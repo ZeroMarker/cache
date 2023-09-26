@@ -1,0 +1,121 @@
+/// 名称: DHCWL.DataQuery.RptSubSItemCfg
+/// 描述: 继承自DHCWL.DataQuery.ReportSubCfg
+/// 编写者：王峥
+/// 编写日期: 2017-6
+Class DHCWL.DataQuery.RptSubSItemCfg Extends DHCWL.DataQuery.ReportSubCfg
+{
+
+/// 顺序
+Property Order As %Integer;
+
+Property Value As %String(COLLATION = "EXACT", MAXLEN = 200);
+
+/// Creator：      王峥
+/// CreatDate：    2017-7
+/// Description:：  与父类功能一样
+/// Table：       	
+/// Input：         
+/// Output：       
+/// Return：        
+/// Others
+ClassMethod Insert(ByRef inParam, ByRef outParam) As %String
+{
+	s $zt="SQLErr"
+	s ret=""
+	s recInx=0
+	f {
+		s recInx=$o(inParam("searchItem",recInx))	
+		q:$g(recInx)=""
+		q:ret'=""
+		s newObj=##class(DHCWL.DataQuery.RptSubSItemCfg).%New()
+		s newObj.RptCode=$g(inParam("RptCode"))
+		s newObj.Code=$g(inParam("searchItem",recInx,"Code"))
+		s newObj.Descript=$g(inParam("searchItem",recInx,"Descript"))
+		s newObj.Type=$g(inParam("searchItem",recInx,"Type"))
+		s newObj.Express=$g(inParam("searchItem",recInx,"Express"))
+		//比父类多出的属性
+		s newObj.Order=$g(inParam("searchItem",recInx,"Order"))
+		s newObj.Value=$g(inParam("searchItem",recInx,"Value"))
+		
+		s sc=newObj.%Save()
+		If $$$ISERR(sc) {
+			s ret="新建查询项失败:"_$System.Status.GetErrorText(sc)
+	 	}	
+	 	d newObj.%Close()	
+	}
+
+	
+	q ret
+SQLErr
+	if ret="" s ret="新建查询项失败:"_$ZERROR
+	q ret
+}
+
+/// Creator：      王峥
+/// CreatDate：    2017-7
+/// Description:：  与父类功能一样
+/// Table：       	
+/// Input：         
+/// Output：       
+/// Return：        
+/// Others
+ClassMethod Delete(ByRef inParam, ByRef outParam) As %String
+{
+	
+	s $zt="SQLErr"
+	s ret=""
+	
+	s RptCode=inParam("RptCode")
+	&sql(DELETE FROM DHCWL_DataQuery.RptSubSItemCfg WHERE RptCode = :RptCode )
+	if SQLCODE'=0 && (SQLCODE'=100) {
+		s ret="删除DHCWL_DataQuery.RptSubSItemCfg对象失败:SQLCODE="_SQLCODE
+		q ret
+	}
+
+	q ret
+	
+SQLErr
+	if ret="" s ret="删除DHCWL_DataQuery.RptSubSItemCfg对象失败:"_$ZERROR
+	q ret
+}
+
+/// Creator：      王峥
+/// CreatDate：    2017-7
+/// Description:：  与父类功能一样
+/// Table：       	
+/// Input：         
+/// Output：       
+/// Return：        
+/// Others
+ClassMethod Update(ByRef inParam, ByRef outParam) As %String
+{
+	s $zt="SQLErr"
+	s ret=""
+	
+	s ret=..Delete(.inParam,.outParam)
+	q:ret'="" ret
+	s ret=..Insert(.inParam,.outParam)
+
+	q ret
+	
+SQLErr
+	if ret="" s ret="更新DHCWL.DataQuery.RptSubSItemCfg对象失败:"_$ZERROR
+	q ret
+}
+
+Storage Default
+{
+<Data name="RptSubSItemCfgDefaultData">
+<Subscript>"RptSubSItemCfg"</Subscript>
+<Value name="1">
+<Value>Order</Value>
+</Value>
+<Value name="2">
+<Value>Value</Value>
+</Value>
+</Data>
+<DefaultData>RptSubSItemCfgDefaultData</DefaultData>
+<Type>%Storage.Persistent</Type>
+}
+
+}

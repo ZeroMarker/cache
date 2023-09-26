@@ -1,0 +1,261 @@
+Import SQLUser
+
+Class DHCDoc.OPDoc.DiagnosEntryListCommon Extends DHCDoc.Util.RegisteredObject [ ClassType = "", Not ProcedureBlock ]
+{
+
+ClassMethod GetDiagnosTypeStr(AdmType As %String = "", type As %String = "", SearchTypeStr As %String = "") As %String
+{
+	s langid=..%LanguageID()
+	s rows=[]
+	s RetStr=""
+	s AdmTypeStr=","_AdmType_","
+	s MRDiagnosRowid=0 for{
+		s MRDiagnosRowid=$O(^MRC("DTYP",MRDiagnosRowid)) Q:MRDiagnosRowid=""
+		s DTYPAdmType=$P($g(^MRC("DTYP",MRDiagnosRowid)),"^",4)
+		continue:(DTYPAdmType'="")&&((","_DTYPAdmType_",")'[AdmTypeStr)
+		s DTYPDateFrom=$P($g(^MRC("DTYP",MRDiagnosRowid)),"^",5)
+		continue:(DTYPDateFrom'="")&&(DTYPDateFrom>+$h)
+		s DTYPDateTo=$P($g(^MRC("DTYP",MRDiagnosRowid)),"^",6)
+		continue:(DTYPDateTo'="")&&(DTYPDateTo<=+$h)
+		s DTYPCode=$P($g(^MRC("DTYP",MRDiagnosRowid)),"^",1)
+		continue:(SearchTypeStr'="")&&(SearchTypeStr'[DTYPCode)
+		s DTYPDesc=$P($g(^MRC("DTYP",MRDiagnosRowid)),"^",2)
+		s DTYPDesc= ##class(User.MRCDiagnosType).GetTranByDesc("DTYPDesc",DTYPDesc,langid)
+		d rows.%Push({"id":(MRDiagnosRowid),"text":(DTYPDesc)})
+		i RetStr="" s RetStr=MRDiagnosRowid_":"_DTYPDesc
+		e  s RetStr=RetStr_";"_MRDiagnosRowid_":"_DTYPDesc
+	}
+	Q:(type="JSON") rows.%ToJSON()
+	Q RetStr
+}
+
+ClassMethod GetOrderListSetClose(ByRef qHandle As %Binary) As %Status [ PlaceAfter = GetOrderListSetExecute ]
+{
+	Set repid=$LIST(qHandle,2)
+	Kill ^CacheTemp(repid)
+	Quit $$$OK
+}
+
+ClassMethod GetOrderListSetExecute(ByRef qHandle As %Binary, DOGRowId As %String = "") As %Status
+{
+	Set repid=$I(^CacheTemp)
+	If $g(ind)="" Set ind=1
+	s desc="",rowid="",mrdesc=""
+	i DOGRowId="" Set qHandle=$lb(0,repid,0) Quit $$$OK
+	s OPRowId=$p(DOGRowId,"||",1)
+	s child=$p(DOGRowId,"||",2)
+	s Rowid=0
+ 	f  s Rowid=$o(^DHCDocOLS(OPRowId,child,Rowid)) q:Rowid=""  d
+ 	.s Code=$p($g(^DHCDocOLS(OPRowId,child,Rowid)),"^",1)
+ 	.s Desc=$p($g(^DHCDocOLS(OPRowId,child,Rowid)),"^",2)
+ 	.s expression=$p($g(^DHCDocOLS(OPRowId,child,Rowid)),"^",3)
+ 	.s colwidth=$p($g(^DHCDocOLS(OPRowId,child,Rowid)),"^",4)
+ 	.s hidden=$p($g(^DHCDocOLS(OPRowId,child,Rowid)),"^",5)
+ 	.d OutputRow
+	Set qHandle=$lb(0,repid,0)
+	Quit $$$OK
+OutputRow
+	set Data=$lb(OPRowId_"||"_child_"||"_Rowid,Code,Desc,expression,colwidth,hidden)
+	Set ^CacheTemp(repid,ind)=Data
+	Set ind=ind+1
+	Quit
+}
+
+ClassMethod GetOrderListSetFetch(ByRef qHandle As %Binary, ByRef Row As %List, ByRef AtEnd As %Integer = 0) As %Status [ PlaceAfter = GetOrderListSetExecute ]
+{
+	Set AtEnd=$LIST(qHandle,1)
+	Set repid=$LIST(qHandle,2)
+	Set ind=$LIST(qHandle,3)
+	//
+	Set ind=$o(^CacheTemp(repid,ind))
+	If ind="" {			// if there are no more rows, finish fetching
+	 Set AtEnd=1
+	 Set Row=""
+	}
+	Else {				// fetch row
+	 Set Row=^CacheTemp(repid,ind)
+	}
+	// Save QHandle
+	s qHandle=$lb(AtEnd,repid,ind)
+	Quit $$$OK
+}
+
+/// d ##class(%ResultSet).RunQuery("DHCDoc.OPDoc.DiagnosEntryListCommon","GetOrderListSet")
+Query GetOrderListSet(DOGRowId) As %Library.Query(CONTAINID = 0, ROWSPEC = "rowid:%String,code:%String,desc:%String,expression:%String,colwidth:%String,hidden:%String") [ SqlProc ]
+{
+}
+
+/// creator:宋春莉
+/// date:	2015-07-13
+/// input:	
+/// return:	
+/// desc:   根据列头设置得到诊断录入的表格配置对象
+/// d ##class(DHCDoc.OPDoc.DiagnosEntryListCommon).ReadListColSet()
+ClassMethod ReadListColSet(classname As %String, classmethod As %String, ByRef colNames As %String, ByRef colModelAry As %String, ByRef ParamAry As %String, context As %String) As %String
+{
+	q:(classname="")||(classmethod="") ""
+	n (%session,classname,classmethod,colNames,colModelAry,ParamAry,context)
+	;s LookupListComponetId = $o(^websys.ComponentI("UniqueNameIndex","WEBSYSLOOKUPLIST",0))
+	s context="K"_classname_"."_classmethod_"."_context
+	
+	s SessionStr=""
+	
+	i %session,$d(%session.Data) {
+		s SessionStr=%session.Get("LOGON.SITECODE")_"^"_%session.Get("LOGON.USERID")
+		s SessionStr=SessionStr_"^"_%session.Get("LOGON.GROUPID")_"^"_%session.Get("LOGON.CTLOCID")
+		s SessionStr=SessionStr_"^"_%session.Get("CONTEXT")_"^"_%session.Get("LOGON.WARDID")
+		s SessionStr=SessionStr_"^"_%session.Get("LOGON.HOSPID")_"^"_%session.Get("LOGON.LANGID")
+	}
+	
+	k ConfigAry
+	d ##class(DHCDoc.OPDoc.DiagnosEntryListCommon).GetListColSet(.ConfigAry)
+	k SortQueue			
+	s uSet=""
+	if (($g(%session)'="")&&($g(%session.Data("LOGON.USERID"))'="")) d
+	.s uSet=##Class(websys.Preferences).GetDataExLE($g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.GROUPID")),$g(%session.Data("LOGON.HOSPID")),$g(%session.Data("LOGON.SITECODE")),context,"COLUMNS","websys.LookUp.List",.app,.appid,.activecontext,$g(%session.Data("LOGON.TRUSTID")),$g(%session.Data("LOGON.REGION")))
+	.;不能改顺序,影响前台取值
+	.f idx=1:1:$l(uSet,"|") d
+	..s uSetItem = $p(uSet,"|",idx)
+	..s myIdx = $p(uSetItem,",",1)		;col-index,width,sort|
+	..s:myIdx>0 SortQueue(myIdx,idx)=1,hiddenPlist(myIdx)=1,hiddenPlist(myIdx,2)=$p(uSetItem,",",2),hiddenPlist(myIdx,3)=$p(uSetItem,",",3)	
+	.s rowsSet=##Class(websys.Preferences).GetDataExLE($g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.GROUPID")),$g(%session.Data("LOGON.HOSPID")),$g(%session.Data("LOGON.SITECODE")),context,"ROWS","websys.LookUp.List",.app,.appid,.activecontext,$g(%session.Data("LOGON.TRUSTID")),$g(%session.Data("LOGON.REGION")))
+	.s pageSize=$lg(rowsSet,1)
+	;排序,所有隐藏列排在后面,显示列按设置显示
+	;SortConfigAry为临时排序数组,Loop为原ConfigAry数组计数器,不会重复;所以只要取到Loop可以直接使用ConfigAry(Loop)取值
+	k SortConfigAry
+	s uSet=1
+	
+	i uSet'="" {
+		s Loop=0
+		for {
+			s Loop=$O(ConfigAry(Loop)) Q:Loop=""
+			s ^tempscl("array",Loop)=ConfigAry(Loop)
+			i $g(hiddenPlist(Loop))="" {
+				s SortConfigAry(999,Loop)=$g(ConfigAry(Loop))
+			}else{
+				s SortNum=$o(SortQueue(Loop,0))
+				s SortConfigAry(+SortNum,Loop)=$g(ConfigAry(Loop))
+			} 
+		}
+	}
+	s SortNum=""
+	for {
+		s SortNum=$O(SortConfigAry(SortNum)) Q:SortNum=""
+		s Loop=0
+		for {
+			s Loop=$O(SortConfigAry(SortNum,Loop)) Q:Loop=""
+			s OneItem=$g(ConfigAry(Loop))
+			s name=$p(OneItem,"^",1)
+			s cap=$p(OneItem,"^",2)
+			s col=$p(OneItem,"^",3)
+			s wid=$p(OneItem,"^",4)
+			s isHidden=$p(OneItem,"^",5)
+			i (isHidden="Y")||(cap="") s cap=name
+			s sort=$p(OneItem,"^",6)
+			s expression=$p(OneItem,"^",7)
+			i '$d(colNames) {
+				s colNames=cap
+			}else{
+				s colNames=colNames_","_cap
+			}
+			//i (uSet'=""),$g(hiddenPlist(Loop))="" s isHidden="Y"
+			;转换
+			i isHidden="Y" s isHidden="true"
+			e  s isHidden="false"
+			;多语言转换
+			s CurLangID=$p(SessionStr,"^",8)
+			i CurLangID'="",$p($g(^SS("LAN",CurLangID)),"^",2)'="Chinese" {
+				s cap=##class(web.DHCDocUtil).GetTranslatedStr(CurLangID,cap)
+			}
+		
+			k ColCFAry
+			s ColCFAry("name")=name
+			s ColCFAry("cap")=cap
+			s ColCFAry("col")=col
+			s ColCFAry("wid")=wid
+			s ColCFAry("isHidden")=isHidden
+			s ColCFAry("sort")=sort
+			s ClassName=$p(expression,".",1,$l(expression,".")-1)
+			s MethodName=$p(expression,".",$l(expression,"."))
+			s colModelAry(cap)="{}"
+			s ExpStr=""
+			i $d(ParamAry(name)) s ExpStr=$g(ParamAry(name))
+			i ClassName'="" {
+				
+				;判断方法是否存在
+				s CLSObj=##class(%Dictionary.ClassDefinition).%OpenId(ClassName)
+				if $IsObject(CLSObj) {
+					if $d(^oddDEF(CLSObj.%Id(),"m",MethodName)) {
+						s colModelAry(cap)=$CLASSMETHOD(ClassName,MethodName,SessionStr,.ColCFAry,ExpStr)
+					}
+				}
+			}
+		}
+	}
+	q
+}
+
+/// creator:宋春莉
+/// date:	2016-07-13
+/// input:	需要返回的数组指针
+/// return:	数组指针
+/// desc:   获取诊断录入列设置,提供给双击列多弹出的设置页面
+/// d ##class(DHCDoc.OPDoc.DiagnosEntryListCommon).GetListColSet()
+ClassMethod GetListColSet(ByRef ConfigAry As %String)
+{
+	n (ConfigAry)
+	s Count=0
+	s DOGRowId=""
+	s child=""
+	s DOPRowID=$o(^DHCDocOGi("Code","diagnosentry",0))
+	i DOPRowID'="" s child=$o(^DHCDocOGi("Code","diagnosentry",DOPRowID,0))
+	i child'="" s DOGRowId=DOPRowID_"||"_child
+	Set rset=##Class(%ResultSet).%New("DHCDoc.OPDoc.DiagnosEntryListCommon:GetOrderListSet")
+	If rset.QueryIsValid() { 
+		Set Status=rset.Execute(DOGRowId)
+		If 'Status Quit
+		While (rset.Next()) {
+			s rowid=rset.GetDataByName("rowid")
+		    s code=rset.GetDataByName("code")
+		    s desc=rset.GetDataByName("desc")
+		    s expression=rset.GetDataByName("expression")
+		    s colwidth=rset.GetDataByName("colwidth")
+		    s hidden=rset.GetDataByName("hidden")
+		    s sort=0
+		    s Count=Count+1
+		    s ConfigAry(Count)=code_"^"_desc_"^"_Count_"^"_colwidth_"^"_hidden_"^"_sort_"^"_expression
+		    //w ConfigAry(Count),!
+		}
+		d rset.Close()
+	}
+	q
+}
+
+ClassMethod GetDiagnosStatusStr() As %String
+{
+	s DiaW=$O(^MRC("DSTAT",0,"Desc","待诊",0))
+    s DiaH=$O(^MRC("DSTAT",0,"Desc","疑诊",0))
+    s DiaD=$O(^MRC("DSTAT",0,"Desc","确诊",0))
+    Set langid=..%LanguageID()
+    s DiaDDesc =##class(User.MRCDiagnosStatus).GetTranByDesc("DSTATDesc","确诊",langid)
+    s DiaHDesc =##class(User.MRCDiagnosStatus).GetTranByDesc("DSTATDesc","疑诊",langid)
+    s DiaWDesc =##class(User.MRCDiagnosStatus).GetTranByDesc("DSTATDesc","待诊",langid)
+    Q DiaD_":"_DiaDDesc_";"_DiaW_":"_DiaWDesc_";"_DiaH_":"_DiaHDesc
+}
+
+Storage Default
+{
+<Data name="DiagnosEntryListCommonDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+</Data>
+<DataLocation>^web.DHCDoc.OP.DiagnosEntr2485D</DataLocation>
+<DefaultData>DiagnosEntryListCommonDefaultData</DefaultData>
+<IdLocation>^web.DHCDoc.OP.DiagnosEntr2485D</IdLocation>
+<IndexLocation>^web.DHCDoc.OP.DiagnosEntr2485I</IndexLocation>
+<StreamLocation>^web.DHCDoc.OP.DiagnosEntr2485S</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

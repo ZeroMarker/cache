@@ -1,0 +1,44 @@
+/// 名称:	EMR.IP.COM.ActionQueryFactory
+/// 描述:	病历查询--公用程序层 Request数据请求代理工厂
+/// 编写者:	yejian
+/// 编写日期: 	2020-12-7
+/// 产品组：	电子病历产品组
+Class EMR.IP.COM.ActionQueryFactory Extends EMR.IP.COM.ActionBase
+{
+
+/// Creator：      yejian
+/// CreatDate：    2020-12-7
+/// Description:   编辑器的命令工厂,解析argInMessage参数，进行分支处理
+/// Table：        
+/// Input：        argInMessage :命令信息 JSON格式  {"action":"GET_PATIENTLIST_BYUSERID","params":{"LocID":"6","UserID":"10209","StartDate":"2019-04-01","EndDate":"2020-04-01"},"product":"GlobalEMR"}
+///                argInData    :传入的数据
+/// Output         argOutMessage:传出的函数处理信息
+///                argOutData   :传出数据
+/// Return：       函数返回值的说明
+/// Others：       其它说明
+/// Debug:         w ##Class(EMR.IP.COM.ActionQueryFactory).AcitonProxy(argInMessage,argInData,argOutMessage,argOutData)	
+ClassMethod AcitonProxy(ByRef argInJson As %DynamicAbstractObject, argInData As %GlobalBinaryStream, ByRef argOutMessage As %DynamicObject, ByRef argOutData As %GlobalBinaryStream) As %String
+{
+	//定义错误处理函数
+	s $ZT="ERROR"
+	s array = argInJson
+	s strAction = array.action
+	d ..DefaultOutMessage(argOutMessage)
+	
+	//命令分发
+	if (strAction = "GET_VERSIONID")         
+	{	
+		//获取病历版本标识(三版、四版)
+		;d ##Class(EMR.DOC.BL.GlobalData).GetVersionID(array,argInData,argOutMessage,argOutData)
+	}
+	else
+	{
+		q ..SetOutMessage(argOutMessage,"ERROR","action操作不存在",2)
+	}
+	q "1"
+	
+ERROR			
+	q ..SetOutMessage(argOutMessage,"ERROR","服务器错误00000",2)
+}
+
+}

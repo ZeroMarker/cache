@@ -1,0 +1,13 @@
+Class DHCAliPay.DHCEntity.PCA.RefundDetail Extends (%RegisteredObject, %XML.Adaptor, DHCCPM.BLL.DHCXMLReader) [ ClassType = "", Inheritance = right, ProcedureBlock ]
+{
+
+/// ResultCode
+Property ResultCode As %String(TRUNCATE = 1);
+
+/// ErrorMsg
+Property ErrorMsg As %String(TRUNCATE = 1);
+
+/// RefList
+Property RefDetails As list Of DHCAliPay.DHCEntity.PCA.RefDetail;
+
+}

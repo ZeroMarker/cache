@@ -1,0 +1,173 @@
+/// Creator:	Jiangew
+/// CreatDate:	2013.02.22
+/// Desc: 		权限规则表(操作和条件规则)
+Class EPRmeta.Privilege.PrivRuleList Extends %Persistent [ ClassType = persistent, ProcedureBlock ]
+{
+
+Property RuleName As %String(TRUNCATE = 1);
+
+Property RuleDesc As %String(TRUNCATE = 1);
+
+Property RuleType As %String(TRUNCATE = 1);
+
+Index IdxName On RuleName [ Data = RuleName, Unique ];
+
+/// Debug: d ##Class(EPRmeta.Privilege.PrivRuleList).InsertRule()
+ClassMethod InsertRule() As %String
+{
+	//操作规则
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('view', '界面模板查看', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('save', '保存', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('print', '打印', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('commit', '提交', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('switch', '更新数据', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('switchtemplate', '更新模板', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('chiefcheck', '主任医师审核', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('attendingcheck', '主治医师审核', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('browse', '浏览病历图片', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('printaftercommit', '病历提交后才可打印', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('load', '病历结构打印模板下界面模板是否加载', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('appoint', '授权操作', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('quitscript', '临时操作关键字：结束脚本', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('reference', '病历引用', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('export', '病历导出', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('caSign', '数字签名', '操作参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType) values ('caVerify', '验证签名', '操作参数'))
+	
+	//条件规则
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('BeLongToMe', '用户是患者的主管医生，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('BeLongToSubdoc', '用户是指定患者主管医生的上级医生，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('BeLongToLoc', '病人属于科室，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('BeLongToLinkLoc', '病人属于相关科室，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('BeLongTransLoc', '病历转移到用户登录科室', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('BeLongToWard', '用户属于病区，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsDisCharge', '病人已出院，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('PatNeedDoc', '病人是住院病人(原意是病人需要写病历，门诊或退院病人不需要写病历)，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('UserIsDoc', '用户是医生，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('OutPatient', '病人是门诊病人，用于门诊医生权限，不区分新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasSaved', '病历已保存', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasSavedNew', '病历已保存', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('RecBelongToMe', '病历由用户首次保存', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('RecBelongToMeNew', '病历由用户首次保存', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasPrinted', '病历已打印', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasPrintedNew', '病历已打印', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasCommited', '病历已提交', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasCommitedNew', '病历已提交', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsUpUser', '用户是否为病历创建人的上级医生', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsUpUserNew', '用户是否为病历创建人的上级医生', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsUpLevelUser', '是否为病历创建人的高级别医生', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsUpUserOfAttending', '是否为病历创建人的高级别医生', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('EPRChapterID', '取得新框架病历结构中“章”(维护程序中目录的下级)的ID，仅用于新框架', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('EPRCategoryID', '取得新框架病历结构中“目录”的ID，仅用于新框架', '条件参数'))	
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('UserLevel', '登陆用户为主任医师或主治医师', '条件参数'))	
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('LoadEprTmpByGender', '男性患者不加载月经生育史', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsDisThreeDay', '是否出院三天', '条件参数'))	
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsDisFiveDay', '是否出院五天', '条件参数'))	
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('RetStatus', '取病案室病历是否回收的状态', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('DisDateDoctor', '出院日期医生医疗结算(格式yyyy-mm-dd)', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('DisDateNurse', '出院日期护士最终结算(格式yyyy-mm-dd)', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('AdmTimeSpan', '入院时间间隔(单位:小时)', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('DisTimeSpan', '出院时间间隔(单位:小时)', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('AdmTimeInBedSpan', '入院时间间隔[护士分床时间](单位:小时)', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('InhsAdmTimeSpan', '入院时间间隔[护理组体温单记录的入院时间](单位:小时)', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsPatDis', '判断病人当前是否已出院[1-已出院,0-在院]', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('GetAppoint', '获取授权得到的操作权限', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasAttendingCheckedNew', '病历已主治医师审核', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasChiefCheckedNew', '病历已主任医师审核', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('CreaterGrpID', '取创建者的安全组ID', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('LastSaverGrpID', '取最后一次保存者的安全组ID', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('PatTypeID', '取病历类型ID', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasMRArchived', '病案室是否已将病历归档', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsDisFiveWorkDay', '患者是否已出院5个工作日', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('IsCACTLoc', '科室是否开启CA服务', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasValidSign', '是否有有效的数字签名', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('PrivByOrdItem', '[补]获取病历书写操作权限通过医嘱项字串', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasChairmanCheck', '是否有科主任审核', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('HasAllSign', '是否包括全部签名(大同三院需求)', '条件参数'))
+	&SQL(insert into EPRmeta_Privilege.PrivRuleList(RuleName, RuleDesc, RuleType)
+		values ('Has3LvlsAudit', '是否完成三级医师审核', '条件参数'))
+}
+
+/// Debug: d ##Class(%ResultSet).RunQuery("EPRmeta.Privilege.PrivRuleList","SelectAllRule")
+Query SelectAllRule() As %SQLQuery [ SqlName = SelectAllRule, SqlProc ]
+{
+	Select ID, RuleName, RuleDesc, RuleType
+	From EPRmeta_Privilege.PrivRuleList
+	Order by ID
+}
+
+Storage Default
+{
+<Data name="PrivRuleListDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>RuleName</Value>
+</Value>
+<Value name="3">
+<Value>RuleDesc</Value>
+</Value>
+<Value name="4">
+<Value>RuleType</Value>
+</Value>
+</Data>
+<DataLocation>^EPRmeta.Privilege.PrivRuleListD</DataLocation>
+<DefaultData>PrivRuleListDefaultData</DefaultData>
+<ExtentSize>100000</ExtentSize>
+<IdLocation>^EPRmeta.Privilege.PrivRuleListD</IdLocation>
+<IndexLocation>^EPRmeta.Privilege.PrivRuleListI</IndexLocation>
+<StreamLocation>^EPRmeta.Privilege.PrivRuleListS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

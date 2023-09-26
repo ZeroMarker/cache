@@ -1,0 +1,28 @@
+Class DHCBILL.SelfPay.Entity.GetBillDetails.Res.RecordList Extends (%RegisteredObject, %XML.Adaptor, DHCCPM.BLL.DHCXMLReader) [ ClassType = "", ProcedureBlock ]
+{
+
+Parameter XMLSEQUENCE = 0;
+
+Parameter XMLIGNOREINVALIDATTRIBUTE = 1;
+
+Parameter XMLIGNOREINVALIDTAG = 1;
+
+Parameter XMLIGNORENULL = 0;
+
+Property OPERATORTIME As %String(TRUNCATE = 1, XMLITEMNAME = "OPERATOR_TIME");
+
+Property HISORDERNO As %String(TRUNCATE = 1, XMLITEMNAME = "HIS_ORDER_NO");
+
+Property RADENO As %String(TRUNCATE = 1, XMLITEMNAME = "RADE_NO");
+
+Property REFUNDTYPE As %String(TRUNCATE = 1, XMLITEMNAME = "REFUND_TYPE");
+
+Property OPERATORMONEY As %String(TRUNCATE = 1, XMLITEMNAME = "OPERATOR_MONEY");
+
+Property BACKFEEOPERATO As %String(TRUNCATE = 1, XMLITEMNAME = "BACK_FEE_OPERATO");
+
+Property SERIALNO As %String(TRUNCATE = 1, XMLITEMNAME = "SERIAL_NO");
+
+Property JYFLAG As %String(TRUNCATE = 1, XMLITEMNAME = "JY_FLAG");
+
+}
