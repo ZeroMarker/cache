@@ -1,0 +1,164 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS require="CmdShell"/>
+	<!--本组css文件-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<style>
+		#kpiSearchDiv{
+			position:absolute;
+			right:2px;
+			top:50%;
+			margin-top:-15px;
+		}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface">
+	
+	<!--任务组表格配置-->
+	<div data-options="region:'center'" style="fit:true;border:none;padding:10px 5px 10px 10px;">
+		<table id="groupGrid" data-options="fit:true,singleSelect:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="任务组列表">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:50,hidden:true">ID</th>
+					<th data-options="field:'groupCode',width:100">任务组编码</th>
+					<th data-options="field:'groupDesc',width:100">任务组描述</th>
+					<th data-options="field:'creator',width:50">创建者</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<!--任务组明细配置-->
+	<div data-options="region:'east'" style="width:650px;border:none;padding:10px 10px 10px 5px;">
+		<table id="kpiGrid" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="任务组指标列表">
+			<thead>
+				<tr>
+					<th data-options="field:'box',checkbox:true">box</th>
+					<th data-options="field:'ID',width:50,hidden:true">ID</th>
+					<th data-options="field:'kpiCode',width:100">指标编码</th>
+					<th data-options="field:'kpiName',width:100">指标名称</th>
+					<th data-options="field:'kpiDim',width:100">指标维度</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<!--任务组明细表头配置-->
+	<div id="groupDetailToobar" class="searchboxRight toolbarsearchbox myToolBar">  
+		<a href="javascript:void(0)" id="groupKPIListAdd" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		<a href="javascript:void(0)" id="groupKPIListDelete" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+		<input id="grpKPISearch" data-options="prompt:'检索',width:'180px'" class="hisui-searchbox"></input>
+	</div>
+	
+	<!--任务组新增与修改-->
+	<div id="groupAddDialog" class="" style="display:none;width:355px;" title="任务组新增">
+		<form id="groupAddForm" class="myFormShow">
+			<div>
+				<label for="groupAddCode">编码</label>
+				<input type="text" id="groupAddCode" data-options="required:true,validType:'isCode'" style="width:220px" class="hisui-validatebox">
+			</div>
+			<div>
+				<label for="groupAddDesc">描述</label>
+				<input type="text" id="groupAddDesc" data-options="required:true,validType:'isForm'" style="width:220px" class="hisui-validatebox">
+			</div>
+			<div>
+				<label for="groupAddCreator">创建者</label>
+				<input type="text" id="groupAddCreator" data-options="required:true,validType:'isForm'" style="width:220px" class="hisui-validatebox">
+			</div>
+		</form>
+	</div>
+	
+	<!--任务组导出-->
+	<div id="groupExportSelectDialog" title="导出任务组选择" style="width:600px;height:450px;padding:10px;display:none">
+		<table id="groupSelectGrid" data-options="fit:true">
+			<thead>
+				<tr>
+					<th data-options="field:'box',checkbox:true">box</th>
+					<th data-options="field:'ID',width:50,hidden:true">ID</th>
+					<th data-options="field:'groupCode',width:50">任务组编码</th>
+					<th data-options="field:'groupDesc',width:100">任务组描述</th>
+					<th data-options="field:'creator',width:50">创建者</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<!--任务组导入-->
+	<div id="groupInputDialog" style="height:450px;width:600px;display:none;" title="任务组导入">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north'" style="height:40px;border:none">
+				<div style="padding:10px 10px 0px 10px" id="importRegion">
+					<input id="groupInputFilebox" class="hisui-filebox" name="groupInputFilebox" style="width:400px;" data-options="prompt:'请选择文件', onChange:function(nv,ov){test(nv,ov);}">
+					<a href="javascript:void(0)" class="hisui-linkbutton" onclick="$('#groupInputFilebox').filebox('clear')">清空</a>
+				</div>
+			</div>
+			<div data-options="region:'center'" style="padding:10px 10px 10px 10px;border:none">
+				<table id="groupKPIListGrid" data-options="fit:true">
+					<thead>
+						<tr>
+							<th data-options="field:'box',checkbox:true">box</th>
+							<th data-options="field:'code',width:100">编码</th>
+							<th data-options="field:'desc',width:100">描述</th>
+							<th data-options="field:'flag',width:100,hidden:true">标志位</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<!--任务组明细选择-->
+	<div id="kpiSelectDialog" style="display:none;width:900px;height:450px;padding:10px" title="任务组明细选择">
+		<table data-options="fit:true" id="kpiSelectGrid">
+			<thead>
+				<tr>
+					<th data-options="field:'box',checkbox:true">box</th>
+					<th data-options="field:'ID'">ID</th>   
+					<th data-options="field:'kpiCode'">编码</th>   
+					<th data-options="field:'kpiName'">指标名称</th>
+					<th data-options="field:'dimType'">维度</th>
+					<th data-options="field:'measure'">度量</th>
+					<th data-options="field:'kpiExcode'">执行代码</th>
+					<th data-options="field:'dataNode'">数据节点</th>
+					<th data-options="field:'MKPIGlobalFlag'">global取值</th>
+					<th data-options="field:'createUser'">创建者</th>
+					<th data-options="field:'updateDate'">更新日期</th>
+					<th data-options="field:'kpiDesc'">指标描述</th>
+					<th data-options="field:'category'">类型</th>
+					<th data-options="field:'section'">区间</th>
+					<th data-options="field:'getValueType'">取值方式</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<!--任务组明细检索栏-->
+	<div id="kpiRuleSearchAllBox" style="display:none">
+		<a href="javascript:void(0)" id="saveSelectKPIListButton" class="hisui-linkbutton" data-options="iconCls:'icon-save'" plain="true">保存</a>
+		<div id="kpiSearchDiv">
+			<input id="kpiSearchKPIInfor" href="javascript:void(0)" class="hisui-searchbox" data-options="prompt:'输入检索信息'"/>
+			<!--img  src="../scripts/dhcwl/v1/kpi/util/other.png"  id="kpiRuleShowImage" alt="展示" /-->
+			<a href="javascript:void(0)" class="hisui-linkbutton" id="kpiRuleShowImage" style="margin-left:5px;" data-options="iconCls:'icon-w-arrow-down'"></a> 
+		</div>
+	</div>
+	
+	<!--script type="text/javascript" src="../scripts/dhcwl/v1/kpi/util/jquery.webui-popover.min.js"></script-->
+	<script charset="UTF-8" type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwl/v1/kpi/util/util.js"></script>
+	<script charset="UTF-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpigroup/kpigroup.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/util/XML.js"></script>
+	<!--script type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpi/configkpisearch.js"></script-->
+	<!--当前csp文件路径-->
+	<span style="display">#(%request.URL)#</span>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ Set %session.AppTimeout = 3600
+ ;s %session.AppTimeout=$g(%session.Data("LOGON.TIMEOUT"),3600)
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+
+	s RowID=$Get(%request.Data("rowid",1))
+	s SysModuleID=$Get(%request.Data("SysModuleID",1))
+	s EAFMDr=$Get(%request.Data("EAFMDr",1))
+	;s RowID=$Get(%request.Data("RowID",1))
+
+    s Type = $Get(%request.Data("Type",1))
+  
+    //列出全部业务审批流
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSysEAFlow).ListRec(searchField, searchValue, sortField, sortDir, start, limit)
+	
+	//列出有效的系统模块
+	i action = "listSysModule" d
+	.w ##class(herp.srm.udata.uSysEAFlow).listSysModule(start,limit,str)
+	
+	//列出有效的主审批流
+	i action = "listEAFMain" d
+	.w ##class(herp.srm.udata.uSysEAFlow).listEAFMain( start,limit,str)
+
+	
+	//增加业务审批流
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uSysEAFlow).InsertRec(Type,SysModuleID, EAFMDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//删除某业务审批流
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uSysEAFlow).Delete(RowID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//编辑某业务审批流
+	i action = "edit" d                                           
+	.s result = ##class(herp.srm.udata.uSysEAFlow).UpdateRec(RowID, Type,SysModuleID, EAFMDr)
+	.i result = 0 d                                               
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

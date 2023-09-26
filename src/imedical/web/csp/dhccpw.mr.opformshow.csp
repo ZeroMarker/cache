@@ -1,0 +1,76 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/ext.ux/css/RowEditor.css"/>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/RowEditor.js"></script>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/ext.ux/css/Ext.ux.form.LovCombo.css"/>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/Ext.ux.util.js"></script>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/Ext.ux.form.LovCombo.js"></script>
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhccpw/export/Excel_Base.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/export/Excel_Const.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/export/Excel_App.js'></script>
+		
+		<script language='javascript' src='../scripts/dhccpw/mr/form/epstep.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/opform/opform.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/form/errorpage.js'></script>
+		
+		<script language='javascript' src='../scripts/dhccpw/mr/outpathway/gui.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/outpathway/event.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/pathwayeva/gui.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/pathwayeva/event.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set ImplNewID=$g(%request.Data("ImplNewID",1))
+			Set LogUser=%session.Data("LOGON.USERID")
+			Set LogUserType=##Class(web.DHCCPW.MR.PaPatmasSrv).getCPTInternalType(LogUser)
+			If (LogUserType="DOCTOR") {
+				Set UserMode="DOCTOR"
+			} ElseIf (LogUserType="NURSE") {
+				Set UserMode="NURSE"
+			} Else {
+				If (%session.Data("LOGON.GROUPDESC")["³¬¼¶")||(%session.Data("LOGON.GROUPDESC")["Demo") {
+					Set UserMode="DEMO"
+				} Else {
+					Set UserMode="NULL"
+				}
+			}
+			Set FormMode=+$g(%request.Data("FormMode",1))
+			Set NewPage=+$g(%request.Data("NewPage",1))
+			Set PortalFlg=+$g(%request.Data("PortalFlg",1))
+		</Script>
+		<script language="javascript" type="text/javascript">
+			Ext.QuickTips.init();
+			var objControlArry = new Array();
+			var ImplNewID = '#(ImplNewID)#';
+			var UserMode = '#(UserMode)#';
+			var FormMode = '#(FormMode)#';
+			var NewPage = '#(NewPage)#';
+			var PortalFlg = '#(PortalFlg)#';
+			function window_onload() {
+				if (ImplNewID.indexOf("||")>=0) {
+					var objFormNewWin = new InitFormNewWin();
+                	objControlArry['FormNewWin'] = objFormNewWin;
+				} else {
+					var objPageErrorWin = new InitPageErrorWin();
+                	objControlArry['PageErrorWin'] = objPageErrorWin;
+				}
+			}
+		</script>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+	</body>
+</html>

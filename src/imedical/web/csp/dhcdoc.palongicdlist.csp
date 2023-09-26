@@ -1,0 +1,171 @@
+<!doctype html>
+<!--dhcdoc.palongicdlist.csp 长效诊断列表-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+</head>
+<body>
+	<div class="hisui-panel" data-options="fit:true,border:false">
+		<table id='tabPALongList'></table>
+	</div>
+	<script type="text/javascript">
+		var GV={PatientID:'#(%request.Get("PatientID"))#'};
+		var selRowIndex="";
+		$(function(){
+			var ToolBar = [{
+	            text: '引用到本次',
+	            iconCls: 'icon-add',
+	            handler: function() { 
+	            	AddDiag();
+	            }
+	        }, {
+	            text: '删除',
+	            iconCls: 'icon-cancel',
+	            handler: function() {
+	                Delete();
+	            }
+	        }];
+
+			var Columns=[[
+				{field:'PALongRowId',title:'',width:120,align:'center',checkbox:true},
+				{field:'DiagnosCat',title:'分类'},
+				{field:'ICDDesc',title:'诊断'},
+				{field:'LongType',title:'长效标识'},
+				{field:'AddDateStr',title:'增加日期'},
+				{field:'AddUser',title:'增加人'},
+				//{field:'LastUpdateUser',title:'最后更新日期'},
+				//{field:'LastUpdateUser',title:'最后更新人'}
+			]]
+			PALongListDataGrid=$("#tabPALongList").datagrid({  
+				fit : true,
+				border : false,
+				striped : false,
+				singleSelect : false,
+				fitColumns : false,
+				autoRowHeight : false,
+				pagination : false,  
+				pageSize: 9999,
+				//pageList : [20,100,200],
+				idField:'PALongRowId',
+				columns :Columns,
+				toolbar :ToolBar,
+				onCheck:function(index, row){
+					if (selRowIndex!="") return false;
+					if (row['mainPALongId']!=""){
+						var mainIndex=PALongListDataGrid.datagrid('getRowIndex',row['mainPALongId']);
+						PALongListDataGrid.datagrid('checkRow',mainIndex);
+					}else{
+						var GridData=PALongListDataGrid.datagrid("getData");
+						for (var i=index+1;i<GridData.rows.length;i++){
+							var mainPALongId=GridData.rows[i]['mainPALongId'];
+							if ((mainPALongId==row['PALongRowId'])&&(mainPALongId!="")){
+								selRowIndex=i;
+								PALongListDataGrid.datagrid('checkRow',i);
+							}
+						}
+					}
+					selRowIndex="";
+				},
+				onUncheck: function(index, row){
+					if (row['mainPALongId']=="") {
+						var GridData=PALongListDataGrid.datagrid("getData");
+						for (var i=index+1;i<GridData.rows.length;i++){
+							var mainPALongId=GridData.rows[i]['mainPALongId'];
+							if ((mainPALongId==row['PALongRowId'])&&(mainPALongId!="")){
+								PALongListDataGrid.datagrid('uncheckRow',i);
+							}
+						}
+					}
+				},
+				onDblClickRow:function(index, row){
+					var ids = [];
+					var mainPALongId=row.mainPALongId;
+					if (mainPALongId!="") {
+						var mainIndex=PALongListDataGrid.datagrid("getRowIndex",mainPALongId);
+					}else{
+						var mainIndex=index;
+					}
+					var rows=PALongListDataGrid.datagrid("getRows");
+					ids.push(rows[mainIndex].ICDDr);
+					for (var i=(mainIndex+1);i<rows.length;i++){
+						if ((rows[i].mainPALongId==rows[mainIndex].PALongRowId)) {
+							ids.push(rows[i].ICDDr);
+						}
+					}
+					var ID=ids.join(',');
+		            websys_showModal("hide");
+					websys_showModal('options').AddItemToList(ID);
+					websys_showModal("close");
+				}
+			});
+			LoadDataGrid();	
+		})
+		function LoadDataGrid(){
+			$.q({
+			    ClassName : "web.DHCDocDiagnosEntryV8",
+			    QueryName : "GetPAlongICDList",
+			    PatientID : GV.PatientID,
+			    LogLocId:session['LOGON.CTLOCID'],
+			    Pagerows:PALongListDataGrid.datagrid("options").pageSize,rows:99999
+			},function(GridData){
+				PALongListDataGrid.propertygrid('loadData',GridData);
+			});
+		}
+		function Delete(){
+			var rows = PALongListDataGrid.datagrid("getSelections");
+            if (rows.length > 0) {
+	            $.messager.confirm("提示", "你确定要删除吗?",
+                    function(r) {
+                        if (r) {
+							var ids = [];
+                            for (var i = 0; i < rows.length; i++) {
+                                ids.push(rows[i].PALongRowId);
+                            }
+                            var ID=ids.join(',');
+                            var value=$.cm({
+								ClassName:"web.DHCDocDiagnosEntryV8",
+								MethodName:"DelPAlongICDRepeat",
+							   	RowidStr:ID,
+								dataType:"text"
+							},false)
+							if((value=="0")||(value=="-100")){
+       					       PALongListDataGrid.datagrid('unselectAll');
+       					       LoadDataGrid();      
+       					       $.messager.show({title:"提示",msg:"删除成功"});
+					        }else{
+						       $.messager.alert('提示',"删除失败:"+value);
+					        }
+                        }
+                    });
+
+            }else {
+                $.messager.alert("提示", "请选择要删除的记录!");
+            }
+		}
+		function AddDiag(){
+			var rows = PALongListDataGrid.datagrid("getSelections");
+            if (rows.length > 0) {
+	            var ids = [];
+	            var PALongIds=[];
+                for (var i = 0; i < rows.length; i++) {
+                    PALongIds[rows[i].PALongRowId]=rows[i].ICDDr;
+                }
+                for ( var index in PALongIds) {
+	                ids.push(PALongIds[index]);
+	            }
+	            var ID=ids.join(',');
+	            websys_showModal("hide");
+				websys_showModal('options').AddItemToList(ID);
+				websys_showModal("close");
+	        }else {
+                $.messager.alert("提示", "请选择要复制的记录!");
+            }
+		}
+	</script>
+</body>
+</html>

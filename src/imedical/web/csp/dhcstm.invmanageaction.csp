@@ -1,0 +1,29 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s StrParam=$Get(%request.Data("strParam",1))
+	
+	//根据发票等查询入库单(退货单)列表
+	i Action = "query" d
+	.d ##class(web.DHCSTM.DHCINGdRecInv).jsDHCINGdRec(Start,Limit,Sort,Dir,StrParam)
+
+	//取入库单(退货单)明细
+	i Action = "queryItem" d
+	.s TrType=$Get(%request.Data("TrType",1))
+	.s RecRet=$Get(%request.Data("parref",1))
+	.d ##class(web.DHCSTM.DHCINGdRecInv).jsRecRetItm(Start,Limit,RecRet,TrType)
+	
+	i Action = "queryItemAll" d
+	.s parstr=$Get(%request.Data("parstr",1))
+	.d ##class(web.DHCSTM.DHCINGdRecInv).jsRecRetItmAll(Start,Limit,parstr)
+</script>

@@ -1,0 +1,136 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/infection.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		<!-- 公共模块 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/PublicFunction/CustomFormItem.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_App.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Base.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Class.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Const.js'></script>
+		<!-- 院感报告模块 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/InfModule_BASE.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/InfModule_INFPOS.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/InfModule_OPR.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/InfModule_LAB.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/InfModule_ANTI.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/InfModule_NOTE.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/InfModule_NBINF.js'></script>
+		<!-- 专项调查模块 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_ADIAG.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_ALAB.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_AANTI.js'></script>
+		<!-- ICU专项调查 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_IBASE.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_IDIAG.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_IPICC.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_IVAP.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_IUC.js'></script>
+		<!-- NICU专项调查 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_NBASE.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_NPICC.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_NVNT.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_NUC.js'></script>
+		<!-- 手术切口专项调查 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_OBASE.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/AimModule_OOPR.js'></script>
+		<!-- 报告主体程序 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/Report_Event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/Report_Gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/Report_Word.js'></script>
+		<!-- 报告评价程序 add by lyh 2013-11-13-->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/Report_Check.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set ReportID=$g(%request.Data("ReportID",1))	    //报告ID
+			Set AdminPower=+$g(%request.Data("AdminPower",1))   //值=1：审核权限
+			If ReportID="" {
+				Set EpisodeID=$g(%request.Data("EpisodeID",1))	    //就诊ID
+				Set TransLoc=$g(%request.Data("TransLoc",1))	    //转科科室（感染科室、调查科室等）
+				Set RepTypeCode=$g(%request.Data("ReportType",1))	//报告类型
+				If RepTypeCode'="" {
+					Set objRepType=##class(DHCMed.SS.Dictionary).GetByTypeCode("NINFInfReportType",RepTypeCode,"")
+					If $IsObject(objRepType) {
+						Set RepTypeID=objRepType.%Id()
+						Set RepTypeCode=objRepType.Code
+					}
+				}
+			} Else {
+				Set objReport=##class(DHCMed.NINF.Rep.InfReport).GetObjById(ReportID)
+				If $IsObject(objReport) {
+					Set EpisodeID=objReport.EpisodeID
+					Set SubID=$o(^DHCMed.NINF("InfRep",ReportID,"Summ",0))
+					Set objSumm=##class(DHCMed.NINF.Rep.InfReportSumm).GetObjById(ReportID_"||"_SubID)
+					If $IsObject(objSumm) {
+						Set TransLoc=objSumm.TransLoc
+					}
+					If $IsObject(objReport.ReportType) {
+						Set RepTypeID=objReport.ReportType.%Id()
+						Set RepTypeCode=objReport.ReportType.Code
+					}
+				}
+			}
+			
+			If (EpisodeID'=""){
+			   	Set OprCount=##Class(DHCMed.NINF.Srv.OperationInfo).GetOprOfCountByEpisodeID(EpisodeID)
+			}
+			
+			Set ReportID=""""_$g(ReportID)_""""
+			Set EpisodeID=""""_$g(EpisodeID)_""""
+			Set TransLoc=""""_$g(TransLoc)_""""
+			Set RepTypeID=""""_$g(RepTypeID)_""""
+			Set RepTypeCode=""""_$g(RepTypeCode)_""""
+			Set AdminPower=""""_$g(AdminPower)_""""
+			Set OprCount=""""_$g(OprCount)_""""
+		</Script>
+		<script language="javascript" type="text/javascript">
+			Ext.QuickTips.init();
+            var objControlArry = new Array();
+            
+            var ReportID=#(ReportID)#;
+            var EpisodeID=#(EpisodeID)#;
+            var TransLoc=#(TransLoc)#;
+            var RepTypeID=#(RepTypeID)#;
+            var RepTypeCode=#(RepTypeCode)#;
+            var AdminPower=#(AdminPower)#;
+            var OprCount=#(OprCount)#;
+            
+            function window_onload() {
+            	var objViewPort = new InitViewPort();
+                objControlArry['ViewPort'] = objViewPort;
+                if ((ReportID=="")&&(OprCount+0>0)){
+	                if (typeof objViewPort.OOPR_RecExtract=="function"){
+	                    objViewPort.OOPR_RecExtract();
+	                }
+	            }
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	< body onload="return window_onload()" >
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+		<script language='Cache' runat='SERVER'>
+	     d ##class(web.DHCBL.RQ.ServerConfig).GetApplet5()
+	   </script>
+	</body>
+</html>

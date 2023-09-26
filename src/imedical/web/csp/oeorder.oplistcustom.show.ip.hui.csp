@@ -1,0 +1,419 @@
+<div id="layout_main" class="hisui-layout" data-options="fit:true,border:false">
+	<!--医嘱列表在下-->
+	<csp:if condition='layoutConfig="1"'>
+		<div id="layout_main_center" data-options="region:'center',border:false" style="overflow:hidden;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div id="layout_main_center_north" data-options="region:'north',title:'',split:false,border:false" style="height:86px;padding:10px 10px 0 10px;border-right:1px solid #ccc;">
+					<div class="hisui-panel" style="border:1px solid #ccc;border-bottom:0;border-radius:4px 4px 0 0;">
+						<!--北部-->
+							<div style="height:36px;">
+								<div id="PriorType_Btn" style="float:left">
+									<input type="hidden" value="" id="HiddenOrderPrior"/>	
+									<!--医嘱类型横向显示 -->
+									<csp:if condition='OrderPriorConfig="2"'>
+										<csp:if condition='INAdmTypeLoc="Y"'>
+											<csp:if condition='OnlyShortPrior="Y"'>
+												<a href="#" id="ShortOrderPrior" class="hisui-linkbutton" data-options="plain:true" style="margin-left:10px;">临时医嘱</a>
+											<csp:else>
+												<a href="#" id="LongOrderPrior" class="hisui-linkbutton" data-options="plain:true" style="margin-left:10px;">长期医嘱</a>
+												<a href="#" id="ShortOrderPrior" class="hisui-linkbutton" data-options="plain:true">临时医嘱</a>
+												<a href="#" id="OutOrderPrior" class="hisui-linkbutton" data-options="plain:true">出院带药</a>		
+											</csp:if>	
+													
+										</csp:if>
+									<csp:else>
+										<!--医嘱类型下拉显示 -->
+										<csp:if condition='INAdmTypeLoc="Y"'>
+											<a href="#" class="hisui-menubutton" data-options="menu:'#OrderPriorMenu_I',iconCls:'icon-edit'" id="PriorType">医嘱类型</a>
+											<div id="OrderPriorMenu_I" style="">
+												<csp:if condition='OnlyShortPrior="Y"'>
+													<div data-options="iconCls:'icon-ok'" id="ShortOrderPrior">临时医嘱</div>
+												<csp:else>
+													<div data-options="iconCls:'icon-ok'" id="DefaultOrderPrior">还原默认</div>
+													<div data-options="iconCls:'icon-ok'" id="ShortOrderPrior">临时医嘱</div>
+													<div data-options="iconCls:'icon-ok'" id="LongOrderPrior">长期医嘱</div>
+													<div data-options="iconCls:'icon-ok'" id="OutOrderPrior">出院带药</div> 							
+												</csp:if>	 					       					
+				            				</div>
+										</csp:if>											
+									</csp:if>
+								</div>
+								<div id="Prompt" style="width:55%;">
+									#(..Get("提示信息"))#
+								</div>
+								<a href="#" id="OrdNotesDetail_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="position:absolute;right:345px;top:14px;"></a>
+								<div id="north-right-div" style="float:right;line-height:36px;margin-right:10px;">
+									<csp:if condition='ShowOrderOpenForAllHosp="1"'>
+										<input id="OrderOpenForAllHosp" class='hisui-checkbox' type="checkbox" label="跨院">
+									</csp:if>
+									<input id="FindByLogDep" class='hisui-checkbox' type="checkbox" label="按登录取接收科室">
+									<label style="margin-left:10px;">#(..Get("未审"))#<label>
+									<input id="ScreenBillSum" disabled class="textbox">
+								</div>
+							</div>
+							<div class="toolbar-div" style="border-top:1px dashed #ccc;">
+							    <div class="datagrid-toolbar" style="border-bottom:0;float:left;">
+							    	<table cellspacing="0" cellpadding="0">
+							    		<tbody>
+							    			<tr>
+							    				<td>
+							    					<a href="#" id="Add_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"></a>
+							    				</td>
+							    				<csp:if condition='DefaultPopTemplate="0"'>
+								    				<td>
+								    					<a href="#" id="Add_TemplOrder_btn" class="hisui-linkbutton" data-options="iconCls:'icon-all-select',plain:true"></a>
+								    				</td>
+								    			</csp:if>
+							    				<td>
+							    					<a href="#" id="Delete_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true"></a>
+							    				</td>
+							    				<td>
+							    					<a href="#" id="Up_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-top',plain:true"></a>
+							    				</td>
+							    				<td>
+							    					<a href="#" id="Down_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-bottom',plain:true"></a>
+							    				</td>
+							    				<td>
+							    					<a href="#" id="Refresh_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-reload',plain:true"></a>
+							    				</td>
+							    				<td>
+							    					<a href="#" id="ChangeOrderSeq_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true">开始关联(R)</a>
+							    				</td>
+							    				<td>
+							    					<div class="datagrid-btn-separator"></div>
+							    				</td>
+							    				<td>
+							    					<a href="#" id="Insert_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-paper-stamp',plain:true">审核医嘱(S)</a>
+							    				</td>
+							    				<td>
+							    					<a href="#" id="Order_copy_btn" class="hisui-linkbutton" data-options="iconCls:'icon-resort',plain:true">医嘱复制</a>
+							    				</td>
+							    				<csp:if condition='DoctorType="DOCTOR"'>
+								    				<td>
+								    					<a href="#" id="Examine_check_btn" class="hisui-linkbutton" data-options="iconCls:'icon-book',plain:true">检验检查申请</a>
+								    				</td>
+								    				<!--csp:if condition='CPWOrdFlag="1"'>
+									    				<td>
+									    					<a href="#" id="Add_CPWOrd" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加临床路径医嘱</a>
+									    				</td>
+								    				</csp:if-->
+							    				</csp:if>
+							    				<!--td>
+							    					<a href="#" id="Dictionary_check_btn" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true">医嘱字典库录入</a>
+							    				</td-->
+							    				<td>
+							    					<a href="#" id="OrderTemplate_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-add-note',plain:true">医嘱模版</a>
+							    				</td>
+							    				<td>
+							    					<a href="#" id="SynchroOrdNotes_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-paper-tri',plain:true">同步备注</a>
+							    				</td>
+							    				<csp:if condition='IsShowOrdList="Y"'>
+								    				<td>
+								    					<a href="#" id="changeBigBtn" class="hisui-linkbutton" data-options="iconCls:'icon-switch',plain:true">放大</a>
+								    				</td>
+							    				</csp:if>
+							    				<td>
+							    					<a href="javascript:void(0)" id="menubtn-saveas" class="hisui-menubutton" data-options="menu:'#mm-saveas'">保存为</a>
+													<div id="mm-saveas" style="">   
+													    <div id="SetSaveForUser">保存用户常用</div>   
+													    <div id="SaveToArcos">保存为医嘱套</div>  
+													    <div id="SaveToTemplate">保存到医嘱模板</div>     
+													</div>
+							    				</td>
+							    				<td>
+							    					<a href="javascript:void(0)" id="menubtn-more" class="hisui-menubutton" data-options="menu:'#mm-more'">更多</a>
+													<div id="mm-more" style="">   
+														<csp:if condition='DoctorType="DOCTOR"'>
+															<!--div id="PkgOrdEntry_btn">套餐录入</div--> 
+															<!--改为加载时隐藏/显示-->
+															<!--csp:if condition='CPWOrdFlag="1"'-->
+													    		<div id="Add_CPWOrd">添加临床路径医嘱</div> 
+													    	<!--/csp:if--> 
+									    				</csp:if>
+														<div id="Dictionary_check_btn">医嘱字典库录入</div>
+													    <div id="SynBtn">同步下方医嘱时间</div>   
+													    <csp:if condition='DoctorType="DOCTOR"'>
+								    						<div id="Cure_check_btn">治疗申请</div> 
+													    	<div id="Antibiotics_apply_btn">抗菌药申请列表</div>  
+									    				</csp:if>
+													    <div id="Template_maintain_btn">医嘱模板维护</div>   
+													    <div id="XHZY">相互作用</div> 
+													    <div id="YDTS">说明书</div> 
+													    <csp:if condition='ZSKOpen=1'>
+													    	<div id="AdviceOrder">建议医嘱</div>   
+													    </csp:if>
+													    <csp:if condition='DoctorType="DOCTOR"'>
+													    	<div id="PracticeDocOrder">实习生医嘱审核列表</div>  
+									    				</csp:if>
+													</div>
+							    				</td>
+							    				<td>
+							    					<csp:if condition='DoctorType="NURSE"'>
+							    						<input id="NurseOrd" class='hisui-checkbox' type="checkbox" label="护嘱">
+													</csp:if>
+							    				</td>
+							    			</tr>
+							    		</tbody>
+							    	</table>
+							    </div>
+							    <!--div id="switch1" class="hisui-switchbox" style="margin:5px 10px;float:right;" data-options="onText:'西药',offText:'中草药',
+									size:'small',animated:true,onClass:'primary',offClass:'primary'">
+								</div-->
+							</div>
+						<!---->
+					</div>
+				</div>
+				<div data-options="region:'center',title:'',border:false,split:false" style="padding:0 10px 0 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;overflow-x:hidden;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+						<table id="Order_DataGrid" style="height:100%;width:100%;"></table>
+					</div>
+				</div> 
+			</div>
+		</div>
+		<csp:if condition='DoctorType="NURSE"'>
+			<csp:if condition='DefaultCloseList="1"'>
+				<div id="layout_main_south" data-options="region:'south',split:true,headerCls:'',border:false,collapsed:true" title="" style="height:380px;padding:0 10px 10px 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border:1px solid #ccc;border-radius:4px;-->
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			<csp:else>
+				<div id="layout_main_south" data-options="region:'south',split:true,headerCls:'',border:false,collapsed:false" title="" style="height:380px;padding:0 10px 10px 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border:1px solid #ccc;border-radius:4px;-->
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			</csp:if>
+		<csp:else>
+			<csp:if condition='DefaultCloseList="1"'>
+				<div id="layout_main_south" data-options="region:'south',split:true,headerCls:'',border:false,collapsed:true" title="" style="height:310px;padding:0 10px 10px 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border:1px solid #ccc;border-radius:4px;-->
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			<csp:else>
+				<div id="layout_main_south" data-options="region:'south',split:true,headerCls:'',border:false,collapsed:false" title="" style="height:310px;padding:0 10px 10px 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border:1px solid #ccc;border-radius:4px;-->
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			</csp:if>
+		</csp:if>
+		
+	<csp:else>	
+	<!--医嘱列表在上-->
+	    <csp:if condition='DoctorType="NURSE"'>
+	    	<csp:if condition='DefaultCloseList="1"'>
+				<div id="layout2_north" data-options="region:'north',border:false,split:true,collapsed:true" style="height:380px;padding:10px 10px 0 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border-radius:4px;border:1px solid #ccc;--> 
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			<csp:else>
+				<div id="layout2_north" data-options="region:'north',border:false,split:true,collapsed:false" style="height:380px;padding:10px 10px 0 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border-radius:4px;border:1px solid #ccc;--> 
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			</csp:if>
+		<csp:else>
+			<csp:if condition='DefaultCloseList="1"'>
+				<div id="layout2_north" data-options="region:'north',border:false,split:true,collapsed:true" style="height:310px;padding:10px 10px 0 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border-radius:4px;border:1px solid #ccc;--> 
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			<csp:else>
+				<div id="layout2_north" data-options="region:'north',border:false,split:true,collapsed:false" style="height:310px;padding:10px 10px 0 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;border:0;"> <!--border-radius:4px;border:1px solid #ccc;--> 
+						<csp:Include Page="oeorder.oplistcustom.show.south.hui.csp">
+					</div>
+				</div>
+			</csp:if>
+		</csp:if>
+		
+		<div id="layout_main_center" data-options="region:'center',headerCls:'',border:false,split:true" title="" style="overflow:hidden;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div id="layout_main_center_north" data-options="region:'north',title:'',split:false,border:false" style="height:76px;padding:0 10px 0 10px;border-right:1px solid #ccc;">
+					<div class="hisui-panel" style="border:1px solid #ccc;border-bottom:0;border-radius:4px 4px 0 0;">
+						<div style="height:36px;">
+							<div id="PriorType_Btn" style="float:left">
+								<input type="hidden" value="" id="HiddenOrderPrior"/>	
+								<!--医嘱类型横向显示 -->
+								<csp:if condition='OrderPriorConfig="2"'>
+									<csp:if condition='INAdmTypeLoc="Y"'>
+										<csp:if condition='OnlyShortPrior="Y"'>
+												<a href="#" id="ShortOrderPrior" class="hisui-linkbutton" data-options="plain:true" style="margin-left:10px;">临时医嘱</a>
+										<csp:else>
+												<a href="#" id="LongOrderPrior" class="hisui-linkbutton" data-options="plain:true" style="margin-left:10px;">长期医嘱</a>
+												<a href="#" id="ShortOrderPrior" class="hisui-linkbutton" data-options="plain:true">临时医嘱</a>
+												<a href="#" id="OutOrderPrior" class="hisui-linkbutton" data-options="plain:true">出院带药</a>	
+										</csp:if>		
+										
+									</csp:if>
+								<csp:else>
+									<!--医嘱类型下拉显示 -->
+									<csp:if condition='INAdmTypeLoc="Y"'>
+										<a href="#" class="hisui-menubutton" data-options="menu:'#OrderPriorMenu_I',iconCls:'icon-edit'" id="PriorType">医嘱类型</a>
+										<div id="OrderPriorMenu_I" style="">
+											<csp:if condition='OnlyShortPrior="Y"'>
+												<div data-options="iconCls:'icon-ok'" id="ShortOrderPrior">临时医嘱</div>
+											<csp:else>
+												<div data-options="iconCls:'icon-ok'" id="DefaultOrderPrior">还原默认</div>
+			       								<div data-options="iconCls:'icon-ok'" id="ShortOrderPrior">临时医嘱</div>
+			        							<div data-options="iconCls:'icon-ok'" id="LongOrderPrior">长期医嘱</div>
+			        							<div data-options="iconCls:'icon-ok'" id="OutOrderPrior">出院带药</div> 		
+									
+											</csp:if>	
+										</div>
+									</csp:if>											
+								</csp:if>
+							</div>
+							<div id="Prompt" style="width:55%;">
+								#(..Get("提示信息"))#
+							</div>
+							<a href="#" id="OrdNotesDetail_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="position:absolute;right:345px;top:4px;"></a>
+							<div id="north-right-div" style="float:right;line-height:36px;margin-right:10px;">
+								<csp:if condition='ShowOrderOpenForAllHosp="1"'>
+									<input id="OrderOpenForAllHosp" class='hisui-checkbox' type="checkbox" label="跨院">
+								</csp:if>
+								<input id="FindByLogDep" class='hisui-checkbox' type="checkbox" label="按登录取接收科室">
+								<label style="margin-left:10px;">#(..Get("未审"))#<label>
+								<input id="ScreenBillSum" disabled class="textbox">
+							</div>
+						</div>
+						<div class="toolbar-div" style="border-top:1px dashed #ccc;">
+						    <div class="datagrid-toolbar" style="border-bottom:0;float:left;">
+						    	<table cellspacing="0" cellpadding="0">
+						    		<tbody>
+						    			<tr>
+						    				<td>
+						    					<a href="#" id="Add_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"></a>
+						    				</td>
+						    				<csp:if condition='DefaultPopTemplate="0"'>
+							    				<td>
+							    					<a href="#" id="Add_TemplOrder_btn" class="hisui-linkbutton" data-options="iconCls:'icon-all-select',plain:true"></a>
+							    				</td>
+						    				</csp:if>
+						    				<td>
+						    					<a href="#" id="Delete_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true"></a>
+						    				</td>
+						    				<td>
+						    					<a href="#" id="Up_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-top',plain:true"></a>
+						    				</td>
+						    				<td>
+						    					<a href="#" id="Down_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-bottom',plain:true"></a>
+						    				</td>
+						    				<td>
+						    					<a href="#" id="Refresh_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-reload',plain:true"></a>
+						    				</td>
+						    				<td>
+						    					<a href="#" id="ChangeOrderSeq_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true">开始关联(R)</a>
+						    				</td>
+						    				<td>
+						    					<div class="datagrid-btn-separator"></div>
+						    				</td>
+						    				<td>
+						    					<a href="#" id="Insert_Order_btn" class="hisui-linkbutton" data-options="iconCls:'icon-paper-stamp',plain:true">审核医嘱(S)</a>
+						    				</td>
+						    				<td>
+						    					<a href="#" id="Order_copy_btn" class="hisui-linkbutton" data-options="iconCls:'icon-resort',plain:true">医嘱复制</a>
+						    				</td>
+						    				<csp:if condition='DoctorType="DOCTOR"'>
+							    				<td>
+							    					<a href="#" id="Examine_check_btn" class="hisui-linkbutton" data-options="iconCls:'icon-book',plain:true">检验检查申请</a>
+							    				</td>
+							    				<!--csp:if condition='CPWOrdFlag="1"'>
+								    				<td>
+								    					<a href="#" id="Add_CPWOrd" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加临床路径医嘱</a>
+								    				</td>
+							    				</csp:if-->
+						    				</csp:if>						    				
+						    				<td>
+						    					<a href="#" id="OrderTemplate_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-add-note',plain:true">医嘱模版</a>
+						    				</td>
+						    				<td>
+						    					<a href="#" id="SynchroOrdNotes_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-paper-tri',plain:true">同步备注</a>
+						    				</td>
+						    				<csp:if condition='IsShowOrdList="Y"'>
+							    				<td>
+							    					<a href="#" id="changeBigBtn" class="hisui-linkbutton" data-options="iconCls:'icon-switch',plain:true">放大</a>
+							    				</td>
+						    				</csp:if>
+						    				<td>
+						    					<a href="javascript:void(0)" id="menubtn-saveas" class="hisui-menubutton" data-options="menu:'#mm-saveas'">保存为</a>
+												<div id="mm-saveas" style="">   
+												    <div id="SetSaveForUser">保存用户常用</div>   
+												    <div id="SaveToArcos">保存为医嘱套</div>  
+												    <div id="SaveToTemplate">保存到医嘱模板</div>     
+												</div>
+						    				</td>
+						    				<td>
+						    					<a href="javascript:void(0)" id="menubtn-more" class="hisui-menubutton" data-options="menu:'#mm-more'">更多</a>
+												<div id="mm-more" style=""> 
+													<csp:if condition='DoctorType="DOCTOR"'>
+														<!--div id="PkgOrdEntry_btn">套餐录入</div--> 
+														<!--改为加载时隐藏/显示-->
+														<!--csp:if condition='CPWOrdFlag="1"'-->
+												    		<div id="Add_CPWOrd">添加临床路径医嘱</div> 
+												    	<!--/csp:if--> 
+								    				</csp:if>
+						    						<div id="Dictionary_check_btn">医嘱字典库录入</div>   
+												    <div id="SynBtn">同步下方医嘱时间</div>   
+												    <csp:if condition='DoctorType="DOCTOR"'>
+												    	<div id="Cure_check_btn">治疗申请</div>  
+												    	<div id="Antibiotics_apply_btn">抗菌药申请列表</div>  
+								    				</csp:if>
+												    <div id="Template_maintain_btn">医嘱模板维护</div>   
+												    <div id="XHZY">相互作用</div> 
+												    <div id="YDTS">说明书</div> 
+												    <csp:if condition='ZSKOpen=1'>
+												    	<div id="AdviceOrder">建议医嘱</div>   
+												    </csp:if>
+												    <csp:if condition='DoctorType="DOCTOR"'>
+												    	<div id="PracticeDocOrder">实习生医嘱审核列表</div>  
+								    				</csp:if>
+												</div>
+						    				</td>
+						    				<td>
+						    					<csp:if condition='DoctorType="NURSE"'>
+						    						<input id="NurseOrd" class='hisui-checkbox' type="checkbox" label="护嘱">
+												</csp:if>
+						    				</td>
+						    			</tr>
+						    		</tbody>
+						    	</table>
+						    </div>
+						    <!--div id="switch1" class="hisui-switchbox" style="margin:5px 10px;float:right;" data-options="onText:'西药',offText:'中草药',
+								size:'small',animated:true,onClass:'primary',offClass:'primary'">
+							</div-->
+						</div>
+						
+						
+					</div>
+				</div>
+				<div data-options="region:'center',title:'',border:false,split:false" style="padding:0 10px 10px 10px;">
+					<div class="hisui-panel" fit="true" style="height:100%;overflow-x:hidden;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+						<table id="Order_DataGrid" style="height:100%;width:100%;"></table>
+					</div>
+				</div> 
+			</div>
+		</div>
+		
+	</csp:if>
+	
+</div>
+<!--临时数据的存储-->
+<div>
+	<input type="HIDDEN" value=""  id="tempTemplateData"/>
+	<input type="HIDDEN" value=""  id="PageTimeLogData"/>
+</div>
+<!-- 医嘱单窗口显示 -->
+<div id="OrderListWindow"></div>
+<!-- 医嘱常用模板选择显示 -->
+<!--div id="OrgFavSelWindow" class="toolpanel">
+	<div style="line-height:123px;text-align:center;">
+		<a href="#" id="OrgFav_Location" class="hisui-linkbutton">科室模板</a>
+		<a href="#" id="OrgFav_User" class="hisui-linkbutton">个人模板</a>
+	</div>
+</div-->

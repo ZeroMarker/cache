@@ -1,0 +1,77 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<script language="cache" runat="server"> 
+	s action = $Get(%request.Data("action",1))
+	s id = $Get(%request.Data("ID",1))
+	s execCodeType = $Get(%request.Data("ExecCodeType",1))
+	s execCodeWrite = $Get(%request.Data("ExecCodewrite",1))
+	s execCodeCall = $Get(%request.Data("ExecCodeCall",1))
+	s execCodeVersion = $Get(%request.Data("ExecCodeVersion",1))
+	s execCodeCUDate = $Get(%request.Data("ExecCodeCUDate",1))
+	//modify by wk~2017-03-17
+	//i execCodeCUDate s execCodeCUDate = $zdh(execCodeCUDate,3)
+	i execCodeCUDate s execCodeCUDate = ##class(DHCWL.CommonUtil.DateUtil).DateHtmlToLogical(execCodeCUDate)
+	s execCodeCreator = $Get(%request.Data("ExecCodeCreator",1))
+	s execCodeGlobalFlag = $Get(%request.Data("ExecCodeGlobalFlag",1))
+	s execCodeApplicable = $Get(%request.Data("ExecCodeApplicable",1))
+	s execCodeDesc = $Get(%request.Data("ExecCodeDescription",1))
+	s execCodeSubType = $Get(%request.Data("ExecCodeSubType",1))
+	s execCodeDefaultFlag = $Get(%request.Data("ExecCodeDefaultFlag",1))
+	;w !,id_","_execCodeType_","_execCodeWrite_","_execCodeCall_","_execCodeVersion_","_execCodeCUDate_","_execCodeCreator_","_execCodeGlobalFlag_","_execCodeApplicable_","_execCodeDesc_","_execCodeSubType_","_execCodeDefaultFlag
+	;q
+	s obj=##class(DHCWL.SysService.SysExecuteCode).BuildSysExecuteCodeObj(id,execCodeType,execCodeWrite,execCodeCall,execCodeVersion,execCodeCUDate,execCodeCreator,execCodeGlobalFlag,execCodeApplicable,execCodeDesc,execCodeSubType,execCodeDefaultFlag)
+	s json=""
+	if ("add"=action){
+		s chkDefF=##class(DHCWL.SysService.SysExecuteCode).CheckedDefExeFlag(id,obj)  
+		if (chkDefF'="") {   ;已存在默认执行标志为¨Y〃的数据
+			w "{success:false,tip:'"_chkDefF_"'}"
+		}else{
+			s result=##class(DHCWL.SysService.SysExecuteCode).Insert(obj)
+			if (1=result){
+				s result="ok"
+				w "{success:true,tip:'"_result_"'}"
+			}else{
+				w "{success:false,tip:'"_result_"'}"
+			}
+		}
+	}elseif ("update"=action){
+		s chkDefF=##class(DHCWL.SysService.SysExecuteCode).CheckedDefExeFlag(id,obj)  
+		if (chkDefF'="") {  ;已存在默认执行标志为¨Y〃的数据
+			w "{success:false,tip:'"_chkDefF_"'}"
+		}else{
+		
+			s result=##class(DHCWL.SysService.SysExecuteCode).Update(obj)
+			if (1=result){
+				s result="ok"
+				w "{success:true,tip:'"_result_"'}"
+			}else{
+				w "{success:false,tip:'"_result_"'}"
+			}
+		}
+	}elseif ("lookup"=action){
+		s json=##class(DHCWL.SysService.SysExecuteCode).QuerySysExecuteCode(execCodeType,execCodeWrite,execCodeCall,execCodeVersion,execCodeCUDate,execCodeCreator,execCodeGlobalFlag,execCodeApplicable,execCodeDesc,execCodeSubType,execCodeDefaultFlag)
+		set limit=""
+		set start = $g(%request.Data("start",1))
+		set maxRecordNum = $g(%request.Data("pageSize",1))
+		set limit=$g(%request.Data("limit",1))
+		if (""'=limit) set maxRecordNum=limit
+		if (""'=json){
+			write json.GetHead()	//该操作会将json的指针(json.privor)重新指向开始位置0
+			set json.privor=start	//因为现在定义的json数组下标是从1才开始存数据的，0被用来存json头部信息，而Ext中json数组下标是从0开始的。
+			do{
+				set obj=json.Next()
+				set obj=$tr(obj,"∧","^")
+				if ((json.privor)=(start+maxRecordNum)){	//请求的最后一条记录需整理最后一条数据格式
+					set obj=$p(obj,"}",1)
+				 	set obj=obj_"}]}"
+				}
+				write obj
+			}while((obj'="")&&(json.privor<(start+maxRecordNum))&&(json.privor<json.count))
+		} else {
+			w "{result:0,totalNum:0,root:[]}"
+		}
+	}elseif ("getExecuteCodeType"=action){
+		s typeStr=##class(DHCWL.SysService.SysExecuteCode).GetExecuteCodeType()
+		w "["_typeStr_"]"
+	}
+</script>

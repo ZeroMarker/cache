@@ -1,0 +1,44 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ n EpisodeID,OEORIItmMastDR,OEORISttDat,ReturnCode,PriceCheck,PriceValue,WINNAME
+ s (EpisodeID,OEORIItmMastDR,OEORISttDat,ReturnCode,PriceCheck,PriceValue,WINNAME)=""
+ s EpisodeID=%request.Get("EpisodeID")
+ s OEORIItmMastDR=%request.Get("OEORIItmMastDR")
+ s OEORISttDat=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("OEORISttDat"))
+ s WINNAME=%request.Get("WINNAME")
+ ;s ^zpeterc($zn,"calculateprice")=EpisodeID_","_OEORIItmMastDR_","_OEORISttDat_","_WINNAME
+
+ s ReturnCode=$$price^MVBARCIM(EpisodeID,OEORIItmMastDR,OEORISttDat,"","")
+ i ReturnCode'="" d
+ . s PriceCheck=$p(ReturnCode,"^",1),PriceValue=$p(ReturnCode,"^",2)
+ . i PriceCheck="N"  s PriceValue=0
+
+ ;s ^zpeterc($zn,"Finalprice")=PriceValue
+
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var cobj=detailFrame.document.getElementById(""BillPrice"");"
+ w "if(cobj){"
+ w "	if ((cobj.value!="""")||("_PriceValue_"!=0)) cobj.value="_PriceValue_";"
+ w "}"
+ w "</script>"
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,206 @@
+<csp:class description="JQuery easyUI1.3.5">
+<div data-options="region:'center',split:true,title:'',border:false" style="padding:10px;">
+	<div id="outer_container" class="hisui-panel" data-options="fit:true,title:'毒麻/出院带药处方打印',headerCls:'panel-header-gray',iconCls:'icon-print'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		<div id="layout_main" class="hisui-layout" data-options="fit:true" style="">
+			<div class="hisui-panel" data-options="region:'center',border:false,border:false" style="padding:3px 0 0 0;" >
+		   		<div class="hisui-panel" fit="true" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-left:0;border-right:0;border-radius:0;">
+			    	<table id="tabOrdList"></table>
+		    	</div>
+		    </div>
+		   	<div data-options="region:'south',iconCls:'icon-add',collapsible:false,border:false" style="height:226px;padding:10px;">
+				<div class="hisui-panel" fit="true" style="height:100%;border:0;">
+					<div id="BtnDiv" style="border:0;border-radius:4px;margin-bottom:10px;">
+						<table id ="Butttable" class="search-table" name="Butttable" ALIGN="center" >
+							<tr>
+								<td class="r-label">
+							   	 	<label for="PAPMICredType">证件类型</label>
+							   	 </td>
+							   	 <td>
+							   	 	<input class="hisui-validatebox textbox" id="PAPMICredType"/>
+							   	 </td>
+							   	 <td class="r-label">
+							   	 	<label for="PatCredNo">本人证件号</label>
+							   	 </td>
+							     <td>
+							     	<input id="PatCredNo" class="textbox">
+							     </td>
+							     <CSP:if CONDITION='(PAAdmType="I")'>
+										<td class="r-label">
+											<label for="SearchDate">补打日期</label>
+										</td>
+										<td>
+											<input id="SearchDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser">
+										</td>
+							     </CSP:if>
+							</tr>
+						   <tr>
+							     <td class="r-label">
+							   	 	<label for="AgencyCredType">证件类型</label>
+							   	 </td>
+							   	 <td>
+							   	 	<input class="hisui-validatebox textbox" id="AgencyCredType"/>
+							   	 </td>
+							     <td class="r-label">
+							   	 	<label for="SupplyCredNo">代理人证件号</label>
+							   	 </td>
+							   	 <td>
+							     	<input id="SupplyCredNo" class="textbox">
+							     </td>
+							   	 <td class="r-label">
+							   	 	<label for="SupplyName">代理人姓名</label>
+							   	 </td>
+							     <td>
+							     	<input id="SupplyName" class="textbox">
+							     </td>
+							     
+							     <td class="r-label">
+							   	 	<label for="SupplyTelH">代理人联系电话</label>
+							   	 </td>
+							     <td>
+							     	<input id="SupplyTelH" class="textbox">
+							     </td>
+						   </tr>
+						   <tr>
+						   	  	<td class="r-label">
+						   	 		<label for="PatAddress">家庭住址(单位)</label>
+						   	  	</td>
+							    <td colspan="5">
+							    	<input id="PatAddress" class="textbox" style="box-sizing:border-box;width:100%;height:30px;">
+							    </td>
+							    <td class="r-label">
+						   	 		<lable>体重<lable/>
+						   	  	</td>
+							    <td>
+							    	<input id="Weight" class="textbox">
+							        <lable>Kg<lable/>
+							    </td>
+						   </tr>
+						   <CSP:if CONDITION='(PAAdmType="E")||(PAAdmType="O")'>
+							   <tr>
+								   	<td class="r-label">
+							   	 		<lable for="TotalExpenses">费用合计<lable/>
+							   	  	</td>
+								    <td>
+								    	<input id="TotalExpenses" disabled class="textbox">
+								    </td>
+								    <td class="r-label">
+							   	 		<lable for="ThisDepartment">本科费用<lable/>
+							   	  	</td>
+								    <td>
+								    	<input id="ThisDepartment" disabled class="textbox">
+									</td>
+								 <td>
+									<CSP:if CONDITION='MTREnble="1"'>
+										<lable> 门诊病历<lable/>
+										<input type="checkbox" id="EMR"  value="" />
+										<lable>复诊病历</lable>
+										<input type="checkbox" id="EMRReturn"  value="" />
+									</CSP:if>
+									<!--
+									<lable> 疾病诊断证明书<lable/>
+									<input type="checkbox" id="EMRCertificate"  value="" /-->
+									<!--lable> 治疗单<lable/>
+									<input type="checkbox" id="Treat"  value="" />
+									<lable> 计价单<lable/>
+									<input type="checkbox" id="ValuationList"  value="" />
+									<lable> 药店处方<lable/>
+									<input type="checkbox" id="OutBuy"  value="" /-->
+									<!--lable for="frontFlag">处方[正]<lable/>
+									<input class='hisui-checkbox' id="frontFlag" type="checkbox" label="">
+									<lable for="backFlag">处方[底]<lable/>
+									<input class='hisui-checkbox' id="backFlag" type="checkbox" label=""-->
+							     </td>
+							  </tr>
+							  <tr>
+							  	 <td colspan="8" align="center">
+							  	 	<input class='hisui-checkbox' id="guide" type="checkbox" label="导诊单">
+						   	 		<input class='hisui-checkbox' id="frontFlag" type="checkbox" label="处方(正)">
+						   	 		<input class='hisui-checkbox' id="backFlag" type="checkbox" label="处方[底]">
+							  	 	<!--该医生下所有病例列表-->
+									<csp:if CONDITION='EMRPrintAll="0"'>
+											<csp:if CONDITION='($L(AInstanceIDList,"^")>0)&&($L(AInstanceIDList)>0)'>
+												<CSP:LOOP COUNTER="i" FROM="1" TO="#($L(AInstanceIDList,"^"))#">
+													<!--td class="r-label">
+											   	 		<lable> #($P($P(AInstanceIDList,"^",i),$C(2),2))#</lable>
+											   	  	</td-->
+													<input class='hisui-checkbox' id="PrintEMR_#(i)#" checked type="checkbox" label="#($P($P(AInstanceIDList,"^",i),$C(2),2))#">
+												</CSP:LOOP>
+											</csp:if>
+									</csp:if>
+									<!--该患者下所有病例列表-->
+									<csp:if CONDITION='EMRPrintAll="1"'>
+											<csp:if CONDITION='($L(AllEMRData,"^")>0)&&($L(AllEMRData)>0)'>
+												<CSP:LOOP COUNTER="i" FROM="1" TO="#($L(AllEMRData,"^"))#">
+													<!--td class="r-label">
+											   	 		<lable> #($P($P(AllEMRData,"^",i),$C(2),2)_" "_$P($P(AllEMRData,"^",i),$C(2),3))#</lable>
+											   	  	</td-->
+													<input class='hisui-checkbox' id="PrintAllEMR_#(i)#" checked type="checkbox" label="#($P($P(AllEMRData,"^",i),$C(2),2)_" "_$P($P(AllEMRData,"^",i),$C(2),3))#">
+												</CSP:LOOP>
+											</csp:if>
+									</csp:if>
+							  	 </td>
+							  </tr>
+							  <CSP:ELSE>
+							  	<tr style="display:none;">
+							  		<td class="r-label">
+							   	 		<label for="frontFlag">处方</label>
+							   	  	</td>
+							  		<td colspan="8">
+							  			<input class='hisui-checkbox' id="frontFlag" type="checkbox">
+							  		</td>
+							  	</tr>
+							  </CSP:if>
+						</table> 
+						<!--该医生下所有病例列表-->
+						<!--csp:if CONDITION='EMRPrintAll="0"'>
+							<table ALIGN="center">
+								<tr>
+								<csp:if CONDITION='($L(AInstanceIDList,"^")>0)&&($L(AInstanceIDList)>0)'>
+									<CSP:LOOP COUNTER="i" FROM="1" TO="#($L(AInstanceIDList,"^"))#">
+										<td class="r-label">
+								   	 		<lable> #($P($P(AInstanceIDList,"^",i),$C(2),2))#</lable>
+								   	  	</td>
+								   	  	<td>
+											<input class='hisui-checkbox' id="PrintEMR_#(i)#" checked type="checkbox" label="">
+										</td>
+									</CSP:LOOP>
+								</csp:if>
+							  </tr>
+							</table>
+						</csp:if-->
+						<!--该患者下所有病例列表-->
+						<!--csp:if CONDITION='EMRPrintAll="1"'>
+							<table ALIGN="center">
+								<tr>
+								<csp:if CONDITION='($L(AllEMRData,"^")>0)&&($L(AllEMRData)>0)'>
+									<CSP:LOOP COUNTER="i" FROM="1" TO="#($L(AllEMRData,"^"))#">
+										<td class="r-label">
+								   	 		<lable> #($P($P(AllEMRData,"^",i),$C(2),2)_" "_$P($P(AllEMRData,"^",i),$C(2),3))#</lable>
+								   	  	</td>
+								   	  	<td>
+											<input class='hisui-checkbox' id="PrintAllEMR_#(i)#" checked type="checkbox" label="">
+										</td>
+									</CSP:LOOP>
+								</csp:if>
+							  </tr>
+							</table>
+						</csp:if-->
+					</div>
+					<div id="BtnDiv" ALIGN="center">
+						<CSP:if CONDITION='(PAAdmType="E")||(PAAdmType="O")'>
+							<a id="Save" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						</CSP:if>
+						<a id="printButton" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+					</div>
+				</div>
+			</div>
+			<!--div data-options="region:'center',border:false" style="width:1200px;height:100%" >
+				<div id="DIAOrdList" title="处方列表" style="height:500px">
+					<table id="tabOrdList"></table>
+				</div>
+			</div-->
+		</div>
+	</div>
+</div>
+
+

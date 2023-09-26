@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!--药房药库 - 皮试药品配置
+	csp:  pha.in.v3.skintest.csp
+	js:   pha/in/v3/skintest.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1/>
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+    	<div data-options="region:'north',height:52,border:false" style="border-bottom:1px dashed #ccc;">
+			<div class="pha-row">
+				<div class="pha-col">
+					<label id="_HospListLabel" style="color:red;">医院</label>
+	        	</div>
+	        	<div class="pha-col">
+	        		<input id="_HospList" class="hisui-combobox textbox"/>
+	        	</div>
+        	</div>
+		</div>
+		
+        <div data-options="region:'center',border:false" class="pha-body">
+        	<!-- layout start -->
+            <div id="layout-first" class="hisui-layout" fit="true">
+				<div data-options="region:'north',height:400,split:true,collapsible:false,border:false">
+					<div class="hisui-layout" fit="true">
+						<div data-options="region:'west',width:600, split:true,collapsible:false,border:false">
+							<div class="hisui-panel" title="药品过敏原" data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:''">
+								<table id="gridAlg" class="hisui-datagrid"></table>
+							</div>
+						</div>
+						<div data-options="region:'center', split:true,collapsible:false,border:false">
+							<div class="hisui-panel" title="项目" data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:'',
+							tools:[{
+								iconCls: 'icon-help',
+								handler: function(){
+									OpenHelpWin(1);
+								}    
+							}]
+							">
+								<table id="gridSkinTest" class="hisui-datagrid"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center', split:true,collapsible:false,border:false">
+					<div id="layout-second" class="hisui-layout" fit="true">
+						<div data-options="region:'center', split:true,collapsible:false,border:false">
+							<div id="layout-second-center-panel" class="hisui-panel" title="关联皮试用药" data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:'',
+							tools:[{
+								iconCls: 'icon-help',
+								handler: function(){
+									OpenHelpWin(2);
+								}
+							}]">
+								<table id="gridSkinTestItm" class="hisui-datagrid"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+            <!-- layout end -->
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridAlgBar" style="padding:3px;">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddAlg" style="display:none;">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveAlg">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelAlg" style="display:none;">删除</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-search" id="btnFindAlg">查询</a>
+    </div>
+    <div id="gridSkinTestBar" style="padding:3px;">
+    	<div class="pha-col">
+	        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+	        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+	        <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
+        </div>
+        <div class="pha-col">
+	        <div class="datagrid-btn-separator"></div>
+	        <span style="visibility:hidden;">占</span>
+	        <input class="hisui-radio" type="radio" label="按处方通用名定义" name="itemType" value="G" />
+	        <input class="hisui-radio" type="radio" label="按医嘱项定义" name="itemType" value="A" data-options="checked:true" />
+    	</div>
+    </div>
+    <div id="gridSkinTestItmBar" style="padding:3px;">
+    	<div class="pha-col">
+	        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddItm">新增</a>
+	        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveItm">保存</a>
+	        <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDeleteItm">删除</a>
+        </div>
+        <div class="pha-col">
+        	<div class="datagrid-btn-separator"></div>
+        	<label id="curSelectedItem" style="margin-left:20px;margin-top:8px;color:red;font-size:16px;font-weight:bold;">当前选择项目: </label>
+        </div>
+    </div>
+    
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/skintest.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,53 @@
+<!-- Copyright (c) 2020 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- nur.chrome.ordersheet.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+
+<HEAD>
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<ADDINS require="DoctorSheet"/>
+ <SERVER>
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s webIP=$P(setstr,"^",2)
+ s locId=%session.Data("LOGON.CTLOCID")
+ s docLoc=""
+ s logonLocType=$p($g(^CTLOC(locId)),"^",13)
+ i logonLocType="W" d
+ .s chl=0 f  s chl=$O(^CTLOC(locId,"LINK",chl)) q:chl=""  d
+ ..s linkLoc=$P(^CTLOC(locId,"LINK",chl),"^",1)
+ ..s docLoc=linkLoc
+ e  d
+ .s docLoc=locId
+</SERVER>
+</HEAD>
+
+<BODY >
+<SCRIPT Language="Javascript">
+var webIp=window.location.href.split('/imedical/web')[0]; //"#(webIP)#";
+var episodeId="#(%request.Get("EpisodeID"))#"
+var wardId=session['LOGON.WARDID']||"";
+var locId="#(docLoc)#";
+var userId=session['LOGON.USERID'];
+function BodyLoad()
+{
+	if ("undefined"==typeof EnableLocalWeb || 0 ==EnableLocalWeb ){
+		 //未开启使用中间件 或 老项目，然仍用老的方式运行		 
+		alert(1);
+		//DHCCDoctorOrderSheet.showDoctorOrderSheetWindow(episodeId,wardId,locId,userId,webIp)
+		//window.close()
+	}else{		
+		DoctorSheet.TopMost = true;
+		DoctorSheet.notReturn=1
+		DoctorSheet.showDoctorOrderSheetWindow(episodeId,wardId,locId,userId,webIp,"true"); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+		//window.close();
+	}
+}
+document.body.onload=BodyLoad;
+</SCRIPT>
+</BODY>
+</HTML>

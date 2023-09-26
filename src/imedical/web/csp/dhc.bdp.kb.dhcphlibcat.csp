@@ -1,0 +1,132 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+ // dhc.bdp.kb.dhcphlibcat.csp
+// 名称: 分类/类型字典
+// 描述: 包含增删改查、维护成分功能
+// 编写者: 基础数据平台组-丁亚男
+// 编写日期: 2018-08-09
+ */ 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/App/KB/NewDic/DHC_PHLibCat.js"></script>
+ <style type="text/css"> 
+	/*去掉treegrid的表头
+	#layoutcenter .datagrid-header {
+		position: absolute; 
+		visibility: hidden;
+	} */
+#layoutcenter .datagrid-header td,#layoutcenter .datagrid-body td,#layoutcenter .datagrid-footer td {
+    border-width: 0 0px 0px 0;
+ }
+/*更改表格中单元格行间距*/
+#layoutcenter .datagrid-btable tr{
+	height: 1px;
+	}	 
+</style>
+</HEAD>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true" border="false">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;" title="" border="false">
+	    	 <table style="padding-top:10px;padding-bottom:10px" >
+			    <tr>
+			    	<td class="tdlabel">类别切换</td>
+		    		<td><input style="width:165px;" class='hisui-combobox' id="PHEGLib" placeholder="默认药品"></td>
+		    		<td class="tdlabel">检索</td>
+		    		<td><input style="width:165px;" class='hisui-validatebox' id="FindTreeText" missingMessage="请输入查找内容"></td>
+		    		<td class="tdlabel-b">
+						<a href="#" id="btnSearch" class="hisui-linkbutton" onclick="SearchFunLib()" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="ClearFunLib()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a>
+					</td>
+				</tr> 
+			 </table >
+		 </div> 	
+		 <div data-options="region:'center'" border="false" id="layoutcenter"> 
+			<table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
+		 </div> 
+     </div> 
+     <div id="myWin" style="width:360px;height:400px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table style="width:90%">
+				<tr style="display:none">
+		 			<td></td>
+		   			<td><input id="PHICRowIdF" name="PHICRowId" type="text" class="textbox hisui-validatebox" ></td>
+		 		</tr>
+				<tr>
+	               <td class="tdlabel"><font color=red>*</font>代码</td>
+	    		   <td><input id="PHICCodeF" name="PHICCode" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+	    		 </tr>
+	    		<tr>
+	    		   <td class="tdlabel"><font color=red>*</font>描述</td>
+	    		   <td><input id="PHICDescF" name="PHICDesc" type="text" class="textbox hisui-validatebox"  data-options="required:true"></td>
+	    		</tr>
+	    		<tr>
+	    		   <td  class="tdlabel">上级分类</td>
+	    		   <td><input id="PHICLastLevelF" name="PHICLastLevel" type="text" class="textbox hisui-combotree" ></td>
+	    		</tr>
+	    		<tr>
+	    		   <td class="tdlabel">级别</td>
+	    		   <td><input id="PHICLevelF" name="PHICLevel" type="text" class="textbox hisui-validatebox"></td>
+	    		</tr>
+	    		<tr>
+		   			<td class="tdlabel">是否可用</td>
+		   			<td><input id="PHICActiveFlagF" name="PHICActiveFlag" type="checkbox" class='hisui-checkbox' data-options="checked:true" value="Y"></td>
+		 		</tr>
+		 		<tr>
+		   			<td class="tdlabel">是否系统标识</td>
+		   			<td><input id="PHICSysFlagF" name="PHICSysFlag" type="checkbox" class='hisui-checkbox' data-options="checked:true" value="Y"></td>
+		 		</tr>
+		 		<tr>
+		   			<td class="tdlabel">是否皮试标识</td>
+		   			<td><input id="PHICSkinTestFlagF" name="PHICSkinTestFlag" type="checkbox" class='hisui-checkbox' data-options=""></td>
+		 		</tr>
+			</table >
+		</form>
+	</div>
+	<!--工具栏-->
+	<div id="mybar">
+ 		<!--<span style="padding-left:10px;"><h style="padding-right:10px;">类别切换</h><input style="width:165px;margin-left:10px;" class='hisui-combobox' id="PHEGLib" placeholder="默认药品"></span>
+ 		<span style="padding-left:10px;">检索<input style="width:165px;margin-left:10px;" class='hisui-validatebox' id="FindTreeText" missingMessage="请输入查找内容"></span>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="btn_search" style="margin-bottom:3px;margin-left:5px">查询</a> 		
+    	<a href="#" class="hisui-linkbutton" onclick="ClearFunLib()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="btnRefresh" style="margin-bottom:3px;margin-left:5px">清屏</a>
+    	<div style='border-top: 1px dashed #C0C0C0;font-size: 14px;margin-top:2px'></div> -->   	
+    	<a   href="#"  class="hisui-linkbutton" onclick="AddDataTree()"  data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAdd">新增</a> 
+        <a   href="#"  class="hisui-linkbutton" onclick="UpdateDataTree()"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true"id="btnUpdate">修改</a> 
+        <a   href="#"  class="hisui-linkbutton"  onclick="DelDataTree()" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true"  id="btnDel">删除</a>
+        <a   href="#"  class="hisui-linkbutton"  onclick="BatchData()" data-options="iconCls:'icon-paper-cfg',plain:true,stopAllEventOnDisabled:true"  id="btnBatch">批量设定药品</a>
+    </div>
+    <!--批量设定药品弹窗-->
+    <div id="myChecktreeWin" style="width:500px;height:480px;padding-top:10px;display:none;">   
+        <div class="hisui-layout" data-options="fit:true,bodyCls:'panel-header-gray'" border="false" >
+            <div data-options="region:'north',collapsible:false,border:false" style="height:40px">
+                 <table>
+                    <tr>
+                        <td class="tdlabel">检索</td>
+                        <td><input id="myChecktreeDesc" type="text" class="textbox hisui-validatebox"></td>
+                        <td>
+                            <input id="myChecktreeFilterCK0" class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+                            <input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+                            <input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>
+                        </td>
+                    </tr>                    
+                 </table >  
+             </div>
+             <div data-options="region:'center',bodyCls:'panel-header-gray'" style='border-top: 1px solid #C0C0C0;'>
+                <table id="myChecktree" data-options="border:false,bodyCls:'panel-header-gray'" style="width:100%;"></table> 
+             </div>  
+         </div> 
+     </div>
+</BODY>
+</HTML>

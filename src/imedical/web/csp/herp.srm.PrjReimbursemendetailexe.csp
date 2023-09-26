@@ -1,0 +1,74 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))
+	
+	s userid=$Get(%request.Data("userid",1))	
+	s projDr=$Get(%request.Data("projDr",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	s FileName=$Get(%request.Data("upLoadFileName",1))
+	s File=$Get(%request.MimeData("files",1))
+	s GroupId=$G(%session.Data("LOGON.GROUPID"))
+    s LocId=$G(%session.Data("LOGON.CTLOCID"))
+    s UserId=$G(%session.Data("LOGON.USERID"))
+    
+    s itemcode = $Get(%request.Data("itemcode",1))
+    s projdr=$Get(%request.Data("projdr",1))
+    
+   
+	i action = "list" d
+	.w ##class(herp.srm.udata.PrjReimbursemen).List(userid,projdr,sortField, sortDir, start, limit)
+	
+	i action = "applyerList" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "deptList" d
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+	
+	///获取项目所有预算项
+	i action = "listItemName" d 
+	.w ##class(herp.srm.udata.PrjReimbursemen).listItemName(start, limit,projDr)
+	
+	
+	///获取项目预算项结余预算
+	i action = "listItem" d 
+	.s result = ##class(herp.srm.udata.PrjReimbursemen).listItem(start, limit,itemcode,projDr)	
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	i action = "submit" d
+	
+	.s result = ##class(herp.srm.udata.PrjReimbursemen).Submit(userid,rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	
+	i action = "Del" d
+	.s result = ##class(herp.srm.udata.PrjReimbursemen).DeleteRec(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+
+		
+</script>

@@ -1,0 +1,26 @@
+<script runat=server language=cache>
+	s act =$g(%request.Data("act",1))
+	s user = %session.Get("LOGON.USERID")
+	s node = $g(%request.Data("node",1)) 
+	if (act="groupTree"){
+		s groupDesc = $g(%request.Data("groupDesc",1))
+		w ##class(web.DHCDocMenuConfig).GetGroupTreeJson(groupDesc)
+	}elseif(act="menuTree"){
+		s groupid=$g(%request.Data("groupid",1))		
+		w ##class(web.DHCDocMenuConfig).GetExtTreeJson(node,groupid)
+	}elseif (act="savegroupmenulink"){
+		s ids = $g(%request.Data("ids",1)) 
+		s groupid = $g(%request.Data("groupid",1))
+		s rtn = ##class(web.DHCDocMenuConfig).SaveMenuGroupSetting(ids,groupid)
+		w "{msg:'"_rtn_"'}"
+	}
+	</script>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<SCRIPT language=CACHE RUNAT=SERVER METHOD=writemsg ARGUMENTS="rtn:%String">
+	if (rtn=0) s msg=0
+	e  s msg=$g(msgmap(rtn),rtn)
+	w "{msg: '"_msg_"'}"
+</SCRIPT>

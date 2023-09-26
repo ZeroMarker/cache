@@ -1,0 +1,67 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+	s StkSysAppId=$Get(%request.Data("StkSysAppId",1))
+	s StkSysAppParameId=$Get(%request.Data("StkSysAppParameId",1))	
+	s GroupId=$Get(%request.Data("groupId",1))
+
+	//查询系统参数
+	i Action = "selectParame" d
+	.s result = ##class(web.DHCST.StkSysAppParame).SelectAll(StkSysAppId)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//保存系统参数
+	i Action = "saveParame" d
+	.s result = ##class(web.DHCST.StkSysAppParame).Save(listData)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除系统参数
+	i Action = "deleteParame" d
+	.s result = ##class(web.DHCST.StkSysAppParame).Delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//查询系统参数属性值
+	i Action = "selectParameValue" d
+	.s result = ##class(web.DHCST.StkSysAppParame).SelectProp(StkSysAppParameId,GroupId)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//保存系统参数值
+	i Action = "saveParameValue" d
+	.s result = ##class(web.DHCST.StkSysAppParame).SaveProp(listData)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除系统参数
+	i Action = "deleteParameValue" d
+	.s result = ##class(web.DHCST.StkSysAppParame).DeleteProp(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

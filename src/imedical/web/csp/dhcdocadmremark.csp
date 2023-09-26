@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--dhcdocadmremark.csp 医生便签--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	padding: 0 10px;
+}
+.r-label{
+	padding-left: 40px;
+}
+ .left_label{
+	 margin-left:0px;
+ }
+</style>
+<Server>
+	s EpisodeID=%request.Get("EpisodeID")
+	//s ReMarkNote=##class(web.DHCDocInPatientListNew).GetDocReMark(EpisodeID)
+</Server>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+	<div data-options="region:'center',border:false,border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="border:1px solid #ccc;">
+		<div class="hisui-panel" fit="true" style="height:100%;border:0;">
+			<table class="search-table">
+			<tr>
+				<td>
+					<textarea style="vertical-align:top" id="RemarkText" style ="height:110px;width:272px;"/></textarea>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="1" ALIGN="center">
+					<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-edit'">保存</a>
+				</td>
+			</tr>
+		</table>
+
+		</div>
+	</div>
+	</div>
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#"
+		};
+		$(function(){
+			//s ReMarkNote=##class(web.DHCDocInPatientListNew).GetDocReMark(EpisodeID)
+			var ReMarkNote=$.cm({ 
+				ClassName:"web.DHCDocInPatientListNew",
+				MethodName:"GetDocReMark", 
+				dataType:"text",
+				EpisodeID:ServerObj.EpisodeID
+			},false);
+			$("#RemarkText").val(ReMarkNote);
+			$("#BSave").click(function(){
+				var Remarktext=$.trim($("#RemarkText").val());
+				var rtn=$.cm({ 
+					ClassName:"web.DHCDocInPatientListNew",
+					MethodName:"UpdateDocReMark", 
+					dataType:"text",
+					EpisodeID:ServerObj.EpisodeID, RemarkNote:Remarktext
+				},false);
+				if (rtn==0){
+					$.messager.alert("提示","保存成功");
+					websys_showModal("hide");
+				    websys_showModal('options').ChangePAAdmReMark(Remarktext);
+				    websys_showModal("close");
+				}else{
+					$.messager.alert("提示",rtn);
+					return false;
+				}
+			});
+				
+		});
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+</body>
+</html>

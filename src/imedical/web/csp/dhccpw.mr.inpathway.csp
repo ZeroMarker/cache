@@ -1,0 +1,76 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/ext.ux/css/Ext.ux.form.LovCombo.css"/>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/Ext.ux.util.js"></script>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/Ext.ux.form.LovCombo.js"></script>
+		
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.DesignerHelper.js"></script>	
+		
+		<script language='javascript' src='../scripts/dhccpw/mr/inpathway/gui.js'></script>	
+		<script language='javascript' src='../scripts/dhccpw/mr/inpathway/event.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/form/form.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set EpisodeID=+$g(%request.Data("EpisodeID",1))
+			Set AdmType=$p($g(^PAADM(+EpisodeID)),"^",2)
+			Set MRAdm=+$p($g(^PAADM(+EpisodeID)),"^",61)
+			Set PatientID=+$p($g(^PAADM(+EpisodeID)),"^",1)
+			Set PapmiNo=$p($g(^PAPER(+PatientID,"PAT",1)),"^",1)
+			Set PatientName=$p($g(^PAPER(+PatientID,"ALL")),"^",1)
+			Set SexID=$p($g(^PAPER(+PatientID,"ALL")),"^",7)
+			Set Sex=$p($g(^CT("SEX",+SexID)),"^",2)
+			Set BirthDay=$p($g(^PAPER(+PatientID,"ALL")),"^",6)
+			Set:BirthDay'="" BirthDay=$zd(BirthDay,3)
+			
+			Set CPWID=$g(%request.Data("CpwVerID",1))
+			Set LogUserID=%session.Get("LOGON.USERID")	// Modified by zhaoyu 2013-04-17 "LOGON.LOCID"->"LOGON.USERID" 修改通过提示入径，出入径明细中入径人为空的bug
+			If ($l(CPWID,$c(2))=1)&&((+CPWID)>0) {
+				Set InputStr=EpisodeID_"^"_(+CPWID)_"^"_LogUserID
+				Set flg=##Class(web.DHCCPW.MR.Interface).InPathWay(InputStr)
+			}
+			
+			Set AdmType=""""_AdmType_""""
+			Set BackPage=+$g(%request.Data("BackPage",1))
+		</Script>
+		
+		<script language="javascript" type="text/javascript">
+			//var t = new Object();
+			Ext.QuickTips.init();
+			
+			var PatientID=#(PatientID)#;
+			var EpisodeID=#(EpisodeID)#;
+			var MRAdm=#(MRAdm)#;
+			var AdmType=#(AdmType)#;
+			var BackPage=#(BackPage)#;
+			var objControlArry = new Array();
+			function window_onload() {
+				var objMainViewport = new InitMainViewport();
+                objControlArry['MainViewport'] = objMainViewport;
+			}
+		</script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!-- <APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET> -->
+	</body>
+</html>

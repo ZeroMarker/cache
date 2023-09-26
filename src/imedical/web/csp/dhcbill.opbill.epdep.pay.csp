@@ -1,0 +1,129 @@
+<!-- 
+ * FileName: dhcbill.opbill.epdep.pay.csp
+ * Anchor: ZhYW
+ * Date: 2019-08-12
+ * Description: 急诊留观交押金
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.epdep.css'/>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<server>
+		set HospId=$g(%session.Data("LOGON.HOSPID"))
+		set ReceiptType=##class(web.DHCOPBillEPAddDeposit).GetReceiptType(HospId)
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",!
+		w "<input id='GetEPMInfoEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPBillEPManageCLS.getpatinfo"))_"'>",!
+		w "<input id='accMRowId' type='hidden'>",!
+		w "<input id='patientId' type='hidden'>",!
+		w "<input id='requiredFlag' type='hidden'>",!
+	</server>
+	<script type="text/javascript">
+		var GV = {
+			ReceiptType: "#(ReceiptType)#"
+		};
+	</script>
+</head>
+
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="height:66px;border-bottom:1px solid #ccc;padding:0 10px;overflow:hidden;">
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-readCard" data-options="iconCls:'icon-big-card-reader',plain:true">读卡(F4)</a>
+		<!--a href="javascript:;" class="hisui-linkbutton big" id="btn-calc" data-options="iconCls:'icon-big-omega',plain:true">计算器</a>
+		<div class="datagrid-btn-separator big"></div-->
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-pay" data-options="iconCls:'icon-big-paid',plain:true">交款(F9)</a>
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-reprint" data-options="iconCls:'icon-big-print',plain:true,disabled:true">补打收据</a>
+		<div class="datagrid-btn-separator big"></div>
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-clear" data-options="iconCls:'icon-big-clear',plain:true">清屏(F7)</a>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:205px;">
+				<div class="hisui-panel" data-options="title:'急诊留观交押金',fit:true,headerCls:'panel-header-gray',iconCls:'icon-fee-arrow'" style="border-bottom-style:none;border-radius:0;">
+					<table class="search-table" style="width:100%;">
+						<tr>
+							<td class="r-label td-first-col-43"><label>卡类型</label></td>
+							<td><input id="cardType" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>卡号</label></td>
+							<td><input id="cardNo" class="textbox"/></td>
+							<td class="r-label"><label>登记号</label></td>
+							<td><input id="patientNo" class="textbox"/></td>
+							<td class="r-label"><label>患者姓名</label></td>
+							<td><input id="patName" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>票据号</label></td>
+							<td><input id="receiptNo" class="textbox" style="font-weight: bold;" disabled/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>就诊号</label></td>
+							<td><input id="admList" class="hisui-combogrid textbox"></td>
+							<td class="r-label"><label>金额</label></td>
+							<td><input id="payAmt" class="hisui-numberbox textbox" data-options="precision:2,min:0,validType:'checkMaxAmt'" style="color: #FF0000;font-weight: bold;"/></td>
+							<td class="r-label"><label>支付方式</label></td>
+							<td><input id="payMode" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>账户余额</label></td>
+							<td><input id="accMLeft" class="hisui-numberbox textbox" data-options="precision:2,disabled:true" style="color: #FF0000;font-weight: bold;"/></td>
+							<td class="r-label"><label>入院日期</label></td>
+							<td><input id="admDate" class="textbox" style="font-weight: bold;" disabled/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>科室</label></td>
+							<td><input id="dept" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>病区</label></td>
+							<td><input id="ward" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>床号</label></td>
+							<td><input id="bedCode" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>就诊费别</label></td>
+							<td><input id="admReason" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>身份证号</label></td>
+							<td><input id="IDNo" class="textbox" style="font-weight: bold;" disabled/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>手机号</label></td>
+							<td><input id="mobPhone" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>备注</label></td>
+							<td><input id="remark" class="textbox"/></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="accDepList"></table>
+			</div>
+		</div>
+	</div>
+	<div id="appendDlg" style="width:480px;height:300px;display:none;">
+		<table class="search-table" style="width:100%;">
+			<tr>
+				<td class="r-label"><label class="clsRequired">支票号</label></td>
+				<td><input id="checkNo" class="textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>支票日期</label></td>
+				<td><input id="chequeDate" class="hisui-datebox textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>银行卡类型</label></td>
+				<td><input id="bankCardType" class="hisui-combobox textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>银行</label></td>
+				<td><input id="bank" class="hisui-combobox textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>支付单位</label></td>
+				<td><input id="company" class="textbox tb250"/></td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.epdep.pay.js"></script>
+</body>
+</html>

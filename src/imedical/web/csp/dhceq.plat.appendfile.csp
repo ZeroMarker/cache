@@ -1,0 +1,88 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhceq/plat/appendfile.js"></script>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+s CurrentSourceType=$g(%request.Data("CurrentSourceType",1))
+s CurrentSourceID=$g(%request.Data("CurrentSourceID",1))
+s Status=$g(%request.Data("Status",1))
+s ReadOnly=$g(%request.Data("ReadOnly",1))
+s DHCEQTomcatServer=##class(web.DHCEQCommon).GetSysInfo("990045")
+s FTPPictureFilePath=##class(web.DHCEQCommon).GetSysInfo("990005")
+</SCRIPT>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel"  title="文件信息" data-options="fit:true,eqtitle:'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<!--Modefied by zc0063 20200407  将虚线改为实线-->
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;height:50px;">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cDocName" for="DocName">资料名称</label></div>
+					<div class="eq-table-td eq-table-input"><input  class="hisui-validatebox" id="DocName"></div>
+					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+					<div class="eq-table-td eq-table-label"><a id="BAdd" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-add'">新增</a></div>	
+				</div>
+				</div>
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+					<table id="tDHCEQFileFind" data-options="border:false,fit:true"></table>
+				
+				</div>
+			</div>
+		</div>
+		<div id="UpLoadFile" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:1000px;height:180px" title="文件上传"> 
+    		<div class="hisui-layout" data-options="fit:true"> 
+        		<div class="BorderLine" data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:140px;"> 
+        			<form id="file-form" method="post" action="" >	
+        				<div class="eq-table-tr">
+        					<div class="eq-table-td eq-table-label"></div>
+        					<div class="eq-table-td eq-table-label"  style="color:red"><label>支持上传doc,docx,ppt,pptx,rar,excel和pdf类型的文件</label></div>
+        				</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cAppendFileType" for="AppendFileType">文件类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"   id="AppendFileType" ></div>
+							<div class="eq-table-td eq-table-label"><label id="cADocName" for="ADocName">资料名称</label></div>
+							<div class="eq-table-td eq-table-input"><input  class="hisui-validatebox" id="ADocName"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cFileName"  for="FileName">文件</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="FileName" size=40 type=file onchange="document.getElementById('FileName').value=this.value"></div>	
+							<div class="eq-table-td eq-table-label"><label for="Remark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Remark" ></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-close'">保存</a></div>
+						</div>
+					   </form>
+				</div>   
+    		</div>
+    </div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+			<input type="hidden" id="CurrentSourceType" value=#(CurrentSourceType)#>	
+			<input type="hidden" id="CurrentSourceID" value=#(CurrentSourceID)#>
+			<input type="hidden" id="Status" value=#(Status)#>	
+			<input type="hidden" id="ReadOnly" value=#(ReadOnly)#>	
+			<input type="hidden" id="DHCEQTomcatServer" value=#(DHCEQTomcatServer)#>	
+			<input type="hidden" id="FTPPictureFilePath" value=#(FTPPictureFilePath)#>
+		</form>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,227 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+    <style>
+   </style>
+</HEAD>
+<BODY class="hisui-layout">
+    <div class="border-none" data-options="region:'center'">
+        <div id="tb">
+            <div id="tbfm" class="padding-10 x-separator">
+                <table>
+                    <tr>
+                        <td class="r-label">预算年度</td>
+                        <td class="padding-right-10">
+                            <input id="Yearbox" class="hisui-combobox combobox-width-177"/>
+                        </td>
+                        <td class="r-label">预算方案</td>
+                        <td class="padding-right-10">
+                            <input id="Schembox" class="hisui-combobox combobox-width-177"/>    
+                        </td>
+                        <td class="r-label">预算项大类</td>
+                        <td>
+                            <input id="IBigType" class="hisui-combobox combobox-width-177"/>    
+                        </td>
+                        
+                    </tr>
+                    <tr>
+                        <td class="r-label padding-top-10">预算项类别</td>
+                        <td class="padding-top-10 padding-right-10">
+                            <input id="ITypebox" class="hisui-combobox combobox-width-177"/>
+                        </td>
+                        <td class="r-label padding-top-10">预算项</td>
+                        <td class="padding-top-10 padding-right-10">
+                            <input id="Itembox" class="text combobox-width-177"/>   
+                        </td>
+                        <td>
+                        </td>
+                        <td class="text-left">
+                            <a id="FindBn" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+                        </td> 
+                    </tr>           
+                </table>
+            </div>
+            <div class="line-36-y">
+                <a id="BtchBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true">批量设置</a>
+                <a id="AddBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true">批量</a>
+                <a id="SaveBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>  
+                <a id="DelBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>    
+            </div>
+        </div>
+        <table class="hisui-datagrid" id="MainGrid">
+        </table>
+    </div>       
+    <!--批量设置-->
+    <div id="BatchWin" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout" data-options="fit:true">
+            <div id="batchcenter" class="padding-10-bottom-none" data-options="region:'center'"> 
+                <form id="batchff" class="flex-x-center">      
+                    <table class="text-right">
+                        <tr>
+                            <td class="padding-right-10">分解方法设置</td>
+                            <td>
+                                <input id="BSplitMeth" class="hisui-combobox combobox-width-177" />
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="bottom-style"  data-options="region:'south'">
+                <a id="BSave" class="hisui-linkbutton width-70" href="#">保存</a>
+                <span class="padding-right-10"></span>
+                <a id="BClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+            </div>
+        </div>
+    </div>      
+    <!--批量分解方法+调节比例-->
+    <div id="AddWin" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout" data-options="fit:true">
+            <div id="addcenter" class="padding-10-bottom-none" data-options="region:'center'"> 
+                <form id="ff" class="flex-x-center">	   
+					<table class="text-right">
+                        <tr>
+                            <td>会计年度</td>
+                            <td class="padding-both-10">
+                                <input id="AddYbox" class="hisui-combobox combobox-width-177" />
+                            </td>
+                            <td>预算方案</td>
+                            <td class="padding-both-10">
+                                <input id="AddSchem" class="hisui-combobox combobox-width-177" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="padding-top-10">分解方法</td>
+                            <td class="padding-10-bottom-none">
+                                <input id="AddSplitMeth" class="hisui-combobox combobox-width-177" />
+                            </td>
+                            <td class="padding-top-10">科室类别</td>
+                            <td class="padding-10-bottom-none">
+                                <input id="AddDType" class="hisui-combobox combobox-width-177" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="padding-top-10">调节比例</td>
+                            <td class="padding-10-bottom-none">
+                            	<input id="AddRatio" class="hisui-validatebox textbox" style="width:172px;" placeholder="输入大于0小于100的整数" data-options="required:true,validType:'OneToHundredNum'">
+                            </td>
+                            <td class="padding-top-10">是否独立核算</td>
+                            <td class="padding-10-bottom-none">
+                                <input id="AddisAlComp" class="hisui-combobox combobox-width-177" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="padding-top-10">科目类别</td>
+                            <td class="padding-10-bottom-none">
+                                <input id="AddIType" class="hisui-combobox combobox-width-177" />
+                            </td>
+                        </tr>
+                    </table>
+                </form> 
+            </div>
+            <div class="bottom-style"  data-options="region:'south'">
+                <a id="AddSave" class="hisui-linkbutton width-70" href="#">保存</a>
+                <span class="padding-right-10"></span>
+                <a id="AddClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+            </div>
+        </div>
+    </div> 
+    <!--维护数据明细-->
+	<div id="DetailWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="padding-10-bottom-none"data-options="region:'center',border:false">
+				<div id="Detailtb">
+            		<div class="line-36-y x-separator">
+            			<span class="padding-both-10">科室类别</span>
+            			<input id="DetailDType" class="hisui-combobox" />
+            			<span class="padding-both-10">科室编码</span>
+            			<input id="DetailDCode" class="text" />
+            			<span class="padding-both-10">科室名称</span>
+            			<input id="DetailDName" class="text" />
+            			<span class="padding-right-10"></span>
+            			<a id="DetailFind" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+            		</div>
+            		<div class="line-36-y">
+                		<a id="DetailBtchEdit" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true">批量修改</a>
+                		<a id="DetailBtchAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-add',plain:true">批量增加</a>
+                		<a id="DetailSaveBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>   
+            		</div>
+        		</div>
+				<table class="hisui-datagrid" id="DetailGrid">
+				</table>	
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="DetailClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div> 
+	<!--维护数据明细-批量修改-->
+    <div id="BatchEditWin" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout" data-options="fit:true">
+            <div id="editcenter" class="padding-10-bottom-none" data-options="region:'center'"> 
+                <form id="editff" class="flex-x-center">	   
+					<table class="text-right">
+                        <tr>
+                            <td class="r-label">调节比例</td>
+                            <td >
+                                <input id="BatchEditRatio" class="hisui-validatebox textbox" style="width:172px;" placeholder="输入大于0小于100的整数" data-options="required:true,validType:'OneToHundredNum'">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label padding-top-10">是否独立核算</td>
+                            <td class="padding-top-10">
+                                <input id="EditisAlComp" class="hisui-combobox combobox-width-177" />
+                            </td>
+                        </tr>
+                    </table>
+                </form> 
+            </div>
+            <div class="bottom-style"  data-options="region:'south'">
+                <a id="BatchEditSave" class="hisui-linkbutton width-70" href="#">保存</a>
+                <span class="padding-right-10"></span>
+                <a id="BatchEditClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+            </div>
+        </div>
+    </div>     
+	<!--维护数据明细-批量增加-->
+	<div id="BatchAddWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="padding-10-bottom-none"data-options="region:'center',border:false">
+				<div id="BatchAddtb">
+            		<div class="line-36-y">
+            			<span class="padding-both-10">科室类别</span>
+            			<input id="BatchDType" class="hisui-combobox" />
+            			<span class="padding-both-10">科室代码</span>
+            			<input id="BatchDCode" class="text" />
+            			<span class="padding-both-10">科室名称</span>
+            			<input id="BatchDName" class="text"/>
+            			<span class="padding-right-10"></span>
+            			<a id="BatchFind" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+            		</div>
+        		</div>
+				<table class="hisui-datagrid" id="BatchAddGrid">
+				</table>	
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="BatchAddSave" class="hisui-linkbutton width-70" href="#">确定</a>
+				<span class="padding-right-10"></span>
+				<a id="BatchAddClose" class="hisui-linkbutton width-70" href="#">取消</a>
+			</div>
+		</div>
+	</div>     
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgSchSplitAccDept/budgSchSplitAccDept.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgSchSplitAccDept/budgSchSplitAccDeptEdit.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgSchSplitAccDept/editr.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgSchSplitAccDept/budgSchSplitAccDeptDetail.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+</BODY>
+</HTML>

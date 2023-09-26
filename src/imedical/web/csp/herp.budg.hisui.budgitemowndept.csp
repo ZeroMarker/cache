@@ -1,0 +1,197 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+   i ##Class(websys.SessionEvents).SessionExpired() q 1
+   q 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<TRAK:HEAD></TRAK:HEAD>
+		<HISUI/>
+		<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	</head>
+		<style>
+			.panel-body{
+				border-top-width:1px;
+				border-left-width:1px;
+				border-right-width:1px;
+			}
+			
+			.panel-header{
+				border-bottom-width:0px;
+			}	
+			
+			/*上下左填充10px;右填充1px*/
+			.padding-10-right-none{
+			    padding:10px 1px 15px 10px;   
+			}
+			
+			.padding-10-left-none{
+			    padding:10px 10px 15px 1px;   
+			}
+			
+		</style>
+	
+	<body>
+	<div class="hisui-layout" data-options="fit:true">
+	    <div id='westDiv' class="border-none padding-10-right-none"
+	    style="width:560px"
+	    data-options="region:&#39;west&#39;,split:true">
+	      <!--预算科室数据表格-->
+	      <table class="hisui-treegrid" id="budgLocTree"
+	      data-options="title:&#39;预算科室&#39;,headerCls:&#39;panel-header-gray&#39;,iconCls:'icon-paper',checkbox:true, lines:true,fit:true, idField:&#39;id&#39;, treeField:&#39;code&#39;, rownumbers:&#39;true&#39;, url:$URL, queryParams:{ ClassName:&#39;herp.budg.hisui.udata.uBudgDeptSet&#39;, MethodName:&#39;ListTree&#39;, hospId:hospid, id:&#39;&#39; },onClickRow:onClickRow,onLoadSuccess:onLoadSuccessFN, toolbar:[{ iconCls: &#39;icon-paper-arrow-down&#39;, text:&#39;全部展开&#39;, handler: expandAllFn},{ iconCls: &#39;icon-arrow-up&#39;, text:&#39;全部折叠&#39;, handler: collapseAllFn },{ iconCls: &#39;icon-copy&#39;, text:&#39;复制&#39;, handler: Copy }]">
+
+	        <!--thead frozen="true" 树表格冻结列后节点点击不开,checkbox点击不动>
+	                                                <tr>
+	                                                        <th field="year" width="120" halign="center" >年度</th>
+	                                                </tr>
+	                                        </thead-->
+	        <thead>
+	          <tr>
+	            <!--th field="year" width="200" halign="center">年度</th-->
+	            <th field="hospNa" width="120" halign="center" hidden="true">医疗单位名称</th>
+	            <th field="hospId" halign="center" hidden="true">医疗单位ID</th>
+	            <th field="id" halign="center" hidden="true">科室ID</th>
+	            <th field="code" width="200" halign="center">科室编码</th>
+	            <th field="name" width="150" halign="center">科室名称</th>
+	          </tr>
+	        </thead>
+	      </table>
+	    </div>
+	    <div id="centerDiv" class="border-none padding-10-left-none" data-options="region:&#39;center&#39;">
+	      <!--查询条件-->
+	      <div id="itemtb">
+	        <div class="line-50-y x-separator">
+	        <span class="padding-both-10">年度</span> 
+	        <select id="yearcb" class="hisui-combobox" style="width:120px;"
+	        data-options="url:$URL +&#39;?ClassName=herp.budg.hisui.common.ComboMethod&amp;MethodName=YearOrYearMon&amp;ResultSetType=array&#39;, mode:&#39;remote&#39;, valueField: &#39;year&#39;, textField: &#39;year&#39;, onBeforeLoad:YearBefLoad, onSelect:YearOnSelect">
+	        </select> 
+	        <span class="padding-both-10">科目</span> 
+	        <select id="itemcb" class="hisui-combogrid" style="width:200px;"
+	        data-options=" panelWidth:300, url:$URL+&#39;?ClassName=herp.budg.hisui.common.ComboMethod&amp;MethodName=GetItem&#39;, mode:&#39;remote&#39;, valueField: &#39;code&#39;, textField: &#39;name&#39;, onBeforeLoad:ItemBefLoad, columns: [[ {field:&#39;code&#39;,title:&#39;编码&#39;,width:120,sortable:true}, {field:&#39;name&#39;,title:&#39;名称&#39;,width:400,sortable:true} ]]">
+	        </select>
+			<span class="padding-right-10"></span>
+	        <a id="finditemBtn" class="hisui-linkbutton" href="#"
+	        data-options="iconCls:&#39;icon-w-find&#39;,onClick:SearchItems">查询</a>
+	        </div>
+	        <div>
+	        <a id="additemBtn" class="hisui-linkbutton" href="#"
+	        data-options="iconCls:&#39;icon-add&#39;,plain:true,onClick:AddItems">新增</a> 
+	        <a id="delitemBtn" class="hisui-linkbutton" href="#"
+	        data-options="iconCls:&#39;icon-cancel&#39;,plain:true,onClick:DelItems">删除</a>
+	        </div>
+	      </div>
+	      <!--预算科目数据表格-->
+	      <table id="itemsGrid" class="hisui-datagrid"
+	      data-options="title:&#39;预算项目&#39;,headerCls:&#39;panel-header-gray&#39;,iconCls:'icon-paper',fit:true, url:$URL, queryParams:{ ClassName: &#39;herp.budg.hisui.udata.uBudgItemOwnDept&#39;, MethodName: &#39;List&#39;, hospid: &#39;&#39;, deptId:&#39;&#39;, year:&#39;&#39;, itemCo:&#39;&#39; }, toolbar:&#39;#itemtb&#39;, rownumbers:true, pagination:true, pageSize:25, pageList:[5, 10, 15, 20, 25, 50, 100]">
+	        <thead>
+	          <tr>
+	            <th field='ckbox' checkbox='true'></th>
+	            <th field='rowid' width='100' halign='center' hidden='true'>ID</th>
+	            <th field="year" width="100" halign="center">年度</th>
+	            <th field="hospNa" width="250" halign="center" hidden="true">医疗单位</th>
+	            <th field='itemCo' width='100' halign='center'>编码</th>
+	            <th field='itemNa' width='400' halign='center'>名称</th>
+	          </tr>
+	        </thead>
+	      </table>
+	     </div>
+	      
+	      <!--配置预算项目到预算科室-->
+	      <div id='addItemsWin' title="配置预算项目到所选预算科室"
+	      style="width:900px;height:550px;top:($(window).height()-550) * 0.5;left:($(window).width() - 900)* 0.5;padding:10px;display:none;"
+	      data-options="iconCls:'icon-w-new',resizable:true,modal:true">
+	        <table id="budgItemTree" class="hisui-treegrid"
+	        data-options=" idField:&#39;id&#39;, checkbox: true, treeField:&#39;year&#39;, rownumbers:true, border:false, lines:true, fit:true, url:$URL, queryParams:{ ClassName:&#39;herp.budg.hisui.udata.uBudgItemOwnDept&#39;, MethodName:&#39;ListItems&#39;, userid:userid, groupid:groupid, hospid: hospid, year:&#39;&#39;, id:&#39;&#39; }, toolbar:[{ iconCls: &#39;icon-save&#39;, text:&#39;保存&#39;, handler: SaveItemsFn },{ iconCls: &#39;icon-cancel&#39;, text:&#39;关闭&#39;, handler: CloseWinFn }]">
+
+	          <!--thead frozen="true">
+	                                                                <tr>
+	                                                                        <th field="compId" halign="center" hidden="true">医疗单位ID</th>
+	                                                                        <th field="compNa" width="200" halign="center" hidden="true">医疗单位名称</th>
+	                                                                        <th field="id" halign="center" hidden="true" hidden="true">项目ID</th>
+	                                                                        <th field="name" width="240" halign="center" >项目名称</th>
+	                                                                        <th field="code" width="220" halign="center" >项目编码</th>
+	                                                                        <th field="year" width="50" halign="center" >年度</th>
+	                                                                </tr>
+	                                                        </thead-->
+	          <thead>
+	            <tr>
+	              <th field="compId" halign="center" hidden="true">医疗单位ID</th>
+	              <th field="compNa" width="200" halign="center" hidden="true">医疗单位名称</th>
+	              <th field="id" halign="center" hidden="true">项目ID</th>
+	              <th field="year" width="200" halign="center">年度</th>
+	              <th field="code" width="220" halign="center">项目编码</th>
+	              <th field="name" width="240" halign="center">项目名称</th>
+	              <!--th field="level" width="50" halign="center" >层级</th>
+	                                                                        <th field="typeCode" width="100" halign="center" hidden="true">类别编码</th>
+	                                                                        <th field="typeName" width="80" halign="center" >类别名称</th>
+	                                                                        <th field="isCalc" width="100" halign="center" hidden="true">是否计算键</th>
+	                                                                        <th field="isCalcNa" width="80" halign="center" >是否计算</th>
+	                                                                        <th field="formulaDesc" width="300" halign="center" >公式描述</th>
+	                                                                        <th field="calUnitDR" width="150" halign="center" hidden="true">计量单位ID</th>
+	                                                                        <th field="calUnitNa" width="120" halign="center" >计量单位名称</th>
+	                                                                        <th field="isLast" width="100" halign="center" hidden="true">是否末级键</th>
+	                                                                        <th field="isLastNa" width="80" halign="center" >是否末级</th>
+	                                                                        <th field="superCode" width="100" halign="center" hidden="true">上级科目编码</th-->
+	            </tr>
+	          </thead>
+	        </table>
+	      </div>
+	      <div id="copyDlg" title="复制科目归口科室信息" style="padding:10px;display:none;"
+	      data-options="region:&#39;center&#39;,resizable:true,modal:true">
+	        <div data-options="title:&#39;边框&#39; fit:true"
+	        style="width:350px;margin-left:5px;margin-right:5px;border:1px solid #95B8E7;">
+	          <table style="border-collapse:separate; border-spacing:0px 10px;padding-left:20px;">
+	            <tr>
+	              <td align="right">
+	                <label id="CCopyHosp">医疗单位</label>
+	              </td>
+	              <td>
+	                <select id="CopyHosp" class="hisui-combobox" style="width:210px;height:24px"
+	                data-options=" url: $URL + &#39;?ClassName=herp.budg.hisui.common.ComboMethod&amp;MethodName=Hospital&amp;ResultSetType=array&#39;, mode: &#39;remote&#39;, valueField: &#39;rowid&#39;, textField: &#39;name&#39;, required: true, onBeforeLoad:HospBefLoad">
+	                </select>
+	              </td>
+	            </tr>
+	            <tr>
+	              <td align="right">
+	                <label id="CPastYear">历史年度</label>
+	              </td>
+	              <td>
+	                <select id="PastYear" class="hisui-combobox" style="width:210px;height:24px"
+	                data-options=" url:$URL+&#39;?ClassName=herp.budg.hisui.common.ComboMethod&amp;MethodName=YearOrYearMon&amp;ResultSetType=array&#39;, mode:&#39;remote&#39;, valueField: &#39;year&#39;, textField: &#39;year&#39;, required: true, onBeforeLoad:YearBefLoad, onSelect:PastYearSelect">
+	                </select>
+	              </td>
+	            </tr>
+	            <tr>
+	              <td align="right">
+	                <label id="CBudgYear">预算年度</label>
+	              </td>
+	              <td>
+	                <select id="BudgYear" class="hisui-combobox" style="width:210px;height:24px"
+	                data-options=" mode:&#39;remote&#39;, valueField: &#39;year&#39;, textField: &#39;year&#39;, required: true, disabled:true, onBeforeLoad:BudgYearBefLoad">
+	                </select>
+	              </td>
+	            </tr>
+	          </table>
+	          <table style="padding-left:55px;">
+	            <tr>
+	              <td>
+	                <a id="WinCopy" href="#" class="hisui-linkbutton"
+	                data-options="iconCls:&#39;icon-add&#39;,plain:true,onClick:WinSave">保存</a>
+	              </td>
+	              <td>
+	                <a id="WinCancel" href="#" class="hisui-linkbutton"
+	                data-options="iconCls:&#39;icon-cancel&#39;,plain:true,onClick:WinCancel">关闭</a>
+	              </td>
+	            </tr>
+	          </table>
+	        </div>
+	      </div>
+	    </div>
+									
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgItemOwnDept/budgitemowndept.js"></script>
+	</body>
+</html>

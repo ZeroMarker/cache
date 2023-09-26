@@ -1,0 +1,123 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	DHC重症监护信息系统 </title>
+
+</head>
+<script language="cache" runat="server">
+	Set curUrl=%request.URL
+	m ^ICUDebug("Data")=%session.Data
+	s remoteAddr=%session.Data("REMOTE_ADDR")
+	i remoteAddr="" s remoteAddr=0
+	Set userId=%session.Get("LOGON.USERID")
+	Set monId=%request.Data("icuaId",1)
+	Set EpisodeID=%request.Data("EpisodeID",1)
+	Set filePath=%request.Data("filePath",1)
+	s bedId=%request.Data("bedId",1)
+	Set userType=##class(web.DHCClinicCom).GetCtcptType(userId)
+	Set connString=%session.Get("LOGON.LAYOUTMANAGER")
+	Set ^ICUDebug("monId",remoteAddr)=EpisodeID_"/"_connString_"/"_filePath_"/"_userType_"/"_connString_"/"_bedId_"/"_userType
+	Set monId=""
+	Set userCtlocId=%session.Get("LOGON.CTLOCID")
+	
+	If ($Data(%request.Data("icuaId")))  Do
+	.Set monId=%request.Get("icuaId")
+	.Set ^ICUDebug("arrangeId",remoteAddr)="OK:"_remoteAddr_"/"_monId
+	// 从网页没有传入icuaId，则根据就诊号查找最新一条记录
+	if monId="" d
+	.If userType="NURSE"  Do
+	..Set monId=##class(web.DHCICUCom).GetIcuaId(EpisodeID,"",userId,"Y","Y",userCtlocId,bedId)
+	.Else  Do
+	..Set monId=##class(web.DHCICUCom).GetIcuaId(EpisodeID,"",userId)
+	Set ^ICUDebug("monId1",remoteAddr)=monId_"^"_EpisodeID_"^"_userId
+	w "<p>"_monId_"</p>"
+	s ^ICUDebug("ECP",+monId,$h)=$zu(67,15,$j)_"/"_$zu(67,12,$j)_"/"_ $zu(54,13,$zu(110))_"/"_remoteAddr
+
+	q:monId'=+monId
+	;Set monId=%request.Get("icuaId")
+	//q:monId="" "此病人未开始监护"
+	Set editState=##class(web.DHCICUCom).GetEditStat(monId)
+	Set ^ICUDebug("editState",remoteAddr)=editState_"/"_monId
+	Set isSuccess=""
+	
+	i monId'="" d
+	.s icuaWardId=+$p($g(^DHCICUArrange(monId)),"^",4)
+	.S ^ICUDebug("icuaWardId",remoteAddr)=icuaWardId
+	.q:icuaWardId=0
+	.s icuaWardLocId=$p($g(^PAWARD(icuaWardId)),"^",5)
+	.s linkLockIdStr=##class(web.DHCClinicCom).GetLinkLocId(icuaWardLocId)
+	.s ^ICUDebug("icuaWardId1",remoteAddr)=icuaWardLocId_"/"_userCtlocId_"/"_linkLockIdStr_"/"_userCtlocId
+	.q:(icuaWardLocId'=userCtlocId)&(("^"_linkLockIdStr_"^")'[("^"_userCtlocId_"^"))
+	.If userType="NURSE"  Do
+	..If editState="CanStart^"  Do
+	...Set isSuccess=##class(web.DHCICUCom).SetInDateTime(monId, $zd($p($h,",",1),3),$zt($p($h,",",2),1),"1")
+	..Else  If (editState="CanStop^") Do
+	...s ^ICUDebug("SetInDateTime",remoteAddr)="start"
+	...Set isSuccess=##class(web.DHCICUCom).SetInDateTime(monId, $zd($p($h,",",1),3),$zt($p($h,",",2),1),"0")
+	...s ^ICUDebug("SetInDateTime",remoteAddr)="end"
+	
+	Set groupId=%session.Get("LOGON.GROUPID")
+	;Set ctLocId=%session.Get("LOGON.CTLOCID")
+	Set ctLocId=##class(web.DHCICUCom).GetWardCtlocId("",monId)
+	Set urlStr="../service/dhcclinic/app/icu/WPFMain.xbap?monId="_monId_"&userId="_userId_"&groupId="_groupId_"&ctLocId="_ctLocId_"&filePath="_filePath_"&connString="_connString
+	Set ^ICUDebug("urlStr",remoteAddr)=urlStr
+	//Set urlStr="../service/dhcclinic/app/icu/Main.application"
+	w "<p>connString:",connString,"</p>"
+</script>
+<!--<script language="javascript">
+document.write("<object id='FormICU' classid='../service/DHCClinic/App/ICU/View.dll#DHCClinic.ICU.View.MainView' height='100%' width='100%' VIEWASTEXT>")
+document.write("</object>");
+</script>-->
+<body>
+<script language="javascript">
+	var lnk="#(..EscapeHTML(urlStr))#";
+	//alert(lnk)
+	if (lnk.indexOf("monId=&")>-1)
+	{
+		alert("监护Id为空！请核查病人是否在本病区床位上，或是未转科病人没有指定床位。");
+		window.close();
+	}
+	else
+	{
+		//window.open(lnk,"_self");
+	
+	var userId="#(..EscapeHTML(userId))#";
+	var monId="#(..EscapeHTML(monId))#";
+	var groupId="#(..EscapeHTML(groupId))#";
+	var ctLocId="#(..EscapeHTML(ctLocId))#";
+	var connString="#(..EscapeHTML(connString))#";
+	//alert(userId+"^"+monId+"^"+groupId+"^"+ctLocId);
+	var curLocation=unescape(window.location);
+	curLocation=curLocation.toLowerCase();
+	var filePath=curLocation.substr(0,curLocation.indexOf('/csp/'))+"/service/DHCClinic/";
+	//var connString="cn_iptcp:10.160.16.90[1972]:DHC-APP"
+	var paras=monId+"#"+userId+"#"+groupId+"#"+ctLocId+"#"+filePath+"#"+connString;
+	var paraFso=new ActiveXObject("Scripting.FileSystemObject");
+	var paraFile=paraFso.OpenTextFile("C:\\DHCClinic\\ParaFile.txt",2,true);
+	paraFile.WriteLine(paras);
+	paraFile.Close();
+	var shell = new ActiveXObject("WSCRIPT.Shell");
+	shell.Run("C:\\DHCClinic\\TestLink.exe");
+	var left=5;
+	Show();
+	}
+	
+	function Show()
+	{
+		left--;
+		if(left==0)
+		{
+			window.opener=null;
+			window.close();
+				
+		}
+		else
+		{
+			setTimeout("Show()",1000);	
+		}	
+	}
+</script>
+
+</body>
+</html>

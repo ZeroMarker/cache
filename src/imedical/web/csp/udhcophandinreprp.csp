@@ -1,0 +1,102 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<STYLE type='text/css'>
+.selectedPrescTypeTab {
+	PADDING: 3px;
+	MARGIN: 3px;
+	COLOR: yellow;
+	BACKGROUND-COLOR: #336699;
+	BORDER: 2px outset #336699;
+	FONT-WEIGHT: bold;
+	cursor: hand;
+}
+.PrescTypeTab {
+	PADDING: 3px;
+	MARGIN: 3px;
+	BACKGROUND-COLOR: #cfcfff;
+	BORDER: 1px outset #cfcfff;
+	cursor: hand;
+}
+<!--
+SPAN    {
+        cursor:hand;
+        }
+-->
+</STYLE>
+
+
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<SCRIPT language="Javascript">
+function showright(){
+	//
+	}
+
+</SCRIPT>
+</HEAD>
+
+<body>
+<TRAK:APPLET>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	;udhcOPHandinRepRP.csp
+	;udhcophandinreprp.csp
+	;操作员日报CSP
+	n myComName
+	
+	s myComName=""
+	
+	s myVer=##class(web.DHCOPConfig).GetVersion()
+	if (+myVer=0){
+		;北京积水潭的报表  重打
+		s myComName="udhcOPHandin.RPQuery"
+		s myComName="udhcOPHandin.BJJSTRepRP"
+	}elseif (+myVer=1){
+		;合肥的日报
+		s myComName="udhcOPHandin.HFDRepRP"
+	}elseif (+myVer=3){
+		;山西大同三院
+		s myComName="udhcOPHandin.DTSYMZRepRP"
+	}elseif (+myVer=4){
+		;宁波明州医院
+		s myComName="udhcOPHandin.NBMZYYRepRP"
+	}elseif (+myVer=5){
+		////西安交大眼科医院
+		s myComName="udhcOPHandin.XAJDYKRepRP"
+	}elseif (+myVer=6){
+		////上海华山医院
+		s myComName="udhcOPHandin.SHHSYYRepRP"
+	}elseif (+myVer=7){
+		////华西一院
+		s myComName="udhcOPHandin.OPSCCDHXYYRepRP"
+	}else{
+		s myComName="udhcOPHandin.RPQuery"
+	}
+ 	s myRepID=$g(%request.Data("RepID",1))
+	s %request.Data("RepID")=myRepID
+	
+	s mobj=##Class(websys.Component).OpenName(myComName)
+	
+	i mobj d
+	.s mobj.HideMenus=1
+	.s mobj.HideHeadings=1
+	.;s mobj.Style="LEFT:0; WIDTH:100%; POSITION:relative;"
+	.d mobj.Show()
+	.d mobj.%Close()
+	
+	s mystr=""
+	
+	;w myComName
+	
+</Script>
+
+</body>
+
+</HTML>

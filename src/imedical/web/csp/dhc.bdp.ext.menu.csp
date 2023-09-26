@@ -1,0 +1,36 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //等保测评,预防xss漏洞 chenying2020-03-19
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+ ; 获取到Menu ID 号
+ s MenuID=$Get(%request.Data("BDPMENU",1))
+ s menuobj=##class(User.BDPMenu).%OpenId(MenuID)
+ s Parter=menuobj.CompName  
+ if (menuobj.ValueExpression'="")
+ {
+  	//s Parter=menuobj.CompName_$e(menuobj.ValueExpression,2,$l(menuobj.ValueExpression)-1)
+  	//2020-02-21 组件， 值表达式有双引号 chenying
+	 s ValueExpression=menuobj.ValueExpression
+	 if ValueExpression[""""
+	 {
+		 s length=$l(ValueExpression)
+		 ///去掉首尾的双引号
+		 if $e(ValueExpression,length)="""" s ValueExpression=$e(ValueExpression,1,length-1)
+		 if $e(ValueExpression,1)="""" s ValueExpression=$e(ValueExpression,2,$l(ValueExpression))
+	  	 s Parter=menuobj.CompName_ValueExpression
+	 }
+ }
+</Script>
+<server></server>
+<frameset>
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=#(Parter)#" name="Component" frameBorder=0 resizeable=yes>
+</frameset>
+</HTML>

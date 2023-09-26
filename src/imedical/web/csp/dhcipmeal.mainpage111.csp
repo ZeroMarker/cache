@@ -1,0 +1,405 @@
+<!-- 
+ * FileName:dhcipmeal.mainpage.csp
+ * User: Lid
+ * Date: 2010-4-28
+ * Function: 主页面
+ * Description: 定义主体框架
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=GB18030" />
+<TITLE></TITLE>
+<!--TRAK:HEAD></TRAK:HEAD-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s Guser=$g(%request.Data("guser",1))   ;用户Dr
+ s Group = $g(%request.Data("group",1)) ;安全组Dr
+ s GuserName=$g(%request.Data("guserName",1))   ;用户Dr
+ s GuserCode=$g(%request.Data("guserCode",1))   ;用户Dr
+ s GroupDesc = $g(%request.Data("groupDesc",1)) ;安全组Dr
+</Script>
+<!--导入Extjs类库-->
+<!--#include file="dhcipmeal.importextjs.csp"-->
+<style type="text/css"> 
+	/*.west-panel .x-layout-collapsed-west{
+		background:url(images/icons/arrow.png) no-repeat center;
+	}                 
+	.south-panel .x-layout-collapsed-south{
+		background: url(images/icons/arrow-down.gif) no-repeat center;
+	}*/
+	.x-layout-collapsed-west{
+		background-image:url(../scripts/dhcdiet/image/dhl.gif);
+		background-repeat:no-repeat;
+		background-position:top;
+	}
+	
+	.x-layout-collapsed-south{
+		background-image:url(images/icons/arrow-up.gif);
+		background-repeat:no-repeat;
+		background-position:center;
+	}
+	
+</style>
+<SCRIPT Language="Javascript">
+     ///
+     var GROUP_ROWID="#(Group)#";
+     var GROUP_DESC="#(GroupDesc)#";
+     var GUSER_ROWID="#(Guser)#";
+     var GUSER_NAME="#(GuserName)#";
+     var GUSER_CODE="#(GuserCode)#";
+     //加载树的url
+     var TREE_LOADDATA_URL = "dhcipmeal.request.CSP?type=onTree&group="+GROUP_ROWID ;
+	 var SYSTEM_SKIN_PATH_URL="dhcipmeal.sysskin.csp?act=skinpath&guser="+GROUP_ROWID;
+	 var SYSTEM_SKIN_CODE_URL="dhcipmeal.sysskin.csp?act=skincode&guser="+GROUP_ROWID;
+     //树的根节点ID
+     var TREE_ROOT_ID="tree-37";
+	    function createTree(iText,id) {
+                return new Ext.tree.TreePanel({
+                    autoScroll: true,
+                    animate: true,
+                    border: false,
+					style:'padding:5px 0px 0px 0px',
+                    rootVisible:false,
+                    root: new Ext.tree.AsyncTreeNode({
+		            draggable: false,   //是否允许拖拽
+     	                text:iText,
+			id:id,
+			expand:true,
+			draggable:false,
+			singleClickExpand:true
+                    }),
+		    singleExpand:true,
+			lines:false,
+		    loader:new Ext.tree.TreeLoader({
+			dataUrl:TREE_LOADDATA_URL,
+			baseParams:{node:id} ,
+			clearOnLoad: false,
+			preloadChildren:true 
+		    }),
+                    dropConfig: {appendOnly:true},
+		    listeners:{
+			'click':function(node,e){
+				if(node.isLeaf()){
+					e.stopEvent();
+					var id = "tab-"+node.attributes.id;
+					//node.attributes.href="grid/gridPanelColMod.html";
+					addTab(node.attributes.href,id,node.attributes.text);
+				}
+			}
+		    }
+                });
+            }
+        
+        
+
+	 //新建标签页,url是显示的内容页面地址title是新标签页的标题
+	 function addTab(url,id,title) {
+	 
+	    var url=url+"?guser="+GUSER_ROWID+"&group="+GROUP_ROWID;
+		var url = '<iframe src=' +url+ ' name="'+ id +'" id="'+ id +'" scrolling="no" width=100% height="100%" frameborder=0  style="margin:0.5px 0.5px 0.5px 0.5px" align="center"></iframe>';
+			
+		//判断此tab页是否已经存在存在则只是激活显示否则才新建一个tab页
+		if(Ext.get(id) == null){
+			center.add({
+				id: id,    //此处id的值要与iframe的id值相同
+			    title: title,
+	            iconCls: 'tabs',
+	            html: url,
+	            closable:true //True 表示为渲染面板后即闭合 (默认为false).
+				//closable:false
+	        }).show();
+		}
+		else{
+			center.setActiveTab(id);
+		}
+     }
+    //获取iframe中链接ext-all.css的link对象
+	function getLinkTagObjOfIframe(iframeId){
+		/*if(document.frames[iframeId]){
+			var linkAry = document.frames[iframeId].document.getElementsByTagName("link");
+			for(var i=0;i<linkAry.length;i++){
+				if((linkAry[i].getAttribute("href")).indexOf("ext-all.css")!=-1){
+					return linkAry[i]
+				}
+			}	
+		}*/
+		//兼容IE，FF
+		var obj = window.frames[iframeId];
+		if(obj){
+			var linkAry = obj.document.getElementsByTagName("link");
+			for(var i=0;i<linkAry.length;i++){
+				if((linkAry[i].getAttribute("href")).indexOf("ext-all.css")!=-1){
+					return linkAry[i]
+				}
+			}	
+		}
+		return ""
+	}
+	
+    Ext.onReady(function(){
+		Ext.QuickTips.init();
+		new Ext.Viewport({
+			enableTabScroll:true,
+			layout:'border',
+			items:[north,west,center,foot]
+		});	
+		//去掉加载的界面显示内容页面
+		setTimeout(function(){
+			Ext.get('loading').remove();
+			Ext.get('loading-mask').fadeOut({remove:true});
+		}, 450);
+			//显示底部信息
+		var footInfo="- &copy;&nbsp;"+GUSER_NAME+"&nbsp;&nbsp;"+(new Date()).format("Y-m-d H:i:s");
+		document.getElementById("foot").innerHTML=footInfo;
+	})
+	//头
+	var north = new Ext.Panel({
+		//title:'工具栏',
+		region:'north',
+		height:30,
+		//collapsedTitle:'asdfads',
+		//collapsible:true,
+		//plugins:new Ext.ux.collapsedPanelTitlePlugin(),   
+		//collapseMode:'mini', //折叠样式
+		//split:true, 
+		contentEl:'header'
+	});
+	//脚
+	var foot = new Ext.Panel({
+		region:'south',
+		contentEl:'foot'
+	});
+	//西
+	
+	var west = new Ext.Panel({
+		title:'导航栏',
+		region:'west',
+		width:130,
+		collapsible:true,    //是否允许折叠
+		frame : true,// 美化界面
+		//collapseMode:'mini', //折叠样式
+		//hideCollapseTool: true,
+		collapsedTitle:'导航栏',
+		split:true,
+		layoutConfig:{ 
+		       animate:true 
+		},  
+                layout:'accordion',
+		listeners:{
+			'beforerender':function(){
+				Ext.Ajax.request({
+					url:TREE_LOADDATA_URL,
+					params: {node:TREE_ROOT_ID},
+					success:function(rs,request){
+						var result = rs.responseText;//拿到结果集?此时为字符串
+                    				var json = Ext.util.JSON.decode(result);//将字符串转换为json类型
+                                                
+						for(var i=0;i<json.length;i++){
+							var id=json[i].id;
+							var tmp=new Ext.Panel({
+								id:id,
+								region:'west',
+								title:json[i].text,
+								baseCls:'x-panel',
+								border:false,
+								autoWidth:true,
+								listeners:{
+									"render":function(){
+										var tree=createTree(this.title,this.id)
+										//var ary = this.removeAll(true);
+										this.add(tree);
+										this.doLayout(true);
+									}
+									,
+									"expand":function(){
+										var tree=createTree(this.title,this.id)
+										//var ary = this.removeAll(true);
+										this.add(tree);
+										this.doLayout(true);
+									},
+									"collapse":function(){
+										var ary = this.removeAll(true);
+									}
+								}
+							});
+							west.add(tmp);
+							west.doLayout(true);
+						}
+					},
+					failure:function(){
+						alert("错误");	
+					}	
+				});	
+			}	
+		}
+		//items: [widgetsTree]
+	});
+
+	var sysSkinMenu = new Ext.menu.Menu({
+		id:'sysskin',
+		frame:true,
+		defaults:{xtype:'menucheckitem'},
+		items:[{
+			text:'默认主题',
+			id:'skin0',
+			name:'skin0',
+			group:'skinGroup',
+			checked:true,
+			handler:selectSkin.createCallback("skin-0")
+		},{
+			text:'主题一',
+			id:'skin1',
+			name:'skin1',
+			group:'skinGroup',
+			handler:selectSkin.createCallback("skin-1")
+		},{
+			text:'主题二',
+			id:'skin2',
+			name:'skin2',
+			group:'skinGroup',
+			handler:selectSkin.createCallback("skin-2")
+		},{
+			text:'主题三',
+			id:'skin3',
+			name:'skin3',
+			group:'skinGroup',
+			handler:selectSkin.createCallback("skin-3")
+		},{
+			text:'主题四',
+			id:'skin4',
+			name:'skin4',
+			group:'skinGroup',
+			handler:selectSkin.createCallback("skin-4")
+		},{
+			text:'主题五',
+			id:'skin5',
+			name:'skin5',
+			group:'skinGroup',
+			handler:selectSkin.createCallback("skin-5")
+		},{
+			text:'主题六',
+			id:'skin6',
+			name:'skin6',
+			group:'skinGroup',
+			handler:selectSkin.createCallback("skin-6")
+		}]
+	});
+	//选择样式
+	function selectSkin(val){
+		Ext.Ajax.request({
+			url:SYSTEM_SKIN_PATH_URL,
+			params:{
+				skin:val
+			},
+			callback:function(options,success,response){	
+				if(success){
+					var rtn=response.responseText.replace("\r\n\r\n","");
+					var rtnAry=rtn.split("^");
+					if(rtnAry[0]==0){
+						//Ext.MessageBox.alert('提示','主题更新成功');
+						reloadSkin(rtnAry[1]);
+					}else{
+						Ext.MessageBox.alert('提示','主题更新失败');
+					}
+				}else{
+					Ext.MessageBox.alert('提示','请求失败');
+				}
+			}
+		}) 
+	}
+	//重新加载样式
+	function reloadSkin(skinPath){
+		//alert(skinPath);
+		//alert(Ext.query("*[href$='ext-all.css']")[0].href);
+		Ext.query("*[href$='ext-all.css']")[0].href =skinPath;
+
+	}
+	
+	var myselfPanel = new Ext.Panel({
+		//title: '关于',
+		frame:true,
+		style:'padding:1px 1px 1px 1px',
+		layout:'fit',
+		tbar:[{text:'界面风格',menu:sysSkinMenu}],
+		listeners:{
+			"render":function(){
+				//alert(sysSkinMenu.findById("skin0").checked);
+				//渲染时初始化"界面风格"菜单
+				Ext.Ajax.request({
+					url:SYSTEM_SKIN_CODE_URL,
+					params:{},
+					callback:function(options,success,response){	
+						if(success){
+							var rtn=response.responseText.replace("\r\n\r\n","");
+							if(rtn!=""){
+								sysSkinMenu.findById(rtn).setChecked(true);
+							}
+						}else{
+							Ext.MessageBox.alert('提示','请求失败');
+						}
+					}
+				}) 
+			}
+		}
+	});
+	/*var aboutPanel = new Ext.Panel({
+		title: '我的信息',
+		frame:true,
+		style:'padding:2px 2px 0px 2px;text-align:center',
+		//layout:'column',
+		html: 'Lid  2010-04-17'
+	});*/
+	//主区域
+	var center = new Ext.TabPanel({
+		region:'center',
+		resizeTabs:true,
+		activeTab: 0,//默认激活第一个tab页
+		//tabPosition:'bottom', //tab页位置
+		//width:200,
+		//minTabWidth:200,//允许的tab页最小宽度
+		//tabWidth:100,//tab页宽度
+		autoTabs: true,
+		anchor: '90%',
+		margins:'0 0 0 0',
+		enableTabScroll:true, //是否允许tab页左右滑动
+		border:true,
+		defaults: {autoScroll:true},
+		plugins: new Ext.ux.TabCloseMenu(), //是否允许关闭其他tab页TabCloseMenu.js
+		items:[ new Ext.Panel({
+			title:"关于",
+            //iconCls: 'ci-main',
+			//itsmCls: '',
+			layout:'fit',
+			items:[myselfPanel]
+        })],
+		listeners:{
+			"tabchange":function(){
+			    //重新链接ext-all.css
+				if(center.getActiveTab()){
+					var currentCSSPath=Ext.query("*[href$='ext-all.css']")[0].href;
+					//此处使用活动tabpanel的id作为iframe的id，所以在生成TabPanel时要注意的id值
+					var iframeLinkObj=getLinkTagObjOfIframe(center.getActiveTab().id);
+					if((iframeLinkObj!="")&&(iframeLinkObj.href!=currentCSSPath)){
+						iframeLinkObj.href = currentCSSPath;
+					}
+				}
+			}
+		}
+	});
+	
+</SCRIPT>
+
+</HEAD>
+
+<BODY>
+<div id="header"><h6 align=center>东华数字医疗-膳食管理系统</h6></div>
+    <div id="loading-mask" style=""></div>
+	<div id="loading">
+	    <div><img src="../scripts/dhcdiet/Ext/resources/images/default/extanim32.gif" style="margin-right:8px;" align="absmiddle"/>Loading...</div>
+	</div>
+	<div id='foot' style="font-size:12px;text-align:right;">foot</div>
+</BODY>
+</HTML>

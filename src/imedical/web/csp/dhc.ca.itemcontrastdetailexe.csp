@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s myType = $Get(%request.Data("myType",1))
+	s myItemContrasts = $Get(%request.Data("itemcontrastsDr",1))
+	s myParRef = $Get(%request.Data("parRef",1))
+	s myRowid = $Get(%request.Data("rowid",1))
+	s myItemDr=$Get(%request.Data("itemDr",1))
+	s myOutCode=$Get(%request.Data("outCode",1))
+	s myOutName=$Get(%request.Data("outName",1))
+	s myRemark=$Get(%request.Data("remark",1))
+	s myStart=$Get(%request.Data("startDate",1))
+	s myEnd=$Get(%request.Data("endDate",1))
+	s myActive=$Get(%request.Data("active",1))
+	
+	i action = "listRemainItems" d
+	.w ##class(dhc.ca.cache.udata.uItemContrastDetail).ListRemainedItems(myItemContrasts,start,limit)
+	
+	i action = "listType" d
+	.w ##class(dhc.ca.cache.udata.uDataTypes).ListRec("Y","","","Rowid","ASC",start,limit)
+	
+	i action = "listitemdr" d
+	.w ##class(dhc.ca.cache.udata.uDataItems).ListRec(myType,"","","","Rowid","ASC",start,limit)
+	
+	i action = "listitemcontrasts" d
+	.w ##class(dhc.ca.cache.udata.uItemContrasts).ListRec("Y","","","Rowid","DESC",start,limit)
+	
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uItemContrastDetail).ListRec(myItemContrasts,searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uItemContrastDetail).InsertRec(myItemContrasts, myItemDr,myOutCode,myOutName)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addAll" d
+	.s result = ##class(dhc.ca.cache.udata.uItemContrastDetail).InsertAllRec(myItemContrasts,myType)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uItemContrastDetail).UpdateRec(myParRef, myRowid, myItemDr, myOutCode,myOutName)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.ca.cache.udata.uItemContrastDetail).DelRec(myRowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

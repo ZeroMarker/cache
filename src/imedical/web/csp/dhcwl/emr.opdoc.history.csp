@@ -1,0 +1,108 @@
+﻿<html>
+    <head>
+        <title> 历史就诊 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" />
+        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/opdoc.admHistoryLst.css" />
+        <script language="cache" runat="server">
+            s patientID = $Get(%request.Data("PatientID", 1), "")
+            s episodeID = $Get(%request.Data("EpisodeID", 1), "")
+            s userLocID = $Get(%request.Data("UserLocID", 1), "")
+            s ssgroupID = $Get(%request.Data("SsgroupID", 1), "")
+            s userID = $Get(%request.Data("UserID", 1), "")
+            s OPEnableReference=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPEnableReference","N")
+            s admType = ""
+            s:(episodeID'="") admType=$p($g(^PAADM(episodeID)),"^",2)
+            s GetOPHistoryMethod = ##Class(EMRservice.SystemParameter).GetOPHistoryMethod() 
+        </script>
+        <script language="javascript">
+            var patientID = '#(patientID)#';
+            var episodeID = '#(episodeID)#';
+            var userLocID = '#(userLocID)#';
+            var ssgroupID = '#(ssgroupID)#';
+            var userID = '#(userID)#';
+            var OPEnableReference = '#(OPEnableReference)#';
+            var admType = '#(admType)#';
+            var GetOPHistoryMethod = '#(GetOPHistoryMethod)#';
+            var showHistoryEMRmethod = 'showHistoryEMR';  //济宁使用 showxmlpreview 
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="border:false,fit:true">
+        <div id="admHisLst" class="hisui-panel" data-options="region:'center',border:false" style="overflow-x:hidden;color:red">
+            <div class="hisui-layout" data-options="border:false,fit:true">
+                <div id="btnPnl" class="hisui-panel" data-options="region:'north',border:false" style="height:35px;overflow-x:hidden;">
+                    <div id="stdpnl" class="hisui-layout" data-options="border:true,fit:true">
+                        <div class="hisui-panel" data-options="region:'center',border:false" style="overflow-x:hidden;padding:5px 0 2px 0;">
+                            <input class='hisui-radio' type="radio" name='flag' id="CurDoc" label='本医师' value='0'></input>
+                            <input class='hisui-radio' type="radio" name='flag' id="CurDept" label='本科室' value='1'></input>
+                            <input class='hisui-radio' type="radio" name='flag' id="All" label='全院' data-options="checked:true" value='2'></input>
+                        </div>
+                        <div class="hisui-panel" data-options="region:'east',border:false" style="width:270px;overflow-x:hidden;padding:5px 0px 2px 12px;">
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeAll" label='全部' value=''></input>
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeO" label='门诊' value='O' data-options="checked:true"></input>
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeE" label='急诊' value='E'></input>
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeI" label='住院' value='I'></input>
+                        </div>
+                    </div>
+                    <!--广西医大使用
+                    <div id="ctlocpnl" class="hisui-layout" data-options="border:true,fit:true">
+                        <div class="hisui-panel" data-options="region:'center',border:false" style="overflow-x:hidden;padding:2px;float:left;margin-top:4px;">
+                            <a>科室:</a><input id="cbxLoc" name="Loc" style="width:130px;"></input>
+                        </div>
+                        <div class="hisui-panel" data-options="region:'east',border:false" style="overflow-x:hidden;padding:2px;float:left">
+                            <a>开始日期:</a><input id="startDate" type="text" name="start" style="width:90px;"></input>
+                            <a>结束日期:</a><input id="endDate" type="text" name="end" style="width:90px;"></input>
+                            <a id="PatientListQuery" href="#" class="easyui-linkbutton">查询</a>
+                        </div>
+                    </div>
+                    -->
+                </div>
+                <div class="hisui-panel" data-options="region:'center',border:false">
+                    <div id="msg_start" style="height:0px; overflow:hidden"></div>
+                    <div id="admHistoryLst">
+                        <!--<script language="cache" runat="server">// 输出
+                            //d ##Class(EMRservice.BL.opInterface).GetOPHistory(patientID,2,episodeID,"O", "Y")
+                            w ##Class(EMRservice.BL.opInterfaceBase).getHistoryDetailTest()
+                        </script>-->
+                    </div>
+                    <div id="msg_end" style="height:0px; overflow:hidden"></div>
+                </div>
+                <div id="pnl" class="hisui-panel" data-options="region:'south',border:false" style="height:32px;overflow-x:hidden;background-color:#EEE;">
+                    <a href="#" id="btnLoadMore" class="hisui-linkbutton" data-options="plain:true" style="width:100%;color:blue;">加载更多</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="admHisDetail" class="hisui-panel" data-options="border:false" style="height:1px;overflow-x:hidden">
+            <div class="hisui-layout" data-options="border:false,fit:true">
+                <div class="hisui-panel" data-options="region:'center',border:false,fit:true" style="overflow:hidden;">
+                    <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                        <div class="hisui-panel" id="detailButotnPnl" data-options="region:'north',border:false" style="height:40px;overflow:hidden;padding:5px;">
+                            <a href="#" id="backAdmHistoryLst" class="hisui-linkbutton" style="width:60px;">返回</a>
+                            <a href="#" id="refEmrDoc" class="hisui-linkbutton" style="display:none;">病历引用</a>
+                            <!--a href="#" id="returnAdm" class="hisui-linkbutton" data-options="plain:true" name="" checked="" onclick=FirstOrReAdmClick(this) style="float:right;color:blue;">复诊病历记录</a>
+                            <a href="#" id="firstAdm" class="hisui-linkbutton" data-options="plain:true" name="" checked="" onclick=FirstOrReAdmClick(this) style="float:right;color:blue;">初诊病历记录</a-->
+                            <span id="insComboSpan" style="float:right;">
+                                <select class="hisui-combobox" id="insCombo" style="width:200px;"></select>
+                            </span>
+                        </div>
+                        <div id="admHisPnl" data-options="region:'center',border:false" style="overflow-y:hidden;border-top: 1px solid #E8E8E8;">
+                            <iframe id="frameDetail" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.common.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.admHistoryLst.js"></script>
+    </body>
+</html>

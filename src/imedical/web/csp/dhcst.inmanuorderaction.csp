@@ -1,0 +1,68 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("action",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+
+ s rows=$Get(%request.Data("rows",1))
+ s page=$Get(%request.Data("page",1))
+ i page<1 s page=1
+s HospitalID=$get(%session.Data("LOGON.HOSPID"))
+s User=$get(%session.Data("LOGON.USERID"))
+s GroupID=$get(%session.Data("LOGON.GROUPID"))
+s CtlocID=$get(%session.Data("LOGON.CTLOCID"))
+i Action = "JsGetIncItm" d   //
+    .s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCST.IncItmRcp).JsGetIncItm(rows,page,params,CtlocID)  
+i Action = "GetIncItmRcp" d   //查询制剂
+    .S Inci=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.IncItmRcp).GetIncItmRcp(Inci)
+i Action = "GetIncItmRecIngr" d   //查询制剂的原料
+    .S InRec=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.IncItmRcp).GetIncItmRecIngr(InRec)
+
+i Action = "SaveInRcp" d //保存制剂的信息
+	.S Inci=$Get(%request.Data("Inci",1))
+	.S ListData=$Get(%request.Data("ListData",1))
+	.s ret=##class(web.DHCST.IncItmRcp).SaveInRcp(Inci,ListData,User)
+	.i +ret<0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+
+i Action = "DeleteInRcp" d   //删除制剂
+    .S InRec=$Get(%request.Data("Rowid",1))
+	.s ret= ##class(web.DHCST.IncItmRcp).DeleteInRcp(InRec)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "SaveInRecIngr" d //保存制剂的原料信息
+	.S InRec=$Get(%request.Data("InRec",1))
+	.S ListData=$Get(%request.Data("ListData",1))
+	.s ret=##class(web.DHCST.IncItmRcp).SaveInRecIngr(InRec,ListData,User)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+
+i Action = "DeleteInRecIngr" d   //删除制剂原料
+    .S InRin=$Get(%request.Data("Rowid",1))
+	.d ##class(web.DHCST.IncItmRcp).DeleteInRecIngr(InRin)
+	.
+
+	.
+//制剂业务----------------------------------------
+i Action = "GetManuOrdDetail" d   //查询制剂的原料
+    .S InRec=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCST.ManuOrder).GetManuOrdDetail(InRec)
+
+i Action = "GetManuOrdBat" d   //查询制剂的原料明细
+    .S InRec=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCST.ManuOrder).GetManuOrdBat(InRec)
+i Action = "GetManuOrdList" d   //查询制剂单列表
+    .S Params=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCST.ManuOrder).GetManuOrdList(Start,Limit,Params)
+
+</SERVER>

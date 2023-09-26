@@ -1,0 +1,43 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+    
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+	s LocId=$Get(%request.Data("LocId",1))
+
+	//查询盘点窗口
+	i Action = "query" d
+	.s result = ##class(web.DHCST.InStkTkWindow).SelectAll(LocId)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//保存盘点窗口
+	i Action = "save" d
+	.s result = ##class(web.DHCST.InStkTkWindow).Save(listData)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除盘点窗口
+	i Action = "delete" d
+	.s ^zx(990)=RowId
+	.s result = ##class(web.DHCST.InStkTkWindow).Delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

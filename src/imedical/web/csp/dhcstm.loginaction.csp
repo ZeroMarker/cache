@@ -1,0 +1,17 @@
+<csp:content charset="UTF-8">
+<script language="cache" runat="server">
+	s VENDORUSERID=$G(%request.Data("VendorUser",1))
+	s VendorPswd=$Get(%request.Data("VendorPswd",1))
+	
+	s Action=$Get(%request.Data("actiontype",1))
+i Action="login" d
+	.
+	.s result=##class(web.DHCSTM.VendorUser).LogInCheck(VENDORUSERID,VendorPswd)
+	.i result="" d
+	..s %session.Data("User")=VENDORUSERID
+	..s %session.Data("Pswd")=VendorPswd
+	..w "{'success':'true','info':''}"
+	..;s response.ServerSideRedirect="dhcstm.vendoruserbarcode.csp"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

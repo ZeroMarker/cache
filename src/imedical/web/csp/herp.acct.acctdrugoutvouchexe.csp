@@ -1,0 +1,46 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))   
+	s str      = $Get(%request.Data("query",1))
+	
+	s YearMonth=$Get(%request.Data("YearMonth",1))
+	s depot=$Get(%request.Data("depot",1))
+	s OrderNO=$Get(%request.Data("OrderNO",1))
+	s orderStatus=$Get(%request.Data("orderStatus",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s VouchNO=$Get(%request.Data("VouchNO",1))
+		
+	s VouchDate=$Get(%request.Data("vouchdate",1))	
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))
+	s userid=$Get(%request.Data("userid",1))
+	s kf=$Get(%request.Data("kf",1))
+	s CTLOCID=$Get(%request.Data("CTLOCID",1))
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctDrugOutVouch).List(sortField, sortDir, start, limit, YearMonth, depot, OrderNO, orderStatus, VouchNO)
+    
+        i action = "Ctlocdr" d
+	.w ##class(herp.acct.udata.acctMaterdelivouch).Ctlocdr(start, limit, str)
+    
+        i action = "listff" d
+	.w ##class(herp.acct.udata.uAcctDrugOutVouch).Listkf(sortField, sortDir, start, limit, rowid, kf, CTLOCID)
+    
+        i action="CreateVouch" d
+        .s result=##class(herp.acct.udata.uAcctDrugOutVouch).CreateVouch(VouchDate,rowid,AcctBookID,userid)
+        .i result=0  d 
+        ..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

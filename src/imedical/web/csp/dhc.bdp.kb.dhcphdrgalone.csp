@@ -1,0 +1,127 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+  /*
+	@CSP:dhc.bdp.kb.dhcphdrgalone.csp
+	@JS:bdp/App/KB/NewBus/DHC_PHDrgAlone.js
+	@Title:药品说明书编辑器——可配伍药品
+	@Description:可配伍药品的增删改
+	@Creator:基础数据平台组 - 丁亚男
+	@CreateDate:2018-09-11
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+<style type="text/css">
+/*多选框*/
+.mulitiDiv {
+	width:560px;
+	height:360px;
+	border: 1px solid #40a2de;
+}
+.webui-popover-title {
+	padding:8px 14px;
+	display: block;
+    background-color: #f9f9fa;
+    border-bottom: 1px solid #cccccc;
+    border-radius: 5px 5px 0 0;
+    color: black
+}
+.webui-popover .webui-popover-content {
+    padding: 1px 5px;
+}
+.panel-header-noborder {
+		    border-width: 0 0 0px 0;
+		}
+</style>
+<script type="text/javascript"  >
+    $(function(){
+              BodyLoadHandler();
+
+    });
+</script></HEAD>
+<BODY>
+    <server>
+    	s GlPGenDr=%request.Get("GlPGenDr")
+    	s GlPPointer=%request.Get("GlPPointer")
+        s GlPPointerType=%request.Get("GlPPointerType")
+   </server> 
+    <div class="hisui-layout" data-options="fit:true" border="false" >
+    	<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',split:true"  title="可配伍药品"  style="height:148px;" border="false"> 
+			<table data-options="fit:true,nowrap:false" id="mygrid" border="false"></table> 
+		</div> 
+       	<div data-options="region:'center'" border="false" > 
+       		<div class="hisui-layout" data-options="fit:true" border="false" >
+       			<div id="mytbar" data-options="region:'north',split:false" border="true" style="height:34px;text-align:left;border-top:1px solid #C0C0C0;border-bottom:1px dashed #C0C0C0;overflow:hidden;" border="false">
+	 			   	 <a   class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAdd">新增</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-write-order' plain="true" id="btnUpd">修改</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-cancel' plain="true" id="btnDel">删除</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-refresh' plain="true" id="btnRel">清屏</a>
+				</div>
+				
+	       		<div data-options="region:'center',split:false" style="padding:4px 30px 20px 10px" border="false">
+			    	 <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    	 <table cellpadding="5">
+					    <tr>
+				               <td class="tdleftlabel">级别</td>
+				                <td> 
+					    		   <table>
+						    		   <tr>
+				               				<td><input id="PHINSTModeF" name="PHINSTMode"  style="width:180px;"></td>
+				               				<td class="tdlabel" width="40px">组号</td>
+					    	  				<td><input id="PHDALGrpNoF" name="PHDALGrpNo" type="text" class="hisui-validatebox" style="width:180px;" ></td>
+					    			   		<td class="tdlabel" width="80px">溶媒分类</td>
+				    		   				<td><input id="PHDALCatDrF" name="PHDALCatDr"  style="width:220px;"></td>
+					    			   </tr>
+					    			</table>
+					    		</td> 			
+					    </tr>					 
+					    <tr>
+				    		  <td class="tdleftlabel">描述</td>
+				              <td><textarea id="PHINSTTextF" name="PHINSTText" type="text" class="hisui-validatebox" style="width:750px;height:90px;overflow:hidden" data-options="required:true"></textarea></td>
+					    </tr> 
+					    <tr>
+					     	<table>
+					        	<tr>
+			              			<td>
+			                        	<div class="hisui-panel" title="商品名" style="width:400px;height:280px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',"> 
+											
+											<table style="height:auto" width="100%" id="diaGrid" border="false" toolbar="#myDiatbar"></table>
+										</div>
+									</td>	
+								</tr>            		                   		    
+					 		</table >
+					 	</tr>
+					 </table >
+					 </form>
+				</div>	
+	    	</div>
+		</div> 
+    </div> 
+    <!--已选商品名列表工具条-->
+     <div id="myDiatbar" style="padding: 1px; height: auto; "  >
+		<a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddDia">新增商品名</a>									    
+ 	</div>  
+    <!--未选商品名列表工具条-->
+    <div id="myunDiatbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <a href="#" class="hisui-searchbox" data-options="stopAllEventOnDisabled:true" id="btnDiaSearch"></a>
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaReset">清屏</a> 
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaSave">保存</a>        
+    </div> 
+	
+    <script type="text/javascript">
+     var  GlPGenDr="#(GlPGenDr)#"
+     var  GlPPointer="#(GlPPointer)#"
+     var  GlPPointerType="#(GlPPointerType)#"
+  </script>
+  <script type="text/javascript" src="../scripts/bdp/App/KB/NewBus/DHC_PHDrgAlone.js"></script>
+</BODY>
+</HTML>

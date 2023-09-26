@@ -1,0 +1,203 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY STYLE="overflow:hidden" onload='HIST_resizeFrames();'>
+<SERVER>
+ n cont,PatientID,EpisodeID,EpisodeIDs,mradm,ChartID,apptID,find
+
+ k ^TMP("ClinicalHistory",%session.SessionId)
+
+ s CONTEXT=$g(%request.Data("CONTEXT",1))
+ s find=$g(%request.Data("isFind",1))
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s EpisodeIDs=$g(%request.Data("EpisodeIDs",1))
+ s EpisodesAll=$g(%request.Data("EpisodesAll",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s ChartID=$g(%request.Data("ChartID",1))
+ s ConsultID=$g(%request.Data("ConsultID",1))
+ ; 59250
+ s apptID=$g(%request.Data("apptID",1))
+ s consultEpID=$g(%request.Data("ConsultEpisodeID",1))
+ s AcrossEpisodes="Y"
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+         w "<DIV id='dHISTPatBanner'>"_$c(13,10)
+         w "  <IFRAME name='fHISTPatBanner' id='fHISTPatBanner' width='1024px' height='768px' scrolling='auto' frameborder='0' framespacing='10' "
+         w "        src='websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Banner&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"'>"_$c(13,10)
+	 w "  </IFRAME></DIV>"_$c(13,10)
+ }
+
+ d ##Class(websys.Component).GetComponentMessages(.t,"epr.Chart.Messages")
+
+ s chart=##Class(epr.Chart).%OpenId(ChartID,0)
+ i 'chart w $g(t("NoChart"),"There is no Chart Defined for this ChartID.") q
+ ; Log 59744 YC - Check whether to display consult banner
+ s DisplayConsultBanner=chart.DisplayConsultBanner
+ s (itmLIST,params,parref)=""
+ s cs=chart.ChartSettings i cs d ##Class(epr.Chart).chartSettingsSelect(.itmLIST,.params,cs)
+ d chart.%Close()
+
+ ; Log 59744 YC - Display consult banner
+ i +DisplayConsultBanner,+%request.Get("ConsultID") {
+         w "<DIV id='dHISTConsBanner'>"_$c(13,10)
+         w "  <IFRAME name='fHISTConsBanner' id='fHISTConsBanner' width='865px' height='75px' scrolling='auto' frameborder='0' framespacing='10' "
+         w "        src='websys.default.csp?WEBSYS.TCOMPONENT=PAPersonConsultSetCons.Banner&ConsultID="_ConsultID_"'>"_$c(13,10)
+	 w "  </IFRAME></DIV>"_$c(13,10)
+ }
+
+ k LINKFRAME
+
+ s jk=""  f  s jk=$o(itmLIST(jk))  q:jk=""  d
+ . s itm=itmLIST(jk)
+ . s ListComponent=$p(itm,"^",5)
+ . s EditComponent=$p(itm,"^",6)
+ . s ctype=$p(itm,"^",2)
+ . ; 59783 ONLY show new links if chart 'show add' set
+ . i $p(itm,"^",4)=1,ListComponent="MRAdm.ListEMRQuestionnaire" s showAdd=1
+ . i $p(itm,"^",4)=1 d
+ . . i ((ListComponent="PAPatWaitingList.List")||(ListComponent="epr.SOAPInternalRef")||(ListComponent="epr.SOAPExternalRef")) s showAdd2=1
+ . ; Log 59853 YC - Check if we're looking at all episodes (originally for observations on SOAP Objective)
+ . s EpisodesAll=+$p(itm,"^",16)
+ . s QGroup=$p(params,"|",1)
+ . s ComponentTitle=$zcvt($p(itm,"^",8),"O","HTML")
+ . s itemID=$p(itm,"^")
+ . s IsHistPage=$p(itm,"^",15) i 'IsHistPage,ctype'="QP",ctype'="RP" q
+ . w "  <DIV id='dHIST"_itemID_"'>"_$c(13,10)
+ . i ListComponent'="epr.SOAPConsultation.Tree" d
+ . . s itmparams=""
+ . . i ctype="RP" d   ;Create neccessary variables for calling the ResultProfile Query.
+ . . . s itmparams=params($p(itm,"^",2),$p(itm,"^",1))
+ . . ; Log 59775 YC - changed context so that it opens the correct context when a soap consult is selected
+ . . s componentCONTEXT="HIST"_ChartID_$p(itm,"^",2)_itemID
+ . . i ((ConsultID="")!(find=1)),((ListComponent="epr.SOAPSubjective")!(ListComponent="MRAdm.ListEMRQuestionnaire")!(ListComponent="epr.SOAPAssessment")!(ListComponent="epr.SOAPPlanning")!(ListComponent="PAPatWaitingList.List")!(ListComponent="epr.SOAPEndConsult")!(ListComponent="epr.SOAPInternalRef")!($p(itm,"^",18)="pacsnomed.csp")) q
+ . . i IsHistPage d
+ . . . i ListComponent="epr.SOAPSubjective" w "    <IFRAME name='fSOAPS'"
+ . . . i ListComponent="MRAdm.ListEMRQuestionnaire" w "    <IFRAME name='fSOAPO'"
+ . . . i ListComponent="epr.SOAPAssessment" w "    <IFRAME name='fSOAPA'"
+ . . . i ListComponent="epr.SOAPPlanning" w "    <IFRAME name='fSOAPP'"
+ . . i ListComponent'="epr.SOAPSubjective",(ListComponent'="MRAdm.ListEMRQuestionnaire"||'IsHistPage),ListComponent'="epr.SOAPAssessment",ListComponent'="epr.SOAPConsultation.Tree",ListComponent'="epr.SOAPPlanning" d
+ . . . ;s componentCONTEXT=CONTEXT_"HIST"_ChartID_$p(itm,"^",2)_itemID ; YC does anyone know why we need to concatenate the context? i've taken it out for log 59775. uncomment this if its necessary.
+ . . . w "    <IFRAME name='fHIST"_itemID_"'"
+ . . d %request.Set("CONTEXT",componentCONTEXT)
+ . . ;w " id='fHIST"_itemID_"' width='600px' height='400px' scrolling='auto' frameborder='0' framespacing='10' "
+ . . i +DisplayConsultBanner,+%request.Get("ConsultID") d
+ . . . w " id='fHIST"_itemID_"' width='100%' height='90%' scrolling='auto' frameborder='0' framespacing='10' "
+ . . e  d
+ . . . w " id='fHIST"_itemID_"' width='100%' height='100%' scrolling='auto' frameborder='0' framespacing='10' "
+ . . s CUrl=$s($p(itm,"^",18)="pacsnomed.csp":$p(itm,"^",18),1:"epr.clinicalhistoryitem.csp")
+ . . w "        src='"_CUrl_"?WEBSYS.TCOMPONENT="_ListComponent_"&ComponentTitle="_$zcvt(ComponentTitle,"O","URL")_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&EpisodeIDs="_EpisodeIDs_"&AcrossEpisodes="_AcrossEpisodes_"&mradm="_mradm_"&CONTEXT="_componentCONTEXT_"&ShowAdd="_$g(showAdd)_"&ShowAdd2="_$g(showAdd2)_"&EditComp="_$g(EditComponent)_"&ChartID="_ChartID_"&QGroup="_QGroup_"&ConsultID="_ConsultID_"&apptID="_apptID_"&EpisodesAll="_EpisodesAll_"&itmparams="_itmparams_"&ItemID="_itemID_"&ConsultEpisodeID="_consultEpID_"'>"_$c(13,10)
+ . . w "    </IFRAME>"_$c(13,10)
+ . . w "  </DIV>"_$c(13,10)
+ . i ListComponent="epr.SOAPConsultation.Tree" d
+ . . s componentCONTEXT="HIST"_ChartID_$p(itm,"^",2)_itemID
+ . . d %request.Set("CONTEXT",componentCONTEXT)
+ . . i ConsultID'="" d
+ . . . s csglob=$g(^PA("CONS",+ConsultID,"CONSET",$p(ConsultID,"||",2)))
+ . . . s %request.Data("EditConsultSetDesc",1)=$p(csglob,"^",2)
+ . . . s ConsetCat=$p(csglob,"^")
+ . . . i ConsetCat'="" s ConsetCat=$p($g(^OEC("CONS",ConsetCat)),"^",2)
+ . . . s %request.Data("EditConsultSetCat",1)=ConsetCat
+ . . . s SubCat=$p(csglob,"^",3)
+ . . . i SubCat'="" s SubCat=$p($g(^OEC("CONS",+SubCat,"SUB",$p(SubCat,"||",2))),"^",2)
+ . . . s %request.Data("EditSubCat",1)=SubCat
+ . . . s cglob=$g(^PA("CONS"+ConsultID,"CONSET",$p(ConsultID,"||",2),"CONS",$p(ConsultID,"||",3)))
+ . . . s %request.Data("EditVisitDate",1)=$p(cglob,"^",2)
+ . . . s %request.Data("EditVisitTime",1)=$p(cglob,"^",3)
+ . . . s CareProv=$p(cglob,"^",4)
+ . . . i CareProv'="" s CareProv=##class(web.CTCareProv).GetCareProvSSUserName(CareProv)
+ . . . s %request.Data("EditCareProv",1)=CareProv
+ . . . s %request.Data("EditSignificant",1)=$p(cglob,"^",6)
+ . . . i $p(cglob,"^",11)'="" d
+ . . . . s %request.Data("apptID",1)=$p(cglob,"^",11)
+ . . . . i apptID="" s apptID=$p(cglob,"^",11)
+ . . e  d
+ . . . ; 59250, 60818
+ . . . s consultsetdet=##class(epr.ClinicalHistory).GetConsultFromAppt(apptID)
+ . . . s %request.Data("EditConsultSetCat",1)=$p(consultsetdet,"^")
+ . . . s %request.Data("EditConsultSetCatDR",1)=$p(consultsetdet,"^",2)
+ . . i ComponentTitle'="" w "<SPAN class='chartitemheading'><B>"_ComponentTitle_"</B>&nbsp;&nbsp;&nbsp;&nbsp;</SPAN>"
+ . . s cmp=##Class(websys.Component).OpenName(ListComponent)
+ . . i cmp d cmp.Show(),cmp.%Close()
+ . . w "<BR>"
+ . w "  </DIV>"_$c(13,10)
+
+ w "<SCRIPT language='javascript'>"_$c(13,10)
+ w "function HIST_resizeFrames() {"_$c(13,10)
+ w "var find="""_find_""";"_$c(13,10)
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") d
+ . w " HIST_resizeframe('fHISTPatBanner');"_$c(13,10)
+ i +DisplayConsultBanner,+%request.Get("ConsultID") d
+ . w " HIST_resizeframe('fHISTConsBanner');"_$c(13,10)
+ s jk=""  f  s jk=$o(itmLIST(jk))  q:jk=""  d
+ . s itm=itmLIST(jk)
+ . i $p(itm,"^",5)="epr.SOAPConsultation.Tree" q
+ . i $p(itm,"^",18)="pacsnomed.csp" q
+ . i $p(itm,"^",15),((ConsultID="")||(find=1)),(($p(itm,"^",5)="epr.SOAPSubjective")!($p(itm,"^",5)="MRAdm.ListEMRQuestionnaire")!($p(itm,"^",5)="epr.SOAPAssessment")!($p(itm,"^",5)="epr.SOAPPlanning")!($p(itm,"^",5)="PAPatWaitingList.List")) q
+ . s itemID=$p(itm,"^")
+ . i $p(itm,"^",15)!($p(itm,"^",5)="MRAdm.ListEMRResults") w " HIST_resizeframe('fHIST"_itemID_"');"_$c(13,10)
+ w " window.scrollTo(0,0);"_$c(13,10)
+ w " document.body.style.overflow='auto';"_$c(13,10)
+ w "}"_$c(13,10)
+ w "</SCRIPT>"_$c(13,10)
+</SERVER>
+<SCRIPT language='javascript'>
+var fullWidth=0;
+function HIST_resizeframe(IFrameName) {
+        var theframe=window.frames[IFrameName];
+        if (!theframe) return;
+        if ((theframe.document)&&(theframe.document.readyState!="complete")) {
+                self.setTimeout("HIST_resizeframe('"+IFrameName+"');",5000);
+        } else {
+                if (theframe.document) {
+                        try {
+                                var fHeight=theframe.document.getElementById("PageContent").offsetHeight+5;
+                                var fWidth=theframe.document.getElementById("PageContent").offsetWidth;
+                        } catch(e) {}
+                }
+                if (fWidth>fullWidth) fullWidth=fWidth;
+                //self.frames[IFrameName].window.resizeTo(fullWidth,fHeight);
+                theframe.resizeTo(fullWidth,fHeight);
+        }
+}
+
+// Log 56835 YC - SOAP - Add ConsultID to the link of each chart in the chartbook if there is one
+var ConsID="#(ConsultID)#";
+var find="#(find)#";
+var appt="#(apptID)#"
+var consEp="#(consultEpID)#"
+var par=window.parent;
+
+if ((par && ConsID!="") || (find==1)) {
+        if(find==1) ConsID="";
+        //we are in a chartbook
+        if (par.name=="maindata") {
+                var elems=par.document.getElementsByTagName("DIV");
+                for(i=0;i<elems.length;i++) {
+                        if(elems[i].chLINK!=undefined) {
+                                var aryParams=elems[i].chLINK.split("&");
+                                for(n=0; n<aryParams.length; n++){
+                                        var aryValue=aryParams[n].split("=");
+                                        if(aryValue[0]=="apptID") aryValue[1]=appt;
+                                        if(aryValue[0]=="ConsultID") aryValue[1]=ConsID;
+					if(aryValue[0]=="ConsultEpisodeID") aryValue[1]=consEp;
+                                        aryParams[n]=aryValue.join("=");
+                                }
+                                elems[i].chLINK=aryParams.join("&");
+                        }
+                }
+        }
+}
+</SCRIPT>
+</BODY>
+</HTML>

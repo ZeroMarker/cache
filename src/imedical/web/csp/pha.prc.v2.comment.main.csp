@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!--药房药库-处方点评-点评处方
+	csp:pha.prc.v2.comment.main.csp
+	js: pha/prc/v2/comment.main.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+	<Server language="CACHE" runat="Server">
+		s Application=%request.Application
+		s gPCntId = $g(%request.Data("gPCntId",1))
+		s gLoadWayID = $p($g(^DHCPHCNTS(+gPCntId)),"^",7)
+	</Server>
+   		<script language=javascript>
+   		var gLoadPCntId = "#(gPCntId)#"
+   		var gLoadWayID = "#(gLoadWayID)#"
+	</script>
+
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    iframe {
+	    width: 100%;
+	    height: 100%;
+	    border: none;
+	    overflow: hidden;
+	    display:block;
+	}
+	.layout-split-south .panel-header-gray{
+		border-top:1px solid #cccccc;
+	}
+	/*
+	.tabs-container.tabs-gray .tabs-header {
+		border-left:none;
+		border-right:none;
+		border-radius:0px;
+	}*/
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',border:false,split:true,width:390">
+                    <div class="hisui-panel" title="点评处方" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                        <table id="gridMain"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel" title=""
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:'panel-body-gray',border:false">
+                        <div class="hisui-layout" fit="true">
+                            <div data-options="region:'north',border:false,split:true,height:60" style="overflow:hidden;">
+                                <div id="dhcpha-patinfo">
+
+                                </div>
+                            </div>
+                            <div data-options="region:'center',border:false">
+                                <div id="tabsForm" class="hisui-tabs tabs-gray" fit="true" border="true" >
+                                    <div data-options="title:'医嘱明细',selected:true" fit="true">
+                                        <div class="hisui-layout" fit="true" border="false">
+                                            <div data-options="region:'center',title:'',border:false" style="border-bottom:1px solid #cccccc">
+                                                <table id="gridPrescInfo"></table>
+                                            </div>
+											<div data-options="region:'south',headerCls:'panel-header-gray',iconCls:'icon-paper',title:'点评日志',border:false,height:300,split:true" id="lyPanelPrc">	
+												<table id="gridLog"></table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div data-options="title:'处方预览'">
+                                                <iframe id="ifrmPresc"></iframe>
+                                    </div>
+                                    <div data-options="title:'过敏记录'">
+                                                <iframe id="ifrmAllergy"></iframe>
+                                    </div>
+                                    <div data-options="title:'检查记录',selected:true">
+                                                <iframe id="ifrmRisQuery"></iframe>
+                                    </div>
+                                    <div data-options="title:'检验记录'">
+                                                <iframe id="ifrmLisQuery"></iframe>
+                                    </div>
+                                    <div data-options="title:'病历浏览',selected:true">
+
+                                                <iframe id="ifrmEMR"></iframe>
+
+                                    </div>
+                                    <div data-options="title:'本次医嘱'">
+                                    	<iframe id="ifrmOrdQuery"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridMainBar" style="height:30px;">
+        <div> 
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-search" id="btnFind" style="margin-top:4px;" >查单</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-ok" id="btnPass" style="margin-top:4px;">合格</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-no" id="btnRefuse" style="margin-top:4px;">不合格</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnAnaly" style="margin-top:4px;">处方分析</a>
+			<a title="合理用药提示灯说明：蓝色-无问题；其他颜色-有问题" class="hisui-tooltip" data-options="position:'left'" style="position:absolute;right:10px;margin-top:7px;">
+    			<img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png"></img>
+    		</a>
+        </div>
+    </div>
+    <!-- window dialog -->
+    <!-- 属性窗体 -->
+    <div id="diagFindNo" class="hisui-dialog"
+        data-options="closed:true,width:1200,height:550,title:'点评处方',iconCls:'icon-search'">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" class="pha-body">
+                <table id="gridFindNo"></table>
+            </div>
+            <div data-options="region:'south',border:false,height:40" style="text-align:center;overflow:hidden;">
+				<a class="hisui-linkbutton" id="btnSelect">确定</a> 
+        	</div>
+        </div>
+    </div>
+    <div id="diagSelectReason" class="hisui-dialog"
+        data-options="closed:true,width:1350,height:550,title:'不合理原因',iconCls:'icon-search'" style="padding:10px">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'west',border:false,split:true" style="width:350px;">
+                <div class="hisui-panel" title="第一步:选择不合格原因<b><双击选择></b>"
+                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                    <table id="gridReason"></table>
+                </div>
+
+            </div>
+            <div data-options="region:'center',border:false">
+                <div class="hisui-panel" title="第二步:选择原因相关联医嘱<b><双击选择></b>"
+                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                    <table id="gridLinkOrder"></table>
+                </div>
+            </div>
+            <div data-options="region:'east',border:false,split:true" style="width:600px;">
+                <div class="hisui-panel" title="第三步:保存,生成问题列表<b><双击取消></b>"
+                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                    <table id="gridQuestion"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridFindNoBar">
+    	<div class="pha-row">
+	        <div class="pha-col">
+	            <label for="conStartDate">开始日期</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id='conStartDate' data-pha />
+	        </div>
+	        <div class="pha-col">
+	            <label for="conEndDate">截止日期</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id='conEndDate' data-pha />
+	        </div>
+	        <div class="pha-col">
+	            <label for="conWay">点评方式</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id='conWay' data-pha />
+	        </div>
+	        <div class="pha-col">
+	            <a class="hisui-linkbutton" id="btnSearch">查询</a>
+	        </div>
+	    </div>
+	    <div class="pha-row">
+	        <div class="pha-col">
+	            <label for="conResult">点评结果</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id='conResult' data-pha />
+	        </div>
+	        <div class="pha-col">
+	            <label for="conPharmacist">点评药师</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id='conPharmacist' data-pha />
+	        </div>
+	        <div class="pha-col">
+	            <label for="comState">点评状态</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id='comState' data-pha />
+	        </div>
+	    </div>
+    	<div class="pha-line"></div>
+    	<div class="pha-col">
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+        </div>
+        <div class="pha-col">
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-submit" id="btnSubmit">提交</a>  
+        </div>
+    </div>
+    <div id="gridQuestionBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="conWarn">不合理警示值</label>
+            </div>
+            <div class="pha-col">
+                <input id='conWarn' data-pha />
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnSave">保存</a>
+            </div>
+        </div>
+        <div class="pha-row">
+            <div class="pha-col" style="margin-left:55px;">
+                <label for="conAdvice">建议</label>
+            </div>
+            <div class="pha-col">
+                <input id='conAdvice' data-pha />
+            </div>
+
+        </div>
+        <div class="pha-row">
+            <div class="pha-col" style="margin-left:55px;">
+                <label for="conPhNote" style="position:relative;top:-20px;">备注</label>
+            </div>
+            <div class="pha-col">
+                <textarea id='conPhNote' data-pha style="width:330px;"> </textarea>
+            </div>
+
+        </div>
+    </div>
+
+    <!--调用美康--因医生站为异步调用，药房只能同步调用，所以需要将美康的McConfig.js 另存为 McConfigPharmacy.js -->
+    <!--并修改 this.MC_Is_SyncCheck = false ; 为 this.MC_Is_SyncCheck = true; -->
+    <link rel="stylesheet" type="text/css" href="../CUSTOM/PassJs/McCssAll.css"/> 
+    <script type="text/javascript" src="../CUSTOM/PassJs/McConfigPharmacy.js"></script>
+    <script type="text/javascript" src="../CUSTOM/PassJs/McJsAll.js"></script>
+    <!--dhcpha common js-->
+    <script type="text/javascript" src="/imedical/web/scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/prc/com/v2/js/store.js"></script>
+    <script type="text/javascript" src="../scripts/pha/prc/v2/comment.main.js"></script>
+</body>
+
+</html>

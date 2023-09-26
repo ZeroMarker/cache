@@ -1,0 +1,214 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(DHCMRQ.Base.Util.Verification).SessionVerifi() q 1
+	q 1
+</csp:method>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title></title>
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/font-awesome-4.6.3/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/datatable-1.10.12/datatables.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/css/main.css">
+		<!--[if lte IE 6]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap-ie6.css">
+	  <![endif]-->
+	  <!--[if lte IE 8]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/ie.css">
+			<style media="screen">
+				.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9{
+					padding-left: 0;
+					padding-right: 0;
+				}
+			</style>
+	  <![endif]-->
+	</head>
+	<body>
+		<input type="hidden" id="startDate" class="form-control input-sm" readonly>
+		<input type="hidden" id="endDate" class="form-control input-sm" readonly>
+		<input type="hidden" id="mrVersionSelect" class="form-control input-sm" readonly>
+		<div class="navbar navbar-static-top" style="background-color:#fff;">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a href="#" class="navbar-brand">病案首页数据质量督导系统</a>
+				</div>
+				<nav id="bs-navbar" class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<!--
+						<li class="active">
+							<a href="../getting-started/">Getting started</a>
+						</li>
+						 -->
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li></li>
+					</ul>
+
+				</nav>
+			</div>
+		</div>
+		<div class="container-fluid">
+			
+			<div class="row">
+				<div class="boxcq" id="two">
+					<div class="ti">
+						<i class="fa fa-users fa-lg"></i><span class="depName"></span>出院首页缺失病例明细
+					</div>
+					<ul class="nav nav-tabs boxnavcq" id="hospInfo" role="tablist">
+						<li></li>
+					</ul>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<table id="caseListTable" class="table table-striped">
+									<thead>
+										<tr>
+											<th>病案号</th><th>缺失总数</th><th>患者基本信息</th><th>住院过程信息</th><th>诊疗信息</th>
+											<th>费用信息</th><th>患者姓名</th><th>主治医师</th><th>住院医师</th><th>编码人员</th>
+										</tr>
+									</thead>
+									<tbody></tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+		
+		<!--
+		<footer id="footer">
+			<div class="container">
+        <p class="text-muted">copyright <i class="fa fa-heartbeat fa-lg"></i> DHCC</p>
+      </div>
+		</footer>
+		 -->
+		<div id="loading">
+		 	<img src="../scripts/dhcmrq/images/loading.gif"/>
+		 	<h3 class="info">正在加载<br>...</h3>
+		 </div>
+		 
+	<DHCMRQ:HEAD></DHCMRQ:HEAD>
+	<script type="text/javascript">
+			var dutyItem = {
+					'CLINIC':{dutyDep:'财务科',base:false,hosp:true,med:true,fee:false},
+					'CODING':{dutyDep:'病案室',base:true,hosp:false,med:true,fee:true},
+					'HQMS':{dutyDep:'财务科',base:false,hosp:false,med:true,fee:true},
+					'WT4':{dutyDep:'财务科',base:false,hosp:false,med:true,fee:true}
+					}
+    	var itemId = getQueryString('itemId');
+    	var depCode = getQueryString('depCode');
+    	var docName = getQueryString('docName');
+    	if(!docName) docName = '';
+    	console.log(itemId+','+depCode+','+docName);
+    	
+    	init();//初始化
+	
+		searchByCondition();
+    	
+    	function loadData(){
+	    	
+	    	var caseList = [];
+    		var pageNum = 10;//每次获取条数
+    		var totalNum = 0;//总数
+    		$.post('dhcmrq.service.csp',
+				{ClassName:'DHCMRQ.Compute.FpList',
+			 	MethodName:'GetFpListByItem',
+			 	Params:itemId+','+startDate+','+endDate+','+mrVersionCode+','+pageNum+','+1+','+depCode+','+docName
+				},
+				function(data){
+					try{
+						totalNum = JSON.parse(data)['total'];
+					}catch(err){
+						$('#caseListTable').after('<div class="alert alert-danger" role="alert">'+err+'</div>');
+						console.error(err);
+					}
+				var totalPages = Math.ceil(totalNum/pageNum);//总获取次数
+				for(var i=1;i<=totalPages;i++){
+					$.ajax({
+        				type: "post",
+        				async:false,
+        				url: 'dhcmrq.service.csp',
+        				data: {ClassName:'DHCMRQ.Compute.FpList',
+			 	  		 	MethodName:'GetFpListByItem',
+			 	   			Params:itemId+','+startDate+','+endDate+','+mrVersionCode+','+pageNum+','+i+','+depCode+','+docName
+				  		},
+        				success: function (data) {
+							try{
+								caseList = caseList.concat(JSON.parse(data)['data']);
+								//drawTable(caseList);
+							} catch(err){
+								console.log(err);
+							}
+						}
+        				}
+					);
+				}
+				drawTable(caseList);
+		});
+	
+		/*
+			try{
+				//console.log(itemId+','+startDate+','+endDate+','+mrVersionCode+','+depCode+','+docName)
+				var dataStr=tkMakeServerCall("DHCMRQ.Compute.FpList","GetFpListByItem",itemId,startDate,endDate,mrVersionCode,pageNum,1,depCode,docName);
+				//console.log(dataStr)
+				totalNum = JSON.parse(dataStr)['total'];
+			} catch(err){
+				$('#caseListTable').after('<div class="alert alert-danger" role="alert">'+err+'</div>');
+				console.error(err);
+			}
+    		
+			var totalPages = Math.ceil(totalNum/pageNum);//总获取次数
+			
+			for(var i=1;i<=totalPages;i++){
+				var dataStr=tkMakeServerCall("DHCMRQ.Compute.FpList","GetFpListByItem",itemId,startDate,endDate,mrVersionCode,pageNum,i,depCode,docName);
+				//console.log('dataStr'+i+': '+dataStr);
+				try{
+					caseList = caseList.concat(JSON.parse(dataStr)['data']);
+				} catch(err){
+					console.log(err);
+					break;
+				}
+			}
+		*/
+			
+			
+	    }
+	    
+    	function drawTable(data){
+	    	$('#caseListTable').DataTable({
+				processing: true,
+				data: data,
+				lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "全部"] ],
+				columns: [
+						{ "data": "oper",
+						  "render": function ( data, type, full, meta ) {
+				      		return '<a role="button" onclick="addTab(\''+full.name+'病案首页\',\'dhcmrq.mr.csp?adm='+full.paadm+'&mrVersionCode='+mrVersionCode+'\',\'mr'+full.paadm+'\')">'+full.mrNo+'</a>';
+					    	}
+					    },
+						{ "data": "mTotal" },
+            			{ "data": "mBaseCnt" ,"visible":dutyItem[mrVersionCode]['base']},
+            			{ "data": "mProcessCnt" ,"visible":dutyItem[mrVersionCode]['hosp']},
+            			{ "data": "mTreatmentCnt" ,"visible":dutyItem[mrVersionCode]['med']},
+						{ "data": "mFeeCnt" ,"visible":dutyItem[mrVersionCode]['fee']},
+						{ "data": "name" },
+						{ "data": "doc1" },
+						{ "data": "doc2" },
+						{ "data": "coder" }
+        				]
+			});
+	    }
+		</script>
+	</body>
+</html>

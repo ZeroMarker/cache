@@ -1,0 +1,94 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<BODY>
+<SERVER>
+ n style,cmp,a,j,idx,posn,closeformatlist,endstr,theline,thestring,orderid,tsrowid,ord,int
+ n jj,str,len1,len2,labnmspc,recloc 
+ n PLIST,STARTTAG,ENDTAG,FORMATLIST
+ s CRLF=$c(13,10)
+ ; Display Patient Banner
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") d
+ . s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . i cmp d cmp.Show(),cmp.%Close()
+ ; Get Test Set Row ID
+ s orderid=%request.Get("OrderID")
+ s ord=$p(orderid,"||",1),int=$p(orderid,"||",2)
+ i (ord="")!(int="") w """"_orderid_""" is an invalid Order ID" q
+ ; don't allow preview for non-labtrak - no Layout....
+ s recloc=$p(^OEORD(ord,"I",int,3),"^",6)
+ i $$extlab^COEOrdItem(recloc)="Y" d  q
+ . w "<B>No layout defined for non-LabTrak systems</B>"
+ 
+ s tsrowid=$p($g(^OEORD(ord,"I",int,3)),"^",35)
+ i tsrowid="" w "Test Set not in LabTrak" q
+ ; Set up style lists
+ ; get 'em form LabTrak namespace..
+ s labnmspc=$lg(^websys.ConfigurationD(1),21)
+ s a="" f  s a=$o(^[labnmspc]SS("PRINT","TYPE","LOCAL",a))  q:a=""  d
+ . i (a="~BOLD")!(a="~UNDERLINE")!(a="~ITALIC")!(a="~INVISIBLE")!($e(a,1,7)="~COLOR=")!($e(a,1,5)="~RES-") d
+ . . s style=$g(^[labnmspc]SS("PRINT","TYPE","LOCAL",a))
+ . . s STARTTAG(a)=$s(style="~BOLD":"<B>",style="~UNDERLINE":"<U>",style="~ITALIC":"<I>",$e(style,1,7)="~COLOR=":"<FONT color='"_$p(style,"=",2)_"'>",1:"")
+ . . s ENDTAG(a)=$s(style="~BOLD":"</B>",style="~UNDERLINE":"</U>",style="~ITALIC":"</I>",$e(style,1,7)="~COLOR=":"</FONT>",1:"")
+ ; Generate report to the page
+ w "<pre><font face='courier new,monospace'>",CRLF
+ i $$GetImageResult^CLabOrderLink(tsrowid,"V")
+ d
+ . s closeformatlist=""
+ . s a="" f  s a=$o(PLIST(a))  q:a=""  d
+ . . ; Parse the next line from LabTrak
+ . . s thestring="",theline="",endstr=0,posn=1,str=""
+ . . k FORMATLIST
+ . . f  q:endstr  d
+ . . . s domerge=0
+ . . . i $e(PLIST(a))="?" d
+ . . . . s spaces=+$e(PLIST(a),2,4)
+ . . . . s PLIST(a)=$e(PLIST(a),5,999) f j=1:1:spaces s PLIST(a)=" "_PLIST(a),domerge=1
+ . . . i PLIST(a)="~NORMAL" s PLIST(a)="",FORMATLIST(posn)=$g(FORMATLIST(posn))_closeformatlist,closeformatlist=""
+ . . . i $e(PLIST(a))="~",$d(STARTTAG(PLIST(a))) s FORMATLIST(posn)=$g(FORMATLIST(posn))_STARTTAG(PLIST(a)),closeformatlist=ENDTAG(PLIST(a))_closeformatlist,PLIST(a)=""
+ . . . i $e(PLIST(a))="~" s PLIST(a)="" ;ignore all other print options  
+ . . . i PLIST(a)=$c(13) s PLIST(a)=""
+ . . . i PLIST(a)="!" s PLIST(a)="",FORMATLIST(posn)=$g(FORMATLIST(posn))_"<br>&nbsp;",endstr=1,posn=1
+ . . . i domerge d
+ . . . . i thestring="" s thestring=PLIST(a) q
+ . . . . i PLIST(a)="" q
+ . . . . s str1=thestring
+ . . . . s str2=PLIST(a)
+ . . . . s len1=$l(str1),len2=$l(str2)
+ . . . . f jj=1:1:len1  d
+ . . . . . s $e(str,jj)=$e(str1,jj)
+ . . . . . i (($e(str1,jj)=" ")&($e(str2,jj)'="")) s $e(str,jj)=$e(str2,jj)
+ . . . . i len2>len1 s str=str_$e(str2,len1+1,len2)
+ . . . . s thestring=str
+ . . . i 'domerge s thestring=thestring_PLIST(a)
+ . . . s posn=$l(thestring)  
+ . . . i posn=0 s posn=1
+ . . . i 'endstr  s a=$o(PLIST(a))
+ . . ; If no formatting on the line then return just the string
+ . . i '$d(FORMATLIST)  s theline=$g(thestring)
+ . . ; Otherwise insert formatting style in the string at the relevent positions
+ . . s idx="",j=1  f  s idx=$o(FORMATLIST(idx))  q:idx=""  d
+ . . . s theline=theline_$e(thestring,j,idx)_FORMATLIST(idx)
+ . . . s j=idx+1
+ . . w theline
+ w "</font></pre>"
+</SERVER>
+<script>
+	this.window.focus();
+</script>
+
+</BODY>
+
+</HTML>
+

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--
+	住院已发药查询 
+	csp: csp/dhcpha/dhcpha.inpha.dispquery.csp
+	js:	 scripts/pharmacy/inpha/dhcpha.inpha.dispquery.js
+-->
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
+    <SERVER>
+        s Application=%request.Application
+    </SERVER>
+    <!--css-->
+    <link rel="stylesheet" type="text/css"
+        href="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.css" />
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/skins/icheck/blue.css">
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/dhcpha/jQuery/themes/default/easyui-new.css">
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/dhcpha/jQuery/themes/icon.css">
+
+    <!--js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/icheck/icheck.js"></script>
+    <script type="text/javascript"
+        src="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/moment.min.js"></script>
+    <script type="text/javascript"
+        src="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/bootstrap-bootbox/bootbox.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/select2.min.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/i18n/zh-CN.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8">
+    </script>
+    <script type="text/javascript" src="#(Application)#scripts/dhcpha/jqueryplugins/json2.js"></script>
+    <!--dhcpha css-->
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/css/dhcpha.common.css">
+    </script>
+    <!--dhcpha common js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.js"></script>
+    <!--dhcpha js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.dispquery.js"></script>
+    <SCRIPT Language="Javascript">
+        $.fn.modal.Constructor.prototype.enforceFocus = function () {}; //modal中select2才能编辑(z-index)
+        $("object").hide();
+    </script>
+</head>
+
+<body style="overflow:hidden">
+    <div id="dhcpha-query-condition">
+        <div class="container-fluid dhcpha-condition-container">
+            <div class="row row_style">
+                <form class="form-inline">
+                    <div class="input-group">
+                        <span for="date-start"
+                            class="input-group-addon dhcpha-input-group-addon-in"><strong>发药时间</strong></span>
+                        <input id="date-start" class="form-control input_style" type="text"
+                            style="border-right:none;width:146px" placeholder="请选择日期">
+                        <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    <span><strong>至</strong></span>
+                    <div class="input-group">
+                        <input id="date-end" class="form-control input_style" type="text"
+                            style="border-right:none;width:146px" placeholder="请选择日期">
+                        <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    <div class="input-group">
+                        <select class="form-control in_select" id="sel-phaloc">
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <select class="form-control in_select" id="sel-docloc">
+                        </select>
+                    </div>
+                    <input class="form-control input_style" type="text" id="txt-patno" style="width:8em;"
+                        placeholder="登记号...">
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-longord">
+                        <lable for="chk-longord"><strong>仅显示长期医嘱</strong></lable>
+                    </div>
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-prttotal">
+                        <lable for="chk-prttotal"><strong>打印汇总</strong></lable>
+                    </div>
+                    <div class="btn-group dhcpha-btn-right">
+                        <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split"
+                            type="button" id="btn-find">查询汇总</button>
+                        <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split"
+                            type="button" id="btn-clear">清屏</button>
+                    </div>
+                </form>
+            </div>
+            <div class="row row_style">
+                <form class="form-inline">
+                    <div class="input-group">
+                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>发药病区</strong></span>
+                        <select class="form-control in_select" id="sel-phaward" style="width:300px">
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <select class="form-control in_select" id="sel-disptype">
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <select class="form-control in_select" id="sel-fyuser">
+                        </select>
+                    </div>
+                    <input class="form-control input_style" type="text" id="txt-dispno" style="width:8em"
+                        placeholder="发药单号...">
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-shortord">
+                        <lable for="chk-shortord"><strong>仅显示临时医嘱</strong></lable>
+                    </div>
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-prtdetail">
+                        <lable for="chk-prtdetail"><strong>打印明细</strong></lable>
+                    </div>
+                    <div class="btn-group dhcpha-btn-right">
+                        <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split"
+                            type="button" id="btn-findselect">查询明细</button>
+                        <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split"
+                            type="button" id="btn-print">打印</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row dhcpha-row-split"></div>
+    </div>
+    <div class="container-fluid ">
+        <div class="row">
+            <div class="panel div_content">
+                <div class="panel-heading"><span class="pal_style"><strong>发药单查询</strong></span></div>
+                <div class="panel-body" id="table_height" style="border:none;">
+                    <table id="grid-query">
+                    </table>
+                </div>
+            </div>
+            <div class="panel div_content" id="div-tab">
+                <div class="panel-heading"><span class="pal_style" id="sp-title"><strong>发药单药品汇总</strong></span>
+                    <i class="fa  fa-exchange dhcpha-btn-fa" id="a-change"
+                        style="padding-left:20px;cursor: pointer;"></i>
+                </div>
+                <div class="panel-body" id="div-total" style="border:none;">
+                    <table id="grid-querytotal">
+                    </table>
+                </div>
+                <div class="panel-body" id="div-detail" style="border:none;">
+                    <table id="grid-querydetail">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
+
+<!-- for lodop print -->
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/lodopcom.js"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.phaxmlprint.js"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/ipprintcom.js"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmprintcom.js"></script>

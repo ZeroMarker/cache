@@ -1,0 +1,204 @@
+<!--dhcpenewdiagnosis.diagnosis.hisui.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+set EpisodeID=$g(%request.Data("EpisodeID",1))
+set MainDoctor=$g(%request.Data("MainDoctor",1))
+set OnlyRead=$g(%request.Data("OnlyRead",1))
+</SCRIPT> 
+<script type="text/javascript">
+ var EpisodeID="#(EpisodeID)#"
+ var MainDoctor="#(MainDoctor)#"
+ var OnlyRead="#(OnlyRead)#"	
+ //var ret=tkMakeServerCall("web.DHCPE.TransResult","TransMain",EpisodeID)
+ var SSID=tkMakeServerCall("web.DHCPE.ResultDiagnosis","GetSSId",EpisodeID)
+ /*
+ if ((OnlyRead!="Y")&&(MainDoctor!="Y")){
+		SumResult_click();
+	}
+ function SumResult_click()
+ {
+	
+	var Type=0
+	var SSID=""
+    var SSID=tkMakeServerCall("web.DHCPE.ResultDiagnosis","GetSSId",EpisodeID)
+	if (SSID!="")
+	{
+		if (confirm("已经有审核纪录,更新原来的吗")){
+			var Type=1;
+		}else{
+			return false;
+		}
+		
+		return false;
+	}
+	if (EpisodeID=="") return false;
+	var flag=tkMakeServerCall("web.DHCPE.ResultDiagnosis","IsCanSumResult",EpisodeID)
+	var values=flag.split("^");
+	flag=values[0];
+	if (flag!=0)
+	{
+		if(flag=="HadNoApp") { flag="有未检查项目" ;} 
+		if(flag=="NoItem"){ flag="没有要总检的项目" ;} 
+		if(flag=="NoSub"){flag="未提交";}
+		if (!confirm(values[1]+flag+",是否继续总检?")) return false;
+	}
+
+	var Remark=""
+	var flag=tkMakeServerCall("web.DHCPE.ResultDiagnosis","UpdateStationS",EpisodeID,Type,Remark)
+	var values=flag.split("^");
+	flag=values[0];
+	if (flag==0)
+	{
+		 var SSID=tkMakeServerCall("web.DHCPE.ResultDiagnosis","GetSSId",EpisodeID)
+		 window.location.reload();
+		 return false;
+	}
+	alert(values[1]+flag);
+	return false;
+}
+*/
+</script>
+ 
+ <style type="text/css">
+  	
+  		
+ table
+        {
+            border-collapse: collapse;
+            margin: 0 auto;
+           /* text-align: center;*/
+          
+            
+        }
+ table td
+        {
+            color: #666;
+            /*padding-left:10px;*/
+        }
+        
+ table thead th
+        {
+            background-color: #EBEBEB;
+            height: 30px;
+            border: 1px solid #ccc;
+            color: #666;
+        }
+ 
+ .r-label{
+	padding-left: 10px;
+	
+}
+
+
+</style>
+ 
+</head>
+<body class="hisui-layout" id="BodyContent">
+  <input type="hidden" id="EpisodeID"/>
+  <input type="hidden" id="MainDoctor"/>
+  <input type="hidden" id="OnlyRead"/>
+  
+  <input type="hidden" id="SSID"/>
+  <div class="hisui-layout" data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'">
+    <div id="DiagnosisPanel" data-options="fit:true,region:'center', title:'',headerCls:'panel-header-gray'">
+
+	 
+	 	 <SERVER>
+ 		    d ##class(web.DHCPE.ResultDiagnosisNew).OutMainHISUI(EpisodeID,MainDoctor,OnlyRead)
+        </SERVER>
+     </div>
+ 
+ </div>    
+ <div data-options="region:'south', title:'',headerCls:'panel-header-gray',border:false" style="height:52px;">	
+ 	  <table style="width:100%">
+ 	   <tr style="height:10px;">
+ 	    </tr>
+        <tr>
+       	
+        	
+        <td style="width:40px;padding-left:10px"><label>初审</label></td>
+        <td style="width:168px;"><input class="textbox" Id="AuditUser"/></td>
+	 <td><input class="hisui-datebox" type="text" Id="AuditDate" style="width:168px;"/></td>
+        	
+        <td class="r-label"><label>复审</label></td>
+        <td style="width:168px;"><input class="textbox" Id="MainUser" style="width:150px;" /></td>
+	 <td><input class="hisui-datebox" type="text" Id="MainDate" style="width:168px;" /></td>
+        <td><div><a id="Report" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">报告预览</a></div></td>
+        
+        <CSP:IF CONDITION=("N"=MainDoctor)>
+				
+					
+		<td><div><a id="Save" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">初审提交</a></div></td>
+ 	    <td><div><a id="Cancel" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">取消初审</a></div></td>		
+		<td><div><a id="Auto" href="#" class="hisui-linkbutton" style="background-color:#EE4000;" data-options="stopAllEventOnDisabled:true">重新初审</a></div></td>
+				
+		</CSP:IF>
+        
+        
+        <CSP:IF CONDITION=("Y"=MainDoctor)>
+				
+					
+		<td><div><a id="MainSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">复审提交</a></div></td>
+ 	    <td><div><a id="MainCancel" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">取消复审</a></div></td>		
+	
+				
+		</CSP:IF>
+           
+        
+        </tr>
+       </table> 
+ </div>
+  <div id="LocResultWin">
+  </div>
+  <div id="EditAdviceWin">
+  </div>
+  <div id="GSSDetailWin" style="width:900px;height:600px;top:10px;left:10px;padding:10px">
+  </div>
+   <div id="ConclusionWin">
+  </div>
+   <div id="SendMessageWin">
+  </div>
+  
+
+  
+  
+  <script type="text/javascript" src="../scripts/DHCPENewDiagnosisHISUI.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  <script type="text/javascript" src="../scripts/websys.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPrtComm.JS"></script>
+  <script type="text/javascript" src="../scripts/dhtmlXCombo.js"></script>
+  <script type="text/javascript" src="../scripts/dhtmlXCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECACommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.PatItemPrint.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintReportCommon.js"></script>
+</body>
+ 
+</html>
+
+
+<div id="DiagnosisEDDiv" style="overflow-y:auto; white-space:normal; word-break:break-all;background-color:white;top:10px;left:500px;">
+
+	
+</div>
+

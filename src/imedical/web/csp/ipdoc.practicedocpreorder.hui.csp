@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--ipdoc.practicedocpreorder.hui.csp HISU--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+</style>
+<Server>
+	s EpisodeID=%request.Get("EpisodeID")
+	s PPRowId=%request.Get("PPRowId")
+	s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+	s PracticeFlag=##class(web.DHCDocCommon).IsPracticeDoctor(%session.Get("LOGON.USERID"))
+	s PageType=%request.Get("PageType")
+	if PageType="" s PageType="R"
+	//未确认数量
+	s GetPracticeOrdNum=##class(web.DHCPracticeDocPreOrder).GetPracticeOrdNum(EpisodeID,"N",PageType)
+	//需处理医嘱数量
+ 	s VerifyStyleNum=##class(web.DHCPracticeDocPreOrder).GetVerifyStyleNum(EpisodeID)
+ 	if (PageType'="Cure") {
+	 	//待确认检验检查病理申请
+	 	s PracticeLabNum=##Class(web.DHCAPPExaReportQuery).QueryExaReqHisListCount("30","1",EpisodeID_"^^I^"_%session.Get("LOGON.HOSPID"))
+	 	//待确认治疗申请
+	 	s PracticeCureNum=##class(web.DHCPracticeDocPreOrder).GetPracticeOrdNum(EpisodeID,"N","Cure")
+ 	}else{
+	 	//当是治疗申请-实习医生列表弹出框时，不显示待确认检验检查病理申请、待确认治疗申请
+	 	s PracticeLabNum=0,PracticeCureNum=0
+	}
+</Server>
+</head>
+<body>
+	<csp:Include Page="ipdoc.practicedocpreorder.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			mradm:"#(mradm)#",
+			PPRowId:"#(PPRowId)#",
+			PracticeFlag:"#(PracticeFlag)#",
+			GetPracticeOrdNum:"#(GetPracticeOrdNum)#",
+			PageType:"#(PageType)#",
+			VerifyStyleNum:"#(VerifyStyleNum)#",
+			PracticeLabNum:"#(PracticeLabNum)#",
+			PracticeCureNum:"#(PracticeCureNum)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/PracticeDocPreOrder.hui.js"></script>
+</body>
+</html>

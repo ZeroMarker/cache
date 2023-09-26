@@ -1,0 +1,456 @@
+/// Creator: congyue
+/// CreateDate: 2017-09-29
+//  Descript: 首页
+
+var url = "dhcadv.repaction.csp";
+var StrParam="";
+
+$(function(){
+	 // 2017-11-09 congyue 注释统计弹出层
+	 /*$("#adv_c_click").click(function(){
+	   $("#c_click_show").show();
+	 }); 
+	  $("#adv_s_click").click(function(){
+	   $("#s_click_show").show();
+	 }); */
+	 
+	 //hxy 2017-09-05 填报、统计、查询点击后面板的自适应位置
+	 $("#w_click_show").css("left",102+($(window).width()-1164)/2);
+	 $("#w_click_show,#c_click_show,#s_click_show").css("top",95);//2017-10-12 add 兼容ie8(仅)
+	 $("#c_click_show").css("left",507+($(window).width()-1164)/2);
+	 $("#s_click_show").css("left",900+($(window).width()-1164)/2);
+	 //hxy 2017-09-05 填报、统计、查询点击后显示面板的隐藏
+	 $("#w_click_show,#c_click_show,#s_click_show").mouseleave(function(){
+	   $(this).hide();
+	 });
+	 //hxy 2017-08-21 控制小数字自适应padding
+	 $(".index-function-button-one i").each(function(){
+	    if($(this).text()!=""){
+		    $(this).addClass("index-function-button-num")
+		}else{
+ 			$(this).next().css("margin-top","17px");//hxy 2017-09-29
+		}
+	 });
+	 $(".index-function-button-two i").each(function(){
+	    if($(this).text()!=""){
+		    $(this).addClass("index-function-button-num")
+		}else{
+			$(this).parent().find("p").css("margin-top","17px");//09-29 动态赋值数字后有上下偏移
+		}
+	 });//hxy end	
+	$("#gologin").hide(); //2017-11-23 cy 隐藏首页按钮
+	var myDate = new Date();
+	var StDate="";
+	//var DateFormat="3" ;
+	if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY
+		StDate="01"+"/"+"01"+"/"+myDate.getFullYear();  //当年开始日期
+	}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
+		StDate=myDate.getFullYear()+"-"+"01"+"-"+"01";  //当年开始日期
+	}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
+		StDate="01"+"/"+"01"+"/"+myDate.getFullYear();  //当年开始日期
+	}
+	var date=formatDate(0);  //CurentTime(); //获取当前日期
+	var params=StDate+"^"+date;
+	var param=StDate+"^"+date+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID;
+	//alert(param);
+	WardInfo(params); //初始化统计列表
+	//UntreatedInfo(param);//待办报告统计列表
+	StaticbyType(myDate.getFullYear());//不良事件按类型统计
+	StaticbyMon(myDate.getFullYear()); //不良事件按月统计
+	/* //病区统计
+	$('#untreated').datagrid({
+	  url:url+'?action=UntreatedList',	
+		queryParams:{
+			param:param}
+	}); */
+	/* //病区统计
+	$('#warddg').datagrid({
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=StaticPreAlert'+'&params='+params,
+		queryParams:{
+			param:params}
+	}); 
+	
+	//医疗等级分布
+	$.ajax({
+		type: "POST",
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYLEVEL&MethodName=QueryLelAnalysis'+'&params='+params,
+		success: function(jsonString){
+
+			var ListDataObj = jQuery.parseJSON(jsonString);
+			var option = ECharts.ChartOptionTemplates.Bars(ListDataObj); 
+			option.title ={
+				//text: '医疗等级分布',
+				//subtext: '柱状图',
+				//x:'center'
+			}
+			var container = document.getElementById('medcharts');
+			opt = ECharts.ChartConfig(container, option);
+			ECharts.Charts.RenderChart(opt);
+		}
+	});*/
+	
+})
+
+// 待办报告初始化列表
+function UntreatedInfo(param){
+		//定义columns
+	var columns=[[
+		{field:'name',title:'报告类型',width:150,align:'center'},
+		{field:'value',title:'报告数量',width:150,align:'center'}
+	]];
+	//定义datagrid
+	$('#untreated').datagrid({
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=UntreatedList'+'&param='+param,
+		//url:'',
+		fit:true,
+		columns:columns,
+		rownumbers:true,
+	    singleSelect:false,
+		loadMsg: '正在加载信息...',
+		showFooter:true,
+		pageSize:10,  // 每页显示的记录条数
+		pageList:[10,20,30],
+		pagination:true
+	});
+	initScroll("#untreated");//初始化显示横向滚动条
+	}
+//初始化统计列表
+function WardInfo(params)
+{
+	//定义columns
+	var columns=[[
+		{field:"name",title:'病区',width:150,align:'center',sortable:true},
+		{field:'reptype',title:'报告类型',width:150,align:'center'},
+		{field:'value',title:'报告数量',width:150,align:'center'}
+	]];
+	//定义datagrid
+	$('#warddg').datagrid({
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=StaticPreAlert'+'&params='+params,
+		fit:true,
+		columns:columns,
+		rownumbers:true,
+		remoteSort:false,  //问题所在
+		sortName:'name',
+		sortOrder:'asc',
+	    singleSelect:false,
+		loadMsg: '正在加载信息...',
+		showFooter:true,
+		pageSize:10,  // 每页显示的记录条数
+		pageList:[10,20,30],
+		pagination:true
+	});
+	initScroll("#warddg");//初始化显示横向滚动条
+	
+}
+//获取当前日期
+function CurentTime()
+{ 
+	var now=new Date();
+	var year=now.getFullYear();  //年
+	var month=now.getMonth() + 1;  //月
+	var day=now.getDate();  //日
+	var clock=year+"-";
+	
+	if(month<10)
+	clock+="0";
+	clock+=month+"-";
+	if(day<10)
+	clock+="0";
+	clock+=day;
+ 	return(clock);
+}
+///事件填报 联动
+function JumpBtn(){
+	$("#w_click_show").show();
+	var UserList=LgUserID+"^"+LgCtLocID+"^"+LgGroupID;
+    $.ajax({
+		type: "POST",
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=GetRepTypeList'+'&UserList='+UserList,		
+		async: false, //同步
+		dataType: "json", 
+		success: function(data){
+		var htmlname='<img style="margin-top:-30px" src="../scripts/dhcnewpro/images/adv_top.png" alt="" width="28" height="28">';
+		    var htmlstr = "";
+		    //alert(data.length);
+			for (var i=0; i<data.length; i++){
+		        htmlstr = htmlstr +'<div class="w_click_row"><div class="w_click_par"><div class="w_click" id="'+ data[i].id +'" onclick="InterfaceJump(this.id,this.innerText)">'+ data[i].value +'</div></div></div>'
+		    }
+		    $('#w_click_show').html(htmlname+htmlstr);   //InterfaceJump(this.id)
+		    //layoutform.csp?code=advNursing
+		}});
+}
+
+///统计分析 联动 2017-11-15
+function StaticBtn(){
+	$("#c_click_show").show();
+	//按等级统计
+	$("#reportbylevel").click(function(){
+	   var Rel='dhcadv.reportbylevel.csp';
+		location.href=Rel;
+	});
+	//按事件类型统计
+	$("#reportbyevent").click(function(){
+	   var Rel='dhcadv.reportbyevent.csp';
+		location.href=Rel;
+	});
+	//不良事件按月统计
+	$("#reportbymon").click(function(){
+	   var Rel='dhcadv.reportbymon.csp';
+		location.href=Rel;
+	});
+	//不良事件按季度统计
+	$("#reportbyqau").click(function(){
+	   var Rel='dhcadv.reportbyqau.csp';
+		location.href=Rel;
+	});
+	//按科室/科室类型数量统计
+	$("#reportbyctloc").click(function(){
+	   var Rel='dhcadv.reportbyctloc.csp';
+		location.href=Rel;
+	});
+	//压疮发生率季报
+	$("#PreSorePerQuarter").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_PreSorePerQuarter.raq';
+		location.href=Rel;
+	});
+	//用药错误例数按月统计
+	$("#MedErrorPerMonth").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_MedErrorPerMonth.raq';
+		location.href=Rel;
+	});
+	//全年各月各级压疮统计
+	$("#PreSoresAtLevel").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_PreSoresAtLevel.raq';
+		location.href=Rel;
+	});
+	//全年各月各级跌倒事件统计
+	$("#FallEventsAtLevels").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_FallEventsAtLevels.raq';
+		location.href=Rel;
+	});
+	//分期院内发生压疮率统计
+	$("#InPerPSore").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_InPerPSore.raq';
+		location.href=Rel;
+	});
+	//院内各部位压疮率统计
+	$("#InPartPSore").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_InPartPSore.raq';
+		location.href=Rel;
+	});
+	//高危患者跌倒发生率月报
+	$("#HRPatFallIncidence").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_HRPatFallIncidence.raq';
+		location.href=Rel;
+	});
+	//有伤害跌倒发生率月报
+	$("#HurtFall").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_HurtFall.raq';
+		location.href=Rel;
+	});
+	//外院带入压疮数统计
+	$("#OutPressureNumber").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_OutPressureNumber.raq';
+		location.href=Rel;
+	});
+	//压疮发生率月报
+	$("#PreUlcer").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_PreUlcer.raq';
+		location.href=Rel;
+	});
+	//跌倒发生率月报
+	$("#PreSlip").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_PreSlip.raq';
+		location.href=Rel;
+	});
+	//高危压疮发生率月报
+	$("#PreHighScore").click(function(){
+	   var Rel='dhccpmrunqianreport.csp?reportName=DHCADV_PreHighScore.raq';
+		location.href=Rel;
+	});
+
+}
+
+///报告综合查询 联动
+function QueryBtn(){
+	$("#s_click_show").show();
+	$("#query").click(function(){
+	   var Rel='dhcadv.reportquery.csp?StrParam='+"";
+		location.href=Rel;
+	});
+	$("#audit").click(function(){
+	   var Rel='dhcadv.reportaudit.csp?StrParam='+"";
+		location.href=Rel;
+	});
+}
+
+//congyue 2017-08-06 点击事件填报类型跳转填报界面
+
+/* function InterfaceJump(code){
+	alert(code);
+	alert(dd);
+	var Rel='layoutform.csp?code='+code.id
+	location.href=Rel;
+
+}*/
+//收件一览 联动
+function RecListBt(){
+	var StsDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^1^^"+"Y"+"^"+""+"^"+""+"^"+""+"^"+"";
+	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='++"(收件一览)";
+	location.href=Rel;
+}
+//已报事件 联动
+function CompleBt(){
+	var StsDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^Y^^^^^"+"Y";
+	var Rel='dhcadv.reportquery.csp?StrParam='+StrParam+'&querytitle='+"(已报事件)";
+	location.href=Rel;
+}
+// 重点关注 联动
+function RepImpBt(){
+	var StsDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^"+""+"^"+"Y"+"^"+""+"^"+""+"^"+"";
+	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='++"(重点关注)";
+	location.href=Rel;
+}
+//草稿箱 联动
+function DraftsBt(){
+	var StsDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^N^^^^^"+"N";
+	var Rel='dhcadv.reportquery.csp?StrParam='+StrParam+'&querytitle='++"(草稿箱)";
+	location.href=Rel;
+}
+//待审批报告
+function PendAuditBt(){
+	var StsDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^"+""+"^"+""+"^"+"Y"+"^"+""+"^"+"";
+	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='++"(待审批报告)";
+	location.href=Rel;
+}
+//被退回报告 联动
+function BackBt(){
+	var StsDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^2^^"+""+"^"+""+"^"+""+"^"+"Y"+"^"+"";
+	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='++"(被退回报告)";
+	location.href=Rel;
+}
+//全部已处理报告
+function AuditBt(){
+	var StsDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^"+""+"^"+""+"^"+""+"^"+""+"^"+"Y";
+	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='++"(全部已处理报告)";
+	location.href=Rel;
+}
+
+
+//不良事件按类型统计
+function StaticbyType(StDate)
+{
+	var params=StDate+"-"+"01"+"-"+"01"+"^"+StDate+"-"+"12"+"-"+"31";
+	$.ajax({
+		type: "POST",
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYEVENT&MethodName=AnalysisReport'+'&params='+params,
+		//url: url+"?action=AnalysisReport&params="+params,
+		success: function(jsonString){
+			var ListDataObj = jQuery.parseJSON(jsonString);
+			var option = ECharts.ChartOptionTemplates.Bars(ListDataObj); 
+			option.title ={
+				//text: '不良反应事件统计分析',
+				//subtext: '柱状图',
+				//x:'center'
+			}
+			var container = document.getElementById('typecharts');
+			opt = ECharts.ChartConfig(container, option);
+			ECharts.Charts.RenderChart(opt);
+		}
+	});
+}
+//不良事件按月统计
+ function StaticbyMon(StDate)
+{
+	//1、清空datagrid 
+	//$('#dgbymon').datagrid('loadData', {total:0,rows:[]}); 
+	//2、查询
+
+	var params=StDate+"-"+"01"+"-"+"01"+"^"+StDate+"-"+"12"+"-"+"31"+"^"+"";
+	var columns=[[
+		{field:"name",title:'月份',width:150,align:'center'},
+		{field:'value',title:'数量',width:150,align:'center'}
+	]];
+	//定义datagrid
+	$('#dgbymon').datagrid({
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYMON&MethodName=StatAllRepByMon'+'&params='+params,		
+		fit:true,
+		columns:columns,
+	    singleSelect:false,
+		loadMsg: '正在加载信息...',
+		showFooter:true,
+		pageSize:10,  // 每页显示的记录条数
+		pageList:[10,20,30],
+		pagination:true,
+		height:200
+
+	});
+	initScroll("#dgbymon");//初始化显示横向滚动条
+		
+	$.ajax({
+		type: "POST",
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYMON&MethodName=AnalysisRepByMon'+'&params='+params,	
+		//url: url+"?action=AnalysisRepByMon&params="+params,
+		success: function(jsonString){
+			var ListDataObj = jQuery.parseJSON(jsonString);
+			var option = ECharts.ChartOptionTemplates.Lines(ListDataObj); 
+			option.title ={
+				//text: '不良反应事件统计分析',
+				//subtext: '饼状图',
+				//x:'center'
+			}
+			var container = document.getElementById('moncharts');
+			opt = ECharts.ChartConfig(container, option);
+			ECharts.Charts.RenderChart(opt);
+		}
+	});
+}
+
+function RepManagement(){
+
+	/*var StrParam=LgGroupID+"^"+LgCtLocID+"^"+LgUserID;
+	//alert(StrParam);
+	 $.ajax({
+		type: "POST",
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QueryRepListAll'+'&StrParam='+StrParam+'&rows='+10+'&page='+1,		
+		async: false, //同步
+		dataType: "json", 
+		success: function(data){
+			//我的报告
+			var htmlstr = "<div style='width:485px;float:left;border-right:1px solid #ccc'><div class='index-function-button-title'>&nbsp;&nbsp;我的报告</div>";
+			htmlstr=htmlstr+"<div class='index-function-button-one' onclick='RecListBt()'><img src='../scripts/dhcnewpro/images/adv_2_1.png'  alt='收件一览' /><i>"+data[0].RecListnum+"</i><p>收件一览</p></div>"
+			htmlstr=htmlstr+"<div class='index-function-button-one' onclick='CompleBt()'><img src='../scripts/dhcnewpro/images/adv_2_2.png'  alt='已报事件' /><i>"+data[0].Complenum+"</i><p>已报事件</p></div>"
+			htmlstr=htmlstr+"<div class='index-function-button-one' onclick='RepImpBt()'><img src='../scripts/dhcnewpro/images/adv_2_3.png'  alt='重点关注' /><i>"+data[0].RepImpnum+"</i><p>重点关注</p></div>"
+			htmlstr=htmlstr+"<div class='index-function-button-one' onclick='DraftsBt()'><img src='../scripts/dhcnewpro/images/adv_2_4.png'  alt='草稿箱' /><i>"+data[0].Draftsnum+"</i><p>草稿箱</p></div>"
+			htmlstr=htmlstr+"<div class='index-function-button-one' onclick='FileBt()'><img src='../scripts/dhcnewpro/images/adv_2_5.png'  alt='归档事件' /><i>"+data[0].Filenum+"</i><p>归档事件</p></div>"+"</div>"
+			// 待处理事件
+			htmlstr=htmlstr+"<div style='width:223px;float:left;border-right:1px solid #ccc'><div class='index-function-button-title'>&nbsp;&nbsp;待处理事件</div>"
+			htmlstr=htmlstr+"<div class='index-function-button-two' onclick='PendAuditBt()'><img src='../scripts/dhcnewpro/images/adv_2_6.png'  alt='待审批报告' /><i>"+data[0].PendAuditnum+"</i><p>待审批报告</p></div>"
+			htmlstr=htmlstr+"<div class='index-function-button-two' onclick='BackBt()'><img src='../scripts/dhcnewpro/images/adv_2_7.png'  alt='被退回报告' /><i>"+data[0].Backnum+"</i><p>被退回报告</p></div>"+"</div>"
+			//提醒事件
+			htmlstr=htmlstr+"<div style='width:220px;float:left;border-right:1px solid #ccc'><div class='index-function-button-title'>&nbsp;&nbsp;提醒事件</div>"
+			htmlstr=htmlstr+"<div class='index-function-button-two' onclick='FillTimeBt()'><img src='../scripts/dhcnewpro/images/adv_2_8.png'  alt='填写时限' /><i>"+data[0].FillTimenum+"</i><p>填写时限</p></div>"
+			htmlstr=htmlstr+"<div class='index-function-button-two' onclick='AcceptTimeBt()'><img src='../scripts/dhcnewpro/images/adv_2_9.png'  alt='受理时限' /><i>"+data[0].AcceptTimenum+"</i><p>受理时限</p></div>"+"</div>"
+			//已处理事件
+			htmlstr=htmlstr+"<div style='width:230px;over-flow:hidden;float:left;border-right:0px solid #ccc'><div class='index-function-button-title'>&nbsp;&nbsp;已处理事件</div>"
+			htmlstr=htmlstr+"<div class='index-function-button-two' onclick='AuditBt()'><img src='../scripts/dhcnewpro/images/adv_2_10.png'  alt='全部已处理报告' /><i>"+data[0].Auditnum+"</i><p>全部已处理报告</p></div>"
+			htmlstr=htmlstr+"<div class='index-function-button-two' onclick='PendBt()'><img src='../scripts/dhcnewpro/images/adv_2_11.png'  alt='待定' /><i>"+data[0].Pendnum+"</i><p>待定</p></div>"+"</div>"
+
+			$('#test').html(htmlstr);  
+		}});*/
+
+}

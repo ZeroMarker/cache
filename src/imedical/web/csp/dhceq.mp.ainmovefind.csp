@@ -1,0 +1,110 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>   <!--modify by wl 2019-12-31 WL0044 begin-->
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<DHCEQ:Report></DHCEQ:Report>
+</HEAD>
+<script language="cache" runat="server">
+ s GroupID=%session.Get("LOGON.GROUPID")
+ s HOSPDESC= ##Class(web.DHCEQCommon).GetHospitalDesc()
+</script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+			<div class="hisui-panel" title="配件业务单汇总查询" data-options="'eqtitle':'maintitle',fit:true">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'north',border:false" style="height:50px">
+						<div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><lable id="cType" for="Type">业务类型</lable></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" style="width:170px" id="Type"></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" style="width:100px" id="SmoveType" data-options="disabled:true" ></div>
+								<div class="eq-table-td eq-table-label"><lable id="cNo" for="No">单号</lable></div><!--2019-10-18 修正id传参不统一-->
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="No" ></div><!--2019-10-18 修正id传参不统一-->								
+								<div class="eq-table-td eq-table-label"><lable id="cStartDate" for="StartDate">统计日期</lable></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate"></div>	
+								<div class="eq-table-td eq-table-label"><lable id="cEndDate" for="EndDate">至</lable></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate" ></div>
+								<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+								<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
+							</div>
+		                 </div>
+			        </div>
+			<!--润乾报表显示位置-->
+					<div data-options="region:'center',border:false" style="overflow:hidden;">
+						<iframe id="ReportFile" name="ReportFile" src=#(ReportFileSrc)# width=100% height=100% scrolling="no"></iframe>
+						<iframe id="ReportFilePrint" name="ReportFilePrint" src=#(ReportFilePrintSrc)# width=100% height=0%></iframe>		
+					</div>
+				</div>
+		   </div>
+	</div>			        
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<input type="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)# >
+			<input type="hidden" name="QXType" id="QXType" value=#(QXType)# >
+			<input type="hidden" name="PrintFlag" id="PrintFlag" value=#(PrintFlag)#>
+			<input type="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)# >
+			<input type="hidden" name="GROUPID" id="GROUPID" value=#(GroupID)#>
+			<input type="hidden" name="HOSPDESC" id="HOSPDESC" value=#(HOSPDESC)#>
+		</form>
+	</div>
+	<script type='text/javascript'>
+   	initType();
+   	initSmoveType();
+   	
+		$('#Type').combobox({
+	   		onChange : function(n,o)
+	   		{ 
+		   		if(getElementValue("Type")!="1")
+		   		{ 	
+		   			$('#SmoveType').combobox({
+			   			disabled:true,	
+			   			});
+			   		
+		   		}
+		   		else
+		   		{ 
+		   			$('#SmoveType').combobox({
+			   			prompt:'当前可选择转移的类型',
+			   			disabled:false});
+		   		}
+	   		}
+
+   		});
+   	function initType(){ 
+			$HUI.combobox("#Type",{
+				valueField:'id', 
+				textField:'text',
+				panelHeight:"auto",
+				data:[
+					 {id:'0',text:'入库单',selected:true}
+					,{id:'1',text:'转移单'}
+					,{id:'2',text:'退货减少单'}	
+				],
+			});   	
+   		
+   	}
+   	function initSmoveType(){ 
+   		 $HUI.combobox("#SmoveType",{
+				valueField:'id', 
+				textField:'text',
+				panelHeight:"auto",
+				data:[
+					 {id:'0',text:'出库'}
+					//,{id:'1',text:'库房调配'}		Mozy003003	1246576		2020-3-27
+					,{id:'2',text:'退库'}	
+				],
+			});   	
+   	}			<!--modify by wl 2019-12-31 WL0044 end-->
+   </script> 					
+</body>
+</HTML>

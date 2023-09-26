@@ -1,0 +1,42 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##class(DHCWL.VerManagement.SetProVerNow).SetProVerNow()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set action=$g(%request.Data("action",1))
+	set ID=$g(%request.Data("ID",1))
+	i action="vmSearch" {
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.VerManagement.DefaultInOutService:GetVersion")
+			i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+		
+	}elseif action="hisdetail" {
+		s ^panlei(1)=1_"!"_ID
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.VerManagement.DefaultInOutService:GetHisByRowID","",ID)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}
+		
+	
+</script>

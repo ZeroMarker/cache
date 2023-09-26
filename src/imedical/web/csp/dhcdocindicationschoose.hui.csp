@@ -1,0 +1,138 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 dhcdocindicationschoose.hui.csp-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html;"/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI></HISUI>
+    <style>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+		padding: 0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.panel-header{
+		border-bottom: 0;
+	}
+	#panel-footer{
+		text-align: center;
+		height:50px;
+		line-height:50px;
+	}
+	</style>
+</head>
+<body class="hisui-layout" data-options="fit:true,border:false">
+  	<div data-options="region:'center',border:false,split:false" style="padding:10px 10px 0 10px;"> 
+   		 <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;margin:0 auto;">
+   		 	<table id="InsurListTab"></table>
+   		 </div>
+  	</div>
+  	<div data-options="region:'south',border:false,split:false" style="height:50px;">
+  		<div id="panel-footer">
+			<a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">确认</a>
+			<div style="display:inline-block;margin:0 20px;"></div>
+			<a href="#" id="BClose" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a>
+		</div>
+  	</div>
+  	<SCRIPT language = 'javascript' >
+  		var PageLogicObj={
+			m_InsurListTab:""
+		}
+  		$(function(){
+			PageLogicObj.m_InsurListTab=InitInsurListTab();
+			AddDataToTbl();
+			$('#BSave').click(BSaveClickHandle);
+			$("#BClose").click(function(){
+				websys_showModal('options').CallBackFunc();
+			});
+		});
+		function InitInsurListTab(){
+			var Columns=[[
+		 			{field:'TarConCode',title:'项目编码',width:100},
+		 			{field:'TarConDesc',title:'HIS项目名称',width:150},
+		 			{field:'ConType',title:'',width:100,hidden:true},
+		 			{field:'ConTypeDesc',title:'项目类型',width:100},
+		 			{field:'bz',title:'备注',width:100},
+		 			{field:'insuCode',title:'医保项目编码',width:100},
+		 			{field:'insuDesc',title:'医保项目名称',width:100},
+		 			{field:'zfbl',title:'自付比例',width:100},
+		 			{field:'zgxj',title:'最高限价',width:100},
+    			 ]];
+			var InsurListTabGrid=$("#InsurListTab").datagrid({  
+				fit : true,
+				border : false,
+				striped : true,
+				singleSelect : true,
+				fitColumns : false,
+				autoRowHeight : false,
+				//url : $URL+"?ClassName=web.DHCDocDiagnosEntryV8&QueryName=GetDeathTypeICDList&desc="+$("#Text_InputStr").val()+"&EpisodeID="+EpisodeID,
+				loadMsg : '加载中..',  
+				pagination : true,  
+				pageSize: 20,
+				pageList : [20,50,100],
+				columns :Columns,
+		    	idField:'ConType',
+		    	onLoadSuccess:function(data){
+			    	$(this).datagrid('unselectAll');
+			    },
+			    onDblClickRow:function(index, row){
+				    if (websys_showModal('options').CallBackFunc) {
+						 websys_showModal('options').CallBackFunc(row.ConType);
+					 }else{
+						window.returnValue=row.ConType;
+					 	window.close();
+					 }
+				}
+			});
+			return InsurListTabGrid;
+	 }
+	 function AddDataToTbl(){
+		var InsurAlertStr=websys_showModal('options').InsurAlertStr;
+		var Itemtemp=InsurAlertStr.split("!");
+		for (var i=0;i<Itemtemp.length;i++){
+			var Item=Itemtemp[i].split(String.fromCharCode(1));
+			var TarConCode=Item[0];
+			var TarConDesc=Item[1];
+			var ConType=Item[2];
+			var bz=Item[3];
+			var ConTypeDesc=Item[4];
+			var insuCode=Item[5];
+			var insuDesc=Item[6];
+			var zfbl=Item[7];
+			if (zfbl!="") zfbl=parseFloat(zfbl);
+			var zgxj=Item[8];
+			$('#InsurListTab').datagrid('appendRow',{
+				TarConCode: TarConCode,
+				TarConDesc: TarConDesc,
+				ConType: ConType,
+				ConTypeDesc:ConTypeDesc,
+				bz:bz,
+				insuCode:insuCode,
+				insuDesc:insuDesc,
+				zfbl:zfbl,
+				zgxj:zgxj
+			});
+		}
+	 }
+	 function BSaveClickHandle(){
+		 var row=PageLogicObj.m_InsurListTab.datagrid('getSelected');
+		 if (!row){
+			 $.messager.alert("提示","请选择一条记录!");
+			 return false;
+		 }
+		 if (websys_showModal('options').CallBackFunc) {
+			 websys_showModal('options').CallBackFunc(row.ConType);
+		 }else{
+			window.returnValue=row.ConType;
+		 	window.close();
+		 }
+	 }
+  	</SCRIPT>
+</body>
+</html>

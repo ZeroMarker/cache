@@ -1,0 +1,81 @@
+<csp:content charset="utf-8">
+
+
+<script language="Cache" runat="SERVER">
+	s requestType=$g(%request.Data("type",1))
+	if (requestType="excelPath"){
+		w "{success:true,msg:'"_##class(web.DHCOPConfig).GetPath()_"'}"
+		
+	}elseif(requestType="WardDetailByModWard"){
+		s patWardRowid=$g(%request.Data("patWardRowid",1))
+		s ModRowid=$g(%request.Data("ModRowid",1))
+		s date=$g(%request.Data("date",1))
+		s inputUpdateDate=$g(%request.Data("updateDate",1))
+		d ##class(DHCBILL.DHCIPMealPrintComm).WirteWardDetailByWardModGlobal(date,patWardRowid,ModRowid,inputUpdateDate)	
+	}elseif (requestType="MealModWardDetail"){
+	    s patWardRowid=$g(%request.Data("patWardRowid",1))
+		s ModRowid=$g(%request.Data("ModRowid",1))
+		s date=$g(%request.Data("date",1))
+		s inputUpdateDate=$g(%request.Data("updateDate",1))
+		d ##class(DHCBILL.DHCIPMealPrintComm).WirteGridByWardModGlobal(date,patWardRowid,ModRowid,inputUpdateDate)
+		//d ##class(DHCBILL.DHCIPMealPrintComm).WirteGridJsonItemByWardMod(date,patWardRowid,ModRowid)
+		//d ##class(DHCBILL.DHCIPMealPrintComm).PrintStatByTypeWard(JSFun,ModRowid,date,printPath,user)
+	}elseif (requestType="patFeeByDateAdmGrid") {
+  		s admRowid=$g(%request.Data("admRowid",1))
+  		s startDate=$g(%request.Data("startDate",1))
+  		s endDate=$g(%request.Data("endDate",1))
+  		s start=+$g(%request.Data("start",1))  ;开始行
+  		s limit=+$g(%request.Data("limit",1))  ;限制行
+  		//
+  		//d ##class(DHCBILL.DHCIPMealWriteJSON).CreateGridJsonByQuery("DHCBILL.DHCIPMealPrintComm","FindFeeDetailByDateAdm",1,7,"2010-12-11","2010-12-13",46)
+  		d ##class(DHCBILL.DHCIPMealWriteJSON).CreateGridJsonByQuery("DHCBILL.DHCIPMealPrintComm","FindFeeDetailByDateAdm",start,limit,startDate,endDate,admRowid)
+  		
+	}elseif(requestType="wardOrderDetail"){
+		s wardRowid=$g(%request.Data("patWardRowid",1))
+		s itemCat=$g(%request.Data("itemCat",1))
+		s arcItmMastRowid=$g(%request.Data("arcItmMastRowid",1))
+		s date=$g(%request.Data("date",1))
+		s start=+$g(%request.Data("start",1))  ;开始行
+  		s limit=+$g(%request.Data("limit",1))  ;限制行
+		d ##class(DHCBILL.DHCIPMealWriteJSON).CreateGridJsonByQuery("DHCBILL.DHCIPMealPrintComm","FindOrdDetailByWard",start,limit,wardRowid,date,itemCat,arcItmMastRowid)
+	}elseif(requestType="ItmMastByCode"){
+		s code=$g(%request.Data("query",1))
+		s itemCatRowid=$g(%request.Data("itemCatRowid",1))
+		s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealCommon","FindItmMastDescByCode",0,0,code,itemCatRowid)	
+		w jsonStr
+	}elseif(requestType="WardByCode"){
+		s code=$g(%request.Data("query",1))
+		s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealCommon","FindWardDescByCode",0,0,code)	
+		w jsonStr	
+	}elseif(requestType="MealOrdCateByCode"){
+		s code=$g(%request.Data("query",1))
+		s jsonStr="{totalCount:2,results:[{rowid:147,desc:'饮食'},{rowid:200,desc:'治疗饮食'}]}"
+		w jsonStr	
+	}elseif(requestType="UserCode"){
+		s code=$g(%request.Data("query",1))
+		s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealCommon","FindMealUserDescByCode",0,0,code)	
+		w jsonStr
+	}elseif(requestType="strikeByDateGrid"){
+		s admRowid=$g(%request.Data("admRowid",1))
+  		s startDate=$g(%request.Data("startDate",1))
+  		s endDate=$g(%request.Data("endDate",1))
+  		s start=+$g(%request.Data("start",1))  ;开始行
+  		s limit=+$g(%request.Data("limit",1))  ;限制行 
+  		s userRowid=$g(%request.Data("userRowid",1)) 
+  		d ##class(DHCBILL.DHCIPMealWriteJSON).CreateGridJsonByQuery("DHCBILL.DHCIPMealPrintComm","FindStrikeByDate",start,limit,startDate,endDate,userRowid,admRowid)
+
+	}elseif(requestType="mealPrecentByDate"){
+		s startDate=$g(%request.Data("startDate",1))
+  		s endDate=$g(%request.Data("endDate",1))
+  		s start=+$g(%request.Data("start",1))  ;开始行
+  		s limit=+$g(%request.Data("limit",1))  ;限制行 
+  		d ##class(DHCBILL.DHCIPMealWriteJSON).CreateGridJsonByQuery("DHCBILL.DHCIPMealPrintComm","FindMealPrecentByDate",start,limit,startDate,endDate)
+	}elseif(requestType="cashierWorkByDate"){
+		s startDate=$g(%request.Data("startDate",1))
+  		s endDate=$g(%request.Data("endDate",1))
+  		s start=+$g(%request.Data("start",1))  ;开始行
+  		s limit=+$g(%request.Data("limit",1))  ;限制行 
+  		d ##class(DHCBILL.DHCIPMealWriteJSON).CreateGridJsonByQuery("DHCBILL.DHCIPMealPrintComm","FindMealCashierWork",start,limit,startDate,endDate)
+
+	}
+</script>

@@ -1,0 +1,186 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<script Language="JavaScript" SRC="../Scripts/OEOrder.Common.js"></script>
+
+
+
+</script>
+</head>
+
+<body>
+<server>
+ s OrderWindow=""
+ s OrderWindow=%request.Get("OrderWindow")
+ i %request.Get("LOCKMSG")'="" d
+ . w "<P><center><B><font color='red'>"_%request.Get("LOCKMSG")_"</font></B></center></P>"
+ w "<br>"
+ i %request.Get("QuestionnaireDesc")'="" d
+ . w "<center>"
+ . w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q""><U>Q</U>uestionnaire-",%request.Get("QuestionnaireDesc"),"</A>"
+ . w "<br>"
+ . w "</center>"
+</server>
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+
+<TRAK:COMPONENT id="OEOrder.CommonFields" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<TRAK:COMPONENT id="OEOrder.Prosthetic" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<server>
+</server>
+<script language="Javascript">
+var OrderWindow="#(OrderWindow)#";
+function BodyLoadHandler() {
+	var UpdateObj=document.getElementById("Update");
+	if (UpdateObj) UpdateObj.onclick = UpdateClickHandler;
+	
+	var UpdateSaveDefObj=document.getElementById("UpdateSaveDefaults");
+	if (UpdateSaveDefObj) UpdateSaveDefObj.onclick = UpdateSaveDefaultsClickHandler;
+	window.focus();  // 65197
+}
+function UpdateClickHandler() {
+	UpdateFromEPRPROS();	
+}
+
+function UpdateFromEPRPROS() {
+	var frm = document.forms['fOEOrder_CommonFields'];
+	var supfrm = document.forms['fOEOrder_Prosthetic'];
+	
+	var data1=TransferDataMain(frm);
+	var data2=TransferDataSub(supfrm);
+	//data2="%01"+data2;
+	var data=data1+data2
+	var win=window.opener.parent.frames[1];
+	if (win) {
+		var formICP=win.document.forms['fMRClinicalPathways_ItemList'];
+		var formICP2=win.document.forms['fMRClinicalPathways_CarePlanItemList'];
+		if (formICP||formICP2) {
+			win.CollectedFields(escape(data));
+		}
+	}
+	data=String.fromCharCode(1)+data;			
+	if (data!="") AddInput(supfrm,data);
+	refreshParent();
+	submitFormPROS();
+}
+
+function submitFormPROS() {
+	var frm = document.forms['fOEOrder_Prosthetic'];
+	frm.kCounter.value = 1;
+	return Update_click();
+}
+
+function UpdateSaveDefaultsClickHandler() {
+	var SaveDefObj=document.getElementById("SaveDefaults");
+	if (SaveDefObj) SaveDefObj.value="Y";
+	UpdateClickHandler();
+}
+
+//Log 61186 PeterC 29/11/06
+var Gparam5="";
+var Gsdcheckval="Y";
+var Gparam6="";
+var Gparam7="";
+var Gparam8="";
+function OEORISttDat_onBlur(e) {
+	var obj=document.getElementById("OEORISttDat");
+	Gparam5=obj.value;
+	var obj=document.getElementById("OEORIItmMastDR");
+	if((obj)&&(obj.value!="")) Gparam6=obj.value;
+	var obj=document.getElementById("EpisodeID");
+	if((obj)&&(obj.value!="")) Gparam7=obj.value;
+	var obj=document.getElementById("OECPRDesc");
+	if((obj)&&(obj.value!="")) Gparam8=obj.value;
+	var hsdcobj=document.getElementById("HiddenStartDateCheck");
+	if (hsdcobj) hsdcobj.onchange();
+	//alert("Gsdcheckval="+Gsdcheckval);
+	var ICAPAlert=mPiece(Gsdcheckval,"^",0);
+	var RecLoc=mPiece(Gsdcheckval,"^",1);
+	if ((ICAPAlert!="")&&(ICAPAlert=="Y")) {
+		alert(t['InClosedAccPeriod']);
+	}
+	var obj=document.getElementById("CTLOCDesc");
+	if(obj) obj.value=RecLoc;
+}
+
+function HiddenStartDateCheck_changehandler(encmeth) {
+	Gsdcheckval=cspRunServerMethod(encmeth,Gparam5,Gparam6,Gparam7,Gparam8);
+}
+
+var obj=document.getElementById("OEORISttDat");
+if (obj) obj.onblur=OEORISttDat_onBlur;
+
+//JPD 56447
+function refreshParent() {
+	if ((window.opener.parent.document.forms['fOEOrdItem_LabSpecimenCollection'])||(window.opener.parent.document.forms['fEPVisitNumber_ListNonExecutedOrders'])) {
+		window.opener.treload('websys.csp');
+	} else if (window.opener) { 
+		//should be from epr chart csp page
+		var formCust=window.opener.document.forms['fOEOrder_Custom'];
+		var formOSL=window.opener.document.forms['fOEOrder_OSItemList'];
+		if(!formCust && !formOSL) window.opener.history.go(0);
+		if (formOSL) {
+			var FormArray=formOSL.RebuiltString.value.split("^");
+			for (var i=0; i<FormArray.length; i++) {
+				var FormStr=FormArray[i];
+				var SetOrdIDArr=FormStr.split("*");
+				var SetOrdID=SetOrdIDArr[1];
+				var OrdID=document.getElementById("ID").value;
+				if (OrdID==SetOrdID) {
+					var Qty1=document.getElementById("OEORIQty");
+					if (Qty1) {
+						if (Qty1.value=="") Qty1.value="1";
+						if (formOSL.document.getElementById("Quantityz"+(i+1))) formOSL.document.getElementById("Quantityz"+(i+1)).value=Qty1.value;
+					}
+				}
+			}
+		}
+	}
+}
+//JD created BodyUnload 6/5/06 for refresh sessionlist
+function BodyUnLoadHandler() {
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(0);
+	}
+
+	//Go to the details page of the next order item 
+	if (OrderWindow=="order_entry") {
+		if ((par_win)&&(par_win.document.fOEOrder_Custom)) par_win.OrderDetailsShowing(par_win.document.fOEOrder_Custom);
+	}
+
+	// JD refresh order list with new values 54852
+	if (OrderWindow=="oeorder_entry") {
+		try {
+			var detailFrame=window.open("","oeorder_entry");
+			if (detailFrame) detailFrame.RefreshSessionList();
+		} catch(e) {
+			//log58506 TedT kill blank window
+			detailFrame.close();
+		}
+	}
+	if (document.getElementById('ID')) {var ID=document.getElementById('ID').value;} else {var ID="";}
+	var serverupdate=tkMakeServerCall("web.OEOrdItem","LockClear",ID);
+
+}
+document.body.onload = BodyLoadHandler;
+document.body.onunload = BodyUnLoadHandler;
+</script>
+<server>
+
+</server>
+
+</form>
+</body>
+</html>

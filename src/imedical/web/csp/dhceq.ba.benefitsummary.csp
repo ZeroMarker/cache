@@ -1,0 +1,81 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RowID=$G(%request.Data("RowID",1))
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+</Script>
+<style type="text/css">
+	.hisui-textarea
+	{
+		width:180%;
+		border:1px solid #40a2de;
+	}
+	.eq-table-label
+	{
+		width:133px;
+	}
+</style>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="年度汇总报告" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:160px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cBSYear" for="BSYear">年度</label></div>
+						<div class="eq-table-td eq-table-input"><input id="BSYear" class="hisui-validatebox"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBSUserDR_SSName" for="BSUserDR_SSName">报告人</label></div>
+						<div class="eq-table-td eq-table-input"><input id="BSUserDR_SSName" class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBSDate" for="BSDate">日期</label></div>
+						<div class="eq-table-td eq-table-input"><input id="BSDate" class="hisui-datebox textbox" id="ISInDate"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+						<div class="eq-table-td eq-table-label15"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cBSSummary" for="BSSummary">总结</label></div>
+						<div class="eq-table-td eq-table-input"><textarea id="BSSummary" class="hisui-textarea"></textarea></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="tDHCEQBenefitSummary" class="hisui-datagrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="BSRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="BSUserDR">
+			<INPUT type="hidden" id="BSStatus">
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/ba/benefitsummary.js'></script>
+</body>
+
+</html>
+
+

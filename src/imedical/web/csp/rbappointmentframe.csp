@@ -1,0 +1,151 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n PatientID,mappt,apptid,sservID
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s BulkApptList=%request.Get("BulkApptList")
+ s ^zGC("rbappointmentframe.csp")=""
+ ;Log 23386 8-Mar-2002 BC
+ s ReasonForTransfer=%request.Get("APPTReasonForTransferDR") 
+ ;Log 27179 07/08/02 BR
+ s LinkedAppts=%request.Get("LinkedAppts")
+ ;RQG Log22959,27.02.02: Need to pass the waitinglistid in order to save the appointment date
+ s WaitingListID=%request.Get("WaitingListID")
+ s WLAdmID=%request.Get("WLAdmID")
+ s PopUp=%request.Get("PopUp")
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s TWKFLL=%request.Get("TWKFLL")
+ s TWKFLJ=%request.Get("TWKFLJ")
+ s CONTEXT=%request.Get("CONTEXT")
+ s ApptDate=%request.Get("ApptDate")
+ s ServListRows=%request.Get("ServListRows")
+ s CPWRowId=%request.Get("CPWRowId")
+ i CONTEXT="",TWKFL'="" s CONTEXT="W"_TWKFL
+ ; Log 37179 BC 27-8-2003 three new fields on Auto Bulk Tansfer
+ s PrintPatientLetter=%request.Get("PrintPatientLetter")
+ s PrintGPLetter=%request.Get("PrintGPLetter")
+ s FUFlag=%request.Get("FUFlag")
+ s HospClosePat=""
+ i PatientID d
+ . s HospClosePatID=$p($g(^PAPER(PatientID,"PER",5)),"^",41)
+ . i HospClosePatID'="" s HospClosePat=$p($g(^CT("HOSP",HospClosePatID)),"^",2)
+ s compid=$e($p(%request.Get("TEVENT"),"i",1),2,999)
+ s oeoriID=%request.Get("OEOrdItemID")
+ s autofind=%request.Get("autofind")
+ s RecallSchedID=$g(%request.Data("RecallSchedID",1))
+ s DefaultLocFlag=%request.Get("DefaultLocFlag")
+ ; Log 35684 BC checking for a cancelled appointment with waitinglist ID (will be defunct when multi Admissions to Waiting list is implemented)
+ i ((WaitingListID="")&&(EpisodeID'="")) d
+ .s res="" f  s res=$o(^RBAS("ADM",EpisodeID,res)) q:res=""  d
+ ..s sched="" f  s sched=$o(^RBAS("ADM",EpisodeID,res,sched)) q:sched=""  d
+ ...s ind="" f  s ind=$o(^RBAS("ADM",EpisodeID,res,sched,ind)) q:ind=""  d
+ ....s Appointment=$g(^RBAS(res,sched,"APPT",ind))
+ ....s status=$p($g(Appointment),"^",3)
+ ....i status="X" d
+ .....i ($p($g(Appointment),"^",16)'="") s WaitingListID=$p($g(Appointment),"^",16)
+ s message = ##Class(websys.UserDefinedFunctions).Evaluate("RBAppointment","OnNew")
+ 
+ ; BR 28943 26/9/02 Percentage size of the frames is now defined against Security group.
+ s GROUPID=%session.Get("LOGON.GROUPID")
+ s Percentage = ##Class(epr.GroupSettings).GetApptFramePerc(GROUPID)
+ ;put in the $p on "%" just incase they store the value with a "%" in secutiry group
+ s TopPerc=$p(Percentage,"^",1)
+ i TopPerc="" s TopPerc="60"
+ s MidPerc=$p(Percentage,"^",2)
+ i MidPerc="" s MidPerc="20"
+ s (indy,mappt,apptid,sservID)=""
+ ; LOG 31317 BC 21-2-2003 Handling service sets
+ n modBulkApptList,linkssappt
+ s (modBulkApptList,linkssappt)=""
+ i $g(BulkApptList)'="" d
+ . s (sservID,mappt)=""
+ . s apptid=$p(BulkApptList,"^"),appoint=$g(^RBAS(+apptid,$p(apptid,"||",2),"APPT",$p(apptid,"||",3))),sservID=$p(appoint,"^",60),mappt=$p(appoint,"^",24)
+ . i sservID'="",mappt="" s mappt=apptid
+ . i sservID'="" d
+ . . s servsetBAL=##Class(web.RBAppointment).CheckForServiceSet(BulkApptList,$g(apptid),$g(mappt),$g(sservID))
+ . . s modBulkApptList=$p(servsetBAL,$c(2)),linkssappt=$p(servsetBAL,$c(2),2)
+ d ##Class(websys.Component).GetComponentMessages(.t,"RBAppointment.Edit")
+ s linkedmessage1=t("LinkedAppts1")
+ s linkedmessage2=t("LinkedAppts2")
+ s linkedmessage3=t("LinkedAppts3")
+ s transapptdetail=##Class(web.RBAppointment).GetApptDetails($p(BulkApptList,"^"))
+ s linkedapptsdetails=""
+ i linkssappt'="" d
+ . f j=1:1:$l(linkssappt,"^") d
+ . . i linkedapptsdetails'="" s linkedapptsdetails=linkedapptsdetails_"|"_##Class(web.RBAppointment).GetApptDetails($p(linkssappt,"^",j))
+ . . i linkedapptsdetails="" s linkedapptsdetails=##Class(web.RBAppointment).GetApptDetails($p(linkssappt,"^",j))
+ s TCIPatientLetter=$g(%request.Data("TCIPatientLetter",1)) 
+ s TCIGPLetter=$g(%request.Data("TCIGPLetter",1)) 
+ s DiaryMode=$g(%request.Data("DiaryMode",1)) 
+ i WaitingListID'=""{ 
+  	s ApptDate=$p($g(^PAWL(WaitingListID)),"^",122)
+  	i RecallSchedID="" s RecallSchedID=$p($g(^PAWL(WaitingListID)),"^",130)
+ }
+
+ ;s ^zrod("PatientID,EpisodeID,BulkApptList,ReasonForTransfer,LinkedAppts,WaitingListID,WLAdmID,PopUp,TWKFL,TWKFLI,TWKFLL,TWKFLJ,oeoriID,autofind")= PatientID_","_EpisodeID_","_BulkApptList_","_ReasonForTransfer_","_LinkedAppts_","_WaitingListID_","_WLAdmID_","_PopUp_","_TWKFL_","_TWKFLI_","_TWKFLL_","_TWKFLJ_","_oeoriID_","_autofind
+ 
+</SERVER>
+
+	<frameset name="fApptFrame" rows="#(TopPerc)#%,#(MidPerc)#%,*" onload="DocumentLoadHandler();">
+  <frame name="RBApptFind" frameBorder=0>
+  <frame  name="RBServList" frameBorder=0>
+  <frame  name="RBApptList" frameBorder=0>
+  </frameset>
+
+
+<script language=javascript>
+function DocumentLoadHandler() {
+//alert('hello');
+var BulkApptList="#(BulkApptList)#";
+var mainappt="#(mappt)#";
+var appt="#(apptid)#";
+var sservID="#(sservID)#";
+var modBulkApptList="#(modBulkApptList)#";
+var linkssappt="#(linkssappt)#";
+var linkmessage="#(linkedmessage1)#"+"\n\n"+"#(transapptdetail)#";
+linkmessage=linkmessage+"\n\n"+"#(linkedmessage2)#"+"\n";
+var transappt="#(linkedapptsdetails)#";
+var FUFlag="#(FUFlag)#";
+var transapptarray=transappt.split("|");
+for (i=0;i<transapptarray.length;i++) {
+ linkmessage=linkmessage+"\n"+transapptarray[i];
+}
+linkmessage=linkmessage+"\n\n"+"#(linkedmessage3)#";
+if (linkssappt!="") {
+ var modify=confirm(linkmessage);
+ if (modify) {
+  top.frames["TRAK_main"].frames["RBApptFind"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.Find&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&BulkApptList=#(modBulkApptList)#&WaitingListID=#(WaitingListID)#&WLAdmID=#(WLAdmID)#&PopUp=#(PopUp)#&PatientBanner=1&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#&ReasonForTransfer=#(ReasonForTransfer)#&LinkedAppts=Y&oeoriID=#(oeoriID)#&ARMCApptMessage=#(message)#&autofind=#(autofind)#&SServID=#(sservID)#&PrintPatientLetter=#(PrintPatientLetter)#&PrintGPLetter=#(PrintGPLetter)#&PHospDesc=#(HospClosePat)#&FUFlag=#(FUFlag)#&DefaultLocFlag=#(DefaultLocFlag)#&TCIGPLetter=#(TCIGPLetter)#&TCIPatientLetter=#(TCIPatientLetter)#&DiaryMode=#(DiaryMode)#&ApptDate=#(ApptDate)#&ServListRows=#(ServListRows)#&CPWRowId=#(CPWRowId)#&RecallSchedID=#(RecallSchedID)#'
+  top.frames["TRAK_main"].frames["RBServList"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ServiceList&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#'
+  top.frames["TRAK_main"].frames["RBApptList"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ApptList&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#'
+ } else {
+  top.frames["TRAK_main"].frames["RBApptFind"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.Find&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&BulkApptList=#(BulkApptList)#&WaitingListID=#(WaitingListID)#&WLAdmID=#(WLAdmID)#&PopUp=#(PopUp)#&PatientBanner=1&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#&ReasonForTransfer=#(ReasonForTransfer)#&LinkedAppts=#(LinkedAppts)#&oeoriID=#(oeoriID)#&ARMCApptMessage=#(message)#&autofind=#(autofind)#&PrintPatientLetter=#(PrintPatientLetter)#&PrintGPLetter=#(PrintGPLetter)#&PHospDesc=#(HospClosePat)#&FUFlag=#(FUFlag)#&DefaultLocFlag=#(DefaultLocFlag)#&TCIGPLetter=#(TCIGPLetter)#&TCIPatientLetter=#(TCIPatientLetter)#&DiaryMode=#(DiaryMode)#&ApptDate=#(ApptDate)#&ServListRows=#(ServListRows)#&CPWRowId=#(CPWRowId)#&RecallSchedID=#(RecallSchedID)#'
+  top.frames["TRAK_main"].frames["RBServList"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ServiceList&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#'
+  top.frames["TRAK_main"].frames["RBApptList"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ApptList&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#'
+ }
+}else {
+  top.frames["TRAK_main"].frames["RBApptFind"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.Find&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&BulkApptList=#(BulkApptList)#&WaitingListID=#(WaitingListID)#&WLAdmID=#(WLAdmID)#&PopUp=#(PopUp)#&PatientBanner=1&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#&ReasonForTransfer=#(ReasonForTransfer)#&LinkedAppts=#(LinkedAppts)#&oeoriID=#(oeoriID)#&ARMCApptMessage=#(message)#&autofind=#(autofind)#&PrintPatientLetter=#(PrintPatientLetter)#&PrintGPLetter=#(PrintGPLetter)#&PHospDesc=#(HospClosePat)#&FUFlag=#(FUFlag)#&DefaultLocFlag=#(DefaultLocFlag)#&TCIGPLetter=#(TCIGPLetter)#&TCIPatientLetter=#(TCIPatientLetter)#&DiaryMode=#(DiaryMode)#&ApptDate=#(ApptDate)#&ServListRows=#(ServListRows)#&CPWRowId=#(CPWRowId)#&RecallSchedID=#(RecallSchedID)#'
+  top.frames["TRAK_main"].frames["RBServList"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ServiceList&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#'
+  top.frames["TRAK_main"].frames["RBApptList"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ApptList&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#'
+  
+}
+}
+function QuitHandler() {
+	return websys_cancel();
+}
+
+</script>
+
+
+</HTML>

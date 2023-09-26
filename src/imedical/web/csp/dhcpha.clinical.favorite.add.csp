@@ -1,0 +1,108 @@
+﻿<html>
+<head>
+	<EASYUI:CLINICAL/>
+	<link rel="stylesheet" type="text/css" id="addcss" href="../scripts/dhcpha/emr/lib/tool/taginput/jquery.tagsinput.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/emr/css/favorite.add.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/emr/css/favorite.css"/>
+	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/taginput/jquery.tagsinput.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcpha/emr/js/actionlog.js"></script>
+
+	<title>添加收藏</title>
+	<script language="cache" runat="server">
+	   	s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+		s InstanceID = $Get(%request.Data("InstanceID",1),"")
+		s categoryId = $Get(%request.Data("categoryId",1),"")
+		s templateId = $Get(%request.Data("templateId",1),"")
+		s PatientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(EpisodeID)
+		s PatientNo = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiNo(PatientID)
+		s Name = ##class(EMRservice.HISInterface.PatientInfoAssist).Name(PatientID)
+		s Gender = ##class(EMRservice.HISInterface.PatientInfoAssist).Gender(PatientID)
+		s:(Gender '= "") Gender = $p(Gender,"^",3)
+		s BOD  = ##class(EMRservice.HISInterface.PatientInfoAssist).Birthday(PatientID)
+		s:(BOD '= "") BOD=##class(web.DHCSTPHCMCOMMON).DateLogicalToHtml(BOD)
+		s UserID = %session.Get("LOGON.USERID")
+		s UserLocID = %session.Get("LOGON.CTLOCID")
+		s UserName = %session.Get("LOGON.USERNAME")
+		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+		s SecCode = ""
+		s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+		if (HasPatEncryptLevel = "Y")
+		{
+			s PatEncryptLevelStr = ##class(web.DHCBL.CARD.UCardPaPatMasInfo).GetPatEncryptLevel(PatientID)
+			s SecAlias = $P(PatEncryptLevelStr, "^",1)
+			s EmployeeFunction = $P(PatEncryptLevelStr, "^",2)
+			s SecCode = $P(PatEncryptLevelStr, "^",3)
+			s SecDesc = $P(PatEncryptLevelStr, "^",4)
+		}
+   </script>
+	<script language="javascript">
+	   var FavUserID = "";
+	   var EpisodeID = '#(EpisodeID)#';
+	   var InstanceID = '#(InstanceID)#';
+	   var categoryId = '#(categoryId)#';
+	   var templateId = '#(templateId)#';
+	   var PatientID = '#(PatientID)#';
+	   var PatientNo = '#(PatientNo)#';
+	   var Name = '#(Name)#';
+	   var Gender = '#(Gender)#';
+	   var BOD = '#(BOD)#';
+	   var UserID = '#(UserID)#';
+	   var UserLocID = '#(UserLocID)#';
+	   var UserName = '#(UserName)#';
+	   
+	   //获取发送到病历操作日志模块所需要的参数
+	   var IsSetToLog = '#(IsSetToLog)#';
+	   var SecCode = '#(SecCode)#';
+   </script>
+</head>
+<body style="padding:0 0 0 6px;margin:0;overflow:hidden">
+	<table class="tbData" style="width:400px;height:125px;margin:8px 3px 3px 3px;">
+		<tr>
+			<td colspan="2" class="tdtitle"></td>
+		</tr>
+		<tr>
+			<td id="photo" class="centertd" style="width:100px"></td>
+			<td id="content" class="info" style="width:200px"></td>
+		</tr>
+	</table>
+	<div id="operation" style="height: 300px">	
+		<div id="divLocation">
+			<span>收藏分类：</span>
+			<span>
+				<input id="cbxLocation" class="easyui-combotree"/>
+			</span>
+			<span>
+				<a href="#" id="btnNew" class="easyui-linkbutton" iconCls="tree-folder">新建文件夹</a><!--hxy 2018-02-27 加图标-->
+			</span>
+		</div>
+		<div id="divTag">
+			<span style="vertical-align:top">关&nbsp;&nbsp;键&nbsp;&nbsp;字：</span>
+			<input id="tags" type="text" style="width:80%;"></input>
+		</div>
+		<div id="divMemo" >
+			<span style="vertical-align:top">备&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注：</span>
+			<textarea id="txaMemo" class="form-control pull-right" name="Memo" rows="6"></textarea>
+		</div>
+		<div class="tool">
+			<a href="#" id="btnAdd" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">确定</a>
+			<a href="#" id="btnCancel" class="easyui-linkbutton" data-options="iconCls:'icon-no'">取消</a>
+		</div>
+	</div>
+   	<div id="newCatalog" style="display:none;padding-left:8px;"> 
+		<div style="margin-top:12px;">
+   			<span>文件夹名:</span>
+   			<input id="txtName" type="text" style="width:200px;vertical-align:middle;"/>
+		</div>
+		<div style="margin-top:12px;">
+			<span>创建位置:</span>
+   			<input id="cbxNewLocation" class="easyui-combotree" style="width:200px;"/>
+		</div>
+		<div style="margin:5px;">
+			<a href="#" id="btnCreate" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">创建</a>
+			<a href="#" id="btnClose" class="easyui-linkbutton" data-options="iconCls:'icon-no'">关闭</a>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/favorite.add.js"></script>
+</body>
+</html>

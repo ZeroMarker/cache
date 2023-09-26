@@ -1,0 +1,59 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="server" charset="UTF-8">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s active=$Get(%request.Data("active",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s jxunitdr=$Get(%request.Data("jxunitdr",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s schemDr=$Get(%request.Data("schemDr",1))
+	s period=$Get(%request.Data("period",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("str",1))
+	s jxUnitDrStr=$Get(%request.Data("jxUnitDrStr",1))
+	
+	i action = "list" d
+	.;w "searchField="_searchField,searchValue," start="_start,limit,!
+	.w ##class(dhc.pa.udata.uKPIIndexNoTree).List(searchField, searchValue, sortField, sortDir, start, limit)
+
+	i action = "schemdetaillist" d
+	.w ##class(dhc.pa.udata.uUnitSchem).GetSchemDetail(parent, schemDr, searchField, searchValue, sortField, sortDir)
+
+	i action = "jxunitlist" d
+	.w ##class(dhc.pa.udata.uUnitSchem).JXUnitList(searchField, searchValue, sortField, sortDir, start, limit, schemDr)
+
+	i action = "jxunit" d
+	.;w ##class(dhc.pa.udata.uUnitSchem).GetJXUnit(userCode)
+	.w ##class(dhc.pa.udata.uUnitSchem).GetJXUnitNoUnitSchem(start, limit, userCode)
+	
+	i action = "add" d
+	.s result = ##class(dhc.pa.udata.uUnitSchem).Insert(schemDr,jxUnitDrStr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(dhc.pa.udata.uUnitSchem).Update(rowid,schemDr,jxunitdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uUnitSchem).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

@@ -1,0 +1,49 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</head>
+
+<body>
+<server>
+ n obj,mradm,save
+ s save=0,id=""
+ s mradm=%request.Get("mradm")
+ s el=%request.Next("")
+ while (el '= "") {
+ 	i $e(el,1,4)="PHYS" {
+ 		//anything passed thru here is a checkbox item that is checked
+   		s id=$e(el,4,999)
+ 		s obj=##Class(User.MRPhysExamination).%New(mradm)
+ 		i obj {
+ 			d obj.PHYSParRefSetObjectId(mradm)
+ 			s level1=+id
+ 			i level1 {
+ 				d obj.PHYSBodyAreaDRSetObjectId(level1)
+ 				s level2=+$p(id,"||",2)
+ 				i level2 {
+ 					d obj.PHYSMRCBodyAreProbDRSetObjectId(level1_"||"_level2)
+ 					s level3=+$p(id,"||",3)
+ 					i level3 d obj.PHYSMRCBodyAreaProbSubDRSetObjectId(level1_"||"_level2_"||"_level3)
+ 				}
+ 			}
+ 			;d obj.%Save(0)
+ 			d obj.%Close()
+ 		}
+ 	}
+ 	s el=%request.Next(el)
+ }
+ d rs.%Close()
+ ;
+ s %response.ServerSideRedirect="websys.csp"
+ d ##Class(websys.Conversions).SaveRequest()
+</SERVER>
+</body>
+</html>

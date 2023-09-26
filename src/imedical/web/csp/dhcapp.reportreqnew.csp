@@ -1,0 +1,244 @@
+<!-- 新检查申请 dhcapp.reportreqnew.csp  -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<TRAK:HEAD></TRAK:HEAD>
+<script language="Cache" runat="server">
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+</script>
+<DHCAPP:EASYUI/>
+<title>新检查申请</title>
+
+<link rel="stylesheet" href="../scripts/dhcdoc/dhcapp/css/appreportreqnew.css"/>
+
+<!--------------打印相关---------->
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/dhcappprintcom.js"></script>
+<!-------------------------------->
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/layout.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reporttarwin.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reportretwin.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reportappwin.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reportreqnew.js"></script>
+<!-- 新旧版本兼容配置 -->
+<server>
+  /// 新旧版本兼容配置
+  s version=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+  /// 检查申请结果IP地址
+  s resIP=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("ResIP")
+  /// 检查分类树收缩展开配置模式
+  s expFlag=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("ExpNode")
+  w "<script Language=""JavaScript"">"_$c(13,10)
+  w "var version="""_$g(version)_""";"_$c(13,10)
+  w "var resIP="""_$g(resIP)_""";"_$c(13,10)
+  w "var expFlag="""_$g(expFlag)_""";"_$c(13,10)
+  w "</script>"
+</server>
+<script language="JavaScript"> 
+  <!-- 弹出窗体最大化 bianshuai 2017-03-09-->
+  self.moveTo(0,0) 
+  self.resizeTo(screen.availWidth,screen.availHeight) 
+</script>
+</head>
+<body>
+<div id="MainPanel" class="easyui-layout" fit="true">
+	<div data-options="region:'west',title:'本次就诊申请单列表'" style='width:210px;border-right:0;'>
+		<div id="dgEmPatList" toolbar="#histb" ></div>
+	</div>
+	<div data-options="region:'center',title:''">
+		<div class="easyui-layout" fit="true">
+			<div data-options="region:'north',title:''" style='height:30px;background:#c1e7ff;' border="false">
+				<div class="item-label">
+	                <div class="ui-div-title-m">
+	                	<span class="btn-ui-span hide-span">PatientID：</span><span id="PatientID" class="ui-span-m hide-span"></span>
+	                	<span class="btn-ui-span hide-span">EpisodeID：</span><span id="EpisodeID" class="ui-span-m hide-span"></span>
+	                	<span class="btn-ui-span hide-span">PatType：</span><span id="PatType" class="ui-span-m hide-span"></span>
+						<span class="btn-ui-span hide-span">mradm：</span><span id="mradm" class="ui-span-m hide-span"></span>
+	                    <span class="btn-ui-span">登记号：</span><span id="PatNo" class="ui-span-m"></span>
+	                    <span class="btn-ui-span">姓名：</span><span id="PatName" class="ui-span-m"></span>
+	                    <span class="btn-ui-span">性别：</span><span id="PatSex" class="ui-span-m"></span>
+	                    <span class="btn-ui-span">年龄：</span><span id="PatAge" class="ui-span-m"></span>
+	                    <span class="btn-ui-span">床号：</span><span id="PatBed" class="ui-span-m"></span>
+	                    <span class="btn-ui-span">费别：</span><span id="PatBill" class="ui-span-m"></span>
+	                    <span class="btn-ui-span">病人级别：</span><span id="PatLv" class="ui-span-m">普通</span>
+	                    <span class="btn-ui-span">病人密级：</span><span id="PatSLv" class="ui-span-m">保密</span>
+	                    <span class="btn-ui-span">临床诊断：</span><span id="PatDiagDesc" class="ui-span-m"></span>
+	                </div>
+				</div>
+			</div>
+			<div data-options="region:'center',title:''"  border="false">
+				<div id="CenPanel" class="easyui-layout" fit="true" border="false">
+					<div data-options="region:'west',title:'检查项目',split:true" style='width:220px;border-left:0;'>
+						<div id="ItemPanel" class="easyui-layout" fit="true">
+							<div data-options="region:'north',title:''" style='height:35px;'>
+								<div style="padding:3px 0px 3px 3px;">
+				        		 	<span style="font-size:13px;color:red;font-weight:bold;margin-right:5px">搜索</span><input id="ExaCatCode" style="width:78%;border:1px solid #95B8E7;" placeholder='请输入名称/拼音码' />
+				        		</div>
+							</div>
+							<div data-options="region:'center'" fit="true" border="false">
+								<ul id="CheckPart"></ul>
+							</div>
+						</div>
+					</div>
+					<div data-options="region:'center',title:'检查方法'">
+						<div class="easyui-layout" fit="true">
+							<div data-options="region:'center',title:''" border="false">
+				                <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
+				                </table>
+							</div>
+							<div data-options="region:'south',title:''" style='height:400px;' border="false">
+								<div class="easyui-layout" fit="true">
+									<div id="SelPanel" data-options="region:'center',title:'已开项目列表'" style="border-right:0;border-left:0;">
+										<div id="ItemSelList" border="false"></div>
+									</div>
+									<div data-options="region:'south',title:'注意事项'" style='height:200px;' border="false">
+										<div id="noteContent" style="background-color:#fff;margin: 0 auto;width: 97%;padding-top:10px;">
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'east',title:'申请单内容',split:true" style='width:400px;'>
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'center',title:''" style="border-top:0;border-right:0;border-left:0;">
+						<div class="ui-div-m-l5-r5">
+			                 <div>
+			                	<span class="ui-span-title-lv2">主诉</span>
+			                	<span style="margin-left:10px;"><a href="#" onclick="javascript:savesymmodel()">保存模板</a></span>
+			                	<span style="margin-left:10px;"><a href="#" onclick="javascript:showmodel(1)">选择模板</a></span>
+			                </div>
+			                <div>
+			                    <textarea id="arPatSym" style="padding:5px 3px;width:100%;height:80px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="病人主诉！"></textarea>
+			                </div>
+				        </div>
+						<div class="ui-div-m-l5-r5">
+			                <div><span class="ui-span-title-lv2">检查目的</span></div>
+			                <div>
+			                    <textarea id="ExaPurp" style="padding:5px 3px;width:100%;height:100px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="请输入检查目的！"></textarea>
+			                </div>
+				        </div>
+				        <div class="ui-div-m-l5-r5">
+			               <div>
+			                	<span class="ui-span-title-lv2">现病史</span>
+			                	<span style="margin-left:10px;"><a href="#" onclick="javascript:saveprehismodel()">保存模板</a></span>
+			                	<span style="margin-left:10px;"><a href="#" onclick="javascript:showmodel(2)">选择模板</a></span>
+			                </div>
+			                <div>
+			                    <textarea id="arDisHis" style="padding:5px 3px;width:100%;height:100px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="请输入现病史描述！"></textarea>
+			                </div>
+				        </div>
+				        <div class="ui-div-m-l5-r5">
+			                <div>
+			                	<span class="ui-span-title-lv2">体征</span>
+			                	<span style="margin-left:10px;"><a href="#" onclick="javascript:savesignmodel()">保存模板</a></span>
+			                	<span style="margin-left:10px;"><a href="#" onclick="javascript:showmodel(3)">选择模板</a></span>
+			                </div>
+			                <div>
+			                    <textarea id="arPhySig" style="padding:5px 3px;width:100%;height:100px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="请输入体征！"></textarea>
+			                </div>
+				        </div>
+				        <div class="ui-div-m-l5-r5">
+			                <div><span class="ui-span-title-lv2">其他项目</span></div>
+			                <div style="min-height:100px;border:1px solid #95B8E7;">
+				                <table id="TmpOtherOpt" border="1" cellspacing="0" cellpadding="1" class="form-table">
+				                </table>
+			                </div>
+				        </div>
+					</div>
+					<div data-options="region:'south',title:'',split:true" style='height:45px;background-color:'>
+						<table style="width: 100%; table-layout: fixed;" border="0" cellspacing="1" cellpadding="0">
+							<tr>
+								<td style="width:110px;"><span id="arExaReqCost" style="font-size:14px;color:#2979FF;font-weight:bold;">总费用:0元</span></td>
+								<td style="width:70px;">
+									<table style="width:100%; table-layout: fixed;" border="0" cellspacing="1" cellpadding="0">
+										<tr>
+										<td>
+											<input id="arEmgFlag" type="checkbox" class="checkbox" name="arEmgFlag" value="Y"></input>
+										</td>
+										<td>
+											<label style="margin-left:-15px;color:red;font-weight:bold;">加急</label>
+										</td>
+										</tr>
+									</table>
+								</td>
+								<td style="width:80px;"><button class="metroButton" style="background:#E0ECFF; color:#000;border:1px solid rgb(0, 139, 139);height:35px;">发送</button></td>
+								<td style="width:80px;"><button class="metroButton" style="background:#E0ECFF; color:#000;border:1px solid rgb(0, 139, 139);height:35px;">打印</button></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="histb">
+	<div style="padding:3px 0px 3px 2px;">
+	<span style="padding-right:10px">就诊记录</span><input id="AdmHis" style="width:130px;"/>
+	</div>
+	<div style="padding:3px 0px 3px 2px;">
+	<span style="padding-right:10px">检查分类</span><input id="itemCatID" style="width:130px;"/>
+	</div>
+	<div style="padding:3px 0px 3px 2px;">
+	<span style="padding-right:10px">报告状态</span><input id="repStatus" style="width:130px;"/>
+	</div>
+</div>
+<!--------------打印相关---------->
+<div id="hiddenEncrypt" style="width:0;height:0;">
+	<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+	</form>
+</div>
+<!-------------部位选择窗------------------->
+<div id="PopUpWin">
+	<span id="arExaItmID" style="display:none;"></span>
+	<span id="arExaItmDesc" style="display:none;"></span>
+	<div class="easyui-layout" fit="true" border=false>
+		<div data-options="region:'center'" border=false>
+			<div id="PopPanel" class="easyui-layout" fit="true">
+				<div data-options="region:'west',title:'可选部位',split:true" style='width:260px;'>
+					<ul id="EnPart"></ul>
+				</div>
+				<div data-options="region:'center',title:'已选部位'" fit="true">
+					<div id="dmPartList"></div>
+				</div>
+				<div data-options="region:'east',title:'后处理',split:true" style='width:180px;'>
+				    <table id="ItmExaDisp" border="1" cellspacing="0" cellpadding="1" class="form-table">
+		    		</table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'south'" style='height:40px;padding-top:6px;'>
+			<a href="#" style="border:1px solid #95B8E7;width:65px;margin-left:300px;" class="easyui-linkbutton" plain="true" data-options="iconCls:'icon-ok'">确认</a>
+			<a href="#" style="border:1px solid #95B8E7;width:65px;margin-left:30px;" class="easyui-linkbutton" plain="true" data-options="iconCls:'icon-undo'">取消</a>
+		</div>
+	</div>
+</div>
+<!--------------知识库消息提示窗------------------>
+<div id="FunUpWin">
+    <div id="TmpFunLib"></div>
+</div>
+<!--------------模板保程序  2017-1-10---------->
+<div id="symwin" style="background:#C6E2FF">
+	<div style="margin-left:20px;margin-top:20px;">
+		<div style="height:25px;width:90px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA" onclick="javascript:saveSymLoc()"><img src="../scripts/dhcnewpro/images/keshi.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><div style="margin-left:5px;padding-top: 5px;float:left;font-size:14px;">科室模板</div></div>
+		<div style="float:right;margin:-26px 30px 0 0;height:25px;width:85px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA" onclick="javascript:saveSymUser()"><img src="../scripts/dhcnewpro/images/person.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><span style="margin-left:4px;padding-top: 4px;float:left;font-size:14px;">个人模板</span></div>
+	</div>
+</div>
+<div id="prehis" style="background:#C6E2FF">
+	<div style="margin-left:20px;margin-top:20px;">
+		<div style="height:25px;width:90px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA" onclick="javascript:savePrehisLoc()"><img src="../scripts/dhcnewpro/images/keshi.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><div style="margin-left:5px;padding-top: 5px;float:left;font-size:14px;">科室模板</div></div>
+		<div style="float:right;margin:-26px 30px 0 0;height:25px;width:85px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA" onclick="javascript:savePrehisUser()"><img src="../scripts/dhcnewpro/images/person.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><span style="margin-left:4px;padding-top: 5px;float:left;font-size:14px;">个人模板</span></div>
+	</div>
+</div>
+<div id="patsign" style="background:#C6E2FF">
+	<div style="margin-left:20px;margin-top:20px;">
+		<div style="height:25px;width:90px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA" onclick="javascript:savePatsignLoc()"><img src="../scripts/dhcnewpro/images/keshi.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><div style="margin-left:5px;padding-top: 5px;float:left;font-size:14px;">科室模板</div></div>
+		<div style="float:right;margin:-26px 30px 0 0;height:25px;width:85px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA" onclick="javascript:savePatsignUser()"><img src="../scripts/dhcnewpro/images/person.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><span style="margin-left:4px;padding-top: 5px;float:left;font-size:14px;">个人模板</span></div>
+	</div>
+</div>
+</body>
+</html>

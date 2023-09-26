@@ -1,0 +1,330 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>采集时间</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI translate=1/>
+	<NURHISUI />
+	<SCRIPT Language="Javascript">
+		var SpecTeam = "#(%request.Get("SpecTeam"))#"  //当前页面标本组别配置
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.speccollect.js"></script>
+	<STYLE type='text/css'>
+		.accordion>.panel>.panel-header, .layout>.panel>.panel-header, .panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, .panel.window>.panel-header, .tabs-panels>.panel>.panel-header {
+		    -moz-border-radius: 0;
+		    -webkit-border-radius: 0;
+		    border-radius: 5px 5px 0 0;
+		    padding: 5px;
+		}
+		.specInfo {
+			color: black !important;
+		}
+
+		.toolbar {
+			height: 68px;
+		}
+
+		.speclabel {
+			text-align: right;
+			padding-right: 10px;
+			width: 70px;
+			display: inline-block;
+		}
+
+		.specrow {
+			margin: 10px 0;
+		}
+
+		.ui-step {
+			color: #b7b7b7;
+			padding: 0 60px;
+			margin-bottom: 35px;
+			position: relative;
+		}
+
+		.ui-step:after {
+			display: block;
+			content: "";
+			height: 0;
+			font-size: 0;
+			clear: both;
+			overflow: hidden;
+			visibility: hidden;
+		}
+
+		.ui-step li {
+			float: left;
+			position: relative;
+		}
+
+		.ui-step .step-end {
+			width: 120px;
+			position: absolute;
+			top: 0;
+			right: -60px;
+		}
+
+		.ui-step-line {
+			height: 1px;	
+			margin-top: 15px;
+		}
+
+		.step-end .ui-step-line {
+			display: none;
+		}
+
+		.ui-step-cont {
+			width: 120px;
+			position: absolute;
+			top: 0;
+			left: -10px;
+			text-align: center;
+		}
+
+		.ui-step-cont-number {
+			display: inline-block;
+			position: absolute;
+			left: 0;
+			top: 10;
+			width: 12px;
+			height: 12px;
+			line-height: 12px;			
+			border-radius: 50%;
+		}
+
+		.ui-step-cont-text {
+			position: relative;
+		    top: 10px;
+		    left: -56px;
+		    font-size: 14px;
+		    display: inline-block;
+		    width: 120px;
+		}
+
+		.ui-step-cont-title {
+			position: relative;
+			top: -20px;
+			left: -53px;
+			font-size: 14px;			
+			font-weight: bold;
+		}
+
+		.ui-step-cont-time {
+			position: relative;
+		    top: 10px;
+		    left: -58px;
+		    font-size: 15px;
+		    width: 120px;
+		}
+
+		/** 步骤数定义 **/
+		.ui-step-3 li {
+			width: 50%;
+		}
+
+		.ui-step-4 li {
+			width: 33.3%;
+		}
+
+		.ui-step-5 li {
+			width: 25%;
+		}
+
+		.ui-step-6 li {
+			width: 20%;
+		}
+		.ui-step-green .step-end .ui-step-cont-number {
+			background-color: #ccc;
+		}
+		
+		/** Green **/
+		/* Done */
+		.ui-step-green .step-done .ui-step-cont-number {
+			background-color: #18af66;
+		}
+
+		.ui-step-green .step-done .ui-step-cont-title {
+			color: #333333;
+		}
+
+		.ui-step-green .step-done .ui-step-cont-text {
+			color: #666666;
+		}
+
+		.ui-step-green .step-done .ui-step-cont-time {
+			color: #666666;
+		}
+
+		.ui-step-green .step-done .ui-step-line {
+			background-color: #18af66;
+		}
+
+		/* Active */
+		.ui-step-green .step-active .ui-step-cont-number {
+			background-color: #18af66;
+			border:5px solid #b9e7d1;			
+			top: 5px;
+			left: -6px;
+		}
+
+		.ui-step-green .step-active .ui-step-cont-title {
+			color: #333333;
+		}
+
+		.ui-step-green .step-active .ui-step-cont-text {
+			color: #666666;
+		}
+
+		.ui-step-green .step-active .ui-step-cont-time {
+			color: #666666;
+		}
+
+		.ui-step-green .step-active .ui-step-line {
+			background-color: #e0e0e0;
+		}
+		
+		
+	</STYLE>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px" >
+		<div style="padding:4px" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',title:'记录采血时间',iconCls:'icon-write-order',fit:true,split:true,headerCls:'panel-header-gray'" style="border:0 1px 1px 1px solid #ccc;border-radius:0 0 5px 5px;">
+				<table cellpadding="5" style="padding:10px">
+					<tr>
+						<td class="r-label">#(..Get("条码号"))#</td>
+						<td>
+							<input id="labNo" class="textbox">
+						</td>
+						<td><a href="#" id="updateBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">更新</a></td>
+						<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						<td class="r-label">#(..Get("条码号"))#</td>
+						<td>
+							<input id="labNoRead" class="textbox" disabled="disabled" readonly="readonly">
+						</td>
+						<!-- <td>
+							<div id="switchCarry" class="hisui-switchbox" style="margin-left:5px" data-options="onText:'运送',offText:'关闭',checked:false,size:'small',animated:true">
+							</div>
+						</td> -->
+					</tr>
+				</table>
+				<div style="padding:5px;margin:0 10px;background-color:#FFE3E2; color: red; border: solid 1px #FEC3C2;">#(..Get("扫描条码后系统自动更新,不需要手动点更新按钮"))#</div>
+				<div style="padding:10px">
+					<div  class="hisui-panel panel-header-gray" title="" style="margin-right:10px;height:200px;padding:20px" data-options="border:false">
+						<div class="specrow">
+							<span class="speclabel">#(..Get("患者姓名"))#</span>
+							<span><input id="retPatName" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("登记号"))#</span>
+							<span><input id="retRegNo" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("床号"))#</span>
+							<span><input id="retBedCode" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							</span>
+							<span class="speclabel">#(..Get("性别"))#</span>
+							<span><input id="retPatSex" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							</span>
+							<span class="speclabel">#(..Get("年龄"))#</span>
+							<span><input id="retPatAge" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							</span>
+						</div>
+						<div class="specrow">
+							<span class="speclabel">#(..Get("标本号"))#</span>
+							<span><input id="retLabNo" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("标本名称"))#</span>
+							<span><input id="retSpecName" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("容器颜色"))#</span>
+							<span><input id="retContainerColor" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("容器名称"))#</span>
+							<span><input id="retContainerName" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("申请备注"))#</span>
+							<span><input id="retOrdNote" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+						</div>
+						<div class="specrow">
+							<span class="speclabel">#(..Get("医嘱名称"))#</span>
+							<span><input id="retArcim" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("医生姓名"))#</span>
+							<span><input id="retDoctor" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("要求时间"))#</span>
+							<span><input id="retSttDateTime" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span id="userName" class="speclabel">#(..Get("执行人"))#</span>
+							<span><input id="retExecNurse" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+							<span class="speclabel">#(..Get("采集时间"))#</span>
+							<span><input id="retCollDateTime" class="textbox specInfo" disabled="disabled" readonly="readonly"></span>
+						</div>
+					</div>
+					<div>
+					<div style="width:95%;padding:90 0 0 0;">
+					<ol class="ui-step ui-step-green ui-step-6">
+						<li class="step-start step-done">
+							<div class="ui-step-line"></div>
+							<div class="ui-step-cont">
+								<span class="ui-step-cont-number"></span>
+								<span class="ui-step-cont-title">#(..Get("标本申请"))#</span>
+								<span id="stepOrderDoctor" class="ui-step-cont-text"></span>
+								<span id="stepOrderTime" class="ui-step-cont-time"></span>
+							</div>
+						</li>
+						<li class="step-start step-done">
+							<div class="ui-step-line"></div>
+							<div class="ui-step-cont">
+								<span class="ui-step-cont-number"></span>
+								<span class="ui-step-cont-title">#(..Get("要求执行"))#</span>
+								<span id="stepExecDoctor" class="ui-step-cont-text"></span>
+								<span id="stepSttDateTime" class="ui-step-cont-time"></span>
+							</div>
+						</li>
+						<li class="step-start step-done">
+							<div class="ui-step-line"></div>
+							<div class="ui-step-cont">
+								<span class="ui-step-cont-number"></span>
+								<span class="ui-step-cont-title">#(..Get("条码打印"))#</span>
+								<span id="stepPrintUser" class="ui-step-cont-text"></span>
+								<span id="stepPrintDateTime" class="ui-step-cont-time"></span>
+							</div>
+						</li>
+						<li class="step-start step-done">
+							<div class="ui-step-line"></div>
+							<div class="ui-step-cont">
+								<span class="ui-step-cont-number"></span>
+								<span id="oeordStat" class="ui-step-cont-title">#(..Get("医嘱执行"))#</span>
+								<span id="stepExecNurse" class="ui-step-cont-text"></span>
+								<span id="stepExecDateTime" class="ui-step-cont-time"></span>
+							</div>
+						</li>
+						<li class="step-active">
+							<div class="ui-step-line"></div>
+							<div class="ui-step-cont">
+								<span class="ui-step-cont-number"></span>
+								<span class="ui-step-cont-title">#(..Get("标本采集"))#</span>
+								<span id="stepCollUser" class="ui-step-cont-text"></span>
+								<span id="stepCollDateTime" class="ui-step-cont-time"></span>
+							</div>
+						</li>
+						<li class="step-end">
+							<div class="ui-step-line"></div>
+							<div class="ui-step-cont">
+								<span class="ui-step-cont-number"></span>
+								<span class="ui-step-cont-title">#(..Get("标本接收"))#</span>
+								<span id="stepCollUser" class="ui-step-cont-text"></span>
+								<span id="stepCollDateTime" class="ui-step-cont-time"></span>
+							</div>
+						</li>
+					</ol>
+				</div>
+					</div>
+				</div>
+			</div>
+<!-- 			<div data-options="region:'south',title:'',split:true,headerCls:'panel-header-gray'" style="height:200px;">
+				
+			</div> -->
+		</div>
+	</div>
+</body>
+
+</html>

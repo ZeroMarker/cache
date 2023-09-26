@@ -1,0 +1,259 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n PatiendID,NoAppt,dateto,Surgeon,surgeonid,OPStatus,CTLocID,ResID,RBOPOperDepartmentDR,Anesthetiest,RESDesc,CTLoc,RBOPDateOper,DiaryType,RBOPOperDepartmentID,RetainFieldValue,RBOPOperation,RBOPStatePPP,RegistrationNo,RBOPASCareProv,RBOPASCareProvType,RBOPASCareProvId,RBOPASCareProvTypeId
+ s (NoAppt,dateto,Surgeon,surgeonid,OPStatus,CTLocID,ResID,RBOPOperDepartmentDR,Anesthetiest,RESDesc,CTLoc,RBOPDateOper,DiaryType,RBOPOperDepartmentID,RetainFieldValue,RBOPOperation,RBOPStatePPP,RegistrationNo,RBOPASCareProv,RBOPASCareProvType,RBOPASCareProvId,RBOPASCareProvTypeId)=""
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s percent="20%"
+ i $d(%request.Data("DiaryType")) s DiaryType=%request.Data("DiaryType",1)
+ s logicaldate=+$h
+ s date=##Class(websys.Conversions).DateLogicalToHtml(logicaldate)
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s Context=%request.Get("CONTEXT")
+ s info="&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&CONTEXT="_Context
+ s info1="&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&CONTEXT="_Context
+ i $d(%request.Data("DontFind")) s DontFind=%request.Data("DontFind",1)
+ i '$d(%request.Data("DontFind")) s DontFind=1
+ 
+ s RBOPDateOper=$g(%session.Data("OTfind","1194","RBOPDateOper"))
+ i ((RBOPDateOper="")&&($d(%request.Data("RBOPDateOper")))) s RBOPDateOper=%request.Data("RBOPDateOper",1)
+ i $d(%request.Data("RBOPDateOper")) s info=info_"&RBOPDateOper="_RBOPDateOper
+ ;
+ s CTLocID=$g(%session.Data("OTfind","1194","CTLocID"))
+ i ((CTLocID="")&&($d(%request.Data("CTLocID")))) s CTLocID=%request.Data("CTLocID",1)
+ ; only need if the location is on the component
+ i $d(%request.Data("CTLoc")) s info=info_"&CTLocID="_CTLocID
+ ;
+ s CTLoc=$g(%session.Data("OTfind","1194","CTLoc"))
+ i ((CTLoc="")&&($d(%request.Data("CTLoc")))) s CTLoc=%request.Data("CTLoc",1)
+ i CTLocID'="" s CTLoc=$P($g(^CTLOC(CTLocID)),"^",2)
+ i $d(%request.Data("CTLoc")) s info=info_"&CTLoc="_CTLoc
+ ;
+ s ResID=$g(%session.Data("OTfind","1194","ResID"))
+ i ((ResID="")&&($d(%request.Data("ResID")))) s ResID=%request.Data("ResID",1)
+ ;only need if description field on the component
+ i $d(%request.Data("RESDesc")) s info=info_"&ResID="_ResID
+ ;
+ s RESDesc=$g(%session.Data("OTfind","1194","RESDesc"))
+ i ((RESDesc="")&&($d(%request.Data("RESDesc")))) s RESDesc=%request.Data("RESDesc",1)
+ i ResID'="" s RESDesc=$p($g(^RB("RES",ResID)),"^",17)
+ i $d(%request.Data("RESDesc")) s info=info_"&RESDesc="_RESDesc
+ ;
+ s Anesthetiest=$g(%session.Data("OTfind","1194","Anesthetiest"))
+ i ((Anesthetiest="")&&($d(%request.Data("Anesthetiest")))) s Anesthetiest=%request.Data("Anesthetiest",1)
+ i $d(%request.Data("Anesthetiest")) s info=info_"&Anesthetiest="_Anesthetiest
+ ;
+ s RBOPOperDepartmentDR=$g(%session.Data("OTfind","1194","RBOPOperDepartmentDR"))
+ i ((RBOPOperDepartmentDR="")&&($d(%request.Data("RBOPOperDepartmentDR")))) s RBOPOperDepartmentDR=%request.Data("RBOPOperDepartmentDR",1)
+ i RBOPOperDepartmentDR'="" d
+ . s count=1,part="",newstr="" f  s part=$p($g(RBOPOperDepartmentDR),"&",count) q:part=""  d
+ . . i newstr'="" s newstr=newstr_"|||amp|||"_part
+ . . i newstr="" s newstr=part
+ . . s count=count+1
+ . s RBOPOperDepartmentDR=newstr
+ i $d(%request.Data("RBOPOperDepartmentDR")) s info=info_"&RBOPOperDepartmentDR="_RBOPOperDepartmentDR
+ ;
+ s RBOPOperDepartmentID=$g(%session.Data("OTfind","1194","RBOPOperDepartmentID"))
+ i ((RBOPOperDepartmentID)&&($d(%request.Data("RBOPOperDepartmentID")))) s RBOPOperDepartmentID=%request.Data("RBOPOperDepartmentID",1)
+ i $d(%request.Data("RBOPOperDepartmentID")) s info=info_"&RBOPOperDepartmentID="_RBOPOperDepartmentID
+ ;
+ s OPStatus=$g(%session.Data("OTfind","1194","OPStatus")) 
+ i ((OPStatus="")&&($d(%request.Data("OPStatus")))) s OPStatus=%request.Data("OPStatus",1)
+ i $d(%request.Data("OPStatus")) s info=info_"&OPStatus="_OPStatus
+ ;
+ s surgeonid=$g(%session.Data("OTfind","1194","surgeonid")) 
+ i ((surgeonid="")&&($d(%request.Data("surgeonid")))) s surgeonid=%request.Data("surgeonid",1)
+ ; only need is the surgeon filed is on the component
+ i $d(%request.Data("Surgeon")) s info=info_"&surgeonid="_surgeonid
+ ;
+ s Surgeon=$g(%session.Data("OTfind","1194","Surgeon")) 
+ i ((Surgeon="")&&($d(%request.Data("Surgeon")))) s Surgeon=%request.Data("Surgeon",1)
+ i surgeonid'="" s Surgeon=$P($g(^CTPCP(surgeonid,1)),"^",2)
+ i $d(%request.Data("Surgeon")) s info=info_"&Surgeon="_Surgeon
+ ;
+ s dateto=$g(%session.Data("OTfind","1194","dateto"))
+ i ((dateto="")&&($d(%request.Data("dateto")))) s dateto=%request.Data("dateto",1)
+ i $d(%request.Data("dateto")) s info=info_"&dateto="_dateto
+ ;
+ s NoAppt=$g(%session.Data("OTfind","1194","NoAppt"))
+ i ((NoAppt="")&&($d(%request.Data("NoAppt")))) s NoAppt=%request.Data("NoAppt",1)
+ i DiaryType="OT" d
+ . s DontFind="", NoAppt="on",percent="15%"
+ i $d(%request.Data("NoAppt")) s info=info_"&NoAppt="_NoAppt
+ ;
+ s RetainFieldValue=$g(%session.Data("OTfind","1194","RetainFieldValue"))
+ i RetainFieldValue'="" s DontFind=""
+ i ((RetainFieldValue="")&&($d(%request.Data("RetainFieldValue")))) s RetainFieldValue=%request.Data("RetainFieldValue",1)
+ s info=info_"&RetainFieldValue="_RetainFieldValue
+ ;
+ s RBOPOperation=$g(%session.Data("OTfind","1194","RBOPOperation"))
+ i ((RBOPOperation="")&&($d(%request.Data("RBOPOperation")))) s RBOPOperation=%request.Data("RBOPOperation",1)
+ i $d(%request.Data("RBOPOperation")) s info=info_"&RBOPOperation="_RBOPOperation
+ ;
+ s RBOPStatePPP=$g(%session.Data("OTfind","1194","RBOPStatePPP"))
+ i ((RBOPStatePPP="")&&($d(%request.Data("RBOPStatePPP")))) s RBOPStatePPP=%request.Data("RBOPStatePPP",1)
+ i $d(%request.Data("RBOPStatePPP")) s info=info_"&RBOPStatePPP="_RBOPStatePPP
+ ;
+ s RegistrationNo=$g(%session.Data("OTfind","1194","RegistrationNo"))
+ i ((RegistrationNo="")&&($d(%request.Data("RegistrationNo")))) s RegistrationNo=%request.Data("RegistrationNo",1)
+ i $d(%request.Data("RegistrationNo")) s info=info_"&RegistrationNo="_RegistrationNo
+ ;
+ ;RBOPASCareProv,RBOPASCareProvType,RBOPASCareProvId,RBOPASCareProvTypeId
+ s RBOPASCareProvId=$g(%session.Data("OTfind","1194","RBOPASCareProvId")) 
+ i ((RBOPASCareProvId="")&&($d(%request.Data("RBOPASCareProvId")))) s RBOPASCareProvId=%request.Data("RBOPASCareProvId",1)
+ i $d(%request.Data("RBOPASCareProv")) s info=info_"&RBOPASCareProvId="_RBOPASCareProvId
+ ;
+ s RBOPASCareProv=$g(%session.Data("OTfind","1194","RBOPASCareProv")) 
+ i ((RBOPASCareProv="")&&($d(%request.Data("RBOPASCareProv")))) s RBOPASCareProv=%request.Data("RBOPASCareProv",1)
+ i RBOPASCareProvId'="" s RBOPASCareProv=$P($g(^CTPCP(RBOPASCareProvId,1)),"^",2)
+ i $d(%request.Data("RBOPASCareProv")) s info=info_"&RBOPASCareProv="_RBOPASCareProv
+ ;
+ s RBOPASCareProvTypeId=$g(%session.Data("OTfind","1194","RBOPASCareProvTypeId")) 
+ i ((RBOPASCareProvTypeId="")&&($d(%request.Data("RBOPASCareProvTypeId")))) s RBOPASCareProvTypeId=%request.Data("RBOPASCareProvTypeId",1)
+ i $d(%request.Data("RBOPASCareProvType")) s info=info_"&RBOPASCareProvTypeId="_RBOPASCareProvTypeId
+ ;
+ s RBOPASCareProvType=$g(%session.Data("OTfind","1194","RBOPASCareProvType")) 
+ i ((RBOPASCareProvType="")&&($d(%request.Data("RBOPASCareProvType")))) s RBOPASCareProvType=%request.Data("RBOPASCareProvType",1)
+ i RBOPASCareProvTypeId'="" s RBOPASCareProvType=##Class(websys.StandardTypeItem).GetDescription("AnaestOtherStaff",RBOPASCareProvTypeId)
+ i $d(%request.Data("RBOPASCareProvType")) s info=info_"&RBOPASCareProvType="_RBOPASCareProvType
+ ;	
+ ;	
+ ;s info="&NoAppt="_NoAppt_"&dateto="_dateto_"&Surgeon="_Surgeon_"&surgeonid="_surgeonid_"&OPStatus="_OPStatus_"&CTLocID="_CTLocID_"&ResID="_ResID_"&Anesthetiest="_Anesthetiest_"&RESDesc="_RESDesc_"&CTLoc="_CTLoc_"&RBOPDateOper="_RBOPDateOper_"&DiaryType="_DiaryType_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&CONTEXT="_Context_"&RBOPOperDepartmentID="_RBOPOperDepartmentID_"&RBOPOperDepartmentDR="_RBOPOperDepartmentDR_"&RetainFieldValue="_RetainFieldValue
+ 
+</SERVER>
+<frameset rows="#(percent)#,*" onload="FDocumentLoadHandler('');">
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=RBOperatingRoom.Find#(info1)#" name="RBOperatingRoomEdit" frameBorder=0>
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=RBOperatingRoom.List&DontFind=1#(info1)#" name="RBOperatingRoomList" frameBorder=0>
+</frameset>
+<script language=javascript>
+
+//Log 49002 Chandana 2/2/05
+//Commented out all of the following and moved to RBOperatingRoom.Find.js.
+//This is because Alt-F wasn't working.
+function FDocumentLoadHandler(df) {
+	//alert("dontfind is :" + "#(DontFind)#");
+	/*var win=document.frames['RBOperatingRoomEdit'];
+	if (win) {
+		var doc=win.document;
+		if (doc) {
+			obj=doc.getElementById('find1');
+			if (obj) {
+				obj.url="";
+				obj.onclick=find1_click;
+			}
+		}
+		if (("#(DontFind)#"=="")&&(df=="")) find1_click();
+	}
+	*/
+}
+	
+	/*function find1_click() {
+		var win=document.frames['RBOperatingRoomEdit'];
+		var link=""
+		var doc=win.document;
+		var RBOPDateOper=""
+		var CTLocID=""
+		var RESDesc=""
+		var CTLoc=""
+		var ResID=""
+		var surgeonid=""
+		var Surgeon=""
+		var dateto=""
+		var Anesthetiest=""
+		var RBOPOperDepartmentID=""
+		var RBOPOperDepartmentDR=""
+		var OPStatus=""
+		var noappt=""
+		var RetainFieldValue=""
+		var RBOPOperation=""
+		var RBOPStatePPP=""
+		var RegistrationNo=""
+		
+		var obj=doc.getElementById("RetainFieldValue");
+		if (obj) { 
+			RetainFieldValue=obj.value; 
+			link="&RetainFieldValue="+RetainFieldValue;
+		}
+		
+		var obj=doc.getElementById("RBOPDateOper");
+		if (obj) {RBOPDateOper=obj.value;link=link+"&RBOPDateOper="+RBOPDateOper;}
+		
+		var obj=doc.getElementById("CTLocID");
+		if (obj) {CTLocID=obj.value;link=link+"&CTLocID="+CTLocID;}
+		
+		var obj=doc.getElementById("CTLoc");
+		if (obj) {CTLoc=obj.value;link=link+"&CTLoc="+CTLoc;}
+		
+		var obj=doc.getElementById("ResID");
+		if (obj) {ResID=obj.value;link=link+"&ResID="+ResID;}
+		
+		var obj=doc.getElementById("RESDesc");
+		if (obj) {RESDesc=obj.value;link=link+"&RESDesc="+RESDesc;}
+		
+		var obj=doc.getElementById("surgeonid");
+		if (obj) {surgeonid=obj.value;link=link+"&surgeonid="+surgeonid;}
+		
+		var obj=doc.getElementById("Surgeon");
+		if (obj) {Surgeon=obj.value;link=link+"&Surgeon="+Surgeon;}
+		
+		var obj=doc.getElementById("dateto");
+		if (obj) {dateto=obj.value;link=link+"&dateto="+dateto;}
+		
+		var obj=doc.getElementById("Anesthetiest");
+		if (obj) {Anesthetiest=obj.value;link=link+"&Anesthetiest="+Anesthetiest;}
+		
+		var obj=doc.getElementById("RBOPOperDepartmentID");
+		if (obj) {RBOPOperDepartmentID=obj.value;link=link+"&RBOPOperDepartmentID="+RBOPOperDepartmentID;}
+		
+		var obj=doc.getElementById("RBOPOperDepartmentDR");
+		if (obj) {RBOPOperDepartmentDR=obj.value;link=link+"&RBOPOperDepartmentDR="+RBOPOperDepartmentDR;}
+		
+		var obj=doc.getElementById("OPStatus");
+		if (obj) {OPStatus=obj.value;link=link+"&OPStatus="+OPStatus;}
+		
+		var obj=doc.getElementById("NoAppt");
+		if ((obj)&&(obj.checked)) {noappt="on";} else {noappt="";}
+		if (!obj) noappt="#(NoAppt)#"
+		if(noappt == "") noappt = "off";
+		link=link+"&NoAppt="+noappt;
+
+		var obj=doc.getElementById("RBOPOperation");
+		if (obj) {RBOPOperation=obj.value;link=link+"&RBOPOperation="+RBOPOperation;}
+
+		var obj=doc.getElementById("RBOPStatePPP");
+		if (obj) {RBOPStatePPP=obj.value;link=link+"&RBOPStatePPP="+RBOPStatePPP;}
+
+
+		var obj=doc.getElementById("RegistrationNo");
+		if (obj) {RegistrationNo=obj.value;link=link+"&RegistrationNo="+RegistrationNo;}
+		
+		//Log 47744 - CS 09/12/04
+		//FindOperation query in web.RBOperatingRoom has 15 parameters, therefore use
+		//Params as the last parameter.  It is a ^ delimited parameter.
+		var obj=doc.getElementById("Params");
+		if(obj) {obj.value=CTLoc+"^"+RESDesc+"^"+RBOPOperDepartmentDR;link=link+"&Params="+obj.value;}
+
+		//alert(RBOPDateOper+","+CTLocID+","+ResID+","+surgeonid+","+dateto+","+Anesthetiest+","+RBOPOperDepartmentDR+","+OPStatus);
+		//alert("Surgeon " + Surgeon + " surgeonid " + surgeonid);
+		var url="websys.default.csp?WEBSYS.TCOMPONENT=RBOperatingRoom.List"+link+"&CONTEXT="+session["CONTEXT"];
+		var win2=document.frames['RBOperatingRoomList'];
+		if (win2) win2.location=url;
+		return;
+	}*/
+	
+</script>
+<BODY>
+</BODY>
+</HTML>

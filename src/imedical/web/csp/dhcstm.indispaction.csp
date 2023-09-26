@@ -1,0 +1,110 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s StrParam=$Get(%request.Data("strParam",1))
+	s Disp=$Get(%request.Data("disp",1))
+	s listData=$Get(%request.Data("data",1))
+	s UserId=$Get(%request.Data("userId",1))
+
+//查询发放单
+i Action = "query" d
+	.d ##class(web.DHCSTM.DHCINDisp).jsDHCINDispM(Start,Limit,Sort,Dir,StrParam)
+
+//查询发放单明细
+i Action = "queryItem" d
+	.d ##class(web.DHCSTM.DHCINDispItm).jsDHCINDispD(Start,Limit,Disp)
+
+//删除发放单明细
+i Action = "delete" d
+	.s result = ##class(web.DHCSTM.DHCINDisp).Delete(Disp)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+//删除发放单明细
+i Action = "deleteItem" d
+	.s RowId=$Get(%request.Data("rowid",1))
+	.s result = ##class(web.DHCSTM.DHCINDispItm).Delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+//保存发放单主表记录
+i Action = "save" d
+	.s result = ##class(web.DHCSTM.DHCINDisp).Update(Disp,listData)
+	.i result >0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+//保存发放单明细记录
+i Action = "saveDetail" d
+	.s result = ##class(web.DHCSTM.DHCINDispItm).Save(Disp,listData)
+	.i result >0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+//审核发放单
+i Action = "audit" d
+	.s ^zhwh(1091)=Disp_"^"_UserId
+	.s result = ##class(web.DHCSTM.DHCINDisp).Audit(Disp,UserId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+i Action = "setComplete" d
+	.s result = ##class(web.DHCSTM.DHCINDisp).SetComplete(Disp,"Y")
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+i Action = "cancelComplete" d
+	.s result = ##class(web.DHCSTM.DHCINDisp).SetComplete(Disp,"N")
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i Action = "select" d
+	.s result = ##class(web.DHCSTM.DHCINDisp).jsSelect(Disp)
+	.w result
+
+//保存发放单
+i Action = "SaveDisp" d
+	.s inds=$G(%request.Data("inds",1))
+	.s mainData=$G(%request.Data("mainData",1))
+	.s detailData=$G(%request.Data("detailData",1))
+	.s result=##class(web.DHCSTM.DHCINDisp).SaveDisp(inds,mainData,detailData)
+	.i result>0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+//根据请领单制作发放单
+i Action="CreateDispByReq" d
+	.s req=$G(%request.Data("dsrq",1))  //请领单rowid
+	.s details=$G(%request.Data("detailData",1))
+	.s DispLoc=$G(%request.Data("DispLoc",1))
+	.s result=##class(web.DHCSTM.DHCINDisp).CreateDispByReq(req,UserId,details,DispLoc)
+	.i result>0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

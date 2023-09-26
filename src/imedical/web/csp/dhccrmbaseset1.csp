@@ -1,0 +1,98 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+</csp:method>
+
+<script language="cache" runat="server">
+ s actiontype = $Get(%request.Data("actiontype",1))
+ s start = $Get(%request.Data("start",1))
+ s limit = $Get(%request.Data("limit",1))
+ //FUSubject
+ s fusrowid = $Get(%request.Data("FUSRowId",1))
+ s fuscode = $Get(%request.Data("FUSCode",1))
+ s fusdesc = $Get(%request.Data("FUSDesc",1))
+ s fusdatelimit = $Get(%request.Data("FUSDateLimit",1))
+ s fusdatebegin= $Get(%request.Data("FUSDateBegin",1))
+ s fusdateend = $Get(%request.Data("FUSDateEnd",1))
+ //FUSDetail
+ s sdparref = $Get(%request.Data("SDParRef",1))
+ s sdrowid = $Get(%request.Data("SDRowId",1))
+ s sdcode = $Get(%request.Data("SDCode",1))
+ s sddesc = $Get(%request.Data("SDDesc",1))
+ s sdtype = $Get(%request.Data("SDType",1))
+ s sdsex = $Get(%request.Data("SDSex",1))
+ s sdunit = $Get(%request.Data("SDUnit",1))
+ s sdexplain = $Get(%request.Data("SDExplain",1))
+ s sdactive = $Get(%request.Data("SDActive",1))
+ s sdrequired = $Get(%request.Data("SDRequired",1))
+ s sdeffdate = $Get(%request.Data("SDEffDate",1))
+ s sdenddate = $Get(%request.Data("SDEffDateTo",1))
+ s sdsequence = $Get(%request.Data("SDSequence",1))
+ s sdparent = $Get(%request.Data("SDParentDR",1))
+ s sdcascade = $Get(%request.Data("SDCascade",1))
+ s sdselectnum = $Get(%request.Data("SDSelectNum",1))
+ //FUSDSelect
+ s sdsparref = $Get(%request.Data("SDSParRef",1))
+ s sdsrowid = $Get(%request.Data("SDSRowId",1))
+ s sdstextval = $Get(%request.Data("SDSTextVal",1))
+ s sdsunit = $Get(%request.Data("SDSUnit",1))
+ s sdsdefault = $Get(%request.Data("SDSDefaultValue",1))
+ s sdssequence = $Get(%request.Data("SDSSequence",1))
+ //FUSDSTemplate
+ s sdstparref = $Get(%request.Data("SDSTParRef",1))
+ s sdstrowid = $Get(%request.Data("SDSTRowId",1))
+ s sdsttextval = $Get(%request.Data("SDSTTextVal",1))
+ s sdstsequence = $Get(%request.Data("SDSTSequence",1))
+ s sdsdesc = $Get(%request.Data("SDSDesc",1))
+ s FUSActive = $Get(%request.Data("FUSActive",1))
+ s icdrowid = $Get(%request.Data("ICDRowId",1))
+ //Loc
+ s LocRowid = $Get(%request.Data("LocRowId",1))
+ s LocParRef = $Get(%request.Data("LocParRef",1))
+ s LocCode = $Get(%request.Data("LocCode",1))
+ s LocCTDR = $Get(%request.Data("LocCTDR",1))
+
+ i actiontype = "list" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSubject(fusrowid,start,limit)
+ i actiontype = "fusdlist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSDetail(fusrowid,start,limit)
+  i actiontype = "icdlist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSICD(fusrowid,start,limit)
+ i actiontype = "sdslist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSDSelect(sdrowid,start,limit)
+ i actiontype = "sdstlist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSDSTemplate(sdsrowid,start,limit)
+ i actiontype = "add" d
+ .w ##class(web.DHCCRM.CRMBaseSet).InsertFUSubject(fuscode,fusdesc,fusdatelimit,fusdatebegin,fusdateend)
+ i actiontype = "edit" d
+ .w ##class(web.DHCCRM.CRMBaseSet).UpdateFUSubject(fusrowid,fuscode,fusdesc,fusdatelimit,fusdatebegin,fusdateend,FUSActive)
+ i actiontype = "fusdadd" d
+ .w ##class(web.DHCCRM.CRMBaseSet).InsertFUSDetail(sdparref,sdcode,sddesc,sdtype,sdsex,sdunit,sdexplain,sdactive,sdrequired,sdeffdate,sdenddate,sdsequence,sdparent,sdcascade,sdselectnum)
+ i actiontype = "fusdedit" d
+ .w ##class(web.DHCCRM.CRMBaseSet).UpdateFUSDetail(sdrowid,sdcode,sddesc,sdtype,sdsex,sdunit,sdexplain,sdactive,sdrequired,sdeffdate,sdenddate,sdsequence,sdparent,sdcascade,sdselectnum)
+ i actiontype = "sdsadd" d
+ .w ##class(web.DHCCRM.CRMBaseSet).InsertFUSDSelect(sdsparref,sdstextval,sdsunit,sdsdefault,sdssequence,sdsdesc)
+ i actiontype = "sdsedit" d
+ .w ##class(web.DHCCRM.CRMBaseSet).UpdateFUSDSelect(sdsrowid,sdstextval,sdsunit,sdsdefault,sdssequence,sdsdesc)
+ i actiontype = "sdstadd" d
+ .w ##class(web.DHCCRM.CRMBaseSet).InsertFUSDSTemplate(sdstparref,sdsttextval,sdstsequence)
+ i actiontype = "sdstedit" d
+ .w ##class(web.DHCCRM.CRMBaseSet).UpdateFUSDSTemplate(sdstrowid,sdsttextval,sdstsequence)
+ i actiontype = "del" d
+ .w ##class(web.DHCCRM.CRMBaseSet).DeleteFUSubject(fusrowid)
+ i actiontype = "fusddel" d
+ .w ##class(web.DHCCRM.CRMBaseSet).DeleteFUSDetail(sdrowid)
+ i actiontype = "sdsdel" d
+ .w ##class(web.DHCCRM.CRMBaseSet).DeleteFUSDSelect(sdsrowid)
+ i actiontype = "sdstdel" d
+ .w ##class(web.DHCCRM.CRMBaseSet).DeleteFUSDSTemplate(sdstrowid)
+  i actiontype = "icddel" d
+ .w ##class(web.DHCCRM.CRMBaseSet).DeleteFUSICD(icdrowid)
+ i actiontype = "ctlist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSLoc(fusrowid,start,limit)
+ i actiontype = "ctdel" d
+ .w ##class(web.DHCCRM.CRMBaseSet).DeleteFUSLoc(LocRowid)
+ i actiontype = "fusctadd" d
+ .w ##class(web.DHCCRM.CRMBaseSet).InsertFUSLoc(LocParRef,LocCTDR)
+
+</script>

@@ -1,0 +1,340 @@
+/// Creator: liangqiang
+/// CreateDate: 2015-10-09
+//  Descript: 不良事件维护
+
+var editRow=""; editqsRow=""; //当前编辑行号
+var url="dhcadv.repaction.csp";
+var dataArray = [{"value":"1","text":'安全组'}, {"value":"2","text":'科室'}, {"value":"3","text":'人员'}]; //, {"value":"4","text":'全院'}
+var SecFlagArray= [{"value":"1","text":'仅自己'}, {"value":"2","text":'仅本科室'}, {"value":"3","text":'全院'}];
+var RepTypeID = "";
+var titleNotes=""; //'<span style="font-weight:bold;font-size:12pt;font-family:华文楷体;color:red;">[双击行即可编辑]</span>';
+$(function(){
+	   
+	// 定义columns
+	var columns=[[		
+		{field:"Code",title:'代码',width:150,editor:texteditor},
+		{field:'Desc',title:'描述',width:150,editor:texteditor},
+		{field:"ID",title:'ID',width:90,align:'center'}
+	]];
+	
+	// 定义datagrid
+	$('#adreventdg').datagrid({
+		title:'不良反应事件分类'+titleNotes,
+		url:'',
+		fit:true,
+		rownumbers:true,
+		columns:columns,
+		pageSize:40,  // 每页显示的记录条数
+		pageList:[40,80],   // 可以设置每页记录条数的列表
+	    singleSelect:true,
+		loadMsg: '正在加载信息...',
+		pagination:true,
+	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
+            if ((editRow != "")||(editRow == "0")) {
+            	$("#adreventdg").datagrid('endEdit', editRow);  
+			}
+            $("#adreventdg").datagrid('beginEdit', rowIndex); 
+            editRow = rowIndex; 
+        } ,
+        onClickRow:function(rowIndex, rowData){
+	    	RepTypeID=rowData.ID;    ///工作流ID
+			$('#querysecdg').datagrid({
+				url:'dhcadv.repaction.csp?action=GetQuerySec',	
+				queryParams:{
+					params:RepTypeID
+			}
+			});
+        } 
+	});
+	
+	initScroll("#adreventdg");//初始化显示横向滚动条
+ 
+ 	//按钮绑定事件
+    $('#insert').bind('click',insertRow); 
+    $('#delete').bind('click',deleteRow);
+    $('#save').bind('click',saveRow);
+    
+    //同时给代码和描述绑定回车事件
+    $('#code,#desc').bind('keypress',function(event){
+        if(event.keyCode == "13")    
+        {
+            //queryAdrEvent(this.id+"^"+$('#'+this.id).val()); //调用查询
+            queryAdrEvent(); //调用查询
+        }
+    });
+    
+    // 查找按钮绑定单击事件
+    $('#find').bind('click',function(event){
+         queryAdrEvent(); //调用查询
+    });
+    
+    $('#adreventdg').datagrid({
+		url:url+'?action=QueryAdrEvent',	
+		queryParams:{
+			params:""}
+	});
+	InitQuerySec();
+})
+
+// 插入新行
+function insertRow()
+{
+	if(editRow>="0"){
+		$("#adreventdg").datagrid('endEdit', editRow);//结束编辑，传入之前编辑的行
+	}
+	$("#adreventdg").datagrid('insertRow', {//在指定行添加数据，appendRow是在最后一行添加数据
+		index: 0, // 行数从0开始计算
+		row: {ID: '',Code:'',Desc: ''}
+	});
+	$("#adreventdg").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
+	editRow=0;
+}
+
+// 删除选中行
+function deleteRow()
+{
+	var rows = $("#adreventdg").datagrid('getSelections'); //选中要删除的行
+	if (rows.length > 0) {
+		$.messager.confirm("提示", "您确定要删除这些数据吗？", function (res) {//提示是否删除
+			if (res) {
+				$.post(url+'?action=DelAdrEvent',{"params":rows[0].ID}, function(data){
+					if(data==0){
+						$.messager.alert('提示','删除成功');	
+					}else if(data==-1){
+						$.messager.alert('提示','此数据存在使用信息，不可删除');	
+					}else{
+						$.messager.alert('提示','删除失败');
+					}
+					$('#adreventdg').datagrid('reload'); //重新加载
+				});
+			}
+		});
+	}else{
+		 $.messager.alert('提示','请选择要删除的项','warning');
+		 return;
+	}
+}
+
+// 保存编辑行
+function saveRow()
+{
+	if(editRow>="0"){
+		$("#adreventdg").datagrid('endEdit', editRow);
+	}
+
+	var rows = $("#adreventdg").datagrid('getChanges');
+	if(rows.length<=0){
+		$.messager.alert("提示","没有待保存数据!");
+		return;
+	}
+	var dataList = [];
+	for(var i=0;i<rows.length;i++)
+	{
+		if((rows[i].Code=="")||(rows[i].Desc=="")){
+			$.messager.alert("提示","代码或描述不能为空!"); 
+			return false;
+		}
+		var tmp=rows[i].ID+"^"+rows[i].Code+"^"+rows[i].Desc;
+		dataList.push(tmp);
+	} 
+	var rowstr=dataList.join("&&");
+
+	//保存数据
+	$.post(url+'?action=SaveAdrEvent',{"params":rowstr},function(data){
+		if(data==0){
+			$.messager.alert('提示','操作成功');
+		}else if ((data == -1)||((data == -2))){
+			$.messager.alert('提示','代码重复,请核实后再试','warning');
+			return;	
+		}else {
+			$.messager.alert('提示','操作失败','warning');
+			return;
+		}
+		$('#adreventdg').datagrid('reload'); //重新加载
+	});
+}
+
+// 编辑格
+var texteditor={
+	type: 'text',//设置编辑格式
+	options: {
+		required: true //设置编辑规则属性
+	}
+}
+
+// 查询
+function queryAdrEvent()
+{
+	var adrEventCode=$('#code').val();
+	var adrEventDesc=$('#desc').val();
+	var params=adrEventCode+"^"+adrEventDesc;
+	$('#adreventdg').datagrid('load',{params:params}); 
+}
+/// ================================================================================
+/// =====================================可查看权限配置=============================
+function InitQuerySec()
+{
+	//设置其为可编辑
+	var editPoint={
+		type: 'combobox',     //设置编辑格式
+		options: {
+			valueField: "value",
+			textField: "text",
+			url: '',
+			onSelect:function(option){
+				var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'PointID'});
+				$(ed.target).val(option.value);  //设置科室ID
+				var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'Pointer'});
+				$(ed.target).combobox('setValue', option.text);  //设置科室Desc
+			}
+		}
+	}
+	//权限范围标志
+	var SecFlagEditor={  //设置其为可编辑
+		type: 'combobox',//设置编辑格式
+		options: {
+			data:SecFlagArray,
+			valueField: "value", 
+			textField: "text",
+			//required:true,
+			panelHeight:"auto",  //设置容器高度自动增长
+			onSelect:function(option){
+				///设置类型值
+				var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'SecFlagID'});
+				$(ed.target).val(option.value);
+				var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'SecFlag'});
+				$(ed.target).combobox('setValue', option.text); 
+			} 
+		}
+	}
+	// 定义columns
+	var columns=[[		
+		{field:"RepTypeDr",title:'报告类型Dr',width:90,align:'center',hidden:true},
+		{field:'TypeID',title:'TypeID',width:90,editor:'text',hidden:true},
+		{field:"Type",title:'角色',width:110,editor:texteditor,
+			editor: {  //设置其为可编辑
+				type: 'combobox',//设置编辑格式
+				options: {
+					data:dataArray,
+					valueField: "value", 
+					textField: "text",
+					panelHeight:"auto",  //设置容器高度自动增长
+					onSelect:function(option){
+						///设置类型值
+						var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'TypeID'});
+						$(ed.target).val(option.value);  //设置科室ID
+						var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'Type'});
+						$(ed.target).combobox('setValue', option.text);  //设置科室Desc
+						///设置级联指针
+						var paramType=option.value+"^"+LgGroupID;  //类型^安全组
+						var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'Pointer'});
+						var url='dhcadv.repaction.csp?action=GetSSPPoint&params='+paramType;
+						$(ed.target).combobox('reload',url);
+					} 
+				}
+			}
+		},
+		{field:'Pointer',title:'指向',width:200,editor:editPoint},
+		{field:'PointID',title:'PointID',width:130,editor:'text',hidden:true},
+		{field:'SecFlag',title:'权限',width:150,editor:SecFlagEditor},
+		{field:'SecFlagID',title:'SecFlagID',width:150,editor:'text',hidden:true},
+		{field:"ID",title:'ID',width:90,align:'center',hidden:false}
+	]];
+	// 定义datagrid
+	$('#querysecdg').datagrid({
+		title:'可查看权限配置',
+		url:'',
+		fit:true,
+		rownumbers:true,
+		columns:columns,
+		//pageSize:40,        // 每页显示的记录条数
+		//pageList:[40,80],   // 可以设置每页记录条数的列表
+	    singleSelect:true,
+		loadMsg: '正在加载信息...',
+		//pagination:true,
+	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
+            if ((editqsRow != "")||(editqsRow == "0")) {
+            	$("#querysecdg").datagrid('endEdit', editqsRow);
+			}
+            $("#querysecdg").datagrid('beginEdit', rowIndex); 
+            editqsRow = rowIndex; 
+        
+        }
+	});
+	
+	initScroll("#querysecdg");//初始化显示横向滚动条
+	
+	//按钮绑定事件
+    $('#insquerysec').bind('click',insquerysecRow); 
+    $('#delquerysec').bind('click',delquerysecRow);
+    $('#savquerysec').bind('click',savquerysecRow);
+	
+}
+
+// 插入新行
+function insquerysecRow()
+{
+	//var ttt=$("#querysecdg").datagrid('selectRow',editqsRow)
+	
+	if(editqsRow>="0"){
+		$("#querysecdg").datagrid('endEdit', editqsRow);//结束编辑，传入之前编辑的行
+	}
+	$("#querysecdg").datagrid('insertRow', {//在指定行添加数据，appendRow是在最后一行添加数据
+		index: 0, // 行数从0开始计算
+		row: {ID: '',Type:'',Point: '',SecFlag:''}
+	});
+	$("#querysecdg").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
+	editqsRow=0;
+}
+
+// 删除选中行
+function delquerysecRow()
+{
+	var rows = $("#querysecdg").datagrid('getSelections'); //选中要删除的行
+	if (rows.length > 0) {
+		$.messager.confirm("提示", "您确定要删除这些数据吗？", function (res) {//提示是否删除
+			if (res) {
+				$.post(url+'?action=DelQuerySec',{"params":rows[0].ID}, function(data){
+					$('#querysecdg').datagrid('reload'); //重新加载
+				});
+			}
+		});
+	}else{
+		 $.messager.alert('提示','请选择要删除的项','warning');
+		 return;
+	}
+}
+
+// 保存编辑行
+function savquerysecRow()
+{
+	if(editqsRow>="0"){
+		$("#querysecdg").datagrid('endEdit', editqsRow);
+	}
+
+	var rows = $("#querysecdg").datagrid('getChanges');
+	if(rows.length<=0){
+		$.messager.alert("提示","没有待保存数据!");
+		return;
+	}
+	var dataList = [];
+	for(var i=0;i<rows.length;i++)
+	{
+		/*
+		if((rows[i].TypeID=="")||(rows[i].PointID=="")){
+			$.messager.alert("提示","代码或描述不能为空!"); 
+			return false;
+		}
+		*/
+		var tmp=rows[i].ID+"^"+RepTypeID+"^"+rows[i].TypeID+"^"+rows[i].PointID+"^"+rows[i].SecFlagID;
+		dataList.push(tmp);
+	} 
+	var rowstr=dataList.join("&&");
+	//保存数据
+	$.post('dhcadv.repaction.csp?action=SaveQuerySec',{"params":rowstr},function(data){
+		if(data==0){
+			$.messager.alert("提示","保存成功!");
+			$('#querysecdg').datagrid('reload'); //重新加载
+		}
+	});
+}

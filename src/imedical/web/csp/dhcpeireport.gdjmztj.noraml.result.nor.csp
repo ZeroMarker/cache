@@ -1,0 +1,101 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">	
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="NORReport"
+		e  d
+		.s DIVClass="Page NORReport"
+	</SCRIPT>
+		<TABLE width=655 border=0 cellspacing=0>
+			<THEAD style="display:table-header-group">
+				<TR>
+					<TD class='NORHead NORHeadARCIMDesc' colSpan=4>#(ARCIMDesc)#</TD>
+				</TR>
+				<TR>
+					<TD width="132" height="42" class="NORResultTtile NORResultTtileTestName">项目名称</TH>
+					<TD width="187" class="NORResultTtile NORResultTtileTestValue">检查结果</TH>
+					<TD width="132" height="42" class="NORResultTtile NORResultTtileTestName">项目名称</TH>
+					<TD width="187" class="NORResultTtile NORResultTtileTestValue">检查结果</TH>
+				</TR>
+			</THEAD>
+			
+			<TBODY>
+				
+					<!--  输出病患信息  -->
+	<csp:WHILE COUNTER=ODID CONDITION=(""'=ODID)>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s CurData=$g(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+		i (""'=CurData) d
+		.s TestDesc=$P(CurData,"^",1)
+		.s TestResults=$P(CurData,"^",2)
+		.s TestResult=$P(CurData,"^",2)
+		.s TestNormal=$P(CurData,"^",3)
+		.s TestUnit=$P(CurData,"^",4)
+		.s:(""'=TestUnit) TestResult=TestResult_" "_TestUnit
+		.s TemplateDescs=$P(CurData,"^",5)
+		.s TemplateDesc=$P(CurData,"^",5)
+		.
+		.s:(""'=TemplateDesc) TestResult=TestResult_"  ("_TemplateDesc_")"
+		s iLLoop=1
+		s TestResult=""
+		s TemplateDesc=""
+		do{
+			s TemplateDesc=$P(TemplateDescs,$C(13)_$C(10),iLLoop)
+			
+			s strTemp=$P(TestResults,$C(13)_$C(10),iLLoop)
+			
+			s:(""'=strTemp) TestResult=TestResult_strTemp
+			s:(""'=TemplateDesc) TestResult=TestResult_"("_TemplateDesc_")"
+			s:(""'=strTemp) TestResult=TestResult_"</br>"
+
+			s iLLoop=iLLoop+1
+		}while(iLLoop<=$L(TestResults,$C(13)_$C(10)))
+		s ODID=$o(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+		s TestDesc2=""
+		s TestResult2=""
+		i ODID'=""
+		{
+		s CurData=$g(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+		i (""'=CurData) d
+		.s TestDesc2=$P(CurData,"^",1)
+		.s TestResults2=$P(CurData,"^",2)
+		.s TestResult2=$P(CurData,"^",2)
+		.s TestNormal2=$P(CurData,"^",3)
+		.s TestUnit2=$P(CurData,"^",4)
+		.s:(""'=TestUnit2) TestResult2=TestResult2_" "_TestUnit2
+		.s TemplateDescs2=$P(CurData,"^",5)
+		.s TemplateDesc2=$P(CurData,"^",5)
+		.
+		.s:(""'=TemplateDesc2) TestResult2=TestResult2_"  ("_TemplateDesc2_")"
+		s iLLoop=1
+		s TestResult2=""
+		s TemplateDesc2=""
+		do{
+			s TemplateDesc2=$P(TemplateDescs2,$C(13)_$C(10),iLLoop)
+			
+			s strTemp2=$P(TestResults2,$C(13)_$C(10),iLLoop)
+			
+			s:(""'=strTemp2) TestResult2=TestResult2_strTemp2
+			s:(""'=TemplateDesc2) TestResult2=TestResult2_"("_TemplateDesc2_")"
+			s:(""'=strTemp2) TestResult2=TestResult2_"</br>"
+
+			s iLLoop=iLLoop+1
+		}while(iLLoop<=$L(TestResults2,$C(13)_$C(10)))
+		}
+		
+		</Script>
+		<CSP:IF CONDITION=(""'=CurData)>
+				<TR>
+					<TD class='NORResult NORResultTestName'>#(TestDesc)#</TD>
+					<TD class='NORResult NORResultTestValue'>#(TestResult)#</TD>
+					<TD class='NORResult NORResultTestName'>#(TestDesc2)#</TD>
+					<TD class='NORResult NORResultTestValue'>#(TestResult2)#</TD>
+				</TR>
+		</CSP:IF>
+	</csp:WHILE>
+			</TBODY>
+			<TFOOT>
+				<TR>
+					<TD class="NORFooter NORFooterChecker" colSpan=3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;医生:<LABEL class=Checker>#(Checker)#</LABEL></TD>
+					<TD class="NORFooter NORFooterCheckDate" colSpan=1>检查日期:<LABEL class=CheckDate>#(CheckDate)#</LABEL></TD>
+				</TR>
+			</TFOOT>
+		</TABLE>

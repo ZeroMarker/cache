@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--doc.ipbookcreate.hui.csp HISUI开住院证--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!--EXTHEALTH:HEAD></EXTHEALTH:HEAD-->
+<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+<SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+<HISUI></HISUI>
+<style>
+body{
+	background: #fff;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.kw-section-list>li {
+	margin:0 5px;
+}
+.disable-li{
+	pointer-events:none;
+}
+.disable-li a{
+	color:#bbb !important;;
+}
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+.editcls:hover{
+	background-color: #DBEDF9;
+	cursor: pointer;
+}
+</style>
+<Server>
+d ##Class(websys.Configuration).HeadSession()
+s IPBKFlag=%request.Get("IPBKFlag")
+s EpisodeID=%request.Get("EpisodeID")
+s PatientID=%request.Get("PatientID")
+s mradm=%request.Get("mradm")
+s BookID=%request.Get("BookID")
+s NowDate=##class(websys.Conversions).DateLogicalToHtml(+$h) 
+s DoctorType=##class(web.SSUser).GetDefaultCareProviderType(%session.Get("LOGON.USERID"))
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+s AdmissionRowid=$o(^DHCDocIPBDIC(0,"TypeCode","IPBookingState","Admission",""))
+s PreInPatRowid=$o(^DHCDocIPBDIC(0,"TypeCode","IPBookingState","PreInPatient",""))
+s sysDateFormat=##class(websys.Conversions).DateFormat()
+s BookStr="Booking^Cancel^PreInPatient"
+s OtherBookStr="Booking^Cancel"
+;关系
+s DefaultRelationPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTRelation","^^^HUIJSON")
+;住院科室
+s InCTLocPara=##class(web.DHCDocIPBookNew).CombListFindJson("InCtloc",%session.Get("LOGON.CTLOCID"))
+;默认科室
+s DefaultLocRowId=##class(DHCDoc.DHCDocConfig.CommonFunction).GetDefaultIPBookLoc(%session.Get("LOGON.CTLOCID"))
+;入院病情
+s AdmInitStatePara=##class(web.DHCDocIPBookNew).CombListFindJson("AdmInitState","")
+;诊断状态
+s DiaStatusPara=##class(web.DHCDocIPBookNew).CombListFindJson("DiaStatus","")
+;入院途径
+s InSorcePara=##class(web.DHCDocIPBookNew).CombListFindJson("InSorce","")
+;当前状态
+s CodeDefault="",DisplayCode="",needSignBed="N"
+if (BookID'="") {
+	s needSignBed=##class(DHCDoc.DHCDocConfig.CommonFunction).IfNeedSignBed(BookID)
+}
+if (IPBKFlag="Booking") {
+	s CodeDefault="Booking"
+	s DisplayCode=BookStr
+}else{
+	s DisplayCode=OtherBookStr
+	if (needSignBed="Y") {
+		s DisplayCode = DisplayCode _ "^" _ "SignBed"
+	}
+}
+s InCurStatuPara=##class(web.DHCDocIPBookNew).CombListFindJson("DHCDocIPBDictory","IPBookingState",CodeDefault,DisplayCode)
+;操作原因
+s CodeDefault="",DisplayCode=""
+if (IPBKFlag="Booking"){
+	s CodeDefault="Admit"
+	s DisplayCode="Admit"
+}else{
+	s CodeDefault="Admit"
+}
+s InReasonPara=##class(web.DHCDocIPBookNew).CombListFindJson("DHCDocIPBDictory","IPBookingStateChangeReason",CodeDefault,DisplayCode)
+;收治原则
+s TreatedPrinciplePara=##class(web.DHCDocIPBookNew).CombListFindJson("DHCDocIPBDictory","IPBookingTreatedPrinciple","","")
+;患者等级
+s PatientLevelPara=##class(web.DHCDocIPBookNew).CombListFindJson("DHCDocIPBDictory","IPBookingPatientLevel","","")
+;床位类型
+s InBedTypePara=##class(web.DHCDocIPBookNew).CombListFindJson("DHCDocIPBDictory","IPBookingBedType","01","")
+;是否允许入院后补打住院证
+s AllowPrintFlag=##class(web.DHCDocConfig).GetConfigNode("AllowPrintAfterInPat") //$G(^DHCDocConfig("AllowPrintAfterInPat"))
+;初始化患者信息
+s IntAdmICDList=""
+s IntPatAdmCheck=""
+if (EpisodeID'=""){
+	//诊断对应的就诊信息
+	s IntAdmICDList=##class(web.DHCDocIPBookNew).GetAdmICDList(EpisodeID)
+	s amdpatdr=$P(^PAADM(EpisodeID),"^",1)
+	s:PatientID'="" PatientID=amdpatdr
+	if (IPBKFlag="Booking")
+	{	;检测就诊是否可以开住院证
+		s IntPatAdmCheck=##class(web.DHCDocIPBookNew).CheckBeforeSave(EpisodeID,"","1","")
+	}
+}
+s IntPatDetail=""
+s:PatientID'="" IntPatDetail=##class(web.DHCDocIPBookNew).GetPatDetail(PatientID,"","")
+s CancelBookState=$o(^DHCDocIPBDIC(0,"TypeCode","IPBookingState","Cancel",0))
+</Server>
+</head>
+<body>
+	<csp:Include Page="doc.ipbookcreate.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			IPBKFlag:"#(IPBKFlag)#",
+			EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			mradm:"#(mradm)#",
+			BookID:"#(BookID)#",
+			NowDate:"#(NowDate)#",
+			DoctorType:"#(DoctorType)#",
+			OtherBookStr:"#(OtherBookStr)#", //PreInPatient Admission^
+			BookStr:"#(BookStr)#",
+			EpisodeIDIP:"",
+			LogonDoctorType:"#(DoctorType)#",
+			AdmissionRowid:"#(AdmissionRowid)#",
+			sysDateFormat:"#(sysDateFormat)#",
+			PreInPatRowid:"#(PreInPatRowid)#",
+			
+			DefaultRelationPara:'#(DefaultRelationPara)#',
+			InCTLocPara:'#(InCTLocPara)#',
+			DefaultLocRowId:"#(DefaultLocRowId)#",
+			AdmInitStatePara:'#(AdmInitStatePara)#',
+			DiaStatusPara:'#(DiaStatusPara)#',
+			InSorcePara:'#(InSorcePara)#',
+			InCurStatuPara:'#(InCurStatuPara)#',
+			InReasonPara:'#(InReasonPara)#',
+			TreatedPrinciplePara:'#(TreatedPrinciplePara)#',
+			PatientLevelPara:'#(PatientLevelPara)#',
+			InBedTypePara:'#(InBedTypePara)#',
+			pageCode:'doc.ipbookcreate.hui.csp',
+			AllowPrintFlag:"#(AllowPrintFlag)#",
+			domSelector:'.textbox',
+			
+			IntPatDetail:"#(IntPatDetail)#",
+			IntAdmICDList:"#(IntAdmICDList)#",
+			IntPatAdmCheck:"#(IntPatAdmCheck)#",
+			CancelBookState:"#(CancelBookState)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
+	<script type="text/javascript" src="../scripts/Doc.IPBookCreate.hui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+</body>
+</HTML>

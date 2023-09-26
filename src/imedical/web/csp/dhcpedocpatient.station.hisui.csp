@@ -1,0 +1,181 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+ <script type="text/javascript">
+        //处理键盘事件 禁止后退键（Backspace）密码或单行、多行文本框除外
+        function forbidBackSpace(e) {
+            var ev = e || window.event; //获取event对象 
+            var obj = ev.target || ev.srcElement; //获取事件源 
+            var t = obj.type || obj.getAttribute('type'); //获取事件源类型 
+            //获取作为判断条件的事件类型 
+            var vReadOnly = obj.readOnly;
+            var vDisabled = obj.disabled;
+            //处理undefined值情况 
+            vReadOnly = (vReadOnly == undefined) ? false : vReadOnly;
+            vDisabled = (vDisabled == undefined) ? true : vDisabled;
+            //当敲Backspace键时，事件源类型为密码或单行、多行文本的， 
+            //并且readOnly属性为true或disabled属性为true的，则退格键失效 
+            var flag1 = ev.keyCode == 8 && (t == "password" || t == "text" || t == "textarea") && (vReadOnly == true || vDisabled == true);
+            //当敲Backspace键时，事件源类型非密码或单行、多行文本的，则退格键失效 
+            var flag2 = ev.keyCode == 8 && t != "password" && t != "text" && t != "textarea";
+            //判断 
+            if (flag2 || flag1) return false;
+        }
+        //禁止后退键 作用于Firefox、Opera
+        document.onkeypress = forbidBackSpace;
+        //禁止后退键  作用于IE、Chrome
+        document.onkeydown = forbidBackSpace;
+</script>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+set PAADM=$g(%request.Data("PAADM",1))
+set StationID=$g(%request.Data("StationID",1))
+</SCRIPT> 
+<script type="text/javascript">
+ var PAADMID="#(PAADM)#"
+ var StationIDHISUI="#(StationID)#"
+ 	
+ </script>
+ 
+  <style type="text/css">
+ 		table
+        {
+            border-collapse: collapse;
+            margin: 0 auto;
+            text-align: center;
+        }
+        table td
+        {
+            border: 1px solid #ccc;
+            color: #666;
+        }
+        
+        table thead th
+        {
+            background-color: #EBEBEB;
+            height: 30px;
+            border: 1px solid #ccc;
+            color: #666;
+        }
+
+
+</style>
+ 
+</head>
+
+<body id="BodyContent" class="hisui-layout">
+  <input type="hidden" id="EpisodeID"/>
+  <input type="hidden" id="StationID"/>
+ <div  data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false">
+    <div class="hisui-layout" fit="true">
+	  <div id="ResultPanel" data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:2px;border: 1px solid #ccc;">
+	 
+	 	 <SERVER>
+ 		     //d ##class(web.DHCPE.ResultNew).OutResultToWebHISUI(PAADM,StationID)
+		     s IDStr= ##class(web.DHCPE.ResultNew).OutResultToWebHISUI(PAADM,StationID) //录入换行
+ 		     w "<input id='IDStr' name='IDStr' type='hidden' value='"_IDStr_"'>"
+
+        </SERVER>
+	 	
+     </div>
+     
+     <div id="AuditDocPanel"  data-options="region:'east', title:'',headerCls:'panel-header-gray'" style="width:350px;border: 1px solid #ccc;">
+	 	<div class="hisui-layout" fit="true">
+	 	 <div data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false" style="padding:2px;">
+	 	 <SERVER>
+ 		    d ##class(web.DHCPE.ResultNew).OutAuditDocHISUI(PAADM,StationID)
+ 		    
+        </SERVER>
+	 	 </div>
+	 	 <div data-options="region:'south', title:'',headerCls:'panel-header-gray',border:false" style="height:50px;">	
+	 	 
+	 	 	<table border=0>
+	 	 	<tr style="height:10px;">
+	 	 	</tr>
+	 	 		<tr border=0>
+	 	 			<td align="right" border=0>
+            		<label for="AuditUser">提交人</label></td>
+          			<td>
+           			<div>
+             		 <input class="hisui-combobox" type="text" Id="AuditUser" style="width:120px;" /></div></td>
+	 	 			<td align="right">
+            		<label for="AuditDate">时间</label></td>
+          			<td>
+           			<div>
+             		 <input class="hisui-datebox" type="text" Id="AuditDate" style="width:120px;" /></div></td>
+	 	 		</tr>
+	 	 	</table>
+	 	 
+	 	 
+	 	 </div>
+	 	 </div>
+     </div>
+     
+     
+ </div>  
+</div>  
+ <div data-options="region:'south', title:'',headerCls:'panel-header-gray',border:false" style="height:45px;">	
+ 	<table>
+ 	<tr style="height:10px;">
+	 	 	</tr>
+ 	<tr>
+ 	<td>
+ 	<div align="center"><a id="DBRAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">科室提交</a></div></td>
+ 	<td>
+ 	<div align="center"><a id="DBAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">取消提交</a></div></td>
+ 	</tr>
+ 	</table>
+ </div>
+ <div id="HistoryResultWin"> 
+</div>
+<div id="AllResultWin"> 
+</div>
+<div id="SendMessageWin"> 
+</div>
+
+  <script type="text/javascript" src="../scripts/DHCPENewResultHISUI.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  <script type="text/javascript" src="../scripts/websys.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPrtComm.JS"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.JS"></script>
+  <script type="text/javascript" src="../scripts/DHCPENewAdviceHISUI.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPENewRoomRecordList.js"></script>
+  <script type="text/javascript" src="../scripts/dhtmlXCombo.js"></script>
+  <script type="text/javascript" src="../scripts/dhtmlXCommon.js"></script>
+  
+</body>
+
+
+</html>
+
+<script language="javaScript">
+	
+</script> 
+
+<div id="STEDDiv" style="overflow-y:auto;white-space:normal;top:10px;left:500px;word-break:break-all;background-color:white;cursor:pointer;">
+	
+	<SERVER>
+		d ##class(web.DHCPE.DocPatientFind).OutEDInfoForHISUI(StationID,"",PAADM,"1")
+	</SERVER>
+	
+</div>
+
+
+

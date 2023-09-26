@@ -1,0 +1,189 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TRAK:APPLET>
+
+<SERVER>
+ ; Need to get patient id of next order
+ s multipatOEIDs=$g(%request.Data("allOEIDsToLoop",1))
+ i multipatOEIDs="" s multipatOEIDs=$g(%request.Data("multipatOEIDs",1))
+ f cnt=1:1 {
+ 	; Get the current OrdItemID (ie. the Next one)
+ 	s OEOrdItemID=$p(multipatOEIDs,"^")
+ 	q:OEOrdItemID=""
+ 	
+ 	; Update allOEIDsToLoop by removing the current ID from the list... so we can always pull the Next one from the begining of the list.
+ 	s len=$l(multipatOEIDs,"^"), multipatOEIDs=$p(multipatOEIDs,"^",2,len)
+ 	
+ 	&SQL(SELECT TRES_OETR_DR->TR_ResStat_DR->RESST_Code INTO :result FROM SQLUser.OE_OrdTextResult WHERE (TRES_ParRef = :OEOrdItemID) ORDER BY TRES_Childsub DESC)
+ 	; If the 'latest' Result Status is "Verified", we don't want it ?
+ 	q:result'="V"
+ 	s cnt=cnt+1
+ }
+ 
+ n EpisodeID,PatientID,warning,lockcmp,vf,OrderItemIDs,FirstTRID,orderid,itemid,ARCIMID,TextResultTypeID
+ s (lockcmp,vf,PatientID,EpisodeID)=""		;Log 65542 - set EpisodeID=""
+ 
+ ; Get the episode/patientID from the order
+ i OEOrdItemID'="" {
+ 	s EpisodeID=$p($g(^OEORD($p(OEOrdItemID,"||"))),"^")
+ 	s PatientID=$p($g(^PAADM(EpisodeID)),"^")
+ }
+ d %request.Set("PatientID",PatientID)
+ ;log 64459
+ d %request.Set("EpisodeID",EpisodeID)
+</SERVER>
+<CSP:IF condition=((%request.Get("PatientBanner")=1)&(%request.Get("PatientID")'=""))>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+</HEAD>
+<SERVER>
+ ; Log 61269 - AI - 27-10-2006 : File created, to allow multiple Text Results to be Verified.
+ 
+ n multipatOEIDs,OEOrdItemID,len,result,cnt,FormStr,InitStr
+ s (multipatOEIDs,OEOrdItemID,len,result)=""
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s TWKFLL=$g(%request.Data("TWKFLL",1))
+ s TWKFLJ=$g(%request.Data("TWKFLJ",1))
+ s CONTEXT=$g(%request.Data("CONTEXT",1))
+ s multipatOEIDs=$g(%request.Data("allOEIDsToLoop",1))
+ i multipatOEIDs="" s multipatOEIDs=$g(%request.Data("multipatOEIDs",1))
+ 
+ i multipatOEIDs="" q
+ 
+ f cnt=1:1 {
+ 	; Get the current OrdItemID (ie. the Next one)
+ 	s OEOrdItemID=$p(multipatOEIDs,"^")
+ 	q:OEOrdItemID=""
+ 	
+ 	; Update allOEIDsToLoop by removing the current ID from the list... so we can always pull the Next one from the begining of the list.
+ 	s len=$l(multipatOEIDs,"^"), multipatOEIDs=$p(multipatOEIDs,"^",2,len)
+ 	
+ 	&SQL(SELECT TRES_OETR_DR->TR_ResStat_DR->RESST_Code INTO :result FROM SQLUser.OE_OrdTextResult WHERE (TRES_ParRef = :OEOrdItemID) ORDER BY TRES_Childsub DESC)
+ 	; If the 'latest' Result Status is "Verified", we don't want it ?
+ 	q:result'="V"
+ 	s cnt=cnt+1
+ }
+ 
+ n EpisodeID,PatientID,warning,lockcmp,vf,OrderItemIDs,FirstTRID,orderid,itemid,ARCIMID,TextResultTypeID
+ s (lockcmp,vf)=""
+ 
+ ; Get the episode/patientID from the order
+ i OEOrdItemID'="" {
+ 	s EpisodeID=$p($g(^OEORD($p(OEOrdItemID,"||"))),"^")
+ 	s PatientID=$p($g(^PAADM(EpisodeID)),"^")
+ 	
+ 	i '##Class(websys.Lock).Lock($lb(OEOrdItemID,"User.OEOrdItem"),%session.SessionId,%session.Get("LOGON.USERID"),.warning) {
+ 		s lockcmp=1 w "<DIV><STRONG><FONT COLOR=RED>",warning,"</FONT></STRONG></DIV>",$c(13,10)
+ 	}
+ 	
+ 	s vf=##Class(web.OEOrdResult).GetSavedFileName(OEOrdItemID,"wav")
+ 	
+ 	d ##Class(websys.Component).GetComponentMessages(.t,"OETextResult.Edit")
+ 	; Currently, get the Text Result ID of the first selected Order Item ID.
+ 	;   Match each Text Result ID of the subsequent selected Order Item IDs.
+ 	;     If there is a mismatch, simply write the component error message and do not open the component.
+ 	;   ( The code <CSP:IF condition=(Error=0)>  and  </CSP:IF>  around the component - below - does this ).
+ 	s FirstTRID=##Class(web.OETextResult).GetTextResultIDFromOrderID($p(OEOrdItemID,"^",1))
+ 	;
+ 	; Split the Order Item ID into orderid and itemid.
+ 	s orderid=$p($p(OEOrdItemID,"^",1),"||",1)
+ 	s itemid=$p($p(OEOrdItemID,"^",1),"||",2)
+ 	;
+ 	; Get the ARC Item Mast ID from the orderid and itemid.
+ 	s ARCIMID=$p($g(^OEORD(orderid,"I",itemid,1)),"^",2)
+ 	; Get the ARC Item Category ID from the ARC Item Mast.
+ 	i ARCIMID s ARCICID=$p($g(^ARCIM($p(ARCIMID,"||",1),$p(ARCIMID,"||",2),1)),"^",10)
+ 	; Get the Text Result Type from the ARCIM ID.
+ 	i ARCICID s TextResultTypeID=$p($g(^ARC("IC",ARCICID)),"^",13)
+ 	; Get Associated Order Items - if another order has the same voice result then it too is "selected"
+ 	; Log 51886 - AI - 16-05-2005 : Method combined with the "Word" method.
+ 	s OrderItemIDs=##class(web.OEOrdItem).AddAssocOrders(OEOrdItemID)
+ 	; end Log 51886
+ 	
+ 	d %request.Set("DisableFlag",1)
+ 	d %request.Set("PatientID",PatientID)
+ 	d %request.Set("multipatOEIDs",multipatOEIDs)
+ 	d %request.Set("TextResultID",FirstTRID)
+ 	d %request.Set("ID",FirstTRID)
+ 	d %request.Set("TextResultTypeID",TextResultTypeID)
+ 	d %request.Set("OEOrdItemID",OrderItemIDs)
+ 	
+ 	;i %request.Get("PatientBanner")=1 {
+ 	;	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ 	;	i cmp d cmp.Show(),cmp.%Close()
+ 	;}
+ 	
+ 	s cmp=##Class(websys.Component).OpenName("OETextResult.Verify")
+ 	i cmp {
+ 		s cmp.HideMenus=1
+ 		s:lockcmp cmp.Disabled=1
+ 		d cmp.Show()
+ 		d cmp.%Close()
+ 	}
+ 	;s FormStr="websys.default.csp?WEBSYS.TCOMPONENT=OETextResult.Verify"
+ 	;s InitStr="&CONTEXT="_CONTEXT_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TWKFLL="_TWKFLL_"&TWKFLJ="_TWKFLJ
+ } else {
+	 s FormStr="websys.default.csp?WEBSYS.TCOMPONENT=OEOrdItem.RadiologyWorkBench"
+	 s InitStr="&CONTEXT="_CONTEXT_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TWKFLL="_TWKFLL_"&TWKFLJ="_TWKFLJ
+ }
+
+</SERVER>
+
+<SCRIPT Language="JavaScript">
+	var lnk="#($g(FormStr))#" + "#($g(InitStr))#" + "&OEOrdItemID=#($g(OEOrdItemID))#&PatientID=#($g(PatientID))#&PatientBanner=1&multipatOEIDs=#($g(multipatOEIDs))#"
+	if ("#($g(FormStr))#"!="") {document.location=lnk}
+</SCRIPT>
+
+<CSP:IF condition=(vf'="")>
+
+<!-- Log 61269 (from Log 61887) - AI - 15-12-2006 -->
+<!-- The following CAB file is the last version that worked BEFORE we added the "Lothian" foot pedal as well. -->
+<!-- The CAB file is saved as "trakwebsound_backup at 20061215.CAB" in \\Emu\developer\W642LDEV\addins\client . -->
+<!-- <OBJECT ID="trakSound" -->
+<!-- CLASSID="CLSID:EC836E1A-F050-41EA-9B22-46C3C9D6D531" -->
+<!-- CODEBASE="..\addins\client\trakwebsound.CAB#version=2002,0,0,8"> -->
+<!-- </OBJECT> -->
+
+<!-- DON'T FORGET TO ADD IN THE DIRECTORY : CODEBASE="..\addins\client\trakwebsound.CAB#version=...  -->
+<!-- log 64023 moved to component
+<OBJECT ID="trakSound"
+CLASSID="CLSID:08A91BDF-6B02-4CEC-AD20-5A95F7FD1010"
+CODEBASE="..\addins\client\trakwebsound.CAB#version=2002,0,0,99">
+</OBJECT>
+-->
+
+<TRAK:COMPONENT id="Voice.Link" hidemenus=1>
+</TRAK:COMPONENT>
+</CSP:IF>
+
+<BODY LANGUAGE=VBScript ONLOAD="Page_Initialise">
+</BODY>
+</HTML>
+<script Language="JavaScript">
+//This must be at bottom of page so that all other javascript functions and event triggers have loaded.
+function TextandVoiceLoadHandler() {
+	//If any of the epr pages have their own document.body.onload handlers then call each of them individually from here.
+	try {OETextResultVerifyLoadHandler();} catch(e){}
+	ObjVoiceFile=document.getElementById('VoiceFile');
+	//alert("FileName=" + ObjVoiceFile.value);
+	if ((ObjVoiceFile) && (ObjVoiceFile.value!="")) {
+		//alert("1");
+		try {
+			//alert(ObjVoiceFile.value);
+			// VoiceLoadHandler in Voice.Link.js, defined above.
+			VoiceLoadHandler("True","True");
+		} catch(e) {}
+	}
+}
+document.body.onload=TextandVoiceLoadHandler;
+</script>

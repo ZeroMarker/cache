@@ -1,0 +1,74 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--更新同频次不同剂量的医嘱 ipdoc.order.doseqtystr.edit.hui.csp-->
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>	
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/tools/flatpickr/flatpickr.css">
+<STYLE type='text/css'>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	width:100%;
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-title{
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+#DoseStrSttDate{
+	width:148px;
+	height:30px;
+	padding-left:5px;
+}
+</STYLE>
+<server>
+	s OEORIRowid=%request.Get("OEORIRowid")
+	s ArcimDr=$P($G(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),1)),"^",2)
+	s DoseUOM=$P($G(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),2)),"^",3)
+	
+	s OrderFreqRowid=$P($G(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),2)),"^",4)
+	s FreqDispTimeStr=##Class(web.DHCOEOrdItemView).GetFreqFreqDispTimeStr(OrderFreqRowid)
+	
+	for i=1:1:$l(FreqDispTimeStr,"!")	{
+		s OneFreqDispTime=$p(FreqDispTimeStr,"!",i)
+		s PHCDTRowId=$p(OneFreqDispTime,"$",1)
+		s DispTime=$p(OneFreqDispTime,"$",2)
+		continue:DispTime=""
+		Set arr(DispTime)=PHCDTRowId
+	}
+	s FreqDispTimeDoseQtyStr=$P(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),"DHC"),"^",59)
+	s ArcimDesc=$P(^ARCIM(+ArcimDr,$P(ArcimDr,"||",2),1),"^",2)
+	s OrderDoseUOM=$P(^CT("UOM",DoseUOM),"^",2)
+	s title="医嘱:"_ArcimDesc_"&nbsp计划使用剂量"
+	
+	s sysDateFormat=##class(websys.Conversions).DateFormat()
+	s DefaultDoseStrSttDate=##Class(web.DHCOEOrdItemDoseQty).GetDefaultDoseStrSttDate(OEORIRowid)
+</server>
+</head>
+<body data-options="fit:true,border:false" class="hisui-layout">
+	<csp:Include Page="ipdoc.order.doseqtystr.edit.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			sysDateFormat:"#(sysDateFormat)#",
+			DefaultDoseStrSttDate:"#(DefaultDoseStrSttDate)#",
+			OEORIRowid:"#(OEORIRowid)#"
+		}
+	</SCRIPT>
+<!-- datePicker-->
+
+<script type="text/javascript" src="../scripts/dhcdoc/tools/flatpickr/flatpickr.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/Order.DoseQtyStr.Edit.js"></script>
+</body>
+</html>

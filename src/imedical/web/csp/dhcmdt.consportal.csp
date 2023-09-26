@@ -1,0 +1,166 @@
+<!-- dhcmdt.consportal.csp  MDT会诊门户页面 csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcmdt/css/consportal.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<!-- ECharts文件引入 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/Echarts.js" ></script>
+	<!-- ECharts文件引入 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consportal.js"></script>
+</head>
+<body class="background-warp">
+	<div class="container">
+		<div class="view-first">
+			<div class="view-first-left">
+				<div class="view-first-left-top">
+					<div class="list-title">
+						<div class="list-icon">
+							<img src="../scripts/dhcnewpro/dhcmdt/images/infomation.png" border=0/>
+						</div>
+						<label>#(..Get("今日会诊"))#<span id="mdtday" style="margin-left:20px;">  XX-XX</span></label>
+						<div class="list-tools">
+						</div>
+		            </div>
+	            	<div class="list-order-item-day">
+						<ul id="dailyconsult" class="pf-nav">
+						</ul>
+					</div>
+				</div>
+				<div class="view-first-left-bottom">
+					<div class="list-title">
+						<div class="list-icon">
+							<img src="../scripts/dhcnewpro/dhcmdt/images/infomation.png" border=0/>
+						</div>
+						<label>#(..Get("本周安排"))#</label>
+						<div class="list-tools">
+						</div>
+		            </div>
+	            	<div class="list-order-item-week">
+	            		<div class="week-plan">
+							<div class="week-plan-title">
+								<ul class="week-nav">
+									<li class="week-nav-item border-none"></li>
+									<li class="week-nav-item">#(..Get("周一"))#</li>
+									<li class="week-nav-item">#(..Get("周二"))#</li>
+									<li class="week-nav-item">#(..Get("周三"))#</li>
+									<li class="week-nav-item">#(..Get("周四"))#</li>
+									<li class="week-nav-item">#(..Get("周五"))#</li>
+								</ul>
+							</div>
+							<div class="week-plan-mon">
+								<ul class="week-nav">
+									<li class="week-nav-item week-nav-item-bk border-none">#(..Get("上午"))#</li>
+									<li id="Week_1_AM" class="week-nav-item"></li>
+									<li id="Week_2_AM" class="week-nav-item"></li>
+									<li id="Week_3_AM" class="week-nav-item"></li>
+									<li id="Week_4_AM" class="week-nav-item"></li>
+									<li id="Week_5_AM" class="week-nav-item"></li>
+								</ul>
+							</div>
+							<div class="week-plan-aft">
+								<ul class="week-nav">
+									<li class="week-nav-item week-nav-item-bk border-none">#(..Get("下午"))#</li>
+									<li id="Week_1_PM" class="week-nav-item"></li>
+									<li id="Week_2_PM" class="week-nav-item"></li>
+									<li id="Week_3_PM" class="week-nav-item"></li>
+									<li id="Week_4_PM" class="week-nav-item"></li>
+									<li id="Week_5_PM" class="week-nav-item"></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="view-first-right">
+				<div class="view-first-right-top">
+					<ul class="bt-nav">
+						<li id="appoint" class="bt-nav-item">
+							<div class="bt-item-left app-left"></div>
+							<div class="bt-item-center app-center"></div>
+							<div class="bt-item-right app-right"></div>
+							<div class="item-text">
+								<div class="item-warn">#(..Get("预约"))#</div>
+							</div>
+						</li>
+						<li id="schedule" class="bt-nav-item bt-nav-item-left">
+							<div class="bt-item-left schedul-left"></div>
+							<div class="bt-item-center schedul-center"></div>
+							<div class="bt-item-right schedul-right"></div>
+							<div class="item-text">
+								<div class="item-warn">#(..Get("排班"))#</div>
+							</div>
+						</li>
+					</ul>
+				</div>
+				<div class="view-first-right-bottom">
+					<div class="list-title">
+						<div class="list-icon">
+							<img src="../scripts/dhcnewpro/dhcmdt/images/addrule.png" border=0/>
+						</div>
+						<label>#(..Get("待处理申请"))#</label>
+						<div class="list-tools">
+							<!--
+							<span class="icon-right icon-more" id="reqmore">#(..Get("更多"))#</span>
+							-->
+							<a href="#" style="margin-top:12px;" onclick="WaitReq_More()" id="reqmore">#(..Get("更多"))#</a>
+						</div>
+		            </div>
+	            	<div class="list-order-item-req">
+	        			<table id="WaitProREQ"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="view-second">
+			<div class="view-second-left">
+				<div class="list-title">
+					<div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcmdt/images/trendchart.png" border=0/>
+					</div>
+					<label>#(..Get("本月MDT会诊病种分布"))#</label>
+					<div class="list-tools">
+					</div>
+	            </div>
+            	<div class="list-order-item">
+					<div id="DisGrpCharts" class="item-chart"></div>
+				</div>	
+			</div>
+			<div class="view-second-right">
+				<div class="list-title">
+					<div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcmdt/images/trendchart.png" border=0/>
+					</div>
+					<label>#(..Get("本月MDT患者来源分布"))#</label>
+					<div class="list-tools">
+					</div>
+	            </div>
+            	<div class="list-tak-item">
+					<!--<div id="ParResCharts" class="item-chart-res"></div>-->
+				<table id="keptBedTable"></table>
+				</div>
+			</div>
+			<!--<div class="view-second-right">
+				<div class="list-title">
+					<div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcmdt/images/trendchart.png" border=0/>
+					</div>
+					<label>#(..Get("本月MDT患者来源分布"))#</label>
+					<div class="list-tools">
+					</div>
+	            </div>
+            	<div class="list-order-item">
+				<table id="keptBedTable"></table>
+				</div>-->
+			</div>
+		</div>
+	</div>
+</body>
+</html>

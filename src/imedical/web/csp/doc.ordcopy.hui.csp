@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--doc.ordcopy.hui.csp HUI医嘱复制--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!--EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.css"></LINK>
+ <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+ <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+ <SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+<HISUI></HISUI>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcdoc/css/simplydatagrid.css"></LINK>
+
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+div[id$="_TablePanle"]{
+	margin:5px;
+	border:1px solid #ccc;
+	border-top:0;
+	border-radius:5px;
+}
+.adm-list{
+	padding:0 0 10px 8px;
+	margin:3px 0 0 5px;
+} 
+.adm-list .head,.foot{
+	content:"";
+	width: 6px;
+	height: 6px;
+	border:3px solid #ccc;
+	border-radius: 8px;
+	margin-left:-5px;
+}
+.adm-list .left{
+	content:"";
+	width: 9px;
+	height: 9px;
+	border:3px solid #fff;
+	border-radius: 9px;
+	position:relative;
+	top:35px;
+	left:-7px;
+	float: left;
+	background: #ccc;
+}
+.adm-list .right {
+	display:block;
+	border-left:2px solid #ccc;
+	padding:3px 3px 3px 15px;
+	text-decoration: none;
+	color: black;
+}
+
+.adm-list .first{
+	clear:both;
+	padding:2px;
+}
+  /*悬浮样式start*/
+.adm-list li:hover div{
+	color:#21BA45;
+}
+.adm-list li:hover .left{
+	background:#21BA45;
+}
+.adm-list li:hover .second .operator{
+	border-right:1px solid #21BA45;
+}
+  /*悬浮样式end*/
+.adm-list .second{
+	clear:both;
+	padding:2px;
+}
+.adm-list .second .data{
+	color:#39B0FF;
+}
+.adm-list .second .operator{
+	border-right:1px solid #000;
+	padding-right:5px;
+}
+.adm-list .third{
+	clear:both;
+	padding:0 2px 2px 2px;
+}
+.adm-list .third .operator{
+	border-right:1px solid #000;
+	padding-right:5px;
+}
+.seleted-a{
+	/*background:#21BA45;*/
+}
+.seleted-a div{
+	color:#21BA45;
+}
+.seleted-a .second .operator{
+	border-right:1px solid #21BA45;
+}
+.hoverdot{
+	background-color:#21BA45 !important;
+}
+
+.selectdot{
+	background-color:#21BA45 !important;
+}
+
+.selectli{
+	background:#F7F7F7 !important;
+}
+/*时间轴 end*/
+.label-1{
+	padding:10px;
+}
+.label-2{
+	padding:10px 10px 10px 24px;
+}
+.panel-header-gray{
+	border-top:1px solid #ccc;
+}
+#OrdTableList > div{
+	margin-bottom:5px;
+	border-bottom:1px solid #ccc;
+}
+#OrdTableList .datagrid-body{
+	overflow-y:hidden;
+}
+.normal-head{
+	background:#f9f9fa;
+	border-top:1px solid #cccccc;
+	border-color:#cccccc;
+}
+.normal-head .panel-title{
+	color: #0E0E0E;
+}
+.danger-head{
+	background:#FF7373;
+	border-color:#FF7373;
+}
+.danger-head .panel-title{
+	color: #FFFFFF;
+}
+.no-data{
+	width:100%;
+	height:100%;
+	background: url(../images/no_data.png) center center no-repeat;
+}
+</style>
+<Server>
+ d ##Class(websys.Configuration).HeadSession()
+ s (EpisodeID,PatientID,notMatch)=""
+ s EpisodeID=%request.Get("EpisodeID") 
+ s PatientID="",mradm=""
+ if (EpisodeID'=""){
+     s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+     s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+     s Patientno=$p(^PAPER(PatientID,"PAT",1),"^",1)
+ }
+ s DefLongPriorRowid=$O(^OECPR(0,"Code","S",0))
+ s DefOutPriorRowid=$O(^OECPR(0,"Code","OUT",0))
+ s DefShortPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+ s DefONEPriorRowid=$O(^OECPR(0,"Code","ONE",0))
+ s DCStatusRowId=$O(^OEC("OSTAT",0,"Code","D",0))
+ s sysDateFormat=##class("websys.Conversions").DateFormat()
+ s SttDate=%request.Get("SttDate")
+ s EndDate=%request.Get("EndDate")
+ s isNurseLogin =##class(web.DHCDocMain).isNurseLogin()
+ // 允许复制其他患者医嘱
+ s IsCanCopyOtherPatOrd=+##class(web.DHCDocConfig).GetConfigNode("IsCanCopyOtherPatOrd") // +$g(^DHCDocConfig("IsCanCopyOtherPatOrd"))
+</Server>
+  </head>
+<body>
+	
+	<csp:Include Page="doc.ordcopy.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+	 //全局请求后台服务对象
+		var ServerObj={
+			 EpisodeID:"#(EpisodeID)#",
+	         PatientID:"#(PatientID)#",
+	         Patientno:"#(Patientno)#",
+	         PAAdmType:"#(PAAdmType)#",
+		     DefLongPriorRowid:"#(DefLongPriorRowid)#",
+		     DefOutPriorRowid:"#(DefOutPriorRowid)#",
+		     DefShortPriorRowid:"#(DefShortPriorRowid)#",
+		     DefONEPriorRowid:"#(DefONEPriorRowid)#",
+		     DCStatusRowId:"#(DCStatusRowId)#",
+		     sysDateFormat:"#(sysDateFormat)#",
+		     SttDate:"#(SttDate)#",
+		     EndDate:"#(EndDate)#",
+		     isNurseLogin:"#(isNurseLogin)#",
+		     IsCanCopyOtherPatOrd:"#(IsCanCopyOtherPatOrd)#"
+		};
+		var switchSysPat="N";
+	</SCRIPT>
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+    <script src="../scripts/dhcdoc/tools/simplydatagrid.js"></script>
+	<script src="../scripts/dhcdoc/Doc.OrdCopy.js"></script>
+</body>
+</html>

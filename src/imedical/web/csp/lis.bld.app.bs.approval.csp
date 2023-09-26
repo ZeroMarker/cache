@@ -1,0 +1,84 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S patAdmID=$G(%request.Data("EpisodeID",1))
+ S userID=$G(%session.Data("LOGON.USERID"))
+ S userCode=$G(%session.Data("LOGON.USERCODE"))
+ S userName=$G(%session.Data("LOGON.USERNAME"))
+ S userGroupID=$G(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$G(%session.Data("LOGON.GROUPDESC"))
+ S userLocID=$G(%session.Data("LOGON.CTLOCID"))
+ S userLoc=##Class(LIS.Core.Util).GetLocation(userLocID)
+ S gApprovalTypeId=$ZCVT($G(%request.Data("typeId",1)),"U")
+   
+ S mainJavaScript="lis.bld.app.bs.approval.js"
+ S arguments=##Class(%ListOfDataTypes).%New()
+ D arguments.InsertAt(gApprovalTypeId,1)
+ D arguments.InsertAt("N",2)
+ D arguments.InsertAt("",3)
+ D arguments.InsertAt("",4)
+ D arguments.InsertAt("",5)
+ S gGuid=##Class(LIS.JSON.JsonQuery).BuildQuery("LIS.BS.BLD.Qry.Approval","QryApprovals",arguments)
+</Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/grid.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/portal.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<!--Ext3 扩展补丁-->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/extend/Ext.ux.grid.CheckColumn.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/proxyhandler.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/print.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/extend/Ext.grid.GridPanel.Query.js"></script>
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+       	//Ext.namespace('Global');
+			
+			//--定义全局变量
+			
+			function User(){};
+			function Util(){};
+			function Global(){};
+			Global.User=User;		//登录用户信息
+			Global.Util=Util;		//公共功能
+
+			//--当前用户信息
+			Global.User.Name="#($G(userName))#";
+			Global.User.ID="#($G(userID))#";
+			Global.User.Code="#($G(userCode))#";
+			Global.User.GroupID="#($G(userGroupID))#";
+			Global.User.Group="#($G(userGroupDesc))#";
+			Global.User.LocationID="#($G(userLocID))#";
+			Global.User.Location="#($G(userLoc))#";
+		  	gApprovalTypeId="#($G(gApprovalTypeId))#";
+		 	gGuid="#($G(gGuid))#";
+		  
+	   </script>
+		
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/lis.bld.manage.core.js"></script>
+</HEAD>
+<body>
+	<div id="lis.bld.app.bs.approval" ></div>
+	<script type="text/javascript" src="../scripts/lisjs/btms/bs/#($G(mainJavaScript))#"></script>
+</body>
+</HTML>

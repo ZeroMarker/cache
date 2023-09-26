@@ -1,0 +1,177 @@
+﻿<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/medical.css"/>
+	<link rel="stylesheet" href="../scripts/emr/lib/tool/ztree/css/zTreeStyle/zTreeStyle.css" />
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/EMRcolorpicker.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/lib/tool/ztree/js/jquery.ztree.all-3.5.js"></script>
+	<script language="cache" runat="server">
+		s userCode = %session.Get("LOGON.USERCODE")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+	</script>
+	<script language="javascript">
+		var userCode = '#(userCode)#';
+		var userName = '#(userName)#';
+		var userID = '#(userID)#';
+		var ssgroupID = '#(ssgroupID)#';
+		var userLocID = '#(userLocID)#';
+		var userLocCode = '#(userLocCode)#';
+	</script>
+	<title>医学计算</title>
+</head>
+<body class="easyui-layout" data-options="border:true,fit:true" >
+	<div id="letterlable" data-options="region:'north',border:false">
+		<p style="padding:0px 0px 0px 6px;background:#D1EEEE;line-height:27px;text-align:left;font-weight:700;color:#365BBD;">医学计算</p>
+		<p style="text-align:center;line-height:0px;">点击跳到字母所在单元</p>
+		<div style="text-align:center;">
+			<a class="letter" id="A" href="#letterTitleA">A</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="B" href="#letterTitleB">B</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="C" href="#letterTitleC">C</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="D" href="#letterTitleD">D</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="E" href="#letterTitleE">E</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="F" href="#letterTitleF">F</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="G" href="#letterTitleG">G</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="H" href="#letterTitleH">H</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="I" href="#letterTitleI">I</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="J" href="#letterTitleJ">J</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="K" href="#letterTitleK">K</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="L" href="#letterTitleL">L</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="M" href="#letterTitleM">M</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="N" href="#letterTitleN">N</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="O" href="#letterTitleO">O</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="P" href="#letterTitleP">P</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="Q" href="#letterTitleQ">Q</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="R" href="#letterTitleR">R</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="S" href="#letterTitleS">S</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="T" href="#letterTitleT">T</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="U" href="#letterTitleU">U</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="V" href="#letterTitleV">V</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="W" href="#letterTitleW">W</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="X" href="#letterTitleX">X</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="Y" href="#letterTitleY">Y</a>
+			<span style="width:3px;"></span>
+			<a class="letter" id="Z" href="#letterTitleZ">Z</a>
+		</div>
+		<div>
+			<!--<a>快速查找</a>-->
+			<input name="s" id="FindIndex"></input>
+			<button  id="submit" onclick="FindButtonClick($('#FindIndex').val())" style="width:80px;">快速查找</button>
+			<button  id="submit" onclick="AddButtonClick()" hidden>添加</button>
+		</div>
+	</div>
+
+	<div id="itemlist" data-options="region:'center',border:true">
+		<p id="letterTitleA" class="letterTitle">A</p>
+			<dt><a class="item" id="APG" href="javascript:void(0);" onclick="itemclick(this)">阿普伽新生儿评分</a></dt>
+		<p id="letterTitleB" class="letterTitle">B</p>
+	
+			<dt><a class="item" id="IBW" href="javascript:void(0);" onclick="itemclick(this)">标准体重</a></dt>
+		<p id="letterTitleC" class="letterTitle">C</p>
+		<p id="letterTitleD" class="letterTitle">D</p>
+			<dt><a class="item" id="Cam/Ccr" href="javascript:void(0);" onclick="itemclick(this)">淀粉酶、肌酐清除率比值</a></dt>
+			<dt><a class="item" id="PaCO2" href="javascript:void(0);" onclick="itemclick(this)">动脉血CO2分压</a></dt>
+			<dt><a class="item" id="SaO2" href="javascript:void(0);" onclick="itemclick(this)">动脉血氧饱和度</a></dt>
+			<dt><a class="item" id="PaO2" href="javascript:void(0);" onclick="itemclick(this)">动脉血氧分压</a></dt>
+			<dt><a class="item" id="CaO2" href="javascript:void(0);" onclick="itemclick(this)">动脉血氧含量</a></dt>
+		<p id="letterTitleE" class="letterTitle">E</p>
+		<p id="letterTitleF" class="letterTitle">F</p>
+			<dt><a class="item" id="Frankel" href="javascript:void(0);" onclick="itemclick(this)">FRANKEL脊髓损伤分级</a></dt>
+			<dt><a class="item" id="PO2" href="javascript:void(0);" onclick="itemclick(this)">肺泡气</a></dt>
+		<p id="letterTitleG" class="letterTitle">G</p>
+			<dt><a class="item" id="GCS" href="javascript:void(0);" onclick="itemclick(this)">格拉斯哥昏迷评分</a></dt>
+			<dt><a class="item" id="GCSC" href="javascript:void(0);" onclick="itemclick(this)">格拉斯哥儿童昏迷评分</a></dt>
+			<dt><a class="item" id="GOS" href="javascript:void(0);" onclick="itemclick(this)">格拉斯哥预后评分</a></dt>
+			<dt><a class="item" id="F54" href="javascript:void(0);" onclick="itemclick(this)">各月份胎儿平均身长与体重</a></dt>
+		<p id="letterTitleH" class="letterTitle">H</p>
+			<dt><a class="item" id="MCH" href="javascript:void(0);" onclick="itemclick(this)">红细胞平均血红蛋白量</a></dt>
+			<dt><a class="item" id="MCHC" href="javascript:void(0);" onclick="itemclick(this)">红细胞平均血红蛋白浓度</a></dt>
+		<p id="letterTitleI" class="letterTitle">I</p>
+		<p id="letterTitleJ" class="letterTitle">J</p>
+			<dt><a class="item" id="CCR" href="javascript:void(0);" onclick="itemclick(this)">肌酐清除率</a></dt>
+			<dt><a class="item" id="Muscle" href="javascript:void(0);" onclick="itemclick(this)">肌力分级</a></dt>
+			<dt><a class="item" id="BEE" href="javascript:void(0);" onclick="itemclick(this)">基础能量消耗</a></dt>
+			<dt><a class="item" id="AAlC" href="javascript:void(0);" onclick="itemclick(this)">急性呼吸性碱中毒预期代偿</a></dt>
+			<dt><a class="item" id="AAcC" href="javascript:void(0);" onclick="itemclick(this)">急性呼吸性酸中毒预期代偿</a></dt>
+			<dt><a class="item" id="QTIC" href="javascript:void(0);" onclick="itemclick(this)">校正QT间期</a></dt>
+			<dt><a class="item" id="ANC" href="javascript:void(0);" onclick="itemclick(this)">绝对中性粒细胞计数</a></dt>
+		<p id="letterTitleK" class="letterTitle">K</p>
+			<dt><a class="item" id="Karn" href="javascript:void(0);" onclick="itemclick(this)">KARNOFSKY表现评分</a></dt>
+		<p id="letterTitleL" class="letterTitle">L</p>
+		<p id="letterTitleM" class="letterTitle">M</p>
+			<dt><a class="item" id="CAlC" href="javascript:void(0);" onclick="itemclick(this)">慢性呼吸性碱中毒预期代偿</a></dt>
+			<dt><a class="item" id="CAcC" href="javascript:void(0);" onclick="itemclick(this)">慢性呼吸性酸中毒预期代偿</a></dt>
+		<p id="letterTitleN" class="letterTitle">N</p>
+			<dt><a class="item" id="FENa" href="javascript:void(0);" onclick="itemclick(this)">钠排泄分数</a></dt>
+			<dt><a class="item" id="CBF" href="javascript:void(0);" onclick="itemclick(this)">脑血流量</a></dt>
+		<p id="letterTitleO" class="letterTitle">O</p>
+		<p id="letterTitleP" class="letterTitle">P</p>
+			<dt><a class="item" id="Papille" href="javascript:void(0);" onclick="itemclick(this)">PAPILLE室管膜下出血分级</a></dt>
+			<dt><a class="item" id="MAP" href="javascript:void(0);" onclick="itemclick(this)">平均动脉压</a></dt>
+		<p id="letterTitleQ" class="letterTitle">Q</p>
+		<p id="letterTitleR" class="letterTitle">R</p>
+			<dt><a class="item" id="Month" href="javascript:void(0);" onclick="itemclick(this)">妊娠月份</a></dt>
+		<p id="letterTitleS" class="letterTitle">S</p>
+			<dt><a class="item" id="AVM" href="javascript:void(0);" onclick="itemclick(this)">SPETZLER动静脉畸形分级</a></dt>
+			<dt><a class="item" id="RBF" href="javascript:void(0);" onclick="itemclick(this)">肾全血流量</a></dt>
+			<dt><a class="item" id="RFI" href="javascript:void(0);" onclick="itemclick(this)">肾衰竭指数</a></dt>
+			<dt><a class="item" id="Digoxin" href="javascript:void(0);" onclick="itemclick(this)">肾衰时地高辛的剂量</a></dt>
+			<dt><a class="item" id="Cosm" href="javascript:void(0);" onclick="itemclick(this)">渗透溶质清除率</a></dt>
+		<p id="letterTitleT" class="letterTitle">T</p>
+			<dt><a class="item" id="F74" href="javascript:void(0);" onclick="itemclick(this)">碳酸氢盐的丢失量</a></dt>
+			<dt><a class="item" id="SVR" href="javascript:void(0);" onclick="itemclick(this)">体循环阻力</a></dt>
+		<p id="letterTitleU" class="letterTitle">U</p>
+		<p id="letterTitleV" class="letterTitle">V</p>
+		<p id="letterTitleW" class="letterTitle">W</p>
+			<dt><a class="item" id="F85" href="javascript:void(0);" onclick="itemclick(this)">胃曲张静脉壁压力</a></dt>
+		<p id="letterTitleX" class="letterTitle">X</p>
+			<dt><a class="item" id="EET" href="javascript:void(0);" onclick="itemclick(this)">小儿气管内插管的管道规格选择</a></dt>
+			<dt><a class="item" id="Osm" href="javascript:void(0);" onclick="itemclick(this)">血浆渗透压</a></dt>
+		<p id="letterTitleY" class="letterTitle">Y</p>
+			<dt><a class="item" id="VOCO" href="javascript:void(0);" onclick="itemclick(this)">氧消耗</a></dt>
+			<dt><a class="item" id="VO2CI" href="javascript:void(0);" onclick="itemclick(this)">氧消耗(给定心输出量)</a></dt>
+			<dt><a class="item" id="F86" href="javascript:void(0);" onclick="itemclick(this)">药物剂量</a></dt>
+			<dt><a class="item" id="AG" href="javascript:void(0);" onclick="itemclick(this)">阴离子间隙</a></dt>
+			<dt><a class="item" id="ERPF" href="javascript:void(0);" onclick="itemclick(this)">有效血浆流量</a></dt>
+		<p id="letterTitleZ" class="letterTitle">Z</p>
+			<dt><a class="item" id="HUNT" href="javascript:void(0);" onclick="itemclick(this)">蛛网膜下腔出血分级</a></dt>
+	</div>
+	<!--div id="calculatorpanel" data-options="region:'east',border:true" style="width:800px;">
+	</div-->
+	<a id="ruler" style="font-size:12px;"></a>
+	<script type="text/javascript" src="../scripts/emr/js/medical.calculator.js"></script>
+</body>
+</html>

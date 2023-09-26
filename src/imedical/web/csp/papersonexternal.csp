@@ -1,0 +1,34 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n frm
+ s ID=%request.Get("ID")
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s ExtSearch=%request.Get("ExtSearch")
+ s RTMASMRNo=%request.Get("RTMAS_MRNo")
+ i RTMASMRNo'="",ExtSearch'="" d
+ .s PatientID=$$CheckFromExternalMRN^zmeto5(RTMASMRNo)
+ .i PatientID'="" d
+ ..s %request.Data("PatientID",1)=PatientID
+ ..s %request.Data("ID",1)=PatientID
+ ..s %request.Data("Age",1)=""
+ .i PatientID="" d
+ ..s %request.Data("PatientID",1)=""
+ ..s %request.Data("ID",1)=""
+ s frm=##Class(websys.Component).OpenName("PAPerson.Edit")
+ i frm  s frm.HideMenus=1 d frm.Show() d frm.%Close()
+</SERVER>
+</BODY>
+</HTML>

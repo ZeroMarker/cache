@@ -1,0 +1,151 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  	<TITLE>ICD维护</TITLE>
+  	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+  	<HISUI/>
+  	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+  	<link rel="stylesheet" href="../scripts/dhcwl/v1/mrbase/icdconfig.css" type="text/css" />
+  	<!--支持拖拽必须引用这个JS-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/datagrid-dnd.js"></script>  
+
+	
+
+
+</head>
+<body class="hisui-layout my-interface">
+  
+
+	<!--ICD分组工具栏-->
+	<div id="icdgrpTB">
+		<table class="tooltable" cellspacing="0" cellpadding="0" style="width:100%">
+			<tr>
+				<td style="width:70px">
+					<a href="javascript:void(0)"  class="hisui-linkbutton" id="addgrp" data-options="iconCls:'icon-add'" plain="true">新增</a>
+				</td>
+
+				<td style="width:70px">
+					<a href="javascript:void(0)"  class="hisui-linkbutton" id="delgrp" data-options="iconCls:'icon-cancel',disabled:'true'" plain="true">删除</a>			
+				</td>
+				<td>
+					&nbsp;
+				</td>				
+				<td style="width:180px">
+					<input id="searchText" class="hisui-searchbox"  plain="true">
+				</td>				
+				
+			</tr>
+		</table>		
+	</div>
+	
+		
+	<!--ICD分组部分 , -->	
+	<div  data-options="region:'west',collapsible:false" style="width:500px;border:none;padding:10px 5px 6px 10px;">
+		<table id="icdconfig-icdgrp" class="hisui-datagrid" title="ICD分组" data-options="singleSelect:true,headerCls:'panel-header-gray'" toolbar="#icdgrpTB">   
+			<thead>   
+				<tr>   
+					<th data-options="field:'ICDCId',width:50,align:'left'">ID</th>   
+					<th data-options="field:'ICDCCode',width:80,align:'left'">Code</th>   
+					<th data-options="field:'ICDCDesc',width:80,align:'left'">名称</th>
+					<th data-options="field:'ICDCCate',width:80,align:'left'">分类</th>
+					<th data-options="field:'ICDCRemark',width:80,align:'left'">备注</th>  
+				</tr>   
+			</thead>   
+		 
+		</table>
+	</div>
+	
+	<!--ICD明细部分,headerCls:'panel-header-gray'-->
+	<div data-options="region:'center'" style="border:none;padding:10px 10px 6px 5px;">	
+		<table id="icdconfig-icddetail" class="hisui-datagrid" title="ICD明细" data-options="singleSelect:true,headerCls:'panel-header-gray'">   
+			<thead>   
+				<tr>   
+					<th data-options="field:'ICDCDId',width:50,align:'left'">ID</th>   
+					<th data-options="field:'ICDCDDesc',width:80,align:'left'">描述</th>   
+					<th data-options="field:'ICDCDICD',width:80,align:'left'">ICD值</th>
+					<th data-options="field:'ICDCDSort',width:80,align:'left'">顺序</th> 
+				</tr>   
+			</thead>   
+		 
+		</table>		
+	</div>
+  
+  	<!--"新增ICD分组对话框"-->
+	<div id="icdconfig-icdgrp-AddDlg" title="新增" style="width:350px;padding:30px;display:none;">   
+		<form id="addicdgrpForm">
+		<table style="width:100%;border-collapse:collapse;border-spacing:10px; ">
+			<tr >
+				<td style="text-align:right;white-space:nowrap;">编码</td>
+				<td><span style="padding-right:8px;"></span></td>
+				<td>
+					<input class="hisui-validatebox" type="text" Id="grpDlgICDCCode" style="width:96%;" data-options="required:true,validType:'isCode'"/>
+				</td>
+			</tr>
+			<tr style="height:8px;"></tr>
+			<tr >
+				<td style="text-align:right;white-space:nowrap;">名称</td>
+				<td><span style="padding-right:8px;"></span></td>
+				<td>
+					<input class="hisui-validatebox" type="text" Id="grpDlgICDCDesc" style="width:96%" data-options="required:true" />
+				</td>
+			</tr>
+			<tr style="height:8px;"></tr>
+			<tr>
+				<td style="text-align:right;white-space:nowrap;">分类</td>
+				<td><span style="padding-right:8px;"></span></td>
+				<td>		
+					<select id="grpDlgICDCCate" class="hisui-combobox" data-options="editable:false " >
+						<option value="诊断">诊断</option>
+						<option value="手术">手术</option>
+					</select>
+				</td>
+			</tr>			
+			<tr style="height:8px;"></tr>
+			<tr>
+				<td style="text-align:right;white-space:nowrap;">备注</td>
+				<td><span style="padding-right:8px;"></span></td>
+				<td >
+					<input class="hisui-validatebox" type="text" Id="grpDlgICDCRemark" style="width:96%" data-options="required:false" />
+				</td>
+			</tr>					
+		</table>
+		</form>
+	</div>
+
+
+	<!--新增ICD明细对话框-->
+	<div id="icdconfig-icddetail-AddDlg" title="新增" style="width:350px;padding:30px;display:none;">   	
+		<table style="width:100%;border-collapse:collapse;border-spacing:10px; ">
+			<tr >
+				<td style="text-align:right;white-space:nowrap;">描述</td>
+				<td><span style="padding-right:8px;"></span></td>
+				<td style="width:100%;">
+					<input class="hisui-validatebox" type="text" Id="detailDlgICDCDDesc" style="width:96%" data-options="required:true"/>
+				</td>
+			</tr>
+			<tr style="height:8px;"></tr>
+			<tr >
+				<td style="text-align:right;white-space:nowrap;">ICD值</td>
+				<td><span style="padding-right:8px;"></span></td>
+				<td style="width:100%;">
+					<input class="hisui-validatebox" type="text" Id="detailDlgICDCDICD" style="width:96%" data-options="required:true" />
+				</td>
+			</tr>	
+		</table>				
+	</div>
+	
+ 
+ 
+	<!--引入js文件JSURL-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwl/v1/mrbase/icdconfig.js"></script>
+    <!--当前csp文件路径CSPURL-->
+    <span style="display:none;">#(%request.URL)#</span> 
+</body>	
+</html>
+

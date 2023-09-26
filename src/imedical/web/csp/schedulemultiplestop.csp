@@ -1,0 +1,155 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 schedulemultiplestop.csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!--EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript" src="../scripts/ScheduleMultipleStop.js"></script>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.label{
+	text-align:right;
+	padding-right: 10px;
+}
+</style>
+ </head> 
+  <body class="hisui-layout" data-options="fit:true,border:false">
+   <div data-options="region:'north',split:false,border:false" style="height:131px;border-bottom:1px dashed #ccc;">
+          <table class="search-table">
+             <tr>
+				<td class="r-label">
+					<label id="_HospUserListLabel" style='color:red;'>医院</label>
+				</td>
+			
+				<td colspan="3">
+					<input id="_HospUserList" />
+				</td>
+			</tr>
+             <tr>
+                <td class="r-label">开始日期</td>
+             	<td>
+             		<input class="hisui-datebox textbox" id="StartDate" data-options="formatter:myformatter,parser:myparser"/>
+             	</td>
+             	<td class="r-label">结束日期</td>
+             	<td>
+             	   <input class="hisui-datebox textbox" id="EndDate" data-options="formatter:myformatter,parser:myparser"/>
+             	</td>
+             	<td class="r-label">科室</td>
+             	<td>
+             		<input id="Combo_Loc" class="textbox"/>
+             	</td>
+             	<td class="r-label">医生</td>
+             	<td>
+             		<input id="Combo_Doc" class="textbox"/>
+             	</td>
+             	<td class="r-label">
+             		<a href="#" id="BFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+             	</td>
+             </tr>   
+             <tr>   
+             	<td class="r-label">时段</td>
+             	<td>
+             		<input id="Combo_TimeRange" class="textbox"/>
+             	</td>
+             	<td class="r-label">星期</td>
+             	<td>
+             		<input id="Combo_Week" class="textbox"/>
+             	</td>
+             	<td class="r-label" colspan="2" style="text-align:left;"><input class='hisui-checkbox' type="checkbox"  id="SelectStop" label="已停排班"></td>
+             </tr>            
+          </table>
+  	</div>   
+    <div data-options="region:'center',split:false,border:false" > 
+   		 <table id="tabScheduleList"></table>  
+    </div> 
+  <!--停诊弹出框-->
+	<div id="StopWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false,iconCls:'icon-w-edit'" title="停诊" style="width:327px;height:214px;" closed=true modal=true>
+		<table class="search-table" style="margin:0 auto;">
+			<tr>
+				<td class="label">批准原因</td>
+				<td>
+					<input id="EReason" class="textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">批准人</td>
+				<td>
+					<input id="ELeader" class="textbox"/>
+				</td>
+			</tr>
+			<tr>
+			    <td class="label">密码</td>
+			    <td>
+			    	<input id="EPassword" type="password" class="textbox" disabled/>
+			    </td>
+			</tr>
+			<tr>
+				<td colspan="2" style="text-align:center;">
+					<a href="#" id="StopSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">停诊</a>
+					<div style="display:inline-block;margin:0 15px;"></div>
+					<a href="#" id="StopCancel" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+				</td>
+			</tr>
+		</table>	
+		<input id="StopASRowIDStr" type="hidden"></input>
+	</div>
+  <!--替诊弹出框-->
+    <div id="ReplaceWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false,iconCls:'icon-w-edit'" title="替诊" style="width:500px;height:210px;" closed=true modal=true>
+			<table class="search-table" style="margin:0 auto;">
+				<tr>
+				    <td class="label">替诊科室</td>
+				    <td>
+				    	<input id="ERepLoc" class="textbox"/>
+				    </td>
+				    <td class="r-label">替诊医生</td>
+				    <td>
+				    	<input id="ERepDoc" class="textbox"/>
+				    </td>
+				 </tr>
+				 <tr>
+				    <td class="label">替诊职称</td>
+				    <td>
+				    	<input id="ERepSessionType" class="textbox"/>
+				    </td>
+				    <td class="r-label">替诊原因</td>
+				    <td>
+				    	<input id="ERepReason" class="textbox"/>
+				    </td>
+				</tr>
+				<tr>
+				    <td class="label">批准人</td>
+				    <td>
+				    	<input id="ERepLeader" class="textbox"/>
+				    </td>
+				    <td class="r-label">密码</td>
+				    <td>
+				    	<input id="td-ERepPassword" type="password" class="textbox" disabled/>
+				    </td>
+				</tr>
+				<tr>
+					<td colspan="4" style="text-align:center;">
+						<a href="#" id="ReplaceSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">替诊</a>
+						<div style="display:inline-block;margin:0 15px;"></div>
+						<a href="#" id="ReplaceCancel" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+					</td>
+				</tr>
+			</table>	
+			<input id="ReplaceASRowIDStr" type="hidden"></input>
+	</div>
+</body>
+</html>

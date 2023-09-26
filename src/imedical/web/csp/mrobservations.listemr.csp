@@ -1,0 +1,76 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+;
+n dtmLIST,chLIST,minslots
+n stdate,enddate,sttime,endtime,mradm,itm,itmparams,ObsGrpID,ObsGrpIDs,obsitm,obsitmparams,ChartID,cols,context,studentchart
+s minslots=60
+s (stdate,enddate,sttime,endtime)=""
+i %request.Get("stdate")'="" s stdate=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("stdate"))
+i %request.Get("enddate")'="" s enddate=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("enddate"))
+i %request.Get("sttime")'="" s sttime=##Class(websys.Conversions).TimeHtmlToLogical(%request.Get("sttime"))
+i %request.Get("enddate")'="" s endtime=##Class(websys.Conversions).TimeHtmlToLogical(%request.Get("endtime"))
+s %request.Data("stdate",1)=stdate
+s %request.Data("enddate",1)=enddate
+s %request.Data("sttime",1)=sttime
+i endtime="" s endtime=86400
+s %request.Data("endtime",1)=endtime
+
+s itm=%request.Get("itm")
+s itmparams=%request.Get("itmparams")
+s mradm=%request.Get("mradm")
+s PatientID=%request.Get("PatientID")
+s EpisodeID=%request.Get("EpisodeID")
+s cols=$p(itm,"^",7)
+s ChartID=%request.Get("ChartID")
+s context=%request.Get("CONTEXT")
+;
+; Log 42221 - AI - 10-02-2004 : Add studentchart to the passed variables.
+s studentchart=$g(%request.Data("studentchart",1))
+i studentchart="on" s studentchart=1
+i studentchart'=1 s studentchart=0
+s %request.Data("studentchart",1)=studentchart
+;
+; Log 29736 - AI - 09-01-2004 : Add ObservationGroup,EpisodesAll,CurrentPregnancy,ReverseDateOrder.
+s ObservationGroup=$g(%request.Data("ObservationGroup",1))
+s EpisodesAll=$g(%request.Data("EpisodesAll",1))
+s CurrentPregnancy=$g(%request.Data("CurrentPregnancy",1))
+s ReverseDateOrder=$g(%request.Data("ReverseDateOrder",1))
+;
+; Log 29736 - AI - 09-01-2004 : Observation Profile, no longer Observation Group. Change variables and calls to reflect this.
+i $p(itm,"^",2)="BP" d
+. s ObsGrpID=##Class(web.MRCObservationGroup).GetIdFromCodeOrDescription(ObservationGroup)
+. s ObsGrpIDs=##Class(web.MRCObservationGroup).getItemsForGroup(ObsGrpID)
+. s obsitm=ObsGrpID_"^"_"BP"_"^"_$p(itm,"^",3,5)_"^"_"OEOrdExec.Edit"_"^"_$p(itm,"^",7)_"^"_"Observation Group: "_ObservationGroup_"^"_$p(itm,"^",9,12)
+. s obsitmparams=""
+;
+n cmp
+i (PatientID'="") s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+i cmp d cmp.Show(),cmp.%Close()
+;
+n frm
+s frm=##Class(websys.Component).OpenName("MRObservations.ListEMR")
+i frm d
+. s frm.HideHeadings=$p(itm,"^",3)
+. s frm.ListRows=$p(itm,"^",7)
+. d frm.Show()
+. ; Log 42221 - AI - 10-02-2004 : Add studentchart to the passed variables.
+. ;d ##Class(web.MRObservations).obsSummaryGet(mradm,ObsGrpIDs,minslots,stdate,enddate,sttime,endtime,.dtmLIST,ObsGrpID,studentchart)
+. ;d ##Class(web.MRObservations).obsSummaryShow(.dtmLIST,minslots,PatientID,mradm,EpisodeID,obsitm,obsitmparams,ObsGrpID,ChartID,context,1,cols,studentchart)
+. d frm.%Close()
+;
+</SERVER>
+</BODY>
+</HTML>

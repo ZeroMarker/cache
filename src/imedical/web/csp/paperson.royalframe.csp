@@ -1,0 +1,41 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+ n PARREF,CONTEXT,RoyalOrder,ID,TWKFL,TWKFLI
+ s (PARREF,CONTEXT,RoyalOrder,ID,TWKFL,TWKFLI)=""
+ s PARREF=$g(%request.Data("PARREF",1))
+ i PARREF="" s PARREF=$g(%request.Data("PatientID",1))
+ s ID=$g(%request.Data("ID",1))
+ i '$d(^PAPER(+ID,"RO",+$p(ID,"||",2))) s ID=""
+ s CONTEXT=$g(%request.Data("CONTEXT",1))
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s admType=$g(%request.Data("admType",1))
+ s RoyalOrder=$p(##class(web.PAPerson).FindIfLinksDataPAPersonEdit(PARREF),"^",12)
+ w "<SCRIPT>",$c(13,10)
+ w "if (window.opener) {",$c(13,10)
+ w "	try {",$c(13,10)
+ w "		if (window.opener) window.opener.setBoldLinks(""RoyalOrder"",""",RoyalOrder,""");",$c(13,10)
+ w "	}",$c(13,10)
+ w "	catch(e) {}",$c(13,10)
+ w "}",$c(13,10)
+ w "</SCRIPT>",$c(13,10)
+</SERVER>
+
+<frameset rows="40%,*">
+	<frame name="PAPersonRoyalOrder_List" src="websys.default.csp?WEBSYS.TCOMPONENT=PAPersonRoyalOrder.List&PatientID=#(PARREF)#&PARREF=#(PARREF)#&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&admType=#(admType)#&PatientBanner=1">
+	<frame name="PAPersonRoyalOrder_Edit" src="websys.default.csp?WEBSYS.TCOMPONENT=PAPersonRoyalOrder.Edit&PARREF=#(PARREF)#&PatientID=#(PARREF)#&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&admType=#(admType)#&ID=#(ID)#">
+</frameset>
+
+</HTML>

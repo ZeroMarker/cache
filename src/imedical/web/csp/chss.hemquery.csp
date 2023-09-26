@@ -1,0 +1,40 @@
+<script language="cache" runat="server">
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	
+	s RowId=$Get(%request.Data("RowId",1)) 
+	s Title=$Get(%request.Data("Title",1))
+	s People=$Get(%request.Data("People",1))
+	s Unit=$Get(%request.Data("Unit",1))
+	s SendDate=$Get(%request.Data("SendDate",1))
+	s SendNum=$Get(%request.Data("SendNum",1))
+	s DateOfStart=$Get(%request.Data("DateOfStart",1))
+	s Target=$Get(%request.Data("Target",1))
+	s Content=$Get(%request.Data("Content",1))
+	s Summarize=$Get(%request.Data("Summarize",1))
+	s Remark=$Get(%request.Data("Remark",1))
+	s CreateDate=$Get(%request.Data("CreateDate",1))
+	s StaffOfCreate=$Get(%request.Data("StaffOfCreate",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.HealthEducationMaterialService).ListPage(CommunityCode,Start,Limit)
+
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.HealthEducationMaterialService).insert(Title,People,Unit,SendDate,SendNum,DateOfStart,Target,Content,Summarize,Remark,CreateDate,StaffOfCreate,CommunityCode)
+	.w result
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.HealthEducationMaterialService).updata(RowId,Title,People,Unit,SendDate,SendNum,DateOfStart,Target,Content,Summarize,Remark,CreateDate,StaffOfCreate,CommunityCode)
+	.w result
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.HealthEducationMaterialService).delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:'É¾³ý³É¹¦'}"
+    .e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

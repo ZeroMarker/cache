@@ -1,0 +1,64 @@
+
+<script language="cache" runat="server">
+
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+	s Action=$Get(%request.Data("actiontype",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	s RecordRowId=$Get(%request.Data("RecordRowId",1))
+	s Theme=$Get(%request.Data("Theme",1))
+	s HEPlace=$Get(%request.Data("HEPlace",1))
+	s Unit=$Get(%request.Data("Unit",1))
+	s HETime=$Get(%request.Data("HETime",1))
+	s HEType=$Get(%request.Data("HEType",1))
+	s CollaborateUnit=$Get(%request.Data("CollaborateUnit",1))
+	s PersonNum=$Get(%request.Data("PersonNum",1))
+	s PromoType=$Get(%request.Data("PromoType",1))
+	s PromoNum=$Get(%request.Data("PromoNum",1))
+	s Name=$Get(%request.Data("Name",1))
+	s Summarize=$Get(%request.Data("Summarize",1))
+	s Appraise=$Get(%request.Data("Appraise",1))
+	s Principal=$Get(%request.Data("Principal",1))
+	s DateOfCreate=$Get(%request.Data("DateOfCreate",1))
+	s MaterialType=$Get(%request.Data("MaterialType",1))
+	
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	
+	
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.HealthEducationRecordService).listPage(CommunityCode,Start,Limit)
+	
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.HealthEducationRecordService).insert(Theme,HEPlace, Unit, HETime, HEType, CollaborateUnit, PersonNum, PromoType, PromoNum, Name, DateOfCreate,Summarize, Appraise, Principal, MaterialType, CommunityCode)
+	.w result
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.HealthEducationRecordService).update(RecordRowId, Theme, HEPlace, Unit, HETime, HEType, CollaborateUnit, PersonNum, PromoType, PromoNum, Name, DateOfCreate, Summarize, Appraise, Principal, MaterialType, CommunityCode)
+    .w result
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.HealthEducationRecordService).delete(RecordRowId)
+	.w result
+
+	
+	i Theme '="" d
+	.s SqlStr = " and Theme like '%"_Theme_"%'"
+	i HEPlace '="" d 
+	.s SqlStr =SqlStr_" and HEPlace like '%"_HEPlace_"%'"
+	i HEType '="" d
+	.s SqlStr =SqlStr_" and HEType like '%"_HEType_"%'"
+	i Principal '= "" d
+	.s SqlStr =SqlStr_" and Principal like '%"_Principal_"%'"
+	i Unit '="" d
+	.s SqlStr =SqlStr_" and Unit like '%"_Unit_"%'"
+	
+	i Action = "search" d
+	.w ##class(CHSSWeb.HealthEducationRecordService).search(CommunityCode,Start,Limit,SqlStr)
+	</script>
+

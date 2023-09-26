@@ -1,0 +1,194 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()  
+ q 1
+  // dhc.bdp.bdp.basedatamap.csp
+ // 名称: 基础数据平台配置-基础数据统一对照管理
+ // 编写者:基础数据平台组 - sunfengchao
+ // 编写日期:2020-02-01
+</csp:method> 
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/> 
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_BaseDataMap.js"> </script> 
+</HEAD> 
+   
+<body>   
+     
+     <div class="hisui-layout" data-options="fit:true" id="layout" border="false"> 
+        <div id="layoutwest" data-options="region:'west',split:true"  style="width:350px;padding:4px 0px 4px 4px;" border="false" >
+            <table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="Tree" border="true" toolbar="#mytbar" title="字典目录"></table>
+        </div>
+        <div id="layoutcenter" data-options="region:'center',split:true"  border="false" style="padding:4px 4px 4px 0px"> 
+            <table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper'" id="DataGrid" border="false" title="基础数据统一对照" toolbar="#dictabletbar"></table> 
+        </div> 
+    </div>
+       
+        
+    <div id="mytbar">
+      <table style="padding-top:5px;padding-bottom:5px;" >
+         <tr>
+            <td class="tdlabel">字典描述</td> 
+            <td><input id="TextTreeDesc" href="#"  class="textbox hisui-searchbox" style="width:100px"></td>  
+            <td class="tdlabel-b"> <a href="#" id="btnTreeRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a></td>
+         </tr>   
+      </table>
+      
+      <div style="border-bottom: 1px dashed #C0C0C0;"></div>    
+            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a>
+            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a> 
+      </div>  
+    </div>
+    
+       
+     <div id="dictabletbar">
+        <table style="padding-top:5px;padding-bottom:5px" >
+            <tr>
+                <td class="tdlabel" style="width:67px">HIS代码</td>
+                <td><input id="TextHISCode" type="text" class="textbox hisui-validatebox" style="width:60px"></td>
+                <td class="tdlabel" style="width:67px">HIS名称</td>
+                <td><input id="TextHISDesc" type="text" class="textbox hisui-validatebox" style="width:60px"></td>
+                <td class="tdlabel" style="width:67px">外部代码</td>
+                <td><input id="TextEXTCode" type="text" class="textbox hisui-validatebox" style="width:60px"></td>  
+                <td class="tdlabel" style="width:67px">外部名称 </td>
+                <td><input id="TextEXTDesc" type="text" class="textbox hisui-validatebox"  style="width:60px"> </td> 
+                <td class="tdlabel-b"> <a href="#" id="btnSearch" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a></td>
+                <td class="tdlabel-b"> <a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a></td>
+            </tr> 
+        </table>
+      <div style="border-bottom: 1px dashed #C0C0C0;"></div>    
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_dicdata_btn">新增</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="modify_dicdata_btn">修改</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_dicdata_btn">删除</a> 
+      </div>  
+    </div>
+     
+ 
+    <!--新增字典时的对话框-->    
+     <div id="myWin2" style="width:370px;height:380px;padding:10px;display:none;">  
+        <form id="form-save2" method="post" data-options="fit:true,border:false,plain:true"> 
+            <table align="center">
+                <tr style="display:none">
+                    <td></td>
+                    <td><input id="BDPBaseDMRowIdF" name="BDPBaseDMRowId" type="text" class="hisui-validatebox"></td>
+                </tr>
+                <tr>
+                   <td  class="tdlabel"><font color=red>*</font>代码</td>
+                   <td><input id="BDPBaseDMCodeF" name="BDPBaseDMCode" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+                 </tr>
+                 
+                 <tr>
+                   <td class="tdlabel"><font color=red>*</font>描述</td>
+                   <td><input id="BDPBaseDMDescF" name="BDPBaseDMDesc" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+                <tr>
+           
+                <tr> 
+                   <td  class="tdlabel">上级类别</td>
+                   <td><input id="BDPBaseDMParentDRF"  type="text"  class='textbox hisui-combotree'  name="BDPBaseDMParentDR" ></td> 
+                </tr>
+                
+                <tr> 
+                   <td  class="tdlabel">对照类别</td>
+                   <td><input id="DPBaseDMTypeF" name="DPBaseDMType" type="text" ></td> 
+                </tr>
+            
+                <tr> 
+                   <td  class="tdlabel">指向表</td>
+                   <td><input id="BDPBaseDMTableDRF" class='textbox hisui-combotree'  name="BDPBaseDMTableDR" type="text"></td> 
+                </tr>
+            
+                  <tr>
+                    <td class="tdlabel"><font color=red>*</font>开始日期</td>
+                    <td><input  id="BDPBaseDMDateFromF" name="BDPBaseDMDateFrom"  class="textbox hisui-datebox"></input></td>
+                </tr>
+                
+                <tr>
+                    <td  class="tdlabel">结束日期</td>
+                    <td><input  id="BDPBaseDMDateToF" name="BDPBaseDMDateTo" class="textbox hisui-datebox"></input></td>
+                </tr>   
+            </table> 
+        </form>  
+    </div>    
+ 
+    
+
+    <!-- 目录树右键菜单-->
+    <div id="TreeMenu" class="hisui-menu" style="width:160px;display:none"> 
+       <div onclick="AddTJProperty()" iconCls="icon-add" id="PropertyAddSelf">新增同级目录</div> 
+       <div onclick="AddProperty()" iconCls="icon-add" id="PropertyAddNextSelf">新增下级目录</div>   
+       <div onclick="UpdateProperty()" iconCls="icon-write-order" id="PropertyModify">修改目录</div>
+       <div onclick="removes()" iconCls="icon-cancel" id="PropertyDelete">删除目录</div> 
+    </div> 
+   
+    
+  <div id="myWin" style="width:370px;height:360px;padding:10px;">    
+    <form id="dicmap-form-save"  method="post"  data-options="fit:true,border:false,plain:true"> 
+        <table align="center"> 
+            <tr style="display:none">
+                <td></td>
+                <td><input id="BDPMapDRowId" name="BDPMapDRowId" type="text" class="hisui-validatebox"></td>
+            </tr>
+ 
+             <tr style="display:none">
+               <td></td>
+               <td> 
+                    <input id="BDPMapDBaseTabNameDR" type="text" class="textbox hisui-validatebox" name="BDPMapDBaseTabNameDR"> 
+               </td>
+             </tr>
+              
+             <tr>
+               <td class="tdlabel"><font color=red>*</font>HIS数据</td>
+               <td> 
+                    <input id="BDPMapDHisDicDesc" type="text" class="textbox hisui-validatebox" name="BDPMapDHisDicCodeDR"> 
+               </td>
+             </tr>
+             
+              
+             <tr>
+               <td class="tdlabel"><font color=red>*</font>HIS代码</td>
+               <td> 
+                    <input id="BDPMapDHisDicCode" type="text" class="textbox hisui-validatebox" name="BDPMapDHisDicCode"> 
+               </td>
+             </tr>
+             
+              <tr>
+               <td class="tdlabel"><font color=red>*</font>HIS名称</td>
+               <td> 
+                    <input id="BDPMapDHisDicDescF" type="text" class="textbox hisui-validatebox" name="BDPMapDHisDicDesc"> 
+               </td>
+             </tr>
+             
+             <tr>
+               <td class="tdlabel"><font color=red>*</font>外部代码</td>
+               <td> 
+                    <input id="BDPMapDExtDicCode" type="text" class="textbox hisui-validatebox" name="BDPMapDExtDicCode"> 
+               </td>
+             </tr>
+             
+             <tr>
+               <td class="tdlabel" ><font color=red>*</font>外部名称</td>
+               <td> 
+                    <input id="BDPMapDExtDicDesc" type="text" class="textbox hisui-validatebox" name="BDPMapDExtDicDesc"> 
+               </td>
+             </tr> 
+             
+             <td class="tdlabel">外部到HIS对照</td>
+               <td><input class='hisui-checkbox' type="checkbox" id="BDPMapDHisFlag" name="BDPMapDHisFlag" data-options="checked:false" value="Y"></td>
+             </tr>
+             
+             <tr>
+               <td class="tdlabel" >有效标志</td> 
+               <td><input class='hisui-checkbox' type="checkbox" id="BDPMapDActive" name="BDPMapDActive" data-options="checked:true" value="Y"></td>
+             </tr> 
+        </table >
+    </form>    
+  </div>    
+    
+   
+</body> 
+</html>

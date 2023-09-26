@@ -1,0 +1,72 @@
+<!--
+Description: 问题关联维护  dhchm.dolinkdetail.edit.csp
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER"> 
+		set OID=$g(%request.Data("OID",1))	
+   </SCRIPT> 
+   <style>
+   		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			text-align:right;
+			padding:0 10px;
+		}
+   		.btn{
+	   		margin-left:30px;
+   		}	
+   </style>
+</head>
+<body style="background-color:#fff" fit="true" class="hisui-layout">
+	<div >
+		<table class="hisui-table">
+			<tr>
+				<td class="labelTd">关联问题</td>	
+				<td><select id="SDLinkID" class="hisui-combogrid"  style="width:180px;" data-options="
+           			panelWidth: 400,
+            		idField: 'DOLID',
+            		textField: 'QDDesc',
+            		method: 'get',
+            		url:$URL+'?ClassName=web.DHCHM.CQDOLinkDetail&QueryName=LinkDetail',
+            		onBeforeLoad:function(param){
+						param.DetailDesc = param.q;
+					},
+					mode:'remote',
+					delay:200,
+            		columns: [[
+                		{field:'QDesc',title:'问卷',width:150},
+                		{field:'QSDesc',title:'主题',width:150},
+                		{field:'QDDesc',title:'问题',width:150},
+                		{field:'DOLID',title:'ID',width:50,align:'center'}
+           			 ]],
+            		fitColumns: true,
+            		pagination:true,
+					pageSize:20">
+            		</select>    
+				</td>
+				<td style="padding-left:20px;"><a id="DOLAddBtn" href="#"  onclick="dolAdd();" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">保存</a></td>
+				<td style="padding-left:20px;"><a id="DOLDeltBtn" href="#"  onclick="dolDelt();"  class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a></td>					
+			</tr>				
+		</table>
+		<div id="DOLDiv" style="height:302px;padding:0 10px 10px 10px">
+			<table id="DOLinkList" data-options="singleSelect:true,bodyCls:'panel-body-gray'"></table>			
+		</div>
+		<input type="hidden" id="OID" value="#(OID)#">
+	</div>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  	<script type="text/javascript" src="../scripts/dhchm.dolinkdetail.edit.js"></script>
+</body>
+</html>

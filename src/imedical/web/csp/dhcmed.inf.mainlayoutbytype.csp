@@ -1,0 +1,130 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+ 
+	//s returnval=##class(web.portal.SessionLogon).LogonDirect()
+ 	//q returnval
+</csp:method>  
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- <meta http-equiv="Content-Type" content="text/html; charset=gb2312" /> -->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+        <DHCMED:HEAD></DHCMED:HEAD>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/infection.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/inf/mainlayoutbytype/gui.js'></script>	
+		<script language='javascript' src='../scripts/dhcmed/inf/mainlayoutbytype/event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/inf/infpatientadm/PaadmRepgui.js'></script>	
+		<script language='javascript' src='../scripts/dhcmed/inf/infpatientadm/PaadmRepevent.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/inf/infpatientadm/LabResultShow.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/inf/DHCMed.Inf.ExcelAppc.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/inf/infcommonjs/MultiComboBox.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		    //set RepID=##class(DHCMed.INFService.InfReportSrv).GetReportID($g(%request.Data("Paadm",1)),$g(%request.Data("TypeDr",1)))
+		    
+		    set InfRepDr="'"_$g(%request.Data("InfRepDr",1))_"'"
+		    set TypeDr="'"_$g(%request.Data("TypeDr",1))_"'"
+		    set showType="'"_##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHospN("InfectionLayout","")_"'"
+		    set TypeCode=$g(%request.Data("TypeDr",1))
+		    set Paadm="'"_$g(%request.Data("Paadm",1))_"'"
+		    set Papmi="'"_$g(%request.Data("Papmi",1))_"'"
+		    set TypeID=##class(DHCMed.SSService.DictionarySrv).GetIdByTypeCode(TypeCode,"InfectionType")
+		    set objCls=##class(DHCMed.SS.Dictionary).GetObjById(TypeID)
+		    //set showTitle="'"_"无该类型报告配置"_"'"
+		    set showTitle="'"_TypeCode_"'"
+		    set:$IsObject(objCls) showTitle="'"_objCls.Description_"'"
+		    k objCls
+		    set TypeCode="'"_TypeCode_"'" 
+		    set InfCtLoc="'"_%session.Get("LOGON.CTLOCID")_"'"
+		</SCRIPT>
+        <script language="javascript" type="text/javascript">
+			// <!CDATA[
+
+				var t = new Object();
+
+			Ext.QuickTips.init();
+            var objControlArry = new Array();
+            var formArray = new Array();
+            var TypeDr=#(TypeDr)#;
+            var strURL="";
+            var showType = #(showType)#;
+            var showTitle= #(showTitle)#;
+            var Paadm=#(Paadm)#;
+            var Papmi=#(Papmi)#;
+            var InfCtLoc=#(InfCtLoc)#;
+            var InfSuryDt="";
+            var TypeCode=#(TypeCode)#;
+            var InfRepDr=#(InfRepDr)#;
+            var widthFlag=900;
+            var CHR_1=String.fromCharCode(1);
+            var CHR_2=String.fromCharCode(2);
+            var CHR_3=String.fromCharCode(3);
+            String.prototype.replaceAll=replaceAll;
+            function replaceAll(oldText,replaceText){
+               regExp = new RegExp(oldText,"g");  //g 全局
+               return this.replace(regExp ,replaceText);
+            }
+            function window_onload() {
+            	  var objmainForm = new InitmainForm();
+                 objControlArry['mainForm'] = objmainForm;
+                 
+            	if(window.location.href.indexOf('DesignMode=Y')>-1) 
+            	{
+            	  
+            	}
+            }
+
+			// ]]>
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+	  <div id="p2" style="z-index:100;position:absolute;height:30px; left:300px; top:400px; width:50%;visibility:visible;"></div>
+
+	<input type='hidden' id='DHCMed.Base.Hospital' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.Base.Hospital"))%>'/>
+	<input type='hidden' id='DHCMed.SSService.DictionarySrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SSService.DictionarySrv"))%>'/>
+	<input type='hidden' id='DHCMed.SS.Dictionary' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SS.Dictionary"))%>'/>
+	<input type='hidden' id='DHCMed.SS.Menus' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SS.Menus"))%>'/>
+	<input type='hidden' id='DHCMed.SS.MenuOperation' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SS.MenuOperation"))%>'/>
+	<input type='hidden' id='DHCMed.SSService.MenusSrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SSService.MenusSrv"))%>'/>
+	<input type='hidden' id='DHCMed.SSService.ConfigSrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SSService.ConfigSrv"))%>'/>
+	<input type='hidden' id='DHCMed.SS.Config' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SS.Config"))%>'/>
+	<input type='hidden' id='DHCMed.Base.Patient' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.Base.Patient"))%>'/>
+	<input type='hidden' id='DHCMed.Base.PatientAdm' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.Base.PatientAdm"))%>'/>
+    <input type='hidden' id='DHCMed.Base.MRDiagnose' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.Base.MRDiagnose"))%>'/>
+    <input type='hidden' id='DHCMed.INFService.InfBaseAricmSrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INFService.InfBaseAricmSrv"))%>'/>
+    
+    <input type='hidden' id='DHCMed.INF.Report' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.Report"))%>'/>
+    <input type='hidden' id='DHCMed.INF.RepStatusDtls' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.RepStatusDtls"))%>'/>
+    <input type='hidden' id='DHCMed.INF.RepOPR' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.RepOPR"))%>'/>
+    <input type='hidden' id='DHCMed.INF.RepDrug' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.RepDrug"))%>'/>
+    <input type='hidden' id='DHCMed.INFService.InfReportSrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INFService.InfReportSrv"))%>'/>
+	<input type='hidden' id='DHCMed.INF.RepReason' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.RepReason"))%>'/>
+	<input type='hidden' id='DHCMed.INF.Pathogeny' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.Pathogeny"))%>'/>
+	<input type='hidden' id='DHCMed.INF.PyObj' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.PyObj"))%>'/>
+	<input type='hidden' id='DHCMed.INF.PyObjDrug' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.PyObjDrug"))%>'/>
+	<input type='hidden' id='DHCMed.INFService.ReportExportSrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INFService.ReportExportSrv"))%>'/>
+	<input type='hidden' id='DHCMed.INF.RepAppen' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.RepAppen"))%>'/>
+	<input type='hidden' id='DHCMed.INF.RepInfoRel' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.RepInfoRel"))%>'/>
+	<input type='hidden' id='DHCMed.INF.ICUInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.ICUInfo"))%>'/>
+	<input type='hidden' id='DHCMed.INF.ICUDias' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.ICUDias"))%>'/>
+	<input type='hidden' id='DHCMed.INF.ICUDeviceInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.ICUDeviceInfo"))%>'/>
+	<input type='hidden' id='DHCMed.INF.TypeLocConfig' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.TypeLocConfig"))%>'/>
+	<input type='hidden' id='DHCMed.INFService.RepConfigSrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INFService.RepConfigSrv"))%>'/>
+	<input type='hidden' id='DHCMed.INF.RepDiagRel' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.INF.RepDiagRel"))%>'/>
+	</body>
+</html>

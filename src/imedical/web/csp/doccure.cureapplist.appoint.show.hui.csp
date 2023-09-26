@@ -1,0 +1,77 @@
+<div class="hisui-layout" data-options="fit:true,border:false">
+  	<div id="region_north" data-options="region:'north',split:true,border:false" style="padding:10px 10px 5px 10px;height:400px;"> 
+		<div id="applist_panel" class="hisui-panel" title="治疗预约平台-申请单列表" 
+		data-options="headerCls:'panel-header-gray',iconCls:'icon-apply-check',fit:true,border:true">
+	  		<csp:Include Page="doccure.cureapplist.show.hui.csp">	  
+  	   </div>
+  	</div>
+    <div data-options="region:'center',border:false,split:true,closable:false,collapsible:true" style="padding:0px 10px 10px 10px;">
+        <div id="tabpanel" class="hisui-panel" style="0px 10px 10px 10px"
+        data-options="headerCls:'panel-header-gray',fit:true,border:true">
+	        <div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true,border:false" >
+				<input name="DCARowId" id="DCARowId" type="hidden"  value="#($g(%request.Data("DCARowId",1)))#">
+				<input name="DCARowIdStr" id="DCARowIdStr" type="hidden"  value="#($g(%request.Data("DCARowIdStr",1)))#">
+				<input name="OperateType" id="OperateType" type="hidden"  value="#("ZLYY")#">
+				<input name="AppDate" id="AppDate" type="hidden"  value="#($g(%request.Data("AppDate",1)))#">
+	        	<div id="Apply_Execlist" title="直接执行">
+	        		<div class="hisui-layout" data-options="fit:true,border:false,collapsible:true">
+						<div data-options="region:'north',split:true,border:false" style="padding:10px 10px 10px 10px;height:50px;">
+							<label for="Exec_StartDate" class="fr-label">执行开始日期</label>
+							<input id="Exec_StartDate" class="hisui-datebox" type="text" name="cureAppStartDate" style="width:130px;"/>
+							<label for="Exec_EndDate" class="r-label">结束日期</label>
+							<input id="Exec_EndDate" class="hisui-datebox" type="text" name="cureAppEndDate" style="width:130px;"/>
+							<input class='hisui-checkbox' type="checkbox" id="OnlyNoExcute" checked label="仅显示未执行">
+						</div>
+						<div id="dregion" data-options="region:'center',border:false,split:true,closable:false,collapsible:true"
+						style="border-top:1px dashed #dcdcdc">
+						    <!--治疗执行记录列表-->
+						    <table id="tabCureExecList" toolbar="#CureExecList-bar"></table>  
+					    </div>
+					    <div id="CureExecList-bar">
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-exe-order" plain="true" onclick="UpdateExec('E')">执行</a>
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-cancel-order" plain="true" onclick="UpdateExec('C')">撤销执行</a>
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-stop-order" plain="true" onclick="UpdateExec('S')">停止执行</a>
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-mutpaper-tri" plain="true" onclick="GenAddCureRecord()">批量执行</a>
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-funnel-eye" plain="true" onclick="DetailExecView()">浏览执行</a>
+					    </div>			
+					</div>
+	        	</div>
+	        	<csp:if condition='DocCureUseBase="0"'>
+		        	<div id="Apply_Reslist" title="预约">
+		        		<div class="hisui-layout" data-options="fit:true,border:false,collapsible:true">
+							<div data-options="region:'north',split:true,border:false" style="padding:10px 10px 10px 10px;height:50px;">
+							    <!--<label for="Apply_AppDate" class="first-qlab">预约日期</label>
+								<input id="Apply_AppDate" class="hisui-datebox" type="text" name="cureAppDate" style="width:130px;"/>-->
+								<label for="Apply_StartDate" class="fr-label">预约开始日期</label>
+								<input id="Apply_StartDate" class="hisui-datebox" type="text" name="cureAppStartDate" style="width:130px;"/>
+								<label for="Apply_EndDate" class="r-label">结束日期</label>
+								<input id="Apply_EndDate" class="hisui-datebox" type="text" name="cureAppEndDate" style="width:130px;"/>
+
+								<a href="javascript:void(0)" id="btnSearchApp" data-options="iconCls:'icon-w-find'" class="hisui-linkbutton" style="margin:0px 10px 0px 10px;">查询</a>
+								<a href="javascript:void(0)" id="btnApp" data-options="iconCls:'icon-w-edit'" style="" class="hisui-linkbutton">预约</a>
+							</div>
+							<div class="triagepanel" data-options="region:'center',split:true,closable:false,collapsible:true">
+						    	<table id="tabCureRBCResSchdule"></table>    
+						    </div>			
+						</div>
+		        	</div>
+		        	<div id="Apply_Applist" title="预约列表" style="padding:0px">			
+		        		<div class="hisui-panel" data-options="fit:true,border:false,collapsible:true">
+					    	<input name="SingleSelect" id="SingleSelect" type="hidden"  value="#($g(%request.Data("SingleSelect",1)))#">
+					    	<input name="XMLObject" id="XMLObject" type="hidden"  value="#(XMLObject)#">							    
+						    <table class="triagepanel" id="tabCureApplyApp" toolbar="#CureApplyApp-bar"></table> 	
+						</div>
+						 <div id="CureApplyApp-bar">
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnDelete" plain="true" onclick="CancelCureAppoint()">取消预约</a>
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-print" id="BtnPrint" plain="true" onclick="BtnPrintApplyClick();">打印预约治疗凭证</a>
+						    <a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnPrint" plain="true" onclick="GenCancelCureAppoint();">批量取消预约记录</a>
+						    <input class='hisui-checkbox' type="checkbox" id="OnlyApp" checked label="仅显示预约">
+					    </div>	
+		        	</div>	
+		        </csp:if>
+	     	</div>
+	     </div>
+   </div>          
+</div>
+<!--右键菜单div-->
+<div id='RightKeyMenu' class='hisui-menu' style='display:none;'></div>

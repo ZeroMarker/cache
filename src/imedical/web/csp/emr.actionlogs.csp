@@ -1,0 +1,119 @@
+﻿<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+	
+	<script language="cache" runat="server">
+	    d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s userID = %session.Get("LOGON.USERID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s formatDate=##class(EMRservice.Tools.Tool).GetHISStandardDateTimeFormat("GetFormat","Date")
+   </script>
+    <script language = "javascript">
+		var episodeID = '#(episodeID)#';
+		var CTLocID = '#(userLocID)#';
+		var UserID = '#(userID)#';
+		var formatDate = '#(formatDate)#';
+		
+		function Dateformatter(date)
+		{
+			if (formatDate=="YYYY-MM-DD") {
+				var y = date.getFullYear();
+				var m = date.getMonth()+1;
+				var d = date.getDate();
+				return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+			}
+			else if (formatDate=="DD/MM/YYYY")
+			{
+				var y = date.getFullYear();
+				var m = date.getMonth()+1;
+				var d = date.getDate();
+				return (d<10?('0'+d):d)+'/'+(m<10?('0'+m):m)+'/'+y;
+			}
+		}
+		function Dateparser(s)
+		{
+			if (!s) return new Date();
+			
+			if (formatDate=="YYYY-MM-DD") {
+				var ss = s.split('-');
+				var y = parseInt(ss[0],10);
+				var m = parseInt(ss[1],10);
+				var d = parseInt(ss[2],10);
+				if (!isNaN(y) && !isNaN(m) && !isNaN(d))
+				{
+					return new Date(y,m-1,d);
+				} else {
+					return new Date();
+				}
+			}
+			else if (formatDate=="DD/MM/YYYY")
+			{
+				var ss = s.split('/');
+				var d = parseInt(ss[0],10);
+				var m = parseInt(ss[1],10);
+				var y = parseInt(ss[2],10);
+				if (!isNaN(y) && !isNaN(m) && !isNaN(d))
+				{
+					return new Date(y,m-1,d);
+				} else {
+					return new Date();
+				}
+				
+			}
+		}
+   </script>
+    <title>电子病历首页 </title>
+</head>
+<body class="easyui-layout" data-options="fit:true,border:false">
+<div data-options="region:'north'" style="height:60px;width:100%">
+	<span style="float:left;width:28%">
+	<div>
+		<TABLE>
+			<TBODY>
+				<TR><TD><label id="cStDate" style="font-size:14;">开始日期</label></TD><TD><input id="StDate" name="StDate" data-options="formatter:Dateformatter,parser:Dateparser" class="easyui-datebox"/></TD></TR>
+				<TR><TD><label id="cEndDate" style="font-size:14;">结束日期</label></TD><TD><input id="EndDate" name="EndDate" data-options="formatter:Dateformatter,parser:Dateparser" class="easyui-datebox"/></TD></TR>
+			</TBODY>
+		</TABLE>
+	</div>
+	</span>
+	<span style="float:left;width:24%">
+	<div>
+		<TABLE>
+			<TBODY>
+				<TR><TD><label id="cUser" style="font-size:14;">用户</label></TD><TD><input id="User" name="User" /></TD></TR>
+				<TR><TD><label id="cType" style="font-size:14;">类型</label></TD><TD><input id="Type" name="Type" /></TD></TR>
+			</TBODY>
+		</TABLE>
+	</div>
+	</span>
+	<span style="float:left;width:36%">
+	<div>
+		<TABLE>
+			<TBODY>
+				<TR><TD><label id="cModel" style="font-size:14;">名称</label></TD><TD><input id="Model" name="Model" style="width:260px"/></TD></TR>
+				<TR><TD><label id="cEMRName" style="font-size:14;">病历</label></TD><TD><input id="EMRName" name="EMRName" style="width:260px"/></TD></TR>
+			</TBODY>
+		</TABLE>
+	</div>
+	</span>
+	<span style="float:left;width:12%;margin-top:18px">
+	<div>
+		<a id="Find" name="Find" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+	</div>
+	</span>
+</div>
+	
+<div data-options="region:'center',border:false">
+    	<table id="actionLogsListData"></table>
+</div>
+    <script type="text/javascript" src="../scripts/emr/js/actionLogsList.js"></script>    
+</body>
+</html>

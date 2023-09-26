@@ -1,0 +1,77 @@
+<!-- dhcpe.chart.vml.csp --!>
+/// 创建时间		2007.01.15
+/// 创建人			xuwm 
+/// 主要功能		团体报告
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 
+-->
+ 
+<HTML>
+<HEAD>
+<!-- 强制网页不被存入Cache中 
+<meta http-equiv="pragma" content="no-cache">
+-->
+
+<!--meta http-equiv="Content-Type" content="text/html;"-->
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="../scripts/dhcpegreportHistogram.js"></SCRIPT>
+
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"/>
+<TITLE>疾病汇总-图形显示</TITLE>
+<style type="text/css">
+v\:*{ behavior:url(#default#VML); }
+.Canve{ 
+	display:block; 
+	position:relative; 
+	width:550px; 
+	height:500px; 
+	left: 0px; 
+	top: 0px; 
+	border: 0 solid black;
+	margin-bottom:0.2cm;
+	PAGE-BREAK-AFTER: always ;
+}
+body{
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	text-align:center;
+}
+</style>
+
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	w "<SCRIPT>",!
+	w "var DSlabel=new Array();",!
+	w "var DSvalue=new Array();",!
+	s Datas=$g(%request.Data("Data",1))
+	s Labels=$g(%request.Data("Label",1))
+	s aLoop=0
+	f iLLoop=1:1:$Length(Datas,"^") d
+	.s Data=$P(Datas, "^", iLLoop)
+	.Q:(""=Data)
+	.s Label=$P(Labels, "^", iLLoop)
+	.q:Label=""
+	.w "DSlabel["_aLoop_"]="""_Label_""";",!
+	.w "DSvalue["_aLoop_"]="_Data_";",!
+	.s aLoop=1+aLoop
+	w "</"_"SCRIPT>",!
+</Script>
+
+	<DIV id=Graph class="Canve"></DIV>
+	<script language="Javascript">
+		function addChartValue()
+      	{
+	      	DrawHistogram(Graph, DSlabel, DSvalue, 400, 300);
+      	}
+		window.onload = function(){
+			addChartValue();
+		}
+		
+    </script>
+</body>
+
+
+</HTML>

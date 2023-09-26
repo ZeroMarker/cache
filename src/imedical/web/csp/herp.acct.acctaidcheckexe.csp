@@ -1,0 +1,101 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action 	= $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir 	= $Get(%request.Data("sortDir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	
+	s rowid		=$Get(%request.Data("rowid",1))	
+	s AcctCheckTypeID=$Get(%request.Data("AcctCheckTypeID",1))
+	s AcctCheckTypeIDold=$Get(%request.Data("AcctCheckTypeIDold",1))
+	s IsValid	=$Get(%request.Data("IsValid",1))
+	s IsFinishInit=$Get(%request.Data("IsFinishInit",1))
+	s StartMonth=$Get(%request.Data("StartMonth",1))
+	s StartYear	=$Get(%request.Data("StartYear",1))
+	s EndMonth	=$Get(%request.Data("EndMonth",1))
+	s EndYear	=$Get(%request.Data("EndYear",1))
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))
+	s str=$Get(%request.Data("str",1))
+	s CheckItemCode=$Get(%request.Data("CheckItemCode",1))
+	s CheckItemName=$Get(%request.Data("CheckItemName",1))
+	s StartDate=$Get(%request.Data("StartDate",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+	s SpellCode=$Get(%request.Data("SpellCode",1))
+
+	
+	;k ^qwecsp
+	;s ^qwecsp=rowid_"^"_AcctBookID1_"^"_AcctCheckTypeID_"^"_IsValid_"^"_StartYear_"^"_StartMonth_"^"_EndYear_"^"_EndMonth
+	
+	//账套类别启用时间定义AcctCheckTypeBook
+	//单位账套下拉数据集
+	i action = "AcctBookList" d
+	.s result = ##class(herp.acct.udata.uAcctCheckTypeBook).ListAcctBook(AcctBookID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//核算类型下拉数据集
+	i action = "CheckTypeList" d
+	.w ##class(herp.acct.udata.uAcctCheckTypeBook).ListCheckType(start, limit)
+	
+	i action = "TypeBookList" d
+	.w ##class(herp.acct.udata.uAcctCheckTypeBook).ListCheckTypeBook(start,limit,AcctBookID)
+	
+	i action = "TypeBookadd" d
+	.s result = ##class(herp.acct.udata.uAcctCheckTypeBook).InsertCheckTypeBook(AcctBookID, AcctCheckTypeID, "1", StartYear, StartMonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "TypeBookedit" d
+	.s result = ##class(herp.acct.udata.uAcctCheckTypeBook).UpdateCheckTypeBook(rowid,AcctBookID, AcctCheckTypeID, IsValid, StartYear, StartMonth, EndYear, EndMonth,AcctCheckTypeIDold)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "TypeBookdel" d
+	.s result = ##class(herp.acct.udata.uAcctCheckTypeBook).DelCheckTypeBook(rowid,AcctBookID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	//辅助核算字典维护AcctCheckItem
+	i action = "CheckItemList" d
+	.w ##class(herp.acct.udata.uAcctCheckTypeBook).ListCheckItem(start, limit,AcctBookID,AcctCheckTypeID,str)
+
+	i action= "CheckItemdel" d
+	.s result = ##class(herp.acct.udata.uAcctCheckTypeBook).DelCheckItem(rowid, AcctBookID)
+	.i $p(result,"*",2) = 0 d
+	..w "{success:'true',info:'',count:'"_$p(result,"*",1)_"'}"
+	.e  d
+	..w "{success:'false',info:'"_$p(result,"*",2)_"'}"
+	
+	i action= "CheckItemedit" d
+	.s result = ##class(herp.acct.udata.uAcctCheckTypeBook).UpdateCheckItem(rowid, AcctBookID, AcctCheckTypeID,CheckItemCode, CheckItemName, IsValid, StartDate, EndDate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "CheckItemadd" d
+	.s result = ##class(herp.acct.udata.uAcctCheckTypeBook).InsertCheckItem( AcctBookID, AcctCheckTypeID, CheckItemCode, CheckItemName, "1", StartDate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+</script>

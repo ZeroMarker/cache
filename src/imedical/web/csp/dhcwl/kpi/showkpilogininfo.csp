@@ -1,0 +1,47 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+	if "lookup"=action {
+		set loginType = $g(%request.Data("loginType",1))
+		set loginTypeDr = ##class(DHCWL.MKPI.APPLibrary).GetIdByCode("LoginType||"_loginType)
+		set fromDate = $g(%request.Data("fromDate",1))
+		set toDate = $g(%request.Data("toDate",1))
+		set start = $g(%request.Data("start",1))
+		set pageType = $g(%request.Data("pageType",1))
+		set limit = $g(%request.Data("limit",1))
+		i (fromDate'="")&&(toDate'="") s checkStart=##class(DHCWL.CommonUtil.DateUtil).DateHtmlToLogical(fromDate),checkEnd=##class(websys.Conversions).DateHtmlToLogical(toDate)
+		i ($g(checkEnd)<$g(checkStart)){
+			w "开始日期不能大于结束日期哦"
+			q
+		}
+		set pageSize = ""
+		if ""=$g(pageType) set json=""
+		set pageSize = $g(%request.Data("pageSize",1))
+		if ""=pageSize set pageSize=limit
+		set maxRecordNum=start+pageSize
+		set json=##class(DHCWL.MKPILogin.LoginService).QueryLoginInfo(fromDate,toDate,loginTypeDr,"",pageSize+1,start,maxRecordNum+1)
+		set totalNum=^||TEMPDHCWL("login","maxNum")
+		//set json=$p(json,"#",1)
+		if (""=json)||(0=json){
+			write "{result:0,totalNum:0,root:[]}"
+			quit
+		}
+		d json.SetTotalNum(totalNum)
+		write json.GetHead()
+		;if (json.count<pageSize) set start=start-1		;--modify by wz.2014-3-26
+		//set json.privor=start
+		set json.privor=0
+		do{
+			set obj=json.Next()
+			set obj=$tr(obj,"∧","^")
+			/*if (json.privor)=(maxRecordNum){
+				 //set obj=$p(obj,"}",1)
+				 //set obj=obj_"}]}"
+				 set obj=obj_"]}"
+			}*/
+			write obj
+		}while(obj'="")&&(json.privor<(maxRecordNum)&&(json.privor<json.count))
+	}
+</script>

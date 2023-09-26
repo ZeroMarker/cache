@@ -1,0 +1,36 @@
+
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s AuditID=$g(%request.Data("AuditID",1))
+ s SplitType=$g(%request.Data("SplitType",1))
+ //SplitType 只能有3种选择：1:item,2:person,3:group
+ i SplitType="" d
+ .s SplitType="item"
+ s ToAuditID=$g(%request.Data("ToAuditID",1))
+ s ARCIMID=$g(%request.Data("ARCIMID",1))
+ s OrdSetID=$g(%request.Data("OrdSetID",1))
+</Script>
+
+<frameset cols="520,140,*">
+	<frame name="LeftFeeList" src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPEFeeListNew&PreAudits=#(AuditID)#&SplitType=#(SplitType)#&ARCIMID=#(ARCIMID)#&OrdSetID=#(OrdSetID)#" frameborder=0>
+	<frameset rows="120,*">
+	<frame name="DHCPEMove1" src="" frameborder=0>	
+	<frame name="DHCPEMove" src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPEMove&SplitType=#(SplitType)#" frameborder=0>	
+	</frameset>
+	<frame name="RightFeeList" src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPEFeeListNew&PreAudits=#(ToAuditID)#&SplitType=#(SplitType)#" frameborder=0>
+</frameset>
+<noframes>
+	<body>
+	<p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+	</body>
+</noframes>
+</HTML>

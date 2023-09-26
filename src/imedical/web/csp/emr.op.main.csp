@@ -1,0 +1,258 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<html>
+    <head>
+        <title>门诊电子病历</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        
+        <!--南方医院-->
+        <!--link rel="stylesheet" type="text/css" href="../skin/default/css/websys.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui-big.css" /-->
+        <!--正常项目-->
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.gh-buttons.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.main.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/tool/ztree/css/zTreeStyle/zTreeStyle.css" />
+        
+        <script type="text/javascript" src="../scripts/websys.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/ztree/js/jquery.ztree.all-3.5.js"></script>
+        
+    </head>        
+    <body ondragstart="return false"  class="easyui-layout">    
+        <div id="patientInfo" data-options="region:'north',border:false" style="height:1px;overflow:hidden;background-color:#F6F6F6;font-weight:bold;font-size:22px;margin:0px;">
+          </div>    
+            
+        <div id="emrEditor" class="easyui-panel" data-options="region:'west',border:false,noheader:true,split:true,collapsed:false" style="width:700px;">
+            <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                
+                <div id="editor" data-options="region:'center',border:false" style="overflow:hidden;">
+                    <!--编辑器emr.op.editor.csp-->
+                    <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>    
+                </div>
+                <!--按钮-->
+                <div id="pnlButton" data-options="region:'north',border:false" style="width:100%;height:38px;padding-left:6px;padding-right:5px;">
+                    <span id="hiddenSpan" style="height:1px;width:1px;border:0px"/>
+                        <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px"/>
+                    </span>
+                </div>
+                <!---->
+                <div class="easyui-layout" data-options="region:'south',border:false" style="width:100%;height:30px">
+                    <div class="easyui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;">
+                        <div id="tmplsTabs" class="easyui-tabs" data-options="fit:true,border:false,plain:true,tabPosition:'bottom',justified:true,narrow:true,pill:true" style="">
+                        </div>
+                    </div>
+                    <table id="msgTable" class="right" style="width:300px;height:100%;table-layout:fixed;display:none;" border=0 cellspacing=0 cellpadding=1> 
+                        <tr> 
+                            <td id="msgtd" style="vertical-align:middle;background-color:red;text-align:center;font-family:MicrosoftYaHei;font-size:120%;color:black;display:inline-block"></td> 
+                        </tr> 
+                    </table>
+                </div>            
+            </div>
+        </div>
+        
+        <div class="easyui-layout" data-options="region:'center',border:false" style="overflow:hidden;">
+            <div class="easyui-panel" data-options="region:'center',border:false,fit:true" style="overflow:hidden;">
+                <div id="res_region" class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                    <div id="histools" class="easyui-panel" data-options="region:'south',border:false" style="height:300px">
+                        <table id="hisToolTable" style="width:100%;table-layout:fixed;background:#008b8b" border=0 cellspacing=1 cellpadding=0>
+                        </table>                
+                    </div>
+                    <div class="easyui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+                        <div id="dataTabs" class="easyui-tabs" data-options="fit:true,border:false,tabPosition:'top',headerWidth:'70'" style="">
+                        </div>
+                    </div>
+                    <div id="pnlResScale" class="easyui-panel" data-options="region:'north',border:false" style="overflow:hidden;height:35px">
+                        <a href="#" id="btnScale7" rate="0.618" class="button small">7:3</a>
+                        <a href="#" id="btnScale5" rate="0.5" class="button small">5:5</a>
+                        <a href="#" id="btnScale3" rate="0.382" class="button small">3:7</a>
+                        <a href="#" id="btnScale1" rate="0.1" class="button small">1:9</a> 
+                        <label style="margin-left:3px;margin-top:8px;font-family:微软雅黑;font-size:16px;display:inline-block;">症状:</label>
+                        <input id="disease" style="font-size:16px;"/>
+                        <!--病种的下拉菜单-->
+                        <div id="combopanel" class="easyui-layout" data-options="border:false,fit:true" style="font-family:微软雅黑;overflow:hidden;width:100%;height:100%;">
+                            <div data-options="region:'north',border:false" style="margin-top:2px;width:100%;height:45%;overflow:hidden;">
+                                <span style="float:left;vertical-align:middle;margin-left:3px;">
+                                    <div style="font-size:16px;">代码:<input id="diseaseCode" class="easyui-textbox" style="width:140px;height:20px;margin:1px 3px 3px;" /></div>
+                                    <div style="font-size:16px;">描述:<input id="diseaseDesc" class="easyui-textbox" style="width:140px;height:20px;margin:0px 3px;" /></div>
+                                </span>
+                                <span style="vertical-align:middle;">
+                                    <a href="#" id="btnSearchDisease" class="easyui-linkbutton" style="margin:10px 0 0 20px;">筛选</a>
+                                </span>
+                            </div>
+                            <div data-options="region:'center',border:false" style="margin-top:5px;width:100%;height:55%;overflow:auto;border-top-style:solid;border-top-width:1px;border-top-color:#C8CAD0;">
+                                <ul id="diseasetree"></ul>
+                            </div>
+                        </div>
+                        <a href="#" id="btnRefDisease" class="easyui-linkbutton" style="font-family:微软雅黑;vertical-align:middle;margin:1px 0 0 3px;">引用</a>
+                    </div> 
+                </div>
+            </div>
+        </div>
+               
+    </div>
+    <script language="cache" runat="server">
+    
+        s CAServicvice=""
+        s IsCAON=##Class(CA.DigitalSignatureService).IsCAON()
+        s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        s HospitalName=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HospitalName")
+
+        s:((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1") CAServicvice="1"   
+    
+        s patientID = $Get(%request.Data("PatientID",1),"")
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s mradm = ""
+        s admType = ""
+        s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+        s:(episodeID'="") admType=$p($g(^PAADM(episodeID)),"^",2)
+        s:((episodeID'="")&&(patientID="")) patientID=$p($g(^PAADM(episodeID)),"^",1)
+        
+        s id = $Get(%request.Data("id",1),"")
+        s chartItemType = $Get(%request.Data("chartItemType",1),"")
+        s pluginType = $Get(%request.Data("pluginType",1),"")
+        s emrDocId = $Get(%request.Data("emrDocId",1),"")
+        s url = $Get(%request.Data("url",1),"")
+        
+        s sessionID = %session.SessionId    
+        s userCode = %session.Get("LOGON.USERCODE")
+        s userName = %session.Get("LOGON.USERNAME")
+        s userID = %session.Get("LOGON.USERID")
+        s ssgroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+        s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+        
+        s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+        s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")    
+        s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+        s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+        s MessageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("MessageScheme","")
+        s isShowPatInfo=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isShowPatInfo","N")
+        s useResWindowHotkey=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("useResWindowHotkey","N")
+        s OPAutoSave=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPAutoSave","updateInsByEmr,openUnitlink")
+        s isAutoSelectTemplate=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isAutoSelectTemplate","N")    
+        s requiredFlag = ##Class(EMRservice.SystemParameter).GetOPRequiredFlag()        
+        s ReturnTemplateIDs = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ReturnTemplateIDs")        
+        s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
+        
+        s firstTmpl = ##Class(EMRservice.BL.opInterface).GetFirstTmpl(userLocID, ssgroupID, episodeID, userID)
+        s savedRecords = ##Class(EMRservice.Ajax.opInterface).getSavedRecords(episodeID, userLocID, ssgroupID)
+        s OPEmrButtons = ##Class(EMRservice.BL.opInterface).getOPEmrButtons()
+        s OPHisTools = ##Class(EMRservice.BL.opInterface).GetHisTools()
+        s OPResource = ##Class(EMRservice.BL.opInterface).GetOPResource("Panel", "main")
+        s patInfoBar = ""
+        s:(isShowPatInfo="Y") patInfoBar = ##Class(EMRservice.BL.opInterface).GetPatientInfo(patientID,episodeID)
+        s OPDisplay = ##Class(EMRservice.BL.BLUserPageConfig).GetOPDisplay(userID, userLocID)
+        s OPHeight = ##Class(EMRservice.SystemParameter).GetOPheigh()
+        s:(OPHeight = "") OPHeight = "38"
+        s lockWarning = ##Class(EMRservice.BL.opInterface).emrEntryLock(episodeID, sessionID)
+        s resTabPosition = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("resTabPosition","top")
+        
+        s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsSetToLogOP","N")
+        s isDirectSignOP = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isDirectSignOP","Y")
+        d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS()
+		s Allergy=""
+		s AllergyLen = 0
+		s:patientID'="" Allergy = ##class(EPRservice.HISInterface.PatientInfoAssist).EPRGetAllergy(patientID)
+        s:Allergy'="" AllergyLen = $L(Allergy,",")
+		s hospitalID = %session.Get("LOGON.HOSPID")
+		s escapeRevokeSignDocID = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EscapeRevokeSignDocID")
+    </script>
+    
+    <script language="javascript">
+        var TAG = "main";    
+        var argConnect = {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"};
+
+        var patInfo = {
+            SessionID: "#(sessionID)#",
+            PatientID: "#(patientID)#",
+            EpisodeID: "#(episodeID)#",
+            MRadm: "#(mradm)#",
+            admType: "#(admType)#",
+            UserID: "#(userID)#",
+            UserCode: "#(userCode)#",
+            UserName: "#(userName)#",
+            SsgroupID: "#(ssgroupID)#",
+            UserLocID: "#(userLocID)#",
+            UserLocCode: "#(userLocCode)#",
+            UserLocName: "#(userLocName)#",
+            DiseaseID: "",
+            IPAddress: "",
+            SecCode: "",
+			HospitalID: '#(hospitalID)#'
+        };                
+                    
+        var sysOption = {
+            pluginUrl : "#(pluginUrl)#",
+            setDefaultFontStyle : "#(setDefaultFontStyle)#",
+            pluginType : "#(pluginType)#",                
+            argConnect : {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"},
+            CAServicvice : '#(CAServicvice)#',
+            messageScheme : $.parseJSON("#(MessageScheme)#".replace(/\'/g, "\"")),
+            isShowPatInfo : '#(isShowPatInfo)#',
+            useResWindowHotkey : '#(useResWindowHotkey)#',
+            OPAutoSave : '#(OPAutoSave)#',
+            requiredFlag : $.parseJSON("#(requiredFlag)#".replace(/\'/g, "\"")),
+            isAutoSelectTemplate : '#(isAutoSelectTemplate)#',
+            ReturnTemplateIDs : '#(ReturnTemplateIDs)#',
+            isRevokeSign : '#(isRevokeSign)#',
+            IsSetToLog : '#(IsSetToLog)#',
+            ResTabPosition : '#(resTabPosition)#',
+            isDirectSignOP : '#(isDirectSignOP)#',
+			escapeRevokeSignDocID : '#(escapeRevokeSignDocID)#'
+        };
+        
+        var envVar = {
+            readonly : '',
+            firstTmpl : $.parseJSON('#(firstTmpl)#'),
+            savedRecords : $.parseJSON('#(savedRecords)#'),
+            opEmrButtons : '#(OPEmrButtons)#',
+            opHisTools : $.parseJSON("#(OPHisTools)#".replace(/\'/g, "\"")),
+            opResource : $.parseJSON("#(OPResource)#".replace(/\'/g, "\"")),
+            patInfoBar : '#(patInfoBar)#',
+            docContext : null,
+            OPDisplay : parseFloat('#(OPDisplay)#'),
+            OPHeight : '#(OPHeight)#',
+            lockWarning : '#(lockWarning)#'
+        };
+		var AllergyLen ='#(AllergyLen)#';
+		var param="";
+    </script>
+    
+    <script language="cache" runat="server">        
+        d ##Class(EMRservice.BL.opInterface).doBeforePageLoad(episodeID)
+        if CAServicvice="1"
+        { 
+            d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+            d ##Class(EMRservice.OutputHtml).OutPutopkeysign(HospitalName)
+        } 
+    </script>
+    
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>    
+    <script type="text/javascript" src="../scripts/emr/js/op.toolbar.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.histools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.quality.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.privilege.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/iEmrPluginEx.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.template.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.editor.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.disease.js"></script>    
+    <script type="text/javascript" src="../scripts/emr/js/op.hisLog.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/externImage.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.main.js"></script>
+	<script language="cache" runat="server">
+		d ##class(EMRservice.BL.BLCDSSService).getCDSSUrl()
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+        <link rel="stylesheet" type="text/css" href="../scripts/nurse/ext-3.1.1/resources/css/ext-all.css" />
+        <!-- GC -->
+        <!-- LIBS -->
+        <script type="text/javascript" src="../scripts/nurse/ext-3.1.1/adapter/ext/ext-base.js"></script>
+		<script type="text/javascript" src="../scripts/nurse/ext-3.1.1/ext-all.js"></script>
+        <!-- ENDLIBS -->
+        <script type="text/javascript" src="../scripts/nurse/ext-3.1.1/src/locale/ext-lang-zh_CN.js"></script>
+		
+
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<DIV id="PageContent">
+<DIV id="hello">
+</DIV>
+<SERVER>
+ s GetLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getloc"))
+ s GetSeatCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.GetSeatMap"))
+ s savecode=##Class(%CSP.Page).Encrypt($lb("User.DHCNurSySeat.SaveLocation"))
+ s seatinfo=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getseatinfo"))
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+</SERVER>
+<TRAK:APPLET>
+
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+</SERVER>
+</DIV>
+<SCRIPT Language="Javascript">
+	var getloc="#(GetLoc)#";
+	var GetSeatCode="#(GetSeatCode)#";
+	var savecode="#(savecode)#";
+	var seatinfo="#(seatinfo)#";
+	var reqLoc="#(%request.Get("loc"))#";
+</SCRIPT>
+<script type="text/javascript" src="../scripts/nurse/nursy/DHCNurMzSySeatMap.js"></script><!-- Put your page Title here -->
+</BODY>
+</HTML>

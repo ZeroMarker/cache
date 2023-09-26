@@ -1,0 +1,437 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+
+	if "selDimPro"=action {					//选择维度属性
+		
+		set ItemType = $g(%request.Data("ItemType",1))
+		//1、得到指定维度的维度属性
+		set sql="select dimpro_code,dimpro_name from DHCWL_MKPI.DHCWLDimProperty WHERE DimPro_DimDr IN (select id from DHCWL_MKPI.DHCWLMKPIDimType WHERE KDT_Code='"_ItemType_"')"
+
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+
+		//2、组装拼接返回数据
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("dimCode"_deli_"dimDesc","result","root",deli)
+
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			s recCnt=recCnt+1
+			//3、得到维度代码和名称
+			s code=rs.Data("DimPro_Code")
+			s name=rs.Data("DimPro_Name")
+			//4、组装拼接返回数据
+			d json.Insert("'"_code_"'"_deli_"'"_name_"'")
+		}
+	
+		d rs.Close()
+		
+		//5、向前台页面返回数据
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+
+	}elseif "addRpt"=action {			//添加或更新报表
+		s ID=$g(%request.Data("ID",1))
+		s RptCode=$g(%request.Data("RptCode",1))
+		s RptDesc=$g(%request.Data("RptDesc",1))
+		s RptType=$g(%request.Data("RptType",1))
+		s RptDimProCode=$g(%request.Data("RptDimProCode",1))
+
+		if $g(ID)="" {	//1、如果ID为空，进行添加操作
+			TSTART
+			s parentModuleCode="root.CRZZBB"	//默认的模块与报表的报表编码
+			//1.1、在模块与报表中插入报表数据
+			&sql(insert into DHCWL_MKPI.MMgrRptCfg (rptCfg_code,rptCfg_desc,RptCfg_TreeCode,RptCfg_Name) values (:RptCode,:RptDesc,:parentModuleCode,:RptDesc))
+			if SQLCODE'=0 {
+				w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"	
+				Trollback
+			}else {
+				//1.2、向报表中插入数据
+				&sql(insert into DHCWL_MRIPDay.Rpt (Rpt_Code,Rpt_Desc,Rpt_MMgrCode,Rpt_Type,Rpt_DimProCodes) 
+				values (:RptCode,:RptDesc,:RptCode,:RptType,:RptDimProCode))
+				i SQLCODE'=0	{
+					Trollback
+					w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"
+				}else {
+					i $l(RptDimProCode,";")>3 {
+						Trollback
+						w "{success:true,tip:'操作失败:维度属性最大不能超过3个！',SQLCODE:"_SQLCODE_"}"
+					}else{
+						TCOMMIT
+						w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+					}
+				}
+			}
+			
+		} else {		//2、如果ID不为空，进行更新操作
+			TSTART
+			s parentModuleCode="root.CRZZBB"
+			//2.1、更新模块与报表中的报表的描述
+			s sqlFlag=0
+			&sql(update DHCWL_MKPI.MMgrRptCfg set rptCfg_desc=:RptDesc,RptCfg_Name=:RptDesc where RptCfg_Code=:RptCode and RptCfg_TreeCode=:parentModuleCode)
+			i SQLCODE'=0 s sqlFlag=1
+			//2.2、根据新的维度、维度属性，更新数据集中的取数规则  成功返回0
+			s flag=##class(DHCWL.MRIPDay.MripDayService).UpdateRulelist(parentModuleCode,RptCode,RptType,RptDimProCode)
+			i flag'=0 s sqlFlag=1
+			if sqlFlag'=0 {
+				w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"	
+				Trollback
+			}else {
+				//&sql(update DHCWL_MRIPDay.Rpt set Rpt_Desc=:RptDesc,Rpt_Type=:RptType,Rpt_DimProCodes=:RptDimProCode where Rpt_RowID=:ID) 
+				//2.3、更新报表的描述，维度属性
+				&sql(update DHCWL_MRIPDay.Rpt set Rpt_Desc=:RptDesc,Rpt_DimProCodes=:RptDimProCode where Rpt_RowID=:ID) 
+				i SQLCODE'=0	{
+					Trollback
+					w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"
+				}else {
+					i $l(RptDimProCode,";")>3 {
+						Trollback
+						w "{success:true,tip:'操作失败:维度属性最大不能超过3个！',SQLCODE:"_SQLCODE_"}"
+					}else{
+						TCOMMIT
+						w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+					}
+					
+				}
+			}
+		}
+		
+		
+
+	}elseif "search"=action {	//查询报表数据
+		B
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) 
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		
+		//1、组合查询条件
+		set sql="select Rpt_RowID,Rpt_Code,Rpt_Desc,Rpt_MMgrCode,Rpt_Type,Rpt_DimProCodes from DHCWL_MRIPDay.Rpt"
+		
+		s rptCode=$g(%request.Data("RptCode",1))
+		s rptDesc=$g(%request.Data("RptDesc",1))
+		s rptType=$g(%request.Data("RptType",1))		
+		s rptDimProCodes=$g(%request.Data("RptDimProCodes",1))
+		s sqlCon=""
+		if rptCode'=""	{
+			if sqlCon="" s sqlCon=" Rpt_Code='"_rptCode_"'"
+			e  s sqlCon=sqlCon_" and Rpt_Code='"_rptCode_"'"
+		}
+		if rptDesc'="" {
+			if sqlCon="" s sqlCon=" Rpt_Desc like '%"_rptDesc_"%'"	
+			e  s sqlCon=sqlCon_" and Rpt_Desc like '%"_rptDesc_"%'"	
+		}
+		if rptType'="" {
+			if sqlCon="" s sqlCon=" Rpt_Type='"_rptType_"'"
+			e  s sqlCon=sqlCon_" and Rpt_Type='"_rptType_"'"
+		}		
+		if rptDimProCodes'="" {
+			if sqlCon="" s sqlCon=" Rpt_DimProCodes='"_rptDimProCodes_"'"
+			e  s sqlCon=sqlCon_" and Rpt_DimProCodes='"_rptDimProCodes_"'"
+		}	
+			
+		if sqlCon'="" s sql=sql_" where "_sqlCon
+
+		//
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+
+		//2、组装拼接返回数据
+		s deli=","   	
+        s json=##class(DHCWL.util.Json).Json("ID"_deli_"RptCode"_deli_"RptDesc"_deli_"RptType"_deli_"RptDimProCode"_deli_"RptMMgrCode"_deli_"RptItemDescs"_deli_"DetailRptDesc","result","root",deli)
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			s recCnt=recCnt+1
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+		
+			s rptRowID=rs.Data("Rpt_RowID")
+			s rptCode=rs.Data("Rpt_Code")
+			s rptDesc=rs.Data("Rpt_Desc")
+			s rptType=rs.Data("Rpt_Type")
+			s rptMMgrCode=rs.Data("Rpt_MMgrCode")
+			s rptDimProCodes=rs.Data("Rpt_DimProCodes")
+			//s rptItemDescs=""
+			s rptItemDescs=##class(DHCWL.MRIPDay.MripDayService).GetRptItemDesc(rptRowID)		//得到报表所包含的统计项的描述
+			s detailRptDesc=##class(DHCWL.MRIPDay.MripDayService).GetDetailRptDesc(rptRowID)	//得到报表下的明细报表的描述
+
+        	//s json=##class(DHCWL.util.Json).Json("ID"_deli_"RptCode"_deli_"RptDesc"_deli_"RptType"_deli_"RptDimProCode"_deli_"RptMMgrCode"_deli_"RptItemDescs"_deli_"DetailRptDesc","result","root",deli)
+			//3、组装拼接返回数据
+			d json.Insert(""_rptRowID_""_deli_"'"_rptCode_"'"_deli_"'"_rptDesc_"'"_deli_"'"_rptType_"'"_deli_"'"_rptDimProCodes_"'"_deli_"'"_rptMMgrCode_"'"_deli_"'"_rptItemDescs_"'"_deli_"'"_detailRptDesc_"'")
+		}
+	
+		d rs.Close()
+		
+		//4、向前台页面返回数据
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"			
+		
+		
+
+	}elseif "addRptItem"=action {			//向报表中增加报表项  
+		b
+		s RptItemOPTLItemDR=$g(%request.Data("RptItemOPTLItemDR",1))
+		//s RptItemOrder=$g(%request.Data("RptItemOrder",1))
+		s RptItemRptDR=$g(%request.Data("RptItemRptDR",1))
+		s RptItemCode=$g(%request.Data("RptItemCode",1))
+		s RptItemDesc=$g(%request.Data("RptItemDesc",1))
+		s aryRptItemOPTLItemDRs=$g(%request.Data("aryRptItemOPTLItemDRs",1))
+		s rptMMgrCode=""
+		s rptType=""
+		s dimProCodes=""
+		b
+		//1、同一报表下，不允许有报表项编码相同的多个报表项。不过这一步似乎有些多余。前台页面
+		//		不会传入与已有报表项编码相同的报表项编码
+		s rptItemDR=$o(^DHCWL.MRIPDay.RptItemI("RptItemRptDRCodeIndex",RptItemRptDR,RptItemCode,""))
+		w rptItemDR
+		i rptItemDR'="" d
+		.w "{success:true,tip:'操作失败！',SQLCODE:''}"
+		q:rptItemDR'=""
+		//2、得到报表的树形编码，报表类型，报表维度属性代码。这3个数据用来生成模块与报表中的数据集
+		&sql(select Rpt_MMgrCode ,Rpt_Type,Rpt_DimProCodes into :rptMMgrCode,:rptType,:dimProCodes from DHCWL_MRIPDay.Rpt where Rpt_RowID=:RptItemRptDR)
+		TSTART
+		//3、向插入报表项数据
+		&sql(insert into DHCWL_MRIPDay.RptItem (RptItem_Code,RptItem_Desc,RptItem_RptDR,RptItem_OPTLItemDR)	values (:RptItemCode,:RptItemDesc,:RptItemRptDR,:RptItemOPTLItemDR))
+		if SQLCODE'=0 {
+			trollback
+			w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"
+		}
+		else {
+			s successFlag=1
+
+			s count=$l(aryRptItemOPTLItemDRs,",")
+			
+			//4、更新报表项的顺序
+			for i=1:1:count {
+				s OPTLItemDR=$p(aryRptItemOPTLItemDRs,",",i)
+				if $g(OPTLItemDR)="" continue
+				&sql(update DHCWL_MRIPDay.RptItem set RptItem_Order=:i where RptItem_RptDR=:RptItemRptDR and RptItem_OPTLItemDR=:OPTLItemDR)
+				if SQLCODE'=0 {
+					Trollback
+					w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"
+					s successFlag=0
+					q 
+					
+				}
+			}
+			
+			if successFlag=1 {
+				//5、下面处理数据集和指标
+				s treeCode="root.CRZZBB"		//默认模块树形编码
+		
+				//得到统计项类型：KPIItem-指标类统计项;CoustomItem-自定义统计项;CalItem-计算类统计项
+				s OPTLItemType=##class(DHCWL.MRIPDay.MripDayService).GetOPTLItemType(RptItemOPTLItemDR)
+				
+				if OPTLItemType="KPIItem" {
+					//5.1、得到统计项对应的KPI和日期敏感度，维度
+					s KPICode=""
+					s dateSec=""
+					s dimCode=""
+					//判断指标统计项是否配置完整
+					s statue=##class(DHCWL.MRIPDay.MripDayService).GetKPIItemKPICode(RptItemOPTLItemDR,rptType,.KPICode,.dateSec,.dimCode)
+					if statue=100 {
+						w "{success:true,tip:'ok',TipMSG:'被操作的统计项配置信息不完整，请先在 统计项配置 中配置信息！'}"	
+						trollback
+						q
+					}
+					//5.2、得到对应的数据集
+					s datasetDR=##class(DHCWL.MRIPDay.MripDayService).GetDataset(treeCode,rptMMgrCode,dateSec)
+					//5.3、写数据集的取数规则
+					if $g(datasetDR)="" {
+						//5.3.1添加	
+						s dsCode=""
+						if dateSec="begin" {s dsCode="ds1"}
+						elseif dateSec="end" {s dsCode="ds2"}
+						elseif dateSec="all" {s dsCode="ds3"}
+
+						s dimProRule=""
+						s proCount=$l(dimProCodes,";")
+						for proIndex=1:1:proCount {
+							s proCode=$p(dimProCodes,";",proIndex)
+							s proCode=dimCode_"."_proCode
+							if dimProRule'="" s dimProRule= dimProRule_"^"
+							s dimProRule=dimProRule_proCode
+						}
+						
+						s ruleList=KPICode
+						if dimProRule'="" s ruleList=ruleList_":"_dimProRule
+						s ruleList=$TRANSLATE(ruleList,"^","%")
+						
+						&sql(insert into DHCWL_MKPI.MMgrDatasetCfg (DatasetCfg_Code,DatasetCfg_desc,DatasetCfg_TreeCode,DatasetCfg_RptCode,DatasetCfg_RuleList) values (:dsCode,:dsCode,:treeCode,:rptMMgrCode,:ruleList))
+						i +$g(SQLCODE)=0 {
+							w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+							TCOMMIT
+						}
+						else  {
+							w "{success:true,tip:'操作失败',SQLCODE:"_SQLCODE_"}"	
+							trollback
+						}	
+					}else{
+						//5.3.2更新
+						s ruleList=$lg(^DHCWL.MKPI.MMgrDataSetCfgD(datasetDR),5)
+						if ruleList'="" s ruleList=ruleList_","
+						
+						
+						s dimProRule=""
+						s proCount=$l(dimProCodes,";")
+						for proIndex=1:1:proCount {
+							s proCode=$p(dimProCodes,";",proIndex)
+							s proCode=dimCode_"."_proCode
+							if dimProRule'="" s dimProRule= dimProRule_"^"
+							s dimProRule=dimProRule_proCode
+						}
+						
+						s ruleList=ruleList_KPICode
+						if dimProRule'="" s ruleList=ruleList_":"_dimProRule
+						s ruleList=$TRANSLATE(ruleList,"^","%")
+						&sql(update DHCWL_MKPI.MMgrDatasetCfg set DatasetCfg_RuleList=:ruleList where DatasetCfg_RowID=:datasetDR)
+						i +$g(SQLCODE)=0 {
+							w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+							tcommit
+						}
+						else {
+							 w "{success:true,tip:'操作失败!',SQLCODE:"_SQLCODE_"}"
+							 trollback
+						}		
+					
+					}
+				
+				}elseif OPTLItemType="CustomItem" {
+					//判断自定义统计项是否配置完整
+					s statue=##class(DHCWL.MRIPDay.MripDayService).GetCustomItemID(RptItemOPTLItemDR,rptType,.customItemID)
+					if statue=100 {
+						w "{success:true,tip:'ok',TipMSG:'被操作的统计项配置信息不完整，请先在 统计项配置 中配置信息！'}"	
+						trollback
+						q
+					}else{
+						tcommit	
+						w "{success:true,tip:'ok'}"
+					}					
+
+				}else{
+					//计算类统计项。
+					tcommit	
+					w "{success:true,tip:'ok'}"
+				}
+				
+			}
+		
+		}
+
+	}elseif "selRptItem"=action {			//得到报表的已选报表项
+		s RptItemRptDR=$g(%request.Data("RptItemRptDR",1))
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) ;$g(%request.Data("pageSize",1))
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		
+		//set sql="select OPTLItem_RowID,OPTLItem_Code,OPTLItem_Desc from DHCWL_MRIPDay.OPTLItem where OPTLItem_RowID in ( select RptItem_OPTLItemDR from DHCWL_MRIPDay.RptItem where RptItem_RptDR="_RptItemRptDR_")"
+		//1、得到报表的已选报表项的ID,编码，描述，按报表项的顺序排列
+		set sql="select OPTLItem_RowID,OPTLItem_Code,OPTLItem_Desc from DHCWL_MRIPDay.OPTLItem t1, DHCWL_MRIPDay.RptItem t2 where t1.OPTLItem_RowID = t2.RptItem_OPTLItemDR  AND t2.RptItem_RptDR="_RptItemRptDR_"    ORDER BY t2.RptItem_Order"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+
+		//2、组装拼接返回数据
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("ID"_deli_"ItemCode"_deli_"ItemDesc","result","root",deli)
+
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			B
+			s recCnt=recCnt+1
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+	
+			s rowid=rs.Data("OPTLItem_RowID")
+			s code=rs.Data("OPTLItem_Code")
+			s desc=rs.Data("OPTLItem_Desc")
+			d json.Insert(""_rowid_""_deli_"'"_code_"'"_deli_"'"_desc_"'")
+		}
+	
+		d rs.Close()
+		
+		//3、把数据写回前台页面
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"				
+		
+
+	}elseif "delRptItem"=action {	//删除报表项
+		s RptItemOPTLItemDR=$g(%request.Data("RptItemOPTLItemDR",1))
+		s RptItemRptDR=$g(%request.Data("RptItemRptDR",1))
+		s aryRptItemOPTLItemDRs=$g(%request.Data("aryRptItemOPTLItemDRs",1))
+		TSTART
+		//删除报表项
+		s result=##class(DHCWL.MRIPDay.MripDayService).DelRptItem(RptItemRptDR,RptItemOPTLItemDR,aryRptItemOPTLItemDRs)
+		if result=0 {
+			tcommit
+			w "{success:true,tip:'ok',ROWID:''}"
+		}else{
+			trollback
+			w "{success:true,tip:'操作失败！',SQLCODE:''}"
+		}
+		
+	}elseif "updateItemOrder"=action {		//更新报表项的顺序
+		s RptItemRptDR=$g(%request.Data("RptItemRptDR",1))
+		s aryRptItemOPTLItemDRs=$g(%request.Data("aryRptItemOPTLItemDRs",1))
+		
+		s successFlag=1
+		TSTART
+		s count=$l(aryRptItemOPTLItemDRs,",")
+
+		//更新报表项的顺序
+		for i=1:1:count {
+			s OPTLItemDR=$p(aryRptItemOPTLItemDRs,",",i)
+			&sql(update DHCWL_MRIPDay.RptItem set RptItem_Order=:i where RptItem_RptDR=:RptItemRptDR and RptItem_OPTLItemDR=:OPTLItemDR)
+			if SQLCODE'=0 {
+				Trollback
+				w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"
+				s successFlag=0
+				q 
+	
+			}
+		}
+		
+		if successFlag=1 {
+			tcommit
+			w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+		}
+		
+	}elseif "deleteRpt"=action {	//删除报表
+		b
+		tstart
+		s rptDR=$g(%request.Data("rptDR",1))
+		s result=##class(DHCWL.MRIPDay.MripDayService).DelRpt(rptDR)
+		if result=0 {
+			tcommit
+			w "{success:true,tip:'ok',ROWID:''}"
+		}else{
+			trollback
+			w "{success:true,tip:'操作失败！',SQLCODE:''}"
+		}
+	}
+</script>

@@ -1,0 +1,69 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	
+	s bfyear=$Get(%request.Data("bfyear",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s year=$Get(%request.Data("year",1))
+	s Year=$Get(%request.Data("Year",1))
+	s Name=$Get(%request.Data("Name",1))
+	s Code=$Get(%request.Data("Code",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	
+    s bsmyear=$Get(%request.Data("bsmyear",1))
+    s bsmcode=$Get(%request.Data("bsmcode",1))
+    s bsmname=$Get(%request.Data("bsmname",1))
+    s bsmitemcode=$Get(%request.Data("bsmitemcode",1))
+    s bsmorderby=$Get(%request.Data("bsmorderby",1))
+    s bsmischeck=$Get(%request.Data("bsmischeck",1))
+    s bsmfile=$Get(%request.Data("bsmfile",1))
+    s bsmishelpedit=$Get(%request.Data("bsmishelpedit",1))
+    s bsmissys=$Get(%request.Data("bsmissys",1))
+    s bsachkstep=$Get(%request.Data("bsachkstep",1))
+    s bmsuupschendr=$Get(%request.Data("bmsuupschendr",1))
+    s bidname=$Get(%request.Data("bidname",1))
+    s bcfmchkflowname=$Get(%request.Data("bcfmchkflowname",1))
+    s bsarstepno=$Get(%request.Data("bsarstepno",1))
+    s basriscurstep=$Get(%request.Data("basriscurstep",1))
+	s bsarchercker=$Get(%request.Data("bsarchercker",1))
+    
+	
+	//s UserID=^dhcpaUsertemp("LOGON.USERID")
+	s UserID=$Get(%request.Data("UserID",1))
+	
+	
+	i action="list" d
+	.s a=UserID
+	.w ##class(herp.budg.udata.uBudgSchemAuditWideHos).ListMain(hospid,Year,UserID,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgFactYear).UpdateRec(rowid,bfincreaserate)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditWideHos).YearList(start,limit,str)
+	
+	i action = "bsmnamelist" d
+	.w ##class(herp.budg.udata.uBudgFactYear).BSMNameList(start,limit,str)
+
+</script>

@@ -1,0 +1,169 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1)) 
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1)) 
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+	s GroupId=$G(%session.Data("LOGON.GROUPID"))
+	s LocId=$G(%session.Data("LOGON.CTLOCID"))
+	s UserId=$G(%session.Data("LOGON.USERID"))
+	s File=$G(%request.MimeData("files",1))
+
+  i Action="saveMCSA" d
+  .s m=$g(%request.Data("mc",1))
+  .s d=$g(%request.Data("sa",1))
+  .s ret=##class(web.DHCSTM.DHCItmManfCertSA).Save(m,d)
+  .i ret=0 d
+  ..w "{success:'true',info:'"_ret_"'}"
+  .e  d
+  ..w "{success:'false',info:'"_ret_"'}"
+  
+  i Action="querySAByManf"  d
+  .s manf=$g(%request.Data("manf",1))
+  .s cert=$g(%request.Data("cert",1))
+  .s vendor=$g(%request.Data("vendor",1))
+  .s inci=$g(%request.Data("inci",1))
+  .w ##class(web.DHCSTM.DHCItmManfCertSA).jsManfChains(manf,cert,vendor,inci,Start,Limit)
+  
+  i Action="querySAByInci"  d
+  .s inci=$g(%request.Data("inci",1))
+  .s result=##class(web.DHCSTM.DHCItmManfCertSA).jsInciSA(inci)
+ 
+  //供应链下的供货品种列表
+  i Action="mcsaItmList"  d
+  .s sa=$g(%request.Data("mcsa",1))
+  .w ##class(web.DHCSTM.DHCItmManfCertSA).jsSAItmList(sa)
+  
+  //检索厂商下的注册证
+  i Action="QueryMcListByManf"  d
+  .s manf=$g(%request.Data("manf",1))
+  .s result= ##class(web.DHCSTM.DHCItmManfCertSA).jsIMCByManf(manf)
+  .i result = "" d
+  ..w "{results:0,rows:[]}"
+  .e  d
+  ..w result  
+  
+   //保存主表数据
+   i Action="saveMC"  d
+   .s mcData=$g(%request.Data("mcData",1))
+   .s ret=##class(web.DHCSTM.DHCItmManfCertSA).SaveMC(mcData)
+   .i ret=0 d
+   ..w "{success:'true',info:'"_ret_"'}"
+   .e  d
+   ..w "{success:'false',info:'"_ret_"'}"
+  
+   //保存子表数据
+   i Action="saveSA"  d
+   .s mc=$g(%request.Data("mc",1))
+   .s data=$g(%request.Data("data",1))
+   .s ret=##class(web.DHCSTM.DHCItmManfCertSA).SaveSA(mc,data)
+   .
+   .i ret=0 d
+   ..w "{success:'true',info:'"_ret_"'}"
+   .e  d
+   ..w "{success:'false',info:'"_ret_"'}"
+  
+   ///根据厂商注册证信息（主表）检索供货授权
+   i Action="querySAByMC"  d
+   .s mc=$g(%request.Data("mc",1))
+   .s result=##class(web.DHCSTM.DHCItmManfCertSA).jsSAByMC(mc)
+   .i result = "" d
+   ..w "{results:0,rows:[]}"
+   .e  d
+   ..w result  
+  
+     i Action="changeSaOfItm"  d
+     .s inciS=$g(%request.Data("inciS",1))
+     .s sa=$g(%request.Data("sa",1))
+     .s ret=##class(web.DHCSTM.DHCItmManfCertSA).ChangeSaOfItm(inciS,sa)
+     .i ret=0 d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_ret_"'}"
+
+  
+      i Action="DelMc"  d
+      .s mc=$g(%request.Data("mc",1))
+      .s ret=##class(web.DHCSTM.DHCItmManfCertSA).DelMC(mc)
+      .i ret=0 d
+      ..w "{success:'true',info:'"_ret_"'}"
+      .e  d
+      ..w "{success:'false',info:'"_ret_"'}"
+      ..
+  
+       i Action="DelSa"  d
+      .s sa=$g(%request.Data("sa",1))
+      .s ret=##class(web.DHCSTM.DHCItmManfCertSA).DelSA(sa)
+      .i ret=0 d
+      ..w "{success:'true',info:'"_ret_"'}"
+      .e  d
+      ..w "{success:'false',info:'"_ret_"'}"
+      ..   
+ 
+ 	 i Action="GetSaPic" d
+ 	 .s sa=$g(%request.Data("sa",1))
+ 	 .w ##class(web.DHCSTM.DHCItmManfCertSAPic).GetSaPic(sa)
+ 	 .
+
+ 	 i Action="MCPic" d
+ 	 .s mc=$g(%request.Data("mc",1))
+ 	 .w ##class(web.DHCSTM.DHCItmManfCertSAPic).MCPic(mc)
+ 	 .
+
+ 	 i Action="SAPic" d
+ 	 .s sa=$g(%request.Data("sa",1))
+ 	 .s ven=$g(%request.Data("ven",1))
+ 	 .s type=$g(%request.Data("type",1))
+ 	 .w ##class(web.DHCSTM.DHCItmManfCertSAPic).SAPic(sa,ven,type)
+ 	 .
+ 
+  	 i Action="uploadMCPic" d
+ 	 .s mc=$g(%request.Data("mc",1))
+ 	 .s type=$g(%request.Data("type",1))
+ 	 .s Param=GroupId_"^"_LocId_"^"_UserId
+ 	 .s result= ##class(web.DHCSTM.DHCItmManfCertSAPic).UploadMCPic(File,Param,mc,type)
+ 	 .
+	 .i result = 0 d
+	 ..w "{success:'true',info:''}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+  	 
+  	 i Action="deleteMCPic" d
+ 	 .s rowid=$g(%request.Data("rowid",1))
+ 	 .s picsrc=$g(%request.Data("picsrc",1))
+ 	 .s Param=GroupId_"^"_LocId_"^"_UserId
+ 	 .s result= ##class(web.DHCSTM.DHCItmManfCertSAPic).DelMCPic(rowid,picsrc,Param)
+	 .i result = 0 d
+	 ..w "{success:'true',info:''}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+
+	 i Action="uploadSAPic" d
+ 	 .s sa=$g(%request.Data("sa",1))
+ 	 .s type=$g(%request.Data("type",1))
+ 	 .s ven=$g(%request.Data("ven",1))
+ 	 .s Param=GroupId_"^"_LocId_"^"_UserId
+ 	 .s result= ##class(web.DHCSTM.DHCItmManfCertSAPic).UploadSAPic(File,Param,sa,ven,type)
+	 .i result = 0 d
+	 ..w "{success:'true',info:''}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+ 	  	 
+   	 i Action="deleteSAPic" d
+ 	 .s rowid=$g(%request.Data("rowid",1))
+ 	 .s result= ##class(web.DHCSTM.DHCItmManfCertSAPic).DelSAPic(rowid)
+	 .i result = 0 d
+	 ..w "{success:'true',info:''}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+	  	 
+ 	 
+ 	 
+</script>

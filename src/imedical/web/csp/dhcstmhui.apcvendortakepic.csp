@@ -1,0 +1,456 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<server>
+ s VendorId=$G(%request.Data("VendorId",1))
+ s typeCode=$G(%request.Data("typeCode",1))
+ s typeDesc=$G(%request.Data("typeDesc",1))
+ s GroupId=$G(%request.Data("GroupId",1))
+ s LocId=$G(%request.Data("LocId",1))
+ s UserId=$G(%request.Data("UserId",1))
+
+</server>
+
+<html XMLNS=TRAK>
+ 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<head>
+<script LANGUAGE=JavaScript>   
+var VendorId=""
+var typeCode="";
+var typeDesc="";
+var GroupId="";
+var LocId="";
+var UserId="";
+var ftpUser=""
+var ftpPass=""
+var ftpPath=""
+var ftpPort="";
+var filePath="";
+
+		
+function start_preview(url)     
+{   
+	ScanCtrl.StartPreview();     
+}   
+
+function stop_preview(url)     
+{   
+	ScanCtrl.StopPreview(); 
+}   
+
+function TakePic(url)     
+{
+
+//	alert('TakePic')
+	var jpgval= 36;
+	//后缀名选择jpg,bmp,png,tif
+	var path;
+	var newFileName=getPicFileName();
+	var bok = 0;
+	// 图像压缩
+	ScanCtrl.SetJpegQuality(jpgval); 
+	ScanCtrl.Scan("C:\\1.jpg")
+	var x=FTPX.FTP(ftpPath,ftpUser,ftpPass,ftpPort, "c:\\1.jpg",filePath+"\\"+newFileName) //\转义字符的问题
+	if(x != true){
+		alert('拍照失败');
+		return;
+	}
+	var ret=#server(web.DHCSTM.APCVendor.InsVendorPic(VendorId,newFileName,typeCode))#;
+	if (ret<0)
+	{ 
+		alert('拍照失败');
+		return;
+	}
+	else
+	{	window.status='拍照成功!';
+		setTimeout('window.status="就绪"',3000);
+		if (document.getElementById("closeConf").checked==true)
+		{
+			window.close();	
+		}
+	}
+}   
+
+function TakePicUpLoad(url)     
+{
+
+var upurl = "http://localhost:8080/TestUploadForScanOCX/fileupload.jsp";
+ScanCtrl.Scan2HttpServer(upurl); 
+　}  
+
+function Property(url)     
+{   
+	ScanCtrl.Property(); 
+　　} 
+
+function deloption()
+{   
+	var obj=document.getElementById("sel").options; 
+	while (obj.length > 0)
+	{
+		obj.options.remove(obj.length - 1);   
+	}   
+}   
+
+function addoption(s)   
+{
+	var obj=document.getElementById("sel").options; 
+	var opt = new Option(s, obj.length ); 
+	obj.options.add(opt);   
+}
+
+function deloption1()
+{   
+	var obj=document.getElementById("sel1").options; 
+	while (obj.length > 0)
+	{
+		obj.options.remove(obj.length - 1);   
+	}   
+}   
+
+function addoption1(s)   
+{
+	var   obj=document.getElementById("sel1").options; 
+	var   opt = new Option(s, obj.length ); 
+	obj.options.add(opt);   
+}
+
+function addoption2(s)   
+{
+	var obj=document.getElementById("sel2").options; 
+	var opt = new Option(s, obj.length ); 
+	obj.options.add(opt);   
+}
+
+function addoption3(s)   
+{
+	var obj=document.getElementById("sel3").options; 
+	var opt = new Option(s, obj.length ); 
+	obj.options.add(opt);   
+}
+
+function addoption4(s)   
+{
+	var obj=document.getElementById("sel4").options; 
+	var opt = new Option(s, obj.length ); 
+	obj.options.add(opt);   
+}
+
+function changeresolution()
+{
+	var num= ScanCtrl.GetResolutionCount();
+	var obj=document.getElementById("sel").options; 
+	var x = obj.selectedIndex;    
+
+	if(x <= num)
+	{
+		ScanCtrl.SetResolution(x);          
+	}
+	else
+	{
+		window.alert("Out of Range"); 
+	}
+}
+
+function contentLoad()
+{
+// 		ScanCtrl.OpenDevice();
+}
+
+function opendevice()
+{
+//	alert('opendevice');
+	var param=GroupId+"^"+LocId+"^"+UserId
+	var ftpconfig=#server(web.DHCSTM.Common.FtpFile.GetFtpConfig(param))# ;
+	var s=ftpconfig.split("^")
+	ftpPath=s[0];
+	ftpUser=s[1];
+	ftpPass=s[2];
+	ftpPort=s[4]
+	filePath=s[3];
+
+	ScanCtrl.StartPreview();
+
+	document.getElementById('sel').length=0;
+	document.getElementById('sel1').length=0;
+	document.getElementById('sel2').length=0;
+	document.getElementById('sel3').length=0;
+	document.getElementById('sel4').length=0;
+	 
+	var num = ScanCtrl.GetResolutionCount();
+	var selindex;
+	var width = ScanCtrl.GetResolutionWidth(0);
+	var height = ScanCtrl.GetResolutionHeight(0);  
+
+	for(i=0;i<num;i++)
+	{
+		var w=ScanCtrl.GetResolutionWidth(i);
+		var h=ScanCtrl.GetResolutionHeight(i);
+		var str=w.toString()+"x"+h.toString();
+		addoption(str);
+
+	}    
+
+	num = ScanCtrl.GetScanSizeCount();
+	if(num == 8)
+	{
+		addoption1("All");
+		addoption1("A3");
+		addoption1("A4");
+		addoption1("A5");
+		addoption1("A6");
+		addoption1("A7");
+		addoption1("名片");
+		addoption1("身份证");
+		addoption1("自定义");
+	}
+	else
+	{
+		addoption1("All");
+		addoption1("A4");
+		addoption1("A5");
+		addoption1("A6");
+		addoption1("A7");
+		addoption1("名片");
+		addoption1("身份证");
+		addoption1("自定义");
+	}
+
+	addoption2("0°");
+	addoption2("90°");
+	addoption2("270°");
+	addoption2("180°");
+
+	addoption3("彩色");
+	addoption3("灰度");
+	addoption3("黑白");
+
+	for(i=1;i<256;i++)
+		addoption4(i);
+	window.status="就绪";
+	
+}
+
+function changescansize()
+{
+	var   num=ScanCtrl.GetScanSizeCount();
+	var   obj=document.getElementById("sel1").options; 
+	var   x = obj.selectedIndex;    
+	if(x<=num)
+	{
+		ScanCtrl.SetScanSize(x);
+	}
+	else{
+		window.alert("Out of  Range");
+	}
+}
+　　     
+function changerotate()
+{
+	var obj=document.getElementById("sel2").options; 
+	var x = obj.selectedIndex;    
+
+	if(x<4)
+	{
+		ScanCtrl.SetVideoRotate(x);
+	}
+	else
+		window.alert("Out of  Range"); 
+}
+	  
+function changecolor()
+{
+	var obj = document.getElementById("sel3").options; 
+	var x = obj.selectedIndex;    
+
+	if(x<3)
+	{
+		ScanCtrl.SetVideoColor(x);
+	}
+	else
+		window.alert("Out of  Range"); 
+}
+	   
+function changethresvalue()
+{
+	var   obj = document.getElementById("sel4").options; 
+	var   x = obj.selectedIndex;    
+
+	if( x < 256 && x > 0 )
+	{
+		ScanCtrl.SetThresVal(x);
+	}
+	else
+		window.alert("Out of Range"); 
+}
+
+function chkautorotate(objcheck)
+{
+		var obj = document.Algorithm.autorotate;
+		var brotate = obj.checked;		
+		
+		ScanCtrl.SetAutoRotate(brotate);
+}
+
+function chkautocrop()
+{
+	var obj = document.Algorithm.autocrop;
+	var bcrop = obj.checked;		
+	
+	ScanCtrl.SetAutoCrop(bcrop);
+}
+
+function Brightness()
+{
+	// -10~10 设置
+	ScanCtrl.SetBrightness(6);
+}
+
+function Contrast()
+{
+	// 0~20 设置
+	ScanCtrl.SetContrast(7);
+}
+
+function Exposure()
+{
+	return;
+		// -10~10 设置	//1表示自动 2表示手动
+	ScanCtrl.SetExposure(-6,1);
+}
+function bodyloadhandler(){
+	SetTypeOnLoad();
+	refreshPageType();
+}
+
+function refreshPageType()
+{
+	 //刷新类型
+	var obj=document.getElementById("pictype");
+	if (obj){	obj.value=typeDesc;}
+}	
+
+function getPicFileName()
+{
+  var fname=#server(web.DHCSTM.APCVendor.GetNewPicName())#
+  return fname
+}
+function SetType(v,a,b,c,d,e)
+{
+	VendorId =v;
+	typeCode=a;
+	typeDesc=b;
+	GroupId=c;
+	LocId=d;
+	UserId=e;
+	refreshPageType();
+}
+
+function SetTypeOnLoad()
+{
+	VendorId ='#(VendorId)#';
+	typeCode='#(typeCode)#';
+	typeDesc='#(typeDesc)#';
+	GroupId='#(GroupId)#';
+	LocId='#(LocId)#';
+	UserId='#(UserId)#';
+	
+}
+
+function stop(){
+	 return false;
+}
+
+function ChangePress()
+{
+	var keys;
+	keys = event.keyCode;
+	if ( keys==119 ) // F8
+	{
+		opendevice();
+	}
+	if ( keys==120 ) // F9
+	{
+		TakePic();
+	}
+}
+function quit()
+{
+//	alert('ok');
+	window.close();	
+}
+
+window.onload=bodyloadhandler;
+//document.oncontextmenu=stop;
+
+//window.onfocus=refreshPageType;
+</script>
+ 
+
+</head>
+<body onkeydown="ChangePress()">
+	<label>图片类型：<label>
+	<input type="text" id="pictype" disabled=true>
+	<input type="button" id="closewindow" value="退出" onClick="quit()">
+	<input   TYPE="checkbox" id="closeConf"  checked="checked" >一次关闭
+	<table>
+		<tr>
+		<td width=120>
+     	</td>
+			<td>
+     <object classid="clsid:090457CB-DF21-41EB-84BB-39AAFC9E271A" id=ScanCtrl CODEBASE="*.cab#version=1,0,0,1"  width=640 height=480> 
+     </object>
+     <OBJECT ID="FTPX"
+		CLASSID="CLSID:9275F8D0-983C-4C02-8414-CE6867C34029"
+		CODEBASE="../addins/client/FTP.CAB#version=1,0,0,0">
+	</OBJECT>
+     <script LANGUAGE=JavaScript>   
+
+ 
+     </script> 
+ 
+     <form Name="Contral">  
+
+     <input   TYPE="button"   VALUE="打开设备(F8)"   onClick="opendevice()">  
+     
+     <!--     <input   TYPE="button"   VALUE="开始预览"   onClick="start_preview()"> -->
+     <!--  <input   TYPE="button"   VALUE="停止预览"   onClick="stop_preview()">  -->
+     
+     <input   TYPE="button"   VALUE="拍照(F9)"   onClick="TakePic()">  
+           
+     <!-- <input   TYPE="button"   VALUE="拍照上传"   onClick="TakePicUpLoad()">   -->
+     <input   TYPE="button"   VALUE="属性"   onClick="Property()">  
+     
+ 
+     <select name="sel"  onchange="changeresolution()"></select>
+     <select name="sel1"  onchange="changescansize()"></select>
+     <select name="sel2"  onchange="changerotate()"></select>
+     <select name="sel3"  onchange="changecolor()"></select>
+     <select name="sel4"  onchange="changethresvalue()"></select>   
+     
+		</form>
+    
+     </td>
+     	<td align="top">
+     		<form Name="Algorithm">
+     		<br>
+    			<input TYPE="button" 	value="亮度" onClick="Brightness()">
+    			<input TYPE="button" 	value="对比度" onClick="Contrast()">
+    			<input TYPE="button" 	value="曝光度" onClick="Exposure()">
+    			<br>		
+    			<br>
+     			<!-- 自动纠偏:&nbsp;&nbsp;&nbsp;<input  TYPE="checkbox"	name="autorotate" value="autorotate" onclick="chkautorotate()">  -->
+     			<br>
+    			<!-- 自动去黑边: <input TYPE="checkbox" 	name="autocrop" value="autocrop" onclick="chkautocrop()">  -->
+    			<br>
+     	</form>
+     	</td>
+     	
+     </tr>
+     </table>
+</body>
+  
+</html> 
+

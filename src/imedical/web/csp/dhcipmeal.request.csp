@@ -1,0 +1,24 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="SERVER">
+	s requestType=$g(%request.Data("type",1))
+	//加载菜单树
+	if (requestType="onTree"){
+		s treejson=##class(web.DHCJFBillJson).ToTreeJson($g(%request.Data("group",1)),$p($g(%request.Data("node",1)),"-",2))
+		w treejson
+	}
+	//加载check树
+	if (requestType="onGrantTree"){
+		s grantTree=##class(web.DHCJFBillJson).ToGrantTreeJson($g(%request.Data("group",1)),$p($g(%request.Data("node",1)),"-",2))
+		w grantTree
+	}
+	//拿安全组的list,除本身的group外
+	if (requestType="groupComboBox"){
+		s grantTree=##class(web.DHCJFBillJson).ToGroupComboJson($g(%request.Data("group",1)),$g(%request.Data("query",1)))
+		w grantTree
+	}
+	//分配树权限给安全组
+	if (requestType="SaveTreeToGroup"){
+		s msg=##class(web.DHCJFBillOperate).InsertGroupLink($g(%request.Data("groupRowid",1)),$g(%request.Data("grantTreeCode",1)),$g(%request.Data("grantTreeId",1)))
+		w msg
+	}
+</script>

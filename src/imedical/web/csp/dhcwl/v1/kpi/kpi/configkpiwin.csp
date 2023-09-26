@@ -1,0 +1,334 @@
+<!--
+	Creator  : wk
+	CreatDate: 2018-05-02
+	Desc     : 指标配置界面的主界面csp
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS require="CmdShell"/>
+	<!--本组css文件//-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/kpi/kpi/css/configkpiwin.css" type="text/css" />
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/kpi/util/jquery.webui-popover.min.css">
+	<!--link rel="stylesheet" href="../scripts/dhcwl/v1/kpi/custommenu.css" type="text/css" /-->
+	<style type="text/css">
+		div#operatorSelector>div>div>div{
+			padding:4px 4px 0px 4px;
+		}
+		div#operatorSelector>div>div>div>span>label {
+			display:inline-block;
+			width:60px;
+			text-align:right;
+		}
+		#saveFilterFunButton{
+			margin-left:100px;
+		}
+		#kpiConfigTabs div.datagrid-wrap.panel-body{
+			border:none;
+		}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface" id="kpiShow-div">
+	<div class="northRegion" data-options="region:'north',headerCls:'panel-header-gray'" style="height:70px;border:none"  >			
+		<div class="kpi-topInfor">
+			<a class="hisui-linkbutton big" id="viewKpiData" onclick = "showKPInfor(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_eye.png',plain:true">预览指标数据</a>
+			<a class="hisui-linkbutton big" id="creatKpiData" onclick = "showKPInfor(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_edit.png',plain:true">数据生成</a>
+			<a class="hisui-linkbutton big" id="kpiOutputIcon" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_arrow_rt.png',plain:true">导出指标</a>
+			<a class="hisui-linkbutton big" id="kpiInputIcon" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_arrow_lt.png',plain:true">导入指标</a>
+			<a class="hisui-linkbutton big" id="kpiInforIcon" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_ref.png',plain:true">指标信息</a>
+			<a class="hisui-linkbutton big" id = "clearAllSelected" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/clear.png',plain:true">清空选择</a>
+			<!--a class="hisui-linkbutton big" id="helpDoc" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book.png',plain:true">帮助文档</a-->
+		<!--/div-->
+		<span class="inlineIcons" id="mysearchbox">
+			<input id="searchKPIInfor" href="#" class="hisui-searchbox"/>
+			<!--img  src="../scripts/dhcwl/v1/kpi/util/other.png"  id="showImage" alt="展示" /-->
+			<a href="#" class="hisui-linkbutton" id="showImage" data-options="iconCls:'icon-w-arrow-down'"></a> 
+		</span>
+		<div id="kpiInOutputDetail" style="display:none;">
+			<a class="hisui-linkbutton big" id="outPutKPIWithDim" onclick = "outPutKPI(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_arrow_rt.png',plain:true">有维度版</a>
+			<a class="hisui-linkbutton big" id="outPutKPIExcDim" onclick = "outPutKPI(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_arrow_rt.png',plain:true">无维度版</a>
+			<a class="hisui-linkbutton big" id="outPutKPIExcel" onclick = "outPutKPIExcel(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_arrow_rt.png',plain:true">Excel版</a>
+		</div>
+		
+		<div id="kpiInforDetail" style="display:none;">
+			<a class="hisui-linkbutton big" id="viewKPIDim" onclick = "showKPInfor(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_ref.png',plain:true">指标维度</a>
+			<a class="hisui-linkbutton big" id="viewKPITask" onclick = "showKPInfor(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_ref.png',plain:true">指标任务</a>
+			<a class="hisui-linkbutton big" id="viewKPIMea" onclick = "showKPInfor(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_ref.png',plain:true">指标度量</a>
+			<a class="hisui-linkbutton big" id="viewKPILog" onclick = "showKPInfor(this)" data-options="iconImg:'../scripts_lib/hisui-0.1.0/dist/css/icons/big/book_ref.png',plain:true">指标日志</a>
+		</div>
+		
+		
+		</div>
+	</div>
+	
+	<div data-options="region:'center',headerCls:'panel-header-gray'" style="padding:10px;border:none;">
+		<div id="kpiConfigTabs" class="hisui-tabs  tabs-gray" data-options="fit:true">   
+			<div title="指标主页" id="kpiMainPage" data-options="iconCls:'icon-add-note'" >   
+				<table id="kpiconfigwinGrid" data-options="fit:true,singleSelect:false" style="border:none;">
+					<thead>   
+						<tr>
+							<!--th data-options="field:'box',width:'70',checkbox:true">box</th>
+							<th data-options="field:'ID',width:'70'">ID</th>   
+							<th data-options="field:'kpiCode',width:'150'">编码</th>   
+							<th data-options="field:'kpiName',width:'150'">指标名称</th>
+							<th data-options="field:'dimType',width:'150'">维度</th>
+							<th data-options="field:'measure',width:'150'">度量</th>
+							<th data-options="field:'kpiExcode',width:'200'">执行代码</th>
+							<th data-options="field:'dataNode',width:'100'">数据节点</th>
+							<th data-options="field:'MKPIGlobalFlag',width:'80'">global取值</th>
+							<th data-options="field:'createUser',width:'80'">创建者</th>
+							<th data-options="field:'updateDate',width:'100'">更新日期</th>
+							<th data-options="field:'kpiDesc',width:'100'">指标描述</th>
+							<th data-options="field:'category',width:'100'">类型</th>
+							<th data-options="field:'section',width:'100'">区间</th>
+							<th data-options="field:'getValueType',width:'100'">取值方式</th>
+							<th data-options="field:'nodeMark',width:'200'">备注</th-->
+							
+							<th data-options="field:'box',checkbox:true">box</th>
+							<th data-options="field:'ID',hidden:true">ID</th>   
+							<th data-options="field:'kpiCode'">编码</th>   
+							<th data-options="field:'kpiName'">指标名称</th>
+							<th data-options="field:'dimType'">维度</th>
+							<th data-options="field:'measure'">度量</th>
+							<th data-options="field:'kpiExcode'">执行代码</th>
+							<th data-options="field:'dataNode'">数据节点</th>
+							<th data-options="field:'MKPIGlobalFlag'">global取值</th>
+							<th data-options="field:'createUser'">创建者</th>
+							<th data-options="field:'updateDate'">更新日期</th>
+							<th data-options="field:'kpiDesc'">指标描述</th>
+							<th data-options="field:'category'">类型</th>
+							<th data-options="field:'section'">区间</th>
+							<th data-options="field:'getValueType'">取值方式</th>
+							<th data-options="field:'nodeMark'">备注</th>
+							 
+							
+						</tr>
+					</thead>
+				</table><!-- datagrid end //-->  
+			</div>   
+		</div>
+	</div>
+	
+	
+	<!--帮助文档-->
+	<div id="helpDialog" style="display:none;padding:10px" title="指标帮助文档">
+  		<div id="kpiHelpTabs" class="hisui-tabs" data-options="fit:true">
+  			<div title="指标说明文档">
+  				<iframe scrolling="auto" frameborder="0" width="100%" height="100%" src="../scripts/dhcwl/v1/kpi/kpi/help/指标系统V4.4.0使用说明书.htm"></iframe>
+  			</div>
+  			<div title="指标帮助文档">
+  				<iframe scrolling="auto" frameborder="0" width="100%" height="100%" src="../scripts/dhcwl/v1/kpi/kpi/help/指标常见问题汇总.htm"></iframe>
+  			</div>
+  		</div>
+  	</div>
+	
+	
+	<!--指标预览数据界面用于弹窗的代码配置-->
+	<!--取数规则-->
+	<!--指标取数规则配置界面-->
+	<div id="kpiRuleConfigDialog" title="取数规则配置" style="width:1000px;height:500px;backgroud:#fafafa;display:none;">
+		<div class="hisui-layout" fit="true">
+			<!--指标选择界面-->
+			<div data-options="region:'west',headerCls:'panel-header-gray'" style="width:500px;padding:10px 0px 10px 10px;border:none">
+				<table id="kpiTableForSearch" data-options="fit:true,singleSelect:false,headerCls:'panel-header-gray',iconCls:'icon-paper',title:'待选指标列表'">
+					<thead>
+						<tr>
+							<th data-options="field:'box',checkbox:true">box</th>
+							<th data-options="field:'ID',hidden:true">ID</th>   
+							<th data-options="field:'kpiCode'">编码</th>   
+							<th data-options="field:'kpiName'">指标名称</th>
+							<th data-options="field:'dimType'">维度</th>
+							<th data-options="field:'measure'">度量</th>
+							<th data-options="field:'kpiExcode'">执行代码</th>
+							<th data-options="field:'category'">类型</th>
+						</tr>
+					</thead>
+				</table>	
+			</div>
+			<!--取数规则待配置界面-->
+			<div data-options="region:'center',headerCls:'panel-header-gray'" style="padding:10px 10px 10px 10px;border:none">
+				<table id="configKPIRuleTree" data-options="fit:true,idField:'ID',treeField:'name',checkbox:true,cascadeCheck:false,headerCls:'panel-header-gray',iconCls:'icon-paper',title:'已选指标列表'">
+					<thead>
+						<tr>
+							<th field="name" width="250" align="left">描述</th>
+							<th field="code" width="150" align="right">编码</th>
+						</tr>
+					</thead>	
+				</table>
+
+			</div>
+		</div>
+	</div>
+	
+	<div id="kpiRuleSearchAllBox" style="display:none">
+		<label for="kpiRuleSearchKPIInfor" style="padding-left:4px">查询</label>
+		<input id="kpiRuleSearchKPIInfor" href="#" class="hisui-searchbox"/>
+		<!--img  src="../scripts/dhcwl/v1/kpi/util/other.png"  id="kpiRuleShowImage" alt="展示" /-->
+	</div>
+	
+	<div id="kpiRuleList" style="display:none">
+		<label for="kpiRuleListBox" style="padding-left:4px">当前规则</label>
+		<input class="hisui-validatebox" type="text" id="kpiRuleListBox" data-options="required:false" style="width:325px"></input>
+		<a href="javascript:void(0)" id="defineButton" style="margin-top:-2px" class="hisui-linkbutton hover-dark">确定</a>
+	</div>
+	
+	
+	
+	
+	<!--过滤规则-->
+	<!--指标过滤规则配置界面-->
+	<div id="kpiFilterConfigDialog" title="过滤规则配置" style="width:1000px;height:530px;backgroud:#fafafa;display:none;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',headerCls:'panel-header-gray'" style="padding:10px 5px 10px 10px;border:none">
+				<table id="kpiFilterTree" data-options="fit:true,idField:'ID',treeField:'name',checkbox:false,headerCls:'panel-header-gray',title:'待选过滤项',iconCls:'icon-paper'">
+					<thead>
+						<tr>
+							<th field='name' width="300" align="left">描述</th>
+							<th field='code' width="150" align="right">编码</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			<!--div data-options="region:'east',headerCls:'panel-header-gray'" style="width:500px;padding:10px 10px 10px 0px;border:none">
+				<table id="filterFunGrid" data-options="fit:true,singleSelect:true">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100">ID</th>
+							<th data-options="field:'FilterFuncCode',width:200">函数代码</th>
+							<th data-options="field:'FilterFuncPrototype',width:170">函数原型</th>
+							<th data-options="field:'Desc',width:100,hidden:true">描述</th>
+						</tr>
+					</thead>
+				</table>
+			</div-->
+			<div data-options="region:'east',headerCls:'panel-header-gray'" style="width:700px;padding:10px 10px 10px 5px;border:none">
+				<table id="filterRuleGrid" data-options="fit:true,singleSelect:false,headerCls:'panel-header-gray',title:'已配置过滤规则',iconCls:'icon-paper'">
+					<!--thead>
+						<tr>
+							<th data-options="field:'kpiCode',width:160">指标编码</th>
+							<th data-options="field:'operator',width:160,editor:'text'">运算规则</th>
+							<th data-options="field:'kpiRule',width:240">指标规则</th>
+							<th data-options="field:'filterFun',width:160">过滤函数</th>
+							<th data-options="field:'value',width:160">过滤值</th>
+							<th data-options="field:'rightBracket',width:80,editor:'text'">运算符</th>
+						</tr>
+					</thead-->
+				</table>
+			</div>	
+		</div>	
+	</div>
+	
+	<!--过滤函数toolbar-->
+	<div id="filterToobar" style="display:none">
+    	<a href="javascript:void(0)" id="filterDefineButton" class="hisui-linkbutton" data-options="iconCls:'icon-save'" plain="true">确定</a>
+    	<a href="javascript:void(0)" id="filterSymButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true"> [] </a>
+    	<a href="javascript:void(0)" id="filterRuleButton" class="hisui-linkbutton" data-options="iconCls:'icon-tip'" plain="true">预览过滤规则</a>
+		<a href="javascript:void(0)" id="clearFilterRuleButton" class="hisui-linkbutton" data-options="iconCls:'icon-remove'" plain="true">清空</a>
+  	</div><!--头部功能菜单维护区配置结束-->
+	<!--过滤函数toolbar-->
+	
+	
+	
+	<!--过滤规则运算符弹出框-->
+	<!--div id = "operatorSelector" title="运算符以及过滤值维护" style = "width:300px;height:200px;top:100px;left:400px;padding:4px;backgroud:#fafafa;display:none">
+		<div>
+			<span>
+				<label for="operatorList">运算规则</label>
+				<select id = "operatorList" class="hisui-combobox" name="operatorList" style="width:160px" editable="false">
+					<option value="&&">&&</option>
+					<option value="||">||</option>
+				</select>
+			</span>
+		</div>
+		<div>
+			<span>
+				<label for="filterValue">值</label>
+				<input class="hisui-validatebox" type="text" id="filterValue" data-options="required:true"></input>
+			</span>
+		</div>
+		<div>
+			<a href="javascript:void(0)" class="hisui-linkbutton" id="saveFilterFunButton">确定</a>
+		</div>
+	</div-->
+	
+	
+	<!--过滤规则配置-->
+  	<div id="operatorSelector" style="width:380px;display:none;" title="过滤规则配置">
+  		<form id="filterInforForm" class="myFormShow">
+			<div>
+				<label for="operatorList">运算规则</label>
+				<select id = "operatorList" class="hisui-combobox" data-options="panelHeight:100" style="width:267px" editable="false">
+					<option value="&&">&&</option>
+					<option value="||">||</option>
+				</select>
+			</div>
+			<div>
+				<label for="filterFun">过滤函数</label>
+				<select id="filterFun" style="width:267px" data-options="required:true">
+					
+				</select>
+			</div>
+			<div>
+				<label for="filterValue">过滤值</label>
+				<input class="hisui-validatebox" type="text" id="filterValue" style="width:260px" data-options="required:true"></input>
+			</div>
+		</form>
+  	</div>
+  	<!--过滤规则配置-->
+	
+	
+	<!--指标预览数据界面的配置end-->
+	<!--过滤规则展示界面-->
+	<div id="filterShowDialog" title="过滤规则展示" style="padding:10px;display:none">
+		<textarea id="filterShowTextbox" style="width:600px;height:350px;"></textarea>
+	</div>	
+	<!--过滤规则展示界面end-->
+	
+	<!--任务组导入-->
+	<div id="kpiInputDialog" style="height:450px;display:none;" title="指标导入-XML版">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north'" style="height:43px;padding:10px 10px 0px 10px;border:none">
+				<div id="importRegion">
+					<input id="kpiInputFilebox" class="hisui-filebox" name="kpiInputFilebox" style="width:400px" data-options="prompt:'请选择文件',onChange:function(nv,ov){getFilePath(nv,ov);}"/>
+					<a href="javascript:void(0)" class="hisui-linkbutton" onclick="$('#kpiInputFilebox').filebox('clear')">清空</a>
+				</div>
+			</div>
+			<div data-options="region:'center'" style="padding:10px 10px 10px 10px;border:none">
+				<table id="kpiInputListGrid" data-options="fit:true">
+					<thead>
+						<tr>
+							<th data-options="field:'box',checkbox:true">box</th>
+							<th data-options="field:'code',width:100,styler:cellStyler">编码</th>
+							<th data-options="field:'desc',width:100,styler:cellStyler">描述</th>
+							<th data-options="field:'flag',width:100,hidden:true">标记</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	
+	<!--引入js文件JSURL-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwl/v1/kpi/util/Excel.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpi/configkpiwin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpi/configviewkpidatadialog.js"></script><!--用于展示预览数据的取数规则和过滤规则放到主界面的弹出框js代码-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpi/configkpisearch.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/util/XML.js"></script>
+	<!--script type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpitipcombox.js"></script-->
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>
+

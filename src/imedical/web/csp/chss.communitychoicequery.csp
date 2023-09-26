@@ -1,0 +1,27 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	s Username=$Get(%request.Data("user",1))
+	s UserId=$Get(%request.Data("UserId",1))
+	s RecordDR=$Get(%request.Data("RecordDR",1))
+ 	s CommunityType=$Get(%request.Data("CommunityType",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	s WhereStr=$Get(%request.Data("WhereStr",1))
+	i WhereStr '= "" d
+	.s WhereStr = " and CommunityName like '%"_WhereStr_"%'"
+
+	i Action = "communityinfo" d
+	.w ##class(CHSSWeb.CommunityService).GetCommunityInfoWithCode(CommunityCode)
+	i Action = "communitycode" d
+	.w ##class(CHSSWeb.CommunityService).GetCommunityInfoWithType(RecordDR,CommunityType)
+	i Action = "curcommunitycode" d
+	.w ##class(CHSSWeb.CommunityService).GetCurrentCommunity(CommunityCode,CommunityType)
+	i Action = "curcodefromhospital" d
+	.w ##class(CHSSWeb.CommunityService).GetCommunityFromHospital(RecordDR,CommunityType,WhereStr)
+	i Action = "communitylist" d
+	.w ##class(CHSSWeb.CommunityService).GetCommunityListWithUserId(UserId)
+	i Action = "communityalllist" d
+	.w ##class(CHSSWeb.CommunityService).GetAllCommunityList()
+</script>
+

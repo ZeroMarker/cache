@@ -1,0 +1,109 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<script Language="JavaScript">
+		var Altbl = "";
+
+	</script>		
+<SERVER>
+
+;n (%request,%session, msg)
+d ##Class(websys.Component).GetComponentMessages(.t,"Pharmacy.List")
+s AllScripts=$g(%request.Data("AllScripts",1))
+
+; should we delete temp packing global?
+i $g(%request.Data("KillTemp",1)),$d(%session) k ^TMP("PharmacyPack",%session.SessionId)
+
+; the next counter...
+s (PatCounter,%request.Data("PatCounter",1))=$g(%request.Data("PatCounter",1))+1
+
+s PatTotal=0,PatStr=""
+f pix=1:1:$l(AllScripts,"^") s pno=$p(AllScripts,"^",pix) i pno'="" d
+. s queue=$o(^PAQUE1(0,"PrescNo",pno,"")) q:queue=""
+. s str=$g(^PAQUE1(queue))
+. s epid=$p(str,"^",3)
+. s patid=+$g(^PAADM(+epid)) q:'patid
+. i '$d(pats(patid)) s PatTotal=PatTotal+1,PatStr=PatStr_$s($l(PatStr):"^",1:"")_patid
+. s pats(patid,pno)=str
+
+s %request.Data("PatTotal",1)=PatTotal
+s close=($g(%request.Data("CLOSEWIN",1))'="N")
+
+; have we looped off the end?
+i close,PatCounter>1,PatCounter>PatTotal,AllScripts'="" d  q
+. w !,"<script Language=""JavaScript"">"
+. w !,"	if (window.top.opener) {"
+. w !,"			window.top.opener.treload('websys.csp');"
+. w !,"	}"
+. w !,"	window.top.close()"
+. w !,"</script>"
+</SERVER>
+
+</HEAD>
+<BODY><TRAK:APPLET>
+
+<SERVER>
+
+i AllScripts'="",'$d(pats)  d  
+. s message=$g(t("UNKNOWNPRESC"))
+. i message="" s message="Prescription Number Not Found"
+. w "<SCRIPT Language=""Javascript"">"
+. w "alert('"_message_"');"
+. w "</script>"
+
+; get patient for current counter
+s CurrPat=$p(PatStr,"^",PatCounter) 
+;i AllScripts'="",'CurrPat q
+
+s %request.Data("PatientID",1)=CurrPat
+
+; list of prescriptions for THIS patient...
+s pno="",PrescNo=""
+i CurrPat f  s pno=$o(pats(CurrPat,pno)) q:pno=""  d
+. s str=$g(pats(patid,pno))
+. s epid=$p(str,"^",3)
+. s %request.Data("EpisodeID",1)=epid
+. s mradm=$p(str,"^",61)
+. s %request.Data("mradm",1)=mradm
+. s PrescNo=PrescNo_$s($l(PrescNo):"^",1:"")_pno
+
+s %request.Data("PrescNo",1)=PrescNo
+
+; for loopback on barcode packing
+i $g(%request.Data("BarcodePack",1)) d
+. s %request.Data("PatTotal",1)=""
+. s %request.Data("PrescNo",1)=""
+. s %request.Data("AllScripts",1)=""
+. s %request.Data("PatCounter",1)=1
+. s %request.Data("PatientBanner",1)=""
+
+; banner
+w ##Class(web.SSMessageRecipient).getMessageLink() 
+i +%request.Get("PatientBanner"),+%request.Get("PatientID") d
+. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+. i cmp d cmp.Show(),cmp.%Close()
+
+; Will check if ANY prescription, not already packed has an allergy/alert....
+; then it will refuse to accept or pack it...
+
+i ##class(web.PAQue1).PrescHasAlerts($g(%request.Data("PrescNo",1))) d
+. ; want 1 order per row
+. ;s %request.Data("OnePerOrder",1)=1
+. s cmp=##Class(websys.Component).OpenName("Pharmacy.Prescription.Alert")
+. i cmp d cmp.Show(),cmp.%Close()
+
+; open edit component
+s cmp=##Class(websys.Component).OpenName("pharmacy.presc.edit")
+i cmp d cmp.Show(),cmp.%Close()
+
+</SERVER>
+</BODY>
+</HTML>

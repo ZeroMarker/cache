@@ -1,0 +1,92 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+ ;// This portion is for annotation related to patient image.
+ n EpisodeID,FilePath,VirtualDirectory,objPD,FileName,x,ID,Actual,FileName,vdir,EXT,mradm,MRPicRowId
+ s (EpisodeID,FilePath,VirtualDirectory,objPD,FileName,x,ID,Actual,FileName,vdir,EXT,mradm,MRPicRowId)=""
+ ;
+ s (VirtualDirectory,FileName,ActualDirectory)=""
+ s EpisodeID=%request.Get("PARREF")
+ s mradm=%request.Get("mradm")
+ s MRPicRowId=%request.Get("MRPicRowId")
+ s ID=%request.Get("ID")
+ s OrderItemId=%request.Get("OrderItemId")
+
+ s FileName=%request.Get("FileName")
+ i $g(FileName)'="" d
+ . s FileName=$tr($g(FileName),"\","/")
+ . s EXT=##Class(%Collation).AlphaUp($p(FileName,".",$l(FileName,".")))
+ . s FilePath=$p(##Class(web.CFSystemFilePath).GetPathFromFileExt(EXT),$c(1),1)
+ . d ##Class(web.CFSystemFileDefinition).GetVirtualDirectories(.vdir)
+ . i EXT'="" s VirtualDirectory="http://"_%session.Get("SERVER_NAME")_$p($g(vdir(EXT)),"^")
+ . i ($l(VirtualDirectory)'=0),($e(VirtualDirectory,$l(VirtualDirectory)-1,$l(VirtualDirectory))'="/") s VirtualDirectory=VirtualDirectory_"/"
+ ; // New section for annotation in Dicom.
+ n dicomStudy,dicomhttp,accessionNo,annotXml
+ s OrderID=%request.Get("OrderID")
+ s PatientID=%request.Get("PatientID")
+ s catgsID=%request.Get("catgsID")
+ s dfrom=%request.Get("dfrom")
+ s dto=%request.Get("dto")
+ s EpisodesAll=%request.Get("EpisodesAll")
+ d ##Class(web.OEOrdResult).GetDicomFiles(OrderID,PatientID,mradm,catgsID,dfrom,dto,EpisodesAll)
+ s dicomStudy=$g(%request.Data("dicomStudy",1))
+ d ##Class(web.OEOrdResult).GetAccessionNumber(OrderID,.accessionNo)
+ s annotXml=##Class(web.OEAnnotation).GetAnnotationXML(OrderID,MRPicRowId)
+ s annotXml=$ZCVT(annotXml,"O","JS")
+ ; pcollins log - 55903. Session and question code need to be passed to viewer in order to save annotations against a questionnaire
+ n sessionId,questionCode
+ s sessionId=$g(%request.Data("SESSIONID",1))
+ s questionCode=$g(%request.Data("QUESTIONCODE",1))
+</SERVER>
+<STYLE>
+	BODY A
+	{
+	    TEXT-DECORATION: none;
+	}
+	BODY A:active
+	{
+	    BACKGROUND-COLOR: #dfdfff;
+	}
+</STYLE>
+<SCRIPT Language="JavaScript">
+var FileName="#(FileName)#";
+var VirtualDirectory="#(VirtualDirectory)#";
+//alert(VirtualDirectory);
+var mradm="#(mradm)#";
+var MRPicRowId="#(MRPicRowId)#";
+// Dicom Variables.
+var bStudy="#(dicomStudy)#";
+var accessionNo="#(accessionNo)#";
+var patientId="#(PatientID)#"
+var accOrderIds="#(OrderID)#"
+var imageLinked = new Image();
+imageLinked.src = "../IMAGES/webemr/LinkedStudy.jpg"
+var imageUnLinked = new Image();
+imageUnLinked.src = "../images/webemr/UnLinkedStudy.jpg"
+//pcollins - log 55903
+var sessionId="#(sessionId)#"
+var questionCode="#(questionCode)#"
+var orderItemId="#(OrderItemId)#"
+var annotationXml="#(annotXml)#";
+</SCRIPT>
+</HEAD>
+
+<BODY onload="initViewer();" onresize="Resize();">
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<CSP:IF condition='$l(%request.Get("OrderID"))<1'>
+<TRAK:COMPONENT id="webtrak.annotate" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<CSP:IF condition='$l(%request.Get("OrderID"))>1'>
+<TRAK:COMPONENT id="Dicom.Viewer" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+</BODY>
+</HTML>

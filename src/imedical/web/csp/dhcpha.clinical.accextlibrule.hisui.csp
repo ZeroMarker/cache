@@ -1,0 +1,165 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<!-- <TRAK:HEAD></TRAK:HEAD> -->
+	<meta http-equiv="Content-Type" content="text/html; ">
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/selectdrugswin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/accextlibrule.hisui.js"></script> 
+	<style type="text/css">
+		.datagrid-toolbar{display:none}/**/
+		/*.combo-arrow{position:relative;left:-4}hxy 2018-10-08*/
+		.panel-margin{
+			margin:10px 10px 0px 0;
+		}
+		.panel-header, .panel-body {
+		    border-color: #ccc;
+		  
+		}
+		.layout-panel-center{
+			padding: 10px 10px 10px 0;
+		}
+		.layout-panel-west{
+			padding: 10px 5px 10px 10px;
+		}
+	</style>
+	
+</HEAD>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true" border="false" >
+		<div data-options="region:'west',title:'选择授权对象',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="width:480px;">
+			<table class="hisui-table" cellspacing="0" cellpadding="0" style="margin:10px;">
+				<tr>
+				   <td align="right" style="padding-right:10px">知识库</td>
+				   <td><select id="libcombo"  class="hisui-combobox" style="width:150px;"></select></td>				   
+				</tr>
+			</table>
+			<div class="hisui-accordion accordion-gray" style="width:300px;float:left; padding:0 10px 60px 10px" data-options="border:false,fit:true">   
+			    <div title="按医院" data-options="selected:true">   
+			       <table  id="hospgrid" border="false" ></table>
+			    </div>   
+			    <div title="按职称" >   
+			    	<table  id="cptgrid" border="false" ></table>
+			    </div>   
+			    <div title="按科室" >   
+			        <table  id="doclocgrid" border="false" ></table>
+			    </div>   
+			     <div title="按医生" >   
+			        <table  id="docgrid" border="false" ></table>
+			    </div>  
+			</div>
+		</div>
+		<div data-options="region:'center'" border="false" > 
+			<table  style="height:560px;" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',toolbar:[],checkbox:true" class="hisui-treegrid" id="accitmgrid"  title="权限列表"></table>  
+			<!-- <div style="width:100%;height:30px;margin-top:10px;">
+				<a href="#" id="btnSave" class="hisui-linkbutton" style="width:90; margin-left:280px;" iconCls="icon-w-save">保存</a>
+			</div>	 -->		
+		</div>
+
+	</div>
+	
+	<div id="doclocbar" style="height: auto; "  >
+		<div style="margin-bottom:1px">
+			<table cellspacing="0" cellpadding="0" style="margin-top:10px;margin-bottom:10px;;">
+				<tr>
+			       <td align="right" style="padding-left:10px;padding-right:10px;">科室</td>
+				   <td ><input id="doclocbarid" type="text" class="hisui-validatebox textbox"  style="width:150px;" ></td>
+				</tr>
+			</table>
+		</div>    
+	</div> 
+	
+	<div id="doctorbar" style="height: auto; "  >
+		<div style="margin-bottom:1px">
+			<table cellspacing="0" cellpadding="0" style="margin-top:10px;margin-bottom:10px;;">
+				<tr>
+			       <td align="right" style="padding-left:10px;padding-right:10px;">工号</td>
+				   <td ><input id="doctorno" type="text" class="hisui-validatebox textbox"  style="width:150px;" ></td>
+				</tr>
+			</table>
+		</div>
+	</div> 
+	<div id="toolbar" >	
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a></td>
+		    </tr>
+		</table>
+	</div>
+
+	<!-- <div class="hisui-layout" data-options="fit:true" border="false" >       
+		<div data-options="region:'west',split:true" border="false" style="width:500px;border:0;padding:10px 5px 3px 10px"  title="" >  
+			<div class="hisui-layout" data-options="fit:true" border="false" >    		
+				<div data-options="region:'center'"  title=""   border="false"> 
+					<div id="aa" class="hisui-accordion accordion-gray"  data-options="fit:true"  border="false">  
+						<div title="按医院" data-options="iconCls:'',selected:true" > 		// icon-w-update					   			  
+							<table style="height:auto" width="100%" id="hospgrid" border="false" ></table>
+						</div> 
+					    
+						<div title="按职称" data-options="iconCls:''" style="padding:0px;">
+							<table style="height:auto" width="100%" id="cptgrid" border="false" ></table>
+						</div>
+
+						<div title="按科室" data-options="iconCls:''">
+						 	<table style="height:auto" width="100%" id="doclocgrid" border="false" ></table>
+						</div>
+						
+						<div title="按医生" data-options="iconCls:''">
+							<table style="height:auto" width="100%" id="docgrid" border="false" ></table>
+						</div>
+					</div> 
+				</div> 	    		 
+			</div> 	     
+		</div> 
+	  
+	  
+		<div data-options="region:'center',headerCls:'panel-header-gray panel-margin' "  title="权限列表" >	  
+			<table style="height:auto" width="100%" id="accitmgrid" border="false" ></table>
+		</div> 
+
+	</div> 
+ 
+   
+	<div id="accitmtbar" style="padding: 1px; height: auto ; "  >
+		<div style="margin-bottom:1px">
+			<table cellpadding=3>
+				<tr>
+				   <td align="right" style="padding-right:5px">知识库</td>
+				   <td><select id="libcombo"  style="width:150px;"></select></td>
+				   <td><a  class="hisui-linkbutton" iconCls="icon-save" plain="true" id="btnSave">保存</a></td>
+				</tr>
+			</table>
+		</div>
+	</div>
+   
+	<div id="doctorbar" style="padding: 1px; height: auto; "  >
+		<div style="margin-bottom:1px">
+			<table cellpadding=3>
+				<tr>
+			       <td align="right" >工号:</td>
+				   <td colspan="3" ><input id="doctorno" type="text" class="hisui-validatebox textbox"  style="width:150px;" ></td>
+				</tr>
+			</table>
+		</div>
+	</div>
+  
+	<div id="doclocbar" style="padding: 1px; height: auto ;  background:#fafafa "  >
+		<div style="margin-bottom:1px">
+			<table cellpadding=3>
+				<tr>
+			       <td align="right" >科室:</td>
+				   <td colspan="3" ><input id="doclocbarid" type="text" class="hisui-validatebox textbox"  style="width:150px;" ></td>
+				</tr>
+			</table>
+		</div>    
+	</div> -->
+	  
+</BODY>
+</HTML>

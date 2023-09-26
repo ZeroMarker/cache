@@ -1,0 +1,50 @@
+<HTML>
+<HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<LINK REL="stylesheet" TYPE="text/css" HREF="../../../scripts/websys.css"></LINK>
+</HEAD>
+<BODY>
+
+<SCRIPT SRC="../../../scripts/websys.js"> </SCRIPT>
+
+<SERVER>
+	;log 49929 AJI
+
+	s runudf=%request.Get("runudf")
+	i runudf {
+		// call UDF
+		d ##Class(websys.UserDefinedFunctions).Evaluate("EDICreation","OnNew")
+	}
+	else {
+		Write !,"<SCRIPT LANGUAGE=""JavaScript"">"
+		Write !,"try {"
+		Write !,$c(9),"var frm = top.frames['TRAK_main'];"
+		Write !,$c(9),"if (frm) {" 
+		Write !,$c(9,9),	"if (frm.frames['ListAll']) {"
+		Write !,$c(9,9),		"frm.frames['ListAll'].CreateEDI();"
+		Write !,$c(9,9),	"}"
+		Write !,$c(9,9),	"else {"
+		Write !,$c(9,9),		"var tmp=frm.window.document.getElementById('TFORM').value;"
+		Write !,$c(9,9),		"if (tmp=='ARInvoicesPayor.List') {"
+		Write !,$c(9,9),			"frm.CreateEDI();"
+		Write !,$c(9,9),		"}"
+		Write !,$c(9,9),		"else if (tmp=='ARPatientBill.ListAll') {"
+		Write !,$c(9,9),			"frm.CreateEDI();"
+		Write !,$c(9,9),		"}"
+		Write !,$c(9,9),		"else {"
+		Write !,$c(9,9),			"alert('EDI function is not supported on ' + tmp + ' screen');"
+		Write !,$c(9,9),		"}"
+		Write !,$c(9,9),	"}"
+		Write !,$c(9),"}"
+		Write !,"}"
+		Write !,"catch(e) {"
+		Write !,$c(9),	"alert('Error: ' + e.description);"
+		Write !,"}"
+		Write !,"</SCRIPT>"
+	}
+</SERVER>
+</DIV>
+</DIV>
+</BODY>
+</HTML>
+

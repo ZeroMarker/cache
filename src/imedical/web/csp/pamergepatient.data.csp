@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+...top
+<SERVER>
+	n TWKFL,TWKFLI,TOPatientID,FROMPatientID
+	s (TWKFL,TWKFLI,TOPatientID,FROMPatientID)=""
+	s TWKFL=$g(%request.Data("TWKFL",1)),TWKFLI=$g(%request.Data("TWKFLI",1))
+	s TOPatientID=$g(%request.Data("TOPatientID",1)),FROMPatientID=$g(%request.Data("FROMPatientID",1))
+	s FROMMRN=$g(%request.Data("FROMMRN",1)),TOMRN=$g(%request.Data("TOMRN",1))
+</SERVER>
+<SCRIPT>
+	var TWKFL='#(TWKFL)#'; var TWKFLI='#(TWKFLI)#';
+	var TOPatientID='#(TOPatientID)#'; var FROMPatientID='#(FROMPatientID)#';
+	var FROMMRN='#(FROMMRN)#';
+	var TOMRN='#(TOMRN)#';
+	var win=window.top.frames["TRAK_main"];
+	var obj=win.document.getElementById("TWKFL");
+	if ((obj)&&(TWKFL=='')) TWKFL=obj.value;
+	var obj=win.document.getElementById("TWKFLI");
+	if ((obj)&&(TWKFLI=='')) TWKFLI=obj.value;
+	var context=win.session['CONTEXT'];
+	// LOG 26038 BC 1-7-2002 Give the option to cancel the merge and hence clear the form 
+	if((TOPatientID!='')||(FROMPatientID!='')) {
+		var obj=win.document.getElementById("TOPatientID");
+		if ((obj)&&(TOPatientID=='')) TOPatientID=obj.value;
+		var obj=win.document.getElementById("FROMPatientID");
+		if ((obj)&&(FROMPatientID=='')) FROMPatientID=obj.value;
+	}
+	var lnk = "pamergepatient.edit.csp?TWKFL="+TWKFL+"&TWKFLI="+TWKFLI+"&TOPatientID="+TOPatientID+"&FROMPatientID="+FROMPatientID+"&FROMMRN="+FROMMRN+"&TOMRN="+TOMRN;
+	if (context!='') lnk+="&CONTEXT="+context;
+	top.frames["TRAK_main"].location=lnk;
+</SCRIPT>
+.....bottom
+</body>
+</html>

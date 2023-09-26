@@ -1,0 +1,61 @@
+﻿<HTML>
+<head>
+	<title>关联用户数字证书</title>
+	<base target= "_self"> 
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 s CAServicvice=##Class(CA.DigitalSignatureService).IsCAON()
+	 q 1
+	</csp:method>
+	 
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/form.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script type="text/javascript" defer="defer" src="../scripts/epr/ExtJS/ext-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprAjaxHelper.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+	 
+	<script language="javascript">
+		var CAService = "#(CAServicvice)#"; //是否启用CA
+	</script>
+
+</head>
+<body>
+	<script language="cache" runat="server">
+	   d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+    </script>
+	<script type="text/javascript" src="../scripts/epr/js/caImportUKey.js"></script>
+	 
+    <input type=hidden name=hCertificate value="">
+    <input type=hidden name=hSignImage value="">
+   
+</body>
+</html>
+<script language="cache" runat="server">
+	d ##Class(CA.DigitalSignatureService).OnUsbChanged()
+</script>
+
+<script language="javascript">
+	function GetList_pnp() 
+   	{	 
+	   	Ext.getCmp('cbxKey').clearValue();
+   	    Ext.getCmp('cbxCertKey').clearValue();
+	   	var userData = "";
+        var lstUsers = GetUserList();
+		var arrUsers = lstUsers.split('&&&');
+		for (var i = 0; i < arrUsers.length; i++) {
+		    var user = arrUsers[i];
+		    if (user != "") {
+		        var keyName = user.split('||')[0];
+		        var uniqueID = user.split('||')[1];
+		        if (i > 0) { userData += ","; }
+		        userData += "['" + keyName + "','" + uniqueID + "']";
+		    }
+		}
+	   	Ext.getCmp('cbxKey').store.loadData(eval("[" + userData + "]"));
+	   	Ext.getCmp("cbxStatus").setValue(0);
+   	}
+</script>

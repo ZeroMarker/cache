@@ -1,0 +1,371 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!--本组css文件-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<style>
+		body{
+			background-color:#fff
+		}
+		#dimCreateBody>div.panel.layout-expand.layout-expand-east{
+			/*display:none !important;*/
+		}
+		#dimProToobar{
+			padding:4px;
+		}
+		div#dimRuleConfigDialog div.datagrid-body>table>tbody>tr>td>div>span.tree-checkbox.tree-checkbox0{
+			display:none;
+		}
+		/*设置过滤规则弹出框*/
+		div#operatorSelector>div>div>div{
+			padding:4px 4px 0px 4px;
+		}
+		div#operatorSelector>div>div>div>span>label {
+			display:inline-block;
+			width:60px;
+			text-align:right;
+		}
+		#saveFilterFunButton{
+			margin-left:100px;
+		}
+		
+		.kpiCondition{
+			position:absolute;
+			top:50%;
+			left:50%;
+			margin-left:-180px;
+			margin-top:-80px;
+		}
+		.kpiCondition ul li{
+			padding:4px;
+		}
+		.kpiCondition ul li#kpiConditionButton{
+			margin-left:100px;
+		}
+		div#dimViewDataDialog>div.panel>div>div.hisui-layout>div>div.panel-body{
+			border-color:#fff !important;
+		}
+		/*--取数规则border线重叠问题--*/
+		div#dimRuleConfigDialog div.panel-header{
+			border-bottom:none;
+		}
+		/*--过滤规则border线重叠问题--*/
+		div#dimFilterConfigDialog div.panel-header{
+			border-bottom:none;
+		}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface" id="dimCreateBody">
+	
+	<!--基础维度表格-->
+	<div data-options="region:'center'" style = "border:false;padding:10px;border:none">
+		<table id="dimTable" data-options="fit:true,singleSelect:true,headerCls:'panel-header-gray',iconCls:'icon-paper',title:'基础维度维护'">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:100,hidden:true">ID</th>
+					<th data-options="field:'vmdIcon',width:100,formatter:dimConfigGrid,align:'center'">维度属性</th>   
+					<th data-options="field:'dimCode',width:120">维度编码</th>
+					<th data-options="field:'dimName',width:120">维度名称</th>
+					<th data-options="field:'exeCode',width:220">执行代码</th>
+					<th data-options="field:'dimDesc',width:120">维度描述</th>
+					<th data-options="field:'date',width:100">更新日期</th>
+					<th data-options="field:'creator',width:50">创建者</th>
+					<th data-options="field:'remark',width:50,formatter:formatCellTooltip">备注</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<div id="dimProDlg" title="维度属性" style="width:1000px;height:450px;padding:10px;display:none;">   
+		<table id="dimProTable" data-options="fit:true,singleSelect:true">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:50,hidden:true">ID</th>
+					<th data-options="field:'proCode',width:100">属性编码</th>
+					<th data-options="field:'proName',width:100">属性名称</th>
+					<th data-options="field:'proDefActive',width:40">默认激活</th>
+					<th data-options="field:'proExeCode',width:340">执行代码</th>
+					<th data-options="field:'proDesc',width:100,hidden:true">属性描述</th>
+					<th data-options="field:'proSplitSign',width:40">分隔符</th>
+				</tr>
+			</thead>
+		</table>
+	</div><!--dialog end //-->
+	
+	<!--基础维度toolbar-->
+    <!--头部功能菜单维护区-->
+  	<div id="dimToobar" class="searchboxRight toolbarsearchbox myToolBar">	
+    	<!--检索框//-->
+    	<input id="searchText" class="hisui-searchbox" data-options="prompt:'检索维度'" style="width:180px">
+    
+    	<!--维度维护按钮//-->
+    	<a href="javascript:void(0)" id="dimAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+    	<a href="javascript:void(0)" id="dimModifyButton" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',disabled:false" plain="true">修改</a>
+    	<a href="javascript:void(0)" id="dimDeleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',disabled:false" plain="true">删除</a>
+    	<a href="javascript:void(0)" id="dimViewData" class="hisui-linkbutton" data-options="iconCls:'icon-funnel-eye',disabled:false" plain="true">预览数据</a>
+    	<a href="javascript:void(0)" id="dimRoleButton" class="hisui-linkbutton" data-options="iconCls:'icon-other',disabled:false" plain="true">维度角色</a>
+		<!--a href="javascript:void(0)" id="dimOutButton" class="hisui-linkbutton" data-options="iconCls:'icon-export',disabled:false" plain="true">导出</a-->
+  	</div><!--头部功能菜单维护区配置结束-->
+  	
+  	<!--基础维度新增-->
+  	<div id="dimAddDialog" style="width:360px;display:none;padding-left:10px;" title="维度新增">
+  		<form id="dimAddInforForm" class="myFormShow">
+			<div>
+				<label for="dimCode">维度编码</label>
+				<input class="hisui-validatebox" type="text" id="dimCode" data-options="required:true,validType:'isCode'" style="width:220px"/>
+			</div>
+			<div>
+				<label for="dimName">维度名称</label>
+				<input class="hisui-validatebox" type="text" id="dimName" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="dimDesc">维度描述</label>
+				<input class="hisui-validatebox" type="text" id="dimDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="dimExCode">执行代码</label>
+				<input class="hisui-validatebox" type="text" id="dimExCode" data-options="validType:'isFormIgNull'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="dimCreator">创建者</label>
+				<input class="hisui-validatebox" type="text" id="dimCreator" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="remark">备注</label>
+				<input class="hisui-validatebox" type="text" id="remark" data-options="required:true,required:false" style="width:220px"/>
+			</div>
+		</form><!--配置修改床位信息表单结束-->
+  	</div>
+  	<!--基础维度新增结束-->
+  	
+  	<!--维度角色展示表格(点击维度编码显示维度角色)-->
+  	<div id="dimRoleDialog" style="width:800px;height:400px;display:none;padding:10px" title="维度角色展示">
+  		<table id="dimRoleTable" data-options="fit:true,singleSelect:true">
+  			<thead>
+  				<tr>
+  					<th data-options="field:'dimRoleCode',width:100">角色编码</th>
+  					<th data-options="field:'dimRoleName',width:200">角色名称</th>
+  					<th data-options="field:'dimRoleDesc',width:200">角色描述</th>
+  					<th data-options="field:'dimRoleCreator',width:100">创建者</th>
+  					<th data-options="field:'dimRoleDate',width:100">更新日期</th>
+  				</tr>
+  			</thead>
+  		</table>
+  	</div>
+  	<!--end维度角色展示展示表格-->
+  	
+  	
+  	<!--维度数据预览-->
+  	<div id="dimViewDataDialog" style="width:1000px;height:500px;display:none;padding:10px" title="维度预览数据">
+		<table id="dimDataTable" data-options="fit:true,singleSelect:true">
+			<thead>
+				<tr>
+					<th data-options="field:'dimDataCode',width:230">数据编码</th>
+					<th data-options="field:'dimDataID',width:100">数据ID</th>
+					<th data-options="field:'dimDataDesc',width:230">数据描述</th>
+				</tr>
+			</thead>
+		</table>
+  	</div>
+  	<!--维度数据预览-->
+  	
+	<!--维度数据导出-->
+	<div id="dimOutDataDialog" style="width:600px;height:500px;display:none;padding:10px" title="维度导出">
+		<table id="configDimOutTree" data-options="fit:true,idField:'ID',treeField:'name',checkbox:true,cascadeCheck:false">
+			<thead>
+				<tr>
+					<th field="name" width="260" align="left">描述</th>
+					<th field="code" width="200" align="right">编码</th>
+				</tr>
+			</thead>	
+		</table>
+  	</div>
+	<!--维度数据导出-->
+	
+	<!--维度导出toolbar-->
+  	<div id="dimOutToobar" class="searchboxRight toolbarsearchbox myToolBar" style="display:none;">	
+    	<!--检索框//-->
+    	<input id="searchOutDimText" class="hisui-searchbox" data-options="prompt:'检索维度'" style="width:180px">
+    
+    	<!--导出按钮//-->
+		<a href="javascript:void(0)" id="dimDialogOutButton" class="hisui-linkbutton" data-options="iconCls:'icon-export',disabled:false" plain="true">导出</a>
+  	</div><!--维度导出toolbar-->
+	
+	
+  	
+	<div id="tableToolbar" style="display:none;">
+		<label for="dimRuleConfig" style="padding:0px 5px 0px 6px;">取数规则</label>
+		<input id="dimRuleConfig" class="hisui-validatebox textbox" data-options="required:false" style="width:260px">
+		<a href="javascript:void(0)" id="dimRuleButton" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true"></a>
+		<label for="dimFilterConfig" id="dimFilterLabel"  style="padding:0px 5px 0px 0px;">过滤规则</label>
+		<input id="dimFilterConfig" class="hisui-validatebox textbox" data-options="required:false" style="width:260px">
+		<a href="javascript:void(0)" id="dimFilterButton" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true"></a>
+		<a id="searchDIMData" href="javascript:void(0)" class="hisui-linkbutton hover-dark">查询</a>
+		<a id="cleanDIMCondition" href="javascript:void(0)" style="margin-left:6px;" class="hisui-linkbutton hover-dark">清空</a>
+	</div>
+	
+	
+  	<!--指标预览数据界面用于弹窗的代码配置-->
+	<!--取数规则-->
+	<!--指标取数规则配置界面-->
+	<div id="dimRuleConfigDialog" title="取数规则配置" style="width:1000px;height:500px;backgroud:#fafafa;display:none;border:none">
+		<div class="hisui-layout" fit="true">
+			<!--指标选择界面-->
+			<div data-options="region:'west',headerCls:'panel-header-gray'" style="width:450px;border:none;padding:10px 5px 10px 10px" class="myTableStyle">
+				<table id="dimTableForSearch" data-options="fit:true,singleSelect:true,title:'待选维度',iconCls:'icon-paper',headerCls:'panel-header-gray'">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'dimCode',width:170">维度编码</th>
+							<th data-options="field:'dimName',width:250">维度名称</th>
+						</tr>
+					</thead>
+				</table>	
+			</div>
+			<!--取数规则待配置界面-->
+			<div data-options="region:'center',headerCls:'panel-header-gray'"  style="padding:10px 10px 10px 5px;border:none">
+				<table id="configDimRuleTree" data-options="fit:true,idField:'ID',treeField:'name',checkbox:true,cascadeCheck:false,title:'已选维度列表',iconCls:'icon-paper',headerCls:'panel-header-gray'">
+					<thead>
+						<tr>
+							<th field="name" width="260" align="left">描述</th>
+							<th field="code" width="200" align="right">编码</th>
+						</tr>
+					</thead>	
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<div id="dimRuleList" style="display:none">
+		<label for="dimRuleListBox" style="padding-left:4px">当前规则:</label>
+		<input class="hisui-validatebox" type="text" id="dimRuleListBox" data-options="required:false" style="width:345px"></input>
+		<a href="javascript:void(0)" style="margin-top:-2px" id="defineButton" class="hisui-linkbutton hover-dark">确定</a>
+	</div>
+	
+	
+	
+	
+	<!--过滤规则-->
+	<!--指标过滤规则配置界面-->
+	<div id="dimFilterConfigDialog" title="过滤规则配置" style="width:1000px;height:530px;backgroud:#fafafa;display:none;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',headerCls:'panel-header-gray'" style="border:none;padding:10px 5px 5px 10px">
+				<table id="dimFilterTree" data-options="fit:true,idField:'ID',treeField:'name',checkbox:false,title:'待选过滤项',iconCls:'icon-paper',headerCls:'panel-header-gray'">
+					<thead>
+						<tr>
+							<th field='name' width="300" align="left">描述</th>
+							<th field='code' width="150" align="right">编码</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			<div data-options="region:'east',headerCls:'panel-header-gray'" style="width:500px;border:none;padding:10px 10px 5px 5px">
+				<table id="filterFunGrid" data-options="fit:true,singleSelect:true,title:'待选过滤函数',iconCls:'icon-paper',headerCls:'panel-header-gray'">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100">ID</th>
+							<th data-options="field:'FilterFuncCode',width:200">函数代码</th>
+							<th data-options="field:'FilterFuncPrototype',width:170">函数原型</th>
+							<th data-options="field:'Desc',width:100,hidden:true">描述</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			<div data-options="region:'south',headerCls:'panel-header-gray'" style="height:270px;border:none;padding:5px 10px 10px 10px">
+				<table id="filterRuleGrid" data-options="fit:true,singleSelect:true,title:'已配置过滤规则',iconCls:'icon-paper',headerCls:'panel-header-gray'">
+					<thead>
+						<tr>
+							<th data-options="field:'operator',width:160">运算规则</th>
+							<th data-options="field:'dimRule',width:340">维度规则</th>
+							<th data-options="field:'filterFun',width:160">过滤函数</th>
+							<th data-options="field:'value',width:260">过滤值</th>
+						</tr>
+					</thead>
+				</table>
+			</div>	
+		</div>	
+	</div>
+	
+	
+	<!--过滤规则运算符弹出框-->
+	<div id = "operatorSelector" title="运算符以及过滤值维护" style = "width:290px;padding:4px;backgroud:#fafafa;display:none">
+		<form id="operatorSelectorForm"  class="myFormShow">
+			<div>
+				<label for="operatorList">运算规则</label>
+				<select id = "operatorList" class="hisui-combobox" name="operatorList" style="width:167px" editable="false">
+					<option value="&&">&&</option>
+					<option value="||">||</option>
+				</select>
+			</div>
+			<div>
+				<label for="filterValue">值</label>
+				<input class="hisui-validatebox" type="text" id="filterValue"  style="width:160px" data-options="required:true"></input>
+			</div>
+		</form>
+	</div>
+	<!--维度预览数据界面的配置end-->
+	<!--过滤规则展示界面-->
+  	
+  	
+  	<!--维度属性新增-->
+  	<div id="dimProAddDialog" style="width:380px;display:none" title="维度属性新增">
+  		<form id="dimProAddForm"  class="myFormShow">
+			<div>
+				<label for="dimProCode">属性编码</label>
+				<input class="hisui-validatebox" type="text" id="dimProCode" data-options="required:true,validType:'isCode'" style="width:220px"/>
+			</div>
+			<div>
+				<label for="dimProName">属性名称</label>
+				<input class="hisui-validatebox" type="text" id="dimProName" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="dimProDesc">属性描述</label>
+				<input class="hisui-validatebox" type="text" id="dimProDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="dimProExCode">执行代码</label>
+				<input class="hisui-validatebox" type="text" id="dimProExCode" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="activeFlag">激活状态</label>
+				<select id="activeFlag" class="hisui-combobox" style="width:226px" data-options="editable:false,panelHeight:100">
+					<option value="N" selected>N</option>
+					<option value="Y">Y</option>
+				</select>
+			</div>
+			<div>
+				<label for="dimProDeli">分隔符</label>
+				<input class="hisui-validatebox" type="text" id="dimProDeli" data-options="required:true,required:false" style="width:220px"/>
+			</div>
+		</form><!--配置修改维度属性信息表单结束-->
+  	</div>
+  	<!--维度属性新增结束-->
+  	
+	
+	<!--维度属性toolbar-->
+    <!--头部功能菜单维护区-->
+  	<div id="dimProToobar" style="display:none">	
+    	<!--维度属性维护按钮//-->
+    	<a href="javascript:void(0)" id="dimProAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">增加</a>
+    	<a href="javascript:void(0)" id="dimProModifyButton" class="hisui-linkbutton" data-options="iconCls:'icon-update',disabled:false" plain="true">修改</a>
+    	<a href="javascript:void(0)" id="dimProDeleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-remove',disabled:false" plain="true">删除</a>
+  	</div><!--头部功能菜单维护区配置结束-->
+	<!--维度属性toolbar-->
+	
+	<!--引入js文件JSURL-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/dim/dimcreate.js"></script>
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>
+﻿

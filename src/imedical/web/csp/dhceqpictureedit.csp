@@ -1,0 +1,171 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+</Script>
+
+<form action="dhceqpictureedit.csp" enctype="multipart/form-data" method=post>
+<isc:SAMPLE>
+	<br>
+	图片文件上传
+	<P>
+</isc:SAMPLE>
+<table width="100%" border="0"> 
+	<tr>
+    <td align="right">说明</td>
+    <td><input name=Remark value=""></td>
+    <td><input name=EquipDR style="WIDTH:0px" value=#($Get(%request.Data("EquipDR",1)))# ></td>
+    <td><input name=CheckListDR style="WIDTH:0px" value=#($Get(%request.Data("CheckListDR",1)))# ></td>
+    <td><input name=rowid style="WIDTH:0px" value=#($Get(%request.Data("rowid",1)))# ></td>
+    <td><input name=SourceType style="WIDTH:0px" value=#($Get(%request.Data("SourceType",1)))# ></td>
+    <td><input name=SourceID style="WIDTH:0px" value=#($Get(%request.Data("SourceID",1)))# ></td>
+    </tr>
+	<tr>
+    <td align="right">图片文件</td>
+    <td><input name=FileStream size=30 type=file></td></tr>
+    <tr>
+    <td></td>
+    <td><input type=submit value="上传">
+    	&nbsp;&nbsp;&nbsp;&nbsp<input type="button" name=BClose onClick="Close()" value="关闭">
+    </td></tr>
+</table>
+</form>
+<server>
+	s equip=$Get(%request.Data("EquipDR",1))
+	s rowid=$Get(%request.Data("RowID",1))
+	s CheckListDR=$Get(%request.Data("CheckListDR",1)) //2009-08-20 党军	
+	s rowid=$Get(%request.Data("rowid",1)) //2012-06-20 ZY	
+	s SourceType=$Get(%request.Data("SourceType",1)) //2012-06-20 ZY
+	s SourceID=$Get(%request.Data("SourceID",1)) //2012-06-20 ZY
+</server>
+
+<script language="javascript">
+	function Close()
+	{
+		try
+		{opener.location.reload()}
+		catch(e)
+		{}
+		window.close();
+	}
+</script>
+
+<!-- As form is submitted to this page look to see if we have the stream in the %request object -->
+<csp:IF CONDITION=($data(%request.MimeData("FileStream",1)))>
+    <ul>
+
+    <script language=Cache runat=server>
+	///存储为文件
+	s equip=$Get(%request.Data("EquipDR",1))
+	s CheckListDR=$Get(%request.Data("CheckListDR",1)) //2009-08-20 党军
+	s rowid=$Get(%request.Data("rowid",1)) //2012-06-20 ZY
+	s SourceType=$Get(%request.Data("SourceType",1)) //2012-06-20 ZY
+	s SourceID=$Get(%request.Data("SourceID",1)) //2012-06-20 ZY
+	if ((equip="")&&(CheckListDR="")&&(SourceType="")&&(SourceID=""))  q //2012-06-20 ZY
+	s remark=$Get(%request.Data("Remark",1))
+	if remark=""
+	{
+		w "<SCR"_"IPT language='Javascript'>"_$c(13,10)
+		w "alert('"_"请输入图片说明!"_"');"
+		w "</SCR"_"IPT>",$c(13,10)
+		;w "<br>请输入图片说明!",!
+		q
+	}
+	s filesize=%request.MimeData("FileStream",1).Size
+	s defaultsize=##class(web.DHCEQCommon).GetSysInfo("990027")
+	i +defaultsize=0 s defaultsize=1
+	if filesize>(defaultsize*1000000)
+	{
+		w "<SCR"_"IPT language='Javascript'>"_$c(13,10)
+		w "alert('"_"上传文件不能大于"_defaultsize_"M!"_"');"
+		w "</SCR"_"IPT>",$c(13,10)
+		;w "<br>文件不能上传!",!
+		;w "<br>上传文件不能大于"_defaultsize_"M!",!
+		q
+	}
+	s filename=%request.MimeData("FileStream",1).FileName
+	s suffix=$p(filename,".",$l(filename,"."))
+	if ($ZCONVERT(suffix,"U")="EXE")
+	{
+		w "<SCR"_"IPT language='Javascript'>"_$c(13,10)
+		w "alert('"_">该类型文件不能上传!"_"');"
+		w "</SCR"_"IPT>",$c(13,10)
+		;w "<br>该类型文件不安全,不能上传!"
+		q
+	}
+	// Mozy	2011-3-29
+	if ($ZCONVERT(suffix,"U")'="BMP")&($ZCONVERT(suffix,"U")'="JPG")&($ZCONVERT(suffix,"U")'="GIF")
+	{
+		Write "<SCR"_"IPT language='Javascript'>"_$c(13,10)
+		Write "alert('该类型文件不能上传!只允许上传jpg,bmp和gif类型图片的文件.');"
+		Write "</SCR"_"IPT>",$c(13,10)
+		Quit
+	}
+	if rowid="" set rowid=##class(web.DHCEQPicture).SaveData("","","","",remark,equip,0,CheckListDR,SourceType,SourceID) //2012-06-20 ZY
+	i (rowid'>0)  q
+	
+	s filename=rowid_"."_suffix	
+	set path=##class(web.DHCEQCommon).GetSysInfo("990004")_filename
+	;set path="D:\trakcare\web\images\shebeipic\"_filename
+	;set path="/data3/TrakCare/web/csp/shebeipic/"_filename
+	d ##class(web.DHCEQPicture).SaveData("","",rowid,filename,remark,equip,0,CheckListDR,SourceType,SourceID) //2012-06-20 ZY
+	
+	;Modified by JDL 2011-69 JDL0082
+	s FtpFlag=##class(web.DHCEQCommon).GetSysInfo("990017")
+	i FtpFlag'=1
+	{
+		Set imgfile=##class(%FileBinaryStream).%New()
+		Set imgfile.Filename=path
+		d imgfile.CopyFrom(%request.GetMimeData("FileStream"))
+		d imgfile.SaveStream()
+		d imgfile.%Close()
+		w "上传成功!"
+		;If ##class(%File).Exists("d:\share\myfile.txt")  d
+		;.Write "It exists",!
+		;.w ##class(%File).Delete("d:\share\myfile.txt")
+		Quit		
+	}
+	else
+	{
+		;采用Ftp上传方式
+		Set ftp=##class(%Net.FtpSession).%New()
+		set server=##class(web.DHCEQCommon).GetSysInfo("990018")
+		set name=$p(server,"&",2)
+		set password=$p(server,"&",3)
+		set port=21
+		i $p(server,"&",4)'="" set port=$p(server,"&",4)
+		set server=$p(server,"&",1)
+		If 'ftp.Connect(server,name,password,port) Write "Not connected",! Quit
+		;Write "Ftp server messsage:",!,ftp.ReturnMessage,!
+		;Set stream=##class(%GlobalCharacterStream).%New()
+		If 'ftp.Binary() Write "Can not swap to binary mode",! Quit
+		;Write "Mode now: ",ftp.Type,!
+		;Write "FileName: ",filename,!
+		;Write "GetMimeData: ",%request.GetMimeData("FileStream"),!
+		;Set imgfile=##class(%FileBinaryStream).%New()
+		;d imgfile.CopyFrom(%request.GetMimeData("FileStream"))
+		;If 'ftp.Store(filename,imgfile) Write "Failed to save file",! Quit
+		;s filename="/img/"_filename
+		;s filename=path_filename 
+		If 'ftp.Store(path,%request.GetMimeData("FileStream")) Write "Failed to save file",! Quit
+		;Write "Length of file received: ",stream.Size,!
+		If 'ftp.Logout() Write "Failed to logout",! Quit
+		w "上传成功!"
+		Quit
+	}
+    </script>
+    </ul>
+</csp:IF>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+</Script>
+</HTML>
+

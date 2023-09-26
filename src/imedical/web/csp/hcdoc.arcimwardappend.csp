@@ -1,0 +1,544 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 dhcdoc.arcimwardappend.csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON> 
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.easyui.1.3.5.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcdoc/css/dhcdoccomconfig.css"></LINK>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css"/>
+ </head> 
+  <body class="easyui-layout" data-options="fit:true,border:false">
+  	<div data-options="region:'west',split:true" style="width:400px"> 
+		<div id="tabs" class="easyui-tabs" style="height:600px;">
+			<div title="用法列表" style="">   
+				<input id="searchInstrItem" class="easyui-searchbox" style="width:300px" data-options="searcher:searchInstrItem,prompt:'请输入用法'"></input>  
+				<table id="tabInstrList"></table> 
+			</div>   
+			<div title="医嘱列表" >   
+				<input id="searchArcimItem" class="easyui-searchbox" style="width:300px" data-options="searcher:searchArcimItem,prompt:'请输入医嘱项'"></input>  
+				<table id="tabArcimList"></table> 
+			</div>   
+		</div>
+  	</div>
+    <div data-options="region:'center',split:true,title:'自动关联医嘱'"> 
+		<!--关联医嘱设置table--> 
+		<table id="tabArcimWardList"></table> 
+	</div> 
+<script type="text/javascript">
+var instrDataGrid;
+var arcimDataGrid;
+var instrArcimWardListDataGrid;
+var editRow1;
+var AddeditRow1;
+$(function(){
+	InitInstrList();
+	InitArcimList();
+	InitInstrArcimWardList();
+	
+	
+});
+function InitInstrArcimWardList() {
+	var instrArcimWardListColumns=[[    
+    	{ field: 'ARCIMDesc', title: '医嘱项名称',  width:120,align: 'center', sortable: true, 
+        	editor:{
+		    	type:'combogrid',
+		        options:{
+		        	required: true,
+					panelWidth:450,
+					panelHeight:350,
+					idField:'ArcimRowID',
+					textField:'ArcimDesc',
+					value:'',//缺省值 
+					mode:'remote',
+					pagination : true,//是否分页   
+					rownumbers:true,//序号   
+					collapsible:false,//是否可折叠的   
+					fit: true,//自动大小   
+					pageSize: 10,//每页显示的记录条数，默认为10   
+					pageList: [10],//可以设置每页记录条数的列表  
+					url:PUBLIC_CONSTANT.URL.QUERY_GRID_URL,
+					columns:[[
+					{field:'ArcimDesc',title:'名称',width:400,sortable:true},
+					{field:'ArcimRowID',title:'ID',width:120,sortable:true},
+					{field:'selected',title:'ID',width:120,sortable:true,hidden:true}
+					]],
+					keyHandler:{
+						up: function () {
+							var selected = $(this).combogrid('grid').datagrid('getSelected');
+							if (selected) {
+								var index = $(this).combogrid('grid').datagrid('getRowIndex', selected);
+								if (index > 0) {
+									$(this).combogrid('grid').datagrid('selectRow', index - 1);
+								}
+							} else {
+								var rows = $(this).combogrid('grid').datagrid('getRows');
+								$(this).combogrid('grid').datagrid('selectRow', rows.length - 1);
+							}
+						},
+						down: function () {
+							var selected = $(this).combogrid('grid').datagrid('getSelected');
+							if (selected) {
+								var index = $(this).combogrid('grid').datagrid('getRowIndex', selected);
+								if (index < $(this).combogrid('grid').datagrid('getData').rows.length - 1) {
+									$(this).combogrid('grid').datagrid('selectRow', index + 1);
+								}
+							} else {
+								$(this).combogrid('grid').datagrid('selectRow', 0);
+							}
+						},
+						left: function () {
+							return false;
+						},
+						right: function () {
+							return false;
+						},            
+						enter: function () { 
+							var selected = $(this).combogrid('grid').datagrid('getSelected');  
+							if (selected) { 
+								$(this).combogrid("options").value=selected.ArcimDesc;
+								var ArcimSelRow=instrArcimWardListDataGrid.datagrid("selectRow",editRow1).datagrid("getSelected"); 
+								var oldInstrArcimId=ArcimSelRow.InstrArcimId;
+								if ((oldInstrArcimId!="")&&(oldInstrArcimId!=undefined)){
+									ArcimSelRow.InstrArcimId=oldInstrArcimId.split("&")[0]+"&"+selected.ArcimRowID;
+								}else{
+									ArcimSelRow.InstrArcimId=selected.ArcimRowID;
+								}
+							}
+							$(this).combogrid('hidePanel');
+							$(this).focus();
+						},
+						query:function(q){
+							var object1=new Object();
+							object1=$(this)
+							if (this.AutoSearchTimeOut) {
+								window.clearTimeout(this.AutoSearchTimeOut)
+								this.AutoSearchTimeOut=window.setTimeout(function(){ LoadItemData(q,object1);},400); 
+							}else{
+								this.AutoSearchTimeOut=window.setTimeout(function(){ LoadItemData(q,object1);},400); 
+							}
+							$(this).combogrid("setValue",q);
+						}
+					},
+					onSelect : function(rowIndex, rowData) {
+						var ArcimSelRow=instrArcimWardListDataGrid.datagrid("selectRow",editRow1).datagrid("getSelected"); 
+						var oldInstrArcimId=ArcimSelRow.InstrArcimId;
+						if ((oldInstrArcimId!="")&&(oldInstrArcimId!=undefined)){
+						ArcimSelRow.InstrArcimId=oldInstrArcimId.split("&")[0]+"&"+rowData.ArcimRowID;
+						}else{
+						ArcimSelRow.InstrArcimId=rowData.ArcimRowID;
+						}
+					}
+				}
+			}
+		},{ field: 'InstrArcimId', hidden:true}
+		,{ field: 'Index', hidden:true},
+		{field : 'AppendType',title : '绑定途径',width:80,
+			editor : {
+				type:'combobox',
+				options:{
+					valueField:'code',
+					textField:'desc',
+					required:true,
+					data:[{"code":"1","desc":"下医嘱绑定"},{"code":"2","desc":"执行绑定"}]
+				}
+			},formatter: function(value,row,index){
+				if (value=="1"){
+					return "下医嘱绑定";
+				}else if (value=="2"){
+					return "执行绑定";
+				}
+			}
+		},{field : 'ExecType',title : '绑定方式',width:80,
+        	editor : {
+				type:'combobox',
+				options:{
+					valueField:'code',
+					textField:'desc',
+					required:true,
+					data:[{"code":"1","desc":"按天"},{"code":"2","desc":"按次"}]
+				}
+			},formatter: function(value,row,index){
+				if (value=="1"){
+					return "按天";
+				}else if (value=="2"){
+					return "按次";
+				}
+			}
+     	},{
+			field : 'Active',title : '启用',width:40,
+			editor : {
+				type : 'checkbox',
+				options : {
+					on : 'Y',
+					off : 'N'
+				}
+			}
+		},{
+			field : 'additionalNum',title : '起收数量',width:40,
+			editor : {type : 'text',options : {}}
+		}
+ 	]];
+ 	/*
+ 	医生站-  增加用法关联医嘱和医嘱关联医嘱的配置功能，
+ 	需要分病区维护，每个病区维护各自病区的，
+ 	可以用于护士执行医嘱时判断按天还是按次插入关联的补费医嘱，
+ 	包括病区、医嘱数量、开关指向(开医嘱，护士执行)、
+ 	类型(按天，按次)、
+ 	医嘱项目(可以多条，有启停参数)、
+ 	按次起始参数
+	*/
+	var instrArcimWardListToolBar = [{
+            text: '添加',
+            iconCls: 'icon-add',
+            handler: function() { //添加列表的操作按钮添加,修改,删除等
+			    editRow1 = undefined;
+                instrArcimWardListDataGrid.datagrid("rejectChanges");
+                instrArcimWardListDataGrid.datagrid("unselectAll");
+                if (editRow1 != undefined) {
+                    instrArcimWardListDataGrid.datagrid("endEdit", editRow1);
+                    return;
+                }else{
+	                 //添加时如果没有正在编辑的行，则在datagrid的第一行插入一行
+                    instrArcimWardListDataGrid.datagrid("insertRow", {
+                        index: 0,
+                        // index start with 0
+                        row: {
+
+						}
+                    });
+                    //将新插入的那一行开户编辑状态
+                    instrArcimWardListDataGrid.datagrid("beginEdit", 0);
+                    //cureItemDataGrid.datagrid('addEditor',LocDescEdit);
+                    //给当前编辑的行赋值
+                    editRow1 = 0;
+                    AddeditRow1=0;
+                }
+              
+            }
+        },
+        '-', {
+            text: '删除',
+            iconCls: 'icon-remove',
+            handler: function() {
+	            var rows2 = instrArcimWardListDataGrid.datagrid("getSelections");
+				var SelInfo=GetTabsSelect();
+				var SelName=SelInfo.split("^")[0];
+				var SelID=SelInfo.split("^")[1];
+				if ((SelID!="")&&(SelName!="")&&(rows2)){
+	            	$.messager.confirm("提示", "你确定要删除吗?",
+                    function(r) {
+                        if (r) {
+                            var ids = [];
+                            for (var i = 0; i < rows2.length; i++) {
+                                ids.push(rows2[i].Index);
+                            }
+                            var Index=ids.join(',')
+                            $.dhc.util.runServerMethod("DHCDoc.DHCDocConfig.InstrArcim","DeleteArcimWardList","false",function testget(value){
+								if(value=="0"){
+									LoadArcimWardList();
+								}else{
+									$.messager.alert('提示',"删除失败:"+value);
+								}
+								editRow1 = undefined;
+								AddeditRow1= undefined;
+							},"","",SelName,SelID,PUBLIC_CONSTANT.SESSION.GCTLOC_ROWID,Index);
+                        }
+	            	});
+	            
+				} else {
+                	$.messager.alert("提示", "请选择要删除的行", "error");
+				}
+	         
+            }
+        },
+        '-', {
+            text: '保存',
+            iconCls: 'icon-save',
+            handler: function() {
+				var SelInfo=GetTabsSelect();
+				var SelName=SelInfo.split("^")[0];
+				var SelID=SelInfo.split("^")[1];
+				if ((SelID!="")&&(SelName!="")){
+	                if (editRow1 != undefined){
+	                	var editors = instrArcimWardListDataGrid.datagrid('getEditors', editRow1);  
+	                	var ArcimSelRow=instrArcimWardListDataGrid.datagrid("selectRow",editRow1).datagrid("getSelected"); 
+						var InstrArcimId=ArcimSelRow["InstrArcimId"];
+						if (InstrArcimId.indexOf("&")!=-1){
+							//var selInstrRowID=InstrArcimId.split("&")[0];
+							var curEditRow=editRow1
+							var ArcimId=InstrArcimId.split("&")[1];
+						}else{
+							var curEditRow="";
+							var ArcimId=InstrArcimId;
+						}
+						if (AddeditRow1==0){
+							var curEditRow="";
+						}
+						if ((ArcimId=="")||(ArcimId==undefined)){
+							$.messager.alert("提示","请选择医嘱项!");
+	                        return false;
+						}
+						//绑定途径
+						var AppendType=editors[1].target.combobox('getValue');
+						//绑定方式
+						var ExecType=editors[2].target.combobox('getValue');
+						//启用
+						var Active=editors[3].target.is(":checked");
+						if (Active){Active="Y";}else{Active="N";}
+						//起收数量
+						var additionalNum=editors[4].target.val();
+						if (AppendType==""){
+							$.messager.alert("提示","请选择绑定途径!");
+	                        return false;
+						}
+						if (ExecType==""){
+							$.messager.alert("提示","请选择绑定方式!");
+	                        return false;
+						}
+						if ((AppendType=="1")&&(additionalNum>0)){
+							$.messager.alert("提示","下医嘱绑定时仅支持起始数量0");
+	                        return false;
+						}
+						/*
+						if ((SelName=="Arcim")&&(ExecType=="1")){
+							$.messager.alert("提示","按医嘱绑定医嘱维护时仅支持按次");
+	                        return false;
+						}
+						*/
+						
+						var LocId=PUBLIC_CONSTANT.SESSION.GCTLOC_ROWID;
+						var SaveInfo=LocId+"^"+ArcimId+"^"+AppendType+"^"+ExecType+"^"+Active+"^"+additionalNum;
+	                	$.dhc.util.runServerMethod("DHCDoc.DHCDocConfig.InstrArcim","SaveArcimWardList","false",function testget(value){
+							if(value=="0"){
+	                			editRow1 = undefined;
+								LoadArcimWardList();
+							}else{
+								$.messager.alert('提示',"保存失败:"+value);
+								return false;
+							}
+							editRow1 = undefined;
+							AddeditRow1=undefined;
+							},"","",SelName,SelID,SaveInfo);
+					}
+	             }else{
+		            $.messager.alert("提示", "请选择一个左侧需要维护的数据", "error"); 
+		         }
+            }
+        }];
+	
+	
+	
+	instrArcimWardListDataGrid=$('#tabArcimWardList').datagrid({  
+		fit : true,
+		width : 'auto',
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : false,
+		autoRowHeight : false,
+		url : PUBLIC_CONSTANT.URL.QUERY_GRID_URL,
+		loadMsg : '加载中..',  
+		pagination : true,  //
+		rownumbers : true,  //
+		idField:"Index",
+		pageList : [15,50,100,200],
+		columns :instrArcimWardListColumns,
+		toolbar :instrArcimWardListToolBar,
+		onClickRow : function(rowIndex, rowData) {
+			LoadArcimWardList();
+		},onLoadError:function(arg1,arg2){
+			debugger
+		}
+	});
+	
+	
+	
+}
+
+function searchInstrItem(value,name){
+	loadInstrDataGrid(value);
+}
+
+function InitInstrList(){
+	///用法列表columns
+    var instrColumns=[[    
+        			{ field: 'InstrDesc', title: '用法名称', width: 100, align: 'center', sortable: true, resizable: true},
+					{ field: 'InstrRowID', title: '用法ID', width: 100, align: 'center', sortable: true, resizable: true,hidden:true}
+    			 ]];
+     // 用法列表Grid
+	instrDataGrid=$('#tabInstrList').datagrid({  
+		fit : true,
+		width : 'auto',
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : true,
+		autoRowHeight : false,
+		url : PUBLIC_CONSTANT.URL.QUERY_GRID_URL,
+		loadMsg : '加载中..',  
+		pagination : true,  //
+		rownumbers : true,  //
+		idField:"InstrRowID",
+		pageList : [15,50,100,200],
+		//frozenColumns : FrozenCateColumns,
+		columns :instrColumns,
+		onClickRow:function(rowIndex, rowData){
+			LoadArcimWardList();
+		},onBeforeLoad:function(param){
+			param.ClassName ='DHCDoc.DHCDocConfig.InstrArcim';
+			param.QueryName ='FindInstr';
+			param.Arg1 =function(){return $("#searchInstrItem").searchbox("getValue");};
+			param.ArgCnt =1;
+			
+		}
+		
+	});
+	//loadInstrDataGrid("");
+}
+function loadInstrDataGrid(value){
+	instrDataGrid.datagrid('unselectAll');
+	instrDataGrid.datagrid('reload');
+	return
+	var queryParams = new Object();
+	queryParams.ClassName ='DHCDoc.DHCDocConfig.InstrArcim';
+	queryParams.QueryName ='FindInstr';
+	queryParams.Arg1 =value;
+	queryParams.ArgCnt =1;
+	//console.info(queryParams)
+	var opts = instrDataGrid.datagrid("options");
+	opts.url = PUBLIC_CONSTANT.URL.QUERY_GRID_URL;
+	instrDataGrid.datagrid('load', queryParams);
+}
+function searchArcimItem(value,name){
+	LoadItemListDataGrid(value)
+}
+function InitArcimList(){
+	///用法列表columns
+    /*var ArcimColumns=[[    
+		{ field: 'ARCIMRowID', title: 'ID', width: 5, align: 'center', sortable: true
+		}, 
+		{ field: 'ARCICDesc', title: '子类', width: 5, align: 'center', sortable: true, resizable: true
+		},
+		{ field: 'ARCIMDesc', title: '项目名称', width: 20, align: 'center', sortable: true, resizable: true
+		}
+	 ]];*/
+	 var ArcimColumns=[[    
+		{ field: 'ArcimRowID', title: 'ID', width: 5, align: 'center', sortable: true
+		}, 
+		{ field: 'ArcimDesc', title: '项目名称', width: 20, align: 'center', sortable: true, resizable: true
+		}
+	 ]];
+     // 用法列表Grid
+	arcimDataGrid=$('#tabArcimList').datagrid({  
+		fit : true,
+		width : 'auto',
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : true,
+		autoRowHeight : false,
+		url : PUBLIC_CONSTANT.URL.QUERY_GRID_URL,
+		loadMsg : '加载中..',  
+		pagination : true,  //
+		rownumbers : true,  //
+		idField:"ARCIMRowID",
+		pageList : [15,50,100,200],
+		//frozenColumns : FrozenCateColumns,
+		columns :ArcimColumns,
+		onClickRow:function(rowIndex, rowData){
+			LoadArcimWardList();
+		},onLoadError:function(arg1,arg2){
+		}
+		
+	});
+	///LoadItemListDataGrid
+}
+function LoadItemListDataGrid(param)
+{
+	var queryParams = new Object();
+	/*queryParams.ClassName ='DHCDoc.DHCDocConfig.InstrArcim';
+	queryParams.QueryName ='FindArcimWardList';
+	queryParams.Arg1 =PUBLIC_CONSTANT.SESSION.GCTLOC_ROWID;
+	queryParams.Arg2 =param;
+	queryParams.ArgCnt =2;*/
+	queryParams.ClassName ='DHCDoc.DHCDocConfig.ArcItemConfig';
+	queryParams.QueryName ='FindAllItem';
+	queryParams.Arg1 =param;
+	queryParams.ArgCnt =1;
+	var opts = arcimDataGrid.datagrid("options");
+	opts.url = PUBLIC_CONSTANT.URL.QUERY_GRID_URL;
+	arcimDataGrid.datagrid('load', queryParams);
+};
+
+
+function LoadItemData(q,obj1){
+	var val = q //$('#Combo_Arcim').combogrid('getValue'); 
+    var queryParams = new Object();
+	queryParams.ClassName ='DHCDoc.DHCDocConfig.ArcItemConfig';
+	queryParams.QueryName ='FindAllItem';
+	queryParams.Arg1 =val;
+	queryParams.ArgCnt =1;
+	var opts = obj1.combogrid("grid").datagrid("options");
+	opts.url = PUBLIC_CONSTANT.URL.QUERY_GRID_URL;
+	obj1.combogrid("grid").datagrid('load', queryParams);
+};	
+
+function LoadArcimWardList(){
+	var SelInfo=GetTabsSelect();
+	var SelName=SelInfo.split("^")[0];
+	var SelID=SelInfo.split("^")[1];
+	var queryParams = new Object();
+	queryParams.ClassName ='DHCDoc.DHCDocConfig.InstrArcim';
+	queryParams.QueryName ='FindArcimWardLink';
+	queryParams.Arg1 =PUBLIC_CONSTANT.SESSION.GCTLOC_ROWID;
+	queryParams.Arg2 =SelName;
+	queryParams.Arg3 =SelID;
+	queryParams.ArgCnt =3;
+	var opts = instrArcimWardListDataGrid.datagrid("options");
+	opts.url = PUBLIC_CONSTANT.URL.QUERY_GRID_URL;
+	instrArcimWardListDataGrid.datagrid('load', queryParams);
+	editRow1 = undefined;
+}
+
+function GetTabsSelect(){
+	var SelTab=$('#tabs').tabs('getSelected');
+	var index = $('#tabs').tabs('getTabIndex',SelTab);
+	var SelID="";
+	var Sel=""
+	if (index==0){
+		Sel="Instr";
+		var rows = instrDataGrid.datagrid("getSelections");
+		if (rows && rows.length > 0){ 
+			var ids = [];
+			for (var i = 0; i < rows.length; i++) {
+				ids.push(rows[i].InstrRowID);
+			}
+			SelID=ids.join(',');
+		}
+	}else if (index==1){
+		Sel="Arcim";
+		var rows = arcimDataGrid.datagrid("getSelections");
+		if (rows && rows.length > 0){ 
+			var ids = [];
+			for (var i = 0; i < rows.length; i++) {
+				ids.push(rows[i].ARCIMRowID);
+			}
+			SelID=ids.join(',');
+		}
+	}
+	return Sel+"^"+SelID
+	
+}
+
+	
+</script>	
+
+</body>
+</html>

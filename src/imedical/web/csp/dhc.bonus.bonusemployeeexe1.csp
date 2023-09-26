@@ -1,0 +1,64 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s str=$Get(%request.Data("query",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s valid=$Get(%request.Data("valid",1))
+	
+	s unitdr=$Get(%request.Data("unitdr",1))
+	
+	s sUnitID=$Get(%request.Data("sUnitID",1))
+	s BonusUnitTypeID =$Get(%request.Data("BonusUnitTypeID",1))
+	s ^zlgtemp5=name
+	
+	i action = "unitemp" d
+	.w ##class(dhc.bonus.udata.uBonusEmployee).GetUnitEmp(sUnitID)
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uBonusEmployee).List(searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "unit" d
+	.w ##class(dhc.bonus.udata.uBonusEmployee).BonusUnit(start,limit,str,BonusUnitTypeID)
+	
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uBonusEmployee).InsertRec(code,name,unitdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uBonusEmployee).UpdateRec(rowid,code,name,unitdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uBonusEmployee).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

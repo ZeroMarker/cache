@@ -1,0 +1,582 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.-->
+<!--DHCDocPatAssPlan.csp HUI诊疗计划--> 
+<!DOCTYPE html>
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/calendar-js/js/WdatePicker.js"></script>
+<STYLE type='text/css'>
+label{
+	text-align:right;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	table-layout: fixed;
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header-gray{
+	border-bottom:0;
+}
+</STYLE>
+<Server>
+s EpisodeID=%request.Get("EpisodeID")
+s UserID=%session.Get("LOGON.USERID")
+s UserType=##class(web.DHCDocPatAssPlan).GetUserType(UserID)
+</Server>
+<script type="text/javascript">
+var EpisodeID="#(EpisodeID)#";
+var UserType="#(UserType)#";
+</script>
+ </head>
+<body>
+<div class="hisui-panel" fit="true" style="padding:10px;border:0;">
+	<div id="layout_main" class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'center',border:false,split:true" style="padding-right:5px;">
+			<div class="hisui-panel" fit="true" data-options="" style="border:1px solid #ccc;border-radius:10px;height:100%;">
+				<!--主数据列表-->
+				<table id="PatAssPlanDataGrid"></table>
+			</div>
+		</div>
+		<div id="FavPannel" class="hisui-panel" data-options="region:'east',iconCls:'',title:'知识库',headerCls:'panel-header-gray',split:true,collapsible:true,collapsed:true" style="width:400px;overflow-y:hidden;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		</div>
+	</div>
+</div>
+
+<!-- 保存或修改的mode窗口 -->
+<div id="Editwin" class="hisui-dialog" title="编辑" style="width:630px;height:470px" data-options="iconCls:'icon-w-edit',modal:true">  
+	<div style="border:0;">  
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<lable for ="UserType">人员类型</lable>
+				</td>
+				<td>
+					<select id="UserType" class="hisui-combobox textbox" style="width:200px;">
+						<option value=""></option>
+					    <option value="DOCTOR">DOCTOR</option>   
+					    <option value="NURSE">NURSE</option>
+					    <option value="Dietitian">Dietitian</option>
+					    <option value="Other">Other</option>    
+					</select> 
+				</td>
+				<td class="r-label">
+					<lable for ="SymptomTime">发现问题时间</lable>
+				</td>
+				<td>
+					<input class="hisui-datetimebox textbox" id="SymptomTime" data-options="required:true,showSeconds:false,formatter:myformatter,parser:myparser" style="width:200px" /> 
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<lable for ="PatSymptom">患者问题</lable>
+				</td>
+				<td>
+					<textarea id ="PatSymptom" style="width:196px;height:80px;"></textarea>
+				</td>
+				<td class="r-label">
+					<lable for ="ExpectedGoal">预期目标</lable>
+				</td>
+				<td>
+					<textarea id ="ExpectedGoal" style="width:196px;height:80px;"></textarea>
+				</td>
+			</tr>
+			<tr style="">
+				<td class="r-label">
+					<lable for ="editforMeasures">措施</lable>
+				</td>
+				<td colspan="3">
+					<textarea id ="editforMeasures" style="width:500px;height:80px;"></textarea>
+			    </td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<lable for ="ExpectedCompletionTime">预计完成时间</lable>
+				</td>
+				<td>
+					<input class="hisui-datetimebox" id="ExpectedCompletionTime" data-options="showSeconds:false,formatter:myformatter,parser:myparser" style="width:200px" /> 
+			    </td>
+			    <td class="r-label">
+			    	<lable for ="ResultCode">结果</lable>
+			    </td>
+			    <td>
+					<select id="ResultCode" class="hisui-combobox textbox"style="width:200px;">  
+						<option value=""></option> 
+					    <option value="01">解决</option>   
+					    <option value="02">部分解决</option>
+					    <option value="03">未解决</option> 
+					</select> 
+			    </td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<lable for ="Result">结果备注</lable>
+				</td>
+			    <td colspan="3">
+					<textarea id ="Result" style="width:500px;height:80px;"></textarea>
+			    </td>
+			</tr>
+		    <tr style="text-align:center;">
+		    	<td colspan="4">
+					<a id="CancelBtn" href="#" class="hisui-linkbutton">取消</a>
+					<a id="SaveBtn" href="#" class="hisui-linkbutton" style="margin-left:10px;">保存</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+<script type="text/javascript">
+	var PlanListDataGrid;
+	var EditRowID;
+	$(function(){
+		if (EpisodeID==""){
+			$.messager.alert("提示","请选择病人!");
+			return false;
+		}
+		InitPlanList();
+		//InitEdit();
+		$("#SaveBtn").click(SaveInfoClickHandle);
+		$('#layout_main').layout('panel', 'east').panel({
+	        onExpand: function() {
+	            if ($("#FavTree").length==0){
+					_content = '<iframe id="FavTree" name="FavTree" src="DHCDocPatAssPlanFav.csp?Edit=No" style="width:100%;height:99.3%;" frameborder="0" scrolling="no"></iframe>'
+					$("#FavPannel").html(_content);
+				}  
+	        }
+	    });
+		$('#Editwin').window({
+			collapsible:false,
+			minimizable:false,
+			maximizable:false,
+			closed:false,
+			modal:true
+		}).window('close');
+		$("#UserType").combobox({disabled:true});
+		$("#CancelBtn").click(function(){$('#Editwin').window('close');});
+	})
+	function AddFavToTable(FavRowID){
+		//alert(FavRowID+","+EpisodeID+","+UserType+","+session['LOGON.USERID'])
+		$.ajax({
+			type : 'POST',
+			dataType : 'json',
+			url : '../web.DHCDocPatAssPlan.cls',
+			async : false,
+			cache : false,
+			data : {
+				action : 'InsFavToTable',
+				FavRowID : FavRowID,
+				EpisodeID: EpisodeID,
+				UserType: UserType,
+				SignUser: session['LOGON.USERID']
+				
+			},
+			success : function (ret) {
+				//PlanListDataGrid.datagrid('reload');
+				PlanListDataGridLoad();
+			},
+			error : function (ret) {
+				alert("InsFavToTable:" + ret);
+			}
+		});
+	}
+	function SaveInfoClickHandle(){
+		var SelRow=PlanListDataGrid.datagrid("getSelected");
+		var RowID=EditRowID;
+		var UserType=$("#UserType").combobox("getValue");
+		var SymptomTimeInfo=$("#SymptomTime").datetimebox("getValue");
+		var PatSymptom=$("#PatSymptom").val();
+		var ExpectedGoal=$("#ExpectedGoal").val();
+		//var Measures=$('#editforMeasures').froalaEditor('html.get');
+		var Measures=$("#editforMeasures").val();
+		var ExpectedCompletionTimeInfo=$("#ExpectedCompletionTime").datetimebox("getValues");
+		var SignUser="";
+		if (RowID=="") {
+			SignUser=session['LOGON.USERID'];
+		}
+		var ResultCode=$("#ResultCode").combobox("getValue");
+		var Result=$("#Result").val();
+		var ResultUser=""
+		if ((!SelRow)||(ResultCode!=SelRow.ResultCode)||(Result!=SelRow.Result)){
+			ResultUser=session['LOGON.USERID'];
+		}
+		var UpdateUser=session['LOGON.USERID'];
+		var Param=RowID+"^"+UserType+"^"+SymptomTimeInfo+"^"+PatSymptom+"^"+ExpectedGoal;
+		var Param=Param+"^"+Measures+"^"+ExpectedCompletionTimeInfo+"^"+SignUser+"^"+ResultCode+"^"+Result
+		var Param=Param+"^"+ResultUser+"^"+UpdateUser;
+		$.ajax({
+			type : 'POST',
+			dataType : 'json',
+			url : '../web.DHCDocPatAssPlan.cls',
+			async : false,
+			cache : false,
+			data : {
+				action : 'SavePAP',
+				EpisodeID:EpisodeID,
+				Param : Param
+			},
+			success : function (ret) {
+				ResetModeInfo({});
+				$('#Editwin').window('close')
+				PlanListDataGridLoad();
+			},
+			error : function (ret) {
+				alert("SavePAP:" + ret);
+			}
+		});
+	}
+	function InitPlanList(){
+		
+		var PlanListBar = [{
+            text: '添加',
+            iconCls: 'icon-add',
+            handler: function() {
+					$('#Editwin').window('open')
+					EditRowID="";
+					ResetModeInfo({SymptomTime:GetCurrDate(),UserType:UserType});
+            	}
+			},{
+	            text: '删除',
+	            iconCls: 'icon-cancel',
+	            handler: function() {
+	                DelRowHandle();
+	            }
+	        },'-',{
+	            iconCls: 'icon-arrow-left',
+	            handler: function() {
+		            Moveclickhandler("Left");
+	            }
+	        },{
+	            iconCls: 'icon-arrow-right',
+	            handler: function() {
+					Moveclickhandler("Right");
+	            }
+	        },{
+	            iconCls: 'icon-arrow-top',
+	            handler: function() {
+	                Moveclickhandler("Up");
+	            }
+	        },{
+	            iconCls: 'icon-arrow-bottom',
+	            handler: function() {
+	                Moveclickhandler("Down");
+	            }
+	        },'-',{
+	            text: '保存为模板',
+	            iconCls: 'icon-save',
+	            handler: function() {
+	                SaveToFav();
+	            }
+	        }
+		];
+		var PlanListColumns=[[
+			{ field: 'SeqNo', title:'序号', width: 50,align: 'left'},
+			{ field: 'RowID', hidden:true}, 
+			{ field: 'UserType', title: '人员', width: 80,align: 'center',
+				styler: function(value,row,index){
+					if ((value=="DOCTOR")||(value=="医生")){
+						return 'background-color:#ffff66;';
+					}else if ((value=="NURSE")||(value=="护士")){
+						return 'background-color:#00CCFF;';
+					}else if ((value=="Dietitian")||(value=="营养师")){
+						return 'background-color:#66ff66;';
+					}
+				}	
+			}, 
+			{ field: 'SymptomTime', title:'发现问题时间', width: 130,align: 'center'},
+			{ field: 'PatSymptom', title: '患者问题', width: 150, align: 'center',
+				formatter: function(value,row,index){
+					return '<span title="' + value + '">'+value+'</span>';
+				}
+			},
+			{ field: 'ExpectedGoal', title: '预期目标', width:150, align: 'left',
+				formatter: function(value,row,index){
+					return '<span title="' + value + '">'+value+'</span>';
+				}
+			},
+			{ field: 'Measures', title: '措施', width: 150, align: 'left',
+				formatter: function(value,row,index){
+					return '<span title="' + value + '">'+value+'</span>';
+				}
+			},
+			{ field: 'ExpectedCompletionTime', title: '预期完成时间', width: 150, align: 'left'},
+			{ field: 'SignUserInfo', title: '签名人/日期', width: 180, align: 'center'},
+			{ field: 'ResultCode', hidden:true},
+			{ field: 'Result', title: '结果', width: 100, align: 'center',
+				styler: function(value,row,index){
+					if (row.ResultCode=="01"){
+						return 'background-color:#66FF99;';
+					}else if (row.ResultCode=="02"){
+						return 'background-color:#FFFF66;';
+					}else if (row.ResultCode=="03"){
+						return 'background-color:#FF3300;';
+					}
+				},
+				formatter: function(value,row,index){
+					return '<span title="' + value + '">'+value+'</span>';
+				}
+			},
+			{ field: 'ResultUserInfo', title: '标注人/时间', width: 180, align: 'center'},
+			{ field: 'OtherInfo', hidden:true}
+		]];
+		PlanListDataGrid=$('#PatAssPlanDataGrid').datagrid({  
+			fit : true,
+			fitColumns:true,
+			width : 'auto',
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false, //为true时 不显示横向滚动条
+			autoRowHeight:false,
+			nowrap: true,
+			//url : PUBLIC_CONSTANT.URL.QUERY_GRID_URL,
+			idField:"RowID",
+			columns :PlanListColumns,
+			toolbar :PlanListBar,
+			loadMsg : '加载中..',  
+			rownumbers : false,  //
+			pagination : false,  //是否分页
+			//pageList : [15,50,100,200],
+			onDblClickRow:function(rowIndex, rowData){
+				if (rowData.UserType!=UserType){
+					$.messaher.alert("无法跨人员类型编辑。");
+					return;
+				}
+				$('#Editwin').window('open')
+				EditRowID=rowData.RowID;
+				var ParamObj={
+					UserType:rowData.UserType,SymptomTime:rowData.SymptomTime,
+					PatSymptom:rowData.PatSymptom,
+					ExpectedGoal:rowData.ExpectedGoal,Measures:rowData.Measures,
+					ExpectedCompletionTime:rowData.ExpectedCompletionTime,ResultCode:rowData.ResultCode,
+					Result:rowData.Result
+				}
+				ResetModeInfo(ParamObj);
+				
+			},onLoadError:function(err){
+			},rowStyler: function(index,row){
+				var OtherInfo=row.OtherInfo;
+				var OtherInfoArr=OtherInfo.split("^");
+				if (OtherInfoArr[0]=="OverTime"){
+					return 'background-color:#F77BFB;';
+				}
+			}
+		});
+		PlanListDataGridLoad();
+	}
+	function PlanListDataGridLoad(){
+		$.cm({
+		    ClassName : "web.DHCDocPatAssPlan",
+		    QueryName : "PatAssPlanList",
+		    EpisodeID:EpisodeID,
+		    Pagerows:PlanListDataGrid.datagrid("options").pageSize,rows:99999
+		},function(GridData){
+			PlanListDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		});
+	}
+	function DelRowHandle(){
+		var SelRow=$('#PatAssPlanDataGrid').datagrid('getSelected');
+		if (!SelRow){
+			$.messager.alert("提示","请选中需要删除的记录!")
+			return;
+		}
+		if (SelRow.UserType!=UserType){
+			$.messager.alert("提示","无法跨人员类型删除。");
+			return;
+		}
+		var RowID=SelRow.RowID;
+		$.messager.confirm('确认对话框', '系统将连带子计划单一起删除，确认删除吗？', function(r){
+			if (r){
+			    $.ajax({
+					type: 'POST',
+				    dataType: 'json',
+				    url: '../web.DHCDocPatAssPlan.cls',
+				    async: false,
+				    cache: false,
+				    data: {
+				        action: 'DeletePAP',
+				        RowID: RowID
+				    },
+					success: function (data){
+						if(data=="0"){
+						    //$('#PatAssPlanDataGrid').datagrid('reload');
+						    $('#PatAssPlanDataGrid').datagrid('unselectAll');
+						    PlanListDataGridLoad();
+						}else{
+							$.messager.alert("提示","删除失败:"+data);
+						}
+					},
+					error : function (ret) {
+						$.messager.alert("提示","err:" + ret);
+					}
+				}) 
+			}
+		});
+	}
+	function SaveToFav(){
+		var SelRow=$('#PatAssPlanDataGrid').datagrid('getSelected');
+		if (!SelRow){return;}
+		var RowID=SelRow.RowID;
+		if (!window.FavTree) {
+			$.messager.alert("提示","请选择右侧要保存的模板主节点维护！")
+			return false;
+		}
+		var FavNodeRowID=window.FavTree.SavePatAssToFav();
+		if (FavNodeRowID==""){
+			return
+		}
+		$.messager.prompt('提示信息', '模板名称：', function(Title){
+			if (Title==""){
+				alert("请输入模板名称!");
+				SaveToFav();
+				return false;
+			}
+			if (Title){
+				$.ajax({
+					type: 'GET',
+		            dataType: 'json',
+		            url: '../web.DHCDocPatAssPlan.cls',
+		            async: false,
+		            cache: false,
+		            data: {
+		                action: 'SavePatAssToFav',
+		                PatAssRowID:RowID,
+		                Title:Title,
+		                FavNodeRowID:FavNodeRowID
+		            },
+					success: function (data){
+						window.FavTree.LoadAssPlanFavData();
+					},
+					error : function (ret) {
+						alert("err:" + ret);
+					}
+				}) 
+			}
+		});
+	}
+	function InitEdit(){
+		$('#editforMeasures').froalaEditor({
+			toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', '|', 'paragraphFormat', 'align', 'undo', 'redo', 'html'],
+			colorsBackground: [],
+			colorsDefaultTab: 'text',
+			colorsStep: 6,
+			colorsText: [
+				'#15E67F', '#E3DE8C', '#D8A076', '#D83762', '#76B6D8', 'REMOVE',
+				'#1C7A90', '#249CB8', '#4ABED9', '#FBD75B', '#FBE571', '#FFFFFF'
+			]
+		})
+	}
+	function ResetModeInfo(ParamObj){
+		var ResetInfo={
+				UserType:"",SymptomTime:"",PatSymptom:"",ExpectedGoal:"",
+				Measures:"",ExpectedCompletionTime:"",ResultCode:"",Result:""
+		}
+		$.extend(ResetInfo,ParamObj);
+		$("#UserType").combobox("setValue",ResetInfo.UserType);
+		$("#SymptomTime").datetimebox("setValue",ResetInfo.SymptomTime);
+		$("#PatSymptom").val(ResetInfo.PatSymptom);
+		$("#ExpectedGoal").val(ResetInfo.ExpectedGoal);
+		//$('#editforMeasures').froalaEditor('html.set', ResetInfo.Measures);
+		$('#editforMeasures').val(ResetInfo.Measures);
+		$("#ExpectedCompletionTime").datetimebox("setValue",ResetInfo.ExpectedCompletionTime);
+		$("#ResultCode").combobox("setValue",ResetInfo.ResultCode);
+		$("#Result").val(ResetInfo.Result);
+	}
+	function GetCurrDate(){
+		var myDate = new Date();
+		var year=myDate.getFullYear();
+		var month=myDate.getMonth()+1;
+		var date=myDate.getDate(); 
+		var h=myDate.getHours();       //获取当前小时数(0-23)
+		var m=myDate.getMinutes();     //获取当前分钟数(0-59)
+		var s=myDate.getSeconds();
+		return year+"-"+month+"-"+date+" "+h+":"+m
+	}
+	function Moveclickhandler(MoveType){
+		//Left,Right,Up,Down
+		var SelRow=$('#PatAssPlanDataGrid').datagrid('getSelected');
+		if (!SelRow){return;}
+		if (SelRow.UserType!=UserType){
+			$.messager.alert("提示","无法跨人员类型编辑。");
+			return;
+		}
+		var RowID=SelRow.RowID;
+		$.ajax({
+			type : 'POST',
+			dataType : 'json',
+			url : '../web.DHCDocPatAssPlan.cls',
+			async : false,
+			cache : false,
+			data : {
+				action : 'MoveAction',
+				RowID : RowID,
+				UserType: UserType,
+				MoveType: MoveType
+			},
+			success : function (ret) {
+				//$('#PatAssPlanDataGrid').datagrid('reload');
+				PlanListDataGridLoad();
+				$('#PatAssPlanDataGrid').datagrid('selectRecord',RowID);
+			},
+			error : function (ret) {
+				$.messager.alert("提示","Moveclickhandler err:" + ret);
+			}
+		});
+	}
+	var DateFormat=tkMakeServerCall("websys.Conversions","DateFormat")
+	function myformatter(date){
+		var y = date.getFullYear();
+		var m = date.getMonth()+1;
+		var d = date.getDate();
+		var h = date.getHours();       //获取当前小时数(0-23)
+	    var M = date.getMinutes();     //获取当前分钟数(0-59)
+		if (DateFormat==3){
+			return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d)+" "+h+":"+(M<10?('0'+M):M);
+		}else if(DateFormat==4){
+			return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y+" "+h+":"+(M<10?('0'+M):M);
+		}
+    } 
+	function myparser(s){
+		if (!s) return new Date();
+		if (DateFormat==3){
+			var ss = s.split(" ")[0].split('-');
+			var y = parseInt(ss[0],10);
+			var m = parseInt(ss[1],10);
+			var d = parseInt(ss[2],10);
+			var h = parseInt(s.split(" ")[1].split(":")[0],10); 
+			var M = parseInt(s.split(" ")[1].split(":")[1],10);
+			if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+				return new Date(y,m-1,d,h,M);
+			} else {
+				return new Date();
+			}
+		}else if(DateFormat==4){
+			var ss = s.split(" ")[0].split('/');
+			var y = parseInt(ss[2],10);
+			var m = parseInt(ss[1],10);
+			var d = parseInt(ss[0],10);
+			var h = parseInt(s.split(" ")[1].split(":")[0],10); 
+			var M = parseInt(s.split(" ")[1].split(":")[1],10);
+			if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+				return new Date(y,m-1,d,h,M);
+			} else {
+				return new Date();
+			}
+		}
+	}
+function xhrRefresh(obj){
+	if (typeof obj !="object"){return}
+	EpisodeID=obj.adm;
+	PlanListDataGridLoad();
+}
+</script>
+</body>
+</html>

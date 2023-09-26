@@ -1,0 +1,194 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. dhcResEffDateSession.csp--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css" />
+<script language="Cache" RUNAT="SERVER">
+	w !," <input id='MNew' name='MNew' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.InsertOneSchedule"))_"'>"
+	w !," <input id='MBase' name='MBase' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.UpdateOneSchedule"))_"'>"
+	w !," <input id='GetTRTimeStrMethod' name='GetTRTimeStrMethod' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBResSession.GetTRTimeStrByRowId"))_"'>"
+	w !," <input id='GetDocResource' name='GetDocResource' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCApptScheduleNew.GetDocResource"))_"'>"
+	w !," <input id='MStop' name='MStop' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.StopOneSchedule"))_"'>"
+	w !," <input id='MRep' name='MRep' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.ReplaceOneSchedule"))_"'>"
+</script>
+
+<!--script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/locale/utf_8_zh_cn.js"></script-->
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="../scripts/dhcResEffDateSession.js"></script>
+<style>
+*{
+	font-size:14px !important;
+	font-family: "Microsoft Yahei" !important;
+}
+  .tabs li a.tabs-inner{
+	  padding: 0px;
+  }
+  /*.panel-header,.datagrid-toolbar,.datagrid-view,.datagrid .panel-body{
+	  width:100% !important;
+  }*/
+</style>
+</head>
+<body class="easyui-layout" data-options="fit:true" >
+<SCRIPT Language="Javascript">
+/*function myformatter(date){
+ var y = date.getFullYear();
+ var m = date.getMonth()+1;
+ var d = date.getDate();
+ return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y
+ }
+ function myparser(s){
+ if (!s) return new Date();
+ var ss = (s.split('-'));
+ var y = parseInt(ss[0],10);
+ var m = parseInt(ss[1],10);
+ var d = parseInt(ss[2],10);
+ if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+ return new Date(y,m-1,d);
+ }else{
+ return new Date();
+ }
+ }*/
+
+</SCRIPT>
+<Server>
+
+;s TDis=1
+</Server>
+ <div data-options="region:'west',split:true,collapsible:false,closable:false" title="科室医生" style="width:360px;">
+    <div class="easyui-layout" data-options="fit:true" >
+        <div class="easyui-panel" style="padding:3px 0px 3px 3px;border-bottom:1px solid #95B8E7;height:70px;" data-options="region:'north'">
+		 	<span style="font-size:13px;color:red;">科室搜索&nbsp</span><input id="SerchLoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/拼音码'/>
+			<!--a href="#" class="easyui-linkbutton" id="FindAll"><span class="icon-find-custom">&nbsp&nbsp&nbsp&nbsp</span>查找全部科室</a-->
+			<a id='FindAll' class="i-btn i-btn-primary" style="margin-top:-28px;margin-left:230px;" href="#" name=Save><IMG border=0 src="../images/uiimages/search.png">查找全部科室</a>
+		    <span style="font-size:13px;color:red;">医生搜索&nbsp</span><input id="SerchDoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/工号'/>
+		</div>
+		
+		<div  class="easyui-panel" fit=true" data-options="region:'center'">
+	      <ul id="LocDocTree"></ul>
+	    </div>
+    </div>
+ </div>
+ <div  id="ScheduleInfo" class="easyui-panel" data-options="region:'center'" collapsible=true title="排班模板信息" fit=true" style="heigth:1000px">
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'center'">
+	    	<div id="ScheduleTab" class="easyui-tabs" data-options="tabPosition:'top',tabWidth:75" fit=true>   
+	    	</div>
+		</div>
+	</div>
+  </div>
+
+
+
+
+<!--div class="easyui-layout" data-options="fit:true">
+	<div class="easyui-panel" data-options="region:'west'" collapsible=true title="科室医生" fit=true" style="width:350px">
+		<div class="easyui-layout" data-options="fit:true" >
+			<div class="easyui-panel" style="padding:3px 0px 3px 3px;border-bottom:1px solid #95B8E7;height:70px;" data-options="region:'north'">
+			 	<div>
+				 	<span style="font-size:13px;color:red;">科室搜索：</span><input id="SerchLoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/拼音码'/>
+					<a id='FindAll' class="i-btn i-btn-primary" style="margin-top:-28px;margin-left:230px;" href="#" name=Save><IMG border=0 src="../images/uiimages/search.png">查找全部科室</a>
+				</div>
+				<span style="font-size:13px;color:red;">医生搜索：</span><input id="SerchDoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/工号'/>
+			<div>
+		</div>
+	</div>
+	<div  class="easyui-panel" fit=true" data-options="region:'center'">
+	   <ul id="LocDocTree"></ul>
+	</div>
+  </div>
+</div>
+	
+	<div  id="ScheduleInfo" class="easyui-panel" data-options="region:'center'" collapsible=true title="排班模板信息" fit=true" style="heigth:1000px">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center'">
+		    	<div id="ScheduleTab" class="easyui-tabs" data-options="tabPosition:'top',tabWidth:75" fit=true>   
+		    	</div>
+			</div>
+		</div>
+	</div>
+</div-->
+    <!--模板新增及修改弹出页面-->
+	<div id="EditWin" class="easyui-window" title="新增排班模板" style="width:800px;height:500px;background:#fafafa" closed=true modal=true>
+		<form style="padding:10px 20px 10px 20px;">
+		<table>
+			<tr>
+				<td><p>科&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp室&nbsp<select id="AdmLoc"  name="AdmLoc"  style="width:150px;height:24px;"/></p></td>
+				<td><p>医&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp生&nbsp<select id="AdmDoc"  name="AdmDoc" class="easyui-combobox" style="width:150px;height:24px;"/></p></td>
+				<td><p><font color="red">诊&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp室&nbsp<select id="LocArea"  name="LocArea" style="width:150px" /></p></td>	
+			</tr>
+			<tr>
+				<td><p>出诊时段&nbsp<select id="TimeRange" name="TimeRange" style="width:150px;height:24px;" /></p></td>
+				<td><p>挂&nbsp号&nbsp职&nbsp称&nbsp<select id="DocSession"  name="DocSession" class="easyui-combobox" style="width:150px;height:24px;"/></p></td>
+				<td><p>亚&nbsp&nbsp&nbsp&nbsp专&nbsp&nbsp&nbsp&nbsp业&nbsp<select id="ClinicGroup"  name="ClinicGroup" class="easyui-combobox" style="width:150px;height:24px;" /></p></td>	
+			</tr>
+			<tr>
+				<td><p>正号限额&nbsp<input id="PositiveMax" name="PositiveMax" type="text" style="width:150px"></p></td>
+				<td><p>预&nbsp约&nbsp限&nbsp额&nbsp<input id="ApptMax" name="ApptMax" type="text" style="width:150px"></p></td>
+				<td><p><font color="red">加&nbsp号&nbsp限&nbsp&nbsp额&nbsp<font><input id="AddtionMax" name="AddtionMax" type="text" style="width:150px"></p></td>
+			</tr>
+			<tr>
+				<td><p>起&nbsp始&nbsp&nbsp号&nbsp<input id="EStartPrefix" name="EStartPrefix" type="text" style="width:150px"></p></td>
+				<!--td><p>自助限额:<input id="AutoLoad" name="AutoLoad" type="text" style="width:150px"></p></td>
+				<td><p>外部限额:<input id="ExtLoad" name="ExtLoad" type="text" style="width:150px"></p></td-->
+				<td><p style="width:150px" >分时段就诊&nbsp<input id="TRFlag" name="TRFlag" type="checkbox" ></p></td>
+				<td><p style="width:150px" >激&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp活&nbsp<input id="ScheduleGenerFlag" name="ScheduleGenerFlag" type="checkbox"></p></td>
+			</tr>
+			<tr>
+				
+				<td><p>开始时间&nbsp<input id="TRStartTime" name="TRStartTime" type="text" style="width:150px" ></p></td>
+				<td><p>结&nbsp束&nbsp时&nbsp间&nbsp<input id="TREndTime" name="TREndTime" type="text" style="width:150px" ></p></td>
+			</tr>
+			<tr>
+				<td><p>间隔分钟&nbsp<input id="TRLength" name="TRLength" type="text" style="width:150px" ></p></td>
+				<td><p>时&nbsp段&nbsp号&nbsp数&nbsp<input id="TRRegNum" name="TRRegNum" type="text" style="width:150px" ></p></td>
+			</tr>
+			<tr>
+				<td colspan="3"><p>号段信息&nbsp<input id="TRRegNumStr" name="TRRegNumStr" type="text" style="width:600px" ></p></td>		
+			</tr>
+			<tr>
+				<td colspan="3"><p>时段信息&nbsp<input id="TRRegInfoStr" name="TRRegInfoStr" type="text" style="width:600px" ></p></td>	
+			</tr>
+		</table>	
+		<div style="padding:5px;text-align:center;">
+			<!--a href="#" id="save" class="i-btn i-btn-primary" >保存</a>
+			<a href="#" id="cancel" class="i-btn i-btn-primary" >取消</a-->
+			<td ><a id='save' class="i-btn i-btn-primary" style="margin-left:50px;" href="#" name=Save><IMG border=0 src="../images/uiimages/updateyun.png">保存</a></td>
+		    <td ><a id='cancel' class="i-btn i-btn-primary" style="margin-left:280px;margin-top:-30px;" href="#" name=Save><IMG border=0 src="../images/uiimages/undo.png">取消</a></td>
+		</div>
+		</form>
+		<form name="DHCIPBILL">
+			<!--ASRowID:--><input id="ASRowID" type="text" style="display:none"></input></td>
+			<!--DOW:--><input id="DOW" type="text" style="display:none"></input>
+		</form>
+	</div>
+	<!--生成排班弹出框-->
+	<div id="CreateDateScheduleWin" class="easyui-window" title="请选择需要生成排班的日期" style="width:300px;height=500px;background:#fafafa" closed=true modal=true>
+		<form style="padding:10px 20px 10px 20px;">
+		<table>
+			<tr>
+				<td>开始日期</td>
+				<td><input class="easyui-datebox" id="CreateScheduleSttDate" name="CreateScheduleSttDate" type="text" style="width:150px" data-options="formatter:myformatter,parser:myparser"></td>	
+			</tr>
+			<tr id="tr-EndDate" style="display:none;">
+				<td>结束日期</td>
+				<td><input class="easyui-datebox" id="CreateScheduleEndDate" name="CreateScheduleEndDate" type="text" style="width:150px" data-options="formatter:myformatter,parser:myparser"></td>	
+			</tr>
+			<tr>
+			  <td colspan="2"><a id='CreateSchedule' class="i-btn i-btn-primary" style="margin-left:60px;" href="#" name=Save><IMG border=0 src="../images/uiimages/createschedulelist.png">生成排班</a></td>
+			</tr>
+		</table>	
+		</form>
+	</div>
+	<div id="EditApptNumWin" class="easyui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="<img src='/dthealth/web/images/uiimages/createschedulelist.png' style='vertical-align:middle;'>&nbsp;&nbsp;非现场预约限额维护" style="width:800px;height:300px;background:#fafafa" closed=true modal=true>
+         <table id="tabRBASApptNum"></table> 
+    </div>
+</body> 
+
+</html>

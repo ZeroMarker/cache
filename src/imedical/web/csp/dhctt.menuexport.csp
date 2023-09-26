@@ -1,0 +1,153 @@
+<csp:content charset="UTF-8">
+<html>
+<head>
+	<DHCTT:HEAD/>
+	<script language="JavaScript" type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<script language="JavaScript" type="text/javascript" src="/csp/broker/cspbroker.js"></script></head>	
+<body>
+	<form action="dhctt.menuexport.csp" method='post'>
+		
+		<input type="hidden" name="FileExists" id="FileExists" value="0">
+		<table>
+			<tr><td>导出菜单:</td></tr>
+			<tr><td></td><td>文件名:</td><td><input id="fileName" name="fileName" value="#($g(%request.Data("fileName",1)))#" style='width:450px;'></td><td><input type='button' value="Browse" id="Browse" onclick="browseOnclickHandler();"></td></tr>
+			<tr>
+				<td></td><td>安全组:</td><td><input id="groupName" name="groupName" value="#($g(%request.Data("groupName",1)))#"> 安全组的名称</td>
+			</tr>
+			<tr>
+				<td></td><td>菜单组:</td><td><input id="menugroupName" name="menugroupName" value="#($g(%request.Data("menugroupName",1)))#"> 菜单组名或描述</td>
+			</tr>
+			<tr>
+				<td></td><td>菜单名:</td><td><input id="menuName" name="menuName" value="#($g(%request.Data("menuName",1)))#"> 菜单名或描述(模糊查询)</td>
+				<td><input id="Find" name='Find' value="Search" type='submit' ></td>
+			</tr>
+		</table>
+		<table>
+			<script language=cache runat=server>
+				if ($g(%request.Data("Find",1))="Search"){
+					s rs = ##class(%ResultSet).%New("web.Util.MenuService:FindMenu")
+					d rs.Execute($g(%request.Data("menuName",1)),$g(%request.Data("groupName",1)),$g(%request.Data("menugroupName",1)))
+					s count=0
+					if (rs.Next()){
+						w "<tr style='background:wheat'>",!
+						w "	<td colspan='3' align='left'>",!
+						w "		<input type='button' name='SelectAll' value='Select All' onclick='toggleCheckboxes(true);'>",!
+						w "		<input type=""button"" name=""UnselectAll"" value=""Unselect All"" onclick=""toggleCheckboxes(false);"">",!
+						w "		<input type=""submit"" name=""OK"" id=""OK"" value=""Export"" onclick=""fileExists(form.fileName.value);return validate();"">",!
+						w "	</td>",!
+						w "</tr>",!
+						do{
+							s count=count+1					
+							w:(count#3)=1 "<tr>"
+							w "<td><input id='cbz"_count_"' name='cbz"_count_"' value='"_rs.Data("id")_"' type='checkbox'>"_rs.Data("Caption")_"</td>"					
+							w:(count#3)=0 "</tr>",!
+						}while(rs.Next())
+						w "<tr style='background:wheat'><td cols=""3"">匹配菜单数: "_count_"<input type=""hidden"" name=""TotalRows"" id=""TotalRows"" value="_count_"></td></tr>",!
+					}else{
+						w "<tr style='background:wheat'><td>没找到到匹配的菜单!<td></tr>",!
+					}
+				}
+			</script>
+		</table>
+		<script language=cache runat=server>	
+			if ($g(%request.Data("OK",1))="Export"){
+					s fileallname = $g(%request.Data("fileName",1))
+					
+					if (fileallname=""){
+						w "提示：请指定导成哪个文件。"
+						Quit 
+					}
+					if ##class(%File).DirectoryExists(fileallname){
+						w "提示：请指定导成哪个文件。"
+						Quit 
+					}
+					s menuxml = ##class(%File).GetDirectory(fileallname)	//"\temp\menuxml\"
+					s filename = ##class(%File).GetFilename(fileallname)
+					d ##class(web.Util.MenuService).ExportProxy(fileallname,.plist,.len)
+					w $g(%request.Data("fileName",1))_"   <a href=dhctt.file.csp?act=download&dirname="_menuxml_"&filename="_filename_" >download</a><br>"				
+					s name="",count=0
+					f  s name=$o(plist(name)) q:name=""  d
+					.s count=count+1
+					.w "导出 ."_plist(name)_"("_name_")","<br>"
+					w "共 "_len_" 菜单, 成功导出 "_count_" 菜单"
+				}
+		</script>
+	</form>
+	<script language='javascript'>
+		function update(v){
+			document.getElementById("fileName").value = v;
+	
+		}
+		function launchPopupWindow(page,features,pageName)
+		{
+			if (features == null) {
+				features = "status,scrollbars,resizable";
+			}
+			var wid = self.screen.width;
+			var hgt = self.screen.height;
+			wid = wid * 0.8;
+			hgt = hgt * 0.8;
+			var top = self.screen.height * 0.1;
+			var left = self.screen.width * 0.1;
+		  	var id = '$ID1=';
+		  	var questionmark = page.split("?");
+		  	var url;
+		  	if (questionmark.length > 1) {
+			  	url = escape(questionmark[0]) + "?" + questionmark[1];
+			  	url = url + "&" + id;
+		  	} else {
+			  	url = page + "?" + id;
+		  	}
+			if (pageName == null) {
+				pageName = 'autopagePopup';
+			}
+			self.autopagePopupWindow = window.open(url,pageName,'left='+left+',top='+top+',width='+wid+',height='+hgt+(features==''?'':','+features));
+			self.autopagePopupWindow.focus();
+		}
+		function gotoBrowse(number,param)
+		{
+			if (number == 1) var remotefile = document.getElementById("fileName").value;
+			else var remotefile = document.getElementById("LocalFileName").value;
+			var url = "/csp/sys/UtilFileSelect.csp?$NAMESPACE=DHC-APP&Dir=" + cspEncodeUTF8(remotefile) + "&" + param;
+			return launchPopupWindow(url);
+		}
+		function browseOnclickHandler(){
+			gotoBrowse(1,"Wizard=Save&Wild=*.xml");
+		}
+		function toggleCheckboxes(cbState){
+			var cb;
+			var TotalRows = document.getElementById("TotalRows").value;
+			for (var i = 1; i <= TotalRows; i++) {
+				cb = self.document.getElementById("cbz"+i);
+				cb.checked = cbState;
+			}
+		}		
+		function validate(){
+			var exists = document.getElementById("FileExists").value;
+			if(exists == 1){
+				if (confirm("文件已存在!确定覆盖吗?")){
+					return true;
+				}else{
+					return false;
+				}
+			}else{
+				return true;
+			}
+		}
+	</script>
+	<script language="cache" runat=server>	
+	w "<script language=""javascript"">"
+	w "function fileExists(remotefile)"
+	w "{"
+	w " var enc = """_##class(%CSP.Page).Encrypt($lb("%File.Exists"))_""";"
+	w " var rtn = cspHttpServerMethod(enc,remotefile);"
+	w " var enc1 = """_##class(%CSP.Page).Encrypt($lb("%File.DirectoryExists"))_""";"
+	w " var rtn1 = cspHttpServerMethod(enc,remotefile);"
+	
+	w " document.getElementById(""FileExists"").value = 0;"
+	W " if (rtn==1 && rtn1==0){document.getElementById(""FileExists"").value = 1;}"
+	w "}"
+	</script>
+	</script>
+</body>
+</html>

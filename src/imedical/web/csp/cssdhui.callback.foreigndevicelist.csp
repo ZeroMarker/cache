@@ -1,0 +1,142 @@
+<!--外来器械登记界面-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div id="ForeignDeviceTB" style="padding:0px;">
+		<div class="BorderLine"> 
+			<table class="Condition">
+				<tr>
+					<td><label>消毒包</label><select id="package" name="package" class="textbox hisui-combobox" style="width:145px;"></select></td>
+					<td>登记号</td>
+					<td><input id="RegisterNo" name="RegisterNo" class="textbox" style="width:120px"></td>
+					<td>使用日期</td>
+					<td><input id="RecDateValue" name="RecDateValue" class="textbox hisui-datebox" style="width:120px"></td>
+					<td>移交人</td>
+					<td><input id="Transfer" name="Transfer" class="textbox" style="width:100px"><input id="TransferDr" name="TransferDr" class="textbox" style="width:120px" hidden></td>
+					<td>移交接收人</td>
+					<td><input id="TransferRec" name="TransferRec" class="textbox" style="width:100px"></td>
+					<td colspan="3" style="">
+						<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px">查询</a>
+						<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px">清屏</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<table>
+			<tr>
+				<td>
+					<a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+				</td>
+				<td>
+					<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+				</td>
+				<td>
+					<a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+				</td>
+				<td>
+					<a href="#" id="TransferBT" class="hisui-linkbutton" data-options="iconCls:'icon-paper-plane',plain:true">移交</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false,headerCls:'panel-header-gray'" class="GridPadding">
+		<div class="hisui-panel" title=""  data-options="headerCls:'panel-header-gray',fit:true"  style="border-color:#ccc">
+			<table id="ExtralList"></table>
+		</div>
+	</div>
+	<div id="AddWin" class="hisui-dialog AddWin" data-options="closed:'true',modal:true,iconCls:'icon-w-find'" title="新增外来器械信息" style="width:1020px;height:310px">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<table id="SelBarCodeConditions" class="Condition" align="center">
+					<tr>
+						<input id="RowId" name="RowId" class="textbox" hidden>
+						<td><label class="required">*</label>消毒包名称</td>
+						<td><input id="InstruName" name="InstruName" class="textbox hisui-combobox"></td>
+						<td><label class="required">*</label>包标牌编码</td>
+						<td><input id="InstruCode" name="InstruCode" class="textbox hisui-combobox"></td>
+						<td><label class="required">*</label>器械数量</td>
+						<td><input id="InstruNum" name="InstruNum" class="hisui-numberbox textbox"></td>
+						<td><label class="required">*</label>植入物</td>
+						<td align="center">
+							<input class='hisui-radio' type="radio" label='是' name='Implants' value='Y'>
+							<input class='hisui-radio' type="radio" label='否' name='Implants' value='N'>
+						</td>
+					</tr>
+					<tr>
+						<td><label class="required">*</label>厂商</td>
+						<td><input id="Firm" name="Firm" class="hisui-combobox textbox"></td>
+						<td>电话</td>
+						<td><input id="Tel" name="Tel" class="textbox" readonly="readonly" ></td>
+						<td>配送人</td>
+						<td><input id="SerMan" name="SerMan" class="textbox" readonly="readonly"></td>
+						<td>单据</td>
+						<td><input id="Receipt" name="Receipt" class="textbox" ></td>
+					</tr>
+					<tr>
+						<td><label class="required">*</label>登记号</td>
+						<td><input id="HospitalNo" name="HospitalNo" class="hisui-validatebox textbox"></td>
+						<td>使用科室</td>
+						<td><input id="ExtLoc" name="ExtLoc" class="textbox hisui-combobox" ></td>
+						<td>使用医生</td>
+						<td><input id="UseDoctor" name="UseDoctor" class="textbox" ></td>
+						<td>使用日期</td>
+						<td><input id="UseDate" name="UseDate" class="textbox hisui-dateboxq" ></td>
+					</tr>
+					<tr>
+						<td>病人姓名</td>
+						<td><input id="SickerName" name="SickerName" class="textbox"  ></td>
+						<td>病人年龄</td>
+						<td><input id="PatientAge" name="PatientAge" class="hisui-numberbox textbox"  ></td>
+						<td>病人性别</td>
+						<td align="center">
+							<input class='hisui-radio' type="radio" label='男' name='PatientSex' value='1'>
+							<input class='hisui-radio' type="radio" label='女' name='PatientSex' value='0'>
+						</td>
+						<td>床号</td>
+						<td><input id="BedNo" name="BedNo" class="hisui-numberbox textbox"></td>
+					</tr>
+					<tr>
+						<td>动力器械</td>
+						<td><input id="PowerInstru" name="PowerInstru" class="textbox" ></td>
+						<td><label class="required">*</label>接收人</td>
+						<td><input id="RecMan" name="RecMan" class="hisui-validatebox textbox"><input class="textbox" hidden id="RecManDr" name="RecManDr"></td>
+						<td><label class="required">*</label>接收数量</td>
+						<td><input id="RecNum" name="RecNum" class="hisui-numberbox textbox"></td>
+						<td>接收日期</td>
+						<td><input id="RecDate" name="RecDate" class="textbox hisui-dateboxq" ></td>
+					</tr>
+					<tr>
+						<td>手术类型</td>
+						<td>
+							<select name="OperatorType" class="hisui-combobox" style="width:155px">
+								<option value="1" >急诊手术</option>
+								<option value="2" >择期手术</option>
+							</select>
+						</td>
+						<td>备注</td>
+						<td><input id="Remark" name="Remark" class="textbox" ></td>
+						<td colspan="2">
+							<a href="#" id="AddSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">保存</a>
+							<a href="#" id="CancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/cssd/CallBack/ForeignDeviceList.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/CallBack/ForeignDeviceAddWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/CallBack/CallBackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/encode.js"></script>
+</body>
+</html>

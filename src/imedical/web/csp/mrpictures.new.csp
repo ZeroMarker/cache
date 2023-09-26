@@ -1,0 +1,281 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+ n Directory,obj,tempdirectory,TempFileName,TempFile
+ n FileDelimiter,VirtualDir,VirtualDirectory,VirtualD,extstr,x,virtuals,extensions,idx,allPaperSizes,allPixelTypes,allFileTypes
+ ;
+ ; Log 33798: Set up virtual directory information.
+ s FileDelimiter=##class(XML.Map.LE.Utils).directorydelim()
+ s (virtuals,extensions)=""
+
+ s obj=##class(websys.Configuration).%OpenId(1),UploadCSP=""
+ i obj s UploadCSP="http://"_%session.Get("SERVER_NAME")_"/"_obj.PathToApp_"/csp/upload.csp" d obj.%Close()
+
+ d ##Class(web.CFSystemFileDefinition).GetVirtualDirectories(.VirtualDir)
+ s extstr="" f  s extstr=$o(VirtualDir(extstr)) q:extstr=""  d
+ . s VirtualD=$p(VirtualDir(extstr),"^",2)
+ . s VirtualDirectory="" f x=1:1:$l(VirtualD,"\")  d
+ . . s VirtualDirectory=VirtualDirectory_$s(x=1:"",1:"\\")_$p(VirtualD,"\",x)
+ . s VirtualDirectory=VirtualDirectory_"\\"
+ . s virtuals=virtuals_$s(virtuals="":"",1:"^")_VirtualDirectory
+ . s extensions=extensions_$s(extensions="":"",1:"^")_extstr
+ ;
+
+ ; Log 33798 - AI - 02-06-2005 : Set up all hidden arrays of Standard Types.
+ s (allPaperSizes,allPixelTypes,allFileTypes)=""
+ s idx=0 f  s idx=$o(^websys.StandardTypeD("STD","ScanningPaperSize","ITM",idx)) q:idx=""  d
+ . s allPaperSizes=allPaperSizes_$s($l(allPaperSizes):"|*|",1:"")_^websys.StandardTypeD("STD","ScanningPaperSize","ITM",idx)
+ s idx=0 f  s idx=$o(^websys.StandardTypeD("STD","ScanningPixelType","ITM",idx)) q:idx=""  d
+ . s allPixelTypes=allPixelTypes_$s($l(allPixelTypes):"|*|",1:"")_^websys.StandardTypeD("STD","ScanningPixelType","ITM",idx)
+ s idx=0 f  s idx=$o(^websys.StandardTypeD("STD","ScanningFileType","ITM",idx)) q:idx=""  d
+ . s allFileTypes=allFileTypes_$s($l(allFileTypes):"|*|",1:"")_^websys.StandardTypeD("STD","ScanningFileType","ITM",idx)
+ d %request.Set("allPaperSizes",allPaperSizes)
+ d %request.Set("allPixelTypes",allPixelTypes)
+ d %request.Set("allFileTypes",allFileTypes)
+
+ ; Log 49056 YC - Create an orderstring if we are not coming from OEOrdItem.ListEMR->Add Documents link
+ ; We are either coming from orders->Scanned Documents or OEOrdItem.ListEMR->Documents
+ i %request.Get("OrderString")="" d
+ . s ordid=%request.Get("OrdItemID") q:ordid=""
+ . s arcim=$p($g(^OEORD(+ordid,"I",$p(ordid,"||",2),1)),"^",2) q:arcim=""
+ . s ordname=$p($g(^ARCIM(+arcim,$p(arcim,"||",2),1)),"^",2) q:ordname=""
+ . d %request.Set("OrderString",ordid_$c(2)_ordname)
+ ; END Log 49056 YC
+</SERVER>
+
+<SCRIPT language="Javascript">
+var ImageAndVoice;
+var virtuals='#(virtuals)#';
+var extensions='#(extensions)#';
+var virtualsarray;
+var extensionsarray;
+var ValidTypes = ",TIF,JPG,JPEG,GIF,BMP,RTF,TXT,DOC,PDF,MHTML,SVG,AVI,MPEG,MPG,WMV,XLS,WMA,DSS";
+var uploadCsp = '#(UploadCSP)#';
+
+
+
+// Log 33798 - AI - 02-06-2005 : New scanning logic.
+function ScanDocument() {
+	var iWidth="";
+	var objhiddenWidth=document.getElementById("hiddenWidth");
+	var iHeight="";
+	var objhiddenHeight=document.getElementById("hiddenHeight");
+	var iDPI=0;
+	var objDPI=document.getElementById("iDPI");
+	var iPixelType=0;
+	var objhiddenPixelType=document.getElementById("hiddenPixelType");
+	var sFileType="";
+	var objhiddenFileType=document.getElementById("hiddenFileType");
+	var iFileQuality=0;
+	var objFileQuality=document.getElementById("iFileQuality");
+	var sFilePath="";
+	var objFilePath=document.getElementById("sFilePath");
+	var bMultiPage=0;
+	var objMultiPage=document.getElementById("bMultiPage");
+	var bShowUI="";
+	var objShowUI=document.getElementById("bShowUI");
+
+	if (objhiddenWidth) iWidth=objhiddenWidth.value;
+	if (iWidth=="") iWidth="21";
+
+	if (objhiddenHeight) iHeight=objhiddenHeight.value;
+	if (iHeight=="") iHeight="29.7";
+
+	if (objDPI) iDPI=objDPI.value;
+	if ((iDPI=="")||(iDPI==0)) iDPI=100;
+
+	if (objhiddenPixelType) iPixelType=objhiddenPixelType.value;
+	if (iPixelType=="") iPixelType=0;
+
+	if (objhiddenFileType) sFileType=objhiddenFileType.value;
+	if (sFileType=="") sFileType="TIF";
+	var virtual=DirectoryForFormat(sFileType);
+
+	if (objFileQuality) iFileQuality=objFileQuality.value;
+	if ((iFileQuality=="")||(iFileQuality==0)) iFileQuality=50;
+
+	if (objFilePath) sFilePath=objFilePath.value;
+	if (sFilePath=="") sFilePath="C:^#(%session.SessionId)#." + sFileType;
+
+	bMultiPage=0;
+	if (objMultiPage && objMultiPage.checked) bMultiPage=1;
+
+	bShowUI=0
+	if (objShowUI && objShowUI.checked) bShowUI=1;
+
+	if (ImageAndVoice.SetProperties(iWidth,iHeight,iDPI,iPixelType,sFileType,iFileQuality,sFilePath,bMultiPage,bShowUI)) {
+		if (ImageAndVoice.DoScan()) {
+			// don't transfer to server on scan - do it via http on update
+			//'PathTemp' is where we hold the scanned image name
+			var obj=document.getElementById("PathTemp");
+			if (obj) obj.value=sFilePath;
+			var obj=document.getElementById("update1");
+			if (obj) obj.disabled=false;
+			var obj=document.getElementById("AttachFile");
+			if (obj) obj.disabled=true;
+		} else {
+			alert(t['ScanningNoWorking']);
+		}
+	}
+}
+
+function DirectoryForFormat(format) {
+	var virtual="";
+	for (var i=0; i<virtualsarray.length; i++) {
+		if (extensionsarray[i].toUpperCase()==format.toUpperCase()) virtual=virtualsarray[i];
+	}
+	if (virtual=="") alert(t['SetupVirtualDirectory']);
+	return virtual;
+}
+// end Log 33798
+
+
+function AttachFileClickHandler(e) {
+	var obj=document.getElementById("Scan");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("update1");
+	if (obj) obj.disabled=false
+	return true
+}
+
+function UpdateClickHandler(e) {
+	var obj=document.getElementById("update1");
+	if ((obj)&&(obj.disabled)) {
+		return false;
+	}
+	var UploadFile = "";
+	var DeleteFile=0;
+
+	// work out if it's a scanned image, or an attached file
+	// first check if we're uploading a file
+	var objAttachFile=document.getElementById("AttachFile");
+	if (objAttachFile && objAttachFile.value!="") {
+		// check we're browsing for a valid file type
+		UploadFile=objAttachFile.value;
+	} else {
+		// we scanned a file - put the scanned filename into the 'FILE' input field so it gets sent in request
+		var objScanFile=document.getElementById("PathTemp");
+		if (objScanFile) {
+			var aryFile=objScanFile.value.split("^");
+			UploadFile = aryFile.join("\\");
+		}
+		// as we scanned the file - mark it to be deleted
+		DeleteFile=1;
+	}
+
+	var arr=UploadFile.split(".");
+	var FileFormat=arr[arr.length-1];
+	if (ValidTypes.indexOf(FileFormat.toUpperCase()) == -1) {
+		alert(t['VALIDTYPES'] + ValidTypes);
+		return false;
+	}
+
+	// if we have a valid file - send it in an HTTP request
+	if (UploadFile!="") {
+		var Session = "";
+		var CookiePairsArray = document.cookie.split("; ");
+		for (var i=0; i<CookiePairsArray.length; i++) {
+			var name = CookiePairsArray[i].split("=");
+			if (unescape(name[0])=="CSPSESSIONID-SP-80") {
+				Session= unescape(name[0]+"="+name[1]);
+			}
+		}
+		var SavedName = ImageAndVoice.POSTFileToServer(UploadFile,0,"",Session,"#(UploadCSP)#",DeleteFile);
+		// SavedName is of format:
+		//	1'FileName or
+		//	0'Error String or
+		//	RandomCacheError
+		//alert(SavedName);  return false;
+		arySavedName = SavedName.split("'");
+		if (arySavedName[0]=="1") {
+			// cache will pick this var up to store in
+			//     User.MRPictures/User.PAAdmDocs/User.RBEventDocs/User.PAComplaintDocs
+			var obj=document.getElementById("PathTemp");
+			if (obj) obj.value=arySavedName[1];
+			return update1_click();
+		} else {
+			// display either error string - or cache error, if we REALLY screewed up...
+			if (arySavedName.length==1) {
+				var Err = arySavedName[0];
+			} else {
+				var Err = arySavedName[1];
+			}
+			alert(Err);
+		}
+	} else {
+		return false;
+	}
+}
+
+function BodyLoadHandler() {
+	try {
+		ImageAndVoice=new self.ActiveXObject("tkImageScanHTTP.clsScan");
+	} catch (e) {
+		alert(t['ScanningNoWorking']);
+	}
+
+	var obj=document.getElementById("Scan");
+	if (obj) obj.onclick=ScanDocument;
+
+	// Log 33798 - AI - 02-06-2005 : New scanning logic.
+	virtualsarray=virtuals.split("^");
+	extensionsarray=extensions.split("^");
+
+	var newobj=document.getElementById("NewScan");
+	if (newobj) newobj.onclick=ScanDocument;
+	// end Log 33798
+
+	//var obj=document.getElementById("PICPath");
+	//if (obj) obj.value=FileName;
+	var obj=document.getElementById("update1");
+	if (obj) {
+		obj.disabled=true;
+		obj.onclick=UpdateClickHandler;
+	}
+	var obj=document.getElementById("AttachFile");
+	if (obj) {
+		obj.onclick=AttachFileClickHandler;
+	}
+
+	var objOrderString=document.getElementById('OrderString');
+	var objOrderItemList=document.getElementById('OrderItemList');
+
+	if ((objOrderString) && (objOrderItemList)) {
+		var str=objOrderString.value;
+		var lu = str.split(String.fromCharCode(1));
+		for(j=0; j<lu.length; j++) {
+			var lu1=lu[j].split(String.fromCharCode(2));
+			// lu1 (in order) : 0 - Order Item Id, 1 - Order Item Name, 2 - Order Item Status Code, 3 - Order Item Paid flag.
+			// we only require lu1[1] for the list.
+			objOrderItemList[objOrderItemList.length]= new Option(lu1[1]);
+		}
+	}
+
+	if (objOrderItemList) {
+		objOrderItemList.disabled = true;
+		objOrderItemList.className = "disabledField";
+	}
+	// end Log 43116
+	// END Log 54486
+}
+</SCRIPT>
+
+<BODY ONLOAD="BodyLoadHandler();">
+<SERVER>
+	w ##Class(web.MRPictures).tkImageScan()	; cjb 16/03/2006 58601 - include tkImageScan.CAB
+</SERVER>
+<TRAK:COMPONENT id="MRPictures.New" hidemenus=1></TRAK:COMPONENT>
+</BODY>
+
+</HTML>

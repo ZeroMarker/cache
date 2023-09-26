@@ -1,0 +1,156 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+</HEAD>
+
+<frameset rows="50,*" cols=100%">
+
+
+
+<SERVER>
+	s autofind=%request.Get("autofind")
+	n userId,LocID
+	s (userId,LocID)=""
+	n CurrentDate,CareProvider,CareProviderDesc,edateOfWeek,PatientID,EpisodeID,RescID,slotCount,CURRdate,maxSlotTime,Location
+	s (CurrentDate,CareProvider,CareProviderDesc,edateOfWeek,PatientID,EpisodeID,RescID,Location)=""
+	s slotCount=0
+	s TWKFL=%request.Get("TWKFL")
+ 	s TWKFLI=%request.Get("TWKFLI")
+ 	s DiaryType=%request.Get("DiaryType")
+ 	;k ^zbrad s ^zbrad("DiaryType")=%request.Get("DiaryType")
+
+ 	s PatientID=%request.Get("PatientID")
+ 	s EpisodeID=%request.Get("EpisodeID")
+ 	; LOG 26750 ANA 19/07/02. Week displayed starting from current date.
+ 	i (%request.Get("CurrentDate")'="") d
+ 	. s CurrentDate=%request.Get("CurrentDate")
+ 	. i (+CurrentDate<4000) s CurrentDate=##Class(websys.Conversions).DateHtmlToLogical(CurrentDate)
+
+	; Log 56180 - Get data according to Lock value
+	s Lock=%request.Get("Lock")
+	i Lock="" s Lock=$g(%session.Data("RBAPTResSched","1194","Lock")) s:Lock="" Lock=$g(%request.Data("Lock",1)) s %request.Data("Lock",1)=Lock	
+	i Lock="" s Lock="off"
+	i Lock="off" {
+		; Kill session details
+		k %session.Data("RBAPTResSched","1194")
+		; Get default location
+		s Location=""
+		s:$d(%request.Data("Location",1)) Location=%request.Data("Location",1)
+		i Location="" s Location=%session.Get("LOGON.CTLOCID")
+		; Get todays date
+		i (%request.Get("CurrentDate")="") s CurrentDate=+$h
+	}
+	i Lock="on" {
+		i (%request.Get("CurrentDate")="") {
+			s CurrentDate=$g(%session.Data("RBAPTResSched","1194","Date"))	
+			s Location=$g(%session.Data("RBAPTResSched","1194","Location"))
+		}
+			
+		i Location="" s Location=$g(%request.Data("Location",1))
+		
+		i (+CurrentDate<4000) s CurrentDate=CurrentDate
+		i CurrentDate="" s CurrentDate=+$h
+		s %session.Data("RBAPTResSched","1194","Lock")=Lock
+  		s %session.Data("RBAPTResSched","1194","Date")=CurrentDate
+  		s %session.Data("RBAPTResSched","1194","Location")=Location
+	}	
+	; End Log 56180
+
+	s CURRdate=+$h
+	;s ^zmeto("CCdate",1)=CURRdate_"^"_CurrentDate
+ 	s userId=%session.Get("LOGON.USERID")
+	;s loc=%request.Get("Location")
+	;i loc'=""
+	;{
+		;s rs=##Class(%Library.ResultSet).%New("web.CTLoc:Find")
+		;d rs.Execute(%request.Get("Location"))
+		;i rs.Next()
+		;{
+			;s LocID=rs.GetDataByName("ID")
+		;}
+	;}
+	
+	n section
+	s section=0
+	s:$d(%request.Data("section",1)) section=%request.Data("section",1)
+	
+	//Log 43299 - Determines how the second frame is setup (below)
+	s OTFullPageDiary = ""
+	s OTFullPageDiary = $g(%request.Data("OTFullPageDiary",1))
+
+	i Location'=""
+	{
+		; Add new searchs here R is radiology, OT is operating theatre
+		i (DiaryType="R") { s rs=##Class(%Library.ResultSet).%New("web.RBResource:FindEquipment") }
+		i DiaryType="OT" { s rs=##Class(%Library.ResultSet).%New("web.RBResource:FindTheatre") }
+		i DiaryType="O" { s rs=##Class(%Library.ResultSet).%New("web.RBResource:FindAllResByLoc") }
+		;s ^zbrad("location a")=Location_","_%request.Get("Location")
+		d rs.Execute(Location)
+		s count=0,frameslist=""
+		n i s i=0
+		f  {
+		  	s i=i+1
+			q:'rs.Next()
+			s rescID=rs.GetDataByName("RescID")
+			s AvailableResource=##Class(web.SSGroupRBRestrictions).AvailableResource(%session.Get("LOGON.GROUPID"),rescID)
+			i AvailableResource {
+				s CareProviderDesc=rs.GetDataByName("RESDesc")
+				;s ^zmeto("CareProviderDesc",rescID)=CareProviderDesc
+				s rescdf=$p($g(^RB("RES",rescID)),"^",22)
+				s rescdt=$p($g(^RB("RES",rescID)),"^",23)
+				s oktoshow=1
+				i rescdf'="",rescdf>CurrentDate s oktoshow=0
+				i rescdt'="",rescdt<CurrentDate s oktoshow=0
+				;Log 43299 - Added OTFullPageDiary
+				i oktoshow { 
+	 	 		s url="rbappointment.rescsch.csp?TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&RescID="_rescID_"&CurrentDate="_CurrentDate_"&CONTEXT="_%request.Get("CONTEXT")_"&RescName="_CareProviderDesc_"&Flag=T"_"&Location="_$g(Location)_"&DiaryType="_$g(DiaryType)_"&OTFullPageDiary="_$g(OTFullPageDiary)
+				s frameslist(count) = "<frame src="""_url_""" resizable=no>"
+				s count=count+1
+				}
+			}
+		}
+		d rs.Close()
+	}
+	
+	i ((count-section)<5) s section=count-5
+	i section<0 s section=0
+
+	;Log 43299 - Added OTFullPageDiary.  If OTFullPageDiary is set, divide frameset into two rows, else only one row.
+	;Log 56180 - 15.09.2006 - Add 'Lock' to URL
+	w "<frame frameborder=1 noresize src=""rbappointment.locationrescschednextprev.csp?section="_section_"&TotalSections="_count_"&Location="_Location_"&DiaryType="_DiaryType_"&autofind="_autofind_"&CurrentDate="_CurrentDate_"&OTFullPageDiary="_OTFullPageDiary_"&Lock="_Lock_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_""">"
+	n viewTotalCnt
+	s viewTotalCnt = 5
+	if OTFullPageDiary=1{
+		w "<frameset rows=""50%,50%""  cols=""20%,20%,20%,20%,20%"">"
+		s viewTotalCnt = 10
+	}
+	else {
+		w "<frameset rows=""100%""  cols=""20%,20%,20%,20%,20%"">"
+	}
+	;f jj=section:1:(section+4) {
+	f jj=section:1:(section + (viewTotalCnt-1)) {
+		;s ^zbrad("c",jj)=section
+		w $g(frameslist(jj))
+	}
+	w "</frameset>"
+
+
+</SERVER>
+
+
+<noframes> Sorry, for this component a browser capable of displaying frames is required</noframes> 
+</frameset> 
+
+<BODY>
+</BODY>
+</HTML>
+

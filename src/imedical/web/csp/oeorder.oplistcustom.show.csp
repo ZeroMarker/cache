@@ -1,0 +1,480 @@
+<!-- 医嘱录入表现层 oeorder.oplistcustom.show.csp -->
+<csp:class description="JQuery easyUI1.3.5">
+<!--
+<div id="loading" style="position: absolute; z-index: 1000; top: 0px; left: 0px; width: 100%; height: 100%; background: #E0ECFF; text-align: center; padding-top: 20%;">
+	页面加载中
+</div>
+-->
+<div id="outer_container" class="easyui-panel" data-options="fit:true">
+	<div id="layout_main" class="easyui-layout" data-options="fit:true,border:false">
+		<!--根据配置显示不同布局 -->
+		<csp:if condition='layoutConfig="1"'>
+		<!-- [医嘱列表在下]布局1开始 -->
+		<!--center 区域开始 -->
+		<div id="layout_main_center" data-options="region:'center',border:false" style="overflow-x:hidden;overflow-y:hidden;">
+		   <div class="easyui-layout" data-options="fit:true,border:false"> 			
+				<div id="layout_main_center_north" data-options="region:'north',split:true,border:false" style="height:65px;"> <!--82px62px -->
+					<!--csp:if condition='PAAdmType="I"'>
+					  <div id="layout_main_center_north" style="height:82px;"> 	
+					<csp:else>
+					  <div id="layout_main_center_north" style="height:58px;">
+					</csp:if-->
+					<div id="ButtonList" class="toolpanel">
+						<csp:if condition='PAAdmType="I"'>				
+							<input type="button" class="icon-copy-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱复制"))# id="Order_copy_btn"/>
+							<csp:if condition='DoctorType="DOCTOR"'>
+								<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp检验检查申请"))# id="Examine_check_btn"/>
+							</csp:if>
+							<input type="button" class="icon-pencil-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱字典库录入"))# id="Dictionary_check_btn"/>
+							<csp:if condition='DoctorType="DOCTOR"'>
+								<input type="button" class="icon-tablist-custom"  value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp抗菌药申请列表"))# id="Antibiotics_apply_btn"/>
+							</csp:if>
+							<input type="button" class="icon-ordtemplatesets-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱模版维护"))# id="Template_maintain_btn"/>
+							<!--img src="../images/DesinerImg/ctrlImg/example.gif" id="UIConfigImg" alt="UI_Config"/-->
+						<csp:else>
+							<input type="button" class="icon-copy-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱复制"))# id="Order_copy_btn"/>
+							<csp:if condition='DoctorType="DOCTOR"'>
+								<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp检验检查申请"))# id="Examine_check_btn"/>
+							</csp:if>
+							<input type="button" class="icon-pencil-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱字典库录入"))# id="Dictionary_check_btn"/>
+							<csp:if condition='DoctorType="DOCTOR"'>
+								<input type="button" class="icon-tablist-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp抗菌药申请列表"))# id="Antibiotics_apply_btn"/>
+							</csp:if>
+							<input type="button" class="icon-ordtemplatesets-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱模版维护"))# id="Template_maintain_btn"/>
+							<csp:if condition='DoctorType="DOCTOR"'>
+								<input type="button" class="icon-app-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp诊间预约"))# id="Appointment_btn"/>
+								<!--input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp一键打印"))# id="BtnPrtClick"/-->
+								<csp:if condition='OutDocEntryMTR=0'><input type="button" class="icon-print-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp一键打印(P)"))# id="BtnPrtClick"/></csp:if>
+							</csp:if>
+							<csp:if condition='GroupCPPFlag="Y"'>
+								<input type="button" class="icon-doccardbill-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp预扣费"))# id="Card_pay_btn"/>
+							</csp:if>
+							<!--img src="../images/DesinerImg/ctrlImg/example.gif" id="UIConfigImg" alt="UI_Config"/-->
+						</csp:if>
+							<div id="handle_BtnDiv_2" style="float:right">
+								<div id="BtnDiv">
+								    <input type="checkbox"  id="FindByLogDep" style="vertical-align:middle;"/>
+									<input style="background: #E0ECFF;width:115px;color:Black;border:0px" disabled="disabled" type="text" title="按登录取接收科室" value=#(..Trans(%session.Get("LOGON.LANGID"),"按登录取接收科室"))# id="FindByLogDep_Btn"/>
+									
+								</div>	
+								<csp:if condition='ShowOrderOpenForAllHosp="1"'>
+									<div id="BtnDiv">
+										<input type="checkbox" style="vertical-align:middle;" id="OrderOpenForAllHosp"/>
+										<input type="text" style="background: #E0ECFF;width:25px;color:Black" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"跨院:"))# id="AllHosp_Btn"/>
+									</div>
+								</csp:if>
+								<!--div id="BtnDiv">
+									<input type="text" style="background: #E0ECFF;width:50px;color:Black;border:0" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"签名密码:"))# id="PinNumber_Btn"/>
+									<input type="password" id="PinNumber"  value=""  style="width:90px"/>
+								</div-->
+							</div>
+					</div>
+						
+						<csp:if condition='INAdmTypeLoc="Y"'>
+							<div class="toolpanel" style="height:25px">
+								<div id="PriorType_Btn" style="">
+									<input type="hidden" value="" id="HiddenOrderPrior"/>	
+									<!--医嘱类型横向显示 -->
+									<csp:if condition='OrderPriorConfig="2"'>
+											<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"默认类型"))# id="DefaultOrderPrior"/>-->
+											<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"长期医嘱"))# id="LongOrderPrior"/>
+											<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"临时医嘱"))# id="ShortOrderPrior"/>
+											<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"出院带药"))# id="OutOrderPrior"/> 					
+										
+									<csp:else>
+										<!--医嘱类型下拉显示 -->
+										<a href="#" class="easyui-menubutton" data-options="menu:'#OrderPriorMenu_I',iconCls:'icon-edit'" id="PriorType">医嘱类型</a>
+										<div id="OrderPriorMenu_I" style="width:90px;">													
+											<div data-options="iconCls:'icon-ok'" id="DefaultOrderPrior">还原默认</div>
+			       							<div data-options="iconCls:'icon-ok'" id="ShortOrderPrior">临时医嘱</div>
+			        						<div data-options="iconCls:'icon-ok'" id="LongOrderPrior">长期医嘱</div>
+			        						<div data-options="iconCls:'icon-ok'" id="OutOrderPrior">出院带药</div> 					       					
+			            				</div>								
+									</csp:if>
+		            			</div>
+		            			<div id="Prompt" style="height:20px;float:left;width:65%">
+									提示信息
+								</div>
+								<div id="BtnDiv" style="float:right;">
+									<input type="text" style="width:60px;color:Black" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"未审合计"))# id="ScreenBillSum_Btn"/>
+									<input type="text" id="ScreenBillSum"  value="" disabled="disabled" readonly="true" style="width:60px"/>
+									<csp:if condition='PAAdmType="I"'>
+									<csp:else>
+										<input type="text" style="width:60px;color:Black" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"已审合计"))# id="ScreenBillSum_Btn1"/>
+										<input type="text" id="SavedScreenBillSum"  value="" disabled="disabled" readonly="true" style="width:60px"/>
+									</csp:if>
+								</div>				
+							</div>
+						<csp:else>
+							<input type="hidden" value="" id="HiddenOrderPrior"/>	
+							<div class="toolpanel" style="height:25px">
+								<div id="Prompt" style="height:20px;width:65%">
+									提示信息
+								</div>
+								<div id="BtnDiv" style="float:right;">
+									<input type="text" style="width:60px;color:Black" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"未审合计"))# id="ScreenBillSum_Btn"/>
+									<input type="text" id="ScreenBillSum"  value="" disabled="disabled" readonly="true" style="width:60px"/>
+									<csp:if condition='PAAdmType="I"'>
+									<csp:else>
+										<input type="text" style="width:60px;color:Black" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"已审合计"))# id="ScreenBillSum_Btn1"/>
+										<input type="text" id="SavedScreenBillSum"  value=""disabled="disabled"  readonly="true" style="width:60px"/>
+									</csp:if>
+									
+								</div>
+							</div>
+						</csp:if>
+				</div>
+	
+				<!--医嘱录入表格 -->
+				<div data-options="region:'center',fit:true,border:false">
+					<table id="Order_DataGrid" style="height:100%;width:100%;">
+					</table>
+				</div>
+				<div data-options="region:'south',split:false,border:false" style="height:35px;">
+					<!--center 区域 south部分 -->
+					<div id="handle_BtnDiv" class="toolpanel" style="height:26px;">
+						
+						<div class="" id="handle_BtnDiv_1" style="float:left">
+							<input type="button" class="icon-add-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp添加(F1)"))#  id="Add_Order_btn"/>
+							<input type="button" class="icon-add-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp添加模板医嘱(A)"))#  id="Add_TemplOrder_btn"/>
+							<input type="button" class="icon-delete-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp删除(F2)"))#   id="Delete_Order_btn"/>
+							<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"编辑医嘱"))#  id="FormEdit_btn" />-->
+							<input type="button" class="icon-ok-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp审核医嘱(S)"))#  id="Insert_Order_btn"/>
+							
+							<input type="button" class="icon-merge-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp开始关联(R)"))# id="ChangeOrderSeq_Btn"/>
+							<!--input type="button" class="icon-merge-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp关联"))# id="SetOrderSeq_Btn"/>	
+							<input type="button" class="icon-undo-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp拆关联"))# id="ClearOrderSeq_Btn"/-->									
+							
+							<!--input type="button" class="icon-orderno-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存用户常用"))# id="SetSaveForUser"/>
+							<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存为医嘱套"))# id="SaveToArcos"/-->
+							<!--input type="button" class="icon-reciprocity-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp相互作用"))# id="XHZY"/>
+							<input type="button" class="icon-pager-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp说明书"))# id="YDTS"/>
+							<csp:if condition='ZSKOpen=1'><input type="button" class="icon-doctor-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp建议医嘱"))# id="AdviceOrder"/></csp:if-->
+							<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"打印导诊单"))# id="BtnPrtGuidPat"/> -->
+							<!--csp:if condition='PAAdmType="I"'-->
+							<input type="button" class="icon-up-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp上"))# id="Up_Order_btn"/>
+							<input type="button" class="icon-down-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp下"))# id="Down_Order_btn"/>
+							<csp:if condition='PAAdmType="I"'>	
+							   
+							<csp:else>
+							   <input type="button" class="icon-stoppresc-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp撤消医嘱(C)"))# id="StopOrderBtn"/>
+							</csp:if>
+							<input type="button" class="icon-copy-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp同步备注"))# id="SynchroOrdNotes_Btn"/>
+							<!--input type="button" class="icon-stoppresc-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp撤消医嘱"))# id="StopOrderBtn"/-->
+							<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"完成接诊"))#  id="FinshAdm_btn" /> -->
+							<a href="#" class="easyui-menubutton" data-options="menu:'#OrderOtherMenu_I'" id="Btn_SaveAs">更多</a>
+							<div id="OrderOtherMenu_I" style="width:auto;">	
+							    <csp:if condition='PAAdmType="I"'><input type="button" class="icon-merge-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp同步下方医嘱时间"))# id="SynBtn"/></csp:if>
+							    <div class="icon-reciprocity-custom" id="XHZY">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp相互作用"))#</div>
+							    <div class="icon-pager-custom" id="YDTS">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp说明书"))#</div>
+							    <csp:if condition='ZSKOpen=1'><div class="icon-doctor-custom" id="AdviceOrder">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp建议医嘱"))#</div></csp:if>
+							    <csp:if condition='PAAdmType="I"'>
+							    <csp:else>
+							    	<csp:if condition='NotDisplayNoPayOrd=1'>
+								    	<div class="icon-doctor-custom" id="ShowNotPayOrd_Btn">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp显示未交费医嘱"))#</div>
+								    </csp:if>
+							    </csp:if>
+							    <csp:if condition='CAInit=1'>
+									<input type="button" class="icon-add-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbspCA补签名"))#  id="Open_CASign_btn"/>
+								</csp:if>							    
+	        				</div>
+							<a href="#" class="easyui-menubutton" data-options="menu:'#OrderSaveAsMenu_I'" id="Btn_SaveAs">保存为</a>
+							<div id="OrderSaveAsMenu_I" style="width:auto;">	
+	    						<div class="icon-orderno-custom" id="SetSaveForUser">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存用户常用"))#</div>
+	    						<div class="icon-hosarcos-custom" id="SaveToArcos">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存为医嘱套"))#</div>
+	    						<div class="icon-hosarcos-custom" id="SaveToTemplate">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存到医嘱模板"))#</div>
+	        				</div>
+							<!--csp:else>
+							</csp:if-->
+							
+						</div>
+						<div class="" style="float:right">	
+							<csp:if condition='INAdmTypeLoc="Y"'>
+								<div id="BtnDiv"><input type="button"  value=#(..Trans(%session.Get("LOGON.LANGID"),"列表"))# id="Orderlist_Btn"/></div>
+							</csp:if>
+							<div id="BtnDiv"><input type="button"  value=#(..Trans(%session.Get("LOGON.LANGID"),"模版"))# id="OrderTemplate_Btn"/></div>
+							<div id="BtnDiv"><input type="hidden" value="" id="LayoutContrl"/></div>
+							
+						</div>
+					
+						<!--
+						<div style="height:27px;">
+						</div>
+						-->
+					</div>	
+				</div>	
+			</div>						
+		</div>
+		<!--center 区域结束 -->
+		<!--south 区域 模版区域 -->
+		<div id="layout_main_south" data-options="region:'south',split:true,headerCls:'collapsible_title_class',collapsed:true" title="--" style="height:250px;">
+			
+			<!-- 模版布局 -->
+			<div id="OrderTemplate" class="easyui-layout" data-options="fit:true,border:false">
+				<div id="Template_Btn_div" data-options="region:'west',split:true,border:false">
+					<div id="Template_Btn_div_1" calss="easyui-panel"  data-options="fit:true,border:false" >
+						<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"个人模版"))# class="ColumnButton" id="Personal_Template_Btn"/>
+						<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"科室模版"))# class="ColumnButton" id="Departments_Template_Btn"/>
+					</div>
+				</div>
+				<div id="Template_center" data-options="region:'center',border:false">
+					<div id="Template_tabs" class="easyui-tabs" data-options="border:false">														
+					</div>					
+				</div>				
+			</div>
+			<!-- 医嘱单布局 -->
+			<div id="OrderList" class="easyui-panel" data-options="fit:true,border:false" style="overflow:hidden;">
+    			
+			</div>
+		
+		</div>
+		
+		<!-- [医嘱列表在下]布局1结束 -->
+		<csp:else>	
+			<!-- [医嘱列表在上]布局2开始 -->
+			<!--center 区域开始 -->
+		<div id="layout_main_center" data-options="region:'center',border:false">
+			<div id="" class="easyui-layout" data-options="fit:true,border:false">
+				<!--div id="" data-options="region:'north',border:true,split:false" style="height:35px;">
+					
+				</div-->
+				<div id="ListAddTemplate" data-options="region:'center',border:false" >
+					<!-- 医嘱单布局 -->
+					<div id="OrderList" class="easyui-panel" data-options="fit:true,border:false" style="overflow:hidden;">
+    				
+					</div>
+					
+					<!-- 模版布局 -->
+					<div id="OrderTemplate" class="easyui-layout" data-options="fit:true,border:false">
+						<div id="Template_Btn_div" data-options="region:'west',split:true,border:false">
+							<div id="Template_Btn_div_1" calss="easyui-panel"  data-options="fit:true,border:false" >
+								<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"个人模版"))# class="ColumnButton" id="Personal_Template_Btn"/>
+								<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"科室模版"))# class="ColumnButton" id="Departments_Template_Btn"/>
+							</div>
+						</div>
+						<div id="Template_center" data-options="region:'center',border:false">
+							<div id="Template_tabs" class="easyui-tabs" data-options="border:false">														
+							</div>					
+						</div>				
+					</div>
+				</div>
+				
+			</div>
+		</div>
+		<!--center 区域结束 -->		
+		<!--south 区域  -->
+		<div id="layout2_south" data-options="region:'south',split:true,headerCls:'collapsible_title_class',collapsed:false" title="--" style="height:300px;overflow-x:hidden;overflow-y:scroll;">
+			
+			
+			<div class="toolpanel" style="height:25px">						
+						<div id="PriorType_Btn" style="float:left">
+						<input type="hidden" value="" id="HiddenOrderPrior"/>	
+						<!--医嘱类型横向显示 -->
+						<csp:if condition='OrderPriorConfig="2"'>
+							<csp:if condition='INAdmTypeLoc="Y"'>
+								<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"默认类型"))# id="DefaultOrderPrior"/>--> 
+								<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"长期医嘱"))# id="LongOrderPrior"/>
+								<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"临时医嘱"))# id="ShortOrderPrior"/>
+								<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"出院带药"))# id="OutOrderPrior"/>				
+							<csp:else>
+								<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"默认类型"))# id="DefaultOrderPrior"/>-->
+								<!--input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"临时医嘱"))# id="ShortOrderPrior"/-->
+							</csp:if>
+						<csp:else>
+							<!--医嘱类型下拉显示 -->
+							<csp:if condition='INAdmTypeLoc="Y"'>
+							<a href="#" class="easyui-menubutton" data-options="menu:'#OrderPriorMenu_I',iconCls:'icon-edit'" id="PriorType">医嘱类型</a>
+							<div id="OrderPriorMenu_I" style="width:90px;">													
+								<div data-options="iconCls:'icon-ok'" id="DefaultOrderPrior">还原默认</div>
+       							<div data-options="iconCls:'icon-ok'" id="ShortOrderPrior">临时医嘱</div>
+        						<div data-options="iconCls:'icon-ok'" id="LongOrderPrior">长期医嘱</div>
+        						<div data-options="iconCls:'icon-ok'" id="OutOrderPrior">出院带药</div>      					       					
+            				</div>
+							<csp:else>
+							<!--a href="#" class="easyui-menubutton" data-options="menu:'#OrderPriorMenu_O',iconCls:'icon-edit'" id="PriorType">医嘱类型</a-->
+							<!--div id="OrderPriorMenu_O" style="width:90px;"-->													
+								<!--<div data-options="iconCls:'icon-ok'" id="DefaultOrderPrior">还原默认</div>-->
+       							<!--div data-options="iconCls:'icon-ok'" id="ShortOrderPrior">临时医嘱</div-->       						
+            				<!--/div-->	
+							</csp:if>											
+						</csp:if>
+						<!--<input type="button"  value=#(..Trans(%session.Get("LOGON.LANGID"),"医嘱模版"))# id="OrderTemplate_Btn"/> -->	
+            			</div>			
+						<div id="Prompt" style="height:20px;width:500px;">
+							提示信息
+						</div>
+						<div  id="handle_BtnDiv_2" style="float:right">
+						    <div id="BtnDiv">
+						        <input type="checkbox" id="FindByLogDep" style="vertical-align:middle;"/>
+								<input type="text" style="background: #E0ECFF;width:115px;color:Black;border:0px;" disabled="disabled"   value=#(..Trans(%session.Get("LOGON.LANGID"),"按登录取接收科室"))# id="FindByLogDep_Btn"/>
+							</div>
+							<div id="BtnDiv" >
+								<input type="text" style="background: #E0ECFF;width:60px;color:Black;" disabled="disabled" readonly value=#(..Trans(%session.Get("LOGON.LANGID"),"未审合计"))# id="ScreenBillSum_Btn"/>
+								<input type="text" id="ScreenBillSum"  value="" disabled="disabled" readonly="true" style="width:60px"/>
+								<csp:if condition='PAAdmType="I"'>
+								<csp:else>
+									<input type="text" style="width:60px;color:Black" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"已审合计"))# id="ScreenBillSum_Btn1"/>
+									<input type="text" id="SavedScreenBillSum"  disabled="disabled" value="" readonly="true" style="width:60px"/>
+								</csp:if>
+							</div>
+							
+							<csp:if condition='ShowOrderOpenForAllHosp="1"'>
+								<div id="BtnDiv">
+									
+									<input type="checkbox" style="vertical-align:middle;" id="OrderOpenForAllHosp"/>
+									<input type="text" style="background: #E0ECFF;width:35px;color:Black" disabled="disabled" value=#(..Trans(%session.Get("LOGON.LANGID"),"跨院"))# id="AllHosp_Btn"/>
+								</div>
+							</csp:if>
+						</div>			
+					</div>
+			
+			
+			<!--医嘱录入表格 -->
+			<table id="Order_DataGrid">
+			</table>
+			<!--工具栏 -->
+			<div id="ButtonList" class="toolpanel" style="height:28px;">
+			
+					<div class="" id="handle_BtnDiv_1" style="float:left">
+					<csp:if condition='PAAdmType="I"'>	
+						<input type="button" class="icon-add-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp添加(F1)"))#  id="Add_Order_btn"/>
+						<input type="button" class="icon-add-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp添加模板医嘱(A)"))#  id="Add_TemplOrder_btn"/>
+						<input type="button" class="icon-delete-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp删除(F2)"))#   id="Delete_Order_btn"/>
+						<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"编辑医嘱"))#  id="FormEdit_btn" />-->					
+						<input type="button" class="icon-ok-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp审核医嘱(S)"))#  id="Insert_Order_btn"/>
+						
+						
+						<input type="button" class="icon-merge-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp开始关联(R)"))# id="ChangeOrderSeq_Btn"/>
+						<!--input type="button" class="icon-merge-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp关联"))# id="SetOrderSeq_Btn"/>	
+						<input type="button" class="icon-undo-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp拆关联"))# id="ClearOrderSeq_Btn"/-->									
+						<!--input type="button" class="icon-orderno-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存用户常用"))# id="SetSaveForUser"/>
+						<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存为医嘱套"))# id="SaveToArcos"/-->
+						<!--input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"说明书"))# id="YDTS"/>
+						<csp:if condition='ZSKOpen=1'><input type="button" class="icon-doctor-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp建议医嘱"))# id="AdviceOrder"/></csp:if>
+						<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"同步下方医嘱时间"))# id="SynBtn"/-->
+						<!--span title="分隔符,后续按钮不用选择行"> - </span-->
+						<input type="button" class="icon-up-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp上"))# id="Up_Order_btn"/>
+						<input type="button" class="icon-down-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp下"))# id="Down_Order_btn"/>
+						
+						<input type="button" class="icon-copy-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱复制"))# id="Order_copy_btn"/>
+						<input type="button" class="icon-pencil-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱字典库录入"))# id="Dictionary_check_btn"/>
+						<input type="button" class="icon-tablelist-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱模版"))# id="OrderTemplate_Btn"/>	
+						<csp:if condition='DoctorType="NURSE"'>
+							<input type="checkbox"  id="NurseOrd" style="vertical-align:middle;"/>
+							<input style="background: #E0ECFF;width:115px;color:Black;border:0px" disabled="disabled" type="text" title="护嘱" value=#(..Trans(%session.Get("LOGON.LANGID"),"护嘱"))# id="NurseOrd_Btn"/>
+						</csp:if>
+						<input type="hidden" value="" id="LayoutContrl"/>
+						<csp:if condition='DoctorType="DOCTOR"'>
+							<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp检验检查申请"))# id="Examine_check_btn"/>
+							<!--input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"抗菌药申请列表"))# id="Antibiotics_apply_btn"/>
+							<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱模版维护"))# id="Template_maintain_btn"/>
+							<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"相互作用"))# id="XHZY"/-->
+						</csp:if>
+						<input type="button" class="icon-copy-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp同步备注"))# id="SynchroOrdNotes_Btn"/>
+						<!--img src="../images/DesinerImg/ctrlImg/example.gif" id="UIConfigImg"  class ="UIConfigImg" style="float:right;" alt="UI_Config"/-->
+						<!--按钮合并-->
+						<a href="#" class="easyui-menubutton" data-options="menu:'#OrderMoreMenu_I'" id="Btn_More">更多</a>
+						<div id="OrderMoreMenu_I" style="width:auto;">	
+    						<div class="icon-merge-custom" id="SynBtn">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp同步下方医嘱时间"))#</div>
+    						<csp:if condition='DoctorType="DOCTOR"'>
+    							<div class="icon-tablist-custom" id="Antibiotics_apply_btn">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp抗菌药申请列表"))#</div>
+    						</csp:if>
+    						<div class="icon-pencil-custom" id="Template_maintain_btn">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱模版维护"))#</div>
+    						<csp:if condition='DoctorType="DOCTOR"'>
+	    						<div class="icon-reciprocity-custom" id="XHZY">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp相互作用"))#</div>
+							    <div class="icon-pager-custom" id="YDTS">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp说明书"))#</div>
+							    <csp:if condition='ZSKOpen=1'><div class="icon-doctor-custom" id="AdviceOrder">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp建议医嘱"))#</div></csp:if>
+						    </csp:if>
+						    <csp:if condition='PAAdmType="I"'>
+						    <csp:else>
+						    	<csp:if condition='NotDisplayNoPayOrd=1'>
+							    	<div class="icon-doctor-custom" id="ShowNotPayOrd_Btn">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp显示未交费医嘱"))#</div>
+							    </csp:if>
+						    </csp:if>
+						    <csp:if condition='CAInit=1'>
+								<input type="button" class="icon-add-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbspCA补签名"))#  id="Open_CASign_btn"/>
+							</csp:if>	
+        				</div>
+        				<a href="#" class="easyui-menubutton" data-options="menu:'#OrderSaveAsMenu_I'" id="Btn_SaveAs">保存为</a>
+						<div id="OrderSaveAsMenu_I" style="width:auto;">	
+    						<div class="icon-orderno-custom" id="SetSaveForUser">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存用户常用"))#</div>
+    						<div class="icon-hosarcos-custom" id="SaveToArcos">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存为医嘱套"))#</div>
+    						<div class="icon-hosarcos-custom" id="SaveToTemplate">#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存到医嘱模板"))#</div>
+        				</div>
+        				
+					<csp:else>
+						<input type="button" class="icon-add-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp添加(F1)"))#  id="Add_Order_btn"/>
+						<input type="button" class="icon-delete-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp删除(F2)"))#   id="Delete_Order_btn"/>					
+						<!--<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"编辑医嘱"))#  id="FormEdit_btn" />-->
+						<input type="button" class="icon-ok-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp审核医嘱"))#  id="Insert_Order_btn"/>	
+						<input type="button" class="icon-merge-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp开始关联(R)"))# id="ChangeOrderSeq_Btn"/>
+						<!--input type="button" class="icon-merge-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp关联"))# id="SetOrderSeq_Btn"/>	
+						<input type="button" class="icon-undo-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp拆关联"))# id="ClearOrderSeq_Btn"/-->
+						<input type="button" class="icon-orderno-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"保存用户常用"))# id="SetSaveForUser"/>
+						<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存为医嘱套"))# id="SaveToArcos"/>
+						<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp保存到医嘱模板"))# id="SaveToTemplate"/>
+						<csp:if condition='DoctorType="DOCTOR"'>
+							<input type="button" class="icon-pager-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp说明书"))# id="YDTS"/>
+							<csp:if condition='ZSKOpen=1'><input type="button" class="icon-doctor-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp建议医嘱"))# id="AdviceOrder"/></csp:if>
+						</csp:if>
+						<input type="button" class="icon-stoppresc-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp撤消医嘱(C)"))# id="StopOrderBtn"/>
+						<span title="分隔符,后续按钮不用选择行"> - </span>
+						<input type="button" class="icon-copy-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱复制"))# id="Order_copy_btn"/>
+						<input type="button" class="icon-pencil-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱字典库录入"))# id="Dictionary_check_btn"/>
+						<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"医嘱模版"))# id="OrderTemplate_Btn"/>	
+						<csp:if condition='DoctorType="DOCTOR"'>
+							<input type="button" class="icon-hosarcos-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp检验检查申请"))# id="Examine_check_btn"/>								
+							<input type="button" class="icon-tablist-custom"  value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp抗菌药申请列表"))# id="Antibiotics_apply_btn"/>
+						</csp:if>
+						<input type="button" class="icon-ordtemplatesets-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp医嘱模版维护"))# id="Template_maintain_btn"/>
+						<csp:if condition='DoctorType="DOCTOR"'>
+							<input type="button" class="icon-reciprocity-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp相互作用"))# id="XHZY"/>
+							<input type="button" class="icon-app-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp诊间预约"))# id="Appointment_btn"/>
+							<!--input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp一键打印(P)"))# id="BtnPrtClick"/-->
+							<csp:if condition='OutDocEntryMTR=0'><input type="button" class="icon-print-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp一键打印(P)"))# id="BtnPrtClick"/></csp:if>
+						</csp:if>
+						
+						<csp:if condition='GroupCPPFlag="Y"'>
+							<input type="button" class="icon-doccardbill-custom" value=#(..Trans(%session.Get("LOGON.LANGID"),"&nbsp&nbsp&nbsp&nbsp预扣费"))# id="Card_pay_btn"/>
+						</csp:if>
+						<!--img src="../images/DesinerImg/ctrlImg/example.gif" id="UIConfigImg" alt="UI_Config"/-->
+					</csp:if>								
+					</div>			
+					
+			 </div>
+		</div>		
+	</div>
+														
+			<!-- [医嘱列表在上]布局2结束 -->	
+		</csp:if>
+		
+		
+   </div>
+	
+	<!--其他 -->
+	<!-- 医嘱单窗口显示 -->
+	<div id="OrderListWindow"></div>
+	<!-- 医嘱常用模板选择显示 -->
+	<div id="OrgFavSelWindow" class="toolpanel">
+		
+		<!--input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"科室"))# id="OrgFav_Location" style="margin: 40px 30px 30px 40px;border: 1px solid #3399ff;border-radius: 5px;"/>
+		<input type="button" value=#(..Trans(%session.Get("LOGON.LANGID"),"个人"))# id="OrgFav_User" style="margin: 40px 30px 30px 30px;border: 1px solid #3399ff;border-radius: 5px;"/-->
+		<table> 
+		  <tr>
+		    <td><a name="OrgFav_Location" class="i-btn i-btn-primary" id="OrgFav_Location" href="#"><img src="../images/uiimages/template_l.png" border="0">科室</a></td>
+		    <td><a name="OrgFav_User" class="i-btn i-btn-primary" id="OrgFav_User" href="#"><img src="../images/uiimages/template_p.png" border="0">个人</a></td>
+		  </tr>
+		</table>
+		
+	</div>
+</div>
+
+<!--临时数据的存储-->
+<div>
+	<input type="HIDDEN" value=""  id="tempTemplateData"/>
+	<input type="HIDDEN" value=""  id="PageTimeLogData"/>
+</div>
+<!--语言转换方法-->
+<csp:method name="Trans" arguments="CurLangID:%String,Desc:%String" >
+    Q ##class(web.DHCDocUtil).GetTranslatedStr(CurLangID,Desc)
+</csp:method>

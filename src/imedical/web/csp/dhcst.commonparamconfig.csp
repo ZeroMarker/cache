@@ -1,0 +1,21 @@
+<SERVER>
+	s Action=$Get(%request.Data("actiontype",1))
+	i Action = "GetParamCommon" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.Common.AppCommon).GetParamCommon(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"
+
+	i Action = "WebSysLock" d
+	.s lockId=$g(%request.Data("lockId",1))
+	.s lockType=$g(%request.Data("lockType",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s lockToggle=$g(%request.Data("lockToggle",1))
+	.//s ^yunhaibao("lockToggle",$i(^aaa))=lockToggle_":"_lockId_","_lockType_","_lockToggle_","_UserId_","_LocId
+	.s ret=##class(web.DHCST.Common.AppCommon).WebSysLock(lockId,lockType,lockToggle,UserId,LocId)
+	.i ret=1 w "{success:'true',info:'"_ret_"'}"
+	.e  i ret=0 w "{success:'false',info:'"_"处理单据锁失败"_"'}"
+	.e  w "{success:'false',info:'"_ret_"'}"
+</SERVER>

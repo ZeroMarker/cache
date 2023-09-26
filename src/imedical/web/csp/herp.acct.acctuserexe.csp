@@ -1,0 +1,48 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+	
+	//acctUserID UserCode UserName isValid
+
+	s rowid=$Get(%request.Data("rowid",1))	
+	s UserCode=$Get(%request.Data("UserCode",1))
+	s UserName=$Get(%request.Data("UserName",1))
+	s isValid=$Get(%request.Data("isValid",1))
+	
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uacctUser).List(sortField, sortDir, start, limit)
+	
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uacctUser).InsertRec(UserCode,UserName,isValid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uacctUser).UpdateRec(rowid,UserCode,UserName,isValid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uacctUser).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

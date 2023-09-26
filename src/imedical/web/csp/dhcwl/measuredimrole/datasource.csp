@@ -1,0 +1,182 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	set action=$g(%request.Data("action",1))
+	set isArrayType=$g(%request.Data("isArrayType",1))
+	set className=$g(%request.Data("className",1))
+	s onePage=$g(%request.Data("onePage",1))
+	set condSql=""
+	;s start=1,pageSize=9999999
+	s:start>1 start=start+1
+	s end=start+pageSize
+	s deli="&"
+	if "getDataSource"=action{
+		i $g(onePage)=1 {
+			s tableName=$g(%request.Data("tableName",1))
+			s packageName=$g(%request.Data("packName",1))
+			s %session.Data("tableName")=tableName
+			s %session.Data("packageName")=packageName
+		}else{
+			s tableName=%session.Data("tableName")
+			s packageName=%session.Data("packageName")
+		}
+		//s packageName="DHCWL.MKPI"
+		s queryJsonPros="{start:"_start_",end:"_end_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.MeasureDimroleData.DataSourceManager:GetTableInforQuery",queryJsonPros,packageName,tableName)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif "addDataSource"=action{
+		s dsDesc=$g(%request.Data("dsDesc",1))
+		s packageName=$g(%request.Data("packageName",1))
+		s tableName=$g(%request.Data("tableName",1))
+		if (dsDesc="")||(packageName="")||(tableName=""){
+			w "{success:true,tip:'填写信息都不能为空'}"
+			q	
+		}
+		s sc=##class(DHCWL.MeasureDimroleData.DataSourceManager).AddDSource(dsDesc,packageName,tableName)
+		w "{success:true,tip:'"_sc_"'}"
+		q
+	}elseif action="getDSCombo"{
+		s sql="select ID,Ds_TableName,Ds_Desc from DHCWL_MeasureDimrole.DSource where Ds_VoidFlag is null"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=",",str="['',''],"
+		While(rs.Next()){
+			s str=str_"['"_rs.Data("ID")_"'"_deli_"'"_rs.Data("Ds_TableName")_":"_rs.Data("Ds_Desc")_"'],"
+		}
+		d rs.Close()
+		w "["_$e(str,1,$l(str)-1)_"]"
+	}elseif "getTablePro"=action{
+		s tableName=$g(%request.Data("tableName",1))
+		if tableName=""{
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s packageName=$lg(^DHCWL.MeasureDimrole.DSourceD(tableName),2)
+		s tableName=$lg(^DHCWL.MeasureDimrole.DSourceD(tableName),3)
+		if tableName=""{
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.MeasureDimroleData.DataSourceManager:SelectProperty","",packageName,tableName)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif "getDSInfor"=action{
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.MeasureDimroleData.DataSourceManager:GetDataSourceQuery","")
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif "delDataSource"=action{
+		s ID=$g(%request.Data("ID",1))
+		if (ID=""){
+			w "{success:true,tip:'获取作废条目信息失败'}"
+			q
+		}
+		s name="",flag=0
+		for {
+			s name=$o(^DHCWL.MeasureDimrole.DSItemI("ItemDSDr",ID,name))
+			q:name=""
+			s itemID=$o(^DHCWL.MeasureDimrole.DSItemI("ItemDSDr",ID,name,""))
+			s voidFlag=$lg(^DHCWL.MeasureDimrole.DSItemD(itemID),8)
+			continue:voidFlag=1
+			s flag=1
+			q
+		}
+		if (flag=1){
+			s sc="请先作废该数据源下的明细再进行操作！"
+			w "{success:true,tip:'"_sc_"'}"
+			q
+		}
+		&sql(UPDATE DHCWL_MeasureDimrole.DSource SET Ds_VoidFlag = 1 where ID=:ID)
+		i SQLCODE=0{
+			s sc="ok"
+		}else{
+			s sc="作废失败"
+		}
+		w "{success:true,tip:'"_sc_"'}"
+	}elseif "modifyDS"=action{
+		s ID=$g(%request.Data("ID",1))
+		s desc=$g(%request.Data("desc",1))
+		if (ID="")||(desc=""){
+			w "{success:true,tip:'修改信息不能为空'}"
+			q
+		}
+		&sql(UPDATE DHCWL_MeasureDimrole.DSource SET Ds_Desc =:desc WHERE ID = :ID )
+		i SQLCODE=0{
+			s sc="ok"
+		}else{
+			s sc="保存失败"
+		}
+		w "{success:true,tip:'ok'}"
+	}elseif "addDSourceItem"=action{
+		//s ^TEMPDHCWL("wk","test5")="wk"
+		s strItemName=$g(%request.Data("strItemName",1))
+		s strItemDesc=$g(%request.Data("strItemDesc",1))
+		s strItemType=$g(%request.Data("strItemType",1))
+		s strItemDataType=$g(%request.Data("strItemDataType",1))
+		s strValue=$g(%request.Data("strValue",1))
+		s dsID=$g(%request.Data("dsID",1))
+		if (strItemName="")||(strItemDesc="")||(strItemType="")||(strItemDataType="")||(dsID=""){
+			w "{success:true,tip:'请确认信息填写完整之后再进行操作'}"
+			q
+		}
+		s sc=##class(DHCWL.MeasureDimroleData.DataSourceManager).AddDSourceItem(strItemName,strItemDesc,strItemType,strItemDataType,strValue,dsID)
+		w "{success:true,tip:'"_sc_"'}"
+	}elseif "getDSItemInfor"=action{
+		s tableName=$g(%request.Data("tableName",1))
+		s detail=$g(%request.Data("detail",1))
+		//s queryJsonPros="{start:"_start_",end:"_end_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.MeasureDimroleData.DataSourceManager:GetDSItemQuery","",tableName,detail)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif "modifyDSItem"=action{
+		s ID=$g(%request.Data("ID",1))
+		s desc=$g(%request.Data("modifyDesc",1))
+		s sc=##class(DHCWL.MeasureDimroleData.DataSourceManager).ModifyDSItem(ID,desc)
+		w "{success:true,tip:'"_sc_"'}"
+	}elseif "deleteDSItem"=action{
+		s ID=$g(%request.Data("ID",1))
+		s sc=##class(DHCWL.MeasureDimroleData.DataSourceManager).DeleteDSItem(ID)
+		w "{success:true,tip:'"_sc_"'}"
+	}
+</script>

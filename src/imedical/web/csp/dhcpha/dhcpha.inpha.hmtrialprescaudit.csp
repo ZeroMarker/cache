@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--
+     草药-住院草药审方 
+     csp: csp/dhcpha/dhcpha.inpha.hmtrialprescaudit.csp
+     js:  scripts/pharmacy/inpha/dhcpha.inpha.hmtrialprescaudit.js
+-->
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+    </Server>
+    <TRAK:HEAD />
+    <DHCPHARMACY:COMMONLIB />
+    <DHCAPP:PHARBOOTSTRAP />
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+        s gPatNo = $G(%request.Data("gPatNo",1))
+        s InPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("IA")
+        s IEVersion=##class(web.DHCSTKUTIL).GetIEVersion()
+    </Server>
+    <SCRIPT Language="Javascript">
+        var InPhaWay = "#(InPhaWay)#";
+        var LoadPatNo = "#(gPatNo)#";
+        if ((("#(IEVersion)#") < 11) && (LoadPatNo != "")) {
+            window.location.href = "#(Application)#csp/dhcpha.inpha.ipmonitor.csp?gPatNo=" + LoadPatNo
+        }
+    </script>
+    <!--调用美康--因医生站为异步调用，药房只能同步调用，所以需要将美康的McConfig.js 另存为 McConfigPharmacy.js -->
+    <!--并修改 this.MC_Is_SyncCheck = false ; 为 this.MC_Is_SyncCheck = true; -->
+    <link rel="stylesheet" type="text/css" href="#(Application)#CUSTOM/PassJs/McCssAll.css" />
+    <script type="text/javascript" src="#(Application)#CUSTOM/PassJs/McConfigPharmacy.js"></script>
+    <script type="text/javascript" src="#(Application)#CUSTOM/PassJs/McJsAll.js"></script>
+    <!--dhcpha common js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.monitorlog.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmtrialprescaudit.js">
+    </script>
+    <style type="text/css">
+        .wardtitle th.ui-th-column div {
+            white-space: normal !important;
+            height: auto !important;
+            padding: 0px;
+        }
+
+        .checkboxpadding {
+            padding-left: 5px;
+        }
+
+        .RowGreen {
+            background-color: #80F0C0;
+        }
+
+        .RowBlue {
+            background-color: #00BFFF;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dhcpha-query-condition">
+        <div style="width:0px;height:0px">
+            <server>
+                d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+            </server>
+        </div>
+        <div class="container-fluid dhcpha-condition-container">
+            <div class="row ">
+                <div class="col-lg-12 col-md-12">
+                    <button class="btn btn-default btn_button btn_important" id="btn-pass"
+                        onclick="javascript:PassIPOrder()"><img
+                            src="#(Application)#scripts/pharmacy/images/pass-default.png"
+                            class="dhcpha-btn-image"><br><strong>审方通过</strong></button>
+                    <button class="btn btn-default btn_button btn_refuse" id="btn-refuse"
+                        onclick="javascript:RefuseIPOrder()"><img
+                            src="#(Application)#scripts/pharmacy/images/refuse-default.png"
+                            class="dhcpha-btn-image"><br><strong>审方拒绝</strong></button>
+                    <button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-prepresc"
+                        onclick="javascript:ViewIPOrderAddInfo()"><img
+                            src="#(Application)#scripts/pharmacy/images/prescadd-default.png"
+                            class="dhcpha-btn-image"><br><strong>医嘱审核</strong></button>
+                    <button class="btn btn-default btn_button btn_common" id="btn-viewlog"
+                        onclick="javascript:ViewIPOrderMonitorLog()"><img
+                            src="#(Application)#scripts/pharmacy/images/log-default.png"
+                            class="dhcpha-btn-image"><br><strong>查看日志</strong></button>
+                    <button class="btn btn-default btn_button btn_common" id="btn-analysis"
+                        onclick="javascript:PrescAnalyse()"><img
+                            src="#(Application)#scripts/pharmacy/images/analysis-default.png"
+                            class="dhcpha-btn-image"><br><strong>处方分析</strong></button>
+                    <button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-autorefresh"
+                        onclick="javascript:AutoRefreshMonitor()"><img
+                            src="#(Application)#scripts/pharmacy/images/autorefresh-default.png"
+                            class="dhcpha-btn-image"><br><strong>自动刷新</strong></button>
+                </div>
+            </div>
+        </div>
+        <div class="row dhcpha-row-split-all"></div>
+        <div class="container-fluid dhcpha-condition-container">
+            <div class="row row_style">
+                <form class="form-inline">
+                    <div class="input-group">
+                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>药房科室</strong></span>
+                        <select class="form-control in_select" id="sel-phaloc"></select>
+                    </div>
+                    <div class="input-group">
+                        <span for="date-start"
+                            class="input-group-addon dhcpha-input-group-addon-in"><strong>开方/审方日期</strong></span>
+                        <input id="date-start" class="form-control input_style" type="text"
+                            style="border-right:none;width:86px" placeholder="请选择日期">
+                        <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    <span><strong>至</strong></span>
+                    <div class="input-group">
+                        <input id="date-end" class="form-control input_style" type="text"
+                            style="border-right:none;width:86px" placeholder="请选择日期">
+                        <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>病区</strong></span>
+                        <select class="form-control in_select" id="sel-phaward">
+                        </select>
+                    </div>
+                    <div class="form-group dhcpha-col-split"></div>
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-audit" />
+                        <lable for="chk-audit"><strong>已审方</strong></lable>
+                    </div>
+                    <div class="btn-group dhcpha-btn-right">
+                        <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                        <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
+                            id="btn-find" onclick="javascript:QueryGridPrescAudit()">查询</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row dhcpha-row-split"></div>
+    </div>
+
+    <div class="container-fluid dhcpha-tab-content">
+        <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6" style="padding-right:0px;padding-left:0px" id="col-left">
+                <div class="panel div_content" id="div-tab">
+                    <div class="panel-heading"><span class="pal_style"><strong>处方预览</strong></span></div>
+                    <iframe id="ifrm-cypresc" src="" style="border:0px;width:100%;"></iframe>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 dhcpha-col dhcpha-col-border-left" id="col-right">
+                <div class="container-fluid dhcpha-tab-content-sm">
+                    <div class="row">
+                        <div class="tab_style tab_style_bottom">
+                            <ul id="tab-ipmonitor" class="nav nav-tabs nav_tabs_style">
+                                <li class="active">
+                                    <a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false"
+                                        id="tab-presc">处方列表</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false"
+                                        id="tab-patno">登记号</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div id="monitor-condition">
+                            <div id="div-presc-condition">
+                                <div class="panel div_content" style="margin-top:9px;">
+                                    <table id="grid-presclist" class="table table-bordered table_style"></table>
+                                    <div id="jqGridPager"></div>
+                                </div>
+                            </div>
+                            <div id="div-patno-condition">
+                                <div class="panel div_content">
+                                    <div class="panel-heading">
+                                        <div style="padding-left:4px;margin-top:-3px">
+                                            <input id="txt-patno" class="form-control input_style" type="text"
+                                                style="width:13em;height:25px;" placeholder="请输入登记号...">
+                                        </div>
+                                    </div>
+                                    <table id="grid-admlist" class="table table-bordered table_style"></table>
+                                </div>
+                                <div class="panel div_content">
+                                    <div class="panel-heading"><span class="pal_style"><strong>此就诊待审处方列表</strong></span>
+                                    </div>
+                                    <table id="grid-admpresclist" class="table table-bordered table_style"></table>
+                                	<div id="jqGridPager1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <csp:Include Page="dhcpha.inpha.ipmonitor.addinfo.csp" />
+    <csp:Include Page="dhcpha.outpha.outmonitor.log.csp" />
+    <csp:Include Page="dhcpha.inpha.presc.csp" />
+</body>
+
+</html>

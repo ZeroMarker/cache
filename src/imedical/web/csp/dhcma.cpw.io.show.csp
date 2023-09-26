@@ -1,0 +1,40 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/CPW/CSS/ShowCPW.css" />
+	</head>
+	<body>
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/Interface/ShowCPW.js"></script>
+		<script language="Cache" RUNAT="SERVER">		
+		    Set EpisodeID=$g(%request.Data("EpisodeID",1))
+		    If (EpisodeID'["!!") {
+		    	Set SYSDr=##class(DHCMA.Util.BTS.SYSTEMSrv).GetSYSDr("")
+		    	Set EpisodeID=EpisodeID_"!!"_SYSDr
+		    }
+		    Set CPWStr=$g(%request.Data("CPWStr",1))
+	   </script>
+	    <script language="javascript" type="text/javascript">
+			var EpisodeID='#(EpisodeID)#'
+			var CPWStr='#(CPWStr)#'
+			$(document).ready(function(){
+				var url = "../scripts/DHCMA/CPW/Interface/ShowCPW.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					ShowSelectCPWDialog();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+		</script>
+	</body>
+</html>

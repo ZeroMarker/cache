@@ -1,0 +1,155 @@
+<!--dhcdoc.orderviewdoctor.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //CA:-------------------start初始化CA服务环境session--------
+ i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+ .d ##Class(CA.DigitalSignatureService).CASessionDataInit()
+ //-------------------end初始化CA服务环境session--------
+ quit 1
+</csp:method>
+<html>
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/dhcdocCustomExt.css" />
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css"/>
+<script type="text/javascript" src="../scripts/framework/ExtCustom/GroupHeaderPlugin.js"></script>
+<script type="text/javascript" src="../scripts/framework/dhcc.icare.MixGridPanel.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcc.doc.OrderCenter.js"></script>
+</head>
+<body>
+<style type="text/css">
+    .myCls{
+       background-image:'';
+    }
+</style>
+<script runat=server language=cache>
+	s orderMetaDataJson = ##class(ext.websys.QueryBroker).ReadRSNew2("web.DHCDocOrderView","FindOrder")
+	 s execMetaDataJson = ##class(ext.websys.QueryBroker).ReadRSNew2("web.DHCDocMain","FindOrderExecDet")
+	  s feeMetaDataJson = ##class(ext.websys.QueryBroker).ReadRSNew2("web.DHCDocMain","FindOrderFee") 
+	s group=%session.Get("LOGON.GROUPID")
+	s menucode = "DOCPRNOrder"
+	#dim obj As websys.ExtMenu
+	s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+	s orderMenuJson = obj.GetMenusJson(group)
+	d obj.%Close()
+	s obj=""
+	i orderMenuJson="" s orderMenuJson="{}"
+	
+	//临时医嘱右键
+	s menucode = "DOCSOSOrder"
+	s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+	s menujsonSOS = obj.GetMenusJson(group)
+	d obj.%Close()
+	s obj=""
+	i menujsonSOS="" s menujsonSOS="{}"
+	
+	s menucode = "NURPRNExec"
+	s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+	s execMenuJson = obj.GetMenusJson(group)
+	d obj.%Close()
+	s obj=""
+	i execMenuJson="" s execMenuJson="{}"
+	
+	s menucode = "NURSOSExec"
+	s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+	s execMenuSOSJson = obj.GetMenusJson(group)
+	d obj.%Close()
+	s obj=""
+	i execMenuSOSJson="" s execMenuSOSJson="{}"
+	
+	
+	
+	;-
+	s menucode = "NURPRNFee"
+	s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+	s feeMenuJson = obj.GetMenusJson(group)
+	d obj.%Close()
+	s obj=""
+	i feeMenuJson="" s feeMenuJson="{}"
+	
+	s menucode = "NURSOSFee"
+	s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+	s feeMenuSOSJson = obj.GetMenusJson(group)
+	d obj.%Close()
+	s obj=""
+	i feeMenuSOSJson="" s feeMenuSOSJson="{}"
+	
+	
+	
+	s collapsed = ##class(web.DHCDocMain).GetExecFeeCollapseConfig()
+	;区分布局,新医嘱录入布局和长期医嘱单和临时医嘱单有差异
+	s LayoutControl=%request.Get("LayoutControl")
+	s PatientID = %request.Get("PatientID")
+	s EpisodeID = %request.Get("EpisodeID")
+	if EpisodeID'="" Set PatientID=$P($g(^PAADM(EpisodeID)),"^",1)
+	w "<input id='OrderPriorType' name='OrderPriorType' type='hidden' value='"_%request.Get("OrderPriorType")_"'>",$C(13,10)
+	;CA:数字签名加载JS  ---START---
+	s CAInit=0
+	i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+	.s CAInit=1
+	.d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+	;得到CA认证的XML信息串
+	s GetOEORIItemXMLMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
+	;插入CA认证后的信息串
+	s InsertCASignInfoMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
+	;------END-----
+</script>
+<script type="text/javascript">
+	var orderMetaDataJson = #(orderMetaDataJson)#;
+	//alert("orderMetaDataJson:"+orderMetaDataJson)
+	var execMetaDataJson = #(execMetaDataJson)#;
+	var feeMetaDataJson = #(feeMetaDataJson)#;
+	var feeListWidth = #($g(^DHCDocOrderBillConfig("Main","FeeListWidth"),380))#;
+	var feeListHeight = #($g(^DHCDocOrderBillConfig("Main","FeeListHeight"),280))#;
+	var collapsed = #(collapsed)#;
+	var LayoutControl = "#(LayoutControl)#";
+	var PatientID = "#(PatientID)#";
+	var EpisodeID = "#(EpisodeID)#";
+	var patData = {"patFlag":0,"flagDesc":"","onlyModifyFee":"N"}; 
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcc.doc.OrderViewDoctor.js"></script>
+<script type="text/javascript"src="../scripts/dhcdoc/dhcc.doc.execOrder.js"></script>
+<script type="text/javascript"src="../scripts/dhcdoc/dhcc.doc.feeOrder.js"></script>
+<script type="text/javascript">
+	var orderRightMenuJson = "";
+	var orderSOSRightMenuJson=""
+	var execRightMenuJson = "";
+	var execSOSRightMenuJson = "";
+	var feeRightMenuJson = "";
+	var feeSOSRightMenuJson = "";
+	
+	//CA:-------------------start 数字签名-----------------
+	var CAInit="#(CAInit)#";
+	var GetOEORIItemXMLMethod="#(GetOEORIItemXMLMethod)#";
+	var InsertCASignInfoMethod="#(InsertCASignInfoMethod)#";
+	var strServerRan="#($g(%session.Data("ServerRan")))#";
+	var strServerCert="#($g(%session.Data("ServerCert")))#";
+	var strServerSignedData="#($g(%session.Data("ServerSignedData")))#";
+	var IsCAWin="";
+	function GetList_pnp(){
+	   var strTemp =GetUserList();
+	   if (strTemp!="") IsCAWin=strTemp;
+	   else IsCAWin="";
+	}
+	if(CAInit==1) {
+		GetList_pnp();
+		if (IsCAWin==""){
+			alert("请先插入KEY");
+		}
+	}
+	//-------------------------------
+	Ext.onReady(function(){
+		orderRightMenuJson = #(orderMenuJson)#;
+		execRightMenuJson = #(execMenuJson)#;
+		feeRightMenuJson = #(feeMenuJson)#;
+		orderSOSRightMenuJson=#(menujsonSOS)#;
+		execSOSRightMenuJson = #(execMenuSOSJson)#;
+		feeSOSRightMenuJson = #(feeMenuSOSJson)#;
+	})
+</script>
+<script type="text/javascript"src="../scripts/dhcdoc/dhcc.doc.layout.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,555 @@
+<!--herp.budg.hisui.budgschemMAself.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<TRAK:HEAD></TRAK:HEAD>
+		<HISUI/>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+		<style>
+			.div-north-height-250{
+				height:250px;	
+			}		
+		
+			.panel-body{
+				border-top-width:1px;
+				border-left-width:1px;
+				border-right-width:1px;
+			}
+			
+			.panel-header{
+				border-bottom-width:0px;
+			}	
+			
+			.padding-10-top-none{
+			    padding:1px 10px 15px 10px;   
+			}
+			
+		</style>
+	</head>	
+	<!---->
+	<body class="padding-0" >	
+		<div class="hisui-layout" data-options="fit:true">
+			<div class='div-north-height-250 border-none padding-10-bottom-5' id='northDiv' data-options="region:'north',split:true,border:false" >
+				<div class="line-50-y" id="tb">
+					<label class='padding-both-10'>年度</label>
+					<select id="yearcb" class="hisui-combobox combobox-width-177"  
+							data-options="url:$URL +'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=YearOrYearMon&ResultSetType=array',
+								mode:'remote',
+								valueField: 'year',
+								textField: 'year',
+								required:true,
+								onBeforeLoad:YearBefLoad,
+								onSelect:yearcbSelectFn">
+					</select>
+					<label class='padding-both-10'>科室名称</label>
+					<select id="deptcb" class="hisui-combobox combobox-width-177"
+							data-options="url:$URL +'?ClassName=herp.budg.hisui.udata.uBudgSchemMAself&MethodName=selfDepts&ResultSetType=array',
+								mode:'remote',
+								valueField: 'rowid',
+								textField: 'name',
+								required:true,
+								onBeforeLoad:selfDeptBefLoad,
+								onSelect:deptcbSelectFn">
+					</select>
+					<label class='padding-left-10'></label>
+					<a id="findBtn" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find',onClick:Search ">查询</a>
+				</div>
+								
+				<!--方案表格-->
+				<table id="schemGrid" class="hisui-datagrid"  
+					data-options="
+						title:'科室年度预算编制（自编）',
+						headerCls:'panel-header-gray',
+						iconCls:'icon-paper',
+						fit:true,
+						url:$URL, 
+						queryParams:{
+							ClassName: 'herp.budg.hisui.udata.uBudgSchemMAself',
+							MethodName: 'List',
+							hospid: hospid,
+							userid: userid				
+						},
+						toolbar:'#tb',
+						idField:'Rowid',
+						rownumbers:true,
+						singleSelect:true,
+						striped : true,
+						pagination:true,
+						pageSize:25,
+						pageList:[5, 10, 15, 20, 25, 50, 100],
+						onSelect:SchemGridClickRow">
+						
+						
+					<thead data-options="frozen:true">
+						<tr>
+							<th field='Rowid' width='120' halign='left' hidden=true>ID</th>
+							<th field='Year' width='80' halign='left' >年度</th>
+							<th field='CompName' width='200' halign='left' hidden=true>医疗单位</th>
+							<th field='SchemId' width='100' halign='left' hidden=true >方案ID</th>
+							<th field='Code' width='100' halign='left'>方案编码</th>
+							<th field='Name' width='150' halign='left'>方案名称</th>
+							<th field='ObjDeptNa' width='120' halign='left'>方案适用科室</th>
+						</tr>
+					</thead>						
+						
+					<thead>
+						<tr>
+							<th field='OrderBy' width='80' halign='left'>编制顺序</th>
+							<th field='ItemName' width='100' halign='left' >结果预算项</th>
+							<th field='SupSchem' width='80' halign='center' align='center' styler="gridTextStyler" >前置方案</th>
+							<th field='IsHelpEdit' width='80' halign='left' align='center' formatter='isChecked'>是否代编</th>
+							<th field='CHKFlowDR' width='120' halign='left' hidden=true>关联审批流ID</th>
+							<th field='ChkFlowName' width='120' halign='left'>关联审批流</th>
+							<th field='File' width='50' halign='left'>附件</th>
+							<th field='ChkStep' width='80' halign='left' hidden=true>编制步骤</th>
+							<th field='IsOver' width='80' halign='left' hidden=true>结束标志</th>
+							<th field='ChkState' width='80' halign='center' align='center' hidden=true
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[
+											{rowid:'1',name:'新建'},
+											{rowid:'2',name:'提交'},
+											{rowid:'3',name:'通过'},
+											{rowid:'4',name:'完成'},
+											{rowid:'5',name:'下放'},
+											{rowid:'6',name:'下放完成'},
+											{rowid:'7',name:'下放完,待重提'}
+										]
+									}
+								}"
+							>编制状态</th>
+							<th field='StateDesc' width='80' halign='left' hidden=true>状态说明</th>
+							<th field="IsTwoUpDown" width="100" halign="center" align='center' 
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[{
+											rowid:'1',
+											name:'是'
+										},{
+											rowid:'0',
+											name:'否'
+										}]
+									}
+								}"
+							>两上两下模式</th>
+							<th field="IsEconItem" width="100" halign="center" align='center' 
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[{
+											rowid:'1',
+											name:'是'
+										},{
+											rowid:'0',
+											name:'否'
+										}]
+									}
+								}"
+							>经济科目模式</th>
+
+						</tr>						
+					</thead>	
+				</table>
+			</div>
+			
+			<div id="centerDiv" class="border-none padding-10-top-none" data-options="region:'center',border:false">
+				<div class='line-50-y' id="itemtb">
+					<label class="padding-both-10">项目类别</label>
+					<select id="typecb" class="hisui-combobox combobox-width-120" 
+							data-options="url:$URL +'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=ItemType&flag=1&ResultSetType=array',
+								mode:'remote',
+								valueField: 'code',
+								textField: 'name',
+								onSelect:typecbSelectFn
+								">
+					</select>
+					<label class="padding-both-10">项目名称</label>
+					<select id="itemcb" class="hisui-combobox combobox-width-177" 
+							data-options=" 
+								valueField: 'code',
+								textField: 'name',
+								onBeforeLoad:itemBefLoad,
+								onSelect:itemcbSelectFn">
+					</select>
+					<label class="padding-both-10">项目状态</label>
+					<select id="itemStatecb" class="hisui-combobox combobox-width-120" 
+							data-options=" 
+								valueField: 'rowid',
+								textField: 'name',
+								data:[
+									{rowid:'1',name:'新建'},
+									{rowid:'2',name:'提交'},
+									{rowid:'3',name:'通过'},
+									{rowid:'4',name:'完成'},
+									{rowid:'5',name:'下放'},
+									{rowid:'6',name:'下放完成'},
+									{rowid:'7',name:'下放完,待重提'}
+								],
+								onSelect:itemStatecbFn">
+					</select>	
+				    
+				    <label></label> 
+					<input type="checkbox" class='hisui-checkbox' id="isLastckb"  
+						data-options="
+							checked:true,
+							onCheckChange:checkChangeFn" >
+				    <label style="padding-bottom:3px">末级</label> 
+				    
+				    <label class="padding-left-10"></label> 
+					<a id="findItemBtn" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find',onClick:SearchItems">查询</a>
+					<label class="padding-left-10"></label>
+					<a id="saveItemBtn" class="hisui-linkbutton width-70" href="#" data-options="disabled:true,onClick:FactYearSave">保存</a>
+					<label class="padding-left-10"></label>
+					<a id="subitItemBtn" class="hisui-linkbutton width-70" href="#" data-options="disabled:true,onClick:FactYearSubmit">提交</a>
+					<label class="padding-left-10"></label>
+					<a id="backItemBtn" class="hisui-linkbutton width-70" href="#" data-options="disabled:true,onClick:FactYearBack">撤销</a>
+				
+				</div>	
+				
+				<!--科室预算数据表格-->
+				<table id="schemDetailGrid" class="hisui-datagrid" 
+					data-options="
+						title:'科室预算方案明细',
+						headerCls:'panel-header-gray',
+						iconCls:'icon-paper',
+						fit:true,
+						url:$URL, 
+						queryParams:{
+							ClassName: 'herp.budg.hisui.udata.uBudgSchemMAself',
+							MethodName: 'ListDetail'
+						},
+						idField:'rowid',
+						toolbar:'#itemtb',
+						striped : true,
+						rownumbers:true,
+						pagination:true,
+						pageSize:25,
+						pageList:[5, 10, 15, 20, 25, 50, 100],
+						onClickCell: onClickCell">
+						
+					<thead data-options="frozen:true">
+						<tr>
+							<th field='ckbox' checkbox='true'></th>
+							<th field='rowid' width='100' halign='left' hidden=true>ID</th>
+							<th field='Year' width='100' halign='left' hidden=true>年度</th>
+							<th field='Code' width='150' halign='left'>项目编码</th>
+							<th field='Name' width='200' halign='left' >项目名称</th>
+							<th field="Level" width="100" halign='left' hidden='true'>项目级次</th>
+							<th field="IsLast" width="100" halign='center' align="center" hidden='true'
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[{
+											rowid:'1',
+											name:'是'
+										},{
+											rowid:'0',
+											name:'否'
+										}]
+									}
+								}"
+							>是否末级</th>
+							<th field='BITName' width='100' halign='left' hidden='true'>项目类别</th>
+							<th field='EditMod' width='100' halign='left' hidden='true'
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[{
+											rowid:'1',
+											name:'自上而下'
+										},{
+											rowid:'2',
+											name:'自下而上'
+										},{
+											rowid:'3',
+											name:'上下结合'
+										}]
+									}
+								}"
+							>编制模式</th>
+						</tr>
+					</thead>
+					
+					<thead>
+						<tr>
+							<th field="AuditDept" width="150" halign="left" 
+								formatter="AuditDeptFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										url:$URL+'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=Dept&ResultSetType=array',
+										mode:'remote',
+										valueField: 'rowid',
+										textField: 'name',
+										onBeforeLoad:auditDeptBefLoad
+									}
+								}"
+							>归口科室一</th>
+							<th field="AuditDeptTwo" width="150" halign="left"
+								formatter="AuditDeptTwoFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										url:$URL+'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=Dept&ResultSetType=array',
+										mode:'remote',
+										valueField: 'rowid',
+										textField: 'name',
+										onBeforeLoad:auditDeptBefLoad
+									}
+								}"
+							>归口科室二</th>
+							<th field="IsGovBuy" width="100" halign="left"  
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[{
+											rowid:'1',
+											name:'是'
+										},{
+											rowid:'0',
+											name:'否'
+										}]
+									}
+								}"
+							>政府采购</th>
+							<th field='PlanValue' width='100' halign='right' align="right"
+								formatter="ValueFormatter" 
+								editor = "{
+									type: 'numberbox',
+									options: {
+										precision: 2
+									}
+								}"
+							>年度预算</th>
+							<th field="OneUpVal" width="100" halign="right" align="right"
+								formatter="dataFormat" 
+								editor = "{
+									type: 'numberbox',
+									options: {
+										precision: 2
+									}
+								}"
+							>一上预算</th>
+							<th field="OneDowVal" width="100" halign="right" align="right"
+								formatter="dataFormat" 
+								editor = "{
+									type: 'numberbox',
+									options: {
+										precision: 2
+									}
+								}"
+							>一下预算</th>
+							<th field="TwoUpVal" width="100" halign="right" align="right"
+								formatter="dataFormat" 
+								editor = "{
+									type: 'numberbox',
+									options: {
+										precision: 2
+									}
+								}"
+							>二上预算</th>
+							<th field="TwoDowVal" width="100" halign="right" align="right"
+								formatter="dataFormat" 
+								editor = "{
+									type: 'numberbox',
+									options: {
+										precision: 2
+									}
+								}"
+							>二下预算</th>
+							<th field="ProjGol" width="100" halign="center" align="center" formatter="ProjGolFormatter" >绩效目标</th>
+							<th field="EstState" width="100" halign="center" align="center" 
+								formatter="comboboxFormatter" 
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[
+											{rowid:'1',name:'新建'},
+											{rowid:'2',name:'提交'},
+											{rowid:'3',name:'通过'},
+											{rowid:'4',name:'完成'},
+											{rowid:'5',name:'下放'},
+											{rowid:'6',name:'下放完成'},
+											{rowid:'7',name:'下放完,待重提'}
+										]
+									}
+								}"
+								styler="gridTextStyler"
+							>编制状态</th>
+							<th field="OneState" width="100" halign="center" align="center" 
+								formatter="comboboxFormatter" 
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[
+											{rowid:'1',name:'新建'},
+											{rowid:'2',name:'提交'},
+											{rowid:'3',name:'通过'},
+											{rowid:'4',name:'完成'},
+											{rowid:'5',name:'下放'},
+											{rowid:'6',name:'下放完成'},
+											{rowid:'7',name:'下放完,待重提'}
+										]
+									}
+								}"
+								styler="gridTextStyler"
+							>一编状态</th>
+							<th field="TwoState" width="100" halign="center" align="center" 
+								formatter="comboboxFormatter" 
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[
+											{rowid:'1',name:'新建'},
+											{rowid:'2',name:'提交'},
+											{rowid:'3',name:'通过'},
+											{rowid:'4',name:'完成'},
+											{rowid:'5',name:'下放'},
+											{rowid:'6',name:'下放完成'},
+											{rowid:'7',name:'下放完,待重提'}
+										]
+									}
+								}"
+								styler="gridTextStyler"
+							>二编状态</th>
+							<th field="IsCurStep" width="100" halign="center" align="center" hidden='true'
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[{
+											rowid:'1',
+											name:'是'
+										},{
+											rowid:'0',
+											name:'否'
+										}]
+									}
+								}"
+							>当前审批</th>
+							<th field="CurStep" width="100" halign="center" align="center" hidden='true'
+								formatter="comboboxFormatter"
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[
+											{rowid:'1',name:'一上'},
+											{rowid:'2',name:'一下'},
+											{rowid:'3',name:'二上'},
+											{rowid:'4',name:'二下'}
+										]
+									}
+								}"
+							>当前过程</th>
+							<th field="DChkResult" width="100" halign="center" align="center" hidden='true'
+								formatter="comboboxFormatter" 
+								editor="{
+									type:'combobox',
+									options:{
+										valueField:'rowid',
+										textField:'name',
+										data:[
+											{rowid:'1',name:'待审'},
+											{rowid:'2',name:'同意'},
+											{rowid:'3',name:'不同意'},
+											{rowid:'4',name:'待下放'},
+											{rowid:'5',name:'同意下放'},
+											{rowid:'6',name:'不同意下放'}
+										]
+									}
+								}"
+							>审批明细结果</th>
+							
+							<th field="PreLastPlanValue" width="100" halign="right" align="right" formatter="dataFormat" >前年预算</th>
+							<th field="PreLast9ExeValue" width="100" halign="right" align="right" formatter="dataFormat" >前年执行</th>
+							<th field="dis1" width="100" halign="right" align="right" formatter="dataFormat" >差额</th>
+							<th field="disrate1" width="100" halign="right" align="right" formatter="dataFormat" >差异率（%）</th>
+							<th field="LastPlanValue" width="100" halign="right" align="right" formatter="dataFormat" >去年预算</th>
+							<th field="Last9ExeValue" width="100" halign="right" align="right" formatter="dataFormat" >去年执行</th>
+							<th field="dis2" width="100" halign="right" align="right" formatter="dataFormat" >差额</th>
+							<th field="disrate2" width="100" halign="right" align="right" formatter="dataFormat" >差异率（%）</th>
+							<th field="CalcValue" width="100" halign="right" align="right" formatter="dataFormat" hidden=true>全院下达</th>
+							<th field="RealValueLast" width="100" halign="right" align="right" formatter="dataFormat" hidden=true>历史参考执行值</th>
+							<th field="DeptDR" width="100" halign="left" hidden=true>科室ID</th>
+							<th field="PlanValueModi" width="100" halign="right" align="right" formatter="dataFormat" hidden=true>上次修改</th>
+							<th field="PlanValueModiMid" width="100" halign="right" align="right" formatter="dataFormat" hidden=true>修改中间数</th>
+						</tr>
+					</thead>
+				</table>			
+			</div>
+		</div>
+
+			
+			<!--经济科目预算明细界面-->
+			<div id='FYDetailWin' style="padding:10px;">
+					<table id='FYDetailGrid'></table>
+			</div>		
+
+			<!--经济科目预算明细附件表界面-->
+			<div id='FYDAppendixWin' style="padding:10px;">
+					<table id='FYDAppendixGrid'></table>
+			</div>				
+			
+		<!--编制状态链接界面-->
+		<div id="StateWin" class="hisui-window padding-10" data-options="closed:true">   
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false,split:true,headerCls:'panel-header-gray'">
+					<table class="hisui-datagrid" id="StateGrid" >
+					</table>	
+				</div>
+				<div class="text-center bottom-style"  data-options="region:'south',border:false">
+					<a id="StateClose" class="hisui-linkbutton" href="#">关闭</a>
+				</div>
+			</div>
+		</div>	
+		
+			<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/SessionAndUrl.js"></script>
+			<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+			<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+			<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/comboboxInitEvents.js"></script>
+			<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/establishcheckstate.js"></script>
+
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemMAself/budgschemMAself.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemMAself/FactYearDetail.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemMAself/FactYearDetailAppendix.js"></script>
+	
+	</body>
+</html>

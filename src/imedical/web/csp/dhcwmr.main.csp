@@ -1,0 +1,49 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<!-- meta http-equiv="Content-Type" content="text/html;" /-->
+	<!--
+	<link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+	<script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+	-->
+	<EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+	<!--DHCMED:HEAD></DHCMED:HEAD-->
+	<script language='Cache' runat='SERVER'>
+	set menuId=$g(%request.Data("menuId",1))
+	set groupId=$g(%session.Data("LOGON.GROUPID"))
+	set operaJson=##class(DHCWMR.MainService.MainSrv).GetMenuOperSecurity(menuId,groupId)
+	</script>
+	
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcwmr/css/main.css" />
+	<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.Setting.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.DesignerHelper.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwmr/main/main.js"></script>
+	
+	<script language='Cache' runat='SERVER'>
+	Set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+	Set LogonHospID=##class(DHCWMR.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+	Set LogonLocID=""""_LogonLocID_""""
+	Set LogonHospID=""""_LogonHospID_""""
+	</script>
+	<script type="text/javascript" language="javascript">
+	var LogonLocID=#(LogonLocID)#;
+	var LogonHospID=#(LogonHospID)#;
+	</script>
+	
+	<!--TRAK:HEAD></TRAK:HEAD-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body>
+		<!-- P5启用APPLET,P7以上版本不需要 -->
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+		<input type='hidden' id='MainService' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCWMR.MainService.MainSrv"))%>'/>
+	</body>
+</html>

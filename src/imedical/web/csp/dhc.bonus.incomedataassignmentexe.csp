@@ -1,0 +1,42 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s cycleDr= $Get(%request.Data("cycleDr",1))
+	s fre= $Get(%request.Data("fre",1))
+    	s quote= $Get(%request.Data("quote",1))
+	s interMethod= $Get(%request.Data("interMethod",1))
+	s interSetDr = $Get(%request.Data("interSetDr",1))
+	
+	i action="list"  d
+	.w ##class(dhc.bonus.usubs.uIncomeDataAssignment).List(cycleDr,fre,quote,interSetDr,interMethod,searchField,searchValue,sortField,sortDir,start,limit)
+
+	i action = "assignment" d  
+	.s result = ##class(dhc.bonus.usubs.uIncomeDataAssignment).Assignment(cycleDr,fre,quote,interSetDr,interMethod)
+	.i result = "true" d
+	..w "{success:'0',info:''}"
+	.e  d
+	..w "{success:'1',info:'"_result_"'}"
+
+	i action = "locsetSublist" d
+	.w ##class(dhc.bonus.usubs.uIncomeDataAssignment).LocSetSubList(searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "del" d  
+	.s result = ##class(dhc.bonus.usubs.uIncomeDataAssignment).Del(cycleDr,fre,quote,interSetDr,interMethod)
+	.i result = 0 d
+	..w "{success:'0',info:''}"
+	.e  d
+	..w "{success:'1',info:'"_result_"'}"
+</script>

@@ -1,0 +1,532 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<csp:method name=Count arguments="itmlist" returntype=%String>
+ ; how about
+ ; [rulid,val]&[rulid,val]|[rulid,val]
+ ; & - and
+ ; | - or
+ ; ~ - not
+ ; ^ - xor
+ ; 
+ ; 
+ n itm,rulid,value,cnt,b,expr,rx,j,val
+ ; 
+ s (expr,rx)=""
+ s j=0
+ s pc=itmlist
+ f  {
+ 	s expr=expr_$p(itmlist,"[",1)
+	s itm=$p($p(itmlist,"[",2,999),"]",1)
+	i itm="" q
+	;s expr=expr_$p(itmlist,"[",1,999)
+	s itmlist=$p(itmlist,"]",2,999)
+	;
+	s rulid=$p(itm,",",1),value=$p(itm,",",2),label=$p(itm,",",4)
+	if label="MONTH" {
+		s value=1+ ##Class(websys.StandardTypeItem).GetIdFromCodeOrDescription("Months",value) -1
+	}
+	;
+	i rulid'="",value'="" {
+		s j=j+1
+		s expr(j)="$g(^DSS.DataD("_rulid_","""_label_""","""_value_""",""BUCKET"",b))"
+		s expr=expr_"val("_j_")"
+		s rx=rulid
+	}
+ }
+ ;q:value'="1STDEGREEPERINEALLACERATIONDELIVERY" 0
+;m ^zPhil(pc,"exp")=expr
+;s ^zPhil(pc,"x")=$g(rx)_"^"_$g(label)_"^"_$g(value)
+ ; loop thru the EXISTS buckets to get the bucket id, as these should be fully populated
+ s b="",count=0
+ f  {
+ 	q:rx=""
+	;s b=$o(^DSS.DataD(rx,""_label_"","{{{EXIST}}}","BUCKET",b))
+	s b=$o(^DSS.DataD(rx,""_label_"",""_value_"","BUCKET",b))
+	i b="" q
+	; count the numer of set bits for the selected value
+	f j=1:1 {
+		i '$d(expr(j)) q
+		;s ^zab($zn,"expr",j)=expr(j)
+		x "s val(j)="_expr(j)
+		;w control,".value='"_expr(j)_"';",!
+	}
+	;x "s count=count+$BITCOUNT($BITLOGIC("_expr_"),1)"
+	; and what if a single not
+
+	m ^zPhil(pc,"val")=val
+	
+	i j=2 {
+		x "s count=count+$BITCOUNT("_expr_",1)"
+	} else {
+		x "s count=count+$BITCOUNT($BITLOGIC("_expr_"),1)"
+	}
+ }
+ s ^zPhil(pc,"count")=count
+
+ ;w control,".value='"_count_"';",!
+ ;w control,".value='"_expr_"';",!
+ q (count)
+</csp:method>
+
+
+
+<csp:method name=Print arguments="arglist">
+ n qry,rowrulid,colrulid,val,valmatch,TotalCount,blnRestriction,multiLineQueryStr,strRowFilter
+ n colrulid,rowrulid,conditions, rul,cond,condix,CheckForColumnCondition,CheckForRowCondition
+ s (CheckForColumnCondition,CheckForRowCondition,colrulid,rowrulid)=""
+ s rowrulid=$p(arglist,"^",1)
+ s rval=$p(arglist,"^",2)
+ s vRowUnit=$p(arglist,"^",3)
+ s blnRestriction=$p(arglist,"^",4)
+ s multiLineQueryStr=$p(arglist,"^",5)
+ 
+ s qry=##Class(websys.DSSQuery).%OpenId(%request.Get("ID"),0)
+ i qry.ColumnRuleDR s colrulid=qry.ColumnRuleDR.%Id()
+ i qry.RowRuleDR s rowrulid=qry.RowRuleDR.%Id()
+ s conditions=qry.QueryValue
+
+ f condix=1:1:$l(conditions,";") d
+ . s cond=$p($p(conditions,";",condix),"[",2),rul=$p(cond,","),val=$p(cond,",",2)
+ . q:val=""
+ . i rul=colrulid s arrconditions("Column",val)="",CheckForColumnCondition=1
+ . i rul=rowrulid s arrconditions("Row",val)="",CheckForRowCondition=1
+
+ ; Clear the column skip if the rules are not the same
+ s firstrul=""
+ f condix=1:1:$l(conditions,";") d
+ . s cond=$p($p(conditions,";",condix),"[",2),rul=$p(cond,","),val=$p(cond,",",2)
+ . i firstrul="" s firstrul=rul
+ . i rul'=firstrul s CheckForColumnCondition=0,CheckForRowCondition=0 
+ 
+ s TotalCount=0
+ ;Need to check if any records exist which match criteria including filter.
+ s sQuerystr="["_rowrulid_","_rval_",""BUCKET"","_vRowUnit_"]"
+ if blnRestriction s sQuerystr=sQuerystr_"&("_multiLineQueryStr_")"
+ 
+ s sQueryCount=..Count(sQuerystr)
+ if (rval'="{{{EXIST}}}"),(sQueryCount'=0) d
+ . s rowcnt=rowcnt+1
+ . ;i rowcnt#2 w "<TR class=""RowOdd"">",! 
+ . ;i '(rowcnt#2) w "<TR class=""RowEven"">",!
+ . s ^TMP("WEB2",%session.SessionId,rowcnt)=rval
+ . ; don't forget to convert it...
+ . if vRowUnit="MONTH" d
+ . . ;w "<TD>",##Class(websys.StandardTypeItem).GetDescription("Months",rval),"</TD>"
+ . . s ^TMP("WEB2",%session.SessionId,rowcnt,0)=##Class(websys.StandardTypeItem).GetDescription("Months",rval)
+ . e  d
+ . . ;w "<TD>",rval,"</TD>"
+ . . s ^TMP("WEB2",%session.SessionId,rowcnt,0)=rval
+ . ;s j=0
+ . s col=0
+ . i qry.ColumnRuleDR d
+ . . s val=""
+ . . f  s val=$o(^DSS.DataD(colrulid,vColUnit,val)) q:val=""  d
+ . . . i CheckForColumnCondition,'$d(arrconditions("Column",val)) q
+ . . . s col=col+1
+ . . . ; don't forget to convert it...
+ . . . ;s sQuerystr="["_colrulid_","_val_",""BUCKET"","_vColUnit_"]&["_rowrulid_","_rval_",""BUCKET"","_vRowUnit_"]"
+ . . . s ^zPhil("cols",colrulid,vColUnit,val)=""
+ . . . s sQuerystr="["_rowrulid_","_rval_",""BUCKET"","_vRowUnit_"]&["_colrulid_","_val_",""BUCKET"","_vColUnit_"]"
+ . . . ; Apply the filter to each cells query
+ . . . if blnRestriction s sQuerystr=sQuerystr_"&("_multiLineQueryStr_")"
+ . . . ; get the count for the cell
+ . . . s sQueryCount=..Count(sQuerystr)
+ . . . ; dont want to show "{{{EXIST}}}" entries
+ . . . i val'="{{{EXIST}}}" d
+ . . . . ; at this count to the total count
+ . . . . ; add value to cell.
+ . . . . s TotalCount=TotalCount+sQueryCount
+ . . . . ;w "<TD>",sQueryCount,"</TD>"
+ . . . . s ^TMP("WEB2",%session.SessionId,rowcnt,col)=sQueryCount
+ . e  d
+ . . s sQuerystr="["_rowrulid_","_rval_",""BUCKET"","_vRowUnit_"]"
+ . . if blnRestriction s sQuerystr=sQuerystr_"&("_multiLineQueryStr_")"
+ . . s TotalCount=..Count(sQuerystr)
+ . 
+ . s sQryStr="["_rowrulid_","_rval_",""BUCKET"","_vRowUnit_"]"
+ . i qry.QueryValue'="" s sQryStr=sQryStr_"&("_multiLineQueryStr_")"
+ . i qry.ViewDR d
+ . . ;w "<TD>","<A HREF=""#"" onclick=""Show('",$ZCVT(sQryStr,"O","URL"),"');"">",TotalCount,"</A>","</TD>"
+ . . s ^TMP("WEB2",%session.SessionId,rowcnt,(col+1))="<A HREF=""#"" onclick=""javascript:Show('"_$ZCVT(sQryStr,"O","URL")_"');"">"_TotalCount_"</A>"
+ . e  d
+ . . ;w "<TD>",TotalCount,"</TD>"
+ . . s ^TMP("WEB2",%session.SessionId,rowcnt,(col+1))=TotalCount
+
+;w "</TR>",!
+</csp:method>
+
+
+
+<csp:method name=CrossTab arguments="">
+ n qry,rowrulid,colrulid,val,valmatch,TotalCount,blnRestriction,multiLineQueryStr,strRowFilter
+ n arrconditions,cond,conditions,condix,rul,CheckForcondition
+ s blnRestriction=0,MoreRows=0
+ s (strRowFilter,multiLineQueryStr,colrulid,rowrulid,CheckForColumnCondition,CheckForRowCondition)=""
+ d ##Class(websys.Component).GetComponentMessages(.t,"websys.DSSQuery.Edit")
+
+ ; Start is passed in via paging arrows
+ s Start=$g(%request.Data("Start",1))
+ i 'Start s Start=""
+ ; kill TMP array if starting a new query
+ i 'Start k ^TMP("WEB2",%session.SessionId)
+
+ i %request.Get("ID")="" q
+ s qry=##Class(websys.DSSQuery).%OpenId(%request.Get("ID"),0)
+ s RowsPerPage=+qry.RowsPerPage
+ ;w " <TABLE id=Querytbl border=0 class=tblList WIDTH=100%>",!
+ ; for each column show the column headings
+ ;w "<THEAD><TH></TH>",!
+ s ^TMP("WEB2",%session.SessionId,0)=""
+ s ^TMP("WEB2",%session.SessionId,0,0)=""
+ 
+ s vColUnit=##Class(%Collation).AlphaUp(qry.ColUnit)
+ i $l(vColUnit)=0 s vColUnit="VALUE"
+ 
+ i qry.ColumnRuleDR s colrulid=qry.ColumnRuleDR.%Id()
+ i qry.RowRuleDR s rowrulid=qry.RowRuleDR.%Id()
+ s conditions=qry.QueryValue
+ f condix=1:1:$l(conditions,";") d
+ . s cond=$p($p(conditions,";",condix),"[",2),rul=$p(cond,","),val=$p(cond,",",2)
+ . q:val=""
+ . i rul=colrulid s arrconditions("Column",val)="",CheckForColumnCondition=1
+ . i rul=rowrulid s arrconditions("Row",val)="",CheckForRowCondition=1
+ 
+ ; Clear the column skip if the rules are not the same
+ s firstrul=""
+ f condix=1:1:$l(conditions,";") d
+ . s cond=$p($p(conditions,";",condix),"[",2),rul=$p(cond,","),val=$p(cond,",",2)
+ . i firstrul="" s firstrul=rul
+ . i rul'=firstrul s CheckForColumnCondition=0,CheckForRowCondition=0 
+ 
+ s col=0
+ i qry.ColumnRuleDR d
+ . s val=""
+ . f  s val=$o(^DSS.DataD(colrulid,vColUnit,val)) q:val=""  d
+ . . ; This has been removed as it cause the query to remove valid enties
+ . . i CheckForColumnCondition,'$d(arrconditions("Column",val)) q
+ . . ; DON'T show columns that are disallowed by a condition
+ . . ; this must be checked at the 'val' level, eg:
+ . . ; don't forget to convert it...
+ . . s col=col+1
+ . . if vColUnit="MONTH" d
+ . . . ;w:val'="{{{EXIST}}}" "<TH>",##Class(websys.StandardTypeItem).GetDescription("Months",val),"</TH>"
+ . . . i val'="{{{EXIST}}}" s ^TMP("WEB2",%session.SessionId,0,col)=##Class(websys.StandardTypeItem).GetDescription("Months",val)
+ . . e  d
+ . . . ;w:val'="{{{EXIST}}}" "<TH>",val,"</TH>"
+ . . . i val'="{{{EXIST}}}" s ^TMP("WEB2",%session.SessionId,0,col)=val
+ 
+ ;w "<TH>",$g(t("Total")),"</TH></THEAD>",!
+ s ^TMP("WEB2",%session.SessionId,0,(col+1))=$g(t("Total"))
+ 
+ ; for each row
+ i qry.RowRuleDR d
+ . s rval=""
+ . i Start s rval=$g(^TMP("WEB2",%session.SessionId,Start))
+ . s rowcnt=+Start
+ . s vRowUnit=##Class(%Collation).AlphaUp(qry.RowUnit)
+ . i $l(vRowUnit)=0 s vRowUnit="VALUE"
+ . ;where additional restrictions apply
+ . i qry.QueryValue'="" d
+ . . s multiLineQueryStr=$tr(qry.QueryValue,";","")
+ . . ;s ^zab($zn,"mls")=multiLineQueryStr
+ . . s blnRestriction=1
+ . . ;s strRowFilter=qry.QueryValue
+ . ;i qry.RowFilter'="" s strRowFilter=qry.RowFilter
+ . i '$l(strRowFilter) d
+ . . f  s rval=$o(^DSS.DataD(rowrulid,vRowUnit,rval)) q:rval=""  q:MoreRows  d
+ . . . i CheckForRowCondition,'$d(arrconditions("Row",rval)) q
+ . . . i RowsPerPage,rowcnt>(Start+RowsPerPage) s MoreRows=1 q
+ . . . s arg=rowrulid_"^"_rval_"^"_vRowUnit_"^"_blnRestriction_"^"_multiLineQueryStr
+ . . . d ..Print(arg)
+ ;. e  d
+ ;. . ;Row Filter only display items from this list
+ ;. . f i=1:1:$LENGTH(strRowFilter,";") d
+ ;. . . s vTemp=##Class(%Collation).AlphaUp($PIECE(strRowFilter,";",i))
+ ;. . . 
+ ;. . . s ^TMP("WEB",$J,vTemp)=""
+ ;. . . ;set rval=##Class(%Collation).AlphaUp($PIECE(strRowFilter,";",i))
+ ;. . . ;s arg=rowrulid_"^"_rval_"^"_vRowUnit_"^"_blnRestriction_"^"_multiLineQueryStr
+ ;. . . ;d ..Print(arg)
+ ;. . ;Row Filter only display items from this list
+ ;. . f  s rval=$o(^TMP("WEB",$J,rval)) q:rval=""  d
+ ;. . . s arg=rowrulid_"^"_rval_"^"_vRowUnit_"^"_blnRestriction_"^"_multiLineQueryStr
+ ;. . . d ..Print(arg)
+		
+ ;w "</TABLE>",!
+ i qry d ..WriteTable()
+ 
+ i 'qry w "no such query",!
+ k ^TMP("WEB",$J)
+ q
+</csp:method>
+
+<csp:method name=WriteTable arguments="">
+ ; ab 5.10.06 61040 - seperate logic to display, now using TMP array to store query results - so we can add paging
+ n qry,RowsPerPage,tr,td,NextStart,PrevStart,Start,rowcount
+ 
+ s Start=$g(%request.Data("Start",1))
+ i 'Start s Start=0
+ s qry=##Class(websys.DSSQuery).%OpenId($g(%request.Data("ID",1)),0)
+ s RowsPerPage=+qry.RowsPerPage
+ s NextStart=0,PrevStart=0
+ i Start s PrevStart=(Start-RowsPerPage)
+ 
+ ; write table header on every page
+ w " <TABLE id=""Querytbl"" border=""0"" class=""tblList"" WIDTH=""100%"">",!
+ w "<THEAD>"
+s td="" f  s td=$o(^TMP("WEB2",%session.SessionId,0,td)) q:td=""  d
+ . w "<TH>"
+ . w $g(^TMP("WEB2",%session.SessionId,0,td))
+ . w "</TH>"
+ w "</THEAD>"
+ 
+ s rowcount=0
+ s tr=Start f  s tr=$o(^TMP("WEB2",%session.SessionId,tr)) q:tr=""  q:NextStart  d
+ . s rowcount=rowcount+1
+ . i RowsPerPage,rowcount>RowsPerPage s NextStart=(tr-1) q
+ . w "<TR "
+ . i tr#2 w "class=""RowOdd"">"
+ . i '(tr#2) w "class=""RowEven"">"
+ . s td="" f  s td=$o(^TMP("WEB2",%session.SessionId,tr,td)) q:td=""  d
+ . . w "<TD>"
+ . . w $g(^TMP("WEB2",%session.SessionId,tr,td))
+ . . w "</TD>"
+ . w "</TR>"
+ 
+ ; write table footer on every page. display paging arrows if appropriate
+ w "<TR><TD>"
+ i Start w "&nbsp;<IMG src=""../images/websys/pageprev.gif"" border=""0"" onclick=""javascript:QueryPaging("_qry.%Id()_",'"_PrevStart_"')"">"
+ i RowsPerPage d
+ . i ((tr'="")||(Start)) w "&nbsp;"_(((+Start)\RowsPerPage)+1)
+ . i MoreRows w "&nbsp;<IMG src=""../images/websys/pagenext.gif"" border=""0"" onclick=""javascript:QueryPaging("_qry.%Id()_",'"_NextStart_"')"">"
+ w "</TD></TR>"
+
+ w "</TABLE>",!
+ 
+</csp:method>
+
+<csp:method name=GetValues arguments="RuleID,control,vConUnit">
+ n rs
+ ;
+ s vUnit=##Class(websys.StandardTypeItem).GetIdFromCodeOrDescription("DSSMeasurementUnit",vConUnit)
+
+ s vConUnit=##Class(%Collation).AlphaUp(vConUnit)
+ i $l(vConUnit)=0 s vConUnit="VALUE"
+ i $l(vUnit)=0 s vUnit=vConUnit
+ s rs=##Class(%ResultSet).%New("websys.DSSRule:ValuebyRule")
+ d rs.Execute(RuleID,vUnit)
+ f  {
+	i 'rs.Next() q
+	if rs.GetDataByName("Value") '="{{{EXIST}}}" {
+	;;
+	if vConUnit="M" {
+	w control,".options[",control,".length]=new Option('"_##Class(websys.StandardTypeItem).GetDescription("Months",rs.GetDataByName("Value"))_"','"_RuleID_"','"_vUnit_"');",!
+	}else{
+	w control,".options[",control,".length]=new Option('"_rs.GetDataByName("Value")_"','"_RuleID_"','"_vUnit_"');",!
+	}
+	}
+ }
+ 
+ d rs.Close()
+ d rs.%Close()
+ q
+ ; 
+</csp:method>
+<csp:method name=ReturnValue arguments="vConUnit">
+
+ q ##Class(websys.StandardTypeItem).GetIdFromCodeOrDescription("DSSMeasurementUnit",vConUnit)
+ 
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script language=javascript>
+function GetValues(RuleID,control,vUnit) {
+	#server(..GetValues(RuleID,control,vUnit))#;
+}
+//Condition
+function ConRuleMatch(txt) {
+	var RuleArray = txt.split("^");
+	ConRuleValue.length=0;
+	var RuleID = RuleArray[1];
+	var objConditionRuleID = document.getElementById('ConditionRuleID');
+	objConditionRuleID.value=RuleID;
+	
+	var vConUnit="VALUE"
+	var objConUnit=document.getElementById('ConUnit');
+	var objConUnitButt=document.getElementById('ld1486iConUnit');
+	
+	if (RuleArray[6]=='DATE') {
+		vConUnit="Y"
+		if (objConUnit) {
+			SetTXTStatus(objConUnit,true);
+		}
+		if (objConUnitButt) SetCMDStatus(objConUnitButt,true);
+	}
+	//GetValues(RuleID,"ConRuleValue",vConUnit)
+	//var objValMatch=document.getElementById('ValMatch');
+	//var objTempRuleID=document.getElementById('TempRuleID');
+	//if ((objTempRuleID)&&(RuleArray[1])) {
+	//	objTempRuleID.value = RuleArray[1];
+	//}
+	//if ((objValMatch)&&(RuleArray[3])) {
+	//	objValMatch.value = RuleArray[3];
+	//}
+	//try { AndClickHandler(); } catch(e) {}	
+}
+
+function ConUnit(txt) {
+	var UnitArray=txt.split("^");
+	var vConUnit=UnitArray[1]
+	vConUnit=vConUnit.toUpperCase()
+	var RuleID=0
+	var objTempRuleID=document.getElementById('TempRuleID');
+	if (objTempRuleID) {
+		RuleID=objTempRuleID.value;
+	}
+	var objRuleValue=document.getElementById('ConRuleValue');
+	////Remove existing list
+	//for (var i=(objRuleValue.length-1); i>=0; i--) {
+	//		objRuleValue.options[i]=null;
+	//}
+	//GetValues(RuleID,"ConRuleValue",vConUnit)
+	//try { AndClickHandler(); } catch(e) {}
+	
+}
+
+//Row 
+function RowUnit(txt) {
+	var UnitArray=txt.split("^");
+	var vRowUnit=UnitArray[1]
+	vRowUnit=vRowUnit.toUpperCase()
+	var RuleID=0
+	var objTempRuleID=document.getElementById('TempRuleID');
+	if (objTempRuleID) {
+		RuleID=objTempRuleID.value;
+	}
+	
+}
+
+function RowRuleMatch(txt) {
+	var RuleArray = txt.split("^");
+	RowRuleValue.length=0;
+	var RuleID = RuleArray[1];
+	GetClassNames1(txt);
+	var vRowUnit="VALUE"
+	var objRowUnit=document.getElementById('RowUnit');
+	var objRowUnitButt=document.getElementById('ld1486iRowUnit');
+	
+	if (RuleArray[6]=='DATE') {
+		vRowUnit="Y"
+		if (objRowUnit) {
+			SetTXTStatus(objRowUnit,true);
+		}
+		if (objRowUnitButt) SetCMDStatus(objRowUnitButt,true);
+	}
+	
+}
+
+function GetClassNames1(txt) {
+
+	var RuleArray = txt.split("^");
+	var objClassName=document.getElementById('ClassName');
+	if ((objClassName)&&(RuleArray[4])) {
+		objClassName.value = RuleArray[4];
+	}
+	var objIndexClassName=document.getElementById('IndexClassName');
+	if ((objIndexClassName)&&(RuleArray[5])) {
+		objIndexClassName.value = RuleArray[5];
+	}
+	var objRowUnit=document.getElementById('RowUnit');
+	var objRowUnitButt=document.getElementById('ld1486iRowUnit');
+	if (RuleArray[6]=='DATE') {
+		
+		if (objRowUnit) {
+			SetTXTStatus(objRowUnit,true);
+			//objRowUnit.value=#server(..ReturnValue("Y"))#; //"Year"
+		}
+		if (objRowUnitButt) SetCMDStatus(objRowUnitButt,true);
+	}
+	else{
+		if (objRowUnit) SetTXTStatus(objRowUnit,false);
+		if (objRowUnitButt) SetCMDStatus(objRowUnitButt,false);
+	}		
+}
+function GetClassNames2(txt) {
+	var RuleArray = txt.split("^");
+	var objClassName=document.getElementById('ClassName');
+	if ((objClassName)&&(RuleArray[4])) {
+		objClassName.value = RuleArray[4];
+	}
+	var objIndexClassName=document.getElementById('IndexClassName');
+	if ((objIndexClassName)&&(RuleArray[5])) {
+		objIndexClassName.value = RuleArray[5];
+	}
+	var objColUnit=document.getElementById('ColUnit');
+	var objColUnitButt=document.getElementById('ld1486iColUnit');
+	if (RuleArray[6]=='DATE') {
+		
+		if (objColUnit) {
+			SetTXTStatus(objColUnit,true);
+		}
+		if (objColUnitButt) SetCMDStatus(objColUnitButt,true);
+	}
+	else{
+		if (objColUnit) SetTXTStatus(objColUnit,false);
+		if (objColUnitButt) SetCMDStatus(objColUnitButt,false);
+	}
+}
+
+function Show(exp) {
+	var qryID=document.getElementById("QueryID");
+	websys_createWindow('websys.dssqueryview.csp?ID='+qryID.value+'&exp='+exp,'QueryViewList','toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes,status=yes');
+	return false;
+}
+
+function QueryPaging(QueryID,Start) {
+		var url="websys.dssquery.csp?ID="+QueryID+"&Start="+Start+"&HideEdit=1";
+		// are we:
+		//  closing the first page,
+		//  opening a new page, or
+		//  just refreshing ourselves?
+		if ((Start<1)&&(window.opener)) {
+			window.opener=null;
+   			window.close();
+		} else if ((window.opener)&&(Start==0)) {
+			window.opener=null;
+ 			window.close();
+		} else if (window.opener) {
+			window.location = url;
+		} else {
+			websys_createWindow(url, 'DSSQuery', 'scrollbars=yes,toolbar=no,width=800,height=600,top=50,left=100,resizable=yes,status=yes');
+		} 
+}
+
+</script>
+</HEAD>
+<BODY><DIV id="PageContent">
+
+<SERVER>
+s HideEdit=$g(%request.Data("HideEdit",1))
+s cmp=##Class(websys.Component).OpenName("websys.DSSQuery.Edit")
+w "<input id=""QueryID"" name=""QueryID"" type=""hidden"" value="""_$g(%request.Data("ID",1))_""">"
+i 'HideEdit,cmp d cmp.Show(),cmp.%Close()
+d ..CrossTab()
+</SERVER>
+
+</DIV>
+<script language=javascript>
+//var RuleValue = document.getElementById('RuleValue');
+var ConRuleValue = document.getElementById('ConRuleValue');
+var RowRuleValue = document.getElementById('RowRuleValue');
+</script>
+</BODY>
+</HTML>

@@ -1,0 +1,37 @@
+<!-- CSP TRAK:COMPONENT Rules -->
+<!-- Copyright (c) 2000 TRAK Systems Pty. ALL RIGHTS RESERVED. -->
+
+<!-- COMPONENT TAG --------------------------------------------- -->
+
+<csr:rule name="EXTHEALTH.COMPONENT" match="EXTHEALTH:COMPONENT">
+<csr:description>
+The <b>EXTHEALTH:COMPONENT</b> tag defines defines s re-usable component. A  number of switches and options are available to control the display and behaviour.
+</csr:description>
+
+<csr:attribute name=id required description="Identifier which uniquely identifies a component on a system." type="Caption:STRING" >
+
+<csr:action>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	n cmp,cmpname,hidemenus,hideheadings,style,listrows
+	//
+	s cmpname=##'%this.GetAttribute("ID")'##
+	s hidemenus=##'%this.GetAttribute("hidemenus")'##
+	s hideheadings=##'%this.GetAttribute("hideheadings")'##
+	s style=##'%this.GetAttribute("style")'##
+	s listrows=##'%this.GetAttribute("listrows")'##
+	Kill %session.Data("WEBSYS.TCOMPONENT")
+	s cmp=##Class(websys.Component).OpenName(cmpname)
+	i cmp d
+	. i $l(hidemenus) s cmp.HideMenus=+hidemenus
+	. i $l(hideheadings) s cmp.HideHeadings=+hideheadings
+	. i $l(style) s cmp.Style=style
+	. i $l(listrows) s cmp.ListRows=listrows
+	. ;d ##class(dtwebsys.Component).Show(cmp)
+	. ;d ##class(dtwebsys.Component).ShowDTGCOM(cmp)
+	. d cmp.Show() d cmp.%Close()
+	. d cmp.%Close()
+
+	</SCRIPT>
+</csr:action>
+</csr:rule>
+

@@ -1,0 +1,45 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s code = $Get(%request.Data("SysVarCode",1))
+	s desc = $Get(%request.Data("SysVarDesc",1))
+	s value = $Get(%request.Data("SysVarValue",1))
+	if $d(%session.Data("LOGON.USERNAME")) set user=$g(%session.Data("LOGON.USERNAME"))
+	else  set user = ""
+	s obj=##class(DHCWL.SysService.SysVarService).BuildSysVarObj(code,desc,value,user)
+	s json=""
+	if ("save"=action){
+		s result=##class(DHCWL.SysService.SysVarService).Insert(obj)
+		if (1=result){
+			s result="ok"
+			w "{success:true,tip:'"_result_"'}"
+		}elseif ("exist"=result){
+			s result="ok"
+			w "{success:true,tip:'"_result_"'}"
+		}else{
+			w "{success:false,tip:'"_result_"'}"
+		}
+	}elseif("lookup"=action){
+		s json=##class(DHCWL.SysService.SysVarService).QuerySysVar(code,desc,value,user)
+		if (""'=json){
+			write json.GetHead()
+			do{
+				set obj=json.Next()
+				write obj
+			}while(obj'="")
+		}
+	}elseif("getGlobalTaskActiveFlag"=action){
+		if (0=$d(^DHCWL.MKPI.SysVariablesI("CodeDateTime","GLOBALTASKINITCFG"))) {
+			w "{result:0,totalNum:0,root:[]}"
+		}else{
+			s json=##class(DHCWL.SysService.SysVarService).GetTaskInitStatusJson()
+			i (""=json) w "{result:0,totalNum:0,root:[]}"
+			q:(""=json)
+			w json.GetHead()
+			w json.Next()
+		}
+	}
+	
+
+</script>

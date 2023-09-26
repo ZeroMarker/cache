@@ -1,0 +1,220 @@
+<!-- Copyright 2016-09-03 QiuPeng. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+<head>
+<title>抗菌药物审核列表</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+	<meta http-equiv="X-UA-Compatible" content="IE=9" />
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/css/dhcant.icon.css">
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCANT:LIB></DHCANT:LIB>
+	<DHCANT:HEAD></DHCANT:HEAD>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/lib/iCheck/square/blue.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/css/dhcant.kss.business.audit.hui.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/lib/FontAwesome/css/font-awesome.min.css"/>
+    <script type="text/javascript" src="../scripts/dhcdocant/lib/iCheck/icheck.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/lib/layui/layer/layer.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdocant/lib/ant-1.0.0/ant-all.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdocant/kss_hui/eaysui-tool.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/kss_hui/audit.js"></script>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center'" style="padding:4px;">
+		<div class="hisui-panel" title="<span style='margin-left:8px;'>抗生素审核</span>" 
+		data-options="iconCls:'icon-antaudit',headerCls:'panel-header-gray',collapsible:false,fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',split:false,border:false" style="height:95px;">
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-xs-12 c-condition-left">
+								<div style="height:2px;margin-bottom:6px;"></div>
+								<div class="row">
+									<div class="col-xs-12" style="padding-left:10px;">
+										<span class="c-span">开始日期</span><input id="i-audit-condition-sdate" />
+										<span class="c-span" style="margin-left:30px;">抗生素级别</span><input id="i-audit-condition-ksslevel"/>
+										<span style="margin-left:30px;"><input id="i-audit-condition-preaudit" type="radio" class='hisui-radio' name="authtype"/><span class="c-span" style="margin-right:30px;margin-left:5px;">科室预审</span></span>
+										<input id="i-audit-condition-ksaudit" type="radio" class='hisui-radio'  name="authtype"/><span class="c-span" style="margin-right:30px;margin-left:5px;">科室审核</span>
+										<a href="#" id="i-audit-condition-btn-find" class="hisui-linkbutton" data-options="iconCls:'icon-antfind'">查询</a>
+									</div>
+								</div>
+								<div class="row" style="margin-top:10px;margin-bottom:0px;">
+									<div class="col-xs-12" style="padding-left:10px;">
+										<span class="c-span">结束日期</span><input id="i-audit-condition-edate" />
+										<!--占位符-->
+										<span class="c-span" style="margin-left:30px; visibility:hidden;">抗生素级别</span><input style="visibility:hidden;" id="i-audit-condition-ksslevel2"/>
+										<span style="margin-left:30px;"><input id="i-audit-condition-lastaudit" type="radio" class='hisui-radio'  name="authtype"/><span class="c-span" style="margin-right:30px;;margin-left:5px;">最终审核</span></span>
+										<input id="i-audit-condition-hasaudit" type="checkbox" class='hisui-checkbox' /><span class="c-span2" style="margin-left:5px;">已审核</span>
+							
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div> 
+				<div data-options="region:'center',border:false">
+					<div class="c-audit-list-grid" id="i-audit-list-grid"></div>
+				</div>  
+			</div>
+		</div>
+	</div>  
+	
+	<!-- 弹出框 -->
+	<div id='i-diag' class='c-diag c-hidden'>
+		<div class="container-fluid"> 
+			<!--基本信息-->	
+			<div class="row title">
+				<div class="col-xs-12"><h1>基本信息</h1></div>
+			</div>
+			<div class="row">
+				<div class="col-xs-5">
+					<label class="c-span required">病人姓名</label>
+					<span id="i-diag-patname" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">申请科室</label>
+					<span id="i-diag-apploc" class="c-diag-span"></span>
+				</div>	
+			</div>
+			<div class="row">
+				<div class="col-xs-5">
+					<label class="c-span required">申请医生</label>
+					<span id="i-diag-appdoc" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">申请日期</label>
+					<span id="i-diag-appdate" class="c-diag-span"></span>
+				</div>		
+			</div>
+			<!--药品信息-->			
+			<div class="row title">
+				<div class="col-xs-12"><h1>药品信息</h1></div>
+			</div>
+			
+			<div class="row">
+				<div class="col-xs-12">
+					<label class="c-span required">药品名称</label>
+					<span id="i-diag-arcim" class="c-diag-span"></span>
+				</div>	
+			</div>
+			<div class="row">
+				<div class="col-xs-5">
+					<label class="c-span required">抗生素级别</label>
+					<span id="i-diag-ksslevel" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">是否越级</label>
+					<span id="i-diag-emgency" class="c-diag-span"></span>
+				</div>
+			</div>
+			
+			<!--使用目的-->			
+			<div class="row title">
+				<div class="col-xs-12"><h1>使用目的</h1></div>
+			</div>
+			<div class="row">
+				<div class="col-xs-5">
+					<label class="c-span required">使用目的</label>
+					<span id="i-diag-useaim" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">用药指征</label>
+					<span id="i-diag-durgind" class="c-diag-span"></span>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-xs-5">
+					<label class="c-span required">感染部位</label>
+					<span id="i-diag-injectpart" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">用药时机</label>
+					<span id="i-diag-drugtime" class="c-diag-span"></span>
+				</div>
+			</div>
+			<div id="i-diag-emre" class="row c-hidden">
+				<div class="col-xs-12">
+					<label class="c-span required">越级理由</label>
+					<span id="i-diag-emreason" class="c-diag-span"></span>
+					
+				</div>
+			</div>
+			
+			<!--会诊信息-->			
+			<div id="i-diag-con" class="row title c-hidden">
+				<div class="col-xs-12"><h1>会诊信息</h1></div>
+			</div>
+			<div id="i-diag-con-base1" class="row c-hidden">
+				<div class="col-xs-5">
+					<label class="c-span required">会诊科室1</label>
+					<span id="i-diag-conloc1" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">会诊医生1</label>
+					<span id="i-diag-condoc1" class="c-diag-span"></span>
+				</div>
+			</div>
+			<div id="i-diag-con-sugession1" class="row c-hidden">
+				<div class="col-xs-5">
+					<label class="c-span required">会诊结果1</label>
+					<span id="i-diag-conresult1" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">会诊意见1</label>
+					<span id="i-diag-connote1" class="c-diag-span"></span>
+				</div>
+			</div>
+			
+			
+			<div id="i-diag-con-base2" class="row c-hidden">
+				<div class="col-xs-5">
+					<label class="c-span required">会诊科室2</label>
+					<span id="i-diag-conloc2" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">会诊医生2</label>
+					<span id="i-diag-condoc2" class="c-diag-span"></span>
+				</div>
+				
+			</div>
+			<div id="i-diag-con-sugession2" class="row c-hidden">
+				<div class="col-xs-5">
+					<label class="c-span required">会诊结果2</label>
+					<span id="i-diag-conresult2" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">会诊意见2</label>
+					<span id="i-diag-connote2" class="c-diag-span"></span>
+				</div>
+			</div>
+			
+			<div id="i-diag-con-base3" class="row c-hidden">
+				<div class="col-xs-5">
+					<label class="c-span required">会诊科室3</label>
+					<span id="i-diag-conloc3" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">会诊医生3</label>
+					<span id="i-diag-condoc3" class="c-diag-span"></span>
+				</div>
+				
+			</div>
+			<div id="i-diag-con-sugession3" class="row c-hidden">
+				<div class="col-xs-5">
+					<label class="c-span required">会诊结果3</label>
+					<span id="i-diag-conresult3" class="c-diag-span"></span>
+				</div>
+				<div class="col-xs-7">
+					<label class="c-span required">会诊意见3</label>
+					<span id="i-diag-connote3" class="c-diag-span"></span>
+				</div>
+			</div>
+		
+			
+		</div>
+	</div>
+	
+</body>
+</html>

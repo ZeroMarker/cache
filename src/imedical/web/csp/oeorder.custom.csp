@@ -1,0 +1,510 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<STYLE type='text/css'>
+<!--
+SPAN    {
+        cursor:hand;
+        }
+-->
+</STYLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SCRIPT language="Javascript">
+
+</SCRIPT>
+</head>
+
+<body>
+
+<server>
+ ;w650dev
+ n multiFlag,EpisodeID,PatientID,notMatch,mobj,MultiEpIDs
+ s multiFlag="false"
+ s (EpisodeID,PatientID,notMatch,OEORIAnaOperDR,MultiEpIDs)=""
+ i $g(%request.Data("MultiEpisodeID",1)),$l($g(%request.Data("MultiEpisodeID",1)),"^")=1 d
+ . d %request.Set("PatientID",$p($g(^PAADM(%request.Data("MultiEpisodeID",1))),"^",1))
+ . s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ ;----PeterC------------------------------------
+ s MultiPatientID=""
+ i $l(%request.Get("MultiEpisodeID"),"^")>1 d
+ . s EpisodeID=%request.Get("MultiEpisodeID")
+ . d %request.Set("EpisodeID",%request.Get("MultiEpisodeID"))
+ . f county=1:1:$l(EpisodeID,"^") d
+ . . s EpIDx=$p($g(EpisodeID),"^",county)
+ . . i $g(EpIDx)'="" s MultiPatientID=MultiPatientID_$p($g(^PAADM(+EpIDx)),"^",1)_"^"
+ . d %request.Set("PatientID",$e(MultiPatientID,1,$l(MultiPatientID)-1))
+
+ s MultiEpIDs=%request.Get("MultiEpisodeID")
+ i $l(%request.Get("MultiEpisodeID"),"^")>1 s multiFlag="true"
+ ;----------------------------------------------
+ i $g(%request.Data("ApptID",1)) d %request.Set("ApptID",%request.Get("ApptID"))
+ ;Log 54780 PeterC 15/08/05
+ s (ORDStat,ISActive)=""
+ s ORDStat=##Class(web.OECOrderStatus).GetIdFromCodeOrDescription("I")
+ i $g(ORDStat)="" {
+	 &SQL(INSERT INTO SQLUser.OEC_OrderStatus (OSTAT_Code, OSTAT_Desc, OSTAT_Activate)
+	 VALUES ('I', 'Inactive', 'Y'))
+ }
+ i $g(ORDStat)'="" {
+	s ISActive=$p($g(^OEC("OSTAT",ORDStat)),"^",3)
+	i ISActive'="Y" &SQL(UPDATE SQLUser.OEC_OrderStatus SET OSTAT_Activate = 'Y' WHERE OSTAT_RowId = :ORDStat)
+ }
+ ;Log 54879 PeterC 15/08/05
+ s (ORDStat,ISActive)=""
+ s ORDStat=##Class(web.OECOrderStatus).GetIdFromCodeOrDescription("IP")
+ i $g(ORDStat)="" {
+	 &SQL(INSERT INTO SQLUser.OEC_OrderStatus (OSTAT_Code, OSTAT_Desc, OSTAT_Activate)
+	 VALUES ('IP', 'In Progress', 'Y'))
+ }
+ i $g(ORDStat)'="" {
+	s ISActive=$p($g(^OEC("OSTAT",ORDStat)),"^",3)
+	i ISActive'="Y" &SQL(UPDATE SQLUser.OEC_OrderStatus SET OSTAT_Activate = 'Y' WHERE OSTAT_RowId = :ORDStat)
+ }
+ 
+ i PatientID,EpisodeID,multiFlag'="true" d
+ . i $p($g(^PAADM(EpisodeID)),"^",1)'=PatientID d
+ . . s notMatch=1
+ . . s mobj=##Class(websys.Component).OpenName("OEOrder.Custom")
+ . . i mobj d mobj.LoadTrans(),mobj.%Close()
+ . . w "<SCRIPT Language=""Javascript"">"
+ . . w "document.write('"_$g(t("PatientID_Not_Match_EpisodeID"))_"');"
+ . . w "</script>"
+ . . q
+ i notMatch q
+ ; BM add Temp Location in order.custom
+ i EpisodeID'="",$l(EpisodeID,"^")=1 d
+ . s obj=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+ . i obj.PAADMTempLocDR d 
+ . . d %request.Set("TempLocID",obj.PAADMTempLocDR.%Id())
+ . . d %request.Set("TempLoc",obj.PAADMTempLocDR.CTLOCDesc)	
+ . . d obj.%Close()
+ . d %request.Set("EligibilityStatus",##Class(web.OEOrder).EligibilityStatus(EpisodeID))
+ 
+ d %request.Set("OEORIAnaestDR",%request.Get("OEORIAnaestDR"))
+ d %request.Set("OEORIAnaOperDR",%request.Get("OEORIAnaOperDR"))
+ n app,params,oeord,orderrow
+ s app=""
+ k %request.Data("OEPARAMS")
+ ;s ^zpeterc($zn,"Multi")=multiFlag
+ i multiFlag="false",%request.Get("PatientID")'="" d
+ . i $g(%request.Data("PatientBannerExclude",1))="",$l($g(%request.Data("MultiEpisodeID",1)),"^")=1 d
+ . . s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . . i cmp d
+ . . s cmp.HideMenus=1,cmp.HideHeadings=1
+ . . d cmp.Show(),cmp.%Close()
+ . s LocDesc=##Class(web.PAAdm).getPatEpisLoc(%request.Get("EpisodeID"))
+ . s LocID=##Class(web.CTLoc).GetIdFromCodeOrDescription(LocDesc)
+ . ;s params=##Class(websys.Preferences).GetDataExPlus(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),%session.Get("LOGON.SITECODE"),LocID,"",.app,"ORDER","OEOrder.Favourites")
+ . ;d %request.Set("OEPARAMS",params)
+ . ;d %request.Set("EpisodeID",%request.Get("EpisodeID"))
+ . ;d ##Class(web.OEOrder).webGetFavouriteGroupNames(LocID)
+ . ;
+ . s %request.Data("CTLOC",1)=LocDesc
+ w "<DIV id='preftabs' style='position:relative; padding:10px;'></DIV>"_$c(13,10)
+ ;
+ ; BM Log 35162 
+ d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID")) 
+ ;
+ ;If working with multiple episodes we need to identify which are locked, alert to this fact
+ ; and then remove them from string of episode id's so the order is not added for them
+ i multiFlag="true" d
+ . n lockedWarning,warning
+ . s (lockedWarning,warning)=""
+ . n count
+ . f count=1:1:$l(MultiEpIDs,"^") d
+ . . s EpID=$$curradm^COEOrdItem($p(MultiEpIDs,"^",count))
+ . . s orderrow=$o(^OEORD(0,"Adm",+EpID,"")) d:'orderrow
+ . . . s oeord=##class(User.OEOrder).%New()
+ . . . d oeord.OEORDAdmDRSetObjectId(EpID)
+ . . . s oeord.OEORDDate=+$h
+ . . . s oeord.OEORDTime=$p($h,",",2)
+ . . . s save=oeord.%Save(0)
+ . . . s orderrow=+oeord.%Id()
+ . . . d oeord.%Close()
+ . . i $p(^CF("OE",1),"^",83)'="Y",warning="",'##Class(websys.Lock).Lock($lb(orderrow,"User.OEOrder"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) d
+ . . . ;s PatientId=##Class(web.PAAdm).GetPatientId(EpID)
+ . . . ;s lockedWarning=lockedWarning_##Class(web.PAPatMas).GetPatientTitle(PatientId,"")_$c(10)_$c(13)
+ . n cmp
+ . s cmp=##Class(websys.Component).OpenName("OEOrder.Custom")
+ . i cmp d
+ . . ;;;i '##Class(websys.Lock).Lock($lb(orderrow,"User.OEOrder"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) s cmp.Disabled=1
+ . . i warning'="" &html<<DIV><STRONG><FONT COLOR=RED><%=warning%></FONT></STRONG></DIV>>
+ . . i warning'="" s cmp.Disabled=1
+ . . s cmp.HideMenus=1
+ . . s cmp.Style="LEFT:0; WIDTH:100%; POSITION:relative;"
+ . . d cmp.Show(),cmp.%Close()
+
+ ; LOG 52132 JPD
+ s pregID=""
+ s PatientID=%request.Get("PatientID")
+ i multiFlag="false",PatientID'="" s pregID=##Class(web.PAPregnancy).GetOpenPregnancy(PatientID)
+ i pregID'="" d
+ . d %request.Set("IsPregnant","on")
+ . d %request.Set("LDMP",$p($g(^PAPRG(pregID)),"^",17))
+ . s weeks=(+$h-$p($g(^PAPRG(pregID)),"^",17))\7
+ . s days=(+$h-$p($g(^PAPRG(pregID)),"^",17))#7
+ . s OEORIWeeksPregnant=weeks_"."_days
+ . d %request.Set("PREGWEEKS",OEORIWeeksPregnant)
+ . d %request.Set("ClinCond","")
+ 
+ i multiFlag="false" d
+ . s EpisodeID=%request.Get("EpisodeID")
+ . ; LOG 57045 JPD
+ . s (admType,EpLocID,EpLoc)=""
+ . s admType=$p(^PAADM(EpisodeID),"^",2)
+ . i " I E "[admType d
+ . . s EpLocID=$p(^PAADM(EpisodeID),"^",74)
+ . . i EpLocID="" d
+ . . . s EpLocID=$p(^PAADM(EpisodeID),"^",70)
+ . . . i EpLocID'="" s EpLocID=$p(^PAWARD(EpLocID),"^",5)
+ . e  i " O "[admType d 
+ . . s (clsDays,clsMin,clsIx,curDays,curMin)=""
+ . . s WAix=0 f  s WAix=$o(^PAADM(EpisodeID,"WAT",WAix)) q:WAix=""  d
+ . . . s (curDays,curMin)=""
+ . . . s rowX=^PAADM(EpisodeID,"WAT",WAix)
+ . . . i $p(rowX,"^")<+$h d 
+ . . . . s curDays= +$h -$p(rowX,"^")
+ . . . . i $p(rowX,"^",2)'>+$p($h,",",2) s curMin= $p($h,",",2) - $p(rowX,"^",2)
+ . . . . e  d
+ . . . . . s curDays=curDays-1
+ . . . . . s curMin= $ZABS($p(rowX,"^",2)-$p($h,",",2))
+ . . . . . s curMin= 86400-curMin
+ . . . e  i $p(rowX,"^")=+$h,$p(rowX,"^",2)<+$p($h,",",2) d
+ . . . . s curDays=0
+ . . . . s curMin= +$p($h,",",2)-$p(rowX,"^",2)
+ . . . i curDays'="" d
+ . . . . i clsDays="" d 
+ . . . . . s clsDays=curDays
+ . . . . . s clsMin=curMin
+ . . . . . s clsIx=WAix
+ . . . . e  i clsDays=curDays,clsMin>curMin d
+ . . . . . s clsMin=curMin
+ . . . . . s clsIx=WAix
+ . . . . e  i clsDays>curDays d
+ . . . . . s clsDays=curDays
+ . . . . . s clsMin=curMin
+ . . . . . s clsIx=WAix
+ . . i clsIx'="" s EpLocID=$p(^PAADM(EpisodeID,"WAT",clsIx),"^",3)
+ . . i EpLocID'="" s EpLocID=$p(^PAWARD(EpLocID),"^",5)
+ . . i EpLocID="" s EpLocID=%session.Get("LOGON.CTLOCID")
+ . i EpLocID'="" s EpLoc=$p(^CTLOC(EpLocID),"^",2)
+ . i EpLoc'="" d %request.Set("EpisLoc",EpLoc)
+ . ; END 57045
+ . s EpisodeID=$$curradm^COEOrdItem(EpisodeID)
+ . s orderrow=$o(^OEORD(0,"Adm",+EpisodeID,"")) d:'orderrow
+ . .s oeord=##class(User.OEOrder).%New()
+ . .d oeord.OEORDAdmDRSetObjectId(EpisodeID)
+ . .s oeord.OEORDDate=+$h
+ . .s oeord.OEORDTime=$p($h,",",2)
+ . .s save=oeord.%Save(0)
+ . .s orderrow=+oeord.%Id()
+ . .d oeord.%Close()
+ . n cmp,warning
+ . s warning=""
+ . s cmp=##Class(websys.Component).OpenName("OEOrder.Custom")
+ . i cmp d
+ . . ;DL: Log 56099
+ . . i $p(^CF("OE",1),"^",83)'="Y",'##Class(websys.Lock).Lock($lb(orderrow,"User.OEOrder"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) s cmp.Disabled=1
+ . . i warning'="" &html<<DIV><STRONG><FONT COLOR=RED><%=warning%></FONT></STRONG></DIV>>
+ . . s cmp.HideMenus=1
+ . . s cmp.Style="LEFT:0; WIDTH:100%; POSITION:relative;"
+ . . d cmp.Show(),cmp.%Close()
+</server>
+
+<server>
+ ;Log 64787 PeterC 03/01/08
+ k ^TMP("WEB","ORDER_ENTRY_QUESTIONNAIRE",%session.SessionId)
+ n RepeatOrdersFromEPR,itmMaster,SOAPordlist
+ s itmMaster=""
+ s RepeatOrdersFromEPR=%request.Get("RepeatOrders")
+ ;Log 61471 PeterC 01/11/06: Pass RepeatOrders by TMP global
+ i $g(RepeatOrdersFromEPR)'="",$d(^TMP("WEB","ORDER_ENTRY",%session.SessionId,"RepeatOrderGlb")) d
+ . s RepeatOrdersFromEPR=^TMP("WEB","ORDER_ENTRY",%session.SessionId,"RepeatOrderGlb")
+ . k ^TMP("WEB","ORDER_ENTRY",%session.SessionId,"RepeatOrderGlb")
+ . s RepeatOrdersFromEPR=##Class(%CSP.Page).UnescapeURL($g(RepeatOrdersFromEPR))
+ ;Log 54856 PeterC 17/08/05
+ ; added secondary condition as reload after TMP killed caused problems. 61812
+ i RepeatOrdersFromEPR'="",RepeatOrdersFromEPR'="Y" d
+ . s RtnStr=""
+ . f idx=1:1:$l(RepeatOrdersFromEPR,$c(6)) d
+ . . s (CurrRepeat,OrdItemID,ARCIMID,ItmDesc)=""
+ . . s CurrRepeat=$p($g(RepeatOrdersFromEPR),$c(6),idx)
+ . . i CurrRepeat'="" s OrdItemID=$p($g(CurrRepeat),$c(4),1)
+ . . i OrdItemID'="" s ARCIMID=$p($g(^OEORD($p(OrdItemID,"||",1),"I",$p(OrdItemID,"||",2),1)),"^",2)
+ . . i ARCIMID'="" s ItmDesc=$p($g(^ARCIM(+ARCIMID,$p(ARCIMID,"||",2),1)),"^",2)
+ . . i ItmDesc'="" s $p(CurrRepeat,$c(4),2)=ItmDesc
+ . . i ItmDesc'="" s RtnStr=RtnStr_CurrRepeat_$c(6)
+ . i RtnStr'="" s RepeatOrdersFromEPR=$e(RtnStr,1,$l(RtnStr)-1)
+
+
+ ;Get User Group Order Category for items and sets
+ n GroupItmCat,GroupSetCat,GrpObj,SSGRPShowAllergyDSSQA,SSGRPDisplayQnsOnSumScreen
+ s (GroupItmCat,GroupSetCat,SSGRPShowAllergyDSSQA)=""
+ 
+ ;d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID"))
+ s GroupItmCat=%request.Get("OEItemDetails")
+ s GroupSetCat=%request.Get("OESetItems")
+ s SSGRPShowAllergyDSSQA=%request.Get("SSGRPShowAllergyDSSQA")
+ s SSGRPDisplayQnsOnSumScreen=%request.Get("SSGRPDisplayQnsOnSumScreen")
+ //
+ ;
+ ;Check if there's orders against episode, if so then it returns "Y"
+ n orders,SetIDFromDiagnos,obj,SetDesc
+ s (orders,SetIDFromDiagnos,SetDesc)=""
+ i multiFlag="false" d
+ . s orders=$$order^COEOrdItem(%request.Get("EpisodeID"))
+ . ; search for ordersetid if the patient has orderset against their diagnosis CT
+ . s SetIDFromDiagnos=##Class(web.OEOrdItem).GetOrderSetDefaultID(%request.Get("EpisodeID")) 
+ . i SetIDFromDiagnos d
+ . . s obj=##Class(User.ARCOrdSets).%OpenId(SetIDFromDiagnos)
+ . . i obj d
+ . . . s SetDesc=obj.ARCOSDesc
+ . . . ;log60520 TedT
+ . . . s SetCat=obj.ARCOSOrdCatDR.%Id() 
+ . . . i SetDesc'=""  s SetIDFromDiagnos=SetIDFromDiagnos_"^"_SetDesc_"^"_SetCat
+ . . . d obj.%Close()
+ . i SetDesc="" s SetIDFromDiagnos=""  ;DL:15/8/05:Log 54866
+ ;Log 48723 Check for all orders in the same episode
+ n OrdersNumberInGroupWarning,GroupNumbersUsed,order,itm,ordGroupNumber,ordStatus
+ s (GroupNumbersUsed,ordGroupNumber,ordStatus)=""
+ s OrdersNumberInGroupWarning=$p($g(^CF("OE",1)),"^",36)
+
+ i OrdersNumberInGroupWarning'="" {
+ 	s order="" f  s order=$o(^OEORD(0,"Adm",EpisodeID,order))  q:order=""  d
+ 	. s itm="" f  s itm=$o(^OEORD(order,"I",itm))  q:itm=""  d
+ 	. . s ordGroupNumber=$p($g(^OEORD(order,"I",itm,6)),"^",1)
+ 	. . s ordStatus=$p($g(^OEORD(order,"I",itm,1)),"^",13)
+ 	. . i ordStatus'="",$p($g(^OEC("OSTAT",ordStatus)),"^",1)'="I",$p($g(^OEC("OSTAT",ordStatus)),"^",1)'="D",ordGroupNumber'="" s GroupNumbersUsed=GroupNumbersUsed_ordGroupNumber_"^"
+ }
+ 
+ n AdmHospID,objPAAdm
+ s AdmHospID=""
+ s objPAAdm=##class(User.PAAdm).%OpenId(EpisodeID)
+ i objPAAdm,objPAAdm.PAADMHospitalDR {
+ 	s AdmHospID=objPAAdm.PAADMHospitalDR.%Id()
+ }
+ d %request.Set("HospID",AdmHospID)
+ 
+ n ReceiveLabOrderID,ordReceiveLab,SpecCollected,ColDate,ColTime,ReceivedDate,ReceivedTime,ReceiveLabDoctor,ReceiveLabLoc
+ s (SpecCollected,ColDate,ColTime,ReceivedDate,ReceivedTime,ReceiveLabDoctor,ReceiveLabLoc)=""
+ s ReceiveLabOrderID=%request.Get("ReceiveOrderID")
+ i $g(ReceiveLabOrderID)'="" d
+ . s ordReceiveLab=##Class(User.OEOrdItem).%OpenId(ReceiveLabOrderID)	
+ . i ordReceiveLab d
+ . . i ordReceiveLab.OEORIOrdDeptDR s ReceiveLabLoc=ordReceiveLab.OEORIOrdDeptDR.CTLOCDesc
+ . . i ordReceiveLab.OEORIDoctorDR s ReceiveLabDoctor=ordReceiveLab.OEORIDoctorDR.CTPCPDesc
+ . . s CollectStr="",CollectStr=##Class(web.OEOrdSpecimen).GetCollectionDateTime(ReceiveLabOrderID)
+ . . i CollectStr'="" d
+ . . . s ColDate=##Class(websys.Conversions).DateLogicalToHtml($p(CollectStr,"^",1))
+ . . . s ColTime=##Class(websys.Conversions).TimeLogicalToHtml($p(CollectStr,"^",2))
+ . . . i ColDate'="" s SpecCollected="on"
+ . . s ReceiveStr="",ReceiveStr=##Class(web.OEOrdSpecimen).GetReceivedDateTime(ReceiveLabOrderID)
+ . . . i ReceiveStr'="" d
+ . . . . s ReceivedDate=##Class(websys.Conversions).DateLogicalToHtml($p(ReceiveStr,"^",1))
+ . . . . i $p(ReceiveStr,"^",1)'="" s ReceivedTime=##Class(websys.Conversions).TimeLogicalToHtml($p(ReceiveStr,"^",2))
+ w "<SCRIPT Language=""Javascript"">",$C(13,10)
+  ;
+  ;;get list of orders already ordered
+ n currItem
+ s currItem=""
+ s currItem=##Class(web.OEOrdItem).GetPatientOrderItems("",%request.Get("EpisodeID"))
+ ;w "var currItems='"_currItem_"';",$C(13,10)
+ ;Log 42881 PeterC 15/03/04 Commented out the above line and modify the below line, make string denoted by " instead of '
+ w "var currItems="""_currItem_""";",$C(13,10)
+ ;
+ ;TN:21-Jun-2002: need to reload selected orders listbox with values from hidden fields.
+ ;this is due to page being refreshed upon error message (such as invalid pin)
+ n j
+ w "var arrReload=new Array();",$c(13,10)
+ w "var arrReloadExtra=new Array();",$c(13,10)
+ f j=1:1  q:'$d(msg.Data("hiddenitem"_j))  d
+ . w "arrReload["_j_"]='"_$g(msg.Data("hiddenitem"_j,1))_"';",$c(13,10)
+ . w "arrReloadExtra["_j_"]='"_$g(msg.Data("hiddenextra"_j,1))_"';",$c(13,10)
+ s j=j-1
+ w "var reloadingcnt="_j_";",$c(13,10)
+ i j>0 w "ReloadOrderSelectionListBox();",$c(13,10)
+ w "</SCRIPT>",$C(13,10)
+
+ ;Log 56616 20/12/05 PeterC
+ s (ApptID,EID,room)=""
+ s ApptID=%request.Get("ApptID")
+ s EID=%request.Get("EpisodeID")
+ i EID'="",ApptID'="" d
+ . ; changed to include inpat eps 58974
+ . i "O,I"[$p($g(^PAADM(+EID)),"^",2) d
+ . . s (sess,room)=""
+ . . s sess=$p(^RBAS(+ApptID,$p(ApptID,"||",2)),"^",12)
+ . . i sess'="" d
+ . . . s room=$p(^RB("RES",+sess,"DATE",$p(sess,"||",2),"SESS",$p(sess,"||",3)),"^",19)
+ . . . i room'="" d
+ . . . . s room=$p($g(^CTLOC(room)),"^",2)
+
+ ; JD 58993
+ s SOAPordlist=""
+ s SOAPIds=%request.Get("SOAPordlist")
+ f i=1:1:$l(SOAPIds,"*") d
+ . s ID=$p(SOAPIds,"*",i)
+ . s IDstr=$$listItmparams^COEOrdItem15(ID)
+ . i IDstr'="",SOAPordlist'="" s SOAPordlist=SOAPordlist_"*"_IDstr
+ . i IDstr'="",SOAPordlist="" s SOAPordlist=IDstr
+ s ConsultID=%request.Get("ConsultID")
+ ;log60520 TedT
+ s framesetting=##Class(epr.GroupSettings).GetShowOrderListFrame(%session.Get("LOGON.GROUPID"))
+ ;Log 61687 06/12/06 PeterC 
+ i %request.Get("StepPathIds")'="" s framesetting=1
+ ;log61362 TedT
+ s groupExist=##Class(web.PAAdm2GroupNumber).GroupNumberExist(EpisodeID)
+
+ ; JD - RecallSched
+ i %request.Get("RecallSchedID") d
+ . s RecallSchedID=%request.Get("RecallSchedID")
+ . s ix=0 f  s ix=$o(^PAPER(+RecallSchedID,"SCH",$p(RecallSchedID,"||",2),"ITM",$p(RecallSchedID,"||",3),"ORD",ix)) q:ix=""  d
+ . . s str=^(ix) q:'str
+ . . s ITM=$p(str,"^"),OS=$p(str,"^",2)
+ . . i ITM d
+ . . . s IDstr=$$listItmparams^COEOrdItem15(ITM)
+ . . . i IDstr'="",SOAPordlist'="" s SOAPordlist=SOAPordlist_"*"_IDstr
+ . . . i IDstr'="",SOAPordlist="" s SOAPordlist=IDstr
+ . . i OS d
+ . . . s IDstr=$$listItmparams^COEOrdItem15(+OS)
+ . . . i IDstr'="",SOAPordlist'="" s SOAPordlist=SOAPordlist_"*"_IDstr
+ . . . i IDstr'="",SOAPordlist="" s SOAPordlist=IDstr
+
+</server>
+<SCRIPT Language="Javascript">
+	//alert("custom csp");
+	//var aobj=document.getElementById("AllergyIDs");
+	//alert("load");
+	//alert("allergyids"+aobj.value);
+	lstOrders=document.getElementById("Orders");
+	lstGroup1=document.getElementById("group1");
+	lstGroup2=document.getElementById("group2");
+	lstGroup3=document.getElementById("group3");
+	lstGroup4=document.getElementById("group4");
+	lstGroup5=document.getElementById("group5");
+
+	//alert(document.forms['fOEOrder_Custom']);
+	docLoaded(document.forms['fOEOrder_Custom']);
+	var FocusWindowName="";
+	var OrdersNumberInGroupWarning="#(OrdersNumberInGroupWarning)#";
+	var GroupNumbersUsed="#(GroupNumbersUsed)#";
+	var ReceiveLabDoctor="#(ReceiveLabDoctor)#";
+	var ReceiveLabLoc="#(ReceiveLabLoc)#";
+	var EpisLocobj=document.getElementById("EpisLoc");
+	//alert("DEBUG 1-EpisLocobj="+EpisLocobj);
+	//if (EpisLocobj) alert("DEBUG 2 value: "+EpisLocobj.value);
+	//alert("DEBUG3-"+ReceiveLabLoc);
+	if ((EpisLocobj)&&(ReceiveLabLoc!="")) EpisLocobj.value=ReceiveLabLoc;
+	var Doctorobj=document.getElementById("Doctor");
+	//alert("pass doctor");
+	if ((Doctorobj)&&(ReceiveLabDoctor!="")) Doctorobj.value=ReceiveLabDoctor;
+	var SpecCollected="#(SpecCollected)#";
+	var SpecColObj=document.getElementById("SpecCollected");
+	if ((SpecColObj)&&(SpecCollected=="on")) {
+		SpecColObj.checked=true;
+		var ColDate="#(ColDate)#";
+		var ColTime="#(ColTime)#";
+		var ReceivedDate="#(ReceivedDate)#";
+		var ReceivedTime="#(ReceivedTime)#";
+		var ColDateobj=document.getElementById("ColDate");
+		var ColTimeobj=document.getElementById("ColTime");
+		var RecDateobj=document.getElementById("ReceivedDate");
+		var RecTimeobj=document.getElementById("ReceivedTime");
+		if ((ColDateobj)&&(ColDate!="")) {ColDateobj.disabled=false; ColDateobj.value=ColDate;}
+		if ((ColTimeobj)&&(ColTime!="")) {ColTimeobj.disabled=false; ColTimeobj.value=ColTime;}
+		if ((RecDateobj)&&(ReceivedDate!="")) {RecDateobj.value=ReceivedDate;}
+		if ((RecTimeobj)&&(ReceivedTime!="")) {RecTimeobj.value=ReceivedTime;}
+	}
+	//alert("before init fun");
+	Init();	
+	document.body.onfocus = EnabledUpdateBtnHandler;
+	var RepeatOrdersFromEPR="#(RepeatOrdersFromEPR)#";
+	var ItemCat="#(GroupItmCat)#";
+	var SetCat="#(GroupSetCat)#";
+	var ordersFoundFromEpisode="#(orders)#";
+	//Log 56616 20/12/05 PeterC
+        var room="#(room)#";
+	var EpisLocobj=document.getElementById("EpisLoc");
+	if ((EpisLocobj)&&(room!="")) EpisLocobj.value=room;
+
+	var DiagnosOSID="#(SetIDFromDiagnos)#";
+	var framesetting="#(framesetting)#";
+	var DiagnosOSFlag=0;
+	
+	if (DiagnosOSID!="") {
+		//alert(DiagnosOSID+","+ordersFoundFromEpisode);
+		//Log 60108 BO: 24-07-2006
+		if ((ordersFoundFromEpisode=="N")&&(document.getElementById("VisitStatus").value!="C")) {
+			//log60520 TedT
+			var txt=mPiece(DiagnosOSID,"^",1)+"^"+mPiece(DiagnosOSID,"^",0)+"^^ARCOS^^^"+mPiece(DiagnosOSID,"^",2)+"^^^^^^^^^^";
+			if(framesetting==0) DiagnosOSFlag=1;
+			window.setTimeout("OrderItemLookupSelect('"+txt+"')",600);
+			//window.setTimeout("OSItemListOpen('"+mPiece(DiagnosOSID,"^",0)+"','"+mPiece(DiagnosOSID,"^",1)+"','YES','','');",1000);
+			//OSItemListOpen(mPiece(DiagnosOSID,"^",0),mPiece(DiagnosOSID,"^",1),"YES","");
+			//FocusWindowName="frmOSList";
+		}
+	}
+	// 58993
+	var SOAPorders="#(SOAPordlist)#";
+	var ConsultID="#(ConsultID)#";
+	
+var PatLocID="#($g(LocID))#";	
+var EpisodeID="#($g(%request.Data("EpisodeID",1)))#";
+var escapedCTLOC="#($zcvt($g(%request.Data("CTLOC",1)),"O","URL"))#";
+if (escapedCTLOC!="") escapedCTLOC=escape(escapedCTLOC);
+var lnkFav="";
+if (FocusWindowName==""||FocusWindowName=="frmOSList") lnkFav="oeorder.entry.redrawprefs.csp?EpisodeID="+EpisodeID+"&CTLOC="+escapedCTLOC+"&XCONTEXT="+session["CONTEXT"]+"&OEWIN="+window.name;
+else lnkFav="oeorder.entry.redrawprefs.csp?EpisodeID="+EpisodeID+"&CTLOC="+escapedCTLOC+"&FocusWindowName="+FocusWindowName+"&XCONTEXT="+session["CONTEXT"]+"&OEWIN="+window.name;
+//var lnkFav="oeorder.entry.redrawprefs.csp?EpisodeID="+EpisodeID+"&CTLOC="+escapedCTLOC+"&XCONTEXT="+session["CONTEXT"]+"&OEWIN="+window.name;
+//var lnkFav='oeorder.entry.redrawprefs.csp?EpisodeID=#($g(%request.Data("EpisodeID",1)))#&CTLOC=#($zcvt($g(%request.Data("CTLOC",1)),"O","URL"))#&XCONTEXT='+session["CONTEXT"]+'&OEWIN='+window.name;
+//if ((RepeatOrdersFromEPR=="")&&(SOAPorders=="")) websys_createWindow(lnkFav+'&PREFTAB=1','TRAK_hidden');
+//if (AddSOAPorders() && AddRepeatOrders()) websys_createWindow(lnkFav+'&PREFTAB=1','TRAK_hidden'); // 59413
+
+// 59413
+var CTLOC="#($g(%request.Data("CTLOC",1)))#";
+//put into function so can call now, and in redraw.csp on after update from "OrganiseFavourites" link
+function DrawPrefs() {
+	//log 64160 pass in CONTEXT
+	var CONTEXT="#($g(%request.Data("CONTEXT",1)))#"
+	//alert (CONTEXT);
+	if (tkMakeServerCall("epr.PreferencesQuery","DrawOrderPrefTabs",FocusWindowName,CONTEXT)) {
+		if (currTab!='') {RedrawFavourites(currTab,FocusWindowName);} else {RedrawFavourites(1,FocusWindowName);}
+	}
+	return true;
+}
+if (DrawPrefs()) {}
+
+AddSOAPorders();
+AddRepeatOrders();
+//Log 61687 06/12/06 PeterC
+AddClinPathOrder();
+
+//log61362 TedT 
+function GroupNumberLink(exist) {
+	var grpobj=document.getElementById("EpisodeGroupNumber");
+	if ((exist=="1")&&(grpobj)) grpobj.style.fontWeight="bold";
+	if ((exist!="1")&&(grpobj)) grpobj.style.fontWeight="";
+}
+
+GroupNumberLink("#(groupExist)#");	
+
+//log 62292
+var MRObsHeightObj=document.getElementById("MRObsHeight");
+if (MRObsHeightObj) MRObsHeightObj.onchange=Float_changehandler;
+var MRObsWeightObj=document.getElementById("MRObsWeight");
+if (MRObsWeightObj) MRObsWeightObj.onchange=Float_changehandler;
+
+</SCRIPT>
+</body>
+</html>
+

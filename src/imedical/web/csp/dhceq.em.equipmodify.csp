@@ -1,0 +1,86 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<script language=Cache runat=server>
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+	s RowIDs=$Get(%request.Data("RowIDs",1))
+	s LocationOperMethod=##class(web.DHCEQCommon).GetSysInfo("201008")
+	s GetPath=##class(web.DHCEQStoreMoveSP).GetPath()
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	//add by wl 2019-12-14 WL0025 条码打印的分隔符
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")   //add by wl 2019-12-14 WL0029
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")   //Modefined by zc0060 20200327  增加润乾预览标志 
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+</script>
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="border:false" style="border-bottom:dashed 1px #ccc;padding:5px 0 10px 0;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-item">信息修改</div>
+				</div>
+			</div>
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="KeeperDR_SSUSRName">使用人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.SSUser'" id="KeeperDR_SSUSRName"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="LocationDR_LDesc">存放地点</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Locaton'" id="LocationDR_LDesc"></div>
+				</div>
+				<!-- Mozy0247	1190758	2020-02-17 -->
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="AccountNo">凭证号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AccountNo"></div>
+				</div>
+			</div>
+			<!--modify by lmm 2020-06-04 UI-->
+			<div style="text-align:center;padding-top:10px;">
+				<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a id="BClose" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">关闭</a>
+			</div>
+		</div>
+		<div class="hisui-panel" data-options="border:false" style="padding:5px 0 10px 0;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-item">批量打印</div>
+				</div>
+			</div>
+			<div style="text-align:center;">
+				<a id="BPrintBar" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-print"  data-options="stopAllEventOnDisabled:true">条码打印</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a id="BPrintCard" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-card"  data-options="stopAllEventOnDisabled:true">卡片打印</a>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="RowIDs" value=#(RowIDs)#>
+			<INPUT type="hidden" id="LocationDR">
+			<INPUT type="hidden" id="KeeperDR">
+			<input type="hidden" id="LocationOperMethod" value=#(LocationOperMethod)#>
+			<input type="hidden" id="GetRepPath" value=#(GetPath)#>
+			<input type="hidden" id="SplitRowCode" value="#(SplitRowCode)#"> <!--add by wl 2019-12-14 WL0025-->
+			<input type="hidden" id="PrintFlag" value="#(PrintFlag)#"> <!--add by wl 2019-12-14 WL0029-->
+			<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--Modefined by zc0060 20200327  增加润乾预览标志-->
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script> <!--add by wl 2019-12-14 WL0025-->
+	<script type='text/javascript' src='../scripts/dhceq/em/equipmodify.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbar.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbarqrcode.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script><!-- add by wl 2019-12-16 WL0029-->
+</body>
+</html>

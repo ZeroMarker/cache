@@ -1,0 +1,108 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str = $Get(%request.Data("str",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s valid=$Get(%request.Data("valid",1))
+	
+	s rpindex=$Get(%request.Data("rpindex",1))
+	s targetid=$Get(%request.Data("targetid",1))
+	s rowId=$Get(%request.Data("rowId",1))
+	s rowID=$Get(%request.Data("rowID",1))
+	s rpType=$Get(%request.Data("rpType",1))
+	s targettype=$Get(%request.Data("targettype",1))
+
+	s schemetype=$Get(%request.Data("schemetype",1))
+	s schemeid=$Get(%request.Data("schemeid",1))
+	s CellName=$Get(%request.Data("cellName",1))
+	s FontBold=$Get(%request.Data("fontBold",1))
+	s BackColor=$Get(%request.Data("backColor",1))
+	s IsPub=$Get(%request.Data("IsPub",1))
+	
+	; BackColor, FontBold ,FontBold,BackColor
+	i action = "listcell" d
+	.w ##class(dhc.bonus.udata.uBonusReportManagement).ListCell(rowID,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uBonusReportManagement).List(searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "add" d
+	.s ^a=rpType
+	.s result =##class(dhc.bonus.udata.uBonusReportManagement).InsertRec(code, name, rpType,IsPub)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addscheme" d
+	.s result =##class(dhc.bonus.udata.uBonusReportManagement).InsertScheme(schemeid, rpindex, rowId,CellName)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addtarget" d
+	.s result =##class(dhc.bonus.udata.uBonusReportManagement).InsertTarget(targetid, rpindex, rowId,CellName)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s ^a=code
+	.s ^b=name
+	.s ^c=rpType
+	.s result =##class(dhc.bonus.udata.uBonusReportManagement).UpdateRec(rowid, code, name, rpType,IsPub)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editcell" d
+	.s result =##class(dhc.bonus.udata.uBonusReportManagement).UpdateCell(rowId, rpindex,CellName,FontBold,BackColor)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result =##class(dhc.bonus.udata.uBonusReportManagement).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delcell" d
+	.s result =##class(dhc.bonus.udata.uBonusReportManagement).DeleteCell(rowId)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "targettype" d
+	.w ##class(dhc.bonus.udata.uBonusReportManagement).TargetType(start, limit, str)
+	
+	i action = "targetname" d
+	.w ##class(dhc.bonus.udata.uBonusReportManagement).TargetName(targettype, start, limit)
+			
+	i action = "schemetype" d
+	.w ##class(dhc.bonus.udata.uBonusReportManagement).SchemeType(start, limit, str)
+	
+	i action = "schemename" d
+	.w ##class(dhc.bonus.udata.uBonusReportManagement).SchemeName(schemetype,start, limit)
+	
+</script>

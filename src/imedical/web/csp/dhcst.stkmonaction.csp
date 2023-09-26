@@ -1,0 +1,113 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s Hosp=$Get(%request.Data("HospId",1))
+;
+i Action = "CreateReport" d
+	.s params=$g(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.DHCStkMon).CreateReports(params)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+i Action = "Select" d
+	.S IngrRowid=$Get(%request.Data("IngrRowid",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).Select(IngrRowid)	
+	.w "{success:'true',info:'"_ret_"'}"
+i Action = "QueryDetail" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s StkGrpId=$g(%request.Data("StkGrpId",1))
+	.s StkCatId=$g(%request.Data("StkCatId",1))
+	.s IncDesc=$g(%request.Data("IncDesc",1))
+	.d ##class(web.DHCST.DHCStkMonRepQuery).jsStkMonRepItm(Parref,StkGrpId,StkCatId,IncDesc)
+	.
+i Action = "Delete" d
+	.S SmId=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.DHCStkMon).Delete(SmId)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "CheckIfExist" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s CurMonth=$Get(%request.Data("CurMonth",1))
+	.s ret=##class(web.DHCST.DHCStkMon).CheckIfExist(LocId,CurMonth)
+	.i +ret>0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "CheckIfCompleted" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s StartDate=$Get(%request.Data("StartDate",1))
+	.s EndDate=$Get(%request.Data("EndDate",1))
+	.s ret=##class(web.DHCST.DHCStkMon).CheckIfCompleted(LocId,StartDate,EndDate)
+	.i +ret>0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "GetStkMonStDateTime" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.S CurrentMon=$Get(%request.Data("Month",1))
+	.s ret=##class(web.DHCST.DHCStkMon).GetStkMonStDateTime(LocId,CurrentMon)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "Query" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s StartDate=$Get(%request.Data("StartDate",1))
+	.s EndDate=$Get(%request.Data("EndDate",1))
+	.w ##class(web.DHCST.DHCStkMon).jsDHCStkMon(LocId,StartDate,EndDate)
+	.
+i Action = "GrpLocForStkMon" d
+	.s GroupId=$Get(%request.Data("GroupId",1))
+	.s ret=##class(web.DHCST.DHCStkMon).jsGrpLocForStkMon(Start,Limit,GroupId,Hosp)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+	.
+i Action = "QueryDetailRp" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s StkGrpId=$g(%request.Data("StkGrpId",1))
+	.s StkCatId=$g(%request.Data("StkCatId",1))
+	.s IncDesc=$g(%request.Data("IncDesc",1))
+	.d ##class(web.DHCST.DHCStkMonRepQuery).jsStkMonRepItmRp(Parref,StkGrpId,StkCatId,IncDesc)
+	.
+i Action = "QueryDetailLB" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s StkGrpId=$g(%request.Data("StkGrpId",1))
+	.s StkCatId=$g(%request.Data("StkCatId",1))
+	.s IncDesc=$g(%request.Data("IncDesc",1))
+	.d ##class(web.DHCST.DHCStkMonReportLB).jsStkMonRepLcBt(Parref,StkGrpId,StkCatId,IncDesc)
+	.
+i Action = "QuerySumBySCG" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s Type=$g(%request.Data("Type",1))
+	.d ##class(web.DHCST.DHCStkMonRepQuery).jsStkMonSumBySCG(Parref,Type)
+	.
+//根据月报主表的Id查询月报主表信息
+    i Action = "getMain" d
+    .s RowId=$Get(%request.Data("rowid",1))
+    .s result = ##class(web.DHCST.DHCStkMon).GetMain(RowId)
+    .i result'="" d
+    ..w "{success:'true',info:'"_$tr(result,$c(13,10))_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+i Action = "GetParamProp" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.DHCStkMon).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "QuerySumByCat" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s Type=$g(%request.Data("Type",1))
+	.d ##class(web.DHCST.DHCStkMonRepQuery).jsStkMonSumByCat(Parref,Type)	
+</SERVER>

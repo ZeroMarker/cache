@@ -1,0 +1,148 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s plandr=$Get(%request.Data("plandr",1))
+	s schemdr=$Get(%request.Data("schemdr",1))
+	s departdr=$Get(%request.Data("departdr",1))
+	s period=$Get(%request.Data("period",1))
+	s warddr=$Get(%request.Data("warddr",1))
+	s parref=$Get(%request.Data("parref",1))
+	s sdetaildr=$Get(%request.Data("sdetaildr",1))
+	s jxpatdr=$Get(%request.Data("jxpatdr",1))
+	s checkdr=$Get(%request.Data("checkdr",1))
+	s rate=$Get(%request.Data("rate",1))
+	s actvalue=$Get(%request.Data("actvalue",1))
+	s txtvalue=$Get(%request.Data("txtvalue",1))
+	s piclink=$Get(%request.Data("piclink",1))
+	s saveuserdr=$Get(%request.Data("saveuserdr",1))
+	s savedate=$Get(%request.Data("savedate",1))
+	s exdepartdr=$Get(%request.Data("exdepartdr",1))
+	s disqua=$Get(%request.Data("disqua",1))
+	
+	s mainrowid=$Get(%request.Data("mainrowid",1))
+	s detailrowid=$Get(%request.Data("detailrowid",1))
+	
+	s year=$Get(%request.Data("year",1))
+	s type=$Get(%request.Data("type",1))
+	s period=$Get(%request.Data("period",1))
+	s dept=$Get(%request.Data("dept",1))
+	s scheme=$Get(%request.Data("scheme",1))
+	s status=$Get(%request.Data("status",1))
+	s userid=$Get(%request.Data("userid",1))
+
+	i action = "list" d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).List(sortField, sortDir, start, limit,year,type,period,dept,warddr,checkdr, scheme,userid)
+	
+	i action = "listNew" d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).ListNew(sortField, sortDir, start, limit,year,type,period,dept,warddr,checkdr, scheme,userid)
+	
+	i action = "audit" d
+	.s result = ##class(dhc.qm.udata.uQualityInfoManagement).audit(rowid,status,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "auditmian" d
+	.s result = ##class(dhc.qm.udata.uQualityInfoManagement).auditmain(rowid,status,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action="ListJXPat"  d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).ListJXPat(start, limit, str)
+	
+	i action="ListCheck"  d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).ListCheck(start, limit, str,schemdr)
+	
+	i action="ListSSUSR"  d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).ListSSUSR(start, limit, str)
+	
+	i action="ListDEP"  d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).ListDEP(start, limit, str)
+	
+	i action = "GetDeptField" d
+	.w ##class(dhc.qm.udata.uComm).GetDeptGroup(start, limit, str,"","","","")
+	
+	i action = "GetSchemeField" d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).SchemeList(start, limit, str)
+	
+	
+	i action = "add" d
+	.s result = ##class(dhc.qm.udata.uQualityInfoManagement).SuperInsert(plandr, schemdr, departdr, period, warddr, sdetaildr, jxpatdr, checkdr, rate, actvalue, txtvalue, piclink, saveuserdr, savedate, exdepartdr, disqua)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.qm.udata.uQualityInfoManagement).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result =##class(dhc.qm.udata.uQualityInfoManagement).UpdateRecTotal(mainrowid, plandr, schemdr, departdr, period, warddr, detailrowid, parref, sdetaildr, jxpatdr, checkdr, rate, actvalue, txtvalue, piclink, saveuserdr, savedate, exdepartdr, disqua)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+    i action="ListPlandr"  d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).ListPlandr(start, limit, str)
+	
+	i action="ListschemDr"  d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).ListschemDr(start, limit, str,userid)
+	
+	i action="ListdepartDr"  d
+	.w ##class(dhc.qm.udata.uComm).GetDeptGroup(start, limit, str,"","","","")
+	
+	i action="ListwardDr"  d
+	.w ##class(dhc.qm.udata.uComm).GetSuperAdmlocward(start, limit, str,dept)
+
+
+	//2015-11-24 审核/取消审核所有记录
+	i action = "auditall" d
+	.s result = ##class(dhc.qm.udata.uQualityInfoManagement).AuditAll(year,period,type,userid,status)
+	.i result = 0 d  ;返回值为0，表示要更新的记录数为0
+	..w "{success:'false',info:'"_result_"'}"
+	.e  d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	i action = "inter" d
+	.s result = ##class(dhc.qm.udata.uQualityInfoManagement).getTimeCFNum(year,period,type)
+	.i result = 0 d  ;返回值为0，表示要更新的记录数为0
+	..w "{success:'false',info:'"_result_"'}"
+	.e  d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	i action="GetChecks"  d
+	.w ##class(dhc.qm.udata.uQualityInfoManagement).GetChecks(sortField, sortDir, start, limit,year,type,period,dept,warddr,checkdr, scheme,userid)
+	//导入接口数据 2016-9-22 add
+	i action="interfaceImp"  d
+	.s result=##class(dhc.qm.udata.uQualityInfoManagement).getTimeCFNum(year,period,type)
+	.i result = 0 d  
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

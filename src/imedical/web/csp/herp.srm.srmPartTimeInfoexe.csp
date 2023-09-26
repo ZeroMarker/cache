@@ -1,0 +1,114 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))	
+	s type=$Get(%request.Data("type",1))
+	s sex=$Get(%request.Data("sex",1))
+	s birthday=$Get(%request.Data("birthday",1))
+	s idnum=$Get(%request.Data("idnum",1))
+	s titledr=$Get(%request.Data("titledr",1))
+	s phone=$Get(%request.Data("phone",1))
+	s email=$Get(%request.Data("email",1))
+    s User=$Get(%request.Data("User",1))
+	s CommitteeDr=$Get(%request.Data("CommitteeDr",1))
+	s PositionDr=$Get(%request.Data("PositionDr",1))
+
+	
+	s mngdr=$Get(%request.Data("mngdr",1))
+	s IsValid=$Get(%request.Data("IsValid",1))
+	s IsSecretary=$Get(%request.Data("IsSecretary",1))
+	s UserDr=$Get(%request.Data("UserDr",1))
+	s DeptDr=$Get(%request.Data("DeptDr",1))
+    s YearDr=$Get(%request.Data("YearDr",1))
+ 	s StartDate=$Get(%request.Data("StartDate",1))
+    s EndDate=$Get(%request.Data("EndDate",1))
+	s SubUser=$Get(%request.Data("SubUser",1))
+	s userid=$Get(%request.Data("userid",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	
+	s eCommitteeDr=$Get(%request.Data("eCommitteeDr",1))
+	s ePositionDr=$Get(%request.Data("ePositionDr",1))
+	s eUserDr=$Get(%request.Data("eUserDr",1))
+	s eYearDr=$Get(%request.Data("eYearDr",1))
+ 	s eStartDate=$Get(%request.Data("eStartDate",1))
+    s eEndDate=$Get(%request.Data("eEndDate",1))
+	s eSubUser=$Get(%request.Data("eSubUser",1))
+	s eBranch=$Get(%request.Data("eBranch",1))
+	
+	s Branch=$Get(%request.Data("Branch",1))
+	
+	s Type=$Get(%request.Data("Type",1))
+	
+	s usercode = $Get(%request.Data("usercode",1))
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uPartTimeInfo).List(sortField, sortDir, start, limit, User, CommitteeDr, PositionDr,usercode,Type)
+	
+	i action = "CalCommitteeInfo" d
+	.w ##class(herp.srm.udata.uPartTimeInfo).CalCommitteeInfo(start, limit, str)
+	
+	i action = "CalPartTimeJobs" d
+	.w ##class(herp.srm.udata.uPartTimeInfo).CalPartTimeJobs(start, limit, str)
+
+	i action = "CalYear" d
+	.w ##class(herp.srm.udata.uPartTimeInfo).CalYear(start, limit, str)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uPartTimeInfo).InsertRec(UserDr,CommitteeDr, PositionDr, YearDr, StartDate, EndDate, SubUser,DeptDr,Branch,Type)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uPartTimeInfo).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uPartTimeInfo).UpdateRec(rowid,eUserDr,eCommitteeDr,ePositionDr,eYearDr,eStartDate,eEndDate,eSubUser,DeptDr,eBranch,Type)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "sub" d
+	.s result = ##class(herp.srm.udata.uPartTimeInfo).ChangeDataStatus(rowid,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "caldept" d
+	.w ##class(herp.srm.udata.uSRMuser).CalDeptname(start,limit,str)
+				
+	i action = "caluser" d
+	.w ##class(herp.srm.udata.uSRMuser).CalUsername(start,limit,str)
+	
+	i action = "UserDeptList" d
+	.s result = ##class(herp.srm.udata.uPartTimeInfo).UserDeptList(userdr)
+	.i result = "" d
+	..w "{success:'false',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'true',info:'"_result_"'}"
+	
+</script>

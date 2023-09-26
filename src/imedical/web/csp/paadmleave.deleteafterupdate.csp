@@ -1,0 +1,37 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n SessID
+	s SessID=%request.Get("SessID")
+	;
+</SERVER>
+...
+<script Language="JavaScript">
+	var win=window;
+	while (window.opener) {win=window.opener;}
+	if (win.parent) win=win.parent;
+	if (win) {
+		var SessionPresentlyLoaded=win.SessID;
+		win.SessID="#(SessID)#";
+		if (win.frames['sessions']) {
+			win.frames['sessions'].treload('websys.csp');
+		} else {
+			//KM 3-Jan-2002: added if/else statement
+			if (window.opener) {window.opener.treload('websys.csp');} else {window.treload('websys.csp');}
+		}
+	}
+</script>
+</BODY>
+</HTML>

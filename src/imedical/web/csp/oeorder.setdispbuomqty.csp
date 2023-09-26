@@ -1,0 +1,54 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ 
+ n WINNAME,OEORIItmMastDR,UOMDesc,FreqDesc,Priority,DurDesc,DoseQty,StartDate
+ s (WINNAME,OEORIItmMastDR,UOMDesc,FreqDesc,Priority,DurDesc,DoseQty,StartDate,PriID,UnitDR,FreqDR,DurDR,qty1,drgform)=""
+ s OEORIItmMastDR=%request.Get("OEORIItmMastDR")
+ s UOMDesc=%request.Get("UOMDesc")
+ s FreqDesc=%request.Get("FreqDesc")
+ s Priority=%request.Get("Priority")
+ s WINNAME=%request.Get("WINNAME")
+ s DurDesc=%request.Get("DurDesc") 
+ s DoseQty=%request.Get("DoseQty")
+ s StartDate=%request.Get("StartDate")
+ s StartDate=##Class(websys.Conversions).DateHtmlToLogical(StartDate)
+ i $g(OEORIItmMastDR)'="" s drgform=$p($g(^ARCIM(+OEORIItmMastDR,1,1)),"^",12)
+ 
+ i $g(Priority)'="" s PriID=##Class(web.OECPriority).GetIdFromCodeOrDescription(Priority)
+ i $g(UOMDesc)'="" s UOMDesc=##Class(%Library.Collation).AlphaUp(UOMDesc) i $g(UOMDesc)'=""  s UnitDR=$o(^CT("UOM",0,"Desc",UOMDesc,""))
+ i $g(FreqDesc)'="" s FreqDesc=##Class(%Library.Collation).AlphaUp(FreqDesc) i $g(FreqDesc)'="" s FreqDR=$o(^PHCFR(0,"Desc1",FreqDesc,""))
+ i $g(DurDesc)'="" s DurDesc=##Class(%Library.Collation).AlphaUp(DurDesc) i $g(DurDesc)'="" s DurDR=$o(^PHCDU(0,"Desc1",DurDesc,""))
+ 
+ s qty1=$s($$calcfl^aOET1(+OEORIItmMastDR)["Y":$$CO29^at122(DoseQty,FreqDR,DurDR,PriID,StartDate,""),1:0)
+ s qty3=$$calcqty^aOET7(drgform,UnitDR,qty1)
+ 
+ s Return=qty3
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var qobj=detailFrame.document.getElementById(""TotBaseDoseQty"");"
+ w "if(qobj){"
+ w "	qobj.innerText="""_Return_""";"
+ ;w "	qobj.value="""_Return_""";"
+ w "}"
+ w "</script>"
+ 
+ q
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

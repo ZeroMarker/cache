@@ -1,0 +1,282 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(DHCMRQ.Base.Util.Verification).SessionVerifi() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+		if (top == self) {
+    		top.location = 'dhcmrq.index.csp';
+		}
+	   </script>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/font-awesome-4.6.3/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-validator/css/bootstrapValidator.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/datatable-1.10.12/datatables.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/css/main.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/zTree/css/metroStyle/metroStyle.css">
+		<!--[if lte IE 6]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap-ie6.css">
+	  <![endif]-->
+	  <!--[if lte IE 8]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/ie.css">
+			<style media="screen">
+				.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9{
+					padding-left: 0;
+					padding-right: 0;
+				}
+			</style>
+	  <![endif]-->
+		
+		
+
+		<style media="screen">
+			label.col-sm-3{
+				padding-right: 0;
+			}
+			.table>tbody>tr.selected{
+				background-color: #16c79e;
+				color: #fff;
+				transition: all .2s;
+			}
+			#menuDiv .col-sm-5{
+				border: 1px solid #16c79e;
+				min-height: 200px;
+			}
+			.panel-footer{
+				text-align: right;
+			}
+			.table th, .table td{
+				text-align: left;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="boxcq">
+					<div class="ti">
+
+					</div>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-sm-8">
+									<table id="confTable" class="table table-striped" width="100%">
+										<thead>
+											<tr><th>配置代码</th><th>配置描述</th><th>值</th><th>备注&nbsp;&nbsp;&nbsp;</th><th>操作&nbsp;&nbsp;&nbsp;</th></tr>
+										</thead>
+										<tbody>
+
+										</tbody>
+									</table>
+								</div>
+								<div class="col-sm-4">
+									<div class="panel panel-info">
+									  <div class="panel-heading">配置信息</div>
+									  <div class="panel-body">
+									  <input type="hidden" id="cfgId">
+											<form id="confForm" class="form-horizontal" role="form">
+												<div class="form-group">
+											    <label for="cfgCode" class="col-sm-3 control-label">配置代码</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="cfgCode" name="Params">
+											    </div>
+											  </div>
+											  <div class="form-group">
+											    <label for="cfgDesc" class="col-sm-3 control-label">配置描述</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="cfgDesc" name="cfgDesc">
+											    </div>
+											  </div>
+											  <div class="form-group">
+											    <label for="cfgValue" class="col-sm-3 control-label">值</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="cfgValue" name="cfgValue">
+											    </div>
+											  </div>
+											  <div class="form-group">
+											    <label for="cfgResume" class="col-sm-3 control-label">备注</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="cfgResume" name="cfgResume">
+											    </div>
+											  </div>
+											</form>
+									  </div>
+										<div class="panel-footer">
+											<button type="button" onclick="saveConf()" class="btn btn-info">保存</button>
+										</div>
+									</div>
+
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">确认</h4>
+      </div>
+      <div class="modal-body">
+        确定要删除吗？
+      </div>
+      <div class="modal-footer">
+        
+        <button type="button" class="btn btn-danger" onclick="deleteConf()" data-dismiss="modal">删除</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+		<DHCMRQ:HEAD></DHCMRQ:HEAD>
+		<script type="text/javascript">
+			$(function(){
+				loadTable();
+				
+				//code值改变时，认为要新增记录，所以启动验证
+				$('#cfgCode').on('input',function(){
+					$('#confForm').bootstrapValidator('enableFieldValidators', 'Params', true);
+				})
+				
+	$('#confForm').bootstrapValidator({
+		//live: 'disabled',
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            cfgDesc: {
+                validators: {
+                    notEmpty: {
+                        message: '配置名不能为空'
+                    }
+                }
+            },
+            Params: {
+                message: 'The cfgCode is not valid',
+                validators: {
+                    notEmpty: {
+                        message: '配置代码不能为空'
+                    },
+                    stringLength: {
+                        min: 4 ,
+                        max: 30,
+                        message: '配置代码要大于4位小于30位字符'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: '配置代码只能包含字母数字和下划线'
+                    },
+                    remote: {
+                        url: 'dhcmrq.service.csp?ClassName=DHCMRQ.Base.Config&MethodName=CheckCfgCode',
+                        message: '配置代码已存在'
+                    }
+                }
+            },
+            cfgValue: {
+                validators: {
+                    notEmpty: {
+                        message: '配置值不能为空'
+                    }
+                }
+            }
+        }
+    });
+			});
+
+			function loadTable(){
+				$.ajax({
+						type: 'post',
+						url: 'dhcmrq.service.csp',
+						data: {ClassName:'DHCMRQ.Base.Config',
+									 MethodName:'GetAllCfg',
+									 Params:''
+						},
+						success: function (res) {
+							//console.log(res);
+							var dt = $('#confTable').DataTable( {
+									data: JSON.parse(res),
+									lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "全部"] ],
+									columns: [
+												{ "data": "cfgCode" },
+												{ "data": "cfgDesc" },
+												{ "data": "cfgValue" },
+												{ "data": "cfgResume" },
+												{ "data": "oper" ,
+													"render": function ( data, type, full, meta ) {
+														return '<a class="link" href="#" onclick="deleteConf(\''+full.cfgId+'\')">删除</a>'
+															
+													}
+												}
+										]
+							});
+
+							$('#confTable tbody').on( 'click', 'tr', function () {
+									dt.$('tr.selected').removeClass('selected');
+									$(this).addClass('selected');
+									var rowData = dt.rows('.selected').data()[0];
+									for (var key in rowData) {
+										$('#'+key).val(rowData[key]);
+									}
+									
+									$('#confForm').bootstrapValidator('enableFieldValidators', 'Params', false);
+							});
+		        }
+		    });
+			}
+
+
+			function saveConf(){
+				//验证表单
+				$('#confForm').bootstrapValidator('validate');
+				if(!$('#confForm').data('bootstrapValidator').isValid()) return;
+				
+				$.ajax({
+						type: 'post',
+						url:  'dhcmrq.service.csp',
+		        data: {ClassName:'DHCMRQ.Base.Config',
+					   MethodName:'Update',
+					   Params:decodeURIComponent($('#confForm').serialize().replace(/&.*?=/g,'^').replace(/^.*?=/g,''))
+					  },
+		        success: function (res) {
+							console.log(res);
+		                    loadTable();
+		                    msg('success','更新成功!',2000);
+		        }
+		    });
+			}
+
+			function deleteConf(cfgId){
+				if(confirm('确定删除吗？')){
+					$.ajax({
+						type: 'post',
+						url:  'dhcmrq.service.csp',
+						data: {ClassName:'DHCMRQ.Base.Config',
+							   MethodName:'DeleteById',
+							   Params:cfgId
+						},
+						success: function (res) {
+							//console.log(res);
+							//loadTable();
+							location.reload();
+							msg('success','配置删除成功!',2000);
+						}
+					});
+				}
+			}
+		</script>
+	</body>
+</html>

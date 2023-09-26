@@ -1,0 +1,69 @@
+﻿﻿<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.quotation.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/emrviewcategory.css">
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s:(patientID = "") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s docID = $Get(%request.Data("DocID",1),"")
+		s userCode = %session.Get("LOGON.USERCODE")
+		s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userLocID = %session.Get("LOGON.CTLOCID") 
+		s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+		s patientEpisodeType = $p(^PAADM(episodeID),"^",2)
+		s quatationCheckFlag = ##Class(EMRservice.SystemParameter).GetQuotationStatus()
+  </script>
+	<script language="javascript">
+	  var patientID = '#(patientID)#';
+	  var episodeID = '#(episodeID)#';
+	  var docID = '#(docID)#';
+	  var userCode = '#(userCode)#';
+	  var userID = '#(userID)#';
+	  var userLocCode = '#(userLocCode)#';
+	  var ssgroupID = '#(ssgroupID)#';
+	  var userLocID = '#(userLocID)#';
+	  var patientEpisodeType = '#(patientEpisodeType)#';
+	  var quatationCheckFlag='#(quatationCheckFlag)#';
+   </script>
+	<title>病历引用</title>
+</head>
+<body class="hisui-layout" data-options="border:false" >
+    <div data-options="region:'west',split:true,border:false" style="width:430px;padding-left:3px;">
+    	<div class="hisui-tabs tabs-gray" data-options="fit:true,border:false">
+	    	<div title="就诊信息">
+		    	<div  class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'north'" class="tool">
+						<span>#(..Get("就诊类型"))#</span>
+						<input id="episodeType" name="episodeType"></input>
+						<input id="diagnosDesc" class="hisui-validatebox validatebox-text" type="text" value="诊断内容"  onclick="my_click(this,'diagnosDesc');"  onBlur="my_blur(this,'diagnosDesc');"></input>
+						<a id="episodeSeek" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>  
+					</div>
+					<div data-options="region:'south',border:false" class="divepisodelist">
+						<table id="recordList"></table> 
+					</div>
+					<div data-options="region:'center',border:false">
+						<table id="episodeList"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+    <div id="browsepage" data-options="region:'center'" style="border-color:#ccc;">
+    	<div id="centerTab" class="hisui-tabs tabs-gray" data-options="fit:true,border:false,tools:'#tab-tools'">
+    		<div id="tabbrowse" title="病历浏览" class="tabbrowse">
+				<iframe id='framebrowse' src='emr.record.browse.browsform.editor.csp' scrolling='no' width='100%' height='100%' frameborder='0'></iframe>
+    		</div>
+    	</div>
+    	<div id="tab-tools">
+    		<a id="btQuotation" title="引用" href="#" class="hisui-linkbutton">#(..Get("引用"))#</a>
+		</div>   	    	
+    </div>  
+    <script type="text/javascript" src="../scripts/emr/js/ip.quotation.js"></script>
+</body> 
+</html>

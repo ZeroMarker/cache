@@ -1,0 +1,40 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<server>
+	; cjb 27/10/2005 43304 - copied from grouper
+	n sessionid,groupermessage,ungrouped,ungrpfinished,ungrouperstarted
+	s (ungroupermessage,ungrouped,ungrouperstarted)=""
+	s ungrpfinished="0"
+	s ungrouped="''"
+	s sessionid = %session.SessionId
+	s ungrouperstarted=$g(%request.Data("ungrouperstarted",1))
+	s ungroupermessage=$g(^TMP("WEB","BatchUnGroup"))
+	w "!!!     ungroupermessage="_$g(ungroupermessage)_"^ungrouperstarted="_$g(ungrouperstarted)
+	i $p($g(ungroupermessage),"^",1)="BatchUnGroupEnd" {
+		s ungrouped=$p($g(ungroupermessage),"^",2)
+		s ungrpfinished="1"
+		;k ^TMP("WEB","BatchUnGroup")
+	}
+</server>
+<script Language="JavaScript">
+	if ("#(ungrpfinished)#"=="1"){
+		var ungrouped=#(ungrouped)#;
+		alert("Batch Process Complete " + "\n" + "Number of episodes ungrouped:" + ungrouped);
+		if(parent.frames["TRAK_main"]) var frm = parent.frames["TRAK_main"].document.forms["fPAAdmCoding_FindBatch"];
+		if (frm) {
+			frm.BatchUnGroupMsg.value="1";
+		}
+	}
+</script>
+</HTML>

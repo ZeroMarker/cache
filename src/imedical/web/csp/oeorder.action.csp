@@ -1,0 +1,319 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+</HEAD>
+<BODY>
+<CSP:IF condition=(($l($g(%request.Data("EpisodeID",1)),"^")=1)!($p($g(%request.Data("EpisodeID",1)),"^",2)=""))>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF> 
+
+<SERVER>
+	;LOG 28264 ANA 28NOV02
+ 	n NewOrderString,EpisString,SilentMode,dummyActionItemString,AfterAction
+ 	s (NewOrderString,EpisString,dummyActionItemString,OrderItemsID,NewOrders)=""
+ 	;d %request.Set("ReceivedDateTime",%request.Get("ReceivedDateTime"))
+ 	s NewOrderString=$tr(##Class(%CSP.Page).UnescapeURL(%request.Get("NewOrderString")),"*","&")
+ 	s EpisString=##Class(%CSP.Page).UnescapeURL(%request.Get("EpisString"))
+	s AfterAction=%request.Get("AfterAction")
+	s BeforeAction=%request.Get("BeforeAction")
+	s ^zanju11("acitmstr NOString silent ")=%request.Get("ActionItemString")_" Silent "_%request.Get("SilentMode")_" NOStr "_NewOrderString
+	;s ^zpeterc($zn,"ReceivedDateTime ")=%request.Get("ReceivedDateTime")_"**"_%request.Get("ActionItemString")_"**"_NewOrderString
+	s ^zanju11("before after NO Str AcStr ")=BeforeAction_" JJ "_AfterAction_" JJ "_NewOrderString_" JJ "_%request.Get("ActionItemString")
+	s ^zanjuxyz($zn,"NOStr")=NewOrderString
+ 	i 'BeforeAction,NewOrderString="" q
+ 	;s SilentMode=""
+	d %request.Set("ReceivedDateTime",%request.Get("ReceivedDateTime"))
+ 	s SilentMode=%request.Get("SilentMode")
+	s OrderItemsID=%request.Get("OrderItemsID")
+	s %request.Data("OrderItemsID",1)=$tr(OrderItemsID,"*","&")
+	s NewOrders=%request.Get("NewOrders")
+	s %request.Data("NewOrders",1)=$tr(NewOrders,"*","&")
+ 	;s ^zanju($zn,"DisplayQuestionFlag")=%request.Get("DisplayQuestionFlag")
+  	s ^zanju($zn,"Strings",$O(^zanju($zn,"Strings",""),-1)+1)="NewOrder: "_NewOrderString_", ActItems: "_%request.Get("ActionItemString")_", Silent: "_SilentMode_", RCDAte "_%request.Get("ReceivedDateTime")_", ColDate "_%request.Get("CollectDateTime")
+	;s ^zanju($zn,"silent ")=SilentMode_" new str "_NewOrderString
+	; NewOrderString will not be blank for afteraction. else it shud be blank.
+ 	i NewOrderString'="" d
+ 	. f cc=1:1:$l(NewOrderString,$c(1))-1 d
+ 	. . s ActionItemString=""
+ 	. . s NewOrder=$p(NewOrderString,$c(1),cc)
+ 	. . s EpisodeID=$p(EpisString,$c(1),cc)
+	. . s ^zanju99("test",cc)=NewOrder_"++"_EpisodeID
+	. . d ##Class(web.OEOrder).SetActionValues(NewOrder,EpisodeID,"A",.ActionItemString,"Y",$p(%request.Get("ReceivedDateTime"),","),$p(%request.Get("ReceivedDateTime"),",",2),$p(%request.Get("CollectDateTime"),","),$p(%request.Get("CollectDateTime"),",",2))
+	. . s dummyActionItemString=dummyActionItemString_ActionItemString
+ 	. s SilentMode=%request.Get("SilentMode")
+	. s ^zanju99("Action afterUpdate")=dummyActionItemString
+ 	. d %request.Set("ActionItemString",dummyActionItemString)
+	i 'AfterAction s SilentMode="1"
+ 	w "<SCRIPT>",$c(13,10)
+	w "var SilentMode=",SilentMode,";"
+	w "var LabEpisodeID='",%request.Get("LabEpisodeID"),"';"
+	w "var loc='",%request.Get("loc"),"';"	
+	w "</SCRIPT>",$c(13,10)
+	s ^zanju($zn,"bbbb  ActionItemString")=dummyActionItemString
+	d ##Class(web.OEOrder).DisplayActionValues()
+	q
+ 
+</SERVER>
+
+</TRAK:APPLET>
+</BODY>
+</HTML>
+<script Language="JavaScript">
+
+	function UpdateClickHandler() {
+		//	alert("hello ");
+		// here set some strange value and call the tsaction with "A" and display the messages. 
+		// so this page has to reload 2 times. After they update the second time. Call a new function which does the tsadd and tsaction 
+		// in silent mode for both "B" and "A"
+		var PatientID; var EpisodeID; var mradm; var RCDateTime=""; CRDateTime=""; var DisplayQuestionFlag=0; var NewOrders="";
+		var LabFlag=0; var OEMessageFlag=0; var AllergyFlag=0; var AllergyItems=0; var InteractFlag=0; var DrugIntString=0;var ORIRowIDs=""; var OrderItemsID="";
+		var ExtCodeString="";
+		var ARCIMString="";
+		//var OldOrder="";
+		var NewOrderString=""; var ActionItemString=""; var EpisString="";
+		var patObj=document.getElementById("PatientID");
+		if (patObj) PatientID=patObj.value;
+		var mrObj=document.getElementById("mradm");
+		if (mrObj) mradm=mrObj.value;
+		var DQObj=document.getElementById("DisplayQuestionFlag");
+		if (DQObj) DisplayQuestionFlag=DQObj.value;
+		var LBObj=document.getElementById("LabFlag");
+		if (LBObj) LabFlag=LBObj.value;
+		var MSGObj=document.getElementById("OEMessageFlag");
+		if (MSGObj) OEMessageFlag=MSGObj.value;
+		var AFObj=document.getElementById("AllergyFlag");
+		if (AFObj) AllergyFlag=AFObj.value;
+		var AIObj=document.getElementById("AllergyItems");
+		if (AIObj) AllergyItems=AIObj.value;
+		var IFObj=document.getElementById("InteractFlag");
+		if (IFObj) InteractFlag=IFObj.value;
+		var DISObj=document.getElementById("DrugIntString");
+		if (DISObj) DrugIntString=DISObj.value;
+
+		var OEObj=document.getElementById("ORIRowIDs");
+		if (OEObj) ORIRowIDs=OEObj.value;
+		var OIObj=document.getElementById("OrderItemsID");
+		if (OIObj) OrderItemsID=OIObj.value;
+		
+		var NOObj=document.getElementById("NewOrders");
+		if (NOObj) NewOrders=NOObj.value;
+
+		var AIObj=document.getElementById("ActionItemString");
+		if (AIObj) ActionItemString=AIObj.value;
+		var rcdObj=document.getElementById("ReceivedDateTime");
+		if (rcdObj) RCDateTime=rcdObj.value;
+		var crdObj=document.getElementById("CollectDateTime");
+		if (crdObj) CRDateTime=crdObj.value;
+
+		var TWKFL=document.getElementById("TWKFL").value;
+		var TWKFLI=document.getElementById("TWKFLI").value;
+	
+		var OAtbl=document.getElementById("tOEOrder_Action");
+		//alert('Silent mode ' + SilentMode);
+		//alert('OAtbl: ' + OAtbl.rows.length);
+		if (SilentMode=="0") {
+			if (OAtbl){
+				var OldOrder="";
+				var StrFail = "";
+				for (var c=1; c<OAtbl.rows.length; c++) {
+					//var ECobj=OAtbl.document.getElementById("extCodez"+c);
+					var NOobj=OAtbl.document.getElementById("NewOrderz"+c);
+					var EpObj=document.getElementById("EpisodeIDz"+c);
+					if (EpObj) EpisodeID=EpObj.value;
+					var CAObj=document.getElementById("Canz"+c);
+					var COObj=document.getElementById("Continuez"+c);
+					var SEObj=document.getElementById("Selectz"+c);
+					var ACObj=document.getElementById("ActionTypez"+c);
+					//alert("NOobj.value="+NOobj.value+" EpObj.value="+EpObj.value+" CAObj.value="+CAObj.value+" COObj.value="+COObj.value);
+					//if ((SEObj)&&(SEObj.value!="")) alert(" SelObj.value="+SEObj.value);
+					if ((NOobj)&&(NOobj.value!="")) {
+						if ((CAObj)&&(CAObj.value=="1")&&(COObj)&&(COObj.value=="1")) {
+							// we can continue and have an action
+							if ((SEObj) && ((SEObj.value=="0")||((ACObj)&&(ACObj.value=="E1"))) ) {
+								// our select object is set to 'no', or is an error with 1 choice ('OK') (e1)
+								StrFail = StrFail + NOobj.value + String.fromCharCode(1);
+								//alert('select off, failing: ' + SEObj.value);
+							}
+						} else {
+							StrFail = StrFail + NOobj.value + String.fromCharCode(1); 
+							//alert('failing: ' + NOobj.value);
+						}
+					}
+				}
+				//alert('Silent=0 string : ' + NewOrderString)
+				// StrFail now contains all failed orderIDs, delimited by $C(1)
+				for (c=1; c<OAtbl.rows.length; c++) {
+					var NOobj=OAtbl.document.getElementById("NewOrderz"+c);
+					var EpObj=document.getElementById("EpisodeIDz"+c);
+					if ((NOobj) && (NOobj.value!="")&&(EpObj)&&(EpObj.value!="")) {
+						// it is NOT in our 'Fail' string
+						//alert('Fail: ' + StrFail + '\nNewOrd: ' + NewOrderString+ '\nobj: ' + NOobj.value);
+						if ((StrFail.indexOf(NOobj.value) == -1)) {
+							//alert('not in string...');
+							// it hasn't already been added
+							if ((NewOrderString.indexOf(NOobj.value) == -1)) {
+								NewOrderString=NewOrderString+NOobj.value+"^"+(String.fromCharCode(1));
+								EpisString=EpisString+EpObj.value+(String.fromCharCode(1));
+							}
+						}
+					}
+				}				
+				
+			}
+			EpisString=escape(EpisString);
+			NewOrderString=escape(NewOrderString);
+			//alert('0 StrFail: ' + StrFail);
+			//alert('0 NOString: ' + NewOrderString);
+			if (NewOrderString!="") {
+			 	var url="oeorder.action.csp?PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&mradm="+mradm+"&NewOrderString="+NewOrderString+"&ActionItemString="+""+"&EpisString="+EpisString+"&TWKFL="+TWKFL+"&TWKFLI="+TWKFLI+"&ReceivedDateTime="+RCDateTime+"&CollectDateTime="+CRDateTime+"&DisplayQuestionFlag="+DisplayQuestionFlag+"&OEMessageFlag="+OEMessageFlag+"&AllergyFlag="+AllergyFlag+"&AllergyItems="+AllergyItems+"&InteractFlag="+InteractFlag+"&DrugIntString="+DrugIntString+"&ORIRowIDs="+ORIRowIDs+"&OrderItemsID="+OrderItemsID+"&NewOrders="+NewOrders+"&LabEpisodeID="+LabEpisodeID+"&loc="+loc;
+				window.location=url;
+			 	//websys_createWindow(url,"TRAK_main");
+			} else {
+				var TWKFL=document.getElementById("TWKFL").value;
+				var TWKFLI=document.getElementById("TWKFLI").value;
+				var url="websys.csp?PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&mradm="+mradm+"&TWKFL="+TWKFL+"&TWKFLI="+TWKFLI+"&ReceivedDateTime="+RCDateTime+"&CollectDateTime="+CRDateTime+"&DisplayQuestionFlag="+DisplayQuestionFlag+"&OEMessageFlag="+OEMessageFlag+"&AllergyFlag="+AllergyFlag+"&AllergyItems="+AllergyItems+"&InteractFlag="+InteractFlag+"&DrugIntString="+DrugIntString+"&ORIRowIDs="+ORIRowIDs+"&OrderItemsID="+OrderItemsID+"&NewOrders="+NewOrders+"&LabEpisodeID="+LabEpisodeID+"&loc="+loc;
+				//alert("url 1:"+url);
+				window.location=url;
+				//websys_createWindow(url,"TRAK_main");
+				return false;
+			}
+		}
+		if (SilentMode=="1") {
+			//alert("silentmode: 1");
+			// call recursive function to go thru all mesages silently and add them as nessesary.
+			var TestSetString=""; var EpisodeString=""; var NewOrderString=""; var StrFail="";
+			var recurseFlag=0; var extCodeString=""; var recurseString=""; var doNotUpdate=0;
+			if (OAtbl){
+				for (var c=1; c<OAtbl.rows.length; c++) {
+					var NOobj=OAtbl.document.getElementById("NewOrderz"+c);
+					var EpObj=document.getElementById("EpisodeIDz"+c);
+					if (EpObj) EpisodeID=EpObj.value;
+					var ACObj=document.getElementById("ActionTypez"+c);
+					var CAObj=document.getElementById("Canz"+c);
+					var COObj=document.getElementById("Continuez"+c);
+					var SEObj=document.getElementById("Selectz"+c);
+					var ACObj=document.getElementById("ActionTypez"+c);
+					if ((NOobj)&&(NOobj.value!="")) {
+						//alert(CAObj+"  "+COObj);
+						if ((CAObj)&&(CAObj.value=="1")&&(COObj)&&(COObj.value=="1")) {
+							// we can continue and have an action
+							//if ((SEObj) && ((SEObj.value=="0")||((ACObj)&&(ACObj.value=="E1"))) ) {
+							if ((ACObj)&&(ACObj.value=="E1")||((ACObj)&&(ACObj.value=="E2")&&(SelObj)&&(SelObj.value=="0"))) {
+								// our select object is set to 'no', or is an error with 1 choice ('OK') (e1)
+								StrFail = StrFail + NOobj.value + String.fromCharCode(1);
+								//alert('select off, failing: ' + SEObj.value);
+							}
+						} 
+					}
+				}
+				for (var c=1; c<OAtbl.rows.length; c++) {
+					//alert("in");
+					//var ECobj=OAtbl.document.getElementById("extCodez"+c);
+					var NOobj=OAtbl.document.getElementById("NewOrderz"+c);
+					var EpObj=document.getElementById("EpisodeIDz"+c);
+					var CAObj=document.getElementById("Canz"+c);
+					var CONObj=document.getElementById("Continuez"+c);
+					var TSSObj=document.getElementById("MsgCodez"+c);
+					var SelObj=document.getElementById("Selectz"+c);
+					var ECObj=document.getElementById("extCodez"+c);
+					var ACObj=document.getElementById("ActionTypez"+c);
+					
+					//if (SelObj) alert(SelObj+"  "+SelObj.value);
+					if ((NOobj)&&(EpObj)&&(NOobj.value!="")&&(EpObj.value!="")) {
+						if (!(ACObj)&&(NewOrderString.indexOf(NOobj.value) == -1)&&(StrFail.indexOf(NOobj.value) == -1)) {
+							NewOrderString=NewOrderString+NOobj.value+"^"+(String.fromCharCode(1));
+							EpisodeString=EpisodeString+EpObj.value+(String.fromCharCode(1));
+						} 
+					}
+					//alert("nostr "+NewOrderString);
+					//alert(" NOObj value "+NOobj.value+' ACObj.value '+ACObj.value)
+					// ANA 16Jan02 An error on AfterDB Save is ignored since the item is already in the database and doesnt make sense.
+					if ((NOobj)&&(NewOrderString.indexOf(NOobj.value) == -1)&&(StrFail.indexOf(NOobj.value) == -1)) {
+						//alert("hello 0");
+					  if ((NOobj)&&(EpObj)&&(NOobj.value!="")&&(EpObj.value!="")&&(ACObj)&&(ACObj.value!="E1")&&(ACObj.value!="E2")) {
+						//alert("hello 1");
+						if ((CONObj)&&(CONObj.value!="0")&&(ACObj)&&(ACObj.value=="TA2")){
+							// ActionType="TA2"
+							//  if selectBox checked--TestSetString.Add Code to test set.Run recursing change status. continue wf.
+							// NewOrderString Format NewOrder_$c(1)_NewOrder_$c(1)_NewOrder
+							// // NewOrder is of Format ItemMast_*_OrderId_*_OrdStat_^
+							// EpisodeString contains EpisodeId of Patients Format EpisodeID_$c(1)_EpisodeID_$c(1)_EpisodeID
+							// extCodeString contains the External code of the item you have ordered. Not the one that action is asking you to add.
+							// TestSetString contains the External code of the item that action is asking you to add.Format A030_$c(1)_""_$c(1)_A020
+							NewOrderString=NewOrderString+NOobj.value+"^"+(String.fromCharCode(1));
+							EpisodeString=EpisodeString+EpObj.value+(String.fromCharCode(1));
+							extCodeString=extCodeString+ECObj.value+(String.fromCharCode(1));
+							if ((TSSObj)&&(TSSObj.value!="")&&(SelObj)&&(SelObj.value=="1")) {
+								// TestSetString Format A030_$c(1)_""_$c(1)_A020 where A030 etc is the ExternalCode of an item in medtrak
+								TestSetString=TestSetString+TSSObj.value+(String.fromCharCode(1));
+							} else {
+								TestSetString=TestSetString+""+(String.fromCharCode(1));
+							}
+						}
+						if ((CONObj)&&(CONObj.value!="0")&&(TSSObj)&&(TSSObj.value!="")&&(ACObj)&&((ACObj.value=="TA0")||(ACObj.value=="TA1"))) {
+							// ActionTpye="TA0" OR ActionTpye="TA1"
+							// TestSetString . Add Code to test set. Run recursing change status. continue wf.
+							NewOrderString=NewOrderString+NOobj.value+"^"+(String.fromCharCode(1));
+							EpisodeString=EpisodeString+EpObj.value+(String.fromCharCode(1));
+							extCodeString=extCodeString+ECObj.value+(String.fromCharCode(1));
+							TestSetString=TestSetString+TSSObj.value+(String.fromCharCode(1));  
+						}
+						if ((ACObj)&&(ACObj.value=="I")) {
+							NewOrderString=NewOrderString+NOobj.value+"^"+(String.fromCharCode(1));
+							EpisodeString=EpisodeString+EpObj.value+(String.fromCharCode(1));
+						}
+					  }else if ((ACObj)&&(ACObj.value=="E2")&&(SelObj)&&(SelObj.value=="1")) { 
+						//alert("hello 2");
+							NewOrderString=NewOrderString+NOobj.value+"^"+(String.fromCharCode(1));
+							EpisodeString=EpisodeString+EpObj.value+(String.fromCharCode(1));
+					  }
+					}
+				}
+				//alert("aah.. U've broken it all!!");
+				//alert('silent StrFail: ' + StrFail);
+				//alert('silent NOString: ' + NewOrderString);
+				//alert('EpisodeString: ' + EpisodeString);
+				EpisodeString=escape(EpisodeString);
+				NewOrderString=escape(NewOrderString);
+				extCodeString=escape(extCodeString);
+				TestSetString=escape(TestSetString);
+				if (NewOrderString!="") {
+				/////////////if (doNotUpdate==0) {
+					var url="oeorder.updateaction.csp?NewOrderString="+NewOrderString+"&EpisodeString="+EpisodeString+"&extCodeString="+extCodeString+"&TestSetString="+TestSetString+"&recurseString="+recurseString+"&PatientID="+PatientID+"&mradm="+mradm+"&TWKFL="+TWKFL+"&TWKFLI="+TWKFLI+"&ReceivedDateTime="+RCDateTime+"&CollectDateTime="+CRDateTime+"&DisplayQuestionFlag="+DisplayQuestionFlag+"&OEMessageFlag="+OEMessageFlag+"&AllergyFlag="+AllergyFlag+"&AllergyItems="+AllergyItems+"&InteractFlag="+InteractFlag+"&DrugIntString="+DrugIntString+"&ORIRowIDs="+ORIRowIDs+"&OrderItemsID="+OrderItemsID+"&NewOrders="+NewOrders+"&LabEpisodeID="+LabEpisodeID+"&loc="+loc;
+					//alert("aah.. U've broken it al");
+					//alert(" Silent=1 "+url);
+					window.location=url;
+					//websys_createWindow(url,"TRAK_main");
+					//top.frames["TRAK_hidden"].location.href=url
+				} else {
+					var url="websys.csp?PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&mradm="+mradm+"&TWKFL="+TWKFL+"&TWKFLI="+TWKFLI+"&DisplayQuestionFlag="+DisplayQuestionFlag+"&OEMessageFlag="+OEMessageFlag+"&AllergyFlag="+AllergyFlag+"&AllergyItems="+AllergyItems+"&InteractFlag="+InteractFlag+"&DrugIntString="+DrugIntString+"&ORIRowIDs="+ORIRowIDs+"&OrderItemsID="+OrderItemsID+"&NewOrders="+NewOrders+"&LabEpisodeID="+LabEpisodeID+"&loc="+loc;
+					//alert("Silent=1 "+url);
+					window.location=url;
+					//websys_createWindow(url,"TRAK_main");
+					return false;
+				}
+			}
+		}
+
+	}
+	function checkKey(key) {
+		var targ;
+		if (key.target) targ = key.target; 
+		else if (key.srcElement) targ = key.srcElement; 
+		var keyVal=key.keyCode
+		if(keyVal==8){
+			if (targ) targ[0].selected=true;
+			key.returnValue=false;
+			return false;
+		}	
+	}
+</script>

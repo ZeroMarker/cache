@@ -1,0 +1,151 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ quit 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+	
+
+                s componentxml = "\scripts\nurse\new\"
+                s componentxmlbackup = "\scripts\nurse\backup\" 
+                s componentcsp = "\csp\"
+                s componentjs  = "\scripts_gen\"
+                s status=1
+                s dataid=-1  ;模板流水ID号
+#;              s dirnamexml = ##class(NurMp.NurMpMoud).GetPhysicalPath(componentxml,"")
+                s dirnamexml = ##class(NurMp.Template).getFilePath(componentxml,"")
+                ; w dirnamexml 上传的xml文件存到哪个物理路径下
+#;                s dirnamecsp = ##class(NurMp.NurMpMoud).GetPhysicalPath(componentcsp,"")
+                s dirnamecsp = ##class(NurMp.Template).getFilePath(componentcsp,"")
+                ; w dirnamecsp 上传的csp文件存到哪个物理路径下
+#;                s dirnamejs = ##class(NurMp.NurMpMoud).GetPhysicalPath(componentjs,"")
+                s dirnamejs = ##class(NurMp.Template).getFilePath(componentjs,"")
+                ; w dirnamexmlbackup 升级的xml备份到那个物理路径下
+                s dirnamexmlbackup = ##class(NurMp.Template).getFilePath(componentxmlbackup,"")
+
+               
+                s count=1
+                s count=%request.CountMimeData("FileStream")
+                try{
+	            	f num=1:1:count
+	            	{
+		        		s fileStream = %request.MimeData("FileStream",num)
+                		; 获取文件名
+                		
+                		s FileName=%request.MimeData("FileStream",num).FileName   
+                		s FileSize=%request.MimeData("FileStream",num).Size
+                		s FileContentType=%request.MimeData("FileStream",num).ContentType 
+                		s file = ##class(%FileBinaryStream).%New()
+                		if (FileName["csp"){
+	                		try{
+	                			s file.Filename=dirnamecsp_FileName
+	                			Do fileStream.Rewind()
+                    			While('fileStream.AtEnd){
+	                
+                    				s bytes = fileStream.Read(1024)
+                    				Do file.Write(bytes)
+                				}
+                				Do file.Flush()
+                				s sc= file.%Save()
+                				s WebPath=##class(NurMp.Template).getWebPath()
+                				s status= $System.CSP.LoadPage(WebPath_"/csp/"_FileName,"/displaylog=0/displayerror=1")
+
+	                    		i ($System.Status.IsError(status)) {
+		                 			
+	                     			//s re=##class(%File).Delete(dirnamecsp_fileStream.FileName)
+	                     			
+	                     			s compileBad = ##class(%Exception.General).%New("compileBad","-1",,"csp编译失败:"_$System.Status.DisplayError(status))
+	                     			throw compileBad
+		                 		}
+		                        
+		                 		s TCIndentity=%request.Data("TCIndentity",1)
+		                 		s TCIndent=$ZConvert(TCIndentity,"U")
+		                 
+		                 		s customJsFilePath = dirnamejs_%request.Data("Indentity",1)_".js"
+		                 		If '##class(%File).Exists(customJsFilePath)
+		                 		{ 
+		                 			s customfile = ##class(%File).%New(customJsFilePath)
+						 			d customfile.Open("WNSK\UTF8\")
+						 			d customfile.WriteLine("///自定义")
+						 			d customfile.WriteLine("function ItemBeforeInit(){}")
+						 			d customfile.WriteLine("function ItemAfterInit(){}")
+						 			d customfile.WriteLine("function ItemBeforeSetValue(){}")
+						 			d customfile.WriteLine("function ItemAfterSetValue(){}")
+						 			d customfile.Close()	
+		                 		}
+		                 
+	                     		s rowid=""
+	                     		s rowid=$o(^NurMp.TemplateCategoryI("Indentity"," "_TCIndent,rowid))
+	                     		s Recid=##class(NurMp.TemplateCategory).%OpenId(rowid)
+	                     		s Recid.IsPublish="true"
+	                     		d Recid.%Save()
+	                     		
+	                     		s IsBackUp=%request.Data("IsBackUp",1)
+	                     		if ($zcvt(IsBackUp,"U") = "TRUE")
+	                     		{		
+		                     		s backupre = ##class(NurMp.Template).BackUp(dirnamexmlbackup,TCIndent)
+		                     		if (backupre'=0)
+		                     		{
+			                     		s backupBad = ##class(%Exception.General).%New("backupBad","-1",,"xml备份失败")
+	                     				throw backupBad
+		                     		}
+	                     		}
+	                     		
+	                		}catch ex{
+		                
+		                 		d file.%Close()
+	                     		throw ex
+		            		}
+	            		}
+                		else{
+                			s file.Filename=dirnamexml_fileStream.FileName
+                			s XmlFile=dirnamexml_fileStream.FileName
+                 			Do fileStream.Rewind()
+                			While('fileStream.AtEnd){
+	                
+                    			s bytes = fileStream.Read(1024)
+                    			Do file.Write(bytes)
+                			}
+                			Do file.Flush()
+                			s sc= file.%Save()
+                			s GetFilePath=dirnamexml_FileName
+                			s ^NW(201810191)=GetFilePath
+                			s Indentity=%request.Data("Indentity",1)
+                			s ^NW(201810192)=Indentity
+                			s TCIndentity=%request.Data("TCIndentity",1)
+                			s ^NW(201810181019)=TCIndentity
+                    
+                		}
+                    
+                		Do file.%Close()
+                		s file="" 
+	            	}
+               
+                	if status=1{
+	            		s d= ##class(NurMp.Template).save(GetFilePath,Indentity, TCIndentity)
+	            		s newArray=##class(NurMp.NurCacheJSON).Decode(d)
+	            		s newMsg= newArray.GetAt("msg")
+	                    s newStatus= newArray.GetAt("status")
+	                    s dataid= newArray.GetAt("data")
+	                    i (newStatus="-1"){
+	                    w ##class(NurMp.ErrorMsg).ReturnMsgJson(newMsg,newStatus)
+	                    Break
+	                    }    
+                    }
+                	//保存模板的共享信息
+	            	d ##class(NurMp.Share).save(TCIndentity)
+                	//保存模板的关联模板
+	            	d ##class(NurMp.TemplateDBReference).save(TCIndentity)
+                
+                	s Msg="",status="0"
+                	w ##class(NurMp.ErrorMsg).ReturnMsgJson(Msg,status,dataid)
+		        }
+		        catch myerr{
+			    	
+                    s Msg=myerr.Name_"^"_myerr.Code_"^"_myerr.Data_"^"_myerr.Location
+                   	w ##class(NurMp.ErrorMsg).ReturnMsgJson(Msg,"-1")
+			    }
+	                
+	             
+                
+</script>
+

@@ -1,0 +1,75 @@
+<HTML>
+<HEAD>
+	<TITLE>PDFÉú³É</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script language="cache" runat="server">
+  		s episodeID = $Get(%request.Data("EpisodeID","1"),"")
+  		s userID = $Get(%request.Data("UserID","1"),"")
+  	 	s patientID = ""
+  		s patName = ""
+  		s patSex = ""
+  		s currentDept = ""
+  		s patMedRecordNo = ""
+  		s patRegNo = ""
+  		if ((episodeID '= "") && (episodeID '= "$c(0)"))
+  		{
+  			s patientID = ##class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+  			s patName = ##class(EPRservice.HISInterface.PatientInfoAssist).Name(patientID)
+  			s patSex = ##class(EPRservice.HISInterface.PatientInfoAssist).Gender(patientID)
+  			s patSex = $P(patSex, "^", 3)
+  			s currentDept = ##class(EPRservice.HISInterface.PatientInfoAssist).CurrentDept(episodeID)
+  			s currentDept = $P(currentDept, "^", 3)
+  			s patMedRecordNo = ##Class(DHCEPRFS.BL.HISInfo.BLPatientInfo).GetMedRecordNo(patientID,"",episodeID)
+  			s patRegNo = ##Class(DHCEPRFS.BL.HISInfo.BLPatientInfo).GetRegNo(patientID)
+  		}
+		s ctlocid=$Get(%request.Data("CTLocID","1"),"")
+		s ssgroupid = $Get(%request.Data("SSGroupID","1"),"")
+		s timeOutItemID = $Get(%request.Data("TimeOutItemID","1"),"")
+		s schemeID = $Get(%request.Data("SchemeID","1"),"")	
+		s schemeType = $Get(%request.Data("SchemeType","1"),"")	
+		s specialFlag = $Get(%request.Data("SpecialFlag","1"),"")
+		s specialParam = $Get(%request.Data("SpecialParam","1"),"")
+		s versionTypeCode = $Get(%request.Data("VersionTypeCode","1"),"")	
+		s needPageQueue = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("NeedPageQueue")
+		s needPageQueue = ##Class(DHCEPRFS.Util.StringHelper).FilterSpecialChar(needPageQueue)
+	</script>	
+	<script type="text/javascript">
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var userID = '#(userID)#';
+		var patName = '#(patName)#';
+		var patSex = '#(patSex)#';
+		var currentDept = '#(currentDept)#';
+		var patMedRecordNo = '#(patMedRecordNo)#';
+		var patRegNo = '#(patRegNo)#';
+		var ctlocid = '#(ctlocid)#';
+		var ssgroupid = '#(ssgroupid)#';
+		var needPageQueue = '#(needPageQueue)#';
+		var schemeID = '#(schemeID)#';
+		var schemeType = '#(schemeType)#';
+		var specialFlag = '#(specialFlag)#';
+		var specialParam = '#(specialParam)#';
+		var versionTypeCode = '#(versionTypeCode)#';
+		var timeOutItemID = '#(timeOutItemID)#';
+		timeOutItemID = timeOutItemID.replace('_','#');
+	</script>
+</HEAD>
+
+<BODY>
+	<script type="text/javascript" src="../scripts/epr/js/FS.PDFCreateMethod.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/FS.PDFCreate.js"></script>
+	<script type = "text/javascript">
+		Ext.Ajax.timeout = 1000 * 60 * 2;
+		if (timeOutItemID == ""){
+			beginPDFCreate();	
+		}
+		else{
+			//CG07_CD_7_33
+			timeOut(timeOutItemID);	
+		}
+	</script>
+</BODY>
+</HTML>
+

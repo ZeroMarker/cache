@@ -1,0 +1,174 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+<SERVER>
+ n PatientID,EpisodeID,mradm,ChartBookID,PAAdmCodingID,GroupID,apptID
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s ^XXTMP=EpisodeID
+ ; 59250
+ s apptID=$g(%request.Data("apptID",1))
+ s ShowCharts=%request.Get("ShowCharts")
+ ; 55289 - TRY and get a current inpatient admission....
+ i EpisodeID="",PatientID'="" d
+ . s found=0,adm=""
+ . s typ="" f  s typ=$o(^PAPERdr(+PatientID,"ADM",typ)) q:typ=""  q:found  d
+ . . f  s adm=$o(^PAPERdr(+PatientID,"ADM",typ,adm),-1) q:adm=""  q:found  d
+ . . . i $p($g(^PAADM(adm)),"^",20)="A" s found=1,(EpisodeID,%request.Data("EpisodeID",1))=adm
+ ; 59418 allow all episodes to be selected
+ s ALLEpisodes=%request.Get("ALLEpisodes")
+ i ALLEpisodes,EpisodeID="" d
+ . ; must grab ONE EpisodeID
+ . s typ=$o(^PAPERdr(+PatientID,"ADM",""),-1) q:typ=""
+ . s adm=$o(^PAPERdr(+PatientID,"ADM",typ,""),-1)
+ . s (EpisodeID,%request.Data("EpisodeID",1))=adm
+ s DischID=%request.Get("DischID")
+ s CurrDischID=%request.Get("CurrDischID")
+ s doctype=%request.Get("doctype")
+ s DischEpisodes=%request.Get("DischEpisodes")
+ i DischID="" s DischID=%request.Get("CurrDischID")
+ i DischID'="",DischEpisodes="" s DischEpisodes=##class(web.PAAdmDischargeSummary).GetEpisodesFromDischID(DischID)
+ s mradm=%request.Get("mradm")
+ ; If have not all three of PatientID, EpisodeID and mradm then derive them from each other ...
+ i PatientID="",EpisodeID'="" s (PatientID,%request.Data("PatientID",1))=##Class(web.PAAdm).GetPatientId(EpisodeID)
+ i 'EpisodeID,mradm s (EpisodeID,%request.Data("EpisodeID",1))=##Class(web.MRAdm).GetEpisodeId(mradm)
+ i mradm="",EpisodeID'="" s (mradm,%request.Data("mradm",1))=##Class(web.PAAdm).GetMRAdm(%request.Get("EpisodeID"))
+ s ChartBookID=%request.Get("ChartBookID")
+ s PAAdmCodingID=%request.Get("PAAdmCodingID")
+ s OperRoomID=%request.Get("OperRoomID")
+ n count,obj,leftlnk,mainlnk
+
+ ; Log 60813 - PJC - Allow Chart Books to be defined against a Discharge Summary Document Type.
+ n objDocType,doctypeID
+ i doctype'="" d
+ . s doctypeID=##Class(epr.CTDischargeSummaryType).GetIdFromCodeOrDescription(doctype)
+ . s objDocType=##Class(epr.CTDischargeSummaryType).%OpenId(doctypeID)
+ . i objDocType d
+ . . i objDocType.DSTEPRChartBookDR  s ChartBookID=objDocType.DSTEPRChartBookDR.%Id()
+ . . d objDocType.%Close()
+
+ ; Log 44164 - AI - 02-06-2004 : If the ChartBookID is not passed through, check for a Discharge Summary ChartBook before the Main ChartBook.
+ i ChartBookID="" d
+ . i (($d(%request.Data("DischEpisodes",1)))!($d(%request.Data("DischID",1)))) s ChartBookID=##Class(epr.GroupSettings).GetDisSumChartBook(%session.Get("LOGON.GROUPID"))
+ . i ChartBookID'="" s %request.Data("ChartBookID",1)=ChartBookID
+ ; end Log 44164
+ i ChartBookID="" d
+ .s ChartBookID=$G(^DHCPEDataEx("DHCPEUser","ChartBook",%session.Get("LOGON.USERID")))
+ i ChartBookID="" d
+ . s GroupID=$g(%session.Data("LOGON.GROUPID"))
+ . s ChartBookID=$G(^DHCPEDataEx("DHCPEGroup","ChartBook",GroupID))
+ 
+ i ChartBookID="" d
+ . s GroupID=$g(%session.Data("LOGON.GROUPID"))
+ . &SQL(SELECT MainChartBookDR INTO :ChartBookID FROM epr.GroupSettings WHERE GroupDR = :GroupID)
+ . i SQLCODE s ChartBookID=""
+ s mainlnk="dhcpe.epr.chartbook.show.csp?ChartBookID="_ChartBookID_"&ShowCharts="_ShowCharts_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&List=R&PAAdmCodingID="_PAAdmCodingID_"&OperRoomID="_OperRoomID_"&DischID="_%request.Get("DischID")_"&CurrDischID="_CurrDischID_"&DischEpisodes="_DischEpisodes_"&doctype="_%request.Get("doctype")_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&apptID="_apptID_"&ConsultID="_$g(%request.Data("ConsultID",1))
+ s leftlnk=""
+ s epselect=""
+ s ShowTimeline=0
+ s obj=##Class(epr.ChartBook).%OpenId(ChartBookID)
+ i obj {
+	 s ShowTimeline=obj.ShowTimeline
+ 	s count=obj.ChartList.Count()
+ 	if count=1,obj.ChartList.GetAt(1) s mainlnk="epr.chart.csp?ChartID="_obj.ChartList.GetAt(1).%Id()_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&PAAdmCodingID="_PAAdmCodingID_"&OperRoomID="_OperRoomID_"&DischID="_%request.Get("DischID")_"&CurrDischID="_CurrDischID_"&DischEpisodes="_DischEpisodes_"&doctype="_%request.Get("doctype")_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&ConsultID="_$g(%request.Data("ConsultID",1))
+ 	s count=obj.LeftChartList.Count()
+ 	if count=1,obj.LeftChartList.GetAt(1) s leftlnk="epr.chart.csp?ChartID="_obj.LeftChartList.GetAt(1).%Id()_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&PAAdmCodingID="_PAAdmCodingID_"&OperRoomID="_OperRoomID_"&DischID="_%request.Get("DischID")_"&CurrDischID="_CurrDischID_"&DischEpisodes="_DischEpisodes_"&doctype="_%request.Get("doctype")_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&ConsultID="_$g(%request.Data("ConsultID",1))
+ 	if count>1 s leftlnk="epr.chartbook.show.csp?ChartBookID="_ChartBookID_"&ShowCharts="_ShowCharts_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&List=L&PAAdmCodingID="_PAAdmCodingID_"&OperRoomID="_OperRoomID_"&DischID="_%request.Get("DischID")_"&CurrDischID="_CurrDischID_"&DischEpisodes="_DischEpisodes_"&doctype="_%request.Get("doctype")_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&apptID="_apptID_"&ConsultID="_$g(%request.Data("ConsultID",1))
+ 	d obj.%Close()
+ }
+ //PC
+ // ONLY DO THIS IF NOT DISCHARGE SUMMARY...
+ i ShowTimeline,%request.Get("DischEpisodes")="",DischID="" s epselect="epr.clintimeline.csp?&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&ALLEpisodes="_ALLEpisodes_"&mainlnk="_$zcvt(mainlnk,"O","URL")_"&leftlnk="_$zcvt(leftlnk,"O","URL")
+ //PC
+
+</SERVER>
+<SCRIPT language="Javascript">
+function FrameResize() {
+	var obj=document.getElementById("dataframeset");
+	if (obj) {
+		var wdt=obj.offsetWidth;
+		wdt/=3;
+		obj.cols=wdt+",*";
+	}
+}
+
+function FrameResizeHeader() {
+	var win=document.frames["patframe"];
+	if (win) {
+		var obj=document.getElementById("PageContent");
+		if (obj) {
+			var hgt=obj.offsetHeight;
+			alert(hgt);
+		}
+	}
+}
+function ResizePABanner() {
+	var eprfrm = document.getElementById("bookframeset");
+	if ((eprfrm)&&(eprfrm.rows!="0,*")) {
+		var pat=frames['patframe'];
+		if (pat.document.readyState!="complete") {
+			self.setTimeout(ResizePABanner,500);
+		} else {
+			var patsize=pat.window.document.getElementById("PageContent").offsetHeight;
+			eprfrm.rows=patsize+',*';
+		}
+	}
+}
+function ResizeEPsPABanner() {
+	var eprfrm = document.getElementById("bookframeset");
+	if ((eprfrm)&&(eprfrm.rows!="0,*")) {
+		var pat=frames['patframe'];
+		var eps=frames['epselect'];
+		if ( (pat.document.readyState!="complete") || (eps.document.readyState!="complete") ) {
+			self.setTimeout(ResizeEPsPABanner,500);
+		} else {
+			var patsize=pat.window.document.getElementById("PageContent").offsetHeight;
+			var epssize=eps.window.document.getElementById("PageContent").offsetHeight;
+			var rows=eprfrm.rows.split(',');
+			rows[0]=patsize;
+			rows[1]=epssize;
+			eprfrm.rows=rows.join(',');
+			//frames['epselect'].SelectOneEp("#(EpisodeID)#","1");
+			//frames['epselect'].refreshEPR("#(EpisodeID)#");
+		}
+	}
+}
+</SCRIPT>
+<CSP:IF condition=(epselect="")>
+	<FRAMESET rows="40,*" BORDER="0" frameborder="no" framespacing="0" name="bookframeset" id="bookframeset" onload="ResizePABanner();" >
+		<FRAME name="patframe" BORDER="0" id="patframe" frameborder="no" framespacing="0" noresize
+		src="websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Banner&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#"></FRAME>
+	<CSP:IF condition=(leftlnk'="")>
+		<FRAMESET cols="50%,*" scrolling="auto" name="dataframeset" id="dataframeset">
+			<FRAME name="leftdata" FRAMEBORDER="1" id="leftdata" src="#(leftlnk)#" framespacing="0"></FRAME>
+	</CSP:IF>
+			<FRAME name="maindata" FRAMEBORDER="1" id="maindata" src="#(mainlnk)#" framespacing="0"></FRAME>
+	<CSP:IF condition=(leftlnk'="")>
+		</FRAMESET>
+	</CSP:IF>
+	</FRAMESET>
+</CSP:IF>
+
+<CSP:IF condition=(epselect'="")>
+	<FRAMESET rows="40,40,*"  BORDER="0" frameborder="0" framespacing="0" name="bookframeset" id="bookframeset" onload="ResizeEPsPABanner();" >
+		<FRAME name="patframe" id="patframe" frameborder="no" framespacing="0" noresize
+		src="websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Banner&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#"></FRAME>
+		<FRAME name="epselect" id="epselect" src="#(epselect)#" frameborder="no" framespacing="0"></FRAME>
+	<CSP:IF condition=(leftlnk'="")>
+		<FRAMESET cols="50%,*" scrolling="auto" name="dataframeset" id="dataframeset">
+			<FRAME name="leftdata" FRAMEBORDER="1" id="leftdata" src="" framespacing="0"></FRAME>
+	</CSP:IF>
+			<FRAME name="maindata" FRAMEBORDER="1" id="maindata" src="" framespacing="0"></FRAME>
+	<CSP:IF condition=(leftlnk'="")>
+		</FRAMESET>
+	</CSP:IF>
+	</FRAMESET>
+</CSP:IF>
+</html>

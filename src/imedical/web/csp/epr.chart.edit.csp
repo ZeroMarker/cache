@@ -1,0 +1,60 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>Chart Setup Page</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY><DIV id="PageContent">
+<SERVER>
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n ChartID,obj,frm,profiles,noprofiles
+ s (profiles,noprofiles)=""
+ s ChartID=%request.Get("ChartID")
+ i ChartID d
+ . s chrt=##class(epr.Chart).%OpenId(ChartID) q:'chrt
+ . d %request.Set("name",chrt.Name)
+ . d %request.Set("student",chrt.Student)
+ . d %request.Set("DisplayConsultBanner",chrt.DisplayConsultBanner)
+ . d %request.Set("IsHistoryPage",chrt.IsHistoryPage)
+ . d %request.Set("ChartColour",chrt.ChartColour)
+ . d %request.Set("TextColour",chrt.TextColour)
+ . d %request.Set("SELChartColour",chrt.SELChartColour)
+ . d %request.Set("SELTextColour",chrt.SELTextColour)
+
+ //i ChartID="" w "No value has been passed to the ChartID variable" q
+ //Get a List of all Profile Parameters for use in javascript functions
+ s obj=##Class(%Library.ResultSet).%New("epr.CTChartItemType:Find")
+ i obj {
+ 	d obj.Execute()
+	f  {
+		q:'obj.Next()
+ 		if obj.GetDataByName("CITClass")="epr.CTProfileParams" {
+ 			s profiles=profiles_$p(obj.GetDataByName("CITCode")," ",1)_","
+ 		} else {
+ 			s noprofiles=noprofiles_$p(obj.GetDataByName("CITCode")," ",1)_","
+ 		}
+ 	}
+ }
+ i $l(profiles)>0 s profiles=$e(profiles,1,$l(profiles)-1)
+ i $l(noprofiles)>0 s noprofiles=$e(noprofiles,1,$l(noprofiles)-1)
+ w "<BR>"_$c(13,10)
+ w "<SCRIPT language=JavaScript>"_$c(13,10)
+ w "var profiles="""_$g(profiles)_""""_$c(13,10)
+ w "var noprofiles="""_$g(noprofiles)_""""_$c(13,10)
+ w "</SCRIPT>"_$c(13,10)
+ ;
+ s frm=##Class(websys.Component).OpenName("epr.Chart.Edit")
+ i frm d frm.Show()
+</SERVER>
+<!--This script must go after noprofiles has been declared-->
+<!--TN: 1-Nov-2002 should not need to call call here... already called in epr.Chart.Edit component.Show()
+	also allow custom script for this component to override system script -->
+<!--SCRIPT SRC="../scripts/epr.chart.Edit.js"></SCRIPT-->
+</DIV></BODY>
+</HTML>

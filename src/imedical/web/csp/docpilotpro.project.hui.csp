@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!--docpilotpro.project.hui.csp HISUI立项/项目修改--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+iframe{
+	vertical-align:top;
+	display:block;
+}
+/*a{
+	margin-right:20px !important;
+}*/
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+</style>
+<Server>
+s PPRowId=%request.Get("PPRowId") 
+s Flag=%request.Get("Flag")
+s ArchivesFilesNoStart=+$G(^DHCDocPilotSeting("ArchivesFilesNoStart"))
+s PilotProConfigStr=##class(web.PilotProject.DHCDocPPGroupSeting).GetInitInfo()
+s InitProjectEntity=##class(web.PilotProject.DHCDocPilotProCommon).GetClassPropertyList("web.PilotProject.PPA.DHCDocPilotProject")
+s HospName=$p(^CT("HOSP",%session.Get("LOGON.HOSPID")),"^",2)
+s PrintPath=##class(web.UDHCJFCOMMON).getpath("","")
+w "<input id='OtherDepStr' name='OtherDepStr' type='hidden' value=''>",$C(13,10)
+w "<input id='OtherDepartment' name='OtherDepStr' type='hidden' value=''>",$C(13,10)
+/*xml*/
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+</Server>
+</head>
+<body>
+	<csp:Include Page="docpilotpro.project.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			PPRowId:"#(PPRowId)#",
+			Flag:"#(Flag)#",
+			ArchivesFilesNoStart:"#(ArchivesFilesNoStart)#",
+			PilotProConfigStr:"#(PilotProConfigStr)#",
+			InitProjectEntity:"#(InitProjectEntity)#",
+			PrintPath:"#(PrintPath)#",
+			HospName:"#(HospName)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.JS"></script>
+	<script type="text/javascript" src="../scripts/DocPilotPro/Project.hui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<script language="JavaScript">
+</script>
+</HEAD>
+<BODY>
+
+<server>
+
+ n Volids,ReqLocId,pid
+ s (Volids,ReqLocId,pid)=""
+ s Volids=%request.Get("VolumeIDs")
+ s pid=%request.Get("PatientID")
+ i pid="" s pid=%request.Get("PatientIDs")
+ s url="rtrequest.edit.csp?PatientID="_%request.Get("PatientID")_"&ReqIds="_"&RTREQReqLocDR="_##Class(websys.Conversions).EscapeUrl(%request.Get("ReqLoc"))_"&CreateTransactions="_%request.Get("CreateTransactions")_"&Page="_%request.Get("Page")_"&hiddenTelNo="_%request.Get("hiddenTelNo")_"&NewTransFlag="_%request.Get("NewTransFlag")_"&RTREQReqLocDR="_%request.Get("MRLocationID")_"&CurrHospitalDR="_%request.Get("CurrHospitalDR")_"&SinglePatReqIds="_%request.Get("VolumeIDs")_"&MRReturnDate="_%request.Get("MRReturnDate")
+ ;s ^zpeterc($zn,"url")=%request.Get("ReqLoc")
+ i Volids'=""  d
+ . w "<script>"
+ . w "if (parent.frames['TRAK_main']) {"
+ . ;w "alert(parent.frames['TRAK_main']);"
+ . w "parent.frames['TRAK_main'].frames[1].location='"_url_"';"
+ . w "} else {"
+ . ;w "alert(url);"
+ . w "window.location='"_url_"';"
+ . w "}"
+ . w "</script>"
+ i Volids="" d
+ . w "<script>"
+ . w "if (window.opener) {"
+ . w "window.close();"
+ . ;w "document.fRTVolume_MoveRequest.target=""TRAK_main"";"
+ . w "window.opener.document.FindClickHandler;"
+ . w "}"
+ . w "</script>"
+ ;w "<script>"
+ ;w "if (parent.frames['TRAK_main']) {"
+ ;;w "alert(parent.frames['TRAK_main']);"
+ ;w "parent.frames['TRAK_main'].frames[1].location='"_url_"';"
+ ;w "} else {"
+ ;;w "alert(url);"
+ ;w "window.location='"_url_"';"
+ ;w "}"
+ ;w "</script>"
+ ;
+ ;s %response.TraceDump=1
+</server>
+
+</BODY>
+</HTML>
+
+
+

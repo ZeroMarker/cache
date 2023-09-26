@@ -1,0 +1,57 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+s action = $Get(%request.Data("action",1))
+s str = $Get(%request.Data("str",1))
+s bookId = $Get(%request.Data("bookId",1))
+s start = $Get(%request.Data("start",1))
+s limit = $Get(%request.Data("limit",1))
+s AcctSubjID = $Get(%request.Data("AcctSubjID",1))
+s AcctCheckTypeID = $Get(%request.Data("AcctCheckTypeID",1))
+s IsValid = $Get(%request.Data("IsValid",1))
+
+	s acctbookid=$Get(%request.Data("bookID",1))
+	s menuCode=$Get(%request.Data("code",1))
+	s schemName=$Get(%request.Data("name",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s schemDesc=$Get(%request.Data("desc",1))
+	s descs=$Get(%request.Data("descs",1))
+	s SchemCode="ZB1201"
+	
+i action = "GetAcctSubj" d
+    .w ##Class(herp.acct.report.uAcctSubLedgerAccount).GetAcctSubj(start, limit, str, bookId)
+
+i action = "GetCheckType" d
+    .w ##Class(herp.acct.report.uAcctSubLedgerAccount).GetCheckType(start, limit, str, AcctSubjID,bookId)
+
+i action = "GetCheckItem" d
+    .w ##Class(herp.acct.report.uAcctSubLedgerAccount).GetCheckItem(start, limit, str, AcctCheckTypeID, IsValid,bookId,AcctSubjID)
+   
+i action = "list" d
+	.w ##class(herp.acct.udata.uAcctQrySchem).ListSLA(start,limit,acctbookid)
+
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctQrySchem).InsertInfo(menuCode, schemName, SchemCode, schemDesc, acctbookid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctQrySchem).UpdateRec(rowid, SchemCode, menuCode, schemName, descs, acctbookid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctQrySchem).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"  
+</script>

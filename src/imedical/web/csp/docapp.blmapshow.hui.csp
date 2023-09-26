@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<!--设置 docapp.blmapshow.hui.csp 病理申请单展示-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="LODOP"/>
+<script language="Cache" runat="server">
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+</script>
+<style type="text/css">
+xmp {
+    margin: 0px 0px;
+}
+.pt-butttom{border:1px solid #fff;}
+.pt-butttom a{
+	margin:8px 0px 0px 60px;
+}
+.pt-butttom .l-btn-text{
+	min-width:60px
+}
+</style>
+<link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcapp/css/piscom.css" rel="stylesheet">
+
+<Server>
+ s DoctorID=##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
+ ///是否为实习生
+ s PracticeFlag=##class(web.DHCOEOrdItem).practice(DoctorID)
+</Server>
+</head>
+<SCRIPT language = 'javascript' >
+	var LgUserID = session['LOGON.USERID'];   /// 用户ID
+	var LgCtLocID = session['LOGON.CTLOCID']; /// 科室ID
+	var LgGroupID = session['LOGON.GROUPID']; /// 安全组ID
+	var LgHospID=session['LOGON.HOSPID'];
+	var PracticeFlag="#(PracticeFlag)#";
+</SCRIPT> 
+<body>
+	<div id="mainPanel" class="hisui-layout" fit="true"> 
+		<div data-options="region:'center',headerCls:'panel-header-gray'" border="false">
+			<div id="mPanel" class="hisui-panel" id ="ItemListTitle" title="MapDesc" style="min-width:400px;height:150px;padding:0px 10px 20px 10px;" data-options="headerCls:'panel-header-gray'">
+				<table id="itemList" border="1" cellspacing="0" cellpadding="1" class="item-table"></table>
+			</div>
+			<div id="TesItemID"></div>
+	<Server>
+	s EpisodeID=%request.Get("EpisodeID")
+	s MapCode=%request.Get("MapCode")
+	s MapDesc=%request.Get("MapDesc")
+	s PisID=%request.Get("itemReqID")
+	s itemReqID=%request.Get("itemReqID")
+	s mListDataDoc=%request.Get("ARCIMStr")
+	s ARCIM=%request.Get("ARCIM")
+	s pid=%request.Get("pid")
+	s Oeori=%request.Get("Oeori")
+	if (Oeori'=""){
+		s ID=$o(^DHCAPPPM(0,"OrdItem",Oeori,""))
+		if (ID'=""){
+			s itemReqID=ID
+			s PisID=ID
+		}
+	}
+	s RISExamNo=%request.Get("RISExamNo")
+	s RISOperNote=""
+	if (RISExamNo'=""){
+		s RISOperNote=##class(RISService.TrakRISService).GetRptExamDescEx(RISExamNo)
+	}
+	s ARCIMDesc=""
+	if (ARCIM'=""){
+		s ARCIMDesc=$P(^ARCIM(+ARCIM,$P(ARCIM,"||",2),1),"^",2)
+	}
+	s DocMainFlag=0
+	if mListDataDoc'="" s DocMainFlag=1
+	s MapID=$O(^DHCDocAppBLMapi("MapCode",MapCode,""))
+	q:MapID="" "未找到对应页面"
+	s MapStr=$P(^DHCDocAppBLMap(MapID),"^",3)
+	s TreeRowid="0" f  {
+		s TreeRowid=$O(^DHCAPPTRA(0,"Alias",MapCode,TreeRowid))  
+		q:TreeRowid=""
+		s TreeHospID=$P(^DHCAPPTRA(TreeRowid),"^",5)
+		continue:TreeHospID'=%session.Get("LOGON.HOSPID")
+		s MapDesc=$P(^DHCAPPTRA(TreeRowid),"^",2)
+	}
+	if MapDesc="" s MapDesc=$P(^DHCDocAppBLMap(MapID),"^",2)
+	if ($g(^DHCDocAppBLMap(MapID,"ShowJS"))'=""){
+		w "<script type='text/javascript' src='../"_$g(^DHCDocAppBLMap(MapID,"ShowJS"))_"'></script>"
+	}
+	s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	s BLInit=$P(^DHCDocAppBLMap(MapID),"^",5)
+	s BLItemMast=$P(^DHCDocAppBLMap(MapID),"^",6)
+	s BLSaveOther=$P(^DHCDocAppBLMap(MapID),"^",7)
+	s BLLoadOther=$P(^DHCDocAppBLMap(MapID),"^",8)
+	s PrintTemp=##Class(web.DHCDocAPPBL).GetPisPrintTemp(MapCode,EpisodeID)
+	s PisStatus="",PisStatusSign="",oeori=""
+	s PisNo=""
+	s itemReqJsonStr="A"
+	if (itemReqID'=""){
+		s itemReqJsonStr=$g(^DHCAPPPM(itemReqID,"JsonInfo"))
+		s PisStatus=$p(^DHCAPPPM(itemReqID),"^",9)
+		s PisNo=$p(^DHCAPPPM(itemReqID),"^",4)
+		s PisStatusSign="",CH="0"
+		f  s CH=$o(^DHCAPPPM(itemReqID,"A",CH))  Q:CH=""  D
+		.s ARCIM=$p(^DHCAPPPM(itemReqID,"A",CH),"^",1)
+  		.s oeori=$p(^DHCAPPPM(itemReqID,"A",CH),"^",3)
+  		.s PisStatusSign = ##Class(web.DHCAPPInterface).GetExaReqItmStatus(oeori,"")
+	}
+	s i=1
+	s CacheMapRowIDStr=""
+	s CacheMapIDStr=""
+	s BLIDStr=""
+	for{
+		s RowID=$P(MapStr,"||",i)
+		q:RowID=""
+		s i=i+1
+		s BLContentDesc=$P(^DHCDocBLTem(RowID),"^",1)
+		s BLContentText=$g(^DHCDocBLTem(RowID,"ConT"))
+		s BLID=$P(^DHCDocBLTem(RowID),"^",3)
+		s BLIDItemRowid=$O(^DHCDocAppBLItemi("BLTemp",RowID, 0))
+		if (BLIDStr="") s BLIDStr=BLID  
+		e  s BLIDStr=BLIDStr_"^"_BLID
+		if (BLIDItemRowid=""){
+			if (CacheMapRowIDStr="") s CacheMapRowIDStr=RowID  
+			e  s CacheMapRowIDStr=CacheMapRowIDStr_"^"_RowID
+			if (CacheMapIDStr="") s CacheMapIDStr=BLID  
+			e  s CacheMapIDStr=CacheMapIDStr_"^"_BLID
+		}
+		w !,BLContentText
+		if ($g(^DHCDocBLTem(RowID,"JSStr"))'=""){
+			w "<script type='text/javascript' src='../"_$g(^DHCDocBLTem(RowID,"JSStr"))_"'></script>"
+		}
+	}
+	w "<SCRIPT language = 'javascript' >"
+	w !,"var LgUserID = session['LOGON.USERID'];   "
+	w !,"var LgCtLocID = session['LOGON.CTLOCID']; "
+	w !,"var LgGroupID = session['LOGON.GROUPID']; "
+	w !,"var LgHospID=session['LOGON.HOSPID'];"
+	w !,"</SCRIPT>"
+	s PrintSet=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("PrintSet")
+	s DefualtDoc=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("DocDr")
+	s CheckSpecEditor=##class(DHCDoc.DHCApp.BasicConfig).CheckSpecEditor(PisID,EpisodeID)
+	s TCTWomen=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("TCTWomen")
+	s LIVSpecFix=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("LIVSpecFix")
+	</Server>
+	</div>
+	
+	<div id="btPanel" data-options="region:'south',headerCls:'panel-header-gray'" style="height:50px;" border="false">		
+			<div class="pt-butttom">
+				<div style="float:right;padding-right:90px;">
+					<a id="CancelBLApply" href="#" class="hisui-linkbutton btn-lightred" data-options="iconCls:''" onclick="Cancle()">取消申请</a>
+					<a id="SaveBLApply" href="#" class="hisui-linkbutton btn-lightgreen" data-options="iconCls:''" onclick="Save()">保存</a>
+					<a id="SendBLApply" href="#" class="hisui-linkbutton btn-lightgreen" data-options="iconCls:''" onclick="Send()">发送</a>
+					<a id="PrintBLBar" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="PrintBar()">打印条码</a>
+					<a id="PrintBLApply" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="Print()">打印</a>
+				</div>
+			</div>
+		</div> 
+	</div>
+	</div>
+	<!--------------打印相关---------->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCIPBILL">
+			<!--INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='vx0iPRmdKcQ5ygin9LZpbfNHGNWefEeUP6zSq_ro82Y-'-->
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		</form>
+	</div>
+	<SCRIPT language = 'javascript' >
+		var EpisodeID="#(EpisodeID)#"
+		var PatientID="#(PatientID)#"
+		var MapCode="#(MapCode)#"
+		var PisID="#(PisID)#"
+		var MapDesc="#(MapDesc)#"
+		var MapStr="#(MapStr)#"
+		var MapID="#(MapID)#"
+		var CacheMapIDStr="#(CacheMapIDStr)#"
+		var CacheMapRowIDStr="#(CacheMapRowIDStr)#"
+		var PisStatus="#(PisStatus)#"
+		var PisStatusSign="#(PisStatusSign)#"
+		var PisNo="#(PisNo)#"
+		var itemReqJsonStrSub='#(itemReqJsonStr)#'
+		var BLIDStr="#(BLIDStr)#"
+		var mListDataDoc="#(mListDataDoc)#"
+		var DocMainFlag="#(DocMainFlag)#"
+		var pid="#(pid)#"
+		var PrintTemp="#(PrintTemp)#"
+		var oeori="#(oeori)#"
+		var Oeori="#(Oeori)#"
+		var ARCIM="#(ARCIM)#"
+		var ARCIMDesc="#(ARCIMDesc)#"
+		if (itemReqJsonStrSub!="A"){
+			var itemReqJsonStr=#(itemReqJsonStr)#
+		}else{
+			var itemReqJsonStr=""
+		}
+		var itemReqID="#(itemReqID)#"
+		//全局请求后台服务对象
+		var ServerObj={
+			BLInit:"#(BLInit)#",
+			BLItemMast:"#(BLItemMast)#",
+			BLSaveOther:"#(BLSaveOther)#",
+			BLLoadOther:"#(BLLoadOther)#",
+			PrintSet:"#(PrintSet)#",
+			DefualtDoc:"#(DefualtDoc)#",
+			TCTWomen:"#(TCTWomen)#",
+			CheckSpecEditor:"#(CheckSpecEditor)#",
+			LIVSpecFix:"#(LIVSpecFix)#",
+			RISOperNote:"#(RISOperNote)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/blmapshow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/PrintBarCode.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<!-------------------------------->
+	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/listcomponent.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+</body>
+</html>

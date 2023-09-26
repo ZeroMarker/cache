@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-24-->
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	var session=new Array(); <!--hxy 2020-05-24 st-->
+	session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+</script>
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patseat.css" />
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patseat.js"></script>
+<style>/*hxy 2020-05-27*/
+#_HospList+span{max-width:154px}
+#_HospList+span >input{max-width:120px}
+</style>
+<title></title>
+</head>
+<body>
+<div style="height:61px;">
+		<div class="top">
+			<table>
+				<tr>
+					<td><div class="item"><img src="../scripts/dhcnewpro/images/dhc_seat.png"/><span> 急诊输液室座位</span></div></td>
+					<td style="padding-left:20px;padding-right:7px"><label id="_HospListLabel">医院</label></td><td><input id="_HospList"></td><!--hxy 2020-05-24-->
+				    <td><span style="font-size:13px;padding-right:10px;padding-left:7px"> 科室</span><input id="ACPart" name="ACPart" class="hisui-combobox"  data-options="editable:true" style="width:150px;"></td>
+					<td id="m-n" style="font-size:13px;padding-left:6px">表格(行)<input type="text" id="m" class="textParent textbox" style="width:28px;margin-left:10px;margin-right:10px"></input>X (列)<input type="text" id="n" class="textParent textbox" style="width:28px;margin-left:10px"></input> </td>	
+			        <!--<td class="creat-btn"><a class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" onclick="javascript:creatTable()" >生成表格</a></td>-->
+			        <td class="creat-btn" style="padding-left:7px"><a href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="javascript:creatTable()">生成表格</a></td><!--hxy 2018-10-18-->
+			        <td class="creat-btn"></td>	<!--<div class="datagrid-btn-separator"> </div> -->	
+			        <td class="setSize-input" colspan="2" style="font-size:13.5px;padding-left:6px">
+						 座位设置(宽)<input type="text" id="w" class="textParent textbox" style="width:47px;margin-left:10px;margin-right:10px"></input>X(高)<input type="text" id="h" class="textParent textbox" style="width:47px;margin-left:10px;margin-right:6px"></input> 
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:save()">保存</a>
+					</td>	        
+				</tr>
+				<tr height=10px></tr>
+			</table>
+			<div id="hiddenBtn" style="display:none">
+					<!--<td class="clear-btn"><div class="datagrid-btn-separator"> </div></td>-->
+					<!--<td class="setSize-input" style="font-size:13.5px;"></td>-->
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelone()" >删除</a>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelrow()" >删行</a>
+			        	<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelcol()" >删列</a>
+			        	<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addrow(1)" >加上行</a>
+			        	<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addrow(2)" >加下行</a>
+			        	<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addcol(1)" >加左列</a>
+			        	<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addcol(2)" >加右列</a>
+			        	<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">清空重建</a>
+
+			</div>			
+			
+		</div>
+</div>		
+		<div class="tool-bar-line" style="margin-top:-18px;margin-bottom:4px;border-bottom-color:#ccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+		<div id="line" style="display:none;margin-top:38px;margin-bottom:6px;border-bottom-color:#ccc;border-bottom-width:1px; border-bottom-style:solid;">	</div>
+		<div class="right">
+			<div id="hiddenImg" style="display:none;text-align:center;line-height:520px"><img align=center src="../scripts/dhcnewpro/dhcem/images/dhc_CreateTb.png"/></div>
+			<table id="bed">
+				<!--<tr>
+					<td class="time">1</td>
+					<td class="drop"></td>					
+					<td class="drop"></td>
+				</tr>-->
+			</table>
+		</div>
+		
+<!--隐藏域-->
+<div style="display:none">
+		<div class="dragitem" id="hidden">
+			   <div class='person' id='patientSex"+i+"'>成人</div>
+			   <div class='bednum' id='patientNum"+i+"'>001号</div>
+			   <div class='patBody' id='patientBody"+i+"'></div>
+			   <div id='patientOperate"+i+"'>
+			   		<input type='button' class='ArrangeBtn' value='安排' id='ArrangeBtn"+i+"'/>
+			   		<input type='button' class='Transfuse' value='输液' id='Transfuse"+i+"'/>
+			   </div>
+		      
+	    </div>		
+</div>
+<!--弹出框-->
+	    <div id="detail" class="hisui-window" title="请录入信息后点保存按钮"
+		             data-options="iconCls:'icon-w-save',
+		             modal:true,
+		             width:330,
+		             height:170,
+		             closed:true,
+		             draggable:false,
+		             minimizable:false
+		             "> 
+		       <table id="detailgrid">
+		             <tr height=5px></tr><!--hxy 2018-10-24-->
+		             <tr>
+		             <td style="font-size:14px;"><span style="padding-right:10px;margin-left:45px">类别</span><input id="PSCType" class="hisui-combobox"  data-options="editable:false" style="width:153px;"></td>
+		             </tr>
+		             <!--<tr>
+		             <td style="font-size:14px;">类别:<input id="personbig" type="radio" name="radio" checked="true" onclick="javascript:radio(0)">成人</input><input id="personsmall" type="radio" name="radio" onclick="javascript:radio(1)">儿童</input> </td>	
+		             </tr>-->
+		             <tr height=4px></tr><!--hxy 2018-10-24-->
+		             <tr>
+		              <td style="font-size:14px;"><span style="padding-right:10px;margin-left:45px">名称</span><input type="text" id="bedname" class="textParent textbox" style="width:147px;"></input> </td>
+		             </tr>
+		             <tr>
+		             <td align=center style="padding-top:7px"><a id="btn" style="margin-left:55px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:submit()">保存</a><td>
+  					 <tr>
+		       </table>
+	    </div>	
+</body>
+</html>

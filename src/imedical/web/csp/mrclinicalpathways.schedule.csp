@@ -1,0 +1,291 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+</HEAD>
+<BODY>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT> 
+<TRAK:COMPONENT id="MRClinicalPathways.CarePlanSchedule" hidemenus=1>
+</TRAK:COMPONENT>
+<SERVER>
+	; LOG 25798 ANA 5/07/02
+	n CareProvID,userId,CareProvDesc,rescID,conSTR,fapptdate,fapptime,fservid,FocusWindowName
+	s (CareProvID,userId,CareProvDesc,rescID,conSTR,fapptdate,fapptime,fservid,FocusWindowName)=""
+	n prevSlotDtTm,currSlotDtTm,CurrentDate,dayofwk,sdateOfWeek,edateOfWeek,PatientID,EpisodeID,rescID,slotCount,CURRdate,HTMLDate,SlotTime,maxSlotTime,SlotOver,noAvailSlots,slctall
+	s (prevSlotDtTm,currSlotDtTm,CurrentDate,dayofwk,sdateOfWeek,edateOfWeek,PatientID,EpisodeID,rescID,HTMLDate,SlotTime,maxSlotTime,SlotOver,slctall)=""
+	s slotCount=0
+	;s noAvailSlots=1
+	s obj=##Class(websys.Component).OpenName("RBClientDiaryMessages")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s slctall=%request.Get("slctall")
+	s TWKFL=%request.Get("TWKFL")
+ 	s TWKFLI=%request.Get("TWKFLI")
+ 	s PatientID=%request.Get("PatientID")
+ 	s EpisodeID=%request.Get("EpisodeID")
+ 	s mradm=%request.Get("mradm")
+	s conSTR=%request.Get("conSTR")
+ 	;s highDuration=%request.Get("highDuration")
+ 	;i highDuration="" 
+ 	s highDuration=7
+	;Log 46001
+	w "<script>"
+	w "var ConfSelect='"_%request.Get("ConfSelect")_"';"
+ 	i %request.Get("ConfSelect")'="Y",(##class(web.MRClinicalPathWays).checkConfSchedule()) d
+	. w "var lnkFav='mrclinicalpathways.confsched.csp?EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&mradm="_mradm_"';"
+        . ;Log 59598 - BC - 29-06-2006 : Remove statusbar variable (status=) to display the status bar.
+	. w "websys_createWindow(lnkFav+'&PatientBanner=1','frmConfSched','top=30,left=20,width=600,height=400,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes');"
+	. w "var FocusWindowName='frmConfSched';"
+ 	. s FocusWindowName="frmConfSched"
+	e  w "var FocusWindowName='';"
+	w "</script>"
+	; LOG 26750 ANA 19/07/02. Week displayed starting from current date.
+ 	i (%request.Get("CurrentDate")'="") s CurrentDate=%request.Get("CurrentDate"), fapptdate=CurrentDate
+	i (%request.Get("CurrentDate")="") s CurrentDate=+$h
+	i (%request.Get("time")'="") s fapptime=%request.Get("time")
+	i (%request.Get("ServID")'="") s fservid=%request.Get("ServID")
+	s CURRdate=+$h
+	i CurrentDate'=""  d
+	. s dayofwk=CurrentDate+3#7+1
+	. s sdateOfWeek=CurrentDate
+	. s edateOfWeek=CurrentDate+highDuration
+	. ;s sdateOfWeek=(CurrentDate-dayofwk)+1
+	. ;s edateOfWeek=(CurrentDate-dayofwk)+highDuration
+	s locidEG=%session.Get("LOGON.CTLOCID")
+ 	s userId=%session.Get("LOGON.USERID")
+ 	s CareProvID=##Class(web.SSUser).GetDefaultCareProvider(userId)
+ 	i %session.Get("LOGON.ROUND") s CareProvID=%session.Get("LOGON.ROUND")
+ 	s CareProvDesc=##Class(web.CTCareProv).GetDescFromRowId(CareProvID)
+ 	i CareProvDesc="" d
+ 	. w "<script>"
+ 	. w "alert(""No Associated Care Provider"");"
+ 	. w "</script>"
+ 	i CareProvDesc'="" d
+	. s CTLOCDesc=##Class(web.CTLoc).GetDescFromRowId(locidEG)
+	. s rescOBJ=##Class(%ResultSet).%New("web.RBResource:Find")
+	. i rescOBJ d
+	. . d rescOBJ.Execute(CTLOCDesc,CareProvDesc)
+	. . i rescOBJ.Next() s rescID=rescOBJ.GetDataByName("ID")
+	. . d %request.Set("rescID",rescID)
+	. i rescID'="" d
+	. . n dayLIST
+	. . s dayLIST(1)="Monday",dayLIST(2)="Tuesday",dayLIST(3)="Wednesday",dayLIST(4)="Thursday",dayLIST(5)="Friday",dayLIST(6)="Saturday",dayLIST(7)="Sunday"
+	. . w "<DIV>"
+	. . w "<B></B>"
+	. . ;w "<table border=1 cellpadding=5>"
+	. . ;w "<TABLE class=tblList id=""tMRClinicalPathways_Schedule"" Name=""tMRClinicalPathways_Schedule"" CELLSPACING=1 border=1 cellpadding=5 >",$c(13,10)
+	. . w "<form name=""fMRClinicalPathways_Schedule"" method=""post"" id=""fMRClinicalPathways_Schedule"">",$c(13,10)
+	. . w "<TABLE class=tblList id=""tMRClinicalPathways_Schedule"" Name=""tMRClinicalPathways_Schedule"" CELLSPACING=1 border=1 cellpadding=5 >",$c(13,10)
+	. . w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFL"" VALUE=""",TWKFL,""">",$c(13,10)
+	. . w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFLI"" VALUE=""",TWKFLI,""">",$c(13,10)
+	. . w "<INPUT TYPE=""HIDDEN"" NAME=""PatientID"" VALUE=""",PatientID,""">",$c(13,10)
+ 	. . w "<INPUT TYPE=""HIDDEN"" NAME=""EpisodeID"" VALUE=""",EpisodeID,""">",$c(13,10)
+	. . w "<INPUT TYPE=""HIDDEN"" NAME=""mradm"" VALUE=""",mradm,""">",$c(13,10)
+	. . w "<INPUT TYPE=""HIDDEN"" NAME=""rescID"" VALUE=""",rescID,""">",$c(13,10)
+	. . w "<INPUT TYPE=""HIDDEN"" NAME=""ItmSchedString"" VALUE="""">",$c(13,10)
+ 	. . w "<INPUT TYPE=""HIDDEN"" NAME=""ConfSchedString"" VALUE="""">",$c(13,10)
+ 	. . w "<INPUT TYPE=""HIDDEN"" NAME=""fapptdate"" VALUE=""",fapptdate,""">",$c(13,10)
+ 	. . w "<INPUT TYPE=""HIDDEN"" NAME=""fappttime"" VALUE=""",fapptime,""">",$c(13,10)
+ 	. . w "<INPUT TYPE=""HIDDEN"" NAME=""fservid"" VALUE=""",fservid,""">",$c(13,10)
+   	. . w "<tr>"
+ 	. . s PREVcurrDate=CurrentDate-7
+ 	. . s Prevz="Previous"
+ 	. . s PREVurl="mrclinicalpathways.schedule.csp?TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_%request.Get("PatientID")_"&EpisodeID="_%request.Get("EpisodeID")_"&mradm="_%request.Get("mradm")_"&highDuration="_%request.Get("highDuration")_"&ORIRowIDs="_%request.Get("ORIRowIDs")_"&CurrentDate="_PREVcurrDate_"&CONTEXT="_%request.Get("CONTEXT")_"&conSTR="_conSTR_"&slctall="_slctall
+ 	. . i %request.Get("ConfSelect")="Y" s PREVurl=PREVurl_"&ConfSelect="_"Y"
+	. . ;w "<td align=center><A id=""",Prevz,""" name=""",Prevz,""" href=""#"" onClick=""websys_createWindow('",PREVurl,"','TRAK_main','');"" accesskey=""P"">Previous</A>"
+	. . w "<td align=center><A id=""",Prevz,""" name=""",Prevz,""" href=",PREVurl," accesskey=""N"">Previous</A>"
+ 	. . s NEXTcurrDate=CurrentDate+7
+ 	. . s Nextz="Next"
+ 	. . s NEXTurl="mrclinicalpathways.schedule.csp?TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_%request.Get("PatientID")_"&EpisodeID="_%request.Get("EpisodeID")_"&mradm="_%request.Get("mradm")_"&highDuration="_%request.Get("highDuration")_"&ORIRowIDs="_%request.Get("ORIRowIDs")_"&CurrentDate="_NEXTcurrDate_"&CONTEXT="_%request.Get("CONTEXT")_"&conSTR="_conSTR_"&slctall="_slctall
+ 	. . i %request.Get("ConfSelect")="Y" s NEXTurl=NEXTurl_"&ConfSelect="_"Y"
+	. . ;w "<td align=center><A id=""",Nextz,""" name=""",Nextz,""" href=""#"" onClick=""websys_createWindow('",NEXTurl,"','TRAK_main','');"" accesskey=""N"">Next</A>"
+ 	. . w "<td align=center><A id=""",Nextz,""" name=""",Nextz,""" href=",NEXTurl," accesskey=""N"">Next</A>"
+ 	. . w "</tr>"
+    . . w "<tr>"
+    . . w "<th bordercolorlight=""silver"">Time Slots</th>",$c(13,10)
+	. . s Date=sdateOfWeek,HTMLDate=""
+    . . f dayCount=1:1:7 d
+    . . . s DNamez="Datez"_dayCount
+    . . . i (dayofwk+dayCount-1)#7=0 s daycnt=(dayofwk+dayCount-1)
+    . . . i (dayofwk+dayCount-1)#7'=0 s daycnt=(dayofwk+dayCount-1)#7
+    . . . s HTMLDate=" ("_##Class(websys.Conversions).DateLogicalToHtml(Date)_")"
+    . . . w "<th bordercolorlight=""silver"">",dayLIST(daycnt)_HTMLDate,"</th>"
+    . . . w "<INPUT TYPE=""HIDDEN"" id=""",DNamez,""" NAME=""",DNamez,""" VALUE=""",Date,""">",$c(13,10)
+    . . . s Date=Date+1
+    . . w "</tr>"
+    . . n dayCount1,SchedID
+	. . s SchedID=""
+	. . s Date1=sdateOfWeek
+    . . s PrevDate=sdateOfWeek
+	. . I $$open^CWEBRBRE6(rescID,sdateOfWeek,edateOfWeek)
+	. . F  Q:$$fetch^CWEBRBRE6(rescID,sdateOfWeek,edateOfWeek)  D
+	. . . s PatientName=""
+	. . . s slotCount=slotCount+1
+	. . . s SlotTime=$g(PLIST(1))
+	. . . i SlotTime>maxSlotTime s maxSlotTime=SlotTime
+	. . . s list2=$g(PLIST(2))
+	. . . ;s ^zanju($zn,"PLIST 2")=$l(list2,$c(2))
+	. . . s TimeSlot=##Class(websys.Conversions).TimeLogicalToHtml(SlotTime)
+	. . . w "<tr>"
+	. . . w "<td align=center>",TimeSlot,"</td>"
+	. . . f dayCount1=1:1:$l(list2,$c(2)) d
+	. . . . s currSlotDtTm=slotCount_dayCount1
+	. . . . s dayDetails=$p(list2,$c(2),dayCount1)
+	. . . . s date=$p(dayDetails,$c(1),1)
+	. . . . s SchedID=$p(dayDetails,$c(1),2)
+	. . . . ; PatIDs is a misleading variable here.Its Patient names on Pc3.
+	. . . . s PatIDs=$p(dayDetails,$c(1),3)
+	. . . . s SlotOver=$p(dayDetails,$c(1),4)
+	. . . . s noAvailSlots=$p(dayDetails,$c(1),6)
+	. . . . ;s ^zanju($zn,"no Avail Slots "_slotCount_dayCount1)=noAvailSlots
+	. . . . ;s ^zanju($zn,"slot"_slotCount_dayCount1)=date_","_SchedID_","_PatIDs_","_SlotOver_","_noAvailSlots
+	. . . . ;s ^zanju($zn,"patientid"_slotCount_dayCount1)=PatIDs
+	. . . . ;pat stuff here
+	. . . . ;s PatIDs=$tr(PatIDs," ")
+	. . . . ; LOG 26750 ANA 16/07/02.Select Boxes Now changed to links.
+	. . . . i dayCount1'>7 d
+	. . . . . s SSelectz="SSelectz"_SlotTime_"^"_date
+	. . . . . s SchedIDz="SchedIDz"_SlotTime_"^"_date
+	. . . . . n SSchedID,SnoAvailSlots,SPatIDs,SPatientName,SSlotOver
+	. . . . . s (SSchedID,SPatIDs,SPatientName,SSlotOver)=""
+	. . . . . s SnoAvailSlots=0
+	. . . . . ; SB 27/05/03 (35978): Don't allow to book unavailable slots
+	. . . . . s naslot="",cssClass="",delim=$c(1)_$c(1)
+	. . . . . s naslot=$p($$block^MVBRBAS(+SchedID,date,SlotTime),delim,1)
+	. . . . . i naslot s cssClass="NotAvailable"
+	. . . . . w "<td align=center class="_cssClass_">"
+	. . . . . i SchedID'="" d
+	. . . . . . f SSCount=1:1:$l(SchedID,$c(4)) d
+	. . . . . . . s SSchedID=$p(SchedID,$c(4),SSCount)
+	. . . . . . . s SnoAvailSlots=$p(noAvailSlots,$c(4),SSCount)
+	. . . . . . . s SPatIDs=$p(PatIDs,$c(4),SSCount)	
+	. . . . . . . s SSlotOver=$p(SlotOver,$c(4),SSCount)
+	. . . . . . . s PatientName=$p(PatIDs,$c(4),SSCount)
+	. . . . . . . ;s ^zanju($zn," pat "_slotCount_dayCount1_" "_SSCount)=SPatIDs_" len "_$l(SPatIDs,"|")
+	. . . . . . . ;i SPatIDs'="",$l(SPatIDs,"|")>0 d
+	. . . . . . . ;. s PatientName="",prevPatID="",PatID=""
+	. . . . . . . ;. f patCount=1:1:$l(SPatIDs,"|") d
+	. . . . . . . ;. . s PatID=$p(SPatIDs,"|",patCount)
+	. . . . . . . ;. . s obj=##Class(User.PAPatMas).%OpenId($tr(PatID," "))
+	. . . . . . . ;. . i obj,prevPatID'=PatID d
+	. . . . . . . ;. . . s PatientName=PatientName_obj.PAPMIName_" "_obj.PAPMIName2_","
+	. . . . . . . ;. . . ;s ^zanju($zn,"PatientName"_slotCount_dayCount1_" "_SSCount_patCount)=PatientName
+	. . . . . . . ;. . . d obj.%Close()
+	. . . . . . . ;;. . . s prevPatID=PatID
+	. . . . . . . ;. .;s ^zanju($zn,"PatientName"_slotCount_dayCount1)=PatientName
+	. . . . . . . ;. ;s PatientName=$e(PatientName,1,$l(PatientName)-1)
+	. . . . . . . s clsName=""
+	. . . . . . . s PatientAvailable=##Class(web.PAAdmUnavailable).IsAvailable(EpisodeID,date)
+	. . . . . . . i CURRdate'>date,'naslot d
+	. . . . . . . . i PatientName'="" d
+	. . . . . . . . . w PatientName,"<BR>" ;$e(PatientName,1,$l(PatientName)-1)
+	. . . . . . . . . i SSlotOver'="Y",SnoAvailSlots>0 d
+	. . . . . . . . . . i PatientAvailable w "<BR><A id=""",SSelectz,""" name=""",SSelectz,""" href=""#"" onclick=""javascript:BookSlot();"" accesskey=""B"">Book</A>"
+	. . . . . . . . . . i 'PatientAvailable w t("Unavailable")
+	. . . . . . . . . . w "<INPUT TYPE=""HIDDEN"" id=""",DNamez,""" NAME=""",DNamez,""" VALUE=""",Date,""">",$c(13,10)
+	. . . . . . . . . . w "<INPUT TYPE=""HIDDEN"" id=""",SchedIDz,""" NAME=""",SchedIDz,""" VALUE=""",SSchedID,""">",$c(13,10)
+	. . . . . . . . i PatientName="",SSlotOver'="Y",prevSlotDtTm'=currSlotDtTm d
+	. . . . . . . . . ;s ^zanju("sched ids "_slotCount_dayCount1_SSCount)=SSchedID
+	. . . . . . . . . s prevSlotDtTm=currSlotDtTm
+	. . . . . . . . . i PatientAvailable w "<A id=""",SSelectz,""" name=""",SSelectz,""" href=""#"" onclick=""javascript:BookSlot();"" accesskey=""B"">Book</A>"
+	. . . . . . . . . i 'PatientAvailable w t("Unavailable")
+	. . . . . . . . . w "<INPUT TYPE=""HIDDEN"" id=""",DNamez,""" NAME=""",DNamez,""" VALUE=""",Date,""">",$c(13,10)
+	. . . . . . . . . w "<INPUT TYPE=""HIDDEN"" id=""",SchedIDz,""" NAME=""",SchedIDz,""" VALUE=""",SSchedID,""">",$c(13,10)
+	. . . . . . . i CURRdate>date!naslot d
+	. . . . . . . . i PatientName'="" d
+	. . . . . . . . . w $e(PatientName,1,$l(PatientName)-1)
+	. . . . . . . . i PatientName="",prevSlotDtTm'=currSlotDtTm d
+	. . . . . . . . . s prevSlotDtTm=currSlotDtTm
+	. . . . . . . . . i PatientAvailable w "<A id=""",SSelectz,""" name=""",SSelectz,""" disabled accesskey=""B"">Book</A>"
+	. . . . . . . . . i 'PatientAvailable w t("Unavailable")
+	. . . . . . . . . w "<INPUT TYPE=""HIDDEN"" id=""",DNamez,""" NAME=""",DNamez,""" VALUE=""",Date,""">",$c(13,10)
+	. . . . . . s PatientName=""
+	. . . . . s PatientAvailable=##Class(web.PAAdmUnavailable).IsAvailable(EpisodeID,Date)
+	. . . . . i SchedID="",prevSlotDtTm'=currSlotDtTm d
+	. . . . . . s prevSlotDtTm=currSlotDtTm
+	. . . . . . i PatientAvailable w "<A id=""",SSelectz,""" name=""",SSelectz,""" disabled accesskey=""B"">Book</A>"
+	. . . . . . i 'PatientAvailable w t("Unavailable")
+	. . . . . . w "<INPUT TYPE=""HIDDEN"" id=""",DNamez,""" NAME=""",DNamez,""" VALUE=""",Date,""">",$c(13,10)
+	. . . . . w "</td>"
+	. . . w "</tr>"
+	. . I $$close^CWEBRBRE6()
+	. . . w "<tr><td>&nbsp;</td><td>" 	
+	. . w "</td></tr>",$c(13,10)
+	. . w "</table>"
+	. . w "</form>"
+	. . w "</DIV>"
+	. . w "<SCRIPT>",$c(13,10)
+	. . w "var resid=",rescID,";"
+	. . w "</SCRIPT>",$c(13,10)
+	d ##Class(websys.Conversions).LoadRequest()
+	
+</SERVER>
+<TRAK:COMPONENT id="MRClinicalPathways.UpdateSchedule" hidemenus=1>
+</TRAK:COMPONENT>
+</TRAK:APPLET>
+</BODY>
+</HTML>
+<script Language="JavaScript">
+// ANA 20-08-02 LOG 27641
+//This must be at bottom of page so that all other javascript functions and event triggers have loaded.
+var UpdateForm=document.forms["fMRClinicalPathways_UpdateSchedule"];
+//var t['NOVALIDCP']='***Not a valid Care Provider.***';
+function BookSlot(e) {
+	var scr=websys_getSrcElement(e);
+	var buttonID=scr.id;
+	var name; var index; var time; var date;
+	if (buttonID) {
+		name=buttonID.split("z");
+		index=name[1].split("^");
+		time=parseInt(index[0]);
+		date=parseInt(index[1]);
+		//alert("name "+name+" time="+time+" date="+date);
+	}
+	if (UpdateForm) {
+		var dtobj=UpdateForm.document.getElementById("Date");
+		var tmobj=UpdateForm.document.getElementById("Time");
+		if (dtobj) dtobj.value=date;
+		if (tmobj) tmobj.value=time;
+		var obj=UpdateForm.document.getElementById("DUMMYHiddenUpdate");
+		//alert("booking");
+		if (obj) {
+			//alert("obj "+obj);
+		 	obj.click();
+		 }
+		 else {
+			//alert("booking 2");
+		 	UpdateClickHandler();
+		 	//alert("booking 3");
+		 }
+	}
+}
+
+var slctall=document.getElementById("slctall");
+
+ if ((slctall)&&(slctall.value=="Y")){
+ 
+  	var tbl=document.getElementById("tMRClinicalPathways_CarePlanSchedule");
+ 	var f=document.getElementById("fMRClinicalPathways_Schedule");	
+ 	if ((f)&&(tbl)) {		
+ 		for (var j=1;j<tbl.rows.length;j++) {
+ 			var obj=document.getElementById('Selectz'+j);
+ 			if ((obj) && (!obj.disabled)) {
+ 				obj.checked=true;				
+ 			}
+ 		}
+ 	}
+  }
+ 
+ //alert("FocusWindowName="+FocusWindowName);
+ if (FocusWindowName!="") {
+	  	var openwin = window.open("",FocusWindowName);
+		if (openwin) openwin.focus();
+ }
+</script>

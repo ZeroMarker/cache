@@ -1,0 +1,156 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+    s File=$Get(%request.MimeData("files",1))
+    s FileName=$Get(%request.Data("upLoadFileName",1))
+    s conditionCode=$Get(%request.Data("conditionCode",1))
+    s conditionName=$Get(%request.Data("conditionName",1))
+    s conditionState=$Get(%request.Data("conditionState",1))
+    s listData=$Get(%request.Data("data",1))
+    s RowId=$Get(%request.Data("rowid",1))
+    s GroupId=$G(%session.Data("LOGON.GROUPID"))
+    s LocId=$G(%session.Data("LOGON.CTLOCID"))
+    s UserId=$G(%session.Data("LOGON.USERID"))
+    
+    s ContrackData=$Get(%request.Data("ContrackData",1))
+    s Parref=$Get(%request.Data("Parref",1))
+    s ContRowId=$Get(%request.Data("ContRowId",1))
+    s ListDetail=$Get(%request.Data("ListDetail",1))
+    s ContNoData=$G(%request.Data("ContNoData",1))
+    
+    i Action = "UploadCont" d
+    .s Param=GroupId_"^"_LocId_"^"_UserId
+    .s condata=$Get(%request.Data("contdata",1))
+    .s ^TMPHOUSC("hscfile")=condata
+    .s result = ##class(web.DHCSTM.DHCConTrackManager).SaveContPic(File,Param,contdata)
+    .
+    .i result=0 d
+    ..w "{success:'true',message:'上传成功'}"
+    .e  d
+    ..w "{success:'false',message:'上传失败'}"
+    
+     i Action="GetContProductImage" d
+     .s inci=$Get(%request.Data("IncRowid",1))
+     .s type=$Get(%request.Data("type",1))
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).GetContProductImageInfo(inci,type)
+     .i result = "" d
+     ..w "{results:0,rows:[]}"
+     .e  d
+     ..w result
+     i Action = "SaveContNo" d
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).SaveContNo(ContNoData)
+     .i result = 0 d
+     ..w "{success:'true',info:'"_result_"'}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+     
+     i Action = "UpdateContData" d
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).UpdateContData(ContNoData)
+     .i result = 0 d
+     ..w "{success:'true',info:'"_result_"'}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+     
+      i Action = "querycont" d
+     .s ^TMPHOUSC("aabad")=ContrackData
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).QueryCont(Start,Limit,ContrackData)
+     .i result = "" d
+     ..w "{results:0,rows:[]}"
+     .e  d
+     ..w result
+     i Action = "deleteContInci" d
+     .s RowId=$G(%request.Data("ContInciRowId",1))
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).DelContInci(RowId)
+     .i result = 0 d
+     ..w "{success:'true',info:''}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+      i Action="SaveContComp" d
+     .s result=##class(web.DHCSTM.DHCConTrackManager).SaveContComp(ContRowId,ListDetail)
+     .i result'<0 d
+     ..w "{success:'true',info:'"_result_"'}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+     i Action = "SelectCont" d
+     .s contid=$G(%request.Data("contid",1))
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).SelectCont(contid)
+     .i result '="" d
+     ..w "{success:'true',info:'"_result_"'}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+     i Action = "queryitmbycont" d
+    
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).QueryItmCont(Start,Limit,Parref)
+     .i result = "" d
+     ..w "{results:0,rows:[]}"
+     .e  d
+     ..w result
+     
+     
+     i Action="GetSynContProductImageInfo" d
+     .s inci=$Get(%request.Data("inci",1))
+     .s contno=$Get(%request.Data("contno",1))
+     .s vendor=$Get(%request.Data("vendor",1))
+     .s result = ##class(web.DHCSTM.DHCConTrackManager).GetSynContProductImageInfo(inci,contno,vendor)
+     .i result = "" d
+     ..w "{results:0,rows:[]}"
+     .e  d
+     ..w result
+     
+     i Action="UploadContImage" d
+    .s cont=$Get(%request.Data("contRowid",1))
+    .s conttype=$Get(%request.Data("conttype",1))
+    .s GroupId=$G(%session.Data("LOGON.GROUPID"))
+    .s LocId=$G(%session.Data("LOGON.CTLOCID"))
+    .s UserId=$G(%session.Data("LOGON.USERID"))
+    .s Param=GroupId_"^"_LocId_"^"_UserId
+    .s File=$Get(%request.MimeData("files",1))
+    .s ^zhwh("hsc")=cont_","_conttype_","_Param_","_File
+    .s result = ##class(web.DHCSTM.DHCConTrackManager).SaveContProductImage(File,Param,cont,conttype)
+    .s ^zhwh(92)=result
+    .i result=0 d
+    ..w "{success:'true',message:'上传成功'}"
+    .e  d
+    ..w "{success:'false',message:'上传失败'}" 
+    
+    i Action = "DeleteContProductImage" d
+    .s RowId=$G(%request.Data("controwid",1))
+    .s PicSrc=$Get(%request.Data("contpicsrc",1))
+    .s GroupId=$G(%session.Data("LOGON.GROUPID"))
+    .s LocId=$G(%session.Data("LOGON.CTLOCID"))
+    .s UserId=$G(%session.Data("LOGON.USERID"))
+    .s Param=GroupId_"^"_LocId_"^"_UserId
+    .s ^zhwh(9)=RowId_","_Param_","_PicSrc
+    .s result = ##class(web.DHCSTM.DHCConTrackManager).DelContProductImageInfo(RowId,PicSrc,Param)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    i Action="setContProductMaster" d
+    .s RowId=$G(%request.Data("controwid",1))
+    .s result=##class(web.DHCSTM.DHCConTrackManager).SetContProductMaster(RowId)
+    .i result=0 d
+    ..w "{success:'true',message:'设置成功'}"
+    .e  d
+    ..w "{success:'false',message:'设置失败'}" 
+    i Action ="GetContItmByVendor"  d
+    .s Others=$G(%request.Data("Others",1))
+    .s start=$G(%request.Data("start",1))
+    .s limit=$G(%request.Data("limit",1))
+    .d ##class(web.DHCSTM.DHCConTrackManager).GetContItmByVendor(start,limit,Others)
+    i Action = "Select" d
+    .s RowId=$G(%request.Data("rowid",1))
+    .s result = ##class(web.DHCSTM.DHCConTrackManager).SelectCont(RowId)
+    .w "{success:'true',info:'"_result_"'}"
+
+   
+</script>

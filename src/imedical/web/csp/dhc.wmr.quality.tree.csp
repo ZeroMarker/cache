@@ -1,0 +1,39 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired()
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<link type="text/css" rel="stylesheet" href="../scripts/DHC.WMR.Quality.XTree.css">
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+	<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>
+	<SCRIPT SRC="../scripts/DHC.WMR.Quality.XTree.js"></SCRIPT>
+	<input type="hidden" id='MethodGetExamRule' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRQuality.ExEntryTree.GetExamRule"))%>'/>
+	<input type="hidden" id='MethodGetRuleSection' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRQuality.ExEntryTree.GetRuleSection"))%>'/>
+	<input type="hidden" id='MethodGetSectionEntry' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRQuality.ExEntryTree.GetSectionEntry"))%>'/>
+	<input type="hidden" id='MethodGetEntryEntry' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRQuality.ExEntryTree.GetEntryEntry"))%>'/>
+	<DIV style="position: absolute; width: 100%; top: 0px; left: 0px; height: 100%; padding: 5px; overflow: auto;">
+	<SCRIPT LANGUAGE="cache" RUNAT="server">
+		s RuleID=$g(%request.Data("Rule",1))       //质控标准
+		s ExamRuleID=$g(%request.Data("ExamRule",1))   //评估标准
+		s tmpRule=##Class(web.DHCWMRQuality.ExEntryTree).GetExamRule(RuleID,ExamRuleID)
+		s ExamRuleID=$p(tmpRule,"^",1)
+		s ExamRuleDesc=$p($p(tmpRule,"^",2),"/",3)
+		s JIndex=##Class(web.DHCWMRQuality.ExEntryTree).GetExamTree(ExamRuleID,"F")   //只取终末评估项目
+	</SCRIPT>
+	<script LANGUAGE=JAVASCRIPT>		
+		var RuleTree = new DHCMedTree("#(ExamRuleDesc)#","#(ExamRuleID)#");
+		RuleTree.setBehavior('classic');
+		AddRSectionOBJ(RuleTree,"#(ExamRuleID)#","#(JIndex)#");
+		document.write(RuleTree);
+		RuleTree.expandAll();
+	</script>
+	</DIV>
+</BODY>
+</HTML>

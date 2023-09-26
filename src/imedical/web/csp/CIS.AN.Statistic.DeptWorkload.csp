@@ -1,0 +1,274 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>科室手术汇总</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+    	<form id="conditionForm">
+    		<label style="padding-left:5px;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:5px;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
+    		<!--<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-excel'">导出</a>-->
+    		<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'">打印</a>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false ">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+	    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: false,
+        		border:false,
+        		toolbar: "#dataTools",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.WorkStatistics",
+            		QueryName: "FindDeptWork",
+            		ArgCnt: 3
+        		},
+        		columns: [
+            		[{
+                    	field: "PatDept",
+                    	title: "科室",
+                    	width: 200,
+                    	align:'center'
+                	}, {
+                    	field: "Count",
+                    	title: "手术例数",
+                    	width: 100,
+                    	align:'center',
+                    	formatter: function(value, row, index) {
+                    		return "<span class='hisui-tooltip' title='" + (row["CountNote"] || '') + "'>" + value + "</span>";
+                		}
+                	}
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = session.UserName;
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	onLoadSuccess: function(data) {
+	        	$('.hisui-tooltip').tooltip({});
+	        },
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	var datagrid = $("#data_grid");
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnPrint").click(function(){
+	    	printGrid();
+    	});
+    	
+    	$("#btnExport").click(function(){
+	    	exportToExcel();
+    	});
+	});
+	
+	function printGrid(){
+			var lodop = getLodop();
+    		createPrintPage(lodop);
+    
+    		lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    		lodop.SET_PREVIEW_WINDOW(1, 2, 0, 0, 0, "");
+    		lodop.SET_PRINT_MODE("AUTO_CLOSE_PREWINDOW", 1); //打印后自动关闭预览窗口
+    		lodop.PREVIEW();
+		}
+		
+		
+    	
+		function createPrintPage(lodop){
+			var datagrid = $("#data_grid");
+    		var rows = datagrid.datagrid("getRows");
+    		
+    		var length = rows.length;
+    		var row;
+    		
+    		var gridHtml=[];
+    		var linedItemNo=1;
+    		var colWidth=120,totalColWidth=720,columns=6;
+    	
+    		gridHtml=[
+                    "<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:18px;}",
+                    "th {font-size:20px;font-weight:bold;text-align:center;} tr>td {text-align:center} tr {height:24px;} ",
+                    "tr {height:30px;} table {table-layout:fixed;} .item-desc {width:200px;overflow:hidden;}</style>"
+                ];
+            gridHtml.push('<table>');
+	    	gridHtml.push('<thead><tr>');
+	    	gridHtml.push('<th style="width:90px;">科室</th>');
+	    	gridHtml.push('<th style="width:80px;">手术例数</th>');	    		
+	    	gridHtml.push('</tr></thead>');
+	    	gridHtml.push('<tbody>');
+	    	
+    		for(var i=0;i<length;i++){
+	    		var operCount=0;
+	    		row = rows[i];
+		    	operCount+=Number(row.Count);
+		    	gridHtml.push('<tr>');
+		    	gridHtml.push('<td>'+row.PatDept+'</td>');
+		    	gridHtml.push('<td>'+row.Count+'</td>');
+		    	gridHtml.push('</tr>');
+    		}
+    		
+    		gridHtml.push('<tr>');
+		    gridHtml.push('<td>'+'总台数'+'</td>');
+		    gridHtml.push('<td>'+operCount+'</td>');
+		    gridHtml.push('</tr>');
+	    	gridHtml.push('</tbody></table>');
+	    	
+	    	lodop.ADD_PRINT_TABLE(120,40,"RightMargin:0.8cm",920,gridHtml.join(''));
+	    		
+    		setHeader();	
+		function setHeader(){
+	    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    		lodop.SET_PRINT_STYLE("FontName", "微软雅黑");
+    		lodop.SET_PRINT_STYLE("FontSize", 11);
+    		lodop.ADD_PRINT_TEXT(20, 180, 430, 30, "科 室 每 日 手 术 汇 总");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 21); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目 
+    	}
+    	    	
+    	
+	}
+	
+	function exportToExcel() {
+    	var datagrid = $("#data_grid");
+    	var groups = datagrid.datagrid("groups");
+    	var groupLength = groups.length;
+    	var columns = datagrid.datagrid("options").columns[0];
+    	var columnLength = columns.length;
+    	var sheetRowCount = 3;
+    	var excelRow=0;
+    	
+    	var xlsExcel, xlsBook, xlsSheet;
+    	xlsExcel = new ActiveXObject("Excel.Application");
+    	xlsBook = xlsExcel.Workbooks.Add();
+
+    	for (var k = 0; k < groupLength; k++) {
+        	exportGroup(groups[k]);
+    	}
+
+    	xlsExcel.Visible = true;
+    	//xlsSheet.PrintPreview;
+    	//xlsSheet.PrintOut(); 
+
+    	function exportGroup(group) {
+        	var rows = group.rows;
+        	var rowLength = rows.length;
+        	
+			var date=new Date();
+			var year=group.value.substr(0,4);
+			year=Number(year);
+			var month=group.value.substr(5,2);
+			month=Number(month);
+			
+			date.setYear(year);
+			date.setMonth(month-1);
+			date.setDate(0);
+			var dayStart=date.getDay();
+			
+        	var startWeekDay=0;
+
+        	var row, field;
+        	for (var i = 0; i < rowLength; i++) {
+            	row = rows[i];
+            	excelRow++;
+            	var day=dayStart;
+         	
+         		addSheet(group.value,row.Nurse);
+            	for (var j = 1; j < columnLength; j++) {
+                	column = columns[j];
+                	field = column["field"];
+                	excelRow ++;
+                	day ++;
+                	if(j<16)
+                	{
+                		xlsSheet.cells(excelRow, 1) = column["title"];
+                		xlsSheet.cells(excelRow, 2) = row[field] || "";
+                		if(day % 7==6 || day % 7==0)xlsSheet.range(xlsSheet.cells(excelRow, 1), xlsSheet.cells(excelRow, 3)).interior.colorIndex = 39;
+                	}
+                	else
+                	{
+	                	xlsSheet.cells(excelRow - 15, 4) = column["title"];
+                		xlsSheet.cells(excelRow - 15, 5) = row[field] || "";
+                		if(day % 7==6 || day % 7==0)xlsSheet.range(xlsSheet.cells(excelRow - 15, 4), xlsSheet.cells(excelRow - 15, 6)).interior.colorIndex = 39;
+                	}
+            	}
+       		}
+    	}
+    
+    	function addSheet(month,nurseName)
+    	{
+    		xlsSheet = xlsBook.Sheets.Add();
+
+     		excelRow = 1;
+        	
+        	xlsSheet.cells(excelRow, 1) = "护士："+nurseName;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 1), xlsSheet.Cells(excelRow, 3)).Font.Size = 14;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 1), xlsSheet.Cells(excelRow, 3)).MergeCells = 1;
+        	xlsSheet.cells(excelRow, 4) = month;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 4), xlsSheet.Cells(excelRow, 6)).Font.Size = 11;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 4), xlsSheet.Cells(excelRow, 6)).MergeCells = 1;
+
+			xlsSheet.Columns(1).ColumnWidth = 3;
+    		xlsSheet.Columns(2).ColumnWidth = 36;
+    		xlsSheet.Columns(3).ColumnWidth = 8;
+    		xlsSheet.Columns(4).ColumnWidth = 3;
+    		xlsSheet.Columns(5).ColumnWidth = 36;
+    		xlsSheet.Columns(6).ColumnWidth = 8;
+    		
+			xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 1), xlsSheet.Cells(excelRow + 16, 1)).Font.Size = 11;
+			xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 2), xlsSheet.Cells(excelRow + 16, 6)).Font.Size = 9;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 1), xlsSheet.Cells(excelRow + 16, 6)).Borders.Weight = 1;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 1), xlsSheet.Cells(excelRow + 16, 6)).Borders.LineStyle = 1;
+    }
+}
+	</script>
+</body>
+</html>

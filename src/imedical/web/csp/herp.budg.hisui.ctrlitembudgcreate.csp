@@ -1,0 +1,115 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<!--引入HISUI文件包-->
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+</head>
+	<!---->
+	<!--引入HISUI布局类-->
+<body class="hisui-layout">
+	<div class="border-none" data-options="region:'center'">
+	    <!--div class="x-separator line-50-y"
+	    data-options="region:&#39;north&#39;"-->
+		<div class='padding-10' id="tb">
+			<span class="padding-right-10">年度</span>
+				<select id="yearcb" class="hisui-combobox" style="width:100px;"
+					data-options="url:$URL 
+						+'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=YearOrYearMon&ResultSetType=array',
+						mode:'remote',
+						valueField: 'year',
+						textField: 'year',
+						onBeforeLoad:YearBefLoad,
+						onSelect:YearOnSelect">
+				</select>
+			<span class="padding-both-10">科目</span>
+				<select id="itemcb" class="hisui-combogrid" style="width:200px;"
+					data-options="
+						panelWidth:300,
+						url:$URL+'?ClassName=herp.budg.hisui.udata.uCtrlItemBudgCreate&MethodName=GetItem',
+						mode:'remote',
+						valueField: 'code',
+						textField: 'name',
+						onBeforeLoad:ItemBefLoad,
+						columns: [[
+							{field:'code',title:'编码',width:120,sortable:true},
+							{field:'name',title:'名称',width:400,sortable:true}
+						]]
+				    ">
+				</select>
+			<span class="padding-both-10">科室</span>
+				<select id="deptcb" class="hisui-combobox" style="width:200px;"
+					data-options="url:$URL 
+					+'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=Dept&ResultSetType=array',
+					mode:'remote',
+					valueField: 'rowid',
+					textField: 'name',
+					onBeforeLoad:DeptBefLoad" >
+				</select>
+	        <span class="padding-left-10"></span> 
+			<a id="findBtn" class="hisui-linkbutton" href="#" 
+			data-options="iconCls:'icon-w-find',onClick:Search">查询</a>
+	        <span class="padding-left-10"></span> 
+			<a id="colectBtn" class="hisui-linkbutton" href="#" 
+			data-options="iconCls:'icon-w-add',onClick:Collect">采集</a>
+		</div>
+		
+		<!--//设置为 true，则显示带有行号的列。-->
+		<!--//title:'控制项预算生成',headerCls:'panel-header-gray',设置为 true，则在数据网格（datagrid）底部显示分页工具栏。-->
+		<table id="CItemBgGrid" class="hisui-datagrid" 
+				data-options="
+					border: false,
+					fit:true,
+					url:$URL, 
+					queryParams:{
+						ClassName: 'herp.budg.hisui.udata.uCtrlItemBudgCreate',
+						MethodName: 'ListMain',
+						hospid: hospid,
+						userid: userid,
+						year: '',
+						itemcode: '',
+						deptId: ''					
+					},
+					toolbar:'#tb',
+					rownumbers:true,
+					pagination:true,
+					pageSize:25,
+					pageList:[5, 10, 15, 20, 25, 50, 100]">
+			<thead>
+				<tr>
+					<!--formatter="dataFormat"格式转换函数-->
+					<th field="year" width="100" >年度</th>
+					<th field="hospName" width="250" hidden="true">医疗单位</th>
+					<th field="deptdr" width="80" hidden="true">科室ID</th>
+					<th field="deptname" width="250" >科室名称</th>
+					<th field="itemname" width="250" >科目名称</th>
+					<th field="ybudgtotal" width="120" halign="right" align="right" formatter="dataFormat">年度总预算</th>
+					<th field="January" width="100" halign="right" align="right" formatter="dataFormat">一月</th>
+					<th field="February" width="100" halign="right" align="right" formatter="dataFormat">二月</th>
+					<th field="March" width="100" halign="right" align="right" formatter="dataFormat">三月</th>
+					<th field="April" width="100" halign="right" align="right" formatter="dataFormat">四月</th>
+					<th field="May" width="100" halign="right" align="right" formatter="dataFormat">五月</th>
+					<th field="June" width="100" halign="right" align="right" formatter="dataFormat">六月</th>
+					<th field="July" width="100" halign="right" align="right" formatter="dataFormat">七月</th>
+					<th field="August" width="100" halign="right" align="right" formatter="dataFormat">八月</th>
+					<th field="September" width="100" halign="right" align="right" formatter="dataFormat">九月</th>
+					<th field="October" width="100" halign="right" align="right" formatter="dataFormat">十月</th>
+					<th field="November" width="100" halign="right" align="right" formatter="dataFormat">十一月</th>
+					<th field="December" width="100" halign="right" align="right" formatter="dataFormat">十二月</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	<!--methods.js文件中定义dataFormat格式转换函数-->
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/budgctrlitembudgcreate/ctrlitembudgcreate.js"></script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!-- 新检查申请 dhcapp.reportreq.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script language="Cache" runat="server">
+	   d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+   </script>
+	<link rel="stylesheet" href="../scripts/dhcdoc/dhcapp/css/reportreq.css"/>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/dhcappprintcom.js"></script>
+	<!-------------------------------->
+	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>		
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/layout.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reporttarwin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reportreq.js"></script>
+	<!-- 新旧版本兼容配置 -->
+	<server>
+	  d ##class(web.DHCXMLPConfig).LODOPInit()
+	  /// 新旧版本兼容配置
+	  s version=1 //##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var version="""_$g(version)_""";"_$c(13,10)
+	  w "</script>"
+   </server>
+</head>
+<body>
+<div id="MainPanel" class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:''"  border="false">
+		<div id="CenPanel" class="hisui-layout" fit="true" border="false">
+			<div data-options="region:'center',title:'检查方法',headerCls:'panel-header-gray'">
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'center',title:''" border="false">
+		                <label style="margin:0px 5px;">#(..Get("项目检索"))#</label><input id="item" style="width:245px;border:1px solid #95B8E7;margin:2px 3px;height:25px;" placeholder='#(..Get("请输入名称/拼音码"))#'/>
+		                <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
+		                </table>
+					</div>
+					<div data-options="region:'south',title:''" style='height:350px;' border="false">
+						<div class="hisui-layout" fit="true">
+							<div id="SelPanel" data-options="region:'center',title:'已开项目列表',headerCls:'panel-header-gray'" style="border-right:0;border-left:0;">
+								<div id="ItemSelList" border="false"></div>
+							</div>
+							<div data-options="region:'south',title:'注意事项',headerCls:'panel-header-gray'" style='height:175px;' border="false">
+								<div id="noteContent" style="background-color:#fff;margin: 0 auto;width: 97%;padding-top:10px;">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'east',title:'申请单内容',split:true,collapsible:false,headerCls:'panel-header-gray'" style='width:400px;'>
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',title:''" style="border-top:0;border-right:0;border-left:0;">
+				<div class="ui-div-m-l5-r5">
+	                 <div class="panel-title-h">
+	                 	<div>
+	                		<span class="ui-span-title-lv2">#(..Get("1、主诉"))#</span>
+	                	</div>
+	                	<div>
+	                		<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(1)">#(..Get("选择模板"))#</a></span>
+	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:savesymmodel()">#(..Get("保存模板"))#</a></span>
+	                	</div>
+	                </div>
+	                <div>
+	                    <textarea id="arPatSym" style="padding:5px 3px;width:98%;height:80px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="#(..Get("病人主诉！"))#"></textarea>
+	                </div>
+		        </div>
+				<div class="ui-div-m-l5-r5">
+					 <div class="panel-title-h">
+					 	<div>
+							<span class="ui-span-title-lv2">#(..Get("2、检查目的"))#</span>
+						</div>
+						<div style="float:right;">
+							<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(4)">#(..Get("选择模板"))#</a></span>
+			                <span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:savePurmodel()">#(..Get("保存模板"))#</a></span>
+		            	</div>
+		             </div>   
+	                <div>
+	                    <textarea id="ExaPurp" style="padding:5px 3px;width:98%;height:100px;font-size:14px;border: 1px solid #95B8E7;" placeholder="#(..Get("请输入检查目的！"))#"></textarea>
+	                </div>
+		        </div>
+		        <div class="ui-div-m-l5-r5">
+	               <div class="panel-title-h">
+	               		<div>
+	                		<span class="ui-span-title-lv2">#(..Get("3、现病史"))#</span>
+	                	</div>
+	                	<div>
+	                		<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(2)">#(..Get("选择模板"))#</a></span>
+	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:saveprehismodel()">#(..Get("保存模板"))#</a></span>
+	                	</div>
+	                </div>
+	                <div>
+	                    <textarea id="arDisHis" style="padding:5px 3px;width:98%;height:100px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="#(..Get("请输入现病史描述！"))#"></textarea>
+	                </div>
+		        </div>
+		        <div class="ui-div-m-l5-r5">
+	                <div class="panel-title-h">
+	                	<div>
+	                		<span class="ui-span-title-lv2">#(..Get("4、体征"))#</span>
+	                	</div>
+	                	<div>
+	                		<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(3)">#(..Get("选择模板"))#</a></span>
+	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:savesignmodel()">#(..Get("保存模板"))#</a></span>
+	                	</div>
+	                </div>
+	                <div>
+	                    <textarea id="arPhySig" style="padding:5px 3px;width:98%;height:100px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="#(..Get("请输入体征！"))#"></textarea>
+	                </div>
+		        </div>
+		        <div class="ui-div-m-l5-r5">
+	                <div class="panel-title-h"><span class="ui-span-title-lv2">#(..Get("5、诊断"))#</span></div>
+	                <div style="min-height:140px;border:1px solid #95B8E7;margin:8px 0px;overflow-y:scroll;">
+		                <table id="TmpDiags" border="1" cellspacing="0" cellpadding="1" class="form-table">
+		                </table>
+	                </div>
+		        </div>
+		        <div class="ui-div-m-l5-r5">
+	                <div class="panel-title-h"><span class="ui-span-title-lv2">#(..Get("6、其他项目"))#</span></div>
+	                <div style="min-height:100px;border:1px solid #95B8E7;">
+		                <table id="TmpOtherOpt" border="1" cellspacing="0" cellpadding="1" class="form-table">
+		                </table>
+	                </div>
+		        </div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south',title:'',headerCls:'panel-header-gray'" style='height:50px;' border="false">
+		<div class="pt-butttom" style="padding-left:40px;">
+			<span class="myCost" >
+				<span class="myCostleft">#(..Get("总费用"))#</span>
+				<span class="myCostleftbl"></span>
+				<span id="arExaReqCost" class="myCostright">#(..Get("0元"))#</span>
+			</span>
+			<!--label style="display:none;position:absolute;left:260px;">
+			<input id="arEmgFlag" type="checkbox" name="arEmgFlag" value="Y" style="margin:15px 0px 0px 45px;vertical-align:text-bottom;"></input>
+			<span style="color:red;font-weight:bold;">加急</span>			
+			</label-->
+			<a href="#" id="bt_sendreq" class="hisui-linkbutton btn-lightgreen m-left-20" data-options="iconCls:''" onclick="sendExaReq()">发送</a>
+			<a href="#" id="bt_printreq" class="hisui-linkbutton" data-options="iconCls:''" onclick="printExaReq()">打印</a>
+			<a href="#" id="bt_suredoc" class="hisui-linkbutton btn-lightgreen m-left-20" data-options="iconCls:''" onclick="sureExaReq()">确认</a>
+			<a href="#" id="bt_clsdoc" class="hisui-linkbutton" data-options="iconCls:''" onclick="closePopWin()">关闭</a>
+		</div>
+	</div>
+</div>
+<!--------------打印相关---------->
+<div id="hiddenEncrypt" style="width:0;height:0;">
+	<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+	</form>
+</div>
+<!-------------部位选择窗------------------->
+<div id="PopUpWin">
+	<span id="arExaItmID" style="display:none;"></span>
+	<span id="arExaItmDesc" style="display:none;"></span>
+	<div id="PopPanel" class="hisui-layout" fit="true">
+		<div data-options="region:'center',headerCls:'panel-header-gray'" border=false>
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',title:'检查部位',headerCls:'panel-header-gray',collapsible:false" style='height:260px;'>
+					<table id="ItmExaPart" border="1" cellspacing="0" cellpadding="1" class="form-table">
+					</table>
+				</div>
+				<div data-options="region:'center',title:'已选部位',headerCls:'panel-header-gray'">
+					<div id="dmPartList"></div>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'east',title:'后处理',split:true,headerCls:'panel-header-gray'" style='width:180px;'>
+		    <table id="ItmExaDisp" border="1" cellspacing="0" cellpadding="1" class="form-table">
+			</table>
+		</div>
+		<div data-options="region:'south'" style='height:50px;'>
+			<div class="pt-butttom">
+				<div style="float:right;padding-right:260px;">
+					<a href="#" id="clsPartWin" class="hisui-linkbutton btn-lightred" data-options="iconCls:''">关闭</a>
+					<a href="#" id="surPartWin" class="hisui-linkbutton btn-lightgreen" data-options="iconCls:''">确认</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--------------知识库消息提示窗------------------>
+<div id="FunUpWin">
+    <table id="TmpFunLib" border="0" cellspacing="0" cellpadding="1" class="form-table">
+    </table>
+</div>
+<!--------------模板保程序  2017-1-10---------->
+<div id="symwin">
+	<div style="margin-top:20px;">
+		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="saveSymLoc()">#(..Get("科室模板"))#</a>
+		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="saveSymUser()">#(..Get("个人模板"))#</a>
+	</div>
+</div>
+<div id="prehis">
+	<div style="margin-top:20px;">
+		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="savePrehisLoc()">#(..Get("科室模板"))#</a>
+		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="savePrehisUser()">#(..Get("个人模板"))#</a>
+	</div>
+</div>
+<div id="patsign">
+	<div style="margin-top:20px;">
+		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="savePatsignLoc()">#(..Get("科室模板"))#</a>
+		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="savePatsignUser()">#(..Get("个人模板"))#</a>
+	</div>
+</div>
+<div id="patpur">
+	<div style="margin-top:20px;">
+		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="savePatpurLoc()">#(..Get("科室模板"))#</a>
+		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="savePatpurUser()">#(..Get("个人模板"))#</a>
+	</div>
+</div>
+</body>
+</html>

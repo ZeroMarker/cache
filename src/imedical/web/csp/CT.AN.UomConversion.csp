@@ -1,0 +1,120 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术麻醉基本单位</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<style>
+	.hisui-validatebox, .validatebox-text, input[type='text']  {width:173px;border-radius:2px}
+	.required-color { color:red}
+	.validatebox-invalid {
+		background-image: none;
+		background-color: #fff;
+	}
+	.validatebox-text.validatebox-invalid {
+		border-color:#9ed2f2;
+	}
+</style>
+</head>
+<body class="hisui-layout">
+	
+		<div id="dataTools">
+		<form id="queryForm" method="post">
+			<div class="form-row-group">
+				<div>
+					<div class="form-row">
+						<div class="form-title-normal">名称</div>
+						<div class="form-item-normal"><input type="text" id="filterDesc" class="textbox"></select></div>
+						<a href="#" id="btnQuery" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</div>
+				</div>
+			</div>
+			<div class="form-row-group" style="padding:0px 0">
+				<a href="#" id="btnAdd" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+				<a href="#" id="btnEdit" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true">修改</a>
+				<a href="#" id="btnDel" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+			</div>
+			
+		</form>
+	</div>
+	<table id="dataBox"></table>
+	
+	<div id="dataDialog" class="hisui-dialog" data-options="closed:true,width:500,height:300">
+		<form id="dataForm" method="post">
+		 <div class="form-row">
+				<div class="form-title-right455"><label>源单位</label></div>	
+				<div class="form-item-normal"><input id="Source" name="Source" class="hisui-combobox textbox"></div>	
+				<div class="form-title-right455"><label>目标单位</label></div>	
+				<div class="form-item-normal"><input id="Target" name="Target" class="hisui-combobox textbox"></div>	
+		 </div>
+		 <div class="form-row">
+				<div class="form-title-right455"><label>转换系数</label></div>	
+				<div class="form-item-normal"><input id="Factor" name="Factor" class="textbox"></div>	
+		 </div>
+			
+			<input type="hidden" id="RowId" name="RowId" />
+		</form>
+	</div>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DataForm.js"></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+    var columns = [
+        [
+            { field: "SourceDesc", title: "源单位", width: 160 },
+            { field: "TargetDesc", title: "目标单位", width: 160 },
+            { field: "Factor", title: "转换系数", width: 160 }
+        ]
+    ];
+    var dataForm = new DataForm({
+        datagrid: $("#dataBox"),
+        gridColumns: columns,
+        //gridTitle: "单位转换系数",
+        gridTool: $("#dataTools"),
+        form: $("#dataForm"),
+        modelType: ANCLS.Code.UomConversion,
+        queryType: ANCLS.BLL.CodeQueries,
+        queryName: "FindUomConversion",
+        dialog: $("#dataDialog"),
+        addButton: $("#btnAdd"),
+        editButton: $("#btnEdit"),
+        delButton: $("#btnDel"),
+        queryButton: $("#btnQuery"),
+        submitCallBack: null,
+        openCallBack: null,
+        closeCallBack: null
+    });
+    dataForm.initDataForm();
+    
+    dataForm.datagrid.datagrid({
+       // headerCls: 'panel-header-gray',
+       border:false,
+        onBeforeLoad: function(param) {
+	        param.Arg1 = $("#filterDesc").val();
+            param.ArgCnt = 1;
+        }
+    });
+
+    $("#Source,#Target").combobox({
+        valueField: "RowId",
+        textField: "Description",
+        url: ANCSP.DataQuery,
+        // queryParams: {
+        //     ClassName: dhccl.bll.admission,
+        //     QueryName: "FindUom",
+        //     Arg1: "QueryFilter",
+        //     ArgCnt: 1
+        // },
+        onBeforeLoad: function(param) {
+            param.ClassName = ANCLS.BLL.CodeQueries,
+            param.QueryName = "FindUom",
+            param.Arg1 = "QueryFilter";
+            param.Arg2 = "";
+            param.ArgCnt = 2;
+        },
+        mode: "remote"
+    });
+});
+	</script>
+</body>
+</html>

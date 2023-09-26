@@ -1,0 +1,200 @@
+<!-- dhcpeireport.normal.new.csp -->
+<!-- 
+/// 创建时间		2007.04.01
+/// 创建人			xuwm 
+/// 主要功能		个人体检报告
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 体检汇总报告
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=5">
+
+<TITLE></TITLE>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s LocDesc="北京协和医院健康医学中心"
+	
+	//s CurGroup=%session.Get("LOGON.GROUPID")
+	s OPGroup=$G(^DHCPESetting("DHCPE","OPGroup"))
+	s NoPrint=0
+	//if (CurGroup=OPGroup) s NoPrint=1
+	s ReportIDs=$g(%request.Data("ReportID",1))
+	s ReportID=$P(ReportIDs,"^",1)	
+	s OtherReportIDs=$P(ReportIDs,"^",2,$L(ReportIDs,"^"))
+	//modify by rxb 20120917
+	i ReportIDs=""
+	{
+		s PatientID=$g(%request.Data("PatientID",1))
+		s IADM=$o(^DHCPEIADM(0,"PAADM",PatientID,0))
+	}
+	else
+	{
+		s IADM=$P( ^DHCPERPT(ReportID),"^",1)
+		s PatientID=$P(^DHCPEIADM(IADM),"^",1)
+	}
+	w:(""=PatientID) "<P>非法客户ID,无报告</P>"
+	Q:(""=PatientID) 
+	s LocID=$P(^PAADM(+PatientID),"^",4)
+	
+	s ReportCorderInfo=$G(^DHCPESetting("DHCPE","ReportInfo",LocID))
+	s LocDesc=$P(ReportCorderInfo,"^",1)
+	s LocTel=$P(ReportCorderInfo,"^",2)
+	s WWWAddress=$P(ReportCorderInfo,"^",3)
+	s LocAddress=$P(ReportCorderInfo,"^",4)
+	s GJLX=$P(ReportCorderInfo,"^",5)
+	
+	s HosCode=$G(^DHCPESetting("DHCPE","ReportCode",LocID))
+	s HosCode=$zcvt(HosCode,"L")
+	
+	i HosCode'="" s HosCode=HosCode_"."
+	s normalcss="../scripts/dhcpeireport.normal.new.css"
+	s covercss="../scripts/dhcpeireport.normal.cover.new.css"
+	s titlecss="../scripts/dhcpeireport.normal.head.title.new.css"
+	s patinfocss="../scripts/dhcpeireport.normal.head.patinfo.new.css"
+	s summarizecss="../scripts/dhcpeireport.normal.summarize.new.css"
+	s generaladvicecss="../scripts/dhcpeireport.normal.generaladvice.new.css"
+	//w generaladvicecss,!
+	s norcss="../scripts/dhcpeireport.normal.result.nor.new.css"
+	s liscss="../scripts/dhcpeireport.normal.result.lis.new.css"
+	s stationresultcss="../scripts/dhcpeireport.normal.stationresult.new.css"
+	s summarizegathercss="../scripts/dhcpeireport.normal.summarizegather.new.css"
+	s footercss="../scripts/dhcpeireport.normal.footer.new.css"
+	s illexplaincss="../scripts/dhcpeireport.normal.illexplain.new.css"
+</SCRIPT>
+
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(normalcss)#></LINK>
+
+
+<!-- 封面  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(covercss)#></LINK>
+<!-- 报告头 报告标题 -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(titlecss)#></LINK>
+<!-- 报告头 报告标题 -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(patinfocss)#></LINK>
+
+<!-- 科室小节  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizecss)#></LINK>
+<!-- 总检建议  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(generaladvicecss)#></LINK>
+
+<!-- 结果  
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.result.css"></LINK>
+-->
+<!-- 通用格式  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(norcss)#></LINK>
+<!-- 检验结果  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(liscss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(stationresultcss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizegathercss)#></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(footercss)#></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(illexplaincss)#></LINK>
+
+<SCRIPT SRC="../scripts/dhcpegreportHistogram.Report.js"></SCRIPT>
+<style type="text/css">
+	v\:*{ behavior:url(#default#VML); }
+	.Canve{ 
+		display:block; 
+		position:relative; 
+		width:80px; 
+		height:40px; 
+		left: 0px; 
+		top: 0px; 
+		border-top: 0 solid black;
+		margin-bottom:0cm;
+	}
+</style>
+</head>
+<BODY>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// 127.0.0.1/iMedical/web/csp/dhcpeireport.normal.new.csp?PatientID=633
+		s Type=$g(%request.Data("Type",1))
+		s CoverFlag=$g(%request.Data("CoverFlag",1))
+		s OnlyAdvice=$g(%request.Data("OnlyAdvice",1))
+		s IsSendMessage=$g(%request.Data("IsSendMessage",1))
+		s UserID=$j_"^"_PatientID
+		// 获取报告信息
+		w:(""=PatientID) "<P>非法客户ID,无报告</P>"
+		Q:(""=PatientID) 
+		s Flag=##Class(web.DHCPE.ReportOutToWeb).GetReportInfor(PatientID,UserID)
+		// 输出报告
+		w:("1"'=Flag) "<P>未找到相关客户信息</P>"
+		Q:("1"'=Flag)
+		s AddItem=$G(^TMPReport(UserID,"Result","AddItem"))
+		d $zobjclassmethod("csp.csp.dhcpeireport.normal.cover.new","OnPageCSPROOT")
+    	d $zobjclassmethod("csp.csp.dhcpeireport.normal.generaladvice.new","OnPageCSPROOT")
+    	d $zobjclassmethod("csp.csp.dhcpeireport.normal.stationresult.new","OnPageCSPROOT")
+		k ^TMPReport(UserID)
+	</SCRIPT>
+
+	<SCRIPT language="javascript">
+
+	document.body.onload = BodyLoadHandler;
+
+	function BodyLoadHandler() {
+			
+		if(document.readyState=='complete') {
+			
+			
+		} else {
+			timeIframe=setTimeout("BodyLoadHandler()",5);
+			return false;
+		}
+		SetGrouph();
+	}
+	</SCRIPT>
+
+	<Script language="Cache" RUNAT="SERVER">
+		w "<SCRIPT language='javascript'>",!
+		
+		q:OnlyAdvice="Y"
+		w "function SetGrouph(){",!
+		s i=1
+		s STSequence=""
+		f  s STSequence=$O(^TMPReport(UserID,"HistoryResult",STSequence)) q:STSequence=""  d
+		.s ODSub=""
+		.f  s ODSub=$O(^TMPReport(UserID,"HistoryResult",STSequence,ODSub)) q:ODSub=""  d
+		..q:ODSub=1
+		..;w "alert(ODSub)"
+		..s CurData=$g(^TMPReport(UserID,"HistoryResult",STSequence,ODSub))
+		..q:CurData=""
+		..s Item1=$P(CurData,"^",1)
+		..s Item2=$P(CurData,"^",2)
+		..s Item3=$P(CurData,"^",3)
+		..s Item4=$P(CurData,"^",4)
+		..s ODID=$P(CurData,"^",5)
+		..;w aaaa
+		..;w ODID,!
+		..;s ODType=$p($g(^DHCPEST(+ODID,"OD",$p(ODID,"||",2))),"^",2)
+		..;q:(ODType="T")||(ODType="S")
+		
+		..;i Item4="" s Item4="&nbsp;"
+		..w "var values=new Array();",!
+		..w "var Labels=new Array();",!
+		..i (+Item2<10)&&(+Item3<10)&&(+Item4<10) d
+		...s:Item2'="" Item2=Item2*20
+		...s:Item3'="" Item3=Item3*20
+		...s:Item4'="" Item4=Item4*20
+		..w "values[0]='"_Item2_"';",!
+		..w "values[1]='"_Item3_"';",!
+		..w "values[2]='"_Item4_"';",!
+		..w "Labels[0]='';",!
+		..w "Labels[1]='';",!
+		..w "Labels[2]='';",!
+		..w "DrawHistogram(Graph"_(i+1)_",Labels,values,0,0);",!
+		..s i=i+1
+		w "}",!
+		w !,"<"_"/SCRIPT>",!
+		
+	</Script>
+</BODY>
+</HTML>

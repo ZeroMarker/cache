@@ -1,0 +1,27 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "getBDQObj"=action {
+		s sql="SELECT ID,BaseObjName as Name, BaseObjDesc || '[' || BaseObjName || ']' as Descript FROM DHCWL_BaseDataQuery.QueryObj"
+		s start=0,end=0
+		s jsonPro="ID,Name,Descript"
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //¹Ì¶¨Ð´·¨
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"		
+		
+		
+		q			
+	}elseif "searchSchema"=action {
+		s searchValue=$g(%request.Data("searchValue",1))
+		
+	}
+</script>

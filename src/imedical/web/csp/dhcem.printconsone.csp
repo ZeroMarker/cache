@@ -1,0 +1,195 @@
+<html style="">
+<head>
+<meta http-equiv="Content-Type" content="text/html; " /> 
+<title></title>
+<script type='text/javascript' src='../scripts/websys.js'></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>	
+<script language="Cache" runat="server">
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/printconsone.js" charset="gb2312"></script>
+
+<script Language="Javascript">
+	var CstItmIDs="#(%request.Get("CstItmIDs"))#" //会诊ID串串
+	var CsType="#(%request.Get("CsType"))#" 
+</script>
+<style>
+	*{
+		font-size:4.2175mm; /*小四*/
+	}
+	.prtTitleDiv{
+		width:210mm;	
+	}
+	
+	.textOver{
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	table,table tr th, table tr td { 
+		border:2px solid #000000;font-size:5mm; /*唯一一个设置成Px的位置*/
+		box-sizing:border-box;
+		text-overflow: ellipsis;
+	}
+	
+	table { 
+		line-height:8mm;max-height:8mm;
+		text-align: center; 
+		border-collapse:collapse;
+		table-layout: fixed;
+   		border-spacing: 0;
+	} 
+	.td1{
+		width:36mm;
+		max-width:36mm;
+		min-width:36mm;
+	}
+	.td2{
+		width:60mm;
+		max-width:60mm;
+		min-width:60mm;
+	}
+	.td3{
+		width:36mm;
+		max-width:36mm;
+		min-width:36mm;
+	}
+	.td4{
+		width:60mm;
+		max-width:60mm;
+		min-width:60mm;
+	}
+	
+	.tdText{
+		text-align: left;
+	}
+	
+	.imgDiv,.img{
+		width:81mm;
+		height:13.5mm;	
+	}
+	.imgDiv{
+		padding-left:60mm;	
+	}
+	
+	.prtTitleDiv{
+		height:15mm;
+		line-height:15mm;
+	}
+	
+	.prtTitle{
+		font-size:7.38mm;  /*二*/
+		font-weight:bold;
+	}
+	.CstCstType{
+		font-size:4.83mm;
+	}
+	.CstTrePro{
+		height:45mm;
+		max-height:45mm;
+		min-height:45mm;
+		width:156mm;
+		max-width:156mm;
+		min-width:156mm;
+		padding:3mm;
+		white-space:normal;
+	}
+	
+	.CstPurpose{
+		height:45mm;
+		max-height:45mm;
+		min-height:45mm;
+		width:156mm;
+		max-width:156mm;
+		min-width:156mm;
+		padding:3mm;
+		white-space:normal;
+	}
+	.CsOpinion{
+		height:100mm;
+		max-height:100mm;
+		min-height:100mm;
+		width:156mm;
+		max-width:156mm;
+		min-width:156mm;
+		padding:3mm;
+		white-space:normal;
+	}
+	#CsOpinion{/*hxy 2019-08-07*/
+		white-space: pre-wrap;
+	}
+</style>
+
+</head>
+
+<body style="margin:0 auto">
+	<div id="imgDiv" class="imgDiv" style="display:none"> 
+		<img class="img" src="../scripts/dhcnewpro/images/logo.png" alt="" title="">
+	</div>
+	
+	<div style="text-align: center;" class="prtTitleDiv textOver">
+		<span class="prtTitle" style=" ">会诊记录(</span>
+		<span class="prtTitle" id="tiCstTypeDesc"></span>
+		<span class="prtTitle">)</span>
+		<span class="CstCstType" id="CstCstType"></span>
+	</div>
+	
+	<div>
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+				<td class="td1">患者姓名:</td>
+				<td class="td2 tdText" id="patName"></td>
+				<td class="td3">住院科室:</td>
+				<td class="td4 tdText" id="patInLoc"></td>
+			</tr>
+			<tr>
+				<td class="td1">患者床号:</td>
+				<td class="td2 tdText"  id="patSeatNo"></td>
+				<td class="td3">住院号:</td>
+				<td class="td4 tdText" id="inHospNo"></td>
+			</tr>
+			<tr>
+				<td class="td1">申请科室:</td>
+				<td class="td2 tdText" id="CstRLoc"></td>
+				<td class="td3" id="consSendDoc">申请医生:</td>
+				<td class="td4 tdText" id="CstRUser"></td>
+			</tr>
+			<tr>
+				<td>联系电话:</td>
+				<td class="tdText" id="CstPhone" colspan="3"></td>
+			</tr>
+			<tr>
+				<td class="td1">简要病历:</td>
+				<td class="tdText CstTrePro textOver" id="CstTrePro" colspan="3"></td>
+			</tr>
+			
+			<tr>
+				<td>会诊目的:</td>
+				<td class="tdText CstPurpose textOver" id="CstPurpose" colspan="3"></td>
+			</tr>
+			<tr>
+				<td class="td1">会诊结论:</td>
+				<td class="tdText CsOpinion textOver"  id="CsOpinion" colspan="3"></td>
+			</tr>
+			<tr>
+				<td class="td1">会诊时间:</td>
+				<td class="tdText"  id="CstNDateTime" colspan="3"></td>
+			</tr>
+			<tr>
+				<td class="td1">会诊科室:</td>
+				<td class="td2 tdText" id="CsLocDesc"></td>
+				<td class="td3" id="consReceiveDoc">会诊医生:</td>
+				<td class="td4 tdText" id="CstRDoctor"></td>
+			</tr>
+			<tr>
+				<td class="td1">联系电话:</td>
+				<td class="td2 tdText" id="CstRPhone"></td>
+				<td class="td3">申请时间:</td>
+				<td class="td4 tdText" id="CstRDateTime"></td>
+			</tr>
+		<table>
+	</div>
+</body>
+</html>

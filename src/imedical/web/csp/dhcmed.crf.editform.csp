@@ -1,0 +1,80 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!-- <meta http-equiv="Content-Type" content="text/html;" /> -->
+		
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+        <DHCMED:HEAD></DHCMED:HEAD>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		<script type="text/javascript" src='../scripts_lib/ext3.1.0/ux/MultiSelect.js'></script>
+		<script type="text/javascript" src='../scripts_lib/ext3.1.0/ux/ItemSelector.js'></script>
+		<script type="text/javascript" src='../scripts/dhcmed/ext.ux/CheckColumn.js'></script>
+		<script type="text/javascript" src='../scripts/dhcmed/crf/editForm/gui.js'></script>
+		<script type="text/javascript" src='../scripts/dhcmed/crf/editForm/event.js'></script>
+		<script language="javascript" type="text/javascript">
+			var t = new Object();
+			
+			Ext.QuickTips.init();
+			var objControlArry = new Array();
+			
+			function window_onload() {
+				var objViewscreen = new InitViewscreen();
+				objControlArry['Viewscreen'] = objViewscreen;			
+				}
+        </script>
+    <!--TRAK:HEAD></TRAK:HEAD-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<server>
+	s FormID=%request.Data("FormID",1)
+	s Type=%request.Data("Type",1)
+	;s FormID="15"
+	s CName=""
+	s EName=""
+	s ESchema="DHCMed"  //默认表单类型DHCMed
+	s BusinessCode=""
+	s BusinessName=""
+  //获取表单定义信息
+ 	i FormID'="" d
+	.s obj=##class(DHCMed.CR.PO.Form).%OpenId(+FormID)
+	.s CName=obj.CName
+	.s EName=obj.EName
+	.s BusinessCode=obj.Business
+	.s objDic=##class(DHCMed.SS.Dictionary).GetByTypeCode("CRBusiness",BusinessCode,"1")
+	.s BusinessName=objDic.Description
+	
+	w "<script language='javascript' type='text/javascript'>"
+	w "var FormID='"_FormID_"';"
+	w "var CName='"_CName_"';"
+	w "var EName='"_EName_"';"
+	w "var ESchema='"_ESchema_"';"
+	w "var BusinessCode='"_BusinessCode_"';"
+	w "var BusinessName='"_BusinessName_"';"
+	w "var ProCode='"_Type_"';"
+	 //获取表单状态字典
+	s rs=##class(%ResultSet).%New("DHCMed.SSService.DictionarySrv"_":"_"QryDictionary")
+	s execute="set %sc=$zobjmethod(rs,""Execute"""_",""CRFDataStatus"""
+	s execute=execute_")"
+	x execute
+
+	//构造表单状态字典listbox
+	w "var array=['<table align="""_"center"">',"
+	w "'<tr> <td align="""_"left"">',"
+	w "'<select name="""_"input""size="""_"10""multiple="""_"multiple""id="""_"input""style="""_"width:200px; font-size:16px""> ',"
+	f  q:rs.Next()=0  d
+	.w "'<option value="""_rs.GetDataByName("Code")_""">"_rs.GetDataByName("Description")_"</option> ',"
+	w "'</select> ','</td> </tr>','</table>'];" 
+	w "</script>"
+	</server>
+	<body onload="return window_onload()">
+	</body>
+</html>

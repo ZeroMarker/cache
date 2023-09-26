@@ -1,0 +1,68 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n EpisodeID,type
+ s EpisodeID=%request.Get("EpisodeID")
+ s ActionType=%request.Get("ActionType")
+</SERVER>
+<SCRIPT language="Javascript">
+var EpisodeID='#(EpisodeID)#';
+var ActionType='#(ActionType)#';
+var ImageAndVoice=null;
+
+function DoError(e) {
+		if (confirm(e + '\nImage and Voice Control not installed or not functioning !\n\n Please check that you have installed the Image and Voice Control.\n Please check that your browser settings allow you to script activeX controls.')) {
+			alert('OK. !!!');
+		}
+}
+
+function NewScan() {
+	ImageAndVoice.ImageScanNew(EpisodeID,session['LOGON.USERID']);
+}
+function NewVoice() {
+	ImageAndVoice.VoiceRecordNew(EpisodeID,session['LOGON.USERID']);
+}
+function NewImage() {
+	ImageAndVoice.ImageClipBoardNew(EpisodeID,session['LOGON.USERID']);
+}
+function NewPreScan() {
+	ImageAndVoice.ImagePreScannedNew(EpisodeID,session['LOGON.USERID']);
+}
+function BodyLoadHandler(e) {
+	try {
+		ImageAndVoice=new self.ActiveXObject("tkMTImagesAndVoice.clsCommand");
+		ImageAndVoice.Init(EpisodeID);
+		switch (ActionType) {
+	 		case "NewScan" :
+	 			NewScan();
+	 			break;
+	 		case "NewImage" :
+	 			NewImage();
+	 			break;
+	 		case "NewVoice" :
+	 			NewVoice();
+	 			break;
+	 		case "NewPreScan" :
+	 			NewPreScan();
+	 			break;
+		}
+	} catch (e) {
+		DoError(e);
+	} 	
+}
+</SCRIPT>
+
+<BODY onload="BodyLoadHandler();">
+</BODY>
+
+</html>

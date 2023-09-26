@@ -1,0 +1,71 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.noraml.generaladvice.csp
+		
+		s GeneralAdviceTitle="总检结论及建议: 在您本次体检的项目中,有以下几方面的问题敬请注意!"
+		s GeneralAdvice=$G(^TMPReport("GeneralAdvice", "Advice"))
+		s AduitUser=$G(^TMPReport("GeneralAdvice","AduitUser"))
+		/*
+		//s GeneralAdviceData=..EscapeHTML(GeneralAdvice)
+		
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(13,10)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(13,10),iLLoop)_"<br>"
+		.
+		
+		s GeneralAdvice=GeneralAdviceData
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(32)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(32),iLLoop)_"&nbsp;"
+		.
+		
+		s AduitDate=$G(^TMPReport("GeneralAdvice", "AduitDate"))
+		s AduitUser="" //$G(^TMPReport("GeneralAdvice","AduitUser"))*/
+		s PatName=$G(^TMPReport("PatInfo","PatName"))
+		s PatSex=$G(^TMPReport("PatInfo","PatSex"))
+		s PatSexString=""
+		i PatSex="男" s PatSexString="先生"
+		i PatSex="女" s PatSexString="女士"
+		s HellTitle="尊敬的"_PatName_PatSexString_": 您好!<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;感谢您光临北京友谊医院医疗保健中心。<br><br>"
+		s HellFooter="<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;谢谢您对我们工作的支持和信任。目前的医疗技术对于疾病的筛查仍有其空窗期和检验的盲点，体检中未发现异常的部分，不代表完全没有潜在性疾病。希望您能听从我们的建议，并要坚持定期体检，如有异常症状出现，请您随时就诊，祝您身体健康！"
+		s LocName="医疗保健中心"
+	</Script>
+		
+<DIV class='Page GeneralAdvice'>
+	<TABLE  border=0 class="GeneralAdviceTable" width="664">
+		<THEAD>
+			<TR>
+				<TD width="663" class="GeneralTitle{">#(HellTitle)#</TD>
+			</TR>
+			<TR>
+				<TD width="663" class="GeneralAdviceTitle">#(GeneralAdviceTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+		<csp:LOOP COUNTER="I" FROM="1" TO="1000">
+
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		q:I>$L(GeneralAdvice,$C(13,10))
+		s GeneralAdviceData=$P(GeneralAdvice,$C(13,10),I)_"<br>"
+		i ((I-2)#3)=0 s GeneralAdviceData=""_GeneralAdviceData
+		</Script>
+		<CSP:IF CONDITION=(""'=GeneralAdviceData)>
+				<TR>
+				<TD class="GeneralAdviceData">
+					#(GeneralAdviceData)#
+				</TD>		
+			</TR>
+		</CSP:IF>
+	</csp:LOOP>
+			<TR>
+				<TD class="GeneralDoctor">总检医生:&nbsp;&nbsp#(AduitUser)#</TD>
+			</TR>
+			<!--TR>
+				<TD class="GeneralFooter">#(HellFooter)#</TD>
+			</TR>
+			<TR>
+				<TD class="GeneralLocName">#(LocName)#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+			</TR-->
+		</TBODY>
+	</TABLE>
+</DIV>
+

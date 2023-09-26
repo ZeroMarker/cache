@@ -1,0 +1,133 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+</HEAD>
+<BODY>
+ 	<!--<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script> -->
+ 	<!--<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>-->
+ 	<!--<script type="text/javascript" src="../scripts/DHCDocIPBookNew.Print.js"></script>-->
+	<server>
+		d ##class(web.DHCMGNurData).PrintLinkFile()
+ 		s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ 		s CacheDB=$P(setstr,"^")
+		s webIP=$P(setstr,"^",2)
+		s dllstr=webIP_"/dhcmg/PrintComm.dll#PrintComm.PrintCom"
+ 		w "<OBJECT id=""PrintComm""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+ 		
+ 		w "<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/DHCNURPRINT.js""></script>"
+ 		//s startPageNumber = ##class(EPRservice.BOPrintPageNumber).GetPageNumber(pageInfoID)
+ 		s GetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.GetPageNumber"))
+        s SetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.SetPageNumber"))
+        s GetPerModel=##Class(%CSP.Page).Encrypt($lb("User.DHCNURMoudelLink.GetPerModel"))
+ 		s PatInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurComm.PatInfo"))
+ 		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s categoryDetail = $Get(%request.Data("CategoryDetail",1),"")
+  		s pageInfoID = $Get(%request.Data("PageInfoID",1),"") 
+	</server>
+	<SCRIPT Language="Javascript">
+	    var PatInfo = "#(PatInfo)#";
+	    var GetPerModel = "#(GetPerModel)#";
+	    var GetPageNumMethod="#(GetPageNumMethod)#";
+	    var SetPageNumMethod="#(SetPageNumMethod)#";
+	    //var EpisodeID = window.dialogArguments.EpisodeID;
+		var EpisodeID = '#(EpisodeID)#';
+		var pageInfoID = '#(pageInfoID)#';
+		var categoryDetail = '#(categoryDetail)#';
+		//printcomm(EpisodeID) 
+		document.body.onload = BodyLoadHandler;
+	function BodyLoadHandler() 
+	{   
+	    ///获取打印起始页码
+	    var startPageNumber=cspRunServerMethod(GetPageNumMethod,pageInfoID);
+	    var ret=cspRunServerMethod(GetPerModel,EpisodeID);
+	    var pinfo=cspRunServerMethod(PatInfo,EpisodeID);
+		//alert(ret)
+	if (ret!="")
+	{   var arr=ret.split("|")
+	    //alert(arr.length)
+	    var l=arr.length
+	    var curpage=startPageNumber
+	    //alert(curpage)
+	  for (i=0;i<l;i++)
+	  {
+		var str=arr[i]
+		var str=str.split("^")
+		var Code=str[0]      //界面模板
+		var PrintCode=str[1] //打印模板
+		var Type=str[2]      //模板类型
+		var PrintComm;
+	    PrintComm = document.getElementById("PrintComm"); 
+	    PrintComm.SetPreView("0");
+		PrintComm.SetConnectStr("#(CacheDB)#");
+    	PrintComm.WebUrl="#(webIP)#"+"/dthealth/web/DWR.DoctorRound.cls";
+		if (Type=="表格")
+		{
+	      var parr=EpisodeID+"!!!!!"+Code+"!"
+		  PrintComm.TitleStr=pinfo;
+		  PrintComm.Adm=EpisodeID;
+    	  PrintComm.ItmName =PrintCode ; 
+    	  PrintComm.ID = "";
+		  PrintComm.MultID = "";
+    	  PrintComm.SetConnectStr("#(CacheDB)#");
+    	  PrintComm.WebUrl="#(webIP)#"+"/dthealth/web/DWR.DoctorRound.cls";
+    	  PrintComm.SetPreView("0");
+    	  //alert(Code)
+    	  //alert(curpage)
+    	  PrintComm.curPages=curpage;
+    	  PrintComm.stRow=0;;
+    	  PrintComm.stprintpos=0;
+    	  PrintComm.SetParrm(parr); // ="EpisodeId" ; //"p1:0^p2:"
+		  PrintComm.PrintOut();
+		  curpage=PrintComm.Pages+1;
+		 // alert(curpage)
+		}
+		if (Type=="评估单")
+		{
+			PrintComm.ItmName = PrintCode; 
+			PrintComm.curPages=curpage;
+		    var parr="@"+EpisodeID+"@"+Code;
+		    PrintComm.MthArr="web.DHCNurMouldDataComm:GetPrnValComm&parr:"+parr;
+		    PrintComm.PrintOut();
+		    curpage=PrintComm.Pages+1;
+		    //startPageNumber=PrintComm.Pages;
+		    
+		}
+		if (Type=="混合")
+		{
+		}
+		
+	  }
+	    //alert(curpage)
+	    var endpage=curpage
+	    //保存设置页码
+	    var RetVal=cspRunServerMethod(SetPageNumMethod,endpage,pageInfoID);	
+	}
+		
+		}
+		setTimeout("parent.printNext();", 3000 )
+	</SCRIPT>
+</BODY>
+</HTML>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	Cache Server Page </title>
+
+</head>
+
+<body>
+
+		<!-- Put your page code here -->
+		My page body
+</body>
+</html>

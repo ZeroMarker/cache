@@ -1,0 +1,88 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+    <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+	<DHCMED:HEAD></DHCMED:HEAD>
+	<SCRIPT LANGUAGE="JavaScript">
+	function showme(str)
+	{
+	 var oSon=document.getElementById("hint");
+	 if (oSon==null) return;
+	 with (oSon) 
+	 {
+	  innerText=str;
+	  style.display="block";
+	  //style.pixelLeft=event.clientX+document.body.scrollLeft+6;
+	  //style.pixelTop=event.clientY+document.body.scrollTop+9;
+	  style.left=window.event.clientX+window.document.body.scrollLeft+6;
+	  style.top=window.event.clientY+window.document.body.scrollTop+9;
+
+	 }
+	}
+	function hidme()
+	{
+	 var oSon=document.getElementById("hint");
+	 if (oSon==null) return;
+	 oSon.style.display="none";
+	}
+	</SCRIPT>
+	</head>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/Portal.css" />
+
+	<server>
+		;w "show grid "_portletId_":</br>"
+		s objPortlet= ##class(DHCMed.SS.Portlets).GetObjById(portletId)
+ 		s strClass=objPortlet.QueryName
+
+ 		w:strClass="" "show grid "_portletId
+ 		if strClass'="" {
+			 s strClassName=$p(strClass,"||",1)
+			 s strQueryName=$p(strClass,"||",2)
+			 ;s arg=$p(strClass,"||",3)
+ 		
+			s rs=##class(%ResultSet).%New(strClassName_":"_strQueryName)
+			s execute="set %sc=$zobjmethod(rs,""Execute"""
+			s execute=execute_")"
+			x execute
+			
+		    s columnStr=##class(DHCMed.SSService.PortletsSrv).getColumnsString(portletId)
+		    s columnName=$p(columnStr,"#",1)
+		    s columnHeader=$p(columnStr,"#",2)
+			w "<table class="""_"tableStyle01"""_" width="""_"100%"""_">" // border='0' cellpadding='0' cellspacing='0'
+			s columns=$l(columnHeader,"^")
+			s:columns>4 columns=4
+			w "<tr>"
+			f i=1:1:columns  {
+				w "<td class="""_"TDstyle02"""_">"_$p(columnHeader,"^",i)_"</td>"
+				;w "<td class="""_"TDstyle02"""_">"_rs.GetColumnName(i)_"</td>"
+			}
+			w "</tr>"
+			f  q:rs.Next()=0  d
+			.w "<tr>"
+			.f i=1:1:columns  d
+			..s columnData=rs.GetDataByName($p(columnName,"^",i))
+			..if $l(columnData)>6 d
+			...w "<td class="""_"TDstyle01"""_" onmouseover=showme(""_columnData_"") onmouseout=hidme()"
+			...w " onmousemove=showme(""_columnData_"") son="""_"hint"">"_$e(columnData,1,6)_"...</td>"
+			...//w "<div id="""_"hint"""_" style="""_"display:none"""_"></td>" // style='display:none'
+			..e  d
+			...w "<td class="""_"TDstyle01"""_">"_columnData_"</td>"
+	        .w "</tr>"
+			w "</table>"
+			w "<div id="""_"hint"""_" style="""_"position:absolute;z-index:9999;display:none;background-color:#0066FF;color:white;font-size:12px"""_">"
+		 	s frequency=+(objPortlet.Frequency)*60 //×Ô¶¯Ë¢ÐÂ
+ 			w:(objPortlet.AutoRefreash=1)&(frequency'=0) "<head><meta http-equiv="""_"refresh"_""" content=""_frequency_""></head>"
+
+     	}
+</server>
+
+<body>
+
+</body>
+</html>

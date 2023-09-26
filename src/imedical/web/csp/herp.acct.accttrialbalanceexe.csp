@@ -1,0 +1,56 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	
+	s AcctSubjCode=$Get(%request.Data("AcctSubjCode",1))
+	s AcctSubjNameAll=$Get(%request.Data("AcctSubjNameAll",1))
+	s TDebtSum=$Get(%request.Data("TDebtSum",1))
+	s TCreditSum=$Get(%request.Data("TCreditSum",1))
+	s EndDebtSum=$Get(%request.Data("EndDebtSum",1))
+	s EndCreditSum=$Get(%request.Data("EndCreditSum",1))
+	s BeginDebtSum=$Get(%request.Data("BeginDebtSum",1))
+	s BeginCreditSum=$Get(%request.Data("BeginCreditSum",1))
+	s Direction=$Get(%request.Data("Direction",1))
+	s subjlevel=$Get(%request.Data("subjlevel",1))
+	s year=$Get(%request.Data("year",1))
+	s bookID=$Get(%request.Data("bookID",1))
+	s userid=$Get(%request.Data("UserID",1))
+	
+	i action="list"  d
+	.w ##class(herp.acct.udata.uAcctTrialBalance).List(sortField, sortDir, start, limit,subjlevel,bookID)
+	
+	i action="getLedgerFlag"  d
+	.s result=##class(herp.acct.udata.uAcctTrialBalance).getLedgerFlag(bookID)
+	.i result = 1 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+
+	i action="TrialBalance" d
+	.s result=##class(herp.acct.udata.uAcctTrialBalance).TrialBalance(bookID)
+	.i result '= "" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',refresh:'true', info:''}"
+	
+	
+	i action="Acctstart" d
+	.s result=##class(herp.acct.udata.uAcctTrialBalance).Acctstart(bookID,userid)
+	.i result = "" d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',refresh:'true',info:'"_result_"'}"
+
+</script>

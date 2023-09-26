@@ -1,0 +1,67 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcwmr/css/main.css" />
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.Setting.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcwmr/ss/flow/gui.js'></script>	
+		<script language='javascript' src='../scripts/dhcwmr/ss/flow/event.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/ss/flow.detail/detail.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/ss/flow.batch/gui.js'></script>	
+		<script language='javascript' src='../scripts/dhcwmr/ss/flow.batch/event.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/ss/barcode/printbarcode.js'></script>
+		<SERVER>
+			Set MrClassCode=%request.Get("MrClassCode") //病案类别代码
+			Set CtlocID=%session.Get("LOGON.CTLOCID","")
+			Set objMrType=##class(DHCWMR.SSService.WorkFlowSrv).GetMrType(CtlocID,MrClassCode)
+			w "<script language='javascript' type='text/javascript'>"_$c(13,10)
+			Set t=##class(DHCMed.ClassMethodService).SerializeObject(objMrType)
+			w $Extract(t,15,$l(t))_$c(13,10)
+			w "var CurrMrType=objTmp; //病案类型对象"_$c(13,10)
+			Set t=##class(DHCMed.ClassMethodService).SerializeObject(objMrType.MTMrClass)
+			w $Extract(t,15,$l(t))_$c(13,10)
+			w "var CurrMrClass=objTmp; //病案分类定义"_$c(13,10)	
+			
+			w "var BarCodePrinterName='"_##class(DHCWMR.SS.Config).GetValByKey("BarCodePrinterName",%session.Get("LOGON.HOSPID"))_"';  //条码打印机名称"_$c(13,10)
+			w "var BarCodeType='"_##class(DHCWMR.SS.Config).GetValByKey("BarCodeType",%session.Get("LOGON.HOSPID"))_"';  //条码类别"_$c(13,10)
+			
+			w "var DefaultPrintVolBarcode="_##class(DHCWMR.SS.Config).GetValByKey("DefaultPrintVolBarcode",%session.Get("LOGON.HOSPID"))_";  //默认打印卷条码"_$c(13,10)
+			w "var DefaultPrintMrBarcode="_##class(DHCWMR.SS.Config).GetValByKey("DefaultPrintMrBarcode",%session.Get("LOGON.HOSPID"))_";  //默认打印病案条码"_$c(13,10)
+			
+			w "</script>"
+		</SERVER>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			
+            var objControlArry = new Array();
+            function window_onload() {
+            	  var objviewScreen = new InitviewScreen();
+                 objControlArry['viewScreen'] = objviewScreen;
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

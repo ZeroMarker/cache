@@ -1,0 +1,221 @@
+<HTML>
+<HEAD>
+<TRAK:HEAD></TRAK:HEAD> 
+<meta http-equiv="Content-Type" content="text/html; ">
+<EASYUI:CLINICAL/>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgCtLocDesc="#(%session.Get("LOGON.CTLOCDESC"))#";  //科室描述
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<!-- Put your page Title here -->
+	<style type="text/css">
+	.report_table{
+		border-collapse:collapse;
+		border:1px solid #95B8E7;
+	}
+	.report_table td{
+		border:1px solid #95B8E7;
+		padding:5px 5px;
+	}
+   </style>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/pharconsult.js"></script>
+	<style type="text/css">
+	     .td_head{
+		     /*background-color: #EEEEEE;*/
+		  }
+		 .dialog-toolbar, .dialog-button {
+   			background:'';
+		  }
+		  .datagrid-row {
+			 height: 32px;
+		  }
+		.datagrid-row-selected {
+			/*background: #ADFAFC;*/
+		}
+		/* 兼容WebKit核心和IE核心的浏览器 */
+		.ui-input {
+		    -webkit-box-sizing: border-box;
+		    -moz-box-sizing: border-box;
+		    height: 25px;
+		    width:160px;
+		    border:1px solid #95B8E7;
+		}
+		.ui-input-490 {
+		    height: 25px;
+		    width:490px;
+		    border:1px solid #95B8E7;
+		}
+		textarea:focus,input:focus{ 
+			/*background-color:#ffa8a8;*/
+		}
+		.tb_td_bk{
+			width:100px;
+			/*background:rgb(238, 247, 254);*/
+		}
+		.tb_td_required{
+			font-weight:bold;
+			/* color: #ffa8a8; */
+			color: red;
+		}
+		#tftf div div.panel-body {
+			border-style: none;
+		}
+		#tftf div div.panel-header{
+			border-top:0px;
+			border-left:0px;
+			border-right:0px;
+		}
+		#tftf .datagrid-header,#tftf .datagrid-td-rownumber {
+			background-color: #EEF7FE;
+			background: linear-gradient(to bottom,#EEF7FE 0,#EEF7FE 100%);
+			filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#EEF7FE,endColorstr=#EEF7FE ,GradientType=0);
+		}
+	</style>
+</head> 
+<body>
+<!--以下定义药学咨询界面-->
+	<div id="mainpanel" class="easyui-layout" fit="true">
+	    <!--查询条件区-->
+		<div data-options="region:'north',title:'药学咨询'" style="width:400px;height:110px" >
+			<!--查询条件布局使用table-->
+			<table >
+					<tr style="height:10">
+					    <td width="30"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>				
+					</tr>
+					<tr>
+						<td></td>
+						<td style="padding-right:5px">开始日期</td>
+						<td><input id="startDate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td></td>
+						<td></td>
+						<td style="padding-right:5px">描述</td>
+						<td><input id="inConsDesc" style="width:180;border:1px solid #95B8E7;"/></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-search">查询</a></td>
+						<td></td>
+						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-add">新建</a></td>
+						<td></td>
+						<td>
+						<!--
+						<a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-remove">删除</a>
+						-->
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td style="padding-right:5px">结束日期</td>
+						<td><input id="endDate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+					</tr>
+			</table>
+		</div>
+		<!--数据列区域-->
+		<div data-options="region:'center'">
+			<div id="conDetList" fit="true"></div>
+		</div>
+	</div>
+	<div id="newConWin" style="padding:0px">
+		<table border="1" cellspacing="0" cellpadding="1" class="report_table">
+			<tr style="display:none">
+				<td align="right" class="tb_td_bk"></td>
+				<td width="180px"><input id="consPatientID" class="ui-input"/></td>
+				<td align="right" class="tb_td_bk">咨询ID</td>
+				<td width="180px"><input id="consultID" style="width:145px;border:1px solid #95B8E7;" readonly/></td>
+				<td align="right" class="tb_td_bk"></td>
+				<td width="180px"></td>
+			</tr>
+			<tr>
+				<!-- 	<td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">咨询人信息：</td> -->
+				<td align="left" colspan="6" style="font-weight:bold;">咨询人信息：</td>
+				
+			</tr>
+			<tr>
+				<td align="right"  class="tb_td_bk tb_td_required">咨询人：</td>
+				<td width="180px"><input id="consName" class="ui-input"/></td>
+				<td align="right"  class="tb_td_bk tb_td_required">联系方式：</td>   <!-- nisijia 2016-09-29 -->
+				<td width="180px"><input id="consContact" class="ui-input"></input></td>
+				<td align="right" class="tb_td_bk tb_td_required">咨询身份：</td>  <!-- nisijia 2016-09-29 -->
+				<td width="180px"><input id="consIden" editable="false"></input></td>
+			</tr>
+			<tr>
+				<td align="right"  class="tb_td_bk">咨询部门：</td>
+				<td width="180px"><input id="consDept"></input></td>
+				<td align="right"  class="tb_td_bk tb_td_required">问题类型：</td>
+				<td width="180px"><input id="consType" editable="false"></input></td>
+				<td align="right"  class="tb_td_bk tb_td_required">咨询方式：</td>  <!-- nisijia 2016-09-29 -->
+				<td width="180px"><input id="consWays" editable="false"></input></td>
+			</tr>
+			<tr>
+				<!-- <td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">患者信息：</td> -->
+				<td align="left" colspan="6" style="font-weight:bold;">患者信息：</td>
+			</tr>
+			<tr>
+				<td align="right"  class="tb_td_bk tb_td_required">患者姓名：</td>
+				<td width="180px"><input id="consPatName" class="ui-input" disabled="disabled"/></td>
+				<td align="right"  class="tb_td_bk">登记号：</td>
+				<td width="180px"><input id="consPatMedNo" class="ui-input"/></td>
+				<td align="right"  class="tb_td_bk tb_td_required">性别：</td>
+				<td width="180px"><input id="consPatSex" disabled="disabled"></td>
+			</tr>
+			<tr>
+				<td align="right"  class="tb_td_bk tb_td_required">年龄：</td>
+				<td width="180px"><input id="consPatAge" class="ui-input" disabled="disabled"></input></td>
+				<td align="right"  class="tb_td_bk">特殊人群：</td>
+				<td width="180px"><input id="consSpeCrowd" editable="false"></input></td>
+				<td align="right"  class="tb_td_bk tb_td_required">参考资料：</td>   <!-- nisijia 2016-09-29 -->
+				<td width="180px"><input id="consRefMat" editable="false"></input></td>
+			</tr>
+			<tr>
+				<td align="right"  class="tb_td_bk tb_td_required">服务时间：</td>
+				<td width="180px"><input id="consDuration" editable="false"></input></td>
+				<td align="right"  class="tb_td_bk tb_td_required">相关诊断：</td>   <!-- nisijia 2016-09-29 -->
+				<td colspan="3"><input id="consDiagDesc"  class="ui-input-490" disabled="disabled"></input></td>
+			</tr>
+			<tr>
+				<!-- <td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">咨询内容：</td> -->
+				<td align="left" colspan="6" style="font-weight:bold;">咨询内容：</td>
+			</tr>
+			<tr style="">
+				<td colspan="6" style="padding:0px;" id="tftf">
+					<div id="consDrugItem" style="padding:0px;"></div>
+				</td>
+			</tr>
+			<tr>
+				<td align="right"  class="tb_td_bk tb_td_required" height="100px">问题描述：</td>
+				<td colspan="5" height="100px" ><textarea style="width:820px;height:100px;border:1px solid #95B8E7;" id="consQusDesc"></textarea></td>	
+			</tr>
+			<tr>
+				<td align="right" height="100px">回答内容：</td>
+				<td colspan="5" height="100px" ><textarea style="width:820px;height:100px;border:1px solid #95B8E7;" id="consAnsDesc"></textarea></td>	
+			</tr>
+		</table>
+	</div>
+</body>
+</html>

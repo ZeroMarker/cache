@@ -1,0 +1,141 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhceq/em/trainingscorelist.js"></script>
+<style>td{text-align:right;}</style>
+<script language="cache" runat="server">
+	s TSRowID = $Get(%request.Data("RowID",1))
+	s CORowID = $Get(%request.Data("CORowID",1))
+	s TRRRowID = $Get(%request.Data("TRRRowID",1))
+	s TRRStage = $Get(%request.Data("TRRStage",1))
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</script>
+</head>
+<body class="hisui-layout">
+<div data-options="region:'center',border:false" style="width:100%">
+	<div id="cc2" class="hisui-layout" style="width:100%;height:100%;">   
+		<div data-options="region:'east',headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" style="padding:10px;width:600px"> <!--modified by csj 2020-05-25 修改宽度-->
+			<div class="hisui-panel"  title="医疗设备操作使用考核人员记录" data-options="fit:true,eqtitle:'maintitle'">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<!-- <div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding:5px 0 10px 0;">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cTSLTrainUser" for="TSLTrainUser">姓名</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="TSLTrainUser" data-options="'component':'PLAT.L.EQUser'"></div>
+							<div class="eq-table-td eq-table-label"><label for="TURemark">电话</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="TURemark"></div>
+							<div class="eq-table-td eq-table-label"><label for="TSLForms">考核形式</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="TSLForms"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cTSLScore" for="TSLScore">成绩</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="TSLScore"></div>
+							<div class="eq-table-td eq-table-label"><label id="cTSLPassFlag" for="TSLPassFlag">是否通过</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="TSLPassFlag"></div>
+						</div>
+					</div> -->
+					<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+						<table id="tDHCEQTrainingUser" data-options="border:false" class="hisui-datagrid"></table>	
+					</div>
+    			</div>
+			</div>
+		</div>   
+		<div data-options="region:'center',bodyCls:'panel-header-gray',border:false" style="padding:10px 0 10px 10px;">
+			<div class="hisui-panel"  title="医疗设备操作使用考核记录" data-options="fit:true,eqtitle:'maintitle'">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'center',border:false" style="border-bottom:solid 1px #ccc;padding:10px;">
+						<div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="COName">课程名称</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="COName" disabled="true"></div>
+								<div class="eq-table-td eq-table-label"><label for="TSLoc">科室</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="TSLoc"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cCOInstitution" for="COInstitution">培训机构及单位</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="COInstitution" disabled="true"></div>
+								<div class="eq-table-td eq-table-label"><label for="TSManager">考核负责人</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="TSManager"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="COSourceTypeDesc">来源类型</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" disabled="true" id="COSourceTypeDesc" data-options="component:'PLAT.L.TypeDefine',paras:[{name:'Desc',type:1,value:'COSourceTypeDesc'},{name:'Lookupname',type:2,value:'COSourceType'}],jsfunction:GetSourceType"></div>
+								<div class="eq-table-td eq-table-label"><label id="cCOSource" for="COSource">来源</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="COSource" disabled="true"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cCOItem" for="COItem">设备项</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="COItem" disabled="true"></div>
+								<div class="eq-table-td eq-table-label"><label for="COModel">机型</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="COModel" disabled="true"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cTSExamStartDate" for="TSExamStartDate">考核开始日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="TSExamStartDate" value=#(CurDate)# ></div>
+								<div class="eq-table-td eq-table-label"><label for="TSExamEndDate">考核结束日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="TSExamEndDate" value=#(CurDate)# ></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cTSExamStartTime" for="TSExamStartTime">考核开始时间</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-timespinner" id="TSExamStartTime"></div>
+								<div class="eq-table-td eq-table-label"><label for="TSExamEndTime">考核结束时间</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-timespinner" id="TSExamEndTime"></div>
+							</div>
+						</div>
+						<div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="TSExamContent">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp考核内容</label></div>
+								<div class="eq-table-td"><textarea id="TSExamContent" class="textbox" style="height:60px;width:440px"></textarea></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="TSRemark">备注</label></div>
+								<div class="eq-table-td"><textarea id="TSRemark" class="textbox" style="height:60px;width:440px"></textarea></div>
+							</div>
+							<div data-options="region:'south',border:false" style="margin-top:10px;height:60px;overflow:hidden;" align="center">
+							<table style="margin-top:10px;">
+								<td><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></td>
+								<td><a id="BSubmit" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">提交</a></td>
+								<td><a id="BDelete" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">删除</a></td>
+							</table>
+						</div>
+						</div>
+					</div>
+    			</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="hiddenEncrypt" style="display:hidden">
+	<form name="DHCEQ">
+		<INPUT type="hidden" name="CORowID" id="CORowID" value="#(CORowID)#">
+		<INPUT type="hidden" name="TSTrainingDR" id="TSTrainingDR" value="#(CORowID)#">
+		<INPUT type="hidden" name="TRRRowID" id="TRRRowID" value="#(TRRRowID)#">
+		<INPUT type="hidden" name="TRRStage" id="TRRStage" value="#(TRRStage)#">
+		<INPUT type="hidden" name="TSRowID" id="TSRowID" value="#(TSRowID)#">
+		<INPUT type="hidden" name="COOpenCheckDR" id="COOpenCheckDR">
+    	<INPUT type="hidden" name="TSLocDR" id="TSLocDR" >
+    	<INPUT type="hidden" name="COSourceType" id="COSourceType">
+    	<INPUT type="hidden" name="COSourceID" id="COSourceID">
+    	<INPUT type="hidden" name="COItemDR" id="COItemDR">
+    	<INPUT type="hidden" name="COModelDR" id="COModelDR">
+    	<INPUT type="hidden" name="TURowID" id="TURowID">
+    	<INPUT type="hidden" name="TUTrainUserDR" id="TUTrainUserDR">
+    	<INPUT type="hidden" name="TSStatus" id="TSStatus">
+    	<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+		<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+
+    	<!-- <INPUT type="hidden" name="TSLTrainingScoreDR" id="TSLTrainingScoreDR" value="#(TSRowID)#"> -->
+	</form>
+</div>
+</body>
+</html>

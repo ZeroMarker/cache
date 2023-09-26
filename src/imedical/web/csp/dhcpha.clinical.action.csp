@@ -1,0 +1,2574 @@
+
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+  	///执行动作
+   	s action = $Get(%request.Data("action",1))
+ 	///===========================================================================  	
+ 	/// 查询主题项目参数
+	i action = "QueryFunLibArt" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s sType=$Get(%request.Data("sType",1))
+	.s params=$Get(%request.Data("params",1))
+	.i sType="L" D
+	..w ##Class(web.DHCSTPHCMFUNLIB).QueryFunLibLabArt(rows,page,params)
+	.E  d
+	..w ##Class(web.DHCSTPHCMFUNLIB).QueryFunLibArt(rows,page,params)  
+	
+	/// 主题项目参数表
+	i action = "saveFunLibArt" d	
+	.s ListData=$Get(%request.Data("ListData",1))
+	.d ##class(web.DHCSTPHCMFUNLIB).saveFunLibArt(ListData)	
+	
+	///------------------------学科分类-------------------------------- qunianpeng 2016-08-01   
+   	///学科分类列表
+	i action = "QueryMonSubClass" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).QueryMonSubClass(rows,page)
+	
+   	 ///学科分类子项列表
+	i action = "QueryMonSubClassItm" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s monSubClassID=$Get(%request.Data("monSubClassID",1))
+	.s hospID=$Get(%request.Data("hospID",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).QueryMonSubClassItm(rows,page,monSubClassID,hospID) 
+	
+	///保存学科分类
+	i action = "SaveMonSubClass" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).SaveMonSubClass(params)  
+	
+	///删除学科分类
+	i action = "DelMonSubClass" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).DelMonSubClass(params)
+	
+	///保存学科分类子项
+	i action = "SaveMonSubClassItm" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).SaveMonSubClassItm(params)
+	
+	///删除学科分类子项
+	i action = "DelMonSubClassItm" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).DelMonSubClassItm(params)
+	
+	///获取学科分类
+	i action = "SelMonSubClass" d
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).SelMonSubClass()
+    
+ 	/// 根据工号查询用户信息
+	i action = "QueryUserInfo" d
+	.s usercode=$Get(%request.Data("usercode",1))
+	.d ##class(web.DHCSTPHCMBASEMANAGEQUERY).QueryUserInfo(usercode)
+    
+
+	//增加页签
+	i action = "SaveInstLabel" d
+	.s code= $Get(%request.Data("code",1))
+	.s desc= $Get(%request.Data("desc",1))
+	.s mode= $Get(%request.Data("mode",1))
+	.s retinfo=""
+	.s retvalue=##class(web.DHCSTPHCMADDINST).SaveInstLabel(code,desc,mode)
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//更新页签
+	i action = "UpdateInstLabel" d
+	.s code= $Get(%request.Data("code",1))
+	.s desc= $Get(%request.Data("desc",1))
+	.s mode= $Get(%request.Data("mode",1))
+	.s rowid= $Get(%request.Data("rowid",1))
+	.s retinfo=""
+	.s retvalue=##class(web.DHCSTPHCMADDINST).UpdateInstLabel(code,desc,mode,rowid)
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//获取页签
+	i action = "QueryInstLabelDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryInstLabelDs(rows,page)
+	
+	
+	//初始化页签
+	i action = "InitInstLabel" d
+	.s retinfo=""
+	.s retvalue=##class(web.DHCSTPHCMADDINST).InitInstLabel()
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//增加
+	i action = "AdviceAdd" d
+	.s FacDesc= $Get(%request.Data("AdviceDesc",1))
+	.s retvalue=##class(web.DHCSTCNTSADDADVICE).AddCommontAdvice(FacDesc)
+	.s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+
+	//获取说明书
+	i action = "Query" d
+	.s drugid= $Get(%request.Data("drugid",1))
+	.w ##class(web.DHCSTPHCMADDINST).Query(drugid)
+	
+    //获取诊断数据集
+	i action = "QueryICD" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryICD(rows,page,input)
+	
+	
+	//获取已对照诊断数据集
+	//i action = "QueryContrastICD" d
+	//.s rows=$Get(%request.Data("rows",1))
+	//.s page=$Get(%request.Data("page",1))
+	//.w ##class(web.DHCSTPHCMADDINST).QueryContrastICD(rows,page)
+	
+	
+	//获取频率数据集
+	i action = "QueryFreqDS" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryFreqDS(rows,page)
+
+	//获取用法数据集
+	i action = "QueryInstrucDS" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryInstrucDS(rows,page)
+	
+	
+	//获取某一条说明书记录的年龄数据集
+	i action = "QueryAgeDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s druginstdr=$Get(%request.Data("druginstdr",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryAgeDs(rows,page,druginstdr)
+
+	
+	//增加ICD对照
+	i action = "AddICD" d
+	.s icdrowid= $Get(%request.Data("icdrowid",1))
+	.s main= $Get(%request.Data("main",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).AddICD(icdrowid,main)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+
+	
+	//获取已对照ICD数据集
+	i action = "QueryContrastICDDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+    .s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryContrastICDDs(rows,page,input)
+	
+	
+	
+    //撤消ICD对照
+	i action = "DelICDData" d
+	.s rowid= $Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelICDData(rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+
+	
+	//获取年龄对照数据集
+	i action = "QueryContrastAgeDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryContrastAgeDs(rows,page)
+	
+	
+	
+    //增加年龄对照
+	i action = "AddAge" d
+	.s agedesc= $Get(%request.Data("agedesc",1))
+	.s agemin= $Get(%request.Data("agemin",1))
+	.s agemax= $Get(%request.Data("agemax",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).AddAge(agemin,agemax,agedesc)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//更新年龄对照
+	i action = "UpdAge" d
+	.s agedesc= $Get(%request.Data("agedesc",1))
+	.s agemin= $Get(%request.Data("agemin",1))
+	.s agemax= $Get(%request.Data("agemax",1))
+	.s rowid= $Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).UpdAge(agemin,agemax,agedesc,rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//获取药品频率已选集合 
+    i action = "QuerySelFreqDS" d	
+    .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s drugid=$Get(%request.Data("drugid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QuerySelFreqDS(rows,page,drugid)
+	
+	
+	//增加药品病症全部的说明书记录: 频率、用法
+	i action="AddGolbalDrgData" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.s optype=$Get(%request.Data("optype",1))
+	.s oprowid=$Get(%request.Data("oprowid",1))
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).AddGolbalDrgData(drugid,optype,oprowid,input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//获取药品用法已选集合
+    i action = "QuerySelUsageDS" d	
+    .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s drugid=$Get(%request.Data("drugid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QuerySelUsageDS(rows,page,drugid)
+	
+
+	//获取药品的等效单位集合
+	i action = "QueryDrgUomDs" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryDrgUomDs(drugid)
+	
+	
+	//保存用法用量
+	i action="SaveUseQty" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.s typedr=$Get(%request.Data("typedr",1))
+	.s optype=$Get(%request.Data("optype",1))
+	.s oprowid=$Get(%request.Data("oprowid",1))
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).AddGolbalDrgData(drugid,typedr,optype,oprowid,input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//获取药品的等效单位集合
+	i action = "QueryUseQty" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryDrgUomDs(drugid)
+	
+	
+	//保存药品适应症
+	i action="SaveIndication" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.s typedr=$Get(%request.Data("typedr",1))
+	.s optype=$Get(%request.Data("optype",1))
+	.s druginstdr=$Get(%request.Data("druginstdr",1))
+	.s input=$Get(%request.Data("input",1))
+	.s mode=$Get(%request.Data("mode",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).AddDrgDiseaseData(drugid,typedr,optype,druginstdr,input,mode)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+
+	//获取药品的用法Combo集合
+	i action = "QueryDrgUsageCombo" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryDrgUsageCombo(drugid)
+
+	//获取药品集合
+    i action = "QueryDrugDs" d	
+    .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryDrugItmDS(rows,page,input)
+	
+	
+     //保存相互作用
+	i action="SaveInteract" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.s optype=$Get(%request.Data("optype",1))
+	.s oprowid=$Get(%request.Data("oprowid",1))
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).AddGolbalDrgData(drugid,optype,oprowid,input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//删除药品相互作用
+	i action="DelDrugInteract" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelDrugInteract(rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//查询药品相互作用集合
+	i action = "QueryDrugInteractDS" d	
+    .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s drugid=$Get(%request.Data("drugid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryDrugInteractDS(rows,page,drugid)
+	
+
+	//获取说明书表数据
+	i action="GetDrugInstData" d
+	.s drginstdr=$Get(%request.Data("drginstdr",1))
+	.s data=##class(web.DHCSTPHCMADDINST).GetDrugInstData(drginstdr)
+    .s data=##class(web.DHCSTJQUERYCOMMON).JsonCell("data",data)
+	.w "{"_data_"}"
+	
+	
+	///获取DHC_PHInstructions表某一记录的所有年龄ID
+	i action="GetDrugInstAgeData" d
+	.s drginstdr=$Get(%request.Data("drginstdr",1))
+	.s data=##class(web.DHCSTPHCMADDINST).GetDrugInstAgeData(drginstdr)
+	.s data=##class(web.DHCSTJQUERYCOMMON).JsonCell("data",data)
+	.w "{"_data_"}"
+	
+	
+	///获取DHC_PHInstructions表某一记录的所有年龄描述
+	i action="GetDrugInstAgeDesc" d
+	.s drginstdr=$Get(%request.Data("drginstdr",1))
+	.s data=##class(web.DHCSTPHCMADDINST).GetDrugInstAgeDesc(drginstdr)
+	.s data=##class(web.DHCSTJQUERYCOMMON).JsonCell("data",data)
+	.w "{"_data_"}"
+	
+	///获取DHC_PHInstructions表某一记录的所有病症描述
+	i action="GetDrgOneDisInstStr" d
+	.s drginstdr=$Get(%request.Data("drginstdr",1))
+	.s data=##class(web.DHCSTPHCMADDINST).GetDrgOneDisInstStr(drginstdr)
+	.s descstr=$p(data,"^",1)
+	.s rowidstr=$p(data,"^",2)
+	.s ret="desc"_"^"_descstr_$c(2)_"rowid"_"^"_rowidstr
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//查询说明书一条记录对应的所有病症 json
+	
+	i action = "JsQueryDrgDisICD" d	
+    .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s drginstdr=$Get(%request.Data("drginstdr",1))
+	.w ##class(web.DHCSTPHCMADDINST).JsQueryDrgDisICD(rows,page,drginstdr)
+	
+	
+	
+	///获取DHC_PHInstructions表某一记录的所有年龄ID
+	i action="GetDrugInstRouteData" d
+	.s drginstdr=$Get(%request.Data("drginstdr",1))
+	.s data=##class(web.DHCSTPHCMADDINST).GetDrugInstUseData(drginstdr)
+	.s descstr=$p(data,"^",1)
+	.s rowidstr=$p(data,"^",2)
+	.s ret="desc"_"^"_descstr_$c(2)_"rowid"_"^"_rowidstr
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///删除已对照频次
+	i action="DelFreqData" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelFreqData(rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+
+	///删除已对照用法
+	i action="DelUsageData" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelUsageData(rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///删除某一条病症的年龄记录
+	i action="DelAgeData" d
+	.s drginstdr=$Get(%request.Data("drginstdr",1))
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelAgeData(drginstdr,rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///一键对照ICD
+	i action="ContrastAllICD" d
+	.s retvalue=##class(web.DHCSTPHCMADDINST).ContrastAllICD()
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///增加对照描述
+	i action="AddContrastDesc" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).AddContrastDesc(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+
+	
+    ///查询已对照的明细
+	i action="QueryContrastItmDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s main=$Get(%request.Data("rowid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryContrastItmDs(page,rows,main)
+	
+	
+	///撤消病症与该诊断的关联
+	i action="DelContrastItm" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelContrastItm(rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///删除某一条说明书记录下关联的病症
+	i action="DelDrgDis" d
+    .s drginstdr=$Get(%request.Data("drginstdr",1))
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelDrgDis(drginstdr,rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	
+	///查询药品列表
+	i action = "QueryDrugList" d	
+    .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s rowid=$Get(%request.Data("rowid",1))
+	.w ##class(web.DHCSTPHCMADDINST).QueryDrugList(rows,page,rowid)
+	
+		
+	///删除某一条说明书记录
+	i action="DelInst" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).DelInst(rowid)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///更新记明书记录管控级别
+	i action="UpdateGolbalDrgData" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.s type=$Get(%request.Data("type",1))
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDINST).UpdateGolbalDrgData(drugid,type,input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)	
+	
+	
+	///获取某一条说明书记录的控制级别
+	
+	i action="GetDrugInstMode" d
+	.s drugid=$Get(%request.Data("drugid",1))
+	.s type=$Get(%request.Data("type",1))
+	.s data=##class(web.DHCSTPHCMADDINST).GetDrugInstMode(drugid,type)
+	.s data=##class(web.DHCSTJQUERYCOMMON).JsonCell("data",data)
+	.w "{"_data_"}"
+	
+
+    ///获取医嘱审核结果
+	i action = "GetOrdItmAdtResult" d
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDINST).GetPassOrdItmResult(input)
+	.
+	
+	
+	///用药监控查询-住院病人列表
+	i action = "QueryMonInPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMMONITORDRUG).QueryMonInPatList(rows,page,input)
+	
+	
+	///用药监控查询-住院病人用药明细列表
+	i action = "FindInPatOrdItemList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMMONITORDRUG).QueryInPatOrdItemList(rows,page,input)
+	
+	
+	//获取函数库
+	i action = "QueryFuntionLib" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).QueryFuntionLib(rows,page,input)
+	
+    //增加函数库
+	i action="AddFunLib" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMFUNLIB).AddFunLib(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//获取函数项目
+	i action = "QueryFuntionLibItm" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).QueryFuntionLibItm(rows,page,input)
+	
+	
+	//增加函数项目
+	i action="AddFunLibItem" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMFUNLIB).AddFunLibItem(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//获取函数项目药品
+	i action = "QueryFunItmDrugList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).QueryFunItmDrugList(rows,page,input)
+
+	
+	//获取函数项目检验
+	i action = "GetLabItemDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).GetLabItemDs(rows,page,input)
+	
+	
+	//获取函数项目中检验
+	i action = "QueryFunItmlabList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).QueryFunItmLabList(rows,page,input)
+	
+	//查询在院患者列表
+	i action = "QueryInHosPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMEMPPAT).QueryInHosPatList(rows,page,input)
+	
+	
+	//增加函数主题
+	i action="AddFunLibTheme" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMFUNLIB).AddFunLibTheme(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//停用函数主题
+	i action="StopFunLibTheme" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMFUNLIB).StopFunLibTheme(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//增加主题项目
+	i action="AddItmTheme" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMFUNLIB).AddItmTheme(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//删除主题项目
+	i action="DelFunLibTheItm" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMFUNLIB).DelFunLibTheItm(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+
+	//查询函数主题
+	i action = "QueryFunLibTheme" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).QueryFunLibTheme(rows,page)
+	
+	//查询函数主题项目
+	i action = "QueryThemeItm" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s main=$Get(%request.Data("main",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).QueryThemeItm(rows,page,main)
+	
+	
+	//查询函数主题和项目记录
+	i action = "QueryThemeItmDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMFUNLIB).QueryThemeItmDs(rows,page)
+	
+	//加入重点关注
+	i action="AddEmpFlag" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMEMPPAT).AddEmpFlag(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//保存查房记录
+	i action="SaveAdmRoomLog" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMEMPPAT).SaveAdmRoomLog(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询查房记录列表
+	i action = "QueryAdmRoomLogList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMEMPPAT).QueryAdmRoomLogList(rows,page,input)
+	
+	
+    ///获取查房情况
+	i action="GetAdmRoomLog" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMEMPPAT).GetAdmRoomLog(input)
+	.s ret="retvalue"_"^"_retvalue
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	
+	///标志原因-获取原因列表
+	i action = "QueryReaDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=""
+	.w ##class(web.DHCSTPHCMMONITORDRUG).QueryReaDs(rows,page,input)
+	
+	
+	//保存原因
+	i action="SaveReaForMon" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMMONITORDRUG).SaveReaForMon(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///获取某个就诊原因列表
+	i action = "GetAdmReaDs" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMMONITORDRUG).GetAdmReaDs(input)
+	.//s ret="retvalue"_"^"_retvalue
+	.//w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	.w retvalue
+	
+	
+	///查询通用名字典
+	i action = "QueryExtGenList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryExtGenList(rows,page)
+	
+	
+	//增加通用名字典
+	i action="AddExtGen" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExtGen(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询剂型字典
+	i action = "QueryExtFormList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryExtFormList(rows,page,input)
+	
+	
+	//增加剂型字典
+	i action="AddExtForm" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExtForm(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+
+	///查询药品成分字典
+	i action = "QueryExtIngrList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.s active=$Get(%request.Data("active",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryExtIngrList(rows,page,input,active)
+	
+	
+	//增加药品成分字典
+	i action="AddExtIngr" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExtIngr(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询单位字典
+	i action = "QueryExtUomList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryExtUomList(rows,page)
+	
+	
+	//增加单位字典
+	i action="AddExtUom" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExtUom(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///查询用法字典
+	i action = "QueryExtInstrList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryExtInstrList(rows,page)
+	
+	
+	//增加用法字典
+	i action="AddExtInstr" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExtInstr(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询频率字典
+	i action = "QueryExtFreqList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryExtFreqList(rows,page)
+	
+	
+	//增加频率字典
+	i action="AddExtFreq" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExtFreq(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//增加通用名成分明细
+	i action="AddGenIngr" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddGenIngr(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//删除通用名成分明细
+	i action="DelGenIngr" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).DelGenIngr(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///查询频率字典
+	i action = "QueryGenIngr" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s phgendr=$Get(%request.Data("phgendr",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryGenIngr(rows,page,phgendr)
+	
+	
+	//增加生理参数字典
+	i action="AddExtPhysi" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExtPhysi(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	
+	///查询生理参数字典
+	i action = "QueryPhysiologyDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryPhysiologyDs(rows,page)
+	
+	
+	//增加过敏史字典
+	i action="AddAllergyFeild" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddAllergyFeild(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///查询过敏史字典
+	i action = "QueryAllergyList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryAllergyList(rows,page)
+	
+	
+	//增加既往史字典
+	i action="AddDisHistoryFeild" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddDisHistoryFeild(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///查询既往史字典
+	i action = "QueryDisHistoryList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryDisHistoryList(rows,page)
+	
+	
+	//增加检查结果字典
+	i action="AddExamineFeild" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddExamineFeild(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///查询检查结果字典
+	i action = "QueryExamineretList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryExamineretList(rows,page)
+	
+	
+    //增加知识库标识字典
+	i action="AddLibLabel" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddLibLabel(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///查询知识库标识字典
+	i action = "QueryLibLabelList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryLibLabelList(rows,page)
+	
+	
+	///查询知识库标识combox
+	i action = "QueryLibLabelComb" d
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryLibLabelComb()
+	
+	
+	//增加诊断字典
+	i action="AddDiagFeild" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTGEN).AddDiagFeild(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询诊断字典
+	i action = "QueryDiagFeildList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTGEN).QueryDiagFeildList(rows,page)
+	
+	
+	///查询his剂型字典
+	i action = "QueryHisForm" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMCONTRAST).QueryHisForm(rows,page,input)
+	
+	
+	///对照剂型
+	i action="ContrastForm" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMCONTRAST).ContrastForm(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询已对照剂型字典
+	i action = "QueryFormCon" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMCONTRAST).QueryFormCon(rows,page,input)
+	
+	///撤消已对照的剂型
+	i action="DelFormCon" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMCONTRAST).DelFormCon(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询his频率字典
+	i action = "QueryHisFreq" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMCONTRAST).QueryHisFreq(rows,page,input)
+	
+	
+	///对照频率
+	i action="ContrastFreq" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMCONTRAST).ContrastFreq(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	///撤消已对照的频率
+	i action="DelFreqCon" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMCONTRAST).DelFreqCon(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询已对照频率字典
+	i action = "QueryFreqCon" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMCONTRAST).QueryFreqCon(rows,page,input)
+	
+	
+	///查询his单位字典
+	i action = "QueryHisUom" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMCONTRAST).QueryHisUom(rows,page,input)
+	
+	
+	//知识库函数字典
+	i action="AddFuncatFeild" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).AddFuncatFeild(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询知识库函数字典
+	i action = "QueryFunCatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryFunCatList(rows,page)
+	
+	
+	
+	//增加知识库函数
+	i action="AddPhFuns" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).AddPhFuns(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询知识库函数
+	i action = "QueryFunLibList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryFunLibList(rows,page)
+	
+	
+	//增加知识库项目
+	i action="AddLibItem" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).AddLibItem(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询知识库项目
+	i action = "QueryLibItemDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryLibItemDs(rows,page)
+	
+	
+	///查询知识库规则
+	i action = "QueryLibRuleDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryLibRuleDs(rows,page)
+	
+	
+	///授权界面查询医生列表
+    i action = "QueryAccDocList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryAccDocList(rows,page,input)
+	
+
+	///授权界面查询科室列表
+	i action = "QueryAccDocLocList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryDocLocList(rows,page,input)
+	
+	
+	///授权界面查询医院列表
+	i action = "QueryHospList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryHospList(rows,page)
+	
+	
+	///授权界面查询职称列表
+	i action = "QueryCtCptList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryCtCptList(rows,page)
+	
+	
+	//增加知识库规则明细
+	i action="AddRuleItm" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).AddRuleItm(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	//增加知识库规则明细
+	i action="DelRuleItm" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).DelRuleItm(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///查询知识库规则明细
+	i action = "QueryRuleItmDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryRuleItmDs(rows,page,input)
+	
+
+	
+	///查询知识库授权规则明细
+	i action = "QueryLibAccMenu" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryLibAccMenu(rows,page,input)
+	
+	
+	///查询知识库标识
+	i action = "QueryLibComboList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMADDEXTLIB).QueryLibComboList(rows,page)
+	
+
+	
+	//保存授权
+	i action="SaveAccItm" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).SaveAccItm(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	///更新规则
+	i action="UpdLibRule" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).UpdLibRule(input)
+	
+	///更新规则明细子表
+	i action="UpdLibRuleItm" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).UpdLibRuleItm(input)
+	
+	//更新规则主表序号
+	i action="UpdRuleOrdNum" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).UpdRuleOrdNum(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//更新规则子表序号
+	i action="UpdRuleItmOrdNum" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCSTPHCMADDEXTLIB).UpdRuleItmOrdNum(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	
+	 //查询知识库日志
+	i action = "QueryLibOrdData" d
+	.S params=$Get(%request.Data("params",1))
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMORDDATA).QueryLibOrdData(rows,page,params)
+
+	 //查询知识库医嘱监测
+	i action = "QueryLibOrditem" d
+	.S params=$Get(%request.Data("params",1))
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCSTPHCMORDDATA).QueryLibOrditem(rows,page,params)
+	
+	//-------------------bianshuai-----------------------------
+	
+	///获取病人基本信息
+	i action = "GetPatInf" d
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHCONSULT).GetPatInf(input)
+	
+	//查询审方维护
+	i action = "SelAuditPreCon" d
+	.d ##class(web.DHCSTPHCMAUDITPRECON).SelAuditPreCon(Page,Rows,Sort,Dir,Params) 
+	
+	//更新 科室审方维护表 Update DHC_PHAudPreControl
+	i action = "Update" d	
+	.d ##class(web.DHCSTPHCMAUDITPRECON).ModPhAudPreControl(dataList)
+	
+	//删除 科室审方维护表 Delete DHC_PHAudPreControl
+	i action = "Delete" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(web.DHCSTPHCMAUDITPRECON).Delete(index)
+	
+	//科室信息
+	i action = "SelAllLoc" d
+	.s hospId=$Get(%request.Data("hospId",1))
+	.s input=$Get(%request.Data("q",1))
+	.d ##class(web.DHCSTPHCMCOMMON).SelAllLoc("",hospId,input)
+	
+	//科室信息(标库新版：科室描述的拼音码和描述分开) --兼容旧版 qunianpeng 2017/7/31
+	i action = "GetAllLocNewVersion" d
+   	.s input=$Get(%request.Data("q",1))			//combobox mode设置为remote时，会传递一个名称为q的参数，内容时输入框中内容
+   	.s hospId=$Get(%request.Data("hospId",1))
+	.d ##class(web.DHCSTPHCMCOMMON).GetAllLocNewVersion(input,hospId)	
+	
+	//病区信息(标库新版：科室描述的拼音码和描述分开) --兼容旧版 qunianpeng 2017/7/31
+	i action = "GetAllWardNewVersion" d
+   	.s input=$Get(%request.Data("q",1))			//combobox mode设置为remote时，会传递一个名称为q的参数，内容时输入框中内容
+   	.s hospId=$Get(%request.Data("hospId",1))
+	.d ##class(web.DHCSTPHCMCOMMON).GetAllWardNewVersion(input,hospId)
+	
+	
+	//职称
+	i action = "SelCarPrvTp" d
+	.d ##class(web.DHCSTPHCMCOMMON).SelCarPrvTp()
+	
+	//按照安全组查询对应组内人员
+	//i action = "SelUserByGrp" d
+	i action = "GetGroupUser" d //按照安全组查询可以登录该组的人员 2017/1/5 qunianpeng
+	.s grpId=$Get(%request.Data("grpId",1)) 
+	.d ##class(web.DHCSTPHCMCOMMON).GetGroupUser(grpId)
+	
+   	//查询主题
+	i action = "SelAllTheme" d
+	.d ##class(web.DHCSTPHCMCOMMON).SelAllTheme()
+	
+	//审方工作量统计
+	i action = "MonitoWorkLoad" d
+	.S StDate=$p(Params,"^",1)
+	.S EndDate=$p(Params,"^",2)
+	.S LocID=$p(Params,"^",3)
+	.S UserID=$p(Params,"^",4)
+	.S Type=$p(Params,"^",5)
+	.S TabType=$p(Params,"^",6)
+	.d ##class(web.DHCSTPHCMWorkLoad).MonitoWorkLoad(StDate,EndDate,LocID,UserID,Type,TabType)
+ 
+	//审核拒绝明细
+	i action = "QueryLocDetail" d
+	.S LocID=$Get(%request.Data("LocID",1))
+	.S pid=$Get(%request.Data("pid",1))
+	.d ##class(web.DHCSTPHCMWorkLoad).QueryLocDetail(Rows,Page,pid,LocID)
+
+	//临床路径
+	i action = "CliPathWay" d
+	.s params=$Get(%request.Data("params",1))
+	.s StDate=$p(params,"^",1)
+	.s:StDate'="" StDate=##class(web.DHCSTPHCMCOMMON).DateHtmlToLogical(StDate)	
+	.s EndDate=$p(params,"^",2)
+	.s:EndDate'="" EndDate=##class(web.DHCSTPHCMCOMMON).DateHtmlToLogical(EndDate)
+	.s Status=$p(params,"^",3)
+	.s LocID=$p(params,"^",4)
+	.s WardID=$p(params,"^",5)
+	.s Select=$p(params,"^",6)
+	.s CpwDicID=$p(params,"^",7)
+	.s PathWaysQuery=$p(params,"^",8)
+	.d ##Class(web.DHCSTPHCMPathWaysQuery).QueryClinPathWay(StDate,EndDate,Status,LocID,WardID,Select,CpwDicID,PathWaysQuery)
+	
+	//按照安全组查询对应组内人员
+	i action = "ClinPathWayDic" d
+	.d ##class(web.DHCSTPHCMCOMMON).ClinPathWayDic()
+	
+	
+	        ///获取特殊人群列表
+	i action = "GetSpeCrdInfo" d
+        .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCPHCONSULT).GetSpeCrdInfo(rows,page)
+	
+	///获取特殊人群
+	i action = "GetSpCrdList" d
+	.w ##class(web.DHCPHCONSULT).GetSpCrdList()
+	
+	//更新特殊人群 Update DHC_PHConSpCrowd
+	i action = "UpdateSpCrowd" d
+        .s dataList=$Get(%request.Data("dataList",1)) //***增加该行代码
+	.d ##class(web.DHCPHCONSULT).UpdateSpCrowd(dataList)
+	
+	i action = "DeleteSpCrdInfo" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(web.DHCPHCONSULT).DeleteSpCrdInfo(index)
+	
+	///获取回复依据列表
+	i action = "GetPhConBasInfo" d
+        .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCPHCONSULT).getPhConBasInfo(rows,page)
+	
+	i action = "SetOkFlag" d
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHCONSULT).SetOkFlag(input)
+	
+	///获取回复依据
+	i action = "GetConBas" d
+	.w ##class(web.DHCPHCONSULT).GetConBas()
+	
+	//更新回复依据 Update DHC_PHConsultBasis
+	i action = "UpdatePhConBas" d
+        .s dataList=$Get(%request.Data("dataList",1))   //***修改取出数	
+	.d ##class(web.DHCPHCONSULT).UpdatePhConBas(dataList)
+	
+	i action = "DeletePhConBas" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(web.DHCPHCONSULT).DeleteBas(index)
+	
+	///获取咨询类别列表
+	i action = "GetPhConTypeInfo" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCPHCONSULT).getPhConTypeInfo(rows,page)
+	
+	i action = "GetComboPhConType" d
+	.d ##class(web.DHCPHCONSULT).GetComboPhConType()
+	
+	
+	//更新咨询类别 Update DHC_PHConsultType
+	i action = "UpdatePhConType" d
+	.s dataList=$Get(%request.Data("datelist",1))
+	.d ##class(web.DHCPHCONSULT).UpdatePhConType(dataList)
+	
+	i action = "DeletePhConTypeInfo" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(web.DHCPHCONSULT).Delete(index)
+	
+	
+	///获取问题类别列表
+	i action = "GetPhConQueTypeInfo" d   //qunianpeng 2016-08-01
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCPHCONSULT).getPhConQueTypeInfo(rows,page)
+	
+	i action = "GetComboPhConQueType" d
+	.d ##class(web.DHCPHCONSULT).GetComboPhConQueType()
+	
+	//更新问题类别 Update DHC_PHConQueType
+	i action = "UpdatePhConQueType" d
+	.s dataList=$Get(%request.Data("dataList",1))
+	.d ##class(web.DHCPHCONSULT).UpdatePhConQueType(dataList)
+	
+	i action = "DeletePhConQueTypeInfo" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(web.DHCPHCONSULT).DeleteQueType(index)
+	
+	i action = "GetComboUser" d
+	.d ##class(web.DHCPHCONSULT).GetComboUser()
+	
+	///咨询记录管理
+	i action = "FindResults" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHCONSULT).QueryResultList(rows,page,input)
+	.;w ret
+	
+	///未回复的咨询记录
+	i action = "FindQuestioning" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.;s input=""
+	.w ##class(web.DHCPHCONSULT).QueryQuestioningList(rows,page)
+	
+	 // 查询当前在院病人信息
+    i action="QueryInPatList" d
+    .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+    .w ##class(web.DHCSTPHCMBLOODCONMONITOR).QueryInHosPatList(rows,page,params)
+	
+	//病区
+	i action = "SelAllWard" d
+	.d ##class(web.DHCSTPHCMCOMMON).SelAllWard()
+
+	//登记号长度
+	i action = "GetPatRegNoLen" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetPatRegNoLen()
+	
+		
+	///咨询记录管理
+	i action = "FindDrugs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s input=$Get(%request.Data("input",1))
+	.d ##class(web.DHCPHCONSULT).FindDrugsByAlias(rows,page,input)
+	
+	///插入咨询问题
+	i action = "SaveQuestion" d
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHCONSULT).SaveQuestion(input)
+	
+	///插入咨询问题
+	i action = "submitAnswer" d
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHCONSULT).SubmitAnswer(input)
+	
+	///插入咨询问题
+	i action = "getAllAnswer" d
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHCONSULT).GetAllAnswer(input)
+
+	///获取病人基本信息
+	i action = "GetPatInfo" d
+	.s AdmDr=$Get(%request.Data("AdmDr",1))
+	.s PatInfoStr=##class(web.DHCSTPHCMCOMMON).GetPatInfo(AdmDr)
+	.w PatInfoStr
+	//===================================用药建议========================================
+	///获取病人医嘱信息
+	i action = "GetPatOrdItmInfo" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S AdmDr=$Get(%request.Data("params",1))
+	.S retval=##class(web.DHCSTPHCMCOMMON).GetPatOrdItmInfo(rows,page,AdmDr)
+	.i retval'="" w ##class(web.DHCSTPHCMCOMMON).getJsonEmptySign(0)
+	
+	///获取病人医嘱信息
+	i action = "GetPatOrdItmInfoNew" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S priCode=$Get(%request.Data("priCode",1))
+	.S AppType=$Get(%request.Data("AppType",1))
+	.s AllFlag=$Get(%request.Data("AllFlag",1))
+	.S retval=##class(web.DHCSTPHCMCOMMON).GetPatOrdItmInfoNew(rows,page,AdmDr,priCode,AppType,AllFlag)
+	.i retval'="" w ##class(web.DHCSTPHCMCOMMON).getJsonEmptySign(0)
+	
+	///保存用药建议信息
+	i action = "SaveMedSuggInfo" d
+	.s dataList=$Get(%request.Data("dataList",1))
+	.w ##class(web.DHCSTPHCMMedicineSuggest).SaveMedSuggInfo(dataList)
+	
+	///保存用药建议信息
+	//i action = "GetPatSugguestInfo" d
+	//.s AdmDr=$Get(%request.Data("AdmDr",1))
+	//.w ##class(web.DHCSTPHCMMedicineSuggest).GetPatSugguestInfo(AdmDr)
+	
+	///保存用药建议
+	i action = "SaveMedAdvMaster" d
+	.s AdvID=$Get(%request.Data("AdvID",1))
+	.s dataList=$Get(%request.Data("dataList",1))
+	.w ##class(web.DHCSTPHCMADVICE).SaveAdvice(AdvID,dataList)
+	
+	///获取病人建议信息
+	i action = "getPatMedAdvInfo" d
+	.s AdvID=$Get(%request.Data("AdvID",1))
+	.w ##class(web.DHCSTPHCMADVICE).getPatMedAdvInfo(AdvID)
+	
+	///获取该病人建议列表
+	i action = "getPatAdviceList" d
+	.s AdmDr=$Get(%request.Data("AdmDr",1))
+	.w ##class(web.DHCSTPHCMADVICE).getPatAdviceList(AdmDr)
+	
+	///保存用药建议
+	i action = "SaveMedAdvDetail" d
+	.s AdvID=$Get(%request.Data("AdvID",1))
+	.s dataList=$Get(%request.Data("dataList",1))
+	.w ##class(web.DHCSTPHCMADVICE).InsPHMedAdvDetail(AdvID,dataList)
+	
+	///删除建议
+	i action = "delPatMedAdv" d
+	.s AdvID=$Get(%request.Data("AdvID",1))
+	.w ##class(web.DHCSTPHCMADVICE).delPatMedAdv(AdvID)
+	
+	///删除建议明细
+	i action = "delPatMedAdvDetail" d
+	.s medAdvDetID=$Get(%request.Data("medAdvDetID",1))
+	.w ##class(web.DHCSTPHCMADVICE).delPatMedAdvDetail(medAdvDetID)
+	
+	///用药建议药师医生处理调用
+	i action = "QueryMedAdvPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADVICE).QueryMedAdvPatList(rows,page,params)
+	
+	///获取病人建议信息
+	i action = "getPatMedAdvIn" d
+	.s AdvID=$Get(%request.Data("AdvID",1))
+	.w ##class(web.DHCSTPHCMADVICE).getPatMedAdvIn(AdvID)
+	
+	///药师同意/医师接受
+	i action = "agrPatMedAdv" d
+	.s medAdvID=$Get(%request.Data("medAdvID",1))
+	.s curStatus=$Get(%request.Data("curStatus",1))
+	.w ##class(web.DHCSTPHCMADVICE).updPatMedAdv(medAdvID,curStatus)
+    //===================================监控========================================
+
+	///手术用药病人信息
+	i action = "GetOperMedPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMOperMedimon).GetOperMedPatList(rows,page,params)
+	
+	///不良反应病人信息
+	i action = "GetUntoEffectPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMUntoEffect).GetUntoEffectPatList(rows,page,params)
+	
+	///查询对应主题监测项目
+	i action = "SelMonItemByTheme" d
+	.s Theme=$Get(%request.Data("Theme",1))
+	.d ##class(web.DHCSTPHCMCOMMON).SelMonItemByTheme(Theme)
+	
+	///药历查询
+	i action = "QueryMedRecord" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMEDRECORDS).QueryMedRecord(rows,page,params)
+	
+	///住院病人
+	i action = "QueryWardPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMEDRECORDS).QueryInHosPatList(rows,page,params)
+	
+	//===============================手术项目维护==========================
+	//保存手术类别
+	i action = "SaveOperCategory" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMAINTOPER).SaveOperCategory(params)
+	
+	//删除手术类别
+	i action = "DelOperCategory" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMAINTOPER).DelOperCategory(params)
+	
+	///手术类别查询
+	i action = "QueryOperCategory" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMAINTOPER).QueryOperCategory(rows,page,params)
+	
+	//保存手术项目
+	i action = "SaveOperItem" d	
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMAINTOPER).SaveOperItem(params)
+	
+	//删除手术项目
+	i action = "DelOperItem" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMAINTOPER).DelOperItem(params)
+	
+	///手术项目查询
+	i action = "QueryOperItem" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMMAINTOPER).QueryOperItem(rows,page,params)
+	
+	//查询手术类别
+	i action = "SelOperCateGory" d
+	.;d ##class(web.DHCSTPHCMMAINTOPER).SelOperCateGory()
+	.d ##class(web.DHCSTPHCMMAINTOPER).SelOperCateGoryNew()  //qunianpeng 2016-09-21
+	
+	//查询手术项目
+	i action = "SelOperItem" d
+	.d ##class(web.DHCSTPHCMMAINTOPER).SelOperItem()
+
+	//==============================报告书写==============================
+    ///加载模板
+	i action = "LoadTempInfo" d
+	.w ##class(web.DHCSTPHCMLECTURES).LoadSelTemp(100,1)
+	
+	///加载模板
+	i action = "getTempContent" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).getTempContent(params)
+	
+    ///另存为模板
+	i action = "SaveAsTemp" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).SaveAsTemp(params)
+	
+	///保存
+	i action = "saveReport" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).saveReport(params)
+	
+    ///修改
+	i action = "modReport" d
+	.s repid=$Get(%request.Data("repid",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).modReport(repid,params)
+	
+	///保存
+	i action = "QueryReport" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).QueryReport(rows,page,params)
+	
+    ///加载模板
+	i action = "getReport" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).getReportContent(params)
+	
+	///查询
+	i action = "QueryDocMangement" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).QueryDocMangement(rows,page,params)
+	
+	///删除模板
+	i action = "delTempFile" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).delRepTemp(params)
+	
+	///打开文档
+	i action = "OpenTempFile" d
+	.s RepID=$Get(%request.Data("RepID",1))
+	.d ##Class(web.DHCSTPHCMLECTURES).getRepTempContent(RepID)
+	
+	///删除文档
+	i action = "delFile" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).delFile(params)
+	
+	i action = "QueryDocMan" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).QueryDocMan(rows,page,params)
+	
+	///打开文档
+	i action = "OpenFile" d
+	.s RepID=$Get(%request.Data("RepID",1))
+	.d ##Class(web.DHCSTPHCMLECTURES).getReportContent(RepID)
+	
+	///查找文档
+	i action = "QueryDocByLogUser" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMLECTURES).QueryDocByLogUser(rows,page,params)
+	//=====================================================================
+	
+	//监测子项目查询
+	i action = "FunLibSubTheme" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s theID=$Get(%request.Data("theID",1))
+	.w ##class(web.DHCSTPHCMCOMMON).FunLibSubTheme(rows,page,theID)
+	
+	//监测子项目所属药品查询
+	i action = "FunLibSubTheDrg" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s theID=$Get(%request.Data("theID",1))
+	.w ##class(web.DHCSTPHCMCOMMON).FunLibSubTheDrg(rows,page,theID)
+	
+	//============================不良反应报表=====================================
+	
+	//保存不良反应/事件名称
+	i action = "SaveAdrEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).SaveAdrEvent(params)
+	
+	//删除不良反应/事件名称
+	i action = "DelAdrEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).DelAdrEvent(params)
+	
+	///不良反应/事件名称查询
+	i action = "QueryAdrEvent" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).QueryAdrEvent(rows,page,params)
+	
+	//保存-患者相关重要信息
+	i action = "SaveAdrPatImpoInfo" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).SaveAdrPatImpoInfo(params)
+	
+	//删除-患者相关重要信息
+	i action = "DelAdrPatImpoInfo" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).DelAdrPatImpoInfo(params)
+	
+	///查询-患者相关重要信息
+	i action = "QueryAdrPatImpoInfo" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).QueryAdrPatImpoInfo(rows,page,params)
+	
+	//保存-不良反应报告用药原因
+	i action = "SaveAdrReasonForMed" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).SaveAdrReasonForMed(params)
+	
+	//删除-不良反应报告用药原因
+	i action = "DelAdrReasonForMed" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).DelAdrReasonForMed(params)
+	
+	///查询-不良反应报告用药原因
+	i action = "QueryAdrReasonForMed" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).QueryAdrReasonForMed(rows,page,params)
+
+    //保存-填报意愿
+	i action = "SaveAdrWishes" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).SaveAdrWishes(params)
+	
+	//删除-填报意愿
+	i action = "DelAdrWishes" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).DelAdrWishes(params)
+	
+	///查询-填报意愿
+	i action = "QueryAdrWishes" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).QueryAdrWishes(rows,page,params)
+
+    //保存-不良反应报告状态
+	i action = "SaveAdrStatus" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).SaveAdrStatus(params)
+	
+	//删除-不良反应报告状态
+	i action = "DelAdrStatus" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).DelAdrStatus(params)
+	
+	///查询-不良反应报告状态
+	i action = "QueryAdrStatus" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).QueryAdrStatus(rows,page,params)
+	
+	//保存-状态授权
+	i action = "SaveAdrStatusGrant" d
+	.s params=$Get(%request.Data("params",1))
+	.W ##class(web.DHCSTPHCMADRDICMAIN).SaveAdrStatusGrant(params)
+	
+	//删除-状态授权
+	i action = "DelAdrStatusGrant" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).DelAdrStatusGrant(params)
+	
+	///查询-状态授权
+	i action = "QueryAdrStatusGrant" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).QueryAdrStatusGrant(params)
+	
+	//保存-流程定义
+	i action = "SaveAdrProcess" d
+	.s params=$Get(%request.Data("params",1))
+	.W ##class(web.DHCSTPHCMADRDICMAIN).SaveAdrProcess(params)
+	
+	//删除-流程定义
+	i action = "DelAdrProcess" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).DelAdrProcess(params)
+	
+	///查询-流程定义
+	i action = "QueryAdrProcess" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRDICMAIN).QueryAdrProcess(rows,page,params)
+	
+	//查询状态
+	i action = "SelAdrStatus" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).SelAdrStatus()
+	
+	i action = "GetSSPPoint" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMADRDICMAIN).GetSSPPoint(rows,page,params)
+	
+	///保存不良反应报告
+	i action = "saveAdrReport" d
+	.s itmstr=$Get(%request.Data("ItmStr",1))
+	.s adrRepID=$Get(%request.Data("adrRepID",1))
+	.s impInfo=$Get(%request.Data("ImpInfo",1))
+	.s MRCICItms=$Get(%request.Data("MRCICItms",1))
+	.s adrEvtItems=$Get(%request.Data("AdrEvtItems",1))
+	.s adrRepDataList=$Get(%request.Data("adrRepDataList",1))
+	.s adrEvtProcessDesc=$Get(%request.Data("AdrEvtProcessDesc",1))
+	.s adrRepAuditList=$Get(%request.Data("adrRepAuditList",1))
+	.w ##class(web.DHCSTPHCMADRREPORT).SaveAdrEvent(adrRepID,adrRepDataList,impInfo,itmstr,MRCICItms,adrEvtItems,adrEvtProcessDesc,adrRepAuditList)
+	.
+	
+	///获取医嘱发药列表
+	i action = "getBatNoList" d
+	.s oeori=$Get(%request.Data("oeori",1))
+	.d ##class(web.DHCSTPHCMADRREPORT).getBatNoList(oeori)
+	
+	//查询不良反应报告  //审核
+	i action = "GetAdrReport" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRREPORTQUERY).QueryAdrReport(rows,page,params)
+	
+	//查询不良反应报告   //查询
+	i action = "QueryCompAdrReport" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRREPORTQUERY).QueryCompAdrReport(rows,page,params)
+	
+	//民族
+	i action = "selNation" d 
+	.d ##class(web.DHCSTPHCMCOMMON).SelNation()
+		
+	//性别
+	i action = "SelCTSex" d 
+	.d ##class(web.DHCSTPHCMCOMMON).SelCTSex()
+			
+	//医院
+	i action = "SelCTHospital" d 
+	.d ##class(web.DHCSTPHCMCOMMON).SelCTHospital()
+	
+	//不良反应事件
+	i action = "SelAdrEvent" d
+	.d ##class(web.DHCSTPHCMCOMMON).SelAdrEvent()
+	
+	//用药原因
+	i action = "SelAdrReaForMed" d
+	.d ##class(web.DHCSTPHCMCOMMON).SelAdrReaForMed()
+	
+	//病人医嘱信息
+	i action = "GetPatOEInfo" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S EpisodeID=$Get(%request.Data("params",1))
+	.s priCode=$g(%request.Data("PriCode",1)) //根据医嘱类型就行筛选数据 duwensheng 2016-09-05
+	.w ##class(web.DHCSTPHCMCOMMON).GetPatOEInfo(rows,page,EpisodeID,priCode)
+	.
+	
+	//诊断字典表
+	i action = "GetMRCICDDx" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S alise=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMCOMMON).GetMRCICDDx(rows,page,alise)
+	
+	//不良反应字典表
+	i action = "GetAdrEvent" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S alise=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMCOMMON).GetAdrEvent(rows,page,alise)
+	
+	//获取报告信息
+	i action = "getAdrRepInfo" d
+	.s adrRepID=$Get(%request.Data("adrRepID",1))
+	.w ##class(web.DHCSTPHCMADRREPORT).getAdrRepInfo(adrRepID)
+	.
+	
+	//获取不良反应报告药品信息
+	i action = "getAdrRepDrgItm" d
+	.S type=$Get(%request.Data("params",1))
+	.S adrRepID=$Get(%request.Data("adrRepID",1))
+	.w ##class(web.DHCSTPHCMADRREPORT).getAdrRepDrgItm(type,adrRepID)
+	
+	//病人基本信息
+	i action = "GetPatEssInfo" d
+	.s PatientID=$Get(%request.Data("PatientID",1))
+	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCSTPHCMADRREPORT).GetPatEssInfo(PatientID,EpisodeID)
+	
+    //报告审批
+	i action = "AuditAdrReport" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRREPORT).AuditAdrReport(params)
+	.
+	
+	//审批日志
+	i action = "QueryAuditLog" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMADRREPORTQUERY).QueryAuditLog(params)
+	.
+	
+	//检查病人是否存在已填写报表
+	i action = "checkPatExitAdrReport" d
+	.S EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCSTPHCMADRREPORT).checkPatExitAdrReport(EpisodeID)
+	.
+	
+	//药品
+	i action = "QueryDrgList" d
+	.S Input=$Get(%request.Data("Input",1))
+	.w ##class(web.DHCSTPHCMCOMMON).QueryDrgList(Input)
+	.
+	
+	//加载指定病人不良反应报告列表
+	i action = "QueryPatAdrReport" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCSTPHCMADRREPORTQUERY).QueryPatAdrReport(rows,page,EpisodeID)
+	
+	//============================药品质量报告=====================================
+	///保存药品质量报告
+	i action = "saveDrgQEvtReport" d
+	.s dqEvtRepID=$Get(%request.Data("dqEvtRepID",1))
+	.s dqEvtRepList=$Get(%request.Data("dqEvtRepList",1))
+	.S dqEvtRepDrgItmList=$Get(%request.Data("dqEvtRepDrgItmList",1))
+	.S dqEvtRepTriFacList=$Get(%request.Data("dqEvtRepTriFacList",1))
+	.w ##class(web.DHCSTPHCMDRGQEVTREPORT).SaveDrgQEvtReport(dqEvtRepID,dqEvtRepList,dqEvtRepDrgItmList,dqEvtRepTriFacList)
+	
+	//查询药品质量事件
+	i action = "GetDQEvtReport" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMDRGQEVTREPORT).QueryDQEvtReport(rows,page,params)
+	
+	//查询药品质量事件报告
+	i action = "getDQEvtRepInfo" d
+	.S dgEvtRepID=$Get(%request.Data("dgEvtRepID",1))
+	.w ##class(web.DHCSTPHCMDRGQEVTREPORT).getDQEvtRepInfo(dgEvtRepID)
+	
+	//查询药品质量事件报告涉及药品
+	i action = "getDQEvtRepDrgItm" d
+	.S dgEvtRepID=$Get(%request.Data("dgEvtRepID",1))
+	.w ##class(web.DHCSTPHCMDRGQEVTREPORT).getDQEvtRepDrgItm(dgEvtRepID)
+	
+	//病人基本信息
+	i action = "getRepPatInfo" d
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S LocID=$Get(%request.Data("LocID",1))
+	.w ##class(web.DHCSTPHCMDRGQEVTREPORT).getRepPatInfo(AdmDr,LocID)
+	//============================用药错误=====================================
+	//查询用药错误
+	i action = "GetDrgMisuseRep" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMDRGMISUSEREPORT).QueryDrgMisuseReport(rows,page,params)
+	
+	//保存用药错误
+	i action = "saveDrgMUReport" d
+	.s drgMURepID=$Get(%request.Data("drgMURepID",1))
+	.s drgMURepList=$Get(%request.Data("drgMURepList",1))
+	.s drgMURepDrgItmList=$Get(%request.Data("drgMURepDrgItmList",1))
+	.w ##class(web.DHCSTPHCMDRGMISUSEREPORT).SaveDrgQEvtReport(drgMURepID,drgMURepList,drgMURepDrgItmList)
+
+	//查询用药错误
+	i action = "getDrgMisuseRepInfo" d
+	.S dmErrRepID=$Get(%request.Data("dmErrRepID",1))
+	.w ##class(web.DHCSTPHCMDRGMISUSEREPORT).getDrgMisuseRepInfo(dmErrRepID)
+	
+	//查询用药错误涉及药品
+	i action = "getDrgMisuseRepDrgItm" d
+	.S dmErrRepID=$Get(%request.Data("dmErrRepID",1))
+	.W ##class(web.DHCSTPHCMDRGMISUSEREPORT).getDrgMisuseRepDrgItm(dmErrRepID)
+	
+	//病人基本信息
+	i action = "getDMRRepPatInfo" d
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S LocID=$Get(%request.Data("LocID",1))
+	.w ##class(web.DHCSTPHCMDRGMISUSEREPORT).getDMRRepPatInfo(AdmDr,LocID)
+	//============================用药建议字典维护=====================================
+	//保存-用药建议字典
+	i action = "SaveDrgSugDic" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMDRGSUGDICMAIN).SaveDrgSugDic(params)
+	
+	//删除-用药建议字典
+	i action = "DelDrgSugDic" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMDRGSUGDICMAIN).DelDrgSugDic(params)
+	
+	///查询-用药建议字典
+	i action = "QueryDrgSugDic" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMDRGSUGDICMAIN).QueryDrgSugDic(rows,page,params)
+	
+	/*
+	///查询-建议字典
+	i action = "QueryUserMedAdvDic" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMDRGSUGDICMAIN).QueryUserMedAdvDic(params)
+	*/
+	
+	//保存-用户用药建议模板
+	i action = "SaveMedAdvTemp" d
+	.s medAdvTempList=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMMEDADVTEMP).save(medAdvTempList)
+	
+	//删除-用户用药建议模板
+	i action = "DelMedAdvTemp" d
+	.s medAdvTempID=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMMEDADVTEMP).delmedAdvTemp(medAdvTempID)
+	
+    ///查询-用户用药建议模板
+	i action = "QueryMedAdvTemp" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMMEDADVTEMP).QueryMedAdvTemp(rows,page,params)
+	
+	///病人建议ID列表串		//add by qunianpeng 2016/10/26
+	i action = "jsonPatMedAdvList" d	
+	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCSTPHCMADVICE).jsonPatMedAdvList(EpisodeID)
+	
+	///用药建议病人基本信息  //add by qunianpeng 2016/10/26
+	i action = "jsonMedAdvPatAdmInfo" d
+	.s medAdvID=$Get(%request.Data("medAdvID",1))
+	.w ##class(web.DHCSTPHCMADVICE).jsonMedAdvPatAdmInfo(medAdvID)
+	
+	///用药建议药品列表  //add by qunianpeng 2016/10/26
+	i action = "jsonMedAdvDrgItm" d
+	.s medAdvID=$Get(%request.Data("medAdvID",1))
+	.w ##class(web.DHCSTPHCMADVICE).jsonMedAdvDrgItm(medAdvID)
+		
+	///用药建议内容	//add by qunianpeng 2016/10/26
+	i action = "jsonPHMedAdvInDet" d
+	.s medAdvID=$Get(%request.Data("medAdvID",1))
+	.w ##class(web.DHCSTPHCMADVICE).jsonPHMedAdvInDet(medAdvID)
+	
+	//=========================药物基因检测=============================================
+	
+	//查询药物基因检测患者列表
+	i action = "QueryPhaGenPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMDRGGENEMONITOR).QueryInHosPatList(rows,page,params)
+	
+	
+	//===========================药学查房================================================
+	///插入药学查房信息
+	i action = "SavePhaWardRoundInf" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCSTPHCMWARDROUND).SaveWardRound(rowid,input)
+	
+	//病人药学查房记录信息
+	i action = "getPatWardInf" d
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S Status=$Get(%request.Data("Status",1))
+	.w ##class(web.DHCSTPHCMWARDROUND).getWardRound(AdmDr,Status)
+	
+	//病人药学查房记录信息(住院期间患者列表)
+	i action = "getPatWardRecord" d
+        .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S Status=$Get(%request.Data("Status",1))
+	.S startDate=$Get(%request.Data("startDate",1))
+	.S endDate=$Get(%request.Data("endDate",1))
+	.w ##class(web.DHCSTPHCMWARDROUND).getPatWardRecord(rows,page,AdmDr,Status,startDate,endDate)
+	
+	//病人用药信息
+	i action = "getWRDrgItm" d
+	.S wardRoundID=$Get(%request.Data("wardRoundID",1))
+	.w ##class(web.DHCSTPHCMWARDROUND).getWRDrgItm(wardRoundID,"1","999")
+	
+	//药师指导列表
+	i action = "getGuidList" d
+	.S wardRoundID=$Get(%request.Data("wardRoundID",1))
+	.w ##class(web.DHCSTPHCMWARDROUND).getGuidList(wardRoundID)
+	
+	//===========================医学查房================================================
+	///插入医学查房信息
+	i action = "SaveMedWardRoundInf" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHCLIPATHOGRAPHY).SaveCliPathography(rowid,input)
+	
+	//病人医学查房记录信息
+	i action = "getMedWardInf" d
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S Status=$Get(%request.Data("Status",1))
+	.w ##class(web.DHCPHCLIPATHOGRAPHY).getMedWardRound(AdmDr,Status)
+	
+	//病人医学查房记录信息（不包含首次查房记录）
+	i action = "GetMedWardRecord" d
+        .s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S startDate=$Get(%request.Data("startDate",1))
+	.S endDate=$Get(%request.Data("endDate",1))
+	.w ##class(web.DHCPHCLIPATHOGRAPHY).GetMedWardRecord(rows,page,AdmDr,startDate,endDate)
+	
+	
+	//病人用药信息
+	i action = "getMRDrgItm" d
+	.S cliPatID=$Get(%request.Data("cliPatID",1))
+	.w ##class(web.DHCPHCLIPATHOGRAPHY).getMRDrgItm(cliPatID,"1","999")
+	
+	//病人主诉信息
+	i action = "getChiefComtItm" d
+	.S cliPatID=$Get(%request.Data("cliPatID",1))
+	.w ##class(web.DHCPHCLIPATHOGRAPHY).getChiefComtItm(cliPatID,"1","999")
+	
+	//===========================用药教育================================================
+	///插入用药教育信息
+	i action = "SaveMedEduInf" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s input=$Get(%request.Data("input",1))
+	.w ##class(web.DHCPHMEDEDUCATION).SaveMedEducation(rowid,input)
+	
+	//病人用药教育记录
+	i action = "getMedEducation" d
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S Status=$Get(%request.Data("Status",1))
+	.w ##class(web.DHCPHMEDEDUCATION).getMedEducation(AdmDr,Status)
+	
+	//病人用药教育记录（住院期间患者教育列表）
+	i action = "getMedEduRecord" d
+	.S AdmDr=$Get(%request.Data("AdmDr",1))
+	.S Status=$Get(%request.Data("Status",1))
+	.S startDate=$Get(%request.Data("startDate",1))
+	.S endDate=$Get(%request.Data("endDate",1))
+	.S rows=$Get(%request.Data("rows",1)) //by qunianpeng 2017/1/5
+	.S page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCPHMEDEDUCATION).getMedEduRecord(rows,page,AdmDr,Status,startDate,endDate)
+	
+	//药师指导列表
+	i action = "getGuidContList" d
+	.S EduRid=$Get(%request.Data("EduRid",1))
+	.w ##class(web.DHCPHMEDEDUCATION).getGuidContList(EduRid)
+	
+	//病人用药信息
+	i action = "getMEDrgItm" d
+	.S medEduRid=$Get(%request.Data("medEduRid",1))
+	.w ##class(web.DHCPHMEDEDUCATION).getMedEduDrgItm(medEduRid,"1","999")
+	
+	//===========================药学监护维护==============================================
+	
+	
+	//------------------------监护级别--------------------------------
+	/*
+	///获取监护级别列表
+	i action = "GetLevelList" d
+	.d ##class(web.PHARMACYCARE).GetLevelList(Rows,Page)
+	
+	///获取监护级别
+	i action = "GetLevelComb" d
+	.w ##class(web.PHARMACYCARE).GetLevelComb()
+	
+	//更新监护级别 Update DHC_PHConSpCrowd
+	i action = "UpdateLevel" d	
+	.d ##class(web.PHARMACYCARE).UpdateLevelInf(dataList)
+	
+	i action = "DeleteLevel" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(web.PHARMACYCARE).DeleteLevel(index)
+	*/
+
+         ///删除监护级别
+        i action="DelMonLevel" d
+        .s params=$Get(%request.Data("params",1))
+        .d ##class(web.DHCSTPHCMPHARCAREMAIN).DelMonLevel(params)
+
+	///获取监护级别列表
+	i action = "QueryMonLevel" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).QueryMonLevel(rows,page)
+	
+	///获取监护级别
+	i action = "SelMonLevel" d
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).SelMonLevel()
+	
+	///保存监护级别
+	i action = "SaveMonLevel" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).SaveMonLevel(params)
+
+	//------------------------监护项目--------------------------------
+	///获取监项目列表
+	i action = "QueryMonItem" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s monLevId=$Get(%request.Data("monLevId",1))
+	.s monSubClassId=$Get(%request.Data("monSubClassId",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).QueryMonItem(rows,page,monSubClassId,monLevId)
+	
+	///保存监护范围 
+	i action = "SaveMonItm" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).SaveMonItm(params)
+	
+	///删除监项目列表 
+	i action = "DelMonItem" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).DelMonItem(params)
+	
+	
+	//------------------------监护范围--------------------------------
+	
+	///获取监护范围列表
+	i action = "QueryMonScope" d	
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s monLevId=$Get(%request.Data("monLevId",1))
+	.s monSubClassId=$Get(%request.Data("monSubClassId",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).QueryMonScope(rows,page,monSubClassId,monLevId)
+	
+	///保存监护范围
+	i action = "SaveMonScope" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).SaveMonScope(params)
+	
+	///删除监护范围
+	i action = "DelMonScope" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMPHARCAREMAIN).DelMonScope(params)
+
+	///插入用药监护信息
+	i action = "saveMedMonInfo" d
+	.s monID=$Get(%request.Data("monID",1))
+	.s param=$Get(%request.Data("param",1))
+	.w ##class(web.DHCSTPHCMPHARCARE).saveMedMonInfo(monID,param)
+		
+	//------------------------监护查询--------------------------------
+	
+	//监护查询
+	i action = "QueryPhaCare" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMPHARMACYCARE).QueryPhaCare(rows,page,params)
+	
+	///监护查询-药品
+	i action = "getMonDrgItm" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMPHARMACYCARE).getMonDrgItm(params)
+	
+	/// 监护范围-json
+	i action = "getMonScopeList" d
+	.s monLevId=$Get(%request.Data("monLevId",1))
+	.s monSubClassId=$Get(%request.Data("monSubClassId",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).getMonScopeList(monSubClassId,monLevId)
+	
+	/// 监护项目-json
+	i action = "getMonItemList" d
+	.s monLevId=$Get(%request.Data("monLevId",1))
+	.s monSubClassId=$Get(%request.Data("monSubClassId",1))
+	.w ##class(web.DHCSTPHCMPHARCAREMAIN).getMonItemList(monSubClassId,monLevId)
+
+	/// 监护信息查询 
+	i action = "getPatMonList" d
+	.s AdmDr=$Get(%request.Data("AdmDr",1))
+	.s monLevId=$Get(%request.Data("monLevId",1))
+	.w ##class(web.DHCSTPHCMPHARMACYCARE).getPatMonList(monLevId,AdmDr)
+	
+	///
+	i action = "getPatMonScopeList" d
+	.s monId=$Get(%request.Data("monId",1))
+	.w ##class(web.DHCSTPHCMPHARMACYCARE).getPatMonScopeList(monId)
+	
+	///
+	i action = "getPatMonItemList" d
+	.s monId=$Get(%request.Data("monId",1))
+	.w ##class(web.DHCSTPHCMPHARMACYCARE).getPatMonItemList(monId)
+
+	///
+	i action = "getMonImpLabsAndGuidCon" d
+	.s monId=$Get(%request.Data("monId",1))
+	.w ##class(web.DHCSTPHCMPHARMACYCARE).getMonImpLabsAndGuidCon(monId)
+	
+	//================================重点患者===============================
+	//保存重点患者
+	i action = "saveEmpPat" d
+	.s empPatID=$Get(%request.Data("empPatID",1))
+	.s empPatList=$Get(%request.Data("empPatList",1))
+	.w ##class(web.DHCSTPHCMEMPPAT).saveEmpPat(empPatID,empPatList)
+
+	//查询重点患者
+	i action = "getEmpPatInfo" d
+	.s admDr=$Get(%request.Data("AdmDr",1))
+	.w ##class(web.DHCSTPHCMEMPPAT).getEmpPatInfo(admDr)
+	
+	///获取日期配置显示类型
+	i action="getDateType" d
+	.w ##class(websys.Conversions).DateFormat()
+	//=======================================================================
+		
+	//病人生命体征
+	i action = "GetPatVitalSigns" d
+	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCSTPHCMCOMMON).GetPatVitalSigns("",EpisodeID)
+	.
+
+       //获取病人检验信息sufan  2016/09/21
+	i action = "GetPatLabList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.s param=$Get(%request.Data("param",1))
+	.d ##CLASS(web.DHCSTCNTANTIBACTERIAL).GetPatLabList(rows,page,EpisodeID,param)
+
+	//获取病人检验信息sufan  2016/09/21
+	i action = "LabItmsValue" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s LabTestSetRow=$Get(%request.Data("LabTestSetRow",1))
+	.d ##CLASS(web.DHCSTCNTANTIBACTERIAL).LabItmsValue(rows,page,LabTestSetRow)
+	
+	//病人首次病程记录
+	i action = "getPatFirProNote" d
+	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.s ret=##class(web.DHCSTPHCMWARDROUND).getPatFirProNote(EpisodeID)
+	.w ##Class(web.DHCSTJQUERYCOMMON).JsonText(ret)
+	
+	//保存退回原因
+	i action = "saveAdrRetReason" d
+	.S adrRepID=$Get(%request.Data("adrRepID",1))
+	.S userID=$Get(%request.Data("userID",1))
+	.S retreason=$Get(%request.Data("retreason",1))
+	.w ##class(web.DHCSTPHCMADRREPORT).saveAdrRetReason(adrRepID, retreason, userID)
+
+	///====================================药学咨询=================================
+	/// 问题类型
+	i action = "QueryQuesType" d
+	.d ##class(web.DHCSTPHCMCONSULT).QueryQuesType()
+
+	/// 咨询部门
+	i action = "QueryConDept" d
+	.d ##Class(web.DHCSTPHCMCOMMON).SelAllLoc()
+
+	/// 特殊人群
+	i action = "QueryConSpCrowd" d
+	.d ##class(web.DHCSTPHCMCONSULT).QueryConSpCrowd()
+
+	/// 回复依据
+	i action = "QueryConsBasis" d
+	.d ##class(web.DHCSTPHCMCONSULT).QueryConsBasis()
+
+        /// 咨询明细
+	i action = "QyConsultDetail" d
+	.s consultID=$Get(%request.Data("consultID",1))
+	.d ##class(web.DHCSTPHCMCONSULTQUERY).QyConsultDetail(consultID)
+
+        ///设置咨询完成状态
+	i action = "setConsultComplete" d
+	.s consultID=$Get(%request.Data("consultID",1))
+	.s consComFlag=$Get(%request.Data("consComFlag",1))
+	.s retval=##Class(web.DHCSTPHCMCONSULT).setConsultComplete(consultID,consComFlag)
+	.w ##class(web.DHCSTPHCMCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+
+
+	///保存患者咨询
+	i action = "savePatConsult" d
+	.s consultID=$Get(%request.Data("consultID",1))
+	.s consDataList=$Get(%request.Data("consDataList",1))
+	.s consDrgItmList=$Get(%request.Data("consDrgItmList",1))
+	.s retval=##Class(web.DHCSTPHCMCONSULT).SavePatConsult(consultID,consDataList,consDrgItmList)
+	.w ##class(web.DHCSTPHCMCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+	
+	///患者类咨询问题列表
+	i action = "QueryPatConsult" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s strParam=$Get(%request.Data("params",1))
+	.d ##Class(web.DHCSTPHCMCONSULTQUERY).QueryPatConsult(rows,page,strParam)
+
+	///保存咨询问题
+	i action = "saveConsultDetail" d
+	.s consultID=$Get(%request.Data("consultID",1))
+	.s conDataList=$Get(%request.Data("conDataList",1))
+	.s retval=##Class(web.DHCSTPHCMCONSULT).SaveConsult(consultID,conDataList)
+	.w ##class(web.DHCSTPHCMCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+
+	///咨询问题列表
+	i action = "QueryPhConsult" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s strParam=$Get(%request.Data("params",1))
+	.d ##Class(web.DHCSTPHCMCONSULTQUERY).QueryPhConsult(rows,page,strParam)
+
+       ///咨询问题列表
+	i action = "QueryConsultBakDet" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s consultID=$Get(%request.Data("consultID",1))
+	.d ##Class(web.DHCSTPHCMCONSULTQUERY).QueryConsultBakDet(rows,page,consultID)
+
+	///咨询药品列表                      //wangxuejian 2016-09-09
+	i action = "QueryConsDrgItmList" d
+	.s consultID=$Get(%request.Data("consultID",1))
+	.d ##Class(web.DHCSTPHCMCONSULTQUERY).QueryConsDrgItmList(consultID)
+
+	///获取病人基本就诊信息
+	i action = "GetPatEssInfoByPatNo" d
+	.s PatientNo=$Get(%request.Data("PatientNo",1))
+	.d ##Class(web.DHCSTPHCMCOMMON).GetPatEssInfoByPatNo(PatientNo,"I")
+
+	//================================================================================	
+	//查询住院患者列表
+	i action = "QueryAllInHosPatList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMPATBASEINFOQUERY).QueryInHosPatList(rows,page,params)
+
+        /// 医嘱项目列表
+	i action = "QueryArcItmDetail" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s Input=$Get(%request.Data("Input",1))
+	.s hospId=$Get(%request.Data("hospId",1))
+	.w ##Class(web.DHCSTPHCMStkDrgUtil).QueryArcItmDetail(rows,page,Input,hospId)
+
+        ///检验指标项目列表
+	i action = "QueryLabItmDetail" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s Input=$Get(%request.Data("Input",1))
+	.d ##Class(web.DHCSTPHCMStkDrgUtil).QueryLabItmDetail(rows,page,Input,"")
+	///====================================基地管理=================================
+	///保存专业方向信息
+	i action = "saveProDirect" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCSTPHCMBASEMANAGE).saveProDirect(params)
+
+	///科室
+	i action = "QueryConsIden" d
+	.d ##Class(web.DHCSTPHCMCOMMON).SelCarPrvTp()
+
+	///删除专业方向信息
+	i action = "delProDirect" d
+	.s proDirectID=$Get(%request.Data("proDirectID",1))
+	.d ##class(web.DHCSTPHCMBASEMANAGE).delProDirect(proDirectID)
+	
+	///查询专业方向信息
+	i action = "QueryProDirect" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCSTPHCMBASEMANAGEQUERY).QueryProDirect(rows,page,params)
+		
+	///专业方向
+	i action = "SelProDirect" d 
+	.d ##class(web.DHCSTPHCMBASEMANAGEQUERY).SelProDirect()
+
+        ///保存带教老师信息
+	i action = "SaveBasManTeacher" d
+	.s bmTeacherID=$Get(%request.Data("bmTeacherID",1))
+	.s bmTDataList=$Get(%request.Data("bmTDataList",1))
+	.s retval=##Class(web.DHCSTPHCMBASEMANAGE).SaveBasManTeacher(bmTeacherID,bmTDataList)
+	.w ##class(web.DHCSTPHCMCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+	
+	///带教老师列表
+	i action = "QuerybmTeaList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s strParam=$Get(%request.Data("params",1))
+	.d ##Class(web.DHCSTPHCMBASEMANAGEQUERY).QuerybmTeaList(rows,page,strParam)
+	
+	///保存基地学员信息
+	i action = "SaveBasManStudent" d
+	.s bmStudentID=$Get(%request.Data("bmStudentID",1))
+	.s bmSDataList=$Get(%request.Data("bmSDataList",1))
+	.s retval=##Class(web.DHCSTPHCMBASEMANAGE).SaveBasManStudent(bmStudentID,bmSDataList)
+	.w ##class(web.DHCSTPHCMCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+	
+	///基地学员列表
+	i action = "QuerybmStudentList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s strParam=$Get(%request.Data("params",1))
+	.d ##Class(web.DHCSTPHCMBASEMANAGEQUERY).QuerybmStudentList(rows,page,strParam)
+
+       ///设置/取消咨询意见状态
+	i action = "saveAdoptConsult" d
+	.s consItmID=$Get(%request.Data("consItmID",1))
+	.s consOkFlag=$Get(%request.Data("consOkFlag",1))
+	.s retval=##Class(web.DHCSTPHCMCONSULT).saveAdoptConsult(consItmID,consOkFlag)
+	.w ##class(web.DHCSTPHCMCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+
+
+     	/// 个人药学服务查询
+	i action = "jsonPerPharServiceTree" d
+	.S EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##Class(web.DHCSTPHCMPERPHARSERVICE).jsonPerPharServiceTree(EpisodeID)
+
+	/// 个人药学服务明细
+	i action = "jsonLoadPerPharSerDet" d
+	.S bsType=$Get(%request.Data("bsType",1))
+	.S bsPoint=$Get(%request.Data("bsPoint",1))
+	.w ##Class(web.DHCSTPHCMPERPHARSERVICE).jsonLoadPerPharSerDet(bsType,bsPoint)
+
+	///保存咨询明细
+	i action = "saveConsultDDetail" d
+	.s consultID=$Get(%request.Data("consultID",1))
+	.s conDataList=$Get(%request.Data("conDataList",1))
+	.s retval=##Class(web.DHCSTPHCMCONSULT).SaveConsultDetail(consultID,conDataList)
+	.w ##class(web.DHCSTPHCMCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+
+    ///库存药品列表
+	i action = "QueryStockDetail" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s Input=$Get(%request.Data("Input",1))
+	.s HospID=$Get(%request.Data("HospID",1))
+	.d ##Class(web.DHCSTPHCMStkDrgUtil).QueryStockDetail(rows,page,Input,"G",HospID)
+
+      //手术列表    2016/09/30
+	i action = "getPatOperList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCSTCNTANTIBACTERIAL).GetPatOpList(rows, page, EpisodeID)
+	.
+
+      // 删除主题项目参数记录
+	i action = "delFunLibArt" d
+	.s itmID=$Get(%request.Data("itmID",1))
+	.d ##class(web.DHCSTPHCMFUNLIB).delFunLibArt(itmID)
+
+
+    //不良反应状态  wangxuejian 2016/10/27
+	i action = "jsonAdrStatus" d
+	.s strParam=$Get(%request.Data("strParam",1))
+	.d ##class(web.DHCSTPHCMCOMMON).jsonAdrStatus(strParam)
+    
+	///获取咨询方式列表
+	i action = "GetPhConWaysInfo" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(PHA.CPW.ConsUlt).GetPhConWaysInfo(rows,page)
+
+	i action = "UpdatePhConWays" d
+	.s dataList=$Get(%request.Data("dataList",1))
+	.d ##class(PHA.CPW.ConsUlt).UpdatePhConWays(dataList)
+	
+	i action = "DeletePhConWays" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(PHA.CPW.ConsUlt).DeletePhConWays(index)
+	
+	///获取咨询身份列表
+	i action = "GetPhConIdenInfo" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(PHA.CPW.ConsUlt).GetPhConIdenInfo(rows,page)
+
+	i action = "UpdatePhConIden" d
+	.s dataList=$Get(%request.Data("dataList",1))
+	.d ##class(PHA.CPW.ConsUlt).UpdatePhConIden(dataList)
+	
+	i action = "DeletePhConIden" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(PHA.CPW.ConsUlt).DeletePhConIden(index)
+	
+	///获取服务时间列表
+	i action = "GetPhConTimeInfo" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(PHA.CPW.ConsUlt).GetPhConTimeInfo(rows,page)
+
+	i action = "UpdatePhConTime" d
+	.s dataList=$Get(%request.Data("dataList",1))
+	.d ##class(PHA.CPW.ConsUlt).UpdatePhConTime(dataList)
+	
+	i action = "DeletePhConTime" d
+	.s index=$Get(%request.Data("index",1))
+	.d ##class(PHA.CPW.ConsUlt).DeletePhConTime(index)
+	
+	/// 咨询方式
+	i action = "QueryConsWays" d
+	.d ##class(PHA.CPW.ConsUlt).QueryConsWays()
+	
+	/// 咨询身份
+	i action = "QueryConsIdenInfo" d
+	.d ##class(PHA.CPW.ConsUlt).QueryConsIdenInfo()
+	
+	/// 服务时间
+	i action = "QueryConsTime" d
+	.d ##class(PHA.CPW.ConsUlt).QueryConsTime()
+    
+	i action = "ListIsActive" d
+	.d ##class(web.DHCPHGuiScope).ListIsActive()
+
+	i action = "ListIsActiveSub" d
+	.d ##class(web.DHCPHGuiScope).ListIsActiveSub()
+</script>

@@ -1,0 +1,142 @@
+<HTML>
+
+<!--add by loo on 2010-8-31-->
+<!--屏蔽掉IE6.0页面上加载的图片上面自动出现的保存图标-->
+<META HTTP-EQUIV="imagetoolbar" CONTENT="no"/>
+
+<HEAD>
+
+	<TITLE></TITLE>
+	<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+ 	<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/ux_VerticalTabPanel.css" />
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<SCRIPT SRC="/csp/broker/cspbroker.js"></SCRIPT>
+	<SCRIPT SRC="/csp/broker/cspxmlhttp.js"></SCRIPT>
+ 	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/ux_VerticalTabPanel.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+	
+	<style type="text/css">
+ 		.spanColor
+		{
+			color: black;
+		}
+		.spanColorLeft
+		{
+			color: #666;
+		}
+		#pInfoDiv
+		{
+			position: relative; height:20;  font-size:9pt; text-align: left;  border-style: none;
+		}
+		#pInfoDivParent
+		{
+			height:auto; background-image: url('../scripts/epr/Pics/title.gif'); background-attachment: fixed; border-style: none;
+		}
+
+		#photo
+		{
+			display: table-cell;
+			vertical-align:middle;
+			width:100%;
+			height:100%;
+			text-align:center;
+			
+		}
+
+		img
+		{
+			vertical-align:middle;
+		}
+ 	</style>
+ 	
+ 	<script language="cache" runat="server">
+  		s patientID = $Get(%request.Data("patientID",1),"")
+  		s episodeID = $Get(%request.Data("episodeID",1),"")
+  		s admType = $Get(%request.Data("admType",1),"") 
+		s pageUrl = ##class(EPRmeta.EPRPageURL).GetAllPageUrls()
+		s mradm = ##class(EPRservice.HISInterface.PatientInfoAssist).GetMRAdmDR(episodeID)
+  		
+  		//20130731 wangwentao add
+		s userID = %session.Get("LOGON.USERID")
+ 		s userCode = %session.Get("LOGON.USERCODE")
+  		s ssGroupID = %session.Get("LOGON.GROUPID")
+  		s ctLocID = %session.Get("LOGON.CTLOCID")
+
+ 		s regNo = "", medicare = ""
+ 		if (patientID '= "")
+ 		{
+	 		s regNo = $p($g(^PAPER(patientID,"PAT",1)),"^",1)
+ 			s medicare = $p($g(^PAPER(patientID,"PAT",1)),"^",22)
+ 		}
+ 		s ctLocCode = ""
+ 		if (ctLocID '= "")
+ 		{
+ 			s ctLocCode = $p(^CTLOC(ctLocID),"^",1)
+ 		}
+		//20130731 end
+		
+  		//新增病人基本信息
+  		//字体
+ 		s fontSize = ##class(EPRmeta.SysOption).GetOptionValueByName("DefaultFontSize")
+ 		//病人基本信息
+  		s patientInfo = ##class(web.eprajax.ajaxCreateEprEdit).GetPatientInfoInBrowser(patientID, episodeID, "")
+  	
+  		//是否开启无纸化
+  		s isPaperless = ##class(EPRmeta.SysOption).GetOptionValueByName("PaperlessOn")
+  	</script>
+  	<script language="javascript">
+  		var patientID = '#(patientID)#';
+  		var episodeID = '#(episodeID)#';
+  		var admType = '#(admType)#';
+  		var pageUrl = '#(pageUrl)#';
+  		var mradm = '#(mradm)#';
+  		
+  		//20130731 wangwentao add
+  		var regNo = '#(regNo)#';
+  		var medicare = '#(medicare)#';
+  		var userID = '#(userID)#';
+  		var userCode = '#(userCode)#';
+  		var ctLocID = '#(ctLocID)#';
+  		var ctLocCode = '#(ctLocCode)#';
+  		var ssGroupID = '#(ssGroupID)#';
+		//20130731 end
+		
+  		//病人基本信息
+		var pInfo = eval("[{" + "#(patientInfo)#" + "}]");
+		
+ 		//病人信息字体
+ 		var fontSize = '#(fontSize)#' + "pt";
+ 		
+ 		var isPaperless = '#(isPaperless)#';
+  	</script>
+  	<server>
+		
+		w "<object id='preconfig' name='preconfig' width=0 height=0 classid='"_##class(web.DHCEPR).GetFormURL()_"PreviewManage.DLL#dhcc.epr.eprlib.previewmanage.UCCfg"_"'>",!
+		w "<param name='DataServiceUrl' value='"_##class(web.DHCEPR).GetServiceURL()_"'>",!
+		w "<param name='FormServiceUrl' value='"_##class(web.DHCEPR).GetFormURL("1")_"'>",!
+		w "<param name='DBUserPassword' value='"_##class(web.DHCEPR).GetUserPassword()_"'>",!
+		w "</object>",!
+	
+		w "<object id='imageloader' name='imageloader' width=0 height=0 classid='"_##class(web.DHCEPR).GetFormURL("1")_"PreviewManage.DLL#dhcc.epr.eprlib.previewmanage.UCImageLoader"_"'>",!
+		w "</object>",!
+		
+	</server>
+</HEAD>
+
+<!--edit by loo on 2010-8-31-->
+<!--屏蔽掉页面上的鼠标右键功能-->
+<BODY oncontextmenu="return false" >
+	<div id="tabpanelDiv" style="width:100%;height:100%"></div>
+	<script type="text/javascript" src="../scripts/epr/js/episodeTab.js"> </script>
+	<script type="text/javascript">
+		//病人信息
+		setPatientInfo();
+	</script>
+</BODY>
+</HTML>

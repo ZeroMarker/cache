@@ -1,0 +1,212 @@
+<div data-options="region:'west',split:true,border:false" class="ipwest">  <!--style="width:530px"-->
+   	<div class="easyui-layout" data-options="fit:true,border:false"> 
+    		<div data-options="region:'north',split:true,border:false" style="height:300px;"> 
+     			<div id="p1" class="easyui-panel" title="本次诊断" data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+      				<table id="tabDiagnosList"></table> 
+     			</div> 
+    		</div> 
+    		<div data-options="region:'center',split:true,border:false"> 
+     			<div id="p2" class="easyui-panel" title="历史诊断"  data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+      				<table id="tabDiagnosHistory"></table> 
+     			</div> 
+    		</div> 
+   		</div> 
+   </div>   
+</div>
+<div data-options="region:'center',title:'诊断录入',split:true" > 
+	<form id="ff" method="post">
+		<table ALIGN="left">
+			<!--tr>
+				<td colspan=2><a id="ExamReports" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:alert('easyui')">辅助检验/检查报告</a></td>
+	    	</tr-->
+	    	<tr>
+	    	    <td><label for="Text_OPDoagnos">门(急)诊诊断：</label></td>
+				<td><input class="easyui-validatebox" type="text" id="Text_OPDoagnos"  disabled="disabled" style="width:170px;background:transparent;border:0px;border-bottom:1px solid #303030;"/></td>
+				
+	    	</tr>
+	    	<tr>
+	    	    <td><label for="DiagnosNotes">查找条件</label></td>
+	    	    <td>
+		    		<input type="radio" name="DiagnosCat" value="0" style="vertical-align:middle;">西医</input>
+	                <input type="radio" name="DiagnosCat" value="1" style="vertical-align:middle;">中医</input>
+	                <span name="USEDKB"><b>&nbsp|&nbsp</b></span>
+	                <input type="checkbox" id="OpenUseDKB" name="USEDKB" style="vertical-align:middle;"><span name="USEDKB">启用诊断知识库</span></input>
+	                
+                </td>
+	    	</tr>
+	   		<tr>
+				<!--td>
+                  <input type="radio" name="DiagnosCat" value="0" style="vertical-align:middle;">西医</input>
+                  <input type="radio" name="DiagnosCat" value="1" style="vertical-align:middle;">中医</input>
+				</td-->
+				<td><label for="DiagnosNotes">诊断查找</label></td>
+				<td>
+				  <input  type="text" id="DiagnosSearch" name="DiagnosSearch" data-options="" style="width:170px;"/>
+				</td>
+			</tr>
+      <csp:if condition='UserICDSyndrome="1"'>
+        <tr id="UserICDSyndromeTR_1" style="visibility: hidden;">
+          <td>
+            <a href="#" id="AddSyndrome" class="easyui-linkbutton" data-options="iconCls:'icon-add'"></a> 
+          </td>
+          <td title="证型" class="easyui-tooltip">
+            <input  type="text" id="SyndromeSearch_1" name="SyndromeSearch" />
+          </td>
+        </tr>
+      </csp:if>
+	    	<tr>   
+	        	<td><label for="DiagnosNotes">诊断注释</label></td>
+	        	<td><input class="easyui-validatebox" type="text" id="DiagnosNotes" name="DiagnosNotes" data-options="" style="width:170px;"/></td>
+	    	</tr>  
+	    	<tr>
+	    	  <td colspan=2>
+	    	    <div id="body" ><!-- style="background:#BEBEBE;color:#BEBEBE;height:30px;"-->
+                   <div id="navl" style="float:left"> 
+                     <button onclick="MRDiagnosStatusChange('QZ')" type="button" id="DiaD" style="border:1px solid black;width:90px;height:30px;background:#1C86EE;" >确诊</button>
+                   </div>
+                 <div id="main" style="float:left"> 
+                     <button onclick="MRDiagnosStatusChange('DZ')" type="button" id="DiaW" style="border:1px solid black;width:90px;height:30px;" >待诊</button>
+                 </div>
+                 <div id="navr" style="float:left"> 
+                     <button onclick="MRDiagnosStatusChange('YZ')" type="button" id="DiaH" style="border:1px solid black;width:90px;height:30px;" >疑诊</button>
+                 </div>
+                </div>
+              </td>
+	    	</tr> 
+	    	<tr>
+	    	 <td><label for="MRDiagType">诊断类型</td>
+	    	 <td>
+	    	   <input class="easyui-combobox" type="text" id="MRDiagType" name="MRDiagType" />
+	    	   <input id="MainDiaType" type="checkbox" class="easyui-validatebox" style="vertical-align:middle;" />主诊断
+	    	 </td>
+	    	</tr>
+			
+	    	<tr>
+	    	 <td colspan="2">
+              <fieldset style="border-color:#FFFAFA;height:200px;width:280px" ><legend align="Left">诊断相关</legend>
+              	 <table ALIGN="left">
+              	 	<!--tr>
+              	 		<td><label for="BPDiastolic">舒&nbsp&nbsp&nbsp张&nbsp&nbsp&nbsp压</label></td>
+              	 		<td><input class="easyui-validatebox" type="text" id="BPDiastolic"  />mmHg</td>
+              	 	</tr>
+              	 	<tr>
+              	 		<td><label for="BPSystolic">收&nbsp&nbsp&nbsp缩&nbsp&nbsp&nbsp压</label></td>
+              	 		<td><input class="easyui-validatebox" type="text" id="BPSystolic" />mmHg</td>
+              	 	</tr-->
+              	 	<tr>
+              	 		<td><label for="Weight">血&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp压</label></td>
+              	 		<td>
+              	 			<input class="easyui-validatebox" type="text" id="BPDiastolic" style="width:70px;"/>
+              	 			/<input class="easyui-validatebox" type="text" id="BPSystolic" style="width:70px;"/>mmHg
+              	 		</td>
+              	 	</tr>
+              	 	<tr>
+              	 		<td><label for="Weight">体&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp重</label></td>
+              	 		<td><input type="text" id="Weight" />kg</td>
+              	 	</tr>
+              	 	<tr>
+              	 		<td><label for="Special">特&nbsp殊&nbsp人&nbsp群</label></td>
+              	 		<td><input class="easyui-combobox" type="text" id="Special" name="Special" /></td>
+              	 	</tr>
+              	 	<tr>
+              	 		<td><label for="SingleDisList">单&nbsp&nbsp&nbsp病&nbsp&nbsp&nbsp种</label></td>
+              	 		<td><input class="easyui-combobox" type="text" id="SingleDisList" name="SingleDisList" /></td>
+                 	</tr>
+              	 	<tr>
+              	 		<td><label for="IDate">发&nbsp病&nbsp日&nbsp期</label></td>
+              	 		<td><input class="easyui-datebox" data-options="formatter:myformatter,parser:myparser" id="IDate"/></td>
+              	 	</tr>
+              	 </table>
+              </fieldset>
+            </td>
+	    	</tr>
+	    	<tr>
+	    	  <td>
+                <!--a class="easyui-linkbutton" id="BSaveDiagnos" ><img src="../images/uiimages/filesave.png" border="0">保存</a-->
+                <a name="BSaveDiagnos" class="i-btn i-btn-primary" id="BSaveDiagnos" href="#"><img src="../images/websys/filesave.png" border="0">保存</a>
+              </td>
+              <td>
+                <!--a class="easyui-linkbutton" id="BShowMRDiagnos" ><img src="../images/uiimages/search.png" border="0">查看全部诊断</a-->
+                <a name="BShowMRDiagnos" class="i-btn i-btn-primary" id="BShowMRDiagnos" href="#"><img src="../images/uiimages/search.png" border="0">查看全部诊断</a>
+              </td>
+	    	  </tr>
+		</table> 
+	</form> 
+</div>
+<div data-options="region:'east',title:'您的模板',split:true,border:false" class="ipeast">
+   	<div class="easyui-layout" data-options="fit:true,border:false"> 
+    		<div data-options="region:'north',split:true,border:false" style="height:45px;"> 
+     			<div id="p1" class="easyui-panel" title="" data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+      				<table>
+      				  <tr>
+      				    <td><input id="MRDiagTemplate" type="text" value="--请选择模板--"/></td>
+      				    <td><a name="MyDiagnosEdit" class="i-btn i-btn-primary" id="MyDiagnosEdit" href="#"><img src="../images/uiimages/arcossets.png" border="0">常用模板维护</a></td>
+      				  </tr>
+      				</table>
+      				
+                    <!--a class="easyui-linkbutton" id="MyDiagnosEdit" ><img src="../images/uiimages/arcossets.png" border="0">常用模板维护</a--> 
+                    
+     			</div> 
+    		</div> 
+    		<div data-options="region:'center',split:true,border:false"> 
+     			<div id="p2" class="easyui-panel" title=""  data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+      				<table id="tabMRDiagTemplateDetail"></table> 
+     			</div> 
+    		</div> 
+   		</div> 
+   </div> 
+</div>
+<!--添加到模板div--> 
+  	 
+  	 <div id="dialog-form" title="添加到模板" style="display:none">
+      <table ALIGN="center">
+        <tr>
+          <td>
+            <label for="Combo_DiagTemplate">选择分类</label>
+          </td>
+          <td>
+            <input type="text"  class="easyui-combobox" id="Combo_DiagTemplate"  style="width:200px">
+          </td>
+          <td>
+            <!--a class="easyui-linkbutton" id="BCreate" ><img src="../images/websys/new.gif" border="0">新建</a-->
+            <a name="BCreate" class="i-btn i-btn-primary" id="BCreate" href="#"><img src="../images/websys/new.gif" border="0">新建</a>
+          </td>
+        </tr>
+        <tr>
+          <td>
+          </td>
+          <td>
+            <input type="text"  id="Text_DiagTemplateName"  style="width:195px;display:none">
+          </td>
+           <td>
+            <!--a class="easyui-linkbutton" id="BAdd" style="display:none"><img src="../images/uiimages/edit_add.png" border="0">增加</a-->
+            <a name="BAdd" class="i-btn i-btn-primary" id="BAdd" href="#"><img src="../images/uiimages/edit_add.png" border="0">增加</a>
+          </td>
+        </tr>
+        <tr>
+          <td >            
+          </td>
+          <td>
+           <!--a class="easyui-linkbutton" id="BSave" ><img src="../images/uiimages/filesave.png" border="0">保存</a-->
+           <a name="BSave" class="i-btn i-btn-primary" id="BSave" href="#"><img src="../images/uiimages/filesave.png" border="0">保存</a>
+          </td>
+           <td>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div id="SpecialPlist" style="display:none">
+		<div id="sp">
+		<div style="color:#99BBE8;background:#fafafa;padding:5px;"></div>
+		<div style="padding:10px">
+			<input type="checkbox" name="YF" value="1"><span>孕妇</span><br/>
+			<input type="checkbox" name="PRQ" value="2"><span>哺乳期</span><br/>
+			<input type="checkbox" name="JQ" value="3"><span>经期</span><br/>
+			<input type="checkbox" name="GNQ" value="4"><span>更年期妇女</span><br/>
+			<input type="checkbox" name="GGN" value="5"><span>肝功能不全</span><br/>
+			<input type="checkbox" name="SGN" value="6"><span>肾功能不全</span><br/>
+			<input type="checkbox" name="JHRS" value="7"><span>计划妊娠</span><br/>
+			<br/><input type="button" name="Sure" value="确定">
+		</div>
+		</div>
+	</div>

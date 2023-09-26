@@ -1,0 +1,174 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S patAdmId=$G(%request.Data("EpisodeID",1))
+ S userId=$G(%session.Data("LOGON.USERID"))
+ S userCode=$G(%session.Data("LOGON.USERCODE"))
+ S userName=$G(%session.Data("LOGON.USERNAME"))
+ S userGroupId=$G(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$G(%session.Data("LOGON.GROUPDESC"))
+ S userLocId=$G(%session.Data("LOGON.CTLOCID"))
+ S userLoc=##Class(LIS.Core.Util).GetLocation(userLocId)
+ S patient=##Class(LIS.Core.Patient).OpenId(patAdmId)
+ S:'$L(patient) patient=##Class(LIS.Core.Patient).%New()
+ 
+ S gRecordTypeId="NURSE"
+ S gFormReader=##Class(LIS.Form.BLD.BTR.Record).ToJsonReader()  //##Class(LIS.BS.BLD.BTR.Record).GetReader(gRecordTypeId)
+ S gLastRecordId=##Class(LIS.BS.BLD.BTR.Record).GetLastRecordId(patAdmId,"S",gRecordTypeId)
+ S tDeli=$C(2),tFieldDeli=$C(3),tRecDeli=$C(2),tDataDeli=$C(4)
+   S reDeli=$C(3),deli=$C(2),formRead=""
+ //--------------------------------------------------------------------------------
+   //----反应症状
+   S symArrayStr="[",symStoreData=""
+   S gpCode=##class(web.DHCBldSymptomConfig).GetDataFiledsGroupCode("S")
+   S symClsData=##class(LIS.Core.Dictionary).GetDictGroupChilds(gpCode)
+   F i=1:1:$l(symClsData,reDeli) {
+	  S data=$P(symClsData,reDeli,i)
+	  S symClsCode=$P(data,deli,1)
+	  S symClsDesc=$P(data,deli,2)
+	  Continue:'$l(symClsCode)
+	  S symArrayStr=symArrayStr_"{"
+	  S symArrayStr=symArrayStr_"title:'"_symClsDesc_"',"
+	  S symArrayStr=symArrayStr_"code:'"_symClsCode_"',"
+	  S symArrayStr=symArrayStr_"autoScroll:true"
+	  S symArrayStr=symArrayStr_"},"
+	  
+	  S symItem=""
+	  S symItmData=##class(LIS.Core.Dictionary).GetDictGroupChilds(symClsCode)
+	  F j=1:1:$l(symItmData,reDeli) {
+		S data=$P(symItmData,reDeli,j)
+		S symCode=$P(data,deli,1)
+		Continue:'$l(symCode)
+		S symDesc=$P(data,deli,2)
+		S symSelected="N"
+		S symItem=symItem_symCode_tFieldDeli_symDesc_tFieldDeli_symSelected_tFieldDeli_tRecDeli 
+	  }
+	  
+	  I $l(symItem) {
+		S symStoreData=symStoreData_symClsCode_"^"_##class(web.DHCBldSymptomLayout).BuildStoreData("SYMPTOM",symItem)_$C(3)	  
+	  }
+   }
+   I $l(symArrayStr,",")>0 {
+	  S symArrayStr=$E(symArrayStr,1,$l(symArrayStr)-1)	 
+   }
+   S symArrayStr=symArrayStr_"]"
+  
+   S jsVersion=$H
+ 
+ 
+</Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/grid.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/portal.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<!--Ext3 扩展补丁-->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/extend/Ext.ux.grid.CheckColumn.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/proxyhandler.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/print.js"></script>
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+       	//Ext.namespace('Global');
+			//----------------------------------------------
+			//--定义全局变量
+			function Patient(){};
+			function User(){};
+			function Util(){};
+			function View(){};
+			function Global(){};
+			Global.Patient=Patient;  //患者信息
+			Global.User=User;		//登录用户信息
+			Global.Util=Util;		//公共功能
+		  
+			//----------------------------------------------
+			//--当前病人信息 
+			Global.Patient.Name="#(patient.Name)#";
+			Global.Patient.Sex="#(patient.Sex)#";
+			Global.Patient.AdmId="#($G(patAdmId))#";
+			Global.Patient.PatientId="#(patient.PatientId)#";
+			Global.Patient.Age="#(patient.Age)#";
+			Global.Patient.Birthday="#(patient.DateOfBirth)#";
+			Global.Patient.LocationId="#(patient.LocationId)#";
+			Global.Patient.Location="#(patient.Location)#";
+			Global.Patient.Ward="#(patient.Ward)#";
+			Global.Patient.Bed="#(patient.Bed)#";
+			Global.Patient.HomeAddress="#(patient.HomeAddress)#";
+			Global.Patient.MobileTelephone="#(patient.MobileTelephone)#";
+			Global.Patient.HomeTelephone="#(patient.HomeTelephone)#";
+			Global.Patient.Apanage="#(patient.Apanage)#";
+			Global.Patient.BloodGroupABO="#(patient.BloodGroupABO)#";
+			Global.Patient.BloodGroupABOCode="#(patient.BloodGroupABOCode)#";
+			Global.Patient.BloodGroup="#(patient.BloodGroup)#";
+			Global.Patient.BloodGroupId="#(patient.BloodGroupId)#";
+			Global.Patient.BloodGroupRhD="#(patient.BloodGroupRhD)#";
+			Global.Patient.BloodGroupRhDCode="#(patient.BloodGroupRhDCode)#";
+			Global.Patient.CardId="#(patient.CardId)#";
+			Global.Patient.Country="#(patient.Country)#";
+			Global.Patient.Diagnosis="#(patient.Diagnosis)#";
+			Global.Patient.MedicareId="#(patient.MedicareId)#";
+			Global.Patient.Nation="#(patient.Nation)#";
+			Global.Patient.Type="#(patient.PatientType)#";
+			Global.Patient.TypeId="#(patient.PatientTypeId)#";
+			Global.Patient.Province="#(patient.Province)#";
+			Global.Patient.ProvinceId="#(patient.ProvinceId)#";
+			Global.Patient.Room="#(patient.Room)#";
+			Global.Patient.SafetyNetCardNo="#(patient.SafetyNetCardNo)#";
+			Global.Patient.SexId="#(patient.SexId)#";
+			Global.Patient.WardId="#(patient.WardId)#";
+			Global.Patient.WorkTelephone="#(patient.WorkTelephone)#";
+			Global.Patient.CountryId="#(patient.CountryId)#";
+			Global.Patient.RoomId="#(patient.RoomId)#";
+			Global.Patient.HospitalId="#(patient.HospitalId)#";
+	
+			//----------------------------------------------
+			//--当前用户信息
+			Global.User.Name="#($G(userName))#";
+			Global.User.Id="#($G(userId))#";
+			Global.User.Code="#($G(userCode))#";
+			Global.User.GroupId="#($G(userGroupId))#";
+			Global.User.Group="#($G(userGroupDesc))#";
+			Global.User.LocationId="#($G(userLocId))#";
+			Global.User.Location="#($G(userLoc))#";
+ 			
+ 			var gRecordTypeId="#($g(gRecordTypeId))#"; 
+			var gLastRecordId="#($g(gLastRecordId))#";
+			 
+ 			var lgUserId="#($g(userId))#";
+ 			var lgUserCode="#($g(userCode))#";
+ 			var lgUserName="#($g(userName))#";
+ 			var lgUserGroupId="#($g(userGroupId))#";
+ 			var lgUserGroupDesc="#($g(userGroupDesc))#";
+ 			var lgUserLocId="#($g(userLocId))#";	
+ 			var gSymArrayStr=eval("#($g(symArrayStr))#");
+ 			var gSymStoreData="#($g(symStoreData))#".split("#($C(3))#")
+ 			  
+ 			var gFormReader=Ext.util.JSON.decode("#($g(gFormReader))#")
+ 			
+	   </script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/lis.bld.manage.core.js"></script> 
+</HEAD>
+<body>
+<div id="lis.bld.btr.bs.nurse" ></div>
+<script type="text/javascript" src="../scripts/lisjs/btms/bs/lis.bld.btr.bs.nurse.js?ver=#($G(jsVersion))#"></script>
+</body>
+</HTML>

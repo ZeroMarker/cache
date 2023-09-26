@@ -1,0 +1,86 @@
+<!-- 
+ * FileName: dhcbill.conf.group.ipbillmenu.csp
+ * Anchor: ZhYW
+ * Date: 2019-03-18
+ * Description: 住院收费菜单配置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.textbox.tb200 {
+			width: 200px;
+		}
+		.textbox.tb202 {
+			width: 202px;
+		}
+	</style>
+	<server>
+		set groupId=+%request.Get("GroupId")
+		set hospId=+%request.Get("HospId")
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		GroupId: "_groupId_",",!
+		w "		HospId: "_hospId_"",!
+		w " };",!
+		w "</script>"
+	</server>
+</head> 
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',border:false" style="padding:10px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'west',border:false,split:true" style="width:600px;">
+					<table id="toolMenuList" title="工具菜单"></table>
+				</div>
+				<div data-options="region:'center',border:false" style="padding-left:5px;">
+					<table id="rightMenuList" title="右键菜单"></table>
+				</div>
+				<div id="menuDlg" style="width:400px;height:340px;display:none;">
+					<table class="search-table" style="width:100%;">
+						<tr>
+							<td class="r-label"><label class="clsRequired">代码</label></td>
+							<td><input id="menuCode" class="hisui-validatebox textbox tb200" data-options="required:true,validType:['checkCodeExist']"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label class="clsRequired">描述</label></td>
+							<td><input id="menuDesc" class="hisui-validatebox textbox tb200" data-options="required:true"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>图标</label></td>
+							<td><input id="menuIcon" class="hisui-validatebox textbox tb200"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>关联事件</label></td>
+							<td><input id="menuHandler" class="hisui-validatebox textbox tb200"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>顺序号</label></td>
+							<td><input id="menuSequenceNo" class="hisui-numberspinner textbox tb202" data-options="min:1,editable:false,validType:['checkSequenceNoExist']"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>是否启用</label></td>
+							<td><div id="menuActive" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',offClass:'gray'"></div></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'south',border:false">
+			<div style="text-align:center;padding-bottom:10px;">
+				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.group.ipbillmenu.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+	/// creator:    yunhaibao
+	/// createdate: 2018-05-22
+	/// description:调用csp,直接返回对应method的输出
+	/// DHCST.METHOD.BROKER.csp
+	/// 类名
+	s className=$g(%request.Data("ClassName",1))
+	/// 方法名
+	s methodName=$g(%request.Data("MethodName",1))
+	s methodObj=##class(%Dictionary.CompiledMethod).%OpenId(className_"||"_methodName,0)
+	q:'$IsObject(methodObj) "-1^method不存在"
+	s formalSpecParsed=methodObj.FormalSpecParsed
+	s pI="",paramName=""
+	f pI=1:1:$ll(formalSpecParsed) d
+	.s specStr=$lg(formalSpecParsed,pI)
+	.i '$d(%request.Data($lg(specStr,1),1)) d 	
+	..Set paramName = $lg(specStr,4)
+	..if paramName="" Set paramName=""""""
+	.e  d
+	..s paramName = "$g(%request.Data("""_$lg(specStr,1)_""",1))"
+	.
+	.if pI=1 s paramsNames=paramName
+	.e  s paramsNames=paramsNames_","_paramName
+	s exeStr = "s methodRet=##class("_className_")."_methodName_"("_paramsNames_")"
+	x exeStr
+	w methodRet
+	q ""
+
+</SERVER>

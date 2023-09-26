@@ -1,0 +1,77 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<script language="JavaScript">
+</script>
+</HEAD>
+<BODY>
+<server>
+ n PatientID,RequestID,VolNum,Location,AskReqDetails,rego,VolDesc,Inactive,warning
+ s (PatientID,RequestID,Location,AskReqDetails,rego,VolDesc,Inactive,warning)=""
+ s AskReqDetails=$p(^CF("RT",2),"^",28) 
+ d %request.Set("CreateReqConfig",AskReqDetails)
+ i %request.Get("UR")'="" {
+ 	s tempUR=##Class(web.RTRequest).URStripZero(%request.Get("UR"))
+	s (%request.Data("PatientID",1),PatientID)=##Class(web.PAPatMas).GetIdFromCodeOrDescription(tempUR)
+	;s (%request.Data("PatientID",1),PatientID)=##Class(web.PAPatMas).GetIdFromCodeOrDescription(%request.Get("UR"))
+ }
+ i PatientID'="" s (%request.Data("PatientID",1),PatientID)=$$patto^CPAPerson(PatientID)
+ i %request.Get("RequestID")'="" s %request.Data("RequestID",1)=%request.Get("RequestID"),RequestID=%request.Get("RequestID")
+ s %request.Data("VolDesc",1)=%request.Get("VolDesc")
+ i %request.Get("RequestID")'="",%request.Get("PatientID")="" d
+ . &SQL(SELECT RTREQ_MRNo_DR->RTMAS_PatNo_DR INTO :PatientID FROM SQLUser.RT_Request WHERE  RTREQ_RowId1= :RequestID)
+ . s %request.Data("PatientID",1)=PatientID
+ ; 
+ i PatientID'="" s PatientID=$$patto^CPAPerson(PatientID)
+ n comp
+ i %request.Get("PatientID")'="" d
+ . s comp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . s comp.HideMenus=1
+ . s comp.HideHeadings=0
+ . d comp.Show()
+ . d comp.%Close()
+ ;
+ s cmp=##Class(websys.Component).OpenName("RTVolume.List")
+ i cmp d
+ . i %request.Get("PatientID")'="" d
+ . . s rtmas="" f  s rtmas=$o(^RT(0,"PAT",%request.Get("PatientID"),rtmas))  q:rtmas=""  d
+ . . . i '##Class(websys.Lock).Lock($lb(rtmas,"User.RTMaster"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) s cmp.Disabled=1
+ . . i warning'="" &html<<DIV><STRONG><FONT COLOR=RED><%=warning%></FONT></STRONG></DIV>>
+ . . d cmp.Show()
+ . . s Inactive=##Class(web.RTMasVol).InactiveVolume(%request.Get("PatientID")) 
+ . i %request.Get("PatientID")="" d
+ . . d cmp.LoadTrans()
+ . . i %request.Get("RequestID")=""  d
+ . . . w $p($g(t("InvalidRego")),"^"),":&nbsp;",%request.Get("UR")
+ . . . w "<script>"
+ . . . w "obj=parent.frames[0].document.getElementById(""UR"");"
+ . . . w "if (obj) obj.value="""";"
+ . . . w "if (obj) obj.focus();"
+ . . . w "</script>"
+ . . i %request.Get("RequestID")'="" w $p($g(t("InvalidRequestID")),"^")
+ . d cmp.%Close()
+ ; 
+ ;s %response.TraceDump=1
+</server>
+<script language="Javascript">
+	var InactiveVol="#(Inactive)#";
+	var iobj=document.getElementById("InactiveVolumes");
+	if ((InactiveVol=="Y")&&(iobj)) iobj.style.fontWeight="bold";
+
+</script>
+
+</BODY>
+</HTML>
+
+
+

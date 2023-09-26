@@ -1,0 +1,66 @@
+<!-- 
+ * FileName: dhcbill.ipbill.qfpayback.csp
+ * Anchor: ZhYW
+ * Date: 2019-01-03
+ * Description: 欠费补交
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.ipbill.qfpayback.css'/>
+	<server>
+		w "<input id='PatientID' type='hidden'>",!
+		w "<input id='EpisodeID' type='hidden'>"
+	</server>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',collapsible:false,title:'欠费患者转出与补交',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:167px;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label>开始日期</label></td>
+					<td><input id="stDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label r-label-1"><label>结束日期</label></td>
+					<td><input id="endDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label r-label-1"><label>登记号</label></td>
+					<td><input id="patientNo" class="textbox"/></td>
+					<td class="r-label r-label-1"><label>姓名</label></td>
+					<td><input id="patName" class="textbox" style="font-weight:bold;" disabled/></td>
+					<td class="r-label r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询</a></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>标志</label></td>
+					<td><input id="flag" class="textbox"/></td>
+					<td class="r-label r-label-1"><label>支付方式</label></td>
+					<td><input id="paymode" class="textbox"/></td>
+					<td class="r-label r-label-1"><label>欠费金额</label></td>
+					<td><input id="qfAmt" class="hisui-numberbox textbox" data-options="disabled:true,precision:2" style="font-weight:bold;color:red;"/></td>
+					<td class="r-label r-label-1"><label>补交金额</label></td>
+					<td><input id="backAmt" class="hisui-numberbox textbox" data-options="precision:2,min:0" style="color:red;"/></td>
+					<td class="r-label r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btn-save" data-options="iconCls:'icon-w-save'">保存</a></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>当前票号</label></td>
+					<td><input id="currRcptNo" class="textbox" style="font-weight:bold;"/></td>
+					<td class="r-label"><label>备注</label></td>
+					<td colspan="5"><input id="remark" class="textbox tb-colspan"/></td>
+					<td class="r-label r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btn-abort" data-options="iconCls:'icon-w-back'">作废</a></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+			<table id="payList"></table>
+	  	</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.qfpayback.js"></script>
+</body>
+</html>

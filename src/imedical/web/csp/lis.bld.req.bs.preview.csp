@@ -1,0 +1,189 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S requestID=$G(%request.Data("requestID",1))
+  
+ S request=##Class(LIS.BLD.BT.REQ.Request).%OpenId(requestID)
+
+ I '$L(request) {
+	W "<span style='color:red;font-size:25px;'>申请单号错误</span>"
+	Q
+ }
+ S patAdmID=request.Patient.AdmID
+ S patient=##Class(LIS.Core.Patient).OpenId(patAdmID)
+ S:'$L(patient) patient=##Class(LIS.Core.Patient).%New()
+  
+ 
+ //当前患者信息
+ S patientID=patient.PatientId
+ S hospitalID=patient.HospitalId
+ 
+ S labelCss="<span style='color=#000000;font-size:15px;'>"
+ S txtCss="<span style='color=#000000;font-size:18px;font-weight:bold;'>"
+ S txtCss2="<span style='color=#000000;font-size:18px;'>"
+ S deli="&nbsp&nbsp&nbsp   "
+ //病人基本信息
+ S patientProfile=""
+ S patientProfile=patientProfile_labelCss_"病案号:</span>"_txtCss_patient.MedicareId_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"ID号:</span>"_txtCss_patient.PatientId_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"姓名:</span><span style='color=#000000;font-size:20px;font-weight:bold;'>"_patient.Name_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"性别:</span>"_txtCss_patient.Sex_"</span>"_deli
+ //S patientProfile=patientProfile_"年龄:"_patAge_deli
+ S patientProfile=patientProfile_labelCss_"出生日期:</span>"_txtCss_patient.DateOfBirth_"</span>"_deli
+ S patientProfile=patientProfile_"<BR>"_labelCss_"科室:</span>"_txtCss2_patient.Location_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"床号:</span>"_txtCss2_patient.Bed_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"诊断:</span>"_txtCss2_patient.Diagnosis_"</span>"_deli
+ 
+ S showBloodGroupABO=patient.BloodGroupABO,showBloodGroupRhD=patient.BloodGroupRhD,showBloodGroupColor="#0000FF"
+ //S showBloodGroupABO="AB型",showBloodGroupRhD="阳性(+)"
+ I showBloodGroupRhD["阴" {
+ 	S showBloodGroupColor="#FF0000"
+ }
+ I '$L(showBloodGroupABO),'$L(showBloodGroupRhD) {
+	S showBloodGroupABO="血型未知"
+	S showBloodGroupColor="#FF0000"
+ }
+
+ //血型信息
+ S bloodGroupProfile="<span style='color="_showBloodGroupColor_";font-size:40px;margin-top:0;margin-bottom:0;'>"_showBloodGroupABO_"</span>"
+ S bloodGroupProfile=bloodGroupProfile_"<span style='color="_showBloodGroupColor_";font-size:25px;'>"_"&nbsp "_showBloodGroupRhD_"</span>"
+ //24小时累计申请血成份:
+ S profile=##Class(LIS.BS.BLD.REQ.BloodTransProfile).%New()
+ S profile=##Class(LIS.BS.BLD.REQ.BloodTransProfile).GetProfile(patAdmID,"24")
+ S total24hBloodComp="",total24hDetail=""
+ I $L(profile) {
+	S total24hBloodComp=profile.SummaryMl.RequestVolume_profile.SummaryMl.Unit	
+	I +profile.RedBloodCell.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.RedBloodCell.Desc_":"_profile.RedBloodCell.RequestVolume_profile.RedBloodCell.Unit_";"
+	}
+	I +profile.Plasma.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.Plasma.Desc_":"_profile.Plasma.RequestVolume_profile.Plasma.Unit_";"
+	}
+	I +profile.Platelet.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.Platelet.Desc_":"_profile.Platelet.RequestVolume_profile.Platelet.Unit_";"
+	}
+	I +profile.WholeBlood.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.WholeBlood.Desc_":"_profile.WholeBlood.RequestVolume_profile.WholeBlood.Unit_";"
+	}
+	I +profile.Cryoprecipitate.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.Cryoprecipitate.Desc_":"_profile.Cryoprecipitate.RequestVolume_profile.Cryoprecipitate.Unit_";"
+	}
+ }
+ 
+ S gRequestReader=##Class(LIS.Form.BLD.REQ.Request).ToJsonReader()
+ 
+</Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/grid.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/portal.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<!--Ext3 扩展补丁-->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/extend/Ext.ux.grid.CheckColumn.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/proxyhandler.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/print.js"></script>
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+       	//Ext.namespace('Global');
+			//----------------------------------------------
+			//--定义全局变量
+			function Patient(){};
+			function User(){};
+			function Util(){};
+			function View(){};
+			function Global(){};
+			function Recent(){};
+			function System(){}; 
+			function Warn(){}; 
+			Global.Patient=Patient;  //患者信息
+			Global.User=User;		//登录用户信息
+			Global.Util=Util;		//公共功能
+			Global.View=View;		//视图控制信息
+			Global.Recent=Recent;	//最近信息
+			Global.System=System;	//系统信息
+			Global.Warn=Warn;		//警告信息
+	 		//----------------------------------------------
+			//--视图信息
+			Global.View.SingleViewModuleID="#($G(SingleViewModuleID))#";
+			Global.View.SingleViewModuleURL="#($G(SingleViewModuleURL))#";
+			Global.View.SingleViewModuleTitle="#($G(SingleViewModuleTitle))#";
+			Global.View.ViewFlag="#($G(viewFlag))#";
+			//----------------------------------------------
+			//--当前病人信息 
+			Global.Patient.Profile="#($G(patientProfile))#"
+			Global.Patient.BloodGroupProfile="#($G(bloodGroupProfile))#"	
+			Global.Patient.Name="#(patient.Name)#";
+			Global.Patient.Sex="#(patient.Sex)#";
+			Global.Patient.AdmID="#($G(patAdmID))#";
+			Global.Patient.PatientID="#(patient.PatientId)#";
+			Global.Patient.Age="#(patient.Age)#";
+			Global.Patient.AgeValue="#(patient.AgeValue)#";
+			Global.Patient.AgeUnit="#(patient.AgeUnit)#";
+			Global.Patient.Birthday="#(patient.DateOfBirth)#";
+			Global.Patient.LocationID="#(patient.LocationId)#";
+			Global.Patient.Location="#(patient.Location)#";
+			Global.Patient.Ward="#(patient.Ward)#";
+			Global.Patient.Bed="#(patient.Bed)#";
+			Global.Patient.HomeAddress="#(patient.HomeAddress)#";
+			Global.Patient.MobileTelephone="#(patient.MobileTelephone)#";
+			Global.Patient.HomeTelephone="#(patient.HomeTelephone)#";
+			Global.Patient.Apanage="#(patient.Apanage)#";
+			Global.Patient.BloodGroupABO="#(patient.BloodGroupABO)#";
+			Global.Patient.BloodGroupABOCode="#(patient.BloodGroupABOCode)#";
+			Global.Patient.BloodGroup="#(patient.BloodGroup)#";
+			Global.Patient.BloodGroupID="#(patient.BloodGroupId)#";
+			Global.Patient.BloodGroupRhD="#(patient.BloodGroupRhD)#";
+			Global.Patient.BloodGroupRhDCode="#(patient.BloodGroupRhDCode)#";
+			Global.Patient.CardID="#(patient.CardId)#";
+			Global.Patient.Country="#(patient.Country)#";
+			Global.Patient.Diagnosis="#(patient.Diagnosis)#";
+			Global.Patient.MedicareID="#(patient.MedicareId)#";
+			Global.Patient.Nation="#(patient.Nation)#";
+			Global.Patient.Type="#(patient.PatientType)#";
+			Global.Patient.TypeID="#(patient.PatientTypeId)#";
+			Global.Patient.Province="#(patient.Province)#";
+			Global.Patient.ProvinceID="#(patient.ProvinceId)#";
+			Global.Patient.Room="#(patient.Room)#";
+			Global.Patient.SafetyNetCardNo="#(patient.SafetyNetCardNo)#";
+			Global.Patient.SexID="#(patient.SexId)#";
+			Global.Patient.WardID="#(patient.WardId)#";
+			Global.Patient.WorkTelephone="#(patient.WorkTelephone)#";
+			Global.Patient.CountryID="#(patient.CountryId)#";
+			Global.Patient.RoomID="#(patient.RoomId)#";
+			Global.Patient.HospitalID="#($G(hospitalID))#";
+			Global.Patient.Total24hBloodComp="#($G(total24hBloodComp))#";
+			Global.Patient.Total24hDetail="#($G(total24hDetail))#";
+			var gRequestTypeID="#(request.TypeID)#";
+			var gRequestReader="#($G(gRequestReader))#";
+			var gRequestID="#($G(requestID))#";
+		  
+			gRequestReader=Ext.util.JSON.decode(gRequestReader)
+ 
+	   </script>
+		
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/lis.bld.manage.core.js"></script>
+		
+</HEAD>
+<body><div id="lis.bld.req.bs.preview"></div></body>
+<script type="text/javascript" src="../scripts/lisjs/btms/bs/lis.bld.req.bs.preview.js"></script>
+</HTML>

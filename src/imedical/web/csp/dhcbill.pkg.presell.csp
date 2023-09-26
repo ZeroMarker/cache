@@ -1,0 +1,104 @@
+<!-- 
+ * FileName: dhcbill.pkg.presell.csp
+ * Anchor: ZhYW
+ * Date: 2019-09-27
+ * Description: 套餐预售
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.pkg.css'/>
+	<script type='text/javascript' src='../scripts/DHCOPAdm.Common.js'></script>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<server>
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$c(13,10)
+		w "<input id='patientId' name='patientId' type='hidden'>",$c(13,10)
+	</server>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:36px;padding: 10px 10px 1px;overflow:hidden;">
+	 	<csp:Include Page="dhcbill.pkg.patient.banner.csp">
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:205px;">
+				<div class="hisui-panel" data-options="title:'套餐预售',fit:true,tools:'#search-panel-tools',headerCls:'panel-header-gray',iconCls:'icon-fee'">
+					<table class="search-table" style="width:100%;">
+						<tr>
+							<td class="r-label td-first-col-58"><label>卡类型</label></td>
+							<td><input id="cardType" class="hisui-combobox textbox"/></td>
+							<td class="r-label td-second-col"><label>卡号</label></td>
+							<td><input id="cardNo" class="textbox"/></td>
+							<td class="r-label"><label>登记号</label></td>
+							<td><input id="patientNo" class="textbox"/></td>
+							<td class="r-label"><label>门诊/住院</label></td>
+							<td><input id="patType" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>预售模式</label></td>
+							<td><input id="sellMode" class="hisui-combobox textbox"/></td>
+							<td><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡</a></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>费用总额</label></td>
+							<td><input id="totalAmt" class="hisui-numberbox textbox" data-options="min:0,precision:2,disabled:true" style="color:#FF0000;font-weight:bold;"/></td>
+							<td class="r-label"><label>最低销售金额</label></td>
+							<td><input id="minSalesAmt" class="hisui-numberbox textbox" data-options="min:0,precision:2,disabled:true" style="color:#FF0000;font-weight:bold;"/></td>
+							<td class="r-label"><label>实际销售金额</label></td>
+							<td><input id="salesAmt" class="hisui-numberbox textbox" data-options="min:0,precision:2,disabled:true,delay:500,validType:['checkMinAmount', 'checkMaxAmount']" style="color: #FF0000;font-weight: bold;"/></td>
+							<td class="r-label"><label>折扣率</label></td>
+							<td><input id="discRate" class="hisui-numberbox textbox" data-options="max:1,precision:2,disabled:true" style="color:#FF0000;font-weight:bold;"/></td>
+							<td class="r-label"><label>优惠金额</label></td>
+							<td><input id="discAmt" class="hisui-numberbox textbox" data-options="min:0,precision:2,disabled:true" style="color:#FF0000;font-weight:bold;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>定金金额</label></td>
+							<td><input id="depositAmt" class="hisui-numberbox textbox" data-options="min:0,precision:2,delay:500,validType:['checkDepAmt']" style="color:#FF0000;font-weight:bold;"/></td>
+							<td class="r-label"><label>购买人</label></td>
+							<td><input id="buyUser" class="hisui-validatebox textbox" data-options="required:true"/></td>
+							<td class="r-label"><label>购买人电话</label></td>
+							<td><input id="buyTelePhone" class="hisui-validatebox textbox" data-options="required:true"/></td>
+							<td class="r-label"><label>购买人单位</label></td>
+							<td><input id="buyWork" class="hisui-validatebox textbox"/></td>
+						</tr>
+					</table>
+					<div style="text-align:center;padding-bottom:10px;">
+						<a href="javascript:;" class="hisui-linkbutton btn-115" id="btn-preSell" style="background: #21BA45;">预售</a>
+						<div style="display:inline-block;margin:0 5px;"></div>
+						<a href="javascript:;" class="hisui-linkbutton btn-115" id="btn-setHolder" data-options="disabled:true">权益人维护</a>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-top:10px;">
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'west',border:false" style="width:570px;padding-right:10px;">
+						<div id="tToolBar" class="hisui-toolbar">
+							<table cellspacing="0" cellpadding="0">
+								<tr>
+									<td class="r-label"><label>套餐组</label></td>
+									<td><input id="pkgGroup" class="hisui-combobox textbox"/></td>
+									<td style="padding-left:20px;"><input id="ss" href="javascript:;" class="hisui-searchbox" data-options="prompt:'请输入拼音码检索...'"/></td>
+									<td class="r-label" style="padding-left:40px;"><input id="indepPricing" class='hisui-checkbox' type="checkbox" data-options="checked:true" label="自主定价"></td>
+								</tr>
+							</table>
+						</div>
+						<table id="productList"></table>
+					</div>
+					<div data-options="region:'center',border:false">
+						<table id="billList"></table>
+					</div>
+				</div>				
+        	</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.presell.js"></script>
+</body>
+</html>

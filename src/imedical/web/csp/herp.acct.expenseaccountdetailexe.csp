@@ -1,0 +1,111 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">   
+
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))
+	
+	s rowid = $Get(%request.Data("rowid",1))
+	s itemcode = $Get(%request.Data("itemcode",1)) 
+    s datad	= $Get(%request.Data("datad",1))
+	s datam	= $Get(%request.Data("datam",1))
+	s deptdr = $Get(%request.Data("deptdr",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	s yearmonth = $Get(%request.Data("yearmonth",1))
+	s billcode = $Get(%request.Data("billcode",1))
+	s mdesc = $Get(%request.Data("mdesc",1))
+    s rowidm = $Get(%request.Data("rowidm",1))
+	s fundbilldr = $Get(%request.Data("fundbilldr",1))
+	s budgreal = $Get(%request.Data("budgreal",1))
+	s reqpay = $Get(%request.Data("reqpay",1))
+	s ddesc = $Get(%request.Data("ddesc",1))
+	s deptdr = $Get(%request.Data("deptdr",1))
+	s yearmonth = $Get(%request.Data("yearmonth",1))
+	s itemcode = $Get(%request.Data("itemcode",1))
+	s state = $Get(%request.Data("state",1))
+	s rowidd = $Get(%request.Data("rowidd",1))
+	s idm = $Get(%request.Data("idm",1))
+	s audeptdr = $Get(%request.Data("audeptdr",1))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uExpenseAccountDetail).List(billcode, start, limit)
+	
+	i action = "bidlist" d
+	.w ##class(herp.budg.udata.uExpenseAccountDetail).BIDList(start, limit, str)	
+	
+	i action = "getclaimcode" d
+	.s result = ##class(herp.budg.udata.uExpenseAccountDetail).GetClaimCode(yearmonth)
+        .i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "applycode" d
+	.w ##class(herp.budg.udata.uExpenseAccountDetail).ApplyCodeList(userdr, start, limit, str)	
+	
+	i action = "timelist" d
+	.w ##class(herp.budg.udata.uExpenseAccountDetail).TimeList(start, limit, str)	
+	
+	i action = "userlist" d
+	.w ##class(herp.budg.udata.uExpenseAccountDetail).ReqUser(start, limit, str)
+	
+	i action = "deptlist" d
+	.s result = ##class(herp.budg.udata.uExpenseAccountDetail).DeptList(userdr)
+    .i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "getcurbalance" d
+	.s result = ##class(herp.budg.udata.uExpenseAccountDetail).BudgBalanceList(deptdr,yearmonth,itemcode,state,rowidd)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uExpenseAccountDetail).UpdateRec(rowidm, rowid, datad, datam)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+        i action = "del" d
+	.s result = ##class(herp.budg.udata.uExpenseAccountDetail).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "Del" d
+	.s result = ##class(herp.budg.udata.uExpenseAccountDetail).Del()
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uExpenseAccountDetail).InsertRec(datad, datam)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+       i action = "submit" d	
+	.s result= ##class(herp.budg.udata.uExpenseAccountDetail).Submit(rowid,idm,yearmonth,deptdr,audeptdr,itemcode,reqpay,billcode)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+		
+</script>

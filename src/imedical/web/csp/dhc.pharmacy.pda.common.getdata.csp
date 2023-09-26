@@ -1,0 +1,44 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+ 	Set Ret=0
+	Set ClassName = $g(%request.Data("ClassName",1))
+	Set MethodName = $g(%request.Data("MethodName",1)) //入参是1024就是query 其他事普通方法
+	Set IsQuery=$g(%request.Data("IsQuery",1),1)	;判断是不是query查询
+	Set Start=$g(%request.Data("offet",1),1)	;bootstrap table 起始页
+	Set Limit=$g(%request.Data("limit",1),1)	;bootstrap table 每页条数
+    
+	i ClassName="" w "{err:'参数ClassName不能为空'}"
+	Q:ClassName=""
+	i MethodName="" w "{err:'参数MethodName不能为空'}" 
+	Q:MethodName=""
+	
+	i '##class(websys.Conversions).IsValidClassName(ClassName) w "{err:'Not Find Class: "_ClassName_"'}"
+	Q:'##class(websys.Conversions).IsValidClassName(ClassName) 
+	
+	//Q:(IsQuery'=1)&&('##class(websys.Conversions).IsValidMethodName(ClassName,MethodName)) "{err:'Not Find Method: "_ClassName_":"_MethodName_"'}"
+	//Q:(IsQuery=1)&&('##class(websys.Conversions).IsValidQueryName(ClassName,MethodName)) "Not Find Query: "_ClassName_":"_MethodName
+
+	
+	i IsQuery="Y" d
+	.set myobj=##class(%Dictionary.CompiledQuery).%OpenId(ClassName_"||"_MethodName,0)
+	e  d
+	.set myobj=##class(%Dictionary.CompiledMethod).%OpenId(ClassName_"||"_MethodName,0)
+	set FormalSpecParsed = myobj.FormalSpecParsed
+	set paramStr = ""
+	for tmp=1:1:$ll(FormalSpecParsed) d
+	.set paramName = $lg($lg(FormalSpecParsed,tmp),1)
+	.set paramStr = paramStr_$case(paramStr,"":"",:",")_"$g(%request.Data("""_paramName_""",1))"
+	
+	i IsQuery="Y" d
+	.set execute = "d ##class(web.DHCAPPJsonObject).ClassQuery2Json("""_ClassName_""","""_MethodName_""","_Start_","_Limit_",.total"
+	.if paramStr'="" Set execute=execute_","_paramStr
+	.Set execute=execute_")"
+	.XECUTE execute
+	e  d
+	.Set execute="s rs=##class("_ClassName_")."_MethodName_"("_paramStr_")"
+	.XECUTE execute
+	.write rs
+	q ""
+
+
+</script>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--ipdoc.nursebatchsupplementord.hui.csp HISUI护士批量补录医嘱--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard"/>
+<style>
+body input{
+	font-size:14px;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.disabled{
+	border:0 !important;
+	color:black !important;;
+}
+#InsertOrder .l-btn-text{
+	color: red;
+	font-weight: bold;
+}
+/* 关联主医嘱背景 */
+.OrderMasterM{
+	background:#94e494; /*#00FF00*/
+}
+/* 关联子医嘱背景 */
+.OrderMasterS{
+	background:#cdf1cd; /*#66FF99*/
+}
+.loclist{
+	list-style-type: none;
+}
+.loclist li{
+	padding: 5px;
+	margin:5px 0;
+}
+.loclist li:hover{
+	background:#40A2DE;
+}
+.loclist li a{
+	display:block;
+}
+.loclist li:hover a{
+	color: #fff;
+}
+.webui-popover-title{
+	position: relative;
+	display: block;
+	top: 6px;
+	color: black;
+	font-weight:bold;
+}
+/*医嘱模板*/
+#BMore{
+	float:right;
+	width:70px;
+	height:35px;
+	border:1px solid #ccc;
+	border-right:0;
+}
+#BMore .l-btn-text{
+	padding:0 10px;
+	margin-left:0;
+	margin-right:10px;
+	height:35px;
+	line-height:35px;
+}
+#BMore .m-btn-downarrow{
+	height:35px;
+}
+</style>
+<Server>
+k TempAdmPatNameArr($j),TempAdmPatNameArr($j)
+// 传入参数优先级 OEOrdItemIDs>OEOrdItemID>EpisodeID
+s OEOrdItemIDs=%request.Get("OEOrdItemIDs") // """282||55#282||72#207||60#207||68" //
+s OEOrdItemID=%request.Get("OEOrdItemID")
+s EpisodeID=%request.Get("EpisodeID")
+//Y 不能取消选中,适用于医技补录、急诊护士补录弹出页面
+s NotUnSelectPat=%request.Get("NotUnSelectPat")
+s EpisPatInfo=##class(web.DHCDocNurseBatchSupplementOrd).InitPatOrderViewGlobal(OEOrdItemIDs,OEOrdItemID,EpisodeID)
+s MedNotOpenARCOS=##class(web.DHCDocConfig).GetConfigNode("MedNotOpenARCOS")
+;临时医嘱
+s ShortOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+s defaultDataCache=##Class(websys.Conversions).DateFormat()
+s CTLOC=$p(^CTLOC(%session.Get("LOGON.CTLOCID")),"^",2)
+s GetItemCongeriesToListMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocNurseBatchSupplementOrd.GetItemCongeriesToList"))
+s GetARCOSInfoMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCUserFavItems.GetARCOSInfo"))
+s SetUserUnSaveDataMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocNurseBatchSupplementOrd.SetUserUnSaveData"))
+s GetUserUnSaveDataMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocNurseBatchSupplementOrd.GetUserUnSaveData"))
+s GetUserUnSaveCountMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocNurseBatchSupplementOrd.GetUserUnSaveCount"))
+s InsertContinuousOrder=##Class(%CSP.Page).Encrypt($lb("web.DHCDocNurseBatchSupplementOrd.InsertContinuousOrder"))
+;通过高职条码获得医嘱项先关信息
+s GetArcimByLabel=##Class(%CSP.Page).Encrypt($lb("web.DHCSTM.PCHCOLLSM.GetArcimByLabel"))
+;高值录入权限控制标志(科室扩展第13位)
+s HighValueControl=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),13)
+;对于医嘱录入非必须前端处理的判断逻辑可以在此处理
+s CheckBeforeSaveMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItem.CheckBeforeSave"))
+s DoctorID=##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
+s DoctorType=##class(web.SSUser).GetDefaultCareProviderType(%session.Get("LOGON.USERID")) s %request("DoctorID")=DoctorID
+s GroupCPPFlag=##Class(web.UDHCOPGSConfig).GetGroupCPPFlag(%session.Get("LOGON.GROUPID"),%session.Get("LOGON.HOSPID"))
+//获取撤销、停止执行记录原因json
+s OECStatusChReasonJson=##Class(web.DHCDocInPatUICommon).GetOECStatusChReason()
+s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_ReadAccExpEncrypt_"'>",$c(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+ ;得到页面用户UI设置 
+ s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("UIConfigObj",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+ i UIConfigObj="" {
+	 //若用户没有设置过，则走安全组设置
+	 s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("UIConfigObj_Group",%session.Get("LOGON.GROUPID"))
+ }
+ i UIConfigObj="" s UIConfigObj="{}"
+ d ##class(web.DHCDocUtil).GetArrayByObjStr(UIConfigObj,.UIConfigArray)
+ s DefaultPopTemplate=0
+ if (UIConfigObj'="{}")&&($d(UIConfigArray("DefaultPopTemplate")))&&(UIConfigArray("DefaultPopTemplate")="true"){
+	 s DefaultPopTemplate=1
+ }
+ //住院模板弹出模式时,是否默认展开
+ s DefaultExpendTemplateOnPopTemplate=0
+ if (UIConfigObj'="{}")&&($d(UIConfigArray("DefaultExpendTemplateOnPopTemplate")))&&(UIConfigArray("DefaultExpendTemplateOnPopTemplate")="true"){
+	 s DefaultExpendTemplateOnPopTemplate=1
+ }
+</Server>
+</head>
+<body class="hisui-layout" fit="true">
+	<csp:Include Page="ipdoc.nursebatchsupplementord.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			MedNotOpenARCOS:"#(MedNotOpenARCOS)#",
+			ShortOrderPriorRowid:"#(ShortOrderPriorRowid)#",
+			defaultDataCache:"#(defaultDataCache)#",
+			CTLOC:"#(CTLOC)#",
+			LogonDoctorID:"#(DoctorID)#",
+			LogonDoctorType:"#(DoctorType)#",
+			GetItemCongeriesToListMethod:"#(GetItemCongeriesToListMethod)#",
+			GetARCOSInfoMethod:"#(GetARCOSInfoMethod)#",
+			SetUserUnSaveDataMethod:"#(SetUserUnSaveDataMethod)#",
+			GetUserUnSaveDataMethod:"#(GetUserUnSaveDataMethod)#",
+			GetUserUnSaveCountMethod:"#(GetUserUnSaveCountMethod)#",
+			CheckBeforeSaveMethod:"#(CheckBeforeSaveMethod)#",
+			InsertContinuousOrder:"#(InsertContinuousOrder)#",
+			GetArcimByLabel:"#(GetArcimByLabel)#",
+			HighValueControl:"#(HighValueControl)#",
+			EpisPatInfo:"#(EpisPatInfo)#",
+			GroupCPPFlag:"#(GroupCPPFlag)#",
+			OECStatusChReasonJson:"#(OECStatusChReasonJson)#",
+			CurrentDate:"#(CurrentDate)#",
+			NotUnSelectPat:"#(NotUnSelectPat)#",
+			DefaultExpendTemplateOnPopTemplate:"#(DefaultExpendTemplateOnPopTemplate)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/NurseBatchSupplementOrd.hui.js"></script>
+	<script defer="defer" type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.JS"></script>
+	<script defer="defer" type="text/javascript" src="../scripts/DHCOPBillLocCheckOut.js"></script>
+</body>
+</html>

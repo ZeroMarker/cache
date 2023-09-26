@@ -1,0 +1,49 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s userdr=$G(%session.Data("LOGON.USERID"))
+	s CTLocDr=$G(%session.Data("LOGON.CTLOCID"))
+
+	s searchField= $Get(%request.Data("searchField",1))
+	s searchValue= $Get(%request.Data("searchValue",1))
+	s parent     = $Get(%request.Data("parent",1))
+	s str        = $Get(%request.Data("query",1))
+	s rowid      = $Get(%request.Data("rowid",1))
+	
+	s Code    = $Get(%request.Data("Code",1))
+	s Name    = $Get(%request.Data("Name",1))
+	s OrderBy = $Get(%request.Data("OrderBy",1))
+	s ItemCode= $Get(%request.Data("ItemCode",1))
+	s SupSchem= $Get(%request.Data("SupSchem",1))
+
+	s IsCheck  = $Get(%request.Data("IsCheck",1))
+	s ChkStep  = $Get(%request.Data("ChkStep",1))
+	s CHKFlowDR= $Get(%request.Data("CHKFlowDR",1))
+	s File     = $Get(%request.Data("File",1))
+    //s userdr   = $Get(%request.Data("Userid",1))
+    s year     = $Get(%request.Data("year",1))
+	s dept     = $Get(%request.Data("dept",1))
+    s adjustnum= $Get(%request.Data("adjusnumber",1))
+//	s SchemDr  = $Get(%request.Data("year",1))
+	s deptdr   = $Get(%request.Data("dept",1))
+  
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.budgadjustdeptyear).List(year, dept, adjustnum, sortField, sortDir, start, limit,userdr,hospid)
+
+    i action = "deptNList" d
+	.w ##class(herp.budg.udata.budgadjustdeptyear).deptname(start, limit, str,userdr,hospid,CTLocDr)		
+
+	i action = "SupSchList" d
+	.w ##class(herp.budg.udata.budgadjustdeptyear).SupSchList(start, limit, str,hospid)
+</script>

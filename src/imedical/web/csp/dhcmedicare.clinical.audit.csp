@@ -1,0 +1,59 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/DHCMedicare/EXT3/css/ExtCss/css/ext-all.css" />
+	<script type="text/javascript" src="../scripts/DHCMedicare/EXT3/Ext/ext-base-debug.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMedicare/EXT3/Ext/ext-all-debug.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMedicare/EXT3/ExtFramework.js"></script>
+	
+	<script language='javascript' src='../scripts/DHCMedicare/Clinical/Audit/GUI.js'></script>	
+	<script language='javascript' src='../scripts/DHCMedicare/Clinical/Audit/Event.js'></script>
+	<script language="javascript" type="text/javascript">
+	var tmes = new Array();
+	tmes['success'] = '操作成功!';
+	tmes['noUser'] = '请先登录!';
+	tmes['noSelected']='无法链接到报告Rowid!';
+	tmes['failed']='操作失败!';
+	tmes['audited']='你处理的报告已经审核,处理失败';
+	var objControl = null;
+	function window_onload()
+	{
+		objControl = Init();
+	}
+	</script>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s Rowid=$g(%request.Data("Rowid",1))
+	s InstanceID=$g(%request.Data("InstanceID",1))
+	s EpisodeID=$g(%request.Data("EpisodeID",1))
+	s CategoryID=$g(%request.Data("CategoryID",1))
+	s prtDocID=$g(%request.Data("prtDocID",1))
+</Script>
+<server>
+	w "<object id='config' name='config' width=0 height=0 classid='" _ ##class(web.DHCEPR).GetFormURL("1") _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	w "<param name='URL' value='" _ ##class(web.DHCEPR).GetServiceURL() _ "'>",!
+	w "<param name='FormURL' value='" _ ##class(web.DHCEPR).GetFormURL("1") _ "'>",!
+	w "</object>",! 	
+	
+	w "<object width=0 height=0 id='UCPrint' name='UCPrint' classid='" _ ##class(web.DHCEPR).GetFormURL("1") _ "WebClient.dll#dhcc.epr.webclient.UCPrint'>",!	
+	w "</object>",!
+</server>
+<body onload="return window_onload()">
+	<input type='hidden' id='MethodPrjectMang' value='<%=##Class(%CSP.Page).Encrypt($LB("User.DHCMedClinicalReport.Project"))%>'/>
+	<input type='hidden' id='MethodRepCheck' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedClinicalReport.ReportCtl.CheckReport"))%>'/>
+	<input type='hidden' id='MethodRepReturn' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedClinicalReport.ReportCtl.ReturnReport"))%>'/>
+	<input type='hidden' id='RowidVal' value="#(Rowid)#"/>
+	<input type='hidden' id='InstanceIDVal' value="#(InstanceID)#"/>
+	<input type='hidden' id='EpisodeIDVal' value="#(EpisodeID)#"/>
+	<input type='hidden' id='CategoryIDVal' value="#(CategoryID)#"/>
+	<input type='hidden' id='prtDocIDVal' value="#(prtDocID)#"/>
+</body>
+</html>

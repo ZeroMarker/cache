@@ -1,0 +1,60 @@
+﻿<!--依据上下限制采购单-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+		<table id="MainConditions" class="Condition">
+			<input id="RowId" name="RowId" type="hidden">
+			<tr>
+				<td><label class="required">*</label><label>采购科室</label><input id="PurLoc" name="PurLoc" class="textbox hisui-combobox"></td>
+				<td><label>类组</label><input id="StkScg" name="StkScg" class="textbox hisui-stkscgcombotree"></td>
+				<td><label>补货标准取整比例</label><input id="RepLevFac" name="RepLevFac" class="textbox" placeholder="0-1之间的小数"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="TipBT" class="hisui-linkbutton">点我提示</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="border:false,region:'center',collapsible:false,split:true" class="NonPadGrid">
+		<table id="PurGrid"></table>
+	</div>
+	<!--提示窗口-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-tip'" title="提示信息">
+		<div data-options="region:'center'" class="GridPadding">
+			<label style="color:blue;">1.补货标准 大于或等于 1,且补货标准取整 比例不为空：建议采购量=补货标准*N,N=M+R
+			</label>
+			</br>
+			<label style="color:blue;">
+				注解：M=(标准库存-科室库存)/补货标准，取整数部分;
+			</label>
+			</br>
+			<label style="color:blue;">
+				((标准库存-科室库存)#补货标准)/补货标准 小于 补货标准取整比例时，R=0,否则R=1,#代表取余.
+			</label>
+			</br>
+			<label style="color:blue;">
+				2.补货标准 小于 1,或补货标准取整比例为空，建议采购量=标准库存-科室库存
+			</label>
+		</div>
+	</div>
+
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPurPlan/InPurPlanCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPurPlan/InPurPlanAuxByLim.js"></script>
+
+</body>
+</html>

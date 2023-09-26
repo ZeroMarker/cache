@@ -1,0 +1,207 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<SERVER>
+  ; Log 57128 YC - changed update link of PAAdmDischargeSummary.Edit component to goto this page instead of websys.reload.csp.
+	n PrevID,obj,reporturl,lastRef,lastDocID,lastClinID,repid,objRep
+	n urltoReports,crystalviewertype,crystalpreviewmode,pathtoreports
+	n delimChar,len,lastChar,i,sChar,tmpPath,newPath,prevURL
+	n RepType,DocID,ClinID,idx,lnk,winname
+
+	; Log 51261 - AI - 30-08-2005 : New the variables that are used for previewing the report.
+	n reportmanagerdsn,configmanagerdsn
+	s (reportmanagerdsn,configmanagerdsn,prevURL,lnk,winname)=""
+	; end Log 51261
+
+	s PrevID=%request.Get("PreviewID")
+	; Log 57128 YC - Check for doc type HTML
+	s DSTDocType=%request.Get("DSTDocType")
+
+	i DSTDocType'="H",PrevID'="" d
+	. ; Log 56154 - AI - 13-10-2005 : Get the first entry from the Distribution List, if one exists. Otherwise, leave blank.
+	. s (RepType,DocID,ClinID)=""
+	. i PrevID'="",$g(^PA("DISSUM",PrevID,"REF",0))'=0 d
+	. . s idx=$o(^PA("DISSUM",PrevID,"REF",0))
+	. . i idx'="" d
+	. . . s DocID=$p($g(^PA("DISSUM",PrevID,"REF",idx)),"^",1)
+	. . . s ClinID=$p($g(^PA("DISSUM",PrevID,"REF",idx)),"^",2)
+	. . . ;  NOTE: Early, non-live data has 1 part only, the ChildsubID. But, now that the RowID is stored as well, only pass through the ChildsubID.
+	. . . i $p(ClinID,"||",2)'="",$p(ClinID,"||",1)=DocID s ClinID=$p(ClinID,"||",2)
+	. i DocID="" s RepType="L"
+	. i DocID'="" s RepType="I"
+	. ; end Log 56154
+ 	. 
+	. ; Log 49447 - AI - 07-04-2005 : Get the correct report and parameters.
+	. 
+	. ;s reporturl="dischsumm.rpt"
+	. 
+	. s (reporturl,lastRef,lastDocID,lastClinID,repid,objRep)=""
+	. s obj=##Class(User.PADischargeSummary).%OpenId(PrevID)
+	. i obj d
+	. . i obj.DISDischargeSummaryTypeDR,obj.DISDischargeSummaryTypeDR.DSTReportDR d
+	. . . s ReportID=obj.DISDischargeSummaryTypeDR.DSTReportDR.%Id()
+	. . . s reporturl=obj.DISDischargeSummaryTypeDR.DSTReportDR.ReportUrl
+	. . . ; Log 51261 - AI - 30-08-2005 : Get the Report's DSN. Used for previewing the report.
+	. . . s reportmanagerdsn=obj.DISDischargeSummaryTypeDR.DSTReportDR.DSN
+	. . . ; end Log 51261
+	. . d obj.%Close()
+	. ; end Log 49447
+	. 
+	. s urltoReports=$lg(^websys.ConfigurationD(1),65)
+	. s crystalviewertype=$lg(^websys.ConfigurationD(1),66)
+	. s crystalpreviewmode=$lg(^websys.ConfigurationD(1),67)
+	. ;i crystalpreviewmode="RAS",urltoReports="" s urltoReports="../csp/"
+	. i crystalpreviewmode'="RAS",urltoReports="" s urltoReports="../custom/"_%session.Get("LOGON.SITECODE")_"/reports/"
+	. i urltoReports'="",$e(urltoReports,$l(urltoReports))'="/" s urltoReports=urltoReports_"/"
+	. i crystalviewertype'="" s crystalviewertype="&init="_crystalviewertype
+	. 
+	. ; Log 51261 - AI - 30-08-2005 : Get the Config Manager DSN. Used for previewing the report.
+	. s configmanagerdsn=$lg(^websys.ConfigurationD(1),24)
+	. ; end Log 51261
+	. 
+	. ; Log 54855 - AI - 15-08-2005 : Get the PathToReports to pass through on the prevURL.
+	. s pathtoreports=$lg(^websys.ConfigurationD(1),69)
+	. ; Log 54880 - AI - 21-09-2005 : If Path To Reports is blank, build it from Path To Scripts.
+	. ;     Path To Reports = Path To Scripts - "scripts_gen" + "CUSTOM\" + the Site Code + "\REPORTS\".
+	. i pathtoreports="" d
+	. . s pathtoreports=$lg(^websys.ConfigurationD(1),1)
+	. . s pathtoreports=$p(pathtoreports,"scripts_gen",1)_"CUSTOM\"_$lg(^websys.ConfigurationD(1),14)_"\REPORTS\"
+	. ; end Log 54880
+	. ; Set up the PathToReports to be HTML-friendly : needs a terminating slash on the path, and all "\" must be doubles, so no encoding occurs. eg. "\\new" is "\new", "\new" is [newline]ew.
+	. s delimChar=""
+	. ; The variable len is the length of the string pathtoreports.
+	. s len=$l(pathtoreports)
+	. ; The variable lastChar is the last character of the string pathtoreports.
+	. s lastChar=$e(pathtoreports,len,len)
+	. ; Loop through all of the pathtoreports string until we find a path separator - "\" or "/".
+	. ; From 1, by 1, until we get to the end.
+	. f i=1:1:len d
+	. . ; The variable sChar is the current character of the string pathtoreports.
+	. .	s sChar=$e(pathtoreports,i,1)
+	. .	; If sChar is a path separator character, set delimChar to be that character, and quit the loop.
+	. .	i (sChar="\")!(sChar="/") s delimChar=sChar q
+	. ;
+	. ; Add the path separator character to the path string if required.
+	. i lastChar'=delimChar s pathtoreports=pathtoreports_delimChar
+	. ; All "\" must be doubles, so no encoding occurs. eg. "\\new" is "\new", "\new" is [newline]ew.
+	. i delimChar="\" d
+	. .	; Firstly, change all slashes to a carats, so we don't confuse the loop below.
+	. .	s tmpPath=$tr(pathtoreports,"\","^")
+	. .	s newPath=""
+	. .	; Loop through all but the last slash (now carat), and add "\\" in between each piece and on to the end.
+	. .	f i=1:1:$l(tmpPath,"^")-1 d
+	. .	.	s newPath=newPath_$p(tmpPath,"^",i)_"\\"
+	. . ;
+	. .	; Set the pathtoreports back to this newly created "double-slash" path.
+	. .	s pathtoreports=newPath
+	. ;
+	. ;
+	. ; *** OVERWRITTEN BY LOG 56154, below.  Log 49447 - AI - 07-04-2005 : Pass the reptype through on the link as well. Use "L" for List, as we don't know which individual.
+	. ; Log 51261 - AI - 30-08-2005 : Pass through the reportmanagerdsn and configmanagerdsn through on the link as well.
+	. ; Log 56154 - AI - 13-10-2005 : Pass the DocID as prompt2 (3rd prompt), and ClinID as prompt3 (4th prompt). The reptype is now "I", as we are passing individual details.
+	. ;
+	. ;  ***** MAKE SURE ALL 9 PARAMETERS ARE SENT THROUGH ON THE LINK *****
+	. s prevURL=""
+	. ; ab 30.03.06 45135
+	. i crystalpreviewmode="RAS" d
+	. . ;s prevURL=urltoReports_"crystalpreview.asp?a=a&report="_reporturl_"&DischID="_PrevID_"&prompt0="_PrevID_"&prompt1="_RepType_"&prompt2="_DocID_"&prompt3="_ClinID_"&prompt4=&prompt5=&prompt6=&prompt7=&prompt8="_"&pathtoreports="_pathtoreports_"&reportmanagerdsn="_reportmanagerdsn_"&configmanagerdsn="_configmanagerdsn
+	. . s prevURL="../csp/crystalpreview.csp?a=a&ID="_ReportID_"&report="_reporturl_"&DischID="_PrevID_"&prompt0="_PrevID_"&prompt1="_RepType_"&prompt2="_DocID_"&prompt3="_ClinID_"&prompt4=&prompt5=&prompt6=&prompt7=&prompt8="_"&pathtoreports="_pathtoreports_"&reportmanagerdsn="_reportmanagerdsn_"&configmanagerdsn="_configmanagerdsn_"&urltocrystal="_$zcvt(urltoReports,"O","URL")
+	. e  d
+	. . s prevURL=urltoReports_reporturl_"?"_crystalviewertype_"&DischID="_PrevID_"&prompt0="_PrevID_"&prompt1="_RepType_"&prompt2="_DocID_"&prompt3="_ClinID_"&prompt4=&prompt5=&prompt6=&prompt7=&prompt8="_"&pathtoreports="_pathtoreports_"&reportmanagerdsn="_reportmanagerdsn_"&configmanagerdsn="_configmanagerdsn
+	. 
+	. ; end Logs 49447, 54855, 51261 and 56154
+	. 
+	. 
+	. ; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	
+	; Log 57128 YC - open paadm.discharge.previewhtml.csp if html doc
+	i DSTDocType="H" d
+	. s DischID=%request.Get("DischID")
+	. s printDS=%request.Get("printDS")
+	. s lnk="paadm.discharge.previewhtml.csp?DischID="_DischID_"&printDS="_printDS
+	. ; if previewing, open in a new window, if not then we open in the hidden frame for printing
+	. s winname="TRAK_hidden" i PrevID'="" s winname="DischPreview"
+	
+</SERVER>
+<script language="Javascript">
+	var previewurl = "#(prevURL)#";
+	// Log 57128 YC - Check for html document
+	var DSTDocType = "#(DSTDocType)#";
+	var closewin=1;
+	//alert(previewurl);
+	
+
+	// Log 57128 YC - show crystal window for non html docs
+	if (DSTDocType!="H") {
+		// Log 47166 - AI - 07-04-2005 : Force the window over the others using showModalDialog. Parameters are shown below.
+		// Log 45135 - AI - 22-11-2005 : Change back to use window.open, because we are now calling an intermediate .csp.
+		// *** NOTES FOR THE WORKING :  If modal, pauses logic but has an extra window that we don't want.
+		// *** NOTES FOR THE WORKING :  If window.open, logic flows to the end, which reloads the .List component, therefore losing focus.
+		if (previewurl!="") {
+			// Log 52857 - AI - 31-03-2006 : Open the window in MAXIMISED size, regardless of screen resolution.
+			// Log 59598 - BC - 29-06-2006 : Change statusbar variable (status=) to display the status bar (=yes).
+			//window.open(previewurl,"ReportWindow","width=640,height=480,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");
+			window.open(previewurl,"ReportWindow","top=0,left=0,height="+screen.availHeight+",width="+screen.availWidth+",toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");
+			// end Log 52857
+
+			closewin=0;
+			//window.showModalDialog(previewurl,'','dialogHeight:"+screen.availHeight+"px;dialogWidth:"+screen.availWidth+"px;center:no;help:no;resizable:yes;scroll:yes');
+		}
+	}
+	else {
+		var lnk = "#(lnk)#";
+		var winname = "#(winname)#";
+		// open html report in new/hidden window
+		if (window.opener) {
+			if ((window.opener.name!="eprmenu")&&(window.opener.name!="TRAK_menu"))
+				window.opener.open(lnk,winname,"");
+		}
+		else if (window.top.opener) window.top.opener.open(lnk,winname,"");
+	}
+
+	/*
+	http://www.webreference.com/js/column90/3.html
+	Properties for showModalDialog :
+		dialogHeight: sHeight
+		dialogLeft: sXpos
+		dialogTop: sYpos
+		dialogWidth: sWidth
+		center:	( yes | no | 1 | 0 | on | off )
+		dialogHide: ( yes | no | 1 | 0 | on | off )
+		edge: ( sunken | raised )
+		help: ( yes | no | 1 | 0 | on | off )
+		resizable: ( yes | no | 1 | 0 | on | off )
+		scroll: ( yes | no | 1 | 0 | on | off )
+		status: ( yes | no | 1 | 0 | on | off )
+		unadorned: ( yes | no | 1 | 0 | on | off )
+	NOTE: The second parameter (window name) gets overwritten anyway.
+	*/
+	// end Log 47166
+	
+	if (window.opener) {
+		window.opener.treload('websys.csp');
+	}
+	else {
+		if (window.top.opener)
+			window.top.opener.treload('websys.csp');
+	}
+	if (closewin) {	
+		window.close();
+	}
+	
+</script>
+
+</BODY>
+</HTML>
+

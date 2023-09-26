@@ -1,0 +1,57 @@
+﻿<!--高值条码重生成-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+	d ##class(web.DHCBillPrint).InvBillPrintCLSID()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',border:false">
+		<table id="Conditions" class="Condition">
+			<input id="inci" name="inci" type="hidden">
+			<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
+			<tr>
+				<td><label>条码</label><input id="BarCodeText" name="BarCodeText" class="textbox"></td>
+				<td><label>起始日期</label><input id="StartDate" name="StartDate" class="hisui-datebox textbox"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印条码</a></td>
+			</tr>
+			<tr>
+				<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
+				<td><label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-datebox textbox"></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="PrintAllBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印本页</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="BarCodeGrid"></table>
+	</div>
+
+	<div id="TB">
+		<table class="Condition" style="border-spacing:0 4px;">
+			<tr>
+				<td><label>原始条码</label><input id="OldBarCode" name="OldBarCode" class="textbox"></td>
+				<td>
+					<a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCodePrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCode2.js"></script>
+</body>
+</html>

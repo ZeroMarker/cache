@@ -1,0 +1,51 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+	//²éÑ¯Ìõ¼þ
+	s ApplyStart=$Get(%request.Data("ApplyStart",1))
+	s Applyend=$Get(%request.Data("Applyend",1))
+	s deptdr=$Get(%request.Data("deptdr",1))
+	s SubSource=$Get(%request.Data("SubSource",1))
+	s projStatus=$Get(%request.Data("projStatus",1))
+	s HeadDr=$Get(%request.Data("HeadDr",1))
+	s PName=$Get(%request.Data("PName",1))
+	s protype=$Get(%request.Data("protype",1))
+	s userdr=$Get(%request.Data("userdr",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s Detail=$Get(%request.Data("Detail",1))
+	s Type=$Get(%request.Data("Type",1))
+	s PrjLife=$Get(%request.Data("PrjLife",1))
+	i action = "list" d
+	.w ##class(herp.srm.udata.ProjectMidCheckNew).List(sortField, sortDir, start, limit, ApplyStart, Applyend, deptdr, SubSource, HeadDr, PName,protype,userdr,Type)
+
+    i action = "listdetail" d
+	.s result = ##class(herp.srm.udata.ProjectMidCheckNew).ListDetail(sortField, sortDir, start, limit, rowid)
+	
+	i action = "deptList" d 
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+	
+	i action = "applyerList" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "sourceList" d 
+	.w ##class(herp.srm.udata.uSRMCommon).CalSubSource(start, limit, str)
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.ProjectMidCheckNew).InsertRec(rowid,Detail, userdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

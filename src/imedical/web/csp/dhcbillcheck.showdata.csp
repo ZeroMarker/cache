@@ -1,0 +1,65 @@
+<!-- 
+ * FileName:	dhcbillcheck.showdata.csp
+ * User:		TangTao
+ * Date:		2015-11-10
+ * Function:	费用核查数据展示CSP, 固定参数Query通用
+ * Description: 
+-->
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+<!-- Put your page Title here -->
+<TRAK:HEAD></TRAK:HEAD>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbillconfig/jqueryeasyui132/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbillconfig/jqueryeasyui132/demo/demo.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbillconfig/jqueryeasyui132/themes/default/easyui.css">
+<SCRIPT type="text/javascript" SRC="../scripts/dhcbillconfig/jqueryeasyui132/jquery-1.8.0.min.js"> </SCRIPT>
+<SCRIPT type="text/javascript" SRC="../scripts/dhcbillconfig/jqueryeasyui132/jquery.easyui.min.js"> </SCRIPT>
+<SCRIPT type="text/javascript" SRC="../scripts/dhcbillconfig/jqueryeasyui132/locale/easyui-lang-zh_CN.js"> </SCRIPT>
+<SCRIPT type="text/javascript" SRC="../scripts/dhcjs/dhcutil.js"> </SCRIPT>
+<server>
+	;d ##class(web.DHCBillMenu).WriteColumnJsonByQuery("web.DHCBillMenu","FindCheckMenu","1","main^foldermenu")
+	
+	//从%request内拿消息明细id
+	Set DetailsId = $g(%request.Data("MsgDetailsId",1))
+	
+	Set ClassName=$g(%request.Data("classname",1))
+	Set QueryName=$g(%request.Data("methodname",1))
+	Set MenuParam=$g(%request.Data("menuparam",1))
+	Set MenuParamNum=$g(%request.Data("menuparamnum",1))
+	If MenuParamNum="0" Do
+	.Set OutputStr=##class(web.DHCBillMenu).WriteColumnJsonByQuery(ClassName,QueryName,MenuParamNum)
+	Else  Do
+	.Set Str=""
+	.For i=1:1:$l(MenuParam,",") Do
+	..If Str=""  Set Str=$p(MenuParam,",",i)
+	..Else  Set Str=Str_","_$p(MenuParam,",",i)
+	.Set OutputStr=##class(web.DHCBillMenu).WriteColumnJsonByQuery(ClassName,QueryName,MenuParamNum,Str)
+	w !,"<script type=""text/javascript"">",!
+	w "var Columns=["_OutputStr_"]",!
+	w "var Method=[{ClassName:"_"'"_ClassName_"',QueryName:"_"'"_QueryName_"',MenuParam:"_"'"_MenuParam_"',MenuParamNum:"_"'"_MenuParamNum_"'}]",!
+	w "</script>"
+
+</server>
+
+ <script type="text/javascript">
+	var DetailsId = "#(DetailsId)#";
+	// 关闭消息弹出窗口方法
+	function closewin(){
+		window.close();
+		top.HideExecMsgWin();
+	}
+	/// 执行所有相关消息
+	function SendExec(){
+		tkMakeServerCall("websys.DHCMessageInterface","ExecAll",DetailsId);
+		closewin();
+	}
+ </script>
+
+</head>
+<body>
+	<table id="tShowData"></table>
+	<script type="text/javascript" src="../scripts/dhcbillcheck.showdata.js"></script>
+</body>
+</html>

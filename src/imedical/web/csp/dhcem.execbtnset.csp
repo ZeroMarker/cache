@@ -1,0 +1,95 @@
+<html>
+<head>
+<title></title>
+<script Language="Javascript">
+	var EpisodeID="#(%request.Get("EpisodeID"))#" //医嘱ID 
+	var LocID="#(%session.Data("LOGON.CTLOCID"))#"  //科室ID
+	var HospID="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+	var session=new Array(); <!--hxy 2020-05-26 st-->
+	session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+</script>
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-26-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/execbtnset.js"></script>
+
+</head>
+<body>   
+	
+		<!-- toolbar -->
+		<div id="toolbar" class="toolbar">	
+			<div id="info" class="messager-popover info" style="margin-top:10px;margin-left:8px;"><!-- hxy 2018-10-18 -->         
+				<span class="messager-popover-icon info"></span><span class="content">代码为执行单代码(SYDO,PSDO等);显示按钮为界面执行按钮描述(执行/打印等)多个用,号分割</span>                        
+			</div>
+			<div style="position:relative;top:55px"><!--hxy 2019-07-18-->
+				<!--span style='margin-right:10px;margin-left:5px;'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	
+				<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>hxy 2020-05-26 注释-->
+				<label class="r-label" id="_HospListLabel" style="padding-left:10px">医院</label><input id="_HospList"><!--hxy 2020-05-26-->
+			</div>
+			<div class="tool-bar-line" style="margin-top:62px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:delet()">删除</a></td>	
+			      <td style="color:red;"></td>
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			border:false,
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRow, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMExecBtnSet&MethodName=GetExecBtnSetList'">
+			<thead>
+				<tr>
+					<th data-options="field:'EBSRowID',width:120,editor:{type:'validatebox',options:{}},hidden:true">EBSID</th>
+					<th data-options="field:'EBSNurSheetCode',width:120,editor:{type:'validatebox',options:{required:true}}">执行按钮代码</th>
+					<th data-options="field:'EBSShowBtn',width:460,editor:{type:'validatebox',options:{required:true}}">显示按钮</th>
+					<th data-options="field:'EBSActiveFlag',align:'center',width:70,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													data:[
+														{'value':'Y','text':'是'},
+														{'value':'N','text':'否'},
+													],
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th data-options="field:'EBSHosp',width:200,align:'center',
+												editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:false,
+													editable:false,
+													onSelect:function(option){
+														var ed=$('#datagrid').datagrid('getEditor',{index:editIndex,field:'EBSHospDr'});
+														$(ed.target).val(option.value);
+													}
+												}
+											}">医院</th>
+					<th data-options="field:'EBSHospDr',editor:{type:'validatebox',options:{required:true}},hidden:true">DurHospDr</th>
+				</tr>
+			</thead>
+		</table>
+</body>
+</html>

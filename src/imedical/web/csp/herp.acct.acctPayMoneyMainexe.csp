@@ -1,0 +1,87 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str = $Get(%request.Data("str",1))
+	s month = $Get(%request.Data("month",1))
+	s year = $Get(%request.Data("year",1))
+	s PayBillNo= $Get(%request.Data("PayBillNo",1))
+	s rowid= $Get(%request.Data("rowid",1))
+	s ActualSum= $Get(%request.Data("ActualSum",1))
+	s data= $Get(%request.Data("data",1))
+	s username= $Get(%request.Data("username",1))
+	s StartDate= $Get(%request.Data("StartDate",1))
+	s EndDate= $Get(%request.Data("EndDate",1))
+	i action = "list" d
+	.w ##class(herp.acct.upay.uPayMoneyMain).List(year, month, str, start, limit)
+	i action = "yearlist" d
+	.w ##class(herp.acct.upay.uPayMoneyMain).YearList(start, limit,str)
+	
+	i action ="submmit" d
+	.s result =##class(herp.acct.upay.uPayMoneyMain).Submmit(str,username,data)
+    .i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action ="SubmmitNoDetail" d
+	.s result =##class(herp.acct.upay.uPayMoneyMain).SubmmitNoDetail(username,data)
+    .i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.upay.uPayMoneyMain).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.upay.uPayMoneyMain).Update(rowid,ActualSum)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetSupplier" d
+	.w ##class(herp.acct.upay.uPayMoneyMain).GetSupplier(start,limit,str)
+	
+	i action = "GetAcctSubj" d
+	.w ##class(herp.acct.upay.uPayMoneyMain).GetAcctSubj(start,limit,str)
+	
+	i action = "GetDept" d
+	.w ##class(herp.acct.upay.uPayMoneyMain).GetDept(start,limit,str)
+	
+	
+	i action ="SubmmitAgain" d
+	.w ##class(herp.acct.upay.uPayMoneyMain).SubmmitAgain(str)
+	
+	i action = "TotalSubmmit" d
+	.s result = ##class(herp.acct.upay.uPayMoneyMain).TotalSubmmit(username,StartDate,EndDate,str)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+    i action ="addBankSys" d
+	.w ##class(herp.acct.upay.uPayMoneyMain).addBankSys(str)
+	
+	
+    i action = "Edit" d
+	.s result = ##class(herp.acct.upay.uPayMoneyMain).EditPayMoney(data,username)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

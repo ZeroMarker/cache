@@ -1,0 +1,110 @@
+﻿<html>
+<head>
+<HISUI/>
+<title>验证用户</title>
+<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+<style type="text/css">
+*{
+	margin:0px;
+	padding:0px;
+	font-family:"Microsoft Yahei";
+}
+.form{
+	padding-left:18px;
+	padding-top:5px;
+	width:250px;	
+}
+.name{
+	font-size:18;
+	font-weight:bold;
+	padding-top:20px;	
+}
+.password{
+	margin-top:10px;
+	width:190px;	
+}
+.password input{
+	width:190px;
+	margin-top:10px;
+}
+.button{
+	margin-top:15px; 
+}
+.button input{
+	width:63px;
+	margin-left:10px;
+	height:25px;
+}
+</style>
+ <script language="cache" runat="server">
+	s userId = $Get(%request.Data("UserID",1),"")
+	s userName = $Get(%request.Data("UserName",1),"")
+</script>		
+ <script language="javascript">
+ 	var userId = '#(userId)#';
+ 	var userName = '#(userName)#';
+ 	
+ 	$(function(){
+	  userName = decodeURI(utf8to16(base64decode(userName)));
+	  $(".name").text(emrTrans("创建者：")+userName);
+	});
+ 	function confirm()
+ 	{
+	 	returnValue = 0;
+	 	var password = document.getElementById("password").value;
+		returnValue = userVerification(userId,password);
+	 	closeWindow();
+	}
+	
+	function cancel()
+	{
+		returnValue = "";
+		closeWindow();
+	}
+	//关闭窗口
+	function closeWindow()
+	{
+		parent.closeDialog("deleteDialog");
+		
+	}
+	///验证用户名
+	function userVerification(userCode,password)
+	{
+		var result = "0";
+		jQuery.ajax({
+			type: "Post",
+			dataType: "text",
+			url: "../EMRservice.Ajax.common.cls",
+			async: false,
+			data: {
+					"Class": "EMRservice.BL.BLPowerUser",
+					"Method":"IsLogonValid",
+					"OutputType":"String",
+			        "p1": userCode,
+			        "p2": password
+			      },
+			success: function(d) {
+				result =  d;
+			},
+			error : function(d) { alert(" error");}
+		});
+		return result;
+	}	
+</script>
+</head>
+<body style="overflow:hidden;width:100%;height:100%;">
+	<div class="form">
+		<div>
+			<div class="name"></div>
+		</div>
+		<div class="password">
+			<div style="font-size:15px;">#(..Get("删除前，请输入创建者密码:"))#</div>
+			<input id="password" type="password" class="hisui-validatebox validatebox-text" onkeydown= "if(event.keyCode==13)confirm()" />
+		</div>
+		<div class="button">
+			<a href="#" class="hisui-linkbutton"  onclick="confirm()">#(..Get("确认"))#</a>
+			<a href="#" class="hisui-linkbutton"  onclick="cancel()">#(..Get("取消"))#</a>
+		</div>
+	</div> 
+</body>
+</html>

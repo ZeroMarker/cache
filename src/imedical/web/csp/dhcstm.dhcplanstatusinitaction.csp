@@ -1,0 +1,35 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s Loc=$Get(%request.Data("Loc",1))
+s Status=$Get(%request.Data("Status",1))
+;
+
+i Action = "Select" d
+	.s ret=##class(web.DHCSTM.DHCPlanStatusInit).Select(Loc)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+	.
+i Action = "Save" d
+	.s Detail=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCSTM.DHCPlanStatusInit).Save(Detail)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Delete" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCSTM.DHCPlanStatusInit).Delete(rowid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+</SERVER>

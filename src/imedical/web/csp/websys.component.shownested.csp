@@ -1,0 +1,52 @@
+<!-- Copyright (c) 2005 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!-- This is a page used to display a hidden nested component  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n winname s winname=$g(%request.Data("WEBSYSWIN",1))
+	if (winname'="TRAK_hidden") {
+		w "<script language='javascript'>"
+		&JS<
+			var win=window.open("",'<%=winname%>');
+			var curs=win.document.body.style.cursor;
+			win.document.body.style.cursor="wait";
+		>
+		w "</script>",!
+		n ncid s ncid=$g(%request.Data("NCID",1))
+		if (ncid'="") {
+			n cmpexp s cmpexp=$g(^TMP("WEB",%session.SessionId,"NC",ncid))
+			i cmpexp'="" {
+				;w %session.SessionId_","_ncid_"<BR>"
+				k %request.Data
+				m %request.Data=^TMP("WEB",%session.SessionId,"NC",ncid)
+				w "<DIV id='websys_nested'>"
+				x cmpexp
+				w !,"</DIV><!-- id='websys_nested' -->",!
+				w "<scr"_"ipt language='javascript'>"
+				w !,"var objnc=win.document.getElementById('"_ncid_"').childNodes[1];"
+				w "objnc.innerHTML=document.getElementById('websys_nested').innerHTML;"
+				;need to create scripts as elements on the actual tree window
+				w !,"var scr_arr=document.getElementById('websys_nested').getElementsByTagName('SCRIPT');"
+				w !,"for (var i=0; i<scr_arr.length; i++) {"
+ 				w !," var newscript=win.document.createElement('script');"
+ 				w !," if (scr_arr[i].src=='') newscript.text=scr_arr[i].text; else newscript.src=scr_arr[i].src;"
+ 				w !," win.document.getElementsByTagName('head')[0].appendChild(newscript);"
+ 				w !,"}"
+				w "</scr"_"ipt>",!
+			}
+		}
+		w "<script language='javascript'>win.document.body.style.cursor=curs;</script>",!
+	}
+</SERVER>
+</BODY>
+</HTML>

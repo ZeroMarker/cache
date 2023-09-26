@@ -1,0 +1,93 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+</STYLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<link rel="stylesheet" href="../scripts/styles.css" type="text/css">
+<script type="text/javascript"  src="../SCRIPTS/dhtmlxcommon.js" ></script>
+<script type="text/javascript"  src="../SCRIPTS/dhtmlxcombo.js" ></script>
+<link rel="STYLESHEET" type="text/css" href="../SCRIPTS/dhtmlxcombo.css">
+
+<script language='javascript' src='../scripts/framework/ext.icare.Lookup.js'></script>
+<script language='javascript' src='../scripts/framework/dhcc.icare.lu.js'></script>
+
+<STYLE type='text/css'>
+td{
+ }
+.ScheduleFull {
+	PADDING: 3px;
+	MARGIN: 3px;
+	BORDER: 1px outset #cfcfff;
+	cursor: hand;
+	COLOR: black;
+	BACKGROUND-COLOR: #ECE9E9;
+	font-style:italic;
+}
+</STYLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<server>
+	s CFRegTreeQuery=##class(web.DHCOPRegConfig).GetSpecConfigNode("RegTreeQuery")
+	i CFRegTreeQuery=1 w "<script type='text/javascript'  src='../SCRIPTS/dhcopadm.reg.tree.js' ></script>",!
+</server>
+</head>
+<BODY>
+<server>
+ 	Write "<TABLE border='0' style='' height='95%'><TBODY><TR><TD  vAlign=top align=left>",$C(13,10)
+ 	Write "<div id='tree'></div>"
+ 	Write "</TD><TD vAlign=top align=left>",$C(13,10)
+ 	s cmp=##Class(websys.Component).OpenName("DHCOPAdm.Reg")
+ 	i cmp d
+	.s cmp.HideMenus=1,cmp.HideHeadings=1
+ 	.d cmp.Show(),cmp.%Close()
+ 	Write "</TD><TD vAlign=top ><TABLE><TBODY><TR><TD vAlign=top align=left style='top:0; padding:0px;'>",$C(13,10)
+ 	//w "<SPAN id='TimeRangeTAB1' class='TimeRangeTab'>"_"上午"_"</SPAN>",$c(13,10)
+ 	s cmp=##Class(websys.Component).OpenName("DHCOPAdm.Reg.MarkList")
+ 	i cmp d
+	.s cmp.HideMenus=1,cmp.HideHeadings=1
+ 	.d cmp.Show(),cmp.%Close()
+ 	Write "</TD></TR><TR><TD height='50%' vAlign=top align=left style=' padding:0px;'>",$C(13,10)
+ 	//w "<SPAN id='TimeRangeTAB2' class='TimeRangeTab'>"_"下午"_"</SPAN>",$c(13,10)
+ 	s cmp=##Class(websys.Component).OpenName("DHCOPAdm.Reg.MarkListCopy")
+ 	i cmp d
+	.s cmp.HideMenus=1,cmp.HideHeadings=1
+ 	.d cmp.Show(),cmp.%Close()
+ 	Write "</TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE>",$C(13,10)	
+ 	 s TimeRangeDefault=##class(web.DHCOPAdmReg).GetCurrentTimeRange()
+	 s TimeRangeStr=##Class(web.DHCOPAdmReg).GetTimeRangeStr(1)
+	 s MorningTimeRangeId=""
+	 s Count=$l(TimeRangeStr,"^")
+	 f i=1:1:Count d
+	 .s TimeRange=$p(TimeRangeStr,"^",i)
+	 .s TimeRangeId=$p(TimeRange,$C(1),1)
+	 .s TimeRangeDesc=$p($p(TimeRange,$C(1),2),"-",1)
+	 .i TimeRangeDesc["上午"  s MorningTimeRangeId=TimeRangeId
+	 
+	 //启用医保实时结算
+	 s CFEnableInsuBill=##class(web.DHCOPRegConfig).GetSpecConfigNode("EnableInsuBill")
+	 //得到现金支付方式,使用硬代码CASH获取
+	 s CashPayModeID=$o(^CT("CTPM",0,"Code","CASH",0))
+</server>
+
+<SCRIPT language="Javascript">
+var MorningTimeRangeId="#(MorningTimeRangeId)#";
+var TimeRangeDefault="#(TimeRangeDefault)#";
+var CFEnableInsuBill="#(CFEnableInsuBill)#";
+var CashPayModeID="#(CashPayModeID)#";
+document.onkeydown=documentkeydown;
+</SCRIPT>
+
+<!--分时段预约使用的js与css-->
+<script type="text/javascript" src="../scripts/DHCOPDocAppointExt.js"></script>
+<link rel="stylesheet" TYPE="text/css" href="../scripts/dhcdoc.app.css"></LINK>
+</BODY>
+
+
+</HTML>

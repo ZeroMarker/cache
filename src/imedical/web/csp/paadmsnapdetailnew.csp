@@ -1,0 +1,135 @@
+<!-- Copyright (c) 2003 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n frm
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ i %request.Get("PatientID"),%request.Get("PatientBanner")'=0 {
+	s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i frm d frm.Show(),frm.%Close()
+ }
+ s (displayconverted,converttoFIM)=""
+ s (AdmDateL,DisDateL,mradm)=""
+ s nd=""
+ s %request.Data("PatientID",1)=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s %request.Data("EpisodeID",1)=$g(%request.Data("EpisodeID",1))
+ s %request.Data("SNAPEpisodeID",1)=$g(%request.Data("SNAPEpisodeID",1))
+ s %request.Data("SNAPDetailID",1)=$g(%request.Data("SNAPDetailID",1))
+ s %request.Data("SNAPDetailShow",1)=$g(%request.Data("SNAPDetailShow",1))
+ s %request.Data("ADLCareType",1)=$g(%request.Data("ADLCareType",1))
+ s %request.Data("NewDetail",1)=$g(%request.Data("NewDetail",1))
+ s %request.Data("SNAPNumberLink",1)=$g(%request.Data("SNAPNumberLink",1))
+ i $g(%request.Data("NewDetail",1))="" s nd=$g(%request.Data("SNAPDetailID",1))
+ i nd="",%request.Data("SNAPNumberLink",1)="",%request.Data("SNAPEpisodeID",1)'="",%request.Data("SNAPDetailID",1)="" d
+ .s %request.Data("NewDetail",1)=1
+ .s %request.Data("SNAPDetailShow",1)=1
+ .s %request.Data("PARREF",1)=$g(%request.Data("SNAPEpisodeID",1))
+ .s %request.Data("ID",1)=""
+ i %request.Data("SNAPEpisodeID",1)'="",%request.Data("SNAPDetailID",1)="",%request.Data("NewDetail",1)="",%request.Data("SNAPNumberLink",1)'=""  d
+ .s SNAPEpisodeID=%request.Data("SNAPEpisodeID",1)
+ .s lastnode=$o(^PAADM($p(SNAPEpisodeID,"||",1),"SNAP",$p(SNAPEpisodeID,"||",2),"DET",""),-1)
+ .i lastnode d
+ ..s %request.Data("SNAPDetailID",1)=SNAPEpisodeID_"||"_lastnode
+ ..s ADLSTCodeId=$p($g(^PAADM($p(SNAPEpisodeID,"||",1),"SNAP",$p(SNAPEpisodeID,"||",2),"DET",lastnode)),"^",2)
+ ..i ADLSTCodeId s %request.Data("ADLSTCode",1)=$p($g(^PAC("ADLST",ADLSTCodeId)),"^")
+ ..s ADLCTCodeId=$p($g(^PAADM($p(SNAPEpisodeID,"||",1),"SNAP",$p(SNAPEpisodeID,"||",2))),"^",6)
+ ..i ADLCTCodeId s %request.Data("ADLCareType",1)=$p($g(^PAC("ADLCT",ADLCTCodeId)),"^")
+ ..i ADLSTCodeId,ADLCTCodeId d ##Class(web.PACADLCareTypeSub).GetMaxMinScore(%request.Data("ADLSTCode",1),%request.Data("ADLCareType",1))
+ s DisDate=$g(%request.Data("PAADMDischgDate",1),"_zz")
+ i DisDate="_zz",EpisodeID d 
+ .s DisDate=$p($g(^PAADM(EpisodeID)),"^",17)
+ .i DisDate s DisDate=##Class(websys.Conversions).DateLogicalToHtml(DisDate)
+ s %request.Data("PAADMDischgDate",1)=DisDate
+ s AdmDate=$g(%request.Data("PAADMAdmDate",1),"_zz")
+ i AdmDate="_zz",EpisodeID d
+ .s AdmDate=$p($g(^PAADM(EpisodeID)),"^",6)
+ .i AdmDate s AdmDate=##Class(websys.Conversions).DateLogicalToHtml(AdmDate)
+ s %request.Data("PAADMAdmDate",1)=AdmDate
+ s AdmDateL=##Class(websys.Conversions).DateHtmlToLogical(AdmDate)
+ s DisDateL=##Class(websys.Conversions).DateHtmlToLogical(DisDate)
+ s CheckDate=DisDateL
+ i CheckDate="" s CheckDate=AdmDateL
+ i CheckDate="" s CheckDate=+$h
+ ;s %request.Data("CheckDate",1)=CheckDate
+ s %request.Data("CheckDate",1)=$$CodeTableValidationDate^CPAAdm1B(%request.Get("EpisodeID"),"PAAdmSNAPDetails",%request.Get("SNAPDetailID"))
+ s mradm=$g(%request.Data("mradm",1),"_zz")
+ i mradm="_zz",EpisodeID d
+ .s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+ s CareType=$g(%request.Data("CARETYPDesc",1),"_zz")
+ i CareType="_zz",mradm d
+ .s CareTypeDR=$p($g(^MR(mradm,"PRO",1)),"^",59)
+ .i CareTypeDR s CareType=$p($g(^PAC("CARETYP",CareTypeDR)),"^",2) 
+ .i 'CareTypeDR s CareType=""
+ s %request.Data("CARETYPDesc",1)=CareType
+ s %request.Data("ID",1)=$g(%request.Data("SNAPEpisodeID",1))
+ s SNAPId=$g(%request.Data("SNAPEpisodeID",1))
+ i SNAPId'="",EpisodeID  d
+ .s SNAPCare=$p($g(^PAADM(EpisodeID,"SNAP",$p(SNAPId,"||",2))),"^",5)
+ .i SNAPCare'="" s %request.Data("displayconverted",1)=$p($g(^PAC("SNAPCT",SNAPCare)),"^",6) 
+ .s ADLCare=$p($g(^PAADM(EpisodeID,"SNAP",$p(SNAPId,"||",2))),"^",6)
+ .i ADLCare'="" s %request.Data("converttoFIM",1)=$p($g(^PAC("ADLCT",ADLCare)),"^",6)
+ s InPatAdmTypeScreen=$g(%request.Data("IPATCode",1),"_zz")
+ i InPatAdmTypeScreen'="_zz" s %request.Data("IPATCode",1)=InPatAdmTypeScreen
+ i InPatAdmTypeScreen="_zz",EpisodeID d
+ .s InPatAdmtype=$p($g(^PAADM(EpisodeID,2)),"^",28)
+ .i InPatAdmtype s %request.Data("IPATCode",1)=$p($g(^PAC("IPAT",InPatAdmtype)),"^") 
+ s (DeleteShow,fsnpid)=0
+ i SNAPId="",EpisodeID d
+ .s snpid=0 f  s snpid=$o(^PAADM(EpisodeID,"SNAP",snpid)) q:'snpid  q:fsnpid  d
+ ..s detid=$o(^PAADM(EpisodeID,"SNAP",snpid,"DET",0))
+ ..i 'detid d
+ ...s fsnpid=1
+ ...s DeleteShow=snpid
+ i DeleteShow=0 d 
+ .s frm=##Class(websys.Component).OpenName("PAAdmSNAP.EditNew")
+ .i frm  s frm.HideMenus=1 d frm.Show() d frm.%Close()
+ .i $g(%request.Data("NextSNAPDetail",1))="" s %request.Data("ID",1)=$g(%request.Data("SNAPDetailID",1))
+ .i $g(%request.Data("NextSNAPDetail",1))'="" d
+ ..s %request.Data("PARREF",1)=$g(%request.Data("SNAPEpisodeID",1))
+ ..s %request.Data("ID",1)=""
+ ..s SNAPDetailID=%request.Data("SNAPDetailID",1)
+ ..s %request.Data("NextSNAPDate",1)=##Class(websys.Conversions).DateLogicalToHtml($p($g(^PAADM($p(SNAPDetailID,"||",1),"SNAP",$p(SNAPDetailID,"||",2),"DET",$p(SNAPDetailID,"||",3))),"^",1))
+ ..s %request.Data("SNAPDetailID",1)=""
+ ..k %request.Data("NextSNAPDetail",1)
+ .;md 09122003
+ .s frm=##Class(websys.Component).OpenName("PAAdmSNAPDetails.Edit")
+ .i ((frm)&&($g(%request.Data("SNAPDetailShow",1))||($g(%request.Data("SNAPDetailID",1))))) d
+ ..s frm.HideMenus=1  
+ ..d frm.Show() 
+ ..d frm.%Close()
+ i DeleteShow'=0 d
+ .s %request.Data("SNAPEpisodeID",1)=$g(EpisodeID)_"||"_$g(DeleteShow)
+ .s ADLCareTypeDR=$p($g(^PAADM(EpisodeID,"SNAP",DeleteShow)),"^",6)
+ .i ADLCareTypeDR s %request.Data("ADLCareType",1)=$p($g(^PAC("ADLCT",ADLCareTypeDR)),"^")
+ .s frm=##Class(websys.Component).OpenName("PAAdmSNAPDDelete.Edit")
+ .i frm d frm.Show() d frm.%Close()
+</SERVER>
+
+<script language="javascript">
+function loadHandler() {
+	//try {
+	//	CustomSNAPDetailsBodyLoadHandler();
+	//} catch(e) {
+	//	SNAPDetailsBodyLoadHandler();
+	//}
+	try {SNAPBodyLoadHandler();} catch(e) {}
+	try {SNAPDetailsBodyLoadHandler();} catch(e) {}	
+	websys_reSizeT();
+}
+window.document.body.onload=loadHandler;
+</script>
+
+</BODY>
+</HTML>

@@ -1,0 +1,133 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s User=$G(%session.Data("LOGON.USERID"))
+
+i Action = "LocItmStk" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.//d ##class(web.DHCST.LocItmStk).LocItmStk(Start,Limit,Sort,Dir,StrParam)
+	.w ##class(web.DHCST.LocItmStk).LocItmStk(Start,Limit,Sort,Dir,StrParam)
+	.
+
+i Action = "Batch" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.LocItmStk).Batch(Start,Limit,Sort,Dir,StrParam)
+	.
+i Action = "LocItmStkMoveSum" d
+	.S StartDate=$Get(%request.Data("startdate",1))
+	.S EndDate=$Get(%request.Data("enddate",1))
+	.S PhaLoc=$Get(%request.Data("phaloc",1))
+	.S StrParam=$Get(%request.Data("others",1))
+	.w ##class(web.DHCST.LocItmTransMove).LocItmStkMoveSum(Start,Limit,StartDate,EndDate,PhaLoc,StrParam,User)  //zhwh 20130717增加参数User
+	.
+i Action = "LocItmStkMoveDetail" d
+	.S Incil=$Get(%request.Data("incil",1))
+	.S StartDate=$Get(%request.Data("startdate",1))
+	.S EndDate=$Get(%request.Data("enddate",1))
+	.s TransType=$Get(%request.Data("transtype",1))
+	.s RetAspFlag=$Get(%request.Data("RetAspFlag",1))
+	.w ##class(web.DHCST.LocItmTransMove).LocItmStkMoveDetail(Start,Limit,Sort,Dir,StartDate,EndDate,Incil,TransType,RetAspFlag)
+	.
+i Action = "jsLocItmBatOfExp" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.LocItmExpDate).jsLocItmBatOfExp(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmStkQtyLimitWarn" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.LocItmStkQtyWarn).jsLocItmStkQtyLimitWarn(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmStkQtyDispensingWarn" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.LocItmStkQtyWarn).jsLocItmQtyDspWarn(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmSluggishGoods" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.LocItmSluggishGoods).jsLocItmSluggishGoods(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmMoveInfo" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.LocItmMoveInfo).jsLocItmMoveInfo(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "GetDirtyQtyInfo" d
+	.S Inclb=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.LocItmStk).GetDirtyQtyInfo(Inclb)
+	.
+i Action = "ClrResQtyAll" d
+	.//S Inclb=$Get(%request.Data("Params",1))
+	.//S Ingr=$Get(%request.Data("Ingr",1))
+	.s ret=##class(web.DHCST.LocItmStk).ClrResQtyAll()
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "ClrResQtyLoc" d
+	.S PhaLoc=$Get(%request.Data("PhaLoc",1))
+	.//S Ingr=$Get(%request.Data("Ingr",1))
+	.s ret=##class(web.DHCST.LocItmStk).ClrResQtyLoc(PhaLoc)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "ClrResQtyLocInci" d
+	.S Incil=$Get(%request.Data("Incil",1))
+	.//S PhaLoc=$Get(%request.Data("PhaLoc",1))
+	.s ret=##class(web.DHCST.LocItmStk).ClrResQtyLocInci(Incil)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "SynInciLoc" d
+	.S PhaLoc=$Get(%request.Data("PhaLoc",1))
+	.//S Ingr=$Get(%request.Data("Ingr",1))
+	.s ret=##class(web.DHCST.LocItmStk).SynIncilLoc(PhaLoc)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "SynInciLocInci" d
+	.S Incil=$Get(%request.Data("Incil",1))
+	.//S PhaLoc=$Get(%request.Data("PhaLoc",1))
+	.s ret=##class(web.DHCST.LocItmStk).SynInciLocInci(Incil)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "GetParamProp" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.LocItmStk).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"
+	.		
+i Action = "LocItmDayTotalDetail" d
+	.S Incil=$Get(%request.Data("incil",1))
+	.S StartDate=$Get(%request.Data("startdate",1))
+	.S EndDate=$Get(%request.Data("enddate",1))
+	.w ##class(web.DHCST.LocItmTransMove).LocItmDayTotalDetail(Start,Limit,Incil)
+i Action = "ChangeBatchUseFlag" d
+	.S BatListDetail=$Get(%request.Data("BatListDetail",1))
+	.s ret=##class(web.DHCST.LocItmStk).ChangeBatchUseFlag(BatListDetail)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+i Action = "LocItmBatTransDetail" d
+	.S Inclb=$Get(%request.Data("inclb",1))
+	.S StartDate=$Get(%request.Data("startdate",1))
+	.S EndDate=$Get(%request.Data("enddate",1))
+	.S HospId=$Get(%request.Data("hospId",1))
+	.w ##class(web.DHCST.LocItmTransMove).BatTransDetail(Start,Limit,Sort,Dir,StartDate,EndDate,Inclb,HospId)
+i Action = "GetReserveQtyInfo" d
+	.S strParams=$Get(%request.Data("strParams",1))
+	.w ##class(web.DHCST.LocItmStk).GetReserveQtyInfo(strParams,Start,Limit)
+	.
+</SERVER>

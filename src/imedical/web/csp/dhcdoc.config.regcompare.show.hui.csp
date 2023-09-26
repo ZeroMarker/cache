@@ -1,0 +1,131 @@
+<div class="hisui-layout" data-options="fit:true,border:false" >
+	<div data-options="region:'north',headerCls:'panel-header-gray',collapsible:false,border:false" style="height:91px;overflow:hidden;border-bottom:1px dashed #ccc;">
+		<table class="search-table">
+		   <tr>
+				<td class="r-label">
+					<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+				</td>
+			
+				<td colspan="3">
+					<input id="_HospList" />
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label class='r-label'>科室</label>
+				</td>
+				<td>
+					<input class="textbox" id="i-loc" type="text">
+				</td>
+				
+				<td class="r-label">
+					<label  class='r-label'>医生</label>
+				</td>
+				<td>
+					<input class="textbox" id="i-doc" type="text">
+				</td>
+				
+				<td class="r-label">
+					<label  class='r-label'>号别</label>
+				</td>
+				<td>
+					<input class="textbox" id="i-reg" type="text">
+				</td>
+				
+				<td class="r-label">
+					<a id="i-find" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+				</td>
+				<td>
+					<a id="i-reset" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+		<div id="i-grid"></div>
+		<div id="i-dialog" class="c-dialog c-hidden">
+			<input id="dg-id" type="hidden"/>
+			<input id="dg-action" type="hidden" />
+			<div class="c-row">
+				<span class="c-span">科室</span><input id="dg-loc" class="textbox" type="text" />
+			</div>
+			<div class="c-row">
+				<span class="c-span">医生</span><input id="dg-doc" class="textbox" type="text" />
+			</div>
+			<div class="c-row">
+				<span class="c-span">号别</span><input id="dg-reg" class="textbox" type="text"/>
+			</div>
+			<div class="c-row">
+				<span class="c-check">默认</span><input id="dg-active" class="hisui-checkbox" type="checkbox"/>
+			</div>
+			<div class="c-row" style="text-align:center;">
+				<a href="#" onclick="saveCfg()" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>  
+			</div>
+		</div>
+	</div>
+</div>
+<div id="MulMarkDocWin" class="hisui-window" title="批量号别对照" style="padding:10px;width:920px;height:700px;"
+    data-options="iconCls:'icon-w-save',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
+	<div class="hisui-layout" data-options="fit:true,split:true">
+		 <div data-options="region:'west',split:true" style="width:300px;border-radius:4px;border:0;">
+		 	<div class="hisui-panel" data-options="fit:true,title:'科室列表'">
+			 	<div style="margin:10px;">
+			 		<input id="FindLoc" href="#" class="hisui-searchbox" data-options="searcher:FindLocChange,prompt:'请输入科室查询条件...'" style="width:278px;"/>
+				</div>
+				<div style="height:88%;border-top:1px solid #ccc;">
+					<table id="LocListTab"></table>
+				</div>
+			</div>
+		 </div>
+		 <div data-options="region:'center',split:true" style="border:1px solid #ccc;border-radius:4px;">
+		 	 <div id="tab" class="hisui-tabs" fit="true" style=""> 
+		 	 	<div title="医生对号别" style="padding:5px;">   
+			         <div class="hisui-layout" data-options="fit:true,split:true">
+			         	 <div data-options="region:'center',split:true" style="border:1px solid #ccc;border-radius:4px;">
+						 	<div style="margin:10px;">
+						 		<input id="FindDoc" href="#" class="hisui-searchbox" data-options="searcher:FindDocChange,prompt:'请输入医生查询条件...'" style="width:210px;"/>
+							</div>
+							<div style="height:88%;border-top:1px solid #ccc;">
+								<table id="DocListTab"></table>
+							</div>
+						 </div>
+						 <div data-options="region:'east',split:true" style="width:290px;border:1px solid #ccc;border-radius:4px;">
+						 	<div style="margin:10px;">
+						 		<input id="FindMark" href="#" class="hisui-searchbox" data-options="searcher:FindMarkChange,prompt:'请输入号别查询条件...'" style="width:150px;"/>
+						 		<a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+							</div>
+							<div style="height:88%;border-top:1px solid #ccc;">
+								<table id="MarkListTab"></table>
+							</div>
+						 </div>
+			         </div>
+			    </div>   
+			    <div title="号别对医生" style="overflow:auto;padding:5px;">   
+			          <div class="hisui-layout" data-options="fit:true,split:true">
+			         	 <div data-options="region:'center',split:true" style="border:1px solid #ccc;border-radius:4px;">
+						 	<div style="margin:10px;">
+						 		<input id="FindMark1" href="#" class="hisui-searchbox" data-options="searcher:FindMark1Change,prompt:'请输入号别查询条件...'" style="width:210px;"/>
+							</div>
+							<div style="height:88%;border-top:1px solid #ccc;">
+								<table id="MarkListTab1"></table>
+							</div>
+						 </div>
+						 <div data-options="region:'east',split:true" style="width:290px;border:1px solid #ccc;border-radius:4px;">
+							<div style="margin:10px;">
+						 		<input id="FindDoc1" href="#" class="hisui-searchbox" data-options="searcher:FindDoc1Change,prompt:'请输入医生查询条件...'" style="width:150px;"/>
+								<a href="#" id="BSave1" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+							</div>
+							<div style="height:88%;border-top:1px solid #ccc;">
+								<table id="DocListTab1"></table>
+							</div>
+						 </div>
+			         </div>
+			    </div> 
+		 	 </div>
+		 </div>
+		 
+		 
+		 
+	</div>
+</div>

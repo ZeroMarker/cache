@@ -1,0 +1,121 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ d ..General()
+ quit 1
+</csp:method>
+<csp:method name=General arguments="" returntype=%Boolean>
+ s statusmsg=""
+ i %request.Get("action")="BACKUP" d ..Backup(%request.Get("env"))
+ i %request.Get("action")="RESTORE" d ..Restore(%request.Get("env"),%request.Get("bck"))
+ i %request.Get("action")="DELETE" d ..Delete(%request.Get("env"),%request.Get("bck"))
+ q $$$OK
+</csp:method>
+<csp:method name=Backup arguments="env" returntype=%Boolean>
+	i env'="" {
+	    l +^%ZBACKUP:10 s dollart=$t
+	    if dollart {
+			j backup^%ZBACKUPQA(env):"%SYS"
+			l -^%ZBACKUP
+		} else {
+			s statusmsg="Unable to lock backup database. Possible cause is backup or restore currently in progress"
+		}
+		h 2
+	}
+ q $$$OK
+</csp:method>
+<csp:method name=Restore arguments="env,bck" returntype=%Boolean>
+	i env'="" {
+	    l +^%ZBACKUP:10 s dollart=$t
+	    if dollart {
+			j restore^%ZBACKUPQA(env,bck):"%SYS"
+			l -^%ZBACKUP
+		} else {
+			s statusmsg="Unable to lock backup database. Possible cause is backup or restore currently in progress"
+		}
+		h 2
+	}
+ q $$$OK
+</csp:method>
+<csp:method name=Delete arguments="env,bck" returntype=%Boolean>
+	    l +^%ZBACKUP:10 s dollart=$t
+	    if dollart {
+			d delete^%ZBACKUPQA(env,bck)
+			l -^%ZBACKUP
+		} else {
+			s statusmsg="Unable to lock backup database. Possible cause is backup or restore currently in progress"
+		}
+		h 2
+ q $$$OK
+</csp:method>
+<csp:method name=DisplayStatus arguments="st" returntype=%String>
+ q $case(st,"B0":"Backup Started","B1":"Backing up Cache","B2":"Backing up Web","B9":"Backup Complete","BE":"Backup Error","R0":"Restore Started","R1":"Restoring Cache","R2":"Restoring Web","R9":"Restore Complete","RE":"Restore Error",:"UNKNOWN")
+</csp:method>
+<csp:method name=DisplayTimeStamp arguments="h" returntype=%String>
+ i h="" q ""
+ q $zd(+h,4)_"&nbsp;"_$zt($p(h,",",2),2)
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>BACKUP UTILITY</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT language=javascript>
+function uConfirm(msg) {
+	var res;
+	res=confirm(msg);
+	if (res) {
+		return true;
+	} else {
+		return false;
+	}
+}
+</SCRIPT>
+</HEAD>
+<BODY>
+<H1>BACKUP & RESTORE UTILITIES</H1>
+<br>
+<A HREF="ybackup.csp"><IMG SRC="../images/websys/refresh.gif" border="0"></A>
+<br>
+<TABLE>
+<SCRIPT language=cache runat=server>
+	n env,bck,rec,status,started,finished
+
+	w "<THEAD><TH>Environment</TH><TH>Action</TH><TH>Backup</TH><TH>Status</TH><TH>Backup Started</TH><TH>Backup Complete</TH><TH>Restore Started</TH><TH>Restore Complete</TH><TH>Delete</TH></THEAD>",!
+	//for each environment
+	s env=""
+	f  {
+		s env=$o(^%ZBACKUP(env))
+		i env="" q
+		w "<TR><TD><H2>",env,"</H2></TD><TD colspan=5><A HREF=""ybackup.csp?action=BACKUP&env=",env,""" title=""Create new backup"" onclick=""return uConfirm('Start a background process to make a backup of ",env," environment');""><IMG SRC=""../images/websys/backup.gif"" BORDER=""0""></A></TD></TR>",!
+
+		//for each each backup, show status etc
+		s bck=""
+		f  {
+			s bck=$o(^%ZBACKUP(env,"BACKUP",bck),-1)
+			i bck="" q
+			
+			s rec=^%ZBACKUP(env,"BACKUP",bck)
+			w "<TR><TD>",!
+			w "<TD><A HREF=""ybackup.csp?action=RESTORE&env=",env,"&bck=",bck,""" title=""Restore from this backup"" onclick=""return uConfirm('Start a background process to restore this backup of ",env," environment');""><IMG SRC=""../images/websys/restore.gif"" BORDER=""0""></A></TD>",! // restore ?
+			w "<TD>",bck,"</TD>",! // id
+			w "<TD>",..DisplayStatus($p(rec,"^",1)),"</TD>",! // status
+			w "<TD>",..DisplayTimeStamp($p(rec,"^",2)),"</TD>",!
+			w "<TD>",..DisplayTimeStamp($p(rec,"^",3)),"</TD>",!
+			w "<TD>",..DisplayTimeStamp($p(rec,"^",4)),"</TD>",!
+			w "<TD>",..DisplayTimeStamp($p(rec,"^",5)),"</TD>",!
+			w "<TD><A HREF=""ybackup.csp?action=DELETE&env=",env,"&bck=",bck,""" title=""Delete this backup"" onclick=""return uConfirm('Delete this backup of ",env," environment');""><IMG SRC=""../images/websys/delete.gif"" BORDER=""0""></A></TD>",!
+			w "<TD>",$zcvt($p(rec,"^",6),"O","HTML"),"</TD>",! // error
+			w "</TR",!
+		}
+
+
+	}
+
+</SCRIPT>
+</TABLE>
+
+
+</BODY>
+
+</HTML>

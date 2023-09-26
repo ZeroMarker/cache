@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--dhcblacklist.type.hui.csp 黑名单类型维护-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding: 0 10px;
+}
+</style>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false,headerCls:'panel-header-gray',collapsible:false" style="height:150px;">
+		<table class="search-table">
+			<tr>
+				<td colspan="6"  class="r-label" style="text-align:left;">
+					管控执行代码示例:<span style="color:red;">##class(clsName).methodName($g(PatientID)),目前只支持入参PatientID</span>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="6"  class="r-label" style="text-align:left;">
+					可参考【显示信息配置】-【患者信息展示】-【执行代码】
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label id="_HospUserListLabel" style='color:red;' class='left_label'>医院</label>
+				</td>
+				<td colSpan='3'>
+					<input id="_HospUserList" style="width:250px;"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label class="left_label" for="BlacklistTypeCode">代码</label>
+				</td>
+				<td>
+					<input class="hisui-validatebox textbox" id="BlacklistTypeCode"/>
+				</td>
+				<td class="r-label">
+					<label class="left_label" for="BlacklistTypeName">类型</label>
+				</td>
+				<td>
+					<input class="hisui-validatebox textbox" id="BlacklistTypeName"/>
+				</td>
+				<td class="r-label">
+					<label class="left_label" for="BlacklistTypeExecuteCode">管控执行代码</label>
+				</td>
+				<td>
+					<input class="textbox" id="BlacklistTypeExecuteCode"/>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="BlacklistTypeTab"></table>
+	</div>
+	<SCRIPT language = 'javascript' >
+		$(function(){
+		var hospComp = GenUserHospComp();
+		hospComp.jdata.options.onSelect = function(e,t){
+			$("#BlacklistTypeTab").datagrid('reload');
+		}
+		hospComp.jdata.options.onLoadSuccess= function(data){
+			$("#BlacklistTypeTab").datagrid('reload');
+		}
+		var AppinfoColumns=[[ 
+			{field:'RowId',hidden:true,title:''},
+			{field:'Code',title:'代码',width:100},
+			{field:'Desc',title:'类型',width:150},
+			{field:'ExecuteCode',title:'管控执行代码',width:300},		
+	    ]]
+	    var toobar=[{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() { AddBlackTypeClickHandle();}
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() { DelectBlackTypeClickHandle();}
+	    },{
+	        text: '更新',
+	        iconCls: 'icon-write-order',
+	        handler: function() { UpdateBlackTypeClickHandle();}
+	    },{
+	        text: '授权医院',
+	        iconCls: 'icon-house',
+	        handler: function() {
+		        var row=$("#BlacklistTypeTab").datagrid('getSelected');
+				if (!row){
+					$.messager.alert("提示","请选择一行！")
+					return false
+				}
+				GenHospWin("DHC_BlackListType",row.RowId);
+		    }
+	    }];
+		$("#BlacklistTypeTab").datagrid({
+			fit : true,
+			border : true,
+			striped : true,
+			singleSelect : true,
+			fitColumns : true,
+			autoRowHeight : false,
+			rownumbers:true,
+			pagination : false,  
+			rownumbers : true,  
+			idField:'RowId',
+			toolbar:toobar,
+			columns :AppinfoColumns,
+			url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Grid',
+			onSelect:function(index,row){
+				$("#BlacklistTypeCode").val(row["Code"]);
+				$("#BlacklistTypeName").val(row["Desc"]);
+				$("#BlacklistTypeExecuteCode").val(row["ExecuteCode"]);
+			},
+			onBeforeLoad:function(param){
+				param.ClassName="web.InExportApp";
+			    param.QueryName="FindBlackListType";
+			    param.HospID=$HUI.combogrid('#_HospUserList').getValue();
+			}
+		});
+		function AddBlackTypeClickHandle(){
+			var BlacklistTypeCode=$("#BlacklistTypeCode").val();
+			var BlacklistTypeName=$("#BlacklistTypeName").val();
+			var BlacklistTypeExecuteCode=$("#BlacklistTypeExecuteCode").val();
+			if (BlacklistTypeCode==""){
+				$.messager.alert("提示","代码不能为空","error");
+				return false
+			}
+			if (BlacklistTypeName==""){
+				$.messager.alert("提示","描述不能为空","error");
+				return false
+			}
+			$.cm({
+				ClassName:"web.InExportApp",
+				MethodName:"InsertBlackType",
+				ID:"",
+				Code:BlacklistTypeCode,
+				Desc:BlacklistTypeName,
+				ExecuteCode:BlacklistTypeExecuteCode,
+				HospID:$HUI.combogrid('#_HospUserList').getValue(),
+				dataType:"text"		
+			},function(ret){
+				if(ret==0) {
+					$.messager.popover({msg: '新增成功!',type:'success'});
+			 		$("#BlacklistTypeCode,#BlacklistTypeName,#BlacklistTypeExecuteCode").val("");
+			 		$("#BlacklistTypeTab").datagrid('reload');
+		 		}else{
+			   		$.messager.alert("提示","修改失败,错误信息:"+ret,"error");
+			   		return false;
+		   		}
+			})
+		}
+		function UpdateBlackTypeClickHandle(){
+			var rows=$("#BlacklistTypeTab").datagrid("getSelected");
+			if (!rows) {
+				$.messager.alert("提示","请选择行","error");
+				return false;
+			}
+			var PatListTypeCode=$("#BlacklistTypeCode").val();
+			var PatListTypeName=$("#BlacklistTypeName").val();
+			var PatListTypeExecuteCode=$("#BlacklistTypeExecuteCode").val();
+			if (PatListTypeCode==""){
+				$.messager.alert("提示","代码不能为空","error");
+				return false;
+			}
+			if (PatListTypeName==""){
+				$.messager.alert("提示","描述不能为空","error");
+				return false;
+			}
+			$.cm({
+				ClassName:"web.InExportApp",
+				MethodName:"InsertBlackType",
+				ID:rows["RowId"],
+				Code:PatListTypeCode,
+				Desc:PatListTypeName,
+				ExecuteCode:PatListTypeExecuteCode,
+				dataType:"text"		
+			},function(ret){
+				if(ret==0) {
+					$.messager.popover({msg: '更新成功!',type:'success'});
+			 		$("#BlacklistTypeCode,#BlacklistTypeName,#BlacklistTypeExecuteCode").val("");
+			 		$("#BlacklistTypeTab").datagrid('reload');
+		 		}else{
+			   		$.messager.alert("提示","修改失败,错误信息:"+ret);
+			   		return false;
+		   		}
+			})
+		}
+		function DelectBlackTypeClickHandle(){
+			var selrow = $("#BlacklistTypeTab").datagrid('getSelected');
+			var rows = $("#BlacklistTypeTab").datagrid('getData')
+			if (selrow==null){
+				$.messager.alert("提示","请选择一行","error");
+			   	return false;
+			}
+			var ID=selrow.RowId
+			$.cm({
+				ClassName:"web.InExportApp",
+				MethodName:"DelectBlackType",
+				ID:ID,
+				dataType:"text"		
+			},function(ret){
+				if(ret==0) {
+					$.messager.popover({msg: '删除成功!',type:'success'});
+					$("#BlacklistTypeCode,#BlacklistTypeName,#BlacklistTypeExecuteCode").val("");
+			 		$("#BlacklistTypeTab").datagrid('reload');
+		 		}
+		   		else{
+			   		$.messager.alert("提示","删除失败,错误信息:"+ret,"error");
+			   		return false;
+		   		}
+			})
+		}
+	});
+	</SCRIPT>
+</body>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+</html>

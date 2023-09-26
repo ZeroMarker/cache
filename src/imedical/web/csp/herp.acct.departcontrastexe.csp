@@ -1,0 +1,64 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir = $Get(%request.Data("sortDir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s userid =%session.Data("LOGON.USERID")
+	s rowid=$Get(%request.Data("AcctBusiDeptMapID",1))
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))
+	s BookName=$Get(%request.Data("AcctBookName",1))
+	s BookID = $Get(%request.Data("BookName",1))
+	s AcctDeptCode = $Get(%request.Data("AcctDeptCode",1))
+	s DeptCode = $Get(%request.Data("AcctDeptName",1))
+	s BusiDeptCode= $Get(%request.Data("BusiDeptCode",1))
+	s SysBusinessID= $Get(%request.Data("SystemName",1))
+	s DeptType= $Get(%request.Data("DeptType",1))
+	s BusiDeptName= $Get(%request.Data("BusiDeptName",1))
+	s str= $Get(%request.Data("query",1))
+	k ^strtmp
+	s ^strtmp=AcctBookID_"^"_BookID_"^"_BookName_"^"_AcctDeptCode_"^"_DeptCode_"^"_BusiDeptCode_"^"_SysBusinessID
+	i action = "AcctBook"  d
+	.w ##class(herp.acct.udata.uAcctDepartContrast).GetAcctBook(start,limit,str)	
+
+	i action = "GetDepart"  d
+	.w ##class(herp.acct.udata.uAcctDepartContrast).GetAcctDepart(start,limit,AcctBookID,BookName,str)	
+
+	i action = "GetBusiSys"  d
+	.w ##class(herp.acct.udata.uAcctDepartContrast).GetBusiSys(start,limit,str)	
+
+	i action = "list"  d
+	.w ##class(herp.acct.udata.uAcctDepartContrast).ListData(start, limit, AcctBookID,AcctDeptCode,BusiDeptCode,SysBusinessID)
+	
+	i action = "add" d
+	.s result= ##Class(herp.acct.udata.uAcctDepartContrast).AddData(BookID, SysBusinessID, DeptCode, DeptType, BusiDeptCode, BusiDeptName)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result= ##Class(herp.acct.udata.uAcctDepartContrast).DelData(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result= ##Class(herp.acct.udata.uAcctDepartContrast).EditData(rowid,BookID, SysBusinessID, DeptCode, DeptType, BusiDeptCode, BusiDeptName)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

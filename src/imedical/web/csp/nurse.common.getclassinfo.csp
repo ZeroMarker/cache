@@ -1,0 +1,120 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<style>
+</style>
+</HEAD>
+<BODY>
+     <div class="hisui-layout" data-options="fit:true" border="false" id="layout" >
+     <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;" title="" border="false">
+	    	 <table style="padding-top:10px;padding-bottom:10px" >
+			    <tr>
+			    	<td class="tdlabel">常用包名</td>
+		    		<td>
+		    			<select id="dfCB" style="width: 200px; display: none;" class="combobox-f combo-f"></select>
+		    		</td>
+		    		<td class="tdlabel">自定义包名</td>
+		    		<td><input id="freeText" type="text" class="hisui-validatebox"  style="width:200px" placeholder="多个包名以逗号,分割"></td>
+		    		<td class="tdlabel-b">
+						<a href="#" id="btnSearch" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" class="hisui-linkbutton">查询</a>
+					</td>
+				</tr> 
+			 </table >
+		 </div>      
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+			<table data-options="fit:true" id="mygrid" border="false" toolbar="#allbar"></table>
+		</div>      
+ 	</div> 
+ 	
+ 	<script>
+ 	    $(function(){
+	 	    var cbox = $HUI.combobox("#dfCB",{
+				valueField:'id',
+				textField:'text',
+				multiple:true,
+				rowStyle:'checkbox', //显示成勾选行形式
+				selectOnNavigation:false,
+				panelHeight:"auto",
+				editable:false,
+				data:[
+				    {id:'CT.NUR.NIS',text:'CT.NUR.NIS'},
+				    {id:'CF.NUR.NIS',text:'CF.NUR.NIS'},
+					{id:'CF.NUR.SHIFT',text:'CF.NUR.SHIFT'},
+					{id:'Nur.NIS',text:'Nur.NIS'},
+					{id:'Nur.SHIFT',text:'Nur.SHIFT'},
+					{id:'Nur.Common',text:'Nur.Common'}
+					
+				]
+			});
+			//设置默认值
+			cbox.setValues(["Nur.NIS"]);
+			var type = cbox.getValues()+""
+	 	    
+	 	    var columns =[[
+		        {field:'ClassName',title:'类名',sortable:true,width:100},
+		        {field:'UpdatedDateTime',title:'修改时间',sortable:true,width:100},
+		        {field:'CompiledDateTime',title:'编译时间',sortable:true,width:100},
+		        {field:'CreatedDateTime',title:'创建时间',sortable:true,width:100},
+	    	]];
+
+	    	var mygrid = $HUI.datagrid("#mygrid",{
+				url:$URL,
+				queryParams:{
+					ClassName:"Nur.NIS.Common.Utils",
+					QueryName:"GetClassInfoList",
+					packageName:type
+				},
+				columns: columns,  //列信息
+				pagination: true,   //pagination	boolean	设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+				pageSize:20,
+				pageList:[5,10,15,20,25,30,50,75,100,200,300,500,1000],
+				singleSelect:true,
+				remoteSort:false,
+				idField:'ClassName',
+				rownumbers:true,    //设置为 true，则显示带有行号的列。
+				fixRowNumber:true,
+				fitColumns:true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+				sortName:'UpdatedDateTime',
+				sortOrder:'desc',
+				onDblClickRow:function(index,row)
+				{
+					//updateData();
+				},
+				onLoadSuccess:function(data){
+					$(this).prev().find('div.datagrid-body').prop('scrollTop',0);
+				}	 	
+			});
+			
+			//点击查询按钮
+			$('#btnSearch').click(function(e){
+				var type = cbox.getValues()+""
+				var freeText = $("#freeText").val()
+				
+				if (type==""&&freeText==""){
+					$.messager.popover({msg:"不可同时为空！",type:'error'});
+					return
+				}
+				
+				if (freeText !=""){ //自定义优先查询
+					var type = freeText
+				}
+				
+				$('#mygrid').datagrid('load',  { 
+					ClassName:"Nur.NIS.Common.Utils",
+					QueryName:"GetClassInfoList",
+					packageName:type
+				});
+				$('#mygrid').datagrid('unselectAll');	
+			});
+	 	});
+   </script>
+</BODY>
+</HTML>

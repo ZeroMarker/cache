@@ -1,0 +1,143 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<html>
+    <head>
+        <title> 办公室浏览 </title>
+
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.gh-buttons.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.main.css"/>
+    
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.combobox.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        
+        <!-- 读卡 -->
+      <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+      <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+      <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+        
+        <style type="text/css">
+        * 
+        .datagrid-cell{
+        font-size:16px;
+        line-height:35px;
+        height:30px;
+        font-weight:500;
+            }
+        .searchbox .searchbox-text{
+        font-size:16px;
+        height: 16px;
+            }
+        </style>
+
+    </head>
+
+    <body class="easyui-layout">
+
+        <div id="patLst" class="easyui-panel" data-options="region:'west',border:false,noheader:true,split:true" style="width:300px;">
+            <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+            <div id="seekform" data-options="region:'north',border:false" style="padding:3px;height:180px;">
+                <table id="qryTable" style="width:100%;table-layout:fixed;border:0;cellspacing:1;cellpadding:0">
+                    <tr><td>
+                        <label style="font-weight:bold;">患者信息:</label>
+                        <div style="padding-top:3px;"><span>患&nbsp&nbsp者&nbsp&nbspID：</span>
+                            <input id="regNoSearch" class="easyui-searchbox" data-options="fit:true,border:false" style=""></input>
+                        </div>
+                        <div style="padding-top:3px;"><span>病&nbsp&nbsp案&nbsp&nbsp号：</span>
+                            <input id="medNoSearch" class="easyui-searchbox" data-options="fit:true,border:false"></input>
+                        </div>
+                        <div style="padding-top:3px;"><span>患者姓名：</span>
+                            <input id="nameSearch" class="easyui-searchbox" data-options="fit:true,border:false" style=";"></input>
+                        </div>
+                        <div style="padding-top:3px;"><span>卡&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp号：</span>
+                            <input id="cardNoSearch" class="easyui-searchbox" data-options="fit:true,border:false" style=""></input>
+                        </div>
+                        <div style="padding-top:10px;">
+                            <a id="readCard" href="#" class="easyui-linkbutton" style="padding-left:5px;">读卡</a>
+                            <a id="btnScan" href="#" class="easyui-linkbutton" style="padding-left:5px;">扫码</a>
+                            <a id="printListSeek" href="#" class="easyui-linkbutton" style="padding-left:5px;">查询</a>
+                            <a id="reset" href="#" class="easyui-linkbutton" style="padding-left:5px;">清空</a>
+                        </div>
+                    </td></tr>
+                </table>
+            </div>	
+                <div class="easyui-panel" data-options="region:'center',border:false" style="color:red">
+                    <table id="patientListData" style="width:100%;"></table>	
+                </div>	
+            </div>		
+        </div>
+        
+        <div id="emrEditor" class="easyui-panel" data-options="region:'center',border:false,noheader:true" style="overflow:hidden;">
+            <!--编辑器-->
+            <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
+        </div>
+        
+    <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+    <script language="cache" runat="server">
+      s myCode($i(myCode))="<script type='text/javascript'>"
+      s event=##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
+      s myCode($i(myCode))="function tkMakeServerCall(tkclass,tkmethod) {"
+        s myCode($i(myCode))="	if ((tkclass=='')||(tkmethod=='')) return '';"
+        s myCode($i(myCode))="	var args=new Array('"_event_"',tkclass,tkmethod);"
+        s myCode($i(myCode))="	for (var i=2; i<tkMakeServerCall.arguments.length; i++) {"
+        s myCode($i(myCode))="	args[i+1]=tkMakeServerCall.arguments[i];"
+        s myCode($i(myCode))="	}"
+        s myCode($i(myCode))="	var retval=cspHttpServerMethod.apply(this,args);"
+        s myCode($i(myCode))="	return retval;"
+        s myCode($i(myCode))="}"
+        s myCode($i(myCode))="<"_"/script>"
+        f myIdx=1:1:myCode {
+            w myCode(myIdx),!
+        }
+      s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+      w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_ReadCardTypeEncrypt_"'>",$C(13,10)
+      d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+      d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+            
+        s patientID = $Get(%request.Data("PatientID",1),"")
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s mradm = ""
+        s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+        
+        s sessionID = %session.SessionId
+        s userCode = %session.Get("LOGON.USERCODE")
+        s userName = %session.Get("LOGON.USERNAME")
+        s userID = %session.Get("LOGON.USERID")
+        s ssgroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+        s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+        
+    </script>
+    <script language="javascript">
+        var patInfo = {
+            SessionID: "#(sessionID)#",
+            PatientID: "#(patientID)#",
+            EpisodeID: "#(episodeID)#",
+            MRadm: "#(mradm)#",
+            UserID: "#(userID)#",
+            UserCode: "#(userCode)#",
+            UserName: "#(userName)#",
+            SsgroupID: "#(ssgroupID)#",
+            UserLocID: "#(userLocID)#",
+            UserLocCode: "#(userLocCode)#",
+            UserLocName: "#(userLocName)#"
+        };
+    </script>
+        
+    <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.office.browse.js"></script>
+    
+    </body>
+</html>

@@ -1,0 +1,60 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str= $Get(%request.Data("query",1))
+	
+	s rowid        = $Get(%request.Data("rowid",1))
+	s CheckTypeCode= $Get(%request.Data("CheckTypeCode",1))
+	s CheckTypeName= $Get(%request.Data("CheckTypeName",1))
+        s AcctSubjID   = $Get(%request.Data("AcctSubjID",1))
+	s code         = $Get(%request.Data("code",1))
+	s name         = $Get(%request.Data("name",1))
+        s userid       = $Get(%request.Data("userid",1))
+        s IsValid      = $Get(%request.Data("IsValid",1))
+        s detailrowid  = $Get(%request.Data("detailrowid",1))
+
+	i action="list" d
+	.w ##class(herp.acct.udata.AcctSubjVindic).ListdetailRec(AcctSubjID,sortField,sortDir,start,limit)
+	
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.AcctSubjVindic).InsertCheckRec(rowid,userid,code,name,IsValid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.AcctSubjVindic).UpdateCheckRec(rowid,userid,code,name,IsValid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.AcctSubjVindic).CheckDelete(rowid,detailrowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	i action = "caldept" d
+	.s ^hss=usernameDr_"^"_start
+	.w ##class(herp.budg.udata.uBudgCheckFlowDetail).CalDeptname(usernameDr,start,limit,str)
+		
+		
+	i action = "caluser" d
+	.w ##class(herp.budg.udata.uBudgCheckFlowDetail).CalUser(start,limit,str)
+</script>

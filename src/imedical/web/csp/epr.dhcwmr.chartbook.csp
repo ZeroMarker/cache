@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n PatientID,EpisodeID,mradm,ChartBookID,PAAdmCodingID,GroupID
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s mradm=%request.Get("mradm")
+ s ChartBookID=%request.Get("ChartBookID")
+ n count,obj,leftlnk,mainlnk
+ i ChartBookID="" d
+ . s GroupID=$g(%session.Data("LOGON.GROUPID"))
+ . &SQL(SELECT MainChartBookDR INTO :ChartBookID FROM epr.GroupSettings WHERE GroupDR = :GroupID)
+ . i SQLCODE s ChartBookID=""
+ s mainlnk="epr.dhcwmr.chartbook.show.csp?ChartBookID="_ChartBookID_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm
+ s leftlnk=""
+ s obj=##Class(epr.ChartBook).%OpenId(ChartBookID)
+ i obj {
+ 	s count=obj.ChartList.Count()
+ 	if count=1,obj.ChartList.GetAt(1) s mainlnk="epr.dhcwmr.chart.csp?ChartID="_obj.ChartList.GetAt(1).%Id()_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm 
+ 	s count=obj.LeftChartList.Count()
+ 	if count=1,obj.LeftChartList.GetAt(1) s leftlnk="epr.dhcwmr.chart.csp?ChartID="_obj.LeftChartList.GetAt(1).%Id()_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm
+ 	if count>1 s leftlnk="epr.dhcwmr.chartbook.show.csp?ChartBookID="_ChartBookID_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm
+ 	d obj.%Close()
+ }
+</SERVER>
+<FRAMESET rows="*" name="bookframeset" id="bookframeset" onload="" >
+<CSP:IF condition=(leftlnk'="")>
+	<FRAMESET cols="300,*" scrolling="auto" name="dataframeset" id="dataframeset">
+		<FRAME name="leftdata" id="leftdata" src="#(leftlnk)#" framespacing="0"></FRAME>
+</CSP:IF>
+		<FRAME name="maindata" id="maindata" src="#(mainlnk)#" framespacing="0"></FRAME>
+<CSP:IF condition=(leftlnk'="")>
+	</FRAMESET>
+</CSP:IF>
+</FRAMESET>
+</html>

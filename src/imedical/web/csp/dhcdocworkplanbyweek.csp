@@ -1,0 +1,415 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- 东华医疗事业部 dhcdocworkplanbyweek.csp 排班-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+
+<Server>
+;s DHTMXPath="../scripts_lib/dhtmx/"
+s DHTMXPath=##class(ext.websys.DHTMLXLib).BasePath()
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxCalendar/codebase/dhtmlxcalendar.css"">",!
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxGrid/codebase/dhtmlxgrid.css"">",!
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxGrid/codebase/style.css"">",!
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"css.css"">",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxTabbar/codebase/dhtmlxcommon.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxCalendar/codebase/dhtmlxcalendar.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxGrid/codebase/dhtmlxgrid.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxGrid/codebase/dhtmlxgridcell.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxGrid/codebase/excells/dhtmlxgrid_excell_clist.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"ShowRightMenu.js'></SCRIPT>",!
+</Server>
+<SCRIPT SRC='../scripts/dhtmlxcombo.js'></SCRIPT>
+<!--
+<LINK REL="stylesheet" type="text/css" href="../dhtmx/dhtmlxCalendar/codebase/dhtmlxcalendar.css"> 
+<LINK REL="STYLESHEET" type="text/css" href="../dhtmx/dhtmlxGrid/codebase/dhtmlxgrid.css">
+<LINK REL="STYLESHEET" type="text/css" href="../dhtmx/dhtmlxGrid/codebase/style.css">
+<LINK REL="STYLESHEET" type="text/css" href="../dhtmx/css.css">
+<SCRIPT SRC='../dhtmx/dhtmlxTabbar/codebase/dhtmlxcommon.js'></SCRIPT>
+<SCRIPT SRC='../dhtmx//dhtmlxCalendar/codebase/dhtmlxcalendar.js'></SCRIPT>
+<SCRIPT SRC="../dhtmx/dhtmlxGrid/codebase/dhtmlxgrid.js"></SCRIPT>	
+<SCRIPT SRC="../dhtmx/dhtmlxGrid/codebase/dhtmlxgridcell.js"></SCRIPT>	
+<SCRIPT SRC="../dhtmx/dhtmlxGrid/codebase/excells/dhtmlxgrid_excell_clist.js"></SCRIPT>
+<SCRIPT SRC="../dhtmx/ShowRightMenu.js" charset="gb2312"></SCRIPT>		
+<SCRIPT SRC='../scripts/dhtmlxcombo.js'></SCRIPT>
+-->
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<Server>
+  //Set DepStr=##class(web.DHCRBResSession).GetOPDeptStr()
+  Set DepStr=##Class(%CSP.Page).Encrypt($lb("web.DHCDOCSetup.GetUserLOC"))
+  Set GetResDocMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.ResDocListBroker"))
+  Set GetResDocDetailMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.GetResDetail"))
+  Set GetDocInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.GetDocInfo"))
+  Set GetTimeRang=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.GetTimeRang"))
+  Set RoomStr=##class(web.DHCRbResByMonth).GetRoomStr()
+  set SessionTypeStr=##Class(web.DHCRbResByMonth).GetSessionTypeStr()
+  Set ClinicGroupStr=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.GetClinicGroupStr"))
+  Set ChackRBRESMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.GetAvailRA"))
+  Set GetResEffectDateMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.FindResEffectDate"))
+  Set GetResSessionMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.ResSessionListBroker"))
+  Set CheckResMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.CheckRes"))
+  Set InsertMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRBResSession.Insert"))
+  Set InsertEffDateMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.InsertEffDate"))
+  Set GetClinicGroupRowid=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.GetClinicGroup"))
+  Set DeleteMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRBResSession.Delete"))
+  Set UpdateMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCRBResSession.Update"))
+  Set GetResourcMeth=##Class(%CSP.Page).Encrypt($lb("web.DHCRbResByMonth.GetResourceById"))
+  Write "<input id='MonthRowid' name='MonthRowid' type='hidden' value='"_%request.Get("MonthRowid")_"'>",$C(13,10)
+  Write "<input id='GetDocInfo' name='GetDocInfo' type='hidden' value='"_GetDocInfo_"'>",$C(13,10)
+  Write "<input id='GetTimeRang' name='GetTimeRang' type='hidden' value='"_GetTimeRang_"'>",$C(13,10)
+  Write "<input id='RoomStr' name='RoomStr' type='hidden' value='"_RoomStr_"'>",$C(13,10)
+  Write "<input id='SessionTypeStr' name='SessionTypeStr' type='hidden' value='"_SessionTypeStr_"'>",$C(13,10)
+  Write "<input id='ClinicGroupStr' name='ClinicGroupStr' type='hidden' value='"_ClinicGroupStr_"'>",$C(13,10)
+  Write "<input id='ChackRBRESMethod' name='ChackRBRESMethod' type='hidden' value='"_ChackRBRESMethod_"'>",$C(13,10)
+  Write "<input id='DepStr' name='DepStr' type='hidden' value='"_DepStr_"'>",$C(13,10)
+  Write "<input id='GetResDocMethod' name='GetResDocMethod' type='hidden' value='"_GetResDocMethod_"'>",$C(13,10)
+  Write "<input id='GetResDocDetailMethod' name='GetResDocDetailMethod' type='hidden' value='"_GetResDocDetailMethod_"'>",$C(13,10)
+  Write "<input id='GetResEffectDateMethod' name='GetResEffectDateMethod' type='hidden' value='"_GetResEffectDateMethod_"'>",$C(13,10)
+  Write "<input id='GetResSessionMethod' name='GetResSessionMethod' type='hidden' value='"_GetResSessionMethod_"'>",$C(13,10)
+  Write "<input id='CheckResMethod' name='CheckResMethod' type='hidden' value='"_CheckResMethod_"'>",$C(13,10)
+  Write "<input id='InsertEffDateMethod' name='InsertEffDateMethod' type='hidden' value='"_InsertEffDateMethod_"'>",$C(13,10)
+  Write "<input id='GetClinicGroupRowid' name='GetClinicGroupRowid' type='hidden' value='"_GetClinicGroupRowid_"'>",$C(13,10)
+  Write "<input id='DeleteMethod' name='DeleteMethod' type='hidden' value='"_DeleteMethod_"'>",$C(13,10)
+  Write "<input id='UpdateMethod' name='UpdateMethod' type='hidden' value='"_UpdateMethod_"'>",$C(13,10)
+  Write "<input id='InsertMethod' name='InsertMethod' type='hidden' value='"_InsertMethod_"'>",$C(13,10)
+  Write "<input id='GetResourcMeth' name='GetResourcMeth' type='hidden' value='"_GetResourcMeth_"'>",$C(13,10)
+</Server>
+<STYLE>
+.btn {
+ BORDER-RIGHT: #002D96 1px solid; PADDING-RIGHT: 2px; BORDER-TOP: #002D96 1px solid; PADDING-LEFT: 2px; FONT-SIZE: 12px; FILTER: progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#FFFFFF, EndColorStr=#9DBCEA); BORDER-LEFT: #002D96 1px solid; CURSOR: hand; COLOR: black; PADDING-TOP: 2px;BORDER-BOTTOM: #002D96 1px solid
+}
+</STYLE>
+</HEAD>
+<BODY onload="BodyLoadHandler();">
+<SCRIPT language = 'javascript' >
+var QueryData = new Array();
+for (i = 1; i < 8; i++) {
+  QueryData[i] = new Array();
+}
+function BodyLoadHandler() {
+  var combo_DocList;
+  var TestCount = 0;
+  var TimeRangStrArray;
+  var DepStrMethod = document.getElementById("DepStr").value;
+      userid=session['LOGON.USERID'];
+      UserDepStr = cspRunServerMethod(DepStrMethod,userid);
+      combo_DepList = new dhtmlXCombo("DepList", "alfa", 200);
+
+ var Arr = DHCC_StrToArray(UserDepStr);
+  combo_DepList.addOption(Arr);
+  combo_DepList.enableFilteringMode(true);
+  combo_DepList.selectHandle = comboDepListselectHandle; //function(){setTimeout("comboDepListselectHandle()",100); }
+
+  calStart = new dhtmlxCalendarObject('StartDate');
+  calStart.setSkin("dhx_blue");
+  dateFrom = new Date(GetToday());
+  dateto = new Date();
+  calEnd = new dhtmlxCalendarObject('EndDate');
+  calEnd.setSkin("dhx_blue");
+
+  document.getElementById("StartDate").value = GetToday();
+  document.getElementById("EndDate").value = GetToday();
+  
+  CreateMenu();
+  ShowRightMenu();
+  
+ var obj=document.getElementById("Save");
+ if (obj) obj.onclick=evtMenu4;
+
+}
+
+function DHCC_StrToArray(str) {
+  var x = new Array();
+  var Arr = str.split('^');
+  for (var i = 0; i < Arr.length; i++) {
+    var Arr1 = Arr[i].split(String.fromCharCode(1));
+    var label = Arr1[1];
+    var val = Arr1[0];
+    if ((typeof(val) == "undefined") || (val === null)) val = label;
+    x[i] = [val, label];
+  }
+  return x;
+}
+
+function comboDepListselectHandle() {
+  try {
+    var LocID = combo_DepList.getSelectedValue();
+    if (LocID == '') {
+      return
+    };
+    var MuSelectStr = "";
+    for (i = 1; i < 8; i++) {
+      QueryData[i].length = 0;
+    }
+    mygrid = new dhtmlXGridObject('gridbox');
+    var ImagePath="#(DHTMXPath)#"+"dhtmlxGrid/codebase/imgs/";
+  	mygrid.imgURL=ImagePath;
+    //mygrid.imgURL = "../dhtmx/dhtmlxGrid/codebase/img/";
+    mygrid.setHeader("星期,出诊时段,号别,挂号职称,亚专业,开始时间,截止时间,正号限额,预约限额,预约起始号,加号限额,DayOfWeek,SessRowid");
+    mygrid.setInitWidths("65,80,120,120,250,100,100,80,80,80,80,0,0")
+    mygrid.setColAlign("left,left,left,left,left,left,left,left,left,left,left,left,left,left")
+    mygrid.setColTypes("coro,coro,coro,coro,clist,ro,ro,ed,ed,ed,ed,ro,ro");
+    mygrid.setSkin("clear");
+    mygrid.getCombo(0).put("1", "星期一");
+    mygrid.getCombo(0).put("2", "星期二");
+    mygrid.getCombo(0).put("3", "星期三");
+    mygrid.getCombo(0).put("4", "星期四");
+    mygrid.getCombo(0).put("5", "星期五");
+    mygrid.getCombo(0).put("6", "星期六");
+    mygrid.getCombo(0).put("7", "星期日");
+    //mygrid.setColumnColor("#AEC2F2,white,white,white,white,white,white,white,white,white,white,white,while");
+    var GetTimeRang = document.getElementById('GetTimeRang').value;
+        TimeRangStr = cspRunServerMethod(GetTimeRang);
+    if (TimeRangStr != '') {
+      TimeRangStrArray = TimeRangStr.split(String.fromCharCode(1));
+      for (i = 0; i < TimeRangStrArray.length; i++) {
+        var ComValue = TimeRangStrArray[i];
+        var ComText = TimeRangStrArray[i].split('^')[0];
+        mygrid.getCombo(1).put(ComValue, ComText);
+      }
+    }
+
+    var GetResDocMethod = document.getElementById('GetResDocMethod').value;
+        DocRet = cspRunServerMethod(GetResDocMethod, LocID);
+    if (DocRet != '') {
+      DocStrArray = DocRet.split('^');
+      for (i = 0; i < DocStrArray.length; i++) {
+        var ComValue = DocStrArray[i].split(String.fromCharCode(1))[0];
+        var ComText = DocStrArray[i].split(String.fromCharCode(1))[1];
+        mygrid.getCombo(2).put(ComValue, ComText)
+      }
+    }
+
+    if (SessionTypeStr.value != '') {
+            SessionTypeArray = SessionTypeStr.value.split('^');
+        for (i = 0; i < SessionTypeArray.length; i++) {
+        var ComValue = SessionTypeArray[i].split(String.fromCharCode(1))[0];
+        var ComText = SessionTypeArray[i].split(String.fromCharCode(1))[1];
+            mygrid.getCombo(3).put(ComValue, ComText)
+      }
+    }
+    var ClinicGroupStr = document.getElementById('ClinicGroupStr').value;
+        GroupStr = cspRunServerMethod(ClinicGroupStr, LocID);
+    if (GroupStr != '') {
+      var MuSelectStr = ""
+          GroupStrArray = GroupStr.split('^');
+      for (i = 0; i < GroupStrArray.length; i++) {
+        var ComValue = GroupStrArray[i].split(String.fromCharCode(1))[0];
+        var ComText = GroupStrArray[i].split(String.fromCharCode(1))[1];
+        if (MuSelectStr == '') {
+          MuSelectStr = ComText
+        } else {
+          MuSelectStr = MuSelectStr + ',' + ComText
+        }
+      }
+    }
+    if (MuSelectStr != '') {
+      mygrid.registerCList(4, MuSelectStr)
+    } else {
+      mygrid.registerCList(4, '&nbsp')
+    }
+    mygrid.enableMultiselect(true);
+
+    mygrid.init();
+    mygrid.attachEvent("onRowSelect", doOnRowSelected);
+    mygrid.attachEvent("onEditCell", doOnCellEdit);
+
+    if (DocRet != '') {
+      DocStrArray = DocRet.split('^');
+      TestCount = 0;
+      for (k = 0; k < DocStrArray.length; k++) {
+        var ComValue = DocStrArray[k].split(String.fromCharCode(1))[0];
+        var ComText = DocStrArray[k].split(String.fromCharCode(1))[1];
+        if (ComValue != '') {
+          var ResEffectDate = "";
+          var GetResEffectDateMethod = document.getElementById('GetResEffectDateMethod').value;
+          ResEffectDate = cspRunServerMethod(GetResEffectDateMethod, ComValue);
+          if (ResEffectDate != '') {
+            SetSessionTable(ResEffectDate)
+          }
+        }
+      }
+    }
+
+    for (i = 1; i < 8; i++) {
+      for (k = 0; k < QueryData[i].length; k++) {
+        val = QueryData[i][k];
+        SetRBValue(val, k, i)
+      }
+    }
+  } catch(e) {
+    alert(e.message);
+  }
+}
+
+function doOnRowSelected(id) {
+
+}
+
+function SetSessionTable(ResDateRowid) {
+  var obj = document.getElementById('GetResSessionMethod');
+  if (obj) {
+    var encmeth = obj.value;
+    if (encmeth != '') {
+      var retDetail = cspRunServerMethod(encmeth, "AddToResSessionTable", ResDateRowid);
+      if (retDetail == 1) return true;
+    }
+  }
+}
+
+function SetRBValue(val, k) {
+  var Split_Value = val.split('^');
+  var StartTime = val.split('^')[2];
+  var DocTimeRang = Split_Value[14];
+  var DocRes = Split_Value[0];
+  var DayOfWeek = Split_Value[1];
+  var CellRowid = DayOfWeek.split(String.fromCharCode(1))[0];
+  var DocTimeRang = DocTimeRang.split(String.fromCharCode(1))[1];
+  for (p = 0; p < TimeRangStrArray.length; p++) {
+    if (TimeRangStrArray[p].split('^')[0] == DocTimeRang) DocTimeRangValue = TimeRangStrArray[p];
+  }
+  var TempArr = val.split('^')[11].split(String.fromCharCode(1));
+  var SessTypeRowid = TempArr[0];
+  var SessType = TempArr[1];
+  var SessLoad = Split_Value[5];
+  var SessNoSlots = Split_Value[7];
+  var SessNoApptSlot = Split_Value[8];
+  var SessNoAdd = Split_Value[9];
+  var TempArr = Split_Value[12]
+  var SessClinicGroup1 = TempArr
+  var DocResText = DocRes.split('||')[0];
+      CellId = mygrid.uid();
+      EndTime = val.split('^')[3];
+      mygrid.addRow(CellId, "", mygrid.getRowsNum());
+      mygrid.cells(CellId, 0).setValue(DayOfWeek.split(String.fromCharCode(1))[0]);
+      mygrid.cells(CellId, 5).setValue(StartTime);
+      mygrid.cells(CellId, 6).setValue(EndTime);
+      mygrid.cells(CellId, 2).setValue(DocResText);
+      mygrid.cells(CellId, 3).setValue(SessTypeRowid);
+      mygrid.cells(CellId, 7).setValue(SessLoad);
+      mygrid.cells(CellId, 8).setValue(SessNoSlots);
+      mygrid.cells(CellId, 9).setValue(SessNoApptSlot);
+      mygrid.cells(CellId, 10).setValue(SessNoAdd);
+      mygrid.cells(CellId, 4).setValue(SessClinicGroup1);
+      mygrid.cells(CellId, 11).setValue(CellRowid);
+      mygrid.cells(CellId, 1).setValue(DocTimeRangValue);
+      mygrid.cells(CellId, 12).setValue(DocRes);
+      mygrid.cells(CellId, 2).setDisabled(true);
+      mygrid.cells(CellId, 0).setDisabled(true);
+      mygrid.cells(CellId, 1).setDisabled(true);
+}
+
+function doOnCellEdit(stage, rowId, cellInd) {
+  if (stage == 2) {
+      CellEditValue = mygrid.cells(rowId, cellInd).getValue();
+      if ((CellEditValue != '') & (cellInd == 1)) {
+      StartTime = CellEditValue.split('^')[2];
+      EndTime = CellEditValue.split('^')[3];
+      mygrid.cells(rowId, 5).setValue(StartTime);
+      mygrid.cells(rowId, 6).setValue(EndTime);
+    }
+    if ((CellEditValue != '') & (cellInd == 2)) {
+      var GetResEffectDateMethod = document.getElementById('GetResEffectDateMethod').value;
+          ResEffectDate = cspRunServerMethod(GetResEffectDateMethod, CellEditValue);
+      if (ResEffectDate!=''){mygrid.cells(rowId, 12).setValue(ResEffectDate);}
+      if (ResEffectDate==''){
+	      ToDay=GetToday();
+		  ResEffectDate=ToDay.split('-')[1]+'/'+ToDay.split('-')[2]+'/'+ToDay.split('-')[0];
+      var obj=document.getElementById('InsertEffDateMethod');
+	      if (obj) {var encmeth=obj.value;}else{var encmeth=""};
+	      if (encmeth!=''){
+		     var retcode=cspRunServerMethod(encmeth,CellEditValue,ResEffectDate);
+		      if (retcode==0){
+				   var GetResEffectDateMethod = document.getElementById('GetResEffectDateMethod').value;
+                       ResEffectDate = cspRunServerMethod(GetResEffectDateMethod, CellEditValue);
+                       alert(ResEffectDate)
+                       mygrid.cells(rowId, 12).setValue(ResEffectDate);
+		         }else{
+			     alert('就诊班次生成失败');
+			     return ;
+		    }
+	     }	
+	   }
+	var encmeth =document.getElementById('GetResourcMeth').value;
+    var retDetail=cspRunServerMethod(encmeth,CellEditValue);
+    if  (retDetail!=''){
+	  var clinicGroup = retDetail.split("^")[0];
+ 	  var sessionType = retDetail.split("^")[1];
+ 	  var RESLoad = retDetail.split("^")[2];
+ 	  var RESAppLoad= retDetail.split("^")[3];
+ 	  var RESAppStartNum= retDetail.split("^")[4];
+ 	  var RESAddLoad = retDetail.split("^")[5];
+ 	  if(clinicGroup!=''){mygrid.cells(rowId, 4).setValue(clinicGroup);}
+ 	  if(sessionType){mygrid.cells(rowId, 3).setValue(sessionType);}
+ 	  if(RESLoad){mygrid.cells(rowId, 7).setValue(RESLoad);}
+ 	  if(RESAppLoad){mygrid.cells(rowId, 8).setValue(RESAppLoad);}
+ 	  if(RESAppStartNum){mygrid.cells(rowId, 9).setValue(RESAppStartNum);}
+ 	  if(RESAddLoad){mygrid.cells(rowId, 10).setValue(RESAddLoad);}
+	 }
+    }
+  }
+  return true;
+}
+
+function SetResDocDetail(ResRowId) {
+  var encmeth = document.getElementById('GetResDocDetailMethod').value;
+  if (encmeth != '') {
+    var retDetail = cspRunServerMethod(encmeth, ResRowId);
+    var Arr = retDetail.split('^');
+    var ResClinicGroupRowId = Arr[0];
+    var ResSessionTypeRowId = Arr[1];
+    var ResLoad = Arr[2];
+    var ResAppLoad = Arr[3];
+    var ResAppStartNum = Arr[4];
+    var ResAddLoad = Arr[5];
+  }
+}
+
+function AddToResSessionTable(val) {
+  try {
+    //if (TestCount>2) return;  //调试的时候限制数据的大小
+    var TestCount = TestCount + 1;
+    var DayOfWeek = val.split('^')[1];
+    var DocRes = val.split('^')[0];
+    var DayOfWeekArray = DayOfWeek.split(String.fromCharCode(1));
+    if (DayOfWeekArray[0] == '') return;
+    var Split_Value = val.split("^");
+    var CellRowid = DayOfWeekArray[0];
+        QueryData[DayOfWeekArray[0]][QueryData[DayOfWeekArray[0]].length] = val;
+        return;
+     } catch(e) {
+    alert(e.message);
+  }
+}
+
+function GetToday() {
+  today = new Date();
+  ToDay = today.getYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+  return ToDay;
+
+}
+
+</SCRIPT>
+<table width="850" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="48"><div align="right">科室</div></td>
+    <td width="164"><div id="DepList" style="width:200px; height:20px;"></div></td>
+    <td width="50"><div align="right"><BUTTON id="Save" class=btn1>保存</BUTTON></div></td>
+    <td width="77"><div align="right">开始时间</div></td>
+    <td width="120"><input type="text" id="StartDate" style="width: 100px; font-size:12px;" readonly="true"></td>
+    <td width="77"><div align="right">结束时间</div></td>
+    <td width="120"><input type="text" id="EndDate" style="width: 100px; font-size:12px;" readonly="true"></td>
+    <td width="83"><BUTTON id="RBResBuild" class=btn1>资源生成</BUTTON></td>
+  </tr>
+  <tr>
+    <td colspan="8"><div id="gridbox" style="width:1200;height:650"></div></td>
+  </tr>
+</table>
+
+		
+</BODY>
+</HTML>

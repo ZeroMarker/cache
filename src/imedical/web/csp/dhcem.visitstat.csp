@@ -1,0 +1,136 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcem.visitstat.csp  急诊患者状态改变 //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcem/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcem/css/visitstat.css" rel="stylesheet"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/visitstat.js"></script>
+	<script Language="Javascript">
+		var EpisodeID="#(%request.Get("EpisodeID"))#"  
+   </script>
+	<style>
+	.td-text{text-align:right;padding-right:10px}
+	</style>
+</head>
+<body>
+
+	<div class="hisui-layout" fit="true">
+		
+		<div data-options="region:'center',headerCls:'panel-header-gray',title:'患者状态改变'" border="true">
+			<table style="margin-left:20px;margin-top:10px;">
+			  <tr>
+			  	<td class="td-text" id="changeDateLab">改变状态日期</td>
+			  	<td><input id="ChangeDate" class="hisui-datebox textbox" style="width:160px"></td>
+			  	<td></td><td></td>
+			  </tr>
+			  <tr style="height:10px"></tr>
+			  <tr style="margin-top:10px">
+			  	<td class="td-text" id="changeTimeLab">时间</td>
+			  	<td><input id="ChangeTime" class="hisui-timespinner" style="width:160px"></td>
+			  	<td></td><td></td>
+			  </tr>
+			  <tr style="height:10px"></tr>
+			  <tr>
+			  	<td class="td-text">患者当前状态</td>
+			  	<td><input id="CurState" class="hisui-validatebox" style="width:153px"></td>
+			  	<td></td><td></td>
+			  </tr>
+			  <tr style="height:10px"></tr>
+			  <tr>
+			  	<td class="td-text">患者状态</td><td><input id="State" class="hisui-validatebox" style="width:160px"></td>
+			  	<td class="td-text">转入医院</td>
+			  	<td><input id="EmRemark" class="hisui-validatebox" style="width:153px"></td>
+			  </tr>
+			  <tr style="height:10px"></tr>
+			  <tr>
+			  	<td class="td-text">入院病区</td><td><input id="InWard" class="hisui-validatebox" style="width:160px"></td>
+			  	<td class="td-text" style="width:100px;">急诊病区</td><td><input id="EmWard" class="hisui-validatebox" style="width:160px"></td>
+			  </tr>
+			  <tr  style="height:10px;display:none"></tr>
+			  <tr style="display:none">
+			  	<td class="td-text">离院日期</td>
+			  	<td><input id="LeaveDate" class="hisui-datebox textbox" style="width:160px"></td><td></td><td></td>
+			  </tr>
+			  <tr style="height:10px"></tr>
+			  <tr>
+			  	<td style="display:none" class="td-text">离院时间</td>
+			  	<td style="display:none"><input id="LeaveTime" class="hisui-timespinner" style="width:160px"></td>
+			    <td class="td-text" id="updateNoteLab">变更原因</td>
+			  	<td><input id="LeaveReason" class="hisui-validatebox" style="width:160px"></td>
+			  	<td class="td-text">急诊等级</td><td><input id="EmClass" class="hisui-validatebox" style="width:153px"></td>
+			  </tr>
+			  <tr style="height:10px"></tr>
+			  <tr>
+			  	<td></td>
+			  	<td ><a href="#" id="Update" class="hisui-linkbutton" data-options="iconCls:''" onclick="Update()">更新</a></td><!--icon-update-->
+			  	<td></td>
+			  	<td id="Cancel" style="display:none"><a href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="UndoDischarge()">撤销结算</a></td><!--icon-undo-->
+			  </tr>
+			</table>
+			
+		</div>
+		
+		<div data-options="region:'north'" style="height:36px;overflow:hidden;">
+			<div class="item-label">
+				<div class="pf-patimg">
+					<img id="PatPhoto" src="../scripts/dhcnewpro/images/girl.png">
+				</div>
+				<div class="pf-patbase">
+					<ul class="pf-nav">
+						<li class="pf-nav-item"><span class="pf-nav-title pf-patname"><span id="PatName" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatSex" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatAge" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatNo" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBed" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBill" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatDiagDesc" class="ui-span-m"></span></span></li>
+					</ul>
+				</div>
+			</div>
+    	</div>
+    	<div data-options="region:'west',title:'病人状态',headerCls:'panel-header-gray',split:true,collapsible:false" style="width:600px;overflow:hidden;">
+    		<table id="visgrid"></table>
+    	</div>
+    
+	</div>
+	
+<!--离院-撤结 window-->
+	<div id="UndoDischargeW" class="hisui-window" title="撤销结算的原因" style="width:300px;height:170px;"	
+	data-options="iconCls:'icon-save',resizable:true,modal:false,minimizable:false,isZindexTop:true">
+		<table style="margin-top:10px;margin-left:15px">
+		  <tr>
+		  	<td class="td-text">撤销结算的原因</td>
+		  	<td><input id="CancelRea" class="hisui-validatebox"></td>
+		  </tr>
+		  <tr style="height:10px"></tr>
+		  <tr>
+		  	<td></td>
+		  	<td id="UpdateUndo"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-update'" onclick="UpdateUndo()">更新</a></td>
+		  </tr>
+		</table>
+	</div>
+</div>
+ 	<!--<SERVER>
+	  s EpisodeID=%request.Get("EpisodeID")
+	  w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	  w "var EpisodeID="""_$g(EpisodeID)_""";"_$c(13,10)
+ 	  w "</SCRIPT>"
+   </SERVER>-->
+</body>
+</html>

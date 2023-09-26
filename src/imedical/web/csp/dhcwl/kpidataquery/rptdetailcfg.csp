@@ -1,0 +1,93 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "saveRpt"=action {
+		b
+		s recCnt=0
+		f {
+			s recCnt=$o(%request.Data("recs",recCnt))
+			q:$g(recCnt)=""
+			s recs=$g(%request.Data("recs",recCnt))
+			s fieldLen=$l(recs,",")
+			f i=1:1:fieldLen {
+				s field=$p(recs,",",i)
+				//inParam("items",记录序号,字段名)=字段值
+				s inParam("items",recCnt,$p(field,$c(2),1))=$p(field,$c(2),2)
+			}
+		}
+		
+		s inParam("RptCode")=$g(%request.Data("rptCode",1))
+		s inParam("Descript")=$g(%request.Data("descript",1))
+		s inParam("DataSrcType")=$g(%request.Data("dataSrcType",1))
+		s inParam("RtpType")=$g(%request.Data("grpRpt",1))
+		s inParam("filterText")=$g(%request.Data("filterText",1))
+
+		//s recAct=$g(%request.Data("recAct",1))
+		s recAct=""
+		if $d(^DHCWL.DataQuery.ReportCfgI("InxCode",$g(%request.Data("rptCode",1)))) {
+			s recAct="update"		//如果已经存在，就更新
+		}else{
+			s recAct="insert"		//如果不存在，就插入
+		}
+		
+		
+		
+		TSTART
+		//s ret=##class(DHCWL.DataQuery.Serv).saveRptCfg(.inParam,.outParam)
+		s ret=""
+		//报表
+		if recAct="insert" {
+			s ret=##class(DHCWL.DataQuery.ReportCfg).Insert(.inParam,.outParam)
+		}else{
+			s ret=##class(DHCWL.DataQuery.ReportCfg).Update(.inParam,.outParam)
+		}
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			Trollback
+			q		
+		}
+		//维度
+
+		if recAct="insert" {
+			s ret=##class(DHCWL.DataQuery.RptSubDimCfg).Insert(.inParam,.outParam)
+		}else{
+			s ret=##class(DHCWL.DataQuery.RptSubDimCfg).Update(.inParam,.outParam)
+		}
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			Trollback
+			q		
+		}		
+		
+		//度量
+		if recAct="insert" {
+			s ret=##class(DHCWL.DataQuery.RptSubMeasureCfg).Insert(.inParam,.outParam)
+		}else{
+			s ret=##class(DHCWL.DataQuery.RptSubMeasureCfg).Update(.inParam,.outParam)
+		}
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			Trollback
+			q		
+		}		
+		
+		//过滤
+		if recAct="insert" {
+			s ret=##class(DHCWL.DataQuery.RptSubFilterCfg).Insert(.inParam,.outParam)
+		}else{
+			s ret=##class(DHCWL.DataQuery.RptSubFilterCfg).Update(.inParam,.outParam)
+		}				
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			Trollback
+			q		
+		}
+		TCOMMIT
+		w "{success:true,tip:'ok',MSG:'操作成功!'}"
+		q
+	}
+	
+</script>

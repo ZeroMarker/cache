@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 736U)" ts="2017-08-25 16:53:45">
+<CSP name="csp/DHCNurEmrComm.csp" application="/dthealth/web/" default="1"><![CDATA[
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<STYLE type='text/css'>
+BODY INPUT
+{
+	height:auto;
+
+} 
+
+</STYLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+
+<!--OBJECT id="PrintComm"  classid="http://127.0.0.1/dhcmg/PrintComm.dll#PrintComm.PrintCom" width=0 height=0 IEWASTEXT>
+        </OBJECT--> 
+ <SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s CacheDB=$P(setstr,"^")
+ s webIP=$P(setstr,"^",2)
+ s flag=%request.Get("flag") //0为成人，1为婴儿
+ s dllstr=webIP_"/dhcmg/PrintCommPic.dll#PrintComm.PrintCom"
+ //s dllstr1=webIP_"/dhcmg/Temperature.dll#Temperature.ClsTemp"
+ s dllstr1=webIP_"/dhcmg/Temperature.dll#Temperature.patlistTemWindow"
+ s dllstr2=webIP_"/dhcmg/TemperatureER.dll#TemperatureER.ClsTemp"
+ s dllstrpic=webIP_"/dhcmg/PrintCommPic.dll#PrintComm.PrintCom"
+ s dllstr4=webIP_"/dhcmg/NewPGD.dll#NewPGD.ClsTemp"
+ s dllSheet=webIP_"/dhcmg/ICUSheet.dll#ICUSheet.ClsSheet"
+ s dllBurn=webIP_"/dhcmg/DHCCBurnSheet.dll#DHCCBurnSheet.WebInterface"
+ s dllloadimg=webIP_"/dhcmg/FtpUpload.dll#FtpUpload.uploadimg"
+ s getSingleConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.getSingleConsult"))
+ s ComponentName=%request.Get("EmrCode")
+ s GetWardLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCQtVolItem.Wardgetloc"))
+ s GetConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.GetConsult"))
+ s SaveCon=##Class(%CSP.Page).Encrypt($lb("User.DHCConsultation.Save"))
+ s GetLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getloc"))
+ s GetLocNew=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getlocNew"))
+ s pdata1=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.getPagData"))
+ s pdata=##Class(%CSP.Page).Encrypt($lb("web.DHCMGPageData.GetPagData1"))
+ s GetSortDep=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.GetSortDep"))
+ s GetMainPat=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakePernum"))
+ s MakeAdmData=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakeAdmData"))
+ s GetEmrCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.ParseNurEmrCode"))
+ s SavePerson=##Class(%CSP.Page).Encrypt($lb("User.DHCPregPerson.save"))
+ S EpisodeID=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+ s EmrCode=%request.Get("EmrCode")
+ s TransId=%request.Get("TransId")
+ s TransNo=%request.Get("TransNo")
+ s EditFlag=%request.Get("editFlag")
+ s GenerateComBoxMeta=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.GenerateComBoxMeta"))
+ s GetQueryDataZSK=##Class(%CSP.Page).Encrypt($lb("web.DHCNurseRecordComm.GetQueryData")) //知识库query
+ s GetQueryDataTempZSK=##Class(%CSP.Page).Encrypt($lb("web.DHCThreeNew.GetQueryData")) //知识库生命体征query
+ s patloc="", curWardId="",bedSub="",bedCode="",curward=""
+  i $g(EpisodeID)'="" d
+  .s patloc=$p(^PAADM(EpisodeID),"^",4)
+  .s curWardId=$p($g(^PAADM(EpisodeID)),"^",70)  
+  .s bedSub=$p($p($g(^PAADM(EpisodeID)),"^",73),"||",2)
+  .i bedSub'="" s bedCode=$p($g(^PAWARD(curWardId,"BED",bedSub)),"^",1)
+  .e  s bedCode=""
+  .i curWardId'="" s curward=$p(^PAWARD(curWardId),"^",5)
+ s AnaesID=%request.Get("AnaesID")
+ s PatientType=""
+ i EpisodeID'="" s PatientType=$p(^PAADM(EpisodeID),"^",2)
+ //s file=##class(web.DHCNUREMR).getcomflag(%request.Get("EmrCode"),EpisodeID,"")
+    s gettranloc=##Class(%CSP.Page).Encrypt($lb("web.DHCNurRecPrint.gettranloc"))  //转科
+    s gettranward=##Class(%CSP.Page).Encrypt($lb("web.DHCNurRecPrint.gettranward")) //转科
+    s getlocbed=##Class(%CSP.Page).Encrypt($lb("web.DHCNurRecPrint.getlocbed"))    //转科
+    s gettranbed=##Class(%CSP.Page).Encrypt($lb("web.DHCNurRecPrint.gettranbed"))  //转科
+    s Rowid=%request.Get("Rowid")                                                  //转科
+    s Prnloctype=%request.Get("Prnloctype")                                        //转科
+    s patloc="", curWardId="",bedSub="",bedCode=""                                 //转科
+    i $g(EpisodeID)'="" d                                                          //转科
+    .s patloc=$p($g(^PAADM(EpisodeID)),"^",4)
+    .s curWardId=$p($g(^PAADM(EpisodeID)),"^",70)  
+    .s bedSub=$p($p($g(^PAADM(EpisodeID)),"^",73),"||",2)
+    .i bedSub'="" s bedCode=$p($g(^PAWARD(curWardId,"BED",bedSub)),"^",1)
+    .e  s bedCode=""
+ s headcode=%request.Get("headcode") //表头变更
+ s getjsjson=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMRHead.getjsjson"))  //表头变更
+ s file=##class(web.DHCNUREMRHead).getcomflag(%request.Get("EmrCode"),EpisodeID,"",%request.Get("headcode")) //表头变更
+ s getadmhead=##Class(%CSP.Page).Encrypt($lb("Nur.DHCNurRecHeadChangeRec.getadmhead")) //表头变更
+ s Savecurhead=##Class(%CSP.Page).Encrypt($lb("Nur.DHCNurRecHeadChangeRec.Savecurhead")) //表头变更
+ //w !,file
+ 
+ //s file=##class(web.DHCNUREMR).getcomflag(%request.Get("EmrCode"),EpisodeID,"")
+s refresh=##Class(%CSP.Page).Encrypt($lb("Nur.DHCTEMQC.refresh")) //体温单质控
+ //s PregRowId=##class(web.DHCPregComm).GetPRegId(EpisodeID,%session.Data("LOGON.USERID"))
+ //w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+// s comret=##class(web.DHCNUREMR).getPagData("",%request.Get("EmrCode"),EpisodeID,"")
+ // s a=##class(web.DHCMGPageData).GetPagData()
+ s itm="" f  s itm=$O(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm)) q:itm=""  d
+ .s link=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":"),id=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":",2)
+ .s val=##Class(%CSP.Page).Encrypt($lb(link))
+ . w "<input id="""_id_""" name="""_id_""" type=""hidden"" value="""_val_""">",!
+</SERVER>
+<script Language="Javascript">
+Ext.grid.ColumnModel.override({  
+        getTotalWidth: function(includeHidden) {  
+            var off = 2;  
+
+            if (Ext.isChrome){  
+                off = 2;  
+            };  
+            if (!this.totalWidth) {  
+                this.totalWidth = 0;  
+                for (var i = 0, len = this.config.length; i < len; i++) {  
+                    if (includeHidden || !this.isHidden(i)) {  
+                        this.totalWidth += this.getColumnWidth(i)+off;  
+                    };  
+                };  
+            };  
+            return this.totalWidth;  
+            }  
+        });  
+</script>
+<Server>
+ w "<OBJECT id=""PrintComm"" width=0 height=0 classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""Temperature"" width=0 height=0 classid="""_dllstr1_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""TemperatureER"" width=0 height=0 classid="""_dllstr2_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""ICUSheet"" width=0 height=0 classid="""_dllSheet_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""PrintCommPic"" width=0 height=0 classid="""_dllstrpic_""" IEWASTEXT></OBJECT>"
+ //w "<OBJECT id=""PrintCommPic"" width=0 height=0 classid=""clsid:00B873A9-A5BE-4aab-A4DB-10881CAEBBF0"" CODEBASE="""_dllstrpic_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""NewPGD"" width=0 height=0 classid="""_dllstr4_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""DHCCBurnSheet"" width=0 height=0 classid="""_dllBurn_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""FtpUpload"" width=0 height=0 classid="""_dllloadimg_""" IEWASTEXT></OBJECT>"
+ w "<input id=""TransId"" name=""TransId"" type=""hidden"" value="""_TransId_""">"
+ w "<input id=""TransNo"" name=""TransNo"" type=""hidden"" value="""_TransNo_""">"
+ w "<input id=""EditFlag"" name=""EditFlag"" type=""hidden"" value="""_EditFlag_""">"
+</Server>
+</HEAD>
+
+<BODY>
+</DIV>
+
+<TRAK:APPLET>
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+</SERVER>
+
+</DIV>
+
+<SCRIPT Language="Javascript">
+
+var CacheDB="#(CacheDB)#";
+var WebIp="#(webIP)#";
+var webIP="#(webIP)#";
+var patloc="#(patloc)#"
+var bedCode="#(bedCode)#"
+var Refresh="#(refresh)#";
+var curward="#(curward)#"
+var GetWardLoc="#(GetWardLoc)#";
+    var patloc="#(patloc)#"            //转科
+    var bedCode="#(bedCode)#"          //转科  
+    var gettranloc="#(gettranloc)#";   //转科
+    var gettranward="#(gettranward)#"; //转科
+    var gettranbed="#(gettranbed)#";   //转科
+    var Rowid="#(Rowid)#";             //转科
+    var Prnloctype="#(Prnloctype)#"    //转科
+    var getlocbed="#(getlocbed)#"      //转科   
+   var getjsjson="#(getjsjson)#";  //表头变更
+   var Savecurhead="#(Savecurhead)#"; //表头变更
+   var headcode="#(%request.Get("headcode"))#"  //表头变更
+   var getadmhead="#(getadmhead)#"; //表头变更
+var PatientType="#(PatientType)#";
+var AnaesID="#(AnaesID)#";
+var EmrCode="#(%request.Get("EmrCode"))#";
+var GetConsult="#(GetConsult)#";
+var getSingleConsult="#(getSingleConsult)#";
+var SaveCon="#(SaveCon)#";
+var getloc="#(GetLoc)#";
+var getlocNew="#(GetLocNew)#";
+var GetSortDep="#(GetSortDep)#";
+var GetMainPat="#(GetMainPat)#";
+var GetEmrCode="#(GetEmrCode)#";
+var EpisodeID="#(%request.Get("EpisodeID"))#";
+var pdata1="#(pdata1)#";
+var pdata="#(pdata)#";
+var PatientID="#(PatientID)#";
+var SavePerson="#(SavePerson)#";
+var ComponentName="#(ComponentName)#";
+var NurRecId="#(%request.Get("NurRecId"))#"
+var Status="#(%request.Get("Status"))#"
+var labledesc="#(%request.Get("labledesc"))#"
+var Usercode="#(%request.Get("Usercode"))#"
+var DHCMoudDataRowId="#(%request.Get("DHCMoudDataRowId"))#"
+var GenerateComBoxMeta="#(GenerateComBoxMeta)#"
+var RowId="#(%request.Get("RowId"))#"
+var PerID="#(%request.Get("PerID"))#"
+var CheckRoomId="#(%request.Get("CheckRoomId"))#"
+var CheckTyp="#(%request.Get("CheckTyp"))#"
+var CheckCode="#(%request.Get("CheckCode"))#"
+var CheckTitle="#(%request.Get("CheckTitle"))#"
+var CheckPar="#(%request.Get("CheckPar"))#"
+var CheckLoc="#(%request.Get("CheckLoc"))#"
+var GetQueryDataZSK="#(GetQueryDataZSK)#";
+var GetQueryDataTempZSK="#(GetQueryDataTempZSK)#";
+function TempShow(Adm)
+{
+    Temperature.Adm=Adm;
+    Temperature.WardId=session['LOGON.WARDID'];
+    Temperature.LocId=session['LOGON.CTLOCID'];
+    Temperature.webservice="#(webIP)#"+"/dthealth/web/Nur.TemperatureInterface.cls";
+    Temperature.FilePath="#(webIP)#"+"/dhcmg/temperatureChart.xml";
+    Temperature.flag="#(flag)#";
+    Temperature.UserId=session['LOGON.USERID'];
+    Temperature.ShowWindow();
+}
+///framework4.6体温单调用方法
+///songchao
+///2017.7.19
+function TempShowNew(Adm)
+{	
+	var ServerIP = "http://"+ServerNameSpace.split(":")[1].split("[")[0];
+    var Adm=Adm;
+    var WardId=session['LOGON.WARDID'];
+    var LocId=session['LOGON.CTLOCID'];
+    var webservice=ServerIP+"/dthealth/web/Nur.TemperatureInterface.cls";
+    var FilePath=ServerIP+"/dhcmg/temperature/temperatureChart.xml";
+    var flag="#(flag)#";
+    var link="#(webIP)#"+"/dhcmg/temperature/Temperature.application?method=ShowWindow&Adm="+Adm+"&WardId="+WardId+"&LocId="+LocId+"&webservice="+webservice+"&FilePath="+FilePath+"&flag="+flag+""
+    //var link="http://127.0.0.1/dhcmg/DoctorOrderSheet/DHCCDoctorOrderSheet.application?episodeId=179&wardId=10&locId=4&userId=69&webIp=http://127.0.0.1" 
+    window.location.href=link;
+}
+function TempShowERNew(Adm)
+{
+	var ServerIP = "http://"+ServerNameSpace.split(":")[1].split("[")[0];
+    var Adm=Adm;
+    var WardId=session['LOGON.WARDID'];
+    var LocId=session['LOGON.CTLOCID'];
+    var webservice=ServerIP+"/dthealth/web/Nur.TemperatureInterface.cls";
+    var FilePath=ServerIP+"/dhcmg/temperature/temperatureChartER.xml";
+    var flag="#(flag)#";
+    var link="#(webIP)#"+"/dhcmg/temperature/Temperature.application?method=ShowWindow&Adm="+Adm+"&WardId="+WardId+"&LocId="+LocId+"&webservice="+webservice+"&FilePath="+FilePath+"&flag="+flag+""
+    window.location.href=link;
+}
+function MakeTempPicNew(Adm)
+{
+	var ServerIP = "http://"+ServerNameSpace.split(":")[1].split("[")[0];
+    var Adm=Adm;
+    var webservice=ServerIP+"/dthealth/web/Nur.TemperatureInterface.cls";
+    var FilePath=ServerIP+"/dhcmg/temperature/temperatureChart.xml";
+    var flag="#(flag)#";
+    var link="#(webIP)#"+"/dhcmg/temperature/Temperature.application?method=MakeTempPic&Adm="+Adm+"&webservice="+webservice+"&FilePath="+FilePath+"&flag="+flag+""
+    window.location.href=link;
+}
+function TempShowER(Adm)
+{
+    Temperature.Adm=Adm;
+    Temperature.WardId=session['LOGON.WARDID'];
+    Temperature.LocId=session['LOGON.CTLOCID'];
+    Temperature.webservice="#(webIP)#"+"/dthealth/web/Nur.TemperatureInterface.cls";
+    Temperature.FilePath="#(webIP)#"+"/dhcmg/temperatureChartER.xml";
+    Temperature.flag="#(flag)#";
+    Temperature.ShowWindow();
+}
+function MakeTempPic(Adm)
+{
+    Temperature.Adm=Adm;
+    Temperature.webservice="#(webIP)#"+"/dthealth/web/Nur.TemperatureInterface.cls";
+    Temperature.FilePath="#(webIP)#"+"/dhcmg/temperatureChart.xml";
+    Temperature.flag="#(flag)#";
+    //Temperature.curDateStr=Date;
+    Temperature.MakeTempPic();
+}
+function SheetShow(Adm)
+{
+    ICUSheet.adm=Adm;
+    ICUSheet.connectStr="#(CacheDB)#";
+    ICUSheet.ShowWindow();
+}
+function showBurnSheet(Adm)
+{
+    DHCCBurnSheet.showBurnSheet(Adm,webIP);
+}
+function FtpLoadimg(filename,ftpServerIP,savename,loginname,loginpassword)
+{
+	var mm=FtpUpload.loadimg(filename,ftpServerIP,savename,loginname,loginpassword);
+	return mm;
+}
+
+//(PregRowId);
+//alert(comlayout)
+</SCRIPT>
+</div><select name="light" id="light" style="display: none;">
+	<option value="Shade">Shade</option>
+	<option value="Mostly Shady">Mostly Shady</option>
+	<option value="Sun or Shade">Sun or Shade</option>
+	<option value="Mostly Sunny">Mostly Sunny</option>
+	<option value="Sunny">Sunny</option>
+</select>
+<div id='lovcomboct'></div>
+<div id='textct'></div>
+<STYLE type='text/css'>
+.buttonZSK
+{
+  filter:alpha(opacity=80);  
+  -moz-opacity:0.5;  
+  -khtml-opacity: 0.5;  
+  opacity: 0.5;  
+}  
+
+</STYLE>
+<script type="text/javascript" src="../scripts/nurse/comm/dhcmgcomm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHCNURComm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/zkinterface.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHC.NURSE.IP.js"></script>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/comm/DHCNurPrintComm.js"></script>
+<Server>
+ //w "<script type=""text/javascript"" src=""../scripts/nurse/DHCMG/"_ComponentName_".js""></script>"
+ //w "<script type=""text/javascript"" src=""http://10.160.16.91/dthealth/web/scripts_gen/dhcmg/"_ComponentName_".js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts_gen/dhcmg/"_ComponentName_".js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/"_ComponentName_".js""></script>"
+ s id=""  f  s id=$O(^User.DHCNURMenuSubD(id)) q:(id="")  d  //只有护理病历模板加知识库
+           .s chl=""  f  s chl=$O(^User.DHCNURMenuSubD(id,chl)) q:(chl="")  d
+           ..s a=##class(User.DHCNURMenuSub).%OpenId(id_"||"_chl)
+           ..s Code=$zcvt(a.Code,"U")
+           ..i Code=ComponentName  d
+           ...//w "<script type=""text/javascript"" src=""../scripts/nurse/comm/DHCNUREMRZSK.js""></script>"
+ ;w "<script type=""text/javascript"" src=""../scripts/nurse/comm/DHCNUREMRZSK.js""></script>"
+</Server>
+
+</BODY>
+</HTML>]]></CSP>
+</Export>

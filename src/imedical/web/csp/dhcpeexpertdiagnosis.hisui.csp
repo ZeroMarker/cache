@@ -1,0 +1,260 @@
+ 
+<!-- 
+ * FileName: dhcpeexpertdiagnosis.hisui.csp
+ * Anchor: yupeng
+ * Date: 2019-04-26
+ * Description: HISUI专家建议
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+ <style type="text/css">
+      .datagrid-header-rownumber, .datagrid-cell-rownumber{
+          width: 50px;
+      }
+  </style>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+		
+</SCRIPT> 
+<script type="text/javascript">
+	
+</script>
+
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false">
+
+
+ <div data-options="region:'west',border:false" style="width:400px;padding:10px 10px 10px 10px;">
+ <div class="hisui-panel" data-options="title:'专家建议',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+	
+	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+	
+	
+    <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false" style="height:160px;border-bottom:1px dashed #C0C0C0;">
+        
+        <table style="width:100%;border-collapse:separate; border-spacing:4px 4px;">
+       <input type="hidden" id="ParrefRowId"/>
+       <input type="hidden" id="EDCRID"/> 
+       <input type="hidden" id="EDARowId"/>
+       <input type="hidden" id="PCRowId"/>
+       <input type="hidden" id="NStationLocID"/>
+       <input type="hidden" id="RelateID"/>
+       
+        
+        <tr>
+           <td><label for="Code">编号</label></td>
+			<td>
+				<input class="textbox" id="Code" style="width:110px;">
+			</td>
+			<td align="right"><label for="DiagnoseConclusion">结论</label></td>
+			 <td>
+				<input class="textbox" id="DiagnoseConclusion" style="width:110px;"/>
+			</td>
+			
+			
+        </tr> 
+        <tr>
+        <td><label for="Alias">别名</label></td>
+		<td>
+			<input class="textbox" id="Alias" style="width:110px;">
+		</td>
+			
+		<td align="right"><label for="StationID">站点名称</label></td>
+		<td >
+  		 <div>
+          <select class="hisui-combobox" type="text" Id="StationID" name="StationID" style="width:116px;"></select>
+          </div>
+		
+			
+         </tr> 
+         
+       <tr>
+        <td><label for="ActiveFlag">激活</label></td>
+         <td>
+          	<div><input class='hisui-checkbox' type="checkbox" label="" Id="ActiveFlag" style="width:100px;"/></div>
+          </td>
+          <td align="right"><label for="HighRisk">高危</label></td>
+		 <td>
+          	<div><input class='hisui-checkbox' type="checkbox" label="" Id="HighRisk" style="width:100px;"/></div>
+          </td>
+			
+         </tr> 
+         
+         
+         	
+        </table>
+         <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+       
+        <tr>
+         <td align="center">
+          <div><a id="Find" href="#" class="hisui-linkbutton" style="width:100px;" data-options="iconCls:'icon-w-find'">查询</a></div>
+          
+         </td>
+        
+        </tr> 
+         
+         
+         	
+        </table>
+	   
+	  </div>  
+	 <div data-options="region:'center',border:false">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border:0;border-radius:0;">
+		<table class="hisui-datagrid" id="ExpertDiagnosisGrid" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>	
+		</div>
+     
+      </div>
+	  
+	</div>   
+	</div>  
+ </div>
+ <div class="hisui-layout" data-options="region:'center',border:false" style="padding:10px 0px 0px 0px;">
+  
+  
+ <div data-options="region:'north',border:false" style="height:500px;padding:10px 10px 0px 0px;">
+ <div class="hisui-panel" data-options="title:'表达式维护',headerCls:'panel-header-gray',iconCls:'icon-copy-sos'">
+ <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+       
+        <tr>
+        <td>
+        	<div>
+              <textarea id="NorInfo" class="textbox" style="width:700px;height:50px;"></textarea></div>	
+          </td>
+        <td>
+		<a id="BSave" href="#" class="hisui-linkbutton">保存</a>
+		</td>
+		</tr>
+	</table>
+	
+<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border:0;border-top:1px solid #ccc;border-radius:0;height:305px;">
+					
+ <table class="hisui-datagrid" id="DHCPEEDCondition" data-options="bodyCls:'panel-header-gray',singleSelect:true"></table>
+</div> 
+ </div>	
+ </div>	
+  <div data-options="region:'center',border:false" style="padding:5px 10px 0px 0px;">
+  <div class="hisui-panel" data-options="title:'疾病与建议对照',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+  <table class="hisui-datagrid" id="DHCPEIDRelate" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
+  </div>
+  </div>
+  
+  <div data-options="region:'east',border:false" style="width:300px;padding:5px 10px 0px 0px;">
+  <div class="hisui-panel" data-options="title:'建议别名维护',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+ 	<table class="hisui-datagrid" id="DHCPEEDAlias" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
+ </div>	
+ </div>		
+  	
+  	
+  		
+ </div>	
+
+</div>
+
+	<div id="ExpertDiagnosis" style="width:540px;height:450px;padding:10px 10px 10px 10px;">	
+ 		<table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+       		<tr>
+       			<td align="right"><label for="NCode">编号</label></td>
+				<td><input class="textbox" id="NCode" style="width:120px;" disabled="true"></td>
+				
+				<td align="right"><label for="NDiagnoseConclusion">结论</label></td>
+				<td><input class="textbox" id="NDiagnoseConclusion" style="width:120px;"/></td>
+			</tr>
+			
+        	<tr>
+        		<td align="right"><label for="NAlias">别名</label></td>
+				<td><input class="textbox" id="NAlias" style="width:120px;"></td>
+			
+				<td align="right"><label for="NSort">顺序号</label></td>
+				<td><input class="hisui-numberbox textbox" id="NSort" style="width:126px;"></td>
+			</tr> 
+      		<tr>
+				<td align="right"><label for="NStationID">站点名称</label></td>
+				<td><div><select class="hisui-combobox" type="text" Id="NStationID" name="NStationID" style="width:126px;"></select></div></td>
+			
+				<td align="right"><label for="NStationLoc">分组名称</label></td>
+				<td><div><select class="hisui-combogrid" type="text" Id="NStationLoc" name="NStationLoc" style="width:126px;"></select></div></td>
+			</tr>  
+         	<tr>
+				<td align="right"><label for="NDiagnosisLevel">级别</label></td>
+				<td><div><select class="hisui-combobox" type="text" Id="NDiagnosisLevel" name="NDiagnosisLevel" style="width:126px;"></select></div></td>
+			
+				<td align="right"><label for="NSex">性别</label></td>
+				<td><div><select class="hisui-combobox" type="text" Id="NSex" name="NSex" style="width:126px;"></select></div></td>
+			</tr>  
+       		<tr>
+				<td align="right"><label for="NActiveFlag">激活</label></td>
+				<td><div><input class='hisui-checkbox' type="checkbox" label="" Id="NActiveFlag" style="width:100px;"/></div></td>
+				
+				<td align="right"><label for="NHighRisk">高危</label></td>
+				<td><div><input class='hisui-checkbox' type="checkbox" label="" Id="NHighRisk" style="width:100px;"/></div></td>
+			</tr> 
+			<tr>
+				<td align="right"><label for="NYGFlag">乙肝</label></td>
+				<td><div><input class='hisui-checkbox' type="checkbox" label="" Id="NYGFlag" style="width:100px;"/></div></td>
+				
+				<td align="right"></td>
+				<td></td>
+			</tr>
+         	<tr>
+				<td align="right"><label for="NDetail">建议</label></td>
+				<td colspan="3"><div><textarea id="NDetail" class="textbox" style="width:376px;height:100px;"></textarea></div></td>
+         	</tr> 	
+		</table>
+         
+		<table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+	        <tr>
+				<td align="center">
+					<div><a id="NSave" href="#" class="hisui-linkbutton" style="width:100px;" data-options="iconCls:'icon-w-save'">保存</a></div>
+				</td>
+			</tr> 
+		</table>
+	</div>	
+
+
+ <div id="PCExpertDiagnosis" style="width:500px;height:300px;padding:10px 10px 10px 10px;">	
+ <div class="hisui-panel" data-options="fit:true" style="border:1px solid #ccc;border-radius:0,0,4px,4px;">
+ 	<table class="hisui-datagrid" id="PCExpertDiagnosisGrid" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
+ </div>	
+ </div>	
+
+
+  <script type="text/javascript" src="../scripts/dhcpeexpertdiagnosis.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  
+  <script type="text/javascript" src="../scripts/websys.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPE.Toolets.Ctls.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPE.Toolets.Common.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  
+  
+   <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+    <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+     <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
+      <script type="text/javascript" src="../scripts/DHCPECashierEx.js"></script>
+       <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+        <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+         <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  
+</body>		
+</html>

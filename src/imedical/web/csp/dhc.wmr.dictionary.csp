@@ -1,0 +1,36 @@
+<SERVER>
+  s arg=%request.Get("query1")
+  s argICD = %request.Get("query")
+  s dicType=%request.Get("DicName")
+  s strArg = ""
+  s tmp = ""
+  s i = 1
+  ;s strArg=arg
+  ;k ^WUqk
+  ;s ^WUqk("O")=arg_"/"_argICD
+  do
+  {
+	  s tmp = $c($p(arg, "-", i))
+	  q:(tmp = $c(0))
+	  ;s ^WUqk(i)=tmp
+	  s i = i + 1
+	  s strArg = strArg_tmp
+  }while tmp'=$c(0)
+  if ((dicType = "O") ! (dicType = "D"))
+  {
+    s result=##class(web.DHCWMRICDCtl).GetICDDxByAlias(strArg, dicType)
+  }
+  else
+  { 
+  	if (strArg = " ")
+  	{
+	  	s strArg = ""	
+	 }
+    s result=##class(web.DHCWMRBaseDic).GetAjaxList(dicType, strArg)
+  }
+  ;k ^WUqk
+  ;s ^WUqk(0)=dicType
+  ;s ^WUqk(1)=strArg
+  ;s ^WUqk(2)=result
+  w !,result
+</SERVER>

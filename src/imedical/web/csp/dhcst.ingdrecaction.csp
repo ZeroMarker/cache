@@ -1,0 +1,201 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s sGroupId=$Get(%session.Data("LOGON.GROUPID"))
+s sLocId=$Get(%session.Data("LOGON.CTLOCID"))
+s sUserId=$Get(%session.Data("LOGON.USERID"))
+s HospId=$Get(%session.Data("LOGON.HOSPID"))
+i Action = "Save" d
+	.S IngrNo=$Get(%request.Data("IngrNo",1))
+	.S MainInfo=$Get(%request.Data("MainInfo",1))
+	.S ListDetail=$Get(%request.Data("ListDetail",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).Save(IngrNo,MainInfo,ListDetail)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+i Action = "Select" d
+	.S IngrRowid=$Get(%request.Data("IngrRowid",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).Select(IngrRowid)	
+	.w "{success:'true',info:'"_ret_"'}"
+i Action = "QueryDetail" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.w ##class(web.DHCST.DHCINGdRecItm).Query(Start,Limit,Sort,Dir,Parref)
+	.
+///用于不分页时入库明细显示
+i Action = "QueryIngrDetail" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.d ##class(web.DHCST.DHCINGdRecItm).QueryIngrDetail(Start,Limit,Sort,Dir,Parref)
+	.
+i Action = "Delete" d
+	.S Parref=$Get(%request.Data("IngrRowid",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).Delete(Parref)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "DeleteDetail" d
+	.S Ingri=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.DHCINGdRecItm).Delete(Ingri)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "GetItmInfo" d
+	.S IncId=$Get(%request.Data("IncId",1))
+	.S Params=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).GetItmInfo(IncId,Params)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+ i Action = "Check" d
+	.S DataList=$Get(%request.Data("DataList",1))
+	.s ret=##class(web.DHCST.Common.UtilCommon).Check(DataList)
+	.w "{success:'true',info:'"_ret_"'}"	
+	
+i Action = "Query" d
+	.s ListParam=$Get(%request.Data("ParamStr",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).Query(Start,Limit,Sort,Dir,ListParam)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+i Action = "MakeComplete" d
+	.s Ingr=$Get(%request.Data("Rowid",1))
+	.s UserId=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).MakeComplete(Ingr,UserId)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "CancleComplete" d
+	.s Ingr=$Get(%request.Data("Rowid",1))
+	.s UserId=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).CancleComplete(Ingr,UserId)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "Audit" d
+	.s Ingr=$Get(%request.Data("Rowid",1))
+	.s UserId=$Get(%request.Data("User",1))
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).Audit(Ingr,UserId,StrParam)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "SaveCheckInfo" d
+	.S IngrId=$Get(%request.Data("IngrId",1))
+	.S UserId=$Get(%request.Data("UserId",1))
+	.S ListDetail=$Get(%request.Data("ListDetail",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).SaveAcceptInfo(IngrId,UserId,ListDetail)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "QueryPoDetailForRec" d
+	.S Parref=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.DHCINGdRecItm).QueryPoItmForRec(Start,Limit,Sort,Dir,Parref)
+	.
+i Action = "GetParamProp" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "CheckInvnoExist" d
+	.S IngriId=$Get(%request.Data("Ingr",1))
+	.S InvNo=$Get(%request.Data("InvNo",1))
+	.s ret=##class(web.DHCST.DHCINGdRecItm).CheckInvnoExist(IngriId,InvNo)	
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "jsQueryRecDetail" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.s StartDate=$Get(%request.Data("StartDate",1))
+	.s EndDate=$Get(%request.Data("EndDate",1))
+	.s Others=$Get(%request.Data("Others",1))
+	.s ret=##class(web.DHCST.DHCINGdRecStat).jsQueryRecDetail(Start,Limit,Sort,Dir,StartDate,EndDate,LocId,Others)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+	.
+i Action = "UpdateRecInfo" d
+	.S ListDetail=$Get(%request.Data("ListDetail",1))
+	.s StrParam=sGroupId_"^"_sLocId_"^"_sUserId_"^"_$g(HospId)
+	.s ret=##class(web.DHCST.DHCINGdRecMod).UpdateRecInfo(ListDetail,StrParam)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "UpdateVendor" d
+	.S Ingr=$Get(%request.Data("Ingr",1))
+	.s VendorId=$g(%request.Data("Vendor",1))
+	.s ret=##class(web.DHCST.DHCINGdRecMod).GrUpdateVen(Ingr,VendorId)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "CancelAudit" d
+	.S Ingr=$Get(%request.Data("Ingr",1))
+	.s ret=##class(web.DHCST.DHCINGdRecMod).GrCancelAudit(Ingr)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action ="GetPrice" d
+    .S InciId=$Get(%request.Data("InciId",1))
+    .S UomId=$Get(%request.Data("UomId",1))
+    .S StrParam=$Get(%request.Data("StrParam",1))
+    .s StkGrpType=$Get(%request.Data("StkGrpType",1))
+    .w ##class(web.DHCST.DHCINGdRec).GetRPrice(InciId,UomId,StrParam,StkGrpType)
+
+i Action ="GetPriceBatch" d
+    .S InciId=$Get(%request.Data("InciId",1))
+    .S StrParam=$Get(%request.Data("StrParam",1))
+    .S BatData=$Get(%request.Data("Batdata",1))
+    .w ##class(web.DHCST.DHCINGdRec).GetRPriceBatch(InciId,StrParam,BatData)
+
+i Action = "CreateAdjPrice" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.
+	.s ret=##class(web.DHCST.DHCINGdRec).CreateAdjPrice(StrParam)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+i Action = "GetBatNo" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.s inci=$p(StrParam,"^",2)
+	.s bat=$p(StrParam,"^",3)
+	.s exp=$p(StrParam,"^",4) 
+	.s rp=$p(StrParam,"^",5)
+	.s uom=$p(StrParam,"^",6) 
+	.s mnf=$p(StrParam,"^",7)
+	.s ret=##class(web.DHCST.DHCINGdRec).GetBatNo(inci, bat, exp, rp, uom, mnf)
+	.i ret'="" d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+i Action = "CreateAdjPriceBatch" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.s ret=##class(web.DHCST.DHCINGdRec).CreateAdjPriceBatch(StrParam)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+</SERVER>

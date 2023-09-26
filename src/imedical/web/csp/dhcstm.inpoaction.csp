@@ -1,0 +1,153 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s User=$G(%session.Data("LOGON.USERID"))
+s ctlocid=$G(%session.Data("LOGON.CTLOCID"))
+;
+i Action = "Query" d
+	.s ListParam=$Get(%request.Data("ParamStr",1))
+	.d ##class(web.DHCSTM.INPO).Query(Start,Limit,Sort,Dir,ListParam)
+	.
+i Action = "QueryDetail" d
+	.s InPo=$Get(%request.Data("Parref",1))
+	.d ##class(web.DHCSTM.INPOItm).Query(Start,Limit,Sort,Dir,InPo)
+	.
+//查询药品信息
+	i Action = "GetItmInfo" d
+	.s IncId=$Get(%request.Data("IncId",1))
+	.s Params=$Get(%request.Data("Params",1))
+	.s result=##class(web.DHCSTM.INPO).GetItmInfo(IncId, Params)
+	.s result=##class(web.DHCSTM.Common.UtilCommon).hJsonChar(result)
+	.w "{success:'true',info:'"_result_"'}"		
+//获得订单主记录信息
+i Action = "Select" d
+	.s InPo=$Get(%request.Data("InpoId",1))
+	.s result=##class(web.DHCSTM.INPO).jsSelect(InPo)	
+	.i result'= "" d
+	..w result
+	.e  d
+	..w "{results:0,rows:[]}"
+i Action = "Save" d
+	.s Main=$Get(%request.Data("Main",1))
+	.S MainInfo=$Get(%request.Data("MainInfo",1))
+	.S ListDetail=$Get(%request.Data("ListDetail",1))
+	.s ret=##class(web.DHCSTM.INPO).Save(MainInfo,ListDetail,Main)
+	.i +ret > 0 d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action="finish"  d
+    .s InPo=$Get(%request.Data("InpoId",1))
+    .s Usr=$Get(%request.Data("Usr",1))
+    .s ^zhwh(908)=InPo_"^"_Usr_"^"_ctlocid
+    .s ret=##class(web.DHCSTM.INPO).SetComplete(InPo,"Y",Usr,ctlocid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	..
+	
+i Action="noFinish"  d
+    .s InPo=$Get(%request.Data("InpoId",1))
+    .s Usr=$Get(%request.Data("Usr",1))
+    .s ret=##class(web.DHCSTM.INPO).SetComplete(InPo,"N",Usr)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	..
+//删除订单
+	i Action = "delete" d
+	.s InPo=$Get(%request.Data("InpoId",1))
+	.s result = ##class(web.DHCSTM.INPO).Delete(InPo)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+//删除订单明细
+	i Action = "deleteItem" d
+	.s InPoi=$Get(%request.Data("InPoi",1))
+	.s result = ##class(web.DHCSTM.INPOItm).Delete(InPoi)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+//取出采购单主表信息用于打印
+	i Action = "SelectMain" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s ret=##class(web.DHCSTM.INPO).SelectMain(Parref)
+	.i ret'="" d	
+	..w "{success:'true',info:'"_ret_"'}"
+	
+i Action = "QueryAll" d
+	.s ListParam=$Get(%request.Data("ParamStr",1))
+	.d ##class(web.DHCSTM.INPOItm).QueryAll(Start,Limit,Sort,Dir,ListParam)
+	.	
+i Action = "Sms" d
+	.s poistr=$Get(%request.Data("poistr",1))
+	.s user=$Get(%request.Data("user",1))
+	.s result = ##class(web.DHCSTM.INPOItm).Sms(poistr,user)
+	.w "{success:'true',info:'"_result_"'}"
+i Action = "DenyDetail" d
+	.s RowIdStr=$Get(%request.Data("RowIdStr",1))
+	.s result = ##class(web.DHCSTM.INPOItm).DenyDetail(RowIdStr,User)
+	.w "{success:'true',info:'"_result_"'}"
+i Action = "Approve" d
+	.s poistr=$Get(%request.Data("poistr",1))
+	.s user=$Get(%request.Data("user",1))
+	.s flag=$Get(%request.Data("flag",1))
+	.s result = ##class(web.DHCSTM.INPO).Approve(poistr,user,flag)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+ i Action = "sendinpo" d
+	.s InPo=$Get(%request.Data("InPo",1))
+	.s result = ##class(web.DHCSTM.INPO).SendInPoStr(InPo)
+	.w "{success:'true',info:'"_result_"'}"
+i Action = "CancelInPo" d
+	.s poistr=$Get(%request.Data("poistr",1))
+	.s user=$Get(%request.Data("user",1))
+	.s cancelreason=$Get(%request.Data("cancelreason",1))
+	.s result = ##class(web.DHCSTM.INPO).CancelInPo(poistr,user,cancelreason)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	 i Action = "PrintMBPL" d
+	.S inpoRowid=$Get(%request.Data("inpoRowid",1))
+	.s HospId=$Get(%request.Data("HospId",1))
+	.S User=$Get(%request.Data("user",1))
+	.s ret=##class(web.DHCSTM.INPO).InserMBPL(inpoRowid,HospId,User)	
+	.w "{success:'true',info:'"_ret_"'}"
+i Action = "cancelinpoi" d
+	.s InPo=$Get(%request.Data("InPo",1))
+	.s Type=$Get(%request.Data("Type",1))
+	.s result=##class(web.DHCSTM.INPO).cancelinpoi(Type,InPo)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+i Action = "urgeinpoi" d
+	.s InPo=$Get(%request.Data("InPo",1))
+	.s Type=$Get(%request.Data("Type",1))
+	.s result = ##class(web.DHCSTM.INPO).urgeinpoi(Type,InPo)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+i Action = "Refuseinpoi" d
+	.s OrderDetailSubIdStr=$Get(%request.Data("OrderDetailSubIdStr",1))
+	.s Type=$Get(%request.Data("Type",1))
+	.s result = ##class(web.DHCSTM.INPO).Refuseinpoi(OrderDetailSubIdStr,Type)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+</SERVER>

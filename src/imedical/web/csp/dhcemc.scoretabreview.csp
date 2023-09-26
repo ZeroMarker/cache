@@ -1,0 +1,41 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcemc.scoretabreview.csp  评分表展示页面 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcemc/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcemc/css/scoretabreview.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcemc/scoretabreview.js"></script>
+</head>
+<body class="background-warp">
+	<div class="container">
+		<div class="tabform">
+			<server>
+				s LgUserID=%session.Get("LOGON.USERID")
+				s ScoreID=$Get(%request.Data("ScoreID",1))     /// 评分表ID
+			    s ScoreCode=$Get(%request.Data("ScoreCode",1)) /// 评分表代码
+			    i ScoreID="" s ScoreID=$o(^DHCEMCSS(0,"Code",$$ALPHAUP^SSUTIL4(ScoreCode),""))
+				w "<script Language=""JavaScript"">"_$c(13,10)
+				w "var ScoreID="""_$g(ScoreID)_""";"_$c(13,10)
+				w "var ScoreCode="""_$g(ScoreCode)_""";"_$c(13,10)
+				w "var LgUserID="""_$g(LgUserID)_""";"_$c(13,10)
+				w "</script>"
+  				w ##Class(web.DHCEMCScoreTabMain).GetScoreTabHtml(ScoreID, ScoreCode)
+			</server>
+		</div>
+		<div class="tabtools">
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="TakClsWin()" style="margin-left:15px" id="cancel">取消</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" onclick="TakScore()" style="margin-left:30px" id="sure">确认</a>
+		</div>
+	</div>
+	<div class="page-foot">
+		<label>总分：</label><label id="count" style="font-size:20px;font-weight:bold;">0</label><label>分</label>
+	</div>
+</body>
+</html>

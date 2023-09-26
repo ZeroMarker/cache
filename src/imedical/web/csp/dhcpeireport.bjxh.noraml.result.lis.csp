@@ -1,0 +1,183 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">	
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="LISReport"
+		e  d
+		.s DIVClass="Page LISReport"
+		//增加审核者 2008-06-04
+		s nullStr=""
+		i $l(Checker)=2 d
+		.s nullStr="&nbsp;&nbsp;&nbsp;&nbsp;"
+		i (AuditUser="")&&(Checker'="") d
+		.s Checker=""_Checker
+		s Checker=Checker_"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;审核者:"_AuditUser
+	</SCRIPT>
+	<!--DIV class='#(DIVClass)#'-->
+		<TABLE width=655 border=0 cellspacing=0>
+				<!--TR>
+					<TD class='LisReportTitle' colSpan=6><BIG><H2>协和医院健康体检中心</H2></BIG></TD>
+				</TR-->
+				<TR>
+					<TD class='LISHead LISHeadARCIMDesc' width=655>#(ARCIMDesc)#</TD>
+				</TR>
+			</TABLE>
+			<TABLE width=655 border=0 cellspacing=0>
+				<THEAD style="display:table-header-group">
+			    <TR>
+					<TD width="40" height="20" class="LISResultTtile">序号</TD>
+					<TD width="190" class="LISResultTtile">项目名称</TD>
+					<TD width="90" class="LISResultTtile">英文缩写</TD>
+					<TD width="100" class="LISResultTtile">检查结果</TD>
+					<TD width="35" class="LISResultTtile">&nbsp;</TD>
+					<TD width="90" class="LISResultTtile">单位</TD>
+					<TD width="130" class="LISResultTtile">参考范围</TD>
+				</TR>
+			    </THEAD>
+			<TBODY>
+				
+					<!--  输出病患信息  -->
+	<!--csp:WHILE COUNTER=ODID CONDITION=(""'=CurData)-->
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s SortNum=0
+		s ODID=0
+		f  s ODID=$O(^TMPReport(UserID,"Result", "Content",ARCIM,ODID)) q:ODID=""  d
+		.s CurData=$g(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+		.s DoctorName="检查者:"
+		.s ARCIMID=$P($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+		.i (""'=CurData) d
+		..s TestDesc=$P(CurData,"^",1)
+		..s TestResult=$P(CurData,"^",2)
+		..q:TestResult="-----"
+		..s l=$L(TestResult,"10S")
+		..i l>1 d
+		...s SZ= $P($G(TestResult),"10S",1)
+		...s Str=SZ_"10<sup>"
+		...s SB=$P($G(TestResult),"10S",2,l)
+		...s j=$L(SB,"/L")
+		...i j>1 d
+		....s OT=$P($G(SB),"/L",2,j)
+		....s SB=$P($G(SB),"/L",1)
+		....s SB=SB_"</sup>/L"_OT
+		....s Str=Str_SB
+		....s TestResult=Str
+		...e  d
+		....s j=$L(SB,"/ml")
+		....i j>1 d
+		.....s OT=$P($G(SB),"/ml",2,j)
+		.....s SB=$P($G(SB),"/ml",1)
+		.....s SB=SB_"</sup>/ml"_OT
+		.....s Str=Str_SB
+		.....s TestResult=Str
+		....e  d
+		.....s SB=SB_"</sup>"
+		.....s Str=Str_SB
+		.....s TestResult=Str
+		
+		..s Normal=$P(CurData,"^",3)
+		..s:Normal="0" TestResult="<font color=#FF0000>"_TestResult_"</font>"
+		..s TestNormal=""
+		..//s:("H"=Normal) TestNormal="?"
+		..//s:("H"=Normal) TestNormal="?"
+		..s TestUnit=$P(CurData,"^",4)
+		..s l=$L(TestUnit,"10S")
+		..i l>1 d
+		...s SZ= $P($G(TestUnit),"10S",1)
+		...s Str=SZ_"10<sup>"
+		...s SB=$P($G(TestUnit),"10S",2,l)
+		...s j=$L(SB,"/L")
+		...i j>1 d
+		....s OT=$P($G(SB),"/L",2,j)
+		....s SB=$P($G(SB),"/L",1)
+		....s SB=SB_"</sup>/L"_OT
+		....s Str=Str_SB
+		....s TestUnit=Str
+		...e  d
+		....s j=$L(SB,"/ml")
+		....i j>1 d
+		.....s OT=$P($G(SB),"/ml",2,j)
+		.....s SB=$P($G(SB),"/ml",1)
+		.....s SB=SB_"</sup>/ml"_OT
+		.....s Str=Str_SB
+		.....s TestUnit=Str
+		....e  d
+		.....s SB=SB_"</sup>"
+		.....s Str=Str_SB
+		.....s TestStandard=Str
+		..s TestStandard=$P(CurData,"^",5)
+		
+		..s l=$L(TestStandard,"10S")
+		..i l>1 d
+		...s SZ= $P($G(TestStandard),"10S",1)
+		...s Str=SZ_"10<sup>"
+		...s SB=$P($G(TestStandard),"10S",2,l)
+		...s j=$L(SB,"/L")
+		...i j>1 d
+		....s OT=$P($G(SB),"/L",2,j)
+		....s SB=$P($G(SB),"/L",1)
+		....s SB=SB_"</sup>/L"_OT
+		....s Str=Str_SB
+		....s TestStandard=Str
+		...e  d
+		....s j=$L(SB,"/ml")
+		....i j>1 d
+		.....s OT=$P($G(SB),"/ml",2,j)
+		.....s SB=$P($G(SB),"/ml",1)
+		.....s SB=SB_"</sup>/ml"_OT
+		.....s Str=Str_SB
+		.....s TestStandard=Str
+		....e  d
+		.....s SB=SB_"</sup>"
+		.....s Str=Str_SB
+		.....s TestStandard=Str
+		
+		..s TestStandard=##class(web.DHCPE.ReportOutToWeb).ChangeRange(TestStandard)
+		..s Arrow=$P(CurData,"^",6)
+		..s CTTCSynonym=$P(CurData,"^",8)
+		..s ArrowName=""
+		..i Arrow="1" s ArrowName="../images/dhcpe/NoArrow.gif"
+		..i Arrow="0" s ArrowName="../images/dhcpe/DownArrow.gif"
+		..i Arrow="2" s ArrowName="../images/dhcpe/UpArrow.gif"
+		..i Arrow="3" s ArrowName="../images/dhcpe/Star.gif"
+		..s SortNum=SortNum+1
+		..w "<TR>"
+		..w "<TD class=LISResultName>"_SortNum_"</TD>"
+		..w "<TD class=LISResultName>"_TestDesc_"</TD>"
+		..w "<TD class=LISResultNameEn>"_CTTCSynonym_"</TD>"
+		..w "<TD class=LISResultValue>"_TestResult_"</TD>"
+		..w "<TD class=LISResultNormal><IMG id='Arrow' name='Arrow' src="_ArrowName_"></TD>"
+		..;w <!--TD class=LISResultNormal width="20">#(TestNormal)#</TD-->
+		..w "<TD class=LISResultTestUnit>"_TestUnit_"</TD>"
+		..w "<TD class=LISResultStandard>"_TestStandard_"</TD>"
+		..w "</TR>"
+		</Script>
+		<!--CSP:IF CONDITION=(""'=CurData)-->
+				
+					
+					
+	
+				
+		<!--/CSP:IF-->
+	<!--/csp:WHILE-->
+			</TBODY>
+			<CSP:IF CONDITION=(CheckDate'="")>
+			<TFOOT>
+				<TR>
+					<!--TD class='LISFooter LISFooterChecker' colspan=6></TD>
+					<TD class='LISFooter LISFooterCheckDate' colspan=6>#(DoctorName)##(Checker)#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD-->
+					<TD class='LISFooter LISFooterChecker' colspan=5>#(DoctorName)##(Checker)#</TD>
+					<TD class="LISFooter LISFooterCheckDate" colSpan=2>报告日期:<LABEL class=CheckDate>#(CheckDate)#&nbsp;&nbsp;</LABEL></TD>
+				</TR>
+			</TFOOT>
+			</CSP:IF>
+		</TABLE>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s Remak=$G(^TMPReport(UserID,"Result", "Content",ARCIM))
+		i (Remak'="")
+		{
+			w "<TABLE width=655 border=0 cellspacing=0><TR><TD class=LISResultValue>",!
+			w "<b>备注:</b>"_Remak,!
+			w "</TD></TR></TABLE>",!
+		}
+		</SCRIPT>
+		
+	<!--/DIV  style="display:table-footer-group;"-->
+	

@@ -1,0 +1,511 @@
+<html>
+<head>
+<exthealth:head></exthealth:head>
+<meta http-equiv="X-UA-Compatible"  content="IE=edge"/> 
+<script type='text/javascript' src='../scripts/websys.js'></script>
+<script language="Cache" runat="server">
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</script>
+<ADDINS require="CmdShell" />
+<FORM:EASYUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/css/easyuicommonnew.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.6/bootstrap/css/dhcem.easyui.combobox.css"/>	
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jQuery/datagrid-detailview.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/FileSaver.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jquery.wordexport.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/reportaudit.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/advprint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/advexport.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcprt/comPrint.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+	</script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			var quoteflag="#(%request.Get("quoteflag"))#"; //为1 代表其他界面引用 
+			if(quoteflag==1){
+				$("#gologin").hide(); //隐藏
+			}
+		})	
+	</script>
+	<script language="Cache" runat="server">
+		d ##class(web.DHCXMLPConfig).LODOPInit()
+	</script>
+	<style type="text/css">
+	  .tdtext{
+	   	  margin:5px 10px 0 0; 
+	   	  float:right;
+	   	  width:70px;
+	   	  text-align:right;
+	   }
+	   /*.panel-body{
+		   border-color: transparent!important;
+	   }hxy 去掉border*/
+	   #reqList > div > div,#WardW > div > div > div{
+		   border-color: transparent!important;
+	   }/*hxy 去掉border*/
+	   /*hxy审核弹窗样式st 08-30*/
+	   .window-header > .panel-title{
+		   color:#fff;
+		   height:36px;
+		   font-size:15px!important;
+		   line-height:36px;
+		   background-color:#566982;
+		   padding-left:10px;
+	   }
+	   .window,.window .window-header{
+		   padding:0;
+	   }/*ed*/
+	   /*2017-11-16 st*/
+	   #TranWin > div > div.panel.layout-panel.layout-panel-center > div > div > div.panel.layout-panel.layout-panel-west > div > div.panel-noscroll > div > div.datagrid-wrap.panel-body.panel-body-noborder > div.datagrid-view > div.datagrid-view1 > div.datagrid-header > div,
+	   #TranWin > div > div.panel.layout-panel.layout-panel-center > div > div > div.panel.layout-panel.layout-panel-center > div > div > div.datagrid-wrap.panel-body.panel-body-noborder > div.datagrid-view > div.datagrid-view1 > div.datagrid-header > div,
+	   #TranWin > div > div.panel.layout-panel.layout-panel-center > div > div > div.panel.layout-panel.layout-panel-west > div > div.panel-noscroll > div > div.datagrid-wrap.panel-body.panel-body-noborder > div.datagrid-view > div.datagrid-view2 > div.datagrid-header,
+	   #TranWin > div > div.panel.layout-panel.layout-panel-center > div > div > div.panel.layout-panel.layout-panel-center > div > div > div.datagrid-wrap.panel-body.panel-body-noborder > div.datagrid-view > div.datagrid-view2 > div.datagrid-header{
+   			background-color:#fff!important;background:none;
+		}/*transparent #F5F5F5;11-15*/
+	   #TranWin > div > div.panel.layout-panel.layout-panel-center > div > div > div.panel.layout-panel.layout-panel-west > div > div.panel-noscroll > div > div.panel-header.panel-header-noborder{
+			border-top:1px solid;
+	   }
+	   .panel-header{background-color:#F9F9FA!important;background:none;}/*11-15*/
+	   .floatLeft{
+			float:left;	
+		}
+		.textLabel{
+			background:#fff;	
+		}
+		#allItmTableDiv{
+			width:40%;	
+			height:100%;
+			background:#ccc;
+		}
+
+		#setItmTableDiv{
+			width:40%;
+			height:100%;	
+			
+		}
+
+		#cuidDiv{
+			width:20%;
+			height:100%;
+				
+		}
+
+
+		#cuidTable{
+			width: 100%;
+			text-align: center;	
+		}
+
+		#cuidTable tr{
+			height:60px;	
+		}
+		#allItmTableDiv>panel-body{
+		   border-color: red!important;
+	   }
+	   .toggle-btn {
+		    color: #40a2de;
+		    text-decoration: underline;
+		    padding-right: 13px;
+		    background: url(../images/fa-angle-double-down_40a2de_12.png) no-repeat center right;
+		    line-height: 13px;
+		    display: inline-block;
+		    border-bottom: 1px solid #40a2de;
+		    cursor: pointer;
+		}
+		.toggle-btn.expanded {
+		    background-image: url(../images/fa-angle-double-up_40a2de_12.png);
+		}
+		.dashline-div {
+		    height: 0px;
+		    border-top: 1px dashed #ccc;
+		    margin: 7 0 7 0
+		}
+		td[field='ShareAdvice']>div{
+			word-break:break-all;
+		}
+		
+   </style>
+</head> 
+<!--以下定义不良反应上报界面-->
+<body class="easyui-layout" style="background-color:#FFFFFF;overflow-y:visible;">
+	<div id="top"></div>
+	<!--block 1-->
+	<div id="nourthlayot" data-options="region:'north',border:false" style="margin:10px 100px 10px 100px;height:178px;">
+		<div style="font-size:20px;font-weight:bold;text-align:center;color:#0e2d5f;margin-bottom:10px;width:90%;">
+			<span class="title-big">报告审核查询</span>
+		</div>
+		<div id='northdiv' class="dhcc-panel" style="float:left;width:90%;"> 
+			<div class="dhcc-panel-header"> 
+			 	<div id="audittitle" class="dhcc-panel-title"></div> 
+			</div> 
+			<div class="dhcc-panel-body" style="height:90px;padding-top:10px!important;margin-bottom:10px">
+				<table cellspacing="0" cellpadding="0">
+					<tr style="height:0">
+					    <td width="10"></td>
+						<td ></td>
+						<td></td>
+						<td width="30"></td>
+						<td ></td>
+						<td></td>
+						<td width="30"></td>
+						<td ></td>
+						<td></td>
+						<td width="30"></td>
+						<td ></td>
+						<td></td>
+						<td width="30"></td>
+						<td ></td>				
+					</tr>
+					<tr>
+						<td></td>
+						<td class="tdtext">开始日期</td>
+						<td><input id="stdate" type="text" class="easyui-datebox" required="required" style="width:130"></input></td>
+						<td></td>
+						<td class="tdtext">结束日期</td>
+						<td><input id="enddate" type="text" class="easyui-datebox" required="required" style="width:130"></input></td>
+						<td></td>
+						<td class="tdtext">接收状态</td>
+						<td><input id="receive" style="width:130" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></td>
+						<td></td>
+						<td class="tdtext">报告科室</td>
+						<td><input id="dept" style="width:130" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></td>
+						<td></td>
+						<td width="150"><img src="../scripts/dhcadvEvt/images/adv_search.png" style="float:left"></img><button id="Find" class="dhcc-btn-icon" style="margin-left:-3px;">查询</button></td>
+						
+					</tr>
+					<tr style="height:10">
+					</tr>
+					<tr style="margin-top:10px;">
+						<td style="margin-top:10px;"></td>						
+						<td class="tdtext">类型</td>
+						<td><input id="typeevent" style="width:130" class="easyui-combobox" data-options="valueField:'value',textField:'text'"/></td>
+						<td></td>
+						<td class="tdtext">状态</td>
+						<td><input id="status" style="width:130" class="easyui-combobox" data-options="valueField:'value',textField:'text'"/></td>	
+						<td></td>
+						<td class="tdtext" >超时状态</td>
+						<td style=""><input id="OverTime" style="width:130" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></td>
+						<td></td>
+						<td class="tdtext" style="display:none;">分享状态</td>
+						<td style="display:none;"><input id="Share" style="width:130" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></td>	
+						<td style="display:none;"></td>
+						<td class="tdtext" style="display:none;">登记号</td>
+						<td style="display:none;"><input id="patno" style="width:130" class="easyui-validatebox"/></td>
+						<td><span style="margin:0 10 0 10"><span onclick="toggleExecInfo(this);" class="toggle-btn">高级查询</span></span></td>
+						<td id="condTd" style='display:none'>逻辑关系
+							<input id="condCombox" style="width:70" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/>
+						</td>
+					</tr>
+				</table>
+				<div class="dashline-div" id="dashline" style="display: none;"></div>
+				<table style="margin: 0 15 5 15;display:none" id="condTable"></table>
+			</div> 
+		</div> 
+	</div>
+	<div id="centerlayout" data-options="region:'center',border:false" style="margin:10px 100px 0 100px;">
+		<div id="toolbar" class="toolbar" style="background-color:#fff;padding-left:0px;padding-right:0px">
+			<!--<span>
+				<img src="../scripts/dhcadvEvt/images/adv_sel_1.png">
+			</span>
+			<span>刷新</span>-->
+			<table cellspacing="0" cellpadding="0" >
+				<tr style="height:36px">
+			      <td id="Refresh" class="toolbar-refresh">&nbsp;刷新</td>
+			      <td id="Export" ><img src="../scripts/dhcadvEvt/images/adv_sel_2.png" style="float:left">&nbsp;导出(报告明细)</td>
+			      <td id="ExportAll" ><img src="../scripts/dhcadvEvt/images/adv_sel_2.png" style="float:left">&nbsp;导出(查询列表)</td>
+			      <td id="ExportWord" ><img src="../scripts/dhcadvEvt/images/adv_sel_2.png" style="float:left;">&nbsp;导出(文档格式)</td>
+			      <td id="Printhtml" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_sel_3.png" style="float:left">&nbsp;打印(HTML)</td>	
+			      <td id="Print"><img src="../scripts/dhcadvEvt/images/adv_sel_3.png" style="float:left">&nbsp;打印</td>	
+			      <td id="Transcription" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_sel_4.png" style="float:left">&nbsp;转抄</td>	
+			      <td id="REceive"><img src="../scripts/dhcadvEvt/images/adv_sel_5.png" style="float:left">&nbsp;接收</td>	
+			      <td id="Back" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_sel_6.png" style="float:left">&nbsp;驳回</td>	
+			      <td id="SHare" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_sel_7.png" style="float:left;">&nbsp;分享</td>	
+			      <td id="RepImpFlag"><img src="../scripts/dhcadvEvt/images/adv_sel_9.png" style="float:left">&nbsp;重点关注</td>		
+			      <td id="Audit" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_sel_10.png" style="float:left">&nbsp;审核</td>
+				  <td id="Fish" style="display:none;"><img src="../scripts/dhcadvEvt/images/fish.png" style="float:left">&nbsp;鱼骨图</td>
+			      <td id="File" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_file.png" style="float:left">&nbsp;归档</td>
+			      <td id="CaseShare" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_caseshare.png" style="float:left">&nbsp;案例共享</td>
+			      <td id="RepCancel" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_cancel.png" style="float:left">&nbsp;作废</td>	
+			      <td id="RepDelete" style="display:none;"><img src="../scripts/dhcadvEvt/images/edit_delete.png" style="float:left">&nbsp;删除</td>
+			      <td id="FileAudit" style="display:none;"><img src="../scripts/dhcadvEvt/images/adv_file.png" style="float:left">&nbsp;归档复核</td>
+			      <td id="DeptConBtn" style=""><img src="../scripts/dhcadvEvt/images/adv_sel_10.png" style="float:left">&nbsp;追踪反馈</td>
+			    </tr>
+			</table>
+		    <div class="tool-bar-line" style="margin-bottom:3px;border-bottom-width:1px"></div>	
+		</div>
+		<div class="dhcc-panel" style="float:left;width:90%;"> 
+			<div class="dhcc-panel-header"> 
+			 	<div class="dhcc-panel-title">报告列表</div> 
+			</div> 
+			<div id="reqList" class="dhcc-panel-body" style="width:100%;height:375px;padding-top:0px!important">
+				<div id="maindg"></div>
+			</div>
+		</div>
+ 	</div>
+ 
+	<!--回首页-->
+	<div id="gologin" style="width:49px;height:47px; position:fixed;right:30px;bottom:142px;z-index:3;">
+		<a style="cursor:pointer" onclick="Gologin()">
+			<img src="../scripts/dhcadvEvt/images/gologin.png" onMouseOver='this.src="../scripts/dhcadvEvt/images/gologin_hover.png"' onMouseOut='this.src="../scripts/dhcadvEvt/images/gologin.png"'>
+		</a>
+	</div>
+	<!--回顶部-->	
+	<div id="gotop" style="width:49px;height:47px; position:fixed;right:30px;bottom:85px;z-index:3;display:none;">
+		<a href="#top">
+			<img src="../scripts/dhcadvEvt/images/gotop_hover.png" onMouseOver='this.src="../scripts/dhcadvEvt/images/gotop_hover.png"' onMouseOut='this.src="../scripts/dhcadvEvt/images/gotop.png"'>
+		</a>
+	</div>
+	<!--底部版权 2018-04-10 cy 注释-->
+	<!-- <div id="footer" style="width:100%;height:40px;color:#999;background-color:#e3e4e6;text-align:center;padding-top:20px;position:fixed;left:0;bottom:0;z-index:3;">
+		Copyright ?? 2017 DHC. All Rights Reserved.
+	</div> -->
+	
+	<!--日志-->
+	<div id="LogWin" style="display:none;"><div id="medadvdicdg"></div></div>
+	
+	<!--hxy 弹框背景层-->
+	<div id="showalert" style="display:none;border-radius:0%;width:100%;height:100%;position:absolute;right:0px;top:0px;background:#000000;opacity:0.1;z-index:4;"> 
+	</div>
+	<!--日志审批表 Process-->
+	<div id="Process">
+		<div class="easyui-layout"  data-options="fit:true">
+			<!--日志审批表-->
+			<div data-options="region:'center'" style="background:#F8F8FF;">
+				<!--<img style="float:right;margin-top:-10px;z-index: 9012" src="../scripts/dhcadvEvt/images/adv_delete.png"> -->
+				<div style="font-size:10pt;margin-top:10px;"id="NextLocList">
+					<span style="margin-left:10px;">科室指向：<span style="margin-left:10px"></span><input id="matadrNextLoc" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:200px;margin-left:2px;border:1px solid #95B8E7;"/></span>
+				</div>
+				<div style="font-size:10pt;margin-top:10px;">
+					<span style="margin-left:10px;">处理意见：</span>
+				</div>
+				<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:5px;"><textarea id="matadrLocAdvice" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto"></textarea> </span>
+            	</div>
+            	<div style="margin:5px;text-align:center;">
+					<!--<a href="#" id="ConfirmAudit" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
+					<a href="#" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#Process').window('close')">取消</a>-->
+					<button class="greenButton" id="ConfirmAudit" style="margin:25px 0px 5px 0px;">确定</button>
+	                <button class="redButton" id="CancelAudit" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#Process').window('close')">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--转抄操作 TranWin-->
+	<div id="TranWin" >
+		<div class="easyui-layout"  data-options="fit:true">
+		    <!--查询条件区-->
+			<div data-options="region:'north',title:''" style="width:900px;height:35px;border-bottom:1px solid #95B8E7;border-left:0;border-right:0;border-top:0" ><!--background:#F8F8FF;-->
+				<button id="transub" class="dhcc-btn" style="margin-left:5px;margin-top:1px" onclick="TranSub()">转抄提交</button>
+				<button id="tranreply" class="dhcc-btn" style="margin-left:5px;margin-top:1px" onclick="TranReply(1)">回复提交</button>
+				<button id="tranrec" class="dhcc-btn" style="margin-left:5px;margin-top:1px" onclick="TranReply(0)">接收</button>
+				<!--<a href="#" id="transub" style="width:90;margin:2px 5px 2px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="TranSub()">转抄提交</a>
+				<a href="#" id="tranreply" style="width:90;margin:2px 5px 2px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="TranReply(1)">回复提交</a>	
+				<a href="#" id="tranrec" style="width:90;margin:2px 5px 2px 5px;" class="easyui-linkbutton" iconCls="icon-receive" onclick="TranReply(0)">接收</a>	-->
+			</div>
+			<!--数据列区域-->
+			<div data-options="region:'center'" style="width:900px;border:0;">
+				<div class="easyui-layout" data-options="fit:true"style="">
+					<!--选择区域-->
+					<div data-options="region:'west'"  style="width:350px;border-left:0"><!--background:#F8F8FF;-->
+						<div style="margin-top:5px;height:28px;">
+							<span style="margin-left:10px;">转抄科室<span style="margin-left:10px"></span><input id="tranLocDr" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:130px;margin-left:2px;border:1px solid #95B8E7;"/></span>
+						</div>
+						<div style="margin-top:5px;height:237px;" >
+							<table id="selectdg" style="border:0;"></table>
+						</div>
+					</div>
+					<!--指向人员信息区域-->
+					<div data-options="region:'center'" border="false" ><!--style="background:#F8F8FF;"-->
+						<table id="tranmesdg" style="border:0;"></table>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'south'" style="width:900px;height:130px;border-top:1px solid #95B8E7;border-left:0;border-right:0;border-bottom:0"><!--background:#F8F8FF;-->
+				<div style="font-size:10pt;margin-top:5px;width:787px;">
+					<span style="margin-left:10px;">处理人员：<input id="medadrUser" class="text"style="background-color:#fff;border: 0px none;width:200px;margin-left:2px;border-bottom:1px solid #95B8E7;"/></span>
+					<span style="margin-left:10px;">处理时间：<input id="medadrDateTime"class="text" style="background-color:#fff;border: 0px none;width:200px;margin-left:2px;border-bottom:1px solid #95B8E7;"></input></span>
+					<span style="margin-left:10px;" id="replyFlag" ><input id="reply" class="cb" name="medadrReplyFlag" type="checkbox" style="margin-left:3px;position:relative;top:8px" value="Y"></input><span>该事件已报告本部门第一责任人</span></span>
+				</div>
+				<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:10px;">处理意见：</span>
+				</div>
+				<div style="font-size:10pt;">
+					<span style="margin-left:5px;"><textarea id="tranLocAdvic" rows="3" cols="129" style="margin:1px;width:97%;"></textarea> </span>
+            	</div>
+				<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:10px;" id="tranReply">回复内容：</span>
+				</div>
+				<div style="font-size:10pt;">
+					<span style="margin-left:5px;"><textarea id="tranReplyMess" rows="3" cols="129" style="margin:1px;width:97%;"></textarea> </span>
+            	</div>
+			</div>
+			
+		</div>
+	</div>
+	<!--审批明细-->
+	<div id="Auditwin" >
+		<div id="AuditListdg" >
+		</div>   
+	</div>
+	<!--动态导出操作 TranWin-->
+	<div id="ExportWin" style="border-right-color: #40a2de !important;">
+		<div class="easyui-layout"  data-options="fit:true" >
+			<div data-options="region:'center',title:''" style="">
+			    <div class="floatLeft" id="allItmTableDiv">
+			 		<table id="allItmTable"></table>
+			 	</div>
+		 		<div class="floatLeft" id="cuidDiv">
+		 			<table id="cuidTable">
+		 				<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-add">添加元素</a>
+			 				</td>
+		 				</tr>
+		 				<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-remove">删除元素</a>
+			 				</td>
+			 			</tr>
+			 			<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-remove">全部删除</a>
+			 				</td>
+			 			</tr>
+			 			<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-redo">全部选中</a>
+			 				</td>
+		 				</tr>
+		 				<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-undo">取消选中</a>
+			 				</td>
+		 				</tr>
+		 				
+		 			</table>
+		 		</div>
+		 		<div class="floatLeft" id="setItmTableDiv">
+		 			<table id="setItmTable"></table>
+		 		</div>
+	 		</div>
+	 		<div data-options="region:'south',title:''" style="height:40px;border-top-color:#40a2de !important;">
+	 			<button id="exportok" class="dhcc-btn" style="margin-left:5px;margin-top:5px;margin-left:600px; " onclick="ExportOK()">确定</button>
+				<button id="exportno" class="dhcc-btn" style="margin-left:5px;margin-top:5px;" onclick="$('#ExportWin').window('close')">取消</button>
+	 		</div>
+		</div>
+	</div>
+	
+	<!--驳回 RetWin-->
+	<div id="RetWin">
+		<div class="easyui-layout"  data-options="fit:true">
+			<!--驳回原因-->
+			<div data-options="region:'center'" style="background:#F8F8FF;">
+				<!--<img style="float:right;margin-top:-10px;z-index: 9012" src="../scripts/dhcadvEvt/images/adv_delete.png">-->
+				<div style="font-size:10pt;margin-top:10px;">
+					<span style="margin-left:10px;">驳回指向：<span style="margin-left:10px"></span><input id="RevStatus" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:200px;margin-left:2px;border:1px solid #95B8E7;"/></span>
+				</div> 
+				<div style="font-size:10pt;margin-top:10px;">
+					<span style="margin-left:10px;">请填写驳回理由：</span>
+				</div>
+				<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:5px;"><textarea id="retreason" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto"></textarea> </span>
+            	</div>
+            	<div style="margin:5px;text-align:center;">
+					<button class="greenButton" id="Reject" style="margin:25px 0px 5px 0px;">确定</button>
+	                <button class="redButton" id="CancelReject" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#RetWin').window('close')">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--归档 FileWin-->
+	<div id="FileWin">
+		<div class="easyui-layout"  data-options="fit:true">
+			<!--归档原因-->
+			<div data-options="region:'center'" style="background:#F8F8FF;">
+				<div style="font-size:10pt;margin-top:10px;">
+					<span style="margin-left:10px;">请填写归档建议：</span>
+				</div>
+				<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:5px;"><textarea id="filereason" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto"></textarea> </span>
+            	</div>
+            	<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:10px;">归档人员：<input id="UserCodeFile" class="text"style="background-color:#fff;border: 0px none;width:120px;margin-left:2px;border-bottom:1px solid #95B8E7;"/></span>
+					<span style="margin-left:10px;">密码：<input id="passWordFile" type="password" class="text" style="background-color:#fff;border: 0px none;width:120px;margin-left:2px;border-bottom:1px solid #95B8E7;"></input></span>
+				</div>
+            	<div style="margin:5px;text-align:center;">
+					<button class="greenButton" id="ConfirmFile" style="margin:25px 0px 5px 0px;">确定</button>
+	                <button class="redButton" id="CancelFile" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#FileWin').window('close')">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--复核归档 FileWin-->
+	<div id="RevFileWin">
+		<div class="easyui-layout"  data-options="fit:true">
+			<!--归档原因-->
+			<div data-options="region:'center'" style="background:#F8F8FF;">
+				<div style="font-size:10pt;margin-top:10px;">
+					<span style="margin-left:10px;">请填写归档建议：</span>
+				</div>
+				<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:5px;"><textarea id="filereasonaud" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto"></textarea> </span>
+            	</div>
+            	<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:10px;">复核人员：<input id="UserCodeAudit" class="text"style="background-color:#fff;border: 0px none;width:120px;margin-left:2px;border-bottom:1px solid #95B8E7;"/></span>
+					<span style="margin-left:10px;">密码：<input id="passWordAudit"  type="password"class="text" style="background-color:#fff;border: 0px none;width:120px;margin-left:2px;border-bottom:1px solid #95B8E7;"></input></span>
+				</div>
+            	<div style="margin:5px;text-align:center;">
+					<button class="greenButton" id="RevFile" style="margin:25px 0px 5px 0px;">确定</button>
+	                <button class="redButton" id="CancelAudFile" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#RevFileWin').window('close')">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--撤销归档 FileWin-->
+	<div id="CanFileWin">
+		<div class="easyui-layout"  data-options="fit:true">
+			<!--归档原因-->
+			<div data-options="region:'center',border:false,collapsible:false" class="dhcc-panel-body"style="background:#F8F8FF;" >
+				<div style="height:150px;border:0px;">
+					<div id="cancelfilelist" style="border:0px;"></div>
+				</div>
+				<div style="font-size:10pt;margin-top:10px;">
+					<span style="margin-left:10px;">请填写撤销归档建议：</span>
+				</div>
+				<div style="font-size:10pt;margin-top:5px;">
+					<span style="margin-left:5px;"><textarea id="canfilereason" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto"></textarea> </span>
+            	</div>
+            	<div style="margin:5px;text-align:center;">
+					<button class="greenButton" id="ConfirmCanFile" style="margin:25px 0px 5px 0px;">确定</button>
+	                <button class="redButton" id="CancelCanFile" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#CanFileWin').window('close')">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--案例共享 病区 WardW-->
+	<div id="WardW"> 
+		<div class="easyui-layout"  data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<div id="toolbar" class="toolbar" style="background-color:#fff;padding-left:0px;padding-right:0px">
+					<table cellspacing="0" cellpadding="0" >
+						<tr style="height:40px">
+						  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addWardAdd()">增加</a></td>
+					      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSecuGUW()">保存</a></td>
+					    </tr>
+					</table>
+				</div>
+				<div class="dhcc-panel-body" style="width:100%;height:370px;padding-top:0px!important">
+					<div id="Warddg"></div>
+				</div>
+			</div>
+		</div>	
+	</div>
+</body>
+</html>

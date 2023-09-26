@@ -1,0 +1,180 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+	n groupid
+	s groupid=$g(%request.Data("GroupDR",1))
+	
+	n accordionIds,accordionName,accordionId,accordionId2,accordionId3
+	//从现有3个手风琴菜单组找下去 找3级 当然目前只有两级
+	set accordionIds="|"
+	for accordionName="dhc.side.emr","dhc.side.oe","dhc.side.find" {
+		set accordionId=$o(^websys.MenuI("UniqueNameIndex",$zu(28,accordionName,7,32768),0))   //第一级
+		continue:accordionId'>0 
+		set accordionIds=accordionIds_accordionId_"|"  //拼上第一级
+		
+		set accordionId2=0
+		for {
+			set accordionId2=$o(^websys.MenuI("SubMenuOf1",accordionId,accordionId2))   //第二级
+			q:accordionId2=""
+			set accordionIds=accordionIds_accordionId2_"|"   //拼上第二级
+			
+			set accordionId3=0
+			for {
+				set accordionId3=$o(^websys.MenuI("SubMenuOf1",accordionId2,accordionId3))   //第三级
+				q:accordionId3=""
+				set accordionIds=accordionIds_accordionId3_"|"     //拼上第四级
+			}
+		}
+	}
+	
+	
+	
+	
+	i groupid {
+		n obj,j,tmp,security,rs,mnu,desc,descU,sort,enabled,sidemenus,headermenu,allowmenu,type
+		;s security=##Class(epr.GroupSettings).GetMenuSecurity(groupid)
+		s security="",sidemenus="",headermenu=""
+		s eprgrpid=##Class(epr.GroupSettings).GetIdFromGroupId(groupid)
+		s obj=##Class(epr.GroupSettings).%OpenId(+eprgrpid,0)
+		i obj {
+			s security=obj.MenuSecurity
+			i obj.MainMenuDR s headermenu=obj.MainMenuDR.%Id()
+			i obj.SideMenuGroupDR s sidemenus=obj.SideMenuGroupDR.MenuItemsGet()
+			d obj.%Close()
+		}
+		k t
+		; Scan all menus
+		s id=$o(^websys.MenuD(0))
+		while (id'="") {
+			m t=^websys.TranslationD("MENU",+$g(%session.Data("LOGON.LANGID")),id)
+			s allowmenu=0
+			s mnu=##Class(websys.Menu).%OpenId(id,0)
+			if id=1 { ;system.main - always allow
+				s allowmenu=1
+			} elseif mnu.Type="HeaderMenu" {
+				if 'headermenu s allowmenu=1
+				if headermenu,headermenu=id s allowmenu=1
+				//if headermenu,mnu.SubMenuOf,mnu.SubMenuOf.%Id()=headermenu s allowmenu=1
+				if headermenu,mnu.SubMenuOf	{
+					Set tmp = mnu.SubMenuOf
+					f  {
+						q:'tmp
+						q:tmp=tmp.SubMenuOf
+						if tmp.%Id()=headermenu s allowmenu=1 q
+						s tmp=tmp.SubMenuOf
+					}
+				}
+
+			} elseif mnu.Type="ComponentMenu" {
+				s allowmenu=1
+			} elseif mnu.Type="SideMenu" {
+				if sidemenus="" s allowmenu=1
+				if sidemenus'="",sidemenus[("|"_id_"|") s allowmenu=1
+				//if sidemenus'="",mnu.SubMenuOf,sidemenus[("|"_mnu.SubMenuOf.%Id()_"|") s allowmenu=1
+				if sidemenus'="",mnu.SubMenuOf	{
+					Set tmp = mnu.SubMenuOf
+					f  {
+						q:'tmp
+						q:tmp=tmp.SubMenuOf
+						if sidemenus[("|"_tmp.%Id()_"|") s allowmenu=1 q
+						s tmp=tmp.SubMenuOf
+					}
+				}
+			}
+			
+			if accordionIds[("|"_mnu.%Id()_"|") s allowmenu=1   //cryze 是手风琴菜单
+			
+			if (allowmenu) {
+				; for top level include additional info
+				;log 37668: display captions and names for all menus
+				i 'mnu.SubMenuOf s desc=mnu.Caption_" ["_mnu.Name_"]" i 1
+				e  s desc=mnu.Caption_"        ["_mnu.Name_"]"
+				; Ensure the sort key is unique by putting the ID on the end !
+				s descU=mnu.Caption_id
+				s tmp=mnu.SubMenuOf
+				f  {
+					q:'tmp
+					s desc="- "_desc
+					s descU=tmp.Caption_tmp.%Id()_"-"_$g(descU)
+					;
+					;;error trapping case menu added with submenu of itself
+					q:tmp=tmp.SubMenuOf
+					;
+					s tmp=tmp.SubMenuOf
+				}
+				s descU=$zcvt(descU,"U")
+				i security="" s enabled="false" i 1
+				e  i $zbitlen(security)<id s enabled="false" i 1
+				e  s enabled=$s($zbitget(security,id):"true",1:"false")
+				
+				if accordionIds[("|"_mnu.%Id()_"|") {    //cryze 是手风琴菜单
+					s sort(descU)=id_"^"_desc_"^"_enabled_"^"_"AccordionMenu"_"^"_$s(mnu.SubMenuOf:mnu.SubMenuOf.%Id(),1:"")_"^"_mnu.Name
+				}else{
+					; sort here  !!!!!
+					s sort(descU)=id_"^"_desc_"^"_enabled_"^"_mnu.Type_"^"_$s(mnu.SubMenuOf:mnu.SubMenuOf.%Id(),1:"")_"^"_mnu.Name
+				}
+			}
+			d mnu.%Close()
+			
+ 			s id=$o(^websys.MenuD(id))
+ 		}
+	}
+	s (sort,val,txt,sel)=""
+	w !,"<script language='javascript'>"
+	w !,"var aryval=new Array(); var arytxt=new Array(); var arysel=new Array();"
+	w !,"var aryvalCmp=new Array(); var arytxtCmp=new Array(); var aryselCmp=new Array();"
+	w !,"var aryvalHdr=new Array(); var arytxtHdr=new Array(); var aryselHdr=new Array();"
+	w !,"var aryvalAcd=new Array(); var arytxtAcd=new Array(); var aryselAcd=new Array();"   //cryze 手风琴菜单
+	n i,iCmp,iHdr,type,iAcd
+	s i=0,iCmp=0,iHdr=0,iAcd=0  //cryze 手风琴
+	f  {
+		s sort=$o(sort(sort))
+		q:sort=""
+		s type=$p(sort(sort),"^",4)
+		if type="SideMenu" { w !,"aryval["_i_"]='"_$p(sort(sort),"^",1)_"'; arytxt["_i_"]='"_$zcvt($p(sort(sort),"^",2),"O","JS")_"'; arysel["_i_"]="_$p(sort(sort),"^",3)_";" s i=i+1 }
+		elseif type="ComponentMenu" { w !,"aryvalCmp["_iCmp_"]='"_$p(sort(sort),"^",1)_"'; arytxtCmp["_iCmp_"]='"_$zcvt($p(sort(sort),"^",2),"O","JS")_"'; aryselCmp["_iCmp_"]="_$p(sort(sort),"^",3)_";" s iCmp=iCmp+1 }
+		elseif type="HeaderMenu" { w !,"aryvalHdr["_iHdr_"]='"_$p(sort(sort),"^",1)_"'; arytxtHdr["_iHdr_"]='"_$zcvt($p(sort(sort),"^",2),"O","JS")_"'; aryselHdr["_iHdr_"]="_$p(sort(sort),"^",3)_";" s iHdr=iHdr+1 }
+		elseif type="AccordionMenu" { w !,"aryvalAcd["_iAcd_"]='"_$p(sort(sort),"^",1)_"'; arytxtAcd["_iAcd_"]='"_$zcvt($p(sort(sort),"^",2),"O","JS")_"'; aryselAcd["_iAcd_"]="_$p(sort(sort),"^",3)_";" s iAcd=iAcd+1 }   //cryze 手风琴
+	}
+	w !,"</script>"
+		k t
+</SERVER>
+</head>
+
+<body>
+<TRAK:COMPONENT id="epr.GroupSettings.EditMenuSecurity">
+</TRAK:COMPONENT>
+<script Language="JavaScript" SRC="../scripts/websys.ListBoxes.js"></script>
+<script language="javascript">
+lst = document.getElementById("MenuSecurity");
+if (lst) {
+	AddItemToList(lst,arytxt,aryval);
+	selectOptions(lst,arysel);
+}
+lstCmp = document.getElementById("MenuComponents");
+if (lstCmp) {
+	AddItemToList(lstCmp,arytxtCmp,aryvalCmp);
+	selectOptions(lstCmp,aryselCmp);
+}
+lstHdr = document.getElementById("MenuHeaders");
+if (lstHdr) {
+	AddItemToList(lstHdr,arytxtHdr,aryvalHdr);
+	selectOptions(lstHdr,aryselHdr);
+}
+lstAcd = document.getElementById("MenuAccordions");  //cryze 手风琴
+if (lstAcd) {
+	AddItemToList(lstAcd,arytxtAcd,aryvalAcd);
+	selectOptions(lstAcd,aryselAcd);
+}
+</SCRIPT>
+</body>
+</html>

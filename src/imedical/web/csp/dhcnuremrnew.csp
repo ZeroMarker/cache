@@ -1,0 +1,85 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+</DIV>
+<SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s getSingleConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.getSingleConsult"))
+ s GetListConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.GetListConsult"))
+ s SaveCon=##Class(%CSP.Page).Encrypt($lb("User.DHCConsultation.Save"))
+ s GetLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getloc"))
+ s pdata1=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.getPagData"))
+ s pdata=##Class(%CSP.Page).Encrypt($lb("web.DHCMGPageData.GetPagData1"))
+ s GetSortDep=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.GetSortDep"))
+ s GetMainPat=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakePernum"))
+ s MakeAdmData=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakeAdmData"))
+ s GetEmrCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.ParseNurEmrCode"))
+ s SavePerson=##Class(%CSP.Page).Encrypt($lb("User.DHCPregPerson.save"))
+ S EpisodeID=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+  s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s userID = %session.Get("LOGON.USERID")
+		s currAuthor=""
+		if (userID'="")
+		{
+			s currAuthor = ##class(EPRmeta.Privilege.PowerUser).GetUserName(userID)
+		}
+		s userLoc = %session.Get("LOGON.CTLOCID")
+		s userLocDes = %session.Get("LOGON.CTLOCDESC")
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+ // s a=##class(web.DHCMGPageData).GetPagData()
+</SERVER>
+<TRAK:APPLET>
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+</SERVER>
+</DIV>
+<SCRIPT Language="Javascript">
+var GetListConsult="#(GetListConsult)#";
+var getSingleConsult="#(getSingleConsult)#";
+var SaveCon="#(SaveCon)#";
+var getloc="#(GetLoc)#";
+var GetSortDep="#(GetSortDep)#";
+var GetMainPat="#(GetMainPat)#";
+var GetEmrCode="#(GetEmrCode)#";
+var EpisodeID="#(%request.Get("EpisodeID"))#"
+var pdata1="#(pdata1)#";
+var pdata="#(pdata)#";
+var PatientID="#(PatientID)#";
+var SavePerson="#(SavePerson)#";
+	var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var userID = '#(userID)#';
+		var currAuthor = '#(currAuthor)#';
+		var userLoc = '#(userLoc)#'
+		var userLocDes = '#(userLocDes)#'
+</SCRIPT>
+<div id='hello'></div>
+<script type="text/javascript" src="../scripts/nurse/DHCNUR/DHCNUREMRNEW.js"></script><!-- Put your page Title here -->
+</BODY>
+</HTML>

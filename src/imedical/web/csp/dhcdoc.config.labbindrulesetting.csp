@@ -1,0 +1,268 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 dhcdoc.config.labbindrulesetting.csp HUI检验绑定规则设置csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	width:100%;
+}
+.r-label{
+	padding-left: 10px;
+	text-align:right;
+}
+#LabPlanLimitLoc {
+	list-style:none;
+	padding-bottom:10px;
+}
+#LabPlanLimitLoc li{
+	border-bottom:1px solid #ddd;
+	padding:5px 10px ;
+}
+#LabPlanLimitLoc li:hover {
+	cursor:pointer;
+	background:#DCF0FF;
+	color:#000;
+}
+.li-active {
+	background:#FFE48D;
+}
+.datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-text {
+	padding-right:5px;
+}
+.messager-popover{
+	padding: 5px 10px;
+	top:1px;
+}
+.tip_class li{
+	border-bottom:1px solid #ddd;
+	padding: 5px 10px;
+}
+</style>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/dhcdocconfig/dhcdoc.config.labbindrulesetting.js"></script>
+<Server>
+  s sexStr=""
+  s id=0
+  for {
+	  s id=$o(^CT("SEX",id)) q:id=""
+	  s DateFrom=$p(^CT("SEX",id),"^",4)
+	  continue:(DateFrom'="")&&(DateFrom>+$h)
+	  s DateTo=$p(^CT("SEX",id),"^",5)
+	  continue:(DateTo'="")&&(DateTo<=+$h)
+	  s desc=$p(^CT("SEX",id),"^",2)
+	  i sexStr="" s sexStr=id_"^"_desc
+	  e  s sexStr=sexStr_$C(1)_id_"^"_desc
+  }
+</Server>
+ </head> 
+  <body>
+  	<SCRIPT language = 'javascript' >
+  	  var sexStr="#(sexStr)#"
+  	</SCRIPT>
+    <div class="hisui-panel" data-options="fit:true,border:false" style="padding:10px;"> 
+    	<div class="hisui-layout" data-options="fit:true,border:false">
+    		<!--div data-options="region:'west',split:true,border:false" style="width:365px;">
+    			<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,tools:'#tt'" title="方案列表">
+    				<table id="planTab"></table>
+    			</div>
+			</div>
+			<div id="tt">
+				<a href="#" id="tip" class="x-btn-text icon-help"></a>
+			</div-->
+			<div data-options="region:'north',split:false,border:false" style="height:51px;">
+				<table class="search-table" style="width:auto;">
+					<tr>
+						<td>
+			              <label id="_HospListLabel" for="_HospList" style="color:red;padding-right:10px;">医院</label>
+			            </td>
+			            <td>
+			              <input id="_HospList"/>
+			            </td>
+			            <td class="r-label">
+			              <label>方案</label>
+			            </td>
+			            <td>
+			              <input id="PlanList"/>
+			            </td>
+			            <td class="r-label">
+			            	<a id="BPlanConfig" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'">方案维护</a>
+			            </td>
+			            <td>
+			            	<a id="BtnBloodSugarOrd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'" onClick="BloodSugarOrdOpen()">血糖医嘱维护</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',split:true,border:false">
+				<div id="tab-tools" style="line-height:33px;">
+					<a href="#" id="tip" class="x-btn-text icon-help">&nbsp&nbsp&nbsp&nbsp</a>
+				</div>
+				<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true,tools:'#tab-tools'">
+					<div title="方案绑定限定规则设置" style="padding:10px;">
+						 <div class="hisui-layout" data-options="fit:true,border:false">
+						 	  <div data-options="region:'west',split:true,border:false" style="width:330px;">
+						 	  	  <div class="hisui-layout" data-options="fit:true,border:false">
+						 	  	  	  <div data-options="region:'north',split:true,border:false" style="height:165px;">
+						 	  	  	  	<div style="display:inline-block;margin-right:5px;">
+							    			<div class="hisui-panel" title="就诊类型" style="height:155px;width:90px;padding:10px;">
+							    				<div>
+							    					<input id="O" class='hisui-checkbox admtype' type="checkbox" label="门诊">
+							    				</div>
+							    				<div>
+							    					<input id="E" class='hisui-checkbox admtype' type="checkbox" label="急诊">
+							    				</div>
+							    				<div>
+							    					<input id="I" class='hisui-checkbox admtype' type="checkbox" label="住院">
+							    				</div>
+							    				<div>
+							    					<input id="H" class='hisui-checkbox admtype' type="checkbox" label="体检">
+							    				</div>
+							    			</div>
+							    		  </div>
+							    		  <div style="display:inline-block;margin-right:5px;">
+							    			 <div class="hisui-panel" title="性别" style="height:155px;width:120px;padding:10px;">
+							    				<server>
+							    					for i=1:1:$l(sexStr,$C(1)) {
+								    					s oneSexStr=$p(sexStr,$C(1),i)
+								    					s sexId=$p(oneSexStr,"^",1)
+								    					s sexDesc=$p(oneSexStr,"^",2)
+								    					w "<div><input id='"_sexId_"_sex' class='hisui-checkbox' type='checkbox' data-options='checked:true' label='"_sexDesc_"'></div>"
+								    				}
+							    				</server>
+							    			</div>
+							    		  </div>
+							    		  <div style="display:inline-block;">
+							    			<div class="hisui-panel" title="年龄" style="height:155px;width:95px;padding:10px;">
+							    				<input id="AgeFrom" class="textbox" style="width:65px;">
+							    				<div style="margin:10px 0;">至</div>
+							    				<input id="AgeTo" class="textbox" style="width:65px;">
+							    			</div>
+							    		 </div>
+						 	  	  	  </div>
+						 	  	  	  <div data-options="region:'center',split:true,border:false">
+						 	  	  	  	 <div class="hisui-panel" title="开单科室" style="padding-right:10px;" data-options="fit:true,iconCls:'icon-w-list'">
+						    				<table id="LabPlanLimitLoc"></table>
+						    			 </div>
+						 	  	  	  </div>
+						 	  	  	  <div data-options="region:'south',split:false,border:false" style="padding-top:10px;height:40px;">
+						 	  	  	  	  <span style="margin-right:10px;">方案算法</span><input id="LabPlanAlgorithms" class="textbox" style="width:120px;">
+						 	  	  	  	  <!--span style="color:red;">目前只支持通用算法</span-->
+						 	  	  	  </div>
+						 	  	  </div>
+						 	   </div>
+						 	  <div data-options="region:'center',split:true,border:false">
+						 	  	  <div class="hisui-layout" data-options="fit:true,border:false">
+						 	  	  	 <div data-options="region:'center',split:true,border:false">
+						 	  	  	 	<div class="hisui-panel" title="限定医嘱列表" data-options="fit:true,iconCls:'icon-w-config'">
+				    				    	<table id="LimitOrdTab"></table>
+				    			     	</div>
+						 	  	  	 </div>
+						 	  	  	 <div data-options="region:'south',split:false,border:false" style="text-align:center;padding-top:10px;height:40px;">
+						 	  	  	  	  	<a href="#" onClick="SaveLabPlanLimit()" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						 	  	  	  </div>
+						 	  	  </div>
+						 	  	  
+						 	  </div>
+						 </div>
+					</div>
+					<div title="方案费用维护" style="padding:10px;">
+			    		<div class="hisui-layout" data-options="fit:true,border:false">
+			    			<div data-options="region:'north',split:true,border:false,collapsible:true" title="取血类型对应采血费维护" style="height:280px;">
+			    				<div class="hisui-panel" data-options="fit:true,iconCls:'icon-w-config'">
+			    				   <div class="hisui-layout" data-options="fit:true,border:false">
+			    				   	   <div data-options="region:'north',split:false,border:false" style="padding:10px;height:51px;border-bottom:1px dashed #ccc;">
+			    				   	   	   <span style="margin-right:10px;">取血类型</span><input id="Combo_BloodFlag" class="textbox" style="width:120px;">
+			    				   	   	   <a href="#" onClick="BloodFlagOpen()" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'" style="margin-left:10px;">取血类型维护</a>
+			    				   	   </div>
+			    				   	   <div data-options="region:'center',split:false,border:false">
+			    				   	   	  <table id="unifyBloodFee"></table>
+			    				   	   </div>
+			    				   </div>
+			    				</div>
+			    			</div>
+			    			<div data-options="region:'center',split:true,border:false">
+			    				<div class="hisui-panel" title="容器/标本绑定费用" data-options="fit:true,iconCls:'icon-w-config'">
+			    					<div class="hisui-layout" data-options="fit:true,border:false">
+			    						<div data-options="region:'west',split:true,border:false" style="width:290px;border-right:1px solid #ccc;">
+			    							<table id="SpecOrContainerListTab"></table>
+			    						</div>
+			    						<div data-options="region:'center',split:true,border:false" style="border-left:1px solid #ccc;">
+			    							<table id="tabSpecOrContainerItemList"></table>
+			    						</div>
+			    					</div>
+			    				</div>
+			    			</div>
+			    		</div>
+					</div>
+				</div>
+			</div>
+    	</div> 
+    </div>
+    <div id="BloodFlag-dialog" class="hisui-dialog" title="取血类型维护" style="width:675px;height:550px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
+		<div class="hisui-layout" data-options="fit:true,border:false" style="width:600px;height:500px;">   
+			<div data-options="region:'center',split:true,border:false">
+				<table id="BloodFlagTab"></table>
+			</div>
+		</div>
+    </div>
+	<div id="CopyLabPlan-dialog" class="hisui-dialog" title="复制方案" style="width:485px;height:230px;" data-options="iconCls:'icon-w-copy',shadow:false,modal:true,closed:true">
+		<div class="hisui-layout" data-options="fit:true,border:false" style="">   
+			<div data-options="region:'center',split:true,border:false">
+				<table class="search-table">
+					<tr>
+						<td class="r-label" colspan="2" style="position:relative;height:29px;">
+							<div id="" class="messager-popover error">
+								<span class="messager-popover-icon error"></span>
+								<span class="content">仅复制方案费用,方案限制规则需复制后维护,否则复制后的方案无效.</span>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label for="CopyToName">复制到方案名称</label>
+						</td>
+						<td>
+							<input class="textbox" id="CopyToName" style="width:205px;"/>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" style="text-align:center;">
+							<a id="BCopy" onClick="CopyLabPlan()" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy'">复制</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+    </div>
+    <div id="BloodSugarOrd-dialog" class="hisui-dialog" title="血糖医嘱维护" style="width:675px;height:550px;" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+    	<div class="hisui-layout" data-options="fit:true,border:false">
+		   <div data-options="region:'center',split:true,border:false">
+		   		<table id="BloodSugarOrdTab"></table>
+		   </div>
+    	</div>
+    </div>
+    <div id="BloodSugar-dialog" class="hisui-dialog" title="血糖分组维护" style="width:400px;height:500px;" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+    	<div class="hisui-layout" data-options="fit:true,border:false">
+		   <div data-options="region:'center',split:true,border:false">
+		   		<table id="BloodSugarTab"></table>
+		   </div>
+    	</div>
+    </div>
+    <div id="Plan-dialog" class="hisui-dialog" title="方案维护" style="width:400px;height:500px;" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+    	<div class="hisui-layout" data-options="fit:true,border:false">
+		   <div data-options="region:'center',split:true,border:false">
+		   		<table id="planTab"></table>
+		   </div>
+    	</div>
+    </div>
+</body>
+</html>

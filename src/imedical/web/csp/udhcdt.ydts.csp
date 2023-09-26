@@ -1,0 +1,36 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server>
+    s ARCIMRowid=%request.Get("ItmID")
+    s DrgFrmRowid=##class(web.DHCDocOrderEntry).GetDrgForm(ARCIMRowid)
+    i DrgFrmRowid'="" d
+    .s DrgCode=$p(^PHCD(+DrgFormRowid,1),"^",1)
+    .s DrgDesc=$p(^PHCD(+DrgFormRowid,1),"^",2)
+    .s Para="<general_name>"_DrgDesc_"</general_name><license_number>"_DrgCode_"</license_number>"
+    .;s Para="<general_name>°±²è¼î»ºÊÍÆ¬</general_name><license_number>¹úÒ©×¼×ÖSDA1361ºÅ</license_number>"
+    .w "<OBJECT classid='clsid:8AD9C840-044E-11D1-B3E9-00805F499D93' width='10' height='10' align='baseline' codebase='http://127.0.0.1:80'>" ,$C(13,10)
+    .w "<PARAM NAME='java_code' VALUE='Ydts.class'>" ,$C(13,10)
+    .w "<PARAM NAME='java_codebase' VALUE='.'>" ,$C(13,10)
+    .w "<PARAM NAME='java_type' VALUE='application/x-java-applet;version=1.5'>",$C(13,10) 
+    .w "<PARAM NAME='ARCHIVE' VALUE='../csp/ydts.jar' >",$C(13,10)
+    .w "<PARAM NAME='scriptable' VALUE='true'>" ,$C(13,10)
+    .w "<PARAM NAME='Param' VALUE='"_Para_"' >",$C(13,10)
+    .w "</OBJECT>" 
+</server>
+<SCRIPT Language="JavaScript">
+	setTimeout('window.close();',2000);
+</SCRIPT>
+</BODY>
+</HTML>

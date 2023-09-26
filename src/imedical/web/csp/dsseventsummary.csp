@@ -1,0 +1,115 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT language=javascript>
+function doDelete(name)
+{   
+	var Desc=""
+	//Desc=window.frames['TRAK_hidden'].document.forms['fwebsys_DSSEventItem_Edit'].Description.value
+	var cmdGo=window.parent.frames['TRAK_main'].document.forms[0].elements[name]
+	//cmdGo.click()
+	alert(cmdGo.value);
+	
+}
+</SCRIPT>
+</HEAD>
+<BODY>
+<server>
+ ;$get(%request.Data("Component",1)) 
+ s oEvent=##Class(websys.DSSEvent).%OpenId(%request.Get("EID"))
+ ;set ^TMP("HUN",$J,"EID")=%request.Get("EID")
+ ;set ^TMP("HUN",$J,"ID")=%request.Get("ID")
+ ;set ^TMP("HUN",$J,"Component")=%request.Get("Component")
+ w "<TABLE cellSpacing=1 cellPadding=1 width=""85%"" border=1>",$c(13,10)
+  w "<TBODY>",$c(13,10)
+  w "<!------------Event & EventItems---------------->",$c(13,10)
+  w "<TR>",$c(13,10)
+    w "<TD><A id=Codez"_oEvent.%Id()_" target=""EDIT"" name=Codez"_oEvent.%Id()_" HREF=""websys.default.csp?WEBSYS.TCOMPONENT=websys.DSSEvent.Edit&TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&ID="_oEvent.%Id()_"&EID="_oEvent.%Id()_"&Component="_%request.Get("Component")_""" tabIndex=""0"" style=""""><img SRC=""../images/websys/edit.gif"" BORDER=""0"">Edit Event</A></TD>",$c(13,10)
+    w "<TD>"_ oEvent.Description _ "</TD>",$c(13,10)
+    w "<TD>&nbsp;</TD>",$c(13,10)
+    w "<TD><A id=delete"_oEvent.%Id()_" name=delete"_oEvent.%Id()_" HREF=""dssdelete.csp?TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&EID="_oEvent.%Id()_"&DSSItem=DSSEvent"" tabIndex=""0"" style=""""><img SRC=""../images/websys/delete.gif"" BORDER=""0""></A></TD>",$c(13,10)
+  w "</TR>",$c(13,10)
+  
+  w "<!------------EventItems---------------->",$c(13,10)
+  w "<TR>",$c(13,10)
+    w "<TD>&nbsp;</TD>",$c(13,10)
+    w "<TD colSpan=3>",$c(13,10)
+      w "<TABLE cellSpacing=1 cellPadding=1 width=""100%"" border=""1"">",$c(13,10)
+        w "<TBODY>",$c(13,10)
+        w "<!--------for h=1:1:oEvent.Items.Count()--------------->",$c(13,10)
+        new oEItem
+  		set (oEItem)="" 
+        for h=1:1:oEvent.Items.Count() {
+        set oEItem = oEvent.Items.GetAt(h)
+        w "<TR>",$c(13,10)
+          w "<TD><A id=Codez"_oEItem.%Id()_" target=""EDIT"" name=Codez"_oEItem.%Id()_" HREF=""websys.default.csp?WEBSYS.TCOMPONENT=websys.DSSEventItem.Edit&TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&ID="_oEItem.%Id()_"&EID="_oEvent.%Id()_"&Component="_%request.Get("Component")_""" tabIndex=""0"" style=""""><img SRC=""../images/websys/edit.gif"" BORDER=""0""></A></TD>",$c(13,10)
+          w "<TD>"_oEItem.Description_"</TD>",$c(13,10)
+          w "<TD><A id=delete"_oEItem.%Id()_" target=""TRAK_main"" name=delete"_oEItem.%Id()_" HREF=""dssdelete.csp?TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&ID="_oEItem.%Id()_"&EID="_oEvent.%Id()_"&Component="_%request.Get("Component")_"&DSSItem=DSSEventItem"" tabIndex=""0"" style=""""><img SRC=""../images/websys/delete.gif"" BORDER=""0""></A></TD>",$c(13,10)
+        w "</TR>",$c(13,10)
+        }
+        w "<!--------End oEvent.Items.Count()--------------------->",$c(13,10)
+        
+        w "<TR>",$c(13,10)
+          w "<TD colSpan=3><A id=neweventitem"_oEvent.%Id()_" target=""EDIT"" name=neweventitem"_oEvent.%Id()_" HREF=""websys.default.csp?WEBSYS.TCOMPONENT=websys.DSSEventItem.Edit&TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&EID="_oEvent.%Id()_"&Component="_%request.Get("Component")_""" tabIndex=""0"" style=""""><img SRC=""../images/websys/new.gif"" BORDER=""0""></A></TD>",$c(13,10)
+        w "</TR>",$c(13,10)
+        w "</TBODY>",$c(13,10)
+      w "</TABLE>",$c(13,10)
+    w "</TD>",$c(13,10)
+  w "</TR>",$c(13,10)
+  w "<!--------for u=1:1:oEvent.Actions.Count()--------------->",$c(13,10)
+  new oAction
+  set (oAction)="" 
+  w "<!------------Action & ActionItems---------------->",$c(13,10)
+  for u=1:1:oEvent.Actions.Count() {
+  set oAction = oEvent.Actions.GetAt(u)
+  w "<TR>",$c(13,10)
+    w "<TD><A id=Codez"_oAction.%Id()_" target=""EDIT"" name=Codez"_oAction.%Id()_" HREF=""websys.default.csp?WEBSYS.TCOMPONENT=websys.DSSAction.Edit&TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&ID="_oAction.%Id()_"&Component="_%request.Get("Component")_"&EID="_oEvent.%Id()_""" tabIndex=""0"" style=""""><img SRC=""../images/websys/edit.gif"" BORDER=""0"">Edit Action</A></TD>",$c(13,10)
+    w "<TD>"_oAction.Description_"</TD>",$c(13,10)
+    w "<TD>"_oAction.TimeOffset_"</TD>",$c(13,10)
+    w "<TD><A id=delete"_oAction.%Id()_" name=delete"_oAction.%Id()_" HREF=""dssdelete.csp?TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&ID="_oAction.%Id()_"&EID="_oEvent.%Id()_"&Component="_%request.Get("Component")_"&DSSItem=DSSAction"" tabIndex=""0"" style=""""><img SRC=""../images/websys/delete.gif"" BORDER=""0""></A></TD>",$c(13,10)
+  w "</TR>",$c(13,10)
+  w "<!------------ActionItems---------------->",$c(13,10)
+    
+  w "<TR>",$c(13,10)
+    w "<TD>&nbsp;</TD>",$c(13,10)
+    w "<TD colSpan=3>",$c(13,10)
+      w "<TABLE cellSpacing=1 cellPadding=1 border=1 width=""100%"">",$c(13,10)
+        w "<TBODY>",$c(13,10)
+        w "<!--------for n=1:1:oAction.Items.Count()--------------->",$c(13,10)
+        for n=1:1:oAction.Items.Count() {
+        set oActionItem = oAction.Items.GetAt(n)
+        w "<TR>",$c(13,10)       
+          w "<TD><A id=Codez"_oActionItem.%Id()_" target=""EDIT"" name=Codez"_oActionItem.%Id()_" HREF=""websys.default.csp?WEBSYS.TCOMPONENT=websys.DSSActionItem.Edit&TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&ID="_oActionItem.%Id()_"&EID="_oEvent.%Id()_"&AID="_oAction.%Id()_"&Component="_%request.Get("Component")_""" tabIndex=""0"" style=""""><img SRC=""../images/websys/edit.gif"" BORDER=""0""></A></TD>",$c(13,10)
+          w "<TD>"_##Class(websys.StandardTypeItem).GetDescription("DSSPresentationType",oActionItem.PresentationType)_"</TD>",$c(13,10)
+          w "<TD>"_##Class(websys.StandardTypeItem).GetDescription("DSSActionType",oActionItem.ActionType)_"</TD>",$c(13,10)
+          w "<TD>"_"<!--&nbsp;-->"_"</TD>",$c(13,10)
+          w "<TD><A id=delete"_oActionItem.%Id()_" name=delete"_oActionItem.%Id()_" HREF=""dssdelete.csp?TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&ID="_oActionItem.%Id()_"&EID="_oEvent.%Id()_"&AID="_oAction.%Id()_"&Component="_%request.Get("Component")_"&DSSItem=DSSActionItem"" tabIndex=""0"" style=""""><img SRC=""../images/websys/delete.gif"" BORDER=""0""></A></TD>",$c(13,10)
+        w "</TR>",$c(13,10)
+        }
+        w "<!--------End oEvent.Actions.Items.Count()--------------------->",$c(13,10)
+        w "<TR>",$c(13,10)
+          w "<TD colSpan=5><A id=newactionitem"_oAction.%Id()_" target=""EDIT"" name=newactionitem"_oAction.%Id()_" HREF=""websys.default.csp?WEBSYS.TCOMPONENT=websys.DSSActionItem.Edit&TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&EID="_oEvent.%Id()_"&AID="_oAction.%Id()_"&Component="_%request.Get("Component")_""" tabIndex=""0"" style=""""><img SRC=""../images/websys/new.gif"" BORDER=""0""></A></TD>",$c(13,10)
+        w "</TR>",$c(13,10)
+        w "</TBODY>",$c(13,10)
+      w "</TABLE>",$c(13,10)
+    w "</TD>",$c(13,10)
+  w "</TR>",$c(13,10)
+  
+  }
+  w "<TR>",$c(13,10)
+    w "<TD colSpan=4><A id=newaction"_oEvent.%Id()_" target=""EDIT"" name=newaction"_oEvent.%Id()_" HREF=""websys.default.csp?WEBSYS.TCOMPONENT=websys.DSSAction.Edit&TFORM="_%request.Get("TFORM")_"&TEVENT="_%request.Get("TEVENT")_"&TNAVMARK="_%request.Get("TNAVMARK")_"&TPAGID="_%request.Get("TPAGID")_"&EID="_oEvent.%Id()_"&Component="_%request.Get("Component")_""" tabIndex=""0"" style=""""><img SRC=""../images/websys/new.gif"" BORDER=""0"">New Action</A></TD>",$c(13,10)
+  w "</TR>",$c(13,10)
+  w "</TBODY>",$c(13,10)
+ w "</TABLE>",$c(13,10)
+ 
+</server>
+</BODY>
+</HTML>

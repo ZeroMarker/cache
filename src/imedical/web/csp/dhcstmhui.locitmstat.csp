@@ -1,0 +1,114 @@
+<!--库存统计-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" style="width:340px;" data-options="region:'west',border:false" >
+		<div class="hisui-panel" data-options="title:'库存统计',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table class="Condition" id="Conditions">
+						<input id="Inci" name="Inci" type="hidden">
+						<input id="RowId" name="RowId" type="hidden">
+						<tr>
+							<td><label class="required">*</label><label>科室</label><input id="PhaLoc" name="PhaLoc" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>类组</label><input id="StkGrpId" name="StkGrpId" class="textbox hisui-stkscgcombotree" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>库存分类</label><input id="StkCat" name="StkCat" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>类型</label><input id="StockType" name="StockType" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>厂商</label><input id="PhManufacturer" name="PhManufacturer" class="textbox hisui-combobox CommonInput" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>管理组</label><input id="LocManGrp" name="LocManGrp" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>货位码</label><input id="StkBin" name="StkBin" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>高值标志</label><input id="HvFlag" name="HvFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>重点关注标志</label><input id="ManageDrugFlag" name="ManageDrugFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						</table>
+						<table class="CkPadding" id="FindConditions">
+						<tr>
+							<td><span style="padding: 20px;"></span><input id="UseFlag" name="UseFlag" class='hisui-checkbox' type="checkbox" value="Y" label="包括">
+							<input id="UseTime" name="UseTime" class="textbox" style="width:25px;height:25px;"><label>个月存在进出零库存</td>
+						</tr>
+						<tr>
+							<td><span style="padding: 20px;"></span><input id="NotUseFlag" name="NotUseFlag" class='hisui-checkbox' type="checkbox" value="Y" label="排除">
+							<input id="NotUseTime" name="NotUseTime" class="textbox" style="width:25px;;height:25px;"><label>个月无进出非零库存</td>
+						</tr>
+						</table>
+					</div>
+					<div class="PartLine" data-options="region:'south',border:false" style="height:51px;">
+						<table class="Condition" align="center">
+							<tr>
+								<td>
+									<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+									<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+									<!--<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>-->
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div  id="LocItmStatTab" class="hisui-tabs tabs-gray GridPadding" data-options="region:'center'" style="padding-left:0;border:none;">
+		<div title="项目明细">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table id="StkQtyGrid"></table>
+				</div>
+			</div>
+		</div>
+		<div title="批次明细" data-options="closable:false">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table id="BatQtyGrid"></table>
+				</div>
+			</div>
+		</div>
+		<div title="项目价格明细" data-options="closable:false">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table id="StockRpQtyGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/encode.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/StockQuery/LocItmStat.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body>
+<SERVER>
+ //Save Answers against patient
+ n EpisodeString,NewOrderString,extCodeString,TestSetString,recurseString,url1
+ s (EpisodeString,NewOrderString,extCodeString,TestSetString,recurseString,url1)=""
+ s EpisodeString=##Class(%CSP.Page).UnescapeURL(%request.Get("EpisodeString"))
+ s NewOrderString=##Class(%CSP.Page).UnescapeURL(%request.Get("NewOrderString"))
+ s extCodeString=##Class(%CSP.Page).UnescapeURL(%request.Get("extCodeString"))
+ s TestSetString=##Class(%CSP.Page).UnescapeURL(%request.Get("TestSetString"))
+ s recurseString=%request.Get("RecurseFlag")
+ d %request.Set("loc",%request.Get("loc"))
+ d %request.Set("LabEpisodeID",%request.Get("LabEpisodeID"))
+
+ ;Recurse flag set as piece on appropriate string.
+ ;s ^zanju($zn,"Flags1")="DSS: "_(##Class(web.CFOEConfig).GetConfiguration("OECFShowAllergyDSSQA",""))_", Lab: "_%request.Get("LabFlag")_", Allergy: "_%request.Get("AllergyFlag")_", DisplayQuest: "_%request.Get("DisplayQuestionFlag")_", Message: "_%request.Get("OEMessageFlag")
+ ;s ^zanju($zn,"Flag1")=(##Class(web.CFOEConfig).GetConfiguration("OECFShowAllergyDSSQA","")'="Y")!(('%request.Get("LabFlag"))&('%request.Get("AllergyFlag"))&('%request.Get("DisplayQuestionFlag"))&('%request.Get("OEMessageFlag")))
+ s ^zanju11("updateaction")=NewOrderString_","_EpisodeString_","_extCodeString_","_TestSetString
+ d ##Class(web.OEOrder).UpdateAction(NewOrderString,EpisodeString,extCodeString,TestSetString,recurseString)
+ s url1="websys.csp?PatientID="_%request.Get("PatientID")_"&EpisodeID="_%request.Get("EpisodeID")_"&mradm="_%request.Get("mradm")_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")
+ d %request.Set("ServerSideRedirect",url1)
+ s %response.ServerSideRedirect="websys.csp"
+ d ##Class(websys.Conversions).SaveRequest()
+ q
+ ;
+</SERVER>
+<script language="javascript">
+
+</script>
+</body>
+</html>
+

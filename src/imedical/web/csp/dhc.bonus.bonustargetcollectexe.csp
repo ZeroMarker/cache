@@ -1,0 +1,103 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	s str=$Get(%request.Data("str",1))
+	s SchemeID=$Get(%request.Data("SchemeID",1))
+	s BonusYear=$Get(%request.Data("BonusYear",1))
+	s BonusPeriod=$Get(%request.Data("BonusPeriod",1))
+	s TargetID=$Get(%request.Data("TargetID",1))
+	s data=$Get(%request.Data("data",1))
+
+	s UnitID=$Get(%request.Data("UnitID",1))
+	s BonusSchemeID=$Get(%request.Data("BonusSchemeID",1))
+	s TargetValue=$Get(%request.Data("TargetValue",1))
+	s UpdateDate=$Get(%request.Data("UpdateDate",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s modeType=$Get(%request.Data("modeType",1))
+		
+	s ftype=$Get(%request.Data("filetype",1))
+	s schemeID=$Get(%request.Data("schemeID",1))
+	
+	s year=$Get(%request.Data("year",1))
+	s month=$Get(%request.Data("month",1))
+	s flag=$Get(%request.Data("flag",1))
+	s targetTable=$Get(%request.Data("targetTable",1))
+	k ^cw1
+	s ^cw1=targetTable
+    i action = "TargetFileType" d
+	.w ##class(dhc.bonus.udata.uOnloadFileType).TargetList(targetTable,userCode,modeType,searchField,searchValue,sortField,sortDir,start,limit)
+
+	i action = "fileType" d
+	.w ##class(dhc.bonus.udata.uOnloadFileType).List(userCode,modeType,searchField,searchValue,sortField,sortDir,start,limit)
+
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uBonusTargetCollect).ListRec(BonusYear,BonusPeriod,TargetID,UnitID,BonusSchemeID,userCode,searchField,searchValue,sortField,sortDir,start,limit)
+    //年度
+	i action = "yearlist" d
+	.w ##class(dhc.bonus.udata.uBonusTargetCollect).GetYear(start,limit)
+	//方案
+	i action = "schemelist" d
+	.w ##class(dhc.bonus.udata.uBonusTargetCollect).GetSupUnit(start,limit,str,userCode)
+	//核算单元
+	i action = "suunit" d
+	.w ##class(dhc.bonus.udata.uBonusTargetCollect).SUList(start,limit,str,SchemeID,userCode)
+	//指标
+	i action = "stunit" d
+	.w ##class(dhc.bonus.udata.uBonusTargetCollect).STList(start,limit,str,SchemeID,userCode)
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uBonusTargetCollect).Insert1(UnitID,BonusYear,BonusPeriod,TargetID,TargetValue,UpdateDate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "batchAdd" d
+	.s result = ##class(dhc.bonus.udata.uBonusTargetCollect).batchInsert(schemeID,BonusYear,BonusPeriod,TargetID,TargetValue)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.chwk.udata.uEmpCostWork).Update(rowid,SetCfgDr,UnitDeptsDr,WorkDr,TitleDr,allPerson,studyPerson)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.chwk.udata.uEmpCostWork).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "refresh" d
+	.s result = ##class(dhc.pa.udata.uStratagem).Refresh(rowid,monthdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "statejudgement" d
+	.s result = ##class(dhc.bonus.udata.uInvoicingManagement).StateJudgement(year,month)
+	.w "{success:'true',info:'"_result_"'}"
+	
+</script>

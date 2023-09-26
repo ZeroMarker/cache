@@ -1,0 +1,166 @@
+
+
+<script language="cache" runat="server">
+
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+    
+	//获取安全组关联的科室
+	i action = "GetStockPhlocDs" d
+	.s GrpDr= $Get(%request.Data("GrpDr",1))
+	.w ##CLASS(web.DHCSTPIVAOUTCOMMON).GetStockPhlocDs(GrpDr)
+	
+		//获取急诊留观室
+	i action = "GetGetLgAreaDs" d
+	.w ##CLASS(web.DHCSTPIVAOUTCOMMON).GetGetLgAreaDs()
+	//获取病人基本信息
+	i action = "GetPatInfo" d
+	.s RegNo= $Get(%request.Data("RegNo",1))
+	.w ##CLASS(web.DHCSTPIVAOUTDISPREQ).GetPatInfo(RegNo)
+	
+	
+	//查处方医嘱明细
+	i action = "FindOrdDetailData" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTDISPREQ).GetOrdDetailData(RegNo,StPage,Limit,Input)
+	
+	//查询待申请病人信息
+	i action = "QueryWaitReqPatInfo" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTDISPREQ).GetWaitReqDspPatInfo(RegNo,StPage,Limit,Input)
+	
+	//查接收自备药医嘱明细
+	i action = "FindReqDetailData" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTRECDRUG).FindReqDetailData(RegNo,StPage,Limit,Input)
+	
+	
+	//查配伍审核医嘱明细
+	i action = "FindReqAdtDetail" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTAUDIT).FindReqDetailData(RegNo,StPage,Limit,Input)
+	
+	
+	//查配液瓶签明细
+	i action = "FindReqPrtDetail" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTPRTLABEL).FindReqPrtDetail(RegNo,StPage,Limit,Input)
+	
+	
+	//查询统计配液排药汇总
+	i action = "QueryArrageData" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTSTATARRAGE).QueryArrageData(RegNo,StPage,Limit,Input)
+	
+	
+	//查询配液减库
+	i action = "FindOrdGrpDetail" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTOPSTOCK).FindOrdGrpDetail(RegNo,StPage,Limit,Input)
+	
+	//查询配液复核
+	i action = "FindReCheckPatInfo" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTRECHECK).FindReCheckPatInfo(RegNo,StPage,Limit,Input)
+	
+	//查询配液接收
+	i action = "FindCheckedPatInfo" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTPIVAOUTRECSURE).FindCheckedPatInfo(RegNo,StPage,Limit,Input)
+
+	
+	
+	//配液踪合查询
+	i action = "PIVAOUTQUERY" d
+	.s RegNo = $Get(%request.Data("RegNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.s ^tlq(action)=Input
+	.w ##class(web.DHCSTPIVAOUTQUERY).FindOrdGrpDetail(RegNo,StPage,Limit,Input)
+	
+	
+	//配液查询瓶签各个已执行状态
+	i action = "QueryPogStatusDs" d
+	.s pogid = $Get(%request.Data("pogid",1))
+	.s dodis = $Get(%request.Data("dodis",1))
+	.w ##class(web.DHCSTPIVAOUTQUERY).QueryPogStatusDs(pogid,dodis)
+	
+	
+	//查询配液单号
+	i action = "FindLabelNoDs" d
+	.s Input= $Get(%request.Data("Input",1))
+	.w ##class(web.DHCSTPIVAOUTCOMMON).FindLabelNoDs(Input,0,200)
+	
+	
+	//工作量统计
+	i action = "PIVAOUTSTATWORK" d
+	.s Input= $Get(%request.Data("Input",1))
+	.w ##class(web.DHCSTPIVAOUTSTATWORK).QueryPIVAWork(Input)
+	
+	
+	//显示树型数据
+	i action = "ListTreeData" d
+	.s id= $Get(%request.Data("id",1))
+	.s level= $Get(%request.Data("level",1))
+	.s waycode= $Get(%request.Data("waycode",1))
+	.w ##class(web.DHCSTPIVAOUTCOMMON).GetReaTreeData(level,id,waycode)
+	
+	
+	//获取不合理数据
+	i action = "GetBedOrdItmDs" d
+	.s orditmstr= $Get(%request.Data("orditmstr",1))
+	.w ##class(web.DHCSTPIVAOUTAUDIT).GetBedOrdItmDs(orditmstr)
+	
+	
+	//获取审核结果日志
+	i action = "GetOrdItmAuditLog" d
+	.s OrdItm=$Get(%request.Data("OrdItm",1))
+	.w ##class(web.DHCSTPIVAOUTAUDIT).GetOrdItmAuditLog(OrdItm,0,200)
+	
+	
+	//获取审核结果明细日志
+	i action = "GetOrdItmAuditItmLog" d
+	.s PHOMDR=$Get(%request.Data("PHOMDR",1))
+	.w ##class(web.DHCSTPIVAOUTAUDIT).GetOrdItmAuditItmLog(PHOMDR,0,200)
+	
+	
+	//取消审核日志
+	i action = "CancelOrdAudit" d
+	.s Input= $Get(%request.Data("Input",1))
+	.s ret=##class(web.DHCSTPIVAOUTAUDIT).CancelOrdAudit(Input)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	
+</script>

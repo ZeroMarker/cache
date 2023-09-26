@@ -1,0 +1,99 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!--<meta http-equiv="Content-Type" content="text/html; charset=gb2312" /> -->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310> 
+        <!--DHCMED:HEAD></DHCMED:HEAD-->
+        <script language='Cache' runat='SERVER'>
+		set menuCode="DTHReportList"
+		set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+		set groupId=$g(%session.Data("LOGON.GROUPID"))
+		set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"DTHReport",groupId)
+        </script>
+		<link rel="stylesheet" type="text/css" href="../skin/default/css/websys.ext.3.1.0.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/DTHReport.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+        <script type="text/javascript" src="../Scripts/dhcmed/ss/PublicFunction/CustomFormItem.js"></script>
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/CommonFunction.js"></script>
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/report/GUI.js"></script>
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/report/Event.js"></script>
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/report/excelprint.js"></script>
+        <script language='Cache' runat='SERVER'>
+           set ReportID=$g(%request.Data("ReportID",1))
+           if ReportID'="" {
+	           set objRep=##Class(DHCMed.DTH.Report).GetObjById(ReportID)
+	           if $IsObject(objRep){
+		           set EpisodeID=objRep.EpisodeID
+		           set PatientID=objRep.PatientID
+		           set ReportLoc=objRep.RepLocDR
+		           set ReportUser=objRep.RepUsrDR
+		           set RepStatus=objRep.RepStatusDR.Code
+		       }
+	       } else {
+		       Set EpisodeID=$g(%request.Data("EpisodeID",1))
+	           set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+	           set ReportLoc=$g(%session.Data("LOGON.CTLOCID"))
+	           set ReportUser=$g(%session.Data("LOGON.USERID"))
+	           set RepStatus=""
+		   }
+		   
+		   Set AdmLoc=$p($g(^PAADM(+EpisodeID)),"^",4)
+		   If AdmLoc'="" {
+			   Set HospitalID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(AdmLoc)
+		       Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(HospitalID,"DTH")
+		   } Else {
+			   Set HospitalID=""
+		       Set SSHospCode=""
+		   }
+		   
+		   Set HospitalID=$p($g(^CTLOC(+ReportLoc)),"^",22)
+           Set:ReportID="" ReportID=""""""
+           Set:EpisodeID="" EpisodeID=""""""
+           Set:PatientID="" PatientID=""""""
+           Set:ReportLoc="" ReportLoc=""""""
+           Set:ReportUser="" ReportUser=""""""
+           Set:RepStatus="" RepStatus=""""""
+           Set:HospitalID="" HospitalID=""""""
+           Set SSHospCode=""""_SSHospCode_""""
+      </script>
+       
+       <script type="text/javascript" language="javascript">
+			//Ext.QuickTips.init();
+			
+			var ReportID=#(ReportID)#;
+			var PatientID=#(PatientID)#;
+			var EpisodeID=#(EpisodeID)#;
+			var ReportLoc=#(ReportLoc)#;
+			var ReportUser=#(ReportUser)#;
+			var RepStatus=#(RepStatus)#;
+			var HospitalID=#(HospitalID)#;
+			var SSHospCode=#(SSHospCode)#;
+			
+			function window_onload(){
+				Ext.QuickTips.init(); //fix bug 135411、135231 IE11非兼容模式下界面显示问题 
+				//ExtJs是通过Ext.ToolTip和Ext.QuickTips两个组件来实现浮动提示功能的,Ext.QuickTips.init();是必需的,初始化Ext.QuickTips,使得tip提示可用
+				Ext.onReady(InitDMReport);
+			}
+	   </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</HEAD>
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

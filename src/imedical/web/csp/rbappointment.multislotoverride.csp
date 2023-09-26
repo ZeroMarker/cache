@@ -1,0 +1,474 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<server>i %request.Get("sTWKFL") d %request.Set("TWKFL",%request.Get("sTWKFL"))</server>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server>
+	n descAry,GrpidAry,scnt,sessAry,debug
+	s (descAry,GrpidAry,sessAry)=""
+	s scnt=0
+	s debug=0
+	s colLen=0
+	s date=%request.Get("date")
+	d %request.Set("date",date)
+	s resource=%request.Get("resource")
+	s sessionId=%request.Get("sessionId")
+	s ServiceHeader=$g(%request.Data("ServiceHeader",1))
+	s descArySer=$p(ServiceHeader,"||")
+	s SeridAry=$p(ServiceHeader,"||",2)
+	s DOW=date+3#7+1
+	s GroupID=%session.Get("LOGON.GROUPID")
+	s NotExceedLoadLevel=$p(^SSU("SSGRP",GroupID),"^",67)
+	;i debug k ^zrod
+	;
+	;i debug s ^zrod($zn, "date, resource, sessionId")=date_","_resource_","_sessionId
+	; Get all sessions for this day
+	&sql( DECLARE SessIds CURSOR FOR SELECT SESS_RowId FROM RB_ResEffDateSession WHERE SESS_ParRef->DATE_ParRef->RES_RowId=:resource AND SESS_DOW_DR=:DOW)
+	&sql( OPEN SessIds)
+ 	f  q:SQLCODE=100  d
+	. &sql( FETCH SessIds INTO :sessrowid)
+	. i SQLCODE=0 s sessAry=sessAry_sessrowid_"^"
+	&sql(CLOSE SessIds)
+	;
+	;i debug s ^zrod($zn,"sessrowid")=sessrowid
+	;i debug s ^zrod($zn,"sessAry")=sessAry
+	; Get all service descriptions to show in column header.
+	; SB 02/08/02: Only show service groups that relate to that session.
+	&sql( DECLARE ServGrp CURSOR FOR SELECT DISTINCT BY (SER_RBC_Service_DR->SER_ServGroup_DR) SER_RBC_Service_DR->SER_ServGroup_DR,SER_RBC_Service_DR->SER_ServGroup_DR->SG_Desc FROM SQLUser.RB_ResEffDateSessServices WHERE SER_ParRef=:sessionId Order by SER_RBC_Service_DR->SER_ServGroup_DR)
+	;&sql( DECLARE ServGrp CURSOR FOR SELECT SG_RowId,SG_Desc FROM SQLUser.RBC_ServiceGroup)
+	&sql( OPEN ServGrp)
+ 	f  q:SQLCODE=100  d
+	. &sql( FETCH ServGrp INTO :srowid,:sdesc)
+	. ; SB 05/05/04 (42863): If service doesn't have a service group defined then just ignore it.
+	. i SQLCODE=0,sdesc'="" s descAry=descAry_sdesc_"^",GrpidAry=GrpidAry_srowid_"^"
+	&sql(CLOSE ServGrp)
+	; SB 26/08/03: Show services that have overrides defined.
+	&sql(Declare services CURSOR FOR SELECT DISTINCT BY (SOV_Service_DR) SOV_Service_DR,SOV_Service_DR->SER_Desc	FROM SQLUser.RB_ServiceOverride WHERE ( SOV_RBSession_DR=:sessionId or SOV_Session1_DR=:sessionId) AND SOV_StartTime is not null AND (SOV_Date is null or SOV_Date=:date) order by SOV_Service_DR)
+	&sql(Open services)
+	f  q:SQLCODE=100  d
+ 	. ;s (SovServId,SovServDesc)=""
+	. &sql(FETCH services INTO :SovServId,:SovServDesc)
+ 	. i SQLCODE=0,SovServId'="" s descAry=descAry_SovServDesc_"^",GrpidAry=GrpidAry_SovServId_"S^"
+	&sql(close services)
+	; SB 26/02/04 (36145): Screen out duplicates due to the refresh of the Add Service window.
+	s (newdescArySer,newSeridAry)=""
+	; SB 05/08/04 (44569): Made a few changes to the problem of duplicates
+	f i=1:1:$l(descArySer,"^")-1 {
+		s tmpx=$p(descArySer,"^",i)
+		s ztest="^"_tmpx_"^"
+		i descAry'[ztest {
+			s newdescArySer=newdescArySer_tmpx_"^"
+			s newSeridAry=newSeridAry_$p(SeridAry,"^",i)_"^"
+		}
+	}
+	s descAry=descAry_newdescArySer
+	s GrpidAry=GrpidAry_newSeridAry
+	;
+	; Loop through component and set up service group columns.
+	s c=##Class(websys.Component).OpenName("RBAppointment.MultiSlotOverride")
+	; LOG 27194 BC 9-8-2002 Only show the correct number of service groups and correct headers
+	s colListOrder=""
+	;i c  d
+	;. f i=1:1:c.TableItems.Count()  d
+	;. . s col=c.TableItems.GetAt(i),colName=$p(col.Name,"x")
+	;. . i colName="ServiceGroup" d
+	;. . . s scnt=scnt+1 ;this count holds the number of service columns (whereas i holds all columns)
+	;. . . ;s col.Caption=$p(descAry,"^",scnt)
+	;. . . i col.Caption="" s col.Hidden=1,col.DisplayOnly=0
+	;. . . e  s col.Hidden=0,col.DisplayOnly=1,colLen=colLen+1
+	;. . . s col.ValueGet="s val=$p(rs.GetDataByName(""slotover""),""^"","_scnt_")"
+	;. . . s col.Style="COLOR: #dfdfff;"
+	;. ;s c.ListRows=200
+	;. ;d c.%Save()
+	i c  d
+	. f i=1:1:c.TableItems.Count()  d
+	. . s col=c.TableItems.GetAt(i),colName=$p(col.Name,"x")
+	. . i ((colName="ServiceGroup") ! (colName="Service")) d
+	. . . s colListOrder=colListOrder_i_","
+	. d c.Show()
+	. d c.%Close()
+	;s ^ZTRAK("BC","SOR","GrpidAry")=GrpidAry
+	;s ^ZTRAK("BC","SOR","ServiceHeader")=ServiceHeader
+	;s ^ZTRAK("BC","SOR","colListOrder")=colListOrder
+</server>
+<script language="JavaScript">
+//alert('#(GrpidAry)#')
+//alert('#(ServiceHeader)#')
+//alert('#(colListOrder)#')
+//var colLen='#(colLen)#'
+var NotExceedLoadLevel='#(NotExceedLoadLevel)#'
+var tbl=document.getElementById("tRBAppointment_MultiSlotOverride");
+//if (tbl) alert("Table Found");
+var sSess='#(sessAry)#'; sSess=convDelim(sSess,"||","?"); var sessAry=sSess.split("^")
+//alert(sessAry)
+var sGrp='#(GrpidAry)#'; var sGrpAry=sGrp.split("^")
+//alert(sGrpAry)
+var sGrpDesc='#(descAry)#'; var sGrpDescAry=sGrpDesc.split("^")
+//alert(sGrpDescAry)
+//var sSerDesc='#(ServiceHeader)#'; var sSerDescAry=sSerDesc.split("^")
+//alert(sSerDesc)
+//alert(sGrpDesc)
+//alert(sGrpDescAry.length)
+//for (var i=0;i<sGrpDescAry.length-1;i++) {alert(sGrpDescAry[i]+","+sGrpAry[i])} //seeing what is in these
+var colLen=sGrpDescAry.length-1
+//var colLenS=sSerDescAry.length-1
+var servAry = new Array()
+var errAry = new Array()
+var tblRowLen=document.getElementById("tblRowLen")
+var colListOrder='#(colListOrder)#'; var colListOrderAry=colListOrder.split(",");
+var NotEnoughCols=0
+//alert(colListOrder)
+//alert('#(descAry)#'+"   "+'#(GrpidAry)#')
+if (tblRowLen && tbl) tblRowLen.value=tbl.rows.length
+HeaderBuilder();
+
+function DocumentLoadHandler() {
+	ServiceGroupTblBuilder();
+
+	obj=document.getElementById('Update');
+	if (obj) obj.onclick=UpdateClickHandler;
+	
+	obj=document.getElementById('reset');
+	if (obj) obj.onclick=ResetClickHandler;
+	//add to resize the window after the reconstruction of the table
+	/*
+	var w=0;var h=0;
+	var f=this.document.body.all;
+	for (var i=0;i<f.length;i++) {
+		if (f[i].tagName=="TABLE") {
+			if (f[i].offsetWidth>w) w=f[i].offsetWidth;
+			//if (f[i].id) h+=f[i].offsetHeight;
+		}
+	}
+	if (w>eval(window.screen.Width-window.screenLeft)) w=eval(window.screen.Width-window.screenLeft)-40;
+	if (w<282) w=282;
+	if (h>eval(window.screen.Height-window.screenTop)) h=eval(window.screen.Height-window.screenTop)-40;
+	h=document.body.offsetHeight;
+	//if (h<document.body.clientHeight) h=document.body.clientHeight;
+	if (h<380) h=380;
+	this.resizeTo(w+30,h);
+	this.resizeBy(0,27); // ab 7.05.02 - to combat lookups growing smaller
+	*/
+	//TestValues();
+}
+
+function UpdateClickHandler() {
+	var str=""
+	var err=""
+	//debugger
+	for (var i=1;i<tbl.rows.length;i++) {
+		var objTime=document.getElementById("Timez"+i)
+		if (objTime) ctime=objTime.innerText
+		showErr=true
+		if (ctime!=prevTime) {
+		 for (var j=1;j<=colLen;j++) {
+			var servId=sGrpAry[j-1]
+			//alert(sessAry.length)
+			for (var k=1;k<sessAry.length;k++) {
+				var sessId=sessAry[k-1]
+				//alert(ctime+"^"+servId+"^"+sessId)
+				if (servAry[ctime+"^"+servId+"^"+sessId]) str=str+servAry[ctime+"^"+servId+"^"+sessId].rowid+"|"+servAry[ctime+"^"+servId+"^"+sessId].time+"|"+servAry[ctime+"^"+servId+"^"+sessId].grp+"|"+servAry[ctime+"^"+servId+"^"+sessId].num+"|"+servAry[ctime+"^"+servId+"^"+sessId].sessId+"^"
+				if (errAry[ctime+"^"+servId+"^"+sessId] && errAry[ctime+"^"+servId+"^"+sessId].msg!="") err=err+errAry[ctime+"^"+servId+"^"+sessId].time+" "+errAry[ctime+"^"+servId+"^"+sessId].grp+": "+errAry[ctime+"^"+servId+"^"+sessId].msg+"\n"
+				if (errAry[ctime+"^ALL"+"^"+sessId] && errAry[ctime+"^ALL"+"^"+sessId].msg!=""  && showErr) {
+					err=err+errAry[ctime+"^ALL"+"^"+sessId].time+" "+errAry[ctime+"^ALL"+"^"+sessId].grp+": "+errAry[ctime+"^ALL"+"^"+sessId].msg+"\n"
+					showErr=false
+				}
+			}
+		 }
+		}
+		var prevTime=ctime
+	}
+	//alert(str)
+	if (err!="") {
+		alert(err)
+		return;
+	}
+	var servGrpStr=document.getElementById("servGrpStr");
+	if (servGrpStr) servGrpStr.value=str
+	//alert(str);
+	return Update_click();
+}
+
+function HeaderBuilder() {
+	//LOG 27194 BC 9-8-2002 Only show the correct number of service groups and correct headers
+	// Remove unwanted table headers
+	//debugger;
+	for (var q=0;q<=colListOrderAry.length-2;q++) {
+	//for (var q=1;q<=20;q++) {
+		var header=document.getElementById(colListOrderAry[q]);
+		if (header) {
+			var headsplita=header.innerText;
+			var headsplit=headsplita.split("x");
+			if (headsplit[0]=="ServiceGroup") {
+				if (headsplit[1]<=colLen) {
+					header.innerText=sGrpDescAry[headsplit[1]-1];
+				}
+				if (headsplit[1]>colLen) {
+					var killed=header.removeNode(false);
+				}
+			}
+			/*if (headsplit[0]=="Service") {
+				if (headsplit[1]<=colLenS) {
+					header.innerText=sSerDescAry[headsplit[1]-1];
+				}
+				if (headsplit[1]>colLenS) {
+					var killed=header.removeNode(false);
+				}
+			} //end if */
+		} //end if
+	} // end for
+
+}
+
+function ServiceGroupTblBuilder() {
+	//alert('#(date)#'+","+'#(resource)#'+","+'#(sessionId)#')
+	//if (tbl) alert("Table Found Again");
+	if (!tbl) return;
+	//debugger;
+	//alert(tbl.rows.length);
+	for (var i=1;i<tbl.rows.length;i++) {
+	   var objclose=document.getElementById("CloseSlotz"+i);
+	   if (objclose) objclose.onclick=CloseClickHandler
+	   //alert(i+","+colLen);
+	   for (var j=1;j<=colListOrderAry.length-1;j++) {
+			var serGrp=document.getElementById("ServiceGroupx"+j+"z"+i);
+			//var ser=document.getElementById("Servicex"+j+"z"+i);
+			if (serGrp && j>colLen) {
+				serGrp.disabled=true;
+				var killed=serGrp.parentElement.removeNode(false);
+			}
+			/*if (ser && j>colLenS) {
+				ser.disabled=true;
+				var killed=ser.parentElement.removeNode(false);
+			}*/
+		} //end for
+		
+	   for (var j=1;j<=colLen;j++) {
+			DefineCells("ServiceGroupx",i,j,"");
+	   }
+	  /*for (var j=1;j<=colLenS;j++) {
+			DefineCells("Servicex",i,j,colLen);
+	   }*/
+
+	} //end for
+	//alert(tbl.rows.length)
+	//alert(colListOrderAry.length-1)
+	if (NotEnoughCols==1) {
+		var colsDis=j-1
+		//alert(colLen)
+		if (colsDis>20) {alert(t['MaxCol']) }
+		else {alert(t['NotEnoughtCols'])}
+	}
+	return "";
+}
+
+function DefineCells(fieldname,x,y,startcnt) {
+			//pass in i & j again!!!!!
+			var i=x
+			var j=y; if (startcnt!="") j=startcnt+y
+			var serGrp=document.getElementById(fieldname+y+"z"+x);
+			if (!serGrp) {NotEnoughCols=1; return;}
+			var cell=serGrp.innerText
+			//alert(cell);
+			var cellAry=cell.split(",")
+			var valDay="",valSess="",valDayId="",valSessId=""
+			if (cellAry[1])	{valDay=mPiece(cellAry[1],"&",2); valDayId=mPiece(cellAry[1],"&",1);}
+			if (cellAry[0])	{valSess=mPiece(cellAry[0],"&",2); valSessId=mPiece(cellAry[0],"&",1);}
+			if (isNaN(valSess)) valSess=""; if (isNaN(valDay)) valDay="";
+			//alert(valDay+","+valDayId+","+valSess+","+valSessId);
+			//LOG 27194 BC 9-8-2002 Only show the correct number of service groups and correct headers
+			if ((serGrp) && (!serGrp.disabled)) {
+				var urls="<table width='100%' CELLSPACING=0>"
+				if (i==1) urls+="<tr><td align='right'><b>Sess &nbsp;</b></td><td align='left'><b>&nbsp; Day</b></td></tr>"
+				//if (i==1) urls+="<thead><TH  NOWRAP>Session</TH><TH  NOWRAP>Day</TH></thead>"
+				urls+="<tbody><tr ALIGN='center'><td align='right'><input id='hSessIdx"+j+"z"+i+"' name='hSessIdx"+j+"z"+i+"' type='hidden' value='"+valSessId+"'><input id='tSessLevelx"+j+"z"+i+"' name='tSessLevelx"+j+"z"+i+"' value='"+valSess+"' style='WIDTH: 40px'></td><td align='left'><input id='hDayIdx"+j+"z"+i+"' name='hDayIdx"+j+"z"+i+"' type='hidden' value='"+valDayId+"'><input id='tDayLevelx"+j+"z"+i+"' name='tDayLevelx"+j+"z"+i+"' value='"+valDay+"' style='WIDTH: 40px'>";
+				urls+="</td></tr></tbody></table>"
+				//alert(urls);
+				//if (i<3) alert(urls);
+				serGrp.innerHTML=urls
+				var obj = document.getElementById("tSessLevelx"+j+"z"+i)
+				if (obj) obj.disabled=true;
+				var obj = document.getElementById("tDayLevelx"+j+"z"+i)
+				if (obj) obj.onchange=txtChangeHandler;
+			}
+}
+
+function txtChangeHandler(e,eSrc) {
+	// Build an array for every row that has been change
+	//debugger;
+	if (!eSrc) var eSrc=websys_getSrcElement(e)
+	var itemAry=eSrc.name.split("x")
+	var rowAry=itemAry[1].split("z")
+	var objDayId=document.getElementById("hDayIdx"+itemAry[1])
+	var objTime=document.getElementById("Timez"+rowAry[1])
+	if (objTime) stime=objTime.innerText
+	var objSessId=document.getElementById("sessionRowIdz"+rowAry[1])
+	if (objSessId) sessid=objSessId.value
+	num=eSrc.value
+	grp=sGrpAry[rowAry[0]-1]
+	grpD=sGrpDescAry[rowAry[0]-1]
+	rowid=objDayId.value
+	sessid=convDelim(sessid,"||","?") //sessid = sessid.replace("||", "?"); sessid = sessid.replace("||", "?")
+	//alert(sessid)
+	servAry[stime+"^"+grp+"^"+sessid] = new itemRecord(stime,grp,num,rowid,sessid)
+
+	//Check that a valid entry has been entered
+	ValidateTextChange(eSrc,mPiece(itemAry[1],"z",2),mPiece(itemAry[1],"z",1),stime,grp,grpD,sessid)
+}
+
+function ValidateTextChange(objDayCell,rowCell,colCell,stime,grp,grpD,sessid) {
+	var objLoad=document.getElementById("hiddenLoadz"+rowCell)
+	if (objLoad) sLoad=objLoad.value;
+	NOS=objDayCell.value
+	objDayCell.style.color="black"
+	if (errAry[stime+"^"+grp+"^"+sessid]) errAry[stime+"^"+grp+"^"+sessid] = new errorRecord("","","")
+	if (errAry[stime+"^ALL"+"^"+sessid]) errAry[stime+"^ALL"+"^"+sessid] = new errorRecord("","","")
+
+	// Check that entered value is a number
+	if (isNaN(objDayCell.value)) {
+		objDayCell.style.color="red"
+		var msg = "'" + objDayCell.value + "' " + t['NotNumber']
+		errAry[stime+"^"+grp+"^"+sessid] = new errorRecord(stime,grpD,msg)
+		return;
+	}
+
+	// SB 25/02/04 (36145): This functionality was removed as it seems to contradict the idea that day overrides 
+	// override the session level
+	// LOG 30550 RC 22/11/02 We also need to check that the number entered is not greater than the load in the session
+	// column as well as in the load column
+	/*
+	var objSess=document.getElementById("tSessLevelx"+colCell+"z"+rowCell)
+	if (objSess) sSess=objSess.value;
+	if (parseInt(NOS)>parseInt(sSess)) {
+		objDayCell.style.color="red"
+		var msg = t['DayOverride'] + " (" + NOS + ") " + t['ExceedsSessLevel'] + " (" + sSess + ")."
+		errAry[stime+"^"+grp+"^"+sessid] = new errorRecord(stime,grpD,msg)
+		return;
+	}
+	*/
+		
+	// Check that entered value is not greater than load level
+	if (parseInt(NOS)>parseInt(sLoad)) {
+			objDayCell.style.color="red"
+			var msg = t['DayOverride'] + " (" + NOS + ") " + t['ExceedsLoadLevel'] + " (" + sLoad + ")."
+			errAry[stime+"^"+grp+"^"+sessid] = new errorRecord(stime,grpD,msg)
+			return;
+	}
+
+	// If security group "Do not allow to exceed Load Level on Slot Overides" is checked
+	// we need to get the cumulative total overrides for that time slot.
+	if (NotExceedLoadLevel=="Y") {
+		var sTotalLoad=0
+		for (var i=1;i<sGrpAry.length;i++) {
+			var objDayCellx=document.getElementById("tDayLevelx"+i+"z"+rowCell)
+			if (objDayCellx && objDayCellx.value!="" && !isNaN(objDayCellx.value)) sTotalLoad=parseInt(sTotalLoad)+parseInt(objDayCellx.value)
+		}
+		if (parseInt(sTotalLoad)>parseInt(sLoad)) {
+			objDayCell.style.color="red"
+			var msg = t['TotalLoad'] + " (" + sTotalLoad + ") " + t['ExceedsLoadLevel'] + " (" + sLoad + ")."
+			errAry[stime+"^ALL"+"^"+sessid] = new errorRecord(stime,"",msg)
+			return;
+		}
+	}
+}
+
+function itemRecord(time,grp,num,rowid,sessId) {
+	this.time=time
+	this.grp=grp
+	this.num=num
+	this.rowid=rowid
+	this.sessId=sessId
+}
+
+function errorRecord(time,grp,msg) {
+	this.time=time
+	this.grp=grp
+	this.msg=msg
+	//this.sessId=sessId
+}
+
+function mPiece(s1,sep,n) {
+    //Split the array with the passed delimeter
+    n=n-1;
+    delimArray = s1.split(sep);
+    //If out of range, return a blank string
+    if ((n <= delimArray.length-1) && (n >= 0)) {
+        return delimArray[n];		
+    }
+}
+
+function convDelim(str,frdelim,todelim) {
+	var ary=str.split(frdelim)
+	for (var x=1;x<ary.length;x++) {
+		str = str.replace(frdelim,todelim)
+	}
+	return str;
+}
+
+function ResetClickHandler() {
+	var rtn=confirm(t['ResetContinue'])
+	//SB 12/12/02 (31270): We now clear the Overrides via SQL to ensure all service groups are cleared.
+	/*if (rtn) {
+		for (var i=1;i<tbl.rows.length;i++) {
+		 	for (var j=1;j<=colLen;j++) {
+				var serGrp=document.getElementById("tDayLevelx"+j+"z"+i);
+				if (serGrp) serGrp.value=""
+				txtChangeHandler("",serGrp)
+		 	}
+		}
+	} else {
+		return false;
+	}*/
+	if (!rtn) return false;
+	return reset_click();
+}
+
+function CloseClickHandler(e) {
+	var eSrc=websys_getSrcElement(e)
+	// SB: Couldn't get id without doing this next/parent thingy :(
+	//var itemAry=eSrc.nextSibling.parentNode.id.split("z")
+	var itemAry=eSrc.parentElement.id.split("z")
+	for (var j=1;j<=colLen;j++) {
+		var serGrp=document.getElementById("tDayLevelx"+j+"z"+itemAry[1]);
+		if (serGrp) {
+			serGrp.value="0"
+			txtChangeHandler("",serGrp)
+			//serGrp.disabled=true
+		}
+	}
+	//alert(itemAry[1])
+	return false;
+}
+
+function TestValues() {
+	// SB: This is for testing purposes only, not to be enabled on site!!!
+	for (var i=1;i<tbl.rows.length;i++) {
+		var colMax=colLen+colLenS
+	 	for (var j=1;j<=colMax;j++) {
+			//alert(colMax+","+i+","+j)
+			var serGrp=document.getElementById("tDayLevelx"+j+"z"+i);
+			if (serGrp) {
+				serGrp.value="1"
+				txtChangeHandler("",serGrp)
+			}
+	 	}
+	}
+}
+
+document.body.onload=DocumentLoadHandler;
+</script>
+
+</BODY>
+</HTML>
+
+

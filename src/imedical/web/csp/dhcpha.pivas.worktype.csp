@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--工作组维护
+	csp:dhcpha.pivas.worktype.csp
+	js: scripts/pharmacy/pivas/worktype.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
+    </link>
+    <style>
+        .pha-row {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .pha-col:first-child {
+            margin-left: -1px;
+        }
+
+        /* inline-block 有间隙,大概4px */
+        .pha-col {
+            display: inline-block;
+            padding-left: 10px;
+            margin-left: -4px;
+        }
+    </style>
+</HEAD>
+
+<body>
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options="region:'center'" class="dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true" border="false">
+                <div
+                    data-options="region:'west',title:'工作组列表',split:true,width:685,headerCls:'panel-header-gray',iconCls:'icon-panel-work'">
+                    <table id="gridWorkType"></table>
+                </div>
+                <div
+                    data-options="region:'center',title:'工作组规则',headerCls:'panel-header-gray',iconCls:'icon-panel-work-fx'">
+                    <table id="gridWorkTypeItm"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridWorkTypeBar">
+        <table>
+            <tr>
+                <td>
+                    <input id="cmbPivaLoc" />
+                </td>
+                <td>
+                    <div class="datagrid-btn-separator"></div>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddWT">新增</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditWT">修改</a>
+                </td>
+                <td style="display:none;">
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDeleteWT">删除</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="gridWorkTypeItmBar">
+        <table>
+            <tr>
+                <td>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
+                </td>
+                <td>
+                    <input class="hisui-validatebox" style="visibility:hidden" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 工作组窗体维护 -->
+    <div id="gridWorkTypeWin" class="hisui-dialog" title="工作组维护" closed="true" style="width:320px;height:400px;"
+        data-options="iconCls:'',modal:true,
+	buttons:[{
+		text:'确定',
+		handler:function(){
+			SaveWorkType();
+		}
+	},{
+		text:'取消',
+		handler:function(){
+			$('#gridWorkTypeWin').window('close');
+		}
+	}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
+                <div class="hisui-layout" data-options="fit:true">
+                    <div data-options="region:'north',height:131,split:true" border="false" style="overflow: hidden">
+                        <div>
+                            <div class="pha-row">
+                                <div class="pha-col">
+                                    <label for="wtCode"><span style="visibility:hidden">占</span>代码</label>
+                                </div>
+                                <div class="pha-col">
+                                    <input id="wtCode" class="hisui-validatebox" style="width:205px">
+                                </div>
+                                <div class="pha-col">
+                                    <label for="wtDefault">默认</label>
+                                </div>
+                                <div class="pha-col">
+                                    <input id="wtDefault" type="checkbox" class="hisui-checkbox">
+                                </div>
+                            </div>
+                            <div class="pha-row">
+                                <div class="pha-col">
+                                    <label for="wtDesc"><span style="visibility:hidden">占</span>名称</label>
+                                </div>
+                                <div class="pha-col">
+                                    <input id="wtDesc" class="hisui-validatebox" style="width:205px">
+                                </div>
+                                <div class="pha-col">
+                                    <label for="wtActive">使用</label>
+                                </div>
+                                <div class="pha-col">
+                                    <input id="wtUse" type="checkbox" class="hisui-checkbox">
+                                </div>
+                            </div>
+                            <div class="pha-row">
+                                <div class="pha-col">
+                                    <label for="wtOrdNum">优先级</label>
+                                </div>
+                                <div class="pha-col">
+                                    <input id="wtOrdNum" class="hisui-validatebox" style="width:205px">
+                                </div>
+                            </div>
+                            <div style="border-top:1px dashed #cccccc;width:100%;"></div>
+                        </div>
+
+                    </div>
+                    <div data-options="region:'center'" border="false" style="padding:0px 10px;">
+                        <div class="hisui-layout" data-options="fit:true">
+                            <div data-options="region:'center'" style="border:1px solid #cccccc;border-radius: 4px;">
+                                <table id="gridPrtDict"></table>
+                            </div>
+                            <div data-options="region:'east',width:175,split:true"
+                                style="border:1px solid #cccccc;border-radius: 4px;">
+                                <table id="gridPrtWay"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/datagrid-dnd/datagrid-dnd.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/worktype.js"></script>
+</body>
+
+</HTML>

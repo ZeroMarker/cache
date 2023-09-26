@@ -1,0 +1,93 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;dhccpm.rqreport.csp
+ //d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("DHCWL_CodeCfg.DHCWLCodeCfgType")  //调用数据平台接口
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	set action=$g(%request.Data("action",1))
+	set isArrayType=$g(%request.Data("isArrayType",1))
+	set className=$g(%request.Data("className",1))
+	set condSql=""
+	;s start=1,pageSize=9999999
+	s:start>1 start=start+1
+	s end=start+pageSize
+	s deli="&"
+	if action="GetAllDate" {
+		s sd=$g(%request.Data("sDate",1))
+		s ed=$g(%request.Data("eDate",1))
+	    s queryJsonPros="{start:"_start_",end:"_end_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CodeCfgData.HolidayCFG:HolidayQuery","",sd,ed)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif action="addholiday" {
+		s dim("datePara")=$g(%request.Data("selectItemPara",1))
+		s dim("holidayFlag")=$g(%request.Data("holidayFlag",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveHolidayData).Addholiday(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="GetChoiceDate" {
+		s sd=$g(%request.Data("sDate",1))
+		s ed=$g(%request.Data("eDate",1))
+		s HolidayFlag=$g(%request.Data("HolidayFlag",1))
+	    s queryJsonPros="{start:"_start_",end:"_end_",HolidayFlag:"_HolidayFlag_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CodeCfgData.HolidayCFG:ChHolidayQuery","",sd,ed,HolidayFlag)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif action="delitem" {
+		s dim("selectItemPara")=$g(%request.Data("selectItemPara",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveHolidayData).DelItem(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="updateAP" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("timeAP")=$g(%request.Data("timeAP",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveHolidayData).UpdateAP(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="getDHCTimeRange" {
+		s sql="select TR_RowId,TR_Desc from DHC_TimeRange"   //出诊时断
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=",",str="['',''],"
+		While(rs.Next()){
+			s str=str_"['"_rs.Data("TR_RowId")_"'"_deli_"'"_rs.Data("TR_Desc")_"'],"
+		}
+		d rs.Close()
+		w "["_$e(str,1,$l(str)-1)_"]"
+	}elseif "compareDate"=action {
+		s sd=$g(%request.Data("sDate",1))
+		s ed=$g(%request.Data("eDate",1))
+		s startDate=##class(DHCWL.CommonUtil.DateUtil).DateHtmlToLogical(sd)
+		s endDate=##class(DHCWL.CommonUtil.DateUtil).DateHtmlToLogical(ed)
+		if (endDate<startDate){
+			w "{success:true,tip:'false'}"
+		}else{
+			w "{success:true,tip:'ok'}"
+		}
+	}
+	
+	
+	
+	
+</script>

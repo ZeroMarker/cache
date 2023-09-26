@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>收费记录</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<style>
+	.required-color { color:red}
+	.validatebox-invalid {
+		background-image: none;
+		background-color: #fff;
+	}
+	
+	.validatebox-text.validatebox-invalid {
+		border-color:#9ed2f2;
+	}
+</style>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px 10px 0 10px;">
+		<div id="orderSetDialog" class="hisui-dialog" data-options="title:'医嘱套',closed:true,buttons:'#orderSetButtons',width:700,height:400,modal:true">
+			<table id="orderSetBox"></table>
+		</div>
+		<div id="orderSetButtons">
+			<a href="#" class="hisui-linkbutton" id="btnConfirmOrderSet" data-options="iconCls:'icon-w-save'" data-permission="All">确认</a>
+			<a href="#" class="hisui-linkbutton" id="btnCloseOrderSet" data-options="iconCls:'icon-w-close'" data-permission="All">关闭</a>
+		</div>
+		<table id="chargeBox"></table>
+		<div id="chargeTools">
+			<form>
+			<div class="form-row-group">
+				<div>
+					<div class="form-row">
+						<div class="form-title-right2">扫码</div>
+						<div class="form-item-normal">
+							<input type="text" id="barCode" class="textbox" placeholder="扫码耗材条码或输入条码号按回车键" data-permission="All" style="width:240px;">
+						</div>
+						<div class="form-title-right3">医嘱套</div>
+						<div class="form-item-normal">
+							<select id="OrderSet" name="OrderSet" class="hisui-combobox" placeholder="请选择医嘱套添加费用" data-permission="All"></select>
+						</div>
+						<span class="form-btn">
+							
+						</span>
+						<span id="totalsum" class="form-btn" style="font-weight:bold;font-size:14px;">
+						</span>
+						
+					</div>
+				</div>
+			</div>
+			<div class="form-row-group" style="padding:3px 0">
+				<a href="#" id="btnAuditOrder" class="hisui-linkbutton" data-options="iconCls:'icon-paper-stamp',plain:true" data-permission="OperNurse">审核</a>
+				<a href="#" id="btnCancelOrder" class="hisui-linkbutton" data-options="iconCls:'icon-cancel-order',plain:true" data-permission="OperNurseHeader">撤销</a>
+				<a href="#" id="btnDelOrder" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" data-permission="All">删除</a>
+				<a href="#" id="btnReload" class="hisui-linkbutton" data-options="iconCls:'icon-refresh',plain:true" data-permission="All">重新加载</a>
+			</div>
+			</form>
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" style="height:90px;padding:0 10px 0 0;">
+		<form id="chargeForm" method="post">
+			<input type="hidden" id="ChargeRowId" name="RowId">
+			<div class="form-rows">
+				<div>
+					<div class="form-row">
+						<div class="form-title-right455"><span class="required-color">*</span>医嘱项</div>
+						<div class="form-item-normal">
+							<select id="ArcimID" name="ArcimID" class="hisui-combogrid" data-options="required:true" style="width:240px;" data-permission="All"></select>
+						</div>
+						<div class="form-title-right255"><span class="required-color">*</span>数量</div>
+						<div class="form-item-normal">
+							<input type="text" id="Qty" name="Qty" class="hisui-numberbox" style="width:100px" data-options="required:true,precision:2" data-permission="All">
+						</div>
+						<div class="form-title-right255"><span class="required-color">*</span>单位</div>
+						<div class="form-item-normal">
+							<select id="Unit" name="Unit" class="hisui-combobox" style="width:87px" data-options="required:true" data-permission="All"></select>
+						</div>
+						<span class="form-btn">
+							<a href="#" id="btnSaveOrder" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" data-permission="All">保存</a>
+						</span>
+						
+						<!--<span style="color:red">
+							注意：审核医嘱之后，请到费用查询界面查看医嘱是否已计费。
+						</span>-->
+						<!--<span class="form-btn">
+							<a href="#" id="btnPrintList" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a>
+						</span>-->
+					</div>
+				</div>
+				<div>
+					<div class="form-row">
+						<div class="form-title-right455"><span class="required-color">*</span>接收科室</div>
+						<div class="form-item-normal">
+							<select id="ExecDept" name="ExecDept" class="hisui-combobox" data-options="required:true" style="width:240px;" data-permission="All"></select>
+						</div>
+						<div class="form-title-right255">用法</div>
+						<div class="form-item-normal">
+							<select id="Instruction" name="Instruction" class="hisui-combobox" style="width:100px" data-permission="All"></select>
+						</div>
+						<div class="form-title-right255">单价</div>
+						<div class="form-item-normal">
+							<input type="text" id="Price" name="Price" class="hisui-validatebox" disabled style="width:80px">
+						</div>
+						
+						
+						<!--<span class="form-btn">
+							<a href="#" id="btnOrderSet" class="hisui-linkbutton" data-options="iconCls:'icon-template'" data-permission="All">套餐</a>
+						</span>-->
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<!--<div id="chargeSetDialog" class="hisui-dialog" data-options="closed:true,title:'收费套餐',width:740,height:500,modal:true,buttons:'#chargeSetBtns'">		
+		<table id="chargeSetBox"></table>
+		<div id="chargeSetBtns">
+			<a href="#" id="btnConfirmChargeSet" class="hisui-linkbutton" data-options="iconCls:'icon-ok'">确认</a> 
+			<a href="#" id="btnExitChargeSet" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a> 
+		</div>
+	</div>
+	<table id="chargeBox"></table>   
+	<div id="chargeTools">
+		<form id="chargeForm" method="post">
+			<div class="form-rows">
+				<div>
+					<div class="form-row">
+						<span class="form-title-common">扫码</span>
+						<span class="form-item-common">
+							<input type="text" class="textbox" id="ScanMatBarCode">
+						</span>
+						<span class="form-title-common">套餐</span>
+						<span class="form-item-common">
+							<select id="ChargeSet" name="ChargeSet" class="hisui-combobox"></select>
+						</span>
+						<span class="form-btn">
+							<a href="#" class="hisui-linkbutton" id="btnPrintChargeRecord" data-options="iconCls:'icon-w-print'">打印收费单</a>
+						</span>
+					</div>
+				</div>
+				<div>
+					<div class="form-row">
+						<span class="form-title-common">项目</span>
+						<span class="form-item-common"><input type="text" id="ChargeItem" name="ChargeItem" class="hisui-combogrid"></span>
+						<span class="form-title-common">数量</span>
+						<span class="form-item-common"><input type="text" class="hisui-numberbox" id="ChargeQty" name="Qty" data-options="required:true"></span>
+						
+						<span class="form-btn">
+							<a href="#" class="hisui-linkbutton" id="btnAddCharge" data-options="iconCls:'icon-w-add'">新增</a>
+						</span>
+						<span class="form-btn">
+							<a href="#" class="hisui-linkbutton" id="btnEditCharge" data-options="iconCls:'icon-w-edit'">修改</a>
+						</span>
+						<span class="form-btn">
+							<a href="#" class="hisui-linkbutton" id="btnDelCharge" data-options="iconCls:'icon-w-cancel'">删除</a>
+						</span>
+						
+					</div>
+				</div>
+				<div>
+					<div class="form-row">
+						
+						<span class="form-title-common">单位</span>
+						<span class="form-item-common"><select id="ChargeUom" name="Unit" class="hisui-combobox" data-options="required:true"></select></span>
+						
+					</div>
+				</div>
+			</div>
+			<input type="hidden" id="ChargeRecord" name="ChargeRecord">
+			<input type="hidden" id="ChargeRecordDetailRowId" name="RowId">
+		</form>
+	</div> -->
+	<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DataForm.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/datagrid-cellediting.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperCharge.js"></script>
+</body>
+</html>

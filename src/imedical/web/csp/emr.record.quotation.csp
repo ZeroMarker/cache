@@ -1,0 +1,79 @@
+﻿﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/quotation.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/emrviewcategory.css">
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>	
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s docID = $Get(%request.Data("DocID",1),"")
+		s:(patientID = "") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s userCode = %session.Get("LOGON.USERCODE")
+		s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userLocID = %session.Get("LOGON.CTLOCID") 
+		s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+		s patientEpisodeType = $p(^PAADM(episodeID),"^",2)
+		s quatationCheckFlag = ##Class(EMRservice.SystemParameter).GetQuotationStatus()
+  </script>
+	<script language="javascript">
+	  var patientID = '#(patientID)#';
+	  var episodeID = '#(episodeID)#';
+	  var docID = '#(docID)#';
+	  var userCode = '#(userCode)#';
+	  var userID = '#(userID)#';
+	  var userLocCode = '#(userLocCode)#';
+	  var ssgroupID = '#(ssgroupID)#';
+	  var userLocID = '#(userLocID)#';
+	  var patientEpisodeType = '#(patientEpisodeType)#';
+	  var quatationCheckFlag='#(quatationCheckFlag)#';
+   </script>
+	<title>病历引用</title>
+</head>
+<body class="easyui-layout" data-options="border:false" >
+    <div  data-options="region:'west',split:true,title:'就诊信息',border:false" style="width:382px;">
+    	<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:30px;background-color:#EBF3FE;padding-top:2px;">
+				<span>就诊类型</span>
+				<input id="episodeType" name="episodeType"></input>
+				<input id="diagnosDesc" type="text" value="诊断内容"  onclick="my_click(this,'diagnosDesc');"  onBlur="my_blur(this,'diagnosDesc');" style="vertical-align:middle;font-size:12px;color:#999;width:180px;"></input>
+				<a id="episodeSeek" href="#" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-search'" style="vertical-align:middle;">查询</a>  
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="episodeList"></table>
+			</div>
+		</div>
+	</div>
+    <div id="browsepage" data-options="region:'center'">
+    	<div id="centerTab" class="easyui-tabs" data-options="fit:true,border:false,tools:'#tab-tools'">
+    		<div id="tabList" title="病历列表"> 		
+    			<table id="recordList"></table> 
+    		</div>
+    		<div id="tabbrowse" title="病历浏览">
+    			<table>
+    				<tr>
+    					<td class='browseform'>
+    						<iframe id='framebrowse' src='emr.record.browse.browsform.editor.csp' scrolling='no' width='100%' height='100%' frameborder='0'></iframe>
+    					</td>
+    					<td class='browsecategory'>
+    						<ul id='ulcategory' class='navcategory'></ul>
+    					</td>
+    				</tr>
+    			</table>
+    		</div>
+    	</div>
+    	<div id="tab-tools">
+    		<a id="btBrowse" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true">浏览</a>
+    		<a id="btQuotation"  href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true">引用</a>
+		</div>   	    	
+    </div>  
+    <script type="text/javascript" src="../scripts/emr/js/record.quotation.js"></script>
+</body> 
+</html>

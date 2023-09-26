@@ -1,0 +1,32 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	
+    i action = "listBonusIndexes" d
+	.s start=$Get(%request.Data("start",1))
+	.s limit=$Get(%request.Data("limit",1))
+    .w ##Class(dhc.bonus.usubs.uBonusDataFilter).GetBonusIndexes(start,limit)
+    
+	i action="GetJsonStr" d
+	.w ##Class(dhc.bonus.usubs.uBonusDataFilter).GetJsonStr()
+	
+	i action="GetInfoByID" d
+	.s ID=$Get(%request.Data("ID",1))
+	.w ##Class(dhc.bonus.usubs.uBonusDataFilter).GetInfoByID(ID)
+	
+	i action="SaveInfo" d
+	.s ID=$Get(%request.Data("ID",1))
+	.s AssistCompItems =$Get(%request.Data("AssistCompItems",1))
+	.s DeptType=$Get(%request.Data("DeptType",1))
+	.s ChargeType=$Get(%request.Data("ChargeType",1))
+	.s PatientType=$Get(%request.Data("PatientType",1))
+	.d ##Class(dhc.bonus.usubs.uBonusDataFilter).SaveInfo(ID,AssistCompItems,DeptType,ChargeType,PatientType)
+
+	
+</script>

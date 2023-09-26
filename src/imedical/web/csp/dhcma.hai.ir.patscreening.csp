@@ -1,0 +1,77 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>	
+		<HISUI/>
+        <DHCHAI:HEAD></DHCHAI:HEAD>
+    	<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+    	<server>
+    		Set IsCheckReport = ##class(DHCHAI.BT.Config).GetValByCode("IRDigIsCheckReport","")
+    	</server>
+	</head>
+	<body>  
+	    <!-- 主页面-->
+		<div id ="divScreen" class="hisui-layout" data-options="fit:true">
+			<div  data-options="region:'center',border:false,collapsible:false" style="width:100%;padding:10px; ">
+				<div id="divMain" class="hisui-layout" ></div>
+			</div>
+			<div id="HelpTip" class="icon-big-book-yellow"></div>
+		</div>
+		<csp:Include Page="dhcma.hai.ir.screeningcom.show.csp">	
+		
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PatScreening/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/CCScreening/PatDtl.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/CCScreening/FloatWindow.js"></script>
+	
+		<script LANGUAGE=CACHE RUNAT=SERVER>
+			Set LocFlag    = +$g(%request.Data("LocFlag",1))
+			Set EpisodeDr  = $g(%request.Data("EpisodeDr",1))
+			Set Paadm      = $g(%request.Data("Paadm",1))	//HIS就诊ID
+			
+			// 院感系统打开
+			If EpisodeDr'=""{
+				Set objPaadm = ##class(DHCHAI.DP.PAAdm).GetObjById(EpisodeDr)
+				If $IsObject(objPaadm){
+					Set EpisodeIDx = objPaadm.PAEpisodeIDx
+					Set Paadm=$p(EpisodeIDx,"||",2)    //HIS就诊ID
+				}
+			}else{
+				// 临床打开
+				If Paadm'=""{
+					// 同步就诊信息
+					Set EpisodeDr = ##class(DHCHAI.DI.DHS.SyncHisInfo).SyncAdmByEpisodeID(HISCode,Paadm)
+					If EpisodeDr>0{
+						Set objPaadm = ##class(DHCHAI.DP.PAAdm).GetObjById(EpisodeDr)
+						If $IsObject(objPaadm){
+							Set EpisodeIDx = objPaadm.PAEpisodeIDx
+							// 同步转科信息
+							Do ##class(DHCHAI.DI.DHS.SyncHisInfo).SyncAdmTransLoc(HISCode,objPaadm.PAEpisodeIDx)
+							// 同步诊断
+							Do ##class(DHCHAI.DI.DHS.SyncHisInfo).SyncAdmDiagnos(HISCode,objPaadm.PAEpisodeIDx,objPaadm.PAAdmDate,+$h)
+						}
+					}
+				}
+			}
+		</script>
+	   
+	   <script language="javascript" type="text/javascript">
+	       var LocFlag   = '#(LocFlag)#';
+	       var EpisodeDr = '#(EpisodeDr)#';
+	       var Paadm = '#(Paadm)#';
+	       var ServerObj = {
+		       IsCheckReport:"(#IsCheckReport#)"
+	       }
+	       
+	       $(window).load(function() {				
+				InitPatScreeningWin();
+			});
+		</script>
+	</body>
+</html>

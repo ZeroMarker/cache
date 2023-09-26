@@ -1,0 +1,45 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">		
+	s action = $Get(%request.Data("action",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s month=$Get(%request.Data("month",1))
+	s itemSetId=$Get(%request.Data("item",1))
+   	s costDistSet=$Get(%request.Data("cost",1))
+	s deptDr=$Get(%request.Data("deptClass",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s inItemDr=$Get(%request.Data("inItemDr",1))
+	s costItemDr=$Get(%request.Data("costItemDr",1))
+	s comDeptDr=$Get(%request.Data("comDeptDr",1))
+	s comItemDr=$Get(%request.Data("comItemDr",1))
+    
+	i action="getvouchdata" d
+	.d ##class(dhc.ca.cache.io.uVouchDatasReport).ReportData(month)
+	.s result= ##class(dhc.ca.cache.report.comm.deptLevelSetTree).getUser(userCode)
+	.w "{success:'true',info:'"_result_"'}"
+	
+	i action="getincomedata" d
+	.d ##class(dhc.ca.cache.io.uIncomeDatasReport).ReportData(month)
+	.s result= ##class(dhc.ca.cache.report.comm.deptLevelSetTree).getUser(userCode)
+	.w "{success:'true',info:'"_result_"'}"
+	
+	i action="getalldataitem" d
+	.d ##class(dhc.ca.cache.io.uAllDataItemsReport).ReportData()
+	.s result= ##class(dhc.ca.cache.report.comm.deptLevelSetTree).getUser(userCode)
+	.w "{success:'true',info:'"_result_"'}"
+	
+	i action="getunitdept" d
+	.d ##class(dhc.ca.cache.io.uUnitDeptsReport).ReportData()
+	.s result= ##class(dhc.ca.cache.report.comm.deptLevelSetTree).getUser(userCode)
+	.w "{success:'true',info:'"_result_"'}"
+	
+	i action="getparadata" d
+	.d ##class(dhc.ca.cache.io.uParamDatasReport).ReportData(month)
+	.s result= ##class(dhc.ca.cache.report.comm.deptLevelSetTree).getUser(userCode)
+	.w "{success:'true',info:'"_result_"'}"
+	
+</script>

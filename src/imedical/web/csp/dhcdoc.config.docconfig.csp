@@ -1,0 +1,205 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 dhcdoc.config.subcatcontral.csp-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+    <meta http-equiv="Content-Type" content="text/html;"/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+    <LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.easyui.1.3.5.css"></LINK>
+	<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcdoc/css/dhcdoccomconfig.css"></LINK>
+	<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css"/>
+
+    <script type="text/javascript" src="../scripts/dhcdocconfig/dhcdoc.config.docconfig.js"></script>
+</head>
+<body class="easyui-layout" data-options="fit:true,border:false">
+ <div data-options="region:'center',split:true">
+    <table ALIGN="left">
+      <tr>
+        <td>
+          <label for="SSDBCombo_Item">附加材料</label>
+          <input id="SSDBCombo_Item" type="text" style="width:140px;height:20px"/>
+        </td>
+        <td>
+         <label for="Combo_DefaultFrequence">默认频次</label>
+         <input id="Combo_DefaultFrequence" type="text"  style="width:140px;height:20px"/>
+        </td>
+        <td>
+         <label for="Combo_DefaultInstr">默认用法</label>
+        <input id="Combo_DefaultInstr" type="text" style="width:140px;height:20px"/>
+        </td>
+        <td>
+         <label for="Txt_ViewGroupSum">草药录入显示列组数</label>
+        <input id="Txt_ViewGroupSum" type="text" style="width:30px;height:20px"/>
+        </td>
+        <td>
+         <a class="easyui-linkbutton" id="BSave" data-options="iconCls:'icon-save'">保存</a>
+        </td>
+      </tr>
+        
+      <tr>
+        <td>
+       <label for="SSDBCombo_CookModeFee">&nbsp&nbsp&nbsp代煎费</label>
+        <input id="SSDBCombo_CookModeFee" type="text" style="width:140px;height:20px"/>
+     </td>
+     <td>
+       <label for="SSDBCombo_DefaultDuration">默认疗程</label>
+        <input id="SSDBCombo_DefaultDuration" type="text" style="width:140px;height:20px"/>
+     </td>
+     <td>
+        <label for="Text_DefaultQty">默认用量</label>
+        <input id="Text_DefaultQty" type="text" style="width:140px;height:20px"/>
+     </td>
+     <td>
+        <label for="Check_CNMedAppendItemQtyCalcu" style="vertical-align:middle;">自动计算附加材料数量</label>
+        <input id="Check_CNMedAppendItemQtyCalcu" type="checkbox" style="vertical-align:middle;" />
+     </td>
+      <td>
+        <label for="Check_IPCookModeFeeNoAutoAdd" style="vertical-align:middle;">住院自动增加代煎费</label>
+        <input id="Check_IPCookModeFeeNoAutoAdd" type="checkbox" style="vertical-align:middle;" />
+     </td>
+      </tr>
+      
+      
+      <tr>
+       <td>
+          <fieldset style="border-color:#006699;height:220px;width:200px" ><legend align="Left">用法</legend>
+              <table id="tabCNMeditemInstr"></table>
+          </fieldset>
+       </td>
+       <td>
+           <fieldset style="border-color:#006699;height:220px;width:200px" ><legend align="Left">包装方式(项目用)</legend>
+              <table id="tabCNMedPackMode"></table>
+          </fieldset>
+        </td>
+       <td>
+          <fieldset style="border-color:#006699;height:220px;width:200px" ><legend align="Left">使用频率(项目用)</legend>
+              <table id="tabFrequence"></table>
+          </fieldset>
+       </td>
+       <td>
+          <fieldset style="border-color:#006699;height:220px;width:200px" ><legend align="Left">草药子分类</legend>
+              <select size="4" multiple="multiple" id="List_CNMedItemCat" style="height:200px;width:200px;"></select>
+          </fieldset>
+       </td>
+       <td>
+         <fieldset style="border-color:#006699;height:220px;width:200px" ><legend align="Left">草药颗粒剂子分类</legend>
+              <select size="4"  multiple="multiple" id="List_CNMedKLItemCat" style="height:200px;width:200px;"></select>
+          </fieldset>
+       </td>
+      </tr>
+      <!--第三行-->
+      <tr>
+       <td colspan="2">
+         <fieldset style="border-color:#006699;height:220px;width:430px" ><legend align="Left">煎药费账单子类</legend></br>
+            <label for="SSDBCombo_BillGroup">账单大类</label>
+            <input id="SSDBCombo_BillGroup" type="text" style="width:110px;height:20px"/>
+            <label for="SSDBCombo_CHNPHBillsub">子类</label>
+            <input id="SSDBCombo_CHNPHBillsub" type="text" style="width:110px;height:20px"/>
+            <table id="tabCNMedCookMode"></table>
+         </fieldset>
+       </td>
+       
+       <td colspan="2">
+         <fieldset style="border-color:#006699;height:220px;width:430px" ><legend align="Left">普通/颗粒设置</legend></br>
+           <label for="Combo_CNMedNormKL">普通/颗粒</label>
+              <select onchange="CNMedNormKLChange()" name="Combo_CNMedNormKL" id="Combo_CNMedNormKL" style="width:140px;height:20px">
+                <option value ="1">普通草药</option>
+                <option value ="2">颗粒草药</option>
+              </select>
+              <label for="Combo_CNMedNormKLInStr">用&nbsp&nbsp法</label>
+              <input id="Combo_CNMedNormKLInStr" type="text" style="width:140px;height:20px"/></br>
+              <label for="Combo_CNMedNormKLCookMode">加工 方式</label>
+              <input id="Combo_CNMedNormKLCookMode" type="text" style="width:140px;height:20px"/>
+              <label for="List_CNMedNormKLRefLoc">接收科室</label>
+              <input id="List_CNMedNormKLRefLoc" type="text" style="width:140px;height:20px"/>
+                <select size="4" name="List_CNMedNormKLItemCat" multiple="multiple" id="List_CNMedNormKLItemCat" style="height:150px;width:430px;"></select>
+         </fieldset>
+       </td>
+         
+       <td>
+          <fieldset style="border-color:#006699;height:220px;width:200px" ><legend align="Left">可用医嘱类型</legend>
+            <select size="4" name="List_CNMedPrior" multiple="multiple" id="List_CNMedPrior" style="height:200px;width:200px;"></select>
+          </fieldset>
+       </td>
+      </tr>
+      
+      <!--第四行-->
+      <tr>
+        
+        <td>
+         <fieldset style="border-color:#006699;height:240px;width:200px" ><legend align="Left">就诊类型/药物使用方式</legend></br>
+           <label for="List_AdmType" >就诊类型</label>
+           <select onchange="AdmTypeChange()"  name="List_AdmType" id="List_AdmType" style="width:135px;">
+            <option value="O">门诊</option>
+            <option value="I">住院</option>
+            <option value="E">急诊</option>
+            <option value="N">新生儿</option>
+            <option value="H">体检</option>    
+           </select>
+           <select size="4" name="List_Instr" multiple="multiple" id="List_Instr" style="height:180px;width:200px;"></select>
+          </fieldset>
+        </td>
+        
+        <td>
+          <fieldset style="border-color:#006699;height:240px;width:200px" ><legend align="Left">代煎接受科室</legend>
+            <select size="4" name="List_CNMedCookDep" multiple="multiple" id="List_CNMedCookDep" style="height:200px;width:200px;"></select>
+          </fieldset>
+        </td>
+        <td>
+          <fieldset style="border-color:#006699;height:240px;width:200px" ><legend align="Left">急诊代煎接受科室</legend>
+            <select size="4" name="List_EPCNMedCookDep" multiple="multiple" id="List_EPCNMedCookDep" style="height:200px;width:200px;"></select>
+          </fieldset>
+        </td>
+         <td>
+           <fieldset style="border-color:#006699;height:240px;width:200px" ><legend align="Left">协定处方设置</legend></br>
+            <input id="Check_ApperFormulaItem" type="checkbox" style="vertical-align:middle;" />
+            <label for="Check_ApperFormulaItem" style="vertical-align:middle;">是否显示明细</label>
+            <input id="Check_PrintFormulaItem" type="checkbox" style="vertical-align:middle;" />
+            <label for="Check_PrintFormulaItem" style="vertical-align:middle;">是否打印明细</label></br>
+            <select size="4" name="List_FormulaItemCat" multiple="multiple" id="List_FormulaItemCat" style="height:150px;width:200px;"></select>
+          </fieldset>
+        </td>
+         <td>
+          <fieldset style="border-color:#006699;height:240px;width:200px" ><legend align="Left">医嘱子类/药物加工方式(项目用)</legend></br>
+            <label for="List_CNMedItemCat2" >加工方式</label>
+            <input id="List_CNMedItemCat2" type="text"  style="width:130px;"/></br>
+            <select size="4" name="List_CookMode" multiple="multiple" id="List_CookMode" style="height:180px;width:200px;"></select>
+          </fieldset>
+       </td>
+      </tr>
+      
+      
+      <tr>
+     <td>
+      	<fieldset style="border-color:#006699;height:220px;width:200px" ><legend align="Left">医嘱单长期医嘱</legend>
+              <table id="tabCNMedAddLongOrder"></table>
+         </fieldset>
+     	
+     </td>
+     <td></td>
+     <td></td>
+     <td></td>
+     <td></td>
+     </tr>
+      
+   
+      <tr>
+      
+       <td>
+       </td>
+       <td>
+       </td>
+       <td>
+       </td>
+       <td>
+       </td>
+      </tr>
+    </table>
+ </div>
+</body>
+</html>

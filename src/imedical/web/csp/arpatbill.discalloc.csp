@@ -1,0 +1,79 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>	
+	//log 46811
+
+	s context   =%request.Get("CONTEXT")
+	s EpisodeID =%request.Get("EpisodeID")
+	s PatientID =%request.Get("PatientID")
+	s BillRowID =%request.Get("BillRowID")
+	
+	;Log 62387 - 01.02.2007 - FromMenu=1 indicates the csp is getting called from the Menu "Allocate Discretionary Discount"
+	s FromMenu =%request.Get("FromMenu")
+	s Rem=$p($g(^ARPBL(BillRowID)),"^",89) 
+	
+	s ClearAlloc=""
+	s GroupType=##Class(web.ARPatBillDiscAlloc).GetGroupType(BillRowID)
+	i GroupType="" {
+		s GroupType="I" //default group is Order Item
+		s ClearAlloc="Y" //default is to clear data in ARPatBillDiscAlloc table
+	}
+	s AllocMethod=##Class(web.ARPatBillDiscAlloc).GetAllocationMethod(BillRowID)
+
+	s BillingGroup   =%request.Get("BillingGroup")
+	s BillingSubGroup=%request.Get("BillingSubGroup")
+
+	n comp s comp=""
+	if AllocMethod="P" s comp="ARPatBill.DiscAllocByPercent"
+	if AllocMethod="A" s comp="ARPatBill.DiscAllocByAmount"
+	
+	;Log 62387 - 02.02.2007
+	i (FromMenu=1) {
+		s Url1="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.DiscAllocSelector&GroupType="_GroupType_"&BillRowID="_BillRowID_"&PatientID="_PatientID_"&AllocMethod="_AllocMethod_"&PatientBanner=1&CONTEXT="_context
+		s Url2="websys.default.csp?WEBSYS.TCOMPONENT="_comp_"&GroupType="_GroupType_"&ClearAlloc="_ClearAlloc_"&BillRowID="_BillRowID_"&PatientID="_PatientID_"&CONTEXT="_context
+		s row="40%,*"
+	} else {	
+		i Rem'="0" {
+			s Url1="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.DiscAllocSelector&GroupType="_GroupType_"&BillRowID="_BillRowID_"&PatientID="_PatientID_"&AllocMethod="_AllocMethod_"&PatientBanner=1&CONTEXT="_context
+			s Url2="websys.default.csp?WEBSYS.TCOMPONENT="_comp_"&GroupType="_GroupType_"&ClearAlloc="_ClearAlloc_"&BillRowID="_BillRowID_"&PatientID="_PatientID_"&CONTEXT="_context
+			s row="40%,*"
+		}
+		else {
+			s Url1="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.DiscEdit&ID="_BillRowID
+			s Url2=""
+			s row="100%,*"
+		}	
+	}	
+	;End Log 62387		
+
+</SERVER>
+
+<frameset rows=#(row)#>
+	<!--<frame name="DiscAlloc" src="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.DiscAllocSelector&GroupType=#(GroupType)#&BillRowID=#(BillRowID)#&PatientID=#(PatientID)#&AllocMethod=#(AllocMethod)#&PatientBanner=1&CONTEXT=#(context)#">
+	<frame name="DiscAllocList" src="websys.default.csp?WEBSYS.TCOMPONENT=#(comp)#&GroupType=#(GroupType)#&ClearAlloc=#(ClearAlloc)#&BillRowID=#(BillRowID)#&PatientID=#(PatientID)#&CONTEXT=#(context)#"> -->
+	<frame name="DiscAlloc" src=#(Url1)#>
+	<frame name="DiscAllocList" src=#(Url2)#>
+</frameset>
+<BODY>
+<SCRIPT>
+
+</SCRIPT>
+
+
+</BODY>
+</HTML>
+
+
+
+

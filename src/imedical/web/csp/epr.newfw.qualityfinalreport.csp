@@ -1,0 +1,59 @@
+<HTML>
+<HEAD>
+	<TITLE>终末质控评价</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+  	<script type="text/javascript" SRC="../scripts/epr/js/dgrid.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+</HEAD>
+
+<BODY bgcolor="#F6FAFD" width="98%" topmargin="2" leftmargin="2" marginwidth="0" marginheight="0">
+		
+	<table width='100%' border='0' cellspacing='0' cellpadding='2'><tr><td class='x-toolbar' nowrap width=100%><div id='pagetoolbar'></div></td></tr></table>
+	<div id="finalReportList"></div>
+	<script type="text/javascript">
+		var lastSelectTr = '';
+		//var episodeID = 1;
+		var episodeID = '#($Get(%request.Data("episodeID",1),""))#';
+		var ruleCodes = 'A^G';	//质控标准编码集合
+		Ext.Ajax.request({			
+			url: '../web.eprajax.finalreport.cls',
+			timeout : 5000,
+			params: { episodeID: episodeID,ruleCodes:ruleCodes,type:"0"},
+			success: function(response, opts) {
+				//alert(episodeID)
+				//debugger;
+				document.getElementById("finalReportList").innerHTML += response.responseText;
+			},
+			failure: function(response, opts) {
+				alert(response.responseText); 		
+			}
+		});
+		
+		Ext.Ajax.request({			
+			url: '../web.eprajax.finalreport.cls',
+			timeout : 5000,
+			params: { episodeID: episodeID,ruleCodes:ruleCodes,type:"1"},
+			success: function(response, opts) {
+				//debugger;
+				var ret = response.responseText;
+				//var list = ret.split("^");
+				//var html = "(病历等级:"+list[0]+" 病历分数:"+list[1]+")";
+				var qualityTbar = new Ext.Toolbar({
+					id:'qualityBar',
+					border: false,
+					renderTo: 'pagetoolbar',
+					items:['<font style="color:blue;font-weight:bold">'+ret+'</font>']
+				});
+			},
+			failure: function(response, opts) {
+				alert(response.responseText); 		
+			}
+		});
+		
+	</script>
+</BODY>
+</HTML>

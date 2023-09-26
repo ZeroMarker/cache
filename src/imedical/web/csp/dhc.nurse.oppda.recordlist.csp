@@ -1,0 +1,225 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML lang="zh-CN">
+<head>
+<!-- Put your page Title here -->
+<title>	 </title>
+<HISUI></HISUI>
+</head>
+
+<body>
+<div>
+	<div>
+	<table>
+		<tr>
+			<td>
+ 				<input class='hisui-radio' type="radio" label='全部' name='getOrder' id="allFlag" data-options="radioClass:'hischeckbox_square-blue'">
+			</td>
+			
+			<td>
+				<input class='hisui-radio' type="radio" label='上次接单' name='getOrder' id="lastFlag" data-options="radioClass:'hischeckbox_square-blue'">
+			</td>
+			<td>
+				<input class='hisui-radio' type="radio" label='本次接单' name='getOrder' id="thisFlag" data-options="radioClass:'hischeckbox_square-blue',checked:true" >
+			</td>
+			<td style="padding-left:10px;">
+				<a id="SearchAll" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find',onClick:PatListTabDataGridLoad">查询</a>
+			</td >
+			<td style="padding-left:10px;">
+				<a href="#" class="hisui-linkbutton" id="endRecOrd" data-options="iconCls:'icon-pause',onClick:endRecOrdClick">结束当前接单</a>
+			</td>
+			<td style="padding-left:10px;">
+				<a href="#" class="hisui-linkbutton" id="cancelOrd" data-options="iconCls:'icon-re-ignore',onClick:cancelOrdClick">撤销接单</a>
+			</td>
+		</tr>
+	</table>
+	
+	</div>
+    <table id="PatListTab"
+         class="hisui-datagrid">
+    </table>
+                   
+	     
+	
+</div>
+			
+	
+		
+</body>
+<server>
+	s userId =%session.Data("LOGON.USERID")
+	s regNo =$g(%request.Data("regNo",1))
+</server>
+<script type="text/javascript">
+var userId="#(userId)#";
+var regNo = "#(regNo)#";
+var selectOrUnSelectIndex = "";
+var PageLogicObj={
+	m_PatListTabDataGrid:"",
+	m_FindFlag:0,
+}				
+$(function(){
+	//初始化
+	Init();	
+})
+function Init(){
+	$HUI.radio("[name='getOrder']",{
+            onChecked:function(e,value){
+                PatListTabDataGridLoad();  
+            }
+    });
+	PageLogicObj.m_PatListTabDataGrid=InitPatListTabDataGrid();
+	PatListTabDataGridLoad();
+}
+//查询按钮
+function PatListTabDataGridLoad(){
+	$.cm({
+	   	ClassName : "Nur.OPPDA.Receive",
+	    QueryName : "getRevOrdList",
+	    regNo : regNo,
+	    //lastFlag:"on",
+	    lastFlag:$("#lastFlag").radio('getValue')?'on':'',
+	    //allFlag:"",
+	    allFlag:$("#allFlag").radio('getValue')?'on':'',
+	    page:1,    //可选项，页码，默认1
+		rows:20    //可选项，获取多少条数据，默认50
+		},function(rs){
+			//alert(rs.rows[1].arcimDesc);
+			PageLogicObj.m_PatListTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',rs);
+			});
+		
+	}
+//结束当前接单按钮
+function endRecOrdClick(){
+	var canFLag = window.confirm("是否结束当前接单?");
+	if(!canFLag) return;
+	$cm({
+		ClassName : "Nur.DHCNurOPReceiveOrd",
+	    MethodName : "endRecOrd",
+	    regNo : regNo,       //登记号，在url里
+	    userId: userId,  //用session获取  session['LOGON.USERID'],
+	    state:"F"
+		},function(ret){
+			//console.log(ret);
+			if(ret=="0"){
+	 			alert("操作成功!");
+ 				}
+ 			else{
+	 			alert(ret);
+ 				}
+			});
+	}
+//撤销接单按钮
+function cancelOrdClick(){
+	var canFLag = window.confirm("是否撤销接单任务?");
+    if(!canFLag) return;
+    var rowsData = $HUI.datagrid('#PatListTab').getSelections();  //获取选中的是那行数据
+	//console.log(rowsData.length);
+	for (var i = 0; i < rowsData.length; i++) {
+		var arcimDesc = rowsData[i].arcimDesc;
+		var oeoreId = rowsData[i].oeoreId;
+		//console.log(oeoreId);
+		if(arcimDesc.indexOf("____")>-1) continue ;	
+ 		$m({
+					ClassName : "Nur.DHCNurOPReceiveOrdSub",
+	    			MethodName : "Delete",
+	    			oeoreId : oeoreId,        //表中的数据
+	    			userId:userId,   //用session获取
+					},function(ret){
+						//alert(ret);
+						console.log(ret);
+						if(ret!="0"){
+	 			 			alert(ret);
+	 						}
+						});
+ 					
+ 				}
+
+    PatListTabDataGridLoad();
+	}
+	//初始化表格
+function InitPatListTabDataGrid(){
+	var Columns=[[ 
+		{field:'recOrdNo',title:'',width:100},
+		{field:'sttDate',title:'开始日期',width:120},
+		{field:'infuseState',title:'状态',width:80},
+		{field:'arcimDesc',title:'医嘱名称',width:250},
+		{field:'doseQtyUnit',title:'剂量',width:80},
+		{field:'phOrdQtyUnit',title:'总量',width:60},
+		{field:'overTime',title:'输液用时',width:80},
+		{field:'recOrdDateTime',title:'接单时间',width:135},
+		{field:'recOrdUser',title:'接单人',width:100},
+		{field:'recOrdStatus',title:'接单状态',width:100},
+		{field:'oeoreId',title:'oeoreId',width:100},
+		{field:'select',title:'选择',width:80,checkbox:'true'},		
+    ]]
+    var PatListTabDataGrid=$("#PatListTab").datagrid({
+		fit : false,
+		border : false,
+		striped : true,
+		singleSelect : false,
+		fitColumns : false,
+		autoRowHeight : false,
+		pagination : true, 
+		rownumbers:true,
+		pageSize: 20,
+		pageList : [20,100,200],
+		columns :Columns,
+		//加了之后就可以双选了，这里是判断相同的oeoreId
+		onSelect: function(index, data) {
+				if (selectOrUnSelectIndex !== "") {
+					return;
+				}
+				selectOrUnSelectIndex = index;
+				var currentOeoreId = data["oeoreId"];
+				var rows = $("#PatListTab").datagrid("getRows");
+				for (var i = index - 1; i >= 0; i--) {
+					if (currentOeoreId === rows[i]["oeoreId"]) {
+						$("#PatListTab").datagrid("selectRow", i);
+					}
+				};
+
+				for (var i = index + 1; i < rows.length; i++) {
+					if (currentOeoreId === rows[i]["oeoreId"]) {
+						$("#PatListTab").datagrid("selectRow", i);
+					}
+				};
+				selectOrUnSelectIndex = "";
+			},
+			//加了之后点击一个可以取消两个
+		onUnselect: function(index, data) {
+				if (selectOrUnSelectIndex !== "") {
+					return;
+				}
+				selectOrUnSelectIndex = index;
+				var currentOeoreId = data["oeoreId"];
+				var rows = $("#PatListTab").datagrid("getRows");
+				for (var i = index - 1; i >= 0; i--) {
+					if (currentOeoreId === rows[i]["oeoreId"]) {
+						$("#PatListTab").datagrid("unselectRow", i);
+					}
+				};
+
+				for (var i = index + 1; i < rows.length; i++) {
+					if (currentOeoreId === rows[i]["oeoreId"]) {
+						$("#PatListTab").datagrid("unselectRow", i);
+					}
+				};
+				selectOrUnSelectIndex = "";
+			},	
+			
+			});
+	PatListTabDataGrid.datagrid('loadData',{ 'total':'0',rows:[] });
+	return PatListTabDataGrid;
+		
+}
+</script>
+
+
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript"
+            src="../scripts/nurse/hisui/utils.js"></script>
+</html>

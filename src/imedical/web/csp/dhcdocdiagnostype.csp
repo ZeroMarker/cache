@@ -1,0 +1,112 @@
+<html>
+<head>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<script runat=server language=cache>
+	s mradm = $g(%request.Data("mradm",1))
+	s ICDType = $g(%request.Data("ICDType",1))
+	s MRDiagnosTypeDescEnc = ##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew:GetMRDiagnoseListJson"))
+  	w "<input name='MRDiagnosTypeDescEnc' id='MRDiagnosTypeDescEnc' type='hidden' value='"_MRDiagnosTypeDescEnc_"'/>"_$C(13,10)
+  	w "<input id='mradm' name='mradm' type='hidden' value='"_mradm_"'>",$C(13,10)
+  	w "<input id='ICDType' name='ICDType' type='hidden' value='"_ICDType_"'>",$C(13,10)
+  	s json = ##class(web.DHCDocDiagnosNew).GetMRDiagnoseListJson(mradm,ICDType)
+</script>
+<STYLE type='text/css'>
+ .x-grid3-hd-row td,
+ .x-grid-group-hd div.x-grid-group-title,
+ .x-grid3-row td, .x-grid3-summary-row td{
+	 font:14px "Microsoft Yahei"
+ }
+</STYLE>
+</head>
+
+<body><div id="gridDiv"></div>
+		<script language='javascript'>
+			Ext.onReady(function(){
+				var store = new Ext.data.GroupingStore({	//wanghc 2012-1-14
+					//proxy:new Ext.data.HttpProxy({url:'%25CSP.Broker.cls'}),
+					//data:#(json)#,
+					groupField: 'MRDiagnosTypeDesc',
+					reader:new Ext.data.JsonReader({root: 'rows', totalProperty: 'results'},[
+							{name:'Desc',type:'string'},
+							{name:'Rowid',type:'string'},
+							{name:'CodeRowid',type:'string'},		  	
+							{name:'MRDesc',type:'string'},
+							{name:'MRCIDCode',type:'string'},
+							{name:'MRDiagnosTypeDesc',type:'string'},
+							{name:'MRdiagnosNoteDesc',type:'string'},		  	
+							{name:'MRDiagnosDate',type:'string'},
+							{name:'MRdiagnosTime',type:'string'},
+							{name:'DiagStat',type:'string'},
+							{name:'DiagnosLeavel',type:'string'}
+					])
+				});
+				var grid = new Ext.grid.GridPanel({
+					title: '诊断类型',	
+					renderTo:"gridDiv",
+					height:600,
+					store: store,
+					frame: true,
+					cm: new Ext.grid.ColumnModel({columns:[
+						{header: '诊断级别',dataIndex:'DiagnosLeavel',type:'string',width:60},
+						{header: 'ICD描述',dataIndex:'Desc',type:'string'},
+						{header: 'rowid',dataIndex:'Rowid',type:'string',hidden:true},
+						{header: 'CodeRowid',dataIndex:'CodeRowid',type:'string',hidden:true},		  	
+						{header: '诊断注释',dataIndex:'MRDesc',type:'string',hidden:true},
+						{header: 'ICD代码',dataIndex:'MRCIDCode',type:'string'},
+						{header: '诊断类型',dataIndex:'MRDiagnosTypeDesc',type:'string'},
+						{header: 'MRdiagnosNoteDesc',dataIndex:'MRdiagnosNoteDesc',type:'string',hidden:true},		  	
+						{header: '日期',dataIndex:'MRDiagnosDate',type:'string',width:60},
+						{header: 'MRdiagnosTime',dataIndex:'MRdiagnosTime',type:'string',hidden:true},
+						{header: '诊断状态',dataIndex:'DiagStat',type:'string'}
+					
+						],
+						defaults: {
+							menuDisabled: true
+						}
+					}),
+					stripeRows: true,
+					sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
+					loadMask: true,
+					view: new Ext.grid.GroupingView({
+							forceFit: true,
+							groupTextTpl:'{text} ({[values.rs.length]} 行记录)'
+					})
+				});
+				store.loadData(#(json)#);
+				/*var method = document.getElementById("MRDiagnosTypeDescEnc");
+				var MRADMID = document.getElementById("mradm");
+				var ICDType = document.getElementById("ICDType");
+				if(method && MRADMID && ICDType){
+					store.load({params:{
+							WARGC: 2,
+							WEVENT: method.value,
+							WARG_1: MRADMID.value,
+							WARG_2: ICDType.value
+					}})
+				}*/
+				/*var MRDiagnosTypeDescWin = new Ext.Window({
+					width: 900,
+					height: 500,
+					layout: 'fit',
+					modal: true,
+					frame: true,
+					items: grid //,		
+				});	  
+				function MRDiagnosTypeDescWinShow(method,MRADMID,ICDType){
+					MRDiagnosTypeDescWin.show();
+					store.load({
+						params:{
+							WARGC: 2,
+							WEVENT: method,
+							WARG_1: MRADMID,
+							WARG_2: ICDType
+						}
+					})
+				}*/				
+			})
+
+		</script>
+</body>
+</html>

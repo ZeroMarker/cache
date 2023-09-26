@@ -1,0 +1,73 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s searchField = $Get(%request.Data("searchField",1))   
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s parent = $Get(%request.Data("parent"),1)
+	s str = $Get(%request.Data("query",1))
+	
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s dept  = $Get(%request.Data("dept",1))
+	s user  = $Get(%request.Data("user",1))
+	s deptname = $Get(%request.Data("deptname",1))
+	s uname = $Get(%request.Data("uname",1))
+	s groupname = $Get(%request.Data("groupname",1))
+	s group = $Get(%request.Data("group",1))
+	s type = $Get(%request.Data("type",1))
+	s flag = $Get(%request.Data("flag",1))
+	s CompName = $Get(%request.Data("CompName",1))		
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgDeptAccessRights).List(deptname,uname,groupname,start,limit,hospid)
+	
+	i action = "groupList" d
+	.w ##class(herp.budg.udata.uBudgDeptAccessRights).GroupList( start, limit, str, flag,hospid)
+	
+	i action="edit" d
+	.s result= ##class(herp.budg.udata.uBudgDeptAccessRights).Update(rowid,dept, user, CompName)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="add" d
+	.s result= ##class(herp.budg.udata.uBudgDeptAccessRights).Insert(dept, user, hospid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "batch" d
+	.s result = ##class(herp.budg.udata.uBudgDeptAccessRights).batchInsert(user, group, dept,type, hospid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="del" d
+	.s result= ##class(herp.budg.udata.uBudgDeptAccessRights).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	;»À‘±
+	i action = "username" d
+	.w ##class(herp.budg.udata.uBudgDeptAccessRights).UserName(start, limit, str, hospid)
+	
+	;ø∆ “
+	i action = "dept" d
+	.w ##class(herp.budg.udata.uBudgDeptAccessRights).Dept(hospid, start, limit, str)
+	
+		
+</script>

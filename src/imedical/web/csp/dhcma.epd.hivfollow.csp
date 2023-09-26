@@ -1,0 +1,55 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+		<server>
+			//获取控制设置参数
+			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
+   	   </server>
+	</head>
+	<body>  
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/EPD/HIVFollow/Print.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/EPD/HIVFollow/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/EPD/HIVFollow/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+		
+		<script language="Cache" RUNAT="SERVER">		
+			If (IsSupportRQ2018'=1) {  //润乾2018支持直接打印，如需引入本方法，本方法影响加载速度
+		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
+		    }
+			
+			Set ReportID=$g(%request.Data("ReportID",1))	    //报告ID
+			Set PatientID=$g(%request.Data("PatientID",1))
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))
+			
+			Set ReportID=""""_$g(ReportID)_""""
+			Set PatientID=""""_$g(PatientID)_""""
+			Set EpisodeID=""""_$g(EpisodeID)_""""
+	   </script>
+	  
+	    <script language="javascript" type="text/javascript">
+            var ReportID=#(ReportID)#;
+            var PatientID=#(PatientID)#;
+            var EpisodeID=#(EpisodeID)#;
+			$(document).ready(function(){
+				var url = "../scripts/DHCMA/EPD/HIVFollow/Layout.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					InitReportWin();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+		</script>
+	</body>
+</html>

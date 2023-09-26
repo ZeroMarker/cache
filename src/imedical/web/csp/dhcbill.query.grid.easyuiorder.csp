@@ -1,0 +1,145 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+	///注意：
+	///1.easyui要求返回的josn串的key必须用双引号引起来，否则不能解析。
+	///2.返回的Json串中如果有布尔值则不能加双引号，负责easyui按字符串解析。
+	s ClassName=$g(%request.Data("ClassName",1))
+	s QueryName=$g(%request.Data("QueryName",1))
+	i ClassName="" {
+		w "{""total"":""0"",""rows"":[]}"
+		q	
+	}
+	s ArgCnt=%request.Data("ArgCnt",1)
+	s rs=##class(%ResultSet).%New(ClassName_":"_QueryName)
+	s pagerows=$g(%request.Data("rows",1))
+	s page=$g(%request.Data("page",1))
+	s sortColumn=$g(%request.Data("sort",1))
+	s sortOrder=$g(%request.Data("order",1))
+	i sortOrder="desc" s tsortOrder="-1"
+	e  s tsortOrder="1"
+	s startRecordNo=""
+	s:pagerows'="" startRecordNo=((+page-1)*pagerows)
+	s limitRecordCnt=pagerows
+
+	;s:limitRecordCnt=0 limitRecordCnt=25
+	s ReturnType=..GetReturnType(ClassName,QueryName)
+	n execute,i
+	k PLIST
+	s execute="set %sc=$zobjmethod(rs,""Execute"""
+	f i=1:1:ArgCnt  d 
+	.s ArgName="Arg"_i
+	.s PLIST(i)=%request.Data(ArgName,1)
+	.s execute=execute_",PLIST("_i_")"
+	s execute=execute_")"
+	x execute
+
+	;json 数据排序
+	k SortCol
+	s count=0
+	s columns=rs.GetColumnCount()
+	f  q:rs.Next()=0  d
+	.s DataInfo="",tsortColumn="",count=count+1
+	.f i=1:1:columns  d
+	..s fieldInfo=$p(ReturnType,",",i)
+	..s fieldType=$p(fieldInfo,":",2)
+	..s rowData=rs.GetColumnName(i)
+	..s tmpData=rs.GetData(i)
+	..s tmpData=..ReplaceString(tmpData,"'","\'")
+	..s tmpData=..ReplaceString(tmpData,$c(13),"\n")
+	..s tmpData=..ReplaceString(tmpData,$c(10),"\r")
+	..s tmpData=..ReplaceString(tmpData,$c(2),"<$C2>")
+	..s tmpData=..ReplaceString(tmpData,$c(5),"<$C5>")
+	..s tmpData=..ReplaceString(tmpData,$c(7),"<$C7>")
+	..s:fieldType="" fieldType="%String"
+	..i fieldType="%String"  d //根据返回数据类别增加引号，方便前台数据排序
+	...s tmpData=tmpData
+	..e  d
+	...s:((tmpData="")&&(fieldType="%Integer")) tmpData="0"
+	...s:((tmpData="")&&(fieldType="%Float")) tmpData="0"
+	..i ((sortColumn=rowData)&(sortColumn'="")) d
+	...i tmpData="" s tsortColumn="ZSTRING"	;避免数据为空造成数组错误，赋固定值
+	..i sortColumn=rowData s tsortColumn=tmpData	; sortColumn有值
+	..i sortColumn="" s tsortColumn="ORDER"	; sortColumn为空说明不排序，走query传出数据顺序
+	..i ((tmpData[".")&((fieldType="%Float")!(fieldType="%Integer"))) d
+	...Set tmpData=$fn(tmpData,"",$l($p(tmpData,".",2))) ; 统一处理小数的问题
+	..i DataInfo="" s DataInfo=rowData_"#@*"_tmpData
+	..e  s DataInfo=DataInfo_"^!"_rowData_"#@*"_tmpData
+	.s SortCol(tsortColumn,count)=DataInfo
+	d rs.%Close()
+
+	s cnt=0
+	s displayRows=0
+	s rowData=""
+	w "{""rows"":["
+	s tData=""
+	f  s tData=$o(SortCol(tData),tsortOrder) q:tData=""  d
+	.s tDatanum=""
+	.f  s tDatanum=$o(SortCol(tData,tDatanum),tsortOrder) q:tDatanum=""  d
+	..i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt="")  d
+	...w:displayRows>0 ","
+	...w "{"
+	...s tDataStr=SortCol(tData,tDatanum)
+	...s tDlen=$l(tDataStr,"^!")
+	...s rowData="""",j=0
+	...f i=1:1:tDlen d
+	....s OutPutStr=$p(tDataStr,"^!",i)
+	....s:i>1 rowData=rowData_","""
+	....s ColumName=$p(OutPutStr,"#@*",1)
+	....s tmpData=$p(OutPutStr,"#@*",2)
+	....s rowData=rowData_ColumName_""" : "
+	....s tmpData=..ReplaceString(tmpData,"'","\'")
+	....s tmpData=..ReplaceString(tmpData,$c(13),"\n")
+	....s tmpData=..ReplaceString(tmpData,$c(10),"\r")
+	....s tmpData=..ReplaceString(tmpData,$c(2),"<$C2>")
+	....s tmpData=..ReplaceString(tmpData,$c(5),"<$C5>")
+	....s tmpData=..ReplaceString(tmpData,$c(7),"<$C7>")
+	....i (($e(tmpData,1,1)="'"))  d
+	.....s rowData=rowData_""""_tmpData_""""
+	....e  d
+	.....s:fieldType="" fieldType="%String"
+	.....i fieldType="%String"  d //根据返回数据类别增加引号，方便前台数据排序
+	......s rowData=rowData_""""_tmpData_""""
+	.....e  d
+	......s:((tmpData="")&&(fieldType="%Integer")) rowData=rowData_"0"
+	......s:((tmpData="")&&(fieldType="%Float")) rowData=rowData_"0"
+	......;s:tmpData'="" rowData=rowData_tmpData
+	......s:tmpData'="" rowData=rowData_""""_tmpData_""""
+	...w rowData
+	...w "}"
+	...s displayRows=displayRows+1
+	..s cnt=cnt+1
+	w "],""total"":"""_cnt_"""}"
+	k SortCol
+	q
+
+</SERVER>
+<csp:method name=ReplaceString arguments="Str, OldStr, NewStr" returntype=%String>
+	set intCounter = 1
+	while (1)
+	{
+		set tmp =$e(Str, intCounter, intCounter + $l(OldStr) - 1) 
+		if (tmp = OldStr)
+		{
+			 set $e(Str, intCounter, intCounter + $l(OldStr) - 1) = NewStr
+			 set intCounter = intCounter + $l(NewStr) - $l(OldStr)
+		}
+		quit:intCounter>=$l(Str)
+		set intCounter = intCounter + 1
+	}
+	quit Str
+</csp:method>
+
+
+<csp:method name=GetReturnType arguments="ClassName, QueryName" returntype=%String>
+Set ret=""
+Set cdef = ##class(%Dictionary.CompiledClass).%OpenId(ClassName)
+set count = cdef.Queries.Count() 
+For i = 1:1:count {
+	if (cdef.Queries.GetAt(i).Name=QueryName)
+ 	{		 	
+ 		Set ret=cdef.Queries.GetAt(i).Parameters.GetAt("ROWSPEC")
+	}	 
+}
+k cdef
+Quit ret
+</csp:method>

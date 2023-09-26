@@ -1,0 +1,62 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html XMLNS=TRAK>
+	<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<DHCHAI:BOOTSTRAP></DHCHAI:BOOTSTRAP>
+		<link rel="stylesheet" type="text/css" href="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css"/>
+		<style>
+			body{
+				padding:0 0 ;
+			}
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js" charset="utf-8"></script>
+		
+		<script type="text/javascript" src="../Scripts/dhchai/Units/Component.js"></script>
+		<script type="text/javascript" src="../Scripts/dhchai/IR/MBRListInfo/Gui.js"></script>
+		<script type="text/javascript" src="../Scripts/dhchai/IR/MBRListInfo/Event.js"></script>
+		
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+			Set Paadm = $g(%request.Data("Paadm",1))	//HIS就诊ID
+			Set EpisodeDr =$g(%request.Data("EpisodeDr",1))
+			Set ResultID = $g(%request.Data("ResultID",1))
+			// 院感系统打开
+			If EpisodeDr'=""{
+				Set objPaadm = ##class(DHCHAI.DP.PAAdm).GetObjById(EpisodeDr)
+				If $IsObject(objPaadm){
+					Set EpisodeIDx = objPaadm.PAEpisodeIDx
+					Set Paadm=$p(EpisodeIDx,"||",2)    //HIS就诊ID
+				}
+			}
+			Set DetailsId = $g(%request.Data("MsgDetailsId",1))
+			Set HAIEpisodeDr =##class(DHCHAI.CUS.ToClinReport).GetEpisodeDr(Paadm)
+			Set:HAIEpisodeDr'="" EpisodeDr=HAIEpisodeDr
+	   </SCRIPT>
+		<script language="javascript" type="text/javascript">
+			var Paadm        = "#(Paadm)#";
+			var EpisodeDr    = "#(EpisodeDr)#";
+			var ResultID     = "#(ResultID)#";
+			var DetailsId    = "#(DetailsId)#";
+			$(document).ready(function(){
+				var url = "../Scripts/dhchai/IR/MBRListInfo/Layout.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					InitMBRListInfoWin();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+		</script>
+	</body>
+</html>

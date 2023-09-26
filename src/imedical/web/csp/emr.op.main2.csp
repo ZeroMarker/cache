@@ -1,0 +1,218 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<html>
+    <head>
+        <title>    门诊电子病历 2 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <!-- 南方医院
+        <link rel="stylesheet" type="text/css" href="../skin/default/css/websys.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui-big.css" />
+        -->
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.gh-buttons.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.main.css"/>
+        
+        <script type="text/javascript" src="../scripts/websys.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+    </head>
+    <body ondragstart="return false"  class="easyui-layout">
+        <!--<div id="patientInfo" class="easyui-panel" data-options="region:'north',border:true" style="height:30px;overflow:hidden">
+            <!--iframe id="bannerFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe-->
+        </div>-->
+        <div id="patientInfo" data-options="region:'north',border:false" style="height:1px;overflow:hidden;background-color:#F6F6F6;font-weight:bold;font-size:22px;margin:0px;">
+          </div>            
+        <div id="pnlwest" class="easyui-panel" data-options="region:'west',border:false,split:true,collapsed:false" style="width:680px">
+            <div class="easyui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+                <div id="emrEditor" class="easyui-panel" data-options="region:'north',border:false,split:true" style="overflow:hidden">
+                    <div  class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                        <div id="editor" data-options="region:'center',border:false" style="overflow:hidden;">
+                            <!--编辑器emr.op.editor.csp-->
+                            <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>    
+                        </div>
+                        <!--按钮-->
+                        <div id="pnlButton" data-options="region:'north',border:false" style="width:100%;height:35px;padding-left:6px;padding-right:5px;">
+                            <span id="hiddenSpan" style="height:1px;width:1px;border:0px"/>
+                            <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px"/>        
+                            </span>
+                        </div>                        
+                        <!---->
+                        <div class="easyui-layout" data-options="region:'south',border:false" style="width:100%;height:30px">
+                            <div class="easyui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;">
+                                <div id="tmplsTabs" class="easyui-tabs" data-options="fit:true,border:false,plain:true,tabPosition:'bottom',justified:true,narrow:true,pill:true" style="">
+                                </div>
+                            </div>
+                            <table id="msgTable" class="right" style="width:300px;height:100%;table-layout:fixed;display:none;" border=0 cellspacing=0 cellpadding=1> 
+                                <tr> 
+                                    <td id="msgtd" style="vertical-align:middle;background-color:red;text-align:center;font-family:MicrosoftYaHei;font-size:120%;color:black;display:inline-block"></td> 
+                                </tr> 
+                            </table>
+                        </div>                    
+                    </div>                
+                </div>
+                <div id="" class="easyui-panel" data-options="region:'center',border:false" style="height:overflow:hidden;">
+                    <iframe id="diagFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
+                </div>
+            </div>            
+        </div>
+        <div class="easyui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+            <div class="easyui-panel" data-options="region:'center',border:false,fit:true" style="overflow:hidden;">
+                <div id="res_region" class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                    <div id="histools" class="easyui-panel" data-options="region:'south',border:false" style="height:1px;">
+                        <table id="hisToolTable" style="width:100%;table-layout:fixed;background:#008b8b" border=0 cellspacing=1 cellpadding=0>
+                        </table>
+                    </div>
+                    <div class="easyui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+                        <div id="FuncArea" class="easyui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+                            <div class="easyui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+                                <div id="dataTabs" class="easyui-tabs" data-options="fit:true,border:false" style="">
+                                </div>
+                            </div>
+                            <div id="kbCollapsePnl" class="easyui-panel" data-options="region:'west',border:true,split:false,collapsed:true" title="病历知识库" style="width:300px;">            
+                                <iframe id="kbDataFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>                                
+                            </div>
+                        </div>
+                                
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <script language="cache" runat="server">
+        s CAServicvice=""
+        s IsCAON=##Class(CA.DigitalSignatureService).IsCAON()
+        s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        if ("Y"=IsCAON)&("1"=IsCACTLoc) { 
+            s CAServicvice="1"
+            d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+        }    
+    
+        s patientID = $Get(%request.Data("PatientID",1),"")
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s mradm = ""
+        s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+        s:((episodeID'="")&&(patientID="")) patientID=$p($g(^PAADM(episodeID)),"^",1)
+        
+        s id = $Get(%request.Data("id",1),"")
+        s chartItemType = $Get(%request.Data("chartItemType",1),"")
+        s pluginType = $Get(%request.Data("pluginType",1),"")
+        s emrDocId = $Get(%request.Data("emrDocId",1),"")
+        s url = $Get(%request.Data("url",1),"")
+        
+        s sessionID = %session.SessionId    
+        s userCode = %session.Get("LOGON.USERCODE")
+        s userName = %session.Get("LOGON.USERNAME")
+        s userID = %session.Get("LOGON.USERID")
+        s ssgroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+        s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+        
+        s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+        s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")    
+        s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+        s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+        s MessageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("MessageScheme","")
+        s isShowPatInfo=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isShowPatInfo","Y")
+        s useResWindowHotkey=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("useResWindowHotkey","N")
+        s OPAutoSave=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPAutoSave","updateInsByEmr,openUnitlink")
+        s isAutoSelectTemplate=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isAutoSelectTemplate","N")    
+        s requiredFlag = ##Class(EMRservice.SystemParameter).GetOPRequiredFlag()        
+        s ReturnTemplateIDs = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ReturnTemplateIDs")
+        s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
+        
+        s firstTmpl = ##Class(EMRservice.BL.opInterface).GetFirstTmpl(userLocID, ssgroupID, episodeID, userID)
+        //s firstTmpl = "{""id"":"""",""actionType"":""CREATE"",""categoryId"":""138"",""chartItemType"":""Single"",""closable"":true,""emrDocId"":""139"",""isLeadframe"":""0"",""isMutex"":""0"",""pluginType"":""GRID"",""status"":""NORMAL"",""templateId"":""56"",""text"":""表格病历""}"
+        s savedRecords = ##Class(EMRservice.Ajax.opInterface).getSavedRecords(episodeID, userLocID, ssgroupID)
+        s OPEmrButtons=##Class(EMRservice.BL.opInterface).getOPEmrButtons()
+        s OPHisTools=##Class(EMRservice.BL.opInterface).GetHisTools()
+        s OPResource=##Class(EMRservice.BL.opInterface).GetOPResource("Panel", "main2")
+        s patInfoBar = ""
+        s:(isShowPatInfo="Y") patInfoBar=##Class(EMRservice.BL.opInterface).GetPatientInfo(patientID,episodeID)
+        s KbTreeAutoExpand = ##Class(EMRservice.BL.opInterface).getOPKbTreeAutoExpand(userID)
+        s lockWarning = ##Class(EMRservice.BL.opInterface).emrEntryLock(episodeID, sessionID)
+        
+        s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+        d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS()
+		d ##Class(EMRservice.OutputHtml).OutPutopkeysign()
+    </script>
+    <script language="javascript">
+        var TAG = "main2";
+        var argConnect = {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"};
+    
+        var patInfo = {
+            SessionID: "#(sessionID)#",
+            PatientID: "#(patientID)#",
+            EpisodeID: "#(episodeID)#",
+            MRadm: "#(mradm)#",
+            UserID: "#(userID)#",
+            UserCode: "#(userCode)#",
+            UserName: "#(userName)#",
+            SsgroupID: "#(ssgroupID)#",
+            UserLocID: "#(userLocID)#",
+            UserLocCode: "#(userLocCode)#",
+            UserLocName: "#(userLocName)#",
+            DiseaseID: "",
+            IPAddress: "",
+            SecCode: ""
+        };                
+                    
+        var sysOption = {
+            pluginUrl : "#(pluginUrl)#",
+            setDefaultFontStyle : "#(setDefaultFontStyle)#",
+            pluginType : "#(pluginType)#",                
+            argConnect : {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"},
+            CAServicvice : '#(CAServicvice)#',
+            messageScheme : $.parseJSON("#(MessageScheme)#".replace(/\'/g, "\"")),
+            isShowPatInfo : '#(isShowPatInfo)#',
+            useResWindowHotkey : '#(useResWindowHotkey)#',
+            OPAutoSave : '#(OPAutoSave)#',
+            requiredFlag : $.parseJSON("#(requiredFlag)#".replace(/\'/g, "\"")),
+            isAutoSelectTemplate : '#(isAutoSelectTemplate)#',
+            ReturnTemplateIDs : '#(ReturnTemplateIDs)#',
+            isRevokeSign : '#(isRevokeSign)#',
+            IsSetToLog : '#(IsSetToLog)#'
+        };
+        
+        var envVar = {
+            readonly : '',
+            firstTmpl : $.parseJSON('#(firstTmpl)#'),
+            savedRecords : $.parseJSON('#(savedRecords)#'),
+            opEmrButtons : '#(OPEmrButtons)#',
+            opHisTools : $.parseJSON("#(OPHisTools)#".replace(/\'/g, "\"")),
+            opResource : $.parseJSON("#(OPResource)#".replace(/\'/g, "\"")),
+            patInfoBar : '#(patInfoBar)#',
+            docContext : null,
+            kbTreeAutoExpand : '#(KbTreeAutoExpand)#' || 'N',
+            lockWarning : '#(lockWarning)#' 
+        };
+    
+    </script>
+    
+    <script language="cache" runat="server">
+        d ##Class(EMRservice.BL.opInterface).doBeforePageLoad(episodeID)
+    </script>
+    
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>    
+    <script type="text/javascript" src="../scripts/emr/js/op.toolbar.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.histools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.quality.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.privilege.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/iEmrPluginEx.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.template.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.editor.js"></script>    
+    <script type="text/javascript" src="../scripts/emr/js/op.hisLog.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/externImage.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.main.js"></script>    
+    
+</body>
+</html>

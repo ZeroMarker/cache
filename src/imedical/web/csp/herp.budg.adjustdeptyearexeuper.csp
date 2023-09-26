@@ -1,0 +1,63 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+    s userdr=$G(%session.Data("LOGON.USERID"))
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))
+
+    s year   = $Get(%request.Data("year",1))
+    s orderby= $Get(%request.Data("orderby",1))
+    s Code   = $Get(%request.Data("Code",1))
+	s Name   = $Get(%request.Data("Name",1))
+	s OrderBy=  $Get(%request.Data("OrderBy",1))
+
+	s schemeDr = $Get(%request.Data("schemeDr",1)) 
+    s UpSchemDR= $Get(%request.Data("UpSchemDR",1))
+	s upschdr  = $Get(%request.Data("upschdr",1))	
+    s rowid    = $Get(%request.Data("rowid",1))
+    s rowids   = $Get(%request.Data("rowids",1))
+
+    s curSchemeDr= $Get(%request.Data("curSchemeDr",1))           
+
+	
+	
+	i action = "list" d
+    .w ##class(herp.budg.udata.budgadjustdeptyear).superlist(rowid,start,limit,hospid)
+	
+
+    i action = "SupSchList" d
+	.w ##class(herp.budg.udata.uBudgSchemMA).schemelist(year, orderby, start, limit)
+        	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.budgadjustdeptyear).InsertSupScheme(curSchemeDr,Name)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.budgadjustdeptyear).DeleteSupScheme(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.budgadjustdeptyear).UpdSupScheme(rowids ,Name)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+		
+		
+	</script>

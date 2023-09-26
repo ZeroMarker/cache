@@ -1,0 +1,111 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD>
+
+</TRAK:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/QHwebsys.css"><NK>
+
+<meta http-equiv="Content-Type" content="text/html; ">
+<!-- Put your page Title here -->
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/lectures.js"></script>
+	<style type="text/css">
+	  .icon-upload{
+	   	  background:url(../scripts/dhcpha/images/upload.png);
+	   	  border:none;
+	   }
+   </style>
+<!--上传-->
+<server>
+	write "<object id='FileManage'  classid='http://192.192.10.123/dhcmg/FileManage/FileManage.dll#FileManage.ManageFile' IEWASTEXT>"
+	write "</object>"
+</server>
+</head> 
+<body>
+<!--以下定义不良反应上报界面-->
+	<div id="mainpanel" class="easyui-layout" fit="true">
+	    <!--查询条件区-->
+		<div data-options="region:'north',title:'文献阅读'" style="width:400px;height:110px" >
+			<!--查询条件布局使用table-->
+			<table style="font-size:13px">
+					<tr style="height:10">
+					    <td width="30"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>				
+					</tr>
+					<tr>
+						<td></td>
+						<td>开始日期:</td>
+						<td><input id="stdate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td></td>
+						<td>主讲人:</td>
+						<td><input id="dept" style="width:180" class="easyui-combobox" data-options="valueField:'value',textField:'text'"/></td>
+						<td></td>
+						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-search">查询</a></td>
+						<td></td>
+						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-log">新建</a></td>
+						<td></td>
+						<td><a href="#" style="width:90;display:none;" class="easyui-linkbutton" iconCls="icon-export">下载</a></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td>结束日期:</td>
+						<td><input id="enddate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td></td>
+						<td>题目[关键字]:</td>
+						<td><input id="patno" style="width:180;border:1px solid #95B8E7;" class="easyui-validatebox"/></td>
+						<td></td>
+						<td><a href="#" id="Audit" style="width:90;display:none;" class="easyui-linkbutton" iconCls="icon-accept">浏览</a></td>
+						<td></td>
+						<td><a href="#" style="width:90;display:none;" class="easyui-linkbutton" iconCls="icon-edit">修改</a></td>
+						<td></td>
+						<td><a href="#" style="width:90;display:none;" class="easyui-linkbutton" iconCls="icon-remove">删除</a></td>
+					</tr>
+			</table>
+		</div>
+		<!--数据列区域-->
+		<div data-options="region:'center'">
+			<div id="maindg"></div>
+		</div>
+	</div>
+   <!--新建-->
+   <div id="newwin" style="display:none;">
+	   <div style="margin:10px;border:1px solid #95B8E7;">
+	   	   <form action="" method="post" name="myform">
+		   	   <div><input id="documentID" style="display:none;"></input></div>
+			   <div style="display:block;margin:10px 2px 10px 33px;width:720px;">
+			   	   <span>日&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp期：</span><input id="date" type="text" class="easyui-datebox"></input>
+			   	   <span style="padding-left:20px;">地&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp点：</span><input id="address" style="font-size:12px;width:170;border:1px solid #95B8E7;" class="easyui-validatebox"/>
+			   	   <span style="padding-left:20px;">主讲人：</span><input id="user" style="font-size:12px;width:120;border:1px solid #95B8E7;" class="easyui-validatebox"/>
+			   </div>
+			   <div style="display:block;margin:10px 2px 10px 33px;">添加文件：<input  type="file" name="filepath" style="width:620px;border:1px solid #95B8E7;"/></span></div>
+			   <div style="display:block;margin:10px 2px 10px 33px;">题&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp目：<input id="title" style="width:620px;border:1px solid #95B8E7;"></div>
+			   <div style="display:block;margin:10px 2px 10px 33px;"><span style="height:65px;float:left;text-align:center;line-height:65px;">主要内容：</span><textarea id="content" rows="4" cols="150" style="height:65px;font-size:10px;width:620px;border:1px solid #95B8E7;"></textarea></div>
+			   <div style="display:block;margin:10px 2px 10px 33px;"><span style="height:65px;float:left;text-align:center;line-height:65px;">参考文献：</span><textarea id="liters" rows="4" cols="150" style="height:65px;font-size:10px;width:620px;border:1px solid #95B8E7;"></textarea></div>
+			   <div style="display:block;margin:10px 2px 10px 33px;"><span style="height:65px;float:left;text-align:center;line-height:65px;">参加人员：</span><textarea id="partuser" rows="4" cols="150" style="height:65px;font-size:10px;width:620px;border:1px solid #95B8E7;"></textarea></div>
+	   		</form>
+	   </div>
+   </div>
+</body>
+</html>

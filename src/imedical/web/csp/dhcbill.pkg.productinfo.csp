@@ -1,0 +1,92 @@
+<!-- 
+ * FileName:	dhcbill.pkg.productinfo.csp
+ * User:		tangzf
+ * Date:		2019-09-05
+ * Function:	优惠券产品信息
+ * Description: 
+-->
+<script type='text/javascript'>
+function openProductInfo(Code){
+	$('#hhd').show();
+	$('#hhd').window({
+		width:1000,
+		height:520,
+		title:'套餐简介',
+		iconCls: "icon-w-list",
+	})
+
+	var dgColumns = [[
+			{field:'PROCode',title:'产品编码',width:100},
+			{field:'PROName',title:'产品名称',width:120 },
+			{field:'PROSalesPrice',title:'售价',width:90,align:'right',
+				formatter:function(value,index,row){
+					return	parseFloat(value).toFixed(2);
+				}},
+			{field:'PROPrice',title:'标准定价',width:90,align:'right',
+				formatter:function(value,index,row){
+					return	parseFloat(value).toFixed(2);
+				}},
+			{field:'PROMimuamout',title:'最低售价',width:90,align:'right',
+				formatter:function(value,index,row){
+					return	parseFloat(value).toFixed(2);
+				}},
+			{field:'PROStartDate',title:'生效日期',width:100},
+			{field:'PROLevel',title:'套餐等级',width:90},
+			{field:'Rowid',title:'Rowid',width:150,hidden:true}
+		]];
+	$('#ProductTable').datagrid({
+		fit:true,
+		height:300,
+		title:'产品信息',
+		headerCls:'panel-header-gray',
+		border: true,
+		striped: true,
+		singleSelect: false,
+		selectOnCheck: true,
+		checkOnSelect: true,
+		rownumbers: true,
+		columns: dgColumns,
+		onLoadSuccess: function (data) {
+			calProAmt(data);	
+		},
+		onDblClickRow:function(rowIndex, rowData){
+		}
+	});
+			
+	var queryParams={
+			ClassName:'BILL.PKG.BL.CouponTemplate',
+			QueryName:'FindCouponProductByCode',
+			CTPCode:Code,
+			HospDr:PUBLIC_CONSTANT.SESSION.HOSPID
+	}
+	$('#ProductTable').datagrid({
+		queryParams:queryParams	,
+		url:$URL
+	})
+	$('#ProductTable').datagrid('reload');
+}
+function closeProductInfo(){
+	$("#hhd").window('close');	
+}
+</script>
+	<div id='hhd' style='display:none' >
+		<div class='hisui-panel' data-options='fit:true' style='width:200px,height:300px'>	
+			<div data-options="region:'north'" style="height:100px">
+				<script language="CACHE" runat="SERVER"> 
+					w "<image style='background:url(../images/unman.png) no-repeat;background-size:cover;position:absolute;top: 50px;width:30px;height:30px;border-radius:30px;'></image>"
+					w "<span style='font-size:16px;margin:0 5px;margin-left:38px;'>"_1_"</span><span>/</span>"
+					w "<span style='margin:0 10px;'>"_2_"</span><span>/</span>"
+					w "<span style='margin:0 10px;'>"_3_"</span><span>/</span>"
+					w "<span style='margin:0 10px;'>登记号:</span><span style='color:#589DDA;'>"_4_"</span>"
+					w "<span style='margin:0 10px;'>出生日期:</span><span style='color:#589DDA;'>"_5_"</span>"
+				</script>
+			</div>
+			<div data-options="region:'center',fit:false" style="height:300px;width:300px">
+				<table id="ProductTable"></table>
+			</div>
+			<div data-options="region:'west',border:false" style="width:630px;padding:10px">
+				bbbbb
+			</div>
+		</div>
+	</div>
+

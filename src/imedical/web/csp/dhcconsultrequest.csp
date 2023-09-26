@@ -1,0 +1,45 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<script language="Cache" runat="SERVER">
+	s action=$g(%request.Data("action",1))
+	s act=$g(%request.Data("act",1))
+	//会诊大科
+	i action="GetConsultDep"
+	{
+		
+	s Hospitalid=$g(%request.Data("Hospitalid",1))
+	s result=##class(web.DHCConsultNew).WriteJSONDataByQuery("web.DHCConsultNew","GetConsultDep",0,0,Hospitalid)
+	w "{ConsultDepList:'"_result_"'}"
+		}
+	i action="GetConsultList"
+	{
+	s startdate=$g(%request.Data("startdate",1))
+	s enddate=$g(%request.Data("enddate",1))
+	s Auditflag=$g(%request.Data("Auditflag",1))
+	s result=##class(web.DHCConsultNew).WriteJSONDataByQuery("web.DHCConsultNew","GetConSultList",0,0,startdate,enddate,Auditflag)
+	s result=$ZCVT(result,"O","JS")
+	;s ^gyongao="{GetConList:'"_result_"'}"
+	w "{GetConList:'"_result_"'}"	
+		
+		}
+	//获取子科室
+	if action="GetItemLoc"
+	{
+		s cboBigCTLoc=$g(%request.Data("cboBigCTLoc",1))
+		s result=##class(web.DHCConsultNew).WriteJSONDataByQuery("web.DHCConsultNew","GetItemLoc",0,0,cboBigCTLoc)
+		w "{GetItemLocList:'"_result_"'}"	
+		}
+	
+	if act="GetDoclist"
+	{
+	 w ##class(web.DHCConsultNew).GetDocList("")
+		
+		}
+	
+	
+	
+	
+	
+</script>

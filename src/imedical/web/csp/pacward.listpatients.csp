@@ -1,0 +1,141 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT>
+	//reset last selected patient
+	var winf = null;
+	if (window.parent != window.self) winf = window.parent;
+	if ((winf)&&(winf.frames['eprmenu'])) winf.SetEpisodeDetails("","","","","","","");
+</SCRIPT>
+</HEAD>
+<BODY><DIV id="PageContent">
+<SERVER>
+
+ w ##Class(web.SSMessageRecipient).getMessageLink()
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+</SERVER>
+
+<SERVER>
+ k ^zkath("pacward.listpatients.csp")
+ n frm,t,prioID,locArray,WardID
+ //These variables are all set in epr.CTIconAssociation.FPHeadingShow()
+ n isSetup,LocID,WardID,isEMLoc,DeptType,FPLayout
+ s TPrint=%request.Get("TPRINT") ;Log 63456 - TPrint and TComponent are used to determine what will be displayed if a print icon is clicked
+ s TComponent=%request.Get("WEBSYS.TCOMPONENT")
+ ;
+ s (isSetup,LocID,WardID,isEMLoc,DeptType,FPLayout)=""
+ s (prioID,locArray,t)=""
+ s WardID=%request.Get("WardID")
+ d ##Class(websys.Component).GetComponentMessages(.t,"PACWardRoom.ListPatients")
+ i ('TPrint) d ##Class(epr.CTIconAssociation).FPHeadingShow(isSetup,"pacward.listpatients.csp",.LocID,.WardID,.isEMLoc,.DeptType,.FPLayout)
+ ; 
+ ;KM 8-May-2002: If WardID is blank show nothing
+ i WardID="" q
+ s %request.Data("WardID",1)=WardID
+ ;
+ i (('TPrint)!((TPrint)&(TComponent="PACWard.ListPatientsInWard"))) {
+ 	s frm=##Class(websys.Component).OpenName("PACWard.ListPatientsInWard")
+ 	i frm d frm.Show() d frm.%Close()
+ }
+ ;
+ //NB: KM 7-Mar-2002: For some reason %request.Get("WardID") is being killed so I have to reset it each time!
+ s %request.Data("WardID",1)=WardID
+ ;
+ i (('TPrint)!((TPrint)&(TComponent="PACWardRoom.ListPatients"))) {
+ 	i ##Class(web.PACWardRoom).getRoomQueryID("BA",%request.Get("WardID"))'="" {
+ 		s %request.Data("QueryType",1)="BA"
+	 	s %request.Data("WardID",1)=WardID
+ 		s frm=##Class(websys.Component).OpenName("PACWardRoom.ListPatients")
+	 	i frm d frm.Show() d frm.%Close()
+ 	}
+		i ##Class(web.PACWardRoom).getRoomQueryID("WA",%request.Get("WardID"))'="" {
+ 		s %request.Data("QueryType",1)="WA"
+ 		s %request.Data("WardID",1)=WardID
+  		s frm=##Class(websys.Component).OpenName("PACWardRoom.ListPatients")
+ 		i frm d frm.Show() d frm.%Close()
+  	}
+ 	i ##Class(web.PACWardRoom).getRoomQueryID("WE",%request.Get("WardID"))'="" {
+ 		s %request.Data("QueryType",1)="WE"
+ 		s %request.Data("WardID",1)=WardID
+ 		s frm=##Class(websys.Component).OpenName("PACWardRoom.ListPatients")
+ 		i frm d frm.Show() d frm.%Close()
+ 	}
+ }
+ s %request.Data("WardID",1)=WardID
+ s %request.Data("AvailableBeds",1)="true"  ;This forces the component not to include occupied beds.
+ s %request.Data("SortOrder",1)=1  ;This forces the component to sort by sequence number and not by status
+ i (('TPrint)!((TPrint)&(TComponent="PACWardRoom.ListUnocc"))){
+ 	s frm=##Class(websys.Component).OpenName("PACWardRoom.ListUnocc")
+ 	i frm d frm.Show() d frm.%Close()
+ }
+</SERVER>
+<script Language="JavaScript">
+
+// ab 6.05.03 - colouring moved to PACWard.ListColours.js, called from the components bodyloadhandlers - additional scripts
+
+function LoadHandler() {
+	try {
+		CustomBedBodyOnloadHandler();
+	} catch(e) {
+		try {
+			BedBodyOnloadHandler();
+		} catch(e){}
+	}
+	
+	try {
+		CustomWardBodyOnloadHandler();
+	} catch(e) {
+		// ab 11.09.03 - try this aswell as the ward may not have a holding area
+		try {
+			WardBodyOnloadHandler();
+		} catch(e){}
+	}
+
+}
+
+// ab 11.09.03 - 35675 adds the icon to the most urgent patient
+function ShowMostUrgent(EpisodeID,Icon,Title) {
+	var tbls=new Array("tPACWard_ListPatientsInWard","tPACWardRoom_ListPatients2");
+	var frms=new Array("fPACWard_ListPatientsInWard","fPACWardRoom_ListPatients");
+	for (var i in tbls) {
+		var tbl=document.getElementById(tbls[i]);
+		var frm=document.getElementById(frms[i]);
+		if (tbl) {
+			for (var j=1;j<tbl.rows.length;j++) {
+				var obj=frm.elements["EpisodeIDz"+j];
+				if (tbl.rows[j]) var obj2=tbl.rows[j].children[1];
+				if ((obj)&&(obj.value==EpisodeID)&&(obj2)) obj2.insertAdjacentHTML("afterBegin","<IMG src='../images/"+Icon+"' title='"+Title+"'>");
+			}
+		}
+	}
+}
+
+document.body.onload=LoadHandler;
+
+</script>
+
+<server>
+ s IconTitle=$o(^epr.CTIconAssociationI("UniqueCodeIndex","NEXTMOSTURGENT",""))
+ i IconTitle,$ld(^epr.CTIconAssociationD(IconTitle)) s IconTitle=$li(^epr.CTIconAssociationD(IconTitle),4)
+ 
+ i ##class(epr.FPView).ShowNextMostUrgent(WardID,"") d
+ . w "<SCRIPT Language=""JavaScript"">",$c(13,10)
+ . w "ShowMostUrgent("""_$g(%request.Data("MostUrgent",1))_""","""_##class(epr.CTIconAssociation).GetImageFromCode("NextMostUrgent")_""","""_IconTitle_""");"
+ . w "</SCRIPT>",$c(13,10)
+</server>
+
+</DIV></BODY>
+</HTML>

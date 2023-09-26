@@ -1,0 +1,92 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir = $Get(%request.Data("sortDir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	//s parent=$Get(%request.Data("parent",1))
+	
+	
+	s userid=$Get(%request.Data("UserId",1))	//取当前用户ID
+	s userDr=$Get(%request.Data("userdr",1))
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))	//AcctBookID
+	s dataTypeDr=$Get(%request.Data("dataTypedr",1))
+	s orgDr=$Get(%request.Data("orgdr",1))
+	s year=$Get(%request.Data("year",1))
+	s orgName=$Get(%request.Data("OrgName",1))
+		
+	s rowid=$Get(%request.Data("rowid",1))
+	s str=$Get(%request.Data("query",1))			 //下拉框检索
+	s AcctSubjCode=$Get(%request.Data("AcctSubjName",1))	//20151103-0829 AcctSubjName
+	s AcctSubjCodeFind=$Get(%request.Data("AcctSubjCode",1))	
+	s OccurDate=$Get(%request.Data("OccurDate",1))
+	s CheqTypeCode=$Get(%request.Data("CheqTypeName",1))	
+	s CheqNo=$get(%request.Data("CheqNo",1))
+	s Summary=$Get(%request.Data("Summary",1))
+	s AmtDebit=$get(%request.Data("AmtDebit",1))
+	s AmtCredit=$Get(%request.Data("AmtCredit",1))
+	s StartDate=$get(%request.Data("StartDate",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+	;s EndSum=$Get(%request.Data("EndSum",1))
+	;s AmtDebitMax=$get(%request.Data("AmtDebitMax",1))
+	;s AmtDebitMin=$Get(%request.Data("AmtDebitMin",1))
+	;s AmtCreditMax=$get(%request.Data("AmtCreditMax",1))
+	;s AmtCreditMin=$Get(%request.Data("AmtCreditMin",1))
+
+	
+	
+	i action = "GetAcctSubjName" d
+	.w ##class(herp.acct.udata.uAcctVouchCheckDetail).GetAcctSubjName(start,limit,str,AcctBookID)
+	
+	i action = "GetCheqTypeName" d
+	.w ##Class(herp.acct.udata.uAcctCommon).GetSysChequeType(start,limit,str)
+	
+	i action = "GetEndSum" d
+	.s result = ##class(herp.acct.udata.uAcctVouchCheckDetail).EndSumList(AcctBookID,AcctSubjCodeFind)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+		
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctVouchCheckDetail).Insert(AcctBookID,AcctSubjCode,OccurDate,CheqTypeCode,CheqNo,Summary,AmtDebit,AmtCredit)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctVouchCheckDetail).Del(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctVouchCheckDetail).Edit(rowid,AcctSubjCode,OccurDate,CheqTypeCode,CheqNo,Summary,AmtDebit,AmtCredit)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctVouchCheckDetail).List(start,limit,StartDate,EndDate,AcctSubjCodeFind,AcctBookID)
+	
+	i action="GetInitBankFlag" d
+	.s result=##class(herp.acct.udata.uAcctVouchCheckDetail).GetInitBankFlag(AcctBookID)
+	.w "{success:'true',info:'"_result_"'}"
+	
+	;.i result=0 d
+	;..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	;.e  d
+	;..w "{success:'false',info:'"_result_"'}"
+		
+</script>

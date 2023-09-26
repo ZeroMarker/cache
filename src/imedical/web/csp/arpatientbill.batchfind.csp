@@ -1,0 +1,80 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</CSP:METHOD>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+
+;log 47635 - batch receipting with multiple frames
+
+s PageType="Batch"
+s ChkEpisodes=""
+
+s TWKFL          =$g(%request.Data("TWKFL",1))
+s TWKFLI         =$g(%request.Data("TWKFLI",1))
+s TWKFLL         =$g(%request.Data("TWKFLL",1))
+s TWKFLJ         =$g(%request.Data("TWKFLJ",1))
+s CONTEXT        =$g(%request.Data("CONTEXT",1))
+s GroupType      =$g(%request.Data("GroupType",1))
+s SelectAll      =$g(%request.Data("SelectAll",1))
+s BillRowIDs     =$g(%request.Data("BillRowIDs",1))
+s DepositRowIDs  =$g(%request.Data("DepositRowIDs",1))
+s ChkBills       =$g(%request.Data("ChkBills",1))
+s Action         =$g(%request.Data("Action",1))
+s ReceiptAmt     =$g(%request.Data("ReceiptAmt",1))
+s Payor          =$zcvt($g(%request.Data("Payor",1)),"O","URL")
+s Hospital       =$g(%request.Data("Hospital",1))
+s BatchNum       =$g(%request.Data("BatchNum",1))
+s Plan           =$g(%request.Data("Plan",1))
+s DontClearPayDet=$g(%request.Data("DontClearPayDet",1))
+s NewlyAddedBill =$g(%request.Data("NewlyAddedBill",1))
+s NewlyAddedDep  =$g(%request.Data("NewlyAddedDep",1))
+s UnselBillRowIDs=$g(%request.Data("UnselBillRowIDs",1))
+s UnselDepositRowIDs =$g(%request.Data("UnselDepositRowIDs",1))
+s RefundComments     =$g(%request.Data("ARRCPRefundComments",1))
+s RefundChk          =$g(%request.Data("RefundChk",1))
+;Log 63114 - 02.04.2007 - Get PatientID is passed ;commented on Log 63417
+;s PatientID  =$g(%request.Data("PatientID",1))
+
+n topFrm,bottomFrm,wkflow
+
+s wkflow="&CONTEXT="_CONTEXT_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TWKFLL="_TWKFLL_"&TWKFLJ="_TWKFLJ
+
+s topFrm="websys.default.csp?WEBSYS.TCOMPONENT=ARPatientBill.FindBatch&BillRowIDs="_BillRowIDs_"&DepositRowIDs="_DepositRowIDs
+s topFrm=topFrm_"&BatchNum="_BatchNum_"&Payor="_Payor_"&DontClearPayDet="_DontClearPayDet_"&ReceiptAmt="_ReceiptAmt_"&UnselBillRowIDs="_UnselBillRowIDs_"&UnselDepositRowIDs="_UnselDepositRowIDs
+s topFrm=topFrm_"&ARRCPRefundComments="_RefundComments_"&RefundChk="_RefundChk
+s topFrm=topFrm_wkflow
+
+s bottomFrm="websys.default.csp?WEBSYS.TCOMPONENT=ARPatientBill.ListAll&BillRowIDs="_BillRowIDs_"&DepositRowIDs="_DepositRowIDs
+s bottomFrm=bottomFrm_"&BatchNum="_BatchNum_"&Payor="_Payor_"&Plan="_Plan_"&Hospital="_Hospital_"&SelectAll="_SelectAll
+s bottomFrm=bottomFrm_"&ChkBills="_ChkBills_"&ChkEpisodes="_ChkEpisodes_"&PageType="_PageType_"&Action="_Action_"&GroupType="_GroupType
+s bottomFrm=bottomFrm_"&NewlyAddedBill="_NewlyAddedBill_"&NewlyAddedDep="_NewlyAddedDep_"&UnselBillRowIDs="_UnselBillRowIDs_"&UnselDepositRowIDs="_UnselDepositRowIDs
+;s bottomFrm=bottomFrm_"&PatientID="_PatientID	;Log 63114 - 02.04.2007 ;commented on Log 63417
+s bottomFrm=bottomFrm_wkflow
+
+s ^zGC("bottomform")=bottomFrm
+</SERVER>
+
+
+<FRAMESET rows="50%,*" border="0" scrolling="auto" reSize>
+   <FRAME SRC="#(topFrm)#" NAME="BR.ARPatBillFindBatch" frameBorder=1>
+   <FRAME SRC="#(bottomFrm)#" NAME="BR.ARPatBillListAll" frameBorder=1 scrolling="auto">
+</FRAMESET>
+
+<BODY>
+</BODY>
+
+</HTML>
+
+
+

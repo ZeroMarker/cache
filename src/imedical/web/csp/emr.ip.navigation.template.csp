@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.navigation.template.css">
+	<script language="cache" runat="server">
+		s docId = $Get(%request.Data("DocID",1),"")
+		s locId = $Get(%request.Data("LocID",1),"")
+		s episodeId = $Get(%request.Data("EpisodeID",1),"")
+		s categoryId = $Get(%request.Data("CategoryId",1),"")
+		s openWay = $Get(%request.Data("openWay",1),"")
+		s Hospital=##class(EMRservice.BL.BLSysOption).GetOptionValueByName("HospitalName")
+		s createAdvance = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("ENABLE_ADVANCE_DAILYRECORD")
+		s dateTime = $Get(%request.Data("DateTime",1),"")
+		s isJsUpdateTitleInfo = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsJsUpdateTitleInfo")
+		s action = $Get(%request.Data("Action",1),"")
+		s titleCode = $Get(%request.Data("TitleCode",1),"")
+		s titlePrefix = $Get(%request.Data("TitlePrefix",1),"")
+		s userID = %session.Get("LOGON.USERID")
+		//判断患者是否下了诊断
+		s DiagnosInfo=""
+		s:episodeId'="" DiagnosInfo=##class(EMRservice.HISInterface.PatientInfoAssist).DiagnosInfo(episodeId)
+		//自动加载病历
+		s isLoadDocument = ##Class(EMRservice.SystemParameter).IsLoadDocument()
+		//病种关联模板
+		s openDiseaseTemp = ##Class(EMRservice.SystemParameter).openDiseaseTemp()
+		//控制创建病程记录不受入出院时间限制
+		s openDocCode = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("openDocCode")
+		s:(openDocCode="") openDocCode = "[]"
+	</script>
+	<script language="javascript">
+		var docId = '#(docId)#';
+		var locId = '#(locId)#'; 
+		var episodeId = '#(episodeId)#';
+		var categoryId = '#(categoryId)#';
+		var openWay = '#(openWay)#';
+		var Hospital = '#(Hospital)#';
+		var createAdvance = '#(createAdvance)#';
+		var dateTime = '#(dateTime)#';
+		var isJsUpdateTitleInfo = '#(isJsUpdateTitleInfo)#';
+		var action = '#(action)#';
+		var titleCode = '#(titleCode)#';
+		var titlePrefix = '#(titlePrefix)#';
+		var userID = '#(userID)#';
+		var DiagnosInfo='#(DiagnosInfo)#';
+		var isLoadDocument='#(isLoadDocument)#';
+		var openDiseaseTemp ='#(openDiseaseTemp)#';
+		var openDocCode = eval(#(openDocCode)#);
+	</script>
+	<script language = "javascript">
+		function Dateformatter(date)
+		{
+			var year = date.getFullYear();
+			var month = date.getMonth()+1;
+			var day = date.getDate();
+			var hour = date.getHours().toString();
+			var minute = date.getMinutes().toString();
+			var second = date.getSeconds().toString();
+			month = month < 10 ? '0' + month : month;
+            day = day < 10 ? '0' + day : day;
+            hour = hour < 10 ? '0' + hour : hour;
+            minute = minute < 10 ? '0' + minute : minute;
+            second = second < 10 ? '0' + second : second;
+			return year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' +second;
+		}
+		function Dateparser(date)
+		{
+			//xxxx-x-x xx:xx:xx
+			if (!date) return new Date();
+			var array = date.split(" ");// 分成日期和时间两部分
+			var arrayDate = array[0].split("-");
+			var yearStr = arrayDate[0];
+			var monthStr = arrayDate[1];
+			var dayStr = arrayDate[2];
+			var arrayTime = array[1].split(":");
+			var hour = arrayTime[0];
+			var minute = arrayTime[1];
+			var second = arrayTime[2];
+			var year = parseInt(yearStr,10);
+			var month = parseInt(monthStr,10);
+			var day = parseInt(dayStr,10);
+			if (!isNaN(year) && !isNaN(month) && !isNaN(day) && !isNaN(hour) && !isNaN(minute) && !isNaN(second)){
+				return new Date(year,month-1,day,hour,minute,second);
+			} else {
+				return new Date();
+			}
+		}
+	</script>	
+	<title>选择模板</title>
+</head>
+<body >
+	<div id="list" class="hisui-layout" data-options="border:false,fit:true">
+		<div data-options="region:'center',border:false" style="padding:5px;">
+			<div class="hisui-panel" title="模板库" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+				<div class="hisui-layout" data-options="border:false,fit:true">
+				<div data-options="region:'north',border:false" style="height:136px;border-bottom:1px solid #ccc;">
+					<div class="pic">
+						<img class="tlogoimg" style="width:100%;height:100%;"></img>
+					</div>
+					<div class="select">
+						<input id="selLocId"></input>
+						<div class="selectDialog">
+							<input id="selDiseaseSpecies" placeholder="输入病种名称查询！"></input>
+						</div>
+						
+						<div class="tab_search">
+							<input type="text" class="hisui-searchbox" id="search" data-options="width:280,prompt:'输入病历名称搜索!'" />
+				        </div>
+				        <div class="toolradio">
+				        	<input class='hisui-radio' id="rdoLoc" value="rdoLoc" type="radio" name='rdoLoc' label='按科室'>
+							<input class='hisui-radio' id="rdoAll" value="rdoAll" type="radio" name='rdoLoc' label='搜全院'>
+						 </div>
+			        </div>
+				</div>
+				<div data-options="region:'center',border:false" style="overflow:auto;" >
+					<ul id="templates"></ul>
+				</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="title" class="hisui-layout" data-options="border:false,fit:true">
+		<div data-options="region:'center',border:false" style="padding:5px;">
+		<div class="hisui-panel" title="修改标题" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-write-order'" style="padding-top:10px;">
+			<div class="titlename">
+				<span>#(..Get("当前病历"))#</span>
+				<lable id="lbDateTime"></lable>
+				<lable id="lbTitleName"></lable>
+			</div>
+			<div class="modifytime">
+				<span>#(..Get("修改时间"))#</span>
+				<input class="hisui-datetimebox" id="dateTime" data-options="formatter:Dateformatter,parser:Dateparser"/>
+			</div>	
+			<div class="doctor">
+				<span>#(..Get("选择医师"))#</span>
+				<input id="doctorInfo"></input>
+			</div>
+			<div class="modifytitle">
+				<span>#(..Get("修改标题"))#</span>
+				<input type="text" id="titlebefore"/>
+				<span id="titleName"></span>
+				<input type="text" id="titleafter"/>
+			</div>
+			<div class="tool">
+				<a id="sure" href="#"  title="确定" href="#" class="hisui-linkbutton">#(..Get("确定"))#</a>
+				<a id="cancel" title="取消" href="#" class="hisui-linkbutton">#(..Get("取消"))#</a>
+			</div>
+		</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/emr/js/ip.navigation.template.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/ip.navigation.template.title.js"></script>
+</body>
+</html>

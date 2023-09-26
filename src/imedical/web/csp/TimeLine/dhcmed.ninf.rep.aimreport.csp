@@ -1,0 +1,95 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/infection.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/PublicFunction/CustomFormItem.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_PAT.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_UC.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_PICC.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_VAP.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_OPR.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_MDR.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_NUC.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_NPICC.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_NVNT.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Module_NOTH.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Report_Event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/AimReport/Report_Gui.js'></script>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set ReportID=$g(%request.Data("ReportID",1))	    //报告ID
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))	    //就诊ID
+			Set TransID=$g(%request.Data("TransID",1))	        //转科ID
+			Set TransLoc=$g(%request.Data("TransLoc",1))	    //转入科室
+			Set ModuleList=$g(%request.Data("ModuleList",1))	//显示模块
+			
+			Set ReportList=""
+			If ReportID'="" {
+				Set objRep=##class(DHCMed.NINF.Rep.AimReport).GetObjById(ReportID)
+				If $IsObject(objRep) {
+					Set ReportList=ReportID
+				}
+			} Else {
+				Set RepType=0
+				For {
+					Set RepType=$o(^DHCMed.NINFi("AimRep",0,"IndexTypeAdmTrans",RepType))
+					Quit:RepType=""
+					Set ReportID=0
+					For {
+						Set ReportID=$o(^DHCMed.NINFi("AimRep",0,"IndexTypeAdmTrans",RepType,EpisodeID,TransID,ReportID))
+						Quit:ReportID=""
+						Set objRep=##class(DHCMed.NINF.Rep.AimReport).GetObjById(ReportID)
+						Continue:'$IsObject(objRep)
+						Set ReportList=ReportList_","_ReportID
+					}
+				}
+				Set:ReportList'="" ReportList=$e(ReportList,2,$l(ReportList))
+			}
+			
+			Set EpisodeID=""""_EpisodeID_""""
+			Set TransID=""""_TransID_""""
+			Set TransLoc=""""_TransLoc_""""
+			Set ReportList=""""_ReportList_""""
+			Set ModuleList=""""_ModuleList_""""
+		</Script>
+		<script language="javascript" type="text/javascript">
+			Ext.QuickTips.init();
+            var objControlArry = new Array();
+            
+            var EpisodeID=#(EpisodeID)#;
+            var TransID=#(TransID)#;
+            var TransLoc=#(TransLoc)#;
+            var ReportList=#(ReportList)#;
+            var ModuleList=#(ModuleList)#;
+            
+            function window_onload() {
+            	var objViewPort = new InitViewPort();
+                objControlArry['ViewPort'] = objViewPort;
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	< body onload="return window_onload()" >
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

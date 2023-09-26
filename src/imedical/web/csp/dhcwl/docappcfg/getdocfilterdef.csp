@@ -1,0 +1,160 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	i start="" s start=0
+	i pageSize="" s pageSize=23
+	s end=start+pageSize
+	s:start>1 start=start+1
+	//k ^TEMPDHCWLYW201506
+	set searcheCond = $g(%request.Data("searcheCond",1))
+	set searcheValue = $g(%request.Data("searcheValue",1))
+	set action=$g(%request.Data("action",1))
+	s onePage=$g(%request.Data("onePage",1))
+	s mark=$g(%request.Data("mark",1)),searcheDimFlag=0
+	s isArrayType=$g(%request.Data("isArrayType",1))
+	if action="singleSearche" {
+		i $g(mark)="OUTPUT" {
+			s:searcheCond="" searcheCond=$g(%session.Data("searcheCond","OUTPUT"))
+			s:searcheValue="" searcheValue= $g(%session.Data("searcheValue","OUTPUT"))
+			s %session.Data("searcheCond","OUTPUT")=searcheCond
+			s %session.Data("searcheValue","OUTPUT")=searcheValue
+			s %session.Data("action","OUTPUT")=action
+		}elseif $g(mark)="TASK"{
+			s:searcheCond="" searcheCond=$g(%session.Data("searcheCond","TASK"))
+			s:searcheValue="" searcheValue= $g(%session.Data("searcheValue","TASK"))
+			s %session.Data("searcheCond","TASK")=searcheCond
+			s %session.Data("searcheValue","TASK")=searcheValue
+			s %session.Data("action","TASK")=action
+		}
+	}
+	s deli="&"
+	//s sql="SELECT ID,MDocKPIDef_Code,MDocKPIDef_Desc,MDocKPIDef_Type,MDocKPI_UpdateDate FROM DHCWL_DocQuery.DHCWLDocKpiDef"
+	s sql="SELECT ID,MDocKPIDef_Code,MDocKPIDef_Desc, (case MDocKPIDef_Type when 'O' then '门诊' when 'I' then '住院' else Null end) As MDocKPIDef_Type,MDocKPI_UpdateDate,MDocKPIDef_Class,MDocKPIDef_Category FROM DHCWL_DocQuery.DHCWLDocKpiDef"
+	s orderSql=" order by ID",condSql="",noCond=" "
+	i ((action="singleSearche")&&(($g(searcheValue)="")||($g(searcheCond)=""))) {
+		s condSql=noCond
+	}elseif((action="singleSearche")&&(($g(searcheValue)'="")||($g(searcheCond)'=""))) {
+		s likeSV="%"_$g(searcheValue)_"%"
+		i $g(searcheCond)="Code"{ ;根据常量代码搜索
+			i $g(searcheValue)="" {
+				s condSql=noCond
+			}else{
+				s condSql=" where MDocKPIDef_Code like '"_likeSV_"'"
+			}
+		}elseif $g(searcheCond)="Desc"{ ;根据常量描述搜索
+			i $g(searcheValue)="" {
+				s condSql=noCond
+			}else{
+				s condSql=" where MDocKPIDef_Desc like '"_likeSV_"'"
+			}
+		}elseif $g(searcheCond)="User"{ ;根据用户搜索
+			i $g(searcheValue)="" {
+				s condSql=noCond
+			}else{
+				s condSql=" where MDocKPIDef_Type like '"_likeSV_"'"
+			}
+		}
+	}elseif(action="mulSearchClass"){
+		i $g(onePage)=1 {
+			s docKpiId = $Get(%request.Data("ID",1))
+			s docKPIDefCode = $Get(%request.Data("MDocKPIDefCode",1))
+			s docKPIDefDesc = $Get(%request.Data("MDocKPIDefDesc",1))
+			s docKPIDefType = $Get(%request.Data("MDocKPIDefType",1))
+			s docKPIUpdateDate = $Get(%request.Data("MDocKPIUpdateDate",1))
+			s docKPIDefClass = $Get(%request.Data("MDocKPIDefClass",1))
+			s docKPIDefCategory = $Get(%request.Data("MDocKPIDefCategory",1))
+			s %session.Data("ID")=docKpiId
+			s %session.Data("MDocKPIDefCode")=docKPIDefCode
+			s %session.Data("MDocKPIDefDesc")=docKPIDefDesc
+			s %session.Data("MDocKPIDefType")=docKPIDefType
+			s %session.Data("MDocKPIUpdateDate")=docKPIUpdateDate
+			s %session.Data("MDocKPIDefClass")=docKPIDefClass
+			s %session.Data("MDocKPIDefCategory")=docKPIDefCategory
+			
+		}else{
+			s docKpiId=$g(%session.Data("ID"))
+			s docKPIDefCode=$g(%session.Data("MDocKPIDefCode"))
+			s docKPIDefDesc=$g(%session.Data("MDocKPIDefDesc"))
+			s docKPIDefType=$g(%session.Data("MDocKPIDefType"))
+			s docKPIDefType = $Get(%request.Data("MDocKPIDefType",1))
+			s docKPIUpdateDate=$g(%session.Data("MDocKPIUpdateDate"))
+			s docKPIDefClass = $Get(%request.Data("MDocKPIDefClass",1))
+			s docKPIDefCategory = $Get(%request.Data("MDocKPIDefCategory",1))
+		}
+		if docKpiId'="" {
+			if condSql="" s condSql=condSql_" where"
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" ID="_docKpiId
+		}
+		if docKPIDefCode'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MDocKPIDef_Code like '%"_docKPIDefCode_"%'"
+		}
+		if docKPIDefDesc'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MDocKPIDef_Desc like '%"_docKPIDefDesc_"%'"
+		}
+		if docKPIDefType'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MDocKPIDef_Type like '%"_docKPIDefType_"%'"
+		}
+		if docKPIUpdateDate'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MDocKPI_UpdateDate like '%"_$zdh(docKPIUpdateDate,3)_"%'"
+		}
+		if docKPIDefClass'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MDocKPIDef_Class like '%"_docKPIDefClass_"%'"
+		}
+		if docKPIDefCategory'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MDocKPIDef_Category like '%计算类指标%'"
+		}
+	}
+	//if docKPIDefType = "门诊"  s docKPIDefType="O"
+	//if docKPIDefType = "住院"  s docKPIDefType="I"
+	s sql="SELECT ID,MDocKPIDef_Code,MDocKPIDef_Desc,MDocKPI_UpdateDate,MDocKPIDef_Class,MDocKPIDef_Category,MDocKPIDef_Type FROM DHCWL_DocQuery.DHCWLDocKpiDef WHERE MDocKPIDef_Category LIKE "_"'%普通指标%' And MDocKPIDef_Class = "_"'"_docKPIDefClass_"' AND MDocKPIDef_Type= "_"'"_docKPIDefType_"'"
+	s rs=##class(%Library.ResultSet).%New()
+	d rs.Prepare(sql)
+	d rs.Execute()
+	s json=##class(DHCWL.util.Json).Json("ID"_deli_"MDocKPIDefCode"_deli_"MDocKPIDefDesc"_deli_"MDocKPIUpdateDate"_deli_"MDocKPIDefClass"_deli_"MDocKPIDefCategory"_deli_"MDocKPIDefType","result","root",deli)
+	s num=0
+	//读入可选项结束
+	While(rs.Next()){
+		s num=num+1
+		i (+isArrayType'=1)&&(num<(start)) continue
+		i (+isArrayType'=1)&&((end)<num) continue
+		s date=rs.Data("MDocKPI_UpdateDate")
+		s:date'="" date=$zd(+date,3)
+		d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("MDocKPIDef_Code")_"'"_deli_"'"_rs.Data("MDocKPIDef_Desc")_"'"_deli_"'"_date_"'"_deli_"'"_rs.Data("MDocKPIDef_Class")_"'"_deli_"'"_rs.Data("MDocKPIDef_Category")_"'"_deli_"'"_rs.Data("MDocKPIDef_Type")_"'")
+	}
+	d rs.Close()
+	d json.SetTotalNum(num)
+	i (+isArrayType=1) {
+		w "["
+		d {
+			s obj=json.GetNextJsonArray()
+			i obj'="" w obj,","
+		}while(obj'="")
+		w "]"
+		q
+	}
+	s jsonHead=json.GetHead()
+	//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+	w jsonHead
+	d{
+		s obj=json.Next()
+		w obj
+	}while(obj'="")
+	i json.GetCount()=0 w "]}"
+
+</script>
+

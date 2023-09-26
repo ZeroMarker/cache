@@ -1,0 +1,22 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s nodeId=%request.Get("nodeId")
+	s hospitalId=%request.Get("hospitalId")
+	s AdmDate=%request.Get("AdmDate")
+	s GroupID=%session.Get("LOGON.GROUPID")
+	s ^tmpgry("nodeId")=nodeId_","_hospitalId_","_AdmDate_","_%request.Get("GetLocTree")_","_%request.Get("GetGroupTree")
+	
+	i %request.Get("GetLocTree")'=""{
+		w ##class(web.DHCOPAdmRegTree).GetLocTree()
+	}else{
+		i %request.Get("GetGroupTree")'="" {
+			w ##class(web.DHCOPAdmRegTree).GetTreeGroupStr("")
+		}else{
+			w ##class(web.DHCOPAdmRegTree).GetTreeLocStrCustom(nodeId,hospitalId,AdmDate,GroupID)
+		}
+	}
+</script>

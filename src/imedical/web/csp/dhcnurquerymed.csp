@@ -1,0 +1,125 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+s ClassName="web.DHCConsultNew" ;$g(%request.Data("ClassName",1)) ;"web.DHCConsultNew"
+s QueryName="GetConSultList" ;$g(%request.Data("QueryName",1)) ;"GetConSultList" 
+s ArgCnt="3" ;$g(%request.Data("ArgCnt",1)) ;"3" 
+s rs=##class(%ResultSet).%New(ClassName_":"_QueryName)
+s startRecordNo=$g(%request.Data("start",1))
+s limitRecordCnt=$g(%request.Data("limit",1))
+
+;s:limitRecordCnt=0 limitRecordCnt=25
+Set ReturnType=..GetReturnType(ClassName,QueryName)
+ n execute,i
+ k PLIST
+ s execute="set %sc=$zobjmethod(rs,""Execute"""
+ f i=1:1:ArgCnt  d 
+ .s ArgName="Arg"_i
+ .s PLIST(i)=%request.Data(ArgName,1)
+ .s execute=execute_",PLIST("_i_")"
+ s execute=execute_")"
+ x execute
+
+ s cnt=0
+ s displayRows=0
+ s rowData=""
+ w "{record:[",!
+ s columns=rs.GetColumnCount()
+ f  q:rs.Next()=0  d
+ .i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt="")  d
+ ..w:displayRows>0 ","
+ ..w "{"
+ ..s rowData=""
+ ..f i=1:1:columns  d
+ ...s:i>1 rowData=rowData_","
+ ...s fieldInfo=$p(ReturnType,",",i)
+ ...s fieldType=$p(fieldInfo,":",2)
+ ...s rowData=rowData_rs.GetColumnName(i)_" : "
+ ...s tmpData=rs.GetData(i)
+ ...s tmpData=..ReplaceString(tmpData,"'","\'")
+ ...s tmpData=..ReplaceString(tmpData,$c(13),"\n")
+ ...s tmpData=..ReplaceString(tmpData,$c(10),"\r")
+ ...s tmpData=..ReplaceString(tmpData,$c(2),"<$C2>")
+ ...s tmpData=..ReplaceString(tmpData,$c(5),"<$C5>")
+ ...s tmpData=..ReplaceString(tmpData,$c(7),"<$C7>")
+ ...i (($e(tmpData,1,1)="'"))  d
+ ....s rowData=rowData_tmpData
+ ...e  d
+ ....s:fieldType="" fieldType="%String"
+ ....i fieldType="%String"  d //根据返回数据类别增加引号，方便前台数据排序
+ .....s rowData=rowData_"'"_tmpData_"'"
+ ....e  d
+ .....s:((tmpData="")&&(fieldType="%Integer")) rowData=rowData_"0"
+ .....s:((tmpData="")&&(fieldType="%Float")) rowData=rowData_"0"
+ .....s:tmpData'="" rowData=rowData_tmpData
+ ..w rowData
+ ..w "}",!
+ ..s displayRows=displayRows+1
+ .s cnt=cnt+1
+ w "],total : "_cnt_"}"
+ d rs.%Close()
+ q
+ 
+ 
+ 
+ 
+/*
+
+ s columns=rs.GetColumnCount()
+ w "<?xml version="_$c(34)_"1.0"_$c(34)_" encoding="_$c(34)_"gb2312"_$c(34)_" ?>",!
+ w "<result>",!
+//w ! f i=1:1:columns w rs.GetColumnHeader(i),":"
+ 
+ f  q:rs.Next()=0  d
+ .w "	<row>",!  
+ .f i=1:1:columns  d
+ ..w "		<"_rs.GetColumnHeader(i)_">"
+ ..s tmp=rs.GetData(i)
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"&","&amp;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,">","&gt;") 
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"<","&lt;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp," ","&nbsp;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"'","&apos;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,$c(34),"&quot;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"#","&#35;")
+ ..w tmp
+ ..w "</"_rs.GetColumnHeader(i)_">",!
+ .w "	</row>",!
+ d rs.%Close()
+ w "</result>"
+ q
+
+*/
+
+
+
+</SERVER>
+<csp:method name=ReplaceString arguments="Str, OldStr, NewStr" returntype=%String>
+	set intCounter = 1
+	while (1)
+	{
+		set tmp =$e(Str, intCounter, intCounter + $l(OldStr) - 1) 
+		if (tmp = OldStr)
+		{
+			 set $e(Str, intCounter, intCounter + $l(OldStr) - 1) = NewStr
+			 set intCounter = intCounter + $l(NewStr) - $l(OldStr)
+		}
+		quit:intCounter>=$l(Str)
+		set intCounter = intCounter + 1
+	}
+	quit Str
+</csp:method>
+
+
+<csp:method name=GetReturnType arguments="ClassName, QueryName" returntype=%String>
+Set ret=""
+Set cdef = ##class(%Dictionary.CompiledClass).%OpenId(ClassName)
+set count = cdef.Queries.Count() 
+For i = 1:1:count {
+	if (cdef.Queries.GetAt(i).Name=QueryName)
+ 	{		 	
+ 		Set ret=cdef.Queries.GetAt(i).Parameters.GetAt("ROWSPEC")
+	}	 
+}
+k cdef
+Quit ret
+</csp:method>

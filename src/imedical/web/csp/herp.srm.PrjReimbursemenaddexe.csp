@@ -1,0 +1,62 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">   
+ s hospid=$G(%session.Data("LOGON.HOSPID"))
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))
+	
+	s rowid = $Get(%request.Data("rowid",1))
+	s rowidm = $Get(%request.Data("rowidm",1))
+	s itemcode = $Get(%request.Data("itemcode",1)) 
+	s deptdr = $Get(%request.Data("deptdr",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	s userdr1 = $Get(%request.Data("userdr1",1))
+	s projdr = $Get(%request.Data("projdr",1))
+	s billcode = $Get(%request.Data("billcode",1))
+	s mdesc = $Get(%request.Data("mdesc",1))
+	s budgreal = $Get(%request.Data("budgreal",1))
+	s reqpay = $Get(%request.Data("reqpay",1))
+	s ddesc = $Get(%request.Data("ddesc",1))
+	s supplier = $Get(%request.Data("supplier",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	
+	i action = "list1" d
+	.w ##class(herp.srm.udata.PrjReimbursemen).AddListMain(projdr,start,limit)
+
+	i action = "list2" d
+	.w ##class(herp.srm.udata.PrjReimbursemen).AddListDetail(sortField, sortDir, start, limit)	
+	
+	i action = "edit" d	
+	.s ^temp=ddesc
+	.s result = ##class(herp.srm.udata.PrjReimbursemen).Update1(rowid,reqpay,ddesc,rowidm,deptdr, userdr, projdr, mdesc,userdr1)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "Add1" d
+	.s result = ##class(herp.srm.udata.PrjReimbursemen).Insert2(rowidm,deptdr, userdr, projdr, mdesc,userdr1)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.PrjReimbursemen).InsertRec(itemcode, budgreal, reqpay, ddesc,rowidm,deptdr, userdr, projdr, mdesc,userdr1)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+		
+</script>

@@ -1,0 +1,78 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+	;dhcdoc.cure.method.easyui.csp
+ If ##Class(websys.SessionEvents).SessionExpired() Quit $$$ERROR($$$CSPSessionTimeout)
+ s strClassName=%request.Data("ClassName",1)
+ s strMethodName=%request.Data("MethodName",1)
+ s ArgCnt=%request.Data("ArgCnt",1)
+ s ret=""
+ s strMethodName=$tr(strMethodName,"_","%")
+ s objMethodInfo=##class(%Dictionary.CompiledMethod).%OpenId(strClassName_"||"_strMethodName)
+ s strReturnType=objMethodInfo.ReturnType
+ d objMethodInfo.%Close()
+ k objMethodInfo 
+ s execute=""
+ s i=""
+ s execute="s ret=$ZOBJCLASSMETHOD(strClassName,strMethodName"
+ k PLIST
+ f i=1:1:ArgCnt  d 
+ .s strArgName="Arg"_i
+ .s PLIST(i)=%request.Data(strArgName,1)
+ .s execute=execute_",PLIST("_i_")"
+ s execute=execute_")"
+ w "{""success"":""true"",""result"":"  //add by lihaihong
+ x execute
+ 
+ 
+ i ((ret="")||($IsObject(ret)=0))  d
+ .;s ret="{success:true,result:'"_ret_"'}"
+ .;s ret="{""success"":""true"",""result"":"_ret_"}" //edit by lihaihong
+ .w:ret'="" ret
+ e  d
+ .;s ret="{""success"":false,""result"":""执行类方法失败:"_$IsObject(ret)_"""}" //edit by lihaihong
+ .w """执行类方法失败:"_$IsObject(ret)_"""" //add by lihaihong
+;s ^scl("gg")=ret //edit by lihaihong
+ ;w ret //edit by lihaihong
+ w "}" //add by lihaihong
+ 
+</SERVER>
+
+<csp:method name=ReplaceString arguments="Str, OldStr, NewStr" returntype=%String>
+	set intCounter = 1
+	while (1)
+	{
+		set tmp =$e(Str, intCounter, intCounter + $l(OldStr) - 1) 
+		if (tmp = OldStr)
+		{
+			 set $e(Str, intCounter, intCounter + $l(OldStr) - 1) = NewStr
+			 set intCounter = intCounter + $l(NewStr) - $l(OldStr)
+		}
+		quit:intCounter>=$l(Str)
+		set intCounter = intCounter + 1
+	}
+	quit Str
+</csp:method>
+
+<csp:method name=SerializeObject arguments="obj" returntype=%String>
+	n (obj)
+	s cdef = ##class(%Dictionary.ClassDefinition).%OpenId(obj.%ClassName(1))
+	s RowID=""
+	s:cdef.Storages.Count()>0 RowID=obj.%Id() 
+	s ret="<ResultObject>{"_$c(13)_$c(10)_"RowID : '"_RowID_"'"
+	s intPropertyCnt=cdef.Properties.Count()
+	f i=1:1:intPropertyCnt  d
+	.s ret=ret_","_$c(13)_$c(10)
+	.s strPropertyName=cdef.Properties.GetAt(i).Name
+	.s strType=cdef.Properties.GetAt(i).Type
+	.s expression="s strValue=obj."_strPropertyName
+	.x expression
+	.s:strType="%Date" strValue=$zd(strValue,3)
+	.s strValue=..ReplaceString(strValue,$c(13),"\r")
+	.s strValue=..ReplaceString(strValue,$c(10),"\n")
+	.s strValue=..ReplaceString(strValue,"'","\'")
+	.s ret=ret_strPropertyName_":'"_strValue_"'"
+	s ret=ret_"}"
+	d cdef.%Close()
+	k cdef
+	q ret
+</csp:method>

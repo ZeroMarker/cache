@@ -1,0 +1,35 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<script language="cache" runat="server">
+ s actiontype = $Get(%request.Data("actiontype",1))
+ s start = $Get(%request.Data("start",1))
+ s limit = $Get(%request.Data("limit",1))
+ //s CTLocRowID= $Get(%request.Data("CTLocRowID",1))
+ //s CTLocDesc= $Get(%request.Data("CTLocDesc",1))
+ s DateFrom= $Get(%request.Data("DateFrom",1))
+ //s DateTo= $Get(%request.Data("DateTo",1))
+ //s Out= $Get(%request.Data("Out",1))
+ //s InHospital= $Get(%request.Data("InHospital",1))
+ //s Emergency= $Get(%request.Data("Emergency",1))
+// s PE= $Get(%request.Data("PE",1))
+//s PatRegNo= $Get(%request.Data("PatRegNo",1))
+//s Returnflag= $Get(%request.Data("Returnflag",1))
+//s PatName= $Get(%request.Data("PatName",1))
+s SendFlag= $Get(%request.Data("SendFlag",1))
+//s PAADMRowID= $Get(%request.Data("PAADMRowID",1))
+s Returnflag= $Get(%request.Data("Returnflag",1))
+
+//GetResultList
+ 
+ i actiontype = "FindList" d
+ .s ^dateform=DateFrom
+ .w ##class(web.DHCCRM.BirthdayRemind).GetPersonList(start,limit,DateFrom,SendFlag)
+ i actiontype = "SMSSend" d
+ .s ^zl("actiontype ")=actiontype 
+ .w ##class(web.DHCCRM.BirthdayRemind).SMSSend(PAADMRowID,Returnflag,actiontype )
+
+</script>
+

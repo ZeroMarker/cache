@@ -1,0 +1,119 @@
+<style>
+.sline, .infoLabel {
+	color: #787878;
+}
+
+.patientInfo {
+	padding-bottom: 10px;
+	padding-left: 60px;
+	display: inline-block;
+	position: absolute;
+	top: 7px;
+}
+
+.patientInfo span {
+	padding-left: 5px;
+}
+
+.patName {
+	font-size: 16px;
+	margin-right: 15px;
+}
+
+.unman {
+ 	background:url(../images/unman.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+ 	top: 3px;
+    left: 10px;
+}
+
+.man {
+ 	background:url(../images/man.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+ 	top: 3px;
+    left: 10px;
+}
+
+.woman {
+ 	background: url(../images/woman.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+ 	top: 3px;
+	left: 10px;
+}
+</style>
+
+<script type="text/javascript">
+/**
+ * 根据登记号获取患者基本信息
+ * @method setBannerPatInfo
+ * @author ZhYW
+ */
+function setBannerPatInfo(patientNo) {
+	$.m({
+		ClassName: 'web.DHCOPBillWarrant',
+		MethodName: 'GetPatInfoByRegNo',
+		patientNo: patientNo,
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+	}, function (rtn) {
+		var myAry = rtn.split('^');
+		var patientNo = myAry[1];
+		var patName = myAry[2];
+		var sex = myAry[3];
+		var patAge = myAry[4];
+		if (sex == '男') {
+			$('#bn-sex').removeClass('unman man woman').addClass('man');
+		} else if (sex == '女') {
+			$('#bn-sex').removeClass('unman man woman').addClass('woman');
+		}else {
+			$('#bn-sex').removeClass('unman man woman').addClass('unman');
+		}
+		$('#bn-patName').text(patName);
+		$('#bn-patAge').text(patAge);
+	});
+}
+
+/**
+ * 根据就诊号获取患者费用信息
+ * @method setBannerPatPayInfo
+ * @author ZhYW
+ */
+function setBannerPatPayInfo(episodeId) {
+	$.m({
+		ClassName: 'web.DHCOPBillWarrant',
+		MethodName: 'GetPatPayInfoByAdm',
+		episodeId: episodeId
+	}, function (rtn) {
+		var myAry = rtn.split('^');
+		var admDept =  myAry[0];
+		var warrAmt = myAry[1];
+		var deposit = myAry[2];
+		$('#bn-admDept').text(admDept);
+		$('#bn-deposit').text(deposit);
+		$('#bn-warrAmt').text(warrAmt);
+	});
+}
+</script>
+
+<!--dhcbill.emergwarrant.baner.csp-->
+<div>
+	<div id="bn-sex"></div>
+	<div class="patientInfo">
+		<span class="patName" id="bn-patName"></span>
+		<span class="infoLabel">年龄:</span><span id="bn-patAge"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">就诊科室:</span><span id="bn-admDept"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">预缴款:</span><span id="bn-deposit"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">担保金额:</span><span id="bn-warrAmt"></span>
+	</div>
+</div>

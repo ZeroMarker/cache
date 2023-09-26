@@ -1,0 +1,219 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术排班</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<style>
+/*.datagrid-btable {
+	color:blue;	
+}*/
+.sourcetype-text {
+    font: bold 12px 微软雅黑;
+    text-shadow: 0 2px 3px #555;
+}
+
+.sourcetype-book {
+    color: yellow;
+}
+
+.sourcetype-em {
+    color: red;
+}
+
+.arrange-container {
+	display:inline-block;
+	min-width:30px;
+	color:blue;
+}
+
+.editor {
+	display:none;	
+}
+
+.oper-nurse{
+    width: 46px;
+    height: 22px;
+    border: 1px solid #169bd5;
+    margin: 5px;
+    padding: 0px;
+    float: left;
+    border-radius: 3px;
+    text-align: center;
+    line-height: 22px;
+    color: #fff;
+	background-color:#169bd5;
+}
+.oper-nurse-inroom{
+	width:auto;
+	margin:5px 2px;
+	padding:0 2px;
+	display:inline-block;
+}
+
+.close{
+	height:100%;
+	margin-left:5px;
+	padding-left:2px;
+	border-left:1px solid #fff;
+}
+.close:hover{
+	cursor:default;
+}
+
+#arrangeForm {
+	margin:0;
+}
+
+
+</style>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px 5px 10px 10px;">
+    <table id="arrangeBox"></table>
+    <div id="arrangeTools">
+        <form id="arrangeForm" method="post">
+            <div class="form-rows">
+                <div>
+                    <div class="form-row">
+                        <div class="form-title-right4">手术日期</div>
+                        <div class="form-item-normal">
+                            <input type="text" id="operDate" class="hisui-datebox">
+                        </div>
+                        <!--<span class="form-btn">
+                            <a href="#" id="btnQuery" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                        </span>-->
+                        <span class="form-btn">
+                            <a href="#" id="btnExtract" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                        </span>
+                        
+                        <span class="form-btn">
+                            <a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存排班</a>
+                        </span>
+                        <span class="form-btn">
+                            <a href="#" id="btnRevoke" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">撤回排班</a>
+                        </span>
+                        <span class="form-btn" >
+                            <a href="#" id="btnSubmit" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'">发布排班</a>
+                        </span>
+                        <span class="form-btn">
+                            <a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印排班表</a>
+                        </span>
+                    </div>
+                    
+                </div>
+            </div>
+        </form>
+    </div>
+   	<div id="attendanceDialog" class="hisui-dialog" data-options="modal:true,title:'科室排班',closed:true,width:1280,height:700,content:'<iframe scrolling=\'yes\' frameborder=\'0\' src=\'dhcan.dailyattendance.csp\' style=\'width:100%;height:100%\'></iframe>',buttons:'#attendanceButtons'">
+   	</div>
+   	<div id="attendanceButtons">
+   		<!--a href="#" id="btnConfirmAttendance" class="hisui-linkbutton" data-options="iconCls:'icon-ok'">确认</a>
+   		<a href="#" id="btnCloseAttendance" class="hisui-linkbutton" data-options="iconCls:'icon-close'">退出</a-->
+   	</div>
+    </div>
+    <div data-options="region:'east',border:false,headerCls:'panel-header-gray'" style="padding:10px 10px 10px 5px;width:300px;">
+    	<div class="hisui-panel" data-options="fit:true,title:'科室排班信息',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+    	<div class="attendance">
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">第01间</div>
+    				<div class="form-item-normal">
+    					<span id="OPR101" class="arrange-container"></span>
+    				</div>
+    				
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">第02间</div>
+    				<div class="form-item-normal">
+    					<span id="OPR102" class="arrange-container"></span>
+    				</div>
+    				
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">第03间</div>
+    				<div class="form-item-normal">
+    					<span id="OPR103" class="arrange-container"></span>
+    				</div>
+    				
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">第04间</div>
+    				<div class="form-item-normal">
+    					<span id="OPR104" class="arrange-container"></span>
+    				</div>
+    				
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">第05间</div>
+    				<div class="form-item-normal">
+    					<span id="OPR105" class="arrange-container"></span>
+    				</div>
+    				
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">门药恢</div>
+    				<div class="form-item-normal">
+    					<span id="W001" class="arrange-container"></span>
+    				</div>
+    				<span class="form-btn">
+                        <a href="#" id="btnAttendance" class="hisui-linkbutton" data-options="iconCls:'icon-schedule',plain:true"></a>
+                    </span>
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">夜班</div>
+    				<div class="form-item-normal">
+    					<span id="W004" class="arrange-container"></span>
+    				</div>
+    				
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">下夜班</div>
+    				<div class="form-item-normal">
+    					<span id="W003" class="arrange-container"></span>
+    				</div>
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">总巡回</div>
+    				<div class="form-item-normal">
+    					<span id="W002" class="arrange-container"></span>
+    				</div>
+    			</div>
+    		</div>
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right45">休息</div>
+    				<div class="form-item-normal">
+    					<span id="W005" class="arrange-container"></span>
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+    	</div>
+    </div>
+    <script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/datagrid-cellediting.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/config/operarrangeconfig.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DataGridEditor.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperArrange.js"></script>
+    
+</body>
+</html>

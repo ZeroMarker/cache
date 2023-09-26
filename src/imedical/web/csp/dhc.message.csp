@@ -1,0 +1,567 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!doctype html>
+<html>
+<head>
+	<script src="../scripts/websys.js" type="text/javascript"></script>
+	<HISUI />
+	<style>
+		.badge {
+		    display: inline-block;
+		    min-width: 10px;
+		    padding: 3px 7px;
+		    font-size: 12px;
+		    font-weight: bold;
+		    line-height: 1;
+		    color: #fff;
+		    text-align: center;
+		    white-space: nowrap;
+		    vertical-align: baseline;
+		    background-color: #999;
+		    border-radius: 10px;
+		}
+		.icon-white-search{
+			background:url('../scripts_lib/hisui-0.1.0/dist/css/icons/white/find.png') no-repeat center center;
+		}
+		.l-btn-icon {
+		    background-color: #378ec4;
+		}
+		#main-box{
+			width:100%;
+			margin:10px 0 0 0;
+		}
+		#left-box{
+			width:405px; /*450px; -45px*/
+			height:497px;
+			float:left;
+		}
+		#left-box .panel.datagrid .panel-body{
+			border-color:#ddd;
+		}
+		#right-box{
+			width: 793px; /*748px;   +45px*/
+			margin-left:10px;
+			height:495px;
+			float:left;
+			border:1px solid #ddd;
+		    -moz-border-radius: 4px;
+		    -webkit-border-radius: 4px;
+		    border-radius: 4px;
+		}
+		.no-data{
+			width:100%;
+			height:100%;
+			background: url(../images/no_data.png) center center no-repeat;
+		}
+		/*right-box 下最大的*/
+		.adminfo{
+			position:relative; 
+		}
+		.msg-adm{
+			height:69px;
+			border-bottom:1px solid #ddd;
+			background-color:#f7f7f7;	
+			position:relative;
+		}
+		.msg-adm-head{
+			width:50px;
+			height:50px;
+			position:absolute;
+			top:9px;
+			left:10px;
+    		background-position: center center;
+    		background-repeat: no-repeat;
+    		background-size: contain;
+		}
+		.msg-adm-head.sex-male{
+			background-image: url(../images/man_big.png);
+		}
+		.msg-adm-head.sex-female{
+			background-image: url(../images/woman_big.png);
+		}
+		.msg-adm-head.sex-unknown{
+			background-image: url(../images/sex3_big.png);
+		}
+		.msg-adm-content{
+			padding-left:70px;	
+			padding-top:9px;
+		}
+		.msg-adm-content-row{
+			line-height:25px;
+			margin:0;
+		}
+		.msg-adm-content-row .label{
+			margin-right:3px;
+		}
+		.msg-adm-content-row .sep{
+			color: #bbb;
+    		margin: 0 3px;
+		}
+		.msg-adm-diag{
+			color:#ff971d;	
+		}
+		.msg-title{
+			margin:0 10px;
+			border-bottom:1px solid #ddd;
+			height:59px;
+			padding:0 10px;
+			overflow:hidden;
+		}
+		.msg-title span{ 
+			font-size:13px;
+		}
+		.msg-reply-c{
+			border-bottom:1px solid #ddd;
+			border-top:1px solid #ddd;
+			background-color:#f7f7f7;	
+			height:145px;
+			overflow:auto;
+			position:relative;
+		}
+		.msg-no-reply{
+			position:absolute;
+			width:100%;
+			height:100%;
+			text-align:center;
+			font-size:32px;
+		}
+		.msg-no-reply>span{
+			padding-left:34px;
+			background:url(../images/fa-info-circle_999999_24.png) no-repeat 0 6px;
+			color:#999999;
+			font-size: 24px;
+		    line-height: 32px;
+		    margin-top: 57px;
+		    display: inline-block;
+		}
+		.msg-hidden{
+			display:none;
+	  		background-color:#fff; /*#F9FBFF*/
+	  		border:1px solid #ccc;
+	  		padding:5px;
+	  		position:absolute;
+	  		border-radius:5px;
+	  		z-index:100;
+	  	}
+	  	.msg-hidden table{
+			color:#666;
+			font-size:12px;
+	  	}
+		.msg-hidden:before {
+			background-color:#fff; /*#F9FBFF*/
+		  	border:1px solid #ccc;
+		  	border-bottom:0;
+		  	border-right:0;
+			position: absolute;
+			content: '';
+			width: 10px;
+			height: 10px;
+			right:5px;
+			top:-7px;
+			-webkit-transform: rotate(45deg);
+			-ms-transform: rotate(45deg);
+			transform: rotate(45deg);
+			z-index: 101;
+		}
+		.msg-content{
+		  	position:relative; 
+			margin:0 10px;
+			padding:0 10px;
+			height:430px;
+			overflow:auto;
+		}
+		.msg-content.msg-content-widthadm{
+			height:360px;
+		}
+		.msg-content.msg-content-widthreply{
+			height:210px;
+		}
+		.msg-content.msg-content-widthadm.msg-content-widthreply{
+			height:140px;
+		}
+		.msg-atta{
+			 left:5px;
+			 bottom:5px;
+		  	 position: absolute;
+		}
+		.msg-link{
+			 right:5px;
+			 bottom:5px;
+		  	 position: absolute;
+		}
+		.msg-text{
+		  overflow:auto;
+		  line-height:1.5em;
+		  word-wrap: break-word; 
+		  word-break:break-all;
+	  	}
+	  	.msg-reply-i{
+		  	padding:0 10px 10px 10px;
+		}
+		#replyContent{
+			width:100%;
+			height:30px;
+			line-height:30px;
+			background-color:transparent!important;
+			border:0;
+			outline:none;
+		}
+		#replyContent:focus,#replyContent:active{
+			background-color:transparent!important;
+			border:0
+		}
+		.msg-reply-i-op{
+			padding-top:10px;	
+		}
+		.font-btn{
+			display:inline-block;
+			width:28px;
+			height:28px;
+			font-size:16px;
+			line-height:28px;
+			text-align:center;
+			cursor:pointer;
+			border:1px solid transparent;
+		}
+		.bold{
+			font-weight:bold;
+		}
+		.italic{
+			font-style:italic;
+		}
+		.active{
+		    background-color: #e6e6e6;
+		    border-color: #adadad;
+		    background-image: none;
+		    outline: 0;
+		    -webkit-box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+		    box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+		    -moz-border-radius: 4px;
+		    -webkit-border-radius: 4px;
+		    border-radius: 4px;
+		}
+		.msg-reply-chatter{
+			margin-top:10px;
+		}
+		.msg-reply-content{
+			height:24px;
+			line-height:24px;	
+			padding:5px 10px;
+			color:#fff;
+			-moz-border-radius: 4px;
+		    -webkit-border-radius: 4px;
+		    border-radius: 4px;
+		    position:relative;
+		    height:auto;
+		    min-width:130px;
+			max-width:500px;
+			word-break:break-all;
+		}
+		.msg-reply-info{
+			line-height:20px;
+			font-size:12px;
+			color:gray;	
+		}
+		.msg-other{
+			padding-left:20px;
+		}
+		.msg-other .msg-reply-content{
+			background-color:#16BBA3;
+			display:inline-block;
+		}
+		.msg-other .msg-reply-content:before {
+		    content: '';
+		    position: absolute;
+		    top: 5px;
+		    left: -5px;
+		    z-index: 10;
+		    border: 5px solid transparent;
+		    border-right-color: #16BBA3;
+		    -webkit-transform: rotate(135deg);
+		    -ms-transform: rotate(135deg);
+		    transform: rotate(135deg);
+		}
+		.msg-other.msg-new .msg-reply-content:after {
+		    content: '.';
+		    position: absolute;
+		    top: -10px;
+		    font-weight: normal;
+		    right: -18px;
+		    z-index: 10;
+		    color: red;
+		    font-size: 50px;
+		}
+		.msg-other .msg-reply-info{
+			display:block;
+		}
+		.msg-self {
+			padding-right:20px;
+			text-align:right;
+		}
+		.msg-self .msg-reply-content{
+			background-color:#509DE1;
+			display:inline-block;
+			text-align:left;
+		}
+		.msg-self .msg-reply-content:before {
+		    content: '';
+		    position: absolute;
+		    top: 5px;
+		    right: -5px;
+		    z-index: 10;
+		    border: 5px solid transparent;
+		    border-right-color: #509DE1;
+		    -webkit-transform: rotate(45deg);
+		    -ms-transform: rotate(45deg);
+		    transform: rotate(45deg);
+		}
+		.msg-self .msg-reply-info{
+			display:block;
+			text-align:right;
+		}
+		#left-box .datagrid-header-row>td:last-child,
+		#left-box .datagrid-row>td:last-child{
+			border-right-color:transparent;
+		}
+		/*typo css实现方案*/
+		.typo-em {
+		    position: relative;
+		}
+		/*不需要了*/
+		.typo-em2:after {
+		    position: absolute;
+		    top: 0.65em;
+		    left: 0;
+		    width: 100%;
+		    overflow: hidden;
+		    white-space: nowrap;
+		    content: "\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb\30fb";
+		}
+		#search-tb td{
+			padding:0;
+		}
+		#search-tb td.r-label{
+		    text-align: right;
+    		padding-right: 10px;
+		}
+		.msg-collapse-c{
+			display:none;
+		}
+		.toggle-btn{
+			color:#40a2de;
+			text-decoration:underline;	
+			padding-right:13px;
+			background:url(../images/fa-angle-double-down_40a2de_12.png) no-repeat center right;
+		    line-height: 13px;
+		    display: inline-block;
+		    border-bottom:1px solid #40a2de;
+		    cursor:pointer;
+		}
+		.toggle-btn.expanded{
+			background-image:url(../images/fa-angle-double-up_40a2de_12.png);
+		}
+		/*未处理按钮*/
+		.l-btn.unexec {
+			border:#f16e57;
+			background:#f16e57;
+		}
+		.l-btn.unexec:hover {
+			border:#cf5843;
+			background:#cf5843;
+		}
+		/*已处理按钮*/
+		.l-btn.exec {
+			border:#2ab66a ;
+			background:#2ab66a ;
+		}
+		.l-btn.exec:hover {
+			border:#189b54;
+			background:#189b54;
+		}
+
+	</style>
+</head>
+<!--dhc.message.csp-->
+<body>
+	<table width="100%" id="search-tb">
+		<tr>
+			<td class="r-label" style="width:57px;">#(..Get("消息类型"))#</td>
+			<td>
+				<select id="ActionTypeArg" class="hisui-combobox" style="width:160px;" data-options='onSelect:ActionTypeArgOnChange'>
+				  <option value ="" selected>#(##class(websys.Translation).Get("DIC","全部"))#</option>
+				  <server>
+				    Set:$d(%session.Data("LOGON.LANGID"))#2 langId=%session.Data("LOGON.LANGID")
+				    Set:$g(langId)="" langId = 20
+				  	set ActionDr="" for  set ActionDr=$o(^websys.DHCMessageActionTypeD(ActionDr)) q:ActionDr=""  d
+				  	.q:$lg(^websys.DHCMessageActionTypeD(ActionDr),7)="N" //未激活的不显示
+				  	.q:(%request.Get("OnlyMarquee")=1)&&($lg(^websys.DHCMessageActionTypeD(ActionDr),22)'="Y")
+				 	.set ActionCode = $lg(^websys.DHCMessageActionTypeD(ActionDr),2)
+					.set ActionDesc = $lg(^websys.DHCMessageActionTypeD(ActionDr),3)
+					.Set ActionDesc = ##class(websys.TranslationEPR).GetTrans("websys.DHCMessageActionType","DHCActionDesc",langId,ActionDesc)
+					.w "<option value =",ActionCode,">",ActionDesc,"</option>"
+				 </server>
+				</select>
+			</td>
+			<td class="r-label">#(..Get("发送日期"))#</td>
+			<td>
+				<input id="sdate" type="text" class="hisui-datebox" style="width:160px;">
+				<span style="padding:0 10px">#(..Get("至"))#</span>	
+				<input id="edate" type="text" class="hisui-datebox" style="width:160px;">
+			</td>
+			<td class="r-label">#(..Get("状态"))#</td>
+			<td>
+				<select id="MsgStatus" class="hisui-combobox" style="width:100px;" data-options='onSelect:MsgStatusOnChange,panelHeight:62'>
+				  <option value ="N" selected>#(..Get("未处理"))#</option>
+				  <option value ="Y" >#(..Get("已处理"))#</option>
+				</select>
+			</td>
+			<td>
+				<input class='hisui-radio' type="radio" label='#(..Get("紧急"))#' name='MsgLevel' value='D,V' data-options='onCheckChange:MsgMsgLevelOnChange'>
+	            <input class='hisui-radio' type="radio" label='#(..Get("普通"))#' name='MsgLevel' value='I,G' data-options='onCheckChange:MsgMsgLevelOnChange'>
+	            <input class='hisui-radio' type="radio" label='#(..Get("全部"))#' name='MsgLevel' value='D,V,I,G' data-options='onCheckChange:MsgMsgLevelOnChange'>
+			</td>
+			<td style="text-align:right;">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-white-search',onClick:findMessageList" >查询</a>      
+			</td>
+		</tr>
+	</table>
+	<div id="main-box">
+		<div id="left-box">
+			<table id="messagelist"></table>
+		</div>
+		<div id="right-box"></div>
+		<div style="clear:both"></div>
+	</div>
+	<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+	<script src="../scripts/dhc.message.js" type="text/javascript"></script>
+		<script id="otherReplyTpl" type="text/x-jquery-tmpl">
+			<div class='msg-reply-chatter msg-other {{if newReplyFlag==1}} msg-new {{/if}}'>
+				<span class="msg-reply-content" 
+				{{if fStyle }} style='${fStyle}'{{/if}}
+				>${replyContent}</span>
+				<span class='msg-reply-info'>${userName}  ${sendDate} </span>
+				<div style="clear:both"></div>
+			</div>
+		</script>
+		 <script id="myselfReplyTpl" type="text/x-jquery-tmpl">
+			<div class='msg-reply-chatter msg-self {{if newReplyFlag==1}} msg-new {{/if}}'>
+				<span class="msg-reply-content" 
+				{{if fStyle }} style='${fStyle}'{{/if}}
+				>${replyContent}</span>
+				<span class='msg-reply-info'>${userName}  ${sendDate} </span>
+				<div style="clear:both"></div>
+			</div>
+		</script>	
+		<!-- 历史回复 //-->
+		<script id="replyTpl" type="text/x-jquery-tmpl">
+			{{each(i,r1) ReplyList}}
+				{{if r1.userId==#(%session.Data("LOGON.USERID"))#}}
+					{{tmpl(r1) '#myselfReplyTpl'}}
+				{{else}}
+					{{tmpl(r1) '#otherReplyTpl'}}
+				{{/if}}
+			{{/each}}
+	  </script>	
+	   <!-- 消息内容与回复区 //-->
+	   <script id="ContentAndReplyTpl" type="text/x-jquery-tmpl">
+  		<div class='msg-title'> 		<!--msg-noticetitle//-->
+			<div style='line-height:30px;padding-top:5px;'>
+				<span style='font-size:16px;font-weight:bold;'>${ActionType}</span>
+				<!--<span style="float:right;"><a href='javascript:void(0);' onmouseover='showReadExecInfo()' onmouseout='hideReadExecInfo()'>明细</a></span>-->
+				<span style="float:right;"><span onclick='toggleExecInfo(this);' class='toggle-btn'>#(..Get("明细"))#</span></span>
+			</div>
+			<div style='color: gray;line-height:24px;'>
+				<span>#(..Get("发件人"))#：${CreateLoc} ${SendUser}</span>
+				<span style="margin-left:20px;">#(..Get("时间"))#：${SendDate} ${SendTime}</span>
+			</div>
+			<!--折叠区域-->
+			<div style='color: gray;line-height:24px;' class="msg-collapse-c">
+				<span>#(..Get("读消息人"))#：${ReadUser}</span>
+				<span style="margin-left:20px;">#(..Get("读消息时间"))#：${ReadDate} ${ReadTime}</span>
+				<span style="margin-left:20px;">#(..Get("处理人"))#：${ExecUser}</span>
+				<span style="margin-left:20px;">#(..Get("处理时间"))#：${ExecDate} ${ExecTime}</span>
+			</div>
+		</div>
+		<div class='msg-content{{if Name}} msg-content-widthadm{{/if}}{{if AllowReply!="N"}} msg-content-widthreply{{/if}}'>
+			<div class='msg-text'><p>{{html Context}}</p></div>
+			<div class='msg-atta'>${attachmentLabel}{{html attachmentA}}</div>
+			<div class='msg-link'>{{html ToolbarItems}}{{html ExecMsgBtn}}</div>
+		</div>
+		<!--
+		<div class='msg-hidden'>
+			<div><table><tr><td>#(..Get("读消息人"))#:</td><td>${ReadUser}</td></tr><tr><td>#(..Get("读消息时间"))#:</td><td>${ReadDate}${ReadTime}</td></tr><tr><td>处理人:</td><td>${ExecUser}</td></tr><tr><td>处理时间:</td><td>${ExecDate}${ExecTime}</td></tr></table></div>
+		</div>
+		-->
+		{{if AllowReply!="N"}}
+		<!-- 回复区块 //-->
+		<div class='msg-reply'> 
+			<div class='msg-reply-c'>
+				{{if typeof ReplyList=="undefined" || !ReplyList.length }}
+					<div class='msg-no-reply'><span>#(..Get("暂无回复"))#</span></div>
+				{{/if}}
+				{{tmpl($data) '#replyTpl'}}
+			</div>
+			<div class='msg-reply-i'>
+				<div ><input id='replyContent' type='text' placeholder='#(..Get("请写入回复内容"))#'></div>
+				<div class='msg-reply-i-op'>
+					<div style="float:left">
+						<span class="font-btn bold">B</span>
+						<span class="font-btn italic">I</span>
+					</div>
+					<div style="float:right">
+						<a href='javascript:void(0)' class="msg-btn" onclick='reply("S");'>仅发给发出人</a>
+						<a href='javascript:void(0)' class="msg-btn" onclick='reply("A");'>发送给相关人</a>
+					</div>
+					<div style="clear:both"></div>
+				</div>
+			</div>
+		</div>
+		{{/if}}
+	  </script>
+	   <!-- 就诊模板 //-->		
+	   <script id="AdmTpl" type="text/x-jquery-tmpl">
+		<div class='adminfo'>
+			{{if Name}}
+				<div class='msg-adm'>
+					<div class='msg-adm-head ${admHeadClass}'></div>
+					<div class='msg-adm-content'>
+						<p class="msg-adm-content-row">
+							<span style="font-size:16px;">${Name}</span>
+							<span class="sep">/</span>
+							<span>${Sex}</span>
+							<span class="sep">/</span>
+							<span>${Age}</span>
+							<span class="sep">/</span>
+							<span class="label typo-em">#(..Get("登记号"))# </span>
+							<span>${AdmPapmiNo}</span>
+							<span class="sep">/</span>
+							<span class="label">#(..Get("就诊科室"))# </span>
+							<span>${AdmLoc}</span>
+							<span class="sep">/</span>
+							<span class="label">#(..Get("主治医生"))#</span>
+							<span>${AdmDoctor}</span>
+						</p>
+						<p class="msg-adm-content-row">
+							<span class="label">#(..Get("主要诊断"))#</span>
+							{{html Diagnosis}}
+						</p>
+					</div>
+				</div>
+			{{/if}}
+			{{tmpl($data) '#ContentAndReplyTpl'}}
+		</div>
+	  </script>
+	<script type="text/javascript">
+		var currSelectedMsgJson={};
+		var sessionUserId = #($g(%session.Data("LOGON.USERID")))#;
+		var sessionUserName = "#($g(%session.Data("LOGON.USERNAME")))#";
+		var dateformat="#(##class(websys.Conversions).DateFormat())#";   //系统的日期格式配置
+		var request={};
+		request.OnlyMarquee="#(%request.Get("OnlyMarquee"))#";
+		request.DetailsId="#(%request.Get("DetailsId"))#";
+		request.DataInd="#(%request.Get("DataInd"))#";
+	</script>
+</body>
+</html>

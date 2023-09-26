@@ -1,0 +1,210 @@
+﻿ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+   <head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/css/interface.record.edit.forinsu.layout.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/tool/ztree/css/zTreeStyle/zTreeStyle.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/css/floatmenu.forinsu.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/css/recordlist.css"/>
+		<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/tool/ztree/js/jquery.ztree.all-3.5.js"></script>
+		<script language="cache" runat="server">
+		
+			s episodeID = $Get(%request.Data("argAdmID",1),"")
+			s DocInfo = $Get(%request.Data("strDocInfo",1),"") 
+			s defaultCollapse = $Get(%request.Data("defaultCollapse",1),"")
+			s patientID = $P($g(^PAADM(episodeID)),"^",1)
+			s userCode = %session.Get("LOGON.USERCODE")
+			s userName = %session.Get("LOGON.USERNAME")
+			s userID = %session.Get("LOGON.USERID")
+			s ssgroupID = %session.Get("LOGON.GROUPID")
+			s userLocID = %session.Get("LOGON.CTLOCID")
+			s sessionID = %session.SessionId
+			s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+			s mradm = $p($g(^PAADM(episodeID)),"^",61)
+			s regNo = ""
+			s medicare = ""
+			s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+			s resourceScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ResourceTabScheme")
+			s:(resourceScheme = "") resourceScheme = "<resource><item><id>Order</id><title>医嘱</title><source>emr.resource.medorder.csp</source><width>600</width></item><item><id>zorders</id><title>中草药</title><source>emr.resource.zorders.csp</source><width>600</width></item><item><id>Pacs</id><title>检查</title><source>emr.resource.pacsdata.csp</source><width>600</width></item><item><id>Lis</id><title>检验</title><source>emr.resource.lisdata.csp</source><width>700</width></item><item><id>vitalsigns</id><title>生命体征</title><source>emr.resource.vitalsigns.csp</source><width>700</width></item><item><id>diagnos</id><title>诊断</title><source>emr.resource.diagnos.csp</source><width>600</width></item><item><id>pathology</id><title>病理</title><source>emr.resource.pathology.csp</source><width>600</width></item></resource>"  
+			s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+			s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+			s key = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")	
+			s messageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("MessageScheme")
+			s:(messageScheme="") messageScheme = "{'alert':'2000','warning':'5000','forbid':'7000','height':'30','fontsize':'14'}"
+	   		s autoSave = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("AutoSave")
+			s:(autoSave = "") autoSave = "{'switch':'off','interval':''}"
+			s requiredFlag = ##Class(EMRservice.SystemParameter).GetRequiredFlag()
+			s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+			s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+			s IsSetToPortal = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToPortal")
+			//是否启用病历信息订阅与发布
+			s disableObserver = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("Observer")
+			s:(disableObserver = "") disableObserver = "N"
+			//是否启用病历加锁
+			s isLock = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EnableLock")
+			s:(isLock = "") isLock = "N"
+			s episodeType = $p(^PAADM(episodeID),"^",2)
+			s westWidth = ##Class(EMRservice.SystemParameter).GetWidth()
+			s:(westWidth = "") westWidth = 280
+			s CAServicvice = ""
+			s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
+			s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+			if (IsCAON = "Y")&(IsCACTLoc = "1") { 
+				s CAServicvice = "1" 
+				d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+			}
+			
+	        s patientNo = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiNo(patientID)
+	        s signLogic = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("SignLogic","")
+	        s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
+	        s isDeleteVerification = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("isDeleteVerification")
+			s:(isDeleteVerification = "") isDeleteVerification = "N"
+			s isSetCurrentRevisorIP = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("isSetCurrentRevisorIP")
+			s:(isSetCurrentRevisorIP = "") isSetCurrentRevisorIP = "Y"
+	   </script>
+	    <title>电子病历书写</title>	
+   </head>
+   <body >
+   		<div id="layout" class="easyui-layout" data-options="fit:true">
+   		<div id="north" data-options="region:'north',border:false" style="height:60px;background:#F5F5F4;">
+	   		<span  class="toolblock toolspan">
+	    		<div>
+	        		<a id='bold' href="#" title="粗体" class="easyui-linkbutton" data-options="plain:true"></a>
+	        		<a id='italic' href="#" title="斜体" class="easyui-linkbutton" data-options="plain:true"></a>
+	        		<a id='underline' href="#" title="下划线" class="easyui-linkbutton" data-options="plain:true"></a>
+	        		<a id='strike' href="#" title="删除线" class="easyui-linkbutton" data-options="plain:true"></a>
+	        		<a id='super' href="#" title="上标"  class="easyui-linkbutton" data-options="plain:true"></a>
+	        		<a id='sub' href="#" title="下标" class="easyui-linkbutton" data-options="plain:true"></a>
+					<a id='undo' title="撤销" href="#" class="easyui-linkbutton" data-options="plain:true" ></a>
+					<a id='redo' title="重做" href="#" class="easyui-linkbutton" data-options="plain:true"></a> 		    		
+	    		</div>
+	    		<div >
+		      		<a id='alignjustify' href="#" title="两端对齐" class="easyui-linkbutton" data-options="plain:true"></a>
+					<a id='alignleft' href="#" title="左对齐" class="easyui-linkbutton" data-options="plain:true"></a>      							
+					<a id='aligncenter' href="#" title="居中对齐" class="easyui-linkbutton" data-options="plain:true" ></a>
+					<a id='alignright' href="#" title="右对齐"  class="easyui-linkbutton" data-options="plain:true"></a>
+					<a id='indent' title="增加缩进量" href="#" class="easyui-linkbutton" data-options="plain:true" ></a>
+					<a id='unindent' title="减少缩进量" href="#" class="easyui-linkbutton" data-options="plain:true"></a> 
+					<a id='cut' title="剪切" href="#" class="easyui-linkbutton" data-options="plain:true"></a>
+					<a id='copy' title="拷贝" href="#" class="easyui-linkbutton" data-options="plain:true"></a>
+					<a id='paste' title="粘贴" href="#" class="easyui-linkbutton" data-options="plain:true"></a>					
+	    		</div>
+	    	</span>
+	    	<span class="toolblock toolspan">
+	    	    <a id='spechars' title="特殊符号" href="#" class="easyui-linkbutton" data-options="plain:true">符号</a> 
+	    		<a id='binddatareload' title="刷新绑定数据" href="#" class="easyui-linkbutton" data-options="plain:true">刷新绑定</a>
+	    	</span>
+			<span class="toolblock">
+				<a id='save' title="保存" href="#" class="easyui-linkbutton" data-options="plain:true">保存</a>
+				<a id='print' title="打印" href="#" class="easyui-linkbutton" data-options="plain:true">打印</a>
+				<a id='delete' title="删除" href="#" class="easyui-linkbutton" data-options="plain:true">删除</a>
+			</span>
+			<span class="">
+				<a id='close' class="easyui-linkbutton" data-options="" style="margin-right:50px;float:right;margin-top:20px;">关闭当前页</a>
+			</span>
+			
+   		</div>
+	   	<div id="west" data-options="region:'west',border:false,title:'病历导航'" style="width:255px;">
+	   	  	<div id="westList" class="easyui-accordion" data-options="fit:true">
+	   	  		 <div class="new-item" title="新建病历" data-options="iconCls:'new-category',selected:true" style="overflow-x:hidden;overflow-y:auto">
+	   	  		 	<div class="subitem" id="InstanceNewItem"></div>
+	   	  		 </div>
+	   	  		 <div title="病历目录" data-options="iconCls:'list-category',tools:'#instance-tools'" style="overflow-y:auto">
+	   	  		 	<ul id="InstanceTree"></ul>
+	   	  		 </div>
+	   	  	</div>
+	   	</div>	
+	   	<div id="east" data-options="region:'east',border:false,title:'资源区'" style="width:255px;">
+	   		<div id="resources" class="easyui-tabs" fit="true" border="false" tabPosition="right" headerWidth="60" iconCls="tabs-header-right"></div>
+	   	</div>
+	   	<div data-options="region:'center',border:false" style="width:100%;height:100%" >
+	   		<div id="record" class="easyui-layout" data-options="fit:true">
+	   		    <div id="messageInfo" data-options="region:'south'" style="height:0px;"></div>
+	   		    <div data-options="region:'center',border:false" style="width:100%;height:100%">
+		   		    <div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+		   		    <div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+		   		    <div id="memo" style="display:none;padding:5px;">
+			   			<div><textarea id="memoText"  rows="13" style="width:100%;height:100%" ></textarea></div>
+		   			    <div style="margin-top:12px;text-align:right;">
+			   				<a id="memoSure" href="javascript:void(0)" class="easyui-linkbutton">确定</a>
+							<a id="memoCancel" href="javascript:void(0)" class="easyui-linkbutton">取消</a>		
+		   			    </div>
+		   		    </div>
+		   		</div>
+	   		</div>
+	   	</div>
+	   	</div>
+		<script language = "javascript"> 
+		  var defaultCollapse = '#(defaultCollapse)#';
+		  var DocInfo = '#(DocInfo)#';
+		  var patientID = '#(patientID)#';
+		  var episodeID = '#(episodeID)#';
+		  var recordParam = "";
+		  var userCode = '#(userCode)#';
+		  var userName = '#(userName)#';
+		  var userID = '#(userID)#';
+		  var ssgroupID = '#(ssgroupID)#';
+		  var userLocID = '#(userLocID)#';
+		  var sessionID = '#(sessionID)#';
+		  var userLocCode = '#(userLocCode)#';
+		  var mradm = '#(mradm)#';
+	 	  var regNo = '#(regNo)#';
+	 	  var medicare = '#(medicare)#';
+		  var setDefaultFontStyle = "#(setDefaultFontStyle)#";  
+		  var resourceScheme = "#(resourceScheme)#";
+		  var pluginUrl = '#(pluginUrl)#';
+		  var argConnect = "#(argConnect)#";
+	  	  var key = "#(key)#";
+	  	  argConnect = {"Params":eval("("+argConnect+")"),"Key":key};  
+		  var messageScheme = eval("(" +"#(messageScheme)#"+ ")"); 
+		  var autoSave = eval(#(autoSave)#);
+		  var requiredFlag = eval(#(requiredFlag)#);
+		  var HasPatEncryptLevel = '#(HasPatEncryptLevel)#';
+		  var IsSetToLog = '#(IsSetToLog)#';
+		  var IsSetToPortal = '#(IsSetToPortal)#';
+		  //是否启用病历信息订阅与发布
+		  var Observer = '#(disableObserver)#';
+		  //是否启用病历加锁
+		  var enableLock = '#(isLock)#';
+		  var episodeType = '#(episodeType)#';
+		  var westWidth = eval(#(westWidth)#);
+		  var CAServicvice = '#(CAServicvice)#';
+		  var strServerRan = '';
+		  var strServerSignedData = '';
+		  var strServerCert = '';
+		  var strKey = '';
+		  var strUserSignedData = '';
+		  var strUserCert = '';		  
+		  var SecCode = ""; //病人密级代码
+		  var ipAddress = getIpAddress();
+		   		    
+		  var param = "";
+		  var pluginType = "";
+		  var iword = false;
+		  var igrid = false; 
+		  var titleCode = "";
+		  var curStatus = "";
+		  var loadFalg = false;
+		  var loadContainer = "";
+		  var lockinfo = "";
+		  
+		  var patientNo = '#(patientNo)#';
+		  var signLogic = '#(signLogic)#';
+		  var isRevokeSign = 'N';
+		  var isDeleteVerification = '#(isDeleteVerification)#';
+		  var isSetCurrentRevisorIP = '#(isSetCurrentRevisorIP)#';
+		</script>
+		<script type="text/javascript" src="../scripts/emr/js/interface.record.edit.forinsu.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/record.lock.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>   
+		<script type="text/javascript" src="../scripts/emr/js/record.HisService.sendPatientMessage.js"></script>
+  		<script type="text/javascript" src="../scripts/emr/js/record.hyperlink.js"></script>
+  		<script type="text/javascript" src="../scripts/emr/js/handSign.js"></script>
+   </body>
+</html>

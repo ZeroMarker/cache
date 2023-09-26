@@ -1,0 +1,82 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server"> 
+    s hospid=$G(%session.Data("LOGON.HOSPID"))
+     
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str = $Get(%request.Data("query",1))
+
+	s rnode=$Get(%request.Data("rnode",1))
+	s rowid=$Get(%request.Data("rowid",1))	
+	s code=$Get(%request.Data("code",1))
+	s Code=$Get(%request.Data("Code",1))
+	s Type=$Get(%request.Data("Type",1))
+	s Graph=$Get(%request.Data("Graph",1))
+	
+	s Active=$Get(%request.Data("Active",1))
+	s data=$Get(%request.Data("data",1))
+	s typecode=$Get(%request.Data("typeCode",1))
+	s Year =$Get(%request.Data("Year",1))
+	s Rowid=$Get(%request.Data("Rowid",1))
+	s isbatch=$Get(%request.Data("isbatch",1))
+	s budgyear=$Get(%request.Data("budgyear",1))
+	s itemtype=$Get(%request.Data("itemtype",1))
+	
+	
+	i action = "list" d
+	.;s ^hsss=rnode
+	.w ##class(herp.budg.udata.uBudgItemMonitor).List(rnode,Year,hospid)
+	
+	i action = "listleaf" d
+	.w ##class(herp.budg.udata.uBudgItemMonitor).ListLeaf(typecode,start,limit)
+	
+	i action = "listType" d
+	.w ##class(herp.budg.udata.uBudgItemMonitor).ListType()
+	
+	i action = "listCalUnit" d
+	.w ##class(herp.budg.udata.uBudgItemMonitor).ListCalUnit()
+	
+	i action = "yearList" d
+	.w ##class(herp.budg.udata.uBudgItemMonitor).year(start, limit, str)
+				
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgItemMonitor).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgItemMonitor).batchUpdateItemMonitor(data,hospid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "ctrl" d
+	.s result = ##class(herp.budg.udata.uBudgItemMonitor).UpdateCtrlItem(Active, Code, Year,isbatch,budgyear,itemtype,hospid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgItemMonitor).Delete(code)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

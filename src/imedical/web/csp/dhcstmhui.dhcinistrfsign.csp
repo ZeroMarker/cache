@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+	s RowId=$G(%request.Data("RowId",1))
+</SERVER>
+<head>
+	<script language=javascript>
+		var gInitId="#(RowId)#";
+		var gHVSignFlag='Y';		//双签字标志
+	</script>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="hisui-layout BorderLine" data-options="region:'north',border:false">
+		<div data-options="region:'west',width:950,border:false">
+			<table class="Condition" id="Conditions">
+				<input id="RowId" name="RowId" type="hidden">
+				<input id="ReqId" name="ReqId" type="hidden">
+				<input id="InitComp" name="InitComp" type="hidden">
+				<tr>
+					<td>出库科室</td>
+					<td><input id="InitFrLoc" name="InitFrLoc" class="textbox hisui-combobox"></td>
+					<td>单号</td>
+					<td><input id="InitNo" name="InitNo" class="textbox" disabled="true"></td>
+					<td>出库备注</td>
+					<td><input id="InitRemarks" name="InitRemarks" class="textbox"></td>
+					<td><a href="#" id="SearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+					<td><a href="#" id="SelReqBT" class="hisui-linkbutton" style="width:100px;">选取请求单</a></td>
+				</tr>
+				<tr>
+					<td>接收科室</td>
+					<td><input id="InitToLoc" name="InitToLoc" class="textbox hisui-combobox"></td>
+					<td>制单日期</td>
+					<td><input id="InitDate" name="InitDate" class="hisui-datebox textbox" data-options="disabled:true"></td>
+					<td>请求单号</td>
+					<td><input id="ReqNo" name="ReqNo" class="textbox" disabled="true"></td>
+					<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+					<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="width:100px;">删除</a></td>
+				</tr>
+				<tr>
+					<td>接收人</td>
+					<td><input id="InitReqUser" name="InitReqUser" class="textbox hisui-combobox"></td>
+					<td>制单人</td>
+					<td><input id="InitUser" name="InitUser" class="textbox hisui-combobox" data-options="disabled:true"></td>
+					<td>请求备注</td>
+					<td><input id="ReqRemarks" name="ReqRemarks" class="textbox" disabled="true"></td>
+					<td><a href="#" id="CompleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'">完成</a></td>
+					<td><a href="#" id="CancelCompBT" class="hisui-linkbutton" style="width:100px;">取消完成</a></td>
+				</tr>
+				<tr>
+					<td>类组</td>
+					<td><input id="InitScg" name="InitScg" class="textbox hisui-stkscgcombotree"></td>
+					<td>出库类型</td>
+					<td><input id="OperateType" name="OperateType" class="textbox hisui-combobox"></td>
+					<td>单据状态</td>
+					<td><input id="InitState" name="InitState" class="textbox simplecombobox" disabled="true"></td>
+					<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+					<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px;">清屏</a></td>
+				</tr>
+				<tr>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td>
+				</td>
+				<td><a href="#" id="AuditOutYesBT" class="hisui-linkbutton" style="width:90px;">审核通过</a></td>
+			   <td><a href="#" id="AuditInYesBT" class="hisui-linkbutton" style="width:100px;">入库接收</a></td>
+				</tr>
+			</table>
+		</div>
+		<div style="padding:0px;" data-options="region:'center',border:false">
+			<div class="NonPadGrid hisui-panel panel-header-gray" data-options="height:200">
+				<div id="MasterGrid"></div>
+			</div>
+		</div>
+	</div>
+
+	<div data-options="region:'center',border:false">
+		<table id="DetailGrid"></table>
+	</div>
+
+
+	<!--查询界面Dialog-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询出库单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="FindConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+						<td><label>接收科室</label><input id="FReqLoc" name="ToLoc" class="textbox hisui-combobox"></td>
+						<td><label>转移单号</label><input id="FInitNo" name="InitNo" class="textbox"></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					</tr>
+					<tr>
+						<td><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						<td><label>单据状态</label><input id="FStatus" name="Status" class="textbox hisui-simplecombobox"></td>
+						<td><label>请求单号</label><input id="FReqNo" name="ReqNo" class="textbox"></td>
+						<td><a href="#" id="FComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">选取</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'库存转移单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="FMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="FDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--批次弹窗-->
+	<csp:Include Page="dhcstmhui.incitmbatwindow.csp">
+
+	<!--选取请求单Dialog-->
+	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询请求单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="SelReqConditions" class="Condition">
+					<input id="SelReqInciId" name="InciId" value="" type="hidden">
+					<tr>
+						<td><label>院区</label><input id="SelReqHosp" name="ReqHosp" class="textbox hisui-combobox"></td>
+						<td><label>起始日期</label><input id="SelReqStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+						<td><input name="Transfered" class="hisui-checkbox" type="checkbox" value="Y" label="显示转移完成"></td>
+						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px;">查询</a></td>
+						<td><a href="#" id="SelReqRefuseBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">退回申请</a></td>
+					</tr>
+					<tr>
+						<td><label>请求科室</label><input id="SelReqRecLoc" name="ToLoc" class="textbox hisui-combobox"></td>
+						<td><label>截止日期</label><input id="SelReqEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						<td><input name="PartlyTransfer" class="hisui-checkbox" type="checkbox" value="Y" label="显示部分转移"></td>
+						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton" style="width:116px;">生成出库单</a></td>
+						<td><a href="#" id="SelReqRefuseDetailBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">拒绝明细</a></td>
+					</tr>
+					<tr>
+						<td><label>物资名称</label><input id="SelReqInciDesc" name="InciDesc" class="textbox"></td>
+						<td>
+							<input class='hisui-radio' type="radio" label='全部' name='wantEat' value='OC'>
+							<input class='hisui-radio' type="radio" label='临时请求' name='wantEat' value='O'>
+							<input class='hisui-radio' type="radio" label='申领计划' name='wantEat' value='C'>
+						</td>
+						<td><input name="IncludeDefLoc" class="hisui-checkbox" type="checkbox" value="Y" label="包含支配科室"></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'请求单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--双签字密码验证弹窗-->
+	<div id="VerifyPassWordWin" class="hisui-dialog" data-options="closed:'true',modal:true" title="密码确认">
+		<div class="hisui-panel" data-options="border:false">
+			<table class="Condition">
+				<tr>
+					<td><label>用户</label><input id="VerifyUser" name="VerifyUser" class="textbox hisui-validatebox"></td>
+				</tr>
+				<tr>
+					<td><label>密码</label><input id="VerifyPassWord" name="VerifyPassWord" class="textbox" type="password"></td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/IncItmBatWindow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/VerifyPassWord.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfFind.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/SelReq.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrf.js"></script>
+</body>
+</html>

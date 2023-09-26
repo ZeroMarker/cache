@@ -1,0 +1,90 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s StartDate= $Get(%request.Data("StartDate",1))
+	s Name = $Get(%request.Data("Name",1))
+	s SubNo = $Get(%request.Data("SubNo",1))
+	s DeptDr = $Get(%request.Data("DeptDr",1))
+	s AppFunds = $Get(%request.Data("AppFunds",1))
+	s EndDate = $Get(%request.Data("EndDate",1))
+	s PatentNum = $Get(%request.Data("PatentNum",1))
+	s Inventors = $Get(%request.Data("Inventors",1))
+	s ConDate = $Get(%request.Data("ConDate",1))
+	
+	s userdr =  $Get(%request.Data("userdr",1)) // µÇÂ½ÓÃ»§CODE
+	s usercheckdr =  $Get(%request.Data("usercheckdr",1)) 
+	s checker =  $Get(%request.Data("checker",1)) 
+	s ApplyStart =  $Get(%request.Data("ApplyStart",1)) 
+	s Applyend  =  $Get(%request.Data("Applyend",1))
+	s deptdr    =  $Get(%request.Data("deptdr",1))	
+	s SubSource =  $Get(%request.Data("SubSource",1))
+	s ResAudit  =  $Get(%request.Data("ResAudit",1)) 
+	s HeadDr =  $Get(%request.Data("HeadDr",1))
+	s PName =  $Get(%request.Data("PName",1))
+	s view=  $Get(%request.Data("view",1))
+	s MonographNum =  $Get(%request.Data("MonographNum",1))
+	s PaperNum =  $Get(%request.Data("PaperNum",1))
+	s PatentNum =  $Get(%request.Data("PatentNum",1))
+	s InvInCustomStanNum =  $Get(%request.Data("InvInCustomStanNum",1))
+	s TrainNum =  $Get(%request.Data("TrainNum",1))
+	s HoldTrainNum =  $Get(%request.Data("HoldTrainNum",1))
+	s InTrainingNum =  $Get(%request.Data("InTrainingNum",1))
+	s Type =  $Get(%request.Data("Type",1))
+	s PrjLife=$Get(%request.Data("PrjLife",1))
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMHorizontalPrjCheckApply).List(sortField, sortDir, start, limit, ApplyStart, Applyend,deptdr, SubSource, ResAudit, HeadDr, PName, userdr,Type)
+
+	i action = "ChangeCheckProjStatus" d
+	.s result = ##class(herp.srm.udata.uSRMHorizontalPrjCheckApply).ChangeCheckProjStatus(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "audit" d
+	.s result = ##class(herp.srm.udata.uSRMHorizontalPrjCheckApply).Audit(rowid,checker)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "noaudit" d
+	.s result = ##class(herp.srm.udata.uSRMHorizontalPrjCheckApply).NoAudit(rowid,view,usercheckdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+    i action = "edit" d
+	.s result = ##class(herp.srm.udata.uSRMHorizontalPrjCheckApply).UpdatePrjAchivements(rowid, MonographNum,PaperNum,PatentNum,InvInCustomStanNum,TrainNum,HoldTrainNum,InTrainingNum)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deptList" d 
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+	
+	i action = "applyerList" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "sourceList" d 
+	.w ##class(herp.srm.udata.uSRMCommon).CalSubSource(start, limit, str)
+	
+	
+</script>

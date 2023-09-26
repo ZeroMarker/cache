@@ -1,0 +1,374 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+</STYLE>
+<link rel="stylesheet" href="../scripts/websys.css" type="text/css">
+<SERVER>
+
+	//s BottomHeight=
+</SERVER>
+</head>
+<body>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S UserID=%session.Get("LOGON.USERID")
+ S HOSPID=%session.Get("LOGON.HOSPID")
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s IADM=$O(^DHCPEIADM(0,"PAADM",EpisodeID,0))
+ i IADM'="" d
+ .s VIPLevel=+##class(web.DHCPE.PreCommon).GetVIPLevel("IADM",IADM)
+ e  d
+ .s VIPLevel=$G(^DHCPEVIPLevel("VIPapprove"))
+  w "<table border=1 width=50%>"
+  w "<tr><td>结论</td><td width=60%>"
+	s GSID=##class(web.DHCPE.ResultDiagnosis).GetSSId(EpisodeID)
+ s GSEXID=""
+ s Default=""
+ i GSID'="" d
+ .s GSEXID=$O(^User.DHCPEGeneralSummarizeExI("GeneralSummarizeID",GSID,0))
+ .s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),3)
+ e  d //保存项目结果
+ .d ##class(web.DHCPE.CardManager).UpdateResult(EpisodeID,"2502")
+ 
+ 
+ 
+ 
+ d ##class(web.DHCPE.Conclusion).OutConclusion("Conclusion",VIPLevel,Default)
+ w "</td>"
+ s ImgStr=##class(web.DHCPE.PrintNewDirect).GetPhotoPathByPAADM(EpisodeID)
+ 
+ w "<td rowspan=3 width=20%><img height=150 src='"_ImgStr_"'></td></tr>"
+  w "<tr><td>备注</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),6)
+ w "<textarea rows=3 id='Suggestions' style='width:100%'>"_Default_"</textarea>"
+ w "</td></tr>"
+ 
+ s HadAudit="N"
+ i GSID'="" d
+ .s AuditUser=$p(^DHCPEGS(GSID,1),"^",5)
+ .s:AuditUser'="" HadAudit="Y"
+ i HadAudit="N" d
+ .w "<tr><td><button id='BSave' onclick='Save()'>保存</button></td><td><button id='BPrint' onclick='SavePrint()'>保存并打印</button></td></tr>"
+ e  d
+ .w "<tr><td><button id='BSave' onclick='CancelSave()'>撤销保存</button></td><td><button id='BPrint' onclick='Print()'>打印</button></td></tr>"
+ 
+ w "</table>"
+ w "<div style='position:absolute; height:600px; overflow:auto'><table border=1 width=97%>"
+ w "<THEAD style='display:table-header-group'>"
+ w "<tr style='background-color:LightSlateGray;'><td width='30%'>项目名称</td><td width='10%'>英文名</td><td width='20%'>结果</td><td width='20%'>参考范围</td><td width='10%'>提示</td><td width='20%'>单位</td></tr>"
+ w "</THEAD"
+ d ##Class(web.DHCPE.ReportGetInfor).GetReportResult(EpisodeID,UserID)
+ s sStationSequence=""
+	f  s sStationSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence)) q:sStationSequence=""  d
+	.s StationId=""
+	.f  s StationId=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId)) Q:(""=StationId)  d
+	..s sARCSequence=""
+	..f  s sARCSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence)) Q:(""=sARCSequence)  d
+	...s iiiLLoop=0
+	...f  s iiiLLoop=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop)) Q:(""=iiiLLoop)  d
+	....s ARCIM=$G(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop))
+	....s sArcimIdTemp=$p($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+	....s bFlagTemp=$G(^DHCPEDataEx("DHCPEStationOrder","Sign",sArcimIdTemp))
+	....q:ARCIM=""
+	....s CurData=$G(^TMPReport(UserID,"Result", "ARCIM", ARCIM))
+	....s ARCIMDesc=$P(CurData,"^",1)
+	....s Checker=$P(CurData,"^",2)
+	....s CheckDate=$P(CurData,"^",3)
+	....s ReportFormat=$P(CurData,"^",4)
+	....s AuditUser=$P(CurData,"^",5)
+	....q:'$D(^TMPReport(UserID,"Result", "Content",ARCIM))
+	....w "<tr><td colspan=6 style='background-color:lightblue;'>"_ARCIMDesc_"</td></tr>"
+	....i (ReportFormat["LIS")||((ReportFormat["CAT")) d
+	.....s ODID=0
+	.....f  s ODID=$O(^TMPReport(UserID,"Result", "Content",ARCIM,ODID)) q:ODID=""  d
+	......s CurData=$g(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+	......w "<tr>"
+	......w "<td>"_$P(CurData,"^",1)_"</td>"  //细项名称
+	......w "<td>"_$P(CurData,"^",8)_"</td>"  //英文名称
+	......s Normal=$P(CurData,"^",3)
+	......s Result=$P(CurData,"^",2)
+	......s ResultID=$P(CurData,"^",9)
+	......i Normal="0" d
+	.......w "<td><font color=#FF0000 size=3>"_Result_"</font></td>" 
+	......e  d
+	.......w "<td>"_Result_"</td>" 
+	......w "<td>"_$P(CurData,"^",5)_"</td>"  //参考范围
+	......s TSInfo="&nbsp;"
+	......i $P(CurData,"^",6)="2" d
+	.......s TSInfo="↑"
+	.......s TSInfo="<font color=#FF0000 size=3>"_TSInfo_"</font>"
+	......i $P(CurData,"^",6)="0" d
+	.......s TSInfo="↓"
+	.......s TSInfo="<font color=#FF0000 size=3>"_TSInfo_"</font>"
+	......w "<td>"_TSInfo_"</td>"  //提示
+	......w "<td>"_$P(CurData,"^",4)_"</td>"  //单位
+	......w "</tr>"
+	....e  d
+	.....s ODID=0
+	.....f  s ODID=$O(^TMPReport(UserID,"Result", "Content",ARCIM,ODID)) q:ODID=""  d
+	......s CurData=$g(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+	......w "<tr>"
+	......w "<td>"_$P(CurData,"^",1)_"</td>"  //细项名称
+	......s Normal=$P(CurData,"^",3)
+	......s Result=$P(CurData,"^",2)
+	......s ResultID=$P(CurData,"^",6)
+	......i Normal'="正常" d
+	.......w "<td><button onclick=SetResult(this) Name='"_0_"' id='"_ResultID_"S'>正常</button></td>"  //英文名称
+	.......w "<td colspan=4><input name='Result' id='"_ResultID_"' style='color:#FF0000;font-size:20px;' value="_Result_"></input></td>" 
+	......e  d
+	.......w "<td><button onclick=SetResult(this) Name='"_1_"' id='"_ResultID_"S'>异常</button></td>"  //英文名称
+	.......w "<td colspan=4><input name='Result' id='"_ResultID_"' value="_Result_"></input></td>" 
+	...... //结果
+	......w "</tr>"
+ w "<table></div>"
+ 
+</Script>
+<SCRIPT language="Javascript">
+ function Save()
+ {
+	 SaveResult();
+	 var ret=SaveApp();
+	 if (ret=="0"){
+		 var obj=document.getElementById("BSave");
+		 if (obj){
+			 obj.innerText="撤销保存";
+		 	 obj.onclick=CancelSave;
+		 	 var obj=document.getElementById("BPrint");
+		 	 if (obj){
+			 	 obj.innerText="打印";
+			 	 obj.onclick=Print;
+		 	 }
+		 }
+		 if (parent){
+		 parent.frames("baseinfo").websys_setfocus("RegNo");
+		 }
+	 }else{
+		 alert(ret);
+	 }
+	
+ }
+ function SetResult(e)
+ {
+	var ID=e.id;
+	var ResultID=ID.split("S")[0];
+	var obj=document.getElementById(ResultID);
+	if (e.name=="0"){
+		e.name="1";
+		var Value=#server(web.DHCPE.CardManager.GetODTemplate(ResultID,e.name))#
+		
+	}else{
+		e.name="0";
+		var Value=#server(web.DHCPE.CardManager.GetODTemplate(ResultID,e.name))#
+	}
+	if (obj) obj.value=Value;
+	if (e.innerText=="正常"){
+		e.innerText="异常";
+	}else{
+		e.innerText="正常";
+	}
+ }
+ function SaveResult()
+ {
+	 var ObjArr=document.getElementsByName("Result");
+	if (ObjArr){
+		var ArrLength=ObjArr.length;
+		for (var j=0;j<ArrLength;j++){
+			var obj=ObjArr[j];
+			var ResultID=obj.id;
+			var Result=obj.value;
+			var NormalObj=document.getElementById(ResultID+"S");
+			var Normal=NormalObj.name;
+			var ret=#server(web.DHCPE.CardManager.UpdateOneResult(ResultID,Result,Normal))#
+		}
+	}
+ }
+ function SaveApp()
+ {
+	 var EpisodeID="",Conclusion="",Suggestions="";
+	 EpisodeID=(#(EpisodeID)#);
+	 obj=document.getElementById("Conclusion");
+	 if (obj) Conclusion=obj.value;
+	 
+	 if(Conclusion==""){
+		 alert("结论不能为空");
+		 return false;
+		 }
+
+	 obj=document.getElementById("Suggestions");
+	if (obj) Suggestions=obj.value;
+	var ret=#server(web.DHCPE.CardManager.Save(EpisodeID,Conclusion,Suggestions))#
+	return ret;
+ }
+ function CancelSave()
+ {
+	 var EpisodeID="";
+	 EpisodeID=(#(EpisodeID)#);
+	 var ret=#server(web.DHCPE.ResultDiagnosis.AuditStationS(EpisodeID,"Cancel","0","N"))#
+	 if (ret=="0"){
+		 var obj=document.getElementById("BSave");
+		 if (obj){
+			 obj.innerText="保存";
+		 	 obj.onclick=Save;
+		 	 var obj=document.getElementById("BPrint");
+		 	 if (obj){
+			 	 obj.innerText="保存并打印";
+			 	 obj.onclick=SavePrint;
+		 	 }
+		 }
+		 //window.location.reload();
+	 }else{
+		 //alert(ret)
+		  if(ret=="ReMainHadAudit"){alert("复检已提交");}
+		 if(ret=="NoSS"){alert("还未小结");}
+		 if(ret=="ReportStatusErr"){alert("报告状态不是打印或者审核状态，请取消已完成等操作");}
+
+
+	 }
+ }
+ function SavePrint()
+ {
+	 var ret=SaveApp();
+	 if (ret=="0"){
+		 Print();
+		 var obj=document.getElementById("BSave");
+		 if (obj){
+			 obj.innerText="撤销保存";
+		 	 obj.onclick=CancelSave;
+		 	 var obj=document.getElementById("BPrint");
+		 	 if (obj){
+			 	 obj.innerText="打印";
+			 	 obj.onclick=Print;
+		 	 }
+		 	 if (parent){
+		 		parent.frames("baseinfo").websys_setfocus("RegNo");
+		 	}
+		 }
+	 }else{
+		 alert(ret)
+	 }
+ }
+function Print()
+{
+	var EpisodeID="";
+	EpisodeID=(#(EpisodeID)#);
+	var ret=#server(web.DHCPE.CardManager.GetReportInfo(EpisodeID))#;
+	var Arr=ret.split("^");
+	if (Arr[0]=="-1"){
+		alert(Arr[1]);
+		return false;
+	}else if(Arr[0]=="-2"){
+		PrintHZD();
+		return false;
+	}
+	var Templatefilepath=#server(web.DHCPE.Report.MonthStatistic.getpath())#+'DHCPEJKZ.xls';
+	xlApp = new ActiveXObject("Excel.Application");
+	xlBook = xlApp.Workbooks.Add(Templatefilepath);
+	xlsheet = xlBook.WorkSheets("Sheet1");
+	//PatID_"^"_Name_"^"_Sex_"^"_Dob_"^"_RegNo_"^"_CardNo
+	xlsheet.cells(3,2).Value=Arr[1];
+	xlsheet.cells(4,2).Value=Arr[2];
+	xlsheet.cells(4,4).Value=Arr[3];
+	xlsheet.cells(8,5).Value=Arr[5];
+	xlsheet.cells(8,1).Value="*"+Arr[4]+"*";
+	try{
+		var msoShaoeRectangle=1;
+		var ShapeRange=xlsheet.Shapes.AddShape(msoShaoeRectangle, 190, 20, 60, 75);
+		ShapeRange.Line.Visible = false;
+		var imgStr=#server(web.DHCPE.PrintNewDirect.GetPhotoPath(Arr[4]))#;
+		ShapeRange.Fill.UserPicture(imgStr); 
+	}catch(e){
+		ShapeRange.Visible=false;
+	}
+	xlsheet.printout(1,10,1,false,"Datacard Printer")
+	xlBook.Close (savechanges=false);
+	xlApp=null;
+	xlsheet=null;
+	CollectGarbage();
+	if (parent){
+		parent.frames("baseinfo").websys_setfocus("RegNo");
+		location.href="websys.default.csp";
+	}	 
+ }
+ function PrintHZD()
+ {
+	var EpisodeID="",HOSPID="";
+	EpisodeID=(#(EpisodeID)#);
+	HOSPID=#(HOSPID)#;
+	var BaseInfo=#server(web.DHCPE.CardManager.GetBaseInfo(EpisodeID))#;
+	var ResultInfo=#server(web.DHCPE.CardManager.GetResultInfo(EpisodeID))#;
+	var Templatefilepath=#server(web.DHCPE.Report.MonthStatistic.getpath())#+'DHCPEJKZHZ.xls';
+	xlApp = new ActiveXObject("Excel.Application");
+	xlBook = xlApp.Workbooks.Add(Templatefilepath);
+	xlsheet = xlBook.WorkSheets("Sheet1");
+	var BaseArr=BaseInfo.split("^");
+	var HosName=""
+        var HosName=#server(web.DHCPE.DHCPECommon.GetHospitalName(HOSPID))#;
+	if(HosName.indexOf("[")>-1){var HosName=HosName.split("[")[0];}
+        xlsheet.cells(1,3).Value=HosName+"体检回执单";
+
+	xlsheet.cells(1,8).Value=BaseArr[5];
+	xlsheet.cells(2,1).Value=xlsheet.cells(2,1).Value+BaseArr[0];
+	xlsheet.cells(2,4).Value=xlsheet.cells(2,4).Value+BaseArr[1];
+	xlsheet.cells(2,5).Value=xlsheet.cells(2,5).Value+BaseArr[2];
+	xlsheet.cells(2,7).Value=xlsheet.cells(2,7).Value+BaseArr[9];
+	xlsheet.cells(2,10).Value=xlsheet.cells(2,10).Value+BaseArr[3];
+	xlsheet.cells(3,1).Value=xlsheet.cells(3,1).Value+BaseArr[4];
+	xlsheet.cells(3,5).Value=xlsheet.cells(3,5).Value+BaseArr[6];
+	xlsheet.cells(3,8).Value=xlsheet.cells(3,8).Value+BaseArr[7];
+	xlsheet.cells(4,1).Value=xlsheet.cells(4,1).Value+BaseArr[8];
+	xlsheet.cells(4,7).Value=xlsheet.cells(4,7).Value+BaseArr[10];
+	//xlsheet.cells(4,9).Value=xlsheet.cells(4,9).Value+Remark;
+	//xlsheet.cells(12,1).Value="";
+	//xlsheet.cells(5,1).Value=xlsheet.cells(5,1).Value+BaseArr[15];
+	xlsheet.cells(7,9).Value=BaseArr[11];
+	var obj=document.getElementById("NoPrintAmount");
+	if (obj&&obj.checked) { xlsheet.cells(7,9).Value="" }
+	xlsheet.cells(9,11).Value=BaseArr[14];
+	if(BaseArr[14]==""){xlsheet.cells(8,11).Value="";}
+	xlsheet.Range(xlsheet.cells(7,1),xlsheet.cells(7,11)).BorderS(4).LineStyle=7;
+	xlsheet.Range(xlsheet.cells(10,1),xlsheet.cells(10,11)).BorderS(4).LineStyle=7;
+	xlsheet.Range(xlsheet.cells(11,1),xlsheet.cells(11,11)).BorderS(4).LineStyle=7;
+	xlsheet.Range(xlsheet.cells(12,1),xlsheet.cells(12,11)).BorderS(4).LineStyle=7;
+	var DietDesc=BaseArr[12];
+	var PhotoDesc=BaseArr[13];
+	if (DietDesc!=""){
+		DietDesc=DietDesc+"  "+PhotoDesc;
+	}else{
+		DietDesc=PhotoDesc;
+	}    
+	xlsheet.cells(1,1).Value=DietDesc;
+	if (ResultInfo!=""){
+		var ResultArr=ResultInfo.split("^");
+		xlsheet.cells(7,4).Value=ResultArr[0];
+		xlsheet.cells(7,6).Value=ResultArr[1];
+		xlsheet.cells(7,8).Value=ResultArr[2];
+		xlsheet.cells(7,10).Value=ResultArr[3];
+	}
+	try{
+		var msoShaoeRectangle=1;
+		var ShapeRange=xlsheet.Shapes.AddShape(msoShaoeRectangle, 10, 10, 60, 75);
+		ShapeRange.Line.Visible = false;
+		var imgStr=#server(web.DHCPE.PrintNewDirect.GetPhotoPath(BaseArr[5].split("*")[1]))#;
+		ShapeRange.Fill.UserPicture(imgStr); 
+	}catch(e){
+		ShapeRange.Visible=false;
+	}
+	xlsheet.printout(1,10,1,false)
+	xlBook.Close (savechanges=false);
+	xlApp=null;
+	xlsheet=null;
+	CollectGarbage();
+	if (parent){
+		parent.frames("baseinfo").websys_setfocus("RegNo");
+		location.href="websys.default.csp";
+	}	
+ }
+</SCRIPT>
+</body>
+</html>

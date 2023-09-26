@@ -1,0 +1,51 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+            s PrnCode = $G(%request.Data("PrnCode", 1))
+            s PageNum = $G(%request.Data("PageNum", 1))
+            s HospitalID = $G(%request.Data("HospitalID", 1))
+        </script>
+<SERVER>
+</SERVER>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:5px!important;
+        }
+	</STYLE>
+</head>
+<body>
+	<script language="cache" runat="SERVER">
+		s objStream=##class(NurMp.RecordsBrowser).getFtpFile(EpisodeID,PrnCode,PageNum,HospitalID)
+		s status=objStream.GetAt("status")
+		i status'=0 {
+			 w "<span style='color:red;display:block;font-size:16px;'>"_status_"</span>"
+		}else{
+			s imgStream=objStream.GetAt("imgStream")
+			d imgStream.Rewind()
+			s len=12000
+			w "<img id='recordPicture' src='data:img/gif;base64,"
+	    	while 'imgStream.AtEnd {
+	      		s base64str = $system.Encryption.Base64Encode(imgStream.Read(.len),1)
+	      		w base64str
+	    	}
+			w "'/>"
+		}
+   </script>				
+</body>
+</html>

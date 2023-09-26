@@ -1,0 +1,73 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+ 	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid=$Get(%request.Data("rowid",1))	
+	s Code=$Get(%request.Data("Code",1))
+	s year=$Get(%request.Data("year",1))
+	s Schemdr=$Get(%request.Data("Schemdr",1))
+	s Deptdr=$Get(%request.Data("Deptdr",1))
+	s bfincreaserate=$Get(%request.Data("bfincreaserate",1))
+	s bsdcalflag =$Get(%request.Data("bsdcalflag",1))
+	s itemty =$Get(%request.Data("itemty",1))
+	s data=$Get(%request.Data("data",1))
+				
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgFactYear).YearList(start,limit,str)
+	
+	i action = "bsmnamelist" d
+	.w ##class(herp.budg.udata.uBudgFactYear).BSMNameListKS(year,start,limit,str)
+	
+	i action = "deptnmlist" d
+	.w ##class(herp.budg.udata.uBudgFactYear).DeptList(Schemdr,start,limit,str)
+
+	i action = "itemtype" d
+	.w ##class(herp.budg.udata.uBudgFactYear).ItemType(start, limit, str)	
+	
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgFactYear).ListDept(hospid,year, Schemdr, Code,Deptdr, itemty,searchField, searchValue, sortField, sortDir, start, limit)
+		
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgFactYear).UpdateRec(rowid , bfincreaserate,bsdcalflag)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	;原批量处理按钮
+	;i action = "lotedit" d
+	.;s result = ##class(herp.budg.udata.uBudgFactYear).LotUpdateRec(data)
+	.;i result = 0 d
+	..;w "{success:'true',info:'',refresh:'true'}"
+	.;e  d
+	..;w "{success:'false',info:'"_result_"'}"
+
+	;按科目类别批量处理
+	i action = "tyedit" d
+	.s result = ##class(herp.budg.udata.uBudgFactYear).IteTypUpdDept(data,hospid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "setsupvalue" d
+	.s result = ##class(herp.budg.udata.uBudgFactYear).UpdSupItemDept(data,hospid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

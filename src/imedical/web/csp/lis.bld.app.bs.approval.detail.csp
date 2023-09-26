@@ -1,0 +1,68 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S approvalId=$G(%request.Data("approvalId",1))
+ S approval=##Class(LIS.BLD.BT.APP.Approval).%OpenId(approvalId)
+ I '$L(approval) {
+	W "<span style='color:red;font-size:25px;'>审批信息获取失败</span>"
+	Q 0	 
+ }
+ S recordTypeId=approval.RecordTypeId
+ S recordId=approval.RecordId
+ I '$L(recordTypeId) {
+	W "<span style='color:red;font-size:25px;'>申请审批记录类型为空</span>"
+	Q 0	 
+ }
+ I '$L(recordId) {
+	W "<span style='color:red;font-size:25px;'>申请审批记录ID为空</span>"
+	Q 0	 
+ }
+ S jsonString="",mainJavaScript=""
+ I recordTypeId="REQ" {	//申请单
+ 	 S mainJavaScript="lis.bld.app.bs.approval.detail.req.js"
+	 S request=##Class(LIS.BLD.BT.REQ.Request).%OpenId(recordId)
+	 I '$L(request) {
+		W "<span style='color:red;font-size:25px;'>申请单号错误</span>"
+		Q 0
+ 	 }
+ 	 S jsonString=##Class(LIS.Action.BLD.Approval).GetRequestDetail(recordId)
+ }
+ 
+ I recordTypeId="BTR" {	//输血单
+ 	 S mainJavaScript="lis.bld.app.bs.approval.detail.btr.js"
+	 S request=##Class(LIS.BLD.BT.REQ.Request).%OpenId(recordId)
+	 I '$L(request) {
+		W "<span style='color:red;font-size:25px;'>申请单号错误</span>"
+		Q 0
+ 	 }
+ 	 S jsonString=##Class(LIS.Action.BLD.Approval).GetRequestDetail(recordId)
+ }
+  
+ I '$L(jsonString) {
+	 W "<span style='color:red;font-size:25px;'>未找到详细信息</span>"
+	 Q 0
+ }
+ I '$L(mainJavaScript) {
+	 W "<span style='color:red;font-size:25px;'>未找到详细信息</span>"
+	 Q 0
+ }
+ 
+</Script>
+
+
+<HTML>
+<HEAD>
+<meta content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<SCRIPT language="Javascript">
+			var gJsonString=Ext.util.JSON.decode("#($G(jsonString))#"); 
+	   </script>
+</HEAD>
+<body>
+	<div id="lis.bld.app.bs.approval.detail" ></div>
+	<script type="text/javascript" src="../scripts/lisjs/btms/bs/#($G(mainJavaScript))#"></script>
+</body>
+</HTML>

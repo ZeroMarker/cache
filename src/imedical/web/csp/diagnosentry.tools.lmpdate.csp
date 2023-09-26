@@ -1,0 +1,165 @@
+<!--诊断录入工具类,csp:diagnosentry.tools.lmpdate.csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<HISUI></HISUI>
+<!--link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/ui.jqgrid.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/ipdoc/css/dhcdocCustomjqGrid.css"-->
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+<style>
+
+</style>
+<Server>
+	s GetWeekDiagnoseMethod=##Class(%CSP.Page).Encrypt($lb("DHCDoc.DHCDocConfig.ItmDiagnose.GetWeekDiagnose"))
+	s DateDefaultFormat=##class(websys.Conversions).DateFormat() //##Class(%CSP.Page).Encrypt($lb("websys.Conversions.DateFormat"))
+</Server>
+</head>
+ 
+<body>
+	<div id="LMPDateWindow" class="toolpanel">
+	    <div style="">
+	        <div style="margin-top:20px;margin-left:80px;">
+	            <label for="LMPDate">末次月经时间</label>
+	            <!--<input id="LMPDate" type="text" class="easyui-datebox" data-options="formatter:myformatter,parser:myparser"></input>-->  
+	            <input id="LMPDate" type="text" ></input>
+	        </div>
+	        <div style="margin-top:40px;margin-left:80px;">
+	            <input id="LMPSlider" value="1" style="width:350px;" data-options="min:1,max:40,showTip:true,rule:[1,'|',10,'|',20,'|',30,'|',40]" />
+	        </div>
+	        <div style="margin-top:40px;height:50px;margin-left:50px;">
+	            <font id="LMPResult" style="color:red;font-size:30px;"></font>
+	        </div>
+	    </div>
+	    <div style="margin-top:70px;">
+	        <div style="float:left;margin-left:100px;">
+	            <a id="LMPBSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save'">插入诊断</a>
+	        </div>
+	        <div style="float:left;margin-left:80px;">
+	        	<a id="LMPBCancel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-remove'">取消</a>
+	        </div>
+	    </div>
+	    <input id='WeekNum' type='hidden'/>
+	</div>
+	<SCRIPT language = 'javascript' >
+		var GetWeekDiagnoseMethod="#(GetWeekDiagnoseMethod)#";
+		var DateDefaultFormat="#(DateDefaultFormat)#";
+		window.returnValue="";
+		$(function(){
+			$('#WeekNum').val("");
+			$('#LMPDate').datebox({    
+				onSelect:function(Seldate){
+					ComputeLMP(Seldate);
+				},
+				onChange:function(newValue, oldValue){
+					if (DateDefaultFormat==3){
+						var myrtn=DHCWeb_IsDate(newValue,"-")
+					}
+					if (DateDefaultFormat==4){
+						var myrtn=DHCWeb_IsDate(newValue,"/")
+					}
+					if (myrtn){
+						var date=myparser(newValue);
+						ComputeLMP(date);
+					}
+					
+				}
+			});
+			$('#LMPSlider').slider({
+				value:1,
+				onChange:function(newValue, oldValue){
+					var WeekNum=$('#WeekNum').val();
+					if (WeekNum!=newValue){
+						var Info="孕"+newValue+"周";
+						$('#LMPResult').html(Info);
+						$('#WeekNum').val(newValue);
+					}
+				}
+			});
+			$('#LMPDate').datebox({
+				formatter:myformatter,
+				parser:myparser
+				
+			});
+			$('#LMPBSave').click(function(){
+				var MRCICDRowid=cspRunServerMethod(GetWeekDiagnoseMethod,$('#WeekNum').val());
+				if (MRCICDRowid==""){
+					alert("尚未维护该周对应的诊断，请联系系统管理员");
+					return false;
+				}
+				window.returnValue=MRCICDRowid+String.fromCharCode(2)+$('#LMPResult').html();
+				window.close()
+				
+			});
+			$('#LMPBCancel').click(function(){
+				window.returnValue="";
+				window.close()
+			});
+			
+		});
+		function ComputeLMP(Seldate){
+			var LMPDate = new Date(Seldate.getFullYear(),Seldate.getMonth(),Seldate.getDate(),0,0);
+		    var CurrDate = new Date();
+		    var CurrDate = new Date(CurrDate.getFullYear(),CurrDate.getMonth(),CurrDate.getDate(),0,0);
+		    var Days = (CurrDate-LMPDate)/(24*60*60*1000);
+			var WeekNum=parseInt(Days/7);
+			var LeftDays=Days%7;
+			if (WeekNum==0){
+				//WeekNum=1;LeftDays=0;
+			}
+			var LMPYear=Seldate.getFullYear();
+			var LMPMonth=Seldate.getMonth()+1;
+			var LMPDay=Seldate.getDate();
+			//预产期的月份就是那个月的月份如果是大于3就减去3，月份小于3就加9就是出生的月份，日期：加7天就是出生的日期
+			if (LMPMonth>3){
+				LMPMonth=LMPMonth-3;
+				LMPYear=LMPYear+1
+			}else{
+				LMPMonth=LMPMonth+9;
+			}
+			LMPDay=LMPDay+7;
+			var DueDate=new Date(LMPYear,LMPMonth-1,LMPDay,0,0);
+			if (DateDefaultFormat==4) DueDate=DueDate.getDate()+"/"+(DueDate.getMonth()+1)+"/"+DueDate.getFullYear();
+			else  DueDate=DueDate.getFullYear()+"-"+(DueDate.getMonth()+1)+"-"+DueDate.getDate();
+			if (WeekNum==0) var Info="孕"+LeftDays+"天,预产期:"+DueDate
+			else var Info="孕"+WeekNum+"周"+LeftDays+"天,预产期:"+DueDate;
+			$('#WeekNum').val(WeekNum);
+			$('#LMPSlider').slider("setValue",WeekNum);
+			$('#LMPResult').html(Info);
+		}
+		function myformatter(date){
+			var y = date.getFullYear();
+			var m = date.getMonth()+1;
+			var d = date.getDate();
+			if (DateDefaultFormat==3) return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+			else if (DateDefaultFormat==4) return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y
+			else return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+		}
+		function myparser(s){
+		    if (!s) return new Date();
+		    if(DateDefaultFormat==4){
+				var ss = s.split('/');
+				var y = parseInt(ss[2],10);
+				var m = parseInt(ss[1],10);
+				var d = parseInt(ss[0],10);
+			}else{
+				var ss = s.split('-');
+				var y = parseInt(ss[0],10);
+				var m = parseInt(ss[1],10);
+				var d = parseInt(ss[2],10);
+			}
+			if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+				return new Date(y,m-1,d);
+			} else {
+				return new Date();
+			}
+		}
+	</SCRIPT>
+
+</body>
+</html>

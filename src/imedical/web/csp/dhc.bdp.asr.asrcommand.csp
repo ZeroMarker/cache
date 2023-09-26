@@ -1,0 +1,167 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+    @CSP：dhc.bdp.asr.asrcommand.csp
+    @JS:
+    @Title：语音HIS界面
+    @Creator:杨帆
+    @Description:语音HIS主界面
+    @CreateDate：2020-01-09
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/ASR/ASR_Command.js"></script>
+<style>   
+</style>
+
+</HEAD>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+		<div data-options="region:'west',split:true,collapsible:false" border="false" style="width:700px;">
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="setgrid" border="true" toolbar="#setbar" title="语音命令集"></table>
+		</div>
+		<div data-options="region:'center',split:true,collapsible:false" style="width:400px;" border="false" >
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="setscenesgrid" border="true" toolbar="#setscenesbar" title="语音命令集场景"></table>
+		</div>
+	</div>
+    <!--语音命令集工具条-->
+    <div id="setbar">
+	  <table style="padding-top:5px;padding-bottom:5px;" >
+	    	<td class="tdlabel">产商</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="setDesc"></td>		
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="setsearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="setRefresh" >重置</a>
+			</td>
+	  </table>
+	  <div style="border-bottom: 1px dashed #C0C0C0;"></div>	
+	  	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a> 
+	</div>  
+	</div>
+	
+	<!--语音命令集场景工具条-->
+	<div id="setscenesbar">
+	  <table style="padding-top:5px;padding-bottom:5px;" >
+	    	<td class="tdlabel">场景</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="setscenesDesc"></td>		
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="setscenessearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="setscenesRefresh" >重置</a>
+			</td>
+	  </table>
+	  <div style="border-bottom: 1px dashed #C0C0C0;"></div>	
+	  	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_setscenes">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_setscenes">修改</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_setscenes">删除</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper',plain:true,stopAllEventOnDisabled:true" id="Btnsetscenescmd">场景命令</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper',plain:true,stopAllEventOnDisabled:true" id="BtnParams">场景参数</a>
+	  </div>  
+	</div>
+	
+	<!--语音命令集增改弹窗-->
+     <div id="myWin" style="width:420px;height:450px;padding:10px;display:none;">
+		       <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    <table id="addtable" align="center">
+			    <tr style="display:none">
+		 			<td></td>
+		   			<td><input id="ASRID" name="ASRID" type="text" class="textbox hisui-validatebox" ></td>
+		 		</tr>
+		 		<tr>
+	               <td class="tdlabel"><font color=red>*</font>产商</td>
+	    		   <td><input id="ASRCompany" name="ASRCompany" type="text" class="textbox hisui-validatebox" style="width:250px" data-options="required:true"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel"><font color=red>*</font>应用版本</td>
+	    		   <td><input id="ASRAppVersion" name="ASRAppVersion" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+				<tr>
+	               <td class="tdlabel"><font color=red>*</font>应用名</td>
+	    		   <td><input id="ASRAppName" name="ASRAppName" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+	    		<tr>
+	    		   <td class="tdlabel">公司名</td>
+	    		   <td><input id="ASRCompanyName" name="ASRCompanyName" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel">通信模块协议版本</td>
+	    		   <td><input id="ASRProtocolVersion" name="ASRProtocolVersion" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel">产商初始化命令串</td>
+	    		   <td><input id="ASRCompanyCmd" name="ASRCompanyCmd" type="text" class="textbox hisui-validatebox" style="width:250px" data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel">服务路径</td>
+	    		   <td><input id="ASRServicePath" name="ASRServicePath" type="text" class="textbox hisui-validatebox" style="width:250px" data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel">开始日期</td>
+	    		   <td><input id="ASRStartDate" name="ASRStartDate" type="text" class="hisui-datebox textbox" style="width:257px" data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel">结束日期</td>
+	    		   <td><input id="ASREndDate" name="ASREndDate" type="text" class="hisui-datebox textbox" style="width:257px" data-options=""></td>
+	    		 </tr>
+				 </table>
+			</form>  
+	</div>
+	
+	<!--语音命令集场景增改弹窗-->
+     <div id="myWinsetscenes" style="width:400px;height:250px;padding:10px;display:none;">
+		       <form id="form-savesetscenes" method="post" data-options="fit:true,border:false,plain:true"> 
+			      <table id="addtablea" align="center">
+			         <tr style="display:none">
+		 			<td></td>
+		   			<td><input id="ASRSID" name="ASRSID" type="text" class="textbox hisui-validatebox" ></td>
+		 		</tr>
+		 		 <tr style="display:none">
+		 			<td class="tdlabel">ASRSParRef</td>
+		   			<td><input id="ASRSParRef" name="ASRSParRef" type="text" class="textbox hisui-validatebox" ></td>
+		 		</tr>
+				<tr>
+	               <td class="tdlabel"><font color=red>*</font>场景</td>
+	    		   <td><input id="ASRSScenes" name="ASRSScenes" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+	    		<tr>
+	    		   <td class="tdlabel"><font color=red>*</font>场景命令名</td>
+	    		   <td><input id="ASRSScenesCommandName" name="ASRSScenesCommandName" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel">有效标识</td>
+	    		   <td><input id="ASRSActiveFlag" name="ASRSActiveFlag" type="checkbox" class="hisui-checkbox" data-options="checked:false" value="Y"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel">备注说明</td>
+	    		   <td><input id="ASRSRemark" name="ASRSRemark" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options=""></td>
+	    		 </tr>
+				 </table>
+			</form>  
+	</div>
+	
+	<!--语音命令集场景关联弹窗1-语音命令集场景命令指令-->
+     <div id="winsetscenescmd" style="width:400px;height:420px;padding:10px;display:none;">
+	</div>
+	
+	<!--语音命令集场景关联弹窗2-语音命令集场景参数-->
+     <div id="winParams" style="width:400px;height:420px;padding:10px;display:none;">
+	</div>
+	   
+</BODY>
+</HTML>
+																						

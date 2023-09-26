@@ -1,0 +1,133 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<title>值域转换</title>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/datagrid-detailview.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.4.1/themes/default/easyui.css"/>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.4.1/themes/icon.css" />
+<script type="text/javascript" src="../scripts/ensLookUpTable.js"></script>
+
+</head>
+<body bgcolor="#DFE8F6">
+	<div class="panel panel-primary" style="height:100%;" >
+		<div id="cc" class="easyui-layout" style="width:100%;height:100%;">
+		    <div data-options="region:'west',title:'<font size=2px>值域转换列表</font>',split:true" style="width:20%;">
+				<ul id="lookuptablelist" class="easyui-tree">  
+			    </ul>
+		    </div>
+			<!--对照列表-->
+			<div id="lookUpTableMm" class="easyui-menu">
+				<div id="appendLookUpTable" onclick="appendLookUpTable()" iconCls="icon-add">新增值域</div>
+				<div id="deleteLookUpTable" onclick="deleteLookUpTable()" data-options="iconCls:'icon-no'">删除值域</div>
+			</div>
+			
+		    <div data-options="region:'center',title:'<font size=2px>值域内容信息</font>'">	
+				<div style="MARGIN-TOP:0.5%;MARGIN-LEFT:1%;height:5%;">
+					<div>
+				        <label for="lbCode">数据代码:</label>  
+				        <input class="textbox" type="text" id="dataCode"/> 
+				        <label for="lbDesc">数据代码:</label>  
+				        <input class="textbox" type="text" id="dataDesc"/>  
+				        <a class="easyui-linkbutton" data-options="iconCls:'icon-search'" id="searchBtn">查 询</a>
+				        <a class="easyui-linkbutton" data-options="iconCls:'icon-add'" id="addBtn">添 加</a>
+				        
+					</div>
+				</div>
+				<div style="width:99%;height:93%;">
+					<div style="float:left;width:49%;height:49%;">
+						<iframe name="sourcelookuptabledatagridlist" src="ensSouLookUpTData.csp" frameborder="0" scrolling="no" style="width:100%;height:100%;"></iframe>
+					</div>
+					<div style="float:left;width:50%;height:49%;">
+						<iframe name="targetlookuptabledatagridlist" src="ensTarLookUpTData.csp" frameborder="0" scrolling="no" style="width:100%;height:100%;"></iframe>
+					</div>
+					<div style="clear:both"></div>
+					<div style="width:99%;height:50%;">
+						<iframe name="lookuptabledatagridlist" src="ensLookUpTablegridlist.csp" frameborder="0" scrolling="no" style="width:100%;height:100%;"></iframe>
+					</div>
+				</div>
+				<!--对照规则配置-->
+				<div id="lookUpRuleDetail" class="easyui-window" title="规则设置" data-options="iconCls:'icon-save',closed:true,modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false" style="width:450px;height:200px;text-align:center;">
+					<form id="ff1" method="post">
+				        <table cellpadding="5" style="font-size:12px;" height="80px" width="400px">
+				            <tr>
+				                <td>字段名称:</td>
+				                <td>
+									<select id="cc" class="easyui-combobox" id="conUseFlag" name="conUseFlag" style="width:134px;" editable="false">
+										<option value="Y">数据名称</option>
+										<option value="N">数据代码</option>
+									</select>
+								</td>
+				                <td>匹配原则:</td>
+				                <td>
+									<select id="cc" class="easyui-combobox" id="conUseFlag" name="conUseFlag" style="width:134px;" editable="false">
+										<option value="Y">完全一致</option>
+										<option value="N">部分一致</option>
+									</select>
+								</td>
+				            </tr>
+				            <tr>
+				                <td>开始位置:</td>
+				                <td><input class="textbox" type="text" name="startPosition" id="startPosition" ></input></td>
+				                <td>结束位置:</td>
+				                <td><input class="textbox" type="text" name="endPosition" id="endPosition" ></input></td>
+				            </tr>
+				        </table>
+				    </form>
+					<div style="margin-top:2px; text-align:center;clear:both;">
+						<button type="button" id="cancleRuleBtn" onclick="cancleRuleBtn()">取 消</button>
+						<button type="button"  id="saveRuleBtn" onclick="saveRuleBtn()">对 照</button>
+					</div>
+				</div>
+				
+				<!--新增对照数据-->
+				<div id="lookUpTableData" class="easyui-window" title="添加数据" data-options="iconCls:'icon-save',closed:true,modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false" style="width:550px;height:170px;text-align:center;">
+					<form id="ff1" method="post">
+				        <table cellpadding="5" style="font-size:12px;" height="80px" width="500px">
+				            <tr>
+				                <td>源数据代码:</td>
+				                <td><input class="textbox" type="text" name="sourceCode" id="sourceCode" ></input></td>
+				                <td>源数据名称:</td>
+				                <td><input class="textbox" type="text" name="sourceDesc" id="sourceDesc" ></input></td>
+				            </tr>
+				            <tr>
+				                <td>目标数据代码:</td>
+				                <td><input class="textbox" type="text" name="targetCode" id="targetCode" ></input></td>
+				                <td>目标数据名称:</td>
+				                <td><input class="textbox" type="text" name="targetDesc" id="targetDesc" ></input></td>
+				            </tr>
+				        </table>
+				    </form>
+					<div style="margin-top:2px; text-align:center;clear:both;">
+						<a class="easyui-linkbutton" data-options="iconCls:'icon-undo'" id="lookUpTableDataClearBtn" onclick="lookUpTableDataClearBtn()">重 置</a>
+						<a class="easyui-linkbutton" data-options="iconCls:'icon-add'" id="lookUpTableDataSaveBtn" onclick="lookUpTableDataSaveBtn()">保 存</a>					</div>
+				</div>
+				
+				<!--新增对照-->
+				<div id="lookUpTableDiv" class="easyui-window" title="新增对照列表" data-options="iconCls:'icon-save',closed:true,modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false" style="width:500px;height:180px;text-align:center;">
+					<form id="ff1" method="post">
+				        <table style="font-size:12px;" width="450px" height="80px">
+				            <tr>
+				                <td style="width:60px;">表名称:</td>
+				                <td><input class="textbox" type="text" name="lookUpTableCode" id="lookUpTableCode" style="width:335px"></input></td>
+							</tr>	            
+							<tr>
+				                <td style="width:60px;">表名称:</td>
+				                <td><input class="textbox" type="text" name="lookUpTableDesc" id="lookUpTableDesc" style="width:335px"></input></td>
+							</tr>
+
+				        </table>
+				    </form>
+					<div style="margin-top:2px; text-align:center;clear:both;">
+						<a class="easyui-linkbutton" data-options="iconCls:'icon-undo'" id="lookUpTableClearBtn">重 置</a>
+						<a class="easyui-linkbutton" data-options="iconCls:'icon-add'" id="lookUpTableSaveBtn" onclick="lookUpTableSaveBtn()">保 存</a>
+					</div>
+				</div>
+				
+	    	</div>
+	   	</div>
+	</div>
+</body>
+</html>

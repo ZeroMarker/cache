@@ -1,0 +1,244 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html XMLNS=TRAK>
+	<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<!--TRAK:HEAD></TRAK:HEAD-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+	
+	<!-- Bootstrap 3.3.6 -->
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/css/zui.css">
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/css/font-awesome.min.css">
+	<script src="../scripts_lib/Bootstrap-3.3.6/jquery-1.9.1.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/js/zui.min.js"></script>
+	
+	<link rel="stylesheet" href="../scripts/dhchai/main/haisys.css">
+	<link rel="stylesheet" href="../scripts/dhchai/main/tabdrop/css/tabdrop.css">
+	<script src="../scripts/dhchai/main/main.js"></script>
+	<script src="../scripts/dhchai/main/jquery.contextmenu.js"></script>
+	<script src="../scripts/dhchai/main/tabdrop/js/bootstrap-tabdrop.js"></script>
+	
+	<!--layer弹出层-->
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/layer/layer.js"></script>
+	<script type="text/javascript" src="../Scripts/dhchai/DHCHAI.JQ.Framework.js"></script>
+	
+	<script language='Cache' runat='SERVER'>
+		Set ProductID=##class(DHCMed.SS.Products).GetIDByCode("HAI")
+		
+		Set UserID=$g(%session.Data("LOGON.USERID"))
+		
+		Set GroupId=$g(%session.Data("LOGON.GROUPID"))
+		//增加选中版本号及安全组名称
+		Set ProductStr = ##class(DHCMed.SS.Products).GetStringById(ProductID)
+		Set Version = $p(ProductStr,"^",4) //转大写
+		Set:Version="" Version = "版本未知"
+		Set Version =$zcvt(Version,"U")
+		Set GroupDesc=$g(%session.Data("LOGON.GROUPDESC"))
+		Set UserName =$g(%session.Data("LOGON.USERNAME"))
+		//取科室
+		Set XLocID=$g(%session.Data("LOGON.CTLOCID"))
+		Set XLocCode=$p($g(^CTLOC(XLocID)),"^",1)
+		Set XHospID=$p($g(^CTLOC(+XLocID)),"^",22)
+		Set:XHospID="" XHospID=$o(^CT("HOSP",0))  //部分科室没有关联医院
+		Set objHospMap=##class(DHCHAI.BT.HospitalMap).GetObjByXCode("HISSYS",XHospID)
+		If $IsObject(objHospMap){
+			Set objHosp=objHospMap.BTMapHospDr
+			Set:$IsObject(objHosp) HISCode=$p(objHosp.BTXCode,"||",1)
+		}
+		Set (LocID,LocCode,LocDesc,HospID,HospDesc,HospGrpID)=""
+		Set objLoc=##class(DHCHAI.BT.Location).GetObjByLocCode(HISCode,XLocCode)
+		If $IsObject(objLoc){
+			Set LocID=objLoc.%Id()
+			Set LocCode=objLoc.BTCode
+			Set LocDesc=objLoc.BTDesc
+			If $IsObject(objLoc.BTHospDr){
+				Set HospID=objLoc.BTHospDr.%Id()
+				Set HospDesc=objLoc.BTHospDr.BTDesc
+				If $IsObject(objLoc.BTHospDr.BTGroupDr){
+					Set HospGrpID=objLoc.BTHospDr.BTGroupDr.%Id()
+				}
+			}
+		}
+	</script>
+	
+	<script language="javascript" type="text/javascript">
+		//变量赋值
+		var USERID ='#(UserID)#';
+		var GroupId='#(GroupId)#';
+		var ProductID='#(ProductID)#';
+		var Version='#(Version)#';
+		var GroupDesc='#(GroupDesc)#';
+	</script>
+	<server>
+	 Set IEVersion = ""  //考虑参数设置 默认的IE8
+	 if IEVersion="IE11" {
+		 Set IEVersion = "IE11"
+	 }ELSE{
+		Set IEVersion = "IE8"
+	 }
+	</server>
+	<csp:if condition=IEVersion="IE8">
+	<style>
+	/*IE低版本布局乱，是li的float莫名其妙没了*/
+	.navbar-nav>li{
+		float:left!important;
+		display:list-item!important;
+		/*display:inline-block!important;
+		float:none!important;*/
+	}
+	/*IE低版本莫名其妙有了margin*/
+	/*IE8需要floatleft,IE7却不需要*/
+	.navbar-nav{
+		margin:0!important;
+		float:left!important;
+	}
+	/*IE低版本生成三角号*/
+	.caret-in {
+		display: block;
+		float: right;
+		width: 0;
+		height: 0;
+		border-color: transparent;
+		border-style: solid;
+		border-width: 5px 0 5px 5px;
+		border-left-color: #ccc;
+		margin-top: -18px;
+		margin-right: 10px;
+	}
+	/*分隔线显示不对，在js中增加一class*/
+	.dropdown-menu .divider-ie{
+		margin:-9px 0 0 0;
+		width:100%;
+	}
+
+	</style>	
+	</csp:if>
+</head>
+<body class="no-skin">
+    <div class="navbarhead">
+	<nav class="navbar navbar-default navbar-fixed-top" id="menuPanel">
+		<div class="navbar-container">
+			<div class="navbar-header pull-left" style="background-color:#366abf;height:50px;">
+				<a href="#" class="navbar-brand" style="font-size:16px;color:#F0F0F0;">
+					<ul style="margin-top:2px;">
+						<li style="margin-bottom:3px;"><img src="../scripts/dhchai/img/logo_imedical.png"/></li>
+						<li>医院感染管理</li>
+					</ul>
+				</a>
+			</div>
+			<div class="navbar-inner">
+				<ul class="nav navbar-nav" id="navmenu">
+										
+				</ul>
+			</div>
+			<div class="navbar-header navbar-buttons pull-right" role="navigation">
+				<ul class="nav navbar-nav">
+					<li class="dhc-menu" style="margin-left:15px;">
+						<a href="#" class="dropdown-toggle rightMainMenu dhc-icon-th" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<span class="icon-th-large" style="font-size:18px;" aria-hidden="true"></span>
+						</a>
+						<ul class="dropdown-menu">
+							<li>
+								<a href="#" data-ilink="javascript:showHelp();" class="dhc-submenu">
+									<i class="icon-question-sign"></i> 帮助文档</a>
+							</li>
+							
+							<li>
+								<a href="#" data-ilink="javascript:showAbout();" class="dhc-submenu">
+									<i class="icon-question-sign"></i> 关于</a>
+							</li>
+						</ul>
+					</li>
+					<!-- 消息提示暂不用 
+					<li>
+						<a id="DHCMessageBtn" href="#" onclick="javascript:alert('Message');" class="rightMainMenu dhc-submenu hasMessage">
+							<span class="icon-envelope" style="font-size:23px;"></span>
+							<span class="badge messagecount">24</span>
+						</a>
+						</li>
+					-->
+					<li class="dhc-menu" style="margin-left:15px;">
+						<a href="#" class="dropdown-toggle rightMainMenu dhc-icon-th dhc-icon-user" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding-top:5px;padding-left:7px;">
+							<span class="icon-user" style="font-size:18px;"></span>
+						</a>
+						
+						<ul class="dropdown-menu">
+							<li>
+								<a id="chgPwd" class="dhc-submenu">
+									<i class="icon-key"></i>修改密码</a>
+							</li>
+							<li>
+								<a id="chgDep" class="dhc-submenu">
+									<i class="icon-exchange"></i> 切换科室</a>
+							</li>
+							<li role="separator" class="divider"></li>
+							<li>
+								<a href="#" onclick="javascript:window.parent.SetKeepOpen('websys.csp?TMENU=4&relogon=1','')" class="dhc-submenu">
+									<i class="icon-reply"></i>重新登录</a>
+							</li>
+							<li>
+								<a href="#" onclick="javascript:window.parent.SetKeepOpen('websys.csp?TMENU=4','')" class="dhc-submenu">
+									<i class="icon-off"></i> 退出系统</a>
+							</li>
+						</ul>
+				   </li>
+					<li>
+						<a>
+							<span class="userlocinfo">
+								<span class="userinfo"><strong>#(UserName)#</strong> &nbsp;&nbsp;#(GroupDesc)#</span>
+								<span class="locinfo">#(LocDesc)#</span>
+							</span>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	</div>
+	<div class="main-container centerPanel">
+		<div class="main-content">
+			<div class="page-content">
+				<div class="tabbable">
+					<ul id="myTab" class="nav nav-tabs"></ul>
+				</div>
+				<div class="tab-content no-border padding-0" id="myTabContent">
+					
+				</div>
+			</div>
+			<!-- /.col -->
+		</div>
+	</div>
+	<!-- /.page-content -->
+
+	<!-- 右键菜单 -->
+	<div id="mm" class="contextMenu" style="width: 150px;" title="多标签右键菜单">
+		<ul>
+			<li id="tabCloseOther">
+				<i class="red icon-undo bigger-100"></i>关闭其它
+			</li>
+			<li id="tabCloseAll">
+				<i class="red icon-adjust bigger-100"></i>关闭全部
+			</li>
+		</ul>
+	</div>
+    <!-- 编辑页面（Modal） -->
+	<div class="modal fade" id="iModal" tabindex="-1" role="dialog" aria-labelledby="winDictionaryEditModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-header">
+					<small>编辑</small>
+            </div>
+            
+            <div class="modal-body">
+			</div>
+		</div>
+	</div>
+</body>
+</html>

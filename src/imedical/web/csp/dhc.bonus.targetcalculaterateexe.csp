@@ -1,0 +1,91 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	s str=$Get(%request.Data("str",1))
+	s SchemeID=$Get(%request.Data("SchemeID",1))
+	s BonusSchemeID=$Get(%request.Data("BonusSchemeID",1))
+	s BonusYear=$Get(%request.Data("BonusYear",1))
+	s BonusPeriod=$Get(%request.Data("BonusPeriod",1))
+	s TargetID=$Get(%request.Data("TargetID",1))
+	s data=$Get(%request.Data("data",1))
+		
+	s UnitID=$Get(%request.Data("UnitID",1))
+	s BonusSchemeID=$Get(%request.Data("BonusSchemeID",1))
+	s State=$Get(%request.Data("State",1))
+	s TargetUnit=$Get(%request.Data("TargetUnit",1))
+	s AccountBase=$Get(%request.Data("AccountBase",1))
+	s StepSize=$Get(%request.Data("StepSize",1))
+	s TargetDirection=$Get(%request.Data("TargetDirection",1))
+	s StartLimit=$Get(%request.Data("StartLimit",1))
+	s EndLimit=$Get(%request.Data("EndLimit",1))
+		s TargetRate=$Get(%request.Data("TargetRate",1))
+			s ParameterTarget=$Get(%request.Data("ParameterTarget",1))	
+	s userCode=$Get(%request.Data("userCode",1))
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uTargetCalculateRate).ListRec(BonusSchemeID,UnitID, TargetID,searchField, searchValue, sortField, sortDir, start, limit)
+
+	i action = "schemelist" d
+	.w ##class(dhc.bonus.udata.uTargetCalculateRate).GetScheme(start,limit,str)
+	i action = "schemelist1" d
+	.w ##class(dhc.bonus.udata.uTargetCalculateRate).GetScheme1(start,limit,str)
+	
+	
+	//核算单元
+	i action = "suunit" d
+	.;w ##class(dhc.bonus.udata.uBonusTargetCollect).SUList(start,limit,str,SchemeID)
+	.w ##class(dhc.bonus.udata.uTargetCalculateParam).SUList(start,limit,str,SchemeID,"","")
+	
+	//指标
+	i action = "stunit" d
+	.w ##class(dhc.bonus.udata.uTargetCalculateRate).STList(start,limit,str,SchemeID)
+	//计量单位
+	i action = "calunit" d
+	.w ##class(dhc.bonus.udata.uTargetCalculateRate).CalList(start,limit,str)
+	//参数指标
+	i action = "targetlist" d
+	.w ##class(dhc.bonus.udata.uTargetCalculateRate).TargetList(start,limit,str,TargetID)
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uTargetCalculateRate).Insert(data)
+	.i result = "OK" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uTargetCalculateRate).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uTargetCalculateRate).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+//审核
+	i action = "audit" d
+	.s result = ##class(dhc.bonus.udata.uTargetCalculateRate).Audit(rowid,userCode)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

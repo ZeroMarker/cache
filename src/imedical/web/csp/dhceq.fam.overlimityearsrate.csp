@@ -1,0 +1,130 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<DHCEQ:Report></DHCEQ:Report>
+<HISUI/>
+</HEAD>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="设备逾龄统计" data-options="'eqtitle':'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="height:130px">
+					<div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable for="EquipType">管理类组</lable></div> <!--modify hly 2019/5/29-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.EquipType'" id="EquipType"></div> <!--modify hly 2019/5/29-->
+							<div class="eq-table-td eq-table-label"><lable for="StatCat">设备类型</lable></div> <!--modify hly 2019/5/29-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.StatCat'" id="StatCat"></div> <!--modify hly 2019/5/29-->
+							<div class="eq-table-td eq-table-label"><lable for="pEquipCat">设备分类</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'EM.L.EquipCat'" id="pEquipCat"></div>							
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+							<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable for="pItem">设备名称</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'EM.L.GetMasterItem'" id="pItem"></div>					
+							<div class="eq-table-td eq-table-label"><lable for="pTransSDate">开始日期</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="pTransSDate" value=#(CurMonth)#></div>
+							<div class="eq-table-td eq-table-label"><lable for="pTransEDate">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="pTransEDate" value=#(CurMonth)#></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable for="pUseLoc">科室</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Loc'" id="pUseLoc"></div>
+							<div class="eq-table-td eq-table-label"><lable for="pMinValue">原值</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"   id="pMinValue"></div>
+							<div class="eq-table-td eq-table-label"><lable for="pMaxValue">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="pMaxValue"></div>
+							<div class="eq-table-td eq-table-label"><label for="IncludeFlag">包含子类</label></div>
+							<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox"  id="IncludeFlag" ></div>		
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="overflow:hidden;">
+					<iframe id="ReportFile" name="ReportFile" src=#(ReportFileSrc)# width=100% height=100% scrolling="no"></iframe>
+					<iframe id="ReportFilePrint" name="ReportFilePrint" src=#(ReportFilePrintSrc)# width=100% height=0%></iframe>				
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+			<INPUT TYPE="hidden" name="PrintFlag" id="PrintFlag" value=#(PrintFlag)#>
+			<INPUT TYPE="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)#>
+			<INPUT TYPE="hidden" name="ReportFilePrintSrc" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<INPUT TYPE="hidden" name="pUseLocDR" id="pUseLocDR">
+			<INPUT TYPE="hidden" name="EquipTypeDR" id="EquipTypeDR"> <!--modify hly 2019/5/29-->
+			<INPUT TYPE="hidden" name="StatCatDR" id="StatCatDR"> <!--modify hly 2019/5/29-->
+			<INPUT TYPE="hidden" name="pEquipCatDR" id="pEquipCatDR">
+			<INPUT TYPE="hidden" name="pItemDR" id="pItemDR">
+		</form>
+	</div>
+	<script type='text/javascript'>
+		//modified by csj 20190128
+		function setSelectValue(vElementID,item)
+		{
+			if (vElementID=="EquipType")
+			{
+				setElement("EquipTypeDR",item.TRowID)
+				setElement("EquipType",item.TName)
+				
+			}			
+			else if(vElementID=="pEquipCat")
+			{
+				setElement("pEquipCatDR",item.TRowID)
+				setElement("pEquipCat",item.TDescription)
+			}
+			else if(vElementID=="StatCat")
+			{
+				setElement("StatCatDR",item.TRowID)
+				setElement("StatCat",item.TName)
+			}
+			else if(vElementID=="pItem")
+			{
+				setElement("pItemDR",item.TRowID) //add hly 2019/5/29
+				setElement("pItem",item.TName)  //add hly 2019/5/29
+				setElement("pEquipTypeDR",item.TEquipTypeDR)
+				setElement("pEquipType",item.TEquipType)
+				setElement("pStatCatDR",item.TStatCatDR)
+				setElement("pStatCat",item.TStatCat)
+				setElement("pEquipCatDR",item.TCatDR)
+				setElement("pEquipCat",item.TCat)
+				
+			}
+			else if(vElementID=="pUseLoc")
+			{
+				setElement("pUseLocDR",item.TRowID)
+				setElement("pUseLoc",item.TName)
+			}
+		}
+		function clearData(vElementID)
+		{
+			setElement(vElementID+"DR","")
+			if(vElementID=="pItem")
+			{
+				setElement("pEquipTypeDR","")
+				setElement("pEquipType","")
+				setElement("pStatCatDR","")
+				setElement("pStatCat","")
+				setElement("pEquipCatDR","")
+				setElement("pEquipCat","")
+			}
+		}
+	</script>
+
+</body>
+</HTML>

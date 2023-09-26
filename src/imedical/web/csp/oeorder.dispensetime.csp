@@ -1,0 +1,170 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script Language="JavaScript" SRC="../Scripts/OEOrder.Common.js"></script>
+<script language="JavaScript">
+</script>
+</HEAD>
+<BODY>
+
+<server>
+ n comp
+ s comp=##Class(websys.Component).OpenName("OEOrder.DispenseTime")
+ s comp.HideMenus=1
+ s comp.HideHeadings=0
+ d comp.Show()
+ d comp.%Close()
+ s (Frequency,Duration,RMFrequency,RMDuration,ID,DoseQty)=""
+ s Frequency=%request.Get("Frequency")
+ s Duration=%request.Get("Duration")
+ s RMFrequency=%request.Get("RMFrequency")
+ s RMDuration=%request.Get("RMDuration")
+ s ID=%request.Get("ID")
+ s DoseQty=%request.Get("DoseQty")
+ s ReGenExe=""
+
+ i Duration'="" d
+ . s Duration=##Class(web.PHCDuration).GetIdFromCodeOrDescription(Duration)
+ i Frequency'="" d
+ . s Frequency=##Class(web.PHCFreq).GetIdFromCodeOrDescription(Frequency)
+ i RMDuration'="" d
+ . s RMDuration=##Class(web.PHCDuration).GetIdFromCodeOrDescription(RMDuration)
+ i RMFrequency'="" d
+ . s RMFrequency=##Class(web.PHCFreq).GetIdFromCodeOrDescription(RMFrequency)
+
+ i ID'="" d
+ . s oeitm=##class(User.OEOrdItem).%OpenId(ID,0)
+ . i oeitm d
+ . . i oeitm.OEORIDuratDR,$g(Duration)'="" d
+ . . . i Duration'=oeitm.OEORIDuratDR.%Id() d
+ . . . . s ReGenExe="Y"
+ . . . . d oeitm.OEORIDuratDRSetObjectId(Duration)
+ . . i 'oeitm.OEORIDuratDR,$g(Duration)'="" d
+ . . . s ReGenExe="Y"
+ . . . d oeitm.OEORIDuratDRSetObjectId(Duration)
+ . . i oeitm.OEORIPHFreqDR,$g(Frequency)'="" d
+ . . . i Frequency'=oeitm.OEORIPHFreqDR.%Id() d
+ . . . . s ReGenExe="Y"
+ . . . . d oeitm.OEORIPHFreqDRSetObjectId(Frequency)
+ . . i 'oeitm.OEORIPHFreqDR,$g(Frequency)'="" d
+ . . . s ReGenExe="Y"
+ . . . d oeitm.OEORIPHFreqDRSetObjectId(Frequency)
+ . . i DoseQty'="" d
+ . . . i DoseQty'=oeitm.OEORIDoseQty d
+ . . . . s oeitm.OEORIDoseQty=DoseQty
+ . . . . s ReGenExe="Y"
+ . . i oeitm.OEORIRMDuratDR,$g(RMDuration)'="" d
+ . . . i RMDuration'=oeitm.OEORIRMDuratDR.%Id() d
+ . . . . s ReGenExe="Y"
+ . . . . d oeitm.OEORIRMDuratDRSetObjectId(RMDuration)
+ . . i 'oeitm.OEORIRMDuratDR,$g(RMDuration)'="" d
+ . . . s ReGenExe="Y"
+ . . . d oeitm.OEORIRMDuratDRSetObjectId(RMDuration)
+ . . i oeitm.OEORIRMFreqDR,$g(RMFrequency)'="" d
+ . . . i RMFrequency'=oeitm.OEORIRMFreqDR.%Id() d
+ . . . . s ReGenExe="Y"
+ . . . . d oeitm.OEORIRMFreqDRSetObjectId(RMFrequency)
+ . . i 'oeitm.OEORIRMFreqDR,$g(RMFrequency)'="" d
+ . . . s ReGenExe="Y"
+ . . . d oeitm.OEORIRMFreqDRSetObjectId(RMFrequency)
+ . . i ReGenExe="Y" s save=oeitm.%Save(0)
+ . . d oeitm.%Close()
+
+ i ReGenExe="Y" d updexe^COEOrdItem6(ID)
+
+</server>
+
+<script language="JavaScript">
+
+function DispensingDate() {
+	var DispensingDate="";
+	var ID="";
+	DispensingDate_changehandler(e);
+	ClearDT();
+
+	var obj=document.getElementById("ID");
+	if((obj)&&(obj.value!="")) {
+		ID=obj.value;
+	}	
+
+	var obj=document.getElementById("DispensingDate");
+	if((obj)&&(obj.value!="")) {
+		DispensingDate=obj.value;
+	}
+	//DL: 05/8/05 : 54236
+	var path="oeorder.calculatedt.csp?DispensingDate="+DispensingDate+"&ID="+ID+"&WINNAME="+window.name;
+	websys_createWindow(path,"TRAK_hidden");
+	
+}
+
+function ClearDT() {
+	for(i=1;i<=10;i++)
+	{
+		var obj=document.getElementById("DispensingTime"+i);
+		if (obj) {
+			obj.value="";
+			obj.disabled=false;
+		}
+
+		var obj=document.getElementById("DisplayTime"+i);
+		if(obj) {
+			obj.value="";
+		}
+	}
+}
+
+function RefreshParent() {
+	if (window.opener) {
+		if((!window.opener.document.forms['fOEOrder_Med'])&&(!window.opener.document.forms['fOEOrder_RM'])) window.opener.history.go(0);
+	}
+}
+
+function BodyLoadHandler() {
+	var obj=document.getElementById("DispensingDate");
+	if (obj) obj.onchange=DispensingDate;
+
+}
+
+function DisableField(fldName) {
+	var fld = document.getElementById(fldName);
+	if (fld) {
+		fld.disabled = true;
+	}
+}
+
+function UpdateHandler() {
+	var countObj = document.getElementById("DTCounter");
+	if ((countObj)&&(countObj.value!="0")) {
+		var count=countObj.value
+		for(i=1;i<=count;i++) {
+			var obj=document.getElementById("DispensingTime"+i);
+			if ((obj) &&(obj.value=="")){
+				alert(t['BALNK_DTVALUE']);
+				return false;
+			}
+			
+			// cjb 27/06/2006 56765 - enable the display only fields so that they still display after a message is displayed (in the save method)
+			var obj=document.getElementById('DisplayTime'+i);
+			if (obj) obj.disabled=false;
+		}
+	}
+	return Update_click();
+}
+
+document.body.onload = BodyLoadHandler;
+// cjb 27/06/2006 56765 - commented this out as it stops messages in the update method from being displayed.  Changed the Update link on OEOrder.DispenseTime to point to websys.reload.csp
+//document.body.onunload = RefreshParent;
+var UPDATE=document.getElementById("Update");
+if (UPDATE) UPDATE.onclick=UpdateHandler;
+</script>
+</BODY>
+</HTML>

@@ -1,0 +1,329 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--opadmreg.paylog.hui.csp HISUI挂号第三方交易日志-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE><EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>	
+<style> 
+.inputc{
+	padding:0 0 0 5px;
+	border:1px solid #40a2de;
+	background-color: rgb(255, 255, 255);
+	scrollbar-arrow-color: #007cff;
+	
+	
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.label{
+	text-align:right;
+	padding-right: 10px;
+}
+
+.clsRequired{
+	padding-left: 10px;
+	font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+
+</style> 
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s sysDateFormat=##class(websys.Conversions).DateFormat()
+	s nowDate=$ZD(+$H,sysDateFormat)
+</Script> 
+
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<!--支付接口引用-->
+<script type="text/javascript" src="../scripts/OPAdm/MisPose/MisPosePublic.js"></script>
+<script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
+<script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+
+<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			nowDate:"#(nowDate)#",
+			sysDateFormat:"#(sysDateFormat)#"
+		};
+		
+		
+</SCRIPT>
+ </head> 
+<body class="hisui-layout" onload="BodyLoadHandler()" data-options="fit:true,border:false">\
+	<div data-options="region:'north',title:'第三方挂号交易信息日志',iconCls:'icon-template',split:true,headerCls:'panel-header-gray'" style="height:100px;">
+		<table class='search-table'>
+			<tr>
+				<td class="r-label">开始日期</td>
+				<td><input id="StDate" type="text" class="hisui-dateboxq" data-options="formatter:myformatter,parser:myparser"></td>
+				<td class="r-label">开始日期</td>
+				<td><input id="EndDate" type="text" class="hisui-dateboxq" data-options="formatter:myformatter,parser:myparser"></td>
+				<td class="r-label">登记号</td>
+				<td><input id="PatNo" class="textbox" name="Papmino" style="width:100px"/></td>
+				<td class="r-label"><input class='hisui-checkbox' type="checkbox" checked id="MySelf" label="查询本人操作"></td>
+				<td class="r-label"><input class='hisui-checkbox' type="checkbox"  checked id="OnlyError" label="只显示错误消息"></td>
+				<td class="r-label"><a href="#" id="Find" class="hisui-linkbutton" data-options="iconCls:'icon-search'">查询</a></td>
+			</tr>
+		</table>
+	</div>  
+	<div data-options="region:'center',split:false,border:false" >
+		<table id="ErrorTable"></table>
+	</div>
+</body>
+
+<SCRIPT language = 'javascript' >
+
+var PageLogicObj = {
+	tabdatagrid:"",
+}
+$(function(){
+	//页面元素初始化
+	PageHandle();
+	//事件初始化
+	InitEvent();
+});
+function PageHandle()
+{
+	$("#StDate").dateboxq('setValue',ServerObj.nowDate)
+	$("#EndDate").dateboxq('setValue',ServerObj.nowDate)
+	
+	PageLogicObj.tabdatagrid=IntTable()
+	
+}
+function InitEvent()
+{
+	$("#Find").click(LoadDeatil);
+}
+function BodyLoadHandler()
+{
+	
+	LoadDeatil()
+}	
+
+
+function LoadDeatil(){
+	var MySelf=$("#MySelf").checkbox('getValue')?"Y":"N";
+	var OnlyError=$("#OnlyError").checkbox('getValue')?"Y":"N";
+	var PatNo=$("#PatNo").val()
+	$.cm({
+	    ClassName : "web.DHCOPAdmRegPay",
+	    QueryName : "FindLogMes",
+	    Stdate:$("#StDate").dateboxq('getValue'),
+	    EndDate:$("#EndDate").dateboxq('getValue'),
+	    PatNo:PatNo,
+	    MySelf:MySelf,
+	    OnlyError:OnlyError,
+	    LogOnUser:session['LOGON.USERID'],
+	    Pagerows:PageLogicObj.tabdatagrid.datagrid("options").pageSize,rows:99999
+	},function(GridData){
+		PageLogicObj.tabdatagrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+	});
+	PageLogicObj.tabdatagrid.datagrid("clearSelections")	
+}
+
+function ReLoadMesage()
+{
+	
+	var tabdatagrid=$('#ErrorTable').datagrid('getSelections')
+	if (tabdatagrid.length==0){
+		$.messager.alert("提示","请选择对应的交易信息")
+		return
+	}
+	
+	$.each(tabdatagrid,function(row,onerow){
+		if (onerow.Statu==0){
+			$.messager.alert("提示",onerow.OnlyTypeDesc+onerow.OnlyID+" rowid:"+onerow.rowid+" 是成功记录不能再次调用?")
+			return false
+		}
+		var rowid=onerow.rowid
+		
+		
+		if (onerow.OnlyTypeDesc.indexOf("退号退费")>=0)
+		{
+			if (onerow.OnlyID==""){
+				$.messager.alert("提示","操作ID不存在")
+				return false
+			}
+			var rtn=RegPayObj.RefundPay(onerow.OnlyID)
+			if (rtn){
+				$.messager.alert("提示","操作成功退费成功!")
+				ChangeLogToOK(rowid,"退号退费成功")
+			}
+			
+		}else if(onerow.OnlyTypeDesc.indexOf("关联交易和发票")>=0){
+			
+			if (onerow.OnlyID==""){
+				$.messager.alert("提示","操作ID不存在")
+				return false
+			}
+			var rtn=RegPayObj.Relation(onerow.OnlyID)
+			if (rtn){
+				$.messager.alert("提示","操作成功信息关联成功!")
+				ChangeLogToOK(rowid,"关联交易和发票成功")
+			}
+			
+		}else if(onerow.OnlyTypeDesc.indexOf("挂号失败回退")>=0){
+			
+			if (onerow.PayMesage==""){
+				$.messager.alert("提示","交易信息不存在")
+				return false
+			}
+			if (onerow.OnlyID==""){
+				$.messager.alert("提示","操作ID不存在")
+				return false
+			}
+			
+			var PayMesageArry=onerow.PayMesage.split("!")
+			
+			var rtnstr=BankCardRefund(PayMesageArry[0],PayMesageArry[1],"OP","D",PayMesageArry[2],PayMesageArry[3])
+			var rtnArry=rtnstr.split("^")
+			if (rtnArry[0]!="0"){
+				 dhcsys_alert("挂号失败,调用费用回退接口,退回失败!<br>"+"交易参数:ETPRowID:"+PayMesageArry[0]+" 金额:"+PayMesageArry[1]+" 支付方式:"+PayMesageArry[2]+" 扩展:"+PayMesageArry[3])
+				 RegPayObj.SetLogMesage(-1,onerow.OnlyID,"挂号失败回退 患者PatDr",PayMesageArry[0]+"!"+PayMesageArry[1]+"!"+PayMesageArry[2]+"!"+PayMesageArry[3]+"!"+onerow.OnlyID,rtnstr)
+				 return false
+			}
+			else{
+				$.messager.alert("提示","退费成功!")
+				RegPayObj.SetLogMesage(0,onerow.OnlyID,"挂号失败回退 患者PatDr",PayMesageArry[0]+"!"+PayMesageArry[1]+"!"+PayMesageArry[2]+"!"+PayMesageArry[3]+"!"+onerow.OnlyID,rtnstr)
+				ChangeLogToOK(rowid,"挂号失败回退成功!")
+			}
+			
+		}else if(onerow.OnlyTypeDesc.indexOf("补医保交易")>=0){
+			
+			//医保二次分解部分退费
+			if (onerow.OnlyID==""){
+				$.messager.alert("提示","操作ID不存在")
+				return false
+			}
+			var rtn=RegPayObj.InsuRefundCase(onerow.OnlyID)
+			if (rtn){
+				$.messager.alert("提示","补医保交易成功!")
+				ChangeLogToOK(rowid,"补医保交易分解退费")
+			}
+		}
+		else{
+			
+			$.messager.alert("提示","该操作类型交易日志,不能补充交易!")
+			return false
+				
+		}
+	})
+	
+	function ChangeLogToOK(rowid,note){
+		var str=$.cm({
+			ClassName:"web.DHCOPAdmRegPay",
+			MethodName:"UpdateLogToOK",
+			dataType:"text",
+			RowID:rowid,
+			Note:note,
+			LogOnUser:session['LOGON.USERID']
+		},false)
+		
+		
+	}
+	
+}
+
+function IntTable(){
+	
+	var toolbar=[{
+		iconCls:'icon-upload-cloud',
+		text:"调用交易消息",
+		handler:function(){
+			ReLoadMesage();
+		}
+	}]
+	var tabdatagrid=$('#ErrorTable').datagrid({  
+	
+	fit:true,
+	border : false,
+	striped : true,
+	singleSelect : true,
+	fitColumns : false,
+	autoRowHeight : true,
+	rownumbers:true,
+	pagination : true,  
+	rownumbers : true, 
+	nowrap: false, //不换行
+	pageSize: 20,
+	pageList : [20,100,200],
+	idField:"rowid",
+	toolbar:toolbar,
+	columns :[[ 
+				{field:'RowCheck',checkbox:true},
+				{field:'PatName',title:"患者姓名",width:100,align:'left'},
+				{field:'PatNoFind',title:"登记号",width:150,align:'left'},
+				{field:'OnlyID',title:"操作ID",width:100,align:'left'},
+				{field:'OnlyTypeDesc',title:"操作类型",width:150,align:'left'},
+				{field:'InsertDate',title:"操作日期",width:150,align:'left'}, 
+				{field:'InsertTime',title:"操作时间",width:150,align:'left'},
+				{field:'UserName',title:"操作人",width:150,align:'left'},
+				{field:'LocDesc',title:"登录科室",width:150,align:'left'},
+				{field:'InsertIP',title:"登录IP",width:100,align:'left'},
+				{field:'PayMesage',title:"交易信息",width:400,align:'left'},
+				{field:'PayRtn',title:"返回信息",width:300,align:'left'},
+				{field:'PayNote',title:"备注",width:100,align:'left'},
+				{field:'Statu',title:"交易状态",width:100,align:'left'},
+				{field:'rowid',title:"rowid",width:100,align:'left'},
+			 ]] ,
+			 onSelect:function (rowIndex, rowData){
+			 },
+			 onLoadSuccess:function(rowData){
+				
+			 }
+	
+	});
+	return tabdatagrid
+}	
+
+function UpdateLog(date){
+	
+}
+
+
+
+function myformatter(date){
+	var y = date.getFullYear();
+	var m = date.getMonth()+1;
+	var d = date.getDate();
+	if (ServerObj.sysDateFormat=="3") return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+	else if (ServerObj.sysDateFormat=="4") return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y
+	else return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+
+function myparser(s){
+    if (!s) return new Date();
+    if(ServerObj.sysDateFormat=="4"){
+		var ss = s.split('/');
+		var y = parseInt(ss[2],10);
+		var m = parseInt(ss[1],10);
+		var d = parseInt(ss[0],10);
+	}else{
+		var ss = s.split('-');
+		var y = parseInt(ss[0],10);
+		var m = parseInt(ss[1],10);
+		var d = parseInt(ss[2],10);
+	}
+	if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+		return new Date(y,m-1,d);
+	} else {
+		return new Date();
+	}
+}
+		
+</SCRIPT>
+</html>

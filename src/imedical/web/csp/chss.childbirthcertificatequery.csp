@@ -1,0 +1,121 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+ 	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))	
+	s SqlStr = ""
+	s BirthRowId=$Get(%request.Data("BirthRowId",1))	  
+
+	i Action = "list" d
+ 	.w ##class(CHSSWeb.ChildBirthCertificateServices).List(CommunityCode,Start,Limit,"")
+ 
+    i (Action = "add")||(Action = "edit") d 
+   	.s BirthRowId=$Get(%request.Data("BirthRowId",1)) 
+   	.s PersonRowIdParref=$Get(%request.Data("PersonRowId",1))
+   	.s BirthCode=$Get(%request.Data("BirthCode",1))
+   	.s CardCode=$Get(%request.Data("CardCode",1))
+   	.s FamilyCode=$Get(%request.Data("FamilyCode",1))
+   	.s Name=$Get(%request.Data("Name",1))
+   	.s Sex=$Get(%request.Data("Sex",1))
+   	.s Birth=$Get(%request.Data("Birth",1))
+   	.s Province=$Get(%request.Data("Province",1))
+   	.s City=$Get(%request.Data("City",1))
+   	.s District=$Get(%request.Data("District",1))
+   	.s TownShip=$Get(%request.Data("TownShip",1))
+   	.s GestationWeek=$Get(%request.Data("GestationWeek",1))
+   	.s HealthStatus=$Get(%request.Data("HealthStatus",1))
+   	.s Weight=$Get(%request.Data("Weight",1))
+   	.s Height=$Get(%request.Data("Height",1))
+   	.s MotherName=$Get(%request.Data("MotherName",1))
+   	.s MotherAge=$Get(%request.Data("MotherAge",1))
+   	.s MotherCountry=$Get(%request.Data("MotherCountry",1))
+   	.s MotherNation=$Get(%request.Data("MotherNation",1))
+   	.s MohterId=$Get(%request.Data("MohterId",1))
+   	.s MotherMt=$Get(%request.Data("MotherMt",1))
+   	.s MotherEmail=$Get(%request.Data("MotherEmail",1))
+   	.s FatherName=$Get(%request.Data("FatherName",1))
+   	.s FatherAge=$Get(%request.Data("FatherAge",1))
+   	.s FatherCountry=$Get(%request.Data("FatherCountry",1))
+   	.s FatherNation=$Get(%request.Data("FatherNation",1))
+   	.s FatherId=$Get(%request.Data("FatherId",1))
+   	.s FatherMt=$Get(%request.Data("FatherMt",1))
+   	.s FatherEmail=$Get(%request.Data("FatherEmail",1))
+   	.s Address=$Get(%request.Data("Address",1))
+   	.s Tele=$Get(%request.Data("Tele",1))
+   	.s TypePlace=$Get(%request.Data("TypePlace",1))
+   	.s OtherTypePlaceName=$Get(%request.Data("OtherTypePlaceName",1))
+   	.s ConstractName=$Get(%request.Data("ConstractName",1))
+   	.s OtherHospital=$Get(%request.Data("OtherHospital",1))
+   	.s BirthInLocal=$Get(%request.Data("BirthInLocal",1))
+   	.s Accouche=$Get(%request.Data("Accouche",1))
+   	.s Discard=$Get(%request.Data("Discard",1))
+   	.s PrintTimes=$Get(%request.Data("PrintTimes",1))
+   	.s HospitalCode=$Get(%request.Data("HospitalCode",1))
+   	.s CommunityCode=$Get(%request.Data("CommunityCode",1))
+   	.s CheckDate=$Get(%request.Data("CheckDate",1))
+   	.s CommitDate=$Get(%request.Data("CommitDate",1))
+   	.s CommitOp=$Get(%request.Data("CommitOp",1))
+   	.s CommitFlag=$Get(%request.Data("CommitFlag ",1))
+     .w ##class(CHSSWeb.ChildBirthCertificateServices).InsertOrUpdate(Action,BirthRowId, PersonRowIdParref, BirthCode, CardCode, FamilyCode, Name, Sex , Birth , Province, City, District, TownShip, GestationWeek, HealthStatus, Weight, Height, MotherName, MotherAge, MotherCountry , MotherNation , MohterId, MotherMt, MotherEmail, FatherName, FatherAge, FatherCountry , FatherNation , FatherId, FatherMt, FatherEmail, Address, Tele, TypePlace, OtherTypePlaceName, ConstractName, OtherHospital, BirthInLocal, Accouche, Discard, PrintTimes, HospitalCode, CommunityCode, CheckDate, CommitDate, CommitOp, CommitFlag)
+ 
+    i Action = "delete" d
+     .w ##class(CHSSWeb.ChildBirthCertificateServices).Delete(BirthRowId)
+   
+   
+    i Action = "SearchBaby" d
+    .s SqlStr=""
+   	.s BirthCode=$Get(%request.Data("BirthCode",1))
+   	.i BirthCode'="" d
+   	..s SqlStr =SqlStr_ " and P.BirthCode like '%"_BirthCode_"%'"
+ 	.s Name=$Get(%request.Data("Name",1))
+    .i Name '= "" d
+    ..s SqlStr =SqlStr_ " and P.Name like '%"_Name_"%'"
+    
+   	.s Sex=$Get(%request.Data("Sex",1))
+   	 
+    .i Sex '= "" d
+    ..s SqlStr =SqlStr_ " and P.Sex = '"_Sex_"'"
+ 	.s HealthStatus=$Get(%request.Data("HealthStatus",1))
+    .i HealthStatus '= "" d
+    ..s SqlStr =SqlStr_ " and P.HealthStatus = '"_HealthStatus_"'"
+ 	.s CardCode=$Get(%request.Data("CardCode",1))
+    .i CardCode '= "" d
+    ..s SqlStr =SqlStr_ " and P.CardCode like '%"_CardCode_"%'"
+	.s TypePlace=$Get(%request.Data("TypePlace",1))
+    .i TypePlace '= "" d
+    ..s SqlStr =SqlStr_ " and P.TypePlace = '"_TypePlace_"'"
+   	.s OtherTypePlaceName=$Get(%request.Data("OtherTypePlaceName",1))
+    .i OtherTypePlaceName '= "" d
+    ..s SqlStr=SqlStr_ " and P.OtherTypePlaceName like '%"_OtherTypePlaceName_"%'"
+	
+	.s ConstractName=$Get(%request.Data("ConstractName",1))
+    .i ConstractName '= "" d
+    ..s SqlStr =SqlStr_ " and P.ConstractName like '%"_ConstractName_"%'"
+	
+	.s OtherHospital=$Get(%request.Data("OtherHospital",1))
+    .i OtherHospital '= "" d
+    ..s SqlStr =SqlStr_ " and P.OtherHospital like '%"_OtherHospital_"%'"
+ 	.s BirthInLocal=$Get(%request.Data("BirthInLocal",1))
+    .i BirthInLocal = "true" d
+    ..s SqlStr =SqlStr_ " and P.BirthInLocal = 'true'"
+	.s Discard=$Get(%request.Data("Discard",1))
+    .i Discard = "true" d
+    ..s SqlStr =SqlStr_ " and P.Discard = 'true'"
+   	.s bPYC = $Get(%request.Data("bPYC",1))
+    .i bPYC = "true" d 
+    ..s BeginDate = $zdh($Get(%request.Data("BeginDate",1)),3)
+    ..s EndDate = $zdh($Get(%request.Data("EndDate",1)),3)
+    ..s SqlStr=SqlStr_" and P.Birth>='"_BeginDate_"' and  Birth<='"_EndDate_"'"    
+    
+ 
+    .w ##class(CHSSWeb.ChildBirthCertificateServices).List(CommunityCode,Start,Limit,SqlStr)
+   
+     
+
+</script>
+

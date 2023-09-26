@@ -1,0 +1,138 @@
+﻿<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+    <script language="cache" runat="server">
+    	d ##Class(EMRservice.SystemParameter).GetImportResource()
+    	s PatientNoLength = ##Class(EMRservice.BOSysOption).GetValueByName("PatientNoLength")
+    	s:(PatientNoLength = "") PatientNoLength = 10
+    	s HospitalName = ##Class(EMRservice.BOSysOption).GetValueByName("HospitalName")
+    	s:(HospitalName = "") HospitalName = "DtHealth"
+    	s userID = $g(%session.Data("LOGON.USERID"))
+    	s userCode = $g(%session.Data("LOGON.USERCODE"))
+    	s locID = $g(%session.Data("LOGON.CTLOCID"))
+    	s expectlocID = ""
+	    if (locID'="") {
+    		s CTLOCType = $p($g(^CTLOC(locID)),"^",13)
+    		if (CTLOCType="W") {
+    			//如果是病区,则默认转第1个科室ID
+    			s expectlocID = ##class(EMRservice.HISInterface.PatientInfoAssist).CurDeptLinkLocByDept(locID)
+	    		s expectlocID = $p(expectlocID,"^",3)
+		    }
+	    }
+	s selectDefaultLoc = ##Class(EMRservice.SystemParameter).IsBrowseSelectDefaultLoc()
+	s dateConfig=##Class(EMRservice.SystemParameter).getDateConfig()
+   </script> 
+    <script language = "javascript">
+    	var PatientNoLength = '#(PatientNoLength)#';
+		var HospitalName = '#(HospitalName)#';
+		var selectDefaultLoc = '#(selectDefaultLoc)#';
+		function Dateformatter(date)
+		{
+			var y = date.getFullYear();
+			var m = date.getMonth()+1;
+			var d = date.getDate();
+			return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+		}
+		function Dateparser(s)
+		{
+			if (!s) return new Date();
+			var ss = s.split('-');
+			var y = parseInt(ss[0],10);
+			var m = parseInt(ss[1],10);
+			var d = parseInt(ss[2],10);
+			if (!isNaN(y) && !isNaN(m) && !isNaN(d))
+			{
+				return new Date(y,m-1,d);
+			} else {
+				return new Date();
+			}
+		}
+    </script>
+    <script language = "javascript">
+    	var PatientNoLength = '#(PatientNoLength)#';
+	var HospitalName = '#(HospitalName)#';
+	var userID = '#(userID)#';
+	var userCode = '#(userCode)#';
+	var locID = '#(locID)#';
+	var expectlocID = '#(expectlocID)#';
+	var dateConfig='#(dateConfig)#';
+    </script>
+    <title>患者列表</title>
+</head>
+<body class="easyui-layout" data-options="fit:true,border:false">
+    <div data-options="region:'north'" style="height:90"> 
+		<table class="tableStyle01" style="width:100%; height:100%">
+	      <tr>
+	        <td>登记号<input class="easyui-validatebox" id="patientNo" style="width:100px"/></td>
+		<td>&nbsp;&nbsp;&nbsp;&nbsp;医生&nbsp;&nbsp;&nbsp;&nbsp;<input id="cbxUser" class="easyui-combobox" style="width:80px"/></td>
+		<td>&nbsp;&nbsp;&nbsp;&nbsp;科室&nbsp;&nbsp;&nbsp;&nbsp;<input id="cbxLoc" style="width:160px"/></td>
+ 	        <td>类型
+	            <input id="cboAdmType" value="" class="easyui-combobox" style="width:60px" data-options="
+					valueField: 'id',
+					textField: 'text',
+					data: [{
+						id: '',
+						text: '全部'
+					},{
+						id: 'O',
+						text: '门诊'
+					},{
+						id: 'E',
+						text: '急诊'
+					},{
+						id: 'I',
+						text: '住院'
+					}]" />
+	        </td> 	        
+	        <td>入院起时<input class="easyui-datebox datebox-f combo-f" id="startDate" data-options="formatter:Dateformatter,parser:Dateparser,width:100"/></td>
+	        <td>出院起时<input class="easyui-datebox datebox-f combo-f" id="outStartDate" data-options="formatter:Dateformatter,parser:Dateparser,width:100"/></td>
+	      </tr>
+	      <tr>
+	      	<td>病案号<input class="easyui-validatebox" id="medicareNo" style="width:100px"/></td>
+		<td>&nbsp;&nbsp;&nbsp;MRN&nbsp;&nbsp;&nbsp;&nbsp;<input class="easyui-validatebox" id="MRN" style="width:80px"/></td>
+ 	        <td>健康卡号<input class="easyui-validatebox" id="cFCardNo" style="width:160px"/></td>
+ 	        <td>状态
+	            <input id="cboAdmStatus" value="all" class="easyui-combobox" style="width:60px" data-options="
+					valueField: 'id',
+					textField: 'text',
+					data: [{
+						id: 'all',
+						text: '全部'
+					},{
+						id: 'A',
+						text: '在院'
+					},{
+						id: 'C',
+						text: '退院'
+					},{
+						id: 'D',
+						text: '出院'
+					}]" />
+	        </td>
+ 	        <td>入院止时<input class="easyui-datebox datebox-f combo-f" id="endDate" data-options="formatter:Dateformatter,parser:Dateparser,width:100"/></td>
+ 	        <td>出院止时<input class="easyui-datebox datebox-f combo-f" id="outEndDate" data-options="formatter:Dateformatter,parser:Dateparser,width:100"/></td>
+	        <td>
+	           <a id="PatientListQuery" href="#" class="easyui-linkbutton" Style="margin-left:10px;">查询</a>
+	        </td>
+	      </tr>
+	      <tr>
+			<td>医保号<input class="easyui-validatebox" id="medicalInsuranceNo" style="width:100px"/></td>
+			<td>患者姓名<input class="easyui-validatebox" id="patientName" style="width:80px"/></td>
+			<td>身份证号<input class="easyui-validatebox" id="IDCardNo" style="width:160px"/></td>
+			<td><input type="checkbox" name="checkbox" id="chkLoc" Style="">本科病人</input></td>
+			<td>诊断内容<input id="diagnosDesc" type="text" value="请输入诊断内容"  onclick="my_click(this,'diagnosDesc');"  onBlur="my_blur(this,'diagnosDesc');" style="vertical-align:middle;font-size:12px;color:#999;width:100px;"></input></td>
+	      </tr>
+	    </table>			
+    </div>
+    <div data-options="region:'center',border:false">
+    	<table id="patientListData"></table>
+	</div>
+    <script type="text/javascript" src="../scripts/emr/js/patientListseek.js"></script>    
+</body>
+</html>

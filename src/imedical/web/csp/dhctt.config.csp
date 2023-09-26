@@ -1,0 +1,51 @@
+<html>
+<head>	
+	<DHCTT:HEAD/>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+s l="language",h="history"
+s act = $g(%request.Data("act",1))		
+s mytmp =""
+s ip = %request.GetCgiEnv("REMOTE_ADDR")		
+if (act="config"){
+	f i=l,h d
+	.s ^DHCTTTEMP("config",ip,i)=$g(%request.Data(i,1))	
+}
+set SaveConfigV = $g(%request.Data("SaveConfig",1))
+if (SaveConfigV="Submit"){
+	set AuthorizeDelTables = $g(%request.Data("AuthorizeDelTables",1))
+	Set ^DHCTTTEMP("config","AuthorizeDelTables")=AuthorizeDelTables
+	Set ^DHCTTTEMP("config","UpdMaxCnt")= $g(%request.Data("UpdMaxCnt",1))
+	Set ^DHCTTTEMP("config","DelMaxCnt")= $g(%request.Data("DelMaxCnt",1))
+}
+d ##class(web.Util.DHCTTLanguageManager).getLanguage().initConfigPage(.t)
+q 1
+</csp:method>
+	<title>#(t("CacheTT Config Title"))#</title>
+</head>
+<body>
+	<table>
+	<tr><td class='greentitle'>配置</td><td></td></tr>
+	<tr>
+		<td></td>
+		<td>
+			<form action="dhctt.config.csp" align="center" type="POST">
+				<input type="hidden" value="config" name="act"/>
+				<table>
+					<tr><td> #(t("history list"))#</td><td>
+						<input type="checkbox" name="#(h)#" #($s(($g(^DHCTTTEMP("config",ip,h))="on"):"checked",1:""))# >
+					</td></tr>
+					<!--<tr><td>#(t("Language Select"))#:</td><td>
+						<input type="radio" value="Chinese" name="#(l)#" #($s(($g(^DHCTTTEMP("config",ip,l))="Chinese"):"checked",1:""))# /> #(t("Chinese"))#
+						<input type="radio" value="English" name="#(l)#" #($s(($g(^DHCTTTEMP("config",ip,l))="English"):"checked",1:""))# /> #(t("English"))#
+					</td></tr>-->
+					<!--<tr><td>#(t("AuthorizeDelTables"))#</td><td><input type='text' id='AuthorizeDelTables' name='AuthorizeDelTables' style='width:800px;' value="#($g(^DHCTTTEMP("config","AuthorizeDelTables")))#"/></td></tr>-->
+					<tr><td>最大更新行数</td><td><input type='text' id='UpdMaxCnt' name='UpdMaxCnt' style='width:100px;' value="#($g(^DHCTTTEMP("config","UpdMaxCnt")))#"/></td></tr>
+					<tr><td>最大删除行数</td><td><input type='text' id='DelMaxCnt' name='DelMaxCnt' style='width:100px;' value="#($g(^DHCTTTEMP("config","DelMaxCnt")))#"/></td></tr>
+					<tr><td><input type="submit" name="SaveConfig" value="Submit"/></td></tr>
+				</table>
+			</form>
+		</td>
+	</tr>
+	</table>	
+</body>
+</html>

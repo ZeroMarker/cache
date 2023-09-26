@@ -1,0 +1,54 @@
+<!-- dhcpeireport.noraml.stationsummarizetest.csp -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+
+<TITLE>体检报告效果调试</TITLE>
+
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.noraml.summarize.css"></LINK>
+
+
+</head>
+
+<body>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s StationId=2
+		s StationDesc=$G(^TMPReport("Summarize", "Station", StationId))
+		s StationTitle=StationDesc_"结论:"
+		s Summarize=$G(^TMPReport("Summarize", "Content", StationDesc))
+
+		s SummarizeData=""
+		f iLLoop=1:1:$L(Summarize,$C(13,10)) d
+		.s SummarizeData=SummarizeData_$P(Summarize,$C(13,10),iLLoop)_"<br>"
+		.
+		
+		s Summarize=SummarizeData
+		s SummarizeData=""
+		f iLLoop=1:1:$L(Summarize,$C(32)) d
+		.s SummarizeData=SummarizeData_$P(Summarize,$C(32),iLLoop)_"&nbsp;"
+		.
+		s SummarizeAduitUser=$G(^TMPReport("Summarize", "Content", StationDesc, "AduitUser"))
+		s AduitDate=$G(^TMPReport("Summarize", "Content", StationDesc, "AduitDate"))
+	</Script>
+	
+<DIV class='Page Summarize'>
+	<TABLE border=0 class="SummarizeTable">
+		<THEAD>
+			<TR>
+				<TD width="663" class="SummarizeTitle">#(StationTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+			<TR>
+				<TD>
+					<P class="SummarizeData">#(SummarizeData)#</P>
+				</TD>		
+			</TR>
+		</TBODY>
+	</TABLE>
+</DIV>
+
+</body>
+</html>

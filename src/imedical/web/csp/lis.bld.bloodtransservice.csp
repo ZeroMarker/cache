@@ -1,0 +1,109 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S patAdmID=$G(%request.Data("EpisodeID",1))
+ S userID=$G(%session.Data("LOGON.USERID"))
+ S userCode=$G(%session.Data("LOGON.USERCODE"))
+ S userName=$G(%session.Data("LOGON.USERNAME"))
+ S userGroupID=$G(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$G(%session.Data("LOGON.GROUPDESC"))
+ S userLocID=$G(%session.Data("LOGON.CTLOCID"))
+ S userLoc=##Class(LIS.Core.Util).GetLocation(userLocID)
+     
+ S mainJavaScript="lis.bld.bloodtransservice.tabs.js"
+ 
+ S json=##Class(LIS.JSON.Json).%New()
+ S workflow=##Class(LIS.BS.BLD.REQ.Workflow).%New()
+ S workflow=##Class(LIS.BS.BLD.REQ.Workflow).GetWorkflow("LIS.BLD.BTS",userCode,userLocID,patAdmID)
+ F i=1:1:workflow.Modules.Count() {
+	 
+	S module=workflow.Modules.GetAt(i)
+	D json.AddKeyValue("id",module.Code)
+ 	D json.AddKeyValue("title",module.Title) 
+ 	D json.AddKeyValue("url",module.URL) 
+ 	D json.AddKeyValue("pars","") 
+ 	D json.AddKeyValue("iconCls",module.IconClass) 
+ 	I workflow.ActiveModuleID=(module.SystemID_"||"_module.Code) {
+ 		D json.AddKeyValue("isActive","true") 
+ 	} ELSE {
+	 	D json.AddKeyValue("isActive","false") 
+	}
+ 	D json.InsertRow(json.GetJson())	
+ }	 
+ S tabs=json.GetRowsJson()
+ S activeModule=##Class(LIS.BLD.CT.Module).%OpenId(workflow.ActiveModuleID)
+ S warnButtonText="确定"
+ I $L(activeModule) {
+	 S warnButtonText=activeModule.Title
+ }
+ 
+ S:workflow.IsStop workflow.IsWarn=workflow.IsStop
+ 
+ 
+</Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/grid.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/portal.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<!--Ext3 扩展补丁-->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/extend/Ext.ux.grid.CheckColumn.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/proxyhandler.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/print.js"></script>
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+       	//Ext.namespace('Global');
+			//----------------------------------------------
+			//--定义全局变量
+			function User(){};
+			function Util(){};
+			function Global(){};
+			function System(){}; 
+			function Warn(){}; 
+			 
+			Global.User=User;		//登录用户信息
+			Global.Util=Util;		//公共功能
+			Global.System=System;	//系统信息
+			Global.Warn=Warn;		//警告信息
+	 		 
+			//----------------------------------------------
+			//--当前用户信息
+			Global.User.Name="#($G(userName))#";
+			Global.User.ID="#($G(userID))#";
+			Global.User.Code="#($G(userCode))#";
+			Global.User.GroupID="#($G(userGroupID))#";
+			Global.User.Group="#($G(userGroupDesc))#";
+			Global.User.LocationID="#($G(userLocID))#";
+			Global.User.Location="#($G(userLoc))#";
+		  
+			Global.System.Tabs="#($G(tabs))#";
+			Global.Warn.Html="#(workflow.GetWarningHtml())#";
+			Global.Warn.isShow=eval("#($S(workflow.IsWarn:"true",1:"false"))#");
+			Global.Warn.isStop=eval("#($S(workflow.IsStop:"true",1:"false"))#");
+			Global.Warn.ButtonText="#($G(warnButtonText))#";
+	   </script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/bs/#($G(mainJavaScript))#"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/lis.bld.manage.core.js"></script>
+</HEAD>
+<body></body>
+</HTML>

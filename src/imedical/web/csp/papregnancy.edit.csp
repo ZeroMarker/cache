@@ -1,0 +1,65 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!-- This is a page used to determine which edit component needs to be displayed and displays it.  -->
+<!-- The attribute that determines this is PregType -->
+<!-- This is used when edit is clicked on the list items in PAPregnancy.Tree -->
+<!-- -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ ;If the PregType is "Medtrak" open PAPregnancy.EditFull.
+ n PregType s PregType=""
+ s PregType=%request.Get("PregType")
+ ;
+ i PregType="Medtrak" d
+ . n frm
+ . i $g(%request.Data("PatientBanner",1)),$g(%request.Data("PatientID",1)) d
+ ..s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+ ..i frm d frm.Show(),frm.%Close()
+ . s frm=##Class(websys.Component).OpenName("PAPregnancy.EditFull")
+ . i frm d frm.Show() d frm.%Close()
+ ;
+ ;If the PregType is "Other" open PAPregnancy.EditOther.
+ i (PregType="Other")!(PregType="") d
+ . n frm
+ . ;i $g(%request.Data("PatientBanner",1)),$g(%request.Data("PatientID",1)) d
+ . i $g(%request.Data("PatientID",1)) d
+ ..s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+ ..i frm d frm.Show(),frm.%Close()
+ . s frm=##Class(websys.Component).OpenName("PAPregnancy.EditOther")
+ . i frm d frm.Show() d frm.%Close()
+ . s frm=##Class(websys.Component).OpenName("PAPregDelBaby.ListOther")
+ . i frm d frm.Show() d frm.%Close()
+ ;
+</SERVER>
+<SCRIPT language="javascript">
+function DisableLink() {
+	return false;
+}
+
+ var frmPreg=document.forms['fPAPregnancy_EditOther'];
+ if(frmPreg != null){
+ 	var objPregID=frmPreg.elements['ID']; 
+ 	if (objPregID.value=="") {
+ 		//enable new on the child PAPregDelBaby.ListOther form
+ 		var obj=document.getElementById('NewDelBaby');
+ 		if (obj) {
+ 			obj.disabled=true;
+ 			obj.className="clsDisabled";
+ 			obj.onclick=DisableLink;
+			obj.style.cursor='default';
+ 		}
+ 	}
+}
+</SCRIPT>
+</BODY>
+</HTML>

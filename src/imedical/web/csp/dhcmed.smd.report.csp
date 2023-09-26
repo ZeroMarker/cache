@@ -1,0 +1,105 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+        <!--DHCMED:HEAD></DHCMED:HEAD-->
+        <script language='Cache' runat='SERVER'>
+		set menuCode="SMDReportQry"
+		set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+		set groupId=$g(%session.Data("LOGON.GROUPID"))
+		set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"SMDReport",groupId)
+        </script>
+        <link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/smdreport.css" />
+		<link rel="stylesheet" type="text/css" href="../skin/default/css/websys.ext.3.1.0.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/ss/PublicFunction/CustomFormItem.js'></script>	
+		<script language='javascript' src='../scripts/dhcmed/smd/report/excelprint.js'></script>	
+		<script language='javascript' src='../scripts/dhcmed/smd/report/main_gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/smd/report/main_event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/smd/report/module_smd_report.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/smd/report/module_smd_dischage.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/smd/report/module_smi_report.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/smd/report/module_smi_dischage.js'></script>
+		
+ 		 <script language='Cache' runat='SERVER'>
+ 			Set CTLocID=%session.Get("LOGON.CTLOCID","")
+ 			Set HospitalID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(CTLocID)
+ 			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(HospitalID,"SMD")
+ 			Set HospID=HospitalID
+ 			Set UserID=%session.Get("LOGON.USERID","")
+ 			Set CTLocDesc=$p($g(^CTLOC(+CTLocID)),"^",2)
+ 			Set:CTLocDesc["-" CTLocDesc=$p(CTLocDesc,"-",2)
+ 			Set HospDesc=$p($g(^CT("HOSP",+HospID)),"^",2)
+ 			Set UserName=$p($g(^SSU("SSUSR",+UserID)),"^",2)
+			Set ReportID=%request.Get("ReportID")
+			Set DiseaseID=%request.Get("DiseaseID")
+			Set RepTypeCode=%request.Get("ReportType")
+			Set EpisodeID=%request.Get("EpisodeID")
+			Set RepTypeID="",RepTypeDesc="",RepStatus = "new"
+			If ReportID'="" {
+				Set objReport=##class(DHCMed.SMD.Report).GetObjById(ReportID)
+				If $IsObject(objReport){
+					Set RepTypeID=objReport.SRRepTypeDr.%Id()
+					Set RepTypeCode=objReport.SRRepTypeDr.Code
+					Set RepTypeDesc=objReport.SRRepTypeDr.Description
+					Set RepStatus = objReport.SRStatusDr.Description
+					Set EpisodeID=objReport.SREpisodeID
+				}
+			} Else {
+				Set objRepType=##class(DHCMed.SS.Dictionary).GetByTypeCode("SMDRepType",RepTypeCode,1)
+				If $IsObject(objRepType) {
+					Set RepTypeID=objRepType.%Id()
+					Set RepTypeCode=objRepType.Code
+					Set RepTypeDesc=objRepType.Description
+				}
+			}
+	        Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+       </script>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			
+			var CTLocDesc	= '#(CTLocDesc)#'
+			var HospDesc	= '#(HospDesc)#';
+			var UserName	= '#(UserName)#'
+			var ReportID 	= '#(ReportID)#';
+			var DiseaseID 	= '#(DiseaseID)#';
+			var RepTypeID 	= '#(RepTypeID)#';
+			var RepTypeCode = '#(RepTypeCode)#';
+			var RepTypeDesc = '#(RepTypeDesc)#';
+			var RepStatus 	= '#(RepStatus)#';
+			var EpisodeID 	= '#(EpisodeID)#';
+			var PatientID 	= '#(PatientID)#';
+			var HospitalID  = '#(HospitalID)#';
+			var SSHospCode  = '#(SSHospCode)#';
+			
+            var objControlArry = new Array();
+            function window_onload() {
+            	var objviewScreen = new InitviewScreen();
+                objControlArry['viewScreen'] = objviewScreen;
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

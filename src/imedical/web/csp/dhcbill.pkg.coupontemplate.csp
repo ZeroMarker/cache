@@ -1,0 +1,153 @@
+<!-- 
+ * FileName:	dhcbill.pkg.coupontemplate.csp
+ * User:		tangzf
+ * Date:		2019-09-05
+ * Function:	优惠券模板维护
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<style>
+	#ProInfo .panel{
+		padding:10px 10px 0px 10px;	
+	}
+	.textbox{
+		width:130px !important;	
+	}
+	.longtext{
+		width:556px !important;	
+	}
+	.big{
+		padding:5px !important	
+	}
+	#_HospList{
+		width:376px !important;	
+	}
+	</style>
+</head>
+<body  style='padding:10px'>
+	<!--
+		1.主界面 
+	-->
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',iconCls:'icon-text',headerCls:'panel-header-gray',title:'优惠券模板维护',closable:false,collapsible:false,minimizable:false,maximizable:false" style="overflow:hidden;height:110px">
+				<a href="javascript:;" class="hisui-linkbutton big" id="BtnFind" data-options="iconCls:'icon-big-paper-search',plain:true">查询</a>
+				<a href="javascript:;" class="hisui-linkbutton big" id="BtnUpdate" data-options="iconCls:'icon-big-paper-pen ',plain:true">修改状态</a>
+				<a href="javascript:;" class="hisui-linkbutton big" id="BtnAdd" data-options="iconCls:'icon-big-save-add',plain:true">新增</a>
+				<a href="javascript:;" class="hisui-linkbutton big" id="BtnClear" data-options="iconCls:'icon-big-clear',plain:true">清屏</a>
+		</div>
+		<div data-options="region:'center',border:false" >
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north'" style="border:1px solid #cccccc;overflow:hidden;border-radius:0">
+					<table class="search-table" >
+						<tr>
+							<td class="r-label"><label>优惠券</label></td>
+							<td><input id="SearchCtpCode" placeholder='输入关键字检索...' class="textbox"/></td>
+							<td class="r-label r-label-1"><label>有效开始日期</label></td>
+							<td><input id="SearchCtpStartDate" class="hisui-datebox textbox" ></td>
+							<td class="r-label r-label-1"><label>有效结束日期</label></td>
+							<td><input id="SearchCtpEndDate" class="hisui-datebox textbox" ></td>
+							<td class="r-label r-label-1"><label>状态</label></td>
+							<td><input id="SearchCtpStatus" class="textbox"/></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false" style="border:1px solid #cccccc;overflow:hidden;border-radius:0 0 4px 4px;">
+					<div class="hisui-panel panel-header-gray" data-options="fit:true,border:false">
+						<table id="dg"></table>
+					</div>
+				</div>	
+			</div>
+		</div>
+	</div>
+	<!--
+		2.新增模板信息弹窗
+	-->
+	<div id="CouponTemplateWin">
+		<div id="CouponTemplatePan" class="hisui-panel"  style="fit:true;padding:10px 30px 20px 30px;border:0px" data-options="closable:true,collapsible:true,minimizable:true,maximizable:true,modal:true">
+			<table class="search-table" id='addInfo'>
+				<tr>
+					<td class="r-label"><label>优惠券代码</label></td>
+					<td><input id="CtpCode" class="textbox  hisui-validatebox" required="required" missingMessage="该项不能为空" /></td>
+					<td class="r-label r-label-1"><label>优惠券名称</label></td>
+					<td><input id="CtpDesc" class="textbox  hisui-validatebox" required="required" missingMessage="该项不能为空"/></td>
+					<td class="r-label r-label-1"><label>状态</label></td>
+					<td><input id="CtpStatus" class="textbox  hisui-validatebox" required="required" missingMessage="该项不能为空" ></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>有效开始日期</label></td>
+					<td><input id="CtpValidStartDate" class="textbox hisui-datebox hisui-validatebox" required="required" missingMessage="该项不能为空"/></td>
+					<td class="r-label r-label-1"><label>有效结束日期</label></td>
+					<td><input id="CtpValidEndDate" class="textbox hisui-datebox hisui-validatebox" required="required" missingMessage="该项不能为空"/></td>
+					<td class="r-label r-label-1"><label>电话</label></td>
+					<td><input id="CtpHospTel" class="textbox hisui-numberbox" data-options='max:99999999999'/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>备注</label></td>
+					<td colspan='6'><input id="CtpMark" class="textbox longtext" /></td>
+				</tr>
+				<tr>
+					<td class="r-label r-label-1"><label>备注01</label></td>
+					<td colspan='6'><input id="CtpExt01" class="textbox longtext"/></td>
+				</tr>
+				<tr>
+					<td class="r-label r-label-1"><label>备注02</label></td>
+					<td colspan='6'><input id="CtpExt02" class="textbox longtext"/></td>
+				</tr>
+				<tr>
+					<td class="r-label r-label-1" ><label>地址</label></td>
+					<td colspan='6'><input id="CtpHospAdr" class="textbox longtext" ></td>
+				</tr>
+				<tr>
+					<td class="r-label r-label-1" ><label>使用说明</label></td>
+					<td colspan='6'><input id="CtpInstruc" class="textbox longtext" ></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>院训</label></td>
+					<td colspan='6'><input id="CtpHospTra" class="textbox longtext"/></td>
+				</tr>
+				<tr>
+					<td colspan='6' style='text-align:center;padding-top:10px'>
+		  				<a id="PanelBtnSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+	  				</td>
+	  			</tr>
+			</table>
+		</div>
+	</div>
+	<csp:Include Page="dhcbill.pkg.productinfo.csp">
+	<!--鼠标悬浮信息-->
+	<div id='ProInfo' style='width:770px;height:520px' data-options='closable:false,collapsible:false,minimizable:false,maximizable:false'>
+		<div class="hisui-panel" title="基本信息" style="fit:true;padding:10px 0 0 10px" data-options="headerCls:'panel-header-card-gray'">
+			<table id='ProBaseTable' class='search-table'>
+				<tr>
+					<td style='padding-right:10px'><label>优惠券名称</label></td>
+					<td><input id="mouseCtpDesc" class="textbox"/></td>
+					<td class="r-label"><label>优惠券代码</label></td>
+					<td><input id="mouseCtpCode" class="textbox"/></td>
+					<td class="r-label"><label>标准价格</label></td>
+					<td><input id="mouseCtpPrice" style='color:red;font-weight:bold' class="textbox"/></td>
+				</tr>
+			</table>
+		</div>
+			<div id='ProTable' style='padding-top:10px'>
+			</div>
+		<!--<div class='messager-popover info ' style='width:720px;margin:10px 10px 0px 10px;padding:5px 14px 5px 14px' >
+			<span class='messager-popover-icon info'></span>
+			<span id='ProUseTable'  style='width:770px'>使用说明</span>
+		</div>-->
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.coupontemplate.js"></script>
+	<DHCBILLINSUCloud/>
+</body>
+</html>

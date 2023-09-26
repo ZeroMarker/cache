@@ -1,0 +1,67 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- W650 -->
+<html XMLNS=TRAK>
+<body>
+<server>
+	
+	; cjb 16/05/2006 56479 - UpdatePAPerson
+	
+	;m ^zTRAK("cjb","zchrisdoc.csp")=%request.Data
+	
+	s UpdatePAPerson=$g(%request.Data("UpdatePAPerson",1))
+	
+	i UpdatePAPerson="on" {
+		s DocID=$g(%request.Data("PARREF",1))
+		s DocClinID=$g(%request.Data("ID",1))
+		s ClinID=$g(%request.Data("ClinicID",1))
+		s ClinCode=$g(%request.Data("CLNCode",1))
+		
+		i DocClinID="" i DocID'="",ClinID'="" s child=$o(^PAC("REFD",0,"Clinic",ClinID,DocID,"")) s DocClinID=DocID_"||"_child
+		
+		
+		s data=$g(^PAC("REFD",DocID))
+		s DocCode=$p(data,"^",1),DocDesc=$p(data,"^",2),datefr=$p(data,"^",15),dateto=$p(data,"^",16),DocSpec=$p(data,"^",37),type=$p(data,"^",45)
+		s DocFname=$p(data,"^",49),DocMname=$p(data,"^",52)
+		s DocTitle=$p(data,"^",51) i DocTitle'="" s DocTitle=$p($g(^CT("TTL",DocTitle)),"^",2)
+		s DocZip=$p(data,"^",5) i DocZip'="" s DocZip=$p($g(^CT("ZIP",+DocZip)),"^",1)
+		s DocHCA=$p(data,"^",38) i DocHCA'="" s DocHCA=$p($g(^CT("HCA",+DocHCA)),"^",2)
+		
+		
+		s cs=$g(^PAC("CLN",ClinID))
+		s ClinCode=$p(cs,"^",1),ClinDesc=$p(cs,"^",2),ClinAddr=$p(cs,"^",3),ClinAddr2=$p(cs,"^",4),tele=$p(cs,"^",7),ClinProvNo=$p(cs,"^",13)
+		s ClinCity=$p(cs,"^",5) i ClinCity'="" s (ClinCity,ClinSuburb)=$p($g(^CT("CIT",+ClinCity)),"^",2)
+		s ClinZip=$p(cs,"^",6) i ClinZip'="" s ClinZip=$p($g(^CT("ZIP",+ClinZip)),"^",1)
+		
+		
+		
+		s FullClinicAddress=##Class(web.PACClinic).GetFullClinicAddress(ClinCode)
+		
+		s str=DocTitle_"^"_DocDesc_"^"_DocMname_"^"_DocFname_"^"_DocID_"^"_DocCode_"^^"_ClinCode_"^"_DocClinID_"^^^^"_tele_"^^^^^"_ClinDesc_"^"_ClinCity_"^"_ClinZip_"^^^"_DocHCA_"^^^^^^^"_FullClinicAddress
+	}
+	
+	
+	w "<SCRIPT Language=""Javascript"">",$C(13,10)
+	
+	w " 	if (window.opener.document.fPAPerson_Edit) {",$C(13,10)
+	i UpdatePAPerson="on" {
+		w " 		window.opener.ViewFamilyDrLookUp('"_str_"')",$C(13,10)
+	}
+	w "		window.location='websys.close.csp';",$C(13,10)
+	w " } else {",$C(13,10)
+	
+	w "		window.location='websys.reload.csp';",$C(13,10)
+	w " }",$C(13,10)
+	
+	//w " window.close()",$C(13,10)
+	
+	
+	w "</SCRIPT>",$C(13,10)
+	
+	
+	q 1
+</server>
+</body>
+
+
+
+</html>

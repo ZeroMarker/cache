@@ -1,0 +1,144 @@
+<!--
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+-->
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<title>WSDL服务列表</title>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/locale/easyui-lang-zh_CN.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.4.1/themes/default/easyui.css"/>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.4.1/themes/icon.css" />
+<script type="text/javascript" src="../scripts/enswebserviceclient.js"></script>
+<style type = "text/css">   
+a {font-size:12px;}   
+a:link {color: blue; text-decoration:none;}  
+a:active:{color: red; } 
+a:visited {color:purple;text-decoration:none;}   
+a:hover {color: red; text-decoration:underline;} 
+</style>
+</head>
+<body bgcolor="#DFE8F6">
+<div style="height:99%;width:100%;">
+	<div id="selectDetail" class="easyui-layout" style="height:20%;width:100%;">  
+	    <div data-options="region:'center',title:'WSDL地址维护'" style="height:100%;">
+	    	<div style="MARGIN-TOP:0.7%;MARGIN-LEFT:1%;">
+			    <div style="float:left;">  
+			        <label for="lcode">服务代码:</label>  
+			        <input class="textbox" type="text" id="code" />  
+			    </div>  
+			    <div style="float:left;MARGIN-LEFT:3%;">  
+			        <label for="ldesc">服务描述:</label>  
+			        <input class="textbox" type="text" id="desc"/>  
+			    </div>
+			    <div style="float:left;MARGIN-LEFT:3%;">  
+			        <label for="ldesc">IP地址:</label>  
+			        <input class="textbox" type="text" id="ip"/>  
+			    </div>
+			    <div style="float:left;MARGIN-LEFT:3%;">  
+			        <label for="lprocuctionname">厂商:</label>  
+					<input class="easyui-combobox" id="procuctionname" style="width:130px;" editable="false"
+					    data-options="valueField:'serviceProcuctionTerm',textField:'serviceProcuctionTerm',
+					    url:'web.DHCENS.STBLL.UTIL.PageLoad.cls?action=serviceProcuctionTermList&input=all',method:'get'"/>  
+			    </div>
+			    <div style="float:left;MARGIN-LEFT:3%;">  
+			        <label for="lstatus">状态:</label>  
+					<select class="easyui-combobox" id="status" name="status" style="width:135px;" editable="false" >
+						<option value="ALL">全部</option>
+						<option value="Y">运行</option>
+						<option value="N">停止</option>
+					</select>  
+			    </div>
+		    </div>
+		    <div style="clear:both;MARGIN-TOP:0.5%;MARGIN-LEFT:1%;">  		    
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-search'" id="webServiceClientDataSelectBtn">查 询</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-add'" id="webServiceClientDataAddBtn">增 加</a>
+		    </div>
+	    </div>
+		<!--配置-->
+		<div id="configDetail" class="easyui-window" title="WSDL地址引用" data-options="iconCls:'icon-save',top:'35px',closed:true,
+			modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false" 
+		    style="width:650px;height:380px;text-align:center;">
+			<form id="ff1" method="post">
+		        <table style="font-size:12px;margin:15 auto;" height="270px" width="600px" id="t1">
+		            <tr>
+		                <td style="width:10%">服务代码:</td>
+		                <td style="width:40%"><input class="textbox" type="text" id="webServiceCode" style="width:100%"></input></td>
+		            	<td style="width:10%">服务名称:</td>
+		                <td style="width:40%"><input class="textbox" type="text" id="webServiceName" style="width:100%"></input></td>
+		            </tr>
+		            <tr>
+		                <td style="width:10%">服务描述:</td>
+		                <td colspan="3"><input class="textbox" type="text" id="webServiceDesc" style="width:100%"></input></td>
+					</tr>
+		            <tr>               
+		                <td style="width:10%">厂商名称:</td>
+		                <td colspan="3">
+							<input class="easyui-combobox" id="webServiceProcuctionTerm" style="width:100%;"
+							    data-options="valueField:'serviceProcuctionTerm',textField:'serviceProcuctionTerm',
+							    url:'web.DHCENS.STBLL.UTIL.PageLoad.cls?action=serviceProcuctionTermList',method:'get'"/>  
+		                </td>
+		            </tr>
+		            <tr>               
+		                <td style="width:10%">URL地址:</td>
+		                <td colspan="3">
+		                	<input class="textbox" type="text" id="webServiceUrl" style="width:100%"></input>
+		                </td>
+		            </tr>
+		            <tr>
+		            	<td style="width:10%">IP地址:</td>
+		                <td style="width:40%"><input class="textbox" type="text" id="webServiceAddress" style="width:100%" readonly></input></td>
+		             	<td style="width:10%">端口:</td>
+		                <td style="width:40%"><input class="textbox" type="text" id="webServiceport" style="width:100%" readonly></input></td>
+					</tr>
+					<tr>
+						<td style="width:10%">用户名:</td>
+		                <td style="width:40%"><input class="textbox" type="text" id="webServiceUserName" style="width:100%"></input></td>
+		                <td style="width:10%">密码:</td>
+		                <td style="width:40%"><input class="textbox" type="text" id="webServicePassWord" style="width:100%"></input></td>
+		            </tr>
+		            <tr>               
+		                <td style="width:10%">保存路径:</td>
+		                <td colspan="3">
+		                	<input class="textbox" type="text" id="webServiceClassName" style="width:100%"></input>
+		                </td>
+		            </tr>
+					<tr>
+						<td style="width:10%">开发语言</td>
+		                <td style="width:40%">
+							<input class="easyui-combobox" id="webServiceLangues" style="width:100%;"
+							    data-options="valueField:'langues',textField:'langues',
+							    url:'web.DHCENS.STBLL.UTIL.PageLoad.cls?action=serviceLanguesList',method:'get'"/> 
+						</td>
+		            	<td style="width:10%">使用标记:</td>
+		                <td style="width:40%"> 
+							<select class="easyui-combobox" id="webServiceUseFlag" style="width:100%" editable="false">
+								<option value="Y">运行</option>
+								<option value="N">停止</option>
+							</select>
+						</td>
+		             </tr>
+		             <tr>
+					<tr>
+		                <td>备注:</td>
+		                <td colspan="5"><textarea class="textbox" id="webServiceRemarks" style="height:50px; width:100%;resize: none;"></textarea></td>
+		            </tr>
+		        </table>
+		    </form>
+			<div style="text-align:center;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-undo'" id="webServiceDataCancleBtn">重 置</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" id="webServiceDataSaveBtn">保 存</a>
+			</div>
+		</div>	
+    </div>
+	<div id="divWebServiceClientListDg" style="height:80%;width:100%;">
+		<table id="webServiceClientListDg" class="easyui-datagrid">
+		</table>
+	</div>
+</div>	
+</body>
+</html>

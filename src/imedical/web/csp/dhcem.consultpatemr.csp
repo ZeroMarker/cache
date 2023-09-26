@@ -1,0 +1,91 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcem.consult.csp  会诊申请 //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+<script type="text/javascript" charset="gb2312" src="../scripts/dhcnewpro/dhcem/consultpatemrcom.js"></script>
+<script type="text/javascript" charset="gb2312" src="../scripts/dhcnewpro/dhcem/consultpatemr.js"></script>
+
+<script type="text/javascript">
+	var pc; 
+    //不要放在$(function(){});中
+    $.parser.onComplete = function () {
+        if (pc) clearTimeout(pc);
+        pc = setTimeout(closes, 1000);
+    } 
+
+    function closes() {
+        $('#loading').fadeOut('normal', function () {
+            $(this).remove();
+        });
+    }
+</script>
+<style> 
+	.editors
+	{
+		font-size:16px;
+		width:100%;
+		height:100%;
+		margin:0px;
+		background-color:#9BCD9B;
+	}
+	.title-text
+	{
+		font-size:14px;
+	}
+	.tabs-container.tabs-gray .tabs-header-right.tabs-header {
+	    border: 0;
+	}
+</style>
+<Server>
+	s curDate=$zd(+$h,3)
+	s episodeID=$g(%request.Data("EpisodeID",1))
+	s patientID=$g(%request.Data("PatientID",1))
+	s targetName=$g(%request.Data("targetName",1))
+	s textValue=$g(%request.Data("TextValue",1))
+	//s resourceScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ResourceTabScheme")
+	//s:(resourceScheme = "") resourceScheme = "<resource><item><id>Order</id><title>医嘱</title><source>emr.resource.medorder.csp</source><width>600</width></item><item><id>zorders</id><title>中草药</title><source>emr.resource.zorders.csp</source><width>600</width></item><item><id>Pacs</id><title>检查</title><source>emr.resource.pacsdata.csp</source><width>600</width></item><item><id>Lis</id><title>检验</title><source>emr.resource.lisdata.csp</source><width>700</width></item><item><id>vitalsigns</id><title>生命体征</title><source>emr.resource.vitalsigns.csp</source><width>700</width></item><item><id>diagnos</id><title>诊断</title><source>emr.resource.diagnos.csp</source><width>600</width></item><item><id>pathology</id><title>病理</title><source>emr.resource.pathology.csp</source><width>600</width></item></resource>"  
+	//s resourceScheme = ##Class(EMRservice.BL.IPResource).GetIPResource(1)
+	s resourceScheme = "<resource><item><id>Order</id><title>医嘱</title><source>emr.ip.resource.medorder.csp</source><width>600</width></item><item><id>zorders</id><title>中草药</title><source>emr.ip.resource.zorder.csp</source><width>600</width></item><item><id>Pacs</id><title>检查</title><source>emr.ip.resource.pacsdata.csp</source><width>600</width></item><item><id>Lis</id><title>检验</title><source>emr.ip.resource.lisdata.csp</source><width>700</width></item><item><id>vitalsigns</id><title>生命体征</title><source>emr.ip.resource.vitalsigns.csp</source><width>700</width></item><item><id>pathology</id><title>病理</title><source>emr.ip.resource.pathology.csp</source><width>600</width></item></resource>"
+</Server>
+ </head>
+ 
+ <body>
+ 	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',title:''" style="border:0;padding:10px 10px 10px 10px;border:false;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+			  	<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align :center;padding-top:20%;">
+			     	<h1><font color="#15428B">加载中....</font></h1>
+				</div>
+				<div data-options="region:'west',headerCls:'panel-header-gray',split:true,iconCls:'icon-paper',collapsible:false" title="<span class='title-text'>文本编辑</span>" style="width:400px;">
+					<div style="width:99%;height:99%">
+			   			<textarea id="EditPanel" class="editors" style="border:0;"></textarea>
+			   		</div>
+				</div>
+				<div data-options="region:'center',headerCls:'panel-header-gray',iconCls:'icon-paper'" title="<span class='title-text'>引用资源</span>">
+					<div id="resources" class="hisui-tabs tabs-gray" fit="true" tabPosition="right" headerWidth="80" iconCls="tabs-header-right" border=false>
+					</div>
+				</div>
+				<div data-options="region:'south',split:true" style="width:99%;height:50px;border:0;">
+			    	<a id="save" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" onclick="SaveData()" style="margin-left:47%;margin-top:6px;font-size:14px">确认</a>
+			    </div>
+			 </div>
+		</div>
+	</div>
+  	<SCRIPT language = 'javascript' >
+   		var curDate="#(curDate)#";
+   		var resourceScheme="#(resourceScheme)#";
+		var episodeID = "#(episodeID)#";
+		var patientID = "#(patientID)#";
+		var targetName = "#(targetName)#";
+		var textValue = "#(textValue)#";
+   </SCRIPT>
+  
+</body>
+</html>

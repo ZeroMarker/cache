@@ -1,0 +1,213 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s RowID=$Get(%request.Data("RowID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("30",RowID),CurRole,Action)
+	s RentLocID=##Class(web.DHCEQCommon).GetFirstIDByLocType("0301","")
+	s RentLocDesc=##Class(web.DHCEQCommon).GetFirstIDByLocType("0301","Y")
+	//Modify by zx 2020-04-20 Bug ZX0084
+	s CurDateTime=$ZDATETIME($h,3,1)
+</script>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<span class="messager-popover" style="color:#1278b8;right:20px;display:none;" id="PriceInfo"><span class="messager-popover-icon info"></span><span class="content" id="PriceDesc"></span></span>
+		<div class="hisui-panel" data-options="title:'申请信息',eqtitle:'maintitle'" style="padding:10px;margin-bottom:10px;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRRequestNo" for="RRequestNo">申请单号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RRequestNo" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRShareItemDR_SIDesc" for="RShareItemDR_SIDesc">资源项名称</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RShareItemDR_SIDesc"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRFromLocDR_DeptDesc" for="RFromLocDR_DeptDesc">供给科室</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RFromLocDR_DeptDesc" data-options="'component':'PLAT.L.Loc'"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRRequestLocDR_DeptDesc" for="RRequestLocDR_DeptDesc">申请科室</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RRequestLocDR_DeptDesc" data-options="'component':'PLAT.L.Loc'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRRequestUserDR_UName" for="RRequestUserDR_UName">联系人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="RRequestUserDR_UName"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRHold3" for="RHold3">联系电话</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RHold3"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRPlanBegin" for="RPlanBegin">计划开始时间</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datetimebox textbox" id="RPlanBegin" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRPlanEnd" for="RPlanEnd">计划结束时间</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datetimebox textbox" id="RPlanEnd" disabled="true"></div>
+				</div>
+			</div>
+		</div>
+		<div class="hisui-panel" data-options="title:'借出管理',eqtitle:'savetitle'" style="padding:10px;margin-bottom:10px;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRShareResourceDR_REEquipName" for="RShareResourceDR_REEquipName">设备</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RShareResourceDR_REEquipName" data-options="'component':'RM.L.EquipByShareResource'"></div>
+					<div class="eq-table-td eq-table-label"><label>设备编号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="REquipNo" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRModelDR_MDesc" for="RModelDR_MDesc">规格型号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RModelDR_MDesc" disabled="true"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRRentManagerDR_UName" for="RRentManagerDR_UName">借出管理人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RRentManagerDR_UName" data-options="'component':'PLAT.L.EQUser'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRLocReceiverDR_UName" for="RLocReceiverDR_UName">科室领用人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RLocReceiverDR_UName" data-options="'component':'PLAT.L.EQUser'"></div>
+					<!--Modify by zc 2020-05-20 ZC0073页面调整 begin-->
+					<div class="eq-table-td eq-table-label"><label id="cFromMoveUser" for="FromMoveUser">配送人员信息</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="FromMoveUser" ></div>
+					<!--Modify by zc 2020-05-20 ZC0073页面调整 end-->
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRStart" for="RStart">开始时间</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datetimebox textbox" id="RStart" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRRentStatus" for="RRentStatus">设备借出状态</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RRentStatus"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRRentStatusRemark" for="RRentStatusRemark">状态说明</label></div><!--Modify by zx 2020-04-06 1256888-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RRentStatusRemark"></div>
+				</div>
+			</div>
+			<div class="hisui-accordion accordion-gray" data-options="border:false" style="margin-top:10px;" id="AffixLoan">  
+			    <div title="附件信息" data-options="iconCls:'icon-attachment'">   
+			        <table id="tDHCEQRentAffix_Loan" class="hisui-datagrid" data-options="onClickRow:onClickRow"></table> 
+			    </div>
+			</div>
+		</div>
+		<!--Modify by zx 2020-04-20 暂不启用续借功能 Bug ZX0084-->
+		<!--div class="hisui-panel" data-options="title:'续借管理',eqtitle:'savetitle'" style="padding:10px;margin-bottom:10px;" id="RentRenewal">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRRenewalTo" for="RRenewalTo">续借计划结束日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datetimebox textbox" id="RRenewalTo"></div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input"></div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input"></div>
+				</div>
+			</div>
+		</div-->
+		<!--Modify by zc 2020-05-20 ZC0073页面调整 begin-->
+		<div id="RenturnInfo">
+		<div class="hisui-panel" data-options="title:'归还管理',eqtitle:'edittitle'" style="padding:10px;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRReturnManagerDR_UName" for="RReturnManagerDR_UName">设备管理人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RReturnManagerDR_UName" data-options="'component':'PLAT.L.EQUser'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRLocReturnDR_UName" for="RLocReturnDR_UName">设备归还人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RLocReturnDR_UName" data-options="'component':'PLAT.L.EQUser'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cToMoveUser" for="ToMoveUser">配送人员信息</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ToMoveUser" ></div>	</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRReturnStatus" for="RReturnStatus">设备归还状态</label></div><!--Modify by zx 2020-05-20 BUG ZX0088-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RReturnStatus"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRReturn" for="RReturn">归还时间</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datetimebox textbox" id="RReturn" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRReturnStatusRemark" for="RReturnStatusRemark">状态说明</label></div><!--Modify by zx 2020-04-06 1256888-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RReturnStatusRemark"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRPrice" for="RPrice">成本价格</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RPrice" disabled="true" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cRWorkLoad" for="RWorkLoad">使用时长</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RWorkLoad"  onchange="totalFee_Change()"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRTotalFee" for="RTotalFee">使用成本</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RTotalFee" disabled="true"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cRHold2" for="RHold2">减免时长</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" data-options="min:0,precision:2" id="RHold2" onchange="reduceFee_Change()"></div>
+					<div class="eq-table-td eq-table-label"><label id="cRHold4" for="RHold4">减免成本</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RHold4"></div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input"></div>
+				</div>
+			</div>
+			<div class="hisui-accordion accordion-gray" data-options="border:false" style="margin-top:10px;" id="AffixReturn">  
+			    <div title="附件信息" data-options="iconCls:'icon-attachment'" style="padding:10px;">   
+			        <table id="tDHCEQRentAffix_Return" class="hisui-datagrid" data-options="onClickRow:onClickRow"></table> 
+			    </div>
+			</div>
+		</div>
+		<!--Modify by zc 2020-05-20 ZC0073页面调整 end-->
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" class="footer">
+		<div class="footer-box">
+			<div style="width:50%;float:left;"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true"></a></div>
+			<div style="width:50%;float:left;">
+				<a id="BApprove1" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true"></a>
+				<a id="BApprove2" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true"></a>
+				<a id="BApprove3" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true"></a>
+				<a id="BApprove4" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true"></a>
+				<a id="BApprove5" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true"></a>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="RRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="RowID">
+			<INPUT type="hidden" id="RRequestLocDR">
+			<INPUT type="hidden" id="RFromLocDR">
+			<INPUT type="hidden" id="RRequestUserDR">
+			<INPUT type="hidden" id="RItemDR">
+			<INPUT type="hidden" id="RModelDR">
+			<INPUT type="hidden" id="RShareResourceDR">
+			
+			<INPUT type="hidden" id="RRentManagerDR">
+			<INPUT type="hidden" id="RLocReceiverDR">
+			<INPUT type="hidden" id="RReturnManagerDR">
+			<INPUT type="hidden" id="RLocReturnDR">
+			
+			<INPUT type="hidden" id="RStatus">
+			<INPUT type="hidden" id="RentLocID" value="#(RentLocID)#">
+			<INPUT type="hidden" id="RentLocDesc" value="#(RentLocDesc)#">
+			
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+			<INPUT type="hidden" id="Action" value=#(Action)#>
+			<INPUT type="hidden" id="CurRole" value=#(CurRole)#>
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			
+			<INPUT type="hidden" id="RPlanBeginDate">
+			<INPUT type="hidden" id="RPlanBeginTime">
+			<INPUT type="hidden" id="RPlanEndDate">
+			<INPUT type="hidden" id="RPlanEndTime">
+			<INPUT type="hidden" id="RStartDate">
+			<INPUT type="hidden" id="RStartTime">
+			<INPUT type="hidden" id="RReturnDate">
+			<INPUT type="hidden" id="RReturnTime">
+			<INPUT type="hidden" id="RRenewalToDate">
+			<INPUT type="hidden" id="RRenewalToTime">
+			<!--Modify by zx 2020-04-20 Bug ZX0084-->
+			<INPUT type="hidden" id="CurDateTime" value="#(CurDateTime)#">
+			<INPUT type="hidden" id="RShareItemDR">
+			<!--Modify by zc 2020-05-20 begin-->
+			<INPUT type="hidden" id="RItemDR_MIDesc">
+			<INPUT type="hidden" id="FromMoveUserDR">
+			<INPUT type="hidden" id="ToMoveUserDR">
+			<!--Modify by zc 2020-05-20 end-->
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/rm/rent.js'></script>
+</body>
+</html>

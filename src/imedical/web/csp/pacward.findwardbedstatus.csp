@@ -1,0 +1,266 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<server>i %request.Get("sTWKFL") d %request.Set("TWKFL",%request.Get("sTWKFL"))</server>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SCRIPT language=Cache RUNAT=SERVER>
+	//need to strip out the summary context eg. W1234DEP needs to be changed back to W1234
+	s ctx=$g(%request.Data("CONTEXT",1)) if $e(ctx,1)="W" {s %request.Data("CONTEXT",1)="W"_+$e(ctx,2,99)} else {s %request.Data("CONTEXT",1)=""}
+	;s ctx=$g(%request.Data("CONTEXT",1)),ctx=$p(ctx,"TOT"),ctx=$p(ctx,"DEP"),ctx=$p(ctx,"RU"),ctx=$p(ctx,"HOSP"),ctx=$p(ctx,"GCAT"),ctx=$p(ctx,"GC"),ctx=$p(ctx,"ZONE"),ctx=$p(ctx,"DISTRICT"),ctx=$p(ctx,"TRUST") s %request.Data("CONTEXT",1)=ctx
+	k %request.Data("dept"),%request.Data("alldept"),%request.Data("ru"),%request.Data("allru"),%request.Data("gc"),%request.Data("allgc"),%request.Data("tots"),%request.Data("hosp"),%request.Data("allhosp"),%request.Data("gcat"),%request.Data("allgcat"),%request.Data("zone"),%request.Data("allzone"),%request.Data("district"),%request.Data("alldistrict")
+	n SETUPcnt,SETUPCaptionLIST,SETUPColourLIST,code,bd,colour,WardID,SETUPDateFromLIST,SETUPDateToLIST,SETUPConfOnlyLIST,SETUPUnconfOnlyLIST,dtToFrom,confUnconf,dFrom,dTo,dtFmList,dtToList
+	s (SETUPCaptionLIST,SETUPColourLIST,WardID,SETUPDateFromLIST,SETUPDateToLIST,SETUPConfOnlyLIST,SETUPUnconfOnlyLIST,dtToFrom,confUnconf,dFrom,dTo,dtFmList,dtToList)=""
+	s SETUPcnt=0
+	;fetch the PACBedDated setup and sort by code
+	s code="" f  s code=$o(^PAC("BDATE",0,"Code",code)) q:code=""  d
+	. s bd="" f  s bd=$o(^PAC("BDATE",0,"Code",code,bd)) q:bd=""  d
+	. . s s=$g(^PAC("BDATE",+bd))
+	. . s SETUPcnt=SETUPcnt+1
+	. . s SETUPCaptionLIST(SETUPcnt)=$p(s,"^",2)
+	. . s colour=$p(s,"^",5),colour=$p(colour,",",2) s:colour="" colour="#FFFFFF"
+	. . s SETUPColourLIST(SETUPcnt)=colour
+	. . ; HP: Used list below in link expression
+	. . s SETUPDateFromLIST(SETUPcnt)=$p(s,"^",3)
+	. . s SETUPDateToLIST(SETUPcnt)=$p(s,"^",4)
+	. . s SETUPConfOnlyLIST(SETUPcnt)=$p(s,"^",7)
+	. . s SETUPUnconfOnlyLIST(SETUPcnt)=$p(s,"^",8)
+	; i SETUPcnt=0  w "<br>" w "<Label>Expected Discharge Dates have not been setup, this can be done under the Setup menu.</Label>"
+	;setup the component to have items and tableitems to match the setup
+	d ##class(web.PACWard).SetupExpDischColumns("PACWard.FindWardBedStatus",0)
+	d ##class(web.PACWard).SetupExpDischColumns("PACWard.FindWardBedStatus.Summary",1)
+	;
+</SCRIPT>
+
+<SCRIPT language="JavaScript">
+var SETUPcnt=#(SETUPcnt)#;
+
+function DisplayTotal() {
+	var tbl=document.getElementById("tPACWard_FindWardBedStatus");
+	var lenRows=tbl.rows.length;
+	//these 3 arrays need to have the same number of items
+	var arrColumns=new Array("TotDisch","DueToday","DueTom","DueNextDay");
+	var arrTotalItems=new Array("TotalExpDisch0","Due1","Due2","Due3");
+	var arrTotals=new Array(0,0,0,0);
+
+	//tally up totals
+	for (var j=0; j<arrColumns.length; j++) {
+		for (var i=1; i<lenRows; i++) {
+			var obj=document.getElementById(arrColumns[j]+"z"+i);
+			if (obj) arrTotals[j]=arrTotals[j]+parseInt(obj.innerText,10);
+		}
+		var obj=document.getElementById(arrTotalItems[j]);
+		if (obj) {
+			obj.value=arrTotals[j];
+			obj.readOnly=true;
+		}
+	}
+	//elective total= the sum of Due1+Due2+Due3
+	var obj=document.getElementById("ElectiveTotal");
+	if (obj) {
+		obj.value=arrTotals[1]+arrTotals[2]+arrTotals[3];
+		obj.readOnly=true;
+	}
+	
+	//add totals for beddate setup
+	for (var j=1; j<SETUPcnt+1; j++) {
+		var total=0;
+		for (var i=1; i<lenRows; i++) {
+			var col="ExpDisch"; if (j<10) col+="0"; col+=j+"z"+i;
+			var obj=document.getElementById(col);
+			if (obj) total=total+parseInt(obj.innerText,10);
+		}
+		var obj=document.getElementById("TotalExpDisch"+j);
+		if (obj) {
+			if (isNaN(total)) total=0;
+			obj.value=total; 
+			obj.readOnly=true;
+		}
+	}
+}
+
+DisplayTotal();
+</SCRIPT>
+
+<SCRIPT language=Cache RUNAT=SERVER>
+	d ##Class(websys.Component).GetComponentMessages(.tary,"websys.SYSTEM,PACWard.FindWardBedStatus.Summary")
+	n WARDprefs,dept,ru,gcdesc,hosp,gcid,alldept,allru,allgc,compSum,oldcontext,gcatdesc,gcatid,allgcat,allhosp,sums,zone,district,allzone,alldistrict,trust,alltrust
+	s (WARDprefs,dept,ru,hosp,gcdesc,gcid,alldept,allru,allgc,oldcontext,gcatdesc,gcatid,allgcat,allhosp,sums,zone,district,allzone,alldistrict,trust,alltrust)=""
+	s WARDprefs=##Class(websys.Preferences).GetData("User.SSUser",%session.Get("LOGON.USERID"),"PACWARD","PACWard.FindWardBedStat.Preferences")
+	i WARDprefs=""  s WARDprefs=##Class(websys.Preferences).GetData("User.SSGroup",%session.Get("LOGON.GROUPID"),"PACWARD","PACWard.FindWardBedStat.Preferences")
+	i WARDprefs=""  s WARDprefs=##Class(websys.Preferences).GetData("SITE",%session.Get("LOGON.SITECODE"),"PACWARD","PACWard.FindWardBedStat.Preferences")
+	i WARDprefs'="" d
+	. s sums=$p(WARDprefs,$c(1),2)
+	. i sums'="" d
+	. . s dept=$p(sums,"$$",1)
+	. . s ru=$p(sums,"$$",2)
+	. . s hosp=$p(sums,"$$",3)
+	. . s zone=$p(sums,"$$",4)
+	. . s district=$p(sums,"$$",5)
+	. . s gcdesc=$p(sums,"$$",6)
+	. . i gcdesc'="" s gcid=##class(web.CTNFMICategDepart).GetIdFromCodeOrDescription(gcdesc)
+	. . s gcatdesc=$p(sums,"$$",7)
+	. . i gcatdesc'="" s gcatid=##class(web.CTNFMICategory).GetIdFromCodeOrDescription(gcatdesc)
+	. . s trust=$p(sums,"$$",8)
+	. s alldept=$p(WARDprefs,$c(1),4)
+	. s allru=$p(WARDprefs,$c(1),5)
+	. s allgc=$p(WARDprefs,$c(1),6)
+	. s allgcat=$p(WARDprefs,$c(1),7)
+	. s tots=$p(WARDprefs,$c(1),8)
+	. s allhosp=$p(WARDprefs,$c(1),9)
+	. s allzone=$p(WARDprefs,$c(1),10)
+	. s alldistrict=$p(WARDprefs,$c(1),11)
+	. s alltrust=$p(WARDprefs,$c(1),12)
+	;
+	; convert strings into list of depts/ru/hosp to show
+	n newdept,newru,newhosp,show,newzone,newdistrict,newtrust
+	s (newdept,newru,newhosp,show,newzone,newdistrict,newtrust)=""
+	f i=1:1:$l(dept,"^") d
+	. s show=$p($p(dept,"^",i),"|",2)
+	. i show="true" d
+	. . i newdept'="" s newdept=newdept_"^"
+	. . s newdept=newdept_##class(web.CTLoc).GetIdFromCodeOrDescription($p($p(dept,"^",i),"|",1))
+	;
+	s show=""
+	f i=1:1:$l(ru,"^") d
+	. s show=$p($p(ru,"^",i),"|",2)
+	. i show="true" d
+	. . i newru'="" s newru=newru_"^"
+	. . s newru=newru_##class(web.CTResponsibleUnit).GetIdFromCodeOrDescription($p($p(ru,"^",i),"|",1))
+	;
+	s show=""
+	f i=1:1:$l(hosp,"^") d
+	. s show=$p($p(hosp,"^",i),"|",2)
+	. i show="true" d
+	. . i newhosp'="" s newhosp=newhosp_"^"
+	. . s newhosp=newhosp_##class(web.CTHospital).GetIdFromCodeOrDescription($p($p(hosp,"^",i),"|",1))
+	;
+	s show=""
+	f i=1:1:$l(zone,"^") d
+	. s show=$p($p(zone,"^",i),"|",2)
+	. i show="true" d
+	. . i newzone'="" s newzone=newzone_"^"
+	. . s newzone=newzone_##class(web.CTHealthCareArea).GetIdFromCodeOrDescription($p($p(zone,"^",i),"|",1))
+	;
+	s show=""
+	f i=1:1:$l(district,"^") d
+	. s show=$p($p(district,"^",i),"|",2)
+	. i show="true" d
+	. . i newdistrict'="" s newdistrict=newdistrict_"^"
+	. . s newdistrict=newdistrict_##class(web.CTHealthCareRegion).GetIdFromCodeOrDescription($p($p(district,"^",i),"|",1))
+	;
+	s show=""
+	f i=1:1:$l(trust,"^") d
+	. s show=$p($p(trust,"^",i),"|",2)
+	. i show="true" d
+	. . i newtrust'="" s newtrust=newtrust_"^"
+	. . s newtrust=newtrust_##class(web.PACTrust).GetIdFromCodeOrDescription($p($p(trust,"^",i),"|",1))
+	;
+	i WARDprefs'="" d
+	. s oldcontext=%request.Get("CONTEXT")
+	. ; HP: Set list of exp discharge days from/to obtained from setup side menu for used in link expression of ExpDisc items of PACWard.FindWardBedStatus.Summary component
+	. i dtFmList'="",dtToList'="" d %request.Set("exDisDtFmList",dtFmList),%request.Set("exDisDtToList",dtToList)
+	. ;
+	. ; Ward Totals
+	. i tots="Y" d
+	. . d %request.Set("tots",tots),%request.Set("CONTEXT",oldcontext_"TOT")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. 
+	. ; Department Summary
+	. i (newdept'="")!(alldept="Y") d
+	. . w "<br>"
+	. . k %request.Data("tots")
+	. . d %request.Set("dept",newdept),%request.Set("alldept",alldept),%request.Set("CONTEXT",oldcontext_"DEP")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. ;
+	. ; Responsible Unit Summary
+	. i (newru'="")!(allru="Y") d
+	. . w "<br>"
+	. . k %request.Data("dept"),%request.Data("alldept"),%request.Data("tots")
+	. . d %request.Set("ru",newru),%request.Set("allru",allru),%request.Set("CONTEXT",oldcontext_"RU")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. ;
+	. ; Hospital Summary
+	. i (newhosp'="")!(allhosp="Y") d
+	. . w "<br>"
+	. . k %request.Data("dept"),%request.Data("alldept"),%request.Data("ru"),%request.Data("allru"),%request.Data("gc"),%request.Data("allgc"),%request.Data("tots")
+	. . d %request.Set("hosp",newhosp),%request.Set("allhosp",allhosp),%request.Set("CONTEXT",oldcontext_"HOSP")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. ;
+	. ; Government Category Summary
+	. i (gcatid'="")!(allgcat="Y") d
+	. . w "<br>"
+	. . k %request.Data("dept"),%request.Data("alldept"),%request.Data("ru"),%request.Data("allru"),%request.Data("gc"),%request.Data("allgc"),%request.Data("tots"),%request.Data("hosp"),%request.Data("allhosp")
+	. . d %request.Set("gcat",gcatid),%request.Set("allgcat",allgcat),%request.Set("CONTEXT",oldcontext_"GCAT")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. ;
+	. ; Government Department Summary
+	. i (gcid'="")!(allgc="Y") d
+	. . w "<br>"
+	. . k %request.Data("dept"),%request.Data("alldept"),%request.Data("ru"),%request.Data("allru"),%request.Data("gcat"),%request.Data("allgcat"),%request.Data("tots"),%request.Data("hosp"),%request.Data("allhosp")
+	. . d %request.Set("gc",gcid),%request.Set("allgc",allgc),%request.Set("gcdesc",gcdesc),%request.Set("CONTEXT",oldcontext_"GC")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. ;
+	. ; Zone Summary
+	. i (newzone'="")!(allzone="Y") d
+	. . w "<br>"
+	. . k %request.Data("dept"),%request.Data("alldept"),%request.Data("ru"),%request.Data("allru"),%request.Data("gc"),%request.Data("allgc"),%request.Data("tots"),%request.Data("hosp"),%request.Data("allhosp"),%request.Data("gcat"),%request.Data("allgcat")
+	. . d %request.Set("zone",newzone),%request.Set("allzone",allzone),%request.Set("CONTEXT",oldcontext_"ZONE")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. ;
+	. ; District Summary
+	. i (newdistrict'="")!(alldistrict="Y") d
+	. . w "<br>"
+	. . k %request.Data("dept"),%request.Data("alldept"),%request.Data("ru"),%request.Data("allru"),%request.Data("gc"),%request.Data("allgc"),%request.Data("tots"),%request.Data("hosp"),%request.Data("allhosp"),%request.Data("gcat"),%request.Data("allgcat"),%request.Data("zone"),%request.Data("allzone")
+	. . d %request.Set("district",newdistrict),%request.Set("alldistrict",alldistrict),%request.Set("CONTEXT",oldcontext_"DISTRICT")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()
+	. ;
+	. ; Trust Summary
+	. i (newtrust'="")!(alltrust="Y") d
+	. . w "<br>"
+	. . k %request.Data("dept"),%request.Data("alldept"),%request.Data("ru"),%request.Data("allru"),%request.Data("gc"),%request.Data("allgc"),%request.Data("tots"),%request.Data("hosp"),%request.Data("allhosp"),%request.Data("gcat"),%request.Data("allgcat"),%request.Data("zone"),%request.Data("allzone"),%request.Data("district"),%request.Data("alldistrict")
+	. . d %request.Set("trust",newtrust),%request.Set("alltrust",alltrust),%request.Set("CONTEXT",oldcontext_"TRUST")
+	. . s compSum=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus.Summary")
+	. . i compSum d
+	. . . d compSum.Show()
+	. . . d compSum.%Close()	
+</SCRIPT>
+
+</BODY>
+</HTML>
+
+
+

@@ -1,0 +1,147 @@
+<html>
+<head>
+<FORM:EASYUI/>
+<script src="../scripts/DtPortal/common/common.js" type="text/javascript"></script>
+<script type="text/javascript" src="../scripts/DtPortal/common/xlsx.core.min.js"></script>
+<script type="text/javascript" src="../scripts/DtPortal/configure/arcimConfigure.js"></script>
+</head> 
+<body bgcolor="#F0F0F0" class="easyui-layout body">  
+	<div data-options="region:'west',title:'项目维护',split:true" style="width:650px;overflow: hidden;background:#ebf3ff;"> 
+          	<form id="arcimForm" method="post">
+				<table cellspacing="0" cellpadding="5" style="padding:10px 0 0 0">
+					<tr>
+						<td class="textLabel">项目CODE:<input data-options="required:true" style="width:200px;border: 1px solid #95B8E7"  type="text" id="arcimCode" name="arcimCode" class="easyui-textbox"></input> </td>					
+					</tr>
+					<tr>
+						<td class="textLabel">项目描述:<input style="width:200px;border: 1px solid #95B8E7" type="text" id="arcimDesc" name="arcimDesc" class="easyui-textbox"></input> </td>
+						
+					</tr>	
+					<tr>
+						<td class="textLabel">医嘱分组:<input style="width:200px;border: 1px solid #95B8E7" type="text" id="arcimGro" name="arcimGro" class="easyui-textbox"></input> </td>			
+					</tr>						
+				</table>
+				<table cellspacing="0" cellpadding="5" >
+					<tr>
+						<td style='font-size:12px'><input type="checkbox" checked="true" id="activeFlag" name="activeFlag" />是否可用</td>	
+						<td style='font-size:12px'><input type="checkbox" checked="true" id="toItmMastFlag" name="toItmMastFlag" />是否关联医嘱</td>
+						<td style='font-size:12px'><input type="checkbox" checked="true" id="isLoadZB" name="activeFlag" />生成指标数据</td>	
+						<td style='font-size:12px'><input type="checkbox" checked="true" id="isShowNH02" name="activeFlag" />【当日医嘱】显示</td>	
+					</tr>
+				</table>
+			</form>						
+			<div class="toolbar" style="padding:0px;magin:0px;">
+				<table cellspacing="0" cellpadding="0"  >
+				<tr>
+				  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="javascript:findArcim()">查询</a> </td>
+				  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveArcim()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteArcim()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-clearscreen',plain:true" onclick="javascript:formClearArcim()" >清空</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="javascript:formExp()">导出</a> </td>	
+			   	  <td><div class="datagrid-btn-separator"> </div> </td>
+			  	  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:openFormImp()">导入</a> </td>
+			    </tr>
+				</table>
+			</div>
+			<table id="arcimTable">
+		   </table>
+		</div><!--tab2 center-->
+    <div data-options="region:'center',title:'医嘱维护'" style="background:#ebf3ff;">
+          	<form id="arcimSubForm" method="post" border="1px">
+				<table cellspacing="0" cellpadding="5" >
+					<tr>
+						<td id="itmMastConfigure" class="textLabel">医嘱选择:						
+    					    <select id="arcimSelect" class="easyui-combogrid" name="arcimSelect" style="width:400px;"   
+						        data-options="    
+						            panelWidth:400, 
+						            panelHeight: '360', //高度自适应
+						            mode:'remote',
+						            pagination:true,   
+						            pageSize: 10,//每页显示的记录条数，默认为10  
+                    				pageList: [5,10,15],//可以设置每页记录条数的列表   
+						            value:'',    
+						            idField:'ID',   
+						            textField:'ItmMastDesc',    
+						            url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.arcim&MethodName=qureyItmMast',    
+						            columns:[[    
+						                {field:'ID',title:'医嘱ID',width:50},    
+						                {field:'ItmMastCode',title:'医嘱CODE',width:100},    
+						                {field:'ItmMastDesc',title:'医嘱描述',width:245},					              
+						            ]]    
+
+						        ">
+						    </select>   
+						</td>
+						<td id="otherConfigureTd" class="textLabel">其他配置:<input data-options="required:true" style="width:200px;border: 1px solid #95B8E7"  type="text" id="otherConfigure" name="otherConfigure" class="easyui-textbox"></input></td>
+					</tr>	
+							
+				</table>
+			</form>		
+	    <!-- toolbar -->
+			<div class="toolbar" style="padding:0px;magin:0px;width:300px">
+				<table cellspacing="0" cellpadding="0"  style="padding:10px 0 0 0">
+				<tr>
+				  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveArcimSub()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteArcimSub()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-clearscreen',plain:true" onclick="javascript:formClearArcimSub()" >清空</a></td>		      
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			    </tr>
+				</table>
+			</div>
+			<table id="arcimSubTable">		
+		   </table>
+		</div><!--tab2 center-->
+	<!--数据生成-->
+	<div id="buidKPIdata" class="easyui-window" title="数据生成"
+						 data-options="modal:true,width:600,height:200,closed:true,maximizable:true"
+						 style="vertical-align: middle;background:#E6F1FA">
+		<form id="FormAdd" method="post">
+		    <table cellspacing="0" cellpadding="5" >
+				<tr>
+					<td class="textLabel" style="width:270px;"><div style="width:70px;float:left;text-align:left">指标编码:</div><input data-options="required:true" style="width:200px;border: 1px solid #95B8E7"  type="text" id="KPICode"  class="easyui-textbox"></input></td>
+					<td class="textLabel" style="width:270px;"><div style="width:70px;float:left;text-align:left">指标描述:</div><input data-options="required:true" style="width:200px;border: 1px solid #95B8E7"  type="text" id="KPIDesc"  disabled="disabled" class="easyui-textbox"></input></td>
+				</tr>
+				<tr>
+					<td class="textLabel" style="width:270px;"><div style="width:70px;float:left;text-align:left">开始日期:</div><input data-options="required:true,formatter:myformatter,parser:myparser" style="width:200px;border: 1px solid #95B8E7"  type="text" id="starDate"  class= "easyui-datebox" required ="required"></input></td>
+					<td class="textLabel" style="width:270px;"><div style="width:70px;float:left;text-align:left">结束日期:</div><input data-options="required:true,formatter:myformatter,parser:myparser" style="width:200px;border: 1px solid #95B8E7"  type="text" id="endDate"  class= "easyui-datebox" required ="required"></input></td>
+				</tr>					
+		    </table>
+		    <div>
+		  	<div style="width:120px;float:right;padding:20px 20px 0 0">
+		  	<a class="easyui-linkbutton" data-options="iconCls:'icon-update',plain:true" onclick="javascript:buildDataStart()">生成数据</a>
+		  	</div>
+		  </div>
+		</form>
+    </div>
+     <!--导入弹出框-->
+   <div id="formImpDiv" class="easyui-window" title="数据导入"
+		             data-options="modal:true,width:600,height:160,closed:true,maximizable:true,onClose:function(){formClearArcim();}"
+					 style="vertical-align: middle;background-color:#E6F1FA">
+	  <div style="background:#FFFFFF;color:red">注意：数据导入会先删除原先数据！！！</div>
+	  <form id="FormAdd" method="post">
+		 <table cellspacing="0" cellpadding="5" align="left">
+		 	<tr>
+				<td class="textLabel" style="width:440px;">
+					<div style="float:left">&nbsp;&nbsp;是否导入医嘱项配置？</div>
+					his8.2医嘱项<input name="IsIMPSub" type="radio" value="8.2" />&nbsp;&nbsp;
+					his8.3医嘱项<input name="IsIMPSub" type="radio" value="8.3" />&nbsp;&nbsp;
+				    否<input name="IsIMPSub" type="radio" value="N" checked="true"/>
+				    
+				</td>
+			</tr>
+			<tr>
+				<td class="textLabel" style="width:440px;"><div style="width:70px;float:left">选取文件:</div><input style="width:330px;" type="file" name="filepath" id="filepath" /></input></td>
+			</tr>
+			<tr>
+				<td class="textLabel"><a class="easyui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="javascript:formImp()">导入</a> </td>
+			</tr>
+										
+		 </table>
+	  </form>
+   </div>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!-- 
+ * FileName:dhcipbillcharge.mainpage.csp
+ * Anchor: Lid
+ * Date: 2014-03-06
+ * Function: 新版住院收费主界面--jQuery easyUI
+ * Description: 定义主体框架
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<!--DOCTYPE HTML-->
+<HEAD>
+<!--meta http-equiv="x-ua-compatible" content="IE=edge"-->
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s Guser=$g(%request.Data("guser",1))   ;用户Dr
+ s Group = $g(%request.Data("group",1)) ;安全组Dr
+ s GuserName=$g(%request.Data("guserName",1))   ;用户Dr
+ s GuserCode=$g(%request.Data("guserCode",1))   ;用户Dr
+ s GroupDesc = $g(%request.Data("groupDesc",1)) ;安全组Dr
+</Script>
+<script language="Cache" runat="server">
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+</script>
+<!--导入jQuery 类库-->
+<JQUERY:EASYUI135></JQUERY:EASYUI135>
+<script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	}; 
+	
+	//$.cachedScript('../scripts/dhcipbill/dhcipbillcharge/DHCIPBillPatList.js').done(function(){ 
+		//...
+	//});
+</script>
+<!-- css 和js的调用在IPBILL.ChargeCommon.csr中 -->
+
+ <link rel='stylesheet' type='text/css' href='../scripts/dhcipbill/dhcjs/themes/default/dhc.css' />
+<link rel='stylesheet' type='text/css' href='../scripts/dhcipbill/themes/default/dhcipbillcharge.css' />
+<script type='text/javascript' src='../scripts/dhcipbill/plugins/calendar-js/js/WdatePicker.js'></script>
+<script type='text/javascript' src='../scripts/dhcipbill/dhcjs/dhc.js'></script>
+<script type='text/javascript' src='../scripts/dhcipbill/dhcjs/dhcpanel.js'></script>
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+<script type='text/javascript' src='../scripts/DHCInsuPort.js'></script>
+<script type='text/javascript' src='../scripts/UDHCJFIPInsu.js'></script>
+<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+<script type='text/javascript' src='../scripts/udhcjfdayprint.js'></script>
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.JS'></script>
+<script type='text/javascript' src='../scripts/dhcipbill/dhcipbillcharge/DHCJFConfig.js'></script>
+<script type='text/javascript' src='../scripts/dhcipbill/dhcipbillcharge/DHCJFCommon.js'></script>
+<script type='text/javascript' src='../scripts/dhcipbill/dhcipbillcharge/DHCIPBillChargeEvent.js'></script>
+<script type='text/javascript' src='../scripts/dhcipbill/dhcipbillcharge/DHCIPBillChargeApp.js'></script>
+</HEAD>
+<body>
+	<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>'>
+		<INPUT TYPE="hidden" name="GetPrintInfo" id="GetPrintInfo" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFPRINTINV.GetPrintInfo"))%>'>
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		<INPUT TYPE="hidden" name="ReadAccEncrypt" id="ReadAccEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))%>'>
+		<INPUT TYPE="hidden" name="ReadAccExpEncrypt" id="ReadAccExpEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))%>'>
+	</form>
+	<div id="chargeTop" class="chargeTop" style='display:block;'>
+		<div id="patPhoto" class="pat_photo">
+			<img id="patImg" src='../scripts/dhcipbill/themes/default/images/defPatImg.png'>
+		</div>
+		<div id="patFeeInfo" class="patFeeInfo">
+			<table>
+				<tr>
+					<td class="patDesc">登记号：</td><td class="patDet"><label id="lblPatientNO" ></label></td>
+					<td class="patDesc">姓名：</td><td class="patDet"><label id="lblPatientName" ></label></td>
+					<td class="patDesc">出生日期：</td><td class="patDet"><label id="lblDOB" ></label></td>
+					<td class="patDesc">总押金：</td><td class="patDet"><label id="lblDeposit" ></label></td>
+					<td class="patDesc">总费用：</td><td class="patDet"><label id="lblTotalAmt" ></label></td>
+					<td class="patDesc">折扣：</td><td class="patDet"><label id="lblDisAmt" ></label></td>
+					<td class="patDesc">余额：</td><td class="patDet"><label id="lblBalance" ></label></td>
+				</tr>
+				<tr>
+					<td class="patDesc">病案号：</td><td v><label id="lblMedicareNO"></label></td>
+					<td class="patDesc">自付：</td><td class="patDet"><label id="lblZFAmt"></label></td>
+					<td class="patDesc">医保：</td><td class="patDet"><label id="lblYBAmt"></label></td>
+					<td class="patDesc">应收：</td><td class="patDet"><label id="lblYSAmt"></label></td>
+					<td class="patDesc">应退：</td><td class="patDet"><label id="lblYTAmt"></label></td>
+					<td class="patDesc">记账：</td><td class="patDet"><label id="lblPayorAmt" ></label></td>
+					<td>
+						<img id="patDetBtn" src='../images/webemr/regalert.gif' style="cursor:pointer" />
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<div class="chargeMain">
+		<div id="chargeTabs" class="easyui-tabs" data-options="fit:true">   
+		    <!--病人列表 Tab-->
+		    <div id="patListTab" title="病人列表">
+		    	<div id="layoutCharge" class="easyui-layout" data-options="fit:true">
+		    		<div data-options="region:'center',border:false" style="padding:0px;background:#eee;">
+		    		
+				    	<div id="layoutPatList" class="easyui-layout" data-options="fit:true">
+				    		<div data-options="region:'center',border:false" style="padding:0px;background:#eee;">
+				    			<table id="tPatList" class="easyui-datagrid"></table>
+				    		</div>
+				    		<div data-options="region:'south',border:false" style="height:200px;">
+				    			<div id="chargeSearch">
+				    				<div>
+										<table id='tQueryPanel'>
+											<tr>
+												<td>开始日期:</td><td><input id="stDate" type="text"></input></td>
+												<td>结束日期:</td><td><input id="endDate" type="text"></input></td>
+												<td>卡类型:</td><td><input id="cardTypeDR" type="text"></input></td>
+												<td><a id="btnReadCard" href="#">读卡</a></td>
+											</tr>
+											<tr>
+												<td>登记号:</td><td><input id="patientNO" type="text"></input></td>
+												<td>病案号:</td><td><input id="medicareNO" type="text"></input></td>
+												<td>卡	号:</td><td><input id="cardNO" type="text"></input></td>
+												<td><a id="btnFind" href="#">查询</a></td>
+											</tr>
+											<tr>
+												<td>姓名:</td><td><input id="patName" type="text"></input></td>
+												<td>费别:</td><td><input id="admReason" type="text"></input></td>
+												<td>发票号:</td><td><input id="invoiceNO" type="text"></input></td>
+												<td><a id="btnClear" href="#">清屏</a></td>
+											</tr>
+											<tr>
+												<td>科室:</td><td><input id="patLoc" type="text"></input></td>
+												<td>病区:</td><td><input id="patWard" type="text"></input></td>
+												
+												<td>可用发票:</td>
+												<td>
+													<input id="currentInv" type="text" readOnly="true" disabled="true"></input>
+													<input id="currentInvId"  name="currentInvId" TYPE="hidden"></input>
+												</td>
+											</tr>
+											<tr talign="center">
+												<table id='tCheckbox' class="billstatus-checkbox">
+													<tr>
+														<td><input type="checkbox" id="billed" class="labelForCheckBox"></input></td>
+														<td>
+															<label for="billed" class="labelForCheckBox">未结算</label>
+														</td>
+														<td/><td/>
+														<td><input type="checkbox" id="discharge" checked="checked" class="labelForCheckBox"></input></td>
+														<td>
+															<label for="discharge" class="labelForCheckBox">最终结算</label>
+														</td>
+														<td/><td/>
+														<td><input type="checkbox" id="paid" class="labelForCheckBox"></input></td><td><label for="paid" class="labelForCheckBox">结算历史</label></td>
+														<td/><td/>
+														<td><input type="checkbox" id="toBill" class="labelForCheckBox"></input></td>
+														<td>
+															<label for="toBill" class="labelForCheckBox">新入院</label>
+														</td>
+													</tr>
+												</table>
+											</tr>
+										</table>
+									</div>
+				    			</div>
+				    		</div> 		    	
+				    	</div>
+		    		</div>
+		    	</div>
+		    </div> 
+		      
+		</div> 
+	</div>
+	<div id="win"></div>
+	
+</body> 
+
+</HTML>

@@ -1,0 +1,56 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s RowID=$Get(%request.Data("RowID",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s Detail=$Get(%request.Data("Detail",1))
+	s applydr=$Get(%request.Data("applydr",1))
+	s rowid2=$Get(%request.Data("rowid2",1))
+	
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.ProjectMidCheckNew).ListDetail(sortField, sortDir, start, limit, rowid)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.ProjectMidCheckNew).InsertRec(rowid,Detail,applydr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.ProjectMidCheckNew).Delete(rowid2)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.ProjectMidCheckNew).UpdateRec(RowID,rowid,Detail)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "submit" d
+	.s result = ##class(herp.srm.udata.ProjectMidCheckNew).Commit(rowid2)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

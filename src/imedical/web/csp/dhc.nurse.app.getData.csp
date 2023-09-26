@@ -1,0 +1,198 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s actionType = $Get(%request.Data("actionType",1))
+s CheckCode = $Get(%request.Data("CheckCode",1))
+s CheckPar = $Get(%request.Data("CheckPar",1))
+s chkval = $Get(%request.Data("chkval",1))
+s checkreason = $Get(%request.Data("checkreason",1))
+s chkpeople=$Get(%request.Data("chkpeople",1))
+s CheckTyp=$Get(%request.Data("CheckTyp",1))   //质控类型
+s chkType=$Get(%request.Data("chkType",1))   //护士类型
+s CheckWard=$Get(%request.Data("CheckWard",1))  //病区
+s CheckScore=$Get(%request.Data("CheckScore",1))  //质控的得分
+s CheckDate=$Get(%request.Data("CheckDate",1))  //打分时间
+s user= $Get(%request.Data("user",1))  //被评分护士
+s CheckQual=$Get(%request.Data("CheckQual",1)) //rw
+s CheckRet=$Get(%request.Data("CheckRet",1))
+s CheckPat=$Get(%request.Data("CheckPat",1))
+s CheckNurName=$Get(%request.Data("CheckNurName",1))
+s userName=$Get(%request.Data("userName",1)) //登陆用户名
+s passWord=$Get(%request.Data("passWord",1)) //登陆密码
+s PatNumber=$Get(%request.Data("PatNumber",1))  //病人住院号
+s param=$Get(%request.Data("param",1))
+s NurOnDutyNamas=$Get(%request.Data("NurOnDutyNamas",1))  //病区值班护士姓名
+s rowId=$Get(%request.Data("rowId",1))
+s remark=$Get(%request.Data("remark",1)) //备注
+s patTypeCount=$Get(%request.Data("patTypeCount",1)) //病区再床人数^危重人数^手术人数
+s imagePath=$Get(%request.Data("imagePath",1))
+s qual=$Get(%request.Data("qual",1))
+s checkStDate=$Get(%request.Data("checkStDate",1))
+s userId=$Get(%request.Data("userId",1))
+;s checktyp=$Get(%request.Data("checktyp"),1)
+s CheckCode=$Get(%request.Data("CheckCode",1))
+s CheckQuestion=$Get(%request.Data("CheckQuestion",1))
+s CheckRw=$Get(%request.Data("CheckRw",1))
+s CheckId=$Get(%request.Data("CheckId",1))
+s flag=$Get(%request.Data("flag",1))
+
+i actionType="addQCCheckItem" d
+ .s result=##class(Nur.QualCheckRec).SaveQual2(checkStDate,userId,CheckTyp,CheckCode,CheckWard,CheckScore,CheckQuestion,CheckPat,CheckRw,CheckId,imagePath,flag)
+ .i result'="" s ^temp("checkDateString")=result
+ 
+i actionType="QualCheckSum" d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCNurCheckRoom","SearchWardCntTol2")
+
+i actionType="qualScore" d
+ .s result=##class(DHCMGNUR.QualCodeItem).getQualScore(qual)
+ .i result'="" d
+ ..w "{'success':true,'result':'"_result_"'}" ;s qualScore=result
+
+i actionType="LocSearch"  d
+ .w ##class(Nur.QueryBroker).QueryExcute("web.DHCMgNurSysComm","FindWardLoc")
+
+i actionType="wardqcitem" d
+ .w ##class(Nur.QueryBroker).QueryExcute("web.DHCNurCheckRoom","FindQualItemRel")
+
+i actionType="LocSearchCF"  d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCNurCheckRoom","CheckWards")
+ 
+i actionType="loadQCList"  d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCMgQualCheck","GetQualItemGrade")
+
+//病房质控和特殊病房质控
+i actionType="addItems"  d
+ .w ##class(Nur.QualCheckRec).SaveQualItem(CheckCode,chkval,checkreason,CheckPar,chkpeople)
+
+i actionType="addItem"  d
+ .s result=  ##class(Nur.QualCheckRec).SaveQual(CheckDate,user,CheckTyp,CheckCode,CheckWard,CheckScore,"",CheckPat,CheckPar,CheckQual,imagePath,"pad",chkType)
+ .i result'="" d
+ ..w "{'success':true,'info':'保存成功','result':'"_result_"'}"
+ 
+i actionType="assignlist"  d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCNurCheckRoom","QuCheckList")
+ 
+i actionType="addsafeItem"  d
+ .s result=##class(Nur.DHCNurSafeCheck).Save(user,CheckCode,CheckTyp,CheckQual,CheckWard,CheckNurName,CheckScore,CheckPar)
+ .i result'=""  d
+ ..w "{'success':true,'info':'保存成功','result':'"_result_"'}"
+ 
+i actionType="getwardqualitemlist" d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCNurCheckRoom","QualCheckList")
+ 
+i actionType="addsafeItems" d
+ .w ##class(Nur.DHCNurSafeCheckChild).SaveItm(CheckPar,CheckCode,CheckRet)
+ 
+i actionType="getcfitemlist"  d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCMgNurSysComm","CheckRoomList")
+ 
+i actionType="getcfQClist"  d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCNurCheckRoom","GetCheckItemSub")
+ 
+i actionType="addCFItem"  d
+ .s result=##class(Nur.CheckRoom).SaveQual(CheckDate,user,CheckTyp,CheckQual,CheckWard,CheckScore,"",CheckPat,CheckPar,NurOnDutyNamas,patTypeCount,remark,imagePath,"pad")
+ .i result'=""  d
+ ..w "{'success':true,'info':'保存成功','result':'"_result_"'}"
+
+i actionType="addCFItems"  d
+ .w ##class(Nur.CheckRoom).SaveQualItem(CheckQual,chkval,checkreason,CheckPar,chkpeople)
+ 
+i actionType="login" d
+ .s result=##class(web.DHCLCNUREXCUTE).ConfirmPassWord(userName,passWord)
+ .s re=$p(result,"^",1)
+ .i re="0" d
+ ..s userid=$p(result,"^",2)
+ ..w "{'success':true,'result':'"_userid_"'}"
+ .i re="密码错误" d
+ ..w "{'success':false,'result':'"_result_"'}"
+ 
+i actionType="getPatName"  d 
+ .s result=##class(web.DHCMgQualCheck).getPatName(PatNumber)
+ .i result'=""  d
+ ..w "{'success':true,'result':'"_result_"'}"
+ .e  d
+ ..w "{'success':false,'result':'"_result_"'}"
+
+i actionType="getDutyNusName"  d
+ .s result=##class(web.DHCMGPerArrange).GetArrangeYNurse(param)
+ .i result'=""  d
+ ..w "{'success':true,'result':'"_result_"'}"
+ .e  d
+ ..w "{'success':false,'result':'"_result_"'}"
+
+i actionType="searchQClist"  d
+ .w ##class(Nur.QueryBroker).RecQueryExcute("Nur.DataForPad","QCheckListForPad")
+ 
+i actionType="LocForSearch"  d
+ .w ##class(Nur.QueryBroker).QueryExcute("Nur.DataForPad","FindWardLoc")
+
+i actionType="patOfWard"  d
+ .w ##class(Nur.QueryBroker).QueryExcute("web.UDHCJFDayDetail","Findpat2")
+ 
+i actionType="deleteQcItem"  d
+ .s result=##class(Nur.QualCheckRec).delQual(rowId)
+ .i result=0  d
+ ..w "{'success':true,'result':'"_result_"'}"
+ .e  d
+ ..w "{'success':false,'result':'"_result_"'}"
+
+i actionType="searchCFlist"  d
+ .w ##class(Nur.QueryBroker).QueryExcute("Nur.DataForPad","CheckRoom")
+
+i actionType="deleteCfItem"  d
+ .s result=##class(Nur.CheckRoom).delQual(rowId)
+ .i result=0  d
+ ..w "{'success':true,'result':'"_result_"'}"
+ .e  d
+ ..w "{'success':false,'result':'"_result_"'}"
+ 
+i actionType="searchSafeList"  d
+ .w ##class(Nur.QueryBroker).QueryExcute("Nur.DataForPad","CheckSafeList")
+
+i actionType="searchSafeValue"  d
+ .s result=##class(Nur.DHCNurSafeCheckChild).getVal(rowId)
+ .i result'=""  d
+ ..w "{'success':true,'result':'"_result_"'}"
+ .e  d
+ ..w "{'success':false,'result':'"_result_"'}"
+
+i actionType="getpatdetailcount"  d
+ .s result=##class(web.DHCMgNurSysComm).FindWardPatType(param)
+ .i result'=""  d
+ ..w "{'success':true,'result':'"_result_"'}"
+ .e  d
+ ..w "{'success':false,'result':'"_result_"'}"
+ 
+i actionType="CheckZKQualItem"  d
+ .s result=##class(Nur.DataForPad).getQual(rowId)
+ .i result'="" d
+ ..w "{'success':true,'result':'"_result_"'}"
+ .e  d
+ ..w "{'success':false,'result':'"_result_"'}"
+ 
+i actionType="findNurByWard"  d
+ .w ##class(Nur.QueryBroker).QueryExcute("Nur.DataForPad","GetDepNurseName") 
+ .;w ##class(Nur.QueryBroker).QueryExcute("Nur.DataForPad","SelectPerson")
+ 
+i actionType="LogonNameById"  d
+ .s result=##class(Nur.DataForPad).getsuser(rowId)
+ .i result'="" d
+ ..w "{'success':true,'result':'"_result_"'}"
+ 
+//w "[{'rw':'ssss'}]"
+ //.w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCMgNurSysComm","CheckRoomList")
+ 
+//w "[{'rw':'ssss'}]"
+	
+ //.w ##class(Nur.QualCheckRec).SaveQual(CheckDate,user,CheckTyp,CheckCode,CheckWard,CheckScore,"","",CheckPar)
+ //.i result="" d
+ //..w "{'success':true,'info':'保存成功'}"
+ //.e  d
+ //..w "{'success':false,'info':'_result_'}"
+
+//w ##class(Nur.QueryBroker).RecQueryExcute("web.DHCMgQualCheck","GetQualItemGrade") 
+//.w ##class(%ResultSet).RunQuery("web.DHCMgNurSysComm","FindWardLoc")
+//.w ##class(%ResultSet).RunQuery("web.DHCMgQualCheck","GetQualItemGrade","Qual16^")
+ //.w ##class(web.WebAppData).FindWardLoc()
+//w "[{'LocDes':'"_actionType_"','LocDr':'aa','SortPos':'aa'}]"
+//.s parameterName="HsDr=1;typ=ward"
+</SERVER>

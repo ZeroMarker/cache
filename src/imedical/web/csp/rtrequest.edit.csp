@@ -1,0 +1,154 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<TRAK:APPLET> 
+
+<TRAK:COMPONENT id="PAPerson.Banner">
+</TRAK:COMPONENT>
+<server>
+ n pid,reqid,found,outstanding,rowid,RTREVRowId
+ s (found,outstanding,RTREVRowId,DefReqForPatFlag,MRReturnDate)=""
+ s pid=%request.Get("PatientID")
+ s reqid=%request.Get("ID")
+ s RequestID=%request.Get("ID")
+ s NewTransFlag=%request.Get("NewTransFlag")
+ ;Log 49288 14/02/05 PeterC: Use the billing flag to identify QH
+ i $p($g(^CF("SM",1)),"^",12)="QA" s DefReqForPatFlag="Y"
+ i RequestID="",'NewTransFlag,DefReqForPatFlag="Y" s RequestID=##Class(web.RTRequest).GetDefaultReqForPat(%request.Get("PatientID"),%session.Get("LOGON.USERID"),##Class(web.CTLoc).GetLogonHosp(%session.Data("LOGON.CTLOCID")))
+ s %request.Data("RequestID",1)=RequestID
+ i RequestID'="" d
+ . ;s ^zpeterc($zn,"RequestID")=RequestID
+ . s (ReqLocDR,HopitalDR)=""
+ . s ReqLocDR=$p($g(^RTREQ(RequestID)),"^",6),%request.Data("RTREQReqLocDR",1)=$lg(##Class(web.CTLoc).GetCodeDescriptionFromId(ReqLocDR),1)
+ . i ReqLocDR'="" d %request.Set("RTReqLocID",ReqLocDR)
+ . i ReqLocDR'="" d %request.Set("RTREQReqExtNo",##Class(web.CTLoc).GetExtFromLocId(ReqLocDR))
+ . i ReqLocDR'="" d %request.Set("RTREQReqTelNo",##Class(web.CTLoc).GetTelFromLocId(ReqLocDR))
+ . i ReqLocDR'="" s HospitalDR=$p($g(^CTLOC(ReqLocDR)),"^",22),%request.Data("CurrHospitalDR",1)=HospitalDR
+ . s ReqReasonDR=$p($g(^RTREQ(RequestID)),"^",4),%request.Data("ReqReasonDR",1)=$lg(##Class(web.RTCReasonRequest).GetCodeDescriptionFromId(ReqReasonDR),1)
+ . s ReqTelNo=$p($g(^RTREQ(RequestID)),"^",7),%request.Data("ReqTelNo",1)=ReqTelNo,%request.Data("RTREQReqTelNo",1)=ReqTelNo
+ . s ReqExtNo=$p($g(^RTREQ(RequestID)),"^",24),%request.Data("RTREQReqExtNo",1)=ReqExtNo,%request.Data("RTREQReqExtNo",1)=ReqExtNo
+ . s TransDate=$p($g(^RTREQ(RequestID)),"^",8),%request.Data("TransDate",1)=TransDate
+ . s TransTime=$p($g(^RTREQ(RequestID)),"^",9),%request.Data("TransTime",1)=TransTime
+ . s RTREQRespLocDR=$p($g(^RTREQ(RequestID)),"^",3),%request.Data("RTREQRespLocDR",1)=$lg(##Class(web.CTLoc).GetCodeDescriptionFromId(RTREQRespLocDR),1)
+ . s RTREQDate=$p($g(^RTREQ(RequestID)),"^",11),%request.Data("RTREQDate",1)=RTREQDate
+ . s RTREQTime=$p($g(^RTREQ(RequestID)),"^",12),%request.Data("RTREQTime",1)=RTREQTime
+ . s DoctorDR=$p($g(^RTREQ(RequestID)),"^",13),%request.Data("DoctorDR",1)=DoctorDR
+ . s PagerNo=$p($g(^RTREQ(RequestID)),"^",16),%request.Data("PagerNo",1)=PagerNo
+ . s ContactPerson=$p($g(^RTREQ(RequestID)),"^",19),%request.Data("ContactPerson",1)=ContactPerson
+ . s PatientAttend=$p($g(^RTREQ(RequestID)),"^",20),%request.Data("PatientAttend",1)=PatientAttend
+ . s BatchID=$p($g(^RTREQ(RequestID)),"^",21),%request.Data("BatchID",1)=BatchID
+ . s ReqTelExt=$p($g(^RTREQ(RequestID)),"^",24),%request.Data("ReqTelExt",1)=ReqTelExt
+ . s RTREQLastUpdateUser=$p($g(^RTREQ(RequestID)),"^",25),%request.Data("RTREQLastUpdateUser",1)=RTREQLastUpdateUser
+ . s RTREQLastUpdateHospital=$p($g(^RTREQ(RequestID)),"^",26),%request.Data("RTREQLastUpdateHospital",1)=RTREQLastUpdateHospital
+ . s Comments=##Class(web.RTRequest).GetRequestComment(RequestID),%request.Data("Comments",1)=Comments
+ . s RTREQSessionDR=$p($g(^RTREQ(RequestID)),"^",22),%request.Data("RTREQSessionDR",1)=$lg(##Class(web.RBResEffDateSession).GetCodeDescriptionFromId(RTREQSessionDR),1)
+ . s ReqUpUser=$p($g(^RTREQ(RequestID)),"^",5),ReqUpUser=$s(ReqUpUser:$p($g(^SSU("SSUSR",ReqUpUser)),"^",1),1:""),%request.Data("ReqUpUser",1)=ReqUpUser
+ 
+ ;Log 59817 PeterC 23/06/06
+ i RequestID="",$g(%request.Data("RTREQReqLocDR",1))="" d 
+ . n LogonLocID
+ . s LogonLocID=%session.Data("LOGON.CTLOCID") 
+ . i LogonLocID'="" d
+ . . ;s %request.Data("RTREQReqLocDR",1)=##Class(web.CTLoc).GetDescFromRowId(LogonLocID)
+ . . ;d %request.Set("RTREQReqExtNo",##Class(web.CTLoc).GetExtFromLocId(LogonLocID))
+ . . ;d %request.Set("RTREQReqTelNo",##Class(web.CTLoc).GetTelFromLocId(LogonLocID))
+
+ i RequestID="",$g(%request.Data("RTREQReqLocDR",1))'="" d 
+ . n LogonLocID
+ . s LogonLocID=##Class(web.CTLoc).GetIdFromCodeOrDescription(%request.Data("RTREQReqLocDR",1)) 
+ . i LogonLocID'="" d
+ . . s %request.Data("RTREQReqLocDR",1)=##Class(web.CTLoc).GetDescFromRowId(LogonLocID)
+ . . d %request.Set("RTREQReqExtNo",##Class(web.CTLoc).GetExtFromLocId(LogonLocID))
+ . . d %request.Set("RTREQReqTelNo",##Class(web.CTLoc).GetTelFromLocId(LogonLocID))
+ 
+ s MRReturnDate=%request.Get("MRReturnDate")
+ 
+ i RequestID'="" {
+ 	s rowid=0 f  s rowid=$o(^RTREQ(RequestID,"RTREV",rowid))  q:(rowid'="")!(found=1)  d
+ 	. i rowid'="" s found=1
+ 	. i rowid="" s found=1
+ 	s (RTREVRowId,CurrMRReturnDate)=""
+	s RTREVRowId=%request.Get("RTREVRowId")
+	s ^zpeterc($zn,"RTREVRowId")=$g(RTREVRowId)
+	
+	i $g(RTREVRowId)'="" s CurrMRReturnDate=$p($g(^RTREQ(+RTREVRowId,"RTREV",$p(RTREVRowId,"||",2))),"^",15)
+	i $g(CurrMRReturnDate)'="" s CurrMRReturnDate=##Class(websys.Conversions).DateLogicalToHtml(CurrMRReturnDate)
+	i $g(MRReturnDate)="",$g(CurrMRReturnDate)'="" d %request.Set("MRReturnDate",CurrMRReturnDate)
+	
+	i RTREVRowId="" s RTREVRowId=RequestID_"||"_rowid,%request.Data("RTREVRowId",1)=RTREVRowId
+	
+ }
+ ;Log 59817 PeterC 23/06/06
+ i RequestID="" {
+	i %request.Get("CurrHospitalDR")="" s %request.Data("CurrHospitalDR",1)=##Class(web.CTLoc).GetLogonHosp(%session.Data("LOGON.CTLOCID"))
+	;i %request.Get("RTREQReqLocDR")="" s %request.Data("RTReqLocID",1)=%session.Data("LOGON.CTLOCID")
+	i %request.Get("RTREQReqLocDR")'="" s %request.Data("RTReqLocID",1)=##Class(web.CTLoc).GetIdFromCodeOrDescription(%request.Get("RTREQReqLocDR"))
+ }
+
+ 
+ i RTREVRowId'="" {
+ n UserIdTo,MoveDate,MoveTime
+ s (UserIdTo,MoveDate,MoveTime)=""
+ 
+ &sql(SELECT RTREV_Status 
+ INTO :outstanding
+ FROM SQLUser.RT_ReqVol
+ WHERE RTREV_RowId=:RTREVRowId)
+
+ 
+ ;s ReqIds=$p($g(%request.Get("ReqIds")),"^",1)
+ s ReqIds=%request.Get("ReqIds")
+
+ i ReqIds'="" {
+
+ &sql(SELECT RTMVT_UserIdFrom_DR->SSUSR_Initials,RTMVT_Date,RTMVT_Time
+ INTO :UserIdTo, :MoveDate, :MoveTime
+ FROM SQLUser.RT_MVTrans
+ WHERE RTMVT_RTMAV_ParRef->RTMAV_RowId =:ReqIds)
+ }
+ 
+ i outstanding="I" s outstanding="N",%request.Data("outstanding",1)=outstanding,%request.Data("MoveDate",1)=MoveDate,%request.Data("MoveTime",1)=MoveTime,%request.Data("UserIdTo",1)=UserIdTo
+ }
+
+ ;s val=%request.Get("RTREQReqLocDR") s:val="" val=%session.Data("LOGON.CTLOCID") i val'="" s val=##Class(web.CTLoc).GetDescFromRowId(val)
+ ;s val="" i obj,obj.RTREQReqReasonDR s val=obj.RTREQReqReasonDR.READesc
+ ;s val=%request.Get("ReqReasonDR") i val="",obj:obj.RTREQReqReasonDR s val=obj.RTREQReqReasonDR.READesc
+ ;s val=%request.Get("ReqLocDR") i val="" s val=%session.Data("LOGON.CTLOCID") i val'="" s val=##Class(web.CTLoc).GetDescFromRowId(val)
+ ;s val=$s(%request.Get("HospitalDR"):%request.Get("HospitalDR"),##Class(web.CTLoc).GetLogonHosp(%session.Get("LOGON.CTLOCID"))'="":##Class(web.CTLoc).GetLogonHosp(%session.Get("LOGON.CTLOCID")),1:"") i val'="" s val=##Class(web.CTHospital).GetDescFromRowId(val)
+ ;s val=%request.Get("ReqTelNo") i val="",obj s val=$s(obj:obj.RTREQReqTelNo,1:"ERROR!") i val="" s val=##Class(web.CTLoc).GetTelFromLocId(%request.Get("RTREQReqLocDR"))
+ ;s val=%request.Get("RTREQTime") s:val="",obj val=obj.RTREQTransTime s:val="" val=+$p($h,",",2) s val=##Class(websys.Conversions).TimeLogicalToHtml(val)
+ ;s val=%request.get("RTREQDate") i val="",obj,obj.RTREQDate s val=obj.RTREQDate i val="" s val=+$h ##Class(websys.Conversions).DateLogicalToHtml(val)
+ ;s val=$s(%request.Get("ContactPerson"):%request.Get("ContactPerson"),obj:obj.RTREQContactPerson,1:"ERROR!")
+</server>
+<TRAK:COMPONENT id="RTRequest.Edit">
+</TRAK:COMPONENT>
+<server>
+ n pid,reqid,volids,LogOnLoc,obj
+ s (pid,reqid,volids,LogOnLoc,obj)=""
+ s pid=%request.Get("PatientID")
+ s reqid=%request.Get("ID")
+ s volids=%request.Get("VolumeIDs")
+ s obj=##Class(User.CTLoc).%OpenId(%session.Data("LOGON.CTLOCID"))
+ i obj'=""  s LogOnLoc=obj.CTLOCDesc d obj.%Close()
+ d %request.Set("DisplayBooked","Y")
+</server>
+
+<TRAK:COMPONENT id="RTMasVol.FindRequestVolume">
+</TRAK:COMPONENT>
+<TRAK:COMPONENT id="RTMaster.FindAllBookedRequest">
+</TRAK:COMPONENT>
+</BODY>
+</HTML>
+
+

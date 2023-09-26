@@ -1,0 +1,139 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+if "getBTData"=action {
+	s searchV=$g(%request.Data("searchV",1))
+	s start=$g(%request.Data("start",1))
+	s limit=$g(%request.Data("limit",1))
+	s end=start+limit
+	s start=start+1			
+
+	s jsonPro="id,code,descript,remarks"
+	s qryName="%DynamicQuery:SQL"  //固定写法
+	s sql="SELECT ID As id, Code AS code ,  Descript AS descript, Remarks AS remarks FROM DHCWL_DataQuery.BusinessType "
+	if searchV'="" s sql=sql_"WHERE UPPER(Code) LIKE '%"_$SYSTEM.SQL.UPPER(searchV)_"%' OR UPPER(Descript) LIKE '%"_$SYSTEM.SQL.UPPER(searchV)_"%' OR UPPER(Remarks) LIKE '%"_$SYSTEM.SQL.UPPER(searchV)_"%'"
+	
+	//w !,sql
+	//q
+	s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)
+	w json.GetHead()
+	d{
+		s obj=json.Next()
+		w obj
+	}while(obj'="")
+	
+	i json.GetCount()=0 w "]}"	
+
+	q	
+}elseif "AddBT"=action {
+	s inParam("Code")=$g(%request.Data("code",1))
+	s inParam("Descript")=$g(%request.Data("descript",1))
+	s inParam("Remarks")=$g(%request.Data("remarks",1))
+	
+	
+	s ret=##class(DHCWL.DataQuery.BusinessType).Insert(.inParam,.outParam)
+	
+	if ret'="" {
+		w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+		q		
+	}
+	w "{success:true,tip:'ok',MSG:'操作成功!'}"
+	q	
+}elseif "getKPIByBT"=action {
+	s searchV=$g(%request.Data("searchV",1))
+	s btCode=$g(%request.Data("BTCode",1))
+	s start=$g(%request.Data("start",1))
+	s limit=$g(%request.Data("limit",1))
+	s end=start+limit
+	s start=start+1			
+	s jsonPro="code,name,descript,type,kpiDim,sec,author"
+	s qryName="DHCWL.DataQuery.ServOfCSP:QryGetKPIByBT"  
+	s arguments=btCode_$C(2)_searchV
+
+	s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,arguments,"",start,end,jsonPro)
+	w json.GetHead()
+	d{
+		s obj=json.Next()
+		w obj
+	}while(obj'="")
+	
+	i json.GetCount()=0 w "]}"	
+
+	q	
+}elseif action="getAllUncollectKPI" {
+	s searchV=$g(%request.Data("searchV",1))
+	s btCode=$g(%request.Data("BTCode",1))
+	s start=$g(%request.Data("start",1))
+	s limit=$g(%request.Data("limit",1))
+	s end=start+limit
+	s start=start+1			
+	s jsonPro="code,name,descript,type,kpiDim,sec,author"
+	s qryName="DHCWL.DataQuery.ServOfCSP:QryGetAllUncollectKPI"  
+	s arguments=btCode_$C(2)_searchV
+
+	s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,arguments,"",start,end,jsonPro)
+	w json.GetHead()
+	d{
+		s obj=json.Next()
+		w obj
+	}while(obj'="")
+	
+	i json.GetCount()=0 w "]}"	
+
+	q		
+}elseif action="AddKPIs" {
+	s inParam("kpiCodes")=$g(%request.Data("codes",1))
+	s inParam("BTCode")=$g(%request.Data("BTCode",1))
+
+	TSTART
+	s ret=##class(DHCWL.DataQuery.BTSub).InsertBat(.inParam,.outParam)
+	if ret'="" {
+		w "{success:true,tip:'false',MSG:'"_ret_"'}"
+		Trollback	
+		q		
+	}
+	w "{success:true,tip:'ok',MSG:'操作成功!'}"
+	TCOMMIT
+	q		
+}elseif action="DelKPI" {
+	s inParam("kpiCode")=$g(%request.Data("KPICode",1))
+	s inParam("BTCode")=$g(%request.Data("BTCode",1))
+	s ret=##class(DHCWL.DataQuery.BTSub).Delete(.inParam,.outParam)
+	if ret'="" {
+		w "{success:true,tip:'false',MSG:'"_ret_"'}"
+		q
+	}
+	w "{success:true,tip:'ok',MSG:'操作成功!'}"
+
+	q		
+}elseif action="DelBT" {
+	s inParam("BTCode")=$g(%request.Data("BTCode",1))
+	TSTART
+	s ret=##class(DHCWL.DataQuery.BusinessType).Delete(.inParam,.outParam)
+	if ret'="" {
+		w "{success:true,tip:'false',MSG:'"_ret_"'}"
+		Trollback
+		q
+	}
+	w "{success:true,tip:'ok',MSG:'操作成功!'}"
+	TCOMMIT
+	q		
+}elseif action="CleanGarbage" {
+	s BTCode=$g(%request.Data("BTCode",1))
+
+	&sql(DELETE FROM DHCWL_DataQuery.BTSub WHERE BusinessTypeCode = :BTCode AND KPICode NOT IN (SELECT MKPI_Code FROM DHCWL_MKPI.DHCWLMKPI))
+	
+	if SQLCODE'=0 && (SQLCODE'=100) {
+		w "{success:true,tip:'false',MSG:'"_SQLCODE_"'}"
+	}else{
+		w "{success:true,tip:'ok',MSG:'操作成功!'}"
+	}
+	q		
+}
+	
+	
+	
+</script>

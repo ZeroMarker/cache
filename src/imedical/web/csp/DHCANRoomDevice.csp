@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<HTML XMLNS=TRAK>
+<head>
+<meta charset="UTF-8">
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD></TRAK:HEAD>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/easyui/themes/gray/easyui.css"> 
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/easyui/themes/icon.css"> 
+<script type="text/javascript" src="../scripts/dhcclinic/easyui/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/view/DHCANRoomDevice.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/easyui/locale/easyui-lang-zh_CN.js"></script>
+<SERVER>
+s locId=$g(%session.Data("LOGON.CTLOCID"))
+s ^dhccldebug("locId")=$g(%session.Data("LOGON.CTLOCID"))
+s wardId=$o(^CTLoc(0,"WARD_LocationDR",locId,""))
+If wardId'="" s wardDesc=$p(^PAWARD(wardId),"^",2)
+Else  s wardDesc=""
+w "<script type='text/javascript'>",!
+w "session['LOGON.ICU.WARDID']='",wardId,"'",!
+w "session['LOGON.ICU.WARDDesc']='",wardDesc,"'",!
+w "</script>",!
+</SERVER>
+<style type="text/css"> 
+/*th{
+font-size: 6px;
+background-color: White;
+text-align: center;
+border-right-width: 0px;
+}*/
+</style>
+</head>
+<body>
+<div class="easyui-layout" fit="true">
+    <div region="north" title="手术间设备关联" style="height:80px;">
+	    <table>
+		    <br/>
+			<tr>
+			    <th>科室</th>
+				<td><input id="Department">&nbsp&nbsp&nbsp</td>
+			    <th>手术间</th>
+				<td><input id="Bed"></td>
+			    <th>设备</th>
+				<td><input id="Device"></td>
+				<th>备注</th>
+				<td><input id="Note">&nbsp&nbsp&nbsp&nbsp</td>
+				<td><input id="RowId" type="hidden"></td>
+			</tr>
+		</table>
+	</div>
+	<div region="center">
+        <table id="bedDeviceDatagrid">
+		</table>
+    </div>
+</div>
+</body>
+</html>

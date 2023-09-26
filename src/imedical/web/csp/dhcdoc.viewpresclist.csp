@@ -1,0 +1,222 @@
+<!-- dhcdoc.viewpresclist.csp--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+   <title>所有处方预览</title>
+   <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+   <style type="text/css"> 
+	v\:line {behavior: url(#default#VML);}
+	* {font-size: 12pt;}
+	.conter
+	{
+	width:770px;
+	border:1px solid #000;
+	margin:20px auto;
+	padding:0px;
+	}
+	.conter h1
+	{
+	height:20px;
+	font-size:12px;
+	background:#0099FF;
+	line-height:20px;
+	text-indent:5px;
+	margin-top:0px;
+	}
+  </style>
+   <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<script src="../scripts/websys.js" type="text/javascript"></script>
+	<script src="../scripts/DesinerScript/CommonJs/jquery-1.7.min.js" type="text/javascript"></script>
+	<script src="../scripts/DHCWeb.OPCommon.js" type="text/javascript"></script>
+	<script src="../scripts/DHCPrtComm.js" type="text/javascript"></script>
+  <script src="../scripts/DHCDoc.ViewPrescList.js" type="text/javascript"></script>
+</head>
+ <body id="ViewPrescListMian" onload="BodyLoadHandler();">
+	<div id="BtnBar" class="conter" style="left:30px;">
+		<h1>处方预览与打印</h1>
+		<div align='left' >
+			<select name="PriseIDList" id="PriseIDList" style="left:190px;width:500;"></select><label id="cPriseIDList">处方列表</label>
+			<input type="button" name="PrintAll" id="PrintAll" value="全部打印" style="left:20px; width: 70;"/>
+		</div>
+		
+    </div>
+    <script language="Cache" runat="server">
+    d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+    ;<csp:content charset="utf-8">
+    s InvPrintEncrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+    w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_InvPrintEncrypt_"'>",!
+    s PrescNoList=##Class(%CSP.Page).Encrypt($lb("web.DHCDocPrescript.PrescNoList"))
+    w "<input id='PrescNoList' name='PrescNoList' type='hidden' value='"_PrescNoList_"'>",!
+    
+    //获取参数
+ 	s PrescNoStr = $g(%request.Data("PrescNoStr",1))
+   	s EpisodeID = $g(%request.Data("EpisodeID",1))
+   	s PrescNoMain = $g(%request.Data("PrescNoMain",1))
+   	s DisPlayType=$g(%request.Data("DisPlayType",1))
+   	s SearchDate=$g(%request.Data("SearchDate",1))
+   	if PrescNoStr="" {
+   		s PrescNoStr=##class(web.DHCDocPrescript).GetAllPrescNo(EpisodeID)
+   	}
+   	s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+   	s deplocdr=$p(^PAADM(EpisodeID),"^",4)
+   	s Childweight="",NeedChildweight=0
+    s CTLocPrintTypeID=##class(web.DHCDocPrescript).GetCTLocPrintTypeID(deplocdr)
+    if (CTLocPrintTypeID=1){
+	    s rtn=##class(web.UDHCPrescript).SetGetChildWeight(EpisodeID,"")
+	    if (rtn'=""){
+		    s NeedChildweight=$p(rtn,"^",1)
+	        s Childweight=$p(rtn,"^",2)
+		}
+	}
+   	
+   	;查找病人身份证号码
+   	s PersonID=$P(^PAADM(EpisodeID),"^",1)
+   	s Name=$P(^PAPER(PersonID,"ALL"),"^",1)
+    ;s PAPMIDVAnumber=$P($G(^PAPER(PersonID,"ALL")),"^",9 )  ;身份证 证件类型
+    ;if PAPMIDVAnumber=""  d
+ 	;.s myCredTypeDesc=""
+ 	;.s myCredTypeID=$p($g(^PAPER(PersonID,"PAT",3)),"^",7)
+ 	;.s:myCredTypeID'="" myCredTypeDesc=$p($g(^PAC("CARD",myCredTypeID)),"^",2)
+ 	;.if myCredTypeDesc["身份证"  d
+ 	;..s PAPMIDVAnumber=$p($g(^PAPER(PersonID,"PAT",3)),"^",6)
+ 	s PAPMIAgencyCredNo="",PAPMIAgencyName="",PAPMIAgencyTel=""
+ 	s SupplyInfo=##class(web.DHCDocCheckPoison).GetSupplyMethod(EpisodeID)
+ 	s PAPMIDVAnumber=$p(SupplyInfo,"^",1)
+ 	s PAPMIAgencyName=$p(SupplyInfo,"^",2)
+ 	s PAPMIAgencyCredNo=$p(SupplyInfo,"^",3)
+ 	s PAPMIAgencyTel=$p(SupplyInfo,"^",4)
+ 	s Len=$l(PrescNoStr,"^")
+   	s HavPresNo=""
+   	s PrintNoSub1=""  ;毒麻
+   	s PrintNoSub2=""  ;普通
+   	for i=1:1:Len {
+	   	s PrescNo=$p(PrescNoStr,"^",i)
+	   	continue:(PrescNoMain'="")&&(PrescNo'=PrescNoMain)
+	   	continue:PrescNo=""
+	   	Continue:("^"_HavPresNo_"^")[("^"_PrescNo_"^")
+	   	if HavPresNo=""  s HavPresNo=PrescNo
+	   	else  s HavPresNo=HavPresNo_"^"_PrescNo
+	   	s DMPrescFlag=##class(web.DHCDocPrescript).IsDMPresc(PrescNo)
+	   	//continue:(DisPlayType="MJ")&&(DMPrescFlag'="1")
+	   	/*s PrescSupplyInfo=##class(web.DHCDocCheckPoison).GetAgencyInfoByPrescNo(EpisodeID,PersonID)
+	   	if (PrescSupplyInfo'=""){
+			s PAPMIAgencyName=$p(PrescSupplyInfo,"^",2)
+		 	s PAPMIAgencyCredNo=$p(PrescSupplyInfo,"^",1)
+		 	s PAPMIAgencyTel=$p(PrescSupplyInfo,"^",3)   	
+		}*/
+	   	if DMPrescFlag=1 
+	   	{
+		   	if PrintNoSub1=""  s PrintNoSub1=PrescNo
+		   	else  s PrintNoSub1=PrintNoSub1_"^"_PrescNo
+		 }
+		 else{
+			if PrintNoSub2=""  s PrintNoSub2=PrescNo
+		   	else  s PrintNoSub2=PrintNoSub2_"^"_PrescNo
+			}
+   	 }
+   	 w "<div align='left'>",!
+	 w "<input type='checkbox' name='OnlyZF' id='OnlyZF' value=''><label id='cOnlyZF'>只打正方</label>",!
+	 if PAAdmType'="I"{
+	 	w "<input type='checkbox' name='OnlyDF' id='OnlyDF' value=''><label id='cOnlyZF'>只打底方</label>",!
+	 }
+	 w "</div>",!
+   	 
+   	//普通处方
+   	if PrintNoSub2'=""
+   	{
+	   	s Len=$l(PrintNoSub2,"^")
+		for i=1:1:Len {
+	   			s PrescNo=$p(PrintNoSub2,"^",i)
+	   	 		continue:PrescNo=""
+	   	 		//CTLocPrintTypeID NeedChildweight Childweight
+	   	 		s URL="dhcdoc.viewprescription.csp?reportID=&PrescNo="_PrescNo_"&EpisodeID="_EpisodeID_"&CTLocPrintTypeID="_CTLocPrintTypeID_"&NeedChildweight="_NeedChildweight_"&Childweight="_Childweight_"&SearchDate="_SearchDate
+	   	        w "<iframe id='"_PrescNo_"' name='"_PrescNo_"' width='100%' height='600px' frameborder='1' src='"_URL_"' ></iframe>",!
+	   	   	}
+	 }
+	 //毒麻处方
+   	if PrintNoSub1'="" {
+	  		w "<form id='DMPrescInfo'>",!
+			w "<fieldset>",!
+			w "  <legend>毒麻处方信息</legend>",!
+			w "		 <span>代办人身份证号:</span>",!
+			w "		 <input type='text' id='PerSupplyCrad' name='PerSupplyCrad' style=color:red value="_PAPMIAgencyCredNo_" >",!
+			w "		 <span>"_##class(web.DHCDocPrescript).OutSpace(4)_"代办人姓名:<span/>",!
+			w "		 <input type='text' id='PerSupply' name='PerSupply' style=color:red value="_PAPMIAgencyName_" >",!
+			w "      <br>",!
+			w "		 <span>"_##class(web.DHCDocPrescript).OutSpace(0)_"代办人联系电话:<span/>",!
+			w "		 <input type='text' id='PerSupplyTel' name='PerSupplyTel'style=color:red value="_PAPMIAgencyTel_" >",!
+			w "		 <hr>",!
+			w "		 <span>"_##class(web.DHCDocPrescript).OutSpace(3)_"本人身份证号:<span/>",!
+			w "		 <input type='text' id='RealCrad' name='RealCrad'  readonly=true style=color:red value="_PAPMIDVAnumber_" >",!
+			w "		 <span>"_##class(web.DHCDocPrescript).OutSpace(8)_"本人姓名:<span/>",!
+			w "	     <input type='text' id='RealName' name='RealName'  readonly=true style=color:red value="_Name_" >",!
+			w "</fieldset>",!
+			w "</form>",!
+			s Len=$l(PrintNoSub1,"^")
+				for i=1:1:Len {
+	   			s PrescNo=$p(PrintNoSub1,"^",i)
+	   	 		continue:PrescNo=""
+	   	 		s URL="dhcdoc.viewprescription.csp?reportID=&PrescNo="_PrescNo_"&EpisodeID="_EpisodeID_"&CTLocPrintTypeID="_CTLocPrintTypeID_"&NeedChildweight="_NeedChildweight_"&Childweight="_Childweight_"&SearchDate="_SearchDate
+	   	        w "<iframe id='"_PrescNo_"' name='"_PrescNo_"DMCF"_"' width='100%' height='600px' frameborder='1' src='"_URL_"' ></iframe>",!
+	   	   		
+	   	   		}
+	   	}
+  </script>
+   
+</body>
+
+ <SCRIPT language = 'javascript' >
+ var PrescNoStr="#(PrescNoStr)#"
+ var EpisodeID="#(EpisodeID)#"
+ var PrescNoMain="#(PrescNoMain)#"
+ var DisPlayType="#(DisPlayType)#"
+ function BodyLoadHandler()
+ {
+	    var NeedChildweight="#(NeedChildweight)#";
+	    var Childweight="#(Childweight)#";
+	    if ((NeedChildweight==1)&&(Childweight=="")){
+	       alert("儿科必须填写体重!")
+        }
+		var Obj=document.getElementById('PriseIDList');
+		if (Obj){
+			Obj.multiple=false;
+			Obj.size=1
+			var NewIndex=Obj.length;
+			Obj.onchange=PrescNoList_OnChange;
+			Obj.options[NewIndex] = new Option("",""); 
+			var ObjMeth=document.getElementById('PrescNoList');
+			if (ObjMeth){
+				var encmeth=ObjMeth.value;
+				if (encmeth!="") var rtn=cspRunServerMethod(encmeth,'SetPrescList',EpisodeID,PrescNoStr,DisPlayType);
+			}
+			if (PrescNoMain!=""){
+				Obj.value=PrescNoMain
+			}
+		 }	
+}
+function PrescNoList_OnChange()
+{
+	var Obj=document.getElementById('PriseIDList');
+	PrescNoMain=Obj.value;
+	if (DisPlayType=="MJ") var tmpPrescNoStr=PrescNoStr;
+	else  var tmpPrescNoStr=""
+	var Url="dhcdoc.viewpresclist.csp?EpisodeID="+EpisodeID+"&PrescNoStr="+tmpPrescNoStr+"&PrescNoMain="+PrescNoMain+"&DisPlayType="+DisPlayType+"&SearchDate="+"#(SearchDate)#";
+    window.location=Url;
+	
+}
+function SetPrescList(Text1,Text2)
+{
+	//var DMPrescFlag = tkMakeServerCall('web.DHCDocPrescript', 'IsDMPresc', Text2)
+	//if ((DisPlayType=="MJ")&&((DMPrescFlag!="1")||(Text2.indexOf("MJ")==-1))) return ;
+	var Obj=document.getElementById('PriseIDList');
+	if (Obj){
+		var NewIndex=Obj.length;
+		Obj.options[NewIndex] = new Option(Text1,Text2); 
+	}
+}
+</SCRIPT>
+</html>

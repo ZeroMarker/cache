@@ -1,0 +1,180 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="server">
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+   
+    
+    //显示树型数据
+	i action = "ListTreeData" d
+	.s id= $Get(%request.Data("id",1))
+	.s level= $Get(%request.Data("level",1))
+	.s Number=$Get(%request.Data("Number",1))
+	.s UserI=$Get(%request.Data("UserI",1))
+	.//s waycode= $Get(%request.Data("waycode",1))
+	.w ##class(web.DHCST.DHCSTMBCCollDrug).GetCatTreeData(id,level,Number,UserI) 
+	
+
+	i action="GetChild" d
+	.s locId=$Get(%request.Data("locId",1))
+	.s Number=$Get(%request.Data("Number",1))
+	.s UserI=$Get(%request.Data("UserI",1))
+	.s result=##class(web.DHCST.DHCSTMBCCollDrug).GetChild(locId,Number,UserI)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	//门诊发放数据查询
+	i action="GetOutPhaPresc" d
+	.s Prescno=$Get(%request.Data("Prescno",1))
+	.s Number=$Get(%request.Data("Number",1))
+	.s UserI=$Get(%request.Data("UserI",1))
+	.s result=##class(web.DHCST.DHCSTMBCCollDrug).GetOutPhaPresc(Prescno,Number,UserI)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	//门诊发放数据明细查询
+	i action="GetOutPhaPrescDetail" d
+	.s Prescno=$Get(%request.Data("Prescno",1))
+	.s result=##class(web.DHCST.DHCSTMBCCollDrug).GetOutPhaPrescDetail(Prescno)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	
+	//门诊煎药类别转换
+	i action = "TransTypePresc" d
+	.s Prescno= $Get(%request.Data("Prescno",1))
+	.s UserId=$Get(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.DHCSTMBCCollDrug).TransTypePresc(Prescno,UserId)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	
+	//门诊煎药类别转换数据查询
+	i action="GetTransTypePresc" d
+	.s Prescno=$Get(%request.Data("Prescno",1))
+	.s result=##class(web.DHCST.DHCSTMBCCollDrug).GetTransTypePresc(Prescno)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result	
+	
+	
+	//收药扫描
+	i action = "RecSave" d
+	.s Prescno= $Get(%request.Data("Prescno",1))
+	.s User=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCSTMBCCollDrug).RecSave(Prescno,User)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+
+       //煎药扫描
+	i action = "DecSave" d
+	.s Prescno= $Get(%request.Data("Prescno",1))
+	.s User=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCSTMBCCollDrug).DecSave(Prescno,User)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+
+
+       //煎药完成扫描
+	i action = "DecSaveCom" d
+	.s Prescno= $Get(%request.Data("Prescno",1))
+	.s User=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCSTMBCCollDrug).DecSaveCom(Prescno,User)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+  
+  //门诊接收
+	i action = "InPhaSave" d
+	.s Prescno= $Get(%request.Data("Prescno",1))
+	.s User=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCSTMBCCollDrug).InPhaSave(Prescno,User)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	
+  //门诊发放
+	i action = "OutPhaSave" d
+	.s Prescno= $Get(%request.Data("Prescno",1))
+	.s User=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCSTMBCCollDrug).OutPhaSave(Prescno,User)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	
+
+	i action = "PrintUpdate" d
+	.s locid=$Get(%request.Data("locid",1))
+	.s User=$Get(%request.Data("User",1))
+	.s Number=$Get(%request.Data("Number",1))
+	.s Pdate=$Get(%request.Data("Ddate",1))
+	.s Ptime=$Get(%request.Data("Dtime",1))
+	.s ret=##class(web.DHCST.DHCSTMBCCollDrug).PrintUpdate(locid,User,Number,Pdate,Ptime)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+      i action = "Query" d
+	.s ListParam=$Get(%request.Data("ParamStr",1))
+	.s Start=$Get(%request.Data("start",1))
+	.s Limit=$Get(%request.Data("limit",1))
+	.s Sort=$Get(%request.Data("sort",1))
+	.s Dir=$Get(%request.Data("dir",1))
+	.w ##class(web.DHCST.DHCSTMBCCollDrug).jsDHCSTMBCCOllDrug(Start,Limit,Sort,Dir,ListParam)
+	.
+	//根据煎药id获取处方历史操作"
+     i action = "GetAllPrescMBC" d
+	.s MBCid=$Get(%request.Data("MBCid",1))
+	.s start=$Get(%request.Data("start",1))
+	.s limit=$Get(%request.Data("limit",1))
+	.w ##class(web.DHCST.DHCSTMBCCollDrug).jsGetAllPrescMBC(start,limit,MBCid)
+    
+     i action="GetPrescType" d 
+     .s Prescno=$Get(%request.Data("Prescno",1))
+     .s ret=##class(web.DHCST.DHCSTMBCCollDrug).GetPrescType(Prescno)	
+     .w "{success:'true',info:'"_ret_"'}" 
+     .
+     .
+     
+     i action="GetPrescOutInfo" d 
+     .s Phdrowid=$Get(%request.Data("Phdrowid",1))
+     .s ret=##class(web.DHCST.DHCSTMBCCollDrug).GetPrescOutInfo(Phdrowid)	
+     .w "{success:'true',info:'"_ret_"'}" 
+     .
+    
+     
+     i action="GetPrescInInfo" d 
+     .s Prescno=$Get(%request.Data("Prescno",1))
+     .s ret=##class(web.DHCST.DHCSTMBCCollDrug).GetPrescInInfo(Prescno)	
+     .w "{success:'true',info:'"_ret_"'}" 
+     . 
+     i action = "QueryReg" d
+     .s ListParam=$Get(%request.Data("ParamStr",1))
+     .s Start=$Get(%request.Data("start",1))
+     .s Limit=$Get(%request.Data("limit",1))
+     .s Sort=$Get(%request.Data("sort",1))
+     .s Dir=$Get(%request.Data("dir",1))
+     .w ##class(web.DHCST.DHCSTMBCCollDrug).jsDHCSTMBCCOllDrugReg(Start,Limit,Sort,Dir,ListParam)
+     .
+     i action = "QueryInpha" d
+     .s ListParam=$Get(%request.Data("ParamStr",1))
+     .s Start=$Get(%request.Data("start",1))
+     .s Limit=$Get(%request.Data("limit",1))
+     .w ##class(web.DHCST.DHCSTMBCCollDrug).jsDHCSTMBCCOllDrugInpha(Start,Limit,ListParam)
+	.
+</script>

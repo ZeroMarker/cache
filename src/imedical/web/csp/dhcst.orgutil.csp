@@ -1,0 +1,116 @@
+<SERVER>
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s LocId=$Get(%request.Data("locId",1))
+    s Name=$Get(%request.Data("name",1))
+    s GroupId=$Get(%request.Data("groupId",1))
+    s LocDesc=$Get(%request.Data("locDesc",1))
+    s UserId=$Get(%request.Data("UserId",1))
+    s User=$G(%session.Data("LOGON.USERID"))
+    s HospId=$Get(%request.Data("HospId",1))
+    
+    i Action = "GetGroupDept" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetGroupDept(Start,Limit,GroupId,LocDesc,"",HospId)
+    i Action = "GetMBCState" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetMBCState(Start,Limit)
+    i Action = "PhaDept" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetPhaDept(Start,Limit,LocDesc)
+    i Action = "ExeDept" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetExeDept(Start,Limit,LocDesc)
+    i Action = "DeptLoc" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetDeptLoc(Start,Limit,LocDesc,HospId)
+    i Action = "Carrier" d
+        .s CADesc = $Get(%request.Data("CADesc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetCarrier(CADesc, Start, Limit,,HospId)
+    i Action = "PhManufacturer" d
+        .s PHMNFName = $Get(%request.Data("PHMNFName",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetPhManufacturer(PHMNFName, Start,Limit,,HospId)
+    i Action = "GetVendorCat" d
+        .s Desc = $Get(%request.Data("Desc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetVendorCat(Desc, Start,Limit,HospId)
+    i Action = "StkLocGrp" d
+        .s str = $Get(%request.Data("str",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetLocSLG(Start,Limit,str,"",HospId)	
+    i Action = "StkItemGrp" d
+        .s str = $Get(%request.Data("str",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetLocLIG(Start,Limit,str,HospId)
+    i Action = "GetHospital" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetHospital(Start,Limit)
+    i Action = "StkLocUserCatGrp" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetDeptUser(Start,Limit,LocId,Name)
+    i Action = "APCVendor" d
+       .s Filter = $Get(%request.Data("filter",1))
+       .w ##class(web.DHCST.Util.OrgUtil).GetAPCVendor(Filter, Start,Limit,,HospId)
+    i Action = "GetLocWard" d
+       .s Filter = $Get(%request.Data("filter",1))
+       .w ##class(web.DHCST.Util.OrgUtil).GetLocWard(Filter, Start,Limit)
+    i Action = "GetDispType" d
+       .s Filter = $Get(%request.Data("filter",1))
+       .w ##class(web.DHCST.Util.OrgUtil).GetDispType(Filter, Start,Limit)
+    i Action = "GetSSPPoint" d
+       .s Filter = $Get(%request.Data("filter",1))
+       .s Group = $Get(%request.Data("Group",1))
+       .s Type=$Get(%request.Data("Type",1))
+	   .s HospRowId=$Get(%request.Data("HospRowId",1))
+	   .i HospRowId="" s HospRowId=HospId
+       .w ##class(web.DHCST.Util.OrgUtil).GetSSPPoint(Type,Group,Filter,Start,Limit,HospRowId)
+    i Action = "GetPhaWindow" d
+        .s LocId = $Get(%request.Data("LocId",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetPhaWindow(Start,Limit,LocId)
+    i Action = "GetDeptUser" d
+        .s Desc = $Get(%request.Data("Desc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetDeptUser(Start,Limit,LocId,Desc)
+    i Action = "GetLocManGrp" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetLocManGrp(Start,Limit,LocId,UserId)
+    i Action = "GroupUser" d
+        .s GrpDesc=$Get(%request.Data("GrpDesc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetGroupUser(Start,Limit,GrpDesc)
+    i Action="GroupMBCUser" d
+        .s GrpDesc=$Get(%request.Data("GrpDesc",1))
+        .s mbcdesc=$Get(%request.Data("mbcdesc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetGroupMBCUser(Start,Limit,GrpDesc,mbcdesc)
+    i Action = "GetInStkTkWindow" d
+        .s LocId = $Get(%request.Data("LocId",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetInStkTkWindow(Start,Limit,LocId)
+    i Action = "RetReason" d
+        .s ReasonDesc = $Get(%request.Data("ReasonDesc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetRetReason(ReasonDesc, Start,Limit,HospId)
+    i Action = "GetDocLoc" d
+        .s FroLoc = $Get(%request.Data("FroLoc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetDocLoc(FroLoc, Start, Limit)	
+    i Action = "GetLocUser" d
+        .s FroLoc = $Get(%request.Data("FroLoc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetLocUser(FroLoc, Start, Limit)
+    i Action = "GetDoctorDs" d
+       .s Filter = $Get(%request.Data("filter",1))
+       .w ##class(web.DHCST.Util.OrgUtil).GetDoctorDs(Filter, Start,Limit)
+    
+    i Action = "GetSurOpDs" d
+       .s Filter = $Get(%request.Data("filter",1))
+       .w ##class(web.DHCST.Util.OrgUtil).GetSurOpDs(Filter,Start,Limit)
+    // 查询维护好的科室采购员
+    i Action = "LocPPLUser" d
+        .s GrpDesc=$Get(%request.Data("locId",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetLocPPLUser(Start,Limit,LocId)	
+    i Action="QueryGroup" d
+        .s FilterDesc=$Get(%request.Data("FilterDesc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).QueryGroup(Start,Limit,FilterDesc,User,HospId)
+    // 获取所有安全组
+    i Action="GetGroup"  d 
+        .s FilterDesc=$Get(%request.Data("FilterDesc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetGroup(Start,Limit,FilterDesc,HospId)
+    // 产地
+    i Action = "Origin" d
+        .s FilterDesc = $Get(%request.Data("FilterDesc",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetOrigin(Start,Limit,FilterDesc,,HospId)
+        .
+    i Action = "GetGrpCatStk" d
+        .w ##class(web.DHCST.Util.OrgUtil).GetStkGrp(Start,Limit)
+    // 医院
+    i Action = "GetAuHospData" d
+        .s FilterDesc = $Get(%request.Data("FilterDesc",1))
+        .s tablename = $Get(%request.Data("tablename",1))
+        .s dataid = $Get(%request.Data("dataid",1))
+        .w ##class(web.DHCST.Util.OrgUtil).GetAuHospData(Start,Limit,FilterDesc,tablename,dataid)
+    </SERVER>

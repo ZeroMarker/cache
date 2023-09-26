@@ -1,0 +1,80 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ s (ORDERSETID,MealTypeID,Date,ARCIMIDs,ItemID,WINNAME,DelItemID,Checked,id)=""
+ s ORDERSETID=%request.Get("ORDERSETID")
+ s MealTypeID=%request.Get("MealTypeID")
+ s Date=%request.Get("Date")
+ s ARCIMIDs=%request.Get("ARCIMIDs")
+ s ItemID=%request.Get("ItemID")
+ s DelItemID=%request.Get("DelItemID")
+ s WINNAME=%request.Get("WINNAME")
+ s Checked=%request.Get("Checked")
+ s id=%request.Get("ID")
+ 
+ ;s ^zpeterc($zn,"SaveOSItemsForDay"_%session.SessionId)=ORDERSETID_","_MealTypeID_","_Date_","_ARCIMIDs_","_ItemID_","_DelItemID_","_Checked_","_id
+ 
+ ;i DelItemID'="",$g(^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID))="" s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs
+ i DelItemID'="",$g(^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID))="" s ^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs
+ i DelItemID="",Checked="" {
+	;i ItemID'="" s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs_ItemID_"^"
+	i ItemID'="" s ^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs_ItemID_"*1"_"^"
+	;i ItemID="" s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs
+	i ItemID="" s ^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs
+
+	;s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs_ItemID_"^"
+ }
+
+ i DelItemID'="" {
+	s len=$l(ARCIMIDs,DelItemID_"^")
+	;i len'>2 s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=$p(ARCIMIDs,DelItemID_"^",1)_$p(ARCIMIDs,DelItemID_"^",2)
+	i len'>2 s ^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID)=$p(ARCIMIDs,DelItemID_"^",1)_$p(ARCIMIDs,DelItemID_"^",2)
+	i len'<3 {
+		s Prefix=$p(ARCIMIDs,DelItemID_"^",1)
+		s PrefixLen=$l(Prefix)
+		s DelItemLen=$l(DelItemID_"^")
+		s TotalLen=$l(ARCIMIDs)
+		;s ^zpeterc($zn,"Save")=Prefix_","_PrefixLen_","_DelItemLen_","_TotalLen_","_$e(ARCIMIDs,(PrefixLen+DelItemLen+1),TotalLen)
+		;s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=Prefix_$e(ARCIMIDs,(PrefixLen+DelItemLen+1),TotalLen)
+		s ^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID)=Prefix_$e(ARCIMIDs,(PrefixLen+DelItemLen+1),TotalLen)
+	}
+
+ }
+
+ ;i Checked="N" s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=""
+ i Checked="N" s ^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID)=""
+ i Checked="Y" {
+	s ARCIMIDs=""
+	s rs=##Class(%ResultSet).%New("web.OEOrdItem:OSItemList")
+	i rs {
+ 		d rs.Execute("", ORDERSETID, "", "", "", %session.Get("LOGON.GROUPID"))
+		f  {
+			i 'rs.Next() d rs.%Close() q
+			i $$ordertype^COEOrdItem($g(rs.Data("ItemRowid")))="D" s ARCIMIDs=ARCIMIDs_rs.Data("ItemRowid")_"*"_rs.Data("Quantity")_"^"
+		}
+	}
+	;s ^zpc(%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs
+	s ^TMP("WEB",%session.SessionId,Date,MealTypeID,ORDERSETID)=ARCIMIDs
+
+ }
+
+ s %response.ServerSideRedirect="websys.default.csp?WEBSYS.TCOMPONENT=OEOrder.DietMealOSForDay&ORDERSETID="_ORDERSETID_"&MealTypeID="_MealTypeID_"&Date="_Date_"&id="_id
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<csp:content charset="utf-8">
+
+
+<script language="Cache" runat="SERVER">
+	s requestType=$g(%request.Data("type",1))
+	if (requestType="onTree")
+	{
+		s nodeId = $g(%request.Data("node",1))
+		s date = $g(%request.Data("date",1))
+		if (nodeId="billRoot"){
+			w ##class(DHCBILL.DHCIPMealFeeBill).ToBillTreeJson(date)
+		}elseif(nodeId="unbillNode"){
+			w ##class(DHCBILL.DHCIPMealFeeBill).ToUnbillWardTreeJson(date)
+		}elseif(nodeId="billNode"){
+			w ##class(DHCBILL.DHCIPMealFeeBill).ToBillWardTreeJson(date)
+		}elseif(($p(nodeId,"-",1)="UnbillWard")){
+			w ##class(DHCBILL.DHCIPMealFeeBill).ToUnbillPaadmTreeJson($p(nodeId,"-",2),date)
+		}elseif(($p(nodeId,"-",1)="BillWard")){
+			w ##class(DHCBILL.DHCIPMealFeeBill).ToBilledPaadmTreeJson($p(nodeId,"-",2),date)
+		}else{
+			w "[]"
+		} 
+	}
+	elseif (requestType="onPAPERNode")
+	{
+		s PAPERRowid=$p($g(%request.Data("PAPERRowid",1)),"-",2)
+		s date=$g(%request.Data("date",1))
+		if (+PAPERRowid'=0){
+	 		w ##class(DHCBILL.DHCIPMealInsertOrder).GetPatInfoByPapmiID(+PAPERRowid,date)
+		}else{
+			w ""
+		}
+	}
+	elseif(requestType="getInfoByMedicare")
+	{
+		s date=$g(%request.Data("date",1))
+		s medicare = $g(%request.Data("papMedicare",1))
+		w "{success:true,msg:'"_##class(DHCBILL.DHCIPMealInsertOrder).GetPatInfoByMedicare(medicare,date)_"'}"
+	}
+	elseif (requestType="mealTypeCombo")
+	{
+		w ##class(DHCBILL.DHCIPMealInsertOrder).ToMealTypeJson()
+	}
+	elseif (requestType="mealModalityCombo")
+	{
+		w ##class(DHCBILL.DHCIPMealInsertOrder).ToMealModalityJson()
+	}
+	elseif (requestType="mealGrid")
+	{
+		s date=$g(%request.Data("mealDate",1))
+		s mealModalityRowid = $g(%request.Data("mealModalityRowid",1))
+		s mealTypeRowid=$g(%request.Data("mealTypeRowid",1))
+		s start=$g(%request.Data("start",1))
+		s limit=$g(%request.Data("limit",1))
+		s admRowid = $g(%request.Data("admRowid",1))
+		s billFlag = $g(%request.Data("billFlag",1)) 
+		//if (billFlag="B") d 
+		//.d ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQueryNew("DHCBILL.DHCIPMealFeeBill","FindMenuItmByDate",start,limit,date,mealModalityRowid,mealTypeRowid,admRowid,billFlag)
+		//if (billFlag="TB") d
+		//.d ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQueryNew("DHCBILL.DHCIPMealInsertOrder","FindMenuItmByDate",start,limit,date,mealModalityRowid,mealTypeRowid,admRowid,billFlag,"")
+		d ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQueryNew("DHCBILL.DHCIPMealFeeBill","FindMenuItmByDate",start,limit,date,mealModalityRowid,mealTypeRowid,admRowid,billFlag)
+	}
+	elseif (requestType="singleBill")
+	{
+		s admRowid = $g(%request.Data("admRowid",1))
+		s userRowid = $g(%request.Data("userRowid",1)) 
+		s date = $g(%request.Data("date",1))
+		s bill=##class(DHCBILL.DHCIPMealFeeBill).CalPatLanchFee(admRowid,userRowid,date)
+		if +bill'=0 d
+		.w "{success:true,msg:'保存数据成功'}"
+		e  d
+		.w "{success:true,msg:'保存数据失败'}"
+	}elseif (requestType="hospitalBill"){
+		s userRowid = $g(%request.Data("userRowid",1)) 
+		s date = $g(%request.Data("date",1))
+		s bill= ##class(DHCBILL.DHCIPMealFeeBill).HospitalCalPatLanchFee(userRowid,date)
+		if +bill'=0 d
+		.w "{success:true,msg:'保存数据成功'}"
+		e  d
+		.w "{success:true,msg:'保存数据失败'}"
+	}elseif(requestType="cancelSingleBill"){
+		s itemInfo = $g(%request.Data("itemInfo",1))
+		s userRowid = $g(%request.Data("userRowid",1)) 
+		s admRowid=$g(%request.Data("adm",1))
+		s rtn=##class(DHCBILL.DHCIPMealInsertOrder).StrikeOrdItem(itemInfo,userRowid,admRowid)
+		if (rtn=0){
+			w "{success:true,msg:'退费成功'}"
+		}elseif(rtn="notBill") {
+			w "{success:true,msg:'没有帐单不用退费,请到订餐页面直接改数量!'}"
+		}elseif(rtn="notAdm"){
+			w "{success:true,msg:'病人已结算出院,不能退费! 如果要退费请到His端先取消结算!'}"
+		}elseif(rtn="notChange"){
+			w "{success:true,msg:'没有医嘱改变'}"
+		}elseif(rtn="hisOrdItemPaid"){
+			w "{success:true,msg:'His已结算,不能退费! 如果要退费请到His端先取消结算!'}"
+		}elseif(rtn="qtyTooBig"){
+			w "{success:true,msg:'新录入数量不能大于老的数量'}"
+		}else{
+			w "{success:true,msg:'退费失败 错误代码:"_rtn_"'}"	
+		}
+	}
+</script>

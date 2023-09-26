@@ -1,0 +1,27 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">		
+	s action = $Get(%request.Data("action",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir = $Get(%request.Data("sortDir",1))
+	s MonthIDStr = $Get(%request.Data("monthDrStr",1))
+	s DeptDr = $Get(%request.Data("deptDr",1))
+	s deptTypeDrStr = $Get(%request.Data("deptTypeDrStr",1))
+
+	i action="depttype" d
+	.w ##class(dhc.ca.cache.report.uDeptIncomeItemTrendAnlys).GetDeptTypes(start,limit)
+
+	i action="entitydept" d
+	.w ##class(dhc.ca.cache.report.uDeptIncomeItemTrendAnlys).GetEntityDepts(deptTypeDrStr,searchField,searchValue,sortField,sortDir,start,limit)
+
+	i action="readydatas" d
+	.d ##class(dhc.ca.cache.report.uDeptIncomeItemTrendAnlys).ReadyDatas(MonthIDStr,DeptDr,deptTypeDrStr)
+	
+</script>

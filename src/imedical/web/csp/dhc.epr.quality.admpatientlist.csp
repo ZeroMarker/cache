@@ -1,0 +1,58 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+	<TITLE>运行态质控</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS321/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS321/resources/css/form.css"/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS321/resources/css/xtheme-slate.css" />
+	<script type="text/javascript" src="../scripts/epr/ExtJS321/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS321/ext-all.js"></script>
+	<script type="text/javascript" defer="defer" src="../scripts/epr/ExtJS321/ext-lang-zh_CN.js"></script>
+	<style>
+	.x-grid-record-pink table{
+	   background: #FFDAB9;
+	}
+	.x-grid-record-orange table{
+	   background: #F8C2CA;
+	}
+	
+   </style>
+	<script language="cache" runat="server">
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s EpisodeID = $Get(%request.Data("EpisodeID",1))
+		s count = ##Class(EPRinstance.ECRecord).GetOldRecCount(EpisodeID)
+		q:(count = -1) 0
+		
+		s userID = %session.Get("LOGON.USERID")
+  		s userLocID = %session.Get("LOGON.CTLOCID")
+  		s docID = ""
+ 		s:(userID '= "") docID = ##Class(web.SSUser).GetDefaultCareProvider(userID)
+		s HospitalName = ##Class(EPRservice.BOSysOption).GetValueByName("HospitalName")
+ 	</script>
+	<script language="javascript">
+		var docID = '#(docID)#';
+		var userID = '#(userID)#';
+		var userLocID = '#(userLocID)#';
+		var HospitalName = '#(HospitalName)#';
+		var SSGroupID = '#(SSGroupID)#'
+		//登记号自动补零功能，有的医院登记号8位，有的10位，做判断处理
+		if (HospitalName == "ZGYDYFY")
+		{
+			var PatientNoLength=8
+		}
+		else
+		{
+			var PatientNoLength=10
+		}
+	</script>
+</HEAD>
+<BODY>
+	<script type="text/javascript" src="../scripts/DHC.EPR.Quality.AdmPatientList.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 	
+</BODY>
+</HTML>

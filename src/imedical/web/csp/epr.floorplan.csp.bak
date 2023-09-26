@@ -1,0 +1,580 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.floorplan.css"></LINK>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT language=javavscript>
+	//reset last selected patient
+	var winf = null;
+	if (window.parent != window.self) winf = window.parent;
+	if ((winf)&&(winf.frames['eprmenu'])) winf.MainClearEpisodeDetails();	
+</SCRIPT>
+<SERVER>
+ /*   
+ 	
+ 	********* don't forget to make any neccessary changes to epr.floorplan.redrawlist.csp page as well ********
+
+	How selecting/clicking and dragging/dropping a patient work:
+
+	The HTML structure is VERY IMPORTANT as follows:
+
+	Each episode details, for both the episodes in cubilces and for each 
+	epiosde in the waiting/booked area, are enclosed within a <TABLE> tab.
+	The important properties of this table tag are: 
+	1. id: This stores all the main episode details in delimited format.
+	2. selected: This is set to 1 or 0 depending on whether this patient is presently selected by the user.
+
+	Each of the above <TABLE> tags are enclosed in a <DIV> tag. The important
+	properties of this div tag are:
+	1. style: This stores the positioning of this episode on the floorplan.
+	2. className: This should change ONLY between the following classes: 
+	For episodes in cubicles this will be either bedNorm, or bedNormSel if the episode in this bed is selected.
+	For episodes in waiting/booked areas this will be either waitingPat, or waitingPatSel if the episode is selected.
+
+	onmousedown: This function selects or deselects the episode that has been clicked.
+	onmousemove: This function drags the selected item after the mouse.
+	onmouseup: This function ascertains whether there is an available room/bed below the
+	cursor and if a patient has been stored on the onmousedown event it will
+	generate the neccessary move window for the relevant episode and bed.
+ 
+  */
+ ;
+ d $zu(115,10,0) //set concurrency level to 0
+ n obj,code,ProfileID
+ n t d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,epr.floorplan.Messages,PAPerson.Edit")
+ w "<SCRIPT>",$c(13,10)
+ s ProfileID=0
+ /* TN: 1/4/05 do we need to do this here when it's done below already?
+ s obj=##Class(websys.Component).OpenName("epr.floorplan.Messages")
+ i obj {
+    //d obj.LoadTrans()
+    s ProfileID=obj.GetIconProfileId("Icons")
+    d obj.%Close()
+ }
+ */
+ /* TN:14/03/05 do we need to do this anymore? now we display epr.floorplan.messages anyway
+ s code=$o(t(""))
+ while (code'="") {
+	w "t['"_code_"']="_##Class(%CSP.Page).QuoteJS($p(t(code),"^"))_";"_$c(13,10)
+	s code=$o(t(code))
+ }
+ */
+ w "</SCRIPT>",$c(13,10),!
+ n tm, WardID, ind, FPdisplayOnly, grpId
+ s tm=##Class(epr.GroupSettings).GetRefreshTime(%session.Get("LOGON.GROUPID"))*60
+ ; Log 63302 KB getting a security group setting for the user and placing in FPDisplayOnly (floor plan display only)
+ s grpId=%session.Get("LOGON.GROUPID")
+ s FPDisplayOnly=$p(^SSU("SSGRP",grpId),"^",147)
+ ; end Log
+ s WardID=$g(%request.Data("WardID",1))
+ i tm,'$d(%request.Data("FPSetup")) w "<META HTTP-equiv='Refresh' CONTENT='"_tm_";URL=epr.floorplan.csp?WardID="_%request.Get("WardID")_"&CONTEXT="_%request.Get("CONTEXT")_"&ViewID="_$g(%request.Data("ViewID",1))_"'>",$c(13,10)
+ d $zu(115,10,1) //reset default concurrency level
+</SERVER>
+</head>
+<body>
+<input type="hidden" name="FPDisplayOnly" value="#(FPDisplayOnly)#">
+<script Language="JavaScript" SRC="../scripts/epr.floorplan.js"></script>
+<script Language="JavaScript" SRC="../scripts/DHCMessage.js"></script>
+
+<script Language="JavaScript" SRC="../scripts/MessageBox.js"></script>
+<SERVER>
+
+  ;
+ d $zu(115,10,0) //set concurrency level to 0
+ n (msg,%request,%session,%response)
+ i (($g(%session.Data("LOGON.PPMCAPTURE")))||($g(%session.Data("LOGON.PPMDISPLAY")))) s mon=##Class(websys.Monitor).%New("floorplan")
+ ;
+ s (LocID,WardID,isEMLoc,DeptType,FPLayout,standalone)=""
+ ;The isSetup parameter is set when setting up the floorplan layout.  It prevents all th patient details from being shown in the rooms.
+ s isSetup=$d(%request.Data("FPSetup"))
+ i '$d(%request.Data("ViewID",1)) s ViewID=%session.Get("ViewID")
+ i $d(%request.Data("ViewID",1)) {
+	s ViewID=$g(%request.Data("ViewID",1))
+	d %session.Set("ViewID",ViewID)
+ }
+ s SessionID=%session.%Id()
+ d ##Class(epr.CTIconAssociation).FPHeadingShow(isSetup,"epr.floorplan.csp",.LocID,.WardID,.isEMLoc,.DeptType,.FPLayout)
+ ; if the view from the session variable is not for this ward, clear it
+ i ViewID'="",WardID'=$li(^epr.FPViewD(ViewID),3) {
+	s ViewID=""
+	k %session.Data("ViewID") 
+ } 
+ 
+ s $zt="Error^"_$zn
+ ;w !,WardID,",","000"
+ i WardID="" q
+ w "<input type=""hidden"" name=""isEMLoc"" value="""_isEMLoc_""">"
+ ;
+ ;d ##Class(web.CTAcuity).GetEmergencyColours(.pColorArray)
+ s bedhistory=##Class(epr.GroupSettings).GetAllowBedHistory(%session.Get("LOGON.GROUPID"))
+ ;; JW 22/10/04
+ // Details of departments allocated to ward are required for checking if patient is a boarder or not.
+ s depsAllcToWard=##Class(web.PACWard).GetBedDepartmentRevised(WardID)
+ s ShowUrgent=##class(epr.FPView).ShowNextMostUrgent(WardID,ViewID)
+ ;
+ s obj=##Class(websys.Component).OpenName("epr.floorplan.Messages")
+ i obj {
+    d obj.LoadTrans()
+    s ProfileID=obj.GetIconProfileId("Icons")
+    d obj.%Close()
+ }
+ ;
+ ;log 29326
+ s standalone=$p($g(^CF("PATCF",1,10)),"^",15)
+ s ShowRegWaitTime=$p($g(^CF("PATCF",1,11)),"^",70)
+ 
+ s AllowViewVIP=##Class(web.SSGroup).GetAllowViewVIP(%session.Get("LOGON.GROUPID"))		; cjb 11/01/2006 55848
+ ;
+ s lcurrpos=10,maxheight=50,maxwidth=50,MostUrgent=0
+ 
+ //The entire floorplan is contained within a DIV so that elements can be absolutely positioned in relation to this div.
+ //w !,WardID,",",ViewID,",","000"
+ w "<DIV  class='Messager' id=""Messager"" nowrap style=""background:#CCFFCC"" >",$c(13,10)
+ i WardID'="" d
+ .w ##class(web.DHCSETIMAGE).GetAllNewOrdPat(WardID)
+ .w "</DIV>"
+ w "<DIV style=""position:relative;"" id=""epr.floorplan"">",$c(13,10)
+ s rs2=##Class(%Library.ResultSet).%New("epr.FPView:FindForFloorplan")
+ q:'rs2
+ d rs2.Execute(WardID,ViewID)
+ s b=0
+ s count=0
+ f  {
+	q:'rs2.Next()
+	s count=count+1
+	s BedID=rs2.GetDataByName("ID")
+	s bedcode=rs2.GetDataByName("BEDCode")
+
+	//if BedID s ^TMP("aaa",BedID)=bedcode
+	s bedicon=rs2.GetDataByName("BEDIcon")
+	s bedtypedesc=rs2.GetDataByName("BEDTypeDesc")
+	s wpos=+rs2.GetDataByName("PositionWidth")
+	s lpos=+rs2.GetDataByName("PositionLeft")
+	s tpos=+rs2.GetDataByName("PositionTop")
+	s hpos=+rs2.GetDataByName("PositionHeight")
+	s isActive=rs2.GetDataByName("ActiveFlag")
+	s Incompletes=rs2.GetDataByName("Incompletes")
+	//only display if bed has some sort of measurement
+	// ab 13.05.02 - 24474 - only display if active (hide inactive, show unavailable)
+	s unAvail=0,(restrict,unavailreason)=""
+	i BedID'="" {
+		s unAvail=##class(web.PACBedStatusChange).IsUnavailBedStatus(BedID,.unavailreason)
+	
+		s restrict=##class(web.PACBedAvailRestriction).IsRestricted(BedID)
+		//s ^TMPA(BedID)=isActive_"^"_restrict_"^"_unavailreason
+	}
+	// ab 5.05.05 51439 - hide inactive + unavailable beds (after close all beds in ward, inactive were displaying)
+ 	//i wpos+lpos+tpos+hpos,(isActive'="N"!unAvail=1) {
+	//s RoomID=rs2.GetDataByName("WardRoomID")
+	i (wpos+lpos+tpos+hpos),isActive'="N" {
+		//s ^TMP("q")=(wpos+lpos+tpos+hpos)_"|"_isActive_"|"_rs2.GetDataByName("WardRoomID")
+ 		s rmQueryType=rs2.GetDataByName("QueryType")
+ 		s rmMaxRec=+rs2.GetDataByName("Rows") i rmMaxRec<1 s rmMaxRec=1
+ 		s RoomID=rs2.GetDataByName("WardRoomID")
+		i RoomID s PACRoomID=$p($g(^PAWARD(WardID,"ROOM",$p(RoomID,"||",2))),"^",1)
+ 		i 'wpos s wpos=50
+ 		i 'hpos s hpos=50
+ 		i 'tpos s tpos=30
+ 		i lpos s lcurrpos=lpos
+		i (tpos+hpos)>maxheight s maxheight=tpos+hpos
+		i (lcurrpos+wpos)>maxwidth s maxwidth=lcurrpos+wpos
+		//s ^Temp("Upgrade",$j,"fp",count,"isSetup")=isSetup
+		i ShowUrgent," WA WE BA "[(" "_rmQueryType_" ") s MostUrgent=##class(epr.FPView).GetNextMostUrgentFP(LocID,rmQueryType)
+
+		// ab 3.11.05 - moved to stylesheets
+		//Hard code colors as taken from websys.css; classes with the same name (as used by components also)
+		//s COL("clsRowDisabled")="LightGrey"
+ 		//s COL("clsRowTempLoc")="LightSeaGreen"
+ 		//s COL("clsRowAlert")="fuchsia"
+		// bed header
+ 		i rmQueryType="" {
+ 			w "<DIV selectEnabled=1 class=""bedNorm"" id=""" w:unAvail=1 "x" w BedID,""" "
+ 			w "style=""left:",lcurrpos,"; top:",tpos,"; width:",wpos,"; height:",hpos,"; z-index:10; """
+ 			i unAvail=1 w " title=""",$g(iconDataLIST("INACTIVEBED","desc")),""" "
+ 			w " >",$c(13,10)
+ 			w " <DIV class='desc' id='c"_BedID_"' nowrap "
+			i bedhistory w " onclick=""ViewBedStatus('"_BedID_"');"" style=""cursor:hand;"" "
+			w ">"
+			i bedicon'="" w "<img src=""../images/"_bedicon_""" title="""_bedtypedesc_""" align=""top"">"
+			i restrict'="" w "<img src=""../images/"_##class(epr.CTIconAssociation).GetImageFromCode("BedRestrict")_""" title="""_$g(t("BedRestrict"))_restrict_""" align=""top"">"
+			w rs2.GetDataByName("ROOMDesc"),"-",rs2.GetDataByName("BEDCode"),"</DIV>",$c(13,10)
+			i (##Class(web.PACBedStatusChange).IsClosed(BedID,+$h,+$p($h,",",2))) {
+				s list="" d ##Class(epr.CTIconAssociation).GetIconList(.list,"InactiveBed")
+ 				//w " <img src='../images/"_list("INACTIVEBED","image")_"' hspace=4 vspace=4 ><BR>&nbsp;"_rs2.GetDataByName("UnavailReason")_$c(13,10) 
+				//w " <img src='../images/"_list("INACTIVEBED","image")_"' hspace=4 vspace=4 ><BR>&nbsp;"_unavailreason_$c(13,10) 
+				
+				i unavailreason="包床" {
+					s StatName=##Class(web.DHCSETIMAGE).FindStatPat(BedID)
+				  	w " <img src='../images/"_list("INACTIVEBED","image")_"' hspace=4 vspace=4 ><BR>"_StatName_unavailreason_$c(13,10) 
+				}else{
+					w " <img src='../images/"_list("INACTIVEBED","image")_"' hspace=4 vspace=4 ><BR>&nbsp;"_unavailreason_$c(13,10) 
+				}
+ 				s BedColourLIST("x"_BedID,"head")="clsRowDisabled"
+ 				s BedColourLIST("x"_BedID,"body")="clsRowDisabled"
+ 			}
+ 		} else {
+	 		// room header (waiting + multi)
+ 			w "<DIV class=""room"" id="""_$s(rmQueryType="MPR":"mr",1:"rm")_RoomID_""" "
+ 			w "style=""left:",lcurrpos,"; top:",tpos,"; width:",wpos,"; height:",hpos,"; "
+ 			w "z-index:10; "">",$c(13,10)
+ 			w " <DIV class=""desc"" nowrap>"  ,rs2.GetDataByName("ROOMDesc")
+ 			//continue
+ 			i 'isSetup {
+ 				i (rmQueryType="WA")!(rmQueryType="WE") w " ("_##Class(web.PACBedAdm).GetNumPatientsWaiting(LocID,rmQueryType)_") "
+				i Incompletes="Y" w "&nbsp;&nbsp;"_$p($g(t("Incomplete")),"^",1)_" (<FONT COLOR='red'>",##Class(web.PACBedAdm).GetNumIncompleteAdm(LocID,"E"),"</FONT>) "
+ 			}
+ 			w "</DIV>",$c(13,10)
+ 		}
+ 		//The variable isSetup only exists when the floorplan is in setup mode, when we prevent any patient details from being shown on the floorplan.
+ 		i 'isSetup {
+			s b=b+1
+			s PARAMS1=$g(isEMLoc)_"^"_$g(WardID)_"^"_$g(depsAllcToWard)_"^^^"
+			s PARAMS2=$g(FPLayout)_"^"_$g(rmQueryType)
+			s EpisodeID=0
+			;rmQueryType="SR"  //spare rooms that never contain patients.
+			i " WA WE BA MPR "[(" "_rmQueryType_" ") {
+				//For waiting rooms and booking areas:  Must use the same query as the wardroom list (PACWardRoom.FindPatientsInRoom
+				i " WA WE "[(" "_rmQueryType_" ") {
+					;s rsPat=##Class(%Library.ResultSet).%New("web.PAAdmTransaction:FindEpisodesInRoom")
+					s rsPat=##Class(%Library.ResultSet).%New("web.PAAdmTransaction:FindEpisodesInBA")
+				} elseif rmQueryType="BA" {
+					s rsPat=##Class(%Library.ResultSet).%New("web.PAAdmTransaction:FindEpisodesInBA")
+				} elseif rmQueryType="MPR" {
+					s rsPat=##Class(%Library.ResultSet).%New("web.PAAdmTransaction:FindEpisodesInMPR")
+				}
+				i rsPat {
+					i rmQueryType="BA" {
+						d rsPat.Execute(WardID)
+					} elseif rmQueryType="MPR" {
+						d rsPat.Execute(WardID,PACRoomID)
+					} else {
+						;d rsPat.Execute(LocID,rmQueryType)
+						d rsPat.Execute(WardID)
+					}
+					// SB 12/11/02 (30217): Only increment k if newlist(k) is not empty, so that we don't get blank rows in waitroom.
+					// (originalTableIDode) s k=0
+					s k=1
+					k EpArray,^TMP("FP",SessionID,RoomID)
+
+					f  {
+						q:'rsPat.Next()
+						k ARY,SpecialSeq
+		 				s (PatientID,imgDONE,imgLIST,ARY)=""
+						s EpisodeID=rsPat.GetDataByName("ID")
+						;s ^tmpeqe("EpisodeID",EpisodeID)=""
+						s BedBookStatus=rsPat.GetDataByName("Status")
+						s OutlierFlag=rsPat.GetDataByName("outlier")
+						s FromTempLoc=rsPat.GetDataByName("TempLoc")
+						q:'EpisodeID
+						i '$d(EpArray(EpisodeID)) {
+							s EpArray(EpisodeID)=""
+							// SB 12/11/02 (30217): (original code) s k=k+1
+							s $p(PARAMS1,"^",6)=BedBookStatus
+							
+							d ##Class(epr.CTIconAssociation).FPGatheringData(EpisodeID,PARAMS1,.ARY,.pColorArray)
+							//JW:21/10/04
+							d ##Class(epr.CTIconAssociation).FPData(EpisodeID,PARAMS2,.ARY,.imgLIST,.imgDONE)
+							// for multi pat rooms use the query of WA/WE/BA for patient display (derived from location FPLayout)
+							s ParamQueryType=$g(rmQueryType)
+							i isEMLoc,rmQueryType="MPR" s ParamQueryType=$s(FPLayout="R":"WE",1:"WA")
+							s PARAMS=k_"$"_$g(ParamQueryType)_"$"_$g(TableID)_"$"_$g(ProfileID)_"$"_$g(PatientID)_"$"_$g(FPLayout)_"$"_$g(TableTitle)_"$"_$g(OutlierFlag)_"$"_$g(BedBookStatus)_"$"_$g(FromTempLoc)
+							i ((rmQueryType="WA")||(rmQueryType="WE")||((isEMLoc)&&(rmQueryType="MPR"))) {
+								i k>rmMaxRec w " <DIV style=""position:absolute;PADDING-LEFT:40px; top:"_(k*1.5)_"em;""><a href=""#"" onclick=""javascript:websys_createWindow('epr.floorplan.redrawlist.csp?LocID="_LocID_"&WardID="_WardID_"&WardRoomID="_RoomID_"&QueryType="_rmQueryType_"&MaxRec="_rmMaxRec_"&RowCnt="_rmMaxRec_"&FPLayout="_FPLayout_"&DeptType="_DeptType_"&ProfileID="_ProfileID_"&ViewID="_ViewID_"&MostUrgent="_MostUrgent_"','TRAK_hidden'); return false;""><img src=""../images/websys/pagenext.gif"" border=0></a></DIV>",$c(13,10) q
+								s ^TMP("FP",SessionID,RoomID,k)=EpisodeID_"$$"_PARAMS
+								m ^TMP("FP",SessionID,RoomID,k,"ARY")=ARY
+								//i ShowUrgent s MostUrgent=##class(epr.CTIconAssociation).NextMostUrgentPatient(MostUrgent,EpisodeID)
+								//w ##Class(epr.CTIconAssociation).FPWaitingRoomShow(EpisodeID,PARAMS,.ARY,.COL)
+								// SB 12/11/02 (30217): Only increment k if newlist(k) is not empty, so that we don't get blank rows in waitroom. 
+								// To reverse, remove following line and restore original code above.
+								s k=k+1
+							} else {
+								i '(($g(ARY("PAADMType"))="E")&(($g(ARY("BookedStatusCode"))="A")||(standalone="Y"))){
+								// 31390 - sorting for RIE
+								s SpecialSeq="Z"
+								i $g(ARY("PAADMVisitStatus"))="A" {
+									s SpecialSeq="10"
+									;i $g(ARY("PAADMEstimDischargeDate"))'="" s SpecialSeq="60"
+									i ##Class(web.PAAdmTransaction).IsMovedFromBed(EpisodeID) s SpecialSeq="60"
+									i $g(ARY("FirstDayOfLeave"))'="" s SpecialSeq="80"
+									i BedBookStatus'="O" s SpecialSeq="20"
+									i $g(ARY("PAADMParentWardDesc"))'="",$g(ARY("PAADMParentWardID"))=WardID s SpecialSeq="70"
+									i OutlierFlag s SpecialSeq="71"
+								}
+								i $g(ARY("PAADMVisitStatus"))="P" {
+										s SpecialSeq="41"
+										i $g(ARY("BookedBedCode"))'="" s SpecialSeq="40"
+										i $g(ARY("PAADMOriginalAdmissionType"))="E" s SpecialSeq="30"
+										i $g(ARY("PAADMWaitListDR"))'="" s SpecialSeq="50"
+								}
+							
+								s SpecialSeq=$e("Z000",1,4-$l(SpecialSeq))_SpecialSeq
+								s SpecialSeq=SpecialSeq_$s($g(ARY("PAADMAdmDate"))'="":$e("00000",1,5-$l($g(ARY("PAADMAdmDate"))))_$g(ARY("PAADMAdmDate")),1:99999)_$s($g(ARY("PAADMAdmTime"))'="":$e("00000",1,5-$l($g(ARY("PAADMAdmTime"))))_$g(ARY("PAADMAdmTime")),1:99999)_k
+								s ^TMP("FP",SessionID,RoomID,SpecialSeq)=EpisodeID_"$$"_PARAMS
+								m ^TMP("FP",SessionID,RoomID,SpecialSeq,"ARY")=ARY
+								// SB 12/11/02 (30217): Only increment k if newlist(k) is not empty, so that we don't get blank rows in waitroom. 
+								// To reverse, remove following line and restore original code above.
+								s k=k+1
+								}
+							}
+						}	
+					}  //end of for loop
+					// 31390 - display booking area in sorted order, waiting area will still be displayed in 'k' order from above (faster)
+					s k=0,ind="" f  {
+						i $o(^TMP("FP",SessionID,RoomID,ind))'="",(k+1)>rmMaxRec w "<DIV style=""position:absolute;PADDING-LEFT:40px; top:"_((k+1)*1.5)_"em;""><a href=""#"" onclick=""javascript:websys_createWindow('epr.floorplan.redrawlist.csp?LocID="_LocID_"&WardID="_WardID_"&WardRoomID="_RoomID_"&QueryType="_rmQueryType_"&MaxRec="_rmMaxRec_"&RowCnt="_rmMaxRec_"&FPLayout="_FPLayout_"&DeptType="_DeptType_"&ProfileID="_ProfileID_"&ind="_ind_"&ViewID="_ViewID_"&MostUrgent="_MostUrgent_"','TRAK_hidden'); return false;""><img src=""../images/websys/pagenext.gif"" border=0></a></div>",$c(13,10) q
+						s ind=$o(^TMP("FP",SessionID,RoomID,ind))
+						q:ind=""
+						k ARY,EpisodeID,PARAMS
+						s k=k+1
+						s EpisodeID=$p($g(^TMP("FP",SessionID,RoomID,ind)),"$$",1),PARAMS=$p($g(^TMP("FP",SessionID,RoomID,ind)),"$$",2,999)
+						s $p(PARAMS,"$",1)=k
+						s $p(PARAMS,"$",2)="BA"
+						m ARY=^TMP("FP",SessionID,RoomID,ind,"ARY")
+						i $p(PARAMS,"$",3)'="" s PATIENTS($p(PARAMS,"$",3))=""
+
+						i ((rmQueryType="WA")||(rmQueryType="WE")||((isEMLoc)&&(rmQueryType="MPR"))) {
+							w ##Class(epr.CTIconAssociation).FPWaitingRoomShow(EpisodeID,PARAMS,.ARY,.COL)
+						} else {
+							w ##Class(epr.CTIconAssociation).FPBookingRoomShow(EpisodeID,PARAMS,.ARY,.COL)
+						}
+					}
+				}  //end of rsPat
+			} elseif rmQueryType="" {
+			
+				//Cubicles: Must use the same index as the ward lists (PACWard.FindPatientsInWard)
+				s bedadm=0
+ 				f  {
+	 				//continue
+	 				//w !,WardID,"-",BedID
+					s bedadm=$o(^PAWARDA(+WardID,"BED",+$p(BedID,"||",2),"ADM",bedadm))
+					q:bedadm=""
+					//w !,bedadm ,"aa"
+                	s bedadminfo=$g(^PAWARDA(+WardID,"BED",+$p(BedID,"||",2),"ADM",bedadm))
+					s EpisodeID=$p(bedadminfo,"^",1)
+					s Status=$p(bedadminfo,"^",2)
+					s TransID=$p(bedadminfo,"^",3)
+					i TransID="" s TransID=$$bedtrans^CPAAdmTransaction(BedID_"||"_bedadm)
+					i EpisodeID,Status="O",$p(TransID,"||",2)'="" {
+						s trans=$p(TransID,"||",2)
+						k ARY
+		 				s (PatientID,imgDONE,imgLIST,ARY)=""
+						s $p(PARAMS1,"^",6)=Status
+		 				d ##Class(epr.CTIconAssociation).FPGatheringData(EpisodeID,PARAMS1,.ARY,.pColorArray)
+						d ##Class(epr.CTIconAssociation).FPData(EpisodeID,PARAMS2,.ARY,.imgLIST,.imgDONE)
+						//;------------DHC Su--------------------------
+                        Set ARY("titlename")=$g(ARY("UR"))_" "_$g(ARY("PAPERName"))
+						Set AdmReason=$P($g(^PAADM(EpisodeID,1)),"^",7)
+						If AdmReason'="" Set PAAdmReason=$P($g(^PAC("ADMREA",AdmReason)),"^",2)
+						Else  Set PAAdmReason=""
+						Set ARY("PAAdmReason")=PAAdmReason
+						//;----------------------------------------
+						//Add Colour for A Patient
+						i $p(^PAADM(EpisodeID),"^",2)="I",##class(web.DHCSTPCHCOLLS2).IFGivePHC(EpisodeID,WardID,0)="-1" s BedColourLIST(BedID,"head")="fuchsia" //ypz
+						// Add Colour  EM and ACU  by WKZ 071203 S
+						i $p(^PAADM(EpisodeID),"^",2)="E",##class(web.DHCSTPCHCOLLS2).IFGivePHC(EpisodeID,WardID,0)="-1" s BedColourLIST(BedID,"head")="fuchsia"
+						//i $p(^PAADM(EpisodeID),"^",2)="E" s BedColourLIST(BedID,"head")="clsRowTempLoc"
+						//--------------------------------------------------------
+						//
+						s PriorityDR=$p(^PAADM(EpisodeID),"^",33)
+						i $p(^PAADM(EpisodeID),"^",2)="E" {
+							i PriorityDR=3 s BedColourLIST(BedID,"head")="white"_"^COL"
+							i PriorityDR=1 s BedColourLIST(BedID,"head")="yellow"_"^COL"
+							i PriorityDR=2 s BedColourLIST(BedID,"head")="red"_"^COL"
+							}
+						i ShowUrgent s MostUrgent=##class(epr.CTIconAssociation).NextMostUrgentPatient(MostUrgent,EpisodeID)
+                       
+						//Set the background color of the cubicle body and/or head as required.
+						i $g(ARY("AdmissionStatusColor"))'="" s BedColourLIST(BedID,"head")=$g(ARY("AdmissionStatusColor"))_"^COL"
+						i ($g(ARY("PAADMTempLocCode"))'="") s BedColourLIST(BedID,"body")="clsRowTempLoc"
+						i $g(ARY("PAADMVisitStatus"))="P" s BedColourLIST(BedID,"body")="clsRowPre" //ypz 080626
+						i " A P "'[(" "_$g(ARY("PAADMVisitStatus"))_" ") s BedColourLIST(BedID,"body")="clsRowAlert"
+						i $g(ARY("VIPStatus"))="Y",AllowViewVIP'="Y" {
+							; cjb 11/01/2006 55848 - If VIP patient and security group doesn't allow you to view, don't display the patients details
+							w "<TABLE style=""width:100%;TABLE-LAYOUT:FIXED"" id="""" title="""" border=0 cellpadding=0 cellspacing=0>",$c(13,10)
+						} else {
+							w "<TABLE selected=0 style=""width:100%;TABLE-LAYOUT:FIXED"" id="""_$g(TableID)_""" title="""_$g(TableTitle)_""" border=0 cellpadding=0 cellspacing=0>",$c(13,10)
+							w "<TR><TD colspan=2>",$c(13,10)
+							d ##Class(epr.CTIconProfile).Show("","",ProfileID,EpisodeID,"")
+							w "</TD></TR>"
+							i TableID'="" s PATIENTS(TableID)=""
+                    		
+							//Row 1: Patient Name
+							w "<TR><TD id="""_$p($g(TableID),"^",1)_""" colspan=2 nowrap>",$g(ARY("titlename")),"</TD></TR>",$c(13,10)
+    						w "<TR><TD colspan=2 nowrap>",$g(ARY("sex")),", ",$g(ARY("age")),", ",$g(ARY("PAAdmReason")),"</TD></TR>",$c(13,10)
+							;
+							// Initial set up for Site RIE
+							
+							if (FPLayout="R") {
+								//Row 2: CareProvider, Temporary Location & Parent Ward (and EpisodeNo)
+								w "<TR>"
+								i $g(isEMLoc)'=1,$g(ARY("PAADMAdmDocCode"))'="" w "<TD>",$g(ARY("PAADMAdmDocCode")),"</TD>",$c(13,10)
+								i $g(isEMLoc)=1,$g(ARY("MostRecentSeenByDocDesc"))'="" w "<TD>",$g(ARY("MostRecentSeenByDocCode")),"</TD>",$c(13,10)
+								i $g(ARY("PAADMParentWardCode"))'="" w "<TD>",$g(ARY("PAADMParentWardCode")),"&nbsp;</TD>",$c(13,10)
+								i $g(ARY("PAADMTempLocCode"))'="" w "<TD>"_$g(ARY("PAADMTempLocCode"))_"&nbsp;</TD>",$c(13,10)
+								//Log 24444 - if inpatient is boarder then set EpisodeID style to clsBoarder
+								s clsboarder=""
+								i DeptType'="EM",$g(ARY("boarder"))="Y" s clsboarder="tblBoarder"
+								w "<TD style=""TEXT-ALIGN:right;""><SPAN class=""",clsboarder,""">&nbsp;"_$e($g(ARY("EpisodeNo")),$l($g(ARY("EpisodeNo")))-2,$l($g(ARY("EpisodeNo"))))_"</SPAN></TD>",$c(13,10)
+								w "</TR>"_$c(13,10)
+								//Row 4: Booking Details and Triage Wait Time.
+								w "<TR>"
+								i isEMLoc,$g(ARY("BookedInfoDesc"))'="" w "<TD style=""color:"_$g(ARY("BookedStatusColor"))_""">"_$g(ARY("BookedInfoCode"))_"</TD>",$c(13,10)
+								//i $g(ARY("BookedInfoDesc"))="" w "<TD>&nbsp;</TD>",$c(13,10)
+								i isEMLoc,$g(ARY("PAADMPriorityID"))'="" w "<TD align=right nowrap class=""",$g(ARY("WaitingTimeColor")),""">&nbsp;",$g(ARY("PriorityWaitingTimeStr")),"</TD>",$c(13,10)								
+								w "</TR>"
+								//Row 5: Diagnosis/Category of Complaint - Log 25371: Show Description and not code, 34951 - removed from rie query
+								//i $g(ARY("diagDesc"))'="" w "<TR><TD colspan=2 nowrap>",$g(ARY("diagDesc")),"</TD></TR>",$c(13,10)
+								//Row 6: Floorplan Notes, consultation depts
+								i $g(ARY("admFreeTextRemark"))'="" w "<TR><TD colspan=2 nowrap>",$g(ARY("admFreeTextRemark")),"</TD></TR>",$c(13,10)
+								i $g(ARY("ConsultDeptCodes"))'=""  w "<TR><TD nowrap colspan=2 style=""color:navy;overflow:hidden;HEIGHT: 1.5em"" title=""",$g(t("ConsDept"),"Consultation Depts")," - ",$g(ARY("ConsultDeptDescs")),""">",$g(ARY("ConsultDeptCodes")),"</TD></TR>",$c(13,10)
+							} elseif (FPLayout="B") {
+								// Bury and Rochdale
+								i $g(ARY("dobFormatted"))'="" w "<TR><TD colspan=2>",$g(ARY("dobFormatted")),"&nbsp;</TD></TR>",$c(13,10)
+								i $g(ARY("AgeDynamic"))'="" w "<TR><TD>",$g(ARY("AgeDynamic")),",&nbsp;</TD>",$c(13,10)
+								i $g(ARY("sexCode"))'="" w "<TD>",$g(ARY("sexCode")),"&nbsp;</TD></TR>",$c(13,10)
+								i $g(ARY("PAADMAdmDocCode"))'="" w "<TR><TD colspan=2>",$g(ARY("PAADMAdmDocCode")),"&nbsp;</TD></TR>",$c(13,10)
+								i $g(ARY("PAADMParentWardCode"))'="" w "<TR><TD colspan=2>",$g(ARY("PAADMParentWardCode")),"&nbsp;</TD></TR>",$c(13,10)
+								i $g(ARY("BookedInfoDesc"))'="" w "<TR><TD colspan=2 style=""color:",$g(ARY("BookedStatusColor")),""">",$g(ARY("BookedInfoCode")),"</TD></TR>",$c(13,10)
+								i $g(ARY("PAADMTempLocCode"))'="" w "<TR><TD colspan=2>",$g(ARY("PAADMTempLocCode")),"&nbsp;</TD></TR>",$c(13,10)
+							} else {
+								/*i isEMLoc {
+									w "<TR>"
+									i $g(ARY("PAADMPriorityID")) w "<TD nowrap class=""",$g(ARY("WaitingTimeColor")),""">",$g(ARY("PriorityWaitingTimeStr")),"</TD>",$c(13,10)
+									i ShowRegWaitTime="Y",$g(ARY("UR"))'="" w "<TD nowrap>",$g(ARY("RegWaitingTimeStr")),"</TD>",$c(13,10)
+									w "</TR>"
+								}*/
+								i $g(ARY("MRADMPresentComplaint"))_$g(ARY("diagDesc"))'="" {
+									w "<TR><td colspan=2>"
+									i $g(ARY("MRADMPresentComplaint"))'="" w "<SPAN>",$g(ARY("MRADMPresentComplaint")),"</SPAN>",$c(13,10)
+									i $g(ARY("diagDesc"))'="",$g(ARY("diagAltDesc"))'="" w "<SPAN>",$s($g(ARY("MRADMPresentComplaint"))'="":", ",1:"")_$s($g(ARY("diagCode"))="":$g(ARY("diagAltDesc")),1:$g(ARY("diagCode"))),"</SPAN>",$c(13,10)
+									i $g(ARY("diagDesc"))'="",$g(ARY("diagAltDesc"))="" w "<SPAN>",$s($g(ARY("diagCode"))="":$g(ARY("diagDesc")),1:$g(ARY("diagCode"))),"</SPAN>",$c(13,10)
+									w "</td></TR>",$c(13,10)
+								}
+								i $g(ARY("PAADMTempLocCode"))_$g(ARY("MostRecentSeenByDocDesc"))_$g(ARY("PAADMDepCode"))'="" {
+									w "<TR><TD colspan=2>"
+									i $g(ARY("PAADMTempLocCode"))'="" w "<SPAN>",$g(ARY("PAADMTempLocCode")),"&nbsp;</SPAN>",$c(13,10)
+									i $g(isEMLoc)'=1,$g(ARY("PAADMAdmDocCode"))'="" w "<SPAN>"_$g(ARY("PAADMAdmDocDesc"))_"&nbsp;</SPAN>",$c(13,10)
+									i $g(isEMLoc)=1,$g(ARY("MostRecentSeenByDocDesc"))'="" w "<SPAN>"_$g(ARY("MostRecentSeenByDocDesc"))_"&nbsp;</SPAN>",$c(13,10)
+									i $g(ARY("PAADMDepCode"))'="" d
+									.s PAADMLocDesc=ARY("PAADMDepDesc")  //$P($G(^CTLOC($O(^CTLOC(0,"Code",$$ALPHAUP^SSUTIL4(ARY("PAADMDepCode")),"")))),"^",2)
+									.i $P(PAADMLocDesc,"-",2)'="" s PAADMLocDesc=$P(PAADMLocDesc,"-",2)
+									.w "<SPAN>",PAADMLocDesc,"&nbsp;</SPAN>",$c(13,10)   //071203
+									w "</TD></TR>",$c(13,10)
+								}
+								i $g(ARY("admFreeTextRemark"))'="" w " <TR><TD colspan=2 nowrap>",$g(ARY("admFreeTextRemark")),"</TD>",$c(13,10)
+								i $g(ARY("ConsultDeptCodes"))'="" w "<TR><TD style=""color:navy;overflow:hidden;HEIGHT: 1.5em"">",$g(ARY("ConsultDeptCodes")),"</TD></TR>",$c(13,10)
+								i $g(ARY("BookedInfoDesc"))'="" w "<TR><TD colspan=2 style=""color:",$g(ARY("BookedStatusColor")),""">",$g(ARY("BookedInfoCode")),"</TD></TR>",$c(13,10)
+							} //end of (FPLayout)
+						} // end of only display non VIP
+						//Displays all the images using imgDONE to not display one image twice
+						w "<TR><TD colspan=2>",$c(13,10)
+						i $g(ARY("VIPStatus"))="Y",AllowViewVIP'="Y" {
+							; cjb 11/01/2006 55848 - If VIP patient and security group doesn't allow you to view, only show VIP icon
+							;s VIPID=$o(^epr.CTIconAssociationI("UniqueCodeIndex","VIP",""))
+							s VIPID=##Class(epr.CTIconAssociation).GetIdFromCodeOrDescription("VIP")
+							s VIPdata=^epr.CTIconAssociationD(VIPID),image=$li(VIPdata,2),title=$li(VIPdata,4)
+							w "<IMG align='top' SRC='../images/"_image_"' title='"_$zcvt(title,"O","HTML")_"'>"
+						} else {
+							//d ##Class(epr.CTIconProfile).Show("","",ProfileID,EpisodeID,"")
+						}
+						w "</TD></TR></TABLE>"
+					}  //end of i EpisodeID,Status="O",$p(TransID,"||",2)'=""
+				}  //end of bedadm loop
+			}  //end of rmQueryType="WA")!(rmQueryType="WE")
+ 		}  //end of isSetup
+ 		w "</DIV>",$c(13,10)
+ 		s lcurrpos=lcurrpos+wpos+10
+ 	}  //end of  wpos+lpos+tpos+hpos....
+ }  //end of q'rs2.Next()
+ d rs2.Close()
+ w "</DIV><!--ward floorplan-->",$c(13,10)
+ ;
+ //just to allow to re-adjust the scrollbar
+ ;w !,"<DIV style=""top:",(maxheight+15),"px;left:",maxwidth,"px;width:1px;height:1px;position:absolute;"">&nbsp;</div>",$c(13,10)
+ w !,"<SCRIPT langauge='javascript'>"
+ w !,"var xxxmaindiv=document.getElementById('epr.floorplan'); var xxxmainhgt=xxxmaindiv.offsetTop+"_maxheight_";"
+ w !,"document.writeln('<DIV id=""scrollie"" style=""top:'+(xxxmainhgt+2)+'px;left:"_maxwidth_"px;width:1px;height:1px;position:absolute;"">&nbsp;</div>');"
+ //display monitor (data/time references)
+ w !,"document.writeln('<DIV style=""top:'+(xxxmainhgt+5)+'px;left:0px;position:absolute;"">');"
+ w !,"</SCRIPT>",!!
+ ;w !,"<DIV style=""top:"_(maxheight+20)_"px;left:0px;position:absolute;"">",$c(13,10)
+ i $g(%session.Data("LOGON.PPMDISPLAY")) d mon.Show()
+ ; Log 57573
+ i $g(%session.Data("LOGON.PPMCAPTURE")) d mon.Freeze(),mon.%Save()
+ ;i $g(%session.Data("LOGON.PPMCAPTURE")) d mon.%Save()
+ i $d(mon) d mon.%Close()
+ w !!
+ //show empty component simply for displaying layout editor and dumping messages
+ n objEPRFloorPlan
+ s objEPRFloorPlan=##Class(websys.Component).OpenName("epr.floorplan.Messages")
+ i objEPRFloorPlan {
+ 	d objEPRFloorPlan.Show()
+ 	d objEPRFloorPlan.%Close()
+ }
+ w !,"</DIV>",$c(13,10)
+	w !,"<SCRIPT>"
+	;w !,"function FloorPlanHelp() {websys_help('websys.help.csp?XCOMPONENT="_objEPRFloorPlan.%Id()_"&XCONTEXT="_$g(%request.Data("CONTEXT",1))_"&XTWKFL="_$g(%request.Data("TWKFL",1))_"'); }"
+	;w !,"document.body.onkeydown = FloorPlanHelp;"
+	w !,"document.body.onkeydown = document.getElementById('depr_floorplan_Messages').onkeydown;"
+ 	w !,"</SCRIPT>"
+ ;
+ //set colours against the rooms with adm
+ w "<SCRIPT>",$c(13,10)
+ w "var admtype=""",$s(isEMLoc:"E",1:""),""";",$c(13,10)
+ w "var WardID=""",WardID,""";",$c(13,10)
+ //Set background or header color of cubicles
+   s j="" f  {
+ 	s j=$o(BedColourLIST(j))
+ 	q:j=""
+	i $g(BedColourLIST(j,"body"))="",$g(BedColourLIST(j,"head"))'="" {
+	 	//w "var objHead=document.getElementById(""c",j,"""); "_$c(13,10)
+		//w "if (objHead) objHead.style.background="""_$g(BedColourLIST(j,"head"))_""";"_$c(13,10)
+		w "var objHead=document.getElementById(""c",j,"""); "_$c(13,10)
+		i $p($g(BedColourLIST(j,"head")),"^",2)'="COL" w "if (objHead) objHead.className=objHead.className+"" "_$p($g(BedColourLIST(j,"head")),"^",1)_""";"_$c(13,10)
+		i $p($g(BedColourLIST(j,"head")),"^",2)="COL" w "if (objHead) objHead.style.background="""_$p($g(BedColourLIST(j,"head")),"^",1)_""";"_$c(13,10)
+ 	}
+	i $g(BedColourLIST(j,"body"))'="" {
+	 	//w "var objBody=document.getElementById(""",j,"""); "_$c(13,10)
+ 		//w "if (objBody) objBody.style.background="""_$g(BedColourLIST(j,"body"))_""";"_$c(13,10)
+		w "var objBody=document.getElementById(""",j,"""); "_$c(13,10)
+ 		i $p($g(BedColourLIST(j,"body")),"^",2)'="COL" w "if (objBody) objBody.className=objBody.className+"" "_$p($g(BedColourLIST(j,"body")),"^",1)_""";"_$c(13,10)
+		i $p($g(BedColourLIST(j,"body")),"^",2)="COL" w "if (objBody) objBody.style.background="""_$p($g(BedColourLIST(j,"body")),"^",1)_""";"_$c(13,10)
+ 	}
+ 	
+ }
+  w $c(13,10)
+  // ab 10.09.03 place the most urgent patient icon
+  i ShowUrgent d
+  . s IconTitle=$o(^epr.CTIconAssociationI("UniqueCodeIndex","NEXTMOSTURGENT",""))
+  . i IconTitle,$ld(^epr.CTIconAssociationD(IconTitle)) s IconTitle=$li(^epr.CTIconAssociationD(IconTitle),4)
+  . s j="" f  s j=$o(PATIENTS(j)) q:j=""  d
+  . . i $p(j,"^",1)=MostUrgent d
+  . . . ;w "var objBody=document.getElementById(""",$zcvt(j,"O","JS"),"""); ",$c(13,10)	; cjb 25/08/2005 54527 - convert " to \"
+  . . . w "var objBody=document.getElementById(""",$p(j,"^",1),"""); ",$c(13,10)	; cjb 25/08/2005 54527 - convert " to \"
+  . . . ; inserts the icon into the TD of the patients TABLE
+  . . . ;w "if ((objBody)&&(objBody.firstChild)&&(objBody.firstChild.firstChild)&&(objBody.firstChild.firstChild.firstChild)) objBody.firstChild.firstChild.firstChild.insertAdjacentHTML(""afterBegin"",""<img align='top' src='../images/"_##class(epr.CTIconAssociation).GetImageFromCode("NextMostUrgent")_"' title='"_IconTitle_"'>"");",$c(13,10)
+  . . . w "if (objBody) objBody.insertAdjacentHTML(""afterBegin"",""<img align='top' src='../images/"_##class(epr.CTIconAssociation).GetImageFromCode("NextMostUrgent")_"' title='"_IconTitle_"'>"");",$c(13,10)
+  
+  w $c(13,10)
+ ;JW:w "document.body.focus();",$c(13,10)
+ w "document.body.onmousedown = TrakIt_onmousedown;",$c(13,10)
+ w "document.body.onmouseup = TrakIt_onmouseup;",$c(13,10)
+ w "document.body.onmousemove = TrakIt_onmousemove;",$c(13,10)
+ w "document.body.onkeypress = GotoShortcutMenu;",$c(13,10)
+ w "window.status="""_%session.Get("LOGON.USERCODE")_""";",$c(13,10)
+ w "</SCRIPT>",$c(13,10)
+ d $zu(115,10,1) //reset default concurrency level
+ q 1
+:Error
+ s ^Temp("Upgrade","epr.floorplan.csp")=$ZE
+ WRITE !,"OnErr $ESTACK= ",$ESTACK   // 0
+ WRITE !,"OnErr $ECODE= ",$ECODE," $ZERROR=",$ZERROR
+ Q 0
+</SERVER>
+</body>
+</html>

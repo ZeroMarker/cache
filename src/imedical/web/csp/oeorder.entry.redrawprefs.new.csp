@@ -1,0 +1,147 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<BODY>
+<!--
+	redraws the order favourites on the order entry screen (oeorder.custom.csp)
+-->
+<!--
+<SCRIPT language="Javascript" src="../scripts/websys.listboxes.js"></SCRIPT>
+-->
+<SCRIPT language="Javascript">
+	document.onreadystatechange = CallMainWinEvent;
+	function CallMainWinEvent() {
+		//if ((document.readyState == 'complete')&&(mainwin.PageLogicObj.isResizeGridH=="Y")) mainwin.ResizeGridWidthHeiht('resize');
+	}
+</SCRIPT>
+<SCRIPT language="Cache" RUNAT=SERVER>
+	n orderentrywin,tabidx,preftab,tabgroups,i,rs,name,chartid,extraitms,itemdataDelim,groupitemDelim,tabgroupDelim,EpisodeID,FocusWindowName
+	m ^tmpRequest=%request.Data
+	;m ^tmpsession=%session.Data
+	s EpisodeID=$g(%request.Data("EpisodeID",1))
+	s orderentrywin=$g(%request.Data("OEWIN",1))
+	s FocusWindowName=$g(%request.Data("FocusWindowName",1))
+	s formulary=""
+	s formulary=$g(%request.Data("formulary",1))
+	s tabidx=$g(%request.Data("TABIDX",2)) ;organise one tab
+	s ^tmpRequest("tabidx",1)=tabidx
+	s preftab=$g(%request.Data("PREFTAB",1)) ;organise all tabs
+	s extraitms=##Class(%CSP.Page).UnescapeURL($g(%request.Data("EXTRAPREFITEMS",1))) ;add tab's groupitems
+	i extraitms'="" d ##Class(epr.PreferencesQuery).websysSaveOETabsUserAdd()
+	d ##Class(epr.PreferencesQuery).GetOEPrefDelims(.itemdataDelim,.groupitemDelim,.tabgroupDelim)
+	s FindDataXTYPE=""
+	s objectType=$g(%request.Data("ObjectType",1))
+	if objectType="" {
+		d ##Class(epr.PreferencesQuery).GetOEPrefTabs()
+		s objectType=$g(%request.Data("ActiveObject",1))
+		s FindDataXTYPE=$g(%request.Data("XTYPE",1))
+		//s ^tmpRequest("tabs",1)=$g(%request.Data("TABLIST",tabidx+1))
+	}else{
+		d ##Class(web.DHCDocOrderCommon).GetOEPrefTabs(objectType)
+		//s ^tmpRequest("tabs","objectType")=objectType_"@"_$g(%request.Data("TABLIST",tabidx+1))
+	}
+	s chartid=$g(%request.Data("ChartID",1))
+	;w "<BR>"_$zd($h,4)_","_$zt($p($h,",",2))_"CHART:",chartid_"</BR>"_$c(13,10)
+	w "<SCRIPT language='Javascript'>"_$c(13,10)
+	;get the window with the order entry screen where this page was called from
+	w "var mainwin=window.open('','"_orderentrywin_"');",$c(13,10),$c(13,10)
+	s ^tmpRequest("tabidx",2)=tabidx
+	if (FindDataXTYPE="L"){
+		w "mainwin.OEPrefChangeHandel('L')",$c(13,10)
+	}
+	;判断是否存在科室权限
+	s OrgFavPrivilege=##Class(web.DHCDocOrderCommon).IsHaveMenuAuthOrderOrgFav(%session.Get("LOGON.GROUPID"),"System.OEOrder.OrgFav.Save.SetSaveForLocation")
+	
+	if tabidx'="" d
+	. s tabgroups=$g(%request.Data("TABLIST",tabidx+1))
+	. s $p(tabgroups,tabgroupDelim,1)="",tabgroups=$e(tabgroups,$l(tabgroupDelim)+1,$l(tabgroups)) ;remove the tabdesc (first piece)
+	. s ^tmpRequest("tabs")=tabgroups
+	. if (tabgroups'="") d
+	. . f i=1:1:5 d
+	. . . s name=##Class(epr.PreferencesQuery).GetOETabGroupName(tabgroups,i)
+	. . . ;w "alert('"_name_"');",$c(13,10)
+	. . . w "var obj=mainwin.jQuery('#ngroup"_(i-1)_"Z"_tabidx_"');",$c(13,10)
+	. . . w "if (obj) {"_$c(13,10)
+	. . . ;w "obj.remove('div');"_$c(13,10)
+	. . . w "obj.panel('setTitle','"_name_"')",$c(13,10)
+	. . . w "if (!(('"_OrgFavPrivilege_"'=='0')&&('"_objectType_"'=='User.CTLoc'))) {",$c(13,10)
+	. . . w "   obj.panel({tools:[",$c(13,10)
+	. . . w "      {iconCls:'icon-add',handler:function(){mainwin.PrefEditItem('addZ"_(i-1)_"Z"_tabidx_"Z"_objectType_"')}},",$c(13,10)
+	. . . w "      {iconCls:'icon-remove',handler:function(){mainwin.PrefEditItem('removeZ"_(i-1)_"Z"_tabidx_"Z"_objectType_"')}},",$c(13,10)
+	. . . w "      {iconCls:'icon-edit',handler:function(){mainwin.PrefEditItem('editZ"_(i-1)_"Z"_tabidx_"Z"_objectType_"')}}",$c(13,10)
+	. . . w "   ]})",$c(13,10)
+	. . . w "}",$c(13,10)
+	. . . ;w "obj.panel({title:'"_$s(name="":"&nbsp",1:$ZCVT(name,"O","JS"))_"'})",$c(13,10)
+	. . . ;s rs=##Class(%Library.ResultSet).%New("epr.PreferencesQuery:FindOETabItems")
+	. . . s rs=##Class(%Library.ResultSet).%New("web.DHCDocOrderCommon:FindOETabItems")
+	. . . d rs.Execute(tabgroups,i,1,$g(%session.Data("LOGON.GROUPID")),EpisodeID,formulary)
+	. . . ;f  d  q:'rs.Next()
+	. . . s n=0
+	. . . f  q:'rs.Next()  d
+	. . . . s itemvalue=rs.GetDataByName("values")  ;$zcvt(rs.GetDataByName("values"),"O","JS")
+	. . . . s itemordertype=$p(itemvalue,$C(4),9)
+	. . . . s itemrowidInfo=$p(itemvalue,$C(4),3)
+	. . . . s arcim=$P(itemrowidInfo,"*",1)
+	. . . . i itemordertype="R" d
+	. . . . . s RealStock=##Class(web.DHCDocOrderEntry).GetRealStock(EpisodeID,arcim)
+	. . . . e  s RealStock=1
+	. . . . s n=n+1
+	. . . . i n=1 d
+	. . . . .;w "alert('"_arcim_":"_itemordertype_":"_":"_EpisodeID_":"_RealStock_"');",$c(13,10)
+	. . . . w " mainwin.PrefAddItemCustom('"_tabidx_"','"_(i-1)_"','"_$zcvt(rs.GetDataByName("values"),"O","JS")_"','"_$zcvt(rs.GetDataByName("desc"),"O","JS")_"','','"_RealStock_"');"
+	. . . w " mainwin.PrefAddItemCustomAppend('"_tabidx_"','"_(i-1)_"');"
+	. . . w "}",$c(13,10),$c(13,10)
+	. . . ;w "alert(2);",$c(13,10)
+	. . s name=$p($p(tabgroups,tabgroupDelim,6),itemdataDelim,1)
+	. . w "var obj=mainwin.jQuery('#catID'); if (obj) obj.value='"_$p($p(tabgroups,tabgroupDelim,6),itemdataDelim,2)_"';",$c(13,10),$c(13,10)
+	. . w "obj=mainwin.jQuery('#Category');",$c(13,10)
+	. . w "if (obj) {obj.val('"_name_"');} ",$c(13,10)
+	. . s name=$p($p(tabgroups,tabgroupDelim,7),itemdataDelim,1)
+	. . w "obj=mainwin.jQuery('#subcatID'); if (obj) obj.val('"_$p($p(tabgroups,tabgroupDelim,7),itemdataDelim,2)_"');",$c(13,10),$c(13,10)
+	. . w "obj=mainwin.jQuery('#SubCategory');",$c(13,10)
+	. . w "if (obj) {obj.val('"_name_"');} ",$c(13,10)
+	
+	;s ^tmpgry("tabidx")=tabidx_","_preftab_","_objectType_","_%request.Data("TABLIST",1)
+	if preftab d
+	. s rs=##Class(%Library.ResultSet).%New("epr.PreferencesQuery:FindOETabList")
+	. d rs.Execute()
+	. w "var obj=mainwin.jQuery('#Template_tabs');",$c(13,10)
+	. w "if (obj) {",$c(13,10)
+	. ;清除所有标签
+	. w "var allTabs = obj.tabs('tabs');",$c(13,10)
+	. w "for(var tabLoop = 0, len = allTabs.length; tabLoop < len; tabLoop++) {obj.tabs('close',0);};",$c(13,10)
+	. if $o(%request.Data("TABLIST",""),-1)>0 d
+	. . f idx=1:1  q:'rs.Next()  d
+	. . . s desc=rs.GetDataByName("desc")
+	. . . if +tabidx=(idx-1) d
+	. . . . w "obj.tabs('add',{id:'TabItem"_idx_"',title: '"_desc_"',selected:1});",$c(13,10)
+	. . . e  d
+	. . . . w "obj.tabs('add',{id:'TabItem"_idx_"',title: '"_desc_"',selected:0});",$c(13,10)
+	. w "}",$c(13,10)
+	. d rs.%Close()
+	. ;i chartid w "if (mainwin.parent.frames['oeorder_eprchart']) {mainwin.parent.RedrawEPRChart('"_chartid_"','"_$g(%request.Data("eprChartFrameSize",1))_"');}",$c(13,10)
+	. ;i 'chartid w "if (mainwin.parent.frames['oeorder_eprchart']) {mainwin.parent.NoEPRChart();}",$c(13,10)
+	
+	w "if (self==top) window.close();",$c(13,10)
+	/**********
+	i FocusWindowName'="",FocusWindowName'="undefined" d
+    . ;Log 59598 - BC - 29-06-2006 : Change statusbar variable (status=) to display the status bar (=yes).
+	. w "var openwin = window.open("""",'"_FocusWindowName_"','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes');",$c(13,10)
+	. w "if (openwin) openwin.focus();",$c(13,10)
+	*/
+	
+	w "</SCR"_"IPT>",$c(13,10)
+</SCRIPT>
+</BODY>
+</HTML>
+

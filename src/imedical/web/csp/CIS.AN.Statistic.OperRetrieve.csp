@@ -1,0 +1,386 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>手术检索</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',title:'',iconCls:'icon-search',headerCls:'panel-header-gray',border:false" style="height:140px;padding-left:5px;">
+    	<form id="conditionForm">
+    		<p>
+    		<label style="display:inline-block;width:100px;text-align:right;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" data-options="width:150">
+    		<label style="display:inline-block;width:80px;text-align:right;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox"  data-options="width:150">
+    		<label style="display:inline-block;width:80px;text-align:right;">患者科室</label>
+    		<input type="text" id="PatDept" name="PatDept" class="hisui-combobox textbox" data-options="width:150,textField: 'Description',valueField: 'RowId'">
+    		<label style="display:inline-block;width:80px;text-align:right;">手术医生</label>
+    		<input type="text" id="Surgeon" name="Surgeon" class="hisui-combobox textbox" data-options="width:150,textField: 'Description',valueField: 'RowId'">
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:20px;">查询</a>
+    		</p>
+    		<p>
+    		<label style="display:inline-block;width:100px;text-align:right;">手术名称包含</label>
+    		<input type="text" id="OperName" name="OperName" class="textbox" style="width:143px;">
+    		<label style="display:inline-block;width:80px;text-align:right;">手术切口</label>
+    		<select type="text" id="BladeType" name="BladeType" class="hisui-combobox textbox" style="width:150px;">
+    			<option value="">全部</option>
+    			<option value="I">I类切口</option>
+    			<option value="II">II类切口</option>
+    			<option value="III">III类切口</option>
+    			<option value="IV">IV类切口</option>
+    		</select>
+    		<label style="display:inline-block;width:80px;text-align:right;">手术类型</label>
+    		<select type="text" id="SourceType" name="SourceType" class="hisui-combobox textbox" style="width:150px;">
+    			<option value="">全部</option>
+    			<option value="E">急诊</option>
+    			<option value="B">择期</option>
+    			<option value="L">限期</option>
+    		</select>
+    		<label style="display:inline-block;width:80px;text-align:right;">使用设备</label>
+    		<input type="text" id="UsedDevice" name="UsedDevice" class="hisui-combobox textbox" data-options="textField: 'EquipDesc',valueField: 'RowId'" style="width:150px;">
+    		<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'" style="margin-left:20px;">打印</a>
+    		</p>
+    		<p>
+    		<label style="display:inline-block;width:100px;text-align:right;">手术分级</label>
+    		<input type="text" id="OperClass" name="OperClass" class="hisui-combobox textbox" data-options="textField: 'Description',valueField: 'RowId'" style="width:150px;">
+    		<label style="display:inline-block;width:80px;text-align:right;">专家手术</label>
+    		<select type="text" id="SpecialistOper" name="SpecialistOper" class="hisui-combobox textbox" style="width:150px;">
+    			<option value="">全部</option>
+    			<option value="Y">是</option>
+    			<option value="N">否</option>
+    		</select>
+    		</p>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'手术查询结果：<span>共<span id=\'badge_opercount\' style=\'margin:0 5px;\'></span>台</span>',headerCls:'panel-header-gray' ">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		//nowrap: true,
+        		toolbar: "",
+        		border:false,
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.WorkStatistics",
+            		QueryName: "FindOperScheduleList",
+            		ArgCnt: 10
+        		},
+        		columns: [[{
+                    field: "OperDate",
+                    title: "手术日期",
+                    width: 100
+                },
+                {
+                    field: "PatDeptDesc",
+                    title: "科室",
+                    width: 100
+                },
+                {
+                    field: "Patient",
+                    title: "患者",
+                    width: 120
+                },
+                {
+                    field: "WardBed",
+                    title: "病区床位",
+                    width: 120,
+                    hidden: true
+                },
+                {
+                    field: "MedcareNo",
+                    title: "住院号",
+                    width: 80
+                },
+                {
+                    field: "OperDesc",
+                    title: "手术名称",
+                    width: 240
+                },
+                {
+                    field: "SurgeonDesc",
+                    title: "手术医生",
+                    width: 60
+                },
+                {
+                    field: "AssistantDesc",
+                    title: "手术助手",
+                    width: 100
+                },{
+                    field: "UnplannedSurgery",
+                    title: "二次手术",
+                    width: 60,
+                    formatter:function(value,row,index){
+	                    var result="";
+	                    if(value=="Y"){
+		                    return "<span class='hisui-tooltip' title='首次手术：<br>"+row.UnplannedSurgeryNote+"'>是</span>"
+	                    }
+	                    return "否";
+                    }
+                },{
+                    field: "AreaInOutTime",
+                    title: "入离室时间",
+                    width: 160
+                },{
+                    field: "AnaTime",
+                    title: "麻醉时间",
+                    width: 160
+                }, {
+                    field: "OperTime",
+                    title: "手术时间",
+                    width: 160
+                },
+                {
+                    field: "AnaCareProv",
+                    title: "麻醉医护",
+                    width: 130
+                },
+                {
+                    field: "SurCareProv",
+                    title: "手术医护",
+                    width: 120,
+                    hidden: true
+                },
+                {
+                    field: "AdmReason",
+                    title: "费别",
+                    width: 100
+                },
+                {
+                    field: "SourceTypeDesc",
+                    title: "类型",
+                    width: 60,
+                    hidden: true
+                },
+                {
+                    field: "OperStatusDesc",
+                    title: "手术状态",
+                    width: 80,
+                    hidden: true
+                }
+           	]],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue")||'';
+            	param.Arg2 = $("#OperEndDate").datebox("getValue")||'';
+            	param.Arg3 = $("#PatDept").combobox('getValue')||'';
+            	param.Arg4 = $("#Surgeon").combobox('getText')||'';
+            	param.Arg5 = $("#OperName").val();
+            	param.Arg6 = $("#BladeType").combobox('getValue')||'';
+            	param.Arg7 = $("#SourceType").combobox('getValue')||'';
+            	param.Arg8 = $("#UsedDevice").combobox('getText')||'';
+            	param.Arg9 = $("#OperClass").combobox('getValue')||'';
+            	param.Arg10 = $("#SpecialistOper").combobox('getValue')||'';
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	onLoadSuccess: function(data) {
+	        	$("#badge_opercount").text(data.total);
+	        	$('.hisui-tooltip').tooltip({});
+	        },
+	        view: groupview,
+        	groupField: "PatDeptDesc",
+        	groupFormatter: function(value, rows) {
+	        	var length=rows.length;
+	        	
+            	return value + " 共 "+rows.length+"台";
+        	},
+        	pagination: true,
+        	pageList: [200, 500, 1000, 2000, 3000],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	dhccl.getDatas(ANCSP.DataQuery, {
+        	ClassName: CLCLS.BLL.Admission,
+        	QueryName: "FindCareProvByLoc",
+        	Arg1: "",
+        	Arg2: session.DeptID,
+        	ArgCnt: 2
+    	}, 'json', true, function(data) {
+        	$("#AnDoctor").combobox('loadData', data);
+    	});
+    	
+    	$("#Surgeon").combobox({
+            valueField: "RowId",
+            textField: "Description",
+            url:ANCSP.DataQuery,
+            mode: "remote",
+            onBeforeLoad:function(param) {
+	            param.ClassName = CLCLS.BLL.Admission;
+            	param.QueryName = "FindCareProv";
+            	param.Arg1 = param.q ? param.q : "";
+            	param.Arg2 = '';
+            	param.ArgCnt = 2;
+            }
+        });
+    	
+    	dhccl.getDatas(ANCSP.DataQuery, {
+        	ClassName: CLCLS.BLL.Admission,
+        	QueryName: "FindLocation",
+        	Arg1:"",
+        	Arg2:"E^O",
+        	ArgCnt: 2
+    	}, 'json', true, function(data) {
+        	$("#PatDept").combobox('loadData', data);
+    	});
+    	
+    	dhccl.getDatas(ANCSP.DataQuery, {
+        	ClassName: ANCLS.BLL.ConfigQueries,
+        	QueryName: "FindDeptEquip",
+        	Arg1:session.DeptID,
+        	Arg2:"",
+        	Arg3:"",
+        	ArgCnt: 3
+    	}, 'json', true, function(data) {
+        	$("#UsedDevice").combobox('loadData', data);
+    	});
+    	
+    	dhccl.getDatas(ANCSP.DataQuery, {
+        	ClassName: ANCLS.BLL.CodeQueries,
+        	QueryName: "FindOperClass",
+        	ArgCnt: 0
+    	}, 'json', true, function(data) {
+        	$("#OperClass").combobox('loadData', data);
+    	});
+    	
+    	
+    	$("#btnPrint").click(function(){
+	    	printGrid();
+    	});
+	});
+	
+	function printGrid(){
+			var lodop = getLodop();
+    		createPrintPage(lodop);
+    
+    		lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    		lodop.SET_PREVIEW_WINDOW(1, 2, 0, 0, 0, "");
+    		lodop.SET_PRINT_MODE("AUTO_CLOSE_PREWINDOW", 1); //打印后自动关闭预览窗口
+    		lodop.PREVIEW();
+		}
+		
+		
+    	
+		function createPrintPage(lodop){
+			var datagrid = $("#data_grid");
+    		var groups = datagrid.datagrid("groups");
+    		
+    		var length = groups.length;
+    		var group,row,rowLength;
+    		var gridHtml=[];
+    		var linedItemNo=1;
+    		var colWidth=120,totalColWidth=720,columns=6;
+    	
+    		for(var i=0;i<length;i++){
+	    		group = groups[i];
+	    	
+	    		if(i>0){
+		    		lodop.NEWPAGEA();
+		    		linedItemNo += 3;
+	    		}
+	    	
+	    		gridHtml=[
+                    "<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:18px;}",
+                    "th {font-size:20px;font-weight:bold;text-align:center;} tr>td {text-align:center} tr {height:24px;} ",
+                    "tr {height:30px;} table {table-layout:fixed;} .item-desc {width:200px;overflow:hidden;}</style>"
+                ];
+	    		gridHtml.push('<table>');
+	    		gridHtml.push('<thead><tr>');
+	    		gridHtml.push('<th style="width:100px;">手术日期</th>');
+	    		gridHtml.push('<th style="width:100px;">科室</th>');
+	    		gridHtml.push('<th style="width:130px;">患者</th>');
+	    		gridHtml.push('<th style="width:80px;">住院号</th>');
+	    		gridHtml.push('<th style="width:245px;">手术名称</th>');
+				gridHtml.push('<th style="width:60px;">手术医生</th>');
+	    		gridHtml.push('<th style="width:60px;">二次手术</th>');
+	    		
+	    		gridHtml.push('</tr></thead>');
+	    		gridHtml.push('<tbody>');
+	    	
+	    		rowLength = group.rows.length;
+	    		for(var j=0;j<rowLength;j++){
+		    		row = group.rows[j];
+		    		gridHtml.push('<tr>');
+		    		gridHtml.push('<td>'+row.OperDate+'</td>');
+		    		gridHtml.push('<td>'+row.PatDeptDesc+'</td>');
+		    		gridHtml.push('<td>'+row.Patient+'</td>');
+		    		gridHtml.push('<td>'+row.MedcareNo+'</td>');
+		    		gridHtml.push('<td>'+row.OperInfo+'</td>');		  	
+		    		gridHtml.push('<td>'+row.SurgeonDesc+'</td>');
+		    		gridHtml.push('<td>'+(row.UnplannedSurgery || '否')+'</td>');		    	
+
+		    		gridHtml.push('</tr>');
+	    		}
+		    
+	    		gridHtml.push('</tbody></table>');
+	    	
+	    		lodop.ADD_PRINT_TABLE(80,20,"RightMargin:0.5cm",950,gridHtml.join(''));
+	    	
+	    		setHeader();
+	    		
+	    		setDeptDesc(group.value,group.rows.length);
+    		}
+	
+	
+	
+		function setHeader(){
+	    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    		lodop.SET_PRINT_STYLE("FontName", "微软雅黑");
+    		lodop.SET_PRINT_STYLE("FontSize", 11);
+    		lodop.ADD_PRINT_TEXT(20, 180, 430, 35, "科 室 手 术 汇 总");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 21); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+   
+    	}
+    	
+    	function setDeptDesc(deptDesc,count)
+    	{
+	    	lodop.ADD_PRINT_TEXT(50, 40, 300, 20, deptDesc+" 共"+count+"台");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 1) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	}
+	}
+	</script>
+</body>
+</html>

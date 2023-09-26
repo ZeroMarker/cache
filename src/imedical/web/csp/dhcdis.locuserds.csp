@@ -1,0 +1,241 @@
+<!--dhcdis.locuserds.csp-->
+<html>
+<head>
+<title></title>
+<DHCAPP:EASYUI/>
+
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcdis/locuserds.js"></script>
+	<script Language="Javascript">
+		var hosp="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+		var LocId=""
+		var URL=""
+   </script>
+</head>
+<body>  
+<!--<div style="width:100%;height:25px;padding:5px 0 0 5px;background-color:#38AAFF;color:#FFFFFF">配送人员关联科室</div>-->
+<div  class="easyui-layout" fit="true" >
+ <div data-options="region:'center'" >
+	<!-- toolbar -->
+		<div id="toolbar" class="toolbar">
+			<form id="queryForm" >
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+					<td class="textLabel">科室:<input type="text" id="LULocDr" name="LULocDr" class="easyui-combobox" ></input> </td>	
+					<td class="textLabel">人员: <input type="text" id="LUUserDr" name="LUUserDr" class="easyui-combobox"></input> </td>
+					<td ><a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
+					<td><div class="datagrid-btn-separator"> </div> </td>
+					<td ><a class="easyui-linkbutton" data-options="iconCls:'icon-reload',plain:true" onclick="javascript:commonReload({'datagrid':'#datagrid','formid':'#queryForm'})">重置</a> </td>
+				</tr>
+				<tr>
+			</table>
+			</form>
+			<div class="tool-bar-line">	</div>	
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >增加</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="easyui-datagrid"  fit="true" title="配送人员关联科室"
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    pageSize:20,
+		    pageList: [20,40,80],
+		    nowrap: false,
+		    onDblClickRow:onDbClickRow, 
+		    onClickRow:onClickRow,
+			url:'dhcapp.broker.csp?ClassName=web.DHCDISLocUser&MethodName=ListFailReason'">
+			<thead>
+				<tr>
+					<th data-options="field:'LULocDr',width:200,id:'lulocdr',editor:{type:'validatebox',options:{required:true}},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISLocUser&MethodName=GetLoc&HospID='+hosp,
+													required:true,
+													editable:true,
+													/*onSelect:function(){
+														
+														var varSelect = $(this).combobox('getValue');								
+                    									SAtypeID=varSelect;
+                   							   			//获取第二个combobox所在的datagrid Editor
+                    									var rowIndex=$('#datagrid').datagrid('getRowIndex',$('#datagrid').datagrid('getSelected'))
+                    									rowIndex=rowIndex==-1?0:rowIndex
+                   							 			var varEditor = $('#datagrid').datagrid('getEditor', { index: rowIndex, field: 'LUUserDr' });
+                   							 			
+                   										$(varEditor.target).combobox('clear');//清空类型值
+                   										
+                    									$(varEditor.target).combobox( { 
+															url:'dhcapp.broker.csp?ClassName=web.DHCDISLocUser&MethodName=GetSSUser&HospID='+hosp+'&LocId='+SAtypeID
+                    									});
+                    								
+													}*/
+													
+												},filter: function(q, row){  
+       											 var opts = $(this).combobox('options');  
+        										return row[opts.textField].indexOf(q) >= 0;//这里改成>=即可在任意地方匹配  
+  							  }
+					
+											}">科室</th>
+					<th data-options="field:'LUUserDr',width:150,editor:{type:'validatebox',options:{required:true}},
+												editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISLocUser&MethodName=GetSSUser&HospID='+hosp,
+													
+													required:true,
+													editable:true
+												},filter: function(q, row){  
+       											 var opts = $(this).combobox('options');  
+        										return row[opts.textField].indexOf(q) >= 0;//这里改成>=即可在任意地方匹配  
+  							  }
+					
+					
+					
+												}">人员</th>
+					<th data-options="field:'LUActiveFlag',align:'center',width:80,
+											formatter:function(value,row,index){
+												if (value=='Y'){return 'Y';} 
+												else {return 'N';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISLocUser&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">激活标志</th>
+					<th data-options="field:'LUStatus',width:180,align:'center',
+					                        formatter:function(value,row,index){
+												if (value=='1'){return '忙碌';} 
+												else {return '空闲';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISLocUser&MethodName=ListStatActive',
+													required:true,
+													editable:false
+
+												}
+											}">状态</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+					<th data-options="field:'LocDr',hidden:true">LocDr</th>
+					<th data-options="field:'UserDr',hidden:true">UserDr</th>
+				</tr>
+			</thead>
+		</table>
+		
+	</div>
+	<div data-options="region:'east'" style='width:700px;height:600px;'  >
+		<!-- toolbar -->
+		<div id="toolbars" class="toolbar">
+			<form id="queryLocForm" >
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+					
+					<td class="textLabel">项目名称:<input type="text" id="itemName" name="itemName" class="easyui-combobox"></input> 
+					<input type="hidden" id="LocUser" name="LocUser"></input> </td>	
+					
+					<td ><a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="javascript:commonQuery({'datagrid':'#locdatagrid','formid':'#queryLocForm'})">查询</a> </td>
+					<td><div class="datagrid-btn-separator"> </div> </td>
+					<td ><a class="easyui-linkbutton" data-options="iconCls:'icon-reload',plain:true" onclick="reloadData()">重置</a> </td>
+				</tr>
+				<tr>
+			</table>
+			</form>
+			<div class="tool-bar-line">	</div>	
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addItemRow()" >增加</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:Itemsave()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:Itemcancel()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			    </tr>
+			</table>
+		</div>
+		<table id="locdatagrid" class="easyui-datagrid" fit="true" title="可配送明细列表"
+			data-options="
+			toolbar:'#toolbars',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    pageSize:20,
+		    pageList: [20,40,80],
+		    nowrap: false,
+		    onDblClickRow:onDbClickRows, 
+		    onClickRow:ma,
+		    queryParams:{LocUser:'',itemName:''},
+			url:'dhcapp.broker.csp?ClassName=web.DHCDISLocItem&MethodName=getItemByUserEs'">
+			
+			<thead>
+				<tr>
+					<th data-options="field:'ItemDesc',width:200,id:'ItemDesc',editor:{type:'validatebox',options:{required:true}},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISLocUser&MethodName=ListItemCodeDs',
+													required:true,
+													editable:false,
+													
+													onSelect:function(){
+														
+															var varSelect = $(this).combobox('getValue');	
+															var rowIndex=$('#locdatagrid').datagrid('getRowIndex',$('#locdatagrid').datagrid('getSelected'))
+                    										rowIndex=rowIndex==-1?0:rowIndex
+                   							 				var varEditor = $('#locdatagrid').datagrid('getEditor', { index: rowIndex, field: 'ItemLoc' });
+                   							 				
+                   											var rtn=serverCall('web.DHCDISLocItem','getLocByItemid',
+																{'itemid':varSelect
+																	})
+															$(varEditor.target).attr('readonly',true);
+                   											$(varEditor.target).val('');//清空类型值
+                    										$(varEditor.target).val(rtn);
+														}
+												},filter: function(q, row){  
+       											 var opts = $(this).combobox('options');  
+        										return row[opts.textField].indexOf(q) >= 0;//这里改成>=即可在任意地方匹配  
+  							  }
+											}
+											">项目名称</th>
+					<th data-options="field:'ItemLoc',width:150,id:'Item',editor:{type:'validatebox',options:{required:false,editable:false}}
+												">去向</th>
+					
+					<th data-options="field:'IDd',hidden:true">id</th> 
+					<th data-options="field:'linkitem',hidden:true">linkitem</th> 
+					
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+</div>
+<input type="hidden" id="getLuId"></input>
+<input type="hidden" id="getLocId"></input>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<server>
+	n PARREF,patientID,episodeID,ID,hidlnk,twkfl,twkfl,trafficID,RSTDesc,ContactRowId,cont
+	s (PARREF,patientID,episodeID,ID,hidlnk,twkfl,twkfl,trafficID,RSTDesc,ContactRowId,cont)=""
+	
+	s PARREF=$g(%request.Data("PARREF",1))
+	s trafficID=$g(%request.Data("trafficID",1))
+	i PARREF="" s PARREF=$g(%request.Data("trafficID",1))
+	s patientID=$g(%request.Data("PatientID",1))
+	s episodeID=$g(%request.Data("EpisodeID",1))
+	s ID=$g(%request.Data("ID",1))
+	s hidlnk=$g(%request.Data("hiddenLinks",1))
+	s twkfl=$g(%request.Data("TWKFL",1))
+	s twkfli=$g(%request.Data("TWKFLI",1))
+	s RSTDesc=$g(%request.Data("RSTDesc",1))
+	s CompoDetails="1"
+	
+	; cjb 10/11/2004 47337 - ContactRowId is set in UARMCPATrafficAccident and passed to PATrafficAccidentContact.Edit so it displays by default
+ 	s ContactRowId=$g(%request.Data("ContactRowId",1))
+    i '$p(ContactRowId,"||",2) s ContactRowId=""
+	
+	w "<SCRIPT>",$c(13,10)
+ 	w "if (window.opener) {",$c(13,10)
+ 	w "	try {",$c(13,10)
+ 	w "		if (window.opener);",$c(13,10)
+ 	w "	}",$c(13,10)
+ 	w "	catch(e) {}",$c(13,10)
+ 	w "}",$c(13,10)
+ 	w "</SCRIPT>",$c(13,10)
+
+</server>
+<frameset rows="35%,*">
+  <frame name="traffic_contact_list" src="websys.default.csp?WEBSYS.TCOMPONENT=PATrafficAccidentContact.List&TWKFL=#(twkfl)#&TWKFLI=#(twkfli)#&PatientID=#(patientID)#&EpisodeID=#(episodeID)#&PARREF=#(PARREF)#&trafficID=#(trafficID)#&RSTDesc=#(RSTDesc)#&PatientBanner=1">
+  <frame name="traffic_contact_edit" src="websys.default.csp?WEBSYS.TCOMPONENT=PATrafficAccidentContact.Edit&TWKFL=#(twkfl)#&TWKFLI=#(twkfli)#&PatientID=#(patientID)#&EpisodeID=#(episodeID)#&PARREF=#(PARREF)#&trafficID=#(trafficID)#&RSTDesc=#(RSTDesc)#&ID=#(ContactRowId)#">
+  </frameset>
+<BODY>
+</BODY>
+</HTML>
+
+
+
+

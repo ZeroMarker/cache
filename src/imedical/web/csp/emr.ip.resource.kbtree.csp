@@ -1,0 +1,71 @@
+<html>
+<head>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.resource.kbtree.css"/>
+	<script language="cache" runat="server">
+		s isCanEdit = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("KBNodeEdit")
+		s:(isCanEdit = "") isCanEdit = "Y"
+		s isPersonEdit = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PersonalKBNodeEdit")
+  		s:(isPersonEdit = "") isPersonEdit = "Y"
+		s isCollapse = ##Class(EMRservice.SystemParameter).SetKnowledgeBaseCollapse()
+  		s:(isCollapse = "") isCollapse = "1"
+  		s isApprove = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("KBShareIsAprrove","N")
+  		s flagFirst = $Get(%request.Data("flagFirst",1),0)
+		s visitType = $Get(%request.Data("VisitType",1),"")
+   </script>	
+    <script type="text/javascript" src="../scripts/emr/js/resource.common.head.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script language="javascript">
+		var isCanEdit = '#(isCanEdit)#';
+		var isPersonEdit = '#(isPersonEdit)#';
+		var isCollapse = '#(isCollapse)#';
+		var curKbParam = "";
+		var isApprove = '#(isApprove)#';
+		var flagFirst = parseInt('#(flagFirst)#');
+		var visitType = '#(visitType)#';
+				
+		var ipAddress = getIpAddress();
+		var userID = '#(%session.Get("LOGON.USERID"))#';
+		var userName = '#(%session.Get("LOGON.USERNAME"))#';
+   </script>
+	<title>知识库</title>
+</head>
+    <body class="hisui-layout" data-options="fit:true,border:false" style="width:100%;height:100%;overflow:hidden;">
+        <div class="hisui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <div class="hisui-panel" data-options="region:'north',border:false" style="height:42px;padding:10 0 0 8;">
+                    <span>
+          			    <input type="text" class="hisui-validatebox validatebox-text searchInput" id="searchInput" value="输入知识库名称搜索!" onclick="my_click(this,'searchInput');" onBlur="my_blur(this,'searchInput');" />
+						<a id="searchRecord" href="#" class="hisui-linkbutton hover-dark search" data-options="iconCls:'icon-w-find'"></a>       
+                    </span>
+                    <span>
+                        <div class="hisui-switchbox" style="margin:0 0 3px 3px" data-options="onText:emrTrans('展开'),offText:emrTrans('折叠'),size:'small',checked:false,animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,value){switchCollapse(event,value);}"></div>
+                        <!--<div class="hisui-switchbox" style="margin-left:5px" data-options="onText:'全部',offText:'当前',size:'small',checked:false,animated:true,onSwitchChange:function(event,value){switchRange(event,value);}"></div>-->
+                    </span>
+                </div>
+                <div class="hisui-panel" data-options="region:'center',border:false" style="height:auto;"> 
+                    <ul id="kbTree" class="hisui-tree" data-options="lines:true"></ul>
+                    <div id ="mm" class="hisui-menu" style="width:210px;height:320px;overflow-y:auto;">
+                        <div id="addKBTree">#(..Get("新增个人模板"))#</div>
+                        <div id="addKBNode">#(..Get("新增节点"))#</div>
+                        <div id="editKBNode">#(..Get("编辑知识库节点"))#</div>
+                        <div id="editTreeName">#(..Get("修改目录名称"))#</div>
+                        <div id="deleteKBTree">#(..Get("删除空个人目录"))#</div>
+                        <div id="deleteKBNode">#(..Get("删除知识库节点"))#</div>
+                        <div id="replaceKBNode">#(..Get("替换知识库节点"))#</div>
+                        <div id="shareKBNode">#(..Get("分享个人知识库"))#</div>
+						<div id="cancelshareKBNode">#(..Get("取消分享知识库"))#</div>
+                        <div class="menu-sep"></div>
+                        <div id="appendKBNode">#(..Get("追加知识库节点"))#</div>
+                        <div id="moveUpKBNode">#(..Get("上移"))#</div>
+                        <div id="moveDownKBNode">#(..Get("下移"))#</div>
+                   </div>
+                </div>
+			<div class="hisui-panel" data-options="region:'south',border:false,split:false" style="height:200px;overflow:auto;border-top: 1px solid #E8E8E8;padding-top:3px;">
+				<div id="kbNodeText" readonly="readonly" ondragstart="return false;" style="overflow:hidden;padding:5 0 0 8;"></div>
+			</div>
+            </div>
+        </div>
+        <script type="text/javascript" src="../scripts/emr/js/ip.resource.kbtree.js"></script>
+    </body>
+</html>

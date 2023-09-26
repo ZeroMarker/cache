@@ -1,0 +1,41 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<csp:content charset="UTF-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s str=$Get(%request.Data("query",1))
+	s CNDr=$Get(%request.Data("CNDr",1))
+	s EmpFieldDr=$Get(%request.Data("EmpFieldDr",1))
+	s PayFieldDr=$Get(%request.Data("PayFieldDr",1))
+	s SDDr=$Get(%request.Data("SDDr",1))
+	s EDDr=$Get(%request.Data("EDDr",1))
+
+	
+
+	i action="EmpBonuslist" d
+	.w ##class(dhc.bonus.udata.uEmpBonusPay).EmpBonuslist(start, limit,sortField, sortDir, CNDr, EmpFieldDr, PayFieldDr, SDDr, EDDr)
+	
+	
+	
+	
+	//获取所属科室
+	i action = "EmpField" d
+	.w ##class(dhc.bonus.udata.uEmpBonusPay).getUnitList(start,limit,str)
+	
+	
+	//获取发放科室
+	i action = "PayField" d
+	.w ##class(dhc.bonus.udata.uEmpBonusPay).getUnitList(start,limit,str)
+	
+
+</script>

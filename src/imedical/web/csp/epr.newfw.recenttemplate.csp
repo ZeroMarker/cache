@@ -1,0 +1,105 @@
+<HTML>
+<HEAD>
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+  <script type="text/javascript" SRC="../scripts/epr/js/dgrid.js"></script>
+  <script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+  <script type="text/javascript" src="../scripts/epr/js/portal/cookie.js"></script>
+  
+  <!--add by loo on 2010-4-26-->
+ 	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+  
+  <!-- Put your page Title here -->
+<TITLE>	Recent Template </TITLE>
+
+</HEAD>
+
+<BODY body bgcolor="#F6FAFD">
+	<server>
+		//给界面写一个表头
+		w "<table name='tablelist' id='tablelist' width='100%' border='0' cellpadding='1' cellspacing='1' class='tableStyle01'>"
+		w "<tr id='trTitle'>"
+		w "<td width='' align='center' class='TDstyle02'><font color='#004E82'><a>最近操作历史记录</a></font></td>"
+		w "<td width='' align='center' class='TDstyle02'><font color='#004E82'><a>操作人</a></font></td>"
+		w "<td width='' align='center' class='TDstyle02'><font color='#004E82'><a>操作时间</a></font></td>"
+		w "</tr>"
+		w "</table>"
+	</server>
+	<script type='text/javascript'>
+		var cookieName = 'configRecnetTemplate_3-16';
+		var patientID = '#($Get(%request.Data("patientID",1),""))#';		//暂时不用
+		var episodeID = '#($Get(%request.Data("episodeID",1),""))#';		//暂时不用
+		var lastSelectTr = '';
+		var arrRecentTemplate = new Array();		//公共变量,用来保存最近打开的模板
+		
+		//读取cookie的配置属性
+		//规则为:目录id^目录名称^打印模板docid^打印模板名称^界面模板docid^界面模板名^操作人^操作时间#目录id^目录名称^打印模板docid^打印模板名称^界面模板docid^界面模板名^操作人^操作时间
+    	var configRecnetTemplate = getCookie(cookieName);
+    	if (configRecnetTemplate != null)
+	    {
+	    	var arrRecnetTemplate = configRecnetTemplate.split('#');
+			for (var i = 0; i < arrRecnetTemplate.length; i++)
+			{
+				var arrRT = arrRecnetTemplate[i].split('^');
+				saveRecentTemplate(arrRT[0], arrRT[1], arrRT[2], arrRT[3], arrRT[4], arrRT[5], arrRT[6], arrRT[7]);
+			}
+	    }
+		
+		//创建一行(打印模板docid,界面模板docid,界面模板名,类型,即唯一还是历次)
+		function saveRecentTemplate(ccID, ccName, prtDocID, prtName, templateDocID, templateName, userName, operateDT)
+		{
+			//判断数组中是否有已经有该模板,如果有,将其从数据中删除,并将界面上tr删除
+			var recentTemplate = ccID + '^' + ccName + '^' + prtDocID + '^' + prtName + '^' + templateDocID + '^' + templateName + '^' + userName + '^' + operateDT;
+			for	(var i = 0; i < arrRecentTemplate.length; i++)
+			{
+				if (arrRecentTemplate[i] == recentTemplate)
+				{
+					//页面显示时为从下到上显示,和数组的方向相反,因此需要用arrRecentTemplate.length - i - 1来得到某行,但由于有标题行,需+1,所以为arrRecentTemplate.length - i
+					$("tr:eq(" + (arrRecentTemplate.length - i) + ")").remove();
+					arrRecentTemplate.splice(i, 1);
+					break;
+				}
+			}
+			
+			//创建一行
+			var tr = "<tr onMouseDown='choTr(this,0)' onDblClick='dbChoTr(this)'><td align='center' class='TDstyle01'><a href='#' onclick= 'OpenRecordClickHandler(" + ccID + ", " + prtDocID + ", " + templateDocID + ", \"" + templateName + "\")'</a>" + ccName + " -> " + prtName + " -> " + templateName + "</td>";
+			tr += "<td align='center' class='TDstyle01'>" + userName + "</td>"
+			tr += "<td align='center' class='TDstyle01'>" + operateDT + "</td>"
+			tr += "</tr>";
+			$('#trTitle').after(tr);
+			
+			//数组里增加一个需要显示模板
+			arrRecentTemplate.push(recentTemplate);
+			
+			//若模板个数大于5,数组移除掉第一个,并且删除最后一行
+			if (arrRecentTemplate.length > 5)
+			{
+				arrRecentTemplate.shift();
+				$("tr:last").remove();
+			}
+			
+			//保存状态到cookie
+			saveToCookie();
+		}
+		
+		//保存最近打开模板到cookie
+		function saveToCookie()
+		{
+			var configRecnetTemplate = '';
+			for(var i = 0; i < arrRecentTemplate.length; i++)
+			{
+				configRecnetTemplate += arrRecentTemplate[i];
+				configRecnetTemplate += '#';
+			}
+			configRecnetTemplate = configRecnetTemplate.substring(0, configRecnetTemplate.length - 1);
+			setCookie(cookieName, configRecnetTemplate);
+		}
+		
+		
+		//某一行的单击事件,参数type为TS或TM,即唯一或历次
+		function OpenRecordClickHandler(ccID, prtDocID, templateDocID, templateName)
+		{
+			parent.parent.parent.openCommonTemplate(ccID, prtDocID, templateDocID);
+		}
+	</script>
+</BODY>
+</HTML>

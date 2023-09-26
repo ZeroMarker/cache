@@ -1,0 +1,361 @@
+
+<script runat=server language=cache>
+
+	s act =$g(%request.Data("act",1))
+	s user = %session.Get("LOGON.USERID")
+	s userDeptId=%session.Get("LOGON.CTLOCID")
+	s msgmap(-303)="执行记录状态没有变化, 不用改变"
+	s msgmap(-304)="执行记录已经执行,不能停止"
+	s msgmap(-302)="执行记录已结算或完成,不能执行该操作" //该医嘱已发药，请护士撤销执行后进行停止操作
+	s msgmap(-305)="执行记录没有执行,不需要撤销"
+	s msgmap(-306)="执行记录保存失败"
+	s msgmap(-307)="执行记录变化表保存失败"
+	s msgmap(-308)="执行记录计费变化表保存失败"
+	s msgmap(-316)="医嘱已停止不能再执行 "
+	s msgmap(-310)="执行记录扩展表保存失败"
+	s msgmap(-301)="停止医嘱执行记录失败"
+	s msgmap(-310)="计费状态相同,不用改变"
+	
+	s msgmap(-311)="已经退费,不需要再免费"
+	s msgmap(-313)="已经待计费,不需要取消免费"
+	s msgmap(-314)="临时医嘱未停止,不能停止执行"
+	s msgmap(-315)="修改执行记录医嘱状态失败"
+	s msgmap("-317")="执行记录在医嘱停止日期之后,不能执行!"
+	s msgmap("-100")="医嘱不存在"
+	s msgmap("-207")="护士已经扫过条码,请撤销条码后再处理医嘱"
+	s msgmap("-209")="执行状态的医嘱才能变为核实"
+	s msgmap("-205")="更新医嘱状态及变化表"
+	s msgmap("-208")="作废医嘱要和下医嘱人一致"
+	s msgmap("-209")="非核实状态的医嘱不能作废"
+	s msgmap("-2091")="非核实状态的医嘱不能撤销"
+	s msgmap("-210")="实库库管已进行医嘱提取,需要经过高值材料库管员退货确认,才能继续操作"
+	s msgmap("-900")="子嘱为药品的执行记录不能操作"
+	s msgmap("-901")="医嘱单顺序已经发生变化,请重新打印!"
+	s msgmap("-902")="请补打作废标识!"
+	s msgmap("-903")="皮试阴性才能执行!"
+	s msgmap("-904")="申请状态在OEC_ApplyStatus表中不存在"
+	s msgmap("-905")="保存申请失败!"
+	s msgmap("-906")="保存申请撤销状态失败"
+	s msgmap("-907")="已申请,请等待审核"
+	s msgmap("-908")="执行时间不能小于要求执行时间"
+	s msgmap("-4")="签名密码错误!"
+	s msgmap("-202")="已收费医嘱不允许撤销，请直接做退费审核或退药!"
+	s msgmap("-15304")="拆账单的产生的自定价医嘱,不能进行该操作!"
+	s msgmap("-15305")="有执行记录提前执行! 请先停止执行记录"
+	s msgmap("-15306")="存在已治疗的执行记录,无法进行撤销和作废操作!"
+	s msgmap("-15307")="主医嘱跟关联医嘱被拆分到不同账单,不能进行该操作!"
+	s msgmap("-15500")="增加备注失败"
+	s msgmap("-200")="已收费医嘱无法撤销"
+	s msgmap("PS")="实习医师审核成功,请上级医师审核完成该操作."
+	s msgmap("-400")="实习医师审核操作失败!"
+	s msgmap("-401")="实习医师无法进行预停操作!"
+	if (act="PatientTree"){
+		s type = $g(%request.Data("type",1),0)
+		s patientNo = $g(%request.Data("patientNo",1))
+		w ##class(web.DHCDocMain).GetPatientTreeJson(type,patientNo)
+	}elseif(act="StopPrnOrder"){
+		s oeori = $g(%request.Data("rid",1))
+		s date = $g(%request.Data("ExpectEndDate",1))
+		s time = $g(%request.Data("ExpectEndTime",1))
+		s pinNum = $g(%request.Data("PinNum",1))
+		s locid = %session.Get("LOGON.CTLOCID")
+		s groupid = %session.Get("LOGON.GROUPID")
+		s orderItemStr = ""
+		s len = $l(oeori,"^")
+		s flag=1,stopMsg=""	;默认有权限停医嘱
+		f i=1:1:len q:(flag=0)  d
+		.s oeorirowid = $p(oeori,"^",i)
+		.s flag = ##class(web.DHCDocMain).CheckStopOrder(oeorirowid,user,locid,groupid,date,time)
+		.q:(+flag=0)
+		.s item = oeorirowid_"!"_date_"!"_time
+		.i orderItemStr="" s orderItemStr=item
+		.e  s orderItemStr=orderItemStr_"^"_item			
+		;}
+		/*else{
+			s oeorirowid=oeori
+			s flag = ##class(appcom.OEOrdItem).CheckStopPermission(oeorirowid,user,locid,groupid)
+			s orderItemStr = (oeorirowid_"!"_date_"!"_time)
+		}*/
+		if (flag=1){
+			s rtn=##class(appcom.OEOrdItem).StopMulti(orderItemStr, user, pinNum)
+			d ..writemsg(rtn,orderItemStr,act)
+		}else{
+			s str1 = ^OEORD(+oeorirowid,"I",$p(oeorirowid,"||",2),1)
+			s ItmMastDR=$p(str1,"^",2)
+			s TOrderDesc=$p(^ARCIM(+ItmMastDR,$p(ItmMastDR,"||",2),1),"^",2)	;医嘱名称
+			s exmsg=$p(flag,"^",2)
+			d ..writemsg("您无权停止 "_TOrderDesc_" 医嘱!," ) //_msgmap(exmsg)
+		}		
+	}elseif(act="CancelPrnOrder"){
+		s oeorditem = $g(%request.Data("rid",1))
+		s pinNum = $g(%request.Data("PinNum",1))
+		s OrdCancelReasonId=$g(%request.Data("OrdCancelReasonId",1))
+		s OrdCancelReasonDesc=$g(%request.Data("OrdCancelReasonDesc",1))
+		s locid = %session.Get("LOGON.CTLOCID")
+		s groupid = %session.Get("LOGON.GROUPID")
+		s adm = $p(^OEORD(+oeorditem),"^",1)
+		s type=$p(^PAADM(adm),"^",2)
+		s rtn=-1
+		if type="I"{
+			s len = $l(oeorditem,"^")
+			s flag=1	;默认有权限停医嘱
+			f i=1:1:len q:(flag=0)  d
+			.s oeorirowid = $p(oeorditem,"^",i)
+			.s flag = ##class(web.DHCDocMain).CheckCancelOrder(oeorirowid,user,locid,groupid)
+			.if (flag=1) d
+			../*如果检查有申请单号,则不能取消*/
+	        ..s TmInfo=##class(DHCDoc.Interface.Inside.Invoke).GetTmInfoByOrderRowId(oeorirowid)
+	        ..i TmInfo'="" s flag=0
+			if flag=1{
+				s rtn=##class(appcom.OEOrdItem).CancelMulti(oeorditem,user,pinNum,"Y",OrdCancelReasonId,OrdCancelReasonDesc)
+			}else{
+				s str1 = ^OEORD(+oeorirowid,"I",$p(oeorirowid,"||",2),1)
+				s ItmMastDR=$p(str1,"^",2)
+				s TOrderDesc=$p(^ARCIM(+ItmMastDR,$p(ItmMastDR,"||",2),1),"^",2)	;医嘱名称
+				s rtn = "您无权撤销 "_TOrderDesc_" 医嘱!"
+			}
+		}else{
+			set curDate = $zd(+$h,4),curTime = $zt($p($h,",",2))
+			set len=$l(oeorditem,"^")
+			set OrdList="",rtn=0
+			s cancelflag=1	;默认有权限停医嘱
+			for i=1:1:len {
+				s oneOrdListItem=$p(oeorditem,"^",i)
+				s stat=$p($g(^OEORD(+oneOrdListItem,"I",+$p(oneOrdListItem,"||",2),1)),"^",13)
+				i stat s stat=$p($g(^OEC("OSTAT",stat)),"^")
+				i stat="D" s rtn=-5
+				Q:rtn'=0
+				set OrdListItem = $p(oeorditem,"^",i)_"&"_curDate_"&"_curTime_"&"
+				if i>1  set OrdList=OrdList_"^"
+				Set OrdList = OrdList_OrdListItem
+				s cancelflag = ##class(web.DHCDocMain).CheckCancelOrder(oneOrdListItem,user,locid,groupid)
+				if (cancelflag=1) d
+				./*如果检查有申请单号,则不能取消*/
+	        	.s TmInfo=##class(DHCDoc.Interface.Inside.Invoke).GetTmInfoByOrderRowId(oneOrdListItem)
+	        	.i TmInfo'="" s cancelflag=0
+							
+			}
+			if cancelflag'=1{
+				s str1 = ^OEORD(+oneOrdListItem,"I",$p(oneOrdListItem,"||",2),1)
+				s ItmMastDR=$p(str1,"^",2)
+				s TOrderDesc=$p(^ARCIM(+ItmMastDR,$p(ItmMastDR,"||",2),1),"^",2)	;医嘱名称
+				s rtn = "您无权撤销 "_TOrderDesc_" 医嘱!"
+			}else{
+			
+				if (rtn=0){
+					s rtn = ##class(web.UDHCStopOrderLook).StopOrder("","",OrdList,user,pinNum)
+				}
+				if (rtn=-5) s rtn="-2091"
+			}
+		}
+		if (rtn="-209") s rtn="-2091"
+		if (rtn=0) d
+		.s msg=0
+		.s pageNo = ##class(Nur.DHCORDPRINTSUB).getPrintInfo(oeorditem)
+		.i +pageNo>0 s rtn = "{msg:0,succmsg:'"_msgmap("-902")_"',OrdList: '"_oeorditem_"',Method: '"_act_"'}"
+		.e  s rtn="{msg: 0,OrdList: '"_oeorditem_"',Method: '"_act_"'}"
+		e  d
+		.s msg=$g(msgmap(rtn),rtn)
+		.s rtn="{msg: '"_msg_"',OrdList: '"_oeorditem_"',Method: '"_act_"'}"
+		w rtn
+	}elseif(act="UnUsePrnOrder"){	//作废
+		s oeorditem =  $g(%request.Data("rid",1))
+		s pinNum = $g(%request.Data("PinNum",1))
+		s OrdAbortReasonId=$g(%request.Data("OrdAbortReasonId",1))
+		s OrdAbortReasonDesc=$g(%request.Data("OrdAbortReasonDesc",1))
+		s locid = %session.Get("LOGON.CTLOCID")
+		s groupid = %session.Get("LOGON.GROUPID")
+		
+		s len = $l(oeorditem,"^")
+		s rtn=0
+		s flag=1	;默认有权限停医嘱
+		f i=1:1:len q:(flag=0)  d
+		.s oeorirowid = $p(oeorditem,"^",i)
+		.s flag=##class(web.DHCDocMain).CheckUnuseOrder(oeorirowid,user,locid,groupid)
+		.if flag=1 d
+		../*如果检查有申请单号,则不能取消*/
+        ..s TmInfo=##class(DHCDoc.Interface.Inside.Invoke).GetTmInfoByOrderRowId(oeorirowid)
+        ..i TmInfo'="" s flag=0
+		if (flag=0){
+			s str1 = ^OEORD(+oeorirowid,"I",$p(oeorirowid,"||",2),1)
+			s ItmMastDR=$p(str1,"^",2)
+			s TOrderDesc=$p(^ARCIM(+ItmMastDR,$p(ItmMastDR,"||",2),1),"^",2)	;医嘱名称
+			s rtn = "您无权作废 "_TOrderDesc_" 医嘱!"
+		}
+		if (rtn=0) s rtn=##class(appcom.OEOrdItem).UnUseMulti(oeorditem,user,pinNum,"Y",OrdAbortReasonId,OrdAbortReasonDesc)
+		if (rtn=0) d
+		.s msg=0
+		.s pageNo = ##class(Nur.DHCORDPRINTSUB).getPrintInfo(oeorditem)
+		.i +pageNo>0 s rtn = "{msg:0,succmsg:'"_msgmap("-901")_"',OrdList: '"_oeorditem_"',Method: '"_act_"'}"
+		.e  s rtn="{msg: 0,OrdList: '"_oeorditem_"',Method: '"_act_"'}"
+		e  d
+		.s msg=$g(msgmap(rtn),rtn)
+		.s rtn="{msg: '"_msg_"',OrdList: '"_oeorditem_"',Method: '"_act_"'}"
+		w rtn
+	}elseif(act="doctorList"){
+		
+		s adm = $g(%request.Data("adm",1))
+		w ##class(web.DHCDocMain).GetDoctorList(adm)
+	}elseif(act="OECStatusChReasonList"){
+		w ##class(web.DHCDocMain).GetOECStatusChReasonList()
+	}elseif(act="RunExecOrder"){			; 执行
+		s locid = %session.Get("LOGON.CTLOCID")
+		s oeore =  $g(%request.Data("rid",1))
+		s rtn = ##class(web.DHCDocMain).CheckOperationPermission(oeore)
+		s skintest=$p($g(^OEORD(+oeore,"I",$p(oeore,"||",2),5)),"^",2)
+		s abnorm=##class(web.DHCDocMainOrderInterface).GetSkinAbnorm(+oeore,$p(oeore,"||",2))
+		if (rtn=1){
+			s rtn = -900 
+		}elseif (skintest="Y")&&(abnorm'="N"){
+			s rtn = -903
+		}else{
+			s date = $g(%request.Data("execDate",1))
+			//if date'="" s date = $zdh(date,4)
+			if (date'="") s date=##class(websys.Conversions).DateHtmlToLogical(date)
+			else  s date=+$h
+			s time = $g(%request.Data("execTime",1))
+			if time'="" s time = $zth(time)
+			else  s time = $p($h,",",2)
+			Set order = +oeore ,ordItem = $p(oeore,"||",2),orderExecId=$p(oeore,"||",3)
+			Set ExeStDate = $p(^OEORD(order,"I",ordItem,"X",orderExecId),"^",1)	;要求执行日期
+			Set ExeStTime = $p(^OEORD(order,"I",ordItem,"X",orderExecId),"^",2) ;要求执行时间
+			s curDate=+$h,curTime=$p($h,",",2)   ;执行的日期和时间
+			/*i ((date>curDate)!((date=curDate)&(time>curTime))){
+				s date=curDate,time=curTime
+			}*/
+			;执行时间不能小于要求执行时间
+			if (((ExeStDate=date)&&(ExeStTime<=time))||(ExeStDate<date)){
+				s rtn=##class(appcom.OEOrdExec).UpdateStatus(oeore,"F",user,date,time,"","","",locid)
+				if (rtn=0) {
+					s rtn=##class(Nur.DHCInstrAttOrd).ExcuteInstrAttOrd(oeore, "F", userDeptId, user)
+				}
+			}else{
+				s rtn=-908
+			}
+		}
+		d ..writemsg(rtn)
+	}elseif(act="CancelExecOrder"){			; 撤销执行
+		s locid = %session.Get("LOGON.CTLOCID")
+		s oeore =  $g(%request.Data("rid",1))
+		s rtn = ##class(web.DHCDocMain).CheckOperationPermission(oeore)
+		if (rtn=1){
+			s rtn = -900 
+		}else{
+			s reasonid = $g(%request.Data("reasonId",1))
+			s Reasoncomment=$g(%request.Data("Reasoncomment",1))
+			s date = +$h
+			s time = $p($h,",",2)
+			s rtn=##class(appcom.OEOrdExec).UpdateStatus(oeore,"C",user,date,time,reasonid,"",Reasoncomment,locid)
+			if (rtn=0) {
+				s rtn=##class(Nur.DHCInstrAttOrd).ExcuteInstrAttOrd(oeore, "C", userDeptId, user)
+			}
+		}
+		d ..writemsg(rtn)
+	}elseif(act="StopExecOrder"){	;停止执行
+		s locid = %session.Get("LOGON.CTLOCID")
+		s oeore =  $g(%request.Data("rid",1))
+		s rtn = ##class(web.DHCDocMain).CheckOperationPermission(oeore)
+		if (rtn=1){
+			s rtn = -900 
+		}else{
+			s date = +$h
+			s time = $p($h,",",2)
+			s reasonId=$g(%request.Data("reasonId",1))
+			s Reasoncomment=$g(%request.Data("Reasoncomment",1))
+			s rtn=##class(appcom.OEOrdExec).UpdateStatus(oeore,"D",user,date,time,reasonId,"",Reasoncomment,locid)
+			if (rtn=0) {
+				s rtn=##class(Nur.DHCInstrAttOrd).ExcuteInstrAttOrd(oeore, "D", userDeptId, user)
+			}		
+		}
+		d ..writemsg(rtn)
+	}elseif(act="AddFeeOrder"){	; 在执行医嘱上增加收费项目 new	
+		
+		s oeore = $g(%request.Data("oeore",1),$g(%request.Data("rid",1)))
+		s adm = $p(^OEORD(+oeore),"^",1)
+		s itemInfo = $g(%request.Data("itemInfo",1))
+		s rtn=$p(##class(web.DHCIPBillInsExpItm).InsOrdExcExpItm(adm,oeore,itemInfo,user),"^",1)
+		d ..writemsg(rtn)
+	}elseif(act="CancelFeeOrder"){
+		
+		s pbd =  $g(%request.Data("rid",1))
+		s comment = $g(%request.Data("comment",1))		
+		s rtn=$p(##class(web.DHCIPBillInsExpItm).PBDetailRefund(pbd,user,comment),"^",1)
+		d ..writemsg(rtn)	
+	}elseif(act="getExecDateScope"){
+		
+		s oeori = $g(%request.Data("rid",1))
+		s rtn=##class(web.DHCDocMain).getExecDateScope(oeori)
+		d ..writemsg(rtn)
+	}elseif(act="FreeCharge"){	//免费
+		s oeore = $g(%request.Data("rid",1))
+		s comment =$g(%request.Data("reasonId",1))
+		s rtn=##class(appcom.OEOrdExec).FreeCharge(oeore,user,"I",comment)
+		d ..writemsg(rtn)
+	}elseif(act="CancelFreeCharge"){	//取消免费
+		s oeore = $g(%request.Data("rid",1))
+		s comment =$g(%request.Data("reasonId",1))
+		s rtn=##class(appcom.OEOrdExec).FreeCharge(oeore,user,"B",comment)
+		d ..writemsg(rtn)
+	}elseif(act="AddExecOrder"){
+		s oeori = $g(%request.Data("rid",1))
+		s exStDate = $g(%request.Data("exStDate",1))
+		s exStTime = $g(%request.Data("exStTime",1))
+		if (##class(appcom.OEOrdItem).ISPRNOrder(oeori)){
+			s (ExecQty,QtyOver,AdminQty,SeqNo,LinkOEORE,XTime)=""
+			s rtn=##class(appcom.OEOrdExec).InsExecOEORE(oeori,exStDate,exStTime)
+			d ..writemsg(rtn)
+			;住院需要实时记账
+			s Adm=$p(^OEORD(+oeori),"^",1)
+			d ##Class(web.UDHCJFBILL).BILLN(Adm,user,"")
+		}else{
+			w "{msg:'频次不是PRN的医嘱不能增加执行医嘱!' }"	
+		}
+	}elseif(act="AddBillOrder"){		//增加计费医嘱
+		s OrdItemStr = $g(%request.Data("oeords",1))
+		s parrefRowid = $g(%request.Data("parrefRowid",1))		
+		s EpisodeID = $p(^OEORD(+parrefRowid),"^",1)
+		s Loc = %session.Get("LOGON.CTLOCID")		
+		s Doc = $p(^SSU("SSUSR",user),"^",14)
+		s OrdItemStr=##class(appcom.OEOrdItem).GetBillOrderItemStr(parrefRowid,OrdItemStr)
+		if (OrdItemStr'="") {
+			s rtn=##class(appcom.OEOrdItem).InsertMulti(EpisodeID,OrdItemStr,user,Loc,Doc)
+			d ..writemsg(rtn)
+		}
+	}elseif (act="UpdateHourOrderEndTime"){ //更新小时医嘱结束时间
+		s oeore =$g(%request.Data("rid",1))
+		s endTime = $g(%request.Data("endTime",1))
+		s endTime=$zth(endTime,2)
+		s rtn = ##class(web.DHCDocMain).CheckUpdateHour(oeore,endTime)
+		if (rtn'=1){
+			w "{msg:'"_rtn_"'}"
+		}else{
+			s rtn=##class(appcom.OEOrdExec).ResetBillFlag(oeore,endTime,user)
+			d ..writemsg(rtn)	
+		}
+	}elseif (act="AddOrderNotes"){
+		s oeori =$g(%request.Data("rid",1))
+		s OrderNotes = $g(%request.Data("OrderNotes",1))
+		s rtn = ##class(web.DHCDocMain).InsertOEORIdepProcNotes(oeori,OrderNotes)
+		d ..writemsg(rtn)	
+	}elseif (act="NURAddOrderNotes"){
+		;增加备注
+		s oeore =$g(%request.Data("rid",1))
+		s OrderNotes = $g(%request.Data("OrderNotes",1))
+		s rtn=##class(appcom.OEOrdExec).UpdateExecNotes(oeore,OrderNotes)
+		d ..writemsg(rtn)	
+	}elseif (act="GetPatIllTypeCountInfo") {
+		Set job = $g(%session.Data("LOGON.SSUSERLOGINID"))
+		W ^Temp("PatIllTypeCountInfo",job)
+	}elseif(act="ordCatList"){
+		w ##class(web.DHCDocMain).GetOrdCatList()
+	}
+	</script>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<SCRIPT language=CACHE RUNAT=SERVER METHOD=writemsg ARGUMENTS="rtn:%String,OrdList:%String=$G(OrdList),Method:%String=$G(Method)">
+	if (rtn=0) s msg=0
+	e  s msg=$g(msgmap(rtn),rtn)
+	w "{msg: '"_msg_"',OrdList: '"_OrdList_"',Method: '"_Method_"'}"
+</SCRIPT>

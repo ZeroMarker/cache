@@ -1,0 +1,353 @@
+<!-- dhcpeposcollect.csp -->
+<!-- 
+/// 创建时间		2006.11.15
+/// 创建人			xuwm 
+/// 主要功能		
+/// 关联文件		DHCPEPosStandard.js
+/// 主要功能		多团体,分年龄段,性别,查询阳性特征
+/// 最后修改时间	2009.11.11
+/// 最后修改人	    yupeng
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HEAD>
+
+
+<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8"-->
+<TITLE>阳性特征汇总</TITLE>
+<!-- TrakCare系统文件 -->
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<SCRIPT SRC="../scripts/websys.listrows.js"> </SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.js"> </SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.Tools.js"> </SCRIPT>
+<SCRIPT SRC="/csp/broker/cspbroker.js"> </SCRIPT>
+<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"> </script>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+
+<!-- 与树型结构相关文件 -->
+<LINK REL="stylesheet" type="text/css" href="../scripts/DHCPETree.css"/>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPETree.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.xml.js"></SCRIPT>
+<!-- 本模块文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.Date.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPESelectTextVal.js"></SCRIPT>
+<!--SCRIPT LANGUAGE="Javascript" SRC="../scripts/websys.List.js"></SCRIPT-->
+  
+<style type="text/css">
+/* 团体列表 */
+#DGroupList{
+	display:block;
+	position: relative;
+	height:6cm;
+	width:7cm; 
+	border-style:none;	
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+	overflow:none;
+}
+#GroupList{
+	display:block;
+	position: relative;
+	height:100%;
+	width:100%;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+}	
+/* 疾病列表 */
+#DStandardList{
+	display:block;
+	position: relative;
+	height:12cm;
+	width:7cm;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+
+}
+#StandardList{
+	display:block;
+	position: relative;
+	height:100%;
+	width:100%;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+
+}
+
+DIV.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	/* border-style: groove;  */
+}
+
+DIV.Ridge{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: inset ;
+
+}
+
+TABLE.Ridge caption{
+	display:block;
+	text-align:left;
+}
+
+TABLE.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: groove; 
+}
+
+TABLE.Groove caption{
+	display:block;
+	text-align:left;
+}
+
+#Panel{
+	display:block;
+	position: relative;
+	width:100%;
+}
+
+#Panel table tr td{
+	display:block;
+	position: relative;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;	
+	text-align: left;
+	
+}
+
+DIV.PanelRTop{
+	display:block;
+	position: relative;
+	width:18.7cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;
+	text-align: left;
+}
+
+DIV.PanelRTop table tr td{
+	text-align: right;
+}
+
+DIV.PanelShow{
+	display:block;
+	position: relative;
+	width:18.75cm;
+	height:14.55cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;	
+	border-style:none;
+	text-align: left;
+}
+DIV.StandardShow{
+	display:block;
+	position: relative;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;	
+	border-style:none;
+	text-align: left;
+}	
+/* 查询结果 */
+#dataframe{
+	display:block;
+	width:100%;
+	height:100%;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;
+	border-style:none;	
+}
+
+
+</style>
+</HEAD>
+
+<BODY>
+<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 
+
+HEIGHT=0 ALIGN=RIGHT></APPLET>
+
+
+<input type='hidden' id='GList' name='GList' value=''>
+<input type='hidden' id='QueryType' name='QueryType' value=''>
+
+
+<!-- 左边 体检单位和项目列表 -->
+<TABLE width="100%"> 
+<TBODY>
+<TR><TD class=i-tableborder>
+<FONT style="BACKGROUND-COLOR: #e4f0ff" color=#15428b> 
+<Table width="100%">
+<tr>
+<td valign="top" width=300>
+	<DIV width=100>
+		<table style="border:0px;">
+			<tr >
+				<td class=maintitle>
+					单位查找:
+				</td>
+				<td style="border:0px;"> 
+					<input type="text" id="GName" name="GName" value="请输入单位名称" size="170px"/>	
+				</td>
+			</tr>
+		</table>
+		<DIV id=DGroupList>
+			<input type='hidden' id='NGroupList' name='NGroupList' value='DHCPEIllnessCollect.GList'>
+			<IFRAME id="GroupList" name="GroupList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessCollect.GList"></iframe>
+		</DIV>
+	</DIV>
+
+	<DIV width=100>
+		<table style="border:0px;">
+			<tr>
+				<td style="border:0px;">选择站点:</td>
+				<td style="border:0px;">
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						d ##class(web.DHCPE.Report.PosCollect).OutStationStationListToHTML()
+					</SCRIPT>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+			</tr>
+		</table>
+		<!-- 显示体征列表 -->
+		<DIV class=DStandardList id=DStandardList>
+			<input type='hidden' id='NStandardList' name='NStandardList' value='DHCPEPosQuery.StandardList'>
+			<IFRAME id="StandardList" name="StandardList" scrolling="auto" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEPosQuery.StandardList"></iframe>
+		</DIV>
+	</DIV>
+</DIV> 
+</td>
+<td valign="top">
+	<DIV width=200>
+		<DIV class="PanelRTop">
+			<fieldset>
+			<legend>查询条件</legend>
+
+			<table width="100%" style="border:0px;" cellspacing="0" cellpadding="0">
+              <tr>
+                <td  style="border:0px;" width="12%" id=r1d1><div align="right">体检日期从</div></td>
+                <td style="border:0px;text-align:left;" width="16%" id=r1d2>
+                	<input name="DateFrom" type="text" id="DateFrom" value="" size="10"/>
+                	<IMG id="ldDateFrom" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                
+                <td style="border:0px;text-align:left;" width="25%" id=r1d4>----
+                	<input name="DateTo" type="text" id="DateTo" value="" size="10"/>
+                	<IMG id="ldDateTo" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                <td style="border:0px;" width="8%" id=r1d5>性别</td>
+                <td style="border:0px;" width="15%" id=r1d6>
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						d ##class(web.DHCPE.Report.PosQuery).OutSexListToHTML()
+					</SCRIPT>                
+                </td>
+                <td id=r1d7 style="border:0px;"></td>
+                <td rowspan="2" id=r1d8 style="border:0px;">
+					<TABLE style="border:0px;">
+              			<TBODY>
+              				<TR>
+                				<TD class="" align=left style="border:0px;">
+                				<p>                
+                					<a class='i-btn i-btn-primary' href="#" id="BQuery" name="BQuery">
+                					<img src="../images/websys/find.gif" border="0">查询
+                					</a>
+                				</p>
+                				<p>
+                					<a class='i-btn i-btn-primary' id=DeleteItem href="#" name=DeleteItem>
+                					<img src="../images/websys/delete.gif" border="0">删除项目
+                					</a>
+                				</p>
+                			   
+                				</TD>
+                				
+    						</TR>
+    					</TBODY>
+    				</TABLE>
+                </td>
+              </tr>
+              <tr>
+               
+                <td style="border:0px;" id=r2d1><div align="right">年龄范围从</div></td>
+                <td style="border:0px;text-align:left;" id=r2d2>
+                <input name="AgeFrom" type="text" id="AgeFrom" value="" size="10"/>
+                </td>
+                <td style="border:0px;text-align:left;" width="25%"id=r2d4>----
+                <input name="AgeTo" type="text" id="AgeTo" value="" size="10"/>
+                </td>
+                <td style="border:0px;" id=r2d5>婚姻</td>
+                <td style="border:0px;" width="10%" id=r2d6 colspan="2">
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						d ##class(web.DHCPE.Report.PosQuery).OutMarriedListToHTML()
+					</SCRIPT>                
+                </td>
+              </tr>
+                 <tr>
+                <td id=r3d1 style="border:0px;"><div align="right">年龄区间</div></td>
+                <td id=r3d2 style="border:0px;text-align:left;">
+                <input name="AgeStep" type="text" id="AgeStep" value="" size="10"/>
+                </td>          
+
+  
+              </tr>
+            </table>
+            </fieldset>
+		</DIV>
+	</DIV>
+	<DIV class="StandardShow">
+	   <SCRIPT language="Cache" RUNAT="SERVER">
+	    s resultclickval=""
+		s resultclickval=##Class(%CSP.Page).Encrypt($lb("web.DHCPE.ResultEdit.GetItemResultStr2"))
+		s teminsval=##Class(%CSP.Page).Encrypt($lb("web.DHCPE.ResultEdit.GetODTemplate"))
+	   </SCRIPT>  
+         <SELECT id=StandardsList style="WIDTH:705px;height:50px" multiple size=5 name=EDList onclick='detailStandard(this);'>
+         </SELECT>
+       <input type='hidden' id='resultClick' name='resultClick' value=#(resultclickval)#>
+       <input type='hidden' id='temIns' name='temIns' value=#(teminsval)#>
+    </DIV>
+	<!-- 显示查询地结果 -->
+	<DIV class="PanelShow" id=PanelShow>
+		<input type='hidden' id='Ndataframe' name='Ndataframe' value='DHCPEPosQuery.PosCollect'>
+		<IFRAME id="dataframe" name="dataframe" scrolling="auto" src="websys.default.csp?
+
+WEBSYS.TCOMPONENT=DHCPEPosQuery.PosCollect"></iframe>
+	</DIV>
+</td>
+</tr>
+</table>
+</FONT>
+</TD></TR>
+</TBODY> 
+</TABLE>
+<!-- 本页面JavaScript文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPEPosCollect.js">
+  //alert(obj.value)
+function SetGroupList(GroupList,TeamList){
+	var obj=document.getElementById('GList');
+	if (obj){ obj.value=GroupList }
+  
+}
+</SCRIPT>
+
+</BODY>
+</HTML>

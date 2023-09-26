@@ -1,0 +1,55 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+  <SERVER>
+ s gPatNo=$Get(%request.Data("gPatNo",1))
+ s EpisodeID=$Get(%request.Data("EpisodeID",1))
+ s logonuser=$G(%session.Data("LOGON.USERID"))
+ s ctpcpdr=$p($g(^SSU("SSUSR",logonuser)),"^",14)
+ s IfDoctor="N"
+ i ctpcpdr'="" d
+ .s carprvtpdr=$p($g(^CTPCP(ctpcpdr,1)),"^",4)
+ .i carprvtpdr'="" d
+ ..s internaltype=$p($g(^CT("CPT",carprvtpdr)),"^",4)
+ ..i internaltype="DOCTOR" s IfDoctor="Y"
+ s CardTypeArray=##class(web.UDHCOPOtherLB).ReadCardTypeDefineListBroker("GetCardTypeToJson","")
+ s ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+ s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+</SERVER>
+<HEAD>
+  <script language=javascript>
+		gPatNo ="#(gPatNo)#";
+		var EpisodeID="#(EpisodeID)#"
+		var CardTypeArray="#(CardTypeArray)#";
+		var IfDoctor="#(IfDoctor)#"
+		if (EpisodeID!=""){
+			window.resizeTo(1000,562);
+		}
+ </script>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+    <script type="text/javascript" src="../scripts/dhcst/ExtUX/components.js"></script>
+    <script language='javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+    <script type="text/javascript" src="../scripts/dhcpha/DHCSTCommonJs/CommonFun.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpha/outpha/dhcpha.outpha.outmonitorrefdrg.js"></script>
+</HEAD>
+<BODY>
+	<div id ="mainPanel"> </div>
+  <server>
+   d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+
+  write "<object id='CaesarComponent' classid='clsid:8C028072-4FD2-46AE-B6D2-63E9F9B4155F' codebase = '../addins/client/dtywzxUIForMS.cab#version1.0.0.1'>"
+  write "</object>"
+
+  </server>
+   <input id='ReadAccEncrypt' type='hidden' value='#(ReadAccEncrypt)#'></input>
+   <input id='ReadAccExpEncrypt' type='hidden' value='#(ReadAccExpEncrypt)#'></input>
+
+</BODY>
+</HTML>

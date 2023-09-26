@@ -1,0 +1,71 @@
+<!-- 
+ * FileName: dhcbill.conf.page.dailydtllist.csp
+ * Anchor: ZhYW
+ * Date: 2019-11-04
+ * Description: 病区日清明细页面配置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+	.td-first-col-113 {
+		width: 113px;
+	}
+	</style>
+	<server>
+		set pageId=+%request.Get("PageId")
+		set site="HOSPITAL"
+		set splitDayCode="DSD"   //是否按天拆分打印
+		set splitColCode="DSC"   //是否双列打印
+		set pageAdmCode="PA"     //是否按患者就诊分页打印
+		set codeStr=splitDayCode_"^"_splitColCode_"^"_pageAdmCode
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		PageId: "_pageId_",",!
+		w "		Site: """_site_""",",!
+		w "		CodeStr: """_codeStr_""",",!
+		w "		SplitDayCode: """_splitDayCode_""",",!
+		w "		SplitColCode: """_splitColCode_""",",!
+		w "		PageAdmCode: """_pageAdmCode_"""",!
+		w "	};",!
+		w "</script>"
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false">
+			<div style="padding:10px 10px 0 10px;">
+				<label style="padding-right:7px;">医院</label>
+				<input id="hospital" class="hisui-combobox textbox"/>
+			</div>
+		</div>
+		<div data-options="region:'center',border:false">
+			<table class="search-table" style="width:80%;">
+				<tr>
+					<td class="r-label td-first-col-113"><label>是否按天拆分打印</label></td>
+					<td><div id="splitDayFlag"></div></td>
+					<td class="r-label"><label>是否双列打印</label></td>
+					<td><div id="splitColFlag"></div></td>
+					<td class="r-label"><label>是否按患者就诊分页打印</label></td>
+					<td><div id="pageAdmFlag"></div></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'south',border:false">
+			<div style="text-align:center;padding-bottom:10px;">
+				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.page.dailydtllist.js"></script>
+</body>
+</html>

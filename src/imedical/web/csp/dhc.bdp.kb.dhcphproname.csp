@@ -1,0 +1,113 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+    @CSP：dhc.bdp.kb.dhcphproname.csp
+    @JS:DHC_PHProName.js
+    @Title：药品商品名字典
+    @Creator:石萧伟
+    @Description:药品商品名字典
+    @CreateDate：2018-08-11
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/App/KB/NewDic/DHC_PHProName.js"></script>
+<style>
+</style>
+</HEAD>
+<BODY>
+     <div class="hisui-layout" data-options="fit:true" border="false" id="layout" >
+     	<div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;" title="" border="false">
+	    	 <table style="padding-top:10px;padding-bottom:10px" >
+			    <tr>
+			   	 	<td class="tdlabel">代码</td>
+		    		<td><input id="TextCode" type="text" class="hisui-validatebox"  style="width:165px" ></td>
+		    		<td class="tdlabel">描述</td>
+		    		<td><input id="TextDesc" type="text" class="hisui-validatebox"  style="width:165px" ></td>
+		    		<td class="tdlabel">剂型</td>
+		    		<td><input id="GlPPointer" type="text" style="width:165px"/></td>
+		    		<td class="tdlabel-b">
+						<a href="#" id="btnSearch" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" class="hisui-linkbutton">查询</a>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnRefresh" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" class="hisui-linkbutton">清屏</a>
+					</td>
+				</tr> 
+			 </table >
+		</div>     
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+			<table data-options="fit:true" id="mygrid" border="false" toolbar="#allbar"></table> <!--toolbar="#allbar"-->
+		</div>      
+ 	</div> 
+     <!--增改弹窗-->
+     <div id="myWin" style="width:480px;height:520px;padding:10px;display:none;">
+	     <div id="tabOther" class="hisui-tabs tabs-gray">
+		     <div title="基本信息" style="padding:20px;">     
+				<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+					<table id="addtable" align="center">
+						 <tr>
+						   <td class="tdlabel"><font color=red>*</font>代码</td>
+						   <td><input id="PHNCode" name="PHNCode" type="text" class="hisui-validatebox" style="width:250px"></td>
+						 </tr>
+						 <tr>
+						   <td class="tdlabel"><font color=red>*</font>描述</td>
+						   <td><input id="PHNDesc" name="PHNDesc" type="text" class="hisui-validatebox" style="width:250px"></td>
+						 </tr>
+						 <tr>
+						   <td class="tdlabel">剂型</td>
+						   <td><input id="PHNFormDr" name="PHNFormDr" type="text" style="width:257px"></td>
+						 </tr>
+						 <tr>
+						   <td class="tdlabel">通用名</td>
+						   <td><input id="PHNGenericDr" name="PHNGenericDr" type="text" style="width:257px"></td>
+						 </tr>				 
+						 <tr>
+						   <td class="tdlabel">毒性</td>
+						   <td><input id="PHNToxicity" name="PHNToxicity" type="text" style="width:257px"></td>
+						 </tr>
+						 <tr>
+						   <td class="tdlabel">厂家</td>
+						   <td><input id="PHNManfDR" name="PHNManfDR" type="text" style="width:257px"></td>
+						 </tr>				 				 				 
+			    		 <tr>
+			    		   <td class="tdlabel">是否可用</td>
+						   <td><input class='hisui-checkbox' type="checkbox" label="" id="PHNActiveFlag" name="PHNActiveFlag" data-options="checked:true" value="Y"></td>
+						 </tr>
+			    		 <tr>
+			    		   <td class="tdlabel">系统标识</td>
+						   <td><input class='hisui-checkbox' type="checkbox" label="" id="PHNSysFlag" name="PHNSysFlag" data-options="checked:true" value="Y"></td>
+						 </tr>
+			    		 <tr>
+			    		   <td class="tdlabel">是否整支</td>
+						   <td><input class='hisui-checkbox' type="checkbox" label="" id="PHNWholeFlag" name="PHNWholeFlag" data-options="checked:true" value="Y"></td>
+						 </tr>				 				 								
+					</table >
+				</form>
+			</div>
+			<div title="别名" style="height:300px;width:200px">
+				<table data-options="fit:true" id="othergrid" border="false" toolbar="#otherbar">
+				</table>				       
+			</div>
+		</div>
+	</div>
+    <!--数据面板工具栏-->
+    <div id="allbar" >
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>
+    </div>
+    <!--别名工具栏-->
+    <div id="otherbar">
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="addo_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="delo_btn">删除</a>    	
+    </div>   
+</BODY>
+</HTML>

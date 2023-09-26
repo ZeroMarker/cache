@@ -1,0 +1,180 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.kb.dhclabdiseasecon.csp
+	@JS:bdp/App/KB/NewBus/DHC_LABDiseaseCon.js
+	@Title:检验项目编辑器——禁忌证
+	@Description:禁忌证的增删改
+	@Creator:基础数据平台组 - 谷雪萍
+	@CreateDate:2018-09-18
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+<style type="text/css">
+/*多选框*/
+.mulitiDiv {
+	width:560px;
+	height:360px;
+	border: 1px solid #40a2de;
+}
+
+.webui-popover-title {
+	padding:8px 14px;
+	display: block;
+    background-color: #f9f9fa;
+    border-bottom: 1px solid #cccccc;
+    border-radius: 5px 5px 0 0;
+    color: black
+}
+.webui-popover .webui-popover-content {
+    padding: 1px 5px;
+}
+
+.panel-header-noborder {
+    border-width: 0 0 0px 0;
+}
+</style>
+<script type="text/javascript"  >
+    $(function(){
+              BodyLoadHandler();
+
+    });
+</script>
+</HEAD>
+<BODY >
+    <server>
+    	s GlPGenDr=%request.Get("GlPGenDr")
+    	s GlPPointer=%request.Get("GlPPointer")
+        s GlPPointerType=%request.Get("GlPPointerType")
+   </server> 
+    <div class="hisui-layout" data-options="fit:true" border="false" >
+    	<div data-options="headerCls:'panel-header-gray',region:'north',split:true,iconCls:'icon-paper'"  title="禁忌证" style="height:148px;" border="false"> 
+			<table data-options="fit:true,nowrap:false"  id="mygrid" border="false"></table> 
+		</div> 
+       	<div data-options="region:'center'" border="false"  > 
+       		<div class="hisui-layout" data-options="fit:true" border="false" >
+       		     <div id="mytbar" data-options="region:'north',split:false"  style="height:34px;text-align:left;border-top:1px solid #C0C0C0;border-bottom:1px dashed #C0C0C0;overflow:hidden" border="false"> 	
+	 			   	 <a   class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAdd">新增</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-write-order' plain="true" id="btnUpd">修改</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-cancel' plain="true" id="btnDel">删除</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-refresh' plain="true" id="btnRel">清屏</a>
+				</div>	
+	       		<div data-options="region:'center',split:false,border:false" style="padding:4px 30px 20px 10px">
+			    	 <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    	 <table cellpadding="5">
+					    <tr>
+				               <td class="tdleftlabel">级别</td>
+				              	 <td>
+				               		<table>
+						    		  <tr>
+				               				<td><input id="PHINSTModeF" name="PHINSTMode"  style="width:80px;"></td>
+				               				<td  class="tdlabel" width="30px">性别</td>
+					       	 				<td id="PHINSTSexF">
+					           					 <input class='hisui-radio' type="radio" label='男' name='PHINSTSex' value='M' id="sexM">
+					            				 <input class='hisui-radio' type="radio" label='女' name='PHINSTSex' value='F' id="sexF">
+					           					 <input class='hisui-radio' type="radio" label='全部' name='PHINSTSex' value='A' data-options="checked:true" id="sexA">
+					        				</td>
+					        				<td  class="tdlabel" width="40px">年龄</td>
+					        				<td><input id="PDAAgeDrF" name="PDAAgeDr"  style="width:100px;"></td>
+					        				<td  class="tdlabel" width="60px">年龄限制</td>
+					        				<td><input id="PDAMinValF" name="PDAMinVal" type="text" class="hisui-validatebox" style="width:50px" ></td>
+								            <td>-</td>
+								            <td><input id="PDAMaxValF" name="PDAMaxVal" type="text" class="hisui-validatebox" style="width:50px" ></td>
+								            <td><input id="PDAUomDrF" name="PDAUomDr"  style="width:80px;"></td>
+					    				</tr>
+					    			</table>
+					    		</td>
+					    </tr>
+
+					          	
+					    <tr>
+				    		  <td class="tdleftlabel">提示(医生)</td>
+				              <td><textarea id="PHINSTDocUseTipsF" name="PHINSTDocUseTips" type="text" class="hisui-validatebox" style="width:740px;height:30px;overflow:hidden" ></textarea></td>
+					    </tr>    
+					    <tr>
+				    		  <td class="tdleftlabel">备注</td>
+				              <td><textarea id="PHINSTNoteF" name="PHINSTNote" type="text" class="hisui-validatebox" style="width:740px;height:30px;overflow:hidden"  ></textarea></td>
+					    </tr> 
+					    <tr>
+				    		  <td class="tdleftlabel">描述</td>
+				              <td><textarea id="PHINSTTextF" name="PHINSTText" type="text" class="hisui-validatebox" style="width:740px;height:60px;overflow:hidden" data-options="required:true"></textarea></td>
+					    </tr> 
+					    <tr>
+					    	<table>
+					        <tr>
+	                        <td>
+		                        <div class="hisui-panel" title="病症" style="width:415px;height:280px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',">   
+									<table style="width:380px;height:auto"  id="diaGrid" border="false" toolbar="#myDiatbar"></table>
+								</div>	
+	                        </td>
+	                        <td   style="padding: 2px 0px 2px 10px;">
+		                        <div class="hisui-panel" title="特殊人群" style="width:420px;height:280px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',"> 
+										<table style="height:auto" width="100%" id="PopuGrid" border="false" toolbar="#myPoputbar"></table>
+								</div>	
+	                        </td>
+	                        </tr>
+	                        </table>
+	                    </tr>	
+
+					                        	                    		                   		    
+					 </table >
+
+					 </form>
+	 
+				</div>
+			 
+	    	</div>
+		</div> 
+		
+		
+    		 
+    </div> 
+	<!--已选病症列表工具条-->
+    <div id="myDiatbar" style="padding: 1px; height: auto; "  >
+		<a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddDia">新增病症</a>
+		<table cellpadding="5">
+			 <tr>
+			 	 <td align="right">类型</td>
+	   			  <td id="PHDDTypeF">
+		            <input class='hisui-radio' type="radio" label='禁用' name='PHDDType' value='F' data-options="checked:true" id="typeF">
+		            <input class='hisui-radio' type="radio" label='慎用' name='PHDDType' value='C' id="typeC">
+		          </td>
+		     </tr>	
+		 </table>						    
+	 </div>
+	 <!--已选特殊人群列表工具条-->
+    <div id="myPoputbar" style="padding: 1px; height: auto; "  >
+		<a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddPopu">新增特殊人群</a>									    
+ 	</div>
+ 	
+ 	<!--未选病症列表工具条-->
+    <div id="myunDiatbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <a href="#" class="hisui-searchbox" data-options="stopAllEventOnDisabled:true" id="btnDiaSearch"></a>
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaReset">清屏</a> 
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaSave">保存</a>        
+    </div> 
+    
+    <!--未选特殊人群列表工具条-->
+    <div id="myunPoputbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <a href="#" class="hisui-searchbox" data-options="stopAllEventOnDisabled:true" id="btnPopuSearch" ></a>
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnPopuReset">清屏</a> 
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnPopuSave">保存</a>        
+    </div>   
+    <script type="text/javascript">
+     var  GlPGenDr="#(GlPGenDr)#"
+     var  GlPPointer="#(GlPPointer)#"
+     var  GlPPointerType="#(GlPPointerType)#"
+  </script>
+    <script type="text/javascript" src="../scripts/bdp/App/KB/NewBus/DHC_LABDiseaseCon.js"></script>
+</BODY>
+</HTML>

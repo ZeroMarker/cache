@@ -1,0 +1,60 @@
+ <!--dhcpeireport.contrast.generaladvice.csp--> 
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s GeneralAdvice="",AduitUser=""
+	s GSCID=$O(^User.DHCPEGSContrastI("IndexGSCADM"," "_RealPatientID,0))
+	i GSCID'="" d
+	.s obj=##class(User.DHCPEGSContrast).%OpenId(GSCID)
+	.s Stream=obj.GSCDetail
+	.s len=Stream.SizeGet()
+    .d Stream.Rewind()
+    .s AduitUser=obj.GSCUpdateUser.SSUSRName
+	.s GeneralAdvice=Stream.Read(len)
+	
+	i GeneralAdvice'=""
+	{
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,$c(13,10,13,10,13,10),$c(13,10,13,10))
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice," ","&nbsp;")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,$C(13),$C(13,10))
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,$C(13,10),"<br>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S3","10<sup>3</sup>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S6","10<sup>6</sup>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S9","10<sup>9</sup>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S12","10<sup>12</sup>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10^9","10<sup>9</sup>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10^12","10<sup>12</sup>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10?9","10<sup>9</sup>")
+	s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10?12","10<sup>12</sup>")
+	}
+	
+    s GeneralAdviceTitle="与既往资料比较:"
+	
+	
+	</Script>
+		
+
+
+
+<TABLE id='GeneralAdviceTable' border="0" class="GeneralAdviceTable" width="655">
+		<THEAD>
+		<tr>
+		   <td colspan="3" height="80" align="center"><B><font face="宋体" size="5">动态分析结论</font></B></td>
+		</tr>
+			<TR>
+				<TD colspan="3" width="655" class="GeneralAdviceTitle" style="word-wrap:break-word;word-break:break-all;">#(GeneralAdviceTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+		
+			<TR>
+				<TD colspan="3" width="655" class="GeneralAdviceData" style="word-wrap:break-word;word-break:break-all;">
+					#(GeneralAdvice)#
+				</TD>
+						
+			</TR>
+			<TR >
+			<TD width="350"></TD>
+			<TD height=5 width="150"><br><br><font face="宋体" size="2">对比汇总:#(AduitUser)#</font></TD>
+			</TR>	
+
+		</TBODY>
+	</TABLE>

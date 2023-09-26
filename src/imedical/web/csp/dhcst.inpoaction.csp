@@ -1,0 +1,90 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+;
+i Action = "Query" d
+	.s ListParam=$Get(%request.Data("ParamStr",1))
+	.w ##class(web.DHCST.INPO).Query(Start,Limit,Sort,Dir,ListParam)
+	.
+i Action = "QueryDetail" d
+	.s InPo=$Get(%request.Data("Parref",1))
+	.s ret=##class(web.DHCST.INPOItm).Query(Start,Limit,Sort,Dir,InPo)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+	.
+//查询药品信息
+	i Action = "GetItmInfo" d
+	.s IncId=$Get(%request.Data("IncId",1))
+	.s Params=$Get(%request.Data("Params",1))
+	.w "{success:'true',info:'"_##class(web.DHCST.INPO).GetItmInfo(IncId, Params)_"'}"
+//对供应商厂商物资资质信息进行判断
+    i Action = "Check" d
+	.S DataList=$Get(%request.Data("DataList",1))
+	.s ret=##class(web.DHCST.Common.UtilCommon).Check(DataList)
+	.w "{success:'true',info:'"_ret_"'}"		
+//获得订单主记录信息
+i Action = "Select" d
+	.s InPo=$Get(%request.Data("InpoId",1))
+	.s result=##class(web.DHCST.INPO).jsSelect(InPo)	
+	.i result'= "" d
+	..w result
+	.e  d
+	..w "{results:0,rows:[]}"
+i Action = "Save" d
+	.s Main=$Get(%request.Data("Main",1))
+	.S MainInfo=$Get(%request.Data("MainInfo",1))
+	.S ListDetail=$Get(%request.Data("ListDetail",1))
+	.s ret=##class(web.DHCST.INPO).Save(MainInfo,ListDetail,Main)
+	.i +ret > 0 d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action="finish"  d
+    .s InPo=$Get(%request.Data("InpoId",1))
+    .s Usr=$Get(%request.Data("Usr",1))
+    .s ret=##class(web.DHCST.INPO).SetComplete(InPo,"Y",Usr)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	..
+	
+i Action="noFinish"  d
+    .s InPo=$Get(%request.Data("InpoId",1))
+    .s Usr=$Get(%request.Data("Usr",1))
+    .s ret=##class(web.DHCST.INPO).SetComplete(InPo,"N",Usr)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	..
+//删除订单
+	i Action = "delete" d
+	.s InPo=$Get(%request.Data("InpoId",1))
+	.s result = ##class(web.DHCST.INPO).Delete(InPo)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+//删除订单明细
+	i Action = "deleteItem" d
+	.s InPoi=$Get(%request.Data("InPoi",1))
+	.s result = ##class(web.DHCST.INPOItm).Delete(InPoi)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+//取出采购单主表信息用于打印
+	i Action = "SelectMain" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s ret=##class(web.DHCST.INPO).SelectMain(Parref)
+	.i ret'="" d	
+	..w "{success:'true',info:'"_ret_"'}"	
+</SERVER>

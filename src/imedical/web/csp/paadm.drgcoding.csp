@@ -1,0 +1,202 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+ n PatientID,EpisodeID,paadmtransid,diagrows,procrows,ccuicuhrs,codingid,objCoding,numrows,dischdate,context,twkfl,obj,verif,DRG,DRGCode,DRGDesc,DRGTypeId,DRGType,WIESScore,WIESPrice,InvalidPasswd,DRGdata,tad,tld,los,pccl
+ s (PatientID,EpisodeID,paadmtransid,diagrows,procrows,ccuicuhrs,codingid,objCoding,numrows,dischdate,context,twkfl,TWKFLI,TWKFLL,TWKFLJ,verif,DRG,WIESScore,WIESPrice,DRGCode,DRGDesc,DRGTypeId,DRGType,DRGdata,tad,tld,los,pccl)=""
+ 
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ i 'mradm,EpisodeID s (mradm,%request.Data("mradm",1))=$p($g(^PAADM(EpisodeID)),"^",61)                               ; faster than   -   ##Class(web.PAAdm).GetMRAdm(EpisodeID)
+ i 'EpisodeID,mradm s (EpisodeID,%request.Data("EpisodeID",1))=$p($g(^MR(mradm,"PRO",1)),"^",9)       ; faster than   -   ##Class(web.MRAdm).GetEpisodeId(mradm)
+ i 'PatientID,EpisodeID s (PatientID,%request.Data("PatientID",1))=$p($g(^PAADM(EpisodeID)),"^",1)                        ; faster than   -   ##Class(web.PAAdm).GetPatientId(EpisodeID)
+ 
+ s (paadmtransid,%request.Data("paadmtransid",1))=$g(%request.Data("TRANSID",1))
+ s context=$g(%request.Data("CONTEXT",1))
+ 
+ ; L34036: If coming from PAAdm.List component, copy ICD and Procedure codes across episodes
+ s windowcopy=$g(%request.Data("COPYWindow",1))
+ s FromEpisodeID=$g(%request.Data("FromEpisodeID",1))
+ i windowcopy="COPY",FromEpisodeID'="" d ##Class(web.PAAdmCoding).CopyDiagProcsAcrossEpisodes(%request.Get("TEVENT"),FromEpisodeID,EpisodeID)
+  
+ s twkfl=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s TWKFLL=$g(%request.Data("TWKFLL",1))
+ s TWKFLJ=$g(%request.Data("TWKFLJ",1)) 
+ 
+ ; RQG 15.05.03 L35445: Rows are now parameterised in CFPatConf table.  may need to use some sort of preference, hard code for now
+ s diagrows=4,procrows=4,numrows=0
+ s numrows=$p(^CF("PATCF",1,11),"^",54)
+ i numrows s diagrows=numrows,procrows=numrows
+ 
+ i paadmtransid'="" d
+ . s obj=##Class(User.PAAdmTransaction).%OpenId(paadmtransid,0)
+ . i obj d
+ . . i obj.TRANSDRGDR s DRG=obj.TRANSDRGDR.%Id()
+ . . d obj.%Close()
+ 
+ i paadmtransid="" d
+ . s obj=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+ . i obj d
+ . . i obj.PAADMMainMRADMDR,obj.PAADMMainMRADMDR.MRADMDRGDR s DRG=obj.PAADMMainMRADMDR.MRADMDRGDR.%Id()
+ . . ;KK 5/5/03 L:34999
+ . . s dischdate=obj.PAADMDischgDate
+ . . 
+ . . ; cjb 28/07/2004 45439 - logic taken from BANNERLengthofStay field and passed to the PAAdm.DRGCodingDisplay frame
+ . . s tad=($s(obj.PAADMDischgDate'="":obj.PAADMDischgDate,1:+$h)-obj.PAADMAdmDate)
+ . . s tld=##class(web.PAAdmLeave).GetTotalLeave(EpisodeID)
+ . . s los=tad-tld s los=$S((los<0):0,(los=0):"1 day",1:los_" days")
+ . . 
+ . . d obj.%Close()
+
+ ;KK 12/Aug/2004 L:45123 - 
+ ;n UseWIESVICDRGFunction
+ ;s UseWIESVICDRGFunction=$p($g(^CF("PATCF",1,11)),"^",25)
+ s DRGCode=""
+ i DRG'="" s DRGCode=$p($g(^MRC("DRG",+DRG)),"^",1)
+ ;s ^zTRAK("karthi","csp","1")="DRG="_$g(DRG)_"^DRGCode="_$g(DRGCode)
+ ;i mradm,DRGCode'="",UseWIESVICDRGFunction="Y" d ##Class(web.MRCDRGCodes).UpdateToVicDRG(DRGCode,mradm)
+
+ ;KK 12/Aug/2004 L:45658 - moved WIES Calculation from websysSave3MDRG
+ i DRGCode'="XXX",DRGCode'="" d ##Class(web.PAAdmCoding).CalculateWIESScore(EpisodeID)
+ 
+ i mradm d
+ . s obj=##Class(User.MRAdm).%OpenId(mradm,0)
+ . i obj d
+ . . ;KK 21/11/2002 Log 28515 - To display WIES Score and price
+ . . i obj.MRADMTotalWIESPrice'="" s WIESPrice=obj.MRADMTotalWIESPrice
+ . . i obj.MRADMTotalWIESScore'="" s WIESScore=obj.MRADMTotalWIESScore
+ . . i obj.MRADMPCCL'="" s pccl=obj.MRADMPCCL				; RQG 01.09.03 L32803
+ . . ; RQG 01.09.03 L32803
+ . . d obj.%Close()
+ 
+ i DRG'="" d
+ .s DRGdata=$g(^MRC("DRG",+DRG))
+ .s (DRGCode,%request.Data("DRGCode",1))=$p(DRGdata,"^",1)
+ .s (DRGDesc,%request.Data("DRGDesc",1))=$p(DRGdata,"^",2)
+ .s DRGTypeId=$p(DRGdata,"^",3)
+ .i DRGTypeId'="" s (DRGType,%request.Data("MDC",1))=$p($g(^MRC("DRGTYP",+DRGTypeId)),"^",2)
+ 
+ ;KK 2/jun/03 Log 35894 - to load DRG Tariff table values.
+ n TAR,s1,hdrg,cwed,datefr,dateto,hcvalid,cwvalid,hosp,s2
+ n TAROneDayTariff,TARReabilitaionLimitDay,TARNormalTariff,TARDayHospitalTariff,TARExtraHighTrimPoint
+ s (TAR,s1,hdrg,cwed,datefr,dateto,hosp,s2)=""
+ s (TAROneDayTariff,TARReabilitaionLimitDay,TARNormalTariff,TARDayHospitalTariff,TARExtraHighTrimPoint)=""
+ s hcvalid=0,cwvalid=0
+ i DRG'="" {
+	;KK 27/07/04 L:44647
+	s s2=$g(^PAADM(EpisodeID,2)),hosp=$p(s2,"^",85)
+	&sql(
+		SELECT DFG_HospDRGCateg_DR
+		INTO :hdrg
+	  	FROM SQLUser.CT_HospitalDRGFundGroup
+	  	WHERE (DFG_ParRef=:hosp) 
+	  	AND (DFG_DateFrom<=:dischdate)
+	  	AND ((DFG_DateTo>=:dischdate) OR (DFG_DateTo IS NULL))
+ 	)
+	;
+	;KK 9.9.03 L:38804
+	;KK 27/07/04 L:44647 - Added TAR_HospDRGCateg_DR check to the criteria
+	&sql(
+		SELECT TAR_RowId INTO :TAR FROM SQLUser.BLC_DRG_Tariff 
+		WHERE	(TAR_DRG_DR=:DRG) 
+		AND (TAR_Version_DR->DRGVER_DateFrom <= :dischdate) 
+		AND ((TAR_Version_DR->DRGVER_DateTo >= :dischdate) OR (TAR_Version_DR->DRGVER_DateTo IS NULL))
+		AND ((TAR_HospDRGCateg_DR=:hdrg) OR (TAR_HospDRGCateg_DR IS NULL))
+	)
+ 	i 'SQLCODE{
+		;KK 27/07/04 L:44647 
+ 		;s s1=$g(^BLC("DRGTAR",+TAR))
+ 		;s hdrg=$p(s1,"^",21)	;get hospital drg category row id
+ 		;s cwed=$p(s1,"^",20)	;get cost weight edition row id
+ 		;i hdrg'="" {
+ 		;	s datefr=$p($g(^CT("HDRGCAT",+hdrg)),"^",3)
+ 		;	s dateto=$p($g(^CT("HDRGCAT",+hdrg)),"^",4)
+ 		;	i (datefr<dischdate)&((dateto>dischdate)!(dateto="")) s hcvalid=1
+ 		;}
+		s s1=$g(^BLC("DRGTAR",+TAR))
+		s cwed=$p(s1,"^",20)	;get cost weight edition row id
+		s (datefr,dateto)=""
+		i hdrg'="" s hcvalid=1 
+		i cwed'="" {
+			s datefr=$p($g(^MRC("CWED",+cwed)),"^",3)
+			s dateto=$p($g(^MRC("CWED",+cwed)),"^",4)
+			i (datefr<dischdate)&((dateto>dischdate)!(dateto="")) s cwvalid=1
+		}
+		i ((hdrg="")&(cwed=""))!((hcvalid=1)&(cwvalid=1)) {
+			;KK 19/Jun/2003 Log 35045
+			s %request.Data("TARCostWeight",1)=$p($g(^MRC("CWED",+cwed)),"^",2) ;Cost weight
+			s %request.Data("TARDRGCategDR",1)=$p($g(^CT("HDRGCAT",+hdrg)),"^",2)  ;Hosp. DRGCategory
+			;s %request.Data("TARExtraHighTrimPoint",1)=$p(s1,"^",22)  ;Extra High Trim Point
+			s (TARExtraHighTrimPoint,%request.Data("TARExtraHighTrimPoint",1))=$p(s1,"^",22)
+			s %request.Data("TARClass1DR",1)=$p(s1,"^",13)
+			s %request.Data("TARClass2DR",1)=$p(s1,"^",14)
+			s %request.Data("TARClass3DR",1)=$p(s1,"^",15)
+			s (TARDayHospitalTariff,%request.Data("TARDayHospitalTariff",1))=$p(s1,"^",7)
+			s %request.Data("TARDRGTypeDR",1)=DRGType		;$p(s1,"^",2)
+			s %request.Data("TARExtraTariffPerDay",1)=$p(s1,"^",9)
+			s %request.Data("TARKind",1)=$p(s1,"^",4)
+			s %request.Data("TARLimitDay",1)=$p(s1,"^",8)
+			s %request.Data("TARMedTarget",1)=$p(s1,"^",16)
+			s (TARNormalTariff,%request.Data("TARNormalTariff",1))=$p(s1,"^",5)
+			s (TAROneDayTariff,%request.Data("TAROneDayTariff",1))=$p(s1,"^",6)
+			s %request.Data("TARReabilitaionExtraTariffPerDay",1)=$p(s1,"^",12)
+			s (TARReabilitaionLimitDay,%request.Data("TARReabilitaionLimitDay",1))=$p(s1,"^",11)
+			s %request.Data("TARReabilitationTariff",1)=$p(s1,"^",10)
+			s %request.Data("TARSameDayOneDay",1)=$p(s1,"^",17)
+		}
+	}
+ }
+ ;KK 7/Aug/2003 Log:37784 - DRGDesc has dbouble quoted in them which prevented the page from loading
+ s DRGDesc=$tr(DRGDesc,"""")
+ 
+ ;AJI 19.11.03 Log 40633 - need to capture this request and pass it to paadm.drgcoding2.csp
+ ;Used to indicate whether session.Data from tmpDiagFields and tmpProcFields need to be cleared out.
+ s InvalidPasswd=$g(%request.Data("InvalidPasswd",1))
+
+ s frameset=##Class(epr.FramePreference).GetData($g(%session.Data("LOGON.SITECODE")),$g(%session.Data("LOGON.GROUPID")),"paadm.drgcoding.csp")
+ s:$g(frameset)="" frameset="9%,12%,25%,25%,*"
+ i $g(PatientID)="" s frameset=$p(frameset,",",2,5)
+</SERVER>
+
+<!-- KK 1/Jul/2003 Log:35047 - Loading components in frames  CSP:IF check for loading this page from DRGInquiry -->
+<CSP:IF condition=(PatientID="")>
+<frameset rows="#(frameset)#">
+	<frame name="PAAdmDRGCodingDisplay" src="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.DRGCodingDisplay&PatientID=#(PatientID)#&CONTEXT=#(context)#&mradm=#(mradm)#&DRGCode=#(DRGCode)#&DRG=#(DRG)#&TAROneDayTariff=#(TAROneDayTariff)#&TARReabilitaionLimitDay=#(TARReabilitaionLimitDay)#&TARNormalTariff=#(TARNormalTariff)#&MDC=#(DRGType)#&TARDayHospitalTariff=#(TARDayHospitalTariff)#&MRADMTotalWIESScore=#(WIESScore)#&MRADMTotalWIESPrice=#(WIESPrice)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=0 resizeable=no> 
+	<frame name="MRDiagnosEditDRG" src="websys.default.csp?WEBSYS.TCOMPONENT=MRDiagnos.EditDRG&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CONTEXT=#(context)#&mradm=#(mradm)#&TRANSID=#(paadmtransid)#&minrows=#(diagrows)#&dischdate=#(dischdate)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=0 scrolling="auto" resizeable="no"> 
+	<frame name="MRProceduresEditDRG" src="mrprocedures.editdrg.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CONTEXT=#(context)#&mradm=#(mradm)#&TRANSID=#(paadmtransid)#&minrows=#(procrows)#&dischdate=#(dischdate)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=0 scrolling="auto" > 
+	<frame name="PAAdmDRGCoding" src="paadm.drgcoding2.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&COPYWindow=#(windowcopy)#&CONTEXT=#(context)#&mradm=#(mradm)#&TRANSID=#(paadmtransid)#&DRGCode=#(DRGCode)#&DRG=#(DRG)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&TARDayHospitalTariff=#(TARDayHospitalTariff)#" frameBorder=0>
+</frameset>
+</CSP:IF>
+
+<CSP:IF condition=(PatientID'="")>
+<frameset rows="#(frameset)#">
+	<frame name="PatientBanner" src="websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Banner&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CONTEXT=#(context)#&mradm=#(mradm)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=0 resizeable=no> 
+	<frame name="PAAdmDRGCodingDisplay" src="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.DRGCodingDisplay&PatientID=#(PatientID)#&CONTEXT=#(context)#&mradm=#(mradm)#&DRGCode=#(DRGCode)#&DRG=#(DRG)#&TAROneDayTariff=#(TAROneDayTariff)#&TARReabilitaionLimitDay=#(TARReabilitaionLimitDay)#&TARNormalTariff=#(TARNormalTariff)#&MDC=#(DRGType)#&TARDayHospitalTariff=#(TARDayHospitalTariff)#&MRADMTotalWIESScore=#(WIESScore)#&MRADMTotalWIESPrice=#(WIESPrice)#&LengthofStay=#(los)#&MRADMPCCL=#(pccl)#&TARExtraHighTrimPoint=#(TARExtraHighTrimPoint)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=0 resizeable=no>
+	<frame name="MRDiagnosEditDRG" src="websys.default.csp?WEBSYS.TCOMPONENT=MRDiagnos.EditDRG&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CONTEXT=#(context)#&mradm=#(mradm)#&TRANSID=#(paadmtransid)#&minrows=#(diagrows)#&dischdate=#(dischdate)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=0 scrolling="auto" resizeable="no"> 
+	<frame name="MRProceduresEditDRG" src="mrprocedures.editdrg.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CONTEXT=#(context)#&mradm=#(mradm)#&TRANSID=#(paadmtransid)#&minrows=#(procrows)#&dischdate=#(dischdate)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=0 scrolling="auto" > 
+	<frame name="PAAdmDRGCoding" src="paadm.drgcoding2.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&COPYWindow=#(windowcopy)#&CONTEXT=#(context)#&mradm=#(mradm)#&TRANSID=#(paadmtransid)#&DRGCode=#(DRGCode)#&DRG=#(DRG)#&TWKFL=#(twkfl)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&InvalidPasswd=#(InvalidPasswd)#&InvalidPasswd=#(InvalidPasswd)#&TARDayHospitalTariff=#(TARDayHospitalTariff)#" frameBorder=0>
+</frameset>
+</CSP:IF>
+
+<SCRIPT>
+
+var winP=window.parent;
+if (winP.frames['eprmenu']) winP.SetEpisodeDetails('#(PatientID)#','#(EpisodeID)#','#(mradm)#');
+try {
+	if (tsc['DRGupdate']) websys_sckeys[tsc['DRGupdate']]=SubmitForms;
+} catch (err) {}
+
+</SCRIPT>
+</html>

@@ -1,0 +1,575 @@
+ <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<JQUERY:EASYUI132/>
+</HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.css"></LINK>
+<style>  
+.menu-text {
+    font-size: 10pt;
+}
+.hasMessage span.messagecount{
+	visibility:visible;
+}
+.nullMessage span.messagecount{
+	visibility:hidden;
+}
+.hasMessage .icon-message{
+	background:url('../skin/default/images/message/unread-unexec.png') no-repeat center center;
+}
+.nullMessage .icon-message{
+	background:url('../skin/default/images/message/unread.png') no-repeat center center;
+}
+.icon-message{
+	background:url('../skin/default/images/message/read-unexec.png') no-repeat center center;
+}
+</style>
+<BODY class="easyui-layout">
+<SERVER>
+	Set EnableExitAlert = 0
+	if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Configuration||EnableExitAlert"){
+		Set EnableExitAlert = ##class(websys.Configuration).GetFieldValue("EnableExitAlert")
+		if EnableExitAlert="" Set EnableExitAlert=0
+	}
+	n LogonFromVB
+	s (LogonFromVB)=""
+	i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s LogonFromVB=$g(%request.Data("LogonFromVB",1)) ;s ^zTRAK("cjb","epr.frames.csp")=LogonFromVB
+	
+	;KK 18/jul/2002 Log 23459 To display the system security message	
+	n securitymsg
+	s securitymsg=""
+	i $d(%request.Data("RELOGON",1))'="" d
+	. s securitymsg=##Class(web.SSUser).GetSystemSecurityMessage(%session.Get("LOGON.USERID"))
+</SERVER>
+
+<server>
+
+	;i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s ^zTRAK("cjb","epr.menu.csp")=$g(%request.Data("LogonFromVB",1))
+	
+ n str,LogonPatientID,LogonEpisodeID
+ s (str,LogonPatientID,LogonEpisodeID)=""
+ i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s str=$p($g(%request.Data("LogonFromVB",1)),"^",2)
+ i str'="" s LogonPatientID=$p(str,":",3),LogonEpisodeID=$p(str,":",4)
+	
+ n comp
+ s comp=##Class(websys.Component).OpenName("epr.Menu.Messages")
+ i comp d comp.LoadTrans(),comp.%Close()
+ w "<SCRIPT>",$c(13,10)
+ ; Dump out all the translated captions
+ s code=""  f  s code=$o(t(code))  q:code=""  d
+ . w "t['"_code_"']="_..QuoteJS($p($g(t(code),code),"^",1))_";",$c(13,10)
+ w "</SCRIPT>",$c(13,10),!
+</server>
+
+
+<server>
+ //qse add
+ s ServerNameSpace=##Class(web.DHCTHREEEX).GetServerNameSpace()
+ s Loc=%session.Data("LOGON.CTLOCID")
+ s LocDesc=$P($G(^CTLOC(Loc)),"^",2)
+ i $P(LocDesc,"-",2)'="" s LocDesc= $P(LocDesc,"-",2)
+ s UserId=%session.Data("LOGON.USERID")
+ s Str=##Class(web.DHCLCNUREXCUTE).GetUserWardId(UserId,Loc)
+ s WardStr=$P(Str,"|")
+ s WardId=$P(WardStr,"^",2)
+</server>
+<SCRIPT Language="Javascript">
+ //qse use
+ var ServerNameSpace="#(ServerNameSpace)#";
+ var WardId="#(WardId)#";
+ var LocDesc="#(LocDesc)#";
+</SCRIPT>
+<!--<script language='javascript' src='../scripts/framework/ext.epr.frames.js'></script>-->
+<!--<script language='javascript' src='../scripts/framework/Ext.ux.Notification.js'></script>-->
+<SCRIPT SRC="../scripts/epr.menu.js"></SCRIPT>
+
+<SCRIPT language="Javascript">
+var securitymsg="#(securitymsg)#";
+if (securitymsg!="") alert(securitymsg);
+
+self.moveTo(0,0);
+self.resizeTo(screen.availWidth,screen.availHeight);
+var keepopen=false;
+if (#(EnableExitAlert)#){
+	window.onbeforeunload = unlockbeforeunload ;
+}
+function unlockbeforeunload(){
+	if(!keepopen){
+		return "您确定退出系统";
+	}
+}
+window.onunload=unlockonunload;                        //add by wuqk 2011-12-31
+ 
+ // ab 19.12.07 65893 - check 'keepopen' flag rather than mouse cursor position
+// keepopen flag is set on click of a 'home' menu
+function unlockonunload() {
+	if (!keepopen) {
+		   try {unloadHandler();} catch(e) {}
+		   //确定退出后,把before事件置空,IE11兼容到IE5后,加载新界面会再次触发before事件
+		   window.onbeforeunload = function(){}
+		   window.location.href="websys.closesession.csp";
+	}
+	return true;
+}
+ 
+//This is a workaround to try and distinguish between reloading the frame and closing the window
+/*
+function unlockonunload() {
+	if (window.event) {
+		if (window.event.clientY < 0) {
+		   	try {unloadHandler();} catch(e) {}
+			//alert("The browser is closing...");
+			window.location.href="websys.closesession.csp";
+		} else {
+			//alert("The user is refreshing or navigating away...");
+		}
+	}
+}
+*/
+
+function unloadHandler() {
+
+	// SA 13.8.02 - log 26697: Function written in order to close Medicode 
+	// when Medtrak is closed. While this code is only relevant to RIE, because 
+	// there is no single component associated with this code, SP and I have agreed
+	// that this code needs to be here rather than in a custom javascript.
+	// This code also appears in websys.frames.csp
+
+	// DDE object
+	var objDDE;
+	try {
+		objDDE = new ActiveXObject("tkDDEInterface.clsConnect");
+		objDDE.DDELinkTopic = "OINSIGHT|MW_MAINFORM.TXT_HOST_ID";
+		objDDE.DDELinkMode = 2;
+		objDDE.DDELinkItem = "TEXT";
+		objDDE.DDEText = "MEDICODE_EXIT"
+		objDDE.DDEPoke();
+	} catch(e) {}
+	
+	// cjb 04/04/2006 58809 - unload SimpleCode when unloading web session
+	var obj;
+	try {
+		obj = new ActiveXObject("tkPSimpleCode.clstkPSimpleCode");
+		obj.ItemPath = "";
+		obj.ClosePSimpleCodeWindow();
+		obj="";
+	} catch(e) {}
+
+}
+
+var DivBedSelected = "";
+var isMenuLoaded = 0;
+var isMainLoaded = 0;
+var elementID="";
+var elementValue="";
+
+//TN: added multipleIDs parameter to pass to MultipleIDs fields for multiple selection. This is to store the main id of those items selected
+//ie. off the episode list... multipleIDs will be "EpisodeID^episID1^episID2^episID3".... etc
+//ie. off the orders workbench... multipleIDs will be "OEOrdItemID^oeoriID1^oeoriID2^oeoriID3".... etc
+////////////////////////////////////////////////////////////////////
+//IMPORTANT!!! TN: when adding new fields to be passed to this function, please remember to add to the Clear function below as well
+////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+////modify by wuqk 2010-05-20    begin
+////////////////////////////////////////////////////////////////////
+function SetEpisodeDetails(patID,episID,mradm,titleName,apptID,waitinglistID,OEOrdItemIDs,SinglePatientFlag,WardID,PAAdmCodingID,multipleIDs,OEORIItemStatus,BillRowIds,BillTypes,wlstatus,ARCIMDesc,FollowUpApptID,ItemApptStatus,Decease,ReqIDs,ReqVolIDs,canGiveBirth,MultiEpisodeID,OperRoomID,AnaesthesiaID,NokID,attendID) {
+	//var win=top.frames['eprmenu'];
+	//if (win) {
+		//if (titleName=="") titleName='##--(%session.Get("TITLE"))--##';
+		//websys_setTitleBar(titleName);
+		//var frm = win.document.forms['fEPRMENU'];
+		var frm = document.forms['fEPRMENU'];
+		if (frm) {
+			//HORRIBLE BUT SAFE SO CAN'T GET MIXED IDs... clear then set values
+			for (var i=0; i<frm.elements.length; i++) {
+				frm.elements[i].value="";
+			}
+			//
+			frm.PatientID.value = patID;
+			frm.EpisodeID.value = episID;
+			frm.mradm.value = mradm;
+			//alert("SetEpisodeDetails"+OperRoomID);
+			if (apptID) frm.apptID.value=apptID;
+			if (OperRoomID) frm.OperRoomID.value=OperRoomID;
+			if (waitinglistID) frm.WaitingListID.value=waitinglistID;
+			if (OEOrdItemIDs) frm.OEOrdItemID.value=OEOrdItemIDs;
+			if (SinglePatientFlag) frm.SinglePatientFlag.value=SinglePatientFlag;
+			if (WardID) frm.WardID.value=WardID;
+			if (PAAdmCodingID) frm.PAAdmCodingID.value=PAAdmCodingID;
+			if (multipleIDs) frm.MultipleIDs.value=multipleIDs;
+			if (OEORIItemStatus) frm.OEORIItemStatus.value=OEORIItemStatus;
+			if (BillRowIds) frm.BillRowIds.value=BillRowIds;
+			if (BillTypes) frm.BillTypes.value=BillTypes;
+			if (wlstatus) frm.WLWaitListStatusDR.value=wlstatus;
+			if (ARCIMDesc) frm.ARCIMDesc.value=ARCIMDesc;
+			if (FollowUpApptID) frm.FollowUpAppt.value=FollowUpApptID;
+			if (ItemApptStatus) frm.ItemApptStatus.value=ItemApptStatus;
+			if (Decease) frm.Decease.value=Decease;
+			if (ReqIDs) frm.ReqIDs.value=ReqIDs;
+			if (ReqVolIDs) frm.ReqVolIDs.value=ReqVolIDs;
+			if (canGiveBirth) frm.canGiveBirth.value=canGiveBirth;
+			if (MultiEpisodeID) frm.MultiEpisodeID.value=MultiEpisodeID;
+			/*for (i in HEADERBUFFER) {
+				if (frm.elements[i]) frm.elements[i].value=HEADERBUFFER[i];
+			}*/
+			if (NokID) frm.NokID.value=NokID;	// cjb 22/02/2006 56793
+			if (AnaesthesiaID) frm.AnaesthesiaID.value=AnaesthesiaID;
+			if (attendID) frm.attendID.value=attendID;  //log 61395 TedT
+		}
+	//}
+}
+
+function SetSingleField(fldname,val) {
+	//var win=top.frames['eprmenu'];
+	//if (win) {
+		var frm = document.forms['fEPRMENU'];
+		if (frm) {
+			var fld=frm.elements[fldname];
+			if (fld) fld.value=val;
+		}
+	//}
+
+}
+//created one clear function so will need to update just the one function instead of everywhere.
+function MainClearEpisodeDetails() {
+	//don't need this anymore, does a form loop
+	//SetEpisodeDetails("","","","","","","","","","","","","","","","","","","","","","","","");
+	//
+	
+		var frm = document.forms['fEPRMENU'];
+		for (var i=0; i<frm.elements.length; i++) {
+			frm.elements[i].value="";
+		}
+		//window.frames["eprmenu"].MENU_TRELOADPAGE='';
+		//window.frames["eprmenu"].MENU_TRELOADID='';
+	
+}
+
+//SA 4.1.01 - log 22468: Added mPiece function.
+function mPiece(s1,sep,n) {
+	//Getting wanted piece, passing (string,separator,piece number)
+	//First piece starts from 0
+	//Split the array with the passed delimeter
+	delimArray = s1.split(sep);
+	//If out of range, return a blank string
+	if ((n <= delimArray.length-1) && (n >= 0)) return delimArray[n];
+}
+function SetKeepOpen(url,newwin) {
+	keepopen = true;
+	location.href = url;
+	/*
+	parent.keepopen=true;
+	parent.location.href=url;
+	*/
+}
+
+//////////////////////////////////////////////////////////////////////
+////modify by wuqk 2010-05-20    end
+////////////////////////////////////////////////////////////////////
+
+//add by wuqk 2011-07-15,show Message 
+//var times=eval(session['LOGON.TIMEOUT'])/10*1000;
+/*var times=600000;                 //10分钟刷新一次
+popMessage();
+setInterval("popMessage()", times);*/
+</SCRIPT>
+    <div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">加载中···</font></h1></div>
+	<div data-options="region:'north',border:false" style="height:36px;padding:0px;overflow:hidden;" id="menuPanel">
+		<FORM name="fEPRMENU">
+			<!--TN:23-Apr-2002:added field MultipleIDs for multiple selected IDs for generic looping workflows-->
+			<INPUT TYPE="hidden" name="PatientID" id="PatientID" value="">
+			<INPUT TYPE="hidden" name="EpisodeID" value="">
+			<INPUT TYPE="hidden" name="mradm" value="">
+			<INPUT TYPE="hidden" name="Decease" value="">
+			<INPUT TYPE="hidden" name="MultipleIDs" value="">
+			<!-- WAITINGLIST -->
+			<INPUT TYPE="hidden" name="WaitingListID" value="">
+			<INPUT TYPE="hidden" name="WLWaitListStatusDR" value="">
+			<!-- ORDERITEM -->
+			<INPUT TYPE="hidden" name="OEOrdItemID" value="">
+			<INPUT TYPE="hidden" name="OEORIItemStatus" value="">
+			<INPUT TYPE="hidden" name="ARCIMDesc" value="">
+			<INPUT TYPE="hidden" name="ItemApptStatus" value="">
+			<!-- CODING -->
+			<INPUT TYPE="hidden" name="PAAdmCodingID" value="">
+			<!-- BILLING -->
+			<INPUT TYPE="hidden" name="BillRowIds" value="">
+			<INPUT TYPE="hidden" name="BillTypes" value="">
+			<!-- BOOKING -->
+			<INPUT TYPE="hidden" name="FollowUpAppt" value="">
+			<INPUT TYPE="hidden" name="apptID" value="">
+			<INPUT TYPE="hidden" name="OperRoomID" value="">
+			<INPUT TYPE="hidden" name="AnaesthesiaID" value="">
+			<!-- MEDRECORD -->
+			<INPUT TYPE="hidden" name="ReqIDs" value="">
+			<INPUT TYPE="hidden" name="ReqVolIDs" value="">
+			<!-- EPISODE -->
+			<INPUT TYPE="hidden" name="MultiEpisodeID" value="">
+			<INPUT TYPE="hidden" name="WardID" value="">
+			<!-- MATERNITY -->
+			<INPUT TYPE="hidden" name="canGiveBirth" value="">
+			<!-- NEXT OF KIN - cjb 22/02/2006 56793 -->
+			<INPUT TYPE="hidden" name="NokID" value="">
+			<!-- Attendance - 61395 Tedt 01/07 -->
+			<INPUT TYPE="hidden" name="attendID" value="">
+			<INPUT TYPE="hidden" name="SpecificID" value="">
+			<INPUT TYPE="hidden" name="SinglePatientFlag" value="">
+			<!-- 药理实验项目指针 -->
+			<INPUT TYPE="hidden" name="PPRowId" value="">
+			<!--会计核算成品-帐套-->
+			<INPUT TYPE="hidden" name="AcctBookID" id="AcctBookID" value="">
+			<INPUT TYPE="hidden" id="checkNewMessage" value='<%=##Class(%CSP.Page).Encrypt($LB("web.SSMessageRecipient.countNewMessages"))%>'>
+			<audio  id="newMsgAudio" preload="preload">
+				<source src="../audio/newmsg.WAV" type="audio/mpeg">
+				<source src="../audio/newmsg.mp3" type="audio/mpeg">
+			</audio>
+		</FORM>
+		#(##class(websys.Menu).EasyMenu("",%session.Data("LOGON.GROUPID")))#
+	</div>
+	<!--epr.default.csp-->
+	<div id="MessageWin" class="easyui-window" title="消息列表" 
+	data-options='modal:true,closed:true,collapsible:false,width:1166,height:500,closable:true,content:"<iframe src=\"dhc.message.csp\" scrolling=no frameborder=0 style=\"width:100%;height:100%;\"></iframe>",iconCls:"icon-message"'>
+	</div>
+	<div id="ExecMessageWin" class="easyui-dialog" title="须处理" 
+	data-options='modal:true,fit:true,closed:true,collapsible:false,width:1166,height:500,closable:true,minimizable:false,maximizable:false,draggable:false,resizable:false,content:"<iframe name=\"dhcmessageexec\" id=\"dhcmessageexec\" scrolling=no frameborder=0 style=\"width:100%;height:100%;\"></iframe>",iconCls:"icon-message"'>
+	</div> 
+	<div  data-options="region:'center',border:false" id="centerPanel" style="overflow:hidden;">
+		<iframe name="TRAK_main" width="100%" height="100%" src="epr.default.csp" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+		</iframe>
+	</div>
+	<div data-options="region:'south',border:false" style="height:1px ;padding:0px;" id="southPanel">
+		<iframe name="TRAK_hidden"  src="" width="100%"  scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+		</iframe>
+	</div>
+	<script language='javascript' src='../scripts/websys.jquery.js'></script>
+	<SCRIPT type="text/javascript">
+		var messageLastDate=0,messageLastTime=0;
+		var navbar,preSelectedMenu;
+		var msgJObj = "", findDHCMessageBtnCount = 10;;	//信息按钮jquery对象
+		var msgTimeoutQhanlder = "";
+		var newMsgAudioObj = document.getElementById("newMsgAudio");
+		///点击消息按钮,显示消息内容
+		var msgBtnClickHandler = function(){
+			if( $('#MessageWin').is(":visible")) return false;
+			ShowDHCMessageCount();
+			var xy = $("#DHCMessageBtn").offset();
+			var width = 1200;
+			var height = 500;
+			var left = xy.left-width+100;
+			if (left<0) left = 0; 
+			$("#MessageWin").window("move",{left:left,top:xy.top+20}).window("open");
+			return false;
+		} 
+		function HideExecMsgWin (){
+			$("#ExecMessageWin").window("close");
+		};
+		var ShowExecMsgWin = function(DetailsId,OtherJson){
+			var ExecMsgWinJObj = $("#ExecMessageWin");
+			if( ExecMsgWinJObj.is(":visible")) return false;
+			ExecMsgWinJObj.window("open");
+			//if("undefined"!=typeof console){ console.log(OtherJson["link"]);}
+			document.getElementById("dhcmessageexec").src = OtherJson["link"]; 
+			//"dhc.message.exec.csp?link="+encodeURIComponent(OtherJson["link"])+"&DetailsId="+DetailsId;
+			return false;		
+		}
+		// 第一次登录与消息有变化时调用。  
+		// 请求query,刷新消息数量
+		var ForceShowDHCMessageCount = function(isNewMsg){
+			$.ajaxRunServerMethod({ 
+					ClassName:"websys.DHCMessageDetailsMgr",MethodName:"GetNotReadMsgCount",UserId:session['LOGON.USERID']
+				},function(rtn){
+					if ("string" == typeof rtn ){ rtn = $.parseJSON(rtn);}
+					
+					if (rtn && rtn.Count>0){
+			            if (isNewMsg && newMsgAudioObj ) {
+							try{newMsgAudioObj.play();}catch(e){}
+						}
+						msgJObj.removeClass("nullMessage").addClass("hasMessage");
+						$("#DHCMessageBtn .messagecount").html(rtn.Count);
+						if (rtn.DCount>0){
+							if(!$('#MessageWin').is(":visible")) msgBtnClickHandler();
+							
+							//window.open("dhc.message.csp?LevelType=D","ImmedMessageWindow");
+						}
+					}else if(rtn && rtn.Count==0){
+						$("#DHCMessageBtn .messagecount").html(rtn.Count);
+						msgJObj.removeClass("hasMessage").addClass("nullMessage");
+					}
+					if (rtn){
+						messageLastDate = rtn.createDate;
+						messageLastTime = rtn.createTime;
+					}
+				})
+		}
+		//显示消息数量
+		var ShowDHCMessageCount = function(){
+			if (findDHCMessageBtnCount<0) return ;
+			clearTimeout(msgTimeoutQhanlder);
+			msgJObj = $("#DHCMessageBtn");
+			if (msgJObj.length>0) {
+				$.ajax({
+					url:"../scripts/cachejson/U"+session["LOGON.USERID"]+".json",
+					dataType:"json",
+					cache:false,
+					success:function(rtn){
+						if("undefined"!=typeof console) {console.log("查询消息:"+messageLastTime);}
+						if (rtn.createDate!=messageLastDate || rtn.createTime!=messageLastTime){
+							
+							//只有时间变化时才说明有新数据
+							ForceShowDHCMessageCount(true);
+						}
+						if (rtn.DCount && rtn.DCount>0){
+							//有紧急消息弹出
+						
+							if(!$('#MessageWin').is(":visible")) msgBtnClickHandler();
+						}
+						msgTimeoutQhanlder = setTimeout(ShowDHCMessageCount,60*1000);	///1分钟查询一次信息数量
+					},
+					error:function(data,textStatus){
+						//$.messager. //没有json说明没有生成,请求查询且生成json
+						if("undefined"!=typeof console) console.log("get message cachejson error, textStatus="+data.status);
+						if (data.status==404){
+							ForceShowDHCMessageCount();
+							msgTimeoutQhanlder = setTimeout(ShowDHCMessageCount,60*1000);	///1分钟查询一次信息数量
+						}
+						//alert('JQuery: RunClassMethodError !\n'+textStatus); 
+					}
+				});
+			}else{
+				//没有找到元素,可能是ext没有render完成,所以得去再去查询,考虑可能是easyui的头菜单
+				msgTimeoutQhanlder = setTimeout(ShowDHCMessageCount,1000);
+				findDHCMessageBtnCount--;
+			}
+		}
+		function nav(txt){
+			if ('undefined'==typeof navbar){				
+				navbar = $(".navbarclass");
+			}else{
+				//$("#menuPanel").css("height","58px");
+				//$("#menuPanel").append("<div class='z-nav' sytle='position:absolute;height:20px;top:30px;left:0px;'>"+txt+"</div>");
+			}
+			var tmp = txt.split("->");
+			var html = ""; //" <a href='#'>IMedical</a> ->";
+			for (var j=0; j<tmp.length; j++){
+				if(j == tmp.length-1) {
+					//html += "<a href='#' class='active'>"+tmp[j]+"</a>"
+					html += tmp[j];
+				}else{
+					html += tmp[j];
+					html +=" >> "
+					//html += "<a href='#' class='unactive'>"+tmp[j]+"</a>"
+					//html += " -> ";
+				}
+			}			
+			navbar.html(html);
+		}
+		function clearSelected(t){
+			var tmp;
+			if(t){
+				tmp = t;
+				tmp.css("border-color",'').css("color","").css("background","");
+				while(tmp.attr("parref")){
+					tmp = $("#Menu"+tmp.attr("parref"));
+					tmp.css("border-color",'').css("color","").css("background","");
+				}				
+			}
+		}
+		function addSelected(t){
+			var tmp ;
+			if(t){
+				tmp = t; /*easyui-#eaf2ff */
+				tmp.css("border-color",'#b7d2ff').css("color","#ffffff").css("background","#1369c0");
+				while(tmp.attr("parref")){
+					tmp = $("#Menu"+tmp.attr("parref"));
+					tmp.css("border-color",'#b7d2ff').css("color","#ffffff").css("background","#1369c0");					
+				}				
+			}
+		}
+		function modifySelectedStyle(t){
+			if(preSelectedMenu){				
+				clearSelected(preSelectedMenu);					
+			}
+			preSelectedMenu = t;
+			if(t){
+				addSelected(t);
+			}
+		}
+		
+		$.parser.onComplete = function(context){
+			// 当点消息按钮时,是用easyui的window打开的,所以parser再次调用,再次进入方法
+			// context是$("#MessageWin")
+			// 第一次context为undefined,不为空跳出.
+			//console.log("parser.onComplete--all---"+context);
+			if (!!context) return ;
+			//不能写到html中,影响头菜单的parse速度----还是些会有html出现
+			//document.getElementsByTagName("iframe")[1].src =  "epr.default.csp";
+			$("#Loading").fadeOut("fast");
+			//console.log("parser.onComplete---"+context);
+			///点击菜单		
+			$(".z-submenu").bind("click",function(event){
+				var t = $(this);
+				var href = t.attr("jshref");
+				var target = t.attr("target");
+				var blankOpt=t.attr("blankOpt");
+				
+				if (href=="#") {
+					event.preventDefault();
+					event.stopPropagation(); 
+					return false;
+				}
+				modifySelectedStyle(t);
+				if (href.indexOf("javascript:")>-1){
+					window.eval(href);
+				}else{
+					websys_createWindow(href,target,blankOpt);
+				}
+				if(target!=="_blank"){
+					window.document.title = t.attr("nav")+" "+window.status;
+					
+					//nav(t.attr("nav"));
+				}	
+				return false;
+			})
+			$(".z-menubar>.easyui-linkbutton").bind("mouseenter",function(event){
+				//当mouse从menubutton称动到linkbutton上时隐藏menu
+				$("body>div.menu-top").menu("hide");
+			})
+			if (!!window.ActiveXObject || "ActiveXObject" in window){
+				var prop = function (n){return n&&n.constructor==Number?n+'px':n;}
+				
+				/*$("body>div.menu").menu({onShow:function(){
+					console.log($(this).attr("id")); 监听onShow,三级菜单位置显示就不对了?
+				}});*/
+				$("body>div.menu,body>div.menu>div.z-submenu").each(function(item){
+					var that = $(this);
+					var s = {src:'javascript:false;'}; 
+					s.top = that.css("top");
+					s.left = that.css("left");
+					s.width = that.css("width") ; 
+					if (s.width>0){}else{s.width = that.parent().css("width");}
+					s.height = that.css("height");
+					//var s = {top:'auto',left:'auto',width:'auto',height:'auto',opacity:true,src:'javascript:false;'};
+					var ifrhtml= '<iframe class="bgiframe" frameborder="0" tabindex="-1" src="'+s.src+'"'+
+						   ' style="display:block;position:absolute;z-index:-1;'+
+							   'filter:Alpha(Opacity=\'0\');'+
+							   'opacity:0;'+
+							   'top:'+prop(s.top)+';'+
+							   'left'+prop(s.left)+';'+
+							   'width:'+prop(s.width)+';'+
+							   'height:'+prop(s.height)+';'+
+						'"/>'; 
+					$(this).append($(ifrhtml));
+				});
+			}
+			ShowDHCMessageCount();
+		}
+	</SCRIPT>
+</BODY>
+</html>

@@ -1,0 +1,203 @@
+<!-- DHCPENetCashier.csp -->
+<!-- 
+/// 创建时间		2006.10.17
+/// 创建人		xuwm 
+/// 主要功能		显示费用帐单
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 
+-->
+
+<HTML>
+<HEAD>
+<!-- 强制网页不被存入Cache中 -->
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+
+<TITLE>费用帐单</TITLE>
+<style type="text/css">
+body{
+	margin:3px 3px 0px 0px;
+	text-align:center;
+
+}
+</style>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+ 	<script language=Cache runat=server>
+ 		s RegNo=$G(%request.Data("PatentID",1))
+		i ""=RegNo s RegNo="56652" //测试
+		s Name=""
+		s StDate=$G(%request.Data("EndDate",1))
+		//i ""=EndDate s EndDate=+$H
+		
+		s EndDate=$G(%request.Data("EndDate",1))
+		i ""=EndDate s EndDate=+$H
+		s getbilled="0"
+		s getpaid="1"
+		s gettobill="0"
+		s locid=""
+		s typeid=""
+	</script>
+</HEAD>
+
+<BODY
+	onmouseup=document.selection.empty()
+	oncontextmenu="return false" 
+	onselectstart="return false"
+	ondragstart="return false" 
+	onbeforecopy="return false"
+	oncopy=document.selection.empty()
+	onselect=document.selection.empty()
+	>
+
+<TABLE class=tblList id="tCASHIER" Name="tCASHIER" CELLSPACING=1 width="100%">
+	<THEAD>
+		<TH style='display:none;'></TH>
+		<TH       NOWRAP>查看明细</TH>
+		<TH id=1  NOWRAP>登记号</TH>
+		<TH id=2  NOWRAP>姓名</TH>
+		<TH id=3  NOWRAP>就诊日期</TH>
+		<TH id=4  NOWRAP>就诊号</TH>
+		<TH id=5  NOWRAP>发票号</TH>
+		<TH id=6  NOWRAP>总费用</TH>
+		<TH id=7  NOWRAP>折扣费用</TH>
+		<TH id=8  NOWRAP>记账费用</TH>
+		<TH id=9  NOWRAP>自付费用</TH>
+		<TH id=10  NOWRAP>已付费用</TH>
+		<TH id=11  NOWRAP>应付/应退金额</TH>
+		<TH id=12  NOWRAP>未付费用</TH>
+		<TH id=13  NOWRAP>结算状态</TH>
+		<TH id=14  NOWRAP>账单状态</TH>
+		<TH id=15  NOWRAP>收费类型</TH>
+		<TH id=16  NOWRAP>账单号</TH>
+		<TH id=17  NOWRAP>就诊号</TH>
+		<TH id=18  NOWRAP>已退</TH>
+		<TH id=19  NOWRAP>结算类型</TH>
+		<TH id=20  NOWRAP>结算日期</TH>
+		<TH id=21  NOWRAP>结算时间</TH>
+		<TH id=22  NOWRAP>出院日期</TH>
+		<TH id=23  NOWRAP>出院时间</TH>
+		<TH id=24  NOWRAP>押金</TH>
+		<TH id=25  NOWRAP>科室</TH>
+		<TH id=27  NOWRAP>办理入院人员</TH>
+		<TH id=28  NOWRAP>办理出院人员</TH>
+		<TH id=29  NOWRAP>账单状态</TH>
+		<TH id=30  NOWRAP>医保</TH>
+	</THEAD>
+	<!--
+	<TR class="RowOdd" NOWRAP>
+		<TD style='display:none;'><input id="TPatientIDz1" name="TPatientIDz1" type="hidden" value="54443"></TD>
+		
+		<TD  ><A id="PIADM_ItemListz24" name="PIADM_ItemListz24" HREF="#" onClick="websys_lu('websys.csp?TEVENT=t50570iPIADM_ItemList&TPAGID=18587574&AdmType=PERSON&AdmId=74',false,'height=500,width=800,left=50');" tabIndex="0"><img SRC="../images/websys/edit.gif" BORDER="0"></A></TD>
+		
+		<TD><label id="Tregnoz1" name="Tregnoz1">00054443</label></TD>
+		<TD><label id="Tnamez1" name="Tnamez1">祝卫英</label></TD>
+		<TD><label id="Tadmdatez1" name="Tadmdatez1">2006-08-09</label></TD>
+		<TD><label id="Tadmnoz1" name="Tadmnoz1">IP00000261</label></TD>
+		<TD><label id="Tinvnoz1" name="Tinvnoz1">0851153</label></TD>
+		<TD><label id="Ttotalamountz1" name="Ttotalamountz1">1868.33</label></TD>
+		<TD><label id="Tdiscountamountz1" name="Tdiscountamountz1">0.00</label></TD>
+		<TD><label id="Tpayorsharez1" name="Tpayorsharez1">0.00</label></TD>
+		<TD><label id="Tpatientsharez1" name="Tpatientsharez1">1868.33</label></TD>
+		<TD><label id="Tamountpaidz1" name="Tamountpaidz1">68.33</label></TD>
+		<TD><label id="Tamounttopayz1" name="Tamounttopayz1">68.33</label></TD>
+		<TD><label id="Tdiscretamtz1" name="Tdiscretamtz1">0.00</label></TD>
+		<TD><label id="Tdischargestatusz1" name="Tdischargestatusz1">最终结算</label></TD>
+		<TD><label id="Tbillstatusz1" name="Tbillstatusz1">Paid</label></TD>
+		<TD><label id="Tbilltypez1" name="Tbilltypez1">自费</label></TD>
+		<TD><label id="Tbillrowidz1" name="Tbillrowidz1">110285</label></TD>
+		<TD><label id="Tadmz1" name="Tadmz1">7394</label></TD>
+		<TD><label id="Trefundz1" name="Trefundz1">&nbsp;</label></TD>
+		<TD><label id="Tdischargetypez1" name="Tdischargetypez1">出院结算</label></TD>
+		<TD><label id="Tdischargedatez1" name="Tdischargedatez1">2006-08-18</label></TD>
+		<TD><label id="Tdischargetimez1" name="Tdischargetimez1">08:50:28</label></TD>
+		<TD><label id="Tpatdisdatez1" name="Tpatdisdatez1">2006-08-18</label></TD>
+		<TD><label id="Tpatdistimez1" name="Tpatdistimez1">08:00:00</label></TD>
+		<TD><label id="Tdepositz1" name="Tdepositz1">1800.00</label></TD>
+		<TD><label id="Tlocz1" name="Tlocz1">眼科</label></TD>
+		<TD><label id="Tadmuserz1" name="Tadmuserz1">030660590z</label></TD>
+		<TD><label id="Tdisuserz1" name="Tdisuserz1">060401023z</label></TD>
+		<TD><label id="Tpaidflagz1" name="Tpaidflagz1">出院已结算</label></TD>
+		<TD><label id="Tybz1" name="Tybz1">&nbsp;</label></TD>
+	</TR>
+	-->
+	<!--
+	P1	RegNo
+	P2	Name
+	P3	StDate
+	P4	EndDate
+	P5	getbilled
+	P6	getpaid
+	P7	gettobill
+	P8	locid
+	P9	typeid
+	-->
+
+	<!--
+	<csp:query name=QCashier classname="web.UDHCJFCASHIER" queryname="searchbill" P1="56623" P2="" P3="" P4="60555" P5="1" P6="0" P7="0" P8="" P9="">
+	-->
+
+	<script language=Cache runat=server>
+		s iLLoop=1
+		s RowType="RowOdd"
+	</script>
+	
+	<csp:query name=QCashier classname="web.UDHCJFCASHIER" queryname="searchbill" P1=#(RegNo)# P2=#(Name)# P3=#(StDate)# P4=#(EndDate)# P5=#(getbilled)# P6=#(getpaid)# P7=#(gettobill)# P8=#(locid)# P9=#(typeid)#>
+	
+	<csp:while condition="QCashier.Next()">
+
+	<TR class=#(RowType)# NOWRAP>
+		<TD style='display:none;'><input id="TPatientIDz#(iLLoop)#" name="TPatientIDz#(iLLoop)#" type="hidden" value="#(QCashier.GetDataByName("TPatientID"))#"></TD>
+		<TD  ><A id="ShowDetailz#(iLLoop)#" name="ShowDetailz#(iLLoop)#" HREF="#" onClick="websys_lu('DHCPENetOrdDetail.csp?billNo=#(QCashier.GetDataByName("Tbillrowid"))#',false,'height=500,width=800,left=50');" tabIndex="0"><img SRC="../images/websys/edit.gif" BORDER="0"></A></TD>
+
+		<TD><label id="Tregnoz#(iLLoop)#" name="Tregnoz#(iLLoop)#">#(QCashier.GetDataByName("Tregno"))#</label></TD>
+		<TD><label id="Tnamez#(iLLoop)#" name="Tnamez#(iLLoop)#">#(QCashier.GetDataByName("Tname"))#</label></TD>
+		<TD><label id="Tadmdatez#(iLLoop)#" name="Tadmdatez#(iLLoop)#">#(QCashier.GetDataByName("Tadmdate"))#</label></TD>
+		<TD><label id="Tadmnoz#(iLLoop)#" name="Tadmnoz#(iLLoop)#">#(QCashier.GetDataByName("Tadmno"))#</label></TD>
+		<TD><label id="Tinvnoz#(iLLoop)#" name="Tinvnoz#(iLLoop)#">#(QCashier.GetDataByName("Tinvno"))#</label></TD>
+		<TD><label id="Ttotalamountz#(iLLoop)#" name="Ttotalamountz#(iLLoop)#">#(QCashier.GetDataByName("Ttotalamount"))#</label></TD>
+		<TD><label id="Tdiscountamountz#(iLLoop)#" name="Tdiscountamountz#(iLLoop)#">#(QCashier.GetDataByName("Tdiscountamount"))#</label></TD>
+		<TD><label id="Tpayorsharez#(iLLoop)#" name="Tpayorsharez#(iLLoop)#">#(QCashier.GetDataByName("Tpayorshare"))#</label></TD>
+		<TD><label id="Tpatientsharez#(iLLoop)#" name="Tpatientsharez#(iLLoop)#">#(QCashier.GetDataByName("Tpatientshare"))#</label></TD>
+		<TD><label id="Tamountpaidz#(iLLoop)#" name="Tamountpaidz#(iLLoop)#">#(QCashier.GetDataByName("Tamountpaid"))#</label></TD>
+		<TD><label id="Tamounttopayz#(iLLoop)#" name="Tamounttopayz#(iLLoop)#">#(QCashier.GetDataByName("Tamounttopay"))#</label></TD>
+		<TD><label id="Tdiscretamtz#(iLLoop)#" name="Tdiscretamtz#(iLLoop)#">#(QCashier.GetDataByName("Tdiscretamt"))#</label></TD>
+		<TD><label id="Tdischargestatusz#(iLLoop)#" name="Tdischargestatusz#(iLLoop)#">#(QCashier.GetDataByName("Tdischargestatus"))#</label></TD>
+		<TD><label id="Tbillstatusz#(iLLoop)#" name="Tbillstatusz#(iLLoop)#">#(QCashier.GetDataByName("Tbillstatus"))#</label></TD>
+		<TD><label id="Tbilltypez#(iLLoop)#" name="Tbilltypez#(iLLoop)#">#(QCashier.GetDataByName("Tbilltype"))#</label></TD>
+		<TD><label id="Tbillrowidz#(iLLoop)#" name="Tbillrowidz#(iLLoop)#">#(QCashier.GetDataByName("Tbillrowid"))#</label></TD>
+		<TD><label id="Tadmz#(iLLoop)#" name="Tadmz#(iLLoop)#">#(QCashier.GetDataByName("Tadm"))#</label></TD>
+		<TD><label id="Trefundz#(iLLoop)#" name="Trefundz#(iLLoop)#">#(QCashier.GetDataByName("Trefund"))#</label></TD>
+		<TD><label id="Tdischargetypez#(iLLoop)#" name="Tdischargetypez#(iLLoop)#">#(QCashier.GetDataByName("Tdischargetype"))#</label></TD>
+		<TD><label id="Tdischargedatez#(iLLoop)#" name="Tdischargedatez#(iLLoop)#">#(QCashier.GetDataByName("Tdischargedate"))#</label></TD>
+		<TD><label id="Tdischargetimez#(iLLoop)#" name="Tdischargetimez#(iLLoop)#">#(QCashier.GetDataByName("Tdischargetime"))#</label></TD>
+		<TD><label id="Tpatdisdatez#(iLLoop)#" name="Tpatdisdatez#(iLLoop)#">#(QCashier.GetDataByName("Tpatdisdate"))#</label></TD>
+		<TD><label id="Tpatdistimez#(iLLoop)#" name="Tpatdistimez#(iLLoop)#">#(QCashier.GetDataByName("Tpatdistime"))#</label></TD>
+		<TD><label id="Tdepositz#(iLLoop)#" name="Tdepositz#(iLLoop)#">#(QCashier.GetDataByName("Tdeposit"))#</label></TD>
+		<TD><label id="Tlocz#(iLLoop)#" name="Tlocz#(iLLoop)#">#(QCashier.GetDataByName("Tloc"))#</label></TD>
+		<TD><label id="Tadmuserz#(iLLoop)#" name="Tadmuserz#(iLLoop)#">#(QCashier.GetDataByName("Tadmuser"))#</label></TD>
+		<TD><label id="Tdisuserz#(iLLoop)#" name="Tdisuserz#(iLLoop)#">#(QCashier.GetDataByName("Tdisuser"))#</label></TD>
+		<TD><label id="Tpaidflagz#(iLLoop)#" name="Tpaidflagz#(iLLoop)#">#(QCashier.GetDataByName("Tpaidflag"))#</label></TD>
+		<TD><label id="Tybz#(iLLoop)#" name="Tybz#(iLLoop)#">#(QCashier.GetDataByName("Tyb"))#</label></TD>
+	
+	</TR>
+	<script language=Cache runat=server>
+		s iLLoop=iLLoop+1
+		i "RowEven"=RowType d
+		.s RowType="RowOdd"
+		e  d
+		.s RowType="RowEven"
+	</script>
+	</csp:while>
+	
+</TABLE>
+
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.listrows.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.Tools.js"></SCRIPT>
+<SCRIPT SRC="../scripts/DHCPECommon.encrypt.js"></SCRIPT>
+</BODY>
+</HTML>

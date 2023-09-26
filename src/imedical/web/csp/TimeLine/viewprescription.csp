@@ -1,0 +1,77 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+   <title>处方</title>
+   <style type="text/css"> 
+	v\:line {behavior: url(#default#VML);}   /*ie 11 不支持*/
+	* {
+		font-size: 12pt;
+		/*font-family:'宋体';*/
+	}
+  </style>
+  <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+  <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+  <script type='text/javascript'>
+	function tkMakeServerCall(tkclass,tkmethod) {
+		if ((tkclass=='')||(tkmethod=='')) return '';
+		var args=new Array('#(##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect")))#',tkclass,tkmethod);
+		for (var i=2; i<tkMakeServerCall.arguments.length; i++) {
+		args[i+1]=tkMakeServerCall.arguments[i];
+		}
+		var retval=cspHttpServerMethod.apply(this,args);
+		return retval;
+	}
+</script>
+
+  
+   <!--jquery 路径修改-->
+   <script src="../../scripts_lib/jQuery/jquery-1.8.0.min.js" type="text/javascript"></script>
+   <!--直接引入医生站的打印js-->
+   <script src="../../scripts/DHCOPPrtCommon.js" type="text/javascript" charset="gb18030"></script>
+   <script src="../../scripts/TimeLine/viewprescription.js" type="text/javascript" ></script>
+
+   <script language="Cache" runat="server">
+    //获取参数
+   	s ReportId = $g(%request.Data("reportID",1))
+   	s PrescNo = $g(%request.Data("PrescNo",1))
+   	s EpisodeID = $g(%request.Data("EpisodeID",1))
+   	Write "<script type='text/javascript' language='javascript'>",!
+   	s XMLTemplateXY="DHCOutPrescXYPrt"
+   	s XMLTemplateCY="DHCOutPrescCY" 
+	s presType = ##class(web.DHCDocPrescript).IsPrescType(PrescNo) //##Class(icare.TimeLineOutpatientView).IsPrescType(PrescNo)
+	if presType = 1
+	{
+		Write "var IsCYPrescType = 1;"
+		s ReportId = ##Class(web.DHCDocPrescript).GetXMLTemplateId(XMLTemplateCY) 
+	}else{
+		Write "var IsCYPrescType = 0;"
+		s ReportId = ##Class(web.DHCDocPrescript).GetXMLTemplateId(XMLTemplateXY)
+		if ReportId="" s ReportId = ##Class(web.DHCDocPrescript).GetXMLTemplateId("DHCOutPhPrescXY") //模板名称也改了
+	}
+    Write "var ReportId = '"_ReportId_"';"
+    //取得处方显示的数据
+    
+    if (##class(websys.Conversions).IsValidMethodName("web.DHCDocPrescript","GetPrescInfoByOrd")){
+	    set ReportData = ##class(web.DHCDocPrescript).GetPrescInfoByOrd(PrescNo)
+	    if (ReportData="!!"){
+	   		s ReportData = ##Class(icare.TimeLinePrescCommon).GetPrescInfoByOrd(PrescNo)
+	    }
+    }else{
+    	s ReportData = ##Class(icare.TimeLinePrescCommon).GetPrescInfoByOrd(PrescNo)
+    }
+   
+    Write "var ReportData = '"_ReportData_"';"
+    Write "<"_"/script>",!
+  </script>
+</head>
+<body id="dbLayout" style="width:740px;height:1058px;background-color:white;">
+			<div id="divReport" style="height:0px; width:0px; position:absolute; z-index:0;">
+		    </div>
+		    <canvas id='canvas'></canvas>
+</body>
+</html>
+

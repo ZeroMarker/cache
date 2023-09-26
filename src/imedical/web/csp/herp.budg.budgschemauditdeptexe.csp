@@ -1,0 +1,104 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s userdr=$G(%session.Data("LOGON.USERID"))
+	s action=$Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))	
+	s str = $Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s data=$Get(%request.Data("data",1))
+		
+	s DeptName = $Get(%request.Data("DeptName",1))
+	s userName = $Get(%request.Data("userName",1))
+	s objDeptName = $Get(%request.Data("objDeptName",1))
+	s state = $Get(%request.Data("state",1))
+
+	s year = $Get(%request.Data("year",1))	
+	s type = $Get(%request.Data("type",1))
+	s name = $Get(%request.Data("name",1))
+	s Dname = $Get(%request.Data("Dname",1))
+	s schemeDr = $Get(%request.Data("schemeDr",1))
+    s checkFlowMainDr = $Get(%request.Data("checkFlowMainDr",1))
+    s schemDr = $Get(%request.Data("schemDr",1))
+	s schemAuditDR=$Get(%request.Data("schemAuditDR",1))
+    s dataid=$Get(%request.Data("dataid",1))
+    s len=$Get(%request.Data("len",1))
+    s flag=$Get(%request.Data("flag",1))
+    
+    s schid=$Get(%request.Data("schid",1))
+    s UserDR=$Get(%request.Data("UserDR",1))
+    s Editdr=$Get(%request.Data("Editdr",1))
+    s ObjType=$Get(%request.Data("ObjType",1))
+    s fromschemdr=$Get(%request.Data("fromschemdr",1))
+    s toschemdr=$Get(%request.Data("toschemdr",1))
+    
+    
+	i action="schemelist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditDept).List(year, type, name, userdr, hospid, sortField, sortDir, start, limit)	
+		
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditDept).ListItem(schemeDr, Dname, userdr, hospid, sortField, sortDir, start, limit)
+		
+	i action="auditcheckS" d
+	.s result= ##class(herp.budg.udata.uBudgSchemAuditDept).UpdstateS(checkFlowMainDr, schemDr,dataid,len)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="auditcheck" d
+	.s result= ##class(herp.budg.udata.uBudgSchemAuditDept).Updstate(checkFlowMainDr, schemDr,schemAuditDR)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="add" d
+	.s result= ##class(herp.budg.udata.uBudgSchemAuditDept).InsertRec(schemeDr, DeptName, userName, objDeptName)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="editr" d
+	.s ^temphss=schid_"^"_Editdr_"^"_UserDR_"^"_ObjType
+	.s result= ##class(herp.budg.udata.uBudgSchemAuditDept).Insert(schid,Editdr,UserDR,ObjType,hospid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="edit" d
+	.s result= ##class(herp.budg.udata.uBudgSchemAuditDept).UpdateRec(rowid,schemeDr, DeptName, userName, objDeptName)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="delete" d
+	.s result= ##class(herp.budg.udata.uBudgSchemAuditDept).ItemDelete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="copy" d
+	.s result= ##class(herp.budg.udata.uBudgSchemAuditDept).Copy(fromschemdr,toschemdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deptType" d
+	.w ##class(herp.comm.BudgCommonCombox).deptType(start, limit, str, hospid)
+	
+</script>

@@ -1,0 +1,85 @@
+ <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server> 
+		w "bmc"
+		n StartDate,EndDate,RunDate,UserName,SMR00,SMR01,RecordType,HiddenFindParam,UKExtract1,UKExtract2,UKExtract3
+		n UKExtract4,UKExtract5,UKExtract6,UKExtract7,UKExtract8,UKExtract9,UKExtract10,OKtoContinue
+		s (StartDate,EndDate,RunDate,UserName,SMR00,SMR01,RecordType,HiddenFindParam,UKExtract1,UKExtract2,UKExtract3)=""
+		s (UKExtract4,UKExtract5,UKExtract6,UKExtract7,UKExtract8,UKExtract9,UKExtract10)=""
+		s OKtoContinue="N"
+		;
+		s obj=##Class(websys.Component).OpenName("PASMRExtractBuild.Find")
+		i obj d obj.LoadTrans(),obj.%Close()
+		;
+		s EndDateText=t("EndDate")_" "_t("mustbeentered")
+		;
+		i $d(%request.Data("StartDate")) s StartDate=%request.Data("StartDate",1)
+		i $d(%request.Data("EndDate")) s EndDate=%request.Data("EndDate",1)
+		i $d(%request.Data("RunDate")) s RunDate=%request.Data("RunDate",1)
+		i $d(%request.Data("UserName")) s UserName=%request.Data("UserName",1)
+		i $d(%request.Data("SMR00")) s SMR00=%request.Data("SMR00",1)
+		i $d(%request.Data("SMR01")) s SMR01=%request.Data("SMR01",1)
+		i $d(%request.Data("RecordType")) s RecordType=%request.Data("RecordType",1)
+		i $d(%request.Data("UKExtract1")) s UKExtract1=%request.Data("UKExtract1",1)
+		i $d(%request.Data("UKExtract2")) s UKExtract2=%request.Data("UKExtract2",1)
+		i $d(%request.Data("UKExtract3")) s UKExtract3=%request.Data("UKExtract3",1)
+		i $d(%request.Data("UKExtract4")) s UKExtract4=%request.Data("UKExtract4",1)
+		i $d(%request.Data("UKExtract5")) s UKExtract5=%request.Data("UKExtract5",1)
+		i $d(%request.Data("UKExtract6")) s UKExtract6=%request.Data("UKExtract6",1)
+		i $d(%request.Data("UKExtract7")) s UKExtract7=%request.Data("UKExtract7",1)
+		i $d(%request.Data("UKExtract8")) s UKExtract8=%request.Data("UKExtract8",1)
+		i $d(%request.Data("UKExtract9")) s UKExtract9=%request.Data("UKExtract9",1)
+		i $d(%request.Data("UKExtract10")) s UKExtract10=%request.Data("UKExtract10",1)
+		;
+		i EndDate'="" d
+		. s OKtoContinue="Y"
+		. d ##Class(web.PASMR).RequestSMR(StartDate,EndDate,SMR00,SMR01,UKExtract1,UKExtract2,UKExtract3,UKExtract4,UKExtract5,UKExtract6,UKExtract7,UKExtract8,UKExtract9,UKExtract10)
+		
+		
+</server>
+<SCRIPT>
+if ("#(OKtoContinue)#"=="Y"){
+	//alert("Check Before Run");
+		var StartDate="#(StartDate)#";
+		var EndDate="#(EndDate)#";
+		var RunDate="#(RunDate)#";
+		var SMR00="#(SMR00)#";
+		var UserName="#(UserName)#";
+		var SMR01="#(SMR01)#";
+		var RecordType="#(RecordType)#";
+		var HiddenFindParam="";
+		var UKExtract1="#(UKExtract1)#";
+		var UKExtract2="#(UKExtract2)#";
+		var UKExtract3="#(UKExtract3)#";
+		var UKExtract4="#(UKExtract4)#";
+		var UKExtract5="#(UKExtract5)#";
+		var UKExtract6="#(UKExtract6)#";
+		var UKExtract7="#(UKExtract7)#";
+		var UKExtract8="#(UKExtract8)#";
+		var UKExtract9="#(UKExtract9)#";
+		var UKExtract10="#(UKExtract10)#";
+		
+		HiddenFindParam=SMR00+"^"+SMR01+"^"+UKExtract1+"^"+UKExtract2+"^"+UKExtract3+"^"+UKExtract4+"^"+UKExtract5+"^"+UKExtract6+"^"+UKExtract7+"^"+UKExtract8+"^"+UKExtract9+"^"+UKExtract10+"^";
+		
+		var url="websys.default.csp?WEBSYS.TCOMPONENT=PASMRExtractBuild.List";
+		url=url+"&StartDate="+StartDate+"&EndDate="+EndDate+"&RunDate="+RunDate+"&UserName="+UserName+"&RecordType="+RecordType+"&HiddenFindParam="+HiddenFindParam;
+		//alert(url);
+		var win2=top.frames["TRAK_main"].frames['PASMRExtractBuildList'];
+		if (win2) win2.document.location.href=url;
+} else {
+	alert("#(EndDateText)#");
+}
+</SCRIPT>
+</body>
+</html>

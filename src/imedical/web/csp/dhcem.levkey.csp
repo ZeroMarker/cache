@@ -1,0 +1,88 @@
+<html>
+<head>
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/levkey.js"></script>
+<script Language="Javascript">
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+</script>
+
+</head>
+<body>   
+	
+		<!-- toolbar -->
+		<div id="toolbar" class="toolbar">	
+			<div style="height:10px"></div><!--hxy 2019-07-20-->
+			<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	
+			<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+			<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			      <!--<td><div class="datagrid-btn-separator"> </div> </td>-->
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <!--<td><div class="datagrid-btn-separator"> </div> </td>-->
+			 <!--     <td><a class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>-->
+			    </tr>
+			</table>
+		</div>
+		<!--分级指标关键字维护-->
+		<table id="datagrid" class="hisui-datagrid" fit="true" title="" 
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    border:false,
+		    onDblClickRow:onClickRow, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMLevKey&MethodName=ListLevKey'">
+			<thead>
+				<tr>
+					<th data-options="field:'LKCode',width:120,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'LKDesc',width:120,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'LKActiveFlag',align:'center',width:75,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevKey&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th data-options="field:'LKRemark',width:450,editor:{type:'validatebox',options:{required:false}}">备注</th>						
+					<th data-options="field:'LKHospDr',width:150,align:'center',
+					                        
+
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false
+												}
+											}">医院</th>
+					<th data-options="field:'LKHospDrID',hidden:true">LKHospDrID</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+
+
+</body>
+</html>

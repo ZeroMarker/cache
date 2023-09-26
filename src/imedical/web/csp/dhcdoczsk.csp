@@ -1,0 +1,137 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. dhcdoczsk.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+//i ##Class(websys.SessionEvents).SessionExpired()
+i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<html XMLNS=TRAK>
+<head>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!--TRAK:HEAD></TRAK:HEAD-->
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+
+</head>
+<body >
+<script language='Cache' runat='SERVER'>
+;标提@信息/n信息!标题@信息/n信息!标题@信息/n信息 如果为空不显示
+///适应症@项目$c(2)部位/$内容/n内容/*部位2/$内容/n内容 /A项目/B部位/$内容/n内容/*部位2/$内容/n内容
+//适应证@头孢拉定/胶囊/$敏感菌感染!
+//禁忌证@头孢拉定/胶囊/$对头孢类抗生素过敏者禁用!
+//不良反应@头孢拉定/胶囊/$长期用药可致菌群失调，维生素B族。维生素K缺乏，二重感染等不良反应!注意事项@头孢拉定/胶囊/$对青霉素过敏或有过敏体质及肾功能不全者慎用/n儿童患者应用本品应谨慎并在检测下用药!!
+s Mesage=%request.Get("Mesage")
+s MesageType=%request.Get("MesageType")
+s tempContentIndex=%request.Get("tempContentIndex")
+;^tempContentIndex("ZSK",UserID,Index,Count)
+s UserID=$p(tempContentIndex,"^",1)
+s ContentIndex=$p(tempContentIndex,"^",2)
+s tempIndex=$I(^tempContentIndex("ZSKGet",UserID))
+kill ^tempContentIndex("ZSKGet",UserID,tempIndex)
+s i=0
+for {
+	s i=$O(^tempContentIndex("ZSK",UserID,ContentIndex,i)) Q:i=""
+	s ^tempContentIndex("ZSKGet",UserID,tempIndex)=$g(^tempContentIndex("ZSKGet",UserID,tempIndex))_$g(^tempContentIndex("ZSK",UserID,ContentIndex,i))
+}
+
+s Beginnsp=0
+s NextAddnsp=2
+s MesageNsp=3
+if (MesageType=2)||(MesageType=3){
+		;tile由外层定义class='easyui-panel'
+			w "<div id='MesagePanel'  maximized=true style='color:#6699CC;width:100%;margin-bottom:4px;text-align:mid'>"
+			w "<table id='tMesageTab' style='width:100%;'>"
+		
+		//w "<div id='MesagePanel' class='easyui-panel' maximized=true style='color:#33FF66;width:400px;margin-bottom:4px;text-align:mid'>"
+		
+		if ($g(^tempContentIndex("ZSKGet",UserID,tempIndex))'=""){
+			s MesageLen=$L($g(^tempContentIndex("ZSKGet",UserID,tempIndex)),"!")
+			for Len=1:1:MesageLen
+			{	s MesageSub=$P($g(^tempContentIndex("ZSKGet",UserID,tempIndex)),"!",Len)
+				continue:MesageSub=""
+				s Title1=$P(MesageSub,"@",1)
+				s Mes=$P(MesageSub,"@",2)
+				s Beginnsp=0
+				s Beginnsp1=Beginnsp
+				if (Title1'=""){
+					s Beginnsp1=(Beginnsp1+NextAddnsp)
+					w "<tr>"
+					w "<td style='background-color:#6699CC' ><label style='color:#FFFFFF;font-size:13px;'>"_Title1_"</label></td>"
+					w "</tr>"
+				}
+			
+				if (Mes'=""){
+					s MesminLen=$L(Mes,"/A")
+					for SUBMain=1:1:MesminLen
+					{
+						
+						s Mesmin3=$P(Mes,"/A",SUBMain)
+						continue:Mesmin3=""
+						s Title2=$P(Mesmin3,"/B",1) ;通用名
+						s Mesmin4=$P(Mesmin3,"/B",2) ;内容
+						s Beginnsp2=Beginnsp1
+						if Mesmin4="" s Mesmin4=Title2,Title2=""
+						if Title2'=""
+						{	s Nspstr=##class(web.DHCDocService).GetNbspStr(Beginnsp1,"&nbsp")
+							s Beginnsp2=(Beginnsp2+NextAddnsp)
+							w "<tr>"
+							w "<td style='background-color:#FFFFFF' ><label style='font-size:14px;'>"_Nspstr_Title2_"</label></td>"
+							w "</tr>"
+						}
+						s L4=$L(Mesmin4,"/*")
+						for L4S=1:1:L4
+						{ 
+							s Mesmin5=$P(Mesmin4,"/*",L4S)
+							continue:Mesmin5=""
+							s Title3=$P(Mesmin5,"/$",1)
+							s Mesmin6=$P(Mesmin5,"/$",2)
+							s Beginnsp3=Beginnsp2
+							if Mesmin6="" s Mesmin6=Title3,Title3=""
+							if Title3'=""
+							{
+							
+								s Nspstr=##class(web.DHCDocService).GetNbspStr(Beginnsp3,"&nbsp")
+								s Beginnsp3=(Beginnsp3+NextAddnsp)
+								w "<tr>"
+								w "<td style='background-color:#FFFFFF' ><label style='font-size:14px;'>"_Nspstr_Title3_"</label></td>"
+								w "</tr>"
+							}
+							s L5=$L(Mesmin6,"/n")
+							for L5S=1:1:L5
+							{
+								s Nspstr=##class(web.DHCDocService).GetNbspStr((Beginnsp3+MesageNsp),"&nbsp")
+								s Mesmin7=$P(Mesmin6,"/n",L5S)
+								continue:Mesmin7=""
+								w "<tr>"
+								if (MesageType=3){
+									w "<td style='background-color:#FFFFFF' >"
+									for i=1:1:$l(Mesmin7,"/"){
+										if (i>1) w "</br>"
+										w "<label style='font-size:14px;'>"_Nspstr_i_":"_$p(Mesmin7,"/",i)_"</label>"
+									}
+									w "</td>"
+								}else{
+									w "<td style='background-color:#FFFFFF' ><label style='font-size:14px;'>"_Nspstr_L5S_":"_Mesmin7_"</label></td>"
+								}
+								
+								w "</tr>"
+								
+							}
+							
+						}
+						
+					}
+				}
+			}
+		}
+		w "</table>"
+		w "</div>"
+}
+
+kill ^tempContentIndex("ZSK",UserID,ContentIndex)
+kill ^tempContentIndex("ZSKGet",UserID,tempIndex)
+
+</script>
+ <script language="javascript" type="text/javascript">
+</script>
+</body>
+
+</html>

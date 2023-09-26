@@ -1,0 +1,219 @@
+<!-- Copyright (c) 2009 DHCC LABTRAK. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<SERVER>
+ n style,cmp,a,j,idx,posn,closeformatlist,endstr,theline,thestring,orderid,tsrowid,ord,int
+ n jj,str,len1,len2,labnmspc,recloc 
+ n PLIST,STARTTAG,ENDTAG,FORMATLIST
+ s CRLF=$c(13,10)
+ ; Display Patient Banner
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") d
+ . s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . i cmp d cmp.Show(),cmp.%Close()
+ ; Get Test Set Row ID
+ s orderid=%request.Get("OrderID")
+ s ord=$p(orderid,"||",1),int=$p(orderid,"||",2)
+ i (ord="")!(int="") w """"_orderid_""" is an invalid Order ID" q
+ ; don't allow preview for non-labtrak - no Layout....
+ s recloc=$p(^OEORD(ord,"I",int,3),"^",6)
+ i $$extlab^COEOrdItem(recloc)="Y" d  q
+ . w "<B>No layout defined for non-LabTrak systems</B>"
+ s tsrowid=$p($g(^OEORD(ord,"I",int,3)),"^",35)
+ s arcid=$p($g(^OEORD(ord,"I",int,1)),"^",2)
+ i tsrowid="" w "Test Set not in LabTrak" q
+ ; Set up style lists
+ ; get 'em form LabTrak namespace..
+ s labnmspc=$lg(^websys.ConfigurationD(1),21)
+ s labno=$p(tsrowid,"||",1),ts=$p(tsrowid,"||",2),tscnt=$p(tsrowid,"||",3)
+ k ^TMPRES($zn,$j)
+ k PLIST
+ s debtor=$p(^TEPI(labno),"\",18)
+ i '$l(debtor) w "<B>No debtorno in  non-LabTrak systems</B>" q
+ i $$GetHisResult^DHCLabOldResults(debtor,ts,"","20")
+ m ^TMPRES($zn,$j)=PLIST
+ s tsname=$p(^ARCIM($p(arcid,"||",1),$p(arcid,"||",2),1),"^",2)
+ //w "</font></pre>"
+ w "<br>"
+ s ^TMPTSNAME=arcid_","_tsname
+ w "<H1>",tsname,"</H1>"
+ w "<br>" 
+ /*
+ w "<DIV ALIGN='LEFT'>"
+ w "<FORM NAME='Options'>"
+ w "<TABLE CELLPADDING='5' CELLSPACING='1' BORDER='1' >"
+ s num="",ColMdl="",fldName="",data=""
+ f {
+	 s num=$o(^TMPRES($zn,$j,num))
+	 quit:num=""
+	 s temstr=^(num)
+	 w "<TR>"
+	 //w "<TD>",temstr,"</TD>"
+	 f temi=1:1:$l(temstr,$c(9)) {
+		 s substr=$p(temstr,$c(9),temi)
+		 if temi=1{
+            if ColMdl="" {
+	           s ColMdl="{'header':'"_substr_"','dataIndex':'tcname'}"
+	           s fldName="{name:'tcname'}"
+	        }
+	        else{
+	           s ColMdl=ColMdl_",{'header':'"_substr_"','dataIndex':'date"_temi_"'}"
+	           s fldName=fldName_",{name:'date"_temi_"'}"
+		    }
+		 }
+		 else{
+		   if data=""{
+ 		   	  s data="'tcname':"_substr
+		   }
+		   else{
+ 		   	  s data=",'date"_temi_"':"_substr
+		   }
+		 }
+		 
+		 if '$l(substr) s substr="&nbsp;"
+		 if num=1{
+		 	w "<TH BGCOLOR='Aqua'>",substr,"</TH>" 
+		 }
+		 else{
+			if num#2=0{
+				w "<TD BGCOLOR=#cfcfff>",substr,"</TD>"
+			}
+			else{
+				w "<TD BGCOLOR=#dfdfff>",substr,"</TD>"
+			}
+			
+		 }
+	 }
+	 w "</TR>"
+ }
+ w "</TABLE>"
+ w "</FORM>"
+ w "</DIV>"
+ */
+ s num="",ColMdl="",fldName="",data=""
+ s cnt=0
+ s rendererRanges="renderer:rangesColor"
+ f {
+	 s num=$o(^TMPRES($zn,$j,num))
+	 quit:num=""
+	 s temstr=^(num)
+	 s cnt=cnt+1
+	 s subdata=""
+	 f temi=1:1:$l(temstr,$c(9)) {
+		s substr=$p(temstr,$c(9),temi)
+		if cnt=1{
+	        if ColMdl="" {
+	           s ColMdl="{'header':'"_substr_"','dataIndex':'tcname',locked:true,id:'tcnameid'}"
+	           s fldName="{name:'tcname'}"
+	        }
+	        else{
+		       if temi=2{
+	           	   s ColMdl=ColMdl_",{'header':'"_substr_"','dataIndex':'ranges',locked:true}"
+	               s fldName=fldName_",{name:'ranges'}"
+			   }
+			   else{ 
+	           	   s ColMdl=ColMdl_",{'header':'"_substr_"',"_rendererRanges_",'dataIndex':'date"_temi_"',locked:false}"
+	               s fldName=fldName_",{name:'date"_temi_"'}"
+			   }
+		    }
+		}
+		else{	    
+		   if subdata=""{
+		   	  s subdata="'tcname':'"_substr_"'"
+		   }
+		   else{
+			  if temi=2{
+		   	      s subdata=subdata_",'ranges':'"_substr_"'"
+			  }else{
+		   	      s subdata=subdata_",'date"_temi_"':'"_substr_"'"
+			  }
+		   }
+		}   
+	 }
+	 if $l(subdata){
+		if data=""{s data="{"_subdata_"}"
+	    }else{s data=data_",{"_subdata_"}"}
+	 }   
+ }
+
+ s gGridData="{'action':'true','message':'error!','data':["_data_"],'columModle':["_ColMdl_"],'fieldsNames':["_fldName_"]}"
+ k ^TMPRES($zn,$j)
+</SERVER>
+
+
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+         <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.3.1/resources/css/ext-all.css" />
+		 <script type="text/javascript" src="../scripts_lib/ext3.3.1/adapter/ext/ext-base.js"></script>
+ 		<script type="text/javascript" src="../scripts_lib/ext3.3.1/ext-all.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.3.1/examples/ux/LockingGridView.js"></script>
+    
+		<SCRIPT language="Javascript">
+ 			//var EpisodeID="#($g(EpisodeID))#";
+ 			var gGridData="#($g(gGridData))#";
+	   </script>
+	
+		<script type="text/javascript" src="../scripts/DHCLabViewOldResult.js"></script>
+		<!--
+         <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<script language="Javascript">
+			Ext.onReady(dhcLabViewResultForm.app.init, dhcLabViewResultForm.app);
+	   </script>
+	   -->
+
+<style type="text/css">
+body,td,th {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	margin:0px;
+	padding:0px;
+}
+#box,#box1{
+	padding:13px 0px 10px;
+	padding-left:28px;
+	width:677px;
+	height:180px;
+}
+</style>
+<!--ÑùÊ½±í--> 
+<style> 
+v\:*{ 
+behavior:url(#default#vml); 
+} 
+span{ 
+cursor:hand; 
+} 
+ul{ 
+list-style-type:none; 
+margin:0px; 
+padding:0px; 
+} 
+li{ 
+margin:0px; 
+padding:0px; 
+} 
+.css_menRight{ 
+position:absolute; 
+border:1px solid #ff9900; 
+display:none; 
+width:80px; 
+height:200px; 
+text-align:left; 
+line-height:20px; 
+padding-left:5px; 
+font-size:12px; 
+} 
+</style> 
+
+</HEAD>
+<BODY>
+    <div id="wgrid"> </div>
+    <div id="container"> </div>
+    <div id="box"></div>
+<TRAK:APPLET>
+</BODY>
+</HTML>
+

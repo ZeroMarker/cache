@@ -1,0 +1,204 @@
+﻿<!-- 主页面-->
+<div id ="divScreen" class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'west',border:false,collapsible:false" style="padding:10px;width:460px;">
+		<div id="divAccordion" class="hisui-accordion" data-options="border:false,fit:true">  
+			<div id="PatAccordion" title="患者列表" style="overflow:auto;background-color:#EBEBEB;" data-options="
+				selected:true,
+				tools:[{
+					iconCls:'icon-w-update',
+					handler:function(){
+					    //执行同步方法
+						SyncAdmByLoc();
+					}
+				}]">
+				<div class="hisui-layout" data-options="fit:true">
+					<table id="gridAdmInfo" data-options="toolbar:'#ToolBar'"></table>
+					<div id="ToolBar">
+						<div id="SearchItem" style="padding:5px;">
+						    <div style="display:inline-block;width:110px;">
+								<input class='hisui-radio' type="radio"  label='在院' name="radAdmStatus" id="radAdmStatus-1" value="1" data-options="checked:true">
+								<input class='hisui-radio' type="radio"  label='出院' name="radAdmStatus" id="radAdmStatus-2" value="2" >					
+							</div>
+							<a id="DateTip">
+								<input id="aDateFrom" class="hisui-datebox textbox" style="width:115px;" disabled />
+								<span>~</span>
+								<input id="aDateTo" class="hisui-datebox textbox" style="width:115px;" disabled />
+							</a>
+							<span style="padding-left:5px;"><span id="btnMore" class="toggle-btn">更多</span></span>
+						</div>	
+						
+						<div id="MSearchItem" style="padding:5px;display:none;">	
+							<input class="textbox" id="aPatName" style="width:70px" placeholder="患者姓名"/> 					
+							<input class="textbox" id="aRegNo" style="width:95px" placeholder="登记号"/> 									
+							<input class="textbox" id="aMrNo" style="width:95px" placeholder="病案号"/> 
+							<input class="textbox" id="aBed" style="width:62px" placeholder="床号"/>							
+							<input class='hisui-checkbox' type="checkbox" name="chkIsInf" label="疑似" id="chkIsInf">						
+						</div>				
+					</div>		
+				</div>	
+			</div>   
+			<div id="DutyAccordion" title="责任患者" style="overflow:auto;background-color:#EBEBEB;">  
+				<div class="hisui-layout" data-options="fit:true">
+					<table id="gridDutyList"></table>
+				</div> 
+			</div>   
+		</div>
+		<div id="divLayout" class="hisui-layout" data-options="border:false,fit:true"> 
+			<div data-options="region:'center',border:false,title:'科室列表'" >
+				<div class="hisui-layout" data-options="fit:true">
+					<table id="gridLocInf" class="easyui-propertygrid" data-options="toolbar:'#ToolBarInf'" ></table>
+					<div id="ToolBarInf">
+						<div id="SearchItem1" style="padding:5px;">
+							<input class="hisui-combobox" id="cboHospital" style="width:229px" />	
+							<span style="margin-left:15px;"></span>
+							<input class="hisui-combobox" id="cboGroup" style="width:115px" disabled />
+							<span style="padding-left:5px;"><span id="btnMore" class="toggle-btn">更多</span></span>
+						</div>
+						<div  id="SearchItem2" style="padding:5px;">
+							<div style="display:inline-block;width:110px;">
+								<input class='hisui-radio' type="radio"  label='在院' name="radAdmStatus" id="radAdmStatus-1" value="1" data-options="checked:true">
+								<input class='hisui-radio' type="radio"  label='出院' name="radAdmStatus" id="radAdmStatus-2" value="2" >					
+							</div>	
+							<a id="DateTip">
+								<input id="aDateFrom" class="hisui-datebox textbox" style="width:115px;" disabled />
+								<span>~</span>
+								<input id="aDateTo" class="hisui-datebox textbox" style="width:115px;" disabled />
+							</a>
+						</div>	
+						
+						<div id="MSearchItem" style="padding:5px;display:none;">						
+							<input class="textbox" id="aPatName" style="width:70px" placeholder="患者姓名"/> 					
+							<input class="textbox" id="aRegNo" style="width:95px" placeholder="登记号"/> 									
+							<input class="textbox" id="aMrNo" style="width:95px" placeholder="病案号"/> 
+							<input class="textbox" id="aBed" style="width:62px" placeholder="床号"/>								
+							<input class='hisui-checkbox' type="checkbox" name="chkIsInf" label="疑似" id="chkIsInf" checked />						
+						</div>					
+					</div>		
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div  data-options="region:'center',border:false,collapsible:false" style="width:100%;padding:10px 10px 10px 0px; ">
+		<div id ="divNoResult" class="no-result"></div>
+		<div id="divMain" class="hisui-layout"></div>
+	</div>
+	<div id="HelpTip" class="icon-big-book-yellow"></div>
+</div>
+
+<div id="IsNeedDialog" style="overflow:hidden;padding-right:10px;display:none;" >   
+	<table class="dialog-table">
+		<tr>
+			<td class="r-label">
+				<label for="cboFollowReason">需关注类型</label>
+			</td>
+			<td>
+				<input id="cboFollowReason" style="width:247px"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="txtIsNeedAtt">需关注原因</label>
+			</td>
+			<td>
+				<input class="textbox" id="txtIsNeedAtt" placeholder="需关注原因(选填)" style="width:240px"/>
+			</td>
+		</tr>
+	</table>
+</div>  
+
+<div id="CofDtlDialog" style="overflow:hidden;display:none;" >
+	<div data-options="region:'center',border:false,collapsible:false" style="padding:10px;height:450px;">   
+		<table id="ConfirmDtl" data-options="toolbar:'#ToolBarDtl'"></table>
+		<div id="ToolBarDtl" style="line-height: 40px;" >
+        	<span style="padding:6px 15px;background-color:#e3f7ff;color:#1278b8;border: 1px solid #c0e2f7;border-radius: 5px;">
+        		<span class="icon-tip-blue" style="margin-right:5px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        		<span style="color:#1278b8;font-weight: 700;">已确诊的项目如需修改，点击取消确诊按钮执行取消，无需修改，请关闭</span>
+        	</span>	
+		</div>
+    </div>
+</div> 
+
+<div id="InfDiagnos" style="overflow:hidden;display:none;padding-right:10px;padding-top:10px;">
+	<table class="search-table" style="float:left;width:360px;margin-top:-10px;">
+		<tr id="IsNewInfRow">
+			<td class="r-label">新发感染</td>				
+			<td>
+			    <input class='hisui-checkbox' type="checkbox" name="chkIsNewInf" label="是" id="chkIsNewInf">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label"><font color='red'>*</font>感染类型</td>				
+			<td >
+				<div style="width:120px;float: left;"><input class='hisui-radio' type="radio"  label='医院感染' name="radInfType" id="radInfType-1" value="1" data-options="checked:true"></div>
+				<div style="width:120px;float: left;"><input class='hisui-radio' type="radio"  label='社区感染' name="radInfType" id="radInfType-0" value="0" ></div>						
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label"><font color='red'>*</font>感染诊断</td>				
+			<td><input class="hisui-combobox textbox" id="cboInfPos" style="width:240px;" /></td>
+		</tr>
+		<tr>
+			<td class="r-label">诊断分类</td>				
+			<td><input class="hisui-combobox textbox" id="cboInfSub"  style="width:240px;" /></td>
+		</tr>
+		<tr>
+			<td class="r-label"><font color='red'>*</font>感染日期</td>					
+			<td><input class="hisui-datebox textbox" id="dtInfDate" style="width:240px;" /></td>
+		</tr>
+		<tr>
+			<td class="r-label">感染结束日期</td>				
+			<td><input class="hisui-datebox textbox " id="dtInfXDate" style="width:240px;"  /></td>	
+		</tr>
+		<tr>
+			<td class="r-label">感染转归</td>					
+			<td><input class="hisui-combobox textbox" id="cboInfEffect" style="width:240px;" /></td>
+		</tr>
+		<tr>
+			<td class="r-label">与死亡关系</td>					
+			<td><input class="hisui-combobox textbox" id="cboDeathRelation" style="width:240px;" /></td>
+		</tr>
+	</table>
+	<div class="table-noboder" >
+		<table id="RepInfoList" style="float:right;width:210px;height:293px;"></table>
+    </div>
+</div>
+
+<div id="InfRepDialog" style="overflow:hidden;display:none;" >
+	<div data-options="region:'north',border:false,collapsible:false" style="padding:10px;height:180px;">
+		<table id="gridRepList" data-options="toolbar:'#ToolBarList'"></table>
+        <div id="ToolBarList" style="padding:3px;" >
+        	<a class="hisui-linkbutton" id="btnCheckRep"  data-options="iconCls:'icon-stamp',plain:true,stopAllEventOnDisabled:true" disabled > 审核 </a>				 				
+		</div>
+	</div>
+
+	<div data-options="region:'center',border:false," style="padding:0px 10px 10px 10px;height:380px;">	
+		<table id="gridINFOPS" style="border:none;height:120px;"></table>
+		<div style="margin-top:10px;"></div>
+		<table id="gridINFLab" style="border:none;height:120px;" ></table>
+		<div style="margin-top:10px;"></div>
+		<table id="gridINFAnti" style="border:none;height:120px;"></table>		
+	</div>
+</div> 
+
+
+<div id="DelOpnDialog" style="overflow:hidden;padding-right:10px;display:none;" >   
+	<table class="dialog-table">
+		<tr>
+			<td class="r-label">
+				<label for="cboOpinion">排除原因</label>
+			</td>
+			<td>
+				<input id="cboOpinion" style="width:247px"/>
+			</td>
+		</tr>
+		<tr id="DivOpinion" style="display:none;">
+			<td class="r-label">
+				<label for="txtOpinion">具体原因</label>
+			</td>
+			<td>
+				<input class="textbox" id="txtOpinion" style="width:240px"/>
+			</td>
+		</tr>
+	</table>
+</div>  

@@ -1,0 +1,220 @@
+<!--
+	医生科室发药
+	csp: csp/dhcpha/dhcpha.inpha.doclocdisp.csp
+	js:  scripts/pharmacy/inpha/dhcpha.inpha.doclocdisp.js
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
+    <!--ADDINS require="LODOP"/-->
+    <!--css-->
+    <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/themes/ui.multiselect.css">
+    <link rel="stylesheet" type="text/css"
+        href="../scripts_lib/jquery.jqGrid-4.6.0/css/themes/redmond/jquery-ui-1.8.2.custom.css">
+    <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/ui.jqgrid.css">
+    <link rel="stylesheet" type="text/css"
+        href="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.css" />
+    <link rel="stylesheet" type="text/css"
+        href="../scripts/pharmacy/plugins/bootstrap-combobox/css/bootstrap-combobox.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/select2-4.0.3/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/skins/icheck/blue.css">
+    <!--js-->
+    <script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/jquery.jqGrid.src.js"></script>
+    <script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/i18n/grid.locale-cn.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/icheck/icheck.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/moment.min.js">
+    </script>
+    <script type="text/javascript"
+        src="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/bootstrap-bootbox/bootbox.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/bootstrap-combobox/js/bootstrap-combobox.js">
+    </script>
+    <script type="text/javascript" src="../scripts_lib/bootstrap-3.3.5/js/popover.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/select2-4.0.3/select2.min.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/select2-4.0.3/i18n/zh-CN.js"></script>
+    <!--dhcpha css-->
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.common.css">
+    </script>
+    <!--jqgrid样式与医生站统一-->
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.jqGrid.css">
+    </script>
+    <!--dhcpha common js-->
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.common.js"></script>
+    <!--dhcpha js-->
+    <script type="text/javascript" src="../scripts/pharmacy/inpha/dhcpha.inpha.doclocdisp.js"></script>
+    <server>
+        s InPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("IA")
+        d ##class(web.DHCXMLPConfig).LODOPInit() //lodop打印
+    </server>
+    <SCRIPT Language="Javascript">
+        DHCPHA_CONSTANT.DEFAULT.INPHAWAY = "#(InPhaWay)#";
+        $.fn.modal.Constructor.prototype.enforceFocus = function () {}; //modal中select2才能编辑(z-index)
+        $("object").hide();
+    </script>
+    <style type="text/css">
+        .wardtitle th.ui-th-column div {
+            white-space: normal !important;
+            height: auto !important;
+            padding: 0px;
+        }
+
+        .checkboxpadding {
+            padding-left: 5px;
+        }
+
+        .RowGreen {
+            background-color: #80F0C0;
+        }
+
+        .RowBlue {
+            background-color: #00BFFF;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dhcpha-query-condition">
+        <div class="container-fluid dhcpha-condition-container">
+            <div class="row ">
+                <div class="col-lg-12 col-md-12">
+                    <button class="btn btn-default btn_button btn_important" id="btn-disp"><img
+                            src="../scripts/pharmacy/images/dispprint-default.png"
+                            class="dhcpha-btn-image"><br><strong>发药并打印</strong></button>
+                    <button class="btn btn-default btn_button btn_refuse" id="btn-refuse"><img
+                            src="../scripts/pharmacy/images/refdisp-default.png"
+                            class="dhcpha-btn-image"><br><strong>拒绝发药</strong></button>
+                </div>
+            </div>
+        </div>
+        <div class="row dhcpha-row-split-all"></div>
+        <div class="container-fluid dhcpha-condition-container">
+            <div class="row row_style">
+                <form class="form-inline">
+                    <div class="input-group">
+                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>药房</strong></span>
+                        <select class="form-control in_select" id="sel-phaloc">
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <span for="date-start"
+                            class="input-group-addon dhcpha-input-group-addon-in"><strong>用药日期</strong></span>
+                        <input id="date-start" class="form-control input_style" type="text"
+                            style="border-right:none;width:86px" placeholder="请选择日期">
+                        <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    <span><strong>至</strong></span>
+                    <div class="input-group">
+                        <input id="date-end" class="form-control input_style" type="text"
+                            style="border-right:none;width:86px" placeholder="请选择日期">
+                        <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                    </div>
+                    <div class="form-group dhcpha-col-split">
+                    </div>
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-timer">
+                        <lable for="chk-timer"><strong>定时刷新</strong></lable>
+                    </div>
+                    <div class="form-group dhcpha-col-split">
+                    </div>
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-prtdetail">
+                        <lable for="chk-prtdetail"><strong>打印明细</strong></lable>
+                    </div>
+                    <div class="input-group">
+                        <input type="checkbox" id="chk-prttotal">
+                        <lable for="chk-prttotal"><strong>打印汇总</strong></lable>
+                    </div>
+                    <div class="btn-group" style="position: absolute;right: 2em;">
+                        <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                        <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
+                            id="btn-find">查询</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row dhcpha-row-split"></div>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-3 dhcpha-col" style="padding-right:0px;padding-left:0px">
+                <div id="monitor-condition">
+                    <div id="div-ward-condition">
+                        <div class="panel div_content wardtitle">
+                            <div class="panel-heading"><span class="pal_style"><strong>医生科室列表</strong></span></div>
+                            <table id="grid-wardlist" class="table table-bordered table_style">
+                            </table>
+                            <div id="jqGridPager1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-9 col-md-9 col-sm-9 dhcpha-col dhcpha-col-border-left">
+                <div class="panel div_content">
+                    <div class="panel-heading"><span class="pal_style">
+                            <strong>
+                                <a data-toggle="collapse" href="#div-conditions" id="a-condition">筛选条件</a>
+                            </strong>
+                        </span></div>
+                    <div id="div-conditions" class="panel-collapse collapse">
+                        <form class="form-inline" style="padding-top:5px;padding-bottom:5px">
+                            <div class="input-group checkboxpadding">
+                                <select class="form-control in_select" id="sel-locinci">
+                                    <option id=""></option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <input id="txt-regno" class="form-control input_style" type="text" style="width:13em;"
+                                    placeholder="登记号...">
+                            </div>
+                            <div class="btn-group" style="position: absolute;right: 2em;">
+                                <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                                <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal"
+                                    type="button" id="btn-finddetail">查询</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="panel div_content" id="div-tab">
+                    <div class="panel-heading"><span class="pal_style" id="sp-title"><strong>发药汇总</strong></span><i
+                            class="fa  fa-exchange dhcpha-btn-fa" id="a-change"
+                            style="padding-left:20px;cursor: pointer;"><strong style="font-size:14px"> 切换</strong></i>
+                    </div>
+                    <div id="div-total">
+                        <table id="grid-disptotal" class="table table-bordered table_style">
+                        </table>
+                        <div id="jqGridPager"></div>
+                    </div>
+                    <div id="div-detail">
+                        <table id="grid-dispdetail" class="table table-bordered table_style">
+                        </table>
+                        <div id="jqGridPager1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--include 文件至于最后-->
+    <csp:Include Page="dhcpha.inpha.refusedispreason.csp" />
+    <csp:Include Page="dhcpha.inpha.phauser.csp" />
+</body>
+
+</html>
+<!-- for lodop print -->
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/pharmacy/inpha/ipprintcom.js"></script>
+<script type="text/javascript" src="../scripts/pharmacy/common/js/lodopcom.js"></script>

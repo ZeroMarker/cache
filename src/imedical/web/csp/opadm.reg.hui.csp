@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<!--opadm.reg.hui.csp HISUI挂号、预约--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+<style>
+object {
+	display:none;
+}
+.versplitline{
+	border-rigth: 1px solid #ccc;
+}
+.r-label{
+	padding-left:5px;
+	padding-right:5px;
+}
+.extendinfo{
+	display:none;
+}
+.min-patinfo{
+	height: 171px !important;;
+}
+.max-patinfo{
+	height: 251px !important;
+}
+#BillAmount,#ReturnAmount{
+	color: red;
+}
+.newclsInvalid{
+	border-color: red !important;
+	color: red !important;
+}
+.dateinfo-div span{
+	color: #FF9113;
+}
+.dateinfo-div,.locinfo-div,.timerange-div{
+	float: left;
+	margin:15px 15px 0 15px;
+}
+.timerange-div a{
+	margin:0 5px;
+	background: white;
+	color: #40A2DE;
+	border: 1px solid #40A2DE !important;
+	border-radius: 4px;
+}
+.seltimerange{
+	background: #40A2DE !important;
+	color: white !important;
+}
+#SelLoc{
+	font-size: 20px;
+}
+/*表格行 链接样式*/
+.editcls{
+	text-decoration: underline;
+	color:#40A2DE; 
+}
+.editcls:hover{
+	background-color: #DBEDF9;
+	cursor: pointer;
+}
+.datagrid-row-selected .editcls{
+	color:#fff;
+}
+.blackname{
+	background-color: red !important;
+	color :#fff  !important;
+}
+#MarkListPanel .panel{
+	float: left;
+}
+.marklist-card-panel{
+	margin-top:5px;
+}
+.marklist-card-panel .panel{
+	margin: 0 0 5px 5px;
+}
+.marklist-card{
+	position: relative;
+	border-radius:0 !important;
+	border-color:black;
+}
+.marklist-card-stop{
+	position: relative;
+	background-color:red;
+}
+.marklist-card-invalid{
+	position: relative;
+	font-style: italic;
+}
+.marklist-card-invalid div:first-child{
+	color: red;
+}
+.schenum-div {
+	position:absolute;
+	bottom:0;
+}
+.schenum-div div{
+	float: left;
+	color:white;
+	width:40px;
+	padding:5px;
+	text-align:center;
+}
+#PreAppDay,#NextAppDay,#AllAppDays,#BeforeWeekAppDay,#ThisWeekAppDay,#NextWeekAppDay{
+	background:#fff;
+	color:#40A2DE;
+	border:1px solid #40A2DE !important;
+}
+#PreAppDay:hover,#NextAppDay:hover,#AllAppDays:hover,#BeforeWeekAppDay:hover,#ThisWeekAppDay:hover,#NextWeekAppDay:hover{
+	background:#378ec4;
+	color:#fff;
+}
+/*视图模式 时段样式*/
+.timerange-span{
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	top: 30px;
+	right: 10px;
+	border-radius: 50%;
+}
+.timerange-span span{
+	position: relative;
+	display: block;
+	top: 4px;
+	left: 3px;
+	width: 30px;
+	height: 30px;
+	line-height:30px;
+	border-radius: 50%;
+	transform: rotate(-30deg);
+}
+.timerange-span-solid-1{
+	border: 2px solid #F89E1F;
+}
+.timerange-span-dotted-1{
+	border: 2px dotted #F89E1F;
+	color: #F89E1F;
+}
+.timerange-span-solid-2{
+	border: 2px solid #EB3946;
+}
+.timerange-span-dotted-2{
+	border: 2px dotted #EB3946;
+	color: #EB3946;
+}
+.timerange-span-solid-3{
+	border: 2px solid #71CFCE;
+}
+.timerange-span-dotted-3{
+	border: 2px dotted #71CFCE;
+	color: #71CFCE;
+}
+.timerange-span-solid-4{
+	border: 2px solid #386872;
+}
+.timerange-span-dotted-4{
+	border: 2px dotted #386872;
+	color: #386872;
+}
+/*视图模式 卡片鼠标悬浮样式*/
+.markcard-hover{
+	background-color: #dcebf9;
+	cursor: pointer; 
+}
+.markcard-select{
+	background-color: #40A2DE;
+	color: #fff;
+	cursor: pointer; 
+}
+#DeptTreeList-div{
+	position: absolute;
+	display: none;
+	width: 190px;
+	padding: 5px;
+	z-index: 99999;
+	background: white;
+	border: 1px solid #ccc;
+	box-shadow: 2px 2px 2px #888888;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding: 0 10px;
+}
+/*分时段预约样式*/
+.diytable{
+	border-collapse:collapse;
+	border:1px solid #ccc; 
+}
+.diytable td{
+	text-align:center;
+	word-break:keep-all;
+	white-space:nowrap;
+	padding:5px;
+}
+.td-time{
+	font-size:13px;
+	color:#9A8989;
+}
+.td-seqno{
+	font-weight:bold;
+	color:#40A2DE;
+}
+.td-seqno-invalid{
+	background:#FFCFCF;
+}
+.td-timerange{
+	color:black;
+	font-weight:bold;
+}
+.diytable td[id="_table_"]:hover{
+	cursor:pointer;
+	background:#FFCFCF;
+}
+.webui-popover-title{
+	display: block;
+	background-color: #f9f9fa;
+	text-align: left;
+	border-bottom: 1px solid #cccccc;
+	color: black;
+	font-weight:bold;
+}
+#Appoint,#Update{
+	background:#21BA45;
+}
+iframe{
+	vertical-align:top;
+	display:block;
+}
+</style>
+<Server>
+//挂号类型 APP 预约 NurReg 分诊挂号 Reg 当日挂号
+s ParaRegType=%request.Get("ParaRegType")
+s sysDateFormat=##class(websys.Conversions).DateFormat()
+s GetreceipNO=##Class(%CSP.Page).Encrypt($lb("web.udhcOPBillIF.GetReceiptNO"))
+
+w "<input id='OMrType' name='OMrType' type='hidden' value=''>",$C(13,10)
+w "<input id='IMrType' name='IPMRN' type='hidden' value=''>",$C(13,10)
+w "<input id='sWorkItem' name='sWorkItem' type='hidden' value=''>",$C(13,10)
+w "<input id='sReqType' name='sReqType' type='hidden' value=''>",$C(13,10)
+
+w "<input id='PatientID' name='PatientID' type='hidden' value=''>",$C(13,10)
+w "<input id='IDCardNo' name='IDCardNo' type='hidden' value=''>",$C(13,10)
+w "<input id='OPMRN' name='OPMRN' type='hidden' value=''>",$C(13,10)
+w "<input id='IPMRN' name='IPMRN' type='hidden' value=''>",$C(13,10)
+w "<input id='AppBreakCount' name='AppBreakCount' type='hidden' value=''>",$C(13,10)
+w "<input id='ReceiptSum' name='ReceiptSum' type='hidden' value=''>",$C(13,10)
+w "<input id='AccAmount' name='AccAmount' type='hidden' value=''>",$C(13,10)
+w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+D ##Class(web.DHCBillPrint).AccPWDCLSID()
+s HospitalCode=##class(web.DHCOPAdmReg).GetHospitalCode()
+s CurDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+s CurWeek=$case($zd(+$h,10),"1":"周一","2":"周二","3":"周三","4":"周四","5":"周五","6":"周六","0":"周天")
+
+//病历本费
+s MRNoteFee=##class(web.DHCOPAdmReg).GetMRFee()
+//卡费
+s CardFee=##class(web.DHCOPAdmReg).GetCardFee()
+s DefaultAppDate=##class(websys.Conversions).DateLogicalToHtml(+$h+1)
+s DefaultAppWeek=$case($zd(+$h+1,10),"1":"周一","2":"周二","3":"周三","4":"周四","5":"周五","6":"周六","0":"周天")
+//启用医保实时结算
+s CFEnableInsuBill=##class(web.DHCOPRegConfig).GetSpecConfigNode("EnableInsuBill")
+s SeqNoMode=""
+s CashPayModeID=$o(^CT("CTPM",0,"Code","CASH",""))
+//挂号界面右侧号别展示默认列表模式
+s OPRegListDefault=##class(web.DHCOPRegConfig).GetSpecConfigNode("OPRegListDefault")
+//挂号界面按专业组查询排班
+s QryScheduleByClinicGroup=##class(web.DHCOPRegConfig).GetSpecConfigNode("QryScheduleByClinicGroup")
+</Server>
+</head>
+<body class="hisui-layout" data-options="split:true">
+	<csp:Include Page="opadm.reg.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			ParaRegType:"#(ParaRegType)#",
+			sysDateFormat:"#(sysDateFormat)#",
+			MRNoteFee:"#(MRNoteFee)#",
+			CardFee:"#(CardFee)#",
+			GetreceipNO:"#(GetreceipNO)#",
+			CurWeek:"#(CurWeek)#",
+			CurDate:"#(CurDate)#",
+			HospitalCode:"#(HospitalCode)#",
+			DefaultAppDate:"#(DefaultAppDate)#",
+			CFEnableInsuBill:"#(CFEnableInsuBill)#",
+			DefaultAppWeek:"#(DefaultAppWeek)#",
+			SeqNoMode:"#(SeqNoMode)#",
+			CashPayModeID:"#(CashPayModeID)#",
+			OPRegListDefault:"#(OPRegListDefault)#",
+			pageCode:'opadm.reg.hui.csp',
+			QryScheduleByClinicGroup:"#(QryScheduleByClinicGroup)#",
+			domSelector:'.textbox'
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+	<script type="text/javascript" src="../scripts/DHC.WMR.Request.js"></script>
+	<!--script type="text/javascript" src="../scripts/OPAdm/common.js"></script-->
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
+	<script type="text/javascript" src="../scripts/OPAdm/Reg.hui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.JS"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<script type="text/javascript" src="../scripts/OPAdm/MisPose/MisPosePublic.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+</body>
+</html>

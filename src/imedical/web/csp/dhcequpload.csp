@@ -1,0 +1,57 @@
+<!-- Copyright (c) 2001 InterSystems Inc. ALL RIGHTS RESERVED. -->
+<csp:class description="Demo of how to upload a file from the browser.">
+<html>
+
+<head>
+</head>
+
+<body bgcolor=#CCCCFF>
+
+<!-- display standard sample template using a custom tag -->
+<isc:SAMPLE title="Upload a file Sample">
+This sample uses an '&lt;input type=file&gt;' element in a form to upload a file
+from the web browser to CSP. Pick a file and hit the submit button to try it.
+</isc:SAMPLE>
+
+<!-- HTML Form to submit the file. You must specify the enctype="multipart/form-data" -->
+<!-- for this to work -->
+<form action="DHCEQUpload.csp" enctype="multipart/form-data" method=post>
+    上传文件: <input name=FileStream size=30 type=file>
+    <p>
+    <ul><input type=submit value="Upload file"></ul>
+    <p>
+</form>
+
+<!-- As form is submitted to this page look to see if we have the stream in the %request object -->
+<csp:IF CONDITION=($data(%request.MimeData("FileStream",1)))>
+    <hr><br>
+    Submitted filename: <b>#(%request.MimeData("FileStream",1).FileName)#</b><br>
+    Size of file: <b>#(%request.MimeData("FileStream",1).Size)#</b><br>
+    Mime Section: <b>#(%request.MimeData("FileStream",1).MimeSection)#</b><br>
+    Type of stream: <b>#(%request.MimeData("FileStream",1).%ClassName(1))#</b><br>
+    Content Type: <b>#(%request.MimeData("FileStream",1).ContentType)#</b><br>
+    <br>
+    First 200 characters of stream:<br>
+    <ul>
+    <script language=Cache runat=server>
+   	////存储到数据库
+   	////实体类DHCEQUpload中的Property UploadFile定义?
+   	////Property UploadFile As %Stream (STORAGE="FILE",LOCATION="D:\restore") [ Collection = binarystream ];
+	////或Property UploadFile As %Stream  [ Collection = binarystream ];
+	//s obj=##class(web.DHCEQUpload).%New()
+	//d obj.UploadFile.CopyFrom(%request.GetMimeData("FileStream"))
+	//d obj.%Save()
+	//d obj.%Close()
+	//k obj		
+		
+	///存储为文件
+	Set imgfile=##class(%FileBinaryStream).%New()
+	Set imgfile.Filename="F:\myfile.txt"
+	d imgfile.CopyFrom(%request.GetMimeData("FileStream"))
+	d imgfile.SaveStream()
+    </script>
+    </ul>
+</csp:IF>
+
+</body>
+</html>

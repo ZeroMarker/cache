@@ -1,0 +1,169 @@
+<HTML>
+<HEAD>
+<TITLE>index.csp</TITLE>
+</HEAD>
+
+<BODY>
+<server>
+ 	s ECPServerStr="172.23.6.201^172.23.6.204^172.23.6.205"
+ 	s DefServerIP="172.23.6.201"
+</server>
+<SCRIPT Language="Javascript">
+	var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	var xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+	var clientIP=GetComputerIp();
+	var ServerIP="#(DefServerIP)#"
+	var MaxAvailableLicense=0
+	var ECPServerStr="#(ECPServerStr)#";
+	var ECPServerArray=ECPServerStr.split("^")
+	for (var i=0;i<ECPServerArray.length;i++)
+	{
+		var TmpServerIP=ECPServerArray[i]
+		var URL="http://"+TmpServerIP+"/dthealth/web";
+		var ret=CheckURL(URL)
+		if(ret)
+		{
+			var AvailableLicense=GetMinAvailableLicense(TmpServerIP);
+			if(AvailableLicense>MaxAvailableLicense)
+			{
+				MaxAvailableLicense=AvailableLicense;
+				ServerIP=TmpServerIP;
+			}
+		}
+	}
+	var URL="http://"+ServerIP+"/dthealth/web";
+	if(MaxAvailableLicense>10)
+	{
+		Redirect(URL)
+	}
+	function CheckURL(URL) 
+	{ 
+		try	 
+		{
+			//var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); 
+			xmlhttp.Open("GET",URL, false);
+			xmlhttp.Send();
+			var result = xmlhttp.status;
+			if(result==200) 
+			{
+				//xmlhttp = null;
+				return true; 
+			}
+			else
+			{
+				//xmlhttp = null; 
+				return false; 
+			}
+		}
+		catch(e)
+		{
+			return false;
+		}
+		
+	}
+	function Redirect(URL)
+	{
+		parent.location=URL
+		//location.replace(URL)
+		return true;
+	}
+	//var ret=GetMinAvailableLicense("172.23.6.201");
+	//var ret=GetMinAvailableLicense("172.23.6.204");
+	//var ret=GetMinAvailableLicense("172.23.6.205");
+	function GetMinAvailableLicense(ServerIP)
+	{
+		var nodeValue=""
+		try
+		{
+			var URL="http://"+ServerIP+"/dthealth/web/DHCOLB.OLBService.cls";
+			var Action="http://www.dhcc.com.cn/GetMinAvailableLicense";
+			var Body = '<GetMinAvailableLicense>'+'</GetMinAvailableLicense>'; 
+			var xmlText=RequestByGet(URL,Body,Action)
+			var nodeName="GetMinAvailableLicenseResult";
+			var nodeValue=AnalyseXML(xmlText,nodeName);
+		}
+		catch(e)
+		{
+		}
+		return nodeValue;
+	}
+	function GetConnection(ServerIP,clientIP)
+	{
+		var nodeValue=""
+		try
+		{
+			var URL="http://"+ServerIP+"/dthealth/web/DHCOLB.OLBService.cls";
+			var Action="http://www.dhcc.com.cn/GetConnection";
+			var Body = '<GetConnection>'+'<ClientIP>'+clientIP+'</ClientIP>'+'</GetConnection>'; 
+			var xmlText=RequestByGet(URL,Body,Action)
+			var nodeName="GetConnectionResult";
+			var nodeValue=AnalyseXML(xmlText,nodeName);
+		}
+		catch(e)
+		{
+		}
+		return nodeValue;
+	}
+	function AnalyseXML(xmlText,nodeName)
+	{
+		var nodeValue=""
+		try
+		{
+			//var xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+			xmlDoc.async="false";
+			xmlDoc.loadXML(xmlText);
+			var nodeValue=xmlDoc.getElementsByTagName(nodeName)[0].childNodes[0].nodeValue;
+			//xmlDoc=null;
+		}
+		catch(e)
+		{
+		}
+		return nodeValue;
+	}
+	function RequestByGet(URL,Body,Action)
+	{
+		var data,response;
+		response=""
+		try
+		{
+			data = '<?xml version="1.0" encoding="utf-8"?>';
+			data = data + '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+			data = data + '<soap:Body>';
+			data = data + Body;
+			data = data + '</soap:Body>';
+			data = data + '</soap:Envelope>';
+			//var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");   
+			xmlhttp.Open("GET",URL, false);
+			xmlhttp.SetRequestHeader ("Content-Type","text/xml; charset=UTF-8"); 
+			xmlhttp.SetRequestHeader ("SOAPAction",Action);
+			xmlhttp.Send(data);
+			var result = xmlhttp.status;
+			if(result==200) {
+				response= xmlhttp.responseText;
+			}    
+			//xmlhttp = null;
+		}
+		catch(e)
+		{
+		}
+		return response;  
+	}
+	function GetComputerIp()
+	{
+		var ipAddr="";
+		try
+		{
+			var obj = new ActiveXObject("rcbdyctl.Setting");
+			ipAddr=obj.GetIPAddress;
+			obj = null;
+		}
+		catch(e)
+		{
+			obj = null;
+			//alert("Exception");
+		}
+		return ipAddr;
+	}
+</SCRIPT>
+</BODY>
+</HTML>

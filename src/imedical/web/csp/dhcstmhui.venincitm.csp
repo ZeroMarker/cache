@@ -1,0 +1,160 @@
+﻿<!--供应商供货授权维护-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="hisui-layout" data-options="region:'center',border:false">
+	<div class="hisui-panel GridPadding" style="padding-top:0;" data-options="region:'center',border:false,fit:true">
+		<div id="DetailTabs" class="hisui-tabs tabs-gray " data-options="region:'center',fit:true" style="border:0px;">
+		<div title="供应商授权物资" data-options="fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+					<div class="GridPadding" data-options="region:'west',border:false,collapsible:false"  style="width:550px;">
+					<div class="hisui-panel" title="供应商" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+						<div class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'north',border:false,collapsible:false" style="padding:0px">
+								<table id="VenConditions" class="Condition">
+									<tr>
+										<td>供应商代码</td>
+										<td><input id="VendCode" name="VendCode" class="textbox" style="width:153px;"></td>
+										<td>供应商名称</td>
+										<td><input id="VendDesc" name="VendDesc" class="textbox" style="width:153px;"></td>
+									</tr>
+									<tr>
+										<td>分类</td>
+										<td><input id="VendorCat" name="VendorCat" class="hisui-combobox" style="width:160px;"></td>
+										<td>状态</td>
+										<td><select id="Status" name="Status" class='hisui-combobox' style="width:160px;">
+											<option value="" selected>全部</option>
+											<option value="A">使用</option>
+											<option value="S">停用</option>
+										</select></td>
+									</tr>
+									<tr>
+										<td colspan="3"><a href="#" id="VenQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+									</tr>
+								</table>
+							</div>
+								<div data-options="region:'center',border:false,collapsible:false">
+								<table id="VendorGrid"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="GridPadding" style="padding-left:0px" data-options="region:'center',border:false" >
+					<div class="hisui-panel" title="物资列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+						<table id="VenInciGrid"></table>
+					</div>
+				</div>	
+			</div>
+		</div>
+		<div title="物资授权供应商" data-options="closable:false">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="GridPadding" data-options="region:'west',border:false,collapsible:false" style="width:550px;">
+					<div class="hisui-panel" title="物资目录" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+						<div class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'north',border:false"  style="padding:0px">
+								<table id="InciConditions" class="Condition">
+									<tr>
+										<td>类组</td>
+										<td><input id="StkGrpBox" name="StkGrp" class="textbox hisui-stkscgcombotree" style=""></td>
+										<td>物资代码</td>
+										<td><input id="InciCode" name="InciCode" class="textbox" style="width:153px;"></td>
+									</tr>
+									<tr>
+										<td>库存分类</td>
+										<td><input id="StkCatBox" name="StkCat" class="textbox hisui-combobox" style=""></td>
+										<td>物资名称</td>
+										<td><input id="InciDesc" name="InciDesc" class="textbox" style="width:153px;"></td>
+									</tr>
+									<tr>
+										<td colspan="3"><a href="#" id="InciQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+									</tr>
+								</table>
+							</div>
+							<div data-options="region:'center',border:false,collapsible:false">
+								<table id="InciGrid"></table>
+							</div>	
+						</div>
+					</div>
+				</div>
+				<div class="GridPadding" style="padding-left:0px" data-options="region:'center',border:false" >
+					<div class="hisui-panel" title="供应商列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+						<table id="InciApcGrid"></table>
+						</div>
+					</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="UAuItmListWin" class="hisui-dialog FindWin" data-options="closed:true,modal:true" title="供货品种列表"> 
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="border-bottom:1px dashed #ccc;">
+				<table id="UAuItmListConditions" class="Condition">
+					<tr>
+						<td>类组</td>
+						<td><input id="WinStkGrpBox" name="StkGrp" class="textbox hisui-stkscgcombotree" style=""></td>
+						<td>物资代码</td>
+						<td><input id="InciCode" name="InciCode" class="textbox" style="width:153px;"></td>
+						<td><a href="#" id="UAuInciQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="CancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">取消</a></td>
+					</tr>
+					<tr>
+						<td>库存分类</td>
+						<td><input id="WinStkCatBox" name="StkCat" class="textbox hisui-combobox" style=""></td>
+						<td>物资名称</td>
+						<td><input id="InciDesc" name="InciDesc" class="textbox" style="width:153px;"></td>
+						<td><a href="#" id="InciAuthorBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">授权</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="ItmGrid"></table>
+			</div>
+		</div>
+	</div>
+	<div id="UAuVenListWin" class="hisui-dialog FindWin" data-options="closed:true,modal:true" title="供应商列表"> 
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="border-bottom:1px dashed #ccc;">
+				<table id="UAuVenListConditions" class="Condition">
+					<tr>
+						<td>供应商代码</td>
+						<td><input id="VendCode" name="VendCode" class="textbox" style="width:153px;"></td>
+						<td>供应商名称</td>
+						<td><input id="VendDesc" name="VendDesc" class="textbox" style="width:153px;"></td>
+						<td><a href="#" id="UAuVenQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="VenCancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">取消</a></td>
+					</tr>
+					<tr>
+						<td>分类</td>
+						<td><input id="WinVendorCat" name="WinVendorCat" class="hisui-combobox" style="width:160px;"></td>
+						<td>状态</td>
+						<td><select id="Status" name="Status" class='hisui-combobox' style="width:160px;">
+							<option value="" selected>全部</option>
+							<option value="A">使用</option>
+							<option value="S">停用</option>
+						</select></td><td><a href="#" id="VenAuthorBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">授权</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="VenItmGrid"></table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonHosp.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ApcIncitm/UnInciApc.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ApcIncitm/UnApcInci.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ApcIncitm/VenIncitm.js"></script>
+</body>
+</html>

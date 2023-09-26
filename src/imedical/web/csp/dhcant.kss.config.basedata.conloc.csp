@@ -1,0 +1,253 @@
+<!-- Copyright (c) 2017-03-09 QiuPeng. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<html>
+<head>
+<title>抗菌药会诊科室维护</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+	<meta http-equiv="X-UA-Compatible" content="IE=9" />
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCANT:LIB></DHCANT:LIB>
+	<server>
+		set type = %request.Get("type")
+	</server>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/lib/FontAwesome/css/font-awesome.min.css"/>
+    <script type="text/javascript" src="../scripts/dhcdocant/lib/layui/layer/layer.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/kssmain/dhcant.kss.eaysui-tool.js"></script>
+    <style>
+		.panel {padding:5px;}
+		.c-btn {
+			margin:20px 0px;
+			padding:0px 20px 0px 20px;
+			height:28px;
+			line-height:28px;
+			}
+		.c-config{
+			height:400px;
+			width:220px;
+			padding:5px;
+			text-align:center;
+		}
+		.c-logicombox {
+			width: 140px;
+		}
+		.m-input {
+			padding-left:2px;
+			margin: 15px 0px;
+			width: 140px;
+		}
+		.m-input2 {
+			padding-left:2px;
+			margin: 0px 0px 15px 0px;
+			width: 140px;
+		}
+		.c-hidden {
+			display: none;	
+		}
+		.c-span {
+			padding-right:8px;
+		}
+	</style>
+    <script type="text/javascript">
+    	var type="#(type)#";
+		if ($.fn.datagrid){
+    		$.fn.datagrid.defaults.pageSize = 20;
+    		$.fn.datagrid.defaults.pageList = [20,30,50];
+		}
+    	$(function(){
+			$('#i-tab-para-center').simpledatagrid({
+				queryParams: {
+					ClassName:"DHCAnt.KSS.Config.BaseData",
+					QueryName:"QryAllbasedata",
+					ModuleName:"datagrid",
+					Arg1:type,
+					ArgCnt:1
+				},
+				singleSelect:true,
+			toolbar:[{
+						text:'修改',
+						iconCls: 'icon-edit',
+						handler: function(){
+							var selected = $('#i-tab-para-center').simpledatagrid('getSelected');
+							if (!selected){
+								layer.alert("请选择一条记录", {title:'提示',icon: 0});
+								return false;
+							};
+							if($('#i-config').hasClass("c-hidden")) {
+								$('#i-config').removeClass("c-hidden");
+							};
+							$("#i-tab-para-center-active").localcombobox({
+								data:[{id: '1', text: '是'}, {id: '0',text: '否'}]
+							});
+							$('#i-config-conloc-loc').simplecombobox({
+								onBeforeLoad: function(param){
+									param.ClassName="DHCAnt.KSS.Config.Authority";
+									param.QueryName="QryGetdep";
+									param.ModuleName="combobox";
+									param.Arg1="";
+									param.ArgCnt=1;
+								},
+								value:selected.desc
+							});
+							$("#i-config input[name='id']").val(selected.id);
+							$("#i-config input[name='tableType']").val(selected.tableType);
+							$("#i-config input[name='tableName']").val(selected.tableName);
+							$("#i-config input[name='action']").val("update");
+							$("#i-config input[name='code']").val(selected.code);
+							//$("#i-config input[name='desc']").val(selected.desc);
+							$("#i-config input[name='specialFlag']").val(selected.specialFlag);
+							$("#i-config input[name='infectDepFlag']").val(selected.infectDepFlag);
+							$("#i-tab-para-center-active").localcombobox("setValue", selected.active);
+							$('#i-config').window({
+								title: '修改数据',
+								modal: true,
+								iconCls:'fa fa-pencil',
+								maximizable:false,
+								minimizable:false,
+								collapsible:false,
+								onClose: function () {
+									$('#i-config').addClass("c-hidden");
+								}
+							});
+							
+						}
+					},'-',{
+						text:'增加',
+						iconCls: 'icon-add',
+						handler: function(){
+							if($('#i-config').hasClass("c-hidden")) {
+								$('#i-config').removeClass("c-hidden");
+							};
+							$("#i-tab-para-center-active").localcombobox({
+								data:[{id: '1', text: '是'}, {id: '0',text: '否'}]
+							});
+
+							$('#i-config-conloc-loc').simplecombobox({
+								onBeforeLoad: function(param){
+									param.ClassName="DHCAnt.KSS.Config.Authority";
+									param.QueryName="QryGetdep";
+									param.ModuleName="combobox";
+									param.Arg1="";
+									param.ArgCnt=1;
+								},
+								value:""
+							});
+							$("#i-config input[name='action']").val("add");
+							
+							$("#i-config input[name='id']").val("");
+							$("#i-config input[name='tableType']").val("");
+							$("#i-config input[name='tableName']").val("");
+							$("#i-config input[name='code']").val("");
+							
+							$("#i-config-conloc-loc").simplecombobox("setValue","");
+							$("#i-config input[name='specialFlag']").val("");
+							$("#i-config input[name='infectDepFlag']").val("");
+							
+							$('#i-config').window({
+								title: '添加数据',
+								modal: true,
+								iconCls:'fa fa-plus-circle',
+								minimizable:false,
+								maximizable:false,
+								collapsible:false,
+								onClose: function () {
+									$('#i-config').addClass("c-hidden");
+								}
+							});
+							
+						}
+					
+					},'-',{
+						text:'联系方式',
+						iconCls: 'icon-help',
+						handler: function(){
+							layer.alert("如有问题请联系医疗质量技术支持组: 邱鹏", {title:'提示',icon: 6}); 
+						}
+				}],
+			columns:[[
+					{field:'code',title:'会诊科室代码',width:100},
+					{field:'descText',title:'会诊科室',width:200},
+					{field:'infectDepFlag',title:'感染性疾病科标志',width:100},
+					{field:'specialFlag',title:'特殊标志',width:100},
+					{field:'active',title:'是否激活',width:100},
+					{field:'tableType',title:'表类型',width:100},
+					{field:'tableName',title:'表描述',width:100},
+					{field:'desc',title:'会诊科室ID',width:200,hidden:true},
+					{field:'id',title:'id',width:100,hidden:true}
+					]]
+			});	
+	    })
+	    
+	    function save(){
+		    var id = $("#i-config input[name='id']").val();
+		    var tableType=$("#i-config input[name='tableType']").val();
+		    var tableName=$("#i-config input[name='tableName']").val();
+		    var desc = $("#i-config-conloc-loc").simplecombobox('getValue');
+		    var desc = desc || "";
+		    var code = $("#i-config input[name='code']").val();
+		    var active = $("#i-tab-para-center-active").localcombobox('getValue')||"";
+		    var parCode = "";
+		    var aimItem = "";
+			var specialFlag = $("#i-config input[name='specialFlag']").val();
+			var infectDepFlag = $("#i-config input[name='infectDepFlag']").val();
+			var action = $("#i-config input[name='action']").val();
+			if (tableType == "") tableType = type;
+			if (tableName == "") tableName = $.InvokeMethod("DHCAnt.Base.MainConfigExcute","GetDescByMCGCode", type);
+			var paraStr = id + "^" + tableType + "^" + tableName + "^" + desc + "^" + code + "^" + active;
+			var paraStr = paraStr + "^" + parCode + "^" + aimItem + "^" + specialFlag + "^" + infectDepFlag;
+			if( $.trim(code) =="") {
+				layer.alert("会诊科室代码不能为空！", {title:'提示',icon: 0}); 
+				return false;
+			}
+			if( $.trim(desc) =="" ) {
+				layer.alert("会诊科室不能为空！", {title:'提示',icon: 0}); 
+				return false;
+			}
+			if (active == "") {
+				layer.alert("激活标志不能为空！", {title:'提示',icon: 0}); 
+				return false;
+			}
+			var rtn=$.InvokeMethod("DHCAnt.KSS.Config.BaseData","DBSaveBasedata", paraStr);
+			if (rtn <= 0) {	
+				layer.alert("保存失败", {title:'提示',icon: 5}); 
+				return false;
+			};
+			if (action=="add"){
+				layer.alert("添加成功...", {title:'提示',icon: 1}); 
+			} else {
+				layer.alert("修改成功...", {title:'提示',icon: 1}); 
+			}
+			reloadGrid();
+			$('#i-config').window('close');
+		 }
+		function reloadGrid() {
+			$('#i-tab-para-center').simpledatagrid("reload",{
+				ClassName:"DHCAnt.KSS.Config.BaseData",
+				QueryName:"QryAllbasedata",
+				ModuleName:"datagrid",
+				Arg1:type,
+				ArgCnt:1
+		});
+	}
+    </script>
+</head>
+
+<body>
+	<div id="i-tab-para-center" class="c-tab-para-center"></div>
+	<div id='i-config' class='c-config c-hidden'>
+		<input type="hidden" name="id" />
+		<input type="hidden" name="action" />
+		<input type="hidden" name="tableType" />
+		<input type="hidden" name="tableName" />
+		<span class="c-span">科室代码</span><input id="i-config-conloc-code" class="m-input" type="text" name="code" /><br/>
+		<span class="c-span">会诊科室</span><input id="i-config-conloc-loc" class="m-input" type="text" name="desc" style="height:24px;" /><br/>
+		<span class="c-span">特殊标志</span><input class="m-input" type="text" name="specialFlag" /><br/>
+		<span class="c-span">感染标志</span><input class="m-input2" type="text" name="infectDepFlag" /><br/>
+		<span class="c-span">是否激活</span><input class="m-input" id="i-tab-para-center-active" type="text" name="active" class="c-logicombox" style="height:24px;"/><br/>
+		<a id="i-config-btn" onclick="save()" class="btn btn-primary c-btn"><i class="fa fa-save"></i>&nbsp;保存</a>
+	</div>
+</body>
+</html>

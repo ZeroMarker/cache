@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!doctype html>
+<html>
+<head>
+	<title>	危急值医嘱 </title>
+	<HISUI />
+	<style>
+		#tabs>.tabs-panels>.panel>.panel-body{
+			overflow:hidden;
+		}
+	</style>
+</head>
+
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true">
+		</div>
+	</div>
+	<script type="text/javascript">
+		var switchSysPat = "N"; //医嘱界面判断了parent.switchSysPat
+		$(function(){
+			var queryString=location.search.split('?')[1]||'';
+			var params={};
+			if (queryString!=""){
+				var arr=queryString.split('&');
+				for (var i=0;i<arr.length;i++){
+					var key=arr[i].split('=')[0]||'';
+					var val=arr[i].split('=')[1]||'';
+					if (key!=""){
+						params[key]=decodeURIComponent(val);
+						//alert(params[key]);
+					}
+				}
+			}
+			$('#tabs').tabs('options').onSelect=function(title,index){
+				if (title=="草药录入"){
+					if( !$('#EidtOrdCY').attr('src') ){
+						$('#EidtOrdCY').attr('src',params['p2']);
+						//alert(params['p2']);
+					}
+				}
+			}
+			if (typeof params['p1']=='string' && params['p1']!=""){
+				$('#tabs').tabs('add',{
+					id:'p1',
+					title:'医嘱录入',
+					content:'<iframe name="EidtOrdXY" id="EidtOrdXY" scrolling="auto" src="'+params['p1']+'" frameborder=0 style="width:100%;height:100%;"></iframe>'
+				})
+			}
+			if (typeof params['p2']=='string' && params['p2']!=""){
+				$('#tabs').tabs('add',{
+					id:'p1',
+					title:'草药录入',
+					content:'<iframe name="EidtOrdCY" id="EidtOrdCY" scrolling="auto" frameborder=0 style="width:100%;height:100%;"></iframe>'
+					,selected:false
+				})
+			}
+		})
+		
+
+		
+		
+		
+	</script>
+	
+</body>
+</html>

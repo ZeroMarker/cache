@@ -1,0 +1,259 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. dhcrbapptschedulequery.csp--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css" />
+<script language="Cache" RUNAT="SERVER">
+	w !," <input id='MNew' name='MNew' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.InsertOneSchedule"))_"'>"
+	w !," <input id='MBase' name='MBase' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.UpdateOneSchedule"))_"'>"
+	w !," <input id='GetTRTimeStrMethod' name='GetTRTimeStrMethod' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBResSession.GetTRTimeStrByRowId"))_"'>"
+	w !," <input id='GetDocResource' name='GetDocResource' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCApptScheduleNew.GetDocResource"))_"'>"
+	w !," <input id='MStop' name='MStop' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.StopOneSchedule"))_"'>"
+	w !," <input id='MRep' name='MRep' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.ReplaceOneSchedule"))_"'>"
+</script>
+<style>
+*{
+	font-size:14px !important;
+	font-family: "Microsoft Yahei" !important;
+}
+a,a:hover{
+	color:blue;
+	cursor:pointer;
+}
+</style>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="../scripts/DHCApptScheduleQuery.js"></script>
+</head>
+<body class="easyui-layout" data-options="fit:true,border:false">
+
+
+<div data-options="region:'west',split:true,border:false,collapsible:false,closable:false" title="科室医生" style="width:360px;">
+    <!--div class="easyui-layout" data-options="fit:true,border:false" >
+        <div class="easyui-panel" style="padding:3px 0px 3px 3px;border-bottom:1px solid #95B8E7;height:70px;" data-options="region:'north'">
+		 	<span style="font-size:13px;color:red;">科室搜索&nbsp</span><input id="SerchLoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/拼音码'/>
+			<a id='FindAll' class="i-btn i-btn-primary" style="margin-top:-28px;margin-left:230px;" href="#" name=Save><IMG border=0 src="../images/uiimages/search.png">查找全部科室</a>
+		    <span style="font-size:13px;color:red;">医生搜索&nbsp</span><input id="SerchDoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/工号'/>
+		</div>
+		
+		<div  class="easyui-panel" data-options="region:'center',fit:true,border:false">
+	      <ul class="easyui-tree" id="LocDocTree"></ul>
+	    </div>
+    </div-->
+    <div class="easyui-layout" data-options="fit:true,border:false"> 
+    		<div data-options="region:'north',split:true,border:false" style="height:71px;"> 
+     			<div id="p1" class="easyui-panel" data-options="iconCls:'icon-edit',fit:true,closable:false,collapsible:false,minimizable:false,maximizable:false"> 
+      				<span style="font-size:13px;color:red;">科室搜索&nbsp</span><input id="SerchLoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/拼音码'/>
+					<a id='FindAll' class="i-btn i-btn-primary" style="margin-top:-28px;margin-left:230px;" href="#" name=Save><IMG border=0 src="../images/uiimages/search.png">查找全部科室</a>
+				    <span style="font-size:13px;color:red;">医生搜索&nbsp</span><input id="SerchDoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/工号'/>
+     			</div> 
+    		</div> 
+    		<div data-options="region:'center',split:true,border:false" > 
+     			<div id="tree-panel" class="easyui-panel"  data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false,border:false" > 
+      				<ul class="easyui-tree"  id="LocDocTree"></ul> 
+     			</div> 
+    		</div> 
+   	</div> 
+ </div>
+  
+  <div id="ScheduleInfo" data-options="region:'center',split:true,border:false" title="<img src='/dthealth/web/images/uiimages/createschedule.png' style='vertical-align:middle;'>&nbsp;&nbsp;排班信息"> 
+   		<div class="easyui-layout" data-options="fit:true,border:false"> 
+    		<div data-options="region:'north',split:true,border:false" style="height:37px;"> 
+     			<div id="p1" class="easyui-panel" data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+      				<span style="font-size:13px;color:red;">日期</span><input id="StartDate" type="text" name="StartDate" class="easyui-datebox" data-options="formatter:myformatter,parser:myparser" style="width:150px;height:27px;" >
+	                <a id='Find' class="i-btn i-btn-primary" style="margin-top:-28px;margin-left:190px;" href="#" name=Save><IMG border=0 src="../images/uiimages/search.png">查找</a>
+     			</div> 
+    		</div> 
+    		<div data-options="region:'center',split:true,border:false" > 
+     			<div id="p2" class="easyui-panel"  data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false,border:false"> 
+      				<div id="ScheduleTab" class="easyui-tabs" data-options="tabPosition:'top',tabWidth:130,fit:true">   
+     			</div> 
+    		</div> 
+   		</div> 
+  </div>
+  
+<!--div class="easyui-layout" data-options="fit:true">
+		<div  class="easyui-panel" data-options="region:'west'" collapsible=true title="<img src='/dthealth/web/images/uiimages/doctor.png' style='vertical-align:middle;'>&nbsp;&nbsp;科室医生" fit=true" style="width:380px">
+			<div class="easyui-layout" data-options="fit:true" >
+			<div class="easyui-panel" style="padding:3px 0px 3px 3px;border-bottom:1px solid #95B8E7;height:70px;" data-options="region:'north'">
+			 	<div>
+				 	<span style="font-size:13px;color:red;">科室搜索&nbsp</span><input id="SerchLoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/拼音码'/>
+					<a id='FindAll' class="i-btn i-btn-primary" style="margin-top:-28px;margin-left:230px;" href="#" name=Save><IMG border=0 src="../images/uiimages/search.png">查找全部科室</a>
+				</div>
+				<span style="font-size:13px;color:red;">医生搜索&nbsp</span><input id="SerchDoc" style="width:150px;border:1px solid #95B8E7;" placeholder='请输入名称/工号'/>
+			<div>
+			</div>
+			</div>
+			<div  class="easyui-panel" fit=true" data-options="region:'center'">
+			<ul id="LocDocTree"></ul>
+			</div>
+			
+		</div>
+		</div>
+		
+		<div  id="ScheduleInfo" class="easyui-panel" data-options="region:'center'" collapsible=true title="<img src='/dthealth/web/images/uiimages/createschedule.png' style='vertical-align:middle;'>&nbsp;&nbsp;排班信息" fit=true" style="heigth:1000px">
+		   <div class="easyui-layout" data-options="fit:true">
+			    <div data-options="region:'north'" style="height:37px;padding-top:5px;">
+			        <span style="font-size:13px;color:red;">日期:</span><input id="StartDate" type="text" name="StartDate" class="easyui-datebox" style="width:150px;height:27px;" >
+				    <a id='Find' class="i-btn i-btn-primary" style="margin-top:-28px;margin-left:190px;" href="#" name=Save><IMG border=0 src="../images/uiimages/search.png">查找</a>
+			    </div>
+			    <div data-options="region:'center'">
+			       <div id="ScheduleTab" class="easyui-tabs" data-options="tabPosition:'top',tabWidth:130" fit=true>   
+			    </div>
+		  </div>
+			
+		</div>  
+
+	</div-->
+	
+</div>
+	<div id="EditWin" class="easyui-window" title="<img src='/dthealth/web/images/uiimages/createschedulelist.png' style='vertical-align:middle;'>&nbsp;&nbsp;排班修改" style="width:800px;height:500px;background:#fafafa" closed=true modal=true>
+		<form style="padding:10px 20px 10px 20px;">
+		<table>
+			<tr>
+				<td><p>出诊日期&nbsp<input id="AdmDate" type="text" name="AdmDate" class="easyui-datebox" style="width:150px;height:24px;"></p></td>
+				<td><p>科&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp室&nbsp<select id="AdmLoc"  name="AdmLoc"  style="width:150px;height:24px;"/></p></td>
+				<td><p><font color="red">诊&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp室&nbsp<select id="LocArea"  name="LocArea" style="width:150px;height:24px;" /></p></td>	
+			</tr>
+			<tr>
+				<td><p>出诊时段&nbsp<select id="TimeRange" name="TimeRange" style="width:150px;height:24px;" /></p></td>
+				<td><p>开始时间&nbsp<input id="StartTime" name="StartTime" type="text" style="width:150px"></p></td>
+				<td><p>结束时间&nbsp<input id="EndTime" name="EndTime" type="text" style="width:150px"></p></td>
+			</tr>
+			<tr>
+				<td><p>医&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp生&nbsp<select id="AdmDoc"  name="AdmDoc" class="easyui-combobox" style="width:150px;height:24px;"/></p></td>
+				<td><p>挂号职称&nbsp<select id="DocSession"  name="DocSession" class="easyui-combobox" style="width:150px;height:24px;"/></p></td>
+				<td><p>亚&nbsp&nbsp专&nbsp&nbsp业&nbsp<select id="ClinicGroup"  name="ClinicGroup" class="easyui-combobox" style="width:151px;height:24px;" /></p></td>	
+			</tr>
+			<tr>
+				<td><p>正号限额&nbsp<input id="PositiveMax" name="PositiveMax" type="text" style="width:150px"></p></td>
+				<td><p>预约限额&nbsp<input id="ApptMax" name="ApptMax" type="text" style="width:150px"></p></td>
+				<td><p><font color="red">加号限额&nbsp<font><input id="AddtionMax" name="AddtionMax" type="text" style="width:150px"></p></td>
+			</tr>
+			<tr>
+				<td><p>起&nbsp&nbsp始&nbsp&nbsp号<input id="EStartPrefix" name="EStartPrefix" type="text" style="width:150px"></p></td>
+				<td><p style="width:150px" >分时段就诊&nbsp<input id="TRFlag" name="TRFlag" type="checkbox" ></p></td>
+				<td><p style="width:150px">停正号&nbsp<input id="StopRegNoFlag" name="StopRegNoFlag" type="checkbox"></p></td>
+				<!--td><p>自助限额:<input id="AutoLoad" name="AutoLoad" type="text" style="width:150px" ></p></td>
+				<td><p>外部限额:<input id="ExtLoad" name="ExtLoad" type="text" style="width:150px"></p></td-->
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><p>间隔分钟&nbsp<input id="TRLength" name="TRLength" type="text" style="width:150px" ></p></td>
+				<td><p>时段号数&nbsp<input id="TRRegNum" name="TRRegNum" type="text" style="width:150px" ></p></td>
+			<tr>
+				<td><p>开始时间&nbsp<input id="TRSartTime" name="TRSartTime" type="text" style="width:150px" ></p></td>
+				<td><p>结束时间&nbsp<input id="TREndTime" name="TREndTime" type="text" style="width:150px" ></p></td>
+			</tr>
+			<tr>
+				<td colspan="3"><p>号段信息&nbsp<input id="TRRegNumStr" name="TRRegNumStr" type="text" style="width:595px" ></p></td>		
+			</tr>
+			<tr>
+				<td colspan="3"><p>时段信息&nbsp<input id="TRRegInfoStr" name="TRRegInfoStr" type="text" style="width:595px" ></p></td>	
+			</tr>
+		</table>
+		<!--table>
+			<tr></tr>
+			<tr>
+				<td style="width:200px" ><p>替&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp诊:<input id="EChkRep" name="EChkRep" type="checkbox" ></p></td>
+				<td><p>替诊科室:<input id="EAdmLoc" name="EAdmLoc" type="text" style="width:140px" ></p></td>
+				<td><p>替诊医生:<input id="EAdmDoc" name="EAdmDoc" type="text" style="width:140px" ></p></td>
+				<td><p>替诊职称:<input id="EDocSession" name="EDocSession" type="text" style="width:140px" ></p></td>
+			</tr>
+		</table-->	
+		<div style="padding:5px 5px 5px 34%;text-align:center;">
+			<!--a href="#" id="save" class="easyui-linkbutton" >保存</a>
+			<a href="#" id="cancel" class="easyui-linkbutton" >取消</a-->
+			<a id='save' class="i-btn i-btn-primary" href="#" name=Save><IMG border=0 src="../images/uiimages/filesave.png">保存</a>
+			<a id='cancel' class="i-btn i-btn-primary" style="margin-left:120px;margin-top:-30px;" href="#" name=Save><IMG border=0 src="../images/uiimages/undo.png">取消</a>
+		</div>
+		</form>
+		<form name="DHCIPBILL">		
+			<!--ASRowID:--><input id="ASRowID" type="text" style="display:none"></input></td>			
+		</form>
+	</div>
+	<!--停诊弹出框-->
+	<div id="StopWin" class="easyui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="<img src='/dthealth/web/images/uiimages/createschedulelist.png' style='vertical-align:middle;'>&nbsp;&nbsp;排班停诊" style="width:500px;height=200px;background:#fafafa" closed=true modal=true>
+		<form style="padding:10px 20px 10px 20px;">
+		<table>
+			<tr></tr>
+			<tr>
+				<td><p>批准原因&nbsp&nbsp<input id="EReason" name="EReason" type="text" style="width:150px" ></p></td>
+				<td><p>批&nbsp&nbsp准&nbsp&nbsp人&nbsp&nbsp<input id="ELeader" name="ELeader" type="text" style="width:150px" ></p></td>
+			</tr>
+			<tr id="tr-EPassword" style="display:none;">
+			    <td><p>密&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp码&nbsp&nbsp<input id="EPassword" name="EPassword" type="password" style="width:150px" ></p></td>
+			</tr>
+		</table>	
+		<div style="padding:5px 5px 5px 34%;text-align:center;">
+			<a id='StopSave' class="i-btn i-btn-primary" href="#" name=Save><IMG border=0 src="../images/uiimages/filesave.png">保存</a>
+			<a id='StopCancel' class="i-btn i-btn-primary" style="margin-left:180px;margin-top:-30px;" href="#" name=Save><IMG border=0 src="../images/uiimages/undo.png">取消</a>
+		</div>
+		<input id="StopASRowIDStr" type="hidden"></input>
+		</form>
+	</div>
+    <!--替诊弹出框-->
+    <div id="ReplaceWin" class="easyui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="<img src='/dthealth/web/images/uiimages/createschedulelist.png' style='vertical-align:middle;'>&nbsp;&nbsp;排班替诊" style="width:800px;height=300px;background:#fafafa" closed=true modal=true>
+		<form style="padding:10px 20px 10px 20px;">
+			<table>
+				<tr>
+				    <td><p>替诊科室&nbsp&nbsp<input id="ERepLoc" name="ERepLoc" type="text" style="width:150px" ></p></td>
+				    <td><p>替诊医生&nbsp&nbsp<input id="ERepDoc" name="ERepDoc" type="text" style="width:150px" ></p></td>
+				    <td><p>替诊职称&nbsp&nbsp<input id="ERepSessionType" name="ERepSessionType" type="text" style="width:150px" ></p></td>
+				</tr>
+				<tr>
+					<td><p>替诊原因&nbsp&nbsp<input id="ERepReason" name="ERepReason" type="text" style="width:150px" ></p></td>
+					<td><p>批&nbsp&nbsp准&nbsp&nbsp人&nbsp&nbsp<input id="ERepLeader" name="ERepLeader" type="text" style="width:150px" ></p></td>
+					<td id="td-ERepPassword" style="display:none;"><p>密&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp码&nbsp&nbsp<input id="ERepPassword" name="ERepPassword" type="password" style="width:150px" ></p></td>
+				</tr>
+			</table>	
+			<div style="padding:5px 5px 5px 34%;text-align:center;">
+				<a id='ReplaceSave' class="i-btn i-btn-primary" href="#" name=Save><IMG border=0 src="../images/uiimages/filesave.png">保存</a>
+				<a id='ReplaceCancel' class="i-btn i-btn-primary" style="margin-left:120px;margin-top:-30px;" href="#" name=Save><IMG border=0 src="../images/uiimages/undo.png">取消</a>
+			</div>
+			<input id="ReplaceASRowIDStr" type="hidden"></input>
+		</form>
+	</div>
+    <div id="EditApptNumWin" class="easyui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="<img src='/dthealth/web/images/uiimages/createschedulelist.png' style='vertical-align:middle;'>&nbsp;&nbsp;修改非现场预约限额" style="width:800px;height:300px;background:#fafafa" closed=true modal=true>
+         <!--div data-options="region:'center',split:true"> 
+     			<div id="p2" class="easyui-panel"   data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+      				<table id="tabRBASApptNum"></table> 
+     			</div> 
+         </div--> 
+         <table id="tabRBASApptNum"></table> 
+    </div>
+
+
+</body> 
+<SCRIPT Language="Javascript">
+/*function myformatter(date){
+ var y = date.getFullYear();
+ var m = date.getMonth()+1;
+ var d = date.getDate();
+ return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y
+ }
+ function myparser(s){
+ if (!s) return new Date();
+ var ss = (s.split('-'));
+ var y = parseInt(ss[0],10);
+ var m = parseInt(ss[1],10);
+ var d = parseInt(ss[2],10);
+ if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+ return new Date(y,m-1,d);
+ }else{
+ return new Date();
+ }
+ }*/
+
+</SCRIPT>
+</html>

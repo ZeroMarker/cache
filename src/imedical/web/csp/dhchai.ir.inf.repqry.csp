@@ -1,0 +1,81 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html XMLNS=TRAK>
+	<head>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<DHCHAI:BOOTSTRAP></DHCHAI:BOOTSTRAP>
+		<link rel="stylesheet" type="text/css" href="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css"/>
+		<style type="text/css" class="init">
+			th, td{ 
+				text-align: center; 
+			}
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js" charset="utf-8"></script>
+
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+        	<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/infection.css" />
+
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		<script type="text/javascript" src="../Scripts/dhcmed/ss/PublicFunction/CustomFormItem.js"></script>
+		
+		<script type="text/javascript" src="../Scripts/dhchai/Units/Component.js"></script>
+		<script type="text/javascript" src="../Scripts/dhchai/IR/Inf/repqry/Gui.js"></script>
+		<script type="text/javascript" src="../Scripts/dhchai/IR/Inf/repqry/Event.js"></script>
+		
+		<!-- Add By zhoubo 2018-03-30 增加导民科系统接口问题提示 -->
+		<script language='javascript' src='../scripts/dhchai/Interface/MKProblemView/gui.js'></script>
+		<script language='javascript' src='../scripts/dhchai/Interface/MKProblemView/event.js'></script>	
+		<script language='javascript' src='../scripts/dhchai/Interface/MKExportToTxt/ExportMinke.js'></script>
+		
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		set menuCode="DHCHAIInf-Rep-RepQry"
+		set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+		set groupId=$g(%session.Data("LOGON.GROUPID"))
+		set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+		   
+		    Set currDate=$g(%request.Data("currDate",1))
+		    Set IntervalDate=##class(DHCHAI.BT.Config).GetValByCode("NewInfRepIntervalDate")
+		    Set (aDateFrom,aDateTo)=""
+		    Set:currDate["-" aDateTo=currDate,aDateFrom=$zd($zdh(currDate,3)-IntervalDate,3)
+		    Set Status=$g(%request.Data("Status",1))
+		    Set StatusType=$o(^DHCHAI.BT.DicTypeI("IdxofCode","InfReportStatus",""))
+		    //Set:Status'="" Status=$o(^DHCHAI.BT.DictionaryI("IdxofTypeDrCode",StatusType,Status,""))
+		    Set:Status'="" Status=$o(^DHCHAI.BT.DictionaryI("IdxofTypeDrCode",StatusType,2,""))		//update for 取不到"提交"状态ID
+		    Set flag=+$g(%request.Data("flag",1))
+			Set aRepType=$g(%request.Data("aRepType",1))	//update for 获取报告类型
+		</SCRIPT>
+		<script language="javascript" type="text/javascript">
+		    var aDateFrom = '#(aDateFrom)#';
+			var aDateTo = '#(aDateTo)#';
+			var Status = '#(Status)#';
+			var flag = '#(flag)#';
+			var aRepType = '#(aRepType)#';		//update for 报告类型
+			$(document).ready(function(){
+				var url = "../Scripts/dhchai/IR/Inf/repqry/Layout.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					InitCtlResultWin();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+		</script>
+	</body>
+</html>

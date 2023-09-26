@@ -1,0 +1,52 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set action=$g(%request.Data("action",1))
+	
+	set sessionUserName=""
+	if $d(%session.Data("LOGON.USERNAME")) set sessionUserName=$g(%session.Data("LOGON.USERNAME"))
+	if ("" = sessionUserName){
+		s action="error"
+		w "{success:true,tip:'"_"会话已过期,请移步重新登录！"_"'}"
+		q
+	}
+		
+	if ("baseSetSave"=action){
+		s paraValues=$g(%request.Data("paraValues",1))
+		s locFlag=$p($g(paraValues),"-",1)
+		s wardFlag=$p($g(paraValues),"-",2)
+		s disDateChoose=$p($g(paraValues),"-",3)
+		i locFlag="true" s depStopFlag="Y"
+		e  s depStopFlag="N"
+		i wardFlag="true" s wardStopFlag="Y"
+		e  s wardStopFlag="N"
+		i disDateChoose="true" s disDateType="DOC"
+		e  s disDateType="NURSE"
+		s creator=$g(%session.Data("LOGON.USERNAME"))
+		
+		s dim("depStopFlag")=$g(depStopFlag)
+		s dim("wardStopFlag")=$g(wardStopFlag)
+		s dim("disDateType")=$g(disDateType)
+		s dim("creator")=$g(creator)
+
+		s tip=##class(DHCWL.MRIPDayTask.MRIPDayTaskServer).SaveBaseSetting(.dim)
+		;s ^cy("tip")=tip
+		w "{success:true,tip:'"_tip_"'}"
+		
+	}elseif("baseSetInit"=action){
+		s ID=""
+		s ID=$O(^DHCWL.MRIPDayTask.BaseSetD(""),-1)
+		if ($g(ID)=""){
+			w "{depStopFlag:'Y',wardStopFlag:'Y',disDateType:'NURSE'}"
+		}else{
+		s depStopFlag=$li(^DHCWL.MRIPDayTask.BaseSetD(ID),3)
+		s wardStopFlag=$li(^DHCWL.MRIPDayTask.BaseSetD(ID),4)
+		s disDateType=$li(^DHCWL.MRIPDayTask.BaseSetD(ID),2)
+		;s tip=depStopFlag_"+"_wardStopFlag_"+"_disDateType
+		;w "{success:true,tip:'"_tip_"'}" 
+		//取最后一条记录的值，输出对象(串)
+		w "{depStopFlag:'"_depStopFlag_"',"_"wardStopFlag:'"_wardStopFlag_"',"_"disDateType:'"_disDateType_"'}"
+		//w "{depStopFlag:'N',wardStopFlag:'Y',disDateType:'NURSE'}"
+		}
+	}
+	</script>

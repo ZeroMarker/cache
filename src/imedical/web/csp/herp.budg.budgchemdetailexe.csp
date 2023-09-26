@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+
+
+<script language="cache" runat="server">
+	
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+    s str = $Get(%request.Data("query",1))
+
+	s SchemDR = $Get(%request.Data("SchemDR",1))
+    s rowid=$Get(%request.Data("rowid",1))
+	s Code      =$Get(%request.Data("sname",1))
+	s Level     ="" ;$Get(%request.Data("Level",1))
+	s CalFlag   =$Get(%request.Data("CalFlag",1))
+	s IsCal     =$Get(%request.Data("IsCal",1))
+	s Formula   =$Get(%request.Data("formula",1))
+	s CalNo     =0 ;$Get(%request.Data("CalNo",1))
+	s CalDesc   =$Get(%request.Data("formuladesc",1))
+	s IsSplit   =$Get(%request.Data("IsSplit",1))
+	s SplitMeth =$Get(%request.Data("SplitMeth",1))
+	
+	s data     	=$Get(%request.Data("data",1))
+	
+	;预算科目
+	i action = "getitem" d
+	.w ##class(herp.budg.udata.uBudgSchemeMain).itemList(Year,type,  sortField, sortDir, start, limit, hospid)
+	;查询
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgSchemDetail).List(SchemDR, start, limit, hospid)
+	;科目类别
+	i action = "itemType" d
+	.w ##class(herp.budg.udata.uBudgSchemDetail).getItemType(start, limit)
+	;添加
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgSchemDetail).Insert(SchemDR,Code,Level,CalFlag,IsCal,Formula,CalNo,CalDesc,IsSplit,SplitMeth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	;修改
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgSchemDetail).Update(rowid,SchemDR,Code,Level,CalFlag,IsCal,Formula,CalNo,CalDesc,IsSplit,SplitMeth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	;批量
+	i action = "editr" d
+	.s result = ##class(herp.budg.udata.uBudgSchemeMain).BatchInsert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	;删除
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgSchemDetail).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	</script>

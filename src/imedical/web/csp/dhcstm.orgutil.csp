@@ -1,0 +1,161 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s LocId=$Get(%request.Data("locId",1))
+s Name=$Get(%request.Data("name",1))
+s GroupId=$Get(%request.Data("groupId",1))
+s LocDesc=$Get(%request.Data("locDesc",1))
+s User=$G(%session.Data("LOGON.USERID"))
+s loc=$G(%session.Data("LOGON.CTLOCID"))
+s HospId=$Get(%request.Data("hospId",1))
+s Type=$Get(%request.Data("Type",1))
+i Action = "GetGroupDept" d
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetGroupDept(Start,Limit,GroupId,LocDesc,Type,HospId)
+i Action = "PhaDept" d
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetPhaDept(Start,Limit)
+i Action = "GetDeptDef" d
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetDeptDef(Start,Limit,User,loc,LocDesc)	
+i Action = "DeptLoc" d
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetDeptLoc(Start,Limit,LocDesc,HospId)
+i Action = "GetDeptByUserGrp" d
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetDeptByUserGrp(Start,Limit,GroupId,User,LocDesc)
+i Action = "Carrier" d
+	.s CADesc = $Get(%request.Data("CADesc",1))
+	.s stkType=##class(web.DHCSTM.StkTypeM).sssCode()  //zhwh 2013-06-20 add
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetCarrier(CADesc, Start, Limit,stkType)
+i Action = "PhManufacturer" d
+	.s PHMNFName = $Get(%request.Data("PHMNFName",1))
+	.s stkType=##class(web.DHCSTM.StkTypeM).sssCode()  //zhwh 2013-06-20 add
+	.s ScgId=$Get(%request.Data("ScgId",1))
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s:LocId="" LocId=$Get(%session.Data("LOGON.CTLOCID"))
+	.s UserId=$Get(%session.Data("LOGON.USERID"))
+	.s GroupId=$Get(%session.Data("LOGON.GROUPID"))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetPhManufacturer(PHMNFName,Start,Limit,stkType,ScgId,LocId,UserId,GroupId)
+i Action = "GetVendorCat" d
+	.s Desc = $Get(%request.Data("Desc",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetVendorCat(Desc, Start,Limit)
+i Action = "StkLocGrp" d
+	.s str = $Get(%request.Data("str",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetLocSLG(Start,Limit,str)	
+i Action = "StkItemGrp" d
+	.s str = $Get(%request.Data("str",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetLocLIG(Start,Limit,str)
+i Action = "GetHospital" d
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetHospital(Start,Limit)
+i Action = "StkLocUserCatGrp" d
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetDeptUser(Start,Limit,LocId,Name)
+i Action = "APCVendor" d
+	.s Filter = $Get(%request.Data("filter",1))
+	.s APCType = $Get(%request.Data("APCType",1))
+	.;2014-11-28 添加根据ApcScg参数和ScgId等信息进行供应商类组取值功能
+	.s ScgId=$Get(%request.Data("ScgId",1))
+	.s UserId=$Get(%request.Data("UserId",1))
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s:LocId="" LocId=$Get(%session.Data("LOGON.CTLOCID"))
+	.s GroupId=$Get(%session.Data("LOGON.GROUPID"))
+	.s rcFlag=$Get(%request.Data("rcFlag",1))
+	.s ApcInciFilter=$Get(%request.Data("ApcInciFilter",1))
+	.s Incid=$Get(%request.Data("Incid",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetAPCVendor(Filter,Start,Limit,APCType,ScgId,UserId,LocId,GroupId,rcFlag,ApcInciFilter,Incid)
+i Action = "GetSSPPoint" d
+	.s Filter = $Get(%request.Data("filter",1))
+	.s Group = $Get(%request.Data("Group",1))
+	.s Type=$Get(%request.Data("Type",1))
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetSSPPoint(Type,Group,Filter,Start,Limit)
+i Action = "GetPhaWindow" d
+	.s LocId = $Get(%request.Data("LocId",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetPhaWindow(Start,Limit,LocId)
+i Action = "GetDeptUser" d
+	.s Desc = $Get(%request.Data("Desc",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetDeptUser(Start,Limit,LocId,Desc)
+i Action = "GetLocManGrp" d
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetLocManGrp(Start,Limit,LocId)
+/*根据采购获取安全组下采购员*/
+i Action = "GroupUser" d
+	.s GrpDesc=$Get(%request.Data("GrpDesc",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetGroupUser(Start,Limit,GrpDesc)
+
+//查询维护好的科室采购员
+i Action = "LocPPLUser" d
+	.s GrpDesc=$Get(%request.Data("locId",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetLocPPLUser(Start,Limit,LocId)
+	
+i Action = "GetInStkTkWindow" d
+	.s LocId = $Get(%request.Data("LocId",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetInStkTkWindow(Start,Limit,LocId)		
+i Action = "VendorbyUsr" d
+	.s VUser = $Get(%request.Data("VUser",1))
+	.s APCType = $Get(%request.Data("APCType",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetVendorbyUsr(Start,Limit,VUser,APCType)
+i Action = "GetStockLoc" d
+	.s group= ##class(web.DHCSTM.VendorUser).getVendorUserGroup()
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetGroupDept(Start,Limit,group,LocDesc)
+	.;w ##class(web.DHCSTM.VendorUser).getStockLocation(Start, Limit,group)
+i Action="GetFrLoc" d  //出库科室列表
+	.s loc=$Get(%request.Data("LocId",1))
+	.s FilterDesc=$Get(%request.Data("FilterDesc",1))
+	.s GroupId=$Get(%session.Data("LOGON.GROUPID"))
+	.w ##class(web.DHCSTM.DHCTransferLocConf).jsFrLoc(Start,Limit,loc,FilterDesc,HospId,GroupId)
+i Action="TransferFrLoc" d
+	.s loc=$Get(%request.Data("LocId",1))
+	.w ##class(web.DHCSTM.DHCTransferLocConf).jsTransferFrLoc(loc)
+
+i Action="NotTransferFrLoc" d
+	.s loc=$Get(%request.Data("LocId",1))
+	.s FilterDesc=$Get(%request.Data("FilterDesc",1))
+	.w ##class(web.DHCSTM.DHCTransferLocConf).jsNotTransferFrLoc(loc,Start,Limit,FilterDesc)
+i Action="CtLoc" d
+	.s loc=$Get(%request.Data("LocId",1))
+	.s FilterDesc=$Get(%request.Data("FilterDesc",1))
+	.w ##class(web.DHCSTM.DHCTransferLocConf).jsCTLoc(loc,Start,Limit,FilterDesc)
+
+i Action="GetLinkLocations" d  //zhwh 2014-03-11
+	.s LocId=$g(%request.Data("LocId",1))
+	.s Desc=$g(%request.Data("Desc",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetLinkLocations(Start,Limit,LocId,Desc)
+i Action = "GetPlanStatus" d
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetPlanStatus(Start,Limit) 
+i Action="GetLocInSLGByLoc" d
+	.s loc=$Get(%request.Data("LocId",1))
+	.s FilterDesc=$Get(%request.Data("FilterDesc",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).GetLocInSLGByLoc(Start,Limit,loc,FilterDesc)
+i Action="QueryGroup" d
+	.s FilterDesc=$Get(%request.Data("FilterDesc",1))
+	.w ##class(web.DHCSTM.Util.OrgUtil).QueryGroup(Start,Limit,FilterDesc,User)
+i Action="TransStkCat" d
+	.s loc=$Get(%request.Data("LocId",1))
+	.w ##class(web.DHCSTM.DHCTransferLocConf).jsTransferStkCat(loc)
+i Action="TransStkCatDesc" d
+	.s loc=$Get(%request.Data("LocId",1))
+	.w ##class(web.DHCSTM.DHCTransferLocConf).jsTransferStkLoc(loc)
+i Action="GetLocByMainLoc" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s Desc=$Get(%request.Data("Desc",1))
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetLocByMainLoc(Start,Limit,LocId,Desc)
+i Action="GetSourceOfFund" d
+	.s Desc=$Get(%request.Data("Desc",1))
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetSourceOfFund(Start,Limit,Desc)
+i Action="GetGroup" d
+	.s FilterDesc=$Get(%request.Data("FilterDesc",1))
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetGroup(Start,Limit,FilterDesc)
+i Action="GetDicGroupInfo" d
+	.s inci=$Get(%request.Data("inci",1))
+	.s groupId=$Get(%request.Data("groupId",1))
+	.s locId=$Get(%request.Data("locId",1))
+	.d ##class(web.DHCSTM.DicGroup).GetDicGroupInfo(inci,groupId,locId,2)
+///安全组能访问的科室ComboBox,外加这些科室所支配的科室(defloc)
+i Action = "GetGroupLeadDept" d
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetGroupLeadDept(Start,Limit,GroupId,LocDesc)
+i Action="GetAllUser" d
+	.s Desc=$Get(%request.Data("Desc",1))
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetAllUser(Start,Limit,Desc)
+i Action = "LocInfo" d
+	.w ##class(web.DHCSTM.DHCINIsTrfAllStat).GetLocInfo(Start,Limit)	
+i Action="GetStandardName" d  //标准名称列表20190412
+	.s Desc=$Get(%request.Data("Desc",1))
+	.d ##class(web.DHCSTM.Util.OrgUtil).GetStandardName(Start,Limit,Desc)	
+</SERVER>
+

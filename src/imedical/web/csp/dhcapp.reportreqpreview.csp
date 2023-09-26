@@ -1,0 +1,126 @@
+<!-- 新检查申请预览 dhcapp.reportreqpreview.csp-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
+<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+<SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+<HISUI></HISUI>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcdoc/css/simplydatagrid.css"></LINK>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/printcommon.js"></script>
+<style>
+ body {
+	background: #fff;
+	 }
+</style>
+<Server>
+  s arExaReqID=$Get(%request.Data("arExaReqID",1))
+  s arExaReqNo=$Get(%request.Data("arExaReqNo",1))
+</Server>
+ </head>
+ <body>
+ <div class="hisui-layout" data-options="fit:true,border:false">
+ 	<a href="#" id="Print" class="hisui-linkbutton" data-options=""style="float:right">打印</a>
+	 <div id="previewObjectTemplate" style="padding:10px;">
+		<div id="previewPanelTemp" style="display:none;">
+		</div>
+	</div>
+</div>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/dhcappprintcom.js"></script>
+	<script language="Cache" runat="server">
+	   d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+   </script>
+   <server>
+	  d ##class(web.DHCXMLPConfig).LODOPInit()
+	  /// 新旧版本兼容配置
+	  s version=1 //##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var version="""_$g(version)_""";"_$c(13,10)
+	  w "</script>"
+   </server>
+	<SCRIPT language = 'javascript' >
+	var ExaReqID="#(arExaReqID)#"
+	var ExaReqNo="#(arExaReqNo)#"
+	$(function(){
+		runClassMethod("web.DHCAPPPrintCom","GetExaReqPrintData",{"ExaReqID":ExaReqID, "ExaReqNo":ExaReqNo},function(jsonString){
+			if (jsonString == null){
+				$.messager.alert("提示:","打印异常！");
+			}else{
+				if (!$.isEmptyObject(jsonString)) {
+					var ExaReqObj = jsonString;
+					//Print_Xml_New(ExaReqObj);
+					var PrintTemp=ExaReqObj.PrintTemp
+					var tempId=$.cm({
+						ClassName:"web.DHCDocPrescript",
+						MethodName:"GetXMLTemplateId",
+						dataType:"text",
+						XMLTemplateName:PrintTemp
+					},false);
+					var $panel=$("#previewObjectTemplate");
+					var $temp=$("#previewPanelTemp").clone();
+					$temp.removeAttr("id");
+					$temp.removeAttr("style");
+					$panel.append($temp);
+					var options={
+						$targetPanel:$temp,
+						ReadyJson:ExaReqObj,
+						node:{
+							checked: false,
+							clickevent: "",
+							domId: "_hisui_tree_2",
+							expandMethodForLoadingTable: "",
+							id: "3",
+							ischecked: true,
+							nocheck: true,
+							pId: "1",
+							previewxmlname: PrintTemp,
+							printmethod: "",
+							state: "open",
+							text: "Pres In",
+							urlObject: "",
+							urlStyle: "",
+							value: "CFZ",
+							},
+						printPageNums: 16,
+						templateId: tempId,
+						}
+					opdoc.print.common.preview(options);
+					
+				}
+			}
+		},'json',false)
+		
+		$("#Print").click(function (){
+			ExaReqPrint("",ExaReqNo);
+			
+			})
+	});
+	</SCRIPT>
+	</body>
+</html>
+<!--script language="cache" runat="server">
+  s arExaReqID=$Get(%request.Data("arExaReqID",1))
+  s arExaReqNo=$Get(%request.Data("arExaReqNo",1))
+  w ##Class(web.DHCAPPExaReportQuery).GetExaReqHtmlContent(arExaReqID,arExaReqNo)
+</script>
+<!--
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<DHCAPP:EASYUI/>
+<title>新检查申请预览</title>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcapp/reportreqpreview.js"></script>
+</head>
+<body>
+</body>
+</html>
+-->

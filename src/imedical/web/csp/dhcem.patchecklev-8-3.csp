@@ -1,0 +1,480 @@
+<!-- 新建预检分诊 -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<DHCAPP:EASYUI/>
+<title>新建预检分诊</title>
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patchecklev.css" />
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/easyui/validator.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.calendar.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patchecklev.js"></script>
+</head>
+<body>
+<div id="mainpanel" class="easyui-layout"  fit="true" >
+    
+    <server>
+    s PatientID=%request.Get("PatientID")
+    i PatientID="" d
+	.w "<div region='west' title='病人列表(未分诊*人)' style='width:210px' tools='#EmPatTb'>"
+	.w "<div id='dgEmPatList' toolbar='#tb'></div>"
+	.w "</div>"
+	
+	</server>
+	<div data-options="region:'center',title:''" border="false">
+		<div class="easyui-layout" fit="true">
+			
+			
+		<div data-options="region:'north',title:''" style='height:30px;background:#c1e7ff;' border="false">
+   		  </SERVER>
+				
+				<div class="item-label"></div>
+			</div>
+			<div data-options="region:'center',title:'病人基本信息'" border="false">
+				<div id="mainpanel" class="easyui-layout"  fit="true">
+					<div data-options="region:'north'" style='height:245px;' border="false">
+						<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+							<tr style="display:none;">
+								<td align="right" class="input-label">病人ID：</td>
+								<td width="100px"><input id="PatientID"/></td>
+								<td align="right" class="input-label">卡号ID：</td>
+								<td width="100px"><input id="EmCardNoID"/></td>
+								<td align="right" class="input-label">登记ID</td>
+								<td width="100px"><input id="EmRegID"/></td>
+								<td align="right" class="input-label">就诊号 </td>
+								<td width="100px"><input id="Adm"/></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">卡号：</td>
+								<td width="100px"><input id="emcardno"/></td>
+								<td align="right" class="input-label">卡类型：</td>
+								<td width="100px"><input id="emcardtype"/></td>
+								<td align="right" class="input-label">登记号：</td>
+								<td width="100px"><input id="EmPatNo"/></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">姓名：</td>
+								<td width="100px"><input id="empatname"/></td>
+								<td align="right" class="input-label">年龄：</td>
+								<td width="100px"><input id="empatage" readonly/></td>
+								<td align="right" class="input-label">出生日期：</td>
+								<td width="100px"><input id="emborth" type="text" class="easyui-datebox"></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">性别：</td>
+								<td width="100px"><input id="empatsex"></input></td>
+								<td align="right" class="input-label">民族：</td>
+								<td width="100px"><input id="emnation"/></td>
+								<td align="right" class="input-label">国籍：</td>
+								<td width="100px"><input id="emcountry"/></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">身份证号：</td>
+								<td width="100px"><input id="emidentno" class="easyui-validatebox" data-options="validType:'idcard'"></input></td>
+								<td align="right" class="input-label">家庭电话：</td>
+								<td width="100px"><input id="emfamtel" class="easyui-validatebox" data-options="validType:'number'"></input></td>
+								<td align="right" class="input-label"></td>
+								<td width="100px"></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">来诊时间：</td>
+								<td width="100px"><input id="emvistime" type="text" class="easyui-datebox" disabled="true"></input></td>
+								<td align="right" class="input-label">家庭住址：</td>
+								<td colspan="3"><input id="emaddress" style="width:100%;"></input></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">重返标识：</td>
+								<td width="100px">
+									<input type="checkbox" name="EmAgainFlag" value="Y">是</input>
+									<input type="checkbox" name="EmAgainFlag" value="N">否</input>
+								</td>
+								<td align="right" class="input-label">成批就诊：</td>
+								<td width="100px">
+									<input type="checkbox" name="EmBatchFlag" value="Y">是</input>
+									<input type="checkbox" name="EmBatchFlag" value="N">否</input>
+								</td>
+								<td align="right" class="input-label">总人数：</td>
+								<td width="100px"><input id="EmBatchNum" disabled="true"></input></td>
+							</tr>
+						</table>
+						<div class="btn">
+							<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-undo">清空</a>
+							<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-add">读卡</a>
+							<SERVER>
+							    s PatientID=+%request.Get("PatientID")
+								s hosp=%session.Get("LOGON.HOSPID")
+								s loc=%session.Get("LOGON.CTLOCID")
+								s user=%session.Get("LOGON.USERID")
+								s group=%session.Get("LOGON.GROUPID")
+								s patType=##class(web.DHCAppComPar).GetAppPropValue("DHCEM","PATTYPE",hosp,loc,user,group)
+								w "<a href='#' class='easyui-linkbutton' plain='true' iconCls='icon-save'"
+								i (patType=1)||PatientID'=0 d
+								.w "style=display:none"
+								w " >登记</a>"
+								
+								w "<a href='#' class='easyui-linkbutton' plain='true' iconCls='icon-edit'"
+								i PatientID'=0 d
+								.w "style=display:none"
+								w " >修改</a>"
+							</SERVER>
+						</div>
+					</div>
+					<div data-options="region:'center',title:'病人当前信息'" border="false">
+						<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+							<tr style="display:none;">
+								<td align="right" class="input-label">分诊ID：</td>
+								<td colspan="5"><input id="EmPCLvID"/></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">既往史：</td>
+								<td colspan="5" id="EmPatChkHis">
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">病人来源：</td>
+								<td colspan="5" id="EmPatSource">
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">来诊方式：</td>
+								<td colspan="5" id="EmPatAdmWay">
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">意识状态：</td>
+								<td width="160px"><input id="EmAware"/></td>
+								<td align="right" class="input-label">中毒：</td>
+								<td width="160px">
+									<input type="checkbox" name="EmPoisonFlag" value="Y">是</input>
+									<input type="checkbox" name="EmPoisonFlag" value="N">否</input>
+								</td>
+								<td align="right" class="input-label">是否吸氧：</td>
+								<td width="160px">
+									<input type="checkbox" name="EmOxygenFlag" value="Y">是</input>
+									<input type="checkbox" name="EmOxygenFlag" value="N">否</input>
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">筛查：</td>
+								<td width="160px">
+									<input type="checkbox" name="EmScreenFlag" value="1">发热</input>
+									<input type="checkbox" name="EmScreenFlag" value="2">肠道</input>
+								</td>
+								<td align="right" class="input-label">复合伤：</td>
+								<td width="160px">
+									<input type="checkbox" name="EmCombFlag" value="Y">是</input>
+									<input type="checkbox" name="EmCombFlag" value="N">否</input>
+								</td>
+								<td align="right" class="input-label">ECG：</td>
+								<td width="160px">
+									<input type="checkbox" name="EmECGFlag" value="Y">是</input>
+									<input type="checkbox" name="EmECGFlag" value="N">否</input>
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">用药情况：</td>
+								<td colspan="5">
+									<input type="checkbox" name="EmHisDrug" value="N">无</input>
+									<input type="checkbox" name="EmHisDrug" value="Y">有</input>
+									<input id="EmHisDrugDesc" style="width:86%;" disabled="true"/>
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">辅助物：</td>
+								<td colspan="5">
+									<input type="checkbox" name="EmMaterial" value="N">无</input>
+									<input type="checkbox" name="EmMaterial" value="Y">有</input>
+									<input id="EmMaterialDesc" style="width:86%;" disabled="true"/>
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">生命体征：</td>
+								<td colspan="5" class="input-label"></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">(1) 时间：</td>
+								<td colspan="5">
+									<input id="EmPcsTime" style="width:40px;" onkeyup="this.value=this.value.replace(/\D/g,'')" onblur="this.value=CheckEmPcsTime(this.id)" onfocus="this.value=SetEmPcsTime(this.id)"/> T
+									<input id="EmPcsTemp" name="EmPcs1" style="width:40px;"/>(℃) HR
+									<input id="EmPcsHeart" name="EmPcs1" style="width:40px;" onkeyup="this.value=this.value.replace(/\D/g,'')" />(次/分) R:
+									<input id="EmPcsPulse" name="EmPcs1" style="width:40px;" onkeyup="this.value=this.value.replace(/\D/g,'')" />(次/分) BP:
+									<input id="EmPcsSBP" name="EmPcs1" style="width:40px;"/>/<input id="EmPcsDBP" name="EmPcs1" style="width:40px;"/>(mmHg) SOP2:
+									<input id="EmPcsSoP2" name="EmPcs1" style="width:40px;"/>(%)
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">(2) 时间：</td>
+								<td colspan="5">
+									<input id="EmPcsTime1" style="width:40px;" onkeyup="this.value=this.value.replace(/\D/g,'')" onblur="this.value=CheckEmPcsTime(this.id)" onfocus="this.value=SetEmPcsTime(this.id)"/> T
+									<input id="EmPcsTemp1" name="EmPcs2" style="width:40px;"/>(℃) HR
+									<input id="EmPcsHeart1" name="EmPcs2" style="width:40px;" onkeyup="this.value=this.value.replace(/\D/g,'')" />(次/分) R:
+									<input id="EmPcsPulse1" name="EmPcs2" style="width:40px;" onkeyup="this.value=this.value.replace(/\D/g,'')" />(次/分) BP:
+									<input id="EmPcsSBP1" name="EmPcs2" style="width:40px;"/>/<input id="EmPcsDBP1" name="EmPcs2" style="width:40px;"/>(mmHg) SOP2:
+									<input id="EmPcsSoP21" name="EmPcs2" style="width:40px;"/>(%)
+								</td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">疼痛分级：</td>
+								<td colspan="4">
+									<input type="checkbox" name="EmPainFlag" value="N">无</input>
+									<input type="checkbox" name="EmPainFlag" value="Y">有</input>
+									<input id="EmPainDesc" style="width:82%;" readonly/>
+								</td>
+								<td width="160px">
+									<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-add" disabled="true">疼痛分级</a>
+								</td>
+							</tr>
+							<!-- 
+							<tr>
+								<td align="right" class="input-label">症状：</td>
+								<td colspan="5" id="EmSymFeild">
+									<input id="EmSymFeildDesc" style="width:100%;"/>
+								</td>
+							</tr>
+							 -->
+							<tr>
+								<td align="right" class="input-label">其他：</td>
+								<td colspan="5"><input id="EmOtherDesc" style="width:100%;"/></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">已开假条：</td>
+								<td colspan="5"><input type="checkbox" name="EmPatAskFlag" value="Y"/></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'east'" style='width:440px;'>
+				<div id="mainpanel" class="easyui-layout"  fit="true">
+					<div data-options="region:'north',title:'症状'" style='height:100px;' border='false'>
+						<div id="EmSymFeild"> </div>
+					</div>
+					
+					<div data-options="region:'center',title:'症状知识库'" border='false'>
+									<div style="width:100%">
+										<div style="width:35%;float:left;border-right:1px solid #95B8E7;">
+											<div id="SymptomLev"></div>
+										</div>
+										<div style="width:62%;height:315px;float:left;padding-top:10px;">
+											<!--
+											<div class="item—list">
+												<ul>
+												</ul>
+											</div>
+											-->
+											<div class="btn-group" id="symList">
+											
+											</div>
+										</div>
+									</div>
+					</div>
+					<div data-options="region:'south',title:'ESI预检分诊'" style='height:300px;' border='false'>
+						<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+							<tr style="display:none;">
+								<td align="right" class="input-label">SEWS分值：</td>
+								<td width="140px"><input id="emcardno" style="width:120px;"/></td>
+								<td align="right" class="input-label">MEWS分值：</td>
+								<td width="140px"><input id="emcardno" style="width:120px;"/></td>
+							</tr>
+							<tr style="display:none;">
+								<td align="right" class="input-label">NEWS分值：</td>
+								<td width="140px"><input id="emcardno" style="width:120px;"/></td>
+								<td align="right" class="input-label"></td>
+								<td width="140px"></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">推荐分级：</td>
+								<td width="140px"><input id="EmRecLevel" style="width:120px;"/></td>
+								<td align="right" class="input-label">护士更改分级原因：</td>
+								<td width="140px"><input id="EmUpdLevRe" style="width:120px;"/></td>
+							</tr>
+							<!--
+							<tr>
+								<td colspan="2" align="right" class="input-label">护士更改分级原因：</td>
+								<td colspan="2"><input id="EmUpdLevRe" style="width:180px;"/></td>
+							</tr>
+							-->
+						</table>
+						<!-- <div>已选号别：</div> -->
+						<div>
+							<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+								<tr>
+									<td align="right" class="input-label">病情：</td>
+									<td width="110px" style="background:#f00;border-right:1px solid #fff;">
+										<input type="radio" name="NurseLevel" value="1"/>
+										一级
+									</td>
+									<td width="110px" style="background:#f00;border-right:1px solid #fff;">
+										<input type="radio" name="NurseLevel" value="2"/>
+										二级
+									</td>
+									<td width="110px" style="background:#f9bf3b;border-right:1px solid #fff;">
+										<input type="radio" name="NurseLevel" value="3"/>
+										三级
+									</td>
+									<td width="110px" style="background:#13987e;border-right:1px solid #fff;">
+										<input type="radio" name="NurseLevel" value="4"/>
+										四级
+									</td>
+								</tr>
+								<tr style="border-top:1px #fff solid;">
+									<td align="right" class="input-label">去向：</td>
+									<td width="110px" style="background:#f00;border-right:1px solid #fff;">
+										<input type="radio" name="Area" value="1"/>
+										红区
+									</td>
+									<td width="110px" style="background:#f9bf3b;border-right:1px solid #fff;">
+										<input type="radio" name="Area" value="2"/>
+										黄区
+									</td>
+									<td width="110px" style="background:#13987e;border-right:1px solid #fff;">
+										<input type="radio" name="Area" value="3"/>
+										绿区
+									</td>
+								</tr>
+							</table>
+						</div>
+						<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+							<tr>
+								<td align="right" class="input-label">已选号别：</td>
+								<td colspan="4" id="SelEmCheckNo"></td>
+							</tr>
+							<tr>
+								<td align="right" class="input-label">号别：</td>
+								<td  colspan="4">
+									 <input id="EmLocID" type='hidden'/>
+									 <SERVER>
+										
+										s loc="" f  s loc=$o(^CTLOC(0,"LocType","EM",loc)) q:loc=""  d
+										.q:+$o(^PAC("ADMLOC",0,"AdmType","E",loc,""))=0
+										.s dateFrom=+$p(^CTLOC(loc),"^",24)
+										.s dateTo=+$p(^CTLOC(loc),"^",25)
+										.q:dateFrom>+$h
+										.q:(+dateTo'=0)&(dateTo<+$h)
+										.s resc="" f  s resc=$o(^RB("RES",0,"CTLOC",loc,resc)) q:resc=""  d 
+										..
+										..q:$d(^SSU("SSUSR",0,"CTPCP",$p(^RB("RES",resc),"^",2)))
+										..s schedulerequired=$p(^RB("RES",resc),"^",6)
+										..q:((schedulerequired'="Yes")&(schedulerequired'="Y"))
+										..s desc=$p(^RB("RES",resc),"^",17)
+										..w "<span><input type='checkbox' name='EmCheckNo' value="_resc_" data_loc="_loc_">"_desc_"</input>&nbsp;&nbsp;</span>"
+									</server>
+								</td>
+							</tr>
+							<!--
+							<tr>
+								<td align="right" class="input-label">分诊科室：</td>
+								<td width="140px">
+									<input id="EmLocID" style="width:120px;"/>
+								</td>
+								<td align="right" class="input-label">号别：</td>
+								<td  width="140px">
+
+									<input id="EmCheckNo" style="width:120px;"/>
+								</td>
+							</tr>
+							-->
+						</table>
+						<div class="btn">
+							<button class="but-pad pad-twenty font-color fontsize-18" type="button">确认分诊</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+<div id="tb">
+	<div class="btn-toolbar">
+		<div class="btn-group">
+			<button type="button" class="button btn-danger" id="1">*/*</button>
+			<button type="button" class="button btn-warning" id="2">*/*</button>
+			<button type="button" class="button btn-success" id="3">*/*</button> 
+		</div>
+    </div>
+ 	<input class="easyui-searchbox" data-options="prompt:'请输入登记号...'" style="width:202px" id="search">
+</div>
+<!-- 疼痛平分窗体 -->
+<div id="EmPatPainLevWin">
+	<div style="width:80%;">
+		<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+			<tr>
+				<td align="right" class="input-label">疼痛范围：</td>
+				<td>
+					<input id="EmPainRange" style="width:140px;"/>
+				</td>
+				<td align="right" class="input-label">疼痛时间：</td>
+				<td>
+				<input id="EmPainTime" class="easyui-datetimebox"
+        			data-options="showSeconds:false" style="width:150px">  
+				</td>
+				<td align="right" class="input-label">疼痛指数：</td>
+				<td>
+					<input id="EmPainLev" style="width:140px;" readonly/>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="panel-style">
+		<div style="font-weight:bold;font-size:16px;padding-bottom:5px 0px 20px 5px;"><span>疼痛评分量表</span></div>
+	    <div style="font-weight:bold;font-size:14px;padding:15px 0px 10px 5px;"><span>1、数字评分法（VAS）</span></div>
+		<div style="padding:5px 0px 30px 15px;">	
+	        <div id="slider" class="easyui-slider" data-options="min:0,max:10,step:2,rule:[0,'|',2,'|',4,'|',6,'|',8,'|',10]" style="width:800px;height:16px;"></div>
+	    </div>
+	    <div style="font-weight:bold;font-size:14px;padding:5px 0px 10px 5px;"><span>2、面部表情法（FACE）</span></div>
+	    <div style="padding:5px 0px 10px 15px;">	
+	        <!-- <div class="slider"></div> -->
+	        <div class="face-regin">
+	        	<ul>
+	            	<li>
+	                	<div class="face-regin-one"><img src="../scripts/dhcnewpro/images/1.png"></img></div>
+	                    <div class="face-regin-title"><span>无痛[0]</span></div>
+	                </li>
+	                <li>
+	                	<div class="face-regin-one"><img src="../scripts/dhcnewpro/images/2.png"></img></div>
+	                    <div class="face-regin-title"><span>有点痛[2]</span></div>
+	                </li>
+	                <li>
+	                	<div class="face-regin-one"><img src="../scripts/dhcnewpro/images/3.png"></img></div>
+	                    <div class="face-regin-title"><span>稍痛[4]</span></div>
+	                </li>
+	                <li>
+	                	<div class="face-regin-one"><img src="../scripts/dhcnewpro/images/4.png"></img></div>
+	                    <div class="face-regin-title"><span>更痛[6]</span></div>
+	                </li>
+	                <li>
+	                	<div class="face-regin-one"><img src="../scripts/dhcnewpro/images/5.png"></img></div>
+	                    <div class="face-regin-title"><span>很痛[8]</span></div>
+	                </li>
+	                <li>
+	                	<div class="face-regin-one"><img src="../scripts/dhcnewpro/images/6.png"></img></div>
+	                    <div class="face-regin-title"><span>最痛[10]</span></div>
+	                </li>
+	            </ul>
+	        </div>
+	    </div>
+	</div>
+	<div class="btn-bottom">
+		<a href="#" class="easyui-linkbutton" iconCls="icon-cancel">取消</a>
+		<a href="#" class="easyui-linkbutton" iconCls="icon-ok">确认</a>
+	</div>
+</div>
+<div id="EmPatTb"> 
+	<a href="#" class="icon-set" title="显示/隐藏查询条件区域" style="margin-right:5px;"></a>
+</div>
+<!--菜单-->
+<div id="menu" class="easyui-menu" style="width:120px;">   
+    <div data-options="name:'Y',iconCls:'icon-accept'">已分诊</div>
+    <div data-options="name:'N',iconCls:'icon-warn'">未分诊</div>
+</div>
+</body>
+
+ 	<SERVER>
+	  s Adm=%request.Get("Adm")
+	  s PatientID=%request.Get("PatientID")
+	  w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	  w "var parAdm="""_$g(Adm)_""";"_$c(13,10)
+	  w "var parPatientID="""_$g(PatientID)_""";"_$c(13,10)
+ 	  w "</SCRIPT>"
+   </SERVER>
+</html>

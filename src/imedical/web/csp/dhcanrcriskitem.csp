@@ -1,0 +1,110 @@
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+		<head>
+		<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	    <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+
+        <link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/css/main.css" />
+        <script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.DesignerHelper.js"></script>
+	    
+	    <script type="text/javascript" src="../scripts/dhcclinic/risk/dhcanrcriskitem.js"></script>
+	    
+		<TRAK:HEAD></TRAK:HEAD>
+		<SERVER>
+ 			Set AnrcmcDr=%request.Get("AnrcmcDr")
+ 			Set AnrcmcCode=$li(^DHCANRC("ManageClass",AnrcmcDr))
+ 			Set AnrrId=%request.Get("AnrrId")
+ 			Set AmdId=$li(^DHCANRRisk(AnrrId),1) 			
+ 			set PapmiId=$p($g(^PAADM(AmdId)),"^",1)
+ 			set Regno=$p($g(^PAPER(PapmiId,"PAT",1)),"^",1)
+ 			Set AnrcTODate=$zd($li(^DHCANRRisk(AnrrId),4),3)
+ 			Set AnrcFromDate= $zd(($li(^DHCANRRisk(AnrrId),4)-200),3)	
+ 			Write "<input id='AnrrId' name='AnrrId' type='hidden' value='"_AnrrId_"'>",$C(13,10)
+ 			Write "<input id='AnrcmcDr' name='AnrcmcDr' type='hidden' value='"_AnrcmcDr_"'>",$C(13,10)
+ 			Write "<input id='AnrcmcCode' name='AnrcmcCode' type='hidden' value='"_AnrcmcCode_"'>",$C(13,10)
+ 		    //Set ANRRStat=##Class("web.DHCANRRisk").GetANRRStatus(AnrrId)
+ 		</SERVER>
+        <script language="javascript" type="text/javascript">
+		var UserId=session['LOGON.USERID'];
+		var AnrcmcDr="#(AnrcmcDr)#";
+		var AnrcmcCode="#(AnrcmcCode)#";
+		var AnrrId="#(AnrrId)#";
+		var AmdId="#(AmdId)#"	
+		var Regno="#(Regno)#"
+		var AnrcTODate="#(AnrcTODate)#"
+		var AnrcFromDate="#(AnrcFromDate)#"
+        </script>
+        <!--<script type="text/javascript">
+           function singleClick(obj){  //获取检验数据
+	           var innerHTMLStr="" 
+	           var cells = obj.getElementsByTagName("td");
+	           if (cells.length==0)  //获取B级以上风险数据
+	           {
+		           var _DHCANRRisk=ExtTool.StaticServerObject('web.DHCClinicCom');
+		           var cellsNodesStr=obj.childNodes[0].name.split("+"); //返回多项集合
+			       for(var k=0;k<cellsNodesStr.length;k++){
+		           	var TCResult=_DHCANRRisk.GetTestResult("",Regno,"",cellsNodesStr[k],AnrcFromDate,"",AnrcTODate,"","");
+                  	var ResultStr=TCResult.split("^");                               
+                   	for(var i=0;i<ResultStr.length;i++){
+	                   var Result=ResultStr[i].split("\\");
+	                   if (Result[0]) {resultFruit=Result[0]}  //结果值
+	                   else {resultFruit=""}
+	                   if (Result[1]) {resultUnit=Result[1]}  //结果单位
+	                   else {resultUnit=""}                    
+		               if (innerHTMLStr==""){innerHTMLStr=cellsNodesStr[k]+" "+"结果:"+resultFruit+" "+"单位:"+resultUnit;}
+	                   else {innerHTMLStr=innerHTMLStr+'<br/>'+cellsNodesStr[k]+" "+"结果:"+resultFruit+" "+"单位:"+resultUnit;}
+		               //document.getElementById("Result").innerHTML=innerHTMLStr;
+                   	}
+			       }
+	           }
+	           else{		         
+	             for(var i=0;i<cells.length;i++){  //获取A级风险数据
+		           if (i==1)  //跳过显示项目
+		           {
+			           var _DHCANRRisk=ExtTool.StaticServerObject('web.DHCClinicCom');
+			           var cellsNodesStr=cells[i].childNodes[0].code.split("+"); //返回多项集合			           
+			           for(var k=0;k<cellsNodesStr.length;k++){
+			           	var TCResult=_DHCANRRisk.GetTestResult("",Regno,"",cellsNodesStr[k],AnrcFromDate,"",AnrcTODate,"","");
+			           	var ResultStr=TCResult.split("^");  //一个项目多次结果			       			                            
+                   	   	for(var j=0;j<ResultStr.length;j++){
+	                   		var Result=ResultStr[j].split("\\");
+	                   		if (Result[0]) {resultFruit=Result[0]}  //结果值
+	                   		else {resultFruit=""}
+	                   		if (Result[1]) {resultUnit=Result[1]}  //结果单位
+	                   		else {resultUnit=""}
+	                   		if (innerHTMLStr==""){innerHTMLStr=cellsNodesStr[k]+" "+"结果:"+resultFruit+" "+"单位:"+resultUnit;}
+	                   		else {innerHTMLStr=innerHTMLStr+'<br/>'+cellsNodesStr[k]+" "+"结果:"+resultFruit+" "+"单位:"+resultUnit;}
+		               		//document.getElementById("Result").innerHTML=innerHTMLStr;
+                   	   	}
+			           }
+		           }		     		          	      
+		         }
+	           }	          
+           }
+           function ConsultClick(obj){  //获取会诊数据
+           		var innerHTMLStr=""
+           	    var cells = obj.getElementsByTagName("td");
+	            if (cells.length==0)  //获取B级以上风险数据
+	            {
+		            var cellsNodesStr=obj.childNodes[0].name.split("+"); //会诊科室别名		            
+			        for(var k=0;k<cellsNodesStr.length;k++){		            	
+		            	var _DHCANRRisk=ExtTool.StaticServerObject('web.DHCANRRisk');
+		            	var CousultResult=_DHCANRRisk.GetConsult(AmdId+"^"+AnrcFromDate+"^"+AnrcTODate+"^"+cellsNodesStr[k]);		           
+		            	if (innerHTMLStr==""){innerHTMLStr=CousultResult;}
+	                   	else {innerHTMLStr=innerHTMLStr+'<br/>'+CousultResult;}
+		               //document.getElementById("Result").innerHTML=innerHTMLStr;
+			        }
+	            }
+           }
+      </script>-->
+</head>	
+<body>
+
+
+</body>
+</html>

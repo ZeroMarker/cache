@@ -1,0 +1,104 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s inDeptId = $Get(%request.Data("inDeptId",1))
+	s inDeptSetsId = $Get(%request.Data("inDeptSetsId",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s id = $Get(%request.Data("id",1))
+	s order = $Get(%request.Data("order",1))
+	s name = $Get(%request.Data("name",1))
+	s remark = $Get(%request.Data("remark",1))
+	s code = $Get(%request.Data("code",1))
+	s appactive = $Get(%request.Data("appactive",1))
+	s flag = $Get(%request.Data("flag",1))
+	s stype = $Get(%request.Data("stype",1))
+	s stype = $Get(%request.Data("stype",1))
+	s patType = $Get(%request.Data("patType",1))
+	s unit = $Get(%request.Data("unit",1))
+	
+	i action = "unitperson" d
+	.w ##class(dhc.ca.cache.udata.uInPerson).UnitPerson(searchField, searchValue, sortField, sortDir, start, limit, id, "Y", "", "",inDeptSetsId)
+	
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uInPerson).ListRec(searchField,searchValue,sortField,sortDir,start,limit,inDeptSetsId)
+	
+	i action = "listInDept" d
+	.w ##class(dhc.ca.cache.udata.uInPerson).ListInDept(inDeptSetsId,unit,"Y",searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "listOutDept" d
+	.w ##class(dhc.ca.cache.udata.uOutPerson).ListRec(searchField,searchValue,sortField,sortDir,start,limit,inDeptId)
+	
+	i action = "listOutDeptTwo" d
+	.w ##class(dhc.ca.cache.udata.uOutPerson).ListAllRec("","","","",start,limit,inDeptSetsId)
+	
+	i action = "getDeptSets" d
+	.w ##class(dhc.ca.cache.udata.uInDeptSets).ListRec("shortcut",searchValue,"","",start,limit,"Y")
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uInPerson).InsertRec(order,inDeptId,inDeptSetsId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addOutDept" d
+	.s result = ##class(dhc.ca.cache.udata.uOutPerson).InsertRec(order,code,name,remark,inDeptId,inDeptSetsId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editOutDept" d
+	.s result = ##class(dhc.ca.cache.udata.uOutDepts).UpdateRec(id,inDeptSetsId,inDeptId,order,code,name,patType,remark)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addAll" d
+	.s result = ##class(dhc.ca.cache.udata.uInPerson).InsertRecByUnit(inDeptSetsId,unit,"Y")
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uInPerson).UpdateRec(id, inDeptSetsId, order, inDeptId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delInDept" d
+	.s result = ##class(dhc.ca.cache.udata.uInPerson).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delOutDept" d
+	.s result = ##class(dhc.ca.cache.udata.uOutPerson).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "getItemPrice" d
+	.s result = ##class(DHCCA.Common.Utility).getBusItemPrice(id)
+	.w "{success:'true',info:'"_result_"'}"
+
+</script>

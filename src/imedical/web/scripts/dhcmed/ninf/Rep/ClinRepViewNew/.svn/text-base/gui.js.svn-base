@@ -1,0 +1,317 @@
+var objScreen = new Object();
+function InitClinRepToAdm(){
+	var obj = objScreen;
+	
+	obj.RepTypeList = new Array();
+	var arrRepType = RepTypeList.split(',');
+	for (var indRepType = 0; indRepType < arrRepType.length; indRepType++) {
+		var tmpReport = arrRepType[indRepType];
+		if (!tmpReport) continue;
+		var arrTmp = tmpReport.split('-');
+		if (arrTmp.length < 3) continue;
+		obj.RepTypeList[indRepType] = {
+			TypeCate : arrTmp[0],
+			TypeCode : arrTmp[1],
+			TypeDesc : arrTmp[2],
+			ReportList : new Array(),
+			ReportCount : 0
+		}
+	}
+	
+	var htmlMainPanel = '';
+	
+	htmlMainPanel += '<div id="RepXTemplateDIV"></div>';
+	htmlMainPanel += '<div id="ErrXTemplateDIV"></div>';
+	
+	obj.MainPanel = new Ext.Panel({
+		id : 'MainPanel'
+		,autoScroll : true
+		//,frame : true
+		,html : htmlMainPanel
+	});
+	
+	obj.ClinRepToAdmWin = new Ext.Viewport({
+		id : 'ClinRepToAdmWin'
+		,layout : 'fit'
+		,items:[
+			obj.MainPanel
+		]
+	});
+	
+	obj.RepXTemplate = new Ext.XTemplate(
+		'<tpl for=".">',
+			'<div style="border:0px solid wight;padding:3px;width:100%;">',
+			//院感管理第三版列表显示
+			'<tpl if="(TypeCate==\'INF\')&&(TypeCode==\'3\')">',
+				'<div class="subtotal">',
+					'<table width="100%">',
+						'<tr>',
+							 '<td width="5%" class="subtotal_td"><div style="position: relative; width: 80px; height: 30px;"><img src="../scripts/dhcmed/img/clinrep08.png" width="60" height="25" style="position: absolute; top: 2; left: 10;" /></div></td>',
+							 '<td width="25%" class="subtotal_td">{TypeDesc}：&nbsp;&nbsp;<span class="subtotal_number">共{ReportCount}份</span>&nbsp;&nbsp;</td>',
+							 '<td width="14%" class="subtotal_td"><span onclick="{[this.OpenNewReportWinByTp(values,\"COMP\")]}" style="font-size:16px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">医院感染报告</span></div></td>',
+							 '<td width="16%" class="subtotal_td"><span onclick="{[this.OpenNewReportWinByTp(values,\"NCOM\")]}" style="font-size:16px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">新生儿感染报告</span></div></td>',
+							 '<td width="13%" class="subtotal_td"><span onclick="{[this.OpenNewReportWinByTp(values,\"ICU\")]}" style="font-size:16px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">ICU感染监测</span></div></td>',
+							 '<td width="14%" class="subtotal_td"><span onclick="{[this.OpenNewReportWinByTp(values,\"NICU\")]}" style="font-size:16px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">NICU感染监测</span></div></td>',
+							 '<td width="14%" class="subtotal_td"><span onclick="{[this.OpenNewReportWinByTp(values,\"OPR\")]}" style="font-size:16px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">手术切口监测</span></div></td>',
+							 '<td>&nbsp;&nbsp;</td>',
+						'</tr>',
+					'</table>',
+				'</div>',
+				'<table border=0 cellpadding=0 cellspacing=0 style="border-collapse:collapse;color:#457294;text-align:center;background-color:#afd3e8;width:100%;">',
+					'<tr style="font-size:13px;height:24px;">',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>序号</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>登记号</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>姓名</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>性别</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>年龄</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>病人密级</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>病人级别</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>ID</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>报告类型</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>状态</b></td>',
+						//'<td align="center" style="border:1 solid #FFFFFF;"><b>报告科室</b></td>',
+						//'<td align="center" style="border:1 solid #FFFFFF;"><b>报告时间</b></td>',
+						//'<td align="center" style="border:1 solid #FFFFFF;"><b>报告人</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>感染部位</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>感染日期</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>感染诊断</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>检验标本</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>病原体</b></td>',
+						//'<td align="center" style="border:1 solid #FFFFFF;"><b>备注</b></td>',
+					'</tr>',
+					'<tbody>',
+						'<tpl for="ReportList">',
+							'<tr  class="{[ (xindex % 2 == 1 ? \"RowEven\" : \"RowOdd\")]}" style="font-size:13px;height:24px;">',
+								'<td align="center">{[xindex]}</td>',
+								'<td align="center">{RegNo}</td>',
+								'<td align="center">{PatName}</td>',
+								'<td align="center">{Sex}</td>',
+								'<td align="center">{Age}</td>',
+								'<td align="center">{EncryptLevel}</td>',
+								'<td align="center">{PatLevel}</td>',
+								'<td align="center" style="cursor:pointer;" onclick="{[this.OpenReportWinByTp(\'INF\',\'3\',values)]}"><span style="border-bottom:1px #F78181 solid;">{ReportID}</td>',
+								'<td align="center">{ReportTypeDesc}</td>',
+								'<td align="center">{ReportStatusDesc}</td>',
+								//'<td align="center">{ReportLocDesc}</td>',
+								//'<td align="center">{ReportDate} {ReportTime}</td>',
+								//'<td align="center">{ReportUserDesc}</td>',
+								'<td align="center">{InfPos}</td>',
+								'<td align="center">{InfDate}</td>',
+								'<td align="center">{InfDiag}</td>',
+								'<td align="center">{Specimen}</td>',
+								'<td align="center">{TestResults}</td>',     //fix bug 8305 by pyian 2015-03-28 医院感染报告-病原体不为空的感染报告病原体显示为空
+								//'<td align="center">{LogResume}</td>',
+							'</tr>',
+						'</tpl>',
+						'{[ this.GetSpacebarRow(values,15)]}',
+					'</tbody>',
+				'</table>',
+				
+				//疑似病例处置记录
+				'<div class="subtotal">',
+					'<table width="100%">',
+						'<tr>',
+							 '<td width="5%" class="subtotal_td"><div style="position: relative; width: 80px; height: 30px;"><img src="../scripts/dhcmed/img/clinrep08.png" width="60" height="25" style="position: absolute; top: 2; left: 10;" /></div></td>',
+							 '<td width="55%" class="subtotal_td">疑似病例处置：&nbsp;&nbsp;<span class="subtotal_number">共{InfCasesCount}条</span>&nbsp;&nbsp;</td>',
+							 '<td width="8%" class="subtotal_td">',
+								'<span onclick="{[this.InfCasesOperClick(3)]}" style="font-size:17px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">确诊</span></div>',
+							 '</td>',
+							 '<td width="8%" class="subtotal_td">',
+								'<span onclick="{[this.InfCasesOperClick(1)]}" style="font-size:17px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">排除</span></div>',
+							 '</td>',
+							 '<td width="12%" class="subtotal_td">',
+								'<span onclick="{[this.InfCasesOperClick(5)]}" style="font-size:17px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">感染结束</span></div>',
+							 '</td>',
+							 //'<td width="5%" class="subtotal_td">',
+							 //	'<span onclick="{[this.ViewInfCtlResult(values)]}" style="font-size:17px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">指标分布</span></div>',
+							 //'</td>',
+							 '<td width="12%" class="subtotal_td">',
+								'<span onclick="{[this.ViewInfBaseInfo()]}" style="font-size:17px;color:#1291A9;text-decoration:underline;cursor:pointer;" align="center">摘要信息</span></div>',
+							 '</td>',
+							 '<td>&nbsp;&nbsp;</td>',
+						'</tr>',
+					'</table>',
+				'</div>',
+				'<table border=0 cellpadding=0 cellspacing=0 style="border-collapse:collapse;color:#457294;text-align:center;background-color:#afd3e8;width:100%;">',
+					'<tr style="font-size:13px;height:24px;">',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>序号</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>处置操作</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>处置日期</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>处置人</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>处置意见</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>目标科室</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>主管医生</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>发生日期</b></td>',
+						'<td align="center" style="border:1 solid #FFFFFF;"><b>确诊日期</b></td>',
+					'</tr>',
+					'<tbody>',
+						'<tpl for="InfCasesList">',
+							'<tr  class="{[ (xindex % 2 == 1 ? \"RowEven\" : \"RowOdd\")]}" style="font-size:13px;height:24px;">',
+								'<td align="center">{[xindex]}</td>',
+								'<td align="center">{Operation}</td>',
+								'<td align="center">{ActDate} {ActTime}</td>',
+								'<td align="center">{ActUser}</td>',
+								'<td align="',
+									'<tpl if="(HandleType==\'HA\')">left</tpl>',
+									'<tpl if="(HandleType==\'HB\')">right</tpl>',
+								'" ondblclick="{[ this.TableOnDblClick(values)]}">{Opinion}</td>',
+								'<td align="center">{TargetDept}/{TargetWard}</td>',
+								'<td align="center">{TargetDoc}</td>',
+								'<td align="center">{CasesXDate}</td>',
+								'<td align="center">{InfDays}</td>',
+							'</tr>',
+						'</tpl>',
+						'{[ this.GetSpacebarRowB(values,9) ]}',
+					'</tbody>',
+				'</table>',
+				/* update by zf 2014-09-02
+				'<div id="divInfCtlResult" style="border:3px white solid;margin-left:0%;width:100%;display:block;">',
+					'<div id="divInfCtlResult-scroll" style="border:1px #BDBDBD solid;overflow:auto;overflow-y:auto;overflow-x:hidden;width:100%;">',
+					'<table id="divInfCtlResult-table" width="{[ this.GetTableWidth(values) ]}" cellpadding="0" cellspacing="0" border="0">',
+						'{[ this.Gettable_header(values) ]}',
+						'<tpl for="CtlRstList">',
+							'{[ this.GetTableData(values) ]}',
+						'</tpl>',
+					'</table>',
+					'</div>',
+					'<div id="divInfCtlResult-x-scroll" style="border:0px solid;overflow:auto;overflow-x:auto;overflow-y:hidden;width:100%;height:16px">',
+						'<table id="divInfCtlResult-x-table" style="border:0px solid;"><tr><td></td></tr></table>',
+					'</div>',
+				'</div>',
+				*/
+			'</tpl>',
+			'</div>',
+		'</tpl>',
+		{
+			OpenNewReportWinByCom : function(values){
+				var tabEv = 'objScreen.OpenReportWinByCom(\'' + values.TypeCate + '\',\'' + values.TypeCode + '\',\'\');';
+				return tabEv;
+			},
+			
+			OpenNewReportWinByTp : function(values,reptype){
+				var tabEv = 'objScreen.OpenReportWinByTp(\'' + values.TypeCate + '\',\'' + values.TypeCode + '\',\'' + reptype + '\');';
+				return tabEv;
+			},
+			OpenReportWinByTp : function(TypeCate,TypeCode,values){
+				var tabEv = 'objScreen.OpenReportWinByCom(\'' + TypeCate + '\',\'' + TypeCode + '\',\'' + values.ReportID + '\');';
+				return tabEv;
+			},
+			GetSpacebarRow : function(values,colnum){
+				//添加空行
+				var tabEv = '';
+				var row = values.ReportList.length;
+				var minRow = 3;
+				if (row>=minRow) minRow = row +1;
+				if (row < minRow) {
+					for (var indRow = row; indRow < minRow; indRow++){
+						tabEv += '<tr class="' + (indRow % 2 == 1 ? 'RowOdd' : 'RowEven') + '" style="font-size:11px;height:20px;">'
+						for (var indCol = 0; indCol < colnum; indCol++){
+							tabEv += 	'<td align="center">&nbsp;</td>'
+						}
+						tabEv += '</tr>'
+					}
+				}
+				return tabEv;
+			},
+			GetSpacebarRowB : function(values,colnum){
+				//添加空行
+				var tabEv = '';
+				var row = values.InfCasesList.length;
+				var minRow = 2;
+				if (row < minRow) {
+					for (var indRow = row; indRow < minRow; indRow++){
+						tabEv += '<tr class="' + (indRow % 2 == 1 ? 'RowOdd' : 'RowEven') + '" style="font-size:11px;height:20px;">'
+						for (var indCol = 0; indCol < colnum; indCol++){
+							tabEv += 	'<td align="center">&nbsp;</td>'
+						}
+						tabEv += '</tr>'
+					}
+				}
+				return tabEv;
+			},
+			ViewInfCtlResult : function(){
+				var divId = 'divInfCtlResult';
+				//疑似病例处置明细记录
+				var tabEv = '';
+				tabEv += "if (document.all['" + divId + "'].style.display == 'none') {"
+				tabEv +=     "document.all['" + divId + "'].style.display = 'block';"
+				tabEv += "} else {"
+				tabEv +=    "document.all['" + divId + "'].style.display = 'none';"
+				tabEv += "}"
+				return tabEv;
+			},
+			GetTableWidth : function(values){
+				var tabEv = 150;
+				if (values.CtlDateList){
+					if (values.CtlDateList.length){
+						tabEv = (values.CtlDateList.length * 180 + 150)
+					}
+				}
+				tabEv += 'px';
+				return tabEv;
+			},
+			Gettable_header : function(values){
+				var tmpDateList = values.CtlDateList;
+				var tabEv = '';
+				if(tmpDateList == null)
+					tmpDateList = new Array();
+				tabEv += '<tr class="fixedtitle_row">';
+				tabEv += 	'<td width="150px" align="center" class="fixedtitle_col" style="border:1px Lavender solid;border-collapse:collapse;">项目分类</td>';
+				for (var indDate = 0; indDate < tmpDateList.length; indDate++) {
+					tabEv += 	'<td width="180px" align="center" style="border:1px Lavender solid;border-collapse:collapse;">' + tmpDateList[indDate] + '</td>';
+				}
+				tabEv += '</tr>';
+				return tabEv;
+			},
+			GetTableData : function(values){
+				var tabEv = '';
+				tabEv += '<tr>';
+				tabEv += 	'<td width="150px"  class="fixeddata_col" style="border:1px Lavender solid;border-collapse:collapse;">' + values.ItemSubCat + '</td>';
+				
+				var tmpDateList = values.CtlDateList;
+				for (var indDate = 0; indDate < tmpDateList.length; indDate++) {
+					tabEv += '<td width="180px" style="border:1px Lavender solid;border-collapse:collapse;">';
+					
+					var tmpDate = tmpDateList[indDate];
+					if (typeof(values.ItemDateList[tmpDate]) != 'undefined') {
+						var arrItemList = values.ItemDateList[tmpDate].ItemList;
+						for (var indItem = 0; indItem < arrItemList.length; indItem++) {
+							if (indItem > 0) {
+								tabEv += '<div style="border-top:1px #58D3F7 solid;">' + arrItemList[indItem].DataValue + '</div>';
+							} else {
+								tabEv += '<div>' + arrItemList[indItem].DataValue + '</div>';
+							}
+						}
+					} else {
+						tabEv += '<div>&nbsp;</div>';
+					}
+					
+					tabEv += '</td>';
+				}
+				
+				tabEv += '</tr>'
+				return tabEv;
+			},
+			ViewInfBaseInfo : function(){
+				//疑似病例 查看摘要信息操作
+				var tabEv = 'objScreen.ViewInfBaseInfo(\'' + EpisodeID + '\');';
+				return tabEv;
+			},
+			InfCasesOperClick : function(operation){
+				//疑似病例处置触发事件
+				var tabEv = 'objScreen.btnHandle_onClick(\'' + EpisodeID + '\',\'' + operation + '\');';
+				return tabEv;
+			},
+			TableOnDblClick : function(values){
+				//取消处置记录触发事件
+				var tabEv = 'objScreen.tabCancelHandle_onDblClick(\'' + values.HandleType + '\',\'' + values.CasesID + '||' + values.SubID + '\');';
+				return tabEv;
+			}
+			
+		}
+	);
+	
+	InitClinRepToAdmEvent(obj);
+	obj.LoadEvent(arguments);
+	return obj;
+}

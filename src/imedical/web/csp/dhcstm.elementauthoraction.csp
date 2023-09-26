@@ -1,0 +1,34 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+i Action="GetAuthorDetail" d
+	.s PageInfo=$Get(%request.Data("PageInfo",1))
+	.s ConfigInfo=$Get(%request.Data("ConfigInfo",1))
+	.d ##class(web.DHCSTM.DHCPageElementAuthor).GetAuthorDetail(PageInfo,ConfigInfo)
+
+i Action="SaveAuthorData" d
+	.s PageInfo=$Get(%request.Data("PageInfo",1))
+	.s ConfigInfo=$Get(%request.Data("ConfigInfo",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s Ret=##class(web.DHCSTM.DHCPageElementAuthor).SaveAuthorData(PageInfo,ConfigInfo,ListData)
+	.i Ret'=""  d
+	..w "{success:'false',info:'"_Ret_"'}"
+	.e  d
+	..w "{success:'true',info:''}"
+
+i Action="GetBPMModelRole" d
+	.s BPMModel=$Get(%request.Data("BPMModel",1))
+	.w ##class(web.DHCSTM.DHCPageElementAuthor).GetBPMModelRole(Start,Limit,BPMModel)
+	
+</script>

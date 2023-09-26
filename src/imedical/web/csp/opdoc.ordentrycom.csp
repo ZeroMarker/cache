@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--opdoc.ordentrycom.csp 医嘱录入、草药录入共用--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+#OrdTemplMan{
+	position:absolute;
+	right:10px;
+	top:20px;
+	background:0;
+	color:#017bce;
+}
+#OrdTemplMan .l-btn-text{
+}
+#OrdTemplMan:hover,#OrdTemplMan:active{
+	background:0;
+	text-decoration:underline;
+}
+iframe{
+	border:0;
+}
+.tabs-panels{
+	border-bottom:0;
+}
+#templName_tabs .tabs-wrap {
+	width:auto !important;
+}
+#templName_tabs .tabs-panels{
+	border:0;
+}
+#templName_tabs .tabs-header{
+	border-left:0;
+	border-right:0;
+	border-radius: 0;
+}
+#BMore{
+	float:right;
+	width:70px;
+	height:35px;
+	border:1px solid #ccc;
+	border-right:0;
+}
+#BMore .l-btn-text{
+	padding:0 10px;
+	margin-left:0;
+	margin-right:10px;
+	height:35px;
+	line-height:35px;
+}
+#BMore .m-btn-downarrow{
+	height:35px;
+}
+#mmedit .menu-text{
+	padding-left:10px;
+}
+.tab_body{
+	white-space:nowrap;
+	float:left;
+	height:0;
+	padding:0 0 35px;
+	line-height:35px;
+	z-index:200;
+	border-top:1px solid #ccc;
+}
+.tab_body li{
+	float:left;
+	border:0;
+	height:35px;
+	line-height:35px;
+	overflow-y:hidden;
+	border-right:1px solid #ccc;
+	border-bottom:1px solid #ccc;
+}
+.tabItem.is-selected{
+	position:relative;
+	top:-1px;
+	height:32px;
+	line-height:32px;
+	border-top:3px solid #509de1;
+	border-bottom:0;
+	background-color:#fff;
+	color:#509de1;
+	pointer-events:none
+}
+.tabItem{
+	padding:0 12px;
+	display:inline-block;
+}
+</style>
+<Server>
+ s (EpisodeID,PatientID,notMatch)=""
+ s EpisodeID=%request.Get("EpisodeID") 
+ s CONTEXT=%request.Get("CONTEXT") 
+ if (CONTEXT="") {
+	 s CONTEXT="WNewOrderEntry"
+ }
+ /*if (CONTEXT="") {
+	 ;是否中医科室
+ 	s IsChinaMed=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),16)
+ 	if (IsChinaMed=1){
+	 	s CONTEXT="W50007"
+	}else{
+	 	s CONTEXT="WNewOrderEntry"
+	}
+ }*/
+ s PatientID="",mradm=""
+ if (EpisodeID'=""){
+     s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+     s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+ }
+ s IsHaveMenuAuthOrderOrgFav=##class(web.DHCDocOrderCommon).IsHaveMenuAuthOrderOrgFav(%session.Get("LOGON.GROUPID"),"System.OEOrder.OrgFav.Save.SetSaveForLocation")
+</Server>
+  </head>
+<body>
+	
+	<csp:Include Page="opdoc.ordentrycom.show.csp">
+	<SCRIPT language = 'javascript' >
+	 //全局请求后台服务对象
+		var ServerObj={
+			 EpisodeID:"#(EpisodeID)#",
+	         PatientID:"#(PatientID)#",
+	         mradm:"#(mradm)#",
+	         CONTEXT:"#(CONTEXT)#",
+	         IsHaveMenuAuthOrderOrgFav:"#(IsHaveMenuAuthOrderOrgFav)#"
+		};
+		//页面加载完之后在赋值，防止事件未定义导致报错
+		$(function(){
+			Init();
+		});
+	</SCRIPT>
+	<script src="../scripts/dhcdoc/opdoc/OrdEntryCom.js"></script>
+</body>
+</html>

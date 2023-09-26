@@ -1,0 +1,43 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s MainPageRowId=$Get(%request.Data("MainPageRowId",1))
+	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	s DiseaseType=$Get(%request.Data("DiseaseType",1))
+	s DiagnoseDate=$Get(%request.Data("DiagnoseDate",1))
+	s BloodSurgeLimosis=$Get(%request.Data("BloodSurgeLimosis",1))
+	s BloodAfterDiningOfTwo=$Get(%request.Data("BloodAfterDiningOfTwo",1))
+	s BloodAfterDining = $Get(%request.Data("BloodAfterDining",1))
+    s CaseSource=$Get(%request.Data("CaseSource",1))
+	s DiseaseHistory=$Get(%request.Data("DiseaseHistory",1))
+	s CheckDoctor=$Get(%request.Data("CheckDoctor",1))
+	s DateCheck=$Get(%request.Data("DateCheck",1))
+	s CheckType=$Get(%request.Data("CheckType",1))
+	s CheckAdd = $Get(%request.Data("CheckAdd",1))
+	s StaffInput=$Get(%request.Data("StaffInput",1))
+	s DateOfInput=$Get(%request.Data("DateOfInput",1))
+	s DateOfUpdate = $Get(%request.Data("DateOfUpdate",1))
+	s UniteIll = $Get(%request.Data("UniteIll",1))
+	i Action = "list" d
+	.w ##class(CHSSWeb.DiabetesHeadPageService).DiabetesHeadPageList(PersonRowId,Start,Limit,Sort)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.DiabetesHeadPageService).Insert(MainPageRowId, PersonRowId, DiseaseType, DiagnoseDate, BloodSurgeLimosis, BloodAfterDiningOfTwo, BloodAfterDining, CaseSource, DiseaseHistory, CheckDoctor, DateCheck, CheckType, CheckAdd, StaffInput, DateOfInput, DateOfUpdate,UniteIll)
+	.w result
+	i Action = "delete" d
+	.s result = ##class(CHSSWeb.DiabetesHeadPageService).delete(MainPageRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'É¾³ý³É¹¦'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>
+

@@ -1,0 +1,140 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<!--DOCTYPE HTML-->
+<HEAD>
+<!--meta http-equiv="x-ua-compatible" content="IE=edge"-->
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<style type="text/css">
+
+</style>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s Guser=$g(%request.Data("guser",1))   ;用户Dr
+ s Group = $g(%request.Data("group",1)) ;安全组Dr
+ s GuserName=$g(%request.Data("guserName",1))   ;用户Dr
+ s GuserCode=$g(%request.Data("guserCode",1))   ;用户Dr
+ s GroupDesc = $g(%request.Data("groupDesc",1)) ;安全组Dr
+</Script>
+
+<link rel="stylesheet" type="text/css" href="../scripts/dhceq/easyui/themes/gray/easyui.css"> 
+<link rel="stylesheet" type="text/css" href="../scripts/dhceq/easyui/themes/icon.css"> 
+<script type="text/javascript" src="../scripts/dhceq/easyui/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts/dhceq/easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../scripts/dhceq/easyui/locale/easyui-lang-zh_CN.js"></script>
+
+<script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	}; 
+	
+</script>
+
+<script type='text/javascript' src='../scripts/dhceq/js/dhceqmovenew.js'></script>
+</HEAD>
+<body>
+<!--<div style="margin:10px 0;" ></div>-->
+	<div class="easyui-layout" data-options="fit:true,border:false" style='width:auto;height:auto;'>
+			<table id='tQueryPanel' class="chargeTable">
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>移动单号</td><td><input id="No" type="text"></input></td><td class="tdspace"></td>
+					<td><font color="#FF0000">*</font>移动缘由</td><td><input required id="EventType" type="text"></input></td><td class="tdspace"></td>
+					<td><font color="#FF0000">*</font>对应事件</td><td><input required id="SourceType" type="text"></input></td><td class="tdspace"></td>
+				</tr>
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td><font color="#FF0000">*</font>对应业务</td><td><input required id="SourceID" type="text"></input></td><td class="tdspace"></td>
+					<td>设备</td><td><input id="ObjID" type="text"></input></td><td class="tdspace"></td>
+					<td><font color="#FF0000">*</font>初始单位类型</td><td><input required id="FromDeptType" type="text"></input></td><td class="tdspace"></td>
+				</tr>
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td><font color="#FF0000">*</font>初始单位</td><td><input required id="FromDeptID" type="text"></input></td><td class="tdspace"></td>
+					<td>初始位置</td><td><input  id="FromLocationDR" type="text"></input></td><td class="tdspace"></td>
+					<td><font color="#FF0000">*</font>开始日期</td><td><input required id="StartDate" class="easyui-datebox"></input></td><td class="tdspace"></td>
+				</tr>
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td><font color="#FF0000">*</font>开始时间</td><td><input required id="StartTime" type="text"></input></td><td class="tdspace"></td>
+					<td><font color="#FF0000">*</font>送出负责人</td><td><input required id="SendUserDR" type="text"></input></td><td class="tdspace"></td>
+					<td>运送人信息<img id="patDetBtn" src='../images/webemr/regalert.gif' style="cursor:pointer" /></td><td class="patInfo"></td><td class="tdspace"></td>
+					<!--<td>运送人</td><td><input  id="MoveUserDR" class="easyui-combobox" data-options="valueField: 'id',textField: 'text'" multiple="multiple" style="width:120px;"></input></td><td class="tdspace"></td>-->
+				</tr>
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>目的单位类型</td><td><input  id="ToDeptType" type="text"></input></td><td class="tdspace"></td>
+					<td>目的单位</td><td><input  id="ToDeptID" type="text"></input></td><td class="tdspace"></td>
+					<td>目的位置</td><td><input  id="ToLocationDR" type="text"></input></td><td class="tdspace"></td>
+				</tr>
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>完成日期</td><td><input  id="EndDate" class="easyui-datebox"></input></td><td class="tdspace"></td>
+					<td>完成时间</td><td><input  id="EndTime" type="text"></input></td><td class="tdspace"></td>
+					<td>接收负责人</td><td><input  id="AcceptUserDR" type="text"></input></td><td class="tdspace"></td>
+				</tr>
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>无效原因</td><td><textarea  id="InvalidReason" type="text" style="width:120px;height:80px"></textarea ></td><td class="tdspace"></td>
+					<td>备注</td><td><textarea  id="Remark" type="text" style="width:120px;height:80px"></textarea ></td><td class="tdspace"></td>
+				</tr>
+				<tr>
+					<td></td><td><input id="Rowid" type="hidden"></input></td>
+					<td></td><td><input id="Status" type="hidden"></input></td>
+					<td></td><td><input id="sid" type="hidden"></input></td>
+					<td></td><td><input id="eid" type="hidden"></input></td>
+				</tr>	
+				<tr>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td><a id="btnSave" href="#" class="easyui-linkbutton" >更新</a></td><td class="tdspace"></td>	
+					<td>&nbsp&nbsp&nbsp</td>
+					<td><a id="btnDelete" href="#" class="easyui-linkbutton" >删除</a></td><td class="tdspace"></td>	
+					<td>&nbsp&nbsp&nbsp</td>
+					<td><a id="btnCancel" href="#" class="easyui-linkbutton" >关闭</a></td><td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp</td>				
+        		</tr>
+	
+			</table>
+	</div>
+ 
+</body>
+
+</HTML>

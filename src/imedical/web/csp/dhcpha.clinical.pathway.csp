@@ -1,0 +1,122 @@
+<HTML>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+<EASYUI:CLINICAL/>
+<!-- Put your page Title here -->
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/clinicatpathway.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/createPatInfoWin.js"></script>
+ <style type="text/css">	
+	.datagrid-row-selected {
+  		background: #ADFAFC;
+	}
+	.datagrid-row {
+	    height: 33px;
+	}
+</style>
+</head> 
+<body>
+<!--以下定义临床路径界面-->
+	<div id="mainpanel" class="easyui-layout" fit="true">
+	    <!--查询条件区-->
+		<div data-options="region:'north',title:'临床路径[出入径明细查询]'" style="width:400px;height:110px" >
+			<!--查询条件布局使用table-->
+			<table>
+					<tr style="height:10">
+					    <td width="30"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>
+						<td></td>
+						<td width="50"></td>
+						<td></td>				
+					</tr>
+					<tr>
+					    <td ></td>
+						<td style="padding-right:5px">开始日期</td>
+						<td><input id="stdate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td></td>
+						<td style="padding-right:5px">科室</td>
+						<td><input id="dept" style="width:180" class="easyui-combobox" data-options="valueField:'value',textField:'text'"/></td>
+						<td></td>
+						<td style="padding-right:5px">状态</td>
+						<td><input id="status" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></td>
+						<td></td>
+						<td style="padding-right:5px">路径字典</td>
+						<td><input id="cpwdic" style="width:180" class="easyui-combobox" data-options="valueField:'code',textField:'text'"/></td>
+						<td></td>
+						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-search" onclick="Query()">查询</a></td>
+					</tr>
+					<tr>
+					    <td></td>
+						<td style="padding-right:5px">结束日期</td>
+						<td><input id="enddate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td></td>
+						<td style="padding-right:5px">病区</td>
+						<td><input id="ward" style="width:180" class="easyui-combobox" data-options="valueField:'value',textField:'text'"/></td>
+						<td></td>
+						<td style="padding-right:5px">类型</td>
+						<td><input id="type" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+					</tr>
+			</table>
+		</div>
+		<!--数据列区域-->
+		<div data-options="region:'center'">
+			<table id="dg" class="easyui-datagrid"  rownumbers="true" style="width:700px;height:350px" pagination="true" 
+				pageList="[20,30,40]" data-options="url:'',singleSelect:true" fit="true">
+				<!--设置冻结列-->
+				<thead frozen="true">
+				 	<tr>
+				 		 <th data-options="field:'Paadm',width:100,hidden:true">AdmDr</th>
+				 	    <th data-options="field:'PapmiNo',width:80" formatter="SetCellUrl">登记号</th>   
+			            <th data-options="field:'InMedicare',width:80,hidden:true">病案号</th>   
+			            <th data-options="field:'PatName',width:80">姓名</th>   
+				   	</tr>   
+			    </thead>
+			    <!--普通列定义-->
+			    <thead>   
+			        <tr>   
+			            <th data-options="field:'Sex',width:60">性别</th>
+			            <th data-options="field:'Age',width:60">年龄</th>
+			            <th data-options="field:'PathWayDesc',width:220">临床路径</th>
+			            <th data-options="field:'PathWayEpDesc',width:100">阶段</th>
+			            <th data-options="field:'StatusDesc',width:100">状态</th>
+			            <th data-options="field:'InDoctorDesc',width:60">入径人</th>
+			            <th data-options="field:'InDate',width:80">入径日期</th>
+			            <th data-options="field:'OutDoctorDesc',width:60">出径人</th>
+			            <th data-options="field:'OutDate',width:80">出径日期</th>
+			            <th data-options="field:'AdmitDate',width:80">入院时间</th>
+			            <th data-options="field:'DisDate',width:80">出院时间</th>
+			            <th data-options="field:'AdmLoc',width:150">科室</th>
+			            <th data-options="field:'AdmWard',width:150">病区</th>
+			            <th data-options="field:'AdmDoc',width:60">医生</th>
+			            <th data-options="field:'RefCost',width:100">参考费用</th>
+			            <th data-options="field:'CountCost',width:80">实际费用</th>
+			            <th data-options="field:'CostRatio',width:80" formatter="SetCellColor">费用增减率</th>
+			            <th data-options="field:'CostFlag',width:60" formatter="SetCellColor">费用增减</th>
+			            <th data-options="field:'DrugRatio',width:60">药费比例</th>
+			            <th data-options="field:'RefDays',width:60">参考天数</th>
+			            <th data-options="field:'AdmDays',width:60">住院天数</th>
+			            <th data-options="field:'DaysRatio',width:60" formatter="SetCellColor">天数增减率</th>
+			            <th data-options="field:'DaysFlag',width:60" formatter="SetCellColor">天数增减</th>
+			            <th data-options="field:'VarCount',width:60">变异次数</th>
+			            <th data-options="field:'OutReasonDesc',width:60">出径原因</th>
+			            <th data-options="field:'VarReason'">变异原因</th>
+			        </tr>   
+			    </thead>   
+			</table> 
+		</div>
+	</div>
+</body>
+</html>

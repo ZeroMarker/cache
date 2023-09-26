@@ -1,0 +1,72 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	图片上传 </title>
+<script Language="JavaScript">
+	 
+	function submitArticle()
+	{
+		self.document.Article.submit(); 	
+	}
+	function submitArticle2()
+	{
+		//var title = self.document.Article.Title.value;
+		//var content = self.document.Article.Content.value;
+		
+		var aa = "#($Get(%request.Data("PersonRowId",1)))#";
+		alert(aa);
+        //self.document.regform.PersonRowIdField.value=aa;
+       // alert(CSPPage.document.regform.PersonRowIdField.value);
+        //action="chss.personphotoquery.csp"
+	
+	}
+	
+  
+</Script>
+</head>
+
+<body>
+<form name="Article" action="chss.personphotoquery.csp?actiontype=add&PersonRowId=#($Get(%request.Data("PersonRowId",1)))#" method="POST" enctype="multipart/form-data">
+    <table>
+    <tr>
+	    <td>照片路径:</td>
+	    <td><input name="Picture" type=file></td>
+	<tr>
+
+  	 <tr>
+    <td colspan="2" align="Center">
+        <input type="Button" value="上传" onclick="submitArticle();">
+        <input name="Reset" type="Reset">
+    </td>
+	</tr>
+    </table>
+ </form>
+<script language="Cache" runat="server">
+    set oid=0
+    s PersonRowId = 0
+    if (1>0){
+	    s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	    q:(PersonRowId="") ""
+	    ;w PersonRowId,!
+	    s PhotoRowId = ""
+    	&SQL(select PhotoRowId into :PhotoRowId from CHSS.PersonPhoto where bCurrentPhoto = 'true' and PersonRowId = :PersonRowId )
+		
+		if PhotoRowId '= ""
+		{
+	    set article = ##Class(CHSS.PersonPhoto).%OpenId(PhotoRowId)
+    	Set oid=article.Photo.%Oid()
+    	s aa = "%25CSP.StreamServer.cls?STREAMOID="_(..Encrypt(oid))
+    	w aa
+		;#(..EscapeHTML(article.Image))#
+		}
+    }
+</script>
+
+<csp:if condition="oid'=0">
+<image src="%25CSP.StreamServer.cls?STREAMOID=#(..Encrypt(oid))#">
+</csp:if>
+
+
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ s (OrigItemID,SubsItemID,OrigItemDesc,SubDescs,AddSubsItem,AddNonSubsItem,AddOrigItem,OIStr,SecGrpID,VisitStat,Restricted,disableSubs,IsGenPrescrib)=""
+ s SecGrpID=%session.Get("LOGON.GROUPID")
+ d %request.Set("PatientID",%request.Data("PatientID",1))
+ d %request.Set("EpisodeID",%request.Data("EpisodeID",1))
+ s EpisodeID=%request.Data("EpisodeID",1)
+ s PatientID=%request.Data("PatientID",1)
+ i EpisodeID'="" s VisitStat=$p($g(^PAADM(EpisodeID)),"^",20)
+ s obj=##Class(websys.Component).OpenName("OEOrder.ShowDrgSubs")
+ i obj d obj.LoadTrans(),obj.%Close()
+ s IsRestricted=$g(t("Restricted"))
+ s IsGenPrescrib=$p($g(^CF("OE",1)),"^",74)
+
+ i %request.Get("ItemList")'="" {
+	s OrigItemID=$p($g(%request.Data("ItemList",1)),"*",1)
+	s SubsItemID=$p($g(%request.Data("ItemList",1)),"*",2)
+	s NonSubItems=%request.Get("NonSubItems")
+	
+	i OrigItemID'="" d
+	. i IsGenPrescrib="Y" s OrigItemDesc=##Class(web.ARCItmMast).GetItemNameByGenePresc(OrigItemID)
+	. i IsGenPrescrib'="Y" s OrigItemDesc=$p($g(^ARCIM(+OrigItemID,1,1)),"^",2) 
+	. i OrigItemDesc'="" s OIStr=OrigItemDesc
+	. i OIStr'="" d 
+	. . d %request.Set("OrigOrdItem",OIStr)
+	. . d %request.Set("AddOrigItem",OrigItemID_"^"_OrigItemDesc_"*")
+	. d %request.Set("OrigItemID",OrigItemID)
+	. s ARCIMOBJ=##Class(User.ARCItmMast).%OpenId(OrigItemID)
+	. i ARCIMOBJ d %request.Set("ItemMsg",##Class(websys.Conversions).LongTextLogicalToHtml(ARCIMOBJ.ARCIMPHCDFDR.PHCDFWarning,"<br>"))
+ 	. i ARCIMOBJ d ARCIMOBJ.%Close()
+
+	i SubsItemID'="" d
+	. f idx=1:1:$l(SubsItemID,"^") d
+	. . s (Restricted,valid)=""
+	. . s CurrSubID=$p(SubsItemID,"^",idx)
+	. . q:CurrSubID=""
+	. . s Restricted=##Class(web.ARCItmMast).CheckFavRestriction(CurrSubID,SecGrpID,"",VisitStat,"",PatientID)
+	. . i +$g(Restricted) s valid="N"
+	. . i IsGenPrescrib="Y" s CurrSubDesc=##Class(web.ARCItmMast).GetItemNameByGenePresc(CurrSubID)
+	. . i IsGenPrescrib'="Y" s CurrSubDesc=$p($g(^ARCIM(+CurrSubID,1,1)),"^",2)
+	. . i CurrSubDesc'="" d
+	. . . i valid="" s SubDescs=SubDescs_CurrSubDesc_"<br><br>"
+	. . . i valid="N" d
+	. . . . s SubDescs=SubDescs_CurrSubDesc_IsRestricted_"<br><br>"
+	. . . . s disableSubs="Y"
+	. . . s AddSubsItem=AddSubsItem_CurrSubID_"^"_CurrSubDesc_"*"
+
+	i NonSubItems'="" d
+	. f idx=1:1:$l(NonSubItems,"^") d
+	. . s CurrSubID=$p(NonSubItems,"^",idx)
+	. . q:CurrSubID=""
+	. . i IsGenPrescrib="Y" s CurrSubDesc=##Class(web.ARCItmMast).GetItemNameByGenePresc(CurrSubID)
+	. . i IsGenPrescrib'="Y" s CurrSubDesc=$p($g(^ARCIM(+CurrSubID,1,1)),"^",2)
+	. . i CurrSubDesc'="" d
+	. . . s AddNonSubsItem=AddNonSubsItem_CurrSubID_"^"_CurrSubDesc_"*"
+
+	i SubDescs'="" s SubDescs=SubDescs
+	d %request.Set("SubsOrdItem",SubDescs)
+	d %request.Set("AddSubsItem",AddSubsItem)
+	d %request.Set("NonSubItems",AddNonSubsItem)
+	d %request.Set("disableSubs",disableSubs)
+
+ }
+ 
+</SERVER>
+	<TRAK:APPLET>
+	<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+	<TRAK:COMPONENT id="OEOrder.ShowDrgSubs"></TRAK:COMPONENT>
+	
+</body>
+</html>

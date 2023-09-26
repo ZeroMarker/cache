@@ -1,0 +1,124 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+  s str = $Get(%request.Data("str",1))
+  
+	s active= $Get(%request.Data("active",1))
+	s parent = $Get(%request.Data("parent",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s periodType = $Get(%request.Data("periodType",1))
+	s period = $Get(%request.Data("period",1))
+	s userCode = $Get(%request.Data("userCode",1))
+	s schemrowid = $Get(%request.Data("schemrowid",1))
+	s schem = $Get(%request.Data("schem",1))
+  s kpidr = $Get(%request.Data("kpidr",1))
+  s userid = $Get(%request.Data("userid",1))
+	s date = $Get(%request.Data("date",1))
+	s result = $Get(%request.Data("result",1))
+	s procdesc = $Get(%request.Data("procdesc",1))
+	s desc = $Get(%request.Data("desc",1))
+	s deptdr = $Get(%request.Data("deptdr",1))
+
+	s mainrowid = $Get(%request.Data("mainrowid",1))
+	s detailrowid = $Get(%request.Data("detailrowid",1))
+	s actvalue = $Get(%request.Data("actvalue",1))
+	s desc = $Get(%request.Data("desc",1))
+	s period = $Get(%request.Data("period",1))
+	s sprrowid = $Get(%request.Data("sprrowid",1))
+	s year = $Get(%request.Data("year",1))
+	
+	s schemDr = $Get(%request.Data("schemDr",1))
+	s state = $Get(%request.Data("state",1))
+	
+	s cycleDr = $Get(%request.Data("cycleDr",1))
+	s frequency = $Get(%request.Data("frequency",1))
+	s schemDr = $Get(%request.Data("schemDr",1))
+
+	s kpidrs = $Get(%request.Data("kpidrs",1))
+	s userID = $Get(%request.Data("userID",1))
+	s Rscore = $Get(%request.Data("Rscore",1)) //最终考核分 2016-04-24 cyl add 
+
+	
+	//上半部分显示
+	i action="list"  d
+	.w ##class(dhc.pa.udata.uBasicUnitPaCalu).ListMainRec(year,periodType, period, userCode, schemDr,state,start, limit)
+	
+	//状态链接
+	i action="liststates"  d
+	.w ##class(dhc.pa.udata.uBasicUnitPaCalu).ListStates(schemrowid,start,limit)
+	
+	//KPI
+	i action="kpilist"  d
+	.w ##class(dhc.pa.udata.uBasicUnitPaCalu).ListKPI(searchField, searchValue, sortField, sortDir, start, limit, schem, parent)
+  
+  //绩效单元
+	i action="listjxunits"  d
+	.w ##class(dhc.pa.udata.uBasicUnitPaCalu).ListURRecs(schemrowid,kpidr,period,start,limit)
+	
+	//提交
+	i action = "submit" d
+	.s result = ##class(dhc.pa.udata.uBasicUnitPaCalu).Submit(schemrowid,sprrowid,userid,date,result,procdesc,desc,deptdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+  //取消提交
+	i action = "cancelsubmit" d
+	.s result = ##class(dhc.pa.udata.uBasicUnitPaCalu).CancelSubmit(schemrowid,sprrowid,period, userid, date, result, procdesc, desc, deptdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+  
+  //计算
+	i action = "calu" d
+	.s result = ##class(dhc.pa.udata.uBasicUnitPaCalu).Calu(cycleDr, frequency, period, schemDr,userCode)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//数据保存
+	i action = "update" d
+	.s result = ##class(dhc.pa.udata.uBasicUnitPaCalu).Update(mainrowid,detailrowid, actvalue, desc,period, kpidrs, periodType, deptdr, userID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//审核科室
+	i action="listschemdepts"  d
+	.w ##class(dhc.pa.udata.uBasicUnitPaCalu).ListDepts(schemrowid, start, limit)
+	
+	//方案列表
+	i action = "listschems" d
+	.w ##class(dhc.pa.udata.uBasicUnitPaCalu).GetSchems(userCode,str,start, limit)
+	
+	//生成最终分数 2016-04-20 wy add
+	i action = "copyScore" d
+	.s result = ##class(dhc.pa.udata.uBasicUnitPaCalu).copyScoreMain(year,period,periodType,userCode,schemDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+ 
+	//最终考核分，问题描述数据修改  2010-04-22 chuyali add
+	i action = "updateNew" d
+	.s result = ##class(dhc.pa.udata.uBasicUnitPaCalu).UpdateNew(mainrowid,detailrowid, Rscore, desc,period, kpidrs, periodType, deptdr, userID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

@@ -1,0 +1,50 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SCRIPT language=javascript>
+function doPrint() {
+//	try {
+		var printdata=document.getElementById("printdata");
+
+		if (printdata) {
+			var websys_print=new self.ActiveXObject("TrakWebPrint.tkTrakWebPrint");
+			websys_print.DoPrintLocalDefault(unescape(printdata.innerHTML),false);
+			websys_print=null;
+		}
+//	}
+//	catch (e) {
+//		alert('Unable to load TrakWebPrint.tkWebPrint');
+//	}
+}
+</SCRIPT>
+
+</HEAD>
+<BODY onload="doPrint();">
+
+<PRE id=printdata>
+<SCRIPT language=cache runat=server>
+	//get the print stuff from the server for now lets hardcode some stuff....
+	//it all gets escaped  on the server,
+	//and then unescaped before passing to the dll
+	w $zcvt("!The First Line","O","HTML"),!
+	w $zcvt("!The Second Line","O","HTML"),!
+	w $zcvt(" more stuff on the same line","O","HTML"),!
+	w $zcvt("?10 10","O","HTML"),!
+	w $zcvt("?20 20","O","HTML"),!
+	w $zcvt("!more stuff on a new line","O","HTML"),!
+</SCRIPT>
+</PRE>
+<OBJECT ID="tkTrakWebPrint" CLASSID="CLSID:0F9F73F1-B8BA-4EE3-8CD9-BCB9DD0F511E" CODEBASE="../addins/client/TrakWebPrint.CAB#version=1,0,0,6">
+</OBJECT>
+
+</BODY>
+</HTML>

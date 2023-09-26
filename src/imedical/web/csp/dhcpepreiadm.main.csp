@@ -1,0 +1,801 @@
+
+<!--dhcpepreiadm.main.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+<style>
+	#box-td {
+			box-sizing:border-box;
+			-moz-box-sizing:border-box; /* Firefox */
+			-webkit-box-sizing:border-box; /* Safari */
+		}
+	.menu-btn {
+			text-align: center;
+			margin-left: auto;
+			margin-right: auto;
+		}
+	.search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+			/*padding: 0 10px;*/
+		}
+	.r-label{
+			padding-left: 10px;
+		}
+	.l-label{
+			padding: 0 10px;
+		}
+	.panel-header{
+			border-bottom: 0;
+		}
+	
+	
+</style>	
+	
+	
+<script language="JavaScript"> 
+
+//self.moveTo(0,4) 
+//self.resizeTo(screen.availWidth,screen.availHeight) 
+
+</script>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+set PAPMINo=$g(%request.Data("PAPMINo",1))
+set PreAdmId=$g(%request.Data("AdmId",1))
+set AdmType=$g(%request.Data("AdmType",1))
+set PreOrAdd=$g(%request.Data("PreOrAdd",1))
+set VIPLevel=$g(%request.Data("VIPLevel",1))
+set DefaultVIP=##class(web.DHCPE.HISUICommon).GetDefaultVIP(%session.Get("LOGON.USERID"))
+set SurveyFlag=$G(^DHCPESetting("DHCPE","PreSurvey",%session.Get("LOGON.CTLOCID")))
+set RecommendFlag=$G(^DHCPESetting("DHCPE","RecommendItem",%session.Get("LOGON.CTLOCID")))
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+</SCRIPT> 
+
+<script type="text/javascript">
+	var PAPMINo="#(PAPMINo)#"
+	var PreAdmId="#(PreAdmId)#"
+	var AdmType="#(AdmType)#"
+	var PreOrAdd="#(PreOrAdd)#"
+	var VIPLevel="#(VIPLevel)#"
+	var SurveyFlag="#(SurveyFlag)#"
+	var RecommendFlag="#(RecommendFlag)#"
+	var PreItemList=0
+</script>
+ 
+</head>
+<body class="hisui-layout" id="TPanel">
+	
+  <input type="hidden" id="Old_RowId"/>	
+  <div data-options="region:'north',border:false" style="height:280px;padding:4px 4px 4px 4px;">
+  
+  <div class="hisui-panel" data-options="title:'个人预约',headerCls:'panel-header-gray',iconCls:'icon-add-note',tools:'#preiadmtt'" style="border:1px solid #ccc;">
+				
+  
+    <form id="preiadmform"  class="form">
+      <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+        <tr>
+          <td align="right" style="width:100px;">
+          	<input type="hidden" id="PIBI_RowId"/>
+          	<input type="hidden" id="PIADM_RowId"/>
+          	<input type="hidden" id="Sex"/>
+          	<input type="hidden" id="NationDesc"/>
+          	<input type="hidden" id="Birth"/>
+          	<input type="hidden" id="CredNo"/>
+          	<input type="hidden" id="PhotoInfo"/>
+          	<input type="hidden" id="PETime"/>
+            <label for="CardNo">卡号</label></td>
+          <td style="width:140px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="CardNo" style="width:133px;" /></div>
+          </td>
+          <td style="width:150px;" align="right">
+            <div>
+              <select class="hisui-combobox" type="text" Id="CardType" name="CardType" style="width:140px;" editable="false"></select></div>
+          </td>
+          <td style="width:120px;" align="right">
+            <div>
+              <a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">&nbsp;&nbsp;&nbsp;读&nbsp;卡&nbsp;&nbsp;</a></div>
+          </td>
+          <td align="right" style="width:100px;">
+            <label for="Age">年龄</label></td>
+          <td style="width:140px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Age" style="width:133px;" /></div>
+          </td>
+          <td align="right" style="width:100px;">
+            <label for="Married_DR_Name">婚姻状况</label></td>
+          <td style="width:160px;">
+            <div>
+              <input class="hisui-combobox" type="text" Id="Married_DR_Name" style="width:140px;" editable="false" /></div>
+          </td>
+          
+          
+          <td style="width:160px;">
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="复查" Id="ReCheckFlag" />
+              <input class='hisui-checkbox' type="checkbox" label="就餐" Id="DietFlag" /></div>
+          </td>
+          <!--td rowspan="2" style="width:160px;">
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="复查" Id="ReCheckFlag" /></div>
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="就餐" Id="DietFlag" /></div>
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="赠品" Id="GiftFlag" /></div>
+          </td-->
+          <td rowspan="4" style="width:260px;">
+          	<label id="imgPic"> <img src="../images/uiimages/patdefault.png" border="0" width=120 height=120></label>
+            <!--img id="imgPic" src="../images/uiimages/patdefault.png" border="0" width=120 height=120--></td>
+            
+        </tr>
+        <tr>
+          <td align="right">
+            <label for="Name">
+              <font color="red">*</font>姓名</label></td>
+          <td>
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Name" style="width:133px;" data-options="validType:'length[1,50]'" /></div>
+          </td>
+          <td colspan="2" align="right">
+            <div>
+              <label style="padding-right:10px;" for="PAPMINo">登记号</label>
+              <input class="hisui-validatebox" type="text" Id="PAPMINo" style="width:160px;" /></div>
+          </td>
+          <td align="right">
+            <label for="PatFeeType_DR_Name">体检类别</label></td>
+          <td>
+            <div>
+              <input class="hisui-combobox" type="text" Id="PatFeeType_DR_Name" style="width:140px;" editable="false" /></div>
+          </td>
+          <td align="right">
+            <label for="Position">部门</label></td>
+          <td>
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Position" style="width:133px;" /></div>
+          </td>
+          <td>
+            <div>
+              <a id="BPreDate" href="#" class="hisui-linkbutton" style="width:100px;">预约时间</a></div>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label for="Sex_DR_Name">
+              <font color="red">*</font>性别</label></td>
+          <td>
+            <div>
+              <input class="hisui-combobox" type="text" Id="Sex_DR_Name" style="width:140px;" data-options="" editable="false" /></div>
+          </td>
+          <td colspan="2" align="right">
+            <div>
+              <label  style="padding-right:10px;" for="MobilePhone">
+                <font color="red">*</font>移动电话</label>
+              <input class="hisui-validatebox" type="text" Id="MobilePhone" style="width:160px;" data-options="" /></div>
+          </td>
+          <td align="right">
+            <label for="VIPLevel">VIP等级</label></td>
+          <td>
+            <div>
+              <input class="hisui-combobox" type="text" Id="VIPLevel" style="width:140px;" editable="false" /></div>
+          </td>
+          <td align="right">
+            <label for="Address">联系地址</label></td>
+          <td>
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Address" style="width:133px;" /></div>
+          </td>
+          <td>
+            <div>
+              <a id="Update" href="#" class="hisui-linkbutton" style="width:100px;">预约</a></div>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            <label for="DOB"><font color="red">*</font>出生日期</label></td>
+          <td>
+            <div>
+              <input class="hisui-datebox" type="text" Id="DOB" style="width:140px;" data-options="" /></div>
+          </td>
+          <td colspan="2" align="right">
+            <div>
+              <label  style="padding-right:10px;" for="PEDateBegin">
+                <font color="red">*</font>体检日期</label>
+              <input class="hisui-datebox" type="text" Id="PEDateBegin" style="width:168px;" data-options="required:true" /></div>
+          </td>
+          <td align="right">
+            <label for="RoomPlace">诊室位置</label></td>
+          <td>
+            <div>
+              <input class="hisui-combobox" type="text" Id="RoomPlace" style="width:140px;" editable="false" /></div>
+          </td>
+          <td align="right">
+            <label for="Tel1">电话</label></td>
+          <td>
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Tel1" style="width:133px;" /></div>
+          </td>
+          <td>
+            <div>
+              <a id="BClear" href="#" class="hisui-linkbutton" style="width:100px;">清屏</a></div>
+          </td>
+          
+        </tr>
+        <tr>
+          <td align="right">
+            <label for="IDCard">证件号</label></td>
+          <td>
+            <div>
+              <input class="hisui-validatebox" type="text" Id="IDCard" style="width:133px;" /></div>
+          </td>
+          <td align="right">
+            <div>
+              <input class="hisui-combobox" type="text" Id="PAPMICardType_DR_Name" style="width:140px;" /></div>
+          </td>
+          <td align="right"> 
+            <div>
+              <a id="ReadRegInfo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读身份证</a></div>
+          </td>
+          <td align="right">
+            <label for="PGADM_DR_Name">团体</label></td>
+          <td>
+            <div>
+              <input class="textbox" type="text" Id="PGADM_DR_Name" style="width:140px;" /></div>
+          </td>
+          <td align="right">
+            <label for="PGTeam_DR_Name">分组</label></td>
+          <td>
+            <div>
+              <input class="textbox" type="text" Id="PGTeam_DR_Name" style="width:140px;" /></div>
+          </td>
+          <td>
+           <div>
+              <a id="BRegister" href="#" class="hisui-linkbutton" style="width:100px;background-color:#24c24e;">登记</a></div>
+         </td>
+         <td>
+            <div>
+              <a id="BPhoto" href="#" class="hisui-linkbutton" style="width:120px;">拍照</a></div>
+          </td>
+        </tr>
+      </table>
+    </form>
+    </div>
+  </div>
+  <div class="hisui-layout" data-options="region:'west',border:false,headerCls:'panel-header-gray'" style="width:1020px;padding:4px 4px 2px 4px;">
+    <div class="hisui-layout" data-options="region:'west',border:false,headerCls:'panel-header-gray'" style="width:320px;padding:2px 6px 2px 2px;position:relative;left:4px;">
+      <div data-options="region:'north',border:false" style="height:75px;">
+      <div class="hisui-panel" data-options="title:'体检套餐',fit:true,headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="border:1px solid #ccc;border-radius:0;">
+		
+        <form class="form"> 
+          <table style='padding-top:1px;'>
+            <tr>
+            <td>
+                <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
+              </td>
+              <td>
+                <div>
+                  <label for="Set">套餐查询</label>
+                  <input class="hisui-validatebox" type="text" Id="Set" style="width:80px;" /></div>
+              </td>
+               <td>
+                <div style="width:10px;" ></div>
+              </td>
+              
+              <td>
+                <div>
+                  <a id="SetBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+              </td>
+            </tr>
+          </table>
+        </form>
+      </div>
+     </div>
+      <div data-options="region:'center',border:false">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-radius:0 0 4px 4px;">
+		<table class="textbox" id="QrySet" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>
+			
+		</div>
+      
+        
+      </div>
+    </div>
+    
+    
+    <div class="hisui-layout" data-options="region:'center',border:false" style="padding:2px;" >
+    <div data-options="region:'north',border:false" style="height:75px;">
+    <div class="hisui-panel" data-options="title:'检查列表',headerCls:'panel-header-gray',fit:true,iconCls:'icon-add-note',collapsible:false" style="border:1px solid #ccc;border-radius:0;">
+		
+    
+        <form class="form">
+          <table style='padding-top:1px;'>
+            <tr>
+            <td>
+                <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
+              </td>
+              <td>
+                <div>
+                  <input class="hisui-combobox" type="text" Id="StationID" style="width:100px;" /></div>
+              </td>
+              
+              
+              <td>
+                <div style="width:20px;"></div>
+              </td>
+              <td>
+                <div>
+                  <label for="Item">项目</label>
+                  <input class="hisui-validatebox" type="text" Id="Item" style="width:60px;" /></div>
+              </td>
+              <td>
+                <div>
+                  <a id="RisBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px;">查询</a></div>
+              </td>
+            </tr>
+          </table>
+        </form>
+      </div>
+      </div>
+      
+      
+       <div data-options="region:'center',border:false">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-radius:0 0 4px 4px;">
+		<table class="textbox" id="QryRisItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>
+			
+		</div>
+      
+        
+      </div>
+      
+    </div>
+    
+    
+    <div id="LisTab" class="hisui-tabs tabs-gray" data-options="region:'east',border:false" style="width:350px;padding:0px 0px 4px 0px;">
+    
+      
+      <div title="检验列表" style="border:false; border-radius:0;">
+        <div style="height:11%;">
+          <form class="form">
+            <table>
+            <tr style="height:6px;">
+            
+            </tr>
+              <tr>
+             <td>
+                <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
+              </td>
+                <td>
+                  <div>
+                    <label for="LisItem">项目</label>
+                    <input class="hisui-validatebox" type="text" Id="LisItem" style="width:80px;" /></div>
+                </td>
+                
+                <td>
+                <div style="width:20px;"></div>
+                </td>
+                
+                <td>
+                  <div>
+                    <a id="LisBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+                </td>
+              </tr>
+            </table>
+          </form>
+        </div>
+        
+        
+        <div style="height:88.5%;border:1px solid #ccc;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+     	<table class="textbox" id="QryLisItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+    	</div> 
+        
+      </div>
+       <div title="其他项目" style="border:false;border-radius:0;">
+       <div style="height:11.5%;">
+          <form class="form">
+            <table>
+            <tr style="height:6px;">
+            
+            </tr>
+              <tr>
+              <td>
+                <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
+              </td>
+                <td>
+                  <div>
+                    <label for="OtherItem">项目</label>
+                    <input class="hisui-validatebox" type="text" Id="OtherItem" style="width:80px;" /></div>
+                </td>
+                
+                <td>
+                <div style="width:20px;"></div>
+                </td>
+                
+                
+                <td>
+                  <div>
+                    <a id="OtherBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+                </td>
+              </tr>
+            </table>
+          </form>
+        </div>
+        <div style="height:88.5%;border:1px solid #ccc;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+     	<table class="textbox" id="QryOtherItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+    	</div> 
+      </div>
+       <div title="药品列表" style="border:false;border-radius:0;">
+        <div style="height:11.5%;">
+          <form class="form">
+            <table>
+            <tr style="height:6px;">
+            
+            </tr>
+              <tr>
+              <td>
+                <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
+              </td>
+                <td>
+                  <div>
+                    <label for="MedicalItem">药品</label>
+                    <input class="hisui-validatebox" type="text" Id="MedicalItem" style="width:80px;" /></div>
+                </td>
+                
+                <td>
+                <div style="width:20px;"></div>
+                </td>
+                
+                <td>
+                  <div>
+                    <a id="MedicalBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+                </td>
+              </tr>
+            </table>
+          </form>
+        </div>
+         <div style="height:88.5%;border:1px solid #ccc;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+     	<table class="textbox" id="QryMedicalItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+    	</div> 
+     </div>
+    </div>
+  </div>
+<div class="hisui-panel" data-options="region:'center',border:false" style="padding:0px 4px 10px 0px;">
+	<div id="ZYBTab" class="hisui-tabs tabs-gray" data-options="border:false,fit:true">
+		<div title="体检项目" data-options="fit:true,iconCls:'icon-add-note'" style="border:false; border-radius:0 0 4px 4px;">
+			<div style="height:92%;" >
+				<table id="PreItemList" data-options="fit:true,singleSelect:true,border:false,toolbar:'#ItemToolBar'"></table>
+			</div>
+			<div style="float:left;height:26px;width:160px;border:1px solid #ff5400;" align="center">
+				<img id="TotalFeeimg" style="height:26px;" src="../images/dhcpe/总费用.png" align="left">
+				<span id="TotalFee" align="center" style="font-size:16px;color:#ff5400;">0.00</span>
+	  	
+			</div>
+	  	
+			<!--div style="float:left;">
+		  		<img id="GFeeimg" src="../images/dhcpe/公费.png">
+		  		<span id="GFee" align="center" style="font-size:14px;color:#f616161;">公费：0.00</span>
+		 
+		  		<img id="IFeeimg" src="../images/dhcpe/自费.png">
+		  		<span id="IFee" align="center" style="font-size:14px;color:#f616161;">自费：0.00</span>
+		   </div--> 
+	  	
+	  	</div>
+		
+		<!-- 职业健康基本信息 start -->
+		<div title="基本信息" style="border:1px solid #ccc;border-top:0;">
+			<form id="jbinfo" class="form">
+				<table style="width:900px; border-spacing:10px;">
+					<tr>
+						<td align="right"><label for="Industry">行业</label></td>
+						<td><input class="hisui-combobox" type="text" Id="Industry" style="width:167px;"/></td>
+						
+						<td align="right"><label for="AllWorkYear">总工龄</label></td>
+						<td>
+							<input class="hisui-numberbox" data-options="min:0, max:65" type="text" Id="AllWorkYear" style="width:61px;"/>
+							<label for="AllWorkYear">年</label>
+							<input class="hisui-numberbox" data-options="min:0, max:11" type="text" Id="AllWorkMonth" style="width:61px;"/>
+							<label for="AllWorkMonth">月</label>
+						</td>
+					</tr>
+	          		<tr>
+						<td align="right"><label for="Typeofwork">工种</label></td>
+						<td><input class="hisui-combobox" type="text" Id="Typeofwork" style="width:167px;"/></td>
+						
+						<td align="right"><label for="HarmWorkYear">接害工龄</label></td>
+						<td>
+							<input class="hisui-numberbox" data-options="min:0, max:65" type="text" Id="HarmWorkYear" style="width:61px;"/>
+							<label for="HarmWorkYear">年</label>
+							<input class="hisui-numberbox" data-options="min:0, max:11" type="text" Id="HarmWorkMonth" style="width:61px;"/>
+							<label for="HarmWorkMonth">月</label>
+						</td>
+					</tr>
+					<tr>
+						<td align="right" style="width:100px;"><label for="WorkNo">工号</label></td>
+						<td><input class="hisui-validatebox" type="text" Id="WorkNo" style="width:160px;"/></td>
+						
+						<td align="right"><label for="Category">检查种类</label></td>
+						<td><input class="hisui-combobox" type="text" Id="Category" style="width:168px;"/></td>
+					</tr>
+					<tr>
+						<td align="right"><label for="HarmInfo">接害因素</label></td>
+						<td colspan="3"><input class="hisui-combotree" type="text" Id="HarmInfo" style="width:500px;"/></td>
+					</tr>
+					<tr align="center">
+						<td align="center" colspan="4">
+	              			<a id="JBSave" href="#" class="hisui-linkbutton" style="width:100px;">保存</a>
+	              			<a id="JBNext" href="#" class="hisui-linkbutton" style="width:100px;">下一步</a>
+						</td>
+					</tr>
+	        	</table>
+	        </form>
+		</div>
+		<!-- 职业健康基本信息 end -->
+		
+		<!-- 职业健康职业史 start -->
+		<div title="职业史" style="border:1px solid #ccc;border-top:0;">
+			<div class="hisui-layout" fit="true" border="false">
+				<div data-options="region:'north'" border="false" style="height:160px;border-bottom:1px solid #CCC;">
+					<form id="ZYform" class="form">
+						<table style="width:1150px; border-spacing:10px;">
+							<tr>
+								<td align="right"><label for="StartDate">开始日期</label></td>
+								<td><input class="hisui-datebox" type="text" Id="StartDate" style="width:127px;"/></td>
+								
+								<td align="right"><label for="WorkPlace">工作单位</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="WorkPlace" style="width:170px;"/></td>
+								
+								<td align="right"><label for="WorkShop">车间</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="WorkShop" style="width:120px;"/></td>
+								
+								<td align="right"><label for="ZYTypeofwork">工种</label></td>
+								<td><input class="hisui-combobox" type="text" Id="ZYTypeofwork" style="width:137px;"/></td>
+								
+								<td align="right"><label for="HarmfulFactor">接触危害</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="HarmfulFactor" style="width:170px;"/></td>
+							</tr>
+							<tr>
+								<td align="right"><label for="EndDate">截止日期</label></td>
+								<td><input class="hisui-datebox" type="text" Id="EndDate" style="width:127px;"/></td>
+								
+								<td align="right"><label for="WorkDepartment">部门</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="WorkDepartment" style="width:170px;"/></td>
+								
+								<td align="right"><label for="WorkTeam">班组</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="WorkTeam" style="width:120px;"/></td>
+								
+								<td align="right"><label for="DailyWorkHours">每日工时数</label></td>
+								<td><input class="hisui-numberbox" data-options="min:0, max:24" type="text" Id="DailyWorkHours" style="width:137px;"/></td>
+								
+								<td align="right"><label for="ProtectiveMeasure">防护措施</label></td>
+								<td><input class="hisui-combobox" type="text" Id="ProtectiveMeasure" style="width:177px;"/></td>
+							</tr>
+							<tr align="center">
+								<td align="center" colspan="10">
+									<a id="ZYSave" href="#" class="hisui-linkbutton" style="width:100px;">保存</a>
+									<a id="ZYDelete" href="#" class="hisui-linkbutton" style="width:100px;">删除</a>
+									<a id="ZYCancel" href="#" class="hisui-linkbutton" style="width:100px;">清屏</a>
+									<a id="ZYNext" href="#" class="hisui-linkbutton" style="width:100px;">下一步</a>
+								</td>
+							</tr>
+						</table>
+					</form>
+				</div>
+				<div border="false" data-options="region:'center'"> 
+					<table class="hisui-datagrid" id="ZYHistory" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false" ></table>
+	    		</div>
+			</div> 
+		</div>
+		<!-- 职业健康职业史 end -->
+		
+		<!-- 职业健康病史 start -->
+		<div title="病史" style="border:1px solid #ccc;border-top:0;">
+			<form id="DHistory" class="form">
+				<table style="width:900px; border-spacing:10px;">
+					<tr>
+						<td align="right"><label for="DHis">既往病史</label></td>
+						<td colspan=4><input class="hisui-validatebox" type="text" Id="DHis" style="width:270px;"/></td>
+						<td align="right"><label for="DHome">家族史</label></td>
+						<td colspan=4><input class="hisui-validatebox" type="text" Id="DHome" style="width:270px;"/></td>
+						<td></td>
+					</tr>
+	        		<tr>
+						<td align="right"><label for="SmokeHis">吸烟史</label></td>
+						<td colspan=2>
+				            <select id="SmokeHis" class="hisui-combobox" name="SmokeHis" style="width:137px;" data-options="enterNullValueClear:false">
+								<option value="不吸烟">不吸烟</option>
+								<option value="偶吸烟">偶吸烟</option>
+								<option value="经吸">经常吸</option>
+							</select>
+	          			</td>
+	          
+	          			<td align="right"><input class="hisui-numberbox" data-options="min:0" type="text" Id="SmokeNo" style="width:52px;"/></td>
+						<td align="left"><label for="SmokeNo">包/天</label></td>
+						<td align="right"><input class="hisui-numberbox" data-options="min:0" type="text" Id="SmokeAge" style="width:52px;"/></td>
+						<td align="left"><label for="SmokeAge">年</label></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td align="right"><label for="AlcolHis">饮酒史</label></td>
+						<td colspan=2>
+							<select id="AlcolHis" class="hisui-combobox" name="AlcolHis" style="width:137px;" data-options="enterNullValueClear:false">
+								<option value="不饮酒">不饮酒</option>
+								<option value="偶饮酒">偶饮酒</option>
+								<option value="经饮">经常饮</option>
+							</select>
+						</td>
+						<td align="right"><input class="hisui-numberbox" data-options="min:0" type="text" Id="AlcolNo" style="width:52px;"/></td>
+						<td align="left"><label for="AlcolNo">ml/天</label></td>
+						<td align="right"><input class="hisui-numberbox" data-options="min:0" type="text" Id="Alcol" style="width:52px;"/></td>
+						<td align="left"><label for="Alcol">年</label></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td align="right"><label>月经史</label></td>
+			        	<td align="right"><label for="FirstMenstrual">初潮年龄</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="FirstMenstrual" style="width:52px;"/></td>
+			          	<td align="right"><label for="Period">经期</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="Period" style="width:52px;"/></td>
+			          	<td align="right"><label for="Cycle">周期</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="Cycle" style="width:52px;"/></td>
+			          	<td align="right"><label for="MenoParseAge">停经年龄</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="MenoParseAge" style="width:52px;"/></td>
+						<td></td>
+						<td></td>
+		          	</tr>
+		          	<tr>
+			          	<td align="right"><label>生育史</label></td>
+			          	
+			          	<td align="right"><label for="NowChild">现有子女</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="NowChild" style="width:52px;"/></td>
+			          	<td align="right"><label for="Abortion">流产</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="Abortion" style="width:52px;"/></td>
+			          	<td align="right"><label for="Prematurebirth">早产</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="Prematurebirth" style="width:52px;"/></td>
+			          	<td align="right"><label for="DeadBirth">死产</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="DeadBirth" style="width:52px;"/></td>
+			          	<td align="right"><label for="AbnormalFetal">异常胎</label></td>
+			          	<td><input class="hisui-numberbox" data-options="min:0" type="text" Id="AbnormalFetal" style="width:52px;"/></td>
+			        </tr>
+		          	<tr>
+			          	<td align="right"><label>婚姻史</label></td>
+			          	
+			          	<td align="right"><label for="WeddingDate">结婚日期</label></td>
+			          	<td colspan=2><input class="hisui-datebox" type="text" Id="WeddingDate" style="width:117px;"/></td>
+			          	
+			          	<td align="right" colspan=3><label for="SpouseHarm">配偶接触相关危险因素情况</label></td>
+			          	<td colspan=4><input class="hisui-validatebox" type="text" Id="SpouseHarm" style="width:299px;"/></td>
+			        </tr>
+		          	<tr>
+			          	<td align="right"></td>
+			          	
+			          	<td align="right"></td>
+			          	<td colspan=2></td>
+			          	
+			          	<td align="right" colspan=3><label for="SpouseHealth">配偶职业及健康状况</label></td>
+			          	<td colspan=4><input class="hisui-validatebox" type="text" Id="SpouseHealth" style="width:299px;"/></td>
+			        </tr>
+					<tr align="center">
+						<td align="center" colspan=11>
+							<a id="BSSave" href="#" class="hisui-linkbutton" style="width:100px;">保存</a>
+							<a id="BSNext" href="#" class="hisui-linkbutton" style="width:100px;">下一步</a></div>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		<!-- 职业健康病史 end -->
+		
+		<!-- 职业健康职业病史 start -->
+	    <div title="职业病史" style="border:1px solid #ccc;border-top:0;">
+	    	<div class="hisui-layout" fit="true" border="false">
+				<div data-options="region:'north'" border="false" style="height:160px;border-bottom:1px solid #CCC;">
+					<form id="ZYBform" class="form">
+						<table style="width:900px; border-spacing:10px">
+		        			<tr>
+								<td align="right"><label for="DiseaseDesc">病名</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="DiseaseDesc" style="width:160px;"/></td>
+								
+								<td align="right"><label for="DiagnosisDate">诊断日期</label></td>
+								<td><input class="hisui-datebox" type="text" Id="DiagnosisDate" style="width:167px;"/></td>
+								
+								<td align="right"><label for="Return">归转</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="Return" style="width:160px;"/></td>
+							</tr>
+							<tr>
+								<td align="right"><label for="DiagnosisPlace">诊断单位</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="DiagnosisPlace" style="width:160px;"/></td>
+								
+								<td align="right"><label for="Process">治疗经过</label></td>
+								<td><input class="hisui-validatebox" type="text" Id="Process" style="width:160px;"/></td>
+								
+								<!--td align="right"></td>
+								<td><input class='hisui-checkbox' type="checkbox" label="是否痊愈" Id="IsRecovery" /></td-->
+							</tr>
+							<tr align="center">
+								<td align="center" colspan="6">
+									<a id="ZYBSave" href="#" class="hisui-linkbutton" style="width:100px;">保存</a>
+									<a id="ZYBDelete" href="#" class="hisui-linkbutton" style="width:100px;">删除</a>
+									<a id="ZYBCancel" href="#" class="hisui-linkbutton" style="width:100px;">清屏</a>
+									<a id="ZYBNext" href="#" class="hisui-linkbutton" style="width:100px;">下一步</a>
+								</td>
+							</tr>
+						</table>
+					</form>
+				</div>
+				<div border="false" data-options="region:'center'"> 
+	     			<table class="hisui-datagrid" id="ZYBHistory" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false" ></table>
+	    		</div>
+			</div> 
+		</div> 
+		<!-- 职业健康职业病史 end -->
+  
+	</div>	
+</div>
+
+  <div id="ItemToolBar" style="padding-top:2px;">
+     <input class='hisui-checkbox' type="checkbox" label="收费" Id="OpenCharge"/>
+     <input class='hisui-checkbox' type="checkbox" label="不刷新" Id="NoRefresh"/>
+     <a id="BEndanger" href="#" class="hisui-linkbutton" style="margin-top:0px;" data-options="plain:true,iconCls:'icon-star-yellow',stopAllEventOnDisabled:'true'">危害因素</a>
+     <a id="DeleteOrdItem" href="#" class="hisui-linkbutton" style="margin-top:0px;" data-options="plain:true,iconCls:'icon-cancel',stopAllEventOnDisabled:'true'">删除项目</a>
+     <a id="BSaveAmount" href="#" class="hisui-linkbutton" style="margin-top:0px;" data-options="plain:true,iconCls:'icon-save',stopAllEventOnDisabled:'true'">保存项目</a>
+     <label style="color:red">双击可编辑!</label>
+     <!--label id="ConfirmInfo" style="color:#FF5809;"></label-->
+  </div>
+  <div id="SetWin" data-options="iconCls:'icon-w-paper'" style="padding:10px;">
+		
+      <table id="QrySetWin" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true"></table>
+      
+  </div>
+   <div id="NameWin">
+		
+      <table id="QryNameWin" data-options="fit:true,singleSelect:true"></table>
+      
+  </div>
+  <div id="OccuWin">
+		
+      <table id="QryOccuWin" data-options="fit:true,singleSelect:false"></table>
+      
+  </div>
+  
+  
+  <div id="PreDateWin"></div>
+  <div id="CashierWin"></div>
+  <div id="PhotoWin"></div>   
+  <div id="SurveyWin" style="overflow:hidden;"></div>
+  <div id="RecommendWin" style="overflow:hidden;"></div>
+   <div id="preiadmtt">
+   <span style="color:#B3B3B3">当前体检性质 ： </span><span id="DefaultVIP">#(DefaultVIP)#</span>
+    <a id="BSetDefaultVIP" href="#" class="icon-edit"></a>
+   </div>
+  
+  <script type="text/javascript" src="../scripts/dhcpepreiadm.main.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.JS"></script>
+  <script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.PatItemPrint.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.RequestPrint.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+
+</body>
+</html>

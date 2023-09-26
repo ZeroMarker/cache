@@ -1,0 +1,147 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RowID=$Get(%request.Data("RowID",1))
+	s Type=$Get(%request.Data("Type",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CurRole=$Get(%request.Data("ApproveRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("21",RowID),CurRole,Action)
+	s ARAccessoryTypeDR=##Class(web.DHCEQACommon).GetDefaultAccessoryType("1")
+	s ARAccessoryType=##Class(web.DHCEQACommon).GetDefaultAccessoryType("2")
+	s ARLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	s ARLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+</script>
+<!--MZY0025	1254598		2020-05-13	注释多行文本框个性样式>
+<style type="text/css">
+	.hisui-textarea
+	{
+		width:200%;
+		height:100%;
+	}
+</style-->
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>	<!--Mozy003019		2020-04-28-->
+	<div data-options="region:'center',border:false" style="padding:5px 0px;">
+		<div class="hisui-panel" data-options="fit:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 0px #ccc;height:160px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cARReduceNo" for="ARReduceNo">退货单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ARReduceNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cARMakeDate" for="ARMakeDate">制单日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="ARMakeDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cARLocDR_CTLOCDesc" for="ARLocDR_CTLOCDesc">退货部门</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="ARLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label15"></div>
+						<div class="eq-table-td eq-table-label15"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cARAccessoryTypeDR_ATDesc" for="ARAccessoryTypeDR_ATDesc">管理类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.AccessoryType'" id="ARAccessoryTypeDR_ATDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cARProviderDR_VDesc" for="ARProviderDR_VDesc">供应商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="ARProviderDR_VDesc"></div>
+						<div class="eq-table-td eq-table-label15"></div>
+						<div class="eq-table-td eq-table-label15"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cARRemark" for="ARRemark">备注</label></div>
+						<div class="eq-table-td"><textarea id="ARRemark" class="textbox"></textarea></div><!--MZY0025	1254598		2020-05-13	修正多行文本框样式-->
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label15"></div>
+						<div class="eq-table-td eq-table-label15"></div>
+					</div>
+				</div>
+				<!--MZY0025 2020-05-13 UI调整-->
+				<div data-options="region:'center',border:false" style="position:relative;padding:0 10px;">
+                	<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'配件退货单明细'">
+						<table id="DHCEQAReduce" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"> </table>
+						<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:20px;top:5px;">合计</span>
+					</div>
+				</div>
+		     	<div data-options="region:'south',border:false" style="border-bottom:dashed 0px #ccc;height:45px;">
+			        <div style="margin:0px auto;fit:true;padding-top:10px;vertical-align:middle;text-align:center;">
+		            	<a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+		                <a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a>
+		                <a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a>
+		                <a id="BApprove1" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核1</a>
+		                <a id="BApprove2" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核2</a>
+						<a id="BApprove3" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核3</a>
+		                <a id="BCancelSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">退回</a>
+						<a id="BPrint" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">打印</a>
+			        </div>
+			    </div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQA">
+			<INPUT type="hidden" id="ARRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="Type" value="#(Type)#">
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="ChangeType" value="0">
+			<INPUT type="hidden" id="NeedUseLoc" value="0">
+			<INPUT type="hidden" id="ApproveTypeCode" value="10">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="ApproveRoleDR" value="">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			
+			<INPUT type="hidden" id="ARReduceType" value="1">
+			<INPUT type="hidden" id="ARAccessoryTypeDR" value="#(ARAccessoryTypeDR)#">
+			<INPUT type="hidden" id="ARAccessoryType" value="#(ARAccessoryType)#">
+			<INPUT type="hidden" id="ARLocDR" value="#(ARLocDR)#">
+			<INPUT type="hidden" id="ARLoc" value="#(ARLoc)#">
+			
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+			
+			<INPUT type="hidden" id="ARStatus" value="">
+			<INPUT type="hidden" id="ARProviderDR" value="">
+			<INPUT type="hidden" id="ARMakerDR" value="">
+			<INPUT type="hidden" id="ARJob" value="">
+			
+			<!--INPUT type="hidden" id="initRunQian" value=#(initRunQian)#-->
+			<INPUT type="hidden" id="PreviewRptFlag" value=#(PreviewRptFlag)#>
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/mp/reduce.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
+</body>
+</html>

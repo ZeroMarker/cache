@@ -1,0 +1,34 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+<SERVER>
+	s ^TMPALERT(1)=$G(%session.Data("LOGON.USERID")) //
+	s ^TMPALERT(2)=$g(%request.Data("EpisodeID"))
+	Set Alert1=##class(web.DHCLabReportControl).ReportWarn($g(%request.Data("EpisodeID")))
+	Set Alert2=##class(web.DHCLabReportControl).PreReportWarn($g(%request.Data("EpisodeID")))
+</SERVER>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ //s FFF=$g(%request.Data("FFF",1))
+ //s PAADMRowid=$p(FFF,"^")
+ //s PatientID=$p(FFF,"^",3)
+ // dhcbldrqmain.csp
+ //50113&TPAGID=986623&TWKFLJ=websys.csp^211001&PatientID=207&EpisodeID=428&mradm=428
+//	s myadmId=$g(%request.Data("admId",1))
+	//// &tAdmId="#(tAdmId)#>
+	//s admId=$g(%request.Data("EpisodeID"))
+</Script>
+<frameset rows="50%,*">
+	<frame name="DHCLabWarnReport" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabWarnReport&EpisodeID=#(%request.Get("EpisodeID"))#&PatientID=#(%request.Get("PatientID"))#" frameborder=0> 
+	<frame name="DHCLabPreReport" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabPreReport&EpisodeID=#(%request.Get("EpisodeID"))#&PatientID=#(%request.Get("PatientID"))#" >
+</frameset>
+<BODY>
+<TRAK:APPLET>
+</BODY>
+</HTML>

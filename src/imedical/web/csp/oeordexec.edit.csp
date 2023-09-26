@@ -1,0 +1,227 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body>
+<SERVER>
+ n vdir,jpegdir,cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+ d ##Class(web.CFSystemFileDefinition).GetVirtualDirectories(.vdir)
+ s jpegdir=$g(vdir("JPEG")),jpegdir=$p(jpegdir,"^",1)
+ i %request.Get("ID")="" d %request.Set("ID",%request.Get("oeordexecid"))
+ 
+ n QuestionnaireAnsweredID
+ i %request.Get("QuestionnaireID") {
+	s QuestionnaireAnsweredID=##Class(web.OEOrdExec).GetAnsweredQuestionnaire(%request.Get("ID"),%request.Get("QuestionnaireID"))
+ 	d %request.Set("QuestionnaireAnsweredID",QuestionnaireAnsweredID)
+ }
+ ;Log 48856
+ n ordExecDR,oearcimdr,DrugFormDR,GenericDR,ordGenericDrugDesc,StrengthDR,Strength,FormDR,Form,RouteDR,Route
+ s (ordExecDR,oearcimdr,DrugFormDR,GenericDR,ordGenericDrugDesc,StrengthDR,Strength,FormDR,Form,RouteDR,Route,IVType,IsFirst,IVContPrevAdmin)=""
+ i %request.Get("ID")'="" d
+ . s ordExecDR=%request.Get("ID")
+ . d %request.Set("OEOrdExecID",%request.Get("ID"))
+ i ordExecDR'="" s oearcimdr=$p($g(^OEORD(+ordExecDR,"I",$p(ordExecDR,"||",2),1)),"^",2)
+ i oearcimdr'="" s DrugFormDR=$p($g(^ARCIM(+oearcimdr,$p(oearcimdr,"||",2),1)),"^",12)
+ i DrugFormDR'="" s GenericDR=$p($g(^PHCD(+DrugFormDR,4)),"^",1)
+ i GenericDR'="" s ordGenericDrugDesc=$p($g(^PHCGE("GE",GenericDR)),"^",2)
+ i DrugFormDR'="" {
+ 	s StrengthDR=$p($g(^PHCD(+DrugFormDR,"DF",$p(DrugFormDR,"||",2),1)),"^",6)
+ 	i StrengthDR'="" s Strength=$p($g(^PHCS(StrengthDR)),"^",2)
+ 	s FormDR=$p($g(^PHCD(+DrugFormDR,"DF",$p(DrugFormDR,"||",2),1)),"^",1)
+ 	i FormDR'="" s Form=$p($g(^PHCF(FormDR)),"^",2)
+ 	s RouteDR=$p($g(^PHCD(+DrugFormDR,"DF",$p(DrugFormDR,"||",2),3)),"^",9)
+ 	i RouteDR'="" s Route=$p($g(^OEC("ROUTE",RouteDR)),"^",2)
+ }
+ i ordGenericDrugDesc'="",Strength'="" s ordGenericDrugDesc=ordGenericDrugDesc_","_Strength
+ i ordGenericDrugDesc'="",Form'="" s ordGenericDrugDesc=ordGenericDrugDesc_","_Form
+ i ordGenericDrugDesc'="",Route'="" s ordGenericDrugDesc=ordGenericDrugDesc_","_Route
+ d %request.Set("GenericDrugDesc",ordGenericDrugDesc)
+
+ ; stock quantity
+ s HidOEOREStockQty=$p($g(^OEORD(+ordExecDR,"I",+$p(ordExecDR,"||",2),"X",+$p(ordExecDR,"||",3))),"^",4)
+ i HidOEOREStockQty'="" s HidOEOREStockQty=$$calcqty2^aOET7(DrugFormDR,$p($g(^OEORD(+ordExecDR,"I",$p(ordExecDR,"||",2),2)),"^",3),HidOEOREStockQty,$p(ordExecDR,"||",1,2),HidOEOREStockQty)
+ d %request.Set("HidOEOREStockQty",HidOEOREStockQty)
+ 
+ i ordExecDR'="" s IVType=##Class(web.OEOrdExec).GetIVType(+ordExecDR_"||"_$p(ordExecDR,"||",2))
+ d %request.Set("IVType",IVType)
+ i $g(IVType)="C" d
+ . s IsFirst=##Class(web.OEOrdExec).IVContIsFirstBag(ordExecDR)
+ . s IVContPrevAdmin=##Class(web.OEOrdExec).IVContPrevComplete(ordExecDR)
+ d %request.Set("IsFirst",IsFirst)
+ d %request.Set("IVContPrevAdmin",IVContPrevAdmin)
+ ;Log 44586 PeterC 09/03/05
+ s (RecLoc,ExecDate,qr,qtydis,AltRecLoc,episID,epislocID,episloc,wardID,ward,wardlocID)=""
+ s Batches="^"
+ s oeitm=ordExecDR
+ /*
+ s ex=0 f  s ex=$o(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),"X",ex)) q:ex=""  d
+ .s dis=0 f  s dis=$o(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),"X",ex,"D",dis)) q:dis=""  s s=^(dis) d
+ ..s bat=$p(s,"^",2)
+ ..i Batches'[ ("^"_bat_"^") s Batches=Batches_bat_"^"
+ */
+ ;Log 54137 22/07/05 PeterC: Only look inside the specific ExecID
+ s dis=0 f  s dis=$o(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),"X",+$p(oeitm,"||",3),"D",dis)) q:dis=""  s s=^(dis) d
+ .s bat=$p(s,"^",2)
+ . i $g(BatchArr(bat))="" s BatchArr(bat)=0
+ . ;;; quantity dispensed-returned quantity
+ . s qr=$p(s,"^",13)
+ . s qp=$p(s,"^")
+ . s qtydis=qtydis+(qp-qr)
+ .i Batches'[ ("^"_bat_"^"),(qp-qr)>0 s Batches=Batches_bat_"^"
+ 
+ ;Log 58164 PeterC 31/01/06------------------------
+ i Batches="^" d
+ . s (ExecBatch,ExecBatchNo,ExecBatchNoDR)=""
+ . s ExecBatch=$p($g(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),"X",+$p(oeitm,"||",3))),"^",32)
+ . i ExecBatch'="" s ExecBatchNoDR=$p($g(^OEORD(+ExecBatch,"I",+$p(ExecBatch,"||",2),"X",+$p(ExecBatch,"||",3),"D",+$p(ExecBatch,"||",4))),"^",2)
+ . i ExecBatchNoDR'="" s Batches="^"_ExecBatchNoDR_"^"
+ ;-------------------------------------------------
+ 
+ i $g(oeitm)'="" s episID=$p(^OEORD(+oeitm),"^")
+ e  s episID=%request.Get("EpisodeID")
+ d %request.Set("EpisodeID",episID)
+ ;Log 61508 PeterC 06/11/06: Now looking at piece 19 (exec. date) instead of 16 (status).
+ i $g(oeitm)'="",$p($g(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),"X",+$p(oeitm,"||",3))),"^",19)="",qtydis'>0 d
+ . i $p(^PAADM(episID),"^",2)'="O" d
+ . . d %request.Set("PackedFlag","N")
+ . . s wardID=$p(^PAADM(episID),"^",70)
+ . . i wardID'="" d
+ . . . s wardlocID=$p(^PAWARD(wardID),"^",5)
+ . . . s ward=$p(^CTLOC(wardlocID),"^",2)
+ . . . d %request.Set("OEOREAltRecLocDR1",wardlocID)
+ . . . d %request.Set("OEOREAltRecLocDR",ward)
+ . . i wardID="" d
+ . . . s epislocID=$p(^PAADM(episID),"^",4)
+ . . . i epislocID'="" d
+ . . . . s episloc=$p(^CTLOC(epislocID),"^",2)
+ . . . . d %request.Set("OEOREAltRecLocDR1",epislocID)
+ . . . . d %request.Set("OEOREAltRecLocDR",episloc)
+
+ s SavedNewLoc=$p($g(^OEORD(+ordExecDR,"I",+$p(ordExecDR,"||",2),"X",+$p(ordExecDR,"||",3))),"^",31)
+ i SavedNewLoc'="" d
+ . d %request.Set("OEOREAltRecLocDR",$p($g(^CTLOC(SavedNewLoc)),"^",2))
+ . d %request.Set("OEOREAltRecLocDR1",SavedNewLoc)
+
+ s ExecDate=$p($g(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),"X",+$p(oeitm,"||",3))),"^",19)
+
+ s RecLoc=$p($g(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),3)),"^",6)
+ i RecLoc'="" s RecLoc=$p($g(^CTLOC(RecLoc)),"^",13)
+
+ i $l($g(Batches),"^")=3,RecLoc="D",ExecDate="" {
+	s BatchNo=$p($g(Batches),"^",2)
+	i BatchNo'="",$l($g(BatchNo),"||")=3 {
+		s HidStockBatches=BatchNo
+		s BatchNo=$p($g(^INCI($p(BatchNo,"||",1),"IL",$p(BatchNo,"||",2),"LB",$p(BatchNo,"||",3))),"^",1)
+		i BatchNo'="" s BatchNo=$p($g(^INCI($p(BatchNo,"||",1),"IB",$p(BatchNo,"||",2))),"^",1)
+		i BatchNo="" s BatchNo=HidStockBatches
+		d %request.Set("OEOREStockBatches",BatchNo)
+		d %request.Set("HidStockBatches",HidStockBatches)
+	}
+ }
+
+ ; PC - reset these values if OEOREExec has been saved off
+ i ExecDate'="" d
+ . s HidStockBatches=$p($g(^OEORD(+oeitm,"I",+$p(oeitm,"||",2),"X",+$p(oeitm,"||",3))),"^",28)
+ . d %request.Set("HidStockBatches",HidStockBatches)
+ . s BatchNo=$zcvt(##Class(web.OEOrdExec).GetBatchNo(HidStockBatches),"O","HTML")
+ . i BatchNo="" s BatchNo=$p(HidStockBatches,",")
+ . d %request.Set("LocationList",$g(JLIST(1)))
+ . d %request.Set("OEOREStockBatches",BatchNo)
+ 
+ ;Log 49611 jpd 15/04/05
+ ;LabelText Stuff JPD Log 52942 26/9/05
+ s OEORIROWID=+ordExecDR_"||"_$p(ordExecDR,"||",2)
+ s LabelText=""
+ s PRNFlag="N"
+ s oeord=##Class(User.OEOrdItem).%OpenId(OEORIROWID)
+ i oeord d
+ . d %request.Set("OEORIRemarks",$tr(##Class(websys.Conversions).LongTextLogicalToHtml(oeord.OEORIRemarks,"<br>"),$c(8),"|"))
+ . d %request.Set("PRNInd",$tr(##Class(websys.Conversions).LongTextLogicalToHtml(oeord.OEORIPRNIndication,"<br>"),$c(8),"|"))
+ . d %request.Set("OrdStartDate",oeord.OEORISttDat)
+ . d %request.Set("OrdStartTime",oeord.OEORISttTim)
+ . s LabelText=$tr(##Class(websys.Conversions).LongTextLogicalToHtml(oeord.OEORILabelText,"<br>"),$c(8),"|")
+ . i LabelText="" s LabelText=oeord.OEORIInstrDR.PHCINDesc1
+ . i LabelText="" s LabelText=oeord.OEORIItmMastDR.ARCIMPHCDFDR.PHCDFPHCINDR.PHCINDesc1 
+ . d %request.Set("OEORILabelText",LabelText)
+ . ; 57308
+ . i oeord.OEORIPriorityDR.OECPRCode="PRN" s PRNFlag="Y"
+ . d %request.Set("PRNFlag",PRNFlag)
+ . d oeord.%Close()
+
+ i oeitm'="" d
+ . s TotVol=""
+ . s TotVol=##Class(web.INCItmRecIngr).getTotalVolume(oeitm)
+ . i $g(TotVol)="" s TotVol=$p($g(^OEORD($p(oeitm,"||",1),"I",$p(oeitm,"||",2),3)),"^",22)
+ . i $g(TotVol)'="" d %request.Set("OEOREExVol",TotVol)
+ d %request.Set("OrdID",oeitm)
+ ;Log 60136 PeterC 24/07/06
+ s StockID=""
+ i ordExecDR'="" d
+ . s (StockItem,Rec)=""
+ . s StockID=$$GetINCIOrigRecipeID^COEOrdItem15(ordExecDR)
+ 
+</SERVER>
+<TRAK:COMPONENT id="OEOrdExec.Edit">
+</TRAK:COMPONENT>
+
+<CSP:IF condition=($g(StockID)'="")>
+<TRAK:COMPONENT id="OEOrdExec.RecipeList">
+</TRAK:COMPONENT>
+</CSP:IF>
+
+<CSP:IF condition=(##class(web.PAQue1).OrderHasAlerts(%request.Data("ID",1)))>
+<TRAK:COMPONENT id="Pharmacy.Prescription.Alert">
+</TRAK:COMPONENT>
+</CSP:IF>
+
+<img src="" name="sig" style="visibility:show;">
+
+
+<SCRIPT LANGUAGE="JAVASCRIPT">
+var path="#(jpegdir)#";
+
+function DisplaySignature() {
+	var img=document.getElementById("sig");
+	var sigfile="";
+	var fld=document.getElementById("OEORESignFile");
+	if (fld) sigfile = fld.value;
+	if (sigfile=="") {
+		img.style.visibility = "hidden";
+	} else {
+		img.src=path+sigfile;
+	}
+}
+DisplaySignature();
+	
+/*function reSizeT() {
+	var w=0;var h=0;
+	var arrTABLES=document.getElementsByTagName("TABLE");
+	for (var i=0; i<arrTABLES.length; i++) {
+		if (arrTABLES[i].offsetWidth>w) w=arrTABLES[i].offsetWidth;
+		h += arrTABLES[i].offsetHeight + arrTABLES[i].offsetTop;
+	}
+	w+=30;h+=100
+	if (w>eval(window.screen.Width-window.screenLeft)) w=eval(window.screen.Width-window.screenLeft)-40;
+	if (w<282) w=282;
+	if (h>eval(window.screen.Height-window.screenTop)) h=eval(window.screen.Height-window.screenTop);
+	this.resizeTo(w,h);
+}
+*/
+//if (self == top) reSizeT();
+</SCRIPT>
+
+</body>
+</html>

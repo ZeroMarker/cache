@@ -1,0 +1,443 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+	//		日志记录模块
+
+	if "searchItem"=action {		//查找符合条件的统计项
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) ;$g(%request.Data("pageSize",1))
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		set sql="select OPTLItem_RowID,OPTLItem_Code,OPTLItem_Desc,OPTLItem_Type from DHCWL_MRIPDay.OPTLItem"			;统计项界面
+		;sql="select OPTLItem_RowID,OPTLItem_Code,OPTLItem_Desc,OPTLItem_Type from DHCWL_MRIPDay.OPTLItem where OPTLItem_Type != 'CalItem' "   ;计算配置界面
+		s itemCode=$g(%request.Data("ItemCode",1))
+		s itemDesc=$g(%request.Data("ItemDesc",1))
+		s itemType=$g(%request.Data("ItemType",1))	
+		s exceptRptDR=$g(%request.Data("ExceptRptDR",1))		
+		//1、组合查询条件
+		s sqlCon=""
+		if itemCode'=""	{
+			if sqlCon="" s sqlCon=" OPTLItem_Code='"_itemCode_"'"
+			e  s sqlCon=sqlCon_" and OPTLItem_Code='"_itemCode_"'"
+		}
+		if itemDesc'="" {
+			if sqlCon="" s sqlCon=" OPTLItem_Desc like '%"_itemDesc_"%'"	
+			e  s sqlCon=sqlCon_" and OPTLItem_Desc like '%"_itemDesc_"%'"
+		}
+		if itemType'="" {
+			if sqlCon="" s sqlCon=" OPTLItem_Type='"_itemType_"'"
+			e  s sqlCon=sqlCon_" and OPTLItem_Type='"_itemType_"'"	
+		}		
+		if exceptRptDR'="" {
+			if sqlCon="" s sqlCon=" OPTLItem_RowID NOT IN (SELECT rptitem_optlitemdr FROM DHCWL_MRIPDay.RptItem WHERE RptItem_RptDR="_exceptRptDR_")"
+			//e  s sqlCon=sqlCon_" and OPTLItem_Type='"_itemType_"'"	
+		}		
+		
+		if sqlCon'="" s sql=sql_" where "_sqlCon
+
+
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+
+		//2、组装拼接返回数据
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("ID"_deli_"ItemCode"_deli_"ItemDesc"_deli_"ItemType","result","root",deli)
+
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			B
+			s recCnt=recCnt+1
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+	
+			s rowid=rs.Data("OPTLItem_RowID")
+			s code=rs.Data("OPTLItem_Code")
+			s desc=rs.Data("OPTLItem_Desc")
+			s type=rs.Data("OPTLItem_Type")
+			//3、组装拼接返回数据
+			d json.Insert(""_rowid_""_deli_"'"_code_"'"_deli_"'"_desc_"'"_deli_"'"_type_"'")
+		}
+	
+		d rs.Close()
+		//4、向前台页面返回数据
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"				
+	
+	}elseif "searchCustomItem"=action {		//查询自定义统计项
+		
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) ;$g(%request.Data("pageSize",1))
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		set sql="select CustomItem_RowID,CustomItem_OPTLItemDR,CustomItem_ItemType,CustomItem_CustomFun from DHCWL_MRIPDay.CustomItem where CustomItem_OPTLItemDR='"_OPTLItemDR_"'"
+
+
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+
+		//组装拼接返回数据
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("RowID"_deli_"OPTLItemDR"_deli_"ItemType"_deli_"CustomFun","result","root",deli)
+
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			B
+			s recCnt=recCnt+1
+			;w "start:"_start_"  end:"_end
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+	
+			s rowid=rs.Data("CustomItem_RowID")
+			s OPTLItemDR=rs.Data("CustomItem_OPTLItemDR")
+			s itemType=rs.Data("CustomItem_ItemType")
+			s customFun=rs.Data("CustomItem_CustomFun")
+			//组装拼接返回数据
+			d json.Insert(""_rowid_""_deli_"'"_OPTLItemDR_"'"_deli_"'"_itemType_"'"_deli_"'"_customFun_"'")
+		}
+	
+		d rs.Close()
+		
+		//向前台页面返回数据
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"			
+		
+	}elseif "addItem"=action {				//新增或更新可选统计项定义
+		s ID=$g(%request.Data("ID",1))
+		s itemCode=$g(%request.Data("ItemCode",1))
+		s itemDesc=$g(%request.Data("ItemDesc",1))
+		s itemType=$g(%request.Data("ItemType",1))
+		if ID="" {			
+			//新增
+			&sql(insert into DHCWL_MRIPDay.OPTLItem (OPTLItem_Code,OPTLItem_Desc,OPTLItem_Type) values (:itemCode,:itemDesc,:itemType))
+			i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+			e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"		
+		}
+		else {
+			//更新
+			&sql(update DHCWL_MRIPDay.OPTLItem set OPTLItem_Desc=:itemDesc where OPTLItem_RowID=:ID )
+			i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:''}"
+			e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"		
+		}
+		
+	}elseif "addKpiItem"=action {		//新增指标类可选统计项定义
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		s KPIDR=$g(%request.Data("KPIDR",1))
+		s KPICode=$g(%request.Data("KPICode",1))
+		s itemType=$g(%request.Data("ItemType",1))
+		s dimCode=$g(%request.Data("DimCode",1))
+		s detailType=$g(%request.Data("DetailType",1))
+		s dateSec=$g(%request.Data("DateSec",1))
+		
+		&sql(insert into DHCWL_MRIPDay.KPIItem (KPIItem_OPTLItemDR,KPIItem_KPIDR,KPIItem_KPICode,KPIItem_ItemType,KPIItem_DimCode,KPIItem_DetailType,KPIItem_DateSec) values (:OPTLItemDR,:KPIDR,:KPICode,:itemType,:dimCode,:detailType,:dateSec))
+		i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+		e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"		
+		
+	}elseif "addCustomItem"=action {	//新增自定义类可选统计项定义
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		s customFun=$g(%request.Data("CustomFun",1))
+		s itemType=$g(%request.Data("ItemType",1))
+		
+		&sql(insert into DHCWL_MRIPDay.CustomItem (CustomItem_OPTLItemDR,CustomItem_ItemType,CustomItem_CustomFun) 
+		values (:OPTLItemDR,:itemType,:customFun))
+		i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+		e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"			
+
+	}elseif "delCustomItem"=action {	//删除自定义类可选统计项定义
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		s itemType=$g(%request.Data("ItemType",1))
+		s rptName=""
+
+		//1、查询要删除的自定义统计项是否被报表所使用。
+		s sql="SELECT Rpt_Desc FROM DHCWL_MRIPDay.Rpt WHERE Rpt_type='"_itemType_"'  AND Rpt_RowID IN (SELECT RptItem_RptDR FROM DHCWL_MRIPDay.RptItem WHERE RptItem_OPTLItemDR='"_OPTLItemDR_"')"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		While(rs.Next()){
+			s rptDesc=rs.Data("Rpt_Desc")
+			if rptName'="" s rptName=rptName_","
+			s rptName=rptName_rptDesc
+		}
+		d rs.Close()
+		
+		//2、要删除的自定义统计项被报表所使用就退出
+		if rptName'="" {
+			 w "{success:true,tip:'ok',rptName:'"_rptName_"'}"
+		}
+		else {
+			//3、删除自定义统计项
+			s rowID=$g(%request.Data("RowID",1))
+			&sql(delete from DHCWL_MRIPDay.CustomItem WHERE CustomItem_RowID=:rowID)
+			i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+			e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"			
+		}
+			
+	
+	}elseif "delKPIItem"=action {		//删除指标类可选统计项定义
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		s itemType=$g(%request.Data("ItemType",1))
+		s rptName=""
+		//1、查询要删除的指标统计项是否被报表所使用。
+		s sql="SELECT Rpt_Desc FROM DHCWL_MRIPDay.Rpt WHERE Rpt_type='"_itemType_"'  AND Rpt_RowID IN (SELECT RptItem_RptDR FROM DHCWL_MRIPDay.RptItem WHERE RptItem_OPTLItemDR='"_OPTLItemDR_"')"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		While(rs.Next()){
+			s rptDesc=rs.Data("Rpt_Desc")
+			if rptName'="" s rptName=rptName_","
+			s rptName=rptName_rptDesc
+		}
+		d rs.Close()
+		//2、要删除的指标统计项被报表所使用就退出
+		if rptName'="" {
+			 w "{success:true,tip:'ok',rptName:'"_rptName_"'}"
+		}
+		else {
+			//3、删除指标统计项
+			s rowID=$g(%request.Data("RowID",1))
+			&sql(delete from DHCWL_MRIPDay.KPIItem WHERE KPIItem_RowID=:rowID)
+			i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+			e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"			
+		}
+			
+		
+	}elseif "addCalItem"=action {			//新增或更新计算类统计项定义
+		b
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		s calExp=$g(%request.Data("CalExp",1))
+		s CalRowID=$g(%request.Data("CalRowID",1))
+		s rptName=""
+		//1、查询要删除的计算类统计项是否被报表所使用。
+		s sql="SELECT Rpt_Desc FROM DHCWL_MRIPDay.Rpt WHERE Rpt_RowID IN (SELECT RptItem_RptDR FROM DHCWL_MRIPDay.RptItem WHERE RptItem_OPTLItemDR='"_OPTLItemDR_"')"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		While(rs.Next()){
+			s rptDesc=rs.Data("Rpt_Desc")
+			if rptName'="" s rptName=rptName_","
+			s rptName=rptName_rptDesc
+		}
+		d rs.Close()
+		//2、要删除的计算类统计项被报表所使用就退出
+		if rptName'="" {
+			 w "{success:true,tip:'ok',rptName:'"_rptName_"'}"
+		}
+		else {
+			if CalRowID="" {	//3、新增
+				
+				&sql(insert into DHCWL_MRIPDay.CalItem (CalItem_OPTLItemDR,CalItem_CalExp) 
+				values (:OPTLItemDR,:calExp))
+				i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+				e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"			
+			}else{		//4、更新
+				&sql(update DHCWL_MRIPDay.CalItem set CalItem_CalExp=:calExp where CalItem_RowID=:CalRowID) 
+				i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+				e  w "{success:true,tip:'操作失败！',SQLCODE:"_SQLCODE_"}"			
+			}
+		}
+					
+		
+
+	}elseif "searchCalItem"=action {		//查询计算类统计项的ID和表达式
+		
+		
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		set sql="select CalItem_RowID,CalItem_CalExp from DHCWL_MRIPDay.CalItem where CalItem_OPTLItemDR='"_OPTLItemDR_"'"
+		s CalRowID=""
+		s CalExp=""
+
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		While(rs.Next()){
+			s CalRowID=rs.Data("CalItem_RowID")
+			s CalExp=rs.Data("CalItem_CalExp")
+		}
+		d rs.Close()
+		//w "{success:true,tip:'ok',CalRowID:'',CalExp:''}"
+		w "{success:true,tip:'ok',CalRowID:'"_CalRowID_"',CalExp:'"_CalExp_"'}"
+		
+	}elseif "selectKpis"=action {		//查询工作量类型的KPI
+		b
+		set kpiCode=$g(%request.Data("kpiCode",1))
+		set array("MKPIDr")=##class(DHCWL.MRIPDay.MripDayService).GetKPIIdStrByCode(kpiCode)  
+
+		s kpiIds=##class(DHCWL.MRIPDay.MripDayService).GetKPIIdStrByCodeWithLike(kpiCode)
+		i (($g(kpiIds)="") && (kpiCode'="")) s kpiIds=-1	
+		set json = ##class(DHCWL.MRIPDay.MripDayService).IsNotCfgKpi2(kpiIds)
+		
+		set start = $g(%request.Data("start",1))
+		set maxRecordNum = $g(%request.Data("pageSize",1))
+		set limit=$g(%request.Data("limit",1))
+		if (""'=limit) set maxRecordNum=limit
+		if (""'=json){
+			write json.GetHead()
+			set json.privor=start
+			do{
+				set obj=json.Next()
+				if ((json.privor)=(start+maxRecordNum)){
+					set obj=$p(obj,"}",1)
+				 	set obj=obj_"}]}"
+				}
+				write obj
+			}while((obj'="")&&(json.privor<(start+maxRecordNum))&&(json.privor<json.count))
+		}else {
+			w "{result:0,totalNum:0,root:[]}"
+		}			
+	}elseif "searchKPIItem"=action {				//查询指标类统计项
+		b
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		set sql="select KPIItem_RowID,KPIItem_OPTLItemDR,KPIItem_KPIDR,KPIItem_KPICode,KPIItem_ItemType,KPIItem_DimCode,KPIItem_DetailType,KPIItem_DateSec from DHCWL_MRIPDay.KPIItem where KPIItem_OPTLItemDR='"_OPTLItemDR_"'"
+
+		//w sql,!
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("RowID"_deli_"OPTLItemDR"_deli_"KPIDR"_deli_"KPICode"_deli_"ItemType"_deli_"DimCode"_deli_"DetailType"_deli_"DateSec","result","root",deli)
+
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			s recCnt=recCnt+1
+	
+			s rowid=rs.Data("KPIItem_RowID")
+			s OPTLItemDR=rs.Data("KPIItem_OPTLItemDR")
+			s KPIDR=rs.Data("KPIItem_KPIDR")
+			s KPICode=rs.Data("KPIItem_KPICode")
+			
+			s ItemType=rs.Data("KPIItem_ItemType")
+			s DimCode=rs.Data("KPIItem_DimCode")
+			s DetailType=rs.Data("KPIItem_DetailType")
+			s DateSec=rs.Data("KPIItem_DateSec")
+			d json.Insert(""_rowid_""_deli_"'"_OPTLItemDR_"'"_deli_"'"_KPIDR_"'"_deli_"'"_KPICode_"'"_deli_"'"_ItemType_"'"_deli_"'"_DimCode_"'"_deli_"'"_DetailType_"'"_deli_"'"_DateSec_"'")
+		}
+	
+		d rs.Close()
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+		
+
+	}elseif "delItem"=action {	//删除统计项
+		s OPTLItemDR=$g(%request.Data("OPTLItemDR",1))
+		
+		//1、查找该统计项是否被报表使用
+		s sql="SELECT Rpt_Desc FROM DHCWL_MRIPDay.Rpt WHERE Rpt_RowID IN (SELECT RptItem_RptDR FROM DHCWL_MRIPDay.RptItem WHERE RptItem_OPTLItemDR='"_OPTLItemDR_"')"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s rptName=""
+		While(rs.Next()){
+			s rptDesc=rs.Data("Rpt_Desc")
+			if rptName'="" s rptName=rptName_","
+			s rptName=rptName_rptDesc
+		}
+		d rs.Close()
+		//2、如果统计项被报表使用，返回这些报表的描述
+		if rptName'="" {
+			 w "{success:true,tip:'ok',TipMSG:'该统计项被报表："_rptName_" 使用，请先删除该报表！'}"
+		}
+		else {
+		//3、删除统计项
+			tstart
+			s result=##class(DHCWL.MRIPDay.MripDayService).DelOPTLItem(OPTLItemDR)
+			if result=0 {
+				tcommit
+				w "{success:true,tip:'ok',ROWID:''}"
+			}else{
+				trollback
+				w "{success:true,tip:'操作失败！',SQLCODE:''}"
+			}
+		}
+		
+	}elseif "searchItemForCalItem"=action {  //计算统计项配置界面
+	set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) ;$g(%request.Data("pageSize",1))
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		;set sql="select OPTLItem_RowID,OPTLItem_Code,OPTLItem_Desc,OPTLItem_Type from DHCWL_MRIPDay.OPTLItem"			;统计项界面
+		set sql="select OPTLItem_RowID,OPTLItem_Code,OPTLItem_Desc,OPTLItem_Type from DHCWL_MRIPDay.OPTLItem where OPTLItem_Type != 'CalItem' "   ;计算配置界面
+		s itemCode=$g(%request.Data("ItemCode",1))
+		s itemDesc=$g(%request.Data("ItemDesc",1))
+		s itemType=$g(%request.Data("ItemType",1))	
+		s exceptRptDR=$g(%request.Data("ExceptRptDR",1))		
+		//1、组合查询条件
+		s sqlCon=""
+		if itemCode'=""	{
+			if sqlCon="" s sqlCon=" OPTLItem_Code='"_itemCode_"'"
+			e  s sqlCon=sqlCon_" and OPTLItem_Code='"_itemCode_"'"
+		}
+		if itemDesc'="" {
+			if sqlCon="" s sqlCon=" OPTLItem_Desc like '%"_itemDesc_"%'"	
+			e  s sqlCon=sqlCon_" and OPTLItem_Desc like '%"_itemDesc_"%'"
+		}
+		if itemType'="" {
+			if sqlCon="" s sqlCon=" OPTLItem_Type='"_itemType_"'"
+			e  s sqlCon=sqlCon_" and OPTLItem_Type='"_itemType_"'"	
+		}		
+		if exceptRptDR'="" {
+			if sqlCon="" s sqlCon=" OPTLItem_RowID NOT IN (SELECT rptitem_optlitemdr FROM DHCWL_MRIPDay.RptItem WHERE RptItem_RptDR="_exceptRptDR_")"
+			//e  s sqlCon=sqlCon_" and OPTLItem_Type='"_itemType_"'"	
+		}		
+		
+		if sqlCon'="" s sql=sql_" where "_sqlCon
+
+
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+
+		//2、组装拼接返回数据
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("ID"_deli_"ItemCode"_deli_"ItemDesc"_deli_"ItemType","result","root",deli)
+
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			B
+			s recCnt=recCnt+1
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+	
+			s rowid=rs.Data("OPTLItem_RowID")
+			s code=rs.Data("OPTLItem_Code")
+			s desc=rs.Data("OPTLItem_Desc")
+			s type=rs.Data("OPTLItem_Type")
+			//3、组装拼接返回数据
+			d json.Insert(""_rowid_""_deli_"'"_code_"'"_deli_"'"_desc_"'"_deli_"'"_type_"'")
+		}
+	
+		d rs.Close()
+		//4、向前台页面返回数据
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"		
+		
+	}
+</script>

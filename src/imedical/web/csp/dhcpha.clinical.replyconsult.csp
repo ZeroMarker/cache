@@ -1,0 +1,167 @@
+<HTML>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+<EASYUI:CLINICAL/>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<!-- Put your page Title here -->
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/replyconsult.js"></script>
+	<style type="text/css">
+	     .report_table{
+		     border-collapse:collapse;
+		   	}
+	     .report_table td{
+		     border:1px solid #95B8E7;
+		     padding:5px 5px;
+		    }
+	     .td_head{
+		     background-color: #EEEEEE;
+		     }
+		 .dialog-toolbar, .dialog-button {
+   			background:'';
+		 }
+		 	.btn-ui-div{
+		margin:10px 5px;
+	}
+	
+			.ui-font14 { 
+  			font-weight:bold;
+		}
+		.ui-font12 {
+  			font-weight:bold;
+  			color:red;
+		}
+		.ui-font13 {
+			margin-left:10px;
+  			font-weight:bold;
+  			color:red;
+		}
+		.ui-font11 {
+			margin-left:6px;
+			margin-right:15px;
+  			font-weight:bold;
+		}
+		
+	.btn-ui-span{
+		margin:0px 10px;
+	}
+	.btn-ui-input{
+		border:0px;
+		width:100px;
+		border-bottom:1px solid #95B8E7;
+		color:#09C;
+		font-weight:bold;
+	}
+	.ui-p-14{
+	  margin-left:5px;
+	  color:#09C;
+	  
+	}
+	.btn-ui-width1{
+		width:40px;
+	}
+	.btn-ui-width2{
+		width:120px;
+	}
+	.btn-ui-width3{
+		width:800px;
+	}
+	.btn-ui-label{
+		margin:0px 5px;
+	}
+	.datagrid-row-selected {
+  		background: #ADFAFC;
+	}
+	
+	.btn-ui a.yanshi {
+		font-weight:bold;
+	    padding: 6px 30px;
+	    background: none repeat scroll 0% 0% #09F;
+	    color: #FFF;
+	    text-decoration: none;
+	}
+
+	.btn-ui a:hover{
+		background: none repeat scroll 0% 0% rgb(1, 91, 241);
+	}
+	.datagrid-row {
+		height: 33px;
+	}
+	</style>
+</head> 
+<body>
+<!--以下定义药学咨询回复界面-->
+	<div id="mainpanel" class="easyui-layout" fit="true">
+		<div data-options="region:'center'">
+			<div class="easyui-layout" fit="true">
+				<div data-options="region:'center'"  style="border:0px">
+					<div id="conBakDetList"></div>
+				</div>
+				<div data-options="region:'south'" title="评论：" style="height:160px;">
+					<div>
+						<div class="btn-ui-div" style="border-bottom:0px solid #95B8E7;display:none;">
+							<span style="margin-left:10px;">参考依据：<input id="monitem" style="width:180" class="easyui-combobox" data-options="valueField:'value',textField:'text'"/></span>
+							<span style="margin-left:0px;margin-top:10px;position: relative;left: 30px;top: 0px;" class="">
+								<a href="#" class="yanshi defualt-bk1" >引用相关模板</a>
+							</span>
+						</div>
+						<div >
+							<div class="btn-ui-div">
+								<textarea id="consDetDesc" style="width:660px;height:85px;margin-left:5px;border: 1px solid #95B8E7;">请输入评论信息...</textarea>
+							</div>
+							<div style=;">
+								<span style=";margin-left:0px;margin-top:10px;position: relative;left: 250px;top: 0px;" class="">
+									<a href="#" class="easyui-linkbutton" style="width:90px" iconCls="icon-clearscreen" onclick="javascript:clearConsultDetail()">重置</a>
+									<a href="#" class="easyui-linkbutton" style="width:90px"  iconCls="icon-save" onclick="javascript:saveConsultDetail()">保存</a>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'west'" title="咨询明细" style="width:220px;">
+			<div>
+				<div>
+					<div class="btn-ui-div">
+						<div class="btn-ui-div">
+							<span class="btn-ui-span">咨&nbsp询&nbsp人：<input id="consName" class="btn-ui-input" readonly></input></span>
+						</div>
+						<div class="btn-ui-div">
+						<span class="btn-ui-span">联系电话：<input id="consTele" class="btn-ui-input" readonly></input></span>
+						</div>
+						<div class="btn-ui-div">
+						<span class="btn-ui-span">问题类型：<input id="consType" class="btn-ui-input" readonly></input></span>
+						</div>
+						<div class="btn-ui-div">
+						<span class="btn-ui-span">咨询身份：<input id="consIden" class="btn-ui-input" readonly></input></span>
+						</div>
+						<div class="btn-ui-div">
+						<span class="btn-ui-span">咨询日期：<input id="consDate" class="btn-ui-input" readonly></input></span>
+						</div>
+					</div>
+					<div class="btn-ui-div">
+						<div class="btn-ui-div">
+							<span class="btn-ui-span">咨询内容：</span>
+						</div>
+						<div class="btn-ui-div" style="width:180px;">
+							<div class="btn-ui-div">
+								<p class="ui-p-14" style="line-height:2.6;text-indet:2em;letter-spacimg:3.2;"><span>&nbsp&nbsp&nbsp&nbsp</span>
+									<span id="consDesc"></span>
+								</p>
+						    </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

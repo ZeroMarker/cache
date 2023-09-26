@@ -1,0 +1,180 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><TRAK:TRANSLATE id=title>##(%seession.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	<style>
+	
+	.textbox-width-height{
+		width:204px;
+		height:24px
+	}
+	
+	</style>
+</head>
+
+<body class="hisui-layout">
+    <div class="x-separator line-50-y"
+    data-options="region:&#39;north&#39;">
+      <span class="padding-both-10">预算年度</span> 
+      <input id="YearBox" class="combobox-width-177" /> 
+      <span class="padding-both-10">编码/名称</span> 
+      <input id="CodeName" class="textbox combobox-width-177" placeholder="请输入编码或名称" /> 
+      <span class="padding-both-10"></span> 
+      <a id="findBtn" href="#" class="hisui-linkbutton" data-options="iconCls:&#39;icon-w-find&#39;">查询</a>
+    </div>
+    <div class="border-none" data-options="region:&#39;center&#39;">
+      <table id="budgItemTree"></table>
+    </div>
+
+	<div id="addEditDlg" title="新增/修改预算项" style="padding:10px;width:1050px;height:550px;display:none;" data-options="resizable:true,modal:true">   
+		<div id="Addnorth" class="flex-x-center" data-options="iconCls:'',headerCls:&#39;panel-header-gray&#39;,region:'north'">
+			<div id="Addform">
+				<table style="border-collapse:separate; border-spacing:0px 10px;"> 					<tr>
+					    <td><label class="r-label">预算年度</label></td>
+						<td class="padding-both-10"><select id="Year" class="combobox-width-177" ></select></td>
+					    <td><label class="r-label">项目名称</label></td>
+					    <td class="padding-both-10"><input  id="Name" class="hisui-validatebox textbox " style="width:170px" data-options="required:true"/></td>
+						<td><label class="r-label">项目编码</label></td>
+						<td class="padding-both-10"><input  id="Code" class="hisui-validatebox textbox "style="width:170px"  data-options="required:true"/></td>
+					</tr>
+					<tr>
+						<td><label class="r-label">适用范围</label></td>
+						<td class="padding-both-10"><select id="UseRange" class="combobox-width-177"></select></td>
+						<td><label class="r-label">项目全称</label></td>
+						<td class="padding-both-10"><input  id="AllName" class="hisui-validatebox textbox " style="width:170px" /></td>
+						<td><label class="r-label">拼音码</label></td>
+						<td class="padding-both-10"><input  id="Spell" class="hisui-validatebox textbox"  data-options="required:true" style="width:170px"/></td>
+					</tr>
+					<tr>
+					    <td><label class="r-label">成本类型</label></td>
+					    <td class="padding-both-10"><select id="SubjClassCostType" class="combobox-width-177"></select></td>
+					    <td><label class="r-label">归口科室一</label></td>
+					    <td class="padding-both-10"><select id="AuDepdrOne" class="combobox-width-177"></select></td>
+					    <td><label class="r-label">归口科室二</label></td>
+					    <td class="padding-both-10"><select id="AuDepdrTwo" class="combobox-width-177"></select></td>
+					</tr>
+					<tr>
+						<td><label class="r-label">政府采购</label></td>
+						<td class="padding-both-10"><select id="IsGovBuy" class="combobox-width-177"></select></td>
+						<td><label class="r-label">上限金额</label></td>
+						<td class="padding-both-10"><input  id="UppLimitBgVal" class="hisui-numberbox" style="width:177px"/></td>
+						<td><label class="r-label">项目类别</label></td>
+						<td class="padding-both-10"><select id="TypeCode" class="combobox-width-177"></select></td>				
+					</tr>
+					<tr>
+						<td><label class="r-label">编制模式</label></td>
+						<td class="padding-both-10"><select id="EditMod" class="combobox-width-177"></select></td>
+						<td><label class="r-label">编制方法</label></td>
+						<td class="padding-both-10"><select id="EditMeth" class="combobox-width-177"></select></td>
+						<td><label class="r-label">计量单位</label></td>
+						<td class="padding-both-10"><select id="CalUnitDR"class="combobox-width-177" ></select></td>
+					<tr>
+						<td><label class="r-label">责任科室</label></td>
+						<td class="padding-both-10"><select id="ProjDuTYD" class="combobox-width-177"></select></td>
+						<td><label class="r-label">指标类型</label></td>
+						<td class="padding-both-10"><select id="IdxType" class="combobox-width-177"></select></td>
+						<td><label class="r-label">数据类型</label></td>
+						<td class="padding-both-10"><select id="ProperyType" class="combobox-width-177"></select></td>
+					</tr>
+					<tr>
+						<td><label class="r-label">方向</label></td>
+						<td class="padding-both-10"><select id="Direction" class="combobox-width-177" ></select></td>
+						<td><label class="r-label">大类</label></td>
+						<td class="padding-both-10"><select id="TypeCodeFirst" class="combobox-width-177" ></select></td>
+						<td><label class="r-label">医药科目类</label></td>
+						<td class="padding-both-10"><select id="SubjClassMT" class="combobox-width-177"></select></td>
+					</tr>
+					<tr>
+						<td><label class="r-label">支出科目类</label></td>
+						<td class="padding-both-10"><select id="SubjClassPay" class="combobox-width-177" ></select></td>
+						<td><label class="r-label">公式描述</label></td>
+						<td class="padding-both-10"><input id="FormulaDesc" class="hisui-validatebox textbox " style="width:170px"/></td>
+					</tr>
+					<tr>
+						<td><label class="r-label">最终预算项</label></td>
+						<td style="padding:5px"><input class='hisui-checkbox' id="IsResult" name="IsResult" type="checkbox" data-options="checked:true"/></td>
+						<td><label class="r-label">是否末级</label></td>
+						<td style="padding:5px"><input class='hisui-checkbox' id="IsLast" name="IsLast" type="checkbox" data-options="checked:true"/></td>
+						<td><label class="r-label">是否计算</label></td>
+						<td style="padding:5px"><input class='hisui-checkbox' id="IsCalc" name="IsCalc" type="checkbox"/></td>
+					</tr>
+					<tr>
+						<td><label class="r-label">是否结转</label></td>
+						<td style="padding:5px"><input class='hisui-checkbox' id="IsCarry" name="IsCarry" type="checkbox"/></td>
+						<td><label class="r-label">现金标志</label></td>
+						<td style="padding:5px"><input class='hisui-checkbox' id="IsCash" name="IsCash" type="checkbox"/></td>
+						<td><label class="r-label">专项标记</label></td>
+						<td style="padding:5px"><input class='hisui-checkbox' id="IsSpecial" name="IsSpecial" type="checkbox"/></td>
+					</tr>
+				</table>
+				<div class="bottom-style">
+			 		<a id="Save" href="#" class="hisui-linkbutton width-70" >保存</a>
+			 		<span class="padding-right-10"></span>
+			 		<a id="Clear" href="#" class="hisui-linkbutton width-70" >清屏</a>
+			 		<span class="padding-right-10"></span>
+			 		<a id="Close" href="#" class="hisui-linkbutton width-70" >关闭</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+        
+    <div id="copyDlg" title="复制预算项" style="padding:10px;width:400px;height:300px;display:none;"
+    data-options="iconCls:'icon-copy',headerCls:&#39;panel-header-gray&#39;,resizable:true,modal:true">
+      <div id="copynorth" class="flex-x-center" data-options="region:&#39;north&#39;">
+        <div id="copyform">
+          <table>
+            <!--tr>
+            <td>
+              <label class="r-label">医疗单位</label>
+            </td>
+            <td>
+              <select id="CopyHosp" class="combobox-width-177"></select>
+            </td>
+          </tr-->
+            <tr>
+              <td>
+                <label class="r-label">历史年度</label>
+              </td>
+              <td>
+                <select id="PastYear" class="combobox-width-177"></select>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label class="r-label">预算年度</label>
+              </td>
+              <td>
+                <select id="BudgYear" class="combobox-width-177"></select>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label class="r-label">项目类别</label>
+              </td>
+              <td>
+                <select id="TyCode" class="combobox-width-177"></select>
+              </td>
+            </tr>
+          </table>
+          <div class="bottom-style">
+          <a id="Copy" href="#" class="hisui-linkbutton width-70">确定</a> 
+          <a id="Cancel" href="#" class="hisui-linkbutton width-70">取消</a></div>
+        </div>
+      </div>
+    </div>
+    
+	<script type="text/javascript" src="../scripts/herp/budg/common/pinying.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgitemdict/budgitemdict.js"></script>
+</body>
+</html>

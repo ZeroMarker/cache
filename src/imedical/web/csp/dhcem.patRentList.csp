@@ -1,0 +1,122 @@
+<html>
+<head>
+<title>出租用品</title>
+<HISUI/>
+<script Language="Javascript">
+	var UserId = #($g(%session.Data("LOGON.USERID")))#;
+    var HospID=  #($g(%session.Data("LOGON.HOSPID")))#;
+</script>
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/dhcem.patRentList.css" />
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<link rel="stylesheet" href="../scripts_lib/jquery-easyui-1.3.2/themes/icon.css" />
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patRentList.js" charset="gb2312"></script>
+<style>
+#startTime + .spinner-arrow{position:relative;left:-4}/*hxy 2018-10-22*/
+#endTime + .spinner-arrow{position:relative;left:-4}/*hxy 2018-10-22*/
+ span.combo.datebox > span{position:relative;left:-4}/*hxy 2018-10-25*/
+</style>
+</head>
+
+<body>
+	<div id="center-layout" class="hisui-layout" data-options="fit:true">   
+		<div data-options="region:'north',title:'',border:false,split:true,headerCls:'panel-header-acc'" style="height:118px;">
+			<div class="top-opbtn" style="height:60px;padding-top:10px">
+				<div class="opbtn" id="insert">
+		        	<button class="opbtn-upObsBtn opbtn-hover" style="background:#fff;border:none">
+		            	<div style="height:28px;background:url(../scripts/dhcnewpro/images/rentTool.png) no-repeat"></i></div>
+		            	<a style="line-height: 24px;color: black;">租用</a>
+		            </button>
+		        </div>
+				
+		        <div class="opbtn" id="update">
+		        	<button class="opbtn-upObsBtn opbtn-hover" style="background:#fff;border:none">
+		            	<div style="height:28px;background:url(../scripts/dhcnewpro/images/updateTool.png) no-repeat"></i></div>
+		            	<a style="line-height: 24px;color: black;">更新</a>
+		            </button>
+		        </div>
+		        <div class="opbtn" id="returnTool">
+		        	<button class="opbtn-upObsBtn opbtn-hover" style="background:#fff;border:none">
+		            	<div style="height:28px;background:url(../scripts/dhcnewpro/images/returnTool.png) no-repeat"></i></div>
+		            	<a style="line-height: 24px;color: black;">归还</a>
+		            </button>
+		        </div>
+		        <div class="tool-bar-line" style="margin-top:57px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:solid;"></div>
+			</div>
+			<div>
+				<table style="padding-left:10px;margin-top:5px;width:80%">
+					<td>
+						<span style="padding-right:10px">租用日期</span><input id="startDate" class="hisui-datebox" style="width:120px;"/><span style="padding-left:5px"></span><input id="startTime" class="hisui-timespinner" style="width:70px"/>
+						<span style="padding-left:10px;padding-right:10px">-</span><input id="endDate" class="hisui-datebox" style="width:120px"/><span style="padding-left:5px"></span><input id="endTime" class="hisui-timespinner" style="width:70px"/>
+					</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td><span style="padding-right:10px">租用者姓名</span><input id="patName" style="width:100px" class="hisui-validatebox textbox"/></td>
+					<td></td>
+					<td><span style="padding-right:10px">状态</span><input id="status" style="width:110px" class="hisui-combobox"/></td>
+					<td><a href="#" id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				</table>
+			</div>
+		</div>   
+		<div data-options="region:'center',title:'',border:false,bodyCls:'panel-header-gray'" style="padding:0px 10px 10px 10px;">
+			<table id="rentTable"></table>
+		</div>   
+	</div> 
+	
+	<div id="widow" class="hisui-window" title="<span id='windowTitle'></span>" data-options="iconCls:'icon-w-save',closed:'true',minimizable:false" style="width:800px;height:320px;padding:5px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center'" style="border:0px;border-bottom:1px solid #8DB2E3">
+				<table id="formTable" style="width:100%">
+					<tr>
+						<td class="alignRight">租用日期</td>
+						<td><input id="rentDate" class="hisui-datebox" style="width:126px"/></td>
+						<td class="alignRight">租用时间</td>
+						<td><input id="rentTime" class="hisui-timespinner" style="width:126px"/></td>
+						<td class="alignRight">租用操作人</td>
+						<td><input id="nurse" disabled="disabled" class="hisui-validatebox textbox" style="width:120px"/></td>
+					</tr>
+					<tr>
+						<td class="alignRight">联系方式</td>
+						<td><input id="renterTel" class="hisui-validatebox textbox" style="width:120px"/></td>
+						<td class="alignRight">证件</td>
+						<td><input id="cardType" editable="false" class="hisui-validatebox textbox" style="width:126px"/></td>
+						<td class="alignRight">现金</td>
+						<td><input id="cash" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" class="hisui-validatebox textbox" style="width:120px"/></td>
+					</tr>
+					<tr>
+						<td class="alignRight">现金编号</td>
+						<td><input id="cashNo" class="hisui-validatebox textbox" style="width:120px"/></td>
+						<td class="alignRight">租用工具</td>
+						<td><input id="rentTool" editable="false" class="hisui-validatebox textbox" style="width:126px"/></td>
+						<td class="alignRight">租用姓名</td>
+						<td><input id="renter" class="hisui-validatebox textbox" data-options="required:true" onblur="this.value=this.value.replace(/\s+/g,'')" style="width:120px"/></td>
+					</tr>
+					<tr>
+						<td class="alignRight">归还姓名</td>
+						<td><input id="giveUser" class="hisui-validatebox textbox" style="width:120px"/></td>
+						<td class="alignRight">关系</td>
+						<td><input id="giveRelation" class="hisui-validatebox textbox" style="width:120px"/></td>
+						<td class="alignRight">状态</td>
+						<td><input id="renterFlag" data-options="editable:false" class="hisui-validatebox textbox" style="width:126px"/></td>
+					</tr>
+					<tr style="">
+						<td class="alignRight">归还日期</td>
+						<td><input id="giveDate" class="hisui-datebox" style="width:126px"/></td>
+						<td class="alignRight">归还时间</td>
+						<td><input id="giveTime" class="hisui-timespinner" style="width:126px"/></td>
+						<td class="alignRight">归还操作人</td>
+						<td><input id="giveNurse" disabled="disabled" class="hisui-validatebox textbox" style="width:120px"/></td>
+					</tr>
+					<tr style="display:none">
+						<td><input id="rentRowId" class="hisui-validatebox textbox" style="width:120px"/></td>
+					</tr>
+				</table>
+			</div>
+		<div data-options="region:'south',border:false" style="text-align:center;padding:5px 0 0;">
+			<a href="#" id="save" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-save">保存</a>
+		</div>
+	</div>
+</div>
+</body>
+</html>

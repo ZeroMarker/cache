@@ -1,0 +1,210 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(DHCMRQ.Base.Util.Verification).SessionVerifi() q 1
+	q 1
+</csp:method>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>病案首页数据质量督导系统</title>
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/font-awesome-4.6.3/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/datatable-1.10.12/datatables.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/css/main.css">
+		<!--[if lte IE 6]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap-ie6.css">
+	  <![endif]-->
+	  <!--[if lte IE 8]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/ie.css">
+			<style media="screen">
+				.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9{
+					padding-left: 0;
+					padding-right: 0;
+				}
+			</style>
+	  <![endif]-->
+	</head>
+	<body>
+		<input type="hidden" id="startDate" class="form-control input-sm" readonly>
+		<input type="hidden" id="endDate" class="form-control input-sm" readonly>
+		<input type="hidden" id="mrVersionSelect" class="form-control input-sm" readonly>
+		<div class="navbar navbar-static-top" style="background-color:#fff;">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a href="#" class="navbar-brand">病案首页数据质量督导系统</a>
+				</div>
+				<nav id="bs-navbar" class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<!--
+						<li class="active">
+							<a href="../getting-started/">Getting started</a>
+						</li>
+						 -->
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li></li>
+					</ul>
+
+				</nav>
+			</div>
+		</div>
+		<div class="container-fluid">
+			
+			<div class="row">
+				<div class="boxcq">
+					<div class="ti">
+						<i class="fa fa-hospital-o fa-lg"></i><span class="itemDesc"></span>缺失病例科室分布
+					</div>
+					<ul class="nav nav-tabs boxnavcq" id="hospInfo" role="tablist">
+						<li></li>
+					</ul>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-sm-6" id="missItemChart"></div>
+								<div class="col-sm-6">
+									<table id="depListTable" class="table table-striped">
+										<thead><tr><th></th><th>科室</th><th>缺失数</th></tr></thead>
+									<tbody></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+		
+		<!--
+		<footer id="footer">
+			<div class="container">
+        <p class="text-muted">copyright <i class="fa fa-heartbeat fa-lg"></i> DHCC</p>
+      </div>
+		</footer>
+		 -->
+		<div id="loading">
+		 	<img src="../scripts/dhcmrq/images/loading.gif"/>
+		 	<h3 class="info">正在加载<br>...</h3>
+		 </div>
+		 
+	<DHCMRQ:HEAD></DHCMRQ:HEAD>
+	<script type="text/javascript">
+		var missItemChart = echarts.init(document.getElementById('missItemChart'));
+    	var itemId = getQueryString('itemId');
+    	var itemDesc = getQueryString('itemDesc');
+    	$('.itemDesc').html(itemDesc);
+    	init();//初始化
+	
+		searchByCondition();
+    	console.log(startDate+','+endDate+','+mrVersionCode+','+itemId)
+    	function loadData(){
+    		$.post('dhcmrq.service.csp',
+				{ClassName:'DHCMRQ.Compute.FpList',
+			 	MethodName:'GetDeptByItem',
+			 	Params:startDate+','+endDate+','+mrVersionCode+','+itemId
+				},
+				function(data){
+					//console.log(data)
+					try{
+						drawTable(JSON.parse(data));
+					}catch(err){
+						$('#depListTable').after('<div class="alert alert-danger" role="alert">'+err+'</div>');
+						console.error(err);
+					}
+			
+			});	
+	    }
+	    
+    	function drawTable(data){
+	    	//console.log(data)
+	    	var dt = $('#depListTable').DataTable({
+				processing: true,
+				data: data,
+				lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "全部"] ],
+				columns: [
+						{
+                			"class":"details-control",
+                			"orderable":false,
+							"ordering":false,
+                			"data": null,
+                			"defaultContent":""
+            			},
+						{ "data": "deptDesc" },
+						{ "data": "oper",
+						  "render": function ( data, type, full, meta ) {
+				      		return '<a role="button" onclick="addTab(\''+full.deptDesc+'缺失病例列表\',\'dhcmrq.caseList.csp?itemId='+itemId+'&depCode='+full.deptCode+'&startDate='+startDate+'&endDate='+endDate+'&mrVersionCode='+mrVersionCode+'\',\'mrList'+itemId+'\')">'+full.deptFpCnt+'</a>';
+					    	}
+					    }
+        				],
+        		order: [[2, 'desc']],
+        		drawCallback: function( settings ) {
+	        	var thisPageData = this.api().rows( {page:'current'} ).data();
+					var data = [];
+					var category = [];
+					for (var i = 0; i < thisPageData.length; i++) {
+						data.push({name:thisPageData[i]['deptDesc'],value:thisPageData[i]['deptFpCnt']});
+						category.push(thisPageData[i]['deptDesc']);
+					}
+					$('#missItemChart').height($('#depListTable').height()+120);
+					pieChart(missItemChart,data,'缺失例数');
+        		}
+			});
+			
+			var detailRows = [];
+		  	$('#depListTable tbody').on( 'click', 'tr td.details-control', function () {
+		      var tr = $(this).closest('tr');
+		      var row = dt.row( tr );
+		      var idx = $.inArray( tr.attr('id'), detailRows );
+
+		      if ( row.child.isShown() ) {
+		          tr.removeClass( 'details' );
+		          row.child.hide();
+
+		          // Remove from the 'open' array
+		          detailRows.splice( idx, 1 );
+		      }
+		      else {
+		          tr.addClass( 'details' );
+		          row.child( detailFormat( row.data() ) ).show();
+				  
+		          // Add to the 'open' array
+		          if ( idx === -1 ) {
+		              detailRows.push( tr.attr('id') );
+		          }
+		      }
+		    });
+
+		    // On each draw, loop over the `detailRows` array and show any child rows
+		    dt.on( 'draw', function () {
+		        $.each( detailRows, function ( i, id ) {
+		            $('#'+id+' td.details-control').trigger( 'click' );
+		        } );
+		    } );
+	    }
+	    
+	    function detailFormat ( rowData ) {
+			var dataList = rowData['deptResInfo'];
+			//console.log(d)
+			var trs = '';
+			for(var i=0;i<dataList.length;i++) {
+				trs += '<tr><td>'+dataList[i]['resident']+'</td><td><a role="button" onclick="addTab(\''+dataList[i]['resident']+'缺失病例列表\',\'dhcmrq.caseList.csp?itemId='+itemId+'&depCode='+rowData['deptCode']+'&docName='+escape(dataList[i]['resident'])+'&startDate='+startDate+'&endDate='+endDate+'&mrVersionCode='+mrVersionCode+'\',\'docList'+dataList[i]['resident']+itemId+'\')">'+dataList[i]['resFpCnt']+'</a></td></tr>'
+			}
+			var table = '<table class="table table-bordered table-condensed" style="margin-top:-8px;text-align:center;">'
+							+'<tr class="info"><th>住院医师</th><th>缺失数</th></tr>'
+							+trs
+						+'</table>';
+		    return table;
+		}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,46 @@
+﻿<html>
+    <head>
+        <title> 打印提示框 </title>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+        <script language="javascript">
+            var prompt = '#($Get(%request.Data("prompt",1),""))#';
+            var dialogId = '#($Get(%request.Data("dialogId",1),""))#';
+            var printArg = '#($Get(%request.Data("printArg",1),""))#';
+            $(function() {
+                $("#prompt").text(prompt);
+                
+                window.returnValue = "";
+                
+                $("#confirm").bind("click",function(){
+                    window.returnValue = printArg;
+                    closeWindow();
+                });
+                $("#cancel").bind("click",function(){
+                    window.returnValue = "";
+                    closeWindow();
+                });
+            });
+            
+            //关闭窗口
+            function closeWindow() {
+                if ((window.parent)&&(window.parent.closeDialog)){
+                    window.parent.closeDialog(dialogId);
+                }
+            }
+        </script>
+    </head>
+    <body ondragstart="return false" fit="true" style="overflow:hidden;">
+        <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+            <div id="desc" data-options="region:'center',border:false" style="padding:10px;overflow:hidden;">
+                <div class="messager-question" style="float:left;width:32px;height:32px;margin:0 10px 10px 0;"></div>
+                <div id="prompt"></div>
+            </div>
+            <div id="tool" align="center" data-options="region:'south',border:false" style="height:40px;padding:5px;background-color:#F0F0F0;">
+                <a id="confirm" href="#" class="hisui-linkbutton">#(..Get("确认"))#</a>
+                <a id="cancel" href="#" class="hisui-linkbutton">#(..Get("取消"))#</a>
+            </div>
+        </div>
+    </body>
+</html>

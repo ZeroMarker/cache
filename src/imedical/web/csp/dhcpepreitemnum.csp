@@ -1,0 +1,55 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>项目限额</title>
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+</head>
+
+<body>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s Date=$g(%request.Data("Date",1))
+	//s:Date="" Date=$ZD(+$H,3)
+	s:Date="" Date=##class(websys.Conversions).DateLogicalToHtml(+$H)
+
+	s PreItemInfo=##class(web.DHCPE.PreManager).OutPreItemNum(Date)
+	w "<TABLE border=1 cellspacing='0' cellpadding='0' width=100%>"
+	w "<TR><TD>日期</TD><TD><input id='Date' value='"_Date_"'></input></TD><TD><button class='i-btn' id='Query'>查询</button></TD><TD>&nbsp</TD></TR>"
+	
+	w "<TR bgcolor='#C0C0C0'><TD>项目名称</TD><TD>预约限额</TD><TD>预警数量</TD><TD>已预约数量</TD></TR>"
+	s Length=$L(PreItemInfo,"%")
+	f i=1:1:Length  d
+	.s OneInfo=$P(PreItemInfo,"%",i)
+	.s bgcolor=""
+	.s PreNum=$P(OneInfo,"^",2)
+	.i $P(OneInfo,"^",3)>=$P(PreNum,"-",2) s bgcolor="'yellow'"
+	.i $P(OneInfo,"^",3)>=$P(PreNum,"^",1) s bgcolor="'#FF00FF'"
+	.w "<TR bgcolor="_bgcolor_">"
+	.w "<TD>"_$P(OneInfo,"^",1)_"</TD>"
+	.w "<TD>"_$P(PreNum,"-",1)_"</TD>"
+	.w "<TD>"_$P(PreNum,"-",2)_"</TD>"
+	.w "<TD>"_$P(OneInfo,"^",3)_"</TD>"
+	.w "</TR>"
+	w "</TABLE>"
+	</SCRIPT>
+	<SCRIPT language="javascript">
+	document.body.onload = BodyLoadHandler;
+
+	function BodyLoadHandler()
+	{
+		var obj=document.getElementById("Query");
+		if (obj) obj.onclick=Query_click;
+		
+	}
+	function Query_click()
+	{
+		var Date="";
+		var obj=document.getElementById("Date");
+		if (obj) Date=obj.value;
+		var lnk="dhcpepreitemnum.csp?Date="+Date;
+		window.location.href=lnk;
+	}
+	</SCRIPT>
+</body>
+</html>

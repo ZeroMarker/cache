@@ -1,0 +1,250 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    ;s %session.Data("LOGON.LANGID")="20" ;简体中文 ;s %session.Data("LOGON.USERID")="4636" ;s sc=%session.Login("_system","SYS",1)
+    ;q 1
+     i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+      q 1
+</csp:method>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/appPatRegister.js" charset="gbk"></script>
+
+
+    <STYLE type='text/css'>
+    .appInfoText{
+	    width:150px
+	 }
+    </STYLE>
+</head>
+
+<body>
+    <div id="appPatRegister" class="hisui-layout" fit=true>
+        <div data-options="region:'west',title:'住院证列表',split:true" style="width:580px;">
+            <div id="westLayout" class="hisui-layout" fit=true>
+                <div style="height: 137px;" data-options="region:'north',title:'',headerCls:'panel-header-gray'" border="false">
+
+                    <div class="hisui-panel" title="病人信息" data-options="iconCls:'icon-search',collapsible:false,headerCls:'panel-header-gray'">
+                        <table cellpadding="5" style="margin-left:30px">
+                            <tr>
+                                <td class="r-label">开始日期</td>
+                                <td>
+                                    <input id="bookStartDate" class="hisui-datebox textbox" style="width:140px;"></input>
+                                </td>
+                                <td class="r-label">结束日期</td>
+                                <td>
+                                    <input id="bookEndDate" class="hisui-datebox textbox" style="width:140px;"></input>
+                                </td>
+                                <td>
+                                    <div id="appStatusSwitch" class="hisui-switchbox" style="margin-left:10px;width:88px;" data-options="onText:'未登记',offText:'已登记',
+								size:'small',animated:true,onClass:'primary',offClass:'gray'">
+                                    </div>
+                                    <td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">预约科室</td>
+                                <td>
+                                    <select id="bookLocBox" class="hisui-combobox" style="width:140px;"></select>
+                                </td>
+                                <td class="r-label">预约医生</td>
+                                <td>
+                                    <select id="bookDocBox" class="hisui-combobox" style="width:140px;"></select>
+                                </td>
+                                <td>
+                                    <a href="#" id="findBookListBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" style="margin-left:10px">查询</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">预约病区</td>
+                                <td>
+                                    <select id="bookWardBox" class="hisui-combobox" style="width:140px;"></select>
+                                </td>
+                                <td class="r-label">姓名</td>
+                                <td>
+                                    <input id="patName" class="textbox" style="width:133px;">
+                                </td>
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+                <div data-options="region:'center',title:'',headerCls:'panel-header-gray'" align="center">
+                    <table id="bookPatGrid"  fit=true  class="hisui-datagrid" title="病人列表" 
+                    data-options="iconCls:'icon-patient',
+                    			singleSelect:true,
+                    			autoSizeColumn:true,
+                    			fitColumns:true,
+                    			headerCls:'panel-header-gray',
+                    			pagination:false,
+                    			rownumbers:true,
+                    			showPageList:false, 
+								showRefresh:false,
+								afterPageText:'页,共{pages}页',
+								beforePageText:'第', 
+								displayMsg:'显示{from}到{to}条，共{total}条',
+								pagination:true">
+                        <thead data-options="frozen:true">
+                            <tr>
+                                <th data-options="field:'PatName'">姓名</th>
+                                <th data-options="field:'IPBookNo'">住院证号</th>
+                            </tr>
+                        </thead>
+                        <thead>
+                            <tr>
+                                <th data-options="field:'RegNO'">登记号</th>
+                                <th data-options="field:'PersonNO'">身份证号</th>
+                                <th data-options="field:'WardDesc'">预约病区</th>
+                                <th data-options="field:'LocDesc'">预约科室</th>
+                                <th data-options="field:'BookDoc'">预约医生</th>
+                                <th data-options="field:'CreatDoc'">开证医生</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="centerPanel" data-options="region:'center',title:'预约登记',split:true" style="padding:10px;border-color:#cccccc">
+            <form id="registerForm" method="post">
+                <div>
+                    <table cellpadding="5" style="margin:0 20px">
+                        <tr>
+                            <td class="r-label">住院证号</td>
+                            <td>
+                                <input id="bookNoInput" class="textbox" style="width:120px;">
+                            </td>
+                            <!-- <td class="r-label">病案号</td>
+                            <td>
+                                <input id="patno" class="textbox" style="width:120px;">
+                            </td> -->
+                            <td align="center">
+                                <a id="getPatByBookNoBtn" href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询</a>
+                            </td>
+                            <!--td align="center">
+                                <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-card'">读卡</a>
+                            </td-->
+                        </tr>
+                    </table>
+                </div>
+                <span style="display: block; border-bottom: 1px solid #ccc;margin: 20px 0 10px 0;"></span>
+                <div class="hisui-panel" title="患者信息" style="width:'100%';" data-options="headerCls:'panel-header-card'">
+                    <table cellpadding="5" style="margin:20px;">
+                        <tr>
+                            <td class="r-label">姓名</td>
+                            <td>
+                                <input id="PatNamePatI" disabled="true" class="textbox appInfoText">
+                            </td>
+                            <td class="r-label">性别</td>
+                            <td>
+                                <input id="SexPatI" disabled="true" class="textbox appInfoText">
+                            </td>
+                            <td class="r-label">年龄</td>
+                            <td>
+                                <input id="AgePatI" disabled="true" class="textbox appInfoText" >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">身份证</td>
+                            <td>
+                                <input id="PersonNOPatI" disabled="true" class="textbox appInfoText" >
+                            </td>
+                            <td class="r-label">出生日期</td>
+                            <td>
+                                <input id="BirthPatI" disabled="true" class="textbox appInfoText" >
+                            </td>
+                            <td class="r-label">病人类型</td>
+                            <td>
+                                <input id="AdmTypePatI" disabled="true" class="textbox appInfoText" >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">联系电话</td>
+                            <td>
+                                <input id="LinkManPhonePatI" disabled="true" class="textbox appInfoText" >
+                            </td>
+                            <td class="r-label">联系人</td>
+                            <td>
+                                <input id="LinkManPatI" disabled="true" class="textbox appInfoText" >
+                            </td>
+                            <td class="r-label">联系人关系</td>
+                            <td>
+                                <input id="LinkManRelationPatI" disabled="true" class="textbox appInfoText" >
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <span style="display: block; border-bottom: 1px solid #ccc;margin: 20px 0 10px 0;"></span>
+                <div class="hisui-panel" title="预约信息" style="width:'100%';" data-options="headerCls:'panel-header-card'">
+                    <table cellpadding="5" style="margin:20px;">
+                        <tr>
+                            <td class="r-label">预约科室</td>
+                            <td>
+                                <input id="LocDescBookI" disabled="true" disabled="true" class="textbox" style="width:120px;">
+                            </td>
+                            <td class="r-label">预约病区</td>
+                            <td>
+                                <select id="WardDescBookI" class="hisui-combobox" style="width:158px;"></select>
+                            </td>
+                            <td class="r-label">预约医生</td>
+                            <td>
+                                <input id="PatInDocBookI" disabled="true" class="textbox" style="width:120px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">预约日期</td>
+                            <td>
+                                <input id="BookingDateBookI" disabled="true" class="textbox" style="width:120px;">
+                            </td>
+                            <td class="r-label">预缴押金</td>
+                            <td>
+                                <input id="IPDepositBookI" disabled="true" class="textbox" style="width:150px;">
+                            </td>
+                            <td class="r-label">收证日期</td>
+                            <td>
+                                <input id="CollectDateBookI" disabled="true" class="hisui-datebox textbox" style="width:127px;"></input>
+                            </td>
+                        </tr>
+                        <tr>
+                        	<td class="r-label">住院证状态</td>
+                            <td>
+                                <input id="BookStatusBookI" disabled="true" class="textbox" style="width:120px;"></input>
+                            </td>
+                            <td class="r-label">诊断</td>
+                            <td colspan="3">
+                                <input id="DiagnosisBookI" disabled="true" class="textbox" style="width:345px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" align="center">
+                                <a href="#" id="appointBtn" class="hisui-linkbutton hover-dark" style="width:120px;" data-options="iconCls:'icon-w-save'">登记</a>                                
+                                <a href="#" id="cancelAppBtn" class="hisui-linkbutton hover-dark" style="width:120px;" data-options="iconCls:'icon-w-back'">取消登记</a>
+                                <a href="#" id="voidAppBtn" class="hisui-linkbutton hover-dark" style="width:120px;" data-options="iconCls:'icon-w-cancel'">作废</a>
+                                <a href="#" id="clearAppointBtn" class="hisui-linkbutton hover-dark" style="width:120px;" data-options="iconCls:'icon-clear-screen'">清屏</a>
+                            </td>
+                        </tr>
+                    </table>
+                    <div id="voidAppDlg" class="hisui-dialog" title="确认作废?" style="width:400px;height:200px;padding:10px;" data-options="iconCls:'icon-save',modal:true,closed:true">   
+				    	<div align="center">
+				    		<div style="margin:10px">
+				    			<span style="color:red">作废原因</span>
+					    		<select id="voidReasonBox" class="hisui-combobox" name="state" style="width:200px;" data-options="enterNullValueClear:false"></select>
+		                    </div>
+		                    <div>
+		                    	<a href="#" id="confirmVoidBtn" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-ok'">确认</a>
+		                    	<a href="#" id="closeDlgBtn" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-close'">关闭</a>
+							</div>
+						</div>
+					</div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,172 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server>
+    s OrderStr=%request.Get("Orders")
+    s EpisodeID=%request.Get("EpisodeID")
+    s DocName=%request.Get("DocName")
+    s DocType=""
+    s DocCode=%request.Get("DocCode")
+    s UploadFlag=%request.Get("UploadFlag")
+    //s OtherPresc=%request.Get("OtherPresc")
+    s DHCDTPrescXML=""
+    s DHCDTPrescXML=##class(web.DHCOEOrdItem).GetDaysDTPresc(EpisodeID,0)   //lgl+
+    s OtherPresc=DHCDTPrescXML
+    s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+    s EpisodeLocID=$p($g(^PAADM(EpisodeID)),"^",4)
+    s EpisodeDate=$p($g(^PAADM(EpisodeID)),"^",6)
+    s EpisodeDate=$ZD(EpisodeDate,3)
+    s EpisodeLocCode=$p($g(^CTLOC(EpisodeLocID)),"^",1)
+    s EpisodeLocDesc=$p($g(^CTLOC(EpisodeLocID)),"^",2)
+    s PatientName=$P($G(^PAPER(PatientID,"ALL")),"^",1)
+    &SQL(Select PAPMI_No into :PatientNo From PA_PatMas Where PAPMI_Rowid=:PatientID)
+    s PatientDOB=$p($g(^PAPER(PatientID,"ALL")),"^",6)
+    s PatientBirthday=$ZD($G(PatientDOB),3)
+	s PatientSexDr=$P($G(^PAPER(PatientID,"ALL")),"^",7)
+ 	if PatientSexDr'="" s PatientSex=$P($G(^CT("SEX",PatientSexDr)),"^",2)
+	else  s PatientSex=""
+	s allergicCode=""
+	s allergicDesc=""
+	s MRDiagnos1="",MRDiagnos2="",MRDiagnos3=""
+	s MRAdmRowid=$p($g(^PAADM(EpisodeID)),"^",61)
+	i MRAdmRowid'="" {
+		s i=0
+		Set obj=##class(%ResultSet).%New("web.MRDiagnos:Find")
+		d obj.Execute(MRAdmRowid)
+		For  Quit:'obj.Next()  Do
+		.s Desc=obj.Data("MRDIAICDCodeDRDesc")
+		.s Rowid=obj.Data("ID")
+		.s CodeRowid=""   ;lgl+诊断只填描述也能过去导致
+		.s CodeRowid=obj.Data("MRDIAICDCodeDR")
+		.if CodeRowid'="" d
+		..s ICDCode=$P($G(^MRC("ID",CodeRowid)),"^",4)
+		..s i=i+1
+		..i i=1 s MRDiagnos1=ICDCode
+		..i i=2 s MRDiagnos2=ICDCode
+		..i i=3 s MRDiagnos3=""
+		d obj.Close()
+	}
+	s Pathology1=""
+	s Pathology2=""
+	s Pathology3=""
+  		w "<SCRIPT Language=""Javascript"">",$C(13,10)
+        w "</SCRIPT>",$C(13,10)
+  s Para="<safe>"
+	;s Para=Para_"<recipe_code></recipe_code>"
+	;s Para=Para_"<doctor_information job_number='"_DocCode_"' date='"_EpisodeDate_"' />"
+	s Para=Para_"<doctor_information job_number='"_DocCode_"' date='"_$zd($p($h,",",1),3)_" "_$zt($p($h,",",2),1)_"' />"
+	s Para=Para_"<doctor_name>"_DocName_"</doctor_name>"
+	s Para=Para_"<doctor_type>"_DocType_"</doctor_type>"
+	s Para=Para_"<department_code>"_EpisodeLocCode_"</department_code>"
+	s Para=Para_"<department_name>"_EpisodeLocDesc_"</department_name>"
+	s Para=Para_"<case_id>"_PatientNo_"</case_id>"
+	s Para=Para_"<inhos_code></inhos_code>"
+	s Para=Para_"<bed_no></bed_no>"
+	s Para=Para_"<patient_information weight='' height='' age='"_PatientBirthday_"'>"
+	s Para=Para_"<patrent_name>"_PatientName_"</patrent_name><patrent_sex>"_PatientSex_"</patrent_sex>"
+	s Para=Para_"<physiological_statms></physiological_statms><boacterioscopy_effect></boacterioscopy_effect>"
+	s Para=Para_"<bloodpressure></bloodpressure><liver_clean></liver_clean>"
+	s Para=Para_"<allergic_history><case><case_code>"_allergicCode_"</case_code><case_name>"_allergicDesc_"</case_name></case></allergic_history>"
+	s Para=Para_"<diagnoses><diagnose>"_MRDiagnos1_"</diagnose><diagnose>"_MRDiagnos2_"</diagnose><diagnose>"_MRDiagnos3_"</diagnose>"
+	s Para=Para_"<diagnose>"_Pathology1_"</diagnose><diagnose>"_Pathology2_"</diagnose><diagnose>"_Pathology3_"</diagnose></diagnoses>"
+	s Para=Para_"</patient_information>"   
+	s Para2=Para_"<prescriptions>"
+	;s Para=Para_"<prescriptions><prescription id='新开处方1' >"
+	s Para=Para_"<prescriptions>"
+	;s GroupNumber=1
+	s ItmCount=$l($g(OrderStr),"^")
+	i OrderStr=""  s ItmCount=0
+    FOR i=1:1:ItmCount {
+	    s Para=Para_"<prescription id='新开处方1' type='mz' current='1' >"
+	    s OrderStr1=$P(OrderStr,"^",i)
+	    Q:OrderStr1=""
+	    s ItmID=$P(OrderStr1,"!",1)
+	    s DoseQty=$P(OrderStr1,"!",2)
+	    s DoseQtyUOM=$P(OrderStr1,"!",3)
+	    s DoseQtyUOMDesc=$p(^CT("UOM",DoseQtyUOM),"^",2)
+	    s Freq=$P(OrderStr1,"!",4)
+	    
+	    i Freq'="" d
+	    .s FreqCode=$P($G(^PHCFR(Freq)),"^",1)
+	    .s FreqFac=$P($G(^PHCFR(Freq)),"^",2)
+	    e  d
+	    .s FreqCode=""
+	    .s FreqFac=1  
+	    s Durationdr=$P(OrderStr1,"!",5)
+        s Duration=$p(^PHCDU(Durationdr),"^",2)
+	    s Instr=$P(OrderStr1,"!",6)
+	    i Instr'="" s InstrCode=$P($G(^PHCIN(Instr)),"^",1) 
+	    e  s InstrCode=""
+	    s DrgFormRowid=$P(OrderStr1,"!",7)
+	    s GroupNumber=$P(OrderStr1,"!",8)
+	    
+	    i DrgFormRowid'="" d
+        .s DrgCode=$p(^PHCD(+DrgFormRowid,1),"^",1)
+        .s DrgDesc=$p(^PHCD(+DrgFormRowid,1),"^",2)
+        .s drgform1=+DrgFormRowid
+        .s drgform2=$p(DrgFormRowid,"||",2)
+        .s leq=$o(^PHCD(drgform1,"DF",drgform2,"EQ",0))
+        .i leq'="" d
+        ..s eqrec=^PHCD(drgform1,"DF",drgform2,"EQ",leq)
+        ..s eqUom=$p(eqrec,"^"),eqqty=$p(eqrec,"^",2)
+        ..//s ^lgltest(1)=eqUom_"^"_DoseQtyUOM_"^"_eqqty
+        ..i eqUom'=DoseQtyUOM d
+        ...s DoseQty=DoseQty*eqqty
+        ...s DoseQtyUOMDesc=$p(^CT("UOM",eqUom),"^",2)
+        ...//s ^lgltest(2)=DoseQty_"^"_DoseQtyUOMDesc
+		.s Para=Para_"<medicine suspension='false' judge='true'>"
+		.s Para=Para_"<group_number>"_GroupNumber_"</group_number>"
+		.s Para=Para_"<general_name>"_DrgDesc_"</general_name>"
+		.s Para=Para_"<license_number>"_DrgCode_"</license_number>"
+		.s Para=Para_"<medicine_name>"_DrgDesc_"</medicine_name>"
+		.s Para=Para_"<single_dose coef='1'>"_DoseQty_"</single_dose>"
+		.s Para=Para_"<times>"_FreqCode_"</times>"
+		.s Para=Para_"<days>"_Duration_"</days>"
+		.s Para=Para_"<unit>"_DoseQtyUOMDesc_"</unit>"
+		.s Para=Para_"<administer_drugs>"_InstrCode_"</administer_drugs>"
+		.s Para=Para_"</medicine>"
+		.s Para=Para_"</prescription>"
+    }
+    if UploadFlag'="1" {
+	  s Para=Para_OtherPresc	
+	  s Para=Para_"</prescriptions></safe>"
+    s ^lgltest(1)=Para
+	    w "<OBJECT classid='clsid:8AD9C840-044E-11D1-B3E9-00805F499D93' width='10' height='10' align='baseline' codebase='http://192.168.1.101:80'>" ,$C(13,10)
+	    w "<PARAM NAME='java_code' VALUE='Xhzy.class'>" ,$C(13,10)
+	    w "<PARAM NAME='java_codebase' VALUE='.'>" ,$C(13,10)
+	    w "<PARAM NAME='java_type' VALUE='application/x-java-applet;version=1.5'>",$C(13,10) 
+	    w "<PARAM NAME='ARCHIVE' VALUE='../csp/xhzy.jar' >",$C(13,10)
+	    w "<PARAM NAME='scriptable' VALUE='true'>" ,$C(13,10)
+	    w "<PARAM NAME='Param' VALUE="_$C(34)_Para_$C(34)_">",$C(13,10)
+	    w "</OBJECT>" 
+    }else{
+	    s Para2=Para2_OtherPresc
+	   	s Para2=Para2_"</prescriptions></safe>"
+ 	    w "<OBJECT classid='clsid:8AD9C840-044E-11D1-B3E9-00805F499D93' width='10' height='10' align='baseline' codebase='http://192.168.1.101:80'>" ,$C(13,10)
+	    w "<PARAM NAME='java_code' VALUE='Upload.class'>" ,$C(13,10)
+	    w "<PARAM NAME='java_codebase' VALUE='.'>" ,$C(13,10)
+	    w "<PARAM NAME='java_type' VALUE='application/x-java-applet;version=1.5'>",$C(13,10) 
+	    w "<PARAM NAME='ARCHIVE' VALUE='../csp/upload.jar' >",$C(13,10)
+	  	w "<PARAM NAME='scriptable' VALUE='true'>" ,$C(13,10)
+	  	w "<PARAM NAME='Param' VALUE="_$C(34)_Para2_$C(34)_">",$C(13,10)
+	    w "</OBJECT>" 
+   }
+    
+</server>
+<SCRIPT Language="JavaScript">
+	setTimeout('window.close();',2000);
+	alert("ItmCount=="+ItmCount);
+</SCRIPT>
+</BODY>
+</HTML>

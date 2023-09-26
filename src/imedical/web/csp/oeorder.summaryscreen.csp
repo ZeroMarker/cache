@@ -1,0 +1,172 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<SERVER>
+ n DelOrderID,tempItemIds,i,row,oid,OrderItemIds,exist
+ s OrderItemIds=""
+ s DelOrderID=%request.Get("DelOrderID")
+ s tempItemIds=%request.Data("OEOrdItemIDs",1)
+ 
+ i DelOrderID'="" d ##Class(web.OEOrdItem).DeleteOrder(DelOrderID)
+
+ ;log59193 TedT strip out the order id which does not exist in global
+ f i=1:1:$l(tempItemIds,"^") {
+	s row=$p(tempItemIds,"^",i)
+	q:row=""
+	s oid=$p(row,"*",2)
+	s exist=$g(^OEORD(+oid,"I",$p(oid,"||",2),1))
+	i exist'="" s OrderItemIds=OrderItemIds_row_"^"
+ }
+ i OrderItemIds'="" s %request.Data("OEOrdItemIDs",1)=OrderItemIds
+
+ s cmp=##Class(websys.Component).OpenName("OEOrdItem.ListEMR")
+ i cmp d 
+ . s cmp.ListRows=9999
+ . d cmp.Show()
+ . d cmp.%Close()
+ s DBOEOrdItemIDs=""
+ s DBARCItmMastIDs=""
+ ;s ^zdenise($zn,"LabOrdDescEpNo")=%request.Data("LabOrdDescEpNo",1)
+ ;w "<script>"
+ ;w "alert(""here"");"
+ ;w "</script>"
+ s displayQAonSumm=$p($g(^SSU("SSGRP",+$g(%session.Data("LOGON.GROUPID")))),"^",107)
+ if (displayQAonSumm'="B") d
+ . d ##Class(web.ARCItemQuestion).OEOrderQuestionPresetData($g(%request.Data("OEOrdItemIDs",1)))
+ . s %request.Data("ScreenType",1)="S"
+ . i displayQAonSumm="A" s %request.Data("ScreenType",1)="A"
+ . s %request.Data("distinct",1)=""
+ . ;w "<P>+"_$g(%request.Data("OEOrdItemIDs",1))_"+<BR>+"_$g(%request.Data("PatientID",1))_"+"_$g(%request.Data("EpisodeID",1))_"+"_$g(%request.Data("ARCItmMastIDs",1))_"+</P>"
+ . s cmp=##Class(websys.Component).OpenName("OEOrder.Question")
+ . i cmp d cmp.Show(),cmp.%Close()
+ . //for backward compatibility where layout does not contain the list
+ . n rs,gotQue
+ . s rs=##Class(%Library.ResultSet).%New("web.ARCItemQuestion:FindAllQuestions")
+ . d rs.Execute($g(%request.Data("ARCItmMastIDs",1)),$g(%request.Data("PatientID",1)),$g(%request.Data("distinct",1)),$g(%request.Data("NewOrders",1)),$g(%request.Data("EpisodeID",1)))
+ . i rs.Next() s gotQue=1
+ . d rs.%Close()
+ . if +$g(gotQue) d
+ . . w "<SCRIPT>"
+ . . &javascript<
+ 	 	var quetbl=document.getElementById("tOEOrder_Question");
+ 	 	if (!quetbl) document.writeln("OEOrder.Question: "+t["NoListInLE"]+"<BR>&nbsp;<BR>");
+ 	 >
+ . . w "</SCRIPT>"
+ 
+</SERVER>
+
+<script language=javascript>
+// cjb 16/06/2006 59730 - new change handlers
+function QuestionDate_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	if (!IsValidDate(eSrc)) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+function QuestionTime_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	if (!IsValidTime(eSrc)) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+//61744 BoC 05/12/06
+function QuestionInteger_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+		if (!IsValidInteger(eSrc)) isValid=0;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+function QuestionFloatPositive_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+		if (!IsPositiveNumber(eSrc)) isValid=0;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+function QuestionIntegerPositive_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+		if (!IsValidInteger(eSrc)) isValid=0;
+		if (!IsPositiveNumber(eSrc)) isValid=0;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+function QuestionFloat_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+var bUpdatedOrCancelled=false;
+</script>
+
+<TRAK:COMPONENT id="OEOrder.SummaryScreen" hidemenus=1>
+</TRAK:COMPONENT>
+</TRAK:APPLET>
+</BODY>
+</HTML>

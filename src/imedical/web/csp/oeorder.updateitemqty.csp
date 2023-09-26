@@ -1,0 +1,34 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+
+ ;TedT update qty ordered for current session
+ n deleteString,qty,currqty,ordrowid,x,ordString
+ s (deleteString,qty,ordrowid,currqty,x,ordString)=""
+ s deleteString=%request.Get("deleteString")
+ 
+ f x=1:1:$l(deleteString,"^") {
+	s ordString=$p(deleteString,"^",x)
+	i ordString'="" {
+		d DeleteTMPQty^COEOrdItem15(ordString)
+	}
+ }
+ 
+ q
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

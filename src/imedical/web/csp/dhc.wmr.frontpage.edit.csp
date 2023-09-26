@@ -1,0 +1,211 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:EXT200></EXTHEALTH:EXT200>
+<script language='javascript' src='../scripts/DHC.WMR.Class.js'></script>
+<script language='javascript' src='../scripts/DHC.WMR.DataAccess.js'></script>		
+<script language='javascript' src='../scripts/DHC.WMR.Serialize.js'></script>	
+<script language='javascript' src='../scripts/DHC.WMR.CommonFunction.js'></script>
+<script language='javascript' src='../scripts/DHC.WMR.InputFP.BaseInfo.js'></script>	
+<script language='javascript' src='../scripts/DHC.WMR.InputFP.ExtraInfo.js'></script>
+<script language='javascript' src='../scripts/DHC.WMR.InputFP.DisTable.js'></script>	
+<script language='javascript' src='../scripts/DHC.WMR.InputFP.OpeTable.js'></script>
+<script language='javascript' src='../scripts/DHC.WMR.InputFP.ModifyDisOpe.js'></script>
+<script language='javascript' src='../scripts/DHC.WMR.InputFP.Control.js'></script>
+<script language='javascript' src='../scripts/DHC.WMR.Coding.InputFP.Condition.js'></script>
+<script language='javascript' src='../scripts/DHC.WMR.InputFP.Shortcuts.JS'></script>
+
+<!--Add By LiYang 为了增加ICD选择的树状展示-->
+<script language='javascript' src='../scripts/DHC.WMR.ICDDir.js'></script>
+
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s WorkItem=$g(%request.Data("WorkItem",1))
+	s FormatMrNoFlag=$g(%request.Data("FormatMrNoFlag",1))
+	s MrType=$g(%request.Data("MrType",1))
+	s AdmType=$g(%request.Data("AdmType",1))
+	s CTLocID=%session.Get("LOGON.CTLOCID")
+	if (MrType=""){
+		s MrType=##class(web.DHCWMRGroup.DHCWMRGroupReceipt).GetGroupMrType(CTLocID,AdmType)
+	}
+	s LeadingFactor=##class(web.DHCWMRGroup.DHCWMRGroupReceipt).GetLeadingFactor(+MrType)
+</Script>
+
+<!--
+<frameset rows="10%,*" frameborder="0" framespacing="0">
+	<frame name="RPtop" src="websys.default.csp?WEBSYS.TCOMPONENT=DHC.WMR.Coding.InputFP.Condition&MrType=#(MrType)#&AdmType=#(AdmType)#&WorkItem=#(WorkItem)#">
+	<frame name="RPbottom" src="websys.default.csp?WEBSYS.TCOMPONENT=DHC.WMR.Coding.InputFP&MrType=#(MrType)#&AdmType=#(AdmType)#&WorkItem=#(WorkItem)#">
+</frameset>
+ -->
+<body onload="window_onload()">
+
+<div id='BaseInfoGrid' style='visibility1:hidden'/>
+<div id='SummaryGrid' style='visibility1:hidden'/>
+<div id='DiseaseGrid' style='visibility1:hidden'/>
+<div id='OperationGrid' style='visibility1:hidden'/>
+<div id='MainPanel'/>
+
+<p id='Condition' style='font:11pt'>
+病案类型<input type="text" id='MrTypeDesc' style='width:70;font:11pt' value='<%=$p(##Class(web.DHCWMRDictionaryCtl).GetDataById(%request.Get("MrType")),"^",4)%>' Disabled=true/>
+&nbsp&nbsp
+病案号<input type="text" id='txtMrNo' style='width:80;font:11pt'/>
+&nbsp&nbsp
+就诊列表<select id='cboVolume' style='width:600;font:11pt'/>
+<input type='hidden' id='txtBarCode'/>
+</p>
+
+<input type='hidden' id='MrType' value='#(MrType)#'>
+<input type='hidden' id='FormatMrNoFlag' value='#(FormatMrNoFlag)#'>
+<input type='hidden' id='LeadingFactor' value='#(LeadingFactor)#'>
+
+<input type='hidden' id='MethodGetDHCWMRDiseaseICDDxByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseICD.GetMyICDByRowId"))%>'/>
+<input type='hidden' id='MethodGetPatientAdmitList' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRBasePaadm.GetAdmList"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRMainVolumeArryByMainID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRVolumeQry.QueryVolListByMainInfo"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRMainByMrNo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMainCtl.GetMainByTypeNo"))%>'/>
+<input type='hidden' id='MethodGetPatientAdmitInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRBasePaadm.GetAdmInfo"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRVolInfoByVolumeID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRVolumeCtl.GetVolInfoByVol"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRDictionaryArryByTypeFlag' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRDictionaryCtl.QueryByTypeFlagLIST"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRDictionaryByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRDictionaryCtl.GetDataById"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRUserByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseCtl.GetLogUserInfo"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRFPTemplateByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFPTempCtl.GetTemp"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRTemplateDtlFromTempID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFPTempCtl.GetTempDtl"))%>'/>
+<input type='hidden' id='MethodGetFrontPageItemDicByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFPTempCtl.GetItem"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRDictionaryByTypeCode' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRDictionaryCtl.QueryByTypeCode"))%>'/>
+<input type='hidden' id='MethodSaveFrontPageInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFrontPageCtl.Coding"))%>'/>
+<input type='hidden' id='MethodGetFrontPageInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFrontPageQry.GetFrontPageInfo"))%>'/>
+<input type='hidden' id='MethodGetFrontPageICD' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFrontPageCtl.GetFPICD"))%>'/>
+<input type='hidden' id='MethodGetTemplateDetailByMrType' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFPTempQry.GetTempItem"))%>'/>
+<input type='hidden' id='MethodGetChineseDic' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRChineseCtl.GetChinese"))%>'/>
+<input type='hidden' id='MethodGetVolumeByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRVolumeCtl.GetVolInfoByVol"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRMainVolumeByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRVolumeCtl.GetVolume"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRMainByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMainCtl.GetMainById"))%>'/>
+<input type='hidden' id='MethodGetPatientByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseCtl.GetPatInfo"))%>'/>
+<input type='hidden' id='MethodQueryAdmitDiagnose' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseDiagnose.GetMrDiagnose"))%>'/>
+<input type='hidden' id='MethodQueryAdmitOperation' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseDiagnose.GetMrOper"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRHistoryAdmByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRHistoryCtl.GetHistoryAdmById"))%>'/>
+<input type='hidden' id='MethodGetVolumeAdmList' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRVolumeCtl.GetVolumeAdmList"))%>'/>
+<input type='hidden' id='MethodGetDHCWMROperationICDDxByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseICD.GetMyOperByRowId"))%>'/>
+<input type='hidden' id='MethodGetWorkItem' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRWorkItemCtl.GetDataById"))%>'/>
+<input type='hidden' id='MethodGetDHCWMRHistoryByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRHistoryCtl.GetHistoryById"))%>'/>
+<input type='hidden' id='MethodGetWorkType' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRDictionaryCtl.QueryByTypeFlagLIST"))%>'/>
+<input type='hidden' id='MethodGetPatientInfoByMrRowID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRBaseInfoCtl.GetBaseInfoByMain"))%>'/>
+<input type='hidden' id='MethodSaveWorkDetail' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMROperation.Operation"))%>'/>
+<input type='hidden' id='MethodGetCurrHospital' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBase01.GetDefaultHosp"))%>'/>
+<input type='hidden' id='MethodGetWorkFlow' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRWorkFlowCtl.QueryByTypeActiveDateLIST"))%>'/>
+<input type='hidden' id='MethodGetWorkFlowArry' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRWorkFlowCtl.SSGetDataByIdLIST")) %>'/>
+<input type='hidden' id='MethodGetVolAdmInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRVolumeCtl.GetVolAdmInfo"))%>'/>
+<input type='hidden' id='MethodQueryFPICDByCode' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseICD.QueryByCode"))%>'/>
+<input type='hidden' id='MethodQueryDoctorByName' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRBaseDic.GetDocByName"))%>'/>
+<input type='hidden' id='MethodQueryDoctorByRowid' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRBaseDic.GetDocByRowid"))%>'/>
+<input type='hidden' id='MethodGetFrontPageItemDicByIDNew' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRFPTempCtl.GetItemNew"))%>'/>
+<input type='hidden' id='MethodFormatMrNo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCWMRMedBaseCtl.FormatMrNo"))%>'/>
+
+</body>
+</HTML>
+<script language="javascript" type="text/javascript">
+	var t=new Array();
+	t["AddFromHis"]="添加[Alt+A]";
+	t["BarCodeError"]="请输入卷条码!";
+	t["DiagnoseDate"]="诊断日期";
+	t["DiagnoseTime"]="诊断时间";
+	t["DiagnoseType"]="诊断类型";
+	t["Discharge"]="出院";
+	t["DischargeStatusError"]="主要诊断和其他诊断必须输入入院病情!";
+	t["DiseaseType"]="诊断类型";
+	t["DoctorCode"]="医师工号";
+	t["DoctorName"]="医师姓名";
+	t["Down"]="向下";
+	t["ErrDiagContent"]="诊断信息录入错误,请及时修改!";
+	t["ErrOperContent"]="手术信息录入错误,请及时修改!";
+	t["FlowError"]="这份病案所处的环节不对,无法进行编目操作!请检查其状态!";
+	t["FormatMrNoFlag"]="病案号自动补位";
+	t["HistoryVol"]="历史";
+	t["MainDiagnoseRequired"]="请输入主要诊断!";
+	t["MethodFormatMrNo"]="MethodFormatMrNo";
+	t["MrTypeDesc"]="病案类型";
+	t["OpeType"]="手术类型";
+	t["SaveToGrid"]="保存回列表[Alt+S]";
+	t["SelectDiagnoseType"]="请选择诊断类型!";
+	t["Up"]="向上";
+	t["srtRelation"]="关系";
+	t["strAddress"]="家庭地址";
+	t["strAddressTel"]="电话";
+	t["strAdmitDate"]="住院日期";
+	t["strAdmitDep"]="住院科室";
+	t["strAge"]="年龄";
+	t["strAssistant1"]="1助";
+	t["strAssistant2"]="2助";
+	t["strBaseFromTitle"]="基本信息";
+	t["strBirthday"]="生日";
+	//t["strCity"]="出生地?市?";
+	t["strCity"]="出生地";
+	t["strCloseUp"]="切口愈合";
+	t["strCompany"]="工作单位";
+	t["strCompanyTel"]="电话";
+	t["strDel"]="删除[Alt+D]";
+	t["strDischargeDate"]="出院日期";
+	t["strDischargeDep"]="出院科室";
+	t["strDiseaseCode"]="ICD编码";
+	t["strDiseaseGridTitle"]="疾病信息";
+	t["strDiseaseICD"]="ICD编码";
+	t["strDiseaseName"]="疾病名称";
+	t["strDiseaseResult"]="出院情况";
+	t["strDiseaseResult"]="入院病情";
+	t["strDiseaseResume"]="是否确诊";
+	t["strInHospDiseasErr"]="请录入入院诊断!";
+	t["strMainDiseasErr"]="请录入主要诊断!";
+	t["strMrNo"]="病案号";
+	t["strMsgInputAssistant1"]="请输入手术第一助手?";
+	t["strMsgInputAssistant2"]="请输入手术第二助手?";
+	t["strMsgInputCloseUpType"]="请输入切口愈合情况?";
+	t["strMsgInputDiseaseResult"]="请输入疾病转归情况?";
+	t["strMsgInputICDCode"]="请输入ICD编码?";
+	t["strMsgInputNarcosisDoctor"]="请输入麻醉医师信息?";
+	t["strMsgInputNarcosisType"]="请输入麻醉方式?";
+	t["strMsgInputOperationDate"]="请输入手术日期?";
+        t["strMsgOpeDateOutHoseDate"]="出院患者输入手术日期(不在住院期内)?";
+	t["strMsgInputOperationICD"]="请输入手术编码?";
+	t["strMsgInputOperator"]="请输入术者信息?";
+	t["strName"]="姓名";
+	t["strNarcosisDoctor"]="麻醉医师";
+	t["strNarcosisType"]="麻醉方式";
+	t["strNation"]="民族";
+	t["strNationality"]="国籍";
+	t["strNew"]="添加";
+	t["strNextPage"]="下一页[Alt+N]";
+	t["strNoticeTitle"]="提示";
+	t["strOccupation"]="职业";
+	t["strOperationDate"]="手术日期";
+	t["strOperationGridTitle"]="手术信息";
+	t["strOperationICD"]="手术编码";
+	t["strOperationName"]="手术名称";
+	t["strOperattor"]="术者";
+	t["strPaneAdmitInfo"]="就诊信息";
+	t["strPaneBaseInfo"]="基本信息";
+	t["strPersonalID"]="身份证号";
+	t["strPleaseInputMrNoAndVol"]="请输入病案号并选择就诊信息?";
+	t["strProvince"]="县";
+	t["strRegNo"]="登记号";
+	t["strRelationAddress"]="联系人地址";
+	t["strRelationName"]="联系人";
+	t["strRelationTel"]="联系人电话";
+	t["strSave"]="保存[Alt+G]";
+	t["strSaveFail"]="保存失败?";
+	t["strSex"]="性别";
+	t["strSummaryGridTitle"]="摘要信息";
+	t["strWedlock"]="婚姻";
+    t["strOperationRank"]="手术等级";
+    
+	function window_onload()
+	{
+		BodyEventHandler();
+	}
+</script>

@@ -1,0 +1,184 @@
+
+<!-- 
+ * FileName: dhcpeillnessstandard.hisui.csp
+ * Anchor: xy
+ * Date: 2019-06-05
+ * Description: HISUI 疾病维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 20px;
+}
+/*弹出框里标签右对齐 并且有10px内边距*/
+.tdlabel
+{
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align:right;
+}
+.addtable{
+	border-collapse:separate;
+	border-spacing:0 6px;
+	/*padding: 0 10px;*/
+}
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false" id="layout">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray'" style="border-bottom: 1px dashed #C0C0C0;" title="" border="false">
+	    	 <table class="search-table">
+				<tr>
+					
+					<td class="r-label"><label for="Code">编号</label></td>
+					<td>
+						<input class="textbox" id="Code"/>
+					</td>
+				
+					<td class="r-label r-label-1"><label for="Alias">别名</label></td>
+					<td>
+						<input class="textbox" id="Alias"/>
+					</td>
+				
+					<td class="r-label r-label-1"><label for="DiagnoseConclusion">疾病名称</label></td>
+					<td>
+						<input class="textbox" id="DiagnoseConclusion"/>
+					</td>
+						
+					<td class="r-label r-label-1">
+						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+				
+					<td class="r-label">
+						<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					</td>
+					
+					<td><input type="hidden" id="ILLSRowId"/></td>
+					<td><input type="hidden" id="ILLSDesc"/></td>	
+				</tr>
+				
+			</table>
+		
+	</div>
+	    <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+			<table data-options="fit:true" id="IllnessFindGrid" border="false" toolbar="#allbar"></table>
+		</div>      
+</div>
+
+   <!--增改弹窗-->
+     <div id="myWin" style="width:520px;height:500px;padding:3px 10px 10px 10px;;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+
+			<table class="addtable">
+				 <tr>
+				 	<td class="tdlabel"><label for="IllCode">疾病编号</label></td>
+					<td>
+						<input class="textbox"  id="IllCode" disabled/>
+					</td>
+					<td class="tdlabel"><label for="Sex">性别</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="Sex">
+					</td>		
+				</tr>
+				 <tr>
+				 	<td class="tdlabel"><label for="IllDesc"><font color=red>*</font>疾病名称</label></td>
+					<td>
+						<input  class="textbox"   id="IllDesc"/>
+					</td>
+					<td class="tdlabel"><label for="Type">类型</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="Type"/>
+					</td>		
+				</tr>
+					 <tr>
+				 	<td class="tdlabel"><label for="IllAlias">别名</label></td>
+					<td>
+						<input class="textbox"  id="IllAlias"/>
+					</td>
+					<td class="tdlabel"><label for="CommonIllness">常见病</label></td>
+					<td>
+						<input class='hisui-checkbox' type="checkbox" id="CommonIllness"/>
+					</td>		
+				</tr>
+				<tr>
+					<td class="tdlabel"><label for="IllDetail"><font color=red>*</font>疾病建议</label></td>
+					<td colspan='5'>
+						<textarea id="IllDetail" class="textbox" style="width:376px; height:250px;"> </textarea>
+					</td>
+				</tr>
+	             								
+			</table >
+		</form>
+	</div>
+	 <!--疾病解释弹窗-->
+     <div id="IllExplainWin" style="width:480px;height:400px;padding:3px 10px 10px 10px;display:none;">   
+		<form id="IllEform-save" method="post" data-options="fit:true,border:false,plain:true">
+
+			<table class="addtable">
+				<tr>
+					<td class="tdlabel"><label for="ILLSName">疾病名称</label></td>
+					<td>
+						<input class="textbox" id="ILLSName" disabled/>
+					</td>
+					<td>
+						<input class='hisui-checkbox' type="checkbox" id="PrintFlag"/><label for="PrintFlag">是否打印</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="tdlabel" id='TIllExplain'><label for="IllExplain"><font color=red>*</font>疾病解释</label></td>
+					<td colspan='4'>
+						<textarea id="IllExplain" class="textbox"  style="width:350px; height:250px;"> </textarea>
+					</td>
+				</tr>
+	             								
+			</table >
+		</form>
+	</div> 
+    <!--数据面板工具栏-->
+    <div id="allbar">
+  
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a> 
+   		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-cfg',plain:true,stopAllEventOnDisabled:true" id="Alias_btn">别名维护</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true,stopAllEventOnDisabled:true" id="ILLED_btn">疾病与建议对照</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-key',plain:true,stopAllEventOnDisabled:true" id="IllExplain_btn">疾病解释</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-person',plain:true,stopAllEventOnDisabled:true" id="IllSportGuide_btn">运动指导</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-info',plain:true,stopAllEventOnDisabled:true" id="IllDietGuide_btn">饮食指导</a>
+    </div> 
+    
+    <!--别名维护弹窗-->
+    <!--div id="myWinAlias" style="width:500px;height:400px;display:none;"> 
+    </div--> 
+     <!--疾病与建议对照弹窗-->
+    <!--div id="myWinILLED" style="width:640px;height:400px;display:none;"> 
+    </div--> 
+
+<script type="text/javascript" src="../scripts/DHCPEIllnessStandard.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+</body>		
+</html>
+			
+		
+ 
+
+
+

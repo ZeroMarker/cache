@@ -1,0 +1,176 @@
+<html>
+<head>
+  	<title>电子病历</title>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script> <!--add by loo on 2010-4-16-->
+ 	
+ 	<!--add by loo on 2010-4-26-->
+ 	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+ 	
+ 	<!--add by loo on 2010-4-16-->
+ 	<style type="text/css">
+ 		.spanColor
+		{
+			color: black;
+		}
+		.spanColorLeft
+		{
+			color: #666;
+		}
+		#pInfoDiv
+		{
+			position: relative; height:20; font-size:9pt; text-align: left;  border-style: none;
+		}
+		#pInfoDivParent
+		{
+			height:auto; background-image: url('../scripts/epr/Pics/title.gif'); background-attachment: fixed; border-style: none;
+		}
+ 	</style>
+ 	
+ 	<script language="cache" runat="server">
+  		//取session全部值
+  		//k ^CacheTempDHCEPRDebug("main.csp")
+  		//s i = ""
+  		//for {
+  		//	s i = $O(%session.Data(i))
+  		//	q:(i="")
+  		//	s str = i_":"_%session.Get(i)
+  		//	s ^CacheTempDHCEPRDebug("main.csp","session")= $g(^CacheTempDHCEPRDebug("main.csp","session"))_"^"_str
+  		//}
+  		
+  		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s patientID = $Get(%request.Data("PatientID",1),"")  		
+  		s patientIDFromEpisodeID = ##class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)		//add by zhuj on 2010-1-6
+  		if patientID = ""
+  		{	s patientID = patientIDFromEpisodeID}
+  		
+  		s userCode = %session.Get("LOGON.USERCODE")
+  		s userID = %session.Get("LOGON.USERID")
+  		s ssgroupID = %session.Get("LOGON.GROUPID")
+  		s userLocID = %session.Get("LOGON.CTLOCID")
+  		
+  		//系统参数
+  		s treeWidth = ##class(EPRmeta.SysOption).GetOptionValueByName("EPRTreeWidth")
+  		//s openFristTemplate = ##class(EPRmeta.SysOption).GetOptionValueByName("OpenFristTemplate")
+ 		s openFristTemplate = ##Class(EPRservice.BOSysOption).OpenFristTemplate(episodeID)
+ 		s fontSize = ##class(EPRmeta.SysOption).GetOptionValueByName("DefaultFontSize")
+  		
+  		s mainDoc = $p(##class(EPRservice.HISInterface.PatientInfoAssist).MainDoc(episodeID), "^", 2) 		
+   		s currAuthor = ""
+		s:(userID'="") currAuthor = ##class(EPRmeta.Privilege.PowerUser).GetUserName(userID)
+		s:(userID'="") currAuthor = $tr(currAuthor,$c(13,10)) //20130325 wangwentao add BJDTYY处理基础数据包含回车符
+ 		
+ 		//病人基本信息
+  		s patientInfo = ##class(web.eprajax.ajaxCreateEprEdit).GetPatientInfo(episodeID, "")
+  		
+  		//授权权限
+  		s privPara = "userid^"_userID_"!admid^"_episodeID_"!patientid^"_patientID_"!userloc^"_userLocID_"!templateid^0!ssgroupid^"_ssgroupID_"!categoryid^0!docid^0!isnewframework^1!eprnum^0"
+   		s privArr = ##Class(EPRservice.Privilege.BOPrivRule).GetAppointPriv(privPara)
+ 		if privArr = ""
+ 		{	s isAppointActive = "0"}
+ 		else
+ 		{	s isAppointActive = privArr.GetAt("appoint")}
+ 		s CAStatus=##Class(EPRservice.BLDigitalSignature).GetCAServiceStatus(userLocID)
+ 	    if "1" = CAStatus
+ 	    {
+	 	    d ##Class(EPRservice.BLDigitalSignature).OutPutHtml()
+	 	} 
+	 	s hisName=##class(EPRmeta.SysOption).GetOptionValueByName("HospitalName")
+	 	if "XieHe" = hisName //协和认证ad帐号
+	 	{
+		 	d ##Class(EPRservice.BLDigitalSignature).OutPutHtmlForXieHe()
+		}
+		
+	 	s canCommitPDF = ##Class(EPRservice.HISInterface.EPRFSInfo).CanCommitPDF(episodeID,userID)
+	 	s needCheckSign = "1"
+ 		s RecyclerStatus = ##class(EPRmeta.SysOption).GetOptionValueByName("RecyclerActivation") 
+ 		
+		//d ##class(web.DHCEPRExt).CLBar()
+	
+ 	</script>
+	<script language="javascript">
+		var mainDoc = '#(mainDoc)#';		//当前病人主管医生code		
+		var userCode = '#(userCode)#';		//当前登陆医生code
+		var ssgroupID = '#(ssgroupID)#'
+		var userLocID = '#(userLocID)#'
+		var userID = '#(userID)#';
+		var timedOut = 10000;		
+		var printTemplateDocId = '';
+		var templateDocId = '';
+		var patientID = '#(patientID)#';
+		var patientIDFromEpisodeID = '#(patientIDFromEpisodeID)#';
+		var isAppointActive = '#(isAppointActive)#';
+		//add by loo on 2010-4-16
+		//病人基本信息
+		var pInfo = eval("[{" + "#(patientInfo)#" + "}]");
+		 		
+ 		//病人信息字体
+ 		var fontSize = '#(fontSize)#' + "pt";
+		//end
+		
+		var episodeID = '#($Get(%request.Data("EpisodeID",1),""))#';
+		
+		var selectParentNode = '';
+		var lastSelectParentNode = '';
+		
+		var selectGrandpaNode = '';
+		var lastSelectGrandpaNode = '';
+		
+		var treeWidth = '#(treeWidth)#';
+		
+		var selectTreeNode = '';
+		
+		var openFristTemplate = '#(openFristTemplate)#';		//add by zhuj on 2010-1-29	判断是否打开第一个界面模板
+		
+		var currAuthor = '#(currAuthor)#';		//add by zhuj on 2010-3-16
+		var HisName = '#(hisName)#'; 
+		var CAStatus = '#(CAStatus)#'; 
+		var canCommitPDF = '#(canCommitPDF)#';
+		var needCheckSign = '#(needCheckSign)#';	
+		var RecyclerStatus = '#(RecyclerStatus)#'
+					
+		//10-28
+		function clearNode()
+		{
+			preNode = null;
+			selectParentNode = '';					
+			lastSelectParentNode = '';					
+			selectGrandpaNode = '';
+			lastSelectGrandpaNode = '';	
+			
+			selectTreeNode = '';			//add by zhuj on 2009-12-15
+		}
+		//var PatientID = '#($Get(%request.Data("PatientID",1),""))#';
+		//var EpisodeID = '#($Get(%request.Data("EpisodeID",1),""))#';
+	</script>
+</head>
+<body>
+<!--script SRC="../scripts/websys.js"></script-->
+<script type="text/javascript" src="../scripts/epr/js/ImageButton.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/finishRecord.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/toSection.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/templateSelect.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/showLogDetail.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/subjectCheck.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/main.js"></script>
+
+<!--add by loo on 2010-4-16-->
+<script type="text/javascript">
+	//病人信息
+	setPatientInfo();
+</script>
+
+<script type="text/JavaScript">
+    /*
+    if ('#(CAStatus)#'=="1")
+    {
+	    websys_createWindow('dhc.epr.loadcacom.csp','LoadCAcom',"top=10000,left=10000,width=50,height=10,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no");
+    }
+    */
+</script>
+</body>
+</html>

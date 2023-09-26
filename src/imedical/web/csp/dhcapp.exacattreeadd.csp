@@ -1,0 +1,279 @@
+<!-- 检查分类树维护 dhcapp.exacattreeadd.csp -->
+<html>
+<head>
+<title>检查分类树维护</title>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/layout.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/listcomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/exacattreeadd.js"></script>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<style>
+/*页面表格样式*/
+.form-table{
+	border-collapse:collapse;
+	border:1px solid #95B8E7;
+	width:100%;
+	border:none;
+}
+
+.form-table td{
+	border:1px solid #95B8E7;
+	padding:5px 5px;
+	font-size: 13px;
+}
+#ExaCatCode{padding:3px 0px;margin:0}
+.tb_td_bk{
+	width:100px;
+	background:rgb(238, 247, 254);
+}
+.tb_td_required{
+	font-weight:bold;
+	color: red;
+}
+.tb_td_bold{
+	font-weight:bold;
+}
+/* 兼容WebKit核心和IE核心的浏览器 */
+.ui-input {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    height: 25px;
+    width:200px;
+    border:1px solid #95B8E7;
+}
+input:focus{ 
+	background-color:#AFEEEE;
+}
+#icw_bt a.l-btn-plain,#pw_bt a.l-btn-plain,#uicw_bt a.l-btn-plain{
+	/*  background-color:#ffa8a8; */
+	border:1px solid #95B8E7;
+}
+span.d-label{
+	text-align:right;
+	padding:0 10px 0 0;
+	color:#666;
+}
+
+</style>
+<!-- 新旧版本兼容配置 -->
+<SERVER>
+  s version=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+  w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+  w "var version="""_$g(version)_""";"_$c(13,10)
+  w "</SCRIPT>"
+</SERVER>
+</head>
+<body>
+<div id="mainpanel" class="hisui-layout" fit="true">
+
+	<div data-options="region:'north',split:false,border:false,collapsible:false" style="height:51px;padding:10px 0 0 10px;">
+	<table ALIGN="left" class="">
+ 	 	<tr>
+            <td class="r-label">
+              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+            </td>
+            <td>
+              <input id="_HospList"/>
+            </td>
+          </tr>
+ 	 </table>
+	</div>
+	<div data-options="region:'west',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" style='width:300px;padding:10px 5px 10px 10px;'>
+		<div class="hisui-layout" fit="true" border="false">
+			<div data-options="region:'north',title:'',border:false,collapsible:false" style='height:84px;'>
+				<div class="hisui-panel" data-options="title:'检查分类树维护',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-bottom:0px;border-radius:0px;">	
+					<div style="padding:10px 0px 10px 11px;">
+	        		 	<input id="ExaCatCode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码'/>
+	        		</div>
+	        	</div>
+			</div>
+			<div data-options="region:'center',title:'',border:false,collapsible:false">
+				<div class="hisui-panel" data-options="title:'',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-radius:0px;border-top:0px;padding:0px 5px 10px 10px;">	
+					<ul id="itemCat"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'"  style='padding:10px 10px 10px 0px;'>
+		<div class="hisui-panel" data-options="title:'检查方法<font color=red font-weight=bold font-size=12pt >【双击即可编辑】</font>',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">		
+			<div id="itemlist" toolbar="#arctb"></div>
+		</div>
+	</div>
+	<div data-options="region:'east',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style='width:460px;padding:10px 10px 10px 0px;'>
+		<div class="hisui-panel" data-options="title:'部位<font color=red font-weight=bold font-size=12pt padding-left:10px;>【双击即可编辑】</font>',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">			
+			<div id="partlist" toolbar="#parttb"></div>
+		</div>
+	</div>
+</div>
+<div id="arctb" class="toolbar">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a></td>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a> </td>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a></td>	
+	      <!--td><a class="hisui-linkbutton" data-options="iconCls:'icon-paper-cfg',plain:true">授权</a></td-->	
+	    </tr>
+	</table>
+</div>
+<div id="parttb" class="toolbar">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a></td>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a> </td>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a></td>	
+	    </tr>
+	</table>
+</div>
+<!-- 分类树右键菜单 -->
+<div id="right" class="hisui-menu" style="">
+	<div onclick="newCreateItmCat('S')" data-options="iconCls:'icon-add'">新增同级分类</div>
+	<div onclick="newCreateItmCat('C')" data-options="iconCls:'icon-add'">新增子分类</div>
+	<div onclick="newCreatePart()" data-options="iconCls:'icon-add'" style="display:none">新增部位</div>
+	<div class="menu-sep"></div>
+	<div onclick="delItmCat()" data-options="iconCls:'icon-cancel'">删除分类</div>
+	<div class="menu-sep"></div>
+	<div onclick="newCreateUpdItmCat()" data-options="iconCls:'icon-reload'">更新分类</div>
+	<!-- 
+	<div class="menu-sep"></div>
+	<div onclick="delTreeCat()" data-options="iconCls:'icon-remove'">删除分类</div>
+	 -->
+</div>
+<!-- 分类树维护 -->
+<div id="itmCatWin">
+	<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+		<tr>
+			<td align="right" class="tb_td_bk">分类名称：</td>
+			<td><input id="ItemDesc" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">代码：</td>
+			<td><input id="ItemAlias" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">分类类型：</td>
+			<td><input id="ItemType" class="ui-input"/></td>
+		</tr>
+		<tr style="display:none;">
+			<td align="right" class="tb_td_bk">上级分类ID：</td>
+			<td><input id="LastItmID" class="ui-input" disabled="disabled"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">上级分类：</td>
+			<td><input id="LastItmDesc" class="ui-input" disabled="disabled"/></td>
+		</tr>
+		<tr>
+			<td style="height:35px;" align="right" class="tb_td_bk tb_td_required">注意事项：</td>
+			<td class="tb_td_bk tb_td_required">"分类名称"为必填项目</td>
+		</tr>
+	</table>
+	<div id="icw_bt" style="float:right;margin-top:10px;margin-right:100px;">
+		<!-- 
+		<a href="#" style="width:70px" class="hisui-linkbutton" plain="true" iconCls="icon-save">查询</a>
+		 -->
+		<a href="#" class="hisui-linkbutton" iconCls="icon-w-save">保存</a>
+		<a href="#" style="margin-left:10px;" class="hisui-linkbutton" iconCls="icon-w-cancel">取消</a>
+	</div>
+</div>
+<!-- 部位维护 -->
+<div id="PartWin">
+	<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+		<tr style="display:none;">
+			<td align="right" class="tb_td_bk">部位ID：</td>
+			<td><input id="PartID" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">部位名称：</td>
+			<td><input id="PartDesc" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">医嘱项名称：</td>
+			<td><input id="ItmmastDesc" class="ui-input"/></td>
+		</tr>
+		<tr style="display:none;">
+			<td align="right" class="tb_td_bk">医嘱项ID：</td>
+			<td><input id="ItmmastID" class="ui-input"/></td>
+		</tr>
+		<tr style="display:none;">
+			<td align="right" class="tb_td_bk">上级分类ID：</td>
+			<td><input id="LastNodeID" class="ui-input" disabled="disabled"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">上级分类：</td>
+			<td><input id="LastNodeDesc" class="ui-input" disabled="disabled"/></td>
+		</tr>
+		<tr>
+			<td style="height:35px;" align="right" class="tb_td_bk tb_td_required">注意事项：</td>
+			<td class="tb_td_bk tb_td_required">"部位名称"、"医嘱项名称" 为必填项目</td>
+		</tr>
+	</table>
+	<div id="pw_bt" style="float:right;margin-top:10px;margin-right:100px;">
+		<!-- 
+		<a href="#" style="width:70px" class="hisui-linkbutton" plain="true" iconCls="icon-save">查询</a>
+		 -->
+		<a href="#" class="hisui-linkbutton" iconCls="icon-w-save">保存</a>
+		<a href="#" style="margin-left:10px;" class="hisui-linkbutton" iconCls="icon-w-cancel">取消</a>
+	</div>
+</div>
+<!-- 分类名称更新 -->
+<div id="uItmCatWin">
+	<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+		<tr style="display:none;">
+			<td align="right" class="tb_td_bk">分类名称ID：</td>
+			<td><input id="TraItmID" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">分类名称：</td>
+			<td><input id="TraItmDesc" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">代码：</td>
+			<td><input id="TraItmAlias" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">类型：</td>
+			<td><input id="TraItmType" class="ui-input"/></td>
+		</tr>
+		<tr>
+			<td style="height:35px;" align="right" class="tb_td_bk tb_td_required">注意事项：</td>
+			<td class="tb_td_bk tb_td_required">分类名称栏,回车自动添加别名</td>
+		</tr>
+	</table>
+	<div id="uicw_bt" style="float:right;margin-top:10px;margin-right:100px;">
+		<a href="#" class="hisui-linkbutton" iconCls="icon-w-update">更新</a>
+		<a href="#" style="margin-left:10px;" class="hisui-linkbutton" iconCls="icon-w-cancel">取消</a>
+	</div>
+</div>
+<!--菜单授权-->
+<div id="menu-security-win" class="" style="padding:0 10px;" data-options="modal:true,draggable:false,closed:true,iconCls:'icon-w-paper'">
+    <input type="text" hidden="true" id="menu-security-win-id"></input>
+    <div style="line-height:30px;padding-top:5px;">
+        <span class="d-label">项目描述:</span><span id="menu-security-win-caption"></span>
+    </div>
+    <div style="line-height:30px;padding-bottom:5px;">
+        <span class="d-label">项目代码:</span><span id="menu-security-win-name"></span>
+    </div>
+    <div id="menu-security-win-list-tb" style="padding:4px;">
+        <input id="menu-security-win-search"/>
+    </div>
+    <table id="menu-security-win-list"></table>
+</div>
+
+</body>
+</html>
+
+

@@ -1,0 +1,255 @@
+	
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>
+<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.bjxh.normal.cover.csp
+        
+        //s PatientID="5748123"
+        //d ##Class(web.DHCPE.ReportGetInfor).GetPatient(PatientID)
+        ;Set UserID=%session.Get("LOGON.USERID")
+        ;s:UserID="" UserID=PatientID
+        //s Loc=%session.Get("LOGON.CTLOCID")
+        s OrderSetsDesc=$G(^TMPReport(UserID,"PatInfo","OrderSetsDesc"))
+        s RegNo=$G(^TMPReport(UserID,"PatInfo","PatRegNo"))_"&nbsp;"
+        s PatName=$G(^TMPReport(UserID,"PatInfo","PatName"))_"&nbsp;"
+        s PatSex=$G(^TMPReport(UserID,"PatInfo","PatSex"))_"&nbsp;"
+        s PatSexDesc="先生"
+        i ($G(^TMPReport(UserID,"PatInfo","PatSex")))="女" s PatSexDesc="女士"
+        s ParBirthday=$G(^TMPReport(UserID,"PatInfo","PatBirthday"))_"&nbsp;"
+        s PatAge=$G(^TMPReport(UserID,"PatInfo","PatAge"))_"&nbsp;"
+        s PatTel=$G(^TMPReport(UserID,"PatInfo","PatTel"))_"&nbsp;"
+        i $G(^TMPReport(UserID,"PatInfo","PatCompany"))="" s ^TMPReport(UserID,"PatInfo","PatCompany")="个人&nbsp;"
+        s PatCompany=$G(^TMPReport(UserID,"PatInfo","PatCompany"))_"&nbsp;"
+		s Department=$G(^TMPReport(UserID,"PatInfo","Position"))_"&nbsp;"
+        s AdmDate=$G(^TMPReport(UserID,"PatInfo","AdmDate"))_"&nbsp;"
+        s IDCard=$G(^TMPReport(UserID,"PatInfo","PatID"))_"&nbsp;"
+        s Mail=$G(^TMPReport(UserID,"PatInfo","Postalcode"))_"&nbsp;"
+        s HPNo=$G(^TMPReport(UserID,"PatInfo","PatHPNo"))_"&nbsp;"
+        s SortNo=$G(SortNo)
+        s VIPLevel=$G(^TMPReport(UserID,"PatInfo","VIPLevel"))
+        i VIPLevel[("VIP") d
+        .s VIPLevel="2"
+        e  d
+        .s VIPLevel="1"
+        s AddItem=$G(^TMPReport(UserID,"Result","AddItem"))
+        
+        
+        s CurDate=$ZD($H,3)
+        s Year=$p(CurDate,"-",1)
+        s Month=$p(CurDate,"-",2)
+        s Day=$p(CurDate,"-",3)
+        s CurDate=Year_"年"_Month_"月"_Day_"日"
+        s Hosption=$G(^DHCPESetting("DHCPE","ReportTitle"))_"-"
+        s Hosptital=$p(Hosption,"-",1)
+        s wHosption=""
+        f iLLoop=1:1:$L(Hosption,"-") d
+        .
+        .s wHosption=wHosption_"<p class='ReportPageHeadHostptionTitle'>"_$P(Hosption,"-",iLLoop)_"</P>"
+        s wHosption="<p>健&nbsp;&nbsp;&nbsp;康&nbsp;&nbsp;&nbsp;档&nbsp;&nbsp;&nbsp;案</P>"
+        //s wHosption="健康档案"
+    </SCRIPT>    
+    
+    <style type="text/css">
+    	.normal{
+	    	margin:2pt auto; /* <p>之间的间距 */
+    		font-size:14pt;
+    		font-family:宋体;
+    	}
+    	.first{
+    		text-indent:2em; /* 首行缩进 */
+    	}
+    	.NewTable{
+			display:block;
+			margin:2pt 2pt 20pt 2pt;
+			PAGE-BREAK-AFTER: always ;
+		}
+    </style>
+    
+	<!-- A4 大小 一般为 595pt*840pt 除去边距 540pt*770pt -->
+    <table border="0" width="655" height="180" class="NewTable">
+		<tr>
+			<td height="100"></td>
+		</tr>
+		
+		<tr>
+			<td><p align="right">健康档案号：#(HPNo)#</td>
+		</tr>
+		
+		<tr height=40><td></td></tr>
+		
+		<tr>
+			<td><p align="center" style="font-size:48pt;font-family:楷体">关爱生命 共享健康</td>
+		</tr>
+		
+		<tr>
+			<td height="50"></td>
+		</tr>
+		
+		<tr>
+			<td><p align="center" style="font-size:36pt;font-family:隶书">#(LocDesc)#</td>
+		</tr>
+		
+		<tr>
+			<td height="180">　</td>
+		</tr>
+		
+		<tr>
+			<td height="200">
+				<div align="center">
+					<table border="0" cellspacing="2" cellpadding="0" width="100%" style="font-size:15pt;">
+						<tr>
+							<td width="15%">　</td>
+							<td width="25%" align="right"><b>体检编号：</b></td>
+							<td style="text-align:center; border-bottom:1pt solid #000000;">#(RegNo)#</td>
+							<td width="20%">　</td>
+						</tr>
+						<tr>
+							<td>　</td>
+							<td align="right"><b>姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名：</b></td>
+							<td style="text-align:center; border-bottom:1pt solid #000000;">#(PatName)#</td>
+							<td>　</td>
+						</tr>
+						<tr>
+							<td>　</td>
+							<td align="right"><b>性&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;别：</b></td>
+							<td style="text-align:center; border-bottom:1pt solid #000000;">#(PatSex)#</td>
+							<td>　</td>
+						</tr>
+						<tr>
+							<td>　</td>
+							<td align="right"><b>年&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;龄：</b></td>
+							<td style="text-align:center; border-bottom:1pt solid #000000;">#(PatAge)#</td>
+							<td>　</td>
+						</tr>
+						<tr>
+							<td>　</td>
+							<td align="right"><b>体检日期：</font></b></td>
+							<td style="text-align:center; border-bottom:1pt solid #000000;">#(AdmDate)#</td>
+							<td>　</td>
+						</tr>
+						<tr>
+							<td>　</td>
+							<td align="right"><b>单&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;位：</b></td>
+							<td style="text-align:center; border-bottom:1pt solid #000000;">#(PatCompany)#</td>
+							<td>　</td>
+						</tr>
+						<tr>
+							<td>　</td>
+							<td align="right"><b>部门名称：</b></td>
+							<td style="text-align:center; border-bottom:1pt solid #000000;">#(Department)#</td>
+							<td>　</td>
+						</tr>
+					</table>
+				</div>
+			</td>
+		</tr>
+		
+		<tr>
+			<td height="180">　</td>
+		</tr>
+		
+		<tr>
+			<td><p align="center" style="font-size:18pt;font-family:宋体">#(LocDesc)#全体员工</td>
+		</tr>
+		
+		<tr>
+			<td><p align="center" style="font-size:18pt;font-family:宋体">恭祝您身体健康、全家幸福！</td>
+		</tr>
+	</table>
+
+	<table border="0" width="655" class="NewTable">
+
+		<tr>
+			<td>
+				<p class="normal"><b>尊敬的 #(PatName)##(PatSexDesc)#</b></p>
+				<p class="normal first">您好！</p>
+				<p class="normal first">欢迎您光临#(LocDesc)#，感谢您对我们工作的信任和支持！</p>
+				<p class="normal first">现将您的健康体检报告呈上，本报告分为总检结论与建议、各科检查情况及小结、各项特殊检查结果及化验单。请您着重关注本次体检的异常情况，仔细阅读专家对您的重点问题给予的提示内容。</p>
+			</td>
+		</tr>
+		
+		<tr>
+			<td height="10"></td>
+		</tr>
+		
+		<!-- 报告中的检查项目 strat -->
+		<tr>
+			<td>
+				<table border='1' cellspacing=0 style='width:100%;font-size:12pt; font-family:宋体;'>
+					<tr>
+						<th colspan=4 algin='center' valign='middle'>检查科室及项目</th>
+					</tr>
+					<tr>
+						<th algin='center'>检查科室</th>
+						<th algin='center'>项目名称</th>
+						<th algin='center'>检查状态</th>
+						<th algin='center'>检查日期</th>
+					</tr>
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						
+						s STRowId=0,num=0
+						f  s STRowId=$o(^TMPReport(UserID,"Result","StationItem",STRowId)) q:STRowId=""  d
+						.s STData=$g(^TMPReport(UserID,"Result","StationItem",STRowId))
+						.s rowspan=$p(STData,"^",$l(STData,"^"))
+						.f i=1:1:$l(STData,$c(1)) d
+						..
+						..s ItemData=$p(STData,$c(1),i)
+						..q:ItemData=""
+						..s ItemStatus="已检"
+						..i $p(ItemData,"^",3)=1 s ItemStatus="弃检"
+						..e  i (($p(ItemData,"^",4)="")||($p(ItemData,"^",4)="/")) s ItemStatus="未检"
+						..
+						..w "<tr>"
+						..w:i=1 "<td rowspan='"_rowspan_"' style='text-align:center;'>"_$p(ItemData,"^",1)_"</td>"
+						..w "<td>&nbsp;"_$p(ItemData,"^",2)_"</td>"
+						..w "<td style='text-align:center;'>"_ItemStatus_"</td>"
+						..w "<td style='text-align:center;'>"_$p(ItemData,"^",4)_"</td>"
+						..w "</tr>"
+
+					</SCRIPT>
+				</table>
+			</td>
+		</tr>
+		<!-- 报告中的检查项目 end -->
+		
+		<tr>
+			<td height="10"></td>
+		</tr>
+		
+		<tr>
+			<td>
+				<p class="normal">报告说明：</p>
+				<p class="normal first">1．此报告仅作健康保健之用，不做任何证明依据，如对检查结果有异议，请于一周内来#(LocDesc)#咨询。</p>
+				<p class="normal first">2．医学科技发展至今，对于疾病筛检仍有其限制及检查盲点，健康体检未发现异常情况，并不代表完全没有潜在性疾病，希望您听从我们的建议，并坚持定期检查，若出现任何异常症状，请您及时就诊。</p>
+				<p class="normal first">3．本次查体化验检查结果，只对本次送检标本负责。</p>
+			</td>
+		</tr>
+		
+		<tr>
+			<td height="100"></td>
+		</tr>
+		
+		<tr>
+			<td>
+				<p class="normal"><b>联系电话：</b>#(LocTel)#</p>
+				<p class="normal"><b>医院网址：</b>#(WWWAddress)#</p>
+				<p class="normal"><b>体检中心地址：</b>#(LocAddress)#</p>
+				<p class="normal"><b>公交路线：</b>#(GJLX)#</p>
+			</td>
+		</tr>
+	</table>
+
+<SCRIPT language="javascript">
+function printCover()
+{
+	return false;
+	
+}
+function chageHeight(obj)
+{
+	
+}
+		//return 
+    </SCRIPT>

@@ -1,0 +1,81 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!doctype html>
+<html>
+<head>
+	<!--criticalvalue.search.csp-->
+	<title>	危急值查询 </title>
+	<HISUI />
+	<style>
+	.r-label{
+		padding-left:15px;	
+	}
+	</style>
+	<server>
+		s (UserId,CareProv,CarProvTpDR,Type)=""
+		set UserId=%session.Get("LOGON.USERID")
+		set UserCode=%session.Get("LOGON.USERCODE")
+		set CareProv=$p(^SSU("SSUSR",UserId),"^",14)
+		i CareProv>0 Set CarProvTpDR = $p(^CTPCP(CareProv,1),"^",4) 
+		i CarProvTpDR>0 Set Type = $p(^CT("CPT",CarProvTpDR),"^",4)
+		s EmrViewLink=##class(web.DHCAntCVOptions).GetBaseOpt("EmrViewLink")
+		s IsForOE=%request.Get("IsForOE")
+	</server>
+	<script type="text/javascript">
+		if(typeof GV=="undefined") var GV={};
+		GV.CareProvType="#(Type)#";
+		GV.UserId="#(UserId)#";
+		GV.UserCode="#(UserCode)#";
+		GV.EmrViewLink="#($zcvt(EmrViewLink,"O","JS"))#";
+		GV.GroupId="#(%session.Get("LOGON.GROUPID"))#";
+		GV.LocId="#(%session.Get("LOGON.CTLOCID"))#";
+		GV.IsForOE="#(IsForOE)#";  //是不是门急诊查询界面  是 只保留日期查询条件 1分钟刷新一次
+		GV.ReportType="#(%request.Get("ReportType"))#";  //支持传入类型 查某单一类型危急值
+		GV.HospId="#(%session.Get("LOGON.HOSPID"))#";
+	</script>
+	<script type="text/javascript" src="../scripts_lib/xlsx/grid2excel.js" charset="utf-8"></script>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" fit="true" title="危急值查询" data-options="headerCls:'panel-header-gray'">
+		<div class="hisui-layout" fit="true" id="center-layout">
+			<div data-options="region:'north',border:false" style="height:52px;padding:10px">
+					<table  cellspacing="0" cellpadding="0" >
+						<tr>
+							<td class="r-label">开始日期</td>
+							<td ><input class="hisui-datebox textbox" id="DateFrom" /></td>
+							
+							<td class="r-label">结束日期</td>
+							<td ><input class="hisui-datebox textbox" id="DateTo" /></td>
+							
+							<csp:if condition=IsForOE'=1>
+								<td class="r-label">就诊类型</td>
+								<td ><input class="textbox" id="pAdmType" /></td>
+								
+								<td class="r-label">就诊科室</td>
+								<td ><input class="textbox" id="pAdmLoc" /></td>
+
+								<td class="r-label">报告状态</td>
+								<td ><input class="textbox" id="pStatus" /></td>
+								
+								<td class="r-label">报告类型</td>
+								<td ><input class="textbox" id="pReportType" /></td>
+							</csp:if>
+							
+							<td style="padding-left:20px;"><a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a></td>
+
+						</tr>
+					</table>
+			</div><!--end layout center-layout  region north-->
+			<div data-options="region:'center',border:false" style="border-top:1px solid #ddd;padding-top:4px;">
+				<table id="reportList"></table>
+			</div><!--end layout center-layout  region center-->
+		</div> <!--end layout center-layout -->
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhccriticalvalue/criticalvalue.search.js"></script>
+</body>
+</html>

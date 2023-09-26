@@ -1,0 +1,88 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+<script language="cache"  runat="server">
+	//在回传json数据时尽量避免包含'\'
+	s Action=$Get(%request.Data("actiontype",1))
+	s RowID=$Get(%request.Data("RowID",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	if Action = "DeleteAppendFile"
+	{
+		s result= ##Class(web.DHCEQ.Process.DHCEQAppendFile).DeleteAppendFile(RowID)
+		i result'>0 w "{success:true,result:'删除失败,"_result_"'}"
+		e  w "{success:true,result:'删除成功'}"
+	}
+	q:(Action = "DeleteAppendFile")
+	if Action = "UploadByFtpStream"
+	{	
+		s SourceType=$Get(%request.Data("SourceType",1))
+		s SourceID=$Get(%request.Data("SourceID",1))
+		s AppendFileTypeDR=$Get(%request.Data("AppendFileTypeDR",1))
+		s DocName=$Get(%request.Data("DocName",1))
+		s Remark=$Get(%request.Data("Remark",1))
+	//===============================FTP相对路径显示法================================
+		if $data(%request.MimeData("FileStream",1))
+		{
+			s filesize=%request.MimeData("FileStream",1).Size
+			s defaultsize=##class(web.DHCEQCommon).GetSysInfo("990028")
+			i +defaultsize=0 s defaultsize=1
+			if filesize>(defaultsize*1024*1024)
+			{
+				w "{success:false,result:'上传文件不能大于"_defaultsize_"M!'}"
+				q
+			}
+			s filename=%request.MimeData("FileStream",1).FileName
+			s Suffix=$p(filename,".",$l(filename,"."))
+			if ($ZCONVERT(Suffix,"U")="EXE")
+			{
+				w "{success:false,result:'该类型文件不能上传!'}"
+				q
+			}
+			if ($ZCONVERT(Suffix,"U")'="XLSX")&($ZCONVERT(Suffix,"U")'="XLS")&($ZCONVERT(Suffix,"U")'="DOC")&($ZCONVERT(Suffix,"U")'="DOCX")&($ZCONVERT(Suffix,"U")'="PPT")&($ZCONVERT(Suffix,"U")'="PPTX")&($ZCONVERT(Suffix,"U")'="PDF")&($ZCONVERT(Suffix,"U")'="RAR")
+			{
+				w "{success:false,result:'该类型文件不能上传!只允许上传doc,docx,ppt,rar,excel和pdf类型的文件.'}"
+				q
+			}
+		}
+		s filename=""
+		//set Path="/TestFtp/DHCEQAppendFile/"
+		set Path=##class(web.DHCEQCommon).GetSysInfo("990005")
+		set AFData=RowID_"^"_SourceType_"^"_SourceID_"^"_AppendFileTypeDR_"^"_DocName_"^"_$g(filename)_"^"_Path_"^"_$g(Suffix)_"^"_Remark
+		Tstart
+		//i PicTypeDR="" w "{success:false,result:'请设置图片类型!'}",! Quit
+		
+		set rowid=##class(web.DHCEQ.Process.DHCEQAppendFile).SaveAppendFile(AFData)
+		if (rowid'>0)
+		{
+			TROLLBACK
+			Write "{""success"":false,result:'文件表存储失败"_rowid_"'}",! Quit
+		}
+		
+		if $data(%request.MimeData("FileStream",1))
+		{
+			set RowID=rowid
+			set Path=Path_RowID_"."_Suffix
+			set result=##Class(web.DHCEQ.Process.DHCEQAppendFile).UploadByFtpStream(Path,%request.GetMimeData("FileStream"))
+			i (result<0)  
+			{
+				TROLLBACK
+				Write "{success:false,result:'FTP存储失败"_result_"'}",! Quit
+			}
+		}
+		TCOMMIT
+		w "{success:true,result:'上传成功',url:'1'}"
+		quit
+	}
+	q:(Action = "UploadByFtpStream")
+	w "{success:false,result:'unknown order'}"
+	Quit 
+</script>
+
+
+
+
+
+

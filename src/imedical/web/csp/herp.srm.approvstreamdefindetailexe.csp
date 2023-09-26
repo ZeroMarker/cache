@@ -1,0 +1,64 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str= $Get(%request.Data("query",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s checkmainid=$Get(%request.Data("checkmainid",1))
+	s stepno=$Get(%request.Data("stepno",1))
+	s procdesc=$Get(%request.Data("procdesc",1))
+	s chkname=$Get(%request.Data("chkname",1))
+	s deptname=$Get(%request.Data("deptname",1))
+	s isdirect=$Get(%request.Data("isdirect",1))
+	s IsSecretary=$Get(%request.Data("IsSecretary",1))
+	s usernameDr=$Get(%request.Data("usernameDr",1))
+	
+	s IDs = $Get(%request.Data("IDs",1))
+	
+	i action="list" d
+	.w ##class(herp.srm.udata.ApprovStreamDefin).DetailList(checkmainid,sortField,sortDir,start,limit)	
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.ApprovStreamDefin).DetailInsertRec(checkmainid, stepno, procdesc, chkname, deptname, isdirect,IsSecretary)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.ApprovStreamDefin).DetailUpdateRec(rowid,checkmainid, stepno, procdesc, chkname, deptname, isdirect,IsSecretary)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.ApprovStreamDefin).DetailDelete(checkmainid,rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	i action = "caldept" d
+	.w ##class(herp.srm.udata.ApprovStreamDefin).GetDept(start,limit,str)
+		
+		
+	i action = "caluser" d
+	.w ##class(herp.srm.udata.ApprovStreamDefin).GetUser(start,limit,str)
+	
+	i action = "GetChkUserInfo" d
+	.w ##class(herp.srm.udata.ApprovStreamDefin).GetChkUserInfo(start,limit,IDs)
+</script>

@@ -1,0 +1,94 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+
+	s filterStr=$Get(%request.Data("filterStr",1))
+
+	//查询科室扩展信息
+	i Action = "query" d
+	.d ##class(web.DHCSTM.CTLOC).Query(Start,Limit,Sort,Dir,filterStr)
+
+	//保存科室扩展信息
+	i Action = "save" d
+	.s result = ##class(web.DHCSTM.CTLOC).Save(listData)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i Action = "addFrLoc" d
+	.s loc=$Get(%request.Data("loc",1))
+	.s frLoc=$Get(%request.Data("frLoc",1))
+	.s group=$Get(%request.Data("group",1))
+	.s ret=##class(web.DHCSTM.DHCTransferLocConf).Insert(loc,frLoc,"","",group)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	..
+    
+	//保存科室库存分类扩展信息
+	i Action = "addStkCat" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s ProvLoc=$Get(%request.Data("ProvLoc",1))
+	.s IncscStr=$Get(%request.Data("IncscStr",1))
+	.s result =##class(web.DHCSTM.DHCTransferLocConf).InsertStkCat(LocId,ProvLoc,IncscStr)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "deleteFrLoc" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s ret=##class(web.DHCSTM.DHCTransferLocConf).Delete(rowid)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	..
+    i Action = "deleteStkCat" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s ret=##class(web.DHCSTM.DHCTransferLocConf).DeleteStkCat(rowid)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	..
+	//保存补货科室相关信息
+	i Action = "Savedefat" d
+	.s result = ##class(web.DHCSTM.DHCTransferLocConf).Savedefat(listData)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action="UnAuthorizedLoc" d
+	.s group=$Get(%request.Data("group",1))
+	.s desc=$Get(%request.Data("FilterDesc",1))
+	.d ##class(web.DHCSTM.DHCTransferLocConf).UnAuthorizedLoc(Start,Limit,group,desc)
+	i Action="AuthorizedLoc" d
+	.s group=$Get(%request.Data("group",1))
+	.d ##class(web.DHCSTM.DHCTransferLocConf).AuthorizedLoc(Start,Limit,group)
+
+	i Action="SendLocInfo" d
+	.s LocIdStr=$Get(%request.Data("LocIdStr",1))
+	.s result=##class(web.DHCSTM.CTLOC).SendLocInfo(LocIdStr)
+	.i +result=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+</script>

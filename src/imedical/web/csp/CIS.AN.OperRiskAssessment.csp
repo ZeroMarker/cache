@@ -1,0 +1,257 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术风险评估</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<style>
+    .print-title {display:none}
+    .checkbox {margin-left:-5px;margin-top:-3px;}
+    .score-margin {margin-right:10px}
+</style>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operriskassessment.css" />
+</head>
+<body class="hisui-layout">
+    <!--<div data-options="region:'north',border:false" style="padding:10px 10px 5px 10px;height:120px;">-->
+    <!--<div class="hisui-panel" data-options="fit:true,title:'手术患者信息',headerCls:'panel-header-gray'">-->
+    <div style="display:none">
+        <div>
+        <div class="form-row">
+            <div class="form-title">手术日期</div>：
+            <div id="OperDate" class="form-item"></div>
+            <div class="form-title">科别</div>：
+            <div class="form-item" id="PatDeptDesc"></div>
+            <div class="form-title">姓名</div>：
+            <div class="form-item" id="PatName"></div>
+            <div class="form-title">住院号</div>：
+            <div class="form-item" id="MedcareNo"></div>
+        </div>
+        </div>
+        <div>
+        <div class="form-row">
+            <div class="form-title">手术名称</div>：
+            <div class="form-item" id="OperationDesc"></div>
+        </div>
+        </div>
+    </div>
+    <!--</div>-->
+    <div data-options="region:'center',border:false" style="padding:10px">
+    <!--<div class="hisui-panel" data-options="fit:true,title:'手术风险评估',headerCls:'panel-header-gray'">-->
+        <!--<div title="护理情况" style="padding:10px;">-->
+        <form id="dataForm" method="post">
+            <div id="riskAssessmentRecord">
+                <table class="condition-table" style="width:100%;margin:0">
+                <tr>
+                    <th style="background-color:#f5f6f5">1.手术切口清洁程度</th>
+                    <th style="background-color:#f5f6f5">2.麻醉分级(ASA分级)</th>
+                    <th style="background-color:#f5f6f5">3.手术持续时间</th>
+                </tr>
+                <tr>
+                    <td>
+                        <input class='hisui-checkbox' data-title="I类手术切口(清洁手术)" data-formitem="OpBladeClean" data-permission="ANDoc" type="checkbox" id="OpBladeCleanCHK1" data-score="0" value="I">
+                        <span id="OpBladeCleanCHK1_Print" class="print-checkbox" ></span>
+                        I类手术切口(清洁手术)&nbsp;&nbsp; 0分
+                        <input type="hidden" id="OpBladeClean" data-title="手术切口清洁程度" name="OpBladeClean" class="operdata" data-multiple="N" data-required="Y" data-msg="手术切口清洁程度">
+                    </td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="P1:正常的患者:除局部病变外,无系统性病变" data-formitem="ASAClass" data-permission="ANDoc" type="checkbox" id="ASAClassCHK1" data-score="0" value="P1">
+                        <span id="ASAClassCHK1_Print" class="print-checkbox" ></span>
+                        P1:正常的患者:除局部病变外,无系统性病变&nbsp;&nbsp; 0分
+                        <input type="hidden" id="ASAClass" name="ASAClass" class="operdata" data-multiple="N" data-required="Y" data-msg="麻醉分级(ASA分级)">
+                    </td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="T1:手术在3小时内完成" data-formitem="OpDurationTimes" data-permission="ANDoc" type="checkbox" id="OpDurationTimesCHK1" data-score="0" value="T1">
+                        <span id="OpDurationTimesCHK1_Print" class="print-checkbox" ></span>
+                        T1:手术在3小时内完成&nbsp;&nbsp; 0分
+                        <input type="hidden" id="OpDurationTimes" name="OpDurationTimes" class="operdata" data-multiple="N" data-required="Y" data-msg="手术持续时间">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="color:#666666">手术野无污染；手术切口周边无炎症；患者没有进行气道、食道和/或尿道插管；患者没有意识障碍。</td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="P2:患者有轻微的临床症状:有轻度或中度系统性疾病" data-formitem="ASAClass" data-permission="ANDoc" type="checkbox" id="ASAClassCHK2" data-score="0" value="P2">
+                        <span id="ASAClassCHK2_Print" class="print-checkbox" ></span>
+                        P2:患者有轻微的临床症状:有轻度或中度系统性疾病&nbsp;&nbsp; 0分
+                    </td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="T2:完成手术超过3小时"  data-formitem="OpDurationTimes" data-permission="ANDoc" type="checkbox" id="OpDurationTimesCHK2" data-score="1" value="T2">
+                        <span id="OpDurationTimesCHK2_Print" class="print-checkbox" ></span>
+                        T2:完成手术超过3小时&nbsp;&nbsp; 1分
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input class='hisui-checkbox'  data-title="II类手术切口(相对清洁手术)" data-formitem="OpBladeClean" data-permission="ANDoc" type="checkbox" id="OpBladeCleanCHK2" data-score="0" value="II">
+                        <span id="OpBladeCleanCHK2_Print" class="print-checkbox" ></span>
+                        II类手术切口(相对清洁手术)&nbsp;&nbsp; 0分
+                    </td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="P3:有严重系统性疾病,日常活动受限,但未丧失工作能力" data-formitem="ASAClass" data-permission="ANDoc" type="checkbox" id="ASAClassCHK3" data-score="1" value="P3">
+                        <span id="ASAClassCHK3_Print" class="print-checkbox" ></span>
+                        P3:有严重系统性疾病,日常活动受限,但未丧失工作能力&nbsp;&nbsp; 1分
+                    </td>
+                    <td rowspan="8">
+                        <p>随访：切口愈合与感染情况</p>
+                        <p style="padding-bottom:20px;">切口甲级愈合</p>
+                        <p>
+                            <span style="display:inline-block;width:80px;">切口感染--</span>浅层感染
+                        </p>
+                        <p style="padding-bottom:20px;">
+                            <span style="display:inline-block;width:80px;"></span>深层感染
+                        </p>
+                        <!--<input class='hisui-checkbox' data-formitem="IncisionalInfection" type="checkbox" id="IncisionalInfectionCHK1" value="1">
+                        <span id="IncisionalInfectionCHK1_Print" class="print-checkbox print-novalue" ></span> 切口甲级愈合<br>
+                        
+                        <input class='hisui-checkbox' data-formitem="IncisionalInfection" type="checkbox" id="IncisionalInfectionCHK2" value="2">
+                        <span id="IncisionalInfectionCHK2_Print" class="print-checkbox print-novalue" ></span> 切口感染--浅层感染<br>
+                        
+                        <input class='hisui-checkbox' data-formitem="IncisionalInfection" type="checkbox" id="IncisionalInfectionCHK3" value="3">
+                        <span id="IncisionalInfectionCHK3_Print" class="print-checkbox print-novalue" ></span> 切口感染--深层感染<br><br>
+                        
+                        <input type="hidden" id="IncisionalInfection" name="IncisionalInfection" class="operdata" data-multiple="N">-->
+                        <p>在与评价项目相应的框内"□"打钩"√"后，分值相加即可完成！</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td rowspan="2" style="color:#666666">上、下呼吸道，上、下消化道，泌尿生殖道或经以上器官的手术；患者进行气道、食道和/或尿道插管；患者病情稳定；行胆囊、阴道、阑尾、耳鼻手术的患者。</td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="P4:有严重系统性疾病,已丧失工作能力,威胁生命安全" data-formitem="ASAClass" data-permission="ANDoc" type="checkbox" id="ASAClassCHK4" data-score="1" value="P4">
+                        <span id="ASAClassCHK4_Print" class="print-checkbox" ></span>
+                        P4:有严重系统性疾病,已丧失工作能力,威胁生命安全&nbsp;&nbsp; 1分
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input class='hisui-checkbox' data-title="P5:病情危重，生命难以维持的濒死病人" data-formitem="ASAClass" data-permission="ANDoc" type="checkbox" id="ASAClassCHK5" data-score="1" value="P5">
+                        <span id="ASAClassCHK5_Print" class="print-checkbox" ></span>
+                        P5:病情危重，生命难以维持的濒死病人&nbsp;&nbsp; 1分
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input class='hisui-checkbox' data-title="III类手术切口(清洁-污染手术)" data-formitem="OpBladeClean" data-permission="ANDoc" type="checkbox" id="OpBladeCleanCHK3" data-score="1" value="III">
+                        <span id="OpBladeCleanCHK3_Print" class="print-checkbox" ></span>
+                        III类手术切口(清洁-污染手术)&nbsp;&nbsp; 1分
+                    </td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="P6:脑死亡的患者" data-formitem="ASAClass" data-permission="ANDoc" type="checkbox" id="ASAClassCHK6" data-score="1" value="P6">
+                        <span id="ASAClassCHK6_Print" class="print-checkbox" ></span>
+                        P6:脑死亡的患者&nbsp;&nbsp; 1分
+                    </td>
+                </tr>
+                <tr>
+                    <td rowspan="2" style="color:#666666">开放、新鲜且不干净的伤口，前次手术后感染的切口；手术中需采取消毒措施的切口。</td>
+                    <th style="background-color:#f5f6f5">4.手术类别</th>
+                </tr>
+                <tr>
+                    <td>
+                        <input class='hisui-checkbox' data-title="浅层手术组织" data-formitem="OperationType" data-permission="ANDoc" type="checkbox" id="OperationTypeCHK1" value="浅层组织手术">
+                        <span id="OperationTypeCHK1_Print" class="print-checkbox" ></span>
+                        4.1.浅层组织手术
+                        <input type="hidden" id="OperationType" data-title="手术类别" name="OperationType" class="operdata" data-multiple="Y" data-required="Y" data-msg="手术类别">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input class='hisui-checkbox' data-title="IV类手术切口(污染手术)" data-formitem="OpBladeClean" data-permission="ANDoc" type="checkbox" id="OpBladeCleanCHK4" data-score="1" value="IV">
+                        <span id="OpBladeCleanCHK4_Print" class="print-checkbox" ></span>
+                        IV类手术切口(污染手术)&nbsp;1分
+                    </td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="深部组织手术" data-formitem="OperationType" data-permission="ANDoc" type="checkbox" id="OperationTypeCHK2" value="深部组织手术">
+                        <span id="OperationTypeCHK2_Print" class="print-checkbox" ></span>
+                        4.2.深部组织手术
+                    </td>
+                </tr>
+                <tr>
+                    <td rowspan="2" style="color:#666666">严重的外伤，手术切口有炎症、组织坏死，或有内脏引流管。</td>
+                    <td>
+                        <input class='hisui-checkbox' data-title="器官类别" data-formitem="OperationType" data-permission="ANDoc" type="checkbox" id="OperationTypeCHK3" value="器官类别">
+                        <span id="OperationTypeCHK3_Print" class="print-checkbox" ></span>
+                        4.3.器官类别
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input class='hisui-checkbox' data-title="腔隙手术" data-formitem="OperationType" data-permission="ANDoc" type="checkbox" id="OperationTypeCHK4" value="腔隙手术">
+                        <span id="OperationTypeCHK4_Print" class="print-checkbox" ></span>
+                        4.4.腔隙手术
+                    </td>
+                    <td>
+                        <input type="checkbox" class="hisui-checkbox" data-title="急诊手术" data-formitem="EmergencyOper" data-permission="ANDoc" id="EmergencyOperCHK" value="急诊">
+                        <span id="EmergencyOperCHK_Print" class="print-checkbox" ></span>
+                        急诊手术
+                        <input type="hidden" id="EmergencyOper" name="EmergencyOper" class="operdata" data-multiple="N">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                    	<div style="margin-bottom:10px;">
+	                    	手术风险评估分数：
+	                        <span>手术切口清洁度(<span id="OpBladeCleanScore"></span>分)</span>
+	                        <span>+麻醉ASA分级(<span id="ASAClassScore"></span>分)</span>
+	                        <span>+手术持续时间(<span id="OpDurationTimesScore"></span>分)</span>
+	                        <span>=<span id="SumScore"></span>分</span><input type="hidden" id="RiskScore" name="RiskScore" class="operdata">
+                        </div>
+                        NNIS级数：
+                        <span class="checkbox-list">
+                           <input class='hisui-checkbox' data-title="0" data-formitem="NNISRate" type="checkbox" id="NNISRateCHK1" value="0" data-permission="ANDoc">
+                           <span id="NNISRateCHK1_Print" class="print-checkbox" ></span> 0 <span class="score-margin"></span>
+                           <input class='hisui-checkbox' data-title="1" data-formitem="NNISRate" type="checkbox" id="NNISRateCHK2" value="1" data-permission="ANDoc">
+                           <span id="NNISRateCHK2_Print" class="print-checkbox" ></span> 1 <span class="score-margin"></span>
+                           <input class='hisui-checkbox' data-title="2" data-formitem="NNISRate" type="checkbox" id="NNISRateCHK3" value="2" data-permission="ANDoc">
+                           <span id="NNISRateCHK3_Print" class="print-checkbox" ></span> 2 <span class="score-margin"></span>
+                           <input class='hisui-checkbox' data-title="3" data-formitem="NNISRate" type="checkbox" id="NNISRateCHK4" value="3" data-permission="ANDoc">
+                           <span id="NNISRateCHK4_Print" class="print-checkbox" ></span> 3 <span class="score-margin"></span>
+                           <input type="hidden" id="NNISRate" name="NNISRate" class="operdata" data-multiple="N">
+                       </span>
+                    </td>
+                </tr>
+                </table>
+            </div>
+            <div>
+                <table class="condition-table" style="width:100%;margin:0;border-top:0">
+                <tr>
+                    <td>
+                        <span class="form-title-right4">术者签名</span>
+                        <input id="SurgeonSign" data-title="术者签名" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'手术医生签名',CareProvType:'DOCTOR'" style="width:180px;">
+                    </td>
+                    <td>
+                        <span class="form-title-right6">麻醉医师签名</span>
+                        <input type="text" id="AnesthetistSign" data-title="麻醉医师签名" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'麻醉医生签名',CareProvType:'DOCTOR'" style="width:180px;">
+                    </td>
+                    <td>
+                        <span class="form-title-right6">巡回护士签名</span>
+                        <input type="text" id="OperNurseSign" data-title="巡回护士签名" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'手术护士签名',CareProvType:'NURSE'" style="width:180px;">
+                    </td>
+                </tr>
+                </table>
+                
+            </div>
+        </form>
+        <!--</div>-->
+    <!--</div>-->
+    </div>
+    <div data-options="region:'south',border:false" style="height:50px;">
+        <div class="button-list" style="padding:10px">
+            <span class="form-btn"><a href="#" id="btnSave" class="hisui-linkbutton" data-title="保存" data-options="iconCls:'icon-w-save'" data-permission="All" style="">保存</a></span>
+            <span class="form-btn"><a href="#" id="btnPrint" class="hisui-linkbutton" data-title="打印" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a></span>
+            <span class="form-btn"><a href="#" id="btnRefresh" class="hisui-linkbutton" data-title="刷新" data-options="iconCls:'icon-w-update'" data-permission="All">刷新</a></span>
+            <span class="form-btn"><a href="#" id="btnSheetSetting" class="hisui-linkbutton" data-title="设置" data-options="iconCls:'icon-w-update'" data-permission="All">设置</a></span>
+            <span class="form-btn"><a href="#" id="btnArchive" class="hisui-linkbutton" data-title="归档" data-options="iconCls:'icon-w-submit'" data-permission="All">归档</a></span>
+        </div>
+    </div>
+    <div id="signContainer">
+    </div>
+    <script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
+    <!--script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CA.js"></script-->
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CASignature.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.Common.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.RecordBrowser.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperRiskAssessment.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.SheetSettings.js"></script>
+    
+</body>
+</html>

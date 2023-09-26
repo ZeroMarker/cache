@@ -1,0 +1,2511 @@
+﻿//var opl=ipdoc.lib.ns("dhcdoc.diag.entry");
+//opl.view=(function(){
+//使用闭包，对于后续门诊流程的控制需要单独写，此处暂时去掉闭包写法
+	//初始化诊断模板
+	var DiagTempDetailDataGrid;
+	var DiagHistoryDataGrid;
+	var DiagTempDetailParamObj;
+	var DiagHistoryParamObj;
+	var WScreenH=window.screen.height;
+	var DATE_FORMAT;
+	var PageLogicObj={
+		m_version: 8,
+		EntrySelRowFlag:0,
+		FocusRowIndex: 0,
+		AddToTemplId:""	
+	}
+	//入口函数
+	function InitDiagEntry(){
+		DiagTempDetailParamObj={"Arg1":"","ClassName":"web.DHCDocDiagnosNew","QueryName":"DiagTemplateDetailList"}
+	    DiagHistoryParamObj={"Arg1":ServerObj.PatientID,"Arg2":"All","Arg3":'',
+	    					 "ClassName":"web.DHCDocDiagnosEntryV8","QueryName":"GetHistoryMRDiagnose"}
+		if (ServerObj.SYSDateFormat=="4"){
+			// DD/MM/YYYY
+	        DATE_FORMAT= new RegExp("(((0[1-9]|[12][0-9]|3[01])/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])/(02))/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29/02/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))");
+		}else if(ServerObj.SYSDateFormat=="3"){
+			// YYYY-MM-DD
+	    	DATE_FORMAT= new RegExp("(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)");
+		}
+		
+		InittabDiagTempDetail();
+		//InittabDiagHistory();
+		InittabDiagHistoryTree();
+		
+		InitTempTabs("","","Init");
+	    SetDiagOtherInfo();
+	    InittabDiagnosEntry();
+	    //LoadtabDiagTempDetailData(); 
+	    LoadtabDiagHistoryData();
+	    InitEvent();
+	}
+	window.onbeforeunload = DiagnosUnloadHandler;
+	function DiagnosUnloadHandler(e){
+		 //未审核的诊断
+    	var GirdData = GetGirdData();
+    	if(GirdData!=""){
+        	if(confirm("有未保存的诊断，是否要保存")){
+	    		InsertMutiMRDiagnos();
+	    	}else{
+		    	return ;
+		    }
+    	}
+	}
+	function LoadtabDiagTempDetailData(){
+		$.q({
+		    ClassName : DiagTempDetailParamObj.ClassName,
+		    QueryName : DiagTempDetailParamObj.QueryName,
+		    MASTERDR : DiagTempDetailParamObj.Arg1,
+		    Pagerows:DiagTempDetailDataGrid.datagrid("options").pageSize,rows:99999
+		},function(GridData){
+			//DiagTempDetailDataGrid.datagrid('loadData',GridData);
+			DiagTempDetailDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData);
+		}); 
+	}
+	function LoadtabDiagHistoryData(){
+		/*if (typeof DiagHistoryDataGrid=="object"){
+			$.q({
+				ClassName : DiagHistoryParamObj.ClassName,
+				QueryName : DiagHistoryParamObj.QueryName,
+				PatientID : DiagHistoryParamObj.Arg1,
+				ICDType : DiagHistoryParamObj.Arg2,
+				CurDep : DiagHistoryParamObj.Arg3,
+				//Pagerows:DiagHistoryDataGrid.datagrid("options").pageSize,
+				rows:99999
+			},function(GridData){
+				DiagHistoryDataGrid.datagrid('loadData',GridData);
+				//DiagHistoryDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData);
+			});
+		}*/
+	    $HUI.combobox("#DiagHistoryDate", {
+			valueField: 'id',
+			textField: 'text',
+			editable:false, 
+			onSelect: function (rec) {
+				LoadFunc();
+			}
+		});
+		$HUI.radio(".DiagAdmType",{
+            onChecked:function(e,value){
+                LoadFunc();
+            }
+        });
+		$.m({
+		    ClassName:"web.DHCDocDiagnosEntryV8",
+		    MethodName:"GetHistoryMRDiagnoseDataJson",
+		    PatientID:ServerObj.PatientID
+		},function(val){
+			var GridData=eval('(' + val + ')'); 
+			$HUI.combobox('#DiagHistoryDate',{data:GridData});
+			//LoadFunc();
+			if (ServerObj.PAAdmType=="I") {
+				var o=$HUI.radio("#IPDiag");
+			}else{
+				var o=$HUI.radio("#OPDiag");
+			}
+			//$("input[name='DiagAdmType_Radio']:checked").val();
+			setTimeout(function() {
+				o.setValue(true)
+			}, 0);
+		});
+		
+        
+		
+		function LoadFunc(){
+			$.m({
+			    ClassName:"web.DHCDocDiagnosEntryV8",
+			    MethodName:"GetHistoryMRDiagnoseJson",
+			    PatientID:ServerObj.PatientID,
+				AdmType:$("input[name='DiagAdmType_Radio']:checked").val(),
+				SearchYear:$('#DiagHistoryDate').combobox('getValue')
+			},function(val){
+				var GridData=eval('(' + val + ')'); 
+				$HUI.tree('#tabDiagHistoryTree',{data:GridData});
+			});
+		}
+	}
+	function SetDiagOtherInfo(){
+		var DiagOtherInfoArr=ServerObj.DiagOtherInfo.split(String.fromCharCode(1));
+		var FirstAdm=DiagOtherInfoArr[0];
+		var ReAdmis=DiagOtherInfoArr[1];
+		var OutReAdm=DiagOtherInfoArr[2];
+		var TransAdm=DiagOtherInfoArr[3];
+		var ILIFlag=DiagOtherInfoArr[4];
+		var BPSystolic=DiagOtherInfoArr[5];
+		var BPDiastolic=DiagOtherInfoArr[6];
+		var Weight=DiagOtherInfoArr[7];
+		if(FirstAdm==1){
+			var o=$HUI.radio("#FirstAdm");
+			o.setValue(true);
+		}
+		if(ReAdmis==1){
+			var o=$HUI.radio("#ReAdmis");
+			o.setValue(true);
+		}
+		if(OutReAdm==1){
+			var o=$HUI.radio("#OutReAdm");
+			o.setValue(true);
+		}
+		if(TransAdm==1){
+			var o=$HUI.radio("#TransAdm");
+			o.setValue(true);
+		}else{
+			var o=$HUI.radio("#TransAdm");
+			o.setValue(false);
+		}
+		if(ILIFlag==1){
+			var o=$HUI.radio("#ILI");
+			o.setValue(true);
+		}else{
+			var o=$HUI.radio("#ILI");
+			o.setValue(false);
+		}
+		$("#BPSystolic").val(BPSystolic);
+		$("#BPDiastolic").val(BPDiastolic);
+		$("#Weight").val(Weight);
+		var cbox = $HUI.combobox("#Special", {
+			valueField: 'id',
+			textField: 'text', 
+			editable:false,
+			multiple:true,
+			data: eval("("+ServerObj.SpecialJson+")"),
+			onLoadSuccess:function(){
+				var sbox = $HUI.combobox("#Special");
+				var DiagOtherInfoArr=ServerObj.DiagOtherInfo.split(String.fromCharCode(1));
+				for (i=0;i<DiagOtherInfoArr[8].split("^").length;i++){
+					sbox.select(DiagOtherInfoArr[8].split("^")[i]);
+				}
+			}
+	   });
+	}
+	var TempListObj={};
+	function InitTempTabs(type,tempid,isInit){
+		var USERID=session['LOGON.USERID'];
+		var LOCID=session['LOGON.CTLOCID'];
+	    if (type=="L"){
+		   USERID="";
+	    }else{
+		   LOCID="";
+	    }
+	   if (typeof tempid =="undefined"){tempid=="";}
+	   if (typeof isInit =="undefined"){isInit=="";}
+	   $.q({
+			ClassName:"web.DHCDocDiagnosEntryV8",
+			QueryName:"DiagTemplateList",
+			USERID:USERID,
+            LOCID:LOCID
+	   },function(GridData){
+		   if ((GridData["total"]==0)&&(isInit=="Init")){
+			   $('#diagTempCategroy').tabs('select',"科室模板");
+			   return false;
+		   }
+		   closeAllTabs();
+		   TempListObj=GridData;
+		   var selIndex="";
+		   for (var i=0;i<GridData.total;i++){
+			   var id=GridData.rows[i].DHCDIAMASRowid;
+			   var text=GridData.rows[i].DHCDIADESC;
+			   if (((tempid=="")&&(i==0))||((tempid!="")&&(id==tempid))){
+			       selIndex=i;
+			   }
+			   //if ($('#diagTempTabs').tabs('exists',text))  continue; //如果标题已经存在则不在新增 
+			   $('#diagTempTabs').tabs('add',{ 
+				    title:text,    
+				    content:'',
+				    closable:false,   
+				    selected:false
+			   }) 
+		   }
+		   var closeFlag=0;
+		   $('#diagTempTabs').tabs({
+			  selected:"",
+			  scrollIncrement:150,
+			  scrollDuration:50,
+			  onSelect: function(title,index){
+				if (closeFlag==1) return false;
+			  	DiagTempDetailParamObj.Arg1=TempListObj.rows[index].DHCDIAMASRowid;
+				LoadtabDiagTempDetailData();
+			  }
+			  ,onClose:function(title,index){
+				  closeFlag=1;
+			  }
+		   });
+		   closeFlag=0;
+		   if (selIndex===""){
+			    DiagTempDetailParamObj.Arg1="";
+			    LoadtabDiagTempDetailData();
+		   }else{
+			   $('#diagTempTabs').tabs('select',selIndex);
+		   }
+		   PageLogicObj.AddToTemplId="";
+	   });
+	}
+	//清空所有的Tab  
+     function closeAllTabs(){  
+         var arrTitle = new Array();  
+         var tabs = $("#diagTempTabs").tabs("tabs");//获得所有小Tab  
+         var tCount = tabs.length;  
+         if(tCount>0){  
+             for(var i=0;i<tCount;i++){  
+                 arrTitle.push(tabs[i].panel('options').title)  
+             }  
+             for(var i=0;i<arrTitle.length;i++){  
+                 $("#diagTempTabs").tabs("close",arrTitle[i]);  
+             }  
+         }  
+     } 
+	function InitEvent(){
+		jQuery('#tabDiagnosEntry').closest('.ui-jqgrid-view').find('div.ui-jqgrid-hdiv').bind("dblclick",headerDblClick)
+	    $('#Add_Diag_btn').click(Add_Diag_row);
+	    $('#Delete_Diag_btn').click(Delete_Diag_btn);
+	    $('#MoveUp_Diag_btn').click(BMoveUpclickhandler);
+	    $('#MoveDown_Diag_btn').click(BMoveDownclickhandler);
+	    $('#MoveLeft_Diag_btn').click(BMoveLeftclickhandler);
+	    $('#MoveRight_Diag_btn').click(BMoveRightclickhandler);
+	    $('#AddToTemplate_Diag_btn').click(AddToTemplateclickhandler);
+	    $('#Save_Diag_btn').click(InsertMutiMRDiagnos);
+	    $('#DiagTemplate').click(diagnosTempEditshow);
+	    $('#AddToEMR_Diag_btn').click(AddToEMRClickhandler);
+	    $('#Copy_Diag_btn').click(CopyDiagshow);
+	    $('#MouthDiaInput').click(MouthDiaInputshow);
+	    $('#diagTempCategroy').tabs({
+		  onSelect: function(title,index){
+			//个人模板 科室模板切换
+			var tab = $('#diagTempCategroy').tabs('getTab',index);
+			var type=tab.panel('options').id; 
+            InitTempTabs(type,PageLogicObj.AddToTemplId);
+		  }
+	   });
+	   $(document.body).bind("keydown",BodykeydownHandler)
+	}
+	function AddToEMRClickhandler(){
+		DiagDataToEMR();
+		window.close();
+	}
+	function diagnosTempEditshow(){
+		//var url = "websys.default.csp?WEBSYS.TCOMPONENT=DHCMRDiagnosEdit";
+		var url = "diagnos.template.mainrenancev8.csp";
+  		websys_createWindow(url, true, "status=1,scrollbars=1,top=0,left=0,width=1200,height=700");
+	}
+	function MouthDiaInputshow(){
+		var url = "mouth.diagnos.csp";
+  		//websys_createWindow(url, true, "status=1,scrollbars=1,top=0,left=0,width=1200,height=700");
+  		var diastr=window.showModalDialog(url,"","dialogHeight: "+(700)+"px; dialogWidth: "+(900)+"px");
+  		if (diastr==""){return false;}
+		for (var k=0;k<diastr.split("^").length;k++){
+			var id=diastr.split("^")[k].split("!")[0];
+			var desc=diastr.split("^")[k].split("!")[1];
+			if ((id=="")&&(desc=="")) continue;
+			if (id!="") AddDiagItemtoList(id,"");
+			else AddDiagItemtoList("",desc);
+		}
+  		
+	}
+	
+	function BodykeydownHandler(e){
+		if (window.event){
+			var keyCode=window.event.keyCode;
+			var type=window.event.type;
+			var SrcObj=window.event.srcElement;
+		}else{
+			var keyCode=e.which;
+			var type=e.type;
+			var SrcObj=e.target;
+		}
+		//回车事件或者
+		if (keyCode==13) {
+			if (SrcObj && SrcObj.id=="BPDiastolic") {
+				$("#Weight").focus();
+				return false;
+			}else if(SrcObj && SrcObj.id=="BPSystolic"){
+				$("#BPDiastolic").focus();
+				return false;
+			}else if(SrcObj && SrcObj.id=="Weight"){
+				$('#Special').next('span').find('input').focus();
+				return false;
+			}else if(SrcObj && SrcObj.id.indexOf("DiagnosICDDesc")>=0){
+				return false;
+			}
+			return true;
+		}
+		window.onhelp = function() { return false };
+		if (keyCode == 112) {
+			Add_Diag_row();
+			return false;
+		}
+		if (keyCode == 113) {
+            Delete_Diag_btn();
+            return false;
+        }
+        if (e){
+	        var ctrlKeyFlag=e.ctrlKey;
+	    }else{
+	        var ctrlKeyFlag=window.event.ctrlKey;
+	    }
+	     if (ctrlKeyFlag){
+	        if (event.keyCode == 83){ //保存诊断
+	            InsertMutiMRDiagnos();
+				return false;
+	        }
+        }
+	}
+	function InittabDiagnosEntry(){
+		//var TableHeight=WScreenH-$("#DiagnosEntryArea").offset().top-400;
+		var TableHeight=$("#DiagnosEntryArea")[0].clientHeight-150
+        $("#tabDiagnosEntry").jqGrid({
+	        width:$(".toolbar-div").width(), //640
+	        height:TableHeight,		//WScreenH-550,  //470
+	        //url:'opdoc.request.query.grid.csp',
+	        //postData:{"ClassName":"web.DHCDocDiagnosEntryV8","QueryName":"DiagnosList","ArgCnt":"1","Arg1":ServerObj.mradm},
+	        url:'oeorder.oplistcustom.new.request.csp?action=GetDiagList',
+			datatype: "json",
+			postData:{USERID:session['LOGON.USERID'],MRADM:ServerObj.mradm},
+			shrinkToFit: false,
+			autoScroll: false,
+			mtype:'GET',
+			emptyrecords:'没有数据',
+			viewrecords:true,
+			loadtext:'数据加载中...',
+			multiselect:true,
+			multiboxonly:true,
+			rowNum:false, 
+			loadonce:false, 
+			viewrecords: true,
+			rownumbers:false,
+			loadui:'enable',
+			loadError:function(xhr,status,error){
+				alert("diagnosentry.js-err:"+status+","+error);
+			},
+			colNames:ListConfigObj.colNames,			
+			colModel:ListConfigObj.colModel,
+			jsonReader: {
+                    /*rows:"rows",
+                    records:"total",
+                    repeatitems: false,
+                    id: "Id"*/
+                    
+                    page: "page",
+                    total: "total",
+                    records: "records",
+                    root: "data",
+                    repeatitems: false,
+                    id: "Id"
+            },
+			prmNames:{
+				page:"page",
+				rows:"rows",
+				sort:"sidx",
+				order:"sord",
+				search:"_search",
+				nd:"nd",
+				id:"id",
+				oper:"oper",
+				editoper:"edit",
+				addoper:"add",
+				deloper:"del",
+				subgridid:"id",
+				npage:null,
+				totalrows:"totalrows" 
+			},
+			ondblClickRow:function(rowid,iRow,iCol,e){
+				EditRow(rowid)				
+			},
+			beforeSelectRow:function(rowid, e){	
+				if ($.isNumeric(rowid) == true) {
+					PageLogicObj.FocusRowIndex=rowid;
+				}else{
+					PageLogicObj.FocusRowIndex=0;
+				}
+				return true;//false 禁止选择行操作
+		    },
+			loadComplete:function(){
+				Add_Diag_row();
+				//改变已经保存诊断的颜色
+				var rowids=$('#tabDiagnosEntry').getDataIDs();
+				for(var i=0;i<rowids.length;i++){
+					var ICDDiagnosDesc=GetCellData(rowids[i],"DiagnosICDDesc");
+					var tmpICDDiagnosDesc=ICDDiagnosDesc.replace(/\&nbsp;/g,"")
+					if (tmpICDDiagnosDesc!=""){
+						$('#tabDiagnosEntry').setCell(rowids[i],"DiagnosICDDesc",ICDDiagnosDesc,"DiagSaved","")
+					}
+					var DiagnosNotes=GetCellData(rowids[i],"DiagnosNotes");
+					if (DiagnosNotes!=""){
+						$('#tabDiagnosEntry').setCell(rowids[i],"DiagnosNotes",DiagnosNotes,"DiagSaved","")
+					}
+				}
+			}
+	    })
+	}
+	function InittabDiagTempDetail(){ 
+		var DiagTempDetailColumns=[[ 
+					{field:'NUM',title:'',hidden:true},
+		 			{field:'DHCMRDiaICDICDDR',title:'',hidden:true},
+		 			{field:'DHCMRDiaICDICDDesc',width:250,title:'描述'},
+		 	]]
+		DiagTempDetailDataGrid=$("#tabDiagTemplateDetail").datagrid({  
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			rownumbers:true,
+			pagination : false,  //
+			rownumbers : true,  //
+			pageSize: 5000,
+			pageList : [5000,7000,8000],
+			idField:'NUM',
+			columns :DiagTempDetailColumns,
+			onDblClickRow:function(rowIndex, rowData){
+				var idStr=rowData.DHCMRDiaICDICDDR;
+				var descStr=rowData.DHCMRDiaICDICDDesc;
+				var MasterICDRowid=idStr.split("*")[0];
+				if (MasterICDRowid!=""){
+					AddDiagItemtoList(MasterICDRowid,"");
+					var subICDRowidStr=idStr.split("*")[1]; //21882!#!测试证型备注   #前面是ID  #后面是描述
+					var synIdStr=subICDRowidStr.split("#")[0];
+					var synDescStr=subICDRowidStr.split("#")[1];
+					for (var k=0;k<synIdStr.split("!").length;k++){
+						var id=synIdStr.split("!")[k];
+						var desc=synDescStr.split("!")[k];
+						if ((id=="")&&(desc=="")) continue;
+						if (id!="") AddDiagItemtoList(id,"");
+						else AddDiagItemtoList("",desc);
+					}
+				}else{
+					AddDiagItemtoList("",descStr);
+				}
+			}
+		});
+	}
+	//初始化历史诊断树
+	function InittabDiagHistoryTree(){
+		var DiagHistoryColumns=[[
+			{field:'Index',title:'计数器',hidden:true},
+ 			{field:'Title',title:'标题',width:120},
+ 			{field:'Desc',title:'诊断名称',width:250},
+ 			{field:'MRDIARowID',hidden:true}
+		]];
+		$HUI.tree('#tabDiagHistoryTree',{
+		    title:'',
+			lines:true,
+		    idField:'Index',    
+		    border: false,   
+		    columns:DiagHistoryColumns,
+			onDblClick:function (node){
+				if ((node.attributes.DiagnosType=="")&&(node.attributes.MRDIARowID=="")) return false;
+				if (node.children!=undefined){
+					var DiagnosTypeRowId=node.attributes.DiagnosType;
+					var nodechildren=node.children;
+					for (var i=0;i<nodechildren.length;i++){
+						var val=tkMakeServerCall("web.DHCDocDiagnosEntryV8","GetDataFromHistMRDiag",nodechildren[i].attributes.MRDIARowID);
+						if (val!=""){
+							for (m=0;m<val.split(String.fromCharCode(1)).length;m++){
+								var oneVal=val.split(String.fromCharCode(1))[m];
+								var id=oneVal.split(String.fromCharCode(2))[0];
+								var desc=oneVal.split(String.fromCharCode(2))[1];
+								AddDiagItemtoList(id,desc,DiagnosTypeRowId);
+							}
+						}
+					}
+				}else{
+					$.m({
+					    ClassName:"web.DHCDocDiagnosEntryV8",
+					    MethodName:"GetDataFromHistMRDiag",
+					    MRDIADr:node.attributes.MRDIARowID
+					},function(val){
+						//主诊断ICDRowid_$C(2)_主诊断备注_$C(1)_子诊断ICDRowid_$C(2)_子诊断备注
+						if (val!=""){
+							for (m=0;m<val.split(String.fromCharCode(1)).length;m++){
+								var oneVal=val.split(String.fromCharCode(1))[m];
+								var id=oneVal.split(String.fromCharCode(2))[0];
+								var desc=oneVal.split(String.fromCharCode(2))[1];
+								AddDiagItemtoList(id,desc);
+							}
+						}
+					});
+				}
+			}
+		});
+	}
+	//初始化历史诊断 
+	function InittabDiagHistory(){
+		var DiagHistoryColumns=[[  //MRDesc
+		 			{field:'Desc',title:'诊断描述'},
+		 			{field:'Count',title:'重复次数',
+		 				formatter:function(value,rec){  
+		                   var btn = '<a class="editcls" onclick="dhcdoc.diag.entry.view.HisMRDiagRepShow(\'' + rec.MRAdmList + '\')">'+value+'</a>';
+					       return btn;
+                        }
+		 			},
+		 			{field:'MRAdmList',hidden:true}
+		 	]]
+		DiagHistoryDataGrid=$("#tabDiagHistory").datagrid({  
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			rownumbers:true,
+			pagination : true,  //
+			rownumbers : true,  //
+			pageSize: 20,
+			pageList : [20,100,200],
+			idField:'MRAdmList',
+			columns :DiagHistoryColumns,
+			onDblClickRow:function(rowIndex, rowData){
+				$.m({
+				    ClassName:"web.DHCDocDiagnosEntryV8",
+				    MethodName:"GetDataFromHistMRDiag",
+				    MRDIADr:rowData.MRAdmList.split(",")[0]
+				},function(val){
+					//主诊断ICDRowid_$C(2)_主诊断备注_$C(1)_子诊断ICDRowid_$C(2)_子诊断备注
+					if (val!=""){
+						for (m=0;m<val.split(String.fromCharCode(1)).length;m++){
+							var oneVal=val.split(String.fromCharCode(1))[m];
+							var id=oneVal.split(String.fromCharCode(2))[0];
+							var desc=oneVal.split(String.fromCharCode(2))[1];
+							AddDiagItemtoList(id,desc)
+						}
+					}
+				});
+			}
+		});
+	}
+	function Add_Diag_row(){
+		var rowid="";
+		var records=$('#tabDiagnosEntry').getGridParam("records");
+		if(records>=1){
+			var prerowid=GetPreRowId();
+			var MRCIDRowId=GetCellData(prerowid,"MRCIDRowId");
+			var DiagnosNotes=GetCellData(prerowid,"DiagnosNotes");
+			if (DiagnosNotes!="") DiagnosNotes=DiagnosNotes.replace(/[\\\@\#\$\^\&\*\{\}\:\"\<\>\?]/g,"");
+			if ((MRCIDRowId=="" || MRCIDRowId==null)&&(DiagnosNotes=="")){
+				SetFocusCell(prerowid,"DiagnosICDDesc");
+				return prerowid;
+			}
+		}
+		rowid=GetNewrowid();
+		if(rowid=="" || rowid==0){return;}	
+		var DefaultData=GetDefaultData(rowid);	
+		DefaultData['id']=rowid;
+		$('#tabDiagnosEntry').addRowData(rowid,DefaultData);
+		EditRowCommon(rowid,true);
+		SetFocusCell(rowid,"DiagnosICDDesc");
+		return rowid;	
+	}
+	function GetDefaultData(rowid){
+		var defDiagnosOnsetDate=ServerObj.CurrentDate,defDiagnosDate=ServerObj.CurrentDate;
+		var defDiagnosLeavel="1",defDiagnosCatRowId="0";
+		var defDiagnosTypeRowId=ServerObj.DedfaultDiagnosTypeID;
+		var defDiagnosStatusRowId="3";
+		
+		//中医科室默认中医诊断
+		if (ServerObj.ZYLocFlag==1){
+			defDiagnosCatRowId=1
+		}
+		
+		if (rowid>1){
+			for (var i=rowid-1;i>=1;i--){
+				var MRDIARowId=GetCellData(i,"MRDIARowId");
+				var MRCIDRowId=GetCellData(i,"MRCIDRowId");
+				if ((MRCIDRowId=="")||(MRCIDRowId==null)) continue;
+				if (MRDIARowId!="") continue;
+			    var DiagnosCatRowId=GetCellData(i,"DiagnosCatRowId"); //分类
+			    var DiagnosTypeRowId=GetCellData(i,"DiagnosTypeRowId"); //诊断类型
+			    var MainDiagFlag=GetCellData(i,"MainDiagFlag");
+			    var DiagnosStatusRowId=GetCellData(i,"DiagnosStatusRowId");
+			    var DiagnosOnsetDate=GetCellData(i,"DiagnosOnsetDate"); //发病日期
+			    defDiagnosOnsetDate=DiagnosOnsetDate;
+			    defDiagnosTypeRowId=DiagnosTypeRowId;
+			    defDiagnosStatusRowId=DiagnosStatusRowId;
+			    if (DiagnosCatRowId=="2"){  //"0:西医;1:中医;2:证型"
+			    	defDiagnosCatRowId="2";
+			    	break;
+			    }else if(DiagnosCatRowId=="1"){
+				    //不启用标准证型诊断,根据上一条的中医诊断判断是否有关联的证型,如果没有则本条不默认为证型
+				    if (ServerObj.UserICDSyndrome!="1"){
+					    //todo
+					}
+					defDiagnosCatRowId="2";
+					break;
+				}else{
+					defDiagnosCatRowId="0";
+					break;
+				}
+		    }
+		}
+		var DfaultData={
+			DiagnosOnsetDate:defDiagnosOnsetDate,
+			DiagnosLeavel:defDiagnosLeavel,
+			DiagnosDate:defDiagnosDate,
+			DiagnosCatRowId:defDiagnosCatRowId,
+			DiagnosCat:defDiagnosCatRowId,
+			DiagnosTypeRowId:defDiagnosTypeRowId,
+			DiagnosType:defDiagnosTypeRowId,
+			DiagnosStatusRowId:defDiagnosStatusRowId,
+			DiagnosStatus:defDiagnosStatusRowId
+		};
+		return DfaultData;
+	}
+	function EditRowCommon(rowid,EnableOrd){
+		if($.isNumeric(rowid)==true){
+			$('#tabDiagnosEntry').editRow(rowid, false); //false ȥ???
+			if ((typeof EnableOrd!="undefined")&&(EnableOrd==false)){
+				return
+			}
+		   //SetDiagICDDescList(rowid)
+		}
+	}
+	function SetFocusCell(rowid,colname){
+		if($.isNumeric(rowid)==true){
+			var obj=document.getElementById(rowid+"_"+colname);
+			if(obj){
+				websys_setfocus(rowid+"_"+colname);
+			}
+			PageLogicObj.FocusRowIndex=rowid;
+		}else{
+			var obj=document.getElementById(colname);
+			if(obj){
+				websys_setfocus(colname);
+			}		
+		}
+    }
+	function DiagnosCatChange(e){
+		var rowId="";
+		var obj=websys_getSrcElement(e);
+		var rowId=GetEventRow(e);
+		var DiagnosCatRowId=GetCellData(rowId,"DiagnosCatRowId");
+		if (obj.value=="2"){ //如果修改分类为证型,则判断是否存在对应中医诊断,如果不存在,则不允许修改
+		    var Flag=0;
+			if (rowId=="1"){
+				Flag=1;
+			}else{
+				var preId=parseInt(rowId)-1;
+				if(CheckIsItem(preId)) Flag=1;
+				else {
+					var upDiagnosCatRowId=GetCellData(preId,"DiagnosCatRowId");
+					if (upDiagnosCatRowId=="0"){
+						Flag=1;
+					}
+				}
+			}
+			if (Flag=="1"){
+				$.messager.alert("提示","请先录入中医诊断!","info",function (){
+					SetFocusCell(rowId,"DiagnosICDDesc");
+				}); 
+				SetCellData(rowId,"DiagnosCatRowId",DiagnosCatRowId); 
+			    SetCellData(rowId,"DiagnosCat",DiagnosCatRowId); 
+				return false; 
+			}
+		}
+		if(obj.value!=DiagnosCatRowId){
+			SetCellData(rowId,"MRCIDCode","")
+			$('#'+rowId+'_DiagnosICDDesc').val("");
+			$('#'+rowId+'_MRCIDRowId').val("");
+			SetCellData(rowId,"DiagnosCatRowId",obj.value);
+			SetFocusCell(rowId,"DiagnosICDDesc")
+		}
+	}
+	function DiagnosTypeChange(e){
+		var rowId="";
+		var obj=websys_getSrcElement(e);
+		var rowId=GetEventRow(e);
+		SetCellData(rowId,"DiagnosTypeRowId",obj.value);
+		SetFocusCell(rowId,"DiagnosICDDesc")
+	}
+	function DiagnosBodyPartChange(e){
+		var rowId="";
+		var obj=websys_getSrcElement(e);
+		var rowId=GetEventRow(e);
+		SetCellData(rowId,"DiagnosBodyPartRowId",obj.value);
+		SetFocusCell(rowId,"DiagnosBodyPart")
+	}
+	function DiagnosStatusChange(e){
+		var rowId="";
+		var obj=websys_getSrcElement(e);
+		var rowId=GetEventRow(e);
+		SetCellData(rowId,"DiagnosStatusRowId",obj.value);
+		SetFocusCell(rowId,"DiagnosICDDesc")
+	}
+	var DiagItemzLookupGrid;
+	function DiagnosICDDesc_keydown(e){
+		var obj = websys_getSrcElement(e);
+	    var type = websys_getType(e);
+	    var key = websys_getKey(e);
+	    if (obj.id.indexOf("_") > 0) {
+	        EditRowid = obj.id.split("_")[0];
+	    } else {
+	        EditRowid = "undefined";
+	    }
+	    var DiagName = $(obj).val();
+	    if (DiagItemzLookupGrid && ((key == 27) || (DiagName == ""))) {
+	        DiagItemzLookupGrid.hide();
+	    }
+	    var Id = obj.id;
+	    if (DiagName == "") {
+		    if (Id.indexOf("_") > 0) {
+		        var EditRowid = Id.split("_")[0];
+		    } else {
+		        var EditRowid = "undefined";
+		    }
+		    SetCellData(EditRowid,"MRCIDRowId","");
+		    SetCellData(EditRowid,"MRCIDCode","");
+		    return;
+		}
+	    
+	    if (key == 13) {
+	        if (PageLogicObj.EntrySelRowFlag==0) {
+	            xItem_lookuphandlerX(Id, DiagName);
+	        }else{
+	            PageLogicObj.EntrySelRowFlag=0;
+	        }
+	    }
+	    if ((type == 'dblclick')||((DiagName.length>1)&&(key>64 && key<91))) {
+	        xItem_lookuphandlerX(Id, DiagName);
+	    }
+	}
+	function Trim(str,is_global)
+    {
+            var result;
+            result = str.replace(/(^\s+)|(\s+$)/g,"");
+            if(is_global.toLowerCase()=="g")
+            {
+                result = result.replace(/\s/g,"");
+             }
+            return result;
+    }
+
+	function xItem_lookuphandlerX(Id, DiagName) {
+		console.log("Id="+Id);
+		if (Id.indexOf("_") > 0) {
+	        var EditRowid = Id.split("_")[0];
+	    } else {
+	        var EditRowid = "undefined";
+	    }
+		var ICDType=GetCellData(EditRowid,"DiagnosCatRowId");
+		if (DiagItemzLookupGrid && DiagItemzLookupGrid.store) {
+	        DiagItemzLookupGrid.searchAndShow([DiagName, '', '', '', ICDType]);
+	    } else {
+	        DiagItemzLookupGrid = new dhcc.icare.Lookup({
+	            lookupListComponetId: 1872,
+	            lookupPage: "诊断项选择",
+	            lookupName: Id,
+	            listClassName: 'web.DHCMRDiagnos',
+	            listQueryName: 'LookUpWithAlias',
+	            enableCache:false,    //缓存
+	            //cacheName:"DiagnosICDDesc",
+	            resizeColumn: false,
+	            queryDelay : 200,
+	            listProperties: [function() { return $("#"+EditRowid+"_DiagnosICDDesc").val(); }, '', '', '', ICDType],
+	            listeners: { 
+	                'selectRow': DiagItemLookupSelect
+	            },
+	            //基础平台-张祥
+				dataCacheFilter:function(tmpData,qValue){
+					var aliColNum = tmpData[0].length-1;  //别名列号
+					var tempData0=[],tempData1 = [],tempData2=[],tempData3=[];
+					qValue=qValue.toUpperCase();
+					
+					if (Id.indexOf("_") > 0) {
+	        			var EditRowid = Id.split("_")[0];
+	    			} else {
+	        			var EditRowid = "undefined";
+	    			}
+					var ICDType=GetCellData(EditRowid,"DiagnosCatRowId");
+					Ext.each(tmpData, function(row,ind){
+						var aliNames = (row[aliColNum]).toUpperCase();
+						var ICDDesc=row[0].toUpperCase();
+						var FICDType=row[3]
+						if (FICDType==ICDType){
+							//alert("ICDDesc:"+ICDDesc+"FICDType:"+FICDType+"ICDType:"+ICDType)
+							if (ICDDesc==qValue){
+								tempData0.push(row)
+							}else if((","+aliNames+",").indexOf(","+qValue+",")>-1 ){
+								tempData1.push(row);
+							}else if((","+aliNames+",").indexOf(","+qValue)>-1 || ICDDesc.indexOf(qValue)==0){
+								tempData2.push(row);
+							}else if((","+aliNames+",").indexOf(qValue)>-1 || ICDDesc.indexOf(qValue)>-1){
+								tempData3.push(row);
+							}
+						}
+					});
+					return tempData0.concat(tempData1,tempData2,tempData3);
+				},
+	            pageSize: 20,
+	            //显示序号列属性,默认false
+	            rowNumber: true,
+	            //支持数字选行属性,默认false
+	            enableNumberEvent: true,
+	            isCombo: true
+	        });
+	    }
+	    return websys_cancel();
+	}
+	function DiagItemLookupSelect(text, rowid){
+		PageLogicObj.EntrySelRowFlag=1;
+		if (typeof rowid == "undefined") {
+	        var rowid = "";
+	    }
+	    if (this.id.indexOf("_") > 0) {
+	        rowid = this.id.split("_")[0];
+	    } 
+	    var Split_Value = text.split("^");
+	    var idesc = Split_Value[0];
+	    var icode = Split_Value[1];
+	    window.event.keyCode = 0;
+	    if (!CheckDiagIsEnabled(icode,function(){ClearRow(rowid);})) {
+	    	return false;
+		}
+		/*var Str=MarchDiagnosis(icode);
+		if (Str==1){
+			var vaild = window.confirm("所加诊断在本次诊断中已经存在，请确认是否重复增加?");
+			if(!vaild) {
+				ClearRow(rowid);
+				return false;
+			}
+		}*/
+	    SetCellData(rowid,"DiagnosICDDesc",idesc);
+	    SetCellData(rowid,"MRCIDRowId",icode);
+	    Add_Diag_row();
+	}
+	function  ClearRow(rowid){
+		SetCellData(rowid,"DiagnosICDDesc","");
+    	SetCellData(rowid,"MRCIDRowId","");
+    	SetFocusCell(rowid, "DiagnosICDDesc");
+	}
+	function DiagnosNotes_keydown(e){
+		var Row=GetEventRow(e);
+		var key=websys_getKey(e);
+		if (key==13){
+			var MRCIDRowId=GetCellData(Row,"MRCIDRowId");
+			var DiagnosNotes=GetCellData(Row,"DiagnosNotes");
+			if (DiagnosNotes!="") DiagnosNotes=DiagnosNotes.replace(/[\\\@\#\$\^\&\*\{\}\:\"\<\>\?]/g,"");
+			if ((MRCIDRowId=="" || MRCIDRowId==null)&&(DiagnosNotes=="")){
+				SetFocusCell(Row,"DiagnosNotes");
+				return false;
+			}else{
+				var ICDType=GetCellData(Row,"DiagnosCatRowId"); 
+				if(ICDType==1){
+					SetFocusCell(Row,"SyndromeDesc");
+				}else{
+					Add_Diag_row();
+				}
+			}
+		}
+	}
+	function InitDatePicker(cl){
+		var dateFormate="dd/MM/yyyy",minDate='%d/%M/%y'
+	    if (ServerObj.SYSDateFormat==3){
+	        dateFormate="yyyy-MM-dd";
+	        minDate='%y-%M-%d'
+	    }
+		var CurrentObj = null;
+        if (cl.currentTarget) { CurrentObj = cl.currentTarget; } else { CurrentObj = cl; }
+		WdatePicker({ 
+			el: CurrentObj.id, 
+			isShowClear: true, 
+			onpicked: function() { $(CurrentObj).change(); }, 
+			readOnly: true, 
+			skin: 'ext', 
+			//maxDate: minDate, //%y-%M-%d
+			value:ServerObj.CurrentDate,
+			dateFmt: dateFormate 
+		}); 
+	}
+	function GetCellData(rowid, colname) {
+	    var CellData = "";
+	    if ($.isNumeric(rowid) == true) {
+	        var obj = document.getElementById(rowid + "_" + colname);
+	        //如果为select 取 text
+	        if (obj) {
+	            if (obj.type == "select-one") {
+	                CellData = $("#" + rowid + "_" + colname + " option:selected").text();
+	            } else if (obj.type == "checkbox") {
+	                if ($("#" + rowid + "_" + colname).attr("checked") == "checked") {
+	                    CellData = "Y";
+	                } else {
+	                    CellData = "N";
+	                }
+	            } else {
+	                CellData = $("#" + rowid + "_" + colname).val();
+	            }
+	        } else {
+	            CellData = $("#tabDiagnosEntry").getCell(rowid, colname);
+	        }
+	    } else {
+	        var obj = document.getElementById(colname);
+	        if (obj) {
+	            CellData = $("#" + colname).val();
+	        }
+	    }
+	    return CellData;
+	}
+	//单元格赋值  2014-03-24
+	function SetCellData(rowid, colname, data) {
+	    if ($.isNumeric(rowid) == true) {
+	        var obj = document.getElementById(rowid + "_" + colname);
+	        if (obj) {
+	            if (obj.type == "checkbox") {
+	                // data: true or  false
+	                var olddata = $("#" + rowid + "_" + colname).attr("checked");
+	                $("#" + rowid + "_" + colname).attr("checked", data);
+	            } else {
+	                var olddata = $("#" + rowid + "_" + colname).val();
+	                $("#" + rowid + "_" + colname).val(data);
+	            }
+	            //对于行上属性的数据修改,模拟onpropertychange事件的实现,在change事件中要同步调用
+	            //CellDataPropertyChange(rowid, colname, olddata, data);
+	        } else {
+	            //rowid,colname,nData,cssp,attrp, forceupd
+	            //forceupd:true 允许设空值
+	            $("#tabDiagnosEntry").setCell(rowid, colname, data, "", "", true);
+	        }
+	    } else {
+	        var obj = document.getElementById(colname);
+	        if (obj) {
+	            $("#" + colname).val(data);
+	        }
+	    }
+	}
+	function GetPreRowId(rowid){
+		var prerowid="";
+		var rowids=$('#tabDiagnosEntry').getDataIDs();
+		if($.isNumeric(rowid)==true){	
+			for(var i=rowids.length;i>=0;i--){			
+				if(rowids[i]==rowid){
+					if(i==0){
+						prerowid=rowids[i];
+					}else{
+						prerowid=rowids[i-1];
+					}
+					break;
+				}
+			}
+		}
+		if(prerowid==""){
+			if(rowids.length==0){
+				prerowid=""
+			}else{
+				prerowid=rowids[rowids.length-1];
+			}
+		}
+		return prerowid;
+	}
+	function GetNewrowid(){
+		var rowid="";
+		var rowids=$('#tabDiagnosEntry').getDataIDs();
+		if(rowids.length>0){	
+			var prerowid=rowids[rowids.length-1];	
+			if(prerowid.indexOf(".") != -1){
+				rowid=parseInt(prerowid.split(".")[0])+1;
+			}else{
+				rowid=parseInt(prerowid)+1;
+			}		
+		}else{
+			rowid=1;
+		}	
+		return rowid;
+	}
+	function EditRow(rowid){
+		if(GetEditStatus(rowid)==true || $.isNumeric(rowid) == false){return false;}
+		var StyleConfigObj={
+			MRCIDRowId:false,
+			MRDIARowId:false,
+			DiagnosCat:false,
+			DiagnosType:true,
+			DiagnosLeavel:false,
+			DiagnosICDDesc:false,
+			MainDiagFlag:true,
+			DiagnosNotes:true,
+			MRCIDCode:false,
+			DiagnosStatus:true,
+			DiagnosOnsetDate:true
+			 
+		};
+		EditRowCommon(rowid,false);
+		ChangeRowStyle(rowid,StyleConfigObj);
+		var DiagnosICDDesc=GetCellData(rowid,"DiagnosICDDesc");
+		var Newstr = DiagnosICDDesc.replace(/\&nbsp;/g," ")
+		SetCellData(rowid,"DiagnosICDDesc",Newstr)
+		SetFocusCell(rowid,"DiagnosNotes")
+	}
+	function ChangeRowStyle(rowid,StyleConfigObj){
+		if($.isNumeric(rowid)==true){
+	
+		}
+		for(var key in StyleConfigObj){
+			var name=key;
+			var value=StyleConfigObj[key];
+			if(value==undefined){continue;}
+			if($.isNumeric(rowid)==true){	
+				if(value==false){
+					if($("#"+rowid+"_"+name).hasClass("combogrid-f")){
+						//销毁产生的dom对象
+						$("#"+rowid+"_"+name).combogrid('destroy'); 
+					}else{
+						$("#"+rowid+"_"+name).addClass("disable");
+					    $("#"+rowid+"_"+name).attr('disabled',true);
+					}
+					$("#"+rowid+"_"+name).addClass("text-dhcdoc-disabled");
+				}else if(value == true){
+                    if($("#"+rowid+"_"+name).hasClass("combogrid-f")){
+						$("#"+rowid+"_"+name).combogrid("enable");
+					}else{				
+						$("#"+rowid+"_"+name).removeClass("disable");
+						$("#"+rowid+"_"+name).attr('disabled',false);
+					}
+					$("#"+rowid+"_"+name).removeClass("text-dhcdoc-disabled");
+				}
+			}else{
+				if(value==false){
+					$("#"+name).attr('disabled',true);
+				}else if(value == true){
+					$("#"+name).attr('disabled',false);
+				}
+			}		
+		}
+		
+	}
+	function GetEventRow(e){
+	    var rowid="";
+	    var obj=websys_getSrcElement(e);
+		if(obj && obj.id.indexOf("_")>0){
+			rowid=obj.id.split("_")[0];
+		}
+		return rowid
+	}
+	function GetEditStatus(rowid){
+		var obj=document.getElementById(rowid+"_DiagnosNotes");
+		if(obj){
+			return true;
+		}else{
+			return false;
+		}	
+	}
+	function headerDblClick(){
+		if(ServerObj.lookupListComponetId != ""){	
+			$.m({
+			    ClassName:"web.SSGroup",
+			    MethodName:"GetAllowWebColumnManager",
+			    Id:session['LOGON.GROUPID']
+			},function(val){
+				if (val==1){
+					websys_lu('../csp/websys.component.customiselayout.csp?ID='+ServerObj.lookupListComponetId+'&CONTEXT=K'+ServerObj.ListColSetCls+'.'+ServerObj.ListColSetMth+'.'+ServerObj.XCONTEXT+"&GETCONFIG=1"+"&DHCICARE=2",false);
+				}
+            })
+		}
+	 }
+	function Delete_Diag_btn(e){
+		var IsExistVerifyFlag=false;
+		var ids=$('#tabDiagnosEntry').jqGrid("getGridParam", "selarrrow"); 			
+		if(ids==null || ids.length==0) {  
+			if (PageLogicObj.FocusRowIndex > 0) {
+	            //如果有焦点行,则直接删除焦点行
+	            if ($("#jqg_tabDiagnosEntry_" + PageLogicObj.FocusRowIndex).attr("checked") != true) {
+	                $("#tabDiagnosEntry").setSelection(PageLogicObj.FocusRowIndex, true);
+	            }
+	        }
+			//$.messager.alert("警告","请选择需要删除的记录");  
+			//return;  
+		} 
+		var ids = $('#tabDiagnosEntry').jqGrid("getGridParam", "selarrrow");
+	    if (ids == null || ids.length == 0) {
+	        $.messager.alert("警告", "请选择需要删除的记录!");
+	        return;
+	    }
+	    if (ServerObj.PAAdmType=="I"){
+			var ret = $.cm({
+				ClassName:"web.DHCMRDiagnos",
+				MethodName:"CheckDelete",
+				dataType:"text",
+				MRDiagnosRowid:ServerObj.mradm
+			},false);
+			if (ret=="Discharged"){
+				$.messager.alert("警告", "病人已出院,诊断不能删除!");
+	        	return false;
+			}
+		}
+		var rowCount=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+		$.messager.confirm('提示','是否确定删除?',function(r){ 
+			if (r){
+				var len=ids.length;
+				var DeleteCount=0;
+				for(var i =0;i<len;i++){
+					if(CheckIsItem(ids[i-DeleteCount])==false){	
+						var DiagnosCatRowId=GetCellData(ids[i-DeleteCount],"DiagnosCatRowId");
+						if (DiagnosCatRowId=="1"){ //如选中的是中医,则先找关联的子诊断并删除
+						     for (var k=parseInt(ids[i])+1;k<=rowCount;k++){
+							     var DiagnosCatRowId=GetCellData(k,"DiagnosCatRowId"); 
+							     if (DiagnosCatRowId=="2") { //证型
+							     	 $('#tabDiagnosEntry').delRowData(k);
+							     }else{
+								     break;
+								 }
+							 }
+						}			
+						$('#tabDiagnosEntry').delRowData(ids[i-DeleteCount]);
+						DeleteCount=DeleteCount+1;
+					}else{
+						IsExistVerifyFlag=true;
+					}				
+				}
+				if (IsExistVerifyFlag==true) {
+					var MRDIARowIdArray = new Array();
+					var MRDIARowIdStrArray = new Array();
+					var len=ids.length;
+					for(var i =0;i<len;i++){
+						if(CheckIsItem(ids[i])==true){					
+							IsExistVerifyFlag=true;
+							var MRDIARowId=GetCellData(ids[i],"MRDIARowId");
+							var MRDIAMRDIADR=GetCellData(ids[i],"MRDIAMRDIADR");
+							if (MRDIAMRDIADR!="") {
+								if (MRDIARowIdStrArray[MRDIAMRDIADR]) continue;
+								MRDIARowIdArray[MRDIARowIdArray.length]=MRDIAMRDIADR;
+								MRDIARowIdStrArray[MRDIAMRDIADR]=MRDIAMRDIADR;
+							}
+							else {
+								if (MRDIARowIdStrArray[MRDIARowId]) continue;
+								MRDIARowIdArray[MRDIARowIdArray.length]=MRDIARowId;
+								MRDIARowIdStrArray[MRDIARowId]=MRDIARowId;
+							}
+						}
+					}
+					if (MRDIARowIdArray.length>0){
+						$.messager.confirm('提示','是否删除已保存的诊断?',function(r){
+							if (r){ 
+								var DiagItemRowStr=MRDIARowIdArray.join("^");
+								DeleteMRDiagnos(DiagItemRowStr);
+							}
+						})
+					}
+				}
+				var records=$('#tabDiagnosEntry').getGridParam("records");
+				if(records==0){
+					Add_Diag_row();					
+				}
+				
+			}
+        });  
+		return websys_cancel();
+	}
+	function DeleteMRDiagnos(DiagItemRowStr) {
+	    var ret = cspRunServerMethod(ServerObj.DeleteMRDiagnosMethod, DiagItemRowStr,session['LOGON.USERID'],session['LOGON.CTLOCID']);
+		if (ret != '0') {
+		    if(ret=='Discharged'){
+			    $.messager.alert("警告","病人已出院,不能删除诊断!");
+			    return false;
+		  	}else if(ret=='Timeout'){
+			    $.messager.alert("警告","不能删病人以前诊断!");
+			    return false;
+		  	}else{
+			    $.messager.alert("警告","删除失败!");	
+			    return false;
+			}
+		}else {
+			ReloadDiagEntryGrid();
+			LoadtabDiagHistoryData();
+			//lxz 调用电子病历接口
+			SaveMRDiagnosToEMR();
+		}
+	}
+	function CheckIsItem(rowid){
+		var id=parseInt(rowid);
+		if($.isNumeric(id)==true){
+			var MRDIARowId=GetCellData(id,"MRDIARowId");
+			if(MRDIARowId != ""){
+				return true;
+			}else{
+				return false;
+			}
+		}else{
+			return false;
+		}
+	}
+	function BMoveUpclickhandler(){
+	     var index=GetCheckedRow()
+		 if(index!=""){
+			 mysort(index, 'up');
+			 BSaveclickhandler();
+		 }
+	}
+	function BMoveDownclickhandler(){
+		var index=GetCheckedRow()
+		if(index!=""){
+			mysort(index, 'down');
+			BSaveclickhandler();
+		}
+	}
+	function BMoveLeftclickhandler(){
+		var index=GetCheckedRow();
+		if(index!=""){
+			HorizontalMove(index,-1);
+			BSaveclickhandler();
+		}
+	}  
+	function BMoveRightclickhandler(){
+		var index=GetCheckedRow();
+		if(index!=""){
+			HorizontalMove(index,1);
+			BSaveclickhandler();
+		}
+	}
+	function GetCheckedRow(){
+		var ids=$('#tabDiagnosEntry').jqGrid("getGridParam", "selarrrow");
+		if(ids==null || ids.length==0) {  
+			$.messager.alert("提示","请选择行!");  
+			return "";  
+		}else if(ids.length>1){
+			$.messager.alert("提示","请勾选一条记录!");
+			return "";  
+		}
+		if(CheckIsItem(ids[0])==false){
+			$.messager.alert("提示","请选择已保存的诊断记录!");
+			return "";	
+		}
+		var MainMRDIADr=GetCellData(ids[0],"MRDIAMRDIADR");
+		if (MainMRDIADr!=""){
+		    $.messager.alert("提示","请选择对应的中医诊断移动!");
+		    $("#tabDiagnosEntry").setSelection(ids[0],false);
+			return false   
+		}
+		return ids[0];
+	}
+	function HorizontalMove(index,Direction){
+		var DiagnosLeavel=GetCellData(index,"DiagnosLeavel");
+		if (+DiagnosLeavel<=1) DiagnosLeavel=1;
+		var DiagnosICDDesc=GetCellData(index,"DiagnosICDDesc");
+		var SpaceHTML="&nbsp;&nbsp;&nbsp;&nbsp;"
+		var DiagnosLeavel=parseInt(+DiagnosLeavel)+parseInt(Direction);
+		if (+DiagnosLeavel==0) DiagnosLeavel=1;
+		if(Direction==1){
+			SetCellData(index,"DiagnosICDDesc",SpaceHTML+DiagnosICDDesc)
+		}else{
+			SetCellData(index,"DiagnosICDDesc",DiagnosICDDesc.replace(SpaceHTML, ''))
+		}
+		SetCellData(index,"DiagnosLeavel",DiagnosLeavel)
+	 }
+	 function mysort(index, type) {
+		var rows=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+	    if (("up" == type)||("Top" == type)) {
+	        if (index != 1) {
+				///存在关联医嘱的问题，上下移动时判断关联诊断
+				var toupLinkDiaList=GetLinkDiaNum(index)
+				if ("Top" == type){
+					var todownLinkDiaList=index //GetLinkDiaNum(0);
+					var todownLinkDiaNum=index;
+				}else{
+					var todownLinkDiaList=GetLinkDiaNum(parseInt(index) - 1);
+					var todownLinkDiaNum=todownLinkDiaList.split("^").length
+				}
+				var toupLinkDiaNum=toupLinkDiaList.split("^").length
+				var StartIndex=parseInt(index)-parseInt(todownLinkDiaNum);
+				var CopyRows=new Array(parseInt(toupLinkDiaNum)+parseInt(todownLinkDiaNum))
+				for (var i=0;i<CopyRows.length;i++) {
+					if (i<toupLinkDiaNum){
+						CopyRows[i]=$("#tabDiagnosEntry").jqGrid("getRowData",parseInt(index)+i);
+					}else{
+						CopyRows[i]=$("#tabDiagnosEntry").jqGrid("getRowData",parseInt(StartIndex)+i-parseInt(toupLinkDiaNum));
+					}
+				}
+				for (var i=0;i<CopyRows.length;i++) {
+					CopyRows[i].id=parseInt(StartIndex)+i;
+					$("#tabDiagnosEntry").jqGrid("setRowData",parseInt(StartIndex)+i,CopyRows[i]);
+				}
+				$("#tabDiagnosEntry").setSelection(index,false);
+				$("#tabDiagnosEntry").setSelection(StartIndex, true);
+	        }
+	    } else if (("down" == type)||("Bottom" == type)) {
+	        if (index != rows ) {
+		        var LastRowData=$("#tabDiagnosEntry").jqGrid("getRowData",parseInt(index)+1);
+		        if (($.isEmptyObject(LastRowData))||(LastRowData.MRDIARowId=="")) return;
+		        ///存在关联医嘱的问题，上下移动时判断关联诊断
+				var todownLinkDiaList=GetLinkDiaNum(index)
+				var todownLinkDiaNum=todownLinkDiaList.split("^").length;
+				var LastdownNum=todownLinkDiaList.split("^")[parseInt(todownLinkDiaNum)-1]
+				var toDownRowData=$("#tabDiagnosEntry").jqGrid("getRowData",parseInt(LastdownNum)+1);
+		        if (($.isEmptyObject(toDownRowData))||(toDownRowData.MRDIARowId=="")) return;
+				if ("Bottom" == type){
+					var toupLinkDiaList=rows-todownLinkDiaNum-index;
+				    var toupLinkDiaNum=rows-todownLinkDiaNum-index;
+				}else{
+					var toupLinkDiaList=GetLinkDiaNum(parseInt(index) + parseInt(todownLinkDiaNum));
+				    var toupLinkDiaNum=toupLinkDiaList.split("^").length;
+				}
+				var StartIndex=index
+				var CopyRows=new Array(parseInt(toupLinkDiaNum)+parseInt(todownLinkDiaNum))
+				for (var i=0;i<CopyRows.length;i++) {
+					if (i<toupLinkDiaNum){
+						CopyRows[i]=$("#tabDiagnosEntry").jqGrid("getRowData",parseInt(StartIndex)+parseInt(todownLinkDiaNum)+i);
+					}else{
+						CopyRows[i]=$("#tabDiagnosEntry").jqGrid("getRowData",parseInt(StartIndex)+i-parseInt(toupLinkDiaNum));
+					}
+				}
+				for (var i=0;i<CopyRows.length;i++) {
+					CopyRows[i].id=parseInt(StartIndex)+i;
+					$("#tabDiagnosEntry").jqGrid("setRowData",parseInt(StartIndex)+i,CopyRows[i]);
+				}
+				$("#tabDiagnosEntry").setSelection(index,false);
+				$("#tabDiagnosEntry").setSelection(parseInt(StartIndex)+parseInt(toupLinkDiaNum),true);
+	        }
+	    }
+	    if (typeof CopyRows=="object"){
+			for (var i=0;i<CopyRows.length;i++) {
+				///同步颜色的变化
+				var DiagnosNotes=CopyRows[i].DiagnosNotes;
+				if (DiagnosNotes!=""){
+					//jqgrid 不支持removeclass
+					$('#tabDiagnosEntry').setCell(parseInt(StartIndex)+i,"DiagnosNotes",DiagnosNotes,{background:'pink'},"");
+				}else{
+					$('#tabDiagnosEntry').setCell(parseInt(StartIndex)+i,"DiagnosNotes",DiagnosNotes,{background:'#FFF'},"");
+				}
+				var DiagnosICDDesc=CopyRows[i].DiagnosICDDesc;
+				if (DiagnosICDDesc!=""){
+					$('#tabDiagnosEntry').setCell(parseInt(StartIndex)+i,"DiagnosICDDesc",DiagnosICDDesc,{background:'pink'},"");
+				}else{
+					$('#tabDiagnosEntry').setCell(parseInt(StartIndex)+i,"DiagnosICDDesc",DiagnosICDDesc,{background:'#FFF'},"");
+				}
+			}
+		}
+	 }
+	 function GetLinkDiaNum(index){
+		var RowList=""
+		var rows=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+		var MainMRDIADr=GetCellData(index,"MRDIAMRDIADR");
+		var DiagnosValue=GetCellData(index,"MRDIARowId");
+	    for (var i=1;i<=rows;i++) {
+		    var TmpRowID=GetCellData(i,"MRDIARowId"); 
+	        var TmpMain=GetCellData(i,"MRDIAMRDIADR"); 
+	        if (index==i){
+	        	//continue
+	        }
+	        if ((MainMRDIADr=="")&&(DiagnosValue==TmpMain)||
+	        	((MainMRDIADr!="")&&((TmpMain!="")&&(TmpMain==MainMRDIADr)||(MainMRDIADr==TmpRowID))||
+	        	(DiagnosValue==TmpRowID))
+	        ){
+		    	if (RowList==""){
+			    	RowList=i+""
+			    }else{
+					RowList=RowList+"^"+i
+				}   
+		    }
+	    }
+	    RowList=RowList
+		return RowList
+	}
+	function BSaveclickhandler()  {
+	    var rows=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+	    for (var i=1;i<=rows;i++) {
+		    if(CheckIsItem(i)){
+			    var MRDIARowId=GetCellData(i,"MRDIARowId");
+			    var DiagnosLeavel=GetCellData(i,"DiagnosLeavel");
+			    var MRDiagnosSequence=i;
+			    var info=DiagnosLeavel+"^"+MRDiagnosSequence
+			    ret = cspRunServerMethod(ServerObj.UpdateMRDiagnosMethod, MRDIARowId, info)
+			}
+	    }
+	}
+	function SaveToPriateTemp(){
+		var sbox = $HUI.combobox("#combo_TemplateList");
+		var TemplateId=sbox.getValue();
+		if (TemplateId==""){
+			$.messager.alert("提示","没有选择模板名称!");  
+			return false;
+		}
+		var paraDiagnosStr="";
+		var selSavedZYRowIdArr=new Array();
+		var selZYRowIdArr=new Array();
+		var rowCount=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+		var ids=$('#tabDiagnosEntry').jqGrid("getGridParam", "selarrrow"); 
+		for (var i=0;i<ids.length;i++){
+			var DiagnosCatRowId=GetCellData(ids[i],"DiagnosCatRowId");
+			var MRDIARowId=GetCellData(ids[i],"MRDIARowId");
+			var MRCIDRowId=GetCellData(ids[i],"MRCIDRowId");
+			var DiagnosNotes=GetCellData(ids[i],"DiagnosNotes");
+			if (DiagnosNotes!="") DiagnosNotes=DiagnosNotes.replace(/[\\\@\#\$\^\&\*\{\}\:\"\<\>\?]/g,"")
+			if ((MRCIDRowId=="")&&(DiagnosNotes=="")) continue;
+			var oneDiagStr="",findmasetrMRDIARowId="",flag=0;
+			if (MRDIARowId!=""){ //已保存过的诊断加入模板
+				var DiagnosCat=GetCellData(ids[i],"DiagnosCat");
+				if (DiagnosCat=="证型"){ //找对应主诊断
+					var DiagnosStr="";
+					for (var m=parseInt(ids[i])-1;m>=1;m--){
+						var masetrMRDIARowId=GetCellData(m,"MRDIARowId");
+						var masetrDiagnosCat=GetCellData(m,"DiagnosCat");
+						if ((masetrDiagnosCat=="中医")&&(!selSavedZYRowIdArr[m])) {
+							selSavedZYRowIdArr[m]=m;
+							findmasetrMRDIARowId=masetrMRDIARowId;
+							flag=1;
+							break;
+						}
+					}
+				}else if(DiagnosCat=="中医"){
+					if (selSavedZYRowIdArr[ids[i]]) continue;
+					selSavedZYRowIdArr[ids[i]]=ids[i];
+					findmasetrMRDIARowId=MRDIARowId;
+					flag=1;
+				}else{
+					if (selSavedZYRowIdArr[ids[i]]) continue;
+					selSavedZYRowIdArr[ids[i]]=ids[i];
+					if (MRCIDRowId!="") oneDiagStr=MRCIDRowId;
+					else oneDiagStr="$"+DiagnosNotes;
+				}
+				if ((flag==1)&&(findmasetrMRDIARowId!="")){
+					//主诊断ICDRowid_$C(2)_主诊断备注_$C(1)_子诊断ICDRowid_$C(2)_子诊断备注
+					var DiagnosStr=cspRunServerMethod(ServerObj.GetDataFromHistMRDiag,findmasetrMRDIARowId);
+					if (DiagnosStr!=""){
+						var DiagnosStrArr=DiagnosStr.split(String.fromCharCode(1));
+						oneDiagStr=DiagnosStrArr[0].replace(String.fromCharCode(2),"$");
+						var id=oneDiagStr.split("$")[0];
+						var desc=oneDiagStr.split("$")[1];
+						if (id!="") oneDiagStr=id;
+						else oneDiagStr="$"+desc;
+						for (var k=1;k<DiagnosStrArr.length;k++){
+							var id=DiagnosStrArr[k].split(String.fromCharCode(2))[0];
+							var desc=DiagnosStrArr[k].split(String.fromCharCode(2))[1];
+							if ((id=="")&&(desc=="")) continue;
+							if (id!="") oneDiagStr=oneDiagStr+"!"+id;
+							else oneDiagStr=oneDiagStr+"!"+desc;
+						}
+					}
+				}
+				
+			}else{ //未保存诊断加入模板
+				if (DiagnosCatRowId=="1"){
+					if (selZYRowIdArr[ids[i]]) continue;
+					selZYRowIdArr[ids[i]]=ids[i];
+					if (MRCIDRowId!="") oneDiagStr=MRCIDRowId
+					else oneDiagStr="$"+DiagnosNotes;
+					for (var k=parseInt(ids[i])+1;k<=rowCount;k++){
+						 var tmpDiagnosCatRowId=GetCellData(k,"DiagnosCatRowId");
+						 if (tmpDiagnosCatRowId=="2"){
+							 var id=GetCellData(k,"MRCIDRowId");
+							 var desc=GetCellData(k,"DiagnosNotes");
+							 if (desc!="") desc=desc.replace(/[\\\@\#\$\%\^\&\*\(\)\{\}\:\"\<\>\?\[\]]/g,"")
+							 if ((id=="")&&(desc=="")) continue;
+							 if (id!="") oneDiagStr=oneDiagStr+"!"+id;
+							 else oneDiagStr=oneDiagStr+"!"+desc;
+					     }else{
+						     break;
+						 }
+					}
+				}else if(DiagnosCatRowId=="2"){
+					for (var k=parseInt(ids[i])-1;k>=1;k--){
+						var tmpDiagnosCatRowId=GetCellData(k,"DiagnosCatRowId"); 
+						if (DiagnosCatRowId=="1"){
+							if (selZYRowIdArr[k]) break;
+							selZYRowIdArr[k]=k;
+							var id=GetCellData(k,"MRCIDRowId");
+							var desc=GetCellData(k,"DiagnosNotes");
+							if (desc!="") desc=desc.replace(/[\\\@\#\$\%\^\&\*\(\)\{\}\:\"\<\>\?\[\]]/g,"")
+							if (id!="") oneDiagStr=id;
+							else oneDiagStr="$"+desc;
+							for (var m=parseInt(k)+1;m<=rowCount;m++){
+								var tmpDiagnosCatRowId=GetCellData(m,"DiagnosCatRowId");
+								if (tmpDiagnosCatRowId=="2"){
+									 var id=GetCellData(m,"MRCIDRowId");
+									 var desc=GetCellData(m,"DiagnosNotes");
+									 if (desc!="") desc=desc.replace(/[\\\@\#\$\%\^\&\*\(\)\{\}\:\"\<\>\?\[\]]/g,"")
+									 if ((id=="")&&(desc=="")) continue;
+									 if (id!="") oneDiagStr=oneDiagStr+"!"+id;
+									 else oneDiagStr=oneDiagStr+"!"+desc;
+							     }else{
+								     break;
+								 }
+							}
+							break;
+						}else{
+							break;
+						}
+				    }
+				}else{
+					if (selZYRowIdArr[ids[i]]) continue;
+					selZYRowIdArr[ids[i]]=ids[i];
+					if (MRCIDRowId!="") oneDiagStr=MRCIDRowId;
+					else oneDiagStr="$"+DiagnosNotes;
+				}
+			}
+			if (oneDiagStr!=""){
+				if (paraDiagnosStr=="") paraDiagnosStr=oneDiagStr;
+				else  paraDiagnosStr=paraDiagnosStr+"^"+oneDiagStr;
+		    }
+		}
+		if (paraDiagnosStr==""){
+			$.messager.alert("提示","没有需要添加到模板的数据!");  
+			return false;
+		}
+		$.m({
+		    ClassName:"web.DHCDocDiagnosNew",
+		    MethodName:"PrivateSaveNew",
+		    USERID:session['LOGON.USERID'],
+		    selValue:TemplateId,
+		    DiagnosStr:paraDiagnosStr,
+		    ListNum:1
+		},function(RetStr){
+			var Ret=RetStr.split("^")[0]
+    		var Message=RetStr.split("^")[1]
+			if((Ret==0)&&(Message=="")){
+				var sbox = $HUI.combobox("#combo_TemplateCategroy");
+		        var type=sbox.getValue();
+		        var tab=$('#diagTempCategroy').tabs('getSelected'); 
+		        var selTabId=tab.panel('options').id; 
+		        if (selTabId==type){
+			        InitTempTabs(type,TemplateId); //保存成功后默认刷新选中的模板
+			    }else{
+				    PageLogicObj.AddToTemplId=TemplateId;
+				    if (type=="L"){
+				    	$('#diagTempCategroy').tabs('select',"科室模板");
+				    }else{
+					    $('#diagTempCategroy').tabs('select',"个人模板");
+					}
+				}
+			    destroyDialog("AddTempDiag");
+			}else if(Message!=""){
+				$.messager.alert("提示","保存失败"+Message+"诊断在该模板中已存在!");
+		        return false;
+			}else{
+				$.messager.alert("提示","保存失败!"+Ret);
+		        return false;
+			}
+		});
+	}
+    function CopyDiagshow(){
+	    var ExistSavedDiagFlag=0;
+	    var ids=$('#tabDiagnosEntry').jqGrid("getGridParam", "selarrrow"); 			
+		for (var i=0;i<ids.length;i++){
+			var MRDIARowId=GetCellData(ids[i],"MRDIARowId");
+			if (MRDIARowId!="") {
+				ExistSavedDiagFlag=1;
+				break;
+			}
+		}
+		if (ExistSavedDiagFlag=="0"){
+			$.messager.alert("提示","请选择需要复制的已保存诊断");  
+			return; 
+		}
+		destroyDialog("CopyDiag");
+	    var Content=initDiagDivHtml("CopyDiag");
+	    var iconCls="icon-resort";
+	    createModalDialog("CopyDiag","复制诊断", 380, 260,iconCls,"复制",Content,"CopyDiag()");
+	    var cbox = $HUI.combobox("#combo_DiagType", {
+			editable: false,
+			multiple:false,
+			mode:"local",
+			method: "GET",
+			selectOnNavigation:true,
+		  	valueField:'id',
+		  	textField:'text',
+		  	data:eval("("+ServerObj.DiagnosTypeJson+")"),
+		  	onLoadSuccess:function(){
+				var sbox = $HUI.combobox("#combo_DiagType");
+				sbox.select(ServerObj.DedfaultDiagnosTypeID);
+			}
+		});
+	}
+	function CopyDiag(){
+		var idstr="";
+		var ids=$('#tabDiagnosEntry').jqGrid("getGridParam", "selarrrow"); 			
+		for (var i=0;i<ids.length;i++){
+			var MRDIARowId=GetCellData(ids[i],"MRDIARowId");
+			var MRDIAMRDIADR=GetCellData(ids[i],"MRDIAMRDIADR");
+			if (MRDIARowId!=""){
+				if (MRDIAMRDIADR!=""){
+					if (idstr=="") idstr=MRDIAMRDIADR;
+					else {
+						if (("^"+idstr+"^").indexOf("^"+MRDIAMRDIADR+"^")==-1){
+							idstr=idstr+"^"+MRDIAMRDIADR;
+						}
+					}
+				}else{
+					if (idstr=="") idstr=MRDIARowId;
+					else {
+						if (("^"+idstr+"^").indexOf("^"+MRDIARowId+"^")==-1){
+							idstr=idstr+"^"+MRDIARowId;
+						}
+					}
+				}
+				
+			}
+		}
+		/*
+		ADiagnosIDStr As %String, ALocId As %String, AUserId As %String, CopyToDiagTypeId As %String, AdmPara
+		*/
+		//todo 复制多条诊断
+		var sbox = $HUI.combobox("#combo_DiagType");
+		var CopyToDiagTypeId=sbox.getValue();
+		$.m({
+		    ClassName:"web.DHCDocDiagnosEntryV8",
+		    MethodName:"CopyMulDiag",
+		    ADiagnosIDStr:idstr,
+		    ALocId:session['LOGON.CTLOCID'],
+		    AUserId:session['LOGON.USERID'],
+		    CopyToDiagTypeId:CopyToDiagTypeId,
+		    AdmPara:GetAdmPara()
+		},function(val){
+			if (val.split("^")[0]=="0"){
+				destroyDialog("CopyDiag");
+				AfterInsertDiag(val);
+				
+		    }else{
+			    $.messager.alert("提示","诊断复制失败!");  
+				return; 
+			}
+		});
+	}
+	function AfterInsertDiag(ret){
+		ReloadDiagEntryGrid();
+		LoadtabDiagHistoryData();
+		//BSaveclickhandler(); //调用
+		for (var i=1;i<ret.split('^').length;i++){
+			var MRDiagnosRowid=ret.split('^')[i].split(String.fromCharCode(1))[0];
+			var MRCICDRowid=ret.split('^')[i].split(String.fromCharCode(1))[1];
+			if (MRDiagnosRowid=="") continue;
+		    CheckDisease(MRDiagnosRowid);
+			ShowCPW(MRCICDRowid,MRDiagnosRowid); 
+			if (MRCICDRowid=="") return;
+			var ClinicPathWayRowId = cspRunServerMethod(ServerObj.FindClinicPathWayByICDMethod,MRCICDRowid);
+			if (ClinicPathWayRowId!="") {
+				var posn="height="+(screen.availHeight-400)+",width="+(screen.availWidth-200)+",top=200,left=100,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes";
+				var path="websys.default.csp?WEBSYS.TCOMPONENT=UDHCOEOrder.CPW.Edit&CPWRowId="+ClinicPathWayRowId+"&EpisodeID="+ServerObj.EpisodeID;
+				websys_createWindow(path,false,posn);
+			}
+		}
+	}
+	function AddToTemplateclickhandler(){
+		var ids=$('#tabDiagnosEntry').jqGrid("getGridParam", "selarrrow"); 			
+		if(ids==null || ids.length==0) {  
+			$.messager.alert("提示","请选择需要添加到模板的诊断");  
+			return;  
+		} 
+		destroyDialog("AddTempDiag");
+	    var Content=initDiagDivHtml("AddDiagToTemp");
+	    var iconCls="icon-ok";
+	    createModalDialog("AddTempDiag","添加到模板", 380, 260,iconCls,"确定",Content,"SaveToPriateTemp()");
+	    var cbox = $HUI.combobox("#combo_TemplateList", {
+			editable: false,
+			multiple:false,
+			mode:"remote",
+			method: "GET",
+			selectOnNavigation:true,
+		  	valueField:'DHCDIAMASRowid',
+		  	textField:'DHCDIADESC'
+		});
+		var cbox = $HUI.combobox("#combo_TemplateCategroy", {
+		  	valueField: 'id',
+			textField: 'text',
+			editable:false,
+			multiple:false, 
+			data: [
+			  {"id":"U","text":"个人模板","selected":true}
+			 ,{"id":"L","text":"科室模板"}
+			]
+			,onSelect: function (rec) {
+				LoadDiagTemplateList(rec["id"],0);
+			}
+			,onLoadSuccess:function(){
+				LoadDiagTemplateList("U",0);
+			}
+		});
+		$("#BtnNewTemplate").click(function(){
+		    $("#Newtr").show();
+		    $("#TemplatName").focus();
+	    });
+	    $("#BtnAddTemplate").click(AddTemplateClickHandle);
+	}
+    function AddTemplateClickHandle(){
+	    var Name=$("#TemplatName").val();
+	    if (Name==""){
+		    $.messager.alert("提示","新增诊断模板名字不能为空!");
+		    $("#TemplatName").focus();
+		    return false;
+		}
+		var sbox = $HUI.combobox("#combo_TemplateList");
+		var data=sbox.getData();
+		var INDEXNum=1,RepeatFlag=0;
+		for(var i=0;i<data.length;i++){
+			if ((Name==data[i].DHCDIADESC)&&(data[i].DHCDIAMASRowid!="")){
+				RepeatFlag=1;
+				break;
+			}
+			INDEXNum=parseInt(INDEXNum)+1;
+		}
+		if(RepeatFlag==1){
+		   $.messager.alert("提示","您添加的模板【"+Name+"】,已存在,请直接选择保存");
+	        return false;
+	    }
+	    var sbox = $HUI.combobox("#combo_TemplateCategroy");
+		var type=sbox.getValue();
+		if (type=="U"){
+			$.m({
+			    ClassName:"web.DHCDocDiagnosEntryV8",
+			    MethodName:"AddPrivate",
+			    PrivateDesc:Name,
+			    USERID:session['LOGON.USERID']
+			},function(val){
+				LoadDiagTemplateList(type,1); //刷新模板列表下拉框,并自动选中新增的模板名称
+				$("#TemplatName").val("");
+			});
+		}else{
+			$.m({
+			    ClassName:"web.DHCDocDiagnosEntryV8",
+			    MethodName:"AddLocTemplet",
+			    Name:Name,
+			    CTLocRowid:session['LOGON.CTLOCID']
+			},function(val){
+				LoadDiagTemplateList(type,1); //刷新模板列表下拉框,并自动选中新增的模板名称
+				$("#TemplatName").val("");
+			});
+		}
+	}
+	function LoadDiagTemplateList(type,flag){
+		var USERID=session['LOGON.USERID'];
+		var LOCID=session['LOGON.CTLOCID'];
+		if (type=="U"){
+			LOCID="";
+		}else{
+			USERID="";
+		}
+		$.q({
+			ClassName:"web.DHCDocDiagnosEntryV8",
+			QueryName:"DiagTemplateList",
+			USERID:USERID,
+			LOCID:LOCID
+	    },function(GridData){
+		   $HUI.combobox('#combo_TemplateList',{
+			    data:GridData.rows
+		   });
+		   var sbox = $HUI.combobox("#combo_TemplateList");
+		   var data=sbox.getData();
+		   if (flag==0) sbox.select(data[0].DHCDIAMASRowid);
+		   else sbox.select(data[data.length-1].DHCDIAMASRowid);
+	    });
+	}
+	function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
+	  if (_btntext=="") {var buttons=[{
+				text:'关闭',
+				iconCls:'icon-cut',
+				handler:function(){
+	   				destroyDialog(id);
+				}
+			}];
+	  }else {
+		   var buttons=[{
+				text:_btntext,
+				iconCls:_icon,
+				handler:function(){
+					if(_event!="") eval(_event);
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-close',
+				handler:function(){
+	   				destroyDialog(id);
+				}
+			}]
+		}
+	    $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
+	    if (_width == null)
+	        _width = 800;
+	    if (_height == null)
+	        _height = 500;
+
+	    $("#"+id).dialog({
+	        title: _title,
+	        width: _width,
+	        height: _height,
+	        cache: false,
+	        iconCls: _icon,
+	        //href: _url,
+	        collapsible: false,
+	        minimizable:false,
+	        maximizable: false,
+	        resizable: false,
+	        modal: true,
+	        closed: false,
+	        closable: false,
+	        content:_content,
+	        buttons:buttons
+	    });
+   }
+	function initDiagDivHtml(type){
+		if (type=="AddDiagToTemp"){
+				var html="<div style='margin:5px;'><table>"
+				
+				html +="	 <tr>"
+				
+			       	html +="	 <td>"
+			       		html +="	 模板分类 "
+			       	html +="	 </td>"
+			       	html +="	 <td>"
+			       		html +="	 <input id='combo_TemplateCategroy' class='textbox'/>"
+			       	html +="	 </td>"
+			       	
+		       html +="	 </tr>"
+		       
+				html +="	 <tr>"
+				
+			       	html +="	 <td>"
+			       		html +="	 模板名称 "
+			       	html +="	 </td>"
+			       	html +="	 <td>"
+			       		//html +="	 <input id='combo_TemplateList' editable='false' class='hisui-combobox'></input>"
+			       		html +="	 <input id='combo_TemplateList' class='textbox'/>"
+			       	html +="	 </td>"
+			       	
+			       	html +="	 <td>"
+		       			html +="	 <a id='BtnNewTemplate' href=#' class='hisui-linkbutton' data-options="+"iconCls:'icon-add'"+" >新建</a>"
+		       		html +="	 </td>"
+		       html +="	 </tr>"
+		       
+		       html +="	 <tr id='Newtr' style='display:none;'>" 
+		       		
+		       		html +="	 <td>"
+			       		html +="	 "
+			       	html +="	 </td>"
+			       	
+		       		html +="	 <td>"
+		       			html +="	 <input id='TemplatName' class='textbox'>"
+		       		html +="	 </td>"
+		       		
+		       		html +="	 <td>"
+		       			html +="	 <a id='BtnAddTemplate' href=#' class='hisui-linkbutton' data-options="+"iconCls:'icon-add'"+" >增加</a>"
+		       		html +="	 </td>"
+		       		
+			   html +="	 </tr>"
+		       
+			html += "</div></table>"
+		}else if(type="CopyDiag"){
+			var html="<div style='margin:5px;'><table>"
+				html +="	 <tr>"
+				
+			       	html +="	 <td>"
+			       		html +="	 诊断类型:"
+			       	html +="	 </td>"
+			       	html +="	 <td>"
+			       		html +="	 <input id='combo_DiagType' class='textbox'/>"
+			       	html +="	 </td>"
+			       	
+		       html +="	 </tr>"
+		       
+		       
+			html += "</div></table>"
+		}
+		return html;
+	}
+	function destroyDialog(id){
+	   $("body").remove("#"+id); //移除存在的Dialog
+	   $("#"+id).dialog('destroy');
+    }
+	function InsertMutiMRDiagnos(MRCICDRowid,MRCDiagNote){
+		if(!CheckBeforeInsertMRDiag(ServerObj.EpisodeID)) return false;
+		var DiagItemStr=GetDiagDataOnAdd();
+		var AdmPara=GetAdmPara();
+		if(typeof DiagItemStr=="undefined"){
+			return ;
+		}
+	    var LogDepRowid = session['LOGON.CTLOCID'];
+        var LogUserRowid = session['LOGON.USERID'];
+		var ret = cspRunServerMethod(ServerObj.InsertMRDiagnosMethod, ServerObj.mradm,DiagItemStr,AdmPara,LogDepRowid, LogUserRowid);
+		var SeccessFlag=ret.split('^')[0];
+	    if (SeccessFlag=='0') {
+		    AfterInsertDiag(ret);
+			SaveMRDiagnosToEMR()
+			UpdateArriveStatus()
+			
+		}else{
+			var ErrorMsg=ret.split('^')[1];
+			$.messager.alert("error","插入诊断失败,"+ErrorMsg,"error");
+			return false;
+		}
+	 }
+	function GetAdmPara(){
+	    var DiagnosValue=1
+		var Admway="",ILI="",ReAdmis="",FirstAdm="",OutReAdm="",TransAdm="";
+		if (ServerObj.PAAdmType!="I"){
+			var o=$HUI.radio("#ReAdmis")
+			if (o.getValue()==true) { ReAdmis="R";Admway="MZFZ";}else{ReAdmis="";}
+			var o=$HUI.radio("#FirstAdm")
+			if (o.getValue()==true) {FirstAdm="F";Admway="CZ"}else{FirstAdm="";}
+			var o=$HUI.radio("#OutReAdm")
+			if (o.getValue()==true) {OutReAdm="R";Admway="CYFZ";}else{OutReAdm="";}
+			var o=$HUI.radio("#TransAdm")
+			if (o.getValue()==true) {TransAdm="Y";Admway="ZZ"}else{TransAdm="";}
+			var o=$HUI.radio("#ILI")
+			if (o.getValue()==true) {ILI="Y"}
+		}
+		
+		
+		var BPSystolic=$("#BPSystolic").val();
+		var BPDiastolic=$("#BPDiastolic").val();
+		var Weight=$("#Weight").val();
+		var o=$HUI.combobox("#Special");
+		var Specialist=o.getValues().join("!");
+		var Subject=""
+		var AdmPara=ReAdmis+"^"+Specialist+"^"+Subject+"^"+Weight+"^"+FirstAdm+"^"+OutReAdm+"^"+TransAdm+"^"+ILI+"^"+DiagnosValue+"^"+Admway+"^"+BPSystolic+"^"+BPDiastolic;
+		return AdmPara;
+	 }
+	function CheckBeforeInsertMRDiag(EpisodeID){
+	    if (!CheckIsAdmissions(ServerObj.EpisodeID)) return false;
+	    if (!CheckAddDiag(ServerObj.EpisodeID)) return false;
+	    if (!CheckAdmBlood()) return false;
+		var SeriousDiseaseICDStr="",DiagnosNotesStr="",RepeatDiagStr="";
+		var IsExistMainDISDiag=0,IsExistDISDiag=0;
+		//var rows=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+		 var rowids = $('#tabDiagnosEntry').getDataIDs();
+    	 for (var i=0;i<rowids.length;i++){
+		    var MRDIARowId=GetCellData(rowids[i],"MRDIARowId");
+		    //if (MRDIARowId!="") continue;
+		    var MRCIDRowId=GetCellData(rowids[i],"MRCIDRowId");
+		    var NotesRowId=GetCellData(rowids[i],"NotesRowId");
+		    var DiagnosICDDesc=GetCellData(rowids[i],"DiagnosICDDesc"); 
+		    var DiagnosNotes=GetCellData(rowids[i],"DiagnosNotes");
+		    if (DiagnosNotes!="") DiagnosNotes=DiagnosNotes.replace(/[\\\@\#\$\^\&\*\{\}\:\"\<\>\?]/g,"")
+		    if ((MRCIDRowId=="")&&(DiagnosNotes=="")) {
+			    if (MRDIARowId!=""){
+				    $.messager.alert('提示','第'+rowids[i]+"条诊断,修改后的诊断备注不能为空!","info",function(){
+					     SetFocusCell(rowids[i],"DiagnosNotes");
+					 });
+					 return false;
+				}else{
+					continue;
+				}
+			}
+		    var DiagnosOnsetDate=GetCellData(rowids[i],"DiagnosOnsetDate");
+		    if (DiagnosOnsetDate!=""){
+			    if (ServerObj.SYSDateFormat=="4"){
+				    var tmpDiagnosOnsetDate=DiagnosOnsetDate.split("/")[2]+"-"+DiagnosOnsetDate.split("/")[1]+"-"+DiagnosOnsetDate.split("/")[0]
+				    var start = new Date(tmpDiagnosOnsetDate.replace("-", "/").replace("-", "/"));
+				}else{
+					var start = new Date(DiagnosOnsetDate.replace("-", "/").replace("-", "/"));
+				}
+				var end=new Date();
+			    if (!DATE_FORMAT.test(DiagnosOnsetDate)){
+				     $.messager.alert('提示','第'+rowids[i]+"条诊断的发病日期格式不正确!","info",function(){
+					     SetFocusCell(rowids[i],"DiagnosOnsetDate");
+					 });
+					 return false;
+				 }else if(start>end){
+					 $.messager.alert('提示','第'+rowids[i]+"条诊断的发病日期不能大于今天!","info",function(){
+					     SetFocusCell(rowids[i],"DiagnosOnsetDate");
+					 });
+					 return false;
+				 }
+		    }else{
+			    $.messager.alert("提示","发病日期不能为空","info",function(){
+				    SetFocusCell(rowids[i],"DiagnosOnsetDate");
+				});
+				return false;
+			}
+		    var DiagnosType=GetCellData(rowids[i],"DiagnosTypeRowId");
+			if ((MRDIARowId=="")&&(DiagnosType=="")){
+				$.messager.alert("提示","诊断类型不能为空","info");
+				return false;
+			}
+			var MainDiagFlag=GetCellData(rowids[i],"MainDiagFlag"); //
+			if (DiagnosType==ServerObj.DISDiagnosTypeRowId){
+				IsExistDISDiag=1;
+				if (MainDiagFlag=="是"){
+					IsExistMainDISDiag=1;
+				}
+			}
+			if (MRDIARowId==""){
+					if ((MRCIDRowId!="")&&(MRCIDRowId!=null)){
+						if (!CheckDiagIsEnabled(MRCIDRowId)) return false;
+					    var SeriousDisease=cspRunServerMethod(ServerObj.GetSeriousDiseaseByICDMethod,MRCIDRowId);
+					    if (SeriousDisease=="Y"){
+						    if (SeriousDiseaseICDStr=="") SeriousDiseaseICDStr=DiagnosICDDesc;
+						    else  SeriousDiseaseICDStr=SeriousDiseaseICDStr+","+DiagnosICDDesc;
+					    }
+						var Str=MarchDiagnosis(MRCIDRowId);
+						var DiagnosICDDesc=$('#'+rowids[i]+'_DiagnosICDDesc').val();
+						if (Str==1){
+							if (RepeatDiagStr=="") RepeatDiagStr=DiagnosICDDesc;
+							else  RepeatDiagStr=RepeatDiagStr+","+DiagnosICDDesc;
+					    }
+				    }else{
+						if (DiagnosNotesStr=="") DiagnosNotesStr=DiagnosNotes;
+						else  DiagnosNotesStr=DiagnosNotesStr+","+DiagnosNotes;
+						var ret = cspRunServerMethod(ServerObj.GetMRDiagnoseList,ServerObj.mradm, '');
+						if (ret != '') {
+							var retarry = ret.split(String.fromCharCode(1));
+							for (k = 0; k < retarry.length; k++) {
+								var retItemArry = retarry[k].split('^');
+								var id=retItemArry[1];
+					            var DiagnosICDCode = retItemArry[4];
+					            var DiagnosNote = retItemArry[6];
+					            if ((DiagnosICDCode=="")&&(DiagnosNote!="")&&(DiagnosNotes!="")&&(ServerObj.mradm!=id)){
+						            var Str1=$.trim(DiagnosNote);
+									//var Str2=$.trim(DiagnosNotechangevalue);
+									if((Str1==DiagnosNotes)&&(Str1!="")&&(DiagnosNotes!="")) {
+										if (RepeatDiagStr=="") RepeatDiagStr=DiagnosNotes;
+								        else  RepeatDiagStr=RepeatDiagStr+","+DiagnosNotes;
+								    }
+						    }
+						}
+				    }
+						//
+				}
+		    }
+		     //
+	    }
+	    if ((IsExistDISDiag==1)&&(IsExistMainDISDiag==0)){
+		    if(!window.confirm("此次所加出院诊断列表中没有【主诊断】,请确认是否继续保存?")) return false;
+		}
+	    if(SeriousDiseaseICDStr!=""){
+	        $.messager.alert("提示",SeriousDiseaseICDStr+"诊断为传染病诊断,请注意及时上报.","info");
+	    }
+	    if(DiagnosNotesStr!=""){
+		    if(!window.confirm("是否确定录入非标准ICD诊断?")) return false;
+		}
+		if(RepeatDiagStr!=""){
+			if(!window.confirm(RepeatDiagStr+",所加诊断在本次诊断中已经存在,请确认是否重复增加")) {
+				
+				return false;
+			}
+		}
+		 return true;
+	 }
+	function MarchDiagnosis(DiagnosValue){
+	    var Str=cspRunServerMethod(ServerObj.FlagMarchDiagnose,ServerObj.mradm,DiagnosValue);
+	    return Str;
+	}
+	function CheckIsAdmissions(EpisodeID) {
+		if (ServerObj.EpisodeID=="") return false;
+		var UserID=session['LOGON.USERID'];
+		var ret=cspRunServerMethod(ServerObj.CheckIsAdmissionsMethod,ServerObj.EpisodeID,UserID)
+		if (ret!="") {
+			$.messager.alert("警告","接诊失败,"+ret,"error");
+			return false;
+		}
+		return true;
+	 }
+	 function CheckAdmBlood(){
+		 var BPSystolic=$("#BPSystolic").val().replace(/(^\s*)|(\s*$)/g,'');	
+		 var BPDiastolic=$("#BPDiastolic").val().replace(/(^\s*)|(\s*$)/g,'');
+		 if (ServerObj.NeedStolicMast==1){
+			if ((BPSystolic=="")||(BPDiastolic=="")){
+				$.messager.alert("提示","请录入完整的血压值","",function(){
+					$("#BPSystolic").focus();
+					//$("#BPDiastolic").focus();
+				});
+				
+				return false;
+			}
+		 }
+		 var r = /^[0-9]*[1-9][0-9]*$/ 
+		 if ((BPSystolic!="")&&(!r.test(BPSystolic))){
+			 $.messager.alert("提示","收缩压只能录入数字!","",function(){
+				 $("#BPSystolic").focus();
+			 });
+			 return false;
+		 }
+		 if ((BPDiastolic!="")&&(!r.test(BPDiastolic))){
+			 $.messager.alert("提示","舒张压只能录入数字!","",function(){
+				 $("#BPDiastolic").focus();
+		     });
+			 return false;
+		 }
+		 return true;
+     }
+     function CheckAddDiag(EpisodeID){
+	    var CheckAddret=cspRunServerMethod(ServerObj.CheckAdd,EpisodeID);
+		if (CheckAddret!=""){
+		   if(CheckAddret=='Discharged'){
+			   $.messager.alert("提示","由于病人已出院,不能增加新诊断", "info");
+		       return false;
+		   }else if(CheckAddret=='Cancel'){
+			   $.messager.alert("提示","由于病人已经退院，不能增加新诊断", "info");
+		       return false;
+	  	   }else if(CheckAddret=="OPCancel"){
+		  	   $.messager.alert("提示","由于病人已经退号，不能增加新诊断", "info");
+		       return false;
+		  }
+		}
+		return true;
+	 }
+	//判断所录入诊断是否有效
+	function CheckDiagIsEnabled(MRCICDRowidStr,callback){
+		if(MRCICDRowidStr=="") return true;
+		var MRCICDRowidStr=MRCICDRowidStr.replace(String.fromCharCode(2),"!")
+		var reg=/(\*)|(\^)|(\:)|(\!)|(\-)|(\String.fromCharCode(2))/g;
+		var MRCICDRowidStrArr=MRCICDRowidStr.replace(reg,"!").split("!")
+		for (var i=0;i<MRCICDRowidStrArr.length;i++) {
+			var MRCICDRowid=MRCICDRowidStrArr[i];
+			if (MRCICDRowid=="") {
+				continue
+			}
+			var ret=tkMakeServerCall("web.DHCMRDiagnos","CheckICDIsEnabled",MRCICDRowid,ServerObj.EpisodeID) 
+			if(ret!=""){
+				setTimeout(function (){
+					$.messager.alert("提示",ret,"info",function(){
+						if (callback){
+							callback();
+						}
+					}); 
+				});
+				return false;
+			}
+		}
+		return true;
+	}
+	function GetDiagDataOnAdd(){
+		 var DiagItemStr=""
+		 var MRCIDRowId=""
+		 //var rows=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+		 var rowids = $('#tabDiagnosEntry').getDataIDs();
+    	 for (var i = 0; i < rowids.length; i++) {
+			 var OrderItemRowid = GetCellData(rowids[i], "OrderItemRowid");
+		     var MRDIARowId=GetCellData(rowids[i],"MRDIARowId");
+		     var MRCIDRowId=GetCellData(rowids[i],"MRCIDRowId");
+		     var DiagnosTypeRowId=GetCellData(rowids[i],"DiagnosTypeRowId");
+		     var DiagnosOnsetDate=GetCellData(rowids[i],"DiagnosOnsetDate");
+		     var DiagnosNotes=GetCellData(rowids[i],"DiagnosNotes");
+		     if (DiagnosNotes!="") DiagnosNotes=DiagnosNotes.replace(/[\\\@\#\$\^\&\*\{\}\:\"\<\>\?]/g,"");
+		     var DiagnosICDDesc=GetCellData(rowids[i],"DiagnosICDDesc");
+		     var MainDiagFlag=GetCellData(rowids[i],"MainDiagFlag");
+		     if (MainDiagFlag=="是") MainDiagFlag="Y";
+             else MainDiagFlag="N";
+		     var DiagnosStatusRowId=GetCellData(rowids[i],"DiagnosStatusRowId");
+		     var DiagnosCatRowId=GetCellData(rowids[i],"DiagnosCatRowId"); //分类
+		     
+		     if ((MRCIDRowId=="")&&(DiagnosNotes=="")){ continue ;}
+		     if (MRCIDRowId==ServerObj.WeekGestationDia){
+			 	MRCIDRowId=window.showModalDialog("diagnosentry.tools.lmpdate.csp","","dialogHeight: "+(370)+"px; dialogWidth: "+(580)+"px");
+			 	//MRCIDRowId=window.open("diagnosentry.tools.lmpdate.csp","diagnosentry","status=1,center=1,resizable=1,scrollbars=1,width=800,height=680")
+			 	if ((typeof MRCIDRowId=="undefined")||(MRCIDRowId=="")){
+					continue; 
+				}
+			 }
+		     
+		     if (DiagnosCatRowId=="2") {continue;}
+		     if ((DiagnosCatRowId=="1")&&(MRDIARowId=="")){ 
+			     var SyndromeInfo=GetSyndromeListInfo(i);
+			 }else{
+				 var SyndromeInfo="";
+			 }
+			 if ((DiagnosNotes!="")&&(MRDIARowId=="")) DiagnosNotes=DiagnosNotes+"#"+(parseInt(DiagnosCatRowId)+1);
+			 var SyndromeCICDStr="",SyndromeCDescStr=""
+			 if (SyndromeInfo!=""){
+			     SyndromeCICDStr=SyndromeInfo.split(String.fromCharCode(1))[0];
+				 SyndromeCDescStr=SyndromeInfo.split(String.fromCharCode(1))[1];
+			 }
+			 var DiagnosBodyPartId=GetCellData(i,"DiagnosBodyPartRowId");
+		     if(MRDIARowId!=""){ //已保存过的诊断修改
+			     var OneDiagItemStr=MRDIARowId+"^"+DiagnosNotes+"^"+DiagnosTypeRowId+"^"+MainDiagFlag+"^"+DiagnosStatusRowId+"^"+DiagnosOnsetDate+"^"+DiagnosBodyPartId;
+			 }else{
+				 var OneDiagItemStr=""+"^"+DiagnosNotes+"^"+MRCIDRowId+"^"+DiagnosTypeRowId+"^"+MainDiagFlag
+				 OneDiagItemStr=OneDiagItemStr+"^"+DiagnosStatusRowId+"^"+DiagnosOnsetDate+"^"+SyndromeCICDStr+"^"+SyndromeCDescStr+"^"+DiagnosBodyPartId;
+			 }
+			 if (DiagItemStr==""){DiagItemStr=OneDiagItemStr}else{DiagItemStr=DiagItemStr+String.fromCharCode(1)+OneDiagItemStr}
+		 }
+		 return DiagItemStr;
+     }
+     function GetSyndromeListInfo(index){
+	     var SyndromeCICDStr="";
+		 var SyndromeCDescStr="";
+	     //var rowCount=$('#tabDiagnosEntry').jqGrid("getGridParam", "records");
+	     var rowids = $('#tabDiagnosEntry').getDataIDs();
+    	 index=parseInt(index)
+	     for (var k=index+1;k<rowids.length;k++){
+		     var SynDiagnosCatRowId=GetCellData(rowids[k],"DiagnosCatRowId"); 
+		     if (SynDiagnosCatRowId=="2") { //证型
+		     	var SynMRCIDRowId=GetCellData(rowids[k],"MRCIDRowId");
+		     	var SynDiagnosNotes=GetCellData(rowids[k],"DiagnosNotes");
+		     	if (SynDiagnosNotes!="") SynDiagnosNotes=SynDiagnosNotes.replace(/[\\\@\#\$\^\&\*\{\}\:\"\<\>\?]/g,"");
+		     	if ((SynMRCIDRowId=="")&&(SynDiagnosNotes=="")) continue;
+		     	
+		     	
+		        var SynDiagnosTypeRowId=GetCellData(rowids[k],"DiagnosTypeRowId");
+		        var SynMainDiagFlag=GetCellData(rowids[k],"MainDiagFlag");
+		        if (SynMainDiagFlag=="是") SynMainDiagFlag="Y";
+                else SynMainDiagFlag="N";
+		        var SynDiagnosStatusRowId=GetCellData(rowids[k],"DiagnosStatusRowId");
+		        var SynDiagnosOnsetDate=GetCellData(rowids[k],"DiagnosOnsetDate");
+		     	
+		     	
+		     	
+		     	if ((SynMRCIDRowId=="")&&(SynDiagnosNotes!="")){
+					SynDiagnosNotes=SynDiagnosNotes+"#3";
+				}else{
+					SynDiagnosNotes="";
+				}
+				SynMRCIDRowId=SynMRCIDRowId+String.fromCharCode(2)+SynDiagnosTypeRowId+String.fromCharCode(2)+SynMainDiagFlag;
+				SynMRCIDRowId=SynMRCIDRowId+String.fromCharCode(2)+SynDiagnosStatusRowId+String.fromCharCode(2)+SynDiagnosOnsetDate;
+				if ((SyndromeCICDStr=="")&&(SyndromeCDescStr=="")){
+					SyndromeCICDStr=SynMRCIDRowId;
+					SyndromeCDescStr=SynDiagnosNotes;
+				}else{
+					SyndromeCICDStr=SyndromeCICDStr+"$"+SynMRCIDRowId;
+					SyndromeCDescStr=SyndromeCDescStr+"$"+SynDiagnosNotes;
+				}
+			 }else{
+				 break;
+		     }
+		 }
+		 return SyndromeCICDStr+String.fromCharCode(1)+SyndromeCDescStr;
+	 }
+    //双击模板或历史记录添加到录入框
+	function AddDiagItemtoList(MRCICDRowId,MRCICDNotes){
+		var CruRow=GetPreRowId();
+		if(CheckIsClear(CruRow)==true){
+			DeleteRow(CruRow);
+		}
+		/*if (MRCICDRowId!=""){
+			var Str=MarchDiagnosis(MRCICDRowId);
+			if (Str==1){
+				var vaild = window.confirm("所加诊断在本次诊断中已经存在，请确认是否重复增加?");
+				if(!vaild) {
+					ClearRow(CruRow);
+					return false;
+				}
+			}
+		}*/
+		Add_Diag_row();
+		var CruRow=GetPreRowId();
+		if(MRCICDRowId!=""){
+		   var ret = cspRunServerMethod(ServerObj.GetICDInfoByICDDrMethod,MRCICDRowId);
+		   var RetArr=ret.split("^");
+		   var DiagnosCatRowId=RetArr[2];
+		   //if (DiagnosCatRowId=="1"){
+		   		SetCellData(CruRow,"DiagnosCat",RetArr[2]);
+		   		SetCellData(CruRow,"DiagnosCatRowId",RetArr[2]);
+		   //}
+		   SetCellData(CruRow,"DiagnosICDDesc",RetArr[1]);
+	       SetCellData(CruRow,"MRCIDRowId",MRCICDRowId);
+	       SetCellData(CruRow,"MRCIDCode",RetArr[0]);
+	       if (MRCICDNotes!=""){
+		       SetCellData(CruRow,"DiagnosNotes",MRCICDNotes);
+		   }
+		   
+		   return false;
+		}else{
+		   SetCellData(CruRow,"DiagnosNotes",MRCICDNotes);
+		}
+	}
+	//检查行是否空白行
+	function CheckIsClear(rowid){
+		var MRCIDRowId=GetCellData(rowid,"MRCIDRowId");
+		var DiagnosNotes=GetCellData(rowid,"DiagnosNotes");
+		if (DiagnosNotes!="") DiagnosNotes=DiagnosNotes.replace(/[\\\@\#\$\^\&\*\{\}\:\"\<\>\?]/g,"");
+		if ((MRCIDRowId != "" )||(DiagnosNotes!="")){
+			return false;
+		}else{
+			return true;
+		}
+	}
+	//删除一行
+	function DeleteRow(rowid){
+		$('#DiagnosEntry_DataGrid').delRowData(rowid);
+	}
+	function ReloadDiagEntryGrid(reloadFlag){
+	    $("#tabDiagnosEntry").jqGrid("clearGridData");
+	    $("#tabDiagnosEntry").jqGrid('setGridParam',{
+			url: "oeorder.oplistcustom.new.request.csp?action=GetDiagList",
+			postData: {USERID:session['LOGON.USERID'],MRADM:ServerObj.mradm,DiagTypeCode:ServerObj.DiagnosTypeCodeStr}
+		}).trigger("reloadGrid", [{ current: true }]);
+	}
+	function HisMRDiagRepShow(){
+		destroyDialog("HisMRDiagRepDiag");
+	    var rowrecord = DiagHistoryDataGrid.datagrid('getSelected');  
+	    var Desc=rowrecord.Desc;
+	   var Content="<table id='tabHisMRDiagRep' cellpadding='5' style='margin:5px;border:none;'></table>";
+	   var iconCls="";
+	   createModalDialog("HisMRDiagRepDiag",Desc+" 重复记录", 550, 350,iconCls,"",Content,"");
+	   var Columns=[[ 
+		 			{field:'Rowid',hidden:true,title:''},
+		 			{field:'Desc',title:'诊断'},
+		 			{field:'DoctDesc',title:'医生'},
+		 			{field:'MRDate',title:'诊断日期'},
+		 			{field:'MRtime',title:'诊断时间'},
+		 			{field:'AdmDep',title:'就诊科室'}
+		 	]]
+		InPatExecFeeDataGrid=$("#tabHisMRDiagRep").datagrid({  
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : false,
+			fitColumns : false,
+			autoRowHeight : false,
+			rownumbers:true,
+			pagination : true,  
+			rownumbers : true,  
+			pageSize: 10,
+			pageList : [10,100,200],
+			idField:'Rowid',
+			columns :Columns
+		});
+		$.q({
+		    ClassName : "web.DHCDocDiagnosEntryV8",
+		    QueryName : "HisMRDiagRep",
+		    PatientID : ServerObj.PatientID,
+		    MRAdmList : rowrecord.MRAdmList,
+		    Pagerows:InPatExecFeeDataGrid.datagrid("options").pageSize,rows:99999
+		},function(GridData){
+			InPatExecFeeDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData);
+		});
+	}
+	function CheckMainDiagCount(){
+		var MainDiagCount=0;
+		var MainDiagCount=CheckSaveDiagCount(MainDiagCount);
+		if(MainDiagCount>1){
+			alert("出院主诊断不能超过两个");
+			return false;
+			}{
+			return true;	
+				}
+		}
+	 function CheckSaveDiagCount(MainDiagCount){
+	   var rowids = $('#tabDiagnosEntry').getDataIDs();
+	   for(var i=0;i<rowids.length;i++){
+		   var rowid = rowids[i];
+		   var DiagnosTypeRowId=GetCellData(rowid,"DiagnosTypeRowId");
+		   var MainDiagFlag=GetCellData(rowid,"MainDiagFlag");
+		   //alert("DiagnosTypeRowId:"+DiagnosTypeRowId+"**"+"MainDiagFlag:"+MainDiagFlag);
+		   //var DiagnosICDDesc=GetCellData(rowid,"DiagnosICDDesc")
+		       if((DiagnosTypeRowId==4)&&(MainDiagFlag=="是")){
+			       MainDiagCount=MainDiagCount+1; 
+			   }
+	     }
+	   return MainDiagCount
+	}
+	//获取所有数据 如果行处于编辑状态 这样得到的行数据包含标签
+   function GetGirdData() {
+       //保存数据
+      //Save_Order_row();
+      var DataArry = new Array();
+      var rowids = $('#tabDiagnosEntry').getDataIDs();
+      for (var i = 0; i < rowids.length; i++) {
+           //不取已经审核诊断 和空白行
+           //if(CheckIsItem(rowids[i])==true){continue;}
+           var MRDIARowId=GetCellData(rowids[i],"MRDIARowId");
+		   var MRCIDRowId=GetCellData(rowids[i],"MRCIDRowId");
+           if (MRDIARowId != "" || MRCIDRowId == "") { continue; }
+           var curRowData = $("#tabDiagnosEntry").getRowData(rowids[i]);
+           DataArry[DataArry.length] = curRowData;
+     }
+         return DataArry;
+    }	
+	function pagerFilter(data){
+		if (typeof data.length == 'number' && typeof data.splice == 'function'){	// is array
+			data = {
+				total: data.length,
+				rows: data
+			}
+		}
+		var dg = $(this);
+		var opts = dg.datagrid('options');
+		var pager = dg.datagrid('getPager');
+		pager.pagination({
+			showRefresh:false,
+			onSelectPage:function(pageNum, pageSize){
+				opts.pageNumber = pageNum;
+				opts.pageSize = pageSize;
+				pager.pagination('refresh',{
+					pageNumber:pageNum,
+					pageSize:pageSize
+				});
+				dg.datagrid('loadData',data);
+				dg.datagrid('scrollTo',0); //滚动到指定的行        
+			}
+		});
+		if (!data.originalRows){
+			data.originalRows = (data.rows);
+		}
+		var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
+		var end = start + parseInt(opts.pageSize);
+		data.rows = (data.originalRows.slice(start, end));
+		return data;
+	}
+	function DiagDataToEMR(){
+		///引用到病历
+		var DiaDataList = new Array();
+		var DiaObj = new Object();
+		var DiagnosType=DiagnosICDDesc=DiagnosICDDesc=DiagnosNotes=MRCIDCode=DiagnosStatus=DiagnosDoctor=DiagnosDate=DiagnosTime=DiagnosDate=MRDIAMRDIADR=DiagnosCatFlag=DiagnosCat="";
+		var rowids=$('#tabDiagnosEntry').getDataIDs();
+		for(var i=0;i<rowids.length;i++){
+			var ChildObjList = new Array();
+			var ChildObj = new Object();
+			var MRDIARowId=GetCellData(rowids[i],"MRDIARowId");
+			if (MRDIARowId=="") continue;
+			MRDIAMRDIADR=GetCellData(rowids[i],"MRDIAMRDIADR"); 
+			if (MRDIAMRDIADR!="") continue;
+			DiagnosType=GetCellData(rowids[i],"DiagnosType");
+			if (ServerObj.DiagnosTypeStr.indexOf(":"+DiagnosType)<0) continue;
+			DiagnosICDDesc=GetCellData(rowids[i],"DiagnosICDDesc");
+			DiagnosICDDesc=DiagnosICDDesc.replace(/\&nbsp;/g,"")
+			DiagnosNotes=GetCellData(rowids[i],"DiagnosNotes");
+			MRCIDCode=GetCellData(rowids[i],"MRCIDCode");
+			DiagnosStatus=GetCellData(rowids[i],"DiagnosStatus");
+			DiagnosDoctor=GetCellData(rowids[i],"DiagnosDoctor");
+			DiagnosDate=GetCellData(rowids[i],"DiagnosDate");
+			DiagnosTime=DiagnosDate.split(" ")[1];
+			DiagnosDate=DiagnosDate.split(" ")[0];
+			DiagnosCat=GetCellData(rowids[i],"DiagnosCat");
+			if (DiagnosCat=="西医") {DiagnosCatFlag=0 }else{DiagnosCatFlag=1}
+			DiagnosLeavel=GetCellData(rowids[i],"DiagnosLeavel");
+			for (var j=0;j<rowids.length;j++){
+				var MRDIARowIdChild=GetCellData(rowids[j],"MRDIARowId");
+				if (MRDIARowIdChild=="") continue;
+				MRDIAMRDIADRChild=GetCellData(rowids[j],"MRDIAMRDIADR"); 
+				if (MRDIAMRDIADRChild!=MRDIARowId) continue;
+				DiagnosTypeChild=GetCellData(rowids[j],"DiagnosType");
+				if (ServerObj.DiagnosTypeStr.indexOf(":"+DiagnosTypeChild)<0) continue;
+				DiagnosICDDescChild=GetCellData(rowids[j],"DiagnosICDDesc");
+				DiagnosICDDescChild=DiagnosICDDescChild.replace(/\&nbsp;/g,"")
+				DiagnosNotesChild=GetCellData(rowids[j],"DiagnosNotes");
+				MRCIDCodeChild=GetCellData(rowids[j],"MRCIDCode");
+				DiagnosStatusChild=GetCellData(rowids[j],"DiagnosStatus");
+				DiagnosDoctorChild=GetCellData(rowids[j],"DiagnosDoctor");
+				DiagnosDateChild=GetCellData(rowids[j],"DiagnosDate");
+				DiagnosTimeChild=DiagnosDateChild.split(" ")[1];
+				DiagnosDateChild=DiagnosDateChild.split(" ")[0];
+				DiagnosCatChild=GetCellData(rowids[j],"DiagnosCat");
+				DiagnosLeavelChild=GetCellData(rowids[j],"DiagnosLeavel");
+				if (DiagnosCatChild=="西医") {DiagnosCatFlag=0 }else{DiagnosCatFlag=1}
+				ChildObj={TypeDesc:DiagnosTypeChild,ICDDesc:DiagnosICDDescChild,MemoDesc:DiagnosNotesChild,ICDCode:MRCIDCodeChild,EvaluationDesc:DiagnosStatusChild,UserName:DiagnosDoctor,Date:DiagnosDateChild,Time:DiagnosTimeChild,BillFlagDesc:DiagnosCatChild,BillFlag:DiagnosCatFlag,Level:DiagnosLeavelChild};
+				ChildObjList.push(ChildObj);
+				
+			}
+			//DiagnosDate=tkMakeServerCall("web.DHCDocDiagnosEntryV8","ChangeMRDate",DiagnosDate)
+			DiaObj={TypeDesc:DiagnosType,ICDDesc:DiagnosICDDesc,MemoDesc:DiagnosNotes,ICDCode:MRCIDCode,EvaluationDesc:DiagnosStatus,UserName:DiagnosDoctor,Date:DiagnosDate,Time:DiagnosTime,children:ChildObjList,BillFlagDesc:DiagnosCat,BillFlag:DiagnosCatFlag,Level:DiagnosLeavel};
+			DiaDataList.push(DiaObj);
+		}
+		var DiaDataList=diagnosesBtQuote(DiaDataList)
+		window.returnValue=$.extend(window.returnValue,{"DiaDataList":DiaDataList});
+	}
+	///lxz 保存诊断到电子病历
+	function SaveMRDiagnosToEMR(){
+		if(ServerObj.PAAdmType=="I"){
+			return true;
+		}
+		var ret=tkMakeServerCall("web.DHCDocDiagnosNew","GetMRDiagnosToEMR",ServerObj.EpisodeID) 
+		if(ServerObj.PAAdmType!="E"){
+			if (typeof(parent.invokeChartFun) === 'function') {
+			    parent.invokeChartFun('门诊病历', 'updateEMRInstanceData', "diag", ret);
+		    }
+		}else{
+			if (typeof(parent.invokeChartFun) === 'function') {
+		    	parent.invokeChartFun('门急诊病历记录', 'updateEMRInstanceData', "diag", ret);
+	    	}
+		}
+	}
+	//lxz  到达
+	function UpdateArriveStatus() {
+	    var LogonUserID = session['LOGON.USERID']
+	    if (cspRunServerMethod(ServerObj.SetArrivedStatus, ServerObj.EpisodeID, ServerObj.DocID, session['LOGON.CTLOCID'], session['LOGON.USERID']) != '1') {}
+	}
+	/*return {
+		"InitDiagEntry":InitDiagEntry,
+		"DiagnosCatChange":DiagnosCatChange,
+		"DiagnosTypeChange":DiagnosTypeChange,
+		"DiagnosBodyPartChange":DiagnosBodyPartChange,
+		"DiagnosStatusChange":DiagnosStatusChange,
+		"DiagnosICDDesc_keydown":DiagnosICDDesc_keydown,
+		"DiagnosNotes_keydown":DiagnosNotes_keydown,
+		"InitDatePicker":InitDatePicker,
+		"HisMRDiagRepShow":HisMRDiagRepShow,
+		"UpdateArriveStatus":UpdateArriveStatus,
+		"SaveMRDiagnosToEMR":SaveMRDiagnosToEMR,
+		"DeleteMRDiagnos":DeleteMRDiagnos
+	}*/
+//})();

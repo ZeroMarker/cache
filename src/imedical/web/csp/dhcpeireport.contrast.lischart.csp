@@ -1,0 +1,170 @@
+ <!--dhcpeireport.contrast.lischart.csp--> 	
+<TABLE width=655 border=0 cellspacing=0>
+			<THEAD style="display:table-header-group">
+				<TR>
+					<TD height=20><b></b></TD>
+				</TR>
+				<TR>
+					<TD bgcolor='#97FFFF' colSpan=4><b>化验结果变化趋势图</b></TD>
+				</TR>
+				
+			</THEAD>
+		<TBODY>
+	
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart0"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart1"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart2"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart3"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart4"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart5"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart6"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart7"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart8"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart9"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart10"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart11"></DIV></TD>
+		</TR>
+		<TR>
+			<TD height=20></TD>
+		</TR>
+		<TR>
+			<TD><DIV id="lischart12"></DIV></TD>
+		</TR>
+		
+		</TBODY>
+</TABLE>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/ext4.0.7/resources/css/ext-all.css" />
+<script type="text/javascript" src="../scripts_lib/ext4.0.7/ext-all.js"></script>
+<script type="text/javascript" src="../scripts/DHCPELisChart.js"></script>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ d ##Class(web.DHCPE.ResultContrast).GetPatResultHistoryNewExt(RealPatientID)
+ 
+ 
+ 
+ w "<br>"
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ s ColMdl="{text:'项目名称',sortable:false,dataIndex:'tcname'},{text:'正常值',sortable:false,dataIndex:'ranges'}"
+ s fldName="{name:'tcname'},{name:'ranges'}"
+ 
+ s cnt=2
+ s cols=2
+ s mDate=""
+ s subdata=""
+ s rendererRanges="renderer:rangesColor"
+ f {
+	 s mDate=$o(^TMPResultContrast(RealPatientID,"ResultHistory","RegDate",mDate))
+	 quit:mDate=""
+	 s rDate=$g(^TMPResultContrast(RealPatientID,"ResultHistory","RegDate",mDate))
+	 s cnt=cnt+1
+	 s rnt=cnt-2
+	 s ColMdl=ColMdl_",{text:'"_rDate_"',"_rendererRanges_",sortable:false,dataIndex:'date"_cnt_"'}"
+	 s fldName=fldName_",{name:'date"_cnt_"'}"
+	 s subdata=subdata_","_rDate_"-"_rnt
+	 s cols=cols+1
+ }
+ s ODID=""
+ s colData=""
+ s mDate=""
+ f {
+	 s ODID=$o(^TMPResultContrast(RealPatientID,"ResultHistory","ODDesc",ODID))
+	 quit:ODID=""
+	 s itemname="'"_$p($g(^TMPResultContrast(RealPatientID,"ResultHistory","ODDesc",ODID)),"^",1)_"'"
+	 s range="'"_$p($g(^TMPResultContrast(RealPatientID,"ResultHistory","ODDesc",ODID)),"^",2)_"'"
+	 s result=""
+	 f {
+	 	s mDate=$o(^TMPResultContrast(RealPatientID,"ResultHistory","RegDate",mDate))
+	 	quit:mDate=""
+	 	
+	 	s result=result_",'"_$p($g(^TMPResultContrast(RealPatientID,"ResultHistory","Result",ODID,mDate)),"^",1)_"'"
+	 	
+	 }
+	 
+	 
+	 
+	 i colData="" s colData="["_itemname_","_range_result_"]"
+	 e  s colData=colData_",["_itemname_","_range_result_"]"
+	 
+ }
+	 
+
+ s gGridData="{success:true,data:["_colData_"],fieldsNames:["_fldName_"],columModle:["_ColMdl_"]}"
+ 
+	
+</SCRIPT>
+
+
+<SCRIPT language="Javascript">
+ 			
+ 			var gGridData="#($g(gGridData))#";
+ 			var gCols="#($g(cols))#";
+ 			var gColData="#($g(subdata))#";
+</script>
+

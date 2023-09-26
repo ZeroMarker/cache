@@ -1,0 +1,180 @@
+<!--回收-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px;padding-bottom:15px">
+		<div class="hisui-panel" data-options="title:'回收单据',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div id="CondTB"> 
+				<table class="Condition" id="MainCondition">
+					<tr>
+						<td>供应科室</td>
+						<td><input id="SupLoc" name="toLocDr" class="textbox hisui-combobox" style="width:120px"></td>
+						<td>
+							<label>回收人</label><input class="textbox" id="toUser" name="toUser" style="width:90px">
+							<input class="textbox" hidden id="toUserDr" name="toUserDr">
+						</td>
+						<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px">查询</a></td>
+						<td><a href="#" id="Print" class="textbox hisui-linkbutton" data-options="iconCls:''" style="width:100px">打印回收单</a></td>
+					</tr>
+					<tr>
+						<td>申请科室</td>
+						<td><input id="ReqLoc" name="fromLocDr" class="textbox hisui-combobox" style="width:120px"></td>
+						<td></td>
+						<td><a href="#" id="SaveBT" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="width:90px;">新建</a></td>
+						<td><a href="#" id="CreateBT" class="textbox hisui-linkbutton" style="width:100px">选取请领单</a></td>
+						<td>
+							<input id="isOPRFlag" name="isOPRFlag" value="N" hidden >
+						</td>
+					</tr>
+					
+					<tr hidden>
+						<td>开始日期</td>
+						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq"></td>
+						<td>结束日期</td>
+						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq"></td>	
+					</tr>		
+				</table>
+				<table>
+					<tr>
+						<td><a href="#" id="UpdateBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a></td>
+					</tr>
+					<div class="BorderLine"></div>	
+				</table>		
+			</div>
+				<table id="MainList"></table>
+		</div>
+	</div>
+	<div class="GridPadding hisui-layout" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:620px;padding-left:0px;padding-right:0px;padding-bottom:5px">	
+		<div class="GridPadding" data-options="title:'',region:'center',border:false,headerCls:'panel-header-gray'" style="width:520px;padding-left:10px;padding-bottom:0px">	
+			<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+				<table id="ItemList"></table>	
+			</div>
+		</div>
+		<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:280px;padding-left:0px;padding-bottom:0px">	
+			<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="器械明细">
+				<table id="ItemSList"></table>
+			</div>
+		</div>
+	</div>
+	
+<!--选取请求单Dialog-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-find'" title="查询条件" style="width:520px;height:250px">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<table id="SelBarCodeConditions" class="Condition" align="center">
+					<tr>
+						<input id="FIsOPRFlag" name="FIsOPRFlag" class="textbox" value="N" hidden>
+						<td>回收科室</td>
+						<td><input id="FReqLoc" name="FReqLoc" class="textbox hisui-combobox"></td>
+						<td>供应科室</td>
+						<td><input id="FSupLoc" name="FSupLoc" class="textbox hisui-combobox"></td>
+					</tr>
+					<tr>
+						<td>开始日期</td>
+						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox" ></td>
+						<td>结束日期</td>
+						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox" ></td>
+					</tr>
+					<tr>
+						<td>单据号</td>
+						<td><input id="FReqNo" name="FReqNo" class="hisui-numberbox textbox"  ></td>
+						<td>单据状态</td>
+						<td>
+							<select name="FStatus" class="hisui-combobox" style="width:155px">
+								<option value="" >全部</option>
+								<option value="Y" >仅提交</option>
+								<option value="N" >仅未提交</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>楼号</td>
+						<td><input id="FloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
+						<td>线路号</td>
+						<td><input id="LineCode" name="LineCode" class="textbox hisui-combobox"></td>
+					</tr>
+					<tr align="center">
+						<td colspan="4">
+							<a href="#" id="FSuerBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确定</a>
+							<a href="#" id="FCancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<!--选取请求单Dialog-->
+	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'" title="选取请领单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="SelReqConditions" class="Condition">
+				<input id="SelisOPRFlag" name="isOPRFlag" value="N" hidden >
+				<input class="textbox" hidden id="SeltoUserDr" name="toUserDr">
+					<tr>
+						<td>申请科室</td>
+						<td><input id="SelReqLoc" name="FReqLoc" class="textbox hisui-combobox"></td>
+						<td>单据号</td>
+						<td><input id="FReqNo" name="FReqNo" class="hisui-numberbox textbox"  ></td>
+						<td>单据类型</td>
+						<td>
+							<input class='hisui-radio' type="radio" label='全部' name='ReqType' value='' data-options="checked:true">
+							<input class='hisui-radio' type="radio" label='请领单' name='ReqType' value='0'>
+			            	<input class='hisui-radio' type="radio" label='借包单' name='ReqType' value='1'>					
+						</td>
+						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px;">查询</a></td>
+					</tr>
+					<tr>
+						<td>开始日期</td>
+						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox" ></td>
+						<td>结束日期</td>
+						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox" ></td>
+						<td>紧急程度</td>
+						<td>
+							<input class='hisui-radio' type="radio" label='全部' name='ReqUrgent' value='' data-options="checked:true">
+							<input class='hisui-radio' type="radio" label='一般&nbsp &nbsp' name='ReqUrgent' value='0'>
+			            	<input class='hisui-radio' type="radio" label='紧急&nbsp &nbsp' name='ReqUrgent' value='1'>
+						</td>
+						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton" style="width:116px;">选取请领单</a></td>
+					</tr>
+					<tr>
+						<td>楼号</td>
+						<td><input id="SFloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
+						<td>线路号</td>
+						<td><input id="SLineCode" name="LineCode" class="textbox hisui-combobox"></td>
+					</tr>	
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'请求单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+<script type="text/javascript" src="../scripts/cssd/CallBack/CallBackCommon.js"></script>
+<script type="text/javascript" src="../scripts/cssd/CallBack/PackageCallBackPrint.js"></script>
+<script type="text/javascript" src="../scripts/cssd/CallBack/SelReq.js"></script>
+<script type="text/javascript" src="../scripts/cssd/CallBack/FindWin.js"></script>	
+<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
+<script type="text/javascript" src="../scripts/cssd/CallBack/PackageCallBack.js"></script>
+</body>
+</html>

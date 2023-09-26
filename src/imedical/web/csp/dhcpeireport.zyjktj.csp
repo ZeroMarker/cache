@@ -1,0 +1,1329 @@
+<!--
+ * FileName: dhcpeireport.zyjktj.csp
+ * Anchor: zhongricheng
+ * Date: 2020-03-03
+ * Description: 职业病报告
+-->
+<!--
+ * 注意: 修改的时候尽量不用 px 使用 pt
+ * A4 size   595.44*841.68 pt    210*297 mm
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>
+
+<html>
+	<head>
+		<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+		<!--meta http-equiv="X-UA-Compatible" content="IE=5"/-->
+
+		<style>
+		.TableWidth {
+			width:485pt;
+		}
+		.TopB {
+			border-top: .5pt solid black;
+		}
+		.RightB {
+			border-right: .5pt solid black;
+		}
+		.BottomB {
+			border-bottom: .5pt solid black;
+		}
+		.LeftB {
+			border-left: .5pt solid black;
+		}
+		
+		.Base {
+			padding:1px;
+			color:black;
+			font-family:宋体;
+			vertical-align:middle;
+			font-size:12.0pt;
+			font-weight:400;
+			white-space:nowrap;
+		}
+		.BaseText {
+			font-size:12.0pt;
+			font-weight:500;
+			text-align:right;
+		}
+		.BaseValue {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:center;
+			border-bottom:0.5pt solid black;
+		}
+
+		.CoverTitle {
+			font-family:宋体;
+			font-size:42.0pt;
+			font-weight:700;
+			text-align:center;
+			vertical-align:middle;
+		}
+		.CoverFoot {
+			font-size:14.0pt;
+			font-weight:400;
+			font-family:黑体;
+			text-align:center;
+			vertical-align:middle;
+		}
+
+		.InfoTitle {
+			font-size:15.0pt;
+			font-weight:700;
+			text-align:left;
+		}
+		.InfoBase {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:center;
+			border:0.5pt solid black;
+		}
+		.InfoBaseLeft {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:left;
+			border:.5pt solid black;
+		}
+		.InfoText {
+			font-size:12.0pt;
+			font-weight:500;
+			text-align:center;
+		}
+		.InfoTextRight {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:right;
+		}
+		.InfoValue {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:center;
+			border-bottom:0.5pt solid black;
+		}
+
+		.ResultBase {
+			font-size:12.0pt;
+			font-weight:700;
+			text-align:center;
+			border:0.5pt solid black;
+		}
+		.ResultValue {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:center;
+			border:.5pt solid black;
+		}
+		.ResultValueLeft {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:left;
+			border:.5pt solid black;
+		}
+		.ResultValueBorder2 {
+			border-top:.5pt solid black;
+			border-right:none;
+			border-bottom:.5pt solid black;
+			border-left:none;
+		}
+		.ResultValueBorder3 {
+			border-top:.5pt solid black;
+			border-right:none;
+			border-bottom:.5pt solid black;
+			border-left:.5pt solid black;
+		}
+
+		.GenTextLT{
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:left;
+			line-height:17pt;
+			padding:3pt 3pt 0 3pt;
+			white-space:normal;
+			word-wrap:break-word;
+			word-break:break-all;
+			vertical-align:top;
+			border:0.5pt solid black;
+		}
+		.GenDocText{
+			font-size:14.0pt;
+			font-weight:400;
+			text-align:left;
+		}
+		</style>
+		<!-- 595.44*841.68 pt  210*297 mm-->
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			// http://127.0.0.1/imedical/web/csp/dhcpeireport.zyjktj.csp?PatientID=631
+		
+			s (Name,Sex,Age,Married,IDCard,CompanyDesc,CompanyTel,Department,VIPLevel,CheckAdmDate,HPNo,RegNo,HospitalCode)=""
+			s (OMETType,SGQ1,ZGQJ1,LGS1,HarmInfoDesc,WorkAge,EndangerWorkAge,JobNumber,Industry,WorkType)=""
+			s (BXY1,OXY1,JCX1)=""
+			s (BYJ1,OYJ1,JCY1)=""
+			s (OMETType,SGQ1,ZGQJ1,LGS1,HarmInfoDesc,WorkAge,EndangerWorkAge,JobNumber,Industry,WorkType)=""
+			s (MQWJYC,FC,YSZYB,ZYJJZ,QTJBHYC,GenDocName,GenDate)=""
+
+			s PAADM=$g(%request.Data("PatientID",1))
+			q:PAADM=""
+			
+			s UserID=$j_"^"_PAADM
+			s Flag=##Class(web.DHCPE.ReportOutToWeb).GetReportInfor(PAADM,UserID)
+			//Q:("1"'=Flag)
+			
+			s Flag=##Class(web.DHCPE.ReportGetInfor).GetZYJKTJReportInfor(PAADM,UserID)
+			//Q:("1"'=Flag)
+			d ##Class(web.DHCPE.ReportGetInfor).GetZYJKTJSummarizeInfor(PAADM,UserID)
+			
+			s CurLocID=$P(^PAADM(PAADM),"^",4)
+			
+			//基本信息 name="BaseInfo" 
+			//姓名
+			s Name=$G(^TMPReport(UserID,"PatInfo","PatName"))
+			//性别
+			s Sex=$G(^TMPReport(UserID,"PatInfo","PatSex"))
+			//出生日期
+			s Birthday=$G(^TMPReport(UserID,"PatInfo","PatBirthday"))
+			//年龄
+			s Age=$G(^TMPReport(UserID,"PatInfo","PatAge"))
+			//婚姻状况
+			s Married=$G(^TMPReport(UserID,"PatInfo","Married"))
+			s:Married'="" Married=$p($g(^CT("MAR",Married)),"^",2)
+			//联系电话
+			s PatTel=$G(^TMPReport(UserID,"PatInfo","PatTel"))
+			//家庭地址
+ 			s PatAddress=$G(^TMPReport(UserID,"PatInfo","PatAddress"))
+			//身份证号码
+			s IDCard=$G(^TMPReport(UserID,"PatInfo","PatID"))
+			//单位名称
+			s CompanyDesc=$G(^TMPReport(UserID,"PatInfo","PatCompany"))
+			//单位电话
+			s CompanyTel=$g(^TMPReport(UserID,"PatInfo","groupContactNumber"))
+			//部门
+			s Department=$G(^TMPReport(UserID,"PatInfo","Position"))
+			//vip等级
+			s VIPLevel=$G(^TMPReport(UserID,"PatInfo","VIPLevel"))
+			s:VIPLevel'="" VIPLevel=$p($g(^DHCPEVIPLevel("VIP",VIPLevel)),"^",2)
+			//体检日期
+			s CheckAdmDate=$G(^TMPReport(UserID,"PatInfo","AdmDate"))
+			//体检号
+			s HPNo=$G(^TMPReport(UserID,"PatInfo","PatHPNo"))
+			//登记号
+			s RegNo=$G(^TMPReport(UserID,"PatInfo","PatRegNo"))
+			
+			//职业信息
+			//岗位类别
+			s OMETType=$g(^TMPReport(UserID,"PatOccInfo","OMETTypeID"))
+			s:OMETType'="" OMETType=$lg(^User.DHCPEOMETypeD(OMETType),3)
+			s (SGQ1,ZGQJ1,LGS1)="&ensp;&ensp;&ensp;&ensp;"
+			;w "<span style='font-family:Segoe UI Symbol'></span>"
+			// ?? ?? ?? √ ?? ?? ?? ?? ㄨ ?? ?? ?? ?? ?? ?? ??
+			s:OMETType["上岗" SGQ1="&ensp;√&ensp;"
+			s:OMETType["在岗" ZGQJ1="&ensp;√&ensp;"
+			s:OMETType["离岗" LGS1="&ensp;√&ensp;"
+			//危害因素
+			s HarmInfo=$g(^TMPReport(UserID,"PatOccInfo","HarmInfo"))
+			s HarmInfoDesc=$g(^TMPReport(UserID,"PatOccInfo","HarmInfoDesc"))
+			//总工龄
+			s WorkAge=$g(^TMPReport(UserID,"PatOccInfo","WorkAge"))
+			//接害工龄
+			s EndangerWorkAge=$g(^TMPReport(UserID,"PatOccInfo","EndangerWorkAge"))
+			//工号
+			s JobNumber=$g(^TMPReport(UserID,"PatOccInfo","JobNumber"))
+			
+			//病史
+			s DiseaseHistory=$g(^TMPReport(UserID,"PatOccInfo","DiseaseHistory"))
+			s (BXY1,OXY1,JCX1)="□"  // "<span style='font-family:Segoe UI Symbol'></span>"
+			s:$p(DiseaseHistory,"^",8)="不吸烟" BXY1="√"  
+			s:$p(DiseaseHistory,"^",8)="偶吸烟" OXY1="√"  
+			s:$p(DiseaseHistory,"^",8)="经吸" JCX1="√"  
+			
+			s (BYJ1,OYJ1,JCY1)="□"  // "<span style='font-family:Segoe UI Symbol'></span>"
+			s:$p(DiseaseHistory,"^",11)="不饮酒" BYJ1="√"  
+			s:$p(DiseaseHistory,"^",11)="偶饮酒" OYJ1="√"  
+			s:$p(DiseaseHistory,"^",11)="经饮" JCY1="√"  
+			
+			//职业病史 取第一条
+			s OccuDiseaseHistory=$g(^TMPReport(UserID,"PatOccInfo","OccuDiseaseHistory",1))
+			
+			s ConclusionData=""
+			s MQWJYC="目前未见异常"
+			s FC="复查"
+			s YSZYB="疑似职业病"
+			s ZYJJZ="职业禁忌症"
+			s QTJBHYC="其他疾病或异常"
+			s ConId=0  f  s ConId=$o(^User.DHCPEConclusionD(ConId)) q:ConId=""  d
+			.s Desc=$lg(^User.DHCPEConclusionD(ConId),3)
+			.i Desc=MQWJYC d
+			..i $d(^TMPReport(UserID,"PatOccInfo","Conclusions^"_ConId)) d
+			...s MQWJYC=MQWJYC_"??："_$g(^TMPReport(UserID,"PatOccInfo","Suggestions^"_ConId))
+			..e  d
+			...s MQWJYC=MQWJYC_"□："
+			
+			.i Desc=FC d
+			..i $d(^TMPReport(UserID,"PatOccInfo","Conclusions^"_ConId)) d
+			...s FC=FC_"??："_$g(^TMPReport(UserID,"PatOccInfo","Suggestions^"_ConId))
+			..e  d
+			...s FC=FC_"□："
+			
+			.i Desc=YSZYB d
+			..i $d(^TMPReport(UserID,"PatOccInfo","Conclusions^"_ConId)) d
+			...s YSZYB=YSZYB_"??："_$g(^TMPReport(UserID,"PatOccInfo","Suggestions^"_ConId))
+			..e  d
+			...s YSZYB=YSZYB_"□："
+			
+			.i Desc=ZYJJZ d
+			..i $d(^TMPReport(UserID,"PatOccInfo","Conclusions^"_ConId)) d
+			...s ZYJJZ=ZYJJZ_"??："_$g(^TMPReport(UserID,"PatOccInfo","Suggestions^"_ConId))
+			..e  d
+			...s ZYJJZ=ZYJJZ_"□："
+			
+			.i Desc=QTJBHYC d
+			..i $d(^TMPReport(UserID,"PatOccInfo","Conclusions^"_ConId)) d
+			...s QTJBHYC=QTJBHYC_"??："_$g(^TMPReport(UserID,"PatOccInfo","Suggestions^"_ConId))
+			..e  d
+			...s QTJBHYC=QTJBHYC_"□："
+			
+			
+			//总检建议
+			s GenAdvice=$G(^TMPReport(UserID,"GeneralAdvice", "Advice"))
+			//总检名字
+			i ($G(^DHCPESetting("DHCPE","MainDoctorGroup",CurLocID))="Y") d
+			.s GenDocName=$g(^TMPReport(UserID,"GeneralAdvice","MainDoctor"))
+			.s GenDate=$g(^TMPReport(UserID,"GeneralAdvice","MainDoctorDate"))
+			e  d
+			.s GenDocName=$G(^TMPReport(UserID,"GeneralAdvice","AduitUser"))
+			.s GenDate=$G(^TMPReport(UserID,"GeneralAdvice","AduitUserDate"))
+			
+			s HosCode=$G(^DHCPESetting("DHCPE","ReportCode",CurLocID))
+			s HosCode=$zcvt(HosCode,"L")
+			//s HosCode=""
+			i HosCode'="" s HosCode=HosCode_"."
+			s normalcss="../scripts/dhcpeireport."_HosCode_"normal.css"
+			s covercss="../scripts/dhcpeireport."_HosCode_"normal.cover.css"
+			s titlecss="../scripts/dhcpeireport."_HosCode_"normal.head.title.css"
+			s patinfocss="../scripts/dhcpeireport."_HosCode_"normal.head.patinfo.css"
+			s summarizecss="../scripts/dhcpeireport."_HosCode_"normal.summarize.css"
+			s generaladvicecss="../scripts/dhcpeireport."_HosCode_"normal.generaladvice.css"
+			s norcss="../scripts/dhcpeireport."_HosCode_"normal.result.nor.css"
+			s liscss="../scripts/dhcpeireport."_HosCode_"normal.result.lis.css"
+			s stationresultcss="../scripts/dhcpeireport."_HosCode_"normal.stationresult.css"
+			s summarizegathercss="../scripts/dhcpeireport."_HosCode_"normal.summarizegather.css"
+			s footercss="../scripts/dhcpeireport."_HosCode_"normal.footer.css"
+			s illexplaincss="../scripts/dhcpeireport."_HosCode_"normal.illexplain.css"
+		</SCRIPT>
+
+		<!-- 结果  
+		<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.result.css"></LINK>
+		-->
+		<!-- 通用格式  -->
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(norcss)#></LINK>
+		<!-- 检验结果  -->
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(liscss)#></LINK>
+
+
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(footercss)#></LINK>
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(illexplaincss)#></LINK>
+
+	</head>
+
+	<body>
+		<div align=left>
+			<!-- 封面 start -->
+			<table class='TableWidth' border=0 cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;PAGE-BREAK-AFTER: always ;'>
+ 				<tr style='height:25pt;'></tr>
+ 				
+ 				<tr style='height:22pt;'>
+					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>姓&ensp;&ensp;&ensp;&ensp;名：</td>
+					<td id='Name' name='BaseInfo' colspan=4 class='Base BaseValue'>#(Name)#</td>
+					<td></td>
+				</tr>
+				
+ 				<tr style='height:22pt;'>
+ 					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>单&ensp;&ensp;&ensp;&ensp;位：</td>
+					<td id='CompanyDesc' name='BaseInfo' colspan=4 class='Base BaseValue'>#(CompanyDesc)#</td>
+  					<td></td>
+ 				</tr>
+ 				
+ 				<tr style='height:22pt;'>
+ 					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>单位电话：</td>
+					<td id='CompanyTel' name='BaseInfo' colspan=4 class='Base BaseValue'>#(CompanyTel)#</td>
+ 					<td></td>
+ 				</tr>
+ 				
+ 				<tr style='height:22pt;'>
+ 					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+ 					<td colspan=3 class='Base BaseText'>工&ensp;&ensp;&ensp;&ensp;号：</td>
+					<td id='Sex' name='BaseInfo' colspan=4 class='Base BaseValue'>#(JobNumber)#</td>
+					<td></td>
+ 				</tr>
+ 				
+ 				<tr style='height:22pt;'>
+ 					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>编&ensp;&ensp;&ensp;&ensp;号：</td>
+					<td id='Age' name='BaseInfo' colspan=4 class='Base BaseValue'>#(RegNo)#</td>
+					<td></td>
+ 				</tr>
+ 				
+ 				<tr style='height:22pt;'>
+ 					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>填表日期：</td>
+					<td id='CheckDate' name='BaseInfo' colspan=4 class='Base BaseValue'>#(CheckAdmDate)#</td>
+					<td></td>
+ 				</tr>
+ 				
+ 				<tr style='height:21pt;'>
+ 					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>类&ensp;&ensp;&ensp;&ensp;别：</td>
+					<td id='' name='BaseInfo' colspan=4 class='Base' height="20">上&ensp;岗&ensp;前（#(SGQ1)#）</td>
+					<td></td>
+				</tr>
+ 				<tr style='height:21pt;'>
+					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'></td>
+					<td id='' name='BaseInfo' colspan=4 class='Base'>在岗期间（#(ZGQJ1)#）</td>
+					<td></td>
+				</tr>
+				
+				<tr style='height:21pt;'>
+					<td></td>
+					<td colspan=6 style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'></td>
+					<td id='' name='BaseInfo' colspan=4 class='Base'>离&ensp;岗&ensp;时（#(LGS1)#）</td>
+					<td></td>
+				</tr>
+				
+				<tr style='height:100pt;'></tr>
+				
+				<tr style='height:45pt;'>
+					<td colspan=15 class='CoverTitle' style=''>职业健康检查表</td>
+				</tr>
+				
+				<tr style='height:290pt;'></tr>
+ 
+				<tr style='height:24pt;'>
+					<td colspan=15 class='CoverFoot' style=''>中华人民共和国卫生部印制</td>
+				</tr>
+ 
+				<tr style='height:7pt;'></tr>
+			</table>
+			<!-- 封面 End -->
+			
+			<!-- 基本信息 Start -->
+			<table class='TableWidth' cellpadding=0 cellspacing=0 border=0 style='border-collapse:collapse; table-layout:fixed; PAGE-BREAK-AFTER: always ;'>
+				<tr style='height:5pt;'>
+					<td colspan=6'></td>
+				</tr>
+				
+				<tr style='height:50pt;'>
+					<td colspan=6 class="InfoTitle" style='text-align: center;'>职业健康人员信息登记表</td>
+				</tr>
+				
+				<tr style='height:35pt;'>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>姓&ensp;&ensp;&ensp;&ensp;名</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>#(Name)#</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>性&ensp;&ensp;&ensp;&ensp;别</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>#(Sex)#</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>年&ensp;&ensp;&ensp;&ensp;龄</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>#(Age)#</td>
+				</tr>
+				
+				<tr style='height:35pt;'>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>出生日期</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>#(Birthday)#</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>总&ensp;工&ensp;龄</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>#(WorkAge)#</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>接害工龄</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>#(EndangerWorkAge)#</td>
+				</tr>
+				
+				<tr style='height:35pt;'>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>身份证号码</td>
+					<td colspan=2 class='Base BaseValue TopB RightB BottomB LeftB'>#(IDCard)#</td>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>电话号码</td>
+					<td colspan=2 class='Base BaseValue TopB RightB BottomB LeftB'>#(PatTel)#</td>
+				</tr>
+				
+				<tr style='height:35pt;'>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>工作单位</td>
+					<td colspan=5 class='Base TopB RightB BottomB LeftB'>&ensp;#(CompanyDesc)#</td>
+				</tr>
+				
+				<tr style='height:35pt;'>
+					<td class='Base BaseValue TopB RightB BottomB LeftB'>家庭住址</td>
+					<td colspan=5 class='Base TopB RightB BottomB LeftB'>#(PatAddress)#</td>
+				</tr>
+ 				
+ 				<tr style='height:10pt;'>
+					<td colspan=6 class='Base RightB LeftB' style="border-bottom-width: 0pt;"></td>
+				</tr>
+				
+				<tr style='height:300pt;'>
+					<td colspan=6 id="HarmInfoDesc" class='Base RightB LeftB' style="white-space:normal; word-wrap:break-word; word-break:break-all; line-height:20pt; padding:0 10pt; vertical-align: top; border-top-width: 0pt; border-bottom-width: 0pt;">毒害种类和名称：#(HarmInfoDesc)#</td>
+				</tr>
+				
+				<tr style='height:150pt;'>
+					<td colspan=3 class='Base BaseValue BottomB LeftB'>
+						<p>受检人签名：</p>
+						<p>&ensp;</p>
+						<p>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;年&ensp;&ensp;&ensp;&ensp;月&ensp;&ensp;&ensp;&ensp;日</p>
+					</td>
+					<td colspan=3 class='Base BaseValue RightB BottomB'>
+						<p>用人单位签章：</p>
+						<p>&ensp;</p>
+						<p>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;年&ensp;&ensp;&ensp;&ensp;月&ensp;&ensp;&ensp;&ensp;日</p>
+					</td>
+ 				</tr>
+			</table>
+			<!-- 基本信息 End -->
+			
+			<!-- 职业体检相关信息 Start -->
+			<table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;PAGE-BREAK-AFTER: always ;'>
+				<tr style='height:20pt;'><td colspan=20></td></tr>
+ 
+				<tr style='height:22.5pt;'><td colspan=27 class='Base InfoTitle'>一、职业史（由受检人填写）</td></tr>
+				<tr style='height:25pt;'>
+					<td colspan=4 class='Base InfoBase'>起止日期</td>
+					<td colspan=7 class='Base InfoBase'>工作单位</td>
+					<td colspan=2 class='Base InfoBase'>车间</td>
+					<td colspan=3 class='Base InfoBase'>工种</td>
+					<td colspan=6 class='Base InfoBase'>有害因素</td>
+					<td colspan=5 class='Base InfoBase'>防护措施</td>
+				</tr>
+				<SCRIPT language="Cache" RUNAT="SERVER">
+					f i=1:1:4 d
+					.s (StartDate,EndDate,WorkPlace,WorkDepartment,WorkShop,WorkTeam,WorkType,DailyWorkHours,HarmfulFactor,ProtectiveMeasure)=""
+					.i $d(^TMPReport(UserID,"PatOccInfo","OccuHistory",i)) d
+					..s StartDate=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),1)
+					..s EndDate=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),2)
+					..s WorkPlace=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),3)
+					..s WorkDepartment=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),4)
+					..s WorkShop=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),5)
+					..s WorkTeam=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),6)
+					..s WorkType=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),7)
+					..s DailyWorkHours=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),8)
+					..s HarmfulFactor=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),9)
+					..s ProtectiveMeasure=$lg(^TMPReport(UserID,"PatOccInfo","OccuHistory",i),10)
+					..//$lb(StartDate,EndDate,WorkPlace,WorkDepartment,WorkShop,WorkTeam,WorkType,DailyWorkHours,HarmfulFactor,ProtectiveMeasure)
+					.i (StartDate'="")&&(EndDate'="") s Date=StartDate_"至"_EndDate
+					.e  s Date=""
+					.w "<tr style='height:25pt;'>"
+					.w "<td colspan=4 class='Base InfoBase' style='white-space:normal; word-wrap:break-word; word-break:break-all; '>&ensp;"_Date_"</td>"
+					.w "<td colspan=7 class='Base InfoBase' style='white-space:normal; word-wrap:break-word; word-break:break-all; '>&ensp;"_WorkPlace_"</td>"
+					.w "<td colspan=2 class='Base InfoBase' style='white-space:normal; word-wrap:break-word; word-break:break-all; '>&ensp;"_WorkShop_"</td>"
+					.w "<td colspan=3 class='Base InfoBase' style='white-space:normal; word-wrap:break-word; word-break:break-all; '>&ensp;"_WorkType_"</td>"
+					.w "<td colspan=6 class='Base InfoBase' style='white-space:normal; word-wrap:break-word; word-break:break-all; '>&ensp;"_HarmfulFactor_"</td>"
+					.w "<td colspan=5 class='Base InfoBase' style='white-space:normal; word-wrap:break-word; word-break:break-all; '>&ensp;"_ProtectiveMeasure_"</td>"
+					.w "</tr>"
+
+				</SCRIPT>
+				
+				<tr style='height:10pt;'></tr>
+				
+				<tr style='height:22.5pt;'>
+  					<td colspan=6 class='Base InfoTitle'>二、既往史</td>
+  					<td colspan=21></td>
+ 				</tr>
+				<tr style='height:45pt;'>
+  					<td colspan=27 class='Base' style="white-space:normal; word-wrap:break-word; word-break:break-all; border:.5pt solid black;">&ensp;#($p(DiseaseHistory,"^",1))#</td>
+ 				</tr>
+ 				
+				<tr style='height:10pt;'></tr>
+ 
+				<tr style='height:22.5pt;'><td colspan=27 class='Base InfoTitle'>三、急慢性职业病史</td></tr>
+				<tr style='height:22.5pt;'>
+					<td colspan=15 class='Base TopB LeftB'>&ensp;病&ensp;&ensp;&ensp;&ensp;名：#($p(OccuDiseaseHistory,"^",1))#</td>
+  					<td colspan=12 class='Base TopB RightB'>&ensp;诊断日期：#($p(OccuDiseaseHistory,"^",2))#</td>
+  				</tr>
+				<tr style='height:22.5pt;'>
+					<td colspan=27 class='Base LeftB RightB'>&ensp;诊断单位：#($p(OccuDiseaseHistory,"^",3))#</td>
+				</tr>
+				<tr style='height:22.5pt;'>
+  					<td colspan=15 class='Base BottomB LeftB'>&ensp;治疗过程：#($p(OccuDiseaseHistory,"^",4))#</td>
+  					<td colspan=12 class='Base RightB BottomB'>&ensp;归&ensp;&ensp;&ensp;&ensp;转：#($p(OccuDiseaseHistory,"^",5))#</td>
+  				</tr>
+  				
+  				<tr style='height:10pt;'></tr>
+ 
+				<tr style='height:22.5pt;'><td colspan=27 class='Base InfoTitle'>四、月经史</td></tr>
+  				<tr style='height:22.5pt;'>
+  					<td class='TopB LeftB'></td>
+	  				<td colspan=3 class='Base InfoTextRight TopB'>初潮：</td>
+	  				<td colspan=2 class='Base InfoValue TopB'>#($p(DiseaseHistory,"^",14))#</td>
+	  				<td class='Base TopB'>岁</td>
+	  				<td colspan=2 class='Base TopB'></td>
+	  				<td colspan=3 class='Base InfoValue TopB'>经期：（</td>
+	  				<td colspan=2 class='Base InfoValue TopB'>#($p(DiseaseHistory,"^",15))#</td>
+	  				<td colspan=2 class='Base InfoValue TopB'>）天</td>
+	  				<td colspan=2 class='Base TopB'></td>
+	  				<td colspan=3 class='Base InfoTextRight TopB'>停经年龄：</td>
+	  				<td colspan=2 class='Base InfoValue TopB'>#($p(DiseaseHistory,"^",17))#</td>
+	  				<td class='Base TopB'>岁</td>
+	  				<td colspan=3 class='Base TopB RightB'></td>
+  				</tr>
+				<tr style='height:22.5pt;'>
+  					<td class='BottomB LeftB'></td>
+	  				<td colspan=3 class='Base BottomB'></td>
+	  				<td colspan=2 class='Base BottomB'></td>
+	  				<td class='Base BottomB'></td>
+	  				<td colspan=2 class='Base BottomB'></td>
+	  				<td colspan=3 class='Base InfoValue BottomB'>周期：（</td>
+	  				<td colspan=2 class='Base InfoValue BottomB'>#($p(DiseaseHistory,"^",16))#</td>
+	  				<td colspan=2 class='Base BottomB' align="center">）天</td>
+	  				<td colspan=2 class='Base BottomB'></td>
+	  				<td colspan=3 class='Base BottomB'></td>
+	  				<td colspan=2 class='Base BottomB'></td>
+	  				<td class='Base BottomB'></td>
+	  				<td colspan=3 class='Base RightB BottomB'></td>
+  				</tr>
+  				
+  				<tr style='height:10pt;'></tr>
+ 
+				<tr style='height:22.5pt;'><td colspan=27 class='Base InfoTitle'>五、生育史</td></tr>
+				<tr style='height:27pt;'>
+					<td colspan=27 class='Base TopB RightB BottomB LeftB'>&ensp;现有子女&ensp;&ensp;#($p(DiseaseHistory,"^",3))#&ensp;&ensp;人，流产&ensp;&ensp;#($p(DiseaseHistory,"^",4))#&ensp;&ensp;次，早产&ensp;&ensp;#($p(DiseaseHistory,"^",5))#&ensp;&ensp;次，死产&ensp;&ensp;#($p(DiseaseHistory,"^",6))#&ensp;&ensp;次，异常胎&ensp;&ensp;#($p(DiseaseHistory,"^",7))#&ensp;&ensp;次。</td>
+				
+					<!--td colspan=3 class='Base InfoTextRight TopB BottomB LeftB'>&ensp;现有子女</td>
+					<td colspan=2 class='Base InfoText TopB BottomB'>#($p(DiseaseHistory,"^",3))#</td>
+					<td colspan=3 class='Base InfoText TopB BottomB'>人，流产</td>
+					<td colspan=2 class='Base InfoValue TopB BottomB'>#($p(DiseaseHistory,"^",4))#</td>
+					<td colspan=3 class='Base InfoText TopB BottomB'>次，早产</td>
+					<td colspan=2 class='Base InfoValue TopB BottomB'>#($p(DiseaseHistory,"^",5))#</td>
+					<td colspan=3 class='Base InfoText TopB BottomB'>次，死产</td>
+					<td colspan=2 class='Base InfoValue TopB BottomB'>#($p(DiseaseHistory,"^",6))#</td>
+					<td colspan=3 class='Base InfoText TopB BottomB'>次，异常胎</td>
+					<td colspan=2 class='Base InfoValue TopB BottomB'>#($p(DiseaseHistory,"^",7))#</td>
+					<td colspan=2 class='Base InfoText TopB BottomB RightB'>次。</td-->
+				</tr>
+				
+				<tr style='height:10pt;'></tr>
+				
+				<tr style='height:22.5pt;'><td colspan=27 class='Base InfoTitle'>六、烟酒史</td></tr>
+				<tr style='height:22.5pt;'>
+					<td class="TopB LeftB"></td>
+					<td colspan=4 class='Base TopB'>不吸烟&ensp;#(BXY1)#</td>
+					<td colspan=4 class='Base TopB'>偶尔吸&ensp;#(OXY1)#</td>
+					<td colspan=4 class='Base TopB'>经常吸&ensp;#(JCX1)#</td>
+					<td class='Base InfoTextRight TopB'>（</td>
+					<td colspan=2 class='Base TopB' align='center'>#($p(DiseaseHistory,"^",9))#</td>
+					<td colspan=4 class='Base TopB'>）包/天、共（</td>
+					<td colspan=2 class='Base TopB' align='center'>#($p(DiseaseHistory,"^",10))#</td>
+					<td colspan=2 class='Base TopB'>）年；</td>
+					<td colspan=3 class='TopB RightB'></td>
+				</tr>
+				<tr style='height:22.5pt;'>
+					<td class="LeftB"></td>
+					<td colspan=4 class='Base'>不饮酒&ensp;#(BYJ1)#</td>
+					<td colspan=4 class='Base'>偶尔饮&ensp;#(OYJ1)#</td>
+					<td colspan=4 class='Base'>经常饮&ensp;#(JCY1)#</td>
+					<td class='Base InfoTextRight'>（</td>
+					<td colspan=2 class='Base' align='center'>#($p(DiseaseHistory,"^",12))#</td>
+					<td colspan=4 class='Base'>）ml/日、共（</td>
+					<td colspan=2 class='Base' align='center'>#($p(DiseaseHistory,"^",13))#</td>
+					<td colspan=2 class='Base'>）年；</td>
+					<td colspan=3 class='RightB'></td>
+				</tr>
+				<tr style='height:20pt;'>
+					<td colspan=2 class="BottomB LeftB"></td>
+					<td colspan=25 class='Base RightB BottomB'>（在适合你的项目□内划√）</td>
+				</tr>
+				
+				<tr style='height:10pt;'></tr>
+
+				<tr style='height:22.5pt;'><td colspan=27 class='Base InfoTitle'>七、婚姻史</td></tr>
+				<tr style='height:22.5pt;'>
+  					<td colspan=4 class='Base InfoTextRight TopB LeftB'>结婚日期：</td>
+  					<td colspan=4 class='Base TopB'>#($p(DiseaseHistory,"^",18))#</td>
+					<td colspan=9 class='Base InfoTextRight TopB'>配偶接触相关危险因素情况：</td>
+  					<td colspan=10 class='Base TopB RightB'>#($p(DiseaseHistory,"^",20))#</td>
+  				</tr>
+				<tr style='height:22.5pt;'>
+  					<td colspan=7 class='Base InfoTextRight BottomB LeftB'>&ensp;&ensp;配偶职业及健康状况：</td>
+  					<td colspan=20 class='Base RightB BottomB'>#($p(DiseaseHistory,"^",19))#</td>
+  				</tr>
+				
+				<tr style='height:10pt;'></tr>
+
+				<tr style='height:22.5pt;'><td colspan=27 class='Base InfoTitle'>八、其他</td></tr>
+				<tr style='height:120pt;'>
+  					<td colspan=27 class='Base' style="border:.5pt solid black;">&ensp;</td>
+ 				</tr>
+				
+ 				<tr style='height:10pt;'></tr>
+ 			</table>
+ 			<!-- 职业体检相关信息 End -->
+ 			
+			<!-- 症状 Start -->
+			<table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;PAGE-BREAK-AFTER: always ;'>
+				<tr style='height:5pt;'>
+					<td colspan=20 style='border-width: 0pt;'></td>
+				</tr>
+				
+				<tr style='height:22pt;'><td colspan=20 class='Base InfoTitle'>九、症状</td></tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBase'>项&ensp;&ensp;&ensp;目</td>
+					<td colspan=5 class='Base InfoBase'></td>
+					<td colspan=5 class='Base InfoBase'>项&ensp;&ensp;&ensp;目</td>
+					<td colspan=5 class='Base InfoBase'></td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;1、头痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;35、气短</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;2、头（晕）昏</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;36、胸闷</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;3、眩晕</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;37、胸痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;4、失眠</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;38、咳嗽</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;5、嗜睡</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;39、咳痰</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;6、多梦</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;40、咯血</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;7、记忆力衰退</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;41、哮喘</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;8、易激动</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;42、心悸</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;9、缺乏无力</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;43、心前区不适</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;10、低热</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;44、食欲减退</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;11、盗汗</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;45、消瘦</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;12、多汗</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;46、恶心</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;13、全身酸痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;47、呕吐</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;14、性欲减退</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;48、腹胀</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;15、视物模糊</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;49、腹痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;16、视力下降</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;50、肝区痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;17、眼痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;51、腹泻</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;18、羞明</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;52、便秘</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;19、流泪</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;53、尿频</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;20、嗅觉减退</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;54、尿急</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;21、鼻干</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;55、尿血</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;22、鼻堵</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;56、皮下出血</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;23、流鼻血</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;57、皮肤瘙痒</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;24、流涕</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;58、皮疹</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;25、耳鸣</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;59、浮肿</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;26、耳鸣</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;60、脱发</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;27、口渴</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;61、关节痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;28、流</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;62、四肢关节</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;29、牙痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;63、动作不灵活</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;30、牙齿松动</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;64、月经异常</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+ 				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;31、刷牙出血</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;65、</td>
+					<td colspan=5 class='Base InfoBase'>　</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;32、口腔异味</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;66、</td>
+					<td colspan=5 class='Base InfoBase'>　</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;33、口腔溃疡</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;67、</td>
+					<td colspan=5 class='Base InfoBase'>　</td>
+				</tr>
+				<tr style='height:19pt;'>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;34、咽痛</td>
+					<td colspan=5 class='Base InfoBase'>-</td>
+					<td colspan=5 class='Base InfoBaseLeft'>&ensp;医生签字</td>
+					<td colspan=5 class='Base InfoBase'>　</td>
+				</tr>
+				<tr style='height:20pt;'>
+					<td colspan=20 class='Base'><p style="text-align: left">*有上述症状用“+”，无症状用“-”</td>
+				</tr>
+			</table>
+			<!-- 症状 End -->
+			
+			<!-- 体征1 Start -->
+			<!-- <table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;PAGE-BREAK-AFTER: always ;'>
+				<tr style='height:22.5pt;'><td colspan=20 class='Base InfoTitle'>十、体征</td></tr>
+				
+				<tr style='height:37.5pt;'>
+					<td colspan=5 class='Base ResultBase'>项&ensp;&ensp;&ensp;&ensp;目</td>
+					<td colspan=6 class='Base ResultBase'>检查结果</td>
+					<td colspan=5 class='Base ResultBase'>检查医师<br>（盖章）</td>
+					<td colspan=4 class='Base ResultBase'>备注</td>
+				</tr>
+				
+				<tr style='height:35pt;'>
+					<td colspan=2 rowspan=3 class='Base ResultBase'>一<br><br>般<br><br>情<br><br>况</td>
+					<td colspan=3 class='Base ResultBase' style='height:35pt;'>一般情况</td>
+					<td colspan=6 name='ItemResult' id='010006' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",1))#</td>
+					<td colspan=5 rowspan=3 name='ItemCheckDoc' id='' class='Base ResultValue' style='width:120pt'>#($p(PTData,"^",6))#</td>
+					<td colspan=4 rowspan=3 class='Base ResultValueLeft' style='width:97pt'>&ensp;</td>
+				</tr>
+				<tr style='height:35pt;'>
+					<td colspan=3 class='Base ResultBase'>脉率</td>
+					<td name='ItemResult' id='010008' colspan=4 class='Base ResultValueLeft ResultValueBorder3' style='width:96pt'>&ensp;#($p(PTData,"^",2))#</td>
+					<td colspan=2 class='Base ResultValueBorder2'>次/分</td>
+				</tr>
+				<tr style='height:35pt;'>
+					<td colspan=3 class='Base ResultBase'>血压</td>
+					<td colspan=2 name='ItemResult' id='010001' class='Base ResultValueLeft ResultValueBorder2' style='width:48pt'>&ensp;#($p(PTData,"^",3))#</td>
+					<td class='Base ResultValueBorder2'>/</td>
+					<td name='ItemResult' id='010002' class='Base ResultValueLeft ResultValueBorder2' style='width:48pt;'>#($p(PTData,"^",4))#</td>
+					<td colspan=2 class='Base ResultValueBorder2'>&ensp;mmHg</td>
+				</tr>
+				
+				<tr style='height:35pt;'>
+					<td colspan=2 rowspan=10 class='Base ResultBase'>五<br><br><br><br><br><br><br>官</td>
+					<td rowspan=2 class='Base ResultBase' style='width:24pt'>视力</td>
+					<td colspan=2 class='Base ResultBase'>裸视力</td>
+					<td class='Base ResultBase ResultValueBorder2'>L</td>
+					<td colspan=2 name='ItemResult' id='' class='Base ResultValueLeft ResultValueBorder2'>&ensp;#($p(PTData,"^",7))#</td>
+					<td class='Base ResultBase ResultValueBorder2'>R</td>
+					<td colspan=2 name='ItemResult' id='' class='Base ResultValueLeft ResultValueBorder2'>&ensp;#($p(PTData,"^",8))#</td>
+					<td colspan=5 name='ItemCheckDoc' id='' rowspan=10 class='Base ResultValue' style='width:120pt'>#($p(PTData,"^",19))#</td>
+					<td colspan=4 rowspan=10 class='Base ResultValueLeft' style='width:97pt'>&ensp;</td>
+				</tr>
+				<tr style='height:35pt;'>
+					<td colspan=2 class='Base ResultBase'>矫正</td>
+					<td class='Base ResultBase ResultValueBorder2'>L</td>
+					<td colspan=2 name='ItemResult' id='' class='Base ResultValueLeft ResultValueBorder2' height="45">&ensp;#($p(PTData,"^",9))#</td>
+					<td class='Base ResultBase ResultValueBorder2'>R</td>
+					<td colspan=2 name='ItemResult' id='' class='Base ResultValueLeft ResultValueBorder2' height="45">&ensp;#($p(PTData,"^",10))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>晶体</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",11))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>眼底</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",12))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>外耳</td>
+					<td name='ItemResult' id='' colspan=6 class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",13))#</td>
+  
+				</tr>
+				<tr style='height:35pt;'>
+					<td rowspan=2 class='Base ResultBase' style='width:24pt'>听力</td>
+					<td colspan=2 class='Base ResultBase ResultValueBorder2'>左</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft ResultValueBorder2' style='width:144pt'>&ensp;#($p(PTData,"^",14))#</td>
+				</tr>
+				<tr style='height:35pt;'>
+					<td colspan=2 class='Base ResultBase ResultValueBorder2'>右</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft ResultValueBorder2' style='width:144pt'>&ensp;#($p(PTData,"^",15))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>鼻</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",16))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>口腔</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",17))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>咽喉</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",18))#</td>
+				</tr>
+				
+				<tr style='height:45pt;'>
+					<td colspan=2 rowspan=4 class='Base ResultBase'>内<br><br><br>科</td>
+					<td colspan=3 class='Base ResultBase'>心脏</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",20))#</td>
+					<td name='ItemCheckDoc' id='' colspan=5 rowspan=4 class='Base ResultValue' style='width:120pt'>#($p(PTData,"^",24))#</td>
+					<td colspan=4 rowspan=4 class='Base ResultValueLeft' style='width:97pt'>&ensp;</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>肺</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",21))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>肝</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",22))#</td>
+				</tr>
+				<tr style='height:45pt;'>
+					<td colspan=3 class='Base ResultBase'>脾</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",23))#</td>
+				</tr>
+			</table>-->
+			<!-- 体征1 End -->
+			
+			<!-- 体征2 Start -->
+			<!--<table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;PAGE-BREAK-AFTER: always;'>
+				<tr style='height:0pt'></tr>
+ 
+				<tr style='height:37.5pt;'>
+					<td colspan=5 class='Base ResultBase'>项&ensp;&ensp;&ensp;&ensp;目</td>
+					<td colspan=6 class='Base ResultBase'>检查结果</td>
+					<td colspan=5 class='Base ResultBase'>检查医师<br>（盖章）</td>
+					<td colspan=4 class='Base ResultBase'>备注</td>
+				</tr>
+
+				<tr style='height:39pt;'>
+					<td colspan=2 rowspan=3 class='Base ResultBase'>外<br><br>科</td>
+					<td colspan=3 class='Base ResultBase'>甲状腺</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",25))#</td>
+					<td colspan=5 rowspan=3 name='ItemCheckDoc' id='' class='Base ResultValue'>#($p(PTData,"^",28))#</td>
+					<td colspan=4 rowspan=3 class='Base ResultValueLeft'>&ensp;</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>浅表淋巴结</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",26))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3  class='Base ResultBase'>皮肤黏膜</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",27))#</td>
+				</tr>
+				
+				<tr style='height:39pt;'>
+					<td colspan=2 rowspan=9 class='Base ResultBase'>神<br>经<br>系<br>统</td>
+					<td colspan=3 class='Base ResultBase'>皮肤划纹症</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",29))#</td>
+					<td colspan=5 rowspan=9 name='ItemCheckDoc' id='' class='Base ResultValue'>#($p(PTData,"^",38))#</td>
+					<td colspan=4 rowspan=9 class='Base ResultValueLeft'>&ensp;</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>膝反射</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",30))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>跟腱反射</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",31))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>肌力</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",32))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>肌张力</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",33))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>共济运动</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",34))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>感觉异常</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",35))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>三颤</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",36))#</td>
+				</tr>
+				<tr style='height:39pt;'>
+					<td colspan=3 class='Base ResultBase'>病理反射</td>
+					<td colspan=6 name='ItemResult' id='' class='Base ResultValueLeft' style='width:144pt'>&ensp;#($p(PTData,"^",37))#</td>
+				</tr>
+				
+				<tr style='height:37.5pt;'>
+					<td colspan=2 rowspan=6 class='Base ResultBase'>其<br><br><br>他</td>
+					<td colspan=3 class='Base ResultBase'>　</td>
+					<td colspan=6 class='Base ResultValueLeft'></td>
+					<td colspan=5 rowspan=6 class='Base ResultValue'></td>
+					<td colspan=4 rowspan=6 class='Base ResultValueLeft'></td>
+				</tr>
+				<tr style='height:37.5pt;'>
+					<td colspan=3 class='Base ResultBase'></td>
+					<td colspan=6 class='Base ResultValueLeft'></td>
+				</tr>
+				<tr style='height:37.5pt;'>
+					<td colspan=3 class='Base ResultBase'></td>
+					<td colspan=6 class='Base ResultValueLeft'></td>
+				</tr>
+				<tr style='height:37.5pt;'>
+					<td colspan=3 class='Base ResultBase'></td>
+					<td colspan=6 class='Base ResultValueLeft'></td>
+				</tr>
+				<tr style='height:37.5pt;'>
+					<td colspan=3 class='Base ResultBase'></td>
+					<td colspan=6 class='Base ResultValueLeft'></td>
+				</tr>
+				<tr style='height:37.5pt;'>
+					<td colspan=3 class='Base ResultBase'></td>
+					<td colspan=6 class='Base ResultValueLeft'></td>
+				</tr>
+			</table>-->
+			<!-- 体征2 End -->
+
+			<!--输出其它csp结果 Start-->
+			<DIV class='Page StationResult TableWidth' style="PAGE-BREAK-AFTER: always;">
+				<table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;'>
+					<tr style='height:22.5pt;'><td colspan=20 class='Base InfoTitle'>十、体检结果</td></tr>
+				</table>
+				<SCRIPT language="Cache" RUNAT="SERVER">
+					// 结果输出方式 SummarizeGather=将结果与小节一起输出
+					;Set UserID=%session.Get("LOGON.USERID")
+					;s:UserID="" UserID=PatientID
+					s HCode=HospitalCode
+					i HospitalCode'="" s HCode=HospitalCode_"."
+					s ReultOutType="SummarizeGather"
+					s NoReportStation="^"_$G(^DHCPESetting("DHCPE","NoReportStation"))_"^"
+					
+					//d $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.noresult","OnPageCSPROOT")	
+					
+					s CurData="aaa"
+
+					s ItemNum=0
+					;d:+$O(^TMPReport(UserID,"HistoryResult",""),-1)>1 $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.history","OnPageCSPROOT")
+					s sStationSequence=""
+					f  s sStationSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence)) q:sStationSequence=""  d
+					.s StationId=""
+					.f  s StationId=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId)) Q:(""=StationId)  d
+					..q:NoReportStation[("^"_StationId_"^")
+					..s sARCSequence=""
+					..f  s sARCSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence)) Q:(""=sARCSequence)  d
+					...s iiiLLoop=0
+					...f  s iiiLLoop=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop)) Q:(""=iiiLLoop)  d
+					....s ARCIM=$G(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop))
+					....s sArcimIdTemp=$p($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+					....s bFlagTemp=$G(^DHCPEDataEx("DHCPEStationOrder","Sign",sArcimIdTemp))
+					....q:ARCIM=""
+					....s CurData=$G(^TMPReport(UserID,"Result", "ARCIM", ARCIM))
+					....s ARCIMDesc=$P(CurData,"^",1)
+					....s Checker=$P(CurData,"^",2)
+					....s CheckDate=$P(CurData,"^",3)
+					....s ReportFormat=$P(CurData,"^",4)
+					....s AuditUser=$P(CurData,"^",5)
+					....;q:'$D(^TMPReport(UserID,"Result", "Content",ARCIM))
+					....q:('$D(^TMPReport(UserID,"Result", "Content",ARCIM)))&&('$D(^DHCPEDataEx("DHCPEPreIOrdItem","RefuseCheck",ARCIM)))
+					....s PAADM=+$g(^OEORD(+ARCIM))
+					....s HistoryContrastInfo="",tablecell=1  // 历次结果
+					....;i $d(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OI")) d
+					....;.s HistoryContrastInfo="1"
+					....;.s tablecell=$o(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OI",""),-1)	
+					....;q:"Y"'=##class(web.DHCPE.ReportGetInfor).IsSummaryItem(PAADM, sArcimIdTemp)	
+					....;q:"Y"'=##class(web.DHCPE.ReportGetInfor).IsSummaryItem(PAADM, sArcimIdTemp)
+					
+					
+					....s ImgSrc=""
+					....s ItemNum=ItemNum+1
+					....i StationId=8 d
+					.....d $zobjclassmethod("csp.csp.dhcpeireport.normal.result.fs.new","OnPageCSPROOT")
+					....e  d
+					.....d:(ReportFormat["LIS") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.lis.new","OnPageCSPROOT")
+					.....d:(ReportFormat["NOR") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.nor.new","OnPageCSPROOT")
+					.....d:(ReportFormat["RIS") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.ris.new","OnPageCSPROOT")
+					.....d:(ReportFormat["PIS") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.ris.new","OnPageCSPROOT")
+					.....d:(ReportFormat["CAT") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.cat.new","OnPageCSPROOT")
+					.....d:(ReportFormat["EKG") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.ekg.new","OnPageCSPROOT")
+					...;d $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"noraml.stationsummarize","OnPageCSPROOT")
+					//d $zobjclassmethod("csp.csp.dhcpeireport.printpacsimg.new","OnPageCSPROOT")
+					//d $zobjclassmethod("csp.csp.dhcpeireport.normal.showother.new","OnPageCSPROOT")
+				</SCRIPT>
+			</DIV>
+			<!-- 输出其它csp结果 End -->
+			
+			<!-- 体检结论 Start -->
+			<table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;PAGE-BREAK-AFTER: always;'>
+				
+				<tr style='height:20pt;'><td colspan=20 class='Base InfoTitle'>十一、体检结论</td></tr>
+				
+				<tr style='height:85pt;'><td colspan=20 class='Base GenTextLT'>#(MQWJYC)#</td></tr>
+ 
+				<tr style='height:85pt;'><td colspan=20 class='Base GenTextLT'>#(YSZYB)#</td></tr>
+ 
+				<tr style='height:85pt;'><td colspan=20 class='Base GenTextLT'>#(ZYJJZ)#</td></tr>
+ 
+				<tr style='height:85pt;'><td colspan=20 class='Base GenTextLT'>#(FC)#</td></tr>
+ 
+				<tr style='height:85pt;'><td colspan=20 class='Base GenTextLT'>#(QTJBHYC)#</td></tr>
+ 
+				<tr style='height:10pt;'><td></td></tr>
+ 
+				<tr style='height:35pt;'>
+					<td colspan=10>　</td>
+					<td id='GenDocName' name='BaseInfo' colspan=10 class='Base GenDocText'>报告医师签字：#(GenDocName)#</td>
+				</tr>
+ 
+				<tr style='height:40pt;'>
+					<td colspan=10>　</td>
+					<td id='GenDocName' name='BaseInfo' colspan=10 class='Base GenDocText'>体检单位：&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;（签章）</td>
+				</tr>
+ 
+				<tr style='height:140pt;'>
+					<td colspan=20>
+						<p>术语解释：</p>
+						<p style='text-indent:2em;'>1.目前未见异常--本次职业健康检查各项检查指标均在正常范围内。</p>
+						<p style='text-indent:2em;'>2.疑似职业病--检查发现疑似职业病或可能患有职业病，需要提交职业健康诊断机构进一步明确诊断者。</p>
+						<p style='text-indent:2em;'>3.职业禁忌症--检查发现有职业禁忌症的患者。</p>
+						<p style='text-indent:2em;'>4.复查--职业健康检查时发现于目标疾病有关的单项或多项异常，需要复查确定者。</p>
+						<p style='text-indent:2em;'>5.其他疾病或异常--除目标疾病之外的其他疾病或某些检查指标的异常。</p>
+						<p style='font-size:11.0pt;'>注:本报告中其他疾病或异常的疾病仅供提示或参考，不作为临床诊断依据。</p>
+						
+					</td>
+				</tr>
+			</table>
+			<!-- 体检结论 End -->
+			<!-- 注意事项 Start -->
+			<!--table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;'>
+				<tr style='height:32pt;'><td colspan=20 style="font-size:20.0pt;text-align:center;">《职业健康检查表》填写注意事项</td></tr>
+ 
+				<tr style='height:180pt;'>
+					<td colspan=20 style="line-height:18pt;font-size:11.5pt;font-family:宋体;">
+						一、体检职工根据表格要求认真填写体检表中的前4页，其他页由体检医师填写。<br>
+						二、第1页《封面》：请认真填写本人姓名、工作单位及电话，填表日期（即体检日期）、类别（即体检的类别、在这括号里打“√”选择）。<br>
+						三、第2页：请认真填写各信息项并加盖用人单位章，其中“毒害种类和名称”指工作环境中接触的有害因素。<br>
+						四、第3页：请如实填写：职业史。包括劳动者工工作起始时间、工作单位、车间、工种接触危害因素名称，防护措施（为工作环境中为防止职业危害而采取的预防措施）。既往病史为既往患病史、过敏史等。过去无“既往病史”者，该项填无，急慢性职业病史，个人生活史等。<br>
+						五、第4页：具有所列症状写“+”表示，不具有所列症状写“-”表示，不得空项。
+					</td>
+				</tr>
+				<tr style='height:80pt;'><td colspan=20 style="font-size:11.0pt;"></td></tr>
+
+				<tr style='height:32pt;'><td colspan=20 style="font-size:20.0pt;text-align:center;">职业健康检查注意事项</td></tr>
+ 
+				<tr style='height:180pt;'>
+					<td colspan=20 style="line-height:18pt;font-size:11.5pt;font-family:宋体;">
+						一&ensp;体检前严格按照要求填写《职业健康检查表》。请用正楷体字填写。<br>
+						二&ensp;体检当日需空腹（不吃饭、不饮水），体检前一日，避免饮酒和进食油腻食物。<br>
+						三&ensp;抽血后按压针眼5分钟以上，以免造成皮下淤血。<br>
+						四&ensp;在心电图及血压检查前应注意保持情绪稳定，避免劳累。<br>
+						五&ensp;女职工体检应尽量避免经期，如在经期请不要做尿常规检查，并将尿检化验单送还体检科并说明情况。我们将统一另行为您安排体检时间。如做超声或心电图检查，请避免身着一件式衣物。<br>
+						六&ensp;接触噪声职工在体检前最好脱离噪声环境24至48小时后再进行电测听检查。<br>
+						七&ensp;在接受高千伏胸片检查时请除去外衣及金属饰物。<br>
+						八&ensp;因体检人数较多，部分项目的工作人员可能对您提出的相关问题不能进行详细的解答，您如有疑问，可向体检科的工作人员进行垂询。敬请谅解。<br>
+						九&ensp;请务必在体检当天完成全部体检项目，完成后，请务必将《职业健康检查表》交还体检科，以免耽误您的体检结果汇总。<br>
+						十&ensp;体检结束后，我们会将体检结果及时反馈回贵单位，不接受个人对体检结果的查询，敬请谅解。
+					</td>
+				</tr>
+			</table-->
+			<!-- 注意事项 End -->
+
+		</div>
+	</body>
+	<SCRIPT language="javascript">
+	/*
+	var ObjArr=document.getElementsByName("ItemCheckDate"); //项目检查日期赋值 id为项目代码
+	if (ObjArr){
+		var CheckDateItem=""
+		var ArrLength=ObjArr.length;
+		for (var j=0;j<ArrLength;j++){
+			//ObjArr[j].innerText="检查日期";
+			if (CheckDateItem==""){
+				CheckDateItem=ObjArr[j].id;
+			}else{
+				CheckDateItem=CheckDateItem+"^"+ObjArr[j].id;
+			}
+		}
+		if (CheckDateItem!=""){
+			
+		}
+	}
+	var ObjArr=document.getElementsByName("ItemCheckDoc"); //项目检查医生赋值 id为项目代码
+	if (ObjArr){
+		var CheckDocItem="";
+		var ArrLength=ObjArr.length;
+		for (var j=0;j<ArrLength;j++){
+			//ObjArr[j].innerText="检查医生"
+			if (CheckDocItem==""){
+				CheckDocItem=ObjArr[j].id;
+			}else{
+				CheckDocItem=CheckDocItem+"^"+ObjArr[j].id;
+			}
+		}
+		if (CheckDateItem!=""){
+			
+		}
+	}
+	*/
+	/*
+	var ObjArr=document.getElementsByName("ItemResult"); //项目结果
+	if (ObjArr){
+		var ResultInfoStr="";
+		var ArrLength=ObjArr.length;
+		for (var j=0;j<ArrLength;j++){
+			var ElementID=ObjArr[j].id;
+			if (ElementID=="") continue
+			if (ResultInfoStr==""){
+				ResultInfoStr=ObjArr[j].id;
+			}else{
+				ResultInfoStr=ResultInfoStr+"^"+ObjArr[j].id;
+			}
+		}
+		var PAADM=#(PAADM)#
+		if (ResultInfoStr!=""){
+			var ResultStr=#server(web.DHCPE.ReportGetInfor.GetResults(PAADM,ResultInfoStr))#;
+			var ResultArr=ResultStr.split("^");
+			var ElementArr=ResultInfoStr.split("^");
+			var Length=ElementArr.length;
+			for (var i=0;i<Length;i++){
+				var ElementID=ElementArr[i];
+				var Result=ResultArr[i];
+				var obj=document.getElementById(ElementID);
+				if (obj) obj.innerText=Result;
+			}
+		}
+		
+	}
+	*/
+	
+	//危害因素自适应高度
+	//var obj=document.getElementById("HarmInfo");
+	//if (obj){
+	//	setTareaAutoHeight(obj);
+	//	obj.style.height = "500px";
+	//}
+	
+	//建议自适应高度
+	var obj=document.getElementById("GenAdvice");
+	if (obj){
+		setTareaAutoHeight(obj);
+		obj.style.height = "150px";
+	}
+	
+	function setTareaAutoHeight(e) {
+	    //e.style.height = e.scrollHeight + "px";
+		if (e.scrollHeight<32){
+			e.style.height=32+"px";
+		}else{
+			e.style.height = (e.scrollHeight+25) + "px";
+		}
+	}
+
+	</script>
+</html>

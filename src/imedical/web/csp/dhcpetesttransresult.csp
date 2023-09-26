@@ -1,0 +1,171 @@
+<!-- dhcpetesttransresult.csp -->
+
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8"-->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE></TITLE>
+
+</head>
+<BODY>
+
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	
+	
+		s OEID=$g(%request.Data("OEID",1))
+		w "系统医嘱ID:<b>"_OEID_"</b><br>",!
+		s LisNewVersion=$g(^DHCPESetting("DHCPE","LisNewVersion"))
+		s RisStation=$g(^DHCPESetting("DHCPE","StationId_Ris"))
+		s RisStation="^"_RisStation_"^"
+		s OldOrdItem=""
+        s CRMOrder=$o(^DHCPECRMO(0,"OEORI",OEID,0))
+		s PreItem=$p(^DHCPECRMO(CRMOrder),"^",2)
+		s PIBI=$P(^DHCPEPreIADM(+PreItem),"^",1)
+		s RegNo=$P(^DHCPEPreIBI(PIBI),"^",1)
+		
+		s namespaceLab="DATA_OLD" //^DHCPESetting("NAMESPACE","LABDATA")
+		S newId=PreItem
+		s OldPreItem=$g(^DHCPEDataExNew("PreItemIDNewToOld",PreItem))
+		i OldPreItem'=""{
+			s OldCRM=$o(^[namespaceLab]DHCPECRMO(0,"CRMORI",OldPreItem,0))
+			s:OldCRM'="" OldOrdItem=$p($g(^[namespaceLab]DHCPECRMO(OldCRM)),"^",1)
+		}
+		//w "旧系统医嘱ID:<b>"_OldOrdItem_"</b><br>",!
+		w "登记号为:<b>"_RegNo_"</b><br>",!
+		
+		i '$D(^DHCPERLT(0,"OEORI",OEID)){
+			
+			s RealOEID=OEID
+			i $G(^DHCPEDataEx("TransResultItemRelate",OEID))'="" s RealOEID=$G(^DHCPEDataEx("TransResultItemRelate",OEID))
+	
+			
+			
+			s OEORD=+RealOEID
+			s COrderSub=$P(RealOEID,"||",2)
+			s ItemStat=$P($g(^OEORD(OEORD,"I",COrderSub,1)),"^",13)
+			i ItemStat'=6{
+				w:ItemStat="1" "项目没有接收标本或者没有检查登记，项目状态为核实，请在lis或者pacs系统确认",!
+				w:ItemStat="4" "项目已经停止，请确认！",!
+				q	
+			}
+			s TransResultFlag=##class(web.DHCPE.HISUICommon).GetSettingByLoc(%session.Get("LOGON.CTLOCID"),"TransResult")
+			s LabNo=$p($G(^OEORD(OEORD,"I",COrderSub,3)),"^",20)
+			i LabNo'=""{
+				w "化验项目:标本号为"_LabNo_"<br>",!
+				
+				i LisNewVersion'="Y"{
+					s ret=##class(web.DHCPE.TransResult).TransALabItem("",%session.Get("LOGON.USERID"),OEID)
+					i ret'="Over"{
+					w "lis接口返回信息："_ret_"<br>"
+					}
+				}elseif(TransResultFlag="PT"){
+					s ret=##class(web.DHCPE.TransResult).TransALabItemNewByPT("",%session.Get("LOGON.USERID"),OEID)
+					i ret'=""{
+					w "lis接口返回信息："_ret_"<br>"
+					}
+					
+					}
+				else{
+					s ret=##class(web.DHCPE.TransResult).TransALabItemNew("",%session.Get("LOGON.USERID"),OEID)
+					i ret'=""{
+					w "lis接口返回信息："_ret_"<br>"
+					}
+					}
+				
+				/*
+				s NewRet=##class(web.DHCPE.TransResult).TransALabItemNew("","",OEID,1)
+				i NewRet'=""{
+					w "新lis接口返回信息："_NewRet_"<br>"
+				}else{
+					i '$D(^DHCPERLT(0,"OEORI",OEID)){
+						s OldRet=##class(web.DHCPE.test).TransALabItem(OEID,1)
+						w:OldRet'="" "旧体检库获取检验结果返回:"_OldRet_"<br>"
+					}
+					w:'$D(^DHCPERLT(0,"OEORI",OEID)) "检验新旧库都没有取到结果，请联系检验工程师"
+				}
+				*/	
+			}else{
+				s ARCIMID=$P($G(^OEORD(OEORD,"I",COrderSub,1)),"^",2)
+				s StationId=$o(^DHCPEST(0,"STORD_ARCIM",ARCIMID,0))
+				w:StationId="" "体检站点为空，不接收结果<br>"
+				q:StationId=""
+				s RisStation=$g(^DHCPESetting("DHCPE","StationId_Ris"))
+				i '(RisStation[("^"_StationId_"^")) w "不是检查及检验类型的项目，不需要回传<br>"
+				s STORDChildSub=$O(^DHCPEST(0,"STORD_ARCIM",ARCIMID, StationId, 0))
+				//w STORDChildSub_"STORDChildSub"
+				Q:(""=STORDChildSub) 0
+				s ReportFormat=$P(^DHCPEST(StationId,"O",STORDChildSub),"^",4)
+				
+				
+				i (RisStation[("^"_StationId_"^")){
+					//w TransResultFlag_"TransResultFlag"
+					if (TransResultFlag="PT"){
+					s ret=##class(web.DHCPE.TransResult).TransARisItemByPT("",OEID, %session.Get("LOGON.USERID"))
+					i ret'=""{
+					w "检查接口返回信息："_ret_"<br>"
+					}
+					}
+					else{
+						s ret=##class(web.DHCPE.TransResult).TransARisItem("",OEID, %session.Get("LOGON.USERID"))
+						i ret'=""{
+						w "检查接口返回信息："_ret_"<br>"
+						}
+						
+						}
+					}
+				/*
+				w:ReportFormat["EKG" "心电结果，请联系心电工程师<br>"
+				i ReportFormat["PIS"{
+					s cLocDr=$P(^OEORD(+ordItmId,"I",$P(ordItmId,"||",2),3),"^",6)
+					zn "PIS"
+					s value=##class(Src.DPIS3OutInterface).GetPisDiagToTJ(OEID,cLocDr)  //新项目、新病理结果
+					zn "DHC-APP"
+					w:value="" "新医嘱："_OEID_"新病理系统没有获取到结果<br>"
+					i value=""{
+						
+						i OldOrdItem'=""{
+							zn "PIS"
+							s value=##class(Src.DPIS3OutInterface).GetPisDiagToTJ(OldOrdItem,cLocDr)  //新项目、新病理结果
+							zn "DHC-APP"
+							w:value="" "旧医嘱："_OldOrdItem_"新病理系统没有获取到结果<br>"
+							i value=""{
+								s obj=##class(web.DHCPE.Soap.MyServiceSoap).%New()
+								s value=obj.GetPisResult(OldOrdItem)
+								w:value="" "旧医嘱："_OldOrdItem_"旧病理系统没有获取到结果<br>"
+							}
+						}
+					}
+					d ##class(web.DHCPE.TransResult).TransAPISItem("",OEID,"")
+					w:'$D(^DHCPERLT(0,"OEORI",OEID)) "新旧病理都没有获取到结果，请联系病理工程师<br>"
+				}else{
+					s RisRet=##class(web.DHCPE.TransResult).TransARisItem("",OEID,"")
+					w:RisRet'="" RisRet_"<br>"
+					w:'$D(^DHCPERLT(0,"OEORI",OEID)) "检查系统没有获取到结果，请联系检查系统工程师<br>"
+				}
+				*/
+			}
+		}
+		w:'$D(^DHCPERLT(0,"OEORI",OEID)) "不存在结果<BR>"
+		q:'$D(^DHCPERLT(0,"OEORI",OEID))
+		w "已存在结果:<br>"
+		w:($d(^DHCPEDataEx("DocRecordResult",OEID))) "在体检系统保存的结果，如果需要获取接口的结果请到录入界面点取正常值<br>"
+		w "<table border=1 width=90%><tr><td width=40%>项目名称</td><td width=20%>结果</td><td>单位</td><td>参考范围</td><td>医生</td></tr>"
+		s RLT=0
+		f  s RLT=$O(^DHCPERLT(0,"OEORI",OEID,RLT)) q:RLT=""  d
+		.s ItemID=$P(^DHCPERLT(RLT),"^",3)
+		.s ODDesc=$P($g(^DHCPEST(+ItemID,"OD",$P(ItemID,"||",2))),"^",1)
+		.s Result=$P(^DHCPERLT(RLT),"^",4)
+		.s User=$P(^DHCPERLT(RLT),"^",5)
+		.s UserName=""
+		.s:User'="" UserName=$P($G(^SSU("SSUSR",User)),"^",2)
+		.s ODUnit=$G(^DHCPEDataEx("DHCPEResult",RLT,"Unit"))
+		.s Standard=$G(^DHCPEDataEx("DHCPEResult",RLT,"Ranges"))
+		.w "<tr><td>"_ODDesc_"</td><td>"_Result_"</td><td>"_ODUnit_"</td><td>"_Standard_"</td><td>"_User_" "_UserName_"</td></tr>"
+		w "</table>"
+		q
+		
+	</SCRIPT>
+
+</BODY>
+</html>
+

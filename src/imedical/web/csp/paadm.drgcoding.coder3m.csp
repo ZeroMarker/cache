@@ -1,0 +1,106 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<SERVER>
+  //This CSP file is needed to load 3M CodeFinder within the DRG Coding List
+  //The main purpose is to preserve extra codes info (such as Contract Flag, AdditionalCodeReq etc) 
+  //that are not supported by 3M Tag. Since the way we save codes is by deleting existing codes 
+  //and parse the 3M output tag, we must take care these extra info
+
+  n mradm,PatientID,EpisodeID,numrows,paadmtransid,procStr,diagStr
+  s (mradm,PatientID,EpisodeID,paadmtransid,procStr,diagStr)=""
+
+  s paadmtransid=$g(%request.Data("TRANSID",1))
+  s PatientID=$g(%request.Data("PatientID",1))
+  s EpisodeID=$g(%request.Data("EpisodeID",1))
+  s mradm=$g(%request.Data("mradm",1))
+  i 'mradm s (mradm,%request.Data("mradm",1))=##Class(web.PAAdm).GetMRAdm(EpisodeID)
+  i 'EpisodeID,mradm s (EpisodeID,%request.Data("EpisodeID",1)) = ##Class(web.MRAdm).GetEpisodeId(mradm)
+  i 'PatientID s (PatientID,%request.Data("PatientID",1)) = ##Class(web.PAAdm).GetPatientId(EpisodeID)
+  s numrows=$p(^CF("PATCF",1,11),"^",54)
+
+  //ID,PROCOperationDR,PROCOperationDRDesc,PROCOperationDRCode,PROCDRGRank,OPERMechVentilCode,OPERBlockNumber,PROCOperMappedDRCode,PROCProcDate,PROCContractFlag,ProcDateMandatory,AddProcCodeRqmt,SexRestrict
+  n rs,counter
+  s rs=##Class(%Library.ResultSet).%New("web.MRProcedures:FindDRG")
+  d rs.Execute(mradm,paadmtransid,numrows)
+  f counter=1:1  {
+ 	q:'rs.Next()
+ 	s opid       =rs.Data("PROCOperationDR")
+ 	s rank       =rs.Data("PROCDRGRank")
+	s code       =rs.Data("PROCOperationDRCode")
+	s desc       =rs.Data("PROCOperationDRDesc")
+	s datemandat =rs.Data("ProcDateMandatory")
+	s blocknumber=rs.Data("OPERBlockNumber")
+	s addcode    =rs.Data("AddProcCodeRqmt")
+	s mappedcode =rs.Data("PROCOperMappedDRCode")
+	s mvccode    =rs.Data("OPERMechVentilCode")
+	s sexrest    =rs.Data("SexRestrict")
+	s date=##Class(websys.Conversions).DateLogicalToHtml(rs.Data("PROCProcDate"))
+	s contractflag=rs.Data("PROCContractFlag")
+ 	i contractflag'="" s contractflag=##Class(web.MRCContractFlag).GetIdFromCodeOrDescription(contractflag)
+	
+	s procStr = procStr_"PROCOperationDRz"_counter_"^"_opid_"||"
+	s procStr = procStr_"PROCDRGRankz"_counter_"^"_rank_"||"
+	s procStr = procStr_"PROCOperationDRCodez"_counter_"^"_code_"||"
+	s procStr = procStr_"PROCOperationDRDescz"_counter_"^"_desc_"||"
+	s procStr = procStr_"PROCProcDatez"_counter_"^"_date_"||"
+	s procStr = procStr_"PROCContractFlagz"_counter_"^"_contractflag_"||"
+	//s procStr = procStr_"AddProcCodeRqmtz"_counter_"^"_addcode_"||"
+	s procStr = procStr_"PROCOperMappedDRCodez"_counter_"^"_mappedcode_"||"
+	s procStr = procStr_"OPERMechVentilCodez"_counter_"^"_mvccode_"||"
+	s procStr = procStr_"ProcDateMandatoryz"_counter_"^"_datemandat_"||"
+	//s procStr = procStr_"SexRestrictz"_counter_"^"_sexrest_"||"
+	//s procStr = procStr_"OPERBlockNumberz"_counter_"^"_blocknumber_"||"
+  }
+  d rs.%Close()
+
+  //ID,MRDIAICDCodeDR,MRDIAICDCodeDRDesc,MRDIAICDCodeDRCode,MRDIADRGOrder,MRDIAICDCodeDRExt1,MRDIAICDCodeDRExt2,MRDIAICDCodeDRExt3,MRDIAPrefix,CodeExt1,CodeExt2,CodeExt3,MappedICD,MRContractFlag,ValidContractFlag,MRCancer,AddCodeRqmt,MRCIDExternalCause,MRCIDMorphologyCode,MRCIDInjuryPoisoningCode,codeinpair,MRCIDUnacceptablePDx,MRCIDCodingPractices,MRCIDValidMCodeExt
+  s rs=##Class(%Library.ResultSet).%New("web.MRDiagnos:FindDRG")
+  d rs.Execute(mradm,paadmtransid,numrows)
+  f counter=1:1  {
+ 	q:'rs.Next()
+ 	s diagid       =rs.Data("MRDIAICDCodeDR")
+ 	s order        =rs.Data("MRDIADRGOrder")
+	s code         =rs.Data("MRDIAICDCodeDRCode")
+	s desc         =rs.Data("MRDIAICDCodeDRDesc")
+	s prefix       =rs.Data("MRDIAPrefix")
+	s contractflag =rs.Data("MRContractFlag")
+ 	i contractflag'="" s contractflag=##Class(web.MRCContractFlag).GetIdFromCodeOrDescription(contractflag)
+	
+	s diagStr = diagStr_"MRDIAICDCodeDRz"_counter_"^"_diagid_"||"
+	s diagStr = diagStr_"MRDIADRGOrderz"_counter_"^"_order_"||"
+	s diagStr = diagStr_"MRDIAICDCodeDRCodez"_counter_"^"_code_"||"
+	s diagStr = diagStr_"MRDIAICDCodeDRDescz"_counter_"^"_desc_"||"
+	s diagStr = diagStr_"MRDIAPrefixz"_counter_"^"_prefix_"||"
+	s diagStr = diagStr_"MRContractFlagz"_counter_"^"_contractflag_"||"
+  }
+  d rs.%Close()
+
+  s %request.Data("ExtraProcInfo",1)=procStr
+  s %request.Data("ExtraDiagInfo",1)=diagStr
+
+  //must increment the item index, otherwise the workflow won't work
+  s TWKFLI = $g(%request.Data("TWKFLI",1))
+  i TWKFLI'="" s %request.Data("TWKFLI",1)=TWKFLI+1
+
+  s frm=##Class(websys.Component).OpenName("PAAdmCoding.Edit3MCoder")
+  i frm d frm.Show() d frm.%Close()
+
+</SERVER>
+
+</BODY>
+</HTML>

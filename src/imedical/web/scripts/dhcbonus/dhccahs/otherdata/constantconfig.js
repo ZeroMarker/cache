@@ -1,0 +1,1 @@
+var DATATYPEID = "2";///数据来源于表dataitemtypes

@@ -1,0 +1,41 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s userid= $Get(%request.Data("userdr",1))
+	s str=$Get(%request.Data("query",1))
+
+
+	;s startacctYear=$Get(%request.Data("startacctYear",1))
+	;s startacctMonth=$Get(%request.Data("startacctMonth",1))
+	;s endacctMonth=$Get(%request.Data("endacctMonth",1))
+	;s endacctYear=$Get(%request.Data("endacctYear",1))
+    
+	s AcctCashFlowItemID=$Get(%request.Data("AcctCashFlowItemID",1))
+	s CFDirection=$Get(%request.Data("CFDirection",1))
+	s isAccts=$Get(%request.Data("isAccts",1))
+	s acctbookid=$Get(%request.Data("acctbookid",1))
+	s startacctYearMonth=$Get(%request.Data("startacctYearMonth",1))
+    s endacctYearMonth=$Get(%request.Data("endacctYearMonth",1))
+
+    
+	i action = "list"  d
+	.w ##class(herp.acct.udata.uAcctCashFlow).List(sortField,sortDir,start,limit,startacctYearMonth,endacctYearMonth,AcctCashFlowItemID,CFDirection,isAccts,acctbookid)
+
+	i action="getcashflow" d
+	.w ##class(herp.acct.udata.uAcctCashFlow).getCashFlow(start,limit,str,acctbookid)
+ 
+     i action="GetAcctCurYearMonth"  d
+     .s result= ##class(herp.acct.udata.uAcctCashFlow).GetAcctCurYearMonth(acctbookid)
+      .i result '= "" d
+  	  ..w "{success:'true',info:'"_result_"'}"
+
+</script>

@@ -1,0 +1,310 @@
+<!-- 
+ * FileName: dhcbill.ipbill.reg.csp
+ * Anchor: ZhYW
+ * Date: 2019-03-26
+ * Description: 住院登记
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.ipbill.reg.css'/>
+	<script type='text/javascript' src='../scripts/dhcbill/plugin/xml2json/xml2json.min.js'></script>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script type='text/javascript' src='../scripts/DHCWeb.COMMHardManager.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPM_DOMComm.js'></script>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCOPAdm.Common.js'></script>
+	<script type='text/javascript' src='../scripts/DHCInsuPort.js'></script>
+	<script type='text/javascript' src='../scripts/nurse/nis/config/index.js'></script>
+	<script type='text/javascript' src='../scripts/nurse/nis/NursePrintComm/BedPrint.js'></script>
+	<server>
+		set groupId=$g(%session.Data("LOGON.GROUPID"))
+		set hospId=$g(%session.Data("LOGON.HOSPID"))
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		do ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+		set patUIDefXMLStr=##class(web.DHCBL.UDHCUIDefConfig).ReadCardPatUIDef("", "", "", "", .defaultObj)
+		w "<input id='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",!
+		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",!
+		w "<input id='PAPersonEntityEncrypt' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("BILL.IP.DTO.Entity.Reg.PAPerson")_"'>",!
+		w "<input id='PAPersonExpEntityEncrypt' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("BILL.IP.DTO.Entity.Reg.PAPersonExp")_"'>",!
+		w "<input id='PAAdmEntityEncrypt' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("BILL.IP.DTO.Entity.Reg.PAAdm")_"'>",!
+		w "<input id='PatientID' type='hidden'>",!
+		w "<input id='EpisodeID' type='hidden'>",!
+		w "<input id='IPBookID' type='hidden'>",!
+		w "<input id='BirthTime' type='hidden'>",!
+		w "<input id='SocialStatus' type='hidden'>",!
+		w "<input id='PhotoInfo' type='hidden'>",!
+		w "<input id='DiagnosType' type='hidden' value='"_##class(web.DHCIPBillReg).GetRegDiagTypeId()_"'>",!
+		set showInsuFlag=##class(web.DHCBillPageConf).GetPageConfValue("dhcbill.ipbill.reg.csp", "SHOWINSU", groupId, hospId)
+		set showInsuFlag=$case(showInsuFlag,0:0,:1)   //未配置默认为显示
+		set DOMSEQAry=##class(web.DHCBillPageConf).GetPageConfValue("dhcbill.ipbill.reg.csp", "DOMSEQ", groupId, hospId)
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		PatUIDefXMLStr: """_patUIDefXMLStr_""",",!
+		w "		PatientNo: """_%request.Get("PatientNo")_""",",!
+		w "		CardNo: """_%request.Get("CardNo")_""",",!
+		w "		IPBookID: """_%request.Get("IPBookID")_""",",!
+		w "		Conf: {",!
+		w "			DOMSEQAry: "_$s((DOMSEQAry'=""):DOMSEQAry,1:"[]"),!
+		w " 	}",!
+		w " };",!
+		w "</script>"
+	</server>
+</head>
+
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="height:66px;border-bottom:1px solid #ccc;padding:0 10px;overflow:hidden;">
+		<a href="javascript:;" class="hisui-linkbutton big" id="Btn-ReadCard" data-options="iconCls:'icon-big-read-card',plain:true">读卡</a>
+		<a href="javascript:;" class="hisui-linkbutton big" id="Btn-ReadIDCard" data-options="iconCls:'icon-big-idcard',plain:true">读身份证</a>
+		<a href="javascript:;" class="hisui-linkbutton big" id="Btn-Find" data-options="iconCls:'icon-big-search-pat',plain:true">查询</a>
+		<a href="javascript:;" class="hisui-linkbutton big" id="Btn-AddDeposit" data-options="iconCls:'icon-big-paid',plain:true">交押金(F10)</a>
+		<a href="javascript:;" class="hisui-linkbutton big" id="Btn-SearchUpdateLog" data-options="iconCls:'icon-big-paper-search',plain:true">信息修改查询</a></td>
+		<div class="datagrid-btn-separator big"></div>
+		<a href="javascript:;" class="hisui-linkbutton big" id="Btn-Clear" data-options="iconCls:'icon-big-clear',plain:true">清屏(F7)</a>
+	</div>
+	<csp:if condition='DOMSEQAry=""'>
+		<div class="window-mask alldom" style="width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;"></div>
+	</csp:if>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" class="main-panel" style="height:570px;">
+			    <div class="hisui-panel" id="PatInfo-Panel" data-options="title:'患者基本信息',headerCls:'panel-header-gray',iconCls:'icon-base-info',tools:'#PatInfo-Panel-Tools'">
+		    		<table class="search-table" style="width:100%;">
+		    			<tr>
+							<td class="r-label"><label for="PatientNo">登记号</label></td>
+							<td><input id="PatientNo" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="MedicareNo">病案号</label></td>
+							<td><input id="MedicareNo" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="CardNo">卡号</label></td>
+							<td><input id="CardNo" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="CardType">卡类型</label></td>
+							<td><input id="CardType" class="textbox"/></td>
+							<td class="r-label"><label for="Age">年龄</label></td>
+							<td><input id="Age" type="text" class="textbox"/></td>
+							<td class="r-label" rowspan="3">
+								<img id="ImgPic" src="../images/uiimages/patdefault.png" style="width:100px;height:110px;">
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label td-required-first-col"><label for="Name">患者姓名</label></td>
+							<td><input id="Name" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="Sex">性别</label></td>
+							<td><input id="Sex" class="textbox"/></td>
+							<td class="r-label"><label for="Nation">民族</label></td>
+							<td><input id="Nation" class="textbox"/></td>
+							<td class="r-label"><label for="BirthDate">出生日期</label></td>
+							<td><input id="BirthDate" type="text" class="textbox"/></td>
+							<td class="r-label"><label>新生儿年龄</label></td>
+							<td><input id="BabyAgeDate" class="hisui-numberbox textbox" data-options="isKeyupChange:true" style="width:34px;"/><label for="BabyAgeDate" style="padding:0 2px;">天</label><input id="BabyAgeHour" class="hisui-numberbox textbox" data-options="isKeyupChange:true" style="width:34px;"/><label for="BabyAgeHour" style="padding:0 2px;">时</label><input id="BabyAgeMinute" class="hisui-numberbox textbox" data-options="isKeyupChange:true" style="width:34px;"/><label for="BabyAgeMinute" style="padding-left:2px;">分</label></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label for="Marital">婚姻状况</label></td>
+							<td><input id="Marital" class="textbox"/></td>
+							<td class="r-label"><label for="IDNo">身份证号</label></td>
+							<td><input id="IDNo" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="CredType">证件类型</label></td>
+							<td><input id="CredType" class="textbox"/></td>
+							<td class="r-label"><label for="CredNo">证件号码</label></td>
+							<td><input id="CredNo" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="Country">国籍/地区</label></td>
+							<td><input id="Country" class="textbox"/></td>
+						</tr>
+						<tr class="#($s((showInsuFlag=1):"display-more-tr",1:"table-row"))#">
+							<td class="r-label"><label for="HomeProv">省(籍贯)</label></td>
+							<td><input id="HomeProv" class="textbox"/></td>
+							<td class="r-label"><label for="HomeCity">市(籍贯)</label></td>
+							<td><input id="HomeCity" class="textbox"/></td>
+							<td class="r-label"><label for="HomeTel">联系电话</label></td>
+							<td><input id="HomeTel" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="MobPhone">手机</label></td>
+							<td><input id="MobPhone" class="hisui-numberbox textbox"/></td>
+							<td class="r-label"><label for="Occupation">职业</label></td>
+							<td><input id="Occupation" class="textbox"/></td>
+						</tr>
+						<tr class="#($s((showInsuFlag=1):"display-more-tr",1:"table-row"))#">
+							<td class="r-label"><label for="Province">省(现住)</label></td>
+							<td><input id="Province" class="textbox"/></td>
+							<td class="r-label"><label for="City">市(现住)</label></td>
+							<td><input id="City" class="textbox"/></td>
+							<td class="r-label"><label for="CityArea">县(现住)</label></td>
+							<td><input id="CityArea" class="textbox"/></td>
+							<td class="r-label"><label for="Address">地址(现住)</label></td>
+							<td><input id="Address" class="textbox"/></td>
+							<td class="r-label"><label for="PostCode">邮编(现住)</label></td>
+							<td><input id="PostCode" class="hisui-numberbox textbox"/></td>
+						</tr>
+						<tr class="#($s((showInsuFlag=1):"display-more-tr",1:"table-row"))#">
+							<td class="r-label"><label for="BirthProv">省(出生)</label></td>
+							<td><input id="BirthProv" class="textbox"/></td>
+							<td class="r-label"><label for="BirthCity">市(出生)</label></td>
+							<td><input id="BirthCity" class="textbox"/></td>
+							<td class="r-label"><label for="BirthArea">县(出生)</label></td>
+							<td><input id="BirthArea" class="textbox"/></td>
+							<td class="r-label"><label for="BirthAddress">地址(出生)</label></td>
+							<td><input id="BirthAddress" class="textbox"/></td>
+							<td class="r-label"><label for="CompanyPostCode">邮编(工作)</label></td>
+							<td><input id="CompanyPostCode" class="hisui-numberbox textbox"/></td>
+						</tr>
+						<tr class="#($s((showInsuFlag=1):"display-more-tr",1:"table-row"))#">
+							<td class="r-label"><label for="HouseProv">省(户口)</label></td>
+							<td><input id="HouseProv" class="textbox"/></td>
+							<td class="r-label"><label for="HouseCity">市(户口)</label></td>
+							<td><input id="HouseCity" class="textbox"/></td>
+							<td class="r-label"><label for="HouseArea">县(户口)</label></td>
+							<td><input id="HouseArea" class="textbox"/></td>					
+							<td class="r-label"><label for="HouseAddress">地址(户口)</label></td>
+							<td><input id="HouseAddress" class="textbox"/></td>
+							<td class="r-label"><label for="HousePostCode">邮编(户口)</label></td>
+							<td><input id="HousePostCode" class="hisui-numberbox textbox"/></td>
+						</tr>
+						<tr class="display-more-tr">
+							<td class="r-label"><label for="Company">工作单位</label></td>
+							<td><input id="Company" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="WorkTel">办公电话</label></td>
+							<td><input id="WorkTel" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="HealthCareProvider">公费单位</label></td>
+							<td><input id="HealthCareProvider" class="textbox"/></td>
+							<td class="r-label"><label for="HealthCareCardNo">公费证号</label></td>
+							<td><input id="HealthCareCardNo" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="HealthFundNo">医保手册号</label></td>
+							<td><input id="HealthFundNo" type="text" class="textbox"/></td>
+						</tr>
+						<tr class="display-more-tr">
+							<td class="r-label"><label for="ForeignName">联系人</label></td>
+							<td><input id="ForeignName" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="Relation">与患者关系</label></td>
+							<td><input id="Relation" class="textbox"/></td>
+							<td class="r-label"><label for="ForeignPhone">联系人电话</label></td>
+							<td><input id="ForeignPhone" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="ForeignCredType">联系人证件类型</label></td>
+							<td><input id="ForeignCredType" class="textbox"/></td>
+							<td class="r-label"><label for="ForeignCredNo">联系人证件号</label></td>
+							<td><input id="ForeignCredNo" type="text" class="textbox"/></td>
+						</tr>
+						<tr class="display-more-tr">
+							<td class="r-label td-first-col"><label for="ForeignAddress">联系人地址</label></td>
+							<td><input id="ForeignAddress" type="text" class="textbox"/></td>
+							<td class="r-label"><label for="Remark">备注</label></td>
+							<td colspan="4"><input id="Remark" type="text" class="textbox" style="width:398px;"/></td>
+						</tr>
+		    		</table>
+		    	</div>
+		    	<div id="PatInfo-Panel-Tools">
+					<div id="More-container" class="menu-container">
+						<div class="spread-b-down"></div>
+						<div class="arrows-b-text">更多</div>
+					</div>
+				</div>
+		    	<div class="hisui-panel" id="AdmInfo-Panel" data-options="title:'患者就诊信息',headerCls:'panel-header-gray',iconCls:'icon-pat-info'">
+		    		<table class="search-table" style="width:100%;">
+		    			<tr>
+							<td class="r-label td-second-col"><label for="AdmList">就诊记录</label></td>
+							<td><input id="AdmList" class="textbox tb125"/></td>
+							<td class="r-label"><label for="AdmReason">就诊费别</label></td>
+							<td><input id="AdmReason" class="textbox tb125"/></td>
+							<td class="r-label"><label for="VisitStatus">在院状态</label></td>
+							<td><input id="VisitStatus" class="textbox tb125"/></td>
+							<td class="r-label"><label for="InPatTimes">住院次数</label></td>
+							<td><input id="InPatTimes" class="hisui-numberbox textbox tb125" data-options="min:0,max:1000,isKeyupChange:true"/><a href="javascript:;" class="hisui-tooltip" id="Btn-TimesUpdate" title="修改住院次数" data-options="iconCls:'icon-w-edit',position:'bottom'" style="padding-left: 5px;background:#FFFFFF;"></a></td>
+							<td class="r-label"><label for="AdmDate">入院日期</label></td>
+							<td><input id="AdmDate" class="hisui-datebox textbox tb125"/></td>
+							<td class="r-label"><label for="AdmTime">入院时间</label></td>
+							<td><input id="AdmTime" type="text" class="hisui-timespinner textbox tb127" data-options="showSeconds:true"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label for="Dept">科室</label></td>
+							<td><input id="Dept" class="textbox tb125"/></td>
+							<td class="r-label"><label for="Ward">病区</label></td>
+							<td><input id="Ward" class="textbox tb125"/></td>
+							<td class="r-label"><label for="Doctor">入院医生</label></td>
+							<td><input id="Doctor" class="textbox tb125"/></td>
+							<td class="r-label"><label for="AdmSource">入院途径</label></td>
+							<td><input id="AdmSource" class="textbox tb125"/></td>
+							<td class="r-label"><label for="AdmCategory">入院情况</label></td>
+							<td><input id="AdmCategory" class="textbox tb125"/></td>
+							<td class="r-label"><label for="EpisSubType">就诊子类</label></td>
+							<td><input id="EpisSubType" class="textbox tb125"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label for="AdmReferPriority">入院病情</label></td>
+							<td><input id="AdmReferPriority" class="textbox tb125"/></td>
+							<td class="r-label"><label for="AdmDiagnos">入院诊断</label></td>
+							<td><input id="AdmDiagnos" class="textbox tb125"/><a href="javascript:;" class="hisui-tooltip" id="Btn-DiagUpdate" title="修改诊断" data-options="iconCls:'icon-w-edit',position:'bottom'" style="padding-left: 5px;background:#FFFFFF;"></a></td>
+							<td class="r-label"><label for="DiagRemark">诊断备注</label></td>
+							<td><input id="DiagRemark" type="text" class="textbox tb125"/></td>
+							<td class="r-label"><label for="RegConDisc">优惠类型</label></td>
+							<td><input id="RegConDisc" class="textbox tb125"/></td>
+							<td class="r-label"><label for="User">操作员</label></td>
+							<td><input id="User" type="text" class="textbox tb125"/></td>
+							<td class="r-label"><label for="SuggestDepAmt">建议押金</label></td>
+							<td><input id="SuggestDepAmt" class="hisui-numberbox textbox tb125"/></td>
+						</tr>
+		    		</table>
+		    	</div>
+		    	<csp:if condition='showInsuFlag=1'>
+			    	<div class="hisui-panel" id="InsuInfo-Panel" data-options="title:'患者医保信息',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			    		<table class="search-table" style="width:100%;">
+			    			<tr>
+								<td class="r-label td-second-col"><label for="InsuType">医保类型</label></td>
+								<td><input id="InsuType" class="textbox"/></td>
+								<td class="r-label"><label for="InsuAdmType">医疗类别</label></td>
+								<td><input id="InsuAdmType" class="textbox"/></td>
+								<td class="r-label"><label for="InsuDiagDesc">医保诊断名称</label></td>
+								<td><input id="InsuDiagDesc" class="textbox"/></td>
+								<td class="r-label"><label for="InsuDiagCode">医保诊断编码</label></td>
+								<td><input id="InsuDiagCode" class="hisui-validatebox textbox" data-options="validType:['checkInsuInfo']"/></td>
+								<td class="r-label"><label for="InsuAdmSeriNo">医保就诊号</label></td>
+								<td><input id="InsuAdmSeriNo" class="hisui-validatebox textbox" data-options="validType:['checkInsuInfo']"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label for="InsuCardNo">医保卡号</label></td>
+								<td><input id="InsuCardNo" class="hisui-validatebox textbox" data-options="validType:['checkInsuInfo']"/></td>
+								<td class="r-label"><label for="InsuNo">医保号</label></td>
+								<td><input id="InsuNo" class="hisui-validatebox textbox" data-options="validType:['checkInsuInfo']"/></td>
+								<td class="r-label"><label for="InsuPatType">人员类别</label></td>
+								<td><input id="InsuPatType" class="hisui-validatebox textbox" data-options="validType:['checkInsuInfo']"/></td>
+								<td class="r-label"><label for="InsuTreatType">待遇类别</label></td>
+								<td><input id="InsuTreatType" class="hisui-validatebox textbox" data-options="validType:['checkInsuInfo']"/></td>
+								<td class="r-label"><label for="InsuActFlag">登记状态</label></td>
+								<td><input id="InsuActFlag" class="hisui-validatebox textbox" data-options="validType:['checkInsuInfo']"/></td>
+							</tr>
+			    		</table>
+			    	</div>
+		    	</csp:if>
+			</div>
+		    <div data-options="region:'center',border:false">
+			</div>
+			<div data-options="region:'south',border:false" style="height:90px;">
+				<table class="menu-area">
+					<tr>
+						<td class="r-label"><a href="javascript:;" class="biggerBtn green" id="Btn-RegSave">入院登记(F9)</a></td>
+						<td class="r-label"><a href="javascript:;" class="biggerBtn" id="Btn-RegCancel">退院(F6)</a></td>
+						<td class="r-label"><a href="javascript:;" class="biggerBtn" id="Btn-InsuReg">医保登记</a></td>
+						<td class="r-label"><a href="javascript:;" class="biggerBtn" id="Btn-InsuRegCancel">取消医保登记</a></td>
+						<td class="r-label"><a href="javascript:;" class="biggerBtn" id="Btn-RegUpdate">就诊信息修改</a></td>
+						<td class="r-label">
+							<a href="javascript:;" class="hisui-menubutton menubutton-blue" style="width:130px;" data-options="menu:'#Menu-WD'">腕带打印</a>
+							<div id="Menu-WD">
+							    <div id="Btn-WDPrt">成人</div>
+							    <div id="Btn-ChildWDPrt">儿童</div>
+							    <div id="Btn-BabyWDPrt">婴儿</div>    
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcbill.ipbill.config.js'></script>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.reg.js"></script>
+</body>
+</html>

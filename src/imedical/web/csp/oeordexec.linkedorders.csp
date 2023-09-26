@@ -1,0 +1,234 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body>
+<SERVER>
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+ s cmp=##Class(websys.Component).OpenName("OEOrdExec.Edit")
+ i cmp d cmp.LoadTrans(),cmp.%Close()
+ w "<FORM name='fOEOrdExec_LinkedOrders' id='fOEOrdExec_LinkedOrders' action='oeordexec.linkedorders.update.csp'>",$c(13,10)
+ s rs=##Class(%Library.ResultSet).%New("web.OEOrdExec:FindAllLinkedOrders")
+ d rs.Execute($g(%request.Data("PARREF",1)))
+ w "<TABLE name='tOEOrdExec_LinkedOrders' id='tOEOrdExec_LinkedOrders'>",$c(13,10)
+ w "<TR><TD>",$c(13,10)
+ w "<TABLE>",$c(13,10)
+ w "<THEAD>",$c(13,10)
+ w "<TH>"_$p($g(t("ARCIMDesc"),"Order Item"),"^",1)_"</TH>",$c(13,10)
+ w "<TH>"_$p($g(t("OEOREExStDate"),"Planned Execution Date"),"^",1)_"</TH>",$c(13,10)
+ w "<TH>"_$p($g(t("OEOREExStTime"),"Planned Execution Time"),"^",1)_"</TH>",$c(13,10)
+ w "<TH>"_$p($g(t("STATDesc"),"Administered Status"),"^",1)_"</TH>",$c(13,10)
+ w "<TH>"_$p($g(t("OEOREDateExecuted"),"Administered Date"),"^",1)_"</TH>",$c(13,10)
+ w "<TH>"_$p($g(t("OEORETimeExecuted"),"Administered Time"),"^",1)_"</TH>",$c(13,10)
+ w "<TH>"_$p($g(t("OEOREQtyAdmin"),"Quantity Administered"),"^",1)_"</TH>",$c(13,10)
+ w "<TH>"_$p($g(t("OEORECTUOMDR"),"Unit of Measurement"),"^",1)_"</TH>",$c(13,10)
+ w "</THEAD>",$c(13,10)
+ w "<TBODY>",$c(13,10)
+ s cnt=0
+ while (rs.Next()) {
+	s cnt=cnt+1
+	w "<TR class='"_$s(cnt#2:"RowOdd",1:"RowEven")_"'>",$c(13,10)
+	w "<TD>"
+	w "<INPUT type=hidden name=IDz"_cnt_" id=IDz"_cnt_" value='"_rs.GetDataByName("ID")_"'>"
+	w "<INPUT type=hidden name=PARREFz"_cnt_" id=PARREFz"_cnt_" value='"_rs.GetDataByName("orditemid")_"'>"
+	w "<LABEL id=ARCIMDescz"_cnt_" name=ARCIMDescz"_cnt_">"_rs.GetDataByName("ARCIMDesc")_"</LABEL>"
+	w "</TD>",$c(13,10)
+	w "<TD><LABEL id=OEOREExStDatez"_cnt_" name=OEOREExStDatez"_cnt_">"_##Class(websys.Conversions).DateLogicalToHtml(rs.GetDataByName("OEOREExStDate"))_"</LABEL></TD>",$c(13,10)
+	w "<TD><LABEL id=OEOREExStTimez"_cnt_" name=OEOREExStTimez"_cnt_">"_##Class(websys.Conversions).TimeLogicalToHtml(rs.GetDataByName("OEOREExStTime"))_"</LABEL></TD>",$c(13,10)
+	;s encmeth=##Class(%CSP.Page).EscapeURL(##Class(%CSP.Page).Encrypt("web.OECOrderAdminStatus.LookUpBroker"))
+	s encmeth=##Class(%CSP.Page).Encrypt($lb("web.OECOrderAdminStatus.LookUpBroker"))
+	w "<TD><INPUT name=STATDescz"_cnt_" id=STATDescz"_cnt_" value='' onkeydown='STATDesc_lookuphandler();' onchange='Statuschange("""_encmeth_""","""_cnt_""");'><IMG id=lSTATDescz"_cnt_" src='../images/websys/lookup.gif' onclick='STATDesc_lookuphandler();'></TD>",$c(13,10)
+	w "<TD><INPUT name=OEOREDateExecutedz"_cnt_" id=OEOREDateExecutedz"_cnt_" value='' onchange='OEOREDateExecutedchange("""_cnt_""");'></TD>",$c(13,10)
+	w "<TD><INPUT name=OEORETimeExecutedz"_cnt_" id=OEORETimeExecutedz"_cnt_" value='' onchange='OEORETimeExecutedchange("""_cnt_""");'></TD>",$c(13,10)
+	w "<TD><INPUT name=OEOREQtyAdminz"_cnt_" id=OEOREQtyAdminz"_cnt_" value='"_rs.GetDataByName("OEOREQtyAdmin")_"' style='TEXT-ALIGN:right;' onchange='OEOREQtyAdmin_changehandler();'></TD>",$c(13,10)
+	s encmeth=##Class(%CSP.Page).Encrypt($lb("web.CTUOM.LookUpBroker"))
+	w "<TD><INPUT name=CTUOMDescz"_cnt_" id=CTUOMDescz"_cnt_" value='"_rs.GetDataByName("OEORECTUOMDR")_"' onkeydown='CTUOMDesc_lookuphandler();' onchange='CTUOMDesc_changehandler("""_encmeth_""",this);'><IMG id=lCTUOMDescz"_cnt_" src='../images/websys/lookup.gif' onclick='CTUOMDesc_lookuphandler();'></TD>",$c(13,10)
+	w "</TR>",$c(13,10)
+ }
+ d rs.%Close()
+ w "</TBODY>",$c(13,10)
+ w "</TABLE>",$c(13,10)
+ w "</TD></TR>",$c(13,10)
+ w "<TR><TD>&nbsp;</TD></TR>",$c(13,10)
+ w "<TR><TD>",$c(13,10)
+ ;;need some way to retrieve mandatory from layout...
+ w "<TABLE>",$c(13,10)
+ w "<TR><TD style='TEXT-ALIGN:right;'>"_$p($g(t("UserCode"),"User"),"^",1)_"</TD>"
+ w "<TD><INPUT name=UserCode id=UserCode value="_%session.Get("LOGON.USERCODE")_"></TD></TR>",$c(13,10)
+ w "<TR><TD style='TEXT-ALIGN:right;'>"_$p($g(t("PIN"),"PIN"),"^",1)_"</TD>"
+ w "<TD><INPUT name=PIN id=PIN type=password></TD></TR>",$c(13,10)
+ w "<TR><TD></TD><TD><a href='#' id=update1 name=update1><img src='../images/websys/update.gif' border=0>"_$p($g(t("update1"),"Update"),"^",1)_"</a></TD></TR>",$c(13,10)
+ w "</TABLE>",$c(13,10)
+ w "</TD></TR>",$c(13,10)
+ w "</TABLE>",$c(13,10)
+ w "</FORM>",$c(13,10)
+</SERVER>
+<SCRIPT SRC="../scripts_gen/OEOrdExec.Edit.js"></SCRIPT>
+<SCRIPT LANGUAGE="JAVASCRIPT">
+function SubmitForm() {
+	var frm=document.forms["fOEOrdExec_LinkedOrders"];
+	frm.submit();
+	return false;
+}
+var obj=document.getElementById("update1");
+if (obj) obj.onclick=SubmitForm;
+
+var lu_obj=null;
+
+
+// Change handlers for log 49513
+// JPD 30/09/05
+function Statuschange(encmeth,x) {
+	var stat=document.getElementById('STATDescz'+x);
+	STATDesc_changehandler(encmeth,stat);
+	if (x==1) {
+		for (i=1;i<=#(cnt)#;i++) {
+			if (i!=x) {
+				var changestat=document.getElementById('STATDescz'+i);
+				changestat.value=stat.value;
+			}
+		}
+	}
+	return false;
+}
+
+function OEORETimeExecutedchange(x) {
+	OEORETimeExecuted_changehandler();
+	if (x==1) {
+		var time=document.getElementById('OEORETimeExecutedz'+x);
+		for (i=1;i<=#(cnt)#;i++) {
+			if (i!=x) {
+				var changetime=document.getElementById('OEORETimeExecutedz'+i);
+				changetime.value=time.value;
+			}
+		}
+	}
+	return false;
+}
+
+function OEOREDateExecutedchange(x) {
+	OEOREDateExecuted_changehandler();
+	if (x==1) {
+		var date=document.getElementById('OEOREDateExecutedz'+x);
+		for (i=1;i<=#(cnt)#;i++) {
+			if (i!=x) {
+				var changedate=document.getElementById('OEOREDateExecutedz'+i);
+				changedate.value=date.value;
+			}
+		}
+	}
+	return false;
+}
+
+function STATDesc_lookuphandler(evt) {
+	var type=websys_getType(evt);
+	var key=websys_getKey(evt);
+	if ((type=='click')||((type=='keydown')&&(key==117))) {
+		var url='websys.lookup.csp';
+		url += "?ID=d489iSTATDesc&CONTEXT=Kweb.OECOrderAdminStatus:LookUp";
+		lu_obj=websys_getSrcElement(evt);
+		if ((lu_obj)&&(lu_obj.tagName=="IMG")) lu_obj=document.getElementById(lu_obj.id.slice(1));
+		if (lu_obj) url += "&P1=" + lu_obj.value;
+		var tmp=url.split('%');
+		url=tmp.join('%25');
+		websys_lu(url,1,'');
+		return websys_cancel();
+	}
+}
+function STATDesc_lookupsel(value) {
+	try {
+		if (lu_obj) {
+  			lu_obj.value=unescape(value);
+			lu_obj.className='';
+			websys_nextfocus(lu_obj.sourceIndex);
+			lu_obj=null;
+		}
+	} catch(e) {};
+}
+
+function STATDesc_changehandler(encmeth,obj) {
+	var p1='';
+	if (obj) {
+		lu_obj=obj;
+		p1=obj.value;
+	}
+	if (cspRunServerMethod(encmeth,'STATDesc_lookupsel','',p1)=='0') {
+		obj.className='clsInvalid';
+		obj.focus();
+		return websys_cancel();
+	} else {
+		obj.className='';
+	}
+}
+function CTUOMDesc_lookuphandler(evt) {
+	var type=websys_getType(evt);
+	var key=websys_getKey(evt);
+	if ((type=='click')||((type=='keydown')&&(key==117))) {
+		var url='websys.lookup.csp';
+		url += "?ID=d489iCTUOMDesc&CONTEXT=Kweb.CTUOM:LookUp";
+		lu_obj=websys_getSrcElement(evt);
+		if ((lu_obj)&&(lu_obj.tagName=="IMG")) lu_obj=document.getElementById(lu_obj.id.slice(1));
+		if (lu_obj) url += "&P1=" + lu_obj.value;
+		var tmp=url.split('%');
+		url=tmp.join('%25');
+		websys_lu(url,1,'');
+		return websys_cancel();
+	}
+}
+function CTUOMDesc_lookupsel(value) {
+	try {
+		if (lu_obj) {
+  			lu_obj.value=unescape(value);
+			lu_obj.className='';
+			websys_nextfocus(lu_obj.sourceIndex);
+			lu_obj=null;
+		}
+	} catch(e) {};
+}
+function CTUOMDesc_changehandler(encmeth,obj) {
+	var p1='';
+	if (obj) {
+		lu_obj=obj;
+		p1=obj.value;
+	}
+	if (cspRunServerMethod(encmeth,'CTUOMDesc_lookupsel','',p1)=='0') {
+		obj.className='clsInvalid';
+		obj.focus();
+		return websys_cancel();
+	} else {
+		obj.className='';
+	}
+}
+
+/* function reSizeT() {
+	var w=0;var h=0;
+	var arrTABLES=document.getElementsByTagName("TABLE");
+	for (var i=0; i<arrTABLES.length; i++) {
+		if (arrTABLES[i].offsetWidth>w) w=arrTABLES[i].offsetWidth;
+		h += arrTABLES[i].offsetHeight + arrTABLES[i].offsetTop;
+	}
+	w+=30;h+=30;
+	if (w>eval(window.screen.Width-window.screenLeft)) w=eval(window.screen.Width-window.screenLeft)-40;
+	if (w<282) w=282;
+	if (h>eval(window.screen.Height-window.screenTop)) h=eval(window.screen.Height-window.screenTop);
+	this.resizeTo(w,h);
+}
+*/
+//if (self == top) reSizeT();
+</SCRIPT>
+
+</body>
+</html>

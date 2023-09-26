@@ -1,0 +1,119 @@
+<!-- CSP DHCHAI:HEAD Rules -->
+<!-- Copyright (c) 2017 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+
+<csr:rule name="DHCHAI.HEAD" match="DHCHAI:HEAD">
+<csr:description>
+The <b>DHCHAI:HEAD</b> tag defines defines standard header info and initialisation for each page. For example javascript utilties, style sheet, theme and initialisation code
+</csr:description>
+
+<csr:action>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		Set MenuID=$g(%request.Data("MenuID",1))
+		
+		Set HISCode=""  //未设置HIS医院与HAI医院对照关系 必须手工设置
+		Set XUserID=$g(%session.Data("LOGON.USERID"))
+		Set XLocID=$g(%session.Data("LOGON.CTLOCID"))
+		Set XHospID=$p($g(^CTLOC(+XLocID)),"^",22)
+		Set:XHospID="" XHospID=$o(^CT("HOSP",0))  //部分科室没有关联医院
+		Set objHospMap=##class(DHCHAI.BT.HospitalMap).GetObjByXCode("HISSYS",XHospID)
+		If $IsObject(objHospMap){
+			Set objHosp=objHospMap.BTMapHospDr
+			Set:$IsObject(objHosp) HISCode=$p(objHosp.BTXCode,"||",1)
+		}
+		
+		Set XUserCode=$p($g(^SSU("SSUSR",XUserID)),"^",1)
+		Set (UserID,UserCode,UserDesc)=""
+		Set objUser=##class(DHCHAI.BT.SysUser).GetObjByUserCode(HISCode,XUserCode)
+		If $IsObject(objUser){
+			Set UserID=objUser.%Id()
+			Set UserCode=objUser.BTCode
+			Set UserDesc=objUser.BTDesc
+		}
+		
+		Set XLocCode=$p($g(^CTLOC(XLocID)),"^",1)
+		Set (LocID,LocCode,LocDesc,HospID,HospDesc,HospGrpID)=""
+		Set objLoc=##class(DHCHAI.BT.Location).GetObjByLocCode(HISCode,XLocCode)
+		If $IsObject(objLoc){
+			Set LocID=objLoc.%Id()
+			Set LocCode=objLoc.BTCode
+			Set LocDesc=objLoc.BTDesc
+			If $IsObject(objLoc.BTHospDr){
+				Set HospID=objLoc.BTHospDr.%Id()
+				Set HospDesc=objLoc.BTHospDr.BTDesc
+				If $IsObject(objLoc.BTHospDr.BTGroupDr){
+					Set HospGrpID=objLoc.BTHospDr.BTGroupDr.%Id()
+				}
+			}
+		}
+	</SCRIPT>
+	<script language="javascript" type="text/javascript">
+		$.LOGON = new Object();
+		$.LOGON.USERID   = '#(UserID)#';
+		$.LOGON.USERCODE = '#(UserCode)#';
+		$.LOGON.USERDESC = '#(UserDesc)#';
+		$.LOGON.LOCID    = '#(LocID)#';
+		$.LOGON.LOCCODE  = '#(LocCode)#';
+		$.LOGON.LOCDESC  = '#(LocDesc)#';
+		$.LOGON.HOSPID   = '#(HospID)#';
+		$.LOGON.HOSPDESC = '#(HospDesc)#';
+		$.LOGON.HOSPGRPID = '#(HospGrpID)#';
+		$.LOGON.XHospID   = '#(XHospID)#';
+		$.LOGON.HISCode   = '#(HISCode)#';
+		$.LOGON.XLocID   = '#(XLocID)#';
+		
+		if ($.LOGON.USERID == '') {
+			alert('当前登录用户未配置!');
+		}
+		
+		if ($.LOGON.LOCID == '') {
+			alert('当前登录科室未配置!');
+		}
+		
+		if ($.LOGON.HOSPID == '') {
+			alert('当前登录医院未配置!');
+		}
+		
+	</script>
+		 <script language="javascript" type="text/javascript">
+	 	$(function () {
+			BrowserVer = BrowserVer();
+		});
+	 	function BrowserVer() {
+	    	// 取得浏览器的userAgent字符串
+	    	var userAgent = navigator.userAgent;
+	    	// 判断是否为小于IE11的浏览器
+		   	var isOpera = userAgent.indexOf("Opera") > -1; //判断是否Opera浏览器
+		    var isEdge = userAgent.indexOf("Edge") > -1; //判断是否IE的Edge浏览器
+		    var isFF = userAgent.indexOf("Firefox") > -1; //判断是否Firefox浏览器
+		    var isSafari = userAgent.indexOf("Safari") > -1
+		            && userAgent.indexOf("Chrome") == -1; //判断是否Safari浏览器
+		    var isChrome = userAgent.indexOf("Chrome") > -1
+		            && userAgent.indexOf("Safari") > -1; //判断Chrome浏览器
+		   	var isLessIE11 = userAgent.indexOf('compatible') > -1 && userAgent.indexOf('MSIE') > -1; // 判断是否为小于IE11的浏览器
+			var isIE11 = userAgent.indexOf('Trident') > -1 && userAgent.indexOf("rv:11.0") > -1; //判断是否IE浏览器
+			
+			if (isIE11) {
+		  	 	return "isIE11";		        
+		    }
+		    if (isLessIE11) {
+		        return "isLessIE11";
+		    }
+		    if (isChrome) {
+		        return "isChrome";
+		    }
+		    if (isOpera) {
+		        return "isOpera";
+		    }
+		    if (isEdge) {
+		        return "isEdge";
+		    }
+		    if (isFF) {
+		        return "isFF";
+		    }
+		    if (isSafari) {
+		        return "isSafari";
+		    }
+	    }
+	</script>
+</csr:action>
+</csr:rule>

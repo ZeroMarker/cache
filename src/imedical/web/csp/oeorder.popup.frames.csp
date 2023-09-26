@@ -1,0 +1,123 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css"></LINK>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ w "The csp in this workflow is no longer supported, please update any workflow item to remove oeorder.popup.frames.csp to oeorder.entry.frames.csp"
+ q
+ n PatientID,EpisodeID,mradmID,TWKFL,TWKFLI,XCONTEXT,ChartID,RepeatOrders,EPRChartName,params,ChartFrameSize,MultiEpisodeID,AllowUpdateWithNoOrders,OEORISttDat,OEORISttTim
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s XCONTEXT=$s(TWKFL:"W"_TWKFL,1:"")
+ s ChartID=$g(%request.Data("ChartID",1))
+ s RepeatOrders=$g(%request.Data("RepeatOrders",1))
+ s EPRChartName=$g(%request.Data("EPRChartName",1))
+ s MultiEpisodeID=$g(%request.Data("MultiEpisodeID",1))
+ s AllowUpdateWithNoOrders=$g(%request.Data("AllowUpdateWithNoOrders",1))
+ i MultiEpisodeID,$l(MultiEpisodeID,"^")=1 s PatientID=$p($g(^PAADM(%request.Data("MultiEpisodeID",1))),"^",1)
+ s EpisLoc=$g(%request.Data("EpisLoc",1))
+ ;Log 50088 PeterC 03/03/05
+ s AllowUpdateWithNoOrders=$ZCVT(AllowUpdateWithNoOrders,"O","JS")
+ s EpisLoc=$ZCVT(EpisLoc,"O","JS")
+ s RepeatOrders=$ZCVT(RepeatOrders,"O","JS")
+ s MultiEpisodeID=$ZCVT(MultiEpisodeID,"O","JS")
+ s RepeatOrders=##Class(%CSP.Page).EscapeURL($g(RepeatOrders))
+ s OEORISttDat=$g(%request.Data("OEORISttDat",1))
+ s OEORISttTim=$g(%request.Data("OEORISttTim",1))
+ s SOAPordlist=%request.Get("SOAPordlist")
+ s ConsultID=%request.Get("ConsultID")
+ ;
+ i RepeatOrders'="" s ChartID=""
+ i 'ChartID,EPRChartName'="" s ChartID=##Class(epr.Chart).GetIdFromCodeOrDescription(EPRChartName)
+ i 'ChartID d
+ . if EpisodeID &SQL(SELECT PAADM_DepCode_DR INTO :LocID FROM SQLUser.PA_Adm WHERE (PAADM_RowID = :EpisodeID))
+ . if 'EpisodeID s LocID=$g(%session.Data("LOGON.CTLOCID"))
+ . s params=##Class(websys.Preferences).GetDataExPlus($g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.GROUPID")),$g(%session.Data("LOGON.SITECODE")),LocID,XCONTEXT,.app,"ORDER","OEOrder.PrefTabs.EditList")
+ . s ChartID=$lg(params,1)
+ . s ChartFrameSize=$lg(params,2) s ChartFrameSize=$s(ChartFrameSize="":"300,*",1:ChartFrameSize_"%,*")
+ ;
+ n rows,cols
+ s urlEPRdefault="epr.chart.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&CONTEXT="_XCONTEXT
+ s rows=1,coldefault=$g(ChartFrameSize,"300,*")
+ s showframe="border=''" s cls="frmborder"
+ s cols=coldefault,urlEPR=urlEPRdefault_"&ChartID="_ChartID
+ i 'ChartID s cols="0,*",showframe="border=0" s urlEPR=""
+ s showframe="border='0'"
+ s ApptID=$g(%request.Data("ApptID",1))
+ s AppointmentFlag=$g(%request.Data("AppointmentFlag",1))
+ s TeethIDs=$g(%request.Data("TeethIDs",1))
+ s TeethUAreas=$g(%request.Data("TeethUAreas",1))
+ s TeethAreas=$g(%request.Data("TeethAreas",1))
+ s TeethPos=$g(%request.Data("TeethPos",1))
+ s TeethNum=$g(%request.Data("TeethNum",1))
+ s SelTeethDesc=$g(%request.Data("SelTeethDesc",1))
+ ;
+ ; log 54852
+ s showlist=0
+ s showlist=##Class(epr.GroupSettings).GetShowOrderListFrame($g(%session.Data("LOGON.GROUPID")))
+ i MultiEpisodeID,$l(MultiEpisodeID,"^")'=1 s showlist=0
+ i $g(showlist)=1 s rows="*,200"
+ ; 
+ ; JD only pass in active paramaters. Getting a bit close to max URL length
+ n ordentrydetails
+ s ordentrydetails=""
+ s:$g(%request.Data("SUMMFlag",1)) ordentrydetails=ordentrydetails_"&SUMMFlag="_$g(%request.Data("SUMMFlag",1))
+ s:PatientID ordentrydetails=ordentrydetails_"&PatientID="_PatientID
+ s:EpisodeID ordentrydetails=ordentrydetails_"&EpisodeID="_EpisodeID
+ s:mradm ordentrydetails=ordentrydetails_"&mradm="_mradm
+ s:TWKFL ordentrydetails=ordentrydetails_"&TWKFL="_TWKFL
+ s:TWKFLI ordentrydetails=ordentrydetails_"&TWKFLI="_TWKFLI
+ s:MultiEpisodeID ordentrydetails=ordentrydetails_"&MultiEpisodeID="_MultiEpisodeID
+ s:EpisLoc ordentrydetails=ordentrydetails_"&EpisLoc="_EpisLoc
+ s:XCONTEXT ordentrydetails=ordentrydetails_"&CONTEXT="_XCONTEXT
+ s:RepeatOrders ordentrydetails=ordentrydetails_"&RepeatOrders="_RepeatOrders
+ s:AllowUpdateWithNoOrders ordentrydetails=ordentrydetails_"&AllowUpdateWithNoOrders="_AllowUpdateWithNoOrders
+ s:ApptID ordentrydetails=ordentrydetails_"&ApptID="_ApptID
+ s:showlist ordentrydetails=ordentrydetails_"&showlist="_showlist
+ s:SOAPordlist ordentrydetails=ordentrydetails_"&SOAPordlist="_SOAPordlist
+ s:AppointmentFlag ordentrydetails=ordentrydetails_"&AppointmentFlag="_AppointmentFlag
+ s:TeethIDs ordentrydetails=ordentrydetails_"&TeethIDs="_TeethIDs
+ s:TeethUAreas ordentrydetails=ordentrydetails_"&TeethUAreas="_TeethUAreas
+ s:TeethAreas ordentrydetails=ordentrydetails_"&STeethAreas="_TeethAreas
+ s:TeethPos ordentrydetails=ordentrydetails_"&TeethPos="_TeethPos
+ s:TeethNum ordentrydetails=ordentrydetails_"&TeethNum="_TeethNum
+ s:SelTeethDesc ordentrydetails=ordentrydetails_"&SelTeethDesc="_SelTeethDesc
+ s:OEORISttDat ordentrydetails=ordentrydetails_"&OEORISttDat="_OEORISttDat
+ s:OEORISttTim ordentrydetails=ordentrydetails_"&OEORISttTim="_OEORISttTim
+ s:ConsultID ordentrydetails=ordentrydetails_"&ConsultID="_ConsultID
+ s:$g(%request.Data("RecallSchedID",1)) ordentrydetails=ordentrydetails_"&RecallSchedID="_$g(%request.Data("RecallSchedID",1)) ; JD
+ ;s ordentrydetails="&SUMMFlag="_$g(%request.Data("SUMMFlag",1))
+ ;
+</SCRIPT>
+<SCRIPT language="Javascript">
+var colsDefault="#(coldefault)#";
+var urlEPRDefault="#(urlEPRdefault)#";
+var eprDefault="#(ChartID)#";
+var Multi="#(MultiEpisodeID)#";
+var AllowUpdateWithNoOrders="#(AllowUpdateWithNoOrders)#";
+
+</SCRIPT>
+<FRAMESET rows="#(rows)#" name="oeframeset" id="oeframeset" #(showframe)#>
+		<frame name="oeorder_entry" id="oeorder_entry" src="oeorder.custom.csp?#(ordentrydetails)#" scrolling="auto" marginwidth="0" marginheight="0" framespacing="0"></frame>
+		<frame name="orderlist" id="orderlist" frameborder="no" framespacing="0" src="websys.default.csp?WEBSYS.TCOMPONENT=OEOrder.SessionList&EpisodeID=#(EpisodeID)#"></frame>
+</FRAMESET>
+<noframes>
+    <body>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5.5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+</html>

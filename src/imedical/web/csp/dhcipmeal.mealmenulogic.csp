@@ -1,0 +1,131 @@
+<script language="Cache" runat="SERVER">
+ /* 
+ * FileName:dhcipmeal.mealmenulogic.csp
+ * User: Lid
+ * Date: 2010-5-10
+ * Function: 菜谱制作业务逻辑
+ * Description: 
+ */
+</script>
+<csp:content charset="utf-8">
+<script language="Cache" runat="SERVER">
+    s group=$g(%request.Data("group",1))
+    s guser=$g(%request.Data("guser",1))
+	s act=$g(%request.Data("act",1))  
+	s start=+$g(%request.Data("start",1))  ;开始行
+	s limit=+$g(%request.Data("limit",1))  ;限制行
+    
+    i act="tree" d
+    .s node=$g(%request.Data("node",1))
+    .s jsonStr=##class(DHCBILL.DHCIPMealMenuLogic).GetMealMenuTreeJson(node)
+    .w jsonStr
+    
+    ;添加菜谱明细
+	i act="insert" d
+	.;菜谱主信息
+	.s startDate=$g(%request.Data("menustartdate",1))     ;菜谱使用日期
+	.s itmloc=$g(%request.Data("itmloc",1))              ;暂时不用
+	.s guser=guser                                       ;用户Rowid
+	.s menucomment1=$g(%request.Data("menucomment1",1))  ;菜谱备注
+	.;菜谱明细信息
+	.s mealitemrowid=$g(%request.Data("itmRowid",1)) ;菜指针
+	.s comboMT=$g(%request.Data("comboMT",1))             ;餐别
+	.s MMList=$g(%request.Data("mulSelMM",1))             ;餐形态
+	.s itmremark=$g(%request.Data("itmremark",1))         ;菜备注
+	.s weekDateList=$g(%request.Data("mulSelWeek",1))         ;星期几(以逗号分开)
+	.s menuInfo=startDate_"^"_itmloc_"^"_guser_"^"_menucomment1
+	.s menuItemInfo=mealitemrowid_"^"_comboMT_"^"_MMList_"^"_guser_"^"_itmremark_"^"_weekDateList
+	.;s ^lidong("menuinof",startDate)=menuInfo_"%%"_menuItemInfo
+	.s rtn=##class(DHCBILL.DHCIPMealCreateMenu).InsertMealMenu(menuInfo, menuItemInfo)
+    .i rtn=0 w "{success:true,msg:'添加成功'}"
+	
+	;更新菜谱明细
+	i act="update" d
+	.;菜谱主信息
+	.s subDr=$g(%request.Data("subdr",1))
+	.;wanghc 2010-12-06 页面不能同时刷新问题在后台再判断是不是已经使用
+	.i $p(^DHCIPMEALMENU(+subDr,"M",$p(subDr,"||",2)),"^",9)'="Y" d
+	..s startDate=$g(%request.Data("menustartdate",1))     ;菜谱使用日期
+	..s itmloc=$g(%request.Data("itmloc",1))              ;暂时不用
+	..s guser=guser                                       ;用户Rowid
+	..s menucomment1=$g(%request.Data("menucomment1",1))  ;菜谱备注
+	..;菜谱明细信息
+	..s mealitemrowid=$g(%request.Data("itmRowid",1)) ;菜指针
+	..s comboMT=$g(%request.Data("comboMT",1))             ;餐别
+	..s MMList=$g(%request.Data("mulSelMM",1))             ;餐形态修改时该值不能多选
+	..s itmremark=$g(%request.Data("itmremark",1))         ;菜备注
+	..s week=+$g(%request.Data("mulSelWeek",1))         ;星期几修改时该值不能多选
+	..i week=0 s week=7
+	..s itmUseDate=+$zdh(startDate,3)+(week-1)
+	..s menuInfo=$p(subDr,"||",1)_"^"_startDate_"^"_itmloc_"^"_guser_"^"_menucomment1
+	..s menuItemInfo=subDr_"^"_mealitemrowid_"^"_comboMT_"^"_MMList_"^"_guser_"^"_itmUseDate
+	..;s ^lidong("menuinof",startDate)=menuInfo_"%%"_menuItemInfo
+	..s rtn=##class(DHCBILL.DHCIPMealCreateMenu).UpdateMealMenu(menuInfo, menuItemInfo)
+	..i rtn=0 d
+	...w "{success:true,msg:'修改成功'}"
+	.e  d
+	..w "{success:true,msg:'该菜谱已经使用,不能修改!'}"
+	;保存调整后的菜谱明细顺序
+	i act="order" d
+	.s indexList=$g(%request.Data("sortIndex",1))
+	.s rtn=##class(DHCBILL.DHCIPMealCreateMenu).SaveMenuDetailOrder(indexList, guser)
+	.w rtn
+	
+	;;删除菜谱模板明细
+	i act="delete" d 
+	.s subRowidStr=$g(%request.Data("ids",1))
+	.s rtn=##class(DHCBILL.DHCIPMealCreateMenu).DeleteMenuDetails(subRowidStr)
+	.w rtn
+	
+	;;删除菜谱模板
+	i act="deletemenu" d 
+	.s menuRowidStr=$g(%request.Data("ids",1))
+	.s rtn=##class(DHCBILL.DHCIPMealCreateMenu).DeleteMenu(menuRowidStr)
+	.w rtn
+
+	;菜谱明细查询
+	i act="query" d
+	.s menuRowid=$g(%request.Data("menuRowid",1))     ;菜谱Rowid
+	.s menuStartDate=$g(%request.Data("startDate",1)) ;菜谱使用日期
+	.s itmUseDate=$g(%request.Data("itmUseDate",1))   ;菜使用日期
+	.s mealTypeDr=$g(%request.Data("mealTypeDr",1))   ;餐类型
+	.d ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQueryNew("DHCBILL.DHCIPMealCreateMenu","FindMealDeatil",start,limit,menuRowid,menuStartDate,itmUseDate,mealTypeDr)
+	.;w jsonStr
+	
+    ;菜谱模板查询
+	i act="menutempquery" d
+	.s menuStatus=$g(%request.Data("searchMenuStatus",1)) 
+	.s menuAddUser=$g(%request.Data("searchMenuAddUser",1))
+	.s menuStartDate=$g(%request.Data("searchMenuStDate",1))
+	.s queryStDate=$g(%request.Data("queryStDate",1))
+	.s queryEndDate=$g(%request.Data("queryEndDate",1))
+	.s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealCreateMenu","FindMenuInfo",start,limit,"",menuStartDate,menuAddUser,menuStatus,queryStDate,queryEndDate)
+	.w jsonStr
+	
+	;菜谱模板另存
+	i act="saveas" d
+	.s menuRowid=$g(%request.Data("menurowid",1))
+	.s menuStartDate=$g(%request.Data("startdate",1))
+	.s rtn=##class(DHCBILL.DHCIPMealCreateMenu).InsertMenuTemplate(menuRowid,menuStartDate,guser)
+	.i rtn=0 w "{success:true,result:'ok',msg:'保存成功'}"
+	.e  i rtn="err001"  w "{success:true,result:'failure',msg:'模板已存在'}"
+	.e  w "{success:true,result:'failure',msg:'保存失败'}"
+	
+	;菜谱模板类型转换
+	i act="convertstatus" d
+	.s data=$g(%request.Data("info",1))
+	.s rtn=##class(DHCBILL.DHCIPMealCreateMenu).UpdateMenuStatus(data,guser)
+	.w rtn
+	
+	i act="menuopnode" d
+	.s menuOPTreeNode=$g(%request.Data("treeNode",1))
+	.i '$d(^DHCTREENODE(menuOPTreeNode)) w ""
+	.e  w menuOPTreeNode_"^"_$g(^DHCTREENODE(menuOPTreeNode))
+	;
+	i act="menudetailsquery" d
+	.s MenuDR=$g(%request.Data("MenuDR",1))     ;菜谱Rowid
+	.d ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQueryNew("DHCBILL.DHCIPMealCreateMenu","QueryMenuDetail",start,limit,MenuDR)
+	.;w jsonStr
+	
+	
+</script>

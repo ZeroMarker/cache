@@ -1,0 +1,48 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+
+ n frm,AntiLIST,rLIST,OrderID,LabEpisodeID,par,child,LabTestSetRow,TestSet,Count,ColCount,obj
+ n cmp
+ s (frm,cmp,obj)=""
+ 
+ s OrderID=$g(%request.Data("OrderID",1))
+ s LabEpisodeID=$g(%request.Data("LabEpisodeNo",1))
+ 
+ i OrderID'="" s obj=##Class(User.OEOrdItem).%OpenId(OrderID,0)
+ i obj d
+ . s %request.Data("Signoff",1)=obj.OEORISensitivitiesSignoff
+ . d obj.%Close()
+ 
+ s par=$p(OrderID,"||",1) i par="" q ""
+ s child=$p(OrderID,"||",2) i child="" q ""
+ s LabTestSetRow=$p(^OEORD(par,"I",child,3),"^",35) i LabTestSetRow="" q ""
+ s TestSet=$p(LabTestSetRow,"||",2)
+ s Count=+$p(LabTestSetRow,"||",3)
+
+ i $g(%request.Data("PatientBanner",1)),$g(%request.Data("PatientID",1)) d
+ . s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . i cmp d cmp.Show(),cmp.%Close()
+
+ s frm=##Class(websys.Component).OpenName("EPVisitTestSet.AntibioticSensitivity")
+ i frm d 
+ . ;d ##Class(web.EPVisitTestSet).AntiBioSensGet(LabEpisodeID,.AntiLIST,OrderID)
+ . ;d ##Class(web.EPVisitTestSet).AntiBioSensShow(LabEpisodeID,.AntiLIST,OrderID)
+ . d frm.Show()
+ . d frm.%Close()
+  
+</SERVER>
+</BODY>
+</HTML>

@@ -1,0 +1,27 @@
+﻿﻿<html>
+<head>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+		if $g(%session.Data("LOGON.USERID"))=""
+		{
+			s rtn = ##class(websys.SessionLogon).Logon()
+			s %response.ServerSideRedirect = "emr.browse.redirect.adm.csp"
+		}
+		q 1
+	</csp:method>
+</head>
+<body>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		if ($d(^DHCEPRI.ECRecordI("IdxEpisodeIDChartItemID"," "_episodeID))>0)
+		{
+			s %response.ServerSideRedirect = "epr.newfw.browser.csp"
+		}
+		else
+		{
+			s %response.ServerSideRedirect = "emr.record.browse.episode.csp"
+		}
+	  	q 1	
+    </script>
+</body> 
+</html>

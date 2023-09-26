@@ -1,0 +1,202 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+	s code = %request.Get("code")
+	;s desc = %request.Get("desc")
+	; Log 45049 - AI - 26-08-2004 : Set up the component messages for the 4 options, to send to the javascript.
+	d ##Class(websys.Component).GetComponentMessages(.t,"SSHL7Log.Find")
+	s INFType=t("INFType")
+	s MSGType=t("MSGType")
+	s REJType=t("REJType")
+	s ERRType=t("ERRType")
+	; Log 45047 - AI - 10-09-2004 : Set up the component messages for Start and End Dates for Search String.
+	s StartDateReq=t("StartDateReq")
+	s EndDateReq=t("EndDateReq")
+</SERVER>
+
+<!-- Log 57591 - AI - 17-01-2006 : javascript code moved to before frameset code because this is now opening in a new window. -->
+
+<script language=javascript>
+// Log 45047 - AI - 10-09-2004 : Get the component messages for Start and End Dates for Search String, set up in the csp code.
+var StartDateReq="#(StartDateReq)#";
+var EndDateReq="#(EndDateReq)#";
+
+function FDocLoadHandler() {
+	// Log 45049 - AI - 26-08-2004 : Get component messages for the 4 options, set up in the csp code.
+	var INFType="#(INFType)#";
+	var MSGType="#(MSGType)#";
+	var REJType="#(REJType)#";
+	var ERRType="#(ERRType)#";
+
+	// Log 57591 - AI - 17-01-2006 : Redefine the window because this is now opening in a new window.
+	//var win=top.frames["TRAK_main"].frames["FindSSHL7Log"];
+	var win=window.frames["FindSSHL7Log"];
+	// end Log 57591
+	if (win) {
+		var doc=win.document;
+		if (doc) {
+			// Log 45049 - AI - 26-08-2004 : Populate the empty FilterByTypesList with the 4 options.
+			var obj=doc.getElementById('FilterByTypesList');
+			if (obj) {
+				obj.multiple=true;
+				obj[0]= new Option(INFType);
+				obj[1]= new Option(MSGType);
+				obj[2]= new Option(REJType);
+				obj[3]= new Option(ERRType);
+			}
+			var obj=doc.getElementById('find');
+			if (obj) {
+				obj.url="";
+				obj.onclick=FindClickHandler;
+			}
+			// Log 45047 - AI - 10-09-2004 : Set up the new SearchString functionality.
+			var obj=doc.getElementById('SearchString');
+			if (obj) {
+				obj.onblur=SearchStringBlurHandler;
+			}
+		}
+	}
+}
+
+// Log 42406 - AI - 19-02-2004 : Add logic for starttime, enddate, and endtime throughout.
+// Log 45049 - AI - 26-08-2004 : Add logic for FilterByTypesList throughout.
+function FindClickHandler() {
+	// Log 57591 - AI - 17-01-2006 : Redefine the window because this is now opening in a new window.
+	//var win=top.frames["TRAK_main"].frames["FindSSHL7Log"];
+	var win=window.frames["FindSSHL7Log"];
+	// end Log 57591
+
+	var doc=win.document;
+
+	// Log 45047 - AI - 10-09-2004 : If Search String exists, ONLY continue IF Search Start Date and Search End Date have values.
+	var searchstr="";
+	var obj=doc.getElementById("SearchString");
+	if (obj) searchstr=obj.value;
+	var errmsg="";
+	var obj2=doc.getElementById('cdate');
+	var objval2=doc.getElementById('date');
+	if ((obj2)&&(obj2.className=="clsRequired")&&(objval2.value=="")&&(searchstr!="")) {
+		if (errmsg!="") errmsg=errmsg+"\n"+StartDateReq;
+		if (errmsg=="") errmsg=StartDateReq;
+		if (objval2) objval2.className="clsInvalid";
+	} else {
+		if (objval2) objval2.className="";
+	}
+	var obj3=doc.getElementById('cenddate');
+	var objval3=doc.getElementById('enddate');
+	if ((obj3)&&(obj3.className=="clsRequired")&&(objval3.value=="")&&(searchstr!="")) {
+		if (errmsg!="") errmsg=errmsg+"\n"+EndDateReq;
+		if (errmsg=="") errmsg=EndDateReq;
+		if (objval3) objval3.className="clsInvalid";
+	} else {
+		if (objval3) objval3.className="";
+	}
+	if (errmsg!="") {
+		alert(errmsg);
+		return false;
+	}
+
+	// Log 43122 - AI - 29-03-2004 : Initialise the url items, in case each item is not on the component layout.
+	var date="";
+	var code="";
+	var sttime="";
+	var enddate="";
+	var endtime="";
+	var filterlist="";
+
+	var obj=doc.getElementById("date");
+	if (obj) date=obj.value;
+	var obj=doc.getElementById("code");
+	if (obj) code=obj.value;
+	var obj=doc.getElementById("enddate");
+	if (obj) enddate=obj.value;
+	var obj=doc.getElementById("sttime");
+	if (obj) sttime=obj.value;
+	var obj=doc.getElementById("endtime");
+	if (obj) endtime=obj.value;
+
+	// Log 45049 - AI - 26-08-2004 : Pass the selected list options through to the List component.
+	var optstr="";
+	var opt0=0;
+	var opt1=0;
+	var opt2=0;
+	var opt3=0;
+
+	var obj=doc.getElementById("FilterByTypesList");
+	if (obj) {
+		if ((obj[0])&&(obj[0].selected)) opt0=1;
+		if ((obj[1])&&(obj[1].selected)) opt1=1;
+		if ((obj[2])&&(obj[2].selected)) opt2=1;
+		if ((obj[3])&&(obj[3].selected)) opt3=1;
+	}
+
+	// If none are selected, search is to include ALL types.
+	if ((opt0==0)&&(opt1==0)&&(opt2==0)&&(opt3==0)) {
+		opt0=1;
+		opt1=1;
+		opt2=1;
+		opt3=1;
+	}
+	optstr=opt0+"^"+opt1+"^"+opt2+"^"+opt3;
+
+	var url="websys.default.csp?WEBSYS.TCOMPONENT=SSHL7Log.List";
+	// hard-code seq as blank when passing from here.
+	url=url+"&code="+code+"&date="+date+"&seq="+"&sttime="+sttime+"&enddate="+enddate+"&endtime="+endtime+"&optstr="+optstr+"&searchstr="+searchstr;
+	// Log 57591 - AI - 17-01-2006 : Redefine the window because this is now opening in a new window.
+	//var win2=top.frames["TRAK_main"].frames["ListSSHL7Log"];
+	var win2=window.frames["ListSSHL7Log"];
+	// end Log 57591
+	if (win2) win2.location=url;
+	return;
+}
+// Log 45047 - AI - 10-09-2004 : Set up the new SearchString functionality.
+function SearchStringBlurHandler() {
+	// Log 57591 - AI - 17-01-2006 : Redefine the window because this is now opening in a new window.
+	//var win=top.frames["TRAK_main"].frames["FindSSHL7Log"];
+	var win=window.frames["FindSSHL7Log"];
+	// end Log 57591
+
+	var doc=win.document;
+
+	var obj=doc.getElementById('SearchString');
+	if (obj) {
+		if (obj.value!="") {
+			var obj2=doc.getElementById('cdate');
+			if (obj2) obj2.className="clsRequired";
+			var obj3=doc.getElementById('cenddate');
+			if (obj3) obj3.className="clsRequired";
+		} else {
+			var obj2=doc.getElementById('cdate');
+			if (obj2) obj2.className="";
+			var obj3=doc.getElementById('cenddate');
+			if (obj3) obj3.className="";
+		}
+	}
+}
+</script>
+
+<!-- Log 57591 - AI - 17-01-2006 : frameset code moved to after javascript code because this is now opening in a new window. -->
+
+<frameset rows="35%,*" onload="FDocLoadHandler();">
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=SSHL7Log.Find&code=#(code)#" name="FindSSHL7Log">
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=SSHL7Log.List&code=#(code)#" name="ListSSHL7Log">
+</frameset>
+<noframes>
+    <body>
+    <p></p>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+</HTML>

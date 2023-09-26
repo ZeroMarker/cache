@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--排班管理-班次维护
+	csp:dhcpha.pivas.schedul.csp
+	js: scripts/pharmacy/pivas/schedul.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/kalendae/build/kalendae.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <style type="text/css">
+        .kalendae {
+            background: white;
+            border-radius: 3px;
+            -moz-border-radius: 3px;
+            /* -webkit-border-radius: 5px; */
+            font-size: 14px;
+            font-family: 'Microsoft YaHei', 'Helvetica';
+        }
+        
+        .kalendae .k-calendar {
+            width: 250px;
+        }
+        
+        .kalendae .k-title {
+            text-align: center;
+            height: 18px;
+            font-weight: bold;
+        }
+        
+        .kalendae .k-header span {
+            text-align: center;
+            font-weight: bold;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            color: rgb(102, 102, 102)；
+        }
+        
+        .kalendae .k-title,
+        .kalendae .k-header,
+        .kalendae .k-days {
+            width: 250px;
+        }
+        
+        .kalendae .k-caption {
+            font-size: 14px;
+            line-height: 18px;
+        }
+        
+        .kalendae .k-days span {
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            padding: 0px;
+            text-align: center;
+        }
+        
+        .kalendae .k-days span.k-selected.k-active {
+            background: #00A3DD;
+            color: white;
+        }
+        
+        .kalendae .k-separator {
+            display: inline-block;
+            zoom: 1;
+            width: 2px;
+            vertical-align: top;
+            background: #ddd;
+            height: 230px;
+            margin: 0px 10px 0px 0px;
+        }
+        
+        .kalendae .k-days span.k-out-of-month {
+            visibility: hidden;
+        }
+    </style>
+</HEAD>
+
+<body>
+    <div class="hisui-layout"  fit="true" border="false">
+        <div data-options="region:'center'" class="dhcpha-hisui-container">
+		    <div class="hisui-layout" fit="true">
+		        <div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-molecule'" class="dhcpha-hisui-border"  style="border-radius: 4px;">
+		            <div id="gridSchedul" data-options="fit:true" border="false">
+		            </div>
+		        </div>
+		    </div>
+	    </div>
+    </div>
+
+    <div id="gridSchedulBar">
+    	<table>
+    		<tr>
+                <td>
+                    <input id="cmbPivaLoc" />
+                </td>
+		        <td>
+		        	<div class="datagrid-btn-separator"></div>
+				</td>
+	    		<td>
+		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">增加</a>
+		        </td>
+				<td>
+		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+		        </td>
+		        <td>
+		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
+		        </td>
+		        <!--td>
+		        	<div class="datagrid-btn-separator"></div>
+				</td>
+		        <td>
+		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnConfig">设定日期</a>
+		        </td>
+		        <td>
+		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnLinkSche">关联班次</a>
+		        </td-->
+		        <td>
+		        	<div class="datagrid-btn-separator"></div>
+				</td>
+				<td colspan="3" style="text-align:left">
+						<div style="border:1px solid #fec0c0;background:#ffe3e3;color:#ff3d2c;height: 27px;line-height: 27px;border-radius: 3px;">
+							<img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:2px;"></img>
+						　		班 次 代 码 在 前 的 优 先 排 班 　
+						</div>
+					</td>
+
+		    </tr>
+		</table>	   
+    </div>
+    <div id="gridScheFixWin" class="hisui-dialog" title="班次固定日期规则" closed="true" style="width:310px;height:250px;" data-options="modal:true,
+	buttons:[{
+		text:'确定',
+		handler:function(){
+			SaveScheFix();
+		}
+	},{
+		text:'取消',
+		handler:function(){
+			$('#gridScheFixWin').window('close');
+		}
+	}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
+                <div class="hisui-layout" data-options="fit:true">
+                    <div data-options="region:'center'" border="false">
+                        <table class="dhcpha-north-tbl">
+                            <tr>
+                                <td>
+                                    每月初第<input id="idMonthDays" type="text" style="display:none" />
+                                </td>
+                                <td>
+                                    <input id="cmbMonthDays" class='hisui-combobox' />
+                                </td>
+                                <td>
+                                    天
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    每月末第<input id="idMonthEndDays" type="text" style="display:none" />
+                                </td>
+                                <td>
+                                    <input id="cmbMonthEndDays" class='hisui-combobox' />
+                                </td>
+                                <td>
+                                    天
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    每周第<input id="idWeekDays" type="text" style="display:none" />
+                                </td>
+                                <td>
+                                    <input id="cmbWeekDays" class='hisui-combobox' />
+                                </td>
+                                <td>
+                                    天
+                                </td>
+                                <tr>
+                                    <td>
+                                        指定日期<input id="idDays" type="text" style="display:none" />
+                                    </td>
+                                    <td>
+                                        <input class='hisui-validatebox' id="kalSelect" style="width:193px" />
+                                    </td>
+                                </tr>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+     <div id="gridLinkScheWin" class="hisui-dialog" title="关联班次规则" closed="true" style="width:310px;height:250px;" data-options="modal:true,
+	buttons:[{
+		text:'确定',
+		handler:function(){
+			SaveLinkSche();
+		}
+	},{
+		text:'取消',
+		handler:function(){
+			$('#gridLinkScheWin').window('close');
+		}
+	}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
+                <div class="hisui-layout" data-options="fit:true">
+                    <div data-options="region:'center'" border="false">
+                        <table class="dhcpha-north-tbl">
+                            <tr>
+                                <td>
+                                    班次<input id="idLinkSche" type="text" style="display:none" />
+                                </td>
+                                <td>
+                                    <input id="cmbLinkSche" class='hisui-combobox' />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/kalendae/build/kalendae.standalone.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/schedul.js"></script>
+</body>
+
+</HTML>

@@ -1,0 +1,61 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<!-- meta http-equiv="Content-Type" content="text/html;" /-->
+	<!--
+	<link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+	<script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+	-->
+	<EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+	<DHCMED:HEAD></DHCMED:HEAD>
+
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+	<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+	<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+	<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+	<script language='javascript' src='../scripts/dhcmed/main/disease/gui.js'></script>	
+	<script language='javascript' src='../scripts/dhcmed/main/disease/event.js'></script>
+	
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		Set ProductCode=$g(%request.Data("ProductCode",1))    //主题配置Code
+		//Set:ProductCode="" ProductCode="SYS"
+		Set ProductCode=""""_ProductCode_""""
+	</SCRIPT>
+	<script language="javascript" type="text/javascript">
+		var t = new Object();
+		Ext.QuickTips.init();
+		var objControlArry = new Array();
+		
+		var ProductCode=#(ProductCode)#;
+		
+		function window_onload() {
+			var objViewport1 = new InitViewport1();
+			objControlArry['Viewport1'] = objViewport1;
+			if(window.location.href.indexOf('DesignMode=Y') > -1) {
+				var objWinICD = new InitWinICD();
+				objWinICD.WinICD.show();
+				ExtDeignerHelper.HandleResize(objWinICD);
+				var objWinAlias = new InitWinAlias();
+				objWinAlias.WinAlias.show();
+				ExtDeignerHelper.HandleResize(objWinAlias);
+			}
+		}
+	</script>
+	<!--TRAK:HEAD></TRAK:HEAD-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body onload="return window_onload()">
+		<!-- P5启用APPLET,P7以上版本不需要 -->
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+		<input type='hidden' id='DHCMed.SSService.ConfigSrv' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SSService.ConfigSrv"))%>'/>
+		<input type='hidden' id='DHCMed.SS.Config' value='<%=##Class(%CSP.Page).Encrypt($LB("DHCMed.SS.Config"))%>'/>
+	</body>
+</html>

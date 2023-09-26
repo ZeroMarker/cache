@@ -1,0 +1,25 @@
+<csp:content charset="utf-8">
+<Server>
+	set ClassName=%request.Data("ClassName",1)
+	set MethodName=%request.Data("MethodName",1)
+	set Params=%request.Data("Params",1)
+	set len=$l(Params,",")
+	if (Params'="")
+	{
+		set inputParams=""
+		for i=1:1:len{
+			set param=$p(Params,",",i)
+			if (i<len){
+				set inputParams=inputParams_""""_param_""","
+			} else{
+				set inputParams=inputParams_""""_param_""""
+			}
+			set cmd="set ret="_"##Class("_ClassName_")."_MethodName_"("_inputParams_")"
+		}	
+	} else {
+		set cmd="set ret="_"##Class("_ClassName_")."_MethodName_"()"	
+	}
+	xecute cmd
+
+	write ret
+</SERVER>

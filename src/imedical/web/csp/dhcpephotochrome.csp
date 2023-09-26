@@ -1,0 +1,86 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script src="../scripts_lib/jQuery/jquery-1.8.0.min.js"></script>
+<title>体检拍照</title>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RegNo=$g(%request.Data("RegNo",1))
+	s PAPMIID=$O(^PAPERi("PAPMI_PatNo",RegNo,""))
+	s Name=""
+	i PAPMIID'="" d
+	.s Name=$p(^PAPER(PAPMIID,"ALL"),"^",1)
+	s PthotoStr=##class(web.DHCPE.PreIBIUpdate).GetPhoto(RegNo)
+	
+</SCRIPT>
+</head>
+
+
+<body>
+<table>
+	<TR><TD colspan=2><table border = 0><TR><TD><button class="play">拍照</button></TD><TD colspan=3><button class="OK" disabled='disabled'>确定</button></TD><TR>
+	<TR><TD>登记号：</TD><TD  id="RegNo">#(RegNo)#</TD><TD>姓名：</TD><TD>#(Name)#</TD></TR>
+	</table></TD></TR>
+	<TR>
+	<TD><canvas id="canvas" width="300" height="400" style="border: 1px solid black;"></canvas></TD>
+    <TD><video id="video" controls="false" muted="muted" autoplay="autoplay" width="300" height="400" style="border: 1px solid red;"> </video> 
+    </TD></TR>
+    
+ </table>
+ </body>
+<script language="javascript">
+
+    var canvas = document.getElementById('canvas');
+	var video = document.getElementById("video");
+	if (canvas.getContext){
+		var context = canvas.getContext("2d");
+		var con = {
+			audio: false,
+			video: {
+				width: 300,
+				height: 400
+			}
+		};
+
+		//导航 获取用户媒体对象
+		navigator.mediaDevices.getUserMedia(con)
+			.then(function (stream) {
+				video.srcObject = stream;
+				video.oncanplaythrough = function () {
+				video.play();
+				};
+		});
+		
+
+	} else {
+		alert("canvas-unsupported code here")
+	}
+	
+	$(".OK").click(function(){
+        var obj=document.getElementById("RegNo");
+        if (obj){
+	    	var RegNo=obj.innerText;
+           	var Imagedata = canvas.toDataURL();
+           	Imagedata=Imagedata.split("base64,")[1];//获取图片
+           	var ret=#server(web.DHCPE.PreIBIUpdate.SavePhoto(RegNo,Imagedata))#;
+			if(ret!=""){
+		         alert("拍照失败,请重新操作");
+		         
+		         
+
+	        }
+        }
+		
+		parent.InitPicture()
+		parent.$('#PhotoWin').window('close');
+		window.close();
+    });
+	$(".play").click(function(){
+	    $(".OK").attr('disabled',false);
+        //把流媒体数据画到convas画布上去
+        context.drawImage(video, 0, 0, 300, 400);
+		
+    });
+    
+
+</script>
+</html>

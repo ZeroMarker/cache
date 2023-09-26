@@ -1,0 +1,73 @@
+<html>
+<head>
+<title>高拍仪图片采集</title>
+<meta charset="utf-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=8" >
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+<Script language="cache" runat="server">
+ s ReadOnly=$Get(%request.Data("ReadOnly",1))
+ s Status=$Get(%request.Data("Status",1))
+ s CurrentSourceType=$Get(%request.Data("CurrentSourceType",1))
+ s CurrentSourceID=$Get(%request.Data("CurrentSourceID",1))
+ s EquipDR=$Get(%request.Data("EquipDR",1))
+ s PTRowID=$Get(%request.Data("PTRowID",1))
+ s PLRowID=$Get(%request.Data("PLRowID",1))
+ s Path=##class(web.DHCEQCommon).GetSysInfo("990004")
+ s PicTypeInfo=##Class(web.DHCEQ.Process.DHCEQCPicType).GetPicTypeBySourceType(CurrentSourceType)
+</Script>
+<TRAK:HEAD></TRAK:HEAD>
+<DHCEQ:EASYUI></DHCEQ:EASYUI>
+<script type="text/javascript" src="../scripts/dhceq/js/dhceqcamera.js"></script>
+<script type="text/javascript" src="../scripts/DHCEQCommon.js"></script>
+<script type="text/javascript" src="../csp/broker/cspbroker.js"></script>
+<script type="text/javascript" src="../csp/broker/cspxmlhttp.js"></script>
+</head>
+<body onload="Load()" onunload="Unload()">
+	<table border="1">
+		<td><object id="view1" type="application/x-eloamplugin" width="600" height="600" name="view"></object></td>
+		<td><object id="thumb1" type="application/x-eloamplugin" width="200" height="600" name="thumb" style="scroll:yes"></object></td>
+		<td>
+			<table width="100">
+			<tr><font size=2>高拍仪:</font></tr>
+			<tr><select id="device" style="width: 90px" name="device" onchange="changeDev()"></select> </tr>
+			<tr><select id="subType" style="width: 90px" name="subType" onchange="changesubType()"></select> </tr>
+			<tr><select id="selRes" style="width: 90px" name="selRes"></select></tr>
+			<tr><font size=2>图片类型及名称:</font></tr>
+			<tr><select id="PicType" style="width: 90px" name="PicType" onchange="changePicType()"></select></tr>
+			<tr><input type="text" id="PicName" style="width: 86px;height: 18px"/></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 打开视频 " onclick="OpenVideo()"></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 关闭视频 " onclick="CloseVideo()" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 拍    照 "	onclick="Scan()" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 全    选 " onclick="SelectAll(true)" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 全 不 选 " onclick="SelectAll(false)" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="submit" value=" 上    传 "	onclick="Upload()" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 显示图片 " onclick="ShowImage()" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 删    除 "	onclick="DelSelImg()" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input class="submit_01" type="button" value=" 清    空 "	onclick="Clear()" /></tr>
+			<tr>&nbsp;</tr>
+			<tr><input id="Deskew" type="checkbox" value="" onclick="Deskew(this)" />纠偏</tr> 
+
+			<tr>
+			<input id="PTRowID" type="hidden" value=#(PTRowID)#>
+			<input id="PLRowID" type="hidden" value=#(PLRowID)#>
+			<input id="ReadOnly" type="hidden" value=#(ReadOnly)#>
+			<input id="CurrentSourceType" type="hidden" value=#(CurrentSourceType)#>
+			<input id="CurrentSourceID" type="hidden" value=#(CurrentSourceID)#>
+			<input id="EquipDR" type="hidden" value=#(EquipDR)#>
+			<input id="Path" type="hidden" value=#(Path)#>
+			<input id="PicTypeInfo" type="hidden" value=#(PicTypeInfo)#>
+			</tr>
+			</table>
+		</td>
+	</table>
+</body>
+</html>

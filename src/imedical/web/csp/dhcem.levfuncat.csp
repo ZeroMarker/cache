@@ -1,0 +1,195 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/levfuncat.js"></script>
+
+</head> 
+<body class="hisui-layout">
+
+	<div data-options="region:'west',title:'分级指标函数',headerCls:'panel-header-gray',border:false" style="width:180px;">
+		<div class="hisui-panel" data-options="border:false" style="padding:5px">
+		    <ul id="CatLib" class="hisui-tree"></ul>
+	    </div>	    
+    </div>
+        
+	<div data-options="region:'center'" border="false">
+		<div id="tabs" class="hisui-tabs tabs-gray" fit="true" border="false">
+		
+		   <div title="分级指标函数分类库" style="padding:0px">
+			<!-- toolbar -->
+		      <div id="toolbar" class="toolbar" >
+			    <div style="height:10px"></div><!--hxy 2019-07-20-->
+				<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	
+				<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+				<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			
+			    <table cellspacing="0" cellpadding="0" >
+				  <tr>
+			       <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			       <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			     </tr>
+			    </table>
+		      </div>
+			<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    border:false,
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRow, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMLevFunCat&MethodName=ListLevFunCat'">
+			<thead>
+				<tr>
+					<th data-options="field:'LFCCode',width:120,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'LFCDesc',width:120,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'LFCActiveFlag',align:'center',width:60,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevFunCat&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th data-options="field:'LFCRemark',width:250,editor:{type:'validatebox',options:{required:false}}">备注</th>						
+					<th data-options="field:'LFCHospDr',width:160,align:'center',
+					                    
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false
+												}
+											}">医院</th>
+					<th data-options="field:'LFCHospDrID',hidden:true">LFCHospDrID</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			  </thead>
+		   </table>
+
+ 
+		</div>
+		   
+  <div title="分级指标函数库" data-options="closable:false,border:false" style="padding:0px">
+	    <!-- toolbar -->
+		<div id="toolbar1" class="toolbar" style="padding:0px,magin:0px">
+			<div style="height:10px"></div><!--hxy 2019-07-20-->
+				<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDr" name="hospDr" class="hisui-combobox"></input>	
+				<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryButton">查询</a>
+				<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowLib()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveLib()">保存</a> </td>
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid1" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar1',
+		    rownumbers:true,
+		    method:'get',
+		    border:false,
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowLib, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMLevFunLib&MethodName=ListLevFunLib'">
+			<thead>
+				<tr>
+					<th data-options="field:'LFLCode',width:120,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'LFLDesc',width:90,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'LFLMedthod',width:400,editor:{type:'validatebox',options:{required:true}}">类方法</th>
+					<th data-options="field:'LFLRetVal',width:120,editor:{type:'validatebox',options:{required:true}}">返回值</th>
+					<th data-options="field:'LFLActiveFlag',align:'center',width:50,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevFunLib&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">可用</th>
+					
+					<th data-options="field:'LFLRemark',width:200,editor:{type:'validatebox',options:{required:false}}">备注</th>						
+					<th data-options="field:'LFLHospDr',width:100,align:'center',
+					                        
+
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false,
+													onSelect: function () {
+                    									//获取选中的值
+                    									var varSelect = $(this).combobox('getValue');								
+                    									HospDrID=varSelect;
+                   							   			//获取第二个combobox所在的datagrid Editor
+                    									var rowIndex=$('#datagrid1').datagrid('getRowIndex',$('#datagrid1').datagrid('getSelected'))
+                    									rowIndex=rowIndex==-1?0:rowIndex
+                   							 			var varEditor = $('#datagrid1').datagrid('getEditor', { index: rowIndex, field: 'LFLCatDr' });
+                   										
+                    									$(varEditor.target).combobox( { 
+															url:'dhcapp.broker.csp?ClassName=web.DHCEMLevFunLib&MethodName=GetLFLCatDr&type='+HospDrID
+                    									})
+
+                    									
+                    								}
+                    
+												}
+											}">医院</th>
+                    <th data-options="field:'LFLCatDr',width:192,align:'center',
+                    
+
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevFunLib&MethodName=GetLFLCatDr&type=2',
+													required:true,
+													editable:false
+												}
+											}">分类</th>
+					<th data-options="field:'LFLHospDrID',hidden:true">LFLHospDrID</th>	
+					<th data-options="field:'LFLCatDrID',hidden:true">LFLCatDrID</th>						
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+		   </div>
+		
+		
+			  
+		</div>
+	</div>
+</body>
+</html>

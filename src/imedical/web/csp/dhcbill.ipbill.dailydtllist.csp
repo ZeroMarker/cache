@@ -1,0 +1,107 @@
+<!-- 
+ * FileName: dhcbill.ipbill.dailydtllist.csp
+ * Anchor: ZhYW
+ * Date: 2018-04-02
+ * Description: 病区日清明细
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.ipbill.dailydtllist.css'/>
+	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+	<server>
+		set cateCols=##class(web.DHCIPBillDailyDtlList).GetCateColumn("web.DHCIPBillDailyDtlList", "FindCateFee")
+	</server>
+	<script type="text/javascript">
+		var GV = {
+			CateColumns: #(cateCols)#
+		};
+
+		/**
+ 		* 修改datagrid 表格 Style
+ 		* @method setCellStyle
+ 		* @author ZhYW
+ 		*/
+		function setCellStyle(value, row, index) {
+			var cateAry = ['小计', '总计'];
+			var cateDesc = row.TCateDesc || row.TCateDesc1;
+			if (cateAry.indexOf(cateDesc) != -1) {
+				return 'font-weight: bold';
+			}
+		}
+	</script>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',border:false" style="width:352px;">
+			<div class="hisui-layout" id="head-menu" data-options="fit:true">
+				<div data-options="region:'north',border:false,title:'患者列表',collapsible:false,tools:'#search-panel-tools'" style="height:115px;overflow:hidden;">
+					<div class="hisui-panel" data-options="fit:true" style="border-bottom-style:dashed;border-bottom-color:#ccc;border-radius:0;">
+						<table class="search-panel-table">
+							<tr>
+								<td class="l-label-td"><input id="menu-stDate" class="hisui-datebox textbox tb160" placeholder="开始日期"/></td>
+								<td class="l-label-td"><input id="menu-endDate" class="hisui-datebox textbox tb160" placeholder="结束日期"/></td>
+							</tr>
+							<tr class="display-more-td">
+								<td class="l-label-td"><input id="menu-stTime" class="hisui-timespinner textbox tb162" data-options="showSeconds:true" placeholder="开始时间"/></td>
+								<td class="l-label-td"><input id="menu-endTime" class="hisui-timespinner textbox tb162" data-options="showSeconds:true" placeholder="结束时间"/></td>
+							</tr>
+							<tr class="display-more-td">
+								<td class="l-label-td"><input id="menu-ward" class="textbox tb160" placeholder="病区"/></td>
+								<td class="l-label-td"><input id="menu-episodeId" class="textbox tb160" placeholder="就诊号(登记号检索...)"/></td>
+							</tr>
+							<tr class="display-more-td">
+								<td class="l-label-td"><input id="menu-userDept" class="textbox tb160" placeholder="开单科室"/></td>
+								<td class="l-label-td"><input id="menu-recDept" class="textbox tb160" placeholder="接收科室"/></td>
+							</tr>
+							<tr class="display-more-td">
+								<td class="l-label-td"><input id="menu-userDeptGrp" class="textbox tb160" placeholder="科室组"/></td>
+								<td class="l-label-td"><input id="menu-tarCate" class="textbox tb160" placeholder="住院费用大类"/></td>
+							</tr>
+							<tr>
+								<td colspan="3" class="l-label-td">
+									<a href="javascript:;" class="hisui-linkbutton" id="menu-search" style="width:89px;margin-right:10px;">查询</a><a href="javascript:;" class="hisui-linkbutton" id="menu-prtdtl" style="width:115px;margin-right:10px;">打印明细</a><a href="javascript:;" class="hisui-linkbutton" id="menu-prtcate" style="width:115px;">打印汇总</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div id="search-panel-tools">
+						<span id="more-container" class="menu-container">
+							<span class="spread-w-down"></span>
+							<span class="arrows-w-text">更多</span>
+						</span>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;">
+						<ul id="pat-menu-tree"></ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	    <div data-options="region:'center',border:false">
+	    	<div class="hisui-accordion accordion-gray" data-options="fit:true,border:false" style="padding-left:10px;">
+	    		<div title="费用明细" data-options="tools:'#details-tools'">
+	    			<table class="hisui-datagrid" id="dtlList"></table>
+				</div>
+				<div title="分类汇总">
+					<table class="hisui-datagrid" id="cateList"></table>
+				</div>
+	    	</div>
+			<span id="details-tools">
+	    		<div id="merge-switch" style="margin-right:5px;"></div>
+			</span>
+	    </div>
+    </div>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.dailydtllist.js"></script>
+</body>
+</html>

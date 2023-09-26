@@ -1,0 +1,208 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT language="Javascript">
+//prompts if user wants to add item that has already been ordered
+//prompts if user wants to add item that has already been ordered
+function ShouldAddItem(ID,desc) {
+
+	var match=-1;
+	var additem=1;
+	var date="";
+	var careprov="";
+	var time="";
+	var testepisno="";
+	var DetailedMessage="N";
+	var ordertype="";
+
+	var currItemsArray=currItems.split("^");
+
+	for (var i=0;i<currItemsArray.length;i++) {
+		if (mPiece(currItemsArray[i],String.fromCharCode(1),0)==ID) {
+			match=1;
+			careprov=mPiece(currItemsArray[i],String.fromCharCode(1),1);
+			date=mPiece(currItemsArray[i],String.fromCharCode(1),2);
+			time=mPiece(currItemsArray[i],String.fromCharCode(1),3);
+			testepisno=mPiece(currItemsArray[i],String.fromCharCode(1),4);
+			ordertype=mPiece(currItemsArray[i],String.fromCharCode(1),5);
+			DetailedMessage="Y";
+			break;
+		}
+	}
+	
+	//now check for new orders already on list (items to be updated)
+	if (match < 0) {
+		for (var i=0; i<lstOrders.options.length; i++) {
+			if (lstOrders.options[i].value == ID) {
+				match=1;
+				break;
+			}
+		}
+	}
+	
+	if (match >= 0) {
+		if (DetailedMessage=="Y") {
+			if ((ordertype=="L") || (ordertype=="N")) {
+				additem=confirm(t['MultipleOrder_Desc']+desc+"\n"+t['MultipleOrder_Date']+date+"\n"+t['MultipleOrder_Time']+time+"\n"+t['MultipleOrder_CareProv']+careprov+"\n"+t['MultipleOrder_TestEpisodeNo']+testepisno+"\n"+t['MultipleOrder_WantToAdd']);
+			} else {
+				additem=confirm(t['MultipleOrder_Desc']+desc+"\n"+t['MultipleOrder_Date']+date+"\n"+t['MultipleOrder_Time']+time+"\n"+t['MultipleOrder_CareProv']+careprov+"\n"+t['MultipleOrder_WantToAdd']);	
+			}
+		} else {
+			additem=confirm(t['MultipleOrder_Desc']+desc+"\n"+t['MultipleOrder_WantToAdd']);
+		}
+	}
+	return additem;
+}
+
+function AgeSexRestrictionCheck(selItmid,seldesc,selsubcatcode,seldur,selmatch,obj,seltype) {
+	
+	var EpisObj=document.getElementById("EpisodeID");
+	if (EpisObj) EpisID=EpisObj.value;
+	
+	if (selsubcatcode=="R") {
+		var DrugString=DrugInteractionCheck(selItmid,seldesc,seldur,"");		
+	}
+	var PatObj=document.getElementById("PatientID");
+	if (PatObj) PatID=PatObj.value;
+	
+	var DateObj=document.getElementById("Date");
+	if (DateObj) DateVal=DateObj.value;	
+	
+	var OrderSetRowid=lstOrders.options[lstOrders.selectedIndex].value;  
+	
+	var f1=top.frames['TRAK_hidden'];	
+	
+	//AmiN  log25880 adding message for items not covered by insurance  
+	if (f1) {	
+		//alert("in oeorder.custom.csp"+"PatID="+PatID+" OEORIItmMastDR="+selItmid+"  ARCIMDesc="+seldesc+"  durid="+seldur)
+		f1.location="oeorder.agesexrestriction.csp?PatID="+PatID+"&OEORIItmMastDR="+selItmid+"&ARCIMDesc="+seldesc+"&durid="+seldur+"&CatMatch="+selmatch+"&OrderSetRowid="+OrderSetRowid+"&DateVal="+DateVal+"&EpisID="+EpisID+"&type="+seltype+"&drugs="+DrugString;
+	}
+	
+}
+
+</SCRIPT>
+<TITLE></TITLE>
+
+</head>
+
+<body>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1>
+</TRAK:COMPONENT>
+<server>
+ n obj,objPP,OrderProfileID,OrderProfileDesc,params,StartMealTime,EndMealTime,allmeals,allmealTimes,timesHTML,comments,GroupID
+ s (OrderProfileID,OrderProfileDesc,GroupID)=""
+ s mradm=##Class(web.PAAdm).GetMRAdm(%request.Get("EpisodeID"))
+ s (StartMealTime,EndMealTime,allmeals,allmealTimes,timesHTML,comments)=""
+ s rsMeal=##Class(%Library.ResultSet).%New("web.DTCMealType:FindMealTypeTime")
+ if rsMeal {
+	d rsMeal.Execute()
+	f  {
+		q:'rsMeal.Next()
+		s allmeals=allmeals_"|"_rsMeal.GetDataByName("MEALTDesc")
+		s allmealTimes=allmealTimes_"|"_rsMeal.GetDataByName("MEALTTime")
+		s timesHTML=timesHTML_"|"_##Class(websys.Conversions).TimeLogicalToHtml(rsMeal.GetDataByName("MEALTTime"))
+	}
+ }
+ d rsMeal.%Close()
+ ;s ^zanju($zn,"allmeals","1")=allmeals
+ i allmeals'="" d %request.Set("allmeals",allmeals)
+ i allmealTimes'="" d %request.Set("allmealTimes",allmealTimes)
+ i timesHTML'="" d %request.Set("timesHTML",timesHTML)
+ ;s ^zanju($zn,"allmeals","2")=allmeals_"^"_allmealTimes
+ s mradmObj=##Class(User.MRAdm).%OpenId(mradm)
+ i mradmObj {
+	s comments=mradmObj.MRADMDietComments
+	d %request.Set("MRADMDietComments",comments)
+ }
+ s frm=##Class(websys.Component).OpenName("OEOrder.DietOrders")
+ i frm d frm.Show() d frm.%Close()
+ ;
+ s mealVal=##Class(web.DTCMealType).GetNextMeal()
+ s Meal=$p(mealVal,"^",1)
+ s MealTime=$p(mealVal,"^",2)
+ s MealCutoff=$p(mealVal,"^",3)
+</server>
+<SCRIPT language="Javascript">
+var startmeal=document.getElementById("StartMeal");
+var startmealtime=document.getElementById("StartMealTime");
+var smealcutoff=document.getElementById("startMealCutoff");
+if(startmeal)
+	startmeal.value="#(Meal)#";
+if(startmealtime)
+	startmealtime.value="#(MealTime)#";
+if(smealcutoff)
+	smealcutoff.value="#(MealCutoff)#";
+</script>
+<server>
+
+ s GroupID=##Class(epr.GroupSettings).GetIdFromGroupId(%session.Get("LOGON.GROUPID"))
+ s obj=##Class(epr.GroupSettings).%OpenId(GroupID)
+
+ i obj {
+ 	//w "<BR>k1"_%session.Get("LOGON.GROUPID")
+ 	i obj.OrderProfileDR  {
+		s OrderProfileID=obj.OrderProfileDR.%Id()
+		i OrderProfileID'=""  s OrderProfileDesc=obj.OrderProfileDR.PPDesc
+	}
+ 	
+	d obj.%Close()
+ 	i OrderProfileID'="" {
+ 		s objPP=##Class(epr.CTProfileParams).%OpenId(OrderProfileID)
+ 		i objPP {
+ 			s params=objPP.PPParameters
+ 			i params'="" {
+ 		 		s stat=$p(params,"|",2)
+ 				s stat=##Class(web.OECOrderStatus).getStatus(stat,"Incl")
+ 				s %request.Data("par",1)=##Class(web.MRAdm).GetOrderId(mradm)_"^I"
+ 				s %request.Data("dfrom",1)="||^"_$tr($p(params,"|",1),",","^")_"^" ;categories
+ 				s %request.Data("stat",1)="|^"_$tr($p(stat,"^",3),",","^")_"^" ;status(s)
+ 				s %request.Data("hospitallist",1)=","_$p(params,"|",3)_","
+ 				s %request.Data("EpisodeAll",1)=$p(params,"|",4)
+				;s ^zanju($zn,"stat")=$p(stat,"^",3)-piece 3.
+ 				s frm=##Class(websys.Component).OpenName("OEOrdItem.ListEMR")
+ 				i frm d
+ 				. ;s frm.ListRows=4
+				. s %request.Data("OEOrdItemIDs",1)=""
+ 				. d frm.Show() 
+ 				. d frm.%Close()
+ 			}
+
+ 			d objPP.%Close()
+ 		}
+ 	}
+ }
+ ;w "<SCRIPT Language=""Javascript"">",$C(13,10)
+ ;
+ ;;get list of orders already ordered
+ n currItem,GroupItmCat,GroupSetCat
+ ;s currItem=##Class(web.OEOrdItem).GetPatientsOrders("",%request.Get("EpisodeID"))
+ s currItem=##Class(web.OEOrdItem).GetPatientOrderItems("",%request.Get("EpisodeID"))
+
+ //TN:user group is not id for epr.GroupSettings
+ d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID"))
+ s GroupItmCat=%request.Get("OEItemDetails")
+ s GroupSetCat=%request.Get("OESetItems")
+
+ ;w "var currItems='"_currItem_"';",$C(13,10)
+ ;
+ ;w "</SCRIPT>",$C(13,10)
+</server>
+<SCRIPT language="Javascript">
+var currItems="#(currItem)#";
+var lstOrders=document.getElementById("Orders");
+
+
+var ItemCat="#(GroupItmCat)#";
+var SetCat="#(GroupSetCat)#";
+
+</SCRIPT>
+</body>
+</html>

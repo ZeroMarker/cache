@@ -1,0 +1,140 @@
+<!-- 
+ * FileName: dhcpedropfeeapp.hisui.csp
+ * Anchor: xy
+ * Date: 2018-10-10
+ * Description: 体检退费审核
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+	<style>
+	#box-td {
+			box-sizing:border-box;
+			-moz-box-sizing:border-box; /* Firefox */
+			-webkit-box-sizing:border-box; /* Safari */
+		}
+	.menu-btn {
+			text-align: center;
+			margin-left: auto;
+			margin-right: auto;
+		}
+	.search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+			/*padding: 0px 0px 0px 0px;*/
+		}
+	.r-label{
+			padding-left: 10px;
+		}
+	.l-label{
+			padding-right: 0px;
+		}
+	
+	
+	
+</style>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<server>
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+		w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+	
+	</server>
+</head>
+
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'west',border:false" style="width:510px;padding:10px 10px 10px 10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:300px;">
+				<div class="hisui-panel" data-options="title:'体检收据查询',fit:true,tools:'#search-panel-tools',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-top:0;border-radius:0;padding-right:0px;">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>卡号</label></td>
+							<td colspan="3" id="box-td">
+								<input id="CardNo" class="textbox" placeholder="刷卡/请输入卡号" style="width:156px;margin-right:10px;"/>
+								<input id="CardTypeNew" class="textbox" placeholder="卡类型" style="width:112px;"/>
+								<a href="#" class="hisui-linkbutton" id="BReadCard" data-options="iconCls:'icon-w-card'" style="margin-left:10px;">读卡</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>开始日期</label></td>
+							<td><input id="BeginDate" class="hisui-datebox textbox" style="width:162px;"/></td>
+							<td class="r-label"><label>结束日期</label></td>
+							<td class="l-label"><input id="EndDate" class="hisui-datebox textbox" style="width:162px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>发票号</label></td>
+							<td><input id="InvNo" class="textbox" style="width:156px;"/></td>
+							<td class="r-label"><label>登记号</label></td>
+							<td class="l-label" ><input id="RegNo" class="textbox" style="width:156px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>患者姓名</label></td>
+							<td><input id="PatName" class="textbox" style="width:156px;"/></td>
+							<td class="r-label"><label>收费员</label></td>
+							<td class="l-label"><input id="User" class="textbox"  style="width:156px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label for="RPFlag">日结标志</label></td>
+          					<td>
+            					<input class="hisui-combobox" type="text" Id="RPFlag" style="width:163px;">
+         			 		</td>		
+						</tr>
+					</table>
+					<div id="panel-footer" style="text-align:center;">
+ 						<a href="#" class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>
+ 						<div style="display:inline-block;margin:0 10px;"></div>
+						<a href="#" class="hisui-linkbutton" id="Bclear" data-options="iconCls:'icon-w-clean'">清屏</a>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="">
+				<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-radius:0 0 4px 4px;">
+					<table class="hisui-datagrid" id="invList"></table>
+				</div>
+        	</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-layout" data-options="fit:true">
+    		<div data-options="region:'north',border:false" style="height:168px;padding:10px 10px 10px 0;">
+				<div class="hisui-panel" data-options="title:'体检退费申请',fit:true,headerCls:'panel-header-gray',iconCls:'icon-fee'">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>退费金额</label></td>
+							<td><input id="BackAmount" class="textbox" style="width:80px;" disabled/></td>
+							<td class="r-label"></td>
+							<td class="r-label"><a href="#" class="hisui-linkbutton" id="BAllRefundApp" data-options="iconCls:'icon-w-paper'">全退申请</a></td>
+							<td class="r-label"><a href="#" class="hisui-linkbutton" id="BPrint" data-options="iconCls:'icon-w-print'">打印退费单</a></td>
+							<td><input type="hidden" id="InvPrtId"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>退费原因</label></td>
+						 	<td colspan='4'>
+								<textarea id="RefundRmark" class="textbox" style="width:375px; height:40px;"> </textarea>
+							</td>
+						<tr>
+					</table>
+				</div>
+        	</div>
+        	<div data-options="region:'center',border:false" style="padding:0px 10px 10px 0px;">
+				<table class="hisui-datagrid"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'"  title="医嘱明细"  id="ordItmList"></table>
+        	</div>
+    	</div>
+	</div>
+	<script type="text/javascript" src="../scripts/DHCPEDropItemApp.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPEPrintReportCommon.js"></script>
+</body>
+</html>

@@ -1,0 +1,793 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s USERCODE = $G(%session.Data("LOGON.USERCODE"))
+ s USERNAME = $G(%session.Data("LOGON.USERNAME"))
+ s HOSPID=$G(%session.Data("LOGON.HOSPID"))
+ s CTLOCID=$G(%session.Data("LOGON.CTLOCID"))
+ s (HospCode,LocCode,LocName,HospName)=""
+ i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+ i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
+ i $l(CTLOCID) s LocCode=$p($g(^CTLOC(CTLOCID)),"^",1)
+ i $l(CTLOCID) s LocName=$p($g(^CTLOC(CTLOCID)),"^",2) 
+ 
+ //处理医院信息 
+ s HospitalDR=""
+ i $l(HospCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
+ //处理用户信息
+ i $l(USERCODE) s CollectUserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
+ s LocCode=##Class(DHCLIS.DHCCommon).UPPER(LocCode)
+</SERVER>
+<!-- Put your page Title here -->
+<title>科主任审批</title>
+	
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/hisuisource.js" ></script>
+	<link   type="text/css" href="../scripts_lib/plug/font-awesome-4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+	<script src="../scripts/websys.jquery.js" type="text/javascript"></script>
+	<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	
+    <style>
+    .PatientInfo {
+        border: 0px;
+        display: none;
+        border-bottom: 1px double #061fe9;
+        padding: 5px 5px 7px 15px
+    }
+
+        .PatientInfo span {
+            font-weight: bold;
+            border-bottom: 1px solid #000000;
+        }
+
+    .ReqFormListInfo table {
+        width: 100%;
+        border: 0px;
+        border-bottom: 2px dotted #00ff90;
+        line-height: 20px
+    }
+
+    .Operate {
+        height: 70px;
+        width: 100%;
+        position: absolute;
+        bottom: 0px;
+        border-top: 1px double #061fe9;
+    }
+    </style>
+</head>
+<body>
+    <div class="hisui-layout" data-options="fit:true">
+        <div data-options="region:'west',title:'审核单列表',split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width: 370px;">
+            <table id="dg_ApprovalList"></table>
+        </div>
+        <div data-options="region:'center',title:'申请信息',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding: 5px;">
+                  <div class="hisui-layout" fit="true">
+                    <div id="div_patientInfo" data-options="region:'north',collapsible:false,split:false,border:true,title:'基本信息',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height: 160px">
+                        <table style="width: 100%;">
+                            <tbody>
+                                <tr>
+                                    <td style="text-align: right; width: 70px"><b>病 案 号：</b></td>
+                                    <td id="td_RecordNo" style="text-align: left; width: 15%"></td>
+                                    <td style="text-align: right; width: 70px"><b>姓名：</b></td>
+                                    <td id="td_UserName" style="text-align: left; width: 7%"></td>
+                                    <td style="text-align: right;"><b>科室：</b></td>
+                                    <td id="td_Location" style="text-align: left; width: 20%"></td>
+                                    <td style="text-align: right; width: 70px"></td>
+                                    <td id="td_ABO" rowspan="2" style="text-align: left; font-size: 25px; font-weight: bold; width: 15%; color: blue"></td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: right;"><b>身份证号：</b></td>
+                                    <td id="td_CardId" style="text-align: left"></td>
+                                    <td style="text-align: right;"><b>年龄：</b></td>
+                                    <td id="td_Age" style="text-align: left"></td>
+                                    <td style="text-align: right;"><b>病区：</b></td>
+                                    <td id="td_Ward" style="text-align: left"></td>
+                                    <td style="text-align: right;"><b>ABO:</b></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: right;"><b>就诊类型：</b></td>
+                                    <td id="td_PatientType" style="text-align: left"></td>
+                                    <td style="text-align: right;"><b>性别：</b></td>
+                                    <td id="td_Sex" style="text-align: left"></td>
+                                    <td style="text-align: right;"><b>床号：</b></td>
+                                    <td id="td_Bed" style="text-align: left"></td>
+                                    <td style="text-align: right;"><b>RH:</b></td>
+                                    <td id="td_RH" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: right;"><b>临床诊断：</b></td>
+                                    <td id="td_Diagnosis" style="text-align: left;" colspan="7"></td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: right;"><b>复检血型：</b></td>
+                                    <td colspan="7">
+                                        <span id="spanPatBldInfo" style="text-align: left;"></span>&nbsp&nbsp
+                                    <span id="spanAntiScreen" style="text-align: left;"></span>&nbsp&nbsp
+                                    <span id="spanPatBldInfoAuth" style="text-align: left;"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="div_pastHistory" data-options="region:'center',title:'输血申请及既往史',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+                        <div style="float: left; width: 40%; height: 98%">
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td id="reqTitle" style="width: 70px">
+                                        <b>申请血液：</b>
+                                    </td>
+                                    <td id="td_ReqFormProduct" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>输血目的：</b>
+                                    </td>
+                                    <td id="td_Purpose" style="text-align: left"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>输血性质：</b>
+                                    </td>
+                                    <td id="td_ReqType" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>特殊要求：</b>
+                                    </td>
+                                    <td id="td_SpecialNeed" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>输血时间：</b>
+                                    </td>
+                                    <td id="td_BookDate" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr id="tr_OpsInfo">
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>医嘱信息：</b>
+                                    </td>
+                                    <td id="td_CostItemInfo" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>输备性质：</b>
+                                    </td>
+                                    <td id="td_IsDefinitelyUse" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>医保类型：</b>
+                                    </td>
+                                    <td id="td_MedicalInsuranceType" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>评估信息：</b>
+                                    </td>
+                                    <td id="td_ReqRuleInfo" style="text-align: left; font-weight: bold"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="float: right; width: 55%; height: 98%">
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td style="width: 70px">
+                                        <b>输 血 史：</b>
+                                    </td>
+                                    <td id="td_TransHistory" style="text-align: left"></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <b>输血反应：</b>
+                                    </td>
+                                    <td id="td_UntowardEffect"></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <b>器官移植：</b>
+                                    </td>
+                                    <td id="td_OrganExplant"></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <b>骨髓移植：</b>
+                                    </td>
+                                    <td id="td_KeestExplant"></td>
+                                </tr>
+                                <tr>
+                                    <td id="td_PregHistoryTilte">
+                                        <b>孕 产 史：</b>
+                                    </td>
+                                    <td id="td_PregHistory"></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <b>特殊药物：</b>
+                                    </td>
+                                    <td id="td_DrugHistory"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div data-options="region:'east',title:'输血前检测项目',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width: 350px">
+                        <table id="dg_ReqFormTestItemResult"></table>
+                    </div> 
+            </div> 
+            <div class="Operate">
+                <table style="width: 100%">
+                    <tr>
+                        <td>审批意见：<input id="text_ApprovOpinion" type="text" style="width: 85%" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 10px; text-align: center">
+                            <a id="" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save'" onclick="ApprovalReqForm();">通过</a>
+                            &nbsp&nbsp&nbsp&nbsp
+                            <a id="" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="RefuseApprovalReqForm();">拒审</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <table id="tb_ApprovalList">
+        <tr>
+            <td>申请日期：<input id="db_SttDate" type="text" class="easyui-datebox" required="required" style="width: 120px" />--
+                <input id="db_EndDate" type="text" class="easyui-datebox" required="required" style="width: 120px" />
+            </td>
+        </tr>
+        <tr>
+            <td>审批状态：
+                 <label>
+                     <input name="ApproveType" type="radio" value="23" onclick="LoadApprovalList()" checked="checked" />申请</label>
+                <label>
+                    <input name="ApproveType" type="radio" value="21,25,20,35" onclick="LoadApprovalList()" />通过</label>
+                <label>
+                    <input name="ApproveType" type="radio" value="24" onclick="LoadApprovalList()" />拒绝</label>
+                <label>
+                    <input name="ApproveType" type="radio" value="" onclick="LoadApprovalList()" />全部</label>
+            </td>
+        </tr>
+    </table>
+    <script type="text/javascript">
+    var me = {
+        ReqFormDR: "",
+    }
+    $(function () {
+        //全局ajax开始
+       $(document).ajaxStart(function () {
+            $("<div class=\"datagrid-mask\"></div>").css({ display: "block", width: "100%", height: document.body.scrollHeight }).appendTo("body");
+            $("<div class=\"datagrid-mask-msg\"></div>").html("正在处理，请稍候。。。").appendTo("body").css({ display: "block", left: ($(document.body).outerWidth(true) - 190) / 2, top: ($(window).height() - 45) / 2 });
+        });
+        //全局ajax结束
+        $(document).ajaxStop(function (evt, request, settings) {
+            $(".datagrid-mask").remove();
+            $(".datagrid-mask-msg").remove();
+        });
+
+        var TodayDate = GetCurentDate();
+        var ThreeDataAgo = getNextDays(TodayDate, -3);
+        $("#db_SttDate").datebox({
+            onSelect: function (date) {
+                LoadApprovalList();
+            }
+        });
+        $("#db_EndDate").datebox({
+            onSelect: function (date) {
+                LoadApprovalList();
+            }
+        });
+        $("#db_SttDate").datebox("setValue", ThreeDataAgo);
+        $("#db_EndDate").datebox("setValue", TodayDate);
+        $("#dg_ApprovalList").datagrid({
+            fit: true,
+            border: false,
+            toolbar: '#tb_ApprovalList',
+            columns: [[
+                { field: 'ReqFormNo', title: '审批单号', width: 100, align: 'center' },
+                {
+                    field: 'Status', title: '状态', width: 50, align: 'center',
+                    formatter: function (value, row, index) {
+                        var retStr = "";
+                        switch (value) {
+                             case "23":
+                                retStr = "申请";
+                                break;
+                            case "21":
+                                retStr = "通过";
+                                break;
+                            case "24":
+                                retStr = "拒审";
+                                break; 
+                            case "20":
+                                retStr = "医务科待审";
+                                break;
+                             case "25":
+                                 retStr = "审核";
+                               break;
+                             case "24":
+                               retStr = "主任拒审";
+                               break;
+                             case "30":
+                                retStr = "医务科拒审";
+                                break;
+                             case "31":
+                               retStr = "输血科拒审";
+                               break;
+                             case "35":
+                               retStr = "接收";
+                               break;
+                             case "37":
+                               retStr = "取消接收";
+                               break; 
+							 case "40":
+                                retStr = "拒收";
+                                break;
+                              default:
+                                retStr = "未知";
+                                break;
+                        }
+                        return retStr;
+                    }
+                },
+                { field: 'CheckDate', title: '申请日期', width: 100, align: 'center' },
+                { field: 'CheckUserName', title: '申请人', width: 100, align: 'right' }
+            ]],
+            singleSelect: true,
+            onSelect: function (rowIndex, rowData) { 
+                me.ReqFormDR=rowData["ReqFormDR"];
+                LoadFeqFormProduct(rowData["ReqFormDR"]);
+                LoadReqFormInfo(rowData["ReqFormDR"]);
+               LoadReqTestItemResultInfo(rowData["ReqFormDR"]);
+               LoadReqFormTestSet(rowData["ReqFormDR"]);
+            },
+            onLoadSuccess: function (data) { 
+                  
+            }
+        });
+        //输血申请前检测结果
+        $("#dg_ReqFormTestItemResult").datagrid({
+            fit: true,
+            border: false,
+            striped: true,
+            singleSelect: true,
+            columns: [[
+              { field: 'TestItemName', title: '项目', width: 100 },
+              { field: 'ScCode', title: '缩写', width: 50, align: 'center' },
+              { field: 'Result', title: '结果', width: 60, align: 'center' },
+              {
+                field: 'NextResult', title: '申请后结果', width: 160, align: 'center',
+                  formatter: function (value, row, index) {
+                     if (value.length == 0) return "";
+                     var retStr = "【" + value;
+                     if (row["NextAbFlag"] == "H") {
+                        retStr = '【<span style="color:red;">' + value + '</span>';
+                     }
+                     else if (row["NextAbFlag"] == "L") {
+                         retStr = '【<span style="color:blue;">' + value + '</span>【';
+                     }
+                     retStr += "】" + row["NextAuthDate"] + "&nbsp&nbsp" + row["NextAuthTime"];
+                        return retStr;
+                  }
+               },
+               { field: 'Unit', title: '单位', width: 60, align: 'center' },
+               { field: 'RefRanges', title: '参考值', width: 60, align: 'center' },
+               {
+                  field: 'AuthDate', title: '审核时间', width: 180, align: 'center',
+                  formatter: function (value, row, index) {
+                      return value + "&nbsp" + row["AuthTime"];
+                  }
+               },
+               { field: 'AuthUserName', title: '审核人', width: 80, align: 'center' }
+
+            ]]
+         })
+        LoadApprovalList();
+    });
+
+    //载入审核单列表
+    function LoadApprovalList() {		
+        var SttDate = $("#db_SttDate").datebox("getValue");
+        var EndDate = $("#db_EndDate").datebox("getValue");
+        var ApproveType = $('input:radio[name="ApproveType"]:checked').val();
+        $("#dg_ApprovalList").datagrid({
+	        url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.BLD.DHCTISReqFormApproval&QueryName=QryTisApprovalReqFormList&FunModul=JSON&P0='+SttDate+'&P1='+EndDate+'&P2='+ApproveType+'&P3='+"#((LocCode))#",
+	        method: 'get'	
+        });
+    }
+     //载入申请单信息
+    function LoadReqFormInfo(ReqFormDR) {
+            //加载申请单基本信息
+           $.ajax({
+	        url:'jquery.easyui.dhclabclassjson.csp',
+	        data: { 
+				 ClassName:"DHCLIS.BLD.DHCBDReqForm",
+				 QueryName:"QryReqFormInfo",
+				 FunModul:"JSON",
+				 P0:ReqFormDR
+			 },
+            success: function (data) {
+                    var data = jQuery.parseJSON(data)["rows"];
+                    var row=data[0];
+                    InitPatientInfo(row);
+                    var htmlStr = "";
+                    htmlStr += "<table>";
+                    //输血史
+                    if (row.IsTransHistory == 1) {
+                        $("#td_TransHistory").html("<span style='color:red'><b>有<b /></span>&nbsp&nbsp");
+                        if (row.LastTransDate.length > 0) {
+                            $("#td_TransHistory").append("最后输血日期（" + row.LastTransDate + "）");
+                        }
+                    } else {
+                        $("#td_TransHistory").html("<b>无</b>&nbsp&nbsp");
+                    }
+
+                    //输血不良反应
+                    if (row.IsUntowardEffect == 1) {
+                        $("#td_UntowardEffect").html("<span style='color:red'><b>有<b /></span>&nbsp&nbsp");
+                        $("#td_UntowardEffect").append("输血不良反应（" + row.UntowardEffectNote + "）");
+                    } else {
+                        $("#td_UntowardEffect").html("<b>无</b>&nbsp&nbsp");
+                    }
+
+                    //器官移植
+                    if (row.IsOrganExplant == 1) {
+                        $("#td_OrganExplant").html("<span style='color:red'><b>有<b /></span>&nbsp&nbsp");
+                        $("#td_OrganExplant").append("供者血型（" + row.OrganBloodGroup + "）");
+                    } else {
+                        $("#td_OrganExplant").html("<b>无</b>&nbsp&nbsp");
+                    }
+
+                    //骨髓移植
+                    if (row.IsKeestExplant == 1) {
+                        $("#td_KeestExplant").html("<span style='color:red'><b>有<b /></span>&nbsp&nbsp");
+                        $("#td_KeestExplant").append("供者血型（" + row.KeestBloodGroup + "）");
+                    } else {
+                        $("#td_KeestExplant").html("<b>无</b>&nbsp&nbsp");
+                    }
+
+                    //孕产史
+                    if (row.IsPregHistory == 1 && row["Sex"] != "男") {
+                        $("#td_PregHistory").html("<span style='color:red'><b>有<b /></span>&nbsp&nbsp");
+                        var htmlStr = ""
+                        if (row.Pregnancies.length > 0) {
+                            htmlStr += "孕次：<b>（" + row.Pregnancies + "）</b>";
+                        } else {
+                            htmlStr += "孕次：（0）";
+                        }
+                        if (row.ChildBirths.length > 0) {
+                            htmlStr += "产次：<b>（" + row.ChildBirths + "）</b>"
+                        } else {
+                            htmlStr += "产次：（0）";
+                        }
+                        $("#td_PregHistory").append(htmlStr);
+                    }
+                    else {
+                        $("#td_PregHistory").html("<b>无</b>&nbsp&nbsp");
+                    }
+                    if (row["Sex"] == "男") {
+                        $("#td_PregHistoryTilte").html("");
+                        $("#td_PregHistory").html("");
+                    }
+                    if (row.IsDrugHistory == 1) {
+                        $("#td_DrugHistory").html("<span style='color:red'><b>有<b /></span>&nbsp&nbsp");
+
+                        $("#td_DrugHistory").append("<b>" + row.DrugList + "</b>");
+                        htmlStr += row.DrugList;
+                    }
+                    else {
+                        $("#td_DrugHistory").html("<b>无</b>&nbsp&nbsp");
+                    }
+                    $("#td_Remark").html(row["Remark"]);
+
+                    //申请类型  即 输血性质  输血日期
+                    $("#td_ReqType").html(row["ReqTypeName"]);
+                    $("#td_BookDate").html(row["BookDate"] + "  " + row["BookTime"]);
+
+                    //申请人等信息
+                    $("#td_AddUserName").html(row["AddUserName"]);
+                    $("#td_AddDate").html(row["AddDate"] + "&nbsp" + row["AddTime"]);
+                    $("#td_CheckUserName").html(row["CheckUserName"]);
+                    $("#td_CheckDate").html(row["CheckDate"] + "&nbsp" + row["CheckTime"]);
+
+                    //手术信息
+                    if (row["OpsDate"].length > 0) {
+                        $("#tr_OpsInfo").html("<td><b>手术信息：</b></td><td><b>" + row["OpsName"] + "&nbsp&nbsp" + row["OpsDate"] + "&nbsp" + "</b></td>")
+                    }
+
+                    //ABO　RH
+                    var ABO = row["ABO"];
+                    if (ABO == undefined || ABO.length == 0)
+                        ABO = "<span style='color:red;font-weight:bold;'>血型未知</span>";
+                    $("#td_ABO").html(ABO);
+                    var RHD = row["RH"];
+                    var RHpat = /[-,阴]/g
+                    if (RHD.match(RHpat) != null && RHD.match(RHpat).length > 0) {
+                        RHD = "<span style='color:red;font-weight:bold;'>" + RHD + "</b></span>";
+                    } else if (RHD == null || RHD.length == 0)
+                        RHD = "<span style='color:red;font-weight:bold'>RH未知<span>";
+                    else
+                        RHD = "<span style='color:blue;font-weight:bold;'>" + RHD + "</span>";
+                    $("#td_RH").html(RHD);
+
+                    //评估信息
+                    $("#td_ReqRuleInfo").html(row["ReqRuleInfo"]);
+                    //输备性质
+                    if (row["IsDefinitelyUse"] == 1) {
+                        $("#td_IsDefinitelyUse").html("一定用");
+                    } else {
+                        $("#td_IsDefinitelyUse").html("备血");
+                    }
+
+                    //医保类型
+                    if (row["MedicalInsuranceType"] == 1) {
+                        $("#td_MedicalInsuranceType").html("医保病人");
+                    } else {
+                        $("#td_MedicalInsuranceType").html("自费病人");
+                    }
+                    $(".Operate").css("display", "block");
+                    if(row["Status"] != "23") {
+                      $(".Operate").css("display", "none");
+                    } 
+                    $("#text_ApprovOpinion").val(row["HeadCheckRemark"]);
+                }
+            })
+        }
+    function InitPatientInfo(data) {
+            $("#td_RecordNo").html(data.MedicalRecordNo);
+            $("#td_UserName").html(data.SurName);
+            $("#td_Apanage").html(data.NativePlace);
+            $("#td_Nation").html(data.Ethnicity);
+            $("#td_Sex").html(data.Sex);
+            $("#td_Age").html(data["AgeDesc"]);
+            $("#td_CardId").html(data.IDNumber);
+            $("#td_Location").html(data.Location);
+            $("#td_Ward").html(data.Ward);
+            $("#td_Bed").html(data.BedNo);
+            var PatientType = "";
+            //I住院,O门诊,H体检,E急诊,N新生儿,R科研,P药理,G其他
+            switch (data.AdmType) {
+                case "I":
+                    PatientType = "住院";
+                    break;
+                case "O":
+                    PatientType = "门诊";
+                    break;
+                case "H":
+                    PatientType = "体检";
+                    break;
+                case "E":
+                    PatientType = "急诊";
+                    break;
+                case "N":
+                    PatientType = "新生儿";
+                    break;
+                case "R":
+                    PatientType = "科研";
+                    break;
+                case "P":
+                    PatientType = "药理";
+                    break;
+                case "G":
+                    PatientType = "其他";
+                    break;
+            }
+            $("#td_PatientType").html(PatientType);
+            $("#td_Diagnosis").html(data.Diagnosis);
+
+            if (data.BldInfo != "") {
+                $('#spanPatBldInfo').html(data.BldInfo);
+            } else {
+                $('#spanPatBldInfo').html("");
+            }
+            if (data.AntiScreen != "") {
+                var color = "";
+                if (data.AntiScreenFlag == "A" || data.AntiScreenFlag == "S") {
+                    color = "red";
+                }
+                $('#spanAntiScreen').html(data.AntiScreen).css('color', color);
+            }
+            else {
+                $('#spanAntiScreen').html("");
+            }
+            if (data.AuthDate) {
+                $('#spanPatBldInfoAuth').html(data.AuthDate + " " + data.AuthTime);
+            }
+            else {
+                $('#spanPatBldInfoAuth').html("");
+            }
+
+   }
+    //载入申请单申请成分信息
+        function LoadFeqFormProduct(ReqFormDR) {
+           $.ajax({
+	        url:'jquery.easyui.dhclabclassjson.csp',
+	        data: { 
+				 ClassName:"DHCLIS.BLD.DHCBDReqForm",
+				 QueryName:"QryReqFormProduct",
+				 FunModul:"JSON",
+				 P0:ReqFormDR
+			 },
+            success: function (data) {
+                    var rows = jQuery.parseJSON(data)["rows"];
+                    var ReqFormProduct = "";
+                    var Purpose = "";
+                    var ReqType = "";
+                    var SpecialNeed = "";
+                    var IsTakedVolumns = "0"; //是否有取血单数据
+                    if (rows.length > 0) {
+                        $("#reqTitle").html(" <b>申请备血：</b>"); 
+                        for (var i = 0; i < rows.length; i++) {
+                                if (i == 0) {
+                                    ReqFormProduct = rows[i]["ReqBloodGroup"] + "&nbsp" + rows[i]["ReqProduct"] + "&nbsp" + rows[i]["Volumn"] + rows[i]["Unit"];
+                                    Purpose = rows[i]["Purpose"];
+                                    SpecialNeed = rows[i]["SpecialNeed"];
+                                }
+                                else {
+                                    ReqFormProduct += "<br />" + rows[i]["ReqBloodGroup"] + "&nbsp" + rows[i]["ReqProduct"] + "&nbsp" + rows[i]["Volumn"] + rows[i]["Unit"];
+                                    Purpose += ";" + rows[i]["Purpose"];
+                                    SpecialNeed += ";" + rows[i]["SpecialNeed"];
+                                }
+                         }
+                        $("#td_ReqFormProduct").html(ReqFormProduct);
+                        $("#td_Purpose").html(Purpose);
+                        $("#td_SpecialNeed").html(SpecialNeed);
+                    }
+                }
+            }) 
+        }
+
+        //载入申请单医嘱信息
+        function LoadReqFormTestSet(ReqFormDR) {
+            $.ajax({
+	        url:'jquery.easyui.dhclabclassjson.csp',
+	        data: { 
+				 ClassName:"DHCLIS.BLD.DHCBDReqForm",
+				 QueryName:"QryReqFormCostItem",
+				 FunModul:"JSON",
+				 P0:ReqFormDR
+			 },
+            success: function (data) {
+                    var data = jQuery.parseJSON(data)["rows"];
+                    for (var i = 0; i < data.length; i++) {
+                        if (i == 0) $("#td_CostItemInfo").html(data[i]["CostItemName"]);
+                        else $("#td_CostItemInfo").append(" + " + data[i]["CostItemName"]);
+                    }
+                    //$("#dg_TestSetInfo").datagrid("loadData", data);
+                }
+            })
+        }
+  //载入输血前关注检验结果信息
+        function LoadReqTestItemResultInfo(ReqFormDR) {
+            $.ajax({
+	        url:'jquery.easyui.dhclabclassjson.csp',
+	        data: { 
+				 ClassName:"DHCLIS.BLD.DHCBDReqForm",
+				 QueryName:"QueryReqFormItemResult",
+				 FunModul:"JSON",
+				 P0:ReqFormDR,
+				 P1:"",
+				 P2:"#((HospitalDR))#"
+			 },
+            success: function (data) {
+                    var data = jQuery.parseJSON(data)["rows"];
+                    $("#dg_ReqFormTestItemResult").datagrid("loadData", data)
+                    for (var i = 0; i < data.length; i++) {
+
+                    }
+                }
+            })
+     }
+     
+    //审批
+    function ApprovalReqForm() {
+        var ApprovOpinion = $("#text_ApprovOpinion").val();
+        $.messager.confirm('确认', '您确认想要<span style="font-weight:bold;color:red">审批通过</span>吗？此操作不可取消！', function (r) {
+            if (r) {
+	            $.ajaxRunServerMethod({ClassName:"DHCLIS.BLD.DHCTISReqFormApproval",MethodName:"ApprovalReqForm",ReqFormDR:me.ReqFormDR,UserID:"#((USERID))#",ApprovalType:"DirectorApproval",ApprovOpinion:ApprovOpinion},
+		           function(rtn){
+					   if (rtn == "0") {
+						   LoadApprovalList();
+						   $.messager.show({
+								title:'提示消息',
+								msg:'审批成功!',
+								timeout:5000,
+								showType:'slide'
+							});
+					   } else {
+						    $.messager.alert("错误提示",rtn);
+					   }
+		           }
+		       );
+               
+            }
+        });
+    }
+    //拒绝审批
+    function RefuseApprovalReqForm() {
+        var ApprovOpinion = $("#text_ApprovOpinion").val();
+        if(ApprovOpinion.trim()==""){
+         $.messager.alert("操作提示","拒收请填写审批原因!!");
+         return;
+        }
+        $.messager.confirm('确认', '您确认想要<span style="font-weight:bold;color:red">拒绝审批</span>吗？此操作不可取消！', function (r) {
+            if (r) {
+                $.ajaxRunServerMethod({ClassName:"DHCLIS.BLD.DHCTISReqFormApproval",MethodName:"RefuseApprovalReqForm",ReqFormDR:me.ReqFormDR,UserID:"#((USERID))#",ApprovalType:"DirectorApproval",ApprovOpinion:ApprovOpinion},
+		           function(rtn){
+					   if (rtn == "0") {
+						   LoadApprovalList();
+						   $.messager.show({
+								title:'提示消息',
+								msg:'审批成功!',
+								timeout:5000,
+								showType:'slide'
+							});
+					   } else {
+						    $.messager.alert("错误提示",rtn);
+					   }
+		           }
+		           );
+            }
+        });
+    }
+    //获取当前日期
+function GetCurentDate() {
+    var now = new Date();
+
+    var year = now.getFullYear();       //年
+    var month = now.getMonth() + 1;     //月
+    var day = now.getDate();            //日
+
+    var hh = now.getHours();            //时
+    var mm = now.getMinutes();          //分
+
+    var clock = year + "-";
+
+    if (month < 10)
+        clock += "0";
+
+    clock += month + "-";
+
+    if (day < 10)
+        clock += "0";
+
+    clock += day;
+
+    return (clock);
+}
+
+//获取日期的下偏移几天
+function getNextDays(date,days) {
+    date = new Date(date);
+    date = +date + 1000 * 60 * 60 * 24 * days;
+    date = new Date(date);
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    if (month < 10) {
+        month = "0" + month;
+    }
+    if (date.getDate() < 10) {
+        day = "0" + day;
+    }
+    //格式化
+    return date.getFullYear() + "-" + month + "-" + day;
+
+}
+    </script>
+</body>
+
+</html>
+

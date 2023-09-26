@@ -1,0 +1,59 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s str=$Get(%request.Data("str",1))
+	
+    s yeardr=$Get(%request.Data("yeardr",1))
+	s typedr=$Get(%request.Data("typedr",1))
+	s perioddr=$Get(%request.Data("perioddr",1))
+	s startdr=$Get(%request.Data("startdr",1))
+	s enddr=$Get(%request.Data("enddr",1))
+	
+	
+
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uSchemePeriod).List(searchField,searchValue,sortField,sortDir,start,limit)
+	
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uSchemePeriod).InsertRec(yeardr,typedr,perioddr,startdr,enddr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..i result = "RepCode" d
+	...w "{success:'false',info:'RepCode'}"
+	..e  d
+	...w "{success:'false',info:'"_result_"'}"
+	
+		
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uSchemePeriod).UpdateRec(rowid,yeardr,typedr,perioddr,startdr,enddr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uSchemePeriod).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

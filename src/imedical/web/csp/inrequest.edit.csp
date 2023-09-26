@@ -1,0 +1,249 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<TRAK:COMPONENT id="INRequest.Edit" hidemenus=1></TRAK:COMPONENT>
+<SERVER>
+
+n c
+s c=%request.Get("c")
+
+i %request.Get("ID")'="" d
+. s cmp=##Class(websys.Component).OpenName("INReqItm.List")
+. d cmp.Show()
+. d cmp.%Close()
+
+</SERVER>
+
+<script language=javascript>
+var tbl=document.getElementById("tINReqItm_List");
+var remove=false;
+var c="#(c)#";
+var decimal=100;
+
+document.body.onunload = BodyUnloadHandler;
+
+if (c==1) window.close();
+
+function BodyUnloadHandler() {
+	if (c==1) {
+		var par_win=window.opener;
+		if (par_win) par_win.refresh();
+	}
+}
+
+function BodyLoadHandler(){
+	
+	var idobj=document.getElementById("ID");
+	var total=document.getElementById("total");
+	var change=document.getElementById("changeLoc");
+	var reqloc=document.getElementById("INRQRecLocDR");
+	var daypast=document.getElementById("INCFDaysPastTransaction");
+	var date=document.getElementById("INRQDate");
+	var complete=document.getElementById("INRQUserCompleted");
+	var unrestrict=document.getElementById("unrestrict");
+	var showall=document.getElementById("showall");
+	var noupdate=false;
+	
+	if (idobj && idobj.value=="") ;
+	
+	if (total) total.readOnly=true;
+	if (change && change.value!="Y") {
+		reqloc.disabled=true;
+		var arrLookUps=document.getElementsByTagName("IMG");
+		for (var i=0; i<arrLookUps.length; i++) {
+			if ((arrLookUps[i].id)&&(arrLookUps[i].id.indexOf("INRQRecLocDR")>=0))
+				arrLookUps[i].disabled=true;
+		}
+	}
+
+	if (date && daypast && date.value!="" && daypast.value!="") noupdate=(DateStringCompareToday(date.value)<0&&(DateStringDifferenceToday(date.value))["dy"]>daypast.value);
+	if (complete && complete.checked || noupdate) disableAll(noupdate);
+	if (showall && unrestrict && unrestrict.value!="Y") showall.disabled=true; 
+	adjustTable();
+	window.focus();
+}
+
+function disableAll(noupdate) {
+	var complete=document.getElementById("INRQUserCompleted");
+	var arrFields=document.getElementsByTagName("INPUT");
+	var arrLookUps=document.getElementsByTagName("IMG");
+
+	var update=document.getElementById("update");
+	var fav=document.getElementById("fav");
+	var add=document.getElementById("add");
+	var below=document.getElementById("below");
+	
+	for (var i=0; i<arrFields.length; i++) {
+		if (arrFields[i].type!="hidden" && (noupdate || arrFields[i].id!=("INRQUserCompleted")))
+			arrFields[i].disabled=true;
+	}
+	
+	for (var i=0; i<arrLookUps.length; i++) {
+		if (arrLookUps[i].type!="hidden")
+			arrLookUps[i].disabled=true;
+	}
+	
+	if (noupdate && update) {update.disabled=true; update.onclick=returnFalse;}
+	if (fav) {fav.disabled=true; fav.onclick=returnFalse;}
+	if (add) {add.disabled=true; add.onclick=returnFalse;}
+	if (below) {below.disabled=true; below.onclick=returnFalse;}
+	remove=true;
+}
+
+function InputValArr(InputVal) {
+	var arr=new Array();
+	if (InputVal=="") return arr;
+	
+	var inputArr=InputVal.split("^");
+	var piece="";
+	for (var i=0; i<inputArr.length; i++) {
+		piece=inputArr[i];
+		if(mPiece(piece,"*",0)=="") continue;
+		arr[mPiece(piece,"*",2)]=piece;
+	}
+	return arr;
+}
+
+function adjustTable() {
+	var rem="";
+	var qty="";
+	var total="";
+	var sum=0;
+	var uomLst="";
+	var data="";
+	var t=document.getElementById("total");
+	var InputVal=document.getElementById("InputVal");
+	if(InputVal) InputVal=InputValArr(InputVal.value);
+	var tempData="";
+	var rowid="";
+	
+	if (tbl) {
+		for (i=1; i<tbl.rows.length; i++) {
+			rem=document.getElementById("removez"+i);
+			qty=document.getElementById("INRQIReqQtyz"+i);
+			total=document.getElementById("totalz"+i);
+			uomLst=document.getElementById("INRQICTUOMDRz"+i);
+			data=document.getElementById("itemDataz"+i);
+			rowid=document.getElementById("rowidz"+i);
+			//tempData=mPiece(InputVal,"^",i-1);
+			tempData=InputVal[rowid.value];
+			
+			if(remove) {
+				if(rem) {
+					rem.disabled=true;
+					rem.onclick=returnFalse;
+				}
+				if(uomLst)
+					uomLst.disabled=true;
+			}
+			
+			if(uomLst) {
+				var desc1="";
+				var val1="";
+				var desc2="";
+				var val2="";
+				var uomdata="";
+				var uom="";
+				var ind="";
+				
+				if(data) {
+					uom=mPiece(data.value,"^",3);
+					uomdata=mPiece(data.value,"^",4);
+					desc1=mPiece(uomdata,String.fromCharCode(1),2);
+					val1=uomdata;
+					uomdata=mPiece(data.value,"^",5);
+					desc2=mPiece(uomdata,String.fromCharCode(1),2);
+					val2=uomdata;
+				}
+				if(tempData && tempData!="") ind=mPiece(tempData,"*",1);
+				
+				uomLst.options[0] = new Option(desc1,val1);
+				if(desc2!="") uomLst.options[1] = new Option(desc2,val2);
+				if(ind!="") uomLst.options[ind].selected=true;
+				else {
+					if(data && uom==mPiece(val1,String.fromCharCode(1),0)) uomLst.options[0].selected=true;
+					else if(data && desc2!="" && uom==mPiece(val2,String.fromCharCode(1),0)) uomLst.options[1].selected=true;
+				}
+				uomLst.multiple=false;
+				uomLst.size=2;
+				uomLst.onchange=changeTotal;
+			}
+			
+			if(qty) {
+				if(tempData && tempData!="") qty.value=mPiece(tempData,"*",0);
+				var temp=getTotal(qty.value,i);
+				qty.onblur=changeTotal; 
+				if (total) total.value=round(temp);
+				sum+=temp;	
+			}
+		}
+	}
+	
+	if(t) t.value=round(sum);
+}
+
+function changeTotal(){
+	
+	var id=this.id;
+	var i=id.substr(id.length-1);
+	var qty=document.getElementById("INRQIReqQtyz"+i);
+	
+	if(qty.value=="") qty.value=0;
+	if(isNaN(parseInt(qty.value))) return false;
+
+	var total=document.getElementById("totalz"+i);
+	var t=document.getElementById("total");
+	var x=getTotal(qty.value,i);
+	
+	if(total) {
+		if(t) t.value=round(parseFloat(t.value)-parseFloat(total.value));
+		total.value=round(x);
+		if(t) t.value=round(parseFloat(t.value)+parseFloat(total.value));
+	}
+}
+
+function getTotal(qty,i) {
+	var data=document.getElementById("itemDataz"+i);
+	uomLst=document.getElementById("INRQICTUOMDRz"+i);
+	
+	var factor=0;
+	var unitcost=1;
+	
+	if(uomLst) unitcost=mPiece(uomLst.value,String.fromCharCode(1),1);
+	if(data) factor=mPiece(data.value,"^",2)*unitcost;
+	return qty*factor;
+}
+
+function round(num) {
+	return Math.round(num*decimal)/decimal;
+}
+
+function returnFalse(){
+	return false;
+}
+
+function mPiece(s1,sep,n) {
+    delimArray = s1.split(sep);
+    if ((n <= delimArray.length-1) && (n >= 0)) {
+        return delimArray[n];
+    }
+	return "";
+}
+
+document.body.onload = BodyLoadHandler;
+
+</script>
+
+</TRAK:APPLET>
+</BODY>
+</HTML>

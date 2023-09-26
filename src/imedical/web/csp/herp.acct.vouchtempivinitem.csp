@@ -1,0 +1,58 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	
+	s rowid    = $Get(%request.Data("rowid",1))
+	s str      = $Get(%request.Data("query",1))
+	s Summary = $Get(%request.Data("Summary",1))
+	s Direction = $Get(%request.Data("Direction",1))
+	s SjCodeName = $Get(%request.Data("SjCodeName",1))
+	s acctempID= $Get(%request.Data("acctempID",1))
+    s AcctSubjID= $Get(%request.Data("SjCodeName",1))
+    s AllocRate= $Get(%request.Data("AllocRate",1))
+    s AcctBookID=$Get(%request.Data("AcctBookID",1))
+    s PaymentSubjID=$Get(%request.Data("CodeName",1))
+    s TempletID= $Get(%request.Data("TempletID",1))
+	;s str = $Get(%request.Data("str",1))
+	
+	i action = "listitem" d
+	.w ##class(herp.acct.udata.uAcctVouchTempVin).ListItemRec(AcctBookID,acctempID,sortField,sortDir, start, limit)
+    
+
+    i action = "Getsubjidname" d
+	.w ##class(herp.acct.udata.uAcctVouchTempVin).GetSubjIDName(str,start, limit,AcctBookID)
+
+	
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctVouchTempVin).InsertItemRec(AcctBookID,TempletID,SjCodeName,Summary,Direction,AllocRate,PaymentSubjID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctVouchTempVin).UpdateItemRec(rowid,TempletID,AcctSubjID,Summary,Direction,AllocRate,PaymentSubjID,AcctBookID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctVouchTempVin).DeleteItemRec(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

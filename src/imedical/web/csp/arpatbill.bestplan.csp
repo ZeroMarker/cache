@@ -1,0 +1,114 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</CSP:METHOD>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+	
+	n QuoteID,epid,patid
+	s QuoteID=""
+	s (Surname,FirstName,DOB,patid,epid)=""
+ 	n bmind,insStr,insValidDateFrom,insValidDateTo,insTypeDR,insTypeDesc,auxTypeDR,auxTypeDesc,PayorPlanStr,bInvalid,apptdatestr
+ 	s bmind=0
+ 	s (insStr,insValidDateFrom,insValidDateTo,insTypeDR,insTypeDesc,auxTypeDR,auxTypeDesc,PayorPlanStr,bInvalid,apptdatestr)=""
+	
+	s patid=$g(%request.Data("PatientID",1))
+	s epid=$g(%request.Data("EpisodeID",1))
+	s apptdatestr=$g(%request.Data("apptdatestr",1)) 
+
+	i patid {
+		s Surname=$p(^PAPER(patid,"ALL"),"^",1)
+		s FirstName=$p(^PAPER(patid,"ALL"),"^",2)
+		s DOB=##Class(websys.Conversions).DateLogicalToHtml($p(^PAPER(patid,"ALL"),"^",6))
+	}
+	
+ 	i epid'="" {
+		s bmind=$o(^PAADM(epid,"INS",bmind))
+		while bmind'="" {
+			s (insStr,insValidDateFrom,insValidDateTo,insTypeDR,insTypeDesc,auxTypeDR,auxTypeDesc,bInvalid)=""
+			s insStr=$g(^PAADM(epid,"INS",bmind))
+			s insTypeDR=$p(insStr,"^",1)
+			i insTypeDR'="" s insTypeDesc=$p($g(^ARC("INST",insTypeDR)),"^",2)
+			s insValidDateFrom=$p(insStr,"^",3)
+			s insValidDateTo=$p(insStr,"^",4)
+			s auxTypeDR=$p(insStr,"^",10)
+			i auxTypeDR'="" s auxTypeDesc=$p($g(^ARC("AUXIT",auxTypeDR)),"^",2)
+			i insValidDateFrom'="",insValidDateFrom>+$h s bInvalid="Y"
+			i insValidDateTo'="",insValidDateTo<+$h s bInvalid="Y"
+			i bInvalid'="Y" s PayorPlanStr=PayorPlanStr_insTypeDR_"&"_auxTypeDR_"|"
+			;s ^zTRAK("BR",$zn,"PayorPlanStr")=PayorPlanStr
+			s bmind=$o(^PAADM(epid,"INS",bmind))
+		}		
+ 	}
+	s PayorID=$g(%request.Data("PayorID",1))
+	s PlanID=$g(%request.Data("PlanID",1)) 	
+ 	s ApptPayorPlan=PayorID_"&"_PlanID
+ 	
+ 	i PayorPlanStr '[ ApptPayorPlan {
+ 		s PayorPlanStr=PayorPlanStr_ApptPayorPlan
+ 	}
+ 	
+	i $g(%request.Data("ARCIMID",1)) {
+		s param=$g(%request.Data("ARCIMID",1))
+		f i=1:1:$l(param,"^") {
+			s par=$p(param,"^",i)
+			i par'="" {
+				s retval = ##Class(web.ARPatBillBestPlan).AddOrders(QuoteID,par,"1",patid,Surname,FirstName,DOB,PayorPlanStr,apptdatestr,1)
+				s QuoteID = $p(retval,"^",1)
+				s %request.Data("QuoteID",1)=QuoteID
+			}
+		}
+	}
+	
+	n DeleteQuoteID,UserCode,PIN,ret
+	n context,epid2,twkfl,twkfli,hospital,qid,action
+	s (context,epid2,twkfl,twkfli,hospital,qid,action)=""
+	s DeleteQuoteID=%request.Get("DeleteQuoteID")
+	s UserCode=%request.Get("UserCode")
+	s PIN=%request.Get("PIN")
+	s ret=""
+	i DeleteQuoteID'="" s ret=##Class(web.ARPatBillBestPlan).DeleteQuote(DeleteQuoteID,UserCode,PIN)
+	i ret'="" {
+		w "<script>"
+ 		w "alert('"_ret_"');"
+ 		w "</script>"
+	}
+	
+	s qid    =$g(%request.Data("QuoteID",1))
+	
+	i ret'="" s qid=DeleteQuoteID
+
+	s twkfl=%request.Get("TWKFL")
+	s twkfli=%request.Get("TWKFLI")
+	s context=%request.Get("CONTEXT")
+
+	n link1,link2
+	s (link1,link2)="arpatbill.bestplan.blank.csp"
+
+	i (qid'="") s link1="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.BestPlanList&QuoteID="_qid_"&Sort=A&EpisodeID="_epid_"&CONTEXT="_context
+	;BR 12/09/06 Removed the passing of the episode ID as this was displaying all orders for the episode. This was
+	;not relevant when showing the best plan from the appointment screen. They only want to see the Orders selected.
+	i (qid'="") s link2="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.BestPlanSelOrder.List&QuoteID="_qid_"&CONTEXT="_context
+
+</SERVER>
+
+<FRAMESET rows="40%,30%,*"  border="0" scrolling="auto" reSize>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.BestPlan&QuoteID=#(qid)#&PatientBanner=1&PatientID=#(patid)##&CONTEXT=#(context)#" name="frmBestPlanEntry" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1"> 
+	<frame src=#(link1)# name="frmBestPlanList" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1">
+	<frame src=#(link2)# name="frmSelOrderList" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1">
+
+</FRAMESET>
+<BODY>
+<TRAK:APPLET>
+</BODY>
+</HTML>

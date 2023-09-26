@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<server>
+	/*
+	* Creator:ZhanMingChao
+	* CreatDate:20140816
+	* Description:医保数据部分;请勿改动,兼容老版本，新版本直接用hisui
+	* 类方法或query中不能有W，否则报错
+	* 使用说明:
+	* 在使用时只用拼上你写的类名、方法名、方法的参数即可生成json格式的数据，不用自己再操心拼串了。
+	* ARGUS:参数列表,格式:临时global节点名字(ROOTID可以用JS自动生成)$class名称$方法名$方法的参数只有一个，参数值用^分割
+	* 比如：
+	*	insujsonbuilder.csp?ARGUS=GlobalTestSubID$web.INSUDicDataCom$GetDicJSONInfo$SYS^^1
+	*							  临时global节点  [你自己的类名]       [方法名]	   [参数拼串]
+	* 临时global存储规则：
+	* 	^CacheTemp(sysRoot,ROOTID,index)=你的数据，数据各个字段用^分割
+	* 	index=0时，存字段的名称，程序会按你字段的名称组织json格式数据
+	*/
+	s spl=$c(36)	//$分割符
+	s tmpArgspl=$c(94)	//^分割符
+	s (ReqStr,limit,start,qKey,txtflag,jsonflag,fileStream)=""
+	//----------------------POST或GET参数接收------------------------------->
+	i ($data(%request.MimeData("FileStream",1))) d
+	.i ($classname(%request.MimeData("FileStream",1)))["Stream" d
+	..;s ReqStr=%request.Get("ReqStr",1)
+	..s ReqStr=%request.Get("ARGUS")
+	..s fileStream=%request.MimeData("FileStream",1)	//$classname
+	e  d
+	.s ReqStr=%request.Get("ARGUS")	//参数$拼串->必传项，不能为空，格式见上面说明
+	.s limit=+%request.Get("rows")	//jquery翻页时自动传的参数，不用管
+	.s start=+%request.Get("page")	//jquery翻页时自动传的参数，不用管
+	.s qKey=%request.Get("qid")		//重新查询标记，1是重新查询，0是取缓存数据
+	.s txtflag=+%request.Get("txtflag")		//取出原始数据标志用作导出数据,1:取出临时global中的数据(原始数据必须是以^分割的数据)
+	.s jsonflag=+%request.Get("jsonflag")	//1：生成的原始数据是JSON格式，0：原始数据是用^分割的数据
+	//<--------------------------------------------------------------------//
+	
+	;s tmp=$i(^zmc(ReqStr))
+	;s ^zmc(ReqStr,tmp)=start_","_limit_"_"_qKey ;_"_"_..UnescapeURL(qKey)
+	s nqflag=1
+	
+	s:$g(qKey)'="" nqflag=$g(qKey)	
+	s RtuValue="{""total"":""0"",""rows"":[""""]}"
+	s Expstr=txtflag_"^"_jsonflag_"^"_nqflag_"^"_start_"^"_limit
+	i ($l(ReqStr,spl)>0)
+	{
+		s ROOTID=$P(ReqStr,spl,1)	//节点
+		s classname=$P(ReqStr,spl,2)	//class名称
+		s methodname=$P(ReqStr,spl,3)	//方法名
+		s inArgs=$P(ReqStr,spl,4)		//实参用^分割,多个参数用@分割
+		i $l(inArgs,"%")>1 d
+		.s inArgs=##class(%CSP.Page).UnescapeURL(inArgs)	//前台如果用ESCAPE加密的话在这里解密
+		s RootID=ROOTID_"("_classname_"."_methodname_")"
+	}
+	i (fileStream'=""){
+		//导入文件内容
+		s RtuValue=$CLASSMETHOD(classname,methodname,RootID,inArgs,fileStream)
+	}else{
+		i (RootID'="")&(classname'="")&(methodname'="")&(inArgs'="") 
+		{
+			s rtnstr=##class(web.INSUJSONBuilder).BuildJSONFromQuery(RootID,classname,methodname,inArgs,Expstr)
+			s:(+rtnstr'=100) RtuValue=""
+		}
+	}
+	w RtuValue
+
+</server>
+
+

@@ -1,0 +1,50 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<server>
+ n ID,oeord,LabelText,LabelText1,LabelText2,drugname,phdf,len
+ s (ID,oeord,LabelText,LabelText1,LabelText2,drugname,phdf)=""
+ s ID=%request.Get("ID")
+ i ID'="" d
+ . s oeord=##Class(User.OEOrdItem).%OpenId(ID)
+ . i oeord,oeord.OEORILabelText d
+ . . s LabelText=$tr(##Class(websys.Conversions).LongTextLogicalToHtml(oeord.OEORILabelText,$c(13,10)),$c(8),"|")
+ . . i LabelText="" s LabelText=oeord.OEORIDoseQty_"x "_oeord.OEORIUnitDR.CTUOMDesc_"; "_oeord.OEORIPHFreqDR.PHCFRDesc1_", "_oeord.OEORIDuratDR.PHCDUDesc1_$c(13,10)_oeord.OEORIInstrDR.PHCINDesc1
+ . . s LabelText1=$p($g(LabelText),$c(13,10),1)
+ . . i LabelText1="" s LabelText1=oeord.OEORIDoseQty_"x "_oeord.OEORIUnitDR.CTUOMDesc_"; "_oeord.OEORIPHFreqDR.PHCFRDesc1_", "_oeord.OEORIDuratDR.PHCDUDesc1
+ . . d %request.Set("LabelText1",LabelText1)
+ . . i LabelText'="" s LabelText2=$e(LabelText,$l(LabelText1)+2,$l(LabelText))
+ . . i LabelText2="" s LabelText2=oeord.OEORIInstrDR.PHCINDesc1
+ . . ;s ^ZBOC($zn,"values")=LabelText2_", "_oeord.OEORIInstrDR.PHCINDesc1_", "_$l(LabelText2)
+ . . d %request.Set("OEORILabelText",LabelText2)
+ . . d oeord.%Close()
+ s ArcimDR=%request.Get("ArcimDR")
+ i ArcimDR'="" d
+ . s drugname=$p($g(^ARCIM(+ArcimDR,1,+$p(ArcimDR,"||",2))),"^",2)
+ . s phdf=$p($g(^ARCIM(+ArcimDR,1,+$p(ArcimDR,"||",2))),"^",12)
+ . i phdf'="" s drugname=$p($g(^PHCD(+phdf,1)),"^",2)
+ . d %request.Set("drugname",drugname)
+
+</server>
+
+	<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+	<TRAK:COMPONENT id="OEOrdItem.LabelText" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+
+<script language="JavaScript">
+
+function LabelText_keydownhandler(encmeth) {
+
+}
+
+</script>
+
+</html>

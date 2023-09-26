@@ -1,0 +1,421 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+		s %response.Timeout=18000
+		s action=$g(%request.Data("action",1))
+		i action="getFileContent" {
+			d %response.SetHeader("Pragma","No-cache")
+			d %response.SetHeader("Cache-Control","No-cache")
+			d %response.SetHeader("Expires",0)
+			s %response.ContentType="application/x-download"
+			d %response.SetHeader("Content-Disposition","attachment")
+		}
+		q 1
+   </script>
+<script language="cache" runat="server">
+	s action = $g(%request.Data("action",1))
+	//添加树节点
+	i (action="addTreeNode") 
+	{
+		s desc = $g(%request.Data("desc",1))
+		s code = $g(%request.Data("code",1))
+		s pCode=$g(%request.Data("pcode",1))
+		s treeCode=pCode_"."_code
+		&sql(insert into DHCWL_MKPI.MMgrModuleCfg (modulecfg_code,modulecfg_desc,modulecfg_treecode,modulecfg_ptreecode) values (:code,:desc,:treeCode,:pCode))
+		i +$g(SQLCODE)=0 w "{success:true,tip:'ok'}"
+		e  w "{success:true,tip:'添加失败！',SQLCODE:"_SQLCODE_"}"		
+	}
+	
+	//删除节点
+	i (action="delTreeNode") 
+	{
+		s treecode = $g(%request.Data("treecode",1))
+		s rowid=""
+		b
+		TSTART
+		&sql(delete from DHCWL_MKPI.MMgrModuleCfg where modulecfg_treecode=:treecode)
+		if ((SQLCODE'=0) && (SQLCODE'=100)) TROLLBACK  w "{success:true,tip:'删除MMgrModuleCfg失败！',SQLCODE:"_SQLCODE_"}" q
+		
+		&sql(delete from DHCWL_MKPI.MMgrRptCfg where RptCfg_TreeCode=:treecode)
+		if ((SQLCODE'=0) && (SQLCODE'=100)) TROLLBACK  w "{success:true,tip:'删除MMRptCfg失败！',SQLCODE:"_SQLCODE_"}" q
+
+		&sql(delete from DHCWL_MKPI.MMgrDatasetCfg where DatasetCfg_TreeCode=:treecode)
+		if ((SQLCODE'=0) && (SQLCODE'=100)) TROLLBACK  w "{success:true,tip:'删除MMgrDatasetCfg失败！',SQLCODE:"_SQLCODE_"}" q
+		
+		&sql(delete from DHCWL_MKPI.MMgrKPICfg where KPICfg_TreeCode=:treecode)
+		if ((SQLCODE'=0) && (SQLCODE'=100)) TROLLBACK  w "{success:true,tip:'删除MMgrKPICfg失败！',SQLCODE:"_SQLCODE_"}" q		
+		TCOMMIT
+		w "{success:true,tip:'ok'}"
+		
+	}
+	
+	//修改节点
+	i (action="modifyTreeNode")
+	{
+		s treecode = $g(%request.Data("treecode",1))
+		s desc = $g(%request.Data("desc",1))
+		&sql(update DHCWL_MKPI.MMgrModuleCfg set modulecfg_desc=:desc where modulecfg_treecode=:treecode)
+		i +$g(SQLCODE)=0 w "{success:true,tip:'ok'}"
+		e  w "{success:true,tip:'更新失败！'}"		
+		
+		
+	}
+	
+	//点击数节点的“展开”时，执行的操作
+	i (action="getTreeNode") 
+	{
+		set parentNode = $g(%request.Data("node",1))
+		set criteria=$g(%request.Data("Criteria",1))
+		
+		s objType=$p(criteria,",",1)
+		s objAttrib=$p(criteria,",",2)
+		s objValue=$p(criteria,",",3)
+		
+		set sql="select modulecfg_code,modulecfg_desc,modulecfg_treecode from DHCWL_MKPI.MMgrModuleCfg where ModuleCfg_PTreeCode="_"'"_parentNode_"'"
+		/*
+		if ((objType="模块") && (objAttrib="描述")) {
+			s modeTreeCodes=##class(DHCWL.ModuleManageServ.MMServ).GetSearchedModule(1,objValue)
+			//SET TreeCodesList=$LISTFROMSTRING(modeTreeCodes,",")
+		}
+		*/
+		if ((objType'="") && (objAttrib'="") && (objValue'="")) {
+			s modeTreeCodes=##class(DHCWL.ModuleManageServ.MMServ).GetSearchedModule(objType,objAttrib,objValue)
+			//SET TreeCodesList=$LISTFROMSTRING(modeTreeCodes,",")
+		}
+		//w !,"sql="_sql
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		//w !,sql
+		//读入可选项结束
+		s recCnt=0
+		w "["
+		
+		While(rs.Next()){
+			s isValid=0
+			s treecode=rs.Data("ModuleCfg_TreeCode")
+			
+			//所以查询条件都不选择表示查询所以数据
+			if ((objType="") && (objAttrib="") && (objValue="")) {
+				s isValid=1
+			}
+		
+			if ((objType'="") && (objAttrib'="") && (objValue'="")) {
+				s unitData=""
+				s codesLen=$L(modeTreeCodes,",")
+
+				b
+				f i=1:1:codesLen {
+					s unitData=$p(modeTreeCodes,",",i)
+					if unitData=treecode {
+						s isValid=1
+						q
+					}
+					if (objType="模块"){
+						s isValid=##class(DHCWL.ModuleManageServ.MMServ).IsAncestor(unitData,treecode)
+						q:(isValid=1)
+
+						s isValid=##class(DHCWL.ModuleManageServ.MMServ).IsAncestor(treecode,unitData)
+						q:(isValid=1) 	
+					}else{
+						s isValid=##class(DHCWL.ModuleManageServ.MMServ).IsAncestor(treecode,unitData)
+						q:(isValid=1)
+					}
+				}
+			}
+			continue:isValid=0
+			s desc=rs.Data("ModuleCfg_Desc")
+			s code=rs.Data("ModuleCfg_Code")
+			s desc=desc_":"_code
+			if ($d(^DHCWL.MKPI.MMgrModuleCfgI("ModuleCfgPTreeCodeIndex",treecode))=0){
+				s resultInfor=0
+			}else{
+				s resultInfor=1
+			}
+			i (recCnt>0) {
+				w ","
+			}
+			
+			if $g(mydebug)=1 {
+				b
+				s childCnt=0
+				&sql(select count(*) into :childCnt from DHCWL_MKPI.MMgrModuleCfg where modulecfg_ptreecode = :treecode )
+				if (childCnt=0)
+				{
+					w "{""text"":"""_desc_""",""id"":"""_treecode_""",""code"":"""_code_""",""cls"":""folder"",leaf: true,checked: false}"
+				}else{
+					w "{""text"":"""_desc_""",""id"":"""_treecode_""",""code"":"""_code_""",""cls"":""folder"",leaf: false,checked: false}"
+				}
+			}else{
+				if (resultInfor=1)
+				{
+					w "{""text"":"""_desc_""",""id"":"""_treecode_""",""code"":"""_code_""",""cls"":""folder"",leaf: false,checked: false}"
+				}else{
+					w "{""text"":"""_desc_""",""id"":"""_treecode_""",""code"":"""_code_""",""cls"":""folder"",leaf: true,checked: false}"
+				}
+			}
+			
+			s recCnt=recCnt+1
+
+		}
+		w "]"
+		d rs.Close()		
+	}
+	
+	
+	if (action="ExportModuleToXML"){ 
+		d %response.Flush()
+		set criteria=$g(%request.Data("Criteria",1))
+		s objType=$p(criteria,",",1)
+		s objAttrib=$p(criteria,",",2)
+		s objValue=$p(criteria,",",3)
+
+		s treeCodes=$g(%request.Data("treeCodes",1))
+		s reportCodes=$g(%request.Data("reportCodes",1))
+		s actFrom=$g(%request.Data("actFrom",1))
+		//w objType_","_objAttrib_","_objValue_","_selCodes_","_actFrom
+		d ##class(DHCWL.ModuleManageServ.MMServ).exportModules(treeCodes,reportCodes,actFrom,objType,objAttrib,objValue)
+		d %response.Flush()
+		q
+	}
+	if (action="getFileContent"){
+		d %response.Flush()
+		set criteria=$g(%request.Data("Criteria",1))
+		s objType=$p(criteria,",",1)
+		s objAttrib=$p(criteria,",",2)
+		s objValue=$p(criteria,",",3)
+		s treeCodes=$g(%request.Data("treeCodes",1))
+		s reportCodes=$g(%request.Data("reportCodes",1))
+		s actFrom=$g(%request.Data("actFrom",1))
+		s list=##Class(%Library.ListOfObjects).%New()
+		s list=##class(DHCWL.ModuleManageServ.MMServ).getExportInfor(treeCodes,reportCodes,actFrom,objType,objAttrib,objValue)
+		s len=list.Count()
+		s kpiIds=""
+		f i=1:1:len {
+	    s obj=list.GetAt(i)
+	    s dataName=obj.%ClassName(1)
+	    if (dataName="DHCWL.MKPI.MMgrDataSetCfg"){
+	    	s ruleList=obj.DatasetRuleList
+	    	s ruleLen=$l(ruleList,",")
+	    	for j=1:1:ruleLen {
+		    	s rule=$p(ruleList,",",j)
+		    	continue:rule=""
+		    	s kpiCode=$p(rule,":")
+		    	continue:kpiCode=""
+		    	s kpiId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiCode,"DHCWL.MKPI.MKPI")
+		    	continue:kpiId=""
+		    	if (kpiIds=""){
+		    		s kpiIds=kpiId
+		    	}else{
+			    	s kpiIds=kpiIds_","_kpiId
+		    	}
+	    	}
+	    }
+		}
+		s kpiSysList=##class(DHCWL.MKPIIO.DefaultOutService).GetKpiSystemList(kpiIds,1)
+		d ##class(DHCWL.MKPIIO.DefaultOutService).OutputMKPIToStream(kpiSysList,.outStream,1)
+		Set sc =##class(%XML.TextReader).ParseStream(outStream,.reader)
+		if (reader="") {
+			w "导出错误!"
+			q
+		}
+		d ##class(DHCWL.MKPIIO.DefaultOutService).TraverXmlToStr(reader)
+	}
+	if (action="getFileContentExpDim"){
+		d %response.Flush()
+		set criteria=$g(%request.Data("Criteria",1))
+		s objType=$p(criteria,",",1)
+		s objAttrib=$p(criteria,",",2)
+		s objValue=$p(criteria,",",3)
+		s treeCodes=$g(%request.Data("treeCodes",1))
+		s reportCodes=$g(%request.Data("reportCodes",1))
+		s actFrom=$g(%request.Data("actFrom",1))
+		s list=##Class(%Library.ListOfObjects).%New()
+		s list=##class(DHCWL.ModuleManageServ.MMServ).getExportInfor(treeCodes,reportCodes,actFrom,objType,objAttrib,objValue)
+		s len=list.Count()
+		s kpiIds=""
+		f i=1:1:len {
+	    s obj=list.GetAt(i)
+	    s dataName=obj.%ClassName(1)
+	    if (dataName="DHCWL.MKPI.MMgrDataSetCfg"){
+	    	s ruleList=obj.DatasetRuleList
+	    	s ruleLen=$l(ruleList,",")
+	    	for j=1:1:ruleLen {
+		    	s rule=$p(ruleList,",",j)
+		    	continue:rule=""
+		    	s kpiCode=$p(rule,":")
+		    	continue:kpiCode=""
+		    	s kpiId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiCode,"DHCWL.MKPI.MKPI")
+		    	continue:kpiId=""
+		    	if (kpiIds=""){
+		    		s kpiIds=kpiId
+		    	}else{
+			    	s kpiIds=kpiIds_","_kpiId
+		    	}
+	    	}
+	    }
+		}
+		s kpiSysList=##class(DHCWL.MKPIIO.DefaultOutService).GetKpiSystemList(kpiIds)
+		d ##class(DHCWL.MKPIIO.DefaultOutService).OutputMKPIToStream(kpiSysList,.outStream)
+		Set sc =##class(%XML.TextReader).ParseStream(outStream,.reader)
+		if (reader="") {
+			w "导出错误!"
+			q
+		}
+		d ##class(DHCWL.MKPIIO.DefaultOutService).TraverXmlToStr(reader)
+	}
+	//生成，删除，重生处理
+	i (action="mmHandleData")
+	{
+		b
+		s criteria=$g(%request.Data("Criteria",1))
+		s treeNodes=$g(%request.Data("treeNodes",1))
+		s rptCodes=$g(%request.Data("rptCodes",1))
+		s KPICodes=$g(%request.Data("KPICodes",1))
+		s startDate=$g(%request.Data("startDate",1))
+		s endDate=$g(%request.Data("endDate",1))				
+		s menuAct=$g(%request.Data("menuAct",1))
+		s actFrom=$g(%request.Data("actFrom",1))
+		s actFlag=$g(%request.Data("actFlag",1))
+		s dateSecType=$g(%request.Data("dateSecType",1))
+		s objType=$p(criteria,",",1)
+		s objAttrib=$p(criteria,",",2)
+		s objValue=$p(criteria,",",3)
+		//add by wk~2017-03-09~公司时间控件标准化
+		if (startDate'=""){
+			s startDate=##class(DHCWL.CommonUtil.DateUtil).DateHtmlToLogical(startDate)
+			s startDate=$zd(startDate,3)
+		} 
+		
+		if (endDate'=""){
+			s endDate=##class(DHCWL.CommonUtil.DateUtil).DateHtmlToLogical(endDate)
+			s endDate=$zd(endDate,3) 
+			s endDateT=$zdh(endDate,3)
+			if endDateT>+$h {
+				s endDate=$zd(+$h,3)	
+			}
+		}
+		//add by wz.2014-12-24
+		
+		i $d(%session.Data("LOGON.USERNAME")) s ^TEMPDHCWLKPIDATA("Login-OtherInfos",$j,"Operator")=$g(%session.Data("LOGON.USERNAME"))
+
+		//s result=##class(DHCWL.ModuleManageServ.MMServ).handleData2(objType,objAttrib,objValue,treeNodes, rptCodes,KPICodes,startDate,endDate,menuAct,actFrom)
+		if (($g(actFlag)=1) ||($g(actFlag)=2)) {
+			s dataFlag=$h
+			s date=$p(dataFlag,",",1)
+			s time=$p(dataFlag,",",2)
+			s dataFlag=date_time
+			s result=##class(DHCWL.ModuleManageServ.MMServ).handleDataOrCheck(objType,objAttrib,objValue,treeNodes, rptCodes,KPICodes,startDate,endDate,menuAct,actFrom,actFlag,dateSecType,dataFlag)
+			//q
+		}elseif ($g(actFlag)=3)&&(menuAct'="cleanData") {
+			s dataFlag=$h
+			s date=$p(dataFlag,",",1)
+			s time=$p(dataFlag,",",2)
+			s dataFlag=date_time
+			//s result=##class(DHCWL.ModuleManageServ.MMServ).handleData(KPICodes,menuAct,startDate,endDate,dateSecType)
+			d ##class(DHCWL.ModuleManageServ.MMServ).handleData(KPICodes,menuAct,startDate,endDate,dateSecType,dataFlag)
+			w "{success:true,tip:'ok',dataFlag:"_dataFlag_"}"
+			//i +$g(result)=0 w "{success:true,tip:'ok'}"
+			//e  w "{success:true,tip:'操作失败！'}"		
+		}elseif ($g(actFlag)=3)&&(menuAct="cleanData"){
+			s result=##class(DHCWL.ModuleManageServ.MMServ).handleData(KPICodes,menuAct,startDate,endDate,dateSecType)
+			i +$g(result)=0 w "{success:true,tip:'ok'}"
+			e  w "{success:true,tip:'操作失败！'}"
+		}
+		//add by wz.2014-12-24
+		k ^TEMPDHCWLKPIDATA("Login-OtherInfos",$j,"Operator")
+		
+	}
+	//返回数据生成状态
+	i (action="getCreatDataInfor"){
+		
+		
+		s kpiDataFlag=$g(%request.Data("moduleDataFlag",1))
+		s dataProcess=$g(^TEMPDHCWL("KPI","CreatDate","progress","currentProgress"),0)
+		s value=$g(^TEMPDHCWL("creatKpiDate","checkNumber"))
+		if (value'=""){
+			s processValue=$p(value,"^",1)
+			s number=$p(value,"^",2)
+			if (processValue=""||number=""){
+				s value=kpiDataFlag_"^"_0
+				s ^TEMPDHCWL("creatKpiDate","checkNumber")=value
+			}else{
+				if (processValue=kpiDataFlag){
+					s number=(+number)+1
+					if (number=30){
+						s dataProcess=-1
+					}
+					s value=kpiDataFlag_"^"_number
+					s ^TEMPDHCWL("creatKpiDate","checkNumber")=value
+				}else{
+					s value=kpiDataFlag_"^"_0
+					s ^TEMPDHCWL("creatKpiDate","checkNumber")=value
+				}
+			}
+		}else{
+			s value=kpiDataFlag_"^"_0
+			s ^TEMPDHCWL("creatKpiDate","checkNumber")=value
+		}
+		if (dataProcess=-1){
+			w "{success:false}"
+		}else{
+			w "{success:true,number:"_dataProcess_"}"
+		}
+	}
+	//激活指标任务
+	i (action="ActivateKPITask")
+	{
+		b
+		s treeNodes=$g(%request.Data("treeCodes",1))
+		s rptNodes=$g(%request.Data("rptNodes",1))
+		s dsNodes=$g(%request.Data("dsNodes",1))
+		s actFrom=$g(%request.Data("actFrom",1))
+		s result=##class(DHCWL.ModuleManageServ.MMServ).ActivateKPITask(treeNodes,rptNodes,dsNodes,actFrom)
+		i +$g(result)=0 w "{success:true,tip:'ok'}"
+		e  w "{success:true,tip:'操作失败！'}"		
+	}
+	//不指标任务
+	i (action="DisActivateKPITask")
+	{
+		b
+		s treeNodes=$g(%request.Data("treeCodes",1))
+		s rptNodes=$g(%request.Data("rptNodes",1))
+		s dsNodes=$g(%request.Data("dsNodes",1))
+		s actFrom=$g(%request.Data("actFrom",1))
+		s isMul=$g(%request.Data("mul",1))
+		s result=##class(DHCWL.ModuleManageServ.MMServ).DisActivateKPITask(treeNodes,rptNodes,dsNodes,actFrom,isMul)
+		i +$g(result)=0 w "{success:true,tip:'ok'}"
+		e  w "{success:true,tip:'操作失败！'}"		
+	}
+	i (action="showDataTaskKpi")
+	{
+		s moduleNodes=$g(%request.Data("modNodeIDs",1))
+		s rptNodes=$g(%request.Data("rptNodeIDs",1))
+		s dsNodes=$g(%request.Data("setNodeIDs",1))
+		s actFrom=$g(%request.Data("sign",1))
+		k ^TEMPDHCWL("GetKpiCode")
+		
+		s kpiCodes=""
+		if actFrom="module" {
+			s kpiCodes=##class(DHCWL.Interface.Module).GetKpiCodeByModuleTCode(moduleNodes,"","","true")
+		}elseif(actFrom="report"){
+			s kpiCodes=##class(DHCWL.Interface.Module).GetKpiCodeByRptCode(moduleNodes,rptNodes,"","true")
+		}elseif(actFrom="dataset"){
+			s kpiCodes=##class(DHCWL.Interface.Module).GetKpiCodeByDsCode(moduleNodes,rptNodes,dsNodes,"true")
+		}
+		i +$g(result)=0 w "{success:true,tip:'ok',kpiCodes:'"_kpiCodes_"'}"
+		e  w "{success:true,tip:'操作失败！'}"		
+	}/*elseif(action="DisActivateAllKPITask")
+	{
+		s Rs=##class(%Library.ResultSet).%New()
+		s Sql="UPDATE DHCWL_MKPI.DHCWLCreatDataTask SET DTask_ActiveFlag = 'N' "
+		s st=Rs.Prepare(Sql)
+		s st=Rs.Execute()
+		if +$g(SQLCODE)=0 w "{success:true,tip:'ok'}"
+		e  w "{success:true,tip:'操作失败！'}"
+	}*/	
+
+   // w "[{""text"":"""_%request.Data("node",1)_""",""id"" :""1"",""cls"":""folder""}]"
+</script>
+
+

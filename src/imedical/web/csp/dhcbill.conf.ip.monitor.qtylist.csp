@@ -1,0 +1,240 @@
+<table class="hisui-datagrid" id="qtyList"></table>
+<script type="text/javascript">
+	GV.EditRowIndex = undefined;
+	
+	$(function() {
+		var toolbar = [{
+				text: '新增',
+				iconCls: 'icon-add',
+				handler: function() {
+					addClick();
+				}
+			}, {
+				text: '修改',
+				iconCls: 'icon-write-order',
+				handler: function() {
+					updateClick();
+				}
+			}, {
+				text: '删除',
+				iconCls: 'icon-cancel',
+				handler: function() {
+					deleteClick();
+				}
+			}, {
+				text: '保存',
+				iconCls: 'icon-save',
+				handler: function() {
+					saveClick();
+				}
+			}, {
+				text: '取消编辑',
+				iconCls: 'icon-redo',
+				handler: function() {
+					rejectClick();
+				}
+			}
+		]
+		GV.QtyList = $HUI.datagrid("#qtyList", {
+			height: 350,
+			title: '医嘱数量维护',
+			headerCls: 'panel-header-gray',
+			iconCls: 'icon-write-order',
+			singleSelect: true,
+			rownumbers: true,
+			pagination: true,
+			pageSize: 5,
+			pageList: [5, 10, 20],
+			loadMsg: '',
+			toolbar: toolbar,
+			columns: [[{title: 'TCDRowID', field: 'TCDRowID', hidden: true},
+					   {title: 'TRulesCode', field: 'TRulesCode', hidden: true},
+			           {title: 'TRulesType', field: 'TRulesType', hidden: true},
+			           {title: 'TRulesTypeDR', field: 'TRulesTypeDR', hidden: true},
+					   {title: '医嘱', field: 'TRulesDesc', width: 300,
+						editor: {
+							type: 'combobox',
+							options: {
+								panelHeight: 150,
+								url: $URL,
+								required: true,
+								method: 'get',
+								mode: 'remote',
+								delay: 500,
+								valueField: 'ArcimRowID',
+								textField: 'ArcimDesc',
+								blurValidValue: true,
+								onBeforeLoad: function (param) {
+									param.ClassName = "DHCDoc.DHCDocConfig.ArcItemConfig";
+									param.QueryName = "FindAllItem";
+									param.ResultSetType = "array";
+									param.Alias = param.q;
+									param.HospId = GV.HospId;
+								},
+								onSelect: function(rec) {
+									var row = GV.QtyList.getRows()[GV.EditRowIndex];
+									if (row) {
+										row.TRulesTypeDR = rec.ArcimRowID;
+									}
+								},
+								onChange: function(newValue, oldValue) {
+									if (!newValue) {
+										var row = GV.QtyList.getRows()[GV.EditRowIndex];
+										if (row) {
+											row.TRulesTypeDR = "";
+										}
+									}
+								}
+							}
+						}
+					   },
+					   {title: '最大数量', field: 'TMaxQty', width: 150,
+					    editor: {
+							type: 'numberbox',
+							options: {
+								min: 1,
+								required: true
+						 	}
+					  	 }
+					    }
+				]],
+			url: $URL,
+			queryParams: {
+				ClassName: "web.DHCIPBillCostMonitorConfig",
+				QueryName: "FindTypeRulesList",
+				MPCRowID: GV.MoniId
+			},
+			onLoadSuccess: function(data) {
+				GV.EditRowIndex = undefined;
+			},
+			onEndEdit: function(index, row, changes) {
+				onEndEditHandler(index, row);
+			}
+		});
+
+		function onEndEditHandler(index, row) {
+			var ed = GV.QtyList.getEditor({index: index, field: "TRulesDesc"});
+			if (ed) {
+				row.TRulesDesc = $(ed.target).combobox("getText");
+			}
+		}
+
+		/**
+		* 保存
+		*/
+		function saveClick() {
+			var row = GV.QtyList.getRows()[GV.EditRowIndex];
+			if (!row){
+				return;
+			}
+			if (!endEditing()) {
+				return;
+			}
+			var jsonObj = {
+				MoniId: GV.MoniId,
+				Id: row.TCDRowID,
+				Type: row.TRulesCode || "ARCIM",
+				TypeDR: row.TRulesTypeDR,
+				MaxQty: row.TMaxQty
+			};
+			$.cm({
+				ClassName: "web.DHCIPBillCostMonitorConfig",
+				MethodName: "SaveRules",
+				jsonStr: JSON.stringify(jsonObj)
+			}, function (rtn) {
+				var type = (rtn.success == "0") ? "success" : "error";
+				$.messager.popover({msg: rtn.msg, type: type});
+				GV.QtyList.reload();
+			});
+		}
+
+		/**
+		* 新增
+		*/
+		function addClick() {
+			if (GV.EditRowIndex != undefined) {
+				$.messager.popover({msg: "有正在编辑的行", type: "info"});
+				return;
+			}
+			var row = {};
+			$.each(GV.QtyList.getColumnFields(), function (index, item) {
+				row[item] = "";
+			});
+			GV.QtyList.appendRow(row);
+			GV.EditRowIndex = GV.QtyList.getRows().length - 1;
+			GV.QtyList.beginEdit(GV.EditRowIndex);
+			GV.QtyList.selectRow(GV.EditRowIndex);
+		}
+
+		/**
+		* 删除
+		*/
+		function deleteClick() {
+			var row = GV.QtyList.getSelected();
+			if (!row) {
+				$.messager.popover({msg: "请选择需要删除的行", type: "info"});
+				return;
+			}
+			$.messager.confirm("确认", "确认删除？", function(r) {
+				if (r) {
+					$.cm({
+						ClassName: "web.DHCIPBillCostMonitorConfig",
+						MethodName: "DeleteCD",
+						id: row.TCDRowID
+					}, function(rtn) {
+						if (rtn.success == "0") {
+							$.messager.popover({msg: rtn.msg, type: "success"});
+							GV.QtyList.reload();
+						}else {
+							$.messager.popover({msg: rtn.msg, type: "error"});
+						}
+					});
+				}
+			});
+		}
+
+		/**
+		* 修改
+		*/
+		function updateClick() {
+			if (GV.EditRowIndex != undefined) {
+				$.messager.popover({msg: "有正在编辑的行", type: "info"});
+				return;
+			}
+			var row = GV.QtyList.getSelected();
+			if (!row) {
+				$.messager.popover({msg: "请选择需要编辑的行", type: "info"});
+				return;
+			}
+			
+			GV.EditRowIndex = GV.QtyList.getRowIndex(row);
+			beginEditRow(GV.EditRowIndex, row);
+		}
+
+		function beginEditRow(index, row) {
+			GV.EditRowIndex = index;
+			GV.QtyList.beginEdit(index);
+		}
+
+		/**
+		* 取消编辑
+		*/
+		function rejectClick() {
+			GV.QtyList.rejectChanges();
+			GV.EditRowIndex = undefined;
+		}
+
+		function endEditing() {
+			if (GV.EditRowIndex == undefined) {
+				return true;
+			}
+			if (GV.QtyList.validateRow(GV.EditRowIndex)) {
+				GV.QtyList.endEdit(GV.EditRowIndex);
+				GV.EditRowIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+	});
+</script>

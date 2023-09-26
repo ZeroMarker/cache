@@ -1,0 +1,81 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--AmiN Log 24044   on 31 May 2002><-->
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</HEAD>
+<TRAK:APPLET></TRAK:APPLET>
+<BODY>
+
+<!-- Log 61887 - AI - 05-01-2007 -->
+<!-- The following CAB file is the last version that worked BEFORE we added the "Lothian" foot pedal as well. -->
+<!-- The CAB file is saved as "trakwebsound_backup at 20061215.CAB" in \\Emu\developer\W642LDEV\addins\client . -->
+<!-- <OBJECT ID="trakSound" -->
+<!-- CLASSID="CLSID:DFE2055C-372C-476F-8D55-515DAC29F3C0" -->
+<!-- CODEBASE="..\addins\client\trakwebsound.CAB#version=2002,0,0,8"> -->
+<!-- </OBJECT> -->
+
+<!-- DON'T FORGET TO ADD IN THE DIRECTORY : CODEBASE="..\addins\client\trakwebsound.CAB#version=...  -->
+
+<Server>
+ //log 62487 TedT
+ s lockcmp=0
+ f i=1:1:$l(%request.Get("OEOrdItemID"),"^") d
+ . s orditm=$p(%request.Get("OEOrdItemID"),"^",i)
+ . i '##Class(websys.Lock).Lock($lb(orditm,"User.OEOrdItem"),%session.SessionId,%session.Get("LOGON.USERID"),.warning) d
+ . . s lockcmp=1 w "<DIV><STRONG><FONT COLOR=RED>",warning,"</FONT></STRONG></DIV>",$c(13,10)
+ ;log 64023
+ d %request.Set("lockcmp",lockcmp)
+</server>
+
+<!-- log 64023 moved to component
+<CSP:IF condition=(lockcmp=0)>
+<OBJECT ID="trakSound"
+CLASSID="CLSID:08A91BDF-6B02-4CEC-AD20-5A95F7FD1010"
+CODEBASE="..\addins\client\trakwebsound.CAB#version=2002,0,0,99">
+</OBJECT>
+-->
+
+</CSP:IF>
+<SERVER>
+ n resrowid,id,dateCreate,timeCreate,userCreate,hospCreate
+ s (resrowid,id,dateCreate,timeCreate,userCreate,hospCreate)=""
+ 
+ d %request.Set("DisableFlag",0)
+ s id=$p(%request.Get("OEOrdItemID"),"^")
+ &sql(Select RES_RowId INTO :resrowid FROM OE_OrdResult WHERE RES_ParRef=:id AND RES_Type ='V' AND RES_NonSTDRepIssReason_DR IS NULL)
+ i SQLCODE=100 s (resrowid)=""
+ i resrowid'="" d
+ . s dateCreate=$p($g(^OEORD(+resrowid,"I",$p(resrowid,"||",2),"RES",$p(resrowid,"||",3))),"^",37)
+ . s timeCreate=$p($g(^OEORD(+resrowid,"I",$p(resrowid,"||",2),"RES",$p(resrowid,"||",3))),"^",38)
+ . s userCreate=$p($g(^OEORD(+resrowid,"I",$p(resrowid,"||",2),"RES",$p(resrowid,"||",3))),"^",39)
+ . s hospCreate=$p($g(^OEORD(+resrowid,"I",$p(resrowid,"||",2),"RES",$p(resrowid,"||",3))),"^",40)
+  
+ i resrowid'="" d %request.Set("ResultID",resrowid)
+ d %request.Set("dateCreate",##Class(websys.Conversions).DateLogicalToHtml(dateCreate))
+ d %request.Set("timeCreate",##Class(websys.Conversions).TimeLogicalToHtml(timeCreate))
+ i userCreate'="" d %request.Set("userCreate",$p($g(^SSU("SSUSR",userCreate)),"^"))
+ d %request.Set("hospCreate",##Class(web.CTHospital).GetDescFromRowId(hospCreate))
+ 
+ s cmp=##Class(websys.Component).OpenName("Voice.Link")
+ i cmp d
+ . s cmp.HideMenus=1
+ . s:lockcmp cmp.Disabled=1 
+ . d cmp.Show()
+ . d cmp.%Close()
+</SERVER>
+
+<SCRIPT Language="JavaScript">
+document.onload=VoiceLoadHandler("False","False");
+</SCRIPT>
+
+</BODY>
+</HTML>

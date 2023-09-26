@@ -1,0 +1,119 @@
+<!--（草药揭药）揭药药包装箱 csp:dhcpha/dhcpha.inpha.hmbrothpackboxup.csp--> 
+<!--（草药揭药）揭药药包装箱 js:pharmacy/inpha/dhcpha.inpha.hmbrothpackboxup.js--> 
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD/>
+	<DHCPHARMACY:COMMONLIB/>	
+	<DHCAPP:PHARBOOTSTRAP/>
+	<Server language="CACHE" runat="Server">
+   		s Application=%request.Application
+   </Server>
+	<!--dhcpha js-->
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/LodopFuncs.js" ></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.mtprintcom.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmbrothpackboxup.js"></script> 
+</head>
+<body >
+	<div class="container-fluid dhcpha-condition-container">
+		<div class="row row_style">
+			<form class="form-inline">  
+				<!--
+				<div class="input-group">
+					<span for="date-daterange" class="input-group-addon dhcpha-input-group-addon-in"><strong>揭药日期</strong></span>
+					<input id="date-daterange" class="form-control input_style" type="text" style="border-right:none;width:14em" placeholder="请选择日期">
+					<span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+						<i class="fa fa-calendar"></i>
+					</span>                 
+				</div>
+				-->
+				<div class="input-group">
+					<span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>揭药日期</strong></span>
+                    <input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:6.5em" placeholder="请选择日期">
+                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                          <i class="fa fa-calendar"></i>
+                    </span>  
+               </div>
+               <span><strong>至</strong></span>
+               <div class="input-group">
+                    <input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:6.5em" placeholder="请选择日期">
+                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                          <i class="fa fa-calendar"></i>
+                    </span>                       
+               </div>
+               
+				<div class="input-group" style="padding-left:20px">		                   
+					<select class="form-control in_select" id="sel-phaward"></select>                   
+				</div> 
+				<div class="input-group">	                    
+		            <select class="form-control in_select" id="sel-medbatno">
+					</select>
+		        </div> 
+		        <div class="form-group dhcpha-col-split"></div>
+				<div class="input-group">                                     
+					<input type="checkbox" id="chk-haspackbox">
+					<lable for="chk-haspackbox"><strong>已装箱</strong></lable>	
+				</div>             
+				<div class="btn-group dhcpha-btn-right">  
+					<button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split" type="button" id="btn-find" onclick="javascript:QueryGridBroPack()">查询</button>
+					<button class="btn btn-danger  dhcpha-btn-common dhcpha-btn-danger dhcpha-btn-split" type="button" id="btn-sure" onclick="javascript:ConfirmPackBoxUp()">装箱</button>
+					<button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split" type="button" id="btn-clear" onclick="javascript:ClearConditions()">清屏</button>
+				</div>
+			</form>
+		</div>
+	</div> 
+	<div class="row dhcpha-row-split" ></div>
+	<div class="container-fluid ">
+		<div class="row">
+			<div>
+				<div class="panel div_content">
+					<div class="panel-heading"><span class="pal_style"><strong>揭药批次列表</strong></span></div>
+					<table id="grid-brobatno" class="table table-bordered table_style"></table>
+				</div>
+				<div class="panel div_content">
+					<div class="panel-heading"><span class="pal_style"><strong>揭药批次明细</strong></span></div>
+					<table id="grid-brobatnodetail" class="table table-bordered table_style"></table> 
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--选择箱数-->
+	<div class="modal fade" id="modal-boxnum" tabindex="-1" role="dialog" aria-hidden="false" data-backdrop="static">
+		<div class="modal-dialog" style="width:400px">
+			<div class="modal-content" style="height:250px">
+		        <div class="modal-header modal_header_style">
+			         <button type="button" class="close" data-dismiss="modal" aria-label="Close" ><span style="color:#fff;" aria-hidden="true">&times;</span></button>
+			         <span class="modal-title" style="background-color:#556983;"><i class="fa fa-medkit" aria-hidden="true"></i>　选择箱数</span>
+		        </div>
+				<div class="modal-body">
+					<div class="row" style="margin-left:30px"> 
+						<span><lable id="wardinfo" style="color:red;font-size:30px;"></lable></span>
+	                </div>
+	                <div style="margin-left:30px"> 
+						<span><lable id="batnoinfo" style="color:red;font-size:30px;"></lable></span>
+	                </div>
+					<div style="margin-left:30px;margin-top:15px;">
+						<div class="input-group">	                    
+				            <select class="form-control in_select" id="sel-phboxnum">
+							</select>
+				        </div>
+		            </div>
+				</div>
+	            <div align="center">
+	                <button class="btn dhcpha-icon-btn-common dhcpha-icon-btn-normal" id="btn-boxnum-sure">确定</button>
+	            </div>
+			</div>
+		</div>
+	</div>
+	
+</body>
+</html>

@@ -1,0 +1,72 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir = $Get(%request.Data("sortDir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s userid = $Get(%request.Data("UserId",1))
+	s AcctBookID = $Get(%request.Data("AcctBookID",1))
+	s CondFlag = $Get(%request.Data("CondFlag",1))
+	s AcctYear= $Get(%request.Data("AcctYear",1))
+	s AcctMonth= $Get(%request.Data("AcctMonth",1))
+	s VouchDate= $Get(%request.Data("VouchDate",1))
+	s VouchNo= $Get(%request.Data("VouchNo",1))
+	s VouchBillNum= $Get(%request.Data("VouchBillNum",1))
+	s TotalAmount= $Get(%request.Data("TotalAmount",1))
+	s Operator= $Get(%request.Data("Operator",1))
+	s IsCheck= $Get(%request.Data("IsCheck",1))
+	s Auditor= $Get(%request.Data("Auditor",1))
+	s Poster= $Get(%request.Data("Poster",1))
+	s VouchState= $Get(%request.Data("VouchState",1))
+	s AcctVouchID= $Get(%request.Data("AcctVouchID",1))
+	s VouchProgress= $Get(%request.Data("VouchProgress",1))
+	s VouchState1= $Get(%request.Data("VouchState1",1))
+	
+	i action = "CurYearMonth"  d
+	.s result = ##Class(herp.acct.udata.uAcctCommon).GetAcctCurYearMonth(AcctBookID)
+	.w "{success:'true',refresh:'true',info:'"_result_"'}"
+	/*.i result = 0 d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	*/
+	
+	i action="Count" d
+	.s result=##Class(herp.acct.udata.uAcctVouchBatchAccount).CondCountlist(AcctBookID,AcctMonth)
+	.i result '="" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:''}"
+	
+	
+	i action = "BatchList"  d
+	.w ##Class(herp.acct.udata.uAcctVouchBatchAccount).BatchList(start, limit, AcctYear, AcctMonth, AcctBookID, CondFlag)
+	
+	i action = "listd"  d
+	.w ##class(herp.acct.udata.uAcctCommon).GetVouchProgress(start,limit,AcctVouchID)
+	
+	i action = "update" d
+	.s result= ##Class(herp.acct.udata.uAcctVouchBatchAccount).AcctRecUpdate(AcctYear, AcctMonth,AcctBookID,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "antiAcctRec" d
+	.s result= ##Class(herp.acct.udata.uAcctVouchBatchAccount).antiAcctRec(AcctYear, AcctMonth,AcctBookID,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

@@ -1,0 +1,132 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<HTML>
+	<HEAD>
+		<title>
+			<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+		</title>
+			<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+		<script language="cache" runat="server">
+			s appointUserID = %session.Get("LOGON.USERID")
+			s appointUserLoc = %session.Get("LOGON.CTLOCID")
+			s ssgroupID = %session.Get("LOGON.GROUPID")	
+	   </script>
+		<script type="text/javascript">
+			var appointUserID = '#(appointUserID)#';
+			var appointUserLoc = '#(appointUserLoc)#';
+			var ssgroupID = '#(ssgroupID)#';	
+	   </script>
+		<style type="text/css">
+			.panel-body .panel-body-noheader 
+			{ 
+				border-color: #cccccc;;
+			}
+	   </style>	
+		<title>出院病历授权</title>
+	</HEAD>
+	<body class="hisui-layout">
+		<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:3px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+					<div id="patientListTableTBar" style="padding:5px;height:30px;">	
+						<div style="margin-bottom:2px;">
+							&nbsp;时间 <select class="hisui-combobox"  id="inputTimeType" style="width:100px;" ></select>
+							&nbsp;<input id="inputStartDate" class="hisui-datebox textbox datebox-f combo-f" style="width:110px;" />
+							<span style="font-size:20px">~</span><input id="inputEndDate" class="hisui-datebox textbox datebox-f combo-f" style="width:110px;" />
+							&nbsp;科室 <select class="hisui-combobox"  id="inputCtLoc" style="width:120px;" ></select>
+							&nbsp;<select id="inputMainSelect" class="hisui-combobox" style="width:80px;" ></select>
+							<input id="inputMainInput" placeholder="请输入查询关键字" class="textbox" style="width:115px;" />
+							<a href="#" id="patientSearchBtn" class="hisui-linkbutton" iconCls="icon-w-find">查询</a>
+						</div>		
+					</div>
+					<table id="patientListTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+			</div>
+		</div>
+		<div id="eastPanel" data-options="region:'east',headerCls:'panel-header-gray',border:false" style="width:440px;padding:3px 3px 3px 0;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="hisui-panel" title="出院病历" data-options="region:'center',headerCls:'panel-header-gray',split:false,iconCls:'icon-paper',tools:'#episodehistory'">
+					<div id="emrTreeDiv" class="hisui-layout" data-options="fit:true,border:false" style="border-color:#cccccc;">
+						<div data-options="region:'north',border:false" style="overflow:hidden;">
+							<div id="treeTBar" style="padding:5px;overflow-y:hidden;">
+								授权时间(小时)<input type="text" id="inputGivePowerSpan" style="width:30px;height:30px;margin:0 5px 0 5px;"></input>  
+								授权操作类型 <select id="inputGivePowerType" class="hisui-combobox" name="inputGivePowerType" style="width:100px;height:30px;margin:0 5px 0 5px;"></select>
+								<a href="#" id="treeHistoryBtn" class="hisui-linkbutton">授权历史</a>	
+							</div>
+						</div>
+						<div data-options="region:'center',border:false" style="border-top:1px solid #cccccc;border-bottom:1px solid #cccccc;">
+							<ul id="emrTree" class="hisui-tree" data-options="lines:true"></ul>
+						</div>
+						<!--
+						<div data-options="region:'south',border:false" style="overflow:hidden;text-align:center;">
+							<a href="#" id="treeGivePowerBtn" class="hisui-linkbutton" style="margin:5px 0 7px 0;background-color:#21BA45;">给予权限</a>
+						</div>
+					-->
+					</div>
+				</div>
+				<div data-options="region:'south',headerCls:'panel-header-gray',border:false" style="height:300px;padding-top:3px;">
+						<div id="docListTableTBar" style="padding:5px;height:30px;">	
+							<div style="margin-bottom:5px;">
+								&nbsp;科室&nbsp; <select id="inputDocLoc" name="inputLoc" class="hisui-combobox" style="width:110px;"></select>
+								&nbsp;姓名&nbsp;<input id="inputDocName" class="textbox" style="width:70px;" />
+								<a href="#" id="docSearchBtn" class="hisui-linkbutton">查询</a>
+								<a href="#" id="doAuthorityBtn" class="hisui-linkbutton" style="background-color:#21BA45">给予权限</a>
+							</div>		
+						</div>
+						<table id="docListTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-doctor',fit:true"></table>
+				</div>
+			</div>
+		</div>
+		<div id="treeHistoryWin" style="border:0;padding:5px;">
+			<div id="historyTableTBar" style="padding:5px;height:30;border:0;">	
+				<div style="margin-bottom:5px;">
+					生效类型 <select id="isCurrentValidSelect" class="hisui-combobox" name="isCurrentValidSelect" style="width:100px;"></select>
+					<a href="#" id="withdrawBtn" class="hisui-linkbutton" iconCls="icon-w-close">撤销生效中授权</a>
+				</div>	
+			</div>
+			<table id="historyTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-doctor',fit:true"></table>
+		</div>
+		<div id="MessageWin" style="padding:5px">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',headerCls:'panel-header-gray',border:false" style="height:90px;">
+					<div style="height:20px;padding:8px 0px 3px 10px;">
+						<span style="font-weight:bold;">给予医生：</span>
+						<span> <a id="MsgDocName">给予医生</a></span>
+					</div>
+					<div style="height:20px;padding:3px 0px 3px 10px;">
+						<span style="font-weight:bold;">患者姓名：</span>
+						<span> <a id="MsgPatName">患者姓名</a></span>
+					</div>
+					<div style="height:20px;padding:3px 0px 8px 10px;">
+						<span style="font-weight:bold;">操作类型：</span>
+						<span> <a id="actionsName">操作类型</a></span>
+					</div>
+				</div>
+				<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+					<div style="padding:0 3px 0 3px;">
+						<table id="MsgWinTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray'" style="height:380px;border:1px solid #cccccc;"></table>
+					</div>
+					<div>
+						<span style="height:50px;line-height:50px;overflow:hidden;padding-left:210px;">
+							<a href="#" id="MsgBtnOK" class="hisui-linkbutton">确定</a>
+						</span>
+						<span style="height:50px;line-height:50px;overflow:hidden;padding-left:15px;">
+							<a href="#" id="MsgBtnCancel" class="hisui-linkbutton">取消</a>
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript" src="../scripts/nurse/hisui/NurMp.Quality.Comm.js"></script>
+		<script type="text/javascript" src="../scripts/nurse/hisui/NurMp.Quality.Authority.js"></script>
+	</body>
+	</HTML>
+	

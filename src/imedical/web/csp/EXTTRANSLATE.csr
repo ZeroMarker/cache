@@ -1,0 +1,29 @@
+<!-- CSP TRAK:TRANSLATE Rules -->
+<!-- Copyright (c) 2000 TRAK Systems Pty. ALL RIGHTS RESERVED. -->
+
+<!-- TRANSLATE TAG superceeed by title - provided for backwards compatibility --------------------------------------------- -->
+
+<csr:rule name="EXTHEALTH.TRANSLATE" match="EXTHEALTH:TRANSLATE">
+<csr:description>
+The <b>TRAK:TRANSLATE</b> inserts the system title from the MEDTRAK configuration
+</csr:description>
+
+<csr:action>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		s LogonDesc="",HospDesc="",LogonLocDesc=""
+		if $d(%session),$g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.CTLOCID")){
+			s LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			if (LogonLocID>0){
+				s LogonLocDesc=$s(LogonLocID'="":$P(^CTLOC(LogonLocID),"^",2),1:"")
+				if $l(LogonLocDesc,"-") =2 s LogonLocDesc =  $p(LogonLocDesc,"-",2) 
+				Set HospId = $P(^CTLOC(LogonLocID),"^",22)
+				If HospId>0 Set HospDesc = $p(^CT("HOSP",HospId),"^",2)
+			}
+			s LogonDesc=" "_%session.Data("LOGON.USERNAME")_" "_%session.Data("LOGON.GROUPDESC")_" "_LogonLocDesc_" "_HospDesc
+	    }
+	    ;$p($g(^CF("SM",1)),"^",5)
+		w LogonDesc
+	</SCRIPT>
+</csr:action>
+</csr:rule>
+

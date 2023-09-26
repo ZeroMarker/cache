@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--opadm.schedulestopqueueno.hui.csp HISUI医生坐诊信息调整--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link rel="stylesheet" href="../scripts_lib/kalendae/kalendae.css" type="text/css">
+<style>
+.seqno-list li{
+	float:left;
+	cursor:pointer;
+    color: white;
+    font-size:20px!important;
+    line-height:60px;
+    text-align: center;
+    width: 60px;
+    height: 60px;
+	border:2px solid #509de1;
+	border-radius:60px;
+	margin:1px;
+}
+.seqno-list li:hover{
+	border:2px solid orange;
+	cursor:pointer;
+	font-size:22px!important;
+	font-weight:bolder;
+}
+.avail-seqno{background-color:rgb(50, 189, 40);}
+.stop-seqno{background-color:#ff8888;}
+</style>
+<Server>
+s ASRowid=%request.Get("ASRowid")
+</Server>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div class="hisui-panel" data-options="iconCls:'icon-template',fit:true,headerCls:'panel-header-gray',title:''" style="1px solid #ccc;">
+		<div id="SeqNoWin">
+			<ul class="seqno-list"><ul>
+		</div>
+	</div>
+</div>
+	<SCRIPT language = 'javascript' >
+	var ASRowid="#(ASRowid)#"
+	var ServerObj={
+		StopStatus:#(##class(DHCDoc.OPAdm.Schedule).#StopStatus)#
+	};
+	$(function(){
+		 ShowAvailSeqNo(ASRowid)
+		 $('.seqno-list').on('click','li',function(){
+	        var QueueNo=$(this).text();
+	        var NewStatusCode=0;
+	        if($(this).hasClass('avail-seqno')) NewStatusCode=ServerObj.StopStatus;
+	        StopQueueNo(NewStatusCode,QueueNo,this);
+	    });
+		})
+	function ShowAvailSeqNo(ASRowid)
+	{
+	    $('.seqno-list').empty();
+	    $.cm({ 
+	        ClassName:"DHCDoc.OPAdm.Schedule",
+	        MethodName:"ShowAvailSeqNo", 
+	        ASRowid:ASRowid
+	    },function(data){
+	        for(var i=0;i<data.length;i++){
+	            var className="avail-seqno";
+	            if(data[i].StatusCode==ServerObj.StopStatus) className="stop-seqno";
+	            $('.seqno-list').append("<li class='"+className+"'>"+data[i].QueueNo+"</li>");
+	        }
+	    },function(err){
+	    });
+	}
+	function StopQueueNo(NewStatusCode,QueueNo,that)
+	{
+	    if(!QueueNo) QueueNo="";
+	    $.cm({ 
+	        ClassName:"DHCDoc.OPAdm.Schedule",
+	        MethodName:"StopQueueNo", 
+	        ASRowid:ASRowid,QueueNo:QueueNo,NewStatusCode:NewStatusCode,UserID:session['LOGON.USERID']
+	    },false);
+	    if(QueueNo){
+	        var className="avail-seqno";
+	        if(NewStatusCode==ServerObj.StopStatus) className="stop-seqno";
+	        $(that).removeClass($(that).attr('class')).addClass(className);
+	    }else{
+	        ShowAvailSeqNo(ASRowid);
+	    }
+		return;
+	}
+	</SCRIPT>
+	<!--日期多选插件-->
+	<script type="text/javascript" src="../scripts_lib/kalendae/kalendae.standalone.js"></script>
+</body>
+</html>

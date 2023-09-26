@@ -1,0 +1,139 @@
+<!-- 
+ * FileName: dhcbill.opbill.accdep.refund.csp
+ * Anchor: ZhYW
+ * Date: 2019-07-29
+ * Description: 门诊预交金退款
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.accdep.css'/>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script type='text/javascript' src='../scripts/DHCBillPayService.js'></script>
+	<script type='text/javascript' src='../scripts/DHCBillMisPosPay.js'></script>
+	<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcbill.ipbill.config.js'></script>
+	<server>
+		set HospId=$g(%session.Data("LOGON.HOSPID"))
+		set BaseCfgStr=##class(web.DHCOPConfig).ReadOPSPConfig(HospId)
+		set Pre2DepFlag=$p(BaseCfgStr,"^",46)
+		set ReceiptType=##class(web.UDHCAccAddDeposit).GetReceiptType(HospId)
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",!
+		w "<input id='GetAccMInfoEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getpatinfo"))_"'>",!
+		w "<input id='accMRowId' type='hidden'>",!
+		w "<input id='patientId' type='hidden'>",!
+		w "<input id='requiredFlag' type='hidden'>",!
+	</server>
+	<script type="text/javascript">
+		var GV = {
+			DisablePatientNo: true,    //是否可以根据登记号获取账户
+			ReceiptType: "#(ReceiptType)#"
+		};
+	</script>
+</head>
+
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="border-bottom:1px solid #ccc;padding:0 10px;overflow:hidden;">
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-readCard" data-options="iconCls:'icon-big-card-reader',plain:true">读卡(F4)</a>
+		<!--a href="javascript:;" class="hisui-linkbutton big" id="btn-calc" data-options="iconCls:'icon-big-omega',plain:true">计算器</a>
+		<div class="datagrid-btn-separator big"></div-->
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-refund" data-options="iconCls:'icon-big-paid',plain:true">退款(F9)</a>
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-reprint" data-options="iconCls:'icon-big-print',plain:true,disabled:true">补打收据</a>
+		<csp:if condition=(ReceiptType'="")>
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-voidInvNo" data-options="iconCls:'icon-big-skip-no',plain:true">跳号</a>
+		</csp:if>
+		<csp:if condition=(Pre2DepFlag=1)>
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-trans2IPDep" data-options="iconCls:'icon-big-return',plain:true">转住院押金</a>
+		</csp:if>
+		<div class="datagrid-btn-separator big"></div>
+		<a href="javascript:;" class="hisui-linkbutton big" id="btn-clear" data-options="iconCls:'icon-big-clear',plain:true">清屏(F7)</a>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:165px;">
+				<div class="hisui-panel" data-options="title:'预交金退款',fit:true,headerCls:'panel-header-gray',iconCls:'icon-fee-arrow'" style="border-bottom-style:none;border-radius:0;">
+					<table class="search-table" style="width:100%;">
+						<tr>
+							<td class="r-label td-first-col-58"><label>卡类型</label></td>
+							<td><input id="cardType" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>卡号</label></td>
+							<td><input id="cardNo" class="textbox"/></td>
+							<td class="r-label"><label>登记号</label></td>
+							<td><input id="patientNo" class="textbox"/></td>
+							<td class="r-label"><label>患者姓名</label></td>
+							<td><input id="patName" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>票据号</label></td>
+							<td><input id="receiptNo" class="textbox" style="font-weight: bold;" disabled/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>账户余额</label></td>
+							<td><input id="accMLeft" class="hisui-numberbox textbox" data-options="precision:2,disabled:true" style="color: #FF0000;font-weight: bold;"/></td>
+							<td class="r-label"><label>金额</label></td>
+							<td><input id="refAmt" class="hisui-numberbox textbox" data-options="precision:2,min:0" style="color: #FF0000;font-weight: bold;"/></td>
+							<td class="r-label"><label>支付方式</label></td>
+							<td><input id="payMode" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>退款原因</label></td>
+							<td><input id="refReason" class="textbox"/></td>
+							<td class="r-label"><label>身份证号</label></td>
+							<td><input id="IDNo" class="textbox" style="font-weight: bold;" disabled/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>手机号</label></td>
+							<td><input id="mobPhone" class="textbox" style="font-weight: bold;" disabled/></td>
+							<td class="r-label"><label>备注</label></td>
+							<td><input id="remark" class="textbox"/></td>
+							<csp:if condition=Pre2DepFlag=1>
+							<td class="r-label"><label>住院记录</label></td>
+							<td><input id="admList" class="textbox"/></td>
+							<td class="r-label"><label>住院押金票号</label></td>
+							<td><input id="depRcptNo" class="textbox" style="font-weight: bold;" disabled/></td>
+							</csp:if>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="accDepList"></table>
+			</div>
+		</div>
+	</div>
+	<div id="appendDlg" style="width:480px;height:350px;display:none;">
+		<table class="search-table" style="width:100%;">
+			<tr>
+				<td class="r-label"><label class="clsRequired">支票号</label></td>
+				<td><input id="checkNo" class="textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>支票日期</label></td>
+				<td><input id="chequeDate" class="hisui-datebox textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>银行卡类型</label></td>
+				<td><input id="bankCardType" class="hisui-combobox textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>银行</label></td>
+				<td><input id="bank" class="hisui-combobox textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>支付单位</label></td>
+				<td><input id="company" class="textbox tb250"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>账户号</label></td>
+				<td><input id="payAccNo" class="textbox tb250"/></td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.accdep.refund.js"></script>
+</body>
+</html>

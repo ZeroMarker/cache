@@ -1,0 +1,52 @@
+
+
+<script language="cache" runat="server">
+
+ s patientID = $Get(%request.Data("patientID",1))
+ s Info=##class(web.DHCCRM.CRMGrowthCurve).GetWHInfoBy2to5(patientID)
+ s CurData=$p(Info,$c(1),1)
+ s Sex=$p(Info,$c(1),2)
+ s path="../images/dhcpe/whboyscht2_5.png"
+ i Sex="M" s path="../images/dhcpe/whboyscht2_5.png"
+ i Sex="F" s path="../images/dhcpe/whgirlscht2_5.png"
+ 
+</script>
+
+
+
+<div style="position:absolute; left:0; top:0; width:1300; height:1860; visibility:visible"><img src=#(path)# width=100% height=100%></div>
+	<csp:WHILE COUNTER=Counter CONDITION=(""'=CurData)>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s CurData=$p(Info,"^",Counter)
+	q:CurData=""
+	s CurDataW=$p(CurData,"$",1)
+	s CurDataH=$p(CurData,"$",2)
+	s CurDataM=$p(CurData,"$",3)
+	s MWPointX=200,MWPointY=903,MWSpaceX=25.5,MWSpaceY=7.3,MWPoint=8.4,MWSpace=0.2
+	s FWPointX=198,FWPointY=902,FWSpaceX=25.5,FWSpaceY=6.9,FWPoint=8.4,FWSpace=0.2
+	
+	s MHPointX=200,MHPointY=1690,MHSpaceX=25.6,MHSpaceY=14.8,MHPoint=80,MHSpace=1
+	s FHPointX=198,FHPointY=1688,FHSpaceX=25.6,FHSpaceY=13.8,FHPoint=77,FHSpace=1
+	
+	i Sex="M" d
+	.s WPointY=MWPointY-((CurDataW-MWPoint)/MWSpace*MWSpaceY)
+	.s WPointX=CurDataM*MWSpaceX+MWPointX
+	.s WStyle="position:absolute;left:"_WPointX_";top:"_WPointY_";color:balck; visibility:visible"
+	.
+	.s HPointY=MHPointY-((CurDataH-MHPoint)/MHSpace*MHSpaceY)
+	.s HPointX=CurDataM*MHSpaceX+MHPointX
+	.
+	.s HStyle="position:absolute;left:"_HPointX_";top:"_HPointY_";color:balck; visibility:visible"
+	i Sex="F" d
+	.s WPointY=FWPointY-((CurDataW-FWPoint)/FWSpace*FWSpaceY)
+	.s WPointX=CurDataM*FWSpaceX+FWPointX
+	.s WStyle="position:absolute;left:"_WPointX_";top:"_WPointY_";color:balck; visibility:visible"
+	.
+	.s HPointY=FHPointY-((CurDataH-FHPoint)/FHSpace*FHSpaceY)
+	.s HPointX=CurDataM*FHSpaceX+FHPointX
+	.s HStyle="position:absolute;left:"_HPointX_";top:"_HPointY_";color:balck; visibility:visible"
+	</SCRIPT>
+	<div style=#(WStyle)#><h2>*</div>
+	<div style=#(HStyle)#><h2>*</div>
+	
+    </CSP:WHILE>

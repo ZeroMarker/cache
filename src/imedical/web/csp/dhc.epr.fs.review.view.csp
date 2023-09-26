@@ -1,0 +1,84 @@
+<HTML>
+<HEAD>
+    <TITLE>病案复核</TITLE> 
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">  
+    <script language="cache" runat="server">
+        s UserID = $Get(%request.Data("UserID",1),"")
+        s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+        
+    </script>
+    <script type="text/javascript">
+        var userID = '#(UserID)#';
+        var episodeID = '#(EpisodeID)#';
+    </script>
+    <script src="../scripts/epr/JQuery/jquery.min.js"></script>
+    <script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+    <script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/metro/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+    
+    <script src="../scripts/epr/js/FS.Review.Common.js"></script>
+    <script src="../scripts/epr/js/FS.Review.View.js"></script>
+</HEAD>
+<body class="easyui-layout" style="width:100%;height:100%;margin:0;padding:0;">
+    <div data-options="region:'north'" style="border:0">
+        <div id="episodeListTableTBar" class="easyui-panel" style="height:80px;border:0">    
+            <div id="infoPanel" style="margin:0;height:30">
+            </div>
+            <div style="margin:2px">
+                <a href="#" id="passBtn" class="easyui-linkbutton" iconCls="icon-ok">审核通过</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="#" id="back2DocBtn" class="easyui-linkbutton" iconCls="icon-no">退回医生</a>
+                <a href="#" id="back2NurBtn" class="easyui-linkbutton" iconCls="icon-no">退回护士</a>
+                <a href="#" id="back2AllBtn" class="easyui-linkbutton" iconCls="icon-no">全部退回</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="#" id="viewEPRBtn" class="easyui-linkbutton" iconCls="icon-search">电子病历</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="#" id="windowCloseBtn" class="easyui-linkbutton" iconCls="icon-no">关闭</a>
+            </div>      
+        </div>
+        <div data-options="region:'center'" style="border:0" style="width:100%,height:100%;">
+            <div id="iframeDIV" style="width:100%,height:auto;">
+                <script language="cache" runat="server">
+                    s userLocID = %session.Get("LOGON.CTLOCID")
+                    if (userLocID = "")
+                    {
+                        s userLocID = "9"
+                    }
+                    s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+                    s ReviewViewPercentLocIDS = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("ReviewViewPercentLocIDS")
+                    s flag = "false"
+                    for i=1:1:$l(ReviewViewPercentLocIDS,"^")
+                    {
+                        s oneLocID = $p(ReviewViewPercentLocIDS,"^",i)
+                        if (oneLocID = userLocID)
+                        {
+                            s flag = "true"
+                            q    
+                        }  
+                    }
+                    if (flag = "false")
+                    {
+                        w "<iframe src='./dhc.epr.fs.check.index35percent.csp?EpisodeID="_EpisodeID_"' frameBorder=0 scrolling=no style='z-index:-1;height:100%;width:100%'></iframe>"
+                    }
+                    else
+                    {
+                       w "<iframe src='./dhc.epr.fs.check.index.csp?EpisodeID="_EpisodeID_"' frameBorder=0 scrolling=no style='z-index:-1;height:100%;width:100%'></iframe>" 
+                    }
+                </script>
+            </div>
+        </div>
+    </div>  
+</body>
+</HTML>

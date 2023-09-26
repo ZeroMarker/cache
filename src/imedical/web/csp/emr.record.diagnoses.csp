@@ -1,0 +1,153 @@
+﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	 <meta http-equiv="X-UA-Compatible" content="IE=8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/1.5.2/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/1.5.2/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/diagnose.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/1.5.2/jquery.easyui.min.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script language="cache" runat="server">
+        d ##Class(EMRservice.SystemParameter).GetImportResource()
+    	s episodeID = $Get(%request.Data("EpisodeID",1),"")
+    	s locID = $Get(%request.Data("LocID",1),"")
+    	s userID = $Get(%request.Data("UserID",1),"")
+    	s userLevel = ##class(EMRservice.BL.BLSignRole).GetUserLevel(userID)
+		s userLevel = $p(userLevel,"^",1)
+    	s patientID = $P($g(^PAADM(episodeID)),"^",1)
+    	s operationsStr = $Get(%request.Data("operationsStr",1),"")
+   </script>
+    <script language="javascript">
+		var episodeID = '#(episodeID)#';
+		var locID = '#(locID)#';
+		var userID = '#(userID)#';
+		var userLevel = '#(userLevel)#';
+		var patientID = '#(patientID)#';
+		var g_xml = "";
+		var closeFlag = "";
+		var operationsStr = '#(operationsStr)#';
+		window.returnValue = "";
+   </script> 
+    <title>诊断</title>
+</head>
+<body class="easyui-layout">
+    <div data-options="region:'east',title:'诊断历史'" style="width:300px;">
+    	<table id="historydiagnoses"></table>
+    </div>   
+    <div data-options="region:'center',border:false">
+    	<div class="easyui-layout" data-options="fit:true,border:false">  
+            <div data-options="region:'north',border:false" style="height:35px;padding-top:5px;">
+				<span style="padding:0 5px 0 8px;">门(急)诊诊断:</span><span id="opdignos" style="text-decoration:underline;padding:0 5px 0 5px;"></span>
+            </div>  
+            <div data-options="region:'south',border:false"  style="height:365px;padding-top:5px;">
+            	<div style=" padding-left:6px;float:left">
+            		复制 <select id="seleFromType"></select>
+            		<button id="btCopyTo" type="button">确定</button>
+				</div>
+				<button id="btCancel" type="button">取消</button>
+				<button id="btQuote" type="button">引用到病历</button>
+				<table cellspacing="0" cellpadding="0" style="width:100%">
+					<tr>
+						<td rowspan="2" id="diagnosetype" style="border:1px solid #E6E6E6;"></td>
+						<td rowspan="2" id="status" style="width:170px;border:1px solid #E6E6E6;"></td>
+						<td style="border-right:1px solid black;border-bottom:1px solid black; width:22px;align:center;">
+							<button id="up" type="button">上</button>
+						</td>
+						<td style="border-bottom:1px solid black; width:24px;align:center;">
+							<button id="down" type="button">下</button>
+						</td>
+						<td rowspan="2" style="width:30px;" >
+							<button id="delete" type="button" >删除</button>
+						</td>
+					</tr>
+					<tr>
+						<td style="border-right:1px solid black;">
+							<button id="left" type="button">左</button>
+						</td>	
+						<td >
+							<button id="right" type="button">右</button>
+						</td>				
+					</tr>
+				</table>
+				<table cellspacing="0" cellpadding="0" style="width:100%;table-layout:fixed;word-break:break-all;">
+					<tr>
+						<td style="width:400px">
+							<fieldset style="height:230px;">
+							<legend>诊断录入</legend>
+							<table>
+							    <tr>
+							        <td colspan=2 style="padding-bottom:5px">
+							        	<div style="float:right;border-bottom:1px solid #E6E6E6;">
+							        		<input type="radio" id="iptpinyin" name="icdcondition"/><label for="iptpinyin">别名</label>
+							        		<input type="radio" id="iptname" name="icdcondition"/><label for="iptname">名称</label>
+							        	    <input type="radio" id="iptcode" name="icdcondition"/><label for="iptcode">代码</label>
+							        	</div>
+							        </td>
+							    </tr>
+								<tr>
+									<td style="vertical-align:top;">
+									    <select id="diagnoscat" onchange="DiagnosCatChange()" >
+									         <option value ="0">西医诊断</option>
+									         <option value ="1">中医诊断</option>
+									    </select>
+							  		</td>
+							  		<td>
+							  		    <div id="radiobox">
+						  		       		<input type="radio" id="iptpicd" name="icd" checked="checked"/><label id="lbpicd" for="iptpicd">诊断</label>    
+									   		<input type="radio" id="iptcicd" name="icd" onclick="CheckBind()"/><label id="lbcicd" for="iptcicd">子诊断</label> 
+							  		    </div>
+							  		    <div>
+							  		    	<input id="icdlist"></input> 
+							  		    	<input id="position"></input>
+							  		    </div>
+									</td>
+								</tr>
+								<tr id="syndromebox" style="display:none">
+									<td style="align:right;vertical-align:top;">证&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;候</td>
+									<td><input id="syndromelist"></input></td>
+								</tr>																	
+								<tr>
+									<td style="align:right;vertical-align:top;">诊断备注</td>
+									<td><textarea id="memo" cols ="38" rows = "2"></textarea></td>
+								</tr>
+								<tr>
+									<td colspan=2 >
+									    <div style="float:left">
+							        		<input type="radio" id="iptfuzzymatch" name="matching"/><label for="iptfuzzymatch">模糊查询</label>					    
+											<input type="radio" id="iptleftmatch" name="matching"/><label for="iptleftmatch">精确查询</label>
+									    </div>
+									    </br>
+										<button id="diagnoseReport" type="button" style="float:right;display:none;">公共卫生事件上报</button>
+										<button id="addDiagnose" type="button" style="float:right;">添加诊断</button>
+									</td>
+								</tr>
+							</table>
+							</fieldset>
+						</td>
+						<td>
+							<fieldset style="height:230px;" >
+							<legend>常用诊断</legend>
+								<table style="width:100%;height:100%;padding-bottom:15px;">
+									<tr>
+										<td style="width:120px;">
+											<div id="modelgroup"></div>
+										</td>
+										<td>
+											<div id="modeldetial"></div>
+										</td>
+									</tr>
+								</table>
+							</fieldset>
+						</td>
+					</tr>
+				</table>
+            </div>         
+            <div data-options="region:'center',border:false" >
+            	<table id="diagnoses"></table>
+            </div>
+        </div>  
+    </div>
+    <script type="text/javascript" src="../scripts/emr/js/record.diagnoses.js"></script>  
+</body>
+</html>

@@ -1,0 +1,716 @@
+<!--库存项维护 
+	csp: dhcst.easyui.incitm.modify.csp 
+	 js: scripts/dhcst/EasyUI/DrugInfo/IncItmModify.js
+--> 
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<TRAK:HEAD>
+	</TRAK:HEAD>
+	<JQUERY:EASYUI136/>
+	<Server language="CACHE" runat="Server">
+    s urlActionType =$G(%request.Data("actionType",1))
+    s urlArcItmId=$G(%request.Data("arcItmRowId",1))
+    s urlIncItmId=$G(%request.Data("incItmRowId",1))
+    s urlSaveAs=$G(%request.Data("saveAs",1))
+   </Server>
+    <SCRIPT Language="Javascript">
+       	var urlActionType="",urlArcItmId="",urlIncItmId="",urlSaveAs="";
+       	urlActionType="#(urlActionType)#"; 
+    	urlArcItmId="#(urlArcItmId)#";
+    	urlIncItmId="#(urlIncItmId)#";
+    	urlSaveAs="#(urlSaveAs)#";
+   </SCRIPT>
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/dhcpha.easyui.css" ></script> 
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcst/EasyUI/Css/DrugInfo.css" ></script> 
+   	<script type="text/javascript" src="../scripts/dhcst/EasyUI/Plugins/dhcst.plugins.js"></script>
+	<script type="text/javascript" src="../scripts/dhcst/EasyUI/Common/Common.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcst/EasyUI/DrugInfo/IncItmModify.js"></script>       
+	<style type="text/css">
+	.dhcst-require{
+		color:red;
+		font-weight:bold;
+	}
+	</style>
+</HEAD>
+
+<body>
+<div class="easyui-layout" fit="true" title="库存项维护">
+	<div data-options="region:'center'" border="false">
+	    <div class="easyui-tabs" fit="true" border="false" id="tabsInc">
+		    <div title="基本信息">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'center'" border="false" >
+						<div class="dhcst-win-content">
+						     <table>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										<span class="dhcst-require">*</span>库存项代码
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtIncCode" data-options="" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										条码
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtIncBarCode" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										用药说明
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtUserOrderInfo" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkBAFlag"/>
+									</td>
+									<td>
+										<label for="chkBAFlag">阳光采购</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										<span class="dhcst-require">*</span>库存项名称
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtIncDesc" data-options="" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										药品本位码
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtIncBaseCode" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										大包装单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-xs"  type="text" id="cmbIncPackUom" />
+										系数
+										<input class="dhcst-easyui-box-mid" style="width:64px;vertical-align:middle" type="text" id="txtPackPurFac" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkIncRec"/>
+									</td>
+									<td>
+										<label for="chkIncRec">处方购药标志</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+									<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>库存分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbStkCat" data-options=""/>
+									</td>
+
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										协和码
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtReportingDays" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										批准文号
+									</td>
+									<td>
+										<input class=" dhcst-easyui-box-xs" type="text" id="cmbIncRemark1" />
+										<input class="dhcst-easyui-box-mid" style='width:95px;vertical-align:middle' type="text" id="txtIncRemark2" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkIncInHosp"/>
+									</td>
+									<td>
+										<label for="chkIncInHosp">本院药品目录</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										<span class="dhcst-require">*</span>基本单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbIncBaseUom" data-options="" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										效期长度(月)
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtExpLen"/>
+									</td>
+						     		<td class="dhcst-td-align ">
+										不可用原因
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbNotUseReason" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkNotUse"/>
+									</td>
+									<td>
+										<label for="chkNotUse">不可用</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										<span class="dhcst-require">*</span>入库单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbIncPurchUom" data-options="" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										帐簿分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbBookCat" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										不可退药原因
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbRefReturn" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkSkin"/>
+									</td>
+									<td>
+										<label for="chkSkin">皮试</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										<span class="dhcst-require">*</span>门诊发药单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbIncOutBaseUom" data-options="" />
+									</td>
+						     		<td class="dhcst-td-align ">
+										进价
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtRp" data-options="required:false,min:0,precision:2" />
+									</td>
+						     		<td class="dhcst-td-align ">
+										售价
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtSp" data-options="required:false,min:0,precision:2" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkHighPrice"/>
+									</td>
+									<td>
+										<label for="chkHighPrice">贵重药</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										<span class="dhcst-require">*</span>住院发药单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbIncInBaseUom" data-options="" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										最高售价
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtMaxSp" data-options="min:0,precision:2"/>
+									</td>
+						     		<td class="dhcst-td-align ">
+										医嘱截止日期
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="dtOrdEndDate" data-options="required:false" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										定价类型
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbMarkType" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										进口标志
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbInciImport" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										价格生效日期
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="dtPriceExeDate" data-options="required:false" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										国(省)别
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtComeFrom" />
+									</td>
+
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										物价文件号
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtPrcFile" data-options="required:false" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										进药依据
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtInDrugInfo" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+						     	<tr>
+						     		<td class="dhcst-td-align ">
+										物价备案日期
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="dtPrcFileDate" data-options="required:false" />
+									</td>
+						     		<td class="dhcst-td-align ">
+										包装规格
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtIncSpec" data-options="" />
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+		    </div>
+		   	<div title="收费项">
+		   	     <div class="easyui-layout" fit="true">
+					<div data-options="region:'center'" border="false">
+						<div class="dhcst-win-content">
+					   	     <table>
+					   	     	<tr>
+						     		<td class="dhcst-td-align ">
+										收费项代码
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtTarCode" readonly/>
+									</td>
+						     		<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>子分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbTarSubCat" data-options=""/>
+									</td>
+					   	     	</tr>
+								<tr class="dhcst-tr-split"></tr>
+					   	     	<tr>
+						     		<td class="dhcst-td-align ">
+										收费项名称
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtTarDesc" readonly/>
+									</td>
+						     		<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>门诊子分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbTarOutCat" data-options="" />
+									</td>
+					   	     	</tr>
+					   	     	<tr class="dhcst-tr-split"></tr>
+					   	        <tr>
+									<td colspan=2></td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										<span class="dhcst-require">*</span>核算子分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbTarAcctCat" data-options="" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+					   	        <tr>
+									<td colspan=2></td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										<span class="dhcst-require">*</span>会计子分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbTarAccSubCat" data-options="" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+					   	        <tr>
+					   	        	<td colspan=2></td>
+						     		<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>住院子分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbTarInCat" data-options="" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+					   	        <tr>
+					   	        	<td colspan=2></td>
+						     		<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>病案首页分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbTarMedCat" data-options="" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+					   	        <tr>
+					   	        	<td colspan=2></td>
+						     		<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>新病案首页分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbTarNewMedCat" data-options="" />
+									</td>
+								</tr>
+							 </table>
+				         </div>
+					</div>
+				</div>
+		    </div>
+		   	<div title="扩展信息" >
+		   	     <div class="easyui-layout" fit="true">
+					<div data-options="region:'center'" border="false">
+						<div class="dhcst-win-content">
+					   	     <table>
+					   	        <tr>
+						     		<td class="dhcst-td-align">
+										招标级别
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPbLevel" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										质量编号
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtQualityNo" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkIncPb"/>
+									</td>
+									<td>
+										<label for="chkIncPb">是否招标</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										招标名称
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPbName" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										质量层次
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbQualityLev" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										招标供应商
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPbVendor" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										转移方式
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbIncIsTrf" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										招标生产商
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPbManf" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										批次
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbBatchReq" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										招标配送商
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPbCarrier" />
+									</td>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										有效期
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbExpReq" />
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+						     		<td class="dhcst-td-align dhcst-td-offset">
+										招标进价
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtPbRp" data-options="min:0,precision:2"/>
+									</td>
+								</tr>
+							 </table>
+				         </div>
+					</div>
+				</div>
+		    </div>
+		   	<div title="存储条件">
+                 <div class="easyui-layout" fit="true">
+					<div data-options="region:'center'" border="false">
+						<div class="dhcst-win-content">
+					   	     <table>
+					   	        <tr>
+									<td class="dhcst-td-align">
+										最低温度
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtMinTemp" style="width:100px"/>
+									</td>
+									<td>
+									°C
+									</td>
+									<td class="dhcst-td-checkbox dhcst-td-align dhcst-td-offset">
+										<input type="checkbox"  id="chkRoomTemp"/>
+									</td>
+									<td>
+										<label for="chkRoomTemp">常温</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkDry"/>
+									</td>
+									<td>
+										<label for="chkDry">干燥</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkAirtight"/>
+									</td>
+									<td>
+										<label for="chkAirtight">密闭</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+								    <td class="dhcst-td-align">
+										最高温度
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtMaxTemp"  style="width:100px"/>
+									</td>
+									<td>
+									°C
+									</td>
+									<td class="dhcst-td-checkbox dhcst-td-align dhcst-td-offset">
+										<input type="checkbox"  id="chkDark"/>
+									</td>
+									<td>
+										<label for="chkDark">避光</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkVentilation"/>
+									</td>
+									<td>
+										<label for="chkVentilation">通风</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkRadiation"/>
+									</td>
+									<td>
+										<label for="chkRadiation">防辐射</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										最低湿度
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtMinHumi" style="width:100px"/>
+									</td>
+									<td>
+									</td>
+									<td class="dhcst-td-checkbox dhcst-td-align dhcst-td-offset">
+										<input type="checkbox"  id="chkMeltSeal"/>
+									</td>
+									<td>
+										<label for="chkMeltSeal">熔封</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkCool"/>
+									</td>
+									<td>
+										<label for="chkCool">阴凉</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkColdDark"/>
+									</td>
+									<td>
+										<label for="chkColdDark">凉暗</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										最高湿度
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtMaxHumi" style="width:100px"/>
+									</td>
+									<td>
+									</td>
+									<td class="dhcst-td-checkbox dhcst-td-align dhcst-td-offset">
+										<input type="checkbox"  id="chkSeal"/>
+									</td>
+									<td>
+										<label for="chkSeal">密封</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkRefrigeration"/>
+									</td>
+									<td>
+										<label for="chkRefrigeration">冷藏</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										
+									</td>
+									<td>
+										
+									</td>
+								</tr>
+							 </table>
+				         </div>
+					</div>
+				</div>
+		    </div>
+		   	<div title="库存项别名">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'north'" border="false" class="dhcst-win-content-row-1">
+						<div class="dhcst-win-content" >
+							<table>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										别名
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtIncAlias"  />
+									</td>
+									<td class="dhcst-td-offset">
+										<span><a class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btn-AddIncAlias" onclick="IncAliasEdit(this.id)">增加</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btn-ModifyIncAlias" onclick="IncAliasEdit(this.id)">修改</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btn-DeleteIncAlias" onclick="IncAliasEdit(this.id)">删除</a></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div data-options="region:'center'" border="false" style="border-top:1px solid #87B9E8;">
+				    	<table id="incAliasGrid">
+						</table>
+					</div>
+				</div>
+		    </div>
+		   	<div title="发药单位维护">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'north'" border="false" class="dhcst-win-content-row-2">
+						<div class="dhcst-win-content" >
+							<table>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										发药科室
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhaLoc"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										开始日期
+									</td>
+									<td>
+										<input class="easyui-dateboxdhcst-easyui-box-mid" type="text" id="dtDispUomStDate"/>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbDispUom"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										截止日期
+									</td>
+									<td>
+										<input class="easyui-dateboxdhcst-easyui-box-mid" type="text" id="dtDispUomEdDate"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkDispUomActive"/>
+									</td>
+									<td>
+										激活
+									</td>
+									<td class="dhcst-td-offset-2">
+										<span><a class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btn-AddDispUom" onclick="DispUomEdit(this.id)">增加</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btn-ModifyDispUom" onclick="DispUomEdit(this.id)">修改</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btn-DeleteDispUom" onclick="DispUomEdit(this.id)">删除</a></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div data-options="region:'center'" border="false" style="border-top:1px solid #87B9E8;">
+				    	<table id="dispUomGrid">
+						</table>
+					</div>
+				</div>
+		    </div>
+			<div title="单位转换维护" style="overflow:hidden;">
+				<IFRAME id="ifrmCTConFac" src="" style="display:block;width:100%;height:100%;overflow:hidden"></IFRAME>
+			</div>
+	    </div>
+	</div>
+	<div data-options="region:'south'" class="dhcst-win-toolbar">
+		<div>
+			<span><a class="easyui-linkbutton" iconCls='icon-save' plain="true" id="btnSave">保存</a></span>
+			<span><a class="easyui-linkbutton" iconCls='icon-clear' plain="true" id="btnClear">清屏</a></span>
+			<span><a class="easyui-linkbutton" iconCls='icon-cancel' plain="true" id="btnClose">关闭</a></span>
+	  	</div>
+	</div>
+</div>
+</body>
+</HTML>

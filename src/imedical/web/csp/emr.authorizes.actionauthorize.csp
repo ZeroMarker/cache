@@ -1,0 +1,40 @@
+﻿<HTML>
+<HEAD>
+	<TITLE>三版会诊病历授权页面</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetExtJSCSS()
+		s userID = %session.Get("LOGON.USERID")					//主动批准人
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")		//当前就诊ID
+		s consultID = $Get(%request.Data("ConsultID",1),"")		//会诊申请ID
+		s consdocID = $Get(%request.Data("ConsdocID",1),"")		//会诊医生ID
+		s consLocID = $Get(%request.Data("ConslocID",1),"")		//会诊科室ID
+		s consultType = $Get(%request.Data("ConsultType",1),"")	//会诊类型
+		s appointType = $Get(%request.Data("AppointType",1),"")	//授权类型(0:个人; 1:科室)
+		
+		s (patientID,consDocDesc,consLocDesc) = ""
+		s patientID = ##Class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s:(consdocID '= "") consDocDesc = ##Class(EMRmeta.PowerUser).GetUserName(consdocID)	//会诊医生
+		s:(consLocID '= "") consLocDesc = $p($g(^CTLOC(consLocID)),"^",1)	//会诊科室
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var consultID = '#(consultID)#';
+		var consdocID = '#(consdocID)#';
+		var consDocDesc = '#(consDocDesc)#';
+		var consLocID = '#(consLocID)#';
+		var consLocDesc = '#(consLocDesc)#';
+		var consultType = '#(consultType)#';
+		var appointType = '#(appointType)#';
+	</script>
+</HEAD>
+<BODY>
+	<script type="text/javascript" src="../scripts/emr/js/authorizes.ActionAuthorize.js"></script>
+</BODY>
+</HTML>

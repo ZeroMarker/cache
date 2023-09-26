@@ -1,0 +1,210 @@
+<!-- 
+ * FileName:	dhcinsu.locallistinfo.csp
+ * User:		tangzf
+ * Date:		2019-09-05
+ * Function:	本地名单维护
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<style>
+	#_HospList{
+		width:395px !important;	
+	}
+	.r-label-1{
+		padding-left:20px	
+	}
+	</style>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="overflow:hidden;">
+			<table class="search-table" id='search' >
+				<tr>
+					<td class="r-label"><label>姓名</label></td>
+					<td><input id="Name" class="textbox"/></td>
+					<td class="r-label r-label-1"><label>费别</label></td>
+					<td><input id="AdmReason" class="hisui-combobox textbox"/></td>
+					<td class="r-label r-label-1"><label>保健号</label></td>
+					<td><input id="INSUNo" class="textbox" ></td>
+					<td class="r-label r-label-1"><label>身份证号</label></td>
+					<td><input id="IDCard" class="textbox" type="text"></td>
+					<td class="r-label r-label-1"><a href="#" class="hisui-linkbutton" iconCls="icon-w-find" id="BtnFind" >查询</a></td>
+					<td style="padding-left:10px"><a href="#" class="hisui-linkbutton" iconCls="icon-w-clean" id="BtnClear" >清屏</a></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>费用性质</label></td>
+					<td><input id="FYQB" class="textbox" type="text"></td>
+					<td class="r-label r-label-1"><label>付费性质</label></td>
+					<td><input id="FYLB r-label-1" class="textbox" type="text"></td>
+					<td class="r-label r-label-1"><label>单位代码</label></td>
+					<td><input id="PADepCode" class="textbox" type="text"></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false" style="border-top:1px dashed #cccccc;">
+			<div id="tToolBar" class="hisui-toolbar" >  
+				<table cellspacing="0" cellpadding="0">
+					<tbody>
+						<tr>
+							<td><a href="#" class="hisui-linkbutton" iconCls="icon-add" id="BtnAdd" plain="true">新增</a></td>
+							<td><a href="#" class="hisui-linkbutton" iconCls="icon-write-order" id="BtnUpdate" plain="true">修改</a></td>
+							<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="BtnImport" plain="true">导入</a></td>
+							<td><a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnDelete" plain="true">删除</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<table id="dg"></table>
+		</div>
+	</div>
+	<!--
+		2.新增模板信息弹窗
+	-->
+	<div id="LocalListInfoProWin">
+		<div id="LocalListInfoProPan" class="hisui-panel"  style="fit:true;border:0px" data-options="closable:true,collapsible:true,minimizable:true,maximizable:true,modal:true">
+			<table class="search-table" id='addInfo'>
+				<tr>
+					<td class="r-label r-label-1"><label id="LabelINLOCXM" class="clsRequired">患者姓名</label></td>
+					<td><input id="INLOCXM" class="textbox  hisui-validatebox" required="required" missingMessage="该项不能为空"/></td>
+					<td class="r-label"><label id="LabelINLOCXXLX">信息类型</label></td>
+					<td><input id="INLOCXXLX" class="textbox"  /></td>
+					<td class="r-label"><label id="LabelINLOCYLZBH" class="clsRequired">保健号</label></td>
+					<td><input id="INLOCYLZBH" class="textbox hisui-validatebox" required="required" missingMessage="该项不能为空" data-options="
+						required:true,
+						validType:['integer'],
+					 "/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCYLZZT">医疗证状态</label></td>
+					<td><input id="INLOCYLZZT" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCSBCARD" class="clsRequired">社保卡号</label></td>
+					<td><input id="INLOCSBCARD" class="textbox hisui-validatebox" required="required" missingMessage="该项不能为空" data-options="required:true,
+					 "/></td>
+					<td class="r-label"><label id="LabelINLOCTXM">条形码</label></td>
+					<td><input id="INLOCTXM" class="textbox"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCSFZH" class="clsRequired">身份证号</label></td>
+					<td><input id="INLOCSFZH" class="textbox  hisui-validatebox"  missingMessage="该项不能为空" data-options="
+						required:true,
+						validType:['idcard'],
+					 "/></td>
+					<td class="r-label"><label id="LabelINLOCXB">性别</label></td>
+					<td><input id="INLOCXB" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCCSNY">出生日期</label></td>
+					<td><input id="INLOCCSNY" class="textbox hisui-datebox hisui-validatebox" ></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label  id="LabelINLOCBZNY">办证日期</label></td>
+					<td><input id="INLOCBZNY" class="textbox hisui-datebox hisui-validatebox"/></td>
+					<td class="r-label"><label id="LabelINLOCYYDH">选定医院代码</label></td>
+					<td><input id="INLOCYYDH" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCDWDM">单位代码</label></td>
+					<td><input id="INLOCDWDM" class="textbox"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCDWMC">单位名称</label></td>
+					<td><input id="INLOCDWMC" class="textbox" /></td>
+					<td class="r-label"><label id="LabelINLOCDWDZ">单位地址</label></td>
+					<td><input id="INLOCDWDZ" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCDWDH">单位电话</label></td>
+					<td><input id="INLOCDWDH" class="textbox" ></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCDWYB" class="clsRequired">单位邮编</label></td>
+					<td><input id="INLOCDWYB" class="textbox hisui-validatebox"  missingMessage="该项不能为空" data-options="
+						required:true,
+						validType:['zip']					"/></td>
+					<td class="r-label"><label id="LabelINLOCJTZZ">家庭地址</label></td>
+					<td><input id="INLOCJTZZ" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCZZDH">家庭电话</label></td>
+					<td><input id="INLOCZZDH" class="textbox" /></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCZZYB">家庭邮编</label></td>
+					<td><input id="INLOCZZYB" class="textbox" /></td>
+					<td class="r-label"><label id="LabelINLOCiDate">操作日期</label></td>
+					<td><input id="INLOCiDate" class="textbox hisui-datebox hisui-validatebox"/></td>
+					<td class="r-label"><label id="LabelINLOCStaDate">生效日期</label></td>
+					<td><input id="INLOCStaDate" class="textbox hisui-datebox hisui-validatebox"  ></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCEndDate">结束日期</label></td>
+					<td><input id="INLOCEndDate" class="textbox hisui-datebox hisui-validatebox"/></td>
+					<td class="r-label"><label id="LabelINLOCYearStrDate">年度开始时间</label></td>
+					<td><input id="INLOCYearStrDate" class="textbox" disabled/></td>
+					<td class="r-label"><label id="LabelINLOCMZQFD">门诊起付段</label></td>
+					<td><input id="INLOCMZQFD" class="textbox"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCMZLJ">门诊自负段累计</label></td>
+					<td><input id="INLOCMZLJ" class="textbox" disabled /></td>
+					<td class="r-label"><label id="LabelINLOCZYQFX">住院起付线</label></td>
+					<td><input id="INLOCZYQFX" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCNDLJ">年度累计</label></td>
+					<td><input id="INLOCNDLJ" class="textbox" ></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCZYCS">住院次数</label></td>
+					<td><input id="INLOCZYCS" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCTZLX">转诊通知类型</label></td>
+					<td><input id="INLOCTZLX" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCZCYYDM">转出医院代码</label></td>
+					<td><input id="INLOCZCYYDM" class="textbox"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCZCKSMC">转出门诊科室名称</label></td>
+					<td><input id="INLOCZCKSMC" class="textbox"  disabled/></td>
+					<td class="r-label"><label id="LabelINLOCZCBQMC">转出病区名称</label></td>
+					<td><input id="INLOCZCBQMC" class="textbox" disabled/></td>
+					<td class="r-label"><label id="LabelINLOCZCCWBH">转出床位编码</label></td>
+					<td><input id="INLOCZCCWBH" class="textbox" disabled/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCZRYYDH">转入医院代码</label></td>
+					<td><input id="INLOCZRYYDH" class="textbox" disabled/></td>
+					<td class="r-label"><label id="LabelINLOCZRKSMC">门诊转入指定科室</label></td>
+					<td><input id="INLOCZRKSMC" class="textbox" disabled/></td>
+					<td class="r-label"><label id="LabelINLOCZRBQMC">转入指定病区名称</label></td>
+					<td><input id="INLOCZRBQMC" class="textbox" disabled/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCDWXZDM">单位性质</label></td>
+					<td><input id="INLOCDWXZDM" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCAdmReasonDr">费别</label></td>
+					<td><input id="INLOCAdmReasonDr" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCFYID">费用性质</label></td>
+					<td><input id="INLOCFYID" class="textbox"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label id="LabelINLOCFFXZID">付费性质</label></td>
+					<td><input id="INLOCFFXZID" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCRZID">职退情况</label></td>
+					<td><input id="INLOCRZID" class="textbox"/></td>
+					<td class="r-label"><label id="LabelINLOCJBID">职级代码</label></td>
+					<td><input id="INLOCJBID" class="textbox" /></td>
+				</tr>
+				<tr>
+					<td colspan='6' style='text-align:center'>
+		  				<a id="BtnSavePro" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+		  				<a id="BtnClose" style="margin-left:8px" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+	  				</td>
+	  			</tr>
+			</table>
+		</div>
+	</div>
+	<DHCBILLINSUCloud/>
+	<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.locallistinfo.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT Language="Javascript">	
+	function transINVStr(InvPrtValue)
+	{
+		alert(InvPrtValue);
+	}
+	
+	////快捷键操作
+	function FrameShutCutKeyFrame(e)
+	{
+		////F9  120   重打
+		////F8	119   查询
+		////F7	118   清除
+		////F12	123		录入医嘱
+		////Alt + 2  读卡
+		switch (e.keyCode){
+			case 118:
+				self.frames["udhcOPInv.SingleQuery"].RefundClear_Click();
+				break;
+			case 119:
+				self.frames["udhcOPInv.SingleQuery"].INVQuery_Click();
+				break;
+			case 120:
+				self.frames["udhcOPInv.SingleQuery"].INVParkPrint();
+				break;
+			case 123:
+				self.frames["udhcOPInv.SingleQuery"].SetCurFocus();
+				break;
+		}
+		
+		if (e.keyCode=120){
+			
+		}
+	}
+
+function document_OnKeyDown()
+{
+	var e=window.event;
+	///alert(e.keyCode);
+	FrameShutCutKeyFrame(e);
+	///DHCWeb_EStopSpaceKey();
+	
+}
+	
+</SCRIPT>
+
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ //s FFF=$g(%request.Data("FFF",1))
+ //s PAADMRowid=$p(FFF,"^")
+ //s PatientID=$p(FFF,"^",3)
+ //udhcopbillprt.csp
+</Script>
+<frameset rows="23%,*">
+	<frame name="udhcOPInv.SingleQuery" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPInv.SingleQuery" frameborder=0>
+	<frame name="udhcOPRefund_Order" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPInv.SingleOrder">
+</frameset>
+</HTML>

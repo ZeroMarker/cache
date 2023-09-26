@@ -1,0 +1,94 @@
+<SERVER>
+s ClassName=%request.Data("ClassName",1)
+s QueryName=%request.Data("QueryName",1)
+s ArgCnt=%request.Data("ArgCnt",1)
+s rs=##class(%ResultSet).%New(ClassName_":"_QueryName)
+s startRecordNo=$g(%request.Data("start",1))
+s limitRecordCnt=$g(%request.Data("limit",1))
+s:startRecordNo="" startRecordNo=0
+s:limitRecordCnt="" limitRecordCnt=65535
+
+s ReturnType=..GetReturnType(ClassName,QueryName)
+n execute,i
+k PLIST
+s execute="set %sc=$zobjmethod(rs,""Execute"""
+if ArgCnt>0 {
+	f i=1:1:ArgCnt  d
+	.s ArgName="Arg"_i
+	.s PLIST(i)=%request.Data(ArgName,1)
+	.s execute=execute_",PLIST("_i_")"
+}
+s execute=execute_")"
+x execute
+
+ s cnt=0
+ s displayRows=0
+ s rowData=""
+ w "{""data"":["
+ s columns=rs.GetColumnCount()
+ f  q:rs.Next()=0  d
+ .i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt="")  d
+ ..w:displayRows>0 ","
+ ..w "{"
+ ..s rowData=""
+ ..f i=1:1:columns  d
+ ...s:i>1 rowData=rowData_","
+ ...s fieldInfo=$p(ReturnType,",",i)
+ ...s fieldType=$p(fieldInfo,":",2)
+ ...s rowData=rowData_""""_rs.GetColumnName(i)_""" : "
+ ...s tmpData=rs.GetData(i)
+ ...s tmpData=..QuoteJS(tmpData)
+ ...s tmpData=..ReplaceString(tmpData,"\x2F","\/")  //解决json中/报错
+ ...s tmpData=..ReplaceString(tmpData,"\x00","")    //解决json中不可见空白报错
+ ...s tmpData=..ReplaceString(tmpData,"\\","")      //解决json中\报错
+ ...i (($e(tmpData,1,1)="'"))  d
+ ....s tmpData=..ReplaceString(tmpData,"\'","'")
+ ....s rowData=rowData_""""_$e(tmpData,2,$l(tmpData)-1)_""""  //用"替换' s rowData=rowData_tmpData
+ ...e  d
+ ....s:fieldType="" fieldType="%String"
+ ....i fieldType="%String"  d //根据返回数据类别增加引号，方便前台数据排序
+ .....s rowData=rowData_""""_tmpData_""""    //
+ ....e  d
+ .....s:((tmpData="")&&(fieldType="%Integer")) rowData=rowData_"0"
+ .....s:((tmpData="")&&(fieldType="%Float")) rowData=rowData_"0"
+ .....s:tmpData'="" rowData=rowData_tmpData
+ ..w rowData
+ ..w "}"
+ ..s displayRows=displayRows+1
+ .s cnt=cnt+1
+ w "],""recordsTotal"":"""_cnt_""",""recordsFiltered"":"""_cnt_""",""draw"":""1""}"
+ d rs.%Close()
+ q
+</SERVER>
+
+<csp:method name=ReplaceString arguments="Str, OldStr, NewStr" returntype=%String>
+	set intCounter = 1
+	while (1)
+	{
+		set tmp =$e(Str, intCounter, intCounter + $l(OldStr) - 1) 
+		if (tmp = OldStr)
+		{
+			 set $e(Str, intCounter, intCounter + $l(OldStr) - 1) = NewStr
+			 set intCounter = intCounter + $l(NewStr) - $l(OldStr)
+		}
+		quit:intCounter>=$l(Str)
+		set intCounter = intCounter + 1
+	}
+	quit Str
+</csp:method>
+
+<csp:method name=GetReturnType arguments="ClassName, QueryName" returntype=%String>
+Set ret=""
+Set cdef = ##class(%Dictionary.CompiledClass).%OpenId(ClassName)
+set count = cdef.Queries.Count() 
+For i = 1:1:count {
+	if (cdef.Queries.GetAt(i).Name=QueryName)
+ 	{		 	
+ 		Set ret=cdef.Queries.GetAt(i).Parameters.GetAt("ROWSPEC")
+	}	 
+}
+k cdef
+Quit ret
+</csp:method>
+
+<csp:content charset="utf-8">

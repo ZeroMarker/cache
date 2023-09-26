@@ -1,0 +1,43 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+;
+//≤È—Øø∆ “
+i Action = "QueryLoc" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s Params=$g(%request.Data("StrParam",1))
+	.s result=##class(web.DHCSTM.CTLOC).QueryGroupLoc(Start,Limit,Sort,Dir,GroupId,Params)
+	.i result ="" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+i Action = "Query" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.s ret=##class(web.DHCSTM.LocManGrp).Query(LocId)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+	.
+i Action = "Save" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.s Detail=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCSTM.LocManGrp).Save(LocId,Detail)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Delete" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCSTM.LocManGrp).Delete(rowid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+</SERVER>

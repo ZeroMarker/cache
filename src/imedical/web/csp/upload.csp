@@ -1,0 +1,28 @@
+<server>
+	s strOut="0''"
+	i %request.IsDefinedMimeData("MMSFILE") {
+		for count=1:1:%request.CountMimeData("MMSFILE") {
+			s MimeData=%request.GetMimeData("MMSFILE","",count) q:'MimeData
+			s (TempFileName,FileDelimiter,FileFormat)=""
+			s FileDelimiter=##class(XML.Map.LE.Utils).directorydelim()
+			s FileFormat=$zcvt($p(MimeData.FileName,".",$l(MimeData.FileName,".")),"U")
+			s obj=##class(websys.Configuration).%OpenId(1)
+			if obj {
+				s TempFileName=obj.PathToTemporaryFiles_FileDelimiter_%session.SessionId_"."_FileFormat
+				d obj.%Close()
+			}
+			;   !!! PC !!!!
+			; filename used to send back to client
+			s fstream=##class(%FileBinaryStream).%New()
+			i 'fstream s srtOut="0'Cannot create file'" q
+			d fstream.LinkToFile(TempFileName)
+			i 'fstream.CopyFrom(MimeData) s strOut="0'Cannot copy data'" q
+			i 'fstream.SaveStream() s strOut="0'Cannot save stream'" q
+			d fstream.%Close()
+			;   !!! PC !!!!
+			s strOut="1'"_TempFileName_"'"
+		}
+	}
+
+	w strOut
+</server>

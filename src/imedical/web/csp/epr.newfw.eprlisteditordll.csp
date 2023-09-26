@@ -1,0 +1,195 @@
+<html>
+<head>
+  <title>历次病程记录</title>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>  
+
+   <script language="javascript">
+  	function buttonClick(methodName) {
+	  	var eprformObject = document.getElementById("eprlistedit");
+		if(methodName == 'btnsave'){eprformObject.SaveClick();}
+		else if(methodName == 'btnprint'){eprformObject.PrintClick();}
+		else if(methodName == 'btncommit'){eprformObject.CommitClick();}
+		else if(methodName == 'btnupdatedata'){eprformObject.RefreshClick();}
+		else if(methodName == 'btnslttemplate'){eprformObject.TemplateClick();}
+	}
+	
+	//add by zhuj on 2009-7-27
+	//设置eprform是否显示
+	function setVisibility (visibility)
+	{		
+		document.getElementById("eprlistedit").style.visibility = visibility;
+	}
+	
+	//add by zhuj on 2009-8-13
+	//设置eprform是否显示
+	function browserPhoto (patientID, episodeID, eprLogsIDs, startIndex, endIndex)
+	{
+		return document.getElementById("eprlistedit").GetPreviewImage(patientID, episodeID, eprLogsIDs, startIndex, endIndex);
+	}
+   </script>
+</head>	
+<body  leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<server>
+	//获取Session信息
+	set userid = %session.Get("LOGON.USERID")	
+	set username = %session.Get("LOGON.USERNAME")
+	set ctlocid=%session.Get("LOGON.CTLOCID")
+	set password = %session.Get("LOGON.PASSWORD")		//Add on 2012-01-17 for 北京协和项目 : 传染病上报所需环境变量 
+	set employeeNo = %session.Get("LOGON.EmployeeNo")	//Add on 2012-01-17 for 北京协和项目 : 传染病上报所需环境变量 
+	set ssgroupid=%session.Get("LOGON.GROUPID")
+	
+	//获取页面参数
+	set EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+	set PatientID = $Get(%request.Data("PatientID",1),"")
+	set categoryid=$Get(%request.Data("CategoryID",1),"")
+	set bindTemplateID = $Get(%request.Data("TemplateID",1),"")
+  	set docID = $Get(%request.Data("prtDocID",1),"")
+	set eprNum = $Get(%request.Data("EPRNum",1),"")
+	set InstanceDataID = $Get(%request.Data("InstanceDataID",1))
+	
+  	
+	//获取配置信息?背景色
+	set strBGColor = ##class(web.DHCEPRExt).GetBGColor()	 
+	
+	//判断是否留痕	
+	s Revisionable = "False"
+	s Revision = ##class(EPRmeta.SysOption).GetOptionValueByName("Revision")
+	if (Revision = "Y")
+	{
+		s logID = ##class(EPRinstance.EPRLogs).GetLogID(EpisodeID, docID, eprNum)
+		if (logID '= "")
+		{
+			s eprLogs = ##class(EPRinstance.EPRLogs).%OpenId(logID)		
+			s status = eprLogs.EPRStatus	
+			s Revisionable = ##Class(EPRservice.BLL.BLEPRRevision).IsRevisionActive(status,docID)
+			if (Revisionable="1") 
+			{
+				s Revisionable = "True"
+			}
+			else 
+			{
+				s Revisionable = "False"
+			}
+		}
+	}
+	
+	
+	//判断操作权限
+	s arr = ##class(web.eprajax.ajaxGetPower).GetPowerArray(userid, EpisodeID, PatientID, ctlocid, bindTemplateID, ssgroupid, categoryid, docID, eprNum)
+	s canView = arr.GetAt("canView")
+	if (canView = "1")
+	{
+		s canView = "True"
+	}
+	else
+	{
+		s canView = "False"
+	}
+	
+	//隐私级别
+	s privacyLevel = ##class(EPRservice.Privilege.BOPrivRule).GetPrivacyLevel2(userid, EpisodeID, PatientID, ctlocid, bindTemplateID, ssgroupid, categoryid, docID, eprNum)
+	
+	//禁用数据同步提示
+	s needStopDataSync =  ##Class(EPRservice.BLL.BLDataSyncTip).NeedStopDataSync(userid,EpisodeID,%session.SessionId)
+	
+	//构造html页面对象
+	//w "<object width=0 height=0 id='config' name='config' classid='" _ ##class(web.DHCEPRExt).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	w "<object width=0 height=0 id='config' name='config' classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	w "<param name='URL' value='" _ ##class(web.DHCEPR).GetServiceURL() _ "'>",!
+	w "<param name='DBUserPassword' value='" _ ##class(web.DHCEPR).GetUserPassword() _ "'>",!
+	w "<param name='GlobalValue1' value='" _ "Password^"_password _ "'>",!     	//Add on 2012-01-17 for 北京协和项目 : 传染病上报所需环境变量 
+	w "<param name='GlobalValue2' value='" _ "EmployeeNo^"_employeeNo _ "'>",!		//Add on 2012-01-17 for 北京协和项目 : 传染病上报所需环境变量 
+	w "<param name='GlobalValue3' value='" _ "PrivacyLevel^"_privacyLevel _ "'>",!		//隐私所需环境变量 
+	w "<param name='GlobalValue4' value='" _ "NeedStopDataSync^"_needStopDataSync _ "'>",!		//禁用数据同步提示
+	
+	w "</object>",!
+		
+	If (InstanceDataID '= "") {
+		
+		set ProfileID = $Get(%request.Data("ProfileID",1),"")
+		
+		//w "<object id='eprlistedit' name='eprlistedit'  classid='" _ ##class(web.DHCEPRExt).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<object id='eprlistedit' name='eprlistedit'  classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<param name='IsNewFramework' value='True'>",!
+		w "<param name='IsTotalLoad' value='False'>",!
+		w "<param name='SSGroupID' value='"_ssgroupid_"'>",!
+		w "<param name='Revisionable' value='"_Revisionable_"'>",!
+		w "<param name='Browsable' value='"_canView_"'>",!
+		w "<param name='BGColor' value='" _ strBGColor  _ "'>",!
+		w "<param name='UserID' value='" _ userid _ "'>",!
+		w "<param name='UserName' value='" _ username _ "'>",!
+		w "<param name='InstanceDataID' value='" _ InstanceDataID _ "'>",!		
+		w "<param name='CTLocID' value='" _ ctlocid _ "'>",!
+		w "<param name='CategoryID' value='" _ categoryid _ "'>",!
+		w "<param name='EpisodeID' value='" _ EpisodeID _ "'>",!
+		w "<param name='PatientID' value='" _ PatientID _ "'>",!
+		w "</object>"
+	}	
+	else	
+	{
+		set TemplateID = $Get(%request.Data("TemplateID",1),"")	
+		set CategoryID = $Get(%request.Data("CategoryID",1),"")	
+		set CategoryType = $Get(%request.Data("CategoryType",1),"")	
+		set TemplateName = $Get(%request.Data("TemplateName",1),"")
+		set ChartItemID = $Get(%request.Data("ChartItemID",1),"")
+		set ProfileID = $Get(%request.Data("ProfileID",1),"")
+		
+		//w "<object id='eprlistedit' name='eprlistedit'  classid='clsid:26AE0BDA-52C1-3C19-A174-49B53CDFF0B9' codebase='" _ ##class(web.DHCEPR).GetFormURL() _ "EPRCom.CAB#version=1,0,0,1' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<object id='eprlistedit' name='eprlistedit'  classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='90%' Height='100%' VIEWASTEXT >", !
+		w "<param name='IsNewFramework' value='True'>",!
+		w "<param name='Revisionable' value='False'>",!
+		w "<param name='Browsable' value='True'>",!
+		w "<param name='IsTotalLoad' value='True'>",!
+		w "<param name='SSGroupID' value='"_ssgroupid_"'>",!
+		w "<param name='BGColor' value='" _ strBGColor _ "'>",!
+		w "<param name='UserID' value='" _ userid _ "'>",!
+		w "<param name='UserName' value='" _ username _ "'>",!
+		w "<param name='PatientID' value='" _ PatientID _ "'>",!	
+		w "<param name='TemplateName' value='" _ TemplateName _ "'>",!
+		w "<param name='TemplateID' value='" _ TemplateID _ "'>",!
+		w "<param name='CategoryID' value='" _ CategoryID _ "'>",!
+		w "<param name='CategoryType' value='" _ CategoryType _ "'>",!
+		w "<param name='ChartItemID' value='" _ ChartItemID _ "'>",!
+		w "<param name='ProfileID' value='" _ ProfileID _ "'>",!
+		w "<param name='ChartItemType' value='Multi'>",!
+		w "<param name='InstanceDataID' value=''>",!
+		w "<param name='ChartListNo' value='-1'>",!
+		w "<param name='CTLocID' value='" _ ctlocid _ "'>",!
+		w "<param name='EpisodeID' value='" _ EpisodeID _ "'>",!
+		w "</object>"	
+	}
+</server>
+ <script language="javascript">	
+ 
+	//document.getElementById("eprlistedit").InitForm();
+	
+	//add by loo on 2010-7-27
+ 	//历次模板保存(F7)?提交(F8)操作添加快捷键
+ 	function AddEprListSaveAndCommitShortCuts()
+ 	{
+		var map = new Ext.KeyMap(Ext.getDoc(), {
+			key: 118,	// F7
+			fn: function()
+			{
+				//Ext.Msg.alert('KEY MAP', 'tree页面You just hit F7');
+				parent.save();
+			},
+			scope: this
+		}); 
+	
+		map.addBinding({
+    		key: 119,	//F8
+    		fn: function()
+    			{
+	    			parent.commit();
+    			},
+    		scope: this
+		});
+ 	}
+ 	
+ 	AddEprListSaveAndCommitShortCuts();
+ </script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	set action=$g(%request.Data("action",1))
+	set isArrayType=$g(%request.Data("isArrayType",1))
+	set className=$g(%request.Data("className",1))
+	set condSql=""
+	;s start=1,pageSize=9999999
+	s:start>1 start=start+1
+	s end=start+pageSize
+	s deli="&"
+	i action="mulSearchGrp" {
+		s id=$Get(%request.Data("ID",1))     //$g(%session.Data("kpiId"))
+		s GrpCode=$g(%request.Data("GrpCode",1))
+		s GrpDesc=$g(%request.Data("GrpDesc",1))
+		s GrpTypeDr=$g(%request.Data("GrpTypeDr",1))
+		s GrpCreateUse=$g(%request.Data("GrpCreateUse",1))
+		i GrpCode'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" Grp_Code like '%"_GrpCode_"%'"
+		i GrpDesc'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" Grp_Desc like '%"_GrpDesc_"%'"
+		i GrpTypeDr'=""  d
+		.s searcheSql="select ID from DHCWL_CodeCfg.DHCWLCodeCfgType where Type_Desc like '%"_GrpTypeDr_"%'"
+		.s condRs=##class(%Library.ResultSet).%New()
+		.d condRs.Prepare(searcheSql)
+		.d condRs.Execute()
+		.While(condRs.Next()){
+		.s ID(condRs.Data("ID"))=""
+		.}
+		.d condRs.Close()
+		.s ids="",tempId="" f  s tempId=$o(ID(tempId)) q:tempId=""  d
+		..s ids=ids_tempId_","
+		.s ids=$e(ids,1,$l(ids)-1)
+		.if $g(ids)'="" d
+		..if condSql="" s condSql=condSql_" where "
+		..e  s condSql=condSql_" and "
+		..s condSql=condSql_" Grp_Type_Dr in ("_ids_")"
+		..k ID
+		i GrpCreateUse'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" Grp_CreateUse like '%"_GrpCreateUse_"%'"
+		s jsonPros="ID,GrpCode,GrpDesc,GrpTypeDr,GrpCreateUse"
+		s sqlFields=##class(DHCWL.util.GetSetService).MapFildFromClassProByStr("DHCWL.CodeCfg.Group",jsonPros)
+		s tableName=##class(DHCWL.util.GetSetService).GetTableName("DHCWL.CodeCfg.Group")
+		s sql="select "_sqlFields_" from "_tableName_condSql_" order by ID"
+		//s ^yxtest("mulSearchGrpaa")=sql
+		s rs=##class(%Library.ResultSet).%New()
+	    d rs.Prepare(sql)
+	    d rs.Execute()
+	    s json=##class(DHCWL.util.Json).Json("ID"_deli_"GrpCode"_deli_"GrpDesc"_deli_"GrpTypeDr"_deli_"GrpCreateUse","result","root",deli)
+	    //s ^yxtest("json")=json
+	    s num=0
+		While(rs.Next()){
+			s num=num+1
+			s typedr=rs.Data("Grp_Type_Dr")
+			i typedr="" s typedesc=""
+		    e  s typedesc=$list(^DHCWL.CodeCfg.TypeD(typedr),6)
+			d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("Grp_Code")_"'"_deli_"'"_rs.Data("Grp_Desc")_"'"_deli_"'"_typedesc_"'"_deli_"'"_rs.Data("Grp_CreateUse")_"'")
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		i (+isArrayType=1) {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+	
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	    
+	}elseif action="mulSearch" {
+		s session=$g(%request.Data("session",1))
+		s className=$g(%request.Data("className",1))
+		s isArrayType=$g(%request.Data("isArrayType",1))
+		s PV=""
+		s para="" f  s para=$o(%request.Data(para)) q:para=""  d
+		.s PV(para)=$g(%request.Data(para,1))
+		.i className="DHCWL.CodeCfg.SubGroup" s %session.Data("SGRP",para)=$g(%request.Data(para,1))
+		.else  if className="DHCWL.CodeCfg.Group" s %session.Data("GRP",para)=$g(%request.Data(para,1))
+		.else  if className="DHCWL.CodeCfg.Type" s %session.Data("FL",para)=$g(%request.Data(para,1))
+		i session'="" d
+		.k PV
+		.s para="" f  s para=$o(%session.Data(session,para)) q:para=""  d
+		..s PV(para)=%session.Data(session,para)
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) ;$g(%request.Data("pageSize",1))
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		i isArrayType=1 {
+			s start="",pageSize=""
+		}
+		s json=##class(web.DHCWL.KPI.MaintainKpi).GetObjsByClassName(className,$g(start),end,.PV)
+		;w json
+		;q
+		i isArrayType=1 {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+		w json.GetHead()
+		;有一些代替此方法（因为数据量大时string会溢出）
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+		
+	}elseif action="addCodecfg" {
+		s dim("TypeCode")=$g(%request.Data("TypeCode",1))
+		s dim("TypeDesc")=$g(%request.Data("TypeDesc",1))
+		s dim("TypeExtCode")=$g(%request.Data("TypeExtCode",1))
+		s dim("TypeValueDes")=$g(%request.Data("TypeValueDes",1))
+		s dim("TypeFlag")=$g(%request.Data("TypeFlag",1))
+		s dim("TypeCreateUse")=$g(%request.Data("TypeCreateUse",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).AddCodeType(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="deleteCodecfgtype" {
+		s id=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).DeleteCodeType(id)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="updateCodecfgtype" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("TypeCode")=$g(%request.Data("TypeCode",1))
+		s dim("TypeDesc")=$g(%request.Data("TypeDesc",1))
+		s dim("TypeExtCode")=$g(%request.Data("TypeExtCode",1))
+		s dim("TypeValueDes")=$g(%request.Data("TypeValueDes",1))
+		s dim("TypeFlag")=$g(%request.Data("TypeFlag",1))
+		s dim("TypeCreateUse")=$g(%request.Data("TypeCreateUse",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).UpdateCodeType(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="getCodeCfgtypeCombo" {
+		s sql="select ID,Type_Desc from DHCWL_CodeCfg.DHCWLCodeCfgType"   //Type_Code
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=",",str="['',''],"
+		While(rs.Next()){
+			s str=str_"['"_rs.Data("ID")_"'"_deli_"'"_rs.Data("Type_Desc")_"'],"
+		}
+		d rs.Close()
+		w "["_$e(str,1,$l(str)-1)_"]"
+	}elseif action="addCodecfggrp" {
+		s dim("GrpCode")=$g(%request.Data("GrpCode",1))
+		s dim("GrpDesc")=$g(%request.Data("GrpDesc",1))
+		s dim("GrpTypeDr")=$g(%request.Data("GrpTypeDr",1))
+		s dim("GrpCreateUse")=$g(%request.Data("GrpCreateUse",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).AddCodeGrp(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="deleteCodecfggrp" {
+		s id=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).DeleteCodeGrp(id)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="updateCodecfggrp" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("GrpCode")=$g(%request.Data("GrpCode",1))
+		s dim("GrpDesc")=$g(%request.Data("GrpDesc",1))
+		s dim("GrpTypeDr")=$g(%request.Data("GrpTypeDr",1))
+		s dim("GrpCreateUse")=$g(%request.Data("GrpCreateUse",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).UpdateCodeGrp(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="list-subGrp" {
+		s grpId=$g(%request.Data("grpId",1))
+		//i $g(kpiId)="" d
+		//.s kpiCode=$g(%request.Data("kpiCode",1))
+		//.s kpiId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiCode,"DHCWL.MKPI.MKPI")  ;##class(DHCWL.MKPIService.ConfigService).GetKPIByName(kpiCode)
+		i grpId="" {
+			w "{success:false,info:'不存在该组'}"
+			q
+		}
+		s subGrpPara=##class(DHCWL.CodeCfgData.FunctionModule).GetSubGrpListByGrpId(grpId)
+		s count=$p(subGrpPara,"^",2)
+		s subGrpList=$p(subGrpPara,"^",1)
+		s subGrpList=$e(subGrpList,1,$l(subGrpList)-1)
+		w "{totalNums:"_count_",root:["_subGrpList_"]}"
+	}elseif action="deleteCodecfgsubgrp" {
+		s id=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).DeleteCodeSubGrp(id)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="addCodecfgsubgrp" {
+		s dim("SGrpCode")=$g(%request.Data("SGrpCode",1))
+		s dim("SGrpDesc")=$g(%request.Data("SGrpDesc",1))
+		s dim("SGrpGrpDr")=$g(%request.Data("SGrpGrpDr",1))
+		s dim("SGrpSort")=$g(%request.Data("SGrpSort",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).AddCodeSubGrp(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="updateCodecfgsubgrp" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("SGrpCode")=$g(%request.Data("SGrpCode",1))
+		s dim("SGrpDesc")=$g(%request.Data("SGrpDesc",1))
+		s dim("SGrpGrpDr")=$g(%request.Data("SGrpGrpDr",1))
+		s dim("SGrpSort")=$g(%request.Data("SGrpSort",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).UpdateCodeSubGrp(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="list-subGrpItem" {
+		s subgrpId=$g(%request.Data("subgrpId",1))
+		i subgrpId="" {
+			w "{success:false,info:'请选择要查看的分类'}"
+			q
+		}
+		s subGrpPara=##class(DHCWL.CodeCfgData.FunctionModule).GetSubGrpItemListBySubGrpId(subgrpId)
+		s count=$p(subGrpPara,"^",2)
+		s subGrpList=$p(subGrpPara,"^",1)
+		s subGrpList=$e(subGrpList,1,$l(subGrpList)-1)
+		w "{totalNums:"_count_",root:["_subGrpList_"]}"
+	}elseif action="list-AllItemold" {
+		s grpId=$g(%request.Data("grpId",1))
+		i grpId="" {
+			w "{success:false,info:'请选择要查看的分类'}"
+			q
+		}
+		s allTypeItemPara=##class(DHCWL.CodeCfgData.FunctionModule).GetTypeItemListByGrpId(grpId)
+		s count=$p(allTypeItemPara,"^",2)
+		s allTypeItemList=$p(allTypeItemPara,"^",1)
+		s allTypeItemList=$e(allTypeItemList,1,$l(allTypeItemList)-1)
+		w "{totalNums:"_count_",root:["_allTypeItemList_"]}"
+	}elseif action="list-AllItem" {
+		s grpId=$g(%request.Data("grpId",1))
+		//s ^yxtest("grpId")=grpId
+		s searcheCond = $g(%request.Data("searcheCond",1))
+	    s searcheValue = $g(%request.Data("searcheValue",1))
+		i grpId="" {
+			w "{success:false,info:'请选择要查看的分类'}"
+			q
+		}
+		s typeId=$list(^DHCWL.CodeCfg.GroupD(grpId),7)
+		//s ^yxtest("typeId")=typeId
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CodeCfgData.CodeTypeItemQuery:CodeTypeItemQuery","",typeId,searcheCond,searcheValue)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif action="deleteSubGrpDetail" {
+		s id=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).DeleteSubGrpDetail(id)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="deleteAllSubGrpDetail" {
+		s subgrpId=$g(%request.Data("subgrpId",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).DeleteSubGrpAllDetail(subgrpId)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="addsubgrpitem" {
+		s dim("GrpId")=$g(%request.Data("GrpId",1))
+		s dim("SubGrpId")=$g(%request.Data("SubGrpId",1))
+		s dim("ItemId")=$g(%request.Data("ItemId",1))
+		s tip=##class(DHCWL.CodeCfgData.SaveData).AddSubGrpItem(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="CheckGrpItem" {
+		s grpId=$g(%request.Data("grpId",1))
+		i grpId="" {
+			w "{success:false,info:'请选择要查看的分类'}"
+			q
+		}
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CodeCfgData.CheckGrpItemQuery:CheckGrpItemQuery","",grpId)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}
+		
+	
+</script>

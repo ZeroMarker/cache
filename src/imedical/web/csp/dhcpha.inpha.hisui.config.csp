@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--住院药房客户端配置  
+	csp: dhcpha.inpha.hisui.config.csp
+	js:  scripts/pharmacy/inpha/hisui.config.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/pha/com/v1/css/ui.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
+	<script type="text/javascript" src="../scripts/pha/com/v1/js/com.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+</HEAD>
+
+<body>
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'west',split:true,headerCls:'panel-header-gray',title:'医嘱优先级与发药类别配置',collapsible:false,iconCls:'icon-panel-common',width:850">
+                    <table id="gridConfig"></table>
+                </div>
+                <div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+                    <div class="hisui-layout" fit="true" border="false">
+                        <div data-options="region:'north',split:true,height:320,headerCls:'panel-header-gray',title:'医嘱优先级',collapsible:false" iconCls='icon-panel-common'>
+                            <table id="gridPri"></table>
+                        </div>
+                        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',title:'发药类别'" iconCls='icon-panel-common'>
+                            <table id="gridPriDisType"></table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="gridConfigToolbar" class="toolbar">
+        <table class="dhcpha-north-tbl" cellpadding=0 cellspacing=0>
+            <tr>
+                <td>
+                    <label for="cmbPhaLoc">药房</label>
+                    <input id="cmbPhaLoc" class="hisui-combobox" />
+                </td>
+                <td style="padding-left:20px">
+                    <label for="txtUser">用户</label>
+                    <input id="txtUser" class="hisui-validatebox" />
+                </td>
+                <td style="padding-left:20px">
+                    <label for="txtMac">MAC地址</label>
+                    <input id="txtMac" class="hisui-validatebox" />
+                </td>
+                <td style="padding-left:20px">
+                    <a class="hisui-linkbutton" iconCls='icon-w-find' id="btnFind" onclick="Query()">查询</a>
+                </td>
+            </tr>
+        </table>
+        <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 3px;margin-left:10px;margin-right: 10px;">
+            <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;"></img>
+             　增 加 数 据 后 , 选 中 配 置 数 据 勾 选 医 嘱 优 先 级 保 存 , 选 中 医 嘱 优 先 级 勾 选 发 药 类 别 保 存
+        </div>
+
+        <div class="tool-bar-line" style="border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;margin-top:10px"></div>
+        <table cellspacing="0" cellpadding="0">
+            <tr>
+                <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AddConfigShow()">新增</a></td>
+                <td><a class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="EditConfigShow()">编辑</a> </td>
+                <td><a class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="DeleteConfig()">删除</a></td>
+            </tr>
+        </table>
+    </div>
+    <div id="gridPriToolbar" class="toolbar">
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:SavePri()">保存</a>
+    </div>
+    <div id="gridPriDisTypeToolbar" class="toolbar">
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:SavePriDisType()">保存</a>
+    </div>
+    <div id="gridConfigWin" class="hisui-dialog" title="配置" closed="true" style="width:270px;height:250px;border-bottom:none" data-options="iconCls:'',modal:true,
+	buttons:[{
+		text:'保存',
+		handler:function(){
+			SaveConfig();
+		}
+	},{
+		text:'关闭',
+		handler:function(){
+			$('#gridConfigWin').window('close');
+		}
+	}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
+                <div class="hisui-layout" data-options="fit:true">
+                    <div data-options="region:'center'" border="false">
+                        <div>
+                            <table class="dhcpha-north-tbl">
+                                <tr>
+                                    <td>
+                                        <span style="color:red">*</span>配置名称
+                                    </td>
+                                    <td>
+                                        <input id="txtConfig" class='hisui-validatebox' />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span style="color:red">*</span>用户
+                                    </td>
+                                    <td>
+                                        <input id="cmbLocUser" class='hisui-combobox' />
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>
+                                        <span style="color:red">*</span>MAC地址
+                                    </td>
+                                    <td>
+                                        <input id="txtMacAdd" class='hisui-validatebox' />
+                                    </td>
+                                </tr>
+                            </table>
+					        <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 3px;margin-left:10px;margin-right: 10px;">
+					            <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;"></img>
+                                　用户与Mac地址必选其一
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.store.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.tools.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/inpha/hisui.config.js"></script>
+</body>
+
+</HTML>

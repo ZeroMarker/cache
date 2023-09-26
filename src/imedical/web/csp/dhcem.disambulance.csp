@@ -1,0 +1,148 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcem.disambulance.csp 急诊科救护车派车管理-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<ADDINS require="RWCard,DHCOPPrint"/>
+	<HISUI/>
+	<script language="Cache" runat="server">
+		d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+   </script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<!-------------------------------->
+	
+	<link href="../scripts/dhcnewpro/dhcem/css/consultaudit.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>		
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/disambulance.js"></script>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',headerCls:'panel-header-gray',title:'急诊科救护车派车管理',collapsible:false" style="height:125px;padding:2px;">
+		<div style="margin:8px;">
+			<label>创建日期</label>
+			<input id="StartDate" class="hisui-datebox textbox" style="width:137px">
+			<label style="width: 41px;display: inline-block;text-align: center;">-</label>
+        	<input id="EndDate" class="hisui-datebox textbox" style="width:137px">
+			<div style="display:none;">
+				<label style="margin-left:30px;">急诊科室</label>
+				<input id="RLoc" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
+			</div>
+			<label style="margin-left:30px;">类型</label>
+			<input id="mMtType" class="textbox" style="width:137px;height:30px;line-height:30px;"/>
+			
+			
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="QryDisAmbMan()" style="margin-left:20px;">查询</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" onclick="newDisAmbMan()" style="margin-left:20px;">新建</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" onclick="updDisAmbMan()" style="margin-left:20px;">修改</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" onclick="delDisAmbMan()" style="margin-left:20px;">删除</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'"onclick="PrintDisAmbMan()" style="margin-left:20px;">打印</a>
+			<!--
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick="PriDisAmbMan()" style="margin-left:20px;">打印</a>
+			-->
+		</div>
+		<div style="margin:8px;">
+			<label style="">病人姓名</label>
+			<input id="aPatName" class="hisui-validatebox" style="width:130px;vertical-align:bottom;"/>
+        	<label style="">登记号</label>
+			<input id="aPatNo" class="hisui-validatebox" style="width:130px;vertical-align:bottom;"/>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'"onclick="OpenDisAmbMan()" style="margin-left:226px;">派车</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'"onclick="OpenHosReg()" style="margin-left:20px;">登记</a>
+		</div>
+	</div>
+	<div data-options="region:'center',headerCls:'panel-header-gray',title:'明细列表'">
+		<table id="bmDetList"></table>
+	</div>
+</div>
+<!-- 审核窗口 -->
+<div id="newConWin" style="padding:0px 1px">
+	<table border="1" cellspacing="0" cellpadding="1" class="report_table">
+		<tr style="display:none">
+			<td align="right" class="tb_td_bk">ID</td>
+			<td width="180px"><span id="MaID" class="td-span-m"/></td>
+			<td align="right" class="tb_td_bk">EpisodeID</td>
+			<td width="180px"><span id="EpisodeID" class="td-span-m"/></td>
+			<td align="right" class="tb_td_bk"></td>
+			<td width="180px"></td>
+			<td align="right" class="tb_td_bk">VisID</td>
+			<td width="180px"><span id="VisID" class="td-span-m"/></td>
+		</tr>
+		<tr class="tr">
+			<td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">填报信息：</td>
+		</tr>
+		
+		<tr class="tr" style="display:none">
+			<td align="right" class="tb_td_bk">登<label style="margin-left:6px;"></label>记<label style="margin-left:6px;"></label>号：</td>
+			<td width="180px">
+				<input id="PatNo" class="hisui-validatebox" style="width:170px;">
+			</td>
+		</tr>
+		<tr class="tr" style="">
+			<td align="right" class="tb_td_bk">姓<label style="margin-left:25px;"></label>名：</td>
+			<td width="180px">
+				<span id="PatName" class="td-span-m"></span>
+			</td>
+			<td align="right"  class="tb_td_bk">年<label style="margin-left:25px;"></label>龄：</td>
+			<td width="180px">
+				<span id="PatAge" class="td-span-m"></span>
+			</td>
+			<td align="right"  class="tb_td_bk">性<label style="margin-left:25px;"></label>别：</td>
+			<td width="180px">
+				<span id="PatSex" class="td-span-m"></span>
+			</td>
+			
+		</tr>
+		<tr class="tr">
+			<td align="right"  class="tb_td_bk">类<label style="margin-left:25px;"></label>型：</td>
+			<td width="180px">
+				<input id="MtType" class="hisui-validatebox" style="width:170px;">
+			</td>
+			<td style="display:none" align="right"  class="tb_td_bk">出生日期：</td>
+			<td style="display:none" width="180px">
+				<span id="PatBDay" class="td-span-m"></span>
+			</td>
+			<td colspan="2"></td>
+		</tr>
+		
+		
+		<tr class="tr">
+			<td align="right" class="tb_td_bk tb_td_required">备注：</td>
+			<td align="left" colspan="5">
+				<textarea id="MtNotes" style="width:760px;height:150px;resize:none;"></textarea>
+			</td>
+		</tr>
+		<!--------------随车人员---------->
+		<tr class="tr">
+			<td align="right"  class="tb_td_bk">医<label style="margin-left:25px;"></label>生：</td>
+			<td width="180px">
+				<input id="DocArr" class="hisui-validatebox" style="width:170px;">
+			</td>
+			<td align="right"  class="tb_td_bk">护<label style="margin-left:25px;"></label>士：</td>
+			<td width="180px">
+				<input id="NurArr" class="hisui-validatebox" style="width:170px;">
+			</td>
+			<td align="right"  class="tb_td_bk">司<label style="margin-left:25px;"></label>机：</td>
+			<td width="180px">
+				<input id="DriArr" class="hisui-validatebox" style="width:170px;">
+			</td>
+		
+		</tr>
+	</table>
+</div>
+<!--------------打印相关---------->
+<div id="hiddenEncrypt" style="width:0;height:0;">
+	<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+	</form>
+</div>
+<!-------------------------------->
+</body>
+</html>

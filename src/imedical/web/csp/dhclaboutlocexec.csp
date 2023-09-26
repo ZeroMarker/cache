@@ -1,0 +1,80 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+///dhclaboutlocexec.csp
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD>
+
+</TRAK:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/QHwebsys.css"><NK>
+
+<meta http-equiv="Content-Type" content="text/html; ">
+<!-- Put your page Title here -->
+ </HEAD>
+ 
+ <FRAMESET cols=20%,80%, id=x>
+  
+      	<frame name="DHCLabOutLocMain" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabOutLocMain" frameborder=0 >
+      	<frame name="DHCLabOutLocExec" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabOutLocExec" frameborder=0 >
+  	
+
+	
+ </FRAMESET>
+
+
+<BODY>
+ <SCRIPT language="Cache" RUNAT="SERVER">
+
+</SCRIPT>
+
+ <script language=javascript>
+         var obj=frames['DHCLabOutLocMain'].document.getElementById('Qurey');
+		// if (obj) {alert(obj.value)}	 
+</script>
+
+
+   <SCRIPT language=JScript event=OnObjectReady(objObject,objAsyncContext) for=foo>
+   
+   var str=""
+   if(objObject.IPEnabled != null && objObject.IPEnabled != "undefined" && objObject.IPEnabled == true)
+   {
+    if(objObject.MACAddress != null && objObject.MACAddress != "undefined")
+    MACAddr = objObject.MACAddress;
+    MACAddr=unescape(MACAddr)
+
+    if(objObject.IPEnabled && objObject.IPAddress(0) != null && objObject.IPAddress(0) != "undefined")
+    IPAddr = objObject.IPAddress(0);
+ 
+    if(objObject.DNSHostName != null && objObject.DNSHostName != "undefined")
+    sDNSName = objObject.DNSHostName;
+    
+    var obj=frames['DHCLabOutLocMain'].document.getElementById('MACAddr');
+    if (obj) obj.value=obj.value+"||"+sDNSName+"**"+MACAddr
+    
+    
+    }
+  </SCRIPT>
+  
+
+  <OBJECT id=locator classid=CLSID:76A64158-CB41-11D1-8B02-00600806D9B6 VIEWASTEXT></OBJECT>
+  <OBJECT id=foo classid=CLSID:75718C9A-F029-11d1-A1AC-00C04FB6C223></OBJECT>
+  
+  <SCRIPT language=JScript>
+   var service = locator.ConnectServer();
+   var MACAddr ;
+   var IPAddr ;
+   var DomainAddr;
+   var sDNSName;
+   service.Security_.ImpersonationLevel=3;
+   service.InstancesOfAsync(foo, 'Win32_NetworkAdapterConfiguration');
+ </SCRIPT>
+  
+  
+
+</BODY>
+
+
+</HTML>

@@ -1,0 +1,56 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	s Name=$Get(%request.Data("name",1))
+	s TableName=$Get(%request.Data("tablename",1))
+	
+	s Rowid=$Get(%request.Data("RowId",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	s CommunityName=$Get(%request.Data("CommunityName",1))
+	s SepllCode=$Get(%request.Data("SepllCode",1))
+	s UpCommunityCode=$Get(%request.Data("UpCommunityCode",1))
+	s CommunityCodePrex=$Get(%request.Data("CommunityCodePrex",1))
+	s CommunityType=$Get(%request.Data("CommunityType",1))
+	s HospitalDR=$Get(%request.Data("HospitalDR",1))
+	s RecordDR=$Get(%request.Data("RecordDR",1))
+	s SearchValue=$Get(%request.Data("searchValue",1))
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.DictHospitalService).update(Rowid,CommunityCode,CommunityName,SepllCode,UpCommunityCode,CommunityCodePrex,CommunityType,HospitalDR,RecordDR)
+	.w result
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.DictHospitalService).ListPage(Start,Limit)
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.DictHospitalService).delete(Rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'É¾³ý³É¹¦'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.DictHospitalService).insert(CommunityCode,CommunityName,SepllCode,UpCommunityCode,CommunityCodePrex,CommunityType,HospitalDR,RecordDR)
+	.w result
+	i Action="search" d
+	.w ##class(CHSSWeb.DictHospitalService).search(Start,Limit,SearchValue)
+	i Action = "getxc" d
+	.w ##class(CHSSWeb.DictHospitalService).getxc(Start,Limit,Name)
+	
+	i Action = "listct" d
+	.w ##class(CHSSWeb.DictHospitalService).listct(Start,Limit)
+	
+	i Action = "listold"  d
+	.w ##class(CHSSWeb.CommonDictService).ListOld(Start,Limit,TableName)
+	
+	i Action = "listpage" d
+	.w ##class(CHSSWeb.CommonDictService).ListPage(Start,Limit,TableName)
+</script>
+

@@ -1,0 +1,148 @@
+﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>	
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script> 
+	
+	<script language="cache" runat="server">
+	    d ##Class(EMRservice.SystemParameter).GetImportResource()
+	    s docId = $Get(%request.Data("DocID",1),"")
+	    s signType = $Get(%request.Data("SignType",1),"") //"Nur" "Doc"
+		s userCode = %session.Get("LOGON.USERCODE")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s userlocName = $case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+		s sessionID = %session.SessionId	
+    	s patientNoLength = ##Class(EMRservice.BOSysOption).GetValueByName("PatientNoLength")
+    	s:(patientNoLength = "") patientNoLength = 10
+		s hospitalName = ##Class(EMRservice.BOSysOption).GetValueByName("HospitalName")
+		s:(hospitalName = "") hospitalName = "DtHealth"	 
+		s CAServicvice = ""
+		s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
+		s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(userLocID)
+		if (IsCAON = "Y")&(IsCACTLoc = "1") { 
+			s CAServicvice = "1" 
+			d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+		} 
+		//用户级别
+		s userLevel = ##class(EMRservice.BL.BLSignRole).GetUserLevel(userID,"")
+		s:(userLevel '= "") userLevel = ##Class(EMRservice.BL.BLSignRole).GetSignCode($p(userLevel,"^",1))
+		//用户职务
+		s userPost = ##Class(EMRservice.BL.BLSignRole).GetUserPosition(userID,userLocID)
+		s:(userPost '= "") userPost = ##Class(EMRservice.BL.BLSignRole).GetSignCode($p(userPost,"^",1))
+		s defaultGroup = $P(##Class(EMRservice.SystemParameter).getDefaultGroup(),"#",1)
+		s defaultLoc = $P(##Class(EMRservice.SystemParameter).getDefaultGroup(),"#",2)
+		s isGroupSignShowWard = ##Class(EMRservice.SystemParameter).IsGroupSignShowWard()
+   </script>
+   <script language = "javascript">
+   	var docId = '#(docId)#';
+   	var signType = '#(signType)#';
+	var userCode = '#(userCode)#';
+	var userName = '#(userName)#';
+	var userID = '#(userID)#';
+	var ssgroupID = '#(ssgroupID)#';
+	var userLocID = '#(userLocID)#';
+	var userlocName = '#(userlocName)#';
+	var sessionID = '#(sessionID)#';	
+	var patientNoLength = '#(patientNoLength)#';
+	var hospitalName = '#(hospitalName)#';
+	var userPost = '#(userPost)#';
+	var userLevel = '#(userLevel)#';
+	var defaultGroup = ('#(defaultGroup)#').split("^");
+	var defaultLoc = ('#(defaultLoc)#').split("^");
+	var CAServicvice = '#(CAServicvice)#';
+	var strServerRan = '';
+	var strServerSignedData = '';
+	var strServerCert = '';
+	var strKey = '';
+	var strUserSignedData = '';
+	var strUserCert = '';	
+	function Dateformatter(date)
+	{
+		var y = date.getFullYear();
+		var m = date.getMonth()+1;
+		var d = date.getDate();
+		return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+	}
+	function Dateparser(s)
+	{
+		if (!s) return new Date();
+		var ss = s.split('-');
+		var y = parseInt(ss[0],10);
+		var m = parseInt(ss[1],10);
+		var d = parseInt(ss[2],10);
+		if (!isNaN(y) && !isNaN(m) && !isNaN(d))
+		{
+			return new Date(y,m-1,d);
+		} else {
+			return new Date();
+		}
+	}
+	ipAddress = getIpAddress();
+	var isGroupSignShowWard = '#(isGroupSignShowWard)#';
+</script> 
+	<title>首页签名</title>
+</head>
+<body id="layout" class="easyui-layout">
+	<div data-options="region:'west'" style="height:100%;width:410px;vertical-align:text-top;padding:3px 0 0 0;">
+		<div class="easyui-layout" data-options="fit:true">	
+			<div data-options="region:'north',border:false" style="height:210px;">
+		        <span>签名类型 </span><input id="cboSignType" style="width:330px;margin-top:2px;" />
+		        <div id="loc" style="padding-top:3px">
+					<span>科&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;室 </span><input id="cbxLoc" style="width:330px;margin-top:2px;"/>
+					<div style="padding-left:140px;">
+						<input type="checkbox" name="checkbox" id="chkGroup">本医疗组</input>
+						<input type="checkbox" name="checkbox" id="chkLoc">本科病人</input>	
+						<input type="checkbox" name="checkbox" id="chkUser">本人病人</input>
+					</div>	
+		        </div>
+		        <div id="ward" style="padding-top:3px">
+		        	<span>病&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;区  </span><input id="wardcombo" style="width:330px;"></input>
+		        </div>
+				<span>病&nbsp;案&nbsp;号  </span><input class="easyui-validatebox" id="medicareNo" style="width:140px;margin-top:1px;"/>
+				<span>登&nbsp;记&nbsp;号  </span><input class="easyui-validatebox" id="patientNo" style="width:140px;"/>
+			<br/>
+			    <span>身&nbsp;份&nbsp;证  </span><input class="easyui-validatebox" id="IDCardNo" style="width:140px;margin-top:1px;"/>	
+	 	    	<span>医&nbsp;保&nbsp;号  </span><input class="easyui-validatebox" id="medicalInsuranceNo" style="width:140px"/>		
+			<br/>
+	 	    	<span>患者姓名 </span><input class="easyui-validatebox" id="patientName" style="width:328px;margin-top:1px;"/>	        		
+			<br/>
+			<div id="oDate" style="padding:3px 0 0px 0;margin-top:3px; display:none;">
+			    <span>出院日期 </span><input class="easyui-datebox datebox-f combo-f" id="outStartDate" data-options="formatter:Dateformatter,parser:Dateparser,width:154"/> 
+		 	    <span>至 </span><input class="easyui-datebox datebox-f combo-f" id="outEndDate" data-options="formatter:Dateformatter,parser:Dateparser,width:154"/>				
+			</div>
+			<span style="padding:1px 8px 1px 1px;">
+				<input type="radio" name="admStatus" id="radioInp" checked=true value="A" >在院</input>
+				<input type="radio" name="admStatus" id="radioOutp" value="D">出院</input>
+			</span>
+		    <span>签名状态</span>
+	        <input id="cboSign" value="unsign" class="easyui-combobox" style="width:60px" data-options="panelHeight:'auto',
+				valueField: 'id',
+				textField: 'text',
+				data: [{
+					id: 'sign',
+					text: '已签'
+				},{
+					id: 'unsign',
+					text: '未签'
+				}]" />
+       
+	       <a id="PatientListQuery" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" Style="margin: 5px 0 0 10px; ">查询</a>
+           </div>
+		   <div data-options="region:'center'">
+				<table id="patientListData"></table>
+		   </div>		
+		</div>
+	</div>
+	<div data-options="region:'center'">
+		<iframe id="frameEditor" src="" style="width:100%;height:100%;" scrolling="no"></iframe>
+	</div>
+	<script type="text/javascript" src="../scripts/emr/js/record.group.sign.js"></script>     
+</body> 
+</html>

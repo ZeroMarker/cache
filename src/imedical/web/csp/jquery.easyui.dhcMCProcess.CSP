@@ -1,0 +1,139 @@
+<HTML XMLNS=TRAK>
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<HEAD>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		 <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/default/easyui.css" />
+		 <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/icon.css" />
+		 <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/FormStyle.css" />
+		 <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/jquery-1.8.0.min.js" charset="utf-8"></script>
+		 <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/jquery.easyui.min.js" charset="utf-8"></script>
+		 <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	</HEAD>
+	<body>
+		<div id="divMCProcess"></div>
+   <SERVER>
+ s VisitNumberReportDR=%request.Get("VisitNumberReportDR")
+</SERVER> 
+ <script type="text/javascript">
+ 	var VisitNumberReportDR = '#($g(VisitNumberReportDR))#';
+	$.ajax({
+      url:'jquery.easyui.dhclabclassjson.csp',
+	  data: { 
+	  ClassName:"LIS.WS.BLL.DHCMCProcess",
+	  QueryName:"QryMCProcessView",
+	  FunModul:"JSON",
+	  P0:VisitNumberReportDR,
+	  P1:"1"
+	  },
+      success: function (data) {
+         data = jQuery.parseJSON(data)
+         result = data.rows;
+         var preType = "";
+             var htmlStr = '';
+             var operStr = "";
+             //数据映射
+             var dataMap = {};
+             //按数据渲染控件
+             if (result != null && result.length > 0) {
+                 var oneTypeStr = '';
+                 var oneTypeHeadStr = '';
+                 var oneTrStr = '';
+                 //存最后操作信息
+                 var lastOperInfo = "";
+                 var lastOperDate = "";
+                 var lastOperTime = "";
+                 for (var i = 0; i < result.length; i++) {
+                    dataMap[result[i].OutRowID] = result[i].Result;
+                    //多选把结果转换成数组
+                    if (dataMap[result[i].OutRowID] != "" && result[i].MethodType == "3") {
+                        dataMap[result[i].OutRowID] = jQuery.parseJSON(dataMap[result[i].OutRowID]);
+                    }
+                    else if (result[i].MethodType == "3") {
+                        dataMap[result[i].OutRowID] = [];
+                    }
+                    if (oneTrStr != "") {
+                        oneTrStr += '</td></tr>';
+                        oneTrStr += operStr;
+                        operStr = "";
+                        oneTypeStr += oneTrStr;
+                        oneTrStr = "";
+                    }
+                    //有结果得到操作信息
+                    if (result[i].Result != "" && $("#ckShowOper").is(':checked')) {
+                        operStr = '<tr><td><b>记录人员：</b>' + result[i].ActUser + '&nbsp&nbsp&nbsp&nbsp<b>修改时间:' + result[i].ActDate + '&nbsp&nbsp' + result[i].ActTime + '</b></td></tr>';
+                    }
+                    if (result[i].ProcessDR != preType) {
+                        if (i != 0) {
+                            oneTypeStr += "</table></div></div>"
+                        }
+                        oneTypeStr = oneTypeHeadStr + lastOperInfo + oneTypeStr;
+                        htmlStr += oneTypeStr;
+                        oneTypeHeadStr = '<div style="width: 95%; background-color: #FFFFFF;border:1px solid #DDDDFF;border-radius: 10px; padding: 2px 2px 2px 2px;margin-bottom:2px;">';
+                        oneTypeHeadStr += '<div style="width: 100%; height: 18px; background-color:#F0F0F0; border-radius: 5px;">';
+                        oneTypeHeadStr += '<span style="color: #000000; font-weight: bold;color:blue;">' + result[i].ProcessName + '</span>';
+                        oneTypeStr = '</div>';
+                        oneTypeStr += '<div style="width: 100%;background-color: #FFFFFF; border-radius: 10px;">';
+                        oneTypeStr += '<table style="width: 100%;">'
+                        preType = result[i].ProcessDR;
+                    }
+                    if (lastOperInfo == "") {
+                        lastOperInfo = '<span style="font-size:10px;font-weight:bold;">&nbsp' + result[i].ActUser + '&nbsp' + result[i].ActDate + '&nbsp' + result[i].ActTime+'</span>';
+                        lastOperDate = result[i].ActDate;
+                        lastOperTime = result[i].ActTime;
+                    }
+                    else if (result[i].ActDate >= lastOperDate ||(result[i].ActDate == lastOperDate && result[i].ActTime >= lastOperTime)) {
+                        lastOperInfo = '<span style="font-size:10px;font-weight:bold;">&nbsp' + result[i].ActUser + '&nbsp' + result[i].ActDate + '&nbsp' + result[i].ActTime+'</span>';
+                        lastOperDate = result[i].ActDate;
+                        lastOperTime = result[i].ActTime;
+                    }
+                    oneTrStr += '<tr><td style="text-align:left;">' + '<b style="float:left;">' + result[i].CName + ':</b>';
+                    //文本类型加文本框，然后缓存可选数据
+                    if (result[i].MethodType == "2") {
+                        oneTrStr += '&nbsp&nbsp&nbsp&nbsp<div id="txt' + result[i].OutRowID + '" name="' + result[i].OutRowID + '" style="width: 80%;border:1px solid #DDDDFF;float:left;">' + result[i].ResultDesc + '</div>';
+                    }
+                    //图片
+                    else if (result[i].MethodType == "3") {
+                        oneTrStr += '&nbsp&nbsp&nbsp&nbsp&nbsp';
+                        if (dataMap[result[i].OutRowID].length > 0) {
+                            for (var j = 0; j < dataMap[result[i].OutRowID].length; j++) {
+                                oneTrStr += '<img src="' + result[i].FTPPath + dataMap[result[i].OutRowID][j] +'" style="width:80px;height:60px;" alt="图片" class="easyui-tooltip" title="双击单独打开" ondblclick="OpenMCImage(\'' + result[i].FTPPath + dataMap[result[i].OutRowID][j] + '\');"/>&nbsp';
+                            }
+                        }
+                        else {
+                            oneTrStr += '<img style="width:80px;height:60px;" alt="图片"/>&nbsp<img style="width:80px;height:60px;" alt="图片"/>&nbsp';
+                        }
+                    }
+                    else
+                    {
+                        oneTrStr += result[i].ResultDesc;
+                    }
+                 }
+                 if (oneTrStr != "") {
+                     oneTrStr += '</td></tr>';
+                     oneTrStr += operStr;
+                     operStr = "";
+                     oneTypeStr += oneTrStr;
+                     oneTypeStr += "</table></div></div>"
+                     oneTrStr = "";
+                 }
+                 if (oneTypeStr != "") {
+                     oneTypeStr = oneTypeHeadStr + lastOperInfo + oneTypeStr;
+                     htmlStr += oneTypeStr;
+                 }
+                 $("#divMCProcess").html(htmlStr);
+             }
+             else
+             {
+                $("#divMCProcess").html('<span style="font-weight:bold;">&nbsp无记录</span>');
+             }
+      }
+    });
+    
+    //打开鉴定过程图片
+ function OpenMCImage(path) {
+     window.open(path);
+ }
+</script>
+</body>
+</HTML>

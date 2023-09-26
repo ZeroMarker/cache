@@ -1,0 +1,61 @@
+<!-- 
+ * FileName: dhcbill.conf.ip.monitor.sec.csp
+ * Anchor: ZhYW
+ * Date: 2020-01-09
+ * Description: 住院费用监控配置
+-->
+<!DOCTYPE html>
+<html>
+<head>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.layout-panel-center div.panel {
+			padding-bottom: 8px;
+		}
+		.r-label-1 {
+			padding-left: 40px;
+		}
+	</style>
+	<server>
+		set moniId=+%request.Get("MoniId")
+		set hospId=+%request.Get("HospId")
+		set jsonStr=##class(web.DHCIPBillCostMonitorConfig).GetCheckDataByConfId(moniId)
+		set jsonObj=##class(%DynamicAbstractObject).%FromJSON(jsonStr)
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		MoniId: """_moniId_""",",!
+		w "		HospId: """_hospId_""",",!
+		w "		CDId: """_jsonObj.ID_""",",!
+		w "		AirStDate: """_jsonObj.CDAirStDate_""",",!
+		w "		AirEndDate: """_jsonObj.CDAirEndDate_"""",!
+		w "	};",!
+		w "</script>"
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',border:false" style="padding:10px;">
+			<csp:Include Page="dhcbill.conf.ip.monitor.explain.csp">
+			<table style="padding-bottom: 10px;">
+				<tr>
+					<td><input class="hisui-checkbox" type="checkbox" id="airMode" label="使用医生站配置" data-options="boxPosition:'right',checked:#($s((jsonObj.CDAirMode=1):"true",1:"false"))#"/></td>
+					<td class="r-label r-label-1"><label>开始日期</label></td>
+					<td><input id="airStDate" class="hisui-datebox textbox" data-options="disabled:#($s((jsonObj.CDAirMode=1):"true",1:"false"))#"/></td>
+					<td class="r-label r-label-1"><label>结束日期</label></td>
+					<td><input id="airEndDate" class="hisui-datebox textbox" data-options="disabled:#($s((jsonObj.CDAirMode=1):"true",1:"false"))#"/></td>
+				</tr>
+			</table>
+			<csp:Include Page="dhcbill.conf.ip.monitor.catelist.csp">
+		</div>
+		<div data-options="region:'south',border:false">
+			<div style="text-align:center;padding-bottom:10px;">
+				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.ip.monitor.sec.js"></script>
+</body>
+</html>

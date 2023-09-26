@@ -1,0 +1,67 @@
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s HospId=$Get(%request.Data("HospId",1))
+;
+//查询科室
+i Action = "QueryLoc" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s Params=$g(%request.Data("StrParam",1))
+	.s result=##class(web.DHCST.CTLOC).QueryGroupLoc(Start,Limit,Sort,Dir,GroupId,Params,HospId)
+	.i result ="" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+i Action = "Query" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.S UserId=$Get(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.LocManGrp).Query(LocId,UserId)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+	.
+i Action = "Save" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.s Detail=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCST.LocManGrp).Save(LocId,Detail)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Delete" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.LocManGrp).Delete(rowid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+	
+i Action = "SaveLocUserMan" d
+	.S locGrpId=$Get(%request.Data("locGrpId",1))
+	.s Detail=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCST.LocManGrp).SaveLocUserMan(locGrpId,Detail)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+	//删除人员信息
+i Action = "deleteUser" d
+	.s RowId=$Get(%request.Data("RowId",1))
+	.s result = ##class(web.DHCST.LocManGrp).DeleteUser(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+i Action = "QueryLocUserMan" d
+	.S locGrpId=$Get(%request.Data("locGrpId",1))
+	.w ##class(web.DHCST.LocManGrp).GetLocUserManDs(Start,Limit,locGrpId)
+
+	
+</SERVER>

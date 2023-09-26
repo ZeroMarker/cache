@@ -1,0 +1,63 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	s bpprojadjdr=$Get(%request.Data("bpprojadjdr",1))
+    s bpitemcode=$Get(%request.Data("bpitemcode",1))
+	s bidlevel=$Get(%request.Data("bidlevel",1))
+	s bidname=$Get(%request.Data("bidname",1))
+	s bpbudpaydr=$Get(%request.Data("bpbudpaydr",1))
+	s budgvaluepay=$Get(%request.Data("budgvaluepay",1))
+	s budgvaluedetail=$Get(%request.Data("budgvaluedetail",1))
+	s sf=$Get(%request.Data("sf",1))
+	s bpbudgdesc=$Get(%request.Data("bpbudgdesc",1))
+	s sumdetail=$Get(%request.Data("sumdetail",1))
+	s sumpay=$Get(%request.Data("sumpay",1))
+	
+	s projadjdr=$Get(%request.Data("projadjdr",1))
+	s ID=$Get(%request.Data("ID",1))
+	
+
+	//s UserID=^dhcpaUsertemp("LOGON.USERID")
+	s UserID=$Get(%request.Data("UserID",1))
+	
+	s Rowid=$Get(%request.Data("Rowid",1))
+	
+	
+
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgProAdditional).ListDetail(hospid,ID,Rowid,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	
+	
+	i action = "del" d  
+	.s result1 = ##class(herp.budg.udata.uBudgProAdditionalAudit).DelDetail(rowid,projadjdr)
+	.i result1 = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+	
+	i action = "bidnamelist" d
+	.w ##class(herp.budg.udata.uBudgProAdditionalAudit).BIDNameList(start,limit,str)
+	
+
+</script>

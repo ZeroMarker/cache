@@ -1,0 +1,58 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))   
+	s str      = $Get(%request.Data("query",1))
+	
+	s collDate=$Get(%request.Data("collDate",1))
+	s accountDate=$Get(%request.Data("accountDate",1))
+	s departType=$Get(%request.Data("departType",1))
+	s dataStatus=$Get(%request.Data("dataStatus",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))
+	s userid=$Get(%request.Data("userid",1))
+	s VouchNO=$Get(%request.Data("VouchNO",1))
+	
+	s startDate=$Get(%request.Data("startDate",1))
+	s endDate=$Get(%request.Data("endDate",1))
+	s departType1=$Get(%request.Data("departType1",1))
+	s department=$Get(%request.Data("department",1))
+	s VouchDate=$Get(%request.Data("vouchdate",1))
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctDepartMentIncome).List(start, limit, collDate, accountDate, departType, dataStatus,VouchNO)
+	
+	i action = "listDetail" d
+	.w ##class(herp.acct.udata.uAcctDepartMentIncome).ListDetail(start, limit, rowid)
+	
+	i action="collection" d
+    .s result=##class(herp.acct.udata.uAcctDepartMentIncome).collection(startDate, endDate, departType1, department, userid)
+    .i result=0  d 
+    ..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+    i action="CreateVouch" d
+    .s result=##class(herp.acct.udata.uAcctDepartMentIncome).CreateVouch(VouchDate,rowid,AcctBookID,userid)
+    .i result="0^0"  d 
+    ..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="GetURL" d
+	.s result=##class(herp.acct.udata.uAcctCommon).GetURL(AcctBookID)
+    .i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+  	
+</script>

@@ -1,0 +1,58 @@
+<HTML>
+<HEAD>
+	<TITLE>病历授权</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script language="cache" runat="server">
+  		s patientID = $Get(%request.Data("PatientID",1),"")
+  		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s appointUserID = %session.Get("LOGON.USERID")
+		s curAppointName = ""
+		s appointUserLoc = %session.Get("LOGON.CTLOCID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		
+		//add by yang 2012-04-13 ----------------------------------------
+		s authorizationSSGroupID =##class(EPRmeta.SysOption).GetOptionValueByName("AuthorizationSSGroupID")
+		s length = $l(authorizationSSGroupID,"^")
+		s onlyCurrentDept = "1"
+		s authLevelTop = "200"
+		for index=1:1:length
+		{
+			if ($p(authorizationSSGroupID,"^",index) = ssgroupID){
+				s onlyCurrentDept = "2"	//1-本科室的病人的授权申请?非1-全部的病人授权申请	
+				s authLevelTop = "300"
+			}
+		}
+		
+		s eprIntegratedAuthorization = $Get(%request.Data("EPRIntegratedAuthorization",1),"") //1-综合授权?非1-按病人授权?原版?
+		
+  	</script>
+	<script type="text/javascript">
+		var ID="";							//申请RowID
+		var requestCateCharpter="";			//申请权限范围
+		var requestCateCharpterDesc="";		//申请权限范围描述
+		var requestUser="";					//申请人
+		var requestDept="";					//申请部门
+		var EPRAction = "";					//申请类型
+		var timeSpan = "";					//授权时长
+		
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var appointUserID = '#(appointUserID)#';
+		var appointUserLoc = '#(appointUserLoc)#';
+		var ssgroupID = '#(ssgroupID)#';
+		
+		//add by yang 2012-04-13 ----------------------------------------		
+		var onlyCurrentDept = '#(onlyCurrentDept)#';
+		var eprIntegratedAuthorization = '#(eprIntegratedAuthorization)#';
+		var authLevelTop = '#(authLevelTop)#';
+	</script>
+</HEAD>
+
+<BODY>
+	<script type="text/javascript" src="../scripts/epr/js/ComboBoxTree.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprIntegratedAuthorizationMethod.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprIntegratedAuthorization.js"></script>
+</BODY>
+</HTML>

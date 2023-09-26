@@ -1,0 +1,76 @@
+<!-- DHCPEBookingPlan.Result.csp -->
+<!-- 
+/// 创建时间		2006.10.26
+/// 创建人		xuwm 
+/// 主要功能		体检排期 显示当前团体的预约客户
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+///  
+-->
+
+<HTML>
+<HEAD>
+
+<TITLE>预约客户</TITLE>
+ <SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+ 	<script language=Cache runat=server>
+ 		s GTId=$G(%request.Data("GTId",1))
+ 		s BookingDate=$G(%request.Data("BookingDate",1))
+ 		s BookingName=$G(%request.Data("BookingName",1))
+		s SearchType=$G(%request.Data("SearchType",1))
+	</script>
+</HEAD>
+
+<BODY>
+<span>人员列表</span>
+<TABLE class=tblList id="tGIADMBooking" Name="tGIADMBooking" CELLSPACING=1 width="100%">
+	<THEAD>
+	<TH style='display:none;'></TH>
+	<TH id=2  NOWRAP>登记号</TH>
+	<TH id=3  NOWRAP>姓名</TH>
+	<TH id=4  NOWRAP>所属团体</TH>
+	<TH id=5  NOWRAP>预约日期</TH>
+	<TH id=6  NOWRAP>预约时间</TH>
+	</THEAD>
+	<script language=Cache runat=server>
+		s iLLoop=1
+		s RowType="RowOdd"
+	</script>
+	
+	<csp:query name=rs classname="web.DHCPE.PreIADM" queryname="SearchGADMPatient" P1=#(GTId)# P2=#(BookingDate)# P3=#(BookingName)# P4=#(SearchType)#>
+	
+	<csp:while condition="rs.Next()">
+
+	<TR class=#(RowType)# NOWRAP>
+		<TD style='display:none;'>
+			<input id="PIADM_RowIdz#(iLLoop)#" name="PIADM_RowIdz#(iLLoop)#" type="hidden" value="#(rs.GetDataByName("PIADM_RowId"))#">
+			<input id="PIADM_PIBI_DRz#(iLLoop)#" name="PIADM_PIBI_DRz#(iLLoop)#" type="hidden" value="#(rs.GetDataByName("PIADM_PIBI_DR"))#">
+		</TD>
+		
+		<TD><label id="PIADM_PIBI_DR_RegNoz#(iLLoop)#" name="PIADM_PIBI_DR_RegNoz#(iLLoop)#">#(rs.GetDataByName("PIADM_PIBI_DR_RegNo"))#</label></TD>
+		<TD><label id="PIADM_PIBI_DR_Namez#(iLLoop)#" name="PIADM_PIBI_DR_Namez#(iLLoop)#">#(rs.GetDataByName("PIADM_PIBI_DR_Name"))#</label></TD>
+		<TD><label id="PIADM_PIBI_DR_Namez#(iLLoop)#" name="PIADM_PIBI_DR_Namez#(iLLoop)#">#(rs.GetDataByName("PIADM_PGADM_DR_Name"))#</label></TD>
+		<TD><label id="PIADM_PEDatez#(iLLoop)#" name="PIADM_PEDatez#(iLLoop)#">#(rs.GetDataByName("PIADM_PEDate"))#</label></TD>
+		<TD><label id="PIADM_PETimez#(iLLoop)#" name="PIADM_PETimez#(iLLoop)#">#(rs.GetDataByName("PIADM_PETime"))#</label></TD>
+
+	</TR>
+	<script language=Cache runat=server>
+		s iLLoop=iLLoop+1
+		i "RowEven"=RowType d
+		.s RowType="RowOdd"
+		e  d
+		.s RowType="RowEven"
+	</script>
+	</csp:while>
+	
+</TABLE>
+
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.listrows.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.Tools.js"></SCRIPT>
+
+</BODY>
+</HTML>

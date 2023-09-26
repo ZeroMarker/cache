@@ -1,0 +1,255 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s id=$Get(%request.Data("id",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s order=$Get(%request.Data("order",1))
+	s shortcut=$Get(%request.Data("shortcut",1))
+	s parRef=$Get(%request.Data("parRef",1))
+	s remark=$Get(%request.Data("remark",1))
+	s deptSet=$Get(%request.Data("deptSet",1))
+	s distFlag=$Get(%request.Data("distFlag",1))
+	s active=$Get(%request.Data("active",1))
+	s monthDr=$Get(%request.Data("monthDr",1))
+	s costSetsDr=$Get(%request.Data("costSetsDr",1))
+	s nodeDr=$Get(%request.Data("nodeDr",1))
+	s deptDr=$Get(%request.Data("deptDr",1))
+	s itemDr=$Get(%request.Data("itemDr",1))
+	s type=$Get(%request.Data("type",1))
+	s rate=$Get(%request.Data("rate",1))
+	s param=$Get(%request.Data("param",1))
+	s layerDr=$Get(%request.Data("layerDr",1))
+	s priority=$Get(%request.Data("priority",1))
+	s ioFlag=$Get(%request.Data("ioFlag",1))
+	s group=$Get(%request.Data("group",1))
+	
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uCostDistSets).ListRec(searchField,searchValue,sortField,sortDir,start,limit,"")
+	
+	i action = "listDistParams" d
+	.w ##class(dhc.ca.cache.udata.uDistParams).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)
+	
+	i action = "listCostDepts" d
+	.i type="inc" d
+	..w ##class(dhc.ca.cache.udata.uInCostDepts).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)
+	.i type="outc" d
+	..w ##class(dhc.ca.cache.udata.uOutCostDepts).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)
+	.i type="inr" d
+	..w ##class(dhc.ca.cache.udata.uInRecDepts).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)
+	.i type="outr" d
+	..w ##class(dhc.ca.cache.udata.uOutRecDepts).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)
+	
+	i action = "listCostItems" d
+	.i type="in" d
+	..w ##class(dhc.ca.cache.udata.uInCostItems).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)
+	.i type="out" d
+	..w ##class(dhc.ca.cache.udata.uOutCostItems).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)
+	
+	i action = "findUndist" d
+	.w ##class(dhc.ca.cache.udata.uCostResultData).FindRecByLayerDr(searchField, searchValue, sortField, sortDir, start, limit, monthDr, deptSet, layerDr)
+	
+	i action = "listMethods" d
+	.w ##class(dhc.ca.cache.udata.uCostDistMethods).ListRec(searchField,searchValue,sortField,sortDir,start,limit,active, id, layerDr)
+	
+	i action = "listItems" d
+	.w ##class(dhc.ca.cache.udata.uDistParams).ListItems(parRef, id, searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "items" d
+	.i type="in" d
+	..w ##class(dhc.ca.cache.udata.uInCostItems).ListItems(parRef, id, searchField, searchValue, sortField, sortDir, start, limit)
+	.i type="out" d
+	..w ##class(dhc.ca.cache.udata.uOutCostItems).ListItems(parRef, id, searchField, searchValue, sortField, sortDir, start, limit)
+	
+	
+	i action = "find" d
+	.w ##class(dhc.ca.cache.udata.uCostResultData).FindRecByDeptDr(searchField,searchValue,sortField,sortDir,start,limit,monthDr, costSetsDr, deptDr, itemDr, type, deptSet, group)
+	
+	i action = "getBranchDepts" d
+	.w ##class(dhc.ca.cache.udata.uInCostDepts).GetBranchDepts(id,layerDr,start,limit,searchValue,deptSet)
+	
+	i action = "getBranchRecDepts" d
+	.w ##class(dhc.ca.cache.udata.uInRecDepts).GetCurrentLayerDepts(id,layerDr,start,limit,searchValue,deptSet)
+	
+	i action = "getCurrentLayerDepts" d
+	.w ##class(dhc.ca.cache.udata.uOutCostDepts).GetBranchDepts(id,layerDr,start,limit,searchValue,deptSet)
+	
+	i action = "getCurrentLayerRecDepts" d
+	.w ##class(dhc.ca.cache.udata.uOutRecDepts).GetCurrentLayerDepts(id,layerDr,start,limit,searchValue,deptSet)
+	
+	i action = "listResult" d
+	.w ##class(dhc.ca.cache.udata.uCostResultData).ListRec(monthDr, costSetsDr, nodeDr ,layerDr)
+	
+	i action="listsub" d
+	.w ##class(dhc.ca.cache.udata.uDeptLevelSets).RListRec(searchField,searchValue,sortField,sortDir,start,limit,id,active)	
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uCostDistSets).InsertRec(order, code, name, deptSet, remark, distFlag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addDistParams" d
+	.s result = ##class(dhc.ca.cache.udata.uDistParams).InsertRec(id, type, itemDr, rate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uCostDistSets).UpdateRec(id, order, code, name, deptSet, remark, active, distFlag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addMethod" d
+	.s result = ##class(dhc.ca.cache.udata.uCostDistMethods).InsertRec(id, priority, layerDr, code, name, itemDr, param, ioFlag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editMethod" d
+	.s result = ##class(dhc.ca.cache.udata.uCostDistMethods).UpdateRec(id, priority, layerDr, code, name, itemDr, param, active, ioFlag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delMethod" d
+	.s result = ##class(dhc.ca.cache.udata.uCostDistMethods).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "checkResult" d
+	.s result = ##class(dhc.ca.cache.udata.uCostResultData).CheckRec(monthDr,deptSet)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addCostDepts" d
+	.s result=""
+	.i type="inc" d
+	..s result = ##class(dhc.ca.cache.udata.uInCostDepts).InsertRec(id, deptDr)
+	.i type="outc" d
+	..s result = ##class(dhc.ca.cache.udata.uOutCostDepts).InsertRec(id, deptDr)
+	.i type="inr" d
+	..s result = ##class(dhc.ca.cache.udata.uInRecDepts).InsertRec(id, deptDr)
+	.i type="outr" d
+	..s result = ##class(dhc.ca.cache.udata.uOutRecDepts).InsertRec(id, deptDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editCostDepts" d
+	.s result=""
+	.i type="inc" d
+	..s result = ##class(dhc.ca.cache.udata.uInCostDepts).UpdateRec(id, deptDr)
+	.i type="outc" d
+	..s result = ##class(dhc.ca.cache.udata.uOutCostDepts).UpdateRec(id, deptDr)
+	.i type="inr" d
+	..s result = ##class(dhc.ca.cache.udata.uInRecDepts).UpdateRec(id, deptDr, rate)
+	.i type="outr" d
+	..s result = ##class(dhc.ca.cache.udata.uOutRecDepts).UpdateRec(id, deptDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "checkDepts" d
+	.s result = ##class(dhc.ca.cache.udata.uInCostDepts).CheckCostDepts(id)
+	.i result '= 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	
+	i action = "checkItems" d
+	.s result = ##class(dhc.ca.cache.udata.uInCostItems).CheckCostDepts(id)
+	.i result '= 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	
+	i action = "checkRecDepts" d
+	.s result = ##class(dhc.ca.cache.udata.uOutRecDepts).CheckRecDepts(id)
+	.i result '= 0 d
+	..w "{success:'true',info:'"_result_"'}"
+
+	i action = "delDepts" d
+	.i type="inc" d
+	..s result = ##class(dhc.ca.cache.udata.uInCostDepts).DelRec(id)
+	.i type="outc" d
+	..s result = ##class(dhc.ca.cache.udata.uOutCostDepts).DelRec(id)
+	.i type="inr" d
+	..s result = ##class(dhc.ca.cache.udata.uInRecDepts).DelRec(id)
+	.i type="outr" d
+	..s result = ##class(dhc.ca.cache.udata.uOutRecDepts).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addCostItems" d
+	.s result=""
+	.i type="in" d
+	..s result = ##class(dhc.ca.cache.udata.uInCostItems).InsertRec(id, itemDr)
+	.i type="out" d
+	..s result = ##class(dhc.ca.cache.udata.uOutCostItems).InsertRec(id, itemDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delItems" d
+	.i type="in" d
+	..s result = ##class(dhc.ca.cache.udata.uInCostItems).DelRec(id)
+	.i type="out" d
+	..s result = ##class(dhc.ca.cache.udata.uOutCostItems).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delDistParams" d
+	.s result = ##class(dhc.ca.cache.udata.uDistParams).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delResult" d
+	.s result = ##class(dhc.ca.cache.udata.uCostResultData).DelRec(monthDr,costSetsDr)
+	.i result = 0||100 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "examination" d
+	.s result = ##class(dhc.ca.cache.udata.DistExamination).ExaminMain(monthDr,"877,878",deptSet)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "examinincome" d
+	.w ##class(dhc.ca.cache.udata.DistExamination).ExaminIncomeFDeptDr(monthDr,start,limit)
+
+	i action = "doDist" d
+	.//w "{success:'true',info:'数据分摊中,请半小时后查看!'}"
+	.s result=##class(dhc.ca.cache.udata.DoCostDist1).DistStart(deptSet, monthDr)
+	
+</script>

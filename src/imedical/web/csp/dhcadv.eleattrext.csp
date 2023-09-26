@@ -1,0 +1,320 @@
+<html >
+<head>
+<title></title>
+<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/searchTree.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/eleattrext.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+	</script>
+
+	<script type="text/javascript">
+	 $(document).ready(function(){
+
+		 //var IEVersion =serverCall("ext.util.String","GetIEVersion");
+		 //alert(IEVersion)
+
+	 })	
+	 </script>	
+	<style>
+		.panel-header, .panel-body {
+		    border-color: #ccc;
+		   
+		}
+		.layout-panel-west{
+			padding:5px;
+		}
+		.layout-panel-center{
+			padding: 5px 5px 5px 0px;
+		}
+		.layout-panel-east{
+			padding: 5px 5px 5px 0px;
+		}
+		.panel-header{
+		    border-radius: 4px 4px 0 0 !important;
+		   
+		}
+		.panel-body{
+		    border-radius: 0 0 4px 4px !important;
+		   
+		}
+	</style>
+</head>
+<body>
+	<div  class="hisui-layout"  fit="true" id="mainPanel">
+	
+		<!--右边保存grid-->
+		<div data-options="region:'west',border:false" style="padding:0px;width:550px;" id="aPanel">
+			<!-- toolbar -->
+			<div id="toolbar" class="datagrid-toolbar">
+				<div style="margin-top:10px;margin-bottom:10px;">
+					<table>
+						<tr>
+							<td ><span style="margin-left:10px;"></span>表单标题<span style="margin-left:10px;"></span><input name="queryField" id="queryField" class="textbox" style="width:120px"/></td>
+							<td ><span style="margin-left:10px;"></span>表单<span style="margin-left:10px;"></span><input style="width:120px" name="queryForm" class='hisui-combobox' 
+			      	  					data-options="valueField:'value',
+			      	  								  textField:'text',
+			      	  								  url:'dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listCombo',
+			      	  								  onSelect: function(rec){    
+		   												commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})		
+													  }" id="queryForm" /></td>
+							<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})">查询</a> </td>					
+						</tr>
+						<tr>
+							<td ><span style="margin-left:38px;"></span>类型<span style="margin-left:10px;"></span><input style="width:127px" name="queryStyle" class='hisui-combobox' 
+		      	  					data-options="valueField:'value',
+		      	  								  textField:'text',
+		      	  								  url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormType',
+		      	  								  onSelect: function(rec){    
+													commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})		
+												  }" id="queryStyle" /></td>
+							<td ><label><input class='hisui-radio' type="radio" name='queryType' value='Y' id="queryTypey">字典元素</label>
+							<label><input class='hisui-radio' type="radio" name='queryType' value='N' id="queryTypen">全部</label>
+					   	  	<input name="userEdit" id="userEdit" value="#(%request.Get("userEdit"))#" type="hidden" /></td>
+						</tr>
+					</table>								
+				</div>
+				<div class="tool-bar-line" style="border-bottom-color:#cccccc; border-bottom-width: 1px; border-bottom-style: dashed;">	</div>
+				<table cellspacing="0" cellpadding="0" >
+				    <tr>
+				      <td><a id="addRow" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a> </td>
+				  	  <td><a id="addSub" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addSub()" >新增一级子元素</a> </td>
+				   	  <td><a id="save" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+				   	  <td><a class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" onclick="javascript:goFormName()" id="goFormName" style="display:none;">返回表单界面</a> </td>
+				      <td><a id="bindRow" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:binding()" >绑定</a> </td>	
+				   </tr>
+				</table>
+			</div>
+			<table id="datagrid" class="hisui-datagrid" fit="true" title="表单字典维护"
+				data-options="
+				toolbar:'#toolbar',
+				iconCls:'icon-paper',
+			    rownumbers:true,
+			    method:'get',
+			    url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listGrid&userEdit=#(%request.Get("userEdit"))#',
+			    singleSelect:true,
+			    pagination:true,
+			   	onDblClickRow: onClickRow,
+			   	pageSize:10,
+			    pageList:[10,20,40,100],
+			    onClickRow: seldgRow,
+			    headerCls:'panel-header-gray'">
+				<thead>
+					<tr>
+						<th data-options="field:'field',width:150,editor:{type:'validatebox',options:{required:true}}">唯一标识</th>
+						<th data-options="field:'title',sortable:true,width:200,editor:{type:'validatebox',options:{required:true}}">表单标题(显示用)</th>
+						<th data-options="field:'style',width:100,
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormType',
+													required:true
+												}
+											}">元素类型</th>
+						<th data-options="field:'catDesc',width:200,
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormCat',
+													required:true,
+													onSelect:function(data){  
+															$('#datagrid').datagrid('getSelected').cat=data.value
+													}
+												}
+											}">元素分类</th>					
+						<th data-options="field:'ID',hidden:true">id</th>													
+					</tr>
+				</thead>
+			</table> 
+	</div>
+	
+	<div id="cpanel" data-options="region:'center',title:''" border="false">
+		<div class="hisui-panel" data-options="title:'子元素(右键树添加多级子元素)',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">
+			<div class="hisui-layout" fit="true" border="false">
+				<div data-options="region:'north'" style='height:40px;border:0px;'headerCls="panel-header-gray">
+					<div style="margin-left:10px;margin-top:10px;">
+	        		 	<input id="queryTreeField" href="#" class="hisui-searchbox" style="width:240px;" prompt='请输入名称'/>
+	        		</div>
+				</div>
+				
+				<!--左边树 -->
+				<div data-options="region:'center',split:true,title:'',border:false">
+					<ul id="formTree"></ul>  
+				</div>
+			</div>	
+		</div>	
+	</div>   
+	<div id="dpanel" data-options="region:'east',title:''" style="width:350px;" border="false">
+		<div class="hisui-panel" data-options="title:'元素属性维护',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">
+			<div id="attrList" toolbar="#atttb" border=false></div>  
+		</div>	
+	</div>   
+ </div>
+
+</div>
+<div id="atttb" class="toolbar">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+			<td><a id="addAttr" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addAttr()" >新增</a> </td>
+			<td><a id="saveAttr" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveAttr()">保存</a> </td>	
+	    	<td><a id="delAttr" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:delAttr()">删除</a> </td>	
+	    </tr>
+	</table>
+</div>
+<!--新增子元素panel-->
+<div id="sub"
+        class="hisui-dialog"  	
+		style="width:800px;height:500px;background-color:'#ffffff'"
+		data-options="title:'新增表单子元素',modal:true,closed:true,
+			buttons:[{
+				text:'保存',
+				iconCls:'',
+				handler:function(){saveSub();}
+			}]">
+	 <div style="padding:10px 30px 20px 30px">
+	 	<form id="form" class="hisui-form" >		
+		<table cellpadding="5">
+			<input id="subParref" type="hidden"  />
+			<input id="subId" type="hidden"  />
+			<tr>
+				<td align="right">标题</td>
+				<td ><input id="subTitle" type="text"  class="hisui-validatebox" data-options="required:true" /></td>	
+				<td align="right">唯一标识</td>
+				<td ><input id="subField" type="text" class="hisui-validatebox"  readonly="readonly" /></td>	
+			</tr>
+			<tr>
+				<td align="right">类型</td>
+				<td ><input id="subStyle" class='hisui-combobox' data-options="required:true,valueField:'value',textField:'text',url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormType',onSelect: function(rec){    
+            		if(rec.value=='form'){
+	            		$('#queryFormBtn').show()
+	            	}else{
+		            	$('#queryFormBtn').hide()
+		            }   
+        		}" /></td>	
+
+				<td align="right">默认值</td>
+				<td >
+					<input id="subValue" type="text" class="textbox"/>
+					<a id="queryFormBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"></a>  
+				</td>	
+			</tr>
+			<tr>
+				<td align="right">url</td>
+				<td ><input id="subUrl" type="text" class="textbox" /></td>	
+
+				<td align="right">宽度</td>
+				<td ><input id="subWidth" type="text" class="textbox" /></td>	
+			</tr>
+			<tr>
+				<td align="right">高度</td>
+				<td ><input id="subHeight" type="text" class="textbox" /></td>	
+
+				<td align="right">cols</td>
+				<td ><input id="subCols" type="text" class="textbox" /></td>	
+			</tr>
+			<tr>
+				<td align="right">rows</td>
+				<td ><input id="subRows" type="text" class="textbox" /></td>	
+
+				<td align="right">是否换行</td>
+				<td ><input id="subNewLine" class='hisui-combobox' data-options="valueField:'value',textField:'text',data: [{text: '是',value:'Y'},{text: '否',value:'N'}]" /></td>	
+			</tr>
+			<tr>
+				<td align="right">子元素是否与父元素同级</td>
+				<td ><input id="subSameLevel" class='hisui-combobox' data-options="valueField:'value',textField:'text',data: [{text: '是',value:'Y'},{text: '否',value:'N'}]" /></td>	
+				<td align="right">隐藏id(radio用)</td>
+				<td ><input id="subHiddenValue" type="text" class="textbox"/></td>
+			</tr>
+			<tr>
+				<td align="right">隐藏子元素</td>
+				<td ><input id="subHiddenSub" class='hisui-combobox' data-options="valueField:'value',textField:'text',data: [{text: '是',value:'Y'},{text: '否',value:'N'}]" /></td>
+				<td align="right">子元素和父元素同行</td>
+				<td ><input id="subDicSameLine" class='hisui-combobox' data-options="valueField:'value',textField:'text',data: [{text: '是',value:'Y'},{text: '否',value:'N'}]" /></td>		
+			</tr>
+			<tr>
+				<td align="right">可以复制</td>
+				<td ><input id="canCopy" class='hisui-combobox' data-options="valueField:'value',textField:'text',data: [{text: '是',value:'Y'},{text: '否',value:'N'}]" /></td>
+				<td align="right">显示顺序</td>
+				<td ><input id="seq" type="text" value=1 class="textbox" /></td>				
+			</tr>
+			<tr>
+				<td align="right">隐藏元素</td>
+				<td ><input id="subHidden" class='hisui-combobox' data-options="valueField:'value',textField:'text',data: [{text: '是',value:'Y'},{text: '否',value:'N'}]" /></td>			
+			</tr>
+		</table>
+		</form>
+	</div>
+</div>
+<!-- 子元素维护界面 2019-07-18-->
+<div id="binding"
+        class="hisui-dialog"  	
+		style="width:800px;height:450px;background-color:'#ffffff'"
+		data-options="title:'绑定元素',modal:true,closed:true,
+			buttons:[{
+				text:'确定',
+				iconCls:'',
+				handler:function(){Sure();}	
+			}] "  
+			toolbar="#tb"
+			>
+			
+    <div id="tb" style="padding:5px;">
+	   <td align="right">类别<span style="margin-left:10px;"></span><input id="subStyle" class='hisui-combobox' data-options="required:true,valueField:'value',textField:'text',data: [{text: '不良反应事件分类',value:'advEventType'}]" /></td>	
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:Query()" >查询</a> 
+    </div>				
+	<div style="padding:10px 60px 20px 60px">
+		 <ul class="hisui-tree" id="TypeTree" data-options="lines:true,checkbox:true"></ul>	
+	</div>
+</div>
+ 
+ 
+ <!--查找布局表单-->
+<div id="queryFormDialog"
+        class="hisui-dialog"  	
+		style="width:800px;height:450px;background-color:'#ffffff'"
+		data-options="title:'查询布局表单(双击选择)',modal:true,closed:true">
+		<table id="formDatagrid" class="hisui-datagrid" fit="true" 
+				data-options="
+			    rownumbers:true,
+			    method:'get',
+			    url:'dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listGrid&queryType=N',
+			    fitColumns:true,
+			    singleSelect:true,
+			    pagination:true,
+			    pageSize:20,
+			    pageList:[20,40,100],
+			    onDblClickRow: onSelectForm">
+				<thead>
+					<tr>
+						<th data-options="field:'code',width:100">表单代码</th>
+						<th data-options="field:'name',width:150">表单名称</th>
+					</tr>
+				</thead>
+			</table> 
+</div> 
+ 
+ <div id="mm" class="hisui-menu" style="width:120px;">
+	<div onclick="appendSub()" data-options="iconCls:'icon-add'">新增子元素</div>
+	<div onclick="append()" data-options="iconCls:'icon-add'">新增同级元素</div>
+	<div onclick="edit()" data-options="iconCls:'icon-edit'">修改</div>
+	<div id="remove" onclick="remove()" data-options="iconCls:'icon-cancel'">删除</div>
+</div>
+ 
+</body>
+
+</html>

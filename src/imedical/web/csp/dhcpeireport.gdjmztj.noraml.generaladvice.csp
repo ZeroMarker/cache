@@ -1,0 +1,63 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.noraml.generaladvice.csp
+		Set UserID=%session.Get("LOGON.USERID")
+		s GeneralAdviceTitle="总检结论及建议:"
+		s GeneralAdvice=$G(^TMPReport(UserID,"GeneralAdvice", "Advice"))
+		s j=$L(GeneralAdvice,$C(13,10))
+		s AduitUser=$G(^TMPReport(UserID,"GeneralAdvice","AduitUser"))
+		s MainDoctor=$G(^TMPReport(UserID,"GeneralAdvice","MainDoctor"))
+     
+		/*
+		//s GeneralAdviceData=..EscapeHTML(GeneralAdvice)
+		
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(13,10)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(13,10),iLLoop)_"<br>"
+		.
+		
+		s GeneralAdvice=GeneralAdviceData
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(32)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(32),iLLoop)_"&nbsp;"
+		.
+		
+		s AduitDate=$G(^TMPReport("GeneralAdvice", "AduitDate"))
+		s AduitUser="" //$G(^TMPReport("GeneralAdvice","AduitUser"))*/
+
+	</Script>
+		
+<DIV class='Page GeneralAdvice'>
+	<TABLE  border=0 class="GeneralAdviceTable" width="655">
+		<THEAD>
+			<TR>
+				<TD width="655" class="GeneralAdviceTitle">#(GeneralAdviceTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+		<csp:LOOP COUNTER="I" FROM="1" TO="100">
+
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		//s GeneralAdvice=$G(^TMPReport("GeneralAdvice", "Advice"))
+		q:I>$L(GeneralAdvice,$C(13,10))
+		s GeneralAdviceData=$P(GeneralAdvice,$C(13,10),I)
+		
+		</Script>
+		<CSP:IF CONDITION=(""'=GeneralAdviceData)>
+				<TR>
+				<TD width="655" class="GeneralAdviceData">
+					#(GeneralAdviceData)#
+				</TD>		
+			</TR>
+		</CSP:IF>
+	</csp:LOOP>
+	
+			<TR >
+			<TD  height=5 class="GeneralDoctor"><br><br>总检医生:#(AduitUser)#</TD>	
+			</TR>
+			<!--TR>
+			<TD  height=5 class="MainDoctor"><br><br>复检医生:#(MainDoctor)#</TD>	
+			</TR-->	
+
+		</TBODY>
+	</TABLE>
+</DIV>

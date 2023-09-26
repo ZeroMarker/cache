@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--opadm.scheduletemplate.hui.csp HISUI排班模板维护--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+#ScheduleList .datagrid-row-over,#ScheduleList .datagrid-row-selected{
+        background-color: #ffffff;
+}
+#ScheduleList .datagrid-body [class="datagrid-cell-c2-Week"]:hover{
+    text-decoration: underline;
+    font-weight: bolder;
+    color:blue;
+}
+#ScheduleList .datagrid-body [class="datagrid-cell-c2-Week"]:hover{
+	cursor:pointer;
+    text-decoration: underline;
+    font-weight: bolder;
+    color:blue;
+}
+.inactive{
+	background-color:#f64c60;
+}
+
+#tabTimeRange .tabs-panels,#tabWeek .tabs-panels{
+	display:none;
+}
+#BtnAddSess,#BtnSaveSess,#BtnDeleteSess,#BtnCancelSess{
+	margin-right:25px;
+}
+iframe{
+	vertical-align:top;
+	display:block;
+}
+.panel-header {
+	border-bottom:0;
+}
+.ImportantFont {
+	color: red;
+	font-weight: bold;
+	font-size: 16px
+}
+</style>
+<Server>
+Write "<SCRIPT language = 'javascript' >",!
+	Write $CHAR(9),"var TRArr=new Array();",!
+	Set Rowid=0
+	For  Set Rowid=$ORDER(^DHCTimeRange(Rowid)) Quit:Rowid=""  Do
+	.Set SttTime=$PIECE(^DHCTimeRange(Rowid),"^",3)
+	.Set SttTime=$ZTIME(+SttTime)
+	.Set EndTime=$PIECE(^DHCTimeRange(Rowid),"^",4)
+	.Set EndTime=$ZTIME(+EndTime)
+	.Write $CHAR(9),"TRArr["_Rowid_"]='"_SttTime_"^"_EndTime_"';",!
+	
+	Write $CHAR(9),"var APTMArr=["
+	Set Rowid=0,count=0
+	For  Set Rowid=$ORDER(^RBC("APTM",Rowid)) Quit:Rowid=""  Do
+	.Set Desc=$PIECE(^RBC("APTM",Rowid),"^",2)
+	.If $INCREMENT(count)>1 Write ","
+	.Write "{'Rowid':'"_Rowid_"','Desc':'"_Desc_"'}"
+	Write "];",!
+Write "</SCRIPT>"
+</Server>
+</head>
+<body>
+	<csp:Include Page="opadm.scheduletemplate.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/Schedule.tools.js"></SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/OPAdm/ScheduleTemplate.hui.js"></script>
+</body>
+</html>

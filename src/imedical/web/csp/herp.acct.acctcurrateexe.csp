@@ -1,0 +1,74 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8"> 
+<script language="cache" runat="server">
+ 
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+		
+	s acctsubj=$Get(%request.Data("acctsubj",1))
+	s acctuser=$Get(%request.Data("acctuser",1))
+	s accbookid=$Get(%request.Data("acctbookid",1))
+	s acctYear=$Get(%request.Data("acctYear",1))
+	s acctMonth=$Get(%request.Data("acctMonth",1))
+	s acctCurID=$Get(%request.Data("acctCurID",1))
+	s startRate=$Get(%request.Data("startRate",1))
+	s averRate=$Get(%request.Data("averRate",1))
+	s endRate=$Get(%request.Data("endRate",1))
+  
+    i action = "del" d
+    .s result = ##class(herp.acct.udata.uacctCurRate).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+	i action = "add" d
+    .s result = ##class(herp.acct.udata.uacctCurRate).InsertRec(accbookid, acctYear, acctMonth, acctCurID, startRate, averRate, endRate)
+    .i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action="list" d
+	.w ##class(herp.acct.udata.uacctCurRate).List(accbookid,acctsubj,acctuser,searchField, searchValue, sortField, sortDir, start, limit)
+	
+
+        
+	i action = "caldept" d
+	.w ##class(herp.acct.udata.uacctCurRate).CalDept(start, limit, str)
+
+
+    i action = "edit" d
+	.s result = ##class(herp.acct.udata.uacctCurRate).UpdateRec(rowid, acctYear, acctMonth, acctCurID, startRate, averRate, endRate,accbookid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+
+
+	i action = "setsupvalue" d
+	.s result = ##class(herp.budg.udata.uBudgFactYear).UpdSupItem(Year)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+       
+
+</script>

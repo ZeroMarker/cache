@@ -1,0 +1,38 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+    s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+    s Schemdr=$Get(%request.Data("Schemdr",1))
+	s str=$Get(%request.Data("query",1))
+	s Year=$Get(%request.Data("Year",1))
+	s DeptDR=$Get(%request.Data("DeptDR",1))
+	s changeflag=$Get(%request.Data("changeflag",1))
+	
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditDeptYear).YearList(start,limit,str)
+	
+	i action = "deptnmlist" d
+	.w ##class(herp.budg.udata.uBudgFactYear).DeptList(Schemdr,start, limit, str)
+	
+	i action = "calculate" d
+	.s result =##class(herp.budg.udata.uBudgFactYearInfo).BudgetDeptMonthSplit(Year,hospid,DeptDR,changeflag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "calculate1" d
+	.s result =##class(herp.budg.udata.uBudgFactYearInfo).YearBudgetingMounthSplit(Year, DeptDR,changeflag,hospid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

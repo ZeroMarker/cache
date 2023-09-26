@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+
+ ; LOG 53598 JPD
+
+ n WINNAME,val,qty,dur,freq,uom,arcim,adm,doseqty,drgform,recloc,sttdat
+ s (WINNAME,val,qty,dur,freq,uom,arcim,adm,doseqty,drgform,recloc,sttdat)=""
+
+ s WINNAME=%request.Get("WINNAME")
+ s uom=##Class(web.CTUOM).GetIdFromCodeOrDescription(%request.Get("UOM"))
+ s arcim=%request.Get("ARCIM")
+ s adm=%request.Get("adm")
+ s freq=%request.Get("freq")
+ s qty=%request.Get("qty")
+ s doseqty=%request.Get("doseqty")
+ s drgform=%request.Get("drgform")
+ s recloc=##Class(web.CTLoc).GetIdFromCodeOrDescription(%request.Get("recloc"))
+ s sttdat=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("sttdat"))
+
+ s val=$$chkstk^aOET1(adm,arcim,qty,uom,freq,dur,doseqty,drgform,recloc,sttdat)
+
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var cobj=detailFrame.document.getElementById(""OEORIQtyPackUOM"");"
+ w "if(cobj) cobj.value="""_PLIST(3)_""";"
+ w "</script>"
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

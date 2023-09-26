@@ -1,0 +1,593 @@
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+   	s logonloc=$G(%session.Data("LOGON.CTLOCID"))  //add by myq 20150825
+   	s logonhosp=$G(%session.Data("LOGON.HOSPID"))  //add by dhy 20180514
+   	s ComboText=$Get(%request.Data("combotext",1))
+
+    //查处方列表
+	i action = "FindOrdData" d
+	.s StDate= $Get(%request.Data("StDate",1))
+   	.s EndDate= $Get(%request.Data("EndDate",1))
+   	.s:StDate'="" StDate=##class(websys.Conversions).DateHtmlToLogical(StDate)
+   	.s:EndDate'="" EndDate=##class(websys.Conversions).DateHtmlToLogical(EndDate)
+   	.s ParStr= $Get(%request.Data("ParStr",1))
+   	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetPrescData("1",StDate,EndDate,ParStr,StPage,Limit)
+	
+	//查处方医嘱明细
+	i action = "FindOrdDetailData" d
+	.s PrescNo = $Get(%request.Data("PrescNo",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetOrdDetailData(PrescNo,StPage,Limit)
+	
+	
+	//查处方医嘱明细
+	i action = "GetOrdDetailData" d
+	.s PrescNo = $Get(%request.Data("PrescNo",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetOrdDetailInfo(PrescNo)
+	
+	
+	//查西药处方明细
+	i action = "GetXYOrdDetail" d
+	.s PrescNo = $Get(%request.Data("PrescNo",1))
+	.w ##class(web.DHCSTCNTSCOMMON).GetXYOrdDetail(PrescNo)
+	
+	//查草药处方明细
+	i action = "GetCYOrdDetail" d
+	.s PrescNo = $Get(%request.Data("PrescNo",1))
+	.w ##class(web.DHCSTCNTSCOMMON).GetCYOrdDetail(PrescNo)
+	
+	//获取医生科室集
+	i action = "GetDocLocDs" d
+	.w ##class(web.DHCSTCNTSMAIN).GetDocLocStore(ComboText,logonhosp)
+	
+	//获取剂型集
+	i action = "GetPHCFormDs" d
+	.w ##class(web.DHCSTCNTSMAIN).GetPHCFormStore()
+	
+	//获取疗程集
+	i action = "GetPHCDUDs" d
+	.w ##class(web.DHCSTCNTSMAIN).GetPHCDUStore()
+	
+	//获取药品集
+	i action = "GetIncitmDs" d
+	.s input = $Get(%request.Data("searchItmValue",1))
+	.s inciStart= $Get(%request.Data("start",1))
+	.s inciLimit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetDrugNameDs(input,inciStart,inciLimit)
+
+	//获取医嘱项集
+	i action = "GetArcimDs" d
+	.s input = $Get(%request.Data("searchItmValue",1))
+	.s inciStart= $Get(%request.Data("start",1))
+	.s inciLimit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetArcimDs(input,inciStart,inciLimit)
+		
+	//查点评单列表
+	i action = "FindCommentNo" d
+	.s StDate= $Get(%request.Data("StDate",1))
+   	.s EndDate= $Get(%request.Data("EndDate",1))
+   	.s:StDate'="" StDate=##class(websys.Conversions).DateHtmlToLogical(StDate)
+   	.s:EndDate'="" EndDate=##class(websys.Conversions).DateHtmlToLogical(EndDate)
+   	.s ParStr= $Get(%request.Data("ParStr",1))
+   	.s FindFlag= $Get(%request.Data("FindFlag",1))
+	.s LogonLocId = $Get(%request.Data("LogonLocId",1))
+	.w ##class(web.DHCSTCNTSMAIN).QueryCommonts(FindFlag,StDate,EndDate,ParStr,LogonLocId)
+	
+	//删除评单
+	i action = "DelCommentNo" d
+	.s CommontNo= $Get(%request.Data("CommontNo",1))
+	.s result=##class(web.DHCSTCNTSMAIN).DelCommonts(CommontNo)
+	.i result'= "" d
+	..w "{success:'"_result_"',info:''}"
+	.e  d
+	..w "{success:'',info:'"_result_"'}"
+	
+	
+	//选取评单
+	i action = "QueryCommontItm" d
+	.s PCNTSRowid= $Get(%request.Data("PCNTSRowid",1))
+	.s RetFlag= $Get(%request.Data("RetFlag",1))
+	.s Phama= $Get(%request.Data("Phama",1))
+    .s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).QueryCommontItm(PCNTSRowid,RetFlag,StPage,Limit,Phama)
+	
+	
+	//查看点评日志
+	i action = "QueryCommontLog" d
+	.s OrdItem= $Get(%request.Data("OrdItem",1))
+	.s Pcntsi= $Get(%request.Data("Pcntsi",1))
+	.w ##class(web.DHCSTCNTSMAIN).QueryCommontLog(OrdItem,Pcntsi)
+	
+	/*
+	//保存数据,生成点评单
+	i action = "SaveCommentData" d
+	.s User= $Get(%request.Data("User",1))
+	.s pid=$Get(%request.Data("pid",1))
+	.s Note=$Get(%request.Data("Note",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).SaveCommentData(User,pid,Note)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	*/
+	
+	
+	//统计处方
+	i action = "QueryCommentData" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.s LogonLocId= $Get(%request.Data("LogonLocId",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).GetPrescDataNum(ParStr,LogonLocId)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//保存数据,生成点评单
+	i action = "SaveCommentData" d
+	.s User= $Get(%request.Data("User",1))
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.s LogonLocId = $Get(%request.Data("LogonLocId",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).SaveCommentData(User,ParStr,LogonLocId)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//统计抗菌药处方
+    i action = "QueryKCommentData" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).GetKPrescDataNum(ParStr)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//保存抗菌药专项数据,生成点评单
+	i action = "SaveKCommentData" d
+	.s User= $Get(%request.Data("User",1))
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).SaveKCommentData(User,ParStr,logonloc)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+		
+
+	//统计成人处方
+	i action = "QueryACommentData" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).GetAdultDataNum(ParStr)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//保存成人专项数据,生成点评单
+	i action = "SaveACommentData" d
+	.s User= $Get(%request.Data("User",1))
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).SaveACommentData(User,ParStr,logonloc)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+
+
+	//合格 or 不合格
+	i action = "SaveItmResult" d
+	.s User= $Get(%request.Data("User",1))
+	.s CommontResult= $Get(%request.Data("CommontResult",1))
+	.s OrdItm= $Get(%request.Data("OrdItm",1))
+	.s reasondr=$Get(%request.Data("ReasonDr",1))
+    .s input=$Get(%request.Data("Input",1))
+    .s otherstr=$Get(%request.Data("Otherstr",1))
+	.s ret=##class(web.DHCSTCNTSMAIN).SaveItmResult(OrdItm,CommontResult,User,reasondr,input,otherstr)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+    
+    //显示树型数据
+	//i action = "ListTreeData" d
+	//.s id= $Get(%request.Data("id",1))
+	//.s level= $Get(%request.Data("level",1))
+	//.s waycode= $Get(%request.Data("waycode",1))
+	//.w ##class(web.DHCSTCNTSADDREASON).GetReaTreeData(level,id,waycode)
+		
+	
+	//获取药师建议集合
+	//i action = "GetAdviceDs" d
+	//.w ##class(web.DHCSTCNTSCOMMON).GetPHCNTSAdvice()
+	
+	
+	//获取不合格警示值集合
+	//i action = "GetReasonFactorDs" d
+	//.w ##class(web.DHCSTCNTSCOMMON).GetPHCNTSFactor()
+	
+	
+	
+	//获取相同处方号医嘱集合
+	//i action = "ComBoOrdItmDs" d
+	//.s OrdItem=$Get(%request.Data("OrdItem",1))
+	//.w ##class(web.DHCSTCNTSCOMMON).GetOrdItms(OrdItem)
+	
+	
+    //获取管制分类集合
+	i action = "GetComBoCtrlDs" d
+	.w ##class(web.DHCSTCNTSMAIN).GetComBoCtrlDs()
+	
+	 //获取医生集合
+	i action = "GetDoctorDs" d
+	.s doclocdrstr=$Get(%request.Data("DocLocDrStr",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetDoctorDs(doclocdrstr)
+	
+
+	 //获取药品用法集合
+	i action = "QueryPhcInstDs" d
+	.w ##class(web.DHCSTCNTSADDINST).QueryPhcInstDs()
+	
+	//获取剂型集合
+	i action = "QueryPhcform" d
+	.w ##class(web.DHCSTCNTSADDINST).QueryPhcform()
+	
+	//增加剂型维护
+	i action = "AddForm" d
+	.s phcformRid=$Get(%request.Data("phcformRid",1))
+	.s ret=##class(web.DHCSTCNTSADDINST).AddForm(phcformRid)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	 //获取点评用法集合
+	i action = "QueryInstDs" d
+	.w ##class(web.DHCSTCNTSADDINST).QueryInstDs()
+	
+		
+	//增加注射剂维护
+	i action = "AddInst" d
+	.s instrowid=$Get(%request.Data("instrowid",1))
+	.s ret=##class(web.DHCSTCNTSADDINST).AddInst(instrowid)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	///删除注射剂维护
+	i action = "DelInst" d
+	.s instrowid=$Get(%request.Data("instrowid",1))
+	.s ret=##class(web.DHCSTCNTSADDINST).DelInst(instrowid)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	///增加点评方式
+	i action = "AddWay" d
+	.s WayCode=$Get(%request.Data("WayCode",1))
+	.s WayDesc=$Get(%request.Data("WayDesc",1))
+	.s WayActive=$Get(%request.Data("WayActive",1))
+	.s ret=##class(web.DHCSTCNTSADDWAY).AddWay(WayCode,WayDesc,WayActive)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+		
+	
+    ///修改点评方式
+	i action = "UpdWay" d
+	.s WayCode=$Get(%request.Data("WayCode",1))
+	.s WayDesc=$Get(%request.Data("WayDesc",1))
+	.s WayActive=$Get(%request.Data("WayActive",1))
+	.s WayID=$Get(%request.Data("WayID",1))
+	.s ret=##class(web.DHCSTCNTSADDWAY).UpdWay(WayCode,WayDesc,WayActive,WayID)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//获取点评方式集合(全部)
+	i action = "QueryWayDs" d
+	.w ##class(web.DHCSTCNTSADDWAY).QueryWayDs()
+	
+	
+	//获取点评方式集合(激活)
+	i action = "QueryActiveWayDs" d
+	.s WayType=$Get(%request.Data("WayType",1))
+	.w ##class(web.DHCSTCNTSADDWAY).QueryActiveWayDs(WayType)
+	
+	
+	//获取病人诊断
+	i action = "GetMRDiagnosDesc" d
+	.s adm=$Get(%request.Data("adm",1))
+	.w ##class(web.DHCSTCNTSCOMMON).GetMRDiagnosDesc(adm)
+	
+	//获取处方类型数据集
+	i action = "GetPresctypeDs" d
+	.w ##class(web.DHCSTCNTSMAIN).GetPresctypeDs()
+	
+	//获取病人基本信息
+	//i action = "GetPatInfo" d
+	//.s prescno=$Get(%request.Data("PrescNo",1))
+	//.s retvalue=##class(web.DHCSTCNTSCOMMON).GetPrescBasicInfo(prescno)
+	//.w "{retvalue:'"_retvalue_"'}"
+	
+	//获取药学大类
+	i action = "GetPhcCatDs" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetPhcCatDs()
+	
+	//获取药学子类
+	i action = "GetPhcSubCatDs" d
+	.s catdr=$Get(%request.Data("CatDr",1))
+	.w ##class(web.DHCSTCNTSCOMMON).GetPhcSubCatDs(catdr)
+	
+	//获取药学小类
+	i action = "GetPhcMinCatDs" d
+	.s subcatdr=$Get(%request.Data("SubCatDr",1))
+	.w ##class(web.DHCSTCNTSCOMMON).GetPhcMinCatDs(subcatdr)
+	
+	//获取病人费别集合 -此处应为社会地位
+	i action = "GetBillTypeDs" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetBillTypeDs()
+	//获取病人费别集合 正确
+	i action = "GetAdmReasonDs" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetAdmReasonDs()
+	//获取药房集合
+	i action = "GetPhaLocDs" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetPhaLocDs(ComboText,logonhosp)
+	
+	//获取住院药房集合
+	i action = "GetIPPhaLocDs" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetIPPhaLocDs(ComboText,logonhosp)
+	
+	//获取管制分类集合
+	i action = "GetPoisonDs" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetPosionDs()
+	
+	
+	//检验处方医嘱是否有重复
+	i action = "CheckArcExist" d
+	.s prescno=$Get(%request.Data("prescno",1))
+	.s retinfo=##class(web.DHCSTCNTSAUTOCHECK).CheckArcExist("O12040800024")
+	.s retvalue="true"
+	.w "{success:'"_retvalue_"',info:'"_retinfo_"'}"
+	
+	//获取重复医嘱列表
+	i action = "GetRepeatOrdList" d
+	.s ChkStr=$Get(%request.Data("ChkStr",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.s StPage=0
+	.s Limit=200
+	.w ##class(web.DHCSTCNTSAUTOCHECK).GetRepeatOrdList(ChkStr,StPage,Limit)
+	
+	
+	//统计出院人数
+	//w ##class(web.DHCSTCNTSIPDATA).GetLeavePersonNum("01/01/2011^01/01/2013")
+	i action = "QueryLeaveHosNum" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.s retstr=##class(web.DHCSTCNTSIPDATA).GetLeavePersonNum(ParStr)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+
+    
+    i action = "SaveIPCommentData" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+    .s User= $Get(%request.Data("User",1))
+	.s retstr=##class(web.DHCSTCNTSIPDATA).SaveIPCommentData(ParStr,User,logonloc)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//获取住院病人基本信息
+	i action = "GetInPatInfo" d
+    .s adm=$Get(%request.Data("Adm",1))
+	.s retvalue=##class(web.DHCSTCNTSCOMMON).GetAdmBasicInfo(adm)
+	.w "{retvalue:'"_retvalue_"'}"
+	
+	
+	//获取住院医嘱信息
+	i action = "FindIPOrdDetailData" d
+	.s adm=$Get(%request.Data("Adm",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.s pcntsitm = $Get(%request.Data("pcntsitm",1))
+	.w ##class(web.DHCSTCNTSIPDATA).FindIPOrdDetailData(adm,StPage,200,pcntsitm)
+	
+	
+	//住院不合格
+	i action = "SaveItmResultIP" d
+	.s Input= $Get(%request.Data("Input",1))
+	.s ReasonDr= $Get(%request.Data("ReasonDr",1))
+	.s OtherStr= $Get(%request.Data("OtherStr",1))
+	.s ret=##class(web.DHCSTCNTSIPDATA).SaveItmResult(ReasonDr,Input,OtherStr)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//获取点评日志
+	i action = "GetIPCommentLog" d
+	.s OrdItm= $Get(%request.Data("OrdItm",1))
+	.s Adm= $Get(%request.Data("Adm",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.s Pcntsitm= $Get(%request.Data("Pcntsitm",1))
+	.i OrdItm'="" w ##class(web.DHCSTCNTSIPDATA).GetIPCommentLog(OrdItm,0,200,Pcntsitm)
+	.i OrdItm="" w ##class(web.DHCSTCNTSIPDATA).GetIPCommentAllLog(Adm,0,200,Pcntsitm)
+	
+	
+	//获取安全组集合
+	i action = "GetSecGrpDs" d
+	.w ##class(web.DHCSTCNTSCOMMON).GetSecGrpDs()
+	
+	
+	
+	//增加点评方式安全组配置
+	i action = "AddWayItm" d
+	.s WayID= $Get(%request.Data("WayID",1))
+	.s GrpDr= $Get(%request.Data("GrpDr",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s retstr=##class(web.DHCSTCNTSADDWAY).AddItmWay(WayID,GrpDr,Input)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//修改点评方式安全组配置
+	i action = "UpdWayItm" d
+	.s WayID= $Get(%request.Data("WayID",1))
+	.s SecGrp= $Get(%request.Data("SecGrp",1))
+	.s GrpDr= $Get(%request.Data("GrpDr",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s retstr=##class(web.DHCSTCNTSADDWAY).UpdItmWay(WayID,SecGrp,GrpDr,Input)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//获取点评方式的安全组配置
+	i action = "QueryWayItmDs" d
+	.s WayID= $Get(%request.Data("WayID",1))
+	.w ##class(web.DHCSTCNTSADDWAY).GetAllItmWay(WayID)
+	
+	
+	//删除点评方式的安全组配置
+	i action = "DelWayItmData" d
+	.s WayItmId= $Get(%request.Data("WayItmId",1))
+	.s retstr=##class(web.DHCSTCNTSADDWAY).DelItmWay(WayItmId)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//保存系统任务(门诊)
+	i action = "SaveSysTask" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+    .s User= $Get(%request.Data("User",1))
+    .s ParStr=$tr(ParStr,"^","!")
+	.s retstr=##class(web.DHCSTCNTSTASK).SaveSysTask(User,ParStr,logonloc)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//保存系统任务(住院)
+	i action = "SaveIPSysTask" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+    .s User= $Get(%request.Data("User",1))
+    .s ParStr=$tr(ParStr,"^","!")
+	.s retstr=##class(web.DHCSTCNTSTASK).SaveIPSysTask(User,ParStr,logonloc)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//查不合理处方列表(医生)
+	i action = "GetDataForDoctor" d
+   	.s input= $Get(%request.Data("input",1))
+   	.s start = $Get(%request.Data("start",1))
+	.s limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetDataForDoctor(input,start,limit)
+	
+	
+	i action = "GetLogForDoctor" d
+   	.s input= $Get(%request.Data("input",1))
+   	.s start = $Get(%request.Data("start",1))
+	.s limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetLogForDoctor(input,start,limit)
+	
+	//提交保存医生申诉备注
+	i action = "SaveDocAdvice" d
+	.s input= $Get(%request.Data("input",1))
+	.s retstr=##class(web.DHCSTCNTSMAIN).SaveDocAdvice(input)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//获取点评药师集合
+	i action = "GetPhaDs" d
+	.w ##class(web.DHCSTCNTSMAIN).GetPhaDs()
+	
+	//查找药师
+	i action = "QueryPhamaDs" d
+	.w ##class(web.DHCSTCNTSALLOTUSER).GetPHAllot()
+	
+	//增加
+	i action = "PhamaAdd" d
+	.s DocDesc= $Get(%request.Data("DocDesc",1))
+	.s retvalue=##class(web.DHCSTCNTSALLOTUSER).AddPhama(DocDesc)
+	.s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//删除
+	i action = "PhamaDel" d
+	.s PhamaID= $Get(%request.Data("PhamaID",1))
+	.s retvalue=##class(web.DHCSTCNTSALLOTUSER).DelPhama(PhamaID)
+	.s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//保存分配处方
+	i action = "SaveAllot" d
+	.s Data= $Get(%request.Data("Data",1))
+	.s Prenum= $Get(%request.Data("Prenum",1)) //未分配的点评单数
+	.s Comrowid = $Get(%request.Data("Rowid",1))
+	.s retvalue=##class(web.DHCSTCNTSALLOTUSER).AllotUser(Data,Prenum,Comrowid)
+	.s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//分配点评任务时查点评单列表
+	i action = "QueryComNo" d
+	.s StDate= $Get(%request.Data("StDate",1))
+   	.s EndDate= $Get(%request.Data("EndDate",1))
+   	.s ParStr= $Get(%request.Data("ParStr",1))
+   	.s FindFlag= $Get(%request.Data("FindFlag",1))
+	.w ##class(web.DHCSTCNTSALLOTUSER).QueryComno(FindFlag,StDate,EndDate,ParStr)
+	
+	//查询点评单分配详细
+	i action = "QueryDetail" d
+   	.s Comrowid= $Get(%request.Data("Comrowid",1))
+	.w ##class(web.DHCSTCNTSALLOTUSER).QueryDetail(Comrowid)
+		//查找药师
+	i action = "QueryDoctorDs" d
+	.w ##class(web.DHCSTCNTSALLOTUSER).GetPHAllot()
+	
+	//提交点评单 add by myq 20150601 
+	i action = "SubmitCommentNo" d
+	.s CommontNo= $Get(%request.Data("CommontNo",1))
+	.s result=##class(web.DHCSTCNTSMAIN).SubmitCommonts(CommontNo)
+	.i result'= "" d
+	..w "{success:'"_result_"',info:''}"
+	.e  d
+	..w "{success:'',info:'"_result_"'}"
+
+	//提交点评单 add by myq 20150601 
+	i action = "CancleSubCommentNo" d
+	.s CommontNo= $Get(%request.Data("CommontNo",1))
+	.s result=##class(web.DHCSTCNTSMAIN).CancleSubCommonts(CommontNo)
+	.i result'= "" d
+	..w "{success:'"_result_"',info:''}"
+	.e  d
+	..w "{success:'',info:'"_result_"'}"
+	
+	//保存系统任务(门诊抗菌专项)
+	i action = "SaveKSysTask" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+    .s User= $Get(%request.Data("User",1))
+    .s ParStr=$tr(ParStr,"^","!")
+	.s retstr=##class(web.DHCSTCNTSTASK).SaveKSysTask(User,ParStr,logonloc)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+</script>

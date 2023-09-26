@@ -1,0 +1,33 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<script language="cache"  runat="server">
+	//在回传json数据时尽量避免包含'\'
+	s Action=$Get(%request.Data("actiontype",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	i Action = "updatepictypeaccess" d
+	.s CurrentSourceType=$Get(%request.Data("CurrentSourceType",1))
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s TPicSourceTypeDR=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TPicSourceTypeDR",1)
+	..s TPicTypeDR=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TPicTypeDR",1)
+	..s TCode=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TCode",1)
+	..s TDesc=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TDesc",1)
+	..s TAccess=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TAccess",1)
+	..//i (TPicTypeDR="")&&(TAccess="N") {s PTData=TPicTypeDR_"^"_TCode_"^"_TDesc_"^^N"
+	..//	s result= ##class(web.DHCEQ.Process.DHCEQCPicType).SaveData(PTData)
+	..//	i result<0 w "{success:false,result:'图片类型录入失败!'}",! q
+	..//  s TPicTypeDR=result}
+	..s PSTData=TPicSourceTypeDR_"^"_CurrentSourceType_"^"_TPicTypeDR_"^^^^^^^"_TAccess
+    ..s result= ##class(web.DHCEQ.Process.DHCEQCPicSourceType).SaveData(PSTData)
+    ..i result<0 {w "{""success"":""false"",""result"":""更新失败!""}",! q}
+    ..w:i=length "{""success"":""true"",""result"":""更新成功!""}"	
+    q:(Action = "updatepictypeaccess")
+	w "{""success"":""false"",""result"":""unknown order""}"
+	Quit 
+</script>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //CA:-------------------start初始化CA服务环境session--------
+ i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+ .d ##Class(CA.DigitalSignatureService).CASessionDataInit()
+ //-------------------end初始化CA服务环境session--------
+ quit 1
+</csp:method>
+<!--doc.emstopord.hui.csp HISUI急诊停医嘱--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<Server>
+	s EpisodeID=%request.Get("EpisodeID")
+	s PatientID=%request.Get("PatientID")
+	s mradm=%request.Get("mradm")
+	
+	s UserEMVirtualtLong=##Class(web.DHCDocConfig).GetConfigNode("UserEMVirtualtLong",%session.Get("LOGON.HOSPID"))
+</Server>
+</head>
+<frameset rows="*" frameborder="0" framespacing="0">
+	<csp:if condition='UserEMVirtualtLong="1"'>
+		<frame name="emstoporder" src="doc.virlongorder.hui.csp?EpisodeID=#(EpisodeID)#&PatientID=#(PatientID)#&mradm=#(mradm)#">
+
+	<csp:else>
+		<frame name="emstoporder" src="doc.surgeryord.hui.csp?EpisodeID=#(EpisodeID)#&PatientID=#(PatientID)#&mradm=#(mradm)#">
+	</csp:if>
+</frameset>
+</html>

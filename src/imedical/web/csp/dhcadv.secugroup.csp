@@ -1,0 +1,399 @@
+<html>
+<head>
+<title></title>
+<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/secugroup.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+	</script>
+	
+<style>
+	
+.dhcc-btn-blue-lg{
+	font-family:Arial,"Microsoft Yahei";
+	cursor:pointer;
+	height:30px;
+	width:130px;
+	background-color:#40A2DE;
+	color:#FFFFFF;
+	border: solid 1px #40A2DE;
+	border-radius:0px;
+	}
+.dhcc-btn-blue-lg:hover{
+	background-color:#378EC4;
+}	
+.img.img-delete{width:16px;height:16px;float:left;cursor:pointer;}
+.img-delete{
+	background:	url(../scripts/dhcadvEvt/images/edit_delete.png) no-repeat;		
+}/*删除图标*/
+/*.delete:hover,.img.img-delete:hover,.img.icon-cancel:hover,.img.icon-no:hover{background-color:#FFC5D1;}*/
+.img.icon-add,.img.icon-no,.img.icon-cancel{width:24px;height:24px;float:left;cursor:pointer;border-radius:4px;}
+.img.icon-add,.img.icon-cancel{position: relative; left:5px;}
+
+/*.img.icon-add:hover{background-color:#B9EAE3;}*/
+/*.warditm,.Locitm{float:left;height:20px;background-color:#40A2DE;margin:3 2 3 0;padding:2 2}/*病区item*//*科室item  2018-01-12 cy*/
+
+.warditm,.Locitm{float:left;border-radius:4px;height:24px;line-height:22px;background-color:#40A2DE;color:#feffff;margin:2 2 2 0;padding:0 10px}/*病区item*//*科室item  2018-01-12 cy*/
+::-ms-clear, ::-ms-reveal{display: none;}  /*sufan 2017/1/6,禁用combobox自带的清空按钮*/
+
+.panel-header, .panel-body {
+    border-color: #ccc;
+   
+}
+.layout-panel-center{
+	padding: 10px 10px 0px 10px;
+}
+.layout-panel-east{
+	padding: 10px 10px 0px 0px;
+}
+.layout-panel-west{
+	padding: 10px 0px 0px 10px;
+}
+
+ .form-table td,#formhead td{
+	border-color:#ddd;
+	border-style:solid;
+	border-width:0 1px 1px 0;
+	margin:0px;
+	padding:0px;
+}
+#formhead{
+	border-color:#ddd;
+	border-style:solid;
+	border-width:1px 0 0 0px;
+}
+.form-table{
+	border-color:#ddd;
+	border-style:solid;
+	border-width:0px;
+}
+
+.panel-header{
+	padding:3px 5px !important;
+	border-radius:4px 4px 0 0 !important;
+}
+.table-head{padding-right:17px;background: #f4f6f5;;}
+.table-body{width:100%; height:300px;overflow-y:scroll;}
+.table-head table,.table-body table{width:100%;}
+.table-body table tr:nth-child(2+1){background: #f4f6f5;;}
+.panel-body{
+    border-radius: 0 0 4px 4px !important;
+   
+}
+#adduserbtn .l-btn-text{
+	padding: 0 10px 0 31px;
+	margin:0px;
+	line-height: 20px;
+}
+#adduserbtn .l-btn-icon{
+	left: 5px;
+	height: 22px;
+	width: 26px;
+}
+</style>
+</head>
+<body class="hisui-layout">  
+<!--<img class="delete" src="../scripts/dhcadvEvt/images/edit_delete.png">-->
+	<div data-options="region:'west'" style="width:540px;border-top:none;border:0px;"> <!--hxy 2018-03-13 加右侧标题和标题对齐-->
+		<!-- toolbar -->
+		<div id="toolbar" class="toolbar">
+			<form id="queryForm">
+			<table style="margin-top:5px;margin-bottom:-10px;">
+				<tr>
+					<td class="textLabel"><span style="margin-left:5px;"></span>代码<span style="margin-left:8px;"></span><input type="text" id="SECUCode" name="SECUCode" class="textbox" style="width:45px;"></input> </td>	
+					<td class="textLabel"><span style="margin-left:5px;"></span>描述<span style="margin-left:8px;"></span><input type="text" id="SECUDesc" name="SECUDesc" class="textbox" style="width:45px;"></input> </td>
+					<td><!--hxy 2019-07-20-->
+						<span style='margin-right:8px;margin-left:5px'>医院</span><input id="hospID" name="hospID" class="hisui-combobox" style="width:93px;"></input>				
+					</td>
+					<td ><a class="hisui-linkbutton" style="width:90"  data-options="iconCls:'icon-w-find'" onclick="javascript:QueryBtn()">查询</a> </td>
+					<td ><a class="hisui-linkbutton" style="width:90"  data-options="iconCls:'icon-w-clean'" onclick="javascript:ReloadBtn()">重置</a> </td>
+				</tr>
+			</table>
+			</form>
+			<div class="tool-bar-line" style="border-bottom-color:#cccccc; border-bottom-width: 1px; border-bottom-style: dashed;">	</div>
+			<table cellspacing="0" cellpadding="0">
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true" title="安全小组字典表"
+			data-options="
+			toolbar:'#toolbar',
+			iconCls:'icon-paper',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onClickRow:onClickRow,
+		    onDblClickRow:onDblClickRow, 
+		    headerCls:'panel-header-gray',
+			url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListSecuGro'">
+			<thead>
+				<tr>
+					<th data-options="field:'SECUCode',width:115,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'SECUDesc',width:115,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'SECUActiveFlag',width:65,
+						formatter:function(value,row,index){
+							if (value=='Y'){return '是';} 
+							else {return '否';}
+						},
+						editor:{
+							type:'combobox',
+							options:{
+								valueField:'value',
+								textField:'text',
+								url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListIsActive',
+								required:true,
+								editable:false
+							}
+						}">是否可用</th>
+					<th data-options="field:'SECUHospDr',width:200,				                        
+
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false
+												}
+											}">医院</th>
+					<th data-options="field:'SECUHospDrID',hidden:true">PHHospDrID</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+
+	<div data-options="region:'center',title:'安全小组成员及病区等维护',iconCls:'icon-paper',"headerCls="panel-header-gray" >
+		<div class="hisui-layout" fit="true" border="false" headerCls="panel-header-gray">
+		        <div id="toolbar1" class="toolbar">
+					<table cellspacing="0" cellpadding="0" style="padding:2px;">
+						<tr>
+					      <td><a id="adduserbtn"class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" style="padding:2px;" onclick="addUser()">新增安全小组成员</a></td>
+					    </tr>
+					</table>
+				</div>
+				<div class="table-head" style="padding-right:17px;">
+			      	<table id="formhead" cellspacing="0" cellpadding="0" >
+						<thead>
+			    			<tr >
+								<td style="width:25px">删除成员</td>
+								<td style="width:50px">安全小组成员</td>
+								<td style="width:150px">分管病区</td>
+								<td style="width:25px">新增病区</td>
+								<td style="width:150px">分管科室</td>
+								<td style="width:25px">新增科室</td>
+								<td style="width:25px">组长</td>
+			   				</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="table-body" style="height:87%;overflow-y:scroll;">
+					<table class="form-table" cellspacing="0" cellpadding="0" >
+						<tbody id="itemList"></tbody>
+					</table>
+				</div>
+		</div>		
+	</div>   
+
+<div id="WardW" class="hisui-window" title="新增病区" style="width:620px;height:340px;padding:10px;"   
+        data-options="iconCls:'icon-w-paper',minimizable:false" modal='true'> 
+    <div id="Drs" style="display:none"></div>
+    <!-- toolbar -->
+	<div id="toolbar3" class="toolbar">	
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+			  <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addWardAdd()">新增</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelWard()">删除</a></td>	
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSecuGUW()">保存</a></td>
+		    </tr>
+		</table>
+	</div>
+	<table id="gridWard" class="hisui-datagrid" fit="true" title=""
+		data-options="
+		toolbar:'#toolbar3',
+	    rownumbers:true,
+	    method:'get',
+	    fitColumns:false,
+	    singleSelect:true,
+	    pagination:true,
+	    onDblClickRow:onDblClickRowWard,
+	    nowrap: false
+		">
+		<thead>
+			<tr>
+				<th data-options="field:'SECUDrs',hidden:true">id</th>	
+				<th data-options="field:'SECUWardDr',hidden:true">SECUWardDr</th>								
+				<th id="SECUWardDr" data-options="field:'SECUWard',width:154,editor:{type:'combogrid',
+						options:{
+							url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListWard',
+							required : true,
+						    id:'id',
+						    fitColumns:true,
+						    fit: true,//自动大小  
+							pagination : true,
+							panelWidth:420,
+							textField:'text',
+							mode:'remote',
+							showHeader:false,
+							columns:[[
+								{field:'id',hidden:true},
+								{field:'text',title:'病区',width:200}
+							]],
+							onSelect:function(rowIndex, rowData) {
+	           					fillValueWard(rowIndex, rowData);
+	        				}		   
+						}
+						}">病区</th>
+						
+			</tr>
+		</thead>
+	</table>
+   
+</div>  
+<div id="LocW" class="hisui-window" title="新增科室" style="width:620px;height:340px;padding:10px;"   
+        data-options="iconCls:'icon-w-paper',minimizable:false"  modal='true'> 
+    <div id="LocDrs" style="display:none"></div>
+    <!-- toolbar -->
+	<div id="toolbar4" class="toolbar">	
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+			  <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addLocAdd()">新增</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelLoc()">删除</a></td>	
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSecuGUL()">保存</a></td>
+		    </tr>
+		</table>
+	</div>
+	<table id="gridLoc" class="hisui-datagrid" fit="true" title=""
+		data-options="
+		toolbar:'#toolbar4',
+	    rownumbers:true,
+	    method:'get',
+	    fitColumns:false,
+	    singleSelect:true,
+	    pagination:true,
+	    onDblClickRow:onDblClickRowLoc,
+	    nowrap: false
+		">
+		<thead>
+			<tr>
+				<th data-options="field:'SECUGULDrs',hidden:true">id</th>	
+				<th data-options="field:'SECUGULLocDr',hidden:true">SECUWardDr</th>								
+				<th id="SECUGULLocDr" data-options="field:'SECUGULLoc',width:154,editor:{type:'combogrid',
+						options:{
+							url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListLoc',
+							required : true,
+						    id:'id',
+						    fitColumns:true,
+						    fit: true,//自动大小  
+							pagination : true,
+							panelWidth:420,
+							textField:'text',
+							mode:'remote',
+							showHeader:false,
+							columns:[[
+								{field:'id',hidden:true},
+								{field:'text',title:'科室',width:200}
+							]],
+							onSelect:function(rowIndex, rowData) {
+	           					fillValueLoc(rowIndex, rowData);
+	        				}		   
+						}
+						}">科室</th>
+						
+			</tr>
+		</thead>
+	</table>
+   
+</div> 
+<div id="UserW" class="hisui-window" title="新增安全小组成员" style="width:620px;height:340px;padding:10px;"   
+        data-options="iconCls:'icon-w-paper',minimizable:false" modal='true'>   
+    <!-- toolbar -->
+	<div id="toolbar2" class="toolbar">	
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+			  <!--<td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addUserAdd()">新增</a></td>
+		      <td><div class="datagrid-btn-separator"> </div> </td>	-->
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSecuGU()">保存</a></td>
+		    </tr>
+		</table>
+	</div>
+	<table id="gridUser" class="hisui-datagrid" fit="true" title=""
+		data-options="
+		toolbar:'#toolbar2',
+	    rownumbers:true,
+	    method:'get',
+	    fitColumns:false,
+	    singleSelect:true,
+	    pagination:true,
+	    onDblClickRow:onDblClickRowUser,
+	    nowrap: false
+		">
+		<thead>
+			<tr>
+				<th data-options="field:'SECUGrpDr',hidden:true">id</th>	
+				<th data-options="field:'SECUUserDr',hidden:true">SECUUserDr</th>								
+				<th id="SECUUserDr" data-options="field:'SECUUser',width:154,editor:{type:'combogrid',
+						options:{
+							required : true,
+						    id:'id',
+						    fitColumns:true,
+						    fit: true,//自动大小  
+							pagination : true,
+							panelWidth:420,
+							textField:'text',
+							mode:'remote',
+							showHeader:false,
+							//url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListUser&HospDr='+LgHospID
+							columns:[[
+								{field:'id',hidden:true},
+								{field:'text',title:'人员',width:200}
+							]],
+							onSelect:function(rowIndex, rowData) {
+	           					fillValue(rowIndex, rowData);
+	        				}		   
+						}
+						}">人员</th>
+				<th data-options="field:'SECULeadFlag',align:'center',width:80,
+						formatter:function(value,row,index){
+							if (value=='Y'){return 'Y';} 
+							else {return 'N';}
+						},
+						editor:{
+							type:'combobox',
+							options:{
+								valueField:'value',
+								textField:'text',
+								url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListIsActive',
+								required:true,
+								editable:false
+							}
+						}">是否组长</th>
+						
+			</tr>
+		</thead>
+	</table>
+
+</div> 
+
+
+</body>
+</html>

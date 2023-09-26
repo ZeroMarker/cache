@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!--TRAK:HEAD></TRAK:HEAD-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<server>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s CacheDB=$P(setstr,"^")
+ s webIP=$P(setstr,"^",2)
+ s dllstr=webIP_"/dhcmg/HBView.dll#HBView.HBPic"
+</SERVER>
+
+</HEAD>
+<body>
+<Server>
+ w "<OBJECT id=""HBView""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+</Server>
+
+<SCRIPT Language="JavaScript">
+    
+    var EpisodeID="#(%request.Get("EpisodeID"))#"
+    var EmrCode="#(%request.Get("EmrCode"))#"
+    var ward="#(%request.Get("ward"))#"
+    //Temperature.height=document.body.offsetHeight;
+    //Temperature.width=document.body.offsetWidth;
+    var height=document.body.offsetHeight;
+    var width=document.body.offsetWidth;
+    HBView.Adm=EpisodeID;
+    HBView.wardid="" //ward;
+    HBView.url="#(webIP)#"+"/imedical/web/DWR.DoctorRound.cls";
+    HBView.xmlpath="#(webIP)#"+"/dhcmg/HLBLMakePictureSet.xml";
+    HBView.EmrCode=EmrCode
+    HBView.Pwidth=width ;
+    HBView.Pheight=height;
+    HBView.Picwidth="1200";
+    HBView.Picheight="1200";
+    HBView.Pleft="0"
+    HBView.Ptop="0"
+    HBView.PatW="120"
+    HBView.TreeW="150"
+    HBView.InitWindow();
+</script>
+    </body>
+</HTML>

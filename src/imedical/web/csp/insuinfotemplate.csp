@@ -1,0 +1,139 @@
+<!-- 
+ * FileName: insuinfotemplate.csp
+ * Modify: tangzf 修改布局
+ * Date: 2019-5-19
+ * Description: 医嘱诊疗信息上传对照
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html;"-->
+<title>诊疗信息上传信息维护</title>
+
+<TRAK:HEAD></TRAK:HEAD>
+<HISUI></HISUI>
+<DHCBILL/>
+<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+<script type="text/javascript" src="../scripts/jsonfun.js"></script>
+<style type="text/css">
+	.insudiv { position:absolute; background: #666;left:-1000px;top:-1000px; border: solid1px #000;z-index:999; display:none}
+	.textbox textarea.textbox-text {
+		white-space: pre-wrap;
+	}
+</style>
+<script type="text/javascript" src="../scripts/INSUExtend.js"></script>
+
+<script type="text/javascript" src="../scripts/insuinfotemplate.js"></script>
+ <style>
+.textbox{
+    width:110px	!important; /* 文本框宽度减小 */ 
+} 
+.search-table:nth-child(n+2) .combo{
+	width:115px	!important; /* 文本框宽度减小 */ 	
+}
+#coninfopanel .panel-body-noheader{
+		border-top:1px dashed #cccccc !important;
+}
+#south-panel .panel-body-noheader{
+		border-top:1px solid #cccccc !important;
+}
+#coninfopanel-right .panel-body{
+  border-radius:0px 0px 4px 4px!important;
+  border-top:0px  !important;
+}
+
+</style>
+</head>
+<body style='padding:10px'>
+	<div class="hisui-layout" data-options="fit:true" >   
+   		<div class="hisui-layout" data-options="region:'north'" id='north-panel' >
+   			<div data-options="region:'center'" style='padding-right:10px'>
+   				<div data-options="region:'north'" id='searchTablePanel'>
+   					<div class="hisui-panel"   data-options="title:'模板维护',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
+   						<table class='search-table' style="width:100%" >
+   						<tr>
+   							<td class="r-label td-first-col"><label>医保类别</label></td>
+							<td><input id="insuType" class="textbox" /></td>
+							<td class="r-label"><label>对照关系</label></td>
+							<td><input id="ConType" name="ConType" class="textbox"/></td>
+							<td class="r-label"><label>业务类型</label></td>
+							<td><input id="BSYType" name="BSYType" style='width:130px' class="textbox"/></td>
+   						</tr>
+   						<tr>
+							<td class="r-label" td-first-col><label>查询条件</label></td>
+							<td><input id="QClase" name="QClase" class="textbox"/></td>
+							<td class="r-label"><label>关键字</label></td>
+							<td><input id="KeyWords" name="KeyWords" class="textbox"/></td>
+   						</tr>
+   					</table>
+   					</div>
+   				</div>
+          		<div data-options="region:'center'" style='height:386px' class='center-panel' id='coninfopanel' >
+					<div id="tleftdg" ></div> 
+				</div>
+			</div>
+			<div  data-options="region:'east'" style='width:500px' > <!-- east -->
+     			<div data-options="region:'north',fit:true"  >
+     				<div class="hisui-panel"    data-options="title:'数据源',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-radius:0;height:4px">
+   						
+   					</div>
+   				</div>
+     			<div data-options="region:'center'" style='height:471px'  id='coninfopanel-right' >
+					<div id="trightdg"></div>
+				</div>
+     		</div>								<!-- east -->	
+    	</div>
+     	<div  data-options="region:'south'" class="south-panel" style='height:210px' id='coninfopanel' >
+     		<div class="hisui-panel" style='padding-top:4px' id='south-panel' data-options="collapsible:true,title:'对照结果',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" >
+     			<div id="oecdg" ></div>
+     		</div>
+     	</div>
+	</div> 
+	<!--数据面板工具栏-->
+    <div id="allbar" style='padding-top:4px'>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true,stopAllEventOnDisabled:true" onClick='Query()'>查询</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" onClick='ConAct("insertRow")'>新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" onClick='UpdateAct()'>修改</a> 
+   		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" onclick="Save()">保存</a> 
+   		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" onclick="delTep()">删除</a>
+   		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-export-all',plain:true,stopAllEventOnDisabled:true" onclick="Exportxls()">导出</a>
+   		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-import-xls',plain:true,stopAllEventOnDisabled:true" onclick="importxls()">导入</a>
+    </div> 
+    <!--window-->
+    <div id="editcel" class="hisui-window" title="对照属性" data-options="modal:true,closed:true,iconCls:'icon-w-edit',collapsible:false,minimizable:false,maximizable:false" style="width:320px;height:340px;padding:10px">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center'" >
+					<table  class='search-table' style="width:100%" >
+					<tr>
+						<td class="r-label" style=''><label>默认值</label></td>
+						<td ><input  id="editdef1"   name="editdef1" data-options="required:true"  style='width:200px !important' class="textbox" /></td>
+					</tr>
+					<tr>
+						<td class="r-label "><label>长度</label></td>
+						<td><input  id="editdef2"   name="editdef2" data-options="required:true" style='width:200px !important' class="textbox" /></td>
+						
+					</tr>	
+						<td class="r-label "><label>字段类型</label></td>
+						<td><input  id="editdef3"   name="editdef3" data-options="required:true" style='width:200px !important' class="textbox" /></td>
+					
+					<tr>
+						<td  class="r-label" style='width:57px;padding-left:10px' ><label style='position:absolute;top:130px;left:10px'>对照公式</label></td>
+						<td ><textarea id="editCode"  data-options="multiline:true" style='width:200px !important;height:100px' class="textbox" ></textarea></td>
+
+					</tr>
+					<tr>
+					   	<td colspan='6'  style='text-align:center'><a  href="#" style='width:80px;' class="hisui-linkbutton"  onClick='SaveConEdit()'>保存</a>
+					</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<DHCBILLINSUCloud/>
+	<script type="text/javascript" src="../scripts/insuinfotemplate.js"></script>
+</body>
+</html>

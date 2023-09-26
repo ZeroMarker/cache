@@ -1,0 +1,69 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+
+n PatientID,cmp,dtmLIST,chLIST,EpisodeID,EpisodesAll,ObservationGroup,CurrentPregnancy,ReverseDateOrder
+n ChartID,Context,frm,Start,Columns,mradm,Obsitmparams,Obsitm,ItemID,Type
+n ObsGrpID,ObsGrpIDs,minslots,stdate,enddate,sttime,endtime,studentchart
+
+s PatientID=$g(%request.Data("PatientID",1))
+s EpisodeID=$g(%request.Data("EpisodeID",1))
+
+; Log 29736 - AI - 09-01-2004 : Include all Chart Item data (itmparams).
+s ObservationGroup=$g(%request.Data("ObservationGroup",1))
+s EpisodesAll=$g(%request.Data("EpisodesAll",1))
+s CurrentPregnancy=$g(%request.Data("CurrentPregnancy",1))
+s ReverseDateOrder=$g(%request.Data("ReverseDateOrder",1))
+
+; Log 42221 - AI - 10-02-2004 : Add studentchart to the passed variables.
+s studentchart=$g(%request.Data("studentchart",1))
+s ChartID=$g(%request.Data("ChartID",1))
+s mradm=$g(%request.Data("mradm",1))
+s Obsitm=$g(%request.Data("Obsitm",1))
+s Obsitmparams=$g(%request.Data("Obsitmparams",1))
+s Context=$g(%request.Data("Context",1))
+s Start=$g(%request.Data("Start",1))
+s Columns=$g(%request.Data("Columns",1))
+i Columns="" s Columns=8
+; indicate we are on the popup page (pap code, I know, it tells the component to show the 'previous' button or not..
+s %request.Data("ScrollingPopupPage",1)=1
+
+w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+w "var ChartID="""_$g(ChartID)_""";"_$c(13,10)
+w "var PatientID="""_$g(PatientID)_""";"_$c(13,10)
+w "var EpisodeID="""_$g(EpisodeID)_""";"_$c(13,10)
+w "</SCRIPT>"_$c(13,10)
+
+
+i +$g(%request.Data("PatientBanner",1))&(PatientID'="") d
+. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+. i cmp d cmp.Show(),cmp.%Close()
+
+s frm=##Class(websys.Component).OpenName("MRObservations.ListEMR")
+i frm d frm.Show()
+
+s stdate="",enddate="",sttime="",endtime="",minslots=60
+; Log 56124 YC - Pass thru search params when searching on MRObservations.FindEMR and clicking prev/next buttons
+i $g(%request.Data("stdate",1))'="" s stdate=$g(%request.Data("stdate",1))
+i $g(%request.Data("enddate",1))'="" s enddate=$g(%request.Data("enddate",1))
+i $g(%request.Data("sttime",1))'="" s sttime=$g(%request.Data("sttime",1))
+i $g(%request.Data("endtime",1))'="" s endtime=$g(%request.Data("endtime",1))
+s ObsGrpIDs=##Class(web.MRCObservationGroup).getItemsForGroup($p(Obsitm,"^",1))
+s ObsGrpID=$p(Obsitm,"^",1)
+; Log 42221 - AI - 10-02-2004 : Add studentchart to the passed variables.
+d ##Class(web.MRObservations).obsSummaryGet(mradm,ObsGrpIDs,minslots,stdate,enddate,sttime,endtime,.refLIST,ObsGrpID,studentchart,"",Start,Columns)
+;m ^zPhil("obs",ObsGrpID)=refLIST
+d ##Class(web.MRObservations).obsSummaryShow(.refLIST,minslots,PatientID,mradm,EpisodeID,Obsitm,Obsitmparams,ObsGrpID,ChartID,Context,Start,Columns,studentchart)
+; end Log 42221
+
+i frm d frm.%Close()
+
+</SERVER>
+</BODY>
+</HTML>

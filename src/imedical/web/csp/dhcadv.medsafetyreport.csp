@@ -1,0 +1,141 @@
+<html>
+<head>
+<DHCADV:EASYUI/>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/medsafetyreport.js"></script>
+	   
+	   <style type="text/css">
+		.s_ipt_wr:hover {border: 5px solid red;}
+		.buttondiv{width:80px;position:fixed;bottom:0;float:right;position:absolute;}
+        .buttondiv{top:200px; right:30px;}
+     </style> 
+</head>
+<body class="easyui-layout">
+	<div id="mainpanel" class="easyui-layout" fit="true" >
+		
+		<div data-options="region:'center'" style="background:#F8F8FF;" >
+			<div style="border:2px solid #95B8E7;margin-left:180px;margin-right:auto;margin-top:10px;width:1000px;background:#F8F8FF;fit:true">
+				<div class="reptitle">
+					<span>用药差错事件上报表</span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:5px;width:987px;">
+					<span style="margin-left:36px;"><span style="color:red;">*</span>科室：<input id="medsrRepLocDr" class="easyui-combobox" style="border: 0px none;width:150px;margin-left:10px;border-bottom:1px solid #95B8E7; " data-options="valueField:'val',textField:'text'"/></span>
+					<span style="margin-left:80px;"><span style="color:red;">*</span>报告编码：<input id="medsrReportNo" style="border: 0px none;width:150px;border-bottom:1px solid #95B8E7;"/></span>
+					<span style="margin-left:35px;"><span style="color:red;">*</span>报告日期：<input id="medsrCreateDateTime" type="text" class="easyui-datetimebox" editable='false' style="width:150px"></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin-left:5px;margin-top:10px;width:987px;">
+					<span style="margin-left:8px;"><span style="color:red;">*</span>发生日期：<input id="medsrOccDateTime" type="text" class="easyui-datetimebox" editable='false' style="width:150px" onclick="getWeek()"></input></span>
+					<span style="margin-left:114px;">星期：<input id="medsrWeek" type="text" class="easyui-combobox" style="width:100px;margin-left:10px;border:1px solid #95B8E7;"data-options="valueField:'val',textField:'text'"></input></span>
+					<span style="margin-left:120px;">班次：<input id="medsrOccBatNo"  class="easyui-combobox" style="width:100px;margin-left:10px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin-left:5px;margin-top:10px;width:987px;">
+					<div>
+						<span style="margin-left:22px;"><span style="color:red;">*</span>病人ID：<input id="PatID" style="border:0px none;width:100px;border-bottom:1px solid #95B8E7;"></input></span>
+						<span style="margin-left:150px;">病案号：<input id="PatNo" style="border:0px none;width:100px;border-bottom:1px solid #95B8E7;"></input></span>
+					</div>
+					<br>
+					<div>
+						<span style="margin-left:41px;">姓名：<input id="PatName" style="border:0px none;width:100px;border-bottom:1px solid #95B8E7;"readOnly></input></span>
+						<span style="margin-left:164px;">性别：<input id="PatSex" class="easyui-combobox" style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></span>
+						<span style="margin-left:120px;">年龄：<input id="PatAge"  style="border:0px none;width:100px;border-bottom:1px solid #95B8E7;"></input></span>
+					</div>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin-left:5px;margin-top:10px;width:987px;">
+					<span style="margin-left:13px;">应给药物：<input id="medsrDrugName" style="border:0px none;width:295px;border-bottom:1px solid #95B8E7;" ></input></span><span><a href="#" id="AdmOrdListBtn" onclick="GetAdmOrdList(EpisodeID)">药品医嘱</a></span>
+					<span style="margin-left:5px;">应给剂量：<input id="medsrDosage" style="border:0px none;width:100px;border-bottom:1px solid #95B8E7;"></input></span>
+					<span style="margin-left:50px;">累计错误给药次数：<input id="medsrErrNum" style="border:0px none;width:100px;border-bottom:1px solid #95B8E7;" ></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;font-weight:bold;text-align:left;margin-left:5px;margin-top:10px;">
+					<span style="">用药差错类型</span>
+				</div>	
+				<div style="border:1px solid #95B8E7;margin:5px;">			
+					<div style="border-bottom:0px solid #95B8E7;width:987px;">
+						<div id="DL" style="border-bottom:1px solid #95B8E7;">
+							<table id="DocL"></table>
+						</div>
+                    	<br>
+                    	<div style="border:0px solid #95B8E7;width:987px;">
+							<span style="margin-left:8px;"><span style="color:red;">*</span>当事医生信息：</span>
+							<span style="margin-left:10px;"><input id="DM10" class="cb1" name="medsrDoctorMes" type="checkbox" value="10"></input>正式医生</span>
+							<span style="margin-left:5px;display:none;" id="dm1">职称<input id="medsrDCProv" type="text"  style="width:100px;border:1px solid #95B8E7;" ></input></span>
+                    		<span style="margin-left:70px;"><input id="DM11" class="cb1" name="medsrDoctorMes" type="checkbox" value="11"></input>研究生</span>
+                   			<span style="margin-left:70px;"><input id="DM12" class="cb1" name="medsrDoctorMes" type="checkbox" value="12"></input>进修医生</span>
+                    		<span style="margin-left:70px;"><input id="DM13" class="cb1" name="medsrDoctorMes" type="checkbox" value="13"></input>其他<input id="medsrDOtherDesc" style="border: 0px none;width:100px;border-bottom:1px solid #95B8E7;margin-left:3px;" disabled="true"></input></span>
+						</div>
+						<div id="AL" style="border-bottom:1px solid #95B8E7;">
+							<table id="ApoL"></table>
+						</div>
+                    	<br>
+                    	<div style="border:0px solid #95B8E7;width:987px;">
+							<span style="margin-left:8px;"><span style="color:red;">*</span>当事药师信息：</span>
+							<span style="margin-left:10px;"><input id="AM20" class="cb1" name="medsrApothecaryMes" type="checkbox" value="20"></input>正式药师</span>
+							<span style="margin-left:5px;display:none;" id="am1">职称<input id="medsrACProv" type="text"  style="width:100px;border:1px solid #95B8E7;" ></input></span>
+        					<span style="margin-left:70px;"><input id="AM21" class="cb1" name="medsrApothecaryMes" type="checkbox" value="21"></input>实习生</span>
+       						<span style="margin-left:70px;"><input id="AM22" class="cb1" name="medsrApothecaryMes" type="checkbox" value="22"></input>进修药师</span>
+        					<span style="margin-left:70px;"><input id="AM23" class="cb1" name="medsrApothecaryMes" type="checkbox" value="23"></input>其他<input id="medsrAOtherDesc" style="border: 0px none;width:100px;border-bottom:1px solid #95B8E7;margin-left:3px;" disabled="true"></input></span>
+						</div>
+						
+						<div id="DiL" style="border-bottom:1px solid #95B8E7;">
+							<table id="DispL"></table>
+						</div>
+						<br>
+						<div id="NL" style="border-bottom:1px solid #95B8E7;">
+							<table id="NurL"></table>
+						</div>
+                    	<br>
+                    	<div style="border:0px solid #95B8E7;width:987px;">
+							<span style="margin-left:8px;"><span style="color:red;">*</span>当事护士信息：</span>
+							<span style="margin-left:10px;"><input id="NM30" class="cb1" name="medsrNurseMes" type="checkbox" value="30"></input>正式护士</span>
+							<span style="margin-left:5px;display:none;" id="nm1">职称<input id="medsrNCProv" type="text" style="width:100px;border:1px solid #95B8E7;" ></input></span>
+                    		<span style="margin-left:70px;"><input id="NM31" class="cb1" name="medsrNurseMes" type="checkbox" value="31"></input>实习生</span>
+                   			<span style="margin-left:70px;"><input id="NM32" class="cb1" name="medsrNurseMes" type="checkbox" value="32"></input>进修护士</span>
+                    		<span style="margin-left:70px;"><input id="NM33" class="cb1" name="medsrNurseMes" type="checkbox" value="33"></input>其他<input id="medsrNOtherDesc" style="border: 0px none;width:100px;border-bottom:1px solid #95B8E7;margin-left:3px;" disabled="true"></input></span>
+						</div>
+						<div id="PL" style="border-bottom:1px solid #95B8E7;">
+							<table id="PatL"></table>
+						</div>
+					</div>
+				</div>				
+				<div style="border-bottom:1px solid #95B8E7;font-weight:bold;text-align:left;margin-left:5px;margin-top:10px;">
+					<span style=""><span style="color:red;">*</span>后果</span>
+				</div>				
+				<div style="border-bottom:1px solid #95B8E7;margin:5px;width:987px;margin-left:5px;margin-top:10px;">
+                    <span style="margin-left:8px;"><input id="RD1" value="1" class="cb" name="medsrReslutDr" type="checkbox"></input>差错未到达患者</span>
+                    <span style="margin-left:200px;"><input id="RD2"  value="2" class="cb" name="medsrReslutDr" type="checkbox"></input>差错到达患者，并且</span>
+					<span style="color:red;">(勾选后显示后果信息)</span>
+					<br>
+					
+ 				<div style="display:none;" id="rd">                    
+ 					<br>
+                    <span style="margin-left:8px;"><input id="RD10" value="10" class="cb" name="medsrReslutDra" type="checkbox"></input>未对患者造成伤害</span>
+                    <span style="margin-left:186px;"><input id="RD11" value="11" class="cb" name="medsrReslutDra" type="checkbox"></input>需要监测/干预以防止伤害</span>
+					<span style="margin-left:160px;"><input id="RD12" value="12" class="cb" name="medsrReslutDra" type="checkbox"></input>患者经受短暂的伤害</span>
+                    <br>
+                    <br>
+                    <span style="margin-left:8px;"><input id="RD13" value="13" class="cb" name="medsrReslutDra" type="checkbox"></input>永久性伤害</span>
+                    <span style="margin-left:228px;"><input id="RD14" value="14" class="cb" name="medsrReslutDra" type="checkbox"></input>需采取挽救生命的干预</span>
+                    <span style="margin-left:178px;" ><input id="RD15" value="15" class="cb" name="medsrReslutDra" type="checkbox"></input>患者死亡</span>
+                </div>
+				</div>	
+				<div style="border-bottom:1px solid #95B8E7;font-weight:bold;text-align:left;margin-left:5px;margin-top:10px;">
+					<span style=""><span style="color:red;">*</span>即时行动/干预：</span>
+				</div>
+				<div style="border:1px solid #95B8E7;margin:5px;">
+					<div style="border:0px solid #95B8E7;width:987px">
+						<span style=""><textarea class="reptextarea" id="medsrNurAction" rows="5" cols="129" style="margin:2px;width:100%;"></textarea> </span>
+                	</div>
+                </div>
+				<div style="border-bottom:1px solid #95B8E7;margin:5px;width:987px;margin-left:5px;margin-top:10px;">
+					<span style="margin-left:8px;"><span style="color:red;">*</span>报告人姓名：<input id="medsrCreator" style="border: 0px none;width:120px;margin-left:10px;border-bottom:1px solid #95B8E7;"/></span>
+					<span style="margin-left:20px;"><span style="color:red;">*</span>报告人职称：<input id="medsrCreatorCareProv" style="border: 0px none;width:120px;margin-left:10px;border-bottom:1px solid #95B8E7;"/></span>
+               	</div>
+			</div>
+		</div>
+	</div>
+	<div class="buttondiv" id="buttondiv">
+		<a href="#" id="savebt"style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveMedsReport(0)">保存</a>
+		<a href="#" id ="submitdiv"style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveMedsReport(1)">提交</a>
+		<a href="#" id="assessment" style="width:90px;margin:5px 50px 5px 5px;display:none;" class="easyui-linkbutton" iconCls="icon-save" onclick="assessmentRep()">评估</a>
+		<a href="#" id="clearbt" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-reload2" onclick="ReloadJs()">刷新</a>
+	</div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<html>
+<head>
+  <title>病历书写</title>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>  
+
+  <script language="javascript">
+	var _EpisodeID = '#($Get(%request.Data("EpisodeID",1),""))#';
+	var _EprStructID = '#($Get(%request.Data("ChartItemID",1),""))#';
+  	
+  	function buttonClick(methodName) {
+	  	var eprformObject = document.getElementById("eprform");
+	  	if (eprformObject == null){return;}
+	  	
+		if(methodName == 'btnsave'){eprformObject.SaveClick(); parent.saveLog();}
+		else if(methodName == 'btnprint'){eprformObject.PrintClick();parent.printLog();}
+		else if(methodName == 'btncommit'){eprformObject.CommitClick();parent.commitedLog();}
+		else if(methodName == 'btnupdatedata'){eprformObject.RefreshClick();}
+		else if(methodName == 'btnslttemplate'){eprformObject.TemplateClick();parent.switchLog();}
+		else if(methodName == 'btnChiefCheck'){ parent.eprAudit("Chief");}
+		else if(methodName == 'btnAttendingCheck'){ parent.eprAudit("Attending");}		
+	}
+	
+	
+	
+	function getBtnEnabled(btnName) {
+		var eprformObject = document.getElementById("eprform");
+		return eprformObject.GetBtnEnabled(btnName);
+	}
+	
+	//add by zhuj on 2009-7-27
+	//设置eprform是否显示
+	function setVisibility (visibility)
+	{		
+		document.getElementById("eprform").style.visibility = visibility;
+	}
+	
+	//add by zhuj on 2009-8-13
+	//设置eprform是否显示
+	function browserPhoto (patientID, episodeID, eprLogsIDs, startIndex, endIndex)
+	{		
+		return document.getElementById("eprform").GetPreviewImage(patientID, episodeID, eprLogsIDs, startIndex, endIndex);
+	}
+  </script>
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+	<DIV id="EPRArea" style="WIDTH:100%; HEIGHT:100%; z-index:-1;"> 
+		<script language=cache runat=server>			
+	 		d ##class(web.DHCEPRExt).EPREdit()
+		</script>
+	</div>
+</body>
+<script language="javascript">	
+	//var eprformObject = document.getElementById("eprform");
+	//eprformObject.InitForm();
+	
+	////add by loo on 2010-7-26
+ 	//唯一模板保存(F7)?提交(F8)?打印(F9)操作添加快捷键
+ 	function AddEprEditShortCuts()
+ 	{
+		var map = new Ext.KeyMap(Ext.getDoc(), {
+			key: 118,	// F7
+			fn: function()
+			{
+				//Ext.Msg.alert('KEY MAP', 'tree页面You just hit F7');
+				parent.save();
+			},
+			scope: this
+		}); 
+	
+		map.addBinding({
+    		key: 119,	//F8
+    		fn: function()
+    			{
+	    			parent.commit();
+    			},
+    		scope: this
+		});
+	
+		map.addBinding({
+    		key: 120,	//F9
+    		fn: function()
+    			{
+	    			parent.print();
+    			},
+    		scope: this
+		});
+ 	}
+ 	
+ 	AddEprEditShortCuts();
+</script>
+</html>

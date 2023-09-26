@@ -1,0 +1,49 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+
+<HEAD>
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <SERVER>
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s webIP=$P(setstr,"^",2)
+ s dllstr=webIP_"/dhcmg/DHCCNursePrintComm.dll#DHCCNursePrintComm.WebInterface"
+ s dllstr1=webIP_"/dhcmg/DHCCDoctorOrderSheet.dll#DHCCDoctorOrderSheet.WebInterface"
+ s locId=%session.Data("LOGON.CTLOCID")
+ s docLoc=""
+ s logonLocType=$p($g(^CTLOC(locId)),"^",13)
+ i logonLocType="W" d
+ .s chl=0 f  s chl=$O(^CTLOC(locId,"LINK",chl)) q:chl=""  d
+ ..s linkLoc=$P(^CTLOC(locId,"LINK",chl),"^",1)
+ ..s docLoc=linkLoc
+ e  d
+ .s docLoc=locId
+</SERVER>
+<Server>
+ w "<OBJECT id=""DHCCNursePrintComm""  width=""0"" height=""0"" classid="""_dllstr_"""  IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""DHCCDoctorOrderSheet""  width=""0"" height=""0"" classid="""_dllstr1_"""  IEWASTEXT></OBJECT>"
+</Server>
+</HEAD>
+
+<BODY >
+<SCRIPT Language="Javascript">
+var webIp="#(webIP)#";
+var episodeId="#(%request.Get("EpisodeID"))#"
+var wardId=session['LOGON.WARDID'];
+var locId="#(docLoc)#";
+var userId=session['LOGON.USERID'];
+function BodyLoad()
+{
+	DHCCDoctorOrderSheet.showDoctorOrderSheetWindow(episodeId,wardId,locId,userId,webIp)
+	window.close()
+}
+document.body.onload=BodyLoad;
+</SCRIPT>
+</BODY>
+</HTML>

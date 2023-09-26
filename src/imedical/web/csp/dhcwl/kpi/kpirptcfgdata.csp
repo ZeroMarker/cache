@@ -1,0 +1,158 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<script language="cache" runat="server">
+
+	set action=$g(%request.Data("action",1))
+	if action="getNode" {
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1))
+		set pCode = $g(%request.Data("PCode",1))
+		set end=start+pageSize
+		s:start>1 start=start+1
+		//&js<alert('start: #(start)# pageSize:#(pageSize)#.');>
+		//set criteria=..UnescapeURL($g(%request.Data("Criteria",1)))
+		//w !,criteria
+		b
+		set criteria=$g(%request.Data("Criteria",1))
+		//		w !,criteria
+		b
+		s objType=$p(criteria,",",1)
+		s objAttrib=$p(criteria,",",2)
+		s objValue=$p(criteria,",",3)
+		//当查询的对象是报表或数据集或指标时显示哪些报表由查询条件确定
+		if ((objType'="模块") && (objAttrib'="") && (objValue'="")) {
+			s validRptCodes=##class(DHCWL.ModuleManageServ.MMServ).GetSearchedRpt(objType,objAttrib,objValue)
+		}
+		;w !,validRptCodes
+		set sql="select RptCfg_RowID,RptCfg_Code,RptCfg_Desc,RptCfg_Name,RptCfg_TreeCode from DHCWL_MKPI.MMgrRptCfg where rptcfg_TreeCode= '"_pCode_"'"
+		//w !,sql,!
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		//w !,sql
+		//读入可选项结束
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("RptCfg_RowID"_deli_"RptCfg_Code"_deli_"RptCfg_Name"_deli_"RptCfg_Desc"_deli_"RptCfg_TreeCode","result","root",deli)
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			s code=rs.Data("RptCfg_Code")
+			s isValid=0
+			//如果输入的查询条件是空或者查询条件是模块时不需要过滤模块下的报表
+			if (((objType="") && (objAttrib="") && (objValue="")) || (objType="模块")) {
+				s isValid=1
+			}
+			if ((objType'="模块") && (objAttrib'="") && (objValue'="")) {
+				s unitData=""
+				s codesLen=$L(validRptCodes,",")
+				b
+				f i=1:1:codesLen {
+					s unitData=$p(validRptCodes,",",i)
+					if unitData=code {
+						s isValid=1
+						q
+					}
+				}
+			}
+			continue:isValid=0
+
+			s recCnt=recCnt+1
+			;w "start:"_start_"  end:"_end
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+	
+			s rowid=rs.Data("RptCfg_RowID")
+			//s code=rs.Data("RptCfg_Code")
+			s desc=rs.Data("RptCfg_Desc")
+			s name=rs.Data("RptCfg_Name")
+			s treecode=rs.Data("RptCfg_TreeCode")
+			d json.Insert("'"_rowid_"'"_deli_"'"_code_"'"_deli_"'"_name_"'"_deli_"'"_desc_"'"_deli_"'"_treecode_"'")
+	
+		}
+	
+		d rs.Close()
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+	}		
+
+	/*
+	if action="update" {
+		
+		s rowid=..UnescapeURL($g(%request.Data("rowid",1)))
+		s code=..UnescapeURL($g(%request.Data("code",1)))
+		s desc=..UnescapeURL($g(%request.Data("desc",1)))
+		s url=..UnescapeURL($g(%request.Data("url",1)))
+		s oldCode=""
+		s kpiCfgCnt=0
+		&sql(select RptCfg_Code into :oldCode from DHCWL_MKPI.ModeMagRptCfg where RptCfg_RowID=:rowid )
+		&sql(select count(*) into :kpiCfgCnt from  DHCWL_MKPI.ModeMagKpiCfg where KpiCfg_PCode=:oldCode)
+		TSTART
+			&sql(update DHCWL_MKPI.ModeMagRptCfg set RptCfg_Code=:code,RptCfg_Desc=:desc,RptCfg_URL=:url where RptCfg_RowID=:rowid )
+			If SQLCODE TROLLBACK  w "{success:true,tip:'添加失败！',SQLCODE:"_SQLCODE_"}" q
+			
+			if kpiCfgCnt>0 {
+				&sql(update DHCWL_MKPI.ModeMagKpiCfg set KpiCfg_PCode=:code where KpiCfg_PCode=:oldCode)
+				If SQLCODE TROLLBACK  w "{success:true,tip:'添加失败！',SQLCODE:"_SQLCODE_"}" q
+			}
+		TCOMMIT
+			w "{success:true,tip:'ok'}"
+	}
+	*/
+	if action="update" {
+		
+		s rowid=..UnescapeURL($g(%request.Data("rowid",1)))
+		s code=..UnescapeURL($g(%request.Data("code",1)))
+		s name=..UnescapeURL($g(%request.Data("name",1)))
+		s desc=..UnescapeURL($g(%request.Data("desc",1)))
+		s treecode=..UnescapeURL($g(%request.Data("treecode",1)))
+		
+		if ($g(rowid)=""){  //添加
+			&sql(insert into DHCWL_MKPI.MMgrRptCfg (rptCfg_code,rptCfg_desc,RptCfg_TreeCode,RptCfg_Name) values (:code,:desc,:treecode,:name))
+			i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+			e  w "{success:true,tip:'添加失败！',SQLCODE:"_SQLCODE_"}"		
+		}else{			//更新
+			&sql(update DHCWL_MKPI.MMgrRptCfg set rptCfg_desc=:desc,RptCfg_Name=:name where rptCfg_RowID=:rowid)
+			i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+			e  w "{success:true,tip:'添加失败！',SQLCODE:"_SQLCODE_"}"		
+		}
+	}	
+	if action="add" {
+		s pcode=..UnescapeURL($g(%request.Data("pcode",1)))
+		s code=..UnescapeURL($g(%request.Data("code",1)))
+		s desc=..UnescapeURL($g(%request.Data("desc",1)))
+		s name=..UnescapeURL($g(%request.Data("name",1)))
+		
+		&sql(insert into DHCWL_MKPI.MMgrRptCfg (rptCfg_code,rptCfg_desc,RptCfg_TreeCode,RptCfg_Name) values (:code,:desc,:pcode,:name))
+		i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+		e  w "{success:true,tip:'添加失败！',SQLCODE:"_SQLCODE_"}"		
+	}
+	
+	if action="del" {
+		b
+
+		s rptCodes=%request.Data("rptCodes",1)
+		s treecode=%request.Data("TreeCode",1)
+		s len=$l(rptCodes,",")
+		for i=1:1:$l(rptCodes,",") {
+			i $g(strRptCodes)'="" s strRptCodes=strRptCodes_","
+			s strRptCodes=$g(strRptCodes)_"'"_$p(rptCodes,",",i)_"'"
+		}
+		s rptCodes=strRptCodes
+		
+		s ret=##class(DHCWL.ModuleManageServ.MMServ).delRptset(rptCodes,treecode)
+	}
+
+	
+
+  //i pCode="CRZ" w "{totalProperty:2,root:[{RptCfg_RowID:'1',RptCfg_Code:'crzhz',RptCfg_Desc:'出入转汇总',RptCfg_URL:'d:tomcat6.0'},{RptCfg_RowID:'2',RptCfg_Code:'crzmx',RptCfg_Desc:'出入转明细',RptCfg_URL:'d:tomcat6.0'}]}"
+  //e  w "{totalProperty:2,root:[{RptCfg_RowID:'3',RptCfg_Code:'crzhz',RptCfg_Desc:'出入转汇总',RptCfg_URL:'d:tomcat6.0'},{RptCfg_RowID:'4',RptCfg_Code:'crzmx',RptCfg_Desc:'出入转明细',RptCfg_URL:'d:tomcat6.0'}]}"
+  //                   {result:2,totalNum:2,root:[{RptCfg_RowID:'1',RptCfg_Code:'crzhz',RptCfg_Desc:'出入转汇总',RptCfg_URL:'d:tomcat6.0'},{RptCfg_RowID:'2',RptCfg_Code:'crzmx',RptCfg_Desc:'出入转明细',RptCfg_URL:'d:tomcat6.0'}]}
+//	i pCode="CRZ" w "{result:2,totalNum:2,root:[{RptCfg_RowID:'1',RptCfg_Code:'crzhz',RptCfg_Desc:'出入转汇总',RptCfg_URL:'d:tomcat6.0'},{RptCfg_RowID:'2',RptCfg_Code:'crzmx',RptCfg_Desc:'出入转明细',RptCfg_URL:'d:tomcat6.0'}]}"
+//	e  w "{result:0,totalNum:0,root:[{}]}"
+</script>
+

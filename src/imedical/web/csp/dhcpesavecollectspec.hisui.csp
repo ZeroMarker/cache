@@ -1,0 +1,151 @@
+<!--
+ * FileName: dhcpesavecollectspec.hisui.csp
+ * Anchor: xy
+ * Date: 2019-07-08
+ * Description: HISUI 采集标本
+-->
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER"> 
+	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+    w "<input id='GetRoomIDClass'  type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCPE.RoomManager.GetRoomIDByCompute"))_"'>",$c(13,10) 
+    w "<input id='GetMinFlagClass'  type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCPE.RoomManagerEx.GetMinFlag"))_"'>",$c(13,10) 
+    w "<input id='GetRoomRecordListClass'  type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCPE.RoomManagerEx.OutRoomPersonDiv"))_"'>",$c(13,10)  
+	</SCRIPT> 
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 5px;
+}
+.r-label-1{
+	padding-left: 5px;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-header{
+	border-bottom: 0;
+}
+
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:175px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'采集标本',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
+			<table class="search-table">
+				<tr>
+				 	<td class="r-label"><label for="SpecNo">标本号</label></td>
+					<td>
+						<input class="textbox" id="SpecNo"/>
+					</td>
+					
+				  	<td class="r-label r-label-1"><label for="RegNo">登记号</label></td>
+					<td>
+						<input class="textbox" id="RegNo" disabled/>
+					</td>
+					
+					<td class="r-label r-label-1"><label for="Name">姓名</label></td>
+					<td>
+						<input class="textbox" id="Name" disabled/>
+					</td>
+					
+					<td class="r-label r-label-1"><label for="Sex">性别</label></td>
+					<td>
+						<input class="textbox" id="Sex" disabled/>
+					</td>
+					
+					<td class="l-label r-label-1">
+						<input class='hisui-checkbox' id="PrintBarCode" type="checkbox" label="条码打印" data-options="checked:true" value="1"/>
+					</td>
+					
+					<td class="r-label r-label-1">
+						<a id="BSRRef" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">全部启用</a>
+					</td>
+					
+					<td class="r-label r-label-1">
+						<a id="BCancelPlacerNo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">撤销预制号</a>
+					</td>
+	
+					<td class="r-label r-label-1">
+						<a id="BSave" href="#" class="hisui-linkbutton"  style="width:128px" data-options="iconCls:'icon-w-save'">保存</a>
+					</td>
+
+				</tr>
+				<tr>
+					<td class="r-label">备注</td>
+					<td td colspan='3'>
+						<input class="textbox" id="CheckInfo" style="width:383px"/>
+					</td>
+					
+					<td class="r-label r-label-1"><label for="CardID">证件号</label></td>
+					<td td colspan='3'>
+						<input class="textbox" id="CardID"  style="width:360px" disabled/>
+					</td>
+					<td class="r-label r-label-1"></td>
+					
+					<td class="r-label r-label-1">
+						<a id="BSARef" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">全部取消</a>
+					</td>
+					
+					<td class="r-label r-label-1">
+						<a id="BPrint" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:128px">打印</a>
+					</td>
+				
+					<td class="r-label r-label-1">
+						
+					</td>
+
+					<td><input type="hidden" id="PAADM"/></td>
+					<td><input type="hidden" id="RoomID"/></td>
+					<td><input type="hidden" id="RoomRecordID"/></td>
+					
+				</tr>
+				<tr>
+					<td class="r-label">预制号</td>
+					<td td colspan='3'>
+						<input class="textbox" id="PlacerNo" style="width:383px"/>
+					</td>
+				</tr>
+
+				
+						
+			</table>
+		</div>
+	</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+					<table data-options="bodyCls:'panel-header-gray'" id="SaveCollectSpecGrid"></table>
+				</div>
+        	</div>
+</div>
+
+
+<script type="text/javascript" src="../scripts/DHCPESaveCollectSpec.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPrintCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.JS"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCPENewRoomRecordList.js"></script>
+</body>		
+</html>
+			
+		
+

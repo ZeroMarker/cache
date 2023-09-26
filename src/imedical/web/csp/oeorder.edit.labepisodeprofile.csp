@@ -1,0 +1,54 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<script Language="JavaScript" SRC="../scripts/websys.ListBoxes.js"></script>
+<TITLE><TRAK:TRANSLATE id=title>Order Profile Page</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<TRAK:COMPONENT id=#(%session.Get("WEBSYS.TCOMPONENT"))# >
+</TRAK:COMPONENT>
+<SERVER>
+ n obj
+ s ProfileID=%request.Get("ID"),params=""
+ s (params,Profile,OrderProfile,ocatgsval,ocatgstxt,allcatval,allcattxt)=""
+ s params=##Class(websys.Preferences).GetData("User.SSUser",%session.Get("LOGON.USERID"),"LG","PROFILE")
+ i ProfileID'="",params'="" d
+ . s Profile=$li(params,ProfileID),OrderProfile=$li(Profile,1),ocatgsval=$li(Profile,2)
+ . s %request.Data("LabOrderProfile",1)=$g(OrderProfile)
+ ;
+ s obj=##Class(%ResultSet).%New("web.OECOrderCategory.LookUp")
+ i obj d
+ . d obj.Execute("")
+ . f  Q:'obj.Next()  D
+ . . f j=1:1:$l(ocatgsval,",") d
+ . . . i $p(ocatgsval,",",j)=obj.GetDataByName("HIDDEN") s ocatgstxt=ocatgstxt_obj.GetDataByName("Description")_","
+ . . s allcatval=allcatval_obj.GetDataByName("HIDDEN")_","
+ . . s allcattxt=allcattxt_obj.GetDataByName("Description")_","
+ . d obj.%Close() k obj
+ ;
+ i $l(ocatgstxt)>0 s ocatgstxt=$e($g(ocatgstxt),1,$l($g(ocatgstxt))-1)
+ i $l(allcatval)>0 s allcatval=$e($g(allcatval),1,$l($g(allcatval))-1)
+ i $l(allcattxt)>0 s allcattxt=$e($g(allcattxt),1,$l($g(allcattxt))-1)
+ ;
+ w "<BR>"_$c(13,10)
+ w "<SCRIPT language=JavaScript>"_$c(13,10)
+ ;w "alert('we are here');"_$c(13,10)
+ w "var ocatgsval='"_$g(ocatgsval)_"'"_$c(13,10)
+ w "var ocatgstxt='"_$g(ocatgstxt)_"'"_$c(13,10)
+ w "var allcatval='"_$g(allcatval)_"'"_$c(13,10)
+ w "var allcattxt='"_$g(allcattxt)_"'"_$c(13,10)
+ w "</SCRIPT>"_$c(13,10)
+ s frm=##Class(websys.Component).OpenName("OEOrder.Edit.LabEpisodeProfile")
+ i frm {
+ 	d frm.Show()
+ }
+</SERVER>
+</BODY>
+</HTML>

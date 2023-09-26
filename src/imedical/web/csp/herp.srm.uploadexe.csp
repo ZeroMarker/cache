@@ -1,0 +1,58 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action=$Get(%request.Data("action",1))
+    s File=$Get(%request.MimeData("files",1))
+	
+	s FileUrl=$Get(%request.Data("fileUrl",1))
+	
+	s sortField=$Get(%request.Data("sort",1))
+	s sortDir=$Get(%request.Data("dir",1))
+	s start=$Get(%request.Data("start",1))
+	s limit=$Get(%request.Data("limit",1))
+	
+	s userCode=$Get(%request.Data("userCode",1))
+	s RecDr=$Get(%request.Data("RecDr",1))
+	s SysNo=$Get(%request.Data("SysNo",1))
+	s ProStatus=$Get(%request.Data("ProStatus",1))
+	s Delrowid=$Get(%request.Data("Delrowid",1))
+	s Type=$Get(%request.Data("Type",1))
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uUpLoad).FileList(sortField, sortDir, start, limit, SysNo,RecDr)
+	
+	i action = "Upload" d
+    .s result = ##class(herp.srm.udata.uUpLoad).SendLargeFile(File,userCode,RecDr,SysNo)
+    .i result=0 d
+    ..w "{success:'true',message:'上传成功'}"
+    .e  d
+    ..w "{success:'false',message:'上传失败'}"
+	 
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uUpLoad).DeleFile(FileUrl,Delrowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "GetUpLoadInfo" d
+	.s result = ##class(herp.srm.udata.uUpLoad).GetUpLoadInfo(RecDr,SysNo)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "GetSRMConfigureInfo" d
+	.s result = ##class(herp.srm.udata.uUpLoad).GetSRMConfigureInfo(Type)
+	.i result = "" d
+	..w "{success:'false',info:''}"
+	.e  d
+	..w "{success:'true',info:'"_result_"'}"
+	 
+
+</script>

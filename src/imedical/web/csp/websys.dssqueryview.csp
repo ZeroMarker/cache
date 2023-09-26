@@ -1,0 +1,159 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<csp:method name=BuildTable arguments="">
+ ; how about
+ ; [rulid,val]&[rulid,val]|[rulid,val]
+ ; & - and
+ ; | - or
+ ; ~ - not
+ ; ^ - xor
+ n itm,rulid,val,value,cnt,b,expr,rx,j,ClassName,View,pos,BucketSize,ViewRowId,RowIDCol
+ ;
+ s expr=""
+ s j=0
+ ;s BucketSize=##Class(websys.DSSRule).GetBucketSize()
+ s BucketSize=16000
+ s qry=##Class(websys.DSSQuery).%OpenId(%request.Get("ID"),0)
+ s itmlist=%request.Get("exp")
+ s ^zab($zn,"itmlist")=itmlist
+ s ClassName=qry.IndexClassName
+ i 'qry.ViewDR q
+ s View=qry.ViewDR
+ f  {
+    s expr=expr_$p(itmlist,"[",1)
+	s itm=$p($p(itmlist,"[",2,999),"]",1)
+	i itm="" q
+	;s expr=expr_$p(itmlist,"[",1,999)
+	s itmlist=$p(itmlist,"]",2,999)
+	;
+	s rulid=$p(itm,",",1),value=$p(itm,",",2),label=$p(itm,",",4)
+	;
+	i rulid'="",value'="" {
+		s j=j+1
+		s expr(j)="$g(^DSS.DataD("_rulid_","""_label_""","""_value_""",""BUCKET"",b))"
+		s expr=expr_"val("_j_")"
+		s rx=rulid
+	}
+ }
+ w "<TABLE class=tblList WIDTH=100%>",!
+ 
+ ;Get the column headings for the view.
+ s sql="select * from Custom."_##Class(%Collation).AlphaUp(View.Code)
+ s rs=##Class(%Library.ResultSet).%New("%Library.DynamicQuery:SQL")
+ d rs.Prepare(sql) 
+ s ColCount=rs.GetColumnCount()
+ ;Write the column headings into the table
+ w "<THEAD>",!
+ s RowIDCol=0
+ f j=1:1:ColCount {
+ 	i ##Class(%Collation).AlphaUp(rs.GetColumnName(j))="ROWID" {
+ 		s RowIDCol=j
+ 	} else {
+ 		w "<TH>",rs.GetColumnName(j),"</TH>"
+ 	}
+ }
+ ;i ClassName="User.PAAdm" w "<TH>","EPR","</TH>"
+ i ((ClassName["User.PAAdm")||(ClassName["User.PAPerson")) w "<TH>","EPR","</TH>"
+ w "</THEAD>",!
+ 
+ i (RowIDCol=0),(ColCount'=0) {
+ 	w "<TR class=""RowOdd"">",!
+ 	w "<TD>","RowId is a mandatory field in the Setup of the View","</TD>"
+ 	w "</TR>",!
+ 	q
+ }
+ ; loop thru the EXISTS buckets to get the bucket id, as these should be fully populated
+ s b="",count=0
+ s sql="SELECT * FROM Custom."_##Class(%Collation).AlphaUp(View.Code)_" WHERE RowId=?"
+ s rs=##Class(%Library.ResultSet).%New("%Library.DynamicQuery:SQL")
+ d rs.Prepare(sql)
+
+ s first=0
+ f  {
+ 	s first=first+1
+ 	;s bucket=^DSS.DataD(rx,""_label_"","{{{EXIST}}}","BUCKET",1)
+	;s b=$o(^DSS.DataD(rx,""_label_"","{{{EXIST}}}","BUCKET",b))
+	s b=$o(^DSS.DataD(rx,""_label_"",""_value_"","BUCKET",b))
+
+	i b="" q
+	; count the numer of set bits for the selected value
+	f j=1:1 {
+		i '$d(expr(j)) q
+		x "s val(j)="_expr(j)
+		;w control,".value='"_expr(j)_"';",!
+	}
+	; and what if a single not
+	s pos=-1
+	s rowcnt=0
+	f  {
+	
+		s rowcnt=rowcnt+1
+		i rowcnt#2 w "<TR class=""RowOdd"">",! 
+		i '(rowcnt#2) w "<TR class=""RowEven"">",!
+		;
+		i j=2 {
+			x "s pos=$BITFIND("_expr_",1,pos+1)"
+		} else {
+			x "s pos=$BITFIND($BITLOGIC("_expr_"),1,pos+1)"
+			;s pos=$BITFIND(bucket,1,pos+1)
+		}
+		i 'pos q
+		s ArgBit=(b-1)*BucketSize+pos
+		s ViewItemRowId=$g(^DSS.DataI("BitToId",ClassName,ArgBit),ArgBit-1)
+		s rs=##Class(%Library.ResultSet).%New("%Library.DynamicQuery:SQL")
+		d rs.Prepare(sql)
+		d rs.Execute(ViewItemRowId)
+		d rs.Next()
+		f x=1:1:ColCount  d
+		. s RowData=rs.GetData(x)
+		. i (","_$zcvt(rs.GetColumnName(x),"U")_",")["TIME" s RowData=##class(websys.Conversions).TimeLogicalToHtml(RowData) w "<TD>",RowData,"</TD>" q
+		. i (","_$zcvt(rs.GetColumnName(x),"U")_",")["DATE" s RowData=##class(websys.Conversions).DateLogicalToHtml(RowData) w "<TD>",RowData,"</TD>" q
+		. i (","_$zcvt(rs.GetColumnName(x),"U")_",")["DOB" s RowData=##class(websys.Conversions).DateLogicalToHtml(RowData) w "<TD>",RowData,"</TD>" q
+		. i x'=RowIDCol w "<TD>",RowData,"</TD>"
+		d rs.Close()
+		d rs.%Close()
+		i ClassName="User.PAAdm" w "<TD>","<A HREF=""#"" onclick=""Show('",ViewItemRowId,"');"">","EPR","</A>","</TD>"
+		i ClassName="User.PAPerson" {
+			;^PAPERdr(ViewItemRowId,"ADM","",{PAADM_RowID})
+			s vID=""
+			s vID = $o(^PAPERdr(ViewItemRowId,"ADM","E",""),-1)
+			i $l(vID)=0 s vID = $o(^PAPERdr(ViewItemRowId,"ADM","I",""),-1)
+			i $l(vID)=0 s vID = $o(^PAPERdr(ViewItemRowId,"ADM","O",""),-1)
+			
+			i $l(vID)>0 w "<TD>","<A HREF=""#"" onclick=""Show('",vID,"');"">","EPR","</A>","</TD>"
+		}
+		w "</TR>",!
+	}
+ }
+ ;w control,".value='"_count_"';",!
+ ;w control,".value='"_expr_"';",!
+
+ q
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script language=javascript>
+function Show(EpisodeID) {
+    // Log 59598 - BC - 29-06-2006 : Remove statusbar variable (status=) to display the status bar.
+    //websys_createWindow('epr.chart.csp?PatientBanner=1&EpisodeID='+EpisodeID,'QueryEPRChart','toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes');
+    websys_createWindow('epr.chartbook.csp?PatientBanner=1&EpisodeID='+EpisodeID,'QueryEPRChart','toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes');
+	return false;
+}
+
+</script>
+</head>
+<body bgcolor=yellow>
+
+<script language=cache runat=server>
+ d ..BuildTable()
+</script>
+
+</body>
+</html>

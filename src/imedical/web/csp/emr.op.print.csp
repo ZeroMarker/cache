@@ -1,0 +1,93 @@
+﻿<html>
+    <head>
+
+    <!-- Put your page Title here -->
+        <title>    电子病历 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css" />
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.combobox.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.gh-buttons.css"/>
+        
+        <script language="cache" runat="server">
+            s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+            s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")    
+            s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")    
+            s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+            
+            s autoPrint = $Get(%request.Data("AutoPrint", 1), "N")
+            s isWithTemplate =  $Get(%request.Data("IsWithTemplate",1), "N")
+            
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s:((episodeID'="")&&(patientID="")) patientID=$p($g(^PAADM(episodeID)),"^",1)
+            s instanceId = $Get(%request.Data("InstanceId", 1), "")
+            //s userID = $Get(%request.Data("UserID", 1), "")
+            
+            s sessionID = %session.SessionId
+            s userCode = %session.Get("LOGON.USERCODE")
+            s userName = %session.Get("LOGON.USERNAME")
+            s userID = %session.Get("LOGON.USERID")
+            s ssgroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+            s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+            
+            s CopyCount = $Get(%request.Data("CopyCount", 1), "1")
+            
+            s emrTemplate = ""
+            s:("Y"=isWithTemplate)&&(episodeID'="") emrTemplate = ##Class(EMRservice.BL.opInterface).getEMRTemplatePrint(episodeID, .instanceId)            
+        </script>
+        <script language="javascript">
+            
+            var sysOption = {
+                pluginUrl : "#(pluginUrl)#",
+                setDefaultFontStyle : "#(setDefaultFontStyle)#",
+                pluginType : "",                
+                argConnect : {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"}
+            };            
+            var patInfo = {
+            	SessionID: "#(sessionID)#",
+				PatientID : "#(patientID)#",
+				EpisodeID : "#(episodeID)#",
+	            UserID : "#(userID)#",
+	            UserCode: "#(userCode)#",
+	            UserName: "#(userName)#",
+	            SsgroupID: "#(ssgroupID)#",
+	            UserLocID: "#(userLocID)#",
+	            UserLocCode: "#(userLocCode)#",
+	            UserLocName: "#(userLocName)#",
+                IPAddress : ""
+            };
+                
+            var envVar = {
+                instanceId : "#(instanceId)#",
+                emrTemplate : "#(emrTemplate)#",
+                autoPrint : "#(autoPrint)#",
+                isWithTemplate : "#(isWithTemplate)#",
+                isPrinting: false,
+                CopyCount: "#(CopyCount)#"
+            };
+            
+        </script>
+    </head>
+
+    <body class="easyui-layout" data-options="border:false,fit:true">
+        <div id="btnPnl" data-options="region:'south',border:true" style="height:40px;overflow-x:hidden;">
+            <a href="#" id="btnClose" class="button big" style="margin-left:5px;margin-top:2px;margin-right:10px;float:right">关闭</a>
+            <a href="#" id="btnPrint" class="button big" style="margin-left:5px;margin-top:2px;margin-right:10px;float:right">打印</a>
+        </div>
+        <div id="editor" data-options="region:'center',border:false" style="overflow-y:hidden;width:100%;height:100%;">
+            <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
+        </div>    
+        <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/iEmrPluginEx.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.print.js"></script>
+    </body>
+</html>

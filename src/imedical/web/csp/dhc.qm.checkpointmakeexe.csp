@@ -1,0 +1,102 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s schemcode=$Get(%request.Data("schemcode",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s schemname=$Get(%request.Data("schemname",1))
+	s linker=$Get(%request.Data("linker",1))
+	s Code= $Get(%request.Data("Code",1))
+	s Rowid=$Get(%request.Data("Rowid",1))
+	s data=$Get(%request.Data("data",1))
+	s row=$Get(%request.Data("row",1))
+	s linker=$Get(%request.Data("linker",1))
+	s fuzzyquery=$Get(%request.Data("fuzzyquery",1))
+	s schemeType=$Get(%request.Data("schemeType",1))
+	s importType= $Get(%request.Data("importType",1))
+	s checkType=$Get(%request.Data("checkType",1))
+	s active=$Get(%request.Data("active",1))
+	
+	s schemId=$Get(%request.Data("schemId",1)) //检查项目id 20160518 cyl
+	s importType=$Get(%request.Data("importType",1)) //检查项目importType  1:移动端  2为电脑端 20160912 cyl
+	
+	//左侧区域查询检查项目
+	i action = "list" d
+	.w ##class(dhc.qm.udata.uCheckPointMake).List(sortField, sortDir, start, limit)
+	
+	//左侧区域添加检查项目
+	i action = "addleft" d
+	.s result = ##class(dhc.qm.udata.uCheckPointMake).AddLeft(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//左侧区域修改检查项目
+	i action = "editproj" d
+	.s result = ##class(dhc.qm.udata.uCheckPointMake).QmSUpdate(rowid,schemcode,schemname,linker,schemeType,importType,checkType,active)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	 //左侧区域删除检查项目
+    i action = "delleft" d
+	.s result = ##class(dhc.qm.udata.uCheckPointMake).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	////左侧区域下拉框查询医嘱项
+	i action = "listcheckproj" d 
+	.w ##class(dhc.qm.udata.uCheckPointMake).Listcheckproj(sortField, sortDir, start, limit,fuzzyquery)
+	
+	//单击左侧检查项目右侧查询出项目检查点
+    i action = "listright" d
+    .w ##class(dhc.qm.udata.uCheckPointMake).Listright(sortField, sortDir, start, limit, schemcode)
+   
+	//右侧区域弹出框添加检查点
+	i action = "addchecker" d
+	.s result = ##class(dhc.qm.udata.uCheckPointMake).Add(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	    
+	////右侧弹出框添加检查点时下拉框查询项目检查点
+	i action = "checkList" d 
+	.w ##class(dhc.qm.udata.uCheckPointMake).CheckList(sortField, sortDir, start, limit,schemId,importType)
+	
+	//右侧区域删除项目检查点
+	i action = "checkdel" d 
+	.s result= ##class(dhc.qm.udata.uCheckPointMake).checkdel(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	///左侧点击修改时在弹出的文本区域中显示未修改前的医嘱项
+	i action = "listleftedit" d 
+	.w ##class(dhc.qm.udata.uCheckPointMake).ListLeftEdit(start,limit,rowid)
+	/*
+	///修改检查项目数据来源，判断现有的检查点时候为对应的采集方式
+	i action = "importTypeTT" d 
+	.s result=##class(dhc.qm.udata.uCheckPointMake).importTypeTT(schemId,importType)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	*/
+</script>

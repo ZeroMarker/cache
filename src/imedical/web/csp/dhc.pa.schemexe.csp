@@ -1,0 +1,152 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s active= $Get(%request.Data("active",1))
+	s parent = $Get(%request.Data("parent",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s data = $Get(%request.Data("data",1))
+	s dataitemtypedr = $Get(%request.Data("dataitemtypedr",1))
+	s schem = $Get(%request.Data("schem",1))
+	s str = $Get(%request.Data("str",1))
+	s trend = $Get(%request.Data("trend",1))
+    s cycle = $Get(%request.Data("cycle",1))
+    s userCode = $Get(%request.Data("userCode",1))
+	s par = $Get(%request.Data("par",1))
+	s cycleDr = $Get(%request.Data("cycleDr",1))
+	s newcycleDr = $Get(%request.Data("newcycleDr",1))
+	
+	s flag = $Get(%request.Data("flag",1))  //方案是否停用
+	
+	i action="list"  d
+	.w ##class(dhc.pa.udata.uSchem).ListRec("",searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action="schemdetailadd"  d
+	.d ##class(dhc.pa.udata.uSchemDetailDist).List("",searchField,searchValue,sortField,sortDir,start,limit,schem, trend)
+	.w ##class(dhc.pa.udata.uSchemDetailDist).getLevel(start,limit,schem)
+	
+	i action="schemdetail"  d
+	.w ##class(dhc.pa.udata.uSchemDetailDist).findDetail(start,limit,schem, trend)
+    
+	i action="detailaddlist"  d
+	.w ##class(dhc.pa.udata.uSchemDetailAdd).List(searchField,searchValue,sortField,sortDir,start,limit,schem,parent)
+	
+	i action = "add" d
+	.s result = ##class(dhc.pa.udata.uSchem).InsertRec(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(dhc.pa.udata.uSchem).UpdateRec(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uSchem).DelRec(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "schemdetaildel" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+	i action = "stratagem" d
+	.w ##class(dhc.pa.udata.uAdjust).UnitList(start,limit,cycle)
+	
+	i action = "kpi" d
+	.w ##class(dhc.pa.udata.uSchemDetail).GetEndKPI(userCode,schem)
+	.;w ##class(dhc.pa.udata.uSchemDetail).GetKPIs(start,limit,str,schem)
+	
+	i action = "notendkpi" d
+	.w ##class(dhc.pa.udata.uSchemDetail).GetNotEndKPI(start,limit,str,par)
+	.;w ##class(dhc.pa.udata.uSchemDetail).GetKPIs(start,limit,str,schem)
+	
+	i action = "findkpi" d
+	.w ##class(dhc.pa.udata.uSchemDetail).List(searchField,searchValue,sortField,sortDir,start,limit,schem,parent) 
+	
+	i action = "addkpi" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "updatepar" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).UpdatePar(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editorder" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).UpdateOrder(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editrate" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).UpdateRate(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editaddvalue" d
+	.s result = ##class(dhc.pa.udata.uSchemDetailAdd).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "init" d
+	.s result = ##class(dhc.pa.udata.uSchemDetailDist).init1()
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "schemdetaildistedit" d
+	.s result = ##class(dhc.pa.udata.uSchemDetailDist).Update(schem,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//2014-08-28 add 复制方案
+	i action = "copy" d
+	.s result = ##class(dhc.pa.udata.uSchem).copy(cycleDr,newcycleDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "stopSchem" d 
+	.s result = ##class(dhc.pa.udata.uSchem).StopSchem(rowid,flag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

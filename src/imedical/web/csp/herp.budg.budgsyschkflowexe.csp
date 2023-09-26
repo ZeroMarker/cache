@@ -1,0 +1,55 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))  
+	
+	s chkflowdr     = $Get(%request.Data("CHKFlowDR",1))
+	s sysnoname     = $Get(%request.Data("SysName",1))
+	s UserDR     = $Get(%request.Data("user",1))
+	
+	s rowid     = $Get(%request.Data("rowid",1))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgSysChkFlowDefinition).List(start, limit, hospid)
+	
+	i action = "chkflowList" d
+	.w ##class(herp.budg.udata.uBudgSysChkFlowDefinition).ChkFlowNameList( start, limit, str, hospid)
+	
+	i action="edit" d
+	
+	.s result= ##class(herp.budg.udata.uBudgSysChkFlowDefinition).Update(rowid,sysnoname,chkflowdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="add" d
+	.s result= ##class(herp.budg.udata.uBudgSysChkFlowDefinition).Insert(sysnoname, chkflowdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="del" d
+	.s result= ##class(herp.budg.udata.uBudgSysChkFlowDefinition).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+		
+</script>

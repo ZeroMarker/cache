@@ -1,0 +1,400 @@
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',border:false,collapsible:false,headerCls:'panel-header-gray'" style="height:50px;">
+	<table class="search-table">
+		<tr>
+			<td class="r-label">
+				<label id="_HospUserListLabel" style='color:red;' class='r-label'>医院</label>
+			</td>
+		
+			<td>
+				<input id="_HospUserList"/>
+			</td>
+		</tr>
+	</table>
+	</div>
+	<div data-options="region:'west',split:false,collapsible:false,border:false" style="width:275px;padding:0 5px 10px 10px;">
+		<div class="hisui-panel" data-options="iconCls:'icon-template',fit:true,headerCls:'panel-header-gray',title:'科室医生列表'" style="1px solid #ccc;">
+		    <div class="hisui-layout" data-options="fit:true,border:false"> 
+		    		<div data-options="region:'north',split:false,border:false" style="height:91px;border-bottom:1px solid #ccc;"> 
+					   <table class="search-table">
+					   	  <tr>
+					   	  	  <td class="r-label">
+					   	  	  		<label>科室</label>
+					   	  	  </td>
+					   	  	  <td>
+					   	  	  		<input id="SerchLoc" href="#" class="hisui-searchbox" data-options="searcher:findLocData,prompt:''" style=""/>
+					   	  	  </td>
+					   	  </tr>
+					   	  <tr>
+					   	  	  <td class="r-label">
+					   	  	  		<label>医生</label>
+					   	  	  </td>
+					   	  	  <td>
+					   	  	  		<input id="SerchDoc" href="#" class="hisui-searchbox" data-options="searcher:findLocData,prompt:''" style=""/>
+					   	  	  </td>
+					   	  </tr>
+					   </table>
+		    		</div> 
+		    		<div data-options="region:'center',split:true,border:false"> 
+		     			<div id="tree-panel" class="hisui-panel" data-options="fit:true,border:false"> 
+		      				<ul class="hisui-tree"  id="LocDocTree"></ul> 
+		     			</div> 
+		    		</div> 
+		   	</div> 
+	   	</div>
+	 </div>
+	 <div data-options="region:'center',split:true,border:false" style="padding:0 10px 10px 0;"> 
+	 	<div class="hisui-panel" data-options="iconCls:'icon-template',fit:true,headerCls:'panel-header-gray',title:'排班列表'" style="1px solid #ccc;">
+	   		<div class="hisui-layout" data-options="fit:true,border:false"> 
+	    		<div class="hisui-layout" data-options="region:'north',split:false,border:false" style="height:50px;">
+     				<table class="search-table">
+     					<tr>
+     						<td class="r-label">日期</td>
+     						<td>
+     							<input class="hisui-datebox textbox" id="StartDate" data-options="formatter:myformatter,parser:myparser"/>
+     						</td>
+     						<td><input class='hisui-checkbox' type="checkbox" id ="PlanSchedule" label="仅显示计划性出诊"></td>
+     						<td class="r-label">
+     							<a href="#" id="Find" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+     						</td>
+     					</tr>
+     				</table>
+	    		</div> 
+	    		<div data-options="region:'center',split:true,border:false"> 
+	      			<div id="ScheduleTab" class="hisui-tabs tabs-gray" data-options="tabPosition:'top',fit:true,border:false"></div> 
+	   			</div> 
+	 	    </div>
+	 	</div>
+	</div>
+</div>
+<div id="EditWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false,closed:true,modal:true,onBeforeClose:EditWinBeforeClose" style="width:995px;height:700px;">
+	<input id="ASRowID" type="text" style="display:none"></input>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false,split:false" style="height:210px;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label class="clsRequired">出诊日期</label></td>
+					<td>
+						<!--input id="AdmDate" type="hisui-datebox text" name="AdmDate" class="textbox"-->
+						<input class="textbox" id="AdmDate" readonly="readonly" style="height:28px;border-color:#40a2de;"/>
+					</td>
+					<td class="r-label"><label class="clsRequired">科室</label></td>
+					<td>
+						<input class="hisui-combobox textbox" id="AdmLoc"/>
+					</td>
+					<td class="r-label"><label class="clsRequired">医生</label></td>
+					<td>
+						<input class="hisui-combobox textbox" id="AdmDoc"/>
+					</td>
+					<td class="r-label"><label class="clsRequired">挂号职称</label></td>
+					<td>
+						<input class="hisui-combobox textbox" id="DocSession"/>
+					</td>
+						
+				</tr>
+				<tr>
+					<td class="r-label"><font color="red">诊室</td>
+					<td>
+						<input class="hisui-combobox textbox" id="LocArea"/>
+					</td>
+					<td class="r-label"><label class="clsRequired">出诊时段</label></td>
+					<td>
+						<input class="hisui-combobox textbox" id="TimeRange"/>
+					</td>
+					<td class="r-label"><label class="clsRequired">开始时间</label></td>
+					<td>
+						<input id="StartTime" class="hisui-timespinner textbox" style="width:155px;" data-options="showSeconds:true">
+					</td>
+					<td class="r-label"><label class="clsRequired">结束时间</label></td>
+					<td>
+						<input id="EndTime" class="hisui-timespinner textbox" style="width:155px;" data-options="showSeconds:true">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">亚专业</td>
+					<td>
+						<input class="hisui-combobox textbox" id="ClinicGroup"/>
+					</td>
+					<td class="r-label"><label class="clsRequired">正号限额</label></td>
+					<td>
+						<input id="PositiveMax" type="text" class="hisui-numberbox textbox" data-options="min:1,max:999">
+					</td>
+					<td class="r-label">预约限额</td>
+					<td>
+						<input id="ApptMax" type="text" class="hisui-numberbox textbox" data-options="min:0,max:999">
+					</td>
+					<td class="r-label">起始号</td>
+					<td>
+						<input id="EStartPrefix" type="text" class="hisui-numberbox textbox" data-options="min:0,max:999">
+					</td>	
+				</tr>
+				<tr>
+					<td class="r-label"><font color="red">加号限额<font></td>
+					<td>
+						<input id="AddtionMax" type="text" class="hisui-numberbox textbox" data-options="min:1,max:999">
+					</td>
+					
+					<td class="r-label">停正号</td>
+					<td>
+						<input id="StopRegNoFlag" class='hisui-checkbox' type="checkbox" data-options="label:'',name:'StopRegNoFlag'">
+					</td>
+					<td class="r-label">分时段就诊</td>
+					<td>
+						<input id="TRFlag" class='hisui-checkbox' type="checkbox" data-options="label:'',name:'TRFlag',onCheckChange:function(event,value){TRFlag_Click();
+		Calc_TRInfo();}">
+					</td>
+				</tr>
+				<!--tr>
+					<td class="r-label">开始时间</td>
+					<td>
+						<input id="TRSartTime" class="hisui-timespinner textbox" style="width:155px;" data-options="showSeconds:true">
+					</td>
+					<td class="r-label">结束时间</td>
+					<td>
+						<input id="TREndTime" class="hisui-timespinner textbox" style="width:155px;" data-options="showSeconds:true">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">间隔分钟</td>
+					<td>
+						<input id="TRLength" type="text" class="hisui-numberbox textbox" data-options="min:1,max:999">
+					</td>
+					<td class="r-label">时段号数</td>
+					<td>
+						<input id="TRRegNum" type="text" class="hisui-numberbox textbox" data-options="min:1,max:999">
+					</td>
+					<td colspan="2">
+						<span style="padding-left:5px;color:red;font-weight:bold;" id="tips"></span>
+					</td>
+				<tr>
+					<td class="r-label" >号段信息</td>
+					<td colspan="5">
+						<input id="TRRegNumStr" name="TRRegNumStr" type="text" class="textbox" style="width:631px;">
+					</td>		
+				</tr>
+				<tr>
+					<td class="r-label" >时段信息</td>
+					<td colspan="5">
+						<input id="TRRegInfoStr" name="TRRegInfoStr" type="text" class="textbox" style="width:631px;">
+					</td>	
+				</tr-->
+				<tr>
+					<td colspan="8" align=center>
+						<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-save'">保存</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false,split:true">
+				<div data-options="region:'west',border:false" style="width:300px;padding-right:5px;">
+					<div class="hisui-panel" data-options="iconCls:'icon-template',fit:true,title:'预约方式限额',headerCls:'panel-header-gray',collapsible:false" style="border:1px solid #ccc;">
+						<table id="tabAppMethodInfo"></table>
+					</div>
+				</div>
+				<div id="pTREdit" data-options="region:'center',border:false" >
+			    	<div class="hisui-layout" fit="true">
+			    		<div data-options="region:'center',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock',title:'分时段信息'">
+			    			<table id="tabTRInfo"></table>
+			    		</div>
+			    		<div data-options="region:'east',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock-record',collapsible:false,title:'分时段预约方式'" style="width:400px;">
+			    			<table id="tabTRAppMethodInfo"></table>
+					    </div>
+			    	</div>
+			    </div>
+			</div>
+		</div>
+	</div>		
+</div>
+<!--停诊弹出框-->
+<div id="StopWin" class="hisui-window" data-options="title:'停诊',iconCls:'',collapsible:false,minimizable:false,maximizable:false" style="width:265px;height:207px;" closed=true modal=true>
+	<table class="search-table" style="width:100%;">
+		<tr>
+			<td class="r-label">
+				<label class="clsRequired">批准原因</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="EReason"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label class="clsRequired">批准人</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="ELeader"/>
+			</td>
+		</tr>
+		<tr>
+		    <td id="tr-EPassword" class="r-label">
+		    	<label class="clsRequired">密码</label>
+		    </td>
+		    <td>
+		    	<input id="EPassword" name="EPassword" type="password" class="textbox">
+		    </td>
+		</tr>
+		<tr>
+			<td colspan="2" align=center>
+				<a class="hisui-linkbutton" id="StopSave" data-options="iconCls:'icon-w-save'" style="margin-left:10px;">停诊</a>
+			</td>
+		</tr>
+	</table>	
+	<input id="StopASRowIDStr" type="hidden"></input>
+</div>
+<!--替诊弹出框-->
+<div id="ReplaceWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="排班替诊" style="width:505px;height=300px;background:#fafafa" closed=true modal=true>
+	<table class="search-table" style="width:100%;">
+		<tr>
+		    <td class="r-label">
+		    	<label class="clsRequired">替诊科室</label>
+		    </td>
+			<td>
+				<input class="hisui-combobox textbox" id="ERepLoc"/>
+			</td>
+			<td class="r-label">
+				<label class="clsRequired">替诊医生</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="ERepDoc"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label class="clsRequired">替诊职称</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="ERepSessionType"/>
+			</td>
+			<td class="r-label">
+				<label class="clsRequired">替诊原因</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="ERepReason"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label class="clsRequired">批准人</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="ERepLeader"/>
+			</td>
+			<td id="td-ERepPassword" class="r-label">
+				<label class="clsRequired">密码</label>
+			</td>
+			<td>
+				<input id="ERepPassword" name="ERepPassword" class="textbox" type="password">
+			</td>
+		</tr>
+		<tr>
+			<td colspan="4"  align=center>
+				<a class="hisui-linkbutton" id="ReplaceSave" data-options="iconCls:'icon-w-save'">替诊</a>
+			</td>
+		</tr>
+	</table>	
+	<input id="ReplaceASRowIDStr" type="hidden"></input>
+</div>
+<!--tabRBASApptNum-->
+<!--复制单条排班-->
+<div id="CopyOneScheduleWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="复制单条排班" style="width:515px;height=300px;background:#fafafa" closed=true modal=true>
+	<table class="search-table" style="">
+		<tr>
+		    <td class="r-label">
+		    	<label class="clsRequired">复制到科室</label>
+		    </td>
+			<td>
+				<input class="textbox" id="CopyToLoc" disabled/>
+			</td>
+			<td class="r-label">
+				<label class="clsRequired">复制到医生</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="CopyToDoc"/>
+			</td>
+		</tr>
+		<tr>
+		    <td class="r-label">
+		    	<label class="clsRequired">复制到日期</label>
+		    </td>
+			<td colspan="3">
+				<input class="textbox" id="CopyToDate" readonly="readonly" style="width:100%;height:28px;border-color:#40a2de;box-sizing:border-box;"/>
+				<!--input class="hisui-datebox textbox" id="CopyToDate" data-options="formatter:myformatter,parser:myparser"/-->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label class="clsRequired">复制到时段</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="CopyToTimeRange"/>
+			</td>
+			<td colspan="2" align=center>
+				<a class="hisui-linkbutton" id="CopyOneSchedule" data-options="iconCls:'icon-w-copy'">复制</a>
+			</td>
+		</tr>
+	</table>	
+</div>
+<!--批量复制排班-->
+<div id="CopyMulScheduleWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="批量复制排班" style="width:515px;height=300px;background:#fafafa" closed=true modal=true>
+	<table class="search-table" style="width:100%;">
+		<tr>
+		    <td class="r-label">
+		    	<label class="clsRequired">复制到日期</label>
+		    </td>
+			<td>
+				<input class="textbox" id="CopyToDate1" readonly="readonly" style="width:400px;height:28px;border-color:#40a2de;"/>
+				<!--input class="hisui-datebox textbox" id="CopyToDate1" data-options="formatter:myformatter,parser:myparser"/-->
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" align=center>
+				<a class="hisui-linkbutton" id="CopyMulSchedule" data-options="iconCls:'icon-w-copy'">复制</a>
+			</td>
+		</tr>
+	</table>	
+</div>
+<div id="TRGenWin" class="hisui-window" title="分时段信息生成" style="width:300px;"
+    data-options="iconCls:'icon-w-edit',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
+	<table class="search-table">
+		<tr>
+			<td class="r-label">生成方式</td>
+			<td colSpan="2">
+				<input class='hisui-radio' type="radio" data-options="label:'选择模板',name:'GenTRRadio',onChecked:GenWayChecked" value='GenTRTemp'>
+	            <input class='hisui-radio' type="radio" data-options="label:'间隔时间均分',name:'GenTRRadio',checked:true,onChecked:GenWayChecked" value='GenTRDefault'>
+			</td>
+		</tr>
+		<tr name="GenTRDefault">
+			<td class="r-label">号源总数</td>
+			<td><input id="TRASLoad" class="hisui-numberbox textbox" data-options="min:1"></td>
+		</tr>
+		<tr name="GenTRDefault">
+			<td class="r-label">时段间隔</td>
+			<td><input id="IntervalTime" class="hisui-numberbox textbox" data-options="min:1"></td>
+		</tr>
+		<tr name="GenTRTemp">
+			<td class="r-label">模板选择</td>
+			<td><input id="TRTemp" class="textbox" ></td>
+		</tr>
+		<tr>
+			<td colSpan="2" style="text-align:center;">
+				<a href="#" id="BTRGen" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">生成</a>
+			<td>
+		</tr>
+	</table>
+</div>
+<div id="TRTempSaveWin" class="hisui-window" title="分时段模板保存" style="width:280px;"
+    data-options="iconCls:'icon-w-save',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
+	<table class="search-table">
+		<tr>
+			<td class="r-label">模板名称</td>
+			<td><input id="TempName" class="textbox"></td>
+		</tr>
+		<tr>
+			<td colSpan="2" style="text-align:center;">
+				<a href="#" id="BTRTempSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">另存为模板</a>
+			<td>
+		</tr>
+	</table>
+</div>
+
+<div id="ColorSynopsis"></div>

@@ -1,0 +1,54 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<script language="cache" runat="server">
+	s SourceType = $Get(%request.Data("SourceType",1))
+	s SourceID = $Get(%request.Data("SourceID",1))
+	s ReadOnly = $Get(%request.Data("ReadOnly",1))
+	s CurRole = $Get(%request.Data("CurRole",1))
+	s ElementID = $Get(%request.Data("ElementID",1))
+	s TemplateID = $Get(%request.Data("TemplateID",1))
+	s IsFunction = $Get(%request.Data("IsFunction",1))
+	s (title,Status)=""
+	i SourceType=1 
+	{
+		s title="采购申请论证-诊疗项目"
+		s Status=$Piece($G(^DHCEQBuyRequest(SourceID)),"^",16)
+	}
+</script>
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title=#(title)# data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',border:false">
+					<table id="tDHCEQBillItem"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="SourceType" id="SourceType" value=#(SourceType)#>
+			<INPUT TYPE="hidden" name="SourceID" id="SourceID" value=#(SourceID)#>
+			<INPUT TYPE="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>
+			<INPUT TYPE="hidden" name="CurRole" id="CurRole" value=#(CurRole)#>
+			<INPUT TYPE="hidden" name="Status" id="Status" value=#(Status)#>
+			<INPUT TYPE="hidden" name="ElementID" id="ElementID" value=#(ElementID)#>
+			<INPUT TYPE="hidden" name="TemplateID" id="TemplateID" value=#(TemplateID)#>			
+			<INPUT TYPE="hidden" name="IsFunction" id="IsFunction" value=#(IsFunction)#>
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/em/billitemnew.js"></script>
+</body>
+
+</html>

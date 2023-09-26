@@ -1,0 +1,160 @@
+<html>
+<head>
+<title>历次病程记录</title>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+
+</head>	
+<body>
+
+<form>
+
+<server>
+
+	set userid = %session.Get("LOGON.USERID")	
+	set username = %session.Get("LOGON.USERNAME")
+	set strBGColor = ##class(web.DHCEPR).GetBGColor()	 
+	set ctlocid=%session.Get("LOGON.CTLOCID")
+  	set categoryid=$Data(%request.Data("categoryid",1))
+ 	set ssgroupid=%session.Get("LOGON.GROUPID") //gaojb 2009-7-29
+
+	w "<object width=0 height=0 id='config' name='config' classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	w "<param name='URL' value='" _ ##class(web.DHCEPR).GetServiceURL() _ "'>",!
+	w "<param name='DBUserPassword' value='" _ ##class(web.DHCEPR).GetUserPassword() _ "'>",!
+	w "</object>",! 
+	;w "host="_%request.CgiEnvs("SERVER_NAME"),!
+	If ($Data(%request.Data("InstanceDataID"))) {
+		
+		set InstanceDataID = $Get(%request.Data("InstanceDataID",1))
+		set objInstance="",objECRecord=""
+		set objInstance=##class(EPRinstance.InstanceData).%OpenId(InstanceDataID)
+		set:((objInstance'="")&&(objInstance.TheECRecord'="")) objECRecord=##class(EPRinstance.ECRecord).%OpenId(objInstance.TheECRecord.%Id())
+		set:(objECRecord'="") categoryid=objECRecord.CategoryID
+		set objInstance="",objECRecord=""
+		
+		If ($Data(%request.Data("ProfileID",1))) 
+		{	set ProfileID = $Get(%request.Data("ProfileID",1))}
+		else 
+		{	set ProfileID = ""	}
+		
+		w "<object id='eprlistedit' name='eprlistedit' classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='1000' Height='650' VIEWASTEXT >", !
+		w "<param name='IsNewFramework' value='False'>",!
+		w "<param name='IsTotalLoad' value='False'>",!
+		w "<param name='Browsable' value='True'>",!
+		w "<param name='Revisionable' value='False'>",!
+		w "<param name='BGColor' value='" _ strBGColor  _ "'>",!
+		w "<param name='UserID' value='" _ userid _ "'>",!
+		w "<param name='UserName' value='" _ username _ "'>",!
+		w "<param name='InstanceDataID' value='" _ InstanceDataID _ "'>",!		
+    	w "<param name='CTLocID' value='" _ ctlocid _ "'>",!
+    	w "<param name='CategoryID' value='" _ categoryid _ "'>",!
+    	w "<param name='SSGroupID' value='"_ssgroupid_ "'>",! //gaojb 2009-7-29
+    	w "<param name='EpisodeID' value='" _ $Get(%request.Data("EpisodeID",1)) _ "'>",!
+    	w "<param name='PatientID' value='" _ $Get(%request.Data("PatientID",1)) _ "'>",!
+		w "</object>"
+	}	
+	else	
+	{
+		If ($Data(%request.Data("PatientID"))) {
+			set PatientID = $Get(%request.Data("PatientID",1))		
+		}
+		else {
+			set PatientID = ""			
+		}
+			
+		If ($Data(%request.Data("EpisodeID"))) {
+			set EpisodeID = $Get(%request.Data("EpisodeID",1))		
+		}
+		else {
+			set EpisodeID = ""			
+		}
+			
+		If ($Data(%request.Data("TemplateID",1))) {
+			set TemplateID = $Get(%request.Data("TemplateID",1))	
+		}
+		else {
+			set TemplateID = ""			
+		}
+		
+		If ($Data(%request.Data("CategoryID",1))) {
+			set CategoryID = $Get(%request.Data("CategoryID",1))	
+		}
+		else {
+			set CategoryID = ""			
+		}
+		
+		If ($Data(%request.Data("CategoryType",1))) {
+			set CategoryType = $Get(%request.Data("CategoryType",1))	
+		}
+		else {
+			set CategoryType = ""			
+		}
+			
+		If ($Data(%request.Data("TemplateName",1))) {
+			set TemplateName = $Get(%request.Data("TemplateName",1))
+		}
+		else {
+			set TemplateName = ""			
+		}
+	
+		If ($Data(%request.Data("ChartItemID",1))) {
+			set ChartItemID = $Get(%request.Data("ChartItemID",1))
+		}
+		else {
+			set ChartItemID = ""			
+		}
+		
+		If ($Data(%request.Data("ProfileID",1))) {
+			set ProfileID = $Get(%request.Data("ProfileID",1))
+		}
+		else {
+			set ProfileID = ""			
+		}
+	
+		w "<object id='eprlistedit' name='eprlistedit' classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='1000' Height='650' VIEWASTEXT >", !
+		w "<param name='IsNewFramework' value='False'>",!
+		w "<param name='IsTotalLoad' value='True'>",!
+		w "<param name='Browsable' value='True'>",!
+		w "<param name='Revisionable' value='False'>",!
+		w "<param name='BGColor' value='" _ strBGColor _ "'>",!
+		w "<param name='UserID' value='" _ userid _ "'>",!
+		w "<param name='UserName' value='" _ username _ "'>",!
+		w "<param name='PatientID' value='" _ PatientID _ "'>",!	
+		w "<param name='TemplateName' value='" _ TemplateName _ "'>",!
+		w "<param name='TemplateID' value='" _ TemplateID _ "'>",!
+		w "<param name='CategoryID' value='" _ CategoryID _ "'>",!
+		w "<param name='CategoryType' value='" _ CategoryType _ "'>",!
+		w "<param name='ChartItemID' value='" _ ChartItemID _ "'>",!
+		w "<param name='ProfileID' value='" _ ProfileID _ "'>",!
+		w "<param name='ChartItemType' value='Multi'>",!
+		w "<param name='ChartListNo' value='-1'>",!
+		w "<param name='CTLocID' value='" _ ctlocid _ "'>",!
+		w "<param name='SSGroupID' value='"_ssgroupid_ "'>",! //gaojb 2009-7-29
+		w "<param name='EpisodeID' value='" _ EpisodeID _ "'>",!
+		w "<param name='InstanceDataID' value=''>",!
+		w "</object>"
+		
+		w "<script type='text/javascript'>"
+		//w "document.getElementById('eprlistedit').InitForm();"
+		w "</script>"	
+	}
+</server>
+<br>
+<script language='javascript'>
+ function btnConfirmClick()
+ {
+ 		var obj=document.getElementById('eprlistedit');
+ 		obj.Save();
+ 		window.returnValue = "OK";
+    window.close();  
+ }
+ function btnCancelClick()
+ {
+ 	window.returnValue ="OK"; //"Cancel";
+ 	window.close();  
+ }
+</script>
+<a href="#" id='btnCancel' name='btnCancel' onclick='btnCancelClick()'>
+<img SRC="../images/websys/delete.gif" BORDER="0">关闭</a>
+</form>
+</body>
+</html>

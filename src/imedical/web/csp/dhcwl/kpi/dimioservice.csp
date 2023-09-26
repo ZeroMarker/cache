@@ -1,0 +1,41 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+		s %response.Timeout=1800
+		s action=$g(%request.Data("action",1))
+		i action="getFileContent" {
+			d %response.SetHeader("Pragma","No-cache")
+			d %response.SetHeader("Cache-Control","No-cache")
+			d %response.SetHeader("Expires",0)
+			s %response.ContentType="application/x-download"
+			d %response.SetHeader("Content-Disposition","attachment")
+		}
+		q 1
+   </script>
+   <script language="cache" runat="server">
+   s action=$g(%request.Data("action",1))
+   if "getFileContent"=action {
+	   d %response.Flush()
+	   s nodeIDs=$g(%request.Data("nodeIDs",1))
+	   s dimSysList=##class(DHCWL.MKPIIO.DefaultOutService).GetDimSystemList(nodeIDs)
+	   d ##class(DHCWL.MKPIIO.DefaultOutService).OutputMDIMToStream(dimSysList,.outStream)
+	   Set sc =##class(%XML.TextReader).ParseStream(outStream,.reader)
+	   if (reader="") {
+	   	   w "µ¼³ö´íÎó!"
+		   q
+	   }
+	   d ##class(DHCWL.MKPIIO.DefaultOutService).TraverXmlToStr(reader)
+   }elseif "dimExportExcel"=action {
+		set sql="select ID,KDT_Code,KDT_Desc,KDT_EXCode,KDT_ExeCode,KDT_Name,KDT_Remark,KDT_UpdateDate,KDT_User from DHCWL_MKPI.DHCWLMKPIDimType"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=",",str=""
+		While(rs.Next()){
+			s date=$zd(rs.Data("KDT_UpdateDate"),3)
+			s str=str_"['"_rs.Data("ID")_"'"_deli_"'"_rs.Data("KDT_Code")_"'"_deli_"'"_rs.Data("KDT_Desc")_"'"_deli_"'"_rs.Data("KDT_EXCode")_"'"_deli_"'"_rs.Data("KDT_ExeCode")_"'"_deli_"'"_rs.Data("KDT_Name")_"'"_deli_"'"_rs.Data("KDT_Remark")_"'"_deli_"'"_date_"'"_deli_"'"_rs.Data("KDT_User")_"'],"
+		}
+		d rs.Close()
+		w "["_$e(str,1,$l(str)-1)_"]"
+   }
+   </script>

@@ -1,0 +1,150 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+<script language="cache"  runat="server">
+	//在回传json数据时尽量避免包含'\'
+	s Action=$Get(%request.Data("actiontype",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	i Action = "GetPicture" d
+	.s CurrentSourceType=$Get(%request.Data("CurrentSourceType",1))
+	.s CurrentSourceID=$Get(%request.Data("CurrentSourceID",1))
+	.s vData=$Get(%request.Data("vData",1))
+    .w ##class(web.DHCEQ.Process.DHCEQPicture).GetPicture(Start,Limit,CurrentSourceType,CurrentSourceID,vData)
+	q:(Action = "GetPicture")
+	i Action = "GetPictureList" d
+	.//i rowid="" w "{success:false,result:'rowid不能为空'}",! Quit
+    .w ##class(web.DHCEQ.Process.DHCEQPictureList).GetPictureList(Start,Limit,rowid)
+	q:(Action = "GetPictureList")
+	i Action = "GetFtpStreamSrcByPTRowID" d
+	.i rowid="" w "{success:false,result:'rowid不能为空'}",! Quit
+    .w ##Class(web.DHCEQ.Process.DHCEQPicture).GetFtpStreamSrcByPTRowID(rowid)
+	q:(Action = "GetFtpStreamSrcByPTRowID")
+	i Action = "DeletePicture" d
+    .s result=##Class(web.DHCEQ.Process.DHCEQPicture).DeletePicture(rowid)
+    .i result'<0 w "{success:true}"
+    .e  w "{success:false,result:"_result_"}"
+	q:(Action = "DeletePicture")
+	i Action = "DeletePiclist" d
+    .s result=##Class(web.DHCEQ.Process.DHCEQPictureList).DeletePictureList(rowid)
+    .i result'<0 w "{success:true}"
+    .e  w "{success:false,result:"_result_"}"
+	q:(Action = "DeletePiclist")
+	if Action = "GetFtpStreamSrcByPLRowID" d
+	.s result=##Class(web.DHCEQ.Process.DHCEQPicture).GetFtpStreamSrcByPLRowID(rowid)
+	.w result
+	q:(Action = "GetFtpStreamSrcByPLRowID")
+	if Action = "IsPicTypeInSourceType" d
+	.s CurrentSourceType=$Get(%request.Data("CurrentSourceType",1)) 
+	.s PicTypeDR=$Get(%request.Data("PicTypeDR",1)) 
+	.s result=##Class(web.DHCEQ.Process.DHCEQCPicSourceType).IsPicTypeInSourceType(CurrentSourceType,PicTypeDR)
+	.w result
+	q:(Action = "IsPicTypeInSourceType")
+	if Action = "UploadByFtpStream"
+	{	
+		s PTRowID=$Get(%request.Data("PTRowID",1))
+		s PLRowID=$Get(%request.Data("PLRowID",1))
+		s EquipDR=$Get(%request.Data("EquipDR",1))
+		s PicTypeDR=$Get(%request.Data("PicTypeDR",1))
+		s PictureNo=$Get(%request.Data("PictureNo",1))
+		s Remark=$Get(%request.Data("Remark",1))
+		s PicName=$Get(%request.Data("PicName",1))
+		s Location=$Get(%request.Data("Location",1))
+		s PicSort=$Get(%request.Data("PicSort",1))
+		s SourceType=$Get(%request.Data("SourceType",1)) 
+		s SourceID=$Get(%request.Data("SourceID",1)) 
+		s DefaultFlag=$Get(%request.Data("DefaultFlag",1)) 
+		
+	//===============================FTP相对路径显示法================================
+		set Path=##class(web.DHCEQCommon).GetSysInfo("990004") 
+		set PTData=PTRowID_"^"_EquipDR_"^"_PictureNo_"^"_Remark_"^"_Path_"^"_PicTypeDR_"^^^"_SourceType_"^"_SourceID_"^^^^"_PicName_"^^^^^"_Location
+
+		Tstart
+		//i PicTypeDR="" w "{success:false,result:'请设置图片类型!'}",! Quit
+		set rowid=##class(web.DHCEQ.Process.DHCEQPicture).SavePicture(PTData)
+		if (rowid'>0)
+		{
+			TROLLBACK
+			Write "{""success"":false,""result"":""图片主表存储失败""_rowid,""error"":""图片主表存储失败""_rowid}",! Quit
+		}
+		set PTRowID=rowid
+		set PLData=PLRowID_"^^"_PicSort_"^^"_DefaultFlag
+		if (PLData'="^^^^")&&(PLData'="^^^^Y")
+		{
+			if $data(%request.MimeData("FileStream",1))
+			{
+				s filename=%request.MimeData("FileStream",1).FileName
+				s filename=##Class(web.DHCEQCommon).Replace(filename,"?",".")
+				s Suffix=$p(filename,".",$l(filename,"."))
+				set PLData=PLRowID_"^^"_PicSort_"^"_Suffix_"^"_DefaultFlag
+			}
+			set rowid=##class(web.DHCEQ.Process.DHCEQPictureList).SavePictureList(PTRowID,PLData) 
+			i (rowid'>0)  
+			{
+				TROLLBACK
+				if rowid=-15 Write "{""success"":false,""result"":""明细表序号重复"",""error"":""明细表序号重复""}",! Quit
+				else  if rowid=-3 Write "{""success"":false,""result"":""序号必须为数字"",""error"":""序号必须为数字""}",! Quit
+				else  Write "{""success"":false,""result"":""明细表存储失败""_rowid,""error"":""明细表存储失败""_rowid}",! Quit
+			}
+		}
+		
+		if $data(%request.MimeData("FileStream",1))
+		{
+			s filesize=%request.MimeData("FileStream",1).Size
+			s defaultsize=##class(web.DHCEQCommon).GetSysInfo("990027")
+			i +defaultsize=0 s defaultsize=1
+			if filesize>(defaultsize*1000000)
+			{
+				TROLLBACK
+				w "{""success"":false,""result"":""上传文件不能大于""_defaultsize_""M!"",""error"":""上传文件不能大于""_defaultsize_""M!""}"
+				q
+			}
+			s filename=%request.MimeData("FileStream",1).FileName
+			s filename=##Class(web.DHCEQCommon).Replace(filename,"?",".")
+			s Suffix=$p(filename,".",$l(filename,"."))
+			if ($ZCONVERT(Suffix,"U")="EXE")
+			{
+				TROLLBACK
+				w "{""success"":false,""result"":""该类型文件不能上传!"",""error"":""该类型文件不能上传!""}"
+				q
+			}
+			if ($ZCONVERT(Suffix,"U")'="BMP")&($ZCONVERT(Suffix,"U")'="JPG")&($ZCONVERT(Suffix,"U")'="GIF")&($ZCONVERT(Suffix,"U")'="PNG")
+			{
+				TROLLBACK
+				w "{""success"":false,""result"":""该类型文件不能上传!只允许上传jpg,bmp,png和gif类型图片的文件."",""error"":""该类型文件不能上传!只允许上传jpg,bmp,png和gif类型图片的文件.""}"
+				q
+			}
+			set PLRowID=rowid
+			set Path=Path_PLRowID_"."_Suffix
+			set result=##Class(web.DHCEQ.Process.DHCEQPictureList).UploadByFtpStream(Path,%request.GetMimeData("FileStream"))
+			i (result<0)  
+			{
+				TROLLBACK
+				Write "{""success"":false,""result"":""FTP存储失败""_result,""error"":""FTP存储失败""_result}",! Quit
+			}
+		}
+		TCOMMIT
+		
+		if (PLData'="^^^^")
+		{
+			w "{""success"":true,""result"":""上传成功!!"",""PTRowID"":"_PTRowID_",""url"":""_##Class(web.DHCEQ.Process.DHCEQPicture).GetFtpStreamSrcByPLRowID(rowid)_""}"
+		}
+		else
+		{
+			w "{""success"":true,""result"":""上传成功!!"",""PTRowID"":"_PTRowID_",""url"":""_##Class(web.DHCEQ.Process.DHCEQPicture).GetFtpStreamSrcByPTRowID(rowid)_""}"
+		}
+		quit
+	}
+	q:(Action = "UploadByFtpStream")
+	w "{""success"":false,""result"":""unknown order"",""error"":""未知单据""}"
+	Quit 
+</script>
+
+
+
+
+
+

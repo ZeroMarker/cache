@@ -1,0 +1,322 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<script language="JavaScript">
+</script>
+</HEAD>
+<BODY>
+<server>
+ ;w650dev
+ i %request.Get("PidMasVolid")'="",%request.Get("CreateReqConfig")="Y" s %response.ServerSideRedirect="rtrequest.bulkedit.csp" q
+ 
+ n PatientID,RequestIDs,Location,PatientIDs,VolDescs,MultiVols,notfound,tempPatids,ReqBatchID,TYPIDs,MRNID,newMRNs,PatientIDFound,noPatientIDForMRN,InvalidMRNAlert
+ s (PatientID,RequestIDs,Location,VolDesc,MultiVols,tempPatids,ReqBatchID,TYPIDs,MRNID,newMRNs,PatientIDFound,noPatientIDForMRN,InvalidMRNAlert)=""
+ s notfound=0
+
+ ;jpd log 51091 -opening component to utilise messages rather than hard coding
+ s obj=##Class(websys.Component).OpenName("RTRequest.FindMultiPatient")
+ i obj d obj.LoadTrans(),obj.%Close()
+ s InvalidR=t("InvalidRego")
+ s InvalidRID=t("InvalidRID")
+
+
+ n ReqVolIDs,ReqVolDescs
+ s (ReqVolIDs,ReqVolDescs)=""
+ i %request.Get("hiddenReqVolIDs")'="",%request.Get("patreqids")'="" {
+ 	s ReqVolIDs=%request.Get("hiddenReqVolIDs")
+	s ReqVolDescs=##Class(web.RTMasVol).GetVolDescs(ReqVolIDs)
+	d %request.Set("VolDescs",ReqVolDescs)
+ }
+ ;Log 61696 PeterC 22/11/06
+ i %request.Get("hiddenReqVolIDs")'="",$tr(%request.Get("patreqids"),"^","")="" {
+ 	s ReqVolIDs=%request.Get("hiddenReqVolIDs")
+	s ReqVolDescs=##Class(web.RTMasVol).GetVolDetails(ReqVolIDs)
+	d %request.Set("VolDescs",$p($g(ReqVolDescs),"*",1))
+	d %request.Set("PatientIDs",$p($g(ReqVolDescs),"*",2))
+	d %request.Set("TYPIDs",$p($g(ReqVolDescs),"*",3))
+	d %request.Set("ReqBatchID",$p($g(ReqVolDescs),"*",4))
+	d %request.Set("MRNs",$p($g(ReqVolDescs),"*",4))
+ }
+
+ //Log 49743 PeterC 18/02/05: Checking if a URN/MRN has been merged
+ s %request.Data("IsMerged",1)=""
+ i (%request.Get("UR")'="")||(%request.Get("MRN")'="")  {
+	s (IsMerged,tempUR,TempPatID)=""
+ 	s tempUR=##Class(web.RTRequest).URStripZero(%request.Get("UR"))
+	s TempPatID=##Class(web.PAPatMas).GetIdFromCodeOrDescription(tempUR)
+
+	i TempPatID'="" {
+		s IsMerged=$o(^PAMRi("PAT-FROM",TempPatID,""))
+		i IsMerged'="" s %request.Data("IsMerged",1)="Y"
+	}
+	
+	i TempPatID="" {
+		s rs=##Class(%Library.ResultSet).%New("web.RTMasVol:FindPatIDByMRNHospID")
+		s HospID=##Class(web.CTLoc).GetLogonHosp(%session.Data("LOGON.CTLOCID"))
+		s MRNID=%request.Get("MRN")
+		if rs {
+			d rs.Execute(MRNID,HospID)
+			i rs.Next() {
+				s TempPatID=rs.Data("PatientID")
+			}
+			d rs.%Close()
+		}
+	 	
+ 	}
+
+	i TempPatID'="",%request.Get("MRN")'="" {
+		s (primary,RTMasID,mrgind,found,table,rtmasID,IsMerged)=""
+		s primary=$o(^PAMRi("PAT-TO",TempPatID,""))
+		s RTMasID=$o(^RT(0,"MRNo",$ZCVT(%request.Get("MRN"),"U"),""))
+		
+		i primary'="" d
+		. f  s mrgind=$o(^PAMR(primary,"DET",mrgind))  q:mrgind=""  q:found="Y"  d
+		. . s table=$p($g(^PAMR(primary,"DET",mrgind)),"^",1)
+		. . s rtmasID=$p($g(^PAMR(primary,"DET",mrgind)),"^",2)
+		. . i $p($g(rtmasID),":",1)=RTMasID s found="Y"
+		. i found="Y" s TempPatID=$p($g(^PAMR(primary)),"^",1)
+		. i found="" s TempPatID=$p($g(^PAMR(primary)),"^",2)
+		. s IsMerged=$o(^PAMRi("PAT-FROM",TempPatID,""))
+		. i IsMerged'="" s %request.Data("IsMerged",1)="Y"
+	}
+ }
+
+ i %request.Get("PatientIDs")="",%request.Get("UR")'=""  {
+ 	s tempUR=##Class(web.RTRequest).URStripZero(%request.Get("UR"))
+	s (%request.Data("PatientIDs",1),PatientIDs)=##Class(web.PAPatMas).GetIdFromCodeOrDescription(tempUR)
+	i %request.Get("RTMAVVolDesc")'="" {
+		s rs=##Class(%Library.ResultSet).%New("web.RTMasVol:FindVolReqTrans")
+		if rs {
+			s (currUR,currVol)=""
+			s currUR=##Class(web.PAPatMas).GetIdFromCodeOrDescription(tempUR)
+			s currVol=%request.Get("RTMAVVolDesc")
+			s MRNID=%request.Get("MRN")
+			d rs.Execute(currUR,"",currVol,"","",MRNID,"")
+			i 'rs.Next() {
+				s (%request.Data("PatientIDs",1),PatientIDs)=""
+				d %request.Set("VolNotExist","Y")
+				i currUR="" d %request.Set("InvalidPatNo","Y")
+			}
+			d rs.%Close()
+		}
+	} 	
+	;s (%request.Data("PatientIDs",1),PatientIDs)=##Class(web.PAPatMas).GetIdFromCodeOrDescription(%request.Get("UR"))
+ }
+
+ s %request.Data("RequestList",1)="Y"
+ i %request.Get("RequestIDs")'="" s (%request.Data("RequestIDs",1),RequestIDs)=%request.Get("RequestIDs")
+ if %request.Get("RequestIDs")'="",%request.Get("PatientIDs")="" {
+	n tmpPatID
+	s tmpPatID=##Class(web.RTRequest).GetPatientID(RequestIDs)
+	i tmpPatID'="" s notfound=0
+	i tmpPatID="" s notfound=1
+	;s (%request.Data("PatientIDs",1),PatientIDs)=tmpPatID
+ }
+  i %request.Get("RequestIDs")'="",%request.Get("PatientIDs")'="" {
+ 	n tmpPatID
+	s tmpPatID=##Class(web.RTRequest).GetPatientID(RequestIDs)
+	i tmpPatID'=%request.Get("PatientIDs") s notfound=1
+ }
+ if %request.Get("RequestIDs")="",%request.Get("PatientIDs")="",%request.Get("ReqBatchID")'="" {
+	n tmpPatID
+	s tmpPatID=##Class(web.RTRequest).GetPatientIDFromBatchID(%request.Get("ReqBatchID"))
+	i tmpPatID'="" s notfound=0
+	i tmpPatID="" s notfound=1
+ }
+ if $tr(%request.Get("PatientIDs"),"^","")="",%request.Get("VolNotExist")'="" {
+ 	w "<script>"
+ 	i 'notfound,%request.Get("RequestIDs")="",ReqVolDescs="",%request.Get("ReqBatchID")=""  d
+	. i %request.Get("InvalidPatNo")'="" d
+	. . w "alert("""_InvalidR_""");"
+	. . w "obj=parent.frames[0].document.getElementById(""UR"");"
+	. . w "if (obj) obj.value="""";"
+	. . w "obj=parent.frames[0].document.getElementById(""RTMAVVolDesc"");"
+	. . w "if (obj) obj.value="""";"
+	. i %request.Get("InvalidPatNo")="" d
+	. . s val=$p(%request.Get("UR"),"^",1)
+	. . i val="" s val=$p(%request.Get("MRN"),"^",1)
+	. . w "if(this.name!=""FindBulkTracking"") { "
+	. . w "alert(""Volume does not exist for Patient "_val_""");"
+	. . w "}"
+	. . w "obj=parent.frames[0].document.getElementById(""RTMAVVolDesc"");"
+	. . w "if (obj) obj.value="""";"
+	i notfound,%request.Get("RequestIDs")'="",%request.Get("ReqBatchID")=""  w "alert("""_InvalidRID_""");"
+ 	w "</script>"
+ }
+
+ ;Log 64039 PeterC 21/06/07
+ s currpatids=%request.Get("patids")
+ s currpatidsOK="N"
+ s currpatids=$p($g(currpatids),"^",1)
+ 
+ 
+ i $g(currpatids)'="" { 
+	s currpatids=##Class(web.RTRequest).URStripZero(currpatids)
+	i $g(currpatids)'="" s currpatids=##Class(web.PAPatMas).GetIdFromCodeOrDescription(currpatids)
+	i $g(currpatids)'="" s currpatidsOK="Y"
+ }
+
+ if %request.Get("PatientIDs")="",%request.Get("MRN")="",%request.Get("VolNotExist")="",$g(currpatidsOK)="N"  {
+ 	w "<script>"
+ 	i 'notfound,%request.Get("RequestIDs")="",ReqVolDescs="",%request.Get("ReqBatchID")=""  d
+	. w "alert("""_InvalidR_""");"
+	. w "obj=parent.frames[0].document.getElementById(""UR"");"
+	. w "if (obj) obj.value="""";"
+	i notfound,%request.Get("RequestIDs")'="",%request.Get("ReqBatchID")=""  w "alert("""_InvalidRID_""");"
+ 	w "</script>"
+ }
+
+ ;Log 63468 PeterC 02/05/07
+ i $tr(%request.Get("PatientIDs"),"^","")'=""  {
+ 	w "<script>"
+	i notfound,$tr(%request.Get("RequestIDs"),"^","")'="",%request.Get("ReqBatchID")=""  {
+		w "alert("""_InvalidRID_""");"
+		d %request.Set("patreqids",$p(%request.Get("patreqids"),"^",1,$l(%request.Get("patreqids"),"^")-2)_"^")
+		d %request.Set("patids",$p(%request.Get("patids"),"^",1,$l(%request.Get("patids"),"^")-2)_"^")
+		w "var frame; var form;"
+		w "if (parent.frames['FindBulkTracking']) frame=parent.frames['FindBulkTrack'];"
+		w "if (frame) form=frame.document.forms['fRTRequest_FindMultiPatient'];"
+		w "if (form) {"
+		w "var pppobj=form.document.getElementById('patids');"
+		w "if (pppobj) pppobj.value='"_%request.Get("patids")_"';"
+		;w "if (pppobj) alert('obj value :'+pppobj.value);"
+		w "var prqobj=form.document.getElementById('patreqids');"
+		w "if (prqobj) prqobj.value='"_%request.Get("patreqids")_"';"
+		w "}"
+	}
+ 	w "</script>"
+ }
+
+ if %request.Get("patids")'=""  {
+ 	s pids=""
+	s replacePids=""
+ 	s %request.Data("PatientIDs",1)=%request.Get("patids")
+ 	f x=1:1:$l(%request.Get("patids"),"^")-1  {
+ 		s tempPid=##Class(web.RTRequest).URStripZero(($p(%request.Get("patids"),"^",x)))
+ 		s pids=pids_##Class(web.PAPatMas).GetIdFromCodeOrDescription(tempPid)_"^"
+		;s pids=pids_##Class(web.PAPatMas).GetIdFromCodeOrDescription($p(%request.Get("patids"),"^",x))_"^"
+ 	}
+ 	s %request.Data("PatientIDs",1)=pids
+ }
+
+ i %request.Get("patreqids")'="" s %request.Data("RequestIDs",1)=%request.Get("patreqids")
+ i %request.Get("patbatchids")'="" s %request.Data("ReqBatchID",1)=%request.Get("patbatchids")
+
+ ;i %request.Get("RTMAVVolDesc")'="",%request.Get("VolDescs")'="" s %request.Data("VolDescs",1)=%request.Get("RTMAVVolDesc")
+ i %request.Get("VolDescs")'="" s %request.Data("RTMAVVolDesc",1)=%request.Get("VolDescs")
+ 
+
+ i %request.Get("TYPIDs")'="" s %request.Data("TYPIDs",1)=%request.Get("TYPIDs")
+
+ i $tr(%request.Get("PatientIDs"),"^","")="",$tr(%request.Get("UR"),"^","")="",%request.Get("MRN")'="" { 
+
+ 	s rs=##Class(%Library.ResultSet).%New("web.RTMasVol:FindPatIDByMRNHospID")
+ 	if rs {
+		s newMRNs=""
+		f x=$l(%request.Get("MRNs"),"^")-1:-1:1  {
+			s MRNID=$p(%request.Get("MRNs"),"^",x)
+			s newMRNs=MRNID_"^"_newMRNs
+			i MRNID'="" {
+ 				s HospID=##Class(web.CTLoc).GetLogonHosp(%session.Data("LOGON.CTLOCID"))
+				s PatientIDFound=""
+				s noPatientIDForMRN="Y"
+ 				d rs.Execute(MRNID,HospID)
+ 				while 1 {
+					i 'rs.Next() q
+					s noPatientIDForMRN="N"
+					i PatientIDFound'="" {
+						s PatientIDFound="^"_PatientIDFound
+						s newMRNs=MRNID_"^"_newMRNs
+					}
+					s PatientIDFound=rs.Data("PatientID")_PatientIDFound
+ 				}
+				s %request.Data("PatientIDs",1)=PatientIDFound_"^"_%request.Data("PatientIDs",1)
+				i x=1,noPatientIDForMRN="Y" {
+					s InvalidMRNAlert="Y"
+				}
+			}
+			i MRNID="" s %request.Data("PatientIDs",1)="^"_%request.Data("PatientIDs",1)
+			
+		}
+		s %request.Data("MRNs",1)=newMRNs
+ 	}
+ }
+
+ i $tr(%request.Get("PatientIDs"),"^","")="",$tr(%request.Get("UR"),"^","")="",%request.Get("MRN")="",$tr(%request.Get("ReqBatchID"),"^","")="" {
+	
+	s rs=##Class(%Library.ResultSet).%New("web.RTMasVol:FindPatIDByMRNHospID")
+ 	if rs {
+		s newMRNs=""
+		f x=$l(%request.Get("MRNs"),"^")-1:-1:1  {
+			s MRNID=$p(%request.Get("MRNs"),"^",x)
+			s newMRNs=MRNID_"^"_newMRNs
+			i MRNID'="" {
+ 				s HospID=##Class(web.CTLoc).GetLogonHosp(%session.Data("LOGON.CTLOCID"))
+				s PatientIDFound=""
+				s noPatientIDForMRN="Y"
+ 				d rs.Execute(MRNID,HospID)
+				while 1 {
+					i 'rs.Next() q
+					s noPatientIDForMRN="N"
+					i PatientIDFound'="" {
+						s PatientIDFound="^"_PatientIDFound
+						s newMRNs=MRNID_"^"_newMRNs
+					}
+					s PatientIDFound=rs.Data("PatientID")_PatientIDFound
+ 				}
+				s %request.Data("PatientIDs",1)=PatientIDFound_"^"_%request.Data("PatientIDs",1)
+			}
+			i MRNID="" s %request.Data("PatientIDs",1)="^"_%request.Data("PatientIDs",1)
+		}
+		s %request.Data("MRNs",1)=newMRNs
+ 	}
+	
+ }
+ ;-----------------------------------------
+ d %request.Set("PatientIDs",%request.Get("PatientIDs")_"^")
+ d %request.Set("ReqBatchID",%request.Get("ReqBatchID")_"^")
+ d %request.Set("VolDescs",%request.Get("VolDescs")_"^")
+ d %request.Set("BulkPatient",%request.Get("BulkPatient"))
+ d %request.Set("ReloadFlag",%request.Get("ReloadFlag"))
+ d %request.Set("RtnToEPR",%request.Get("RtnToEPR"))
+
+ d %request.Set("TYPIDs",%request.Get("TYPIDs")_"^")
+ d %request.Set("scanFlag",%request.Get("scanFlag"))
+ d %request.Set("MODE",%request.Get("MODE")) ; 59790
+
+ s scanFlag=(%request.Get("scanFlag")="on")
+ ;if ('scanFlag) {
+  ;;w !,"*"_%request.Get("PatientIDs")_"*"_%request.Get("RequestIDs")_"*<BR>"
+ n comp
+ s comp=##Class(websys.Component).OpenName("RTVolume.FindMultiPatientReqList")
+ d comp.LoadTrans()
+ i InvalidMRNAlert="Y" w " <script> alert('"_$g(t("InvalidMRN"))_"'); </script>"
+ if %request.Get("PatientIDs")="",%request.Get("MRNs")="" {
+ 	w $p($g(t("InvalidRego")),"^"),":&nbsp;",%request.Get("PUR")
+ 	w "<script>"
+	w "obj=parent.frames[0].document.getElementById(""UR"");"
+	w "if (obj) obj.value="""";"
+	w "if (obj) obj.focus();"
+	w "</script>"
+ } else {
+	;s comp.HideMenus=0
+	s comp.HideHeadings=0
+	d comp.Show()
+ }
+ d comp.%Close()
+ ;s %response.TraceDump=1
+ ;}
+</server>
+
+</BODY>
+</HTML>

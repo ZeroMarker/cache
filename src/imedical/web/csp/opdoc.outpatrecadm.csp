@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--opdoc.outpatrecadm.csp 门诊接诊--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard"/>
+<style>
+/*时间轴*/
+.events-wrapper {
+  position: relative;
+  height: 100%;
+  margin:0 auto;
+  overflow: hidden;
+}
+.events {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  height: 40px;
+  line-height: 40px;
+  margin-left:10px
+}
+.events ul {  
+    list-style-type: none;  
+    padding: 0px;  
+    margin: 0 auto; 
+    width: 100%; 
+}
+.events ul li {  
+    float: left;  
+    position: relative;  
+    text-align:center;
+    display:block;
+}   
+.events ul li .line{
+	width:60px;
+	border-top:3px solid #40A2DE;
+	margin:18px 5px 0 5px;
+}
+.events a {
+	padding:3px 5px;
+	font-size: 16px;
+	font-weight: bold;
+	color: #40A2DE;
+}
+.sel-line{
+	border-top-color:#00BF4C !important;
+	background:#00BF4C !important
+}
+.sel-li-a{
+	background:#00BF4C;
+	color:#fff !important;
+}
+.oldsel-li-a{
+	color:#00BF4C !important;
+}
+/*时间轴*/
+#tabsReg .tabs-panels {
+	height:100%;
+}
+ .i-btn-right{
+ 	position: absolute;
+    right: 10px;
+    top: 5px;
+ }
+ .i-btn-right a{
+	 margin: 0 2px;
+ }
+ .i-btn-right .hisui-menubutton{
+	 float:right;
+ }
+ .northpat-div{
+	 height:36px;
+	 border-bottom:1px solid #ccc;
+	 background-color:#fff;
+ }
+ #ModalMainContent div{
+	 margin: 15px;
+ }
+ #ModalMainContent span{
+	 font-size: 16px;
+ }
+ #Complete,#RegQue,#NextPatName{
+	 font-size: 16px;
+	 font-weight: bold;
+ }
+ #CancelRecAdm{
+	 background:#F16E56;
+ }
+ .webui-popover-title{
+	display:block;
+	background-color: #f9f9fa;
+	text-align: left;
+	border-bottom: 1px solid #ccc;
+	color: block;
+}
+.webui-popover .webui-popover-content{
+	padding:0;
+}
+.window .window-body{
+	border-left: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+.box{
+	position:absolute; 
+	top:50%; 
+	left:50%;  
+	margin:-50px 0 0 -100px;  
+	width:200px; height:100px; 
+	text-align:center;
+	color:gray;
+	font-size:16px;
+}
+#WaitPatNum{
+	color: red;
+	margin-right:10px;
+	vertical-align:middle;
+}
+.window-header{
+	background:#556983;
+	border-color:#556983;
+}
+.panel-tool-close{
+	background:url(../scripts_lib/hisui-0.1.0/dist/css/images/panel_tools_2.png) no-repeat -16px 0px;
+}
+.tabItem{
+	position:relative;
+}
+.tabItem_badge{
+	position:absolute;
+	display:inline-block;
+	height:10px;width:10px;
+	background-color:#ee4f38;
+	text-align:center;color:#fff;
+	transform:translateY(-50%) translateX(100%);
+	font-size:10px;
+	line-height:10px;
+	border:1px solid transparent;
+	border-radius:10px;
+	top:2px;
+	right:10px
+}
+.menu-item .tabItem_badge {
+	top:5px;
+}
+/*流程轴前置样式start*/
+.events ul li .cmordline {
+	margin:10px 5px 0 5px;
+	width:3px;
+	height:20px;
+	background:#40A2DE;
+}
+/*流程轴前置样式end*/
+.PatInfoItem{
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+.webui-popover-patinfo{
+	top:0 !important;
+	left:0 !important;
+}
+.patinfo-hover-content{
+	line-height:25px;
+	padding:5px;
+	left:0;
+}
+/*弹层动画（从上往下）*/
+.webui-popover-patinfo {
+    -webkit-animation: fadeInDown .3s;
+    animation: fadeInDown .3s;
+}
+@keyframes fadeInDown {
+    0% {
+        -webkit-transform: translate3d(0, -20%, 0);
+        -webkit-transform: translate3d(0, -20%, 0);
+        transform: translate3d(0, -20%, 0);
+        transform: translate3d(0, -20%, 0);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: none;
+        transform: none;
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes fadeInDown {
+    0% {
+        -webkit-transform: translate3d(0, -20%, 0);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: none;
+        opacity: 1;
+    }
+}
+</style>
+<Server>
+ s EpisodeID=%request.Get("EpisodeID") //"288" 
+ s PatientID="",mradm="",RegNo=""
+ if (EpisodeID'=""){
+     s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+     s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+     s RegNo=$p($g(^PAPER(PatientID,"PAT",1)),"^",1)
+ }else{
+	 //w "<div class='box'>请选择患者!<div>"
+	 //q 
+ }
+ w "<SCRIPT Language=""Javascript"">"
+	d ##class(web.DHCDocOrderListCommon).GetMessageArray("opdoc.outpatrecadm.csp",%session.Get("LOGON.LANGID"))
+ w "</SCRIPT>"
+ d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+ w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+ w "<input id='CardBillCardTypeValue' name='CardBillCardTypeValue' type='hidden' value=''>",$C(13,10)
+</Server>
+  </head>
+<body>
+	<csp:Include Page="opdoc.outpatrecadm.show.csp">
+	<SCRIPT language = 'javascript' >
+	 //全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			mradm:"#(mradm)#",
+			RegNo:"#(RegNo)#"
+		};
+		//页面加载完之后在赋值，防止事件未定义导致报错
+		$(function(){
+			Init();
+		});
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCOPBillLocCheckOut.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OPDocPatInfoBar.js"></script>
+	<!--readcard control-->
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script src="../scripts/dhcdoc/opdoc/outpatientRecAdm.js"></script>
+</body>
+</html>

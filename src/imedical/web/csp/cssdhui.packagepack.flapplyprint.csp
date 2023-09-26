@@ -1,0 +1,86 @@
+<!--敷料单申请打印-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<server>
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</server>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:4px">
+		<div class="hisui-panel" data-options="title:'敷料单申请打印',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div id="UomTB">
+				<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
+				<input id="txtChkerv" name="txtChkerv" type="hidden">
+				<input id="txtActorv" name="txtActorv" type="hidden">
+				<table id="SelReqConditions" class="Condition">
+					<tr>
+						<td>申请科室</td>
+						<td><input id="SelReqLoc" name="FReqLoc" class="textbox hisui-combobox"></td>
+						<td>接收科室</td>
+						<td><input id="toLocDr" name="toLocDr" class="textbox hisui-combobox">
+						</td>
+						
+					</tr>
+					<tr>
+						<td>开始日期</td>
+						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq" style="width:155px"></td>
+						<td>结束日期</td>
+						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq" style="width:155px"></td>
+					</tr>	
+					<tr>
+						<td><label>审核人</label></td>
+						<td><input class="textbox" id="txtChker" name="txtChker" style="width:150px"></td>
+						<td><label>包装人</label></td>
+						<td><input class="textbox" id="txtActor" name="txtActor" style="width:150px"></td>
+						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a></td>
+						<td><a href="#" id="LabelGen" class="hisui-linkbutton"  style="width:150px;">标签生成</a></td>
+					</tr>
+						<tr>
+							<td><label>灭菌日期</label></td>
+							<td><input id="stedate" name="stedate" class="hisui-dateboxq textbox" style="width:157px"></input></td>
+							<td><label>有效期</label></td>
+							<td>
+							<select id="PackType" name="PackType" class="hisui-combobox" style="width:158px;">
+							<option value="5">常规</option>
+								<option value ="0">7天</option>
+								<option value ="1">14天</option>
+								<option value="2">30天</option>
+								<option value="3">90天</option>
+								<option value="4">180天</option>
+							</select>
+							</td>	
+							<td><a href="#" id="Print" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px;">标签打印</a></td>
+							<td><a href="#" id="GenLableAndPrint" class="hisui-linkbutton"  style="width:150px;">标签生成打印</a></td>			 
+						</tr>
+				</table>
+			</div>
+			<table id="GridList"></table>
+		</div>
+	</div>
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:410px;padding-left:0px">
+		<div class="hisui-panel" data-options="title:'标签详情',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div id="InputTB"> 
+				<table  class="Condition ">
+					<tr>
+						<td><a href="#" id="PrintDetail" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px;">标签打印</a></td>
+					</tr>
+				</table>
+			</div>
+			<table id="ItemList"></table>
+		</div>
+	</div>	
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Pack/PackCommon.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Pack/FlApplyPrintLabel.js"></script>
+</body>
+</html>

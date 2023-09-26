@@ -1,0 +1,129 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT language="Javascript">
+function DisplayNotes(notes) {
+	websys_createWindow('websys.default.csp?WEBSYS.TCOMPONENT=epr.ProcessingNotes.Custom&notes='+notes,'ProcessingNotes','top=50,left=50,width=300,height=200');
+	//alert(notes);
+	return false;
+}
+</SCRIPT>
+</HEAD>
+<body>
+<SERVER>
+ n PatientID,EpisodeID,mradm,comp,row
+ n datefr,daystoview,statusColrLIST
+ n rsCPW,rsOEORI,olnk,qlnk,lnk,cnt,mrcpwID,cpwID,cpwdesc,episdesc,stepdesc,EpidID,StepID
+
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s mradm=%request.Get("mradm")
+ i 'EpisodeID,mradm s (EpisodeID,%request.Data("EpisodeID",1))=##Class(web.MRAdm).GetEpisodeId(mradm)
+ i 'EpisodeID w "No EpisodeID" q
+ i PatientID="" s (PatientID,%request.Data("PatientID",1))=##Class(web.PAAdm).GetPatientId(%request.Get("EpisodeID"))
+ i 'PatientID w "No PatientID" q
+ i mradm="" s (mradm,%request.Data("mradm",1))=##Class(web.PAAdm).GetMRAdm(%request.Get("EpisodeID"))
+ ;
+ i +%request.Get("PatientBanner"),%request.Get("PatientID") {
+ 	s comp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ 	i comp d comp.Show(),comp.%Close()
+ }
+ ;
+ ;will need to store and retrieve this from some preferences somehow
+ s daystoview=4
+ s datefr=+%request.Get("dateFrom")
+ ;;start with yesterday
+ i 'datefr s datefr=$h-1
+ ;
+ ;w "<SCRIPT Language='JavaScript'>",$c(13,10)
+ ;w "var PatientID='",PatientID,"';",$c(13,10)
+ ;w "var mradm='",mradm,"';",$c(13,10)
+ ;w "var EpisodeID='",EpisodeID,"';",$c(13,10)
+ ;w "var dateFrom='",datefr,"';",$c(13,10)
+ ;w "</SCRIPT>",$c(13,10)
+ ;
+ d ##class(web.OECOrderAdminStatus).GetStatusColours(.statusColourLIST)
+ s comp=##Class(websys.Component).OpenName("MRClinicalPathway.Messages")
+ i comp d comp.LoadTrans(),comp.%Close()
+ ;
+ s lnk="epr.clinpathway.ordexectime.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm
+ ;
+ w !,!,"<TABLE class=tblList id=epr_clinpathway name=epr_clinpathway CELLSPACING=1>",$c(13,10)
+ w "<TR><TH>",$p($g(t("PATHWAY"),"Pathway"),"^",1),"</TH><TH>",$p($g(t("ORDERITEM"),"Order Item"),"^",1),"</TH><TH>",$p($g(t("Diagnosis"),"Diagnosis"),"^",1),"</TH><TH>",$p($g(t("STEPDESC"),"Step Description"),"^",1),"</TH><TH>",$p($g(t("STATUS"),"Status"),"^",1),"</TH><TH>",$p($g(t("OrderFrequency"),"Order Frequency"),"^",1),"</TH>" 
+ ;f i=0:1:daystoview-1 {
+	;w "<TH align=center>",##class(websys.Conversions).DateLogicalToHtml(datefr+i),"</TH>"
+ ;}
+ ;STEPDESC, Diagnosis
+ w "</TR>",$c(13,10)
+ s row=1
+ s rsCPW=##class(%Library.ResultSet).%New("web.MRClinicalPathWays:Find")
+ d rsCPW.Execute(mradm)
+ while (rsCPW.Next()) {
+	s mrcpwID=rsCPW.GetDataByName("ID")
+	s cpwID=rsCPW.GetDataByName("pathwayID")
+	s episdesc=rsCPW.GetDataByName("EPDesc") if episdesc="" s episdesc=rsCPW.GetDataByName("EPEpisode")
+	s stepdesc=rsCPW.GetDataByName("DAYSDesc") if stepdesc="" s stepdesc=rsCPW.GetDataByName("DAYSDay")
+	s cpwdesc=rsCPW.GetDataByName("pathwayDesc")_" : "_episdesc_" : "_stepdesc
+	s EpisID=rsCPW.GetDataByName("pathEpid")
+	s StepID=rsCPW.GetDataByName("StepID")
+	s Diagnosis="no Diagnosis field yet"
+	s Status="no Status field yet"
+	;s OrderFrequency="no OrderFrequency field yet"
+	s rsOEORI=##class(%Library.ResultSet).%New("web.OEOrdItem:FindClinicalPathway")
+	d rsOEORI.Execute(mrcpwID)
+	s cnt=1
+	;s ^zanju($zn,"mradm-patientID-EpisodeID")=$g(mradm)_"^"_$g(EpisodeID)_"^"_$g(PatientID)
+	while (##Class(web.MRClinicalPathWays).ShowOrderItemRow(.rsOEORI,cpwID,cpwdesc,datefr,daystoview,.statusColourLIST,row,cnt,lnk,EpisID,StepID,stepdesc,Diagnosis,Status,mradm,PatientID,EpisodeID)) {
+		s row=row+1
+		s cnt=cnt+1
+	}
+	d rsOEORI.%Close()
+ }
+ d rsCPW.%Close()
+ //non clin pathway order items
+ s rsOEORI=##class(%Library.ResultSet).%New("web.OEOrdItem:FindNonClinicalPathway")
+ d rsOEORI.Execute(EpisodeID)
+ s cnt=1
+ ;s ^zanju($zn,"2")=$g(mradm)_"^"_$g(EpisodeID)_"^"_$g(PatientID)
+ while (##Class(web.MRClinicalPathWays).ShowOrderItemRow(.rsOEORI,"",$p($g(t("NoPATHWAY"),"Non Clinical Pathway Orders"),"^",1),datefr,daystoview,.statusColourLIST,row,cnt,lnk,"","",$p($g(t("NoPATHWAY"),"Non Clinical Pathway Orders"),"^",1),"Diagnosis","Status",mradm,PatientID,EpisodeID)) {
+	s row=row+1
+	s cnt=cnt+1
+ }
+ d rsOEORI.%Close()
+ n lnk
+ i (row>1) {
+ 	w "<TR><TD colspan=2>"
+ 	s lnk="epr.clinpathway.csp?mradm="_mradm_"&EpisodeID="_EpisodeID_"&PatientID="_PatientID
+ 	i $d(%request.Data("PatientBanner")) s lnk=lnk_"&PatientBanner="_%request.Get("PatientBanner")
+ 	w "<TD align=left><a id='prevpage' href=""",lnk,"&dateFrom="_(datefr-daystoview+1),"""><img SRC=""../images/websys/pageprev.gif"" BORDER=0></a></TD>"
+ 	w "<TD colspan=",daystoview-2,"></TD>"
+ 	w "<TD align=right><a id='nextpage' href=""",lnk,"&dateFrom="_(datefr+daystoview-1),"""><img SRC=""../images/websys/pagenext.gif"" BORDER=0></a></TD>"
+ 	w "</TR>",$c(13,10)
+ }
+ w "</TABLE>",$c(13,10)
+</SERVER>
+<SCRIPT>
+function Page() {
+	var keycode;
+	try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+	if (keycode==33) {
+		var obj=document.getElementById("prevpage");
+		if (obj) obj.click();
+	}
+	if (keycode==34) {
+		var obj=document.getElementById("nextpage");
+		if (obj) obj.click();
+	}
+}
+document.onkeydown=Page;
+</SCRIPT>
+</body>
+</html>

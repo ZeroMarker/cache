@@ -1,0 +1,30 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<HTML XMLNS=TRAK>
+<HEAD>
+</HEAD>
+<BODY>
+
+<server> 
+	; cjb 28/07/2006 60139 - this csp is loaded from PAPerson.Edit.js if the EXTERNALMERGE hidden field = 1.
+	
+	n status,field,fieldvalue
+	
+	i '##Class(websys.Lock).Lock($lb($g(%request.Data("PatientID",1)),"User.PAPerson"),%session.SessionId,%session.Get("LOGON.USERID"),.status) q
+	
+	w !,"<SCRIPT language='Javascript'>"
+	
+	w !," var obj; var evt;"
+	w !," var win=window.top.frames['TRAK_main'];"
+	
+	s field="" f  s field=$o(^TMP("WEB",%session.SessionId,"EXTERNALMERGE",field)) q:field=""  s fieldvalue=^(field) d
+	.w !!," evt = win.document.createEventObject();"
+	.w !," obj=win.document.getElementById('"_field_"');"
+	.w !," if (obj) {obj.value='"_fieldvalue_"'; obj.fireEvent('onchange',evt);}"
+	
+	w !,"</SCRIPT>"
+	
+	k ^TMP("WEB",%session.SessionId,"EXTERNALMERGE")
+
+</server>
+</body>
+</html>

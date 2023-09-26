@@ -1,0 +1,181 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+
+    s StrPar=$Get(%request.Data("strPar",1))
+    s Req=$Get(%request.Data("req",1))
+    s ReqInfo=$Get(%request.Data("reqInfo",1))
+    s ListData=$Get(%request.Data("data",1))
+    s Status=$Get(%request.Data("statu",1))
+    s User=$G(%session.Data("LOGON.USERID"))
+  
+
+    s LocId=$Get(%request.Data("locId",1))
+    s UserId=$Get(%request.Data("userId",1))
+    s ListReqId=$Get(%request.Data("listReqId",1))
+    s StkGrpId=$Get(%request.Data("stkGrpId",1))
+    
+
+    s ReqItm=$Get(%request.Data("reqItm",1))
+    s ReqLoc=$Get(%request.Data("reqloc",1))
+    s ProLoc=$Get(%request.Data("proloc",1))
+
+    //查询请求单
+    i Action = "query" d
+    .s result = ##class(web.DHCST.INRequest).jsINReqM(Start,Limit,Sort,Dir,StrPar)
+    .i result = "" d
+    ..w "{results:0,rows:[]}"
+    .e  d
+    ..w result
+
+    //查询请求单明细
+    i Action = "queryDetail" d
+    .s showFlag=$g(%request.Data("TransferedFlag",1))
+    .i showFlag=""  d
+    ..d ##class(web.DHCST.INReqItm).jsINReqD(Start,Limit,Sort,Dir,Req)
+    ..;s result=##class(web.DHCST.INReqItm).jsINReqD(Start,Limit,Sort,Dir,Req)
+    .e  d
+    ..d ##class(web.DHCST.INReqItm).jsINReqD(Start,Limit,Sort,Dir,Req,showFlag)
+    ..;s result=##class(web.DHCST.INReqItm).jsINReqD(Start,Limit,Sort,Dir,Req,showFlag)
+    .;i result = "" d
+    ..;w "{results:0,rows:[]}"
+    .;e  d
+    ..;w result
+
+    //根据请求单Id查询相关信息
+    i Action = "select" d
+    .s ReqId=$Get(%request.Data("ReqId",1))
+    .w "{success:'true',info:'"_##class(web.DHCST.INRequest).Select(ReqId)_"'}"
+    .
+    //保存请求出库的主表信息和明细信息
+    i Action = "save" d
+    .s result = ##class(web.DHCST.INRequest).Save(Req,ReqInfo,ListData)
+    .i result > 0 d
+    ..w "{success:'true',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //删除请求出库的明细信息
+    i Action = "del" d
+    .s result = ##class(web.DHCST.INReqItm).Delete(ReqItm)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    //删除请求单
+    i Action = "Delete" d
+    .s result = ##class(web.DHCST.INRequest).Delete(Req)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    //设置完成请求单
+    i Action = "set" d
+    .s result = ##class(web.DHCST.INRequest).SetCompleteStatus(Req,Status)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //查询辅助请求单<消耗及补货标准>
+    i Action = "queryFZ" d
+    .d ##class(web.DHCST.INRequestAuxByConsume).jsLocItmForReq(Start,Limit,StrPar,User)
+    .
+    //查询辅助请求单<转移入库>
+    i Action = "queryFZByTrans" d
+    .
+    .s result = ##class(web.DHCST.INRequestAuxByTrans).jsLocItmForReq(StrPar,User)
+    .i result = "" d
+    ..w "{results:0,rows:[]}"
+    .e  d
+    ..w result
+
+    //查询辅助请求单<库存上下限>
+    i Action = "queryFZByLimit" d
+    .s result = ##class(web.DHCST.INRequestAuxByLim).jsLocItmForReq(Start,Limit,Sort,Dir,StrPar,User)
+    .i result = "" d
+    ..w "{results:0,rows:[]}"
+    .e  d
+    ..w result
+    //根据库存上下限生成请求单:保存
+    i Action = "SaveForAuxByLim" d
+    .s pid=$g(%request.Data("Pid",1))
+    .s data=$g(%request.Data("ListData",1))
+    .s result = ##class(web.DHCST.INRequestAuxByLim).Save(pid,data)
+    .i result = 0 d
+    ..w "{success:'true',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    .
+    //根据库存上下限生成请求单
+    i Action = "CreateReqByLim" d
+    .s pid=$g(%request.Data("Pid",1))
+    .s reqinfo=$g(%request.Data("ReqInfo",1))
+    .s result = ##class(web.DHCST.INRequestAuxByLim).CreateReq(pid,reqinfo)
+    .i (result '= "")&&(+result>0) d
+    ..w "{success:'true',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    .
+    //删除临时global
+    i Action = "KillTmpGlobal" d
+    .s pid=$g(%request.Data("Pid",1))
+    .s result = ##class(web.DHCST.INRequestAuxByLim).KillTmpGlobal(pid)
+    .w "{success:'true',info:'"_result_"'}"
+    .
+i Action = "GetParamProp" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.INRequest).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"
+
+i Action="CancelReqItm" d
+      .s ListDetailID=$g(%request.Data("ListDetailID",1))
+      .s CancelFlag=$g(%request.Data("CancelFlag",1))
+      .s result = ##class(web.DHCST.INReqItm).CancelReqItm(ListDetailID,CancelFlag)
+      .i result = 0 d
+      ..w "{success:'true',info:'"_result_"'}"
+      .e  d
+      ..w "{success:'false',info:'"_result_"'}"
+      .
+  //查询药品信息
+	i Action = "GetItmInfo" d
+	.s Params=$Get(%request.Data("Params",1))
+	.s LncId=$Get(%request.Data("lncId",1))
+	.w "{success:'true',info:'"_##class(web.DHCST.INReqItm).GetItmInfo(LncId, Params)_"'}"
+//创建申领单
+i Action = "CreateInRequest" d
+    .s strParam=$g(%request.Data("strParam",1))
+	.s result = ##class(web.DHCST.INRequestAuxByConsume).INRequestAuxByLocStk(strParam)
+	.i result >0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+//复制请求出库的主表信息和明细信息
+i Action = "copy" d
+	.s transflag=$g(%request.Data("transflag",1))
+    .s result = ##class(web.DHCST.INRequest).Copy(Req,ReqLoc,ProLoc,transflag)
+    .i result > 0 d
+    ..w "{success:'true',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+//根据传入的原始请求明细单串,生成新出库请求
+i Action = "InsertReqByNotMove" d
+	.s ReqItmStr=$g(%request.Data("ReqItmStr",1))
+    .s result = ##class(web.DHCST.INReqItm).InsertReqByNotMove(ReqItmStr,User)
+    .i result["success" d
+    ..s newreqno=$p(result,"^",2)
+    ..w "{success:'true',info:'"_newreqno_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+</script>

@@ -1,0 +1,46 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ q 1
+</csp:method>
+
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s userCode= $Get(%request.Data("userCode",1))
+	s password = $Get(%request.Data("password",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s data = $Get(%request.Data("data",1))
+	s dataitemtypedr = $Get(%request.Data("dataitemtypedr",1))
+	s unitDr = $Get(%request.Data("unitDr",1))
+	s type = $Get(%request.Data("type",1))
+	s tieOff = $Get(%request.Data("tieOff",1))
+    s schemDr = $Get(%request.Data("schemDr",1))
+
+	i action="logon"  d
+	.;s result= ##Class(dtweb.SSUser).IsValidUser(userCode,password)
+	.s result= ##class(web.SSUser).IsValidUser(userCode,password)
+	.i result>0 d
+	..s %session.Data("userCode")=userCode
+	..s str="{""success"":""true"",""info"":"_result_"}" 
+	. e   d
+	..s str="{""success"":""false"",""info"":""用户名或密码不匹配""}" 
+	.w str
+	
+	i action="schem"  d
+	.w ##class(dhc.pa.udata.uTest).schem()
+	
+	i action="jxunit"  d
+	.;w schemDr,!
+	.w ##class(dhc.pa.udata.uTest).jxUnit(schemDr)
+
+	
+	
+</script>

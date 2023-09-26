@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+ n twkfl,twkfli,CONTEXT,compref
+ n CP1or2,Loc,CareProv,ClinicType,RoomNo,Resource,ApptID
+ 
+ s (twkfl,twkfli,CONTEXT)=""
+ s (CP1or2,Loc,CareProv,ClinicType,RoomNo,Resource,ApptID)=""
+ s CP1or2=$g(%request.Data("CP1or2",1))
+ s Loc=$g(%request.Data("Location",1))
+ s CareProv=$g(%request.Data("CareProvider",1))
+ s ClinicType=$g(%request.Data("ClinicType",1))
+ s RoomNo=$g(%request.Data("RoomNo",1))
+ s Resource=$g(%request.Data("Resource",1))
+ s ApptID=$g(%request.Data("ApptID",1))
+ 
+ s compref=%request.Get("TEVENT")
+  
+ s ^zGC("CP1")=CP1or2_"^"_Loc_"^"_Resource_"^"_CareProv_"^"_ClinicType_"^"_RoomNo_"^"_ApptID
+ 
+ s twkfl=$g(%request.Data("TWKFL",1))
+ s twkfli=$g(%request.Data("TWKFLI",1))
+ s context=$g(%request.Data("CONTEXT",1)) 
+ 
+ d ##Class(web.RBAppointment).getNextPatient(compref,CP1or2,Loc,Resource,CareProv,ClinicType,RoomNo,ApptID)
+</SERVER>
+
+<script Language="JavaScript">
+	top.frames["TRAK_main"].frames["PatTrack"].location.reload();
+</script>
+
+
+<BODY>
+</BODY>
+</HTML>

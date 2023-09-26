@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.tool.reference.css"/>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s instanceID=$Get(%request.Data("InstanceID",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s param= ##class(EMRservice.BL.BLClientCategory).GetParamByInstanceID(instanceID)
+		s userLocID = %session.Get("LOGON.CTLOCID")
+	    s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userCode= %session.Get("LOGON.USERCODE")
+		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+        s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+        s SecCode = ""
+        if (HasPatEncryptLevel = "Y")
+        {
+            s PatEncryptLevelStr = ##class(web.DHCBL.CARD.UCardPaPatMasInfo).GetPatEncryptLevel(patientID)
+            s SecCode = $P(PatEncryptLevelStr, "^",3)
+        }
+    </script>
+      	
+		<script language = "javascript"> 
+	   		var episodeID = '#(episodeID)#';
+	   		var instanceID = '#(instanceID)#';
+	   		var param= eval('('+ '#(param)#' + ')'); 
+	   		var patientID = '#(patientID)#';
+	   		var userLocID ='#(userLocID)#';
+	   		var flag = true;
+			var userCode = '#(userCode)#';
+			var userID = '#(userID)#';
+			var ssgroupID ='#(ssgroupID)#';
+			var userName = '#(userName)#';
+			var IsSetToLog = '#(IsSetToLog)#';
+			var HasPatEncryptLevel= '#(HasPatEncryptLevel)#';
+			var SecCode ='#(SecCode)#';  //病人密级代码
+	   </script>		   
+	   <title> 病历参考 </title>
+	</head>
+	<body class="hisui-layout" data-options="fit:true,border:false" style="width:100%;height:100%;overflow:hidden;padding:10px;">
+		<div class="hisui-panel" data-options="region:'center',headerCls:'panel-header-gray',border:false" style="overflow:hidden;">
+			<iframe id='framebrowse' src='' scrolling='no' width='100%' height='100%' frameborder='0'></iframe>
+		</div>
+		<div class="hisui-panel" title="病历目录" data-options="region:'south',headerCls:'panel-header-gray',border:false,split:false,iconCls:'icon-paper',split:true,tools:'#episodehistory'" style="height:230px;">
+			<div id="InstanceTree" style="width='100%'" class="hisui-tree" data-options="lines:true"></div>
+		</div>
+		<div id="episodehistory" >
+			<span class="episodeType">
+				<input id="episodeType" name="episodeType"></input>
+			</span>
+			<span class="episodeList">
+				<select class="hisui-combogrid" id="episodeList" style="width:200px;" ></select>
+			</span>
+		</div>
+		<script type="text/javascript" src="../scripts/emr/js/ip.tool.reference.js" ></script>
+	</body>
+</html>

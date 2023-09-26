@@ -1,0 +1,150 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+    
+    s hospid=$G(%session.Data("LOGON.HOSPID"))
+    s userdr=$G(%session.Data("LOGON.USERID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s yearmonth=$Get(%request.Data("yearmonth",1))
+	s deptdr=$Get(%request.Data("deptdr",1))
+	s datafrom=$Get(%request.Data("datafrom",1))
+	s typecode=$Get(%request.Data("typecode",1))
+	s itemcode=$Get(%request.Data("itemcode",1))
+	s value=$Get(%request.Data("value",1))
+	s chkstate=$Get(%request.Data("chkstate",1))
+	s Year = $Get(%request.Data("Year",1))
+	
+	s data = $Get(%request.Data("data",1))
+	s flag = $Get(%request.Data("flag",1))
+	
+	i action = "yearmonth" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetail).yearmonth(start, limit, str)
+		
+	i action = "deptdr" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetail).Deptname(start, limit, str)
+				
+	i action = "data" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetail).DataFrom(flag,hospid,start, limit, str)
+				
+	i action = "code" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetail).ItemCode(start, limit, str)
+	
+	i action = "desc" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetail).ItemName(start, limit, str,Year)	
+	//查询
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetail).List(hospid,yearmonth,deptdr,datafrom,typecode,itemcode,sortField, sortDir,start,limit)
+	//保存
+	i action = "save" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetail).SaveRec(hospid,data)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	//删除
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetail).Delete(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	//审核
+	i action = "audit" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetail).Audit(userdr,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	//取消审核
+	i action = "noaudit" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetail).NoAudit(userdr,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	//统计计算
+	i action = "calculate" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetail).Calculate(hospid,yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	//按年统计计算
+	i action = "yearcal" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetail).YearCalculate(hospid, yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "HRExeData" d
+	.s result = ##class(herp.budg.udata.uBudgExedata).HRExeDate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "HCHISOExeData" d
+	.s result = ##class(herp.budg.udata.uBudgExedata).HCHISOExeDate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "OPExeData" d
+	.s result = ##class(herp.budg.udata.uBudgExedata).DuraExeDate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "U8ExeData" d
+	.s result = ##class(herp.budg.uu8link.uGLaccvouchEXE).ExeINTOHerp(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "HCHISIExeData" d
+	.s result = ##class(herp.budg.udata.uBudgExedata).HCHISIExeDate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "HCHISDExeData" d
+	.s result = ##class(herp.budg.udata.uBudgExedata).HCHISDExeDate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "HCHISDIExeData" d
+	.s result = ##class(herp.budg.udata.uBudgExedata).HCHISDIExeDate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "OPIExeData" d
+	.s result = ##class(herp.budg.udata.uBudgExedata).DuraExeDateI(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

@@ -1,0 +1,57 @@
+<csp:content charset="UTF-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s StrFilter = $Get(%request.Data("strFilter",1))
+	s LocId = $Get(%request.Data("locId",1))
+	s ListData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+	;s LocGrpId=$Get(%request.Data("locGrpId",1))
+	s CTLocId=$Get(%request.Data("ctlocid",1))
+	s GroupId=$Get(%request.Data("groupId",1))
+	s HospId=$Get(%request.Data("HospId",1))
+
+	//查询科室
+	i Action = "QueryLoc" d
+	.s result=##class(web.DHCST.CTLOC).QueryGroupLoc(Start,Limit,Sort,Dir,GroupId,StrFilter,HospId)
+	.i result ="" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	
+	//根据科室查询人员信息
+	i Action = "QueryUser" d
+	.s ^tmpli("QueryUser")=Start_","_Limit_","_Sort_","_Dir_","_CTLocId
+	.s result = ##class(web.DHCST.LocPurPlanUser).Query(Start,Limit,Sort,Dir,CTLocId)
+	.i result ="" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//保存人员信息
+	i Action = "SaveUser" d
+	.s ret=##class(web.DHCST.LocPurPlanUser).Save(CTLocId,ListData)
+	.i ret="" d
+	..w "{""success"":""true"",""info"":"""_ret_"""}"
+	.e  d
+	..w "{""success"":""false"",""info"":"""_ret_"""}"
+
+	//删除人员信息
+	i Action = "deleteUser" d
+	.s result = ##class(web.DHCST.LocPurPlanUser).Delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

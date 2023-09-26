@@ -1,0 +1,110 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+
+<script language="cache" runat="server">
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	
+	s searchField = $Get(%request.Data("searchfield",1))
+	s searchValue = $Get(%request.Data("searchvalue",1))
+	
+	s action=$Get(%request.Data("action",1))
+	s type=$Get(%request.Data("type",1))
+	
+	s month=$Get(%request.Data("month",1))
+	s locDr=$Get(%request.Data("locDr",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s fromLocName=$Get(%request.Data("fromLocName",1))
+	s costItemName=$Get(%request.Data("costItemName",1))
+	s recname=$Get(%request.Data("recname",1))
+	s subjdr=$Get(%request.Data("subjdr",1))
+	s order=$Get(%request.Data("order",1))
+	
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s end=$Get(%request.Data("end",1))
+	s remark=$Get(%request.Data("remark",1))
+	s active=$Get(%request.Data("active",1))
+	s id=$Get(%request.Data("id",1))
+	s repdr=$Get(%request.Data("repdr",1))
+	s distCost=$Get(%request.Data("distCost",1))
+	s recCost=$Get(%request.Data("recCost",1))
+	s repFlag=$Get(%request.Data("repFlag",1))
+	s query=$Get(%request.Data("query",1))	//20160831  zjw
+	
+	//[{id:'3',code:'3',name:'3',desc:'3-3',remark:'3',leaf:'N',active:'Y',parent:'0',uiProvider:col'}]
+	//[{id:'1',toLoc:'院级报表',uiProvider:'col',leaf:false}]
+	i action="list" d
+	.w ##class(dhc.ca.cache.udata.uDeptLevelSets).ListRec(id)	
+	
+	i action="listhosp" d
+	.w ##class(dhc.ca.cache.udata.uDeptLevelSets).ListRec(id)	
+	
+	i action="listsub" d
+	.w ##class(dhc.ca.cache.udata.uDeptLevelSets).RListRec(searchField,searchValue,sortField,sortDir,start,limit,id,"")	
+	
+	i action="listloc" d
+	.w ##class(dhc.ca.cache.udata.uDeptLevelSets).GetDepts(id,start,limit,"Y",repdr,query)	
+	
+	i action="listlast" d
+	.w ##class(dhc.ca.cache.udata.uLevelDepts).ListRec(searchField,searchValue,sortField,sortDir,start,limit,id)	
+	
+	i action="item" d
+	.w ##class(DHCCA.UBusiness.UDHCCARepThiSubjItem).GetSubjItem(start,limit,recCode,owenr)
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uDeptLevelSets).InsertRec(code, name, remark, active, "", id,order)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addloc" d
+	.s result = ##class(dhc.ca.cache.udata.uLevelDepts).InsertRec(order, locDr, recCost, distCost, id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "check" d
+	.s result = ##class(dhc.ca.cache.udata.uDeptLevelSets).CheckRec(id)
+	.i result = "N" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uDeptLevelSets).UpdateRec(id, code, name, remark, end, active, order, repFlag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editloc" d                                        
+	.s result = ##class(dhc.ca.cache.udata.uLevelDepts).UpdateRec(id , order, locDr, recCost, distCost, subjdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "delloc" d
+	.s result = ##class(dhc.ca.cache.udata.uLevelDepts).DelRec(id)
+	.i result '= 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "copy" d
+	.s result = ##class(dhc.ca.cache.udata.uDeptLevelSets).CopyLevels(id)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

@@ -1,0 +1,142 @@
+<!-- Copyright (c) 2006 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+
+<SERVER>
+ n rs,SubQualAry,QualDescAry,QualIDAry,RelDescAry
+ s QualDescAry="",QualIDAry=""
+ s ID=$g(%request.Data("ID",1))
+ ;s PARREF=$g(%request.Data("PARREF",1))
+ s ConceptID=$g(%request.Data("ConceptID",1))
+ s SNOeditcomp=$g(%request.Data("SNOeditcomp",1))
+ s update=$g(%request.Data("update",1))
+ s SNQglob=$g(%request.Data("SNQglob",1))
+
+ i update'=1 d
+ . ; reload currently selected concepts
+ . i ID'="" d
+ . . q:SNQglob=""
+ . . s ConceptID=""
+ . . s ISA=$o(^PAC("SNOC",0,"Desc","ISAATTRIBUTE","")) q:ISA=""
+ . . s idx="" f  s idx=$o(^PA("SNQ",0,SNQglob,ID,idx)) q:idx=""  d
+ . . . s qglob=$g(^PA("SNQ",idx)) q:qglob=""
+ . . . q:$p(qglob,"^",2)=ISA
+ . . . i ConceptID="" s ConceptID=$p(qglob,"^")
+ . . . q:$p(qglob,"^",2)=""
+ . . . s QualIDAry=QualIDAry_$s(QualIDAry'="":"*",1:"")_$p(qglob,"^",2)
+ . . . s QualDescAry=QualDescAry_$s(QualDescAry'="":"*",1:"")_##Class(web.PACSnomedConcept).GetConceptDesc($p(qglob,"^",2))
+ . . . s qidx=$p(qglob,"^",3)
+ . . . f  q:qidx=""  d
+ . . . . s QualIDAry=QualIDAry_"^"_$p(^PA("SNQ",qidx),"^")
+ . . . . s QualDescAry=QualDescAry_" - "_##Class(web.PACSnomedConcept).GetConceptDesc($p(^PA("SNQ",qidx),"^"))
+ . . . . s qidx=$p(^PA("SNQ",qidx),"^",3)
+ . . i ConceptID'="" s %request.Data("ConceptID",1)=ConceptID
+ . ; all available qualifiers for this concept
+ . s rs=##Class(%ResultSet).%New("web.PACSnomedRelation:GetQualifiers")
+ . d rs.Execute(ConceptID)
+ . f  q:'rs.Next()  d
+ . . s SubQualList=rs.GetDataByName("SubQualList")
+ . . s QualID=rs.GetDataByName("QualID")
+ . . s QualDesc=rs.GetDataByName("QualDesc")
+ . . s RelID=rs.GetDataByName("RelID")
+ . . s RelDesc=rs.GetDataByName("RelDesc")
+ . . ;
+ . . s SubQualAry(RelID,QualID)=SubQualList
+ . . s QualDescAry(QualID)=QualDesc
+ . . s RelDescAry(RelID)=RelDesc
+ . . m ^zTRAK("Phil","SubQual")=SubQualAry
+ . . m ^zTRAK("Phil","QualDesc")=QualDescAry
+ . . m ^zTRAK("Phil","RelDesc")=RelDescAry
+ . ;s rlist=""
+ . ;s ridx="" f  s ridx=$o(SubQualAry(ridx)) q:ridx=""  d
+ . ;. s qlist=""
+ . ;. s qidx="" f  s qidx=$o(SubQualAry(ridx,qidx)) q:qidx=""  d
+ . ;. . s qlist=qlist_$s(qlist="":"",1:"^")_qidx_"*"_QualDescAry(qidx)
+ . ;. . w !,"<INPUT TYPE=""HIDDEN"" NAME=""GENSubQualz"_ridx_"_"_qidx_""" VALUE="""_SubQualAry(ridx,qidx)_""">"
+ . ;. w !,"<INPUT TYPE=""HIDDEN"" NAME=""GENQualz"_ridx_""" VALUE="""_qlist_""">"
+ . ;. s rlist=rlist_$s(rlist="":"",1:"^")_ridx_"*"_RelDescAry(ridx)
+ . ;w !,"<INPUT TYPE=""HIDDEN"" NAME=""GENRel"" VALUE="""_rlist_""">"_$c(13,10)
+ . ; 63545 - put qualifiers in 1 listbox and allow auto-add
+ . s rlist=""
+ . s ridx="" f  s ridx=$o(SubQualAry(ridx)) q:ridx=""  d
+ . . ;s rlist=rlist_$s(rlist="":"",1:"^")_ridx_"*"_RelDescAry(ridx)
+ . . s qlist=""
+ . . s qidx="" f  s qidx=$o(SubQualAry(ridx,qidx)) q:qidx=""  d
+ . . . s rlist=rlist_$s(rlist="":"",1:"^")_ridx_"_"_qidx_"*"_RelDescAry(ridx)_" - "_QualDescAry(qidx)
+ . . . w !,"<INPUT TYPE=""HIDDEN"" NAME=""GENSubQualz"_ridx_"_"_qidx_""" VALUE="""_SubQualAry(ridx,qidx)_""">"
+ . . ;w !,"<INPUT TYPE=""HIDDEN"" NAME=""GENQualz"_ridx_""" VALUE="""_qlist_""">"
+ . w !,"<INPUT TYPE=""HIDDEN"" NAME=""GENRel"" VALUE="""_rlist_""">"_$c(13,10)
+ . s cmp=##Class(websys.Component).OpenName(SNOeditcomp)
+ . i cmp d cmp.Show() d cmp.%Close()
+	
+</SERVER>
+	
+<SCRIPT language='javascript'>
+	var update="#(update)#";
+	if (update==1) {
+		window.open(this.parent.document.location,this.parent.name);
+	}
+	else {
+		var ConceptID="#(ConceptID)#";
+		if (ConceptID!="") {
+			// 63545 - put qualifiers in 1 listbox and allow auto-add
+			/*
+			var RelList=document.getElementById("GENRel");
+			var Qualifiers=document.getElementById("Qualifiers");
+			if(RelList && Qualifiers) {
+				var RelEntry=RelList.value.split("^");
+				var Rel;
+				for(i=0;i<RelEntry.length;i++) {
+					if(RelEntry[i]!="") {
+						Rel=RelEntry[i].split("*");
+						Qualifiers[Qualifiers.length] = new Option(Rel[1],Rel[0]);
+					}
+				}
+			}
+			*/
+			var RelList=document.getElementById("GENRel");
+			var Qualifiers=document.getElementById("Qualifiers");
+			if(RelList && Qualifiers) {
+				var RelEntry=RelList.value.split("^");
+				var Rel;
+				for(i=0;i<RelEntry.length;i++) {
+					if(RelEntry[i]!="") {
+						Rel=RelEntry[i].split("*");
+						var strOption;
+						// if contains "_" it is a sub-qualifier - so can be selected
+						// else it's just a grouping header
+						//alert(Rel[0]+", "+Rel[0].indexOf("_"));
+						//if (Rel[0].indexOf("_") != -1) Rel[1] = "--> " + Rel[1];
+									
+						Qualifiers[Qualifiers.length] = new Option(Rel[1],Rel[0]);
+					}
+				}
+			}
+		}
+		var QualIDAry="#(QualIDAry)#";
+		var QualDescAry="#(QualDescAry)#";
+		if(QualIDAry!="" && QualDescAry!="") {
+			var idary=QualIDAry.split("*");
+			var descary=QualDescAry.split("*");
+			var qlobj=document.getElementById("QualifierList");
+			for (i=0;i<idary.length;i++) {
+				if(descary[i]&&idary[i]){
+					qlobj[qlobj.length] = new Option(descary[i],idary[i]);
+				}
+			}
+		}
+	}
+	//alert("conc#(ConceptID)#");
+</SCRIPT>
+
+</HTML>

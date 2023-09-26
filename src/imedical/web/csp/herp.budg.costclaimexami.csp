@@ -1,0 +1,92 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+    s year=$Get(%request.Data("year",1))
+	
+    s userid=$Get(%request.Data("userid",1))
+	s rowid =$Get(%request.Data("rowid",1))	
+	s select=$Get(%request.Data("select",1))
+	s checkyearmonth=$Get(%request.Data("checkyearmonth",1))
+	s billcode=$Get(%request.Data("billcode",1))
+	s deprdr=$Get(%request.Data("deprdr",1))
+	
+	s applyer=$Get(%request.Data("applyer",1))
+	s reqpay=$Get(%request.Data("reqpay",1))
+	s actpay=$Get(%request.Data("actpay",1))
+	s applydate=$Get(%request.Data("applydate",1))
+	s billstate=$Get(%request.Data("billstate",1))
+	
+        s applydecl=$Get(%request.Data("applydecl",1))
+	s budgetsurplus=$Get(%request.Data("budgetsurplus",1))
+	s budgcotrol=$Get(%request.Data("budgcotrol",1))
+	
+	s dept=$Get(%request.Data("dept",1))
+	s applyer=$Get(%request.Data("applyer",1))
+	
+        s view     = $Get(%request.Data("view",1))
+	s ChkResult= $Get(%request.Data("ChkResult",1))
+	s IsCurStep= $Get(%request.Data("IsCurStep",1))
+	s userdr   = $Get(%request.Data("userdr",1))
+	i action = "list" d
+	.w ##class(herp.budg.udata.ubudgcostclaimexamin).List(year,dept,applyer,sortField, sortDir, start, limit,userdr)
+
+     
+	
+        i action = "yearList" d
+	.w ##class(herp.budg.udata.ubudgcostclaimexamin).yearList(start, limit, str)
+
+        
+        i action = "deptList" d
+	.w ##class(herp.budg.udata.ubudgcostclaimexamin).Listdept(str,start, limit)
+
+        
+
+           
+        i action = "applyerList" d
+	.w ##class(herp.budg.udata.ubudgcostclaimexamin).Listapplyer(str,start,limit)
+
+
+        i action = "nocheck" d
+	.w ##class(herp.budg.udata.ubudgcostclaimexamin).nocheck(rowid,userdr)
+
+
+
+
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.ubudgcostclaimapply).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+     
+        i action="check" d
+	.s result= ##class(herp.budg.udata.ubudgcostclaimexamin).UpdChkRec(rowid,view, ChkResult,userdr)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+         i action = "backout" d
+	.s result = ##class(herp.budg.udata.ubudgcostclaimapply).backout(userid,rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  i result = 8888  d
+	..w "{success:'hhhh',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

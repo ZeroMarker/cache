@@ -1,0 +1,142 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<SERVER> s frm=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus") i frm s compId=frm.%Id() d %request.Set("CONTEXT","S"_compId) d frm.%Close()</SERVER>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT>
+	//reset last selected patient
+	var winf = null;
+	if (window.parent != window.self) winf = window.parent;
+	if ((winf)&&(winf.frames['eprmenu'])) winf.SetEpisodeDetails("","","","","","","");
+</SCRIPT>
+</HEAD>
+<BODY><DIV id="PageContent">
+
+<SERVER>
+ n frm,t
+ n LocID,WardID,RespUnitID,WardDesc,RUDesc
+
+ s (LocID,WardID,RespUnitID,WardDesc,RUDesc)=""
+ s LocID=%session.Get("LOGON.CTLOCID")
+ s WardID=%request.Get("WardID")
+ 
+ //if no ward, get ward associated with logon location
+ i WardID="" s WardID=##Class(web.PACWard).GetWardFromLoc(LocID)
+
+	// get colour setup
+	n SETUPcnt,SETUPCaptionLIST,SETUPColourLIST,code,bd,colour
+	s (SETUPCaptionLIST,SETUPColourLIST)=""
+	s SETUPcnt=0
+	;fetch the PACBedDated setup and sort by code
+	s code="" f  s code=$o(^PAC("BDATE",0,"Code",code)) q:code=""  d
+	. s bd="" f  s bd=$o(^PAC("BDATE",0,"Code",code,bd)) q:bd=""  d
+	. . s s=$g(^PAC("BDATE",+bd))
+	. . s SETUPcnt=SETUPcnt+1
+	. . s SETUPCaptionLIST(SETUPcnt)=$p(s,"^",2)
+	. . s colour=$p(s,"^",5),colour=$p(colour,",",2) s:colour="" colour="#FFFFFF"
+	. . s SETUPColourLIST(SETUPcnt)=colour
+
+ s rs=##Class(User.PACWard).%OpenId(WardID,0)
+ i rs {
+ 	s WardDesc=rs.WARDDesc 
+ 	i rs.WARDLocationDR s LocID=rs.WARDLocationDR.%Id()
+ 	i LocID s rs2=##Class(User.CTLoc).%OpenId(LocID,0) i rs2.CTLOCRespUnitDR s RespUnitID=rs2.CTLOCRespUnitDR.%Id() d rs2.%Close()
+ 	i RespUnitID s rs3=##Class(User.CTResponsibleUnit).%OpenId(RespUnitID,0) s RUDesc=rs3.RUDesc d rs3.%Close()
+ 	d rs.%Close()
+ }
+ w "&nbsp;<B><a href=javascript:CallListUnocc('"_WardID_"')>"_WardDesc_"</a>&nbsp;&nbsp;"_RUDesc_"</B><BR>"
+ w "<BR>"
+ s %request.Data("WardID",1)=WardID
+ w "<TABLE width=""98%"">"
+ w "<TR><TD valign=""top"">"
+ s frm=##Class(websys.Component).OpenName("PACWard.BedAllocation")
+ i frm d frm.Show() d frm.%Close()
+ w "</TD><TD valign=""top"">"
+ s frm=##Class(websys.Component).OpenName("PACWard.AvailRestriction")
+ i frm d frm.Show() d frm.%Close()
+ w "</TD></TR>"
+ w "<TR><TD valign=""top"">"
+ s %request.Data("WardID",1)=WardID
+ s frm=##Class(websys.Component).OpenName("PACWard.Transaction")
+ i frm d frm.Show() d frm.%Close()
+ w "</TD><TD valign=""top"">"
+ s %request.Data("WardID",1)=WardID
+ s frm=##Class(websys.Component).OpenName("PACBed.AvailRestriction")
+ i frm d frm.Show() d frm.%Close()
+ w "</TD></TR>"
+ w "</TABLE>"
+ w "<BR>"
+ s frm=##Class(websys.Component).OpenName("PACWard.FindWardBedStatus")
+ i frm d frm.Show() d frm.%Close()
+ w "<BR>"
+ s ShiftIds=##Class(web.NRCScheduleCategory).GetCurrentShifts()
+ d ##Class(web.NRRostering).GetNurseRoster(WardID,ShiftIds)
+ s frm=##Class(websys.Component).OpenName("NRNurseRoster.List")
+ i frm d frm.Show() d frm.%Close()
+</SERVER>
+
+<SCRIPT language="JavaScript">
+ function CallListUnocc(WardID) {
+ 	var lnk="websys.default.csp?WEBSYS.TCOMPONENT=PACWardRoom.ListUnocc&WardID="+WardID+"&AvailableBeds=true&SortOrder=1"
+	window.open(lnk,"ListUnocc","HEIGHT=200,WIDTH=200,LEFT=50,TOP=50,scrollbars=yes,resizable=yes,status=yes");
+ }
+ 
+ // to do: extract this out into a seperate js to be used by both ward csp pages
+var SETUPcnt=#(SETUPcnt)#;
+
+function DisplayTotal() {
+	var tbl=document.getElementById("tPACWard_FindWardBedStatus");
+	var lenRows=tbl.rows.length;
+	//these 3 arrays need to have the same number of items
+	var arrColumns=new Array("TotDisch","DueToday","DueTom","DueNextDay");
+	var arrTotalItems=new Array("TotalExpDisch0","Due1","Due2","Due3");
+	var arrTotals=new Array(0,0,0,0);
+
+	//tally up totals
+	for (var j=0; j<arrColumns.length; j++) {
+		for (var i=1; i<lenRows; i++) {
+			var obj=document.getElementById(arrColumns[j]+"z"+i);
+			if (obj) arrTotals[j]=arrTotals[j]+parseInt(obj.innerText,10);
+		}
+		var obj=document.getElementById(arrTotalItems[j]);
+		if (obj) {
+			obj.value=arrTotals[j];
+			obj.readOnly=true;
+		}
+	}
+	//elective total= the sum of Due1+Due2+Due3
+	var obj=document.getElementById("ElectiveTotal");
+	if (obj) {
+		obj.value=arrTotals[1]+arrTotals[2]+arrTotals[3];
+		obj.readOnly=true;
+	}
+	
+	//add totals for beddate setup
+	for (var j=1; j<SETUPcnt+1; j++) {
+		var total=0;
+		for (var i=1; i<lenRows; i++) {
+			var col="ExpDisch"; if (j<10) col+="0"; col+=j+"z"+i;
+			var obj=document.getElementById(col);
+			if (obj) total=total+parseInt(obj.innerText,10);
+		}
+		var obj=document.getElementById("TotalExpDisch"+j);
+		if (obj) {
+			if (isNaN(total)) total=0;
+			obj.value=total; 
+			obj.readOnly=true;
+		}
+	}
+}
+DisplayTotal();
+ 
+</SCRIPT>
+</DIV></BODY>
+</HTML>

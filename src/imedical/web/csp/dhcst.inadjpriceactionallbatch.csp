@@ -1,0 +1,84 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$g(%request.Data("sort",1))
+s Dir=$g(%request.Data("dir",1))
+;
+i Action = "Save" d
+	.S StkGrp=$Get(%request.Data("StkGrp",1))
+	.S LocId=$Get(%request.Data("LocId",1))
+	.S AspNo=$Get(%request.Data("AspNo",1))
+	.S list=$Get(%request.Data("list",1))
+	.s ret=##class(web.DHCST.INAdjPriceAllBatch).Save(AspNo,StkGrp,LocId,list)
+	.i $l(ret,"^")>1  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+
+i Action = "DeleteAspItm" d
+	.S AspRowid=$Get(%request.Data("AspRowid",1))
+	.s ret=##class(web.DHCST.INAdjPriceAllBatch).Delete(AspRowid)
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+
+i Action = "QueryAspInfo" d
+	.S StartDate=$Get(%request.Data("StartDate",1))
+	.S EndDate=$Get(%request.Data("EndDate",1))
+	.s Params=$g(%request.Data("Others",1))
+	.w ##class(web.DHCST.INAdjPriceAllBatch).QueryAspInfo(Start,Limit,StartDate,EndDate,Params)
+	.
+
+i Action = "GetItmInfo" d
+	.S ItmId=$Get(%request.Data("InciId",1))
+	.S Params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INAdjPriceAllBatch).GetItmInfo(ItmId,Params)
+	.
+	
+i Action = "Batch" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INAdjPriceAllBatch).Batch(Start,Limit,Sort,Dir,StrParam)
+	.
+	
+i Action = "AuditAsp" d
+	.S AspIdStr=$Get(%request.Data("StrAspId",1))
+	.S AuditUserId=$Get(%request.Data("AuditUser",1))
+	.s ret=##class(web.DHCST.INAdjPriceAllBatch).Audit(AspIdStr,AuditUserId)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+
+i Action = "CancelAuditAsp" d
+	.S AspIdStr=$Get(%request.Data("StrAspId",1))
+	.S User=$Get(%request.Data("CancelUser",1))
+	.s ret=##class(web.DHCST.INAdjPriceAllBatch).CancelAudit(AspIdStr,User)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+
+i Action = "Execute" d
+	.S AspIdStr=$Get(%request.Data("StrAspId",1))
+	.s ret=##class(web.DHCST.INAdjPriceAllBatch).SetExe(AspIdStr)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+
+i Action = "UpdatePrice" d
+	.S ListData=$Get(%request.Data("ListData",1))
+	.s ret=##class(web.DHCST.INAdjPriceAllBatch).BatUpdatePrice(ListData)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+	
+</SERVER>
+

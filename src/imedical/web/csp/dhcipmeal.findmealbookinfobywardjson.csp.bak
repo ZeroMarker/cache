@@ -1,0 +1,28 @@
+/* 
+ * FileName:dhcipmeal.findmealbookinfobywardjson.csp
+ * User: yyx
+ * Date: 2010-05-17
+ * Function: 动态生成列实例服务器端动态生成json数据格式
+ * Description: 
+*/
+<csp:content charset="utf-8">
+<script language="Cache" runat="SERVER">
+  s act=$g(%request.Data("act",1))
+  s wardid=$g(%request.Data("patward",1))
+  s stdate=$g(%request.Data("startdate",1))
+  s start=+$g(%request.Data("start",1))  ;开始行
+  s limit=+$g(%request.Data("limit",1))  ;限制行
+  
+  i act="combolist" d	
+	.s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealCommon","FindPacWard",0,0)
+	.w jsonStr
+	
+  i act="query"  d
+  .s jsonStr= ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONStoreStrByQuery("DHCBILL.DHCIPMealBookMealPrint","FindMealBookInfoByWard","",start,limit,stdate,mealmodality)
+  .w jsonStr
+  .;s stdate=1,mealmodality=1
+  .;i (stdate=1)!(mealmodality=1) d
+  .;.w "{'data':[{'number':'333','text1': '0.3','info1': '4','special1': '2010-01-01'}],'columModle':[{'header': '序号','dataIndex': 'number','width':40},{'header': '编码','dataIndex': 'text1'},{'header': '名称','dataIndex': 'info1'},{'header': '金额','dataIndex': 'special1'}],'fieldsNames':[{name: 'number'},{name: 'text1'}, {name: 'info1'},{name: 'special1'}]}"
+  .;e  w "{data:[],columModle:[],fieldsNames:[]}"
+
+</script>

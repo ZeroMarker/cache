@@ -1,0 +1,73 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	s str=$Get(%request.Data("str",1))
+	s SchemeID=$Get(%request.Data("SchemeID",1))
+	s BonusYear=$Get(%request.Data("BonusYear",1))
+	s BonusPeriod=$Get(%request.Data("BonusPeriod",1))
+	s ItemID=$Get(%request.Data("ItemID",1))
+	s data=$Get(%request.Data("data",1))
+		
+	s UnitID=$Get(%request.Data("UnitID",1))
+	s BonusSchemeID=$Get(%request.Data("BonusSchemeID",1))
+	s BonusValue=$Get(%request.Data("BonusValue",1))
+	s UpdateDate=$Get(%request.Data("UpdateDate",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uUnitBonusDetail).ListRec(BonusYear, BonusPeriod, ItemID, UnitID, BonusSchemeID,userCode,searchField, searchValue, sortField, sortDir, start, limit)
+    //年度
+	i action = "yearlist" d
+	.w ##class(dhc.bonus.udata.uUnitBonusDetail).GetYear(start,limit)
+	//方案
+	i action = "schemelist" d
+	.w ##class(dhc.bonus.udata.uUnitBonusDetail).GetScheme(start,limit,str)
+	//核算单元
+	i action = "suunit" d
+	.w ##class(dhc.bonus.udata.uUnitBonusDetail).SUList(start,limit,str,SchemeID,userCode)
+	//指标
+	i action = "siunit" d
+	.w ##class(dhc.bonus.udata.uUnitBonusDetail).SIList(start,limit,str,SchemeID)
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uUnitBonusDetail).Insert1(UnitID,BonusYear,BonusPeriod,ItemID,BonusValue,UpdateDate,BonusSchemeID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.chwk.udata.uEmpCostWork).Update(rowid,SetCfgDr,UnitDeptsDr,WorkDr,TitleDr,allPerson,studyPerson)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.chwk.udata.uEmpCostWork).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "refresh" d
+	.s result = ##class(dhc.pa.udata.uStratagem).Refresh(rowid,monthdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

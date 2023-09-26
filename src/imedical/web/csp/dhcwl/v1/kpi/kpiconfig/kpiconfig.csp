@@ -1,0 +1,214 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!--本组css文件-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<style>
+	.my-interface>div>div.panel-body{
+		background-color:#fff !important;
+	}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface">
+	
+	<!--系统配置主界面表格展示-->
+	<div data-options="region:'center'" style="background:#eee;padding:10px 10px 10px 10px;border:none">
+		<div id="tt4" class="hisui-tabs tabs-gray" data-options="tabPosition:'left',headerWidth:140">   
+			<div title="过滤函数配置" style="padding:10px;">   
+				<table id="filterFunGrid" data-options="fit:true,singleSelect:true">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'funName',width:50">过滤函数名称</th>
+							<th data-options="field:'funDesc',formatter:formatCellTooltip,width:100">功能描述</th>
+							<th data-options="field:'funType',width:50">函数原型</th>
+							<th data-options="field:'funExeCode',formatter:formatCellTooltip,width:100">执行代码</th>
+						</tr>
+					</thead>
+				</table>
+			</div>   
+			<div title="执行代码配置" data-options="closable:false" style="overflow:auto;padding:10px;">   
+				<table id="exeCodeGrid" data-options="fit:true,singleSelect:true">
+					<thead>
+						<tr>
+							<th data-options="field:'subType',width:20">区间</th>
+							<th data-options="field:'exeCode',formatter:formatCellTooltip,width:100">执行代码</th>
+							<th data-options="field:'desc',formatter:formatCellTooltip,width:100">描述</th>
+							<th data-options="field:'active',width:20">激活状态</th>
+						</tr>
+					</thead>
+				</table>	
+			</div>   
+			<div title="日志全局配置" data-options="closable:false" style="padding:20px;">   
+				<p><strong>以下是支持的日志记录类型,请选择您希望<span style="color:red;">所有指标</span>的日志记录类型:</strong></p>
+				<br/>
+				<br/>
+				<div >
+					<input class='hisui-checkbox' type="checkbox" label="指标定义日志" id="GlobalKpiLogDefinitionCfg"  style="padding-right:200px">
+					<input class='hisui-checkbox' type="checkbox" label="数据处理日志" id="GlobalKpiLogDataProcessCfg">
+					<input class='hisui-checkbox' type="checkbox" label="数据查询日志" id="GlobalKpiLogDataQueryCfg">
+					<input class='hisui-checkbox' type="checkbox" label="任务错误日志" id="GlobalKpiLogTaskErrCfg">
+				</div>
+				<br/>
+				<div style="padding-left:230px">
+					<a href="javascript:void(0)" id="logconfigButton" class="hisui-linkbutton">保存</a>
+				</div>
+			</div>  
+			<div title="任务全局配置" data-options="closable:false" style="padding:20px;">
+				<label for="taskDefActiveCfg">添加指标任务时，默认激活添加的指标任务？</label>
+				<input class='hisui-checkbox' type="checkbox" id="GlobalTaskInitCfg"> 
+				<br/>
+				<br/>
+				<br/>
+				<label for="taskProcessCfg">当某个指标任务出错时，任务挂起，同时将指标数据整个任务挂起？</label>
+				<input class="hisui-checkbox" type="checkbox" id="GlobalTaskSuspendCfg">
+				<br/>
+				<br/>
+				<div style="padding-left:230px">
+					<a href="javascript:void(0)" id="taskConfigButton" class="hisui-linkbutton">保存</a>
+				</div>				
+			</div> 
+			<div title="其他系统配置" data-options="closable:false" style="padding:20px">
+				<label for="dimProAddButton">为所有维度添加属性“统计大组”和“统计子组”</label>
+				<a href="javascript:void(0)" id="dimProAddButton" class="hisui-linkbutton" data-options="iconCls:''">添加</a>
+			</div>
+			<div title="指标常见问题检查" data-options="closable:false" style="padding:10px">
+				<table id="kpiProblemCheckGrid" data-options="fit:true,singleSelect:true">
+					<thead>
+						<tr>
+							<th data-options="field:'errType',width:100">错误类型</th>
+							<th data-options="field:'errInfor',width:100">错误信息</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div> 
+	</div><!--center region end //-->
+	
+	
+	<!--过滤函数配置-->
+		
+		<!--过滤函数toolbar-->
+		<div id="filterFunToolbar" class="searchboxRight toolbarsearchbox">
+			<!--检索框//-->
+			<input id="searchText" class="hisui-searchbox" data-options="prompt:'检索'" style="width:180px">
+		
+			<!--类型按钮//-->
+			<a href="javascript:void(0)" id="filterFunAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		</div>	
+		<!--toolbar配置结束-->
+		
+		<!--过滤函数新增-->
+		<div id="filterAddDialog" style="width:340px;display:none" title="过滤函数新增">
+			<form class="myFormShow" id="myFilterFormShow">
+				<div>
+					<label for="filterFormName">名称</label>
+					<input class="hisui-validatebox" type="text" data-options="required:true,validType:'isForm'" id="filterFormName" style="width:220px"/>
+				</div>
+				
+				<div>
+					<label for="filterFormType">函数原型</label>
+					<select id="filterFormType" class="hisui-combobox" style="width:227px" data-options="panelHeight:62,editable:false">
+						<option value="INTERNAL">INTERNAL</option>
+						<option value="CUSTOM">CUSTOM</option>
+					</select>
+					<!--select id="filterFormType" style="width:226px">
+					</select-->
+				</div>
+				
+				<div>
+					<label for="filterExeCode">执行代码</label>
+					<input class="hisui-validatebox" type="text" data-options="required:true,validType:'isForm'" id="filterExeCode" style="width:220px"/>
+				</div>
+				
+				<div>
+					<label for="filterDesc">功能描述</label>
+					<input class="hisui-validatebox" type="text" data-options="required:true,validType:'isForm'" id="filterDesc" style="width:220px"/>
+				</div>
+			</form>
+		</div>
+		<!---过滤函数新增结束->
+	
+	<!--过滤函数配置结束-->
+	
+	
+	<!--执行代码配置-->
+		
+		<!--执行代码toolbar-->
+		<div id="exeCodeToolbar" class="searchboxRight toolbarsearchbox">
+			<input type="text" id="searchExeCode" class="hisui-searchbox" data-options="prompt:'检索'" style="width:180px"/>
+			<a href="javascript:void(0)" class="hisui-linkbutton" id="exeCodeAddButton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		</div>
+		
+		<!--执行代码新增表单-->
+		<div id="exeCodeAddDialog" style="width:340px;display:none" title="执行代码新增">
+			<form class="myFormShow" id="myExeFormShow">
+				<div>
+					<label for="typeCombox">类型</label>
+					<select id="typeCombox" class="hisui-combobox" style="width:226px" data-options="disabled:true">
+						<option value="TAS">任务</option>
+						<option value="DIM">维度</option>
+						<option value="SEC">区间</option>
+						<option value="KPI">指标</option>
+					</select>
+				</div>
+				<div>
+					<label for="subTypeCombox">子类型</label>
+					<select id="subTypeCombox" class="hisui-combobox"  style="width:226" data-options="panelHeight:122">
+						<option value="D">日</option>
+						<option value="M">月</option>
+						<option value="Q">季</option>
+						<option value="Y">年</option>
+					</select>
+				</div>
+				<div>
+					<label for="activeCombox">默认激活</label>
+					<select id="activeCombox" class="hisui-combobox" style="width:226" data-options="panelHeight:62">
+						<option value="N">否</option>
+						<option value="Y">是</option>
+					</select>
+				</div>
+				<div>
+					<label for="exeCodeDesc">描述</label>
+					<input type="text" class="hisui-validatebox" data-options="required:true,validType:'isForm'" id="exeCodeDesc" style="width:220px">
+				</div>
+				<div>
+					<label for="exeCode">执行代码</label>
+					<input type="text" class="hisui-validatebox" data-options="required:true,validType:'isForm'" id="exeCode" style="width:220px"> 
+				</div>
+				<div>
+					<label for="exeCodeCreator">创建者</label>
+					<input type="text" class="hisui-validatebox" data-options="required:true,validType:'isForm'" id="exeCodeCreator" style="width:220px">
+				</div>
+			</form>
+		</div>
+	<!--执行代码配置-->
+	
+	<div id="errShowDialog" title="错误明细信息展示" style="padding:10px;display:none">
+		<textarea id="errShowTextbox" style="width:600px;height:350px;"></textarea>
+	</div>	
+	
+	
+	
+	<!--引入js文件JSURL-->
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpiconfig/filterconfig.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpiconfig/execodeconfig.js"></script>
+	<!--script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpiconfig/logconfig.js"></script-->
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpiconfig/taskconfig.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpiconfig/othercfg.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/kpi/kpiconfig/problemcheck.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>

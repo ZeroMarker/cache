@@ -1,0 +1,88 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<server>
+s RowID=$g(%request.Data("RowID",1))
+s ProviderDR=$g(%request.Data("ProviderDR",1))
+s MenuName=$g(%request.Data("MenuName",1))
+s RequestLocType=$g(%request.Data("RequestLocType",1))
+s Provider=""
+i ProviderDR'="" s Provider=##class(web.DHCEQCommon).GetTrakNameByID("prov",ProviderDR)
+s BussType=$g(%request.Data("BussType",1))	// Mozy003005	1248904		2020-4-1
+s InvoiceNo=$g(%request.Data("InvoiceNo",1))
+</server>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel"  title="发票信息" data-options="fit:true,eqtitle:'maintitle'" style="width:100%;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;width:150%;height:120%;border-bottom:solid 1px #ccc;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cProvider" for="Provider">供应商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Provider" data-options="'component':'PLAT.L.Vendor'" value=#(Provider)#></div>
+							<div class="eq-table-td eq-table-label"><label id="cRequestLoc" for="RequestLoc">管理科室</label></div>
+							<div class="eq-table-td eq-table-input"><input id="RequestLoc" class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" data-options="'component':'PLAT.L.Loc','paras':[{'name':'Type','type':'2','value':'0'},{'name':'CTLocAllFlag','type':'2','value':'Y'},{'name':'LocType','type':'2','value':'0101'}],"></div>						
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-button"><a id="BSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="margin-left:120px;margin-right:20px">保存</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceNo" for="InvoiceNo">发票号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceNo"></div>
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceCode" for="InvoiceCode">发票代码</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceCode"></div>
+							<div class="eq-table-td eq-table-label"><label id="cAmountFee" for="AmountFee">发票金额</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AmountFee"></div>
+							<div class="eq-table-td eq-table-button"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-delete'" style="margin-left:120px;margin-right:20px">删除</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable id="cDate" for="Date">开票日期</lable></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="Date"></div>
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceDept" for="InvoiceDept">开票单位</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceDept"></div>
+							<div class="eq-table-td eq-table-label"><label id="cRemark" for="Remark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Remark"></div>
+							<div class="eq-table-td eq-table-button"><a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="margin-left:120px;margin-right:20px">清屏</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="instocklistdatagrid" data-options="fit:true,border:false"></table>
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+				
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+            <input id="ProviderDR" name="ProviderDR" type="hidden" value=#(ProviderDR)#>
+            <input id="MenuName" name="ProviderDR" type="hidden" value=#(MenuName)#>
+            <input id="BussType" name="BussType" type="hidden" value=#(BussType)#>	<!--Mozy003005	1248904		2020-4-1-->
+            <input id="CertificateDR" name="CertificateDR" type="hidden">
+            <input id="TypeDR" name="TypeDR" type="hidden">
+            <input id="RequestLocDR" name="RequestLocDR" type="hidden">
+            <input id="Customer" name="Customer" type="hidden">
+            <input id="PayedAmountFee" name="PayedAmountFee" type="hidden">
+            <input id="RowID" name="RowID" type="hidden" value=#(RowID)#>
+            <input id="InvoiceNo" name="InvoiceNo" type="hidden" value=#(InvoiceNo)#>
+            <input id="Hold1" name="Hold1" type="hidden">
+            <input id="Hold2" name="Hold2" type="hidden">
+            <input id="Hold3" name="Hold3" type="hidden">
+            <input id="Hold4" name="Hold4" type="hidden">
+            <input id="Hold5" name="Hold5" type="hidden">
+		</form>
+	</div>
+<script type='text/javascript' src='../scripts/dhceq/plat/invoicebindinstocklist.js'></script>
+</body>
+
+</html>

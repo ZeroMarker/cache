@@ -1,0 +1,92 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+    s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+    s Year=$Get(%request.Data("Year",1))
+	s BITName=$Get(%request.Data("BITName",1))
+	s DeptNM=$Get(%request.Data("DeptNM",1))
+	
+	s year=$Get(%request.Data("Year",1))
+	s BITName=$Get(%request.Data("BITName",1))
+	s DeptNM=$Get(%request.Data("DeptNM",1))
+	s BIDNM=$Get(%request.Data("BIDNM",1))
+	
+	
+	s bfryear=$Get(%request.Data("bfryear",1))
+	s bfrmonth=$Get(%request.Data("bfrmonth",1))
+	s bfrdeptdr=$Get(%request.Data("bfrdeptdr",1))
+	
+	s bfritemcode=$Get(%request.Data("bfritemcode",1))
+	s bfritemcodename=$Get(%request.Data("bfritemcodename",1))
+	
+	s bibbrejectmoney=$Get(%request.Data("bibbrejectmoney",1))
+                s bibbrejectreason=$Get(%request.Data("bibbrejectreason",1))
+	s bidname=$Get(%request.Data("bidname",1))
+	s bidtypecode=$Get(%request.Data("bidtypecode",1))
+	s bidislast=$Get(%request.Data("bidislast",1))
+	s bdeptname=$Get(%request.Data("bdeptname",1))
+	s bibbrealdatadr=$Get(%request.Data("bibbrealdatadr",1))
+	s year=$Get(%request.Data("year",1))
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgIsNotBaseData).List(hospid,Year,BITName,DeptNM, searchField, searchValue, sortField, sortDir, start, limit)
+	
+	
+	i action="listdetail" d
+	.w ##class(herp.budg.udata.uBudgIsNotBaseData).ListDetail(BIDNM, searchField, searchValue, sortField, sortDir, start, limit)
+	
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgIsNotBaseData).UpdateRec(rowid, bfryear, bibbrejectmoney, bibbrejectreason,bibbrealdatadr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgIsNotBaseData).InsertRec(hospid,bfryear,bibbrealdatadr,bibbrejectmoney, bibbrejectreason)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgIsNotBaseData).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgIsNotBaseData).YearList(start,limit,str)
+	
+	i action = "bidnamelist" d
+	.w ##class(herp.budg.udata.uBudgIsNotBaseData).BIDNameList(hospid,year,start,limit,str)
+	
+	i action = "bitnamelist" d
+	.w ##class(herp.budg.udata.uBudgIsNotBaseData).BITNameList(start,limit,str)
+	
+	
+	i action = "deptnmlist" d
+	.w ##class(herp.budg.udata.uBudgIsNotBaseData).DeptList(start,limit,str)
+
+
+</script>

@@ -1,0 +1,76 @@
+﻿<html>
+<head>
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-25-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.hisui.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/gua.reason.js"></script>
+<style>
+.datagrid-editable-input{height:28px!important}
+</style>
+    <script Language="Javascript">
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	var session=new Array(); <!--hxy 2020-05-25 st-->
+	session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+   </script>
+</head>
+<body >   
+<!--急诊担保原因字典表(双击行编辑)-->
+<table fit='true' id="datagrid" class="hisui-datagrid" title="" 
+data-options="fitColumns:true,
+			  rownumbers:true,
+			  pagination:true,
+			  singleSelect:true,
+			  border:false,
+			  onDblClickRow:function(index,row){CommonRowClick(index,row,'#datagrid')},
+			  url:'dhcapp.broker.csp?ClassName=web.DHCEMDocGuarantee&MethodName=ListGuaReason',
+			  toolbar:'#toolbar'">
+	<thead>
+	<tr>
+		<th data-options="field:'ID',hidden:true"></th>
+		<th data-options="field:'GRECode',width:200,align:'left',editor:{type:'validatebox',options:{required:true}}">代码</th>
+		<th data-options="field:'GREDesc',width:200,align:'left',editor:{type:'validatebox',options:{required:true}}">描述</th>
+		<th data-options="field:'GREActiveFlag',width:50,align:'left',
+				formatter:function(value,row,index){
+					if (value=='Y'){return '是';} 
+					else {return '否';}
+				},
+				editor:{
+					type:'combobox',
+					options:{
+						valueField:'value',
+						textField:'text',
+						url:'dhcapp.broker.csp?ClassName=web.DHCEMPatAdmWay&MethodName=ListIsActive',
+						required:true
+					}
+				}">是否可用</th>
+		<th data-options="field:'GREHospDr',width:100,hidden:true,
+				editor:{
+					type:'combobox',
+					options:{
+						valueField:'value',
+						textField:'text',
+						url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+						required:true
+					}
+				}">集团化医院</th>
+	</tr>
+	</thead>
+	</table>
+	
+	<div id="toolbar" style='padding-top:10px;padding-bottom:5px' >
+			<span style='margin-right:10px;margin-left:10px'>代码</span><input type="text" id="GUACode" name="code" class="textbox"></input>
+			<span style='margin-right:10px;margin-left:5px'>描述</span><input type="text" id="GUADesc" name="desc" class="textbox"></input>	
+			<!--<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	hxy 2019-07-18 2020-05-25 注释-->
+			<input id="hospDrID" name="hospDrID" type="hidden" /><!--hxy 2020-05-25-->
+			<label id="_HospListLabel" style="padding-left:10px;padding-right:10px">医院</label></td><td><input id="_HospList"><!--hxy 2020-05-25-->
+			<!--<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="queryBTN">查询</a>hxy 2018-09-14-->
+			<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+			<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="addBTN">新增</a>
+			<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="saveBTN">保存</a>
+			<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="removeBTN">删除</a>
+	</div>
+</body>
+</html>

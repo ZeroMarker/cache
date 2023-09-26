@@ -1,0 +1,100 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<script language="cache" runat="server">
+
+ s Action=$Get(%request.Data("actiontype",1))
+ s PapmiNo=$Get(%request.Data("RegNo",1))                 //登记号
+ s CardType=$Get(%request.Data("CardType",1))             //卡类型
+ s CardNo=$Get(%request.Data("CardNo",1))                 //卡号
+ s PatName=$Get(%request.Data("PatName",1))               //姓名
+ s PatNo=$Get(%request.Data("PatNo",1))                   //个人编码
+ s CreateHealth=$Get(%request.Data("CreateHealth",1))     //是否建档
+ s IDCardType=$Get(%request.Data("IDCardType",1))         //证件类型
+ s IDNo=$Get(%request.Data("IDNo",1))                     //证件号码
+ s HouseHoldTypeDR=$Get(%request.Data("HouseHoldTypeDR",1)) //户口类型
+ s Sex=$Get(%request.Data("Sex",1))                       //性别
+ s PatBirthday=$Get(%request.Data("PatBirthday",1))       //出生日期
+ s PatAge=$Get(%request.Data("PatAge",1))                 //年龄
+ s PatType=$Get(%request.Data("PatType",1))               //医保类别
+ s MedNo=$Get(%request.Data("MedNo",1))                   //医保号码
+ s MobileNo=$Get(%request.Data("MobileNo",1))             //手机号码
+ s PhoneNo=$Get(%request.Data("PhoneNo",1))               //固定电话
+ s ProfessionDR=$Get(%request.Data("ProfessionDR",1))     //职业
+ s Work=$Get(%request.Data("Work",1))                     //工作单位
+ s HouseholderName=$Get(%request.Data("HouseholderName",1)) //户主姓名
+ s RelationHourseHoldDR=$Get(%request.Data("RelationHourseHoldDR",1)) //与户主关系
+ s ProvinceDR=$Get(%request.Data("ProvinceDR",1))            //省(自治区/直辖市)
+ s CityDR=$Get(%request.Data("CityDR",1))                    //市(地区)
+ s SectionDR=$Get(%request.Data("SectionDR",1))              // 县(区)
+ s StreetDR=$Get(%request.Data("StreetDR",1))                //乡(镇/街道办事处)
+ s VillageName=$Get(%request.Data("VillageName",1))          //村街/路/弄
+ s DoorPlate=$Get(%request.Data("DoorPlate",1))              //门牌号
+ 
+ //生成His系统中新病人记录
+ i Action="NewPatient" d
+ .s Address = ProvinceDR_CityDR_SectionDR_StreetDR_VillageName_DoorPlate  //出生地
+ .s Birth = PatBirthday  //生日
+ .s CredNo = IDNo  //身份证号
+ .s EmployeeCompany = Work //工作单位
+ .s IDCardNo1 = IDNo //身份证号
+ .s MobPhone = MobileNo //手机
+ .s Name = PatName //姓名
+ .s PatYBCode = MedNo //医保号
+ .s Sex = Sex //性别
+ .s TelHome = PhoneNo //固定电话
+ .s CardNo = CardNo //卡号
+ .s PayMode = "" //支付方式
+ .s ret = ##class(CHSSWeb.Reg.CARDIF.ICardRefInfo).SavePCAInfoToServer(Address, Birth, CredNo, EmployeeCompany, IDCardNo1, MobPhone, Name, PatYBCode, Sex, TelHome, CardNo, PayMode)
+ .i ret = "0" d
+ ..w "{""success"":""true"",""info"":""建卡成功""}"
+ .e  i ret = "-341" d
+ ..w "{""success"":""false"",""info"":""此卡号已经存在,不能发卡!""}"
+ .e  i ret = "-340" d
+ ..w "{""success"":""false"",""info"":""此卡没有对应的病人信息!""}"
+ .e  i ret = "-350" d
+ ..w "{""success"":""false"",""info"":""此卡已经使用,不能重复发卡!""}"
+ .e  i ret = "-351" d
+ ..w "{""success"":""false"",""info"":""此卡已经被挂失,不能使用!""}"
+ .e  i ret = "-352" d
+ ..w "{""success"":""false"",""info"":""此卡已经被作废?不能使用!""}" 
+ .e  i ret = "-356" d 
+ ..w "{""success"":""false"",""info"":""发卡时,配置要求新增卡记录,但是此卡数据被预先生成错误!""}"
+ .e  i ret = "-357" d
+ ..w "{""success"":""false"",""info"":""发卡时,配置要求更新卡记录,但是此卡数据没有预先生成!""}"
+ .e  i ret = "-358" d
+ ..w "{""success"":""false"",""info"":""发卡时,此卡已经有对应的登记号了,不能在新增了!""}"
+ .e  i ret = "-370" d
+ ..w "{""success"":""false"",""info"":""卡号位数不正确请输入正确卡号""}"
+ .e  d
+ ..w "{""success"":""true"",""info"":"""_ret_"""}"
+ 
+ 
+//卡号查询
+i Action="CardSelect" d
+ .;w "CardType:"_CardType_"CardNo:"_CardNo
+ .s ret=##class(CHSSWeb.DTHealthCommon).GetPatInfoFromCardNo(CardType, CardNo)
+ .i $p(ret,"^",1) = "" d
+ ..w "{""success"":""false"",""info"":""没有与该卡号的信息请您重新输入正确卡号!""}"
+ .e  d
+ ..w "{""success"":""true"",""info"":"""_ret_"""}"
+
+
+//登记号查询
+i Action = "RegNoSearch" d
+ .s ret=##class(CHSSWeb.DTHealthCommon).GetPatInfoFromPapmiNo(PapmiNo)
+ .i ret = ""  d
+ ..w "{""success"":""false"",""info"":""没有该登记号的信息请您重新输入正确登记号!""}"
+ .e  d
+ ..w "{""success"":""true"",""info"":"""_ret_"""}"
+ 
+//医保Store 
+i Action ="CTSocialStatus" d
+ .w ##class(CHSSWeb.system.CTSocialStatus).GetJsonData()
+ 
+ //健康档案调阅
+ i Action = "personHealthSearch" d
+ .w ##class(CHSSWeb.system.CTSocialStatus).GetJsonData()
+</script>
+

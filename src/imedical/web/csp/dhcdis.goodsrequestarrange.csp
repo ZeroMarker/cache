@@ -1,0 +1,315 @@
+<html lang="en" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<!-- <DHCAPP:EASYUI/> -->
+<HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/plugins/font-awesome/font-awesome.min.css"/>
+    <script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	</script>
+	<script src="../scripts/dhcnewpro/dhcdis/goodsrequestarrange.js" charset="gb2312"></script>
+  <style type="text/css">
+  	.bootstrap-table{
+	  margin-top:-15px
+	  }
+	  
+	  /*输入框START #6BB7E6*/
+	.input-mini{  
+		width:100px;
+		height:30px;
+		line-height: normal;
+		font-size:12px;
+		color:#555;
+		border-radius:2px;
+		backgroud-color:#FFFFFF;
+		border:1px solid #40a2de;
+		padding-left:5px;
+	}
+	/*输入框获得焦点边框样式 #40A2DE*/
+	.input-mini:focus{
+		box-shadow: 0 0 5px #40a2de;
+		border:1px solid #A4C6FD;
+	}
+	/*form 区域*/
+	.form-input{width:20%;float:left}
+	.form-row{margin-top:4px;width:100%;float:left}
+	.form-input-div{padding-left:20px}
+	
+	/*查找按钮*/
+	.iconbutton{
+	 	width: 30px;	
+	 	height: 30px;
+	 	background-color: #40A2DE;
+	 	border: 0px;
+	 	border-radius: 1px;
+	 	text-align: center;
+	 	line-height: 30px;
+	 	color: #fff;
+	 	float: left;
+	 } 
+	 .btn{
+		height:30px;
+		background-color:#40A2DE;
+		color:#fff;
+		border: solid 1px #40A2DE;
+		cursor: pointer; 	 
+	 }
+	 
+	 .btn:hover{
+		background-color:#4169E1;	 
+	}
+	.tabs-panels{
+		border:0 !important;
+	}
+	.tabs li{
+		margin:0;
+		border:0 !important;
+	}
+	.panel-header{
+		height:18px;
+	}
+	 
+  </style>
+</head>
+
+<body >
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north'" style="height:110px"> 
+	<!--north-title start-->
+		<div class="panel" style="padding-top:4px;padding-left:15px;min-height:22px;color:#fff;background-color:#38AAFF;">
+			<i class="fa fa-table" ></i>&nbsp;&nbsp;配送查询安排
+		</div>
+		<!--row-one start-->
+			  <div class="form-row" style="margin-top:5px;">
+				<div class="form-input">
+					<div class="form-input-div">	
+				    <span>开始日期</span> 	
+		        	<input id="StrDate" type="text" class="hisui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;height:30px">
+				    </div>
+				</div>
+		    	<div class="form-input">
+		    		<div class="form-input-div">	
+					<span>申请科室</span> 
+				    <input id="ApplayLoc" class="hisui-combobox" style="max-width:130px;height:30px" data-options="mode:'remote',valueField:'id',textField:'text',url:'dhcapp.broker.csp?ClassName=web.DHCDISCommonDS&MethodName=LocCombo'"></input > 
+				    </div>
+		    	</div>
+		    	<!-- <div class="form-input" style="margin-left:3px">	
+					<div class="form-input-div">
+					<span>验证码</span>
+				    <input id="TaskID" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+					</div>
+		    	</div> -->
+		    	<div class="form-input" style="margin-left:3px">
+		    		<div class="form-input-div">
+		    			<span>当前位置</span> 	
+						<input id="currLoca" class="hisui-combobox" style="max-width:130px;height:30px"></input> 	
+					</div>
+				</div>
+		    	<div class="form-input">	
+					<div class="form-input-div">
+					<span class="fa fa-search iconbutton"></span>
+    				<button type="button" class="btn" id="searchBtn" style="min-width:65px;">
+					查找
+					</button>
+					</div>
+		    	</div>
+			  </div>
+			  <!--row-two start-->
+			  <div class="form-row">
+				<div class="form-input">
+					<div class="form-input-div">	
+				    <span>截至日期</span> 	
+		        	<input id="EndDate" type="text" class="hisui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;height:30px">
+				    </div>
+				</div>
+		    	
+		    	<div class="form-input">
+		    		<div class="form-input-div">	
+					<span>接收科室</span> 
+				    <input id="RecLoc" class="hisui-combobox" style="max-width:130px;height:30px" data-options="mode:'remote',valueField:'id',textField:'text',url:'dhcapp.broker.csp?ClassName=web.DHCDISCommonDS&MethodName=LocCombo'"></input > 
+				    </div>
+		    	</div>
+		    	<div class="form-input">
+					<div class="form-input-div" style="margin-left:3px">	
+					<span>状&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;态</span> 
+					<input id="status" class="hisui-combobox" style="max-width:130px;height:30px" data-options="mode:'remote',valueField:'id',textField:'text',url:'dhcapp.broker.csp?ClassName=web.DHCDISCommonDS&MethodName=StatusComboS&type=1'"></input> 	
+					</div>
+		    	</div>
+		    	
+			  </div>
+	</div><!--north end-->
+
+ <!--center start-->
+    <div data-options="region:'center',title:''" style="border:none">
+    	 <table id="table" class="hisui-datagrid"
+    	 	data-options="toolbar:'#toolbar'" >
+    	 </table> 
+    </div>
+ <!--center end-->
+ 
+ <!--south start-->
+ 	<div data-options="region:'south'" style="height:150px;border:none">
+ 		  <table id="subTable" class="hisui-datagrid"
+    	 	data-options="toolbar:'#toolbardetail'" style="height:170px">
+    	 			
+    	 </table>
+	</div> 
+
+	<div id="toolbar" class="toolbar">
+		 <table cellspacing="0" cellpadding="0" >
+			 <tr>
+			 	<td align="center"style="width:100px;color:#38AAFF">配送申请列表</td>
+			 	<!--zhanghailong-->
+			 	<td><div class="datagrid-btn-separator"> </div> </td>		
+			    <!-- <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="splitmergebtn">拆分合并</a> </td>   
+			    <td><div class="datagrid-btn-separator"> </div> </td> -->
+			    <!--zhanghailong-->
+			    <td><a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="detailMsg">详情</a> </td>   
+			    <td><div class="datagrid-btn-separator"> </div> </td>
+			  	<!-- <td><a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="sendMsg">补发通知</a> </td>   
+			    <td><div class="datagrid-btn-separator"> </div> </td> -->
+			    <!-- <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="arrange" onclick='arrange();'>安排</a> </td>   
+			    <td><div class="datagrid-btn-separator"> </div> </td> -->
+			    <!-- <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="accpet" onclick='accpet();'>接受</a> </td>   
+			    <td><div class="datagrid-btn-separator"> </div> </td> -->
+			   <!--  <td><a class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" id="refuse" onclick='refuse();'>拒绝</a> </td>   
+			    <td><div class="datagrid-btn-separator"> </div> </td> -->
+			    <td><a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="vercodebtn">验证码明细</a> </td>
+			    <td><div class="datagrid-btn-separator"> </div> </td>
+			   <!--  <td><a class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" id="Arrange">安排</a> </td>
+			    <td><div class="datagrid-btn-separator"> </div> </td>
+			    <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="Cancelbtn"><span style="color:red">撤销安排</span></a> </td>
+			    <td><div class="datagrid-btn-separator"> </div> </td> -->
+			    <td><a id="complete" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" >确认</a><td>
+				<td><div class="datagrid-btn-separator"> </div><td> 
+			 	<!-- <td><a id="exeBtn" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" >完成确认</a><td>
+				<td><div class="datagrid-btn-separator"> </div><td> -->
+			 </tr>	
+		 </table>
+	</div>
+
+	<div id="toolbardetail" class="toolbar">
+		 <table cellspacing="0" cellpadding="0" >
+			 <tr height="20px">
+			 	<td align="center" style="width:100px;color:#38AAFF">申请单明细列表</td>
+			 	<!--
+			 	<td><a id="saveBtn" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" >保存</a></td><td>
+			 	<td><div class="datagrid-btn-separator"> </div><td>
+		 		-->
+		 </table>
+	</div>
+</div>
+
+	<!--安排操作 ArrangeWin background:#F8F8FF;-->
+	<div id="ArrangeWin" >
+		<div class="hisui-layout"  data-options="fit:true" style="" >
+			<div  class="hisui-layout" data-options="region:'center'" style="border:0 0 1px 0">
+			    <!--查询条件区-->
+				<div data-options="region:'west'" style="width:402px;border:0;" >
+					<!--数据列区域-->
+					<div id="tabs" class="hisui-tabs"  style='border:0;'>
+						<div id="WN" title="所在病区护工列表"  style="padding:0px;border:0;"> 
+			        		<div data-options="region:'center'" style="border:0;margin-top:3px;">
+								<div data-options="region:'south'" style="border:0;">
+							    	<table id="wardnurfreedg" toolbar="#wardfreetb"style="border:0;"></table>
+								</div>
+								<div data-options="region:'south'" style="border:0;">
+							    	<table id="wardnurbusydg" toolbar="#wardbusytb"style="border:0;"></table>
+								</div>
+							</div>
+			   			</div>   
+			    		<div id="ON" title="其他护工列表"   style="padding:0px;border:0;">
+			        		<div data-options="region:'center'" style="border:0;margin-top:3px;">
+								<div data-options="region:'south'" style="border:0;">
+							    	<table id="othnurfreedg" toolbar="#freetb"style="border:0;"></table>
+								</div>
+								<div data-options="region:'south'" style="border:0;">
+							    	<table id="othnurbusydg" toolbar="#busytb"style="border:0;"></table>
+								</div>
+							</div>
+			    		</div>   
+					</div>
+				</div>
+				<!--数据列区域-->
+				<div data-options="region:'center'" style="border-left:1px solid #95B8E7;border-top:0px;border-right:0px;border-bottom:0px;" title="已选护工列表">
+					<div style="font-size:10pt;margin-top:3px;">
+						<div style="margin-top:3px;height:30px;display:none">
+							<span style="margin-left:10px;">指定人员：<span style="margin-left:10px"></span><input id="LocUsers" class="hisui-combogrid" name="dept" style="width:150px;"/></span>
+							<button type="button" class="btn" id="AddBtn" style="min-width:65px;margin:0px 10px 5px 5px;" onclick="AddLocUserRow()">
+								添加
+							</button>
+						</div>
+						<div style="margin-top:3px;height:478px;" >
+							<table id="selnurdg" toolbar="#busytbs" style=""></table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'south'" style='height:50px;border-top:0px solid #95B8E7;border-left:0px;border-right:0px;border-bottom:0px;text-align:center;'>
+				<button type="button" class="btn" id="SaveBtn" style="min-width:65px;margin:10px 50px 5px 5px;"onclick="SaveLocUserList()">
+					安排
+				</button>
+				<button type="button" class="btn" id="CloseBtn" style="min-width:65px;" onclick="javascript:$('#ArrangeWin').window('close')">
+					取消
+				</button>
+				<!--<a href="#" style="width:90px;margin:10px 50px 5px 5px;" class="hisui-linkbutton" iconCls="" onclick="">安排</a>
+				<a href="#" style="width:90px;margin:10px 50px 5px 5px;" class="hisui-linkbutton" iconCls="" onclick="javascript:$('#ArrangeWin').window('close')">取消</a>-->
+			</div>
+		</div>
+	</div>
+	
+	<div id="wardfreetb" style="padding:5px;line-height:30px;height:30px">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><div class="" style="color:red; text-align:center">安闲</div></td>
+		    </tr>
+		</table>
+	</div>
+	<div id="wardbusytb" style="padding:5px;line-height:30px;height:30px">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><div class="" style="margin-right:20px;color:red; text-align:center">忙碌</div></td>
+		    </tr>
+		</table>
+	</div>
+	<div id="freetb" style="padding:5px;line-height:30px;height:30px">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><div class="" style="color:red; text-align:center">安闲</div></td>
+		    </tr>
+		</table>
+	</div>
+	<div id="busytb" style="padding:5px;line-height:30px;height:30px">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><div class="" style="margin-right:20px;color:red; text-align:center">忙碌</div></td>
+		    </tr>
+		</table>
+	</div>
+	<div id="busytbs" style="padding:5px;height:30px">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      	<td>
+		      		<span style="margin-left:10px;">指定人员：<input id="LocUser" class="hisui-combogrid" name="dept" style="width:150px;"/></span>
+					<button type="button" class="btn" id="AddBtn" style="min-width:65px;margin:0px 0px 2px 2px;" onclick="AddLocUserRow()">
+						添加
+					</button>
+				</td>
+		    </tr>
+		</table>
+	</div>	
+</body>
+</html>

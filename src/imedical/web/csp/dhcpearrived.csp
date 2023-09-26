@@ -1,0 +1,63 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+
+ quit 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+
+</HEAD>
+<BODY>
+<SCRIPT Language="Javascript">
+
+function DocumentLoadHandler(){  
+document.getElementById("btnSave").onclick=function(){ 
+	var PIADM="";
+	var radio = document.getElementsByName("TSelect");  
+		for (i=0; i<radio.length; i++) {  
+			if (radio[i].checked) {  
+				PIADM=radio[i].id  
+			}  
+		} 
+		window.returnValue=PIADM;
+		window.close();
+}
+document.getElementById("btnCancel").onclick=function(){
+	window.returnValue="";
+	window.close();
+} 
+}
+document.body.onload = DocumentLoadHandler;
+</SCRIPT>
+    <SCRIPT language="Cache" RUNAT="SERVER"> 
+    s RegisterRecord=%request.Get("RegisterRecord")
+    w "<table align='center' border=1 width=100%>"
+    w "<tr><td>选择</td><td>姓名</td><td>日期</td><td>团体</td><td>体检号</td></tr>"
+    s RecordLength=$L(RegisterRecord,"^")
+    f i=1:1:RecordLength d
+    .s PIADM=$P(RegisterRecord,"^",i)
+    .w "<tr><td><input type='radio' name='TSelect' id="_PIADM_"></td>"
+    .s PIBI=$P(^DHCPEPreIADM(PIADM),"^",1)
+    .s HPNo=$P(^DHCPEPreIADM(PIADM),"^",27)
+    .s Name=$P(^DHCPEPreIBI(PIBI),"^",2)
+    .s Date=$P(^DHCPEPreIADM(PIADM),"^",4)
+    .s:Date'="" Date=$ZD(Date,4)
+    .s Group=$P(^DHCPEPreIADM(PIADM),"^",2)
+    .i Group'="" d
+    ..s Group=$P(^DHCPEPreGADM(Group),"^",1)
+    ..s:Group'="" Group=$P(^DHCPEPreGBI(Group),"^",2)
+    .w "<td>"_Name_"</td><td>"_Date_"</td><td>"_Group_"</td><td>"_HPNo_"</td></tr>"
+    
+    w "<tr>" 	
+    w "<td><a id='btnSave' href='#' ><font size=3>到达</font></a></td>"
+    w "<td colspan=3></td>"
+    w "<td><a id='btnCancel' href='#' ><font size=3>取消</a></font></td>"
+    w "</tr><table/>"
+    </SCRIPT>  
+ 
+</BODY>
+</HTML>

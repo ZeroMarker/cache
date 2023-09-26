@@ -1,0 +1,81 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<server>
+s BussType=$g(%request.Data("BussType",1))
+s QXType=$g(%request.Data("QXType",1))
+s ManageLocDR=$g(%request.Data("ManageLocDR",1))
+s StartDate=$g(%request.Data("StartDate",1))
+s EndDate=$g(%request.Data("EndDate",1))
+s InStockListStr=$g(%request.Data("InStockListStr",1))
+s RequestLocDR=$g(%request.Data("RequestLocDR",1))
+s ProviderDR=$g(%request.Data("ProviderDR",1))
+s Provider=""
+i ProviderDR'="" s Provider=##class(web.DHCEQCommon).GetTrakNameByID("prov",ProviderDR)
+</server>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;height:100%;">
+		<div class="hisui-panel"  data-options="fit:true,eqtitle:'maintitle'" style="width:100%;height:100%">
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;width:100%;height:18%;border-bottom:solid 1px #ccc;"><!--modified by csj 2020-03-08 界面显示修改-->
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cProvider" for="Provider">供应商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Provider" disabled="true" data-options="'component':'PLAT.L.Vendor'" value=#(Provider)#></div>
+							<div class="eq-table-td eq-table-label"><label id="cRequestLoc" for="RequestLoc">管理科室</label></div>
+							<div class="eq-table-td eq-table-input"><input id="RequestLoc" class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" data-options="'component':'PLAT.L.Loc','paras':[{'name':'Type','type':'2','value':'0'},{'name':'CTLocAllFlag','type':'2','value':'Y'},{'name':'LocType','type':'2','value':'0101'}],"></div>						
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-button"><a id="BAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="margin-left:120px;margin-right:20px">新增发票</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceNo" for="InvoiceNo">发票号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceNo"></div>
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceCode" for="InvoiceCode">发票代码</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceCode"></div>
+							<div class="eq-table-td eq-table-label"><label id="cAmountFee" for="AmountFee">发票金额</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AmountFee"></div>
+							<div class="eq-table-td eq-table-button"><a id="BSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="margin-left:120px;margin-right:20px">修改发票</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable id="cDate" for="Date">开票日期</lable></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="Date"></div>
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceDept" for="InvoiceDept">开票单位</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceDept"></div>
+							<div class="eq-table-td eq-table-label"><label id="cRemark" for="Remark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Remark"></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="height:40%;border-bottom:solid 1px #ccc;">
+					<table id="invoicelistdatagrid" data-options="border:false"></table>
+				</div>
+			<div class="hisui-layout" data-options="border:false" style="width:100%;height:40%"><!--start by csj 2020-03-08 界面显示修改-->
+				<div data-options="region:'north',border:false,fit:true" style="height:100%;border-bottom:solid 1px #ccc;">
+					<table id="instocklistdatagrid" data-options="border:false"></table><!--end by csj 2020-03-08 界面显示修改-->
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+			<input id="BussType" name="BussType" type="hidden" value=#(BussType)#><!--add by csj 2020-02-11 标准版-设备入库发票补录程序修改-->
+            <input id="ProviderDR" name="ProviderDR" type="hidden" value=#(ProviderDR)#>
+            <input id="RequestLocDRNew" name="RequestLocDRNew" type="hidden" value=#(RequestLocDR)#>
+            <input id="RequestLocDR" name="RequestLocDR" type="hidden">
+            <input id="InvoiceDR" name="InvoiceDR" type="hidden">
+            <input id="InStockListStr" name="InStockListStr" type="hidden" value=#(InStockListStr)#>
+		</form>
+	</div>
+<script type='text/javascript' src='../scripts/dhceq/plat/invoiceinstocklist.js'></script>
+</body>
+
+</html>

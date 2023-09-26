@@ -1,0 +1,58 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">	
+<script language="cache" runat="server">
+
+s action = $Get(%request.Data("action",1))
+
+s period = $Get(%request.Data("period",1))
+
+s userid = $Get(%request.Data("userid",1))
+s bookid=$Get(%request.Data("acctbookid",1))
+s year = $p(period,"-",1)
+s month = $p(period,"-",2)
+s btn = $Get(%request.Data("btn",1))
+
+ i action = "GetAcctCurYearMonth" d
+ .s CurYearMonth=##Class(herp.acct.udata.uAcctCommon).GetAcctCurYearMonth(bookid)
+ .w "{success:'false',info:'"_CurYearMonth_"'}"
+   
+ i action = "settleAccounts" d
+	.s result =  ##class(herp.acct.udata.uAcctFinalBill).SettleAccounts(year,month,btn,userid)
+	.s TorF = $p(result,"_",1)
+	.i TorF = "true" d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_$p(result,"_",2)_"'}"
+
+
+    i action = "buildBill" d
+    .s data=bookid_"^"_"M"_"^"_year_"^"_month_"^"_userid
+	.s result = ##class(herp.acct.udata.uAcctFinalBill).BuildBill(year,month,userid,data)
+	.s TorF = $p(result,"_",1)
+	.i TorF = "true" d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_$p(result,"_",2)_"'}"
+
+
+    i action = "isHasNextYearAcct" d
+	.s nextyear = year+1
+	.s result =  ##class(herp.acct.udata.uAcctFinalBill).isHasNextYearAcct(nextyear,btn,userid)
+	.i result '= 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+    i action = "counterSettlingAccounts" d
+
+	.s result = ##class(herp.acct.udata.uAcctFinalBill).CounterSettlingAccounts(year,month,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+
+</script>

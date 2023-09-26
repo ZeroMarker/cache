@@ -1,0 +1,265 @@
++<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术登记</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<style>
+	.required-color { color:red}
+	.hisui-datetimebox {
+		width:160px;	
+	}
+</style>
+</head>
+<body class="hisui-layout">
+    <div data-options="region:'center',border:false" style="padding:10px 10px 5px 5px;">
+    	<!--<div id="appFormPanel" class="hisui-panel" data-options="fit:true,title:'术后登记',headerCls:'panel-header-gray',iconCls:'icon-paper'">-->
+    		<form id="appForm">
+    			<input type="hidden" id="RowId" name="RowId">
+				<input type="hidden" id="Status" name="Status">
+				<input type="hidden" id="EpisodeID" name="EpisodeID">
+				<input type="hidden" id="PatDeptID" name="PatDeptID">
+				<input type="hidden" id="PatWardID" name="PatWardID">
+				<input type="hidden" id="PatBedID" name="PatBedID">
+				<input type="hidden" id="AppUserID" name="AppUserID">
+				<!--<input type="hidden" id="AppCareProvID" name="AppCareProvID">-->
+				<input type="hidden" id="ExtAnaestID" name="ExtAnaestID">
+	    		<div class="form-row-group">
+	    			<div class="form-row-grouptitle">手术信息</div>
+	    			<div>
+	    				<div class="form-row">
+	    					<div class="form-title-right4">术后诊断</div>
+	    					<div class="form-item-normal">
+	    						<table id="postopDiagBox"></table>
+	    						<div id="postopDiagTool" style="padding-bottom:10px;">
+	    							<div>
+	    								<div class="form-row">
+	    									<div class="form-title-right4">诊断</div>
+					    					<div class="form-item-normal">
+					    						<select id="Diagnosis" name="Diagnosis" class="hisui-combogrid"></select>
+					    					</div>
+					    					<span class="form-btn">
+					    						<a id="btnAddDiag" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+					    					</span>
+					    					<span class="form-btn">
+					    						<a id="btnEditDiag" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+					    					</span>
+					    					<span class="form-btn">
+					    						<a id="btnDelDiag" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+					    					</span>
+	    								</div>
+	    							</div>
+	    						</div>
+	    					</div>
+	    				</div>
+	    			</div>
+	    			<div>
+	    				<div class="form-row">
+	    					<div class="form-title-right4">实施手术</div>
+	    					<div class="form-item-normal">
+	    						<table id="operationBox"></table>
+		                        
+	    					</div>
+	    				</div>
+	    			</div>
+	    			<div>
+	    				<div class="form-row">
+	    					<div class="form-title-right4">手术体位</div>
+	    					<div class="form-item-normal">
+	    						<select id="OperPosition" name="OperPosition" class="hisui-combobox" data-options="required:true"></select>
+	    					</div>
+	    					<div class="form-title-right4">麻醉方法</div>
+	    					<div class="form-item-normal">
+	    						<select id="AnaMethod" name="AnaMethod" class="hisui-combobox" data-options="required:true"></select>
+	    					</div>
+	    					<div class="form-title-right4">麻醉医生</div>
+	    					<div class="form-item-normal">
+	    						<select id="Anesthesiologist" name="Anesthesiologist" class="hisui-combobox"></select>
+	    					</div>
+	    				</div>
+	    			</div>
+	    		</div>
+	    		<div class="form-row-group">
+	    			<div class="form-row-grouptitle">护理信息</div>
+	    			<div>
+	    				<div class="form-row">
+	    					<div class="form-title-right4">手术间</div>
+	    					<div class="form-item-normal">
+	    						<select id="OperRoom" name="OperRoom" class="hisui-combobox" data-options="required:true"></select>
+	    					</div>
+	    					<div class="form-title-right4">台次</div>
+	    					<div class="form-item-normal">
+	    						<input type="text" class="textbox" id="OperSeq" name="OperSeq" data-options="required:true"></select>
+	    					</div>
+	    					<div class="form-title-right4">巡回护士</div>
+	    					<div class="form-item-normal">
+	    						<select id="CircualNurse" name="CircualNurse" class="hisui-combobox" ></select>
+	    					</div>
+	    					<div class="form-title-right4">器械护士</div>
+	    					<div class="form-item-normal">
+	    						<select id="ScrubNurse" name="ScrubNurse" class="hisui-combobox" ></select>
+	    					</div>
+	    				</div>
+	    			</div>
+	    			<div>
+	    				<div class="form-row">
+	    					<div class="form-title-right4">交接班</div>
+	    					<div class="form-item-normal">
+	    						<table id="operShiftBox"></table>
+	    					</div>
+	    				</div>
+	    			</div>
+	    			<div>
+	    				<div class="form-row">
+	    					<div class="form-title-right4">入室时间</div>
+	    					<div class="form-item-normal">
+	    						<input type="text" id="TheatreInDT" name="TheatreInDT" class="hisui-datetimebox" data-options="required:true,editable:false" style="width:160px;"/>
+	    					</div>
+	    					<div class="form-title-right4">离室时间</div>
+	    					<div class="form-item-normal">
+	    						<input type="text" id="TheatreOutDT" name="TheatreOutDT" class="hisui-datetimebox" data-options="required:true,editable:false" style="width:160px;"/>
+	    					</div>
+	    					<div class="form-title-right4">入区时间</div>
+	    					<div class="form-item-normal">
+	    						<input type="text" id="AreaInDT" name="AreaInDT" class="hisui-datetimebox" data-options="editable:false" style="width:160px;"/>
+	    					</div>
+	    					<div class="form-title-right4">离区时间</div>
+	    					<div class="form-item-normal">
+	    						<input type="text" id="AreaOutDT" name="AreaOutDT" class="hisui-datetimebox" data-options="editable:false" style="width:160px;"/>
+	    					</div>
+	    				</div>
+	    			</div>
+	    		</div>
+	    		
+    		</form>
+    	<!--</div>-->
+    </div>
+    <div data-options="region:'south',border:false" style="height:45px;padding:5px 10px 0 10px;">
+    	<div class="btnList" style="width:974px;">
+	    	<span>
+	    		<a href="#" id="btnSave" class="hisui-linkbutton" style="background:#21ba45;">保存</a>
+	    	</span>
+	    	<span>
+	    		<a href="#" id="btnFinishOperation" class="hisui-linkbutton" style="background:#21ba45;">手术完成</a>
+	    	</span>
+	    	<span>	
+				<a href="#" id="btnRefresh" class="hisui-linkbutton">刷新</a>
+	    	</span>
+	    </div>
+    </div>
+	<div id="operationTool" style="padding-bottom:10px;">
+		<form id="operationForm" method="post">
+    	<div>
+        	<div class="form-row">
+        		<div class="form-title-right455"><span class="required-color">*</span>手术名称</div>
+				<div class="form-item-normal">
+					<select id="Operation" name="Operation" class="hisui-combogrid" style="width:415px;"></select>
+				</div>
+				<div class="form-title-right455">名称备注</div>
+				<div class="form-item-normal">
+					<input type="text" class="textbox" id="OperNote" name="OperNote" style="width:153px;">
+				</div>
+				<span class="form-btn">
+					<a id="btnAddOperation" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+				</span>
+        	</div>
+    	</div>
+    	<div>
+    		<div class="form-row">
+    			<div class="form-title-right455"><span class="required-color">*</span>手术分级</div>
+				<div class="form-item-normal">
+					<select id="OperClass" name="OperClass" class="hisui-combobox"></select>
+				</div>
+    			<div class="form-title-right455"><span class="required-color">*</span>手术部位</div>
+				<div class="form-item-normal">
+					<select id="BodySite" name="BodySite" class="hisui-combobox"></select>
+				</div>
+				<div class="form-title-right455"><span class="required-color">*</span>切口类型</div>
+				<div class="form-item-normal">
+					<select id="BladeType" name="BladeType" class="hisui-combobox"></select>
+				</div>
+				<span class="form-btn">
+					<a id="btnEditOperation" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+				</span>
+    		</div>
+    	</div>
+    	<div>
+        	<div class="form-row">
+        		<div class="form-title-right455"><span class="required-color">*</span>术者科室</div>
+				<div class="form-item-normal">
+					<select id="SurgeonDeptID" name="SurgeonDeptID" class="hisui-combobox"></select>
+				</div>
+				<div class="form-title-right455"><span class="required-color">*</span>主刀医生</div>
+				<div class="form-item-normal">
+					<select id="Surgeon" name="Surgeon" class="hisui-combobox"></select>
+				</div>
+				<div class="form-title-right455">一助</div>
+				<div class="form-item-normal">
+					<select id="Assistant1" name="Assistant1" class="hisui-combobox sur-careprov"></select>
+				</div>
+				<span class="form-btn">
+					<a id="btnDelOperation" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+				</span>
+        	</div>
+    	</div>
+    	<div>
+        	<div class="form-row">
+        		
+        		<div class="form-title-right455">二助</div>
+				<div class="form-item-normal">
+					<select id="Assistant2" name="Assistant2" class="hisui-combobox sur-careprov"></select>
+				</div>
+				<div class="form-title-right455">三助</div>
+				<div class="form-item-normal">
+					<select id="Assistant3" name="Assistant3" class="hisui-combobox sur-careprov"></select>
+				</div>
+				<div class="form-title-right455">外院专家</div>
+				<div class="form-item-normal">
+					<input type="text" class="textbox" id="SurgeonExpert" name="SurgeonExpert" style="width:153px;"></select>
+				</div>
+        	</div>
+    	</div>
+        </form>
+    </div>
+    <div id="operShiftTool" style="padding-bottom:10px;">
+		<form id="operShiftForm" method="post">
+    	<div>
+    	    <input type="hidden" id="RowId" name="RowId">
+        	<div class="form-row">
+        		<div class="form-title-right4">交班护士</div>
+				<div class="form-item-normal">
+					<select id="ShiftCareProvID" name="ShiftCareProvID" class="hisui-combobox"></select>
+				</div>
+				<div class="form-title-right4">接班护士</div>
+				<div class="form-item-normal">
+					<select id="ReliefCareProvID" name="ReliefCareProvID" class="hisui-combobox"></select>                
+				</div>
+				<div class="form-title-right4">交接时间</div>
+				<div class="form-item-normal">
+					<input id="ShiftDT" name="ShiftDT" class="hisui-datetimebox" type="text" data-options="editable:false" style="width:160px;">
+				</div>
+        	</div>
+    	</div>
+    	<div>
+    		<div class="form-row">
+				<span class="form-btn">
+					<a id="btnAddShift" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+				</span>
+				<span class="form-btn">
+					<a id="btnEditShift" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+				</span>
+				<span class="form-btn">
+					<a id="btnDelShift" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+				</span>
+    		</div>
+    	</div>
+        </form>
+    </div>
+    <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operregister.css" />
+    <script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/datagrid-cellediting.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperRegister.js"></script>
+	
+</body>
+</html>

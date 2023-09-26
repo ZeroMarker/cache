@@ -1,0 +1,180 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;" >
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-26-->
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patstatus.js"></script>
+<script Language="Javascript">
+		var session=new Array(); <!--hxy 2020-05-26 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+</script>
+</head>
+
+<body class="hisui-layout">
+   <div data-options="region:'north',title:'',split:false,headerCls:'panel-header-gray',border:false" style="height:40px;padding:10px 5px 3px 10px;overflow:hidden"> <!--hxy 2020-05-26 st-->
+      <label id="_HospListLabel" style="padding-right:10px">医院</label><input id="_HospList">
+   </div><!--ed-->
+
+	<!--west start-->
+	<div data-options="region:'west',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:680px;border:0;padding:10px 5px 3px 10px">
+   <div id="toolbar" class="toolbar" >
+   <form id="queryForm" action="javascript:void(0);" style="margin-bottom:7px;margin-top:7px">
+			<table cellspacing="0" cellpadding="0" >
+				
+				<tr>
+					<td class="r-label" style="padding-left:20px">描述</td><td><input type="text" id="Stdesc" name="Stdesc" class="textbox"></input> </td>
+					<td style="padding-left:40px;padding-right:10px"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
+					<td ><a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:commonReload({'datagrid':'#datagrid','formid':'#queryForm'})">重置</a> </td>
+				</tr>
+			</table>
+			</form>
+   
+			<div class="tool-bar-line">	</div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowPsa()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:savePsa()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelPsa()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+     <table id="datagrid" class="hisui-datagrid" fit="true" title="病人状态表" headerCls="panel-header-gray"
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    border:true,
+		    iconCls:'icon-paper',
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowSys, 
+		    onClickRow:ClickRowSys,
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMPatStatus&MethodName=ListPsa'">
+			<thead>
+				<tr>
+					<th data-options="field:'PTCode',width:100,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'PTDesc',width:100,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'PTProCombo',width:100,
+					editor:{
+						type:'combobox',
+						options:{
+							valueField:'id',
+							textField:'text',
+							url:'dhcapp.broker.csp?ClassName=web.DHCEMPatStatus&MethodName=GetAllAccessStatJsonList',
+							editable:false,
+							onSelect: function (option) {
+								var ed=$('#datagrid').datagrid('getEditor',{index:editRow,field:'PTProCombo'});
+								$(ed.target).combobox('setValue',option.text); 
+								var ed=$('#datagrid').datagrid('getEditor',{index:editRow,field:'PTProID'});
+								$(ed.target).val(option.id); 
+							}
+						}
+                    }">上一状态</th>
+                    <th data-options="field:'PTProID',width:100,hidden:true,editor:{type:'validatebox',options:{}}">上一状态ID</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+</div>
+   </div>   <!--west end--> 
+   <div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:0;padding:10px 10px 3px 0">
+   <!-- toolbar -->
+		<div id="toolbar1" class="toolbar">	
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowPsaAcc()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:savePsaAcc()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelPsaAcc()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid1" class="hisui-datagrid" fit="true" title="状态授权表" headerCls="panel-header-gray"
+			data-options="
+			toolbar:'#toolbar1',
+		    rownumbers:true,
+		    method:'get',
+		    border:true,
+		    iconCls:'icon-paper',
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowSysItm, 
+		    //onClickRow:ClickRowSysItm,
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMPatStatus&MethodName=ListPstAccItm&PVId=1'">
+			<thead>
+				<tr>
+				    <th data-options="field:'PSAStatusDr',hidden:true">PSAStatusDr</th>
+				    <th data-options="field:'PSAPointer',hidden:true">PSAPointer</th>
+					<th data-options="field:'PSAType',width:100,
+					formatter:function(value,row,index){
+												if (value=='G'){return '安全组';} 
+												else if(value=='U'){return '人员';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													id:'comboboxid',
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMPatStatus&MethodName=ListIsWhich',
+													required:true,
+													editable:false,
+													onSelect: function () {
+                    									//获取选中的值
+                    									var varSelect = $(this).combobox('getValue');								
+                    									PSAtypeID=varSelect;	
+                   							   			//获取第二个combobox所在的datagrid Editor
+                    									var rowIndex=$('#datagrid1').datagrid('getRowIndex',$('#datagrid1').datagrid('getSelected'))
+                    									rowIndex=rowIndex==-1?0:rowIndex
+                   							 			var varEditor = $('#datagrid1').datagrid('getEditor', { index: rowIndex, field: 'PointerDesc' });
+                   										$(varEditor.target).combogrid('clear');//清空类型值
+                   										var HospDr=hospComp.getValue(); //hxy 2020-05-26
+                    									$(varEditor.target).combogrid( { 
+															url:'dhcapp.broker.csp?ClassName=web.DHCEMPatStatus&MethodName=ListGroup&type='+PSAtypeID+'&HospDr='+HospDr
+                    									})
+                    									
+                    								}
+                    
+												}
+											
+					                        }">类型</th>
+					<th id="Pointer" data-options="field:'PointerDesc',width:100,
+						editor:{
+							type:'combogrid',
+							options:{
+								required : true,
+							    id:'id',
+							    fitColumns:true,
+							    fit: true,//自动大小  
+								pagination : true,
+								panelWidth:300,
+								idField:'id',
+								textField:'text',
+								mode:'remote',
+								enterNullValueClear:false,
+								//url:'dhcapp.broker.csp?ClassName=web.DHCEMPatStatus&MethodName=ListGroup&type='+PSAtypeID
+								columns:[[
+									
+									{field:'id',hidden:true},
+									{field:'text',title:'',width:100}
+								
+								]],
+								onSelect:function(rowIndex, rowData) {
+                   					fillValue(rowIndex, rowData);
+                				}		   
+							}
+									}">指向</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+					<th data-options="field:'HospDr',hidden:true">HospDr</th><!--hxy 2020-06-02-->
+				</tr>
+			</thead>
+		</table>
+   </div>  <!--center end-->
+</body>  
+</html>

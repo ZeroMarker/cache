@@ -1,0 +1,184 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+ <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+ <TRAK:HEAD></TRAK:HEAD> 
+<!-- 去掉meta标签中的 charset=utf-8 bianshuai 2014-07-02-->
+<meta http-equiv="Content-Type" content="text/html; ">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+<style type="text/css">
+
+body {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+#popResWindow{
+	font-size:14px
+}
+
+#popResWindow table{
+	font-size:14px
+}
+
+.header{
+	margin-left:5px;
+	color:#FF571D
+}
+.answerer{
+	margin-left:10px
+}
+.name{
+	margin-left:4px 
+}
+
+.answerer1{
+	color:blue;
+	margin-left:40px
+}
+.name1{
+	color:blue;
+	margin-left:4px 
+}
+.date{
+	margin-left:10px
+}
+.time{
+	margin-left:10px
+}
+.answered{
+	margin-left:200px
+}
+
+.rowid{
+	display:none
+}
+.content{
+	margin-left:50px;
+	font-size:16px;
+	padding:15px 25px 0px 0px;
+}
+.ah{
+	margin-left:4px;
+	font-size:14px;
+	text-decortion:none;
+	margin-right:4px
+}
+#foot{
+	text-align:right
+}
+
+
+</style>
+
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+
+<script type="text/javascript" src="../scripts/dhcpha/clinical/drugquestion.js"></script>
+
+<script type="text/javascript">
+
+$(function(){
+    BodyLoadHandler();
+	
+ });
+
+</script> 
+
+</HEAD>
+
+<BODY>
+	
+	<div id="mainPanel"  class="easyui-layout" fit="true" style="display:block">
+	 	<div data-options="region:'center',title:'可回复问题列表'">
+			<table id="questioningGrid"></table>
+		</div> 		 
+    </div>
+    
+    <!-- 弹出回复信息信息-->
+	<div id="popResWindow" title="添加回复信息" style="width:900px;height:600px; display:none">
+		<div>
+        	<table border="0">
+            	<th style="background-color:#CCC; text-align:left" colspan="6">医生/护士信息</th>
+                <tr>
+                	<td style="width:100px; text-align:right; background-color:#CCCCFF">姓名:</td>
+                    <td style="width:100px"><label id="DetailWinDocName">&nbsp</label></td>
+                    <td style="width:100px; text-align:right;background-color:#CCCCFF">联系电话:</td>
+                    <td style="width:200px"><label id="phoneNumber">&nbsp</label></td>
+                    <td style="width:100px; text-align:right;background-color:#CCCCFF">所属科室:</td>
+                    <td style="width:250px"><label id="DetailWinCtlocName">&nbsp</label></td>
+                </tr>
+            </table>
+		</div>
+        <div>
+        	<table border="0">
+            	<th style="background-color:#CCC; text-align:left" colspan="6">患者信息</th>
+                <tr>
+                	<td style="width:100px; text-align:right;background-color:#CCCCFF">姓名:</td>
+                    <td style="width:100px"><label id="patname">&nbsp</label></td>
+                    <td style="width:100px; text-align:right;background-color:#CCCCFF">联系电话:</td>
+                    <td style="width:200px"><label id="patphoneNumber">&nbsp</label></td>
+                    <td style="width:100px; text-align:right;background-color:#CCCCFF">性别:</td>
+                    <td style="width:250px"><label id="gender">&nbsp</label></td>
+                </tr>
+                <tr>
+                	<td style="text-align:right;background-color:#CCCCFF">年龄:</td>
+                    <td><label id="patage"></label>&nbsp</td>
+                    <td style="text-align:right;background-color:#CCCCFF">特殊人群:</td>
+                    <td><label id="specicalPop">&nbsp</label></td>
+                    <td style="text-align:right;background-color:#CCCCFF">慢性病:</td>
+                    <td><label id="chronicDiseases">&nbsp</label></td>
+                </tr>
+                <tr>
+                	<td style="text-align:right;background-color:#CCCCFF">联系地址:</td>
+                    <td><label id="pataddress">&nbsp</label></td>
+                    <td style="text-align:right;background-color:#CCCCFF">患者信息备注:</td>
+                    <td colspan="3"><label id="patremarks">&nbsp</label></td>
+                </tr>
+            </table>
+		</div>
+        <div>
+        	<table border="0">
+            	<th style="background-color:#CCC; text-align:left; width:900px">咨询部分</th>
+             </table>
+        </div>
+         <div style="padding:0px,0px,10px,10px">
+        	<span style="background-color:#CCCCFF">问题类型:</span><label style="margin-left:20px" id="ResWinQuestion"></label>      	
+        </div>
+         <div style="padding:0px,0px,10px,10px">
+            <span style="background-color:#CCCCFF">关联药物:</span><label id="ResWinResRelativeDrugs" style="margin-left:20px"></label>       	
+        </div>
+         <div style="padding:0px,0px,10px,10px">
+        	<span style="background-color:#CCCCFF">问题描述:</span><label style="margin-left:20px" id="ResWinQuestionDesc"></label> 	
+        </div>
+        <div style="padding:0px,0px,0px,10px">
+        	<span style="background-color:#CCCCFF">回复列表:</span>	
+        </div>
+        
+        <div id="allAnswer2" style="height:180px; padding:10px;overflow:auto">
+          
+        </div>
+        
+        <div id="answerTheQue" style="margin-top:15px; margin-left:10px; margin-right:10px;overflow:auto">
+            <label style="background-color:#CCCCFF">回复：</label>
+            <textarea id="ResWinAnswer" style="width:700px;height:50px"></textarea>
+            <button style="margin-left:20px" onclick="submitAnswer()">提交回复</button>
+        </div>
+        <div id="footdiv" style="margin-top:5px; padding:10px 10px 0px 10px; background:#ffffff">
+        	
+  		</div>
+               
+	</div>
+    
+  
+  
+  
+  
+</BODY>
+</HTML>

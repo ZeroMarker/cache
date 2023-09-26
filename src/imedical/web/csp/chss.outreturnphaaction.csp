@@ -1,0 +1,57 @@
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+
+;读取卡信息
+i Action = "GetAccInfoFromCardNo" d
+	.s CardType = $Get(%request.Data("CardType",1))
+	.s CardNo=$Get(%request.Data("CardNo",1))
+	.d ##class(CHSSWeb.Pharmacy.OutReturnPha).GetAccInfoFromCardNo(CardType,CardNo)
+;读取卡信息
+i Action = "GetAccInfoFromPapmiNo" d
+	.s PapmiNo = $Get(%request.Data("PapmiNo",1))
+	.d ##class(CHSSWeb.Pharmacy.OutReturnPha).GetAccInfoFromPapmiNo(PapmiNo)
+	
+;病患收据列表
+i Action = "QueryPRT" d
+	.s ctloc = $Get(%request.Data("ctloc",1))
+	.s CDate = $Get(%request.Data("CDate",1))
+	.s CPmiNo = $Get(%request.Data("CPmiNo",1))
+	.d ##class(CHSSWeb.Pharmacy.OutReturnPha).QueryPRT(ctloc,CDate,CPmiNo)
+;取得退药信息
+i Action = "QueryRetPh" d
+	.s ctloc = $Get(%request.Data("ctloc",1))
+	.s CPrt = $Get(%request.Data("CPrt",1))
+	.s CPrescNo = $Get(%request.Data("CPrescNo",1))
+	.s CurrReqNo = $Get(%request.Data("CurrReqNo",1))
+	.d ##class(CHSSWeb.Pharmacy.OutReturnPha).QueryRetPh(ctloc,CPrt,CPrescNo,CurrReqNo)
+;判断退药数量
+i Action = "CheckRetQty" d
+	.s phditmList = $Get(%request.Data("PhdItmList",1))
+	.s qtyList = $Get(%request.Data("RetQtyList",1))
+	.s descList = $Get(%request.Data("PhdescList",1))
+	.s count = $Get(%request.Data("Count",1))
+	.d ##class(CHSSWeb.Pharmacy.OutReturnPha).CheckRetQty(phditmList,qtyList,descList,count)
+;退药
+i Action = "DoReturn" d
+	.s ctloc = $Get(%request.Data("ctloc",1))
+	.s userid = $Get(%request.Data("userid",1))
+	.s phditm = $Get(%request.Data("phditm",1))
+	.s rfr = $Get(%request.Data("rfr",1))
+	.s newprt = $Get(%request.Data("newprt",1))
+	.s winpos = $Get(%request.Data("winpos",1))
+	.s reqrow = $Get(%request.Data("reqrow",1))
+	.s RetInf = $Get(%request.Data("RetInf",1))
+	.d ##class(CHSSWeb.Pharmacy.OutReturnPha).DoReturn(ctloc,userid,phditm,rfr,newprt,winpos,reqrow,RetInf)
+;退费
+i Action = "RetMoney" d
+	.s ctloc = $Get(%request.Data("ctloc",1))
+	.s userid = $Get(%request.Data("userid",1))
+	.s groupid = $Get(%request.Data("groupid",1))
+	.s newprt = $Get(%request.Data("newprt",1))
+	.s retrow = $Get(%request.Data("retrow",1))
+	.s card = $Get(%request.Data("card",1))
+	.d ##class(CHSSWeb.Pharmacy.OutReturnPha).RetMoney(ctloc, userid, groupid, newprt, retrow, card)
+
+</SERVER>

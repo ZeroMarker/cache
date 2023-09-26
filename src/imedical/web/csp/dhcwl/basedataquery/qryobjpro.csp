@@ -1,0 +1,53 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "saveQryobjPro"=action {
+		s inParam("ID")=$g(%request.Data("ID",1))
+		s inParam("queryObj")=$g(%request.Data("queryObj",1))
+		s inParam("proCode")=$g(%request.Data("proCode",1))
+		s inParam("proName")=$g(%request.Data("proName",1))
+		s inParam("proDesc")=$g(%request.Data("proDesc",1))
+		s inParam("proExeCode")=$g(%request.Data("proExeCode",1))
+		if $g(inParam("ID"))'="" {
+			s ret=##class(DHCWL.BaseDataQuery.QryobjPro).Update(.inParam,.outParam)
+		}else{
+			s ret=##class(DHCWL.BaseDataQuery.QryobjPro).Insert(.inParam,.outParam)
+		}
+
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+		}else {
+			w "{success:true,tip:'ok',MSG:'操作成功!'}"	
+		}
+		q			
+	}elseif "lookupObjPro"=action {
+		s sql="SELECT ID, BaseObjName As queryObj, proCode, proName, proDesc, proExeCode FROM DHCWL_BaseDataQuery.QryobjPro"
+		s start=0,end=0
+		s jsonPro="ID,queryObj,proCode,proName,proDesc,proExeCode"
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)		
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"		
+		
+		
+		q	
+		
+	}elseif "deleteQryobjPro"=action {
+		s ID=$g(%request.Data("ID",1))
+		&sql(DELETE FROM DHCWL_BaseDataQuery.QryobjPro WHERE ID = :ID)
+		if SQLCODE'=0 {
+			w "{success:true,tip:'ok',MSG:'删除失败!'}"	
+		}else{
+			w "{success:true,tip:'ok',MSG:'成功!'}"	
+		}
+		q
+	}
+</script>

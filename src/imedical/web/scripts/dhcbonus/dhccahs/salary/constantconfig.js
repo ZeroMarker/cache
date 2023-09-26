@@ -1,0 +1,1 @@
+﻿var ITEMTYPEID = 12;

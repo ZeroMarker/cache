@@ -1,0 +1,139 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+	s userid=$Get(%request.Data("userid",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s AcctBookID = $Get(%request.Data("AcctBookID",1))
+	s StartDate=$Get(%request.Data("SYearMonth",1))
+	s EndDate=$Get(%request.Data("EYearMonth",1))
+	
+	s BillDate=$Get(%request.Data("BillDate",1))
+
+	s Summary=$Get(%request.Data("Summary",1))
+	s AcctSubjCode=$Get(%request.Data("AcctSubjCode",1))
+	s AmtDebit=$Get(%request.Data("AmtDebit",1))
+	s AmtCredit=$Get(%request.Data("AmtCredit",1))
+	s EndSum=$Get(%request.Data("EndSum",1))
+	s Every=$Get(%request.Data("Every",1))
+	s Poster=$Get(%request.Data("Poster",1))
+	s userid=%session.Data("LOGON.USERID")
+    s Summary=$Get(%request.Data("Summary",1))
+    s CurDate=$Get(%request.Data("CurDate",1))
+    s MainID=$Get(%request.Data("ID",1))
+    s JournalState=$Get(%request.Data("JournalState",1))
+    s SubjCode=$Get(%request.Data("SubjCode",1))
+    s SubjID=$Get(%request.Data("SubjID",1))
+    s CheckTypeID=$Get(%request.Data("CheckTypeID",1))
+    s CheckInfo=$Get(%request.Data("CheckInfo",1))
+    s CheckTypeName=$Get(%request.Data("CheckTypeName",1))
+    s datemodel=$Get(%request.Data("dateModel",1))
+    ;s JournalType=$Get(%request.Data("JournalType",1))
+    
+	i action="GetAcctSubj" d
+	.w ##class(herp.acct.udata.uAcctCashJournal).GetAcctSubj(start, limit,str,AcctBookID)
+	
+	 i action="GetCurYearMonth"  d
+     .s result= ##class(herp.acct.udata.uAcctCashJournal).GetYearMonth(AcctBookID)
+      .i result '= "" d
+  	  ..w "{success:'true',info:'"_result_"'}"
+  	  
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctCashJournal).List( sortField, sortDir, start, limit,StartDate,EndDate,AcctBookID,Summary,JournalState,userid)
+	
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctCashJournal).Insert(BillDate,Summary,AcctSubjCode,AmtDebit,AmtCredit,EndSum,Every,userid,CheckInfo)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctCashJournal).Update(rowid,BillDate, Summary, AcctSubjCode, AmtDebit, AmtCredit,AcctBookID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctCashJournal).Delete(rowid,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	  i action="Sbumitdata"  d
+     .s result= ##class(herp.acct.udata.uAcctCashJournal).Sbumitdata(MainID)
+     .i result = 0 d
+	 ..w "{success:'true',refresh:'true',info:''}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+	 
+     i action="CanSubmit"  d 
+     .s result= ##class(herp.acct.udata.uAcctCashJournal).CanSubmit(MainID)
+     .i result = 0 d
+	 ..w "{success:'true',refresh:'true',info:''}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+	 
+	 
+	i action="SaveSum"  d
+	 .s result= ##class(herp.acct.udata.uAcctVouch).InsertSummary(Summary)
+     .i result = 0 d
+	 ..w "{success:'true',refresh:'true',info:''}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+	
+    i action="IsCheck"  d
+     .s result= ##class(herp.acct.udata.uAcctCashJournal).IsCheck(SubjCode,AcctBookID)
+     .s ischeck=$p(result,"*",1)
+     .i ischeck= 1 d
+  	  ..w "{success:'true',info:'"_result_"'}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+     
+     
+     i action="CheckType"  d 
+     .w ##class(herp.acct.udata.uAcctCashJournal).CheckType(start, limit,str,SubjID)
+   
+   i action="GetCheckItem"  d  
+    .w ##class(herp.acct.udata.uAcctCashJournal).GetCheckItem(start, limit,str,CheckTypeID,CheckTypeName,AcctBookID)
+
+
+   i action="GetSummary" d
+   .w ##class(herp.acct.udata.uAcctCashJournal).GetSummary(start, limit,str)
+   
+   i action="IfIncome"  d
+    .s result= ##class(herp.acct.udata.uAcctCashJournal).IfIncome(AcctBookID)
+    .i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+
+
+   i action="cashVouchIncome" d
+   .s result= ##class(herp.acct.udata.uAcctCashJournal).cashVouchIncome(AcctBookID,StartDate,EndDate,datemodel,userid)
+   .i result '=0 d
+   ..w "{success:'true',info:''}"
+   .e  d
+   ..w "{success:'false',info:'"_result_"'}"
+   
+   i action="getvcStartDate"  d
+   .s result= ##class(herp.acct.udata.uAcctCashJournal).getvcStartDate(AcctBookID)
+   .i result '= "" d
+   ..w "{success:'true',info:'"_result_"'}"
+
+   i action="IfExistCashVouch"  d
+   .s result= ##class(herp.acct.udata.uAcctCashJournal).IfExistCashVouch(AcctBookID, StartDate, EndDate)
+   .w "{success:'true',info:"_result_"}"
+  	
+</script>

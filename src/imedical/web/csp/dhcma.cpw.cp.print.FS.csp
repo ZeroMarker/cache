@@ -1,0 +1,62 @@
+<html XMLNS=TRAK>
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<TRAK:HEAD></TRAK:HEAD>
+		<script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+       
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/ToolToPrint.js"></script> 
+	</head>
+	<body>
+		<script language="Cache" RUNAT="SERVER">		
+		    Set EpisodeID=$g(%request.Data("EpisodeID",1))
+		    If (EpisodeID'["!!") {
+		    	Set SYSDr=##class(DHCMA.Util.BTS.SYSTEMSrv).GetSYSDr("")
+		    	Set EpisodeID=EpisodeID_"!!"_SYSDr
+		    }
+	   </script>
+	    <script language="javascript" type="text/javascript">
+			var EpisodeID='#(EpisodeID)#'
+			window_onload1();
+			function window_onload1() {
+				if (EpisodeID!='')
+				{		
+					PrintCPWToExcel();
+				}
+			}
+			function PrintCPWToExcel()
+			{
+				
+				var objServer = ExtTool.StaticServerObject("DHCMA.CPW.CPS.PrintSrv");
+				var TemplatePath= objServer.GetTemplatePath()
+				var FileName=TemplatePath+"\\\\"+"DHCMA.CPW.PrintImpl.xls";
+
+				try {	
+					xls = new ActiveXObject ("Excel.Application");
+					
+				}catch(e) {
+					$.messager.alert("提示","创建Excel应用对象失败!",'info');
+					return false;
+				}finally{
+				xls.visible=false;
+
+				xlBook=xls.Workbooks.Add(FileName);
+				xlSheet=xlBook.Worksheets.Item(1);
+				var flg = objServer.PrintCPWImpl("fillxlSheet",EpisodeID);
+				xlSheet.printout();
+				
+				xlSheet=null;
+				xlBook.Close (savechanges=false);
+				xls.Quit();
+				xlSheet=null;
+				xlBook=null;
+				xls=null;
+				idTmr=window.setInterval("Cleanup();",1);
+
+				return true;
+				}
+			}
+			setTimeout("parent.printNext();", 3000 )
+		</script>
+	</body>
+</html>

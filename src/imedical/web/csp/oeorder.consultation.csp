@@ -1,0 +1,829 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<script Language="JavaScript" SRC="../Scripts/OEOrder.Common.js"></script>
+<server>
+ d ##Class(websys.Component).GetComponentMessages(.t,"OEOrder.Normal")
+  
+ i %request.Get("LOCKMSG")'="" d
+ . w "<P><center><B><font color='red'>"_%request.Get("LOCKMSG")_"</font></B></center></P>"
+ ; seanl log 58161 Questionnaire link will turn bold if questionnaire has already been 
+ ; filled in
+ n oid,QuestRowID,QuestRowIDFinal
+ s (oid,QuestRowID,QuestRowIDFinal)=""
+ s oid=%request.Get("ID") 
+ i oid'="",$p(oid,"||",2)'="" s QuestRowID=$g(^OEORD(+oid,"I",$p(oid,"||",2),12)) 
+ i QuestRowID'="" s QuestRowID=$p(QuestRowID,"^",15) 
+ i QuestRowID'="" s QuestRowIDFinal=$p(QuestRowID,"||",2)
+ i QuestRowIDFinal'="" w "<B>"
+ i %request.Get("QuestionnaireDesc")'="" d
+ . w "<center>"
+ . w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ . w "<br>"
+ . w "</center>"
+ i QuestRowIDFinal'="" w "</B>" 
+
+
+ ;i %request.Get("QuestionnaireDesc")'="" d
+ ;. w "<center>"
+ ;. w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ ;. w "<br>"
+ ;. w "</center>"
+ ;. ;w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-</A>"
+ ;LOG 35167 RC 06/06/03 This has been commented out because Log 35170 added 3 new customizable links to 
+ ;replace this one.
+ ;i %request.Get("FileNotes")'="" d
+ ;. w "<center>" 
+ ;. w "<A href=""javascript:PatientOrderProfile();"" accesskey=""P""><U>P</U>atientOrderProfile-",%request.Get("FileNotes"),"</A>"
+ ;. w "</center>"
+</server>
+
+<script language="JavaScript">
+//not used any more, field order may change!!!!
+function mPiece(s1,sep,n) {
+	//Split the array with the passed delimeter
+    delimArray = s1.split(sep);
+    //If out of range, return a blank string
+    if ((n <= delimArray.length-1) && (n >= 0)) {
+        return delimArray[n];		
+    }
+	//return "";
+}
+var newOrder=1;  // new order
+var updated=0;
+var Gparam5="";
+var Gsdcheckval="Y";
+//var ordwin=window.open("","oeorder_entry");	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+
+/*
+function LookUpPatOrderSelect(str) {
+	//alert("str: "+str);
+ 	var lu = str.split("^");
+	var obj=document.getElementById("PatientOrders")
+	if (obj) obj.value = lu[2];
+	var obj=document.getElementById("LinkedItmID")
+	if (obj) obj.value = lu[3];
+
+}
+*/
+
+function UpdateFromOrderEntry() { //new order
+	var par_win = window.opener;
+	//if (par_win.name=="TRAK_hidden") par_win=window.opener.parent.frames['TRAK_main'].websys_windows['frmOSList'];
+	if ((par_win.name=="TRAK_hidden")&&(window.opener)) par_win=window.opener.parent.frames['TRAK_main'].websys_windows['frmOSList'];
+	var f = document.forms['fOEOrder_Consultation'];
+	if (par_win) {
+		//var strData = par_win.TransferDataMain(f);
+		var strData1 = TransferDataMain(f);
+		var strData2 = TransferDataSub(f);
+		var strData=strData1 + strData2;
+		par_win.CollectedFields(escape(strData));
+	}
+	window.close();
+	return Update_click();
+}
+function InvalidFields() {
+	var invalid=false;
+	//common fields
+	if(!isInvalid("PatientLoc")&&(!invalid)) {
+		alert(t['PatientLoc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+
+	if(!isInvalid("OECPRDesc")&&(!invalid)) {
+		alert(t['OECPRDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OSTATDesc")&&(!invalid)) {
+		alert(t['OSTATDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("CTLOCDesc")&&(!invalid)) {
+		alert(t['CTLOCDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("Doctor")&&(!invalid)) {
+		alert(t['Doctor']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OEORIRefDocDR")&&(!invalid)) {
+		alert(t['OEORIRefDocDR']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OEORIVarianceReasonDR")&&(!invalid)) {
+		alert(t['OEORIVarianceReasonDR']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+	//end of common fields
+
+	if(!isInvalid("DeptDesc")&&(!invalid)) {
+		alert(t['DeptDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("CTPCPDesc")&&(!invalid)) {
+		alert(t['CTPCPDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("CONSDesc")&&(!invalid)) {
+		alert(t['CONSDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("CareProvider")&&(!invalid)) {
+	alert(t['CareProvider']+":  "+t['XINVALID']);
+	invalid=true;
+	}
+
+	var Nobj=document.getElementById("NotifyClinician");
+	var Pobj=document.getElementById("PrefConMethod");
+
+	if((Nobj)&&(Nobj.checked)&&(Pobj)&&(Pobj.value=="")) {
+		alert(t['SELECT_CONMETHD']);
+		invalid=true;
+	}
+
+
+	return invalid;
+}
+function UpdateSaveDefaultsClickHandler() {
+	//alert("savedef");
+	var SaveDefObj=document.getElementById("SaveDefaults");
+	if (SaveDefObj) SaveDefObj.value="Y";
+	//if (SaveDefObj) alert(SaveDefObj.value);
+	UpdateClickHandler();
+	//return Update_click();
+
+}
+function UpdateClickHandler() {
+	if (InvalidFields()==true) {
+		return false;
+	}
+
+	var WarnMsg="";
+	WarnMsg=CheckForAllMendatoryFields();
+	if (WarnMsg!="") {
+		alert(WarnMsg); 
+		return false;
+	}
+
+	//Log 58325 BoC, check pregnant and breastfeeding, required functions are in OEOrder.Common.js
+	PregnBrFdCheck();
+
+	var Qobj=document.getElementById("OEORIQty");
+	if((Qobj)&&(Qobj.value!="")) {
+		var DQobj=document.getElementById("defQtyRange");
+		if (!CheckQtyRange(Qobj)) {
+			return false;
+		}
+	}
+
+/*	//JPD Log 48728
+	var MaxDayQty=document.getElementById("MaxDayQty");
+	MaxDayQty=MaxDayQty.value;
+	var MaxQty=document.getElementById("MaxQty");
+	MaxQty=MaxQty.value;
+	var Qobj=document.getElementById("OEORIQty");
+
+	if((Qobj)&&(Qobj.value!="")) {
+		if ((MaxDayQty!="")&&(Qobj.value>MaxDayQty)) {
+				var checkqty=confirm(t['MAXDAYEXCEED']+"\n"+t['CONTINUE']);
+				if (!checkqty) {
+					websys_setfocus(Qobj.name);
+					return false; }
+		}
+			
+		if ((MaxQty!="")&&(Qobj.value>MaxQty)) {
+				var checkqty=confirm(t['MAXQTYEXCEED']+"\n"+t['CONTINUE']);
+				if (!checkqty) {
+					websys_setfocus(Qobj.name);
+					return false; }	
+		}
+	}
+*/
+	
+	if(!UpdateStatusCheck()) return false;
+	var par_win = window.opener;
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(0);	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+	}	
+	if (newOrder) {
+			var sobj=document.getElementById("OEORISttDat");
+ 		if (sobj && (sobj.value!="")) {
+			var dobj=document.getElementById("DischDate");
+			var aobj=document.getElementById("AdmDate");
+			if (dobj && (dobj.value!="") && aobj && (aobj.value!="")){
+                               	var enteredDate = new Date();
+				var enteredDate1 = new Date();
+				var enteredDate2 = new Date();
+				var enteredDate = VerifyDateformat(dobj);
+				var enteredDate1 = VerifyDateformat(sobj);
+				var enteredDate2 = VerifyDateformat(aobj);
+
+				if (enteredDate1>enteredDate){
+					alert(t['STARTDATE_OUT']+" "+aobj.value+" to " + dobj.value);
+					sobj.value=""
+					return false;				
+				}else if(enteredDate1<enteredDate2) {
+					alert(t['STARTDATE_OUT']+" "+aobj.value+" to " + dobj.value);
+					sobj.value=""
+					return false;
+				}
+				Updated=1;
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+			else{
+				var enteredDate1 = new Date();
+				var enteredDate2 = new Date();
+				var enteredDate1 = VerifyDateformat(sobj);
+				var enteredDate2 = VerifyDateformat(aobj);
+				if(enteredDate1<enteredDate2) {
+					alert(t['STARTDATE_EXCEED']+" "+aobj.value);
+					sobj.value=""
+					return false;
+				}
+				Updated=1;
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+			
+		}else {
+			var dobj=document.getElementById("DischDate");
+			if (dobj && (dobj.value!="")) alert(t['STARTDATE_MAN']);
+			else{ 
+				Updated=1;
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+		}
+		//UpdateFromOrderEntry();	
+		}else {
+			//alert("updating");
+			Updated=1;
+			//UpdateFromEPR(); // found in OEOrder.Common.js
+			checkDateForEPR();
+			refreshParent(); //// *****  Log# 29886; AmiN ; 29/10/2002   to refresh from OEOrdItem.ListEMR   .*****  
+		}
+		//Log 46424 Add Order Group Number 
+		var ID="";
+		var objID=document.getElementById("ID");
+		if (objID) ID=objID.value;
+		var OrderGroupNumber="";
+		var objOrderGroupNumber=document.getElementById("OEORIItemGroup");
+		if (objOrderGroupNumber) {
+			OrderGroupNumber=ID+"^"+objOrderGroupNumber.value;
+			//alert(OrderGroupNumber);
+			try {
+				if (par_win) par_win.ChangeOrderGroupNumber(OrderGroupNumber);
+			}catch(e){}
+		}
+		Updated=1;
+	if (OrderWindow=="ORDERFAVPANEL") {
+		//alert("orderfav");
+		UpdateFromEPR();
+
+	}
+	var win=window.opener.parent.frames[1];
+	if (win) {
+		var formICP=win.document.forms['fMRClinicalPathways_ItemList'];
+		var formICP2=win.document.forms['fMRClinicalPathways_CarePlanItemList'];
+		if (formICP||formICP2) {
+			UpdateFromOrderEntry();
+		}
+	}
+}	
+
+function refreshParent() { //// *****  Log# 29886; AmiN ; 29/10/2002   to refresh from OEOrdItem.ListEMR  *****  
+	var win=window.opener.parent.frames[1];
+	if (win) {
+		var formRad=win.document.forms['fOEOrdItem_RadiologyWorkBench'];
+		if (formRad) {
+			// ANA Using the URl looses workflow.
+			//win.treload('websys.csp');			 //log 63299 refresh done in websys.close
+		}
+	} else if (window.opener) { //JPD changed 56447
+		//should be from epr chart csp page
+		var formCust=window.opener.document.forms['fOEOrder_Custom'];
+		var formOSL=window.opener.document.forms['fOEOrder_OSItemList'];
+		//if(!formCust && !formOSL) window.opener.history.go(0); //log 63299 refresh done in websys.close
+		if (formOSL) {
+			var FormArray=formOSL.RebuiltString.value.split("^");
+			for (var i=0; i<FormArray.length; i++) {
+				var FormStr=FormArray[i];
+				var SetOrdIDArr=FormStr.split("*");
+				var SetOrdID=SetOrdIDArr[1];
+				var OrdID=document.getElementById("ID").value;
+				if (OrdID==SetOrdID) {
+					var Qty1=document.getElementById("OEORIQty");
+					if (Qty1) {
+						if (Qty1.value=="") Qty1.value="1";
+						if (formOSL.document.getElementById("Quantityz"+(i+1))) formOSL.document.getElementById("Quantityz"+(i+1)).value=Qty1.value;
+					}
+				}
+			}
+		}
+	}
+//	} else if (window.opener) {
+//		//should be from epr chart csp page
+//		var formCust=window.opener.document.forms['fOEOrder_Custom'];
+//		if(!formCust) window.opener.history.go(0);
+//	}
+}
+
+function DisableElement(el) {
+	//Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+	if (el.readOnly==false) el.disabled = true;
+	//el.className = "disabledField";
+}
+function BodyLoadHandler() {
+	//AmiN Log 24827   on 02 May 2002;
+	//self.resizeTo(750, 550);
+	//window.moveTo(5, 1)
+	// ANA LOG 27959 If there is a default Status against the Layout,then do not use the default coming from Mainloop. 
+	// This change is made to all details screens.
+	//sets global variable to determine whether adding new order or modifying current one
+	var obj=document.forms['fOEOrder_Consultation'].elements['ID'];
+	if ((obj)&&(obj.value!="")) newOrder=0;  //not new order
+	
+	var tempstOBJ=document.getElementById("tempOSTATDesc");	
+	var statOBJ=document.getElementById("OSTATDesc");	
+	if (statOBJ&&statOBJ.value==""&&tempstOBJ) statOBJ.value=tempstOBJ.value;
+	var sobj=document.getElementById("OSTATDesc");
+	var bfobj=document.getElementById("BilledFlag");
+	if (bfobj) {
+		if (bfobj.value=="TR"||bfobj.value=="R") {
+			if (sobj) sobj.disabled=true;
+		}
+	}
+	var scodeobj=document.getElementById("OrdStatCode");
+	if (scodeobj){
+		//alert(scodeobj.value);
+		if(scodeobj.value=="E") DisableElement(sobj);
+	}
+	
+	var par_win = window.opener;
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(1);	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+	}	
+
+	var UpdateSaveObj=document.getElementById("UpdateSaveDefaults");
+	if (UpdateSaveObj) UpdateSaveObj.onclick = UpdateSaveDefaultsClickHandler;	//update link
+	if (tsc['UpdateSaveDefaults']) {
+		websys_sckeys[tsc['UpdateSaveDefaults']]=UpdateSaveDefaultsClickHandler;
+	}
+
+	var UpdateObj=document.getElementById("Update");
+	//alert(UpdateObj);
+	if (UpdateObj) UpdateObj.onclick = UpdateClickHandler;	//update link
+	if (tsc['Update']) {
+		websys_sckeys[tsc['Update']]=UpdateClickHandler;
+	}
+
+	var obj=document.getElementById("Delete");
+	if (obj) obj.onclick=DeleteClickHandler;
+
+	//LOG 35170 RC 13/06/03 Require 3 htm links on order details screens
+	var patOrdFile1=document.getElementById("patOrdFile1");
+	var patOrdFile2=document.getElementById("patOrdFile2");
+	var patOrdFile3=document.getElementById("patOrdFile3");
+	var PatientOrderFile1=document.getElementById("PatientOrderFile1");
+	var PatientOrderFile2=document.getElementById("PatientOrderFile2");
+	var PatientOrderFile3=document.getElementById("PatientOrderFile3");
+	
+	if ((patOrdFile1)&&(PatientOrderFile1)) {
+		if (patOrdFile1.value=="") {
+			PatientOrderFile1.disabled=true;
+			PatientOrderFile1.onclick=NoLink;
+		} else {
+			PatientOrderFile1.onclick=OpenWindow1;
+		}
+	} 
+	if ((patOrdFile2)&&(PatientOrderFile2)) {
+		if (patOrdFile2.value=="") {
+			PatientOrderFile2.disabled=true;
+			PatientOrderFile2.onclick=NoLink;
+		} else {
+			PatientOrderFile2.onclick=OpenWindow2;
+		}
+	}
+	if ((patOrdFile3)&&(PatientOrderFile3)) {
+		if (patOrdFile3.value=="") {
+			PatientOrderFile3.disabled=true;
+			PatientOrderFile3.onclick=NoLink;
+		} else {
+			PatientOrderFile3.onclick=OpenWindow3;
+		}
+	}
+
+	//var PatProObj=document.getElementById("PatOrderProfile");
+	//if (PatProObj) PatProObj.onclick=PatientOrderProfile;	
+	
+	LoadCareProviders();
+	LoadRefDoctor();
+	var obj=document.getElementById("DeleteRef");
+	if (obj) obj.onclick=DeleteRefClickHandler;
+	var qobj=document.getElementById("Questionnaire");
+	if (qobj) qobj.onclick=QuestionnaireClickHandler;	
+	HideField();
+	
+	var DeptObj=document.getElementById("DeptDesc");
+	if (DeptObj) DeptObj.onchange=DeptChangeHandler;
+
+	var obj=document.getElementById("OEORIRefDocDR");
+	//if (obj) obj.onkeydown=REFDDesc_lookuphandlerCustom;
+	//var obj=document.getElementById("ld1416iOEORIRefDocDR");
+	//if (obj) obj.onclick=REFDDesc_lookuphandlerCustom;
+
+	//Log 46700
+	var SummaryFlag="";
+	var objSF=document.getElementById("SummaryFlag");
+	if ((objSF)&&(objSF.value!="")) SummaryFlag=objSF.value;
+	if (OrderWindow=="oeorder_entry") {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var hpsobj=document.getElementById("hiddenPendingStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			if ((hpsobj)&&(hpsobj.value!="")) {
+				sobj.value=hpsobj.value;
+				sobj.innerText=hpsobj.value;
+			}
+			else if ((sobj.value=="")&&(hosobj)&&(hosobj.value!="")) {
+				sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}else if (SummaryFlag!="") {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var hpsobj=document.getElementById("hiddenPendingStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			if ((hpsobj)&&(hpsobj.value!="")) {
+				sobj.value=hpsobj.value;
+				sobj.innerText=hpsobj.value;
+			}
+			else if ((hosobj)&&(hosobj.value!="")) {
+				sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}else {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			 if ((hosobj)&&(hosobj.value!="")) {
+			 	sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}
+	
+	InitStatusCheck("ld323iOSTATDesc");
+
+	var obj=document.getElementById("Doctor");
+	//if ((obj)&&(obj.value!="")&&(obj.onchange)) obj.onchange();
+	
+	var frm=document.fOEOrder_Consultation;
+	var modeobj=document.getElementById("Mode");
+	if ((modeobj)&&(modeobj.value=="READONLY"||modeobj.value=="PARTIALREAD")) 
+		DisableAllButTwo(frm,modeobj.value); //log61154 TedT
+
+	//Log 50948 PeterC 10/03/05
+	if (document.getElementById("CareProvList")) {document.getElementById("CareProvList").tkItemPopulate=1;}
+	if (document.getElementById("RefDoctorList")) {document.getElementById("RefDoctorList").tkItemPopulate=1;}
+	
+	var objboldlnk=document.getElementById("BoldLinks");
+	var objalertmess=document.getElementById("OEOrdAlertMessage");
+	if (objboldlnk && objalertmess && objboldlnk.value=="1") objalertmess.style.fontWeight="bold"	
+
+	window.focus();  // 65197
+}
+
+function NoLink() {
+	return false;	
+}
+
+function OpenWindow1() {
+	var patOrdFile1=document.getElementById("patOrdFile1");
+	var PatientOrderFile1=document.getElementById("PatientOrderFile1");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+	
+	if ((patOrdFile1)&&(patOrdFile1.value!="")) {
+		var url=patOrdFile1.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile1', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');
+	}
+	return false;
+}
+
+function OpenWindow2() {
+	var patOrdFile2=document.getElementById("patOrdFile2");
+	var PatientOrderFile2=document.getElementById("PatientOrderFile2");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+		 
+	if ((patOrdFile2)&&(patOrdFile2.value!="")) {
+		var url=patOrdFile2.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile2', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');
+	} 
+	return false;
+}
+
+function OpenWindow3() {
+	var patOrdFile3=document.getElementById("patOrdFile3");
+	var PatientOrderFile3=document.getElementById("PatientOrderFile3");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+	
+	if ((patOrdFile3)&&(patOrdFile3.value!="")) {
+		var url=patOrdFile3.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile3', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');		
+	}
+	return false;
+}
+
+function OEORIRemarks_onkeydown() {
+//required to call this function to override the generic script
+//DL : LOG 29062 : 02/Oct/02
+
+}
+
+
+function OEORIDepProcNotes_onkeydown() {
+//required to call this function to override the generic script
+//DL : LOG 29062 : 02/Oct/02
+
+}
+
+
+function DeptChangeHandler () {
+	var DocObj=document.getElementById("CTPCPDesc");
+	if (DocObj) DocObj.value="";
+
+}
+function ClearField() {
+	var obj=document.getElementById("CareProvider");
+	if (obj) obj.value="";
+	var obj=document.getElementById("OEORIRefDocDR")
+	if (obj) obj.value="";
+	//document.fOEOrder_Consultation.CareProvider.value="";
+}
+function DeleteClickHandler() {
+	//Delete items from lstOrders listbox when a "Delete" button is clicked.
+	var CPLobj=document.getElementById("CareProvList");
+	if (CPLobj) RemoveFromList(document.fOEOrder_Consultation,CPLobj)
+}
+
+function DeleteRefClickHandler() {    
+	//Delete items from lstOrders listbox when a "Delete" button is clicked.
+	var obj=document.getElementById("RefDoctorList")
+	if (obj) RemoveFromList(document.fOEOrder_Normal,obj)
+}
+
+function BodyUnLoadHandler() { 
+	//If there is any mandatory field left unfilled, alert the user and delete the order item from the list.
+	var par_win = window.opener;
+	if (OrderWindow!="") par_win=window.open('',OrderWindow); //par_win=par_win.top.frames[1];	
+	var WarnMsg="";
+	WarnMsg=CheckForAllMendatoryFields();
+	//if (WarnMsg!="") {
+	if ((WarnMsg!="")&&(OrderWindow!="")&&(par_win)&&(par_win.document.fOEOrder_Custom)) {
+		alert(WarnMsg+"\n"+t['WillDeleteOrder']);
+		try{
+			var delID="";
+			var idobj=document.getElementById("ID");
+			if (idobj) {
+				delID=idobj.value;
+				if ((delID!="")&&(par_win)) {
+					par_win.DeleteOrderByID(delID);
+				}
+			}
+		}catch(e){}
+	}
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(0);	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+		// log 63386 BoC: close Questionnaire Window when closing order details window
+		if (par_win.QuestionnaireWin) {
+			try{
+				par_win.QuestionnaireWin.close();
+			}catch(e){}
+		}
+	}
+
+	//Go to the details page of the next order item 
+	//log 61470 TedT orderWindow should be "oeorder_entry"
+	if (OrderWindow=="oeorder_entry") {
+		if ((par_win)&&(par_win.document.fOEOrder_Custom)) par_win.OrderDetailsShowing(par_win.document.fOEOrder_Custom);
+	}
+
+	// JD refresh order list with new values 54852
+	if (OrderWindow=="order_entry") {
+		try {
+			var detailFrame=window.open("","oeorder_entry");
+			if (detailFrame) detailFrame.RefreshSessionList();
+		} catch(e) {
+			//log58506 TedT kill blank window
+			detailFrame.close();
+		}
+	}
+	if (document.getElementById('ID')) {var ID=document.getElementById('ID').value;} else {var ID="";}
+	var serverupdate=tkMakeServerCall("web.OEOrdItem","LockClear",ID);
+}
+function CheckForAllMendatoryFields() {
+	var AllGetValue="";
+	for (var i=0;i<document.fOEOrder_Consultation.elements.length;i++) {
+		if (document.fOEOrder_Consultation.elements[i].id!="") {
+			var elemid="c"+document.fOEOrder_Consultation.elements[i].id;
+			var elemc=document.getElementById(elemid);
+			var elem=document.getElementById(document.fOEOrder_Consultation.elements[i].id);
+			if ((elemc) && (elemc.className=="clsRequired")) {
+				if ((elem)&&(elem.value=="")) AllGetValue=AllGetValue+elemc.innerText+":  "+t['XMISSING']+"\n";
+			}	
+		}
+	}
+	return AllGetValue;
+}
+
+</script>
+</head>
+
+<body>
+
+<server>
+ n PatID,OrderWindow
+ s OrderWindow=""
+ s CPList=%request.Get("CareProvList")
+ s RefDOcList=%request.Get("RefDoctorList")
+ s PatID=%request.Get("PatientID")
+ s OrderWindow=%request.Get("OrderWindow")
+</server>
+
+
+<TRAK:COMPONENT id="OEOrder.Consultation">
+</TRAK:COMPONENT>
+
+<script language="Javascript">
+var CPList = "#(CPList)#";
+var RefDOcList="#(RefDOcList)#";
+var PatientID = "#(PatID)#";
+var OrderWindow="#(OrderWindow)#";
+ var Updated=0;   //log 30710 AmiN Start Date must be within Episode Admin Date and Discharge date. 
+document.body.onload = BodyLoadHandler;
+document.body.onunload = BodyUnLoadHandler;  //log 30710
+function DisableElementsWhenInvoiced() {
+ 	var obj=document.getElementById("OEORISttDat");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORISttTim");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIEndDate");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIEndTime");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIQty");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("DrugForm");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIDoseQty");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCFRDesc1");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCDUDesc1");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OSTATDesc");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCINDesc1");
+	if (obj) obj.disabled=true;
+ }
+/*
+function OEORISttDat_onBlur(e) {
+	var obj=document.getElementById("OEORISttDat");
+	Gparam5=obj.value;
+	var objDate = DateStringToDateObj(Gparam5);
+	var objToday = new Date();
+	if (objDate < objToday) {
+		var hsdcobj=document.getElementById("HiddenStartDateCheck");
+		if (hsdcobj) hsdcobj.onchange();
+		//alert("Gsdcheckval="+Gsdcheckval);
+		if (Gsdcheckval=="Y") {
+			alert(t['InClosedAccPeriod']);
+		}
+	}
+}
+
+function HiddenStartDateCheck_changehandler(encmeth) {
+	//alert(" "+encmeth+" "+Gparam5);
+	Gsdcheckval=cspRunServerMethod(encmeth,Gparam5);
+}
+*/
+
+
+function DisableAllButTwo(eForm,mode){
+    var iNumElems = eForm.elements.length;     //for only form elements.
+    //log 61154 TedT
+	var enabledfldnames="";
+	var readonlyfldnames="";
+	if(mode=="PARTIALREAD"){
+		enabledfldnames = ",OEORIRemarks,OEORIDepProcNotes,OECPRDesc,UserCode,PIN,CareProvider,CareProvList,";
+		readonlyfldnames = ",OSTATDesc,";
+	}
+    for (var i=0; i<iNumElems; i++)  {
+        var eElem = eForm.elements[i];
+        //if ( (eElem.name != 'OEORIRemarks') && (eElem.name != 'OEORIDepProcNotes') && (eElem.name != 'OECPRDesc') && (eElem.name != 'UserCode') && (eElem.name != 'PIN')) {
+        //Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+	if ((enabledfldnames.indexOf(","+eElem.name+",")==-1)&&(eElem.type!="hidden")&&(readonlyfldnames.indexOf(","+eElem.name+",")==-1)&&(eElem.readOnly==false)) {
+            if (("hidden" != eElem.type)&&("INPUT" == eElem.tagName) || ("TEXTAREA" == eElem.tagName)) {
+                eElem.disabled = true;
+                var img=document.getElementById("ld159i"+eElem.id); //to hid the images for the brokers.
+                //if (img) img.onclick="";
+                if (img) { img.style.visibility="hidden"; }
+            } else if ("SELECT" == eElem.tagName) {
+                var cOpts = eElem.options;
+                var iNumOpts = cOpts.length;
+                for (var j=0; j<iNumOpts; j++) {
+                    var eOpt = cOpts[j];
+                    eOpt.disabled = true;
+                }
+            }
+	}
+    }
+}
+
+//Log 61186 PeterC 29/11/06
+var Gparam6="";
+var Gparam7="";
+var Gparam8="";
+var currDate="";
+function OEORISttDat_onBlur(e) {
+	var obj=document.getElementById("OEORISttDat");
+	Gparam5=obj.value;
+	var obj=document.getElementById("OEORIItmMastDR");
+	if((obj)&&(obj.value!="")) Gparam6=obj.value;
+	var obj=document.getElementById("EpisodeID");
+	if((obj)&&(obj.value!="")) Gparam7=obj.value;
+	var obj=document.getElementById("OECPRDesc");
+	if((obj)&&(obj.value!="")) Gparam8=obj.value;
+	var hsdcobj=document.getElementById("HiddenStartDateCheck");
+	if (hsdcobj) hsdcobj.onchange();
+	//alert("Gsdcheckval="+Gsdcheckval);
+	var ICAPAlert=mPiece(Gsdcheckval,"^",0);
+	var RecLoc=mPiece(Gsdcheckval,"^",1);
+	if ((ICAPAlert!="")&&(ICAPAlert=="Y")) {
+		alert(t['InClosedAccPeriod']);
+	}
+	var obj=document.getElementById("CTLOCDesc");
+	if((obj)&&(Gparam5!="")&&(Gparam5!=currDate)) obj.value=RecLoc;
+	if(currDate!=Gparam5) currDate=Gparam5;
+}
+
+function HiddenStartDateCheck_changehandler(encmeth) {
+	Gsdcheckval=cspRunServerMethod(encmeth,Gparam5,Gparam6,Gparam7,Gparam8);
+}
+
+var obj=document.getElementById("OEORISttDat");
+if (obj) {
+	obj.onblur=OEORISttDat_onBlur;
+	currDate=obj.value;
+}
+
+</SCRIPT>
+<server>
+ i %request.Get("ID")'="" d
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="P" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="TR" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="R" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+</server>
+
+</form>
+</body>
+</html>
+

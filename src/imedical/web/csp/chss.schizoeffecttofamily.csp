@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+ 
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))	 
+  
+ 	s RowId=$Get(%request.Data("RowId",1))
+ 	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	s EffectRowIDDR=$Get(%request.Data("EffectRowIDDR",1))
+	s Times=$Get(%request.Data("Times",1))
+	s CheckRowId=$g(%request.Data("CheckRowId",1))
+     //w "RowId=="_RowId_"  PersonRowId="_PersonRowId
+     //q 
+	s Start=0
+	s Limit=10
+	
+		
+	i Action = "list" d
+	.w ##class(CHSSWeb.SchizoEffectToFamilyService).ListPage(Start,Limit,PersonRowId,CheckRowId )    
+	
+	i Action = "info" d
+	.w ##class(CHSSWeb.SchizoEffectToFamilyService).ShowInfo(Start,Limit,PersonRowId,CheckRowId)
+ 
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.SchizoEffectToFamilyService).insert(PersonRowId,EffectRowIDDR,Times,CheckRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'添加成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.SchizoEffectToFamilyService).update(RowId,EffectRowIDDR,Times)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "delete" d
+	.s result = ##class(CHSSWeb.SchizoEffectToFamilyService).delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>
+

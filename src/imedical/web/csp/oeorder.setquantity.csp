@@ -1,0 +1,71 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ ;created 15/06/05 JPD
+ n Days,DurMins,NumDoses,SttDat,EndDate,SttTim,EndTime,WINNAME,DOseQty,FreqDelay,Return,BaseDoseQty,RtnBaseDoseQty
+ s (Days,DurMins,NumDoses,SttDat,EndDate,SttTim,EndTime,WINNAME,DOseQty,FreqDelay,Return,BaseDoseQty,RtnBaseDoseQty)=""
+ s SttDat=%request.Get("SttDat")
+ s EndDate=%request.Get("EndDate")
+ s SttTim=%request.Get("SttTim")
+ s EndTime=%request.Get("EndTime")
+ s WINNAME=%request.Get("WINNAME")
+ s DoseQty=%request.Get("DoseQty") 
+ s FreqDelay=%request.Get("FreqDelay")
+ s BaseDoseQty=%request.Get("BaseDoseQty")
+ 
+ s SttDat=##Class(websys.Conversions).DateHtmlToLogical(SttDat)
+ s EndDate=##Class(websys.Conversions).DateHtmlToLogical(EndDate)
+ s SttTim=##Class(websys.Conversions).TimeHtmlToLogical(SttTim)
+ s EndTime=##Class(websys.Conversions).TimeHtmlToLogical(EndTime)
+
+ s Days=EndDate-SttDat
+ ; 1440 minutes in a day
+ s DurMins= (Days*1440)-1440
+ s DurMins= DurMins+(EndTime/60)
+ s DurMins= DurMins+(1440-(SttTim/60))
+
+ s NumDoses=(DurMins\FreqDelay)+1
+
+ s Return=NumDoses*DoseQty
+ //Log 59218 PeterC 11/09/2006
+ s RtnBaseDoseQty=NumDoses*BaseDoseQty
+
+ i SttDat="" s Return=DoseQty,RtnBaseDoseQty=BaseDoseQty
+ i EndDate="" s Return=DoseQty,RtnBaseDoseQty=BaseDoseQty
+ i SttTim="" s Return=DoseQty,RtnBaseDoseQty=BaseDoseQty
+ i EndTime="" s Return=DoseQty,RtnBaseDoseQty=BaseDoseQty
+
+ i NumDoses<1  s Return=DoseQty,RtnBaseDoseQty=BaseDoseQty
+
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var qobj=detailFrame.document.getElementById(""OEORIQty"");"
+ w "if(qobj){"
+ w "	qobj.value="""_Return_""";"
+ w "}"
+ w "var tobj=detailFrame.document.getElementById(""TotBaseDoseQty"");"
+ w "if(tobj){"
+ w "	tobj.value="""_RtnBaseDoseQty_""";"
+ w "	tobj.innerText="""_RtnBaseDoseQty_""";"
+ w "}"
+ w "</script>"
+ 
+ q
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

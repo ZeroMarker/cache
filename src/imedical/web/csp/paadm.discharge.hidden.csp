@@ -1,0 +1,65 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<SERVER language="Cache" RUNAT=SERVER> 
+ n EpisodeId, dx, tmpdttm, IsAuth, url1, DischID, newestdttm, Patid, admtype
+ ; Log 53721 YC - get episodeid from the row (in PAADM.Tree)
+ s epid = $g(%request.Data("EpisodeID",1))
+
+ ; put all summaries in orde - get the most recent....
+ s Patid=+$g(%request.Data("PatientID",1))
+ s admtype="" f  s admtype=$o(^PAPERdr(+Patid,"ADM",admtype))  q:admtype=""  d
+ . s EpisodeID="" f  s EpisodeID=$o(^PAPERdr(+Patid,"ADM",admtype,EpisodeID))  q:EpisodeID=""  d
+ . . ; Log 53721 YC - get the first discharge summary that matches the episodeID from the row (in PAADM.Tree)
+ . . i epid'="" q:epid'=EpisodeID
+ . . s dx=0 f  s dx=$o(^PAADM(EpisodeID,"DISSUM",dx)) q:dx=""  d
+ . . . s DischID=$p($g(^PAADM(EpisodeID,"DISSUM",dx)),"^",10) q:DischID=""
+ . . . ; don't include cancelled ones
+ . . . q:$p($g(^PA("DISSUM",DischID)),"^")="C" 
+ . . . s dt=$p($g(^PA("DISSUM",DischID)),"^",6)
+ . . . s tm=$p($g(^PA("DISSUM",DischID)),"^",7)
+ . . . s tmpdttm(((dt*86400)+tm),DischID)=""
+ 
+ s DischID="",newestdttm=$o(tmpdttm(""),-1)
+ i newestdttm'="" s DischID=$o(tmpdttm(newestdttm,""),-1)
+ d ##Class(websys.Component).GetComponentMessages(.t,"PAAdmDischargeSummary.List")
+ 
+ s IsAuth=0,DocName=""
+ i DischID'="",$p($g(^PA("DISSUM",DischID)),"^")="A" d
+ . s IsAuth=1
+ . s reqID=$o(^websys.RequestedReportHistoryI("DischargeSummaryIDIndex"," "_DischID,""),-1),objREQ=""
+ . i reqID s objREQ=##class(websys.RequestedReportHistory).%OpenId(reqID)
+ . s docDR=""
+ . i objREQ d
+ . . i objREQ.DocumentDR s docDR=objREQ.DocumentDR.%Id()
+ . . d objREQ.%Close()
+ . . i docDR'="" d
+ . . . s url1="websys.Document.cls?ID="_docDR
+ . . . s %response.ServerSideRedirect=url1
+ . . . d ##Class(websys.Conversions).SaveRequest()
+ . i docDR="" w $g(t("DSNotGenerated"))
+ 
+ ; if not authorised, open the existing Discharge Summary...
+ i 'IsAuth d  q 1
+ . s doctype=$p($g(^PA("DISSUM",DischID)),"^",9)
+ . i +doctype s doctype=$lg(^epr.CTDischargeSummaryTypeD(+doctype),6)
+ . s url1="websys.csp?PatientID="_%request.Get("PatientID")_"&DischID="_DischID_"&TWKFL="_##class(websys.WorkFlow).GetIdFromCodeOrDescription("Trak.Discharge.Summary.Edit")_"&doctype="_doctype
+ . s %response.ServerSideRedirect=url1
+ . d ##Class(websys.Conversions).SaveRequest()
+ 
+</SERVER>
+
+</BODY>
+</HTML>
+

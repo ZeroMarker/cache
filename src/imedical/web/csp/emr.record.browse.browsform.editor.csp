@@ -1,0 +1,102 @@
+﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<title>在编辑器浏览病历</title>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	s needPrint=$Get(%request.Data("Print",1),"N")
+	if (needPrint '= "N")
+	{
+		s id = $Get(%request.Data("id",1),"")
+		s episodeId = $Get(%request.Data("episodeId",1),"")
+		s printType  = ##Class(EMRservice.HISInterface.DHCEPRFSInfo).GetPrintType(episodeId,id)
+		if (printType = "DHCEPRFS")
+		{
+			s %response.ServerSideRedirect="dhc.epr.fs.diagsignprint.csp?EpisodeID="_episodeId
+		}
+	}
+	q 1
+	</csp:method>
+</head>
+<body style="margin:0px;">
+	<script language="cache" runat="server">
+	    d ##Class(EMRservice.SystemParameter).GetImportResource()
+	    s status = $Get(%request.Data("status",1),"")
+		s episodeId = $Get(%request.Data("episodeId",1),"")
+		s id = $Get(%request.Data("id",1),"")
+		s (text,pluginType,chartItemType,characteristic,emrDocId)=""
+		if (id '= "") 
+		{ 
+			s objInstance = ##class(EMRinstance.InstanceData).%OpenId(id) 
+			if (objInstance '= "") 
+			{
+				s text = objInstance.Title 
+				s pluginType = objInstance.TheECRecord.DocumentType
+				s chartItemType = objInstance.TheECRecord.ChartItemType
+				s characteristic = objInstance.TheECRecord.DocumentCharacteristic
+			    s:(episodeId="") episodeId = objInstance.EpisodeID
+				s emrDocId = objInstance.TheECRecord.ChartItemID
+			}
+		}else{ 
+			s text = $Get(%request.Data("text",1),"")
+			s chartItemType = $Get(%request.Data("chartItemType",1),"")
+			s pluginType = $Get(%request.Data("pluginType",1),"")
+			s characteristic = $Get(%request.Data("characteristic",1),"")
+			s episodeId = $Get(%request.Data("episodeId",1),"")
+			s emrDocId = $Get(%request.Data("emrDocId",1),"")
+		 }
+		s patientId = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeId)
+		s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+   		s needPrint=$Get(%request.Data("Print",1),"N")
+		s closeAfterPrint=$Get(%request.Data("CloseAfterPrint",1),"N")
+   		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+		s action = $Get(%request.Data("Action",1),"")
+		s visitType=$Get(%request.Data("VisitType",1),"")
+		if (visitType="OP") 
+		{
+			s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+		}
+		else
+		{
+			s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+		}
+		s userLocID = %session.Get("LOGON.CTLOCID")
+   </script>
+	<script language="javascript">
+		var param = "";
+		var id = '#(id)#';
+		var text = '#(text)#';
+		var chartItemType = '#(chartItemType)#';
+		var pluginType = '#(pluginType)#';
+		var emrDocId = '#(emrDocId)#';
+		var characteristic = '#(characteristic)#';
+		var status = '#(status)#';
+		var iword = false;
+		var igrid = false;
+		var pluginUrl = "#(pluginUrl)#";
+		var needPrint = "#(needPrint)#";
+		var closeAfterPrint = "#(closeAfterPrint)#";
+		var episodeId = "#(episodeId)#";
+		var patientId = "#(patientId)#";
+		var ssgroupId = "#(ssgroupID)#";
+		var IsSetToLog = '#(IsSetToLog)#';
+		var userName = '#(userName)#';
+		var userID = '#(userID)#';
+		var setDefaultFontStyle = "#(setDefaultFontStyle)#";
+		var action = '#(action)#';
+		var ipAddress = getIpAddress();
+		var userLocID = '#(userLocID)#';
+   </script>
+    <div id="promptMessage" style="display:none;font-size:20px;font-weight:bold;padding:10px 0 0 5px;"></div>
+	<div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+	<div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+        <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="border:0px;display:none;"/>
+	<script type="text/javascript" src="../scripts/emr/js/record.browse.browseform.editor.js"></script>
+</body>
+</html>

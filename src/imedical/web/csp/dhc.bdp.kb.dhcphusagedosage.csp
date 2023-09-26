@@ -1,0 +1,289 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.kb.dhcphusagedosage.csp
+	@JS:bdp/App/KB/NewBus/DHC_PHUsageDosage.js
+	@Title:药品说明书编辑器——用法用量
+	@Description:用法用量的增删改
+	@Creator:基础数据平台组 - 丁亚男
+	@CreateDate:2018-09-10
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+<style type="text/css">
+/*多选框*/
+.mulitiDiv {
+	width:560px;
+	height:360px;
+	border: 1px solid #40a2de;
+}
+
+.webui-popover-title {
+	padding:8px 14px;
+	display: block;
+    background-color: #f9f9fa;
+    border-bottom: 1px solid #cccccc;
+    border-radius: 5px 5px 0 0;
+    color: black
+}
+.webui-popover .webui-popover-content {
+    padding: 1px 5px;
+}
+
+#btnAddPopu .l-btn-text {
+    padding-right: 0px;
+    
+}
+.panel-header-noborder {
+    border-width: 0 0 0px 0;
+}
+</style>
+<script type="text/javascript"  >
+    $(function(){
+              BodyLoadHandler();
+
+    });
+</script>
+</HEAD>
+<BODY>
+    <server>
+    	s GlPGenDr=%request.Get("GlPGenDr")
+    	s GlPPointer=%request.Get("GlPPointer")
+        s GlPPointerType=%request.Get("GlPPointerType")
+   </server> 
+    <div class="hisui-layout" data-options="fit:true" border="false" >
+    	<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',split:true" border="false" title="用法用量" style="height:148px;"> 
+			<table data-options="fit:true,nowrap:false"  id="mygrid" border="false"></table> 
+		</div>
+       	<div data-options="region:'center'"   border="false" > 
+       		<div class="hisui-layout" data-options="fit:true" border="false" >
+       			<div id="mytbar" data-options="region:'north',split:false"  style="height:34px;text-align:left;border-top:1px solid #C0C0C0;border-bottom:1px dashed #C0C0C0;overflow:hidden" border="false">
+	 			   	 <a   class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAdd">新增</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-write-order' plain="true" id="btnUpd">修改</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-cancel' plain="true" id="btnDel">删除</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-refresh' plain="true" id="btnRel">清屏</a>
+				</div>	
+	       		<div data-options="region:'center',split:false" style="padding:4px 30px 20px 10px" border="false">
+			    	 <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    	 <table cellpadding="5">
+					    <tr>
+				               <td class="tdleftlabel">级别</td>
+				               <td>
+				               		<table>
+						    		  <tr>
+				               				<td><input id="PHINSTModeF" name="PHINSTMode"  style="width:180px;"></td>
+				               				<td class="tdlabel" width="40px">年龄</td>
+				               				<td><input id="PDAAgeF" name="PDAAge"  style="width:160px;"></td>
+					    		   			<td class="tdlabel" width="80px">年龄限制</td>
+					    		   			<td><input id="PDAMinValF" name="PDAMinVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+								            <td >-</td>
+								            <td><input id="PDAMaxValF" name="PDAMaxVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+								            <td><input id="PDAUomDrF" name="PDAUomDr"  style="width:90px;"></td>
+					    				</tr>
+					    			</table>
+					    		</td>    		
+					    </tr>		  
+					    <tr>
+				    		   <td class="tdleftlabel">用法</td>
+				    		   <td>
+				               		<table>
+						    		  <tr>
+				    		   			<td><input id="PHEINInstrucF" name="PHEINInstruc"  style="width:180px;"></td>
+				    		   			<td class="tdlabel" width="40px">体重</td>
+				    		   			<td><input id="PHUSDOWeightMinF" name="PHUSDOWeightMin" type="text" class="hisui-validatebox" style="width:68px" ></td>
+				    		   			<td>-</td>
+							            <td><input id="PHUSDOWeightMaxF" name="PHUSDOWeightMax" type="text" class="hisui-validatebox" style="width:68px" ></td>
+							            <td class="tdlabel" width="80px">体表面积</td>
+						              	<td><input id="PHUSDOBodyAreaMinF" name="PHUSDOBodyAreaMin" type="text" class="hisui-validatebox" style="width:60px" ></td>
+							            <td >-</td>
+							            <td><input id="PHUSDOBodyAreaMaxF" name="PHUSDOBodyAreaMax" type="text" class="hisui-validatebox" style="width:150px" ></td>
+					   				 </tr>
+					   				</table>
+				              </td>
+					    </tr> 
+					    <tr>
+					            <td class="tdleftlabel">性别</td>
+					            <td>
+					            	<table>
+						    		  <tr>
+								        <td id="PHINSTSexF" style="width:180px;">
+								            <input class='hisui-radio' type="radio" label='男' name='PHINSTSex' value='M' id="sexM">
+								            <input class='hisui-radio' type="radio" label='女' name='PHINSTSex' value='F' id="sexF">
+								            <input class='hisui-radio' type="radio" label='全部' name='PHINSTSex' value='A' data-options="checked:true" id="sexA">
+								        </td>
+						        		<td class="tdlabel" width="40px">疗程</td>
+				    		   			<td><input id="PHUSDOPeriodF" name="PHUSDOPeriod" type="text" class="hisui-validatebox" style="width:155px" ></td>
+				    		   			</tr>
+					   				</table>
+				              </td>
+				        </tr>
+				        <tr>
+	                        <td colspan="2">
+		                        <div class="hisui-panel" title="录入用量" style="padding-left:10px;width:840px;height:220px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',">   															
+						    		  <table>
+							    		  <tr>
+							    		  	  <td class="tdleftlabel" width="90px">每日用药次数</td>
+							    		  	  <td>
+				               					<table>
+						    		  				<tr>
+														<td><input id="PHUSDOOneDayTimeMinF" name="PHUSDOOneDayTimeMin" type="text" class="hisui-validatebox" style="width:80px" ></td>
+														<td>-</td>
+														<td><input id="PHUSDOOneDayTimeMaxF" name="PHUSDOOneDayTimeMax" type="text" class="hisui-validatebox" style="width:80px" ></td>
+														<td class="tdleftlabel" width="120px">次</td>
+														<td class="tdlabel" width="100px">单次用药量</td>
+											            <td><input id="PHUSDOOnceQtyMinF" name="PHUSDOOnceQtyMin" type="text" class="hisui-validatebox" style="width:80px" ></td>
+											            <td>-</td>
+											            <td><input id="PHUSDOOnceQtyMaxF" name="PHUSDOOnceQtyMax" type="text" class="hisui-validatebox" style="width:80px" ></td>
+											            <td><input id="PHUSDOOnceQtyUomDrF" name="PHUSDOOnceQtyUomDr"  style="width:90px;"></td>
+							              			</tr>
+							              		</table>
+							              	<td>
+							    		  </tr>
+							    		  <tr>
+							    		  	  <td class="tdleftlabel" width="90px">每日用药总量</td>
+							    		  	  <td>
+				               					<table>
+						    		  				<tr>
+														<td><input id="PHUSDOOneDayQtyMinF" name="PHUSDOOneDayQtyMin" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								              			<td>-</td>
+								              			<td><input id="PHUSDOOneDayQtyMaxF" name="PHUSDOOneDayQtyMax" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								             			<td><input id="PHUSDOOneDayQtyUomDrF" name="PHUSDOOneDayQtyUomDr"  style="width:120px;"></td>
+								             			<td class="tdlabel" width="100px">首次用药量</td>
+											            <td><input id="PHUSDOFristTimeQtyMinF" name="PHUSDOFristTimeQtyMin" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								             			<td>-</td>
+								             			<td><input id="PHUSDOFristTimeQtyMaxF" name="PHUSDOFristTimeQtyMax" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								              			<td><input id="PHUSDOFristTimeQtyUomDrF" name="PHUSDOFristTimeQtyUomDr"  style="width:90px;"></td>
+							              			</tr>
+							              		</table>
+							              	</td>
+							    		  </tr>
+							    		  
+							               <tr>
+							    		  	  <td class="tdleftlabel" width="90px">连用量</td>
+							    		  	  <td>
+				               					<table>
+						    		  				<tr>
+														<td><input id="PHUSDODurationQtyMinF" name="PHUSDODurationQtyMin" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								              			<td>-</td>
+								              			<td><input id="PHUSDODurationQtyMaxF" name="PHUSDODurationQtyMax" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								              			<td><input id="PHUSDODurationQtyUomDrF" name="PHUSDODurationQtyUomDr"  style="width:120px;"></td>
+							              				<td class="tdlabel" width="100px">用药间隔</td>
+											            <td><input id="PHUSDOSpaceQtyMinF" name="PHUSDOSpaceQtyMin" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								              			<td>-</td>
+								              			<td><input id="PHUSDOSpaceQtyMaxF" name="PHUSDOSpaceQtyMax" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								              			<td><input id="PHUSDOSpaceQtyUomDrF" name="PHUSDOSpaceQtyUomDr"  style="width:90px;"></td>
+							              			</tr>
+							              		</table>
+							              	</td>
+							    		  </tr>
+							    		  <tr>
+							    		  	  <td class="tdleftlabel" width="90px">每次最大量</td>
+							    		  	  <td>
+				               					<table>
+						    		  				<tr>
+														<td><input id="PHUSDOOnceMaxQtyF" name="PHUSDOOnceMaxQty" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								             			<td><input id="PHUSDOOnceMaxQtyUomDrF" name="PHUSDOOnceMaxQtyUomDr"  style="width:220px;"></td>
+							             				<td class="tdlabel" width="100px">每日最大量</td>
+											            <td><input id="PHUSDOOneDayMaxQtyF" name="PHUSDOOneDayMaxQty" type="text" class="hisui-validatebox" style="width:80px" ></td>
+								             			<td><input id="PHUSDOOneDayMaxQtyUomDrF" name="PHUSDOOneDayMaxQtyUomDr"  style="width:190px;"></td>
+							              			</tr>
+							              		</table>
+							              	</td>
+							    		  </tr>						              								              							              						              
+						              </table>
+								</div>	
+	                        </td>
+	                    </tr>			        
+					    
+				        <tr>
+					    	<td class="tdleftlabel">检验项目</td>
+				    		   <td>
+				               		<table>
+						    		  <tr>
+						    		  		<td><input id="LABILabDrF" name="LABILabDr"  style="width:180px;"></td>
+						    		  		<td class="tdlabel" width="40px">逻辑</td>
+						    		  		<td><input id="LABIRelationF" name="LABIRelation"  style="width:120px;" disabled="true"></td>
+											<td class="tdlabel" width="90px">指标值范围</td>
+											<td><input id="LABIMinValF" name="LABIMinVal" type="text" class="hisui-validatebox" style="width:60px" disabled="true" ></td>
+											<td>-</td>
+											<td><input id="LABIMaxValF" name="LABIMaxVal" type="text" class="hisui-validatebox" style="width:60px" disabled="true" ></td>
+											<td><input id="LABIUomDrF" name="LABIUomDr"  style="width:125px;" disabled="true"></td>
+					   				 </tr>
+					   				</table>
+				              </td>
+					    </tr> 		
+					    <tr>
+				    		  <td class="tdleftlabel">提示(医生)</td>
+				              <td><textarea id="PHINSTDocUseTipsF" name="PHINSTDocUseTips" type="text" class="hisui-validatebox" style="width:750px;height:30px;overflow:hidden" ></textarea></td>
+					    </tr>    
+					    <tr>
+				    		  <td class="tdleftlabel">提示(护士)</td>
+				              <td><textarea id="PHINSTNurseUseTipsF" name="PHINSTNurseUseTips" type="text" class="hisui-validatebox" style="width:750px;height:30px;overflow:hidden"  ></textarea></td>
+					    </tr> 
+					    <tr>
+				    		  <td class="tdleftlabel" >描述</td>
+				              <td><textarea id="PHINSTTextF" name="PHINSTText" type="text" class="hisui-validatebox" style="width:750px;height:90px;overflow:hidden" data-options="required:true"></textarea></td>
+					    </tr> 
+					    <tr>
+					       <table>
+					        <tr>
+	                        <td>
+		                        <div class="hisui-panel" title="病症" style="width:415px;height:280px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',">   
+										<table style="width:400px;height:260px;"  id="diaGrid" border="false" toolbar="#myDiatbar" ></table>
+								</div>	
+	                        </td>
+	                        <td   style="padding: 2px 0px 2px 20px;">
+		                        <div class="hisui-panel" title="特殊人群" style="width:415px;height:280px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',"> 
+										<table style="width:400px;height:260px;"  id="PopuGrid" border="false" toolbar="#myPoputbar"></table>
+								</div>	
+	                        </td>
+	                        </tr>
+	                        </table>
+	                    </tr>	                    		                   		    
+					 </table >
+					 </form>
+				</div>
+	    	</div>
+		</div>	 
+    </div> 
+    <!--已选病症列表工具条-->
+    <div id="myDiatbar" style="padding: 1px; height: auto; "  >
+		<a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddDia">新增病症</a>								    
+	 </div>
+	 <!--已选特殊人群列表工具条-->
+    <div id="myPoputbar" style="padding: 1px; height: auto; "  >
+		<a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddPopu">新增特殊人群</a>									    
+ 	</div>
+    
+    <!--未选病症列表工具条-->
+    <div id="myunDiatbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <a href="#" class="hisui-searchbox" data-options="stopAllEventOnDisabled:true" id="btnDiaSearch"></a>
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaReset">清屏</a> 
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaSave">保存</a>        
+    </div> 
+    
+    <!--未选特殊人群列表工具条-->
+    <div id="myunPoputbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <a href="#" class="hisui-searchbox" data-options="stopAllEventOnDisabled:true" id="btnPopuSearch"></a>
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnPopuReset">清屏</a> 
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnPopuSave">保存</a>        
+    </div> 
+    
+    <script type="text/javascript">
+     var  GlPGenDr="#(GlPGenDr)#"
+     var  GlPPointer="#(GlPPointer)#"
+     var  GlPPointerType="#(GlPPointerType)#"
+  </script>
+  <script type="text/javascript" src="../scripts/bdp/App/KB/NewBus/DHC_PHUsageDosage.js"></script>
+</BODY>
+</HTML>

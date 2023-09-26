@@ -1,0 +1,82 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))   
+	s str      = $Get(%request.Data("query",1))
+	
+	s userdr=$G(%session.Data("LOGON.USERID"))
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+    s rowid   = $Get(%request.Data("rowid",1))
+    s Code    = $Get(%request.Data("Code",1))
+	s Name    = $Get(%request.Data("Name",1))
+    s CalFlag = $Get(%request.Data("CalFlag",1))
+	s CalDesc = $Get(%request.Data("CalDesc",1))
+    s ChkDesc = $Get(%request.Data("ChkDesc",1))
+	s Chkstate= $Get(%request.Data("Chkstate",1))
+
+	s startbudget= $Get(%request.Data("startbudget",1))
+	s adjustbude = $Get(%request.Data("adjustbude",1))
+	s lastyearexe= $Get(%request.Data("lastyearexe",1))
+	s difference = $Get(%request.Data("difference",1))
+    s thisadjust = $Get(%request.Data("thisadjust",1))
+	s diffratio  = $Get(%request.Data("diffratio",1))                          
+    s adjustrange= $Get(%request.Data("adjustrange",1))
+    s planvalue  = $Get(%request.Data("thisadjust",1))
+    s planvalueS=$Get(%request.Data("planvalueS",1))
+    s SchemDr    = $Get(%request.Data("SchemDr",1))                          
+    s yearmonth  = $Get(%request.Data("yearmonth",1)) 
+	s deptdr     = $Get(%request.Data("deptdr",1))
+    s year       = $Get(%request.Data("byear",1))
+    s schtype    = $Get(%request.Data("schtype",1))
+    s adjustno   =$Get(%request.Data("adjustno",1))
+	i action = "list" d
+	.w ##class(herp.budg.udata.budgadjustdeptyear).detailList(schtype,year,SchemDr,deptdr,adjustno,sortField, sortDir, start, limit,hospid)
+	
+	i action="submit" d
+	.s result= ##class(herp.budg.udata.budgadjustdeptyear).submit(rowid, deptdr, userdr, hospid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+	i action="calculate" d
+	.s result= ##class(herp.budg.udata.budgadjustdeptyear).calculate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+    i action="edit" d
+	.s result= ##class(herp.budg.udata.budgadjustdeptyear).edit(rowid,planvalue,hospid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "submit2" d
+	.s result1 = ##class(herp.budg.udata.budgadjustdeptyear).SubmitUpdateS(SchemDr,userdr,hospid)
+	.i result1 = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "submit3" d
+	.s result1 = ##class(herp.budg.udata.budgadjustdeptyear).SubmitSaveS(rowid, planvalueS, hospid)
+	.i result1 = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+</script>

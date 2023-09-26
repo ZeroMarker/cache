@@ -1,0 +1,347 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>压疮评估汇总</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+    	<form id="conditionForm">
+    		<label style="padding-left:5px;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:5px;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:5px;">住院号</label>
+    		<input type="text" id="MedcareNo" name="MedcareNo" class="hisui-validatebox textbox" data-options="prompt:'输入病人姓名或住院号'">
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
+    		<!--<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'">打印</a>-->
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false ">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = false;
+		var hasSevenOperSeq = false;
+		$(document).ready(function() {
+			var date=new Date();
+			var day=date.getDate();
+			date.setDate(day-1);
+			
+    		$("#OperStartDate").datebox("setValue", date.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", date.format("yyyy-MM-dd"));
+	    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: true,
+        		border:false,
+        		toolbar: "#dataTools",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.WorkStatistics",
+            		QueryName: "FindSoreAssess",
+            		ArgCnt: 3
+        		},
+        		columns: [
+            		[{
+                    	field: "Date",
+                    	title: "日期",
+                    	width: 100,
+                    	align:'center'
+                	}, {
+                    	field: "PatDept",
+                    	title: "科室",
+                    	width: 100
+                	},
+                	{
+                    	field: "PatName",
+                    	title: "姓名",
+                    	width: 80,
+                    	align:'center'
+                	},
+                	{
+                    	field: "Gender",
+                    	title: "性别",
+                    	width: 40,
+                    	align:'center'
+                	},
+                	{
+                  		field: "Age",
+                    	title: "年龄",
+                    	width: 60,
+                    	align:'center'
+                	},
+                	{
+                    	field: "MedcareNo",
+                    	title: "住院号",
+                    	width: 90,
+                    	align:'center'
+                	},
+                	{
+                    	field: "Operation",
+                    	title: "手术名称",
+                    	width: 200
+                	},
+                	{
+                    	field: "Surgeon",
+                    	title: "主刀",
+                    	width: 60,
+                    	align:'center'
+                	},
+                	{
+                    	field: "OperDuration",
+                    	title: "手术时间",
+                    	width: 140,
+                    	align:'center'
+                	},
+                	{
+                    	field: "AnaestMethod",
+                    	title: "麻醉方法",
+                    	width: 120
+                	},
+                	{
+                    	field: "AnaDoctor",
+                    	title: "麻醉医生",
+                    	width: 60,
+                    	align:'center'
+                	},
+                	{
+                    	field: "TheatreDuration",
+                    	title: "入离室时间",
+                    	width: 140,
+                    	align:'center'
+                	},
+                	{
+                    	field: "AssessNurseName",
+                    	title: "评估护士",
+                    	width: 60,
+                    	align:'center',
+                    	formatter:function(value,row,index){
+	                    	return "<span style='font-weight:bold;'>"+value+"</span>";
+                    	}
+                	},
+                	{
+                    	field: "ScattTriggerResult",
+                    	title: "斯卡特触发点",
+                    	width: 90,
+                    	align:'center',
+                    	formatter:function(value,row,index){
+	                    	return "<span title='"+value+"'>"+value+"</span>";
+                    	}
+                	},
+                	{
+                    	field: "PreOperAssessmentResult",
+                    	title: "术前评估",
+                    	width: 90,
+                    	align:'center',
+                    	formatter:function(value,row,index){
+	                    	return "<span title='"+value+"'>"+value+"</span>";
+                    	}
+                	},
+                	{
+                    	field: "InOperAssessmentResult",
+                    	title: "术中评估",
+                    	width: 90,
+                    	align:'center',
+                    	formatter:function(value,row,index){
+	                    	return "<span title='"+value+"'>"+value+"</span>";
+                    	}
+                	},
+                	{
+                    	field: "PostOperAssessmentResult",
+                    	title: "术后评估",
+                    	width: 90,
+                    	align:'center',
+                    	formatter:function(value,row,index){
+	                    	return "<span title='"+value+"'>"+value+"</span>";
+                    	}
+                	},
+                	{
+                    	field: "NursingMeasures",
+                    	title: "护理措施",
+                    	width: 90,
+                    	align:'center',
+                    	formatter:function(value,row,index){
+	                    	return "<span title='"+value+"'>"+value+"</span>";
+                    	}
+                	},
+                	{
+                    	field: "VisitNurseName",
+                    	title: "随访护士",
+                    	width: 60,
+                    	align:'center',
+                    	formatter:function(value,row,index){
+	                    	return "<span style='font-weight:bold;'>"+value+"</span>";
+                    	}
+                	},
+                	{
+                    	field: "PressureSore",
+                    	title: "术后转归效果评价",
+                    	width: 90,
+                    	align:'center'
+                	},
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = $("#MedcareNo").val() || "";
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	view: groupview,
+        	groupField: "Date",
+        	groupFormatter: function(value, rows) {
+	        	var length=rows.length;
+            	return value + " 共进行 " + length + " 台手术病人的压疮评估";
+        	},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnPrint").click(function(){
+	    	printGrid();
+    	});
+	});
+	
+	function printGrid(){
+		var lodop = getLodop();
+    	createPrintPage(lodop);
+    
+    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    	lodop.SET_PREVIEW_WINDOW(1, 2, 0, 0, 0, "");
+    	lodop.SET_PRINT_MODE("AUTO_CLOSE_PREWINDOW", 1); //打印后自动关闭预览窗口
+    	lodop.PREVIEW();
+	}
+	
+	function createPrintPage(lodop){
+		var datagrid = $("#data_grid");
+    	var groups = datagrid.datagrid("groups");
+    	
+    	var length = groups.length;
+    	var group,row,rowLength;
+    	var gridHtml=[];
+    	var linedItemNo=1,operCount=0;
+    	var colWidth=120,totalColWidth=720,columns=6;
+    	
+    	for(var i=0;i<length;i++){
+	    	group = groups[i];
+	    	
+	    	if(i>0){
+		    	lodop.NEWPAGEA();
+		    	linedItemNo += 5;
+	    	}
+	    	
+	    	gridHtml=[
+                    "<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:14px;}",
+                    "th {font-size:14px;font-weight:bold;text-align:center;} tr>td {text-align:center} tr {height:24px;} ",
+                    "tr {height:27px;} table {table-layout:fixed;} .item-desc {width:200px;overflow:hidden;}</style>"
+                ];
+	    	gridHtml.push('<table>');
+	    	gridHtml.push('<thead><tr>');
+	    	gridHtml.push('<th style="width:50px;">日期</th>');
+	    	columns = 6;
+	    	if(hasSevenOperSeq)columns = 7;
+	    	colWidth = Math.ceil(totalColWidth/columns);
+	    	gridHtml.push('<th style="width:'+colWidth+'px;">第一台</th>');
+	    	gridHtml.push('<th style="width:'+colWidth+'px;">第二台</th>');
+	    	gridHtml.push('<th style="width:'+colWidth+'px;">第三台</th>');
+	    	gridHtml.push('<th style="width:'+colWidth+'px;">第四台</th>');
+	    	gridHtml.push('<th style="width:'+colWidth+'px;">第五台</th>');
+	    	gridHtml.push('<th style="width:'+colWidth+'px;">第六台</th>');
+	    	if(hasSevenOperSeq)gridHtml.push('<th style="width:'+colWidth+'px;">第七台</th>');
+	    	gridHtml.push('</tr></thead>');
+	    	gridHtml.push('<tbody>');
+	    	
+	    	operCount = 0;
+	    	rowLength = group.rows.length;
+	    	for(var j=0;j<rowLength;j++){
+		    	row = group.rows[j];
+		    	gridHtml.push('<tr>');
+		    	gridHtml.push('<td>'+row.Day+'</td>');
+		    	gridHtml.push('<td>'+row.OperSeq1+'</td>');
+		    	gridHtml.push('<td>'+row.OperSeq2+'</td>');
+		    	gridHtml.push('<td>'+row.OperSeq3+'</td>');
+		    	gridHtml.push('<td>'+row.OperSeq4+'</td>');
+		    	gridHtml.push('<td>'+row.OperSeq5+'</td>');
+		    	gridHtml.push('<td>'+row.OperSeq6+'</td>');
+		    	if(hasSevenOperSeq)gridHtml.push('<td>'+row.OperSeq7+'</td>');
+		    	gridHtml.push('</tr>');
+		    	operCount+=Number(row.OperCount);
+	    	}
+		    
+	    	gridHtml.push('<tr>');
+	    	gridHtml.push('<td>合计</td>');
+		    gridHtml.push('<td></td><td></td><td></td><td></td><td></td><td></td>');
+		    if(hasSevenOperSeq)gridHtml.push('<td></td>');
+		    gridHtml.push('</tr>');
+		    
+	    	gridHtml.push('</tbody></table>');
+	    	
+	    	lodop.ADD_PRINT_TABLE(120,40,"RightMargin:0.8cm",920,gridHtml.join(''));
+	    	
+	    	setHeader();
+	    	setMonth(group.value);
+    	}
+    	
+    	function setHeader(){
+	    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    		lodop.SET_PRINT_STYLE("FontName", "微软雅黑");
+    		lodop.SET_PRINT_STYLE("FontSize", 11);
+    		lodop.ADD_PRINT_TEXT(20, 240, 300, 30, "麻 醉 科 医 师");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 21); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	
+    		lodop.ADD_PRINT_TEXT(60, 40, 720, 20, "个  人  工  作  量  统  计  表 （共 "+operCount+" 台）");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 18); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 2) //居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    		
+    		lodop.ADD_PRINT_TEXT(90, 200, 560, 20, $("#AnaDoctor").combobox("getText"));
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 3) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+   
+    	}
+    	
+    	function setMonth(month)
+    	{
+	    	lodop.ADD_PRINT_TEXT(90, 40, 150, 20, month);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 1) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	}
+	}
+	</script>
+</body>
+</html>

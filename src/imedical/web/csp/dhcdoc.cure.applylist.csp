@@ -1,0 +1,84 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--治疗记录申请单列表 dhcdoc.cure.applylist.csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s PatientID="" ;$g(%request.Data("PatientID",1))
+ s EpisodeID="" ;$g(%request.Data("EpisodeID",1))
+ if ((PatientID="")&&(EpisodeID'="")){
+	 s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+ }
+</Script>
+
+<script type="text/javascript" SRC="../scripts/websys.listrows.js"></script>
+<script type="text/javascript" SRC="../scripts/websys.List.js"></script>
+<script type="text/javascript" SRC="../scripts/websys.List.Tools.js"></script>
+<script type="text/javascript" SRC="../scripts/DHCWeb.OPCommon.js"></script>
+<script type="text/javascript" SRC="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure/dhcdoc.cure.commonutil.js"></script>  
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure/dhcdoc.cure.applylist.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.JS"></script>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+</Script> 
+<Server>
+w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+</Server>
+
+ </head> 
+<body class="easyui-layout" data-options="fit:true,border:false" onload="Int()">
+<input name="PatientID" id="PatientID" type="hidden"  value="#(PatientID)#">
+  	<div data-options="region:'north',split:true" style="height:420px;">
+  	<table>
+	 	<tr>
+			<td><p>卡类型</p></td>
+			<td><input id="cardType" type="text" name="cardType" style="width:150px;height:20px;padding: 2px 5px;"/></td>
+			<td><p>卡号</p></td>
+			<td><input id="cardNo" type="text" name="cardNo" style="width:150px;height:15px;padding: 2px 5px;"/></td>
+			<td><p>登记号</p></td>
+			<td><input id="patNoIn" type="text" name="patNoIn" style="width:150px;height:15px;padding: 2px 5px;"/></td>
+			<td colspan=2 align="right"><a id="btnReadCard" class="easyui-linkbutton">读卡</a></td>
+			<td><p>申请单号</p></td>
+			<td><input id="DocApplayNo" type="text" name="DocApplayNo" style="width:150px;height:15px;padding: 2px 5px;"/></td>
+			<td><input id="CancelDis" type="checkbox" name="CancelDis" style="height:15px;padding: 2px 5px;"/>撤销</td>
+			<td><input id="FinishDis" type="checkbox" name="FinishDis" style="height:15px;padding: 2px 5px;"/>完成</td>
+			<td colspan=2 align="right"><a id="btnFind" class="easyui-linkbutton">查询</a></td>
+			<td colspan=2 align="right"><a id="btnFinish" class="easyui-linkbutton">完成</a></td>
+		<tr>
+	</table>	
+  	
+  	 <div id="p" class="easyui-panel" title="治疗申请单列表"  
+     data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">     
+      <!--治疗申请单列表table-->
+      <table id="tabCureApplyList"></table>
+      <div id="ApplyDetailDiag"></div> 
+  	</div>   
+  	</div>
+    <div data-options="region:'center',split:true" >
+    <div id="tabs" class="easyui-tabs" style="padding:1px;height:500px;"data-options="border:false">
+        <div id="Apply_Reslist" title="预约"  style="padding:5px;">
+        <iframe scrolling="no" frameborder="0"  src="dhcdoc.cure.applyreslist.csp" style="padding:1px;width:100%;height:100%;"></iframe>
+        </div>
+        <div id="Apply_Applist" title="预约列表" style="padding:5px">			
+        <iframe scrolling="no" frameborder="0"  src="dhcdoc.cure.applyapplist.csp" style="width:100%;height:100%;"></iframe>
+        </div>
+        <div id="Apply_Resultlist" title="治疗记录列表" style="padding:5px">
+        <iframe scrolling="no" frameborder="0"  src="dhcdoc.cure.curerecordlist.csp" style="width:100%;height:100%;"></iframe>			
+        </div>   	
+     </div>
+</div>  
+
+</div>  
+</div> 
+<SCRIPT language="Javascript">
+</Script> 
+     
+</body>
+</html>

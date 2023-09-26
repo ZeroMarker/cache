@@ -1,0 +1,282 @@
+<!--普通包发放-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false">
+		<div class="hisui-panel" data-options="title:'发放单信息',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div id="CondTB">
+			<div class="BorderLine"> 
+				<table class="Condition" id="MainCondition">
+					<tr>
+						<td>发放科室
+							<input id="ReqLoc" name="fromLocDr" class="textbox hisui-combobox">
+						</td>
+						<td>接收科室
+							<input id="SupLoc" name="toLocDr" class="textbox hisui-combobox">
+						</td>
+						<!--<td>消毒包
+							<input id="PackageName" name="packagename" class="textbox hisui-combobox">
+						</td>
+						<td>
+							<input id="isOPRFlag" name="isOPRFlag" value="N" hidden >
+						</td>-->
+							<td>
+							<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a>
+						</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>开始日期
+							<input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq" >
+						</td>
+						<td>结束日期
+							<input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq" >
+						</td>
+						<!--<td>
+							<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a>
+						</td>
+						<td></td>-->
+						<td>
+							<a href="#" id="CreateBT" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-eye'" style="width:130px;">查看回收单</a>
+						</td>
+						<td>
+							<input id="isOPRFlag" name="isOPRFlag" value="N" hidden >
+						</td>
+					</tr>
+					<tr>
+						<td>楼号
+						<input id="FloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
+						<td>线路号
+						<input id="LineCode" name="LineCode" class="textbox hisui-combobox"></td>
+						<td>
+							<a href="#" id="CreateBTApply" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-eye'" style="width:130px;">查看借包单</a>
+						</td>
+						<td>
+							<input id="isOPRFlag" name="isOPRFlag" value="N" hidden >
+						</td>
+					</tr>
+					<tr>
+						<td>单据号
+							<input id="FReqNo" name="FReqNo" class="textbox">
+						</td>
+						<td>发放人
+							<input class="textbox" id="toUser" name="toUser">
+							<input class="textbox" hidden id="toUserDr" name="toUserDr">
+						</td>
+							<td>
+							<a href="#" id="Print" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px;">打印</a>
+						</td>
+					</tr>
+					<tr>
+					<td>消毒包
+							<input id="PackageName" name="packagename" class="textbox hisui-combobox">
+						</td>
+						
+					</tr>
+				</table>
+				</div> 
+					<table>
+				<tr>
+					<td>
+						<a href="#" id="submitAll" class="hisui-linkbutton" data-options="iconCls:'icon-upload',plain:true">批量提交</a>
+					</td>
+				</tr>
+			</table>
+			</div>
+			<table id="MainList"></table>
+		</div>
+	</div>
+	<!--
+	<div class="GridPadding hisui-layout" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:370px;padding-left:10px">
+		<div class="hisui-panel" data-options="title:'发放明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<table id="ItemList"></table>
+		</div>
+	</div>
+	-->
+		<!--<div class="GridPadding hisui-layout" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:650px;padding-left:0px;padding-right:0px;padding-bottom:5px">	
+		<div class="GridPadding" data-options="title:'',region:'center',border:false,headerCls:'panel-header-gray'" style="width:520px;padding-left:10px;padding-bottom:0px">	
+		 <div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="发放明细">
+			<div id="Itembr">
+				<table id="ColSetConditions" class="Condition">
+					<tr>
+					   <td><label>条码</label><input class="hisui-numberbox textbox" id="BarCode" name="BarCode" style="width:150px"></td>
+					</tr>
+				</table>
+			   <table>
+					<tr>
+						<td><a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a></td>
+						<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a></td>
+						<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a></td>
+					</tr>
+						<div class="BorderLine"></div>	
+				</table>
+			</div>
+				<table id="ItemList"></table>
+		</div>
+		</div>
+		<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:280px;padding-left:0px;padding-bottom:0px">	
+			<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="发放标签明细">
+				<table id="ItemSList"></table>
+			</div>
+		</div>
+	</div>-->
+
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:450px;padding-left:0px">	
+		<div class="hisui-layout" data-options="fit:true">
+			<div  data-options="region:'north',border:false,collapsible:false" style="height:400px" >
+				<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="发放明细">
+					<div id="Itembr">
+						<table id="ColSetConditions" class="Condition">
+							<tr>
+					   		<td><label>条码</label><input class="hisui-numberbox textbox" id="BarCode" name="BarCode" style="width:150px"></td>
+							</tr>
+						</table>
+			   			<table>
+						<tr>
+							<td><a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a></td>
+							<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a></td>
+							<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a></td>
+						</tr>
+						<div class="BorderLine"></div>	
+						</table>
+					</div>
+				<table id="ItemList"></table>
+				</div>
+				</div>
+				<div  data-options="region:'center',border:false" style="padding-top:10px">
+					<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="发放标签明细" >
+						<table id="ItemSList"></table>
+					</div>
+			</div>
+		</div>
+	</div>
+	<!--选取回收单Dialog-->
+	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-find',closed:'true',modal:true" title="查看回收单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="SelReqConditions" class="Condition">
+				<input id="SelisOPRFlag" name="isOPRFlag" value="N" hidden >
+				<input class="textbox" hidden id="SeltoUserDr" name="toUserDr">
+					<tr>
+						<td>回收科室</td>
+						<td><input id="SelReqLoc" name="FReqLoc" class="textbox hisui-combobox"></td>
+						<td>单据号</td>
+						<td><input id="FReqNo" name="FReqNo" class="textbox"  ></td>
+						<td><input id="FIsOPRFlag" name="FIsOPRFlag" class="textbox" value="N" hidden></td>
+						<!--<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a></td>-->
+					</tr>
+					<tr>
+						<td>开始日期</td>
+						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox" ></td>
+						<td>结束日期</td>
+						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox" ></td>
+						<!--<td>是否生成发放单
+							<input class='hisui-radio' type="radio" label='是' name='isDisp' value='Y'>
+							<input class='hisui-radio' type="radio" label='否' name='isDisp' value='N' data-options="checked:true">
+						</td>
+						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">生成发放单</a></td>-->
+					</tr>
+					<tr>
+						<td>楼号</td>
+						<td><input id="CFloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
+						<td>线路号</td>
+						<td><input id="CLineCode" name="LineCode" class="textbox hisui-combobox"></td>
+						<td>是否生成发放单
+							<input class='hisui-radio' type="radio" label='是' name='isDisp' value='Y'>
+							<input class='hisui-radio' type="radio" label='否' name='isDisp' value='N' data-options="checked:true">
+						</td>
+						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a></td>
+						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">生成发放单</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0; width:600px" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'回收单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div>
+          <audio src="" id="snd_ie" hidden="true"></audio>
+    </div>
+    <!--查询借包单-->
+   <div id="SelReqWinBorrow" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-find',closed:'true',modal:true" title="查看借包单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="SelReqConditionsBro" class="Condition">
+				<input id="SelisOPRFlag" name="isOPRFlag" value="N" hidden >
+				<input class="textbox" hidden id="SeltoUserDr" name="toUserDr">
+					<tr>
+						<td>申请科室</td>
+						<td><input id="SelReqLocB" name="FReqLoc" class="textbox hisui-combobox"></td>
+						<td>单据号</td>
+						<td><input id="FReqNo" name="FReqNo" class="textbox"  ></td>
+						<td><input id="FIsOPRFlag" name="FIsOPRFlag" class="textbox" value="N" hidden></td>
+						<!--<td><a href="#" id="SelReqQueryBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a></td>-->
+					</tr>
+					<tr>
+						<td>开始日期</td>
+						<td><input id="FStartDateB" name="FStartDate" class="textbox hisui-datebox" ></td>
+						<td>结束日期</td>
+						<td><input id="FEndDateB" name="FEndDate" class="textbox hisui-datebox" ></td>
+						<!--<td>是否生成发放单
+							<input class='hisui-radio' type="radio" label='是' name='isDisp' value='Y'>
+							<input class='hisui-radio' type="radio" label='否' name='isDisp' value='N' data-options="checked:true">
+						</td>
+						<td><a href="#" id="SelReqCreateBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">生成发放单</a></td>-->
+					</tr>
+					<tr>
+						<td>楼号</td>
+						<td><input id="BroFloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
+						<td>线路号</td>
+						<td><input id="BroLineCode" name="LineCode" class="textbox hisui-combobox"></td>
+						<td>是否生成发放单
+							<input class='hisui-radio' type="radio" label='是' name='isDisp' value='Y'>
+							<input class='hisui-radio' type="radio" label='否' name='isDisp' value='N' data-options="checked:true">
+						</td>
+						<td><a href="#" id="SelReqQueryBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a></td>
+						<td><a href="#" id="SelReqCreateBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">生成发放单</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0; width:600px" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'申请单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqMasterGridBro"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqDetailGridBro"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+<script type="text/javascript" src="../scripts/cssd/Disp/DispCommon.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Disp/SelReq.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Disp/SelReqApply.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Disp/FindWin.js"></script>	
+<script type="text/javascript" src="../scripts/cssd/Disp/PackageDisp.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Common/commonmedia.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Disp/DispPrint.js"></script>
+</body>
+</html>

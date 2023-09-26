@@ -1,0 +1,72 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+</csp:method>
+<script language="cache" runat="server">
+ s action = $Get(%request.Data("action",1))
+ s start = $Get(%request.Data("start",1))
+ s limit = $Get(%request.Data("limit",1))
+
+ i action = "mrbaselist" d
+ .
+ .s BeginDate=$Get(%request.Data("BeginDate",1))
+ .s EndDate=$Get(%request.Data("EndDate",1))
+ .s LocID=$Get(%request.Data("LocID",1))
+ .s ICD=$Get(%request.Data("ICD",1))
+ .s RegNo=$Get(%request.Data("RegNo",1))
+ .s PatName=$Get(%request.Data("PatName",1))
+ .s PatSexID=$Get(%request.Data("PatSexID",1))
+ .s PatAgeFrom=$Get(%request.Data("PatAgeFrom",1))
+ .s PatAgeTo=$Get(%request.Data("PatAgeTo",1))
+ .s PAADM=$Get(%request.Data("PAADM",1))
+ .s PatientType=$Get(%request.Data("PatientType",1))
+ .s FindCheck=$Get(%request.Data("FindCheck",1))
+ .s YuanQuID=$Get(%request.Data("YuanQuID",1))
+ .s PatInDate=$Get(%request.Data("PatInDate",1))
+ .s PatLocNum=$Get(%request.Data("PatLocNum",1))
+ .i (PatientType="")||(PatientType="CPatient") w ##class(web.DHCCRM.SetPlan).MRBaseList(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,PAADM,PatientType,FindCheck,YuanQuID,PatInDate,PatLocNum,start,limit)
+ .i PatientType="IPatient" w ##class(web.DHCCRM.SetPlan).MRBaseListI(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,PAADM,PatientType,FindCheck,YuanQuID,PatInDate,PatLocNum,start,limit)
+ .i PatientType="OPatient" w ##class(web.DHCCRM.SetPlan).MRBaseListO(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,PAADM,PatientType,FindCheck,YuanQuID,start,limit)
+ .i PatientType="HPatient" w ##class(web.DHCCRM.SetPlan).MRBaseListH(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,PAADM,PatientType,FindCheck,YuanQuID,start,limit)
+ .i PatientType="EIPatient" w ##class(web.DHCCRM.SetPlan).MRBaseListEI(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,PAADM,PatientType,FindCheck,YuanQuID,start,limit)
+ .i PatientType="EOPatient" w ##class(web.DHCCRM.SetPlan).MRBaseListEO(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,PAADM,PatientType,FindCheck,YuanQuID,start,limit)
+ .i PatientType="BYUser" w ##class(web.DHCCRM.SetPlan).MRBaseListU(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,PAADM,PatientType,start,limit)
+
+ i action = "fuplist" d
+ .s BeginDate=$Get(%request.Data("BeginDate",1))
+ .s EndDate=$Get(%request.Data("EndDate",1))
+ .w ##class(web.DHCCRM.SetPlan).FUPlanList(BeginDate,EndDate,start,limit)
+ i action="loclist" d
+ .s LocDesc=$Get(%request.Data("locDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetLoc(start,limit,LocDesc)
+ i action="wardlist" d
+ .s cxlocId=$Get(%request.Data("cxlocId",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetWard(start,limit,cxlocId)
+ i action="fupersonlist" d
+ .s UserDesc=$Get(%request.Data("UserDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetUser(UserDesc)
+ i action="fuICDlist" d
+ .s ICDDesc=$Get(%request.Data("ICDDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetICD(ICDDesc)
+ i action="fuqtICDlist" d
+ .s ICDDesc=$Get(%request.Data("ICDDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetQTICD()
+ i action="Sexlist" d
+ .s SexDesc=$Get(%request.Data("SexDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetSex(SexDesc)
+ i action="yuanqulist" d
+ .w ##class(web.DHCCRM.GetBaseInfo).GetYuanQu()
+ i action="AddPlan" d
+ .s PAADMStr=$Get(%request.Data("PAADMStr",1))
+ .s FUSRowIdStr=$Get(%request.Data("FUSRowIdStr",1))
+ .s FUSUser=$Get(%request.Data("FUSUser",1))
+ .s FUSDate=$Get(%request.Data("FUSDate",1))
+ .s PatientType=$Get(%request.Data("PatientType",1))
+ .s FUSEndDate=$Get(%request.Data("FUSEndDate",1))
+ .s PTUser=$Get(%request.Data("PTUser",1))
+ .s fudays=$Get(%request.Data("fudays",1))
+ .s funums=$Get(%request.Data("funums",1))
+ .
+ .w ##class(web.DHCCRM.SetPlan).SetPlan(PAADMStr,FUSRowIdStr,FUSUser,FUSDate,PatientType,FUSEndDate,PTUser,fudays,funums)
+</script>
+

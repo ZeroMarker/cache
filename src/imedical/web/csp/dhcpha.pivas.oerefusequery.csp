@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--配液拒绝医嘱查询,给医生站/护士站展示
+	csp:dhcpha.pivas.oerefusequery.csp
+	js: scripts/pharmacy/pivas/oerefusequery.js
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+	<Server language="CACHE" runat="Server">
+   	s admId = $G(%request.Data("EpisodeID",1))
+   </Server> 
+    <SCRIPT Language="Javascript">
+	// 接收参数
+	var LoadAdmId="#(admId)#"||"";
+	</script>
+</HEAD>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'center',title:'配液拒绝查询',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-common'">
+                    <table id="gridOrdExe"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+     <div id="gridOrdExeBar">
+        <table class="dhcpha-north-tbl" cellpadding=0 cellspacing=0>
+	        <tr>
+	            <td>
+	                <label for="dateOrdStart">用药日期</label>
+	                <input id="dateOrdStart" class="hisui-datebox" data-options="width:120">
+	                <input id="dateOrdEnd" class="hisui-datebox" data-options="width:120">
+	            </td>
+	            <td>
+	            	<label for="txtPatNo">登记号</label>
+	                <input id="txtPatNo" class="hisui-validatebox" placeholder="登记号...">
+	            </td>
+	            <td>
+	                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">查询</a>
+	            </td>
+	        </tr>
+        </table>
+    </div>   
+	<!--script type="text/javascript" src="https://www.jeasyui.com/easyui/datagrid-bufferview.js"></script-->
+    <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>   
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/oerefusequery.js"></script>
+</body>
+
+</HTML>

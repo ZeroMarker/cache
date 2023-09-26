@@ -1,0 +1,41 @@
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+	s Hosp=$Get(%request.Data("HospId",1))
+    s conditionCode=$Get(%request.Data("conditionCode",1))
+    s conditionName=$Get(%request.Data("conditionDesc",1))
+    s conditionType=$Get(%request.Data("conditionType",1))
+    s conditionAlias=$Get(%request.Data("conditionAlias",1))
+    s conditionHosp=$Get(%request.Data("conditionHosp",1))
+    s listData=$Get(%request.Data("data",1))
+    s RowId=$Get(%request.Data("rowid",1))
+    //查询产地信息
+    i Action = "query" d
+    .s result = ##class(web.DHCST.DHCOrigin).Query(Start,Limit,Sort,Dir,conditionCode,conditionName,conditionType,conditionAlias,conditionHosp,Hosp)
+    .i result = "" d
+    ..w "{results:0,rows:[]}"
+    .e  d
+    ..w result
+
+    //保存产地
+    i Action = "save" d
+    .s result = ##class(web.DHCST.DHCOrigin).Save(listData,Hosp)
+    .i result = "" d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //删除产地
+    i Action = "delete" d
+    .s result = ##class(web.DHCST.DHCOrigin).Delete(RowId,Hosp)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+</script>

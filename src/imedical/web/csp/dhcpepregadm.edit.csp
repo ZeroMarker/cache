@@ -1,0 +1,125 @@
+<!--DHCPEPreGADM.Edit.csp -->
+<!-- 
+/// 创建时间		2006.06.27
+/// 创建人			xuwm 
+/// 内容			团体预约 框架
+/// 类型			框架页面 
+/// 主要功能		团体预约功能的标签列表页面/团体预约页面
+/// 最后修改时间	
+/// 最后修改人	 
+/// 
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+
+ 	s ParRef=$g(%request.Data("ParRef",1))
+ 	i ""'=ParRef d
+ 	.s Data=##class(web.DHCPE.PreGADM).DocListBroker("","",ParRef_"^")
+ 	.s PreGADMData=$P(Data,";",2)
+ 	.s GBookDate=$P(PreGADMData,"^",6)
+ 	.s GBookTime=$P(PreGADMData,"^",7)
+ 	.s ParRefName=$g(%request.Data("ParRefName",1))
+ 	.
+ 	.// 图表是否可用 
+ 	.s EditIsDisabled=""
+ 	.s ListIsDisabled=""
+ 	.s TeamIsDisabled=""
+ 	.
+ 	e  d
+ 	.s GBookDate=""
+ 	.s GBookTime=""
+ 	.
+ 	.// 图表是否可用 
+ 	.s EditIsDisabled=""
+ 	.s ListIsDisabled="disabled"
+ 	.s TeamIsDisabled="disabled"
+ 	.s ParRefName=""
+
+ 	// 操作类型
+ 	s OperType=$g(%request.Data("OperType",1))
+ 	
+ 	// 	Q : 查询
+	i "Q"=OperType d
+	.s CurComponent="DHCPEPreGADM.Edit"
+	. 
+ 	
+ 	// 	E : 编辑
+	i "E"=OperType d
+	.s CurComponent="DHCPEPreGADM.Edit"
+	. 
+	
+	// 	T : 中间加项
+	i "T"=OperType d
+ 	.s EditIsDisabled="disabled"
+ 	.s ListIsDisabled="disabled"
+ 	.s TeamIsDisabled=""
+	.s CurComponent="DHCPEPreIADM.Team"
+	
+	s ChartItem="DHCPEPreGADM.Edit"
+	
+	
+	
+	
+</Script>
+</HEAD>
+
+<BODY>
+<input id="ChartItem" name="ChartItem" type="hidden" value='#(ChartItem)#'>
+<input id="OperType" name="OperType" type="hidden" value='#(OperType)#'>
+
+<!-- 传递预约日期和预约时间 -->
+<input id="ID" name="ID" type="hidden" value="#(ParRef)#">
+<input id="Name" name="Name" type="hidden" value="#(ParRefName)#">
+
+<!-- 传递预约日期和预约时间 -->
+<input id="GBookDate" name="GBookDate" type="hidden" value="#(GBookDate)#">
+<input id="GBookTime" name="GBookTime" type="hidden" value="#(GBookTime)#">
+<!-- GADMData 传递数据 -->
+<input id="GADMData" name="GADMData" type="hidden" value="">
+<script language=javascript>
+
+	var offsetWdt = document.body.offsetWidth - document.body.clientWidth;
+	var offsetHgt = document.body.offsetHeight - document.body.clientHeight;
+	var remainHgt;
+	var remainWdt;
+	/*<DIV class='chartitem' id='DHCPEPreGTeam.List' onclick='SelectChart(this);' #(ListIsDisabled)#><a href="#">团体分组</A></div>
+		<DIV class='chartitem' id='DHCPEPreIADM.Team' onclick='SelectChart(this);' #(TeamIsDisabled)#><a href="#">人员分组</A></div>
+		*/
+</script>
+<DIV id="chartbook">
+	<DIV id="charttabs">
+		<DIV class='chartitem' id='DHCPEPreGADM.Edit' onclick='SelectChart(this);' #(EditIsDisabled)#><a href="#">团体预约 </A></div>
+		<!--CSP:IF CONDITION=(""'=ParRef)-->
+		<!--DIV class='chartitem' id='DHCPEPreGTeam.List' onclick='SelectChart(this);' #(TeamIsDisabled)#><a href="#">团体分组</A></div-->
+		<!--/CSP:IF-->
+		<DIV class='chartitem' id='DHCPEPreGTeam.List' onclick='SelectChart(this);' #(TeamIsDisabled)#><a href="#">团体分组</A></div>
+		<!--DIV class='chartitem' id='DHCPEGroupAllPersonFind' onclick='SelectChart(this);' #(TeamIsDisabled)#><a href="#">批量加减项目</A></div-->
+	</DIV>
+	<DIV id="data">
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		i "T"=OperType d
+		.w "<IFRAME id='dataframe' name='dataframe' src='websys.default.csp?WEBSYS.TCOMPONENT=DHCPEPreIADM.Team&ParRef="_ParRef_"&ParRefName="_ParRefName_"&OperType="_OperType_"' frameborder=0></iframe>"
+		e  d
+		.w "<IFRAME id='dataframe' name='dataframe' src='websys.default.csp?WEBSYS.TCOMPONENT=DHCPEPreGADM.Edit&ID="_ParRef_"&OperType=E' frameborder=0></iframe>"
+	</SCRIPT>
+	</DIV>
+</DIV>
+
+<SCRIPT SRC="../scripts/DHCPE.Chartbook.PreGADM.js"></SCRIPT>
+<SCRIPT SRC="../scripts/DHCPEPreGADM.Opertator.js"></SCRIPT>
+<script language=javascript>
+	setDataFrameSize();
+</script>
+
+</BODY>
+</HTML>

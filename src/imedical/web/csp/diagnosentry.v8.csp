@@ -1,0 +1,365 @@
+<!--诊断录入V8csp,csp:diagnosentry.v8.csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
+<HISUI></HISUI>
+<!-- jqgrid css-->
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/ui.jqgrid.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/ipdoc/css/dhcdocCustomjqGrid.css">
+<!--放大镜-->
+<!--script type='text/javascript' src='../scripts/framework/ext.icare.Lookup.js'></script-->
+<!-- jqgrid js-->
+<script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/jquery.jqGrid.src.js"></script>
+<!-- this page js -->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDocDiagnoEntry.V8.js"></script>
+<style>
+.DiagSaved{
+	background:pink;
+}
+.tree-icon , .tree-file{
+	display:none;
+}
+.ui-corner-all{
+	border-top-left-radius:0px;
+	border-top-right-radius:0px;
+}
+.toolbar-div{
+	margin-top:10px;
+	border:1px solid #ccc;
+	border-bottom:0px;
+	border-top-left-radius:5px;
+	border-top-right-radius:5px;
+}
+.datagrid-toolbar, .datagrid-pager{
+	background: transparent;
+}
+a {
+	text-decoration: underline; 
+	color: #40A2DE;
+}
+a:hover{
+	cursor: pointer;
+}
+#DiagTemplate,#AllDiag_List_btn{ /*,#DiagnosDel_List_btn*/
+	position:absolute;
+	display:block;
+	text-decoration:none;
+	top:10px;
+	right:10px;
+	color: #1584D2;
+}
+#MouthDiaInput{
+	position:absolute;
+	display:block;
+	text-decoration:none;
+	top:10px;
+	right:100px;
+	color: #1584D2;
+}
+.panel-header-card-gray{
+	width: 80px !important;
+}
+.l-btn-plain .l-btn-icon-left .l-btn-text{
+	margin:0px 0px 0px 20px
+}
+.l-btn-text{
+	padding:0 5px;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.lookup{
+	height:28px !important;
+	line-height:28px !important;
+}
+BODY INPUT:focus{
+	background-color:#f4faff;
+}
+
+#diagTempTabs .tabs-wrap {
+	width:auto !important;
+}
+#diagTempTabs .tabs-panels{
+	border:0;
+}
+#diagTempTabs .tabs-header{
+	border-left:0;
+	border-right:0;
+	border-radius: 0;
+}
+#BMore{
+	float:right;
+	width:70px;
+	height:35px;
+	border:1px solid #ccc;
+	border-right:0;
+}
+#BMore .l-btn-text{
+	padding:0 10px;
+	margin-left:0;
+	margin-right:10px;
+	height:35px;
+	line-height:35px;
+}
+#BMore .m-btn-downarrow{
+	height:35px;
+}
+#mmedit .menu-text{
+	padding-left:10px;
+}
+.selmenudiv {
+	font-weight:bold;
+}
+#diagTempTypeKW li {
+	width:90px;
+}
+</style>
+</head>
+ 
+<body>
+    <Server>
+	     Set PatientID="",mradm=""
+		 Set EpisodeID=%request.Get("EpisodeID")
+		 Set langid=20
+		 If ($DATA(%session)){
+			Set langid=+$GET(%session.Data("LOGON.LANGID"))
+		}
+		 If (EpisodeID=""){
+			 Write "<SCRIPT Language=""Javascript"">"
+	         Write "document.write('"_##class(websys.Translation).Get("diagnosentry.v8.csp","请选择患者!")_");"
+	         Write "</script>"
+			 Quit
+		 }
+		 Set Opener=%request.Get("Opener")
+		 Set SearchDiagnosTypeStr=%request.Get("DiagnosTypeStr")
+		 
+	     If (EpisodeID'=""){
+		     Set PatientID=$PIECE($GET(^PAADM(EpisodeID)),"^",1)
+		     Set mradm=$PIECE($GET(^PAADM(EpisodeID)),"^",61)
+		 }
+		 Set CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$HOROLOG)
+		 Set SYSDateFormat=##class(websys.Conversions).DateFormat()
+		 //出院诊断id
+		 Set DISDiagnosTypeRowId=$ORDER(^MRC("DTYP",0,"Code","DIS",0))
+		 ;门诊默认诊断类型
+	     Set OPDedfaultDiagnosTypeID=$ORDER(^MRC("DTYP",0,"Code","OP",0))
+	     ;住院默认诊断类型
+	     Set IPDedfaultDiagnosTypeID=$ORDER(^MRC("DTYP",0,"Code","PRE",0))
+	     Set ShowDiagOtherInfo=1 //控制是否显示诊断其他信息框
+		 Set PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+		 If (PAAdmType="I") {
+			 Set ShowDiagOtherInfo=0
+			 Set DedfaultDiagnosTypeID=IPDedfaultDiagnosTypeID
+			 Set OutDisFlag=%request.Get("OutDisFlag")
+			 If OutDisFlag="1" Set DedfaultDiagnosTypeID=DISDiagnosTypeRowId
+			 Set DiagDelLimitFlag=+##class(web.DHCDocConfig).GetConfigNode("IPDiagDelLimit") 
+		 }Else{
+			 Set DedfaultDiagnosTypeID=OPDedfaultDiagnosTypeID
+			 Set DiagDelLimitFlag=+##class(web.DHCDocConfig).GetConfigNode("OPDiagDelLimit")
+		 }
+	     ;删除诊断
+		 Set DeleteMRDiagnosMethod=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocDiagnosEntryV8.DeleteMRDiagnos"))
+		 ;更新诊断位置、级别
+		 Set UpdateMRDiagnosMethod =##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocDiagnosNew.UpdateMRDiagnos"))
+		 ;保存诊断
+	     Set InsertMRDiagnosMethod=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocDiagnosEntryV8.InsertMRDiagnos"))
+	     ;判断是否可以接诊
+	     Set CheckIsAdmissionsMethod=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocOutPatientList.CheckIsAdmissions"))
+	     ;必须录入血压(科室扩展第12位)
+	     Set NeedStolicMast=+(##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),12))
+	     ;判断是否可以新增或修改诊断
+	     Set CheckAdd=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCMRDiagnos.CheckAdd"))
+	     ;传染病上报诊断提示
+	     Set GetSeriousDiseaseByICDMethod=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCMRDiagnos.GetSeriousDiseaseByICD"))
+	     ;得到本次诊断列表
+	     Set GetMRDiagnoseList=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocDiagnosNew.GetMRDiagnoseList"))
+	     ;判断ICD是否重复
+	     Set FlagMarchDiagnose=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocDiagnosNew.FlagMarchDiagnose"))
+	     Set GetICDInfoByICDDrMethod=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocDiagnosEntryV8.GetICDInfoByICDDr"))
+	     Set FindClinicPathWayByICDMethod=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCMRClinicalPathWays.FindClinicPathWayByICD"))
+	     ;得到诊断其他信息  诊断相关信息
+		 //s DiagOtherInfo=##class(web.DHCDocDiagnosEntryV8).GetDiagOtherInfo(EpisodeID)
+		 //获取特殊人群 基础数据-病人管理下-特殊人群
+		 Set SpecialJson=##class(web.DHCDocDiagnosEntryV8).GetSpecialJson()
+		 //不允许录入非ICD诊断
+		 //s NotEntryNoICDDiag=##class(web.DHCDocConfig).GetConfigNode("NotEntryNoICDDiag")
+		 //获取生理周期
+		 Set PhysiologicalCycleJson=##class(web.DHCDocDiagnosEntryV8).GetPhysiologicalCycleJson()
+		 //分床日期
+		 /*s AdmBedInfo=##Class(EMRservice.DAL.GetPaAdmDetail).AdmDateTimeInBed(EpisodeID)
+		 s AdmBedDate=$p(AdmBedInfo,",",1)
+		 s AdmBedDate=##class(websys.Conversions).DateLogicalToHtml(AdmBedDate)*/
+		 //启用标准证型诊断
+	     Set UserICDSyndrome=##class(web.DHCDocConfig).GetConfigNode("UserICDSyndrome")
+	     Set GetDataFromHistMRDiag=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocDiagnosEntryV8.GetDataFromHistMRDiag"))
+		 Set DiagnosTypeStr=##class(DHCDoc.OPDoc.DiagnosEntryListCommon).GetDiagnosTypeStr(PAAdmType,"",SearchDiagnosTypeStr)
+		 Set DiagnosTypeJson=##class(DHCDoc.OPDoc.DiagnosEntryListCommon).GetDiagnosTypeStr(PAAdmType,"JSON",SearchDiagnosTypeStr)
+		 If ((";"_DiagnosTypeStr)'[(";"_DedfaultDiagnosTypeID_":"))&&(DiagnosTypeStr'=""){
+		 	Set DedfaultDiagnosTypeID=$PIECE(DiagnosTypeStr,":",1)
+		 	Set DedfaultDiagnosTypeCode=$PIECE($GET(^MRC("DTYP",DedfaultDiagnosTypeID)),"^",1)
+		 }
+		 Set DiagnosTypeCodeStr=""
+		 For i=1:1:$LENGTH(DiagnosTypeStr,";"){
+			 Set id=$PIECE($PIECE(DiagnosTypeStr,";",i),":",1)
+			 Set code=$PIECE($GET(^MRC("DTYP",id)),"^",1)
+			 If DiagnosTypeCodeStr="" Set DiagnosTypeCodeStr=code
+			 e  Set DiagnosTypeCodeStr=DiagnosTypeCodeStr_","_code
+	     }
+	     //*******************与选中病人相关的变量集*****************************///
+ 		 Set EpisPatInfo=##Class(web.DHCDocViewDataInit).InitPatDiagViewGlobal(%request.Get("EpisodeID"),%request.Get("OutDisFlag"),%request.Get("DiagnosTypeStr"),%request.Get("Opener"))
+ 
+		 Set DiagnosBodyPart=##class(web.DHCDocDiagnosEntryV8).GetBodyPart()
+		 Set DiagnosStatusStr=##class(DHCDoc.OPDoc.DiagnosEntryListCommon).GetDiagnosStatusStr()
+		 Set SetArrivedStatus=##Class(%CSP.Page).Encrypt($LISTBUILD("web.DHCDocOrderEntry.SetArrivedStatus"))
+	     Set WeekGestationDia=##class(web.DHCDocConfig).GetConfigNode("WeekGestationDia")
+	     Set DocID=$PIECE(^SSU("SSUSR",%session.Get("LOGON.USERID")),"^",14)
+		 Set MenuName = "System.DiagFav.Save.SaveAsLoc"
+		 ;得到安全组是否有医嘱模板维护某一个保存菜单权限
+		 Set IsHaveMenuAuthDiagFav=##class(web.DHCDocDiagnosNew).IsHaveMenuAuthDiagFav(%session.Get("LOGON.GROUPID"),MenuName)
+		 ;copy diagnos
+		 ;s CopyDiagnosStr = $g(%request.Data("copyOeoris",1))
+		 Set CopyDiagnosStr=""
+		 Set copyOeoris=$GET(%request.Data("copyOeoris",1))
+		 Set len = $LENGTH(copyOeoris,"^")
+		 If (copyOeoris'=""){
+		 	For j=1:1:len {
+				Set dataItem = ##class(web.DHCDocDiagnosEntryV8).CreateCopyItem($PIECE(copyOeoris,"^",j))
+				If (dataItem="") Continue
+				If (CopyDiagnosStr="") Set CopyDiagnosStr=dataItem
+				Else  Set CopyDiagnosStr=CopyDiagnosStr_$CHAR(2)_dataItem
+			}
+		 }
+		 Set XCONTEXT=""
+		 ;得到诊断录入的表格配置对象
+		 Set ListColSetCls="web.DHCDocDiagListCommon"
+		 Set ListColSetMth="GetListColSet"
+		 Kill colNames,colModelAry,ParamAry
+		 Set colNames=""
+		 ;中医科标志(科室扩展第16位)
+		 Set ZYLocFlag=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),16)
+		 Set CMDisFlag=%request.Get("CMDisFlag")
+		 Set CMDiag=##class(websys.Translation).Get("diagnosentry.v8.csp","中医")
+		 Set CMSubDiag=##class(websys.Translation).Get("diagnosentry.v8.csp","证型")
+		 Set YMDiag=##class(websys.Translation).Get("diagnosentry.v8.csp","西医")
+		 If (CMDisFlag=1){
+			 Set ParamAry("DiagnosCat")="1:"_CMDiag_";2:"_CMSubDiag_";0:"_YMDiag
+		 }Else{
+			
+			 If ZYLocFlag'=1  Set ParamAry("DiagnosCat")="0:"_YMDiag_";1:"_CMDiag_";2:"_CMSubDiag
+			 Else  Set ParamAry("DiagnosCat")="1:"_CMDiag_";2:"_CMSubDiag_";0:"_YMDiag
+		 }
+		 ;诊断通过模板/历史录入自动保存
+		 Set DiagFromTempOrHisAutoSave=##class(web.DHCDocConfig).GetConfigNode("DiagFromTempOrHisAutoSave")
+		 Set LocDiagFromTempOrHisAutoSave=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Data("LOGON.CTLOCID"),24)
+		 Set LocDiagFromTempOrHisAutoSave=$CASE(LocDiagFromTempOrHisAutoSave,"Y":1,"N":0,:"")
+		 If LocDiagFromTempOrHisAutoSave'="" Set DiagFromTempOrHisAutoSave=LocDiagFromTempOrHisAutoSave
+		 //从后台返回的下拉列表数据
+		 //s ParamAry("DiagnosCat")="0:"_西医_";1:"_"中医"_";2:"_"证型"
+		 Set ParamAry("DiagnosType")=DiagnosTypeStr
+		 Set ParamAry("DiagnosBodyPart")=DiagnosBodyPart
+		 Set ParamAry("MainDiagFlag")="N:"_##class(websys.Translation).Get("diagnosentry.v8.csp","否")_";Y:"_##class(websys.Translation).Get("diagnosentry.v8.csp","是")
+		 Set ParamAry("DiagnosStatus")=DiagnosStatusStr //"QZ:确诊;DZ:待诊;YZ:疑诊"
+		 Set ParamAry("LongDiagnosFlag")=":;L:"_##class(websys.Translation).Get("diagnosentry.v8.csp","本科")_";H:"_##class(websys.Translation).Get("diagnosentry.v8.csp","全科")
+		 Do ##class(web.DHCDocDiagListCommon).ReadListColSet(ListColSetCls,ListColSetMth,.colNames,.colModelAry,.ParamAry,XCONTEXT)
+	     Write "<SCRIPT Language=""Javascript"">",!
+		 Write "var ListConfigObj={colNames:null,colModel:null};",!
+		 Write "var colNamesAry=new Array();",!
+		 Write "var colModelAry=new Array();",!
+		 For i=1:1:$LENGTH(colNames,",") {
+			 Set colName=$PIECE(colNames,",",i)
+			 Continue:colName=""
+			 Set colModel=colModelAry(colName)
+			 Write "colNamesAry.push('"_colName_"');",!
+			 Write "colModelAry.push("_colModel_");",!
+		 }
+		 Write "ListConfigObj.colNames=colNamesAry;",!
+		 Write "ListConfigObj.colModel=colModelAry;",!
+		 Write "</SCRIPT>",!
+	</Server>
+	<!--医政组MRDiagnos.js需要-->
+	<input id='EpisodeID' name='EpisodeID' type='hidden' value='#(EpisodeID)#'>
+    <input id='PatientID' name='PatientID' type='hidden' value='#(PatientID)#'>
+	<!--
+		/*
+		    EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			mradm:"#(mradm)#",
+			DedfaultDiagnosTypeID:"#(DedfaultDiagnosTypeID)#",
+			PAAdmType:"#(PAAdmType)#",
+			DiagOtherInfo:"#(DiagOtherInfo)#",
+			Opener:"#(Opener)#",
+			AdmBedDate:"#(AdmBedDate)#",
+			DiagDelLimitFlag:"#(DiagDelLimitFlag)#",
+			NotEntryNoICDDiag:"#(NotEntryNoICDDiag)#",
+	    */
+	-->
+    <csp:Include Page="diagnosentry.v8.show.csp">
+	<SCRIPT language = 'javascript' >
+		
+		//全局请求后台服务对象
+		var ServerObj={
+			SYSDateFormat:"#(SYSDateFormat)#",
+			CurrentDate:"#(CurrentDate)#",
+			lookupListComponetId:1872,
+			ListColSetCls:"#(ListColSetCls)#",
+		    ListColSetMth:"#(ListColSetMth)#",
+		    XCONTEXT:session["CONTEXT"],
+		    DeleteMRDiagnosMethod:"#(DeleteMRDiagnosMethod)#",
+		    UpdateMRDiagnosMethod:"#(UpdateMRDiagnosMethod)#",
+		    InsertMRDiagnosMethod:"#(InsertMRDiagnosMethod)#",
+		    CheckIsAdmissionsMethod:"#(CheckIsAdmissionsMethod)#",
+		    NeedStolicMast:"#(NeedStolicMast)#",
+		    CheckAdd:"#(CheckAdd)#",
+		    GetSeriousDiseaseByICDMethod:"#(GetSeriousDiseaseByICDMethod)#",
+		    GetMRDiagnoseList:"#(GetMRDiagnoseList)#",
+		    FlagMarchDiagnose:"#(FlagMarchDiagnose)#",
+		    GetICDInfoByICDDrMethod:"#(GetICDInfoByICDDrMethod)#",
+		    FindClinicPathWayByICDMethod:"#(FindClinicPathWayByICDMethod)#",
+		    UserICDSyndrome:"#(UserICDSyndrome)#",
+		    GetDataFromHistMRDiag:"#(GetDataFromHistMRDiag)#",
+		    DiagnosTypeStr:"#(DiagnosTypeStr)#",
+		    SearchDiagnosTypeStr:"#(SearchDiagnosTypeStr)#",
+		    DiagnosTypeJson:"#(DiagnosTypeJson)#",
+		    SetArrivedStatus:"#(SetArrivedStatus)#",
+		    WeekGestationDia:"#(WeekGestationDia)#",
+		    DocID:"#(DocID)#",
+		    ZYLocFlag:"#(ZYLocFlag)#",
+		    SpecialJson:"#(SpecialJson)#",
+		    DISDiagnosTypeRowId:"#(DISDiagnosTypeRowId)#",
+		    PhysiologicalCycleJson:"#(PhysiologicalCycleJson)#",
+			CMDisFlag:"#(CMDisFlag)#",
+			DiagFromTempOrHisAutoSave:"#(DiagFromTempOrHisAutoSave)#",
+			IsHaveMenuAuthDiagFav:"#(IsHaveMenuAuthDiagFav)#",
+			CopyDiagnosStr:"#(CopyDiagnosStr)#",
+			pageCode:'diagnosentry.v8.csp',
+			domSelector:'.textbox'
+		};
+		//alert("in:"+ServerObj.Opener)
+		//页面加载完之后在复制，防止事件未定义导致报错
+		$(function(){
+			$(".window-mask.alldom").hide();
+			//dhcdoc.diag.entry.view.InitDiagEntry();
+			InitPatDiagViewGlobal("#(EpisPatInfo)#");
+			InitDiagEntry();
+		});
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
+	<!-- datePicker-->
+	<script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/calendar-js/js/WdatePicker.js"></script>
+	<!--//add by zf 20150330 引用医政组接口-->
+	<SCRIPT SRC='../scripts/dhcmed/ss/interface/MRDiagnos.js'></SCRIPT>
+	<!--电子病历引用诊断-->
+	<SCRIPT SRC='../scripts/emr/js/tools.js'></SCRIPT>
+	<SCRIPT SRC='../scripts/emr/js/record.diagnosesV8.js'></SCRIPT>
+</body>
+</html>

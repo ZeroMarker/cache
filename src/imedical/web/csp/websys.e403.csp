@@ -1,0 +1,62 @@
+<!-- PRIVATE:Demo of how to write an application error page .-->
+<!-- Copyright (c) 2000 InterSystems Inc. ALL RIGHTS RESERVED. -->
+<!-- All error pages MUST inherit from %CSP.Error -->
+<!--<csp:CLASS super=%CSP.Error INCLUDES="%occErrors">-->
+<html>
+<head>
+	<style>
+		body{
+			font-family: "Microsoft YaHei";
+		}
+		a.viewbtn{
+			font-size:14px;
+			/*position:absolute;
+			margin-top:80px;
+			margin-left:230px;*/
+			padding:5px 5px;
+			border-radius:5px;
+			background-color:#eeeeee;
+			color:#000000;
+		}
+		a.viewbtn:hover{
+			background-color:#bbbbbb;
+			color:#000000;
+		}
+	</style>
+</head>
+<body>
+<!--<HR color="#336699">-->
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+	Quit 1
+</script>
+<!--<HR color="#336699">-->
+<server>
+	New ErrorInfo,ErrorNumber,message,btnhtml
+	Set ErrorDesc=%request.Get("Error:ErrorDesc")
+	Set ErrorCode = %request.Get("Error:ErrorCode")
+	if (ErrorDesc="") Set ErrorDesc = %request.Get("ErrorDesc")
+	if (ErrorCode="") Set ErrorCode = %request.Get("ErrorCode")
+	Set btnhtml=""
+	If ErrorCode="ModelLicNotAccess"{
+		Set btnhtml="<a href=""websys.default.hisui.csp?WEBSYS.TCOMPONENT=BSP.Lic.BizModelPage"" class=""viewbtn"">查看许可</a>"
+				
+	}
+	&html<<body style="overflow:hidden;">
+		<div style="background-color:#ffffff;overflow:hidden;">
+			<div style="margin:10px auto;width:640px;text-align:center;font-size:20px;">
+				<div>#(ErrorDesc)#</div>
+				<span>请联系计算机管理员.</span>
+				#(btnhtml)#
+			</div>
+			<div style="margin:0 auto;width:540px;" >
+				<img src="../images/websys/403.gif"/>
+			</div>
+		</div>
+		<div id="errorMsg" style="height:0px;width:0px;overflow: auto;" >
+			
+		</div>
+	</body>>
+</server>
+<!--<HR color="#336699">-->
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!-- dhcapp.arclinktar.csp-->
+<html>
+<head>
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/listcomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/arclinktar.js"></script>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<style>
+	.datagrid-wrap
+	{
+		border:0px;
+	}
+</style>
+</head>
+<body>
+<div id="mainpanel" class="hisui-layout" fit="true">
+	<div data-options="region:'north',title:'',border:false,collapsible:false" style="height:50px;">
+		<div id="toolbar" class="toolbar" >
+			<div id="queryForm" style="margin:10 0 10 10;">
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+						<td class="textLabel">医嘱项代码<input style="margin-left:10px;margin-right:10px;" type="text" id="code" class="textbox"></input> </td>  
+						<td class="textLabel">医嘱项名称<input style="margin-left:10px;" type="text" id="desc" class="textbox"></input> </td>
+						<td class="textLabel"><span style="margin-left:10px;">部位名称</span><input style="margin-left:10px;" type="text" id="partdesc" class="textbox"></input> </td>
+						<td ><a style="margin-left:10px;" class="hisui-linkbutton" id="find" data-options="iconCls:'icon-w-find'" >查询</a> </td>
+						<td ><a style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a> </td>  
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'west',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style='width:400px;padding:0px 10px 10px 10px;'>
+		<div class="hisui-panel" data-options="title:'检查项目',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+			<table id="arcItemList" toolbar="#arctb">
+			</table>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false,collapsible:false" style='padding:0px 10px 10px 0px;'>
+		<div id="tabs" class="hisui-tabs tabs-gray" fit="true">
+		   	<div title="收费项关联" style="padding:0px">
+					<div id="subtoolbar" class="toolbar">
+						<table cellspacing="0" cellpadding="0" >
+						   <tr>
+							  <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+						      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+						      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:deleteTarRow()">删除</a> </td>
+					       </tr>
+					  </table>
+				    </div>
+					  <table id="arctardatagrid" class="hisui-datagrid" fit="true"
+						data-options="
+							toolbar:'#subtoolbar',
+						    rownumbers:true,
+						    method:'get',
+						    fitColumns:false,
+						    singleSelect:true,
+						    pagination:true,
+						    nowrap: false,
+						    onDblClickRow:onClickRowDisc,
+						    url:'dhcapp.broker.csp?ClassName=web.DHCAPPArclinkTar&MethodName=QueryArcLinkTar'">
+							<thead>
+								<tr>
+									<th data-options="field:'ID',hidden:true">id</th>
+									<th data-options="field:'TarDr',hidden:true"></th>
+									<th data-options="field:'ArcId',hidden:true"></th>
+									<th data-options="field:'TarCode',width:80,align:'left'">收费项代码</th>
+									<th data-options="field:'TarDesc',width:200,align:'center',editor:{
+											type:'combogrid',
+											options:{
+													required : true,
+												    id:'AORowId',
+												    fitColumns:true,
+												    fit: true,//自动大小  
+													pagination : true,
+													panelWidth:600,
+													textField:'desc',
+													mode:'remote',
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPPosLinkTar&MethodName=QueryTar',
+													columns:[[
+															{field:'tarId',hidden:true},
+															{field:'code',title:'代码',width:60},
+															{field:'desc',title:'名称',width:100},
+															{field:'price',title:'收费项价格',width:40}
+															]],
+														onSelect:function(rowIndex, rowData) {
+						                   					fillValue(rowIndex, rowData);
+						                				}		   
+													}
+											}">收费项名称</th>
+									<th data-options="field:'PartNum',width:50,align:'center',editor:{type:'numberbox'}">数量</th>
+									<th data-options="field:'TarStart',width:80,editor:{type:'datebox',options:{required:true}}">开始日期</th>
+									<th data-options="field:'TarEnd',width:80,editor:{type:'datebox'}">结束日期</th>
+									<th data-options="field:'TarPrice',width:80">收费项价格</th>
+									<th data-options="field:'BaseFlag',width:60,
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPOtherOpt&MethodName=listIsRequired',
+													required:true
+															}
+													},hidden:true">基价标志</th>
+									<th data-options="field:'UpdUser',width:60">更新人</th>
+									<th data-options="field:'UpdDate',width:80">更新日期</th>
+									<th data-options="field:'UpdTime',width:80">更新时间</th>
+									<th data-options="field:'PartID',hidden:true">部位id</th>		
+								</tr>
+							</thead>
+					</table>
+		   		 </div>
+		   
+		  		  <div title="收费项查询" data-options="closable:false" style="padding:0px">
+			  		 <table id="FindTarItemList" class="hisui-datagrid" fit="true"
+			  		 data-options="
+						    rownumbers:true,
+						    pagination:true,
+						    fitColumns:false,
+						    singleSelect:true,
+						    nowrap: false,
+						    url:'dhcapp.broker.csp?ClassName=web.DHCAPPArclinkTar&MethodName=QueryArcLinkTarStat'">
+							<thead>
+								<tr>
+									<th data-options="field:'ID',hidden:true">id</th>
+									<th data-options="field:'TarDr',hidden:true"></th>
+									<th data-options="field:'ArcId',hidden:true"></th>
+									<th data-options="field:'TarCode',width:80">收费项代码</th>
+									<th data-options="field:'TarDesc',width:200,align:'center'">收费项名称</th>
+									<th data-options="field:'PartNum',width:50">数量</th>
+									<th data-options="field:'TarStart',width:80">开始时间</th>
+									<th data-options="field:'TarEnd',width:80">结束时间</th>
+									<th data-options="field:'TarPrice',width:80">收费项价格</th>
+									<th data-options="field:'BaseFlag',width:50,hidden:true">基价标志</th>
+									<th data-options="field:'UpdUser',width:80">更新人</th>
+									<th data-options="field:'UpdDate',width:80">更新日期</th>
+									<th data-options="field:'UpdTime',width:80">更新时间</th>
+									<th data-options="field:'PartID',hidden:true">部位id</th>
+								</tr>
+							</thead>
+			        </table>
+		   		 </div>
+		   	<div title="体位" data-options="closable:false" style="padding:0px">
+				<table id="PostionList" class="hisui-datagrid" fit="true"
+					data-options="
+					toolbar:'#postoolbar',
+				    rownumbers:true,
+				    method:'get',
+				    fitColumns:false,
+				    singleSelect:true,
+				    idField: 'ID',
+				    pagination:true,
+				    nowrap: false,
+				    onDblClickRow:onClickRow, 
+					url:'dhcapp.broker.csp?ClassName=web.DHCAppArcLinkPos&MethodName=list'">
+					<thead>
+						<tr>
+						    <th data-options="field:'ArcDr',hidden:true,align:'center'">医嘱项</th>
+							<th data-options="field:'PosDr',align:'center',width:300,
+								editor:{
+									type:'combobox',
+									options:{
+										valueField:'id',
+										textField:'text',
+										url:'dhcapp.broker.csp?ClassName=web.DHCAppArcLinkPos&MethodName=getPos',
+										required:true
+									}
+								}">体位</th>
+							<th data-options="field:'ID',hidden:true">id</th>
+							<th data-options="field:'PartID',hidden:true">部位id</th>
+						</tr>
+					</thead>
+				</table>
+		 	</div> 
+		 </div>
+	</div>
+</div>
+<div id="arctb">
+	<div>
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add">新增</a></td>
+		      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save">保存</a></td>
+		      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel">删除</a></td>
+		    </tr>
+		</table>
+	</div>
+</div>
+<div id="postoolbar" class="toolbar">
+	<div class="tool-bar-line">	</div>	
+	<table cellspacing="0" cellpadding="0">
+		<tr>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowPos()">新增</a></td>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:cancelPos()">删除</a></td>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:savePos()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+</body>
+</html>

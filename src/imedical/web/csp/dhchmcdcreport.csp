@@ -1,0 +1,495 @@
+<script language="cache" runat=server> 
+//w %request.Data("QUEID",1)
+s queid=%request.Data("QUEID",1)
+
+s ret9= ##class(web.DHCHM.BaseDataSet).GetReport(queid)
+
+
+</script> 
+
+<html><head>
+
+
+<title>慢病评估情况报告</title>
+<style media=print> 
+.Noprint{display:none;} 
+.PageNext{page-break-after: always;} 
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<style type="text/css">
+<!--
+.title {  font-family: "黑体"; font-size: 18pt; font-weight: bolder}
+-->
+</style>
+
+<link rel="stylesheet" href="info.asp_files/font.htm" type="text/css">
+<style type="text/css">
+a{font-family:宋体;font-size:9pt;text-decoration:none;color:#003366}
+a:hover{font-family:宋体;font-size:9pt;text-decoration:underline;color:#003366}
+a:active{font-family:宋体;font-size:9pt;text-decoration:none;color:#003366}
+</style>
+<OBJECT id=WebBrowser classid=CLSID:8856F961-340A-11D0-A96B-00C04FD705A2  height=0  width=0 VIEWASTEXT>  </OBJECT>  
+</head>
+
+<body leftmargin="0" topmargin="0" bgcolor="#ffffff" marginheight="0" marginwidth="0" text="#000000">
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s qID=$g(%request.Data("QUEID",1))
+	//s qID="14||22"
+	s obj=##class(User.DHCHMOQEQuestion).GetObj(qID)
+	w:'$isobject(obj) "<P>未找到相关问卷信息</P>"
+	q:'$isobject(obj)
+	s flag=obj.QEQStatus
+	s tsub=$O(^User.DHCHMOQEQuestionD(+qID,$P(qID,"||",2),"DHCHMOQMedicalTips",0))
+	//w:(flag="P") "<P>已打印过报告</P>"
+	//w:(flag'="TS")&&(flag'="P") "<P>问卷状态不允许打印</P>"
+	//q:(flag'="TS")&&(flag'="P")
+	s OERobj=##class(User.DHCHMOEvaluationRecord).GetObj(+qID)
+	s vName=OERobj.QOBaseInfoDR.BIName
+	s vSex=OERobj.QOBaseInfoDR.BICSexDR.CTDesc
+	s vDob=OERobj.QOBaseInfoDR.BIDOB
+	s vAge=""
+ 	s:(""'=vDob) vAge=##class(web.DHCLCNUREXCUTE).CalAge(vDob,$h)
+ 	s vAge=$P(vAge,"Y")
+	s vIDCard=OERobj.QOBaseInfoDR.BIIDCard
+	s vTel=OERobj.QOBaseInfoDR.BITel
+	s vMail=OERobj.QOBaseInfoDR.BIEmail
+	s vDate=OERobj.QAddDate
+	s:(""'=vDate) vDate=$zd(vDate,3)
+	s vCompany=OERobj.QOBaseInfoDR.BICompany 
+	s vRegno=OERobj.QOBaseInfoDR.BIPAPMINo
+</SCRIPT>
+<SCRIPT language="Cache" method="getpath">
+	&sql(select pathtoreports into :path from websys.configuration)
+	q path
+</SCRIPT>
+<SCRIPT language="Cache" method="IsPrint">
+	s qID=$g(%request.Data("QUEID",1))
+	//s qID="14||22"
+	s obj=##class(User.DHCHMOQEQuestion).GetObj(qID)
+	w:'$isobject(obj) "<P>未找到相关问卷信息</P>"
+	q:'$isobject(obj)
+	s obj.QEQStatus="P"
+	s sc=obj.%Save()
+	d obj.%Close()
+	q sc
+</SCRIPT>
+
+
+<div align="center"> 
+<input type=button value="另存为" onclick="document.all.WebBrowser.ExecWB(4,1)" class="NOPRINT">
+<input type=button value="打印" onclick="PrintReport()" class="NOPRINT">   
+<input type=button value="打印预览" onclick="document.all.WebBrowser.ExecWB(7,1)" class="NOPRINT">             
+<input type="button" value="关闭" onclick="parent.close();" class="NOPRINT"> 
+
+
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="645">
+    <tbody><tr> 
+      <td align="center" valign="middle" width="165">
+      <img src="logo.gif" border="0" height="100" width="160"></a></td>
+      <td align="right" width="480"> 
+        <table border="0" cellpadding="0" cellspacing="0" height="40" width="480">
+          <tbody><tr> 
+            <td align="center"><span class="title"><b>慢病评估情况报告</b></span></td>
+          </tr>
+        </tbody></table>
+        <table bgcolor="#999999" border="0" cellpadding="0" cellspacing="1" width="480">
+          <tbody><tr bgcolor="#ffffff"> 
+            <td class="font9" bgcolor="#ffffff" height="20" width="120"><b>姓名:</b>#($p(ret9,"^",1))# </td>
+            <td class="font9" height="20" width="65"><b>性别:</b> 
+             #($p(ret9,"^",2))# 
+            </td>
+            <td class="font9" height="20" width="132"><b>出生日期:</b>#($p(ret9,"^",3))# </td>
+          </tr>
+          <tr bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="120"><b>个人编码:</b>#($p(ret9,"^",4))# </td>
+            <td class="font9" colspan="2" height="20"><b>地址:</b>#($p(ret9,"^",5))#  </td>
+          </tr>
+        
+        </tbody></table>
+      </td>
+    </tr>
+  </tbody></table>
+  <table class="engline" border="0" cellpadding="0" cellspacing="0" width="645">
+    <tbody><tr> 
+      <td>&nbsp;</td>
+    </tr>
+  </tbody></table>
+  <table bgcolor="#999999" border="0" cellpadding="0" cellspacing="1" height="70" width="645">
+    <tbody><tr> 
+      <td align="center" bgcolor="#ffffff"> 
+        <table border="0" cellpadding="0" cellspacing="0" width="630">
+          <tbody><tr> 
+            <td class="font9" height="50"><b><span class="font"></span></b> <span class="font">
+ 慢病评估情况报告汇总了你的主要健康信息,通过这些健康指标,指出已患的慢病及存在的可能引起慢病的健康隐患,其中的参照值可作为你判断健康指标的参考,与疾病诊断有关的问题请与专业医生联系
+             
+             </span></td>
+          </tr>
+        </tbody></table>
+      </td>
+    </tr>
+  </tbody></table>
+  <table class="engline" border="0" cellpadding="0" cellspacing="0" width="645">
+    <tbody><tr> 
+      <td>&nbsp;</td>
+    </tr>
+  </tbody></table>
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="645">
+    <tbody><tr> 
+      <td width="180"> 
+        
+		<table bgcolor="#999999" border="0" cellpadding="0" cellspacing="1" width="180">
+          <tbody><tr align="center" bgcolor="#cccccc"> 
+            <td colspan="2" class="font9" height="20"><b>目前患病情况</b></td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" bgcolor="#ffffff" height="20" width="90">现患病名称</td>
+            <td class="font9" height="20" width="90">现患病名称</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" bgcolor="#ffffff" height="20" width="90">
+            <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01001")
+               i ($Extract(tmp,1,1)="Y") w "高血压"  
+           </script> 
+            </td>
+            <td class="font9" height="20" width="90"> 
+                <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01005")
+               i ($Extract(tmp,1,1)="Y") w "糖尿病"  
+           </script> 
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" bgcolor="#ffffff" height="20" width="90"> 
+                   <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01009")
+               i ($Extract(tmp,1,1)="Y") w "冠心病"  
+           </script> 
+       
+            </td>
+            <td class="font9" height="20" width="90"> 
+                <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01010")
+               i ($Extract(tmp,1,1)="Y") w "脑卒中"  
+           </script> 
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" bgcolor="#ffffff" height="20" width="90">
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01011")
+               i ($Extract(tmp,1,1)="Y") w "慢阻肺"  
+           </script> 
+            </td>
+            <td class="font9" height="20" width="90">
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01012")
+               i ($Extract(tmp,1,1)="Y") w "癌症"  
+           </script> 
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" bgcolor="#ffffff" height="20" width="90"></td>
+            <td class="font9" height="20" width="90"></td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" bgcolor="#ffffff" height="20" width="90"></td>
+            <td class="font9" height="20" width="90"></td>
+          </tr>
+        </tbody></table><br>
+        <table bgcolor="#999999" border="0" cellpadding="0" cellspacing="1" width="180">
+          <tbody><tr align="center" bgcolor="#cccccc"> 
+            <td colspan="2" class="font9" height="20"><b>家族史</b></td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="90">糖尿病</td>
+            <td class="font9" height="20" width="90"> 
+             
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01027")
+               i (tmp["Y") {w "有"} else {w "无"}
+              </script> 
+            
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="90">冠心病</td>
+            <td class="font9" height="20" width="90"> 
+             
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01028")
+               i (tmp["Y") {w "有"} else {w "无"}
+              </script> 
+            
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="90">脑卒中</td>
+            <td class="font9" height="20" width="90"> 
+              
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01029")
+               i (tmp["Y") {w "有"} else {w "无"}
+              </script> 
+            
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="90">高血压</td>
+            <td class="font9" height="20" width="90"> 
+              
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01030")
+               i (tmp["Y") {w "有"} else {w "无"}
+              </script> 
+            
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="90">癌症</td>
+            <td class="font9" height="20" width="90"> 
+              
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01031")
+               i (tmp["Y") {w "有"} else {w "无"}
+              </script> 
+            
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="90">肥胖</td>
+            <td class="font9" height="20" width="90"> 
+              
+              <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01032")
+               i (tmp["Y") {w "有"} else {w "无"}
+              </script> 
+            
+            </td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="90"></td>
+            <td class="font9" height="20" width="90"> 
+              
+            </td>
+          </tr>
+        </tbody></table>
+      </td>
+      <td align="right" valign="top" width="465"> 
+        <table bgcolor="#999999" border="0" cellpadding="0" cellspacing="1" width="455">
+          <tbody><tr align="center" bgcolor="#cccccc"> 
+            <td colspan="4" class="font9" height="20"><b>体检结果</b></td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="30" width="120">检查指标</td>
+            <td class="font9" height="30" width="220">检查结果  </td>
+          
+            <td class="font9" width="200">合适范围</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">身高</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01017"))#
+            </td>
+         
+            <td class="font9" width="230">-cm</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">体重</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01018"))#
+            </td>
+          
+            <td class="font9" width="230">-kg</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">体质指数</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"","CDC01"))#
+            </td>
+           
+            <td class="font9" width="230">18.5-24.0</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">腰围</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01020"))#
+            </td>
+          
+            <td class="font9" width="230">男&lt;85cm女&lt;80cm</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">血压</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01021"))#
+            /
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01022"))#
+            </td>
+          
+            <td class="font9" width="230">&lt;120/80 mmHg</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">空腹血糖</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01023"))#
+            </td>
+        
+            <td class="font9" width="230">3.61-6.10 mmol/L</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">总胆固醇</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01024"))#
+            </td>
+         
+            <td class="font9" width="230">&lt;5.18 mmol/L</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">甘油三酯</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01025"))#
+            </td>
+          
+            <td class="font9" width="230">&lt;1.70 mmol/L</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">HDL胆固醇</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01032"))#
+            </td>
+          
+            <td class="font9" width="230"> &gt;=1.04 mmol/L</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">LDL胆固醇</td>
+            <td class="font9" height="20" width="100">
+            #(##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01033"))#
+            </td>
+           
+            <td class="font9" width="230">&lt;3.37 mmol/L</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">&nbsp;</td>
+            <td class="font9" height="20" width="100">&nbsp;</td>
+           
+            <td class="font9" width="230">&nbsp;</td>
+          </tr>
+         <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">&nbsp;</td>
+            <td class="font9" height="20" width="100">&nbsp;</td>
+           
+            <td class="font9" width="230">&nbsp;</td>
+          </tr>
+          <tr align="center" bgcolor="#ffffff"> 
+            <td class="font9" height="20" width="80">&nbsp;</td>
+            <td class="font9" height="20" width="100">&nbsp;</td>
+           
+            <td class="font9" width="230">&nbsp;</td>
+          </tr>
+         
+        </tbody></table>
+      </td>
+    </tr>
+  </tbody></table>
+  <table class="engline" border="0" cellpadding="0" cellspacing="0" width="645">
+    <tbody><tr> 
+      <td>&nbsp;</td>
+    </tr>
+  </tbody></table>
+  <table border="0" cellpadding="20" cellspacing="0" width="645">
+    <tbody>
+    <tr> 
+      <td width="380" valign="top"> 
+        BMI:#(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"10030005","CDC02"))#<p>
+        腰围:#(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"10030006","CDC03"))#<p>
+        血压评价:#(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"10030007","CDC04"))#<p>
+        血糖评价:#(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"10030008","CDC05"))#<p>
+        血脂评价:#(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"10030009","CDC06"))#<p>
+        高血压患者分及:#(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"10030002","CDC07"))#<p>
+        慢病人群分类:#(##class(web.DHCHM.BaseDataSet).GetJudge(queid,"10040001","CDC08"))#<p>
+        
+        
+      </td>
+      <td  width="265" valign="top"> 
+        
+         吸烟:
+         <script language="cache" runat=server> 
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01013")
+               i ($Extract(tmp,1,1)="Y") {w "您是吸烟者"} else {w "您不是吸烟者"} 
+               
+               s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01015")
+               i ($Extract(tmp,1,1)="Y") {s smk= "<p>您不是被动吸烟者"} else {s smk= "<p>您是被动吸烟者"} 
+               
+                s tmp=##class(web.DHCHM.BaseDataSet).GetAnswer(queid,"cdc01016")
+               i ($Extract(tmp,1,1)="Y") {s smk= "<p>您不是被动吸烟者"} else {s smk= "<p>您是被动吸烟者"} 
+                
+                w smk
+         </script> 
+      </td>
+    </tr>
+  </tbody></table>
+  <table border="0" cellpadding="0" cellspacing="0" width="645">
+    <tbody><tr> 
+      <td class="font" height="20"><span class="font9"></span></td>
+    </tr>
+  </tbody></table>
+  <table border="0" cellpadding="0" cellspacing="10" width="645">
+    <tbody><tr> 
+      <td align="right" width="124"><i class="font9"></i></td>
+      <td align="right" width="496"><i class="font105"><b class="font9"><br>服务单位:XXXXXX<br>日期:#($ZDate($H,3))#</b></i></td>
+    </tr>
+  </tbody></table>
+</div> 
+
+<script language="JavaScript">
+    PrintActiveX.paddingTop=400;
+	PrintActiveX.paddingRight=100;
+	PrintActiveX.paddingBottom=80;
+	PrintActiveX.paddingLeft=200;
+	PrintActiveX.isHtmlHeadFoot=true;
+	var vName="",vSex="",vAge="",vIDCard="",vTel="",vMail="",vDate="",vCompany="",vRegno="";
+	vName='#(vName)#';
+	vSex='#(vSex)#';
+	vAge='#(vAge)#';
+	vIDCard='#(vIDCard)#';
+	vTel='#(vTel)#';
+	vMail='#(vMail)#';
+	vTel='#(vTel)#';
+	vDate='#(vDate)#';
+	vCompany='#(vCompany)#';
+	vRegno='#(vRegno)#';
+	
+	var str="姓名:"+vName+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />性别:"+vSex+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />年龄:"+vAge+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />身份证号:"+vIDCard;
+
+	var header="<div style=\"float:center;border-bottom:0px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\"><img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/tb.GIF\" height=\"83\" align=\"absmiddle\"><FONT SIZE=+3>健康管理报告</FONT></span></div><br>"
+	+"<div style=\"float:center;border-bottom:3px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\">"+str+"</span></div>";
+	
+	PrintActiveX.header=header;
+	
+	var footer="&b<div style=\"float:center;border-top:3px solid;padding:0px;\">第&p页 (共&P页)</div>&b";
+	PrintActiveX.footer=footer;
+	
+	PrintActiveX.orientation=1;
+	PrintActiveX.pageName="A4";
+function PrintReport()
+{
+
+	var ret=#(..IsPrint())#;
+	if (ret!=1)  {alert("报告状态修改不成功!");return;};
+	document.all.WebBrowser.ExecWB(6,1)
+}
+function SaveAs()
+{
+	var FileName=vName+"的慢病健康管理报告.htm";
+	document.execCommand("SaveAs",true,FileName); 
+} 
+
+
+</script>
+
+
+
+
+
+</body></html>

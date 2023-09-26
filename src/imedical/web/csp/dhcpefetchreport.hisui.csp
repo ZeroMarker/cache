@@ -1,0 +1,112 @@
+<!-- 
+ * FileName: dhcpefetchreport.hisui.csp
+ * Anchor: zhongricheng
+ * Date: 2020-02-19
+ * Description: HISUI 取报告
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+</head>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+</SCRIPT> 
+<body>
+	<div class="hisui-panel" border="false" fit="true" style="padding:10px;">
+		<div class="hisui-layout" border="false" data-options="collapsible:false,fit:true">
+			<div class="hisui-layout" data-options="region:'center'" style="border:1px solid #ccc; border-radius:4px;">
+				
+				<!-- 取报告查询 div start -->
+				<div data-options="title:'取报告',region:'north',headerCls:'panel-header-gray',iconCls:'icon-add-note',collapsible:false" border="false" style="height: 126px;border-bottom:1px solid #C0C0C0;">
+					<div>
+						<table style="border-spacing: 10px;">
+			 				<tr>
+			 					<td align="right"><label for="DoRegNo">登记号</label></td>
+								<td><input class="textbox" id="DoRegNo" style="width:120px;"/></td>
+								
+								<td align="right" style="padding-left:5px;"><label for="StartDate">开始日期</label></td>
+								<td><input class="hisui-datebox" type="text" id="StartDate" style="width:127px;"/></td>
+								
+			 					<td align="right" style="padding-left:5px;"><label for="Name">姓名</label></td>
+								<td><input class="textbox" id="Name" style="width:130px;"/></td>
+								
+								<td align="right" style="padding-left:5px;"><label for="Group">单位</label></td>
+								<td><input class="hisui-combogrid" type="text" id="Group" style="width:167px;"/></td>
+								
+								<td align="right" style="padding-left:5px;"><label for="DepartName">部门</label></td>
+								<td><input class="textbox" type="text" id="DepartName" style="width:130px;"/></td>
+								
+								<td style="padding-left:5px;"><a id="BSearch" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:120px;">查询</a></td>
+	             				<td style="padding-left:5px;"><a id="BFetch" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" style="width:120px;">领取报告</a></td>
+			 				</tr>
+			 				<tr>
+								<td align="right"><label for="HPNo">体检编号</label></td>
+								<td><input class="textbox" type="text" id="HPNo" style="width:120px;"/></td>
+								
+								<td align="right" style="padding-left:5px;"><label for="EndDate">结束日期</label></td>
+								<td><input class="hisui-datebox" type="text" id="EndDate" style="width:127px;"/></td>
+								
+								<td align="right" style="padding-left:5px;"><label for="VIPLevel">VIP等级</label></td>
+								<td><input class="hisui-combobox" type="text" id="VIPLevel" style="width:137px;"/></td>
+								
+								<td align="right" style="padding-left:5px;"><label for="CredNo">身份证号</label></td>
+								<td><input class="hisui-validatebox textbox" id="CredNo" style="width:160px;"/></td>
+								
+								<td align="right" style="padding-left:5px;"><label for="NoFetchReport">已取报告</label></td>
+								<td><input class="hisui-checkbox" type="checkbox" id="NoFetchReport"/></td>
+								
+								<td style="padding-left:5px;"><a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:120px;">清屏</a></td>
+			 					<td style="padding-left:5px;"><a id="ReadRegInfo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'" style="width:120px;">读身份证</a></td>
+			 				</tr>
+						</table>
+			 		</div>
+		 		</div>
+				<!-- 取报告查询 div end -->
+				
+		 		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+		 			<table data-options="fit:true" border="false" id="FetchReport"></table>
+		 		</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 领取人信息弹窗 start -->
+	<div id="FetchInfoWin" style="width:520px;height:190px;padding:0 10px 10px 10px;display:none;">   
+		<table style="border-spacing: 10px;margin:0 auto;">
+			<tr>
+				<td align="right"><font color="red">*</font><label for="NameWin">姓名</label></td>
+		       	<td><input class="hisui-validatebox textbox"  id="NameWin" name="NameWin" type="text" style="width:140px;"></td>
+		    
+				<td align="right" class="paddingtd"><font color="red">*</font><label for="IDCardWin">身份证号</label></td>
+		        <td><input class="hisui-validatebox textbox"  id="IDCardWin" name="IDCardWin" type="text" style="width:165px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><font color="red">*</font><label for="TelWin">联系电话</label></td>
+				<td><input class="hisui-validatebox textbox"  id="TelWin" name="TelWin" type="text" style="width:140px;"></td>			
+				
+				<td></td>
+				<td></td>
+			</tr>
+		</table>
+	</div>
+	<!-- 领取人信息弹窗 end -->
+	    
+	<script type="text/javascript" src="../scripts/DHCPEFetchReport.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+
+</body>
+</html>

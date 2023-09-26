@@ -1,0 +1,43 @@
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s StartDate=$Get(%request.Data("StartDate",1))
+s EndDate=$Get(%request.Data("EndDate",1))
+s PhaLoc=$Get(%request.Data("PhaLoc",1))
+s PapmiNo=$Get(%request.Data("PapmiNo",1))
+s FinFlag=$Get(%request.Data("FinFlag",1))
+;门诊药房发药列表
+i Action = "QueryLocPat" d
+	.d ##class(CHSSWeb.Pharmacy.OutDispensePha).QueryLocPat(StartDate,EndDate,PhaLoc,PapmiNo,FinFlag)
+;发药明细
+i Action = "GDispItm" d
+	.s rPHL = PhaLoc
+	.s rPRT=$Get(%request.Data("Prt",1))
+	.s rPrescNo=$Get(%request.Data("PrescNo",1))
+	.d ##class(CHSSWeb.Pharmacy.OutDispensePha).GDispItm(rPHL,rPRT,rPrescNo)
+;读取卡信息
+i Action = "GetAccInfo" d
+	.s CardType = $Get(%request.Data("CardType",1))
+	.s CardNo=$Get(%request.Data("CardNo",1))
+	.d ##class(CHSSWeb.Pharmacy.OutDispensePha).GetAccInfoFromCardNo(CardType,CardNo)
+;检核库存
+i Action = "CheckPhKC" d
+	.s ctloc = PhaLoc
+	.s prt=$Get(%request.Data("Prt",1))
+	.s presco=$Get(%request.Data("PrescNo",1))
+	.d ##class(CHSSWeb.Pharmacy.OutDispensePha).CheckPhKC(ctloc, prt, presco)
+;发药确认 
+i Action = "UpdatePhKC" d
+	.s prt=$Get(%request.Data("Prt",1))
+	.s GPhl=$Get(%request.Data("GPhl",1))
+	.s GPydr=$Get(%request.Data("GPydr",1))
+	.s GFydr=$Get(%request.Data("GFydr",1))
+	.s prescno=$Get(%request.Data("PrescNo",1))
+	.s shdr=$Get(%request.Data("shdr",1))
+	.s pwin=$Get(%request.Data("pwin",1))
+	.s newwin=$Get(%request.Data("newwin",1))
+	.s fs=$Get(%request.Data("fs",1))
+	.s phw=$Get(%request.Data("phw",1))
+	.d ##class(CHSSWeb.Pharmacy.OutDispensePha).UpdatePhKC(prt,GPhl,GPydr,GFydr,prescno,shdr,pwin,newwin,fs,phw)
+</SERVER>

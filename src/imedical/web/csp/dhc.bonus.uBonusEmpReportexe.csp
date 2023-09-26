@@ -1,0 +1,64 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+
+	s RowID=$Get(%request.Data("RowId",1))
+	s BonusEmployeeID=$Get(%request.Data("BonusEmployeeID",1))
+	s BonusReportID=$Get(%request.Data("BonusReportID",1))
+	
+
+    //列出全部人员报表权限
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uBonusEmpReport).ListRec(searchField, searchValue, sortField, sortDir, start, limit)
+	
+	//列出有效的人员
+	i action = "listEmployee" d
+	.w ##class(dhc.bonus.udata.uBonusEmpReport).listEmployee(start, limit, str)
+	
+	//列出有效的报表
+	i action = "listReport" d
+	.w ##class(dhc.bonus.udata.uBonusEmpReport).listReport(start, limit, str)
+
+	
+	//增加人员报表权限
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uBonusEmpReport).InsertRec(BonusEmployeeID, BonusReportID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//删除某人员报表权限
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uBonusEmpReport).Delete(RowID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//修改某人员报表权限
+	i action = "edit" d                                           
+	.s result = ##class(dhc.bonus.udata.uBonusEmpReport).UpdateRec(RowID, BonusEmployeeID, BonusReportID)
+	.i result = 0 d                                               
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+
+</script>

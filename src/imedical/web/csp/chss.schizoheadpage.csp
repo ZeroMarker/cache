@@ -1,0 +1,48 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s MainPageRowId=$Get(%request.Data("MainPageRowId",1))
+	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	s LockInfoRowIDDR=$Get(%request.Data("LockInfoRowIDDR",1))
+	s HeadPageCode=$Get(%request.Data("HeadPageCode",1))
+	s Intime=$Get(%request.Data("Intime",1))
+	s Doctor=$Get(%request.Data("Doctor",1))
+	s StaffInput= $Get(%request.Data("StaffInput",1))
+    s DateOfInput=$Get(%request.Data("DateOfInput",1))
+	s DateOfUpdate=$Get(%request.Data("DateOfUpdate",1))
+	s GuardianName=$Get(%request.Data("GuardianName",1))
+	s Relation=$Get(%request.Data("Relation",1))
+	s GuardianAdd=$Get(%request.Data("GuardianAdd",1))
+	s GuardianPhone= $Get(%request.Data("GuardianPhone",1))
+	s CommitteePhone=$Get(%request.Data("CommitteePhone",1))
+	s DateOfFirstOnset=$Get(%request.Data("DateOfFirstOnset",1))
+	s PrimarySymptom= $Get(%request.Data("PrimarySymptom",1))
+	s OutPatientDR= $Get(%request.Data("OutPatientDR",1))
+	s InHospitalNum=$Get(%request.Data("InHospitalNum",1))
+	s Diagnose=$Get(%request.Data("Diagnose",1))
+	s DiagnoseHospital= $Get(%request.Data("DiagnoseHospital",1))
+	s DateOfDiagnose= $Get(%request.Data("DateOfDiagnose",1))
+	s LastTreatEffect= $Get(%request.Data("LastTreatEffect",1))
+	i Action = "list" d
+	.w ##class(CHSSWeb.SchizoHeadPageService).SchizoHeadPageList(PersonRowId,Start,Limit,Sort)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.SchizoHeadPageService).Insert(MainPageRowId,PersonRowId,LockInfoRowIDDR,HeadPageCode,Intime,Doctor,StaffInput,DateOfInput,DateOfUpdate,GuardianName,Relation,GuardianAdd,GuardianPhone,CommitteePhone,DateOfFirstOnset,PrimarySymptom,OutPatientDR,InHospitalNum,Diagnose,DiagnoseHospital,DateOfDiagnose,LastTreatEffect)
+	.w result
+	i Action = "delete" d
+	.s result = ##class(CHSSWeb.SchizoHeadPageService).delete(MainPageRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'É¾³ý³É¹¦'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>
+

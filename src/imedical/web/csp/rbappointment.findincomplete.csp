@@ -1,0 +1,81 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n docids,edocids, status,todate,fromdate,logonUser, round,url,anylinks
+	s (docids,edocids, status,todate,fromdate,round,url,anylinks)=""
+	;
+	s logonUser=%session.Get("LOGON.USERID")
+	s round=%session.Get("LOGON.ROUND")
+	s todate=+$h
+	; Only want "Arrived" appointments
+	s status="A"
+	;
+	;Get the messages for the RBMessage component
+	s obj=##Class(websys.Component).OpenName("RBMessages")
+	i obj d obj.LoadTrans(),obj.%Close()
+	;
+	;Find the default doctor
+	s docids=$p($g(^SSU("SSUSR",logonUser)),"^",14)
+	;Add the round doctor if they exist
+	i round s docids=docids_"^"_round
+	s edocids="^"_docids_"^"
+	;
+	;Need to check for any incompletes
+	;&sql(	Declare incomp cursor for
+	;		Select APPT_RowId
+	;		FROM RB_Appointment
+	;		WHERE ((APPT_Verified is NULL) OR (APPT_Verified = "N"))
+	;		AND (:edocids [ "^"_(APPT_AS_ParRef->AS_RES_ParRef->RES_CTPCP_DR)_"^")
+	;		AND (:status [ APPT_Status)
+	;		AND	((APPT_AS_ParRef->AS_Date <= :todate) OR ((:todate IS NULL) AND (APPT_AS_ParRef->AS_Date <= CURRENT_DATE)))
+	;		AND	((APPT_AS_ParRef->AS_Date >= :fromdate) OR (:fromdate IS NULL))
+	;	)
+	;	
+	//w edocids_" - "_status_" - "_todate_" - "_fromdate
+	/*	SB 8/12/04: Removed due to crashing server... will need to be re-written using indexes correctly
+	/*&sql(	
+			Select count(APPT_RowId)
+			INTO :anylinks
+			FROM RB_Appointment
+			WHERE ((APPT_Verified is NULL) OR (APPT_Verified = "N"))
+			AND (:edocids [ "^"_(APPT_AS_ParRef->AS_RES_ParRef->RES_CTPCP_DR)_"^")
+			AND (:status [ APPT_Status)
+			AND	((APPT_AS_ParRef->AS_Date <= :todate) OR ((:todate IS NULL) AND (APPT_AS_ParRef->AS_Date <= CURRENT_DATE)))
+			AND	((APPT_AS_ParRef->AS_Date >= :fromdate) OR (:fromdate IS NULL))
+		)
+	SB 13/12/04 (48144) Check for bold links using open/fetch query */
+	i $$open^CRBAppointment2(edocids,fromdate,todate,status)
+ 	f  q:$$fetch^CRBAppointment2(edocids,fromdate,todate,status)  q:anylinks  d
+	. s anylinks=1
+	i $$close^CRBAppointment2()
+	;
+	;Build the URL
+	s url="websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ListIncomplete&DocIDs="_docids_"&Status="_status_"&fromdate="_fromdate_"&todate="_todate
+	;
+	i anylinks w "<B>"
+	;Write the link
+	;w "<A href=",url,">",t("Incomplete"),"</A>"
+	w "<A HREF=""#"" onclick=""ShowInNewWindow('",url,"');"">",t("Incomplete"),"</A>"
+	i anylinks w "</B>"
+	
+</SERVER>
+<Script language=javascript>
+function ShowInNewWindow(exp) {
+    websys_createWindow(exp,'IncompApptList','top=30,left=20,width=750,height=380,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes');
+	return false;
+}
+</Script>
+</BODY>
+</HTML>
+

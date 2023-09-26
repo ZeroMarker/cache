@@ -1,0 +1,77 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED.-->
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+n (msg,%session,%request,%response)
+s (frm,cmp)=""
+
+s PatientID=$g(%request.Data("PatientID",1))
+s EpisodeID=$g(%request.Data("EpisodeID",1))
+s mradm=$g(%request.Data("mradm",1))
+s ChartID=$g(%request.Data("ChartID",1))
+s ChartItemID=$g(%request.Data("ChartItemID",1))
+s Context=$g(%request.Data("CONTEXT",1))
+s Start=$g(%request.Data("Start",1))
+s Columns=$g(%request.Data("Columns",1))
+s LabItem=$g(%request.Data("LabItem",1))
+s ObsGroup=$g(%request.Data("Observation",1))
+s DaysFrom=$g(%request.Data("DaysFrom",1))
+s DaysTo=$g(%request.Data("DaysTo",1))
+s OrderCategory=$g(%request.Data("OrderCategory",1))
+s OrderSubCategory=$g(%request.Data("OrderSubCategory",1))
+s ShowLab=$g(%request.Data("ShowLab",1))
+s ShowOrderItem=$g(%request.Data("ShowOrderItem",1))
+s ShowOrderCat=$g(%request.Data("ShowOrderCat",1))
+s ShowOrderSubcat=$g(%request.Data("ShowOrderSubcat",1))
+s ClinPath=$g(%request.Data("ClinPath",1))
+s ShowClinPath=$g(%request.Data("ShowClinPath",1))
+
+; indicate we are on the popup page (pap code, I know, it tells the component to show the 'previous' button or not..
+s %request.Data("ScrollingPopupPage",1)=1
+
+w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+w "var ChartID="""_$g(ChartID)_""";"_$c(13,10)
+w "var PatientID="""_$g(PatientID)_""";"_$c(13,10)
+w "var EpisodeID="""_$g(EpisodeID)_""";"_$c(13,10)
+w "var mradm="""_$g(mradm)_""";"_$c(13,10)
+w "</SCRIPT>"_$c(13,10)
+
+
+i +$g(%request.Data("PatientBanner",1))&(PatientID'="") d
+. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+. i cmp d cmp.Show(),cmp.%Close()
+
+s %request.Data("PatientID",1)=PatientID
+s %request.Data("ChartID",1)=ChartID
+s %request.Data("ChartItemID",1)=ChartItemID
+s %request.Data("Type",1)="CT"
+s %request.Data("CONTEXT",1)=Context
+s %request.Data("Columns",1)=Columns
+s %request.Data("Start",1)=Start
+s %request.Data("LabItem",1)=LabItem
+s %request.Data("Observation",1)=ObsGroup
+s %request.Data("DaysFrom",1)=DaysFrom
+s %request.Data("DaysTo",1)=DaysTo
+s %request.Data("OrderCategory",1)=OrderCategory
+s %request.Data("OrderSubCategory",1)=OrderSubCategory
+s %request.Data("ShowLab",1)=ShowLab
+s %request.Data("ShowOrderItem",1)=ShowOrderItem
+s %request.Data("ShowOrderCat",1)=ShowOrderCat
+s %request.Data("ShowOrderSubcat",1)=ShowOrderSubcat
+s %request.Data("ClinPath",1)=ClinPath
+s %request.Data("ShowClinPath",1)=ShowClinPath
+
+s frm=##Class(websys.Component).OpenName("OEOrdItem.ListCytoEMR")
+
+i frm d frm.Show()
+i frm d frm.%Close()
+
+</SERVER>
+</BODY>
+</HTML>

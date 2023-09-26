@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<!--设置 doccure.curerecord.trace.hui.csp 治疗过程追踪-->
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON> 
+<SERVER>
+ s DCARRowID=$g(%request.Data("DCARRowID",1))
+</SERVER>	
+<script type="text/javascript">
+	var step;
+    $(function () {
+        var DCARRowID="#(DCARRowID)#"
+        //全局ajax开始
+        $(document).ajaxStart(function () {
+            $("#loading").show();
+        });
+        //全局ajax结束
+        $(document).ajaxStop(function (evt, request, settings) {
+            $("#loading").hide();
+        });
+        if (DCARRowID!="") {
+            LoadReportTrace(DCARRowID);
+        }
+        
+        step = $("#myStep").step();
+    })
+    function LoadReportTrace(DCARRowID) {
+        if (DCARRowID != "") {
+            var queryParams = new Object();
+			queryParams.ClassName ='DHCDoc.DHCDocCure.Record';
+			queryParams.QueryName ='QryRecordTrace';
+			queryParams.Arg1 =DCARRowID;
+			queryParams.ArgCnt =1;
+			$.dhc.util.runServerQuery(queryParams,"false",function(objScope){
+				   jQuery.each(objScope.rows, function(i, data) { 
+	                    if (data.ArcimDesc!="") {                           
+	                        var TestSets = "";
+	                        for (i = 0; i < 1; i++) {
+	                            TestSets +="&nbsp&nbsp&nbsp" +data.ArcimDesc;
+	                            var patientInfoHtmlStr = '姓名：<b>' + data.PatientName + '       </b>';
+	                            patientInfoHtmlStr += '&nbsp&nbsp&nbsp性别：<b>' + data.PatientSex + '      </b>';
+	                            patientInfoHtmlStr += '&nbsp&nbsp&nbsp登记号：<b>' + data.PatientNo + '       </b>';
+	                            patientInfoHtmlStr += '&nbsp&nbsp&nbsp申请科室：<b>' + data.OrderAddDept + '   </b>';
+	                            patientInfoHtmlStr += '&nbsp&nbsp&nbsp联系电话：<b>' + data.PatientTel + '   </b>';
+	                            patientInfoHtmlStr += '&nbsp&nbsp&nbsp&nbsp医嘱名称：<b>' + TestSets;
+	                            $('#div_ShowInfo').html(patientInfoHtmlStr);
+	                            var curData = data;
+	                            if (curData.ApplyUser.length > 0) {
+	                                step.goStep(1);
+	                            }
+	                            $(".step-header li").children(".stepDesc").eq(0).html(curData.ApplyUser + '</br>' + curData.ApplyDate + '</br>' + curData.ApplyTime);
+	                            if (curData.AppReqUser.length > 0) {
+	                                step.goStep(2);
+	                            }
+	                            $(".step-header li").children(".stepDesc").eq(1).html(curData.AppReqUser + '</br>' + curData.AppReqDate + '</br>' + curData.AppReqTime);
+	                            //if (curData.CRCreateDate.length > 0) {
+	                            //    step.goStep(3);
+	                            //}
+	                            //$(".step-header li").children(".stepDesc").eq(2).html(curData.AppReqUser + '</br>' +  curData.CRCreateDate+ '</br>' + curData.CRCreateTime);
+	                            if (curData.CRCreateUser.length > 0) {
+	                                step.goStep(3);
+	                            }
+	                            $(".step-header li").children(".stepDesc").eq(2).html(curData.CRCreateUser + '</br>' + curData.CRCureStDate + '</br>' + curData.CRCureStTime);
+	                            if (curData.CRCureEndDate.length > 0) {
+	                                step.goStep(4);
+	                            }
+	                            $(".step-header li").children(".stepDesc").eq(3).html(curData.CRCreateUser + '</br>' + curData.CRCureEndDate + '</br>' + curData.CRCureEndTime);
+	                            
+	                        };
+	                    } else {
+	                        alert("没有查询到相关过程信息！");
+	                    } 
+				   });
+			});
+        }
+    }
+
+(function (factory) {
+    "use strict";
+    if (typeof define === 'function') {
+        // using CMD; register as anon module
+        define.cmd && define('jquery-step', ['jquery'], function (require, exports, moudles) {
+            var $ = require("jquery");
+            factory($);
+            return $;
+        });
+        define.amd && define(['jquery'], factory);
+    } else {
+        // no CMD; invoke directly
+        factory((typeof (jQuery) != 'undefined') ? jQuery : window.Zepto);
+    }
+}
+
+(function ($) {
+    $.fn.step = function (options) {
+        var opts = $.extend({}, $.fn.step.defaults, options);
+        var size = this.find(".step-header li").length;
+        var barWidth = opts.initStep < size ? 100 / (2 * size) + 100 * (opts.initStep - 1) / size : 100;
+        var curPage = opts.initStep;
+
+        this.find(".step-header").prepend("<div class=\"step-bar\"><div class=\"step-bar-active\"></div></div>");
+        this.find(".step-list").eq(opts.initStep - 1).show();
+        if (size < opts.initStep) {
+            opts.initStep = size;
+        }
+        if (opts.animate == false) {
+            opts.speed = 0;
+        }
+        this.find(".step-header li").each(function (i, li) {
+            if (i < opts.initStep) {
+                $(li).addClass("step-active");
+            }
+            //$(li).prepend("<span>"+(i+1)+"</span>");
+            $(li).append("<span class='stepNo'>" + (i + 1) + "</span><br/><span class='stepDesc' style='margin-top:15px'></span>");
+        });
+        this.find(".step-header li").css({
+            "width": 100 / size + "%"
+        });
+        this.find(".step-header").show();
+        this.find(".step-bar-active").animate({
+            "width": barWidth + "%"
+        },
+            opts.speed, function () {
+
+            });
+
+        this.nextStep = function () {
+            if (curPage >= size) {
+                return false;
+            }
+            return this.goStep(curPage + 1);
+        }
+
+        this.preStep = function () {
+            if (curPage <= 1) {
+                return false;
+            }
+            return this.goStep(curPage - 1);
+        }
+
+        this.goStep = function (page) {
+            if (page == undefined || isNaN(page) || page < 0) {
+                if (window.console && window.console.error) {
+                    console.error('the method goStep has a error,page:' + page);
+                }
+                return false;
+            }
+            curPage = page;
+            this.find(".step-list").hide();
+            this.find(".step-list").eq(curPage - 1).show();
+            this.find(".step-header li").each(function (i, li) {
+                $li = $(li);
+                $li.removeClass('step-active');
+                if (i < page) {
+                    $li.addClass('step-active');
+                    if (opts.scrollTop) {
+                        $('html,body').animate({ scrollTop: 0 }, 'slow');
+                    }
+                }
+            });
+            barWidth = page < size ? 100 / (2 * size) + 100 * (page - 1) / size : 100;
+            this.find(".step-bar-active").animate({
+                "width": barWidth + "%"
+            },
+            opts.speed, function () {
+            });
+            return true;
+        }
+        return this;
+    };
+
+    $.fn.step.defaults = {
+        animate: true,
+        speed: 500,
+        initStep: 1,
+        scrollTop: true
+    };
+
+}));
+</script>	
+</head>
+
+<body>
+	<div style="padding-left:20px;padding-top:10px">
+       <table>
+           <tr>
+               <td>
+                    <div id="div_ShowInfo" class="hisui-panel" style="padding:0px;height:auto;text-align:left;font-size:15px;padding-top:0px">
+                    </div>
+               </td>
+           </tr>
+       </table>
+   </div>
+   <div class="step-body" id="myStep">
+	    <div class="step-header" style="width:95%">
+		    <ul>
+			    <li><p>医生开治疗医嘱</p></li>
+			    <li><p>预约治疗</p></li>
+			    <!--<li><p>患者到治疗室报到</p></li>-->
+			    <li><p>治疗开始</p></li>
+			    <li><p>治疗结束</p></li>
+		    </ul>
+	    </div>
+    </div>
+    <div id="loading" style="text-align:center">正在加载，请稍后...</div>
+</body>
+
+</html>
+<style>
+.container-fluid {
+    margin-right: auto;
+    margin-left: auto;
+     padding-left: 1px; 
+     padding-right: 0px; 
+}
+body {
+	font-family:"Microsoft YaHei" !important;
+	overflow-y:hidden;
+	background-color:#FFFFFF!important;
+}
+
+
+/*Modalstep*/
+/*step*/
+a {
+	cursor: pointer;
+}
+*{margin: 0}
+.step-body{
+	position: relative;
+	
+	
+}
+.step-header{
+	width: 100%;
+	margin: 0 auto;
+	display: none;
+}
+.step-header ul{
+		padding: 0;
+}
+.step-header li{
+	list-style-type:none;
+	text-align: center;
+	float: left;
+	position: relative;
+}
+.step-header li p{
+	margin-top: 30px;
+	margin-bottom: 5px;
+	font-size: 14px;
+	font-family:  微软雅黑;
+	color: #625454;
+}
+.step-header li span.stepNo{
+	position: relative;
+	margin: 0 auto;
+	font-size: 18px;
+	font-family: Arial;
+	color: #625454;
+	height: 25px;
+	line-height: 25px;
+	background: url("../scripts_lib/jquery-easyui-1.3.2/themes/icons/cell.png") center top no-repeat;
+	display: block;
+}
+.step-header li.step-active span.stepNo{
+	background: url("../scripts_lib/jquery-easyui-1.3.2/themes/icons/cell-active.png") center top  no-repeat ;
+	color: white;
+}
+.step-header li.step-active span.stepDesc{
+	color: #337AB7;
+}
+.step-header li.step-active p{
+	color: #466faa;
+}
+.step-bar,.step-bar-active{
+	height: 13px;
+	border-radius: 12px;
+}
+.step-bar{
+	width:100%;
+	background: url("../scripts_lib/jquery-easyui-1.3.2/themes/icons/bar-bg.png") ;
+	position: relative;
+	border-radius: 12px;
+	z-index: -1;
+	height: 5px;
+	top: 70px;
+}
+.step-bar-active{
+	width: 0px;
+	background: url("../scripts_lib/jquery-easyui-1.3.2/themes/icons/bar-bg-active.png") ;
+	height: 5px;
+
+}
+.step-list{
+	display: none;
+	clear: both;
+}
+#loading{
+    text-align:center;
+    position: absolute;
+    padding-top:100px;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: #000 ;
+    opacity:.2;
+    color: white;
+    display: none;
+    z-index: 1080;
+}
+#loading font{font-size: 40px;margin:0;font-family: 黑体;}
+
+</style>
+

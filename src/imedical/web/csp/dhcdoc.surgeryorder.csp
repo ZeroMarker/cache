@@ -1,0 +1,126 @@
+<!--dhcdoc.surgeryorder.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //CA:-------------------start初始化CA服务环境session--------
+ i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+ .d ##Class(CA.DigitalSignatureService).CASessionDataInit()
+ //-------------------end初始化CA服务环境session--------
+ quit 1
+</csp:method>
+<html>
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/dhcdocCustomExt.css" />
+<script type="text/javascript" src="../scripts/framework/dhcc.icare.MixGridPanel.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcc.doc.OrderCenter.js"></script>
+</head>
+<body>
+<script runat=server language=cache>
+	s orderMetaDataJson = ##class(ext.websys.QueryBroker).ReadRSNew("web.DHCDocSosOrder","FindSosOrder")
+	s group=%session.Get("LOGON.GROUPID")
+	S EpisodeID=$g(%request.Data("EpisodeID",1))
+	S PatientID = $P(^PAADM(EpisodeID),"^",1)
+	;CA:数字签名加载JS  ---START---
+	s CAInit=0
+	i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+	.s CAInit=1
+	.d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+	;得到CA认证的XML信息串
+	s GetOEORIItemXMLMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
+	;插入CA认证后的信息串
+	s InsertCASignInfoMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
+	;------END-----
+</script>
+<script type="text/javascript">
+	var orderMetaDataJson = #(orderMetaDataJson)#;
+	//CA:-------------------start 数字签名-----------------
+	var CAInit="#(CAInit)#";
+	var GetOEORIItemXMLMethod="#(GetOEORIItemXMLMethod)#";
+	var InsertCASignInfoMethod="#(InsertCASignInfoMethod)#";
+	var strServerRan="#($g(%session.Data("ServerRan")))#";
+	var strServerCert="#($g(%session.Data("ServerCert")))#";
+	var strServerSignedData="#($g(%session.Data("ServerSignedData")))#";
+	var IsCAWin="";
+	function GetList_pnp(){
+	   var strTemp =GetUserList();
+	   if (strTemp!="") IsCAWin=strTemp;
+	   else IsCAWin="";
+	}
+	if(CAInit==1) {
+		GetList_pnp();
+		if (IsCAWin==""){
+			alert("请先插入KEY");
+		}
+	}
+	//-------------------------------
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcc.doc.surgeryOrder.js"></script>
+<script type="text/javascript">
+	var EpisodeID= "#(EpisodeID)#";
+	var PatientID = "#(PatientID)#";
+	var frm = dhcsys_getmenuform();
+	frm.EpisodeID.value = EpisodeID;
+	frm.PatientID.value = PatientID;
+	function xhrRefresh(obj){	
+		dhcc.doc.orderGridPanel.refreshData(obj);
+		//var flag = tkMakeServerCall("web.DHCDocMainOrderInterface", "HiddenMenuFlag", obj.adm, session['LOGON.CTLOCID'])
+		var flag = tkMakeServerCall("web.DHCDocMainOrderInterface", "HiddenMenuFlag", obj.adm)
+		var stopOrdersBtn = Ext.getCmp("stopOrdersBtn");
+		var abortOrdersBtn= Ext.getCmp("abortOrdersBtn");
+		if ((flag!=0)&&(flag!="2.5")){
+			stopOrdersBtn.setDisabled(true);
+			abortOrdersBtn.setDisabled(true)
+			switch(flag){
+				case '1' : 
+					stopOrdersBtn.setText("出院的"); 
+					break;
+				case '2' : 
+					stopOrdersBtn.setText("医疗结算"); 
+					break;
+				case '3' : 
+					stopOrdersBtn.setText("最终结算"); 
+					break;
+				case '4' : 
+					stopOrdersBtn.setText("财务结算"); 
+					break;
+				case "5" : 
+					stopOrdersBtn.setText("不是v7的病人"); 
+					break;
+				default: stopOrdersBtn.setText(flag);
+			}				
+		}else{
+			stopOrdersBtn.setDisabled(false);
+			stopOrdersBtn.setText("撤销多条");
+			abortOrdersBtn.setDisabled(false);
+			abortOrdersBtn.setText("作废多条");
+		}
+		patientInfoBar.load({
+				url:'websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Banner',
+				params:{PatientID:PatientID,EpisodeID:EpisodeID},
+				callback:function(html,p2){
+					html.dom.innerHTML = "<div id='PageContent'>"+document.getElementById("dPAPerson_Banner").innerHTML+"</div>"
+				},
+				scripts:false,
+				timeout:300
+			});	
+	}
+	Ext.onReady(function(){
+		var viewport = new Ext.Viewport({
+			layout:'border',					
+			//items:[patientInfoBar,dhcc.doc.orderGridPanel]
+			items:[dhcc.doc.orderGridPanel]
+		});
+		//var frm = dhcsys_getmenuform();
+		//if (frm && frm.EpisodeID.value !== "0" ) {
+		if(EpisodeID==""){
+			alert("没有选中病人!");
+			return ""
+		}
+		xhrRefresh({papmi:PatientID, adm:EpisodeID,forceRefresh:true});
+		//}
+	});	
+</script>
+</body>
+</html>

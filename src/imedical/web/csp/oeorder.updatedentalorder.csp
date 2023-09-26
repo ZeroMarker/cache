@@ -1,0 +1,40 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body>
+<SERVER>
+ ;
+ n compref,id,OrderedRowIDs,OrderWindow
+ s (id)=""
+ 
+ s OrderWindow=%request.Get("OrderWindow")
+ s id=%request.Get("ID")
+ s compref=%request.Get("TEVENT")
+ s OrderedRowIDs=%request.Get("OrderedRowIDs")
+ d SetInsertVars^COEOrdItem8(compref,id,OrderedRowIDs)
+ 
+ w "<script>"
+ w "var dentalwin = window.open("""",'"_%request.Get("OrderWindow")_"');"
+ w "dentalwin.CloseWindow();"
+ w "</script>"
+ ;w "<script>"
+ ;w "var ordwin = window.open("""",'"_%request.Get("OrderWindow")_"');"
+ ;w "ordwin.PopUpQuesSumm("""_WorkFlowID_""","""_ReceivedDateTime_""","""_CollectDateTime_""","""_NewOrderString_""","""_EpisString_""","""_DisplayQuestionFlag_""","""_OEMessageFlag_""","""_AllergyFlag_""","""_AllergyItems_""","""_PathwayDR_""","""_OrderItemsID_""","""_NewOrders_""","""_ORIRowIDs_""","""_InteractFlag_""","""_DrugIntString_""","""_LabFlag_""","""_HasAction_""","""_AfterAction_""","""_BeforeAction_""","""_ActionItemString_""","""_NewLabEpisodeNumber_""","""_NewLabOrders_""","""_NewLabSpecs_""","""_NewLabColDate_""","""_NewLabColTime_""","""_NewLabRecDate_""","""_NewLabRecTime_""","""_SilentMode_""","""_OrderSetID_""","""_AgeSexFlag_""","""_AgeSexString_""","""_AgeSexItem_""","""_DosageRange_""","""_SubCat_""","""_Cat_""","""_DupMsg_""","""_HasDSSMsg_""","""_gotOEMsg_""","""_ordSetID_""","""_%request.Get("PatientID")_""","""_WARNING_""");"
+ ;i $g(%request.Data("REFRESHFAV",1))=1 w "ordwin.RunInHiddenWindow(ordwin.lnkFav+'&PREFTAB=1');"
+ ;i $g(%request.Data("REFRESHFAV",1))=1 w "ordwin.SelectAllItemList();"
+ ;w "</script>"
+ q
+ ;
+</SERVER>
+</body>
+</html>

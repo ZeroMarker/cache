@@ -1,0 +1,65 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+ n dicomStudy,dicomhttp
+ s OrderID=%request.Get("OrderID")
+ s ^zanju($zn,"order id ")=OrderID
+ s ResultID=%request.Get("ResultID")
+ s PatientID=%request.Get("PatientID")
+ s mradm=%request.Get("mradm")
+ s catgsID=%request.Get("catgsID")
+ s dfrom=%request.Get("dfrom")
+ s dto=%request.Get("dto")
+ s EpisodesAll=%request.Get("EpisodesAll")
+ s dicomStudy=##Class(web.OEOrdResult).GetDicomFiles(OrderID,PatientID,mradm,catgsID,dfrom,dto,EpisodesAll)
+ ;d %request.Set("Study","2")
+ ;n cnt,i,dicomStudy,vdir
+ ;s dicomStudy=%request.Get("dicomStudy")
+ ;d ##Class(web.CFSystemFileDefinition).GetVirtualDirectories(.vdir)
+ ;s cnt=$l(dicomStudy,";")-1
+ ;f i=1:1:cnt s $p(dicomStudy,";",i)="http://"_%session.Get("SERVER_NAME")_$p($g(vdir("DCM")),"^")_$tr($p(dicomStudy,";",i),"\","/")
+ ;;f i=1:1:cnt s $p(dicomStudy,";",i)="http://"_%session.Get("SERVER_NAME")_$p($g(vdir("DCM")),"^")_$tr($p($p(dicomStudy,";",i),"."),"\","/")_".jpg"
+</SERVER>
+<STYLE>
+FORM TABLE
+{
+    BACKGROUND-COLOR: #336699
+}
+BODY A
+{
+    COLOR: #336699;
+    TEXT-DECORATION: none
+}
+BODY A:active
+{
+    COLOR: #336699;
+    BACKGROUND-COLOR: #336699;
+
+}
+</STYLE>
+<script Language="JavaScript">
+var bStudy="#(dicomStudy)#";
+var ResultID="#(ResultID)#";
+var imageLinked = new Image();
+imageLinked.src = "../IMAGES/webemr/LinkedStudy.jpg"
+var imageUnLinked = new Image();
+imageUnLinked.src = "../images/webemr/UnLinkedStudy.jpg"
+</script>
+
+</HEAD>
+
+<BODY onload="Init();" onresize="Resize();">
+<TRAK:COMPONENT id="Dicom.Viewer" hidemenus=1></TRAK:COMPONENT>
+</BODY>
+</HTML>
+
+

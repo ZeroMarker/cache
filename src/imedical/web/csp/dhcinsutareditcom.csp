@@ -1,0 +1,167 @@
+<!-- 
+ * FileName:	dhcinsutareditcom.csp
+ * User:		DingSH 
+ * Date:		2019-06-04
+ * Description: 医保目录维护弹窗 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<server>
+		do ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_TARITEMS")
+	</server>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css'/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+</head>
+
+<body>
+<div class="hisui-layout" data-options="fit:true" >
+   <div id="InItmEPl"data-options="region:'center',border:false" style="solid #ccc;border-top:0;">
+      <table  class="search-table" style="width:100%;">				
+		 <tr>
+			<td class="r-label" align="right"  >医保类别</td>
+			<td>
+				<input id="lsfxmbm" class="hisui-combobox" style="width:155px"  >
+				<input id="lrowid" class="textbox" style="display:none;">
+			</td>
+			<td class="r-label" align="right" >收费大类描述</td>
+			<td>
+				<input id="lsfdlbmdesc"  style="width:155px" >
+				<input id="lsfdlbm" class="textbox" style="display:none;" >
+			</td>
+			<td class="r-label" align="right" >项目类别</td>
+			<td><input id="lxmlb" class="textbox" ></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >项目编码</td>
+			<td><input id="lxmbm" class="textbox hisui-validatebox" missingMessage="该项不能为空" data-options = "required:true"></td>
+			<td class="r-label" align="right" >批准文号</td>
+			<td><input id="lpzwh" class="textbox"></td>
+			<td class="r-label" align="right" >分类指标3</td>
+			<td><input id="lflzb3" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >项目名称</td>
+			<td><input id="lxmmc" class="textbox hisui-validatebox" missingMessage="该项不能为空" data-options = "required:true" ></td>
+			<td class="r-label" align="right" >商品名称</td>
+			<td><input id="lspmc" class="textbox"></td>
+			<td class="r-label" align="right" >分类指标4</td>
+			<td><input id="lflzb4" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >规格</td>
+			<td><input id="lgg" class="textbox"></td>
+			<td class="r-label" align="right" >商品拼音码</td>
+			<td><input id="lspmcrj" class="textbox"></td>
+			<td class="r-label" align="right" >分类指标5</td>
+			<td><input id="lflzb5" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >剂型</td>
+			<td><input id="ljx" class="textbox"></td>
+			<td class="r-label" align="right" >标准价格</td>
+			<td><input id="lbzjg" class="textbox hisui-numberbox" data-options="precision:2"></td>
+			<td class="r-label" align="right" >分类指标6</td>
+			<td><input id="lflzb6" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >单位</td>
+			<td><input id="ldw" class="textbox"></td>
+			<td class="r-label" align="right" >实际价格</td>
+			<td><input id="lsjjg" class="textbox hisui-numberbox" data-options="precision:2"></td>
+			<td class="r-label" align="right" >分类指标7</td>
+			<td><input id="lflzb7" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >拼音码</td>
+			<td><input id="lxmrj" class="textbox"></td>
+			<td class="r-label" align="right" >最高限价</td>
+			<td><input id="lzgxj" class="textbox hisui-numberbox" data-options="precision:2"></td>
+			<td class="r-label" align="right" >发票类别</td>
+			<td><input id="lfplb" class="textbox" ></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >用法</td>
+			<td><input id="lyf" class="textbox" ></td>
+			<td class="r-label" align="right" >报批限额</td>
+			<td><input id="lbpxe" class="textbox" ></td>
+			<td class="r-label" align="right" >累计增负标志</td>
+			<td><input id="lljzfbz" class="textbox" ></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >自付比例</td>
+			<td><input id="lzfbl1" class="textbox hisui-numberbox"  data-options="max:1,min:0,precision:2" ></td>
+			<td class="r-label" align="right" >用量</td>
+			<td><input id="lyl" class="textbox" ></td>
+			<td class="r-label" align="right" >医院增加标志</td>
+			<td><input id="lyyjzjbz" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >是否医保</td>
+			<td><input id="lflzb1" class="hisui-combobox" style="width:155px"></td>
+			<td class="r-label" align="right" >数量</td>
+			<td><input id="lsl" class="textbox hisui-numberbox" ></td>
+			<td class="r-label" align="right" >医院三目编码</td>
+			<td><input id="lyysmbm" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >有效标志</td>
+			<td><input  id="lflzb2" class="hisui-combobox" style="width:155px"></td>
+			<td class="r-label" align="right" >自付比例2</td>
+			<td><input id="lzfbl2" class="textbox hisui-numberbox" data-options="max:1,min:0,precision:2">
+			</td><td class="r-label" align="right" >目录类别</td>
+			<td><input id="lDicType" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >项目等级</td>
+			<td><input id="ltjdm" class="hisui-combobox" style="width:155px"></td>
+			<td class="r-label"align="right"  >自付比例3</td>
+			<td><input id="lzfbl3" class="textbox" data-options="max:1,min:0,precision:2"></td>
+			<td class="r-label" align="right" >中心唯一标识码</td>
+			<td><input id="lUnique" class="textbox" ></td>
+		 </tr>	
+		 <tr>
+			<td class="r-label" align="right" >生效日期</td>
+			<td><input id="lActiveDate" class="hisui-datebox textbox"></td>
+			<td class="r-label"align="right"  >限制用药标志</td>
+			<td><input id="ltxbz" class="textbox"></td>
+			<td class="r-label" align="right">备注</td>
+			<td><input id="lbz" class="textbox"></td>
+		 </tr>	
+		 <tr>
+			<td class="r-label" align="right" >失效日期</td>
+			<td><input id="lExpiryDate" class="hisui-datebox textbox">
+			</td>
+			<td class="r-label"align="right"  >更新日期</td>
+			<td><input id="lDate" class="textbox" readonly= "true"></td>
+			<td class="r-label" align="right" >更新人</td>
+			<td>
+				<input id="lUserName" class="textbox" readonly= "true">
+				<input id="lUserDr" class="textbox" style="display:none;">
+			</td>
+		 </tr>			
+	  </table>
+	  <table style="padding:0 10px 0 20px">
+	    <tr>	
+	       <td style="padding:5px 0px 0px 300px">
+		      <a id="btnU" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">确定</a>
+	       </td>
+	  	   <td  style="padding:5px 0px 0px 40px">
+		      <a id="btnC" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+	      </td>
+	    </tr>		
+	</table>
+   </div>
+</div>
+ <script type="text/javascript" src="../scripts/dhcinsutareditcom.js"></script>
+</body>
+</html>

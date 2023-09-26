@@ -1,0 +1,885 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. dhcopadm.schedulebyweek.csp HUI排班报表--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ Q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="/csp/broker/cspbroker.js"></SCRIPT><SCRIPT SRC="/csp/broker/cspxmlhttp.js"></SCRIPT>
+<script type="text/javascript" src="../SCRIPTS/dhtmlxcommon.js"></script>
+<script type="text/javascript" src="../SCRIPTS/dhtmlxcombo.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<!--
+<script type="text/javascript" src="../SCRIPTS/jQuery/jquery.js"></script>
+
+<script type="text/javascript" src="../SCRIPTS/DHCOPAdm.ScheduleDateCommon.js"></script>
+-->
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+
+<STYLE type='text/css'>
+body {
+	overflow:hidden;
+	padding:0;
+}
+th{
+	background-color: #fff;
+}
+table,tr,td,th{
+	border:1px solid #ddd;
+	border-collapse:collapse;
+	text-align:center;
+}
+.no-border-tab{
+	border:0;
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.no-border-tab tr,.no-border-tab tr td{
+	border:0;
+}
+#weekTable {
+	width:100%;
+}
+#weekTable tr {
+	height:35px;
+	color:#000000;
+	background:#fff;
+}
+#weekTable tr:hover{
+	background:#dcf0ff;
+	cursor:default;
+}
+#wrap{
+	height:85%;
+	overflow:auto;
+	/*overflow-y:auto;/** 必须，否则当表格数据过多时，不会产生滚动条，而是自动延长该div的高度 */
+	position:relative;/** 必须，若不设置，拷贝得来的表头将相对于其设置该属性为该值的父节点（或间接父节点）定位，如果没有，则相对于body */
+}
+/*
+
+#TableHead{
+	display:block;
+	position:absolute;
+	top:0;
+	left:0;
+	right:0;
+}
+*/
+#weekTable>td,#weekTable>th{
+	font-size: 14px;
+	width:60px;
+	line-height:24px;
+	padding:3px 5px;
+	background-color:#ddd;
+	word-break:break-all;
+	text-align:center;
+}
+
+#weekTable>th{
+	height:24px;
+	width:60px;
+	line-height:24px;
+	background-color:#D6E2F2;
+}
+.stopschedule {
+	PADDING: 3px;
+	MARGIN: 3px;
+	BORDER: 1px outset #cfcfff;
+	cursor: hand;
+	COLOR: #FFFFFF;
+	BACKGROUND-COLOR: #E04141;
+}
+.replaceschecule {
+  	PADDING: 3px;
+	MARGIN: 3px;
+	COLOR: #FFFFFF;
+	BACKGROUND-COLOR: #336699;
+	BORDER: 1px outset #336699;
+	FONT-WEIGHT: bold;
+	cursor: hand;
+	BACKGROUND-COLOR: #3399FF;
+}
+.normalschedule{
+	BORDER: 0px
+}
+.oddschedule{
+	BACKGROUND-COLOR: #ffeaaa; 
+}
+.stopregnoschedule{
+	PADDING: 3px;
+	MARGIN: 3px;
+	BORDER: 1px outset pink;
+	cursor: hand;
+	COLOR: #FFFFFF;
+	BACKGROUND-COLOR: pink;
+}
+.LocTD{
+	width:100px;
+}
+.SessTD{
+	width:80px;
+}
+.DocTD{
+	width:80px;
+}
+.TRTD{
+	width:50px;
+}
+.DateTD{
+	
+}
+</STYLE>
+
+</HEAD>
+<BODY >
+
+<DIV style="height:100%;background:#fff;">
+<SCRIPT language=cache RUNAT=SERVER>
+ 	n (%request,%session,%response,msg)
+ 	;s UserID=%session.Get("LOGON.USERID")
+ 	k ^DHCTempTitle,^DHCTempBody
+ 	s ASIrregularFlag=""
+ 	s sessiontypedesc=""
+ 	s cellclass=""
+ 	s LogonHospId=$G(%request.Data("Hospital",1))
+ 	if LogonHospId="" s LogonHospId=%session.Get("LOGON.HOSPID")
+ 	s DepStr=##class(web.DHCRBResSession).GetOPDeptStr("","","",LogonHospId)
+ 	s WeekNum=$G(%request.Data("WeekNum",1))
+ 	s Depart =$G(%request.Data("Dep",1))
+ 	s SortByFloor=$G(%request.Data("SortByFloor",1))
+ 	i SortByFloor="true" s SortByFloor="CHECkED"
+ 	e  s SortByFloor="UNCHECkED"
+	
+	s TodayWeek=$ZD($H,10)
+	i TodayWeek=0 s TodayWeek=7
+	s StartDate=+$H-TodayWeek+1
+ 	s StartDate=StartDate+((WeekNum)*7)
+ 		
+	;s StartDate=+$H
+	s EndDate=StartDate+6
+	
+	k ScheduleList("WeekSchedule",$J)
+	k ScheduleList("WeekScheduleSorted",$j)
+	s n=0
+	s ResRowId=0 
+	f  {
+		s ResRowId=$O(^RBAS(ResRowId))
+		Q:ResRowId=""
+		s DepDr=$P($G(^RB("RES",ResRowId)),"^",1)
+		s DocDr=$P($G(^RB("RES",ResRowId)),"^",2)
+		continue:(DocDr="")
+		continue:(DepDr="")
+		continue:(((","_Depart_",")'[(","_DepDr_","))&&(Depart'=""))
+		//continue:(Depart'=DepDr)&&(Depart'="")
+		//continue:(UserID'="")&&('##class(web.DHCUserGroup).UserCanDo(UserID,DepDr,DocDr))
+		s CTLocHospDr=$p(^CTLOC(DepDr),"^",22)
+		continue:(LogonHospId'="")&&(CTLocHospDr'=LogonHospId)
+		continue:'$d(^CTPCP(DocDr,1))
+		s DocTypeDr=$p(^CTPCP(DocDr,1),"^",4)
+		s DocTypeDesc=$p(^CT("CPT",DocTypeDr),"^",2)
+		s ResRowidd=$o(^RB("RES",0,"CTPCP",DocDr,DepDr,""))
+		s ScheSt=$p(^RB("RES",ResRowidd),"^",6)   //RES_ScheduleRequired字段?判断是不是需要排班
+		continue:(ScheSt'="Y")
+		s DepDesc=$P(^CTLOC(DepDr),"^",2)
+		s DocDesc=$p(^CTPCP(DocDr,1),"^",2)
+		f ASDate=StartDate:1:EndDate {
+			s SessStartTime="" 
+			f  {
+				s SessStartTime=$O(^RBAS(ResRowId,0,"DateSTime",ASDate,SessStartTime))
+				q:SessStartTime=""
+				s ASChildSub="" 
+				f  {
+					s ASChildSub=$o(^RBAS(ResRowId,0,"DateSTime",ASDate,SessStartTime,ASChildSub))
+					q:ASChildSub=""
+					s RBSessionDr=$p($G(^RBAS(ResRowId,ASChildSub)),"^",12)
+					s Qty=$p($G(^RBAS(ResRowId,ASChildSub)),"^",8)
+					s sessiontype=$P($G(^RBAS(ResRowId,ASChildSub,"DHC")),"^",6)
+					continue:sessiontype=""
+					s:sessiontype'="" sessiontypedesc=$p(^RBC("SESS",sessiontype),"^",2)
+					s ASRowId=ResRowId_"||"_ASChildSub
+					s StartTime=$P($G(^RBAS(ResRowId,ASChildSub)),"^",4)
+					s EndTime=$P($G(^RBAS(ResRowId,ASChildSub)),"^",5)
+					s TRRowId=$p($g(^RBAS(ResRowId,ASChildSub,"DHC")),"^",17)
+					continue:TRRowId=""
+					s status=$P($G(^RBAS(ResRowId,ASChildSub,"DHC")),"^",10)
+					i status'="" s status=$P(^DHCRBCASStatus(status),"^",1)
+					s ASIrregularFlag=$p($g(^RBAS(ResRowId,ASChildSub)),"^",13)
+					//便民和体检VIP在排班报表里不显示
+					continue:ASIrregularFlag="A"
+					s datecreate=$P($G(^RBAS(ResRowId,ASChildSub)),"^",23)
+					s timecreate=$P($G(^RBAS(ResRowId,ASChildSub)),"^",24)
+					i datecreate="" {
+						s datecreate=$P($G(^RBAS(ResRowId,ASChildSub,"DHC")),"^",8)
+						s timecreate=$P($G(^RBAS(ResRowId,ASChildSub,"DHC")),"^",9)
+					}
+					s datetimecreate=datecreate_timecreate
+					s TRDoc=""
+					i (status="R")||(status="TR") {
+						s TRRBASRowId=$P(^RBAS(ResRowId,ASChildSub,"DHC"),"^",12)
+						i (TRRBASRowId'="") d
+						.s TRDocRowId=$P($G(^RB("RES",+TRRBASRowId)),"^",2)
+						.s:TRDocRowId="" TRDoc="",^TRBASRowId=TRRBASRowId
+						.s:TRDocRowId'="" TRDoc=$p($g(^CTPCP(TRDocRowId,1)),"^",2)
+					}
+					s ASDate=$P($G(^RBAS(ResRowId,ASChildSub)),"^",1)      //就诊时间
+					s ASDateWeek=$zd(ASDate,10)
+					f AdmDate=StartDate:1:EndDate {
+						s AdmWeek=$ZD(AdmDate,10)
+						continue:AdmDate'=ASDate
+						s StopRegNoFlag=$P($G(^RBAS(+ASRowId,$P(ASRowId,"||",2),"DHC")),"^",27) //停正号标识
+						s CellData=ASRowId_"^"_DocDesc_"^"_status_"^"_TRDoc_"^"_datetimecreate_"^"_Qty_"^"_ASRowId_"^"_StopRegNoFlag
+						;已经存在有效的出诊记录,则不改变
+						s ExistStr=$g(ScheduleList("WeekSchedule",$J,DepDr,DocDr,AdmWeek,TRRowId,sessiontype))
+						s ExistStatus=$p(ExistStr,"^",3)
+						//continue:(ExistStatus="S")||(ExistStatus="TR")
+						s ScheduleList("WeekSchedule",$J,DepDr,DocDr_sessiontype,AdmWeek,TRRowId,sessiontype)=CellData  
+						s DocTypeDr=$p(^CTPCP(DocDr,1),"^",4)  
+						s:$g(^CT("CPT",DocTypeDr,"Sequence"))'="" DocTypeCode=$g(^CT("CPT",DocTypeDr,"Sequence"))
+						s:$g(^CT("CPT",DocTypeDr,"Sequence"))="" DocTypeCode=1
+						s ScheduleList("WeekScheduleSorted",$J,DepDr,sessiontype,DocDr,TRRowId,ResRowId_"||"_ASChildSub)="" 
+					}
+				}
+			}
+		}
+	}
+	
+ 	w !,"<table style='margin-left:0px; margin-top:0px;top:0;left:0;width:100%;'>"
+ 	w !," <tr></td>"
+ 	w !,"  <table class='no-border-tab' cellspacing=1 cellpadding=3 border=0  style='margin-left:0px; margin-top:0px;top:0;left:0;white-space:nowrap;'>"
+	;w !," <td><P align=right><label>开始日期</label></P></td>"
+    ;w !," <TD><input id='StartDate' name='StartDate' style='WIDTH: 80px; HEIGHT: 28px' tabIndex='1' value=''></td>"
+  	;w !," <td><P align=right><label>结束日期</label></P></td>"
+    ;w !," <TD><input id='EndDate' name='EndDate' style='WIDTH: 80px; HEIGHT: 28px' tabIndex='1' value=''></td>"
+    ;w !," <TD><a href='#' id='CurrentWeek' class='hisui-linkbutton' name='CurrentWeek'>本周</A></td>"
+    
+    w !," <TD class='r-label'>第<input id='WeekNum' class='textbox' name='WeekNum' style='WIDTH: 40px;margin:0 10px;' tabIndex='1' value='"_WeekNum_"'>周</td>"
+    w !," <TD class='r-label'>科室</td><td><input id='DepartMent' class='hisui-combobox' name='DepartMent' style='WIDTH: 180px;' tabIndex='2' ></td>"
+    ;w !," <TD class='r-label'>日期</td><td><input id='WeekDate' name='WeekDate' onpropertychange='WeekDate_change()' onclick='WeekDate_click()'  style='WIDTH: 158px;' tabIndex='3' ></td>"
+    w !," <TD class='r-label'>日期</td><td><input id='WeekDate' class='hisui-datebox textbox' data-options='onSelect:WeekDate_change' style='WIDTH: 158px;'></input></td>"
+    ;w !," <TD><a href='#' id='Find' class='hisui-linkbutton' name='Find' tabIndex=4>查找(<u>F8</u>)</A></td>"
+    ;w !," <TD class='r-label'>医院</td><td><input id='Hospital' name='Hospital' style='WIDTH: 180px;' tabIndex='2' ></td>"
+    w !,"<td class='r-label'><label id='_HospUserListLabel' style='color:red;'>医院</label></td><td><input id='_HospUserList'/></td>"
+    w !," <TD class='r-label'><a name='CurrentWeek' class='hisui-linkbutton' id='CurrentWeek' href='#'>本周</a></td>"
+    w !," <TD class=''><a name='Find' class='hisui-linkbutton' id='Find' >查询</a></td>"
+    w !," <TD><input id='SortByFloor' name='SortByFloor' "_SortByFloor_"  type='checkbox' disabled='true' style='display:none'><label></label></td>"
+    ;w !," <TD><a href='#' id='Export' name='Export' tabIndex=5'>导出</A></td>"
+    w !," <TD class='r-label'><a name='Export' class='hisui-linkbutton' id='Export' >导出</a></td>"
+	w !," </td></tr>"
+  	w !,"  </table>"
+	w !," <tr><td>"
+	w !," </tr></table>"
+	
+ 	s TRCount=EndDate-StartDate+1
+ 	w !,"<div id='wrap'>"
+ if (SortByFloor="CHECkED") {
+	 	
+	w !,"  <table id='weekTable' cellspacing=0 cellpadding=3 border=1 width='100%' style='padding-top:2px'>"
+	w !,"  <thead>"
+	w !,"   <tr class='fixedHeaderTr' >"
+	w !,"<td class='fixedHeaderTr' rowspan='3'  width=30>楼层</td>"
+	w !,"<td class='fixedHeaderTr' rowspan='3'  width=30>科室</td>"
+	w !,"<td class='fixedHeaderTr' rowspan='3' width=155>诊室</td>"
+	
+	f AdmDate=StartDate:1:EndDate d
+	.s AdmDateStr=##class(websys.Conversions).DateLogicalToHtml(AdmDate) //$ZD(AdmDate,3)
+	.s ^DHCTempTitle("Date",AdmDateStr)=AdmDateStr    //zlj 2012-12-02   add
+	.w !,"<td align='left' colspan='"_TRCount_"' width=120  class=''>"_AdmDateStr_"</td>"
+	w !,"</tr>"
+	w !,"   <tr class='fixedHeaderTr'>"
+	f AdmDate=StartDate:1:EndDate d
+	.s AdmWeek=$ZD(AdmDate,10)
+	.i AdmWeek=1 s AdmWeekDesc="周一"
+	.i AdmWeek=2 s AdmWeekDesc="周二"
+	.i AdmWeek=3 s AdmWeekDesc="周三"
+	.i AdmWeek=4 s AdmWeekDesc="周四"
+	.i AdmWeek=5 s AdmWeekDesc="周五"
+	.i AdmWeek=6 s AdmWeekDesc="周六"
+	.i AdmWeek=0 s AdmWeekDesc="周日"
+	.s ^DHCTempTitle("Week",AdmDate)=AdmWeekDesc
+	.w !,"<td  colspan='"_TRCount_"' align='center' width=60 class=''>"_AdmWeekDesc_"</td>"
+	w !,"</tr>"
+
+	w !," </tr>"
+	w !,"  </thead>"
+ 
+ 	w !,"  <tbody>"
+ 	
+ 	s rowstyle="RowOdd"
+ 	s rows=0
+	s RoomFloor=0 
+	s FloorRoomCount=""
+	
+	w !,"<tr>"
+	w !,"<td rowspan='"_(FloorRoomCount)_"' width=30 style='text-align:center;'><div style=' width:12px'>"_RoomFloor_"<div></td>"
+	s RoomCount=""
+	s count=0
+	s DepDr=0 
+	f  {
+		s DepDr=$O(ScheduleList("WeekSchedule",$J,DepDr))
+		Q:DepDr=""
+		s DepDesc=$P(^CTLOC(DepDr),"^",2)
+		w !,"<td rowspan='"_RoomCount_"' width=30 style='text-align:center;'><div style=' width:12px'>"_DepDesc_"<div></td>"
+		s j=0
+		s j=j+1
+		i j>1 w !,"<tr class='"_rowstyle_"'>"
+		w !,"<td >"_RoomDesc_"</td>"
+		s ret=DepDesc_"^"_DocTypeDesc
+		s count=count+1
+		f AdmDate=StartDate:1:EndDate {
+			s AdmWeek=$ZD(AdmDate,10)
+			s TRRowId=0  
+			f  {
+				s TRRowId=$O(^DHCTimeRange(TRRowId))
+				Q:(TRRowId="")
+				s TRValidEndDate=$P(^DHCTimeRange(TRRowId),"^",8)
+			    continue:((+$h)>TRValidEndDate)&&(TRValidEndDate'="")
+				s CellData=$G(ScheduleList("WeekSchedule",$J,DepDr,AdmWeek,TRRowId))
+				s:((AdmWeek=1)||(AdmWeek=3)||(AdmWeek=5)) cellclass="oddschedule"
+				i CellData="" {
+					s ret="^"
+					w !,"<td  class='"_cellclass_"'></td>"
+				}else{ 
+					s status=$P(CellData,"^",3)
+					s DocDesc=$P(CellData,"^",2)
+					s TRDoc=$P(CellData,"^",4)
+					s Qty=$P(CellData,"^",6)
+					s StopRegNoFlag=$P(CellData,"^",8)
+					s cellclass="normalschedule"
+					s:((AdmWeek=1)||(AdmWeek=3)||(AdmWeek=5)) cellclass="oddschedule"
+					s celltip=""
+					i StopRegNoFlag="Y"{
+						s cellclass="stopregnoschedule"
+						s celltip="停正号"
+					}
+					i status="S" {
+						s cellclass="stopschedule"
+						s celltip="停诊"
+					}
+					i status="R" {
+						s cellclass="replaceschecule"
+						s celltip="替诊:"_TRDoc
+					}
+					w !,"<td  class='"_cellclass_"'><label title='"_celltip_"'>"_DocDesc_"</label></td>"
+					i celltip'=""  {
+						s DocDesc=DocDesc_"("_celltip_")"
+					}
+					s ret=ret_"^"_DocDesc
+				}
+			}
+		}
+		w !,"</tr>"
+	}
+ 	w !,"  </tbody>"
+	w !,"  </table>"
+ }else{
+	w !,"<table id='weekTable' cellspacing=0 cellpadding=3 border=1 style=''>"
+	
+	w !,"  <thead id='TableHead'>"
+	w !,"    <tr class='' id=''>"
+	w !,"      <th class='LocTD' rowspan='2'>科室</th>"
+	w !,"      <th class='SessTD' rowspan='2'>级别</th>"
+	w !,"      <th class='DocTD' rowspan='2'>医生</th>"
+	w !,"      <th class='TRTD' rowspan='2'>时段</th>"
+	f AdmDate=StartDate:1:EndDate {
+		s AdmDateStr=##class(websys.Conversions).DateLogicalToHtml(AdmDate)
+		w !,"      <th class='DateTD'>"_AdmDateStr_"</th>"
+	}
+	
+	w !,"    </tr>"
+	w !,"    <tr>"
+	f AdmDate=StartDate:1:EndDate {
+		s AdmWeek=$ZD(AdmDate,10)
+		i AdmWeek=1 s AdmWeekDesc="周一"
+		i AdmWeek=2 s AdmWeekDesc="周二"
+		i AdmWeek=3 s AdmWeekDesc="周三"
+		i AdmWeek=4 s AdmWeekDesc="周四"
+		i AdmWeek=5 s AdmWeekDesc="周五"
+		i AdmWeek=6 s AdmWeekDesc="周六"
+		i AdmWeek=0 s AdmWeekDesc="周日"
+		w !,"      <th  class='DateTD'>"_AdmWeekDesc_"</th>"
+	}
+	w !,"    </tr>"
+ 	w !,"  </thead>"
+ 	
+ 	
+ 	s DepDr=0 
+	f{
+		s DepDr=$O(ScheduleList("WeekScheduleSorted",$J,DepDr))
+		Q:DepDr=""
+		s RoomCount=0
+		s DocTypeCode=0  
+	    f{
+		    s DocTypeCode=$O(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode))
+		    Q:DocTypeCode=""
+		    s DocTypeNum=0
+		    s DocDr=0
+		    for{
+			    s DocDr=$O(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode,DocDr))
+			    Q:DocDr="" 
+			    k TimeRangeList
+			    s TimeRangeNum=0
+				s TRRowId=0
+				for {
+					s TRRowId=$O(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode,DocDr,TRRowId))
+					q:TRRowId=""
+					continue:$D(TimeRangeList(TRRowId))
+					s TimeRangeNum=TimeRangeNum+1
+					s DocTypeNum=DocTypeNum+1
+					s RoomCount=RoomCount+1
+					s TimeRangeList(TRRowId)="1"
+				}
+				s ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode,DocDr)=TimeRangeNum
+		    }
+		    s ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode)=DocTypeNum
+	    }
+	    s ScheduleList("WeekScheduleSorted",$J,DepDr)=RoomCount
+	}
+	k ^tan("222")
+	m ^tan("222")=ScheduleList("WeekScheduleSorted",$J)
+ 	s rowstyle="RowOdd"
+ 	s rows=0
+ 	s count=0
+ 	s NextRow="Y"
+	s DepDr=0 
+	f{
+		s DepDr=$O(ScheduleList("WeekScheduleSorted",$J,DepDr))
+		Q:DepDr=""
+		s RoomCount=ScheduleList("WeekScheduleSorted",$J,DepDr)
+		
+		s DepDesc=$P(^CTLOC(DepDr),"^",2)
+		i $L(DepDesc,"-")>1 s DepDesc=$P(DepDesc,"-",2,4)
+		if (NextRow="Y"){
+	    	w !,"<tr>"
+	    	s NextRow="N"
+    	}
+		w !,"<td rowspan='"_RoomCount_"' class='LocTD'><div>"_DepDesc_"<div></td>"
+		s DocTypeDesc=""
+	    s DocTypeCode=0  
+	    f{
+		    s DocTypeCode=$O(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode))
+		    Q:DocTypeCode=""
+		    s DocTypeNum=ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode)
+		    s sessiontypedesc=$p(^RBC("SESS",DocTypeCode),"^",2)
+		    if (NextRow="Y"){
+		    	w !,"<tr>"
+		    	s NextRow="N"
+	    	}
+			w !,"<td rowspan='"_(DocTypeNum)_"' class='SessTD'>"_sessiontypedesc_"</td>"
+		   	s DocDr=0 
+			f  {
+				s DocDr=$O(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode,DocDr)) 
+				Q:DocDr="" 
+				s DocNum=$g(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode,DocDr))
+				s DocTypeDr=$p(^CTPCP(DocDr,1),"^",4)
+				s DocTypeDesc=$p(^CT("CPT",DocTypeDr),"^",2)
+				s (sessiontypedesc,ScheduleID,sessiontype)=""
+				s ScheduleID=$O(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode,DocDr,""))
+				
+				s DocDesc=$p(^CTPCP(DocDr,1),"^",2)
+				i DocDesc["(" s DocDesc=$P(DocDesc,"(",1)
+				if (NextRow="Y"){
+			    	w !,"<tr>"
+			    	s NextRow="N"
+		    	}
+				w !,"<td rowspan='"_(DocNum)_"' class='DocTD'>"_DocDesc_"</td>"
+				
+				s TRRowId=""
+				for {
+					s TRRowId=$O(ScheduleList("WeekScheduleSorted",$J,DepDr,DocTypeCode,DocDr,TRRowId)) 
+					Q:TRRowId=""
+					s TRDesc=$P(^DHCTimeRange(TRRowId),"^",2)
+					if (NextRow="Y"){
+				    	w !,"<tr>"
+				    	s NextRow="N"
+			    	}
+					w !,"<td  class='TRTD'><div>"_TRDesc_"<div></td>"
+					f AdmDate=StartDate:1:EndDate {
+						s AdmWeek=$ZD(AdmDate,10)
+						s CellData=$G(ScheduleList("WeekSchedule",$J,DepDr,DocDr_DocTypeCode,AdmWeek,TRRowId,DocTypeCode))
+						s status=$P(CellData,"^",3)
+						s DocDesc=$P(CellData,"^",2)
+						s Qty=$P(CellData,"^",6)
+						s TRDoc=$P(CellData,"^",4)
+						s StopRegNoFlag=$P(CellData,"^",8)
+						s celltip=""
+						s cellclass=""
+						i StopRegNoFlag="Y"{
+							s cellclass="stopregnoschedule"
+							s celltip="停正号"
+						}
+						i status="S" {
+							s cellclass="stopschedule"
+							s celltip="停诊"
+						}
+						i status="R" {
+							s cellclass="replaceschecule"
+							s celltip="替诊:"_TRDoc
+						}
+						i status="TR" {
+							s cellclass="stopschedule"
+							s celltip="被替诊:"_TRDoc
+						}
+						w !,"<td class='DateTD "_cellclass_"'><label title='"_celltip_"'>"_Qty_"</label></td>"
+					}
+					w !,"</tr>"
+					s NextRow="Y"
+				}
+			}
+	    }
+	}
+	
+	w !,"  </table>"
+}
+w !,"</div>"
+s TRStr=##class(web.DHCRBResSession).GetTRStr()
+s DateStr=##class(web.DHCRBResSession).GetDateStr()
+s WeekStr=##class(web.DHCRBResSession).GetWeekStr()
+s WeekScheduleRowIDStr=##class(web.DHCRBResSession).GetWeekScheduleRowIDStr()
+</SCRIPT>
+</DIV>
+<SCRIPT language=javascript>
+$("#wrap").css('height',$(window).height()-50);
+function Find_click() {
+	var obj=document.getElementById('WeekNum');
+	if ((obj)){
+		var WeekNum=obj.value;
+		var obj=document.getElementById('SortByFloor');
+		var SortByFloor=obj.checked
+		var Dep=$("#DepartMent").combobox('getValues');
+		var Hospital=$HUI.combogrid('#_HospUserList').getValue();
+		if (Hospital==undefined) Hospital="";
+	    var url="dhcopadm.schedulebyweek.csp?WeekNum="+WeekNum+"&Dep="+Dep+"&SortByFloor="+SortByFloor+"&Hospital="+Hospital;
+		window.location=url
+	}
+}
+var obj=document.getElementById("Find");
+obj.onclick=Find_click;
+var obj=document.getElementById("Export");
+obj.onclick=Export_click;
+
+//window.onscroll=PageScrollHandler;
+document.body.onload=documentload;
+var comb_Dep;
+var pre_scrollTop;
+var obj_topic;
+function documentload() {
+  scroll("weekTable","wrap",2);
+  pre_scrollTop = (document.documentElement.scrollTop || document.body.scrollTop);
+  obj_topic = document.getElementById("TableHead");
+  
+  quickK.f8=$('Find').onclick;
+  quickK.addMethod();
+  
+  var CurrentWeekObj=document.getElementById("CurrentWeek");
+  if (CurrentWeekObj){
+	  CurrentWeekObj.onclick=selectCurrentWeek;
+  }
+  //LoadHospital()
+  //初始化医院
+	var hospComp = GenUserHospComp();
+	//此处不能使用onSelect事件，在默认院区和所选择院区不一致时setValue会调用select事件导致页面一直重复刷新
+	hospComp.jdata.options.onClickRow = function(e,t){ 
+		var HospID=t.HOSPRowId;
+		if ($("#DepartMent").hasClass("combobox-f")) {
+			$("#DepartMent").combobox('select',"");
+		}
+		//LoadLoc(HospID);
+		$("#DepartMent").combobox('setValues',[]);
+		Find_click();
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		var Hospital=$HUI.combogrid('#_HospUserList').getValue();
+		var LogonHospId='#(LogonHospId)#';
+		if ((LogonHospId!="")&&(Hospital!=LogonHospId)) {
+			$HUI.combogrid('#_HospUserList').setValue(LogonHospId);
+		}
+		var Hospital=$HUI.combogrid('#_HospUserList').getValue();
+		LoadLoc(Hospital);
+	}
+    var DateFormat=GetDateFormat()
+    $HUI.panel("#datebox",{
+	    formatter:function(Data){
+			var y = Data.getFullYear();
+			var m = Data.getMonth()+1;
+			var d = Data.getDate();
+			if (DateFormat=="1"){
+				var DataStr=m+'/'+d+'/'+y;
+			}else if (DateFormat=="3"){
+				var DataStr=y+'-'+m+'-'+d;
+			}else if (DateFormat=="4"){
+				var DataStr=d+'/'+m+'/'+y;
+			}
+			
+			return DataStr;
+
+		}
+    });
+    
+    document.onkeydown=nextfocus1;	
+    document.onclick=document_click;
+    
+}
+function LoadHospital(){
+	$.q({
+		ClassName:"web.DHCRBResSession",
+		QueryName:"FindHospital",
+		LogonHospId:""
+	},function(Data){
+		var cbox = $HUI.combobox("#Hospital", {
+				valueField: 'Hidden',
+				textField: 'Desc', 
+				editable:true,
+				valueField: 'id',
+				data: Data['rows'],
+				filter: function(q, row){
+					//if (q=="") return true; 
+					//q=q.toUpperCase();
+					//if ((row["Code"].toUpperCase().indexOf(q)>=0)||(row["Alias"].toUpperCase().indexOf(q)>=0)||(row["Desc"].toUpperCase().indexOf(q)>=0)) return true;
+				},
+				onSelect:function(rec){
+					if (rec){
+						if ($("#DepartMent").hasClass("combobox-f")) {
+							$("#DepartMent").combobox('select',"");
+						}
+						LoadLoc(rec['id']);
+						Find_click();
+					}
+				},
+				onChange:function(newValue,oldValue){
+
+				}
+		 });
+		 var LogonHospId='#(LogonHospId)#';
+	     if(LogonHospId!=""){
+		    //$("#Hospital").combobox('select',dep);
+		    cbox.setValue(LogonHospId);
+		    LoadLoc(LogonHospId);
+		 }else{
+			cbox.setValue(session['LOGON.HOSPID']);
+			LoadLoc(session['LOGON.HOSPID']);
+		 }
+		 
+	});
+}
+function LoadLoc(hospitalid){
+	var hospitalid=$HUI.combogrid('#_HospUserList').getValue();
+	$.q({
+		ClassName:"web.DHCRBResSession",
+		QueryName:"FindLoc",
+		Loc:"",
+		UserID:"", //session['LOGON.USERID']
+		HospitalDr:hospitalid,
+		rows:99999
+	},function(Data){
+		var cbox = $HUI.combobox("#DepartMent", {
+				valueField: 'Hidden',
+				textField: 'Desc', 
+				editable:true,
+				data: Data['rows'],
+				multiple:true,
+				filter: function(q, row){
+					if (q=="") return true; 
+					q=q.toUpperCase();
+					if ((row["Code"].toUpperCase().indexOf(q)>=0)||(row["Alias"].toUpperCase().indexOf(q)>=0)||(row["Desc"].toUpperCase().indexOf(q)>=0)) return true;
+				},
+				onLoadSuccess:function(){
+				     var dep='#(Depart)#';
+		 			 $("#DepartMent").combobox('setValues',dep.split(","));
+				},
+				onSelect:function(rec){
+					/*if (rec){
+						Find_click();
+					}*/
+				},
+				onHidePanel:function(){
+					Find_click();
+				},
+				onChange:function(newValue,oldValue){
+					/*if (newValue=="") {
+						Find_click();
+					}*/
+				}
+		 });
+		 var dep='#(Depart)#';
+	     if(dep!=""){
+			    var allData = $("#DepartMent").combobox("getData");   //获取combobox所有数据
+		        var result = true;      //为true说明输入的值在下拉框数据中不存在
+		        for (var i = 0; i < allData.length; i++) {
+		            if (dep == allData[i]["Hidden"]) {
+		                result = false;
+		                break;
+		            }
+		        }
+		        if (result==false){
+			        $("#DepartMent").combobox('select',dep);
+			    }
+		 }
+	});
+	}
+function PageScrollHandler()
+{
+	
+	var MainDiv=document.getElementById("wrap");
+	if (MainDiv) {
+		
+		MainDiv.onscroll=PageScrollHandler;
+		//alert(MainDiv.offsetTop+","+MainDiv.offsetHeight);
+		MainDiv.style.height=(document.body.clientHeight-MainDiv.offsetTop-20>MainDiv.offsetHeight)?(MainDiv.offsetHeight+20)   :   (document.body.clientHeight-MainDiv.offsetTop-20);
+		MainDiv.style.width=(document.body.clientWidth-20);
+		//alert("document.body.clientWidth="+document.body.clientWidth)
+	}
+	
+	//return '';
+	
+}
+function document_click()
+{
+	var eSrc=window.event.srcElement;
+	if ((eSrc.id != "WeekDate")&&( eSrc.getAttribute("Author")==null)){
+		if (document.all.meizzDateLayer) document.all.meizzDateLayer.style.display="none";
+	}
+}
+function nextfocus1() {	
+	var eSrc=window.event.srcElement;	
+	//var t=eSrc.type;		&& t=='text'
+	var key=event.keyCode;
+	if (key==13) {	
+		websys_nexttab(eSrc.tabIndex);
+		var d=window.event.srcElement||e.target;   
+		if (d.id=="WeekNum") {
+			Find_click();
+		}
+	}
+	if (key==27){
+		if (document.all.meizzDateLayer) document.all.meizzDateLayer.style.display="none";
+	}
+	if (key==119){
+		Find_click();
+	}
+}
+function WeekDate_click()
+{
+	var eSrc=window.event.srcElement;
+	if (typeof(setday) == "function") setday(eSrc);
+}
+function GetDateFormat(){
+	return tkMakeServerCall("websys.Conversions","DateFormat")
+}
+function WeekDate_change(date)
+{
+	var DateFormat=GetDateFormat();
+	if (DateFormat=="3"){
+		var DateStr=date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+	}else{
+		var DateStr=date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
+	}
+	var ret=tkMakeServerCall("web.DHCOPSendMedicare","GetWeekNum",DateStr)
+	var obj=document.getElementById("WeekNum");
+	if (obj) obj.value=parseFloat(ret);
+	Find_click();
+}
+function selectCurrentWeek(){
+	//alert();
+	var WeekNumObj=document.getElementById("WeekNum");
+	if (WeekNumObj){
+		WeekNumObj.value="";
+		return Find_click();
+	}
+}
+var tableToExcel = (function() {
+	var uri = 'data:application/vnd.ms-excel;base64,',
+		template = '<html><head><meta charset="UTF-8"></head><body><table  border="1">{table}</table></body></html>',
+		base64 = function(
+			s) {
+			return window.btoa(unescape(encodeURIComponent(s)))
+		},
+		format = function(s, c) {
+			return s.replace(/{(\w+)}/g, function(m, p) {
+				return c[p];
+			})
+		}
+	return function(table, name) {
+		if (!table.nodeType)
+			table = document.getElementById(table)
+		var ctx = {
+			worksheet: name || 'Worksheet',
+			table: table.innerHTML
+		}
+		window.location.href = uri + base64(format(template, ctx))
+	}
+})()
+function Export_click() {
+	if (websys_isIE) {
+		var elTable = document.getElementById("weekTable"); //table1改成你的tableID
+	    var oRangeRef = document.body.createTextRange();
+	    oRangeRef.moveToElementText(elTable);
+	    oRangeRef.execCommand("Copy");
+	    try {
+	        var appExcel = new ActiveXObject("Excel.Application");
+	    } catch (e) {
+	        alert("无法调用Office对象，请确保您的机器已安装了Office并已将本系统的站点名加入到IE的信任站点列表中！");
+	        return;
+	    }
+	    appExcel.Visible = true;
+	    appExcel.Workbooks.Add().Worksheets.Item(1).Paste();
+	    appExcel = null;
+	}else{
+		tableToExcel("weekTable");
+	}	
+	
+}
+/**
+ * 功能：固定表头
+ * 参数   viewid     表格的id
+ *       scrollid   滚动条所在容器的id
+ *       size       表头的行数（复杂表头可能不止一行）
+ */
+ ///scroll("weekTable","mainDiv",3);
+function scroll(viewid,scrollid,size){
+    	// 获取滚动条容器
+	var scroll = document.getElementById(scrollid);
+        // 将表格拷贝一份
+	var tb2 = document.getElementById(viewid).cloneNode(true);
+        // 获取表格的行数
+	var len = tb2.rows.length;
+        // 将拷贝得到的表格中非表头行删除
+	for(var i=tb2.rows.length;i>size;i--){
+		// 每次删除数据行的第一行
+                tb2.deleteRow(size);
+	}
+        // 创建一个div
+	var bak = document.createElement("div");
+        // 将div添加到滚动条容器中
+	scroll.appendChild(bak);
+        // 将拷贝得到的表格在删除数据行后添加到创建的div中
+	bak.appendChild(tb2);
+        // 设置创建的div的position属性为absolute，即绝对定于滚动条容器（滚动条容器的position属性必须为relative）
+	bak.style.position = "absolute";
+        // 设置创建的div的背景色与原表头的背景色相同（貌似不是必须）
+	bak.style.backgroundColor = "#cfc";
+        // 设置div的display属性为block，即显示div（貌似也不是必须，但如果你不希望总是显示拷贝得来的表头，这个属性还是有用处的）
+	bak.style.display = "block";
+        // 设置创建的div的left属性为0，即该div与滚动条容器紧贴
+	bak.style.left = 0;
+	bak.style.right = 0;
+        // 设置div的top属性为0，初期时滚动条位置为0，此属性与left属性协作达到遮盖原表头
+	bak.style.top = "0px";
+        // 给滚动条容器绑定滚动条滚动事件，在滚动条滚动事件发生时，调整拷贝得来的表头的top值，保持其在可视范围内，且在滚动条容器的顶端
+	scroll.onscroll = function(){
+        // 设置div的top值为滚动条距离滚动条容器顶部的距离值
+		bak.style.top = (this.scrollTop)+"px";
+	}
+}
+
+</SCRIPT>
+</BODY>
+
+</HTML>

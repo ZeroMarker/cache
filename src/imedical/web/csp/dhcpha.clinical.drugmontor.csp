@@ -1,0 +1,283 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRA>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+ <TRAK:HEAD></TRAK:HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+
+<!-- Put your page Title here -->
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/drugmontor.js"></script>
+	<style type="text/css">
+	    body {
+  			font-family:宋体;
+  			font-size: 1.4em;
+		}
+	   .list ul{
+	      list-style-type:none;
+	      margin: 0;
+	      padding-left: 0px;
+	      width: auto;
+	   }
+       .list ul li {
+         margin-top: 1px;
+         font-size:13px;
+         border-bottom:1px solid #CCC;
+       }
+       .list ul li a {
+         background: #FFFFFF;
+         color: #000; 
+ 	     padding: 0.5em;
+  		 padding-left:40px;
+  		 text-decoration: none;
+	   }
+	   .list ul li a:hover {
+  		 background: #87CEFA;
+  		 font-size:14px;
+  		 font-weight:bold;
+	   }
+	   .list li a{
+		 display:block; /* 区块显示 */
+	   }
+		/*
+		ul {
+  			list-style-type:none;
+  			margin: 0;
+  			padding-left: 0px;
+  			width: 140px;
+		}
+
+		ul li {
+  			margin-top: 1px;
+		}
+
+		ul li a {
+  			background: #DDD;
+  			color: #000; 
+  			padding: 0.5em;
+  			padding-left:20px;
+  			text-decoration: none;
+		}
+
+		ul li a:hover {
+  			background: #FFF;
+		}
+
+
+		ul#menu li ul li a:hover {
+  			background: #aaa;
+  			border-left: 5px #000 solid;
+  			padding-left: 15px;
+		}
+
+		li a{
+			display:inline-block;
+		}
+
+		li a{
+			display:block;
+		}
+		*/
+		.ui-font14 {
+  			font-family:宋体;
+  			font-size: 14px;
+  			font-weight:bold;
+		}
+		.ui-font12 {
+  			font-weight:bold;
+  			font-size:12pt;
+  			font-family:华文楷体;
+  			color:red;
+		}
+	    
+	    .btn-ui a{
+			font-family:微软雅黑;
+			font-size: 16px;
+			text-align:center;
+			width:120px;
+			height:35px;
+			line-height:35px;
+		    background: none repeat scroll 0% 0% #09F;
+		    color: #FFF;
+		    text-decoration: none;
+		}
+
+		.btn-ui a:hover{
+			font-size: 16px;
+			color:#FFFFFF;
+    		background: none repeat scroll 0% 0% rgb(1, 91, 241);
+		}
+   </style> 
+</head>
+
+<body>
+	<div class="easyui-layout" data-options="fit:true" border="false" > 
+	  	<div data-options="region:'west',title:'菜单列表'" style="width:200px;">
+	  		<div id="aa" class="easyui-accordion" style="position: absolute; top: 1px; left: 0px; right: 0px; bottom: 0px;">
+				<div title="药学监护级别"  class="list">
+					<ul>
+						<li><a href="#">一级药学监护</a></li>
+						<li><a href="#">二级药学监护</a></li>
+						<li><a href="#">三级药学监护</a></li>	
+					</ul>
+	  			</div>
+            </div>
+	  	</div>
+	
+        <div id="mainPanel" region="center" style="overflow: auto; display:none;">
+        	<!--小儿内科分级药学监护标准-->
+        	<div id="PedDep_Level1" style="overflow: auto; display:none;">
+        		<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+					<div id="mainTitle1" style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">1、纳入标准<span class="ui-font12">[符合一项即为一级监护]</span></span></div>
+					<div style="float:left ;padding:0px 0px 0px 10px">
+						<table id="rangetable1" border='0' cellspacing='2' cellpadding='3' style="font-size:13px">
+
+						</table>				
+					</div>
+				</div>	
+				<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+					<div id="monitmTitle1" style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">2、生命体征</span></div>
+					<div style="float:left ;padding:0px 0px 0px 10px">
+						<div style="float:left ;padding:0px 0px 0px 10px">
+							<table id="monitmtable1" border='0' cellspacing='2' cellpadding='0' style="font-size:13px">
+
+							</table>
+						</div>
+					</div>
+				</div>
+				<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+					<div style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">3、检验检查</span></div>
+					<div>
+						<textarea id="Imptres1" cols="160" rows="4"  style="font-size:10pt;border:1px solid #95B8E7;"></textarea>
+					</div>
+				</div>
+				<!--药品信息-->
+                <div style="display:none;height:45px;border:1px solid #95B8E7;;margin:5px 0px 5px 5px;width:980px;">
+                	<table id="drugdg1"></table>
+                </div>
+                <div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+                	<div style='font-size:9pt;padding:10px 0px 3px 0px;'><span style="color:red;">*</span><span class="ui-font14">4、病情转归情况</span></div>
+	                <div>
+		                <form name=myform action="">  
+		        			<textarea id="GuideContent1" name="GuideContent1" cols="160" rows="4"  style="font-size:10pt;border:1px solid #95B8E7;" onKeyDown="textCounter(GuideContent1,remLen1,800);" onKeyUp="textCounter(GuideContent1,remLen1,800);">编辑内容..</textarea>     
+		    			</form>
+	    			 </div>
+	    		</div>
+				<div style="margin-bottom:40px;" class="btn-ui">
+					<span style="margin-left:10px; background-color:#99CCFF">您还可以输入:<input name="remLen1" type="text" value="800" size="5" >个字符</span>
+					<a href="#" id="btnAddEmp" style="margin-left:400px" onclick="saveLevel1Info()">提交保存</a>
+				</div>			
+        	</div>
+        	
+        	<div id="PedDep_Level2" style="overflow: auto; display:none;">
+        		<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+					<div id="mainTitle2" style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">1、纳入标准<span class="ui-font12">[符合一项即为二级监护]</span></span></div>
+					<div style="float:left ;padding:0px 0px 0px 10px">
+						<table id="rangetable2" border='0' cellspacing='2' cellpadding='3' style="font-size:13px">
+						
+						</table>
+					</div>
+				</div>	
+				<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+					<div id="monitmTitle2" style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">2、生命体征</span></div>
+					<div style="float:left ;padding:0px 0px 0px 10px">
+						<table id="monitmtable2" border='0' cellspacing='2' cellpadding='0' style="font-size:13px">
+
+						</table>
+					</div>
+				</div>
+				<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+					<div style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">3、检验检查</span></div>
+					<div>
+						<textarea id="Imptres2" cols="160" rows="4"  style="font-size:10pt;border:1px solid #95B8E7;"></textarea>
+					</div>
+				</div>
+				<!--药品信息-->
+                <div style="display:none;height:45px;border:1px solid #95B8E7;;margin:5px 0px 5px 5px;width:980px;">
+                	<table id="drugdg2"></table>
+                </div>
+                 <div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+	                <div style='font-size:9pt;padding:10px 0px 3px 0px;'><span style="color:red;">*</span><span class="ui-font14">4、病情转归情况</span></div>
+	                <div>
+		                <form name=myform action="">  
+		        			<textarea id="GuideContent2" name="GuideContent2" cols="160" rows="4"  style="font-size:10pt;border:1px solid #95B8E7;" onKeyDown="textCounter(GuideContent2,remLen2,800);" onKeyUp="textCounter(GuideContent2,remLen2,800);">编辑内容..</textarea>     
+		    			</form>
+	    			</div>
+	    		</div>
+				<div style="margin-bottom:40px;" class="btn-ui">
+					<span style="margin-left:10px; background-color:#99CCFF">您还可以输入:<input name="remLen2" type="text" value="800" size="5" >个字符</span>
+					<a href="#" id="btnAddEmp" style="margin-left:400px" onclick="saveLevel2Info()">提交保存</a>
+				</div>
+        	</div>
+        	
+        	<div id="PedDep_Level3" style="overflow: auto; display:none;">
+        		<div style="border:0px solid #95B8E7;">
+	        		<div style="border:1px solid #95B8E7;margin:5px;width:980px;">
+						<div id="mainTitle3" style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">1、纳入标准<span class="ui-font12">[符合一项即为三级监护]</span></span></div>
+						<div style="float:left ;padding:0px 0px 0px 10px">
+							<table id="rangetable3" border='0' cellspacing='2' cellpadding='3' style="font-size:13px">
+						
+							</table>
+						</div>
+					</div>	
+					<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+						<div id="monitmTitle3" style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">2、生命体征</span></div>
+						<div style="float:left ;padding:0px 0px 0px 10px">
+							<table id="monitmtable3" border='0' cellspacing='2' cellpadding='0' style="font-size:13px">
+
+							</table>
+						</div>
+					</div>
+					<div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+						<div style="height:20px;line-height:20px;padding:10px 0px 3px 0px;"><span style="color:red;">*</span><span class="ui-font14">3、检验检查</span></div>
+						<div>
+							<textarea id="Imptres3" cols="160" rows="4"  style="font-size:10pt;border:1px solid #95B8E7;"></textarea>
+						</div>
+					</div>
+					<!--药品信息-->
+	                <div style="display:none;height:45px;border:1px solid #95B8E7;;margin:5px 0px 5px 5px;width:980px;">
+	                	<table id="drugdg3"></table>
+	                </div> 
+	                <div style="border:1px solid #95B8E7;;margin:5px;width:980px;">
+		                <div style='font-size:9pt;padding:10px 0px 3px 0px;'><span style="color:red;">*</span><span class="ui-font14">4、病情转归情况</span></div>
+		                <div>
+			                <form name=myform action="" style=''>  
+			        			<textarea id="GuideContent3" name="GuideContent3" cols="160" rows="4"  style="font-size:10pt;border:1px solid #95B8E7;" onKeyDown="textCounter(GuideContent3,remLen3,800);" onKeyUp="textCounter(GuideContent3,remLen3,800);">编辑内容..</textarea>     
+			    			</form>
+		    			</div>
+    				</div>
+					<div style="margin-bottom:40px;" class="btn-ui">
+						<span style="margin-left:10px; background-color:#99CCFF">您还可以输入:<input name="remLen3" type="text" value="800" size="5" >个字符</span>
+						<a href="#" id="btnAddEmp" style="margin-left:400px" onclick="saveLevel3Info()">提交保存</a>
+					</div>
+				</div>
+        	</div>
+        		
+        </div>     
+        
+    </div>
+    
+     <!--病人用药信息窗口-->
+	<div id="mwin">
+		<div class="easyui-layout" fit="true">
+			<!--用药信息-->
+			<div data-options="region:'center'">
+				<div id="medInfo" toolbar="#tb"></div>
+			</div>
+		</div>
+		<div id="tb" style="padding:5px;height:auto">
+			<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:addWatchDrg()">添加[关注药品]</a>
+			<a href="#" class="easyui-linkbutton" iconCls="icon-cancel" plain="true" onclick="javascript:close()">取消</a>
+		</div>
+	</div>	
+</body>
+</html>

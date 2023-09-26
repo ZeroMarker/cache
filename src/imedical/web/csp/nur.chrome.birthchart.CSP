@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2020 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- nur.chrome.birthchart.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+
+<HEAD>
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<ADDINS require="BirthChart"/>
+ <SERVER>
+ s CtlocId=%session.Data("LOGON.CTLOCID")
+ s UserId=%session.Data("LOGON.USERID")
+</SERVER>
+</HEAD>
+
+<BODY >
+<SCRIPT Language="Javascript">
+var episodeId="#(%request.Get("EpisodeID"))#"
+var XmlPath
+var locId=session['LOGON.CTLOCID'];
+var userId=session['LOGON.USERID'];
+var webIp=window.location.href.split('/imedical/web')[0]
+
+function BodyLoad()
+{
+	if ("undefined"==typeof EnableLocalWeb || 0 ==EnableLocalWeb ){
+		 //未开启使用中间件 或 老项目，然仍用老的方式运行		 
+		alert(1);
+		//DHCCDoctorOrderSheet.showDoctorOrderSheetWindow(episodeId,wardId,locId,userId,webIp)
+		//window.close()
+	}else{		
+		BirthChart.notReturn=1
+        var XmlPath =webIp+"/dhcmg/BirthMain/xml/XMLCurveV.xml";// "../../../../dhcmg/XMLCurveV.xml";        
+		var ServiceUrl = webIp+"/imedical/web";
+		BirthChart.Show(userId,locId,XmlPath,ServiceUrl,episodeId,"true")	 //中间件运行,此处的DoctorSheet为配置界面的调用ID
+		//window.close();
+	}
+}
+document.body.onload=BodyLoad;
+</SCRIPT>
+</BODY>
+</HTML>

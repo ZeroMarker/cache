@@ -1,0 +1,204 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<html>
+    <head>
+        <title> 门诊办公室审核 </title>
+
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css" />
+    
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.combobox.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        
+        <style type="text/css">
+        * 
+        .datagrid-cell{
+            font-size: 16px;
+            line-height: 35px;
+            height: 30px;
+            font-weight: 500;
+        }
+        .searchbox .searchbox-text{
+            font-size: 16px;
+            height: 16px;
+        }
+        .combo .combo-text{
+            font-size: 16px;
+            height: 16px;
+        }
+        button{
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        button:hover{
+            text-shadow: -1px -1px 0 rgba(0,0,0,0.3);
+            color: red;
+            border-color: #000;
+            background-color: #EFF8FE;
+            background-image: linear-gradient(#599bdc, #3072b3);
+        }
+        </style>
+
+    </head>
+
+    <body ondragstart="return false"  class="easyui-layout">
+
+        <div id="patLst" class="easyui-panel" data-options="region:'west',border:false,noheader:true,split:true" style="width:300px;">
+            <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+            <div id="seekform" data-options="region:'north',border:false" style="height:120px;padding:3px">
+                    <table id="qryTable" style="width:100%;height:100%;table-layout:fixed;border:0;cellspacing:1;cellpadding:0">
+                        <tr>
+                            <td>
+                                <label style="padding-top:3px;">登&nbsp&nbsp记&nbsp&nbsp号：</label>
+                                <input id="regNoSearch" class="easyui-searchbox" data-options="fit:true,border:false" style=""></input>
+                            </td>
+                            <td>
+                                <label style="padding-top:3px;">就诊科室：</label>
+                                <input id="cbxLoc" class="easyui-combobox" style="width:140px"/>
+                            </td>
+                            <td style="width:80"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label style="padding-top:3px;">患者姓名：</label>
+                                <input id="nameSearch" class="easyui-searchbox" data-options="fit:true,border:false" style=""></input>
+                            </td>
+                            <td>
+                                <label style="padding-top:3px;">开始日期：</label>
+                                <input class="easyui-datebox datebox-f combo-f" id="startDate" data-options="formatter:Dateformatter,parser:Dateparser,width:140"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label style="padding-top:3px;">就诊卡号：</label>
+                                <input id="cardNoSearch" class="easyui-searchbox" data-options="fit:true,border:false" style=""></input>
+                            </td>
+                            <td>
+                                <label style="padding-top:3px;">结束日期：</label>
+                                <input class="easyui-datebox datebox-f combo-f" id="endDate" data-options="formatter:Dateformatter,parser:Dateparser,width:140"/>
+                            </td>
+                            <td>
+                               <button id="PatientListQuery">查&nbsp&nbsp&nbsp询</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>    
+                <div class="easyui-panel" data-options="region:'center',border:false">
+                    <table id="patientListData" title="诊断证明书完成情况表"></table>    
+                </div>    
+            </div>        
+        </div>
+        
+        <div id="emrEditor" class="easyui-panel" data-options="region:'center',border:false,noheader:true" style="overflow:hidden;">
+            <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <!--按钮-->
+                <div class="easyui-layout" data-options="region:'north',border:false" style="width:100%;height:38px;padding-left:6px;padding-right:5px;">
+                    <div id="pnlButton" class="easyui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;padding-top:8px;">
+                        <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px"/>
+                        <span style="font-size:18px;margin-left:5px;margin-top:0px;">审核人：</span>
+                        <select name="auditUsrCombo" id="auditUsrCombo" style="width:200px;font-size:18px;margin-left:5px;"></select>
+                        <button id="btnOpOfficeAudit">审&nbsp&nbsp&nbsp核</button>
+                        <button id="btnOpOfficePrint">PDF打印</button>
+                        <button id="btnOpOfficePDFPrev">PDF预览</button>
+                    </div>
+                    <table id="msgTable" class="right" style="width:400px;height:100%;table-layout:fixed;display:none;" border=0 cellspacing=0 cellpadding=1> 
+                        <tr> 
+                            <td id="msgtd" style="vertical-align:middle;background-color:red;text-align:center;font-family:MicrosoftYaHei;font-size:120%;color:black;display:inline-block"></td> 
+                        </tr> 
+                    </table>
+                </div>
+                <!--病历显示-->
+                <div id="editor" data-options="region:'center',border:false" style="overflow:hidden;">
+                    <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>    
+                </div>
+            </div>
+        </div>        
+        
+    <script language="cache" runat="server">
+        s patientID = $Get(%request.Data("PatientID",1),"")
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s mradm = ""
+        s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+        
+        s id = $Get(%request.Data("id",1),"")
+        s chartItemType = $Get(%request.Data("chartItemType",1),"")
+        s pluginType = $Get(%request.Data("pluginType",1),"")
+        s emrDocId = $Get(%request.Data("emrDocId",1),"")
+        s url = $Get(%request.Data("url",1),"")
+        
+        s sessionID = %session.SessionId    
+        s userCode = %session.Get("LOGON.USERCODE")
+        s userName = %session.Get("LOGON.USERNAME")
+        s userID = %session.Get("LOGON.USERID")
+        s ssgroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+        s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+        
+        s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+        s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")    
+        s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+        s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+        s MessageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("MessageScheme","")
+
+        s savedRecords = "" //##Class(EMRservice.BL.opInterface).getSavedRecordsForAudit(episodeID, userLocID, ssgroupID)
+        s PatientNoLength = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("PatientNoLength","N")
+        s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsSetToLogOP","N")
+    </script>
+    <script language="javascript">
+        var patInfo = {
+            SessionID: "#(sessionID)#",
+            PatientID: "#(patientID)#",
+            EpisodeID: "#(episodeID)#",
+            MRadm: "#(mradm)#",
+            UserID: "#(userID)#",
+            UserCode: "#(userCode)#",
+            UserName: "#(userName)#",
+            SsgroupID: "#(ssgroupID)#",
+            UserLocID: "#(userLocID)#",
+            UserLocCode: "#(userLocCode)#",
+            UserLocName: "#(userLocName)#",
+            DiseaseID: "",
+            IPAddress: getIpAddress(),
+            SecCode: ""
+        };                
+                    
+        var sysOption = {
+            pluginUrl : "#(pluginUrl)#",
+            setDefaultFontStyle : "#(setDefaultFontStyle)#",
+            pluginType : "#(pluginType)#",
+            argConnect : {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"},
+            messageScheme : $.parseJSON("#(MessageScheme)#".replace(/\'/g, "\"")),
+            PatientNoLength : '#(PatientNoLength)#',
+            IsSetToLog : '#(IsSetToLog)#'
+        };
+        
+        var envVar = {
+            readonly : 'true',
+            savedRecords : $.parseJSON('#(savedRecords)#'),
+            docContext : null 
+        };
+    </script>        
+        
+    <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/iEmrPluginEx.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.hisLog.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.office.toolbar.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.office.editor.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.office.audit.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.office.audit.pdfcreator.js"></script>
+        
+    </body>
+</html>

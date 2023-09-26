@@ -1,0 +1,216 @@
+<!--<csp:content charset="utf-8">-->
+<html>
+<head>
+	<DHCTT:HEAD/>
+	<SCRIPT language="CACHE" RUNAT=SERVER>
+		m ^Temp("wanghc","cgi")=%request.CgiEnvs
+		d ##class(web.Util.DHCTTLanguageManager).getLanguage().initFindTableStructure(.t)
+		S findpn = "packageName"
+		S findtn = "tableName"
+		s findmin= "masterIndexName"		
+		S findurl = "dhctt.findtablestructure.csp"
+		s %session.EventClass="web.Util.FindClassSession"
+		s reqPnValue = $g(%request.Data(findpn,1))
+		s reqTnValue = $g(%request.Data(findtn,1))
+		s reqMinValue = $g(%request.Data(findmin,1))
+		s ip = %request.GetCgiEnv("REMOTE_ADDR")		
+		i $g(^DHCTTTEMP("config",ip,"history"))="on" d
+		.s i=$i(^Temp("DHCTTFindTableStruHistory",%session.Key))		//global history
+		.s:reqTnValue'="" ^Temp("DHCTTFindTableStruHistory",%session.Key,i)=$LB(reqTnValue,..CreateUrl(reqPnValue,reqTnValue,reqMinValue))
+	</SCRIPT>
+	<title>#(t("find table structure"))#</title>
+	
+	<SCRIPT language=CACHE RUNAT=SERVER METHOD=CreateUrl RETURNTYPE=%String ARGUMENTS="pn:%String,tn:%String,min:%String">
+		q findurl_"?"_findpn_"="_pn_"&"_findtn_"="_tn_"&"_findmin_"="_min
+	</SCRIPT>
+	<SCRIPT language=CACHE RUNAT=SERVER METHOD=clearHistory>
+		k ^Temp("DHCTTFindTableStruHistory",%session.Key)
+		q
+	</SCRIPT>
+</head>
+<body>
+	<DHCTT:MENU/>	
+	<input type="hidden" value="#($g(^DHCTTTEMP("config","nameClassTipConfig")))#" id="nameClassTipConfig">
+	<table style="height:94%">
+		<tr><td class='greentitle' >#(t("find table structure"))#:</td></tr>
+		<tr>	
+			<td></td>
+			<td>
+				<form action="#(findurl)#">
+				#(t("pn"))#: <input type="text" name="packageName" id="packageName" value=#($s(reqPnValue'="":reqPnValue,1:"User"))# required=true/>
+				#(t("tn"))#: <input type="search" name="tableName" id="tableName" autocomplete="off" value="#(reqTnValue)#" placeholder="Class Name" required=true/>	
+				<input id='find' type="submit" value="#(t("find"))#">
+				</form>
+				<!--&nbsp<a id='find' href="#">#(t("find"))#</a>	-->
+			</td>
+			<td>#(t("pt"))#:
+				<script language=CACHE RUNAT=SERVER>					
+					;set ns = $namespace
+					;zn "dhc-app"
+					s parentTable = ##class(web.Util.DHCJFClassGlobal).SelectParent(reqPnValue,reqTnValue)
+					i parentTable '= "" d
+					.w "<a id='parentTable' href='"_..CreateUrl(reqPnValue,parentTable,"")_"' >"_parentTable_"</a>"
+					;zn ns
+				</SCRIPT>
+			</td>			
+		</tr>
+					
+		<tr>
+			<td>#(t("ct"))#:</td>
+			<td><font class='greentitle'>#(t("table index structure"))#</font></td>
+		</tr>
+		<tr valign="top">
+			<td>
+				<div style='height:150; overflow: auto'><table>
+				<!--create children table-->
+				<script language=CACHE RUNAT=SERVER>									
+					;set ns = $namespace
+					;zn "dhc-app"
+					s len = 0
+					s childrenTable = ##class(web.Util.DHCJFClassGlobal).SelectChild(reqPnValue,reqTnValue)										
+					i (childrenTable'="") d					
+					.s len = $l(childrenTable,"^")					
+					.f i=1:1:len d
+					..s childTable=$p(childrenTable,"^",i)
+					..w "<tr><td><a href='"_..CreateUrl(reqPnValue,childTable,"")_"' >"_childTable_"</a></td></tr>"
+					;zn ns
+				</SCRIPT>
+				</table></div>
+			</td>
+			<td colspan=3>
+				<table border=1 cellpadding="0" cellspacing="0"  style='table-layout:fixed;' id="indexStructTableTitle">
+					<thead>
+						<TH style="width:95px;">#(t("Index Type"))#</TH>
+						<TH style="width:200px;">#(t("Map Name"))#</TH>
+						<TH style="width:850px;">#(t("Index Detail"))#</TH>
+					</thead>
+				</table>
+				<div style='height:150; overflow: auto'>				
+				<table border=1 cellpadding="0" cellspacing="0" style='table-layout:fixed;' id="indexStructTable">
+					<!--create index struct table-->
+					<script language=CACHE RUNAT=SERVER>					
+						w "<tbody>"
+						;set ns = $namespace
+						;zn "dhc-app"
+						s len = 0
+						i (reqPnValue="") || (reqTnValue="") d
+						.w "<tr><td></td><td></td><td></td></tr>"									
+						e  d
+						.s mastersRS = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectMaster")
+						.set sc=mastersRS.Execute(reqPnValue,reqTnValue)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit										
+						.while mastersRS.Next() {	//..CreateUrl(reqPnValue,reqTnValue,mastersRS.GetDataByName("indexName"))
+						.w "<tr align='center'><td style='width:95px;'>"_mastersRS.GetDataByName("type")_"</td>"
+						.w "<td style='width:200px;'>"_$s(mastersRS.GetDataByName("type")="data":"<a href='#'>"_mastersRS.GetDataByName("indexName")_"</a>",1:mastersRS.GetDataByName("indexName"))_"</td>"
+						.w "<td align='left' style='width:850px;'>"_mastersRS.GetDataByName("indexMasterData")_"</td></tr>"}						
+						.D mastersRS.%Close()
+						.s mastersRS=""
+						;zn ns
+						w "</tbody>"
+					</SCRIPT>
+				</table>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+			<script language=CACHE RUNAT=SERVER>
+			w:$g(^DHCTTTEMP("config",ip,"history"))="on" t("history table")_":<input type=""button"" value=""-"" text=""delete"" id=""clearHistoryBtn"">"
+			</script>
+			</td>
+			<td><font class='greentitle'>#(t("index info"))#</font></td>	
+		</tr>
+		<tr valign="top">
+			<td style="width:190px">
+				<div style='height:300; overflow: auto' id="historyListDiv"><table id='historyList'>
+				<script language=CACHE RUNAT=SERVER>
+					s i=0
+					f  s i=$o(^Temp("DHCTTFindTableStruHistory",%session.Key,i))  q:i=""  d					
+					.w "<tr><td><a href='"_$ListGet(^Temp("DHCTTFindTableStruHistory",%session.Key,i),2)_"'>"_$ListGet(^Temp("DHCTTFindTableStruHistory",%session.Key,i),1)_"</a></td></tr>"					
+				</SCRIPT>
+				</table></div>	
+			</td>
+			<td valign="top" colspan=3>
+				<table border=0 id="indexInfoTableTitle"  cellpadding="0" cellspacing="0"  style='table-layout:fixed;'  >
+					<thead>
+						<TH style="width:250px">#(t("Property Name"))#</TH>
+						<TH style="width:100px">#(t("Node"))#</TH>
+						<TH style="width:100px">#(t("Delimiter"))#</TH>
+						<TH style="width:110px">#(t("Piece"))#</TH>
+						<TH style="width:220px">#(t("Type"))#</TH>			
+						<TH style="width:250px">#(t("Field"))#</TH>
+						<TH style="width:110px">#(t("PList"))#</TH>
+					</thead>
+					<tbody align='center' id='TableIndexInfoTitle'>
+						<tr class='bgcolorgreen'>
+						<script language=CACHE RUNAT=SERVER>
+						s colstr=$lb("propertyName","propertyNode","propertyDeli","propertyPiece","propertyType","propertyField","propertyColumn")
+						s c1=$lg(colstr,1), c2=$lg(colstr,2), c3=$lg(colstr,3), c4=$lg(colstr,4), c5=$lg(colstr,5), c6=$lg(colstr,6), c7=$lg(colstr,7)
+						w "<td style='width:250px' title='"_t("Property Name Filter Tip")_"'><input id='"_c1_"'></td>"
+						w "<td style='width:100px' title='"_t("Property Node Filter Tip")_"'><input id='"_c2_"'  style='width:100px'></td>"
+						w "<td style='width:100px'>^</td>"
+						w "<td style='width:110px' title='"_t("Piece Filter Tip")_"'><input id='"_c4_"' style='width:100px'></td>"
+						w "<td style='width:220px' title='"_t("Property Type Filter Tip")_"'><input id='"_c5_"'></td>"
+						w "<td style='width:250px' title='"_t("Field Filter Tip")_"'><input id='"_c6_"'></td>"
+						w "<td style='width:110px' title='"_t("PList Filter Tip")_"'><input id='"_c7_"' style='width:100px'></td>"
+						</SCRIPT>
+						 </tr>
+					</tbody>	
+				</table>
+				<div style='height:290; overflow: auto'>
+				<table border=1 id="indexInfoTable" cellpadding="0" cellspacing="0" style='table-layout:fixed;' >	
+					<tbody align='center' id='TableIndexInfo'>
+					<script language=CACHE RUNAT=SERVER>
+						;propertyName,propertyNode,propertyDeli,propertyPiece,propertyType,propertyField,propertyColumn						
+						s len = 0
+						i (reqPnValue="") || (reqTnValue="") d
+						.;w "<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"									
+						e  d
+						.s infoRS = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectProperty")
+						.set sc=infoRS.Execute(reqPnValue,reqTnValue,reqMinValue)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit										
+						.while infoRS.Next() {
+						.s len=len+1
+						.s type=infoRS.GetDataByName(c5),typelen=$l(type,".")
+						.w "<tr><td style='width:250px' align='left'><label id='"_c1_"z"_len_"'>"_infoRS.GetDataByName(c1)_"</label></td>"
+						.w "<td  style='width:100px'><label id='"_c2_"z"_len_"'>"_infoRS.GetDataByName(c2)_"</label></td>"
+						.w "<td  style='width:100px'><label id='"_c3_"z"_len_"'>"_infoRS.GetDataByName(c3)_"</label></td>"
+						.w "<td  style='width:110px'><label id='"_c4_"z"_len_"'>"_infoRS.GetDataByName(c4)_"</label></td>"
+						.w "<td  style='width:220px'  align='left'><label id='"_c5_"z"_len_"'>"_$s($e(type,1)="%":type,1:"<a href="_..CreateUrl($p(type,".",1,typelen-1),$p(type,".",typelen),"")_">"_type_"</a>")_"</td>"
+						.w "<td  style='width:250px'  align='left'><label id='"_c6_"z"_len_"'>"_infoRS.GetDataByName(c6)_"</label></td>"
+						.w "<td  style='width:110px'><label id='"_c7_"z"_len_"'>"_infoRS.GetDataByName(c7)_"</label></td></tr>"
+						.}	
+						.D infoRS.%Close()
+						.s infoRS=""										
+					</script>
+					 </tbody>
+				</table></div>
+			</td>
+		</tr>
+	</table>
+	<script type="text/javascript" src="../../scripts/dhctt/DHCTable.js"></script>
+	<script type="text/javascript">
+		DHC.addEventListener(document.getElementById("clearHistoryBtn"),"click",function(){
+			#call(..clearHistory())#
+			var hisobj=document.getElementById('historyList');
+			if(hisobj)
+				document.getElementById('historyListDiv').removeChild(hisobj);
+		})
+		var indexInfoTable = document.getElementById("indexInfoTable");	
+		var indexInfoTableTitle = document.getElementById("indexInfoTableTitle");			
+		var indexStructTable = document.getElementById("indexStructTable");
+				
+		DHC.addEventListener([indexStructTable,indexInfoTable],"keyup",DHCTable.tableEnterKeyupHandler );
+		DHC.addEventListener([indexStructTable,indexInfoTable],"click",DHCTable.tableClickRowHandler );	
+		DHC.addEventListener([indexInfoTableTitle],"keyup",function(e){
+				var keycode = DHC.getKeyCode(e) ;
+				var input = DHC.getTarget( e );
+				var row = DHC.getRow( input );				
+				if( keycode === 13) {			
+					if ( input.tagName == "INPUT" ){	
+						DHCTable.filterTalbe( indexInfoTable,row );
+					}
+				}
+		});	
+	</script>
+	<script type="text/javascript" src="../../scripts/dhctt/findtablestructure.js"></script>
+</body>
+</html>

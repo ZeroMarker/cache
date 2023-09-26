@@ -1,0 +1,173 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+s diagOrds=""
+s cont=$g(%request.Data("CONTEXT",1))
+s PatientID=$g(%request.Data("PatientID",1))
+s EpisodeID=$g(%request.Data("EpisodeID",1))
+s EpisodeIDs=$g(%request.Data("EpisodeIDs",1))
+s ConsultID=$g(%request.Data("ConsultID",1))
+s ConsultEpisodeID=$g(%request.Data("ConsultEpisodeID",1))
+s ComponentTitle=$zcvt($zcvt($g(%request.Data("ComponentTitle",1)),"I","URL"),"O","HTML")
+s mradm=$g(%request.Data("mradm",1))
+; Log 57774 - PJC - 31/03/2006 - Display Questionnaire List on History Pages
+s showAdd=$g(%request.Data("ShowAdd",1))
+s showAdd2=$g(%request.Data("ShowAdd2",1))
+s editComp=$g(%request.Data("EditComp",1))
+s ChartID=$g(%request.Data("ChartID",1))
+s QGroup=$g(%request.Data("QGroup",1))
+s ItemID=$g(%request.Data("ItemID",1))
+s itmparams=$g(%request.Data("itmparams",1))
+; 59250
+s apptID=$g(%request.Data("apptID",1))
+s EpisodesAll=$g(%request.Data("EpisodesAll",1))
+; For present illness set flag to Y
+i $g(%request.Data("WEBSYS.TCOMPONENT",1))="epr.HistDiagCurr" d %request.Set("Current","Y")
+; Log 56835 YC - Needed for Order Profile in SOAPPlanning
+i $g(%request.Data("WEBSYS.TCOMPONENT",1))="epr.SOAPPlanning" d
+. d %request.Set("EpisodeAll","1")
+. q:ConsultID=""
+s glbVar="&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&ChartID="_ChartID
+d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM"_$s($g(%request.Data("WEBSYS.TCOMPONENT",1))'="":","_$g(%request.Data("WEBSYS.TCOMPONENT",1)),1:""))
+
+</SERVER>
+
+<BODY onload="resize()">
+<DIV id="PageContent">
+	<TRAK:APPLET>
+	<CSP:IF CONDITION=(ComponentTitle'="")>
+    <SPAN class='chartitemheading'><B>#(ComponentTitle)#</B>&nbsp;&nbsp;&nbsp;&nbsp;
+	  <SERVER>
+			; ab 23.08.06 59768 - set flag used in FindReferral query
+ 			i $g(%request.Data("WEBSYS.TCOMPONENT",1))="epr.SOAPInternalRef" s %request.Data("RefFlag",1)="I"
+			i $g(%request.Data("WEBSYS.TCOMPONENT",1))="epr.SOAPExternalRef" s %request.Data("RefFlag",1)="E"
+
+			; Log 56835 YC - SOAP - Show new links if it is a questionnaire page.
+			i ConsultID'="" s ConsultCat=$p($g(^PA("CONS",+ConsultID,"CONSET",$p(ConsultID,"||",2))),"^")
+			i $g(%request.Data("WEBSYS.TCOMPONENT",1))="MRAdm.ListEMRQuestionnaire",$g(ConsultCat)'="" d
+			. q:'$d(^OEC("CONS",ConsultCat,"QUES"))
+			. ;PJC - Quit if selected consult has a diffenent episode than the episode we cam in on
+			. i ConsultEpisodeID'="",EpisodeID'=ConsultEpisodeID q
+			. ; 59783 ONLY show new links if chart 'show add' set
+			. q:'showAdd
+			. s ConsQues=0 f  s ConsQues=$o(^OEC("CONS",ConsultCat,"QUES",ConsQues)) q:ConsQues=""  d
+			. . s CQID=$p($g(^OEC("CONS",ConsultCat,"QUES",ConsQues)),"^") q:CQID=""
+			. .	s CQDesc=$p($g(^SSU("WIN",CQID)),"^",2) q:CQDesc=""
+			. .	s CQDesc=$zcvt($zcvt(CQDesc,"I","URL"),"O","HTML")
+			. . s lnk="ssuserdefwindowcontrols.questionnaire.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&QuestionnaireID="_CQID_"&PatientBanner=1&QUESConsultDR="_ConsultID
+			. . s features="top=30,left=10,width=600,height=440,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes"
+			. . w "<A HREF=# onclick=""websys_createWindow('"_lnk_"', 'new', '"_features_"')""><IMG SRC=""../images/websys/new.gif"" BORDER=0>"_CQDesc_"</A>"
+			; ab 24.05.06 - 58955
+			i showAdd2 d
+			. ; Log 60929 - PJC - Soap End Consult dosen't need new button.
+			. q:$g(%request.Data("WEBSYS.TCOMPONENT",1))="epr.SOAPEndConsult"
+			. ;PJC - Quit if selected consult has a diffenent episode than the episode we cam in on
+			. i ConsultEpisodeID'="",EpisodeID'=ConsultEpisodeID q
+			. ;log 60614 TedT
+			. i $g(%request.Data("WEBSYS.TCOMPONENT",1))="epr.SOAPInternalRef" s lnk="websys.csp?TWKFL="_##Class(websys.WorkFlow).GetIdFromCodeOrDescription("Trak.Popup Order Entry")_"&EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&ConsultID="_ConsultID_"&SOAPReferral=1",features="top=50,left=100,width=800,height=600,scrollbars=yes,resizable=yes"
+			. i $g(%request.Data("WEBSYS.TCOMPONENT",1))="epr.SOAPExternalRef" s lnk="websys.csp?TWKFL="_##class(websys.WorkFlow).GetIdFromCodeOrDescription("Trak.Discharge.Summary.Edit")_"&EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&ConsultID="_ConsultID,features="top=50,left=100,width=800,height=600,scrollbars=yes,resizable=yes"
+			. i $g(%request.Data("WEBSYS.TCOMPONENT",1))="MRSickNote.List" s lnk="websys.default.csp?WEBSYS.TCOMPONENT="_editComp_"&PARREF="_mradm_"&CONTEXT="_cont_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&ConsultID="_ConsultID_"&PatientBanner=1",features="top=30,left=10,width=600,height=440,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes"
+			. i $g(%request.Data("WEBSYS.TCOMPONENT",1))'="epr.SOAPInternalRef",$g(%request.Data("WEBSYS.TCOMPONENT",1))'="epr.SOAPExternalRef",$g(%request.Data("WEBSYS.TCOMPONENT",1))'="MRSickNote.List" s lnk="websys.default.csp?WEBSYS.TCOMPONENT="_editComp_"&CONTEXT="_cont_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&WLConsultDR="_ConsultID_"&PatientBanner=1",features="top=30,left=10,width=600,height=440,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes"
+			. w "<A HREF=# id=""compnew1"" name=""compnew1"" onclick=""websys_createWindow('"_lnk_"', 'new','"_features_"')""><IMG SRC=""../images/websys/new.gif"" BORDER=0>"_$g(t("new"))_"</A>"
+			; Log 59743 - Set up request vars for Result Profile
+ 			i itmparams'="" d
+ 			. ; YC - If adding request params here, please add them to epr.chart as well.
+ 			. s %request.Data("userid",1)=%session.Get("LOGON.USERID")
+ 			. s %request.Data("ChartID",1)=ChartID
+ 			. ;s %request.Data("ItemID",1)=ItemID
+ 			. s %request.Data("Type",1)="RP"
+ 			. ; Flags for result display: 1-Atomic,2-Dicom,3-Image,4-Text,5-Word
+ 			. s resultAtomic=$s($p(itmparams,"|",3):"Y",1:"N")
+ 			. s resultDicom=$s($p(itmparams,"|",4):"Y",1:"N")
+ 			. s resultImage=$s($p(itmparams,"|",5):"Y",1:"N")
+ 			. s resultText=$s($p(itmparams,"|",6):"Y",1:"N")
+ 			. s resultWord=$s($p(itmparams,"|",7):"Y",1:"N")
+ 			. ; Log 41352 - AI - 13-02-2004 : Add the new subcategories data - as the 8th piece. Only need IDs List - $p($p(itmparams,"|",8),"*",2).
+ 			. s %request.Data("ResultDisplayFlags",1)=resultAtomic_"^"_resultDicom_"^"_resultImage_"^"_resultText_"^"_resultWord_"^^^^"_$p($p(itmparams,"|",8),"*",2)
+ 			. s %request.Data("catgsID",1)=","_$p(itmparams,"|",1)_","
+ 			. s %request.Data("EpisodesAll",1)=$p(itmparams,"|",2)
+ 			. ; Log 55973 - PJC - 20-12-2005 : Add the "Only show entries marked for DS Report" checkbox.
+ 			. s %request.Data("OnlyMarkedForDSReport",1)=$s($p(itmparams,"|",9):"Y",1:"N")
+      . ; Log 60704 YC - no category filter
+      . s %request.Data("noCats",1)=$s($p(itmparams,"|",10):"Y",1:"N")
+      . ; Log 60604 PJC - Status Filter
+      . s %request.Data("ResultStatusList",1)=$p(itmparams,"|",11)
+ 		  . ; Log 64346 YC - If "only display unverified results" then ResultStatusList is only entered
+ 			. i $p($p($p(itmparams,"|",8),"*",2),"^",8)="Y" i ((","_%request.Data("ResultStatusList",1)_",")[",E,")!(%request.Data("ResultStatusList",1)="") s %request.Data("ResultStatusList",1)="E"
+		</SERVER></SPAN>
+	  <CSP:IF CONDITION=((showAdd=1)&(ConsultID=""))>
+	    <A HREF=# onclick="NewQuestionnairePage('#(editComp)#','','#(mradm)#','#(QGroup)#','','#(ConsultID)#');"><IMG SRC="../images/websys/new.gif" BORDER=0>New</A>
+	  </CSP:IF>
+	</CSP:IF>
+	<TRAK:COMPONENT id=#($g(%request.Data("WEBSYS.TCOMPONENT",1)))# ></TRAK:COMPONENT>
+
+<server>
+ ;
+ ; if we are displaying a SOAP consultation
+ ; also add observation profiles to the OBJECTIVE FRAME (which is the MRAdm.ListEMRQuestionnaire component)
+ i ConsultID'="",$g(%request.Data("WEBSYS.TCOMPONENT",1))="MRAdm.ListEMRQuestionnaire" d
+ . s ItemID=1
+ . s ConsultCat=$p($g(^PA("CONS",+ConsultID,"CONSET",$p(ConsultID,"||",2))),"^") q:ConsultCat=""
+ . s ConsObs=0 f  s ConsObs=$o(^OEC("CONS",ConsultCat,"OBS",ConsObs)) q:ConsObs=""  d
+ . . n stdate,enddate,sttime,endtime,minslots,OBGRP,obdesc
+ . . s frm=##Class(websys.Component).OpenName("MRObservations.ListEMR") q:'frm
+ . . s OBGRP=$p($g(^OEC("CONS",ConsultCat,"OBS",ConsObs)),"^") q:OBGRP=""
+ . . s obdesc=$p($g(^MRC("OBGRP",OBGRP)),"^",2)
+ . . s obdesc=$zcvt($zcvt(obdesc,"I","URL"),"O","HTML")
+ . . w !,"<SPAN class='chartitemheading'><B>"_obdesc_"</B>&nbsp;&nbsp;&nbsp;&nbsp;"
+ . . ; 59783 ONLY show new links if chart 'show add' set
+ . . i showAdd d
+ . . . ;PJC - Quit if selected consult has a diffenent episode than the episode we cam in on
+ . . . i ConsultEpisodeID'="",EpisodeID'=ConsultEpisodeID q
+ . . . w !,"<A HREF=# onclick=""NewObsPage('"_PatientID_"','"_mradm_"','"_EpisodeID_"','"_OBGRP_"','',0,'"_ConsultID_"');""><IMG SRC='../images/websys/new.gif' BORDER=0>New</A>"
+ . . w "</SPAN>"
+ . . s stdate="",enddate="",sttime="",endtime="",minslots=60,ItemID=ItemID+1
+ . . s %request.Data("ChartID",1)=ChartID
+ . . s %request.Data("ChartItemID",1)=ItemID
+ . . s %request.Data("ChartItemType",1)="BP"
+ . . s %request.Data("Context",1)=cont
+ . . s %request.Data("Columns",1)=9999
+ . . s %request.Data("ColumnWidth",1)=""
+ . . s %request.Data("ObservationGroup",1)=""
+ . . s %request.Data("EpisodesAll",1)=EpisodesAll
+ . . s %request.Data("CurrentPregnancy",1)=""
+ . . s %request.Data("ReverseDateOrder",1)=1
+ . . s %request.Data("ConsultID",1)=ConsultID
+ . . s (%request.Data("ObsGrpID",1),ObsGrpID)=OBGRP
+ . . s %request.Data("ObsGrpIDs",1)=##Class(web.MRCObservationGroup).getItemsForGroup(ObsGrpID)
+ . . ;s %request.Data("obsitm",1)=ObsGrpID_"^"_"BP"_"^"_$p(itm,"^",3,5)_"^"_"OEOrdExec.Edit"_"^"_$p(itm,"^",7)_"^"_"Observation Group: "_$p(itmparams,"|",1)_"^"_$p(itm,"^",9,12)
+ . . d frm.Show()
+ . . d frm.%Close()
+</server>
+</DIV>
+
+<script language='javascript'>
+/*
+if (window.parent.document.readyState=="complete") {
+	resize();
+}
+*/
+
+// Log 62193 YC - questionnaires don't resize correctly
+function resize() {
+	try {window.parent.HIST_resizeframe(window.name)} catch(err) {}
+}
+
+// don't put a document.body.onload on this page or each chart item will not be able to use it.
+
+var glb="&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&ChartID=#(ChartID)#"
+</script>
+</BODY>
+</HTML>

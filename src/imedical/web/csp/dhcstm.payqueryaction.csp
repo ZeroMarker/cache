@@ -1,0 +1,88 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s StrParam=$Get(%request.Data("strParam",1))
+	
+	s UserId=$Get(%request.Data("userId",1))
+	s LocId=$Get(%request.Data("locId",1))
+	s PayId=$Get(%request.Data("parref",1))
+	//s ^zhwh(123)=Action_"^"_Start_"^"_Limit_"^"_PayId
+	
+	
+	//查询付款单列表
+	i Action = "query" d
+	.s ^zhwh(89)=StrParam
+	.s result = ##class(web.DHCSTM.DHCPay).jsDHCPay(Start,Limit,Sort,Dir,StrParam)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+		
+	//采购确认信息
+	i Action = "SetAck1" d
+	.s PayId=$Get(%request.Data("PayId",1))
+	.s user=%session.Get("LOGON.USERID")
+	.s ^zhwh(78)=PayId_"^"_user
+	.s result = ##class(web.DHCSTM.DHCPayQuery).SetPayAck1(PayId,user)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//会计确认信息
+	i Action = "SetAck2" d
+	.s PayId=$Get(%request.Data("PayId",1))
+	.s user=%session.Get("LOGON.USERID")
+	.s PayInfo=$Get(%request.Data("PayInfo",1))
+	.s ^zhwh(38)=PayId_"^"_user_"^"_PayInfo
+	.s result = ##class(web.DHCSTM.DHCPayQuery).SetPayAck2(PayId,user,PayInfo)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+	//取明细
+	i Action = "queryItem" d
+	.s result = ##class(web.DHCSTM.DHCPayItm).jsDHCPayItm(Start,Limit,PayId)
+    .i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	..
+
+	i Action = "payMainInfo" d
+	.s pay=$g(%request.Data("pay",1))
+	.i pay'="" d
+	..//s result=##class(web.DHCSTM.DHCPay).Select(pay)	
+	..s result=##class(web.DHCSTM.DHCPay).jsSelect(pay)	
+	..
+	..i result = "" d
+	...//w "{success:'false',info:''}"
+	...w "{results:0,rows:[]}"
+	..e  d
+	...//w "{success:'true',info:'"_result_"'}"
+	...w result
+	.e  d
+	..w "{success:'false',info:''}"
+
+	i Action="GetPayMode" d
+	.s result=##class(web.DHCSTM.DHCPay).jsPayMode()
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result	
+	.
+	
+</script>

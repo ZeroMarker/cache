@@ -1,0 +1,104 @@
+/*
+ * Ext JS Library 3.1.0
+ * Copyright(c) 2009-2010 DHCC
+ */
+//document.write('<style type="text/css"> .x-panel-ml{padding-left:0px;} .x-panel-mc{padding-top:0px;} .x-panel-mr{padding-right:1.5px;} </style>');  //2010.10.12  Lid  重新定义Panel内边界样式
+Ext.onReady(function(){
+		Ext.BLANK_IMAGE_URL='../scripts_lib/ext3.2.1/resources/images/default/s.gif';         //add by wuqk 2010-09-06 default icon path
+    Ext.QuickTips.init();
+    //var groupId = "1";  // session['LOGON.GROUPID'];
+    var centerpanel = new Ext.Panel({
+			id:'centerpanel',
+    		region:"center",
+    		title:"",
+    		frame:true,
+    		autoScroll:true,
+    		//collapsible:true,   //自动收缩按钮 
+    		border:true,
+    		//width:300,
+    		layout:"accordion",
+    		//extraCls:"roomtypegridbbar",
+				//iconCls:'icon-feed', 
+     		//添加动画效果
+    		layoutConfig: {animate: true},
+    		items:[]
+		});
+	
+	//##class(ext.websys.Menu).ShowBarJson(parent)
+	
+   var menusJson = tkMakeServerCall("ext.websys.Menu","ShowBarJson","1");
+   window.eval("var menuArray = " + menusJson);
+   
+   for(var intRow = 0; intRow < menuArray.length; intRow ++)
+	{
+		var menuObj = menuArray[intRow];
+		
+		
+		var tree = new Ext.tree.TreePanel({
+    						border:false,
+    						animate:true,
+    						enableDD:false,
+    						containerScroll:true,
+			                ///loader: new Ext.tree.TreeLoader({nodeParameter : "parent",dataUrl:"ext.loadmenus.csp"}),
+			                loader: new Ext.tree.TreeLoader({nodeParameter : "id" ,dataUrl:"ext.websys.datatrans.csp?pClassName=ext.websys.Menu&pClassMethod=ShowBarJson"}),
+			                rootVisible:menuObj.leaf,
+			                lines:false,
+			                autoScroll:true,
+			                root: new Ext.tree.AsyncTreeNode({
+		                          text: menuObj.text,		                          
+		                          id: menuObj.id,
+		                          href:menuObj.href,
+		                          hrefTarget:menuObj.hrefTarget,
+		                          leaf:menuObj.leaf,
+		                          cls:menuObj.cls
+		                          //expanded:true
+		                	}),
+                			listeners:{
+                			"click":function(node,event)
+        							{
+        								if (node.isLeaf()){
+        									var s = node.attributes.cls;
+        									if (s.indexOf("javascript")>-1){
+        										window.eval(s);
+        									}
+        								}
+        								else{
+        									node.expand(!node.isExpanded());
+        								}
+        							}
+                			}
+            })
+		
+		var proPanel = new Ext.Panel({
+			title:menuObj.text,
+			id:menuObj.id,
+			autoScroll:true,
+			collapsed:true,
+			//icon:menuObj.icon,
+			//iconCls:'icon-menuconfig',
+			items:tree,
+			listeners:{
+                		"beforeexpand":function(p,a){
+                			//alert(p.title);
+                		}
+                		
+            }
+			
+		});
+    	centerpanel.add(proPanel);
+		
+	}
+			 
+    var viewport = new Ext.Viewport({
+        layout:'border',
+        items:[centerpanel]
+    });
+  
+    //Ext.getCmp("centerpanel").layout.setActiveItem("2");  //2010.10.12 Lid 设置¨首页〃展开
+    
+    function SetKeepOpen(url,newwin) {
+		parent.keepopen=true;
+		parent.location.href=url;
+	}
+});
+

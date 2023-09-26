@@ -1,0 +1,22 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">		
+	s action = $Get(%request.Data("action",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s month=$Get(%request.Data("month",1))
+	s itemSetId=$Get(%request.Data("item",1))
+   	s costDistSet=$Get(%request.Data("cost",1))
+	s deptDr=$Get(%request.Data("deptClass",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s repType="jxhssrmx"
+	i action="depttype" d
+	.w ##class(dhc.ca.cache.report.uPerformanceAccountIncomesReport).GetDeptTypes(start,limit)	
+    i action="getUser" d
+	.d ##class(dhc.ca.cache.report.uIncomeDetail).addZero(month,1,2,deptDr)
+	.s result= ##class(dhc.ca.cache.report.comm.deptLevelSetTree).getUser(userCode)
+	.w "{success:'true',info:'"_result_"'}"
+</script>

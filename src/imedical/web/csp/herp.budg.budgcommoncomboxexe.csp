@@ -1,0 +1,75 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+
+<script language="cache" runat="server">
+    s hospid=$G(%session.Data("LOGON.HOSPID"))
+    s userdr=$G(%session.Data("LOGON.USERID"))
+    s hisdeptdr=$G(%session.Data("LOGON.CTLOCID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+
+	s flag=$Get(%request.Data("flag",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s year=$Get(%request.Data("year",1))
+	s type=$Get(%request.Data("type",1))
+	s level=$Get(%request.Data("level",1))
+	s supercode=$Get(%request.Data("supercode",1))
+
+	;医疗单位
+	i action = "hospital" d
+	.w ##class(herp.comm.BudgCommonCombox).Hospital(userdr,rowid,start,limit,str)	
+	;年度、年月
+	i action = "year" d
+	.w ##class(herp.comm.BudgCommonCombox).YearOrYearMon(flag,start,limit,str)
+	;方案
+	i action = "bsm" d
+	.w ##class(herp.comm.BudgCommonCombox).BudgSchem(hospid,userdr,flag,year,start,limit,str)
+	;科室
+	i action = "dept" d
+	.w ##class(herp.comm.BudgCommonCombox).Dept(hospid,userdr,flag,start,limit,str)
+	;科目类别
+	i action = "itemtype" d
+	.w ##class(herp.comm.BudgCommonCombox).ItemType(flag,start,limit,str)
+	;科目级别
+	i action = "itemlev" d
+	.w ##class(herp.comm.BudgCommonCombox).ItemLev(start,limit,str)
+	;科目
+	i action = "item" d
+	.w ##class(herp.comm.BudgCommonCombox).GetItem(hospid,userdr,flag,year,type,level,supercode,start,limit,str)
+	;人员
+	i action = "username" d
+	.w ##class(herp.comm.BudgCommonCombox).UserName(start, limit, str, hospid,userdr, flag)
+	;科室类别
+	i action = "deptType" d
+	.w ##class(herp.comm.BudgCommonCombox).deptType(start, limit, str, hospid,userdr)	
+	;科室类别1
+	i action = "deptType1" d
+	.w ##class(herp.comm.BudgCommonCombox).deptType1(start, limit, str, hospid,userdr)
+
+        ;计量单位
+	i action = "calunit" d
+	.w ##class(herp.comm.BudgCommonCombox).CalUnit(start, limit, str)
+	;调整序号
+	i action = "adjustno" d
+	.w ##class(herp.comm.BudgCommonCombox).AdjustNoList(flag, userdr, year, hospid, start, limit, str)
+	;根据his的登录科室获取当前登录人的科室
+	i action = "getdname" d
+	.s result=##class(herp.comm.BudgCommonCombox).GetDeptName(hisdeptdr)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	;项目名称
+	i action = "projList" d
+	.w ##class(herp.comm.BudgCommonCombox).projName(hospid,userdr,year,start, limit, str,flag)
+	
+</script>

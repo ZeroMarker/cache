@@ -1,0 +1,163 @@
+﻿<html>
+<head>
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.hisui.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" ></script>
+<script type='text/javascript' src='../scripts/dhcnewpro/js/comPrint.js'></script>
+<script type='text/javascript' src='../scripts/dhcnewpro/plugins/easyui/validator.js'></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/pay.advpayass.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+ <style>
+.tdRight{text-align:right;width:100;padding-right:5px;/*hxy 2018-06-26 间距*/}
+td {text-align:left;}
+</style>
+    <script Language="Javascript">
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID 
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID            
+   </script>
+</head>
+<body class="hisui-layout">
+<input type="hidden" id="EpisodeID"  value=#(%request.Get("EpisodeID"))#>
+<input type="hidden" id="PatientID"  value=#(%request.Get("PatientID"))#>
+<input type="hidden" id="advpayassId" >	
+<div data-options="region:'north',title:'急诊预交金评估',split:true,headerCls:'panel-header-gray'" style="height:420px">
+ <table style='width:100%;height:100%' id="detailTable">
+    <tr style="height:34px;">
+      <td class="tdRight">姓名</td>
+      <td><input id="name"  class="textbox" type="text" disabled="true"></td>
+      <td class="tdRight">性别</td>
+      <td><input id="sex"  class="textbox" type="text" disabled="true"></td>
+       <td class="tdRight">年龄</td>
+       <td><input id="age"   class="textbox" type="text" disabled="true"></td>
+    </tr>
+    
+    <tr style="height:34px">
+      <td class="tdRight">登记号</td>
+      <td><input id="patno"  class="textbox" type="text" disabled="true"></td>
+      <td class="tdRight">分诊级别</td>
+      <td><input id="level"   class="textbox" type="text" disabled="true"></td>
+      <td class="tdRight">特殊人群</td>
+      <td><input id="threenon"  class="textbox" disabled="true"/></td>
+    </tr>
+    <tr style="height:34px">
+      <td class="tdRight">来院时间</td>
+      <td><input id="admtime"  class="textbox" type="text" disabled="true"></td>
+      <td class="tdRight">来院方式</td>
+      <td><input id="admway"   class="textbox" type="text" disabled="true"></td>
+      <td class="tdRight">诊断</td>
+      <td><input id="diagnosis"  class="textbox" disabled="true"/></td>
+    </tr>
+    
+    <tr style="height:34px">
+      <td class="tdRight">总费用</td>
+      <td><input id='TotalAmt'  class="textbox" type="text" disabled="true"></td>
+      <td class="tdRight" id="ChargeLabel">押金余额</td>
+      <td><input id='Charge'  class="textbox" type="text" disabled="true"></td>
+      <td style="display:none" class="tdRight">未记账金额 </td>
+      <td style="display:none"><input id="NotAmount"  class="textbox" type="text" disabled="true"/></td>
+      <td class="tdRight">押金总额 </td>
+      <td><input id="AllCharge"  class="textbox" type="text" disabled="true"/></td>
+    </tr>
+    
+    <tr style="height:34px">
+      <td class="tdRight" style="display:none;">评估留观天数</td>
+      <td style="display:none;"><input id="payobsDays"   class="hisui-validatebox textbox" type="text" ></td>
+      <td class="tdRight" style="display:none;">评估留观病区</td>
+      <td style="display:none;"><input id="payobsWard"   class="hisui-combobox  textbox" type="text" ></td>
+      <td class="tdRight">评估预交金</td>
+      <td><input id="advpayAmt"   class="hisui-validatebox textbox" type="text" data-options="required:true,validType:'number'"></td>
+      <td class="tdRight">评估人</td>
+      <td><input id='payUser'  class="hisui-validatebox textbox" type="text" data-options="required:true" value=#(%session.Get("LOGON.USERNAME"))# disabled="true"></td>
+      <td class="tdRight">评估日期</td>
+      <td><input id='payAssDatetime'  class="hisui-datetimebox textbox" showSeconds=false type="text" editable="fasle"></td>
+    </tr>
+    
+    <tr style="height:34px">
+      <td class="tdRight">当前科室</td>
+      <td><input id="payCurward"   class="textbox" type="text" disabled="true"></td>
+      <td class="tdRight" style="display:none;">评估科室</td>
+      <td style="display:none;"><input id="payLoc"    class="hisui-combobox  textbox" type="text" ></td>
+
+    <tr style="height:34px">
+       <td class="tdRight">备注</td>
+        <td style="height:100px;padding-top:10px;">
+			<textarea id="payNote" class="hisui-validatebox textbox" style="width:100%;height:100%;resize:none;"></textarea>
+	   </td>
+    </tr>
+    
+    <tr>
+    	<td colspan=6 style='text-align:center'>
+    		<a href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-add'"id="addBTN">新增</a>
+			<a href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-edit'"id="updateBTN" style="margin-left:15px">修改</a>
+			<a href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-cancel'" id="cancelBTN" style="margin-left:15px">删除</a>
+			<a href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-print'"id="printBTN" style="margin-left:15px;display:none;">打印</a>
+    	</td>
+    </tr>
+  </table>
+             
+</div>
+<div data-options="region:'center',split:true,headerCls:'panel-header-gray'"  style="border-color:#cccccc" >   
+	<table id='datagrid' class="hisui-datagrid" title='申请列表'   
+		data-options="headerCls:'panel-header-gray',
+					  rownumbers:true,	
+					  pagination:true,
+					  toolbar:'#toolbar',
+					  singleSelect:true,
+					  onBeforeLoad:function(param){
+						param.no=$('#regno').val()
+						param.startDate=$('#startDate').datebox('getValue'),
+						param.endDate=$('#endDate').datebox('getValue'),
+						param.lgUser=LgUserID
+						param.lgHosp=LgHospID
+						return param
+					  },
+					  onLoadSuccess: function(data){
+						if($('#GrossClass').val()==1){
+							getInfoByAss(data.rows[0].ID,data.rows[0].adm);
+						}
+					  },
+					  url:'dhcapp.broker.csp?ClassName=web.DHCEMAdvPayass&MethodName=ListAdvPayass',
+					  onClickRow:function(index, row){getInfoByAss(row.ID,row.adm)}" fit=true fitColumns=true>   
+		<thead>   
+			<tr> 
+			    <th data-options="field:'ID',hidden:true"></th>
+			    <th data-options="field:'adm',hidden:true"></th>  
+				<th data-options="field:'regno',width:50">登记号</th>   
+				<th data-options="field:'name',width:50">姓名</th>
+				<th data-options="field:'sex',width:30">性别</th>
+				<th data-options="field:'age',width:30">年龄</th>
+				<th data-options="field:'amt',width:30">评估预交金</th>   
+				<th data-options="field:'reqUser',width:30">评估人</th>
+				<th data-options="field:'reqDate',width:50">评估时间</th> 
+				<th data-options="field:'admLoc',width:50">就诊科室</th>     
+			</tr>   
+		</thead>  
+	</table>
+	
+	<div id="toolbar" >
+		<table style=''>
+			<tr>
+				<td style="display:none">登记号</td>
+      			<td style="display:none"><input id="regno"   class="textbox" type="text"></td>
+				<td style="margin-left:10px;">开始日期</td>
+      			<td><input id="startDate"   class="hisui-datebox textbox" type="text"></td>
+      			<td class="tdRight">结束日期</td>
+      			<td><input id='endDate'  class="hisui-datebox textbox" type="text" ></td>
+      			<td style="padding-left:40px;">
+					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-search'" id="searchBTN" >查询</a>
+				</td>
+			</tr>
+		</table>
+	</div> 
+</div>
+<server>
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID() //打印时使用
+</server>
+</body>
+</html>

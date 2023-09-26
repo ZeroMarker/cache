@@ -1,0 +1,123 @@
+﻿<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <HISUI/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+	<script language="cache" runat="server">
+		s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+		s locID = $g(%session.Data("LOGON.CTLOCID"))
+		s CTLOCType = $p($g(^CTLOC(locID)),"^",13)
+		s HospitalName = ##Class(EMRservice.BOSysOption).GetValueByName("HospitalName")
+		s:(HospitalName = "") HospitalName = "DtHealth"
+		s docID = ##Class(EMRservice.SystemParameter).GetMedicalRecordDocID()
+	</script>
+
+    <script language = "javascript">
+		function Dateformatter(date)
+		{
+			var y = date.getFullYear();
+			var m = date.getMonth()+1;
+			var d = date.getDate();
+			return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+		}
+		function Dateparser(s)
+		{
+			if (!s) return new Date();
+			var ss = s.split('-');
+			var y = parseInt(ss[0],10);
+			var m = parseInt(ss[1],10);
+			var d = parseInt(ss[2],10);
+			if (!isNaN(y) && !isNaN(m) && !isNaN(d))
+			{
+				return new Date(y,m-1,d);
+			} else {
+				return new Date();
+			}
+		}
+		var HasPatEncryptLevel = '#(HasPatEncryptLevel)#';
+		var Title = '#($Get(%request.Data("Title",1),""))#';
+		var locID = '#(locID)#';
+		var CTLOCType = '#(CTLOCType)#';
+		var defaultRadio = "currentGroup";
+		var HospitalName = '#(HospitalName)#';
+		var docID = '#(docID)#';
+    </script>
+    <title>待签患者查询</title>
+</head>
+<body class="hisui-layout" data-options="fit:true,border:false">
+    <div  data-options="region:'north'"title="待签患者查询" style="height:140px;"  > 
+
+	<table class="tableStyle01" style="width:100%; height:80% " >
+		<tr >
+			<td >
+				&nbsp;&nbsp;#(..Get("待签操作："))#
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SignAction" id="Check" checked=true value="Check" >#(..Get("病历医师签名"))#</input>
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SignAction" id="attendingCheck" value="attendingCheck" >#(..Get("主治医师签名"))#</input>
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SignAction" id="viceChiefCheck" value="viceChiefCheck^chiefCheck" onclick="changeType()" >#(..Get("(副)主任医师签名"))#</input>
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SignAction" id="chairmanCheck" value="chairmanCheck" onclick="changeType()" >#(..Get("科主任签名"))#</input>
+				</td>
+				<td >
+				<input class='hisui-radio' type="radio" name="SignAction" id="patientSign" value="patientSign" >#(..Get("患者签名"))#</input>
+			</td>
+		</tr>	
+		<tr>
+			<td >
+				&nbsp;&nbsp;#(..Get("查询方式："))#
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SearchType" id="inpat" checked=true value="inpat" >#(..Get("在院患者"))#</input>
+			</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SearchType" id="outthreedays" value="2" >#(..Get("出院3天"))#</input>
+			</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SearchType" id="outsevendays" value="6" >#(..Get("出院7天"))#</input>
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="SearchType" id="outdate" value="outdate" >
+					#(..Get("出院日期"))# <input  class="hisui-datebox textbox"  id="startDate" data-options="formatter:Dateformatter,parser:Dateparser,width:120"></input>
+					<input  class="hisui-datebox textbox"  id="endDate" data-options="formatter:Dateformatter,parser:Dateparser,width:120"></input>
+				</input>
+				</td>
+				<td >
+				<input  class='hisui-radio' type="radio" name="SearchType" id="papmiNo" value="papmiNo">&nbsp;&nbsp;#(..Get("登记号"))# <input class="hisui-validatebox" id="patientNo" style="width:90px"/></input>
+			</td>
+			<td align='center'>
+				<a id="PatientListQuery" href="#" class="hisui-linkbutton" >#(..Get("查询"))#</a>
+			</td>
+		</tr>	
+		<tr>
+			<td>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="PatientType" id="currentUser" value="currentUser" >#(..Get("本人主管患者"))#</input>
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="PatientType" id="currentGroup" checked=true value="currentGroup" >#(..Get("本医疗组患者"))#</input>
+				</td>
+				<td>
+				<input class='hisui-radio' type="radio" name="PatientType" id="currentLoc" value="currentLoc" >#(..Get("本科室患者"))#</input>
+				&nbsp;&nbsp;&nbsp;
+				</td>
+				<td>
+				<div id="GroupSign" href="#" class="hisui-linkbutton">#(..Get("集中签名页面"))#</div>
+			</td>
+		</tr>	
+	</table>
+
+    </div>
+    <div data-options="region:'center',border:false">
+    	<table id="patientListData"></table>
+	</div>
+    <script type="text/javascript" src="../scripts/emr/js/ip.waitsign.js"></script>    
+</body>
+</html>

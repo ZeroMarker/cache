@@ -1,0 +1,151 @@
+<!-- 
+ * FileName: dhcbillmenu.sysconfig.csp
+ * User: TangTao
+ * Date: 2014-04-10
+ * Function: 系统参数配置
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.textbox.tb200 {
+			width: 200px;
+		}
+	</style>
+	<server>
+	do ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("SYSCONFIG")
+	</server>
+</head>
+<body>
+	<table class="search-table" style="margin-top:-10px;">
+		<tr>
+			<td class="r-label"><label>医院</label></td>
+			<td><input id="Hospital" class="hisui-combobox textbox tb200"/></td>
+		</tr>
+		<tr>
+			<td class="r-label"><label>缺省标准价格</label></td>
+			<td><input id="DefPrice" class="hisui-combobox textbox tb200" data-options="
+				panelHeight: 'auto',
+				valueField: 'id',
+				textField: 'name',
+				required: true,
+				editable: false,
+				disabled: true,
+				data:[
+					{id:'P0', name:'Price', selected: true},
+					//{id:'P1', name:'AlterPrice1'},
+					//{id:'P2', name:'AlterPrice2'}
+				]
+			"/></td>
+        </tr> 
+		<tr>    
+			<td class="r-label"><label>缺省计费点</label></td>    
+			<td><input id="DefCondition" class="hisui-combobox textbox tb200" data-options="
+				panelHeight: 'auto',
+				valueField: 'id',
+				textField: 'name',
+				required: true,
+				editable: false,
+				disabled: true,
+				data:[
+					{id:'OD', name:'Order Entry or Discontinued', selected: true},
+					//{id:'OE', name:'Order Executed'},
+					//{id:'NE', name:'Nurse Executed'},
+					//{id:'CR', name:'Pharmacy Collected or Return'}
+				]
+			"/></td>
+        </tr>
+		<tr>    
+			<td class="r-label"><label>计费方式</label></td>    
+			<td><input id="DefCharge" class="hisui-combobox textbox tb200" data-options="
+				panelHeight: 'auto',
+				valueField: 'id',
+				textField: 'name',
+				required: true,
+				editable: false,
+				disabled: true,
+				data:[
+					{id:'C',name:'Changed Order', selected: true}
+					//{id:'A',name:'All Order'},
+				]
+			"/></td>
+        </tr>
+		<tr>    
+			<td class="r-label"><label>缺省收费类别</label></td>    
+			<td><input id="DefAdmReason" class="hisui-combobox textbox tb200"/></td>
+        </tr>
+		<tr>
+			<td style="width:122px;"><label>重新生成账单方式</label></td>
+			<td><input id="DefReBill" class="hisui-combobox textbox tb200" data-options="
+				panelHeight: 'auto',
+				valueField: 'id',
+				textField: 'name',
+				required: true,
+				editable: false,
+				disabled: true,
+				data:[  
+					{id:'O',name:'All Order', selected: true},
+					//{id:'B',name:'Billed Item'}
+				]
+			"/></td>
+        </tr>
+		<tr>    
+			<td class="r-label"><label>缺省折扣方式</label></td>    
+			<td><input id="DefRate" class="hisui-combobox textbox tb200" data-options="
+				panelHeight: 'auto',
+				valueField: 'id',
+				textField: 'name',
+				required: true,
+				editable: false,
+				disabled: true,
+				data:[
+					//{id:'I', name:'Item'},
+					{id:'P', name:'Patient', selected: true}
+				]
+			"/></td>
+        </tr>
+		<tr>    
+			<td class="r-label"><label>包含新生儿费用</label></td>    
+			<td><input id="DefBabyBill" class="hisui-combobox textbox tb200" data-options="
+				panelHeight: 'auto',
+				valueField: 'id',
+				textField: 'name',
+				required: true,
+				editable: false,
+				data:[  
+					{id:'Y', name:'是'},
+					{id:'N', name:'否'}
+				]
+			"/></td>
+        </tr>
+        <tr>
+			<td class="r-label"><label>年龄计算方式</label></td>
+			<td><input id="DefAgeCalc" class="hisui-combobox textbox tb200" data-options="
+				panelHeight: 'auto',
+				valueField: 'id',
+				textField: 'name',
+				required: true,
+				editable: false,
+				data:[
+					{id:'Y', name:'按就诊时间'},
+					{id:'N', name:'按当前时间', selected: true}
+				]
+			"/></td>
+        </tr>
+        <tr>
+        	<td colspan="2" style="text-align:center;">
+        		<a id="BtnUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+        	</td>
+        </tr>
+    </table>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbillmenu.sysconfig.js"></script>
+</body>  
+</html>

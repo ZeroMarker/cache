@@ -1,0 +1,56 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+</Script>
+<server>
+ s RowID=$Get(%request.Data("RowID",1))
+ s DType=$Get(%request.Data("DType",1))
+ s Type=$Get(%request.Data("Type",1))
+ s ApproveSetDR=$Get(%request.Data("ApproveSetDR",1))
+ s CurRole=$Get(%request.Data("ApproveRole",1))
+ s ReadOnly=$Get(%request.Data("ReadOnly",1))
+ s QXType=$Get(%request.Data("QXType",1))
+ s RequestLocDR=$Get(%request.Data("RequestLocDR",1))
+ s EquipDR=$Get(%request.Data("EquipDR",1))
+ i RowID'="" d
+ .s EquipDR=$p($g(^DHCEQDisuseRequest(RowID)),"^",1)
+ .s RequestLocDR=$p($g(^DHCEQDisuseRequest(RowID)),"^",3)
+
+ s Flag=##class(web.DHCEQCommon).GetSysInfo("601002")
+ if (Flag=1&&(EquipDR'="")) s Flag=0
+ i Flag=0  s rowsheight="86,*"
+ i Flag=1  s rowsheight="35,35,*"
+
+//s cmp=##Class(websys.Component).OpenName("DHCEQBanner")
+//s cmp.HideMenus=1,cmp.HideHeadings=1
+//i cmp d cmp.Show(),cmp.%Close()
+//s cmp=##Class(websys.Component).OpenName("DHCEQDisuseRequest")
+//i cmp d cmp.Show(),cmp.%Close()
+</server>
+<CSP:IF condition=(Flag=0)>
+<frameset rows="110,*">
+	<frame name="DHCEQBanner" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQBanner&RowIDB=#(EquipDR)#"    framespacing="0" frameBorder="no" noresize>
+	
+	<frame name="DHCEQDisuseRequest" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequest&ChangeTypeDR=6&RowID=#(RowID)#&DType=#(DType)#&Type=#(Type)#&CurRole=#(CurRole)#&ApproveSetDR=#(ApproveSetDR)#&ReadOnly=#(ReadOnly)#&QXType=#(QXType)#&RequestLocDR=#(RequestLocDR)#&EquipDR=#(EquipDR)#"    framespacing="0" frameBorder="no" noresize>
+</frameset>
+</CSP:IF>
+
+<CSP:IF condition=(Flag=1)>
+<frameset rows="280,200,*">
+	<frame name="DHCEQDisuseRequestNew" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequestNew&ChangeTypeDR=6&RowID=#(RowID)#&DType=#(DType)#&Type=#(Type)#&CurRole=#(CurRole)#&ApproveSetDR=#(ApproveSetDR)#&ReadOnly=#(ReadOnly)#&QXType=#(QXType)#&RequestLocDR=#(RequestLocDR)#&EquipDR=#(EquipDR)#"    framespacing="0" frameBorder="no" noresize>
+	<frame name="DHCEQDisuseRequestList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequestList&DisuseRequestDR=#(RowID)#&Type=#(Type)#&RequestLocDR=#(RequestLocDR)#"    framespacing="0" frameBorder="no" noresize>
+	<frame name="DHCEQDisuseRequestListAdd" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequestListAdd&DisuseRequestDR=#(RowID)#&Type=#(Type)#&RequestLocDR=#(RequestLocDR)#"    framespacing="0" frameBorder="no" noresize>
+</frameset>
+</CSP:IF>
+
+
+</HTML>

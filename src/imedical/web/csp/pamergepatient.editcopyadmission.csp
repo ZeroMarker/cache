@@ -1,0 +1,143 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<server> 
+	
+	; CJB 32430 copied from pamergepatient.edit.csp
+	
+	n patType,TOPatientID,FROMPatientID,EpisodeID,LIST1,LIST2
+	s TOPatientID=%request.Get("TOPatientID")
+	s FROMPatientID=%request.Get("FROMPatientID")
+	s EpisodeID=%request.Get("EpisodeID")
+	s FROMMRN=%request.Get("FROMMRN"),TOMRN=%request.Get("TOMRN")
+	
+	s (FROMPAPMIName,TOPAPMIName)=""
+	s (TOPAPMIRegNo,TOPAPMIName2,TOPAPMIName3,TOPAPMIDOB,TOCTSEXDesc,TOPAPERStNameLine1,TOCTCITDesc,TOPROVDesc,TOCTZIPCode,TOMRNumber,TOPAPERForeignAddress)=""
+	s (FROMPAPMIRegNo,FROMPAPMIName,FROMPAPMIName2,FROMPAPMIName3,FROMPAPMIDOB,FROMCTSEXDesc,FROMPAPERStNameLine1,FROMCTCITDesc,FROMPROVDesc,FROMCTZIPCode,FROMMRNumber,FROMPAPERForeignAddress)=""
+	
+	; CJB 19/09/2002 - 28654: In W642 & W642R Help is not being displayed on Merge scrn
+	; the context of the page was lost.
+	s TFORM=%request.Get("TFORM")
+	s TPAGID=%request.Get("TPAGID")
+	s TEVENT=%request.Get("TEVENT")
+	s TOVERRIDE=%request.Get("TOVERRIDE")
+	s TDIRTY=%request.Get("TDIRTY")
+	s TWKFL=%request.Get("TWKFL")
+	s TWKFLI=%request.Get("TWKFLI")
+	s TWKFLL=%request.Get("TWKFLL")
+	s TWKFLJ=%request.Get("TWKFLJ")
+	s TREPORT=%request.Get("TREPORT")
+	s TRELOADID=%request.Get("TRELOADID")
+	s CONTEXT=%request.Get("CONTEXT")
+	s CSPNSID=%request.Get("CSPNSID")
+	s ServerSideRedirect=%request.Get("ServerSideRedirect")
+	s TMENU=%request.Get("TMENU")
+	s zchrisa=%request.Get("a")
+	
+	; LOG 26947 BC 26-7-2002 Locking patient records while merging
+	d ##Class(websys.Lock).LockClearSession(%session.SessionId) 
+	d ##Class(websys.Component).GetComponentMessages(.t,"PAMergePatient.Edit")
+	n warning
+	s warning=""
+	i TOPatientID'="",'##Class(websys.Lock).Lock($lb(TOPatientID,"User.PAPerson"),%session.SessionId,%session.Get("LOGON.USERID"),.status) d
+	. s warning=t("Patient1")
+	i FROMPatientID'="",'##Class(websys.Lock).Lock($lb(FROMPatientID,"User.PAPerson"),%session.SessionId,%session.Get("LOGON.USERID"),.status) d
+	. s warning=t("Patient2")
+	i warning'="" w "<DIV><STRONG><FONT COLOR=RED>",warning,"</FONT></STRONG></DIV>",$c(13,10)
+	; End Log 26947
+	
+	if (TOPatientID) {
+		k LIST1,LIST2
+		&SQL(SELECT * INTO :LIST1() FROM SQLUser.PA_PatMas WHERE PAPMI_RowID=:TOPatientID)
+		&SQL(SELECT PAPMI_MedicareSuffix_DR->MEDSUF_Desc,PAPMI_Sex_DR->CTSEX_Desc,PAPMI_Dentist_DR->REFD_Desc,PAPMI_DentistClinic_DR->CLN_Address1,PAPMI_Dentist_DR->REFD_CITY_DR->CTCIT_Desc INTO :LIST1(105),:LIST1(15),LIST1(135),LIST1(136),DentCITY FROM PA_PatMas WHERE PAPMI_RowID=:TOPatientID)
+		&SQL(SELECT * INTO :LIST2() FROM SQLUser.PA_Person WHERE PAPER_RowID=:TOPatientID)
+		&SQL(SELECT PAPER_CityCode_DR->CTCIT_Desc,PAPER_Religion_DR->CTRLG_Desc,PAPER_Zip_DR->CTZIP_Code,PAPER_NokCity_DR->CTCIT_Desc,PAPER_NokCTRLT_DR->CTRLT_Desc,PAPER_NokZip_DR->CTZIP_Code,PAPER_CT_Province_DR->PROV_Desc,PAPER_FamilyDoctor_DR->REFD_Desc,PAPER_FamilyDoctor_DR->REFD_CITY_DR->CTCIT_Desc,PAPER_FamilyDoctorClinic_DR->CLN_Address1,PAPER_Title_DR->TTL_Desc
+			INTO :LIST2(33),:LIST2(93),:LIST2(35),:LIST2(135),:LIST2(111),:LIST2(136),:LIST2(113),:LIST2(67),:famdoccity,:LIST2(148),:LIST2(139)
+			FROM SQLUser.PA_Person WHERE PAPER_RowID=:TOPatientID
+		)
+		s TOPAPMIRegNo=$g(LIST1(2))
+		s TOPAPMIName=$g(LIST1(4))
+		s TOPAPMIName2=$g(LIST1(5))
+		s TOPAPMIName3=$g(LIST1(99))
+		s TOPAPMIDOB=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(11)))
+		s TOCTSEXDesc=$g(LIST1(15))
+		s TOPAPERStNameLine1=$g(LIST2(88))
+		s TOPAPERForeignAddress=$g(LIST2(26))
+		s TOCTCITDesc=$g(LIST2(33))
+		s TOPROVDesc=$g(LIST2(113))
+		s TOCTZIPCode=$g(LIST2(35))
+		s TOMRNumber=##class(web.RTMaster).GetMRNNumber(TOPatientID) 
+	}
+	if (FROMPatientID) {
+		k LIST1,LIST2
+		&SQL(SELECT * INTO :LIST1() FROM SQLUser.PA_PatMas WHERE PAPMI_RowID=:FROMPatientID)
+		&SQL(SELECT PAPMI_MedicareSuffix_DR->MEDSUF_Desc,PAPMI_Sex_DR->CTSEX_Desc,PAPMI_Dentist_DR->REFD_Desc,PAPMI_DentistClinic_DR->CLN_Address1,PAPMI_Dentist_DR->REFD_CITY_DR->CTCIT_Desc INTO :LIST1(105),:LIST1(15),LIST1(135),LIST1(136),DentCITY FROM PA_PatMas WHERE PAPMI_RowID=:FROMPatientID)
+		&SQL(SELECT * INTO :LIST2() FROM SQLUser.PA_Person WHERE PAPER_RowID=:FROMPatientID)
+		&SQL(SELECT PAPER_CityCode_DR->CTCIT_Desc,PAPER_Religion_DR->CTRLG_Desc,PAPER_Zip_DR->CTZIP_Code,PAPER_NokCity_DR->CTCIT_Desc,PAPER_NokCTRLT_DR->CTRLT_Desc,PAPER_NokZip_DR->CTZIP_Code,PAPER_CT_Province_DR->PROV_Desc,PAPER_FamilyDoctor_DR->REFD_Desc,PAPER_FamilyDoctor_DR->REFD_CITY_DR->CTCIT_Desc,PAPER_FamilyDoctorClinic_DR->CLN_Address1,PAPER_Title_DR->TTL_Desc
+			INTO :LIST2(33),:LIST2(93),:LIST2(35),:LIST2(135),:LIST2(111),:LIST2(136),:LIST2(113),:LIST2(67),:famdoccity,:LIST2(148),:LIST2(139)
+			FROM SQLUser.PA_Person WHERE PAPER_RowID=:FROMPatientID
+		)
+		s FROMPAPMIRegNo=$g(LIST1(2))
+		s FROMPAPMIName=$g(LIST1(4))
+		s FROMPAPMIName2=$g(LIST1(5))
+		s FROMPAPMIName3=$g(LIST1(99))
+		s FROMPAPMIDOB=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(11)))
+		s FROMCTSEXDesc=$g(LIST1(15))
+		s FROMPAPERStNameLine1=$g(LIST2(88))
+		s FROMPAPERForeignAddress=$g(LIST2(26))
+		s FROMCTCITDesc=$g(LIST2(33))
+		s FROMPROVDesc=$g(LIST2(113))
+		s FROMCTZIPCode=$g(LIST2(35))
+		s FROMMRNumber=##class(web.RTMaster).GetMRNNumber(FROMPatientID) 
+	}
+	
+	; LOG 26038 BC 1-7-2002 Give the option to cancel the merge and hence clear the form
+	if '(TOPatientID),'(FROMPatientID) {
+		k %request.Data
+	}
+	
+	; CJB 19/09/2002 - 28654: In W642 & W642R Help is not being displayed on Merge scrn
+	; the context of the page was lost.
+	s %request.Data("TFORM",1)=TFORM
+	s %request.Data("TPAGID",1)=TPAGID
+	s %request.Data("TEVENTL",1)=TEVENT
+	s %request.Data("TOVERRIDE",1)=TOVERRIDE
+	s %request.Data("TDIRTY",1)=TDIRTY
+	s %request.Data("TWKFL",1)=TWKFL
+	s %request.Data("TWKFLI",1)=TWKFLI
+	s %request.Data("TWKFLL",1)=TWKFLL
+	s %request.Data("TWKFLJ",1)=TWKFLJ
+	s %request.Data("TREPORT",1)=TREPORT
+	s %request.Data("TRELOADID",1)=TRELOADID
+	s %request.Data("CONTEXT",1)=CONTEXT
+	s %request.Data("CSPNSID",1)=CSPNSID
+	s %request.Data("ServerSideRedirect",1)=ServerSideRedirect
+	s %request.Data("TMENU",1)=TMENU
+	s %request.Data("a",1)=zchrisa
+	
+	s %request.Data("PatientID",1)=%request.Get("FROMPatientID")
+	
+	s TSRTITM="mrnumber",TSRTORD="A"
+	
+</server>
+
+<frameset rows="300,200,*">
+<frame name="CopyAdmission" src="websys.default.csp?WEBSYS.TCOMPONENT=PAMergePatient.EditCopyAdmission&FROMPatientID=#(FROMPatientID)#&TOPatientID=#(TOPatientID)#&TOPAPMIRegNo=#(TOPAPMIRegNo)#&TOPAPMIName=#(TOPAPMIName)#&TOPAPMIName2=#(TOPAPMIName2)#&TOPAPMIName3=#(TOPAPMIName3)#&TOCTSEXDesc=#(TOCTSEXDesc)#&TOPAPERStNameLine1=#(TOPAPERStNameLine1)#&TOPAPERForeignAddress=#(TOPAPERForeignAddress)#&TOCTCITDesc=#(TOCTCITDesc)#&TOPROVDesc=#(TOPROVDesc)#&TOCTZIPCode=#(TOCTZIPCode)#&TOPAPMIDOB=#(TOPAPMIDOB)#&TOMRNumber=#(TOMRNumber)#&TOMRN=#(TOMRN)#&FROMPAPMIRegNo=#(FROMPAPMIRegNo)#&FROMPAPMIName=#(FROMPAPMIName)#&FROMPAPMIName2=#(FROMPAPMIName2)#&FROMPAPMIName3=#(FROMPAPMIName3)#&FROMCTSEXDesc=#(FROMCTSEXDesc)#&FROMPAPERStNameLine1=#(FROMPAPERStNameLine1)#&FROMPAPERForeignAddress=#(FROMPAPERForeignAddress)#&FROMCTCITDesc=#(FROMCTCITDesc)#&FROMPROVDesc=#(FROMPROVDesc)#&FROMCTZIPCode=#(FROMCTZIPCode)#&FROMPAPMIDOB=#(FROMPAPMIDOB)#&FROMMRNumber=#(FROMMRNumber)#&FROMMRN=#(FROMMRN)#&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=2>
+<frame name="EpisodeList" src="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.List&PatientID=#(FROMPatientID)#&TOPatientID=#(TOPatientID)#&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=2> 
+<frame name="MRNumberList" src="websys.default.csp?WEBSYS.TCOMPONENT=RTMaster.MRNumberList&PatientID=#(FROMPatientID)#&TSRTITM=#(TSRTITM)#&TSRTORD=#(TSRTORD)#&TOPatientID=#(TOPatientID)#&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" frameBorder=2> 
+</frameset>
+
+<body>
+</body>
+
+</html>
+

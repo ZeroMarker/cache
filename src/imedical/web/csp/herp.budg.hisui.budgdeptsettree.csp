@@ -1,0 +1,111 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><TRAK:TRANSLATE id=title>##(%seession.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+</head>
+<body class="hisui-layout">
+      	<div class="border-none" data-options="region:'center'">
+		 <table class="hisui-treegrid " 
+		 		id="budgLocTree" 
+		 		data-options="
+		 			idField:'id',
+		 			fit: true,
+		 			treeField:'name',
+		 			rownumbers:true,
+		 			url:$URL,
+		 			queryParams:{
+			 			ClassName:'herp.budg.hisui.udata.uBudgDeptSet',
+			 			MethodName:'ListTree',
+			 			searchField:'',
+			 			searchValue: '',
+			 			sortField:'',
+			 			sortDir:'',
+			 			id:''
+			 		},
+			 		onClickRow:onClickRow,
+			 		onLoadSuccess:onLoadSuccessFN,
+			 		toolbar:[{
+						iconCls: 'icon-add',
+						text:'新增',
+						handler: addFn
+					},{
+						iconCls: 'icon-write-order',
+						text:'修改',
+						handler: editFn
+					},{
+						iconCls: 'icon-cancel',
+						text:'删除',
+						handler: delFn
+					},{
+						iconCls: 'icon-arrow-bottom',
+						text:'全部展开',
+						handler: expandAllFn
+					}]">
+		 	<thead>
+		 		<tr>
+		 			<th field="hospId" halign="center" hidden="true">医疗单位ID</th>
+		 			<th field="hospNa" width="140" halign="center" hidden="true">医疗单位名称</th>
+		 			<th field="id" halign="center" hidden="true">预算科室ID</th>
+		 			<th field="code" width="120" halign="left" align="left">预算科室编码</th>
+		 			<th field="name" width="160" halign="left" align="left" >预算科室名称</th>
+		 			<th field="Pym" width="130" halign="left"align="left" >拼音码</th>
+		 			<th field="classType" width="120" hidden="true" >科室类别ID</th>
+		 			<th field="classTypename" width="120" halign="center" align="center">科室类别</th>
+		 			<th field="directdr" width="120" hidden="true" >科主任ID</th>
+		 			<th field="directname" width="120" halign="left" align="left">科主任</th>
+		 			<th field="level" width="120" halign="center" hidden="true">科室层级</th>
+		 			<th field="supdeptid" width="120" hidden="true" >上级科室ID</th>
+		 			<th field="IOflag" width="120" halign="left" align="left">门诊住院</th>
+		 			<th field="isbudg" width="70" halign="center" align="center" data-options="editor:{type:'checkbox',options:{on:'1',off:'0'}},formatter: IsFormatter">是否大科</th>
+		 			<th field="sstate" width="70" halign="center" align="center" data-options="editor:{type:'checkbox',options:{on:'1',off:'0'}},formatter: IsFormatter">是否有效</th>
+		 			<th field="isitem" width="130" halign="center" align="center" data-options="editor:{type:'checkbox',options:{on:'1',off:'0'}},formatter: IsFormatter">是否用于预算项目</th>
+		 			<th field="islast" width="70" halign="center" align="center" data-options="editor:{type:'checkbox',options:{on:'1',off:'0'}},formatter: IsFormatter">是否末级</th>
+		 		</tr>
+		 	</thead>
+		 </table>
+	 </div>	 
+	 
+	 
+	<div id="addEditDlg" title="新增/编辑预算项" class="hisui-window padding-10" style="width:500px"
+	     data-options="closed:true,shadow:true,modal:true,minimizable: false,maximizable: false,collapsible:false,resizable:true,iconCls:'icon-w-new'" >
+       <center><div class="hisui-layout"  data-options="region:'center'" style="height:320px; padding:10px ">
+            <form id="addfm" class="flex-x-center" >
+            <table  id="addtable">
+				<tr><td align="right"><label class="padding-right-10" id="LocCode">预算科室编码</label></td><td><input id="Lcode" class="hisui-validatebox textbox"  style="width:174px" data-options="required:true"></td><td></td></tr>
+				<tr><td align="right"><label class="padding-right-10" id="LocDesc">预算科室名称</label></td><td><input  id="ldesc" class="hisui-validatebox textbox"  style="width:174px" data-options="required:true"></td><td></td></tr>
+				<tr><td align="right"><label class="padding-right-10" id="LPY">拼音码</label></td><td><input  id="spell" class="hisui-validatebox textbox"  style="width:174px" placeholder="自动生成" disabled></td><td></td></tr>
+                <tr><td align="right"><label class="padding-right-10" id="cls">科室类别</label></td><td><input  id="cdr" class="hisui-combobox combobox-width-177"></td><td></td></tr>
+				<tr><td align="right"><label class="padding-right-10" id="LMonster">科主任</label></td><td><input  id="Lname" class="hisui-combobox combobox-width-177"></td><td></td></tr>
+				<tr><td align="right"><label class="padding-right-10" id="LIO">门诊住院</label></td><td><input  id="io" class="hisui-validatebox textbox"  style="width:174px" ></td><td></td></tr>
+                <tr><td align="right"><label class="padding-right-10" id="LIBudg">是否大科</label></td><td><input class='hisui-checkbox' id="ibudg" name="ibudg" type="checkbox" data-options="checked:false"></td><td></td></tr>
+                <tr><td align="right"><label class="padding-right-10" id="LState">是否有效</label></td><td><input class='hisui-checkbox' id="istate" name="istate" type="checkbox" data-options="checked:false"></td><td></td></tr>
+                <tr><td align="right"><label class="padding-right-10" id="LisItm">用于预算项目</label></td><td><input class='hisui-checkbox' id="iitm" name="iitm" type="checkbox" data-options="checked:false"></td><td></td></tr>
+                <tr><td align="right"><label class="padding-right-10" id="LisLast">是否末级</label></td><td><input class='hisui-checkbox' id="ilst" name="ilst" type="checkbox" data-options="checked:false"></td><td></td></tr>  
+			</table>
+			</form>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'" >
+			     <a id="Save" class="hisui-linkbutton width-70" type="linkbutton" >保存</a>
+			     <span Class="padding-right-10"></span>
+			     <a id="Clear" class="hisui-linkbutton width-70" type="linkbutton" >清屏</a>
+			     <span Class="padding-right-10"></span>
+			     <a id="Close" class="hisui-linkbutton width-70" type="linkbutton" >关闭</a>
+		    </div>
+	</div>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/SessionAndUrl.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budg/common/pinying.js"></script>
+
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/basicinfo/budgdeptsettree.js"></script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csr:action>		<!--modify by wl 2019-12-13 WL0021 begin-->		
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+	}   
+    </SCRIPT>  
+</csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->  
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<!-- modified by sjh SJH0027 2020-06-12 修改台帐界面中“账”字为“帐”-->
+<HISUI/>
+<style type="text/css">
+/*文本描述信息div实现table布局*/
+.eq-table{width:100%;}
+.eq-table-item{padding-top:5px;font-weight:blod;}
+.eq-table-lable{width:8%;color:#666;text-align:right;}
+.eq-table-lable-large{width:12%;color:#666;text-align:right;}/*标题相对长的列*/
+.eq-table-info{width:10%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/*卡片样式*/
+.eq-card{float:left;width:25%;height:100%;display:none;min-height:80px;}
+.eq-card-content{border:1px solid #DCDCDC;height:100%;margin-right:10px;border-radius:3px;position:relative;}
+.eq-card-title{height:32px;line-height:32px;background-repeat:no-repeat;background-position:10px;text-align:center;}
+.eq-card-title>span:first-child{font-size:16px;font-weight:900;padding-left:5px;}
+.eq-card-num{padding-left:5px;color:#666}
+.eq-card-list{padding:5px 10px 10px 10px;}
+.eq-card-item{padding:5px 0px;}
+.eq-card-item-num{float:right;color:#666}
+.eq-card-item-text{color:#008FF0}
+.eq-card-edit{color:#A3C4E7;text-decoration:underline;position:absolute;bottom:5px;right:5px;}
+.eq-card-more{color:#A3C4E7;position:absolute;bottom:5px;left:5px;display:none;}
+.eq-card-active{display: block;}
+/*左右滑动按钮样式*/
+.eq-card-move{width:17px;height:30%;background-color:#666;background-repeat:no-repeat;background-position:center;opacity:0.5;}
+.eq-card-move:hover{background-color:#000;}/*悬停背景色*/
+.eq-card-stop{width:17px;height:30%;background-color:#D3D3D3;background-repeat:no-repeat;background-position:center;opacity:0.5;}/*移动到顶部后样式*/
+.greenbuttoncss{background-color:#2AB66A;color:#ffffff;padding:4px 15px;border-radius:4px;border:1px solid #2AB66A;}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+	s RowID=$Get(%request.Data("RowID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s ToolBarFlag=$Get(%request.Data("ToolBarFlag",1))  //0:不显示功能按钮 1:显示功能按钮
+	s LifeInfoFlag=$Get(%request.Data("LifeInfoFlag",1)) //0:不显示生命周期 1:显示生命周期 
+	s DetailListFlag=$Get(%request.Data("DetailListFlag",1)) //0:不显示明细列表 1:显示明细列表
+	s ImgSrc=##Class(web.DHCEQ.Process.DHCEQPicture).GetPictureByEquip(RowID) //获取图片路径
+	s GetPath=##class(web.DHCEQStoreMoveSP).GetPath()
+	s BuildingType=##class(web.DHCEQCommon).GetSysInfo("401003")  //add by zx 20190705 获取房屋类组设置 BUG ZX0069
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	//add by czf 20190902
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")	
+</Script>
+<body class="hisui-layout" id="EquipShow">
+	<div data-options="region:'north',border:false" style="height:72px;border-bottom:1px solid #DCDCDC;padding:3px 0px;"> <!--begin 顶部按钮区域-->
+		<div style="float:left;border-right:1px solid #DCDCDC;padding:0px 5px;">
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-change-account',plain:true" onclick="javascript:changeAccount()">调帐</a>
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-start',plain:true" onclick="javascript:equipStart()">启用</a>
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-stop',plain:true" onclick="javascript:equipStop()">停用</a>
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-equi-cfg',plain:true" onclick="javascript:equipAttribute()">属性</a><!-- add by jyp 2019-09-02 设备属性相关调整-->
+		</div>
+		<div style="float:left;border-right:1px solid #DCDCDC;padding:0px 5px;">
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-maint',plain:true" onclick="javascript:maintRequest()">维修</a>
+			<a href="#" id="BMeterage" class="hisui-linkbutton big" data-options="iconCls:'icon-big-meterage',plain:true" onclick="javascript:meterage()">计量</a>	<!--Modified by csj 2020-03-30 添加计量按钮id-->
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-inspect',plain:true" onclick="javascript:inspect()">检查</a>
+			<a href="#" id="returnBtn" class="hisui-linkbutton big" data-options="iconCls:'icon-big-return',plain:true" onclick="javascript:returnRequest()">退货</a>
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-disuse',plain:true" onclick="javascript:disuseRequest()">报废</a>
+		</div>
+		<div style="float:left;padding:0px 5px;">
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-bar',plain:true" onclick="javascript:equipPrintBar()">条码</a>
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-card',plain:true" onclick="javascript:printCard()">卡片</a>
+			<!--modify by lmm 2020-04-17 1262026-->
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-yellow',plain:true" onclick="javascript:productPicture()">产品库</a><!-- add by mwz 2020-03-27  台帐顶部增加产品库链接-->
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-maint',plain:true" onclick="javascript:engineerMaintRequest()">工程师维修</a> <!-- add by czf 工程师维修 1300634-->
+		</div>
+	</div> <!--end 顶部按钮区域-->
+	<div data-options="region:'center',border:false"> <!--begin 主体内容区域-->
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',border:false" style="height:40px;" style="overflow:hidden"> <!--begin banner显示区域-->
+				<iframe id="Banner" frameborder="0" src="" style="width:100%;height:40px;padding-top:10px;"></iframe>
+			</div> <!--begin banner显示区域-->
+			<div data-options="region:'center',border:false" style="padding:0 5px 5px 5px;"> <!--begin 台帐信息显示区域-->
+				<div class="hisui-layout" data-options="fit:true,border:false" id="EquipInfo">
+					<div data-options="region:'center',split:true" title="信息总览<a href='#\' onclick='javascript:equipEdit()' style='padding:10px 15px;background:url(../images/eq-edit.png) no-repeat center;'></a>"> <!--begin 台帐总览区域-->
+
+						<div class="hisui-panel" data-options="fit:true,border:false" >
+							<div class="hisui-layout" data-options="fit:true,border:false" id="EquipCard">
+								<div data-options="region:'north',border:false" style="padding:10px;"> <!--begin 台帐基本信息区域-->
+									
+									<div class="eq-table" style="position:relative;">
+										<div style="position:absolute;right:0px;top:0px;height:150px;width:20%;border:1px dashed #DCDCDC;padding:10px;">
+											<img id="Image" src="" height="100%" width="100%" style="display:none;"/>
+											<div id="DefaultImage" style="background-color:#F5F7F5;height:150px;width:100%;text-align:center;line-height:150px;vertical-align: middle;">
+												<sapn style='padding:20px;background:url(../images/eq-defualt.png) no-repeat center;'></sapn>
+												<span style="font-size:20px;color:#666;">暂无图片</span>
+											</div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td" style="font-weight:900; padding-top:0px"><span>基本信息</span></div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable">设备项名称：</div> <!--add by zx 2019-03-14 ZX0061-->
+											<div class="eq-table-td eq-table-info" id="EQItemDR_MIDesc"></div>
+											<div class="eq-table-td eq-table-lable">类组：</div>
+											<div class="eq-table-td eq-table-info" id="EQEquipTypeDR_ETDesc"></div>
+											<div class="eq-table-td eq-table-lable">资产类型：</div>
+											<div class="eq-table-td eq-table-info" id="EQStatCatDR_SCDesc"></div>
+											<div class="eq-table-td eq-table-lable-large">国别/地区：</div>
+											<div class="eq-table-td eq-table-info" id="EQCountryDR_CTCOUDesc"></div>
+											<div class="eq-table-td eq-table-lable"></div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable">单位：</div>
+											<div class="eq-table-td eq-table-info" id="EQUnitDR_UOMDesc"></div>
+											<div class="eq-table-td eq-table-lable">状态：</div>
+											<div class="eq-table-td eq-table-info" id="EQStatusDisplay"></div>
+											<div class="eq-table-td eq-table-lable">经费来源：</div>
+											<div class="eq-table-td eq-table-info" id="EQHold10_EDesc"></div>
+											<div class="eq-table-td eq-table-lable-large">用途：</div>
+											<div class="eq-table-td eq-table-info" id="EQPurposeTypeDR_PTDesc"></div>
+											<div class="eq-table-td eq-table-lable"></div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable">出厂日期：</div>
+											<div class="eq-table-td eq-table-info" id="EQLeaveFactoryDate"></div>
+											<div class="eq-table-td eq-table-lable">档案号：</div>
+											<div class="eq-table-td eq-table-info" id="EQFileNo"></div>
+											<div class="eq-table-td eq-table-lable"></div>
+											<div class="eq-table-td eq-table-info"></div>
+											<div class="eq-table-td eq-table-lable-large"></div>
+											<div class="eq-table-td eq-table-info"></div>
+											<div class="eq-table-td eq-table-lable"></div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-item" style="font-weight:900;"><span>购置信息</span></div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable"><span>资产来源：</span></div>
+											<div class="eq-table-td eq-table-info" id="EQOriginDR_ODesc">组电脑</div>
+											<div class="eq-table-td eq-table-lable">采购方式：</div>
+											<div class="eq-table-td eq-table-info" id="EQBuyTypeDR_BTDesc"></div>
+											<div class="eq-table-td eq-table-lable">合同号：</div>
+											<div class="eq-table-td eq-table-info" id="EQContractNo"></div>
+											<div class="eq-table-td eq-table-lable-large">供方经办人：</div>
+											<div class="eq-table-td eq-table-info" id="EQProviderHandler"></div>
+											<div class="eq-table-td eq-table-lable"></div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable">申购类别：</div>
+											<div class="eq-table-td eq-table-info" id="EQPurchaseTypeDR_PTDesc"></div>
+											<div class="eq-table-td eq-table-lable">ABC分类：</div>
+											<div class="eq-table-td eq-table-info" id="EQABCType"></div>
+											<div class="eq-table-td eq-table-lable">保修期：</div>
+											<div class="eq-table-td eq-table-info" id="EQGuaranteePeriodNum"></div>
+											<div class="eq-table-td eq-table-lable-large">医疗器械注册证：</div>
+											<div class="eq-table-td eq-table-info" id="EQRegistrationNo"></div>
+											<div class="eq-table-td eq-table-lable"></div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+									</div>
+									<div class="eq-table">
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-item" style="font-weight:900;"><span>使用信息及其他信息</span></div>
+										</div>
+									</div>
+									<div class="eq-table">
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable"><span>启用日期：</span></div>
+											<div class="eq-table-td eq-table-info" id="EQStartDate"></div>
+											<div class="eq-table-td eq-table-lable">异常状态：</div>
+											<div class="eq-table-td eq-table-info" id="EQAdvanceDisFlag"></div> <!--add by zx 2019-06-17异常标志获取-->
+											<div class="eq-table-td eq-table-lable">使用年限：</div>
+											<div class="eq-table-td eq-table-info" id="EQLimitYearsNum"></div>
+											<div class="eq-table-td eq-table-lable-large">折旧方法：</div>
+											<div class="eq-table-td eq-table-info" id="EQDepreMethodDR_DMDesc"></div>
+											<div class="eq-table-td eq-table-lable">累计折旧：</div>
+											<div class="eq-table-td eq-table-info" id="EQDepreTotalFee"></div>
+										</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable">租借部门：</div>
+											<div class="eq-table-td eq-table-info" id="EQRentLocDR_CTLOCDesc"></div>
+											<div class="eq-table-td eq-table-lable">共用：</div>
+											<div class="eq-table-td eq-table-info" id="EQCommonageFlag"></div>
+											<div class="eq-table-td eq-table-lable">备注：</div>
+											<div class="eq-table-td eq-table-info" id="EQRemark"></div>
+											<div class="eq-table-td eq-table-lable">自筹资金：</div>
+											<div class="eq-table-td eq-table-info" id="EQSelfFundFee"></div>
+											<div class="eq-table-td eq-table-lable" id="EQFunds" style="text-align:left;color:#008FF0;">其它资金</div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+									</div>
+								</div> <!--end 台帐基本信息区域-->
+								<div data-options="region:'center',border:false" style="padding:0 0 10px 10px;"> <!--begin 台帐相关信息区域-->
+									<div style="height:100%;position:relative;">
+										<a href="#" class="eq-card-stop" style="position:absolute;left:0px;top:35%;background-image:url(../images/eq-click-left.png);z-index:20" id="moveLeft"></a>
+										<a href="#" class="eq-card-move" style="position:absolute;right:10px;top:35%;background-image:url(../images/eq-click-right.png);z-index:20" id="moveRight"></a>
+										<div class="eq-card eq-card-active"><!--begin 卡片信息区域-->
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-affix.png);"><span>附件信息</span><span class="eq-card-num" id="AffixNum"></span></div>
+													<div class="eq-card-list" id="AffixContent"></div>
+												</div>
+												<div class="eq-card-more" id="AffixMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:affixEdit()'>详细信息</a></div>
+											</div>
+										</div>
+										<div class="eq-card eq-card-active">
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-pic.png);"><span>图片资料</span><span class="eq-card-num" id="PicNum"></span></div>
+													<div class="eq-card-list" id="PicContent"></div>
+												</div>
+												<div class="eq-card-more" id="PicMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:picEdit()'>详细信息</a></div>
+											</div>
+										</div>
+										<!--//Modify by zx 2020-02-19 BUG ZX0076-->
+										<!--Modify by zc0076 2020-6-17 恢复屏蔽的随机文件 begin-->
+										<div class="eq-card eq-card-active">
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-doc.png)"><span>随机文件</span><span class="eq-card-num" id="DocNum"></span></div>
+													<div class="eq-card-list" id="DocContent"></div>
+												</div>
+												<div class="eq-card-more" id="DocMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:docEdit()'>详细信息</a></div>
+											</div>
+										</div>
+										<!--Modify by zc0076 2020-6-17 恢复屏蔽的随机文件 begin-->
+										<div class="eq-card eq-card-active">
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-doc.png)"><span>电子资料</span><span class="eq-card-num" id="AppendFileNum"></span></div>
+													<div class="eq-card-list" id="AppendFileContent"></div>
+												</div>
+												<div class="eq-card-more" id="AppendFileMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:appendFileEdit()'>详细信息</a></div>
+											</div>
+										</div>
+										<div class="eq-card"> <!--Modify by zc0076 2020-6-17修改样式-->
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-contract.png)"><span>保修合同</span><span class="eq-card-num" id="ContractNum"></span></div>
+													<div class="eq-card-list" id="ContractContent"></div>
+												</div>
+												<div class="eq-card-more" id="ContractMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:contractEdit()'>详细信息</a></div>
+											</div>
+										</div>
+										<div class="eq-card">
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-config.png)"><span>配置信息</span><span class="eq-card-num" id="ConfigNum"></span></div>
+													<div class="eq-card-list" id="ConfigContent"></div>
+												</div>
+												<div class="eq-card-more" id="ConfigMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:configEdit()'>详细信息</a></div>
+											</div>
+										</div>
+										<div class="eq-card" id="ConfigCard">
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-equipconfig.png);"><span>附属设备</span><span class="eq-card-num" id="EquipConfigNum"></span></div>
+													<div class="eq-card-list" id="EquipConfigContent"></div>
+												</div>
+												<div class="eq-card-more" id="EquipConfigMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:equipconfigEdit()'>详细信息</a></div>
+											</div>
+										</div>
+										<div class="eq-card">
+											<div class="eq-card-content">
+												<div style="overflow:hidden;height:80%;">
+													<div class="eq-card-title" style="background-image:url(../images/eq-tree.png);"><span>设备树</span><span class="eq-card-num" id="TreeNum"></span></div>
+													<div class="eq-card-list" id="TreeContent"></div>
+												</div>
+												<div class="eq-card-more" id="TreeMore"><span>更多...</span></div>
+												<div class="eq-card-edit"><a href="#" onclick='javascript:treeEdit()'>详细信息</a></div>
+											</div>
+										</div><!--end 卡片信息区域-->
+									</div>
+								</div> <!--end 台帐相关信息区域-->
+							</div>
+						</div>
+					</div><!--end 台帐总览区域-->
+					<div data-options="region:'east',split:true" title="生命周期" style="width:300px;"> <!--begin 生命周期区域-->
+						<div class="hisui-panel" data-options="fit:true,border:false"  style="padding:10px;position:relative;">
+							<div class="eq-times">
+							    <ul id="LifeInfoView">
+							    </ul>
+							</div>
+							<a href="#" class="hisui-linkbutton hover-dark" style="position:absolute;right:10px;top:10px;" id="LifeInfoFind" data-options="iconCls:'icon-w-filter'">筛选</a>
+							<div id="LifeInfoDetailPopover" class="webui-popover-content">
+								<div id="LifeInfoItemDetail">
+								</div>
+								<div style="text-align: center;"><button type="button" id="LifeInfoSeach" class="greenbuttoncss">保存</button></div>
+							</div>
+						</div>
+					</div> <!--end 生命周期区域-->
+				</div>
+			</div> <!--end 台帐信息显示区域-->
+		</div>
+	</div> <!--end 主体内容区域-->
+	<input type="hidden" id="RowID" value=#(RowID)#>
+	<input type="hidden" id="ReadOnly" value=#(ReadOnly)#>
+	<input type="hidden" id="EQStatus">
+	<input type="hidden" id="EQStatusDisplay">
+	<input type="hidden" id="EQParentDR">
+	<input type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+	<input type="hidden" id="GetRepPath" value=#(GetPath)#> <!--add by zx  2018-12-18 与通用方法命名一致-->
+	<input type="hidden" id="ToolBarFlag" value=#(ToolBarFlag)#>
+	<input type="hidden" id="LifeInfoFlag" value=#(LifeInfoFlag)#>
+	<input type="hidden" id="DetailListFlag" value=#(DetailListFlag)#>
+	<INPUT type="hidden" id="BuildingType" value="#(BuildingType)#"> <!--add by zx 20190705 房屋类组设置 BUG ZX0069-->
+	<INPUT type="hidden" id="SplitRowCode" value="#(SplitRowCode)#"> <!--add by czf 20190902-->
+	<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-11 WL0010  -->	
+	<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+	<!--script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>	Mozy003002	2020-03-18	屏蔽引用-->
+	<script type='text/javascript' src='../scripts/dhceq/em/equip.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbar.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbarqrcode.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>  <!--add by wl 2019-11-11  WL00010-->
+</body>
+</HTML>

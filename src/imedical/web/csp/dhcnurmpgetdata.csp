@@ -1,0 +1,185 @@
+<SERVER>
+s ClassName=$g(%request.Data("ClassName",1))
+s MethodName=$g(%request.Data("MethodName",1))
+
+i $D(%request.Data("datapost",1)){ 
+		s datapost=$g(%request.Data("datapost",1))
+		
+		s dataArray=##class(NurMp.NurCacheJSON).Decode(datapost)
+}
+else{
+		s dataArray=##class(%ArrayOfDataTypes).%New()
+}
+
+s templateVersionGuid=dataArray.GetAt("templateVersionGuid")
+s EpisodeID=dataArray.GetAt("EpisodeID")
+
+if (ClassName ="NurMp.TempalteRecordPrint" ) &&(MethodName = "GetPrintData"){
+	
+	w ##class(NurMp.TempalteRecordPrint).GetPrintData(templateVersionGuid,EpisodeID)
+	
+}
+if (ClassName ="NurMp.TemplateSet" ) && (MethodName = "GetCodeList")
+{
+	
+	i dataArray.IsDefined("pageInfo")  d
+	.s pageDetail=dataArray.GetAt("pageInfo")
+	.s pageInfo=pageDetail.GetAt("PageStart")_"^"_pageDetail.GetAt("PageEnd")
+	else  s pageInfo=""
+	
+	i dataArray.IsDefined("specifyFileds"){ 
+		s specifyFileds=dataArray.GetAt("specifyFileds")
+	}
+	else{
+		s specifyFileds=##class(%ListOfDataTypes).%New()
+	}
+	i dataArray.IsDefined("NurMPDataID")  s NurMPDataID=dataArray.GetAt("NurMPDataID")
+	else  s NurMPDataID=""
+	i dataArray.IsDefined("queryInfo")  s queryInfo=dataArray.GetAt("queryInfo")
+	else  s queryInfo=""
+
+	w ##class(NurMp.TemplateSet).GetCodeList(templateVersionGuid,EpisodeID,pageInfo,specifyFileds,NurMPDataID,queryInfo)
+}
+
+if (ClassName ="NurMp.DHCTempMultData" ) &&(MethodName = "Save"){
+	if dataArray.IsDefined("NurMPDataID")  s NurMPDataID=dataArray.GetAt("NurMPDataID")
+	else  set NurMPDataID=""
+	s GroupDesc=dataArray.GetAt("LOGON.GROUPDESC")
+	s Loc=dataArray.GetAt("LOGON.CTLOCID")
+	s Ward=dataArray.GetAt("LOGON.WARDID")
+	s UserId=dataArray.GetAt("LOGON.USERID")
+	s TemporarySave=dataArray.GetAt("TemporarySave")
+	w ##class(NurMp.DHCTempMultData).save(templateVersionGuid,EpisodeID,NurMPDataID,dataArray,GroupDesc,Loc,Ward,UserId,TemporarySave)
+	
+}
+if (ClassName ="NurMp.DHCNurRecorderPrintinfo" ) &&(MethodName = "insertdata"){
+
+	w ##class(NurMp.DHCNurRecorderPrintinfo).insertdata(dataArray)
+	
+}
+if (ClassName ="NurMp.DHCTempMultData" ) &&(MethodName = "RecCancel"){
+	
+	i dataArray.IsDefined("LOGON.USERID")  s userid=dataArray.GetAt("LOGON.USERID")
+	else  s userid=""
+	i dataArray.IsDefined("LOGON.GROUPDESC")  s usergroup=dataArray.GetAt("LOGON.GROUPDESC")
+	else  s usergroup=""
+	i dataArray.IsDefined("RecIds")  s id=dataArray.GetAt("RecIds")
+	else  s id=""
+	w ##class(NurMp.DHCTempMultData).RecCancel(id, userid, usergroup)
+	
+}
+if (ClassName ="NurMp.DHCTempMultData" ) &&(MethodName = "RecRecover"){
+	
+	i dataArray.IsDefined("LOGON.USERID")  s userid=dataArray.GetAt("LOGON.USERID")
+	else  s userid=""
+	i dataArray.IsDefined("LOGON.GROUPDESC")  s usergroup=dataArray.GetAt("LOGON.GROUPDESC")
+	else  s usergroup=""
+	i dataArray.IsDefined("RecIds")  s id=dataArray.GetAt("RecIds")
+	else  s id=""
+	w ##class(NurMp.DHCTempMultData).RecRecover(id, userid, usergroup)
+	
+}
+if (ClassName ="NurMp.TemplateInOutRecComm" ) &&(MethodName = "SaveComm"){
+	
+	i dataArray.IsDefined("Type")  s type=dataArray.GetAt("Type")
+	else  s type=""
+	i dataArray.IsDefined("LOGON.USERID")  s user=dataArray.GetAt("LOGON.USERID")
+	else  s user=""
+	i dataArray.IsDefined("LOGON.CTLOCID")  s LOCID=dataArray.GetAt("LOGON.CTLOCID")
+	else  s LOCID=""
+	i dataArray.IsDefined("LOGON.WARDID")  s WARDID=dataArray.GetAt("LOGON.WARDID")
+	else  s WARDID=""
+	i dataArray.IsDefined("LOGON.GROUPDESC")  s GROUP=dataArray.GetAt("LOGON.GROUPDESC")
+	else  s GROUP=""
+	i dataArray.IsDefined("queryInfo")  s queryInfo=dataArray.GetAt("queryInfo")
+	else  s queryInfo=""
+	i dataArray.IsDefined("startTime")  s startTime=dataArray.GetAt("startTime")
+	else  s startTime=""
+	i dataArray.IsDefined("endTime")  s endTime=dataArray.GetAt("endTime")
+	else  s endTime=""
+	i dataArray.IsDefined("disTitle")  s disTitle=dataArray.GetAt("disTitle")
+	else  s disTitle=""
+	i dataArray.IsDefined("signField")  s signField=dataArray.GetAt("signField")
+	else  s signField=""
+	w ##class(NurMp.TemplateInOutRecComm).SaveComm(EpisodeID, type, user, templateVersionGuid, queryInfo,startTime,endTime,disTitle,LOCID,WARDID,GROUP,signField)
+	
+}
+if (ClassName ="NurMp.InOutVolume.MaxMinStatistics" ) &&(MethodName = "SaveComm"){
+	
+	i dataArray.IsDefined("Type")  s type=dataArray.GetAt("Type")
+	else  s type=""
+	i dataArray.IsDefined("LOGON.USERID")  s user=dataArray.GetAt("LOGON.USERID")
+	else  s user=""
+	i dataArray.IsDefined("LOGON.CTLOCID")  s LOCID=dataArray.GetAt("LOGON.CTLOCID")
+	else  s LOCID=""
+	i dataArray.IsDefined("LOGON.WARDID")  s WARDID=dataArray.GetAt("LOGON.WARDID")
+	else  s WARDID=""
+	i dataArray.IsDefined("LOGON.GROUPDESC")  s GROUP=dataArray.GetAt("LOGON.GROUPDESC")
+	else  s GROUP=""
+	i dataArray.IsDefined("queryInfo")  s queryInfo=dataArray.GetAt("queryInfo")
+	else  s queryInfo=""
+	i dataArray.IsDefined("startTime")  s startTime=dataArray.GetAt("startTime")
+	else  s startTime=""
+	i dataArray.IsDefined("endTime")  s endTime=dataArray.GetAt("endTime")
+	else  s endTime=""
+	i dataArray.IsDefined("disTitle")  s disTitle=dataArray.GetAt("disTitle")
+	else  s disTitle=""
+	i dataArray.IsDefined("signField")  s signField=dataArray.GetAt("signField")
+	else  s signField=""
+	w ##class(NurMp.InOutVolume.MaxMinStatistics).SaveComm(EpisodeID, type, user, templateVersionGuid, queryInfo,startTime,endTime,disTitle,LOCID,WARDID,GROUP,signField)
+	
+}
+if (ClassName ="NurMp.DHCNurRecCountReport" ) &&(MethodName = "BatchSign"){
+	i dataArray.IsDefined("LOGON.USERID")  s userid=dataArray.GetAt("LOGON.USERID")
+	else  s userid=""
+	i dataArray.IsDefined("LOGON.GROUPDESC")  s usergroup=dataArray.GetAt("LOGON.GROUPDESC")
+	else  s usergroup=""
+	i dataArray.IsDefined("RecIds")  s id=dataArray.GetAt("RecIds")
+	else  s id=""
+	w ##class(NurMp.DHCNurRecCountReport).BatchSign(id, userid)
+	
+}
+if (ClassName ="NurMp.DHCNurRecCountReport" ) &&(MethodName = "BatchWithdrawnSign"){
+	i dataArray.IsDefined("LOGON.USERID")  s userid=dataArray.GetAt("LOGON.USERID")
+	else  s userid=""
+	i dataArray.IsDefined("LOGON.GROUPDESC")  s usergroup=dataArray.GetAt("LOGON.GROUPDESC")
+	else  s usergroup=""
+	i dataArray.IsDefined("RecIds")  s id=dataArray.GetAt("RecIds")
+	else  s id=""
+	w ##class(NurMp.DHCNurRecCountReport).BatchWithdrawnSign(id)
+	
+} 
+if (ClassName ="NurMp.DHCNurRecCountReport" ) &&(MethodName = "GetGWCountExport"){
+	
+	i dataArray.IsDefined("LOGON.USERID")  s userid=dataArray.GetAt("LOGON.USERID")
+	else  s userid=""
+	i dataArray.IsDefined("LOGON.USERCODE")  s user=dataArray.GetAt("LOGON.USERCODE")
+	else  s user=""
+	i dataArray.IsDefined("queryInfo")  s queryInfo=dataArray.GetAt("queryInfo")
+	else  s queryInfo=""
+	w ##class(NurMp.DHCNurRecCountReport).GetGWCountExport(EpisodeID,  userid, queryInfo,templateVersionGuid)
+	
+}
+if ((ClassName ="NurMp.DHCMGNurComm" )&&(MethodName = "getUserName")) {
+	s userCode="",displayFlag="1"
+	i dataArray.IsDefined("userCode") {
+		s userCode=dataArray.GetAt("userCode")
+	}
+	i dataArray.IsDefined("displayFlag") {
+		s displayFlag=dataArray.GetAt("displayFlag")
+	}
+	w ##class(NurMp.DHCMGNurComm).getUserName(userCode,displayFlag)
+}
+if ((ClassName ="NurMp.Sources.Comm" )&&(MethodName = "getUserName")) {
+	s userCode="",displayFlag="1"
+	i dataArray.IsDefined("userCode") {
+		s userCode=dataArray.GetAt("userCode")
+	}
+	i dataArray.IsDefined("displayFlag") {
+		s displayFlag=dataArray.GetAt("displayFlag")
+	}
+	w ##class(NurMp.Sources.Comm).getUserName(userCode,displayFlag)
+}		
+
+</SERVER>
+<csp:content charset="UTF-8">

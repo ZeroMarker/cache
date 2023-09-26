@@ -1,0 +1,965 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+		s %response.Timeout=1800
+		s action=$g(%request.Data("action",1))
+		i action="getKpiTaskGroup" {
+			d %response.SetHeader("Pragma","No-cache")
+			d %response.SetHeader("Cache-Control","No-cache")
+			d %response.SetHeader("Expires",0)
+			s %response.ContentType="application/x-download"
+			d %response.SetHeader("Content-Disposition","attachment")
+		}
+		q 1
+   </script>
+	<script language="cache" runat="server">
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	i start="" s start=0
+	i pageSize="" s pageSize=20 ;$g(%request.Data("pageSize",1))
+	s end=start+pageSize
+	s:start>1 start=start+1
+	set searcheCond = $g(%request.Data("searcheCond",1))
+	set searcheValue = $g(%request.Data("searcheValue",1))
+	s onePage=$g(%request.Data("onePage",1))
+	s isArrayType=$g(%request.Data("isArrayType",1))
+	s mark=$g(%request.Data("mark",1)),searcheDimFlag=0,searcheMeaFlag=0
+	s action=$g(%request.Data("action",1))
+	if "list-kpiName"=action {
+		s deli="&"
+		s json=##class(DHCWL.util.Json).Json("id"_deli_"text"_deli_"leaf"_deli_"cls",,deli)
+		s sql="select ID,MKPI_Name from DHCWL_MKPI.DHCWLMKPI ",orderSql="order by MKPI_Name",querySql=" "
+		s selectKpiId=$g(%request.Data("selectKpiId",1))
+		s searcheValue=$g(%request.Data("searcheValue",1))
+		i (selectKpiId'="")&&(selectKpiId'="undefined") s querySql=" where ID="_selectKpiId
+		i (searcheValue'="")&&(searcheValue'="undefined") s querySql=" where MKPI_Name like '%"_searcheValue_"%'"
+		e  s querySql=" "
+		s sql=sql_querySql_orderSql
+		;w sql,!
+		;q
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		While(rs.Next()){
+			s id=rs.Data("ID"),name=rs.Data("MKPI_Name")
+			d json.FreeInsert("id:"_id_",text:'"_name_"',leaf:true,cls:'file'")
+		}
+		w "["
+		d{
+			s obj=json.NextObj()
+			w obj
+			i json.GetPrivor()<json.GetCount() w ","
+		}while(obj'="")
+		w "]"
+	}elseif "list-kpiExc"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		i $g(kpiId)="" d
+		.s kpiCode=$g(%request.Data("kpiCode",1))
+		.s kpiId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiCode,"DHCWL.MKPI.MKPI")  ;##class(DHCWL.MKPIService.ConfigService).GetKPIByName(kpiCode)
+		i +kpiId=0 {
+			w "{success:false,info:'不存在该指标'}"
+			q
+		}
+		s kpi=##class(DHCWL.MKPI.MKPI).%OpenId(kpiId)
+		i ""=kpiId {
+			w "{success:false,info:'不存在该指标'}"
+			q
+		}
+		s kpiExc=kpi.MKPIEXCode
+		;s kpiDim=kpi.MKPITypeDr
+		;i kpiDim'="" d
+		;.s dimExc=kpiDim.KDTEXCode
+		s taskSecList=""
+		;s active=$o(^DHCWL.MKPI.CreatDataTaskI("SectionKPI",secId,kpiId,""))
+		;s id=$o(^DHCWL.MKPI.CreatDataTaskI("SectionKPI",secId,kpiId,active))
+		s taskAct=""  f  s taskAct=$o(^DHCWL.MKPI.CreatDataTaskI("KPI",kpiId,taskAct)) q:taskAct=""  d
+		.s taskId="" f  s taskId=$o(^DHCWL.MKPI.CreatDataTaskI("KPI",kpiId,taskAct,taskId)) q:taskId=""  d
+		..q:'$d(^DHCWL.MKPI.CreatDataTaskD(taskId))
+		..s taskSecId=$listget(^DHCWL.MKPI.CreatDataTaskD(taskId),5,"")
+		..i (taskSecId'="")&&(+$g(taskSecId)'=0) d
+		...q:'$d(^DHCWL.MKPI.SectionD(taskSecId))
+		...s taskSec=$listget(^DHCWL.MKPI.SectionD(taskSecId),2,"")
+		...s sectionName=$listget(^DHCWL.MKPI.SectionD(taskSecId),4,"")
+		...i taskAct [ "Y" s taskAct2="Y"  
+		...e  s taskAct2="N"
+		...;s taskAct=taskAct2
+		...;s task(kpiId,taskSec,taskAct)=$list(^DHCWL.MKPI.CreatDataTaskD(taskId),3)
+		...s taskSecExcuteCode=$lg(^DHCWL.MKPI.CreatDataTaskD(taskId),3,"")
+		...s:$ascii($e(taskSecExcuteCode,1))=0 taskSecExcuteCode=""
+		...s taskSecList=taskSecList_"{taskId:"_taskId_",sectionName:'"_sectionName_"',section:'"_taskSec_"',active:'"_taskAct2_"',taskSecExc:'"_taskSecExcuteCode_"'},"
+		...;s task(taskId,taskSec,taskAct2)=$list(^DHCWL.MKPI.CreatDataTaskD(taskId),3)
+		s taskSecList=$e(taskSecList,1,$l(taskSecList)-1)
+		//s sign=##class(DHCWL.MKPIIO.KpiModuleData).GetKpiModuleData(kpiId)
+		w "{success:true,info:{kpiExc:'"_$g(kpiExc)_"',taskSectionList:["_taskSecList_"]}}"
+		q
+		s taskSecList=""
+		s taskId=""  f  s taskId=$o(task(taskId)) q:taskId=""  d
+		.;s taskSecList="{task:"_taskId_","
+		.s taskSec=""  f  s taskSec=$o(task(taskId,taskSec)) q:taskSec=""  d
+		..s taskAct=""  f  s taskAct=$o(task(taskId,taskSec,taskAct)) q:taskAct=""  d
+		...s taskSecList=taskSecList_"{taskId:"_taskId_",section:'"_taskSec_"',active:'"_taskAct_"',taskSecExc:'"_task(taskId,taskSec,taskAct)_"'},"
+		s taskSecList=$e(taskSecList,1,$l(taskSecList)-1)
+		w "{success:true,info:{kpiExc:'"_$g(kpiExc)_"',dimExc:'"_$g(dimExc)_"',taskSectionList:["_taskSecList_"]}}"
+	}elseif "list-kpiTaskExc"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		i $g(kpiId)="" d
+		.s kpiCode=$g(%request.Data("kpiCode",1))
+		.s kpiId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiCode,"DHCWL.MKPI.MKPI")  ;##class(DHCWL.MKPIService.ConfigService).GetKPIByName(kpiCode)
+		i ""=kpiId {
+			w "{success:false,info:'不存在该指标'}"
+			q
+		}
+		s kpi=##class(DHCWL.MKPI.MKPI).%OpenId(kpiId)
+		i "list-kpiTaskExc"=kpiId {
+			w "{success:false,info:'不存在该指标'}"
+			q
+		}
+		s taskSecList=""
+		s count=0
+		s taskAct=""  f  s taskAct=$o(^DHCWL.MKPI.CreatDataTaskI("KPI",kpiId,taskAct)) q:taskAct=""  d
+		.s taskId="" f  s taskId=$o(^DHCWL.MKPI.CreatDataTaskI("KPI",kpiId,taskAct,taskId)) q:taskId=""  d
+		..q:'$d(^DHCWL.MKPI.CreatDataTaskD(taskId))
+		..s taskSecId=$list(^DHCWL.MKPI.CreatDataTaskD(taskId),5)
+		..i +taskSecId'=0 d
+		...s count=count+1
+		...s taskSec=$list(^DHCWL.MKPI.SectionD(taskSecId),2)
+		...s DTaskExcuteCode=$lg(^DHCWL.MKPI.CreatDataTaskD(taskId),3,"")
+		...s:$ascii($e(DTaskExcuteCode,1))=0 DTaskExcuteCode=""
+		...i $g(DTaskExcuteCode)'=""  s DTaskExcuteCodeTip="s monthId="_$g(DTaskExcuteCode)_"()"
+		...e  s DTaskExcuteCodeTip=""
+		...s sectionName=$list(^DHCWL.MKPI.SectionD(taskSecId),4)
+		...i taskAct [ "Y" s taskAct2="Y"  
+		...e  s taskAct2="N"
+		...s taskSecList=taskSecList_"{taskId:"_taskId_",SecName:'"_sectionName_"',SecCode:'"_taskSec_"',DTaskActiveFlag:'"_taskAct2_"',DTaskExcuteCode:'"_$g(DTaskExcuteCode)_"',DTaskExcuteCodeTip:'"_$g(DTaskExcuteCodeTip)_"'},"
+		s taskSecList=$e(taskSecList,1,$l(taskSecList)-1)
+		w "{totalNums:"_count_",root:["_taskSecList_"]}"
+	}elseif "freshTaskExc"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		s taskId=$g(%request.Data("taskId",1))
+		s selectSec=$g(%request.Data("selectSec",1))
+		s secId=$o(^DHCWL.MKPI.SectionI("SecCode",selectSec,""))
+		q:'$d(^DHCWL.MKPI.CreatDataTaskI("SectionKPI",secId,kpiId)) "{success:true,info:''"
+		s active=$o(^DHCWL.MKPI.CreatDataTaskI("SectionKPI",secId,kpiId,""))
+		q:active="" "{success:true,info:''"
+		s newTaskId=$o(^DHCWL.MKPI.CreatDataTaskI("SectionKPI",secId,kpiId,active,""))
+		i active ["Y"  s active="Y"  e  s active="N"
+		q:newTaskId="" "{success:true,info:''"
+		i '$d(^DHCWL.MKPI.CreatDataTaskD(newTaskId)) s exc=""
+		e  s exc=$list(^DHCWL.MKPI.CreatDataTaskD(newTaskId),3)
+		w "{success:true,info:{active:'"_active_"',newTaskId:"_newTaskId_",taskExc:'"_exc_"'}}"
+	}elseif "autoCreateTaskExc"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		s selectSec=$g(%request.Data("selectSec",1))
+		s yExc="CreatLastYearDataAt0101^DHCWLAutoCreatMKPIData"
+		s hyExc=""
+		s qExc="CreatLastQuaDateAt1^DHCWLAutoCreatMKPIData"
+		s mExc="CreatLastMonDataAt1^DHCWLAutoCreatMKPIData"
+		s dExc="CreatYesterdayData^DHCWLAutoCreatMKPIData"
+		s taskRule("Y")="Y,HY,Q,M,D",taskRule("HY")="HY,Q,M,D",taskRule("Q")="Q,M,D",taskRule("M")="M,D",taskRule("D")="D"
+		s taskExc("Y")=yExc,taskExc("HY")=hyExc,taskExc("Q")=qExc,taskExc("M")=mExc,taskExc("D")=dExc
+		s info=##class(web.DHCWL.KPI.TaskService).AutoCreateTask(kpiId,taskRule(selectSec),.taskExc)
+		w "{success:true,info:'"_info_"'}"
+	}elseif "activeTaskExc"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		s info=##class(web.DHCWL.KPI.TaskService).ActiveTask(kpiId)
+		w "{success:true,info:'"_info_"'}"
+	}elseif "addKpiTask"=action {
+		s kpiCode=$g(%request.Data("kpiCode",1))
+		s taskList=$g(%request.Data("taskList",1))
+		s taskLen=$l(taskList,"@")
+		s tip=##class(DHCWL.Interface.MKPI.KpiData).CheckKpiTaskByItface(taskList)
+		if (tip'="ok"){
+			w "{success:false,tip:'"_tip_"'}"
+			q
+		}
+		;w "list="_taskList,!
+		;w "para=",!
+		f i=1:1:taskLen {
+			k taskD
+			s task=$p(taskList,"@",i)
+			s taskD("DTaskKPIDR")=kpiCode
+			s taskD("DTaskMonthExcuteCode")=$p(task,"||",1)
+			s taskD("DTaskExcuteCode")=$p(task,"||",2)
+			s taskD("DTaskActiveFlag")=$p(task,"||",3)
+			s taskD("DTaskSectionDR")=##class(web.DHCWL.KPI.MaintainKpi).GetKpiSecByCode(taskD("DTaskMonthExcuteCode"))
+			;w taskD("DTaskKPIDR")_"  "_taskD("DTaskMonthExcuteCode")_"  "_taskD("DTaskExcuteCode")_"  "_task("DTaskActiveFlag")_"  "_taskD("DTaskSectionDR"),!
+			;s tip=""
+			s tip=##class(web.DHCWL.KPI.TaskService).AddTask(.taskD)
+			if tip'="ok" {
+				w "{success:false,tip:'"_tip_"'}"
+				q
+			}
+		}
+		w "{success:true,tip:'ok'}"
+	}elseif "deleteTask"=action {
+		s secCode=$g(%request.Data("secCode",1))
+		s kpiCode=$g(%request.Data("kpiCode",1))
+		s secId="",kpiId=""
+		s secId=##class(web.DHCWL.KPI.MaintainKpi).GetKpiSecByCode(secCode)
+		s kpiId=##class(DHCWL.MKPIService.ConfigService).GetKPIIdStrByCode(kpiCode)
+		s info=##class(web.DHCWL.KPI.TaskService).DeleteTask(kpiId,secId)
+		w "{success:true,tip:'"_info_"'}"
+	}elseif "updateTask"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		s selectSec=$g(%request.Data("selectSec",1))
+		;w "test",!,selectSec,$g(%request.Data("taskId",1)),!
+		;q
+		if (selectSec'="")&&(selectSec="undefined") s selectSec=""
+		s:selectSec'="" taskId=##class(web.DHCWL.KPI.TaskService).GetTaskId(kpiId,selectSec)
+		if $g(taskId)="" s taskId=$g(%request.Data("taskId",1))
+		/*
+		i taskId="" {
+			s info="无此任务代码！"
+			w "{success:true,info:'"_info_"'}"
+			q
+		}
+		*/
+		s task("id")=taskId
+		s task("kpiId")=kpiId
+		s task("section")=selectSec
+		s task("active")=$g(%request.Data("active",1))
+		s task("taskSecExc")=$g(%request.Data("taskSecExc",1))
+		s task("kpiExc")=$g(%request.Data("kpiExc",1))
+		s task("dimExc")=$g(%request.Data("dimExc",1))
+		;w "kpiExc="_task("kpiExc")_"&kpiId="_task("kpiId")_"&dimExc="_task("dimExc")
+		;q
+		s info=##class(web.DHCWL.KPI.TaskService).UpdateCreateTask(.task)
+		w "{success:true,info:'"_info_"'}"
+	}elseif "getTaskExc"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		s selectSec=$g(%request.Data("selectSec",1))
+		s exc=##class(web.DHCWL.KPI.TaskService).GetTaskExc(kpiId,selectSec)
+		i exc="" {
+			s info="该指标还没有设置此区间下的任务执行代码！"
+			w "{success:true,info:'"_info_"'}"
+			q
+		}
+		w "{success:true,info:'ok'}"
+	}elseif "getSectionMaxToMin"=action{
+		s kpiCode=$g(%request.Data("kpiCode",1))
+		s choiceKpiListStr=$g(%request.Data("choiceKpiListStr",1))
+		s len=$p(choiceKpiListStr,",")
+		if (len>0){
+			s configWrong=0
+			for i=1:1:len {
+				s theKpi=$p(choiceKpiListStr,",",i)
+				s theKpiId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(theKpi,"DHCWL.MKPI.MKPI")
+				continue:((theKpiId="")||('$d(^DHCWL.MKPI.MKPID(theKpiId))))
+				s kpiSec=$lg(^DHCWL.MKPI.MKPID(theKpiId),11)
+				if ((kpiSec="")||('$d(^DHCWL.MKPI.SectionD(kpiSec)))){
+					s configWrong=i
+					q
+				}
+			}
+			if (configWrong){
+				w "{success:true,sectionConfigFlag:true,wrongKpi:'"_$p(choiceKpiListStr,",",configWrong)_"'}"
+				q
+			}
+		}
+		if (kpiCode="") {
+			s fromSection=""
+		}else{
+			s kpiCode=##class(DHCWL.MKPIService.ConfigService).GetKPIIdStrByCode(kpiCode)
+			i +kpiCode=0 {
+				s fromSection=""
+			}else {
+				s kpi=##class(DHCWL.MKPI.MKPI).%OpenId(kpiCode)
+				i kpi.MKPISectionFlag="" s fromSection=""
+				e  s fromSection=kpi.MKPISectionFlag.%Id()
+			}
+		}
+		s enforce=##class(DHCWL.MKPIService.ConfigService).GetSectionMaxToMin(.sec)
+		s secList="",level=0,flag=0
+		s lev="" 
+		f  {
+			s lev=$o(sec(lev)) 
+			q:lev=""
+			i flag=1 q
+			s level=level+1
+			s secId="" 
+			f  {
+				s secId=$o(sec(lev,secId)) 
+				q:secId=""
+				i flag=1 q
+				i secId=$g(fromSection) s flag=1
+				//--modify by wz.2014-4-10
+				//s secList=secList_"{level:"_lev_",secId:"_secId_",SecCode:'"_$g(sec(lev,secId,"C"))_"',SecName:'"_$g(sec(lev,secId,"N"))_"',SecDirectParent:'"_$g(sec(lev,secId,"P"))_"'},"
+				//++modify by wz.2014-4-10
+				s secList=secList_"{level:"_lev_",secId:"_secId_",SecCode:'"_$g(sec(lev,secId,"C"))_"',SecName:'"_$g(sec(lev,secId,"N"))_"',SecDirectParent:'"_$g(sec(lev,secId,"P"))_"',SecDefExe:'"_$g(sec(lev,secId,"E"))_"'},"
+			}
+		}
+		s secList=$e(secList,1,$l(secList)-1)
+		w "{success:true,isEnforce:"_enforce_",sectionConfigFlag:false,level:"_level_",secList:["_secList_"]}"
+	}elseif "deleteTaskOS"=action {
+		s kpiCode=$g(%request.Data("kpiCode",1))
+		s tip=##class(web.DHCWL.KPI.TaskService).DeleteTaskRefSection(kpiCode)
+		i $l(tip,"@")=2 {
+			s deletSec=$p(tip,"@",2)
+			s tip=$p(tip,"@",1)
+			w "{success:true,tip:'"_tip_"',deleteSec:'"_deletSec_"'}"
+			q
+		}
+		w "{success:false,tip:'"_tip_"'}"
+	}elseif "saveExecuteCode"=action {
+		s kpiCode=$g(%request.Data("kpiCode",1))
+		s kpiId=##class(DHCWL.MKPIService.ConfigService).GetKPIIdStrByCode(kpiCode)
+		s exc("kpiId")=kpiId
+		s exc("kpiExc")=$g(%request.Data("kpiExc",1))
+		s exc("dimExc")=$g(%request.Data("dimExc",1))
+		s tip=##class(web.DHCWL.KPI.TaskService).UpdateCreateTask(.exc)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif "addKpiTaskTemplate"=action {
+		s deli="&"
+		s taskList=$g(%request.Data("taskList",1))
+		s taskLen=$l(taskList,"@")
+		s kpiIds=$g(%request.Data("kpiIds",1)),kpiLen=$l(kpiIds,",")
+		s tip=##class(DHCWL.Interface.MKPI.KpiData).CheckKpiTaskByItface(taskList)
+		if (tip'="ok"){
+			w "{success:false,tip:'"_tip_"'}"
+			q
+		}
+		
+		f i=1:1:taskLen {
+			s task=$p(taskList,"@",i)
+			continue:task=""
+			s secCode=$p(task,"||",1)
+			s DTaskExcuteCode=$p(task,"||",2)
+			s DTaskActiveFlag=$p(task,"||",3)
+			s DTaskSectionDR=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(secCode,"DHCWL.MKPI.Section")
+			s pro="DTaskSectionDR="_DTaskSectionDR_deli_"DTaskExcuteCode="_DTaskExcuteCode_deli_"DTaskActiveFlag="_DTaskActiveFlag_deli_"DTaskMonthExcuteCode="_secCode
+			continue:DTaskSectionDR=""
+			f j=1:1:kpiLen {
+				s kpiId=$p(kpiIds,",",j)
+				continue:kpiId=""
+				s taskId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiId_"||"_DTaskSectionDR,"DHCWL.MKPI.CreatDataTask")
+				i +taskId>0 {
+					s ope="U",whereStr=" where ID="_taskId
+				}else {
+					s ope="I",whereStr=""
+				}
+				d ##class(DHCWL.util.GetSetService).SetPropertyByStr("DHCWL.MKPI.CreatDataTask",pro_deli_"DTaskKPIDR="_kpiId,deli,ope,whereStr)
+			}
+		}
+		w "{success:true,tip:'ok'}"
+	}elseif "deleteTaskTemplate"=action {
+		/*
+		s kpiIds=$g(%request.Data("kpiIds",1)),kpiLen=$p(kpiIds,",")
+		s secCode=$g(%request.Data("secCode",1))
+		s secId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(secCode,"DHCWL.MKPI.Section")
+		f i=1:1:kpiLen {
+			s kpiId=$p(kpiIds,",",i)
+			s taskId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiId_"||"_secCode,"DHCWL.MKPI.CreatDataTask")
+			if +taskId>0 {
+				&sql(delete from DHCWL_MKPI.DHCWLCreatDataTask where DTask_KPI_DR=:kpiId and DTask_Section_DR=:secId)
+			}
+		}
+		w "{success:false,tip:'OK'}"
+		*/
+
+		s hasError=0
+		s kpiIds=$g(%request.Data("kpiIds",1)),kpiLen=$l(kpiIds,",")
+		f i=1:1:kpiLen {
+			s kpiId=$p(kpiIds,",",i)
+			s kpiCode=##class(DHCWL.MKPIIO.XMLIOConfige).GetCodeById(kpiId,"DHCWL.MKPI.MKPI")  
+			s tip=##class(web.DHCWL.KPI.TaskService).DeleteTaskRefSection(kpiCode)
+			
+			i $p(tip,"@",1)'="ok" {
+				s hasError=1
+				q
+			}
+		}
+		
+		if hasError=1 {
+			w "{success:false,tip:'"_"操作失败!"_"'}"
+		}else{
+			w "{success:true,tip:'ok'}"	
+		}
+		
+	}elseif "isConfiged"=action {
+		s kpiIds=$g(%request.Data("kpiIds",1)),kpiLen=$l(kpiIds,",")
+		s configed=0
+		f j=1:1:kpiLen {
+			s kpiId=$p(kpiIds,",",j)
+			if $d(^DHCWL.MKPI.CreatDataTaskI("KPI",kpiId)) {
+				s configed=1
+				q	
+			}
+		}
+
+		if configed=1 {
+			w "{success:true,tip:'要操作的指标已经配置了指标任务！'}"
+			q
+		}else{
+			w "{success:true,tip:'ok'}"
+		}
+	}elseif "getKpiSectionInfor"=action{
+		s secs=$g(%request.Data("secs",1))
+		s selNodeIDs=$g(%request.Data("kpiselNodeIDs",1))
+		s kpimoduleRptSign=$g(%request.Data("kpimoduleRptSign",1))
+		s sectionNumTotal=0
+		s secLength=$length(secs,",")
+		for i=1:1:secLength{
+			s sectionCodeExe=$p(secs,",",i)
+			q:sectionCodeExe=""
+			s sectionCode=$p(sectionCodeExe,":",1)
+			q:sectionCode=""
+			s sectionNum=""
+			s sectionNum=$o(^DHCWL.MKPI.SectionI("SecCode",sectionCode,sectionNum))
+			s sectionNumTotal=sectionNumTotal+sectionNum
+		}
+		s sectionList=##class(DHCWL.MKPIService.KpiModuleData).GetKpiSectionInfor(secs,sectionNumTotal,selNodeIDs,kpimoduleRptSign)
+		w "{root:["_sectionList_"]}"
+	}elseif "updateSection"=action{
+		s kpiCodes=$g(%request.Data("kpiCodes",1))
+		s secinfors=$g(%request.Data("secinfors",1))
+		s kpiselNodeIDs=$g(%request.Data("kpiselNodeIDs",1))
+		s kpimoduleRptSign=$g(%request.Data("kpimoduleRptSign",1))
+		s hasError=##class(DHCWL.MKPIService.KpiModuleData).SetSectionTask(kpiCodes,secinfors,kpiselNodeIDs,kpimoduleRptSign)
+		if hasError=1{
+			w "{success:true,tip:'ok'}"
+		}else{
+			w "{success:false,tip:'配置失败！'}"
+		}
+	}elseif "saveTaskGroup"=action{
+		s code=$g(%request.Data("Code",1))
+		s desc=$g(%request.Data("Desc",1))
+		s user=$g(%request.Data("User",1)) 
+		s sc=##class(web.DHCWL.KPI.TaskService).saveTaskGroup(code,desc,user)
+		w "{success:true,tip:'"_sc_"'}"
+	}elseif "modTaskGroup"=action{
+		s desc=$g(%request.Data("Desc",1))
+		s user=$g(%request.Data("User",1))
+		s groupID=$g(%request.Data("groupID",1))
+		s sc=##class(web.DHCWL.KPI.TaskService).modTaskGroup(desc,user,groupID)
+		w "{success:true,tip:'"_sc_"'}"
+	}elseif "delTaskGroup"=action{
+		s groupID=$g(%request.Data("groupID",1))
+		s sc=##class(web.DHCWL.KPI.TaskService).DelTaskGroup(groupID)
+		w "{success:true,tip:'"_sc_"'}"
+	}elseif "getTaskGroup"=action{
+		s deli="&"
+		s sql="select ID,DTask_GroupCode,DTask_GroupDesc,DTask_GroupUser from DHCWL_MKPI.DHCWLConfigTaskGroup"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s json=##class(DHCWL.util.Json).Json("groupID"_deli_"code"_deli_"desc"_deli_"user","result","root",deli)
+		s num=0
+		while(rs.Next()){
+			s num=num+1
+			i (num<(start)) continue
+			i ((end)<num) continue
+			d json.Insert("'"_rs.Data("ID")_"'"_deli_"'"_rs.Data("DTask_GroupCode")_"'"_deli_"'"_rs.Data("DTask_GroupDesc")_"'"_deli_"'"_rs.Data("DTask_GroupUser")_"'")
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		w json.GetHead()
+		d {
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif "deleteTaskDetail"=action{
+		s kpis=$g(%request.Data("kpis",1))
+		s groupID=$g(%request.Data("groupID",1))
+		if ((kpis="")||(groupID="")){
+			w "{success:true,tip:'删除信息为空,请刷新浏览器后重试'}"
+			q
+		}
+		s len=$l(kpis,","),flag=0
+		for i=1:1:len {
+			s kpi=$p(kpis,",",i)
+			s kpiCode=##class(DHCWL.MKPIIO.XMLIOConfige).GetCodeById(kpi,"DHCWL.MKPI.MKPI")
+			continue:kpiCode=""
+			&sql(delete from DHCWL_MKPI.DHCWLTaskGroupDetail where DTask_GroupDr=:groupID and DTask_KpiDr=:kpiCode)
+			if (SQLCODE'=0){
+				s flag=1
+				q
+			}
+		}
+		s sc="删除失败"
+		w:flag=1 "{success:true,tip:'"_sc_"'}"
+		w:flag=0 "{success:true,tip:'ok'}"
+		q
+	}elseif "saveTaskDetail"=action{                //保存任务组明细   
+		s kpis=$g(%request.Data("selectedKpiIds",1))
+		s groupID=$g(%request.Data("groupID",1))
+		s sc=##class(web.DHCWL.KPI.TaskService).SaveTaskDetail(kpis,groupID)
+		w "{success:true,tip:'"_sc_"'}"
+	}elseif ("getTaskDetail"=action){
+		s onePage=$g(%request.Data("onePage",1))
+		if (onePage=1){
+			s groupID=$g(%request.Data("groupID",1))
+			s searchValue=$g(%request.Data("searchValue",1))
+			s %session.Data("searchValue")=searchValue
+			s %session.Data("groupID")=groupID
+		}else{
+			s groupID=$g(%session.Data("groupID"))
+			s searchValue=$g(%session.Data("searchValue"))
+		}
+		s deli="&"
+		s sql="select a.ID,a.MKPI_Code,a.MKPI_Name from DHCWL_MKPI.DHCWLMKPI a,DHCWL_MKPI.DHCWLTaskGroupDetail b where a.MKPI_Code=b.DTask_KpiDr and b.DTask_GroupDr="_groupID_"order by a.ID"
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s json=##class(DHCWL.util.Json).Json("kpiID"_deli_"kpiCode"_deli_"kpiDesc"_deli_"kpiDim","result","root",deli)
+		s num=0
+		while (rs.Next()){
+			s ID=rs.Data("ID")
+			s code=rs.Data("MKPI_Code")
+			s desc=rs.Data("MKPI_Name")
+			s tempRes=""
+			s tempDim="" 
+			k kpiDimOrdered
+			f {
+				s tempDim=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimKPII",ID,tempDim))
+				q:($g(tempDim)="")||(tempDim=$c(0))
+				continue:(+tempDim<=0) 
+				s kpiDimId=""
+				f {
+					s kpiDimId=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimKPII",ID,tempDim,kpiDimId))
+					q:kpiDimId=""
+					s dimOrder=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),6)
+					s:(dimOrder="")||(dimOrder=$c(0)) dimOrder=1
+					s kpiDimOrdered(dimOrder)=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),4)   ;$list(^DHCWL.MKPI.MKPIDimTypeD(tempDim),5)
+				}	
+			}
+			s dimOrder=""
+			f {
+				s dimOrder=$o(kpiDimOrdered(dimOrder))
+				q:dimOrder=""
+				i tempRes="" s tempRes=kpiDimOrdered(dimOrder)
+				e  s tempRes=tempRes_","_kpiDimOrdered(dimOrder)
+			}
+			s dim=$g(tempRes)
+			s:(searchValue'="") searchValue=$zcvt(searchValue,"U")
+			continue:(searchValue'="")&&((ID '[ searchValue)&&(($zcvt(code,"U"))'[searchValue)&&(($zcvt(desc,"U")) '[ searchValue)&&(($zcvt(dim,"U"))'[ searchValue))
+			s num=num+1
+			i (num<(start)) continue
+			i ((end)<num) continue
+			d json.Insert("'"_ID_"'"_deli_"'"_code_"'"_deli_"'"_desc_"'"_deli_"'"_dim_"'")
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		w json.GetHead()
+		d {
+			s obj=json.Next()
+			w obj
+		}while (obj'="")
+		if json.GetCount()=0 w "]}"
+	}elseif "getKpiTaskGroup"=action{
+		d %response.Flush()
+		s groupID=$g(%request.Data("groupID",1))
+		s taskSysList=##class(DHCWL.MKPIIO.DefaultOutService).GetKpiTaskSystemList(groupID)
+		d ##class(DHCWL.MKPIIO.DefaultOutService).OutputTaskToStream(taskSysList,.outStream)
+		Set sc =##class(%XML.TextReader).ParseStream(outStream,.reader)
+		if (reader="") {
+			w "导出错误!"
+			q
+		}
+		d ##class(DHCWL.MKPIIO.DefaultOutService).TraverXmlToStr(reader)
+		
+	}elseif "UPTaskFile"=action{
+		s theStep=+$g(%request.Data("theStep",1))
+		s node="NODE"_$g(^DHCWL.MKPI.TEMPCONT("NODEINDEX"))
+		s wrong=0,wrongMes=""
+		s deli=##class(DHCWL.util.DirectoryFile).SetPathOS()
+		s deli=$p(deli,"||",2)
+		s tmp=##class(DHCWL.util.DirectoryFile).GetTempDir()
+		i $e(tmp,$l(tmp))'=deli s tmp=tmp_deli
+		s index=$g(^DHCWL.MKPI.TEMPCONT("NODEINDEX")) 
+		s fileName="tempDHCWLXML"_index_".xml"
+		s tempFile=tmp_fileName
+		s index=+index+1
+		s ^DHCWL.MKPI.TEMPCONT("NODEINDEX")=index
+		i ##class(%File).Exists(tempFile) d ##class(%File).Delete(tempFile)
+		s file=##class(%File).%New(tempFile)
+		d file.Open("WN")
+		for i=1:1:theStep {
+			s content=$g(%request.Data("Node"_i,1))
+			s ^DHCWL.MKPI.TEMPCONT("Node"_i)=content
+			s sc=file.Write(content)
+			if sc'=1 {
+				s wrongMes=sc
+				s wrong=1
+				q
+			}
+		}
+		d:file'="" file.Close()
+		s ^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",+$h,index-1)=tempFile
+		if wrong=0{
+			
+			Set sc =##class(%XML.TextReader).ParseFile(tempFile,.reader)
+			If $$$ISERR(sc) {
+				s ret=$System.Status.GetErrorText(sc)
+				w "{success:true,info:'wrong',tips:'解析文件时发生错误，请确认导入的文件是否正确！'}"
+				q	
+			}
+			w "{root:"
+			d ##class(DHCWL.MKPIIO.DefaultInService).JsonKpiTask(tempFile)
+			w ",tips:"""_fileName_""",tempFile:"""_tempFile_"""}"
+		}else {
+			w "{success:true,info:'wrong',tips:'文件上传失败！无法进行下面的操作'}"
+		}
+		//若历史上有没有删除掉的临时文件，则全部删除了。
+		s day=+$h f  s day=$o(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day),-1) q:day=""  d
+		.s indI="" f  s indI=$o(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day,indI)) q:indI=""  d
+		..s tf=$g(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day,indI))
+		..i tf'="" d
+		...i ##class(%File).Exists(tf) d ##class(%File).Delete(tf)
+		.k ^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day)
+	}elseif ("inputKpiTask"=action){
+		s isUpdate=+$g(%request.Data("isUpdate",1))
+		s fileName=$g(%request.Data("fileName",1))
+		s wrong=0,wrongMes=""
+		s deli=##class(DHCWL.util.DirectoryFile).SetPathOS()
+		s deli=$p(deli,"||",2)
+		s tmp=##class(DHCWL.util.DirectoryFile).GetTempDir()
+		i $e(tmp,$l(tmp))'=deli s tmp=tmp_deli
+		s tempFile=temp_fileName
+		s realInputTaskList=$g(%request.Data("realInputTaskList",1))
+		if (realInputTaskList=""){
+			w "{success:true,info:'ok',tips:'导入0个任务组'}"
+			i ##class(%File).Exists(tempFile) d ##class(%File).Delete(tempFile)
+			q
+		}
+		k ^TEMPDHCWL("REALINPUT",$j)
+		for i=$l(realInputTaskList,","):-1:1 {
+			s kpiCode=$p(realInputTaskList,",",i)
+			continue:kpiCode=""
+			s ^TEMPDHCWL("REALINPUT",$j,kpiCode)=kpiCode
+		}
+		if wrong=0{
+			s sc=##class(DHCWL.MKPIIO.DefaultInService).InputXML(tempFile)
+			k ^TEMPDHCWL("REALINPUT",$j)
+			i +sc=1 {
+				w "{success:true,info:'ok',tips:'任务组导入成功!'}" 
+			}else{
+				w "{success:true,info:'wrong',tips:'"_"任务组导入失败,"_sc_"'}"
+			}
+			q
+		}
+		w "{success:true,info:'wrong',tips:'"_wrongMes_"'}" 
+		q
+	}elseif(action="mulSearch"){
+		s deli="&"
+		s sql="select ID,MKPI_Code,MKPI_Name,MKPI_Desc,MKPI_EXCode,MKPI_GlobalFlag,MKPI_User,MKPI_UpdateDate,MKPI_Remark,MKPI_TypeDr,MKPI_Cate,MKPI_SectionFlag,MKPI_DataNod,MKPI_GetValueType from DHCWL_MKPI.DHCWLMKPI"
+		s orderSql=" order by ID",condSql="",noCond=" "
+		i $g(onePage)=1 {
+			s kpiId = $Get(%request.Data("kpiId",1))
+			s kpiCode = $Get(%request.Data("kpiCode",1))
+			s kpiName = $Get(%request.Data("kpiName",1))
+			s kpiDesc = $Get(%request.Data("kpiDesc",1))
+			s kpiExcode = $Get(%request.Data("kpiExcode",1))
+			s createUser = $Get(%request.Data("createUser",1))
+			s updateDate = $Get(%request.Data("updateDate",1))
+			s nodeMark=$Get(%request.Data("nodeMark",1))
+			s dataNode=$Get(%request.Data("dataNode",1))
+			s dimType=$Get(%request.Data("dimType",1))
+			s category=$Get(%request.Data("category",1))
+			s section=$Get(%request.Data("section",1))
+			s globalFlag=$Get(%request.Data("globalFlag",1))
+			s getValueType=$Get(%request.Data("getValueType",1))
+			s measure=$Get(%request.Data("measure",1))
+			s %session.Data("kpiId")=kpiId
+			s %session.Data("kpiCode")=kpiCode
+			s %session.Data("kpiName")=kpiName
+			s %session.Data("kpiDesc")=kpiDesc
+			s %session.Data("kpiExcode")=kpiExcode
+			s %session.Data("createUser")=createUser
+			s %session.Data("updateDate")=updateDate
+			s %session.Data("nodeMark")=nodeMark
+			s %session.Data("dimType")=dimType
+			s %session.Data("category")=category
+			s %session.Data("section")=section
+			s %session.Data("globalFlag")=globalFlag
+			s %session.Data("getValueType")=getValueType
+			s %session.Data("measure")=measure
+		}else{
+			s kpiId=$g(%session.Data("kpiId"))
+			s kpiCode=$g(%session.Data("kpiCode"))
+			s kpiName=$g(%session.Data("kpiName"))
+			s kpiDesc=$g(%session.Data("kpiDesc"))
+			s kpiExcode=$g(%session.Data("kpiExcode"))
+			s kpiExcode=$g(%session.Data("kpiExcode"))
+			s createUser=$g(%session.Data("createUser"))
+			s updateDate=$g(%session.Data("updateDate"))
+			s nodeMark=$g(%session.Data("nodeMark"))
+			s dimType=$g(%session.Data("dimType"))
+			s category=$g(%session.Data("category"))
+			s section=$g(%session.Data("section"))
+			s globalFlag=$g(%session.Data("globalFlag"))
+			s getValueType=$g(%session.Data("getValueType"))
+			s measure=$g(%session.Data("measure"))
+		}
+		s selKpiIDs = $Get(%request.Data("selKpiIDs",1))
+		if selKpiIDs'="" {
+			if condSql="" s condSql=condSql_" where"
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" ID in ("_selKpiIDs_")"
+		}
+		
+		if kpiId'="" {
+			if condSql="" s condSql=condSql_" where"
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" ID="_kpiId
+		}
+		if kpiCode'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MKPI_Code like '%"_kpiCode_"%'"
+		}
+		if kpiName'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MKPI_Name like '%"_kpiName_"%'"
+		}
+		if kpiDesc'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MKPI_Desc like '%"_kpiDesc_"%'"
+		}
+		if kpiExcode'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MKPI_EXCode like '%"_kpiExcode_"%'"
+		}
+		if createUser'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MKPI_User like '%"_createUser_"%'"
+		}
+		if updateDate'="" {
+			s searDate=##class(DHCWL.CommonUtil.DateUtil).DateHtmlToLogical(updateDate)
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			//s condSql=condSql_" MKPI_UpdateDate = '"_$zdh(updateDate,3)_"'"
+			s condSql=condSql_" MKPI_UpdateDate = '"_searDate_"'"
+		}
+		if nodeMark'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MKPI_Remark like '%"_nodeMark_"%'"
+		}
+		if $g(dataNode)'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			s condSql=condSql_" MKPI_DataNod like '%"_dataNode_"%'"
+		}
+		if globalFlag'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			if globalFlag="N" {
+				s condSql=condSql_" ((MKPI_GlobalFlag = '"_globalFlag_"')or(MKPI_GlobalFlag is null))"
+			}else{
+				s condSql=condSql_" MKPI_GlobalFlag = '"_globalFlag_"'"
+			}
+		}
+		if getValueType'="" {
+			if condSql="" s condSql=condSql_" where "
+			e  s condSql=condSql_" and "
+			if getValueType="1" {
+				s condSql=condSql_" ((MKPI_GetValueType = '"_getValueType_"')or(MKPI_GetValueType is null))"
+			}else{
+				s condSql=condSql_" MKPI_GetValueType = '"_getValueType_"'"
+			}
+		}		
+		if dimType'="" {
+			s dimLen=$l(dimType,","),dimDeli=","
+			s:dimLen<2 dimLen=$l(dimType,"，"),dimDeli="，"
+			k ID,filterKpiArr
+			f i=1:1:dimLen {
+				s theDimName=$p(dimType,dimDeli,i)
+				i theDimName="" s ID(i,0)=""
+				i (theDimName="")&&(dimLen>1) continue
+				s searcheSql="select MKPI_Dr from  DHCWL_MKPI.DHCWLMKPIDim where MKPIDim_Des like '%"_theDimName_"%'"
+				s condRs=##class(%Library.ResultSet).%New()
+				d condRs.Prepare(searcheSql)
+				d condRs.Execute()
+				While(condRs.Next()){
+					s mkpiDr=condRs.Data("MKPI_Dr")
+					continue:((mkpiDr="")||(+mkpiDr=0))
+					s filterKpiArr(mkpiDr)=$g(filterKpiArr(mkpiDr))+1
+				}
+				d condRs.Close()
+			}
+			s searcheDimFlag=1
+		}
+		if measure'="" {
+			s meaLen=$l(measure,","),meaDeli=","
+			s:meaLen<2 meaLen=$l(measure,"，"),meaDeli="，"
+			k ID,KpiMeaArr
+			f i=1:1:meaLen {
+				s theMeaName=$p(measure,meaDeli,i)
+				i theMeaName="" s ID(i,0)=""
+				i (theMeaName="")&&(meaLen>1) continue
+				s searcheSql="select a.Mea_Desc,b.MKPI_KpiDr from DHCWL_MKPI.DHCWLMKPIMeasure b,DHCWL_MeasureDimrole.DHCWLMeasure a where b.MKPI_MeaDr=a.ID and a.Mea_VoidFlag is null and a.Mea_Desc like '%"_theMeaName_"%'"
+				s condRs=##class(%Library.ResultSet).%New()
+				d condRs.Prepare(searcheSql)
+				d condRs.Execute()
+				While(condRs.Next()){
+					s mkpiDr=condRs.Data("MKPI_KpiDr")
+					continue:((mkpiDr="")||(+mkpiDr=0))
+					s KpiMeaArr(mkpiDr)=$g(KpiMeaArr(mkpiDr))+1
+				}
+				d condRs.Close()
+			}
+			s searcheMeaFlag=1
+		}
+		if category'="" {
+			s searcheSql="select ID from DHCWL_MKPI.DHCWLMKPIFL where MKPIFL_Name like '%"_category_"%'"
+			s condRs=##class(%Library.ResultSet).%New()
+			d condRs.Prepare(searcheSql)
+			d condRs.Execute()
+			While(condRs.Next()){
+				s ID(condRs.Data("ID"))=""
+			}
+			d condRs.Close()
+			s ids="",tempId="" f  s tempId=$o(ID(tempId)) q:tempId=""  d
+			.s ids=ids_tempId_","
+			s ids=$e(ids,1,$l(ids)-1)
+			if $g(ids)'="" {
+				if condSql="" s condSql=condSql_" where "
+				e  s condSql=condSql_" and "
+				s condSql=condSql_" MKPI_Cate in ("_ids_")"
+			}
+			
+			k ID
+		}
+		if section'="" {
+			s searcheSql="select ID from DHCWL_MKPI.DHCWLSection where Sec_Name like '%"_section_"%'"
+			s condRs=##class(%Library.ResultSet).%New()
+			d condRs.Prepare(searcheSql)
+			d condRs.Execute()
+			While(condRs.Next()){
+				s ID(condRs.Data("ID"))=""
+			}
+			d condRs.Close()
+			s ids="",tempId="" f  s tempId=$o(ID(tempId)) q:tempId=""  d
+			.s ids=ids_tempId_","
+			s ids=$e(ids,1,$l(ids)-1)
+			if $g(ids)'="" {
+				if condSql="" s condSql=condSql_" where "
+				e  s condSql=condSql_" and "
+				s condSql=condSql_" MKPI_SectionFlag in ("_ids_")"
+			}
+			k ID
+		}
+		s sql=sql_" "_condSql_orderSql
+		//s ^TEMPDHCWL("wk","test","sql")=sql
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s json=##class(DHCWL.util.Json).Json("id"_deli_"kpiCode"_deli_"kpiName"_deli_"kpiDesc"_deli_"kpiExcode"_deli_"MKPIGlobalFlag"_deli_"createUser"_deli_"updateDate"_deli_"nodeMark"_deli_"dimType"_deli_"category"_deli_"section"_deli_"dataNode"_deli_"getValueType","result","root",deli)
+		s num=0
+		;zw filterKpiArr
+		//读入可选项结束
+		While(rs.Next()){
+			s rowKpiId=rs.Data("ID")
+			s filterKpiCode=rs.Data("MKPI_Code")
+			continue:$d(^DHCWL.MKPI.TaskGroupDetailI("kpi"," "_$ZCVT(filterKpiCode,"U")))
+			i searcheDimFlag=1 {
+				if ('$d(filterKpiArr(rowKpiId))) continue
+			}
+			i searcheMeaFlag=1 {
+				if ('$d(KpiMeaArr(rowKpiId))) continue
+			}
+			s num=num+1
+			i (+isArrayType'=1)&&(num<(start)) continue
+			i (+isArrayType'=1)&&((end)<num) continue
+			s date=rs.Data("MKPI_UpdateDate"),cate=rs.Data("MKPI_Cate"),dim=rs.Data("MKPI_TypeDr"),sect=rs.Data("MKPI_SectionFlag")
+			s cateId=cate,dimId=dim,sectId=sect
+			if cate="" {
+				s cate=""
+			}elseif $g(^DHCWL.MKPI.MKPIFLD(cate))'="" {
+				s cate=$list(^DHCWL.MKPI.MKPIFLD(cate),5)
+				;s cate=cate
+			}else{
+				s cate=""
+			}
+			i (1=1)||(dim="")||(dim=$c(0)) {
+				s tempRes=""
+				s tempDim="" 
+				k kpiDimOrdered
+				f {
+					s tempDim=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimKPII",rowKpiId,tempDim))
+					q:($g(tempDim)="")||(tempDim=$c(0))
+					continue:(+tempDim<=0) 
+					s kpiDimId=""
+					f {
+						s kpiDimId=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimKPII",rowKpiId,tempDim,kpiDimId))
+						q:kpiDimId=""
+						s dimOrder=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),6)
+						s:(dimOrder="")||(dimOrder=$c(0)) dimOrder=1
+						s kpiDimOrdered(dimOrder)=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),4)   ;$list(^DHCWL.MKPI.MKPIDimTypeD(tempDim),5)
+					}	
+				}
+				s dimOrder=""
+				f {
+					s dimOrder=$o(kpiDimOrdered(dimOrder))
+					q:dimOrder=""
+					i tempRes="" s tempRes=kpiDimOrdered(dimOrder)
+					e  s tempRes=tempRes_","_kpiDimOrdered(dimOrder)
+				}
+				s dim=$g(tempRes)
+				;s dim=""
+			}elseif $d(^DHCWL.MKPI.MKPIDimTypeD(dim)) {
+				s tempRes=""
+				s tempDim="" 
+				f {
+					s tempDim=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimKPII",rowKpiId,tempDim))
+					q:($g(tempDim)="")||(tempDim=$c(0))
+					continue:(+tempDim<=0)||('$d(^DHCWL.MKPI.MKPIDimTypeD(tempDim)))
+					i tempRes="" s tempRes=$list(^DHCWL.MKPI.MKPIDimTypeD(tempDim),5)
+					e  s tempRes=tempRes_","_$list(^DHCWL.MKPI.MKPIDimTypeD(tempDim),5)
+				}
+				s:($g(tempRes)="") tempRes=$list(^DHCWL.MKPI.MKPIDimTypeD(dim),5)
+				s dim=$g(tempRes)
+			}
+			//获取指标度量
+			s tempMea="",tempMeaCodes=""
+			for{
+				s tempMea=$o(^DHCWL.MKPI.MKPIMeasureI("MKPIMeaI",rowKpiId,tempMea))
+				q:tempMea=""
+				if (tempMeaCodes)="" s tempMeaCodes=$lg(^DHCWL.MeasureDimrole.MeasureD(tempMea),3)
+				e  s tempMeaCodes=tempMeaCodes_","_$lg(^DHCWL.MeasureDimrole.MeasureD(tempMea),3)
+			}
+			s measureInfor=$g(tempMeaCodes)
+			i sect="" {
+				s setc=""
+			}elseif $g(^DHCWL.MKPI.SectionD(sect))'="" {
+				;s sectCode=$list(^DHCWL.MKPI.SectionD(sect),2)
+				s sect=$list(^DHCWL.MKPI.SectionD(sect),4)
+			}else {
+				s sect=""
+			}
+			//modify by wk~2017-03-03~公司时间控件标准化
+			//s:date'="" date=$zd(+date,3)
+			s:date'="" date=##class(DHCWL.CommonUtil.DateUtil).DateLogicalToHtml(date)
+			//插入一个json对象格式
+			s getValueType=rs.Data("MKPI_GetValueType")
+			if getValueType=1 {
+				s getValueType="普通指标"
+			}elseif getValueType=2 {
+				s getValueType="计算指标"
+			}
+			s rs.Data("MKPI_Name")=##class(DHCWL.util.StringUtil).ReplaceStr(rs.Data("MKPI_Name"),"'","\'")
+			s rs.Data("MKPI_Desc")=##class(DHCWL.util.StringUtil).ReplaceStr(rs.Data("MKPI_Desc"),"'","\'")
+			s rs.Data("MKPI_EXCode")=##class(DHCWL.util.StringUtil).ReplaceStr(rs.Data("MKPI_EXCode"),"'","\'")
+			s rs.Data("MKPI_User")=##class(DHCWL.util.StringUtil).ReplaceStr(rs.Data("MKPI_User"),"'","\'")
+			s rs.Data("MKPI_Remark")=##class(DHCWL.util.StringUtil).ReplaceStr(rs.Data("MKPI_Remark"),"'","\'")
+			s rs.Data("MKPI_DataNod")=##class(DHCWL.util.StringUtil).ReplaceStr(rs.Data("MKPI_DataNod"),"'","\'")
+			s dim=##class(DHCWL.util.StringUtil).ReplaceStr(dim,"'","\'")
+			d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("MKPI_Code")_"'"_deli_"'"_rs.Data("MKPI_Name")_"'"_deli_"'"_rs.Data("MKPI_Desc")_"'"_deli_"'"_rs.Data("MKPI_EXCode")_"'"_deli_"'"_rs.Data("MKPI_GlobalFlag")_"'"_deli_"'"_rs.Data("MKPI_User")_"'"_deli_"'"_date_"'"_deli_"'"_rs.Data("MKPI_Remark")_"'"_deli_"'"_dim_"'"_deli_"'"_cate_"'"_deli_"'"_sect_"'"_deli_"'"_rs.Data("MKPI_DataNod")_"'"_deli_"'"_getValueType_"'"_deli_"'"_measureInfor_"'")
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}
+</script>

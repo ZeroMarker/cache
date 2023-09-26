@@ -1,0 +1,29 @@
+<csp:content charset="utf-8">
+<CSP:CLASS ERRORPAGE="CIS.AN.Error.csp">
+<server>
+	//If ##Class(websys.SessionEvents).SessionExpired() Quit $$$ERROR($$$CSPSessionTimeout)
+	new result,execute,i
+		kill PLIST
+		set className=%request.Data("ClassName",1)
+		set methodName=%request.Data("MethodName",1)
+		set execute="set result=$classmethod("_""""_className_""""_","_""""_methodName_""""
+		if (%request.Get("ArgCnt")="")
+		{
+			set execute=execute_","_%request.Data("Params",1)	
+		}
+		else
+		{
+			set argCount=%request.Data("ArgCnt",1)
+			for i=1:1:argCount
+			{
+				set argName="Arg"_i
+				set PLIST(i)=%request.Data(argName,1)
+				set execute=execute_",PLIST("_i_")"	
+			}	
+		}
+		
+		set execute=execute_")"
+		x execute
+		write result
+	
+</server>

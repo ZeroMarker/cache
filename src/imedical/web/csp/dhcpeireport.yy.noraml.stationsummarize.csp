@@ -1,0 +1,55 @@
+
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		Q:(0=$D(StationId))
+		s StationDesc=$G(^TMPReport("Summarize", "Station", StationId))
+		Q:(""=StationDesc)
+		s StationTitle=StationDesc_"小结:"
+		s Summarize=$G(^TMPReport("Summarize", "Content", StationDesc))
+
+		
+		s SummarizeData=""
+		f iLLoop=1:1:$L(Summarize,$C(13,10)) d
+		.s SummarizeData=SummarizeData_$P(Summarize,$C(13,10),iLLoop)_"<br>"
+		.//
+		.//i i'=$L(Summarize,$C(13,10)) s SummarizeData=SummarizeData_"<br>"
+		Q:(""=SummarizeData)
+		s Summarize=SummarizeData
+		s SummarizeData=""
+		f iLLoop=1:1:$L(Summarize,$C(32)) d
+		.s SummarizeData=SummarizeData_$P(Summarize,$C(32),iLLoop)_"&nbsp;"
+		.
+		
+		s SummarizeAduitUser=$G(^TMPReport("Summarize", "Content", StationDesc, "AduitUser"))
+		s AduitDate=$G(^TMPReport("Summarize", "Content", StationDesc, "AduitDate"))
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="Summarize"
+		e  d
+		.s DIVClass="Page Summarize"
+		//i SummarizeData="<br>&nbsp;" s SummarizeData="<br>未见异常&nbsp;"
+		i SummarizeData="<br>&nbsp;" s StationTitle=""
+	</Script>
+<TABLE border=0 class="SummarizeTable">
+	<CSP:IF CONDITION=(""'=StationTitle)>	
+<!--DIV class='#(DIVClass)#'-->
+	
+		<THEAD>
+			<TR>
+				<TD width="663" class="SummarizeTitle">#(StationTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+			<TR>
+				<TD>
+					<P class="SummarizeData">#(SummarizeData)#</P>
+				</TD>		
+			</TR>
+		</TBODY>
+		</CSP:IF>
+		<TFOOT>
+				<!--TR>
+					<!--TD class='LISFooter LISFooterChecker' colspan=3></TD-->
+					<!--TD width=580 class='Summarize SummarizeFooterCheckDate'>医生:#(Checker)#</TD>
+				</TR-->
+		</TFOOT>
+</TABLE>
+<!--/DIV-->

@@ -1,0 +1,243 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	<style>
+	.combobox-width-150{
+       width:150px;     
+    }
+    .width-text{
+        width:133px;
+    }
+    .height-430{
+		height: 430px;	
+	}
+    #ViewField{
+		width:300px;
+		height:100px;    
+	}
+	#CheckResult{
+		width:302px;	
+	}
+	#checkfm{
+		margin-top:26px;
+	}
+	.panel-body{
+		border-top-width:1px;
+		border-left-width:1px;
+		border-right-width:1px;
+	}
+	.padding-top-8{
+		padding-top:8px;	
+	}
+	</style>
+</HEAD>
+<BODY class="hisui-layout">
+	<div class="border-none" data-options="region:'center'">
+		<div id="tb">
+			<div id="tbfm" class="padding-10">
+				<table class="text-right">
+					<tr>
+						<td>申请年月</td>
+						<td class="padding-both-10">
+							<input id="YMbox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td>申请单号</td>
+						<td class="padding-both-10">
+							<input id="ApplyCbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td>申请人</td>
+						<td class="padding-both-10">
+							<input id="Applyerbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td>审批金额范围</td>
+						<td class="padding-both-10">
+							<input id="StPricebox" class="hisui-numberbox" style="width:150px;" data-options="min:0,precision:2"/>	
+						</td>
+						<td>
+							<a id="FindBn" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+						</td>				
+					</tr>
+					<tr>
+						<td class="padding-top-8">归口科室</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="OwnDeptbox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td class="padding-top-8">申请科室</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="ApplyDbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td class="padding-top-8">单据状态</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="Statebox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td class="padding-spac">至</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="EdPricebox" class="hisui-numberbox" style="width:150px;" data-options="min:0,precision:2"/>	
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>		 	
+		<table id="MainGrid">
+		</table>
+	</div>
+	<!--审批窗口-->
+	<div id="CheckWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div id="checkcenter" class="padding-10-bottom-none" data-options="region:'center'">
+				<div id="checkfm" class="flex-x-center">
+					<table class="text-right">
+						<tr>
+							<td>审批结果</td>
+							<td class="padding-left-10">
+								<input id="CheckResult" class="hisui-combobox"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="padding-top-10">审批意见</td>
+							<td class="padding-topl-10">
+								<textarea id="ViewField" ></textarea>
+							</td>
+						</tr>
+					</table>
+				</div>	
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="CheckSave" class="hisui-linkbutton width-70">确定</a>
+				<span class="padding-right-10"></span>
+				<a id="CheckClose" class="hisui-linkbutton width-70">取消</a>
+			</div>
+		</div>
+	</div>
+	<!--单据状态窗口-->
+	<div id="BillState" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout"data-options="fit:true">
+            <div class="padding-10-bottom-none" data-options="region:'center'" >
+                <table id="StateGrid">       
+                </table>
+            </div>
+            <div class="bottom-style"  data-options="region:'south'">
+                <a id="StateClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+            </div>
+        </div>
+    </div>
+	<!--修改报销单窗口-->
+	<div id="EditWin" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout height-430" data-options="fit:true">
+            <div id="Editnorth">
+				<div id="Editform" class="padding-topbot-10 flex-x-center x-separator">
+                   <table class="text-right">
+                   		<tr>
+							<td>申请单号</td>
+							<td class="padding-both-10">
+								<input disabled id="EditApplyC" class="textbox width-text"/>
+							</td>
+							<td class="padding-left-10">申请人</td>
+							<td class="padding-both-10">
+								<input id="EditUser" class="hisui-combobox"/>	
+							</td>
+							<td class="padding-left-10">申请科室</td>
+							<td class="padding-both-10">
+								<input id="EditDept" class="hisui-combobox"/>	
+							</td>
+							<td class="padding-left-10">审批流</td>
+							<td class="padding-both-10">
+								<input id="EditCheckFlow" class="hisui-combobox"/>
+							</td>
+						</tr>
+						<tr>
+							<td>预算期</td>
+							<td class="padding-10">
+								<input id="EditYM" class="hisui-combobox"/>
+							</td>
+							<td class="padding-left-10">支付方式</td>
+							<td class="padding-10">
+								<input id="EditPay" class="hisui-combobox"/>	
+							</td>
+							<td class="padding-left-10">银行</td>
+							<td class="padding-10">
+								<input disabled id="EditBank" class="textbox width-text"/>	
+							</td>
+							<td class="padding-left-10">银行卡号</td>
+							<td class="padding-10">
+								<input disabled id="EditNumber" class="textbox width-text"/>	
+							</td>
+						</tr>
+						<tr>
+							<td>归口科室</td>
+							<td class="padding-both-10">
+								<input id="EditOwn" class="hisui-combobox"/>
+							</td>
+							<td class="padding-left-10">冲抵借款</td>
+							<td class="padding-both-10" style="text-align: left;">
+								<input id="EditChargeAgst" class="hisui-checkbox" type="checkbox" data-options="onCheckChange:function(event,value){console.log(value)}"/>	
+							</td>
+							<td class="padding-left-10">借款单号</td>
+							<td class="padding-both-10">
+								<input readonly id="EditFundApply" class="textbox width-text"/>	
+							</td>
+							<td class="padding-left-10">报销说明</td>
+							<td class="padding-both-10">
+								<input id="EditDesc" class="textbox width-text"/>	
+							</td>
+						</tr>
+		   			</table>
+				</div>
+				<div class="line-36-y">
+					<table>
+						<tr>
+							<td>
+								<a id="EditAddDetail" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+							</td>
+							<td>
+								<a id="EditDelBt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>	
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="padding-10-bottom-none" data-options="region:'center'" >
+				<table id="EditMainGrid">		
+				</table>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="EditSave" class="hisui-linkbutton width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="EditClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div>
+	<!--创建差旅费窗口-->
+	<div id="AddTravel" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="padding-10-bottom-none" data-options="region:'center'" >
+				<table id="TravelGrid">		
+				</table>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="TrSave" class="hisui-linkbutton width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="TrClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div>  		   
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimExamin/budgcostclaimexamimain.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimExamin/billstate.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimExamin/editfun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimExamin/CostTravelPage.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimExamin/examine.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimExamin/addReqFun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+</BODY>
+</HTML>

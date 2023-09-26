@@ -1,0 +1,140 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--dhcdoc.deathtypediag.csp 死亡诊断分类诊断列表-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+    <meta http-equiv="Content-Type" content="text/html;"/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI></HISUI>
+    <style>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+		padding: 0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.panel-header{
+		border-bottom: 0;
+	}
+	#panel-footer{
+		text-align: center;
+		height:150px;
+		line-height:150px;
+	}
+	</style>
+</head>
+<server>
+s EpisodeID=%request.Get("EpisodeID")
+s mradm=$p(^PAADM(EpisodeID),"^",61)
+//出院诊断id
+s DISDiagnosTypeRowId=$O(^MRC("DTYP",0,"Code","DIS",0))
+//确诊
+s DiaD=$O(^MRC("DSTAT",0,"Desc","确诊",0))
+</server>
+<body class="hisui-layout" data-options="fit:true,border:false">
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:51px;"> 
+  		<table class="search-table">
+        	<tr>
+        		<td class="r-label">
+        			诊断名称/别名
+        		</td>
+        		<td>
+        			<input class="textbox" id="Text_InputStr" placeholder="请输入诊断查询..." style="width:253px;"/>
+        		</td>
+        		<td class="r-label">
+        			<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>
+        		</td>
+        	</tr>
+        </table>
+  	</div>
+  	<div data-options="region:'center',split:false,title:''" style="border-color:#ccc;"> 
+  		<table id="DeathTypeDiagList"></table>
+  	</div>
+  	<div data-options="region:'south',split:false,title:'',border:false" style="height:50px;text-align:center;padding:10px;">
+  		 <a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确定</a>
+  		 <a href="#" id="BClose" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:50px;">关闭</a>
+  	</div>
+  	<SCRIPT language = 'javascript' >
+  		var PageLogicObj={
+			m_DeathTypeDiagListGrid:""
+		}
+		var EpisodeID="#(EpisodeID)#";
+		var mradm="#(mradm)#";
+		var DISDiagnosTypeRowId="#(DISDiagnosTypeRowId)#";
+		var DiaD="#(DiaD)#";
+  		$(function(){
+			PageLogicObj.m_DeathTypeDiagListGrid=InitDeathTypeDiagListGrid();
+			$('#BFind').click(function(){
+				PageLogicObj.m_DeathTypeDiagListGrid.datagrid('load',{
+					desc:$("#Text_InputStr").val()
+				});
+			});
+			$('#BSave').click(BSaveClickHandle);
+			$("#BClose").click(function(){
+				websys_showModal('options').CallBackFunc("");
+			});
+		});
+		function InitDeathTypeDiagListGrid(){
+			var Columns=[[
+					{field:'ICDDr',title:'',checkbox:'true'},
+		 			{field:'ICDDesc',title:'诊断名称',width:150},
+		 			{field:'ICDCode',title:'诊断编码',width:100}
+    			 ]];
+			var DeathTypeDiagListGrid=$("#DeathTypeDiagList").datagrid({  
+				fit : true,
+				border : false,
+				striped : true,
+				singleSelect : true,
+				fitColumns : true,
+				autoRowHeight : false,
+				url : $URL+"?ClassName=web.DHCDocDiagnosEntryV8&QueryName=GetDeathTypeICDList&desc="+$("#Text_InputStr").val()+"&EpisodeID="+EpisodeID,
+				loadMsg : '加载中..',  
+				pagination : true,  
+				pageSize: 20,
+				pageList : [20,50,100],
+				columns :Columns,
+		    	idField:'ICDDr',
+		    	onLoadSuccess:function(data){
+			    	$(this).datagrid('unselectAll');
+			    }
+			});
+			return DeathTypeDiagListGrid;
+	 }
+	 function BSaveClickHandle(){
+		 var row=PageLogicObj.m_DeathTypeDiagListGrid.datagrid('getSelected');
+		 if (!row){
+			 $.messager.alert("提示","请至少选择一条记录!");
+			 return false;
+		 }
+		 var ICDDr=row['ICDDr'];
+		 //插入诊断表
+		 var DiagItemStr=""+"^"+""+"^"+ICDDr+"^"+DISDiagnosTypeRowId+"^"+"N";
+		 DiagItemStr=DiagItemStr+"^"+DiaD+"^"+""+"^"+""+"^"+""+"^"+"";
+		 DiagItemStr=DiagItemStr+"^"+""+"^"+"";
+		 var Err = $.cm({
+			ClassName:"web.DHCDocDiagnosEntryV8",
+			MethodName:"InsertMRDiagnos",
+			mradm:mradm, DiagItemStr:DiagItemStr, AdmPara:"", CTLocRowId:session['LOGON.CTLOCID'], UserRowId:session['LOGON.USERID'],
+			dataType:"text"
+		 },false);
+		 var SeccessFlag=Err.split('^')[0];
+		 if (SeccessFlag=='0') {
+			 if (websys_showModal('options').CallBackFunc) {
+				 websys_showModal('options').CallBackFunc(ICDDr);
+			 }else{
+				window.returnValue=ICDDr;
+			 	window.close();
+			 }
+		 }else{
+			 $.messager.alert("提示","插入死亡诊断失败!");
+			 return false;
+		 }
+	 }
+  	</SCRIPT>
+</body>
+</html>

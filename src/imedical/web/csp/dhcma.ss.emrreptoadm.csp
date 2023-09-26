@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+	</head>
+	<body>
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/SS/emrreptoadm/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/SS/emrreptoadm/Event.js"></script>
+	    <script language="Cache" RUNAT="SERVER">		
+            Set LogonLocID=%session.Data("LOGON.CTLOCID")         //登录科室
+            Set LogonUserID=%session.Data("LOGON.USERID")         //登录用户
+			Set LogonHospID=$p($g(^CTLOC(+LogonLocID)),"^",22)
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))        //就诊号
+			Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)         //病人基本信息ID
+			Set AdmType = $p($g(^PAADM(+EpisodeID)),"^",2)
+			//格式: EPD-2-传染病报告,INF-3-医院感染报告,DTH-2-死亡证明书,CR-1-肿瘤报卡
+			If AdmType="I" {
+				Set RepTypeList=##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSClinRepToAdmIP","")
+			} ElseIf AdmType="O" {
+				Set RepTypeList=##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSClinRepToAdmOP","")
+			} ElseIf AdmType="E" {
+				Set RepTypeList=##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSClinRepToAdmEP","")
+			} Else {
+				Set RepTypeList=""
+			}
+			
+			Set CDTypeList=##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSClinCDRepType","")
+			Set SubjectCode=$g(%request.Data("SubjectCode",1))           //登录科室
+			Set:SubjectCode="" SubjectCode="INTCCS"
+			
+			Set SubjectID=""
+			Set objConfig=##class(DHCMed.CC.SubjectConfig).GetObjByCode(SubjectCode)
+			If $IsObject(objConfig){
+				Set xSubjectCode=objConfig.SubjectCode
+				Set objSubject=##class(DHCMed.CC.Subject).GetObjByCode(xSubjectCode)
+				If $IsObject(objSubject){
+					Set SubjectID=objSubject.%Id()
+				}
+			}
+			Set DoctorFlag=""
+			Set LogUser=%session.Data("LOGON.USERID")
+			Set LogUserType=##Class(DHCMed.SSService.CommonCls).getCPTInternalType(LogUser)
+			Set:LogUserType="DOCTOR" DoctorFlag="D"
+			//医院感染管理V4.0就诊转换
+			Set HAIEpisodeDr=##class(DHCHAI.CUS.ToClinReport).GetEpisodeDr(EpisodeID)
+			Set HAILocDr=##class(DHCHAI.CUS.ToClinReport).GetLocDr(LogonLocID)
+			Set HAIUserDr=##class(DHCHAI.CUS.ToClinReport).GetUserDr(LogonUserID,LogonLocID)
+			Set IsExistReport = ##Class(DHCMed.SSService.ConfigSrv).IsExistReport(EpisodeID,HAIEpisodeDr,RepTypeList)
+	   </script>
+	    <script language="javascript" type="text/javascript">
+			var LogonLocID='#(LogonLocID)#';
+			var LogonHospID='#(LogonHospID)#';
+			var EpisodeID='#(EpisodeID)#';
+			var PatientID='#(PatientID)#';
+			var RepTypeList='#(RepTypeList)#';
+			var SubjectCode='#(SubjectCode)#';
+			var SubjectID='#(SubjectID)#';
+			var AdmType='#(AdmType)#';
+			var CDTypeList='#(CDTypeList)#';
+			var DoctorFlag='#(DoctorFlag)#'
+			var HAIEpisodeDr='#(HAIEpisodeDr)#';
+			var HAILocDr='#(HAILocDr)#';
+			var HAIUserDr='#(HAIUserDr)#';
+			var IsExistReport = '#(IsExistReport)#';
+			$(document).ready(function(){
+				var url = "../scripts/DHCMA/SS/emrreptoadm/Layout.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					InitEmrRepAdmWin();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+		</script>
+	</body>
+</html>

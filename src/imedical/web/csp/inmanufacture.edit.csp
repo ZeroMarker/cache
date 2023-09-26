@@ -1,0 +1,75 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+//i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SCRIPT language="Javascript">
+function mPiece(s1,sep,n) {
+	//Getting wanted piece, passing (string,separator,piece number)
+	//First piece starts from 0
+	//Split the array with the passed delimeter
+	delimArray = s1.split(sep);
+	//If out of range, return a blank string
+	if ((n <= delimArray.length-1) && (n >= 0)) return delimArray[n];
+}
+
+</SCRIPT>
+
+<SERVER>
+	s (RecipeID,StockID,RecUOM,RecQty,RecNumber,INMANAmount,sterile)=""
+
+	;log 55195 BoC 31-08-2006 pass sterile
+	s sterile=%request.Get("sterile")
+	s FROM=%request.Get("FROM")
+
+	s ManufactureID=%request.Get("ManufactureID")
+	i ManufactureID="" d
+	. s StockID=%request.Get("StockID")
+	. s RecNumber=%request.Get("RecNumber")
+	. s RecUOM=%request.Get("RecUOM")
+	. s RecQty=%request.Get("RecQty")
+	. s INMANAmount=%request.Get("INMANAmount")
+
+	s Percentage=""
+	s TopPerc=$p(Percentage,"^",1)
+	i TopPerc="" s TopPerc="55"
+	;s MidPerc=$p(Percentage,"^",2)
+	;i MidPerc="" s MidPerc="20"
+	i '$g(^COUNT("STOCK",1,"MO_Len")) d  q
+	. n t
+	. d ##Class(websys.Component).GetComponentMessages(.t,"InManufacture.Edit")
+	. w "<BODY>"
+	. w "<B>"_$g(t("NOCOUNTER"),"No Manufacture Order Counter Defined")_"</B>"
+ ; onload="DocumentLoadHandler();" (removed from frameset 50310)
+</SERVER>
+
+<frameset rows="#(TopPerc)#%,*"  border="0" scrolling="auto">
+  <frame name="ManufactureHeader" scrolling="auto"
+	src="websys.default.csp?WEBSYS.TCOMPONENT=InManufacture.Edit&ID=#(ManufactureID)#&StockID=#(StockID)#&RecNumber=#(RecNumber)#&RecUOM=#(RecUOM)#&RecQty=#(RecQty)#&INMANAmount=#(INMANAmount)#&sterile=#(sterile)#&FROM=#(FROM)#">
+  <frameset cols="50%,*" >
+  	<frame name="ManufactureRecipe" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="0">
+  	<frame name="ManufactureItemBatch" marginwidth="0" marginheight="0" frameborder="yes" framespacing="0">
+  </frameset>
+</frameset>
+  
+<noframes>
+    <body>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5.5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+<SCRIPT language=javascript>
+function DocumentLoadHandler() {
+	top.frames["TRAK_main"].frames["ManufactureHeader"].document.location.href='websys.default.csp?WEBSYS.TCOMPONENT=InManufacture.Edit&ID=#(ManufactureID)#&StockID=#(StockID)#&RecNumber=#(RecNumber)#&RecUOM=#(RecUOM)#&RecQty=#(RecQty)#&INMANAmount=#(INMANAmount)#&sterile=#(sterile)#'
+}
+</SCRIPT>
+
+</html>

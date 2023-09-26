@@ -1,0 +1,40 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<TRAK:APPLET>
+<SERVER>
+;log60961 tedT
+n ordstring,data,i,ordItemIds
+s i=1
+s (ordstring,ordItemIds)=""
+
+f  {
+	s data=%request.Get("itemz"_i)
+	q:data=""
+	s ordstring=ordstring_i_"*"_$p(data,"*",3)_"*"_$p(data,"*",4)_"^"
+	s ^TMP("WEB","ORDER_ENTRY","OEORI_ROWID",%session.SessionId,"ChangeStatus",i)=data
+	;Log 64703 - get order item id list
+	i ordItemIds="" s ordItemIds=$p(data,"*",1)
+	e  s ordItemIds=ordItemIds_"^"_$p(data,"*",1)
+	;End Log 64703
+	s i=i+1
+}
+
+d %request.Set("OrderString",ordstring)
+d %request.Set("ordItemIds",ordItemIds)		;Log 64703
+
+</SERVER>
+<TRAK:COMPONENT id="OEOrder.ChangeStatus" hidemenus=1></TRAK:COMPONENT>
+</TRAK:APPLET>
+</BODY>
+</HTML>

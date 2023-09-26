@@ -1,0 +1,93 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s IFBBRowID=$Get(%request.Data("IFBBRowID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s SourceType=$Get(%request.Data("SourceType",1))
+	s SourceID=$Get(%request.Data("SourceID",1))
+</Script>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-5-08 界面首先加载loading bug WY0068-->
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel"  title="应标供应商" data-options="fit:true,eqtitle:'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:150px;">
+				<div class="eq-table-tr">
+					<!--modify hly 2019-11-11 bug:1067351-->
+					<div class="eq-table-td eq-table-label"><label id="cIFBLVendor" for="IFBLVendor">供应商</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'"   id="IFBLVendor" ></div>
+					<div class="eq-table-td eq-table-label"><label for="IFBLPrice">单价</label></div> <!--modify by wy 2019-12-16-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="IFBLPrice" ></div>
+					<div class="eq-table-td eq-table-label"><label  for="IFBLWinQty">中标数量</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="IFBLWinQty" ></div>					
+					<div class="eq-table-td eq-table-label"><label for="IFBLAmount">总额</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="IFBLAmount" ></div>	
+			        <!--modify by lmm 2019-05-29 892873-->
+					<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true" >保存</a></div>	
+				</div>
+				<div class="eq-table-tr">
+					<!--modify hly 2019-11-11 bug:1067351-->
+					<div class="eq-table-td eq-table-label"><label id="cIFBLManuFactory" for="IFBLManuFactory">生产厂商</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.ManuFacturer'"  id="IFBLManuFactory" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cIFBLModel" for="IFBLModel">机型</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Model'" id="IFBLModel" ></div>
+				    <div class="eq-table-td eq-table-label"><label id="cIFBLBrand" for="IFBLBrand">品牌</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Brand'" id="IFBLBrand" ></div>
+					<div class="eq-table-td eq-table-label"><label  for="IFBLArg">其他参数</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="IFBLArg" ></div>
+			        <!--modify by lmm 2019-05-29 892873-->
+					<div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">删除</a></div> <!--add by wy 2020-5-08 1309365-->
+				</div>
+				<div class="eq-table-tr">
+					<!--modify hly 2019-11-11 bug:1067351-->
+					<div class="eq-table-td eq-table-label"><label  for="IFBLCandidacySeq">顺序</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="IFBLCandidacySeq" ></div>	
+					<div class="eq-table-td eq-table-label"><label for="IFBLScore">评分</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IFBLScore" ></div>
+					<div class="eq-table-td eq-table-label"><label for="IFBLRemark">备注</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IFBLRemark" ></div>
+					<div class="eq-table-td eq-table-label"><label for="IFBLWinFlag">中标标志</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-checkbox" type="checkbox"  id="IFBLWinFlag" ></div>	
+				</div>
+				<!--add by csj 2020-05-25-->
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label  for="IFBLCandidacy">候选标志</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-checkbox" type="checkbox"  id="IFBLCandidacy" ></div>
+				</div>
+				
+				</div>
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+					<table id="tDHCEQIFBList" data-options="border:false,fit:true"></table>
+				
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="hidden">
+		<form name="DHCEQ">	
+			<!--modify hly 2019-11-11 bug:1067351-->	
+            <INPUT type="hidden" id="IFBLRowID">
+			<INPUT type="hidden" id="IFBBRowID" value="#(IFBBRowID)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="IFBLSourceType" value="#(SourceType)#">
+			<INPUT type="hidden" id="IFBLSourceID" value="#(SourceID)#">
+			<INPUT type="hidden" id="IFBLVendorDR">
+			<INPUT type="hidden" id="IFBLModelDR">
+			<INPUT type="hidden" id="IFBLManuFactoryDR">
+			<INPUT type="hidden" id="IFBLBrandDR">
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/em/ifblist.js"></script>
+</body>
+
+</html>

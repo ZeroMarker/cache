@@ -1,0 +1,37 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ Q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s myModifyMode=$g(%request.Data("ModifyMode",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s PatientID=$g(%request.Data("PatientID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s myExtraFrmWidth=0
+ if myModifyMode="PPR" {
+ 		s myExtraFrmWidth=70
+ }
+ s myExtraFrmWidth=70
+ s myMainFrmWidth=100-myExtraFrmWidth
+ /*
+Only PPR MODE
+ */
+s colStr=myMainFrmWidth_"%"_",*"
+</Script>
+<frameset rows="#(myMainFrmWidth)#%,*">
+	<frame name="DHCOPDocListOrder" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDoc.ModifyOrder.FindAdm&ModifyMode=#(myModifyMode)#&EpisodeID=#(EpisodeID)#&PatientID=#(PatientID)#&mradm=#(mradm)#">
+	<frameset cols="60%,*">
+	<frame name="DHCOPDocPrtPrescList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDoc.PrintPresc.List">
+	<frame name="DHCOPDocPrtPrescDetail" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDoc.PrintPresc.Detail">
+	</frameset>
+</frameset>
+</HTML>

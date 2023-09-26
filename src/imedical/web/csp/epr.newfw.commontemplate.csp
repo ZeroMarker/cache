@@ -1,0 +1,190 @@
+<HTML>
+<HEAD>
+
+<TITLE> 常用病历 </TITLE>
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+  <script type="text/javascript" SRC="../scripts/epr/js/dgrid.js"></script>
+  <script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	
+  <!--add by loo on 2010-4-26-->
+  <script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+
+</HEAD>
+
+<BODY bgcolor="#F6FAFD">
+	<server>
+		w "<table name='tablelist' id='tablelist' width='100%' border='0' cellpadding='1' cellspacing='1' class='tableStyle01'>"
+		w "<tr id='trTitle'>"
+		w "<td align='center' class='TDstyle02'><font color='#004E82'><a>常用病历</a></font></td>"
+		w "</tr>"
+		
+		//edit by loo on 2010-8-9
+		//修改原因:bug#1058 前端要求欢迎界面常用模板能按科室显示支持病历类型
+		//数据格式:ctlocid1*ctlocid2*..#Name#PrintTemplateDocId1@templateDocId1*PrintTemplateDocId2@templateDocId2*..$..
+		
+		//edit by loo on 2010-8-19
+		//配置串原先是配置科室#模板名称#prtDocId@templateDocID
+		//现在修改为科室1#模板名称1#ccId1#templateDocId1*templateDocId2$科室2#模板名称2#ccId2#templateDocId3*templateDocId4,其中templateDocId可省略,如果省略则加载ccId下的第一个界面模板
+
+		s episodeID = $Get(%request.Data("episodeID",1),"")
+		s episodeType = ""
+		s:(episodeID '= "") episodeType =  $P($g(^PAADM(episodeID)),"^",2)
+		s ctlocID =  $p(##class(EPRservice.HISInterface.PatientInfoAssist).CurrentDept(episodeID),"^",1)
+		//s commonPrtDocs = "990*989#主诉#2#2$ALL#一般情况#33"
+		s commonPrtDocs =  ##class(EPRmeta.SysOption).GetOptionValueByName("CommonPrtDocs")
+		
+		//20130329 wangwentao update bjdtyy 获取Session中的登录位置
+		s LogonCurDeptID = %session.Get("LOGON.CTLOCID")
+		s (LogonCurDeptDesc,LogonCurDeptType)=""
+		s:(LogonCurDeptID'="") LogonCurDeptDesc = $p($g(^CTLOC(LogonCurDeptID)),"^",2) //CTLOC_Desc
+		s:(LogonCurDeptID'="") LogonCurDeptType = $p($g(^CTLOC(LogonCurDeptID)),"^",13) //CTLOC_Type
+		
+		//20131018 wangwnetao update ykyzlyy 获取ctlocID的科室类型
+		//界面10|病历载入快捷方式DocID集合(CTLOCID1*CTLOCID2*...或ALL#Title1#CCID1#tmpDocID1$CTLOCID1*CTLOCID2*...或ALL#Title2#CCID2#tmpDocID1$...)[禁用->NULL]
+		s ctlocDeptType = ##Class(web.eprajax.commontemplate).GetDeptTypeByLoc(ctlocID)
+						
+		if (commonPrtDocs '= "")&&($zcvt(commonPrtDocs,"U") '= "NULL" )
+		{
+			s commonPrtDocsLength = $l(commonPrtDocs, "$")
+			s commonTemplate = ""
+			for i = 1:1:commonPrtDocsLength
+			{
+				s commonPrtDocsInfo = $p(commonPrtDocs,"$",i)
+
+				s ctlocidStr = $p(commonPrtDocsInfo, "#", 1)
+				
+				if ($f(ctlocidStr,"ALL")>0)
+				{
+					
+					if ctlocidStr = "ALL"
+					{
+						//当科室配置为ALL时,直接不检验配置串是否符合当前科室
+						//edit by loo on 2010-8-19
+					}
+					elseif $e(ctlocidStr,1,6) = "ALLOPE"
+					{
+						//门诊科室
+						continue:(ctlocDeptType '= "O")||(episodeType '= "O")
+					}
+					elseif $e(ctlocidStr,1,6) = "ALLEPE"
+					{	
+						//急诊科室
+						continue:(ctlocDeptType '= "E")||(episodeType '= "E")
+					}
+					elseif $e(ctlocidStr,1,6) = "ALLIPE"
+					{
+						//住院科室
+						//添加不包含功能 NC LocId1&LocId2&LocId3...
+						s IPENotContainLocIdStr = $p($g(ctlocidStr),"NC",2)
+						continue:(ctlocDeptType '= "I")||(LogonCurDeptType = "W")||($f("&"_IPENotContainLocIdStr_"&","&"_ctlocID_"&")>0)
+					}
+					elseif $e(ctlocidStr,1,6) = "ALLIPW"
+					{
+						//住院病区
+						//添加不包含功能 NC LocId1&LocId2&LocId3...
+						s IPWNotContainLocIdStr = $p($g(ctlocidStr),"NC",2)
+						continue:(ctlocDeptType '= "I")||(LogonCurDeptType '= "W")||($f("&"_IPWNotContainLocIdStr_"&","&"_ctlocID_"&")>0)
+					}
+					
+				}
+				else
+				{
+					s tmpCTLocIDStr = "*"_ctlocidStr_"*"
+					s isOutPatOK = 0, isEmePatOK = 0, isLocPatOK = 0
+					s isOutPatOK = (episodeType="O")&&($f(tmpCTLocIDStr,"*"_"O"_"*")>0)		//查找配置串是否符合门诊科室
+					s isEmePatOK = (episodeType="E")&&($f(tmpCTLocIDStr,"*"_"E"_"*")>0)		//查找配置串是否符合急诊科室
+					s isInPatOK = (episodeType="I")&&($f(tmpCTLocIDStr,"*"_"I"_"*")>0)		//查找配置串是否符合住院科室
+					s isLocPatOK = ($f(tmpCTLocIDStr, "*"_ctlocID_"*")>0)					//查找配置串是否符合当前科室
+					continue:('isOutPatOK)&&('isEmePatOK)&&('isInPatOK)&&('isLocPatOK)
+				}
+				s templateName = $p(commonPrtDocsInfo, "#",2)
+				s ccID = $p(commonPrtDocsInfo, "#", 3)
+				s cgID = ##class(EPRmeta.EPRTemplateCategory).GetParentIDByDocID(ccID)	//用ccID取到cgID
+				
+				s tmpDocIdStr = $p(commonPrtDocsInfo, "#", 4)
+				//s ^CacheTempTest(i,"tmpDocIdStr") = tmpDocIdStr
+				
+				//delete by loo on 2010-8-19
+				//配置串原先是配置prtDocId和templateDocID
+				//现在修改为科室#模板名称#ccId@templateDocId,其中templateDocId可省略,如果省略则加载ccId下的第一个界面模板
+				
+				//3@4*5@6
+				//s length = $l(prtTpDocIdAndTpDocIdStr,"*")
+				//for j=1:1:length {
+					//s prtDocID = $p($p(prtTpDocIdAndTpDocIdStr,"*",j),"@",1)
+					//s ^CacheTempTest(i,"1","prtDocID",j) = prtDocID
+
+					//s cgID = ##class(EPRservice.Privilege.BOPrivAssist).EPRCategoryID(prtDocID)
+					//s ccID = ##class(EPRmeta.EPRTemplateCategory).GetParentIDByDocID(prtDocID)				
+					//continue:((cgID = "")||(ccID = ""))	
+					
+				s commonTemplate = commonTemplate_cgID_"^"_ccID_"^"_tmpDocIdStr_"^"_templateName_"#"	
+				//}
+			}
+			
+			s commonTemplateLength = $l(commonTemplate)
+			s commonTemplate = $E(commonTemplate, 1, commonTemplateLength - 1)
+			
+			s commonTemplateLength = $l(commonTemplate, "#")
+			for i = 1:1:commonTemplateLength
+			{
+				w "<tr id='valueTr' onDblClick='dbChoTr(this)'; onMouseDown='choTr(this,0);'>"
+				s ct = $p(commonTemplate, "#", i)
+				s cgID = $p(ct, "^", 1)
+				s ccID = $p(ct, "^", 2)
+				
+				//根据cgID取出该节点的type 然后再进行转换 将cgID转化为前台treePanel的节点ID格式
+				//s cgNote = $g(^DHCEPRM.EPRTemplateCategoryD(cgID))
+				//s cgType = $lg(cgNote,10)
+				//s cgID = ##class(EPRservice.BOEPRTemplateCategory).TransCategoryType(cgType)_cgID
+				
+				s TmpDocIdStr = $p(ct, "^", 3)			
+				s templateName = $p(ct, "^", 4)
+
+				w "<td align='center' class='TDstyle01'><a href='#' onclick="_$c(34)_"OpenCommonTemplateClickHandler(this,'"_cgID_"','"_ccID_"','"_TmpDocIdStr_"')"_$c(34)_">"_templateName_"</a></td>"
+				w "</tr>"
+			}
+		}
+		w "</table>"
+	</server>
+	<script type='text/javascript'>
+		
+		//debugger;
+		var patientID = '#($Get(%request.Data("patientID",1),""))#';
+		var episodeID = '#(episodeID)#';
+		var lastSelectTr = '';
+		
+		function OpenCommonTemplateClickHandler(e,cgID,ccID,TmpDocIdStr)
+		{
+			//debugger;
+			var prtDocID = '';
+			var templateDocID = '';
+			var prtTpDocAdnTpDocIdInfo='';
+			Ext.Ajax.request({
+				url: '../web.eprajax.commontemplate.cls',
+				timeout:5000,
+				params: {cgID:cgID,ccID:ccID,EpisodeID:episodeID,TmpDocIdStr:TmpDocIdStr},
+				success: function(response, opts) {
+					//debugger;
+					//返回格式:cgId^ccId^prtDocId^TemplateId
+		    		tmpDocIdInfo = response.responseText;
+		    		if(tmpDocIdInfo != "")
+		    		{
+		    			var array = tmpDocIdInfo.split('^');
+		    			prtDocID = array[2];
+		    			templateDocID = array[3];
+		    			if((prtDocID != '') && (prtDocID !='undefined') && (templateDocID != '') && (templateDocID !='undefined'))
+							parent.parent.parent.openCommonTemplate(e,cgID, prtDocID, templateDocID);
+		    		}
+				},
+				failure: function(response, opts) {
+					alert(response.responseText);
+				}
+			});
+			
+		}
+	</script>
+</BODY>
+</HTML>

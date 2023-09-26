@@ -1,0 +1,88 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent= $Get(%request.Data("parent",1))
+    s str   = $Get(%request.Data("query",1))
+	
+    ;rowid,flowitemid,acctbookid,Cilevel,acctyear,acctmonth,itemcode,itemname,direction,acctcurid,flowtotalsum
+	;direction, acctcurid
+	s rowid     = $Get(%request.Data("rowid",1))
+	s direction = $Get(%request.Data("direction",1))
+	s acctcurcode = $Get(%request.Data("acctcurcode",1))
+	s flowitemid = $Get(%request.Data("flowitemid",1))
+	s acctbookid = $Get(%request.Data("acctbookid",1))
+	s Cilevel   = $Get(%request.Data("Cilevel",1))
+	s acctyear  = $Get(%request.Data("acctyear",1))
+	s acctmonth = $Get(%request.Data("acctmonth",1))
+	s itemcode  = $Get(%request.Data("itemcode",1))
+	s itemname  = $Get(%request.Data("itemname",1))
+	s flowsum   = $Get(%request.Data("flowsum",1))
+    s flowtotalsum = $Get(%request.Data("flowtotalsum",1))
+    s islast= $Get(%request.Data("islast",1))  
+    s isInit= $Get(%request.Data("isInit",1))   
+    s userdr= $Get(%request.Data("userdr",1)) 
+  
+        
+    
+
+
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctCashFlowLedger).ListRec(direction, acctcurcode, start, limit, acctbookid)
+	
+	i action = "GetAcctCurYearMonth" d
+	.s result =##class(herp.acct.udata.uAcctCashFlowLedger).GetAcctCurYearMonth(acctbookid)
+	.i result '= "" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	i action = "Getflagsty" d
+	.s result =##class(herp.acct.udata.uAcctCashFlowLedger).Getflagsty(acctbookid)
+	.i result '= "" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result =##class(herp.acct.udata.uAcctCashFlowLedger).UpdateRec(rowid, itemname, direction, acctcurcode, flowsum, flowtotalsum, islast)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "GetAcctDirection" d  //流量项引入
+	.s result=##Class(herp.acct.udata.uAcctCashFlowLedger).GetAcctDirection(acctcurcode, acctbookid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetCurrName" d  //币种
+	.w ##Class(herp.acct.udata.uAcctCommon).GetCurrName(start, limit, str)
+	
+	
+	i action = "Compinit" d  //初始化完成
+	.s result = ##class(herp.acct.udata.uAcctCashFlowLedger).Compinit(acctbookid,userdr)
+	.i (result=0)||(result="已完成初始化操作")||(result="未进行初始化操作") d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "Sumlacation" d   //汇总计算
+	.s result = ##class(herp.acct.udata.uAcctCashFlowLedger).Sumlacation(acctbookid)
+	.i result '=""  d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+
+
+</script>

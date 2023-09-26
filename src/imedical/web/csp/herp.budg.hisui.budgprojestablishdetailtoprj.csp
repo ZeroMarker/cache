@@ -1,0 +1,336 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	<style>
+		.panel-title {
+           font-size: 16px;
+           height: 36px;
+           line-height: 36px;
+        }
+        .panel-header {
+       	   padding: 10px;
+		}
+  </style>
+</HEAD>
+<BODY class="hisui-layout padding-0" >
+	<div class="hisui-panel padding-10" title="项目明细信息管理" style="height:154px;" data-options="region:'north',split:true,collapsible:true,headerCls:'panel-header-gray'">
+		<table class="text-right">
+			<tr>
+				<td>年度</td>
+				<td class="padding-both-10">
+					<input id="YMbox" class="hisui-combobox combobox-width-177"/>
+				</td>
+				<td class="padding-left-10">预算科目</td>
+				<td class="padding-both-10">
+					<input id="Itembox" class="hisui-combobox combobox-width-177" data-options="prompt:'请先选择年度'"/>	
+				</td>
+				<td class="padding-left-10">项目名称</td>
+				<td class="padding-both-10">
+					<input id="Projbox" class="hisui-combobox combobox-width-177" data-options="prompt:'请先选择年度'"/>	
+				</td>
+				<div class="padding-both-10" style="float:right;">
+					<a id="FindBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+				</div>
+			</tr>
+			<tr>
+				<td>资金类别</td>
+				<td class="padding-10">
+					<input id="FundTybox" class="hisui-combobox combobox-width-177" />
+				</td>
+				<td class="padding-left-10">责任科室</td>
+				<td class="padding-10">
+					<input id="DutyDeptbox" class="hisui-combobox combobox-width-177"/>	
+				</td>
+				<td class="padding-left-10">预算科室</td>
+				<td class="padding-10">
+					<input id="ApplyDbox" class="hisui-combobox combobox-width-177"/>	
+				</td>
+			</tr>
+		</table>
+
+	</div>
+	<div class="hisui-panel" style="background:#eee;border-color: #cccccc;" data-options="region:'center'" >
+		<table class="hisui-datagrid" id="MainGrid" >
+		</table>
+	</div>
+	<!--添加项目明细信息窗口-->
+	<div id="AddWin" class="hisui-window padding-10" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="padding-10"  data-options="region:'center',headerCls:'panel-header-gray'">	
+				<form id="AddForm">	   
+					<table class="text-right" align="center">
+						<tr>
+							<td>年度:</td>
+							<td class="padding-both-10">
+								<input id="AddYear" class="hisui-combobox combobox-width-177"  data-options="prompt:'请选择...'"/>
+							</td>
+							<td>人员资质-原有设备:</td>
+							<td class="padding-both-10">
+								<input id="AddPerOri" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>责任科室:</td>
+							<td class="padding-both-10">
+								<input id="AddDept" class="hisui-combobox combobox-width-177" data-options="prompt:'请选择...'"/>
+							</td>
+							<td>年效益预测:</td>
+							<td class="padding-both-10">
+								<input id="AddAnnBen" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算科室:</td>
+							<td class="padding-both-10">
+								<input id="AddBgDept" class="hisui-combobox combobox-width-177" data-options="required:true,prompt:'请选择...'"/>
+							</td>
+							<td>耗材费:</td>
+							<td class="padding-both-10">
+								<input id="AddMatChar" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算科目:</td>
+							<td class="padding-both-10">
+								<input id="AddItem" class="hisui-combobox combobox-width-177" data-options="required:true,prompt:'请选择...'"/>
+							</td>
+							<td>配套条件:</td>
+							<td class="padding-both-10">
+								<input id="AddSupCon" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>资金类型:</td>
+							<td class="padding-both-10">
+								<input id="AddFundTy" class="hisui-combobox combobox-width-177" data-options="required:true,prompt:'请选择...'"/>
+							</td>
+							<td>说明:</td>
+							<td class="padding-both-10">
+								<input id="AddRemark" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算单价:</td>
+							<td class="padding-both-10">
+								<input id="AddPrice" class="hisui-numberbox" style="width:177px;" placeholder="请输入单价..." data-options="required:true,min:0,precision:2"/>
+							</td>
+							<td>推荐品牌1:</td>
+							<td class="padding-both-10">
+								<input id="AddBrand1" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算数量:</td>
+							<td class="padding-both-10">
+								<input id="AddNum" class="hisui-numberspinner" style="width:177px;" value="1" placeholder="请输入数量..." data-options="required:true,min:1"/>
+							</td>
+							<td>规格型号1:</td>
+							<td class="padding-both-10">
+								<input id="AddSpec1" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算金额:</td>
+							<td class="padding-both-10">
+								<input disabled id="AddBgSum" class="hisui-numberbox" style="width:177px;" placeholder="计算得到..." data-options="required:true,min:0,precision:2"/>
+							</td>
+							<td>推荐品牌2:</td>
+							<td class="padding-both-10">
+								<input id="AddBrand2" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>总预算占比:</td>
+							<td class="padding-both-10">
+								<input id="AddPerce" class="numberbox" style="width:172px;" placeholder="请输入整数..." />
+							</td>
+							<td>规格型号2:</td>
+							<td class="padding-both-10">
+								<input id="AddSpec2" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>新增-更新:</td>
+							<td class="padding-both-10">
+								<input id="AddAE" class="hisui-combobox combobox-width-177" data-options="required:true"/>
+							</td>
+							<td>推荐品牌3:</td>
+							<td class="padding-both-10">
+								<input id="AddBrand3" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>设备名称备注:</td>
+							<td class="padding-both-10">
+								<input id="AddEquRemark" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+							<td>规格型号3:</td>
+							<td class="padding-both-10">
+								<input id="AddSpec3" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>收费标准:</td>
+							<td class="padding-both-10">
+								<input id="AddFeeSca" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+					</table>
+				</form>	
+			</div>
+			<div class="text-center"  data-options="region:'south',border:false" style="height:40px;padding:6px 0 0 0">
+				<a id="AddSave" class="hisui-linkbutton" href="#">添加</a>
+				<a id="AddClose" class="hisui-linkbutton" href="#">取消</a>
+			</div>
+		</div>
+	</div>	
+	<!--修改项目明细信息窗口-->
+	<div id="EditWin" class="hisui-window padding-10" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="padding-10"  data-options="region:'center',headerCls:'panel-header-gray'">	
+				<form id="EditForm">	   
+					<table class="text-right" align="center">
+						<tr>
+							<td>年度:</td>
+							<td class="padding-both-10">
+								<input id="EditYear" class="hisui-combobox combobox-width-177"  data-options="prompt:'请选择...'"/>
+							</td>
+							<td>人员资质-原有设备:</td>
+							<td class="padding-both-10">
+								<input id="EditPerOri" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>责任科室:</td>
+							<td class="padding-both-10">
+								<input id="EditDept" class="hisui-combobox combobox-width-177" data-options="prompt:'请选择...'"/>
+							</td>
+							<td>年效益预测:</td>
+							<td class="padding-both-10">
+								<input id="EditAnnBen" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算科室:</td>
+							<td class="padding-both-10">
+								<input id="EditBgDept" class="hisui-combobox combobox-width-177" data-options="required:true,prompt:'请选择...'"/>
+							</td>
+							<td>耗材费:</td>
+							<td class="padding-both-10">
+								<input id="EditMatChar" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算科目:</td>
+							<td class="padding-both-10">
+								<input id="EditItem" class="hisui-combobox combobox-width-177" data-options="required:true,prompt:'请选择...'"/>
+							</td>
+							<td>配套条件:</td>
+							<td class="padding-both-10">
+								<input id="EditSupCon" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>资金类型:</td>
+							<td class="padding-both-10">
+								<input id="EditFundTy" class="hisui-combobox combobox-width-177" data-options="required:true,prompt:'请选择...'"/>
+							</td>
+							<td>说明:</td>
+							<td class="padding-both-10">
+								<input id="EditRemark" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算单价:</td>
+							<td class="padding-both-10">
+								<input id="EditPrice" class="hisui-numberbox" style="width:177px;" placeholder="请输入单价..." data-options="required:true,min:0,precision:2"/>
+							</td>
+							<td>推荐品牌1:</td>
+							<td class="padding-both-10">
+								<input id="EditBrand1" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算数量:</td>
+							<td class="padding-both-10">
+								<input id="EditNum" class="hisui-numberspinner" style="width:177px;" value="1" placeholder="请输入数量..." data-options="required:true,min:1"/>
+							</td>
+							<td>规格型号1:</td>
+							<td class="padding-both-10">
+								<input id="EditSpec1" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>预算金额:</td>
+							<td class="padding-both-10">
+								<input disabled id="EditBgSum" class="hisui-numberbox" style="width:177px;" placeholder="计算得到..." data-options="required:true,min:0,precision:2"/>
+							</td>
+							<td>推荐品牌2:</td>
+							<td class="padding-both-10">
+								<input id="EditBrand2" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>总预算占比:</td>
+							<td class="padding-both-10">
+								<input id="EditPerce" class="numberbox" style="width:172px;" placeholder="请输入整数..." />
+							</td>
+							<td>规格型号2:</td>
+							<td class="padding-both-10">
+								<input id="EditSpec2" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>新增-更新:</td>
+							<td class="padding-both-10">
+								<input id="EditAE" class="hisui-combobox combobox-width-177" data-options="required:true"/>
+							</td>
+							<td>推荐品牌3:</td>
+							<td class="padding-both-10">
+								<input id="EditBrand3" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>设备名称备注:</td>
+							<td class="padding-both-10">
+								<input id="EditEquRemark" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+							<td>规格型号3:</td>
+							<td class="padding-both-10">
+								<input id="EditSpec3" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+						<tr>
+							<td>收费标准:</td>
+							<td class="padding-both-10">
+								<input id="EditFeeSca" class="textbox" style="width:172px;" placeholder="选填..." />
+							</td>
+						</tr>
+					</table>
+				</form>	
+			</div>
+			<div class="text-center"  data-options="region:'south',border:false" style="height:40px;padding:6px 0 0 0">
+				<a id="EditSave" class="hisui-linkbutton" href="#">修改</a>
+				<a id="EditClose" class="hisui-linkbutton" href="#">取消</a>
+			</div>
+		</div>
+	</div>		   
+	
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/projbg/BudgProjEstablishDetailToPrj/budgprojestablishdetailtoprjmaintest.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/projbg/BudgProjEstablishDetailToPrj/addfun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/projbg/BudgProjEstablishDetailToPrj/editfun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<!--<script type="text/javascript" src="../scripts/herp/budgHisUI/projbg/BudgProjEstablishDetailToPrj/budgprojectdictedit.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/projbg/BudgProjEstablishDetailToPrj/budgprojectdictedit.js"></script>-->
+</BODY>
+</HTML>

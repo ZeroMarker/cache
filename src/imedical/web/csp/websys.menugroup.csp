@@ -1,0 +1,296 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<!--websys.menugroup.csp //-->
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD SoundScenes="orderMenuGroup"></EXTHEALTH:HEAD>
+	<HISUI/>	
+	<script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
+</head>
+<SERVER> 
+	Set MenuGorupID = $G(%request.Data("MenuGorupID",1))
+	if (MenuGorupID="") Set MenuGorupID = $G(%request.Data("MenuGroupID",1))
+	set MenuGroupCode=%request.Get("MenuGroupCode")  //支持下菜单组代码
+	if MenuGorupID="",MenuGroupCode'="" s MenuGorupID=##class(websys.MenuGroup).GetIdFromCodeOrDescription(MenuGroupCode)
+	If (MenuGorupID'>0){W "Not Find MenuGroupID Param" Quit $$$OK} 
+	Set MenuGroupObj = ##class(websys.MenuGroup).%OpenId(MenuGorupID,0)
+	If '$IsObject(MenuGroupObj){W "Not Find MenuGroupID="_MenuGorupID Quit $$$OK}
+	#dim itm as websys.Menu
+	n arr
+	set itms=MenuGroupObj.Items
+	for index=1:1:itms.Count() {
+		set itm=itms.GetAt(index)
+		if $IsObject(itm),$IsObject(itm.Menu) {
+			Set arr(" "_itm.Menu.Sequence,itm.Menu.%Id())=itm.Menu.Caption_","_$TR(itm.Menu.Name,".","_")
+		}
+	}
+	Set PersonBanner = "dhcdoc.in.patient.banner.csp"
+	if $g(%request.Data("PersonBanner",1))'=""{
+		Set PersonBanner = $g(%request.Data("PersonBanner",1))
+	}
+	if $g(%request.Data("PatientBanner",1))'=""{
+		Set PersonBanner = $g(%request.Data("PatientBanner",1))
+	}
+	;w "<PersonBanner name="""_PersonBanner_""" / >"
+	Set homeTab="ipdoc.patinfoview.csp"
+	Set homeTabTitle=..Get("信息总览")
+	if $g(%request.Data("homeTab",1))'=""{
+		Set homeTab = $g(%request.Data("homeTab",1))
+		Set homeTabTitle = $P(homeTab,"$",2)
+		If homeTabTitle="" Set homeTabTitle=..Get("信息总览")
+		Set homeTab = $p(homeTab,"$")
+	}
+	Set PatientListPage="" 				//"inpatientlist.csp" 2018-08-03 不默认病人列表,【病人列表】按钮不显示
+	if ($g(%request.Data("PatientListPage",1))'=""){
+		Set PatientListPage = $g(%request.Data("PatientListPage",1))
+	}
+
+	;w "<homeTab name="""_homeTab_""" / >"
+
+	//add 2019-06-26 cryze 增加是否允许切换病人参数 传N重写dhcsys_getmenuform 实现不切换头菜单病人
+	set SwitchSysPat = "Y"  
+	if ($g(%request.Data("SwitchSysPat",1))'=""){
+		Set SwitchSysPat = $g(%request.Data("SwitchSysPat",1))
+	}
+	//add 2019-06-26 cryze 支持接收url传过来的就诊参数
+	s (reqEpisodeID,reqPatinetID,reqMradm)=""
+	s reqEpisodeID=%request.Get("EpisodeID")
+	if reqEpisodeID>0 {
+		s reqPatinetID=$p(^PAADM(reqEpisodeID),"^",1)
+		s reqMradm=$p(^PAADM(reqEpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = reqPatinetID
+		Set %request.Data("mradm",1) = reqMradm
+	}
+	
+</SERVER>
+<style>
+ul,li{
+	list-style:none;
+	padding:0;
+	margin:0;
+}
+.accordion .accordion-header {
+    border-top: 0px solid #fff;
+}
+a{
+	font-size:14px;
+	color: #333333;
+}
+.i-west-region,.i-west-acc,.menugroup-list{
+	background-color:#F9F9F9;
+}
+.i-west-region .panel .panel-header .panel-title{
+	padding-left:10px;
+}
+.menugroup-list ul.i-menugroup>li>a, ul.dropdown-menu>li>a{
+	text-decoration: none;
+	color:#000000;
+	display:block;
+	padding:2px 5px 2px 25px;
+	line-height: 24px;
+}
+.menugroup-list ul.i-menugroup>li:hover{
+	background-color: #E3E3E3;
+}
+.menugroup-list ul.i-menugroup>li.active{
+	background-color: #E3E3E3;
+}
+.menugroup-list .i-menugroup li.x-tab-strip-red a{
+	 color:red;
+ }
+ .menugroup-list .i-menugroup li.x-tab-strip-green a{
+	 color:green;
+ }
+ .menugroup-list .i-menugroup li.x-tab-strip-gray a{
+	 color:gray;
+ }
+ .menugroup-list .i-menugroup li a>span.count{
+	padding: 0 10px;
+	background-color: #dddddd;
+	color:#666666;
+	border-radius: 4px;
+	margin: 0 5px;
+	float: right;
+ }
+ .menugroup-list .i-menugroup li.x-tab-strip-red a>span.count{
+	background-color: #ffd7d7;
+	color:#ff3d2f;
+ }
+ .tabs .tabs-title span.count{
+ 	padding:0 0 0 5px;
+ }
+ .tabs li.x-tab-strip-red a.tabs-inner {
+    /*color: #0E2D5F;*/
+    background: #ff584c;
+    border-top-color:#ff584c;
+}
+ .tabs li.x-tab-strip-red.tabs-selected a.tabs-inner {
+    color: #ff584c;
+    background: #ffffff;
+}
+#tabsReg div.panel .panel-body{
+	overflow:hidden;
+}
+
+.i-dropdown-submenu {
+  position: relative;
+}
+.i-dropdown-submenu .i-dropdown-arrow{
+	display:inline-block;
+	width:0;
+	height:0;
+	border:5px solid transparent; 
+	border-right:5px dashed;
+	vertical-align:middle;
+	margin-left:2px;
+	transition: transform 0.4s ease-out;
+	-webkit-transition:-webkit-transform 0.4s ease-out;
+}
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus{
+	color: #000;
+    text-decoration: none;
+    background-color: #eeeeee;
+    background-image:none;
+}
+li.i-dropdown-submenu .dropdown-menu{
+    position:fixed;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display:none;
+    float: left;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    font-size: 14px;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 4px;
+    -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    opacity:0;
+    filter: alpha(opacity=0);
+    -webkit-transition: opacity 0.4s ease-in-out;
+    -moz-transition: opacity 0.4s ease-in-out;
+    -o-transition: opacity 0.4s ease-in-out;
+    transition: opacity 0.4s ease-in-out;
+}
+li.i-dropdown-submenu.open .i-dropdown-arrow{
+	transform:rotate(-180deg);
+	-ms-transform:rotate(180deg); 
+	-moz-transform:rotate(180deg);
+	-webkit-transform:rotate(-180deg);
+	-o-transform:rotate(-180deg);
+}
+li.i-dropdown-submenu.open .dropdown-menu{
+	display:block;
+	opacity:1;
+    filter: alpha(opacity=100);
+}
+</style>
+<script type="text/javascript" >
+	var MENUGROUPID = #(MenuGorupID)#;
+	var FixedTabTitle="#(%request.Get("FixedTabTitle"))#";
+	var patientListPage= "#(PatientListPage)#";
+	var FixedEpisodeID = "#(%request.Get("FixedEpisodeID"))#";
+	var reqEpisodeID="#($g(reqEpisodeID))#";
+	var reqPatientID="#($g(reqPatientID))#";
+	var reqMradm="#($g(reqMradm))#";
+	var SwitchSysPat="#($g(SwitchSysPat))#";
+	var PersonBanner="#(PersonBanner)#";
+	if (reqEpisodeID>0){
+		if (SwitchSysPat=="N") { //不切换病人 重写dhcsys_getmenuform 实现不切换头菜单病人
+			var fEPRMENU = {"EpisodeID":{value:reqEpisodeID},"PatientID":{value:reqPatientID},"mradm":{value:reqMradm}};
+			if(dhcsys_getmenuform){
+				dhcsys_getmenuform_origin = dhcsys_getmenuform;
+			}
+			var dhcsys_getmenuform = function (){
+				return window.fEPRMENU;
+			}
+		}else{ // 切换头菜单病人
+			var frm = dhcsys_getmenuform();
+			if (frm) {
+				frm.EpisodeID.value=reqEpisodeID;
+				frm.PatientID.value=reqPatientID;
+				frm.mradm.value=reqMradm;
+			}
+		}
+	}
+</script>
+<body class="hisui-layout" >
+   	<div class="window-mask alldom" style="width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;"><iframe frameborder="0" style="left: 0px; top: 0px; width: 100%; height: 100%; position: absolute; z-index: -1; scrolling: no;"></iframe></div>
+	<div data-options="region:'north',border:false" style="height:36px;padding:1px;overflow:hidden;padding-top:10px;">
+		 <csp:Include Page="#(PersonBanner)#">
+	</div>
+	<div region="west" border="true" split="true" title="" class="i-west-region" style="width:190px;">
+		<div id="menuGroupReg" border="false" data-options="multiple:true" fit="true" class="hisui-accordion i-west-acc" style="overflow-y:auto;">
+		    <server>
+			Set se="" for  Set se = $O(arr(se)) Quit:se=""  d
+			.Set r="" for  Set r = $O(arr(se,r)) Quit:r=""  d
+			..w "<div data-code='"_$p(arr(se,r),",",2)_"' title='"_$p(arr(se,r),",")_"' class='menugroup-list' data-options=""collapsible:false,collapsed:false""></div>"
+		   </server>		
+		</div>
+	</div>
+	<div data-options="region:'center',border:true">
+		<div id="tabsReg" data-options="fit:true" class="hisui-tabs" style="border:0px;">
+			<div id="dhc_side_epr_qualitycontrol" title="#(homeTabTitle)#" data-options="isxhr:1,ilink:'#(homeTab)#'">
+				<iframe src="about:blank" width="100%" min-height="500px" height="100%" frameborder="0"></iframe>
+			</div>
+		</div>
+	</div>
+	<!--<div data-options="region:'south',border:true" heigth="0px" split="true"></div>-->
+	<!--<div id="tabscm" class="hisui-menu" style="width:150px;">
+       <div>关闭所有</div>
+       <div>关闭其它</div>
+    </div>-->
+    <script id="menuGroupLevel2Tpl" type="text/x-jquery-tmpl" data-note="第二层菜单">
+		<ul class="i-menugroup">
+			{{each(j,r2) menuscnd}}
+				<li class="{{if r2.disabled==1}}disabled{{/if}} {{if r2.className}}${r2.className}{{/if}} {{if r2.children}}i-dropdown-submenu{{/if}}">
+					<a href="javascript:void(0)" data-text="${r2.text}" {{if r2.count>0}}data-count="${r2.count}"{{/if}} data-options="menu:'#${r2.code}'" data-ilink="${r2.link}" data-icode="${r2.code}" data-class="${r2.className}" data-valueexp="${r2.valueExp}" data-itarget=${r2.target} data-isxhr=${r2.isXhrRefresh} data-autoopen=${r2.autoOpen}>{{html r2.text}}{{if r2.count>0}}<span class="count">${r2.count}</span>{{/if}}{{if r2.children}}<b class="i-dropdown-arrow"></b>{{/if}}</a>
+					{{if r2.children }}
+					<ul class="dropdown-menu">
+						{{each(k,r3) r2.children}}
+							<li><a href="#" data-text="${r3.text}" {{if r2.count>0}}data-count="${r2.count}"{{/if}} data-ilink="${r3.link}" data-icode="${r3.code}" data-class="${r3.className}" data-valueexp="${r3.valueExp}" data-itarget=${r3.target} data-isxhr=${r3.isXhrRefresh} data-autoopen=${r3.autoOpen}>${r3.text}</a></li>
+						{{/each}}
+					</ul>
+					{{/if}}
+				</li>
+			{{/each}}
+		</ul>
+   </script>
+	<script id="menuGroupTpl" type="text/x-jquery-tmpl">
+		<ul class="nav nav-list i-menugroup">
+		{{each(i,r1) menus}}
+			<li class="nav-header"><span>{{if r1.img}}<img src="${r1.img}"/>{{/if}}{{html r1.text}}</span></li>
+			{{if r1.children}}
+				{{each(j,r2) r1.children}}
+					<li class="{{if r2.disabled==1}}disabled{{/if}} {{if r2.className}}${r2.className}{{/if}} {{if r2.children}}i-dropdown-submenu{{/if}}">
+					<a href="#" data-text="${r2.text}" {{if r2.count>0}}data-count="${r2.count}"{{/if}} data-ilink="${r2.link}" data-icode="${r2.code}" data-class="${r2.className}" data-valueexp="${r2.valueExp}" data-itarget=${r2.target} data-isxhr=${r2.isXhrRefresh} data-autoopen=${r2.autoOpen}>{{if r2.img}}<img src="${r2.img}"/>{{/if}}{{html r2.text}}{{if r2.count>0}}<span class="count">${r2.count}</span>{{/if}}</a>
+					{{if r2.children }}
+					<ul class="dropdown-menu">
+						{{each(k,r3) r2.children}}
+							<li><a href="#" data-text="${r3.text}" {{if r2.count>0}}data-count="${r2.count}"{{/if}} data-ilink="${r3.link}" data-icode="${r3.code}" data-class="${r3.className}" data-valueexp="${r3.valueExp}" data-itarget=${r3.target} data-isxhr=${r3.isXhrRefresh} data-autoopen=${r3.autoOpen}>${r3.text}</a></li>
+						{{/each}}
+					</ul>
+					{{/if}}
+					</li>
+				{{/each}}
+			{{/if}}
+		{{/each}}
+		</ul>
+   </script>
+	<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+	<script type="text/javascript" src="../scripts/websys.menugroup.js"></script>
+	<script language='javascript' src='../scripts/websys.jquery.js'></script>
+</body>
+</html>

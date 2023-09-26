@@ -1,0 +1,54 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s RowId=$Get(%request.Data("RowId",1))
+	s Type=$Get(%request.Data("Type",1))
+	s paramstr=$Get(%request.Data("paramstr",1))
+	s User=$Get(%request.Data("User",1))
+	
+	//确认发票
+	i Action = "ConfirmStr" d
+	.s RcRtStr=$Get(%request.Data("RcRtStr",1))
+	.s ret=##class(web.DHCSTM.DHCIngRcRtInv).ConfirmStr(RcRtStr,User)
+    .w "{success:'true',info:'"_ret_"'}"
+    //取消确认
+    i Action = "CancleConfirm" d
+	.s ret=##class(web.DHCSTM.DHCIngRcRtInv).CancleConfirm(RowId,Type)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+	//审核发票
+	i Action = "AuditStr" d
+	.s RcRtStr=$Get(%request.Data("RcRtStr",1))
+	.s ret=##class(web.DHCSTM.DHCIngRcRtInv).AuditStr(RcRtStr,paramstr)
+    .w "{success:'true',info:'"_ret_"'}"
+    //取消审核
+    i Action = "CancleAudit" d
+	.s ret=##class(web.DHCSTM.DHCIngRcRtInv).CancleAudit(RowId,Type,paramstr)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+	//拒绝审核
+    i Action = "AuditNo" d
+    .s RefuseReason=$Get(%request.Data("RefuseReason",1))
+	.s ret=##class(web.DHCSTM.DHCIngRcRtInv).AuditNo(RowId,Type,paramstr,RefuseReason)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+</script>

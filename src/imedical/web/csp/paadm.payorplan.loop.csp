@@ -1,0 +1,53 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+...
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server> 
+	s (PatientID,ApptIDs,adm,sub,payor,plan)=""
+	s multiApptIDs = $g(%request.Data("multiApptIDs",1))
+	s multiPatIDs = $g(%request.Data("multiPatIDs",1))
+	i multiPatIDs'="" {
+		s (payor,plan)=""
+		s PatientID = $p($g(multiPatIDs),"^",1)
+		s ApptIDs = $p($g(multiApptIDs),",",1)
+		s adm=$p(^RBAS(+$g(ApptIDs),$p($g(ApptIDs),"||",2),"APPT",$p($g(ApptIDs),"||",3)),"^",4)
+		s sub=$o(^PAADM(+adm,"INS",""),-1)
+		i sub {
+			s payor=$p(^PAADM(+adm,"INS",sub),"^",1)
+			s plan=$p(^PAADM(+adm,"INS",sub),"^",10)
+		}
+	}
+</server>
+<script>
+	//alert('#(multiApptIDs)#');
+	//alert('#(multiPatIDs)#');
+	var multiApptIDs = '#(multiApptIDs)#';
+	var multiPatIDs = '#(multiPatIDs)#';
+	var sEpId = "";
+	var sPatId = '#(PatientID)#';
+	var sApptId = '#(ApptIDs)#';
+	var sApptIds = "";
+	var sRescID = "";
+	var sPresentStatus = "";
+	var sPayor = '#(payor)#';
+	var sPlan = '#(plan)#';
+	//alert(multiPatIDs)
+	if (multiPatIDs!="") {
+		var lnk="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.PayorPlan.Edit&EpisodeID="+sEpId+"&PatientID="+sPatId+"&ApptID="+sApptId+'&RescID='+sRescID+'&date='+""+'&PresentStatus='+sPresentStatus+"&Payor="+sPayor+"&Plan="+sPlan+"&ApptIDs="+sApptIds+"&PatientBanner=1"+"&multiPatIDs="+multiPatIDs+"&multiApptIDs="+multiApptIDs;
+	} else {
+		var lnk="websys.reload.csp";
+	}
+	window.location=lnk;
+</script>
+</body>
+</html>

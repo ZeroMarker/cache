@@ -1,0 +1,711 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server> 
+	n RBFutureAppt,Str,PatID,t,EpisodeID,IsOnly,dt,chkTra,chkInt,cancelledAdm,dispBookMess,TimeViolation,ServiceIDs,PubHolBook,PubHolMsg,code2Infor,pos
+	;log 34967 BC 24-4-2003
+	s code2Infor=0
+	s dispBookMess="N"
+	s TimeViolation=""
+	s EpisodeID=%request.Get("EpisodeID")
+	s obj=##Class(websys.Component).OpenName("RBMessages")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s TimeViolationWarning=$g(t("RBWaitingTimeViolation"))
+	s RBFutureAppt=$p(t("RBFutureAppt"),"^",1)
+	s RBSlotsAvail=$p(t("RBSlotsAvail"),"^",1)
+	s RBCantOBPastMax=$p(t("RBCantOBPastMax"),"^",1)
+	s RBLoadLevelExceeded=$p(t("RBLoadLevelExceeded"),"^",1)
+	s RBCantNA=$p(t("RBCantNA"),"^",1)
+	s NOTRBCantNA=$p(t("NOTRBCantNA"),"^",1)
+	s RBOverbookExceeded=$p(t("RBOverbookExceeded"),"^",1)
+	s RBSearchOutsideSched=$p(t("RBSearchOutsideSched"),"^",1)
+	s RBValidPin=$p(t("RBValidPin"),"^",1)
+	s RBCantSearchOutsideSched=$p(t("RBCantSearchOutsideSched"),"^",1)
+	s RBSlotsAvailCont=$p(t("RBSlotsAvailCont"),"^",1)
+	s RBApptPerSlotExceeded=$p(t("RBApptPerSlotExceeded"),"^",1)
+	s RBNoOverbooking=$p(t("RBNoOverbooking"),"^",1)
+	s RBCancerWarn=$p(t("RBCancerWarn"),"^",1)
+	s TCIExceeded=$p(t("TCIExceeded"),"^",1)
+	s RBMoreUnshown=$p(t("RBMoreUnshown"),"^",1)
+	; LOG 38393 BC 23-9-2003 New Group setting to allow overbooking of closed slots
+	s RBCantOBClosedSlot=$p(t("RBCantOBClosedSlot"),"^",1)
+	s RBPatUnavail=$p(t("RBPatUnavail"),"^",1)
+	s NADate=$p(t("NADate"),"^",1)
+	s NADate1=$p(t("NADate1"),"^",1)
+	s RBAppInPast=$p(t("RBAppInPast"),"^",1)
+	s NoPubHolBook=$p(t("NoPubHolBook"),"^",1)
+	s NotGuaranteedMsg=t("NotGuaranteed")
+	;LOG 34263 BC 8-4-2003 Allow for cancelled pre-admissions for waiting lists
+	s CancelledAdmWarning=t("CancelledAdmWarning")
+	s obj=##Class(websys.Component).OpenName("PAAdm.Edit")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s PAType=t("TYPE")
+	s PAWL=t("WAIT_LIST")
+	s PADate=t("DATE")
+	;s PALoc=t("LOCATION")
+	s PALoc=""
+	s PACP=t("CARE_PROV")
+	s PAOP=t("OPER")
+	s PADiag=t("DIAG")
+	s PAAdmTCI=t("PRE_ADM_TCI")
+	s PAAppt=t("APPT")
+	s PAConExist=t("CONFL_EXISTS")
+	s PATime=t("TIME")
+	s OPAADM=t("OPA_ADM")
+	s IPAADM=t("IPA_ADM")
+	s NBADM=t("NB_ADM")
+	s HPADM=t("HP_ADM")
+	s EPAADM=t("EPA_ADM")
+	s TransAppt=%request.Get("TransAppt")
+	s obj=##Class(websys.Component).OpenName("RBAppointment.ApptList")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s NoApptPayor=t("NoApptPayor")
+	s WarnApptPayor=t("WarnApptPayor")
+	;
+	s MUserC=$g(%request.Data("MUserC",1))
+	s Validated=0
+	s UserCode=%request.Get("UserCode")
+	s PIN=%request.Get("PIN")
+	s UserID="",UserID=##Class(web.SSUser).GetIdFromCodeOrDescription(UserCode)
+	i UserID="" s UserID=%session.Get("LOGON.USERID")
+	s UserObj=##Class(User.SSUser).%OpenId(UserID,0)
+	i UserObj {
+		s EncryptPIN=##Class(web.SSUser).Encrypt(PIN)
+		i UserObj.SSUSRPin=EncryptPIN {
+			s Validated=1
+		}
+		d UserObj.%Close()
+	}
+	
+	;
+	s PatID=%request.Get("PatientID")
+	s NewApptIDFlag=%request.Get("NewApptIDFlag")
+	s Str=%request.Get("Str")
+	s Overbook=%request.Get("Overbook")
+	s date=""
+	i %request.Get("Date") s date=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("Date"))
+	i $g(%request.Data("Date",1))="",$g(%request.Data("date",1))'="" s date=$g(%request.Data("date",1))
+	; Log 36711 BC 24-6-2003 Check for Dead or merged Patient (only needed to stop a very special case)
+	s obj=##Class(websys.Component).OpenName("PAPerson.Edit")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s patientinactmsg=""
+	i PatID,$p($g(^PAPER(PatID,"ALL")),"^",12)="Y",date>$p($g(^PAPER(PatID,"ALL")),"^",13) s patientinactmsg=t("PatientDeceased")
+	i PatID,$p($g(^PAPER(PatID,"PAT",1)),"^",6)="N",date>$p($g(^PAPER(PatID,"ALL")),"^",13) s patientinactmsg=t("PatientNotActive")
+	;
+	s obj=##Class(websys.Component).OpenName("RBAppointment.Find")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s RBservXdays=t("RBservXdays") 
+	s RBservXdays1=t("RBservXdays1")
+	
+	n count,count1,serID,locID,date,warnRet,warnRetpiece,Loop,AgeSexRest,sessID,chl,slot,nos
+	s (count,count1,Loop)=1
+	s (serID,locID,warnRet,warnRetpiece,date,ScheduleIDs,AgeSexRest,pos,sessID,chl,slot,nos)=""
+	;LOG 31106 RC 07/02/03 Conflict check for services booked with in X number of days
+	s AtEnd=0 f  s AtEnd=$p(Str,"^",Loop)  q:AtEnd=""  d
+	. s ServiceIDs=$p($p(Str,"^",Loop),"*",4)
+	. s ScheduleIDs=$p($p(Str,"^",Loop),"*",3)
+	. s LocationIDs=$p($p(Str,"^",Loop),"*",6)
+	. s date=$p($p(Str,"^",Loop),"*",1)
+	. s payid=$p($p(Str,"^",Loop),"*",7)
+	. s planid=$p($p(Str,"^",Loop),"*",8)
+	. s Loop=Loop+1
+	. s grp=$p($g(^SSU("SSUSR",UserID)),"^",5)
+	. s flag=$p($g(^SSU("SSGRP",+grp)),"^",44)
+	. f  s ScID=$p(ScheduleIDs,"z",count)  q:ScID=""  d
+	. . i 'pos,payid s pos=$$payorsess^MVBRBAS4(ScID,payid,UserID)
+	. . f  s serID=$p(ServiceIDs,"^",count1) q:serID=""  d
+	. . . s locID=$p(LocationIDs,"^",count1)
+	. . . s warnRet=##Class(web.RBAppointment).CheckServiceAgainstHospital(serID,locID,PatID,date)
+	. . . i $p(warnRet,"^",1)=1 d
+	. . . . s warnRetpiece=$p(warnRet,"^",2)
+	. . . . q
+	. . . s count1=count1+1
+	. . i 'pos,payid d
+	. . . s sessID=$p($g(^RBAS(+ScID,+$p(ScID,"||",2))),"^",12)
+	. . . s chl=$o(^RB("RES",+sessID,"DATE",+$p(sessID,"||",2),"SESS",+$p(sessID,"||",3),"INS",0,"InsType",payid,""))
+	. . . i chl s slot=$p($g(^RB("RES",+sessID,"DATE",+$p(sessID,"||",2),"SESS",+$p(sessID,"||",3),"INS",chl)),"^",2)
+	. . . i slot d
+	. . . . s nos=$l(ScheduleIDs,"z")-1
+	. . . . i nos'<slot s pos=$s(flag="Y":62,1:61)
+	. . s count=count+1
+	;
+	; Check for future appointments
+	n StDate,StTime,AtEnd,Loop,code,stop
+	s stop=0
+	s code=""
+	s Loop=1
+	s AtEnd=0 f  s AtEnd=$p(Str,"^",Loop)  q:AtEnd=""  q:stop=1  d
+	. s StDate=##Class(websys.Conversions).DateHtmlToLogical($p(AtEnd,"*",1))
+	. s SchedId=$p($p(AtEnd,"*",3),"z",1), SerId=$p(AtEnd,"*",4), Urgent=$p(AtEnd,"*",5)
+	. s StTime=##Class(websys.Conversions).TimeHtmlToLogical($p(AtEnd,"*",2))
+	. i StTime="" s StTime=$p($g(^RBAS(+SchedId,+$p(SchedId,"||",2))),"^",4)
+	. s dur=$$duration^MVBAPPT(SchedId,SerId)
+	. i dur="" s ETime=StTime
+	. i dur'="" s ETime=StTime+(dur*60)
+	. s mytest=PatID_","_StDate_","_StTime_","_ETime
+	. s code=$$chkappt^MVBAPPT(PatID,StDate,StTime,ETime)
+	. i code="Y"  s stop=1
+	. s Loop=Loop+1
+	;
+	; Check User Group for displaying future appointments
+	s GroupID=%session.Get("LOGON.GROUPID")
+	s ShowFutAppts=$p(^SSU("SSGRP",GroupID),"^",59)
+	s NotBookPastSched=$p(^SSU("SSGRP",GroupID),"^",60)
+	s AllowOverbookNA=##class(epr.GroupSettings).GetAllowOverbookNA(GroupID)   ;md 47819
+	s userID="",userID=%request.Get("UserCode")
+	i userID'="" s userID=##Class(web.SSUser).GetIdFromCodeOrDescription(userID)
+	i userID="" s userID=%session.Get("LOGON.USERID")
+	;BR 27/10/03 - Need to use UserCode incase User is changed.
+	i userID'="" d
+	.s UserNotAllowOverBook=$p(^SSU("SSUSR",userID),"^",92)
+	.s UserAllowOverBookZeroSlot=$p(^SSU("SSGRP",GroupID),"^",104)
+	;
+	; Check / validate overbookings
+	n StDate,StTime,EndTime,RescID,LocID,ServID,PayID,PlanID,Days,code2
+	s code2=""
+	s code2Str=""
+	s PatientAvailable="Y",unavaildate="",PubHolMsg="",PubHolBook=""
+	s Loop=1
+	i $l(Overbook,"^")>0,UserNotAllowOverBook="Y" s code2Str=69_"^"
+	s AtEnd=0 f  s AtEnd=$p(Overbook,"^",Loop)  q:AtEnd=""  q:UserNotAllowOverBook="Y"  q:PubHolMsg=1  d
+	. s StDate=$p(AtEnd,"|",1)
+	. s StDate=##Class(websys.Conversions).DateHtmlToLogical(StDate)
+	. ;Log 39748 BC check overbooking for patient unavailability
+	. i EpisodeID'="" d
+	. . i '##Class(web.PAAdmUnavailable).IsAvailable(EpisodeID,StDate) d
+	. . . s PatientAvailable="N"
+	. . . i unavaildate'="" s unavaildate=unavaildate_", "_$p(AtEnd,"|",1) 
+	. . . i unavaildate="" s unavaildate=$p(AtEnd,"|",1)
+	. s StDate=StDate_"^^^^"_%session.Get("LOGON.USERID")_"^^^^^^^"_%session.Get("LOGON.GROUPID")
+	. s StTime=##Class(websys.Conversions).TimeHtmlToLogical($p(AtEnd,"|",2))
+	. ;need to pass an end time in case StTime is before session.
+	. s EndTime=StTime
+	. s RescID=$p(AtEnd,"|",3)
+	. s LocID=$p(AtEnd,"|",4)
+	. s ServID=$p(AtEnd,"|",5)
+	. s PayID=$p(AtEnd,"|",6)
+	. s PlanID=$p(AtEnd,"|",7)
+	. s Days="1234567"
+	. s code2=$$valob^CRBAppointment1(RescID,StDate,StDate,StTime,EndTime,Days,"",LocID,ServID,PayID + "^^" + PlanID)
+	. i code2=61  d
+	. . ; System Parameter: Allow overbooking if there are free slots (if this is "Y" then we try to overbook).
+	. . s AllowOverBook=$p(^CF("RB",1),"^",24)
+	. . i (AllowOverBook="Y")  d
+	. . . s PLIST(1)="Y"
+	. . . s code2=$$valob^CRBAppointment1(RescID,StDate,StDate,StTime,"",Days,"",LocID,ServID,PayID + "^^" + PlanID)
+	. ; LOG 38393 BC 23-9-2003 New Group setting to allow overbooking of closed slots
+	. s closedslot=##Class(web.RBServiceOverride).IsSlotClosed(RescID,+StDate,+StTime)
+	. i closedslot,UserAllowOverBookZeroSlot'="Y" s code2=70
+	. ;md 47819
+	. s code2Infor=0
+	. i code2=64,$$block^MVBRBAS1(RescID,+StDate,+StTime) s code2Infor=1
+	. ;md 47819
+	. s code2Str = code2Str_code2_"^"
+	. s PubHolBook=##Class(epr.GroupSettings).GetNoPubHolBook(GroupID)
+	. i PubHolBook=1 d
+	. . i ##Class(web.RBAppointment).CheckPublicHoliday(+StDate,RescID)'="" s PubHolMsg=1
+	. s Loop=Loop+1
+	; LOG 24453
+	s obj=##Class(websys.Component).OpenName("ARCItmMast.Worklist.Edit")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s ARCItmMast=$p(t("ARCItmMast"),"^",1)
+	//LOG 33089 BC 20-2-03 Booking Message added to the OE message
+	s bookmess=$p(t("BookingNote"),"^",1)
+	s oemess=$p(t("OEMessage"),"^",1)
+	;log 34967 BC 24-4-2003
+	s dispBookMess=$p($g(^CF("RB",1)),"^",35)
+	s oeorditmMessage=""
+	s servMessage=""
+	s dateMessage=""
+	s patsex=""
+	s patage=""
+	s patobj=""
+	i PatID'="" s patobj=##Class(User.PAPerson).%OpenId(PatID)
+	i (patobj) {
+		s patage=##Class(web.PAPerson).calculateAge(PatID)
+		i patobj.PAPERSexDR s patsex=patobj.PAPERSexDR.%Id()
+		d patobj.%Close()
+	}
+	i PatID'="" d
+	.s AtEnd=0 f  s AtEnd=$p(Str,"^",Loop)  q:AtEnd=""  d
+	. .s ServiceID=$p($p(Str,"^",Loop),"*",4)
+	. .s SchedIDs=$p($p(Str,"^",Loop),"*",3)
+	. .s Loop=Loop+1
+	. .s StDate=$p(AtEnd,"*",1)
+	. .s StTime=$p(AtEnd,"*",2)
+	. .s s=$g(^RBC("SER",+ServiceID)),arcimid=$p(s,"^")
+	. .s servicedesc=""
+	. .s itmmstobj=##Class(User.ARCItmMast).%OpenId(arcimid)
+	. .i itmmstobj d
+	. . .s servicedesc=itmmstobj.ARCIMDesc
+	. . .d itmmstobj.%Close()
+	. .s message=""
+	. .s message=##Class(web.ARCItmMast).FindMessByID(arcimid,patage,patsex)
+	. .i message'="" d 
+	. . . s finis=0 
+	. . . s floop=1 
+	. . . f  s finis=$p(SchedIDs,"z",floop)  q:finis=""  d
+	. . . . s floop=floop+1
+	. . . . s schedobj=##Class(User.RBApptSchedule).%OpenId(finis)
+	. . . . i schedobj d
+	. . . . . s schtime=##Class(websys.Conversions).TimeLogicalToHtml(schedobj.ASSessStartTime)
+	. . . . . s schdate=##Class(websys.Conversions).DateLogicalToHtml(schedobj.ASDate)
+	. . . . . d schedobj.%Close()
+	. . . . . s servMessage=servMessage_servicedesc_" |"
+	. . . . . s dateMessage=dateMessage_" "_schdate_" "_schtime_" |"
+	. . . . . ; SB 11/07/02: Problems occur in the script if message has carrage returns, i've replaced them with space.
+	. . . . . s oeorditmMessage=oeorditmMessage_$tr(message,$c(13)," ")_" |"
+	;
+	;LOG 25281 BC Warning that a patient with Referral Status of "Urgent Cancer" has a first Appointment date greater than 14 days from the referral date.
+	;LOG 34263 BC 8-4-2003 Allow for cancelled pre-admissions for waiting lists
+	s cancelledAdm=""
+	i EpisodeID'="" {
+		s stat=$p($g(^PAADM(EpisodeID)),"^",20)
+		i stat="C" {
+			s EpisodeID="",cancelledAdm="Y"	
+			s %request.Data("EpisodeID",1)=""
+		}
+	}
+	s IsOnly=""
+	s urgcancerwarn=""
+	i EpisodeID'=""  {
+		s IsOnly=##Class(web.RBAppointment).GetApptIDsForAdm(EpisodeID,PatID)
+		i IsOnly="" s IsOnly="Y"
+		s checkRefDate=""
+		;
+		s status=##Class(web.PACReferralStatus).GetIdFromCodeOrDescription("UC")
+		s paadmobj=##Class(User.PAAdm).%OpenId(EpisodeID)
+		; if the status is "Urgent Cancer" and it has an associated icon then get the message
+		i paadmobj,paadmobj.PAADMRefStatDR,(paadmobj.PAADMRefStatDR.%Id()=status),(IsOnly="Y") s checkRefDate="Y"
+		i paadmobj d paadmobj.%Close()
+		s AtEnd=0 
+		s Loop=1
+		i checkRefDate="Y" {
+			f  {
+				s withintime="1"
+				s AtEnd=$p(Str,"^",Loop)  
+				q:AtEnd=""  	
+				s ServiceID=$p($p(Str,"^",Loop),"*",4)
+				s Loop=Loop+1
+				s StDate=$p(AtEnd,"*",1)
+				s StTime=$p(AtEnd,"*",2)
+				s s=$g(^RBC("SER",+ServiceID)),arcimid=$p(s,"^")
+				s servicedesc=""
+				s itmmstobj=##Class(User.ARCItmMast).%OpenId(arcimid)
+				i itmmstobj {
+					s servicedesc=itmmstobj.ARCIMDesc
+					d itmmstobj.%Close()
+				}
+				;log 31993 BC Urgent Cancer message appeaing all the time because HTML being passed and hence have to convert it to a logical date
+				s sStDate=##Class(websys.Conversions).DateHtmlToLogical(StDate)
+				s withintime=##Class(web.PAAdm).CheckReferralDate(EpisodeID,sStDate,14)
+				if (withintime=1) {
+					s urgcancerwarn=$g(urgcancerwarn)_servicedesc_"^"_StDate_"^"_StTime_"|"
+				}
+			}
+		}
+	}
+	; SB 07/06/02 (24863): Done for waitinglists, ApptDate can't be before TCI date
+	s WaitListIDstr=%request.Get("WaitListID")
+	s TCIDate="",svcdesc=""
+	s ValidateTCI=1,WLOffCnt=0,NotGuaranteed=""
+	s ValidateNADate=1,NADateFrom="",NADateTo="",NADeleteDate="",GuaranteedDate="",WLServ="",WLDaysWait="",MaxOff="",WLSerGrp=""
+	s testval="1"
+	i WaitListIDstr'="" d
+	. f i=1:1:$l(WaitListIDstr,"^") d
+	. . s WaitListID=$p(WaitListIDstr,"^",i)
+	. .	s appt=$p(Str,"^",i)
+	. . q:WaitListID=""
+	. . q:ValidateNADate=0
+	. . s apptdate=$p(appt,"*") 
+	. . s apptdate=##Class(websys.Conversions).DateHtmlToLogical(apptdate)
+	. . s wlobj=##Class(User.PAWaitingList).%OpenId(WaitListID)
+	. . i wlobj,wlobj.WLRadiologyFlag'="Y" d
+	. . . &SQL(SELECT ADM_AdmDate INTO :TCIDate FROM PA_WaitingListAdm WHERE ADM_ParRef=:WaitListID AND ADM_PAADM_DR=:EpisodeID)
+	. . . i TCIDate'="",apptdate>TCIDate s ValidateTCI=0
+	. . . d wlobj.%Close()
+	. . &sql( DECLARE ServGrp CURSOR FOR SELECT NA_DateFrom,NA_DateTo,NA_DateDelete FROM PA_WaitingListNotAvailable WHERE NA_ParRef=:WaitListID)
+	. . &sql( OPEN ServGrp)
+ 	. . f  q:SQLCODE=100  d
+	. . . s testval=SQLCODE
+	. . . s NADateFrom="",NADateTo=""
+	. . . s testval=apptdate
+	. . . &sql( FETCH ServGrp INTO :NADateFrom,:NADateTo,:NADeleteDate)
+	. . . i SQLCODE=0 d
+	. . . . s svcid=$p($p(appt,"*",4),"|") s svcdesc=$p($g(^RBC("SER",svcid)),"^",6)
+	. . . . i NADateFrom'="",NADateTo'="" i apptdate'<NADateFrom,apptdate'>NADateTo s ValidateNADate=0 
+	. . . . i NADateFrom'="",NADateTo="" i apptdate'<NADateFrom s ValidateNADate=0
+	. . . . i NADeleteDate'="" s ValidateNADate=1
+	. . &sql(CLOSE ServGrp)
+	. . s GuaranteedDate=$p($g(^PAWL(WaitListID)),"^",64)
+	. . i GuaranteedDate'="",apptdate'<GuaranteedDate s NotGuaranteed=1
+	. . s WLServ=$p($g(^PAWL(WaitListID)),"^",99)
+	. . i $p($g(^RBC("SER",WLServ)),"^",21)'="Y",apptdate>GuaranteedDate s NotGuaranteed=1
+	. . s WLSerGrp=$p($g(^RBC("SER",WLServ)),"^",9),WLLoc=$p($g(^PAWL(WaitListID)),"^",3),WLHosp=$p($g(^CTLOC(WLLoc)),"^",22)
+	. . s MaxOff=$p($g(^RBC("SG",WLSerGrp)),"^",11)
+	. . i MaxOff'="" s MaxOff=$p($g(^CTLOC(WLLoc)),"^",82)
+	. . i MaxOff'="" s MaxOff=$p($g(^CT("HOSP",WLHosp)),"^",36)
+	. . i MaxOff'="",$p($g(^RBC("SER",WLServ)),"^",21)="Y" d
+	. . . &sql(SELECT COUNT(APTOF_RowId) INTO :WLOffCnt FROM PA_WaitingListApptOffers WHERE APTOF_ParRef=:WaitListID)
+	. . . s WLOffCnt=WLOffCnt+1
+	. . . i WLOffCnt'<MaxOff d
+	. . . . s WLDaysWait=$p($g(^PAWL(WaitListID)),"^",96),NotGuaranteed=""
+	. . . . s GuaranteedDate=(+$h)+(WLDaysWait)
+	. . . . i apptdate>GuaranteedDate s NotGuaranteed=1
+	;LOG 28902 BC 25-9-2002
+	s ShowFutAppts=$p(^SSU("SSGRP",GroupID),"^",59)
+	s conflictmess=""
+	s StDate=date ;'##Class(websys.Conversions).DateHtmlToLogical($p(Str,"*",1)) ;only check the first appointment as they should be similar dates
+	; SB 09/03/05 (50499): Will now ignore appointments just booked through the quick appointment workflow.
+	s IgnoreAppt=TransAppt i NewApptIDFlag'="" s IgnoreAppt=NewApptIDFlag
+	i ShowFutAppts="Y" s conflictmess=##Class(web.PAAdm).GetConflictMessageForAppt(PatID,EpisodeID,%request.Get("WListID"),StDate,IgnoreAppt)
+	;log 35019 BC 17-4-2003
+	s CutWarningShort="N"
+	k ^TMP("WEB",$j)
+	i $l(conflictmess,"|")>12 d
+	. s CutWarningShort="Y"
+	s conflictmess=##Class(web.RBAppointment).correctCrossModCheck(conflictmess)
+	;Log 41359 BC 3-2-2004 Warn about dependent services
+	n nScheduleIDs,nServiceIDs,depwarning
+	s (nScheduleIDs,nServiceIDs,depwarning)=""
+	s Loop=1
+	s AtEnd=0 f  s AtEnd=$p(Str,"^",Loop)  q:AtEnd=""  d
+	. s nsch=$p($p(Str,"^",Loop),"*",3),nser=$p($p($p(Str,"^",Loop),"*",4),"|",1)
+	. f j=1:1:$l(nsch,"z")-1 d 
+	. . i nScheduleIDs'="" s nScheduleIDs=nScheduleIDs_"^"_$p(nsch,"z",j)
+	. . i nScheduleIDs="" s nScheduleIDs=$p(nsch,"z",j)
+	. . i nServiceIDs'="" s nServiceIDs=nServiceIDs_"^"_nser
+	. . i nServiceIDs="" s nServiceIDs=nser
+	. s Loop=Loop+1
+	i PatID d
+	. s depwarning=$$CheckDependServs^CRBAppointment3(PatID,nScheduleIDs,nServiceIDs)
+	. i depwarning'="" s depwarning=$$AssembleMessage^CRBAppointment3(depwarning)
+</server>
+
+<script arguments="Appt:%String" language=Cache method=cancelAppt>
+	d %request.Set("NoCancel",1)
+	d cancel^CRBAppointment(Appt,"Y")
+	d cancelreq^CRBAppointment(Appt)
+	q
+</script>
+
+<SCRIPT language=javascript>	
+	//Log 39748 BC check overbooking for patient unavailability
+	// Use oktoviolate to drop out of the check
+	var mmwin=top.frames["frmUpdateBooking"]
+	var MUserC="#(MUserC)#";
+	var oktoviolate=true
+	var patientavailable="#(PatientAvailable)#";
+	var unavaildate="#(unavaildate)#";
+	if (patientavailable=="N") {
+		alert('#(RBPatUnavail)#'+" "+unavaildate);
+		oktoviolate=false;
+	}
+	var msg=""
+	var msg1=""
+	if (mPiece("#(Overbook)#","|",1)!=""){
+		IsOverbooking='Y'
+	} else {
+		IsOverbooking=''
+	} 
+	//Log 36711 BC 24-6-2003 Check for Dead or merged Patient (only needed to stop a very special case)
+	var patientinactmsg="#(patientinactmsg)#"
+	if (patientinactmsg!="") {
+		if (!mmwin) { alert(patientinactmsg);}
+		if (mmwin) {mmwin.alert(patientinactmsg); }	
+	} else {
+		var ShowFutAppts="#(ShowFutAppts)#"
+		var TimeViolation="#(TimeViolation)#"
+		var t=new Array
+		t['TYPE']="#(PAType)#"
+		t['WAIT_LIST']="#(PAWL)#"
+		t['DATE']="#(PADate)#"
+		t['LOCATION']="#(PALoc)#"
+		t['CARE_PROV']="#(PACP)#"
+		t['OPER']="#(PAOP)#"
+		t['DIAG']="#(PADiag)#"
+		t['PRE_ADM_TCI']="#(PAAdmTCI)#"
+		t['APPT']="#(PAAppt)#"
+		t['CONFL_EXISTS']="#(PAConExist)#"
+		t['TIME']="#(PATime)#"
+		t['OPA_ADM']="#(OPAADM)#"
+		t['IPA_ADM']="#(IPAADM)#"
+		t['NB_ADM']="#(NBADM)#"
+		t['HP_ADM']="#(HPADM)#"
+		t['EPA_ADM']="#(EPAADM)#"
+		
+		if (TimeViolation==1) {
+			oktoviolate = confirm("#(TimeViolationWarning)#");
+		}
+		if (oktoviolate) {
+		if ("#(code)#"=="Y") {
+			msg1=msg1+"#(RBFutureAppt)#"+"\n\n";
+		}
+		if ("#(NotGuaranteed)#"=="1") {
+			msg1=msg1+"#(NotGuaranteedMsg)#"+"\n\n";
+		}
+		// LOG 34263 BC 8-4-2003 Allow for cancelled pre-admissions for waiting lists
+		if ("#(cancelledAdm)#"=="Y") {
+			if (!mmwin){ confirm('#(CancelledAdmWarning)#'); }
+			if (mmwin) { mmwin.confirm('#(CancelledAdmWarning)#');}
+		}
+		//LOG 28902 BC 25-9-2002 Move the appointment conflict warning back to the  Update 
+		//Log 41359 BC 3-2-2004 Warn about dependent services
+		if ("#(depwarning)#"!="") {
+			msg1="#(depwarning)#";
+		}
+			var Cont=true;
+			if ("#(warnRetpiece)#"!="") {
+				var warningmessage=""
+				warningmessage="#(RBservXdays)#"+"#(warnRetpiece)#"+"#(RBservXdays1)#"+"\n\n";
+				if (!mmwin){ Cont = confirm(warningmessage); }
+				if (mmwin) { Cont = mmwin.confirm(warningmessage); }
+			}
+			if (Cont) {
+				var goOn=true;
+				if ('#(conflictmess)#'!="") {
+					goOn=DisplayConflictMessages('#(conflictmess)#');
+				}
+			}
+			if (goOn) {
+				var goOnAgain=true;
+				if ('#(pos)#'==62) {
+					goOnAgain = confirm('#(WarnApptPayor)#');
+				} else if ('#(pos)#'==61) {
+					msg=msg+"#(NoApptPayor)#"+"\n\n"
+				}
+			}
+			//LOG 28902 BC 25-9-2002 added if statement to stop the update is "cancel" is selected
+			if (goOnAgain) {
+				var ret=true;
+				if ("#(urgcancerwarn)#"!="") {
+					var str="#(urgcancerwarn)#";
+					var uregentalerts=str.split("|");
+					cancermessage="";
+					cancermessage="#(RBCancerWarn)#"+"\n\n";
+					for (var i=0;i<uregentalerts.length;i++) {
+						if (uregentalerts[i]!="") {
+							var strin=uregentalerts[i].split("^");
+							cancermessage=cancermessage+strin[0]+" "+strin[1]+" "+strin[2]+"\n";
+						}
+					}
+					if (!mmwin) { var ret = confirm(cancermessage); }
+					if (mmwin) {var ret = mmwin.confirm(cancermessage);}
+				}
+				//log 34967 BC 24-4-2003
+				var dispBookMess="#(dispBookMess)#";
+				if (ret) {
+					if ("#(oeorditmMessage)#"!="") {
+						var str="#(oeorditmMessage)#";
+						var itmalerts=str.split("|");
+						str="#(servMessage)#";
+						var servalerts=str.split("|");
+						str="#(dateMessage)#";
+						var datealerts=str.split("|");
+						totalmessage="";
+						totalmessage="#(ARCItmMast)#"+"\n\n";
+						for (var i=0;i<itmalerts.length;i++) {
+							if (itmalerts[i]!="") {
+								//LOG 33089 BC 20-2-03 Booking Message added to the OE message
+								var mess=itmalerts[i].split(String.fromCharCode(2));
+								totalmessage=totalmessage+servalerts[i]+" "+datealerts[i]+"\n";
+								if ((mess[0])&&(mess[0]!="")) totalmessage=totalmessage+"#(oemess)#"+" : "+mess[0]+"\n";
+								//log 34967 BC 24-4-2003
+								if ((dispBookMess=="Y")&&(mess[1])&&(mess[1]!="")) totalmessage=totalmessage+"#(bookmess)#"+" : "+mess[1]+"\n";
+								totalmessage=totalmessage+"\n";
+							}
+						}
+						//MD 
+						if (!mmwin) { alert(totalmessage); }
+						if (mmwin) { mmwin.alert(totalmessage); }
+						
+					}
+					str="#(code2Str)#"
+					var lu = str.split("^");
+					if (IsOverbooking=='Y') {
+					  for (var i=0;i<lu.length;i++) {
+						if (lu[i]==61) {
+							msg=msg+"#(RBSlotsAvail)#"+"\n\n"
+						}
+						if (lu[i]==63) {
+							msg1=msg1+"#(RBLoadLevelExceeded)#"+"\n\n";
+						}
+						if (lu[i]==64) {
+							if ("#(code2Infor)#"==1) {
+							if ("#(AllowOverbookNA)#"==1) {
+								msg1=msg1+"#(RBCantNA)#"+"\n\n";
+							} else {
+								msg=msg+"#(NOTRBCantNA)#"+"\n\n";
+							}	
+							}else {	
+							if ("#(NotBookPastSched)#"=="Y") {
+								msg=msg+"#(RBCantSearchOutsideSched)#"+"\n\n";
+							} else {
+								msg1=msg1+"#(RBSearchOutsideSched)#"+"\n\n";
+							}
+							}
+						}
+						if (lu[i]==65) {
+							msg1=msg1+"#(RBApptPerSlotExceeded)#"+"\n\n";
+						}
+						if (lu[i]==66) {
+							msg1=msg1+"#(RBOverbookExceeded)#"+"\n\n";
+						}
+						if (lu[i]==67) {
+							msg1=msg1+"#(RBSlotsAvailCont)#"+"\n\n";
+						}
+						if (lu[i]==68) {
+							msg=msg+"#(RBCantOBPastMax)#"+"\n\n";
+						}
+						if (lu[i]==69) {
+							msg=msg+"#(RBNoOverbooking)#"+"\n\n";
+						}
+						//LOG 38393 BC 23-9-2003 New Group setting to allow overbooking of closed slots
+						if (lu[i]==70) {
+							msg=msg+"#(RBCantOBClosedSlot)#"+"\n\n";
+						}
+					  }
+					}
+					if ("#(PubHolMsg)#"==1) {
+						msg=msg+"#(NoPubHolBook)#"+"\n\n";
+					}				
+					if (msg!="") {
+						if (!mmwin) {alert(msg) };
+						if (mmwin) { mmwin.alert(msg);}
+					} else if (msg1!="") {
+						if (!mmwin) { var ret=confirm(msg1); }
+						if (mmwin) { var ret=mmwin.confirm(msg1); }
+						if (ret) {
+							top.frames["frmUpdateBooking"].UpdateClickHandler("");
+						}
+					}
+					if ((msg=="") && (msg1=="")) {
+						top.frames["frmUpdateBooking"].UpdateClickHandler("");
+					}
+				}
+			}
+		}
+	}
+
+function mPiece(s1,sep,n) {
+   	delimArray = s1.split(sep);
+	if ((n <= delimArray.length-1) && (n >= 0)) {
+    	return delimArray[n];
+	} else {
+	  	return ""					
+    }
+}
+
+ //LOG 28902 BC 25-9-2002 Move the appointment conflict warning back to the  Update 
+function DisplayConflictMessages(ConfMsg) {
+	var sSingleMsg;
+	var sMsgBoxMsg=t['CONFL_EXISTS']+"\n"+"\n";
+	var fdate;
+	var ftime;
+	var floc;
+	var fdoc;
+	var foper;
+	var fdiag;
+	var fstat;
+	var strg= new String(ConfMsg);
+	var array=strg.split("|");
+	var numberofconflicts=array.length;
+	if (numberofconflicts < 5) {
+		for (var i=0; mPiece(ConfMsg,"|",i)!=""; i++) {
+			sSingleMsg=mPiece(ConfMsg,"|",i);
+			if (mPiece(sSingleMsg,"^",0)=="wl") {
+				//do nothing
+			} else if (mPiece(sSingleMsg,"^",0)=="adm") {
+				// Preadmission messages return in the form
+				fdate=mPiece(sSingleMsg,"^",1);
+				ftime=mPiece(sSingleMsg,"^",2);
+				floc=mPiece(sSingleMsg,"^",3);
+				fdoc=mPiece(sSingleMsg,"^",4);
+				ftype=mPiece(sSingleMsg,"^",5);
+				fvis=mPiece(sSingleMsg,"^",6);
+				if (fvis=="P") sMsgBoxMsg+=t['TYPE']+": "+t['PRE_ADM_TCI']+" ";
+				if ((fvis=="A") && (ftype=="E")) sMsgBoxMsg+=t['TYPE']+": "+t['EPA_ADM']+" ";
+				if ((fvis=="A") && (ftype=="I")) sMsgBoxMsg+=t['TYPE']+": "+t['IPA_ADM']+" ";
+				if ((fvis=="A") && (ftype=="O")) sMsgBoxMsg+=t['TYPE']+": "+t['OPA_ADM']+" ";
+				if ((fvis=="A") && (ftype=="H")) sMsgBoxMsg+=t['TYPE']+": "+t['HP_ADM']+" ";
+				if ((fvis=="A") && (ftype=="N")) sMsgBoxMsg+=t['TYPE']+": "+t['NB_AMD']+" ";
+				sMsgBoxMsg+=t['DATE']+": "+fdate+"\n";
+				sMsgBoxMsg+=t['TIME']+": "+ftime+"\n";
+				sMsgBoxMsg+=t['LOCATION']+": "+floc+"\n";
+				sMsgBoxMsg+=t['CARE_PROV']+": "+fdoc+"\n";
+				sMsgBoxMsg+="\n";					
+			} else if (mPiece(sSingleMsg,"^",0)=="appt") {
+				// Appointment messages return in the form
+				fdate=mPiece(sSingleMsg,"^",1);
+				ftime=mPiece(sSingleMsg,"^",2);
+				floc=mPiece(sSingleMsg,"^",3);
+				fdoc=mPiece(sSingleMsg,"^",4);
+				fstat=mPiece(sSingleMsg,"^",5);
+				sMsgBoxMsg+=t['TYPE']+": "+t['APPT']+" ("+fstat+")\n";
+				sMsgBoxMsg+=t['DATE']+": "+fdate+"\n";
+				sMsgBoxMsg+=t['TIME']+": "+ftime+"\n";
+				sMsgBoxMsg+=t['LOCATION']+": "+floc+"\n";
+				sMsgBoxMsg+=t['CARE_PROV']+": "+fdoc+"\n";
+				sMsgBoxMsg+=+"\n";					
+			}
+		}
+	} else {		
+		for (var i=0; mPiece(ConfMsg,"|",i)!=""; i++) {
+			sSingleMsg=mPiece(ConfMsg,"|",i);
+			if (mPiece(sSingleMsg,"^",0)=="wl") {			
+			} else if (mPiece(sSingleMsg,"^",0)=="adm") {
+				// Preadmission messages return in the form
+				fdate=mPiece(sSingleMsg,"^",1);
+				ftime=mPiece(sSingleMsg,"^",2);
+				floc=mPiece(sSingleMsg,"^",3);
+				fdoc=mPiece(sSingleMsg,"^",4);
+				ftype=mPiece(sSingleMsg,"^",5);
+				fvis=mPiece(sSingleMsg,"^",6);
+				if (fvis=="P") sMsgBoxMsg+=t['TYPE']+": "+t['PRE_ADM_TCI']+" ";
+				if ((fvis=="A") && (ftype=="E")) sMsgBoxMsg+=t['TYPE']+": "+t['EPA_ADM']+" ";
+				if ((fvis=="A") && (ftype=="I")) sMsgBoxMsg+=t['TYPE']+": "+t['IPA_ADM']+" ";
+				if ((fvis=="A") && (ftype=="O")) sMsgBoxMsg+=t['TYPE']+": "+t['OPA_ADM']+" ";
+				if ((fvis=="A") && (ftype=="H")) sMsgBoxMsg+=t['TYPE']+": "+t['HP_ADM']+" ";
+				if ((fvis=="A") && (ftype=="N")) sMsgBoxMsg+=t['TYPE']+": "+t['NB_AMD']+" ";
+				sMsgBoxMsg+=t['DATE']+": "+fdate+" ";
+				sMsgBoxMsg+=t['TIME']+": "+ftime+" ";
+				sMsgBoxMsg+=t['LOCATION']+": "+floc+" ";
+				sMsgBoxMsg+=t['CARE_PROV']+": "+fdoc+" ";
+				sMsgBoxMsg+="\n";					
+			} else if (mPiece(sSingleMsg,"^",0)=="appt") {
+				// Appointment messages return in the form
+				fdate=mPiece(sSingleMsg,"^",1);
+				ftime=mPiece(sSingleMsg,"^",2);
+				floc=mPiece(sSingleMsg,"^",3);
+				fdoc=mPiece(sSingleMsg,"^",4);
+				fstat=mPiece(sSingleMsg,"^",5);
+				sMsgBoxMsg+=t['TYPE']+": "+t['APPT']+" ("+fstat+") ";
+				sMsgBoxMsg+=t['DATE']+": "+fdate+" ";
+				sMsgBoxMsg+=t['TIME']+": "+ftime+" ";
+				sMsgBoxMsg+=t['LOCATION']+": "+floc+" ";
+				sMsgBoxMsg+=t['CARE_PROV']+": "+fdoc+" ";
+				sMsgBoxMsg+=+"\n";					
+			}
+		}
+	}
+	if ("#(CutWarningShort)#"=="Y") sMsgBoxMsg+="\n"+"#(RBMoreUnshown)#"
+	if (!mmwin)  { 	var ret = confirm(sMsgBoxMsg); }
+	if (mmwin) {	var ret = mmwin.confirm(sMsgBoxMsg);}
+	return ret;
+ }
+ // End LOG 28902
+
+</SCRIPT>
+</body>
+</html>

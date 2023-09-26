@@ -1,0 +1,4 @@
+function testxxx()
+{
+	return "a"
+}

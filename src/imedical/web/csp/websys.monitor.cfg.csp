@@ -1,0 +1,253 @@
+<html>
+<head>
+<title>	Cache Server Page </title>
+<BOOTSTRAP303/>
+<script type="text/javascript" src="../scripts_lib/vue.js" charset="utf-8"></script> 
+<script type="text/javascript" src="../scripts_lib/echarts3.6.2/echarts.js" charset="utf-8"></script> 
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script> 
+<style>
+	body{
+		background-color:#f9f9f9 ;
+	}
+	.popover {
+		z-index:10001;
+	}
+	.form-control{
+		width:150px;
+		display: inline;
+	}
+	.mtb5{
+		margin-top: 5px;
+    	margin-bottom: 5px;
+	}
+	.i-fixed-top {
+        position:fixed;
+        left:50%;
+        top:0px;
+        width:640px;
+        height:45px;
+        margin-left:-320px;
+    }
+    .i-fixed-buttom {
+        position:fixed;
+       	bottom:10px;
+       	right:10px;
+    }
+    .im-panel .panel-heading{
+		cursor: pointer;
+    }
+   tr.error{
+	   color:red;
+    }
+</style>
+<server >
+	Set CfgPageFlg = $g(%request.Data("settings",1))
+	w !,"<script type=""text/javascript"">"
+	// 输出服务器信息
+	w !,"var monitorJson={ "
+	w !,"curServerItem:{}"
+	w !,",diskParam:0"
+	w !,",msg:"""""
+	w !,",dbParam:"
+	w ##class(ext.util.JsonObject).ClassQuery2Json("websys.MonitorDB","DBList")
+	w !,",serverList:"
+	d ##class(ext.util.JsonObject).ClassQuery2Json("websys.ServerConfigMgr","Find")
+	w !,",mTypeList:"
+	d ##class(ext.util.JsonObject).ClassQuery2Json("websys.MonitorType","Find")
+	w !,"}"
+	w !,"</script>"
+</server>
+</head>
+<body>
+	<div id="allEl">
+		<a href="#" style="z-index:1000" class="i-fixed-buttom btn btn-primary" v-on:click="returnPage()">
+			<span class="glyphicon glyphicon-cog" aria-hidden="true"></span> 返回
+		</a>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12" role="main">
+					<!--服务器配置-->
+					<im-panel title="服务器配置" :collapsed='true'>
+						<div slot="body">
+							定义服务器的属性。现在
+							<a href="javascript:void(0);" class="btn btn-default" v-on:click="addServerItem()">
+								新增
+							</a>
+						</div>
+						<table class="table table-hover table-condensed">
+							<thead>
+							<tr><th style="width:100px">服务器名</th><th>IP</th><th><div style="width:80px">WEB端口</div></th><th><div style="width:120px">WEB路径</div></th><th style="width:120px">服务类型</th></tr>
+							</thead>
+							<tr v-for="(server,serverInd) in serverList" v-bind:class="{'error':(server.errorMsg!=='')}">
+								<td>{{server.serverName}}</td>
+								<td>{{server.serverIP}}</td>
+								<td>{{server.webServerPort}}</td>
+								<td>{{server.serverWebPath}}</td>
+								<td>{{server.serverType}}</td>
+								<td style="width: 15px;">
+									<a href="javascript:void(0);" style="color:black;" v-on:click="eidtServerItem(server)">
+										<span class="glyphicon glyphicon-pencil" aria-hidden="true" title="编辑"></span>
+									</a>
+								</td>
+								<td>
+									<a href="javascript:void(0);" style="color:black;" v-on:click="showDelWin(server)">
+										<span class="glyphicon glyphicon-minus" aria-hidden="true" title="删除"></span>
+									</a>
+								</td>
+							</tr>
+						</table>
+					</im-panel>
+					<!--监听类型配置-->
+					<im-panel title="监听类型配置" :collapsed='true'>
+						<div slot="body">定义要监听的哪些项目</div>
+					  	<table class="table table-hover table-condensed">
+							<thead>
+							<tr><th style="width:60px">序号</th><th style="display:none;">代码</th><th><div style="width:120px">名称</div></th><th><div style="width:420px">说明</div></th><th style="width:80px">激活</th></tr>
+							</thead>
+							<tr v-for="(typ,typIdex) in mTypeList">
+								<td>{{typ.mid}}</td>
+								<td style="display:none;">{{typ.mtype}}</td>
+								<td>{{typ.mname}}</td>
+								<td>{{typ.mnote}}</td>
+								<!--<td>
+									<button v-if="typ.mparam!=''" type="button" v-bind:data-content="typ.mparam!=''?('当前参数值：'+typ.mparam+',点击可修改'):'点击可修改'" data-trigger="hover" class="btn" data-container="body" data-toggle="popover" data-placement="top" v-on:click="typeParamSetting(typ)">配置</button>
+								</td>-->
+								<td>
+									<div class="btn-group" role="group" style="width:80px;">
+									  <button type="button" class="btn btn-default" v-bind:class="{'btn-success':'Y'==typ.mactive}" v-on:click="switchTypActive(typ)">开</button>
+									  <button type="button" class="btn btn-default" v-bind:class="{'btn-warning':'N'==typ.mactive}" v-on:click="switchTypActive(typ)">关</button>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</im-panel><!--监听类型end-->
+					
+					<!--磁盘阀值设置-->
+					<im-panel title="磁盘阀值设置" :collapsed='true'>
+						<div slot="body">
+							<div class="col-md-3">值在0-1之间. 如0.9</div>
+							<input v-on:blur="diskParamBlur()" v-on:focus="diskParamFocus()" v-model:value="diskParam" class="form-control">
+						</div>
+					</im-panel>
+					
+					<!--监听DB配置-->
+					<im-panel title="监听数据库配置" :collapsed='true'>
+					  <div slot="body">定义数据库是否监听</div>
+					  <table class="table table-hover table-condensed">
+							<thead>
+							<tr>
+								<th>数据库名</td>
+								<th style="width:80px">大小(M)</td>
+								<th>库路径</td>
+								<th>是否监听</th>
+							</tr>
+							</thead>
+							<tr v-for="(dbp,dbpind) in dbParam">
+								<td>{{dbp.ValueKey}}</td>
+								<td>{{dbp.Value}}M</td>
+								<td>{{dbp.Path}}</td>
+								<td>
+									<div class="btn-group" role="group" style="width:80px;">
+									  <button type="button" class="btn btn-default" v-bind:class="{'btn-success':'1'==dbp.IsActive}" v-on:click="switchDBParamActive(dbp)">开</button>
+									  <button type="button" class="btn btn-default" v-bind:class="{'btn-warning':'0'==dbp.IsActive}" v-on:click="switchDBParamActive(dbp)">关</button>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</im-panel><!--监听DB配置结束-->
+					
+				</div><!--md-12-->
+			</div><!--row-->
+		</div><!--container-->
+		   <div v-if="msg!=''" class="i-fixed-top alert " v-bind:class="{'alert-success':success,'alert-danger':!success}">{{msg}}</div>
+		</nav>
+		<div id="serverFormWin" class="modal fade" role="dialog">
+			<div class="modal-dialog" role="document" aria-hidden="true" >
+			    <div class="modal-content" style="width:520px">
+			    	<div class="modal-header" >
+				    	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				    	<span aria-hidden="true">&times;</span></button>
+			        	<h4 class="modal-title">服务器维护</h4>
+					</div>
+					<div class="modal-body">
+						<div slot="body" class="row mtb5">
+							<div class="col-md-4">服务器名</div>
+							<div class="col-md-8"><input class="form-control" style="width:200px" placeholder="以字母开头如:ECP12" v-model:value="curServerItem.serverName"></div>
+						</div>
+						<div slot="body" class="row mtb5">
+							<div class="col-md-4">服务器IP</div>
+							<div class="col-md-8"><input class="form-control" style="width:200px" v-model:value="curServerItem.serverIP"></div>
+						</div>
+						<div slot="body" class="row mtb5">
+							<div class="col-md-4">WEB端口</div>
+							<div class="col-md-8"><input class="form-control" style="width:200px" v-model:value="curServerItem.webServerPort"></div>
+						</div>
+						<div slot="body" class="row mtb5">
+							<div class="col-md-4">WEB路径</div>
+							<div class="col-md-8">
+								<input class="form-control" style="width:200px" v-model="curServerItem.serverWebPath" placeholder="输入路径如:/imedical/web">
+								<!--<select class="form-control" style="width:200px" v-model="curServerItem.serverWebPath">
+								  <option value="/dthealth/web">/dthealth/web</option>
+								  <option value="/trakcare/web">/trakcare/web</option>
+								  <option value="/trakcarelive/trak/web">/trakcarelive/trak/web</option>
+								</select>-->
+							</div>
+						</div>
+						<div slot="body" class="row mtb5">
+							<div class="col-md-4">服务类型</div>
+							<div class="col-md-8">
+								<!--v-model:value="curServerItem.serverType" -->
+								<select class="form-control" style="width:200px" v-model="curServerItem.serverType" >
+								  <option value="D">DB</option>
+								  <option value="M">主WEB</option>
+								  <option value="E">ECP</option>
+								  <option value="S">Shadow</option>
+								</select>
+							</div>
+						</div>
+						<div slot="body" class="row mtb5">
+							<div class="col-md-12">
+								获取数据服务
+							</div>
+						</div>
+						<div slot="body" class="row mtb5">
+							<div class="col-md-12">
+								<a v-bind:href="getServerUrl(curServerItem)" target="_blank">{{getServerUrl(curServerItem)}}</a>
+							</div>
+						</div>
+						<div slot="body" class="row mtb5">
+							<div class="col-md-12">
+								<div style="color:red;">{{msg}}</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button id="saveServerItemSure" type="button" class="btn btn-primary" v-on:click="saveServerItem(curServerItem)">确定</button>
+						<button id="saveServerItemCancel" type="button" class="btn btn-default" data-dismiss="modal" >取消</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+		
+		<div id="delServerFormWin" class="modal fade" role="dialog">
+			<div class="modal-dialog" role="document" aria-hidden="true" >
+			    <div class="modal-content" style="width:420px">
+			    	<div class="modal-header" >
+				    	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				    	<span aria-hidden="true">&times;</span></button>
+			        	<h4 class="modal-title">操作确认</h4>
+					</div>
+					<div class="modal-body">
+						你确定要删除【{{curServerItem.serverName}}】服务？
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" v-on:click="delServerItem(curServerItem)">确定</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal" >取消</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+	</div>
+	<script type="text/javascript" src="../scripts/websys.monitor.cfg.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s yearmonth=$Get(%request.Data("yearmonth",1))
+	s deptname=$Get(%request.Data("deptname",1))
+	s itemdesc=$Get(%request.Data("itemdesc",1))
+	s unitname=$Get(%request.Data("unitname",1))
+	s value=$Get(%request.Data("value",1))
+	s datafrom=$Get(%request.Data("datafrom",1))
+	s chkstate=$Get(%request.Data("chkstate",1))
+
+	
+	//s checker=^dhcpaUsertemp("LOGON.USERID")	
+	//s oprator=^dhcpaUsertemp("LOGON.USERID")
+	
+	s checker=$Get(%request.Data("checker",1))
+	s oprator=$Get(%request.Data("oprator",1))
+
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).List(hospid,sortField,sortDir,start,limit,yearmonth,datafrom)
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).InsertRec(hospid,yearmonth,deptname,itemdesc,value,datafrom,unitname)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).UpdateRec(rowid,yearmonth,deptname,itemdesc,value,datafrom,unitname)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "audit" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).Audit(rowid,checker)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "noaudit" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).NoAudit(rowid,oprator)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "calculate" d
+	.s result = ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).Calculate(yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "yearmonth" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).yearmonth(start, limit, str)
+		
+	i action = "deptname" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).Deptname(start, limit, str)
+				
+	i action = "data" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).DataFrom(hospid,start, limit, str)
+
+	i action = "desc" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).ItemName(hospid,start, limit, str)
+	
+	i action = "unit" d
+	.w ##class(herp.budg.udata.uBudgFactRealMonthDetailPlan).UnitName(start, limit, str)
+	
+	
+</script>

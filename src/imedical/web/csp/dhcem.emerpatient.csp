@@ -1,0 +1,260 @@
+<!-- Creator: nisijia
+ CreateDate: 2016-11-16 -->
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<!--<TRAK:HEAD></TRAK:HEAD>-->
+<DHC:BOOTSTRAP/>
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/dhcem/css/emerpatient.css">
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js" charset="gb2312"></script>
+	<script src="../scripts/dhcnewpro/dhcem/emerpatient.js" charset="gb2312"></script>
+	<script Language="Javascript">
+		var EpisodeID="#(%request.Get("EpisodeID"))#" //医嘱ID 
+		var locId="#(%session.Data("LOGON.CTLOCID"))#"  //科室ID
+		var hosp="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+		var LgUserID="#(%session.Get("LOGON.USERID"))#";  //用户ID
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+   </script>
+   <SERVER>
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+    d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+    s ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+    s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+</SERVER>
+   <style>
+   .index-function-text:hover,.text:active{
+	   color:#40a3de;
+	   }
+  #ClsReadCardSDSL,#DHCIDOCXClsIDDLLWLTRS{display:none}/*hxy 2017-02-27*/
+   </style>
+</head>
+
+<body>
+    <div class="emerPatient">
+        <div class="title">
+	        <!--index-button start-->
+	        <div class="index-function-button-area" style="border-bottom: 1px solid #CCC;">
+            	<div onclick="javascript:save()" class="index-function-button">
+					<i class="fa fa-volume-up fa-2x" style="color:#6bd7fb;"></i>
+					<br>
+					<p class="index-function-button-text">呼叫</p>
+			    </div>
+            	<div onclick="javascript:save()" class="index-function-button-4">
+					<i class="fa fa-volume-up fa-2x" style="color:red;"></i>
+					<br>
+					<p class="index-function-button-text">重复呼叫</p>
+			    </div>
+            	<div onclick="javascript:save()" class="index-function-button">
+					<i class="fa fa-exchange fa-2x" style="color:#16bd9f"></i>
+					<br>
+					<p class="index-function-button-text">过号</p>
+			    </div>
+			    <div id="backNumber" class="index-function-button">
+					<i class="fa fa-fast-backward fa-2x" style="color:#ef879d"></i>
+					<br>
+					<p class="index-function-button-text">退号</p>
+			    </div>
+            	<div id="admissions" class="index-function-button">
+					<i class="fa fa-user-md fa-2x" style="color:#ffbe58"></i>
+					<br>
+					<p class="index-function-button-text">接诊</p>
+			    </div>
+            	<div id="triage" class="index-function-button-4">
+					<i class="fa fa-user-md fa-2x" style="color:#61dbff"></i>
+					<br>
+					<p class="index-function-button-text">分诊信息</p>
+			    </div>
+			    <div id="upCheckLev" class="index-function-button-4">
+					<i class="fa fa-user-md fa-2x" style="color:#61dbff"></i>
+					<br>
+					<p class="index-function-button-text">更新分诊</p>
+			    </div>
+			    <div id="upCheckLev" class="">
+					<div class="collapse navbar-collapse" id="example-navbar-collapse">
+			            <ul class="nav navbar-nav">
+			                <li class="dropdown">
+		                        <div class="index-function-button-4 index-function-button-4 dropdown-toggle" data-toggle="dropdown">
+                					<i class="fa fa-user-md fa-2x" style="color:orange"></i>
+									<br>
+									<p class="index-function-button-text">改状态</p>	
+                				</div>
+			                    <ul class="dropdown-menu">
+			                    	<SERVER>
+			                    		///取出配置，形成界面按钮
+				                        s grp=%session.Data("LOGON.GROUPID")
+						  				s userid=%session.Data("LOGON.USERID")
+					                    i $d(^DHCEMPSA(0,"TYPE","U",userid))=10 d
+								  		.s psa=""  f  s psa=$o(^DHCEMPSA(0,"TYPE","U",userid,psa)) q:psa=""  d
+								  		..q:'$D(^DHCEMPSA(psa))
+								  		..s parf=$p(^DHCEMPSA(psa),"^",1)
+								  		..q:+parf=0
+								  		..s code=$p(^DHCPACVisitStatus(parf),"^",1)
+								  		..s desc=$p(^DHCPACVisitStatus(parf),"^",2)
+								  		..w "<li><a href='#' data-id='"_code_"'>"_desc_"</a></li>"
+								  		e  d
+								  		.i $d(^DHCEMPSA(0,"TYPE","G",grp))=10 d
+								  		..s psa=""  f  s psa=$o(^DHCEMPSA(0,"TYPE","G",grp,psa)) q:psa=""  d
+								  		...s parf=$p(^DHCEMPSA(psa),"^",1)
+								  		...q:+parf=0
+								  		...s code=$p(^DHCPACVisitStatus(parf),"^",1)
+								  		...s desc=$p(^DHCPACVisitStatus(parf),"^",2)
+								  		...w "<li><a href='#' data-id='"_code_"'>"_desc_"</a></li>"
+								  		 w "<li><a data-id='Annul' href='#'>撤销结算</a></li>"
+			                       </SERVER>
+			                    </ul>
+			                </li>
+			            </ul>
+			        </div>
+			    </div>
+            </div>				
+			<!--index-button end-->
+            <!--
+            <div class="row">
+                <div class="col-xs-1">
+                    <div style="color: #6bd7fb;font-size: 35px;cursor:pointer"><i class="fa fa-volume-up"></i></div>
+                    <div><span>呼叫</span></div>
+                </div>
+                <div class="col-xs-1">
+                    <div style="color: red;font-size: 35px;cursor:pointer"><i class="fa fa-volume-up"></i></div>
+                    <span>重复呼叫</span>
+                </div>
+                <div class="col-xs-1">
+                    <div style="color: #16bd9f;font-size: 35px;cursor:pointer"><i class="fa fa-exchange"></i></div>
+                    <span> 过号</span>
+                </div>
+                <div class="col-xs-1" id="backNumber">
+                    <div style="color: #ef879d;font-size: 35px;cursor:pointer"><i class="fa fa-fast-backward"></i></div>
+                    <span >退号</span>
+                </div>
+                <div class="col-xs-1" id="admissions">
+                    <div style="color: #ffbe58;font-size: 35px;cursor:pointer"><i class="fa  fa-user-md"></i></div>
+                    <span >接诊</span>
+                </div>
+                <div class="col-xs-1" id="triage">
+                    <div style="color: #61dbff;font-size: 35px;cursor:pointer"><i class="fa  fa-user-md"></i></div>
+                    <span >分诊信息</span>
+                </div>
+                <div class="col-xs-1" id="upCheckLev">
+                    <div style="color: #61dbff;font-size: 35px;cursor:pointer"><i class="fa  fa-user-md"></i></div>
+                    <span >更新分诊</span>
+                </div>
+            </div>-->
+        </div>
+        <div class="left fl">
+            <div class="left_top" id="nav">
+                <ul class="nav" >
+                    <li style="background-color:#2cb84b;border-radius: 5px;">
+                    <div>
+                    	  <button data-toggle="dropdown" class="dropdown-toggle btn" aria-expanded="false" id="btnpatient">
+						  <i class="fa fa-user-md"></i>&nbsp;&nbsp;&nbsp;&nbsp;<span>病人列表</span>&nbsp;&nbsp;<i class="caret"></i>
+						  </button>
+					
+						  <ul class="dropdown-menu dropdown-menu-right" style="margin: -10px;border-radius: 5px;">
+						  <li><a href="#" id="patientList">病人列表</a></li>
+						  <li><a href="#" id="attention">留观</a></li>
+						  <li><a href="#" id="bttention">本科留观</a></li>
+						  <li><a href="#" id="nattention">非留观</a></li>
+						  </ul>
+                    </div>	
+                    </li>
+                    <li><a href="#" id="awaitDiag"><i class="fa fa-stethoscope" style="color:#f36b51;"></i>&nbsp;&nbsp;&nbsp;&nbsp;待诊<span id="awaitDiagNum">（0）</span></a></li>
+                    <li><a href="#" id="haveDiag"><i class="fa fa-stethoscope" style="color:#34b6e7"></i>&nbsp;&nbsp;&nbsp;&nbsp;已诊<span id="haveDiagNum">（0）</span></a></li>
+                    <li style="display:none"><a href="#" style="padding-left: 8px;" id="nowDiag"><i class="fa fa-hospital-o" style="color:#fcc257"></i>&nbsp;&nbsp;&nbsp;&nbsp;正在处理<span id="nowDiagNum">（0）</span></a></li>
+                </ul>
+            </div>
+            <div id="CardPatient" style="height:345px;overflow:auto;">
+            	
+            </div>
+        </div>
+        <div class="right fl">
+            <div class="right_top">
+                <div class="row" style="margin-bottom: 7px;">
+                    <div class="col-xs-12">
+	                   <div class="col-sm-2" style="margin-left:7px">	
+	            			<div class="input-group">
+							<span class="input-group-addon bord-no" style="font-size: 14px;color:#000;">登记号</span>
+						    <input type="text" id="RegNo" style="height:30px;width:140px; border:1px solid #40a2de;padding-left:5px;margin-left:-2px!important;" placeholder="请输入登记号">
+						    </div>
+						</div>
+                        <div class="col-sm-2" style="margin-left:43px">	
+	            			<div class="input-group">
+							<span class="input-group-addon bord-no" style="font-size: 14px;color:#000;">卡号</span>
+							<input type="text" id="CardNo" style="height:30px;width:140px; border:1px solid #40a2de;padding-left:5px;margin-left:-2px!important;" placeholder="刷卡/请输入卡"/>
+						    </div>
+						</div>
+                        <div class="col-sm-2" style="z-index:2">	
+		            		<div class="input-group">
+							<span class="input-group-addon bord-no" style="font-size: 14px;color:#000;">卡类型</span>
+						    <select id="EmCardType" class="form-control"style="width:140px;">
+						    </select> 
+						    <span id="clearCardType" style="display:none;position:absolute;right:54px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+						    </div>
+						</div>
+						
+	            		<div class="col-sm-1" style="margin-left:-25px">
+	    					<button type="button" class="btn btn-primary" id="readCardNo" style="margin-left: 100px;">
+                           		<i class="fa fa-credit-card"></i>
+                           		<span style="margin-left: -8px;min-height:30px" >读卡</span>
+                        	</button>
+        				</div>
+                    </div>
+				</div>
+				<div class="row">
+                    <div class="col-xs-2" style="">
+                        <div class="input-group date" id="StartDate">
+                            <span class="input-group-addon bord-no" style="font-size: 14px;color:#000;">开始日期</span>
+                            <input type="text" class="form-control" style="width: 96px;;margin-left:-2px!important;">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                        </div>
+                    </div> 
+                    <div class="col-xs-2" style="margin-left: 26px;">
+                        <div class="input-group date" id="EndDate">
+                            <span class="input-group-addon bord-no" style="font-size: 14px;color:#000;">结束日期</span>
+                            <input type="text" class="form-control" style="width: 96px;;margin-left:-1px!important;">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                        </div>
+                    </div>
+				 <div class="col-xs-2" style="margin-left: 34px;margin-top: 3px;">
+                    <div class="form-group">
+    					<label class="col-sm-4 control-label" style="font-size: 14px;color:#000;padding-left:17px;margin-right:-4px;" >号别</label>
+    					<div class="col-sm-8" id="myLoc">
+       						<select id="Loc" class="selectpicker show-tick form-control"  multiple data-live-search="true" style="width:100px;" >
+            					<SERVER>
+            						s UserID = %session.Get("LOGON.USERID")
+            						s LocID = %session.Get("LOGON.CTLOCID")
+									s data = ##Class(web.DHCEMEmeraPatient).FindDocMarkStr(UserID,LocID)
+									s Len = $l(data,"!")
+									for i=1:1:Len d
+									.s Desc = $p(data,"!",i)
+									.w "<option value='"_$p(Desc,"^",1)_"'>"_$p(Desc,"^",2)_"</option>"
+     							</SERVER>    
+        					</select>
+    					</div>
+				    </div> 	
+				</div>
+				<div class="col-xs-1" style="margin-left:64px;margin-top: 3px;">
+                        <button type="button" class="btn btn-primary" id="Find">
+                            <span>查询</span>
+                        </button>   	
+					</div>
+                </div>
+            </div>
+            <div class="right table">
+                    <table id="ccPatientTb">
+                    </table>
+            </div>
+        </div>
+    </div>
+   <!-- 读卡用 2016-09-20 bianshuai-->
+	<input id='ReadAccEncrypt' type='hidden' value='#(ReadAccEncrypt)#'></input>
+	<input id='ReadAccExpEncrypt' type='hidden' value='#(ReadAccExpEncrypt)#'></input>
+</body>
+ <server>
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+    D ##Class(web.DHCBillPrint).AccPWDCLSID()  //obj
+</server>
+</html>

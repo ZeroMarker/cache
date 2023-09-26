@@ -1,0 +1,44 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ Set %session.AppTimeout = 3600
+ ;s %session.AppTimeout=$g(%session.Data("LOGON.TIMEOUT"),3600)
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	s RPID=$Get(%request.Data("RPID",1))
+	s RewardAmount=$Get(%request.Data("RewardAmount",1))
+	s AuditStatus=$Get(%request.Data("AuditStatus",1))
+	s RPDeptDr=$Get(%request.Data("RPDeptDr",1))
+	s RPTitle=$Get(%request.Data("RPTitle",1))
+	s RPJournalName=$Get(%request.Data("RPJournalName",1))
+	s RPFristAuthor=$Get(%request.Data("RPFristAuthor",1))
+	s UserCode=$Get(%request.Data("UserCode",1))
+	
+    s ID=$Get(%request.Data("ID",1))
+	
+    //列出登记信息
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMRewardInfo).List(searchField, searchValue, sortField, sortDir, start, limit,RPDeptDr,RPTitle,RPJournalName,RPFristAuthor)
+
+
+	//审核论文奖励
+	i action = "edit" d                                           
+	.s result = ##class(herp.srm.udata.uSRMRewardInfo).InsertRec(RPID, RewardAmount,UserCode,ID)
+	.i result = 0 d                                               
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

@@ -1,0 +1,98 @@
+﻿<HTML>
+<HEAD>
+	<TITLE>申请权限页面</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetExtJSCSS()
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s currPatient = ""
+		if (patientID'="")
+		{
+			s currPatient = ##class(EMRservice.HISInterface.PatientInfoAssist).Name(patientID)
+		}
+		s userID = %session.Get("LOGON.USERID")
+		s currAuthor=""
+		if (userID'="")
+		{
+			s currAuthor = ##class(EMRmeta.PowerUser).GetUserName(userID)
+		}
+		s userLoc = %session.Get("LOGON.CTLOCID")
+		s userLocDes = %session.Get("LOGON.CTLOCDESC")
+
+		s RequestReasonRequiredStr = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("RequestReasonRequiredStr","Y^N^N^N")
+		s RequestReasonRequiredStr = $zcvt(RequestReasonRequiredStr,"U")
+		
+		s RequestReasonLimitStr = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("RequestReasonLimitStr","0^0^0^0")
+		
+		s IsCopyed = ""
+		s AuthRequestByPriented = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("AuthRequestByPriented","N")
+		if (AuthRequestByPriented = "Y")&&(episodeID '= "")
+		{
+			s IsCopyed = ##class(DHCWMR.IO.ToOutService).GetIsCopy(episodeID)
+		}
+	</script>
+	<script type="text/javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var currPatient = '#(currPatient)#';
+		var userID = '#(userID)#';
+		var currAuthor = '#(currAuthor)#';
+		var userLoc = '#(userLoc)#';
+		var userLocDes = '#(userLocDes)#';
+		var IsCopyed = '#(IsCopyed)#';
+
+		var reqReasonFL = '申请的原因';
+		var befReqConFL = '修改前内容';
+		var aftReqConFL = '修改后内容';
+		var requestNumber = '申请人电话';
+		var RequestReasonRequiredStr = '#(RequestReasonRequiredStr)#';
+		var EditMust = RequestReasonRequiredStr.split("^");
+		var RequestReasonLimitStr = '#(RequestReasonLimitStr)#';
+		var LimitMust = RequestReasonLimitStr.split("^");
+		
+		if (EditMust[0] == "Y")
+		{
+			reqReasonFL = '申请的原因<font color="FF0000">(必填)</font>';
+			if (LimitMust[0] > 0)
+			{
+				reqReasonFL = '申请的原因font color=FF0000(必填,至少' + LimitMust[0] + '个字)font';
+			}
+		}
+		if (EditMust[1] == "Y")
+		{
+			befReqConFL = '修改前内容<font color="FF0000">(必填)</font>';
+			if (LimitMust[1] > 0)
+			{
+				befReqConFL = '修改前内容font color=FF0000(必填,至少' + LimitMust[1] + '个字)font';
+			}
+		}
+		if (EditMust[2] == "Y")
+		{
+			aftReqConFL = '修改后内容<font color="FF0000">(必填)</font>';
+			if (LimitMust[1] > 0)
+			{
+				befReqConFL = '修改后内容font color=FF0000(必填,至少' + LimitMust[2] + '个字)font';
+			}
+		}
+		if (EditMust[3] == "Y")
+		{
+			aftReqConFL = '修改后内容<font color="FF0000">(必填)</font>';
+			if (LimitMust[1] > 0)
+			{
+				befReqConFL = '修改后内容font color=FF0000(必填,至少' + LimitMust[2] + '个字)font';
+			}
+		}
+	</script>
+</HEAD>
+
+<BODY>
+	<script type="text/javascript" src="../scripts/emr/js/RowExpander.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/authorizes.Request.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/authorizes.RequestHistory.js"></script>
+</BODY>
+</HTML>

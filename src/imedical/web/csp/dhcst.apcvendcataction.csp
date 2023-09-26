@@ -1,0 +1,42 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s Hosp=$Get(%request.Data("HospId",1))
+
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+
+	// 查询供应商分类
+	i Action = "selectAll" d
+	.s result = ##class(web.DHCST.APCVendCat).SelectAll(Hosp)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	// 保存供应商分类
+	i Action = "save" d
+	.s result = ##class(web.DHCST.APCVendCat).Save(listData,Hosp)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除供应商分类
+	i Action = "delete" d
+	.s result = ##class(web.DHCST.APCVendCat).Delete(RowId,Hosp)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

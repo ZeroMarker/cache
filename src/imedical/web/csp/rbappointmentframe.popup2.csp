@@ -1,0 +1,52 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s CONTEXT=$g(%request.Data("CONTEXT",1))
+ s BulkApptList=""
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s ApptDate=%request.Get("ApptDate")
+ s ServListRows=%request.Get("ServListRows")
+ s CPWRowId=%request.Get("CPWRowId")
+ s ^zpeterc($zn,"APPTCLIN")=ApptDate_","_ServListRows_","_CPWRowId
+ ; Log 37179 BC 27-8-2003 three new fields on Auto Bulk Tansfer
+ s ReasonForTransfer=%request.Get("APPTReasonForTransferDR")
+ s PrintPatientLetter=%request.Get("PrintPatientLetter")
+ s PrintGPLetter=%request.Get("PrintGPLetter")
+ ;RQG Log22959,27.02.02: Need to pass the waitinglistid in order to save the appointment date
+ s WaitingListID=%request.Get("WaitingListID")
+ s WLAdmID=%request.Get("WLAdmID")
+ ; SB 27/02/02: Always close form when calling Appointments using popup2.CSP
+ s PopUp=1
+ ;s ^zrger("Appointment","waitinglistid","popup")=WaitingListID_"^"_PopUp
+ s TCIPatientLetter=$g(%request.Data("TCIPatientLetter",1)) 
+ s TCIGPLetter=$g(%request.Data("TCIGPLetter",1)) 
+ ;s ^zgav($zn)=TCIGPLetter_"^"_TCIPatientLetter
+ s message = ##Class(websys.UserDefinedFunctions).Evaluate("RBAppointment","OnNew")
+ s RecallSchedID=$g(%request.Data("RecallSchedID",1))
+</SERVER>
+<SCRIPT>
+	// SB 01/12/03 (39499): Display appointment screen in full window (also done in rbappointmentframe.popup.csp)
+	self.moveTo(0,0);
+	self.resizeTo(screen.availWidth,screen.availHeight);
+</script>
+  <frameset rows="100%,*">
+  <frame src="rbappointmentframe.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&CONTEXT=#(CONTEXT)#&WaitingListID=#(WaitingListID)#&WLAdmID=#(WLAdmID)#&PopUp=#(PopUp)#&ARMCApptMessage=#(message)#&PrintPatientLetter=#(PrintPatientLetter)#&PrintGPLetter=#(PrintGPLetter)#&APPTReasonForTransferDR=#(ReasonForTransfer)#&TCIGPLetter=#(TCIGPLetter)#&TCIPatientLetter=#(TCIPatientLetter)#&ApptDate=#(ApptDate)#&ServListRows=#(ServListRows)#&CPWRowId=#(CPWRowId)#&RecallSchedID=#(RecallSchedID)#" name="TRAK_main">
+  <frame name="TRAK_hidden" frameBorder=0>
+  </frameset>
+  
+<BODY>
+</BODY>
+</HTML>

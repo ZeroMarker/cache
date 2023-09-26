@@ -1,0 +1,312 @@
+<!--dhcdoccheckpoison.csp 毒麻代理信息填写-->
+<html>
+<head>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.hisui.1.3.5.css"></LINK-->
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+<HISUI></HISUI>
+</head>
+<server>
+	s EpisodeID=%request.Get("PatID")
+	s SupplyStr=##class(web.DHCDocCheckPoison).GetSupplyMethod(EpisodeID)
+	s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	s PatDobDate=##class(web.DHCDoc.OP.AjaxInterface).GetPatDob($g(PatientID))
+	s PatSex=##class(DHCDoc.OPDoc.AjaxInterface).GetPatSex($g(PatientID))
+</server>
+<STYLE type='text/css'>
+.search-table{
+	width:100%;
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.textbox{
+	width:180px;
+}
+</STYLE>
+<body class="hisui-layout" fit="true">
+<div data-options="region:'center',border:false,collapsible:false" style="">
+   <table class="search-table">
+		<tr>
+			<td class="r-label">
+				<label>证件类型</label>
+			</td>
+			<td>
+				<input class="hisui-validatebox textbox" id="PAPMICredType"/>
+			</td>
+			
+		    <td class="r-label"><label>本人证件号</label></td>
+			<td>
+				<!-- onkeyup="value=value.replace(/[^0-9\X]/g,'') " -->
+				<input class="hisui-validatebox textbox" id="PAPMIDVANumber" autofocus onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"/>
+			</td> 
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label>证件类型</label>
+			</td>
+			<td>
+				<input class="hisui-validatebox textbox" id="AgencyCredType"/>
+			</td>
+		    <td class="r-label"><label>代办人证件号</label></td>
+			<td>
+				<!-- onkeyup="value=value.replace(/[^0-9\X]/g,'') " -->
+				<input class="hisui-validatebox textbox" id="AgencyCredNo" autofocus onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"/>
+			</td> 
+		</tr>
+		<tr>
+		    <td class="r-label"><label>代办人姓名</label></td>
+			<td  colspan="3">
+				<input class="hisui-validatebox textbox" id="AgencyName" autofocus onkeydown="if(event.keyCode==13)event.keyCode=9"/>
+			</td> 
+		</tr>
+		<tr>
+		    <td class="r-label"><label>代办人电话</label></td>
+			<td colspan="3">
+				<!-- onkeyup="value=value.replace(/[^\0-9\-]/g,'') " -->
+				<input class="hisui-validatebox textbox" id="AgencyTel" autofocus onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"/>
+			</td> 
+		</tr>
+		<tr>
+		   <td colspan="4" align=center>
+		   	  <a id="update" name="update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">确认</a>
+	 	   	  <a id="clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="margin-left:20px;">清除</a>
+	 	   	  <a id="close" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">关闭</a>
+	 	   </td>
+		</tr>
+   </table>
+</div> 
+
+<script type='text/javascript'>
+	var PatientID="#(PatientID)#";
+	var PatDobDate="#(PatDobDate)#";
+	var PatSex="#(PatSex)#";
+	var PatInfo="";
+	var m_IDCredTypePlate="01"; //身份证代码字段
+	var m_IDDefaultCredType="";
+	function BodyLoadHandler(){
+		$("#PAPMIDVANumber").focus();
+		$("#update").click(update_onclick);
+		$("#clear").click(clear_onclck);
+		$("#close").click(close_onclck);
+		LoadCredType();
+		InitInfo();
+	}
+	function InitInfo(){
+		var SupplyStr="#(SupplyStr)#";
+		var SupplyStrArr=SupplyStr.split("^");
+		$("#PAPMIDVANumber").val(SupplyStrArr[0]);
+		$("#AgencyName").val(SupplyStrArr[1]);
+		$("#AgencyCredNo").val(SupplyStrArr[2]);
+		$("#AgencyTel").val(SupplyStrArr[3]);
+		var AgencyCredTypeDr=SupplyStrArr[4];
+		if (AgencyCredTypeDr!=""){
+			$("#AgencyCredType").combobox('select',AgencyCredTypeDr.replace("$","^"));
+		}
+		var PAPMIDCredTypeDr=SupplyStrArr[5];
+		if ((PAPMIDCredTypeDr!="")&&(SupplyStrArr[0]!="")){
+			$("#PAPMICredType").combobox('select',AgencyCredTypeDr.replace("$","^"));
+		}
+	}
+	function LoadCredType(){
+		var Data=$.m({
+			ClassName:"web.UDHCOPOtherLB",
+			MethodName:"ReadCredTypeExp",
+			JSFunName:"GetCredTypeToHUIJson",
+			ListName:""
+		},false);
+		var Data=JSON.parse(Data);
+		var cbox = $HUI.combobox("#PAPMICredType,#AgencyCredType", {
+				valueField: 'id',
+				textField: 'text',
+				blurValidValue:true, 
+				editable:false,
+				data:Data 
+		 });
+		 var selData=$("#PAPMICredType").combobox('getValue');
+		 if (!selData) {
+		 	InitCredType();
+		 }else{
+			m_IDDefaultCredType=selData.split("^")[1];
+		 }
+    }
+    function InitCredType(){
+	    //默认证件类型为身份证
+	    var Data=$("#PAPMICredType").combobox('getData');
+		var selData=$("#PAPMICredType").combobox('getValue');
+		if (selData){
+			 var code=selData.split("^")[1];
+			 if (code!=m_IDDefaultCredType){
+				 for (var i=0;i<Data.length;i++){
+					 var id=Data[i].id;
+					 if (id.split("^")[1]==m_IDDefaultCredType){
+						 $("#PAPMICredType,#AgencyCredType").combobox('setValue',id);
+					 }
+				 }
+			 }
+		}
+	}
+	function update_onclick(){
+		var IsDPatCredNo=true,IsIdCardNo=true;
+		var PAPMIDVANumber=$("#PAPMIDVANumber").val();
+		var AgencyCredNo=$("#AgencyCredNo").val();
+		var AgencyName=$("#AgencyName").val();
+		var AgencyTel=$("#AgencyTel").val();
+		if((PAPMIDVANumber=="")&&((AgencyCredNo=="")||(AgencyName=="")||(AgencyTel==""))){
+			$.messager.alert("提示","信息不完整,请填写完整信息!");
+			return false;
+		}else{
+			if(PAPMIDVANumber!=""){
+				var myrtn=IsCredTypeID("PAPMICredType");
+				if (myrtn){
+					IsIdCardNo=DHCWeb_IsIdCardNo(PAPMIDVANumber);
+					if(!IsIdCardNo)return false;
+					var IDNoInfoStr=DHCWeb_GetInfoFromId(PAPMIDVANumber)
+					var IDBirthday=IDNoInfoStr[2]  
+					if (PatDobDate!=IDBirthday){
+						$.messager.alert("提示","出生日期与身份证信息不符!","info",function(){
+							$("#PAPMIDVANumber").focus();
+						});
+			   		    return false;
+					}
+					var IDSex=IDNoInfoStr[3]
+					if(PatSex!=IDSex){
+						$.messager.alert("提示","身份证号:"+PAPMIDVANumber+"对应的性别是【"+IDSex+"】,与患者本人性别不同!","info",function(){
+							$('#PAPMIDVANumber').next('span').find('input').focus();
+						});
+						return false;
+					}
+					var myage=getAge(PAPMIDVANumber)
+					if ((!isNaN(myage))&&(myage!="")){
+						if (parseInt(myage)>=parseInt(176)){
+							$.messager.alert("提示","本人年龄不能超过176岁!");
+							return false;
+						}
+					}
+					var Data=$.m({
+						ClassName:"web.DHCBL.CARD.UCardPaPatMasInfo",
+						MethodName:"CheckCredNoIDU",
+						PatientID:PatientID,
+						CredNo:PAPMIDVANumber,
+						CredTypeDR:$("#PAPMICredType").combobox('getValue').split("^")[0]
+					},false);
+					if (Data==1) {
+						$.messager.alert("提示",PAPMIDVANumber+" 此身份证号码已经被使用!");
+						return false;
+					}
+				}
+			}
+			if(AgencyCredNo!=""){
+				var myrtn=IsCredTypeID("AgencyCredType");
+				if (myrtn){
+					IsDPatCredNo=DHCWeb_IsIdCardNo(AgencyCredNo);
+					if(!IsDPatCredNo)return false;
+					var myage=getAge(AgencyCredNo)
+					if ((!isNaN(myage))&&(myage!="")){
+						if (parseInt(myage)>=parseInt(176)){
+							$.messager.alert("提示","代办人年龄不能超过176岁!");
+							return false;
+						}
+					}
+				}
+			}
+			if (AgencyTel!=""){
+			    if (!CheckTelOrMobile(AgencyTel,"AgencyTel","代办人联系电话")) return false;
+			}
+			if((IsIdCardNo)&&(IsDPatCredNo)){
+				var PAPMICredType=$("#PAPMICredType").combobox('getValue');
+				var PAPMICredTypeId=PAPMICredType.split("^")[0];
+				var AgencyCredType=$("#AgencyCredType").combobox('getValue');
+				var AgencyCredTypeId=AgencyCredType.split("^")[0];
+				PatInfo=PAPMIDVANumber+"^"+AgencyName+"^"+AgencyCredNo+"^"+AgencyTel+"^"+PAPMICredTypeId+"^"+AgencyCredTypeId;
+			}
+		}
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc(PatInfo);
+		}else{
+			window.returnValue =PatInfo;
+    		window.close();	
+		}
+	}
+	function close_onclck(){
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc("");
+		}else{
+			window.returnValue ="";
+    		window.close();	
+		}
+	}
+	function clear_onclck(){
+		$("#PAPMIDVANumber,#AgencyName,#AgencyCredNo,#AgencyTel").val('');
+		InitCredType();
+	}
+	function getAge(pId)
+	{
+		var id=String(pId);
+        if (id.length==18){
+		    var myMM=(id.slice(10,12)).toString();
+		    var myDD=id.slice(12,14).toString();
+		    var myYY=id.slice(6,10).toString();
+	    }else{
+		    var myMM=(id.slice(8,10)).toString();
+		    var myDD=id.slice(10,12).toString();
+		    var myYY=id.slice(6,8).toString();
+			if(parseInt(myYY)<10)	{
+				myYY = '20'+myYY;
+			}else{
+				myYY = '19'+myYY;
+			}	    
+	    
+	    }
+	    var myMM=myMM.length==1?("0"+myMM):myMM;
+	    var myDD=myDD.length==1?("0"+myDD):myDD;
+	    var birthday=myYY+"-"+ myMM +"-"+myDD;
+	    var myAge="";
+		var bage=birthday;
+		bage=bage.substring(0,4);
+		var now = new Date();
+	    var yy = now.getFullYear();
+		var myAge=yy-bage;
+		return myAge;
+	}
+	function CheckTelOrMobile(telephone,Name,Type){
+		if (DHCC_IsTelOrMobile(telephone)) return true;
+		if (telephone.indexOf('-')>=0){
+				$.messager.alert("提示",Type+",固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,并以连接符【-】连接,请核实!","info",function(){
+					$("#"+Name).focus();
+				})
+		        return false;
+		}else{
+			if(telephone.length!=11){
+				$.messager.alert("提示",Type+",长度应为【11】位,请核实!","info",function(){
+					$("#"+Name).focus();
+				})
+		        return false;
+			}else{
+				$.messager.alert("提示",Type+",不存在该号段的手机号,请核实!","info",function(){
+					$("#"+Name).focus();
+				})
+		        return false;
+			}
+		}
+		return true;
+	}
+	function IsCredTypeID(id)
+	{
+		var myval=$("#"+id).combobox("getValue");
+		var myary = myval.split("^");
+		if (myary[1]==m_IDCredTypePlate){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	document.body.onload = BodyLoadHandler;
+</script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+﻿function InitVpInfPatientAdmEvent(obj)
+{	obj.LoadEvent = function(args)
+	{
+		//科室为登陆科室
+		var objLoc= ExtTool.StaticServerObject("DHCMed.Base.Ctloc");
+		var LocStr=objLoc.GetStringById(session['LOGON.CTLOCID'],"^");
+		var LocDesc=LocStr.split("^")[2];
+		ExtTool.AddComboItem(obj.Loc,LocDesc,session['LOGON.CTLOCID']);
+		
+		obj.grdPatAdmListStore.load({
+	  	params : {
+			start:0
+			,limit:100
+		}});
+		
+		obj.TreeControlsTreeLoader.baseParams.SubjectID=obj.SubjectID;
+		obj.TreeControls.loader=obj.TreeControlsTreeLoader;
+		obj.TreeControlsTreeLoader.load(obj.TreeControls.getRootNode());
+		obj.TreeControls.getRootNode().expanded=true;
+		obj.TreeControls.on("checkchange", obj.TreeControls_CheckChange, obj);
+		
+		window.refreshDataGrid = function() {
+	  		obj.DataGridPanelStore.load({});
+	  	};
+	}
+	obj.txtRegNoM_specialkey = function()
+	{
+	  obj.grdPatAdmListStore.load({
+	  params : {
+		start:0
+		,limit:30
+	   }});
+	};
+	obj.BtnFind_click= function()
+	{
+		obj.aCtrls="";
+		
+		obj.grdPatAdmListStore.removeAll();
+		obj.grdPatAdmRepListStore.removeAll();
+		
+	  obj.grdPatAdmListStore.load({
+	  	params : {
+			start:0
+			,limit:30
+	   }});	
+	   
+	   EpisodeID="";
+	   
+	  obj.grdPatAdmRepListStore.load({
+	  	params : {
+			start:0
+			,limit:30
+		}});
+	  
+	  obj.grdPatAdmListStore.load({
+			callback : function(){
+				obj.expCtrlDetail.bodyContent={}; //清除RowExpander bodyContent 
+			}
+		});
+		
+	};
+	
+	obj.BtnCC_click= function()
+	{
+		obj.grdPatAdmListStore.removeAll();
+		obj.grdPatAdmRepListStore.removeAll();
+		
+		obj.aCtrls = getChildString(obj.TreeControls.getRootNode());
+		if (obj.aCtrls==""){
+			alert( "监控项目未选择,请至少选择一个监控项目!");
+			return;
+		}
+		
+	  obj.grdPatAdmListStore.load({
+	  	params : {
+			start:0
+			,limit:30
+	   }});	
+	   
+	   EpisodeID="";
+	   
+	  obj.grdPatAdmRepListStore.load({
+	  	params : {
+			start:0
+			,limit:30
+		}});
+		
+		obj.grdPatAdmListStore.load({
+			callback : function(){
+				obj.expCtrlDetail.bodyContent={}; //清除RowExpander bodyContent 
+			}
+		});
+	};
+	
+	obj.grdPatAdmList_rowclick = function()
+	{
+		var rc=obj.grdPatAdmList.getSelectionModel().getSelected();
+		if(rc==null)return;
+		
+		EpisodeID = rc.get("Paadm");
+		PatientID = rc.get("PatientID");
+		obj.grdPatAdmRepListStore.load({
+	  params : {
+		start:0
+		,limit:30
+		}});
+	}
+		
+	obj.grdPatAdmList_rowcontextmenu = function (objGrid, rowIndex, eventObj) {
+		eventObj.preventDefault();//覆盖默认右键
+	
+		var sel = obj.grdPatAdmListStore.getAt(rowIndex);
+		EpisodeID = sel.get("Paadm");
+		PatientID = sel.get("PatientID");
+	
+		obj.objSelContextMenu="";
+		var objClass = ExtTool.StaticServerObject("DHCMed.NINFService.Aim.ICUSrv");
+		if (objClass) {
+			var JsonExp = objClass.GetCRReportInfo("");
+			window.eval(JsonExp);
+		}
+		obj.objSelContextMenu.showAt(eventObj.getXY());
+		
+	}
+	
+	obj.grdPatAdmRepList_rowdblclick = function () {
+		var rc=obj.grdPatAdmRepList.getSelectionModel().getSelected();
+		if(rc==null)return;
+		
+		var PrintDocID = rc.get("PrintDocID");
+		var TemplateDocID = rc.get("TemplateDocID");
+		var InstanceID = rc.get("InstanceID");
+		var Description= rc.get("Description");
+		var RepStatus = rc.get("RepStatus");
+		var ReportID = rc.get("rowid");
+		var EPRNum=InstanceID.split("||",1);
+	  var ChartItemID="ML"+PrintDocID;
+	  if((EpisodeID=="")||(PatientID=="")||(PrintDocID=="")||(TemplateDocID=="")||(InstanceID=="")||(WebServerAppURL=="")||(EPRNum=="")) return;
+		
+		var objClass = ExtTool.StaticServerObject("DHCMed.NINFService.Aim.ICUSrv");
+		var WebServerAppURL=""
+		if (objClass) {
+			WebServerAppURL=objClass.GetServerInfo()
+		}
+		if (WebServerAppURL=="") return;
+		var url=WebServerAppURL+"/csp/dhcmed.ninf.aim.centertablistdetail.csp?PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&PrintDocID="+PrintDocID+"&TemplateDocID="+TemplateDocID+"&ChartItemID="+ChartItemID+"&InstanceDataID="+InstanceID+"&EPRNum="+EPRNum+"&RepStatus="+RepStatus+"&ReportID="+ReportID;;
+		var objWin = new Ext.Window(
+			{
+				title:Description,
+				html:'<iframe width=990 height=620 scrollbars=no src='+ url + '></iframe>',
+				height:650,
+				width:1000
+			}
+		);
+	objWin.show();
+		
+	}
+	
+	obj.TreeControls_CheckChange = function(){
+		var node = arguments[0];
+		var val = arguments[1];
+		//obj.SelectNode 非常重要,避免checkchange引起的死循环
+		if (obj.SelectNode) return;
+		obj.SelectNode=node;
+		setChildNode(node,val);
+		setParentNode(node,val);
+		obj.SelectNode=null;
+	}
+		
+	setChildNode = function(argNode,argVal){
+		//alert("setChildNode="+argNode.text+"//"+argVal);
+		var childnodes = argNode.childNodes;
+		for(var i=0;i<childnodes.length;i++){
+			var childnode = childnodes[i];
+			childnode.attributes.checked=argVal;
+			childnode.getUI().toggleCheck(argVal);
+			if(childnode.childNodes.length>0){
+				setChildNode(childnode,argVal);
+			}
+      	}
+	};
+	
+	setParentNode = function(argNode,argVal){
+		//alert("setParentNode="+argNode.text+"//"+argVal);
+		var parentnode=argNode.parentNode;
+		if (!parentnode) return;
+		if (parentnode.id=="root") return;
+		if (argVal){
+			parentnode.attributes.checked=true;
+			parentnode.getUI().toggleCheck(true);
+			setParentNode(parentnode,true);
+		}else{
+			var childnodes=parentnode.childNodes;
+			var isChecked=false;
+			for(var i=0;i<childnodes.length;i++){
+				var childnode=childnodes[i];
+				if (childnode.attributes.checked){
+					isChecked=true;
+				}
+			}
+			if (!isChecked){
+				parentnode.attributes.checked=false;
+				parentnode.getUI().toggleCheck(false);
+				setParentNode(parentnode,false);
+			}
+		}
+	};
+	
+	getChildString = function(node){
+		var str = "";
+		var childnodes = node.childNodes;
+		for(var i=0;i<childnodes.length;i++){
+			var childnode = childnodes[i];
+			var nodeList = childnode.id.split("-");
+			if (nodeList.length>2){
+				if (nodeList[1]=="I"){
+					if (childnode.attributes.checked){
+						str = str + nodeList[0] + "/";
+					}
+				}
+			}
+			str += getChildString(childnode);
+		}
+		return str;
+	}
+
+}
+
+function ReportClickHeader(PrintDocID,TemplateDocID,ChartItemID,Description)
+{
+	var objClass = ExtTool.StaticServerObject("DHCMed.NINFService.Aim.ICUSrv");
+	var WebServerAppURL=""
+	if (objClass) {
+		WebServerAppURL=objClass.GetServerInfo()
+	}
+	if (WebServerAppURL=="") return;
+	
+	var CtlocId=session['LOGON.CTLOCID'];
+	var UserId=session['LOGON.USERID'];
+	var GroupId=session['LOGON.GROUPID'];
+
+	var url=WebServerAppURL+"/csp/dhcmed.ninf.aim.centertablistdetail.csp?PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&PrintDocID="+PrintDocID+"&TemplateDocID="+TemplateDocID+"&ChartItemID="+ChartItemID+"&InstanceDataID=&EPRNum=&CtlocId="+CtlocId+"&UserId="+UserId+"&GroupId="+GroupId;
+	var objWin = new Ext.Window(
+		{
+			title:Description,
+			html:'<iframe width=990 height=620 scrollbars=no src='+ url + '></iframe>',
+			height:650,
+			width:1000
+		}
+	);
+	objWin.show();
+}
+
+function ShowEPRReport()
+{
+	var objClass = ExtTool.StaticServerObject("DHCMed.NINFService.Aim.ICUSrv");
+	var WebServerAppURL=""
+	if (objClass) {
+		WebServerAppURL=objClass.GetServerInfo()
+	}
+
+	if (WebServerAppURL=="") return;
+	
+	var strUrl = WebServerAppURL + "/csp/dhceprredirect.csp?EpisodeID="+EpisodeID;
+	var objWin = new Ext.Window(
+		{
+			title:"电子病历",
+			html:'<iframe width=847 height=627 scrollbars=no src='+ strUrl + '></iframe>',
+			height:650,
+			width:852
+		}
+	);
+	objWin.show();
+}	
+
+function ShowLibReport()
+{
+	var objClass = ExtTool.StaticServerObject("DHCMed.NINFService.Aim.ICUSrv");
+	var WebServerAppURL=""
+	if (objClass) {
+		WebServerAppURL=objClass.GetServerInfo()
+	}
+
+	if (WebServerAppURL=="") return;
+	
+	var strUrl = WebServerAppURL + "/csp/dhcmed.ninf.aim.looklibresult.csp?paadmdr="+EpisodeID;
+	var objWin = new Ext.Window(
+		{
+			title:"检验报告",
+			html:'<iframe width=847 height=627 scrollbars=no src='+ strUrl + '></iframe>',
+			height:650,
+			width:852
+		}
+	);
+	objWin.show();
+}	
+
+function ShowTypeLocPatInfo()
+{
+	var objClass = ExtTool.StaticServerObject("DHCMed.NINFService.Aim.ICUSrv");
+	var WebServerAppURL=""
+	if (objClass) {
+		WebServerAppURL=objClass.GetServerInfo()
+	}
+
+	if (WebServerAppURL=="") return;
+	
+	var strUrl = WebServerAppURL + "/csp/dhcmed.inf.typelocpatinfo.csp";
+	var objWin = new Ext.Window(
+		{
+			title:"ICU日志",
+			html:'<iframe width=847 height=627 scrollbars=no src='+ strUrl + '></iframe>',
+			height:650,
+			width:852
+		}
+	);
+	objWin.show();
+}
+
+function ShowICUGrade()
+{
+	var objClass = ExtTool.StaticServerObject("DHCMed.NINFService.Aim.ICUSrv");
+	var WebServerAppURL=""
+	if (objClass) {
+		WebServerAppURL=objClass.GetServerInfo()
+	}
+
+	if (WebServerAppURL=="") return;
+	
+	var strUrl = WebServerAppURL + "/csp/dhcmed.inf.icugrade.csp";
+	var objWin = new Ext.Window(
+		{
+			title:"ICU危险等级",
+			html:'<iframe width=847 height=627 scrollbars=no src='+ strUrl + '></iframe>',
+			height:650,
+			width:852
+		}
+	);
+	objWin.show();
+}

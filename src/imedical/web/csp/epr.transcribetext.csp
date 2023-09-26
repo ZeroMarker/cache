@@ -1,0 +1,122 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<CSP:IF condition=(%request.Get("PatientBanner")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+</HEAD>
+<BODY LANGUAGE=VBScript ONLOAD="Page_Initialise">
+<TRAK:APPLET>
+
+<SERVER>
+ n vf,OrderItemIDs,FirstTRID,Error,x,trid
+ s vf=##Class(web.OEOrdResult).GetSavedFileName(%request.Get("OEOrdItemID"),"wav") ;%request.Get("VoiceFile")
+ d %request.Set("DisableFlag",1)
+
+ d ##Class(websys.Component).GetComponentMessages(.t,"OETextResult.Edit")
+ ; Currently, get the Text Result ID of the first selected Order Item ID.
+ ;   Match each Text Result ID of the subsequent selected Order Item IDs.
+ ;     If there is a mismatch, simply write the component error message and do not open the component.
+ ;   ( The code <CSP:IF condition=(Error=0)>  and  </CSP:IF>  around the component - below - does this ).
+ s OrderItemIDs=%request.Get("OEOrdItemID")
+ s FirstTRID=##Class(web.OETextResult).GetTextResultIDFromOrderID($p(OrderItemIDs,"^",1))
+ s Error=0 f x=2:1:$l(OrderItemIDs,"^")  d
+ . s trid=##Class(web.OETextResult).GetTextResultIDFromOrderID($p(OrderItemIDs,"^",x))
+ . i FirstTRID'=trid s Error=1
+ i Error=1 w $g(t("MultipleTextResults"))
+ d %request.Set("TextResultID",FirstTRID)
+ d %request.Set("ID",FirstTRID)
+ ;
+ ; Split the Order Item ID into orderid and itemid.
+ s orderid=$p($p(OrderItemIDs,"^",1),"||",1)
+ s itemid=$p($p(OrderItemIDs,"^",1),"||",2)
+ ;
+ ; Get the ARC Item Mast ID from the orderid and itemid.
+ s ARCIMID=$p($g(^OEORD(orderid,"I",itemid,1)),"^",2)
+ ; Get the ARC Item Category ID from the ARC Item Mast.
+ i ARCIMID s ARCICID=$p($g(^ARCIM($p(ARCIMID,"||",1),$p(ARCIMID,"||",2),1)),"^",10)
+ ; Get the Text Result Type from the ARCIM ID.
+ i ARCICID s TextResultTypeID=$p($g(^ARC("IC",ARCICID)),"^",13)
+ d %request.Set("TextResultTypeID",TextResultTypeID)
+ ; Get Associated Order Items - if another order has the same voice result then it too is "selected"
+ ; Log 51886 - AI - 16-05-2005 : Method combined with the "Word" method.
+ s OrderItemIDs=##class(web.OEOrdItem).AddAssocOrders(OrderItemIDs)
+ ; end Log 51886
+ d %request.Set("OEOrdItemID",OrderItemIDs)
+ 
+ ;log 62487 TedT
+ s lockcmp=0
+ f i=1:1:$l(%request.Get("OEOrdItemID"),"^") d
+ . s orditm=$p(%request.Get("OEOrdItemID"),"^",i)
+ . i '##Class(websys.Lock).Lock($lb(orditm,"User.OEOrdItem"),%session.SessionId,%session.Get("LOGON.USERID"),.warning) d
+ . . s lockcmp=1 w "<DIV><STRONG><FONT COLOR=RED>",warning,"</FONT></STRONG></DIV>",$c(13,10)
+ 
+ s cmp=##Class(websys.Component).OpenName("OETextResult.Edit")
+ i Error=0,cmp d
+ . s cmp.HideMenus=1
+ . s:lockcmp cmp.Disabled=1 
+ . d cmp.Show()
+ . d cmp.%Close()
+
+ /*
+ <CSP:IF condition=(Error=0)>
+ <TRAK:COMPONENT id="OETextResult.Edit" hidemenus=1>
+ </TRAK:COMPONENT>
+ </CSP:IF>
+ */
+</SERVER>
+
+<CSP:IF condition=(vf'="")>
+
+<!-- Log 61887 - AI - 05-01-2007 -->
+<!-- The following CAB file is the last version that worked BEFORE we added the "Lothian" foot pedal as well. -->
+<!-- The CAB file is saved as "trakwebsound_backup at 20061215.CAB" in \\Emu\developer\W642LDEV\addins\client . -->
+<!-- <OBJECT ID="trakSound" -->
+<!-- CLASSID="CLSID:DFE2055C-372C-476F-8D55-515DAC29F3C0" -->
+<!-- CODEBASE="..\addins\client\trakwebsound.CAB#version=2002,0,0,8"> -->
+<!-- </OBJECT> -->
+
+<!-- DON'T FORGET TO ADD IN THE DIRECTORY : CODEBASE="..\addins\client\trakwebsound.CAB#version=...  -->
+<!-- log 64023 moved to component
+<OBJECT ID="trakSound"
+CLASSID="CLSID:08A91BDF-6B02-4CEC-AD20-5A95F7FD1010"
+CODEBASE="..\addins\client\trakwebsound.CAB#version=2002,0,0,99">
+</OBJECT>
+-->
+
+<TRAK:COMPONENT id="Voice.Link" hidemenus=1>
+</TRAK:COMPONENT>
+
+</CSP:IF>
+
+</TRAK:APPLET>
+</BODY>
+</HTML>
+<script Language="JavaScript">
+//This must be at bottom of page so that all other javascript functions and event triggers have loaded.
+function TextandVoiceLoadHandler() {
+	//If any of the epr pages have their own document.body.onload handlers then call each of them individually from here.
+	try {OETextResultEditLoadHandler();} catch(e){}
+	ObjVoiceFile=document.getElementById('VoiceFile');
+	//alert("FileName=" + ObjVoiceFile.value);
+	if ((ObjVoiceFile) && (ObjVoiceFile.value!="")) {
+		//alert("1");
+		try {
+			//alert(ObjVoiceFile.value);
+			// VoiceLoadHandler in Voice.Link.js, defined above.
+			VoiceLoadHandler("True","True");
+		} catch(e) {}
+	}
+}
+document.body.onload=TextandVoiceLoadHandler;
+</script>
+
+

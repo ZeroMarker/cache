@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<DHC:BOOTSTRAP/>
+	<script src="../scripts/dhcnewpro/dhcem/physioresheet.js" charset="gb2312"></script>
+	<script src="../scripts/excelprint.js"></script>
+	<script Language="Javascript">
+		var RegNo = '#($g(%request.Data("RegNo",1)))#';//登记号 
+		var EpisodeID='#($g(%request.Data("EpisodeID",1)))#'; //医嘱ID 
+		var Lg="#(%request.Get("EpisodeID"))#" //医嘱ID
+   </script>
+</head>
+<style>
+
+.input-mini{  /*输入框*/
+	width:100px;
+	height:20px;
+	line-height: normal;
+	font-size:12px;
+	color:#555555;
+	border-radius:2px;
+	backgroud-color:#FFFFFF;
+	border:1px solid #CCCCCC;
+}
+.input-mini:focus{
+	border:1px solid #40A2DE;
+}
+
+/*查找的按钮样式*/
+.iconbutton{
+	 	width: 30px;	
+	 	height: 30px;
+	 	background-color: #40A2DE;
+	 	border: 0px;
+	 	border-radius: 1px;
+	 	text-align: center;
+	 	line-height: 30px;
+	 	color: #fff;
+	 	float: left;
+	 } 
+
+</style>
+<body class="bor-lay" style="background-color:#fff;padding-top:10px">
+	<div class="panel" style="padding-left:10px;padding-right:10px;margin-bottom:0px">
+    	<!---top query--->
+		<!--<div class="" style ="height:50px;border:0px solid #E6F0FF;margin:10px 0px 0px;">-->
+		<div style="height:50px;margin-left:1px;background:#FAFAFA; border:1px solid #CBCBCB;border-radius:3px;border-bottom:2px dashed #E6E6E6;">
+			<div class="row" style="margin-top:8px;margin-bottom:5px;">	
+				<div style="margin-left:20px;height: 30px;line-height: 30px;float: left;">
+					<input type="radio" class="magic-radio" id="AllOrd" name="AllOrd" value="1">
+					<label for="AllOrd" style="line-height: 17px;padding-right:5px !important;">全部</label>
+					<input type="radio" class="magic-radio" id="OrdLong" name="OrdLong" value="1">
+					<label for="OrdLong" style="line-height: 17px;padding-right:5px !important;">长期医嘱</label>
+					<input type="radio" class="magic-radio" id="OrdTemp" name="OrdTemp" value="1">
+					<label for="OrdTemp" style="line-height: 17px;padding-right:20px !important;">临时医嘱</label>
+					<input type="checkbox" class="magic-checkbox" id="NurOrd" name="NurOrd" value="1">
+					<label for="NurOrd" style="line-height: 17px;padding-right:5px !important;">护嘱</label>
+					<input type="checkbox" class="magic-checkbox" id="DocOrd" name="DocOrd" value="1">
+					<label for="DocOrd" style="line-height: 17px;padding-right:5px !important;">医嘱</label>
+					<input type="checkbox" class="magic-checkbox" id="SelDate" name="SelDate" value="1">
+					<label for="SelDate" style="line-height: 17px;padding-right:5px !important;">按日期查询</label>
+				</div>
+
+				<div class="col-sm-1" style="display:none;">
+    				<button type="button" class="btn btn-primary" id="OrdLong" onclick="findLong()">
+					长期医嘱
+					</button>
+        		</div>
+        		<div class="col-sm-1" style="display:none;">
+    				<button type="button" class="btn btn-primary" id="OrdTemp" onclick="Temp_click()">
+					临时医嘱
+					</button>
+        		</div>
+				<div id="ifshow" style="display:none;">
+				<div class="col-sm-2" >	
+            		<div class="input-group date" id="StDate">
+            			<span class="input-group-addon bord-no">开始日期</span>
+                		<input id="StDate"type="text" class="form-control" style="width:100px">
+                		<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            		</div>
+        		</div>
+        		<div class="col-sm-2" style="margin-left:40px;">	
+            		<div class="input-group date" id="EndDate">
+            			<span class="input-group-addon bord-no">结束日期</span>
+                		<input id="EndDate"type="text" class="form-control" style="width:100px">
+                		<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            		</div>
+        		</div>
+        		</div>
+        		
+        		<div class="col-sm-2" style="margin-left:40px;float:right">
+        			<span class="fa fa-search iconbutton" style="background-color:#378ec4"></span>
+    				<button type="button" class="btn btn-primary" id="queryBtn" style="min-width:65px;">
+					查找
+					</button>
+        		</div>
+        	</div>       		
+		</div>
+		<!--<div class="toolbar-sm bord-top bord-hor ">-->
+	    <div class=" toolbar-sm bord-top bord-hor" style="height: 40px;border-left:1px solid #CBCBCB ; margin: -5px 0px 0px 1px; border-image: none;border-top:0;padding-top: 10px;padding-left: 14px;">
+	    	<table >
+				<tr >
+					<td><button class="text-primary" id="Print" onclick="PrintClick()"><img src="../scripts/dhcnewpro/images/Nurse_Printing.png" class="Nurseimg"/>&nbsp;打印</button></td>
+
+					<td><button class="text-primary" id="BtPrintCurr" onclick="PrintCurrClick()"><img src="../scripts/dhcnewpro/images/now-print.png" class="Nurseimg"/>&nbsp;打印当前</button></td>
+
+					<td><button class="text-primary" id="Print" data-toggle="modal"  data-target="#StuModel"onclick="StuModel()"><img src="../scripts/dhcnewpro/images/bu-advice.png" class="Nurseimg"/>&nbsp;补打医嘱</button></td>
+					<!-- <td><div class="btn-separator"> </div></td>
+					<td><button class="text-primary" id="BtPrintCurr" onclick=""><i class="fa fa-print"></i>续打医嘱</button></td> -->
+					<!-- <td><div class="btn-separator"> </div></td> -->
+					<td><button class="text-primary" id="Print" onclick="SetStpage()"><img src="../scripts/dhcnewpro/images/look-print.png" class="Nurseimg"/>&nbsp;打印预览</button></td>
+					<!-- <td><div class="btn-separator"> </div></td>
+					<td><button class="text-primary" id="BtPrintCurr" data-toggle="modal" data-target="#StModel"onclick="StModel()"><i class="fa fa-print" ></i>起始页设置</button></td> -->
+
+					<!-- <td>当前<input class="input-mini" id="CurStatus" onclick="PrintClick()"></td>
+					<td><div class="btn-separator"> </div></td>
+					<td>页码<input class="input-mini" style="width:50px" id="PagNo"></td> 
+					<td><button class="text-primary" id="SchPage" onclick="PageBtn_Click()"><i class="fa fa-search "></i>查找</button></td>
+					<td><button class="text-primary" id="btnsure" onclick="surecheck()"><i class="fa fa-ok "></i>确认</button></td> -->
+				</tr>
+			</table>
+		</div>
+		<!---top query--->
+		<table id="phypreshetb"></table>
+	</div>
+	<div class="modal fade" id="StuModel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <span class="modal-title" style='color:#fff;font-size:18px;'>补打医嘱</span> 
+            </div>
+            <div class="modal-body" >
+                <from id="status-form" class="form-horizontal">
+                  	<div class="form-group" >
+    					<span class="spantext" style="margin-left:100px;">起始页</span>
+						<input class="input-mini" type="text" id="StPage">
+    					<span class="spantext" style="margin-left:100px;">起始行</span>
+						<input class="input-mini" type="text" id="StRow">
+
+  					</div>
+
+                   <div class="form-group" >
+    					<span class="spantext" style="margin-left:100px;">结束页</span>
+						<input class="input-mini" type="text" id="EdPage">
+    					<span class="spantext" style="margin-left:100px;">结束行</span>
+						<input class="input-mini" type="text" id="EdRow">
+  					</div>
+  					</form>
+            		<div style="padding-right:100px;" class="modal-footer">
+                		<div class="col-sm-6" >
+                    		<button class="btn btn-primary" type="button" id="SupPriupdate" data-dismiss="modal"onclick="PrintSet()" >确认</button>
+                		</div>
+                		<div class="col-sm-6" >
+                    		<button class="btn btn-primary" type="button" data-dismiss="modal">取消</button>
+                		</div>
+            		</div>
+            		
+            </div>
+           
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+	</div>
+	<div class="modal fade" id="StModel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <span class="modal-title" style='color:#fff;font-size:18px;'>起始页设置</span> <span class="modal-title" style='color:red;font-size:12px;'>各项不能为空</span>
+            </div>
+            <div class="modal-body" >
+                <from id="status-form" class="form-horizontal">
+                  	<div class="form-group" id="changedate" >
+    					<span class="spantext" style="margin-left:100px;">起始页</span>
+						<input class="input-mini" type="text" id="StPage">
+  					</div>
+  				</form>
+            		<div style="padding-right:100px;" class="modal-footer">
+                		<div class="col-sm-6" >
+                    		<button class="btn btn-primary" type="button" id="SupPriupdate" data-dismiss="modal"onclick="" >确认</button>
+                		</div>
+            		</div>
+            		
+            </div>
+           
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+	</div>
+</body>
+</html>

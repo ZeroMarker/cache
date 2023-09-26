@@ -1,0 +1,140 @@
+
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>	
+<SCRIPT language="Cache" RUNAT="SERVER">	
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="LISReport"
+		e  d
+		.s DIVClass="Page LISReport"
+	</SCRIPT>
+	<!--DIV class='#(DIVClass)#'-->
+			<TABLE width=655 border=0 cellspacing=0 class="ResultLisTable">
+				<TR>
+					<TD class='LISHead LISHeadARCIMDesc' colSpan=#((tablecell-1)*2+5)#>#(ARCIMDesc)#</TD>
+				</TR>
+			</TABLE>
+			
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	q:ARCIMDesc[("放弃") ""
+	</SCRIPT>
+			<TABLE width=655 border=0 cellspacing=0 class="ResultLisTable">
+				<THEAD style="display:table-header-group">
+				<TR>
+					<TD width=#(199-((tablecell-1)*35))# height="20" class="LISResultTtile">项目名称</TH>
+					<CSP:IF CONDITION=("1"=HistoryContrastInfo)>
+						<TD class="LISResultTtile" colspan=2>#(CheckDate)#</TH>
+						<SCRIPT language="Cache" RUNAT="SERVER">
+							s ind=2
+							f ind=2:1:tablecell d
+							.s iDate=$g(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OI",ind))
+							.w "<TD class='LISResultTtile' colspan=2>"_iDate_"</TH>"
+						
+						</SCRIPT>
+					<CSP:ELSE>
+						<TD class="LISResultTtile" colspan=2>检查结果</TH>
+					</CSP:IF>
+					<TD width=#(124-((tablecell-1)*15))# class="LISResultTtile">单位</TH>
+					<TD width=#(156-((tablecell-1)*25))# class="LISResultTtile">参考范围</TH>
+				</TR>
+			</THEAD>
+			<TBODY>
+					<!--  输出病患信息  -->
+	<csp:WHILE COUNTER=ODID CONDITION=(""'=CurData)>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s CurData=$g(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+		s ARCIMID=$P($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+		s DoctorName="录入:"
+		;s Checker="bbbb"
+		
+		i (""'=CurData) d
+		.s TestDesc=$P(CurData,"^",1)
+		.s TestResult=$P(CurData,"^",2)
+		.s Normal=$P(CurData,"^",3)
+		.s:Normal="0" TestResult="<font color=#FF0000>"_TestResult_"</font>"
+		.s TestNormal=""
+		.//s:("H"=Normal) TestNormal="?"
+		.//s:("H"=Normal) TestNormal="?"
+		.s TestUnit=$P(CurData,"^",4)
+		.s l=$L(TestUnit,"~")
+		.i l>1 d
+		..s SZ= $P($G(TestUnit),"~",1)
+		..s Str=SZ_"<sup>"
+		..s SB=$P($G(TestUnit),"~",2,l)
+		..s j=$L(SB,"/L")
+		..i j>1 d
+		...s OT=$P($G(SB),"/L",2,j)
+		...s SB=$P($G(SB),"/L",1)
+		...s SB=SB_"</sup>/L"_OT
+		...s Str=Str_SB
+		...s TestUnit=Str
+		.s TestStandard=$P(CurData,"^",5)
+		.s Arrow=$P(CurData,"^",6)
+		.s:Arrow="" Arrow=1
+		.s TemplateDescs=$P(CurData,"^",7)
+		.i Arrow="1" s ArrowName="../images/dhcpe/NoArrow.gif"
+		.i Arrow="0" s ArrowName="../images/dhcpe/DownArrow.gif"
+		.i Arrow="2" s ArrowName="../images/dhcpe/UpArrow.gif"
+		.i Arrow="3" s ArrowName="../images/dhcpe/Star.gif"
+		s TestResult2=""
+		
+		s iwd=120
+		s:tablecell>1 iwd=+(iwd/tablecell)
+		s iwa=31
+		s:tablecell>1 iwa=+(iwa/tablecell)
+		
+		s iLLoop=1
+		do{
+			s TemplateDesc=$P(TemplateDescs,$C(13)_$C(10),iLLoop)
+			
+			s strTemp=$P(TestResult,$C(13)_$C(10),iLLoop)
+			
+			s:(""'=strTemp) TestResult2=TestResult2_strTemp
+			s:(""'=TemplateDesc) TestResult2=TestResult2_"("_TemplateDesc_")"
+			s:(""'=strTemp) TestResult2=TestResult2_"</br>"
+
+			s iLLoop=iLLoop+1
+		}while(iLLoop<=$L(TestResult,$C(13)_$C(10)))
+		</Script>
+		<CSP:IF CONDITION=(""'=CurData)>
+				<TR>
+					<TD class=LISResultName>#(TestDesc)#</TD>
+					
+					<TD class=LISResultValue width=#(iwd)#>#(TestResult2)#</TD>
+					<TD class=LISResultNormal width=#(iwa)#><IMG id="Arrow" name="Arrow" src=#(ArrowName)#></TD>
+					
+					<CSP:IF CONDITION=("1"=HistoryContrastInfo)>
+						<SCRIPT language="Cache" RUNAT="SERVER">
+							s ind1=2
+							s OrdDeID=$p($g(^DHCPERLT($P(CurData,"^",9))),"^",3)
+							f ind1=2:1:tablecell d
+							.s idate=$g(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OD",OrdDeID,ind1))
+							.s iArrow=$p(idate,"^",2)
+							.s:iArrow="" iArrow="1"
+							.i iArrow="1" s iArrowName="../images/dhcpe/NoArrow.gif"
+							.i iArrow="0" s iArrowName="../images/dhcpe/DownArrow.gif"
+							.i iArrow="2" s iArrowName="../images/dhcpe/UpArrow.gif"
+							.i iArrow="3" s iArrowName="../images/dhcpe/Star.gif"
+							.w "<TD class=LISResultValue width='"_iwd_"'>"_$p(idate,"^",1)_"</TD>"
+							.w "<TD class=LISResultNormal width='"_iwa_"'><IMG id='Arrow"_ind1_"' name='Arrow' src='"_iArrowName_"'></TD>"
+						</SCRIPT>	
+					</CSP:IF>
+					
+					<!--TD class=LISResultNormal width="20">#(TestNormal)#</TD-->
+					<TD class=LISResultTestUnit>#(TestUnit)#</TD>
+					<TD class=LISResultStandard>#(TestStandard)#</TD>
+				</TR>
+		</CSP:IF>
+	</csp:WHILE>
+			</TBODY>
+			<CSP:IF CONDITION=(""'=Checker)>
+			<TFOOT>
+				<TR>
+					<TD class="LISFooter LISFooterChecker" colSpan=#((tablecell-1)+3)#>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;录入者:#(Checker)#</TD>
+					<TD class="LISFooter LISFooterCheckDate" colSpan=#((tablecell-1)+2)#>检查日期:<LABEL class=CheckDate>#(CheckDate)#&nbsp;&nbsp;</LABEL></TD>
+				</TR>
+			</TFOOT>
+			</CSP:IF>
+		</TABLE>
+	<!--/DIV-->

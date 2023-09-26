@@ -1,0 +1,152 @@
+<!--dhcem.patoverviews.csp-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html" /> 
+<HISUI/>
+<TRAK:HEAD></TRAK:HEAD>
+
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+	<link rel="stylesheet" href="../scripts_lib/popover1.2.17/jquery.webui-popover.min.css">
+	<script src="../scripts_lib/popover1.2.17/jquery.webui-popover.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patoverviews.js"  ></script>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patoverviews.css" />
+ <style> 
+ .playcircle{
+		background:	 url(../scripts/dhcnewpro/images/playcircle.gif);
+		width:23px;
+		height:23px;
+		float:left;
+		margin-left:-37px;
+		margin-top:-2px;
+	}
+html{
+	overflow-y: hidden;	
+}
+.webui-popover-content{padding:0px!important;overflow:hidden}/*hxy 2018-07-06 泡芙*/
+</style> 
+<script Language="Javascript">
+   var EpisodeID="#(%request.Get("EpisodeID"))#";        //就诊ID
+	
+</script>
+
+</head>
+
+<body style="margin:0px;padding:0px 10px 0 10px;background-color:#ffffff;"><!--hxy 10px-->
+
+	<div style="width:49%;height:100%;float:left">
+		<div class="hisui-panel bootPanel topPanel">
+		  <div class="panel-heading" ><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>基本信息
+		 	
+		  </div>
+		  <div class="panel-body body-height" id="patInfo" style="overflow-y: auto;">
+
+		  </div>
+		</div>
+		<div class="hisui-panel bootPanel bottomPanel">
+		<div class="panel-heading" ><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>诊断信息</div>
+		  	<div class="panel-body body-height" style="padding-top:4px;overflow-y: auto;">
+		    <table  class="hisui-datagrid" 
+			data-options="
+		    method:'get',
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMPatOverview&MethodName=getDiagnosisJson&MRADMID='+EpisodeID,
+			pagination:false">
+				<thead>
+					<tr>
+						<th data-options="field:'DiagType',width:150,id:'diagType'">诊断类型</th>
+						<th data-options="field:'DiagDesc',width:422,id:'diagDesc'">诊断</th>
+						
+					</tr>
+				</thead>
+			</table>
+		  </div>
+		</div>
+	</div>
+	
+	<div style="width:50%;height:100%;float:left;margin-left:10px;">
+	<div class="hisui-panel bootPanel topPanel" data-options="iconCls:'icon-save',closable:true,collapsible:true,minimizable:true,maximizable:true">
+		  <div class="panel-heading" ><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>分诊信息
+		  	<a style='color:#0076CD;float:right;margin-right:20px;text-decoration:underline;cursor: pointer' onclick="linkToCsp()">详情</a>
+		  </div>
+		  <div class="panel-body body-height" style="padding-top:4px;overflow-y: auto;">
+		    
+		    <table  class="hisui-datagrid" 
+			data-options="
+		    method:'get',
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMPatOverview&MethodName=getVSJson&EpisodeID='+EpisodeID,
+			pagination:false">
+				<thead>
+					<tr>
+						<th data-options="field:'PCSTemp',width:70">体温</th>
+						<th data-options="field:'PCSHeart',width:70">心率</th>
+						<th data-options="field:'PCSPCSPulse',width:70">脉搏</th>
+						<th data-options="field:'PCSBP',width:70">收缩压</th>
+						<th data-options="field:'PCSDBP',width:70">舒张压</th>
+						<th data-options="field:'PCSR',width:70">呼吸</th>
+						<th data-options="field:'PCSSOP',width:70">SPO2</th>
+						<th data-options="field:'PCSGlu',width:70">Glu</th>
+					</tr>
+				</thead>
+			</table>
+			
+		    <table id="scoreTable" class="hisui-datagrid"  data-options="headerCls:'panel-header-card',fitColumns:true,idField:'code',autoSizeColumn:false,nowrap:false" style="">   
+				<thead>   
+					<tr>
+					    <th data-options="field:'code',hidden:true">主键</th> 
+						<th data-options="field:'lev',width:20">分级</th>
+						<th data-options="field:'score',width:20">得分</th>    
+						<th data-options="field:'itm',width:80">评分项</th>   
+					</tr>   
+				</thead>   
+			</table>
+		    <div style='width:100%;border-bottom:2px dotted #D1D1D1'></div>
+		    <table class="table " id="patChcekLevInfo" >	
+		    </table>
+		  </div>
+		</div>
+		
+		<div class="hisui-panel  bootPanel bottomPanel">
+		  <div class="panel-heading"><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>流转信息</div>
+		  <div class="panel-body body-height" style="overflow-y:auto">
+		    <div id="status-detail" style="font-size:14px;padding:20px 0 0 20px">
+				<ul class="status-list">
+				</ul>
+			</div>
+		  </div>
+		</div>
+</div>
+
+<div id="box" class="box" >
+
+	<div class="box1">  
+		<a href="javascript:;" id= "close" class="close" style="color:#919191;font-size:20px;margin-top: 10px; margin-right: 10px;"><i class="fa fa-close" ></i></a>  
+	</div> 
+	<div id="detTitle" style="font-size:20px;color:#42A5F5;height:40px;width:100%;padding:3px 0 0 10px;border-bottom:1px solid #E5E5E5;"></div>
+	<table class=" table " id="detailDiv">
+	</table>
+	
+	<div style="margin-right:20px;" id="saveAndCancle">	
+	<button class='optButton' id='cancle'><i class='fa fa-times-circle' style='color:#42A5F5' ></i>取消</button><button class='optButton' id='save'><i class='fa fa-check-circle' style='color:#42A5F5' ></i>保存</button>
+	</div>
+</div>
+
+
+<div id="boxT" class="boxT" >
+
+	<div class="box1">  
+		<a href="javascript:;" id= "closeT"class="close" style="color:#919191;font-size:20px;margin-top: 10px; margin-right: 10px;"><i class="fa fa-close" ></i></a>  
+	</div> 
+	<div id="detTitleT" style="font-size:20px;color:#42A5F5;height:40px;width:100%;padding:3px 0 0 10px;border-bottom:1px solid #E5E5E5;"></div>
+	
+	<table class=" table " id="detailDivT">
+	</table>
+
+	<div style="margin-right:20px;" id="saveAndCancle">	
+	<button class='optButton' id='cancleT'><i class='fa fa-times-circle' style='color:#42A5F5' ></i>取消</button>
+	</div>
+</div>
+
+</body>
+</html>

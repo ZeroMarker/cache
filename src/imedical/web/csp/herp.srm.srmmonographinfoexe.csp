@@ -1,0 +1,76 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	//查询条件
+	
+	s Editor=$Get(%request.Data("Editor",1))
+	s MonTra=$Get(%request.Data("MonTra",1))
+	s startPubtime=$Get(%request.Data("startdate",1))
+	s endPubtime=$Get(%request.Data("enddate",1))
+	s ISBN=$Get(%request.Data("ISBN",1))
+	//添加和修改
+	s rowid=$Get(%request.Data("rowid",1))
+	s name=$Get(%request.Data("name",1))
+	s deptDr=$Get(%request.Data("deptDr",1))
+	s issigdept=$Get(%request.Data("issigdept",1))
+	s editor1=$Get(%request.Data("editor1",1))
+	s monTra1=$Get(%request.Data("monTra1",1))
+	s totalNum=$Get(%request.Data("totalNum",1))
+	s writeNum=$Get(%request.Data("writeNum",1))
+	s press=$Get(%request.Data("press",1))
+	s pubTime=$Get(%request.Data("pubTime",1))
+	s priTime=$Get(%request.Data("priTime",1))
+	s ISBN1=$Get(%request.Data("ISBN1",1))
+	s userDr=$Get(%request.Data("userDr",1))
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uMonographInfo).list(sortField, sortDir, start, limit, startPubtime, endPubtime, MonTra, Editor, ISBN)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uMonographInfo).InsertRec(name,deptDr,issigdept,editor1,monTra1,totalNum,writeNum,press,pubTime,priTime,ISBN1,userDr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uMonographInfo).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "smt" d
+	.s result = ##class(herp.srm.udata.uMonographInfo).InsertEAFRec(rowid, userDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uMonographInfo).UpdateRec(rowid, name, deptDr, issigdept, editor1,monTra1,totalNum,writeNum, press, pubTime,priTime,ISBN1,userDr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editorList" d
+	.w ##class(herp.srm.udata.uMonographInfo).GetEditor(start,limit,str)
+	i action = "deptList" d
+	.w ##class(herp.srm.udata.uMonographInfo).GetDeptName(start,limit,str)
+	
+	
+</script>

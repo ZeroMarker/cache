@@ -1,0 +1,125 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<SERVER>
+n SimplePallette
+s SimplePallette=%request.Get("SimplePallette")
+i SimplePallette d
+. s colorNames="White,Silver,Gray,Black,Yellow,Fuchsia,Red,Maroon,Lime,Olive,Green,Purple,Aqua,Teal,Blue,Navy"
+. s colorHex="FFFFFF,C0C0C0,808080,000000,FFFF00,FF00FF,FF0000,800000,00FF00,808000,008000,800080,00FFFF,008080,0000FF,000080"
+. s perrow=4
+e  d
+. s colorNames="AliceBlue,AntiqueWhite,Aqua,Aquamarine,Azure,Beige,Bisque,Black,BlanchedAlmond,Blue,BlueViolet,Brown,BurlyWood,CadetBlue,Chartreuse,Chocolate,Coral,CornflowerBlue,Cornsilk,Crimson,DarkBlue,DarkCyan,DarkGoldenrod,DarkGray,DarkGreen,DarkKhaki,DarkMagenta,DarkOliveGreen,DarkOrange,DarkOrchid,DarkRed,DarkSalmon,DarkSeaGreen,DarkSlateBlue,DarkSlateGray,DarkTurquoise,DarkViolet,DeepPink,DeepSkyeBlue,DimGray,DodgerBlue,FireBrick,FloralWhite,ForestGreen,Fuchsia,Gainsboro,GhostWhite,Gold,Goldenrod,Gray,Green,GreenYellow,HoneyDew,HotPink,IndianRed,Indigo,Ivory,Khaki,Lavender,LavenderBlush,LawnGreen,LemonChiffon,LightBlue,LightCoral,LightCyan,LightGoldenrodYellow,LightGreen,LightGrey,LightPink,LightSalmon,LightSeaGreen,LightSkyBlue,LightSlateGray,LightSteelBlue,LightYellow,Lime,LimeGreen,Linen,Maroon,MediumAquamarine,MediumBlue,MediumOrchid,MediumPurple,MediumSeaGreen,MediumSlateBlue,MediumSpringGreen,MediumTurquoise,MediumVioletRed,MidnightBlue,MintCream,MistyRose,Moccasin,NavajoWhite,Navy,OldLace,Olive,OliveDrab,Orange,OrangeRed,Orchid,PaleGoldenrod,PaleGreen,PaleTurquoise,PaleVioletRed,PapayaWhip,PeachPuff,Peru,Pink,Plum,PowderBlue,Purple,Red,RosyBrown,RoyalBlue,SaddleBrown,Salmon,SandyBrown,SeaGreen,Seashell,Sienna,Silver,SkyBlue,SlateBlue,SlateGray,Snow,SpringGreen,SteelBlue,Tan,Teal,Thistle,Tomato,Turquoise,Violet,Wheat,White,WhiteSmoke,Yellow,YellowGreen,Black"
+. s colorHex="F0F8FF,FAEBD7,00FFFF,7FFFD4,F0FFFF,F5F5DC,FFE4C4,000000,FFEBCD,0000FF,8A2BE2,A52A2A,DEB887,5F9EA0,7FFF00,D2691E,FF7F50,6495ED,FFF8DC,DC143C,00008B,008B8B,B8860B,A9A9A9,006400,BDB76B,8B008B,556B2F,FF8C00,9932CC,8B0000,E9967A,8FBC8F,483D8B,2F4F4F,00CED1,9400D3,FF1493,00BFFF,696969,1E90FF,B22222,FFFAF0,228B22,FF00FF,DCDCDC,F8F8FF,FFD700,DAA520,808080,008000,ADFF2F,F0FFF0,FF69B4,CD5C5C,4B0082,FFFFF0,F0E68C,E6E6FA,FFF0F5,7CFC00,FFFACD,ADD8E6,F08080,E0FFFF,FAFAD2,90EE90,D3D3D3,FFB6C1,FFA07A,20B2AA,87CEFA,778899,B0C4DE,FFFFE0,00FF00,32CD32,FAF0E6,800000,66CDAA,0000CD,BA55D3,9370DB,3CB371,7B68EE,00FA9A,48D1CC,C71585,191970,F5FFFA,FFE4E1,FFE4B5,FFDEAD,000080,FDF5E6,808000,6B8E23,FFA500,FF4500,DA70D6,EEE8AA,98FB98,AFEEEE,DB7093,FFEFD5,FFDAB9,CD853F,FFC0CB,DDA0DD,B0E0E6,800080,FF0000,BC8F8F,4169E1,8B4513,FA8072,F4A460,2E8B57,FFF5EE,A0522D,C0C0C0,87CEEB,6A5ACD,708090,FFFAFA,00FF7F,4682B4,D2B48C,008080,D8BFD8,FF6347,40E0D0,EE82EE,F5DEB3,FFFFFF,F5F5F5,FFFF00,9ACD32,000000"
+. s perrow=10
+</SERVER>
+<HTML XMLNS=TRAK>
+<HEAD>
+
+<!--NB: To Use this color Palette your window.opener must contain a javascript method 
+	called "ColorPicker" and the method takes one value which contains a comma delimited list 
+	of the selected color; where the first item in the list is the named color and 
+	the second item is the hexidecimal representation.-->
+
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script Language="JavaScript" SRC="../scripts/websys.js"></script>
+<style type="text/css">
+	TABLE.job {background:white}
+	/* Make all cells a uniform size. */
+	TD.col {width:17pt; height:17pt; cursor:default; font-family:Arial}
+</style>
+
+<script Language="JavaScript">
+function create2DimAry(val,txt,oth) {
+	var ary=new Array();
+	for (var i=0;i<val.length;i++) {
+		ary[i]=new Array();
+		ary[i]["val"]=val[i];
+		ary[i]["txt"]=txt[i];
+		if (oth.length>0) ary[i]["oth"]=oth[i];
+	}
+	return ary
+}
+
+var colorNames="#(colorNames)#"
+var colorHex="#(colorHex)#"
+
+var cTxt=colorNames.split(",");
+var cVal=colorHex.split(",");
+var colors=create2DimAry(cVal,cTxt,'')
+var tbl=""
+
+function sort2DimArray(ary,element) {
+    for (var i=0; i<(ary.length-1); i++) {
+        for (var j=i+1; j<ary.length; j++) {
+            if (ary[j][element] < ary[i][element]) {
+                var dummy = ary[i];
+                ary[i] = ary[j];
+                ary[j] = dummy;
+            }
+		}
+	}
+	return ary;
+}
+
+function changeOrder(element) {
+	colors=sort2DimArray(colors,element)
+	writeRows()
+}
+function writeRows() {
+	if (tbl.rows.length>0) for (var i=tbl.rows.length;i>0;i--) {tbl.deleteRow(i-1);}
+	var trcount=0;
+	for (var i=0; i<colors.length; i++) {
+		if (trcount==#(perrow)#) {trcount=0;}
+		if (trcount==0) {tbl.insertRow(tbl.rows.length);}
+		tbl.rows[tbl.rows.length-1].insertCell(trcount);
+		tbl.rows[tbl.rows.length-1].cells[trcount].className="col";
+		tbl.rows[tbl.rows.length-1].cells[trcount].bgColor="#"+colors[i]['val'];
+		tbl.rows[tbl.rows.length-1].cells[trcount].title=colors[i]['txt']+",#"+colors[i]['val'];
+		trcount++;
+	}
+}
+function selectColor() {
+	var sE=window.event.srcElement;
+	if (window.opener.ColorPicker) {
+		window.opener.ColorPicker(window.event.srcElement.title)
+	} else {
+		prompt("Your calling window does not contain a javascript method 'ColorPicker(color)' for receiving your selected color.",window.event.srcElement.title);
+	}
+	window.close();
+}
+function docHandler() {
+	tbl=document.getElementById('colors');
+	tbl.onclick=selectColor;
+	writeRows();
+	websys_reSize();
+}
+window.onload=docHandler;
+</script>
+</HEAD>
+
+<BODY>
+<div>
+<form name="form1">
+<table cellpadding=1 cellspacing=1 border=0>
+<tr><td nowrap><input type="hidden" name="selectedid" value="logbg">
+<input type="button" id="txt" name="name" value="Order By Name" onclick="changeOrder(this.id)"><input type="button" id="val" name="hex" value="Order By Hex" onclick="changeOrder(this.id)">
+&nbsp;&nbsp;&nbsp;
+</td></tr>
+<tr><td>
+<table id="colors" cellpadding=0 cellspacing=1 border=1 bordercolordark="Black">
+</table>
+</td>
+</tr>
+</table>
+</form>
+&nbsp;
+</div>
+</BODY>
+</HTML>

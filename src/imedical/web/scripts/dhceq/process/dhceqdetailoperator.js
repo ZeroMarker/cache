@@ -1,0 +1,29 @@
+$(document).ready(function(){
+	$('#dhceqoperator').datagrid(
+	{
+		url:'dhceq.jquery.csp',
+		border:'true',	   
+		queryParams:{
+			ClassName:"web.DHCEQLifeInfo",
+			QueryName:"GetDetailOperatorInfo",
+			Arg1:$("#SourceType").val(),
+			Arg2:$("#SourceID").val(),
+			ArgCnt:2
+			},
+		rownumbers: true,  //如果为true，则显示一个行号列。TRowID,TOpinion,TApproveUserDR,TApproveDate
+		singleSelect:true,
+		columns:[[
+			{field:'TRowID',title:'TRowID',width:50,align:'center',hidden:true},
+			{field:'TOpinion',title:'意见',width:200,align:'center'},
+			{field:'TApproveRole',title:'角色',width:100,align:'center'},
+			{field:'TApproveUserDR',title:'审批人',width:100,align:'center'},
+			{field:'TApproveDate',title:'审批日期',width:150,align:'center'},
+		]],
+		//onClickRow:function(rowIndex,rowData){OnclickRow();},
+		pagination:true,
+		pageSize:15,
+		pageNumber:1,
+		pageList:[15,30,45,60,75]
+	});
+});
+

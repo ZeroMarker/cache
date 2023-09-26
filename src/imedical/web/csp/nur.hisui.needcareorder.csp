@@ -1,0 +1,335 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI translate=1/>
+    <NURHISUI/>
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.needcareorder.js"></script>
+
+
+    <STYLE type='text/css'>
+        .datagrid-row-selected {
+            background: #21BA45;
+            color: #ffffff;
+        }
+
+        #patListDiv>div>div {
+            background-color: #f5f5f5;
+        }
+
+        .searchboxWidth {
+            width: 100%
+        }
+
+        .pf-patimg {
+            float: left;
+            padding: 0px 15px 0px 15px;
+            width: 30px;
+            line-height: 35px;
+        }
+
+        .pf-patbase {
+            position: relative;
+            float: left;
+        }
+
+        .pf-nav {
+            float: left;
+        }
+
+        .pf-nav .pf-nav-item {
+            float: left;
+            height: 35px;
+            padding: 0 5px;
+        }
+
+        .pf-nav-title {
+            display: block;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .i-sep {
+             color:#c3c3c3;           
+        }
+       .messager-popover .content {
+	        height:100%;
+		    float: left;
+		    margin-top: -1px;
+		}
+		
+    </STYLE>
+</head>
+
+<body>
+    <div id="mainLayout" fit=true class="hisui-layout">
+        <div data-options="region:'west',title:'',split:true,headerCls:'panel-header-gray'" style="width:360px;border-right:solid 1px #cccccc;border-color:#cccccc">
+            <div id="westLayout" class="hisui-layout" fit=true>
+                <div data-options="region:'north',split:false,headerCls:'panel-header-gray'" style="height:35px;border:none">
+                    <input id="patSearchbox" href="#" class="hisui-searchbox" style="width:350px;" />
+                </div>
+                <div id="patListDiv" data-options="region:'center',title:'',split:false,headerCls:'panel-header-gray'" style="border-color:#cccccc">
+                    <table fit=true id="patTable"></table>
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="border:none">
+            <div id="centerLayout" class="hisui-layout" fit=true>
+                <div data-options="region:'north',split:true,headerCls:'panel-header-gray'" style="height:35px;border:none">
+                    <div class="hisui-panel" style="height: 40px;display: block;border:none">
+                        <div id="pbarDiv" class="item-label" hidden="false">
+                            <div class="pf-patimg">
+                                <img id="PatPhoto" src="../scripts/dhcnewpro/images/boy.png">
+                            </div>
+                            <div class="pf-patbase">
+                                <ul class="pf-nav">
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title pf-patname">
+                                            <span class="ui-span-m" id="pbarPatName"></span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="i-sep">/</span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="ui-span-m" id="pbarSex"></span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="i-sep">/</span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="ui-span-m" id="pbarAge"></span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="i-sep">/</span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="ui-span-m" id="pbarRegNo"></span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="i-sep">/</span>
+                                        </span>
+                                    </li>
+                                    <li class="pf-nav-item">
+                                        <span class="pf-nav-title">
+                                            <span class="ui-span-m" id="pbarAdmType"></span>
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="border-color:#cccccc;border-radius: 5px 5px">
+                    <div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'" style="border:none">
+                        <table id="orderGrid" data-options="rownumbers:true,toolbar:'#tb'">
+                            <thead data-options="frozen:true">
+                                <tr>
+                                    <th data-options="title:'',checkbox:true"></th>
+                                    <th data-options="title:'#(..Get("未处理情况"))#',field:'abnormalStat',align: 'left',width: 100"></th>
+                                    <th data-options="title:'#(..Get("医嘱名称"))#',field:'arcimDesc',align: 'left',width: 200"></th>
+                                </tr>
+                            </thead>
+                            <thead>
+                                <tr>
+                                    <th data-options="title:'#(..Get("医嘱状态"))#',field: 'ordStatDesc',align: 'left',width: 120"></th>
+                                    <th data-options="title:'#(..Get("执行状态"))#',field: 'execStat',align: 'left',width: 120"></th>
+                                    <th data-options="title:'#(..Get("要求执行日期"))#',field: 'sttDate',align: 'left',width: 150"></th>
+                                    <th data-options="title:'#(..Get("要求执行时间"))#',field: 'sttTime',align: 'left',width: 150"></th>
+                                    <th data-options="title:'#(..Get("开医嘱科室"))#',field: 'createLoc',align: 'left',width: 200"></th>
+                                    <th data-options="title:'#(..Get("开医嘱时间"))#',field: 'createDate',align: 'left',width: 150"></th>
+                                    <th data-options="title:'#(..Get("医生"))#',field: 'ctcpDesc',align: 'left',width: 150"></th>
+                                    <th data-options="title:'#(..Get("发药状态"))#',field: 'dispenStat',align: 'right',align: 'left',width: 150"></th>
+                                    <th data-options="title:'#(..Get("领药审核状态"))#',field: 'linYaoStat',align: 'left',width: 150"></th>
+                                    <th data-options="title:'#(..Get("标本号"))#',field: 'labNo',align: 'left',width: 200"></th>
+                                    <th data-options="title:'#(..Get("需关注类型"))#',field: 'abnTypeDesc',align: 'left',width: 150"></th>
+                                    <th data-options="title:'oeoreID',field: 'oeoreID',align: 'left',width: 150"></th>
+                                    <th data-options="title:'abnormalID',field: 'abnormalID',hidden: true"></th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div id="tb" style="padding:5px;height:auto">
+                            <div>
+                                <table cellpadding="5" style="padding: 5px">
+                                    <tr>
+                                        <td class="r-label">#(..Get("需关注类型"))#</td>
+                                        <td>
+                                            <select id="typeBox" class="hisui-combobox" name="type" style="width:150px;height:30px;margin-top: 5px;margin-left: 5px;"></select>
+                                        </td>
+                                        <td class="r-label">#(..Get("未处理情况"))#</td>
+                                        <td>
+                                            <select id="stateBox" class="hisui-combobox" name="state" style="width:150px;;height:30px"></select>
+                                        </td>
+                                        <td>
+                                            <a href="#" id='refreshOrderGridBtn' class="hisui-linkbutton" style="margin-left:10px">#(..Get("刷新"))#</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <span style="display: block; border-bottom: 1px solid #ccc;margin: 1px 0;border-bottom-style:dashed;"></span>
+                            <div>
+                                <a href="#" id='ignoreBtn' class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-stop-order'">#(..Get("忽略选中的需关注项"))#</a>
+                                <a href="#" id="hasIgnoreListBtn" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-all-select'">#(..Get("已忽略列表"))#</a>
+                                <a href="#" id='seeOrdBtn' class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'">#(..Get("处理"))#</a>
+                                <a href="#" id='execOrdBtn' class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-arrow-right-top'">#(..Get("执行"))#</a>
+                                <a href="#" id='cancelExecBtn' class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-arrow-left-top'">#(..Get("撤销执行"))#</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="ignoreDlg" class="hisui-dialog" title="#(..Get("忽略需关注"))#" style="width:280px;height:280px;padding:10px;" data-options="iconCls:'icon-save',modal:true,closed:true">
+                        <form id="ignoreForm" method="post">
+                            <div align="center">
+                                <table cellpadding="5" style="padding: 5px">
+                                    <tr>
+                                        <td class="r-label">#(..Get("忽略原因"))#</td>
+                                        <td>
+                                            <input id="ignoreReasonBox" class="hisui-validatebox textbox" data-options="required:true" style="width: 153px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("日期"))#</td>
+                                        <td>
+                                            <input id="ignoreDateBox" class="hisui-datebox textbox" data-options="required:true" style="width: 160px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("时间"))#</td>
+                                        <td>
+                                            <input id="ignoreTimeBox" class="hisui-timespinner textbox" data-options="required:true" style="width: 160px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("工号"))#</td>
+                                        <td>
+                                            <input id="ignoreUserBox" class="hisui-validatebox textbox" data-options="required:true" style="width: 153px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("密码"))#</td>
+                                        <td>
+                                            <input id="ignorePwdBox" class="hisui-validatebox textbox" data-options="required:true" type="password" style="width: 153px">
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" id="saveIgnBtn">#(..Get("确定"))#</a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" id="closeIgnDlgBtn">#(..Get("取消"))#</a>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="seeOrdDlg" class="hisui-dialog" title="#(..Get("处理医嘱"))#" style="width:280px;height:330px;padding:10px;" data-options="iconCls:'icon-save',modal:true,closed:true">
+                        <form id="seeOrdForm" method="post">
+                            <div align="center">
+                                <table cellpadding="5" style="padding: 5px">
+                                    <tr>
+                                        <td class="r-label">#(..Get("类型"))#</td>
+                                        <td>
+                                            <select id="seeTypeBox" class="hisui-combobox" name="seeType" style="width: 160px"></select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("备注"))#</td>
+                                        <td>
+                                            <input id="seeOrdNoteBox" class="textbox" style="width: 153px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("日期"))#</td>
+                                        <td>
+                                            <input id="seeOrdDateBox" class="hisui-datebox textbox" data-options="required:true" style="width: 160px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("时间"))#</td>
+                                        <td>
+                                            <input id="seeOrdTimeBox" class="hisui-timespinner textbox" data-options="required:true" style="width: 160px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("工号"))#</td>
+                                        <td>
+                                            <input id="seeOrdUserBox" class="hisui-validatebox textbox" data-options="required:true" style="width: 153px">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="r-label">#(..Get("密码"))#</td>
+                                        <td>
+                                            <input id="seeOrdPwdBox" class="hisui-validatebox textbox" data-options="required:true" type="password" style="width: 153px">
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" id="saveSeeOrdDlgBtn">#(..Get("确定"))#</a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" id="closeSeeOrdDlgBtn">#(..Get("取消"))#</a>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="ignoreListWin" class="hisui-window" title="#(..Get("已忽略列表"))#" style="width:900px;height:500px;top:100px;left:200px;padding:10px"
+                        data-options="iconCls:'icon-w-list',closed:true,resizable:true,modal:false,isTopZindex:true">
+                        <div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'">
+                            <table id="ignoreListGrid">
+                                <thead data-options="frozen:true">
+                                    <tr>
+                                        <th data-options="title:'',checkbox:true"></th>
+                                        <th data-options="title:'#(..Get("需关注类型"))#',field:'abnormalTypeDesc',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("医嘱名称"))#',field:'arcimDesc',align:'left',width:150"></th>
+                                    </tr>
+                                </thead>
+                                <thead>
+                                    <tr>
+                                        <th data-options="title:'#(..Get("用药途径"))#',field:'phcinDesc',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("开医嘱日期"))#',field:'createDate',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("要求执行日期"))#',field:'sttDate',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("要求执行时间"))#',field:'sttTime',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("未处理情况"))#',field:'abnormalStat',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("忽略日期"))#',field:'ignDate',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("忽略时间"))#',field:'ignTime',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("忽略人"))#',field:'ignoreUser',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("忽略原因"))#',field:'ignorReason',align:'left',width:150"></th>
+                                        <th data-options="title:'#(..Get("医嘱ID"))#',field:'ignoreOeoreID',align:'left',width:150"></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

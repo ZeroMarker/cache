@@ -1,0 +1,261 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ ;d ##Class(websys.Conversions).CommonReload()
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<SERVER>
+ ; If called from the new button of the questionnaire edit screen then the last questionnaire should not be fetched
+ s questionnaireload=1 i $g(%request.Data("clearquestion",1))=1 s questionnaireload=0
+ k %request.Data("clearquestion")
+ i $d(msg) i $e($g(msg.Data("TFORM",1)),1,14)="questionnaire." s questionnaireload=0
+</SERVER>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321/>
+
+<script language="javascript">
+function websys_move(left,top,width,height) {
+	return ;
+}
+</script>
+<SCRIPT SRC="../scripts/epr.Chart.js"></SCRIPT>
+<style>
+.epr_chart_tbmenu {COLOR:black; FONT-FAMILY:Verdana; FONT-SIZE:10pt;}
+.tbMenuHighlight2 {BACKGROUND-COLOR:lightgrey; CURSOR:default;}
+</style>
+
+</HEAD>
+<BODY><DIV id="PageContent">
+<SERVER>
+ s eprchartCONTEXT="",ChartID=%request.Get("ChartID"),PatientID=%request.Get("PatientID"),EpisodeID=%request.Get("EpisodeID"),mradm=%request.Get("mradm")
+ //PC
+ s EpisodeIDs=%request.Get("EpisodeIDs")
+ s TimeLine=%request.Get("TimeLine")
+ s MultiEpisodes=0
+ // Check if 1 episode - then use this as the mradm and episodeID
+ i $l(EpisodeIDs,"^")>1 s MultiEpisodes=1
+ i (EpisodeIDs'=""),$l(EpisodeIDs,"^")=1 d
+ . s (EpisodeID,%request.Data("EpisodeID",1))=EpisodeIDs
+ . s (mradm,%request.Data("mradm",1))=##Class(web.PAAdm).GetMRAdm(EpisodeID)
+
+ s (eplist,mradmlist,qdisable)=""
+ i %request.Get("EpisodeIDs")'="" s eplist=%request.Get("EpisodeIDs")
+ e  s eplist=EpisodeID
+ i eplist'="" d
+ . s mradmlist="" f xx=1:1:$l(eplist,"^") d
+ . . s ep=$p(eplist,"^",xx) q:ep=""
+ . . s mradmlist=mradmlist_$s(mradmlist="":"",1:"^")_$p($g(^PAADM(+ep)),"^",61)
+ i mradmlist="" s mradmlist=mradm
+ s %request.Data("mradmlist",1)=mradmlist
+ //PC
+ s eprurl="epr.chart.csp?PatientID="_%request.Get("PatientID")_"&EpisodeID="_EpisodeID_"&EpisodeIDs="_EpisodeIDs_"&mradm="_mradm_"&ChartID="_%request.Get("ChartID")_"&PAAdmTransactionID="_%request.Get("PAAdmTransactionID")_"&DischID="_%request.Get("DischID")_"&CurrDischID="_%request.Get("CurrDischID")_"&DischEpisodes="_%request.Get("DischEpisodes")_"&doctype="_%request.Get("doctype")_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")
+
+ s DischEpisodes="",DischID=%request.Get("DischID"),%request.Data("ID",1)=%request.Get("DischID")
+ s CurrDischID=%request.Get("CurrDischID")  ; Log 51327 - AI - 30-03-2005 : Store off the CurrDischID now to distinguish for later use.
+ i DischID="" s DischID=%request.Get("CurrDischID")  ; see if creating a new version
+ i DischID'="" d
+ . s DischEpisodes=##class(web.PAAdmDischargeSummary).GetEpisodesFromDischID(DischID)
+ . s %request.Data("DischEpisodes",1)=DischEpisodes
+ e  i $g(%request.Data("DischEpisodes",1))'="" d
+ . s DischEpisodes=%request.Data("DischEpisodes",1)
+ ; If a discharge chart, the chart's episode id and mradm are the latest episode
+ i EpisodeID="",DischEpisodes'="" d
+ . d ##Class(web.PAAdmDischargeSummary).GetLatestEpisode(DischEpisodes, .epis, .eparray, .mradms, .eps)
+ . s EpisodeID=+eps s %request.Data("EpisodeID",1)=EpisodeID
+ . s mradm=+mradms s %request.Data("mradm",1)=mradm
+ ; PC
+ ; episode list (PAAdm.List)
+ i DischEpisodes'="" s %request.Data("EpisodeIDs",1)=DischEpisodes
+ i EpisodeIDs'="" s %request.Data("EpisodeIDs",1)=EpisodeIDs
+
+ i 'ChartID d
+ . i $d(%request.Data("PrevEpisode")) s (ChartID,%request.Data("ChartID",1))=##Class(epr.GroupSettings).GetPrevEpisChart(%session.Get("LOGON.GROUPID"))
+ . i '$d(%request.Data("PrevEpisode")) s (ChartID,%request.Data("ChartID",1))=##Class(epr.GroupSettings).GetMainChart(%session.Get("LOGON.GROUPID"))
+ i ChartID s eprchartCONTEXT="C"_ChartID
+ ; For printing - taking advantage that the context for the normal page is still accessable
+ ; We need the previous context so we can print the right list component
+ s TPrintContext=%request.Get("CONTEXT")
+ ; Setting the context for the whole chart
+ d %request.Set("CONTEXT",eprchartCONTEXT)
+ w ##Class(web.SSMessageRecipient).getMessageLink()
+ n PatiendID,mradm,chart,itmLIST,jk,params,itmparams,parref,GrpId,GrpSetCarPrv,AdHocGraphLink,ConditionalExpression
+ n obj,Graph,PAAdmCodingID,Heading,ItemID,EpisodeNo,PatientBanner,TPrint,TPrintComp,TPrintParams,divID,Collapsed
+ n resultAtomic,resultDicom,resultImage,resultText,resultWord,episode,studentMRADMID,newMRADMclass,tmpmradm,studentchart,oldstudentflag
+ s (ObsGrpID,TPrintParams)=""
+ s TPrint=$g(%request.Data("TPRINT",1))
+ s TPrintComp=$g(%request.Data("WEBSYS.TCOMPONENT",1))
+ ; get the workflow ID of Orders Entry for use by 'repeat orders' menu
+ n eprWorkFlowID s eprWorkFlowID=$O(^websys.WorkFlowI("UniqueNameIndex"," TRAK.EPR ORDER ENTRY",""))
+ k %request.Data("TMENU")
+ s ChartID=%request.Get("ChartID")
+ i 'ChartID d
+ . i $d(%request.Data("PrevEpisode")) s (ChartID,%request.Data("ChartID",1))=##Class(epr.GroupSettings).GetPrevEpisChart(%session.Get("LOGON.GROUPID"))
+ . i '$d(%request.Data("PrevEpisode")) s (ChartID,%request.Data("ChartID",1))=##Class(epr.GroupSettings).GetMainChart(%session.Get("LOGON.GROUPID"))
+ i ChartID s eprchartCONTEXT="C"_ChartID
+ d %request.Set("CONTEXT",eprchartCONTEXT)
+ s mradm=%request.Get("mradm"),PAAdmCodingID=%request.Get("PAAdmCodingID"),PatientBanner=%request.Get("PatientBanner")
+ d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,epr.Chart.Messages")
+ i PatientID="",EpisodeID'="" s (PatientID,%request.Data("PatientID",1))=##Class(web.PAAdm).GetPatientId(EpisodeID)
+ i 'PatientID w "Patient has not been selected" q
+ i 'EpisodeID,mradm s (EpisodeID,%request.Data("EpisodeID",1))=##Class(web.MRAdm).GetEpisodeId(mradm)
+ ; only quit if we're not diaplying the timeline....
+ i 'EpisodeID,'TimeLine w "Episode has not been selected" q
+ i mradm="",EpisodeID'="" s (mradm,%request.Data("mradm",1))=##Class(web.PAAdm).GetMRAdm(EpisodeID)
+ ; Log 29736 - AI - 08-01-2004 : Updated from "Observation Groups" to "Observation Profiles".
+ i 'mradm,'TimeLine w "<P>NB: Episode has not been selected.  This is required to view Order Profiles, Result Profiles and Observation Profiles.</P>"
+ i 'ChartID w "Chart ID is Blank.  Check your Security Settings to see if a Chart has been defined for this User Group" q
+ s CanAddDSMedications=""
+ s GrpId=##Class(epr.GroupSettings).GetIdFromGroupId(%session.Get("LOGON.GROUPID"))
+ s obj=##Class(epr.GroupSettings).%OpenId(GrpId)
+ i obj d
+ . s GrpSetCarPrv=obj.CarPrvTp
+ . s CanAddDSMedications=obj.CanAddDSMedications
+ d obj.%Close()
+ i $g(GrpSetCarPrv)'="" {s %request.Data("GrpSetCarPrv",1)=","_GrpSetCarPrv_","} else {s %request.Data("GrpSetCarPrv",1)=""}
+ i $g(EpisodeID)'="" {s EpisodeNo=$p($g(^PAADM(EpisodeID)),"^",81) s %request.Data("EpisodeNo",1)=EpisodeNo}
+ ;
+ ;These variables need to be declared at top of this page;
+ w "<SCRIPT Language=""JavaScript"">"_$c(13,10),"var PAAdmCodingID="""_$g(PAAdmCodingID)_""";"_$c(13,10),"var ChartID="""_$g(ChartID)_""";"_$c(13,10)
+ w "var PatientID="""_$g(PatientID)_""";"_$c(13,10)
+ w "var mradm="""_$g(mradm)_""";"_$c(13,10),"var mradmlist="""_$g(mradmlist)_""";"_$c(13,10)
+ w "var EpisodeID="""_$g(EpisodeID)_""";"_$c(13,10)
+ w "var EpisodeNo="""_$g(EpisodeNo)_""";"_$c(13,10),"var PrevEpisode="""_%request.Get("PrevEpisode")_""";"_$c(13,10),"var eprWorkFlowID="""_$g(eprWorkFlowID)_""";"_$c(13,10)
+ ; NOTE: The "studentdischargewarning" message should NEVER be displayed, because you cannot have a Student "Discharge Summary" chart in the first place.
+ ;   If we don't display "(Student)" next to the Chart Item Description, then it shouldn't have the Student mradm as THE mradm either.
+ w "var DischEpisodes="""_$g(DischEpisodes)_""";"_$c(13,10),"var studentdischargewarning="""_$g(t("studentdischargewarning"))_""";"_$c(13,10)
+ w "var multiselect="""_$g(t("multiselect"))_""";"_$c(13,10) ;
+ ;
+ ;TODO: For the moment we are defaulting to one frame.  If you wish EPR to display in more than one frames
+ ;then you need to change the GroupSetting fields "GetMainChartDR" and "GetPrevEpisodeChartDR" to be list
+ ;fields that store listbuilds of the different Charts you want to appear in the different frames.
+ ;Then you need to change this csp page into a frames page by looping through these lists and creating
+ ;the appropriate frames.
+ ;
+ ; we DON'T want this - it forces the 'sort' columns to refresh with a pat banner
+ ;s %request.Data("PatientBanner",1)=1
+ ;
+ s chart=##Class(epr.Chart).%OpenId(ChartID,0)
+ i 'chart w "There is no Chart Defined for this ChartID." q
+ ; Log 59791 YC - If this is a history page, redirect to epr.clinicalhistory.csp
+ i chart.IsHistoryPage s %response.ServerSideRedirect="epr.clinicalhistory.csp?PatientID="_%request.Get("PatientID")_"&EpisodeID="_EpisodeID_"&EpisodeIDs="_EpisodeIDs_"&mradm="_mradm_"&ChartID="_%request.Get("ChartID")_"&apptID="_%request.Get("apptID")_"&ConsultID="_%request.Get("ConsultID") q
+ s (itmLIST,params,parref)=""
+ ; Log 42221 - AI - 05-02-2004 : Check to see if the Chart is a Student Chart or not, and use the correct MRAdm DR.
+ ; 			If we have made it this far, we have a valid EpisodeID, a valid ChartID, and a valid chart.
+ ; Note - if the chart is being used in the Discharge Summaries then there is no Student EPR
+ s studentchart=0
+ s studentMRADMID=""
+ ; Log 59050 - AI - 30-05-2006 : Set up oldstudentflag. Used in epr.Chart - ChartDisplay.
+ s oldstudentflag=0
+ i chart.Student,DischEpisodes="",EpisodeIDs'="" s oldstudentflag=1
+ ; Log 59050 - AI - 30-05-2006 : Added to the condition : Only Display "(Student)" if EpisodeIDs is BLANK. Display done in epr.Chart - ChartDisplay.
+ ;i chart.Student,DischEpisodes="" d
+ i chart.Student,DischEpisodes="",EpisodeIDs="" d
+ . s studentchart=1
+ . s episode=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+ . i episode.PAADMStudentMRADMDR s studentMRADMID=episode.PAADMStudentMRADMDR.%Id()
+ . i studentMRADMID="" d
+ . . ; Log 59050 - AI - 30-05-2006 : Overwrite the mradmlist that was created above. mradmlist is used by MRSubFind.
+ . . s mradmlist=studentMRADMID
+ . . s %request.Data("mradmlist",1)=mradmlist
+ . . ; end Log 59050
+ . . s newMRADMclass=##Class(User.MRAdm).%New()
+ . . d newMRADMclass.MRADMADMDRSetObjectId(EpisodeID)
+ . . ; set any other MRAdm fields here ???
+ . . d newMRADMclass.%Save(0)
+ . . s studentMRADMID=newMRADMclass.%Id()
+ . . d episode.PAADMStudentMRADMDRSetObjectId(studentMRADMID)
+ . . d newMRADMclass.%Close()
+ . . d episode.%Save(0)
+ . d episode.%Close()
+ ; Log 59050 - AI - 30-05-2006 : Modify the following to go off the variable we set, not directly from the chart setting.
+ ;w "var studentchart="""_chart.Student_""";"_$c(13,10)
+ w "var studentchart="""_studentchart_""";"_$c(13,10)
+ w "</SCRIPT>"_$c(13,10)
+ i (PatientID'="")&(PatientBanner=1) {
+   s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+   i cmp d cmp.Show(),cmp.%Close()
+ }
+ ; So from now, if studentMRADMID is not blank, it's a Student Chart with a valid MRAdm record. If studentMRADMID is blank, it's a normal/regular/non-student Chart.
+ ; Also, if studentchart is 1, it's a Student Chart with a valid MRAdm record. If studentchart is 0, it's a normal/regular/non-student Chart.
+ ; end Log 42221\
+ //removed by wuqk 2011-06-02  to ChartDisplay7
+ //s cs=chart.ChartSettings i cs d ##Class(epr.Chart).chartSettingsSelect(.itmLIST,.params,cs)
+ d chart.%Close()
+ i $g(%request.Data("TPRINT",1))=1 {
+   K %request.Data("TPRINT",1) //this slightly bizarre set and kill is to stop the print prompt on the banner itself
+   s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+   i cmp d cmp.Show(),cmp.%Close()
+   S %request.Data("TPRINT",1)=1
+ }
+ s PatBasedLists=",PAPatMas.ListEMRHistory,PAAllergy.ListEMR,PAAlertMsg.List,PAAdm.List,PAAdm.Tree,PAPregnancy.Tree,PAPatMas.ListEMRPatDetails,PAAdmDischargeSummary.List,"
+
+ ; PC
+ i DischEpisodes'="" d
+ . s %request.Data("PARREF",1)=EpisodeID
+
+ ; YC - moved code to epr.chart.cls
+ //d ##Class(epr.Chart).ChartDisplay()
+ //by zhouzq 2012.11.27 保证在切换非硬编码的chartitem时清除锁,可以防止医嘱录入锁在诊疗界面被占用
+ d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ //by wuqk 2011-06-02 .chartSettingsSelect+.ChartDisplay
+ d ##Class(epr.Chart).ChartDisplay7()
+ 
+ ; PJC - Added so that we could rebuild the component to do the transalation of messages.
+ s cmp=##Class(websys.Component).OpenName("epr.Chart.Messages")
+ i cmp d cmp.Show(),cmp.%Close()
+
+
+</SERVER>
+<P>&nbsp;</P>
+<script Language="JavaScript">
+//This must be at bottom of page so that all other javascript functions and event triggers have loaded.
+function eprLoadHandler() {
+	// Log 42221 - AI - 05-02-2004 : Remove mradm from glb, as we don't know if it is Main MRADM or Student MRADM any more.
+	//glb="&PatientID="+PatientID+"&mradm="+mradm+"&EpisodeID="+EpisodeID+"&ChartID="+ChartID;
+	glb="&PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&ChartID="+ChartID;
+	//If any of the epr pages have their own document.body.onload handlers then call each of them individually from here.
+	try {PAPatMas_ListEMRPatDetails_BodyLoadHandler();} catch(e) {}
+	// Log 52572 - AI - 30-05-2005 : Remove the component-defined ALT-"U" and replace with a javascript-defined function that is still ALT-"U".
+	//                               Discharge Summary Edit BodyLoad defined here so it is loaded AFTER the component and tsc array.
+	try {PAAdmDischargeSummaryEdit_BodyLoad();} catch(e) {}
+	try {MRAdmListEMRQuestionnaire_BodyLoadHandler();} catch(e) {}
+	try {MRSickNoteList_BodyLoadHandler();} catch(e) {}
+
+	var objQuestUpdate = document.getElementById("update1");
+	if (objQuestUpdate) { objQuestUpdate.onclick = QuestUpdate;}
+	// ab 11.10.06 61014
+	var objQuestUpdate = document.getElementById("save1");
+	if (objQuestUpdate) { objQuestUpdate.onclick = QuestUpdate;}
+	if ((studentchart=="1")&&(DischEpisodes!="")) {alert(studentdischargewarning);}
+
+	// Log 51367 YC - Disable update if questionnaire status is authorised
+	var qdisable="#(qdisable)#";
+	if (qdisable!="") {
+		var obj=document.getElementById("update1");
+		obj.disabled=true;
+		obj.onclick=LinkDisable;
+	}
+
+}
+
+function LinkDisable(evt) {
+	var el = websys_getSrcElement(evt);
+	if (el.disabled) {
+		return false;
+	}
+	return true;
+}
+
+document.body.onload=eprLoadHandler;
+
+
+</script>
+<script language='javascript' src='../scripts/framework/dhcc.icare.lu.js'></script>
+</div></body>
+</html>

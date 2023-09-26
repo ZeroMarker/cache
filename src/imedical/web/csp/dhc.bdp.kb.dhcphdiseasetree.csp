@@ -1,0 +1,269 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+ /*
+    @CSP：dhc.bdp.kb.dhcphdiseasetree.csp
+    @JS:DHC_PHDiseaseTree.js
+    @Title：诊断逻辑推导目录
+    @Creator:石萧伟
+    @Description:诊断逻辑推导目录
+    @CreateDate：2018-08-15
+*/
+ 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/App/KB/NewDic/DHC_PHDiseaseTree.js"></script>
+<style type="text/css"> 
+	/*去掉treegrid的表头
+	#layoutcenter .datagrid-header {
+		position: absolute; 
+		visibility: hidden;
+	} */
+#layoutcenter .datagrid-header td,#layoutcenter .datagrid-body td,#layoutcenter .datagrid-footer td {
+    border-width: 0 0px 0px 0;
+ }
+/*更改表格中单元格行间距*/
+#layoutcenter .datagrid-btable tr{
+	height: 1px;
+	}	 
+</style>
+
+</HEAD>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true" id="layout">
+		<div id="layoutcenter" data-options="region:'center',split:true" border="false" style="padding:4px 0px 4px 4px">
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="diagrid" border="true" toolbar="#diabar"  title="诊断逻辑推导目录"></table>
+		</div>
+		<div id="layouteast" data-options="region:'east',split:true"  style="width:600px;padding:4px 4px 4px 0px" border="false" >
+			<div class="hisui-layout" data-options="fit:true" id="layoutW">
+				<!---->
+				<div data-options="region:'center',split:true" border="false">
+					<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="itmgrid" border="true" toolbar="#itmbar" title="推导目录明细"></table> 
+				</div>
+				<!---->
+				<div data-options="region:'north',split:true,collapsible:false"  style="height:260px" border="false">
+					<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="listgrid" border="true" toolbar="#listbar"  title="指导目录"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--左侧列表工具栏-->
+	<!--<div id="diabar" style="padding-top:5px">
+		<table>
+	 		<span style="padding-left:10px;">描述<input style="width:165px;margin-left:10px;" class='hisui-validatebox' id="TextDia"></span>
+	 		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="diaSearch" style="margin-bottom:3px;margin-left:10px">查询</a>
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="diaRefresh" style="margin-bottom:3px;margin-left:10px">清屏</a>
+	    	<div style='border-top: 1px dashed #C0C0C0;font-size: 14px;margin-top:2px'></div>
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a> 
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-cfg',plain:true,stopAllEventOnDisabled:true" id="prompt_btn">推导目录提示表</a>
+	    	<a href="#" class="hisui-linkbutton" style="" data-options="iconCls:'icon-batch-cfg',plain:true,stopAllEventOnDisabled:true" id="configure_btn">配置</a>    	    	
+	    </table>
+    </div>-->
+    <div id="diabar">
+		 <table style="padding-top:5px;padding-bottom:5px;" >
+		    <tr>
+		    	<td class="tdlabel">描述</td>
+	    		<td><input style="width:165px;" class='hisui-validatebox' id="TextDia"></td>
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="diaSearch">查询</a>
+				</td>
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="diaRefresh" >清屏</a>
+				</td>
+			</tr> 
+		 </table>
+		 <div style='border-top: 1px dashed #C0C0C0;'></div>  
+		 <table style="padding-top:1px;padding-bottom:1px;">
+			<tr>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a> 
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-cfg',plain:true,stopAllEventOnDisabled:true" id="prompt_btn">推导目录提示表</a>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" style="" data-options="iconCls:'icon-batch-cfg',plain:true,stopAllEventOnDisabled:true" id="configure_btn">配置</a>
+				</td>
+			</tr>		 
+		 </table>  
+    </div>    
+	<!--配置弹窗-->
+	<div id="conWin" style="width:350px;height:400px;padding:10px;display:none;">
+		<table>
+			<tr>
+				<td class="tdlabel">手动输入代码</td>
+				<td><input class='hisui-checkbox' type="checkbox" id="AutoCode" name="AutoCode" data-options="checked:true" value="Y"></td>
+			</tr>
+			<tr>
+				<td class="tdlabel"><font color=red>*</font>代码长度</td>
+				<td><input id="CodeLen" name="CodeLen" style="width:200px" class="hisui-validatebox" type="text"></td>
+			</tr>
+			<tr>
+				<td class="tdlabel"><font color=red>*</font>代码起始字符</td>
+				<td><input id="StartCode" name="StartCode" style="width:200px" class="hisui-validatebox" type="text"></td>
+			</tr>
+		</table>
+	</div>
+	<!-- 左侧增改弹框-->
+	<div id="myWin" style="width:400px;height:450px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table>
+				<tr>
+	            	<td class="tdlabel"><font color=red>*</font>代码</td>
+	    		    <td><input id="PDTCode" name="PDTCode" type="text" class="hisui-validatebox"  style="width:250px"></td>
+	    		</tr>
+	    		<tr>
+	    		    <td class="tdlabel"><font color=red>*</font>描述</td>
+	    		    <td><input id="PDTDesc" name="PDTDesc" type="text" class="hisui-validatebox" style="width:250px"></td>
+	    		</tr>	    		 	    		 
+				<tr>
+				    <td class="tdlabel">上级分类</td>
+				    <td><input id="PDTLastRowid" name="PDTLastRowid"  style="width:257px;"></td>
+				</tr>
+	    		<tr>
+	    		    <td class="tdlabel" hidden="true">级别</td><!--顺序字段-->
+	    		    <td hidden="true"><input id="PDTLevel" name="PDTLevel" type="text" class="hisui-validatebox" style="width:250px"></td>
+	    		</tr>	    		 	    		 
+	    		 <tr>
+	    		   <td class="tdlabel">是否可用</td>
+				   <td><input class='hisui-checkbox' type="checkbox" label="" id="PDTActiveFlag" name="PDTActiveFlag" data-options="checked:true" value="Y"></td>
+				 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">系统标识</td>
+				   <td><input class='hisui-checkbox' type="checkbox" label="" id="PDTSysFlag" name="PDTSysFlag" data-options="checked:true" value="Y"></td>
+				 </tr>				 					 							
+			</table >
+		</form>
+	</div>
+    <!--推导弹窗-->
+     <div id='promptWin' style="display:none;overflow:hidden;width:900px;height:500px;">
+		<iframe id="prompt_iframe" src="" frameborder="0" width="100%" height="100%" scrolling="no"></iframe>
+    </div>
+	<!--推导目录工具栏-->
+	<!--<div id="listbar" style="padding-top:5px">
+ 		<span style="padding-left:10px;"><h style="padding-right:10px;">指南目录</h><input style="width:150px" id="TextList"/></span>
+ 		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="listSearch" style="margin-bottom:2px;margin-left:10px">查询</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="listRefresh" style="margin-bottom:2px;margin-left:10px">清屏</a>
+    	<div style='border-top: 1px dashed #C0C0C0;font-size: 14px;margin-top:5px'></div>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="addl_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="updatel_btn">修改</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="dell_btn">删除</a>    	
+    </div> -->
+    <div id="listbar">
+		 <table style="padding-top:5px;padding-bottom:5px;" >
+		    <tr>
+		    	<td class="tdlabel">指南目录</td>
+	    		<td><input style="width:165px;" class='hisui-validatebox' id="TextList"></td>
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="listSearch">查询</a>
+				</td>
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="listRefresh" >清屏</a>
+				</td>
+			</tr> 
+		 </table>
+		 <div style='border-top: 1px dashed #C0C0C0;'></div>  
+		 <table style="padding-top:1px;padding-bottom:1px;">
+			<tr>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="addl_btn">新增</a>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="updatel_btn">修改</a> 
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="dell_btn">删除</a>
+				</td>
+			</tr>		 
+		 </table>  
+    </div>     
+	<!-- 右侧增改弹框-->
+	<div id="listWin" style="width:400px;height:350px;top:30px;padding:10px;display:none;">   
+		<form id="list-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table>
+				<tr>
+	    		    <td><input id="PDLDisTreeDr" name="PDLDisTreeDr" type="hidden"></td>
+	    		</tr>				
+				<tr>
+	            	<td class="tdlabel"><font color=red>*</font>指南目录</td>
+	    		    <td><input id="PDLLabelDr" name="PDLLabelDr" type="text" style="width:257px"></td>
+	    		</tr>
+				<tr>
+				    <td class="tdlabel">逻辑关系</td>
+				    <td><input id="PDLRelation" name="PDLRelation"  style="width:257px;"></td>
+				</tr>	    		
+	    		<tr>
+	    		    <td class="tdlabel">运算符</td>
+	    		    <td><input id="PDLOperator" name="PDLOperator" type="text" style="width:257px"></td>
+	    		</tr>
+	    		<tr>
+	    		    <td class="tdlabel">数量</td>
+	    		    <td><input id="PDLNum" name="PDLNum" type="text" class="hisui-validatebox" style="width:250px"></td>
+	    		</tr>	    			    		 	    		 				 					 							
+			</table >
+		</form>
+	</div> 
+     <!--明细增改弹窗-->
+     <div id="itmWin" style="width:400px;height:450px;padding:10px;display:none;">   
+		<form id="itm-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table id="addtable" align="center">
+				 <tr>
+				 	<td><input id="PDLIId" name="PDLIId" type="hidden"></td>
+				 </tr>			
+				 <tr id="gendrid">
+				   <td class="tdlabel"><font color=red>*</font>通用名</td>
+				   <td><input id="PDLIGenDr" name="PDLIGenDr" type="text" style="width:257px"></td>
+				 </tr>	
+				 <tr id="valid">
+				   <td class="tdlabel">检验值</td>
+				   <td><input id="PDLIVal" name="PDLIVal" type="text" class="hisui-validatebox" style="width:250px"></td>
+				 </tr>					 
+				 <tr id="operatorid">
+				   <td class="tdlabel">运算符</td>
+				   <td><input id="PDLIOperator" name="PDLIOperator" type="text" style="width:257px"></td>
+				 </tr>
+				 <tr id="resultid">
+				   <td class="tdlabel">结果</td>
+				   <td><input id="PDLIResultText" name="PDLIResultText" type="text" style="width:257px"></td>
+				 </tr>
+				 <tr id="keywordid">
+				   <td class="tdlabel"><font color=red>*</font>关联项目</td>
+				   <td><input id="PDLIKeyWord" name="PDLIKeyWord" type="text" style="width:257px"></td>
+				 </tr>				 
+				 <tr id="relationid">
+				   <td class="tdlabel">逻辑关系</td>
+				   <td><input id="PDLIRelation" name="PDLIRelation" type="text" style="width:257px"></td>
+				 </tr>				 					 	
+	    		 <tr id="flagid">
+	    		   <td class="tdlabel">系统标识</td>
+				   <td><input class='hisui-checkbox' type="checkbox" label="" id="PDLISysFlag" name="PDLISysFlag" data-options="checked:true" value="Y"></td>
+				 </tr>				 							
+			</table >
+		</form>
+	</div>
+    <!--推导目录明细工具栏-->
+    <div id="itmbar" style='padding-top:5px'>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="additm_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="updateitm_btn">修改</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="delitm_btn">删除</a>
+    </div>		       		    		          
+</BODY>
+</HTML>
+																						

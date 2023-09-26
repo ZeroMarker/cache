@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!--
+    配液收费规则
+	csp:dhcpha.pivas.feerule.csp
+	js: scripts/pharmacy/pivas/feerule.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+        i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+        q 1
+    </csp:method>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
+    <style>
+        .pha-row {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .pha-col:first-child {
+            margin-left: -1px;
+        }
+
+        /* inline-block 有间隙,大概4px */
+        .pha-col {
+            display: inline-block;
+            padding-left: 10px;
+            margin-left: -4px;
+        }
+
+        .batch-title {
+            color: #007ACF;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .batch-title-sign {
+            height: 14px;
+            margin-top: 3px;
+            border-left: 5px solid #007ACF;
+            float: left;
+            margin-right: 10px;
+        }
+
+        div p {
+            padding-top: 10px
+        }
+    </style>
+</HEAD>
+
+<body style="background:white;">
+    <div class="dhcpha-win-mask">
+        <img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
+    </div>
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options="region:'center'" class="dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',width:300,title:'规则名称',headerCls:'panel-header-gray',iconCls:'icon-fx',split:true,collapsible:false">
+                    <table id="gridFeeRule"></table>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true" id="lyRight">
+                        <div data-options="region:'center',title:'关联关系',headerCls:'panel-header-gray',iconCls:'icon-drug-link',split:true,collapsible:false">
+                            <table id="gridFeeRuleItm"></table>
+                        </div>
+                        <div data-options="region:'south',height:250,title:'关联收费医嘱项',headerCls:'panel-header-gray',iconCls:'icon-fee',split:true,collapsible:false">
+                            <table id="gridFeeRuleLink"></table>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'east',width:250,title:'规则说明',headerCls:'panel-header-gray',iconCls:'icon-help',split:true,collapsible:false">
+                    <div style="padding:10px;">
+                        <div>
+                            <div class="hisui-panel" title="规则名称" data-options="headerCls:'panel-header-card'" style="padding: 10px;padding-top: 15px;line-height: 20px;">
+                                <div>每一种收费情况可维护一条规则名称</div>
+                                <div>在菜单【配液大类收费设置】中可关联收费规则</div>
+                            </div>
+                        </div>
+                        <div style="padding-top:10px;">
+                            <div class="hisui-panel" title="关联关系" data-options="headerCls:'panel-header-card'" style="padding: 10px;padding-top: 15px;line-height: 20px;">
+                                <div>本规则判断医嘱内所有药品或规格</div>
+                                <div>记录间为并列关系，同时满足才能进行收费</div>
+                                <div>规格[ML]指医嘱内规格最大的</div>
+                            </div>
+                        </div>
+                        <div style="padding-top:10px;">
+                            <div class="hisui-panel" title="关联收费医嘱项" data-options="headerCls:'panel-header-card'" style="padding: 10px;padding-top: 15px;line-height: 20px;">
+                                <div>数量为正数增加收费</div>
+                                <div>数量为负数减少收费</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 关联规则窗体 -->
+    <!-- 工作组窗体维护 -->
+    <div id="gridFeeRuleItmWin" class="hisui-dialog" title="关联关系维护" closed="true" style="width:400px;height:310px;" data-options="iconCls:'',modal:true,
+        buttons:[{
+            text:'确定',
+            handler:function(){
+                SaveRuleItm();
+            }
+        },{
+            text:'取消',
+            handler:function(){
+                $('#gridFeeRuleItmWin').window('close');
+            }
+        }]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" border="false" style="overflow:hidden">
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <label for="cmbType">　类型</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="cmbType" />
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <label for="cmbOperate">　关系</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="cmbOperate" />
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <label>类型值</label>
+                    </div>
+                    <div class="pha-col" style="display:none;" id="divCMBTypeVal">
+                        <input id="cmbTypeVal" />
+                    </div>
+                    <div class="pha-col" id="divTXTTypeVal">
+                        <input id="txtTypeVal" class="hisui-validatebox" style="width:303px">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 工具栏 -->
+    <div id="gridFeeRuleBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
+    </div>
+    <div id="gridFeeRuleItmBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddItm">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditItm">修改</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDeleteItm">删除</a>
+    </div>
+    <div id="gridFeeRuleLinkBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddLink">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveLink">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDeleteLink">删除</a>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/feerule.js"></script>
+</body>
+
+</HTML>

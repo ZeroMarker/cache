@@ -1,0 +1,102 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</head>
+
+<body>
+<SERVER>
+	n mradm,level1,level2,level3
+	n level1desc,level2desc,level3desc,newlevel1,obj,cnt
+	s mradm=%request.Get("mradm")
+	;TNtesting
+	i mradm="" s mradm=10345
+	;might use translation
+	s level1desc="Body Area",level2desc="Body Area Problem",level3desc="Body Area Sub-Problem"
+	s obj=##Class(websys.Component).OpenName("MRPhysExamination.Edit")
+	i obj d obj.LoadTrans(),obj.%Close()
+
+	d ##Class(websys.Menu).ShowMenuMS("",t("PageTitle"))
+	w "<B>",t("PageTitle"),"</B>",$c(13,10)
+	w "<FORM ACTION='update.csp' NAME='fMRPhysExaminationEditAll' method='POST'>",$c(13,10)
+	w "<INPUT TYPE='HIDDEN' NAME='PatientID' VALUE='",%request.Get("PatientID"),"'>",$c(13,10)
+	w "<INPUT TYPE='HIDDEN' NAME='EpisodeID' VALUE='",%request.Get("EpisodeID"),"'>",$c(13,10)
+	w "<INPUT TYPE='HIDDEN' NAME='mradm' VALUE='",mradm,"'>",$c(13,10)
+	w "<INPUT TYPE='HIDDEN' NAME='TWKFL' VALUE='",%request.Get("TWKFL"),"'>",$c(13,10)
+	w "<INPUT TYPE='HIDDEN' NAME='TWKFLI' VALUE='",%request.Get("TWKFLI"),"'>",$c(13,10)
+	;
+	w "<TABLE cellpadding=0 cellspacing=0 border=1>",$c(13,10)
+	w "<THEAD><TH>",level1desc,"</TH><TH>",level2desc,"</TH><TH>",level3desc,"</TH></THEAD>",$c(13,10)
+	;
+	set cnt=0
+	set level1 = $o(^MRC("BODAR",0))
+	while (level1 '= "") {
+		q:cnt>10
+		set cnt=cnt+1
+		set newlevel1=1
+		set level1desc=##Class(websys.Conversions).HtmlFriendly($p($g(^MRC("BODAR",level1)),"^",2))
+		set level2 = $o(^MRC("BODAR",level1,"PROB",0))
+		if (level2 = "") {
+			write "<TR><TD colspan=3><INPUT type='checkbox' name='PHYS",level1,"'>"
+			write level1desc
+			write "</TD></TR>",$c(13,10)
+		} else {
+			write "<TR><TD>"
+			write level1desc
+			write "</TD>"
+			
+			while (level2 '= "") {
+				if ('newlevel1) {
+					write "<TR><TD></TD>"
+				}
+				set newlevel1=0
+				set level2desc=##class(websys.Conversions).HtmlFriendly($p($g(^MRC("BODAR",level1,"PROB",level2)),"^",2))
+				set level3 = $o(^MRC("BODAR",level1,"PROB",level2,"SUBP",0))
+				if (level3 = "") {
+					write "<TD colspan=2><INPUT type='checkbox' name='PHYS",level1_"||"_level2,"'>"
+					write level2desc
+					write "</TD></TR>",$c(13,10)
+				} else {
+					write "<TD>"
+					write level2desc
+					write "</TD>"
+					
+					write "<TD>"
+					while (level3 '= "") {
+						write "<INPUT type='checkbox' name='PHYS",level1_"||"_level2_"||"_level3,"'>"
+						write ##class(websys.Conversions).HtmlFriendly($p($g(^MRC("BODAR",level1,"PROB",level2,"SUBP",level3)),"^",2))
+						write " "
+					
+						set level3 = $o(^MRC("BODAR",level1,"PROB",level2,"SUBP",level3))
+					}
+					write "</TD></TR>",$c(13,10)
+				}
+				
+				set level2 = $o(^MRC("BODAR",level1,"PROB",level2))
+			}
+		}
+ 		
+		set level1 = $o(^MRC("BODAR",level1))
+ 	}
+ 	
+ 	w "<TR><TD colspan=2>&nbsp;</TD><TD>"
+ 	w "<A href='javascript:submitForm();' accesskey='U'><IMG src='../images/websys/update.gif' border=0><U>U</U>pdate</A>"
+ 	w "</TD></TR>",$c(13,10)
+ 	w "</TABLE>",$c(13,10)
+ 	w "</FORM>",$c(13,10)
+</SERVER>
+
+<SERVER>
+	
+</SERVER>
+</body>
+</html>
+
+

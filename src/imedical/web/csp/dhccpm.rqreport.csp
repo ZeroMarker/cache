@@ -1,0 +1,34 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;dhccpm.rqreport.csp
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ ;http://localhost:8080/runqianReport/report/jsp/directprint1.jsp?report={类名称查询.raq(classname=web)}&prompt=no
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<!--DHC Add for lookup   -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/lookup.css"></LINK>
+<!--DHC End   -->
+</HEAD>
+<!--  onload="docHandler();" -->
+<script language="Cache" runat="server">
+	s reportName=""
+	s rqappserver=##class(web.DHCBL.RQ.ServerConfig).GetReportServiceUrl()
+	s reportName=$g(%request.Data("reportName",1))
+	i (reportName=""){
+		;s reportName="类名称查询1.raq"
+	}
+	;<iframe name="RunQianReport" src="#(rqappserver)#report/jsp/dhccpmrunqianreport.jsp?report=#(reportName)#"></iframe>
+</script>
+<SCRIPT LANGUAGE="CACHE" RUNAT="SERVER">
+	;<iframe name="RunQianReport" src="#(rqappserver)#report/jsp/dhccpmrunqianreport.jsp?report=#(reportName)#" WIDTH=%100></iframe>
+</SCRIPT>
+
+<FRAMESET ROWS="1">
+	<FRAME name="RunQianReport" src="#(rqappserver)#report/jsp/dhccpmrunqianreport.jsp?report=#(reportName)#" WIDTH=%100></FRAME>
+</FRAMESET>
+
+</HTML>

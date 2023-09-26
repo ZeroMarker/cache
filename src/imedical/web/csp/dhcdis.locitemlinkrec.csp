@@ -1,0 +1,94 @@
+<!-- dhcdis.locitemlinkrec.csp -->
+<html>
+<head>
+<title></title>
+<DHCAPP:EASYUI/>
+
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcdis/locitemlinkrec.js"></script>
+<script Language="Javascript">
+		var hosp="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+   </script>
+</head>
+<body class="easyui-layout">   
+	<div data-options="region:'west'" >
+	<!-- toolbar -->
+		<div id="toolbar" class="toolbar">
+			<form id="queryForm" >
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+					<td class="textLabel">项目:<input type="text" id="LICode" name="LICode" class="textParent"></input> </td>	
+					<td class="textLabel">科室: <input type="text" id="LIDesc" name="LIDesc" class="textParent"></input> </td>
+					<td ><a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
+					<td><div class="datagrid-btn-separator"> </div> </td>
+					<td ><a class="easyui-linkbutton" data-options="iconCls:'icon-reload',plain:true" onclick="javascript:commonReload({'datagrid':'#datagrid','formid':'#queryForm'})">重置</a> </td>
+				</tr>
+				<tr>
+			</table>
+			</form>
+			<div class="tool-bar-line">	</div>	
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >增加</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="easyui-datagrid" fit="true" title="配送项目关联接收科室"
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pageSize:20,
+		    pageList: [20,40,80],
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRow, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCDISLocItemLinkRec&MethodName=ListLocItemLinkRec'">
+			<thead>
+				<tr>
+					
+					<th data-options="field:'LREItemDr',width:200,align:'center',
+											
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISLocItemLinkRec&MethodName=getDisLocItem',
+													required:true,
+													editable:false
+												}
+											}
+					">配送项目</th>
+					<th data-options="field:'LRELocDr',width:200,align:'center',
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISLocItemLinkRec&MethodName=GetLoc&HospID='+hosp,
+													required:true,
+													editable:false
+												}
+											}
+					">可配送科室</th>
+					
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+</div>
+
+<div data-options="region:'center'" style="background:#eee;">
+	
+</div>   
+ 
+</body>
+</html>
+

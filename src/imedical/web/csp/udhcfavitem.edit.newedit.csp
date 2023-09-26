@@ -1,0 +1,295 @@
+<!--udhcfavitem.edit.newedit.csp HUI医嘱套明细维护-->
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.--> 
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<STYLE type='text/css'>
+.label{
+	padding-right:10px;
+	text-align:right;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	margin:0 auto;
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header{
+	border-bottom: 0;
+}
+</style>
+</head>
+<body class="hisui-layout" data-options="fit:true" onload="BodyLoadHandler();">
+<Server>
+//医嘱项目ID
+s ARCOSItemRowid=%request.Get("ARCOSItemRowid")
+//医嘱套ID
+s ARCOSRowid=+%request.Get("ARCOSRowid")
+//明细项目对应ID
+s ARCIMRowid=%request.Get("ARCIMRowid")
+//临时医嘱
+s ShortOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+//录入频次的非药品子类
+s FrequencedItemCat=##Class(web.DHCDocConfig).GetConfigNode("FrequencedItemCat")
+//可选择用法的非药品子分类
+s inputInstrNotDrugCat=##Class(web.DHCDocConfig).GetConfigNode("SelectInstrNotDrugCat")
+;滴速用法
+s DrippingSpeedInstr=##Class(web.DHCDocConfig).GetConfigNode("DrippingSpeedInstr")
+;可以录入小数的子类
+s GetARCItemSubCatID=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderEntry.GetARCItemSubCatIDBroker"))
+s AllowEntryDecimalItemCat=##class(web.DHCDocConfig).GetConfigNode("AllowEntryDecimalItemCat")
+if DrippingSpeedInstr'="0" s DrippingSpeedInstr="^"_DrippingSpeedInstr_"^"
+s ARCOSPrescType=##Class(web.UDHCFavItemNew).GetARCOSPrescType(ARCOSRowid)
+S ARCOSPrescType=$P(ARCOSPrescType,"^",1)
+s ARCOSInfo=##Class(web.DHCUserFavItems).GetARCOSInfo(ARCOSRowid)
+s CelerType=$P(ARCOSInfo,"^",2)
+s CelerType=$S(CelerType="":"N",1:CelerType)
+;出院带药医嘱
+s OutOrderPriorRowid=$O(^OECPR(0,"Code","OUT",0))
+;取药医嘱
+s OneOrderPriorRowid=$O(^OECPR(0,"Code","ONE",0))
+;长期医嘱
+s LongOrderPriorRowid=$O(^OECPR(0,"Code","S",0))
+;临时医嘱
+s ShortOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+;自备药临时医嘱
+s OMOrderPriorRowid=$O(^OECPR(0,"Code","OM",0))
+;自备药长期医嘱
+s OMSOrderPriorRowid=$O(^OECPR(0,"Code","OMST",0))
+;即刻医嘱
+s STATOrderPriorRowid=$O(^OECPR(0,"Code","STAT",0))
+;PRN医嘱
+s PRNOrderPriorRowid=$O(^OECPR(0,"Code","PRN",0))
+;长期嘱托
+s OMCQZTOrderPriorRowid=$O(^OECPR(0,"Code","OMCQZT",0))
+;临时嘱托
+s OMLSZTOrderPriorRowid=$O(^OECPR(0,"Code","OMLSZT",0))
+;不能关联的医嘱子类
+s NotLinkItemCat=##Class(web.DHCDocConfig).GetConfigNode("NotLinkItemCat")
+;皮试用法
+s SkinTestInstr=##Class(web.DHCDocConfig).GetConfigNode("SkinTestInstr")
+if SkinTestInstr'="" s SkinTestInstr="^"_SkinTestInstr_"^"
+;外用用法
+s WYInstr=##Class(web.DHCDocConfig).GetConfigNode("WYInstr")
+if WYInstr'="" s WYInstr="^"_WYInstr_"^"
+</Server>
+<SCRIPT Language="Javascript">
+var ARCOSItemRowid="#(ARCOSItemRowid)#"
+var ARCOSRowid="#(ARCOSRowid)#"
+var ShortOrderPriorRowid="#(ShortOrderPriorRowid)#"
+var FrequencedItemCat="#(FrequencedItemCat)#"
+var inputInstrNotDrugCat="#(inputInstrNotDrugCat)#"
+var DrippingSpeedInstr="#(DrippingSpeedInstr)#"
+var GetARCItemSubCatID="#(GetARCItemSubCatID)#"
+var AllowEntryDecimalItemCat="#(AllowEntryDecimalItemCat)#"
+
+var OutOrderPriorRowid="#(OutOrderPriorRowid)#";
+var OneOrderPriorRowid="#(OneOrderPriorRowid)#";
+var LongOrderPriorRowid="#(LongOrderPriorRowid)#";
+var ShortOrderPriorRowid="#(ShortOrderPriorRowid)#";
+var OMOrderPriorRowid="#(OMOrderPriorRowid)#";
+var OMSOrderPriorRowid="#(OMSOrderPriorRowid)#";
+var STATOrderPriorRowid="#(STATOrderPriorRowid)#";
+var PRNOrderPriorRowid="#(PRNOrderPriorRowid)#";
+var OMCQZTOrderPriorRowid="#(OMCQZTOrderPriorRowid)#";
+var OMLSZTOrderPriorRowid="#(OMLSZTOrderPriorRowid)#";
+var ARCOSPrescType="#(ARCOSPrescType)#";
+var CelerType="#(CelerType)#";
+var NotLinkItemCat="#(NotLinkItemCat)#"
+var ARCIMRowid="#(ARCIMRowid)#"
+var SkinTestInstr="#(SkinTestInstr)#"
+var WYInstr="#(WYInstr)#"
+</SCRIPT>
+<!-- 布局显示医嘱套 udhcfavitem.edit.newshow.csp -->
+<csp:class description="JQuery easyUI1.3.5">
+<div id="OrderItemEditLay" data-options="region:'center',title:'',fit:true,border:false" style="">
+	<!--div data-options="title:''" style="width:390px;height:640px;margin-left:5px;margin-right:5px;border:1px solid #95B8E7;background-color:#F9FBFF;"-->
+	<div class="hisui-panel" fit="true" style="height:100%;border:0;">
+		<table class="search-table">
+			<tr>
+				<td class="label">
+					<label id="CItemDesc">医嘱名称</label>
+				</td>
+				<td colspan="3">
+					<input id="ItemDesc" class="textbox" style=""/>
+					<input id="ItemRowid" name="ItemRowid" style="display:none;">
+					<!--img name="imgItemDesc" id="imgItemDesc" src="../images/websys/lookup.gif" style="margin-left:-20px;"-->
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label id="CItemDoseQty">单次剂量</label>
+				</td>
+				<td>
+					<input  id="ItemDoseQty" class="textbox"/>
+					<input  id="OrderFreqTimeDoseStr" class="textbox" style="display:none;"/>
+				</td>
+				<td class="r-label">
+					<label id="CItemDoseUOM">剂量单位</label>
+				</td>
+				<td>
+					<input id="ItemDoseUOM" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label id="CItemFrequence">频次</label>
+					<input  id="OrderFreqWeekStr" class="textbox" style="display:none;"/>
+				</td>
+				<td>
+					<input id="ItemFrequence" class="hisui-combobox textbox"/>
+				</td>
+				<td class="r-label">
+					<label id="CItemInstruction">用法</label>
+				</td>
+				<td>
+					<input id="ItemInstruction" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label id="CItemQty">数量</label>
+				</td>
+				<td><input  id="ItemQty" class="textbox"/>
+				</td>
+				<td class="r-label">
+					<label id="CItemBillUOM">单位</label>
+				</td>
+				<td>
+					<input id="ItemBillUOM" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label id="CItemDuration">疗程</label>
+				</td>
+				<td>
+					<input id="ItemDuration" class="hisui-combobox textbox"/>
+				</td>
+				<td class="r-label">
+					<label id="CsampleType">标本</label>
+				</td>
+				<td>
+					<input id="sampleType" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label id="CItmLinkDoctor">关联</label>
+				</td>
+				<td>
+					<input  id="ItmLinkDoctor" class="textbox"/>
+				</td>
+				<td class="r-label">
+					<label id="Cremark">备注</label>
+				</td>
+				<td>
+					<input  id="remark" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label id="CDHCDocOrderType">医嘱类型</label>
+				</td>
+				<td>
+					<input id="DHCDocOrderType" class="hisui-combobox textbox"/>
+				</td>
+				<td class="r-label">
+					<label id="COrderPriorRemarks">附加说明</label>
+				</td>
+				<td>
+					<input id="OrderPriorRemarks" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label id="CDHCDocOrderType">接收科室</label>
+				</td>
+				<td>
+					<input id="DHCDocOrderRecLoc" class="hisui-combobox textbox"/>
+				</td>
+				<td class="r-label">
+					<label id="CDHCDocOrderStage">医嘱阶段</label>
+				</td>
+				<td>
+					<input id="DHCDocOrderStage" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+		    <tr>
+		    	<td class="label">
+		    		<label id="COrderSpeedFlowRate">输液流速</label>
+		    	</td>
+		    	<td>
+		    		<input  id="OrderSpeedFlowRate" class="textbox"/>
+		    	</td>
+		    	<td class="r-label">
+		    		<label id="COrderFlowRateUnit">流速单位</label>
+		    	</td>
+		    	<td>
+		    		<input id="OrderFlowRateUnit" class="hisui-combobox textbox"/>
+		    	</td>
+		    </tr>
+		    <!--tr><td class="r-label"><label id="CChoseType">草药</label></td><td><input id="ChoseType" name="ChoseType" type="checkbox"></td></tr-->
+			<tr>
+				<td class="label">
+					<label for="MustEnter" id="CMustEnter">必开项目</label>
+				</td>
+				<td>
+					<input id="MustEnter" class='hisui-checkbox' type="checkbox" label="">
+				</td>
+				<td class="r-label" title="仅新模式检查可用">
+		    		<label id="COrderBodyPartLabelText">部位信息</label>
+		    	</td>
+		    	<td>
+		    		<input id="OrderBodyPartLabelText" class="textbox"/>
+		    		<input id="OrderBodyPartLabel" style="display:none;" class="textbox"/>
+		    	</td>
+			</tr>
+			<!--目前商议的都走皮试引导窗口，那维护皮试相关信息的意义就不大了，但是考虑到部分医生对某些药品是否需要皮试可能与药剂室有冲突，还是放开了展示style="display:none;"-->
+			<tr >
+		    	<td class="label">
+					<label for="SkinTest" id="CSkinTest">皮试</label>
+				</td>
+				<td>
+					<input id="SkinTest" class='hisui-checkbox' type="checkbox" label="">
+				</td>
+		    	<td class="r-label">
+		    		<label id="CSkinAction">皮试备注</label>
+		    	</td>
+		    	<td>
+		    		<input id="SkinAction" class="hisui-combobox textbox"/>
+		    	</td>
+		    </tr>
+		    <tr>
+		    	<td class="label">
+					<label for="NotifyClinician" id="CNotifyClinician">加急</label>
+				</td>
+				<td>
+					<input id="NotifyClinician" class='hisui-checkbox' type="checkbox" label="">
+				</td>
+				<td class="r-label">
+					<label for="RemoveCeler" id="CRemoveCeler">快速例外</label>
+				</td>
+				<td>
+					<input id="RemoveCeler" class='hisui-checkbox' type="checkbox" label="">
+				</td>
+		    </tr>
+			<tr>
+				<td colspan="4" style="text-align:center;padding-left:15px;">
+					<a id="Save" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					<div style="display:inline-block;margin:0 20px;"></div>
+					<a id="Clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+				</td>
+			</tr>
+		</table>
+	 </div>
+</div>   
+<SCRIPT type="text/javascript" SRC='../SCRIPTS/DHCOPAdm.Common.js'></SCRIPT>
+<SCRIPT type="text/javascript" SRC='../SCRIPTS/DHCWeb.OPCommon.js'></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript" src="../scripts/udhcfavitem.edit.newedit.js"></script>
+</body> 
+</html>

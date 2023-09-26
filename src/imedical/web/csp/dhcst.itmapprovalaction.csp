@@ -1,0 +1,32 @@
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+;
+i Action = "QueryAppNumInfo" d
+	.//S StDate=$Get(%request.Data("StDate",1))
+	.//S EndDate=$Get(%request.Data("EndDate",1))
+	.S ApprovalNum=$Get(%request.Data("ApprovalNum",1))
+	.S InciDr=$Get(%request.Data("InciDr",1))
+	.S ManfId=$Get(%request.Data("ManfId",1))
+	.s StkGrpId=$Get(%request.Data("StkGrpId",1))
+	.//w ##class(web.DHCST.ItmApproval).QueryItmAppInfo(Start,Limit,StDate,EndDate,InciDr,ManfId,StkGrpId)
+	.w ##class(web.DHCST.ItmApproval).QueryItmAppInfo(Start,Limit,ApprovalNum,InciDr,ManfId,StkGrpId)
+	
+i Action = "SaveAppNum" d
+	.S ListDate=$Get(%request.Data("ListDate",1))
+	.S ret=##class(web.DHCST.ItmApproval).SaveAppNum(ListDate)
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "CheckExist" d
+	.S Inci=$Get(%request.Data("inciDr",1))
+	.S ret=##class(web.DHCST.ItmApproval).CheckExist(Inci)
+	.i ret=1  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+</SERVER>

@@ -1,0 +1,57 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s loctype=$Get(%request.Data("loctype",1))
+	s coltype=$Get(%request.Data("coltype",1))
+	s assesstype=$Get(%request.Data("assesstype",1))
+	s desc=$Get(%request.Data("desc",1))
+	s active=$Get(%request.Data("active",1))
+	s photo=$Get(%request.Data("photo",1))
+	s spcil=$Get(%request.Data("spcil",1))
+	s objecttype=$Get(%request.Data("objecttype",1))
+	s comp=$Get(%request.Data("comp",1))
+	
+	i action = "list" d
+	.w ##class(dhc.qm.udata.uCheck).List(sortField, sortDir, start, limit)
+	
+	i action = "add" d
+	.s result = ##class(dhc.qm.udata.uCheck).InsertRec(code,name,loctype,coltype,assesstype,desc,active,photo,spcil,objecttype,comp)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.qm.udata.uCheck).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.qm.udata.uCheck).UpdateRec(rowid, code, name, loctype, coltype, assesstype, desc, active, photo, spcil, objecttype, comp)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+</script>

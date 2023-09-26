@@ -1,0 +1,65 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+		s searchCode=$g(%request.Data("queryCode",1))
+    	s episodeId = $g(%request.Data("episodeId",1))
+    	s startDate = $g(%request.Data("startDate",1))
+    	s actionCode =  $g(%request.Data("actionCode",1))
+    	//获取病人列表
+    	if (actionCode ="GetPatientList")
+    	{
+	    	write "("
+	    	//若是急诊科室  方法来自dhcdoc.main.view.out.csp
+	    	if %session.Get("LOGON.CTLOCID")>0,##class(web.DHCOPAdmReg).IsEmergency(%session.Get("LOGON.CTLOCID"))=1{
+		    	s sc=##class(icare.TimeLineEmergencyView).GetLocDocPatient()
+		    }else{
+			    s sc=##class(icare.TimeLineView).GetLocDocPatient(episodeId) 
+			}
+	    	write ")"
+	    	quit
+    	}
+    	if (episodeId = "")
+    	{
+	    	quit
+    	}
+    	//生成数据
+    	if (actionCode ="GenerateData")
+    	{
+	    	s sc=##class(icare.TimeLineView).GenerateData(episodeId)
+	    	write "({success:true})"
+	    	quit
+    	}
+    	//取得诊断数据
+    	elseif (actionCode ="GetDiagnoseData")
+    	{
+	    	s startIndex = $g(%request.Data("startIndex",1))
+	    	s pageCount = $g(%request.Data("pageCount",1))
+	    	write "("
+	    	s sc=##class(icare.TimeLineView).GetDiagnoseInfor(episodeId,startIndex,pageCount)
+	    	write ")"
+	    	quit
+    	}
+    	
+    	if (searchCode '= "")
+    	{
+	    	//获取展现数据
+	    	s changeEpisodeId =  $g(%request.Data("changeEpisodeId",1))
+	    	if changeEpisodeId = "1"
+	    	{
+	    		s sc=##class(icare.TimeLineView).GenerateData(episodeId)
+	    	}
+			write "("
+	    	s sc=##class(icare.TimeLineView).GetDisplayInfor(searchCode,episodeId,startDate)
+	    	write ")"
+    	}
+    	else
+    	{
+	    	//获取单类型数据
+	    	s dataTypeCode = $g(%request.Data("dataTypeCode",1))
+	    	if (dataTypeCode '="")
+	    	{
+	    		write "("
+	    		s sc = ##Class(icare.TimeLineView).GetDataTypeData(dataTypeCode,episodeId,startDate)
+	    		write ")"
+	    	}
+    	}
+</script>

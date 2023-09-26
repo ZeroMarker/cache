@@ -1,0 +1,127 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+
+<!--
+14-Feb-02: NOT USED ANYMORE
+-->
+
+</HEAD>
+<body>
+<TRAK:APPLET>
+<server>
+ n itemtext,returncode
+ s itemtext="",returncode=""
+ k PLIST
+ n itemids,itemdesc,itemCnt,x,a,OrderTypeCode,itmCatid,OEMessage,mes,RangeFrom,RangeTo,UOM,RFrom,RTo,sUOM,defdur,dur,os,txtfreq,txtdur,SetRef,itmLinked
+ s (osdur,osfreq,osInstr,osUOM,osDoseQty,SetDefDetails,SetDefDetails1)=""
+ s (itemdesc,itemids,OrderTypeCode,itmCatid,OEMessage,mes,RangeFrom,RangeTo,UOM,RFrom,RTo,sUOM,defdur,dur,os,txtfreq,txtdur,SetRef,itmLinked)=""
+ i %request.Get("itemtext")'=""  d
+ . S TEXT=%request.Get("itemtext")
+ . s TEXT=##class(%CSP.Page).UnescapeURL(TEXT)
+ . s returncode=$$findbyalias1^COEOrdItem(TEXT)
+ . i returncode'="0" s %response.ServerSideRedirect="websys.close.csp" Q
+ . i returncode="0"  d
+ . s a="" f x=1:1 s a=$o(PLIST(a)) q:a=""  d
+ . . s itemdesc=itemdesc_$p(PLIST(a),$C(2),1)_$C(2)
+ . . s itemids=itemids_$p(PLIST(a),$C(2),2)_$C(2)
+ . . s OrderTypeCode=OrderTypeCode_$p(PLIST(a),$C(2),31)_$C(2)
+ . . s OEMessage=OEMessage_$p(PLIST(a),$C(2),3)_$C(2)
+ . . s RangeFrom=RangeFrom_$p(PLIST(a),$C(2),4)_$C(2)
+ . . s RangeTo=RangeTo_$p(PLIST(a),$C(2),5)_$C(2)
+ . . s UOM=UOM_$p(PLIST(a),$C(2),6)_$C(2)
+ . . s defdur=defdur_$p(PLIST(a),$C(2),7)_$C(2)
+ . . s txtfreq=txtfreq_$p(PLIST(a),$C(2),8)_$C(2)
+ . . s txtdur=txtdur_$p(PLIST(a),$C(2),9)_$C(2)
+ i %request.Get("itemtext")="" d
+ . i $$getall^CWEBARCOI(%request.Get("ORDERSETID"))="0"  d
+ . s newcnt=0
+ . s a="" f x=1:1 s a=$o(PLIST(a)) q:a=""  d
+ . . s mes=##Class(web.ARCItmMast).GetOEMessage($p(PLIST(a),$C(2),1))
+ . . s RFrom=%request.Get("RangeFrom")
+ . . s RTo=%request.Get("RangeTo")
+ . . s sUOM=%request.Get("UOM")
+ . . s dur=%request.Get("defdur")
+ . . s osdur=$p(PLIST(a),$C(2),13)
+ . . s osfreq=$p(PLIST(a),$C(2),15)
+ . . s osInstr=$p(PLIST(a),$C(2),17)	
+ . . s osUOM=$p(PLIST(a),$C(2),19)
+ . . s osDoseQty=$p(PLIST(a),$C(2),20)
+ . . s SetDefDetails=osdur_$c(1)_osfreq_$c(1)_osInstr_$c(1)_osUOM_$c(1)_osDoseQty
+ . . s itmLinked=$p($tr(PLIST(a),$c(2),"*"),"*",11)
+ . . i itmLinked="Y" s itmLinked="Y"_"^"_x_"^"_newcnt
+ . . i itmLinked="N" s newcnt=x,itmLinked="N"_"^"_x
+ . . s itemdesc=itemdesc_$p(PLIST(a),$C(2),3)_$C(2)
+ . . s itemids=itemids_$p(PLIST(a),$C(2),1)_$C(2)
+ . . s OrderTypeCode=OrderTypeCode_$p(PLIST(a),$C(2),31)_$C(2)
+ . . s itmCatid=itmCatid_$p(PLIST(a),$C(2),32)_$C(2)
+ . . s OEMessage=OEMessage_mes_$C(2)
+ . . s RangeFrom=RangeFrom_RFrom_$C(2)
+ . . s RangeTo=RangeTo_RTo_$C(2)
+ . . s UOM=UOM_sUOM_$C(2)
+ . . s defdur=defdur_dur_$C(2)
+ . . s Linked=Linked_itmLinked_$C(2)
+ . . s SetDefDetails1=SetDefDetails1_SetDefDetails_$C(2)
+ ;
+ s itemdesc=$e(itemdesc,1,$l(itemdesc)-1)
+ s itemids=$e(itemids,1,$l(itemids)-1)
+ s OrderTypeCode=$e(OrderTypeCode,1,$l(OrderTypeCode)-1)
+ s itmCatid=$e(itmCatid,1,$l(itmCatid)-1)
+ s OEMessage=$e(OEMessage,1,$l(OEMessage)-1)
+ s RangeFrom=$e(RangeFrom,1,$l(RangeFrom)-1)
+ s RangeTo=$e(RangeTo,1,$l(RangeTo)-1)
+ s UOM=$e(UOM,1,$l(UOM)-1)  
+ s defdur=$e(defdur,1,$l(defdur)-1)  
+ s txtfreq=$e(txtfreq,1,$l(txtfreq)-1)  
+ s txtdur=$e(txtdur,1,$l(txtdur)-1)  
+ s Linked=$e(Linked,1,$l(Linked)-1)
+ ;
+ d %request.Set("ItemDesc",itemdesc)
+ d %request.Set("ItemRowids",itemids)
+ d %request.Set("OrderTypeCode",OrderTypeCode) 
+ d %request.Set("itmCatid",itmCatid) 
+ d %request.Set("OEMessage",OEMessage)
+ d %request.Set("RangeFrom",RangeFrom)
+ d %request.Set("RangeTo",RangeTo)
+ d %request.Set("UOM",UOM)
+ d %request.Set("defdur",defdur)
+ d %request.Set("PHCFRDesc1",txtfreq)
+ d %request.Set("PHCDUDesc1",txtdur) 
+ d %request.Set("Linked",Linked)
+ d %request.Set("SetDefDetails",SetDefDetails1)
+ ;
+ s xwidth=450,xheight=x*22+150
+ i xheight>550 s xheight=550
+ ;
+ ;Get User Group Order Category for items and sets
+ n GroupItmCat,GroupSetCat,GrpObj
+ s (GroupItmCat,GroupSetCat)=""
+ //TN:user group is not id for epr.GroupSettings
+ d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID"))
+ s GroupItmCat=%request.Get("OEItemDetails")
+ s GroupSetCat=%request.Get("OESetItems")
+
+ n frm
+ ;s frm=##Class(websys.Component).OpenName("OEOrder.OSItemList")
+ ;i frm d frm.Show(),frm.%Close()
+</server>
+
+<script language=Javascript>
+   //self.moveTo(0,0);
+   //self.resizeTo(#(xwidth)#,#(xheight)#);
+  // window.moveTo(100, 100)
+   var ItemCat="#(GroupItmCat)#";
+   var SetCat="#(GroupSetCat)#";  
+</script>
+
+</body>
+</html>
+

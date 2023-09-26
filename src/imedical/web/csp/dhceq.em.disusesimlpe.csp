@@ -1,0 +1,223 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csr:action>		<!--modify by wl 2019-12-13 WL0021 begin-->		
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") //add by QW20191022 BUG:QW0032 增加润乾打印依方式
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+	}   
+    </SCRIPT>  
+</csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<HISUI/>
+</HEAD>
+<style type="text/css">
+.eq-total-sum{
+	font-size:120%;
+	color:#F00;
+	float:right;
+}
+/*end div实现table布局样式*/
+</style>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+	s DRRowID=$Get(%request.Data("RowID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s DRStatus=$Get(%request.Data("Status",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s Type=$Get(%request.Data("Type",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s Flag=$Get(%request.Data("Flag",1))  //Modified by wy 2020-1-13 QW20200218 BUG:QW0040
+	s DRDisuseTypeDR=$Get(%request.Data("DisuseTypeDR",1))
+	s ApproveRoleDR=$Get(%request.Data("ApproveRoleDR",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	if ApproveRoleDR="" s ApproveRoleDR=CurRole // Add by QW20200303 BUG:QW0042
+	s Action=$Get(%request.Data("Action",1))
+	s Action=$Get(%request.Data("Action",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("5",DRRowID),CurRole,Action)
+	
+	s ISLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	s ISLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	s TotalFlag=##class(web.DHCEQCommon).GetSysInfo("301006")
+	;s ISOrigin=##class(web.DHCEQCommon).GetStandardDesc("DHCEQCOrigin",ISOriginDR)
+	s DREquipTypeDR=##class(web.DHCEQCommon).GetDefaultEquipType(1)
+	s DREquipType=##class(web.DHCEQCommon).GetDefaultEquipType(2)
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()	
+	s DRRequestDate=##class(web.DHCEQCommon).TransValueToPage(+$H,"date")
+	s Job=$J //Modified by QW20200218 BUG:QW0040
+	s RecoverFlag=$Get(%request.Data("RecoverFlag",1)) //Add by QW20200218 BUG:QW0040
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+</Script>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-1-13 QW20200218 BUG:QW0040 界面首先加载loading WY0055-->
+	<div data-options="region:'center',border:false" style="padding:10px 10px 5px 10px;"><!--add by zx 2020-4-23-->
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'设备多批次报废'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:210px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="DRRequestNo">申请单号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="DRRequestNo" disabled="true"></div>
+							<div class="eq-table-td eq-table-label"><label for="DRRequestLocDR_CTLOCDesc" id="cDRRequestLocDR_CTLOCDesc">申请科室</label></div> <!--modified by csj 20191112-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="DRRequestLocDR_CTLOCDesc"></div>
+							<div class="eq-table-td eq-table-label"><label for="DRUseLocDR_CTLOCDesc" id="cDRUseLocDR_CTLOCDesc">使用科室</label></div> <!--modified by csj 20191112-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="DRUseLocDR_CTLOCDesc"></div>
+					        <!--modify by lmm 2019-05-29 892873-->
+						    <!--Modiedy by zc0057 增加报废标签打印  begin-->
+						    <div class="eq-table-td eq-table-label"><a id="BDisusePrintBar" href="#" class="hisui-linkbutton" style="margin-left:20px;"  iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">报废标签打印</a></div>
+							 <!--Modiedy by zc0057 增加报废标签打印   end-->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="DRRequestDate">申请日期</label></div>
+					        <div class="eq-table-td eq-table-input" ><input class="hisui-datebox textbox" id="DRRequestDate" value="#(DRRequestDate)#"></div>
+							<!--div class="eq-table-td eq-table-label"><label for="KindFlag">报废种类</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="KindFlag" data-options="'component':'EM.L.Equip'"></div-->
+							<div class="eq-table-td eq-table-label"><label id="cDRDisuseTypeDR_DRDesc" for="DRDisuseTypeDR_DRDesc">报废类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.GetDisuseType'" id="DRDisuseTypeDR_DRDesc"></div>
+							<div class="eq-table-td eq-table-label"><label for="DREquipTypeDR_ETDesc">设备类组</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType'" id="DREquipTypeDR_ETDesc"></div>
+					        <!--modify by lmm 2019-05-29 892873-->
+							<!--modify by lmm 2019-11-22 LMM0050-->
+					         <!--Modified by QW20191022 BUG:QW0032 增加打印依按钮-->
+		                    <div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton" style="margin-left:20px;" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">打印</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cDRHold4" for="DRHold4">批文号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="DRHold4"></div>
+							<div class="eq-table-td eq-table-label"><label id="cDRHold5" for="DRHold5">批文日期</label></div>
+					        <div class="eq-table-td eq-table-input" ><input class="hisui-datebox textbox" id="DRHold5"></div>
+							<div class="eq-table-td eq-table-label"><label for="DRUseState">使用情况</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="DRUseState" class="textbox"></textarea></div>
+							<!--Add By QW20191008 BUG:QW0028 增加报废恢复-->
+							<div class="eq-table-td eq-table-label"><a id="BRecover" href="#" class="hisui-linkbutton"  style="margin-left:20px;" iconCls="icon-w-back" data-options="stopAllEventOnDisabled:true">恢复</a></div>	<!--modified by wy 2020-4-17 恢复图标不对1276583-->			
+							<!--End By QW20191008 BUG:QW0028-->
+						</div>
+						<div class="eq-table-tr">
+						    <div class="eq-table-td eq-table-label"><label for="DRChangeReason">申请报废理由</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="DRChangeReason" class="textbox"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="DRTechnicEvaluate">技术鉴定意见</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="DRTechnicEvaluate" class="textbox"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="DRCheckResult">检查结果</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="DRCheckResult" class="textbox"></textarea></div>
+							<div class="eq-table-td eq-table-label"><a id="BCancelSubmit" href="#" class="hisui-linkbutton"  iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">退回</a></div>
+						</div>
+						<div class="eq-table-tr">
+						    <div class="eq-table-td eq-table-label"><label for="DRRejectReason">拒绝原因</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="DRRejectReason" class="textbox"></textarea></div>
+						    <div class="eq-table-td eq-table-label"><label for="DRRemark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="DRRemark" class="textbox"></textarea></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"></div>
+						    <div class="eq-table-td eq-table-label">  <!--modify by lmm 2019-02-17 826288-->
+							<a id="BApprove1" href="#" class="hisui-linkbutton" style="margin-left:20px;" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+							<a id="BApprove2" href="#" class="hisui-linkbutton" style="margin-left:20px;" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+							<a id="BApprove3" href="#" class="hisui-linkbutton" style="margin-left:20px;" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+							<a id="BApprove4" href="#" class="hisui-linkbutton" style="margin-left:20px;" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+							</div>     
+
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="DHCEQDisuseRequestSimple" data-options="onClickRow:onClickRow,border:false"></table>
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	 <div data-options="region:'south',fit:true,border:false" style="padding:0px 10px 10px 10px;"><!--add by wy 2020-4-23 UI样式调整 -->
+           	<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton"  iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a></div>
+			<div class="eq-table-td eq-table-label"><a id="BSubmit" href="#" class="hisui-linkbutton"  iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton"  iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+        </div>
+    </div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">		
+		    <INPUT type="hidden" id="DRKindFlag" value="2">  <!-- 多批报废 -->
+		    <INPUT type="hidden" id="DRStatus" value="#(DRStatus)#">
+		    <INPUT type="hidden" id="DRRowID" value="#(DRRowID)#">  
+		    <INPUT type="hidden" id="Flag" value=#(Flag)#>  <!--Modified by wy 2020-1-13 QW20200218 BUG:QW0040 -->
+		    <INPUT type="hidden" id="AllListInfo" value="">
+			<INPUT type="hidden" id="DRApproveSetDR">
+			<INPUT type="hidden" id="DRNextRoleDR">
+			<INPUT type="hidden" id="DRNextFlowStep">
+			<INPUT type="hidden" id="RowID" value="#(DRRowID)#">      <!-- add by jyp 2020-02-27  JYP0020  报废信息表添加可编辑字段  -->			
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveRoleDR" value="#(ApproveRoleDR)#">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+		    <INPUT type="hidden" id="BeginInsertRow" value="">
+		    <INPUT type="hidden" id="CancelFlag">
+		    <INPUT type="hidden" id="ColSpanNum" value="">
+		    <INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+		    <INPUT type="hidden" id="DetailAudit" value="">
+			<INPUT type="hidden" id="DRDisuseTypeDR" value="#(DRDisuseTypeDR)#">
+			<INPUT type="hidden" id="EquipCatDR" value="">
+			<INPUT type="hidden" id="DRGroupDR" value="">
+			<INPUT type="hidden" id="DREquipDR" value="">
+			<INPUT type="hidden" id="DREquipTypeDR" value="#(DREquipTypeDR)#">
+			<INPUT type="hidden" id="DREquipType" value="#(DREquipType)#">
+			<INPUT type="hidden" id="ExcludeIDs" value="">
+			<INPUT type="hidden" id="GetApproveByResource" value="">			
+			<INPUT type="hidden" id="GetApproveFlow" value="">
+			<INPUT type="hidden" id="GetCancelSubmit" value="">
+			<INPUT type="hidden" id="DRInStockListDR" value="">
+			<INPUT type="hidden" id="DRUseLocDR" value="">
+			<INPUT type="hidden" id="ManuFactoryDR" value="">
+			<INPUT type="hidden" id="ModelDR" value="">
+			<INPUT type="hidden" id="ProviderDR" value="">
+			<INPUT type="hidden" id="DRRequestLocDR" value="">
+			<INPUT type="hidden" id="StopFlag" value="">
+			<INPUT type="hidden" id="Type" value="">			
+			<INPUT type="hidden" id="DRJob" value="#(Job)#"> <!--Modified by QW20200218 BUG:QW0040-->
+			 <INPUT type="hidden" id="TotalFlag" value="#(TotalFlag)#">			
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="RoleStep" value="#(RoleStep)#">		    
+		    <INPUT type="hidden" id="DRApproveStatu">		    
+		    <INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#> <!--Modified by QW20191022 BUG:QW0032 增加打印依按钮-->
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-11 WL0010  -->			
+			<INPUT type="hidden" id="CancelToFlowDR">			
+			<INPUT type="hidden" id="ApproveTypeCode" value="5">
+			<INPUT type="hidden" id="DRApproveRoleDR" value="">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="RecoverFlag" value=#(RecoverFlag)#>  <!--Add by wy 2020-1-13 QW20200218 BUG:QW0040 -->
+			<INPUT type="hidden" id="DRHold1" value="">
+			<INPUT type="hidden" id="DRHold2" value="">
+			<INPUT type="hidden" id="DRHold3" value="">
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<!--INPUT type="hidden" id="DRHold4" value="">
+			<INPUT type="hidden" id="DRHold5" value=""-->			
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>  <!--Modified by wy 2020-1-13 QW20200218 BUG:QW0040 -->
+	<script type="text/javascript" src="../scripts/dhceq/em/disusesimlpe.js"></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>  <!--add by wl 2019-11-11  WL0010-->
+	<!--Modiedy by zc0057 增加报废标签打印  begin-->
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbar.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbarqrcode.js'></script>
+	<!--Modiedy by zc0057 增加报废标签打印   end-->
+</body>
+</html>

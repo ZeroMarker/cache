@@ -1,0 +1,117 @@
+﻿<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. oeorder.entrysinglelogon.csp --> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /-->
+<TITLE>医嘱录入</TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ n PatientID,EpisodeID,mradmID,TWKFL,TWKFLI,XCONTEXT,ChartID,RepeatOrders,EPRChartName,params,ChartFrameSize,MultiEpisodeID,AllowUpdateWithNoOrders
+ n urlEPRdefaultWL
+ s ^tmpgry("singlelogon",1)="321313"
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=1 ;$g(%request.Data("TWKFLI",1))
+ s XCONTEXT=$s(TWKFL:"W"_TWKFL,1:"")
+ s RepeatOrders=$g(%request.Data("RepeatOrders",1))
+ s MultiEpisodeID=$g(%request.Data("MultiEpisodeID",1))
+ s AllowUpdateWithNoOrders=$g(%request.Data("AllowUpdateWithNoOrders",1))
+ i MultiEpisodeID,$l(MultiEpisodeID,"^")=1 s PatientID=$p($g(^PAADM(%request.Data("MultiEpisodeID",1))),"^",1)
+ s EpisLoc=$g(%request.Data("EpisLoc",1))
+ ;Log 50088 PeterC 03/03/05
+ s AllowUpdateWithNoOrders=$ZCVT(AllowUpdateWithNoOrders,"O","JS")
+ s EpisLoc=$ZCVT(EpisLoc,"O","JS")
+ s RepeatOrders=$ZCVT(RepeatOrders,"O","JS")
+ s MultiEpisodeID=$ZCVT(MultiEpisodeID,"O","JS")
+ s RepeatOrders=##Class(%CSP.Page).EscapeURL($g(RepeatOrders))
+ s ordentrydetails="&SUMMFlag="_$g(%request.Data("SUMMFlag",1))
+ s DCAARowId=$g(%request.Data("DCAARowId",1))
+ 
+ s PAAdmTransactionID=""
+ s OperRoomID=%request.Get("OperRoomID")
+ s ConsultID=%request.Get("ConsultID")
+ s DischID=%request.Get("DischID")
+ ; the current ID when we're creating a new version
+ s CurrDischID=%request.Get("CurrDischID")
+ s DischEpisodes=%request.Get("DischEpisodes")
+ s doctype=%request.Get("doctype")
+ s NotEMREntry=$g(%request.Data("NotEMREntry",1)) 
+ s TimeLine=""
+ ;草药录入标识,1 代表需要进入草药录入,其他进入西药录入
+ s CNFlag=%request.Get("CNFlag")
+ ;是否显示病人信息栏参数
+ s NotShowPABannerFlag=%request.Get("NotShowPABannerFlag")
+ 
+ s rows="*,0"
+ Set PersonBanner = "dhcdoc.in.patient.banner.csp"
+ if $g(%request.Data("PersonBanner",1))'=""{
+	 Set PersonBanner = $g(%request.Data("PersonBanner",1))
+ }
+ if $g(%request.Data("PatientBanner",1))'=""{
+	 Set PersonBanner = $g(%request.Data("PatientBanner",1))
+ }
+
+ ;借用Chart的链接获取模式
+ if CNFlag="1" {
+	 ;草药医嘱录入
+	 s ChartName="DHCOECM"
+	 Set DHCePROECMChart=$O(^ooChartI("NameIndex",ChartName,""))
+	 s DHCePRChart=DHCePROECMChart
+	 
+ }else{
+	 ;西药医嘱录入
+	 s ChartName="医嘱录入"
+	 Set DHCePROEChart=$O(^ooChartI("NameIndex",ChartName,""))
+	 s DHCePRChart=DHCePROEChart
+ }
+ 
+ s chLINK=""
+ if DHCePRChart'="" {
+	s chLINK="epr.chart.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&EpisodeIDs="_MultiEpisodeID_"&mradm="_mradm_"&PAAdmTransactionID="_PAAdmTransactionID_"&OperRoomID="_OperRoomID_"&DischID="_DischID_"&CurrDischID="_CurrDischID_"&DischEpisodes="_DischEpisodes_"&doctype="_$zcvt(doctype,"O","HTML")_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TimeLine="_TimeLine_"&ConsultID="_ConsultID_"&ConsultEpisodeID="_"&DCAARowId="_DCAARowId
+	s chLINK=##class(ext.epr.Chart).RedirctCharURL(DHCePRChart,chLINK)
+	;s chLINK=$P(chLINK,"websys.csp",1)_"websys.csp"_$P(chLINK,"websys.csp",2)
+	if (NotEMREntry=1){
+		;如果是弹出整个诊疗界面,则不需要显示患者信息,注意修改菜单ID(根据项目上菜单表epr.menu中的Rowid修改)
+		s NotShowPABannerFlag=1
+		s EMRMenuId=53655
+		;s chLINK="websys.csp?a=a&TMENU="_EMRMenuId_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&DCAARowId="_DCAARowId
+	}
+ }
+ if chLINK="" {
+	 s warning="没有配置【"_ChartName_"】页签,通过【$O(^ooChartI('NameIndex','"_ChartName_"',''))】不能获取到数据."
+	 i warning'="" &html<<DIV><STRONG><FONT COLOR=RED><%=warning%></FONT></STRONG></DIV>>
+ }
+ s NotShowPABannerFlag=0
+ 
+ s ^tmpgry("singlelogon",2)=CNFlag_"^"_PatientID_"^"_EpisodeID_"^"_chLINK_"^"_NotEMREntry_"^"_PersonBanner
+</SCRIPT>
+ <SCRIPT language="javascript">
+	var FixedEpisodeID="#(EpisodeID)#";
+   	if ("#(NotEMREntry)#"==1) {
+	   	window.location.href="#(chLINK)#";
+	   	return false;
+   	}
+</SCRIPT>
+<csp:if condition="NotShowPABannerFlag'=1">
+	<csp:Include Page="#(PersonBanner)#">
+</csp:if>
+
+ <FRAMESET rows="*,0" name="EntryMain" id="EntryMain">
+	<frame name="oeorder_entry" id="oeorder_entry" 
+		src="#(chLINK)#" scrolling="auto" marginwidth="0" marginheight="0" framespacing="0"></frame>
+	<frame name="TRAK_hidden"  src="" width="100%"  scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0></frame>
+</FRAMESET>
+
+<noframes>
+    <body>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5.5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+</HTML>

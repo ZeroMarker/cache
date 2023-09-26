@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--icare.timeline.anepr.csp //-->
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<server>
+		Set EprJson="[]",OperId=""
+		Set OEOrdItem = $G(%request.Data("ordItemId",1))
+		Quit:OEOrdItem'>0 
+		Set EpisodeID = $p(^OEORD(+OEOrdItem),"^",1)
+		Set OpaId = ##class(BSP.IMP.AN.Interface).GetOpaIdByOrd(OEOrdItem)
+		Set EprJson = ##class(ext.util.JsonObject).ClassQuery2JsonQ("EMRservice.InterfaceService.Operation","GetLinkRecordByOpaID",0,100,.total,EpisodeID,OpaId)
+		// d ##class(%ResultSet).RunQuery("CIS.AN.SRV.OperService","FindRecordSheets","63","")
+		Set OpaJson = ##class(ext.util.JsonObject).ClassQuery2JsonQ("CIS.AN.SRV.OperService","FindRecordSheets",0,100,.total,EpisodeID,OpaId)
+		//d ##class(websys.Query).ToJson("EMRservice.InterfaceService.Operation","GetLinkRecordByOpaID")
+		//d ##Class(%ResultSet).RunQuery("EMRservice.InterfaceService.Operation","GetLinkRecordByOpaID","4","73")
+	</server>
+</head>
+<body class='hisui-layout'>
+	<div data-options="region:'west',title:'',iconCls:'icon-w-list',split:true" style="width:160px;">
+		<div id="mytt" style="width:150px;" class="accordiontree" ></div>
+	</div>   
+	<div data-options="region:'center',title:'',split:true" 
+		style="padding:10px;overflow:hidden">
+			<iframe name="ctxfrm" width="100%" height="100%" src="" style="overflow:hidden" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0></iframe>
+	</div>
+	<script type="text/javascript">
+		$(function(){
+			var OpaId = "#(OpaId)#";
+			var OEOrdItem = "#(OEOrdItem)#";
+			var treeJson = [{
+					id:1,text:"病历相关",state:"open",
+					children:[
+					]
+				},{
+					id:2,text:"手术相关",state:"open",
+					children:[
+					]
+				}];
+			var EprJson = #(EprJson)#;
+			var OpaJson = #(OpaJson)#;
+			if (EprJson.length>0){
+				for(var i=0; i<EprJson.length; i++){
+					var item = EprJson[i];
+					treeJson[0].children.push({id:"insId"+item.insID,text:item.title,href:item.browseUrl});
+				}
+				//var node = $('#tt').tree('find', "insId+");
+				//$('#tt').tree('select', node.target);
+				//$("#mytt").tree('select',0);
+				ctxfrm.location.href = treeJson[0].children[0].href;
+			}else{
+				treeJson[0].children.push({id:"insId",text:"无手术相关病历",href:"#"});
+			}
+			if (OpaJson.length>0){
+				for(var i=0; i<OpaJson.length; i++){
+					var item = OpaJson[i]; //MenuDesc-菜单名称,URL-链接路径,CreateUser-创建用户,CreateDT-创建日期时间
+					
+					treeJson[1].children.push({id:"opId"+item.MenuDesc,text:item.MenuDesc,href:item.URL});
+				}
+				if (EprJson.length==0) {
+					//$("#mytt").tree('select',0);
+					ctxfrm.location.href = treeJson[1].children[0].href;
+				}
+			}else{
+				treeJson[1].children.push({id:"opId",text:"无手术相关信息",href:"#"});
+			}
+			$("#mytt").tree({
+				border:false,
+				onClick:function(node){
+					if (typeof node.href=='string' && node.href!="#"){
+						ctxfrm.location.href = node.href;
+					}
+					//$("#mytt").tree('toggle',node.target);
+				},
+				data:treeJson,
+				
+			});
+		})
+	</script>   
+</body>
+</html>

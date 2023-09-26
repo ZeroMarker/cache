@@ -1,0 +1,64 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server"> 
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str = $Get(%request.Data("query",1))
+
+	s rnode=$Get(%request.Data("rnode",1))
+	s rowid=$Get(%request.Data("rowid",1))	
+	s code=$Get(%request.Data("code",1))
+	s data=$Get(%request.Data("data",1))
+	s typecode=$Get(%request.Data("typeCode",1))	
+	s year=$Get(%request.Data("year",1))
+	s toyear=$Get(%request.Data("toyear",1))
+	
+	i action = "yearList" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetYear(start, limit, str)
+
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMItemDict).List(rnode,year)
+	
+	i action = "listleaf" d
+	.w ##class(herp.srm.udata.uSRMItemDict).ListLeaf(start,limit)
+									
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uSRMItemDict).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "copy" d
+	.s result = ##class(herp.srm.udata.uSRMItemDict).CopyInsert(year, toyear)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uSRMItemDict).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uSRMItemDict).Delete(rowid,year,code)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

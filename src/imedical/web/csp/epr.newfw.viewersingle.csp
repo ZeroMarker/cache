@@ -1,0 +1,40 @@
+<HTML>
+<HEAD>
+
+<TITLE>≤°¿˙‰Ø¿¿</TITLE>
+	<script language="cache" runat="server">  	
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+    	s printTemplateDocID = $Get(%request.Data("PrintTemplateDocID",1),"")
+    	s templateDocID = $Get(%request.Data("TemplateDocID",1),"")	
+  		//s instanceID = ##class(web.eprajax.viewerQuery).GetSingleDataID(episodeID,printTemplateDocID,templateDocID)
+  		s instanceID = ##class(web.eprajax.viewerQuery).GetInstanceID(episodeID,printTemplateDocID,templateDocID)
+  		q:(instanceID="") 1
+  		s type = $P(instanceID,"#",1)
+  		s instanceID = $P(instanceID,"#",2)
+  		if type="Single"
+  		{	s %response.ServerSideRedirect = "EPR1109.CSP?instanceid="_instanceID_"&PatientID="_patientID_"&EpisodeID="_episodeID_"&PrintTemplateDocID="_printTemplateDocID_"&TemplateDocID="_templateDocID}
+  		else
+  		{	//s %response.ServerSideRedirect = "EPR1124.CSP?instanceid="_instanceID_"&printdocid="_printTemplateDocID }
+  			s %response.ServerSideRedirect = "epr.newfw.viewerList.csp?PatientID="_patientID_"&EpisodeID="_episodeID_"&PrintTemplateDocID="_printTemplateDocID_"&TemplateDocID="_templateDocID
+  		}
+  		q 1
+	</script>
+	<script type="text/javascript">
+    	var episodeID = '#(episodeID)#';
+    	var patientID = '#(patientID)#';
+    	var printTemplateDocID = '#(printTemplateDocID)#';
+    	var templateDocID = '#(templateDocID)#';
+		var instanceID = '#(instanceID)#';
+	</script>
+
+</HEAD>
+
+<BODY>
+	<iframe marginwidth=0 marginheight=0 id='EPRShowSingle' style="z-index: -1; border-style: none; border-width: 0px; padding: 0px; margin: 0px; left: 0px; top: 0px; position: absolute; height:expression(document.body.offsetHeight - 5);  width:expression(document.body.offsetWidth - 5);"></iframe>
+	<script type="text/javascript">
+		//document.getElementById('EPRShowSingle').src = 'EPR1109.CSP?instanceid='+instanceID;
+		
+	</script>
+</BODY>
+</HTML>

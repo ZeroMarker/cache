@@ -1,0 +1,75 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s userId=$Get(%request.Data("userId",1))
+	s frequency=$Get(%request.Data("frequency",1))	
+	s unitDr=$Get(%request.Data("unitDr",1))
+	s shortCutStr=$Get(%request.Data("query",1))
+	
+	s year=$Get(%request.Data("year",1))
+	s acuttypeitem=$Get(%request.Data("acuttypeitem",1))
+	s deptDr=$Get(%request.Data("deptDr",1))
+	s DschemDr=$Get(%request.Data("DschemDr",1))
+	s Parent=$Get(%request.Data("parent",1))
+	
+	s UDRDrowid=$Get(%request.Data("UDRDrowid",1))
+	s UDRDestDesc=$Get(%request.Data("UDRDestDesc",1))
+	s UDRDfBDesc=$Get(%request.Data("UDRDfBDesc",1))
+	s UDResultDr=$Get(%request.Data("UDResultDr",1))
+	
+	i action="listdept" d
+	.w ##class(dhc.pa.udata.uSelfFillandReport).ListDept(userId,DschemDr, shortCutStr, start, limit)
+	
+	i action="listdeptschem" d
+	.w ##class(dhc.pa.udata.uSelfFillandReport).ListDeptSchem(userId, frequency, shortCutStr, start, limit)
+
+	i action = "list" d
+	.w ##class(dhc.pa.udata.uSelfFillandReport).List(year, frequency, acuttypeitem, userId, deptDr, DschemDr, Parent, start, limit)
+
+    i action = "GetGridTitle" d
+	.w ##class(dhc.pa.udata.uSelfFillandReport).GetGridTitle(year, frequency, acuttypeitem, userId, deptDr, DschemDr)
+
+
+    i action = "listH" d
+	.w ##class(dhc.pa.udata.uSelfFillandReport).ListH(year, frequency, acuttypeitem, userId, deptDr, DschemDr, Parent, start, limit)
+    i action = "detailList" d
+	.w ##class(dhc.pa.udata.uSelfFillandReport).detailList(year, frequency, acuttypeitem, userId, deptDr, DschemDr, Parent, start, limit)
+	
+	i action = "submit" d
+	.s result = ##class(dhc.pa.udata.uSelfFillandReport).Submit(UDRDrowid, UDRDestDesc, UDRDfBDesc, year, acuttypeitem, deptDr, DschemDr, userId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "cancelsubmit" d
+	.s result = ##class(dhc.pa.udata.uSelfFillandReport).CancelSubmit(UDResultDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "update" d
+	.;w data,!
+	.s result = ##class(dhc.pa.udata.uSelfFillandReport).Update(UDRDrowid, UDRDestDesc, UDRDfBDesc, year, acuttypeitem, deptDr, DschemDr, userId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="listHNew" d 
+	.w ##class(dhc.pa.udata.uSelfFillandReport).ListHNew(year, frequency,acuttypeitem,deptDr,DschemDr,userId)
+	
+</script>

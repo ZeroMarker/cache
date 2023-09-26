@@ -1,0 +1,163 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts_gen/webcommon.DateAndTime.js"></SCRIPT>
+</HEAD>
+
+<SERVER>
+ n PatientID,EpisodeID,PatientID,paadmtransid,ccuicuhrs,codingid,objCoding,dischdate,context,cmp,encmeth,obj,verif,DRG,admdate,patdob,ageOnAdmission,weight,warning
+ 
+ s (patdob,inpadmtyp,inpadmtypedit,verif,DRG,admdate,warning)="",ageOnAdmission=0
+ 
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s (paadmtransid,%request.Data("paadmtransid",1))=$g(%request.Data("TRANSID",1))
+ s context=$g(%request.Data("CONTEXT",1))
+ 
+ d ##Class(web.PAAdm).GetPreviousEpisodeDetails(%request.Get("PatientID"),%request.Get("EpisodeID"))
+ 
+ s %request.Data("TWKFL",1)=$g(%request.Data("TWKFL",1))
+ s %request.Data("TWKFLI",1)=$g(%request.Data("TWKFLI",1))
+ s %request.Data("TWKFLL",1)=$g(%request.Data("TWKFLL",1))
+ s %request.Data("TWKFLJ",1)=$g(%request.Data("TWKFLJ",1))
+
+ //AJI 19.11.03 Log 40633 - everytime password is invalid, these session variables will have some data.
+ //These session data are set in web.PAAdmCoding class (websysSaveDRGGrouping and websysSave3MGrouper methods)
+ //ReloadDRGCodingCSP() in PAAdm.DRGCoding.js sets this parameter
+ i $g(%request.Data("InvalidPasswd",1))="Y" {
+	n DiagStr, ProcStr
+	s DiagStr = $g(%session.Data("CODING.TMPDIAGFIELDS"))
+	s ProcStr = $g(%session.Data("CODING.TMPPROCFIELDS"))
+	s %request.Data("DIAGFields",1) = DiagStr
+	s %request.Data("PROCFields",1) = ProcStr
+ }
+ 
+ i paadmtransid="" d
+ . s obj=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+ . i obj d
+ . . ;RQG 04.07.03 L36701
+ . . i obj.PAADMMainMRADMDR,obj.PAADMMainMRADMDR.MRADMCareTypeDR s %request.Data("CARETYCode",1)=obj.PAADMMainMRADMDR.MRADMCareTypeDR.CARETYPCode
+ . . ;RQG 14.07.03 L32790
+ . . i obj.PAADMMainMRADMDR,obj.PAADMMainMRADMDR.MRADMCareTypeDR s %request.Data("CareTypNationCode",1)=obj.PAADMMainMRADMDR.MRADMCareTypeDR.CARETYPNationCode
+ . . i obj.PAADMCurrentWardDR s %request.Data("WARDDesc",1)=obj.PAADMCurrentWardDR.WARDDesc		;KK 5/5/03 L:34999
+ . . i obj.PAADMInPatAdmTypeDR s %request.Data("CARETYDesc",1)= obj.PAADMInPatAdmTypeDR.IPATDesc 	;KK 10/9/03 L:38819
+ . . i obj,obj.PAADMDepCodeDR s %request.Data("CTLOCDesc",1)=obj.PAADMDepCodeDR.CTLOCDesc			;md 14/01/2004 Log 41600 
+ . . i obj.PAADMAdmDocCodeDR s %request.Data("CTPCPDesc",1)=obj.PAADMAdmDocCodeDR.CTPCPDesc
+ . . s dischdate=obj.PAADMDischgDate
+ . . i obj.PAADMAdmDate s admdate=obj.PAADMAdmDate														;RQG 25.07.03 L37676
+ . . i obj.PAADMAdmSrcDR s %request.Data("PAADMAdmSrc",1)=obj.PAADMAdmSrcDR.ADSOUCode 			; cjb 07/07/2004 44201
+ . . d obj.%Close()
+ . . 
+ . . s adm2=$g(^PAADM(EpisodeID,"ADM2")),(verif,%request.Data("PAADMVerified",1))=$p(adm2,"^",10)		;KK L:40509
+ 
+ i mradm d
+ . s obj=##Class(User.MRAdm).%OpenId(mradm,0)
+ . i obj d
+ . . 
+ . . s ccuicuhrs=##Class(web.PAAdmCoding).GetICUandCCUHours(EpisodeID)						;KK 27/Aug/2002 Log 27332 to calculate and display ICU and CCU Hours
+ . . ; SA 15.7.03 - log 37357: ARMC have requested that ICU/CCU hours to always be recalculated due to changes in episode details (eg. discharge date/time, 
+ . . ; cancellations) ARMC currently have the ICU/CCU fields disabled, QH do not use these fields. If site reports require the ICU/CCU hrs to be saved against 
+ . . ; MRAdm record, but the fields remain read only, the hours should be set and saved from web.PAAdmCoding.GetICUandCCUHours and the code here changed to
+ . . ; always use the MRAdm saved values.
+ . . s %request.Data("ICUHours",1)=$p(ccuicuhrs,"^",2)
+ . . s %request.Data("CCUHours",1)=$p(ccuicuhrs,"^",1)
+ . . ; END 37357
+ . . 
+ . . s %request.Data("MechVentHours",1)=obj.MRADMDurationMechVent
+ . . s %request.Data("CPAPHours",1)=obj.MRADMCPAPHours
+ . . s %request.Data("MRADMWeight",1)=obj.MRADMWeight
+ . . i obj.MRADMCodingUpdateUserDR s %request.Data("LastUpdateUserCode",1)=obj.MRADMCodingUpdateUserDR.SSUSRInitials
+ . . i obj.MRADMCodingUpdateUserDR s %request.Data("LastUpdateUser",1)=obj.MRADMCodingUpdateUserDR.SSUSRName
+ . . s %request.Data("LastUpdateDate",1)=obj.MRADMCodingUpdateDate
+ . . s %request.Data("LastUpdateTime",1)=obj.MRADMCodingUpdateTime
+ . . ; RQG 04.02.03 Log32051 - To display Hospital last Update
+ . . i obj.MRADMCodingUpdateHospitalDR'="" s %request.Data("LastUpdateHospital",1)=obj.MRADMCodingUpdateHospitalDR.HOSPDesc
+ . . ;KK 21/11/2002 Log 28515 - To display WIES Score and price
+ . . i obj.MRADMTotalWIESPrice'="" s %request.Data("MRADMTotalWIESPrice",1)=obj.MRADMTotalWIESPrice
+ . . i obj.MRADMTotalWIESScore'="" s %request.Data("MRADMTotalWIESScore",1)=obj.MRADMTotalWIESScore
+ . . i obj.MRADMUnplanReadmissionDR s %request.Data("UnplannedReadmission",1)=obj.MRADMUnplanReadmissionDR.UNPLREADDesc 
+ . . i obj.MRADMPCCL'="" s %request.Data("PCCL",1)=obj.MRADMPCCL				; RQG 01.09.03 L32803
+ . . i obj.MRADMDischTypeDR s %request.Data("CTDSPCode",1)=obj.MRADMDischTypeDR.CTDSPCode
+ . . ;md Log 51821 oposition to 37357 STAN for Now
+ . . s %request.Data("HiddenICUCCUHours",1)=obj.MRADMICUHours_"^"_obj.MRADMCCUHours
+ . . d obj.%Close()
+ 
+ ; RQG 09.10.03 L32790 IDC Edit
+ i EpisodeID'="" {
+	s objPAAdm=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+	i objPAAdm,objPAAdm.PAADMInPatAdmTypeDR {
+		s inpadmtyp=objPAAdm.PAADMInPatAdmTypeDR.IPATCode
+		s inpadmtypedit=objPAAdm.PAADMInPatAdmTypeDR.IPATICDEdit
+	}
+ }
+ s %request.Data("InPatientAdmType",1)=inpadmtyp
+ s %request.Data("InPatientAdmTypeEdit",1)=inpadmtypedit 
+ 
+ ; RQG 17.10.03 L32773: if admission weight is blank in mradm try the admissionweight in PA_PregDelBaby table
+ i $g(%request.Data("MRADMWeight",1)) = "",PatientID'="" {
+	&SQL(SELECT BABY_BirthWeigth INTO :weight FROM SQLUser.PA_PregDelBaby WHERE BABY_Person_Dr = :PatientID)
+	i 'SQLCODE s %request.Data("MRADMWeight",1)=weight
+ }
+ 
+ ; CJB - 02/09/2002 - CancerReg - 24388
+ i PatientID d
+ . s objpat=##Class(User.PAPerson).%OpenId(PatientID,0)
+ . i objpat d
+ . . i objpat.PAPERCancerReg="Y" s %request.Data("CancerRegFlag",1)="on"
+ . . i objpat.PAPERDob s patdob=objpat.PAPERDob
+ . . d objpat.%Close()
+ 
+ i patdob,admdate {
+ 	s ageOnAdmission=admdate - patdob
+ 	i ageOnAdmission '> 0 s ageOnAdmission=0
+ 	s %request.Data("AgeOnAdmission",1)=ageOnAdmission
+ 	s AgeData=$$CalAge^at182(patdob,admdate,"","","")
+ 	s %request.Data("AdmissionAgeInYears",1)=$p(AgeData,"|",12)		; cjb 31/05/2004 44201
+ 	s %request.Data("AdmissionAgeInMonths",1)=$p(AgeData,"|",13)+($p(AgeData,"|",12)*12)		; cjb 07/10/2004 46760
+ }
+  
+ s cmp=##Class(websys.Component).OpenName("PAAdm.DRGCoding")
+ i cmp d
+ . i '##Class(websys.Lock).Lock($lb(mradm,"User.MRAdm"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) d
+ . . s cmp.Disabled=1
+ . i warning'="" &html<<DIV><STRONG><FONT COLOR=RED><%=warning%></FONT></STRONG></DIV>>
+ . d cmp.Show(),cmp.%Close()
+
+</SERVER>
+<SCRIPT>
+var winP=window.parent;
+if (winP.frames['eprmenu']) winP.SetEpisodeDetails('#(PatientID)#','#(EpisodeID)#','#(mradm)#');
+try {
+	if (tsc['DRGupdate']) websys_sckeys[tsc['DRGupdate']]=SubmitForms;
+} catch (err) {}
+
+var lockwarning="#(warning)#";
+if (lockwarning!="") {
+	var btnB3MGrouper=document.getElementById("B3MGrouper");
+	var btnDRGUpdate=document.getElementById("DRGUpdate");
+	var btnUpdatecodeset=document.getElementById("updatecodeset");
+	var btnUpdateVisasys=document.getElementById("UpdateVisasys");
+	var btnDeleteRFU=document.getElementById("DeleteRFU");
+	var btnEncoder3M=document.getElementById("Encoder3M");
+
+	if (btnB3MGrouper) btnB3MGrouper.disabled = true;
+	if (btnDRGUpdate) btnDRGUpdate.disabled = true;
+	if (btnUpdatecodeset) btnUpdatecodeset.disabled = true;
+	if (btnUpdateVisasys) btnUpdateVisasys.disabled = true;
+	if (btnDeleteRFU) btnDeleteRFU.disabled = true;
+	if (btnEncoder3M) btnEncoder3M.disabled = true;
+}
+
+</SCRIPT>
+<BODY>
+</BODY>
+</html>

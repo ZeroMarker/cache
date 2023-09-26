@@ -1,0 +1,65 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<style type="text/css"  >   
+       .classDiv2 {
+	     filter: alpha(opacity=60);
+         color: #FF0000;
+        }
+</style>  
+
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<DIV id="PageContent">
+<DIV id="hello">
+</DIV>
+<SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s pdata1=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.getPagData"))
+ s GetFatherList=##Class(%CSP.Page).Encrypt($lb("web.DHCNurEprMenuMain.GetFatherList"))
+ s GetSonList=##Class(%CSP.Page).Encrypt($lb("web.DHCNurEprMenuMain.GetSonList"))
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s webIP=$P(setstr,"^",2)
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+</SERVER>
+<TRAK:APPLET>
+
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+</SERVER>
+</DIV>
+<SCRIPT Language="Javascript">
+var GetFatherList="#(GetFatherList)#";
+var GetSonList="#(GetSonList)#";
+var pdata1="#(pdata1)#";
+var webIP="#(webIP)#";
+</SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/bdp/Framework/scripts/Ext.BDP.FunLib.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/nurse/DHCNUR/DHCNurEprMenuMain.js"></SCRIPT>
+<!-- Put your page Title here -->
+</BODY>
+</HTML>

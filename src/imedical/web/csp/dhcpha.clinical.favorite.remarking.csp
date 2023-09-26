@@ -1,0 +1,73 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/emr/lib/tool/pagination/pagination.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/emr/css/favorite.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/emr/css/favorite.remarking.css"/>
+	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/pagination/jquery.pagination.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/comment/comment.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcpha/emr/js/actionlog.js"></script>
+	<title>病历评价</title>
+	<script language="cache" runat="server">
+       s favInfoId = $Get(%request.Data("FavInfoID",1),"")  
+       s instanceId = $Get(%request.Data("InstanceID",1),"") 
+       s instanceName = $Get(%request.Data("InstanceName",1),"") 
+       s userId = $Get(%request.Data("UserID",1),"")
+       s userLocId = $Get(%request.Data("UserLocID",1),"")
+       s episodeId = $Get(%request.Data("EpisodeID",1),"")
+       s userName = ##class(EMRservice.BL.BLPowerUser).GetUserName(userId)
+       s userLocCode = $Case(userLocId,"":"",:$p(^CTLOC(userLocId),"^",1))
+       s pluginType = $Get(%request.Data("pluginType",1),"")
+       s chartItemType = $Get(%request.Data("chartItemType",1),"")
+       s emrDocId = $Get(%request.Data("emrDocId",1),"")
+   </script>
+   	<script language="javascript">	
+   		var favInfoId = '#(favInfoId)#';
+   		var instanceId = '#(instanceId)#';
+   		var instanceName = '#(instanceName)#';
+   		var userId = '#(userId)#';
+   		var userLocId = '#(userLocId)#';
+   		var episodeId = '#(episodeId)#';
+   		var userName = '#(userName)#';
+   		var userLocCode = '#(userLocCode)#';//增加登录科室字段userLocCode
+   		var pluginType = '#(pluginType)#';
+   		var chartItemType = '#(chartItemType)#';
+   		var emrDocId = '#(emrDocId)#';
+   </script>
+
+</head>
+<body style="min-width:880px; _min-width:880px;">
+	<div class="fac">
+		<div class="fac_left">
+			<div id="record"></div>
+			<div id="quiz">
+				<div class="title">
+					<span class="title-left">我要评价</span>
+				</div>
+				<div class="quiz_content">
+					<div class="l_text">
+						<textarea id="content" class="text" maxlength="200" onclick="my_click(this,'content')" onblur="my_blur(this,'content')" onchange="limit(maxlength)" onkeydown="limit(maxlength)" onkeyup="limit(maxlength)">字数限制为1-200个</textarea>
+					</div>
+					<div class="goods-comm">
+						<div class="goods-comm-stars">
+							<span class="star_l">点评打分:</span>
+							<div id="rate-comm-1" class="rate-comm"></div>
+							<div id="result"></div>
+						</div>
+						<div id="saveComment" class="btm">评论</div>
+					</div>
+				</div>
+			</div>
+			<div id="remarkList" style="height:290px;">
+				<div class="title">
+					<span class="title-left">病历评价</span>
+				</div>
+				<div id="comments-list"></div>		
+			</div>
+		</div>
+		<div class="fac_right"></div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/favorite.remarking.js"></script>
+</body>
+</html>

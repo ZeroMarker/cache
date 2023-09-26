@@ -1,0 +1,86 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+		<server>
+			//获取控制设置参数
+			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
+   	   		//获取患者现住址
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))	       //当前病人就诊ID
+ 			Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)         //病人ID
+			Set PatAddress =##class(DHCMed.SSService.AreaDicSrv).GetPatAddress(PatientID)
+			Set PatCurrAddress =$p(PatAddress,$c(1),2)
+			Set CurrAddress = ##class(DHCMed.SSService.AreaDicSrv).GetAddress(PatCurrAddress)
+		    //获取配置地址
+			Set:CurrAddress="" CurrAddress =##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("DefaultProvinces","")
+   	   </server>
+	</head>
+	<body> 
+	    <csp:Include Page="dhcma.cd.reportyszyb.show.csp">   
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CD/reportyszyb/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CD/reportyszyb/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CD/reportyszyb/Print.js"></script>
+		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+
+		<script language="Cache" RUNAT="SERVER">
+		    If (IsSupportRQ2018'=1) {
+		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
+            }
+		    
+			Set menuCode="CDQryRepYSZYB"
+			Set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+			Set groupId=$g(%session.Data("LOGON.GROUPID"))
+			Set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"CDReport",groupId)
+			
+		    Set ReportID=$g(%request.Data("ReportID",1))	    //报告ID
+			Set PatientID=$g(%request.Data("PatientID",1))
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))
+			Set LocID=$g(%session.Data("LOGON.CTLOCID"))
+			Set LocDesc=$p($g(^CTLOC(+LocID)),"^",2)
+			
+			set LogonHospID=$g(%session.Data("LOGON.HOSPID"))
+		    set objHosp=##class(DHCMed.Base.Hospital).GetObjById(LogonHospID)
+		    Set HospDesc=""
+		    If ($IsObject(objHosp)) {
+		    	Set HospDesc=objHosp.Descs
+		    }
+		    
+			Set ReportID=""""_$g(ReportID)_""""
+			Set PatientID=""""_$g(PatientID)_""""
+			Set EpisodeID=""""_$g(EpisodeID)_""""
+			Set LocID=""""_$g(LocID)_""""
+			Set LocDesc=""""_$g(LocDesc)_""""
+			Set LogonHospID=""""_$g(LogonHospID)_""""
+			Set HospDesc=""""_$g(HospDesc)_""""
+			Set EmrOpen=+$g(%request.Data("EmrOpen",1))   //是否由病历浏览打开
+			Set:EmrOpen="" EmrOpen=""""""
+	   </script>
+	  
+	    <script language="javascript" type="text/javascript">
+	        var ReportID=#(ReportID)#;
+            var PatientID=#(PatientID)#;
+            var EpisodeID=#(EpisodeID)#;
+            var LocID=#(LocID)#;
+            var LocDesc=#(LocDesc)#;
+            var LogonHospID=#(LogonHospID)#;
+            var HospDesc=#(HospDesc)#;
+			var EmrOpen=#(EmrOpen)#;
+			//全局请求后台服务对象
+			var ServerObj={
+				PatCurrAddress:"#(PatCurrAddress)#",
+				CurrAddress:"#(CurrAddress)#"
+			}
+
+		</script>
+	</body>
+</html>

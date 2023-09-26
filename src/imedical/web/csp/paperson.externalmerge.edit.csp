@@ -1,0 +1,61 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<csp:if condition=(%request.Get("PatientID")'="")>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1>
+</TRAK:COMPONENT>
+</csp:if>
+
+<server> 
+	; cjb 28/07/2006 60139
+	n PatientID,LIST1,LIST2,field,fieldvalue,cmp
+	s PatientID=%request.Get("PatientID")
+	
+	;m ^zTRAK("cjb",$zn)=%request.Data
+	
+	; the values from the external system are passed in %request from PAPersonExternal.List.  These are then set in %request.Data("External"_field,1) and %request killed.
+	f field="RegistrationNo","PAPERName","PAPERName2","PAPERName3","PAPERName4","PAPERDob","CTSEXDesc","INDSTDesc","ASSISDesc","CTNATDesc","PAPERNationalResident","PAPERStNameLine1","PAPERForeignAddress","PAPERAddress2","CTCITDesc","CTZIPCode","PROVDesc","PAPERID" d
+	.s fieldvalue=$g(%request.Data(field,1)) s %request.Data("External"_field,1)=fieldvalue k %request.Data(field,1)
+	
+	i (PatientID) {
+		d ##Class(web.PAMergePatient).GetPatientDetails(PatientID) 
+		
+		s %request.Data("RegistrationNo",1)=$g(LIST1(2))
+		s %request.Data("PAPERID",1)=$g(LIST2(3))
+		s %request.Data("PAPERName",1)=$g(LIST1(4))
+		s %request.Data("PAPERName2",1)=$g(LIST1(5))
+		s %request.Data("PAPERName3",1)=$g(LIST1(99))
+		s %request.Data("PAPERName4",1)=$g(LIST1(147))
+		
+		s %request.Data("PAPERDob",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(11)))
+		s %request.Data("CTSEXDesc",1)=$g(LIST1(15))
+		
+		s %request.Data("INDSTDesc",1)=$g(LIST2(141))
+		s %request.Data("ASSISDesc",1)=$g(LIST2(180))
+		s %request.Data("CTNATDesc",1)=$g(LIST2(22))
+		s %request.Data("PAPERNationalResident",1)=##Class(websys.StandardTypeItem).GetDescription("YESNO",$g(LIST2(156)))
+		
+		s %request.Data("PAPERStNameLine1",1)=$g(LIST2(88))
+		s %request.Data("PAPERForeignAddress",1)=$g(LIST2(26))
+		s %request.Data("PAPERAddress2",1)=$g(LIST2(195))
+		s %request.Data("CTCITDesc",1)=$g(LIST2(33))
+		s %request.Data("CTZIPCode",1)=$g(LIST2(35))
+		s %request.Data("PROVDesc",1)=$g(LIST2(113))
+	}
+	
+	s cmp=##Class(websys.Component).OpenName("PAPerson.ExternalMerge.Edit")
+	i cmp d cmp.Show(),cmp.%Close()
+	
+</server>
+</body>
+</html>

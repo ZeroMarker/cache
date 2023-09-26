@@ -1,0 +1,45 @@
+/// 数据对照表
+Class CIS.OPApp.DataMapping Extends %Persistent [ Final, Owner = {_SYSTEM}, SqlRowIdName = RowId, SqlTableName = DataMapping ]
+{
+
+/// 数据表
+Property TableName As %String [ Required, SqlColumnNumber = 2 ];
+
+/// 实例ID
+Property InstanceID As %String [ Required, SqlColumnNumber = 3 ];
+
+/// 外部系统(OPApp,AIS,HIS,LIS,PIS)
+Property ExternalSystem As %String [ Required, SqlColumnNumber = 4 ];
+
+/// 外部ID
+Property ExternalID As %String [ Required, SqlColumnNumber = 5 ];
+
+Index Ext On (TableName, ExternalSystem, ExternalID, InstanceID);
+
+Index Ins On (TableName, InstanceID, ExternalSystem, ExternalID);
+
+Storage Default
+{
+<Data name="DataMappingDefaultData">
+<Value name="1">
+<Value>TableName</Value>
+</Value>
+<Value name="2">
+<Value>InstanceID</Value>
+</Value>
+<Value name="3">
+<Value>ExternalSystem</Value>
+</Value>
+<Value name="4">
+<Value>ExternalID</Value>
+</Value>
+</Data>
+<DataLocation>^CIS.OPApp.DataMappingD</DataLocation>
+<DefaultData>DataMappingDefaultData</DefaultData>
+<IdLocation>^CIS.OPApp.DataMappingD</IdLocation>
+<IndexLocation>^CIS.OPApp.DataMappingI</IndexLocation>
+<StreamLocation>^CIS.OPApp.DataMappingS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

@@ -1,0 +1,1516 @@
+//页面Event
+function InitHISUIWinEvent(obj){
+	//CheckSpecificKey();
+	obj.LastAdmIndex=""
+	//提交后台保存
+	obj.saveVerToSrv=function(node)
+	{
+		var userID = session['DHCMA.USERID'];
+		var pathDr = node.id.split("-")[0];
+		var data = $.cm({ClassName:"DHCMA.CPW.BTS.PathFormSrv",MethodName:"AddNewVer",
+				"aMastID":pathDr,
+				"aUserID":userID
+			},false);
+		if(parseInt(data)<0){
+			$.messager.alert("提示","失败！");
+		}else{			
+			if (node){
+				$('#treeType').tree('reload',node.target);
+			}
+		}
+	};
+	//按钮处理事件
+	obj.saveEpToSrv=function()
+	{
+		var userID = session['DHCMA.USERID'];
+		
+		var Parref = obj.selVerID;		
+		var ID = $("#hID").val();
+		var EpDesc = $("#txtDesc").val();
+		var EpDesc2 = $("#txtDesc1").val();
+		var EpIndNo  = $("#txtIndNo").val();
+		var EpDays   = $("#txtEpDays").val();
+		var EpIsKeyStep = Common_GetValue("chkEpIsKeyStep")?"1":"0";
+		var EpIsOperDay = Common_GetValue("chkEpIsOperDay")?"1":"0";  //itmValue = $this.checkbox('getValue');	
+		var EpIsFirstDay = Common_GetValue("chkEpIsFirstDay")?"1":"0";
+		var EpIsActive = Common_GetValue("chkActive")?"1":"0";
+		
+		var errinfo = "";
+		if (!EpDesc||EpDesc=="") {
+			errinfo = errinfo + "描述为空!<br>";
+		}
+		if (!EpDesc2||EpDesc2=="") {
+			errinfo = errinfo + "别名为空!<br>";
+		}
+		if (""==EpIndNo||!obj.numReg(EpIndNo)) {
+			errinfo = errinfo + "顺序号为空或只能为数值!<br>";
+		}
+		if (""==EpDays||!obj.numReg(EpDays)) {
+			errinfo = errinfo + "阶段天数为空或只能为数值!<br>";
+		}
+		
+		if (errinfo!="") {
+			$.messager.alert("错误提示", errinfo, 'info');
+			return;
+		}
+		
+		var InputStr = Parref+"^"+ID;
+		InputStr += "^" + EpDesc;
+		InputStr += "^" + EpDesc2;
+		InputStr += "^" + EpIndNo;
+		InputStr += "^" + EpDays;
+		InputStr += "^" + EpIsKeyStep;
+		InputStr += "^" + EpIsOperDay;
+		InputStr += "^" + EpIsFirstDay;
+		InputStr += "^" + EpIsActive;
+		InputStr += "^" ;
+		InputStr += "^" ;
+		InputStr += "^" + userID;	
+		InputStr += "^" ;
+		
+		var data = $.cm({ClassName:"DHCMA.CPW.BT.PathFormEp",MethodName:"Update",
+				"aInputStr":InputStr,
+				"aSeparete":"^"
+		},false);
+		
+		if(parseInt(data)<0){
+			$.messager.alert("提示","失败！");
+		}else{			
+			//重新加载数据  
+			obj.epRefresh();
+			obj.dictDlg.close();
+		}
+	};
+	//验证数值
+	obj.numReg = function(numStr){
+		var reg = /^[0-9]+(.[0-9]{0,2})?$/;//正则表达式 最多两位的正实数
+		if (!reg.test(numStr)) {
+			return false;
+		}else{
+			return true;
+		}
+	}
+	//按钮处理事件
+	obj.saveEpItemToSrv=function()
+	{
+		var userID = session['DHCMA.USERID'];
+		
+		var Parref = obj.selVerEpID;		
+		var ID = $("#hiID").val();
+		var ItemDesc = $("#txtItemDesc").val();
+		var ItemCatDr = Common_GetValue("cboItemCatDr");
+		var ItemIndNo  = $("#txtItemIndNo").val();
+		var ItemIsOption = Common_GetValue("chkItemIsOption")?"1":"0";  //itmValue = $this.checkbox('getValue');
+		var ItemIsActive = Common_GetValue("chkItemIsActive")?"1":"0";
+		var ExeDesc   = $("#txtExeDesc").val();
+		var errinfo = "";
+		if (!ItemCatDr) {
+			errinfo = errinfo + "项目分类为空!<br>";
+		}
+		if (!ItemDesc) {
+			errinfo = errinfo + "项目描述为空!<br>";
+		}
+		if (""!=ItemIndNo&&!obj.numReg(ItemIndNo)) {
+			errinfo = errinfo + "顺序号只能为数值!<br>";
+		}
+		
+		if (errinfo) {
+			$.messager.alert("错误提示", errinfo, 'info');
+			return;
+		}
+		
+		var InputStr = Parref+"^"+ID;
+		InputStr += "^" + ItemDesc;
+		InputStr += "^" + ItemCatDr;
+		InputStr += "^" + ItemIndNo;
+		InputStr += "^" + ItemIsOption;
+		InputStr += "^" + ItemIsActive;
+		InputStr += "^" ;
+		InputStr += "^" ;
+		InputStr += "^" + userID;	
+		InputStr += "^" ;
+		InputStr += "^" + ExeDesc;
+		
+		var data = $.cm({ClassName:"DHCMA.CPW.BT.PathFormItem",MethodName:"Update",
+				"aInputStr":InputStr,
+				"aSeparete":"^"
+		},false);
+		
+		if(parseInt(data)<0){
+			$.messager.alert("提示","失败！");
+		}else{			
+			//重新加载数据  
+			obj.refreshGridHl();
+			obj.refreshGridYz();
+			obj.refreshGridZl();
+			obj.itemDlg.close();
+		}
+	};
+	//删除按钮处理事件
+	obj.delHandler= function(){
+		//id,code,desc
+		
+	};
+	//显示路径信息
+	obj.pathInfoTitle = function(verID){
+		if(verID!="")
+		{	
+			//取表单对象
+			$cm({
+				ClassName:"DHCMA.CPW.BT.PathForm",
+				MethodName:"GetObjById",
+				aId:verID
+			},function(jsonData){		
+				//console.dir(jsonData); 
+				//$("#pathMastID").val(jsonData.FormPathDr);
+				$("#ckfy").text(jsonData.FormCost);
+				$("#ckts").text(jsonData.FormDays);
+				if(jsonData.FormPathDr!="")
+				{
+					var mastData = $cm({ClassName:"DHCMA.CPW.BT.PathMast",MethodName:"GetObjById",aId:jsonData.FormPathDr},false);
+					$("#pathDesc").text(mastData.BTDesc);	
+					//准入数据		
+					$cm({
+						ClassName:"DHCMA.CPW.BTS.PathAdmitSrv",
+						QueryName:"QryPathAdmit",
+						aBTPathDr:jsonData.FormPathDr,
+						ResultSetType:"array",
+						page:1,    //可选项，页码，默认1
+						rows:200    //可选项，获取多少条数据，默认50
+					},function(rs){
+						//console.dir(rs);    //{"rows":[{"Description":"王二","HIDDEN":1,"Code":"001"},{"Description":"张三","HIDDEN":2,"Code":"002"},...],"total":110}
+						var diagCode ="",diagDesc="",operCode="",operDesc="";						
+						for(var i=0;i<rs.length;i++)
+						{
+							var tmpObj = rs[i];
+							if(tmpObj.BTICD10!="")
+							{
+								if(diagCode=="")
+								{
+									diagCode = tmpObj.BTICD10;
+								}
+								else
+								{
+									diagCode = diagCode+","+tmpObj.BTICD10;
+								}
+							}
+							if(tmpObj.BTICDKeys!="")
+							{
+								if(diagDesc=="")
+								{
+									diagDesc = tmpObj.BTICDKeys;
+								}
+								else
+								{
+									diagDesc = diagDesc+","+tmpObj.BTICDKeys;
+								}
+							}
+							if(tmpObj.BTOperICD!="")
+							{
+								if(operCode=="")
+								{
+									operCode = tmpObj.BTOperICD;
+								}
+								else
+								{
+									operCode = operCode+","+tmpObj.BTOperICD;
+								}
+							}
+							if(tmpObj.BTOperKeys!="")
+							{
+								if(operDesc=="")
+								{
+									operDesc = tmpObj.BTOperKeys;
+								}
+								else
+								{
+									operDesc = operDesc+","+tmpObj.BTOperKeys;
+								}
+							}
+						}
+						$("#pathDiagDesc").text(diagDesc);
+						$("#pathDiagCode").text(diagCode);		
+						$("#pathOperDesc").text(operDesc);
+						$("#pathOperCode").text(operCode);						
+					});
+				}				
+			});
+		}
+		else
+		{
+			//清空主页面内容
+			
+		}
+	};
+	obj.refreshGridZl = function()
+	{
+		var tab = $('#tabs').tabs('getSelected');
+		var index = $('#tabs').tabs('getTabIndex',tab);
+		
+		if((obj.gridZl==undefined)||(obj.gridZl==null))
+		{
+			//主要诊疗工作
+			obj.gridZl = $HUI.datagrid("#gridZl",{
+				url:$URL,
+				singleSelect: true,
+				queryParams:{
+					ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+					QueryName:"QryPathFormEpItem",
+					aPathFormEpDr:obj.selVerEpID,
+					aDicCode:"A"
+				},		
+				columns:[[
+					/* {field:'ID',width:'80',title:'操作',
+						formatter:function(value,row,index){						
+							// /csp/websys.csp?TE onclick='openRepWin(\""+value+"\")' '../images/websys/edit.gif'
+							return "&nbsp;&nbsp;<a href='#' text=\""+value+"\" class='itemSDel' title='删除项目'>\
+					<img src='../scripts/DHCMA/img/cancel.png' border=0/>\
+					</a>&nbsp;&nbsp;<a href='#' class='itemSEdit' text=\""+value+"\" title='编辑项目'>\
+					<img src='../scripts/DHCMA/img/pencil.png' border=0/>\
+					</a>&nbsp;&nbsp;";
+						}
+					}, */
+					{field:'ItemIndNo',width:'50',title:'顺序号'},
+					{field:'ItemDesc',width:'450',title:'描述'},
+					{field:'ItemIsOptionD',width:'70',title:'是否可选'},
+					{field:'ExeDesc',width:'100',title:'执行提示'}				
+				]],
+				onLoadSuccess:function(data){
+					//链接选中方式
+					$('#gridZl-tool .itemSDel').unbind('click').on('click', function (e) {
+						var row = $('#gridZl').datagrid("getSelected");
+						if(row != null){//添加删除提示 by WJF 2018-10-24:13:27
+							$.messager.confirm("确认","确定删除?",function(r){	
+								if(r){
+									var aID = row["ID"];
+									var rstData = $cm({ClassName:"DHCMA.CPW.BT.PathFormItem",MethodName:"DeleteById",aId:aID},false);
+									if(parseInt(rstData)<0){
+										$.messager.alert("提示","失败！");
+									}else{			
+										//重新加载数据  
+										$.messager.alert("提示","删除成功！");
+										obj.refreshGridZl();
+									}   
+								}
+							});
+						}else{
+							$.messager.alert("提示","请选择一条数据！");
+							return;
+						}	
+					});
+					//链接选中方式
+					$('#gridZl-tool .itemSEdit').on('click', function (e) {
+						var row = $('#gridZl').datagrid("getSelected");
+						if(row==null){ //by wjf
+							$.messager.alert("提示","请选择一条数据");
+							return;
+						} 
+						var aID = row["ID"];
+						obj.openEpItemWin(aID);
+					});
+				},
+				onDblClickRow:function(rowIndex, rowData){
+					obj.ItemRowData = rowData;
+					$("#itemMRDlg").show();
+					obj.itemMRDlg = $HUI.dialog("#itemMRDlg",{
+						iconCls:'icon-save',
+						title:"关联病历模板ID:"+rowData.ItemDesc,
+						resizable:true,
+						modal:true,
+						onOpen:function(){
+							obj.refreshGridMR();
+						}
+					});
+				},
+				pagination:true,
+				pageSize:12,
+				pageList:[12,14],
+				fit:true
+			});			
+			
+		}
+		else
+		{
+			obj.gridZl.load({
+				ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+				QueryName:"QryPathFormEpItem",
+				aPathFormEpDr:obj.selVerEpID,
+				aDicCode:"A"
+			}); 
+		}		
+	};
+	obj.refreshGridHl = function()
+	{
+		
+		if((obj.gridHl==undefined)||(obj.gridHl==null))
+		{
+			//主要诊疗工作
+			obj.gridHl = $HUI.datagrid("#gridHl",{
+				url:$URL,
+				singleSelect: true,
+				queryParams:{
+					ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+					QueryName:"QryPathFormEpItem",
+					aPathFormEpDr:obj.selVerEpID,
+					aDicCode:"C"
+				},		
+				columns:[[
+					{field:'ItemIndNo',width:'50',title:'顺序号'},
+					{field:'ItemDesc',width:'450',title:'描述'},
+					{field:'ItemIsOptionD',width:'70',title:'是否可选'},
+					{field:'ExeDesc',width:'100',title:'执行提示'}			
+				]],
+				onLoadSuccess:function(data){
+					//链接选中方式
+					$('#gridHl-tool .itemSDel').unbind('click').on('click', function (e) {
+						var row = $('#gridHl').datagrid("getSelected");
+						//$('#gridHl').datagrid("clearSelections");
+						if(row!=null){//添加删除提示 by WJF 2018-10-24:13:27
+							$.messager.confirm("确认","确定删除?",function(r){
+								if(r){
+									var aID = row["ID"];
+									var rstData = $cm({ClassName:"DHCMA.CPW.BT.PathFormItem",MethodName:"DeleteById",aId:aID},false);
+									if(parseInt(rstData)<0){
+										$.messager.alert("提示","失败！");
+									}else{			
+										//重新加载数据  
+										$.messager.alert("提示","删除成功！");
+										obj.refreshGridHl();
+									}  
+								}
+							});
+						}else{
+							$.messager.alert("提示","请选择一条数据！");
+							return false;
+						}
+					});
+					//链接选中方式
+					$('#gridHl-tool .itemSEdit').on('click', function (e) {
+						var row = $('#gridHl').datagrid("getSelected");
+						if(row==null){ //by wjf
+							$.messager.alert("提示","请选择一条数据");
+							return;
+						} 
+						var aID = row["ID"];
+						obj.openEpItemWin(aID);
+					});
+				},
+				pagination:true,
+				pageSize:12,
+				pageList:[12,14],
+				fit:true
+			});
+			
+		}
+		else
+		{
+			obj.gridHl.load({
+				ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+				QueryName:"QryPathFormEpItem",
+				aPathFormEpDr:obj.selVerEpID,
+				aDicCode:"C"
+			}); 
+		}
+	};
+	obj.refreshGridYz = function()
+	{
+		if((obj.gridYz==undefined)||(obj.gridYz==null))
+		{
+			//主要诊疗工作
+			obj.gridYz = $HUI.datagrid("#gridYz",{
+				url:$URL,
+				singleSelect: true,
+				queryParams:{
+					ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+					QueryName:"QryPathFormEpItem",
+					aPathFormEpDr:obj.selVerEpID,
+					aDicCode:"B"
+				},		
+				columns:[[
+					{field:'ItemIndNo',width:'50',title:'顺序号'},
+					{field:'ItemDesc',width:'450',title:'描述'},
+					{field:'ItemIsOptionD',width:'70',title:'是否可选'},
+					{field:'ExeDesc',width:'100',title:'执行提示'}			
+				]],
+				onLoadSuccess:function(data){
+					//链接选中方式
+					$('#gridYz-tool .itemSDel').unbind('click').on('click', function (e) {
+						var row = $('#gridYz').datagrid("getSelected");
+						//$('#gridYz').datagrid("clearSelections");
+						if(row!=null){//添加删除提示 by WJF 2018-10-24:13:27
+							$.messager.confirm("确认","确定删除?",function(r){	//添加删除提示 by WJF 2018-10-24:13:27
+								if(r){
+									var aID = row["ID"];
+									var rstData = $cm({ClassName:"DHCMA.CPW.BT.PathFormItem",MethodName:"DeleteById",aId:aID},false);
+									if(parseInt(rstData)<0){
+										$.messager.alert("提示","失败！");
+									}else{			
+										//重新加载数据  
+										$.messager.alert("提示","删除成功！");
+										obj.refreshGridYz();
+									} 
+								}	
+							});
+						}else{
+							$.messager.alert("提示","请选择一条数据！");
+							return false;
+						}
+					});
+					//链接选中方式
+					$('#gridYz-tool .itemSEdit').on('click', function (e) {
+						var row = $('#gridYz').datagrid("getSelected");
+						if(row==null){ //by wjf
+							$.messager.alert("提示","请选择一条数据");
+							return;
+						} 
+						var aID = row["ID"];
+						obj.openEpItemWin(aID);
+					});
+				},
+				onDblClickRow:function(rowIndex, rowData){
+					obj.ItemRowData = rowData;
+					var strUrl = "./dhcma.cpw.bt.itemord.csp?1=1" + 
+							"&ParamID=" + obj.ItemRowData.ID + "&ParamDesc=" + obj.ItemRowData.ItemDesc;
+					 websys_showModal({
+						url:strUrl,
+						title:'项目关联医嘱',
+						iconCls:'icon-w-edit',  
+						//onBeforeClose:function(){alert('close')},
+						dataRow:{ParamRow:obj.ItemRowData},   //？
+						originWindow:window,
+						width:1300,
+						top:20,
+						height:600
+					});
+				},
+				pagination:true,
+				pageSize:12,
+				pageList:[12,14],
+				fit:true
+			});
+			
+		}
+		else
+		{
+			obj.gridYz.load({
+				ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+				QueryName:"QryPathFormEpItem",
+				aPathFormEpDr:obj.selVerEpID,
+				aDicCode:"B"
+			}); 
+		}
+	};
+	epEdit=function (aID)
+	{
+		obj.openEpWin(aID);
+	}
+	epDelete=function (aID)
+	{
+		$.messager.confirm("确认","确定删除?",function(r){
+			var rstData = $cm({ClassName:"DHCMA.CPW.BT.PathFormEp",MethodName:"DeleteById",aId:aID},false);
+			obj.epRefresh();
+		});
+	}
+	obj.epRefresh = function()
+	{	
+		$cm({
+			ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+			QueryName:"QryPathFormEp",
+			aPathFormDr:obj.selVerID,
+			ResultSetType:"array",
+			page:1,    //可选项，页码，默认1
+			rows:200    //可选项，获取多少条数据，默认50
+		},function(rs){
+			//console.dir(rs); 
+			$("#ulEp").empty();
+			var str="";
+			str += "<li class='treeview'>";
+			str +="<ul id='ulEpMX' class='treeview-menu'>"
+			for(var i=0;i<rs.length;i++)
+			{
+				var tmpObj = rs[i];
+				str += "<li id='epli"+tmpObj.ID+"' text='"+tmpObj.ID+"' class='treeview' style='text-align: center;'><a id='LocpID' href='#' >"+ tmpObj.EpDesc+"</a></li>";
+				
+			}			
+			str += "<li class='treeview' text='' style='text-align: center;'><a>添加阶段</a></li>";			
+			str += "</ul></li>";
+			$("#ulEp").append(str);
+			$("#ulEpMX > li:not(':last')").each(function(){
+				//alert($(this).attr("text"));
+				$(this).popover({trigger:'hover',offsetLeft:2,arrow:false,style:'myma',placement:"right",content:"<a style='cursor:pointer;' onclick='epEdit(\""+$(this).attr("text")+"\");' class='icon icon-edit'>&nbsp;&nbsp;&nbsp;&nbsp;</a>&nbsp;&nbsp;&nbsp;&nbsp;<a style='cursor:pointer;' onclick='epDelete(\""+$(this).attr("text")+"\");' class='icon icon-no'>&nbsp;&nbsp;&nbsp;&nbsp;</a>"});
+		    });
+	
+			$('#ulEpMX > li').click(function (e) {
+				e.preventDefault();
+				$('#ulEpMX > li').removeClass('active');
+				$(this).addClass("active");					
+				obj.selVerEpID = $(this).attr("text");
+				if(obj.selVerEpID!="")
+				{
+					obj.refreshGridHl();
+					obj.refreshGridYz();
+					obj.refreshGridZl();
+				}				
+			});
+			//默认选择第一条科室
+			$('#ulEpMX li:first-child').click();
+			//$('#ulEpMX li:first-child').addClass("active");	
+			$("#ulEpMX > li:last-child").click(function(e){
+				if(obj.selVerID!="")
+				{
+					//增加阶段
+					obj.openEpWin("");
+				}
+				else
+				{
+					$.messager.alert("提示","请选择添加阶段的路径！");
+				}
+			});
+		});
+		
+	};
+	//删除按钮处理事件
+	obj.delHandler= function(){
+		if(obj.editIndex ==null){return;}
+		if (obj.modifyBeforeRow.ID == null) { return; }
+		
+		if (obj.modifyBeforeRow.ID){			
+			$.messager.confirm("确认","确定删除?",function(r){
+				if(r){					
+					$.cm({ClassName:'DHCMA.CPW.BT.PathFormMR',MethodName:'DeleteById','aId':obj.modifyBeforeRow.ID},function(data){
+						//debugger;
+						if(parseInt(data)<0){
+							$.messager.alert("提示","失败！");  //data.msg
+						}else{							
+							//重新加载datagrid的数据  
+							obj.mrList.load({
+								ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+								QueryName:"QryPathFormEpItemMR",
+								aPathFormEpItemDr:obj.ItemRowData.ID 
+							}); 
+							obj.editIndex = null;
+						}
+					});
+				}
+			});
+		}
+	};
+	//删除按钮处理事件
+	obj.delFormVerHandler= function(){		
+		if (obj.selVerID){			
+			var selNode=$('#treeType').tree('getSelected');
+			if(selNode)
+			{
+				$.messager.confirm("确认","确定作废?",function(r){
+					if(r){					
+						$.cm({ClassName:'DHCMA.CPW.BTS.PathFormSrv',MethodName:'ActiveFalse','aFormVerID':obj.selVerID},function(data){
+							//debugger;
+							if(parseInt(data)<0){
+								$.messager.alert("提示","作废失败！");  //data.msg
+							}else{							
+								var par = $('#treeType').tree('getParent',selNode.target);
+								$('#treeType').tree('reload', par.target);
+
+							}
+						});
+					}
+				});
+			}
+		}
+	};
+	//按钮处理事件
+	obj.pubFormVerHandler= function(){		
+		if (obj.selVerID){			
+			var selNode=$('#treeType').tree('getSelected');
+			if(selNode)
+			{
+				$.messager.confirm("确认","确定发布，发布之后不可以修改?",function(r){
+					if(r){					
+						$.cm({ClassName:'DHCMA.CPW.BTS.PathFormSrv',MethodName:'PathFormPub','aFormVerID':obj.selVerID,'aUserID':session['DHCMA.USERID']},function(data){
+							if(parseInt(data)<0){
+								if(parseInt(data)==-2) {
+									$.messager.alert("提示","应先作废已发布的版本！");
+									return;
+								}
+								$.messager.alert("提示","发布失败！");  //data.msg
+							}else{							
+								var par = $('#treeType').tree('getParent',selNode.target);
+								$('#treeType').tree('reload',par.target);
+
+							}
+						});
+					}
+				});
+			}
+		}
+	};
+	obj.CoypFormVerHandler = function(){
+		if (obj.selVerID){
+			var selNode=$('#treeType').tree('getSelected');
+			if(selNode)
+			{
+				$.messager.prompt("提示", "请输入新路径名称：", function (name) {
+					if (name) {
+						$.cm({ClassName:'DHCMA.CPW.BTS.PathFormSrv',MethodName:'CopyFormAsNew','aPathFormID':obj.selVerID,'aNewName':name,'aUserID':session['DHCMA.USERID']},function(ret){
+							if(parseInt(ret)<0){
+								if(parseInt(data)==-2) {
+									$.messager.alert("提示","路径名称重复");
+									return;
+								}
+								$.messager.alert("提示","复制失败！errCode="+ret);
+							}else{							
+								var par = $('#treeType').tree('getParent',selNode.target);
+								var parPar=$('#treeType').tree('getParent',par.target);
+								$('#treeType').tree('reload',parPar.target);
+							}
+						});
+					} else {
+					}
+				});
+			}
+		}
+	}
+	obj.ExportFormVerHandler = function(){
+		if (obj.selVerID){
+			$.messager.alert("提示","研发中...");
+		}
+	}
+	//事件绑定
+	obj.LoadEvents = function(arguments){	
+		
+		$(".btnEpItemAdd").on('click',function(){
+			//编辑			
+			if(obj.selVerEpID=="")
+			{
+				$.messager.alert("提示","请先选中需要增加项目的路径阶段！");
+			}
+			else
+			{
+				obj.openEpItemWin("");
+			}
+		});
+		$("#btnDelForm").on('click',function(){
+			//作废			
+			if(obj.selVerID=="")
+			{
+				$.messager.alert("提示","请先选中需要作废的路径版本！");
+			}
+			else
+			{
+				if($("#btnDelForm").attr("disable") == "1") return;
+				obj.delFormVerHandler();
+			}
+		});
+		$("#btnPubForm").on('click',function(){
+			//	
+			if(obj.selVerID=="")
+			{
+				$.messager.alert("提示","请先选中需要发布的路径版本！");
+			}
+			else
+			{
+				if($("#btnPubForm").attr("disable") == "1") return;
+				obj.pubFormVerHandler();
+			}
+		});
+		$("#btnCopyPath").on('click',function(){
+			//	
+			if(obj.selVerID=="")
+			{
+				$.messager.alert("提示","请先选中需要复制的路径版本！");
+			}
+			else
+			{
+				obj.CoypFormVerHandler();
+			}
+		});btnExport
+		$("#btnExport").on('click',function(){
+			//	
+			if(obj.selVerID=="")
+			{
+				$.messager.alert("提示","请先选中需要复制的路径版本！");
+			}
+			else
+			{
+				obj.ExportFormVerHandler();
+			}
+		});
+		$("#tmp").on('click',function(){
+			var rtn = $cm({
+				dataType:'text',
+				ResultSetType:"Excel",
+				ExcelName:"excelname", //默认DHCCExcel
+				ClassName:"DHCHAI.DPS.PAAdmSrv",
+				QueryName:"QryAdm",
+				aIntputs:"1|2|3|4^1^2017-08-01^2017-08-31^^^^^"
+			},false);
+			location.href = rtn;
+		});	
+		$("#addIcon").on('click',function(){
+			// 添加一行
+			if (obj.endEditing()) {
+				//$("#dg").datagrid("appendRow");
+				$("#mrList").datagrid("appendRow", {
+					ID:"",
+					MRTypeID: "",
+					MRTypeDrCode: "",
+					MRTypeDrDesc: "",
+					MRTempID: "",
+					MRIsActive:"1",
+					MRIsActiveD:"是"
+				});
+				obj.editIndex = $("#mrList").datagrid("getRows").length - 1;
+				$("#mrList").datagrid("selectRow", obj.editIndex).datagrid("beginEdit", obj.editIndex);
+			}
+		});
+		$("#editIcon").on('click',function(){
+			obj.endEditing();
+		});	
+		$("#delIcon").on('click',function(){			
+			obj.delHandler();
+		});	
+		$("#addIconMrg").on('click',function(){
+			if(obj.LastAdmIndex!="") {
+				//
+				$.messager.alert("提示","请先保存当前行！");
+				return;
+				//$('#admitList').datagrid("endEdit", obj.LastAdmIndex); //自动结束并保存上一条编辑记录
+			}else{
+			// 添加一行
+			if(obj.isAdded==1) return;
+			$("#admitList").datagrid("appendRow", {
+				ID:"",
+				BTPathDr: $("#pathMastID").val(),
+				BTTypeDr: "",
+				BTTypeDrDesc: "",
+				BTICD10: "",
+				BTICDKeys: "",
+				BTOperICD:"",
+				BTOperKeys:"",
+				BTIsICDAcc:"否",
+				BTIsOperAcc:"否",
+				BTIsActive:"是"
+			});
+				var rowIndex=$("#admitList").datagrid("getRows").length - 1;
+				obj.LastAdmIndex=rowIndex
+				$('#admitList').datagrid('selectRow', rowIndex).datagrid('beginEdit', rowIndex);			
+				obj.isAdded=1;
+			}
+		});
+		$("#editIconMrg").on('click',function(){
+				$('#admitList').datagrid("endEdit", obj.LastAdmIndex);
+		});	
+		$("#delIconMrg").on('click',function(){			
+			obj.delHandlerMrg();
+		});	
+		$("#btnInitVer").on('click',function(){
+			obj.saveVerToSrv(obj.selPath);
+		});
+		$('#treeType').tree({
+			onClick:function(node){		
+				obj.treeClick(node);
+				obj.isAdded=0;
+			},
+			onSelect:function(node){
+				/* obj.treeClick(node);
+				obj.isAdded=0; */
+			}
+			,onBeforeExpand:function(node,param){
+				//参数重置
+			}
+			,onExpand:function(node)
+			{
+				obj.refreshNode(node);			
+			}
+			,onCollapse:function(node)
+			{
+				//node.state = "closed";
+			}
+			,onContextMenu: function(e, node){
+				e.preventDefault();
+				// select the node
+				$('#treeType').tree('select', node.target);
+				// display context menu
+				var idVal = node.id;
+				if(idVal.indexOf("Ver")>-1)
+				{
+					$("#btnPubForm").css("color","#000000");
+					$("#btnPubForm").css("cursor","pointer");
+					$("#btnDelForm").css("color","#000000");
+					$("#btnDelForm").css("cursor","pointer");
+					$("#btnPubForm").attr("disable","0")
+					$("#btnDelForm").attr("disable","0")
+					if(node.text.indexOf("正使用")>-1) {
+						$("#btnPubForm").css("color","#DDDDDD");
+						$("#btnPubForm").css("cursor","not-allowed");
+						$("#btnPubForm").attr("disable","1");
+					}
+					if(node.text.indexOf("作废")>-1) {
+						$("#btnDelForm").css("color","#DDDDDD");
+						$("#btnDelForm").css("cursor","not-allowed");
+						$("#btnDelForm").attr("disable","1");
+					}
+					$('#mm').menu('show', {
+						left: e.pageX,
+						top: e.pageY
+					});
+				}
+			}
+		});
+		obj.refreshNode = function(node)
+		{
+			//加载子节点数据				
+			var subNodes = [];
+			$(node.target)
+			.next().children().children("div.tree-node").each(function(){   
+				var tmp = $('#treeType').tree('getNode',this);
+				subNodes.push(tmp);
+			});
+			//$('#treeType').tree('remove',cArr[i].target);
+			for(var i=0;i<subNodes.length;i++)
+			{
+				$('#treeType').tree('remove',subNodes[i].target);
+			}
+			$cm({
+				ClassName:"DHCMA.CPW.BTS.PathFormSrv",
+				QueryName:"QryLocPathVer",
+				argNodeID:node.id,
+				argLocID:"",
+				ResultSetType:"array", 
+				page:1,    
+				rows:9999
+			},function(rs){   		
+				$('#treeType').tree('append', {
+						parent: node.target,
+						data: rs
+				});
+				$('.hisui-splitbutton').splitbutton({ 
+				}); 
+			});	
+		};
+		obj.DisplayPathFromWin = function (PathFormID) {	 
+			var strUrl = "./dhcma.cpw.bt.pathformmrg.csp?1=1" + 
+							"&PathFormID=" + PathFormID ;
+			 websys_showModal({
+				url:strUrl,
+				title:'路径信息维护',
+				iconCls:'icon-w-edit',  
+				//onBeforeClose:function(){alert('close')},
+				dataRow:{PathFormID:PathFormID},   //？
+				originWindow:window,
+				width:940,
+				height:500
+			});
+		};
+		
+		$("#btnPathEdit").on('click',function(){
+			var txt = $('#btnPathEdit').text();
+			if(txt =='新增版本')
+			{
+				obj.saveVerToSrv(obj.selPath);
+			}
+			else
+			{
+				//编辑
+				
+				if(obj.selVerID=="")
+				{
+					$.messager.alert("提示","请先选中需要修改的路径版本！");
+				}
+				else
+				{
+					obj.DisplayPathFromWin(obj.selVerID);
+				}
+			}
+		});	
+		
+		$("#btnSaveInfo").on('click',function(){
+			var Code = $('#txtPathCode').val();
+			var Desc = $('#txtPathDesc').val();
+			var BTTypeDr   =$('#cboTypeDr').combobox('getValue');
+			var BTEntityDr = $('#cboEntityDr').combobox('getValue');
+			var BTPCEntityDr = $('#cboPCEntityDr').combobox('getValue');
+			var BTQCEntityDr = $('#cboQCEntityDr').combobox('getValue');
+			var IsActive = $("#txtIsActive").switchbox('getValue')?1:0;
+			var BTActDate ='';
+			var BTActTime='';
+			var BTActUserID="";
+			if(session['DHCMA.USERID']) BTActUserID=session['DHCMA.USERID'];
+			var errinfo = "";
+			if (!Code) {
+				errinfo = errinfo + "代码为空!<br>";
+			}
+			if (!Desc) {
+				errinfo = errinfo + "名称为空!<br>";
+			}	
+			var IsCheck = $m({
+				ClassName:"DHCMA.CPW.BT.PathMast",
+				MethodName:"CheckPTCode",
+				aCode:Code,
+				aID:$("#pathMastID").val()
+			},false);
+			if(IsCheck>=1) {
+				errinfo = errinfo + "代码与列表中现有项目重复，请检查修改!<br>";
+			}
+			if (errinfo) {
+				$.messager.alert("错误提示", errinfo, 'info');
+				return;
+			}
+			
+			var MastID=$("#pathMastID").val();
+			var inputStr = MastID;
+			inputStr = inputStr + CHR_1 + Code;
+			inputStr = inputStr + CHR_1 + Desc;
+			inputStr = inputStr + CHR_1 + BTTypeDr;
+			inputStr = inputStr + CHR_1 + BTEntityDr;
+			inputStr = inputStr + CHR_1 + BTPCEntityDr;
+			inputStr = inputStr + CHR_1 + BTQCEntityDr;
+			inputStr = inputStr + CHR_1 + IsActive;
+			inputStr = inputStr + CHR_1 + BTActDate;
+			inputStr = inputStr + CHR_1 + BTActTime;
+			inputStr = inputStr + CHR_1 + BTActUserID;
+			
+			var flg = $m({
+				ClassName:"DHCMA.CPW.BT.PathMast",
+				MethodName:"Update",
+				aInputStr:inputStr,
+				aSeparete:CHR_1
+				},false);
+				if (parseInt(flg) <= 0) {
+					if (parseInt(flg) == 0) {
+						$.messager.alert("错误提示", "参数错误!" , 'info');
+					}else if (parseInt(flg) == -2) {
+						$.messager.alert("错误提示", "数据重复!" , 'info');
+					} else {
+						$.messager.alert("错误提示", "更新数据错误!Error=" + flg, 'info');
+					}
+				}else {
+					var flg = $m({
+						ClassName:"DHCMA.CPW.BT.PathForm",
+						MethodName:"UpdateCostDay",
+						aId:obj.lastVerID,
+						aCost:$("#txtFormCost").val(),
+						aDay:$("#txtFormDays").val()
+						},false);
+					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+					window.location.reload();
+				}
+			});
+			
+			$('#btnEditNote').on('click', function(){
+				var strUrl = "./dhcma.cpw.bt.docedit.csp?1=1" + "&FormID=" + obj.lastVerID;
+					 websys_showModal({
+						url:strUrl,
+						title:'临床路径适用对象文档编辑',
+						iconCls:'icon-w-edit',  
+						closable:true,
+						//onBeforeClose:function(){alert('close')},
+						//dataRow:{EpisodeID:EpisodeID},   //？
+						originWindow:window,
+						width:600,
+						height:500
+					});
+			});
+			
+			$("body").layout();
+			//$("#layoutId").layout("resize");
+			//$.parser.parse($('#dictDlg').parent());
+			$.parser.parse($("body"));
+			//$("body").layout('collapse','west');
+			$("#workS").show();
+			$("#workP").hide();
+			$("#workD").hide();
+	};	
+	obj.openEpWin = function(EpID){
+		//$.parser.parse($('#dictDlg').parent());
+		if(EpID!="")
+		{
+			var rstData = $cm({ClassName:"DHCMA.CPW.BT.PathFormEp",MethodName:"GetObjById",aId:EpID},false);
+			$("#hID").val(EpID);
+			$("#txtDesc").val(rstData.EpDesc);
+			$("#txtDesc1").val(rstData.EpDesc2);
+			$("#txtIndNo").val(rstData.EpIndNo);
+			$("#txtEpDays").val(rstData.EpDays);
+			$('#chkEpIsFirstDay').checkbox('setValue',rstData.EpIsFirstDay =="1"?true:false);
+			$('#chkEpIsKeyStep').checkbox('setValue',rstData.EpIsKeyStep =="1"?true:false);
+			$('#chkEpIsOperDay').checkbox('setValue',rstData.EpIsOperDay =="1"?true:false);
+			$('#chkActive').checkbox('setValue',rstData.EpIsActive =="1"?true:false);
+		}
+		else
+		{			
+			$("#hID").val("");
+			$("#txtDesc").val("");
+			$("#txtDesc1").val("");
+			$("#txtIndNo").val("");
+			$("#txtEpDays").val("");
+			
+			//$("#chkEpIsKeyStep").checkbox('setValue',true);
+			$("#chkEpIsKeyStep").iCheck('check');
+			$('#chkEpIsFirstDay').checkbox('setValue',false);
+			$('#chkEpIsKeyStep').checkbox('setValue',false);
+			$('#chkEpIsOperDay').checkbox('setValue',false);
+			$('#chkActive').checkbox('setValue',true);
+		}
+		
+		$("#dictDlg").show();
+		obj.dictDlg = $HUI.dialog("#dictDlg",{
+			iconCls:'icon-w-edit',
+			title:"阶段维护",
+			resizable:true,
+			modal:true,
+			buttons:[{
+				text:'保存',
+				handler:function(){
+					//保存
+					obj.saveEpToSrv();
+					
+				}
+			},{
+				text:'关闭',
+				handler:function(){
+					obj.dictDlg.close();
+				}
+			}]
+		});
+	};
+	obj.openEpItemWin = function(EpItemID){
+		var tab = $('#tabs').tabs('getSelected');
+		var index = $('#tabs').tabs('getTabIndex',tab);
+		var dicCode = "";
+		if(index=="0")
+		{
+			dicCode="A";
+		}
+		else if(index=="1")
+		{
+			dicCode="C";
+		}
+		else if(index=="2")
+		{
+			dicCode="B";
+		}
+		//初始化赋值
+		obj.cboItemCatDr = $HUI.combobox("#cboItemCatDr",{
+			url:$URL+"?ClassName=DHCMA.CPW.BTS.PathItemCatSrv&QueryName=QryPathItemCatByD&aDicCode="+dicCode+"&ResultSetType=array",
+			valueField:'BTID',
+			textField:'BTDesc'
+		});
+		if(EpItemID!="")
+		{
+			var rstData = $cm({ClassName:"DHCMA.CPW.BT.PathFormItem",MethodName:"GetObjById",aId:EpItemID},false);
+			$("#hiID").val(EpItemID);
+			Common_SetValue("cboItemCatDr",rstData.ItemCatDr);
+			$("#txtItemDesc").val(rstData.ItemDesc);
+			$("#txtItemIndNo").val(rstData.ItemIndNo);
+			$('#chkItemIsOption').checkbox('setValue',rstData.ItemIsOption =="1"?true:false);
+			$('#chkItemIsActive').checkbox('setValue',rstData.ItemIsActive =="1"?true:false);
+			$("#txtExeDesc").val(rstData.ExeDesc);
+		}
+		else
+		{			
+			$("#hiID").val("");
+			Common_SetValue("cboItemCatDr","");
+			$("#txtItemDesc").val("");
+			$("#txtItemIndNo").val("");
+			$('#chkItemIsOption').checkbox('setValue',false);
+			$('#chkItemIsActive').checkbox('setValue',true);
+			$("#txtExeDesc").val("");
+		}
+		$("#itemDlg").show();
+		obj.itemDlg = $HUI.dialog("#itemDlg",{
+			iconCls:'icon-w-edit',
+			title:"阶段项目维护",
+			resizable:true,
+			modal:true,
+			buttons:[{
+				text:'保存',
+				handler:function(){
+					//保存
+					obj.saveEpItemToSrv();					
+				}
+			},{
+				text:'关闭',
+				handler:function(){
+					obj.itemDlg.close();
+				}
+			}]
+		});
+	};
+	//提交后台保存
+	obj.saveMRToSrv=function()
+	{
+		var Parref = obj.ItemRowData.ID;
+		var ID = obj.modifyAfterRow.ID;
+		//$.form.GetValue("txtDicCode")
+		var MRTypeID = obj.modifyAfterRow.MRTypeID;
+		var MRTempID  =obj.modifyAfterRow.MRTempID;
+		var MRIsActive = obj.modifyAfterRow.MRIsActiveD;		
+		MRIsActive = (MRIsActive =="是"?"1":"0");
+		if(MRTypeID=="")
+		{
+			$.messager.alert("提示","病历类型不可以为空！");
+			return false;
+		}
+		if(MRTempID=="")
+		{
+			$.messager.alert("提示","模板ID不可以为空！");
+			return false;
+		}
+		var InputStr = Parref+"^"+ID;
+		InputStr += "^" + MRTypeID;
+		InputStr += "^" + MRTempID;
+		InputStr += "^" + MRIsActive;
+		InputStr += "^";
+		InputStr += "^";
+		InputStr += "^" + session['DHCMA.USERID'];
+		
+		//同步调用
+		var data = $.cm({ClassName:"DHCMA.CPW.BT.PathFormMR",MethodName:"Update",
+				"aInputStr":InputStr,
+				"aSeparete":"^"
+			},false);
+		if(parseInt(data)<0){
+			$.messager.alert("提示","失败！");
+			return false;
+		}else{			
+			$('#mrList').datagrid('getRows')[obj.editIndex]['ID'] = Parref+"||"+data;
+			$('#mrList').datagrid('refreshRow',obj.editIndex);
+			$.messager.alert("提示","成功。", 'info');			
+		}
+		return true;
+	};
+	obj.endEditing=function(){
+		if (obj.editIndex == undefined){return true}
+		if ($('#mrList').datagrid('validateRow', obj.editIndex)){	
+			//列表中下拉框实现，修改后把回写
+			var ed = $('#mrList').datagrid('getEditor', {index:obj.editIndex,field:'MRTypeID'});
+			var MRTypeIDDesc = $(ed.target).combobox('getText');
+			$('#mrList').datagrid('getRows')[obj.editIndex]['MRTypeDrDesc'] = MRTypeIDDesc;
+			$('#mrList').datagrid('endEdit', obj.editIndex);
+			//保存后台数据
+			obj.modifyAfterRow = $('#mrList').datagrid('getRows')[obj.editIndex];
+			obj.saveMRToSrv();						
+			obj.editIndex = null;
+			return true;
+		} else {
+			return false;
+		}
+	};
+	
+	obj.refreshGridMR = function()
+	{
+		
+		if((obj.mrList==undefined)||(obj.mrList==null))
+		{
+			obj.btnAddMR=$HUI.linkbutton("#addIcon",{
+				iconCls:'icon-add',
+				plain:true,
+				text:'新增'
+			});
+			obj.btnEditMR=$HUI.linkbutton("#editIcon",{
+				iconCls:'icon-write-order',
+				plain:true,
+				text:'修改'
+			});
+			obj.btnDelMR=$HUI.linkbutton("#delIcon",{
+				iconCls:'icon-cancel',
+				plain:true,
+				text:'删除'
+			});			
+			//
+			obj.mrList = $HUI.datagrid("#mrList",{
+				url:$URL,
+				queryParams:{
+					ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+					QueryName:"QryPathFormEpItemMR",
+					aPathFormEpItemDr:obj.ItemRowData.ID
+				},
+				onSelect:function(rowIndex,rowData){
+					if (rowIndex>-1){
+						var p = obj.mrList.getPanel();
+						p.find("#editIcon").linkbutton("enable",false);
+						p.find("#delIcon").linkbutton("enable",false);
+					}
+				},
+				onClickRow: function(rowIndex,rowData){			
+					if (obj.editIndex!=rowIndex) {
+						if (obj.endEditing()){
+							$('#mrList').datagrid('selectRow', rowIndex)
+									.datagrid('beginEdit', rowIndex);
+							obj.editIndex = rowIndex;
+							obj.modifyBeforeRow = $.extend({},$('#mrList').datagrid('getRows')[obj.editIndex]);
+						} else {					
+							$('#mrList').datagrid('selectRow', obj.editIndex);
+							obj.editIndex = null;
+						}
+					}	
+				},
+				columns:[[			
+					{field:'MRTypeID',title:'病历类型',sortable:true,width:300
+					 ,formatter:function(value,row){
+							return row.MRTypeDrDesc;
+					  }
+					 ,editor:{
+							type:'combobox',
+							options:{						
+								url:$URL+"?ClassName=DHCMA.Util.BTS.DictionarySrv&QueryName=QryDictByType&aTypeCode=CPWFormMRType&ResultSetType=array",
+								valueField:'BTID',
+								textField:'BTDesc',
+								required:true
+								,onChange: function (newValue, oldValue) {
+									//alert(newValue);
+								}
+							}
+					}},
+					{field:'MRTempID',title:'模板ID',sortable:true,width:150,editor:'text'},
+					{field:'MRIsActiveD',title:'是否有效',width:80,
+					editor:{type:'switchbox',options:{onClass:'primary',offClass:'gray',onText:'是',offText:'否'}}}
+				]],	
+				singleSelect:true,
+				toolbar:'#tb'
+			});		
+			
+		}
+		else
+		{	
+			obj.mrList.load({
+				ClassName:"DHCMA.CPW.BTS.PathFormEpSrv",
+				QueryName:"QryPathFormEpItemMR",
+				aPathFormEpItemDr:obj.ItemRowData.ID
+			}); 
+		}		
+	};
+	obj.refreshGridAdmit = function()
+	{		
+		var node = obj.selPath;
+		var FormPathDr = node.id.split("-Path")[0];
+		var mastData = $cm({ClassName:"DHCMA.CPW.BT.PathMast",MethodName:"GetObjById",aId:FormPathDr},false);
+		$("#txtPathCode").val(mastData.BTCode);
+		$("#txtPathDesc").val(mastData.BTDesc);
+		
+		$('#cboTypeDr').combobox('setValue',mastData.BTTypeDr);
+		$('#cboEntityDr').combobox('setValue',mastData.BTEntityDr);
+		$('#cboPCEntityDr').combobox('setValue',mastData.BTPCEntityDr);
+		$('#cboQCEntityDr').combobox('setValue',mastData.BTQCEntityDr);
+		$("#pathMastID").val(FormPathDr);
+		if(mastData.BTIsActive=="1"){
+			$("#txtIsActive").switchbox('setValue',true);
+		}
+		else{
+			$("#txtIsActive").switchbox('setValue',false);
+		}
+		var FormStr=$m({ClassName:"DHCMA.CPW.BTS.PathFormSrv",MethodName:"GetFormByMast",aMastID:FormPathDr},false);
+		
+		obj.lastVerID=FormStr.split("^")[0];	//有发布的，则是发布版本ID；无发布的，则是最新版本ID
+		var FormData = $cm({ClassName:"DHCMA.CPW.BT.PathForm",MethodName:"GetObjById",aId:obj.lastVerID},false);
+		$("#txtFormCost").val(FormData.FormCost);
+		$("#txtFormDays").val(FormData.FormDays);
+		
+		//第二层路径ui初始化
+		if((obj.admitList==undefined)||(obj.admitList==null))
+		{		
+
+			obj.btnAddMrg=$HUI.linkbutton("#addIconMrg",{
+				iconCls:'icon-add',
+				plain:true,
+				text:'新增'
+			});
+			obj.btnEditMrg=$HUI.linkbutton("#editIconMrg",{
+				iconCls:'icon-write-order',
+				plain:true,
+				text:'保存'
+			});
+			obj.btnDelMrg=$HUI.linkbutton("#delIconMrg",{
+				iconCls:'icon-cancel',
+				plain:true,
+				text:'删除'
+			});
+			obj.admitList = $HUI.datagrid("#admitList",{
+				url:$URL,
+				queryParams:{
+					ClassName:"DHCMA.CPW.BTS.PathAdmitSrv",
+					QueryName:"QryPathAdmit",
+					aBTPathDr:$("#pathMastID").val()
+				},
+				onSelect:function(rowIndex,rowData){
+					if (rowIndex>-1){
+						if(rowData['ID']==obj.admRecRowID){
+							obj.admitList.clearSelections();
+							obj.admRecRowID=""
+						}else{
+							obj.admRecRowID=rowData['ID'];
+							//var LastRowIndex=$('#admitList').datagrid("getRowIndex",obj.admEditRow);
+							//$('#admitList').datagrid("endEdit", LastRowIndex);
+						}
+					}
+				},
+				onDblClickRow: function(rowIndex,rowData){
+
+						$('#admitList').datagrid('selectRow', rowIndex)
+						.datagrid('beginEdit', rowIndex);
+						obj.LastAdmIndex=rowIndex;
+					
+				},
+				onAfterEdit: function (rowIndex, rowData, changes) {
+					obj.saveToSrvMrg(rowData);
+					$('#admitList').datagrid('reload');
+					obj.LastAdmIndex=""
+					obj.isAdded=0;
+				},
+				columns:[[			
+					{field:'BTTypeDr',title:'类型',sortable:true,width:100
+					 ,formatter:function(value,row){
+							return row.BTTypeDrDesc;
+					  }
+					 ,editor:{
+							type:'combobox',
+							options:{						
+								url:$URL+"?ClassName=DHCMA.Util.BTS.DictionarySrv&QueryName=QryDictByType&aTypeCode=CPWAdmDiagType&ResultSetType=array",
+								valueField:'BTID',
+								textField:'BTDesc',
+								required:true
+							}
+					}},
+					{field:'BTICD10',title:'准入诊断',sortable:true,width:140,editor:'text'},
+					{field:'BTICDKeys',title:'诊断关键词',sortable:true,width:150,editor:'text'},			
+					{field:'BTOperICD',title:'准入手术',sortable:true,width:100
+					 ,editor:'text'},
+					{field:'BTOperKeys',title:'手术关键词',sortable:true,width:100
+					 ,editor:'text'},
+					{field:'BTIsICDAcc',title:'中西诊断组合',width:100,
+					editor:{type:'switchbox',options:{onClass:'primary',offClass:'gray',onText:'是',offText:'否'}}}
+					,
+					{field:'BTIsOperAcc',title:'诊断手术组合',width:100,
+					editor:{type:'switchbox',options:{onClass:'primary',offClass:'gray',onText:'是',offText:'否'}}}
+					,
+					{field:'BTIsActive',title:'是否有效',width:70,
+					editor:{type:'switchbox',options:{onClass:'primary',offClass:'gray',onText:'是',offText:'否'}}}
+				]],
+				singleSelect:true,
+				toolbar:'#tbMrg'
+			});
+		}
+		else
+		{
+			//重新加载datagrid的数据  
+			obj.admitList.load({
+				ClassName:"DHCMA.CPW.BTS.PathAdmitSrv",
+				QueryName:"QryPathAdmit",
+				aBTPathDr:$("#pathMastID").val() 
+			});
+		}
+	};
+	obj.treeClick = function(node)
+	{
+		var idVal = node.id;
+		obj.selPath = node;
+		if(idVal.indexOf("Ver")>-1)
+		{
+			//第三层 表单层选中
+			$("#workS").hide();
+			$("#workP").hide();
+			$("#workD").show();
+			var valArr = idVal.split("-");
+			obj.pathInfoTitle(valArr[0]);
+			obj.selVerID = valArr[0];
+			$('#btnPathEdit').linkbutton({  
+				text:"路径信息维护"
+			}); 
+			obj.epRefresh();
+		}
+		else if(idVal.indexOf("Path")>-1)
+		{
+			//第二层 路径
+			$("#workP").show();
+			$("#workS").hide();
+			$("#workD").hide();
+			obj.refreshGridAdmit();
+			obj.selVerID = "";
+		}
+		else
+		{
+			//第一层
+			$("#workS").show();
+			$("#workP").hide();
+			$("#workD").hide();
+			obj.selVerID = "";
+		}
+		$('#treeType').tree('toggle', node.target);	
+	};
+	
+	//提交后台保存
+	obj.saveToSrvMrg=function(rowData)
+	{
+		obj.modifyAfterRowMrg=rowData
+		var ID = obj.modifyAfterRowMrg.ID;
+		//$.form.GetValue("txtDicCode")
+		var BTPathDr = obj.modifyAfterRowMrg.BTPathDr;
+		var BTTypeDr = obj.modifyAfterRowMrg.BTTypeDr;
+		var BTICD10  =obj.modifyAfterRowMrg.BTICD10;
+		var BTICDKeys   = obj.modifyAfterRowMrg.BTICDKeys;
+		var BTOperICD = obj.modifyAfterRowMrg.BTOperICD;
+		var BTOperKeys = obj.modifyAfterRowMrg.BTOperKeys;
+		var BTIsICDAcc = obj.modifyAfterRowMrg.BTIsICDAcc;
+		var BTIsOperAcc = obj.modifyAfterRowMrg.BTIsOperAcc;
+		var BTIsActive = obj.modifyAfterRowMrg.BTIsActive;
+		
+		BTIsICDAcc = (BTIsICDAcc =="是"?"1":"0");
+		BTIsOperAcc = (BTIsOperAcc =="是"?"1":"0");
+		BTIsActive = (BTIsActive =="是"?"1":"0");
+		if(BTTypeDr=="")
+		{
+			$.messager.alert("提示","诊断类型不可以为空！");
+			return false;
+		}
+		
+		var InputStr = ID;
+		InputStr += "^" + BTPathDr;
+		InputStr += "^" + BTTypeDr;
+		InputStr += "^" + BTICD10;
+		InputStr += "^" + BTICDKeys;
+		InputStr += "^" + BTOperICD;
+		InputStr += "^" + BTOperKeys;
+		InputStr += "^" + BTIsICDAcc;
+		InputStr += "^" + BTIsOperAcc;
+		InputStr += "^" + BTIsActive;
+		InputStr += "^";
+		InputStr += "^";
+		InputStr += "^" + session['DHCMA.USERID'];
+		//同步调用
+		var data = $.cm({ClassName:"DHCMA.CPW.BT.PathAdmit",MethodName:"Update",
+				"aInputStr":InputStr,
+				"aSeparete":"^"
+			},false);
+		if(parseInt(data)<0){
+			$.messager.popover({msg:"保存失败",type:'error',style:{top:250,left:600}});
+			return false;
+		}else{
+			$.messager.popover({msg:"保存成功",type:'success',style:{top:250,left:600}});			
+		}
+		return true;
+	};
+	//删除按钮处理事件
+	obj.delHandlerMrg= function(){
+		if (obj.admRecRowID!=""){			
+			$.messager.confirm("确认","确定删除?",function(r){
+				if(r){					
+					$.cm({ClassName:'DHCMA.CPW.BT.PathAdmit',MethodName:'DeleteById','aId':obj.admRecRowID},function(data){
+						//debugger;
+						if(parseInt(data)<0){
+							$.messager.alert("提示","失败！");  //data.msg
+						}else{							
+							//重新加载datagrid的数据  
+							obj.admitList.load({
+								ClassName:"DHCMA.CPW.BTS.PathAdmitSrv",
+								QueryName:"QryPathAdmit",
+								aBTPathDr:$("#pathMastID").val() 
+							}); 
+						}
+					});
+				}
+			});
+		}else{			
+			$.messager.alert("提示","请先选中行，再执行删除操作！")
+			}
+	};
+}

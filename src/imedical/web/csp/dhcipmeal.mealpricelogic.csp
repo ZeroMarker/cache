@@ -1,0 +1,42 @@
+/* 
+ * FileName:dhcipmeal.mealpricelogic.csp
+ * User: yyx
+ * Date: 2010-5-6
+ * Function: 调价
+ * Description: 调价
+*/
+<script language="Cache" runat="SERVER">
+	s act=$g(%request.Data("act",1))  
+	s start=+$g(%request.Data("start",1))  ;开始行
+	s limit=+$g(%request.Data("limit",1))  ;限制行
+	
+	
+	i act="insert" d
+	.s itmPriceRowid=$g(%request.Data("rowid",1))
+	.s miaitmrowid = $p(itmPriceRowid,"||",1)
+	.s price = $g(%request.Data("txtItmPrice",1))
+	.s startdate=$g(%request.Data("itmPriceStDate",1))
+	.s guser=$g(%request.Data("guser",1))
+	.s tmp = miaitmrowid_"^"_price_"^"_startdate_"^"_""_"^"_guser
+	.s rtn = ##class(DHCBILL.DHCIPMealItmPrice).Insert(tmp)
+	.i rtn=0 w "{success:true,msg:'保存成功'}"
+	.;e  w "{failure:true,msg:'保存失败'}"
+	
+	i act="update" d
+	.s rowid = $g(%request.Data("rowid",1))
+	.s miaitmrowid = $g(%request.Data("miaitmrowid",1))
+	.s price = $g(%request.Data("price",1))
+	.s guser=$g(%request.Data("guser",1))
+	.s tmp = rowid_"^"_miaitmrowid_"^"_alias_"^"_guser
+	.s rtn = ##class(DHCBILL.DHCIPMealItm).Update(tmp)
+	.i rtn=0 w "{success:true,msg:'修改成功'}"
+	.;e  w "{failure:true,msg:'修改失败'}"
+	
+	i act="query" d
+	.s miaitmrowid = $g(%request.Data("miaitmrowid",1))
+	.;w "{totalCount:'5',results:[{'Code':'0002','Desc':'desc','Remark':'sssssss','PYM':'desc','Comment1':'','Comment2':'','RowID':'2'},{'Code':'00002','Desc':'早餐','Remark':'sssss','PYM':'zc','Comment1':'','Comment2':'','RowID':'3'}]}"
+	.;s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSON2(result)
+	.;w ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealItmPrice","FindMealPrice",0,0,10)
+	.s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealItmPrice","FindMealPrice",start,limit,miaitmrowid)
+	.w jsonStr
+</script>

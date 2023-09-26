@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--opdoc.outpatientlist.csp HISUI门诊病人列表--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard"/>
+<link rel="stylesheet" href="../scripts/dhcdoc/ipdoc/jquery.webui-popover.min.css">
+<style>
+
+	.a-oplist-unselected{
+		position:relative;
+		background:0 0;
+		border-radius: 4px;
+		color: #ff4401;
+		/*display:block;
+		padding:3px 10px 7px 10px;*/
+	}
+	
+	.a-oplist-selected,.a-oplist-unselected:hover{
+		background:#ffe9db;
+		color: #ff4401;
+		border-radius: 4px;
+	}
+	#RegQue{
+		margin-left:10px;
+	}
+	ul>li>a:focus:not(.a-close), ul>li>a:hover:not(.a-close){
+		text-decoration:none;
+		background-color:#eee;
+		cursor:pointer;
+	}
+	a:focus,a:hover{
+		cursor:pointer;
+	}
+	.editcls{
+		color:blue;
+		
+	}
+	.a-close{
+		position:absolute;
+		top:11px;
+		right:20px ;
+	}
+	.a-close-li{
+		position:relative;
+		padding-top:2px;
+		
+	}
+	#toolbarPanel div{
+		display:inline-block;
+	}
+	.global-opdoc-verline{
+		border-right:1px solid #cbcbcb;
+		margin:0 3px;
+		padding:0 3px;
+	}
+	.row-oplist-called{
+		background-color: #21ba45 !important;
+		color:#fff !important;
+	}
+	.row-oplist-recalled{
+		background-color: #d2eafe  !important;
+		color:#000 !important;
+	}
+	.row-oplist-skip{
+		background-color: #ff7373  !important;
+		color:#fff !important;
+	}
+	.webui-popover.in{
+		background-color:#4C4C4C;
+		opacity:0.9;
+	}
+	.win-oplist-header{
+		
+	}
+	#CardTypeNew{
+		width:100px;
+	}
+	#DateFrom,#DateTo{
+		width:115px;
+	}
+	.disabled{
+		color:#A2A2A2;
+	}
+	.disabled:hover .l-btn-text{
+		color:#A2A2A2 !important;
+	}
+	.webui-popover.left>.webui-arrow, .webui-popover.left-top>.webui-arrow, .webui-popover.left-bottom>.webui-arrow
+	{
+		border-left-color:#5E5E5E;
+	}
+	.webui-popover.left>.webui-arrow:after, .webui-popover.left-top>.webui-arrow:after, .webui-popover.left-bottom>.webui-arrow:after{
+		border-left-color:#5E5E5E;
+	}
+	.dashline-div{
+		height:0px;
+		border-top:1px dashed #ccc;
+	}
+	.fixedh2-div{
+		height: 30px;
+		/*line-height: 50px*/
+		padding:5px 0;
+	}
+	.fixedh3-div{
+		height: 30px;
+		/*line-height: 30px*/
+		padding:5px 10px;
+	}
+	.toggle-btn{
+	color:#40a2de;
+	text-decoration:underline;	
+	padding-right:13px;
+	background:url(../images/fa-angle-double-down_40a2de_12.png) no-repeat center right;
+    line-height: 13px;
+    display: inline-block;
+    border-bottom:1px solid #40a2de;
+    cursor:pointer;
+}
+.toggle-btn.expanded{
+	background-image:url(../images/fa-angle-double-up_40a2de_12.png);
+}
+.webui-popover{
+	max-height:300px;
+}
+</style>
+<Server>
+w "<SCRIPT Language=""Javascript"">"
+	d ##class(web.DHCDocOrderListCommon).GetMessageArray("oupatientlist.csp",%session.Get("LOGON.LANGID"))
+w "</SCRIPT>"
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+s sysDateFormat=##class("websys.Conversions").DateFormat()
+s openWinName=%request.Get("openWinName")
+s UserRowID=%session.Get("LOGON.USERID")
+s GroupRowID=%session.Get("LOGON.GROUPID")
+s DocDr=##Class(web.SSUser).GetDefaultCareProvider(UserRowID)
+s OPDefDisplayMoreContions=##class(web.DHCDocConfig).GetConfigNode1("OPDefDisplayMoreContions",UserRowID_"Z"_GroupRowID)
+if (+OPDefDisplayMoreContions=0){
+	s OPDefDisplayMoreContions=##class(web.DHCDocConfig).GetConfigNode1("OPDefDisplayMoreContions",GroupRowID)
+}
+</Server>
+</head>
+<body>
+	<csp:Include Page="opdoc.outpatientlist.show.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			sysDateFormat:"#(sysDateFormat)#",
+			openWinName:"#(openWinName)#",
+			DocDr:"#(DocDr)#",
+			OPDefDisplayMoreContions:"#(OPDefDisplayMoreContions)#"
+		};
+	</SCRIPT>
+	<!--script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script-->
+	<script src="../scripts/dhcdoc/ipdoc/jquery.webui-popover.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OutPatientList.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<!--readcard control-->
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+</body>
+</html>

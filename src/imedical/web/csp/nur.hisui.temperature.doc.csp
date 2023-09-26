@@ -1,0 +1,364 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- 医生站预览单个人体温单 -->
+<!-- nur.hisui.temperature.doc.csp -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>
+            <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+        </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <HISUI />
+        <NURHISUI />
+        <script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" ></script> 
+        <!--script type="text/javascript" src="../scripts/nurse/hisui/nur.orderexcute.js" charset='gbk'></script-->
+        <style>
+            .panel-icon, .panel-tool{
+                top: 1px;
+                margin-top: 0;
+                height: auto;
+            }
+            .panel-tool a{
+                margin-top: 7px;	
+            }
+        </style>
+    </head>
+    <ADDINS require="PrintChart"/>
+    <server>
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
+	if EpisodeID'="" {
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+		Set Page=$g(%request.Data("page",1))
+	}
+	s dllstr="../addins/plugin/Temperature/PrintChart.cab"
+	w "<OBJECT id=""PrintChartCAB"" style=""display:none"" classid=""clsid:AEC49948-438A-40BF-8306-DC4B72EEA892"" codebase="""_dllstr_"""  VIEWASTEXT></OBJECT>"
+   </server>
+    <body class="hisui-layout">
+        <div data-options="region:'center',border:true" style="border:0px;padding:5px 0 10px 0;">
+            <div class="hisui-panel" title="预览"  data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:'#chartToolBar'">
+                <div align="center">
+                	<img id="iframePicture" name="iframePicture" style="width:75%; height:75%;"  border='0' src="../../../dhcmg/webchart/IndexForm.aspx" onload="disLoad"/>
+                </div>
+                <!--iframe id="iframePicture" name="iframePicture" src="../../../dhcmg/webchart/IndexForm.aspx" width="100%" min-height="500px" height="98%" align="absmiddle" frameborder="0"></iframe-->
+            </div>
+            <div id="chartToolBar">
+                <!--input id="pageBox" class="hisui-combobox" name="state" style="width:80px;" data-options="enterNullValueClear:false,blurValidValue:true"></input--> 
+                <sapn title="跳转" class="hisui-tooltip" data-options="position:'left'">
+                	<input id="pageInput" name="pageInput" type="number" class="hisui-triggerbox textbox" style="width:60px;" data-options="icon:'icon-paper-arrow-up',handler:jumpPage"/>
+                </span>
+                <span id="totalPageSpan" style="margin:0 10px;color:red"></span>
+                <a id="viewRefreshBtn" title="刷新预览" href="javascript:void(0)" class="hisui-tooltip icon-reload" data-options="position:'bottom'"></a>
+                <a id="viewAddBtn" title="预览界面放大" href="javascript:void(0)" class="hisui-tooltip icon-add" data-options="position:'bottom'"></a>
+                <a id="viewMinusBtn" title="预览界面缩小" href="javascript:void(0)" class="hisui-tooltip icon-minus" data-options="position:'bottom'"></a>
+                <a id="firstPageBtn" title="首页" href="javascript:void(0)" class="hisui-tooltip icon-trian-recta-left" data-options="position:'bottom'"></a>
+                <a id="prePageBtn" title="上一页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-up" data-options="position:'bottom'"></a>
+                <a id="nextPageBtn" title="下一页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-down" data-options="position:'bottom'"></a>
+                <a id="lastPageBtn" title="末页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-trian-recta-right" data-options="position:'bottom'"></a>
+                <a id="printAllPageBtn" title="预览打印全部" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-print" data-options="position:'bottom'"></a>
+                <a id="printCurrPageBtn" title="预览打印当前页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-reprint-inv" data-options="position:'bottom'"></a>
+                <a id="printOutAllPageBtn" title="直接打印全部" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-print-arr-bo" data-options="position:'bottom'"></a>
+            </div>
+        </div>
+          
+        <script type="text/javascript">
+            var episodeID="#(EpisodeID)#";
+            var userID = session['LOGON.USERID'];
+            var locID = session['LOGON.CTLOCID'];
+            var webIP=window.location.href.split('/imedical/web')[0];
+            var page="#(Page)#"==""?1:"#(Page)#";
+            var totalPage="";
+            var iframeUrl="";
+            var currPageBase64="";
+            var rate=16;  //图片清晰度
+            var fontRate=4;
+            $.parser.onComplete = function(context){
+                if (!!context) return ;
+                init();
+            }
+            function init(){
+	            loading();
+                var frm = dhcsys_getmenuform();
+                if(frm){
+                    episodeID=frm.EpisodeID.value;
+                }
+                initPageBox(episodeID);
+                initEvent();
+            }
+            function initEvent(){	 
+                $('#viewAddBtn').bind('click', viewAddBtnClick);  
+                $('#viewMinusBtn').bind('click', viewMinusBtnClick);  	
+                $('#firstPageBtn').bind('click', firstPageBtnClick); 	 
+                $('#prePageBtn').bind('click', prePageBtnClick); 
+                $('#nextPageBtn').bind('click', nextPageBtnClick);  
+                $('#lastPageBtn').bind('click', lastPageBtnClick);  
+                $('#printAllPageBtn').bind('click', printAllPageBtnClick);  
+                $('#printCurrPageBtn').bind('click', printCurrPageBtnClick);
+                $('#viewRefreshBtn').bind('click', hrefRefresh);    
+                $('#printOutAllPageBtn').bind('click', printOutAllPageBtnClick);            	
+            }
+            function initPageBox(episodeId){
+                $cm({
+                        ClassName:"Nur.NIS.Service.Chart.DAO.Chart",
+                        MethodName:"getChartPages",
+                        EpisodeID: episodeId
+                    },function(pageNum){
+                        totalPage=pageNum;
+                        $("#totalPageSpan").html("共"+pageNum+"页");
+                        $("#pageInput").triggerbox('setValue',pageNum);
+                        page=pageNum;			
+                        hrefRefresh(true);
+                    });
+            }
+		    function switchPatient(rowData){
+				var patientId=rowData["PatientID"]
+				var adm=rowData["EpisodeID"]
+				var mradm=rowData["mradm"]
+            	//function switchPatient(patientId,adm,mradm,age){
+                //$("#InpatListDiv").data("AutoOpen",0);
+                episodeID=adm;
+                setEprMenuForm(adm,patientId,mradm,"");
+                //console.log(episodeId,patientId,mradm,"");
+                //hrefRefresh();
+                updatePatientInfo(rowData);
+                initPageBox(adm)
+            }
+            function hrefRefresh(ifLoad){
+                //var frm = dhcsys_getmenuform();
+               // if(frm){
+                    // episodeID=frm.EpisodeID.value;
+                    iframeUrl="../../../dhcmg/webchart/IndexForm.aspx?chartType=1&episodeID="+episodeID
+                        +"&webIP="+webIP+"&userID="+userID+"&locID="+locID+"&v="+new Date().getTime()+"&rate="+rate+"&fontRate="+fontRate;
+                    document.getElementById('iframePicture').src=iframeUrl+"&page="+page+"&chartID="; 
+                    if(ifLoad){
+                    	loading();
+                    }
+                    document.getElementById('iframePicture').onload =function() {
+            			disLoad();
+        			}
+                    //document.getElementById('iframePicture').onload=resizePicture(1);                   
+               // }
+            }
+            function setEprMenuForm(adm,papmi,mradm,canGiveBirth){
+                var frm = dhcsys_getmenuform();
+                if((frm) &&(frm.EpisodeID.value != adm)){
+                    frm.EpisodeID.value = adm;
+                    frm.PatientID.value = papmi;
+                    frm.mradm.value = mradm;
+                }
+            }
+            function printCurrPageBtnClick(){
+	            if(!!window.ActiveXObject || "ActiveXObject" in window){
+			        PrintChartCAB.printPreview("1", episodeID, page, page, webIP, userID,  locID, "");
+	           		return ;
+		        }
+		        else{
+			        if ("undefined"==typeof EnableLocalWeb || 0 ==EnableLocalWeb ){		            	            
+						importClodop();
+		                LODOP=getCLodop();  
+		                LODOP.PRINT_INIT("体温单打印");
+		                LODOP.SET_PRINT_PAGESIZE(1, 0, 0, 'A4');
+				        // LODOP.ADD_PRINT_IMAGE(0, 0, 6300, 8910, "<img border='0' src='"+document.getElementById('iframePicture').src+'&ifPrint=true'+"'/>")
+				        //var currPageBase64="data:image/gif;base64,"+document.getElementById('base64Page'+page).innerText;
+				        LODOP.ADD_PRINT_IMAGE(0, 0, "100%", "100%", currPageBase64)
+				        LODOP.SET_PRINT_STYLEA(0,"Stretch",2);
+				        //LODOP.SET_PRINT_STYLEA(0,"HtmWaitMilSecs",100)//设置上面打印项延迟
+				        LODOP.PREVIEW();
+					}else{		
+						//DoctorSheet.TopMost = true;
+						PrintChart.notReturn=1
+						PrintChart.printPreview("1", episodeID, page, page, webIP, userID,  locID, ""); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+						//window.close();
+					}
+			    }	      		
+            }
+            function printAllPageBtnClick(){
+                printAll(true);
+            }
+            function printOutAllPageBtnClick(){
+	            printAll(false);
+	        }
+	        function printAll(ifPreview){
+		        if(!!window.ActiveXObject || "ActiveXObject" in window){
+			        if(ifPreview){
+			           PrintChartCAB.printPreview("1", episodeID,"1", totalPage,  webIP, userID,  locID, "");
+	            	   return ;
+			        }
+			        else{
+				       PrintChartCAB.printOut("1", episodeID,"1", totalPage,  webIP, userID,  locID, "");
+	            	   return ;
+				    }
+		        }
+		        else{
+			        if ("undefined"==typeof EnableLocalWeb || 0 ==EnableLocalWeb ){
+				        if(ifPreview){
+					        importClodop();
+		                	LODOP=getCLodop();  
+					    }else{
+				        	LODOP=getLodop();  
+					    }
+		                LODOP.PRINT_INIT("体温单打印");
+		                //LODOP.SET_PRINT_PAGESIZE(1, 0, 0, 'A4')
+		                iframeUrl=document.getElementById('iframePicture').src.split('&page=')[0]
+		                for (i=0;i<totalPage;i++)
+		                {
+		                    var pageNum=i+1;
+		                    var imgUrl=iframeUrl+"&page="+pageNum+"&chartID="+"&ifPrint=true";
+		                    //LODOP.ADD_PRINT_URL(0,0,"100%","100%",iframeUrl+"&page="+pageNum); //document.getElementById('iframePicture').src);
+		                    LODOP.ADD_PRINT_IMAGE(0, 0, 210*40, 297*40, "<img border='0' src='"+imgUrl+"'/>")
+		                    LODOP.SET_PRINT_STYLEA(0,"HtmWaitMilSecs",5000)//设置上面打印项延迟
+		                    LODOP.NewPage();
+		                }
+		                if(ifPreview){
+		                	LODOP.PREVIEW();
+		                }
+		                else{
+			            	LODOP.PRINT();
+			            }		
+					}else{		
+						//DoctorSheet.TopMost = true;
+						PrintChart.notReturn=1
+						if(ifPreview){
+		                	PrintChart.printPreview("1", episodeID, "1", totalPage, webIP, userID,  locID, ""); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+		                }
+		                else{
+			            	PrintChart.printOut("1", episodeID, "1", totalPage, webIP, userID,  locID, ""); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+			            }						
+						//window.close();
+					}
+		        }
+				
+		    }
+            function jumpPage(){
+                page=$("#pageInput").triggerbox('getValue');
+                if(page>totalPage){
+                    $.messager.popover({msg: '共'+totalPage+'页，无法跳转到'+page+'页^_^',type:'alert'});
+                    return;
+                }
+                hrefRefresh(true);
+            }
+            function firstPageBtnClick(){
+                page=1;
+                $("#pageInput").triggerbox('setValue',page);
+                hrefRefresh(true);
+            }
+            function lastPageBtnClick(){
+                page=totalPage;
+                $("#pageInput").triggerbox('setValue',page);
+                hrefRefresh(true);
+            }
+            function prePageBtnClick(){
+                if(page>1){
+                    page=page-1
+                }
+                else{
+                    $.messager.popover({msg: '已经是首页，无法往前咯^_^',type:'alert'});
+                    return;
+                }
+                $("#pageInput").triggerbox('setValue',page);
+                hrefRefresh(true);
+            }
+            function nextPageBtnClick(){
+                if(page<totalPage){page=page+1}
+                else{
+                    $.messager.popover({msg: '已经是最后一页，无法往后咯^_^',type:'alert'});
+                    return;
+                }
+                $("#pageInput").triggerbox('setValue',page);
+                hrefRefresh(true);
+            }
+            function viewAddBtnClick(){	
+                resizePicture(1.05);
+                
+            }
+            function viewMinusBtnClick(){
+                resizePicture(0.95);
+            }
+
+            function resizePicture(percent){
+                //var iframeWidth=iframePicture.innerWidth;
+                //var iframePage=iframePicture.document；
+                //iframePage.getElementsByTagName("img")[0];
+                var chartImg=document.getElementById('iframePicture');
+                if(chartImg){
+	                var str=chartImg.style.width.replace("%","");
+	                chartImg.style.width=str*percent+"%";
+    				chartImg.style.height=str*percent+"%";
+	                //chartImg.height=chartImg.height*percent;
+	                //chartImg.width=chartImg.width*percent;
+	                //var marginLeft=(iframeWidth-chartImg.width)/2-10;
+	                //chartImg.style.marginLeft=marginLeft;
+                }
+            }
+            
+            //弹出加载层
+			function loading() {
+				$.messager.progress({
+					title: "提示",
+					msg: '正在绘制图片',
+					text: '请稍微耐心等待一下下哦....'
+				});
+			}
+			//取消加载层  
+			function disLoad() {
+				$.messager.progress("close");
+				//getImageBase64();
+				//currPageBase64=image2Base64();
+				//console.log(image2Base64());
+			}  
+			
+			function importClodop(){
+				var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+				var oscript = document.createElement("script");
+				oscript.src ="http://localhost:8000/CLodopfuncs.js?priority=1";
+				head.insertBefore( oscript,head.firstChild );
+
+				//引用双端口(8000和18000）避免其中某个被占用：
+				oscript = document.createElement("script");
+				oscript.src ="http://localhost:18000/CLodopfuncs.js?priority=0";
+				head.insertBefore( oscript,head.firstChild );
+			}
+			function image2Base64() {
+				var img=document.getElementById('iframePicture');
+			    var canvas = document.createElement("canvas");
+			    canvas.width = img.width;
+			    canvas.height = img.height;
+			    var ctx = canvas.getContext("2d");
+			    ctx.drawImage(img, 0, 0, img.width, img.height);
+			    var dataURL = canvas.toDataURL("image/gif");
+			    return dataURL;
+			}
+			function getImageBase64() {
+				var d=document.getElementById('pagesBase64');				
+				var postUrl="../../../dhcmg/webchart/GetBase64.ashx?chartType=1&episodeID="+episodeID
+                        +"&webIP="+webIP+"&userID="+userID+"&locID="+locID+"&v="+new Date().getTime()+"&page="+page+"&chartID=&ifPrint=true";
+				$.ajax({
+					url:postUrl,
+					type:"GET",	
+					dataType:"text",
+					success:function(data){						
+						currPageBase64=data;
+						var storage=window.localStorage;
+			            storage.setItem("base64Page"+page,data);
+						//console.log(data);//返回的json数据
+						var pageBase64=document.createElement("div");
+						pageBase64.id="base64Page"+page;
+						pageBase64.innerText=data;
+						d.appendChild(pageBase64);
+					},
+					error:function(err){
+						console.log(err.responseText);//查看错误信息
+					}
+				})
+			}
+        </script>
+    </body>
+</html>

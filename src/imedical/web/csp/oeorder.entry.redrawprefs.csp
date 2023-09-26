@@ -1,0 +1,143 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<BODY>
+<!--
+	redraws the order favourites on the order entry screen (oeorder.custom.csp)
+-->
+
+<SCRIPT language="Javascript" src="../scripts/websys.listboxes.js"></SCRIPT>
+<SCRIPT language="Javascript">
+</SCRIPT>
+<SCRIPT language="Cache" RUNAT=SERVER>
+            //this screen should only get called now on update of order favourites screen or from AddToFav link on order entry
+            // - not on load of order entry nor on order entry tab select
+            /*
+            s preftab=$g(%request.Data("PREFTAB",1)) ;organise all tabs
+            s orderentrywin=$g(%request.Data("OEWIN",1))
+            s extraitms=##Class(%CSP.Page).UnescapeURL($g(%request.Data("EXTRAPREFITEMS",1))) ;add tab's groupitems
+            i extraitms'="" {d ##Class(epr.PreferencesQuery).websysSaveOETabsUserAdd()}
+            w "<SCR"_"IPT language='Javascript'>"_$c(13,10)
+            w "var mainwin=window.open('','"_orderentrywin_"');",$c(13,10)
+            w "mainwin.DrawPrefs();",$c(13,10)
+            w "if (self==top) window.close();"_$c(13,10)
+            w "</SCR"_"IPT>",$c(13,10)
+            q
+            */
+
+	n orderentrywin,tabidx,preftab,tabgroups,i,rs,name,chartid,extraitms,itemdataDelim,groupitemDelim,tabgroupDelim,EpisodeID,FocusWindowName
+	s EpisodeID=$g(%request.Data("EpisodeID",1))
+	s orderentrywin=$g(%request.Data("OEWIN",1))
+	s FocusWindowName=$g(%request.Data("FocusWindowName",1))
+	//Log 54451 PeterC 19/08/05
+	s formulary=""
+	s formulary=$g(%request.Data("formulary",1))
+	s tabidx=$g(%request.Data("TABIDX",1)) ;organise one tab
+	s preftab=$g(%request.Data("PREFTAB",1)) ;organise all tabs
+	s extraitms=##Class(%CSP.Page).UnescapeURL($g(%request.Data("EXTRAPREFITEMS",1))) ;add tab's groupitems
+	i extraitms'="" d ##Class(epr.PreferencesQuery).websysSaveOETabsUserAdd()
+	d ##Class(epr.PreferencesQuery).GetOEPrefDelims(.itemdataDelim,.groupitemDelim,.tabgroupDelim)
+	s FindDataXTYPE=""
+	s objectType=$g(%request.Data("ObjectType",1))
+	if objectType="" {
+		d ##Class(epr.PreferencesQuery).GetOEPrefTabs()
+		s FindDataXTYPE=$g(%request.Data("XTYPE",1))
+	}else{
+		d ##Class(web.DHCDocOrderCommon).GetOEPrefTabs(objectType)
+	}
+	s chartid=$g(%request.Data("ChartID",1))
+	;w "<BR>"_$zd($h,4)_","_$zt($p($h,",",2))_"CHART:",chartid_"</BR>"_$c(13,10)
+	w "<SCR"_"IPT language='Javascript'>"_$c(13,10)
+	;get the window with the order entry screen where this page was called from
+	w "var mainwin=window.open('','"_orderentrywin_"');",$c(13,10),$c(13,10)
+	if (FindDataXTYPE="L"){
+		w "mainwin.OEPrefChangeHandel('L')",$c(13,10)
+	}
+	if tabidx'="" d
+	. s tabgroups=$g(%request.Data("TABLIST",tabidx))
+	.;w "alert('"_tabgroups_"')",$c(13,10)
+	. s $p(tabgroups,tabgroupDelim,1)="",tabgroups=$e(tabgroups,$l(tabgroupDelim)+1,$l(tabgroups)) ;remove the tabdesc (first piece)
+	. if (tabgroups'="") d
+	. . f i=1:1:5 d
+	. . . s name=##Class(epr.PreferencesQuery).GetOETabGroupName(tabgroups,i)
+	. . . w "var obj=mainwin.document.getElementById('ngroup"_i_"');",$c(13,10)
+	. . . ;w "if (obj) obj.innerHTML='"_$s(name="":"Group"_i,1:$ZCVT(name,"O","JS"))_"';",$c(13,10)
+	. . . w "if (obj) obj.innerHTML='"_$s(name="":"&nbsp",1:$ZCVT(name,"O","JS"))_"';",$c(13,10)
+	. . . w "var lst=mainwin.document.getElementById('group"_i_"');",$c(13,10)
+	. . . w "if (lst) {",$c(13,10)
+	. . . w " ClearAllList(lst);",$c(13,10)
+	. . . ;s rs=##Class(%Library.ResultSet).%New("epr.PreferencesQuery:FindOETabItems")
+	. . . s rs=##Class(%Library.ResultSet).%New("web.DHCDocOrderCommon:FindOETabItems")
+	. . . d rs.Execute(tabgroups,i,1,$g(%session.Data("LOGON.GROUPID")),EpisodeID,formulary)
+	. . . ;f  d  q:'rs.Next()
+	. . . s n=0
+	. . . f  q:'rs.Next()  d
+	. . . . ;w " AddItemSingle(lst,'"_$zcvt(rs.GetDataByName("values"),"O","JS")_"','"_$zcvt(rs.GetDataByName("desc"),"O","JS")_"');"
+	. . . . ;mask by zhouzq 2006.6.14
+	. . . . ;w " mainwin.PrefAddItem('"_i_"','"_$zcvt(rs.GetDataByName("values"),"O","JS")_"','"_$zcvt(rs.GetDataByName("desc"),"O","JS")_"','"_$zcvt(rs.GetDataByName("hasdefault"),"O","JS")_"');"
+	. . . . ;add by zhouzq 
+	. . . . s itemvalue=$zcvt(rs.GetDataByName("values"),"O","JS")
+	. . . . s itemordertype=$p(itemvalue,$C(4),9)
+	. . . . s arcim=$p(itemvalue,$C(4),3)
+	. . . . i itemordertype="R" d
+	. . . . . s RealStock=##Class(web.DHCDocOrderEntry).GetRealStock(EpisodeID,arcim)
+	. . . . e  s RealStock=1
+	. . . . s n=n+1
+	. . . . i n=1 d
+	. . . . .;w "alert('"_arcim_":"_itemordertype_":"_":"_EpisodeID_":"_RealStock_"');",$c(13,10)
+	. . . . w " mainwin.PrefAddItemCustom('"_i_"','"_$zcvt(rs.GetDataByName("values"),"O","JS")_"','"_$zcvt(rs.GetDataByName("desc"),"O","JS")_"','','"_RealStock_"');"
+	. . . . ;end by zhouzq 	. . . d rs.%Close()
+	. . . w "}",$c(13,10),$c(13,10)
+	. . s name=$p($p(tabgroups,tabgroupDelim,6),itemdataDelim,1)
+	. . w "var obj=mainwin.document.getElementById('catID'); obj.value='"_$p($p(tabgroups,tabgroupDelim,6),itemdataDelim,2)_"';",$c(13,10),$c(13,10)
+	. . w "obj=mainwin.document.getElementById('Category');",$c(13,10)
+	. . w "if ((obj)&&(obj.tagName=='INPUT')) {obj.value='"_name_"';} ",$c(13,10)
+	. . w "else if (obj) {obj.innerHTML='"_$s(name="":"&nbsp;",1:name)_"';} "_$c(13,10),$c(13,10)
+	. . s name=$p($p(tabgroups,tabgroupDelim,7),itemdataDelim,1)
+	. . w "obj=mainwin.document.getElementById('subcatID'); obj.value='"_$p($p(tabgroups,tabgroupDelim,7),itemdataDelim,2)_"';",$c(13,10),$c(13,10)
+	. . w "obj=mainwin.document.getElementById('SubCategory');",$c(13,10)
+	. . w "if ((obj)&&(obj.tagName=='INPUT')) {obj.value='"_name_"';} ",$c(13,10)
+	. . w "else if (obj) {obj.innerHTML='"_$s(name="":"&nbsp;",1:name)_"';} "_$c(13,10),$c(13,10)
+	if preftab d
+	. s rs=##Class(%Library.ResultSet).%New("epr.PreferencesQuery:FindOETabList")
+	. d rs.Execute()
+	. w "var obj=mainwin.document.getElementById('preftabs');",$c(13,10)
+	. w "if (obj) {",$c(13,10)
+	. w " obj.innerText='';",$c(13,10)
+	. if $o(%request.Data("TABLIST",""),-1)>1 d
+		..;w " alert(obj.id)",$c(13,10)
+	. . f idx=1:1  q:'rs.Next()  d
+	. . . s desc=rs.GetDataByName("desc")
+	. . . w " obj.innerHTML+=""<SPAN id='TAB"_idx_"' class='PrefTab PrefTab1' onclick=\""RedrawFavourites('"_idx_"');\"">"_$zcvt(desc,"O","JS")_"</SPAN>"";",$c(13,10)
+	. . . //i idx#6=0 w "obj.innerHTML+=""<br></br>""",$c(13,10)
+	. w "}",$c(13,10)
+	. ;w "if (mainwin.currTab) {mainwin.RedrawFavourites(mainwin.currTab,"""_FocusWindowName_""");} else {mainwin.RedrawFavourites(1,"""_FocusWindowName_""");}",$c(13,10)
+	. //修复在有些IE上，医嘱录入--常用模板维护----弹出界面后点击更新后，不能自动关闭模板维护界面
+	. w "if (mainwin.currTab!='') {try{mainwin.RedrawFavourites(mainwin.currTab,"""_FocusWindowName_""");}catch(e){}} else { try{mainwin.RedrawFavourites(1,"""_FocusWindowName_""");}catch(e){}}",$c(13,10)
+	. d rs.%Close()
+	. i chartid w "if (mainwin.parent.frames['oeorder_eprchart']) {mainwin.parent.RedrawEPRChart('"_chartid_"','"_$g(%request.Data("eprChartFrameSize",1))_"');}",$c(13,10)
+	. i 'chartid w "if (mainwin.parent.frames['oeorder_eprchart']) {mainwin.parent.NoEPRChart();}",$c(13,10)
+	. ;i FocusWindowName'="" w "if (mainwin) mainwin.focus();",$c(13,10)
+	. ;i FocusWindowName'="" d
+	. ;. w "var openwin = window.open("""",'"_FocusWindowName_"');",$c(13,10)
+	. ;. w "if (openwin) openwin.focus();",$c(13,10)
+	w "if (self==top) window.close();"_$c(13,10)
+	i FocusWindowName'="",FocusWindowName'="undefined" d
+        . ;Log 59598 - BC - 29-06-2006 : Change statusbar variable (status=) to display the status bar (=yes).
+	. w "var openwin = window.open("""",'"_FocusWindowName_"','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes');",$c(13,10)
+	. w "if (openwin) openwin.focus();",$c(13,10)
+	w "</SCR"_"IPT>",$c(13,10)
+</SCRIPT>
+</BODY>
+</HTML>
+

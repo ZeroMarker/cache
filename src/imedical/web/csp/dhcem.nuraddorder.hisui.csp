@@ -1,0 +1,129 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcem.nuraddorder.hisui.csp 护士补录医嘱hisui版-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script language="Javascript">
+		session['LOGON.CTLOCDESC']="#($p(^CTLOC(%session.Get("LOGON.CTLOCID")),"^",2))#";
+	</script>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/nuraddorder.hisui.css"/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstm/Common/Acc.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/listcomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcapp/layout.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/nuraddorder.hisui.js"></script>
+	<server>
+	  /// 左侧病人医嘱列表
+	  s PatPanelFlag = ##Class(web.DHCAppComPar).GetAppPropValue("DHCEM","LEFTPANEL",%session.Get("LOGON.HOSPID"),%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"))
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var PatPanelFlag = """_$g(PatPanelFlag)_""";"_$c(13,10)
+	  w "</script>"	
+	</server>
+</head>
+<body>
+	<server>
+		//登录时以此取接收科室 
+	 	s RecLocByLogonLocFlag=$P($g(^CTLOC(%session.Get("LOGON.CTLOCID"),"DHC")),"^",1)
+		s episodeid=+%request.Get("EpisodeID")
+		s patientid=$p($g(^PAADM(episodeid)),"^",1)
+		s CardBillCardTypeValue=""
+		s PatDefCardInfo=##class(web.DHCOPAdmReg).GetValidAccMNoCardNo(patientid)
+	 	s PatDefCardNo=$p(PatDefCardInfo,"^",1)
+		s CardBillCardTypeValue=$p(PatDefCardInfo,"^",2,$l(PatDefCardInfo,"^")) 
+		s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+		W "<input type='hidden' id='CardBillCardTypeValue' value='"_CardBillCardTypeValue_"' />"
+		W "<input type='hidden' id='ReadAccExpEncrypt' value='"_ReadAccExpEncrypt_"' />"
+		
+	</server>
+	<script language="Javascript">
+		var RecLocByLogonLocFlag='#(RecLocByLogonLocFlag)#';
+		session['LOGON.CTLOCDESC']="#($p(^CTLOC(%session.Get("LOGON.CTLOCID")),"^",2))#";
+	</script>
+
+	<div id="MainPanel" class="hisui-layout" fit="true">
+		<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style='height:38px;' border="false">
+			<div class="item-label">
+				<div class="pf-patimg">
+					<img id="PatPhoto" src="../scripts/dhcnewpro/images/girl.png">
+				</div>
+				<div class="pf-patbase">
+					<ul class="pf-nav">
+						<li class="pf-nav-item"><span class="pf-nav-title pf-patname"><span id="PatName" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatSex" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatAge" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatNo" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBed" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBill" class="ui-span-m"></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+						<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatDiagDesc" class="ui-span-m"></span></span></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'west',title:'本次就诊医嘱列表',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style='width:600px;'>
+			<div id="dgPatOrdList" toolbar="#tb" border=false></div>
+		</div>
+		<div data-options="region:'center',title:'',headerCls:'panel-header-gray',split:true" border="false" >
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style='height:180px;overflow:hidden;border-top:0;margin-bottom:1px'>
+					<div id="tt-brand-gray" class="hisui-tabs tabs-gray" data-options="onSelect:function(title){TabsOnSelect(title)}"   border="false">   
+						<div title="医嘱套" data-options="closable:false" style="padding:20px;display:none;"></div>
+						<div title="科室模板" data-options="closable:false" style="padding:20px;display:none;"></div>  
+						<div title="个人模板" data-options="closable:false" style="padding:20px;display:none;"></div>
+					</div>
+					<div class="con_div">
+						<span style="margin-left:5px;margin-right:5px;color:#000;">医嘱套</span>
+						<input id="TempCov" style="width:220px;"/>
+						<input id="TempCovCK" class='hisui-checkbox' type="checkbox" data-options="label:'全选',checked:false,onCheckChange:function(event,value){ TempCovCKItem(value);}">	
+					</div>
+					<div class="item_div" style="overflow:auto;">
+						<table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
+		                	<thead>
+		                		<tr style="width:33px">
+		                			<th style="width:40px;" align="left">选择</th>
+		                			<th align="left">名称</th>
+		                			<th style="width:40px;" align="left">数量</th>
+		                			<th style="width:80px;" align="left">单位</th>
+		                			<th style="width:40px;" align="left">选择</th>
+		                			<th align="left">名称</th>
+		                			<th style="width:40px;" align="left">数量</th>
+		                			<th style="width:80px;" align="left">单位</th>
+		                		</tr>
+		                	</thead>
+		                	<tbody></tbody>
+		                </table>
+					</div>
+				</div>
+				<div data-options="region:'center',title:'',headerCls:'panel-header-gray',split:true" border="true" style="margin-top:5px">
+					<div id="dgWriOrdList" ></div>
+				</div>
+				<div data-options="region:'south',title:'',headerCls:'panel-header-gray'" style='height:50px;' >
+					<div class="pt-butttom" style="margin:0 auto;width:60%;">
+						<a href="#" style="border-radius:0" class="hisui-linkbutton btn-red" data-options="iconCls:''" onclick="deleteRow()">删除</a>
+						<a href="#" style="border-radius:0" class="hisui-linkbutton btn-green" data-options="iconCls:''" onclick="insertRow()">增加</a>
+						<a href="#" style="border-radius:0" class="hisui-linkbutton btn-green" data-options="iconCls:''" onclick="saveRow()">提交</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="tb" class="tb_panel">
+    	<label>开始日期</label><input id="StartDate" class="hisui-datebox textbox" style="width:135px">
+    	<label>结束日期</label><input id="EndDate" class="hisui-datebox textbox" style="width:135px">
+    	<input id="ByDate" class='hisui-checkbox' type="checkbox" data-options="label:'按日期',checked:false">
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search-white'" onclick="QryPatOrdList()" style="border-radius:0">查询</a>
+	</div>
+</body>
+</html>

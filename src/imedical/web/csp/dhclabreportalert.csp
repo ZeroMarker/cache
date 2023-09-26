@@ -1,0 +1,77 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</CSP:METHOD>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+
+<SERVER>
+	n EpisodeID,PatientID,PIN,ret
+	Set EpisodeID=%request.Get("EpisodeID")
+	Set PatientID=%request.Get("PatientID")
+	Set (Alert1,Alert2)=0
+	Set Alert1=##class(web.DHCLabReportControl).ReportWarn(EpisodeID)
+	Set Alert2=##class(web.DHCLabReportControl).PreReportWarn(EpisodeID)
+
+	/*
+	s DeleteQuoteID=%request.Get("DeleteQuoteID")
+	s UserCode=%request.Get("UserCode")
+	s PIN=%request.Get("PIN")
+	s ret=""
+	i DeleteQuoteID'="" s ret=##Class(web.ARPatBillBestPlan).DeleteQuote(DeleteQuoteID,UserCode,PIN)
+	i ret'="" {
+		w "<script>"
+ 		w "alert('"_ret_"');"
+ 		w "</script>"
+	}
+	
+	s patid  =$g(%request.Data("PatientID",1))
+	s epid   =$g(%request.Data("EpisodeID",1))
+	s qid    =$g(%request.Data("QuoteID",1))
+	i ret'="" s qid=DeleteQuoteID
+
+	s twkfl=%request.Get("TWKFL")
+	s twkfli=%request.Get("TWKFLI")
+	s context=%request.Get("CONTEXT")
+
+	n link1,link2
+	s (link1,link2)="arpatbill.bestplan.blank.csp"
+
+	i (qid'="") s link1="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.BestPlanList&QuoteID="_qid_"&Sort=A&EpisodeID="_epid_"&CONTEXT="_context
+	i ((epid'="")||(qid'="")) s link2="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.BestPlanSelOrder.List&QuoteID="_qid_"&EpisodeID="_epid_"&CONTEXT="_context
+   */
+</SERVER>
+<!--
+<FRAMESET rows="40%,30%,*"  border="0" scrolling="auto" reSize>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARPatBill.BestPlan&QuoteID=#(qid)#&PatientBanner=1&PatientID=#(patid)#&EpisodeID=#(epid)#&CONTEXT=#(context)#" name="frmBestPlanEntry" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1"> 
+	<frame src=#(link1)# name="frmBestPlanList" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1">
+	<frame src=#(link2)# name="frmSelOrderList" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1">
+
+</FRAMESET>
+-->
+<csp:IF CONDITION='Alert1="1"&Alert2="1"'>
+<frameset rows="50%,*">
+	<frame name="DHCLabWarnReport" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabWarnReport&EpisodeID=#(%request.Get("EpisodeID"))#&PatientID=#(%request.Get("PatientID"))#" frameborder=0> 
+	<frame name="DHCLabPreReport" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabPreReport&EpisodeID=#(%request.Get("EpisodeID"))#&PatientID=#(%request.Get("PatientID"))#" >
+</frameset>
+<csp:else>
+	<csp:If CONDITION='Alert1="1"'>
+		<frameset>
+			<frame name="DHCLabWarnReport" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabWarnReport&EpisodeID=#(%request.Get("EpisodeID"))#&PatientID=#(%request.Get("PatientID"))#" frameborder=0> 
+		</frameset>
+	<csp:else>
+		<frameset>
+			<frame name="DHCLabPreReport" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCLabPreReport&EpisodeID=#(%request.Get("EpisodeID"))#&PatientID=#(%request.Get("PatientID"))#" >
+		</frameset>
+	</csp:if>
+</csp:IF>
+<BODY>
+<TRAK:APPLET>
+</BODY>
+</HTML>

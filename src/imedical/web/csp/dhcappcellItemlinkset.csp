@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<!--dhcappcellItemlinkset.csp HISUI分子病理项目关联设置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+</style>
+<Server>
+s sysDateFormat=##class("websys.Conversions").DateFormat()
+</Server>
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false,collapsible:false" style="height:51px;padding:10px 0 0 10px;">
+			<table ALIGN="left" class="">
+		    	<tr>
+		            <td class="r-label">
+		              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		            </td>
+		            <td>
+		              <input id="_HospList"/>
+		            </td>
+		          </tr>
+		   </table>
+		</div>
+	 	<div data-options="region:'west',split:false,border:false" style="width:400px;padding:10px 0 10px 10px;">
+	  		<div class="hisui-layout" data-options="fit:true,border:false">
+	  			<div data-options="region:'north',split:false,border:false" style="height:85px;">
+	  				<div class="hisui-panel" data-options="title:'项目大类',iconCls:'icon-edit',fit:true,headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" style="border:1px solid #ccc;border-top:0;border-radius:0;">   
+		  				<table class="search-table">
+			            	<tr>
+			            		<td class="r-label">
+			            			<input class="textbox" id="ItemMast"  style="width:253px;"/>
+			            		</td>
+			            		<td>
+			            			<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>
+			            		</td>
+			            	</tr>
+			            </table>
+		            </div>
+	  			</div>
+	  			<div data-options="region:'center',split:false,border:false"> 
+	  				<div class="hisui-panel" data-options="fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">   
+	  					<table id="tabItemMastList"></table>
+	  				</div>
+	  			</div>
+	  		</div>
+	  	</div>   
+	    <div data-options="region:'center',split:false,border:false" style="padding:10px;"> 
+			<div class="hisui-layout" data-options="fit:true,border:false">
+	  			<div data-options="region:'center',split:false,border:false"> 
+	  				<div class="hisui-panel" data-options="title:'分子明细项目',iconCls:'icon-edit',fit:true,headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" style="border:1px solid #ccc;border-top:0;border-radius:0;">   
+	  					<table id="tabItemList"></table>
+	  				</div>
+	  			</div>
+	  		</div>
+	   </div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var PageLogicObj={
+			m_tabItemMastListDataGrid:"",
+			m_tabItemListDataGrid:"",
+		};
+		$(function(){
+			var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+			var hospComp = GenHospComp("Doc_APP_CellItemlinkset",hospStr);
+			hospComp.jdata.options.onSelect = function(){
+				var row=PageLogicObj.m_tabItemMastListDataGrid.datagrid('getSelected');
+				if ((row)&&(row.length!=0)){
+					LoadItemListDataGrid()
+				}
+				//LoadItemListDataGrid()
+			}
+			Init();
+			InitEvent();
+		});
+		function Init(){
+			PageLogicObj.m_tabItemMastListDataGrid=InitItemMastListDataGrid();
+			PageLogicObj.m_tabItemListDataGrid=InitItemListDataGrid();
+		}
+		function InitItemMastListDataGrid(){
+			var Columns=[[ 
+				{field:'RowID',hidden:true,title:''},
+				{field:'Desc',title:'项目大类',width:310},
+		    ]]
+			var ItemMastListDataGrid=$("#tabItemMastList").datagrid({
+				fit : true,
+				width : 'auto',
+				border : false,
+				striped : true,
+				singleSelect : true,
+				fitColumns : true,
+				autoRowHeight : false,
+				loadMsg : '加载中..',  
+				pagination : false,  //是否分页
+				rownumbers : true,  //
+				pageSize: 20,
+				pageList : [20,50,100],
+				idField:'RowID',
+				columns :Columns,
+				//toolbar:toobar,
+				onClickCell:function(index, field,value){
+				},
+				onClickRow:function(rowIndex, rowData){
+					LoadItemListDataGrid();
+				},
+				onBeforeSelect:function(index, row){
+					
+					
+				}
+			}); 
+			return ItemMastListDataGrid;
+		}
+		function LoadtabItemMastListDataGrid(){
+			var ItemID=$HUI.combobox("#ItemMast").getValue();
+			var HospID=$HUI.combogrid('#_HospList').getValue();
+			$.q({
+			    ClassName : "web.DHCAPPCellItemLinkSet",
+			    QueryName : "FindItem",
+			    ItemID:ItemID,
+			    HospID:HospID,
+			    Pagerows:PageLogicObj.m_tabItemMastListDataGrid.datagrid("options").pageSize,rows:99999
+			},function(GridData){
+				PageLogicObj.m_tabItemMastListDataGrid.datagrid("clearSelections").datagrid('loadData',GridData);
+			})
+		}
+		var SelectedRow
+		var ItemListDataGridEditRow
+		function InitItemListDataGrid(){
+			 var toobar = [{
+		            text: '增加',
+		            iconCls: 'icon-add',
+		            handler: function() { 
+		                if (ItemListDataGridEditRow != undefined) {
+		                    return;
+		                }else{
+		                    PageLogicObj.m_tabItemListDataGrid.datagrid("insertRow", {
+		                        index: 0,
+		                        row: {}
+		                    });
+		                    PageLogicObj.m_tabItemListDataGrid.datagrid("beginEdit", 0);
+		                    ItemListDataGridEditRow = 0;
+		                }
+		              
+		            }
+		        },{
+		            text: '删除',
+		            iconCls: 'icon-cancel',
+		            handler: function() {
+		                var rows = PageLogicObj.m_tabItemListDataGrid.datagrid("getSelections");
+		                if (rows.length > 0) {
+		                    $.messager.confirm("提示", "你确定要删除吗?",
+		                    function(r) {
+		                        if (r) {
+			                        var rows = PageLogicObj.m_tabItemListDataGrid.datagrid("getSelections");
+			                        Rowid=rows[0].ItemRowID
+			                        if (Rowid!=""){
+				                        var value=$.m({
+											ClassName:"web.DHCAPPCellItemLinkSet",
+											MethodName:"Delect",
+										   	RowID:Rowid
+										},false);
+										if(value=="0"){
+											$.messager.popover({msg: '删除成功',type:'success'});
+									        LoadItemListDataGrid()	
+										}
+			                        }else{
+										PageLogicObj.m_tabItemListDataGrid.datagrid("selectRow",SelectedRow)
+										PageLogicObj.m_tabItemListDataGrid.datagrid('deleteRow',SelectedRow);
+			                        }
+		                        }
+		                    });
+		                } else {
+		                    $.messager.alert("提示", "请选择要删除的行", "error");
+		                }
+		            }
+		        },{
+		            text: '取消编辑',
+		            iconCls: 'icon-undo',
+		            handler: function() {
+		                //取消当前编辑行把当前编辑行罢undefined回滚改变的数据,取消选择的行
+		                ItemListDataGridEditRow = undefined;
+		                PageLogicObj.m_tabItemListDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
+		            }
+		        },{
+					text: '保存',
+					iconCls: 'icon-save',
+					handler: function() {
+						if (ItemListDataGridEditRow != undefined){
+				            var ArcimSelRow=PageLogicObj.m_tabItemListDataGrid.datagrid("selectRow",ItemListDataGridEditRow).datagrid("getSelected"); 
+				           	var DescRowID=ArcimSelRow.DescRowID
+				           	if ((DescRowID==undefined)||(DescRowID=="")){
+									$.messager.alert("提示", "请选择项目", "error");
+			                        return false;
+					        } 
+					        var RowID=ArcimSelRow.ItemRowID
+					        var row=PageLogicObj.m_tabItemMastListDataGrid.datagrid('getSelected');
+							if ((!row)||(row.length==0)){
+								$.messager.alert("提示","请选择大类项目","info");
+								return false;
+							}
+							MastRowID=row.RowID;
+							var HospID=$HUI.combogrid('#_HospList').getValue();
+					        var value=$.m({
+								ClassName:"web.DHCAPPCellItemLinkSet",
+								MethodName:"Insert",
+							   	ItemMast:MastRowID, ItemRowID :DescRowID, RowID:RowID,HospDr:HospID
+							},false);
+							if(value=="0"){
+								$.messager.popover({msg: '保存成功',type:'success'});
+						        LoadItemListDataGrid()		
+							}else if (value==-1){
+								$.messager.alert("提示","保存失败!记录重复!");
+							}
+				        }
+					}
+				}];
+			var Columns=[[ 
+				{field:'ItemRowID',hidden:true,title:''},
+				{field:'DescRowID',hidden:true,title:''},
+				{field:'Desc',title:'项目子类描述',width:310,
+				editor :{  
+							type:'combobox',  
+							options:{
+								url:$URL+"?ClassName=web.DHCAPPCellItemLinkSet&QueryName=FindItem&ItemID=13&rows=99999",
+								valueField:'RowID',
+								textField:'Desc',
+								required:false,
+								onBeforeLoad:function(param){
+									param.HospID=$HUI.combogrid('#_HospList').getValue();
+								},
+								onSelect:function(record){
+									var ArcimSelRow=PageLogicObj.m_tabItemListDataGrid.datagrid("selectRow",ItemListDataGridEditRow).datagrid("getSelected"); 
+									ArcimSelRow.DescRowID=record.RowID;
+								},onChange:function(newValue,oldValue){
+									if (ItemListDataGridEditRow!=undefined){
+										var ArcimSelRow=PageLogicObj.m_tabItemListDataGrid.datagrid("selectRow",ItemListDataGridEditRow).datagrid("getSelected"); 
+										if (newValue=="") ArcimSelRow.DescRowID="";
+								    }
+								},
+								loadFilter:function(data){
+									return data['rows'];
+								},
+							    filter: function(q, row){
+									var opts = $(this).combobox('options');
+									return row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+								}
+							  }}}
+		    ]]
+			var ItemListDataGrid=$("#tabItemList").datagrid({
+				fit : true,
+				width : 'auto',
+				border : false,
+				striped : true,
+				singleSelect : true,
+				fitColumns : true,
+				autoRowHeight : false,
+				loadMsg : '加载中..',  
+				pagination : false,  //是否分页
+				rownumbers : true,  //
+				idField:'ItemRowID',
+				columns :Columns,
+				toolbar:toobar,
+				onClickRow:function(rowIndex, rowData){
+					PageLogicObj.m_tabItemListDataGrid.datagrid('selectRow',rowIndex);
+					SelectedRow=rowIndex
+					var selected=PageLogicObj.m_tabItemListDataGrid.datagrid('getRows'); 
+				},
+				onDblClickRow:function(rowIndex, rowData){
+					if (ItemListDataGridEditRow != undefined) {
+						$.messager.alert("提示", "有正在编辑的行，请先点击保存");
+				        return false;
+					}
+					PageLogicObj.m_tabItemListDataGrid.datagrid("beginEdit", rowIndex);
+					ItemListDataGridEditRow=rowIndex;
+				}
+			}); 
+			return ItemListDataGrid;
+		}
+		function LoadItemListDataGrid()	{
+	        var row=PageLogicObj.m_tabItemMastListDataGrid.datagrid('getSelected');
+			if ((!row)||(row.length==0)){
+				$.messager.alert("提示","请选择大类项目","info");
+				return false;
+			}
+			MastRowID=row.RowID;
+			var HospID=$HUI.combogrid('#_HospList').getValue();
+			$.q({
+			    ClassName : "web.DHCAPPCellItemLinkSet",
+			    QueryName : "FindMastItem",
+			    ItemID:MastRowID,
+			    HospDr:HospID,
+			    Pagerows:PageLogicObj.m_tabItemListDataGrid.datagrid("options").pageSize,rows:99999
+			},function(GridData){
+				PageLogicObj.m_tabItemListDataGrid.datagrid('loadData',GridData);
+				PageLogicObj.m_tabItemListDataGrid.datagrid("clearSelections")
+		        ItemListDataGridEditRow = undefined;
+		        PageLogicObj.m_tabItemListDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
+			})
+		}
+		function InitEvent(){
+			var cbox = $HUI.combobox("#ItemMast", {
+				valueField:'RowId',
+				textField:'Desc',
+				data:[{"RowId":"14","Desc":"分子检测类型"},{"RowId":"15","Desc":"分子检测诊断类型"}],
+				onSelect: function (record) {
+					LoadtabItemMastListDataGrid()
+				}
+			});
+		}
+	</SCRIPT>
+</body>
+</html>

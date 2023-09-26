@@ -1,0 +1,153 @@
+<!-- DHCPENetReportDetail.csp -->
+<!-- 
+/// 创建时间		2006.10.16
+/// 创建人		xuwm 
+/// 主要功能		输入个人体检报告
+/// 关联文件		DHCPEReport.js,DHCPEReport.css
+/// 最后修改时间	
+/// 最后修改人	 
+/// -->
+
+<HTML>
+<HEAD>
+<!-- 强制网页不被存入Cache中 -->
+<meta http-equiv="pragma" content="no-cache">
+
+<!-- 主页制作所使用的文字及语言 -->
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<!--
+<style type="text/css">
+@import url("../scripts/DHCPEReport.css");
+@import url("../scripts/DHCPEReportResult.css");
+@import url("../scripts/DDHCPEReportPatient.css");
+@import url("../scripts/DHCPEReportSummarize.css");
+</style>
+-->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/DHCPEReport.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"/>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/DHCPEReportPatient.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/DHCPEReportSummarize.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/DHCPEReportAdvice.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/DHCPEReportResult.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/DHCPEReportFooter.css"></LINK>
+<style media=print>
+.Noprint{display:none;}
+.PageNext{page-break-after: always;}
+</style>
+<TITLE>体检报告</TITLE>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+
+ 	s PatentID=$g(%request.Data("PatentID",1))
+ 	//if ""=PatentID s PatentID=9642
+</Script>
+
+
+<BODY>
+<!--
+	onmouseup=document.selection.empty()
+	oncontextmenu="return false" 
+	onselectstart="return false"
+	ondragstart="return false" 
+	onbeforecopy="return false"
+	oncopy=document.selection.empty()
+	onselect=document.selection.empty()
+-->
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 患者信息
+	//d ##Class(web.DHCPE.ReportOutToWeb).GetPatient(PatentID)
+	//d ##Class(web.DHCPE.ReportOutToWeb).OutPatientToWeb()
+	d ##Class(web.DHCPE.ReportOutToXML).OutPatientToXML(PatentID)
+</Script>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 站点?科室?小结
+	//d ##Class(web.DHCPE.ReportOutToWeb).GetSummarize(PatentID)
+	//d ##Class(web.DHCPE.ReportOutToWeb).OutSummarizeToWeb()
+	
+	d ##Class(web.DHCPE.ReportOutToXML).OutSummarizeToXML(PatentID)
+</Script>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 站点?科室?小结
+	//d ##Class(web.DHCPE.ReportOutToWeb).GetGeneralAdvice(PatentID)
+	//d ##Class(web.DHCPE.ReportOutToWeb).OutGeneralAdviceToWeb()
+	d ##Class(web.DHCPE.ReportOutToXML).OutGeneralAdviceToXML(PatentID)
+</Script>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 检验检查报告
+	//d ##Class(web.DHCPE.ReportOutToWeb).GetResult(PatentID)
+	//d ##Class(web.DHCPE.ReportOutToWeb).OutResultToWeb()
+	d ##Class(web.DHCPE.ReportOutToXML).OutResultToXML(PatentID)
+</Script>
+<OBJECT  id=WebBrowser  classid=CLSID:8856F961-340A-11D0-A96B-00C04FD705A2  height=0  width=0 VIEWASTEXT>
+  </OBJECT>
+<input type=button value=打印     onclick="document.all.WebBrowser.ExecWB(6,1)" class="NOPRINT">
+<input type=button value=直接打印 onclick="document.all.WebBrowser.ExecWB(6,6)" class="NOPRINT">
+<input type=button value=页面设置 onclick="document.all.WebBrowser.ExecWB(8,1)" class="NOPRINT">
+<input type=button value=打印预览 onclick="document.all.WebBrowser.ExecWB(7,1)" class="NOPRINT">
+<DIV class="DPrint">
+	<!-- 患者信息 -->
+	<div id=PatInfor>无法查看数据......</div>
+	
+	<!-- 体检结论 -->
+	<DIV id=Summarize>无法查看数据......</DIV>
+	<hr/>
+	<!-- 体检建议 -->
+	<DIV id=GeneralAdvice class="Block">无法查看数据......</DIV>
+	<hr/>
+	<!-- 报告列表 -->
+	<DIV id=ResultList class="Block">无法查看数据......</DIV>
+	
+	<!-- 报告提示 
+	<hr/>-->
+	<DIV class="footer">
+	<table width=100% border="0">
+		<tr>
+			<th>说明:</th>
+		</tr>
+		<tr>
+			<td>1,你过去患的疾病?因这次体检范围所限未能发现的情况,仍按原诊断及治疗.</td>
+		</tr>
+		<tr>
+			<td>2,查出的疾病请及时治疗?异常项目请到医院复查.</td>
+		</tr>
+	</table>
+
+</DIV>
+
+</DIV>
+
+<SCRIPT SRC="../scripts/DHCPEReport.js"></SCRIPT>
+<SCRIPT SRC="../scripts/DHCPECommon.xml.js"></SCRIPT>
+
+<script language="javascript">
+
+function show() {
+
+	// 患者信息
+	load_xmlnFromXMLObject(PatInfor, xmlPatInfo,"../scripts/DHCPEReportPatient.xsl",0);
+	
+	// 报告列表
+	load_xmlnFromXMLObject(ResultList, xmlReport,"../scripts/DHCPEReportResultList.xsl",0);
+
+	// 体检结论
+	load_xmlnFromXMLObject(Summarize, xmlSummarize,"../scripts/DHCPEReportSummarize.xsl",0);
+
+	// 体检建议 
+	load_xmlnFromXMLObject(GeneralAdvice, xmlGeneralAdvice,"../scripts/DHCPEGeneralAdvice.xsl",0);
+
+	ResultList.className='';
+}
+	show()
+	
+</script>
+
+</body>
+
+
+</HTML>

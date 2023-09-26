@@ -1,0 +1,313 @@
+<html>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+
+<!-- Put your page Title here -->
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/adrreport.js"></script>
+	    <style type="text/css">
+		.ui-checkbox{
+			vertical-align: bottom;
+			margin-bottom:2px;
+			margin-left:5px;
+			width:14px;
+			height:14px;
+			border:1px solid #95B8E7;
+		}
+		span.add{
+			width:17px;
+		    height:17px;
+			cursor:pointer;
+			background:url(../scripts/dhcpha/jQuery/themes/icons/edit_add.png) 0 0 no-repeat;
+			display:-moz-inline-box;
+			display:inline-block;
+			vertical-align: bottom;
+			margin-bottom:2px;
+		}
+		.datagrid-row {
+			height: 33px;
+		}
+		.datagrid-row-selected {
+  			background: #ADFAFC;
+		}
+		input:focus{ 
+			background-color:#ADFAFC;
+		}
+       </style> 
+</head>
+<body>
+	<div id="mainpanel" class="easyui-layout" fit="true">
+		<div data-options="region:'center'" title="药 品 不 良 反 应 / 事 件 报 告 表<span style='color:red;font-size:12pt;font-family:华文楷体;'>[红色*号标注的为必填项]</span>" style="background:#F8F8FF;">
+			<div style="border:2px solid #95B8E7;margin-left:150px;margin-right:auto;margin-top:5px;width:1000px;font-family:宋体;background:#F8F8FF;">
+				<div style="font-size:18pt;font-weight:bold;font-family:华文楷体;text-align:center;">
+					<span>药 品 不 良 反 应 / 事 件 报 告 表</span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:8px;">
+					<span style=""><span style="color:red;">*</span>报告优先级：</span>
+					<span style="margin-left:15px;">首次报告<input id="firrep" class="ui-checkbox" type="checkbox" name="adrrPriority" value="10"></input></span>
+					<span style="margin-left:200px;">跟踪报告<input id="trarep" class="ui-checkbox" type="checkbox" name="adrrPriority" value="11"></input></span>
+					<span style="margin-left:200px;">编码：<input id="adrrRepCode" style="border:0px none;width:280px;border-bottom:1px solid #95B8E7;height:22px;line-height:22px;" readonly></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:8px;">
+					<span style=""><span style="color:red;">*</span>报告类型：</span>
+					<span style="margin-left:2px;">新的<input id="new" class="ui-checkbox" name="adrrRepTypeNew" type="checkbox" value="Y"></input></span>
+					<span style="margin-left:20px;">一般<input id="RT10" class="ui-checkbox" name="adrrRepType" type="checkbox" value="10"></input></span>
+					<span style="margin-left:20px;">严重<input id="RT11" class="ui-checkbox" name="adrrRepType" type="checkbox" value="11"></input></span>
+					<input id="serdesc" style="margin-left:3px;width:120px;border:1px solid #95B8E7;display:none;"><div id="modser" class="add" style="margin-left:2px;margin-bottom:2px;display:none;"></div></input>
+					<span style="margin-left:50px;"><span style="color:red;">*</span>报告单位类别：</span>
+					<span style="margin-left:2px;">医疗机构<input id="RD10" class="ui-checkbox" name="adrrRepDeptType" type="checkbox" value="10" checked="checked"></input></span>
+					<span style="margin-left:16px;">经营企业<input id="RD11" class="ui-checkbox" name="adrrRepDeptType" type="checkbox" value="11"></input></span>
+					<span style="margin-left:16px;">生产企业<input id="RD12" class="ui-checkbox" name="adrrRepDeptType" type="checkbox" value="12"></input></span>
+					<span style="margin-left:16px;">个人<input id="RD13" class="ui-checkbox" name="adrrRepDeptType" type="checkbox" value="13"></input></span>
+					<span style="margin-left:16px;">其他<input id="RD99" class="ui-checkbox" name="adrrRepDeptType" type="checkbox" value="99"></input><input id="RepDeptTypeOther" style="border: 0px none;width:80px;border-bottom:1px solid #95B8E7;margin-left:3px;height:23px;line-height:23px;"  disabled="true"></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:8px;width:987px;">
+					<input id="adrrPatID" style="display:none;width:100px;border:1px solid #95B8E7;"></input>
+					<span><span style="color:red;">*</span>患者姓名：<input id="PatName" style="width:100px;border:1px solid #95B8E7;height:22px;line-height:22px;vertical-align: bottom;" readonly></input></span>
+					<span style="margin-left:20px;"><span style="color:red;">*</span>性别:<input id="PatSex" style="width:70px;border:1px solid #95B8E7;" readonly></input></span>
+					<span style="margin-left:20px;">出生日期：<input id="PatDOB" type="text" class="easyui-datebox" style="width:100px;" readonly></input></span>
+					<span style="font-family:宋体;margin-left:5px;display:none;"><span style="color:red;">*</span>年龄：<input id="PatAge"  style="width:50px;border:1px solid #95B8E7;"></input><span style="margin:0px 3px">岁</span></span>
+					<span style="margin-left:20px;">民族：<input id="PatNation" style="width:90px;border:1px solid #95B8E7;"></input></span>
+					<span style="margin-left:20px;">体重：<input id="PatWeight" style="width:40px;border:1px solid #95B8E7;height:22px;line-height:22px;vertical-align: bottom;"></input></span>
+					<span style="margin-left:20px;"><span style="color:red;">*</span>联系方式：<input id="PatContact" style="width:120px;border:1px solid #95B8E7;height:22px;line-height:22px;vertical-align: bottom;"></input></span>
+				</div>
+				<div style="border-bottom:0px solid #95B8E7;margin:8px;width:987px;">
+					<span><span style="color:red;">*</span>原患疾病：<input id="adrrPatOriginalDis" style="width:170px;border:1px solid #95B8E7;height:22px;line-height:22px;vertical-align: bottom;"></input><div id="MRCICItms" style="display:none;"></div><span id="disfind" class="add" style="margin-left:2px;margin-bottom:2px;"></span></span>
+					<span style="margin-left:21px;">医院名称：<span style="margin-left:28px;"><input id="Hospital" style="width:180px;" readonly/></span></span>
+					<span style="margin-left:25px;">既往药品不良反应/事件：有<input id="EH10" class="ui-checkbox" name="adrrEventHistory" type="checkbox" value="10"></input><input id="adrrEventHistDesc" style="border: 0px none;width:100px;border-bottom:1px solid #95B8E7;margin-left:3px;height:22px;line-height:22px;" disabled="true"/></span>
+					<span>无<input id="EH11" class="ui-checkbox" name="adrrEventHistory" type="checkbox" value="11"></input></span><span style="margin-left:8px;">不详<input id="EH99" class="ui-checkbox" name="adrrEventHistory" type="checkbox" value="99"></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:8px;width:987px;">
+					<span style="margin-left:275px;"><span style="color:red;">*</span>登记号:<input id="PatMedNo" style="width:180px;border:1px solid #95B8E7;height:22px;line-height:22px;vertical-align: bottom;" readonly></span>
+					<span style="margin-left:25px;">家族药品不良反应/事件：有<input id="EF10" class="ui-checkbox" name="adrrEventFamily" type="checkbox" value="10"></span><input id="adrrEventFamiDesc" style="border: 0px none;width:100px;border-bottom:1px solid #95B8E7;margin-left:3px;height:22px;line-height:22px;" disabled="true"></span>
+					<span>无<input id="EF11" class="ui-checkbox" name="adrrEventFamily" type="checkbox" value="11"></input></span><span style="margin-left:8px;">不详<input id="EF99" class="ui-checkbox" name="adrrEventFamily" type="checkbox" value="99"></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:5px;">
+					<span>相关重要信息：</span>
+					<span style="margin-left:10px;">吸烟史<input id="II10" class="ui-checkbox" name="smokhis" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">饮酒史<input id="II11" class="ui-checkbox" name="drinhis" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">妊娠期<input id="II12" class="ui-checkbox" name="gestper" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">肝病史<input id="II13" class="ui-checkbox" name="hepahis" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">肾病史<input id="II14" class="ui-checkbox" name="nephhis" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">过敏史<input id="II15" class="ui-checkbox" name="allehis" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">其他<input id="II99" class="ui-checkbox" name="iiothers" type="checkbox"></input><input id="iiothersdesc" style="border: 0px none;width:130px;border-bottom:1px solid #95B8E7;margin-left:3px;height:22px;line-height:22px;" disabled="true"/></span>
+                </div>
+                <div style="border-bottom:1px solid #95B8E7;">
+                	<table id="susdrgdg"></table>
+                </div>
+                <div style="border-bottom:1px solid #95B8E7;">
+                	<table id="blenddg"></table>
+                </div>
+                <div style="border-bottom:1px solid #95B8E7;margin:8px;width:987px;">
+					<span style=""><span style="color:red;">*</span>不良反应/事件名称：<input id="AdrEvent" style="width:330px;border:1px solid #95B8E7;vertical-align: bottom;height:22px;line-height:22px;"></input><div id="AdrEventItms" style="display:none;"></div><span id="adrEvtFind" class="add" style="margin-left:2px;margin-bottom:2px;"></span></span>
+					<span style="margin-left:160px;"><span style="color:red;">*</span>不良反应/事件发生时间：<input id="DateOccu" type="text" class="easyui-datebox" style="width:180px"/></span>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:8px;">
+				    <div style="border-bottom:1px solid #95B8E7;width:983px;">
+						<span style="margin:5px 0px;display:block;"><span style="color:red;margin:5px 0px;">*</span>不良反应/事件过程描述（包括症状、体征、临床检验等）及处理情况：</span>
+					</div>
+					<div style="width:980px;height:120px;padding:2px;">
+						<textarea id="adrrProcessDesc"  style="width:100%;height:100%;resize:none;"></textarea>
+                    </div>
+				</div>
+				
+			    <div style="margin:8px;width:987px;">
+					<span style=""><span style="color:red;">*</span>不良反应/事件的结果：</span>
+					<span style="margin-left:10px;">痊愈<input id="RR10" value="10" class="ui-checkbox" name="adrrEventResult" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">好转<input id="RR11" value="11" class="ui-checkbox" name="adrrEventResult" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">未好转<input id="RR12" value="12" class="ui-checkbox" name="adrrEventResult" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">不详<input id="RR99" value="99" class="ui-checkbox" name="adrrEventResult" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">有后遗症<input id="RR13" value="13" class="ui-checkbox" name="adrrEventResult" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">表现：<input id="adrrEventRSeqDesc" style="width:250px;border:1px solid #95B8E7;height:22px;line-height:22px;" disabled="true"/></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:8px;width:987px;">
+					<span style="margin-left:150px;">死亡<input id="RR14" value="14" class="ui-checkbox" name="adrrEventResult" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">直接死因：<input id="adrrEventRDRDesc" style="width:240px;border:1px solid #95B8E7;vertical-align: bottom;height:22px;line-height:22px;" disabled="true"/></span>
+                    <span style="margin-left:55px;">死亡时间：<input id="adrrEventRDRDate" type="text" class="easyui-datetimebox" style="width:160px;margin-left:2px;" disabled="true"></input></span>
+				</div>
+				<div style="margin:8px;">
+					<div style="border-bottom:1px solid #95B8E7;padding:7px 0px;">
+						<span style=""><span style="color:red;">*</span>停药或减量后，反应/事件是否消失或减轻？</span>
+						<span style="margin-left:120px;">是<input id="ES10" value="10" class="ui-checkbox" name="adrrEventStopResultt" type="checkbox"></input></span>
+	                    <span style="margin-left:50px;">否<input id="ES11" value="11" class="ui-checkbox" name="adrrEventStopResultt" type="checkbox"></input></span>
+	                    <span style="margin-left:50px;">不明<input id="ES99" value="99" class="ui-checkbox" name="adrrEventStopResultt" type="checkbox"></input></span>
+	                    <span style="margin-left:50px;">未停药或未减量<input id="ES12" value="12" class="ui-checkbox" name="adrrEventStopResultt" type="checkbox"></input></span>
+					</div>
+					<div style="border-bottom:1px solid #95B8E7;padding:7px 0px;">
+						<span style=""><span style="color:red;">*</span>再次使用可疑药品后是否再次出现同样反应/事件？</span>
+						<span style="margin-left:84px;">是<input id="ET10" value="10" class="ui-checkbox" name="adrrEventTakingAgain" type="checkbox"></input></span>
+	                    <span style="margin-left:50px;">否<input id="ET11" value="11" class="ui-checkbox" name="adrrEventTakingAgain" type="checkbox"></input></span>
+	                    <span style="margin-left:50px;">不明<input id="ET99" value="99" class="ui-checkbox" name="adrrEventTakingAgain" type="checkbox"></input></span>
+	                    <span style="margin-left:50px;">未再使用<input id="ET12" value="12" class="ui-checkbox" name="adrrEventTakingAgain" type="checkbox"></input></span>
+					</div>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:8px;">
+					<span style=""><span style="color:red;">*</span>对原患疾病的影响：</span>
+					<span style="margin-left:120px;">不明显<input id="RE10" value="10" class="ui-checkbox" name="adrrEventEffectOfTreatment" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">病程延长<input id="RE11" value="11" class="ui-checkbox" name="adrrEventEffectOfTreatment" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">病情加重<input id="RE12" value="12" class="ui-checkbox" name="adrrEventEffectOfTreatment" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">导致后遗症<input id="RE13" value="13" class="ui-checkbox" name="adrrEventEffectOfTreatment" type="checkbox"></input></span>
+                    <span style="margin-left:50px;">导致死亡<input id="RE14" value="14" class="ui-checkbox" name="adrrEventEffectOfTreatment" type="checkbox"></input></span>
+				</div>
+				<div style="border:1px solid #95B8E7;margin:8px;">
+					<div style="width:100px;height:63px;float:left;text-align:center;line-height:63px;">
+						<span>关联性评价</span>
+					</div>
+					<div style="width:850px;height:63px;float:left;">
+						<div style="border-left:1px solid #95B8E7;border-left:1px solid #95B8E7;width:860px;padding:5px;">
+						    <span ><span style="color:red;">*</span>报告人评价：</span>
+							<span style="margin-left:22px;">肯定<input id="ECU10" value="10" class="ui-checkbox" name="adrrEventCommentOfUser" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">很可能<input id="ECU11" value="11" class="ui-checkbox" name="adrrEventCommentOfUser" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">可能<input id="ECU12" value="12" class="ui-checkbox" name="adrrEventCommentOfUser" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">可能无关<input id="ECU13" value="13" class="ui-checkbox" name="adrrEventCommentOfUser" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">待评价<input id="ECU14" value="14" class="ui-checkbox" name="adrrEventCommentOfUser" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">无法评价<input id="ECU15" value="15" class="ui-checkbox" name="adrrEventCommentOfUser" type="checkbox"></input></span>
+		                    <span style="margin-left:40px;"><span style="color:red;">*</span>签名：<input id="adrrEventUserOfReport" style="width:120px;margin-left:2px;border:1px solid #95B8E7;height:22px;line-height:22px;"/></span>
+						</div>
+						<div style="border-left:1px solid #95B8E7;width:860px;padding:5px;">
+						    <span style="margin-left:6px;">报告单位评价：</span>
+							<span style="margin-left:10px;">肯定<input id="ECD10" value="10" class="ui-checkbox" name="adrrEventCommentOfDept" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">很可能<input id="ECD11" value="11" class="ui-checkbox" name="adrrEventCommentOfDept" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">可能<input id="ECD12" value="12" class="ui-checkbox" name="adrrEventCommentOfDept" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">可能无关<input id="ECD13" value="13" class="ui-checkbox" name="adrrEventCommentOfDept" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">待评价<input id="ECD14" value="14" class="ui-checkbox" name="adrrEventCommentOfDept" type="checkbox"></input></span>
+		                    <span style="margin-left:30px;">无法评价<input id="ECD15" value="15" class="ui-checkbox" name="adrrEventCommentOfDept" type="checkbox"></input></span>
+		                    <span style="margin-left:46px;">签名：<input id="adrrEventDeptOfReport" style="width:120px;margin-left:2px;border:1px solid #95B8E7;height:22px;line-height:22px;"/></span>
+	                    </div>
+					</div>
+                    <div style="clear:both;"></div>
+				</div>
+				<div style="border:1px solid #95B8E7;margin:8px;">
+					<div style="width:100px;height:55px;float:left;text-align:center;line-height:55px;">
+						<span>报告人信息</span>
+					</div>
+					<div style="width:850px;height:55px;float:left;">
+						<div style="border-left:1px solid #95B8E7;border-left:1px solid #95B8E7;width:860px;padding:5px;">
+						    <span style=""><span style="color:red;">*</span>联系电话：<input id="adrrReportUserTel" style="width:160px;margin-left:2px;border:1px solid #95B8E7;height:22px;line-height:22px;"/></span>
+							<span style="margin-left:50px;"><span style="color:red;">*</span>职业：医生<input id="RU10" value="10" class="ui-checkbox" name="adrrCareerOfRepUser" type="checkbox"></input></span>
+		                    <span style="margin-left:50px;">药师<input id="RU11" value="11" class="ui-checkbox" name="adrrCareerOfRepUser" type="checkbox"></input></span>
+		                    <span style="margin-left:50px;">护士<input id="RU12" value="12" class="ui-checkbox" name="adrrCareerOfRepUser" type="checkbox"></input></span>
+		                    <span style="margin-left:50px;">其他<input id="RU99" value="99" class="ui-checkbox" name="adrrCareerOfRepUser" type="checkbox"></input><input id="adrrCareerOfRepUserOthers" style="width:160px;margin-left:2px;border:1px solid #95B8E7;height:22px;line-height:22px;" disabled="true"/></span>
+						</div>
+						<div style="border-left:1px solid #95B8E7;width:860px;padding-left:5px;">
+						    <span style=""><span style="color:red;">*</span>电子邮箱：<input id="adrrEmailOfRepUser" style="width:160px;margin-left:2px;border:1px solid #95B8E7;vertical-align: bottom;height:22px;line-height:22px;"/></span>
+							<span style="margin-left:80px;"><span style="color:red;">*</span>签名：<input id="adrrSignOfRepUser" style="width:100px;margin-left:2px;border:1px solid #95B8E7;vertical-align: bottom;height:22px;line-height:22px;"/></span>
+							<span style="margin-left:80px;"><span style="color:red;">*</span>报告部门：<input id="adrrSignOfRepDept" style="width:180px;margin-left:2px;border:1px solid #95B8E7;"/></span>
+                    	</div>
+                    </div>
+                    <div style="clear:both;"></div>
+				</div>
+				<div style="border:1px solid #95B8E7;margin:8px;">
+					<div style="width:100px;height:30px;float:left;text-align:center;line-height:30px;">
+						<span>报告单位信息</span>
+					</div>
+					<div style="border-left:1px solid #95B8E7;width:850px;height:23px;float:left;padding:5px;">
+						<span style="margin-left:2px;">单位名称：<input id="adrrRepDeptName" style="width:180px;margin-left:2px;border:1px solid #95B8E7;" readonly/></span>
+	                    <span style="margin-left:30px;">联系人：<input id="adrrRepDeptContacts" style="width:80px;margin-left:2px;border:1px solid #95B8E7;vertical-align: bottom;height:22px;line-height:22px;"/></span>
+	                    <span style="margin-left:30px;">电话：<input id="adrrRepDeptTel" style="width:150px;margin-left:2px;border:1px solid #95B8E7;vertical-align: bottom;height:22px;line-height:22px;"/></span>
+	                    <span style="margin-left:30px;"><span style="color:red;">*</span>报告日期：<input id="adrrRepDate" type="text" class="easyui-datebox" style="width:100px;margin-left:2px;" readonly></input></span>
+					</div>
+					<div style="clear:both;"></div>
+				</div>
+				<div style="border:1px solid #95B8E7;margin:8px;">
+				    <div style="width:100px;height:65px;float:left;text-align:center;line-height:65px;">
+				    	<span>备注</span>
+					</div>
+					<div style="width:878px;height:65px;border-left:1px solid #95B8E7;float:left;">
+						<textarea id="adrrRepRemark" style="width:100%;height:100%;resize:none;"></textarea>
+					</div>
+					<div style="clear:both;"></div>
+				</div>
+				<div style="margin:5px;text-align:center;">
+					<a href="#" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveAdrEventReport(0)">暂存</a>
+					<a href="#" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveAdrEventReport(1)">提交</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--病人用药信息窗口-->
+	<div id="mwin">
+		<div class="easyui-layout" fit="true">
+			<!--用药信息-->
+			<div data-options="region:'center'">
+				<div id="medInfo" toolbar="#tb"></div>
+			</div>
+		</div>
+		<div id="tb" style="padding:5px;height:auto">
+			<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:addSuspectDrg()">添加[怀疑药品]</a>
+			<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:addMergeDrg()">添加[并用药品]</a>
+			<a href="#" class="easyui-linkbutton" iconCls="icon-cancel" plain="true" onclick="javascript:clsDrgWin()">取消</a>
+		</div>
+	</div>
+	<!--疾病选择窗口-->
+	<div id="diswin">
+		<div class="easyui-layout" fit="true">
+			<div data-options="region:'west',title:'疾病列表',split:true" style="width:430px;">
+				<div id="dislist" toolbar="#distb"></div>
+				<div id="distb">
+					<span>疾病描述：</span><!-- 赵武强   2016-09-07 -->
+					<input id="textAlise" type="text" class="easyui-validatebox" style="width:350px"></input>
+				</div>
+			</div>
+			<div data-options="region:'center',title:'已选择'">
+				<div id="seldislist"></div>
+			</div>
+		</div>
+	</div>
+	<!--不良反应事件选择窗口-->
+	<div id="AdrEvtWin">
+		<div class="easyui-layout" fit="true">
+			<div data-options="region:'west',title:'不良反应事件列表',split:true" style="width:360px;">
+				<div id="adrevtlist" toolbar="#adrevttb"></div>
+				<div id="adrevttb">
+					<span>描述:</span><!-- 赵武强   2016-09-07 -->
+					<input id="textAdrEvtAlise" type="text" class="easyui-validatebox" style="width:300px"></input>
+				</div>
+			</div>
+			<div data-options="region:'center',title:'已选择'">
+				<div id="seladrevtlist"></div>
+			</div>
+		</div>
+	</div>
+	<!--严重药品不良反应的损害情形窗口-->
+	<div id="AdrEvtRetWin">
+		<div class="easyui-layout" fit="true">
+			<div data-options="region:'center'">
+				<div style="margin:10px;">
+					<span style="display:block;margin:20px;"><input id="A" class="ui-checkbox" type="checkbox" name="serret" style="margin-right:10px;margin-left:10px;"></input><b>A、</b><span id="AS">导致死亡</span></span>
+					<span style="display:block;margin:20px;"><input id="B" class="ui-checkbox" type="checkbox" name="serret" style="margin-right:10px;margin-left:10px;"></input><b>B、</b><span id="BS">危及生命</span></span>
+					<span style="display:block;margin:20px;"><input id="C" class="ui-checkbox" type="checkbox" name="serret" style="margin-right:10px;margin-left:10px;"></input><b>C、</b><span id="CS">致癌、致畸、致出生缺陷</span></span>
+					<span style="display:block;margin:20px;"><input id="D" class="ui-checkbox" type="checkbox" name="serret" style="margin-right:10px;margin-left:10px;"></input><b>D、</b><span id="DS">导致显著的或者永久的人体伤残或者器官功能的损伤</span></span>
+					<span style="display:block;margin:20px;"><input id="E" class="ui-checkbox" type="checkbox" name="serret" style="margin-right:10px;margin-left:10px;"></input><b>E、</b><span id="ES">导致住院或者住院时间延长</span></span>
+					<span style="display:block;margin:20px;"><input id="F" class="ui-checkbox" type="checkbox" name="serret" style="margin-right:10px;margin-left:10px;"></input><b>F、</b><span id="FS">导致其他重要医学事件，如不进行治疗可能出现上述所列情况的</span></span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--既往药品不良反应/事件选择窗口-->
+	<div id="AdrEvtEHWin">
+		<div id="adrEvtEHList"></div>
+	</div>
+	<!--家族药品不良反应/事件选择窗口-->
+	<div id="AdrEvtEFWin">
+		<div id="adrEvtEFList"></div>
+	</div>
+</body>
+</html>

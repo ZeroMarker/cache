@@ -1,0 +1,92 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s StrParam=$Get(%request.Data("StrParam",1))
+
+i Action = "GetAllVendor" d
+	.d ##class(web.DHCSTM.ApcCatGroup).GetAllVendor(Start,Limit,Sort,Dir,StrParam)
+	
+//获取评价指标
+i Action = "EvalueIndex" d
+	.w ##class(web.DHCSTM.DHCVendorEvaluationIndex).GetEvalueIndex()
+
+//获取指标权重	
+i Action = "GetWeight" d
+	.s Index=$Get(%request.Data("Index",1))
+	.w ##class(web.DHCSTM.DHCVendorEvaluationIndex).GetWeight(Index)
+
+//获取指标的系统标志	
+i Action = "GetSySIndex" d
+	.s Index=$Get(%request.Data("Index",1))
+	.w ##class(web.DHCSTM.DHCVendorEvaluationIndex).GetSySIndex(Index)
+
+i Action = "Save" d
+	.s VendorIdStr=$Get(%request.Data("VendorIdStr",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s ret=##class(web.DHCSTM.DHCVendorEvaluationIndex).SaveVenEval(VendorIdStr,ListData)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	
+//获取供应商的评价指标分数
+i Action = "GetEvalIndex" d
+	.s ret=##class(web.DHCSTM.DHCVendorEvaluationIndex).GetEvalIndex(Start,Limit,StrParam)
+	.i ret ="" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+
+//根据入库单保存供应商的评价指标分数
+i Action = "SaveByIngr" d
+	.s Ingr=$Get(%request.Data("Ingr",1))
+	.s List=$Get(%request.Data("List",1))
+	.s ret=##class(web.DHCSTM.DHCVendorEvaluationIndex).SaveVenEvalByIngr(Ingr,List)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+
+//根据入库单获取供应商的评价指标分数
+i Action = "GetIndexByIngr" d
+	.s ingr=$Get(%request.Data("ingr",1))
+	.s ret=##class(web.DHCSTM.DHCVendorEvaluationIndex).GetIndexByIngr(Start,Limit,ingr)
+	.i ret ="" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+
+i Action = "Delete" d
+	.s ScgStr=$Get(%request.Data("ScgStr",1))
+	.s VendorIdStr=$Get(%request.Data("VendorIdStr",1))
+	.s result = ##class(web.DHCSTM.ApcCatGroup).Delete(VendorIdStr,ScgStr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+//提交供应商的评价指标分数
+i Action = "SubmitEvaluation" d
+	.s List=$Get(%request.Data("List",1))
+	.s ret=##class(web.DHCSTM.DHCVendorEvaluationIndex).SubmitEvaluation(List)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+
+//获取扣分项
+i Action = "EvalReason" d
+	.s Index=$Get(%request.Data("Index",1))
+	.w ##class(web.DHCSTM.DHCVendorEvaluationIndex).EvalReason(Index)
+
+</script>

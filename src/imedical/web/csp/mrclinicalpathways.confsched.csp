@@ -1,0 +1,125 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+</HEAD>
+<BODY>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT> 
+<SERVER>
+ ; LOG 25798 ANA 05/07/02.
+ n ORIRowIDs,confCount,sbind,rescID,prevDate,ORIROWID,locidEG,userId,CareProvID,CareProvDesc,CTLOCDes,conflictSTR,Date,DateHTML,DispTime
+ s (ORIRowIDs,confCount,sbind,rescID,prevDate,ORIROWID,locidEG,userId,CareProvID,CareProvDesc,CTLOCDes,conflictSTR,Date,DateHTML,DispTime)=""
+ n OEORIROWID,ORD,CLD,ARCIMID
+ s (OEORIROWID,ORD,CLD,ARCIMID)=""
+ s confCount=1
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s mradm=%request.Get("mradm")
+ s locidEG=%session.Get("LOGON.CTLOCID")
+ s userId=%session.Get("LOGON.USERID")
+ s ORIRowIDs=%request.Get("ORIRowIDs")
+ s CareProvID=##Class(web.SSUser).GetDefaultCareProvider(userId)
+ i %session.Get("LOGON.ROUND") s CareProvID=%session.Get("LOGON.ROUND")
+ s CareProvDesc=##Class(web.CTCareProv).GetDescFromRowId(CareProvID)
+ s CTLOCDesc=##Class(web.CTLoc).GetDescFromRowId(locidEG)
+ i CareProvDesc'="",CTLOCDesc'="" d
+ . s rescOBJ=##Class(%ResultSet).%New("web.RBResource:Find")
+ . i rescOBJ d
+ . . d rescOBJ.Execute(CTLOCDesc,CareProvDesc)
+ . . i rescOBJ.Next() s rescID=rescOBJ.GetDataByName("ID")
+ . . d %request.Set("rescID",rescID)
+ . ;s ^zanju($zn,"Resource id")=rescID
+ . i rescID'= "" d
+ . . w "<DIV>"
+ . . w "<B></B>"
+ . . w $c(13,10),"<P align=left><STRONG><FONT style=""BACKGROUND-COLOR: #a2c0f4"">Conflict Screen</FONT></STRONG>",$c(13,10),"</P>",$c(13,10)
+ . . w "<form name=""fMRClinicalPathways_ConfSchedcsp"" method=""post"" action=""websys.csp"">",$c(13,10)
+ . . w "<TABLE class=tblList id=""tMRClinicalPathways_ConfSched"" Name=""tMRClinicalPathways_ConfSched"" CELLSPACING=1 border=1 cellpadding=5 >",$c(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFL"" VALUE=""",TWKFL,""">",$c(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFLI"" VALUE=""",TWKFLI,""">",$c(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""PatientID"" VALUE=""",PatientID,""">",$c(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""EpisodeID"" VALUE=""",EpisodeID,""">",$c(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""mradm"" VALUE=""",mradm,""">",$c(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""rescID"" VALUE=""",rescID,""">",$c(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""ORIRowIDs"" VALUE=""",ORIRowIDs,""">",$c(13,10)
+ . . w "<tr>"
+ . . ;w "<th bordercolorlight=""silver"">Week</th>",$c(13,10)
+ . . w "<th bordercolorlight=""silver"">Date</th>",$c(13,10)
+ . . w "<th bordercolorlight=""silver"">Time</th>",$c(13,10)
+ . . w "<th bordercolorlight=""silver"">Intervention</th>",$c(13,10)
+ . . w "<th bordercolorlight=""silver"">&nbsp;</th>",$c(13,10)
+ . . s sbind="" f  s sbind=$o(^TMP("WEB","CarePlanCONF",%session.SessionId,sbind)) q:sbind=""  d
+ . . . n OEORIROWID,ORD,CLD,ARCIMID,ARCIMDesc
+ . . . s (OEORIROWID,ORD,CLD,ARCIMID,ARCIMDesc)=""
+ . . . s conSTR=$tr(sbind,"&","^")
+ . . . ;s ^zanju("conSTR ")=conSTR
+ . . . s conflictSTR=^TMP("WEB","CarePlanCONF",%session.SessionId,sbind)
+ . . . s ORIROWID=$p(conflictSTR,"&",1)
+ . . . i ORIROWID'="" d
+ . . . . s ORD=$p(ORIROWID,"||",1),CLD=$p(ORIROWID,"||",2)
+ . . . . s ARCIMID=$p($g(^OEORD(ORD,"I",CLD,1)),"^",2)
+ . . . s Date=$p(conflictSTR,"&",2)
+ . . . s DispTime=$p(conflictSTR,"&",3)
+ . . . s ServiceID=$p(conflictSTR,"&",4)
+ . . . s clsName=""
+ . . . i ARCIMID'="" s ARCIMDesc=$p($g(^ARCIM($p(ARCIMID,"||",1),$p(ARCIMID,"||",2),1)),"^",2)
+ . . . s ^TMP("WEB","CarePlanCONF",$j,Date,DispTime,ORIROWID)=$g(ARCIMDesc)
+ . . s Date="" f  s Date=$o(^TMP("WEB","CarePlanCONF",$j,Date)) q:Date=""  d
+ . . . s DateHTML=##Class(websys.Conversions).DateLogicalToHtml(Date)
+ . . . s dtid="Datez"+confCount
+ . . . w "<tr>"
+ . . . i prevDate'=Date w "<td align=center><LABEL class=""",clsName,""" id=lb",dtid,">",DateHTML,"</LABEL></TD>",$char(13,10)
+ . . . i prevDate=Date w "<td align=center></td>"
+ . . . s prevDate=Date
+ . . . s Time="" f  s Time=$o(^TMP("WEB","CarePlanCONF",$j,Date,Time)) q:Time=""  d
+ . . . . i (DispTime/3600)<24 s DispTimeHTML=##Class(websys.Conversions).TimeLogicalToHtml(DispTime)
+ . . . . i (DispTime/3600)'<24 s DispTimeHTML="No Valid Schedule"
+ . . . . s tmid="Timez"+confCount
+ . . . . w "<td align=center><LABEL class=""",clsName,""" id=lb",tmid,">",DispTimeHTML,"</LABEL></TD>",$char(13,10)
+ . . . . s ORIROWIDs="",ARCIMDesc=""
+ . . . . s ORIROWID="" f  s ORIROWID=$o(^TMP("WEB","CarePlanCONF",$j,Date,Time,ORIROWID)) q:ORIROWID=""  d
+ . . . . . i ORIROWIDs'="" s ORIROWIDs=ORIROWIDs_"^"_ORIROWID,ARCIMDesc=ARCIMDesc_"<BR>"_$g(^TMP("WEB","CarePlanCONF",$j,Date,Time,ORIROWID))
+ . . . . . i ORIROWIDs="" s ORIROWIDs=ORIROWID,ARCIMDesc=$g(^TMP("WEB","CarePlanCONF",$j,Date,Time,ORIROWID))
+ . . . . s ORIid="ORIROWIDz"_confCount
+ . . . . w "<INPUT TYPE=""HIDDEN"" id=""",ORIid,""" NAME=""",ORIid,""" VALUE=""",ORIROWID,""">",$c(13,10)
+ . . . . s itid="ARCIMRowIdz"_confCount
+ . . . . w "<INPUT TYPE=""HIDDEN"" id=""",itid,""" NAME=""",itid,""" VALUE=""",ARCIMID,""">",$c(13,10)
+ . . . . s ServID=""
+ . . . . s servid="ServIDz"_confCount
+ . . . . w "<INPUT TYPE=""HIDDEN"" id=""",servid,""" NAME=""",servid,""" VALUE=""",ServID,""">",$c(13,10)
+ . . . . ;s url="websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.FindRescDaySched&RescID="_rescID_"&date="_Date_"&EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&ServID="_ServID_"&PatientBanner=1"_"&conSTR="_conSTR_"&ORIROWID="_ORIROWID
+ . . . . s url="mrclinicalpathways.schedule.csp?EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&PatientBanner=1"_"&ORIRowIDs="_ORIROWIDs_"^"_"&conSTR="_conSTR_"&ConfSelect="_"Y"_"&ServID="_$g(ServiceID)_"&CurrentDate="_Date_"&slctall=Y"_"&time="_Time
+ . . . . w "<TD>",ARCIMDesc,$c(13,10)
+ . . . . s schedid="Schedulez"_confCount
+ . . . . ;Log 59598 - BC - 29-06-2006 : Remove statusbar variable (status=) to display the status bar.
+ . . . . w "</td><td><A id=""",schedid,""" name=""",schedid,""" HREF=""#"" onClick=""websys_createWindow('",url,"','frmConfUpdateSchedule','top=60,left=50,width=800,height=600,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes');"">Schedule</A>"
+ . . . . w "</td>"
+ . . . . s confCount=confCount+1
+ . . w "</table>"
+ . . w "</form>"
+ . . w "</DIV>"
+</SERVER>
+<TRAK:COMPONENT id="MRClinicalPathways.ConfSched" hidemenus=1>
+</TRAK:COMPONENT>
+</TRAK:APPLET>
+</BODY>
+</HTML>
+<script language="javascript">
+	function RefreshBooking() {
+		var openwindow=top.opener;
+		//if (openwindow) alert("openwindow.name="+openwindow.name);
+		if ((openwindow)&&(openwindow.name=="TRAK_main")) openwindow.RefreshBooking();
+	}
+</script>
+</body>
+</html>

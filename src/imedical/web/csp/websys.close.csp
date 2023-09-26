@@ -1,0 +1,49 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT Language="Cache" RUNAT="SERVER">
+ n refresh
+ s refresh = +$g(%request.Data("refresh",1))
+</SCRIPT>
+<SCRIPT Language="JavaScript">
+//var refresh="#(refresh)#";
+var refresh=#(refresh)#;
+function sys_close() {
+	// 头菜单点出的模态修改密码,修改默认科室,修改pin
+	if (parent && parent.hidenModalEasyUI) {
+		if(top && top.websys_showModal){ //8.3-websys_lu()弹出的仿模态组件
+			websys_showModal('close');
+		}
+		parent.hidenModalEasyUI();
+		return ;
+	}
+	//if ((window.opener)&&(refresh!="0")&&(refresh!="")) {
+	if ((window.opener)&&(refresh)) {
+		if ((window.opener.name=="TRAK_hidden")||(window.opener.name=="eprmenu")) {
+			window.opener.top.frames["TRAK_main"].treload('websys.csp');
+		} else {
+			window.opener.treload('websys.csp');
+		}
+	}else{
+		if (!window.opener){
+			if(window.top.frames["TRAK_main"]) {
+				window.top.frames["TRAK_main"].treload('websys.csp');
+			}
+		}
+	}
+	//window.parent.close();
+	if (self==top) window.close();
+
+}
+</SCRIPT>
+</HEAD>
+<BODY onload="sys_close();">
+</BODY>
+</HTML>

@@ -1,0 +1,287 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s requestParams="",deli="&"
+    s val="" f  s val=$o(%request.Data(val)) q:val=""  d
+	.s ind="" f  s ind=$o(%request.Data(val,ind)) q:ind=""  d
+	..;w val_"="_$g(%request.Data(val,ind)),!
+	..i requestParams'="" s requestParams=requestParams_deli_val_"="_$g(%request.Data(val,ind))
+	..e  s requestParams=val_"="_$g(%request.Data(val,ind))
+	;w "requestParams="_requestParams_"<br>"
+	
+	s action=$g(%request.Data("action",1))
+	s start=$g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	s end=start+pageSize
+	s:start>1 start=start+1
+	i "GetKpiDimDimList"=action {
+		;s kpiId=$g(%request.Data("kpiId",1))
+		s searcheValue=$g(%request.Data("searcheValue",1))
+		;s kpiId=+kpiId
+		;s sql="select KDT_Code,KDT_Name from DHCWL_MKPI.DHCWLMKPIDimType"  ;--modify by wz.2014-7-23
+		s sql="select KDT_Code,KDT_Name, KDT_Code||':'||KDT_Name from DHCWL_MKPI.DHCWLMKPIDimType"
+		i searcheValue'="" s sql=sql_" where KDT_Code like '%"_searcheValue_"%'"
+		s jsonPro="ID,KDTCode,KDTName"
+		s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,,,jsonPro)
+		w json.GetJsonArray()
+	}elseif "GetKpiDimList"=action {
+		s kpiId=$g(%request.Data("kpiId",1))
+		s kpiId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiId,"DHCWL.MKPI.MKPI")
+		s sql="select t1.ID,MKPIDim_Code,MKPIDim_Des,t2.KDT_Code as MKPIDim_DimDr,t2.KDT_Name,t1.MKPIDim_Order,t1.MKPIDim_Deli from DHCWL_MKPI.DHCWLMKPIDim t1,DHCWL_MKPI.DHCWLMKPIDimType t2 where ((t1.MKPIDim_DimDr=t2.ID ))and (MKPI_Dr=?) union select ID,MKPIDim_Code,MKPIDim_Des,MKPIDim_DimDr,'' as KDT_Name,MKPIDim_Order,MKPIDim_Deli from DHCWL_MKPI.DHCWLMKPIDim where MKPIDim_DimDr is null and (MKPI_Dr=?) order by MKPIDim_Order"
+		s jsonPro="ID,MKPIDimCode,MKPIDimDes,MKPIDimDimDr,KDT_Name,MKPIDimOrder,MKPIDimDeli"
+		s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,,,jsonPro,kpiId,kpiId)
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif "AddKpiDimold"=action {
+		b
+		s deli="&"
+		s kpiId=$g(%request.Data("kpiId",1))
+		s kpiDimId=$g(%request.Data("kpiDimId",1))
+		s kpiDimCode=$g(%request.Data("MKPIDimCode",1))
+		s kpiDimDesc=$g(%request.Data("kpiDimDesc",1))
+		s MKPIDimOrder=$g(%request.Data("MKPIDimOrder",1))
+		s MKPIDimDimDr=$g(%request.Data("MKPIDimDimDr",1))
+		s MKPIDimDeli=$g(%request.Data("MKPIDimDeli",1),",")
+		
+			
+		s kpiCode=##class(DHCWL.MKPIIO.XMLIOConfige).GetCodeById(kpiId,"DHCWL.MKPI.MKPI")
+		s gessId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiCode_"||"_kpiDimCode,"DHCWL.MKPI.MKPIDimensions")
+			
+		i ((kpiDimId="")&&(+gessId>0)) {
+			w "{success:true,tip:'指标维度编码不能重复'}"
+			q
+		}
+		i ((+gessId>0)&&(kpiDimId'="")&&(+kpiDimId'=gessId)) {
+			w "{success:true,tip:'指标维度编码不能重复'}"
+			q
+		}
+		
+		s count=0
+		s tempCode="" f  s tempCode=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimCodeI",kpiId,tempCode)) q:tempCode=""  d
+		.s tempId=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimCodeI",kpiId,tempCode,""))
+		.s order=$lg(^DHCWL.MKPI.MKPIDimensionsD(tempId),6)
+		.i ((order=+MKPIDimOrder) && (kpiDimId'=tempId)) s count=count+1
+		i count>=1 {
+			w "{success:true,tip:'指标维度序号不能重复'}"
+			q
+		}
+
+		s:$g(MKPIDimDimDr)'="" dimId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(MKPIDimDimDr,"DHCWL.MKPI.MKPIDimType")
+		s setPro="MKPIDimCode="_kpiDimCode_deli_"MKPIDimDes="_kpiDimDesc_deli_"MKPIDimOrder="_MKPIDimOrder_deli_"MKPIDimDimDr="_$g(dimId)_deli_"MKPIDr="_kpiId
+		s ope="I",whereStr=""
+		i kpiDimId'="" s ope="U",whereStr=" where ID="_kpiDimId
+		e  s ope="I"
+		;w setPro_"<br>"_ope_"  "_whereStr_"<br>"
+		d ##class(DHCWL.util.GetSetService).SetPropertyByStr("DHCWL.MKPI.MKPIDimensions",setPro,deli,ope,whereStr)
+		d ##class(DHCWL.util.GetSetService).SetPropertyByStr("DHCWL.MKPI.MKPIDimensions","MKPIDimDeli="_MKPIDimDeli,"&","U","where MKPI_Dr="_kpiId)
+		w "{success:true,tip:'ok'}"
+		
+		
+	}elseif "AddKpiDim"=action {
+		s strKpiDimCode=$g(%request.Data("strKpiDimCode",1))
+		s strKpiDimName=$g(%request.Data("strKpiDimName",1))
+		s strDimCode=$g(%request.Data("strDimCode",1))
+		s strDimName=$g(%request.Data("strDimName",1))
+		s strDimOrder=$g(%request.Data("strDimOrder",1))
+		s strDimDeli=$g(%request.Data("strDimDeli",1))
+		s kpiId=$g(%request.Data("kpiId",1))
+		s kpiCode=##class(DHCWL.MKPIIO.XMLIOConfige).GetCodeById(kpiId,"DHCWL.MKPI.MKPI")
+		k dimOrderList,kpiDimCodeList
+		s flag=0,error=""
+		s len=$l(strKpiDimCode,",")
+		//检查是否有重复的指标维度
+		for i=1:1:len{
+			s kpidimCode=$p(strKpiDimCode,",",i)
+			s upKpiDimCode=$zcvt(kpidimCode,"U")
+			if $d(kpiDimCodeList(upKpiDimCode)){
+				s flag=1,error="存在相同的指标维度编码"
+			}
+			s kpiDimCodeList(upKpiDimCode)=""
+		}
+		if (flag=1){
+			w "{success:true,tip:'fail',error:"_error_"}"
+		}
+		for i=1:1:len {
+			s kpiDimCode=$p(strKpiDimCode,",",i)
+			s kpiDimName=$p(strKpiDimName,",",i)
+			s dimOrder=$p(strDimOrder,",",i)
+			s dimOrderList(dimOrder)=""
+			s dimCode=$p(strDimCode,",",i)
+			s dimName=$p(strDimName,",",i)
+			s dimDeli=$p(strDimDeli,",",i)
+			if (dimDeli=""){
+				s dimDeli=","
+			}
+			s dimId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(dimCode,"DHCWL.MKPI.MKPIDimType")
+			if ('$d(^DHCWL.MKPI.MKPIDimensionsI("KPIOrderI",kpiId,dimOrder))){  //如果不存在则插入
+				&sql(INSERT INTO DHCWL_MKPI.DHCWLMKPIDim(MKPIDim_Code,MKPI_Dr,MKPIDim_Des,MKPIDim_DimDr,MKPIDim_Order,MKPIDim_Deli) VALUES(:kpiDimCode,:kpiId,:kpiDimName,:dimId,:dimOrder,:dimDeli))
+				i (SQLCODE'=0) {
+					s flag=1,error="保存数据失败"
+					q
+				}
+			}else{   //如果存在则更新
+				s kpiDimId="",num=0
+				for{
+					s kpiDimId=$o(^DHCWL.MKPI.MKPIDimensionsI("KPIOrderI",kpiId,dimOrder,kpiDimId))
+					q:kpiDimId=""
+					s num=num+1
+					if (num>=2){
+						s sc=##class(DHCWL.MKPI.MKPIDimensions).%DeleteId(kpiDimId)
+						if (sc'=1){
+							s flag=1,error="删除多余数据失败"
+							q
+						}
+						continue
+					}
+				
+					s locKpiDimCode=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),2)
+					s locKpiDimDesc=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),4)
+					s locKpiDimDeli=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),7)
+					s locDimId=$lg(^DHCWL.MKPI.MKPIDimensionsD(kpiDimId),5)
+					if ((locKpiDimCode'=kpiDimCode)||(locKpiDimDesc'=kpiDimName)||(locKpiDimDeli'=dimDeli)||(locDimId'=dimId)){
+						&sql(update DHCWL_MKPI.DHCWLMKPIDim set MKPIDim_Code=:kpiDimCode,MKPIDim_Des=:kpiDimName,MKPIDim_DimDr=:dimId,MKPIDim_Deli=:dimDeli where ID=:kpiDimId)
+						i (SQLCODE'=0) {
+							s flag=1,error="更新已有指标信息失败"
+							q
+						}
+					}
+				}
+			}
+			q:flag=1
+			
+		}
+		//删除多余的指标维度
+		s dimOrder=""
+		for{
+			 s dimOrder=$o(^DHCWL.MKPI.MKPIDimensionsI("KPIOrderI",kpiId,dimOrder))
+			 q:dimOrder=""
+			 if ('$d(dimOrderList(dimOrder))){
+				 s kpiDimId=""
+				 for{
+				 	s kpiDimId=$o(^DHCWL.MKPI.MKPIDimensionsI("KPIOrderI",kpiId,dimOrder,kpiDimId))
+				 	q:kpiDimId=""
+				 	&sql(delete from DHCWL_MKPI.DHCWLMKPIDim where ID=:kpiDimId)
+				 	i (SQLCODE'=0) {
+					 	s flag=1,error="删除多余指标维度失败"
+					 	q
+				 	}
+				 }
+				 q:flag=1
+			 }
+		}
+		if (flag=1){
+			w "{success:true,tip:'fail',error:"_error_"}"
+			q
+		}
+		w "{success:true,tip:'ok'}"
+	}elseif "DeleteKpiDim"=action {
+		s kpiDimId=$g(%request.Data("kpiDimId",1))
+		q:+kpiDimId=0
+		&sql(delete from DHCWL_MKPI.DHCWLMKPIDim where ID =:kpiDimId)
+		
+		w "{success:true,tip:'ok'}"
+	}elseif "AddKpiDimTemplate"=action {
+		s configed=0
+		s kpiIds=$g(%request.Data("kpiIds",1)),kpiLen=$l(kpiIds,",")
+		f i=1:1:kpiLen {
+			s kpiId=$p(kpiIds,",",i)
+			s kpiArr(kpiId)=##class(DHCWL.MKPIIO.XMLIOConfige).GetCodeById(kpiId,"DHCWL.MKPI.MKPI")
+		}
+		
+		s kpiDimNum=$g(%request.Data("kpiDimNum",1)),kpiDimNum=+kpiDimNum
+		f i=1:1:kpiDimNum {
+			s MKPIDimCode=$g(%request.Data("MKPIDimCode"_i,1)),MKPIDimDes=$g(%request.Data("MKPIDimDes"_i,1))
+			s MKPIDimDimDr=$g(%request.Data("MKPIDimDimDr"_i,1)),MKPIDimOrder=$g(%request.Data("MKPIDimOrder"_i,1))
+			s MKPIDimDeli=$g(%request.Data("MKPIDimDeli"_i,1))
+			i MKPIDimDeli="" s MKPIDimDeli=","
+			s:$g(MKPIDimDimDr)'="" dimId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(MKPIDimDimDr,"DHCWL.MKPI.MKPIDimType")
+			s kpiId=""
+			f {
+				s kpiId=$o(kpiArr(kpiId))
+				q:kpiId=""
+				;w kpiId_"="_kpiArr(kpiId)_"<br/>"
+				s kpiCode=kpiArr(kpiId)
+				
+				s kpiDimId=##class(DHCWL.MKPIIO.XMLIOConfige).GetIdByCode(kpiCode_"||"_MKPIDimCode,"DHCWL.MKPI.MKPIDimensions")
+				s setPro="MKPIDimCode="_MKPIDimCode_deli_"MKPIDimDes="_MKPIDimDes_deli_"MKPIDimOrder="_MKPIDimOrder_deli_"MKPIDr="_kpiId_deli_"MKPIDimDeli="_MKPIDimDeli
+				;w "setPro="_setPro_"<br/>"
+				i +$g(dimId)>0 {
+					s setPro=setPro_deli_"MKPIDimDimDr="_$g(dimId)
+				}
+				i +kpiDimId=0 {
+					s ope="I",whereStr=""
+				}else {
+					s ope="U",whereStr=" where ID="_kpiDimId
+				}
+				d ##class(DHCWL.util.GetSetService).SetPropertyByStr("DHCWL.MKPI.MKPIDimensions",setPro,deli,ope,whereStr)
+			}
+		}
+		w "{success:true,tip:'ok',MSG:'ok'}"
+	}elseif "DeleteKpiDimTemplate"=action {
+		s kpiIds=$g(%request.Data("kpiIds",1)),kpiLen=$l(kpiIds,",")
+		s MKPIDimCode=$g(%request.Data("MKPIDimCode",1))
+		if (MKPIDimCode'="") {
+			s MKPIDimCode=$zcvt(MKPIDimCode,"U")
+			f i=1:1:kpiLen {
+				s kpiId=$p(kpiIds,",",i)
+				s kpidimId=$o(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimCodeI",kpiId,MKPIDimCode,""))
+				i kpidimId'="" {
+					s sc=##class(DHCWL.MKPI.MKPIDimensions).%DeleteId(kpidimId)
+				}
+			}
+		}
+		w "{success:true,tip:'ok'}"
+	}elseif "isConfiged"=action {
+		s configed=0
+		s kpiIds=$g(%request.Data("kpiIds",1)),kpiLen=$l(kpiIds,",")
+		f i=1:1:kpiLen {
+			s kpiId=$p(kpiIds,",",i)
+			
+			//如果指标维度已配置就退出。
+			if $d(^DHCWL.MKPI.MKPIDimensionsI("MKPIDimCodeI",kpiId)) {
+				s configed=1
+				q	
+			}
+		}
+		if configed=1 {
+			w "{success:true,tip:'要配置维度的指标已经配置了指标维度！'}"
+		}else{
+			w "{success:true,tip:'ok'}"
+		}
+		q
+	}elseif "getList"=action{
+		s type=$g(%request.Data("type",1))
+		if (type="root"){
+			d ##class(DHCWL.Interface.MKPI.DimData).GetDimTreeList(.json)
+		}
+		if (type="dim"){
+			s dimInfor=$g(%request.Data("dimCode",1))
+			s dimCode=$p(dimInfor,"-",1)
+			d ##class(DHCWL.Interface.MKPI.DimData).GetDimProTreeList(dimCode,.json)
+		}
+		if $d(json){
+			s num=$o(json(""))
+			write "["
+			do{
+				write json(num)
+				s num=$o(json(num))
+				i ""'=num write ","
+			}while(""'=num)
+			write "]"
+		}
+	}
+
+</script>
+<script language="Cache" method="ProcessRequestData" arguments="" returntype="%String"> 
+	s requestParams="",deli="&"
+    s val="" f  s val=$o(%request.Data(val)) q:val=""  d
+	.s ind="" f  s ind=$o(%request.Data(val,ind)) q:ind=""  d
+	..w val_"="_$g(%request.Data(val,ind)),!
+	..i requestParams'="" s requestParams=requestParams_deli_val_"="_$g(%request.Data(val,ind))
+	..e  s requestParams=val_"="_$g(%request.Data(val,ind))
+    Quit 1
+</script>

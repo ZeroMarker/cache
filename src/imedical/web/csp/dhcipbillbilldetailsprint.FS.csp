@@ -1,0 +1,115 @@
+<!-- 
+	FileName:	dhcipbillbilldetailsprint.csp
+	Creaor:		Lid
+	CreatDate:	2013-03-22 
+	Desc:		提供给电子病历组的接口，用于打印病人费用清单。
+-->
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script type='text/javascript' src="../scripts/UDHCJFDayPrint.js"></script>
+	<script type='text/javascript' src="../scripts/dhcipbillbilldetailsprint.js"></script>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	
+	;EpisodeID: episodeID, PatientID: patientID, CategoryDetail: categoryDetail, PageInfoID
+	New EpisodeID,PatientID,CategoryDetail,PageInfoID,StartPage,BillNo,UserCode
+	
+	Set EpisodeID=$g(%request.Data("EpisodeID",1))
+	Set PatientID=$g(%request.Data("PatientID",1))
+	Set CategoryDetail=$g(%request.Data("CategoryDetail",1))
+	Set PageInfoID=$g(%request.Data("PageInfoID",1))
+	Set BillNo=$g(%request.Data("BillNo",1))
+	Set StartPage=$g(%request.Data("StartPage",1))
+	
+	Set GetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.GetPageNumber"))
+    Set SetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.SetPageNumber"))
+	Set UserID = $Get(%request.Data("userID",1),"")
+	Set UserCode="",UserName=""
+	If UserID'="" {
+		Set UserCode=$p($g(^SSU("SSUSR",UserID)),"^",1)
+		Set UserName=$p($g(^SSU("SSUSR",UserID)),"^",2)	
+	}
+	Set PrintDateTime=$zdt($h,3)
+	;
+	;先账单一下
+	Set err=##class(web.UDHCJFBILL).BILLN(EpisodeID, UserID,"")
+	;
+	Set Bill="0",BillList="",Job=""
+	For  Set Bill=$o(^DHCPB(0,"ADM",EpisodeID,Bill)) Quit:Bill=""  Do
+	.Set PayedFlag=$p(^DHCPB(Bill),"^",16)
+	.Set TotalAmt=+$p(^DHCPB(Bill),"^",8)
+	.Quit:+TotalAmt=0
+	.Set rset=##class(%ResultSet).%New("web.UDHCJFBillDetail:FindBillDetail")
+	.Set columns=rset.GetColumnCount()
+	.Set OrdItmStr=""
+	.Set rs = rset.Execute(Bill,"","")	;Execute the query
+	.Set i="",Job=""
+	.For  Set i=rset.Next() Quit:(i="")!(Job'="")  Do
+	..Set Job=$g(rset.Data("Tjob"))
+	.If BillList="" Set BillList=Bill_"^"_Job
+	.Else  Set BillList=BillList_"|"_Bill_"^"_Job
+	;
+ 	;
+</Script>
+<SCRIPT Language="Javascript">
+	try {
+		var UserCode="#(UserCode)#";
+		var UserName="#(UserName)#";
+		var PrintDateTime="#(PrintDateTime)#"
+		var EpisodeID="#(EpisodeID)#";
+		//alert(EpisodeID);
+		var PatientID="#(PatientID)#";
+		var CategoryDetail="#(CategoryDetail)#";
+		var PageInfoID="#(PageInfoID)#";
+		var GetPageNumMethod="#(GetPageNumMethod)#";
+		var SetPageNumMethod="#(SetPageNumMethod)#";
+		var BillNo="#(BillNo)#";
+		//
+		var EndPageNum=0;
+		var BillList="#(BillList)#";
+		//获取开始页码
+		//alert("GetPageNumMethod:"+GetPageNumMethod+",PageInfoID="+PageInfoID);
+		var StartPageNum=cspRunServerMethod(GetPageNumMethod,PageInfoID);
+		//var StartPageNum=5;
+		if(StartPageNum!="0"){
+			StartPageNum=StartPageNum-1;
+		}
+		//
+		//alert(BillList);
+		if(BillList!=""){
+			var AryBillList=BillList.split("|");
+			var EndPageNum=0
+			for (var n=0;n<AryBillList.length;n++){
+				StartPageNum=parseInt(StartPageNum,10)+parseInt(EndPageNum,10);
+				var BillNo=AryBillList[n].split("^")[0];
+				var Job=AryBillList[n].split("^")[1];
+				//alert(BillNo+","+UserCode+","+StartPageNum+","+Job+","+PrintDateTime);
+				var EndPageNum=IPrintBillDetail(BillNo,UserCode,StartPageNum,Job,PrintDateTime);	
+			}
+			//计算结束页码
+			EndPageNum=parseInt(StartPageNum,10)+parseInt(EndPageNum,10);
+			//alert(EndPageNum);
+			if (EndPageNum!=0){
+				//保存设置结束页码
+			    var RetVal=cspRunServerMethod(SetPageNumMethod,EndPageNum,PageInfoID);	
+			    //alert("RetVal="+RetVal);
+			}
+			setTimeout("parent.printNext();", 3000 );
+		}else{
+			alert("无有效地账单信息.");	
+		}
+		
+	}catch(e){
+		alert(e.message);
+		setTimeout("parent.printNext();", 3000 );
+	}	
+</SCRIPT>
+
+</HTML>

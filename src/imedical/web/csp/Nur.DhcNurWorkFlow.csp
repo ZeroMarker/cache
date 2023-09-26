@@ -1,0 +1,1101 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	Cache Server Page </title>
+<HISUI/>
+<style type="text/css">
+	body{
+		margin:0;
+		padding:0;	
+	}
+	.main {
+	    width: 100%;
+	    height: 100%;
+	    position: absolute;
+	}
+
+	.quarter-div {
+	    width: 50%;
+	    height: 50%;
+	    float: left;
+	}
+
+	.green {
+	    background-color: #5CB85C;
+	}
+
+	.orange {
+	    background-color: #F0AD4E;
+	}
+
+	.yellow {
+	    background-color: #FFC706;
+	}
+</style>
+</head>
+
+<body>
+
+    <div id="dd" class="hisui-dialog">
+		<div style="padding:10px">
+		<table>	
+			<tr>
+				<td class="r-label">代码</td>
+				<td>
+					<input id="upCode" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">描述</td>
+				<td>
+					<input id="upDesc" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">定义优先级</td>
+				<td>
+					<select id="iconokBox" style="width:200px;"></select>
+				</td>
+			</tr>
+		</table>
+		</div>
+    </div>
+    <div id="cc"  class="hisui-dialog">
+		<div style="padding:10px">
+		<table>	
+			<tr>
+				<td class="r-label">代码</td>
+				<td>
+					<input id="downCode" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">描述</td>
+				<td>
+					<input id="downDesc" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
+				</td>
+			</tr>
+		</table>
+		</div>
+    </div>
+    <div id="aa" class="hisui-dialog">
+    	<div  style="padding:10px">
+	    	<table>
+				<tr>
+					<td class="r-label">类型</td>
+					<td>
+						<select id="type" style="width:200px;"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">指向</td>
+					<td>
+						<select id="direct" style="width:200px;"></select>
+					</td>
+				</tr>
+			</table>
+    	
+    	</div>
+    </div>
+	<div id="upLefttb">
+		<table>
+			<tr>
+				<td>
+					<input class="hisui-textbox" name="name" id="searchInput" style="height:30px;padding-left:4px;" placeholder="请输入上报类型">
+				</td>
+				<td style="padding-left: 10px;">
+					<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'"  onclick="getDataLeftTable()">查询</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+    <div class="main">
+        <div class="quarter-div" id="blue" style="padding:5px;box-sizing:border-box">
+        	<div id="pUpLeft" style="padding:5px;">    
+			   <table id="upLeftTable"></table>
+			</div>
+        </div>
+        <div class="quarter-div" id="green" style="padding:5px;box-sizing:border-box">
+			<div id="pUpRight" style="padding:5px;">    
+				 <table id="upRightTable"></table>  
+			</div>	
+        </div>
+        <div class="quarter-div" id="orange" style="padding:5px;box-sizing:border-box">
+			<div id="pdownLeft" style="padding:5px;">    
+			   <table id="downLeftTable"></table>
+			</div>
+        </div>
+        <div class="quarter-div" id="yellow" style="padding:5px;box-sizing:border-box">
+        	<div id="pdownRight" style="padding:5px;">    
+			      <table id="downRightTable"></table>  
+			</div>
+        </div>
+    </div>
+
+	<script language="javascript">
+	
+  var watcherObj = {};// 定义一个可以监听的变量（左上角表格数据）
+  Object.defineProperty(watcherObj, "currentId", {
+    get: function() {
+      return currentId;
+    },
+    set: function(newVal) {
+      currentId = newVal;
+      getDataRightUpTableData(newVal); // 请求右侧工作流数据
+      getLeftDownData(0);// 左侧下边的数据清零
+      getDataRightDownTable(0);// 请求权限数据清零
+      // 级联请求数据处理位置 getDataRightUpTableData(watcherObj.currentId)
+    }
+  });
+  var watcherObjRightUp={};
+  Object.defineProperty(watcherObjRightUp,"currentId",{
+	get:function(){
+      return currentId;
+	},
+	set: function(newVal){
+      	currentId = newVal;
+		getLeftDownData(newVal);// 请求左侧下边的数据表格信息
+		getDataRightDownTable(0);// 权限数据表格清零
+		console.log(watcherObj,'songxx')
+	}  
+  })
+  var watcherObjLeftDown={};
+  Object.defineProperty(watcherObjLeftDown,"currentId",{
+	get:function(){
+		return currentId;	
+	},
+	set:function(newVal){
+      	currentId = newVal;
+		getDataRightDownTable(newVal);// 请求权限数据
+		console.log(newVal);
+	}	  
+  })
+  	var rightUpSelectRow="",
+  		leftDownSelectRow="",
+  		rightDownSelectRow="";
+	var	products=[{
+			productid:'是',
+			name:'是'
+		},
+		{
+			productid:'否',
+			name:'否'	
+		}]
+	var TypeArr="", // 权限定义类型数据存储
+		SaveGroup="", // 安全组
+		LocRoom="",	// 科室
+		UserArr="", // 人员
+		BigGroup=""; // 大安全组
+	var targetArr="";
+	function calculateDiv(){
+		var WUL=$("#blue").get(0).clientWidth-10;
+		var HUL=$("#blue").get(0).clientHeight-10;
+		var WUR=$("#green").get(0).clientWidth-10;
+		var HUR=$("#green").get(0).clientHeight-10;
+		var WDL=$("#orange").get(0).clientWidth-10;
+		var HDL=$("#orange").get(0).clientHeight-10;
+		var WDR=$("#yellow").get(0).clientWidth-10;
+		var HDR=$("#yellow").get(0).clientHeight-10;
+		$("#pUpLeft").panel({
+			title:"上报类型",
+			width:WUL,
+			height:HUL,
+			headerCls:"panel-header-gray",
+			iconCls:"icon-set-zero"	
+		})
+		$("#pUpRight").panel({
+			title:"工作流层级设置",
+			width:WUR,
+			height:HUR,
+			headerCls:"panel-header-gray",
+			iconCls:"icon-set-zero"	
+		})
+		$("#pdownLeft").panel({
+			title:"工作流层级设置",
+			width:WDL,
+			height:HDL,
+			headerCls:"panel-header-gray",
+			iconCls:"icon-set-zero"	
+		})
+		$("#pdownRight").panel({
+			title:"权限设置",
+			width:WDR,
+			height:HDR,
+			headerCls:"panel-header-gray",
+			iconCls:"icon-set-zero"	
+		})
+	}
+	function getDataLeftTable(){
+		var tmpStr=$("#searchInput").val();
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseWorkflow',
+			MethodName:'getType',
+			parr:tmpStr	
+		},function(res){
+			var tmpData=res.data;
+			$("#upLeftTable").datagrid({
+				fit:true,
+				fitColumns:true,
+				singleSelect:true,
+				rownumbers:true,
+				onSelect:function(rowIndex, rowData){
+					watcherObj.currentId=rowData.Id;
+				},
+				columns:[[
+					{field:'Name',title:'上报类型',width:150}
+				]],
+				data:{
+					rows:tmpData	
+				},
+				toolbar:'#upLefttb'
+			})	
+		})	
+	}	
+	function modifyDownTableRight(){
+		//console.log(rightDownSelectRow);
+		var RowId=rightDownSelectRow.Id;
+		var tmpPerSetPointTo=rightDownSelectRow.PerSetPointTo.split(",");
+		var tmpPerSetType=rightDownSelectRow.PerSetType;
+		var tmpAdverseId=rightDownSelectRow.AdverseId;
+		var targetDirect="";
+		var targetType=TypeArr;
+		if(tmpPerSetType=="Group"){
+			targetDirect=SaveGroup;
+		}else if(tmpPerSetType=="Loc"){
+			targetDirect=LocRoom;
+		
+		}else if(tmpPerSetType=="User"){
+			targetDirect=UserArr;
+		}
+
+		$HUI.combobox("#type",{
+			valueField:'Id', textField:'Desc', multiple:false,selectOnNavigation:false,editable:true,
+			required:true,
+			data:targetType,
+			onChange:function(newval,oldval){
+				
+				if(!newval || !oldval){
+					return;	
+				}
+				console.log(newval,oldval,'xxx');
+				if(newval=="Group"){
+					$("#direct").combobox('clear');      
+					$("#direct").combobox('loadData',SaveGroup)
+				}else if(newval=="Loc"){
+					$("#direct").combobox('clear');   
+					$("#direct").combobox('loadData',LocRoom)
+				}else if(newval=="User"){
+					$("#direct").combobox('clear');   
+					$("#direct").combobox('loadData',UserArr)
+				}
+			}
+		});
+		$("#type").combobox('setValue',tmpPerSetType);
+		
+		$HUI.combobox("#direct",{
+			valueField:'Id', textField:'Desc', multiple:true,selectOnNavigation:false,editable:true,
+			required:true,
+			data:targetDirect,
+			onChange:function(newval,oldval){
+				console.log(newval,oldval,'song');
+			}
+		});
+		$("#direct").combobox('setValues',tmpPerSetPointTo)
+		
+		$HUI.dialog(('#aa'),{
+		title: '权限设置修改',
+		width:400,
+		height:180,
+		iconCls:'icon-save',
+		resizable:false,
+		modal:true,
+		buttons:[{
+		text:'保存',
+		handler:function(){
+			var tmpType=$("#type").combobox('getValue');
+			var PointTo=$("#direct").combobox('getValues');
+			var tmpPointTo=PointTo.join(',');
+			if(!tmpType||!tmpPointTo){
+				$.messager.popover({msg: '必填项不能为空！',type:'alert'});	
+				return;
+			}
+			var str='AdverseType|'+tmpAdverseId+"^PerSetType|"+tmpType+"^PerSetPointTo|"+tmpPointTo;
+			console.log(str);
+			$cm({
+				ClassName:'NurMp.DHCNurAdversePerSetflow',
+				MethodName:'Save',
+				parr:str,
+				Id:RowId	
+			},function(res){
+				if(res.status==0){
+					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+					getDataRightDownTable(tmpAdverseId);
+					$HUI.dialog('#aa').close();
+					rightDownSelectRow="";
+				}	
+			})
+		},
+		},{
+			text:'取消',
+			handler:function(){$HUI.dialog('#aa').close();}
+			}]
+		});
+		
+	}
+	function modifyDownTableLeft(){
+		console.log(leftDownSelectRow);
+		var tmpAdiutCode=leftDownSelectRow.AdiutCode;
+		var tmpAdiutDesc=leftDownSelectRow.AdiutDesc;
+		var tmpRowId=leftDownSelectRow.Id;
+		var tmpparentId=rightUpSelectRow==""?"":rightUpSelectRow.Id;
+		$HUI.dialog(('#cc'),{
+		title: '工作流层级修改',
+		width:400,
+		height:180,
+		iconCls:'icon-save',
+		resizable:false,
+		modal:true,
+		buttons:[{
+		text:'保存',
+		handler:function(){
+			var tmpCode=$("#downCode").val();// 获取输入的code值
+			var tmpDesc=$("#downDesc").val();// 获取输入的描述值
+			//var tmpFlag=$("#iconokBox").combobox('getValue');
+			var str='AdverseType|'+tmpparentId+"^AdiutCode|"+tmpCode+"^AdiutDesc|"+tmpDesc;
+			// console.log(str);$.messager.popover({msg: '必填项不能为空！',type:'alert'});	
+			if(!tmpCode || !tmpDesc){
+				$.messager.popover({msg: '必填项不能为空！',type:'alert'});
+				return;
+			}
+			$cm({
+				ClassName:'NurMp.DHCNurAdverseAdiutflow',
+				MethodName:'Save',
+				parr:str,
+				id:tmpRowId	
+			},function(res){
+				if(res.status==0){
+					$HUI.dialog('#cc').close();
+					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+					getLeftDownData(tmpparentId)
+					leftDownSelectRow="";
+				}	
+			})
+			// console.log(tmpCode,tmpDesc,tmpFlag)
+		},
+		},{
+			text:'取消',
+			handler:function(){$HUI.dialog('#cc').close();}
+			}]
+		})
+		$("#downCode").val(tmpAdiutCode)
+		$("#downCode").validatebox("validate");
+		$("#downDesc").val(tmpAdiutDesc)
+		$("#downDesc").validatebox("validate");
+		
+	}
+	function modifyUpTableRight(){
+		console.log(rightUpSelectRow)
+		var tmpModulDes=rightUpSelectRow.ModulDes;
+		var tmpModuleCode=rightUpSelectRow.ModuleCode;
+		var tmpModulPriorityFlag=rightUpSelectRow.ModulPriorityFlag;
+		var tmpParentId=rightUpSelectRow.AdverseType; // 父id
+		var tmpRowId=rightUpSelectRow.Id;
+		$HUI.combobox("#iconokBox",{
+			valueField:'Indentity', textField:'Description', panelHeight:'auto',multiple:false,selectOnNavigation:false,editable:true,
+			required:true,
+			data:[
+				{Indentity:'是',Description:'是'},
+				{Indentity:'否',Description:'否'}
+			]
+		});
+		 $("#iconokBox").combobox('setValue',tmpModulPriorityFlag);
+		$("#upCode").val(tmpModuleCode)
+		$("#upCode").validatebox("validate");
+		$("#upDesc").val(tmpModulDes)
+		$("#upDesc").validatebox("validate");
+		// 修改数据
+		$HUI.dialog(('#dd'),{
+		title: '工作流层级修改',
+		width:400,
+		height:214,
+		iconCls:'icon-save',
+		resizable:false,
+		modal:true,
+		buttons:[{
+		text:'保存',
+		handler:function(){
+			var tmpCode=$("#upCode").val();// 获取输入的code值
+			var tmpDesc=$("#upDesc").val();// 获取输入的描述值
+			var tmpFlag=$("#iconokBox").combobox('getValue');
+			var tmpStr='AdverseType|'+tmpParentId+"^ModuleCode|"+tmpCode+"^ModulDes|"+tmpDesc+"^ModulPriorityFlag|"+tmpFlag;
+			if(!tmpCode || !tmpDesc || !tmpFlag){
+				$.messager.popover({msg: '必填项不能为空！',type:'alert'});	
+				return;
+			}
+			$cm({
+				ClassName:'NurMp.DHCNurAdverseWorkflow',
+				MethodName:'Save',
+				parr:tmpStr,
+				Id:tmpRowId	
+			},function(res){
+				if(res.status==0){
+					$HUI.dialog('#dd').close();
+					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+					getDataRightUpTableData(tmpParentId)
+					rightUpSelectRow="";
+				}	
+			})
+			console.log(tmpCode,tmpDesc,tmpFlag)
+		},
+		},{
+			text:'取消',
+			handler:function(){$HUI.dialog('#dd').close();}
+			}]
+		})
+	}
+	function insert() {
+		// 右上表格新增插入数据
+		$('#upRightTable').datagrid('clearSelections')
+		var row = $('#upRightTable').datagrid('getSelected');
+		if (row) {
+			var index = $('#tt').datagrid('getRowIndex', row);
+		} else {
+			index = 0;
+		}
+		$('#upRightTable').datagrid('insertRow', {
+			index: index,
+			row: {
+			}
+		});
+		$('#upRightTable').datagrid('selectRow', index);
+		$('#upRightTable').datagrid('beginEdit', index);
+	}
+	function saverow(target) {
+		$('#upRightTable').datagrid('endEdit', 0);
+		var parentId=$("#upLeftTable").datagrid('getSelected').Id;
+		if(!parentId){
+			return;
+		}
+		var tmp=$('#upRightTable').datagrid('getSelected')
+		// 行保存数据
+		var str='AdverseType|'+parentId+"^ModuleCode|"+tmp.ModuleCode+"^ModulDes|"+tmp.ModulDes+"^ModulPriorityFlag|"+tmp.ModulPriorityFlag;
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseWorkflow',
+			MethodName:'Save',
+			parr:str,
+			Id:''	
+		},function(res){
+			if(res.status==0){
+				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+				getDataRightUpTableData(parentId)
+			}	
+		})
+	}
+		
+	function insertLD() {
+		// 右上表格新增插入数据
+		$('#downLeftTable').datagrid('clearSelections')
+		var row = $('#downLeftTable').datagrid('getSelected');
+		if (row) {
+			var index = $('#tt').datagrid('getRowIndex', row);
+		} else {
+			index = 0;
+		}
+		$('#downLeftTable').datagrid('insertRow', {
+			index: index,
+			row: {
+			}
+		});
+		$('#downLeftTable').datagrid('selectRow', index);
+		$('#downLeftTable').datagrid('beginEdit', index);
+	}
+	
+		
+	function insertRD() {
+		// 右下表格新增插入数据
+		
+		$('#downRightTable').datagrid('clearSelections')
+		var row = $('#downRightTable').datagrid('getSelected');
+		if (row) {
+			var index = $('#tt').datagrid('getRowIndex', row);
+		} else {
+			index = 0;
+		}
+		$('#downRightTable').datagrid('insertRow', {
+			index: index,
+			row: {
+			}
+		});
+		$('#downRightTable').datagrid('selectRow', index);
+		$('#downRightTable').datagrid('beginEdit', index);
+	}
+	function saverowDL(target) {
+		var parentId=$("#upRightTable").datagrid('getSelected').Id;
+		if(!parentId){
+			return;
+		}
+		$('#downLeftTable').datagrid('endEdit', 0);
+		var tmp=$('#downLeftTable').datagrid('getSelected')
+		// 行保存数据
+		console.log(tmp);
+		// var str='AdverseType|'+watcherObj.currentId+"^AdiutCode|"+tmp.AdiutCode+"^AdiutDesc|"+tmp.AdiutDesc;
+		var str='AdverseType|'+parentId+"^AdiutCode|"+tmp.AdiutCode+"^AdiutDesc|"+tmp.AdiutDesc;
+		console.log(str);
+		
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseAdiutflow',
+			MethodName:'Save',
+			parr:str,
+			Id:''	
+		},function(res){
+			if(res.status==0){
+				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+				getLeftDownData(parentId)
+			}	
+		})
+	}
+	
+	function saverowDR(target) {
+		var parentId=$("#downLeftTable").datagrid('getSelected').Id;
+		if(!parentId){
+			return;
+		}
+		$('#downRightTable').datagrid('endEdit', 0);
+		var tmp=$('#downRightTable').datagrid('getSelected')
+		// 行保存数据watcherObjLeftDown
+		// var str='AdverseType|'+watcherObj.currentId+"^PerSetType|"+tmp.PerSetType+"^PerSetPointTo|"+tmp.PerSetPointTo;
+		var str='AdverseType|'+parentId+"^PerSetType|"+tmp.PerSetType+"^PerSetPointTo|"+tmp.PerSetPointTo;
+		console.log(str);
+		$cm({
+			ClassName:'NurMp.DHCNurAdversePerSetflow',
+			MethodName:'Save',
+			parr:str,
+			Id:''	
+		},function(res){
+			if(res.status==0){
+				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+				getDataRightDownTable(parentId)
+			}	
+		})
+	}
+	function cancelrow(target) {
+		$('#upRightTable').datagrid('cancelEdit', 0);
+	}
+	function upTableRU(rowId,parentId){
+		// 模块工作流上调级别
+		console.log(rowId)
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseWorkflow',
+			MethodName:'changePriority',
+			Type:'UP',
+			id:rowId
+		},function(res){
+			if(res.status==0){
+				getDataRightUpTableData(parentId)	
+			}else{
+				$.messager.popover({msg: res.msg,type:'alert'});	
+			}		
+		})
+	}
+	function downTableRU(rowId,parentId){
+		// 模块工作流下调级别
+		console.log(rowId)
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseWorkflow',
+			MethodName:'changePriority',
+			Type:'DOWN',
+			id:rowId
+		},function(res){
+			if(res.status==0){
+				getDataRightUpTableData(parentId)	
+			}else{
+				$.messager.popover({msg: res.msg,type:'alert'});	
+			}	
+		})	
+	}
+	function downTableLD(rowId,parentId){
+		// 审核工作流下调级别
+		console.log(rowId)
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseAdiutflow',
+			MethodName:'changePriority',
+			Type:'DOWN',
+			Id:rowId
+		},function(res){
+			if(res.status==0){
+				getLeftDownData(parentId)	
+			}else{
+				$.messager.popover({msg: res.msg,type:'alert'});	
+			}	
+		})
+	}
+	function upTableLD(rowId,parentId){
+		console.log(rowId)
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseAdiutflow',
+			MethodName:'changePriority',
+			Type:'UP',
+			Id:rowId
+		},function(res){
+			if(res.status==0){
+				getLeftDownData(parentId)	
+			}else{
+				$.messager.popover({msg: res.msg,type:'alert'});	
+			}
+		})
+	}
+	function getDataRightUpTableData(currId){
+		// 右上方的表格数据获取
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseWorkflow',
+			MethodName:'getData',
+			AdverseId:currId	
+		},function(res){
+			var tmpData=res.data;
+			// console.log(res.data)
+			$("#upRightTable").datagrid({
+				fit:true,
+				singleSelect:true,
+				onSelect:function(rowIndex, rowData){
+					rightUpSelectRow=rowData;
+					watcherObjRightUp.currentId=rowData.Id
+				},
+				columns:[[
+					{field:'ModuleCode',title:'代码',width:70,editor:{type:'text',options:{required:true}}},
+					{field:'ModulDes',title:'描述',width:150,editor:{type:'text',options:{required:true}}},
+					{
+						field:'ModulPriorityFlag',
+						title:'是否定义优先级',
+						width:60,
+						formatter:function(value){
+							for(var i=0;i<products.length;i++){
+								if(products[i].productid==value) return products[i].name;	
+							}
+							return value;
+						},
+						editor:{
+							type:'combobox',
+							options:{
+								valueField:'productid',
+								textField:'name',
+								data:products,
+								required:true
+							}
+						}
+					
+					},
+					{
+						field:'yxj',
+						title:'优先级',
+						width:50,
+						formatter:function(value,row,index){
+							var down = '<span style="margin-left:5px;cursor:pointer" class="icon icon-down" onclick="downTableRU('+row.Id+','+row.AdverseType+')">&nbsp;&nbsp;&nbsp;&nbsp;</span> ';
+							var up = '<span style="cursor:pointer" class="icon icon-up" onclick="upTableRU('+row.Id+','+row.AdverseType+')">&nbsp;&nbsp;&nbsp;&nbsp;</span>';
+							return down + up;
+						}
+					}
+				]],
+				fitColumns:true,
+				rownumbers:true,
+				data:{
+					rows:tmpData	
+				},
+				toolbar:[
+					{iconCls:'icon-add',handler:function(){
+						insert();// 新增数据	
+					},text:'新增'},
+					{iconCls:'icon-save',handler:function(){
+						var tmp=$('#upRightTable').datagrid('getSelected');
+						if(tmp==null){
+							return;	
+						}
+						$.messager.confirm('保存', '确定要保存吗?',function(r){
+							if(r){
+								saverow();
+								// $("#upRightTable").datagrid('clearSelections')		
+							}else{
+								$('#upRightTable').datagrid('deleteRow', 0);
+								$("#upRightTable").datagrid('clearSelections')	
+							}	
+						})
+						
+					},text:'保存'},
+					{iconCls:'icon-write-order',handler:function(){
+						if(rightUpSelectRow==""){
+							$.messager.popover({msg: '未选中要修改的行数据！',type:'info',timeout: 2000,showType: 'show'});
+							return;
+						}
+						modifyUpTableRight();
+					},text:'修改'},
+					{iconCls:'icon-cancel',handler:function(){
+						// rightUpSelectRow="",
+				  		// leftDownSelectRow="",
+				  		// rightDownSelectRow=""
+				  		if(rightUpSelectRow==""){
+					  		$.messager.popover({msg: '未选中要删除的行！',type:'alert'});	
+					  	}else{
+							$.messager.confirm('删除', '确定要删除吗?', function (r) {
+								if (r) {
+									$cm({
+										ClassName:'NurMp.DHCNurAdverseWorkflow',
+										MethodName:'delete',
+										Id:String(rightUpSelectRow.Id)	
+									},function(res){
+										if(res.status==0){
+											$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+											var parentId=$("#upLeftTable").datagrid('getSelected').Id;
+											if(!parentId){
+												return;
+											}
+											getDataRightUpTableData(parentId)	
+										}	
+									},function(){
+										$.messager.popover({msg: '删除失败！',type:'error'});	
+									})
+								}
+							});	
+						 }
+					},text:'删除'},
+				]
+					
+			})
+		})	
+	}
+	function getLeftDownData(currId){
+		// 获取左下方表格数据信息
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseAdiutflow',
+			MethodName:'getData',
+			AdverseId:currId	
+		},function(res){
+			var tmpData=res.data;
+			$("#downLeftTable").datagrid({
+				fit:true,
+				singleSelect:true,
+				onSelect:function(rowIndex, rowData){
+					leftDownSelectRow=rowData;
+					watcherObjLeftDown.currentId=rowData.Id;
+				},
+				columns:[[
+					{
+						field:'AdiutCode',
+						title:'代码',
+						width:100,
+						editor:{type:'text',options:{required:true}}
+					},
+					{field:'AdiutDesc',title:'描述',width:150,editor:{type:'text',options:{required:true}}},
+					{
+						field:'yxj',
+						title:'优先级',
+						width:50,
+						formatter:function(value,row,index){
+							var down = '<span style="margin-left:5px;cursor:pointer" class="icon icon-down" onclick="downTableLD('+row.Id+','+row.AdverseId+')">&nbsp;&nbsp;&nbsp;&nbsp;</span> ';
+							var up = '<span style="cursor:pointer" class="icon icon-up" onclick="upTableLD('+row.Id+','+row.AdverseId+')">&nbsp;&nbsp;&nbsp;&nbsp;</span>';
+							return down + up;
+						}
+					}
+				]],
+				fitColumns:true,
+				rownumbers:true,
+				data:{
+					rows:tmpData	
+				},
+				toolbar:[
+					{iconCls:'icon-add',handler:function(){
+						insertLD(); // 新增一行数据	
+					},text:'新增'},
+					{iconCls:'icon-save',handler:function(){
+						var tmp=$('#downLeftTable').datagrid('getSelected');
+						if(tmp==null){
+							return;	
+						}
+						$.messager.confirm('保存', '确定要保存吗?',function(r){
+							if(r){
+								saverowDL();
+								// $("#upRightTable").datagrid('clearSelections')		
+							}else{
+								$('#downLeftTable').datagrid('deleteRow', 0);
+								$("#downLeftTable").datagrid('clearSelections')	
+							}	
+						})
+					},text:'保存'},
+					{iconCls:'icon-write-order',handler:function(){
+						if(leftDownSelectRow==""){
+							$.messager.popover({msg: '未选中要修改的行数据！',type:'info',timeout: 2000,showType: 'show'});
+							return;
+						}
+						modifyDownTableLeft();
+					},text:'修改'},
+					{iconCls:'icon-cancel',handler:function(){
+						// rightUpSelectRow="",
+				  		// leftDownSelectRow="",
+				  		// rightDownSelectRow=""
+				  		if(leftDownSelectRow==""){
+					  		$.messager.popover({msg: '未选中要删除的行！',type:'alert'});	
+					  	}else{
+							$.messager.confirm('删除', '确定要删除吗?', function (r) {
+								if (r) {
+									$cm({
+										ClassName:'NurMp.DHCNurAdverseAdiutflow',
+										MethodName:'delete',
+										Id:String(leftDownSelectRow.Id)	
+									},function(res){
+										if(res.status==0){
+											$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+											var parentId=$("#upRightTable").datagrid('getSelected').Id;
+											if(!parentId){
+												return;
+											}
+											getLeftDownData(parentId)	
+										}	
+									},function(){
+										$.messager.popover({msg: '删除失败！',type:'error'});	
+									})
+								}
+							});	
+						 }
+					},text:'删除'},
+				]
+					
+			})
+		})	
+	}
+	
+	function getDataRightDownTable(currId){
+		$cm({
+			ClassName:'NurMp.DHCNurAdversePerSetflow',
+			MethodName:'getData',
+			AdverseId:currId	
+		},function(res){
+			var tmpData=res.data;
+			//console.log(res.data);
+			$("#downRightTable").datagrid({
+				fit:true,
+				singleSelect:true,
+				onSelect:function(rowIndex, rowData){
+					rightDownSelectRow=rowData;
+					console.log(rightDownSelectRow)
+				},
+				columns:[[
+					{
+						field:'PerSetType',
+						title:'类型',
+						width:20,
+						formatter:function(value){
+							for(var i=0;i<TypeArr.length;i++){
+								if(TypeArr[i].Id==value) return TypeArr[i].Desc;	
+							}
+							return value;
+						},
+						editor:{
+							type:'combobox',
+							options:{
+								valueField:'Id',
+								textField:'Desc',
+								data:TypeArr,
+								required:true,
+								onSelect:function(newValue, oldValue){
+									// 选择框发生变化的时候
+									if(newValue.Id=="User"){
+										targetArr=UserArr;	
+									}else if(newValue.Id=="Group"){
+										targetArr=SaveGroup
+									}else if(newValue.Id=="Loc"){
+										targetArr=LocRoom
+									}else if(newValue.Id=="LocGroup"){
+										targetArr=BigGroup
+									}
+									// console.log(targetArr)
+									var editor=$("#downRightTable").datagrid("getEditor",{index:0,field:'PerSetPointTo'})
+									$(editor.target).combobox('loadData',targetArr)
+								}
+							}
+						}
+					},
+					{
+						field:'PerSetPointTo',
+						title:'指向',
+						width:100,
+						resizable:true,
+						formatter:function(value,row,index){
+							if(row.PerSetType=="User"){
+								targetArr=UserArr;	
+							}else if(row.PerSetType=="Group"){
+								targetArr=SaveGroup
+							}else if(row.PerSetType=="Loc"){
+								targetArr=LocRoom
+							}else if(row.PerSetType=="LocGroup"){
+								targetArr=BigGroup
+							}
+							if(value==undefined){
+								return value;
+							}else{
+								var tmpVal=value.split(",")
+								var resault=[];
+								for(var i=0;i<targetArr.length;i++){
+									tmpVal.forEach(function(item){
+										if(parseInt(targetArr[i].Id)==parseInt(item)){
+											resault.push(targetArr[i].Desc)
+										}
+									})
+									// if(parseInt(targetArr[i].Id)==parseInt(value)) return targetArr[i].Desc;	
+								}
+								return resault.join(",");
+							}
+						},
+						editor:{
+							type:'combobox',
+							options:{
+								valueField:'Id',
+								textField:'Desc',
+								data:targetArr,
+								required:true,
+								multiple:true
+							}
+						}
+					},
+				]],
+				fitColumns:true,
+				rownumbers:true,
+				data:{
+					rows:tmpData	
+				},
+				toolbar:[
+					{iconCls:'icon-add',handler:function(){
+						insertRD();		
+					},text:'新增'},
+					{iconCls:'icon-save',handler:function(){
+							var tmp=$('#downRightTable').datagrid('getSelected');
+							if(tmp==null){
+								return;	
+							}
+							$.messager.confirm('保存', '确定要保存吗?',function(r){
+							if(r){
+								saverowDR();
+								// $("#upRightTable").datagrid('clearSelections')		
+							}else{
+								$('#downRightTable').datagrid('deleteRow', 0);
+								$("#downRightTable").datagrid('clearSelections')	
+							}	
+						})	
+					},text:'保存'},
+					{iconCls:'icon-write-order',handler:function(){
+						if(rightDownSelectRow==""){
+							$.messager.popover({msg: '未选中要修改的行数据！',type:'info',timeout: 2000,showType: 'show'});
+							return;
+						}
+						modifyDownTableRight();
+					},text:'修改'},
+					{iconCls:'icon-cancel',handler:function(){
+				  		if(rightDownSelectRow==""){
+					  		$.messager.popover({msg: '未选中要删除的行！',type:'alert'});	
+					  	}else{
+							$.messager.confirm('删除', '确定要删除吗?', function (r) {
+								if (r) {
+									$cm({
+										ClassName:'NurMp.DHCNurAdversePerSetflow',
+										MethodName:'delete',
+										Id:String(rightDownSelectRow.Id)	
+									},function(res){
+										if(res.status==0){
+											$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+											var parentId=$("#downLeftTable").datagrid('getSelected').Id;
+											if(!parentId){
+												return;
+											}
+											getDataRightDownTable(parentId)	
+										}	
+									},function(){
+										$.messager.popover({msg: '删除失败！',type:'error'});	
+									})
+								}
+							});	
+						 }
+					},text:'删除'},
+				]
+					
+			})
+		})
+	}
+	function getType(){
+	// 权限获取类型
+	$cm({
+		ClassName:'NurMp.DHCNurAdversePerSetflow',
+		MethodName:'getType',	
+	},function(res){
+		TypeArr=res.data;
+		console.log(TypeArr,"typeArr")
+		var newData=TypeArr.map(function(item){
+			return item.Id;	
+		});
+		newData.forEach(function(item){
+				/*var TypeArr="", // 权限定义类型数据存储
+					SaveGroup="", // 安全组
+					LocRoom="",	// 科室
+					UserArr="", // 人员
+					BigGroup=""; // 大安全组*/
+			if(item=="Group"){
+				// 安全组
+				$cm({
+					ClassName:'NurMp.DHCNurAdversePerSetflow',
+					MethodName:'getTypeInfo',
+					Type:item	
+				},function(res){
+					SaveGroup=res.data;	
+					// console.log(SaveGroup);
+				})
+			}else if(item=="Loc"){
+				// 科室
+				$cm({
+					ClassName:'NurMp.DHCNurAdversePerSetflow',
+					MethodName:'getTypeInfo',
+					Type:item	
+				},function(res){
+					LocRoom=res.data;	
+					//console.log(SaveGroup);
+				})
+			}else if(item=="User"){
+				$cm({
+					ClassName:'NurMp.DHCNurAdversePerSetflow',
+					MethodName:'getTypeInfo',
+					Type:item	
+				},function(res){
+					UserArr=res.data;	
+					// console.log(UserArr);
+				})
+			}else if(item=="LocGroup"){
+				// 大科安全组
+				$cm({
+					ClassName:'NurMp.DHCNurAdversePerSetflow',
+					MethodName:'getTypeInfo',
+					Type:item	
+				},function(res){
+					BigGroup=res.data;	
+					// console.log(BigGroup);
+				})
+			}
+		})
+	})
+}
+	$(function(){
+		$("#dd").dialog('close');
+		$("#cc").dialog('close');
+		$("#aa").dialog('close');
+		getType();
+		getDataLeftTable();
+		// getDataRightDownTable();
+		setTimeout(function(){
+				calculateDiv();
+			},200)
+		$(window).on("resize",function(){
+			calculateDiv();
+		})	
+	})
+	</script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<HTML>
+<HEAD>
+	<TITLE>手术麻醉相关打印</TITLE>
+	<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+	<TRAK:HEAD></TRAK:HEAD>
+ 	<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.js"></script>  
+	<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.Setting.js"></script>  
+	<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.DesignerHelper.js"></script>
+	<script type="text/javascript" src='../scripts/excelprint.js'></script>
+	<script language="cache" runat="server">
+    &sql(select LayoutManager into :ConnectStr from websys.configuration)
+   </script>
+    <server>
+		w "<object id='FormICU' classid='../service/DHCClinic/App/AN/UI.dll#UI.OneStepPrint' height='0' width='0' VIEWASTEXT/></object>"
+		s GetOpaIdStr=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCom.GetOpaIdStr"))
+		s GetAnLocId=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCom.GetAnLocId"))
+		s GetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.GetPageNumber"))
+        s SetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.SetPageNumber"))
+   </server>
+	<script type="text/javascript">
+	var connectStr='#(ConnectStr)#';
+	var printParameters = window.dialogArguments
+	var pageInfoID = printParameters.PageInfoID
+	var EpisodeID = printParameters. EpisodeID
+	var categoryDetail=printParameters.CategoryDetail
+	var GetOpaIdStr='#(GetOpaIdStr)#';
+	var GetAnLocId='#(GetAnLocId)#';
+	var GetPageNumMethod='#(GetPageNumMethod)#';
+	var SetPageNumMethod='#(SetPageNumMethod)#';
+   </script>
+</HEAD>
+<BODY >
+<!--<script type="text/javascript" src="../scripts/dhcclinic/PACU/onestepprint/DHCANOneStepPrint.js"></script>-->
+ <script type="text/javascript">
+ var opCountPageCount=0,startPageNo;
+ Ext.onReady( function ()
+ { 
+  var objFormICU,str1="",str2="";
+  if(!objFormICU)
+   {
+     objFormICU=document.getElementById("FormICU"); 
+   }
+   var opaIdStr=cspRunServerMethod(GetOpaIdStr,EpisodeID)
+   if(opaIdStr=="") return;
+   
+   if (categoryDetail=="麻醉记录.麻醉记录")
+  {
+    str1="AN"
+  }
+   if (categoryDetail=="病理.病理")
+  {
+    str2="OPCount"
+  }
+  var userId=session['LOGON.USERID'];
+  var userGroupId=session['LOGON.GROUPID'];
+  var ctlocId=session['LOGON.CTLOCID'];
+  startPageNo=cspRunServerMethod(GetPageNumMethod,pageInfoID)
+  startPageNo=parseInt(startPageNo)
+  if(str1!="")
+  { 
+    var isSuperUser=false;
+    var curLocation=unescape(window.location);
+    curLocation=curLocation.toLowerCase();
+    filePathStr=curLocation.substr(0,curLocation.indexOf('/csp/'))+"/service/DHCClinic/Configuration/";  
+	var i=0;
+	var pageCount;
+	var count=opaIdStr.split("^").length;
+	for(i=0;i<count;i++)
+	 { 
+	  opaId=opaIdStr.split("^")[i];
+	  if(opaId=="")continue;
+	  ctlocId=cspRunServerMethod(GetAnLocId,opaId)
+	  pageCount=0;
+	  startPageNo+=pageCount;
+	  pageCount=FormICU.InitOneStepPrint(opaId,userId,connectStr,isSuperUser,userGroupId,ctlocId,filePathStr,str1,"",startPageNo); 
+	 }
+	  var endPageNumber=startPageNo+pageCount;
+	  var ret=cspRunServerMethod(SetPageNumMethod,endPageNumber, pageInfoID)
+	  if(ret!=1) alert("设置页码未成功！") 
+   }
+   
+   if(str2!="")
+   {  
+    var count=opaIdStr.split("^").length;
+	for(i=0;i<count;i++)
+	 {
+      opaId=opaIdStr.split("^")[i];
+	  if(opaId=="")continue;
+	  PrintOPCount(opaId);
+	 } 
+   }
+   setTimeout("window.close();", 3000 ) 
+	 
+ }) 
+ function PrintOPCount(opaId)
+ {
+   
+   if(opaId=="") return;
+   var storeProxy = new Ext.data.HttpProxy(new Ext.data.Connection({
+	     url : ExtToolSetting.RunQueryPageURL
+	      }));
+    var store = new Ext.data.Store({
+	    proxy: storeProxy,
+	    reader: new Ext.data.JsonReader({
+	    root: 'record',
+	    totalProperty: 'total',
+	    idProperty: 'tANOPCId'
+		}, 
+		[
+			 {name: 'tANOPCId', mapping: 'tANOPCId'}
+			,{name: 'OPCountDesc', mapping: 'OPCountDesc'}
+			,{name: 'tPreOperNum', mapping: 'tPreOperNum'}
+			,{name: 'tAddNum', mapping: 'tAddNum'}
+			,{name: 'tUnSewNum', mapping: 'tUnSewNum'}			
+			,{name: 'tSewedNum', mapping: 'tSewedNum'}
+			,{name: 'OPCountId', mapping: 'OPCountId'}
+			,{name: 'tSelfDefine', mapping: 'tSelfDefine'}
+		])
+	});
+	 storeProxy.on('beforeload', function(objProxy, param){
+			param.ClassName = 'web.DHCANCOPCount';
+			param.QueryName = 'FindTypeSel';
+			param.Arg1 = '';
+			param.Arg2 = opaId;
+			param.ArgCnt = 2;
+		});
+		
+	store.load({
+	  params:{opaId:opaId},
+	  callback:function(records,option,success)
+	  {
+	    //如果在这里引用opaId全局变量，这个回调函数属于异步调用，外面的循环比里面这个回调函数快，所以opaId很快变为最后一个值，而这个回调函数才到引用opaId的时候，外面的循环走完了，回调函数才开始按部就班的走那三个循环导致了一直引用的是最后一个全局变量的值。
+	   if(success)
+	   {
+	    var opaId=option.params.opaId;
+	    startPageNo+=opCountPageCount;
+	    PrintMethod(records,opaId);
+	    var endPageNumber=startPageNo+opCountPageCount;
+	    var ret=cspRunServerMethod(SetPageNumMethod,endPageNumber, pageInfoID)
+	    if(ret!=1) alert("设置页码未成功！")
+	   }
+	  }
+	  })	
+ }
+ function PrintMethod(records,opaId)
+ {
+    var xlsExcel,xlsSheet,xlsBook;
+    var titleRows,titleCols,LeftHeader,CenterHeader,RightHeader;
+    var LeftFooter,CenterFooter,RightFooter;
+    var path,fileName;
+    path = GetFilePath();
+    fileName = path + "DHCANCOPCount.xls";
+    xlsExcel = new ActiveXObject("Excel.Application");
+    xlsBook = xlsExcel.Workbooks.Add(fileName);
+    xlsSheet = xlsBook.ActiveSheet;
+    xlsTop=1;xlsLeft=1;
+    var patOpDate = "",patLoc = "",patMedCareNo = "",patName = "",patSex = "",patAge = "",patPreDiag = "",patOpName = "",patOpDoc = "",InstrNur = "",cirNur = "";
+    var shiftScrNur="";
+    var shiftCirNur="";
+	if (opaId==""){alert("该病人未做手术！");return;}
+ 	var _DHCANOPCareRecord=ExtTool.StaticServerObject('web.DHCANOPCareRecord');
+    var patInfoStr=_DHCANOPCareRecord.GetPatInfo(opaId)
+	var patInfo=patInfoStr.split("^");
+	  patLoc = patInfo[0];
+	  patMedCareNo = patInfo[4];
+	  patName = patInfo[1];
+	  patSex = patInfo[2];
+	  patAge = patInfo[3];
+	  patPreDiag = patInfo[13];
+	  patOpDate = patInfo[7];
+	  plOpDes = patInfo[8];
+	  patOpDoc = patInfo[14];
+	  instrNur = patInfo[11];
+	  cirNur = patInfo[12];
+      //patitent base information
+      var totalRow=27; 
+	  var row = 2;
+      var count=records.length;
+      if(count==0) return;
+      var pageCount=0;
+      var n=parseInt(count/(2*totalRow))
+      if(count%(2*totalRow)==0)
+      {
+        pageCount=n;
+      }      
+      else
+      {
+	      pageCount=n+1;
+      }
+      opCountPageCount+=pageCount;
+	  for(var i=1;i<count;i++)
+	  {
+	    var record=records[i];
+		var opCountDesc=record.get('OPCountDesc');
+		var preOperNum=record.get('tPreOperNum');
+		var addNum=record.get('tAddNum');
+		var unSewNum=record.get('tUnSewNum');
+		var sewedNum=record.get('tSewedNum');
+        if(parseInt(unSewNum)!=parseInt(sewedNum))
+        {
+         alert(opCountDesc+'关后清点数与关前清点数不相等！')
+         return;
+        }
+        if((preOperNum=='0')&&(addNumStr=='0')&&(unSewNum=='0')&&(sewedNum=='0'))
+		{
+		  continue;
+		}
+		var isEven;
+		var curPage=parseInt(i/totalRow);
+        if(curPage%2 == 0)   
+   		{   
+      		isEven=1;  //even
+   		}else{   
+      		isEven=0;  //odd
+   		}
+   if(isEven==1)
+        {
+			xlsSheet.cells(row+i-curPage*totalRow,1)=opCountDesc;
+			xlsSheet.cells(row+i-curPage*totalRow,2)=preOperNum;
+			xlsSheet.cells(row+i-curPage*totalRow,3)=addNum;
+			xlsSheet.cells(row+i-curPage*totalRow,4)=unSewNum;
+			xlsSheet.cells(row+i-curPage*totalRow,5)=sewedNum;
+		}
+	else{
+			xlsSheet.cells(row+i-curPage*totalRow+1,6)=opCountDesc;
+			xlsSheet.cells(row+i-curPage*totalRow+1,7)=preOperNum;
+			xlsSheet.cells(row+i-curPage*totalRow+1,8)=addNum;
+			xlsSheet.cells(row+i-curPage*totalRow+1,9)=unSewNum;
+			xlsSheet.cells(row+i-curPage*totalRow+1,10)=sewedNum;
+		 }
+	  }
+    xlsSheet.cells(totalRow+row+1,6)=cirNur;
+	xlsSheet.cells(totalRow+row+2,6)=instrNur;
+	var tmpStartPageNo=startPageNo-1
+	xlsSheet.PageSetup.RightFooter = " &N+"+tmpStartPageNo+  "-&P "
+    xlsSheet.PrintOut();
+    xlsSheet = null;
+    xlsBook.Close(savechanges=false)
+    xlsBook = null;
+    xlsExcel.Quit();
+    xlsExcel = null;
+    }
+  function countExcelSet(objSheet, titleRows, titleCols, LeftHeader, CenterHeader, RightHeader, LeftFooter, CenterFooter, RightFooter)
+  {
+    var titleRowsStr, titleColsStr
+    if (titleRows > 0) {titleRowsStr="$1:$"+titleRows}
+    else { titleRowsStr = ""}
+    titleColsStr = "";
+    if (titleCols==1) titleColsStr = "$A:$A"    //'maxcols is 5
+    if (titleCols==2) titleColsStr = "$A:$B"
+    if (titleCols==3) titleColsStr = "$A:$C"
+    if (titleCols==4) titleColsStr = "$A:$D"
+    if (titleCols==5) titleColsStr = "$A:$E"
+   
+    objSheet.PageSetup.PrintTitleRows = titleRowsStr
+    objSheet.PageSetup.PrintTitleColumns = titleColsStr
+        
+    objSheet.PageSetup.PrintArea = ""
+    objSheet.PageSetup.LeftHeader = LeftHeader
+    objSheet.PageSetup.CenterHeader = CenterHeader
+    objSheet.PageSetup.RightHeader = RightHeader
+    objSheet.PageSetup.LeftFooter = LeftFooter
+    objSheet.PageSetup.CenterFooter = CenterFooter
+    objSheet.PageSetup.RightFooter = RightFooter
+  }
+ function GetFilePath()
+ {
+    var _DHCLCNUREXCUTE=ExtTool.StaticServerObject('web.DHCLCNUREXCUTE');
+	var path=_DHCLCNUREXCUTE.GetPath();
+	return path;
+ }
+function xlHVRight(objSheet,row1,row2,c1,c2)
+{
+  objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).HorizontalAlignment =-4108;
+  objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).VerticalAlignment =-4108;
+}
+</script>
+</BODY>
+</HTML>

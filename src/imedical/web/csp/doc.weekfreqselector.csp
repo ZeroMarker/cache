@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!--doc.weekfreqselector.csp HUI周频次选择界面-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<HISUI></HISUI>
+<style>
+body{
+	background: #fff;
+}
+.datagrid-body{
+	/*height:240px !important;*/
+}
+.panel-header{
+	border-bottom: 0;
+}
+</style>
+<Server>
+	s OrderFreqRowid=$G(%request.Data("OrderFreqRowid",1))
+	s OrderFreqDispTimeStr=$G(%request.Data("OrderFreqDispTimeStr",1))
+	s OrderFreqDispTimeStr=$TR(OrderFreqDispTimeStr,"A",$C(1))
+	s OrderFreqDispTimeStr=$TR(OrderFreqDispTimeStr,"B",$C(2))
+	s OrderFreqDispTimeStr=$TR(OrderFreqDispTimeStr,"C",":")
+	s OrderFreqWeekStr=""
+    for j=1:1:$L(OrderFreqDispTimeStr,$C(1)){
+        s ArrData=$P(OrderFreqDispTimeStr,$C(1),j)
+        s DispTime=$P(ArrData,$C(2),1)
+        s DispWeek=$P(ArrData,$C(2),2)
+        s OrderFreqWeekStr=OrderFreqWeekStr_DispWeek
+    }
+	s OrderFreqTimeList=""
+	s childsub=0
+	for {
+		s childsub=$O(^PHCFR(OrderFreqRowid,"DT",childsub))
+		q:(childsub="")
+		s time=$p(^PHCFR(OrderFreqRowid,"DT",childsub),"^",1)
+		if (OrderFreqTimeList=""){
+			s OrderFreqTimeList=$ZT(time)
+		}else{
+			s OrderFreqTimeList=OrderFreqTimeList_","_$ZT(time)
+		}
+	}
+	//周频次系数,即一周需要执行几次
+	s OrderFreqWeekNum=$P($G(^PHCFR(OrderFreqRowid)),"^",11)
+	s OrderFreqDesc=$P($G(^PHCFR(OrderFreqRowid)),"^",4)
+	s GetWeekFreqStartDateMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItemView.GetWeekFreqStartDate"))
+</Server>
+ </head>
+<body>
+<div class="hisui-panel" title="#(OrderFreqDesc)#(时间点:#(OrderFreqTimeList)#)" style="height:309px;" data-options="headerCls:'panel-header-gray'">
+	<div class="hisui-layout" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+		<div data-options="region:'center', split:true, iconCls:'icon-add',collapsible:false,border:false" style="">
+			<table id="FreqWeekTable"></table>
+		</div>
+	</div>
+</div>
+<a href="#" id="OKBtn" style="margin: 10px 0px 0px 90px;" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" >确定</a>
+<SCRIPT language = 'javascript' >
+	var OrderFreqDispTimeStr="#(OrderFreqDispTimeStr)#";
+	var OrderFreqWeekStr="#(OrderFreqWeekStr)#";
+	var OrderFreqTimeList="#(OrderFreqTimeList)#";
+	var GetWeekFreqStartDateMethod="#(GetWeekFreqStartDateMethod)#";
+	var OrderFreqWeekNum="#(OrderFreqWeekNum)#";
+	window.returnValue=OrderFreqDispTimeStr+"^"+OrderFreqWeekStr;
+     
+	$(function(){
+		InitFreqWeekDataGrid();
+		$("#OKBtn").click(function(){
+			OKBtnClickHandler();
+		});
+	});
+	function OKBtnClickHandler(){
+		var FreqWeekArr=$("#FreqWeekTable").datagrid('getChecked');
+		FreqWeekArr.sort(function(obj1,obj2){
+			return parseFloat(obj1.FreqValue)-parseFloat(obj2.FreqValue);
+		});
+		if (FreqWeekArr.length==0){
+			$.messager.alert("提示","请选择需要使用的周");
+			return false;
+		}
+		if ((OrderFreqWeekNum!="")&&(FreqWeekArr.length<OrderFreqWeekNum)){
+			$.messager.alert("提示","该周频次系数为"+OrderFreqWeekNum+",请选择"+OrderFreqWeekNum+"条记录!");
+			return false;
+		}
+		var CalOrderFreqDispTimeStr="";
+		var CalOrderFreqWeekStr="";
+		var OrderFreqTimeListArr=OrderFreqTimeList.split(",");
+		for (var i=0;i<FreqWeekArr.length;i++){
+			CalOrderFreqWeekStr=CalOrderFreqWeekStr+FreqWeekArr[i].FreqValue;
+			for (var j=0;j<OrderFreqTimeListArr.length;j++){
+				var OneFreqWeekStr=OrderFreqTimeListArr[j]+String.fromCharCode(2)+FreqWeekArr[i].FreqValue;
+				if (CalOrderFreqDispTimeStr==""){
+					CalOrderFreqDispTimeStr=OneFreqWeekStr
+				}else{
+					CalOrderFreqDispTimeStr=CalOrderFreqDispTimeStr+String.fromCharCode(1)+OneFreqWeekStr;
+				}
+			}
+		}
+		var WeekFreqStartDate = cspRunServerMethod(GetWeekFreqStartDateMethod, "", CalOrderFreqDispTimeStr);
+		var rtnValue=CalOrderFreqDispTimeStr+"^"+CalOrderFreqWeekStr+"^"+WeekFreqStartDate;
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc(rtnValue);
+		}else{
+			window.returnValue=rtnValue;
+			window.close();
+		}
+	}
+	var Cancel=0;
+	function InitFreqWeekDataGrid(){
+		var FreqWeekGridData={"total":7,"rows":[
+			{"FreqValue":"1","WeekDesc":"星期一"},
+			{"FreqValue":"2","WeekDesc":"星期二"},
+			{"FreqValue":"3","WeekDesc":"星期三"},
+			{"FreqValue":"4","WeekDesc":"星期四"},
+			{"FreqValue":"5","WeekDesc":"星期五"},
+			{"FreqValue":"6","WeekDesc":"星期六"},
+			{"FreqValue":"7","WeekDesc":"星期天"}
+		]};
+		var FreqWeekColumns=[[ 
+ 			{field:'CheckFreq',title:'选择',checkbox:'true',width:80},
+ 			{field:'FreqValue',hidden:true},
+			{field:'WeekDesc',title:'星期',width:150}
+		]];
+		//初始化周频次选择表格
+		var FreqWeekDataGrid=$("#FreqWeekTable").datagrid({  
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : false,
+			fitColumns : false,
+			autoRowHeight : false,
+			rownumbers:false,
+			showFooter:false,
+			pagination : false,  //
+			pageSize: 10,
+			idField:'FreqValue',
+			columns :FreqWeekColumns,
+			onCheck:function(rowIndex, rowData){
+				if (OrderFreqWeekNum=="") return;
+				var Selections=$("#FreqWeekTable").datagrid('getChecked');
+				var OverNum=Selections.length-OrderFreqWeekNum;
+				if (OverNum<=0) return;
+				if (Cancel==1){
+					setTimeout(function(){
+						$("#FreqWeekTable").datagrid('uncheckRow',rowIndex);
+					});
+					Cancel=0;
+					return;
+				}
+				for (i=0;i<Selections.length;i++){
+					var SelRowIndex=$("#FreqWeekTable").datagrid('getRowIndex',Selections[i]);
+					if (SelRowIndex==rowIndex){
+						continue;
+					}
+					$("#FreqWeekTable").datagrid('uncheckRow',SelRowIndex);
+					OverNum--;
+					if (OverNum<=0){
+						break;
+					}
+				}
+			},onBeforeSelect:function(index, row){
+				var Selections=$("#FreqWeekTable").datagrid('getChecked');
+				if ((OrderFreqWeekNum!="")&&(Selections.length>=OrderFreqWeekNum)){
+					var ret=dhcsys_confirm("勾选星期数已到该周频次系数"+OrderFreqWeekNum+",继续勾选将会取消一条勾选记录,是否继续?");
+					if (!ret) {
+						Cancel=1;
+					}
+				}
+				return true;
+			},onLoadSuccess:function(data){
+				if (OrderFreqWeekStr==""){return;}
+				data.rows.forEach(function(item, index){
+					if (OrderFreqWeekStr.indexOf(item.FreqValue)>=0){
+						$("#FreqWeekTable").datagrid('selectRow',index);
+					}
+				});
+			}
+		});
+		
+		$("#FreqWeekTable").datagrid('loadData',FreqWeekGridData);
+		if ((OrderFreqWeekNum!="")&&(FreqWeekGridData['total']>OrderFreqWeekNum)){
+			$(".datagrid-header-check").attr("disabled","disabled");
+		}
+	}
+   </SCRIPT>
+  
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "saveRpt"=action {
+		s inParam("Routine")=$g(%request.Data("routine",1))
+		s inParam("Function")=$g(%request.Data("fun",1))
+		s inParam("NameSpace")=$g(%request.Data("nameSpace",1))
+		s inParam("OtherParam")=$g(%request.Data("OtherParam",1))
+		s inParam("RptTitle")=$g(%request.Data("rptTitle",1))
+		s inParam("QryName")=$g(%request.Data("qryName",1))
+		s inParam("rowID")=$g(%request.Data("rptCfgID",1))
+
+		s exist=##CLASS(DHCWL.CommonDataQry.RptCfg).IsExistRec(.inParam,.outParam)
+		
+		s ret=""
+		if exist=0 {	//之前没有相同配置，直接插入
+			s ret=##CLASS(DHCWL.CommonDataQry.RptCfg).Insert(.inParam,.outParam)
+		}else{
+			if $g(inParam("rowID"))="" {	//之前有相同配置，退出
+				w "{success:true,tip:'false',MSG:'相同配置的报表已存在'}"	
+				q
+			}else{
+				if inParam("rowID")=outParam("existRowID") { //更新已有的配置	
+					s ret=##CLASS(DHCWL.CommonDataQry.RptCfg).Update(.inParam,.outParam)
+				}else{
+					w "{success:true,tip:'false',MSG:'相同配置的报表已存在'}"	
+					q
+				}
+				
+			}
+		}
+		
+		if ret="" {
+			w "{success:true,tip:'ok',MSG:'操作成功!',rptID:"_inParam("rowID")_"}"
+		}else{
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			
+		}
+		q
+	}
+	
+</script>

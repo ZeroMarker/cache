@@ -1,0 +1,52 @@
+
+<script language="cache" runat="server">
+/*
+parameter: 
+		action: (list|add|edit|del|upload)
+		do    : (check|import)
+		sort  : name sort by
+		dir   : direction (DESC|ASC)
+		start : record number to start with
+		limit : limit for one page to display
+		
+DataBase:
+		Hosp_Rowid            : rowid
+		Hosp_Code             : code
+		Hosp_Name             : name
+*/
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	
+	s Rowid=$Get(%request.Data("RowID",1))
+	s Code=$Get(%request.Data("Code",1))
+	s Description=$Get(%request.Data("Description",1))
+	
+	i Action = "edit" d
+	.s result = ##class(web.CHSSDictKin).update(Rowid,Code,Description)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "list" d
+	.w ##class(web.CHSSDictKin).KinList1(0,100)
+	i Action = "del" d
+	.s result = ##class(web.CHSSDictKin).delete(Rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "add" d
+	.s result = ##class(web.CHSSDictKin).insert(Code,Description)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>
+

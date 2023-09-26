@@ -1,0 +1,96 @@
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+/* 参数获取 			*Start*/
+ s action = $Get(%request.Data("action",1))
+ s rows=$Get(%request.Data("rows",1))
+ s page=$Get(%request.Data("page",1))
+ s hosp=$Get(%request.Data("hosp",1))
+/* 参数获取 			*End*/
+
+/* 公共 				*Start*/
+
+
+/* 公共 				*End  */
+
+/* 配伍审核 			*Start*/
+ i action="JsGetOeAuditDetail" d
+ .s params=$Get(%request.Data("params",1))
+ .s pid=$Get(%request.Data("pid",1))
+ .w ##class(web.DHCSTPIVAS.OeAudit).JsGetOeAuditDetail(rows,page,params,pid) 
+/* 配伍审核			 	*End  */
+
+/* 配液排批 			*Start*/
+ i action="JsGetBatUpdateDetail" d
+ .s params=$Get(%request.Data("params",1))
+ .s pid=$Get(%request.Data("pid",1))
+ .w ##class(web.DHCSTPIVAS.BatUpdate).JsGetBatUpdateDetail(rows,page,params,pid) 
+/* 配液排批				*End  */
+
+/* 配液打签 			*Start*/
+ i action="JsGetLabelPrintDetail" d
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.LabelPrint).JsGetLabelPrintDetail(rows,page,params) 
+/* 配液打签 			*End  */
+
+/* 配液状态执行 		*Start*/
+ i action="JsGetExecuteDetail" d	// 明细
+ .s params=$Get(%request.Data("params",1))
+ .s pid=$Get(%request.Data("pid",1))
+ .w ##class(web.DHCSTPIVAS.Execute).JsGetExecuteDetail(rows,page,params,pid)  
+ i action="JsGetExecuteWardBat" d	// 病区批次汇总
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.Execute).JsGetExecuteWardBat(rows,page,params)  
+/* 配液状态执行 		*End  */
+
+/* 配液拒绝 		*Start*/
+ i action="JsGetRefuseDetail" d	// 病区批次汇总
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.Refuse).JsGetRefuseDetail(rows,page,params)   
+/* 配伍拒绝 		*End  */
+
+/* 配液配置单独执行 	*Start*/
+ 
+/* 配液配置单独执行 	*End  */
+
+/* 配液医嘱查询 		*Start*/
+ i action="JsGetOeQueryDetail" d
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.OeQuery).JsGetOeQueryDetail(rows,page,params) 
+ 
+/* 配液医嘱查询 		*End  */
+
+/* 配液综合查询 		*Start*/
+ i action="JsGenerallyQuery" d
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.Generally).JsGenerallyQuery(rows,page,params) 
+/* 配液综合查询 		*End  */
+
+/* 配伍审核原因 		*Start*/
+ i action="JsGetAuditReason" d
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.AuditReason).JsGetAuditReason(rows,page,params,hosp) 
+/* 配伍审核原因 		*End  */
+
+/* 配液大屏显示 		*Start*/
+ i action="JsGetScreenWardState" d	// 明细
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.ScreenWardState).JsGetScreenWardState(rows,page,params)  
+/* 配液大屏显示 		*End  */
+
+/* 配液药品信息维护		*Start*/
+ i action="DrugMaintain.JsGetIncItm" d	// 明细
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.DrugMaintain).JsGetIncItm(rows,page,params)  
+/* 配液药品信息维护 	*End  */
+
+/* 配液停止签查询		*Start*/
+ i action="JsGetStopOeQueryDetail" d	// 明细
+ .s params=$Get(%request.Data("params",1))
+ .w ##class(web.DHCSTPIVAS.StopPrint).JsGetStopOeQueryDetail(rows,page,params)  
+
+/* 配液停止签查询 		*End*/
+
+ i action="web.DHCSTCNTS.Extract" d	// 明细
+ .w ##class(web.DHCSTCNTS.Extract).GetPrescDataNum("","","2018-03-01","2018-05-01")
+</script>

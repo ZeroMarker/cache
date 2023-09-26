@@ -1,0 +1,2238 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ s Title=##Class(web.ARCItmMast).GetItemNameByGenePresc(%request.Get("OEORIItmMastDR"))
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(Title)#</TITLE>
+</head>
+<body>
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<script Language="JavaScript" SRC="../Scripts/OEOrder.Common.js"></script>
+<server>
+ d ##Class(websys.Component).GetComponentMessages(.t,"OEOrder.Normal")
+
+ i %request.Get("LOCKMSG")'="" d
+ . w "<P><center><B><font color='red'>"_%request.Get("LOCKMSG")_"</font></B></center></P>"
+ ; seanl log 58161 Questionnaire link will turn bold if questionnaire has already been 
+ ; filled in
+ n oid,QuestRowID,QuestRowIDFinal
+ s (oid,QuestRowID,QuestRowIDFinal)=""
+ s oid=%request.Get("ID") 
+ i oid'="",$p(oid,"||",2)'="" s QuestRowID=$g(^OEORD(+oid,"I",$p(oid,"||",2),12)) 
+ i QuestRowID'="" s QuestRowID=$p(QuestRowID,"^",15) 
+ i QuestRowID'="" s QuestRowIDFinal=$p(QuestRowID,"||",2)
+ i QuestRowIDFinal'="" w "<B>"
+ i %request.Get("QuestionnaireDesc")'="" d
+ . w "<center>"
+ . w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ . w "<br>"
+ . w "</center>"
+ i QuestRowIDFinal'="" w "</B>" 
+ ;i %request.Get("QuestionnaireDesc")'="" d
+ ;. w "<center>"
+ ;. w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ ;. w "<br>"
+ ;. w "</center>"
+ ;. ;w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q""><U>Q</U>uestionnaire-</A>"
+ ;LOG 35167 RC 06/06/03 This has been commented out because Log 35170 added 3 new customizable links to 
+ ;replace this one.
+ ;i %request.Get("FileNotes")'="" d
+ ;. w "<center>" 
+ ;. w "<A href=""javascript:PatientOrderProfile();"" accesskey=""P""><U>P</U>atientOrderProfile-",%request.Get("FileNotes"),"</A>"
+ ;. w "</center>"
+  ;SB 18/03/05 (49930): Need to change logical stock when updating details screen... but only on update, not on NEW order.
+ s AlreadyPkedQty=0
+ s zOEORIPhQtyOrd=""
+ s zID = $g(%request.Data("ID",1))
+ i zID {
+ 	i $p($$qtypacked^aOET20(zID),"^") s AlreadyPkedQty=1
+ 	s zOEORIPhQtyOrd=$p($g(^OEORD(+zID,"I",$p(zID,"||",2),1)),"^",12)
+ }
+ ; Log 58206 YC - TPN Assist & Kinetics
+ n KineticsEXE,TPNEXE,KineticsParams,TPNParams 
+ s (KineticsEXE,TPNEXE,KineticsParams,TPNParams)=""
+ ;s params=##Class(web.OEOrder).GetClinicalAssistParams()
+ s params=""
+ s KineticsEXE=$zcvt($p(params,"*"),"O","JS")
+ s TPNEXE=$zcvt($p(params,"*",2),"O","JS")
+ s KineticsParams=$zcvt($p(params,"*",3),"O","JS")
+ s TPNParams=$zcvt($p(params,"*",4),"O","JS")
+
+ ; END Log 58206
+ ;Log 60858 07/09/06 PeterC
+ s (CTUOMID,CTUOMDesc,BaseDoseQty)=""
+ s CTUOMDesc=##Class(%Library.Collation).Upper(%request.Get("CTUOMDesc")) i $g(CTUOMDesc)'=""  s CTUOMID=$o(^CT("UOM",0,"Desc",CTUOMDesc,""))
+ i %request.Get("ARCIMPHCDFDR")'="",%request.Get("OEORIDoseQty")'="",$g(CTUOMID)'=""  s BaseDoseQty=$$calcqty^aOET7(%request.Get("ARCIMPHCDFDR"),$g(CTUOMID),%request.Get("OEORIDoseQty"))
+ i $g(BaseDoseQty)'="" d %request.Set("BaseDoseQty",BaseDoseQty)
+</server>
+<script language="JavaScript">
+
+//not used any more, field order may change!!!!
+var DataFields;
+
+var STATflag=0; // log 56523
+var updated=0;
+var Gparam5="";
+var Gsdcheckval="Y";
+// Log 58206 YC - Get Kinetics and TPN path and parameters built in cache
+var KineticsEXE = "#(KineticsEXE)#";
+var TPNEXE = "#(TPNEXE)#";
+var KineticsParams = "#(KineticsParams)#";
+var TPNParams = "#(TPNParams)#";
+
+function KineticsClick() {
+	var obj = new self.ActiveXObject("tkClinicalAssist.clstkClinicalAssist");
+	obj.ExeName = KineticsEXE; 
+	obj.Params = KineticsParams;
+	var test=obj.ShowKineticsWindow();
+	return false;
+}
+function TPNClick() {
+	var obj;
+	obj = new ActiveXObject("tkClinicalAssist.clstkClinicalAssist");
+	obj.ExeName = TPNEXE;
+	obj.Params = TPNParams;
+	var test=obj.ShowKineticsWindow();
+	return false;
+}
+
+// Log 48697
+// Changes for log 56523
+// STAT Priority to disable frequency/duration/freqdelay,end date/time fields.
+function LookUpPrioritySelect(str) {
+	var durobj=document.getElementById("PHCDUDesc1");
+	var freqobj=document.getElementById("PHCFRDesc1");
+	var ofdobj=document.getElementById("OEORIFreqDelay"); 
+	var edobj=document.getElementById("OEORIEndDate"); 
+	var etobj=document.getElementById("OEORIEndTime"); 
+	var duriobj=document.getElementById("ld157iPHCDUDesc1");
+	var freqiobj=document.getElementById("ld157iPHCFRDesc1");
+	var ediobj=document.getElementById("ld157iOEORIEndDate"); 
+
+	// JD ensure nothing gets reenabled when mode=READONLY!!! 60037
+	var modeobj=document.getElementById("Mode");
+	if ((modeobj)&&(modeobj.value!="READONLY")&&(modeobj.value!="PARTIALREAD")) {
+		if (((ofdobj) && (ofdobj.value=="")) || !(ofdobj)) {
+			if (durobj) durobj.disabled=false; 
+			if (freqobj) freqobj.disabled=false; 
+			if (freqiobj) freqiobj.disabled=false;
+			if (duriobj) duriobj.disabled=false;
+		}
+		if (ofdobj) ofdobj.disabled=false; 
+		if (edobj) edobj.disabled=false; 
+		if (ediobj) ediobj.disabled=false;
+		if (etobj) etobj.disabled=false; 
+	}
+
+	var lu = str.split("^");
+	STATflag=0;
+	// changed to check lu[1] (code) instead of lu[0] (desc)
+	if (lu[1]=="STAT") {
+		if (OnceDailyFreq!="") {
+			if (freqobj) freqobj.value = mPiece(OnceDailyFreq,"^",0);
+			freq = mPiece(OnceDailyFreq,"^",1);
+			var iobj=document.getElementById("Interval");
+			if (iobj) iobj.value= "";
+			if (freq=="") freq=0;
+		}
+		if (OneDayDuration!="") {
+			if (durobj) durobj.value = mPiece(OneDayDuration,"^",0);
+			dur = mPiece(OneDayDuration,"^",1);
+			if (dur=="") dur=mPiece(OneDayDuration,"^",1);
+			var dfobj=document.getElementById("DurFactor");
+			if (dfobj) dfobj.value=dur;
+		} 
+		if (durobj) {
+			durobj.disabled=true;
+			if (duriobj) duriobj.disabled=true;
+		}
+		if (freqobj) {
+			freqobj.disabled=true;
+			if (freqiobj) freqiobj.disabled=true;
+		}
+		if (edobj) {
+			edobj.value="";
+			edobj.disabled=true;
+			if (ediobj) ediobj.disabled=true;
+		}
+		if (etobj) {
+			etobj.value="";
+			etobj.disabled=true;
+		}
+		if (ofdobj) {
+			ofdobj.disabled=true;
+			ofdobj.value="";
+		}
+		STATflag=1;
+		SetQuantity();
+	}
+	// Set RecLoc by Priority 56496
+	// But not onload!
+	// Also do not update RecLoc if field disabled
+	var loadobj=document.getElementById("PriOnLoad");
+	if (loadobj && (loadobj.value!=1)) {
+		var lu = str.split("^");
+		var obj=document.getElementById("CTLOCDesc");
+		if (obj && !obj.disabled && lu[4] && lu[4]!="") obj.value = lu[4];
+	}
+
+	return;
+}
+
+function InstructionsBroker(str) {
+	var obj=document.getElementById("PHCINDesc1");
+	var obj2=document.getElementById("LabelText");
+	if (obj && obj2) obj2.value=obj.value;
+	return;
+}
+
+// LOG 50984 JPD
+function BuildLabelText(){
+	var qtyobj=document.getElementById("OEORIDoseQty");
+	var frmobj=document.getElementById("CTUOMDesc");
+	var frqobj=document.getElementById("PHCFRDesc1");
+	var durobj=document.getElementById("PHCDUDesc1");
+	var lblobj=document.getElementById("LabelText1");
+
+	if (lblobj){
+		lbl="";
+		if (qtyobj) lbl=lbl+qtyobj.value+"x ";
+		if (frmobj) lbl=lbl+frmobj.value+"; ";
+		if (frqobj) lbl=lbl+frqobj.value+", ";
+		if (durobj) lbl=lbl+durobj.value;
+		lblobj.value=lbl;
+	}
+	return;
+}
+
+function LookUpPatOrderSelectPharm(str) {
+	var ID="";
+	var LinkID="";
+ 	var lu = str.split("^");
+	LinkID=lu[3];
+	var obj=document.getElementById("ID")
+	if (obj) ID=obj.value;
+	if((ID!="")&&(LinkID!="")&&(ID==LinkID)) {
+		alert(t["LINK_ERROR"]);
+		var obj=document.getElementById("PatientOrders")
+		if (obj) obj.value = ""; 
+		return false;
+	}
+
+	var obj=document.getElementById("PatientOrders")
+	if (obj) obj.value = lu[2];
+	var obj=document.getElementById("LinkedItmID")
+	if (obj) obj.value = lu[3];
+	
+	var obj=document.getElementById("OECPRDesc")
+	if ((obj)&&(lu[6]!="")) obj.value = lu[6];
+	var obj=document.getElementById("OSTATDesc")
+	if ((obj)&&(lu[7]!="")) obj.value = lu[7];
+	var obj=document.getElementById("OEORISttDat")
+	if ((obj)&&(lu[8]!="")) obj.value = lu[8];
+	var obj=document.getElementById("PHCFRDesc1")
+	if (obj) {
+		obj.value = ""
+		obj.disabled=false;
+		obj.className="";
+		if (lu[9]!="") {
+			obj.value = lu[9];
+			obj.disabled=true;
+			obj.className="disabledField";
+		}
+	}
+	var obj=document.getElementById("PHCINDesc1")
+	if ((obj)&&(lu[10]!="")) obj.value = lu[10];
+	var obj=document.getElementById("PHCDUDesc1")
+	if (obj) {
+		obj.value = ""
+		obj.disabled=false;
+		obj.className="";
+		if (lu[11]!="") {
+			obj.value = lu[11];
+			obj.disabled=true;
+			obj.className="disabledField";
+		}
+	}
+	var obj=document.getElementById("RouteAdmin")
+	if (obj) {
+		obj.value = ""
+		obj.disabled=false;
+		obj.className="";
+		if (lu[12]!="") {
+			obj.value = lu[12];
+			obj.disabled=true;
+			obj.className="disabledField";
+		}
+	}
+
+}
+
+function DisableElement(el) {
+	//Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+	if (el.readOnly==false) el.disabled = true;
+}
+
+
+function InvalidFields() {
+	var invalid=false;
+	//common fields
+	if(!isInvalid("PatientLoc")&&(!invalid)) {
+		alert(t['PatientLoc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+
+	if(!isInvalid("OECPRDesc")&&(!invalid)) {
+		alert(t['OECPRDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OSTATDesc")&&(!invalid)) {
+		alert(t['OSTATDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("CTLOCDesc")&&(!invalid)) {
+		alert(t['CTLOCDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("Doctor")&&(!invalid)) {
+		alert(t['Doctor']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OEORIRefDocDR")&&(!invalid)) {
+		alert(t['OEORIRefDocDR']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OEORIVarianceReasonDR")&&(!invalid)) {
+		alert(t['OEORIVarianceReasonDR']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+	//end of common fields
+
+	if(!isInvalid("DrugForm")&&(!invalid)) {
+		alert(t['DrugForm']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("CTUOMDesc")&&(!invalid)) {
+		alert(t['CTUOMDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("PHCFRDesc1")&&(!invalid)) {
+		alert(t['PHCFRDesc1']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("PHCINDesc1")&&(!invalid)) {
+		alert(t['PHCINDesc1']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("PHCDUDesc1")&&(!invalid)) {
+		alert(t['PHCDUDesc1']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OEORIDoseQty")&&(!invalid)) {
+		alert(t['OEORIDoseQty']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	var Nobj=document.getElementById("NotifyClinician");
+	var Pobj=document.getElementById("PrefConMethod");
+
+	if((Nobj)&&(Nobj.checked)&&(Pobj)&&(Pobj.value=="")) {
+		alert(t['SELECT_CONMETHD']);
+		invalid=true;
+	}
+
+	return invalid;
+}
+
+function UpdateSaveDefaultsClickHandler() {
+	//alert("savedef");
+	var SaveDefObj=document.getElementById("SaveDefaults");
+	if (SaveDefObj) SaveDefObj.value="Y";
+	UpdateClickHandlerDelay();
+
+}
+// function for log 53598 found in custom script.
+function checkBillingUOM() {
+	var flag=document.getElementById("OEORIBillQtyFlag");
+	if (flag) flag.value="y";
+}
+function UpdateOEORIQtyPackUOM(str){
+	alert(str);
+	var cobj=document.getElementById("OEORIQtyPackUOM");
+	if (cobj) cobj.value=str;
+	return;
+}
+
+// 56083 - gets total recipe cost from admixture frame in order to set billprice on update
+function CalcBills(totals) {
+	var obj=document.getElementById("HIDDENMixtureCost");
+	if (obj) obj.value=totals;
+	return;
+}
+
+function UpdateClickHandlerDelay(){
+	//log 53598
+	var cobj=document.getElementById("OEORIQtyPackUOM");
+	if (cobj&&(cobj.value=="")) checkBillingUOM();
+	setTimeout("UpdateClickHandler()",1500);
+}
+
+function UpdateClickHandler() {
+	
+	if (InvalidFields()==true) {
+		return false;
+	}	
+	
+	var LabelText1=document.getElementById("LabelText1");
+	if (LabelText1) {
+		var LabelText1b=document.getElementById("LabelText1b");
+		if (LabelText1b) LabelText1b.value=LabelText1.value;
+	}
+
+	var obj=document.getElementById("RouteAdmin")
+	if (obj) obj.disabled=false;
+	
+	var ofdobj=document.getElementById("OEORIFreqDelay")
+	if((ofdobj)&&(ofdobj.value!="")) {
+
+		var oedobj=document.getElementById("OEORIEndDate")
+		var oetobj=document.getElementById("OEORIEndTime")
+
+		if((!oedobj)||(!oetobj)) {
+			alert(t['END_MISSING']);
+			return false;
+
+		}
+
+		if((oedobj.value=="")||(oetobj.value=="")) {
+			alert(t['END_REQ']);
+			return false;
+		}
+
+	
+		if (ofdobj.value!=parseInt(ofdobj.value)) {
+			alert(t['OEORIFreqDelay']+ " " + t['XINVALID'] );
+			return false;
+
+		}
+
+	}
+	
+	var WarnMsg="";
+	WarnMsg=CheckForAllMendatoryFields();
+	if (WarnMsg!="") {
+		alert(WarnMsg); 
+		return false;
+	}
+
+	//Log 58325 BoC, check pregnant and breastfeeding, required functions are in OEOrder.Common.js
+	PregnBrFdCheck();
+	
+	var Qobj=document.getElementById("OEORIQty");
+	if((Qobj)&&(Qobj.value!="")) {
+		var DQobj=document.getElementById("defQtyRange");
+		if (!CheckQtyRange(Qobj)) {
+			return false;
+		}
+	}
+	
+
+	// 56083
+	var MIXobj=document.getElementById("HIDDENMixtureCost");
+	if (MIXobj && (MIXobj.value!="")) {
+		var Qobj=document.getElementById("OEORIQty");
+		var Bobj=document.getElementById("BillPrice");
+		var Aobj=document.getElementById("HiddenINMANAmt");
+		if (Qobj && Bobj && (Qobj.value!="")) {
+			var bill = parseFloat(MIXobj.value) * parseFloat(Qobj.value);
+			bill=parseFloat(bill)+parseFloat(Aobj.value);
+			Bobj.value=bill;
+		}
+	}
+
+	//JPD 1 Apr 2005 Log 34252 Check Cumulative Days
+	var Prior1=document.getElementById("OECPRDesc");
+	var PRNcodeobj=document.getElementById("PRNcheck");
+	if ((Prior1) && (PRNcodeobj) && (Prior1.value==PRNcodeobj.value)){
+		var dayoverride=0
+		var df=document.getElementById("DurFactor");
+		if (df) df=df.value;
+		if (df && (df!="")){
+			var NoCumDay=document.getElementById("NoCumDay"); 
+			if (parseInt(df)>parseInt(NoCumDay.value)) {
+				var checkday=confirm(t['NODAYEXCEED']+"\n"+t['CONTINUE']);
+				dayoverride=1
+				if (!checkday) {
+					return false; }
+			}
+		}
+		var oedobj=document.getElementById("OEORIEndDate")
+		var oetobj=document.getElementById("OEORIEndTime")
+		var sobj=document.getElementById("OEORISttDat");
+		var stttobj=document.getElementById("OEORISttTim");
+		if (sobj && oedobj) { 
+			if ((sobj.value!="") && (oedobj.value!="")) {
+				if ((stttobj && oetobj) && ((stttobj.value!="") && (oetobj.value!=""))) {
+					var cumdays = DateTimeDiffInHM(sobj.value,stttobj.value,oedobj.value,oetobj.value);
+					var days=cumdays["hr"]/24;
+					if ((days>parseInt(NoCumDay.value)) && (dayoverride=0)) {
+						var checkday=confirm(t['NODAYEXCEED']+"\n"+t['CONTINUE']);
+						if (!checkday) {
+							return false; }
+					}
+				} else {
+					var cumdays = DateStringDifference(sobj.value,oedobj.value);
+					var days=cumdays["dy"]
+					if ((days>parseInt(NoCumDay.value)) && (dayoverride=0)) {
+						var checkday=confirm(t['NODAYEXCEED']+"\n"+t['CONTINUE']);
+						if (!checkday) {
+							return false; }
+					}
+				}
+			}
+		}
+
+		//LOG 51669 JPD
+		//Log 58512 Ted check PRNAlert before showing PRN alerts
+		var PRNAlert=document.getElementById("PRNAlert");//ttt
+		if(PRNAlert.value==1){
+			var gap="";
+			var minutes="";
+			var minobj=document.getElementById("OEORIFreqDelay");
+			if (minobj) minutes=minobj.value;
+			if (minutes!="") gap=minutes/60;
+			else if (freq && freq!="") gap=24/freq;
+			var PRNhrsobj=document.getElementById("PRNMinTime");
+			if (PRNhrsobj) PRNhrs=PRNhrsobj.value;
+			if (PRNhrs!="") {
+				if (gap<PRNhrs) {
+					var checkhrs=confirm(t['PRNHrs']+"\n"+t['CONTINUE']);
+					if (!checkhrs) return false;
+				}
+			}
+		}
+	}
+	//end log 34525
+
+	if(!UpdateStatusCheck()) return false;
+	
+	//Log 46698 
+	var NewReceivingLoc="";
+	var objNewReceivingLoc=document.getElementById("CTLOCDesc");
+	if (objNewReceivingLoc) NewReceivingLoc=objNewReceivingLoc.value;
+	var OldReceivingLoc="";
+	var obj=document.getElementById("hiddenReceivingLoc");
+	if (obj) OldReceivingLoc=obj.value;
+	var AlreadyPacked="";
+	var obj=document.getElementById("AlreadyPacked");
+	if (obj) AlreadyPacked=obj.value;
+	if ((AlreadyPacked=="Y")&&(OldReceivingLoc!=NewReceivingLoc)&&(NewReceivingLoc!="")&&(objNewReceivingLoc)) {
+		alert(t['ALREADY_PACKED']);
+		objNewReceivingLoc.value=OldReceivingLoc;
+		websys_setfocus(objNewReceivingLoc);
+		return false;
+	}
+	//SB 05/04/05 (49930)
+	var zQty = ""
+	var objQty = document.getElementById("OEORIQty")
+	if (objQty) zQty=objQty.value;
+	var ORIPhQty = "#(zOEORIPhQtyOrd)#"
+	var AlreadyPkedQty = "#(AlreadyPkedQty)#"
+	if (AlreadyPkedQty==1 && zQty != ORIPhQty) {
+		alert(t["ALREADY_PACKED_QTY"])
+		return false;
+	}
+
+	//Log 57255 21/12/05 PeterC
+	var HidRepDays,HidMaxRep,RepDays,MaxRep="";
+	var HidObjRepDays=document.getElementById("HidRepDays");
+	if((HidObjRepDays)&&(HidObjRepDays.value!="")) HidRepDays=HidObjRepDays.value;
+	
+	var HidObjMaxRep=document.getElementById("HidMaxRep");
+	if((HidObjMaxRep)&&(HidObjMaxRep.value!="")) HidMaxRep=HidObjMaxRep.value;
+
+	var ObjRepDays=document.getElementById("OEORIPrescRepNumberDays");
+	if((ObjRepDays)&&(ObjRepDays.value!="")) RepDays=ObjRepDays.value;
+	
+	var ObjMaxRep=document.getElementById("OEORIMaxRepeats");
+	if((ObjMaxRep)&&(ObjMaxRep.value!="")) MaxRep=ObjMaxRep.value;
+
+	if((HidRepDays!="")&&(RepDays!="")&&(RepDays>HidRepDays)) {
+		var checkrepday=confirm(t["OEORIPrescRepNumberDays"]+" "+"("+RepDays+")"+t["GREATERMAXDAY"]+"("+HidRepDays+")"+"."+"\n"+t['CONTINUE']);
+		if (!checkrepday) {return false; }
+	}
+
+	if((HidMaxRep!="")&&(MaxRep!="")&&(MaxRep>HidMaxRep)) {
+		var checkrepmax=confirm(t["OEORIMaxRepeats"]+" "+"("+MaxRep+")"+t["GREATERMAXREP"]+"("+HidMaxRep+")"+"."+"\n"+t['CONTINUE']);
+		if (!checkrepmax) {return false; }
+	}
+
+	var par_win = window.opener;
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(0);	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+	}	
+	var obj=document.getElementById("ID")
+	if (obj) {
+		if (obj.value=="") {
+			var sobj=document.getElementById("OEORISttDat");
+ 		if (sobj && (sobj.value!="")) {
+			var dobj=document.getElementById("DischDate");
+			var aobj=document.getElementById("AdmDate");
+			if (dobj && (dobj.value!="") && aobj && (aobj.value!="")){
+                               	var enteredDate = new Date();
+				var enteredDate1 = new Date();
+				var enteredDate2 = new Date();
+				var enteredDate = VerifyDateformat(dobj);
+				var enteredDate1 = VerifyDateformat(sobj);
+				var enteredDate2 = VerifyDateformat(aobj);
+
+				if (enteredDate1>enteredDate){
+					alert(t['STARTDATE_OUT']+" "+aobj.value+" to " + dobj.value);
+					sobj.value=""
+					return false;				
+				}
+				else if(enteredDate1<enteredDate2) {
+					alert(t['STARTDATE_OUT']+" "+aobj.value+" to " + dobj.value);
+					sobj.value=""
+					return false;
+				}
+				Updated=1; //log 30710
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+
+			else{
+				var enteredDate1 = new Date();
+				var enteredDate2 = new Date();
+				var enteredDate1 = VerifyDateformat(sobj);
+				var enteredDate2 = VerifyDateformat(aobj);
+				if(enteredDate1<enteredDate2) {
+					alert(t['STARTDATE_EXCEED']+" "+aobj.value);
+					sobj.value=""
+					return false;
+				}
+				Updated=1; //log 30710
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+			
+		}
+		else {
+			var dobj=document.getElementById("DischDate");
+			if (dobj && (dobj.value!="")) alert(t['STARTDATE_MAN']);
+			else{
+				Updated=1; //log 30710
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+		}			
+		//UpdateFromOrderEntry();	
+		}else {
+			Updated=1; //log 30710
+			updated=1;
+			checkDateForEPR();
+			refreshParent(); //// *****  Log# 29468; AmiN ; 16/10/2002   To allow order to be changed to type Execute.*****  
+		}
+	}	
+	//Clear the CopyOrderRowId in option.id in custom page
+	var CopyOrdobj=document.getElementById("CopyRowId");
+	if (CopyOrdobj) {
+		var CopyOrderRowId=CopyOrdobj.value;
+		if (CopyOrderRowId!="")	{
+			try{
+				if ((par_win)&&(OrderWindow!="")) par_win.ClearCopyRowId(CopyOrderRowId);
+			}catch(e){}
+		}
+	}
+	//Log 46424 Add Order Group Number 
+	var ID="";
+	var objID=document.getElementById("ID");
+	if (objID) ID=objID.value;
+	var OrderGroupNumber="";
+	var objOrderGroupNumber=document.getElementById("OEORIItemGroup");
+	if (objOrderGroupNumber) {
+		OrderGroupNumber=ID+"^"+objOrderGroupNumber.value;
+		try {
+			if (par_win) par_win.ChangeOrderGroupNumber(OrderGroupNumber);
+		}catch(e){}
+	}
+	Updated=1; //log 30710
+	if (OrderWindow=="ORDERFAVPANEL") {
+		UpdateFromEPR();
+
+	}
+     //Log 50318 PeterC 03/05/06
+     try{
+	var win=window.opener.parent.frames[1];
+     }catch(e){}
+	if (win) {
+		var formICP=win.document.forms['fMRClinicalPathways_ItemList'];
+		var formICP2=win.document.forms['fMRClinicalPathways_CarePlanItemList'];
+		if (formICP||formICP2) {
+			UpdateFromOrderEntry();
+		}
+	}
+}
+
+function refreshParent() { //// *****  Log# 29468; AmiN ; 16/10/2002   To allow order to be changed to type Execute.*****  
+    //Log 50318 PeterC 03/05/06
+    try{
+	var win=window.opener.parent.frames[1];
+    }catch(e){}
+
+	if (win) {
+		var formRad=win.document.forms['fOEOrdItem_RadiologyWorkBench'];
+		if (formRad) {
+			// ANA Using the URl looses workflow.
+			//win.treload('websys.csp');			//log 63299 refresh done in websys.close
+		}
+		if (UpdateFrom=="Pharmacy.Presc.Edit") {
+			window.opener.treload('websys.csp');
+		}
+
+	} else if (window.opener) { //JPD changed 56447
+		//should be from epr chart csp page
+		var formCust=window.opener.document.forms['fOEOrder_Custom'];
+		var formOSL=window.opener.document.forms['fOEOrder_OSItemList'];
+		//if(!formCust && !formOSL) window.opener.history.go(0); //log 63299 refresh done in websys.close
+		if (formOSL) {
+			var FormArray=formOSL.RebuiltString.value.split("^");
+			for (var i=0; i<FormArray.length; i++) {
+				var FormStr=FormArray[i];
+				var SetOrdIDArr=FormStr.split("*");
+				var SetOrdID=SetOrdIDArr[1];
+				var OrdID=document.getElementById("ID").value;
+				if (OrdID==SetOrdID) {
+					var Qty1=document.getElementById("OEORIQty");
+					if (Qty1) {
+						if (Qty1.value=="") Qty1.value="1";
+						if (formOSL.document.getElementById("Quantityz"+(i+1))) formOSL.document.getElementById("Quantityz"+(i+1)).value=Qty1.value;
+					}
+				}
+			}
+		}
+	}
+}
+
+function DisplayOSDefaults(defaults) {
+	var str=defaults.split(String.fromCharCode(1));
+	
+	var DurObj=document.getElementById("PHCDUDesc1");
+	if ((DurObj) && (str[0]!=null) &&(str[0]!="")) DurObj.value = str[0];
+	
+	var FreqObj=document.getElementById("PHCFRDesc1");
+	if ((FreqObj) && (str[1]!=null) && (str[1]!="")) FreqObj.value = str[1];
+		
+	var InstrObj=document.getElementById("PHCINDesc1");
+	if ((InstrObj) && (str[2]!=null) && (str[2]!="")) InstrObj.value=str[2];
+	
+	var uomObj=document.getElementById("CTUOMDesc");
+	if ((uomObj) && (str[3]!=null) && (str[3]!="")) uomObj.value=str[3];
+
+	var DoseQtyObj=document.getElementById("OEORIDoseQty");
+	if ((DoseQtyObj) && (str[4]!=null) && (str[4]!="")) DoseQtyObj.value = str[4];
+
+}
+function UpdateFromOrderEntry() {
+
+	var par_win = window.opener;
+	if ((par_win.name=="TRAK_hidden")&&(window.opener)) par_win=window.opener.parent.frames['TRAK_main'].websys_windows['frmOSList'];
+
+	var f = document.forms['fOEOrder_Med'];
+	if (par_win) {
+		var strData1 = TransferDataMain(f);
+		var strData2 = TransferDataSub(f);
+		var strData=strData1 + strData2;
+		par_win.CollectedFields(escape(strData));
+	}
+
+	window.close();
+	return Update_click();
+
+}
+function DeleteClickHandler() {    
+	//Delete items from lstOrders listbox when a "Delete" button is clicked.
+	var obj=document.getElementById("CareProvList");
+	if (obj) RemoveFromList(document.fOEOrder_Med,obj);
+}
+
+// JPD LOG 50983
+function LabelText_keydownhandler(encmeth) {
+	var obj=document.getElementById("LabelText");
+	ReplaceLabelTextCode(obj,encmeth);
+}
+
+function ReplaceLabelTextCode(fld,encmeth) {
+ 	var code="";
+
+	keychar = websys_getKey(event);
+
+	if (keychar == endAscii) {
+		code = GetCode(fld);
+		var ARCIMPHCDFDR=document.getElementById("ARCIMPHCDFDR");
+		var OEORIItmMastDR=document.getElementById("OEORIItmMastDR");
+		cspRunServerMethod(encmeth,code,ARCIMPHCDFDR.value,OEORIItmMastDR.value);
+	}
+}
+
+function BodyLoadHandler() {
+	if (self == top) {
+		
+	}
+	if (itmdesc=="") HideAlertField();
+	var objQty=document.getElementById("OEORIQty");
+	if (objQty) {
+		var CalcQtyFlagObj=document.getElementById("ARCICCalcQtyFlag");
+		if ((CalcQtyFlagObj) && (CalcQtyFlagObj.value!="N")) DisableElement(objQty);
+		SetQuantity();
+	}
+	
+	var sobj=document.getElementById("OSTATDesc");
+	var bfobj=document.getElementById("BilledFlag");
+	if (bfobj) {
+		if (bfobj.value=="TR"||bfobj.value=="R") {
+			if (sobj) sobj.disabled=true;
+		}
+	}
+	
+	//Log 47556 Disable Route and Drug Form fields if the CF_OEConfig.OECF_GenericPrescribing="Y"
+	var gpobj=document.getElementById("GenericPrescribing");
+	if ((gpobj)&&(gpobj.value=="Y")) {
+		var dfobj=document.getElementById("DrugForm");
+		if (dfobj) DisableField("DrugForm","ld157iDrugForm");
+		var routeobj=document.getElementById("OEORIRoute");
+		if (routeobj) DisableField("OEORIRoute","ld157iOEORIRoute");
+	}
+	
+	var par_win = window.opener;
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(1);	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+	}	
+	
+	//LOG 35170 RC 13/06/03 Require 3 htm links on order details screens
+	var patOrdFile1=document.getElementById("patOrdFile1");
+	var patOrdFile2=document.getElementById("patOrdFile2");
+	var patOrdFile3=document.getElementById("patOrdFile3");
+	var PatientOrderFile1=document.getElementById("PatientOrderFile1");
+	var PatientOrderFile2=document.getElementById("PatientOrderFile2");
+	var PatientOrderFile3=document.getElementById("PatientOrderFile3");
+	
+	if ((patOrdFile1)&&(PatientOrderFile1)) {
+		if (patOrdFile1.value=="") {
+			PatientOrderFile1.disabled=true;
+			PatientOrderFile1.onclick=NoLink;
+		} else {
+			PatientOrderFile1.onclick=OpenWindow1;
+		}
+	} 
+	if ((patOrdFile2)&&(PatientOrderFile2)) {
+		if (patOrdFile2.value=="") {
+			PatientOrderFile2.disabled=true;
+			PatientOrderFile2.onclick=NoLink;
+		} else {
+			PatientOrderFile2.onclick=OpenWindow2;
+		}
+	}
+	if ((patOrdFile3)&&(PatientOrderFile3)) {
+		if (patOrdFile3.value=="") {
+			PatientOrderFile3.disabled=true;
+			PatientOrderFile3.onclick=NoLink;
+		} else {
+			PatientOrderFile3.onclick=OpenWindow3;
+		}
+	}
+	
+	// ANA LOG 27959 If there is a default Status against the Layout,then do not use the default coming from Mainloop. 
+	// This change is made to all details screens.
+	var tempstOBJ=document.getElementById("tempOSTATDesc");	
+	var sobj=document.getElementById("OSTATDesc");	
+	if (sobj&&sobj.value==""&&tempstOBJ) sobj.value=tempstOBJ.value;
+	var scodeobj=document.getElementById("OrdStatCode");
+	if (scodeobj){
+		
+	}
+	if ((ordDesc!="") && (itmdesc!="")) alert(ordDesc+" - Drug Interaction Warning\n\n"+"This drug will interact with: "+itmdesc+".\n"+"A reason to override this alert must be selected.");
+
+	var UpdateSaveObj=document.getElementById("UpdateSaveDefaults");
+	if (UpdateSaveObj) UpdateSaveObj.onclick = UpdateSaveDefaultsClickHandler;	//update link
+	if (tsc['UpdateSaveDefaults']) {
+		websys_sckeys[tsc['UpdateSaveDefaults']]=UpdateSaveDefaultsClickHandler;
+	}
+
+	var UpdateObj=document.getElementById("Update");
+	if (UpdateObj) UpdateObj.onclick = UpdateClickHandlerDelay;	//update link
+	if (tsc['Update']) {
+		websys_sckeys[tsc['Update']]=UpdateClickHandlerDelay;
+	}
+	obj=document.getElementById("Delete");
+	if (obj) obj.onclick=DeleteClickHandler;
+	LoadCareProviders();
+	LoadRefDoctor();
+
+	var obj=document.getElementById("DeleteRef");
+	if (obj) obj.onclick=DeleteRefClickHandler;
+
+	var DoseQtyObj=document.getElementById("OEORIDoseQty");
+	if (DoseQtyObj) {
+		if (curydecimalsym!=".") {  
+			var arrTemp = DoseQtyObj.value.split('.'); 
+			DoseQtyObj.value=arrTemp.join(curydecimalsym);
+		}
+		DoseQtyObj.onchange = DoseQtyChangeHandler;
+	}
+	
+        //Eliot Log 63900 -start
+	var objQty=document.getElementById("OEORIQty");
+	if (objQty) {
+		if (curydecimalsym!=".") {  
+			var arrTemp = objQty.value.split('.'); 
+			objQty.value=arrTemp.join(curydecimalsym);
+		}
+		objQty.onchange = QtyChangeHandler;
+	} 
+         //Eliot 63900 -end
+
+
+	var qobj=document.getElementById("Questionnaire");
+	if (qobj) qobj.onclick=QuestionnaireClickHandler;	
+	HideField();
+
+	var obj=document.getElementById("OEORIRefDocDR");
+	var obj=document.getElementById("ID")
+	if ((obj)&&(obj.value=="")) {
+		var linkobj=document.getElementById("ChangeDT")
+		if (linkobj) linkobj.style.visibility = "hidden";
+	}
+
+	var obj=document.getElementById("Doctor");
+
+	InitStatusCheck("ld157iOSTATDesc");
+	var Eobj=document.getElementById("IsExecuted");
+	var Uobj=document.getElementById("CTUOMDesc");
+	var CLobj=document.getElementById("CTLOCDesc");
+
+	if((Eobj)&&(Eobj.value!="")) {
+		if((Uobj)) {
+			DisableField("CTUOMDesc","ld157iCTUOMDesc");
+		}
+
+		if((CLobj)) {
+			DisableField("CTLOCDesc","ld157iCTLOCDesc");
+		}
+	}
+	
+	//Log 46700
+	var SummaryFlag="";
+	var objSF=document.getElementById("SummaryFlag");
+	if ((objSF)&&(objSF.value!="")) SummaryFlag=objSF.value;
+	if (OrderWindow=="oeorder_entry") {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var hpsobj=document.getElementById("hiddenPendingStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			if ((hpsobj)&&(hpsobj.value!="")) {
+				sobj.value=hpsobj.value;
+				sobj.innerText=hpsobj.value;
+			}
+			else if ((sobj.value=="")&&(hosobj)&&(hosobj.value!="")) {
+				sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}else if (SummaryFlag!="") {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var hpsobj=document.getElementById("hiddenPendingStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			if ((hpsobj)&&(hpsobj.value!="")) {
+				sobj.value=hpsobj.value;
+				sobj.innerText=hpsobj.value;
+			}
+			else if ((hosobj)&&(hosobj.value!="")) {
+				sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	} else {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			 if ((hosobj)&&(hosobj.value!="")) {
+			 	sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}
+	var frm=document.fOEOrder_Med;
+	var modeobj=document.getElementById("Mode");
+	if ((modeobj)&&(modeobj.value=="READONLY"||modeobj.value=="PARTIALREAD")) 
+		DisableAllButTwo(frm,modeobj.value); //log61154 TedT
+
+	var ofdobj=document.getElementById("OEORIFreqDelay")
+	if (ofdobj) ofdobj.onchange=FreqDelayChangeHandler;
+
+	FreqDelayChangeHandler();
+	//jpd 48215
+	var CalcQtyFlag2=document.getElementById("CalcQtyFlag2");
+	var CalcQtyFlagObj=document.getElementById("ARCICCalcQtyFlag"); 
+	var Test1=parseInt(CheckQuantity());
+	var Test2=parseInt(objQty.value);
+
+	// added condition READONLY - 60037
+	if ((CalcQtyFlagObj)&&(CalcQtyFlagObj.value!="N") && (modeobj)&&(modeobj.value!="READONLY"))  {
+		var FreqObj=document.getElementById("PHCFRDesc1");
+		//Log 55810 27/09/05 PeterC: Call the freq changehandler when the page loads.
+		if ((FreqObj)&&(FreqObj.value!="")) {
+			//log 63684 BoC don't use obj.onchange(), as it changes the focus
+			//FreqObj.onchange();
+			var FreqLookupResult=tkMakeServerCall("web.PHCFreq","GetFreqLookupResult",FreqObj.value);
+			//alert (FreqLookupResult);
+			FrequencyLookUpSelect(FreqLookupResult);
+		}
+		var DurObj=document.getElementById("PHCDUDesc1");
+		if ((CalcQtyFlag2)&&(Test1==Test2)) {
+			CalcQtyFlag2.checked=true;
+			objQty.disabled=true;
+			MandatoryField("PHCFRDesc1");
+			MandatoryField("PHCDUDesc1");
+		} else if (CalcQtyFlag2&&(objQty.value=="1")&&((FreqObj&&(FreqObj.value==""))||(DurObj&&(DurObj.value=="")))) {
+			MandatoryField("PHCFRDesc1");
+			MandatoryField("PHCDUDesc1");
+			CalcQtyFlag2.checked=true;
+			objQty.disabled=true;
+		} else if (CalcQtyFlag2) {
+			CalcQtyFlag2.checked=false;
+			objQty.disabled=false;
+		}
+	}
+
+	if (CalcQtyFlag2) {
+		CalcQtyFlag2.onclick=CalcQtyFlagChangeHandler;
+	}
+
+	//Log 48857 PeterC 08/02/05
+	var DoseEqObj=document.getElementById("CTUOMDesc");
+	//if ((DoseEqObj)&&(DoseEqObj.onchange)) {
+	if (DoseEqObj) {
+		//setTimeout("DoseEqObj.onchange()",200); // SB: Removed for some reason (56418)
+		var DoseQtyObj=document.getElementById("OEORIDoseQty");
+		if (DoseQtyObj) {
+			try {
+				DoseQtyObj.onblur=DoseEqObj.onchange;
+			} catch (e) {}
+		}
+		
+	}
+
+	//Log 45929 PeterC: Now disable the drug form field when the page loads
+	var dfobj=document.getElementById("DrugForm");
+	if (dfobj) DisableField("DrugForm","ld157iDrugForm");
+
+	//Log 50948 PeterC 10/03/05
+	if (document.getElementById("CareProvList")) {document.getElementById("CareProvList").tkItemPopulate=1;}
+	if (document.getElementById("RefDoctorList")) {document.getElementById("RefDoctorList").tkItemPopulate=1;}
+
+	//Log 49134 JPD: BMI and BSA, add BSA formula type.
+	var BSAForm=document.getElementById("BSAFormula");
+	if ((BSAForm)&&(BSAForm.value!="")) SetBSAForm();
+
+	//JPD 15/6/05
+	var objsttdat=document.getElementById("OEORISttDat");
+	//Log 61186 PeterC 30/11/2006: Moved the SetQuantity call to OEORISttDat_onBlur(e)
+	var objenddat=document.getElementById("OEORIEndDate");
+	if (objenddat) objenddat.onblur=SetQuantity;
+	var objstttim=document.getElementById("OEORISttTim");
+	if (objstttim) objstttim.onblur=SetQuantity;
+	var objendtim=document.getElementById("OEORIEndTime");
+	if (objendtim) objendtim.onblur=SetQuantity;
+	
+	var objboldlnk=document.getElementById("BoldLinks");
+	var objalertmess=document.getElementById("OEOrdAlertMessage");
+	if (objboldlnk && objalertmess && objboldlnk.value=="1") objalertmess.style.fontWeight="bold"
+	
+	var objPatientOrders=document.getElementById("PatientOrders")
+	if (objPatientOrders && objPatientOrders.value!="") {
+		var obj=document.getElementById("PHCFRDesc1")
+		if (obj && obj.value!="") {
+			obj.disabled=true;
+			obj.className="disabledField";
+		}
+		var obj=document.getElementById("PHCDUDesc1")
+		if (obj && obj.value!="") {
+			obj.disabled=true;
+			obj.className="disabledField";
+		}
+		var obj=document.getElementById("RouteAdmin")
+		if (obj && obj.value!="") {
+			obj.disabled=true;
+			obj.className="disabledField";
+		}
+	}
+	//Check if label text is on screen 
+	var labelobj=document.getElementById("LabelText");
+	var flagobj=document.getElementById("LabelTextOnMed");
+	if (labelobj && flagobj) flagobj.value="Y";
+	// JPD Log 56523
+	// STAT Priority to disable frequency/duration/freqdelay,end date/time fields.
+	var Prior1=document.getElementById("OECPRDesc");
+	var STATcodeobj=document.getElementById("STATcode");
+	if ((Prior1) && (STATcodeobj) && (Prior1.value==STATcodeobj.value)){
+		STATflag=1;
+		var ofdobj=document.getElementById("OEORIFreqDelay");
+		var edobj=document.getElementById("OEORIEndDate");
+		var etobj=document.getElementById("OEORIEndTime");
+		var durobj=document.getElementById("PHCDUDesc1");
+		var freqobj=document.getElementById("PHCFRDesc1");
+		var duriobj=document.getElementById("ld157iPHCDUDesc1");
+		var freqiobj=document.getElementById("ld157iPHCFRDesc1");
+		var ediobj=document.getElementById("ld157iOEORIEndDate"); 
+		if (durobj) durobj.disabled=true; 
+		if (freqobj) freqobj.disabled=true;
+		if (ofdobj) ofdobj.disabled=true;
+		if (edobj) edobj.disabled=true;
+		if (etobj) etobj.disabled=true;
+		if (freqiobj) freqiobj.disabled=true;
+		if (duriobj) duriobj.disabled=true;
+		if (ediobj) ediobj.disabled=true;
+	}
+	// Log 58206 YC - disable Kinetics & TPN links if the path is null
+	var objKineticsEXE = document.getElementById("KineticsEXE")
+	if (objKineticsEXE) {
+		if (KineticsEXE == "") objKineticsEXE.disabled=true;
+		if (KineticsEXE != "") objKineticsEXE.onclick=KineticsClick;
+	}
+	var objTPNEXE = document.getElementById("TPNEXE")		
+	if (objTPNEXE) {
+		if (TPNEXE == "") objTPNEXE.disabled=true;
+		if (TPNEXE != "") objTPNEXE.onclick=TPNClick;
+	}
+
+	// 62152
+	var pnobj=document.getElementById("OEORIPrescNoHIDDEN");
+	if (pnobj && (pnobj.value!="")) DisableField("CTLOCDesc","ld157iCTLOCDesc");
+
+	// ADD ALL ONLOAD LOGIC ABOVE ME!!!
+	//Log 58029 PeterC 22/02/06: Run the "Priority" changehandler onload 
+	setTimeout("ChangePriority()",500);
+	// JD extend finishload delay - log 58462
+	setTimeout("FinishLoad()",2000);
+	// END Log 58206
+	// ADD NO ONLOAD LOGIC BELOW HERE!!
+
+
+	//LOG 63900 START EliotC
+
+	var objTDBObj=document.getElementById("TotBaseDoseQty");
+		if(objTDBObj) 
+		{	
+		        var OEORIItmMastDR,UOMDesc="";
+			var obj=document.getElementById("OEORIItmMastDR");
+			if((obj)&&(obj.value!="")) OEORIItmMastDR=obj.value;
+					
+			var obj=document.getElementById("CTUOMDesc");
+			if((obj)&&(obj.value!="")) UOMDesc=obj.value;
+			var UOM_QTY=tkMakeServerCall("web.OEOrder","SetDispbuomQtyNoQtyCal",OEORIItmMastDR,UOMDesc);
+			if (UOM_QTY==0)
+			    var UOM_QTY=1;
+			//alert("UOM_QTY"+UOM_QTY);
+			var obj=document.getElementById("UOMConvFac");  
+			if (obj) obj.innerText=UOM_QTY;
+		
+                         
+			 
+			var rdobj=document.getElementById("ConfigRoundDose");
+			var pdobj=document.getElementById("PartialDeduct");
+			var CalcQtyFlag2=document.getElementById("CalcQtyFlag2");
+
+		          //**************** Get <Total Dispensing Qty> and <Dose Dispensing Qty> ON LOAD
+			
+			if(CalcQtyFlag2.checked)
+			{
+			
+			  if ((rdobj)&&(rdobj.value=="Y"))
+			  {
+			       var OEORIItmMastDR,UOMDesc,FreqDesc,Priority,DurDesc,DoseQty,StartDate="";
+			
+				var obj=document.getElementById("OEORIItmMastDR");
+				if((obj)&&(obj.value!="")) OEORIItmMastDR=obj.value;
+				
+				var obj=document.getElementById("CTUOMDesc");
+				if((obj)&&(obj.value!="")) UOMDesc=obj.value;
+				
+				var obj=document.getElementById("PHCFRDesc1");
+				if((obj)&&(obj.value!="")) FreqDesc=obj.value;
+				
+				var obj=document.getElementById("OECPRDesc");
+				if((obj)&&(obj.value!="")) Priority=obj.value;
+				
+				var obj=document.getElementById("PHCDUDesc1");
+				if((obj)&&(obj.value!="")) DurDesc=obj.value;
+				
+				var obj=document.getElementById("OEORIDoseQty");
+				if((obj)&&(obj.value!="")) DoseQty=obj.value;
+
+				var obj=document.getElementById("OEORISttDat");
+				if((obj)&&(obj.value!="")) StartDate=obj.value;
+
+			        var qobj=document.getElementById("TotBaseDoseQty");
+	
+				if(qobj)
+				{
+				         //alert("eliot");
+
+					var temp=document.getElementById("ConfigRoundDose"); 
+					if((temp)&&(temp.value=="Y"))
+					{
+						
+						//alert("eliot_returnNew_1");
+						//var convfact=0;
+						var BaseDose="";
+						var BaseTot="";
+						var obj=document.getElementById("OEORIDoseQty");
+						//alert("eliot1"+obj.value+";"+UOM_QTY);
+						if (obj) 
+						{
+						if(obj.value%UOM_QTY!=0)
+						 BaseDose=Math.ceil(obj.value/UOM_QTY);
+						else
+						  BaseDose=obj.value/UOM_QTY;
+						}
+						BaseDoseNew=BaseDose*UOM_QTY;
+						var Return_new=tkMakeServerCall("web.OEOrder","SetDispbuomQty",OEORIItmMastDR,UOMDesc,FreqDesc,Priority,DurDesc,BaseDoseNew,StartDate);
+						//alert("eliot_returnNew"+Return_new+" ; "+BaseDoseNew); 
+						qobj.innerText=Return_new;
+
+						// Round Dose Disp Qty
+						var obj=document.getElementById("BaseDoseQty");
+						var BaseDose = Math.ceil(obj.value);
+						obj.innerText=BaseDose;
+					}
+				}
+			  
+			  }
+			  
+			  
+			  else
+			  {
+			    var obj=document.getElementById("OEORIDoseQty");
+			      BaseDose=obj.value/UOM_QTY;
+			    var qobj=document.getElementById("BaseDoseQty");
+			      qobj.innerText=BaseDose;
+			    var obj=document.getElementById("OEORIQty");
+			    var pdobj=document.getElementById("PartialDeduct");
+		            if((pdobj)&&(pdobj.value=="Y"))
+			       BaseTot = obj.value/UOM_QTY;
+			    else
+			       BaseTot = Math.ceil(obj.value/UOM_QTY);
+			    var qobj=document.getElementById("TotBaseDoseQty");
+			      qobj.innerText=BaseTot;
+						
+			  }
+			}
+			else
+			{
+		            var pdobj=document.getElementById("PartialDeduct");
+			    if((pdobj)&&(pdobj.value=="Y"))
+			    {
+			     var obj=document.getElementById("OEORIQty");
+			       BaseTot = obj.value/UOM_QTY;
+			     var qobj=document.getElementById("TotBaseDoseQty");
+			      qobj.innerText=BaseTot;
+			    }
+			    else
+			    {
+			     var obj=document.getElementById("OEORIQty");
+			       BaseTot = Math.ceil(obj.value/UOM_QTY);
+			     var qobj=document.getElementById("TotBaseDoseQty");
+			      qobj.innerText=BaseTot;
+			    }
+			
+			}
+
+
+		
+		
+		}
+		//LOG63900 EliotC END
+	
+	window.focus();  // 65197
+}
+
+function ChangePriority(){
+	//Log 58029 PeterC 22/02/06: Run the "Priority" changehandler onload
+	//log 63684 BoC don't use obj.onchange(), as it changes the focus
+	var obj=document.getElementById("OECPRDesc");
+	var EpisodeID="";
+	var OEORIItmMastDR="";
+	var OEORISttTim="";
+	var EpisodeIDObj=document.getElementById("EpisodeID");
+	if (EpisodeIDObj) EpisodeID=EpisodeIDObj.value;
+	var OEORIItmMastDRObj=document.getElementById("OEORIItmMastDR");
+	if (OEORIItmMastDRObj) OEORIItmMastDR=OEORIItmMastDRObj.value;
+	var OEORISttTimObj=document.getElementById("OEORISttTim");
+	if (OEORISttTimObj) OEORISttTim=OEORISttTimObj.value;
+	//if ((obj)&&(obj.value!="")&&(obj.onchange)) obj.onchange();
+	if ((obj)&&(obj.value!="")) {
+		//alert (obj.value+"*"+EpisodeID+"*"+OEORIItmMastDR+"*"+OEORISttTim);
+		var PriorityLookupResult=tkMakeServerCall("web.OECPriority","GetPriorityLookupResult",obj.value,EpisodeID,OEORIItmMastDR,OEORISttTim);
+		//alert (PriorityLookupResult);
+		LookUpPrioritySelect(PriorityLookupResult);
+	}
+	return;
+}
+
+function FinishLoad(){
+	// flag wont allow priority broker to change recloc on load.
+	// all because for some crazy reason the Priority handler sometimes runs before the onload also.
+	var loadobj=document.getElementById("PriOnLoad");
+	if (loadobj && (loadobj.value==1)) loadobj.value=0;
+	return;
+}
+
+//Log 49134 JPD: BMI and BSA, add BSA formula type.
+function SetBSAForm() {
+	var BSAForm=document.getElementById("BSAFormula");
+	if (BSAForm.value!="") {
+		if (BSAForm.value=="B") BSAForm.value="Boyd";
+		if (BSAForm.value=="G") BSAForm.value="Gehan and George";
+		if (BSAForm.value=="M") BSAForm.value="Mosteller";
+		if (BSAForm.value=="H") BSAForm.value="Haycock";
+		if (BSAForm.value=="D") BSAForm.value="DuBois and DuBois";
+	}
+	return false;
+}
+//Log 49134 JPD
+//modified 17/06/05 to cut BSA display to 3 decimal places
+function BSAFormReturn(Str){
+	var lu = Str.split("^");
+	var BSA=document.getElementById("BSA");
+	var HidBSAFormula=document.getElementById("HidBSAFormula");
+	if(HidBSAFormula) HidBSAFormula.value=lu[1];
+	var BSAround=lu[2]*1000;
+	BSAround=parseInt(BSAround);
+	BSAround=parseFloat(BSAround/1000);
+	if (BSA) BSA.innerText=BSAround;
+	return false;
+}
+
+function DisableFieldDM(fldName) {
+	var fld = document.getElementById(fldName);
+	var lbl = document.getElementById('c'+fldName);
+	//Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+	if ((fld)&&(fld.tagName=="INPUT")&&(fld.readOnly==false)) {
+		fld.value = "";
+		fld.disabled = true;
+		fld.className = "disabledField";
+		if (lbl) lbl = lbl.className = "";
+	}
+}
+
+function EnableNonMandatoryField(fldName) {
+	// 60037
+	var modeobj=document.getElementById("Mode");
+	if ((modeobj)&&(modeobj.value=="READONLY")) return false;
+	var fld = document.getElementById(fldName);
+	var lbl = document.getElementById('c'+fldName);
+	if (fld) {
+		fld.disabled = false;
+		fld.className = "";
+		if (lbl) lbl = lbl.className = "";
+	}
+	return;
+}
+
+function FreqDelayChangeHandler() {
+	//log 62013 because defalut handler doesn't allow to remove focus
+	IntegerPositive_changehandler();
+	var ofdobj=document.getElementById("OEORIFreqDelay")
+	var duriobj=document.getElementById("ld157iPHCDUDesc1");
+	var freqiobj=document.getElementById("ld157iPHCFRDesc1");
+	if((ofdobj)&&(ofdobj.value!="")) {
+		DisableFieldDM("PHCDUDesc1");
+		DisableFieldDM("PHCFRDesc1");
+		if (freqiobj) freqiobj.disabled=true;
+		if (duriobj) duriobj.disabled=true;
+	}
+
+	if((ofdobj)&&(ofdobj.value=="")) {
+		EnableNonMandatoryField("PHCDUDesc1");
+		EnableNonMandatoryField("PHCFRDesc1");
+		if (freqiobj) freqiobj.disabled=false;
+		if (duriobj) duriobj.disabled=false;
+	}
+	SetQuantity();
+}
+
+//jpd 48215
+function CalcQtyFlagChangeHandler() {
+
+	var CalcQtyFlag2=document.getElementById("CalcQtyFlag2");
+	
+	if (CalcQtyFlag2.checked) {
+		var objQty=document.getElementById("OEORIQty");
+		if (objQty) objQty.disabled=true;
+		if (objQty) SetQuantity();
+	} else {
+		var objQty=document.getElementById("OEORIQty");
+		if (objQty) objQty.disabled=false;
+
+	}
+
+			
+	
+}
+
+function DisableField(fldName,icN) {
+	var fld = document.getElementById(fldName);
+	var lbl = document.getElementById('c'+fldName);
+	//Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+	if ((fld)&&(fld.tagName=="INPUT")&&(fld.readOnly==false)) {
+		fld.disabled = true;
+		fld.className = "disabledField";
+		if (lbl) lbl = lbl.className = "";
+	}
+	if (icN) {
+		var objIcon=document.getElementById(icN);
+		if (objIcon) objIcon.style.visibility = "hidden";
+	}
+}
+
+function NoLink() {
+	return false;	
+}
+
+function OpenWindow1() {
+	var patOrdFile1=document.getElementById("patOrdFile1");
+	var PatientOrderFile1=document.getElementById("PatientOrderFile1");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+	
+	if ((patOrdFile1)&&(patOrdFile1.value!="")) {
+		var url=patOrdFile1.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile1', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');
+	}
+	return false;
+}
+
+function DeleteRefClickHandler() {    
+	//Delete items from lstOrders listbox when a "Delete" button is clicked.
+	var obj=document.getElementById("RefDoctorList")
+	if (obj) RemoveFromList(document.fOEOrder_Normal,obj)
+}
+
+function OpenWindow2() {
+	var patOrdFile2=document.getElementById("patOrdFile2");
+	var PatientOrderFile2=document.getElementById("PatientOrderFile2");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+		 
+	if ((patOrdFile2)&&(patOrdFile2.value!="")) {
+		var url=patOrdFile2.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile2', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');
+	} 
+	return false;
+}
+
+function OpenWindow3() {
+	var patOrdFile3=document.getElementById("patOrdFile3");
+	var PatientOrderFile3=document.getElementById("PatientOrderFile3");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+	
+	if ((patOrdFile3)&&(patOrdFile3.value!="")) {
+		var url=patOrdFile3.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile3', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');		
+	}
+	return false;
+}
+
+function OEORIRemarks_onkeydown() {
+//required to call this function to override the generic script
+//DL : LOG 29062 : 02/Oct/02
+
+}
+
+function OEORIDepProcNotes_onkeydown() {
+//required to call this function to override the generic script
+//DL : LOG 29062 : 02/Oct/02
+
+}
+
+function BodyUnLoadHandler() {
+	var AlertReason="";
+	var obj=document.getElementById("AlertReason");
+	if (obj) {
+		AlertReason=obj.value;
+		if ((AlertReason=="") && (obj.style.visibility != "hidden")) {
+			var par_win = window.opener;
+		}
+	}
+	//If there is any mandatory field left unfilled, alert the user and delete the order item from the list.
+	var par_win = window.opener;
+	if (OrderWindow!="") par_win=window.open('',OrderWindow); //par_win=par_win.top.frames[1];	
+	var WarnMsg="";
+	WarnMsg=CheckForAllMendatoryFields();
+	if ((WarnMsg!="")&&(OrderWindow!="")&&(par_win)&&(par_win.document.fOEOrder_Custom)) {
+		alert(WarnMsg+"\n"+t['WillDeleteOrder']);
+		try{
+			var delID="";
+			var idobj=document.getElementById("ID");
+			if (idobj) {
+				delID=idobj.value;
+				if ((delID!="")&&(par_win)) {
+					par_win.DeleteOrderByID(delID);
+				}
+			}
+		}catch(e){}
+	}
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(0);	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+		// log 63386 BoC: close Questionnaire Window when closing order details window
+		if (par_win.QuestionnaireWin) {
+			try{
+				par_win.QuestionnaireWin.close();
+			}catch(e){}
+		}
+	}
+
+	//Go to the details page of the next order item 
+	//log 61470 TedT orderWindow should be "oeorder_entry"
+	if (OrderWindow=="oeorder_entry") {
+		if ((par_win)&&(par_win.document.fOEOrder_Custom)) par_win.OrderDetailsShowing(par_win.document.fOEOrder_Custom);
+	}
+
+	var OD="";
+	var OIDD="";
+	var windesc="";
+	var UF=""
+	var UFObj=document.getElementById("UpdateFrom");
+	if((UFObj)&&(UFObj.value!="")) UF=UFObj.value
+	var idobj=document.getElementById("ID");
+	if(idobj) OIDD=idobj.value;
+
+	if(OIDD!="") OD=OIDD.split("||");
+	if((OD)&&(OD[1])) windesc="ORDEXEC"+OD[1];
+	if(UF!="OEOrder.AllAlerts") {
+	
+	try{
+		var win=window.open('',windesc);
+		if (win) {
+			var wobj=win.document.getElementById("ID")
+			if((wobj)&&(wobj.value!="")) {
+				var idobj=document.getElementById("ID")
+				if ((idobj)&&(idobj.value!="")) {
+					win.close();
+					var URL="oeordexec.editrefresh.csp?OrderID="+idobj.value;
+					//Log: 59598, 03-07-2006 BC: add "status=yes"
+					var features='scrollbars=yes,toolbar=no,resizable=yes,status=yes'
+					window.open(URL,'',features);
+				}
+			}
+			else(win.close());
+		}
+	}catch(e){}
+	}
+
+	// JD refresh order list with new values 54852
+	if (OrderWindow=="oeorder_entry") {
+		try {
+			var detailFrame=window.open("","oeorder_entry");
+			if (detailFrame) detailFrame.RefreshSessionList();
+		} catch(e) {
+			//log58506 TedT kill blank window
+			detailFrame.close();
+		}
+	}
+	if (document.getElementById('ID')) {var ID=document.getElementById('ID').value;} else {var ID="";}
+	var serverupdate=tkMakeServerCall("web.OEOrdItem","LockClear",ID);
+
+}
+function CheckForAllMendatoryFields() {
+	var AllGetValue="";
+	for (var i=0;i<document.fOEOrder_Med.elements.length;i++) {
+		if (document.fOEOrder_Med.elements[i].id!="") {
+			var elemid="c"+document.fOEOrder_Med.elements[i].id;
+			var elemc=document.getElementById(elemid);
+			var elem=document.getElementById(document.fOEOrder_Med.elements[i].id);
+			if ((elemc) && (elemc.className=="clsRequired")) {
+				if ((elem)&&(elem.value=="")) AllGetValue=AllGetValue+elemc.innerText+":  "+t['XMISSING']+"\n";
+			}	
+		}
+	}
+	return AllGetValue;
+}
+function HideAlertField() {
+	var alertobj=document.getElementById("AlertReason");
+	if (alertobj) alertobj.style.visibility = "hidden";
+	
+	var labelobj=document.getElementById("cAlertReason");
+	if (labelobj) labelobj.style.visibility = "hidden";
+
+	var imgobj=document.getElementById("ld157iAlertReason");
+	if (imgobj) imgobj.style.visibility = "hidden";
+}
+
+function FrequencyLookUpSelect(str) {
+	var lu = str.split("^");
+	var obj=document.getElementById("PHCFRDesc1");
+	if (obj) obj.value = lu[0];
+	freq = lu[2];
+	var iobj=document.getElementById("Interval");
+	if (iobj) iobj.value= lu[3];
+	if (freq=="") freq=0;
+	SetQuantity();
+	BuildLabelText();
+}
+function DurationLookUpSelect(str) {
+	var lu = str.split("^");
+	var obj=document.getElementById("PHCDUDesc1");
+	if (obj) obj.value = lu[0];
+	dur = lu[2];
+	if (dur=="") dur=0;
+	var dfobj=document.getElementById("DurFactor");
+	if (dfobj) dfobj.value=dur;	
+	SetQuantity();
+	BuildLabelText();
+}
+function DrugFormLookUpSelect(str) {
+	var lu=str.split("^");
+	var obj=document.getElementById("DrugForm");
+	if (obj) obj.value=lu[1];
+	var obj=document.getElementById("PHCDUDesc1");
+	if (obj) obj.value=lu[7];
+	dur = lu[8];
+	if (dur=="") dur=0;
+	var obj=document.getElementById("DurFactor");
+	if (obj) obj.value=dur;
+	var obj=document.getElementById("PHCFRDesc1");
+	if (obj) obj.value=lu[10];
+	freq = lu[11];
+	if (freq=="") freq=0;
+	var obj=document.getElementById("CTUOMDesc");
+	if (obj) obj.value=lu[3];
+	var obj=document.getElementById("PHCINDesc1");
+	if (obj) obj.value=lu[5];
+	var obj=document.getElementById("OEORIDoseQty");
+	if (obj) obj.value=lu[13];
+	SetQuantity();	
+}
+
+function LookUpDoseEquivHandler(str) {
+	var lu=str.split("^");
+	var obj=document.getElementById("OEORIItmMastDR");
+	if((obj)&&(obj.value!="")) OEORIItmMastDR=obj.value;
+	
+	var obj=document.getElementById("CTUOMDesc");
+	if((obj)&&(obj.value!="")) UOMDesc=obj.value;
+	var convfact=tkMakeServerCall("web.OEOrder","SetDispbuomQtyNoQtyCal",OEORIItmMastDR,UOMDesc);
+	var obj=document.getElementById("UOMConvFac");
+	if (obj) obj.innerText=convfact;
+	var rdobj=document.getElementById("ConfigRoundDose");		
+	var obj=document.getElementById("BaseDoseQty");   
+	if (obj)   
+	
+	{
+	if ((rdobj)&&(rdobj.value=="Y"))  // Eliotc log63900 Round Dose Dispensing Qty When "ConfigRoundDose" is set to "Y"
+	   {
+ 
+	       obj.innerText=Math.ceil(lu[1]);
+	   }
+	
+	else
+	 
+	 obj.innerText=lu[1];
+	
+	}
+	var obj=document.getElementById("HidBaseDoseQty");
+	if (obj) obj.innerText=lu[1];
+
+       //Eliotc log63900 recalculate Total Dispensing Qty when UOM is changed
+	var obj=document.getElementById("OEORIQty");
+	if (obj) 
+	{
+	if(obj.value%convfact!=0)
+	{
+	  var pdobj=document.getElementById("PartialDeduct");
+	  if((pdobj)&&(pdobj.value=="Y"))
+	   BaseTot=obj.value/convfact;
+          else
+	   BaseTot=Math.ceil(obj.value/convfact);
+	}
+	else
+          BaseTot=obj.value/convfact;
+	}
+	var obj=document.getElementById("TotBaseDoseQty");
+	if (obj) obj.innerText=BaseTot;
+
+
+	//Log 50604 JPD 13/04/05
+	var QtyUOM=document.getElementById("QtyUOM");
+	if (QtyUOM) QtyUOM.innerText=lu[0];
+	//Log 52110
+	var obj=document.getElementById("oldUOM");
+	if (obj && obj.value!=lu[0]) {
+		obj.value=lu[0];
+		var obj=document.getElementById("OEORIDoseQty");
+		if (obj) obj.value=lu[2];	
+		SetQuantity();
+		var DoseEqObj=document.getElementById("CTUOMDesc");
+		if (DoseEqObj) DoseEqObj.onchange();
+	}
+	BuildLabelText();
+}
+
+function ClearField() {
+	var obj=document.getElementById("CareProvider");
+	if (obj) obj.value="";
+	var obj=document.getElementById("OEORIRefDocDR")
+	if (obj) obj.value="";
+}
+
+function SetQuantity() {
+	var objQty=document.getElementById("OEORIQty");
+	var objDoseQty=document.getElementById("OEORIDoseQty");
+	var RoundUpNum="";
+	var CalcQtyFlag2=document.getElementById("CalcQtyFlag2");
+	var iobj=document.getElementById("Interval");
+	var dfobj=document.getElementById("DurFactor");
+	if (dfobj) dur=dfobj.value;
+	if (iobj) {
+		var Interval=iobj.value;
+		if ((Interval!="") && (Interval!=null)) {
+			var convert=Number(dur)/Number(Interval)
+			var fact=(Number(dur))%(Number(Interval));
+			if (fact>0) {
+				fact=1;
+			} else {
+				fact=0;
+			}
+			dur=Math.floor(convert)+fact;
+		}	
+	}
+	if (CalcQtyFlag2) {
+		var objfreqmins=document.getElementById("OEORIFreqDelay");
+		if ((objfreqmins) && (objfreqmins.value!="")){
+			var objsttdat=document.getElementById("OEORISttDat");
+			var objenddat=document.getElementById("OEORIEndDate");
+			var objstttim=document.getElementById("OEORISttTim");
+			var objendtim=document.getElementById("OEORIEndTime");
+			//Log 59218 PeterC 11/09/2006
+			var BaseDoseQty=""
+			var BDQObj=document.getElementById("HidBaseDoseQty");
+			if((BDQObj)&&(BDQObj.value!="")) BaseDoseQty=BDQObj.value;
+			if ((objsttdat) && (objenddat) && (objstttim) && (objendtim)){
+				var path="oeorder.setquantity.csp?SttDat="+objsttdat.value+"&EndDate="+objenddat.value+"&SttTim="+objstttim.value+"&EndTime="+objendtim.value+"&DoseQty="+objDoseQty.value+"&FreqDelay="+objfreqmins.value+"&WINNAME="+window.name+"&BaseDoseQty="+BaseDoseQty;
+				websys_createWindow(path,"TRAK_hidden");
+			}
+		}
+		//Log 59218 PeterC 11/09/2006
+		var objTDBObj=document.getElementById("TotBaseDoseQty");
+		 if((objTDBObj)&&(objfreqmins)&&(objfreqmins.value=="")&&(CalcQtyFlag2.checked)) {
+
+			var OEORIItmMastDR,UOMDesc,FreqDesc,Priority,DurDesc,DoseQty,StartDate="";
+			
+			var obj=document.getElementById("OEORIItmMastDR");
+			if((obj)&&(obj.value!="")) OEORIItmMastDR=obj.value;
+			
+			var obj=document.getElementById("CTUOMDesc");
+			if((obj)&&(obj.value!="")) UOMDesc=obj.value;
+			
+			var obj=document.getElementById("PHCFRDesc1");
+			if((obj)&&(obj.value!="")) FreqDesc=obj.value;
+			
+			var obj=document.getElementById("OECPRDesc");
+			if((obj)&&(obj.value!="")) Priority=obj.value;
+			
+			var obj=document.getElementById("PHCDUDesc1");
+			if((obj)&&(obj.value!="")) DurDesc=obj.value;
+			
+			var obj=document.getElementById("OEORIDoseQty");
+			if((obj)&&(obj.value!="")) DoseQty=obj.value;
+
+			var obj=document.getElementById("OEORISttDat");
+			if((obj)&&(obj.value!="")) StartDate=obj.value;
+
+				 
+			var temp=document.getElementById("ConfigRoundDose"); 
+			if((temp)&&(temp.value=="Y"))
+			{
+					//alert("eliot_returnNew_1");
+					var convfact=0;
+					//convfact=tkMakeServerCall("web.OEOrder","SetDispbuomQtyNoQtyCal",OEORIItmMastDR,UOMDesc);
+					var obj=document.getElementById("UOMConvFac");
+					if (obj) convfact=obj.value;
+					if (convfact==0)
+					var convfact=1;
+					var BaseDose="";
+					var BaseTot="";
+					var obj=document.getElementById("OEORIDoseQty");
+					if (obj) 
+					{
+					if(obj.value%convfact!=0)
+					 BaseDose=Math.ceil(obj.value/convfact);
+					else
+					  BaseDose=obj.value/convfact;
+					}
+					BaseDoseNew=BaseDose*convfact;
+					//alert("eliot_returnNew"+BaseDoseNew+" ; " + convfact+" ; "+obj.value);
+					var path="oeorder.setdispbuomqty.csp?WINNAME="+window.name+"&OEORIItmMastDR="+OEORIItmMastDR+"&UOMDesc="+escape(UOMDesc)+"&FreqDesc="+escape(FreqDesc)+"&Priority="+escape(Priority)+"&DurDesc="+escape(DurDesc)+"&DoseQty="+escape(BaseDoseNew)+"&StartDate="+StartDate;
+			                websys_createWindow(path,"TRAK_hidden");
+                                        //alert("eliot_returnNew"+path); 
+					//qobj.innerText=Return_new;
+			}
+			else			
+			{
+			var path="oeorder.setdispbuomqty.csp?WINNAME="+window.name+"&OEORIItmMastDR="+OEORIItmMastDR+"&UOMDesc="+escape(UOMDesc)+"&FreqDesc="+escape(FreqDesc)+"&Priority="+escape(Priority)+"&DurDesc="+escape(DurDesc)+"&DoseQty="+escape(DoseQty)+"&StartDate="+StartDate;
+			websys_createWindow(path,"TRAK_hidden");
+			}
+		}
+		//Log 34255,34091
+		var rdobj=document.getElementById("ConfigRoundDose");
+		var pdobj=document.getElementById("PartialDeduct");
+		if ((rdobj)&&(objDoseQty)) {
+			var valDoseQty=objDoseQty.value;
+			if (curydecimalsym!=".") {  
+				var arrTemp = valDoseQty.split(curydecimalsym); 
+				valDoseQty=arrTemp.join('.');
+				var arrTemp = objDoseQty.value.split('.'); 
+				objDoseQty.value=arrTemp.join(curydecimalsym);
+			}
+			//Log 50094 07/03/05 PeterC
+			if ((rdobj.value=="Y")&&((pdobj)&&(pdobj.value=="N"))) {
+			//if (rdobj.value=="Y") {
+				//BM Log 35283 round problem 
+				//objDoseQty.value=Math.round(valDoseQty); //parseInt(Math.round(valDoseQty));
+				RoundUpNum=Math.ceil(valDoseQty);
+			}
+		}
+		if ((CalcQtyFlag2.checked==true)&&(objQty)&&(objDoseQty)&&(objDoseQty.value!="NaN")) {
+			var valDoseQty=RoundUpNum;
+			if (valDoseQty=="") valDoseQty=objDoseQty.value;
+			if (curydecimalsym!=".") {  
+				if (valDoseQty.split) {
+					var arrTemp=valDoseQty.split(curydecimalsym);
+					valDoseQty=arrTemp.join('.');
+				}
+			} 
+			//Log 49274
+			valDoseQty=valDoseQty+"";
+			valDoseQty=valDoseQty.replace(",","")
+			objQty.value = parseFloat(valDoseQty) * parseFloat(freq) * parseFloat(dur);
+			// BM to get rid of the JavaScript float number calculating problem
+			objQty.value = Math.round(objQty.value*100000000)/100000000
+			
+			if ((rdobj)&&(rdobj.value=="N")) {
+				if ((pdobj)&&(pdobj.value=="N")) {
+					objQty.value=Math.round(objQty.value);
+				}
+			}
+		} else {
+			if ((objQty) && (CalcQtyFlag2.checked==true)&&(objQty.value) && (objQty.value.value="")) objQty.value="0";
+			if ((objQty) && (CalcQtyFlag2.checked==true)&&(objDoseQty.value=="NaN")) objQty.value="NaN";
+		}
+		if (curydecimalsym!=".") {  
+			var arrTemp = objQty.value.split('.'); 
+			objQty.value=arrTemp.join(curydecimalsym);
+		}
+	}
+	else {
+		if (curydecimalsym!=".") {  
+			var arrTemp = objDoseQty.value.split('.'); 
+			objDoseQty.value=arrTemp.join(curydecimalsym);
+		}
+	}
+	if (objDoseQty) objDoseQty.value=String(objDoseQty.value);
+
+	return true;
+}
+
+function CheckQuantity() {
+	var objQty=document.getElementById("OEORIQty");
+	var objDoseQty=document.getElementById("OEORIDoseQty");
+	var CalcQtyFlag2=document.getElementById("CalcQtyFlag2");
+	var iobj=document.getElementById("Interval");
+	var dfobj=document.getElementById("DurFactor");
+	var TestQty;
+	var TestDoseQty;
+	TestQty=objQty.value;
+	TestDoseQty=objDoseQty.value;
+	if (dfobj) dur=dfobj.value;
+	if (iobj) {
+		var Interval=iobj.value;
+		if ((Interval!="") && (Interval!=null)) {
+			var convert=Number(dur)/Number(Interval)
+			var fact=(Number(dur))%(Number(Interval));
+			if (fact>0) {
+				fact=1;
+			} else {
+				fact=0;
+			}
+			dur=Math.floor(convert)+fact;
+		}	
+	}
+	if (CalcQtyFlag2) {
+		var rdobj=document.getElementById("ConfigRoundDose");
+		var pdobj=document.getElementById("PartialDeduct");
+		if ((rdobj)&&(objDoseQty)) {
+			var valDoseQty=TestDoseQty;
+			if (curydecimalsym!=".") {  
+				var arrTemp = valDoseQty.split(curydecimalsym); 
+				valDoseQty=arrTemp.join('.');
+				var arrTemp = TestDoseQty.split('.'); 
+				TestDoseQty=arrTemp.join(curydecimalsym);
+			}
+			if ((rdobj.value=="Y")&&((pdobj)&&(pdobj.value=="N"))) {
+				//BM Log 35283 round problem 
+				TestDoseQty=Math.round(valDoseQty); //parseInt(Math.round(valDoseQty));
+			}
+		}
+		if ((objQty)&&(objDoseQty)&&(TestDoseQty!="NaN")) {
+			var valDoseQty=TestDoseQty;
+			if (curydecimalsym!=".") {  
+				if (valDoseQty.split) {
+					var arrTemp=valDoseQty.split(curydecimalsym); 
+					valDoseQty=arrTemp.join('.');
+				}
+			}
+			TestQty = parseFloat(valDoseQty) * parseFloat(freq) * parseFloat(dur);
+			TestQty = Math.round(TestQty*100000000)/100000000
+			
+			if ((rdobj)&&(rdobj.value=="N")) {
+				if ((pdobj)&&(pdobj.value=="N")) {
+					TestQty=Math.round(TestQty);
+				}
+			}
+		} else {
+			if ((objQty) && (CalcQtyFlag2.checked==true)&&(TestQty) && (TestQty.value="")) TestQty="0";
+			if ((objQty) && (CalcQtyFlag2.checked==true)&&(TestDoseQty=="NaN")) TestQty="NaN";
+		}
+		if (curydecimalsym!=".") {  
+
+		}
+	}
+	else {
+		if (curydecimalsym!=".") {  
+			var arrTemp = TestDoseQty.split('.'); 
+			TestDoseQty=arrTemp.join(curydecimalsym);
+		}
+	}
+	TestDoseQty=String(TestDoseQty);
+	return TestQty;
+			
+}
+
+//Eliotc Log 63900 start
+function QtyChangeHandler(){
+
+        //alert("eliot2");
+        var convfact=0;
+	var obj=document.getElementById("UOMConvFac");
+	if (obj) convfact=obj.value;
+	if (convfact==0)
+	var convfact=1;
+	var BaseTot="";
+	var obj=document.getElementById("OEORIQty");
+	if (obj)
+	{
+	if(obj.value%convfact!=0)
+	{
+	  var pdobj=document.getElementById("PartialDeduct");
+	  if((pdobj)&&(pdobj.value=="Y"))
+	   BaseTot=obj.value/convfact;
+          else
+	   BaseTot=Math.ceil(obj.value/convfact);
+	}
+	else
+          BaseTot=obj.value/convfact;
+
+	}
+	
+	var obj=document.getElementById("TotBaseDoseQty");
+	if (obj) obj.innerText=BaseTot;
+
+}
+//Eliotc Log 63900end
+
+function DoseQtyChangeHandler() {
+	// 59146 - have to treat it differently depending on curydecimalsym
+
+	var dqobj=document.getElementById("OEORIDoseQty");
+	if(dqobj) {		
+		var dosestring=dqobj.value;
+		if (curydecimalsym!=".") {  
+				var arrTemp = dosestring.split('.'); 
+				dosestring=arrTemp.join(curydecimalsym);
+				if(isNaN(parseInt(dosestring))) {
+					dqobj.className='clsInvalid';
+					return false;
+				} else{ dqobj.className=''; }
+		} else {
+			if(isNaN(dosestring)) {
+				dqobj.className='clsInvalid';
+				return false;
+			} else{ dqobj.className=''; }
+		}
+	}
+	if (!SetQuantity()) {
+		websys_setfocus("OEORIDoseQty");
+	}
+	
+	//Eliotc log63900 start
+	/*var convfact=0;
+	var obj=document.getElementById("UOMConvFac");
+	if (obj) convfact=obj.value;
+	if (convfact==0)
+	var convfact=1;
+	var BaseDose="";
+	var BaseTot="";
+	var rdobj=document.getElementById("ConfigRoundDose");		
+	var obj=document.getElementById("OEORIDoseQty");
+	if (obj) 
+	{
+	if(obj.value%convfact!=0)
+	{
+	  
+	   if ((rdobj)&&(rdobj.value=="Y"))
+	   {
+ 
+	       BaseDose=Math.ceil(obj.value/convfact);
+	   }
+	   else
+	        BaseDose=obj.value/convfact;
+
+	}
+	else
+          BaseDose=obj.value/convfact;
+	}
+	var obj=document.getElementById("BaseDoseQty");
+	              //alert("eliot"+BaseDose);
+	if (obj) obj.innerText=BaseDose;
+	var obj=document.getElementById("HidBaseDoseQty");
+	if (obj) obj.value=BaseDose;
+
+	//Eliotc log63900 End
+         */
+	BuildLabelText();
+}
+
+</script>
+
+<!--AmiN Log 24827   on 02 May 2002><-->
+
+<server>
+ s PatientID=%request.Get("PatientID")
+ ;i PatientID'="",$l($g(%request.Data("EpisodeID",1)),"^")=1 d
+ . ;s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . ;i cmp d
+ . ;s cmp.HideMenus=1,cmp.HideHeadings=1
+ . ;d cmp.Show(),cmp.%Close()
+ ;n basePHCDUFactor,basePHCFRFactor
+ s basePHCDUFactor=%request.Get("basePHCDUFactor"),basePHCFRFactor=%request.Get("basePHCFRFactor")
+ ;s %response.TraceDump=1
+ n ordDesc,itmdesc,DrugAlert,CPList,RangeFrom,RangeTo,OrderWindow,Idx,OneDayDuration,OnceDailyFreq
+ s (ordDesc,itmdesc,DrugAlert,RangeFrom,RangeTo,OrderWindow,Idx,OneDayDuration,OnceDailyFreq)=""
+ s ordDesc=%request.Get("ordDesc")
+ s itmdesc=%request.Get("itmdesc")
+ s CPList=%request.Get("CareProvList")
+ s RefDOcList=%request.Get("RefDoctorList")
+ s RngeFrom=%request.Get("RangeFrom") 
+ s RngeTo=%request.Get("RangeTo") 
+ s PatID=%request.Get("PatientID") 
+ s ChID=%request.Get("ChartID")
+ s PatID=%request.Get("PatientID")
+ s madm=%request.Get("mradm")
+ s EpisID=%request.Get("EpisodeID")
+ s OrderWindow=%request.Get("OrderWindow")
+ d %request.Set("DurFactor",basePHCDUFactor)
+ ;Log 48697 Get the Freq and Duration that factor is 1
+ s Idx="" f  s Idx=$o(^PHCDU(Idx))  q:Idx=""  q:OneDayDuration'=""  d
+ . i $p($g(^PHCDU(Idx)),"^",2)=1 s OneDayDuration=$p($g(^PHCDU(Idx)),"^",3)_"^"_$p($g(^PHCDU(Idx)),"^",2)
+ s Idx="" f  s Idx=$o(^PHCFR(Idx))  q:Idx=""  q:OnceDailyFreq'=""  d
+ . i $p($g(^PHCFR(Idx)),"^",2)=1 s OnceDailyFreq=$p($g(^PHCFR(Idx)),"^",3)_"^"_$p($g(^PHCFR(Idx)),"^",2)
+ s UpdateFrom=%request.Get("UpdateFrom")
+
+</server>
+<TRAK:COMPONENT id="OEOrder.Med">
+</TRAK:COMPONENT>
+
+<script language="Javascript">
+ var dur = "#(basePHCDUFactor)#";
+ var freq = "#(basePHCFRFactor)#";
+ var ordDesc = "#(ordDesc)#";
+ var itmdesc = "#(itmdesc)#";
+ var CPList = "#(CPList)#";
+ var RefDOcList="#(RefDOcList)#";
+ var PatientID = "#(PatID)#";
+ var RngFrom = "#(RngeFrom)#";
+ var RngTo = "#(RngeTo)#";
+ var PatID= "#(PatID)#";
+ var ChID= "#(ChID)#";
+ var madm= "#(madm)#";
+ var EpisID= "#(EpisID)#";
+ var OrderWindow="#(OrderWindow)#";
+ var OneDayDuration="#(OneDayDuration)#";
+ var OnceDailyFreq="#(OnceDailyFreq)#";
+ var UpdateFrom="#(UpdateFrom)#"
+
+
+ var Updated=0;   //log 30710 
+ document.body.onload = BodyLoadHandler;
+ document.body.onunload = BodyUnLoadHandler;
+
+//Log 61186 PeterC 29/11/06
+var Gparam6="";
+var Gparam7="";
+var Gparam8="";
+var currDate="";
+function OEORISttDat_onBlur(e) {
+	var obj=document.getElementById("OEORISttDat");
+	Gparam5=obj.value;
+	var obj=document.getElementById("OEORIItmMastDR");
+	if((obj)&&(obj.value!="")) Gparam6=obj.value;
+	var obj=document.getElementById("EpisodeID");
+	if((obj)&&(obj.value!="")) Gparam7=obj.value;
+	var obj=document.getElementById("OECPRDesc");
+	if((obj)&&(obj.value!="")) Gparam8=obj.value;
+	var hsdcobj=document.getElementById("HiddenStartDateCheck");
+	if (hsdcobj) hsdcobj.onchange();
+	var ICAPAlert=mPiece(Gsdcheckval,"^",0);
+	var RecLoc=mPiece(Gsdcheckval,"^",1);
+	if ((ICAPAlert!="")&&(ICAPAlert=="Y")) {
+		alert(t['InClosedAccPeriod']);
+	}
+	var obj=document.getElementById("CTLOCDesc");
+	if((obj)&&(Gparam5!="")&&(Gparam5!=currDate)) obj.value=RecLoc;
+	if(currDate!=Gparam5) currDate=Gparam5;
+	SetQuantity();
+}
+
+function HiddenStartDateCheck_changehandler(encmeth) {
+	Gsdcheckval=cspRunServerMethod(encmeth,Gparam5,Gparam6,Gparam7,Gparam8);
+}
+
+var obj=document.getElementById("OEORISttDat");
+if (obj) {
+	obj.onblur=OEORISttDat_onBlur;
+	currDate=obj.value;
+}
+
+ function DisableElementsWhenInvoiced() {
+	var COPHobj=document.getElementById("ChgOrderPerHour");
+ 	var obj=document.getElementById("OEORISttDat");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORISttTim");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIEndDate");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIEndTime");
+	if (obj) obj.disabled=true;
+	
+	if ((COPHobj)&&(COPHobj.value=="Y")) {
+		var obj=document.getElementById("OEORIEndDate");
+		if (obj) obj.disabled=false;
+		var obj=document.getElementById("OEORIEndTime");
+		if (obj) obj.disabled=false;
+	}
+
+	var obj=document.getElementById("OEORIQty");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("DrugForm");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIDoseQty");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCFRDesc1");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCDUDesc1");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OSTATDesc");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCINDesc1");
+	if (obj) obj.disabled=true;
+ }
+ 
+ function DisableAllButTwo(eForm,mode){
+    var iNumElems = eForm.elements.length;     //for only form elements.
+	//log 61154 TedT
+	var enabledfldnames="";
+	var readonlyfldnames="";
+	if(mode=="PARTIALREAD"){
+		enabledfldnames = ",OEORIRemarks,OEORIDepProcNotes,OECPRDesc,UserCode,PIN,CareProvider,CareProvList,";
+		readonlyfldnames = ",OSTATDesc,";
+		//Log 62313 PeterC 22/01/07
+		var obj=document.getElementById("ChgOrderPerHour");
+		var bobj=document.getElementById("BilledFlag");
+		if((obj)&&(obj.value=="Y")&&(bobj)&&(bobj.value!="")) {
+			if((bobj.value=="P")||(bobj.value=="TR")||(bobj.value=="R")) enabledfldnames=enabledfldnames+"OEORIEndDate,OEORIEndTime,";
+			var obj=document.getElementById("OEORIEndDate");
+			if (obj) obj.disabled=false;
+			var obj=document.getElementById("OEORIEndTime");
+			if (obj) obj.disabled=false;
+		}
+	}
+    for (var i=0; i<iNumElems; i++)  {
+        var eElem = eForm.elements[i];
+	//Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+        if ((enabledfldnames.indexOf(","+eElem.name+",")==-1)&&(eElem.type!="hidden")&&(readonlyfldnames.indexOf(","+eElem.name+",")==-1)&&(eElem.readOnly==false)) {
+            if (("hidden" != eElem.type)&&("INPUT" == eElem.tagName) || ("TEXTAREA" == eElem.tagName)) {
+                eElem.disabled = true;
+                var img=document.getElementById("ld157i"+eElem.id); //to hid the images for the brokers.
+                if (img) { img.style.visibility="hidden"; }
+            } else if ("SELECT" == eElem.tagName) {
+                var cOpts = eElem.options;
+                var iNumOpts = cOpts.length;
+                for (var j=0; j<iNumOpts; j++) {
+                    var eOpt = cOpts[j];
+                    eOpt.disabled = true;
+                }
+            }
+	}
+    }
+}
+
+//log 62013 because defalut handler doesn't allow to remove focus
+var PRNMax24HrDoseObj=document.getElementById("PRNMax24HrDose");
+if (PRNMax24HrDoseObj) PRNMax24HrDoseObj.onchange=Float_changehandler;
+var PRNTotDoseAllowedObj=document.getElementById("PRNTotDoseAllowed");
+if (PRNTotDoseAllowedObj) PRNTotDoseAllowedObj.onchange=Float_changehandler;
+
+</script>
+<server>
+ i %request.Get("ID")'="" d
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="P" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="TR" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="R" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+
+</server>
+</body>
+</html>

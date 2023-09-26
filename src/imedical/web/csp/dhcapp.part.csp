@@ -1,0 +1,209 @@
+<!--dhcapp.part.csp -->
+<html>
+<head>
+<title></title>
+<HISUI/>
+<style>
+#ExaCatCode{padding:3px 0px;margin:0}
+</style>
+
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/part.js" ></script>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+</head>
+<body class="hisui-layout">
+	
+	<div id="right" class="hisui-menu" style="">
+		<div onclick="addCurRow()" data-options="iconCls:'icon-add'">新增同级部位</div>
+		<div onclick="addRow()" data-options="iconCls:'icon-add'">新增子部位</div>
+		<div onclick="moveup()" data-options="iconCls:'icon-up'">上移</div>
+		<div onclick="movedown()" data-options="iconCls:'icon-down'">下移</div>
+		
+	</div>
+
+	<div data-options="region:'west',title:'',border:false,collapsible:false" style="width:300px;padding:10px 5px 10px 10px;" >
+		<div class="hisui-layout" fit="true" border="false">
+			<div data-options="region:'north',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style='height:84px;'>
+				<div class="hisui-panel" data-options="title:'部位字典(<font>右键可直接新增</font>)',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-bottom:0px;border-radius:0px;">		
+					<div style="padding:10px 0px 10px 11px;">
+	        		 	<input id="ExaCatCode" href="#" class="hisui-searchbox" prompt='请输入部位描述或别名'/>
+	        		</div>
+	        	</div>
+			</div>
+			<!--左边树 -->
+			<div data-options="region:'center',split:true,title:'',border:false,collapsible:false" style="">
+				<div class="hisui-panel" data-options="title:'',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;padding:0px 10px 10px 10px;">	
+					<ul id="partTree"></ul>
+				</div>  
+			</div>
+		</div>
+	</div>
+	
+	<!--右边保存grid-->
+	<div data-options="region:'center',border:false,collapsible:false">
+			
+		<div class="hisui-layout" data-options="fit:true">    
+          <div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 10px 5px;">   
+
+			<!-- toolbar -->
+			<div id="toolbar" class="datagrid-toolbar">
+				<table cellspacing="0" cellpadding="0">
+				    <tr>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a> </td>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+				   	  <td style='font-size:12px'><input class="hisui-checkbox" type="checkbox" name="root" value="1"  />根节点</td>
+				   	  <!--
+				   	  <td style='font-size:12px'><input style="width:180px;" type="file" name="filepath" id="filepath" /></td>
+				   	  <td><div class="datagrid-btn-separator"> </div> </td>
+				   	  <td style='font-size:12px'><a id="data" class="hisui-linkbutton" data-options="iconCls:'icon-uploadyun'"  onclick="javascript:ImportDataPart()">数据导入</a></td>
+				   	  <td><div class="datagrid-btn-separator"> </div> </td>
+				   	  -->
+				     </tr>
+				</table>
+			</div>
+			<table id="datagrid" class="hisui-datagrid" fit="true" title="部位字典维护"
+				data-options="
+				headerCls:'panel-header-gray',
+				iconCls:'icon-paper',
+				toolbar:'#toolbar',
+			    rownumbers:true,
+			    method:'get',
+			    fitColumns:true,
+			    singleSelect:true,
+			    onDblClickRow: onClickRow,
+			    onClickRow: selectRow,
+			    onRowContextMenu:showRowContextMenu">
+				<thead>
+					<tr>
+						<th data-options="field:'APDesc',width:100,editor:{type:'validatebox',options:{required:true}}">部位名称</th>
+						<th data-options="field:'APCode',width:30,editor:{type:'validatebox',options:{required:true}}">部位代码</th>
+						<th data-options="field:'APParPDr',width:100,
+											editor:{
+												type:'combotree',
+												options:{
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPPart&MethodName=getTreeComboNew'
+												}
+											}">父部位</th>
+						<th data-options="field:'APActiveFlag',width:20,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '可用';} 
+												else {return '停用';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPPart&MethodName=listUseState',
+													required:true
+												}
+											}">状态</th>
+						<th data-options="field:'ID',hidden:true">id</th>
+						<th data-options="field:'APPartNum',width:30,editor:{type:'validatebox',options:{required:true}}">部位数</th>
+						<th data-options="field:'APOrdNum',width:50,formatter:cellStyler">顺序号</th>
+						<th data-options="field:'APAlias',width:80">别名</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<div data-options="region:'south',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style="height:250px;padding:0px 10px 10px 5px;">
+			
+			
+			<div id="subtoolbar" class="datagrid-toolbar">
+				<table cellspacing="0" cellpadding="0">
+				    <tr>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSub()" >新增</a> </td>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSub()">保存</a> </td>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:deleteSub()">删除</a> </td>
+				    	
+				    </tr>
+				</table>
+			</div>
+			<table id="subdatagrid" class="hisui-datagrid" fit="true" title="组合关联部位"
+				data-options="
+				headerCls:'panel-header-gray',
+				toolbar:'#subtoolbar',
+				iconCls:'icon-paper',
+			    rownumbers:true,
+			    method:'get',
+			    fitColumns:true,
+			    singleSelect:true,
+			    onDblClickRow: onClickRowSub">
+				<thead>
+					<tr>
+						<th data-options="field:'APCode',width:30">部位代码</th>
+						<th data-options="field:'APDesc',width:100,
+											editor:{
+												type:'combotree',
+												options:{
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPPart&MethodName=getTreeCombo',
+													onSelect:selectPart
+												}
+											}">部位名称</th>
+						<th data-options="field:'ID',hidden:true">id</th>
+						<th data-options="field:'ParRefDr',hidden:true">id</th>
+					</tr>
+				</thead>
+			</table>
+		
+		</div>   
+        </div>   
+	</div>
+	<!--右键菜单-->
+	<div id="menu" class="hisui-menu" style="">   
+	    <div onclick="showPartWin()" data-options="iconCls:'icon-add'">新增别名</div>
+	</div>
+	<!-- 部位别名窗口 -->
+	<div id="PartWin">
+		<div id="dgPartList" toolbar="#tb"></div>
+	</div>
+	<div id="tb">
+		<div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add">添加</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel">删除</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save">保存</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			    </tr>
+			</table>
+		</div>
+	</div>
+	
+	<!--列表信息-->
+	<div id="PreSent">
+	    <div class="hisui-layout"  data-options="fit:true"  >
+			<!--列表信息-->
+			<div data-options="region:'center'" style="background:#F8F8FF;">
+
+					<div data-options="region:'center'" style="height:300px;">
+						<table id="win" >
+						</table>
+					</div>			    
+	 
+			</div>
+		</div>	
+	</div>
+	
+	
+	
+</body>
+
+
+
+
+
+</html>

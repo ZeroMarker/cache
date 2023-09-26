@@ -1,0 +1,67 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid = $Get(%request.Data("rowid",1))	
+	s serialnumber = $Get(%request.Data("serialnumber",1))
+	s budget = $Get(%request.Data("budget",1))
+	s currbudgetsurplus = $Get(%request.Data("currbudgetsurplus",1))
+	s reimbursementapply =$Get(%request.Data("reimbursementapply",1))
+	
+
+        s examinepay = $Get(%request.Data("examinepay",1))
+	s execbudgetsurplus = $Get(%request.Data("execbudgetsurplus",1))
+	s budgetcontrol = $Get(%request.Data("budgetcontrol",1))
+	
+	
+	
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.ubudgcostclaimapply).Listpaydetail(rowid,sortField, sortDir, start,limit)
+
+        i action = "billcode" d
+	.w ##class(herp.budg.udata.ubudgcostclaimapply).Listbillcode(str, start,limit)
+
+        
+        i action = "budget" d
+	.w ##class(herp.budg.udata.ubudgcostclaimapply).Listbudget(str, start,limit)
+
+       
+        i action = "budgetitem" d
+	.w ##class(herp.budg.udata.ubudgcostclaimapply).Listbudgetitem(str, start,limit)
+
+
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgAdjust).InsertRec(CompDR,Year,AdjustNo,AdjustAate,AdjustFile,Memo,IsApprove,IsElast,ElastMonth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgAdjust).UpdateRec(rowid,CompDR,Year,AdjustNo,AdjustAate,AdjustFile,Memo,IsApprove,IsElast,ElastMonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgAdjust).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

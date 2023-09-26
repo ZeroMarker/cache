@@ -1,0 +1,90 @@
+<!-- dhcdoc.viewprescription.csp--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+   <title>处方</title>
+   <style type="text/css"> 
+  v\:line {behavior: url(#default#VML);}
+  * {font-size: 12pt;}
+  </style>
+   <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+   <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+   <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+   <script src="../scripts/websys.js" type="text/javascript"></script>
+   <script src="../scripts/DesinerScript/CommonJs/jquery-1.7.min.js" type="text/javascript"></script>
+   <script src="../scripts/DHCWeb.OPCommon.js" type="text/javascript"></script>
+   <script src="../scripts/DHCPrtComm.js" type="text/javascript"></script>
+   <script src="../scripts/DHCOPPrtCommon.js" type="text/javascript"></script>
+   <script src="../scripts/DHCDoc.ViewPrescription.js" type="text/javascript"></script>
+   <script src="../scripts/DHCWeb.OPCommon.js" type="text/javascript"></script>
+  
+   <script language="Cache" runat="server">
+    d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+    ;<csp:content charset="utf-8">
+    s InvPrintEncrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+    w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_InvPrintEncrypt_"'>",!
+    
+    //获取参数
+    s ReportId = $g(%request.Data("reportID",1))
+    s PrescNo = $g(%request.Data("PrescNo",1))
+    s EpisodeID = $g(%request.Data("EpisodeID",1))
+    s OnlyZF = $g(%request.Data("OnlyZF",1))
+  s PatientID = $p(^PAADM(EpisodeID),"^",1)
+  s CTLocPrintTypeID =$g(%request.Data("CTLocPrintTypeID",1))
+  s NeedChildweight =$g(%request.Data("NeedChildweight",1))
+  s Childweight=$g(%request.Data("Childweight",1))
+    //打印模版名称
+    s XMLTemplateXY="DHCOutPrescXYPrt"
+    s XMLTemplateCY="DHCOutPrescCY" 
+   s SearchDate=$g(%request.Data("SearchDate",1))
+  s presType = ##Class(web.DHCDocPrescript).IsPrescType(PrescNo)
+  if presType = 1
+  {
+    s IsCYPrescType=1
+    s ReportId = ##Class(web.DHCDocPrescript).GetXMLTemplateId(XMLTemplateCY)
+  }
+  else
+  {
+    s IsCYPrescType=0
+    s ReportId = ##Class(web.DHCDocPrescript).GetXMLTemplateId(XMLTemplateXY)
+  }
+  
+    s ReportData = ##Class(web.DHCDocPrescript).GetPrescInfoByOrd(PrescNo,"","",SearchDate)
+    s EventLogData = ##Class(web.DHCDocPrescript).GetPrescEventLogInfo(EpisodeID)
+    /*s deplocdr=$p(^PAADM(EpisodeID),"^",4)
+    s Childweight="",NeedChildweight=0
+    s CTLocPrintTypeID=##class(web.DHCDocPrescript).GetCTLocPrintTypeID(deplocdr)
+    if (CTLocPrintTypeID=1){
+      s rtn=##class(web.UDHCPrescript).SetGetChildWeight(EpisodeID,"")
+      if (rtn'=""){
+        s NeedChildweight=$p(rtn,"^",1)
+          s Childweight=$p(rtn,"^",2)
+    }
+  }*/
+  </script>
+  <script type='text/javascript' language='javascript'>
+  var XMLTemplateXY="#(XMLTemplateXY)#"
+  var XMLTemplateCY="#(XMLTemplateCY)#"
+  var IsCYPrescType="#(IsCYPrescType)#"
+  var ReportId="#(ReportId)#"
+  var ReportData="#(ReportData)#"
+  var EventLogData="#(EventLogData)#"
+  var EpisodeID="#(EpisodeID)#"
+  var PatientID="#(PatientID)#"
+  var CTLocPrintTypeID="#(CTLocPrintTypeID)#"
+  var NeedChildweight="#(NeedChildweight)#"
+  var Childweight="#(Childweight)#"
+  </script>
+</head>
+<body id="dbLayout" style="width:740px;height:1058px;background-color:white;">
+  <div id='OnePrescBar' style='left:30px;'  align='right'>
+    <input type='button' name='PrintOne' id='PrintOne' value='单方打印' style='left:20px; width: 70;'/>
+    </div>
+  <div id="divReport" style="height:0px; width:0px; position:absolute; z-index:0;">
+    </div>
+</body>
+</html>
+

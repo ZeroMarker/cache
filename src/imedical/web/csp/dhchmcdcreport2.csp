@@ -1,0 +1,162 @@
+<html>
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>	健康管理报告打印 </title>
+<style media=print> 
+.Noprint{display:none;} 
+.PageNext{page-break-after: always;} 
+</style>
+</head>
+
+<body>
+<OBJECT id="PrintActiveX"  style="DISPLAY: none" classid='clsid:3EDE745C-4ADB-42A6-AB25-5621EDBDFD6B' codebase="../addins/client/QWPrint.cab#version=1,0,1,1" > </OBJECT>
+<input type=button value="另存为" onclick="SaveAs()" class="NOPRINT">
+<input type=button value="打印" onclick="PrintReport()" class="NOPRINT">   
+<input type=button value="打印预览" onclick="PrintActiveX.PrintView()" class="NOPRINT">             
+<input type="button" value="关闭" onclick="window.close();" class="NOPRINT"> 
+<TABLE width=680 border=0 cellspacing=0>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s qID=$g(%request.Data("qID",1))
+	s obj=##class(User.DHCHMOQEQuestion).GetObj(qID)
+	w:'$isobject(obj) "<P>未找到相关问卷信息</P>"
+	q:'$isobject(obj)
+	s flag=obj.QEQStatus
+	s tsub=$O(^User.DHCHMOQEQuestionD(+qID,$P(qID,"||",2),"DHCHMOQMedicalTips",0))
+	//w:(flag="P") "<P>已打印过报告</P>"
+	//w:(flag'="TS")&&(flag'="P") "<P>问卷状态不允许打印</P>"
+	//q:(flag'="TS")&&(flag'="P")
+	s OERobj=##class(User.DHCHMOEvaluationRecord).GetObj(+qID)
+	s vName=OERobj.QOBaseInfoDR.BIName
+	s vSex=OERobj.QOBaseInfoDR.BICSexDR.CTDesc
+	s vDob=OERobj.QOBaseInfoDR.BIDOB
+	s vAge=""
+ 	s:(""'=vDob) vAge=##class(web.DHCLCNUREXCUTE).CalAge(vDob,$h)
+ 	s vAge=$P(vAge,"Y")
+	s vIDCard=OERobj.QOBaseInfoDR.BIIDCard
+	s vTel=OERobj.QOBaseInfoDR.BITel
+	s vMail=OERobj.QOBaseInfoDR.BIEmail
+	s vDate=OERobj.QAddDate
+	s:(""'=vDate) vDate=$zd(vDate,3)
+	s vCompany=OERobj.QOBaseInfoDR.BICompany 
+	s vRegno=OERobj.QOBaseInfoDR.BIPAPMINo
+</SCRIPT>
+
+
+<SCRIPT language="Cache" method="getpath">
+	&sql(select pathtoreports into :path from websys.configuration)
+	q path
+</SCRIPT>
+<SCRIPT language="Cache" method="IsPrint">
+	s qID=$g(%request.Data("qID",1))
+	s obj=##class(User.DHCHMOQEQuestion).GetObj(qID)
+	w:'$isobject(obj) "<P>未找到相关问卷信息</P>"
+	q:'$isobject(obj)
+	s obj.QEQStatus="P"
+	s sc=obj.%Save()
+	d obj.%Close()
+	q sc
+</SCRIPT>
+
+
+<csp:WHILE CONDITION=(""'=tsub)>
+<SCRIPT language="Cache" RUNAT="SERVER">
+		s obj=##class(User.DHCHMOQMedicalTips).GetObj(qID_"||"_tsub)
+		s length=$G(^User.DHCHMOQMedicalTipsS(tsub,0))
+		s detail=obj.QMTDetail.Read(length)
+		s tsub=$O(^User.DHCHMOQEQuestionD(+qID,$P(qID,"||",2),"DHCHMOQMedicalTips",tsub))
+</SCRIPT>
+	<CSP:IF CONDITION=(""'=detail)>
+		<TR>
+			<TD>#(detail)#</TD>
+		</TR>
+	</CSP:IF>
+</csp:WHILE>
+
+</TABLE>
+
+</SCRIPT>
+
+<SCRIPT language="javascript">
+
+	PrintActiveX.paddingTop=400;
+	PrintActiveX.paddingRight=100;
+	PrintActiveX.paddingBottom=80;
+	PrintActiveX.paddingLeft=200;
+	PrintActiveX.isHtmlHeadFoot=true;
+	var vName="",vSex="",vAge="",vIDCard="",vTel="",vMail="",vDate="",vCompany="",vRegno="";
+	vName='#(vName)#';
+	vSex='#(vSex)#';
+	vAge='#(vAge)#';
+	vIDCard='#(vIDCard)#';
+	vTel='#(vTel)#';
+	vMail='#(vMail)#';
+	vTel='#(vTel)#';
+	vDate='#(vDate)#';
+	vCompany='#(vCompany)#';
+	vRegno='#(vRegno)#';
+	
+	var str="姓名:"+vName+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />性别:"+vSex+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />年龄:"+vAge+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />身份证号:"+vIDCard;
+
+	var header="<div style=\"float:center;border-bottom:0px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\"><img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/tb.GIF\" height=\"83\" align=\"absmiddle\"><FONT SIZE=+3>健康管理报告</FONT></span></div><br>"
+	+"<div style=\"float:center;border-bottom:3px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\">"+str+"</span></div>";
+	
+	PrintActiveX.header=header;
+	
+	var footer="&b<div style=\"float:center;border-top:3px solid;padding:0px;\">第&p页 (共&P页)</div>&b";
+	PrintActiveX.footer=footer;
+	
+	PrintActiveX.orientation=1;
+	PrintActiveX.pageName="A4";
+	
+function PrintReport()
+{
+	var ret=#(..IsPrint())#;
+	if (ret!=1) {alert("报告状态修改不成功!");return;};
+	printCover();
+	PrintActiveX.Print(false);
+	window.close();
+}
+function SaveAs()
+{
+	var FileName=vName+"的健康管理报告.htm";
+	document.execCommand("SaveAs",true,FileName); 
+} 
+
+function printCover()
+{
+	var Templatefilepath='#(..getpath())#'+'DHCHMReportCover.xls';
+             
+	try
+	{
+		xlApp = new ActiveXObject("Excel.Application");  //固定
+		xlBook = xlApp.Workbooks.Add(Templatefilepath);  //固定
+		xlsheet = xlBook.WorkSheets("Sheet1");     //Excel下标的名称
+		xlsheet.cells(23,4)=vName;
+		xlsheet.cells(23,7)=vSex;
+		xlsheet.cells(24,4)=vAge;
+		xlsheet.cells(24,7)=vTel;
+		xlsheet.cells(25,4)=vRegno;
+		xlsheet.cells(25,7)=vDate;
+		xlsheet.cells(26,4)=vCompany;
+		xlsheet.printout;
+		xlBook.Close(savechanges=false);
+		xlApp.Quit();     
+        xlApp=null;
+        idTmr=window.setInterval("Cleanup();",1);
+	}
+	catch(e)
+	{
+		alert(e+"^"+e.message);
+	}
+}
+
+function Cleanup()
+{   
+	window.clearInterval(idTmr);   
+	CollectGarbage();   
+} 
+</SCRIPT>
+</body>
+</html>

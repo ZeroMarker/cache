@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--opdoc.emr.csp 医生站电子病历--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<HISUI></HISUI>
+<link rel="stylesheet" href="../scripts/dhcdoc/ipdoc/jquery.webui-popover.min.css">
+<style>
+.PatImage{
+	top:2px !important;
+}
+.tree-file,.tree-folder,.tree-expanded,.tree-collapsed{
+	display:none;
+}
+.RootsNodes > .tree-indent,.RootsNodes > .tree-join,.RootsNodes > .tree-expanded,.RootsNodes > .tree-collapsed{
+	display:none;
+}
+.RootsNodes .tree-title{
+	height:35px;
+	line-height:35px;
+}
+.RootsNodes{
+	height:35px;
+}
+div[id^="_easyui_tree_"] .tree-line{
+	visibility:hidden;
+}
+div[id$="_TablePanle"]{
+	margin:5px;
+	border:1px solid #ccc;
+	border-top:0;
+	border-radius:5px;
+}
+.normal-head{
+	background:#f9f9fa;
+	border-top:1px solid #cccccc;
+	border-color:#cccccc;
+}
+/*.normal-head .panel-title{
+	color: #0E0E0E;
+}*/
+.danger-head{
+	background:#FF7373;
+	border-color:#FF7373;
+}
+.danger-head .panel-title{
+	color: #FFFFFF;
+}
+.tree-node-selected{
+	background:#D2EAFE;
+}
+/*.panel-header-gray{
+	border-top:1px solid #ccc;
+}*/
+#_easyui_tree_4 +ul li div .tree-title{
+	color:gray;
+}
+.ipord-search-div{
+	height:35px;
+	line-height:35px;
+}
+.ipord-search-div label{
+	margin:0 10px;
+}
+.limit-input{
+	width:100px;
+}
+.adm-list{
+	padding:0 0 10px 8px;
+	margin:3px 0 0 5px;
+} 
+.adm-list .head,.foot{
+	content:"";
+	width: 6px;
+	height: 6px;
+	border:3px solid #ccc;
+	border-radius: 8px;
+	margin-left:-5px;
+}
+.adm-list .left{
+	content:"";
+	width: 9px;
+	height: 9px;
+	border:3px solid #fff;
+	border-radius: 9px;
+	position:relative;
+	top:35px;
+	left:-7px;
+	float: left;
+	background: #ccc;
+}
+.adm-list .right {
+	display:block;
+	border-left:2px solid #ccc;
+	padding:3px 3px 3px 15px;
+	text-decoration: none;
+	color: black;
+}
+
+.adm-list .first{
+	clear:both;
+	padding:2px;
+}
+  /*悬浮样式start*/
+.adm-list li:hover div{
+	color:#21BA45;
+}
+.adm-list li:hover .left{
+	background:#21BA45;
+}
+.adm-list li:hover .second .operator{
+	border-right:1px solid #21BA45;
+}
+  /*悬浮样式end*/
+.adm-list .second{
+	clear:both;
+	padding:2px;
+}
+.adm-list .second .data{
+	color:#39B0FF;
+}
+.adm-list .second .operator{
+	border-right:1px solid #000;
+	padding-right:5px;
+}
+.adm-list .third{
+	clear:both;
+	padding:0 2px 2px 2px;
+}
+.adm-list .third .operator{
+	border-right:1px solid #000;
+	padding-right:5px;
+}
+.seleted-a div{
+	color:#21BA45;
+}
+.seleted-a .second .operator{
+	border-right:1px solid #21BA45;
+}
+.hoverdot{
+	background-color:#21BA45 !important;
+}
+
+.selectdot{
+	background-color:#21BA45 !important;
+}
+
+.selectli{
+	background:#F7F7F7 !important;
+}
+iframe{
+	border: 0;
+}
+/*时间轴 end*/
+</style>
+<Server>
+ s (EpisodeID,PatientID,notMatch)=""
+ s EpisodeID=%request.Get("EpisodeID") 
+ if ('$d(^PAADM(EpisodeID))) s EpisodeID=""
+ s PatientID=%request.Get("PatientID") 
+ s mradm=""
+ if (EpisodeID'=""){
+     s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+     s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+ }
+ s OpenWinName=%request.Get("OpenWinName") //OPDocRecAdm"
+</Server>
+  </head>
+<body>
+	<csp:Include Page="opdoc.emr.show.csp">
+	<SCRIPT language = 'javascript' >
+	 //全局请求后台服务对象
+		var ServerObj={
+			 EpisodeID:"#(EpisodeID)#",
+	         PatientID:"#(PatientID)#",
+	         mradm:"#(mradm)#"
+		};
+		//页面加载完之后在赋值，防止事件未定义导致报错
+		$(function(){
+			Init();
+		});
+	</SCRIPT>
+	<script src="../scripts/dhcdoc/ipdoc/jquery.webui-popover.min.js"></script>
+	<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OPDocPatInfoBar.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/emr.js"></script>
+</body>
+</html>

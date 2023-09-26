@@ -1,0 +1,99 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n frm
+ 
+ i $g(%request.Data("PARREF",1))'=$g(%request.Data("EpisodeID",1)) {
+ 	s %request.Data("ID",1)=$g(%request.Data("PARREF",1))
+	s %request.Data("PARREF",1)=$g(%request.Data("EpisodeID",1))
+ }
+ 
+ i $g(%request.Data("PatientID",1))'="",$g(%request.Data("PatientBanner",1)) {
+	s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i frm d frm.Show() d frm.%Close()
+ }
+ 
+ s ContactDet=$p(##class(web.PAAdm).FindIfLinksDataPAAdmEdit($g(%request.Data("PARREF",1))),"^",5)
+ w "<SCRIPT>",$c(13,10)
+ w "if (window.opener) {",$c(13,10)
+ w "	try {",$c(13,10)
+ w "		if (window.opener) window.opener.setBoldLinks(""EpisodeContactLink"",""",ContactDet,""");",$c(13,10)
+ w "	}",$c(13,10)
+ w "	catch(e) {}",$c(13,10)
+ w "}",$c(13,10)
+ w "</SCRIPT>",$c(13,10)
+ 
+ s frm=##Class(websys.Component).OpenName("PAAdmContactPerson.List")
+ i frm d frm.Show() d frm.%Close()
+ 
+ i $g(%request.Data("PARREF",1))'=$g(%request.Data("PatientID",1)) {
+ 	s %request.Data("ID",1)=$g(%request.Data("PARREF",1))
+	s %request.Data("PARREF",1)=$g(%request.Data("PatientID",1))
+ }
+ s %request.Data("MultiContactFrame2",1)="Y"
+ s frm=##Class(websys.Component).OpenName("PANok.List")
+ i frm d frm.Show() d frm.%Close()
+ 
+ s frm=##Class(websys.Component).OpenName("PAAdm.ListCurCareProv")
+ i frm d frm.Show() d frm.%Close()
+ 
+</SERVER>
+
+<script language="Javascript">
+
+// ab 28.07.04 - 45190 set all 'update' click handlers manually
+for (var i=0;i<document.all.tags("DIV").length;i++) {
+	div=document.all.tags("DIV")[i];
+	if (div) {
+	    for (var j=0;j<div.all.tags("A").length;j++) {
+			if (div.all.tags("A")[j].id=="update1") {
+				var obj=div.all.tags("A")[j];
+				if (obj) obj.onclick=CloseWindow;
+			}
+		}
+	}
+}
+/*
+// ab 28.07.04 - 45190 set date links to show in a new window
+for (var j=0;j<document.all.length;j++) {
+	if (document.all[j].tagName=="TABLE") {
+		var tbllistdoc=document.all[j];
+		for (var i=1;i<tbllistdoc.rows.length;i++) {
+			for (var k=0;k<tbllistdoc.rows[i].all.length;k++) {
+				var childid="",child=tbllistdoc.rows[i].all[k];
+				childid=child.id.split("z");
+				//if (childid[0]=="CONTTP_Desc") child.onclick=LinkClickHandler;
+			}
+		}
+	}
+}
+*/	
+function CloseWindow() {
+	window.location.href="websys.close.csp";
+	return true;
+}
+
+function LinkClickHandler(e) {
+	var eSrc=websys_getSrcElement(e);
+	if (eSrc) {
+		websys_lu(eSrc.href);
+		return false;
+	}
+	
+}
+
+</script>
+
+</BODY>
+</HTML>

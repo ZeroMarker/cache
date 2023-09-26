@@ -1,0 +1,948 @@
+
+
+<!-- 
+ * FileName: dhcpepregadm.edit.hisui.csp
+ * Anchor: yupeng
+ * Date: 2018-07-15
+ * Description: HISUI 团体预约
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+<!--dhcpepregadm.edit.hisui.csp-->	
+	
+<script language="JavaScript"> 
+
+self.moveTo(0,4) 
+self.resizeTo(screen.availWidth,screen.availHeight) 
+
+</script>	
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+s ID=$g(%request.Data("ParRef",1))
+s OperType=$g(%request.Data("OperType",1))
+
+if (OperType="")  s GroupHeight="height:710px;"
+e  s GroupHeight="height:770px;"
+
+if (OperType="")  s TeamHeight="height:300px;"
+e  s TeamHeight="height:360px;"
+s Default=$g(^DHCPESetting("DHCPE","CashierSystem",%session.Get("LOGON.CTLOCID")))
+s GiftFlag=##class(web.DHCPE.PreIADM).GetGiftFlagByID(ID,"G")
+s DietFlag=##class(web.DHCPE.PreIADM).GetDietFlagByID(ID,"G")
+</SCRIPT> 
+<script type="text/javascript">
+
+var OperType="#(OperType)#"
+
+var Default="#(Default)#"
+var GiftFlag="#(GiftFlag)#"
+var DietFlag="#(DietFlag)#"	
+var GroupID="#(ID)#"
+</script> 
+</head>
+<body class="hisui-layout">
+<div id='Loading' style="display:none;position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;filter:alpha(opacity=70);opacity: 0.70;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">处理中···</font></h1></div>
+<div class="hisui-layout" data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-add-note'">
+ <div id="GroupTab" class="hisui-tabs tabs-gray" style="padding:10px;">
+  <div title="团体预约">
+  <form class="form" id="groupform" style=#(GroupHeight)#>
+  <input type="hidden" id="ID"/>
+  <input type="hidden" id="PGBI_RowId"/>
+  <input type="hidden" id="PGADM_RowId"/>
+  <input type="hidden" id="PGTRowId"/>
+  <input type="hidden" id="PGTChildSub"/>
+  <input type="hidden" id="Status"/>
+  <input type="hidden" id="PIADM_RowId"/>
+  <input type="hidden" id="PIBI_RowId"/>
+  <input type="hidden" id="TeamPEDeskClerkNameID"/>
+  <input type="hidden" id="PEDeskClerkNameID"/>
+
+  		
+  		
+      <table style="width:1100px;border-collapse:separate; border-spacing:10px 8px;">
+        <tr>
+          <td align="right" style="width:90px;">
+   		  <label for="CardNo">卡号</label></td>
+   		  
+   		  <td align="left" style="width:100px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="CardNo" style="width:100px;" /></div>
+          </td>
+  		  <td align="left" style="width:100px;">
+            <div>
+              <select class="hisui-combobox" type="text" Id="CardType" name="CardType" style="width:100px;" editable="false"></select></div>
+          </td>
+          
+          <td style="width:100px;" align="left">
+            <div>
+              <a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></div>
+          </td>
+          
+           <td align="right" style="width:90px;">
+            <label for="GroupDesc">团体名称</label></td>
+           <td style="width:200px;">
+            <div>
+              <input class="textbox" type="text" Id="GroupDesc" style="width:180px;" /></div>
+          </td>
+           <td align="right" style="width:90px;">
+            <label for="PAPMINo">登记号</label></td>
+           <td style="width:200px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="PAPMINo" style="width:180px;" /></div>
+          </td>
+          
+          
+        </tr>
+        <tr>
+          <td align="right">
+            <label for="BookDateBegin">
+              <font color="red">*</font>体检起始日期</label></td>
+          <td colspan="2">
+            <div>
+              <input class="hisui-datebox" type="text" Id="BookDateBegin" style="width:225px;" data-options="required:true" /></div>
+          </td>
+          <td></td>
+          
+          <td align="right">
+            <label for="BookDateEnd">
+              <font color="red">*</font>截止日期</label></td>
+          <td>
+            <div>
+              <input class="hisui-datebox" type="text" Id="BookDateEnd" style="width:180px;" data-options="required:true" /></div>
+          </td>
+          
+          <td align="right" style="width:90px;">
+            <label for="Linkman">联系人1</label></td>
+           <td style="width:200px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Linkman" style="width:180px;" disabled="disabled"/></div>
+          </td>
+          
+        </tr>
+        
+        
+         <tr>
+          <td align="right">
+            <label for="DisChargedMode">结算方式</label></td>
+          <td colspan="2">
+              <select id="DisChargedMode" class="hisui-combobox" name="DisChargedMode" style="width:225px;" data-options="enterNullValueClear:false">
+              <option value="GD">统结</option>
+			  <option value="ID">自结</option>
+              </select>
+          </td>
+          
+          
+          <td></td>
+          
+          <td align="right">
+            <label for="GroupCode">团体编码</label></td>
+          <td>
+            <div>
+              <input class="hisui-validatebox" type="text" Id="GroupCode" style="width:174px;" /></div>
+          </td>
+          
+          <td align="right" style="width:90px;">
+            <label for="Tel1">联系人1电话</label></td>
+           <td style="width:200px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Tel1" style="width:180px;" disabled="disabled"/></div>
+          </td>
+          
+        </tr>
+        
+        
+         <tr>
+          <td align="right">
+            <font color="red">*</font><label for="GReportSend">团体报告发送</label></td>
+          <td colspan="2">
+            <div>
+              <select class="hisui-combobox" type="text" Id="GReportSend" name="GReportSend" style="width:225px;" editable="false">
+              
+              	<option value='AC'>挂账可取</option>
+				<option value='DC'>结账取</option>
+              </select></div>
+          </td>
+          <td></td>
+          
+          <td align="right">
+            <font color="red">*</font><label for="IReportSend">个人报告领取</label></td>
+          <td>
+            <div>
+              <select class="hisui-combobox" type="text" Id="IReportSend" name="IReportSend" style="width:180px;" editable="false">
+              	<option value='GS'>统取</option>
+				<option value='IS'>自取</option>
+              </select></div>
+          </td>
+          
+          <td align="right" style="width:90px;">
+            <label for="Tel2">联系人2电话</label></td>
+           <td style="width:200px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Tel2" style="width:180px;" disabled="disabled"/></div>
+          </td>
+          
+        </tr>
+        
+        
+        
+         <tr>
+          <td align="right">
+            <label for="DelayDate">延期日期</label></td>
+          <td colspan="2">
+            <div>
+             <input class="hisui-datebox" type="text" Id="DelayDate" style="width:225px;" /></div>
+          </td>
+          <td></td>
+          
+          <td align="right">
+            <label for="BookTime">预约时间</label></td>
+          <td>
+            <div>
+              <input class="hisui-timespinner" type="text" Id="BookTime" style="width:180px;" /></div>
+          </td>
+          
+          <td align="right" style="width:90px;">
+            <label for="Postalcode">邮政编码</label></td>
+           <td style="width:200px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="Postalcode" style="width:180px;" disabled="disabled"/></div>
+          </td>
+          
+        </tr>
+        
+        
+        <tr>
+          <td align="right">
+            <label for="PEDeskClerkName">接待人</label></td>
+          <td colspan="2">
+            <div>
+             <select class="textbox" type="text" Id="PEDeskClerkName" name="PEDeskClerkName" style="width:225px;"></select></div>
+          </td>
+          <td></td>
+          
+          <td align="right">
+            <label for="Sales">业务员</label></td>
+          <td>
+            <div>
+              <select class="textbox" type="text" Id="Sales" name="Sales" style="width:180px;"></select></div>
+          </td>
+          <td></td>
+         
+           <td align="left"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="视同收费" Id="AsCharged" />
+              <input class='hisui-checkbox' type="checkbox" label="公费加项" Id="AddOrdItem" data-options="onCheckChange:function(event,value){AddOrdItem_click(value)}" /></div>  
+              
+          </td>
+          
+        </tr>
+        
+        
+        <tr>
+          <td align="right">
+            <label for="GetReportDate">取报告日期</label></td>
+          <td colspan="2">
+            <div>
+             <input class="hisui-datebox" type="text" Id="GetReportDate" style="width:225px;" /></div>
+          </td>
+          <td></td>
+          
+          <td align="right">
+            <label for="GetReportTime">取报告时间</label></td>
+          <td>
+            <div>
+              <input class="hisui-timespinner" type="text" Id="GetReportTime" style="width:180px;" /></div>
+          </td>
+          <td></td>
+         <td align="left"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="允许开药" Id="AddPhcItem" />
+              <input class='hisui-checkbox' type="checkbox" label="允许重复" Id="AllowCF" /></div>  
+              
+          </td>
+          
+        </tr>
+        
+         <tr>
+          <td align="right">
+            <label for="Contract">所属合同</label></td>
+          <td colspan="2">
+            <div>
+             <select class="hisui-combobox" type="text" Id="Contract" name="Contract" style="width:225px;"></select></div>
+          </td>
+          <td></td>
+          
+          <td align="right">
+            <label for="PatFeeTypeName">体检类别</label></td>
+          <td>
+            <div>
+              <select class="hisui-combobox" type="text" Id="PatFeeTypeName" name="PatFeeTypeName" style="width:180px;" editable="false"></select></div>
+          </td>
+          
+         <td></td>
+           <td align="left"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="客户就餐" Id="DietFlag" />
+              <input class='hisui-checkbox' type="checkbox" label="赠品" Id="GiftFlag" /></div>  
+              
+          </td>
+          
+        </tr>
+        
+        <tr>
+          <td align="right">
+            </td>
+          <td colspan="2">
+            <div>
+             <input class='hisui-checkbox' type="checkbox" label="限制加项金额" Id="AddOrdItemLimit" data-options="onCheckChange:function(event,value){AddOrdItemLimit_click(value)}" /></div>
+          </td>
+          <td></td>
+          
+          <td align="right">
+            <label for="AddOrdItemAmount">加项金额</label></td>
+          <td>
+            <div>
+             <input class="hisui-validatebox" type="text" Id="AddOrdItemAmount" style="width:174px;" /></div>
+          </td>
+          
+         
+          
+          
+        </tr>
+        
+         <tr>
+           <td align="right">
+            <label for="Remark">备注</label></td>
+          <td colspan="7">
+        	<div>
+              <textarea id="Remark"  style="width:850px;height:100px;"></textarea></div>	
+          </td>
+        
+        </tr>
+        
+        </table>
+        <table style="width:800px;border-collapse:separate; border-spacing:10px 10px;">
+       
+        <tr>
+        	<td style="width:200px;"></td>
+        
+           <td align="center">
+        	  <div>
+              <a id="Update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></div></td>
+           <td align="center">    
+              <div>
+              <a id="GroupTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-list'">团体分组</a></div></td>
+           <td align="center">    
+              <div>
+              <a id="PreGImport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">导入人员</a></div></td>
+           <td colspan="5" align="center">   
+              <div>
+              <a id="ImportCheck" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cal'">信息验证</a></div></td>
+          
+        
+        </tr>
+        </table>
+      
+  </form>     
+  </div>	
+  <div title="团体分组" style="padding:10px 10px 10px 10px;width:98%;">
+  		<div class="hisui-panel" data-options="title:'团体分组',headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="height:262px;">
+  		
+  		<div style="height:43px;padding-top:4px;">
+          <form class="form">
+            <table>
+              <tr>
+                 <td style="width:10px;"></td>
+                 <td>
+                  <div>
+                    <a id="BNew" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新建分组</a></div>
+                </td>
+                <td style="width:5px;"></td>
+                 <td>
+                
+                  <div>
+                    <a id="RapidNew" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-new'">快速分组</a></div>
+                </td>
+                <td style="width:5px;"></td>
+                <td>
+                  <div>
+                    <a id="BCopyTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy',stopAllEventOnDisabled:true" disabled>复制分组</a></div>
+                </td>
+                <td style="width:5px;"></td>
+                <td>
+                  <div>
+                    <a id="BDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel',stopAllEventOnDisabled:true" disabled>删除分组</a></div>
+                </td>
+                <td style="width:5px;"></td>
+                <td>
+                  <div>
+                    <a id="BNewItem" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" disabled>公费加项</a></div>
+                </td>
+                <td style="width:5px;"></td>
+                 <td>
+                  <div>
+                    <a id="BRegister" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">登记</a></div>
+                </td>
+                <td style="width:5px;"></td>
+                
+                <td>
+               <div>
+               	<a id="TCancelPE" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">取消体检</a></div>
+           		 </td>
+                 <td style="width:5px;"></td>
+                <td>
+                  <div>
+                     <a id="BPrintPatItem" href="#" class="hisui-linkbutton" style="background-color:#24c24e;">打印导诊单</a></div>
+                </td>
+                <td style="width:5px;"></td>
+                <!--td>
+                  <div>
+                     <a id="PrintTeamPerson" href="#" class="hisui-linkbutton" style="background-color:#66CD00;">打印分组凭条</a></div>
+                </td>
+                
+		<td style="width:5px;"></td>
+                <td>
+                  <div>
+                     <a id="ContinuePrintTeamPer" href="#" class="hisui-linkbutton" style="background-color:#66CD00;">凭条续打</a></div>
+                </td>
+                <td style="width:5px;"></td-->
+		 
+		 		<td>
+                <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
+                </td>
+
+                <!--td><label for="ContinueRegNo">续打体检号</label></td>
+               <td>
+                 <div><input class="hisui-validatebox" type="text" Id="ContinueRegNo" style="width:90px;"> </div>
+               </td-->
+
+                <td>
+                   <label id="RegisterInfo" style="color:#FF5809;"></label>
+                </td>
+               
+                
+              </tr>
+            </table>
+          </form>
+        </div>
+        <div style="height:79%;border:1px solid #ccc;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+		<table id="TeamGrid" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>
+		</div>
+  		
+  		</div>
+  		<div style="height:10px;"> </div>
+  		<div class="hisui-panel" data-options="title:'分组信息',headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="padding-top:4px;">
+  		 <div style="height:82px;">
+          <form class="form">
+            <table style="border-collapse:separate; border-spacing:4px 4px;">
+            <tr>
+          		<td align="right" style="width:60px;">
+   		 		<label for="PCardNo">卡号</label></td>
+   		  
+   		  	<td align="left">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="PCardNo" style="width:80px;" /></div>
+          	</td>
+  		  	<td align="left">
+            <div>
+              <select class="hisui-combobox" type="text" Id="PCardType" name="PCardType" style="width:100px;" editable="false"></select></div>
+          	</td>
+          
+            <td style="width:100px;" align="left">
+            <div>
+              <a id="PReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></div>
+          	</td>
+          	
+          	<td align="right" style="width:90px;">
+            <label for="RegNo">登记号</label></td>
+            <td style="width:120px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="RegNo" style="width:160px;" /></div>
+            </td>
+            
+            <td align="right" style="width:100px;"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="预约" Id="PREREG" /></div>
+            </td>
+            <td style="width:100px;"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="登记" Id="REGISTERED" /></div>  
+            </td>
+            
+            <td>
+               <div style="width:140px;">
+               <a id="BNewIADM" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add',stopAllEventOnDisabled:true" disabled>新建人员</a></div>
+            </td>
+            <td>
+               <div style="width:140px;">
+               <a id="PNewItem" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" disabled>公费加项</a></div>
+            </td>
+          	<td>
+               <div style="width:140px;">
+               <a id="BAddItem" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" disabled>自费加项</a></div>
+            </td>
+            
+            <td>
+               <div style="width:140px;">
+               <a id="BMoveTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-switch'">转组</a></div>
+            </td>
+           </tr>
+           <tr>
+          	<td align="right" style="width:60px;">
+   		 		<label for="DepartName">部门</label></td>
+   		  
+   		  	<td align="left" colspan="3">
+             <div>
+              <input class="hisui-combobox" type="text" Id="DepartName" style="width:191px;"></div>
+          	</td>
+          	
+          	<td align="right" style="width:60px;">
+   		 		<label for="PatName">姓名</label></td>
+   		  
+   		  	<td align="left" style="width:166px;">
+             <div>
+              <input class="hisui-combogrid" type="text" Id="PatName" style="width:166px;"></div>
+          	</td>
+          	<td align="right" style="width:100px;"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="到达" Id="ARRIVED" /></div>
+            </td>
+            <td></td>
+            
+            
+             <td>
+               <div style="width:140px;">
+               <a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+            </td>
+            <td>
+               <div style="width:140px;">
+               <a id="BSelectPre" href="#" class="hisui-linkbutton">选取已预约人员</a></div>
+            </td>
+            <td>
+               <div style="width:140px;">
+               <a id="BCancelSelect" href="#" class="hisui-linkbutton">撤销已预约人员</a></div>
+            </td>
+          	<!--td>
+               <div style="width:140px;">
+               <a id="PrintTeamSelf" href="#" class="hisui-linkbutton" style="background-color:#24c24e;">打印个人凭条</a></div>
+            </td-->
+            <td>
+               <div style="width:140px;">
+               <a id="BCancelPE" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">取消体检</a></div>
+            </td>
+           </tr>
+           
+            </table>
+          </form>
+        </div>
+        <div style="border:1px solid #ccc;border-bottom:0;border-left:0;border-right:0;border-radius:0;" style=#(TeamHeight)#> 
+        <table id="TeamPersonGrid" data-options="bodyCls:'panel-header-gray',fit:true,rownumbers:true,singleSelect:false,border:false"></table>
+        </div>
+  		
+  		</div>
+  </div>	
+ </div>
+</div> 
+
+
+<div id="RapidNewWin" class="hisui-layout" data-options="iconCls:'icon-w-paper'" style="width:800px;">
+  <div data-options="region:'north',border:false,headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="height:520px;padding:10px;">
+   <form class="form" style="border:1px solid #ccc;">	
+	<table style="width:800px;border-collapse:separate; border-spacing:4px 10px;">
+        <tr>
+          <td align="right" style="width:50px;">
+           <label for="RapidBookDateBegin">起始日期</label></td>
+   		  
+   		   <td align="left" style="width:180px;">
+            <div>
+              <input class="hisui-datebox" type="text" Id="RapidBookDateBegin" style="width:180px;" /></div>
+          </td>
+         
+           <td align="right" style="width:50px;">
+           <label for="RapidBookDateEnd">结束日期</label></td>
+   		  
+   		   <td align="left" style="width:180px;">
+            <div>
+              <input class="hisui-datebox" type="text" Id="RapidBookDateEnd" style="width:180px;" /></div>
+          </td>
+          
+          <td align="right" style="width:50px;">
+           <label for="RapidBookTime">预约时间</label></td>
+   		  
+   		   <td align="left" style="width:100px;">
+            <div>
+              <input class="hisui-timespinner" type="text" Id="RapidBookTime" style="width:100px;" /></div>
+          </td>
+          
+          
+        </tr> 
+        
+         <tr>
+           <td align="right" style="width:50px;">
+           <label for="RapidDisChargedMode">结算方式</label></td>
+   		  
+   		   <td align="left" style="width:180px;">
+            <select id="RapidDisChargedMode" class="hisui-combobox" name="RapidDisChargedMode" style="width:180px;" data-options="enterNullValueClear:false">
+              <option value="GD">统结</option>
+			  <option value="ID">自结</option>
+            </select>
+           </td>
+         
+           <td align="right">
+            <label for="RapidPatFeeTypeName">体检类别</label></td>
+          <td>
+            <div>
+              <select class="hisui-combobox" type="text" Id="RapidPatFeeTypeName" name="RapidPatFeeTypeName" style="width:180px;" editable="false"></select></div>
+          </td>
+        </tr>
+        
+        
+        <tr>
+           <td align="right" style="width:50px;">
+           <label for="AgeBoundary">年龄界限</label></td>
+   		  
+   		   <td align="left" style="width:180px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="AgeBoundary" style="width:174px;" /></div>
+           </td>
+         
+           <td align="right">
+            <label for="RapidVIPLevel">VIP等级</label></td>
+          <td>
+            <div>
+              <select class="hisui-combobox" type="text" Id="RapidVIPLevel" name="RapidVIPLevel" style="width:180px;" editable="false"></select></div>
+          </td>
+        </tr>
+        <tr>
+         <td colspan="6">
+            <input class='hisui-radio' type="radio" label='一个组（全体人员）' name='TeamNum' value='Team_One'>
+           
+        </td>
+         </tr>
+        <tr>
+         <td colspan="6">
+            
+            <input class='hisui-radio' type="radio" label='二个组（男、女）' name='TeamNum' value='Team_Two'>
+            
+        </td>
+         </tr> 
+        <tr>
+         <td colspan="6">
+            
+            <input class='hisui-radio' type="radio" label='三个组（男、已婚女、未婚女）' name='TeamNum' value='Team_Three'>
+          
+         </tr>
+         <tr>
+         <td colspan="6">
+           
+            <input class='hisui-radio' type="radio" label='四个组（N岁以上男、N岁以下男、N岁以下女、N岁以上女）' name='TeamNum' value='Team_Four'>
+            
+        </td>
+         </tr>
+         <tr>
+         <td colspan="6">
+            
+            <input class='hisui-radio' type="radio" label='五个组（N岁以上男、N岁以下男、未婚女、N岁以下已婚女、N岁以上已婚女）' name='TeamNum' value='Team_Five'>
+        </td>
+         </tr> 
+      </table>  
+      	<table style="width:800px;border-collapse:separate; border-spacing:4px 10px;">
+        <tr> 
+         <td align='center'>
+           <div>
+              <a id="RapidUpdate" href="#" class="hisui-linkbutton" style="width:100px;">保存</a></div>
+          </td>
+        </tr> 
+      </table> 
+      </form>	
+  </div> 
+   <div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-add-note'">
+    
+    </div> 
+</div> 
+<div id="NewWin" class="hisui-layout" data-options="iconCls:'icon-w-paper'" style="width:900px;">
+	<div data-options="region:'north',border:false" style="height:600px;padding:10px;">
+    <form class="form" style="border:1px solid #ccc;">	
+      <table style="width:850px;border-collapse:separate; border-spacing:10px 6px;">
+        <tr>
+          <td align="right" style="width:90px;">
+           <label for="ParRef_Name">团体名称</label></td>
+   		  
+   		  <td colspan="3" align="left" style="width:152px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="ParRef_Name" style="width:153px;" /></div>
+          </td>
+          
+          <td align="right" style="width:90px;">
+           <label for="VIPLevel">VIP等级</label></td>
+   		  
+   		  <td align="left" style="width:180px;">
+            <div>
+             <select class="hisui-combobox" type="text" Id="VIPLevel" name="VIPLevel" style="width:180px;" editable="false"></select></div>
+          </td>
+          
+          <td style="width:30px;"></td>
+          
+          <td id="sexlist" >
+            <input class='hisui-radio' type="radio" label='男' name='TeamSex' value='M' id='TeamSexM'>
+            <input class='hisui-radio' type="radio" label='女' name='TeamSex' value='F' id='TeamSexF'>
+            <input class='hisui-radio' type="radio" label='不限' name='TeamSex' value='N' id='TeamSexN'>
+        </td>
+        </tr>  
+        
+         <tr>
+          <td align="right" style="width:90px;">
+           <label for="TeamDesc"><font color="red">*</font>分组名称</label></td>
+   		  
+   		  <td colspan="3" align="left" style="width:152px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="TeamDesc" style="width:153px;" /></div>
+          </td>
+          
+          <td align="right" style="width:90px;">
+           <label for="RoomPlace">诊室位置</label></td>
+   		  
+   		  <td align="left" style="width:180px;">
+            <div>
+             <select class="hisui-combobox" type="text" Id="RoomPlace" name="RoomPlace" style="width:180px;" editable="false"></select></div>
+          </td>
+           <td style="width:30px;"></td>
+          <td id="Marriedlist" >
+            <input class='hisui-radio' type="radio" label='未婚' name='TeamMarried' value='UM' id='TeamMarriedUM'>
+            <input class='hisui-radio' type="radio" label='已婚' name='TeamMarried' value='M' id='TeamMarriedM'>
+            <input class='hisui-radio' type="radio" label='不限' name='TeamMarried' value='N' id='TeamMarriedN'>
+        </td>
+        </tr>  
+        
+        
+        <tr>
+          <td align="right" style="width:90px;">
+           <label>年龄范围</label></td>
+   		  
+   		  <td align="left" style="width:55px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="LowerLimit" style="width:55px;" /></div>
+          </td>
+          <td align="right" style="width:5px;">
+           <label>至</label></td>
+   		  
+   		  <td align="left" style="width:55px;">
+            <div>
+              <input class="hisui-validatebox" type="text" Id="UpperLimit" style="width:55px;" /></div>
+          </td>
+          
+          
+          <td align="right">
+            <label for="TeamPatFeeTypeName">体检类别</label></td>
+          <td>
+            <div>
+              <select class="hisui-combobox" type="text" Id="TeamPatFeeTypeName" name="TeamPatFeeTypeName" style="width:180px;" editable="false"></select></div>
+          </td>
+          <td style="width:30px;"></td>
+          <td align="left"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="不包括在团体" Id="NoIncludeGroup" /></div></td>
+           <td> 
+          
+        </tr>  
+        
+        <tr>
+          <td align="right" style="width:90px;">
+           <label for="TeamBookDateBegin">起始日期</label></td>
+   		  
+   		   <td colspan="3" align="left" style="width:160px;">
+            <div>
+              <input class="hisui-datebox" type="text" Id="TeamBookDateBegin" style="width:160px;" /></div>
+          </td>
+         
+           <td align="right" style="width:90px;">
+           <label for="TeamBookDateEnd">结束日期</label></td>
+   		  
+   		   <td align="left" style="width:180px;">
+            <div>
+              <input class="hisui-datebox" type="text" Id="TeamBookDateEnd" style="width:180px;" /></div>
+          </td>
+          <td style="width:30px;"></td>
+          <td> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="公费加项" Id="TeamAddOrdItem" data-options="onCheckChange:function(event,value){TeamAddOrdItem_click(value)}" /></div>  
+              
+          </td>
+        </tr> 
+        
+       <tr>
+          <td align="right" style="width:90px;">
+           <label for="TeamGReportSend">团体报告发送</label></td>
+   		  
+   		   <td colspan="3" align="left" style="width:160px;">
+           <div>
+              <select class="hisui-combobox" type="text" Id="TeamGReportSend" name="TeamGReportSend" style="width:160px;" editable="false">
+              	<option value='AC'>挂账可取</option>
+				<option value='DC'>结账取</option>
+              </select></div>
+          </td>
+         
+           <td align="right" style="width:90px;">
+           <label for="TeamIReportSend">个人报告领取</label></td>
+   		  
+   		   <td align="left" style="width:180px;">
+           <div>
+              <select class="hisui-combobox" type="text" Id="TeamIReportSend" name="TeamIReportSend" style="width:180px;" editable="false">
+              	<option value='GS'>统取</option>
+				<option value='IS'>自取</option>
+			  </select></div>
+          </td>
+          <td style="width:30px;"></td>
+          <td align="left"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="允许开药" Id="TeamAddPhcItem" /></div></td>
+           <td> 
+        </tr>  
+        <tr>
+          <td align="right" style="width:90px;">
+           <label for="TeamPEDeskClerkName">接待人</label></td>
+   		  
+   		   <td colspan="3" align="left" style="width:160px;">
+           <div>
+              <select class="hisui-combogrid" type="text" Id="TeamPEDeskClerkName" name="TeamPEDeskClerkName" style="width:160px;"></select></div>
+          </td>
+         
+           <td align="right" style="width:90px;">
+           <label for="TeamDisChargedMode">结算方式</label></td>
+   		  
+   		   <td align="left" style="width:180px;">
+            <select id="TeamDisChargedMode" class="hisui-combobox" name="TeamDisChargedMode" style="width:180px;" data-options="enterNullValueClear:false">
+              <option value="GD">统结</option>
+			  <option value="ID">自结</option>
+            </select>
+           </td>
+           <td style="width:30px;"></td>
+           <td align="left"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label="限制加项金额" Id="TeamAddOrdItemLimit" data-options="onCheckChange:function(event,value){TeamAddOrdItemLimit_click(value)}" /></div>
+          </td>
+           
+          
+        </tr>
+        
+        <tr>
+          <td align="right" style="width:90px;">
+           <label for="OMEType">检查种类</label></td>
+   		  
+   		   <td colspan="3" align="left" style="width:160px;">
+           <div>
+              <select class="hisui-combobox" type="text" Id="OMEType" name="OMEType" style="width:160px;"></select></div>
+          </td>
+         
+           
+          <td align="right">
+            <label for="TeamAddOrdItemAmount">加项金额</label></td>
+          <td>
+            <div>
+             <input class="hisui-validatebox" type="text" Id="TeamAddOrdItemAmount" style="width:174px;" /></div>
+          </td>
+        </tr>
+         
+
+       
+        <tr>
+           <td align="right">
+            <label for="HarmInfo">危害因素</label></td>
+          <td colspan="8">
+            <div><input class="hisui-combotree" type="text" Id="HarmInfo" style="width:451px;"/></div>
+          </td>
+
+        </tr>
+      </table>    
+    <table style="width:780px;border-collapse:separate; border-spacing:10px 10px;">
+     <tr align="center">
+          
+           <td align="center">
+           <div>
+              <a id="TeamUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" style="width:100px;">更新</a>
+              <a id="TeamClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px;">清屏</a>
+              <a id="SaveTemplate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:150px;">存为预置</a>
+             </div>  
+          </td>
+      </tr>    
+    </table> 
+    </form>
+    <div style="height:10px;"> 
+        
+    </div>
+    
+     <div style="height:170px;border:1px solid #ccc;border-radius:0;"> 
+        <table id="TempSet" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>
+    </div>
+    
+    </div>  
+     <div data-options="region:'center'">
+	</div>
+</div>
+<div id='ItemWin'>
+
+</div>
+<div id='GIAdmEditWin'>
+
+</div>
+<div id='BaseWin'>
+
+</div>
+
+<div id='SelectPreInfoWin'>
+
+</div>
+
+<div id='CheckedListWin'>
+
+</div>
+
+
+<div id="SelectTemplate" title="模板选择" class="hisui-window"  style="width:400px;height:100px;padding:10px;"
+		data-options="iconCls:'icon-all-select',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
+		<table>
+			<tr>
+				<td><input class="hisui-filebox" id="fileNew" data-options="width:300,buttonText:'',buttonIcon:'icon-folder',plain:true,prompt:'excel文件：*.xls,*.xlsx'"
+					accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></td>
+				<td style="padding-left: 10px;">
+					<a href="#" onclick="confirm_file();" class="hisui-linkbutton">确定</a>
+				</td>
+			</tr>
+		</table>	
+		<input type="hidden" id="tempType" value="">	
+	</div>
+  <script type="text/javascript" src="../scripts/DHCPEPreGADM.EditHISUI.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEImportGInfoHISUI.js"></script> 
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  <!--script type="text/javascript" src="../scripts/websys.js"></script-->
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPrtComm.JS"></script>
+  <script type="text/javascript" src="../scripts/dhtmlXCombo.js"></script>
+  <script type="text/javascript" src="../scripts/dhtmlXCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEExcelPublic.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.PatItemPrint.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintDJDCommon.js"></script>
+  
+  <script type="text/javascript" src="../scripts/DHCPEExcelTool.js"></script>
+  <script type="text/javascript" src="../scripts/pha/plugins/xlsx/xlsx.full.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s myRowid=$Get(%request.Data("id",1))
+	s myCode=$Get(%request.Data("code",1))
+	s myInputPerson=$Get(%request.Data("inputPerson",1))
+	s myUnitDeptsDr=$Get(%request.Data("unitDeptsDr",1))
+	s myRate=$Get(%request.Data("rate",1))
+	s myUnitPhonesDr=$Get(%request.Data("unitPhonesDr",1))
+	s myUnitDr=$Get(%request.Data("unitDr",1))
+	s myUnitTypeDr=$Get(%request.Data("unitTypeDr",1))
+	s myActive=$Get(%request.Data("active",1))
+	
+	i action = "listunitphones" d
+	.w ##class(dhc.ca.cache.udata.uUnitPhones).ListRec(myUnitDr,"Y",searchField,searchValue,"Rowid","DESC",start,limit)
+	
+	i action = "listunits" d
+	.w ##class(dhc.ca.cache.udata.uUnits).ListRec(myUnitTypeDr,"Y",searchField,searchValue,"Rowid","DESC",start,limit)
+	
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uPhoneDepts).ListRec(myUnitPhonesDr,searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uPhoneDepts).InsertRec(myUnitPhonesDr,myUnitDeptsDr,myRate,myInputPerson)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uPhoneDepts).UpdateRec(myUnitPhonesDr,myRowid,myUnitDeptsDr,myRate,myInputPerson)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.ca.cache.udata.uPhoneDepts).DelRec(myRowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "percent" d
+	.s result = ##class(dhc.ca.cache.udata.uPhoneDepts).CheckPercent(myRowid)
+	.i result '= 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:''}"
+</script>

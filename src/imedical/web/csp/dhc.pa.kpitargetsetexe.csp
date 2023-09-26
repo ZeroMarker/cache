@@ -1,0 +1,62 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s schemDr=$Get(%request.Data("schemDr",1))
+	s cycleDr=$Get(%request.Data("cycleDr",1))
+	s deptDr=$Get(%request.Data("deptDr",1))
+	s parent=$Get(%request.Data("parent",1))
+	s yearData=$Get(%request.Data("yearData",1))
+	s kpiDr=$Get(%request.Data("kpiDr",1))
+	s distMethodDr=$Get(%request.Data("distMethodDr",1))
+	
+
+	i action = "schemdetaillist" d
+	.w ##class(dhc.pa.udata.uKPITargetSet).GetSchemDetailOfUnit(parent, schemDr, deptDr, searchField, searchValue, sortField, sortDir)
+	
+	i action = "getTitleInfo" d
+	.w ##class(dhc.pa.udata.uKPITargetSet).GetGridTitle(cycleDr,schemDr)
+
+	i action = "setyeardata" d
+	.s result = ##class(dhc.pa.udata.uKPITargetSet).SetYearData(cycleDr,schemDr,kpiDr,deptDr,yearData)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "distkpi" d
+	.s result = ##class(dhc.pa.udata.uKPITargetSet).ExecDistKPI(cycleDr,schemDr,kpiDr,deptDr,yearData,distMethodDr)
+	.i result = "true" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "batchdist" d
+	.s result = ##class(dhc.pa.udata.uKPITargetSet).ExecBatchDistKPI(cycleDr,schemDr,kpiDr,deptDr)
+	.i result = "true" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "settvalue" d
+	.s result = ##class(dhc.pa.udata.uKPITargetSet).ImportTValue(cycleDr,schemDr,deptDr)
+	.;w result,!
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

@@ -1,0 +1,460 @@
+﻿<!-- dhcpeireport.normal.csp -->
+<!-- 
+/// 创建时间		2007.04.01
+/// 创建人			xuwm 
+/// 主要功能		个人体检报告
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 体检汇总报告
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<TITLE></TITLE>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	
+	s ReportIDs=$g(%request.Data("ReportID",1))
+		s ReportID=$P(ReportIDs,"^",1)	
+		s OtherReportIDs=$P(ReportIDs,"^",2,$L(ReportIDs,"^"))
+		//modify by rxb 20120917
+		i ReportIDs=""
+		{
+			s PatientID=$g(%request.Data("PatientID",1))
+			s IADM=$o(^DHCPEIADM(0,"PAADM",PatientID,0))
+		}
+		else
+		{
+			s IADM=$P( ^DHCPERPT(ReportID),"^",1)
+			s PatientID=$P(^DHCPEIADM(IADM),"^",1)
+		}
+		w:(""=PatientID) "<P>·Ƿ¨¿ͻ§ID,Ϟ±¨¸亯P>"
+		Q:(""=PatientID) 
+	s LocID=$P(^PAADM(PatientID),"^",4)
+	s HosCode=$G(^DHCPESetting("DHCPE","ReportCode",LocID))
+	s HosCode=$zcvt(HosCode,"L")
+	//s HosCode=""
+	i HosCode'="" s HosCode=HosCode_"."
+	s normalcss="../scripts/dhcpeireport."_HosCode_"normal.css"
+	s covercss="../scripts/dhcpeireport."_HosCode_"normal.cover.css"
+	s titlecss="../scripts/dhcpeireport."_HosCode_"normal.head.title.css"
+	s patinfocss="../scripts/dhcpeireport."_HosCode_"normal.head.patinfo.css"
+	s summarizecss="../scripts/dhcpeireport."_HosCode_"normal.summarize.css"
+	s generaladvicecss="../scripts/dhcpeireport."_HosCode_"normal.generaladvice.css"
+	s norcss="../scripts/dhcpeireport."_HosCode_"normal.result.nor.css"
+	s liscss="../scripts/dhcpeireport."_HosCode_"normal.result.lis.css"
+	s stationresultcss="../scripts/dhcpeireport."_HosCode_"normal.stationresult.css"
+	s summarizegathercss="../scripts/dhcpeireport."_HosCode_"normal.summarizegather.css"
+	s footercss="../scripts/dhcpeireport."_HosCode_"normal.footer.css"
+	s illexplaincss="../scripts/dhcpeireport."_HosCode_"normal.illexplain.css"
+</SCRIPT>
+<Server>
+	//w "<SCRIPT SRC='../SCRIPTS/DHCWeb.OPCommon.js'></SCRIPT>",!
+	//s OnlyAdviceFlag=$g(%request.Data("OnlyAdvice",1))
+	//i "Y"=OnlyAdviceFlag  w "<SCRIPT SRC='../SCRIPTS/DHCPEAddPrintReportFun.js'></SCRIPT>",!
+</Server>
+
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(normalcss)#></LINK>
+
+
+<!-- 封面  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(covercss)#></LINK>
+<!-- 报告头 报告标题 -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(titlecss)#></LINK>
+<!-- 报告头 报告标题 -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(patinfocss)#></LINK>
+
+<!-- 科室小节  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizecss)#></LINK>
+<!-- 总检建议  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(generaladvicecss)#></LINK>
+
+<!-- 结果  
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.result.css"></LINK>
+-->
+<!-- 通用格式  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(norcss)#></LINK>
+<!-- 检验结果  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(liscss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(stationresultcss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizegathercss)#></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(footercss)#></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(illexplaincss)#></LINK>
+
+<SCRIPT SRC="../scripts/dhcpegreportHistogram.Report.js"></SCRIPT>
+<style type="text/css">
+v\:*{ behavior:url(#default#VML); }
+.Canve{ 
+	display:block; 
+	position:relative; 
+	width:80px; 
+	height:40px; 
+	left: 0px; 
+	top: 0px; 
+	border-top: 0 solid black;
+	margin-bottom:0cm;
+}
+</style>
+</head>
+<BODY>
+<div id="Layer1" width=600>
+<!--<OBJECT id="PrintActiveX" style="DISPLAY: none" classid="clsid:3ede745c-4adb-42a6-ab25-5621edbdfd6b" codebase="../addins/client/QWPrint.cab#version=1,3,8,2" viewastext> </OBJECT>-->
+<OBJECT classid="CLSID:8856F961-340A-11D0-A96B-00C04FD705A2" height="0" id="WebBrowser" width="0"></OBJECT> 
+
+<input type=button id=SaveAs value="存为Html" onclick="SaveAs()" class="NOPRINT">
+<input type=button name='button_export' onclick="OpenWord()" value="存为word" class="NOPRINT">
+<input type=button name='PrintCover' onclick="printCover()" value="打印封面" class="NOPRINT">
+<input type=button value="打印" onclick="PrintReport()" class="NOPRINT"> 
+<input type=button value="页面设置" onclick="document.all.WebBrowser.ExecWB(8,1)" class="NOPRINT">
+<input type=button value="打印预览" onclick="PreviewReport()" class="NOPRINT">           
+<input type=button value="补打" onclick="RePrintReport()" class="NOPRINT">
+<input type="button" value="关闭" onclick="window.close();" class="NOPRINT"> 
+</div>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		
+		s ReportIDs=$g(%request.Data("ReportID",1))
+		s ReportID=$P(ReportIDs,"^",1)	
+		s OtherReportIDs=$P(ReportIDs,"^",2,$L(ReportIDs,"^"))
+		//modify by rxb 20120917
+		i ReportIDs=""
+		{
+			s PatientID=$g(%request.Data("PatientID",1))
+			s IADM=$o(^DHCPEIADM(0,"PAADM",PatientID,0))
+		}
+		else
+		{
+			s IADM=$P( ^DHCPERPT(ReportID),"^",1)
+			s PatientID=$P(^DHCPEIADM(IADM),"^",1)
+		}
+		
+		;s PatientID=$g(%request.Data("PatientID",1))
+		s Type=$g(%request.Data("Type",1))
+		s CoverFlag=$g(%request.Data("CoverFlag",1))
+		s OnlyAdvice=$g(%request.Data("OnlyAdvice",1))
+		s IsSendMessage=$g(%request.Data("IsSendMessage",1))
+		// 获取报告信息
+		w:(""=PatientID) "<P>非法客户ID,无报告</P>"
+		Q:(""=PatientID) 
+		s UserID=$j_"^"_PatientID
+		s Flag=##Class(web.DHCPE.ReportOutToWeb).GetReportInfor(PatientID,UserID)
+		// 输出报告
+		w:("1"'=Flag) "<P>未找到相关客户信息</P>"
+		Q:("1"'=Flag)
+		//s UserID=%session.Get("LOGON.USERID")
+		
+		d ##Class(web.DHCPE.ReportOutToWeb).OutReportToWeb(OnlyAdvice)
+		s AddItem=$G(^TMPReport(UserID,"Result","AddItem"))
+	    k ^TMPReport(UserID)
+	</SCRIPT>
+
+<OBJECT id="PrintActiveX" style="DISPLAY: none" classid="clsid:3EDE745C-4ADB-42A6-AB25-5621EDBDFD6B" codebase="../addins/client/QWPrint.cab#version=1,3,8,2" viewastext> </OBJECT>
+<TABLE>
+<TR>
+  <TD  id="FileName" width="735" height="10" style="display:none;">#(IADM)#</TD>
+  <TD  id="ReportID" width="0" height="0" style="display:none;">#(ReportID)#</TD>
+  <TD  id="Type" width="0" height="0" style="display:none;">#(Type)#</TD>
+  <TD  id="CoverFlag" width="0" height="0" style="display:none;">#(CoverFlag)#</TD>
+  <TD  id="AddItem" width="0" height="0" style="display:none;">#(AddItem)#</TD>
+  <TD  id="ReportIDs" width="0" height="0" style="display:none;">#(OtherReportIDs)#</TD>
+  <TD  id="IsSendMessage" width="0" height="0" style="display:none;">#(IsSendMessage)#</TD>
+</TR>
+</TABLE>
+<SCRIPT language="javascript">
+var idTmr="";
+var ExportAppName="ExportReport";
+var vPosition="",vName="",vSex="",vAge="",vIDCard="",vTel="",vMail="",vDate="",vCompany="",vRegno="",vSortNo="",vDepartment="",vOrderSetsDesc="",vAddItem="",vHPNo="";
+var obj=document.getElementById("PatName");
+if (obj) vName=obj.innerText;
+var obj=document.getElementById("PatSex");
+if (obj) vSex=obj.innerText;
+var obj=document.getElementById("PatAge");
+if (obj) vAge=obj.innerText;
+var obj=document.getElementById("PatID");
+if (obj) vIDCard=obj.innerText;
+var obj=document.getElementById("PatTel");
+if (obj) vTel=obj.innerText;
+var obj=document.getElementById("Mail");
+if (obj) vMail=obj.innerText;
+var obj=document.getElementById("AdmDate");
+if (obj) vDate=obj.innerText;
+var obj=document.getElementById("PatCompany");
+if (obj) vCompany=obj.innerText;
+
+var obj=document.getElementById("RegNo");
+if (obj) vRegno=obj.innerText;
+var obj=document.getElementById("HPNo");
+if (obj) vHPNo=obj.innerText;
+var obj=document.getElementById("SortNo");
+if (obj) vSortNo=obj.innerText;
+var obj=document.getElementById("Position");
+if (obj) vPosition=obj.innerText;
+var obj=document.getElementById("Department");
+if (obj) vDepartment=obj.innerText;
+var obj=document.getElementById("OrderSetsDesc");
+if (obj) vOrderSetsDesc=obj.innerText;
+var obj=document.getElementById("AddItem");
+if (obj) vAddItem=obj.innerText;
+document.title='姓名：'+vName+'；体检号：'+vHPNo+';ID号：'+vRegno;
+
+document.body.onload = BodyLoadHandler;
+
+function BodyLoadHandler()
+{	
+	if(document.readyState=='complete')
+	{
+		
+	}else{
+		timeIframe=setTimeout("BodyLoadHandler()",5);
+		return false;
+	}
+	SetGrouph();
+	var lnk=window.location.href;
+	if (lnk.split(ExportAppName).length>1){
+		return false;
+	}
+	var Type="";
+	var obj=document.getElementById("Type")
+	if (obj) Type=obj.innerText;
+	if (Type=="Print"){
+		//setTimeout("PrintReport()",5);
+		PrintReport();
+	}else if (Type=="Export"){
+		OpenWord();
+		//setTimeout("OpenWord()",5);
+	}else if (Type=="ExportHTML"){
+		SaveAs();
+		//setTimeout("SaveAs()",5);
+	}else if(Type=="ExportPDF"){
+		ExportReport();
+	}
+	//setTimeout("NextReport()",1000);
+	//NextReport();
+	
+}
+
+function PreviewReport()
+{
+	pagesetup_default(0);
+	//factory.printing.Preview()
+	//PrintActiveX.PrintView();
+	//PrintActiveX.Print();
+}
+function RePrintReport()
+{
+	var ReportID="";
+	var obj=document.getElementById("ReportID")
+	if (obj) ReportID=obj.innerText;
+	var InString=ReportID+"^P^^";
+	var ret=#server(web.DHCPE.Report.SetReportStatus("","",InString))#;
+	pagesetup_default(0);
+}
+function PrintReport()
+{
+	
+	var lnk=window.location.href;
+	if (lnk.split(ExportAppName).length==1){
+		var ReportID="",CoverFlag="",IsSendMessage="";
+		var obj=document.getElementById("ReportID")
+		if (obj) ReportID=obj.innerText;
+		if(ReportID==""){
+			alert("请在个人报告界面打印报告");
+			return  false;
+		}
+		var obj=document.getElementById("CoverFlag")
+		if (obj) CoverFlag=obj.innerText;
+		var obj=document.getElementById("IsSendMessage");
+		if (obj) IsSendMessage=obj.innerText;
+		var InString=ReportID+"^P^^"+IsSendMessage;
+		var ret=#server(web.DHCPE.Report.SetReportStatus("","",InString))#
+	}
+	if (CoverFlag!="1"){printCover();}
+	PrintMain();
+	//window.close();
+	setTimeout("window.close()",5000);
+
+}
+function PrintMain()
+{
+	pagesetup_default(1);
+
+}
+function ExportReport()
+{
+	pagesetup_default(1);
+	setTimeout("ReNamePDF()",5000);
+}
+var i=0;
+function ReNamePDF()
+{
+	if (i>9){
+		alert("没有找到生成的PDF文件");
+		window.close();
+		return false;
+	}
+	setTimeout("ReNameApp()",2000);
+	
+}
+function ReNameApp()
+{
+		var fso=new ActiveXObject("Scripting.FileSystemObject");
+		//fso.CreateFolder("D:/ExportPDF/IReport/")
+		if (fso.FileExists("D:/ExportPDF/DHCPEIReport.pdf"))
+		{
+			var obj,RegNo,PatName;
+			var file=fso.GetFile("D:/ExportPDF/DHCPEIReport.pdf");
+			obj=document.getElementById("RegNo");
+			if (obj) RegNo=obj.innerText;
+			obj=document.getElementById("PatName");
+			if (obj) PatName=obj.innerText;
+			if (fso.FileExists("D:/ExportPDF/IReport/"+RegNo+" "+PatName+".pdf"))
+			{
+				var oldfile=fso.GetFile("D:/ExportPDF/IReport/"+RegNo+" "+PatName+".pdf");
+				oldfile.Delete();
+			}
+			//file.Move("D:/ExportPDF/IReport/"+RegNo+" "+PatName+".pdf");
+			file.Copy("D:/ExportPDF/IReport/"+RegNo+" "+PatName+".pdf");
+			window.close();
+
+		}else{
+			i=i+1;
+			ReNamePDF();
+		}
+}
+function NextReport()
+{
+	var obj=document.getElementById("ReportIDs");
+	var ReportIDs=""
+	if (obj) ReportIDs=obj.innerText;
+	var Type="";
+	var obj=document.getElementById("Type");
+	if (obj) Type=obj.innerText;
+	var CoverFlag="";
+	var obj=document.getElementById("CoverFlag");
+	if (obj) CoverFlag=obj.innerText;
+	/*
+	if (ReportIDs!=""){
+		var lnk="dhcpeireport.normal.csp?ReportID="+ReportIDs+"&Type="+Type+"&CoverFlag="+CoverFlag;
+		window.location.href=lnk;
+	}else{
+		var lnk=window.location.href;
+		if (lnk.split(ExportAppName).length==1){
+			//window.close();
+		}
+	}*/
+}
+/*
+function   SaveAs(){
+	var fs=new ActiveXObject("Scripting.FileSystemObject"); 
+	var obj=document.getElementById("FileName");
+	if (obj) Str=obj.innerText;
+	//OverWrite  Unicode
+	var file=fs.CreateTextFile("D://ExportReport//HTML//"+Str+".html",true,true); 
+	var j=document.all.length
+	file.WriteLine(document.documentElement.outerHTML)
+	file.Close(); 
+}*/
+function   SaveAs(){
+	var fs=new ActiveXObject("Scripting.FileSystemObject"); 
+	var obj=document.getElementById("PatName");
+	if (obj) Str=obj.innerText.replace(/(^\s*)|(\s*$)/g,'');;
+	var file=fs.CreateTextFile("D://ExportReport//HTML//"+Str+".html",true,true); 
+	var j=document.all.length
+	file.WriteLine(document.documentElement.outerHTML)
+	file.Close(); 
+}
+
+function   Cleanup()   {   
+	window.clearInterval(idTmr);   
+	CollectGarbage();   
+}
+/*
+function OpenWord(){
+	var obj=document.getElementById("FileName");
+	if (obj) Str=obj.innerText;
+	Layer1.style.border=0
+	ExcelSheet = new ActiveXObject('Word.Application');
+	ExcelSheet.Application.Visible = false;
+	var mydoc=ExcelSheet.Documents.Add('',0,1);
+	myRange =mydoc.Range(0,1)
+	var sel=Layer1.document.body.createTextRange()
+	sel.select()
+	Layer1.document.execCommand('Copy')
+	sel.moveEnd('character')
+	myRange.Paste();
+	mydoc.saveAs("D://ExportReport//Word//"+Str+".doc");     //存放到指定的位置注意路径一定要是¨//〃不然会报错
+	ExcelSheet.Quit();
+    ExcelSheet = null;
+	idTmr   =   window.setInterval("Cleanup();",1); 
+	//mydoc.ActiveWindow.ActivePane.view.Type=3;  //默认为页面视图	
+}
+*/
+function OpenWord(){
+	var obj=document.getElementById("PatName");
+	if (obj) Str=obj.innerText.replace(/(^\s*)|(\s*$)/g,'');
+	Layer1.style.border=0
+	ExcelSheet = new ActiveXObject('Word.Application');
+	ExcelSheet.Application.Visible = false;
+	var mydoc=ExcelSheet.Documents.Add('',0,1);
+	myRange =mydoc.Range(0,1)
+	var sel=document.body.createTextRange(Layer1)
+	sel.select()
+	sel.execCommand('Copy')
+	myRange.Paste();
+	mydoc.saveAs("D://ExportReport//Word//"+Str+".doc"); //存放到指定的位置注意路径一定要是¨//〃不然会报错
+	ExcelSheet.Quit();
+    ExcelSheet = null;
+	idTmr =   window.setInterval("Cleanup();",1); 
+	//mydoc.ActiveWindow.ActivePane.view.Type=3; //默认为页面视图 
+}
+
+</SCRIPT>
+
+<Script language="Cache" RUNAT="SERVER">
+	w "<SCRIPT language='javascript'>",!
+	
+	q:OnlyAdvice="Y"
+	w "function SetGrouph(){",!
+	s i=1
+	s STSequence=""
+	f  s STSequence=$O(^TMPReport(UserID,"HistoryResult",STSequence)) q:STSequence=""  d
+	.s ODSub=""
+	.f  s ODSub=$O(^TMPReport(UserID,"HistoryResult",STSequence,ODSub)) q:ODSub=""  d
+	..q:ODSub=1
+	..;w "alert(ODSub)"
+	..s CurData=$g(^TMPReport(UserID,"HistoryResult",STSequence,ODSub))
+	..q:CurData=""
+	..s Item1=$P(CurData,"^",1)
+	..s Item2=$P(CurData,"^",2)
+	..s Item3=$P(CurData,"^",3)
+	..s Item4=$P(CurData,"^",4)
+	..s ODID=$P(CurData,"^",5)
+	..;w aaaa
+	..;w ODID,!
+	..;s ODType=$p($g(^DHCPEST(+ODID,"OD",$p(ODID,"||",2))),"^",2)
+	..;q:(ODType="T")||(ODType="S")
+	
+	..;i Item4="" s Item4="&nbsp;"
+	..w "var values=new Array();",!
+	..w "var Labels=new Array();",!
+	..i (+Item2<10)&&(+Item3<10)&&(+Item4<10) d
+	...s:Item2'="" Item2=Item2*20
+	...s:Item3'="" Item3=Item3*20
+	...s:Item4'="" Item4=Item4*20
+	..w "values[0]='"_Item2_"';",!
+	..w "values[1]='"_Item3_"';",!
+	..w "values[2]='"_Item4_"';",!
+	..w "Labels[0]='';",!
+	..w "Labels[1]='';",!
+	..w "Labels[2]='';",!
+	..w "DrawHistogram(Graph"_(i+1)_",Labels,values,0,0);",!
+	..s i=i+1
+	w "}",!
+	w !,"<"_"/SCRIPT>",!
+</Script>
+</BODY>
+</HTML>

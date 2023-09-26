@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--药房药库-处方点评-报表
+	csp:pha.prc.v2.report.ipmain.csp
+	js: pha/prc/v2/report.ipmain.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <STYLE>
+        #tabsWardBat div {
+            overflow: hidden;
+        }
+    </STYLE>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',width:300,border:false,split:true">
+                    <div class="hisui-panel" title="住院医嘱点评报表汇总"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-sum',fit:true,bodyCls:''" >
+		                <div class="datagrid-toolbar height:30px;">
+					        <a class="hisui-linkbutton" plain='true' iconCls="icon-search" id="btnFindNo" style="margin-top:4px;">查单</a>
+					    </div>
+                        <div class="pha-row">
+                            <div class="pha-col">
+                                <label for="conStartDate">开始日期</label>
+                            </div>
+                            <div class="pha-col">
+                                <input id='conStartDate' data-pha />
+                            </div>
+                        </div>
+                        <div class="pha-row">
+                            <div class="pha-col">
+                                <label for="conEndDate">截止日期</label>
+                            </div>
+                            <div class="pha-col">
+                                <input id='conEndDate' data-pha />
+                            </div>
+                        </div>
+                        <div class="pha-row">
+	                        <div class="pha-col">
+                                <label for="conMultiDocLoc">医生科室</label>
+                            </div>
+                            <div class="pha-col">
+                                <input id='conMultiDocLoc' data-pha="" />
+                            </div>
+                        </div>
+                        <div class="pha-row">
+                            <div class="pha-col">
+				                <label for="conResult">点评结果</label>
+				            </div>
+				            <div class="pha-col">
+				                <input id='conResult' data-pha />
+				            </div>
+                        </div>
+                        <div class="pha-row">
+		                    <div class="pha-col">
+				                 点评单号
+				            </div>
+				            <div class="pha-col">
+				                <input id="conComNo" style="width:198px;" class='hisui-validatebox' data-pha="class:'hisui-validatebox'">
+				            </div>
+		                </div>
+						<div class="pha-row">
+		                    <div class="pha-col">
+				                 <strong> 报表类型 </strong>
+				            </div>
+		                </div>
+		                <div class="pha-row" style="margin-left:10px;">
+							<input class='hisui-radio' type="radio" label='点评医嘱明细表' name='wantSelect' value='ComOrdDetail' id="rabyIPDetail">
+		                </div>
+		                <div class="pha-row" style="margin-left:10px;">
+							<input class='hisui-radio' type="radio" label='点评就诊明细表' name='wantSelect' value='ComAdmDetail' id="rabyIPAdmDetail">
+		                </div>
+		                <div class="pha-row" style="margin-left:10px;">
+							<input class='hisui-radio' type="radio" label='合理用药指标统计' name='wantSelect' value='ComLocIndex' id="rabyRational">
+		                </div>
+		                <div data-options="region:'south'" border="false" style="text-align:center;padding:10px 0px">
+                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" style="overflow:hidden;" id="btnFind">查询</a>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:true,bodyCls:'panel-header-gray'"  style="overflow:hidden;border-radius: 4px;">
+	                <iframe style="width:100%;height:100%;" frameborder="0"></iframe>
+                </div>
+           </div>
+        </div>
+    </div>
+</div>
+<!-- 表格工具栏 -->
+<div id="gridFindNoBar">
+    <div class="pha-row">
+        <div class="pha-col">
+            <label for="conStartDate">开始日期</label>
+        </div>
+        <div class="pha-col">
+            <input id='conNoStartDate' data-pha />
+        </div>
+        <div class="pha-col">
+            <label for="conEndDate">截止日期</label>
+        </div>
+        <div class="pha-col">
+            <input id='conNoEndDate' data-pha />
+        </div>
+        <div class="pha-col">
+            <label for="conWay">点评方式</label>
+        </div>
+        <div class="pha-col">
+            <input id='conWay' data-pha />
+        </div>
+        <div class="pha-col">
+            <a class="hisui-linkbutton" id="btnSearch">查询</a>
+        </div>
+    </div>
+    <div class="pha-row">
+        <div class="pha-col">
+            <label for="conNoResult">点评结果</label>
+        </div>
+        <div class="pha-col">
+            <input id='conNoResult' data-pha />
+        </div>
+        <div class="pha-col">
+            <label for="conPharmacist">点评药师</label>
+        </div>
+        <div class="pha-col">
+            <input id='conPharmacist' data-pha />
+        </div>
+        <div class="pha-col">
+            <label for="conSubmit">点评状态</label>
+        </div>
+        <div class="pha-col">
+            <input id='conSubmit' data-pha />
+        </div>
+    </div>
+</div>
+<!-- window dialog -->
+<!-- 属性窗体 -->
+<div id="diagFindNo" class="hisui-dialog" data-options="closed:true,width:1200,height:550,title:'点评住院医嘱',iconCls:'icon-search'">
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+             <table id="gridFindNo"></table>
+        </div>
+         <div data-options="region:'south',border:false,height:40" style="text-align:center;overflow:hidden;">
+				<a class="hisui-linkbutton" id="btnComfirm">确定</a> 
+        </div>
+    </div>
+    
+</div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/prc/com/v2/js/store.js"></script>
+    <script type="text/javascript" src="../scripts/pha/prc/v2/report.ipmain.js"></script>
+</body>
+
+</html>

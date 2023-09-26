@@ -1,0 +1,167 @@
+<html>
+<head>
+  	<title></title>
+  	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script> 
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/viewer/window/js/audit.js"></script>
+	<style type="text/css">
+		.spanColor
+		{
+			color: black;
+		}
+		.spanColorLeft
+		{
+			color: #666;
+		}
+		#divInfo
+		{
+			top: 8; position: relative; height:27;  font-size:9pt; text-align: left;  border-style: none;
+		}
+		#divInfoParent
+		{
+			height:27; background-image: url('../scripts/epr/Pics/title.gif'); background-attachment: fixed; border-style: none;
+		}
+		#divState
+		{
+			top: 3; position: relative; background-color: cdd4dc; color: black; font-size: 9pt; height: 20; border-style: none;
+		}
+		.divStateParent
+		{
+			background-color: cdd4dc; height:24;  border-style: none;
+		}
+		
+	</style>
+</head>
+<body>  
+  <div id="centerTab" style="overflow:auto;width:100%;height:100%">
+  </div>  
+</body>
+ 
+ <script language="cache" runat="server">
+ 	
+	s userid = %session.Get("LOGON.USERID")
+	s EpisodeID = $Get(%request.Data("episodeID",1),"-1")
+	s PatientID = $Get(%request.Data("patientID",1),"-1")
+	s ctlocid=%session.Get("LOGON.CTLOCID")
+	s docID = $Get(%request.Data("printTemplateDocId",1),"-1")
+	s ssgroupid = %session.Get("LOGON.GROUPID")
+	s printTemplateDocId = $Get(%request.Data("printTemplateDocId",1),"")
+	s templateDocID = $Get(%request.Data("templateDocId",1),"-1")
+	s category = ##class(EPRmeta.EPRTemplate).%OpenId(templateDocID)	
+	s bindTemplateCategoryID = category.BindTemplateCategoryID	
+	s bindTemplateID = category.BindTemplateID
+	d category.%Close()
+	s category = ""
+	s EPRNum = ##class(EPRservice.BOEPRLogs).GetSingleEPRNumByDocType(printTemplateDocId)
+	
+	//权限
+	s arr = ##class(web.eprajax.ajaxGetPower).GetPowerArray(userid, EpisodeID, PatientID, ctlocid, bindTemplateID, ssgroupid, bindTemplateCategoryID, docID, EPRNum)
+
+	s curPrintTemplateID = ##class(web.eprajax.ajaxCreateEprEdit).GetBindPrintTemplateID($Get(%request.Data("printTemplateDocId",1),""))
+ 	
+ 	s episodeID = $Get(%request.Data("episodeID",1),"")
+	
+ 	//---begin of houj 2009-11-14
+  	//根据唯一界面模板所属病历类型判断其EPRNum,
+	//1 表示属于科研病历和可重复打印病历
+	//2 表示属于唯一打印病历
+	
+ 	s currState = ##class(EPRinstance.EPRLogs).GetEPRStatus($Get(%request.Data("episodeID",1),""), $Get(%request.Data("printTemplateDocId",1),""), EPRNum)
+ 
+  	//病人基本信息
+  	s patientInfo = ##class(web.eprajax.ajaxCreateEprEdit).GetPatientInfo(episodeID, printTemplateDocId)
+  	
+  	//日志记录状态
+  	s divStateServer = ##class(EPRinstance.EPRLogs).GetCurrStatus($Get(%request.Data("episodeID",1),""), $Get(%request.Data("printTemplateDocId",1),""), EPRNum)
+ 	//---end of houj 
+ 	
+ 	//自动保存时间
+ 	s autoSaveStr = ##class(EPRmeta.SysOption).GetOptionValueByName("AutoSaveTime")
+ 	
+ 	//是否是必填模板
+ 	s necessaryTemplate = "-1"
+ 	s templateDocId = $Get(%request.Data("templateDocId",1),"-1")
+ 	if (templateDocId '= "-1")
+ 	{
+ 		s template = ##class(EPRmeta.EPRTemplate).%OpenId(templateDocId)
+ 		s necessaryTemplate = template.NecessaryTemplate
+ 		d template.%Close()
+ 	}
+ 	
+ 	//字体
+ 	s fontSize = ##class(EPRmeta.SysOption).GetOptionValueByName("DefaultFontSize")
+ 	//留痕
+ 	s Revision = ##class(EPRmeta.SysOption).GetOptionValueByName("Revision")		//add by zhuj on 2009-12-30
+  </script>
+ <script type="text/javascript">
+ 	var timedOut = 10000;
+ 	//权限
+  	var canView = '#(arr.GetAt("canView"))#';
+  	var canSave = '#(arr.GetAt("canSave"))#';
+  	var canPrint = '#(arr.GetAt("canPrint"))#';
+  	var canCommit = '#(arr.GetAt("canCommit"))#';
+  	var canSwitch = '#(arr.GetAt("canSwitch"))#';  	
+  	var canSwitchTemplate = '#(arr.GetAt("canSwitchTemplate"))#';
+  	var canChiefCheck = '#(arr.GetAt("canChiefCheck"))#';
+  	var canAttendingCheck = '#(arr.GetAt("canAttendingCheck"))#';
+  	var printAfterCommit = '#(arr.GetAt("canPrintAfterCommit"))#';
+  	
+ 	//界面相关参数
+ 	var pateintID = '#($Get(%request.Data("patientID",1),""))#';
+	var episodeID = '#($Get(%request.Data("episodeID",1),""))#';
+	var templateDocId = '#($Get(%request.Data("templateDocId",1),""))#';
+	var printTemplateDocId = '#($Get(%request.Data("printTemplateDocId",1),""))#';
+	var bindPrnTemplateID = '#(curPrintTemplateID)#';
+	var userID = '#(%session.Get("LOGON.USERID"))#';	
+	var happenDate = '';
+	var happenTime = '';	
+	var EPRNum = '#(EPRNum)#'	//added by houj on 2009-11-14
+	var currState = '#(currState)#';
+	
+	//var canView = 'False';
+	
+	var interval;
+	
+	//切换时是否提示
+	var isSave = true;
+	
+	//是否必填模板
+	var necessaryTemplate = '#(necessaryTemplate)#';
+	//病人基本信息
+	var pInfo = eval("[{" + "#(patientInfo)#" + "}]");
+	
+	//病历当前状态
+	var divStateServer = '#(divStateServer)#';
+	
+	//自动保存时间
+	var autoSaveStr = '#(autoSaveStr)#';
+ 	var autoSaveTime = parseInt(autoSaveStr, 10);
+ 	
+ 	//病人信息字体
+ 	var fontSize = '#(fontSize)#' + "pt";
+ 	
+ 	//留痕
+ 	var revision = '#(Revision)#';			//add by zhuj on 2009-12-30
+</script>
+<script type="text/javascript" src="../scripts/epr/viewer/window/js/centerTabDetialMethodNew.js"></script>
+<script type="text/javascript" src="../scripts/epr/viewer/window/js/centerTabDetialNew.js"></script>
+<script type="text/javascript">
+	//病人信息
+ 	setPatientInfo();
+ 	//病历状态
+ 	setEprState();
+ 	//设置权限
+ 	setPower();
+ 	//设置打印按钮是否可用
+ 	//setBtnPrintEnabled();
+ 	//自动保存
+ 	setSaveTime();
+ 	//判断页面是加载完毕
+ 	var syncLoadEnd = true;
+</script>
+ 
+</html>

@@ -1,0 +1,63 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))   
+	s str      = $Get(%request.Data("query",1))
+	s rowid    = $Get(%request.Data("rowid",1))
+	s StartYM  = $Get(%request.Data("StartYM",1))          ;启用年月
+	s AcctBook = $Get(%request.Data("AcctBook",1))
+	
+	s ReportCode = $Get(%request.Data("ReportCode",1))     ;报表模板编码
+	s ReportName = $Get(%request.Data("ReportName",1))     ;报表模板名称
+	s ReportType = $Get(%request.Data("ReportType",1))     ;报表模板类型
+	
+	s MonthReport= $Get(%request.Data("MonthReport",1))    ;月报
+	s QuartReport= $Get(%request.Data("QuartReport",1))    ;季报
+	s SemyearReport=$Get(%request.Data("SemyearReport",1)) ;半年报
+	s YearReport = $Get(%request.Data("YearReport",1))     ;年报
+	s LenWayArray= $Get(%request.Data("LenWayArray",1))    ;纵向数组
+	s ReportExplain=$Get(%request.Data("ReportExplain",1)) 
+	
+	
+	s data = ReportCode_"^"_ReportName_"^"_ReportType_"^"_MonthReport
+	    _"^"_QuartReport_"^"_SemyearReport_"^"_YearReport_"^"_LenWayArray_"^"_ReportExplain
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).List(AcctBook,ReportCode_"^"_ReportName_"^"_StartYM,sortField,sortDir,start,limit)
+
+    i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).InsertRec(AcctBook,data)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).UpdateRec(AcctBook,rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).DeleteRec(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+    i action = "GetInfo" d
+	.s result=##class(herp.acct.udata.uAcctFinancialReportTempletAdd).GetInfo(AcctBook)
+	.i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+</script>

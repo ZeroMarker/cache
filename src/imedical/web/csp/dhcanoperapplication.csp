@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	手术申请 </title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/dhccl/css/dhcanoperapplication.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/dhccl/css/opmain.css" />
+<!--<script type="text/javascript" src="../scripts/dhccl/an/dhcanoperapplication.js"></script>-->
+<script type="text/javascript" src="../scripts/dhccl/an/dhcanoperapplication.js"></script>
+<style type="text/css">
+#PatListStyle .panel-body-noheader.panel-body
+{
+	border:0px;
+}
+</style>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true" style="width:100%;">
+	    <div id="searchRegion" data-options="region:'west',border:false" style="width:270px;height:100%;">
+	 	    <div class="hisui-panel" style="height:635px;border:1px solid rgb(64,162,222);">
+		 	    <div class="searchlist">
+	    			<div class="searchlisttitle">
+	    			 	病人列表（<span>0</span>人）
+	    			</div>
+	    			<div style="margin-bottom:5px;">
+	    			<div style="margin-top:5px;margin-left:10px;"><label>登记号&nbsp&nbsp</label>
+	    				<input id="patientNo" class="textbox" onkeydown="RegSearch()" style="width:186px;"/>
+	    			</div>
+	    			<div style="margin-top:5px;margin-left:10px"><label>科&nbsp&nbsp&nbsp室&nbsp&nbsp</label>
+	    				<input id="SearchLoc" style="width:194px;">
+	    			</div>
+	    			<div style="margin-top:5px;margin-left:10px;">
+	    				<div style="float:left;"><label>病&nbsp&nbsp&nbsp区&nbsp&nbsp</label>
+	    				<select id="SearchWard" style="width:194px"></select>
+	    				</div>
+	    			</div>
+	    			</div>
+	    		</div>
+	    		<div style="padding:4px 0 0 0;width:100%;height:482px;">
+	    		<div id="PatListStyle" style="height:100%">
+	    			<table id="patientsList"></table></div>
+	    		</div>
+    		</div>
+	    </div>
+	     <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false" style="overflow-y:hidden;">
+	     	<form id="dataForm" method="post" style="width:100%;height:100%;">
+	     		<div style="width:100%;text-align:center;margin:0 0 1px 0;">
+	     		<span style="letter-spacing:10px;font-weight:bold;font-size:16px;">手术申请单</span>
+	     		</div>
+		     	<div style="margin:15px 10px 15px 0px;height:14px">
+		     	<ul style="padding-left:10px">
+	     			<li><label id="patSeximg" style="margin-left:10px;" name="patSeximg"></label></li>
+	     			 <li><label id="PatName"  name="PatName" style="font-size:16px;padding-left:10px;">-</label></li>
+					 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatGender"  name="PatGender">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatAge"  name="PatAge">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><font style="color:#666666">登记号:</font><label id="RegNo"  name="RegNo"></label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>							
+					<li><label id="PatLoc" name="PatLoc">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="AdmReason"  name="AdmReason">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatWard"  name="PatWard">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatBedNo"  name="PatBedNo">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatSecret"  name="PatSecret">-</label></li>
+				</ul>
+	     		</div>
+	     		<div style="margin-top:10px;">
+	     		<table class="oper-table">
+     			<tr class="oper-tr">
+	     				<td class="oper-td oper-td-title">手术室</td>
+	     				<td class="oper-td"><select id="OperLocation" style="width:156px;" data-options="required:true"></select></td>	
+	     				<td class="oper-td oper-td-title">手术类型</td>
+	     				<td class="oper-td">
+	     					<select id="OperType" style="width:156px;"
+	     					data-options="required:true,
+	     									onSelect:function(){
+		     									setOperDateAndBtn();
+	     									}">
+                        	</select>
+	     				</td>
+	     				<td class="oper-td oper-td-title">申请科室</td>
+	     				<td class="oper-td">
+	     				<!--select id="AppLocation" style="width:156px;" disabled></select>-->
+	     				<input id="AppLocation" style="width:156px;">
+	     				</td>
+	     				<td class="oper-td oper-td-title">申请医师</td>
+	     				<td class="oper-td"><select id="AppDoctor" style="width:126px;" disabled></select></td>
+	     			</tr>
+	     			<tr class="oper-tr">
+	     				<td class="oper-td oper-td-title">手术日期</td>
+                    	<td class="oper-td"><input type="text" id="OperDate" style="width:156px;" data-options="required:true"/></td>
+                    	<td class="oper-td oper-td-title">开始时间</td>
+                    	<td class="oper-td"><input id="OperTime" style="width:156px;" data-options="required:true"/></td>
+                       <td class="oper-td oper-td-title">计划台次</td>
+                     <td class="oper-td">	
+                       <input type="text" id="PlanSeq" data-option="min:1,max:30,editable:false" style="width:156px;">
+                	</td> 	
+       	     		<td class="oper-td oper-td-title">预计时长</td>
+                    	<td class="oper-td"><input id="OperDuration"  style="width:126px;" data-options="min:0"/>小时</td>
+                	</tr>
+	     			 <tr class="oper-tr">
+                    	<td class="oper-td oper-td-largertitle">是否麻醉</td>
+                    	<td class="oper-td">
+                        	<select id="IsAnaest" style="width:156px;">
+                             </select>
+                    	</td>
+                    	<td class="oper-td oper-td-title">拟施麻醉</td>
+                    	<td class="oper-td">
+                        <select id="PrevAnaMethod" style="width:156px;">
+                        </select>
+                    	</td>
+                    	 <td class="oper-td oper-td-title">重返手术</td>
+                    <td class="oper-td">
+                        <select id="ReentryOperation" style="width:156px;">
+                            
+                        </select>
+                    </td>
+                 	
+        		</tr>
+                <tr class="oper-tr">
+                    <td class="oper-td oper-td-title">术前诊断</td>
+                    <td colspan="7" class="oper-td">
+                    	<div id="daigNoTitle" style="width:900px;height:100px;border-radius:4px;">
+                        <table id="preopDiagBox" style="width:100%;">
+                        </table>
+                        <input type="hidden" name="PrevDiagnosis" id="PrevDiagnosis">
+                        <div id="preopDiagTool" style="border-top-width:0;border-bottom-width:0;padding:3px;">
+                            &nbsp&nbsp诊断 <select id="diagnosis" style="width:400px;"></select>
+                            <a id="btnAddDiag" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">添加</a>
+                            <a id="btnDelDiag" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">删除</a>
+                        </div>
+                        </div>
+                    </td>
+
+                </tr>
+                <tr class="oper-tr">
+                	<td class="oper-td oper-td-title">诊断备注</td>
+                	<td colspan="7" class="oper-td">
+                		 <input type="text" id="OperPreDiagMem" name="OperPreDiagMem" class="textbox" style="width:893px;"/>
+                	</td>
+
+                </tr>
+                 
+                <tr class="oper-tr">
+                    <td class="oper-td oper-td-title">拟施手术</td>
+                    <td colspan="7" class="oper-td">
+                    	<div id="operNoTitle" style="width:900px;height:117px;">
+                        <table id="operationBox" style="width:100%;">
+                        </table>
+                        <div id="operationTool" style="border-top-width:0;">
+                            <a id="btnAddOperation" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a>
+                            <a id="btnEditOperation" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true">修改</a>
+                            <a id="btnDelOperation" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+                        </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="oper-tr">
+                 	<td class="oper-td oper-td-title">手术部位</td>
+                    <td class="oper-td">	
+                       <select id="BodySite" style="width:156px;"></select>
+                	</td> 
+                	<td class="oper-td oper-td-title">手术体位</td>
+                    <td class="oper-td">	
+                       <select id="OperPos" style="width:156px;"></select>
+                	</td> 
+               	<td class="oper-td oper-td-title">手术要求</td>
+                	<td colspan=3><input type="text" id="AreaOperMem" name="AreaOperMem" class="textbox" style="width:397px;"/></td>
+                	<!--td colspan=5 class="oper-td">
+                		<span class="oper-input">手术部位<select id="BodySite" name="BodySite" class="hisui-combobox" data-options="required:true"></select></span>
+                		<span class="oper-input">手术体位<select id="OperPos" name="OperPos" class="hisui-combobox" data-options="required:true"></select></span>
+                	</td>
+                	<td class="oper-td oper-td-title">备注</td>
+                    <td class="oper-td"><input type="text" id="OperPreDiagMem" name="OperPreDiagMem" class="textbox"/></td-->
+                </tr>
+               <!-- <tr class="oper-tr">
+                	<td class="oper-td oper-td-title">材料清单</td>
+                    <td colspan="3" class="oper-td"><input id="MaterialMem" style="width:403px;"></td>
+                <td class="oper-td oper-td-title">术者备注</td>
+                	<td colspan=3><input type="text" id="SurgeonNote" name="SurgeonNote" class="textbox" style="width:397px;"/></td>
+                	
+                </tr>-->
+
+                <tr class="oper-tr">
+                <td class="oper-td oper-td-title"></td>
+               	<td class="oper-td" colspan="7">
+               	<div style="width:902px;">	
+                		<span><input class='hisui-checkbox' type="checkbox" id="IsoOperation" label="隔离手术" value="N"></span>
+                        <span style="padding-left:25px;"><input class='hisui-checkbox' type="checkbox" id="ECC" label="体外循环" value="N"></span>
+                        <span style="padding-left:25px;"><input class='hisui-checkbox' type="checkbox" id="TransAutoblood" label="自体血回输" value="N"></span>
+                        <span style="padding-left:25px;"><input class='hisui-checkbox' type="checkbox" id="PrepareBlood" label="备血" value="N"></span>
+                    	<span style="padding-left:33px;">术者备注&nbsp&nbsp<input type="text" id="SurgeonNote" name="SurgeonNote" class="textbox" style="width:397px;"/></span>
+                   </div>  
+                     </td>                
+                    </tr>
+                <tr class="oper-tr">
+                	<td class="oper-td oper-td-title">检验信息</td>
+                	<td colspan="7" class="oper-td">
+                	<div style="width:910px;">
+                        <span class="oper-input">血型<span style="color:red;">*</span>&nbsp
+                            <select id="BloodType" style="width:80px;">
+                            </select>
+                        </span>
+                        <span class="oper-input" style="padding-left:10px">RH血型<span style="color:red;">*</span>&nbsp
+                            <select id="RHBloodType" style="width:85px;">
+                            
+                            </select>
+                        </span>
+                        <span class="oper-input" style="padding-left:10px">HbsAg<span style="color:red;">*</span>&nbsp
+                            <select id="HbsAg" style="width:85px;">
+
+                            </select>
+                        </span>
+                        <span class="oper-input" style="padding-left:10px">HcvAb<span style="color:red;">*</span>&nbsp
+                            <select id="HcvAb" style="width:85px;">
+                
+                            </select>
+                        </span>
+                        <span class="oper-input" style="padding-left:10px">HivAb<span style="color:red;">*</span>&nbsp
+                            <select id="HivAb" style="width:85px;">
+                            
+                            </select>
+                        </span>
+                        <span class="oper-input" style="padding-left:10px">梅毒<span style="color:red;">*</span>&nbsp
+                            <select id="Syphilis" style="width:85px;">
+                              
+                            </select>
+                        </span>
+                        </div>
+                    </td>
+                    
+                </tr>
+                <tr class="oper-tr">
+                	<td class="oper-td oper-td-title">其他</td>
+                    <td colspan="7" class="oper-td"><input type="text" class="textbox" id="LabTest" name="LabTest" style="width:890px;"></td>
+                </tr>
+                <tr class="btnList" >
+                	<td colspan="4">
+                		<a href="#" id="btnSave" class="hisui-linkbutton" >保存</a>
+                	</td>
+                	
+                	<td colspan="3">
+                	<div style="margin-left:10px;">	
+        				<a href="#" id="btnCancel" class="hisui-linkbutton">取消</a>
+        			</div>
+                	</td>
+                </tr>
+	     		</table>
+	     		</div>
+	     	</form>
+	     </div>
+	    <div id="operDialog" class="hisui-dialog" data-options="closed:true,width:680,height:400,modal:true,
+	   onClose:function(){
+			$('#operationForm').form('clear');
+		}">
+        <form id="operationForm">
+            <table class="form-table">
+                <tr style="margin-top:10px">
+                    <td class="showwindow-tdtype" style="margin-top:10px">手术名称</td>
+                    <td colspan="3">
+                    	<select id="Operation" style="width:516px" data-options="required:true"></select>
+                    	<input type="hidden" id="OperationDesc" name="OperationDesc">
+                    </td>
+                </tr>
+               
+                <tr style="margin-top:10px">
+                    <td class="showwindow-tdtype">手术分级</td>
+                    <td>
+                    	<select id="OperClass" data-options="required:true" style="width:187px;"></select>
+                    	<input type="hidden" id="OperClassDesc" name="OperClassDesc">
+                    </td>
+                    <td class="showwindow-tdtype">切口类型</td>
+                    <td>
+                    	<select id="BladeType" data-options="required:true" style="width:187px;"></select>
+                    	<input type="hidden" id="BladeTypeDesc" name="BladeTypeDesc">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="showwindow-tdtype">术者科室</td>
+                    <td>
+                    	<select id="SurgeonLoc" style="width:187px;"></select>
+                    	<input type="hidden" id="SurgeonLocDesc" name="SurgeonLocDesc">
+                    </td>
+                    <td class="showwindow-tdtype">手术医师组</td>
+                    <td>
+                    	<select id="OpDocGroup" style="width:187px;"></select>
+                    </td>
+                </tr>
+                <tr>
+                	<td class="showwindow-tdtype">手术医生</td>
+                    <td>
+                    	<select id="Surgeon" data-options="required:true" style="width:187px;"></select>
+                    	<input type="hidden" id="SurgeonDesc" name="SurgeonDesc">
+                    </td>
+                     <td class="showwindow-tdtype">手术一助</td>
+                    <td ><select id="SurgonAss1" style="width:187px;"></select></td>
+                </tr>
+                <tr>
+                    <td class="showwindow-tdtype">手术二助</td>
+                    <td ><select id="SurgonAss2" style="width:187px;"></select></td>
+                     <td class="showwindow-tdtype">手术三助</td>
+                    <td ><select id="SurgonAss3" style="width:187px;"></select></td>
+               </tr>
+                <tr>
+                    <td class="showwindow-tdtype">其他助手</td>
+                    <td><select id="SurgonAsso" style="width:187px;"></select></td>
+                      <td class="showwindow-tdtype">名称备注</td>
+                    <td >
+                    	<input id="OperNote" type="text" class="textbox" style="width:182px">
+                    </td>
+                      
+             </tr>
+             <tr style="height:20px;">
+             </tr>
+             <tr>
+             <td colspan=3 style="padding-left:220px;">
+             <a href="#" id="opwinsave" class="hisui-linkbutton" onClick="saveOperation()" >保存</a>
+             </td>
+             <td style="margin-left:30px;">
+             <a href="#" id="opwincancel" class="hisui-linkbutton" onClick="
+				$HUI.dialog('#operDialog').close();">关闭</a>
+             </td>
+             </tr>
+            </table>
+            <input type="hidden" name="OperID" id="OperID">
+            <input type="hidden" name="OpSubDr" id="OpSubDr">
+            <!--input type="hidden" name="Assistant" id="Assistant"-->
+            <input type="hidden" name="EditOperation" id="EditOperation" value="N">
+        </form>
+    </div>
+	</div>
+</body>
+</html>

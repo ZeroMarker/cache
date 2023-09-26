@@ -1,0 +1,87 @@
+<HTML>
+
+<!--add by loo on 2010-8-18-->
+<!--屏蔽掉IE6.0页面上加载的图片上面自动出现的保存图标-->
+<META HTTP-EQUIV="imagetoolbar" CONTENT="no"/>
+
+<HEAD>
+	<TITLE></TITLE>
+	
+	<script language="cache" runat="server">
+  		s imageList = $Get(%request.Data("ImageList",1),"")
+  		s patientID = $Get(%request.Data("PatientID",1),"")
+  		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s canPrintPic = ##class(EPRmeta.SysOption).GetOptionValueByName2("CanPrintPic","N")
+	</script>
+	
+</HEAD>
+
+<!--edit by loo on 2010-8-18-->
+<!--屏蔽掉页面上的鼠标右键功能-->
+<BODY onload="load()"  oncontextmenu="return false" >
+	<div id="browserPhoto" style="width:100%; height:100%?overflow-x:scroll"></div>
+	<script  type="text/javascript">
+		//var imageList = unescape('#(imageList)#');//图片列表
+		var imageList = parent.imageList;  //避免了传递的参数超出GET的最大值而导致的数据丢失  2012-10-17 by niucaicai
+  		var patientID =  '#(patientID)#';
+  		var episodeID = '#(episodeID)#';
+  		var arrTmp = new Array();		//存临时图片的路径
+		//var total = 0;					//图片个数
+		//alert("C+"+imageList);
+		var canPrintPic =  '#(canPrintPic)#';
+	</script>
+	<script type="text/javascript" src="../scripts/epr/js/episodeUxTabMethod.js"></script>
+	<script type="text/javascript">
+		function load()
+		{
+			//历次模板返回的图片类型为M, 唯一模板返回的图片类型为S, 全部的有M及S
+			//判断imageList中是否存在S, 如果不存在着证明其为历次模板生成的图片
+			//用<锚点>来定位滚动条的位置
+			if(imageList.indexOf('S') == -1)
+				location.hash = 'controlSroll';	
+		}
+		function getList()
+		{
+			//debugger;
+	  		if( imageList.split(',')[0] == 'NoPower'&&imageList.indexOf('@') == -1)
+			{
+				document.getElementById('browserPhoto').innerHTML = "对不起,您没有权限浏览["+ imageList.split(',')[1] +"]!";
+				return;				
+			}
+			if( imageList.split(',')[0] == 'docIdListnull'&&imageList.indexOf('@') == -1)
+			{
+				//alert('没有找到相关图片!错误代码:docIdList null');
+				document.getElementById('browserPhoto').innerHTML = "没有找到["+ imageList.split(',')[1] +"]相关病历!";
+				return;				
+			}
+			if( imageList.split(',')[0] == 'logIdListnull'&&imageList.indexOf('@') == -1)
+			{
+				//alert('没有找到相关图片!错误代码:logIdList null');
+				document.getElementById('browserPhoto').innerHTML = "没有找到["+ imageList.split(',')[1] +"]相关病历!";
+				return;
+			}
+			
+			if( imageList.split(',')[0] == 'ImageNotUpdate'&&imageList.indexOf('@') == -1)
+			{
+				//alert('没有找到相关图片!错误代码:docIdList null');
+				document.getElementById('browserPhoto').innerHTML = "病历图片["+ imageList.split(',')[1] +"]未同步至最新,请联系管理员!";
+				return;				
+			}
+			
+			if (imageList.split(',')[0] == ""&&imageList.indexOf('@') == -1)
+			{
+				//alert("获取图片集合失败!错误代码:imageList null");
+				document.getElementById('browserPhoto').innerHTML = "没有找到["+ imageList.split(',')[1] +"]相关病历!";
+				return;
+			}
+			else
+			{
+				//debugger;
+				queryPhoto(imageList);
+			}
+		}
+		
+		getList();
+	</script>
+</BODY>
+</HTML>

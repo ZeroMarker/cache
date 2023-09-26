@@ -1,0 +1,152 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s File=$Get(%request.MimeData("files",1))
+	s extension=$Get(%request.Data("extension",1))
+	s type=$Get(%request.Data("type",1))
+	s conditionCode=$Get(%request.Data("conditionCode",1))
+	s conditionName=$Get(%request.Data("conditionName",1))
+	s conditionState=$Get(%request.Data("conditionState",1))
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+	s GroupId=$G(%session.Data("LOGON.GROUPID"))
+	s LocId=$G(%session.Data("LOGON.CTLOCID"))
+	s UserId=$G(%session.Data("LOGON.USERID"))
+
+i Action = "Upload" d
+	.s Param=GroupId_"^"_LocId_"^"_UserId
+	.s result = ##class(web.DHCSTM.APCVendor).SaveVendPic(File,Param,RowId,type,extension)
+	.i +result=0 d
+	..w "{success:'true',message:'上传成功'}"
+	.e  d
+	..w "{success:'false',message:'上传失败'}"
+
+i Action = "GetPic" d
+	.d ##class(web.DHCSTM.APCVendor).GetPicInfo(RowId,type)
+
+i Action = "DeletePic" d
+	.s Param=GroupId_"^"_LocId_"^"_UserId
+	.s PicSrc=$Get(%request.Data("picsrc",1))
+	.s result = ##class(web.DHCSTM.APCVendor).GetDelPicInfo(RowId,PicSrc,Param)
+	.i +result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+i Action="UpdatePicInfo" d
+	.s rowid=$Get(%request.Data("rowid",1))
+	.s type=$Get(%request.Data("type",1))
+	.s result=##class(web.DHCSTM.APCVendor).UpdatePicInfo(rowid,type)
+	.i +result=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+
+//查询供应商信息
+i Action = "query" d
+	.s others=$Get(%request.Data("others",1))
+	.d ##class(web.DHCSTM.APCVendor).Query(Start,Limit,Sort,Dir,conditionCode,conditionName,conditionState,others)
+
+//新建供应商信息
+i Action = "insert" d
+	.s result = ##class(web.DHCSTM.APCVendor).Save(listData)
+	.i +result>0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+//根据供应商的RowId查询供应商的明细信息
+i Action = "queryByRowId" d
+	.s result=##class(web.DHCSTM.APCVendor).Select(RowId)
+    .s result=##class(web.DHCSTM.Common.UtilCommon).hJsonChar(result)
+    .w "{success:'true',info:'"_result_"'}"
+
+//更新供应商信息
+i Action = "update" d
+	.s result = ##class(web.DHCSTM.APCVendor).Update(listData)
+	.i result =0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+i Action="UpdVendorFromExcel" d
+	.s VendorInfoStr=$Get(%request.Data("VendorInfoStr",1))
+	.s result=##class(web.DHCSTM.APCVendor).UpdVendorFromExcel(VendorInfoStr)
+	.i result>=0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+i Action="UpdManfFromExcel" d
+	.s ManfInfoStr=$Get(%request.Data("ManfInfoStr",1))
+	.s result=##class(web.DHCSTM.ItmManf).UpdManfFromExcel(ManfInfoStr)
+	.i result'<0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+i Action="GetVendorParamP" d
+	.s AppName=##class(web.DHCSTM.APCVendor).%GetParameter("AppName")
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s HospId=$g(%request.Data("HospId",1))
+	.s pstr=GroupId_"^"_LocId_"^"_UserId_"^"_HospId
+	.s ret=##class(web.DHCSTM.Common.AppCommon).GetAppParamStr(AppName,pstr )
+	.w ret
+
+i Action="InsVendorPic"  d 
+	 .s vendorCode=$g(%request.Data("vendorCode",1))
+	 .s fileName=$g(%request.Data("fileName",1))
+	 .s type=$g(%request.Data("type",1))
+	 .&sql(select apcvm_rowid into :vendor from apc_vendor where apcvm_code=:vendorCode)
+	 .i SQLCODE d
+	 .. s result=-100
+	 .e  d
+	 ..s result=##class(web.DHCSTM.APCVendor).InsVendorPic(vendor,fileName,type)
+	 .i result'<0 d
+	 ..w "{success:'true',info:'"_result_"'}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+	 
+i Action = "GetNotAuditPic" d
+    .s auditflag=$g(%request.Data("auditflag",1))
+	.d ##class(web.DHCSTM.APCVendor).GetNotAuditPic(RowId,type,auditflag)
+
+i Action = "AuditRegInfo" d
+     .s vendor=$Get(%request.Data("Vendor",1))
+     .s type=$Get(%request.Data("type",1))
+     .s ret = ##class(web.DHCSTM.APCVendor).AuditRegInfo(vendor,type)
+     .i +ret<0  d
+      ..w "{success:'false',info:'"_ret_"'}"
+      .e  d
+      ..w "{success:'true',info:'"_ret_"'}"
+      
+i Action = "RefuseRegInfo" d
+     .s vendor=$Get(%request.Data("Vendor",1))
+     .s type=$Get(%request.Data("type",1))
+     .s ret = ##class(web.DHCSTM.APCVendor).RefuseRegInfo(vendor,type)
+     .i +ret=0  d
+     ..w "{success:'true',info:'"_ret_"'}"
+     .e  d
+     ..w "{success:'false',info:'"_ret_"'}" 
+i Action="SendVendor" d
+	.s VendorStr=$Get(%request.Data("VendorStr",1))
+	.s result=##class(web.DHCSTM.APCVendor).SendVendorStr(VendorStr)
+	.i +result=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+</script>

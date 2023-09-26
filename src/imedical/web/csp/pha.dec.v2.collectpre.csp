@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--煎药流程-收方
+	csp:pha.dec.v2.collectpre.csp
+	js: pha/dec/v2/collectpre.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHADECV2/>
+</head>
+
+<body>       
+    <div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">
+				<div data-options="region:'center',title:'煎药收方',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout" fit="true">
+						<div data-options="region:'north',border:false,split:false" class="dhcpha-north-tbl-2" style="overflow:hidden" id="colprelayout">
+							<div class="pha-row">
+								<div class="pha-col">
+						            <label for="dateStart">开始日期</label>
+						        </div>
+						        <div class="pha-col">
+						            <input id="dateColStart" class="hisui-datebox phadec-date" type="text"></input>
+						        </div>
+						        <div class="pha-col">
+						            <input id="timeColStart" class="hisui-timespinner" showSeconds="true" data-options="width:90"></input>
+						        </div>
+						        <div class="pha-col">
+						            <label for="cmbPhaLoc">调剂药房</label>
+						        </div>
+						        <div class="pha-col">
+						            <input id="cmbPhaLoc" class="hisui-combobox phadec-combobox" />
+						        </div>
+						        <div class="pha-col">
+						            <input class='hisui-radio' type="radio" label='全部' name='busType' value="" id="radioAll" data-options="required:true">	<!-- data-options="radioClass:'hischeckbox_square-blue',required:true" -->
+									<input class='hisui-radio' type="radio" label='门诊' name='busType' value="O" data-options="required:true">
+									<input class='hisui-radio' type="radio" label='住院' name='busType' value="I" data-options="required:true">
+						        </div>
+						        <div class="pha-col">
+						        	<span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-find' id="btnFind" onclick="javascript:Query()">查询</a></span>
+						        </div>				
+							</div>
+							<div class="pha-row">
+								<div class="pha-col">
+						            <label for="dateEnd">截止日期</label>
+						        </div>
+						        <div class="pha-col">
+						            <input id="dateColEnd" class="hisui-datebox phadec-date" type="text"></input>
+						        </div>
+						        <div class="pha-col">
+						            <input id="timeColEnd" class="hisui-timespinner" showSeconds="true" data-options="width:90"></input>
+						        </div>
+						        <div class="pha-col" style="margin-left:10px;">
+						            <label for="cmbDecLoc">煎药室</label>
+						        </div>
+						        <div class="pha-col">
+						            <input id="cmbDecLoc" class="hisui-combobox phadec-combobox"/>
+						        </div>
+						        <div class="pha-col">
+						            <input class='hisui-checkbox' type="checkbox" id="chkOnlyColPre" label="仅收方状态" data-options="checked:true,onCheckChange:function(event,value){javascript:Query()}"/>
+						        </div>
+						        <div class="pha-col">
+						        	<span><a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" id="btnClear" style="margin-left:70px;" onclick="javascript:Clear()">清屏</a></span>
+						        </div>
+							</div>
+						</div>
+
+						<div data-options="region:'center'" border="false" style="border-radius: 4px;padding:10px;padding-top:0px">
+							<div id="tabsColPre" class="hisui-tabs tabs-gray" fit="true">
+								<div id="tabPresc" data-options="title:'扫码收方'" class="pha-panel-body-content">
+									<div class="hisui-layout" id="mainLayout" fit="true" border="false">
+										<div data-options="region:'center',split:false,border:true,iconCls:'icon-paper',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" title="已扫描处方">
+											<table id="gridScanPresc"></table>
+										</div>
+									</div>
+								</div>
+								<div id="tabBatPresc" data-options="title:'批量收方'">
+									<div class="hisui-layout" fit="true" border="false">
+										<div data-options="region:'center'" border="false" >
+											<table id="gridBatPresc" style="TABLE-LAYOUT:fixed;WORD-BREAK:break-all">
+											</table>
+										</div>
+									</div>
+								</div>
+								<div id="tabColPresc" data-options="title:'已收方查询'">
+									<div class="hisui-layout" fit="true" border="false">
+										<div data-options="region:'center'" border="false">
+											<table id="gridColPresc">
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+		    </div>
+        </div>
+    </div>
+    <div id="gridScanPrescBar">
+    	<div class="pha-row">
+    		<div class="pha-col">
+    			<label for="cmbBarDecLoc">煎药室</label>
+    		</div>
+    		<div class="pha-col">
+    			<input id="cmbBarDecLoc" class="hisui-combobox phadec-combobox"/>
+    		</div>
+    		<div class="pha-col">
+    			<label for="labelBarCode">处方号</label>
+    		</div>
+    		<div class="pha-col">
+    			<input id="txtBarCode" type="text" class="hisui-validatebox textbox" />
+    		</div>
+    	</div>
+	</div>
+    <div id="gridBatPrescBar">
+        <span><a class="hisui-linkbutton" plain="true" iconCls='icon-ok' id="btnExecute" onclick="javascript:SaveBat()">确认收方</a></span>
+    </div>
+    <!-- window dialog -->
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/dec/v2/xmlprint.js"></script>
+	<script type="text/javascript" src="../scripts/pha/dec/v2/preview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/collectpre.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,35 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<server>
+ n x,ServerSideRedirect
+ s ServerSideRedirect=%request.Get("ServerSideRedirect")
+ s str="?"
+ s x=""  f  s x=%request.Next(x) q:x=""  d
+ . s str=str_x_"="_##Class(websys.Conversions).EscapeUrl(%request.Get(x))_"&"
+ s str=$e(str,1,$l(str)-1)
+ ;s str=##Class(websys.Conversions).EscapeUrl(str)
+</server>
+
+<SCRIPT Language="JavaScript">
+//KM 4-Oct-2001: Took the epr.chart.csp stuff out of here.  Now updating edit pages, which are called from a chart, are redirected from settings n their websysBeforeSave() method.
+var ServerSideRedirect="#(ServerSideRedirect)#";
+var str="#(str)#";
+function LoadHandler() {
+	if (ServerSideRedirect!="") {
+		var fname=top.frames['TRAK_main'];
+		if (top.frames['TRAK_main'].document.getElementById("dataframe")) {var fname=top.frames['TRAK_main'].frames['dataframe'];}
+		fname.location.href=ServerSideRedirect+str
+	} 
+}
+</SCRIPT>
+
+</HEAD>
+<BODY onload="LoadHandler();">
+...
+</BODY>
+
+</HTML>

@@ -1,0 +1,77 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	
+	s projname     = $Get(%request.Data("projname",1))
+	s billcode     = $Get(%request.Data("billcode",1))
+	s year    	   = $Get(%request.Data("year",1))
+	s rowid  	   = $Get(%request.Data("rowid",1))	
+	s data         = $Get(%request.Data("data",1))
+	s FundBillDR   = $Get(%request.Data("FundBillDR",1))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).List(hospid,year, projname, billcode,userdr, start, limit)
+	
+	i action = "yearList" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).year(start, limit, str)	
+	
+	;i action = "projList" d
+	.;w ##class(herp.budg.udata.uBudgProjFundReq).projName(hospid,userdr,year,start, limit, str)
+	
+	i action="submit" d
+	.s result= ##class(herp.budg.udata.uBudgProjFundReq).UpdState(rowid,userdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "revocation" d 
+	.s result= ##class(herp.budg.udata.uBudgProjFundReq).unUpdState(rowid,userdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delete" d	//删除表单数据
+	.s result= ##class(herp.budg.udata.uBudgProjFundReq).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="add" d
+	.s result= ##class(herp.budg.udata.uBudgProjFundReq).Insert(data,hospid)
+	.i result '= "RepName" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="edit" d
+	.s result= ##class(herp.budg.udata.uBudgProjFundReq).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "yearmonth" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).yearmonth(start, limit, str)
+	
+	
+
+	i action = "itemlist" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).detailList(FundBillDR, sortField, sortDir, start, limit)
+		
+</script>

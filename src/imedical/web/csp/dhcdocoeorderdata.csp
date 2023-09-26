@@ -1,0 +1,127 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+ s action=$Get(%request.Data("action",1))
+ s ^DHCXPTest("action")=action
+ s GroupID=%session.Get("LOGON.GROUPID")
+ s CFGFlag=##class(web.DHCDocConfig).GetConfigNode1("TreeMaintain",GroupID)
+ if action="tree"  {
+	s Root=$Get(%request.Data("Root",1))
+	/*
+	w "[{""id"":""rootlab"",""text"":""检验"",""expanded"":false,""collapsible"":false,""leaf"":false,""children"":"
+	d ##class(web.DHCDocExtTest).BuildMenuJson("rootlab",CFGFlag)
+	w "},{""id"":""rootexam"",""text"":""检查"",""expanded"":false,""collapsible"":false,""leaf"":false,""children"":"
+	d ##class(web.DHCDocExtTest).BuildMenuJson("rootexam",CFGFlag)
+	w "}]"
+	*/
+	s Count=0
+	w "["
+	s MainList=0
+	for {
+		s MainList=$O(^DHCDocEntryTree(MainList))
+		q:MainList=""
+		s Count=Count+1
+		s text=$G(^DHCDocEntryTree(MainList))
+		s id=MainList
+		if (Count>1){
+			w ","
+		}
+		w "{""id"":"""_id_""",""text"":"""_text_""",""expanded"":false,""collapsible"":false,""leaf"":false,""children"":"
+		d ##class(web.DHCDocExtTest).BuildMenuJson(id,CFGFlag)
+		w "}"
+	}
+	w "]"
+	
+ }
+ if action="grid"  d
+ .;m ^gry=%request.Data
+ .s PrentId=$Get(%request.Data("PrentId",1))
+ .s s = ##class(web.DHCDocExtTest).getArcimJsonData(PrentId)
+ .w s
+ if action="DelNode"  d
+ .s myId=$Get(%request.Data("myId",1))
+ .s result=##class(web.DHCDocExtTest).DelNodeJsonData(myId)
+ .i result=0 d
+ ..w "{success:'true',info:'"_result_"'}"
+ .e  d
+ ..w "{success:'false',info:'"_result_"'}"
+ if action="RefItemType" {
+	 w "{""results"":""2"",""rows"":[{""rowId"":""EXAM"",""code"":""1"",""name"":""检查""},{""rowId"":""LAB"",""code"":""2"",""name"":""检验""}]}"
+	 q
+ }
+ if action="LBFApp" {
+	 s searchValue=$Get(%request.Data("searchValue",1))
+	 s RowId=$Get(%request.Data("RowId",1))
+	 s TypeId=$Get(%request.Data("TypeId",1))
+	 w ##class(web.DHCDocExtTest).SelectLBFApp(searchValue,RowId,TypeId)
+ }elseif action="BFSApp" {
+	 s searchValue=$Get(%request.Data("searchValue",1))
+	 s RowId=$Get(%request.Data("RowId",1))
+	 w ##class(web.DHCDocExtTest).SelectBFSApp(searchValue,RowId)
+ }elseif action="SpecItem" {
+	 s searchValue=$Get(%request.Data("searchValue",1))
+	 s RowId=$Get(%request.Data("RowId",1))
+	 s start=$Get(%request.Data("start",1))
+	 s limit=$Get(%request.Data("limit",1))
+	 w ##class(web.DHCDocExtTest).SelectSpecItem(searchValue,RowId,start,limit)
+ }elseif action="SLAArcim" {
+	 ;m ^gry=%request.Data
+	 s searchValue=$Get(%request.Data("searchValue",1))
+	 s RowId=$Get(%request.Data("RowId",1))
+	 s start=$Get(%request.Data("start",1))
+	 s limit=$Get(%request.Data("limit",1))
+	 s TYPE="L^SERVICE"
+	 w ##class(web.DHCDocExtTest).SelectSLAArcim(searchValue,RowId,start,limit,TYPE)
+ }elseif action="SLAArcos" {
+	 s searchValue=$Get(%request.Data("searchValue",1))
+	 s RowId=$Get(%request.Data("RowId",1))
+	 s start=$Get(%request.Data("start",1))
+	 s limit=$Get(%request.Data("limit",1))
+	 w ##class(web.DHCDocExtTest).SelectSLAArcos(searchValue,RowId,start,limit)
+ }elseif action="Save" {
+	 ;'SelNodeId='+SelNodeObj.id+'&RootNodeId='+RootNodeObj.id+'&Desc='+Desc+'&SpecFlag='+SpecFlag+'&SpecItemValue='+SpecItemValue+'&ArcimFlag='+ArcimFlag+'&RefItemValue='+RefItemValue+'&SLASDate='+SLASDate+'&SLAEDate='+SLAEDate+'&ArcosFlag='+ArcosFlag+'&RefARCOSItemValue='+RefARCOSItemValue+'&SLASArcosDate='+SLASArcosDate+'&SLAEArcosDate='+SLAEArcosDate
+	 s SelNodeId=$Get(%request.Data("SelNodeId",1))
+	 s RootNodeId=$Get(%request.Data("RootNodeId",1))
+	 s Desc=$Get(%request.Data("Desc",1))
+	 s SpecFlag=$Get(%request.Data("SpecFlag",1))
+	 s SpecItemValue=$Get(%request.Data("SpecItemValue",1))
+	 s ArcimFlag=$Get(%request.Data("ArcimFlag",1))
+	 s RefItemValue=$Get(%request.Data("RefItemValue",1))
+	 s SLASDate=$Get(%request.Data("SLASDate",1))
+	 s SLAEDate=$Get(%request.Data("SLAEDate",1))
+	 s ArcosFlag=$Get(%request.Data("ArcosFlag",1))
+	 s RefARCOSItemValue=$Get(%request.Data("RefARCOSItemValue",1))
+	 s SLASArcosDate=$Get(%request.Data("SLASArcosDate",1))
+	 s SLAEArcosDate=$Get(%request.Data("SLAEArcosDate",1))
+	 s Code=$Get(%request.Data("Code",1))
+	 s Para=SelNodeId_"^"_RootNodeId_"^"_Desc_"^"_SpecFlag_"^"_SpecItemValue_"^"_ArcimFlag_"^"_RefItemValue_"^"_SLASDate_"^"_SLAEDate_"^"_ArcosFlag_"^"_RefARCOSItemValue_"^"_SLASArcosDate_"^"_SLAEArcosDate_"^"_Code
+	 s result=##class(web.DHCDocExtTest).Save(Para)
+	 i result=0 w "{success:'true',info:'"_result_"'}"
+	 e  w "{success:'false',info:'"_result_"'}"
+ }elseif action="GetArcimStr" {
+	 s RowId=$Get(%request.Data("ParaRowid",1))
+	 s ArcimStr=##class(web.DHCDocExtTest).GetArcimStr(RowId)
+	 w "{ArcimStr:'"_ArcimStr_"'}"
+ }elseif action="GetTarItems" {
+	 s ArcimRowid=$Get(%request.Data("ParaRowid",1))
+	 s TarItemsStr=##class(web.DHCDocExtTest).GetTarItems(ArcimRowid)
+	 w "{TarItemsStr:'"_TarItemsStr_"'}"
+ }elseif action="GetItemMsg"{
+	 s ArcimRowid=$Get(%request.Data("ParaRowid",1))
+	 s ItemMsg=##class(web.DHCDocExtTest).GetItemMsg(ArcimRowid)
+	 w "{ItemMsg:'"_ItemMsg_"'}"
+ }elseif action="movenode" {
+	 s nodeId=$Get(%request.Data("nodeId",1))
+	 s oldParentId=$Get(%request.Data("oldParentId",1))
+	 s newParentId=$Get(%request.Data("newParentId",1))
+	 s oldParentDepth=$Get(%request.Data("oldParentDepth",1))
+	 s newParentDepth=$Get(%request.Data("newParentDepth",1))
+	 s index=$Get(%request.Data("index",1))
+	 d ##class(web.DHCDocExtTest).MoveNode(nodeId,oldParentId,newParentId,oldParentDepth,newParentDepth,index)
+ }elseif (action="updateNodeName") {
+	 s nodeId=$Get(%request.Data("nodeId",1))
+	 s updateNodeName=$Get(%request.Data("updateNodeName",1))
+	 d ##class(web.DHCDocExtTest).UpdateNodeName(nodeId,updateNodeName)
+	 w "{success:'true',info:'更新成功!'}"
+ }
+ q 
+</SERVER>

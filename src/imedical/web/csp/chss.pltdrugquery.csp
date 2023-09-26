@@ -1,0 +1,67 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+ 
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Dosage=$Get(%request.Data("Dosage",1))
+	
+	s DrugRowId=$Get(%request.Data("DrugRowId",1))
+	s DateOfStart=$Get(%request.Data("DateOfStart",1))
+	s DateOfEnd=$Get(%request.Data("DateOfEnd",1))
+	s DrugName=$Get(%request.Data("DrugName",1))
+	s DrugCode=$Get(%request.Data("DrugCode",1))
+	s Useage=$Get(%request.Data("Useage",1))
+	s Dosage=$Get(%request.Data("Dosage",1))
+	s ADR=$Get(%request.Data("ADR",1))
+	s Remark=$Get(%request.Data("Remark",1))
+	s RecordId=$Get(%request.Data("RecordId",1))
+	s RecordType=$Get(%request.Data("RecordType",1))
+	
+	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	s TableName=$Get(%request.Data("TableName",1))
+	s TableType=$Get(%request.Data("TableType",1))
+	s Start=0
+	s Limit=100
+	
+	;个人主要用药情况
+	i Action = "maindruglist" d
+	.w ##class(CHSSWeb.PersonLongTermDrugService).ListPage1(Start,Limit,PersonRowId,RecordId,TableType)	
+	i Action = "list" d
+	.w ##class(CHSSWeb.PersonLongTermDrugService).ListPage(Start,Limit,PersonRowId,RecordId,TableType)
+	i Action = "list1" d
+	.w ##class(CHSSWeb.PersonLongTermDrugService).ListPage1(Start,Limit,PersonRowId,RecordId,TableType)
+	i Action = "info" d
+	.w ##class(CHSSWeb.PersonLongTermDrugService).ShowInfo(Start,Limit,PersonRowId,RecordId,TableType)
+	i Action = "info1" d
+	.w ##class(CHSSWeb.PersonLongTermDrugService).ShowInfo1(Start,Limit,PersonRowId,RecordId,TableType)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.PersonLongTermDrugService).insert(DateOfStart,DateOfEnd,DrugName,DrugCode,Useage,Dosage,ADR,Remark,RecordId,RecordType,PersonRowId,TableType)
+	.i result = 0 d
+	..w "{success:'true',info:'添加成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.PersonLongTermDrugService).update(DrugRowId,DateOfStart,DateOfEnd,DrugName,DrugCode,Useage,Dosage,ADR,Remark,RecordType)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "delete" d
+	.s result = ##class(CHSSWeb.PersonLongTermDrugService).delete(DrugRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>
+

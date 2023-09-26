@@ -1,0 +1,68 @@
+
+<script language="cache" runat="server">
+
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+	s Action=$Get(%request.Data("actiontype",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	s LectureRowId=$Get(%request.Data("LectureRowId",1))
+	s LectureTitel=$Get(%request.Data("LectureTitel",1))
+	s LectureName=$Get(%request.Data("LectureName",1))
+	s LectureAddress=$Get(%request.Data("LectureAddress",1))
+	s People=$Get(%request.Data("People",1))
+	s Unit=$Get(%request.Data("Unit",1))	
+	s PlanContent=$Get(%request.Data("PlanContent",1))
+	s PlanTarget=$Get(%request.Data("PlanTarget",1))
+	s Remark=$Get(%request.Data("Remark",1))
+	s Summarize=$Get(%request.Data("Summarize",1))
+	s DateOfCreate=$Get(%request.Data("DateOfCreate",1))
+	s StaffOfCreate=$Get(%request.Data("StaffOfCreate",1))
+	
+	s LectureDATE=$Get(%request.Data("LectureDATE",1))
+	s LectureTime=$Get(%request.Data("LectureTime",1))
+	
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	s titel = $Get(%request.Data("titel",1))
+	s name = $Get(%request.Data("name",1))
+	s people = $Get(%request.Data("people",1))
+	s unit = $Get(%request.Data("unit",1))
+	s DATE = $Get(%request.Data("DATE",1))
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.HealthEducationLectureService).ListPage(CommunityCode,Start,Limit)
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.HealthEducationLectureService).update(LectureRowId, LectureTitel,LectureName,LectureAddress,People,Unit,PlanContent,PlanTarget,Remark,Summarize,LectureDATE,LectureTime,DateOfCreate,StaffOfCreate,CommunityCode)
+	.w result
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.HealthEducationLectureService).delete(LectureRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'É¾³ý³É¹¦'}"
+    .e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.HealthEducationLectureService).insert(LectureTitel,LectureName,LectureAddress,People,Unit,PlanContent,PlanTarget,Remark,Summarize,LectureDATE,LectureTime,DateOfCreate,StaffOfCreate,CommunityCode)
+	.w result
+	
+	i LectureTitel '= "" d
+	.s SqlStr = " and LectureTitel like '%"_LectureTitel_"%'"
+	i LectureName '= "" d
+	.s SqlStr = " and LectureName = '"_LectureName_"'"
+	i People '= "" d
+	.s SqlStr = " and People = '"_People_"'"
+	i Unit '= "" d
+	.s SqlStr = " and Unit = '"_Unit_"'"
+	i LectureAddress '= "" d
+	.s SqlStr = " and LectureAddress = '"_LectureAddress_"'"
+	
+	i Action = "search" d
+	.w ##class(CHSSWeb.HealthEducationLectureService).Search(CommunityCode,Start,Limit,SqlStr)
+</script>
+

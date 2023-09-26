@@ -1,0 +1,123 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcem.consult.csp  会诊申请 //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script language="Cache" runat="server">
+		d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+   </script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<!-------------------------------->
+	<link href="../scripts/dhcnewpro/dhcem/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcem/css/consult.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultprintcom.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consult.js"></script>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',headerCls:'panel-header-gray',title:''" style="border-left:1px solid #E3E3E3;" border="false">
+			<!-- 申请单内容区 -->
+			<div class="container">
+				<!-- 申请单按钮区 -->
+				<div id="OpBtns" class="p-toolbar">       
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="SaveCstNo()" id="bt_save">保存</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="SendCstNo()" id="bt_send">发送</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="SureCstNo()" id="bt_sure">确认</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="CanCstNo()" id="bt_can">取消</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AcceptCstNo()" id="bt_acc">接受</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-close',plain:true" onclick="RefCstNo()" id="bt_ref">拒绝</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="AriCstNo()" id="bt_arr">到达</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" onclick="CompCstNo()" id="bt_com">完成</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="OpenPupWin()" id="bt_ord">医嘱录入</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="PrintCst()" id="bt_print">打印</a>
+				</div>
+				<!-- 申请单操作区 -->
+				<div class="p-content1">
+					<div class="ph-title">
+						<span>会&nbsp&nbsp诊&nbsp&nbsp申&nbsp&nbsp请&nbsp&nbsp单</span>
+					</div>
+					<div style="margin:10px 0px;">
+			            <label style="font-weight:bold;">会诊类型</label>
+						<input class='hisui-radio' type="radio" label='普通' name='CstType' value='N'>
+						<input class='hisui-radio' type="radio" label='急诊' name='CstType' value='Y'>
+						<label class="m-l-40">会诊日期：</label>
+						<input id="CstDate" class="hisui-datebox textbox" style="width:190px;">
+						<label class="m-l-40">会诊时间：</label>
+						<input id="CstTime" class="hisui-timespinner textbox" style="width:190px;">
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;">院内院外</label>
+						<input class='hisui-radio' type="radio" label='院内' name='CstUnit' value='N'>
+						<input class='hisui-radio' type="radio" label='院外' name='CstUnit' value='Y'>
+						<label class="m-l-40">外院名称：</label>
+						<input id="CstUnit" class="hisui-validatebox" style="width:183px;">
+						<label class="m-l-40">外院医师：</label>
+						<input id="CstDoc" class="hisui-validatebox" style="width:183px;">
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;">会诊科室</label>
+						<div style="min-height:180px;padding-top:10px;">
+							<table id="dgCstDetList"></table>
+			            </div>
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;">简要病历</label>
+						<div style="height:80px;padding-top:10px;">
+							<textarea id="ConsTrePro" style="width:100%;height:100%;resize:none;"></textarea>
+			            </div>
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;">会诊目的</label>
+						<div style="height:80px;padding-top:10px;">
+							<textarea id="ConsPurpose" style="width:100%;height:100%;resize:none;"></textarea>
+			            </div>
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label>申请科室</label>
+			            <input id="CstRLoc" class="hisui-validatebox" style="width:220px;">
+						<label class="m-l-40">申请医师</label>
+						<input id="CstRDoc" class="hisui-validatebox" style="width:220px;">
+		            </div>
+		            <div style="margin:10px 0px;">
+						<label style="margin-left:2px;">&nbsp&nbsp&nbsp联系人</label>
+						<input id="CstUser" class="hisui-validatebox" style="width:220px;">
+						<label class="m-l-40">联系电话</label>
+						<input id="CstTele" class="hisui-validatebox" style="width:220px;margin-right:40px;">
+						<input id="ShareFlag" class='hisui-checkbox' type="checkbox" label="是否共享">
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;">备注</label>
+						<div style="height:80px;padding-top:10px;">
+							<textarea id="ConsNote"  style="width:100%;height:100%;resize:none;"></textarea>
+			            </div>
+		            </div>
+		            <div id="Opinion" style="margin:10px 0px;">
+			            <label style="font-weight:bold;">会诊意见</label>
+						<div style="height:80px;padding-top:10px;">
+							<textarea id="ConsOpinion"  style="width:100%;height:100%;resize:none;"></textarea>
+			            </div>
+		            </div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--------------打印相关---------->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCIPBILL">
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		</form>
+	</div>
+	<!-------------------------------->
+</body>
+</html>

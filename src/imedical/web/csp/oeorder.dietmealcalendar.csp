@@ -1,0 +1,289 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html XMLNS=TRAK>
+<head>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<TRAK:COMPONENT id="OEOrder.UpdateMealCalendar" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<script language="Javascript">
+//SB: Can change year by increment or by whole value
+function changemonth(incr,val) {
+ var frm=document.moForm;
+ var mo=parseInt(frm.moSelected.value,10)
+ if (incr!="") mo=parseInt(frm.moSelected.value,10)+(incr);
+ if (val!="") mo=parseInt(val,10);
+ var yr=parseInt(frm.yrSelected.value,10);
+ if (mo>12)
+  yr=yr+1,mo=mo-12;
+ if (mo<1)
+  yr=yr-1,mo=mo+12;
+ frm.moSelected.value=mo;
+ frm.yrSelected.value=yr;
+ frm.submit();
+}
+//SB: Can change year by increment or by whole value
+function changeyear(incr,val) {
+ var frm=document.moForm;
+ var mo=parseInt(frm.moSelected.value,10);
+ var yr=parseInt(frm.yrSelected.value,10)
+ if (val!="") yr=parseInt(val,10);
+ if (incr!="") yr=parseInt(frm.yrSelected.value,10)+(incr);
+ frm.moSelected.value=mo;
+ frm.yrSelected.value=yr;
+ frm.submit();
+}
+</script>
+</head>
+
+<body style="margin-left:10px;margin-right:10px;">
+<server>
+ n PatientID,EpisodeID,TWKFL,TWKFLI,TNAVMARK
+ ; LOG 39484 BC 29-9-2003 Fix Thai date problem
+ s frm=$ZCONVERT($lg($g(^websys.ConfigurationD(1)),10),"U") s:frm="" frm="DMY"
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s TNAVMARK=%request.Get("TNAVMARK")
+ ;s showkey=%request.Get("showkey")
+ ;
+ i %request.Get("Reset")="Y" k ^TMP("WEB",%session.SessionId)
+ n rs,monthLIST,today,tMonth,tYear,moSelected,yrSelected,TRANSmonths
+ ;
+ s today=$zd(+$h)		;m/d/y
+ s tMonth=+$p(today,"/",1)	;1=jan..12=dec
+ s tYear=+$p(today,"/",3)	;4 digit year
+ s obj=##Class(websys.Component).OpenName("websys.SYSTEM")
+ i obj d obj.LoadTrans(),obj.%Close()
+ s TRANSmonths=t("XMONTHS")
+ f i=1:1:12  s monthLIST(i)=$p(TRANSmonths,",",i)
+ s tSunday=$p(t("XDAYS"),",",1)
+ s tMonday=$p(t("XDAYS"),",",2)
+ s tTuesday=$p(t("XDAYS"),",",3)
+ s tWednesday=$p(t("XDAYS"),",",4)
+ s tThursday=$p(t("XDAYS"),",",5)
+ s tFriday=$p(t("XDAYS"),",",6)
+ s tSaturday=$p(t("XDAYS"),",",7)
+ ;
+ s obj=##Class(websys.Component).OpenName("RBMessages")
+ i obj d obj.LoadTrans(),obj.%Close()
+ s TRANSNextMonth=t("RBNextMonth")
+ s TRANSPrevMonth=t("RBPrevMonth")
+ s tBlank=t("Blank")
+ ;
+ s moSelected=%request.Get("moSelected")
+ i moSelected=""  s moSelected=tMonth
+ s yrSelected=%request.Get("yrSelected")
+ i yrSelected="" s yrSelected=tYear
+ s displayyrSelected=yrSelected
+ i frm="THAI" s displayyrSelected=yrSelected+543
+ ;
+ d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,RBMessages")
+ s Vacanttext=t("Vacant")
+ s DietID=%request.Get("DietID")
+ s DietType=%request.Get("DietType")
+ s StartDate=%request.Get("StartDate") ;##Class(websys.Conversions).DateHtmlToLogical(%request.Get("StartDate"))
+ s EndDate=%request.Get("EndDate")
+ s MealType=%request.Get("InsertStr")
+ s InsertStr=%request.Get("InsertStr")
+ s ALGRequireAssistanceMenu=%request.Get("ALGRequireAssistanceMenu")
+ s ALGRequireAssistanceMeal=%request.Get("ALGRequireAssistanceMeal")
+ s Boarder=%request.Get("Boarder")
+ s TWKFLI=%request.Get("TWKFLI")
+
+ ;s ^zpeterc($zn,"Calender")=$g(DietID)_","_$g(DietType)_","_$g(StartDate)_","_$g(EndDate)_","_$g(MealType)_","_$g(ALGRequireAssistanceMenu)_","_$g(ALGRequireAssistanceMeal)_","_$g(Boarder)
+ ;s ^zpeterc($zn,"Session")=%session.SessionId
+ s CommenceDate=0
+ s (DietType,Location)=""
+ i $g(DietID)'="" {
+ 	s DTObj=##Class(epr.CTDietType).%OpenId(DietID,0)
+ 	i DTObj d
+ 	. s CommenceDate=DTObj.FirstCycleSttDate
+ 	. s DietType=DTObj.Description
+ 	. s Location=DTObj.CTLocDR.CTLOCDesc
+ 	d DTObj.%Close()
+ }
+
+</server>
+<DIV>
+<B>#(DietType)# : #(Location)#</B> &nbsp;<!--a href="oeorder.dietmealos.update.csp?DietTypeID=#(DietID)#&StartDate=#(StartDate)#&EndDate=#(EndDate)#&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&ALGRequireAssistanceMeal=#(ALGRequireAssistanceMeal)#&ALGRequireAssistanceMenu=#(ALGRequireAssistanceMenu)#&Boarder=#(Boarder)#&TWKFLI=#(TWKFLI)#" id="Update" name="Update">Update</A-->
+<table border=1 cellpadding=5>
+	<form name="moForm" method="post" action="oeorder.dietmealcalendar.csp">
+	<INPUT TYPE="HIDDEN" NAME="TWKFL" VALUE="#(TWKFL)#">
+	<INPUT TYPE="HIDDEN" NAME="TWKFLI" VALUE="#(TWKFLI)#">
+	<INPUT TYPE="HIDDEN" NAME="TNAVMARK" VALUE="#(TNAVMARK)#">
+	<INPUT TYPE="HIDDEN" NAME="PatientID" VALUE="#(PatientID)#">
+	<INPUT TYPE="HIDDEN" NAME="EpisodeID" VALUE="#(EpisodeID)#">
+	<INPUT TYPE="HIDDEN" NAME="DietID" VALUE="#(DietID)#">
+	<INPUT TYPE="HIDDEN" NAME="StartDate" VALUE="#(StartDate)#">
+	<INPUT TYPE="HIDDEN" NAME="EndDate" VALUE="#(EndDate)#">
+	<INPUT TYPE="HIDDEN" NAME="MealType" VALUE="#(MealType)#">
+	<INPUT TYPE="HIDDEN" NAME="InsertStr" VALUE="#(InsertStr)#">
+	<input type=hidden name="moSelected" value="#(moSelected)#">
+	<input type=hidden name="yrSelected" value="#(yrSelected)#">
+	<input type=hidden name="ALGRequireAssistanceMenu" value="#(ALGRequireAssistanceMenu)#">
+	<input type=hidden name="ALGRequireAssistanceMeal" value="#(ALGRequireAssistanceMeal)#">
+	<input type=hidden name="Boarder" value="#(Boarder)#">
+	<input type=hidden name="Params" value="#(DietID)#||#(StartDate)#||#(EndDate)#||#(PatientID)#||#(EpisodeID)#||#(ALGRequireAssistanceMeal)#||#(ALGRequireAssistanceMenu)#||#(Boarder)#">
+    <tr>
+      <TH COLSPAN="2">
+	    <!--INPUT type="button" name="prev" VALUE="Prev" onClick="changemonth(-1);"-->
+	    <INPUT type="image" SRC='../images/websys/arrow_left.gif' BORDER='0' onclick="changemonth(-1,'');"><font size="1">#(TRANSPrevMonth)#</font><br>
+	  </TH><TH COLSPAN="3"><CENTER>	
+	  		<Select TYPE="text" ID="monthText" NAME="monthText">
+	  		<server>
+	  			f i=1:1:12  {
+	  				w "<option value='",i,"'"
+	  				i moSelected=i w " selected" 
+	  				w ">",monthLIST(i),"</option>"
+	  			}
+	  		</server>
+		</select>
+		<!--INPUT TYPE="text" ID="mText" NAME="mText" VALUE="#(monthLIST(moSelected))#" size="12" maxlength="4"-->
+		<!--input id="monthText" name="monthText" width=200 value=""><IMG id="ld1145iCTLOCDesc" name="ld1145iCTLOCDesc" src="../images/websys/lookup.gif"-->
+		<!--&nbsp;#(yrSelected)#-->
+		<INPUT TYPE="text" ID="yearText" NAME="yearText" VALUE="#(displayyrSelected)#" size="12" maxlength="4">
+	  </CENTER></TH><TH COLSPAN="2"><div align="right">
+		<font size="1">#(TRANSNextMonth)#</font><INPUT type="image" SRC='../images/websys/arrow_right.gif' BORDER='0' onclick="changemonth(1,'');"><br>
+		<!--INPUT type="button" name="next" VALUE="Next" onClick="changemonth(1);"-->
+    </div></TH>
+	</tr>
+    <tr>
+      <th bordercolorlight="silver">#(tMonday)#</th>
+	  <th bordercolorlight="silver">#(tTuesday)#</th>
+	  <th bordercolorlight="silver">#(tWednesday)#</th>
+	  <th bordercolorlight="silver">#(tThursday)#</th>
+	  <th bordercolorlight="silver">#(tFriday)#</th>
+      <th bordercolorlight="silver"><font color=red>#(tSaturday)#</font></th>
+      <th bordercolorlight="silver"><font color=red>#(tSunday)#</font></th>
+    </tr>
+<server>
+ n firstday,Digit,i,delim
+ s delim=$c(2)
+ ;
+ s GrpID=%session.Get("LOGON.GROUPID")
+ s DietID=%request.Get("DietID")
+ s DietType=%request.Get("DietType")
+ s StartDate=%request.Get("StartDate")
+ s EndDate=%request.Get("EndDate")
+ s MealType=%request.Get("InsertStr")
+ i DietID'="",StartDate'="",EndDate'="",MealType'="" d GenerateTemp^CDTCDietType(DietID,StartDate,EndDate,MealType)
+ ;
+ d ##Class(websys.Component).GetComponentMessages(.t,"RBMessages")
+ s firstday=moSelected_"/1/"_yrSelected
+ s firstday=$zdh(firstday)+3#7+1	;1=mon..7=sun
+ s offset=8-firstday
+ w "<TR>",$c(13,10)
+ f i=1:1:firstday-1 W "<TD></TD>"
+ s Digit=1
+ s maxdays=$$daysinmonth^CDTCDietType(moSelected,yrSelected)
+ f i=1:1  q:i>maxdays  d
+ . ;;TN:21/07/2004:fix for all formats
+ . s cdate=$zdh(Digit_"/"_moSelected_"/"_yrSelected,4)
+ . ;s ^zTrak("zsb",yrSelected,moSelected,Digit)=""
+ . s cls="noapptcell"
+ . //i taken>0 s cls="apptcell"
+ . //i taken>=allowed s cls="maxapptcell"
+ . //i $l(overbooked) s cls="overbookcell"
+ . i cdate<CommenceDate s cls="noschedcell"
+ . i $g(StartDate)'="",cdate<##Class(websys.Conversions).DateHtmlToLogical(StartDate) s cls="noschedcell"
+ . i $g(EndDate)'="",cdate>##Class(websys.Conversions).DateHtmlToLogical(EndDate) s cls="noschedcell"
+ . i DietID="" s cls="noschedcell"
+ . //i other="P" s cls="partunavailcell"
+ . //i closedslot="Y" s cls="partunavailcell"
+ . s dayNo=""
+ . ;s FoundMOS=""
+ . s sdateday="",edate=""
+ . ;i FoundMOS="" s cls="noschedcell"
+ . w "<TD class='",cls,"' align=center  width=1000 height=200 valign=top><dd><DIV align=right valign=top><b>",Digit,"</b>"
+ . i cdate'<StartDate,DietID'="" d GenerateSetMeals^CDTCDietType(Digit,cls,dayNo,edate,cdate,DietID,StartDate,EndDate,MealType)
+ . w "&nbsp;</TD>",$c(13,10)
+ . w "</TD>",$c(13,10)
+ . s Digit=Digit+1
+ . i i-offset#7=0  W "</TR>",$c(13,10)
+ ;
+ ;;close table row
+ i i#7'=0  W "</TR>",$c(13,10)
+</server>
+</form>
+</table>
+<BR>
+<script>
+</script>
+</DIV>
+</DIV>
+<script>
+function DocumentLoadHandler() {
+	obj=document.getElementById('yearText');
+	if (obj) obj.onchange= YearTextChangeHandler;
+	
+	obj=document.getElementById('yearText');
+	if (obj) obj.onkeydown= YearTextKeyDownHandler;
+	
+	obj=document.getElementById('monthText');
+	if (obj) obj.onchange= MonthTextChangeHandler;
+
+	for (var i=0;i<document.moForm.elements.length;i++) {
+		if (document.moForm.elements[i].id!="") {
+			var elemid=document.moForm.elements[i].id;
+			var obj=document.getElementById(elemid);
+			if((obj)&&(mPiece(obj.id,"z",0)=="SelMeal")) obj.onclick=SelMealIDClickHandler;
+		}
+	}
+
+	var UpdateMMObj=document.getElementById("Update");
+	if (UpdateMMObj) UpdateMMObj.onclick = UpdateClickHandler;
+	if (tsc['Update']) {
+		websys_sckeys[tsc['Update']]=UpdateClickHandler;
+	}
+}
+function MonthTextChangeHandler() {
+	var obj=document.getElementById('monthText')
+	if (obj) changemonth("",obj.value);
+}
+function YearTextChangeHandler() {
+	var obj=document.getElementById('yearText')
+	if (obj) {
+		var yr=obj.value;
+		if ((yr!="")&&("#(frm)#"=="THAI")) yr=parseInt(yr,10)-543;
+		changeyear("",yr);
+	}
+}
+function YearTextKeyDownHandler(e) {
+	var keycode;
+	try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+	if (keycode==13) return false; //YearTextChangeHandler();
+}
+
+function SelMealIDClickHandler(evt) {
+	//Log 52185 PeterC 20/06/05: If Checked=Creeate the global. If Unchecking=Delete global
+	var eSrc=websys_getSrcElement(evt);
+	obj=document.getElementById(eSrc.id);
+	if(obj) {
+		var ORDERSETID=mPiece(eSrc.id,"||",3);
+		var MealTypeID=mPiece(eSrc.id,"||",2);
+		var Date=mPiece(eSrc.id,"||",1);
+		var Checked="N";
+		if(obj.checked) Checked="Y";		
+		var url="oeorder.dietmealosday.add.csp?ORDERSETID="+ORDERSETID+"&MealTypeID="+MealTypeID+"&Date="+Date+"&Checked="+Checked;
+		websys_createWindow(url,'TRAK_hidden');
+	}
+	return true;
+}
+
+function mPiece(s1,sep,n) {
+	delimArray = s1.split(sep);
+	if ((n <= delimArray.length-1) && (n >= 0)) return delimArray[n];
+}
+
+document.body.onload = DocumentLoadHandler;
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s str = $Get(%request.Data("str",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+    s CheckStartDate = $Get(%request.Data("CheckStartDate",1))
+    s CheckEndDate = $Get(%request.Data("CheckEndDate",1))
+	s status=$Get(%request.Data("status",1))
+	s RowId=$Get(%request.Data("RowId",1))
+	s rowId=$Get(%request.Data("rowId",1))
+	s userDr=$Get(%request.Data("userDr",1))
+	s user=$Get(%request.Data("user",1))
+	s CheckStartDate1=$Get(%request.Data("CheckStartDate1",1))
+	s CheckEndDate1=$Get(%request.Data("CheckEndDate1",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+	s StartDate=$Get(%request.Data("StartDate",1))
+	s QMSchem=$Get(%request.Data("QMSchem",1))
+	s name=$Get(%request.Data("name",1))
+	s qmschemDr=$Get(%request.Data("qmschemDr",1))
+	s deptDR=$Get(%request.Data("deptDR",1))
+	s title=$Get(%request.Data("title",1))
+	s CycleDr=$Get(%request.Data("CycleDr",1))
+	s period=$Get(%request.Data("period",1))
+	s dept=$Get(%request.Data("dept",1))
+	
+	s periodTxt=$Get(%request.Data("periodTxt",1)) //2016-8-8
+	s yearPeriod=$Get(%request.Data("yearPeriod",1))  //2016-8-8
+	i action = "list" d
+	.w ##class(dhc.qm.udata.uPlanArrange).List(sortField, sortDir, start, limit, CheckStartDate, CheckEndDate, userDr)
+
+	i action = "nameList" d
+	.w ##class(dhc.qm.udata.uComm).GetDeptGroup(start, limit, str,periodTxt,yearPeriod,userDr,RowId)
+	.;w ##class(dhc.qm.udata.uComm).GetAdmlocwardInfo()
+
+	i action = "deptfList" d
+	.w ##class(dhc.qm.udata.uComm).GetlocwardInfo(dept,periodTxt,yearPeriod,userDr,RowId)
+
+	i action = "userList" d
+	.w ##class(dhc.qm.udata.uPlanArrange).userList(sortField, sortDir, start, limit,str)
+
+	i action = "QMSchemList" d
+	.w ##class(dhc.qm.udata.uPlanArrange).QMSchemList1(sortField, sortDir, start, limit, qmschemDr)
+
+    i action = "edit" d
+	.s result = ##class(dhc.qm.udata.uPlanArrange).Update(rowId)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+	i action = "add" d
+	
+	.s result = ##class(dhc.qm.udata.uPlanArrange).Add(title,CycleDr,period,CheckStartDate1 , CheckEndDate1, user,StartDate,EndDate,QMSchem,name  )
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "eidtRecord" d   //2016-6-30 add cyl
+	.s result = ##class(dhc.qm.udata.uPlanArrange).UpdateRecord(title,CycleDr,period,CheckStartDate1 , CheckEndDate1, user,StartDate,EndDate,QMSchem,name,rowId  )
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--oeorder.oplistcustom.config.hui.csp HISUI诊疗设置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.l-label{
+	text-align:left;
+}
+form table td{
+	padding: 0;
+}
+</style>
+<Server>
+//若不为空,则按照安全组设置
+s GroupRowId=%request.Get("GroupRowId")
+s LoginGroupRowId=%session.Get("LOGON.GROUPID")
+s LoginUserRowId=%session.Get("LOGON.USERID")
+s isNurseLogin=%request.Get("isNurseLogin")
+s DefaultGroupRowId=GroupRowId
+i DefaultGroupRowId="" {
+	///说明是用户点进来的
+	s isNurseLogin = ##class(web.DHCDocMain).isNurseLogin()
+	s DefaultGroupRowId=LoginGroupRowId
+}
+s ViewOrderTypeJson=##Class(web.DHCDocInPatUICommon).GetViewOrderTypeJson(LoginUserRowId,DefaultGroupRowId,isNurseLogin)
+s ViewOrderSortJson=##Class(web.DHCDocInPatUICommon).GetViewOrderSortJson(LoginUserRowId,DefaultGroupRowId,isNurseLogin)
+s ViewLocDescJson=##Class(web.DHCDocInPatUICommon).GetViewLocDescJson(LoginUserRowId,DefaultGroupRowId,isNurseLogin)
+s ViewScopeDescJson=##Class(web.DHCDocInPatUICommon).GetViewScopeDescJson(LoginUserRowId,DefaultGroupRowId,isNurseLogin)
+s ViewNurderBillJson=##Class(web.DHCDocInPatUICommon).GetViewNurderBillJson(LoginUserRowId,DefaultGroupRowId,isNurseLogin)
+</Server>
+</head>
+<body>
+	<csp:Include Page="oeorder.oplistcustom.config.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		if ((("#(isNurseLogin)#")=="")&&(("#(GroupRowId)#")!="")){
+			parent.$.messager.confirm("重要！！","该安全组是否为护士登录病区时使用",function(result){
+				if (result){
+					window.location.href = changeURLArg(window.location.href,'isNurseLogin',1)
+				}else{
+					window.location.href = changeURLArg(window.location.href,'isNurseLogin',0)
+				}
+			});
+		}
+	
+	
+		//全局请求后台服务对象
+		var ServerObj={
+			GroupRowId:"#(GroupRowId)#",
+			LoginGroupRowId:"#(LoginGroupRowId)#",
+			ViewOrderTypeJson:"#(ViewOrderTypeJson)#",
+			ViewOrderSortJson:"#(ViewOrderSortJson)#",
+			ViewLocDescJson:"#(ViewLocDescJson)#",
+			ViewScopeDescJson:"#(ViewScopeDescJson)#",
+			ViewNurderBillJson:"#(ViewNurderBillJson)#"
+		};
+		function changeURLArg(url,arg,arg_val){
+			var pattern=arg+'=([^&]*)';
+			var replaceText=arg+'='+arg_val; 
+			if(url.match(pattern)){
+				var tmp='/('+ arg+'=)([^&]*)/gi';
+				tmp=url.replace(eval(tmp),replaceText);
+				return tmp;
+			}else{ 
+				if(url.match('[\?]')){ 
+				   return url+'&'+replaceText; 
+				}else{ 
+				   return url+'?'+replaceText; 
+				} 
+			}
+		}
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/UDHCOEOrder.List.Custom.Config.hui.js"></script>
+</body>
+</html>

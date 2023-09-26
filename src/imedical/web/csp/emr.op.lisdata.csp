@@ -1,0 +1,65 @@
+﻿<html>
+    <head>
+        <title>检验信息</title>
+    
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script language="cache" runat="server">
+        s scheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("LisScheme")
+        s:(scheme = "") scheme = "<scheme><show><parent><item><code>EpisodeDate</code><desc>就诊日期</desc><hidden>N</hidden></item><item><code>DeptDesc</code><desc>就诊科室</desc><hidden>N</hidden></item><item><code>OEordItemRowID</code><desc>OEordItemRowID</desc><hidden>Y</hidden></item><item><code>OEordItemDesc</code><desc>医嘱名称</desc><hidden>N</hidden></item><item><code>LabEpisodeNo</code><desc>标本号</desc><hidden>N</hidden></item><item><code>SpecimenDesc</code><desc>标本类型</desc><hidden>N</hidden></item><item><code>CollectionDate</code><desc>采集日期</desc><hidden>N</hidden></item><item><code>CollectionTime</code><desc>采集时间</desc><hidden>N</hidden></item><item><code>ReceiveDate</code><desc>接受日期</desc><hidden>N</hidden></item><item><code>ReceiveTime</code><desc>接收时间</desc><hidden>N</hidden></item><item><code>AuthorisationDate</code><desc>审核日期</desc><hidden>N</hidden></item><item><code>AuthorisationTime</code><desc>审核时间</desc><hidden>N</hidden></item><item><code>ExistReport</code><desc>有无报告</desc><hidden>N</hidden></item></parent><child><item><code>OeordID</code><desc>OeordID</desc><hidden>Y</hidden></item><item><code>ItemDesc</code><desc>描述</desc><hidden>N</hidden></item><item><code>Synonym</code><desc>英文缩写</desc><hidden>N</hidden></item><item><code>ItemResult</code><desc>结果</desc><hidden>N</hidden></item><item><code>ItemUnit</code><desc>单位</desc><hidden>N</hidden></item><item><code>AbnorFlag</code><desc>异常值</desc><hidden>N</hidden></item><item><code>ItemRanges</code><desc>范围值</desc><hidden>N</hidden></item></child></show><reference><parent><item><code>EpisodeDate</code><desc>就诊日期:</desc><separate>,</separate></item><item><code>DeptDesc</code><desc>就诊科室:</desc><separate>,</separate></item><item><code>OEordItemDesc</code><desc>医嘱名称:</desc><separate>enter</separate></item></parent><child><item><code>AbnorFlag</code><desc>异常值</desc><separate>,</separate></item><item><code>ItemUnit</code><desc>单位</desc><separate>,</separate></item><item><code>ItemDesc</code><desc>描述</desc><separate></separate></item></child><separate>enter</separate></reference></scheme>"
+        s singleSelect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPResSingleSelect", "Y")
+    </script>
+    <script language="javascript">
+        var invoker = null;
+        try{
+            if (typeof(window.dialogArguments.emrEditor) != 'undefined') {
+                invoker = window.dialogArguments;
+            }
+        }
+        catch (e) {
+            invoker = parent;
+        }    
+        var patientID = invoker.patientID;
+        var episodeID = invoker.episodeID;
+        var scheme = '#(scheme)#'
+        var strXml = "";
+        var quoteData = {};
+        var singleSelect = '#(singleSelect)#';
+    </script>
+    
+</head>
+<body ondragstart="return false"  class="easyui-layout">
+    <div id="seekform" data-options="region:'north',border:false" style="height:33px;padding:3px">
+        <input id="currentEpisode" type="radio" name="episode"/><span>本次就诊</span>
+        <input id="allEpisode" type="radio" name="episode"/>
+        <span>所有就诊</span>
+        <span id="comboxEpisode">
+            <input id="EpisodeList" name="EpisodeList" style="width:120px;"/>
+            <a href="#" class="easyui-linkbutton" onclick="queryData()" style="vertical-align:middle;">查询</a>
+        </span>
+    </div>
+    
+    <div class="easyui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+        <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+            <div data-options="region:'north',border:false" style="height:200px;width:100%;">
+                <table id="lisData"></table>    
+            </div>
+            <div data-options="region:'center',border:false" style="">
+                <table id="lisSubData"></table>    
+            </div>
+        </div>
+    </div>
+    
+    <div data-options="region:'south',border:false" style="height:30px;padding-top:3px;">
+        <a href="#" class="easyui-linkbutton" onclick="getData()">引用</a>
+    </div>
+        
+<script type="text/javascript" src="../scripts/emr/js/op.res.commonfile.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/op.lisdata.js"></script>
+</body>
+</html>

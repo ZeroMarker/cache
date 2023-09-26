@@ -1,0 +1,57 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	//s Rowid=$g(%request.Data("Rowid",1))
+	s InstanceID=$g(%request.Data("InstanceID",1),"-1")
+	s EpisodeID=$g(%request.Data("EpisodeID",1),"-1")
+	s CategoryID=$g(%request.Data("CategoryID",1),"-1")
+	s userid = %session.Get("LOGON.USERID")
+	s ctlocid=%session.Get("LOGON.CTLOCID")
+	s ssgroupid = %session.Get("LOGON.GROUPID")
+	s userName = %session.Get("LOGON.USERNAME")
+</Script>
+<BODY>
+<server>
+	w "<object id='config' name='config' width=0 height=0 classid='" _ ##class(web.DHCEPR).GetFormURL("1") _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	//w "<object id='config' name='config' width=0 height=0 classid='clsid:0B596853-D803-3E1C-AF3A-11FE02FF7856' codebase='" _ ##class(web.DHCEPR).GetFormURL() _ "EPRCom.CAB#version=1,0,0,1'>",!
+	w "<param name='URL' value='" _ ##class(web.DHCEPR).GetServiceURL() _ "'>",!
+	w "<param name='FormURL' value='" _ ##class(web.DHCEPR).GetFormURL("1") _ "'>",!
+	w "</object>",!	
+	
+	w "<object id='eprlistedit' name='eprlistedit'  classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='100%' Height='100%' VIEWASTEXT >", !
+	w "<param name='IsNewFramework' value='True'>",!
+	w "<param name='IsTotalLoad' value='False'>",!
+	w "<param name='SSGroupID' value='" _ ssgroupid _ "'>",!
+	//w "<param name='SSGroupID' value='" _ userName _ "'>",!
+	//安全组
+	w "<param name='Revisionable' value='False'>",!
+	//留痕
+	w "<param name='Browsable' value='True'>",!
+	//是否能够浏览
+	w "<param name='BGColor' value='"_ ##class(web.DHCEPRExt).GetBGColor()_"'>",!
+	//系统参数 ?参考电子病历值?
+	w "<param name='UserID' value='" _ userid _ "'>",!
+	//登录用户id
+	w "<param name='UserName' value='" _ userName _ "'>",!
+	//登录用户名
+	w "<param name='InstanceDataID' value='" _ InstanceID _ "'>",!
+	//实例id	
+	w "<param name='CTLocID' value='" _ ctlocid _ "'>",!
+	//登录科室id
+	w "<param name='CategoryID' value='" _ CategoryID _ "'>",!
+	//w "<param name='EpisodeID' value='61780'>",!
+	w "<param name='EpisodeID' value='" _ EpisodeID _ "'>",!
+	w "</object>"
+</server>
+</BODY>
+</HTML>

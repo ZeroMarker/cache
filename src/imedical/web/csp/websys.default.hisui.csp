@@ -1,0 +1,229 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!doctype html>
+<HTML XMLNS=TRAK>
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+ 	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+ 	<SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+ 	<server>
+ 	d ##class(websys.hisui.Configuration).HeadSession()
+ 	Set iconsPath = "../scripts_lib/hisui-0.1.0/dist/css/icons"
+ 	</server>
+	<HISUI/>
+	<ADDINS/>
+	<SCRIPT type='text/javascript' SRC="../scripts/hisui/websys.hisui.js"></SCRIPT>
+	<style>
+	body{
+		padding: 10px;
+	}
+	p{
+		margin:0px;
+	}
+	.maintitle,.formtitle,.listtitle,.savetitle,.edittitle,.defaulttitle,.collapsetitle{	
+		height:26px;
+		font-size: 14px;
+		vertical-align: middle;
+		text-align: left;
+		border: 1px solid #cccccc;
+		border-bottom: 0px;
+		border-top-right-radius: 4px;
+    	border-top-left-radius: 4px;
+    	background:url("") #f9f9fa no-repeat center left 10px;
+	    padding:4px;
+	    padding-left: 36px;
+	    
+	}
+	.headtitle{
+  	  color:#000000;
+  	  font-size:22px;
+  	  font-family: 微软雅黑;
+  	  text-align:center;
+	}
+	.headtitle *{
+  	  color:#000000;
+  	  font-size:22px;
+  	  font-family: 微软雅黑;
+	}
+	.maintitle {
+		background-image:url("#(iconsPath)#/apply_check.png");
+	}
+	.formtitle{
+		background:url("") #f9f9fa  no-repeat center left 10px; 
+	}
+	.formtitle>img{
+	  position: absolute;
+	  margin-top:2px;
+	  margin-left:-18px;
+	  margin-right:4px;
+	}
+	.listtitle{
+		background-image:url("#(iconsPath)#/add_note.png");
+	}
+	.savetitle{
+		background-image:url("#(iconsPath)#/save.png");
+	}
+	.edittitle{
+		background-image:url("#(iconsPath)#/write_order.png");
+	}
+	.defaulttitle{
+		background-image:url("#(iconsPath)#/paper.png");
+	}
+	.i-tableborder {
+	    position: relative;
+	    padding: 0px;
+	    border: 1px solid #cccccc;
+		border-bottom-right-radius: 4px;
+		border-bottom-left-radius: 4px;
+	}
+	.hgt4 {
+	    padding: 0;
+	    /*top: -2px;*/
+	    position: relative;
+	    height: 4px;
+	    border-left: 1px solid #ccc;
+	    border-right: 1px solid #ccc;
+	    border-top: 1px solid #CCC;
+	}
+	.i-tableborder .panel-body.panel-body-noheader { 
+		border: 0px;
+    	border-radius: 0px;
+	}
+	/*查询与列表在一个i-tableborder内时,table-top加线条*/
+	.i-tableborder>table+.datagrid>.panel-body.panel-body-noheader { 
+		border-top: 1px solid #cccccc;
+	}
+	.datagrid .panel-body, .datagrid .panel-header {
+	    border-color: #cccccc;
+	}
+	.i-tableborder table td label{
+		margin:0 6px 0 0;
+	}
+	.i-toolborder {
+	    border-top: 1px dashed #cccccc;
+	    border-left: 1px solid #cccccc;
+	    border-right: 1px solid #cccccc;
+	    position: relative;
+	}
+	.i-toolborder .l-btn-plain{
+		padding:0 0 0;
+		border:0;
+		margin-top:3px;
+		margin-bottom:3px;
+	}
+	.i-toolborder .l-btn-plain .l-btn-icon-left .l-btn-icon{
+		left:5px;
+		height:22px;
+		width:26px;
+	}
+	.i-toolborder .l-btn-plain .l-btn-icon-left .l-btn-text{
+		line-height:22px;
+		padding:0 10px 0 31px;
+		margin:0 0 0;
+		color:#666666;
+	}
+	.i-toolborder .l-btn-plain:hover .l-btn-text{
+		color:#0379d0;
+	}
+	.panel .panel-body.i-leftright-noborder{
+		border-radius:0;
+		-webkit-border-radius:0;
+		border-left-width:0;
+		border-right-width:0;	
+	}
+	select {
+		border: 1px #9ed2f2 solid;
+	}
+	</style>
+	 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+</HEAD>
+<body>
+<div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">加载中···</font></h1></div>
+<DIV id="PageContent">
+<SERVER>
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+ ; 获取到BDPMenuID号, 兼容数据平台菜单配置 2019-11-19
+ Set BDPMenuID=$Get(%request.Data("BDPMENU",1))
+ If (BDPMenuID'=""){
+	 Set cmpName = $lg(^User.BDPMenuD(BDPMenuID),17)
+	 If cmpName'="" Set %session.Data("WEBSYS.TCOMPONENT")=cmpName
+ }
+ set cmpName = $s($g(%request.Data("WEBSYS.TCOMPONENT",1))'="":%request.Data("WEBSYS.TCOMPONENT",1),1:$g(%session.Data("WEBSYS.TCOMPONENT")))
+ set cmpName = $$ALPHAUP^SSUTIL4(cmpName)
+ set cmpRowID = $O(^websys.ComponentI("UniqueNameIndex",cmpName,""))
+ Set MessageID=0,fitLayout=0
+ for {
+	Set MessageID=$o(^websys.ComponentD(cmpRowID,"Messages",MessageID))
+	Quit:MessageID=""
+	Set MessageCode=$lg(^websys.ComponentD(cmpRowID,"Messages",MessageID),1)
+	Set MessageDesc=$lg(^websys.ComponentD(cmpRowID,"Messages",MessageID),2)
+	if ($zcvt(MessageCode,"L")="i-listheight"){
+		if ($ZCVT(MessageDesc,"O","JS")["auto"){
+			Set fitLayout = 1 //MessageDesc
+			if ($p(MessageDesc,",",2)>0) Set gridHeight = $p(MessageDesc,",",2)
+		}else{
+			Set gridHeight = $ZCVT(MessageDesc,"O","JS")
+		}
+	}
+	if ($zcvt(MessageCode,"L")="i-fitlayout"){
+		Set fitLayout = MessageDesc
+	}
+	if ($zcvt(MessageCode,"L")="i-hiddenrowno"){
+		Set hiddenRowNo = MessageDesc
+	}
+ }
+ set obj = ##class(websys.hisui.ComponentUserImp).%New(cmpRowID)
+ do obj.Grid()
+ do obj.%Close()
+ set obj = ""
+ for myi=1:1:10{
+ 	if $g(%request.Data("WEBSYS.TCOMPONENT"_myi,1))'=""{
+		 set cmpName = %request.Data("WEBSYS.TCOMPONENT"_myi,1)
+		 set cmpName = $$ALPHAUP^SSUTIL4(cmpName)
+		 set cmpRowID = $O(^websys.ComponentI("UniqueNameIndex",cmpName,""))
+		/*---*/
+		Set MessageID=0
+		for {
+			Set MessageID=$o(^websys.ComponentD(cmpRowID,"Messages",MessageID))
+			Quit:MessageID=""
+			Set MessageCode=$lg(^websys.ComponentD(cmpRowID,"Messages",MessageID),1)
+			Set MessageDesc=$lg(^websys.ComponentD(cmpRowID,"Messages",MessageID),2)
+			if ($zcvt(MessageCode,"L")="i-listheight"){
+				if ($ZCVT(MessageDesc,"O","JS")["auto"){
+					Set fitLayout = 1 //MessageDesc
+					if ($p(MessageDesc,",",2)>0) Set gridHeight = $p(MessageDesc,",",2)
+				}else{
+					Set gridHeight = $ZCVT(MessageDesc,"O","JS")
+				}
+			}
+			if ($zcvt(MessageCode,"L")="i-fitlayout"){
+				Set fitLayout = MessageDesc
+			}
+			if ($zcvt(MessageCode,"L")="i-hiddenrowno"){
+				Set hiddenRowNo = MessageDesc
+			}
+		}
+		 set obj = ##class(websys.hisui.ComponentUserImp).%New(cmpRowID)
+		 do obj.Grid()
+		 do obj.%Close()
+		 set obj = ""
+	 }
+ }
+ if (fitLayout>0){
+	 w "<style>body{overflow:hidden;}</style>"
+ }
+ Kill %session.Data("WEBSYS.TCOMPONENT")
+</SERVER>
+</DIV>
+<script type="text/javascript">	
+	$(function(){$("#Loading").fadeOut("fast");});
+</script>
+</BODY>
+</HTML>

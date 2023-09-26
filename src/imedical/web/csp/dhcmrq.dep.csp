@@ -1,0 +1,277 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(DHCMRQ.Base.Util.Verification).SessionVerifi() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+		if (top == self) {
+    		top.location = 'dhcmrq.index.csp';
+		}
+	   </script>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/font-awesome-4.6.3/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-validator/css/bootstrapValidator.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/datatable-1.10.12/datatables.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/css/main.css">
+		<!--[if lte IE 6]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap-ie6.css">
+	  <![endif]-->
+	  <!--[if lte IE 8]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/ie.css">
+			<style media="screen">
+				.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9{
+					padding-left: 0;
+					padding-right: 0;
+				}
+			</style>
+	  <![endif]-->
+		<style media="screen">
+			label.col-sm-3{
+				padding-right: 0;
+			}
+			.table>tbody>tr.selected{
+				background-color: #16c79e;
+				color: #fff;
+				transition: all .2s;
+			}
+			#roleDiv .col-sm-5{
+				border: 1px solid #16c79e;
+				min-height: 200px;
+			}
+			.panel-footer{
+				text-align: right;
+			}
+			.table th, .table td{
+				text-align: left;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="boxcq" id="two">
+					<div class="ti">
+
+					</div>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-sm-8">
+									<table id="deptTable" class="table table-striped" width="100%">
+										<thead>
+											<tr><th>科室编码</th><th>科室名称</th><th>更新日期</th><th>状态</th><th>操作</th></tr>
+										</thead>
+										<tbody>
+
+										</tbody>
+									</table>
+								</div>
+								<div class="col-sm-4">
+									<div class="panel panel-info">
+									  <div class="panel-heading">操作</div>
+									  <div class="panel-body">
+									  		<input type="hidden" id="deptId">
+											<form id="deptForm" class="form-horizontal" role="form">
+											<div class="form-group">
+											    <label for="deptCode" class="col-sm-3 control-label">科室代码</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="deptCode" name="Params">
+											    </div>
+											  </div>
+											  <div class="form-group">
+											    <label for="deptDesc" class="col-sm-3 control-label">科室名称</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="deptDesc" name="deptDesc">
+											    </div>
+											  </div>
+											  <div class="form-group">
+											    <label for="deptStatus" class="col-sm-3 control-label">状态</label>
+											    <div class="col-sm-9">
+											      <select class="form-control" id="deptStatus" name="deptStatus">
+											      	<option value="1" selected="selected">可用</option>
+											      	<option value="0">不可用</option>
+											      </select>
+											    </div>
+											  </div>
+											</form>
+									  </div>
+										<div class="panel-footer">
+											<button type="button" onclick="saveDept()" class="btn btn-info">保存</button>
+										</div>
+									</div>
+									
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">确认</h4>
+      </div>
+      <div class="modal-body">
+        确定要删除吗？
+      </div>
+      <div class="modal-footer">
+        
+        <button type="button" class="btn btn-danger" onclick="deleteDept()" data-dismiss="modal">删除</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+		<DHCMRQ:HEAD></DHCMRQ:HEAD>
+		<script type="text/javascript">
+			$(function(){
+				loadTable();
+				
+				//code值改变时，认为要新增记录，所以启动验证
+				$('#deptCode').on('input',function(){
+					$('#deptForm').bootstrapValidator('enableFieldValidators', 'Params', true);
+				})
+				
+	$('#deptForm').bootstrapValidator({
+		//live: 'disabled',
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            deptDesc: {
+                validators: {
+                    notEmpty: {
+                        message: '科室名不能为空'
+                    }
+                }
+            },
+            Params: {
+                message: 'The Code is not valid',
+                validators: {
+                    notEmpty: {
+                        message: '科室代码不能为空'
+                    },
+                    stringLength: {
+                        min: 3 ,
+                        max: 30,
+                        message: '科室代码要大于3位小于30位字符'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: '科室代码只能包含字母数字和下划线'
+                    },
+                    remote: {
+                        url: 'dhcmrq.service.csp?ClassName=DHCMRQ.Base.MRQDepartment&MethodName=CheckDeptCode',
+                        message: '科室代码已存在'
+                    }
+                }
+            }
+        }
+    });
+			})
+
+			function loadTable(){
+				$.ajax({
+						type: 'post',
+						url: 'dhcmrq.service.csp',
+						data: {ClassName:'DHCMRQ.Base.MRQDepartment',
+									 MethodName:'GetAllDept',
+									 Params:''
+						},
+						success: function (res) {
+							//console.log(res);
+							var dt = $('#deptTable').DataTable( {
+									data: JSON.parse(res),
+									columns: [
+												{ "data": "deptCode" },
+												{ "data": "deptDesc" },
+												{ "data": "deptUpdateDate" },
+												{ "data": "deptStatus" ,
+													"render": function ( data, type, full, meta ) {
+														if(full.deptStatus==1){
+															return '可用';
+														} else if(full.deptStatus==0){
+															return '不可用';
+														}
+															
+													}
+												},
+												{ "data": "oper" ,
+													"render": function ( data, type, full, meta ) {
+														return '<a class="link" href="#" onclick="deleteDept(\''+full.deptId+'\')">删除</a>'
+															
+													}
+												}
+										]
+							});
+
+							$('#deptTable tbody').on( 'click', 'tr', function () {
+									dt.$('tr.selected').removeClass('selected');
+									$(this).addClass('selected');
+									var rowData = dt.rows('.selected').data()[0];
+									for (var key in rowData) {
+										$('#'+key).val(rowData[key]);
+									}
+									
+									$('#deptForm').bootstrapValidator('enableFieldValidators', 'Params', false);
+
+							});
+		        }
+		    });
+			}
+			
+			function saveDept(){
+				//验证表单
+				$('#deptForm').bootstrapValidator('validate');
+				if(!$('#deptForm').data('bootstrapValidator').isValid()) return;
+				
+				$.ajax({
+		        	type: 'post',
+		        	url: 'dhcmrq.service.csp',
+		        	data: {ClassName:'DHCMRQ.Base.MRQDepartment',
+							 	   MethodName:'Update',
+							 	   Params:decodeURIComponent($('#deptForm').serialize().replace(/&.*?=/g,'^').replace(/^.*?=/g,''))
+					  },
+		        	success: function (res) {
+			        	//console.log(decodeURIComponent($('#userForm').serialize().replace(/&.*?=/g,'^').replace(/^.*?=/g,'')+'^'+flag))
+						//console.log(res);
+		          		loadTable()
+		          		msg('success','更新成功!',2000);
+		        	}
+		    	});
+			}
+
+			function deleteDept(deptId){
+				if(confirm('确定删除吗？')){
+					$.ajax({
+						type: 'post',
+						url: 'dhcmrq.service.csp',
+						data: {ClassName:'DHCMRQ.Base.MRQDepartment',
+									 MethodName:'DeleteById',
+									 Params:deptId
+						},
+						success: function (res) {
+							//loadTable();
+							location.reload();
+							msg('success','科室删除成功!',2000);
+						}
+					});
+				}
+			}
+		</script>
+	</body>
+</html>

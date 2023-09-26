@@ -1,0 +1,148 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csr:action>		<!--modify by wl 2019-12-13 WL0021 begin-->		
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+	}   
+    </SCRIPT>  
+</csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI> 
+<HISUI/>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+	s RowID=$Get(%request.Data("RowID",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s flag=$Get(%request.Data("flag",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("14",RowID),CurRole,Action)
+	
+	s SMEquipTypeDR=##class(web.DHCEQCommon).GetDefaultEquipType(1)
+	s SMEquipType=##class(web.DHCEQCommon).GetDefaultEquipType(2)
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s SMMoveType=$Get(%request.Data("SMMoveType",1))	//add by csj 20190125
+	i SMMoveType="" s SMMoveType="0"
+	s LocationOperMethod=##class(web.DHCEQCommon).GetSysInfo("201008") //add by zx 2019-06-20 BUG ZX0068
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s CancelOper=$Get(%request.Data("CancelOper",1))	//add by czf 20191211
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+</Script>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by zx 2019-05-05 界面首先加载loading ZX0063-->
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'转移申请单'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding:5px 0 10px 0;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<!--add by zx 2019-06-01 Bug ZX0066 元素位置变更-->
+							<div class="eq-table-td eq-table-label"><label id="cInStock" for="InStock">入库单</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="InStock" data-options="'component':'EM.L.GetInStockList'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSMMoveType_Desc" for="SMMoveType_Desc">转移类型</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" data-options="'component':'EM.L.GetMoveType'" id="SMMoveType_Desc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSMFromLocDR_CTLOCDesc" for="SMFromLocDR_CTLOCDesc">供给部门</label></div>
+							<div class="eq-table-td "><input class="hisui-validatebox" id="SMFromLocDR_CTLOCDesc"></div>
+							<div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a></div>
+							<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+							<div class="eq-table-td"><a id="BCancel" href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" data-options="stopAllEventOnDisabled:true">作废</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cSMStoreMoveNo" for="SMStoreMoveNo">转移单号</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="SMStoreMoveNo" disabled="true"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSMReciverDR_SSUSRName" for="SMReciverDR_SSUSRName">接收人</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="SMReciverDR_SSUSRName"></div><!--add by zx 2019-06-11 修改人员调用lookup-->
+							<div class="eq-table-td eq-table-label"><label id="cSMToLocDR_CTLOCDesc" for="SMToLocDR_CTLOCDesc">接收部门</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="SMToLocDR_CTLOCDesc"></div>
+							<div class="eq-table-td"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a></div>
+							<div class="eq-table-td">
+								<a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+								<a id="BApprove2" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+								<a id="BApprove3" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+							</div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cSMEquipTypeDR_ETDesc" for="SMEquipTypeDR_ETDesc">管理类组</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType'" id="SMEquipTypeDR_ETDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSMRemark" for="SMRemark">备注</label></div>
+							<div class="eq-table-td"><textarea id="SMRemark" class="textbox"></textarea></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<!--modify by lmm 2019-11-22 LMM0050-->
+							<div class="eq-table-td"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">退回</a></div>
+							<div class="eq-table-td"><a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">单据打印</a></div>
+							<div class="eq-table-td"><a id="BPrintBar" href="#" class="hisui-linkbutton" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">条码打印</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;">
+					 <table id="DHCEQStoreMove" class="hisui-datagrid" data-options="onClickRow:onClickRow"></table>
+					 <span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="SMRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="SMFromLocDR" value="">
+			<INPUT type="hidden" id="SMReciverDR" value="">
+			<INPUT type="hidden" id="SMToLocDR" value="">
+			<INPUT type="hidden" id="SMStatus" value="">
+			<INPUT type="hidden" id="SMEquipTypeDR" value="#(SMEquipTypeDR)#">
+			<INPUT type="hidden" id="SMEquipType" value="#(SMEquipType)#">
+			<INPUT type="hidden" id="SMStatCatDR" value="">
+			<INPUT type="hidden" id="SMMoveType" value="#(SMMoveType)#">
+			<INPUT type="hidden" id="SMStatCatDR" value="">
+			<INPUT type="hidden" id="SMJob" value="">
+			
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+			<INPUT type="hidden" id="flag" value=#(flag)#>
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="ApproveTypeCode" value="14">
+			<INPUT type="hidden" id="ApproveRoleDR" value="">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+			<input type="hidden" id="LocationOperMethod" value=#(LocationOperMethod)#> <!--add by zx 2019-06-20 BUG ZX0068-->
+			<INPUT type="hidden" id="SplitRowCode" value="#(SplitRowCode)#"> <!--add by czf 20190902-->
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-11 WL0010  -->
+			<INPUT type="hidden" id="CancelOper" value=#(CancelOper)#>
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
+	<script type="text/javascript" src="../scripts/dhceq/em/storemove.js"></script>
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbar.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/plat/printbarqrcode.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>  <!--add by wl 2019-11-01 WL008 删除上面的report,解决界面加载问题  -->
+
+</body>
+</html>

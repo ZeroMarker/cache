@@ -1,0 +1,80 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s id=$Get(%request.Data("id",1))
+	s dataTypeDr=$Get(%request.Data("dataTypeDr",1))
+	s fee=$Get(%request.Data("fee",1))
+	s intervalDr=$Get(%request.Data("intervalDr",1))
+	s itemDr=$Get(%request.Data("itemDr",1))
+	s operDr=$Get(%request.Data("operDr",1))
+	s receiverDr=$Get(%request.Data("receiverDr",1))
+	s remark=$Get(%request.Data("remark",1))
+	s servedDeptDr=$Get(%request.Data("servedDeptDr",1))
+	
+	s flag=$Get(%request.Data("flag",1))
+	s inType=$Get(%request.Data("inType",1))
+	s remark=$Get(%request.Data("remark",1))
+	s fee=$Get(%request.Data("fee",1))
+	s price=$Get(%request.Data("price",1))
+	s amount=$Get(%request.Data("amount",1))
+	s findType=$Get(%request.Data("findType",1)) 
+	s deptDr=$Get(%request.Data("deptDr",1)) 
+	s type=$Get(%request.Data("type",1)) 
+	s itemDr=$Get(%request.Data("itemDr",1)) 
+	s userCode=$Get(%request.Data("userCode",1))		//zjw 20160802
+	
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uBudgetData).ListRec(searchField, searchValue, sortField, sortDir, start, limit, intervalDr, deptDr, itemDr, type, findType)
+	
+	i action = "find" d
+	.w ##class(dhc.ca.cache.udata.uBudgetData).ListRec(searchField, searchValue, sortField, sortDir, start, limit, intervalDr, deptDr, itemDr, type, findType)
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uBudgetData).InsertRec(intervalDr, deptDr, itemDr, amount, price, fee, remark, type)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "del" d
+	.s result = ##class(dhc.ca.cache.udata.uBudgetData).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "delall" d
+	.s result = ##class(dhc.ca.cache.udata.uBudgetData).DelAllRec(intervalDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	//zjw 20160802-将项目冲销额根据当月各科室对应项目的收入比例拆解到各科室项目
+	i action = "ImportCXData" d
+	.s result = ##class(dhc.ca.cache.comm.DataLoad).ImportCXExamRec(intervalDr,userCode)	//检测是否有权操作或收入是否已对照
+	.i result = 0 d
+	..s result = ##class(dhc.ca.cache.comm.DataLoad).ImportCXDataRec(intervalDr,userCode)	//拆解冲销额
+	..i result = "OK" d
+	...w "{success:'true',info:'导入成功！'}"
+	..e  d
+	...w "{success:'false',info:'导入失败！'}"
+	.e  d
+	..w "{failure:'false',info:'"_result_"'}"
+	
+	
+</script>

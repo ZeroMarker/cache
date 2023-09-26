@@ -1,0 +1,54 @@
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Rowid = $Get(%request.Data("LocId",1))
+s ProLoc=$Get(%request.Data("ProLoc",1)) //add by myq 20141104
+s RecLoc=$Get(%request.Data("RecLoc",1)) //add by myq 20141104
+i Action = "Query" d
+	.w ##class(web.DHCST.RelLoc).GetRelLocDescByID(Start,Limit,Rowid)
+i Action = "Save" d
+	.S ProLoc=$Get(%request.Data("LocId",1))
+	.S Detail=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCST.RelLoc).SaveRelLoc(ProLoc,Detail)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Delete" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.RelLoc).Delete(rowid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+i Action = "GetRelLoc" d
+    .s Rowid=$Get(%request.Data("relid",1))
+    .s reltype=$Get(%request.Data("reltype",1))
+    .s locDesc=$Get(%request.Data("locDesc",1))
+	.w ##class(web.DHCST.RelLoc).GetRelLocDescByID(Start,Limit,Rowid,reltype,locDesc)
+i Action = "GetProRelLoc" d
+    .s Rowid=$Get(%request.Data("relid",1))
+    .s reltype=$Get(%request.Data("reltype",1))
+    .s locDesc=$Get(%request.Data("locDesc",1))
+	.w ##class(web.DHCST.RelLoc).GetProRelLocDescByID(Start,Limit,Rowid,reltype,locDesc)
+//--------------------------//add by myq 20141104
+i Action = "SaveInci" d
+	.s Detail=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCST.RelLoc).SaveRelLocInciDetail(ProLoc,RecLoc,Detail)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "QueryInciDetail" d
+	.w ##class(web.DHCST.RelLoc).GetRelLocInciDetail(Start,Limit,ProLoc,RecLoc)
+i Action = "DeleteInci" d
+	.S LreliRowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.RelLoc).DeleteInci(LreliRowid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+</SERVER>

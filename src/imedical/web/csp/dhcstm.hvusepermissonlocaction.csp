@@ -1,0 +1,60 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+   i ##Class(websys.SessionEvents).SessionExpired() q 1
+   q 1
+</csp:method>
+<csp:content charset="UTF-8">
+<script language="cache" runat="server">
+s Action=$Get(%request.Data("actiontype",1))
+s loginparams=$Get(%request.Data("loginparams",1))
+s PermLocId=$Get(%request.Data("PermLocId",1))
+
+///查询科室权限记录
+if Action="selectAll" d
+ .d ##class(web.DHCSTM.HVUsePermissonLoc).selectAll()
+ 
+//保存科室权限记录
+if Action="SavePerMLoc" d
+ .s DataStr=$Get(%request.Data("DataStr",1))
+ .s ^tmpli("DataStr")=DataStr
+ .s ret=##class(web.DHCSTM.HVUsePermissonLoc).SavePerMLoc(DataStr,loginparams)
+ .i +ret=0  d
+ ..w "{success:'true',info:'"_ret_"'}"
+ .e  d
+ ..w "{success:'false',info:'"_ret_"'}"
+ .
+
+//删除科室权限记录
+if Action="DeletePerMLoc" d
+ .s HUPLrowid=$Get(%request.Data("HUPLrowid",1))
+ .s ret=##class(web.DHCSTM.HVUsePermissonLoc).DeletePerMLoc(HUPLrowid)
+ .i +ret=0  d
+ ..w "{success:'true',info:'"_ret_"'}"
+ .e  d
+ ..w "{success:'false',info:'"_ret_"'}"
+ .
+
+//查询科室人员权限记录
+if Action="QueryPerLocUser" d
+ .d ##class(web.DHCSTM.HVUsePermissonLoc).QueryPerLocUser(PermLocId)
+
+//保存科室人员权限记录
+if Action="SavePerLocUser" d
+ .s datastr=$Get(%request.Data("data",1))
+ .s ret=##class(web.DHCSTM.HVUsePermissonLoc).SavePerLocUser(datastr,PermLocId,loginparams)
+ .i +ret=0  d
+ ..w "{success:'true',info:'"_ret_"'}"
+ .e  d
+ ..w "{success:'false',info:'"_ret_"'}"
+ .
+
+//删除科室人员权限记录
+if Action="deletePerLocUser" d
+ .s HUPLURowid=$Get(%request.Data("HUPLURowid",1))
+ .s ret=##class(web.DHCSTM.HVUsePermissonLoc).deletePerLocUser(HUPLURowid)
+ .i +ret=0  d
+ ..w "{success:'true',info:'"_ret_"'}"
+ .e  d
+ ..w "{success:'false',info:'"_ret_"'}"
+ .
+
+</script>

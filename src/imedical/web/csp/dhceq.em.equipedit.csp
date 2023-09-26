@@ -1,0 +1,218 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<body class="hisui-layout">
+	<script language=Cache runat=server>
+		s RowID=$Get(%request.Data("RowID",1))
+		s ModelOperMethod=##class(web.DHCEQCommon).GetSysInfo("201004")
+		s ManuFactoryOperMethod=##class(web.DHCEQCommon).GetSysInfo("201005")
+		s ProviderOperMethod=##class(web.DHCEQCommon).GetSysInfo("201006")
+		s LocationOperMethod=##class(web.DHCEQCommon).GetSysInfo("201008")
+	</script>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-panel" data-options="border:false" style="padding:10px;">
+			<div>
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-item">基本信息</div>
+					</div>
+				</div>
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQNo" for="EQNo">资产编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQName" for="EQName">设备名称</label></div> <!--add by zx 2019-03-14 ZX0061-->
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQName"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQItemDR_MIDesc" for="EQItemDR_MIDesc">设备项名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQItemDR_MIDesc" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQCountryDR_CTCOUDesc" for="EQCountryDR_CTCOUDesc">国别/地区</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Country'" id="EQCountryDR_CTCOUDesc"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQModelDR_MDesc" for="EQModelDR_MDesc">规格型号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Model'" id="EQModelDR_MDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQUnitDR_UOMDesc" for="EQUnitDR_UOMDesc">资产单位</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.UOM'" id="EQUnitDR_UOMDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQStatusDisplay" for="EQStatusDisplay">状态</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQStatusDisplay" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQHold10_EDesc" for="EQHold10_EDesc">经费来源</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Expenditures'" id="EQHold10_EDesc"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQManuFactoryDR_MFName" for="EQManuFactoryDR_MFName">生产厂商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.ManuFacturer'" id="EQManuFactoryDR_MFName"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQLeaveFactoryNo" for="EQLeaveFactoryNo">出厂编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQLeaveFactoryNo"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQLeaveFactoryDate" for="EQLeaveFactoryDate">出厂日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EQLeaveFactoryDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQPurposeTypeDR_PTDesc" for="EQPurposeTypeDR_PTDesc">用途</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.PurposeType'" id="EQPurposeTypeDR_PTDesc"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQEquipTypeDR_ETDesc" for="EQEquipTypeDR_ETDesc">类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQEquipTypeDR_ETDesc" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQStatCatDR_SCDesc" for="EQStatCatDR_SCDesc">类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQStatCatDR_SCDesc" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQEquiCatDR_ECDesc" for="EQEquiCatDR_ECDesc">资产分类</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.EquipCat'" id="EQEquiCatDR_ECDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQFileNo" for="EQFileNo">档案号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQFileNo"></div>
+					</div>
+					<!--add hly 20200311 bug:1191120-->
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQOldNo" for="EQOldNo">财政编码</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQOldNo"></div>
+					</div>
+				</div>
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-item">购置信息</div>
+					</div>
+				</div>
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQOriginDR_ODesc" for="EQOriginDR_ODesc">资产来源</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Origin'" id="EQOriginDR_ODesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQBuyTypeDR_BTDesc" for="EQBuyTypeDR_BTDesc">采购方式</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.BuyType'" id="EQBuyTypeDR_BTDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQPurchaseTypeDR_PTDesc" for="EQPurchaseTypeDR_PTDesc">申购类别</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.PurchaseType'" id="EQPurchaseTypeDR_PTDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQABCType" for="EQABCType">ABC分类</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQABCType"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQProviderDR_VName" for="EQProviderDR_VName">供货商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="EQProviderDR_VName"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQProviderHandler" for="EQProviderHandler">供方经办人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQProviderHandler"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQProviderTel" for="EQProviderTel">联系方式</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQProviderTel"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQGuaranteePeriodNum" for="EQGuaranteePeriodNum">保修期(月)</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQGuaranteePeriodNum"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQOriginalFee" for="EQOriginalFee">资产原值</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="precision:2,decimalSeparator:'.'" id="EQOriginalFee" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQNetFee" for="EQNetFee">净值</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="precision:2,decimalSeparator:'.'" id="EQNetFee" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQContractNo" for="EQContractNo">合同号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" type="text" id="EQContractNo"></div>
+						<!-- Mozy0247	1190758	2020-02-17 增加凭证号并与档案号更换位置-->
+						<div class="eq-table-td eq-table-label"><label id="cEQAccountNo" for="EQAccountNo">凭证号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQAccountNo"></div>
+					</div>
+				</div>
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-item">使用信息和其他信息</div>
+					</div>
+				</div>
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQStoreLocDR_CTLOCDesc" for="EQStoreLocDR_CTLOCDesc">库房</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQStoreLocDR_CTLOCDesc" disabled="true"></div>
+						<!--Modify by zx 2020-03-31 元素宽度不一致加textbox控制 BUG ZX0082-->
+						<div class="eq-table-td eq-table-label"><label id="cEQLocationDR_LDesc" for="EQLocationDR_LDesc">存放地点</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Locaton'" id="EQLocationDR_LDesc"></div>
+						<!--Modify by zx 2020-03-31 元素宽度不一致加textbox控制 BUG ZX0082-->
+						<div class="eq-table-td eq-table-label"><label id="cEQKeeperDR_SSUSRName" for="EQKeeperDR_SSUSRName">保管人</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'" id="EQKeeperDR_SSUSRName"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQRentStatus" for="EQRentStatus">出租状态</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQRentStatus" disabled="true"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQUseLocDR_CTLOCDesc" for="EQUseLocDR_CTLOCDesc">使用部门</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQUseLocDR_CTLOCDesc" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQRegistrationNo" for="EQRegistrationNo">器械注册证</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQRegistrationNo"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQStartDate" for="EQStartDate">启用日期</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-datebox textbox" id="EQStartDate" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQRentLocDR_CTLOCDesc" for="EQRentLocDR_CTLOCDesc">租借部门</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQRentLocDR_CTLOCDesc" disabled="true"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQLimitYearsNum" for="EQLimitYearsNum">使用年限</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" data-options="precision:2,decimalSeparator:'.'" id="EQLimitYearsNum"></div>
+						<!--Modify by zx 2020-03-31 元素宽度不一致加textbox控制 BUG ZX0082-->
+						<div class="eq-table-td eq-table-label"><label id="cEQDepreMethodDR_DMDesc" for="EQDepreMethodDR_DMDesc">折旧方法</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.DepreMethod'" id="EQDepreMethodDR_DMDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQAddDepreMonths" for="EQAddDepreMonths">调整月数</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQAddDepreMonths" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQDepreTotalFee" for="EQDepreTotalFee">累计折旧</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" data-options="precision:2,decimalSeparator:'.'" id="EQDepreTotalFee" disabled="true"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQAdvanceDisFlagDesc" for="EQAdvanceDisFlagDesc">异常状态</label></div><!--add by Mozy 2019-10-18-->
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQAdvanceDisFlagDesc" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQUnusualRemark" for="EQUnusualRemark">异常状态备注</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQUnusualRemark" disabled="true"></div>
+						<!--div class="eq-table-td eq-table-label"><label id="cEQHold5" for="EQHold5">中医标志</label></div>
+						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQHold5"></div-->
+						<div class="eq-table-td eq-table-label"><label id="cEQCommonageFlag" for="EQCommonageFlag">共用</label></div>
+						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQCommonageFlag"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQRemark" for="EQRemark">备注</label></div>
+						<div class="eq-table-td"><textarea id="EQRemark" style="width:150px"></textarea></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td"></div>
+						<!--div class="eq-table-td eq-table-label"><label id="cEQComputerFlag" for="EQComputerFlag">计量标志</label></div>
+						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQComputerFlag"></div-->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" class="footer">
+		<div class="footer-box">
+			<!--add by zx 20190704 增加分摊设置处理-->
+			<div style="width:50%;float:left;"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+			<div style="width:50%;float:left;"><a id="BDepreAllot" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-batch-cfg',stopAllEventOnDisabled:true">分摊设置</a></div>
+		</div>
+	</div>
+
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="EQRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="EQModelDR">
+			<INPUT type="hidden" id="EQEquiCatDR">
+			<INPUT type="hidden" id="EQUnitDR">
+			<INPUT type="hidden" id="EQItemDR">
+			<INPUT type="hidden" id="EQHold10">
+			<INPUT type="hidden" id="EQUseLocDR">
+			<INPUT type="hidden" id="EQOriginDR">
+			<INPUT type="hidden" id="EQBuyTypeDR">
+			<INPUT type="hidden" id="EQProviderDR">
+			<INPUT type="hidden" id="EQManuFactoryDR">
+			<INPUT type="hidden" id="EQDepreMethodDR">
+			<INPUT type="hidden" id="EQManageUserDR">
+			<INPUT type="hidden" id="EQEquipTypeDR">
+			<INPUT type="hidden" id="EQPurchaseTypeDR">
+			<INPUT type="hidden" id="EQPurposeTypeDR">
+			<INPUT type="hidden" id="EQKeeperDR">
+			<INPUT type="hidden" id="EQStoreLocDR">
+			<INPUT type="hidden" id="EQLocationDR">
+			<INPUT type="hidden" id="EQStatCatDR">
+			<INPUT type="hidden" id="EQRentLocDR">
+			<INPUT type="hidden" id="EQStatus">
+			<INPUT type="hidden" id="EQCountryDR">
+			<INPUT type="hidden" id="EQAdvanceDisFlag">	<!--add by Mozy 2019-10-18-->
+		</form>
+	</div>
+	<input type="hidden" id="ModelOperMethod" value=#(ModelOperMethod)#>
+	<input type="hidden" id="ProviderOperMethod" value=#(ProviderOperMethod)#>
+	<input type="hidden" id="ManuFactoryOperMethod" value=#(ManuFactoryOperMethod)#>
+	<input type="hidden" id="LocationOperMethod" value=#(LocationOperMethod)#>
+	<script type='text/javascript' src='../scripts/dhceq/em/equipedit.js'></script>
+</body>
+</html>

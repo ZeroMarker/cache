@@ -1,0 +1,80 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n SessType,Message,sess,SessDesc,SessTypeid,LocDesc,ResDesc,SessCode,noSched
+	s (SessType,Message,sess,SessDesc,SessTypeid,LocDesc,ResDesc,SessCode,noSched)=""
+ 	s obj=##Class(websys.Component).OpenName("RBAppointment.ServiceList")
+ 	i obj d obj.LoadTrans(),obj.%Close()
+ 	s blank=$p(t("NoSTDef"),"^",1)
+	s Location=%request.Get("Location")
+	s Resource=%request.Get("Resource")
+	s Res=%request.Get("ResId")
+	s Date=%request.Get("Date")
+	s Time=%request.Get("Time")
+	s sessId=%request.Get("sessId")
+	i sessId'="" s sess=sessId
+	s GetMessage=%request.Get("GetMessage")
+	s cDate=##Class(websys.Conversions).DateHtmlToLogical(Date)
+	i GetMessage=1 {
+		&sql(SELECT SOV_Message INTO :Message FROM SQLUser.RB_ServiceOverride WHERE SOV_RBSession_DR=:sessId AND SOV_Date=:cDate)
+		s Message=##Class(websys.Conversions).ListLogicalToHtml(Message,"\n")
+		s SessType="M^^^^"_Message
+		s SessTypeid=$p(^RB("RES",+sessId,"DATE",$p(sessId,"||",2),"SESS",$p(sessId,"||",3)),"^",9)
+		i SessTypeid s SessCode=$p(^RBC("SESS",SessTypeid),"^",1)
+		i SessCode'="" s SessType=SessType_"^"_SessCode
+	} else {
+		;s SessType=##Class(web.RBResEffDateSession).GetSessionType(Location,Resource,Date,Time)
+		s cDate=##Class(websys.Conversions).DateHtmlToLogical(Date)
+		s cTime=##Class(websys.Conversions).TimeHtmlToLogical(Time)
+		&sql(select COUNT(AS_RowId) into :noSched from RB_ApptSchedule where AS_RES_ParRef=:Res and AS_Date=:cDate and AS_SessStartTime=:cTime)
+		i noSched<2,sessId=""{
+			s row=0 f  s row=$o(^RBAS(Res,0,"DateSTime",cDate,cTime,row)) q:row=""  d
+			. s sess=$p($g(^RBAS(Res,row)),"^",12)
+			;BR 58082 - This If statment is for if they enter a time which is inbetween slots ie 10:00 and 10:30 slots, 10:15 is entered. We still want to find what
+			;session that overbooking is being entered into.
+			i sess="" {
+				s prevTime=""
+				s found=0
+				s nextTime=0 f  s nextTime=$o(^RBAS(Res,0,"DateSTime",cDate,nextTime)) q:nextTime=""  q:found=1  d
+				.i prevTime<cTime,nextTime>cTime d
+				..s row=0 f  s row=$o(^RBAS(Res,0,"DateSTime",cDate,nextTime,row)) q:row=""  d
+				...s sess=$p($g(^RBAS(Res,row)),"^",12)
+				...s found=1
+				.s prevTime=nextTime
+			}
+		}
+		i sess'="" { 
+			&sql(SELECT SOV_Message INTO :Message FROM SQLUser.RB_ServiceOverride WHERE SOV_RBSession_DR=:sess AND SOV_Date=:cDate)
+			i Message'="" s Message=##Class(websys.Conversions).ListLogicalToHtml(Message,"\n")
+			s SessTypeid=$p(^RB("RES",+sess,"DATE",$p(sess,"||",2),"SESS",$p(sess,"||",3)),"^",9)
+			i SessTypeid {
+				s SessDesc=$p(^RBC("SESS",SessTypeid),"^",2)
+				s SessCode=$p(^RBC("SESS",SessTypeid),"^",1)
+			}
+			i SessDesc="" s SessDesc=blank
+			s LocDesc=$p(^CTLOC(+^RB("RES",+sess)),"^",2)
+			s ResDesc=$p(^RB("RES",+sess),"^",17)
+			s SessType=SessDesc_"^"_LocDesc_"^"_ResDesc_"^"_sess_"^"_Message_"^"_SessCode
+		}
+	}
+	s DOW=cDate+3#7+1
+	i SessType'="" s SessType=SessType_"^"_DOW_"^"_noSched
+	e  s SessType=SessType_"^^^^^^"_DOW_"^"_noSched
+</SERVER>
+<SCRIPT language=javascript>
+	top.frames["TRAK_main"].frames["RBServList"].SetSessType('#(SessType)#');
+</SCRIPT>
+</BODY>
+</HTML>

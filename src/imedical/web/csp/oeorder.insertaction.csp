@@ -1,0 +1,59 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+
+ s (ActionItemString,ARCIMDesc,DelActionString,DelStr,ActionStrLen)=""
+ 
+ s ActionItemString=%request.Get("ActionItemString")
+ s DelActionString=%request.Get("DelActionString")
+ 
+ ;s ^zpeterc($zn,"ActionItemString")=ActionItemString_"()()()"_DelActionString
+
+ w "<script>"
+
+ i ActionItemString'="" {
+	s ^TMP("WEB","Action",%session.SessionId)="Y" 	
+	w "if(window.opener) { "
+	s ActionStrLen=$l(ActionItemString,"^")
+ 	f ind=1:1:ActionStrLen  d
+	. s (CurrActionItemStr,CurrARCIMDesc)=""
+	. s CurrActionItemStr=$p($g(ActionItemString),"^",ind)
+	. q:CurrActionItemStr=""
+	. s CurrARCIMDesc=$p($g(^ARCIM(+CurrActionItemStr,$p(CurrActionItemStr,"||",2),1)),"^",2)
+	. w "	window.opener.AddItemToList('','"_CurrActionItemStr_"','"_CurrARCIMDesc_"');"
+	w "	window.opener.SelectAllPreUpdateItem();"
+	w "	window.opener.UpdateOnAddClick(0,0,0);"
+ 	w "	}"
+ }
+
+ i DelActionString'="" {
+	w "if(window.opener) { "
+	s DelActionStrLen=$l(DelActionString,"^")
+ 	f ind=1:1:DelActionStrLen  d
+	. s CurrDel=""
+	. s CurrDel=$p($g(DelActionString),"^",ind)
+	. i CurrDel'="" w "	window.opener.DeleteOrderByID('"_CurrDel_"');"
+	w "	window.close();"
+	w "	}"
+ 
+ }
+ w "	window.close();"
+ w "</script>"
+ q
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,352 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!--本组css文件-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<style>
+		/*--解决报表列维护表头底线重叠问题--*/
+		.my-interface #rptColCfgDig div.panel-header.panel-header-gray{
+			border-bottom:none;
+		}
+		/*--解决共有明细维护表头底线重叠问题--*/
+		.my-interface #rptColDetailCfgDig div.panel-header.panel-header-gray{
+			border-bottom:none;
+		}
+		/*--解决私有明细维护表头底线重叠问题--*/
+		.my-interface #rptPrivateDetailCfgDig div.panel-header.panel-header-gray{
+			border-bottom:none;
+		}
+		/*--明细上下左右图标居中--*/
+		.my-interface .moveImgeCenter{
+			position:absolute;
+			top:50%;
+			left:50%;
+			margin-top:-80px;
+			margin-left:-44px;
+		}
+		/*--明细按钮上下间距--*/
+		.my-interface .moveImgeCenter .hisui-linkbutton{
+			margin-bottom:10px;
+		}
+		/*--设置弹出框toolbar间距--*/
+		.my-interface #rptColCfgDig div.datagrid div.datagrid-toolbar{
+			padding:1px 2px;
+		}
+		.my-interface #rptColDetailCfgDig div.datagrid div.datagrid-toolbar{
+			padding:1px 2px;
+		}
+		.my-interface #rptPrivateDetailCfgDig div.datagrid div.datagrid-toolbar{
+			padding:1px 2px;
+		}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface">
+	
+	
+	
+	<!--报表项表格-->
+	<div data-options="region:'center'" style = "fit:true;padding:10px 5px 10px 10px;border:none">
+		<table id="rptCfgTable" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'" title="报表项表格">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:100,hidden:true">ID</th>
+					<th data-options="field:'rptCode',width:160">编码</th>
+					<th data-options="field:'rptDesc',width:160">描述</th>
+					<th data-options="field:'rptDim',width:160">维度</th>
+					<th data-options="field:'rptDimPro',width:160,formatter:formatCellTooltip">维度属性</th>
+					<th data-options="field:'rptModuleCode',width:160">模块报表代码</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	
+	<!--报表列表格-->
+	<div  data-options="region:'east',collapsed:false,collapsible:false" style="width:540px;padding:10px 10px 10px 5px;border:none">
+		<table id="rptColumnTable" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'" title="报表列表格">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:100,hidden:true">ID</th>
+  					<th data-options="field:'colCode',width:100">编码</th>
+  					<th data-options="field:'colDesc',width:100">描述</th>
+					<!--th data-options="field:'colViewDetail',width:100,formatter:linkViewDetailGrid,align:'center'">产看明细</th-->
+					<th data-options="field:'colConfigDetail',width:100,formatter:linkPrivateDetailGrid,align:'center'">维护明细</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<!--报表toolbar--->
+  	<div id="rptToobar" class="searchboxRight toolbarsearchbox myToolBar" style="display:none">	
+    	<input id="searchText" class="hisui-searchbox" data-options="prompt:'检索'" style="width:180px">
+    
+    	<a href="javascript:void(0)" id="rptAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		<a href="javascript:void(0)" id="rptModifyButton" class="hisui-linkbutton" data-options="iconCls:'icon-write-order'" plain="true">修改</a>
+		<a href="javascript:void(0)" id="rptDeleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+		<a href="javascript:void(0)" id="rptAllDetailButton" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg'" plain="true">共有明细维护</a>
+  	</div>
+	
+	
+	<!--报表列toolbar-->
+  	<div id="rptColToobar" style="display:none">	
+		<a href="javascript:void(0)" id="rptColConfigButton" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',disabled:false" plain="true">报表列维护</a>
+  	</div>
+	
+	
+	
+	
+	<!--报表列维护弹出框-->
+	<div id = "rptColCfgDig" title="报表列维护" style="width:1100px;height:450px;padding:10px;background: #fff;display:none;">
+		<div class = "hisui-layout" fit="true">
+			<div data-options = "region:'west',headerCls:'panel-header-gray',collapsible:false" style="width:510px;border:none;">
+				<table id = "optionalRptColGrid" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'" title="待选报表列">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'rptItemCode',width:100">编码</th>
+							<th data-options="field:'rptItemDesc',width:100">描述</th>
+							<th data-options="field:'rptItemType',width:100,hidden:true">类型</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			
+			<div data-options="region:'center',headerCls:'panel-header-gray'" style="border:none;">
+				<!--img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_right.png"  id="moveRight" class="moveRight" alt="移入" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_left.png"  id="moveLeft" class="moveLeft" alt="移出" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_top.png"  id="moveTop" class="moveLeft" alt="上移" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_bottom.png"  id="moveBottom" class="moveLeft" alt="下移" /-->
+				<div class="moveImgeCenter">
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveRight" data-options="iconCls:'icon-w-arrow-right'">移入</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveLeft" data-options="iconCls:'icon-w-arrow-left'">移出</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveTop" data-options="iconCls:'icon-w-arrow-up'">上移</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveBottom" data-options="iconCls:'icon-w-arrow-down'">下移</a>
+				</div>				
+			</div>
+			
+			
+			
+			<div data-options = "region:'east',headerCls:'panel-header-gray',collapsible:false" style="width:460px;border:none;">
+				<table id = "selectedRptGrid" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'"  title="已选报表列">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'selectedCode',width:100">编码</th>
+							<th data-options="field:'selectedDesc',width:100">描述</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	
+	
+	<!--共有明细维护弹出框-->
+	<div id = "rptColDetailCfgDig" title="共有明细维护" style="width:1100px;height:450px;padding:10px;background: #fff;display:none;">
+		<div class = "hisui-layout" fit="true">
+			<div data-options = "region:'west',headerCls:'panel-header-gray',collapsible:false" style="width:510px;border:none;">
+				<table id = "optionalRptColDetailGrid" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'" title="待选明细">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'optionalCode',width:100">编码</th>
+							<th data-options="field:'optionalDesc',width:100">描述</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			
+			<div data-options="region:'center',headerCls:'panel-header-gray'" style="border:none;">
+				<div class="moveImgeCenter">
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveRightDetail" data-options="iconCls:'icon-w-arrow-right'">移入</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveLeftDetail" data-options="iconCls:'icon-w-arrow-left'">移出</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveDetailTop" data-options="iconCls:'icon-w-arrow-up'">上移</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveDetailBottom" data-options="iconCls:'icon-w-arrow-down'">下移</a>
+				</div>	
+				<!--img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_right.png"  id="moveRightDetail" class="moveRight" alt="移入" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_left.png"  id="moveLeftDetail" class="moveLeft" alt="移出" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_top.png"  id="moveDetailTop" class="moveLeft" alt="上移" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_bottom.png"  id="moveDetailBottom" class="moveLeft" alt="下移" /-->
+			</div>
+			
+			
+			
+			<div data-options = "region:'east',headerCls:'panel-header-gray',collapsible:false" style="width:460px;border:none;">
+				<table id = "selectedRptColDetailGrid" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'"  title="已选明细">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'selectedCode',width:100">编码</th>
+							<th data-options="field:'selectedDesc',width:100">描述</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	<!--私有明细维护弹出框-->
+	<div id = "rptPrivateDetailCfgDig" title="私有明细维护" style="width:1100px;height:450px;padding:10px;background: #fff;display:none;">
+		<div class = "hisui-layout" fit="true">
+			<div data-options = "region:'west',headerCls:'panel-header-gray',collapsible:false" style="width:510px;border:none;">
+				<table id = "optionalPrivateDetailGrid" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'" title="待选明细">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'optionalCode',width:100">编码</th>
+							<th data-options="field:'optionalDesc',width:100">描述</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			
+			<div data-options="region:'center',headerCls:'panel-header-gray'" style="border:none;">
+				<!--img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_right.png"  id="moveRightPrivateDetail" class="moveRight" alt="移入" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_left.png"  id="moveLeftPrivateDetail" class="moveLeft" alt="移出" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_top.png"  id="moveDetailPrivateTop" class="moveLeft" alt="上移" />
+				<img  src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_bottom.png"  id="moveDetailPrivateBottom" class="moveLeft" alt="下移" /-->
+				<div class="moveImgeCenter">
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveRightPrivateDetail" data-options="iconCls:'icon-w-arrow-right'">移入</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveLeftPrivateDetail" data-options="iconCls:'icon-w-arrow-left'">移出</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveDetailPrivateTop" data-options="iconCls:'icon-w-arrow-up'">上移</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" id="moveDetailPrivateBottom" data-options="iconCls:'icon-w-arrow-down'">下移</a>
+				</div>	
+			</div>
+			
+			
+			
+			<div data-options = "region:'east',headerCls:'panel-header-gray',collapsible:false" style="width:460px;border:none;">
+				<table id = "selectedPrivateDetailGrid" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'"  title="已选明细">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:100,hidden:true">ID</th>
+							<th data-options="field:'selectedCode',width:100">编码</th>
+							<th data-options="field:'selectedDesc',width:100">描述</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	<!--明细查看弹出框-->
+	<div id = "viewRptColDetailCfgDig" title="明细展示" style="width:600px;height:450px;padding:10px;background: #fff;display:none;">
+		<table id = "viewRptColDetailGrid" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true">
+			<thead>
+				<tr>
+					<th data-options="field:'detailCode',width:100">编码</th>
+					<th data-options="field:'detailDesc',width:100">描述</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<!--报表新增-->
+  	<div id="rptAddDialog" style="width:340px;display:none" title="报表项新增">
+  		<form id="rptAddForm" class="myFormShow" style="fit:true">
+			<div>
+				<label for="rptAddDim">维度</label>
+				<select id="rptAddDim" class="hisui-combobox" mode="remote" style="width:227px" data-options="required:true,editable:false,panelHeight:62">
+					<option value="CTLOC">CTLOC</option>
+					<option value="WARD">WARD</option>
+				</select>
+			</div>
+			<div>
+				<label for="rptAddDimPro">维度属性</label>
+				<select id="rptAddDimPro" class="hisui-combogrid" style="width:227px" data-options="
+					required:true,
+					editable:false,
+					panelWidth:306,
+					idField:'code',
+					textField:'code',
+					multiple:true,
+					url:$URL,
+					method:'get',
+					columns:[[
+						{field:'ck',checkbox:true},
+						{field:'code',title:'编码',width:80},
+						{field:'desc',title:'描述',width:80}
+					]],
+					fitColumns:true
+					">
+				</select>
+			</div>
+			<div>
+				<label for="rptAddCode">大组编码</label>
+				<input class="hisui-validatebox" type="text" id="rptAddCode" data-options="required:true,validType:'isCode'" style="width:220px"/>
+			</div>
+			<div>
+				<label for="rptAddDesc">大组描述</label>
+				<input class="hisui-validatebox" type="text" id="rptAddDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+		</form><!--配置报表项信息表单结束-->
+  	</div>
+	
+	
+	
+	<!--报表修改-->
+  	<div id="rptModifyDialog" style="width:340px;display:none" title="报表项修改">
+  		<form id="rptModifyForm" class="myFormShow" style="fit:true">
+			<div>
+				<label for="rptModifyCode">报表编码</label>
+				<input class="hisui-validatebox" type="text" id="rptModifyCode" data-options="required:true,validType:'isCode'" disabled='true' style="width:220px"/>
+			</div>
+			<div>
+				<label for="rptModifyDim">维度</label>
+				<select id="rptModifyDim" class="hisui-combobox" mode="remote" style="width:227px" data-options="required:true,editable:false,disabled:true">
+					<option value="CTLOC">CTLOC</option>
+					<option value="WARD">WARD</option>
+				</select>
+			</div>
+			<div>
+				<label for="rptModifyDimPro">维度属性</label>
+				<select id="rptModifyDimPro" class="hisui-combogrid" style="width:227px" data-options="
+					required:true,
+					editable:false,
+					panelWidth:306,
+					idField:'code',
+					textField:'code',
+					multiple:true,
+					url:$URL,
+					method:'get',
+					columns:[[
+						{field:'ck',checkbox:true},
+						{field:'code',title:'编码',width:80},
+						{field:'desc',title:'描述',width:80}
+					]],
+					fitColumns:true
+					">
+				</select>
+			</div>
+			<div>
+				<label for="rptModifyDesc">报表描述</label>
+				<input class="hisui-validatebox" type="text" id="rptModifyDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+		</form><!--配置报表项信息表单结束-->
+  	</div>
+	
+	
+	<!--引入js文件JSURL-->
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/mripday/mripdayrptcfg.js"></script>
+	<script type="text/javascript" src="../scripts/dhcwl/v1/kpi/util/Excel.js"></script>
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>

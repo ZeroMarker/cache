@@ -1,0 +1,211 @@
+<HTML>
+<HEAD>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<TITLE>权限审批</TITLE>	
+	
+	<script language="cache" runat="server">
+		s csflag = $Get(%request.Data("CSFlag",1),"")
+		if (csflag = "Y")
+		{
+			s appointUserID = $Get(%request.Data("UserID",1),"")
+		}
+		else
+		{
+  			s appointUserID = %session.Get("LOGON.USERID")
+			//s appointUserLoc = %session.Get("LOGON.CTLOCID")
+			//s appointUserSSGroupID = %session.Get("LOGON.GROUPID")	
+		}
+		s systemName = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("SystemName")
+        s systemVersion = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("Version")
+	</script>
+	<script type="text/javascript">
+		var appointUserID = '#(appointUserID)#';
+		var systemName = '#(systemName)#';
+        var systemVersion = '#(systemVersion)#';
+		if (appointUserID == "")
+		{
+			appointUserID = '2776';
+		}
+	</script>
+	
+	<script src="../scripts/epr/JQuery/jquery-1.8.0.min.js"></script>
+	<script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+	<script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+    
+	<script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+	
+	<script src="../scripts/epr/js/FS.Authorization.js"></script>
+	
+</HEAD>
+
+<body class="easyui-layout" data-options="fit:true">
+	<div data-options="region:'north'" class="easyui-panel" style="padding:3px;height:37px;border:0">
+		<a href="#" id="advancedSecurityBtn" class="easyui-linkbutton" iconCls="icon-edit" data-options="plain:true">特殊病历维护</a>
+		<a href="#" id="viewHistorySummaryBtn" class="easyui-linkbutton" iconCls="icon-tip" data-options="plain:true">浏览记录汇总</a>
+		<a href="#" id="authorizationSummaryBtn" class="easyui-linkbutton" iconCls="icon-tip" data-options="plain:true">授权记录汇总</a>
+	</div>
+	<div data-options="region:'west'"  style="width:500px;border:0">
+		<div id="authorizationListTableTBar" style="padding:5px;height:115">	
+			<div style="margin:5px">
+				<select id="inputType" name="inputType" style="width:100px;height:20px;"></select>
+				<select id="inputSpan" name="inputSpan" style="width:100px;height:20px;"></select>
+			</div>
+			<div style="margin:5px">
+ 				<input id="inputDateStart" class="easyui-datebox" />
+ 				<input id="inputDateEnd" class="easyui-datebox" />
+			</div>	
+			<div style="margin:5px">
+				<a href="#" id="searchBtn" class="easyui-linkbutton" iconCls="icon-search">查询</a>
+				<a href="#" id="resetBtn" class="easyui-linkbutton" iconCls="icon-reload">清空条件</a>
+			</div>	
+			<div style="margin:5px">
+				<a href="#" id="assignRoleBtn" class="easyui-linkbutton" iconCls="icon-add">分配选定角色</a>
+				<a href="#" id="rejectBtn" class="easyui-linkbutton" iconCls="icon-no">拒绝申请</a>
+				<a href="#" id="cancelBtn" class="easyui-linkbutton" iconCls="icon-undo">提前结束</a>
+			</div>		
+		</div>
+		<table id="authorizationListTable" data-options="fit:true"></table>
+	</div>
+	<div data-options="region:'center'" style="border:0">
+		<div id="roleListTableTBar" style="padding:5px;height:90">
+			<div style="margin:5px">
+				角色名称:<input id="inputRoleName" class="easyui-textbox" type="text" style="width:100px;height:20px;" />
+				角色代码:<input id="inputRoleCode" class="easyui-textbox" type="text" style="width:100px;height:20px;" />
+				角色描述:<input id="inputRoleDesc" class="easyui-textbox" type="text" style="width:100px;height:20px;" />
+			</div>
+			<div style="margin:5px">
+				<a href="#" id="roleAddBtn" class="easyui-linkbutton" iconCls="icon-add">新增</a>
+				<a href="#" id="roleSaveBtn" class="easyui-linkbutton" iconCls="icon-save">保存</a>
+			</div>
+			<div style="margin:5px">
+				<a href="#" id="addItemBtn" class="easyui-linkbutton" iconCls="icon-add">添加/修改角色权限内容</a>
+				<a href="#" id="defaultRoleSSGroupBtn" class="easyui-linkbutton" iconCls="icon-add">设定安全组的默认角色</a>
+				<a href="#" id="defaultRoleBtn" class="easyui-linkbutton" iconCls="icon-add">设定默认角色</a>
+			</div>
+		</div>
+		<table id="roleListTable" data-options="fit:true"></table>
+	</div>
+	<div data-options="region:'east'" style="width:500px;border:0">
+		<table id="roleItemDisplayTable" data-options="fit:true"></table>
+	</div>
+	<div data-options="region:'south',border:false" style="height:20px;">
+        <div id="systemDesc" style="float:right;padding:0 10px;font-size:13px;"></div>
+    </div>
+	<div id="addWin" style="width:1000px;height:600px;padding:10px">
+    	<div class="easyui-layout" data-options="fit:true">    
+        	<div data-options="region:'center'">  
+    			<div id="itemListTableTBar" style="padding:5px;height:50">
+					<div style="margin:5px">
+						隐私级别:<select id="inputPrivacyLevel" name="inputPrivacyLevel" style="width:100px;height:20px;"></select>
+						操作类别:<select id="inputOperationType" name="inputOperationType" style="width:100px;height:20px;"></select>
+					</div>
+					<div style="margin:5px">
+						<a href="#" id="itemAddBtn" class="easyui-linkbutton" iconCls="icon-add">添加</a>
+					</div>
+				</div>
+					<table id="itemListTable" data-options="fit:true"></table>
+        		</div>
+        		<div data-options="region:'east'" style="width:500">  
+    				<div id="roleItemTableTBar" style="padding:5px;height:50">
+						<div style="margin:5px">
+							<a href="#" id="itemDeleteBtn" class="easyui-linkbutton" iconCls="icon-remove">移除</a>
+							<a href="#" id="itemSaveBtn" class="easyui-linkbutton" iconCls="icon-save">保存</a>	
+						</div>
+						<div style="margin:5px">
+							<a href="#" id="itemUpBtn" class="easyui-linkbutton">上移</a>
+							<a href="#" id="itemDownBtn" class="easyui-linkbutton">下移</a>
+						</div>
+					</div>
+					<table id="roleItemTable" data-options="fit:true"></table>
+        		</div>
+        	</div>
+        </div>
+    </div>
+    <div id="rejectDialog" class="easyui-dialog" style="width:400px;height:200px">
+    	<div style="margin:5px">
+    		<div style="margin:20px 0;"></div>
+    		<p>请填写拒绝或者取消的原因:</p>
+			<input id="inputReason" class="easyui-textbox" data-options="multiline:true" style="width:350px;height:60px">
+		</div>
+	</div>
+	<div id="addDefaultRoleDialog" class="easyui-dialog" style="width:250px;height:400px">
+	    <div class="easyui-layout" data-options="fit:true">    
+	        <div data-options="region:'center'">  
+				<div id="addDefaultRoleTBar" style="padding:5px;height:20">
+					<input id="inputAddDefaultRoleFilter" class="easyui-searchbox" style="width:200px;height:20px;" />
+				</div>
+				<table id="addDefaultRoleTable" data-options="fit:true"></table>
+			</div>
+		</div>
+	</div>
+	<div id="advancedSecurityWin" style="width:1000px;height:600px;padding:10px">
+    	<div class="easyui-layout" data-options="fit:true">    
+        	<div data-options="region:'north'" style="height:250">   
+				<div id="patientListTableTBar" style="padding:5px;height:50">	
+					<div>
+						患者姓名:<input id="inputPatientName" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者登记号:<input id="inputPatientRegNo" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者就诊号:<input id="inputPatientEpisodeID" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者病人号:<input id="inputPatientID" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者病案号:<input id="inputMedRecordID" class="easyui-textbox" style="width:100px;height:20px;" />
+					</div>
+					<div style="margin:5px">
+						<a href="#" id="patientSearchBtn" class="easyui-linkbutton" iconCls="icon-search">查询患者</a>
+						<a href="#" id="patientResetBtn" class="easyui-linkbutton" iconCls="icon-reload">清空条件</a>
+					</div>	
+					<div style="margin:5px">
+						<a href="#" id="addListBtn" class="easyui-linkbutton" iconCls="icon-add">将选中添加到特殊病历列表</a>
+					</div>	
+				</div>
+				<table id="patientListTable" data-options="fit:true"></table>
+        	</div>   
+			<div data-options="region:'center'">   
+				<div id="advancedSecurityListTableTBar" style="padding:5px;height:50">	
+					<div style="margin:5px">
+						<a href="#" id="removeListBtn" class="easyui-linkbutton" iconCls="icon-remove">将选中移除特殊病历列表</a>
+						<a href="#" id="resetListBtn" class="easyui-linkbutton" iconCls="icon-reload">刷新</a>
+					</div>
+				</div>
+				<table id="advancedSecurityListTable" data-options="fit:true"></table>
+        	</div>  
+    	</div>  
+    </div>
+    <div id="viewHistorySummaryWin" style="width:1000px;height:600px;padding:10px">
+    	<div class="easyui-layout" data-options="fit:true">    
+        	<div data-options="region:'center'">   
+				<div id="historyListTableTBar" style="padding:5px;height:50">
+					<div style="margin:5px">
+ 						<input id="historyDateStart" class="easyui-datebox" />
+ 						<input id="historyDateEnd" class="easyui-datebox" />
+ 						<select id="historyViewType" name="historyViewType" style="width:100px;height:20px;"></select>
+ 					</div>
+					<div style="margin:5px">
+						<a href="#" id="refreshBtn" class="easyui-linkbutton" iconCls="icon-search">刷新</a>
+					</div>	
+				</div>
+				<table id="historyListTable" data-options="fit:true"></table>
+        	</div>  
+    	</div>  
+    </div>
+    <div id="authorizationSummaryWin" style="width:1000px;height:600px;padding:10px">
+    	<div class="easyui-layout" data-options="fit:true">    
+        	<div data-options="region:'center'">   
+				<div id="authorizationSummaryListTableTBar" style="padding:5px;height:50">
+					<div style="margin:5px">
+ 						<input id="authorizationDateStart" class="easyui-datebox" />
+ 						<input id="authorizationDateEnd" class="easyui-datebox" />
+ 					</div>
+					<div style="margin:5px">
+						<a href="#" id="authorizationRefreshBtn" class="easyui-linkbutton" iconCls="icon-search">刷新</a>
+					</div>	
+				</div>
+				<table id="authorizationSummaryListTable" data-options="fit:true"></table>
+        	</div>  
+    	</div>  
+    </div>
+</body>
+
+</HTML>
+

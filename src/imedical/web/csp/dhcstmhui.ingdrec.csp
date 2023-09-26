@@ -1,0 +1,260 @@
+﻿<!--入库制单-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+	s gIngrRowid = $G(%request.Data("Rowid",1))
+</SERVER>
+<head>
+	<script language=javascript>
+		gIngrRowid = "#(gIngrRowid)#"
+	</script>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',border:false,headerCls:'panel-header-gray'" >
+		<table id="MainConditions" class="Condition">
+			<input id="IngrId" name="IngrId" type="hidden">
+			<tr>
+				<td>入库科室</td>
+				<td><input id="RecLoc" name="RecLoc" class="hisui-combobox textbox"></td>
+				<td>入库单号</td>
+				<td><input id="InGrNo" name="InGrNo" class="textbox" disabled></td>
+				<td>采购人员</td>
+				<!-- <td><input id="PurchaseUser" name="PurchaseUser" class="hisui-combobox textbox"></td> -->
+				<td><input id="PurchaseUser" name="PurchaseUser" class="textbox"></td>
+				<td><input id="AdjCheque" name="AdjCheque" class='hisui-checkbox' type="checkbox" value="Y" label="调价换票"></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" style="width:114px;">查询入库单</a></td>
+			</tr>
+			<tr>
+				<td>供应商</td>
+				<td><input id="Vendor" name="Vendor" class="hisui-combobox textbox"></td>
+				<td>入库日期</td>
+				<td><input id="CreateDate" name="CreateDate" class="hisui-dateboxq textbox" disabled></td>
+				<td>验收人</td>
+				<!-- <td><input id="AcceptUserId" name="AcceptUserId" class="hisui-combobox" style="width:145px;"></td> -->
+				<td><input id="AcceptUserId" name="AcceptUserId" class="textbox"></td>
+				<td><input id="GiftFlag" name="GiftFlag" class='hisui-checkbox' type="checkbox" value="Y" label="捐赠标志"></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:88px;">完成</a></td>
+				<td><a href="#" id="ImportInpo" class="hisui-linkbutton" style="width:114px;">选取订单</a></td>
+			</tr>
+			<tr>
+				<td>类组</td>
+				<td><input id="StkGrpId" name="StkGrpId" class="hisui-stkscgcombotree textbox"></td>
+				<td>入库类型</td>
+				<!-- <td><input id="IngrTypeId" name="IngrTypeId" class="hisui-combobox" style="width:145px;"></td> -->
+				<td><input id="IngrTypeId" name="IngrTypeId" class="textbox"></td>
+				<td>随行单号</td>
+				<td><input id="SxNo" name="SxNo" class="textbox" class="textbox"></td>
+				<td><input id="Complete" name="Complete" class='hisui-checkbox' type="checkbox" label="完成标志" disabled></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton" style="width:88px;">取消完成</a></td>
+				<td><a href="#" id="ImportSCI" class="hisui-linkbutton">选取平台订单</a></td>
+			</tr>
+			<tr>
+				<td>资金来源</td>
+				<!-- <td><input id="SourceOfFund" name="SourceOfFund" class="hisui-combobox textbox"></td> -->
+				<td><input id="SourceOfFund" name="SourceOfFund" class="textbox"></td>
+				<td>接收科室</td>
+				<!-- <td><input id="ReqLocId" name="ReqLocId" class="hisui-combobox textbox"></td> -->
+				<td><input id="ReqLocId" name="ReqLocId" class="textbox"></td>
+				<td valign="top" rowspan="2">备注</td>
+				<td valign="top" rowspan="2"><textarea id="InGrRemarks" name="InGrRemarks" rows="2" cols="9" class="textbox"></textarea></td>
+				<td colspan="2">
+					<input id="File" name="File" data-options="width:200,buttonText:'',buttonIcon:'icon-w-file'">
+				</td>
+				<td><a href="#" id="ReadBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">读取</a></td>
+				<td><a href="#" id="DownExcelTemplet" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">下载模板</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="InGdRecGrid"></table>
+	</div>
+
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询入库单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="FindConditions" class="Condition">
+					<tr>
+						<td>入库科室</td>
+						<td><input id="FRecLoc" name="FRecLoc"></td>
+						<td>起始日期</td>
+						<td><input id="StartDate" name="StartDate" class="hisui-dateboxq textbox"></td>
+						<td>入库单号</td>
+						<td><input id="FInGrNo" name="FInGrNo" class="textbox"></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton">查询</a></td>
+						<td><a href="#" id="FReturnBT" class="hisui-linkbutton">选取</a></td>
+					</tr>
+					<tr>
+						<td>供应商</td>
+						<td><input id="FVendorBox" name="FVendorBox" class="textbox"></td>
+						<td>截止日期</td>
+						<td><input id="EndDate" name="EndDate" class="hisui-dateboxq textbox"></td>
+						<td colspan="2">
+							<input class='hisui-radio' type="radio" label='全部' name='FStatusBox' value='' data-options="checked:true">
+							<input class='hisui-radio' type="radio" label='未完成' name='FStatusBox' value='N'>
+							<input class='hisui-radio' type="radio" label='已完成' name='FStatusBox' value='Y'>
+						</td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton">清屏</a></td>
+						<td></td>
+						<td><input id="AuditFlag" name="AuditFlag" type="hidden" value="N"></td>
+						<td><input id="HVFlag" name="HVFlag" type="hidden" value="N"></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'west',border:false" class="GridPadding" style="width:500px;padding-top:0;">
+				<div class="hisui-panel" data-options="title:'入库单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="InGdRecMainGrid"></table>
+				</div>
+			</div>
+			<div class="hisui-panel" data-options="region:'center',border:false" class="GridPadding" style="padding-left:0;padding-top:0;">
+				<div class="hisui-panel" data-options="title:'入库单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="InGdRecDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 调价确认Dialog -->
+	<div id="AdjPriceWin" class="hisui-dialog FindWin" data-options="closed:'true'" title="调价确认" style="width:650px;height:170px;">
+		<table id="AdjPriceConditions" class="Condition">
+			<tr>
+				<td>物资代码</td>
+				<td><input id="Code" name="Code" class="textbox" disabled></td>
+				<td>物资名称</td>
+				<td><input id="Description" name="Description" class="textbox" disabled></td>
+				<td>调价单位</td>
+				<td><input id="AspUomId" name="AspUomId" class="hisui-combobox" disabled style="width: 90px;"></td>
+			</tr>
+			<tr>
+				<td>调前售价</td>
+				<td><input id="PriorSpUom" name="PriorSpUom" class="textbox" disabled></td>
+				<td>调前进价</td>
+				<td><input id="PriorRpUom" name="PriorRpUom" class="textbox" disabled></td>
+			</tr>
+			<tr>
+				<td>调后售价</td>
+				<td><input id="ResultSpUom" name="ResultSpUom" class="textbox"></td>
+				<td>调后进价</td>
+				<td><input id="ResultRpUom" name="ResultRpUom" class="textbox"></td>
+				<td colspan="2" align="left"><a href="#" id="SaveAdjPrBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确定</a></td>
+			</tr>
+		</table>
+	</div>
+	<div id="ImportByPoWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="导入订单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false,headerCls:'panel-header-gray'" style="height:141px">
+				<div data-options="region:'north',border:true,headerCls:'panel-header-gray'"  style="height:90px;border-bottom:1px dashed #ccc;">
+					<table id="PoConditions" class="Condition">
+						<tr>
+							<td>入库科室</td>
+							<td><input id="PoRecLoc" name="PoRecLoc" class="textbox"></td>
+							<td>起始日期</td>
+							<td><input id="PoStartDate" name="PoStartDate" class="hisui-dateboxq textbox"></td>
+							<td></td>
+							<td>
+								<input class='hisui-radio' type="radio" label='未入库' name='Status' value='0' data-options="checked:true">
+								<input class='hisui-radio' type="radio" label='部分入库' name='Status' value='1'>
+								<input class='hisui-radio' type="radio" label='全部入库' name='Status' value='2'>
+							</td>
+							<td><a href="#" id="PoQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="PoClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+						</tr>
+						<tr>
+							<td>供应商</td>
+							<td><input id="VendorBox" name="VendorBox" class="textbox"></td>
+							<td>截止日期</td>
+							<td><input id="PoEndDate" name="PoEndDate" class="hisui-dateboxq"></td>
+							<td></td>
+							<td></td>
+							<td><a href="#" id="PoSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,headerCls:'panel-header-gray'">
+					<table id="PoSaveConditions" class="Condition">
+						<tr>
+							<td>资金来源</td>
+							<td><input id="PoSourceOfFund" name="PoSourceOfFund" class="textbox"></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div data-options="region:'west',border:false" class="GridPadding" style="width:500px;padding-top: 0px;">
+				<div class="hisui-panel" data-options="title:'订单  (注: 资金来源 作为保存条件)',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="IngrInpoMainGrid"></table>
+				</div>
+			</div>
+			<div class="hisui-panel" data-options="region:'center',border:false" class="GridPadding" style="padding-left:0px;padding-top: 0px;">
+				<div class="hisui-panel" data-options="title:'订单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="IngrInpoDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="ImportBySCIPoWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="导入订单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" class="GridPadding">
+				<div data-options="region:'north',border:false" >
+					<table id="SCIPoSearchConditions" class="Condition">
+						<tr>
+							<td>随行单号</td>
+							<td><input id="PoSXNo" name="PoSXNo" class="textbox"></td>
+							<td><a href="#" id="SCIPoQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="SCIPoClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							<td><a href="#" id="SCIPoSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">导入</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'south',border:false">
+					<table id="SCIPoConditions" class="Condition">
+						<input id="PoId" name="PoId" type="hidden">
+						<tr>
+							<td>入库科室</td>
+							<td><input id="SCIPoLoc" name="SCIPoLoc" class="textbox hisui-combobox" disabled></td>
+							<td>订单号</td>
+							<td><input id="SCIPoNo" name="SCIPoNo" class="textbox" disabled style="width: 170px;"></td>
+							<td>申购科室</td>
+							<td><input id="SCIPoReqLoc" name="SCIPoReqLoc" class="textbox hisui-combobox" disabled></td>
+						</tr>
+						<tr>
+							<td>供应商</td>
+							<td><input id="SCIPoVendor" name="SCIPoVendor" class="textbox hisui-combobox" disabled></td>
+							<td>订单日期</td>
+							<td><input id="SCIPoDate" name="SCIPoDate" class="textbox hisui-dateboxq" disabled style="width: 177px;"></td>
+							<td>随行单号</td>
+							<td><input id="SCINo" name="SCINo" class="textbox" disabled></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="hisui-panel" data-options="region:'center',border:false" class="GridPadding" style="padding-top:0;">
+				<div class="hisui-panel" data-options="title:'订单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="IngrSCIPoDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/XLSX/xlsx.full.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DrugImportGrSearch.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/AdjWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/ImportByPo.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/ImportBySciPo.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRec.js"></script>
+</body>
+</html>

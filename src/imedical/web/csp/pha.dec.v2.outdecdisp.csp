@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--煎药-门诊发放
+	csp:pha.dec.v2.outdecdisp.csp
+	js: scripts/pha/dec/v2/outdecdisp.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHADECV2/>
+    <ADDINS/>
+    <server>
+		s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+		s GetCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+		s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+	</server>
+</HEAD>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div style="width:0px;height:0px">
+				<input id='ReadAccExpEncrypt' type='hidden' value='#(ReadAccExpEncrypt)#'></input>
+				<input id='GetCardTypeEncrypt' type='hidden' value='#(GetCardTypeEncrypt)#'></input>
+				<input id='ReadCardTypeEncrypt' type='hidden' value='#(ReadCardTypeEncrypt)#'></input>
+				<server>
+				 	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+				</server>
+			</div>
+			<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">
+				<div data-options="region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-blue-drug-ok'" class="pha-body" title="门诊发放">
+					<div id="mainLayout" class="hisui-layout" fit="true" >
+						<div data-options="region:'center',split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',minWidth:600" style="border-radius: 4px;" border="false">
+							<div id="dispTab" class="hisui-tabs tabs-gray" fit="true">
+								<div id="tabScanDisp" data-options="title:'扫码发放'">
+				            		<div class="hisui-layout" fit="true" border="false">
+				        				<div data-options="region:'center',split:false,bodyCls:'panel-body-gray'" border="false">
+											<table id="gridPresc"></table>
+										</div>
+									</div>
+				            	</div>
+				            	<div id="tabDisped" data-options="title:'已发放查询'">
+				            		<div class="hisui-layout" fit="true" border="false">
+				                        <div data-options="region:'center'" border="false">
+				                        	<table id="gridDisped"></table>
+				                        </div>
+				                    </div>
+				            	</div>
+				            </div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="gridDspBar">
+				<div class="pha-row">
+					<div class="pha-col">卡号</div>
+					<div class="pha-col">
+						<input id="txtCardNo" type="text" class="hisui-validatebox textbox"/>
+					</div>
+					<div class="pha-col">
+						<span><a class="hisui-linkbutton" plain="false" data-options="iconCls:'icon-w-card'" id="readCard">读卡</a></span>
+					</div>
+					<div class="pha-col">登记号</div>
+					<div class="pha-col">
+						<input id="txtBarCode" type="text" class="hisui-validatebox textbox"/>
+					</div>
+					<div class="pha-col">
+						<span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-ok' id="btnExecute" onclick="javascript:dispPresc()">确认发放</a></span>
+					</div>
+				</div>
+			</div>
+		    <div id="gridQueryBar">
+		    	<div class="hisui-layout" fit="true" border="false" class="pha-body" style="padding-top:0px;padding-bottom:0px;">
+		        	<div data-options="region:'north',border:false" >
+		        		<div class="pha-row">
+		                	<label for="dateStart">开始日期</label>
+	                       	<div class="pha-col">
+	                            <input id="dateStart" type="text" class="hisui-datebox" style="width:120px;" />
+	                        </div>
+	                        <div class="pha-col">
+	                            <input id="timeStart" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90"/>
+	                        </div>
+	                        <div class="pha-col" style="margin-left:24px;">
+	                        	<label for="cmbDecLoc">煎药室</label>
+	                        </div>
+                            <div class="pha-col">
+                                <input id="cmbDecLoc" class="hisui-combobox" style="width:100px;" />
+                            </div>
+                            <div class="pha-col" style="margin-left:20px;">
+                            	<label for="txtPatNo">登记号</label>
+                           	</div>
+                            <div class="pha-col">
+                                <input id="txtPatNo" class="hisui-validatebox textbox" style="width:100px;" />
+                            </div>
+		        		</div>
+		        		<div class="pha-row">
+		                	<label for="dateEnd">截止日期</label>
+	                       	<div class="pha-col">
+	                            <input id="dateEnd" type="text" class="hisui-datebox" style="width:120px;" />
+	                        </div>
+	                       	<div class="pha-col">
+	                            <input id="timeEnd" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90">
+	                        </div>
+	                        <div class="pha-col" style="margin-left:10px;">
+	                        	<label for="cmbPhaLoc">药房科室</label>
+	                        </div>
+                            <div class="pha-col">
+                                <input id="cmbPhaLoc" class="hisui-combobox" style="width:100px;" />
+                            </div>
+                            <div class="pha-col">
+                            	<span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-find' style="width:107px;margin-left:76px;" id="btnExecute" onclick="javascript:queryDispedList()">查询</a></span>
+                            </div>
+		        		</div>
+		        	</div>
+		        </div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/xmlprint.js"></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/preview.js"></script>
+	<script type="text/javascript" src="../scripts/pha/dec/v2/outdecdisp.js"></script>
+</body>
+</HTML>

@@ -1,0 +1,311 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!--本组css文件-->
+	<!--link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" /-->
+	<style>
+	
+		/*--背景色--*/
+		.my-interface>div>div.panel-body{
+			background-color:#fff !important;
+		}
+		/*--按钮的padding值--*/
+		.my-interface .productList span a {
+			padding:5px 0px 5px 7px;
+		}
+		.my-interface .productList a span.l-btn-text{
+			display:inline-block;
+			text-align:left;
+			font-size:16px;
+			font-family:Microsoft YaHei; 
+			color:#000;
+			padding:0px 6px 0px 17px;
+		}
+		.my-interface .productList a span.l-btn-text:hover{
+			color:#017bce;
+		}
+		.my-interface .productList .panel-tool{
+			height:26px;
+			width:80px;
+			margin-top:-10px;
+		}
+		.my-interface .productList .panel-tool a{
+			width:32px;
+		}
+		.my-interface .productList span.productPiece{
+			display:inline-block;
+			width:185px;
+			margin-bottom:20px;
+		}
+		/*--面板之间的间距是10px--*/
+		.my-interface .productList div.panel{
+			padding-bottom:10px;
+		}
+		/*--常用、最近使用产品列表浮动----*/
+		.my-interface .productList #selectModule{
+			position: fixed;
+			right: 0px;
+			top: 0px;
+		}
+		/*--常用、最近使用产品panel弧度去掉--*/
+		.my-interface .productList #selectModule div div.panel-header {
+			border-radius: 0px 0px 0px 0px;
+		}
+		.my-interface .productList #selectModule div div.panel-body {
+			border-radius: 0px 0px 0px 0px;
+		}
+		.my-interface .productList #selectModule div div.panel-header {
+			border-radius: 0px 0px 0px 0px;
+		}
+		/*--常用、最近使用产品列表样式----*/
+		.my-interface .productList #recentProduct,#ofterProduct{
+			background-color:#f9f9f9;
+		}
+		/*--常用、最近使用产品列表样式--*/
+		.my-interface .productList .showButtonList{
+			padding:9px 20px 9px 20px;
+			font-size:14px;
+			color:#000;
+		}
+		.my-interface .productList .showButtonList:hover{
+			background-color:#e3e3e3;
+			padding-left:15px;
+			font-size:14px;
+		}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface" onunload="closeNews();">
+	<div data-options="region:'center'" class="productList" style="fit:true;padding:0px 10px 0px 10px;border:none;overflow-x:hidden;">
+		
+		<div id="selectModule" style="width:200px;height:600px;border:none;padding:10px;background-color: #fff;">
+			<div class="hisui-panel" title="最近" id="recentProduct" style="width:200px;height:230px;" data-options="iconCls:'icon-w-file'"></div>
+			<div class="hisui-panel ofterProduct" title="常用" id="ofterProduct" style="width:200px;height:230px;" data-options="iconCls:'icon-w-file'"></div>
+		</div>
+		
+		
+		<div class="hisui-panel productPanel" title="指标系统" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#KPITool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="KPIDefineTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">指标定义</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="KPITab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">指标</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="baseDimTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">基础维度</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="dimRowTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">维度角色</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="sectionDimTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">区间维度</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="KPITypeTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">指标类型</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="dateSectionTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">日期区间</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="KPIGroupTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">任务组配置</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="KPILogTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">指标日志</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="KPIModuleCfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">模块与报表</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="KPIOtherCfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">系统配置</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="标准化管理" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#standTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="standMeasurecfgTab" onclick = "showThisTable(this)" class="hisui-linkbutton" data-options="iconCls:'icon-big-book-ref'" plain="true">度量维护</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="standDataSourceTab" onclick = "showThisTable(this)" class="hisui-linkbutton" data-options="iconCls:'icon-big-book-ref'" plain="true">数据源管理</a>
+			</span>
+		</div>
+		
+		
+		<div class="hisui-panel productPanel" title="BS代码维护" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#BSCfgTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="BSGrpTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">统计大组</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="BSSubGrpTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">统计子组</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="出入转统计维护" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#mripdayTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="mripdayrptcfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">报表项配置</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="mripdayrptcolcfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">报表列配置</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="mripdayrptcoldetailTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">明细报表列配置</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="mripdaytaskcfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">出入转任务配置</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="收入报表配置" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#incomeRptCfgTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="rptconfigTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">报表配置</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="rptstatmodeTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">统计模式配置</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="rptstatitemTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">统计项配置</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="rptmkpipool" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">指标池</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="病案维护" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#mrbaseTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="mrbaseBedconfigTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">床位维护</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="mrbaseIcdconfigTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">ICD维护</a>
+			</span>
+		</div>
+		
+		
+		<div class="hisui-panel productPanel" title="医生应用配置" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#docAppCfgTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="dockpicfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">医生应用配置</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="医技工作量" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#wlCfgTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="wlcfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">医技工作量</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="标准值维护" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#checkfunTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="checkFunMaincfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">考核方案维护</a>
+			</span>
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="checkFunkpicfgTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">考核指标维护</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="院长查询" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#deanviewTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="deanviewTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">院区配置</a>
+			</span>
+		</div>
+		
+		<div class="hisui-panel productPanel" title="版本管理" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#verCfgTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="vermanagementTab" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">版本管理</a>
+			</span>
+		</div>
+
+		<!--add by wz.-->
+		<div class="hisui-panel productPanel" title="可配置报表工具包" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort'/*,tools:'#verCfgTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="rptlistmain" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">报表展示</a>
+			</span>
+			
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="permisframe" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">权限管理</a>
+			</span>
+			
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="cdqbrowserpt" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">通用简单查询配置</a>
+			</span>
+			
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="basedataframe" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">基础数据查询配置</a>
+			</span>
+		</div>
+
+		<!--add by wz.-->
+		<div class="hisui-panel productPanel" title="报表管理" style="padding:20px 20px 0px 20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-resort',/*tools:'#verCfgTool'*/">
+			<span class="productPiece">
+				<a href="javascript:void(0)" id="rptmgmt" class="hisui-linkbutton" onclick = "showThisTable(this)" data-options="iconCls:'icon-big-book-ref'" plain="true">报表管理</a>
+			</span>
+		</div>
+	</div>
+	
+	
+	<!--指标toolbar-->
+	<div id="KPITool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V4.4.8</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	
+	<!--标准化toolbar-->
+	<div id="standTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V1.0.0</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	
+	<!--BS代码维护toolbar-->
+	<div id="BSCfgTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V1.7.2</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	<!--出入转统计维护toolbar-->
+	<div id="mripdayTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V1.1.1</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	<!--收入报表配置toolbar-->
+	<div id="incomeRptCfgTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V1.0.0</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	<!--病案维护toolbar-->
+	<div id="mrbaseTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V3.0.2</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	<!--医技工作量toolbar-->
+	<div id="wlCfgTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V2.5.0</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	<!--标准值维护toolbar-->
+	<div id="checkfunTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V1.0.0</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	<!--院长查询toolbar-->
+	<div id="deanviewTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V2.3.0</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	<!--版本管理toolbar-->
+	<div id="verCfgTool">
+		<span style="font-size:14px;color:#B8B8B8;padding-right:5px;">V1.0.0</span>
+		<a href="javascript:void(0)">关于</a>
+	</div>
+	
+	<!--引入js文件JSURL-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/main/productinforlist.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/main/homepage.js"></script>
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>

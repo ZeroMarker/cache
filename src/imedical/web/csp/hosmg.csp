@@ -1,0 +1,32 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+	<body>
+ <SERVER>
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s webIP=$P(setstr,"^",2)
+ s dllstr=webIP_"/dhcmg/HospitalMg.dll#HospitalMg.hosmg"
+ w "<OBJECT id=""mgcontrol""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+ 
+</SERVER>
+
+<SCRIPT Language="JavaScript">
+  mgcontrol.configPath="#(webIP)#"+"/dhcmg/";
+  mgcontrol.height=document.body.offsetHeight-15;
+  mgcontrol.width=document.body.offsetWidth-10;
+  mgcontrol.UserId=session['LOGON.USERCODE'];
+  mgcontrol.LogDep=session['LOGON.CTLOCID'];
+  mgcontrol.LogGrpId=session['LOGON.GROUPID'];
+  mgcontrol.load();
+</script>	</body>
+</HTML>
+
+

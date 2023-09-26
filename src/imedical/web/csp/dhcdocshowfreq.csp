@@ -1,0 +1,160 @@
+<html>
+<head>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+
+<STYLE type='text/css'>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	width:100%;
+}
+.r-label{
+	padding-left: 10px;
+}
+</STYLE>
+<server>
+	//s OrderARCIMRowid=%request.Get("OrderARCIMRowid")
+	//s OrderName=$p($g(^ARCIM(+OrderARCIMRowid,$p(OrderARCIMRowid,"||",2),1)),"^",2)
+	s FreqDispTimeStr=%request.Get("FreqDispTimeStr")
+	for i=1:1:$l(FreqDispTimeStr,"!")	{
+		s OneFreqDispTime=$p(FreqDispTimeStr,"!",i)
+		s PHCDTRowId=$p(OneFreqDispTime,"$",1)
+		s DispTime=$p(OneFreqDispTime,"$",2)
+		continue:DispTime=""
+		Set arr(DispTime)=PHCDTRowId
+	}
+	s FreqDispTimeDoseQtyStr=%request.Get("FreqDispTimeDoseQtyStr")
+	s OrderDoseUOM=%request.Get("OrderDoseUOM")
+</server>
+</head>
+<body class="hisui-layout">
+<div id="dosediv" class="hisui-panel" data-options="fit:true"> <!--,title:'剂量维护'-->  
+   <table class="search-table">
+		<server>
+			Set se="" for  Set se = $O(arr(se)) Quit:se=""  d
+			.w "<tr>"
+			.w "<td class='r-label'><label>"_se_"</label></td>"
+			.w "<td><input autofocus class='hisui-validatebox textbox doseqty' id="_arr(se)_"><span class='r-label'>"_OrderDoseUOM_"<span></td>"
+			.w "</tr>"
+	   </server>
+		<!--tr>
+		    <td><label>早 </label></td>
+			<td><input  id="MonNumber" title=""  autofocus class="hisui-validatebox" onkeyup="value=value.replace(/[^0-9\.]/g,'')"onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"><span id="text"></span></td> 
+		</tr-->
+		<tr>
+		   <td style="text-align:center;" colspan="2">
+		   		<a id="update" name="update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确认</a>
+		   		<a id="clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="margin-left:15px;">清屏</a>
+		   		<a id="Close" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" style="margin-left:15px;">关闭</a>
+		   </td>
+		</tr>
+   </table>
+</div> 
+
+<script type='text/javascript'>
+	var FreqStr="";
+	function BodyLoadHandler(){
+		var FreqDispTimeDoseQtyStr="#(FreqDispTimeDoseQtyStr)#";
+		//$("#dosediv").panel('setTitle',OrderName+"剂量维护");
+		$("#update").click(update_onclick);
+		$("#clear").click(clear_onclick);
+		$("#Close").click(Close_onclick);
+		$(".doseqty").keyup(DoseQtyKeyDown);
+		for (var i=0;i<FreqDispTimeDoseQtyStr.split("!").length;i++){
+			var OneFreqDispTimeDose=FreqDispTimeDoseQtyStr.split("!")[i];
+			//var id=OneFreqDispTimeDose.split("$")[0];
+			var value=OneFreqDispTimeDose.split("$")[1];
+			$($(".doseqty")[i]).val(value);
+		}
+	}
+	function DoseQtyKeyDown(e){
+		var id=e.target.id;
+		var keycode=websys_getKey(e);
+		if (keycode==13) {
+			var len=$(".doseqty").length;
+			for (var i=0;i<len;i++){
+				if ($(".doseqty")[i].id==id){
+					if (i==(len-1)){
+						update_onclick();
+					}else{
+						$("#"+$(".doseqty")[i+1].id).focus();
+					}
+					return;
+				}
+			}
+		}
+		if ((keycode == 8) || (keycode == 9) || (keycode == 190) || (keycode == 46) || (keycode == 13) || (keycode == 110) || ((keycode > 47) && (keycode < 58)) || ((keycode > 95) && (keycode < 106)))  {
+			var val=$("#"+id).val();
+			$("#"+id).val(val.replace(/。/g,'.'));
+		} else {
+            window.event.keyCode = 0;
+            return websys_cancel();
+        }
+	}
+	function update_onclick(){
+		var FreqStr="";
+		var len=$(".doseqty").length;
+		for (var i=0;i<len;i++){
+			var id=$(".doseqty")[i].id;
+			var value=$.trim($("#"+id).val());
+			if (value==""){
+				$.messager.alert("提示","剂量不能为空!","info",function(){
+					$("#"+id).focus();
+				})
+				return;
+			}else{
+				if (!isNumber(value)||(value<=0)){
+					$.messager.alert("提示","请填写正确的剂量!","info",function(){
+						$("#"+id).focus();
+					})
+					return;
+				}
+				if (+value>9999) {
+					$.messager.alert("提示","剂量不能超过9999","info",function(){
+						$("#"+id).focus();
+					})
+					return;
+				}
+				if (FreqStr=="") FreqStr=id+"$"+value; //.replace("_","||")
+				else FreqStr=FreqStr+"!"+id+"$"+value;
+			}
+		}
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc(FreqStr);
+		}else{
+			window.returnValue =FreqStr;
+    		window.close();
+		}
+	}
+	function clear_onclick(){
+		$(".doseqty").val("");
+	}
+	function Close_onclick(){
+		var FreqStr="";
+		var len=$(".doseqty").length;
+		for (var i=0;i<len;i++){
+			var id=$(".doseqty")[i].id;
+			var value=$.trim($("#"+id).val());
+			if ((value=="")||(!isNumber(value))||(value<=0)||(+value>9999)) {
+				websys_showModal("options").CallBackFunc("");
+				return;
+			}
+			if (FreqStr=="") FreqStr=id+"$"+value;
+			else FreqStr=FreqStr+"!"+id+"$"+value;
+		}
+		websys_showModal("options").CallBackFunc(FreqStr);
+	}
+	function isNumber(objStr){
+	 strRef = "1234567890.";
+	 for (i=0;i<objStr.length;i++) {
+	  tempChar= objStr.substring(i,i+1);
+	  if (strRef.indexOf(tempChar,0)==-1) {return false;}
+	 }
+	 return true;
+	}
+	document.body.onload = BodyLoadHandler;
+</script>
+</body>
+</html>

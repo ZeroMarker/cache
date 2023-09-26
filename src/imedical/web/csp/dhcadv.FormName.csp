@@ -1,0 +1,161 @@
+<html >
+<head>
+<title></title>
+<ADDINS require="CmdShell" />
+<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/skin/js/formname.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+	</script>
+<style type="text/css">
+		.datagrid-row-selected {
+	  		background: #ADFAFC;
+		}
+		.panel-header, .panel-body {
+		    border-color: #ccc;
+		}
+   </style>
+</head>
+<body >
+	<!-- toolbar -->
+	<div id="toolbar" class="datagrid-toolbar">
+		<div style="margin-top:10px;margin-bottom:10px;">
+			<tr>
+			<td><span style="margin-left:10px;"></span>代码<span style="margin-left:10px;"></span><input type="text" name="queryCode" class="textbox" /> </td>	
+			<td><span style="margin-left:10px;"></span>描述<span style="margin-left:10px;"></span><input type="text" name="queryName" class="textbox" /> </td>        
+			<td><input class="hisui-radio" type="radio" value="Y" name="queryType" checked="true" id="queryTypey" label="表单"></td> 
+			<td><input class="hisui-radio" type="radio" value="N" name="queryType" label="布局表单"></td> 
+			<td><input class="hisui-radio" type="radio" value="A" name="queryType" label="全部"></td> 
+			<td ><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})">查询</a> </td>					
+			</tr>								
+		</div>
+		<div class="tool-bar-line" style="border-bottom-color:#cccccc; border-bottom-width: 1px; border-bottom-style: dashed;">	</div>
+		<table cellspacing="0" cellpadding="0" style="margin-top:4px;margin-bottom:4px;">
+		     <tr>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>	
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:delName()">删除</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" onclick="javascript:formCopy()">复制</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" onclick="javascript:formCat()" style="display:none">维护表单分类</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" onclick="javascript:formItm()"style="display:none">维护表单元素</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="javascript:edit()">编辑表单样式</a> </td>	
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="javascript:formExp()">导出</a> </td>	
+				<td>表单文件<span style="margin-left:5px;"></span><input class="hisui-filebox" name="filepath" id="filepath"/><span style="margin-left:5px;"></span><a href="#" id='btn'  class="hisui-linkbutton" onclick="javascript:formImp()">导入</a></td>
+		     </tr>
+		</table>
+	</div>
+	<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+		data-options="
+		toolbar:'#toolbar',
+		border:false,
+	    rownumbers:true,
+	    method:'get',
+	    url:'dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listGrid',
+	    fitColumns:true,
+	    singleSelect:true,
+	    pagination:true,
+	    pageSize:20,
+	    pageList:[20,40,100],
+	    onDblClickRow: onClickRow">
+		<thead>
+			<tr>
+				<th data-options="field:'code',width:100,editor:{type:'validatebox',options:{required:true,validType:'isBlank'}}">表单代码</th>
+				<th data-options="field:'name',width:150,editor:{type:'validatebox',options:{required:true,validType:'isBlank'}}">表单名称</th>
+				<th data-options="field:'version',width:30">版本</th>
+				<th data-options="field:'jsPath',width:100,editor:{type:'validatebox',options:{required:true,validType:'isBlank'}}">引用js</th>
+				<th data-options="field:'ID',hidden:true">id</th>
+				<th data-options="field:'type',width:30,
+								formatter:function(value,row,index){
+									if(value=='Y'){return '是';}
+									else {return '否';}
+								},
+								editor:{
+										type:'combobox',
+										options:{
+											valueField:'value',
+											textField:'text',
+											url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listState',
+											required:true
+										}
+									}">表单</th>
+				<th data-options="field:'cat',hidden:true">cat</th>
+				<th data-options="field:'catDesc',width:100,editor:{
+										type:'combobox',
+										options:{
+											valueField:'value',
+											textField:'text',
+											mode:'remote',
+											url:'dhcapp.broker.csp?ClassName=web.DHCADVFormCat&MethodName=listCombo',
+											onSelect:function(data){  
+												$('#datagrid').datagrid('getSelected').cat=data.value
+											},
+											onChange:function(n,o){
+												if(n==''){
+													$('#datagrid').datagrid('getSelected').cat=0
+												}
+											}	
+										}
+									}">分类</th>
+				<th data-options="field:'active',width:40,
+								formatter:function(value,row,index){
+									if(value=='Y'){return '是';}
+									else {return '否';}
+								},
+								editor:{
+										type:'combobox',
+										options:{
+											valueField:'value',
+											textField:'text',
+											url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listState',
+											required:true
+										}
+									}">是否可用</th>
+				<th data-options="field:'width',width:20,editor:{type:'validatebox'}">宽</th>					
+			</tr>
+		</thead>
+	</table> 
+
+
+<!--复制表单-->
+<div id="copy"
+        class="hisui-dialog"  	
+		style="width:800px;height:200px;background-color:'#E0ECFF'"
+		data-options="title:'复制表单',modal:true,closed:true,
+			toolbar:[{
+				text:'保存',
+				iconCls:'icon-save',
+				handler:function(){saveFormCopy();}
+			}]">
+	 <div style="padding:10px 60px 20px 60px">
+	 	<form id="copyForm" class="hisui-form" >		
+		<table cellpadding="5">
+			<input id="subParref" type="hidden"  />
+			<input id="subId" type="hidden"  />
+			<tr>
+				<td >code</td>
+				<td ><input id="copyCode" type="text"  class="hisui-validatebox" data-options="required:true" style="width:500px"/></td>
+			</tr>
+			<tr>
+				<td >名称</td>
+				<td ><input id="copyName" type="text" class="hisui-validatebox"  data-options="required:true" style="width:500px" /></td>	
+			</tr>
+		</table>
+		</form>
+	</div>
+</div>
+
+ 
+</body>
+
+</html>

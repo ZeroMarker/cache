@@ -1,0 +1,44 @@
+<!-- Copyright (c) 2003 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n frm
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ i %request.Get("PatientID"),%request.Get("PatientBanner")'=0 {
+	s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i frm d frm.Show(),frm.%Close()
+ }
+ s %request.Data("PatientID",1)=$g(%request.Data("PatientID",1))
+ s %request.Data("admType",1)=$g(%request.Data("admType",1))
+ s %request.Data("VISITSTATUS",1)=$g(%request.Data("PAAdmVisitStatus",1))
+ s %request.Data("ADMINTTYPE",1)=$g(%request.Data("ADMINTTYPE",1))
+ //s %request.Data("PARREF",1)=$g(%request.Data("EpisodeID",1))
+ s %request.Data("admstring",1)=$g(%request.Data("admstring",1))
+ s frm=##Class(websys.Component).OpenName("PAAdm.List")
+ i frm d frm.Show() d frm.%Close()
+ s frm=##Class(websys.Component).OpenName("PAAdmSNAP.List")
+ //i frm d frm.Show() d frm.%Close()
+ i frm s frm.HideMenus=1 d frm.Show() d frm.%Close()
+</SERVER>
+
+<script language="javascript">
+function loadHandler() {
+	try {PAAdmSNAPListLoadHandler();} catch(e) {}
+	websys_reSizeT();
+}
+window.document.body.onload=loadHandler;
+</script>
+
+</BODY>
+</HTML>

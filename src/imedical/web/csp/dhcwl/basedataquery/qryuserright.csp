@@ -1,0 +1,272 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "addURUser"=action {
+		s inParam("userID") = $g(%request.Data("userID",1))
+	 	s inParam("rptName")=$g(%request.Data("rptName",1))
+		
+		s ret=##class(DHCWL.BaseDataQuery.URMap).Insert(.inParam,.outParam)
+		
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			q		
+		}
+
+		w "{success:true,tip:'ok',MSG:'操作成功！'}"
+	}elseif "addURRpt"=action {
+		s inParam("userID") = $g(%request.Data("userID",1))
+	 	s inParam("rptName")=$g(%request.Data("rptName",1))
+		TSTART
+		s ret=##class(DHCWL.BaseDataQuery.URMap).InsertRpts(.inParam,.outParam)
+		
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			Trollback
+			q		
+		}
+		TCOMMIT
+		w "{success:true,tip:'ok',MSG:'操作成功！'}"
+		q				
+	}elseif "getRtpNotBelongUserID"=action {
+	 	s userID=$g(%request.Data("userID",1))
+	 	s rptName=$g(%request.Data("rptName",1))
+	 	s BaseObjName=$g(%request.Data("BaseObjName",1))
+	 	s start=$g(%request.Data("start",1))
+	 	s limit=$g(%request.Data("limit",1))
+	 	
+		s end=start+limit
+		s start=start+1		 	
+	 	
+	 	
+	 	
+	 	s sql="SELECT BaseObjName, Name AS rptName, ID , Remarks ,t2.SSUSR_Name AS userName FROM DHCWL_BaseDataQuery.ReportCfg t1 ,SS_User t2 WHERE t1.userID=t2.SSUSR_RowId"
+	 	s sql=sql_" AND t1.Name NOT IN (SELECT IFNULL(rptName,'',rptName) FROM DHCWL_BaseDataQuery.URMap WHERE userID="_userID_")"
+		
+		if rptName'="" {
+			s sql=sql_" and t1.Name like '%"_rptName_"%'"
+		}
+		if BaseObjName'="" {
+			s sql=sql_" and t1.BaseObjName like '%"_BaseObjName_"%'"
+		}		
+		s sql=sql_" ORDER BY t1.ID"
+		//w !,sql
+		//s start=0,end=0
+		s jsonPro="BaseObjName,Name,rptID,userName"
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+
+	}elseif "getRtpBelongUserID"=action {
+	 	s userID=$g(%request.Data("userID",1))
+	 	//s rptName=$g(%request.Data("rptName",1))
+	 	//s BaseObjName=$g(%request.Data("BaseObjName",1))
+	 	s start=$g(%request.Data("start",1))
+	 	s limit=$g(%request.Data("limit",1))
+	 	
+		//s end=start+limit
+		//s start=start+1		 	
+	 	
+	 	
+	 	
+		s sql="SELECT t1.BaseObjName,t1.Name ,t1.ID AS rptID ,(SELECT SSUSR_Name FROM SS_User WHERE SSUSR_RowId=t1.userID) userName ,t2.userID FROM DHCWL_BaseDataQuery.ReportCfg t1 left join DHCWL_BaseDataQuery.URMap t2  on t1.Name = t2.rptName WHERE t2.userID "_userID
+		/*
+		if rptName'="" {
+			s sql=sql_" and t1.Name like '%"_rptName_"%'"
+		}
+		if BaseObjName'="" {
+			s sql=sql_" and t1.BaseObjName like '%"_BaseObjName_"%'"
+		}		
+		*/
+		//w !,sql
+		//s start=0,end=0
+		s jsonPro="BaseObjName,Name,rptID,userName"
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+
+	}elseif "getURMapRpt"=action {
+	 	s searchObj=$g(%request.Data("searchObj",1))
+	 	s sql="SELECT BaseObjName, Name AS rptName, userID , Remarks ,t2.SSUSR_Name AS userName FROM DHCWL_BaseDataQuery.ReportCfg t1 ,SS_User t2 WHERE t1.userID=t2.SSUSR_RowId"
+		s sql=sql_"  ORDER BY ID"
+
+		//w !,sql
+	 	s start=+$g(%request.Data("start",1))
+	 	s limit=+$g(%request.Data("limit",1))
+	 	s end=start+limit
+		i +limit>0 s start=start+1
+		
+		s jsonPro="BaseObjName,rptName,userID,Remarks,userName"
+			//w !,sql
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+	}elseif "getURMapUserByRptName"=action {
+	 	s rptName=$g(%request.Data("rptName",1))
+	 	
+	 	s sql="SELECT t2.SSUSR_Name As userName,t2.SSUSR_Group->SSGRP_Desc as userGrp,t1.userID As userID FROM DHCWL_BaseDataQuery.URMap t1,SS_User t2 WHERE t1.userID=t2.SSUSR_RowId"
+	 	s sql=sql_" AND t1.rptName='"_rptName_"'"
+		s sql=sql_"  ORDER BY t1.ID"
+
+		//w !,sql
+	 	s start=+$g(%request.Data("start",1))
+	 	s limit=+$g(%request.Data("limit",1))
+	 	s end=start+limit
+		i +limit>0 s start=start+1
+		
+		s jsonPro="userName,userGrp,userID"
+			//w !,sql
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)		
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+	}elseif "delURUser"=action {
+	 	s inParam("rptName")=$g(%request.Data("rptName",1))
+	 	s inParam("userID")=$g(%request.Data("userID",1))
+
+		s ret=##class(DHCWL.BaseDataQuery.URMap).Delete(.inParam,.outParam)
+		
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			q		
+		}
+		w "{success:true,tip:'ok',MSG:'操作成功！'}"
+		q
+	}elseif "getUserNotBelongRpt"=action {
+	 	s userName=$g(%request.Data("userName",1))
+	 	s userGrp=$g(%request.Data("userGrp",1))
+	 	s rptName=$g(%request.Data("rptName",1))
+	 	s start=$g(%request.Data("start",1))
+	 	s limit=$g(%request.Data("limit",1))
+	 	
+		s end=start+limit
+		s start=start+1		 	
+	 	
+	 	
+	 	
+		s sql="SELECT t2.SSUSR_RowId as ID , t2.SSUSR_Name as name ,t2.SSUSR_Group->SSGRP_Desc as ssGrp, t2.SSUSR_RowId"
+		s sql=sql_" FROM SS_User t2 WHERE t2.SSUSR_RowId  NOT IN (SELECT userID FROM DHCWL_BaseDataQuery.URMap WHERE rptName='"_rptName_"')"
+		if userName'="" {
+			s sql=sql_" and t2.SSUSR_Name like '%"_userName_"%'"
+		}
+		if userGrp'="" {
+			s sql=sql_" and t2.SSUSR_Group->SSGRP_Desc like '%"_userGrp_"%'"
+		}		
+		
+		//w !,sql
+		//s start=0,end=0
+		s jsonPro="ID,name,ssGrp"
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+	}elseif "getURMapUser"=action {
+	 	//s sql="SELECT DISTINCT t2.userID,SSUSR_Name As userName,SSUSR_Group->SSGRP_Desc as userGrp FROM SS_User t1,DHCWL_BaseDataQuery.URMap t2 WHERE t1.SSUSR_RowId =t2.userID ORDER BY t2.ID"
+		
+		s sql="SELECT SSUSR_RowId AS userID,SSUSR_Name As userName,SSUSR_Group->SSGRP_Desc as userGrp "
+		s sql=sql_"FROM SS_User WHERE SSUSR_RowId IN (SELECT DISTINCT userID from DHCWL_BaseDataQuery.URMap)  ORDER BY SSUSR_RowId"
+
+		//w !,sql
+	 	s start=+$g(%request.Data("start",1))
+	 	s limit=+$g(%request.Data("limit",1))
+	 	s end=start+limit
+		i +limit>0 s start=start+1
+		
+		s jsonPro="userID,userName,userGrp"
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+	}elseif "getURMapRptByUserID"=action {
+	 	s userID=$g(%request.Data("userID",1))
+	 	
+	 	//s sql="SELECT BaseObjName, Name AS rptName, userID , Remarks ,t2.SSUSR_Name AS userName FROM DHCWL_BaseDataQuery.ReportCfg t1 ,SS_User t2 WHERE t1.userID=t2.SSUSR_RowId"
+	 	//s sql=sql_" AND t1.Name IN (SELECT rptName FROM DHCWL_BaseDataQuery.URMap WHERE userID="_userID_")"
+		//s sql=sql_" ORDER BY t1.ID"
+	 	s sql="SELECT BaseObjName, Name AS rptName, t1.userID , Remarks ,t2.SSUSR_Name AS userName FROM DHCWL_BaseDataQuery.ReportCfg t1 ,SS_User t2,DHCWL_BaseDataQuery.URMap t3 WHERE t1.userID=t2.SSUSR_RowId"
+	 	s sql=sql_" AND t1.Name = t3.rptName and t3.userID="_userID
+		s sql=sql_" ORDER BY t3.ID"
+
+		//w !,sql
+	 	s start=+$g(%request.Data("start",1))
+	 	s limit=+$g(%request.Data("limit",1))
+	 	s end=start+limit
+		i +limit>0 s start=start+1
+		
+		s jsonPro="BaseObjName,rptName,userID,Remarks,userName"
+			//w !,sql
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+	}elseif "getUserNotBelongMap"=action {
+	 	s userName=$g(%request.Data("userName",1))
+	 	s userGrp=$g(%request.Data("userGrp",1))
+	 	s start=$g(%request.Data("start",1))
+	 	s limit=$g(%request.Data("limit",1))
+	 	
+		s end=start+limit
+		s start=start+1		 	
+	 	
+	 	
+	 	
+		s sql="SELECT t2.SSUSR_RowId as ID , t2.SSUSR_Name as name ,t2.SSUSR_Group->SSGRP_Desc as ssGrp, t2.SSUSR_RowId"
+		s sql=sql_" FROM SS_User t2 WHERE t2.SSUSR_RowId  NOT IN (SELECT DISTINCT userID FROM DHCWL_BaseDataQuery.URMap)"
+		if userName'="" {
+			s sql=sql_" and t2.SSUSR_Name like '%"_userName_"%'"
+		}
+		if userGrp'="" {
+			s sql=sql_" and t2.SSUSR_Group->SSGRP_Desc like '%"_userGrp_"%'"
+		}		
+		
+		//w !,sql
+		//s start=0,end=0
+		s jsonPro="ID,name,ssGrp"
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,start,end,jsonPro)
+		s qryName="%DynamicQuery:SQL"  //固定写法
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"	
+	}
+	
+</script>

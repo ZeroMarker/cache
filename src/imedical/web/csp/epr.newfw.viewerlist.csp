@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+
+<TITLE>	历次 </TITLE>
+	<script language="cache" runat="server">
+  		s objTAndCNotes = ##class(EPRservice.BOInstanceData).GetTAndCFromEPRTemplate($Get(%request.Data("EpisodeID",1),"-1"), $Get(%request.Data("TemplateDocID",1),"-1"), "2")
+	  	s userid = %session.Get("LOGON.USERID")
+	  	s EpisodeID = $Get(%request.Data("EpisodeID",1),"-1")
+	  	s PatientID = $Get(%request.Data("PatientID",1),"-1")
+	  	s ctlocid=%session.Get("LOGON.CTLOCID")
+	  	s docID = $Get(%request.Data("PrintTemplateDocID",1),"-1")
+	  	s ssgroupid = %session.Get("LOGON.GROUPID")
+	  	
+	  	s templateDocID = $Get(%request.Data("TemplateDocID",1),"-1")
+	  	s category = ##class(EPRmeta.EPRTemplate).%OpenId(templateDocID)	
+		s bindTemplateCategoryID = category.BindTemplateCategoryID	
+		s bindTemplateID = category.BindTemplateID
+		d category.%Close()
+		s category = ""
+		
+		s eprNum = $Get(%request.Data("eprNum",1),"-1")
+		
+	
+		//加载dll?用来打印
+		d ##class(web.DHCEPRExt).CLBar()
+		
+		s viewListNum = ##class(EPRmeta.SysOption).GetOptionValueByName("ViewListNum")		//add by zhuj on 2010-1-7
+
+	</script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/viewer/desktop/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>  
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+  	<script type="text/javascript" src="../scripts/epr/viewer/window/js/dgrid.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/viewer/window/js/eprList.js"></script>
+ 	<script type="text/javascript">
+ 		var _PageTitle = '';
+ 		var isShowAll = 'Y';
+ 		var funurl = '../web.eprajax.viewerListGrid.cls';  	
+  		var patientID = "#($Get(%request.Data("PatientID",1),"-1"))#";
+  		var episodeID = "#($Get(%request.Data("EpisodeID",1),"-1"))#";
+  		var profileID = "#(objTAndCNotes.ChartItemID)#";
+  		var categoryID = "#(objTAndCNotes.CategoryID)#";
+  		var printTemplateDocID = "#($Get(%request.Data("PrintTemplateDocID",1),"-1"))#";
+  		var templateDocID = "#($Get(%request.Data("TemplateDocID",1),"-1"))#";
+  		var userID = "#(%session.Get("LOGON.USERID"))#";
+		
+		var profileID = "#(objTAndCNotes.ChartItemID)#";
+  		var categoryID = "#(objTAndCNotes.CategoryID)#";
+  		var categoryType = "#(objTAndCNotes.CategoryType)#";
+	  	var templateID = "#(objTAndCNotes.TemplateID)#";
+	  	var templateName = "#(objTAndCNotes.TemplateName)#";
+		
+		var viewListNum = parseInt('#(viewListNum)#', 10);	//每页显示几条
+		if (viewListNum == '')
+		{
+			viewListNum = 1;	
+		}
+		var currPage = 0;			//当前页是第几页
+ 	</script>
+ 	
+</HEAD>
+
+<BODY>
+
+</BODY>
+</HTML>

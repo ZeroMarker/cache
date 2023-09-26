@@ -1,0 +1,179 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html XMLNS=TRAK>
+<head>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+<TRAK:COMPONENT id="MRClinicalPathways.CycleEdit" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</head>
+
+<body style="margin-left:10px;margin-right:10px;">
+<server>
+
+	//Log 56894
+
+ n TWKFL,TWKFLI,TNAVMARK
+ n k,EPTotalDays,EPRowId,DAYSchildsub,DAYSRowIds,SERDesc,DAY,SerSeq,DAYSRowId,OSChildsub,OrdItemIds,OSOrdSetDR,OSARCIMDR,ItemIds,ItemId,ItemDesc,IPEpisodeRequired
+ s (EPTotalDays,EPRowId,DAYSRowIds,SERDesc,DAY,DAYSRowId,OrdItemIds,OSOrdSetDR,OSARCIMDR,ItemIds,ItemId,ItemDesc,IPEpisodeRequired,DefaultItmID)=""
+ s (DAYSchildsub,SerSeq,OSChildsub)=0
+ s k=1
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s TNAVMARK=%request.Get("TNAVMARK")
+ s EPRowId=%request.Get("EPRowId")
+ s EPTotalDays=%request.Get("EPTotalDays")
+ s ItemIds=%request.Get("OrdItemIds")
+ i EPTotalDays="",EPRowId'="" s EPTotalDays=$p(^MRC("CPW",+EPRowId,"EP",$p(EPRowId,"||",2)),"^",4)
+ i EPRowId'="" d
+ . f  s DAYSchildsub=$o(^MRC("CPW",+EPRowId,"EP",$p(EPRowId,"||",2),"DAYS",DAYSchildsub)) q:DAYSchildsub=""  d
+ . . s DAY=$p($g(^MRC("CPW",+EPRowId,"EP",$p(EPRowId,"||",2),"DAYS",DAYSchildsub)),"^",3)
+ . . i DAY="" q 
+ . . s DAYSRowIds(DAY,k)=+EPRowId_"||"_$p(EPRowId,"||",2)_"||"_DAYSchildsub
+ . . ;s ^ZBOC($zn,"ZZ",$O(^ZBOC($zn,"ZZ",""),-1)+1)=DAY_"*"_k_"*"_+EPRowId_"||"_$p(EPRowId,"||",2)_"||"_DAYSchildsub
+ . . s k=k+1
+ 
+</server>
+<DIV>
+
+<table id="CycleDaysCalendar" name="CycleDaysCalendar" border=1 cellpadding=5>
+	<form name="mrcForm" method="post" action="mrclinicalpathways.cycleedit.csp">
+		<INPUT TYPE="HIDDEN" NAME="TWKFL" VALUE="#(TWKFL)#">
+		<INPUT TYPE="HIDDEN" NAME="TWKFLI" VALUE="#(TWKFLI)#">
+		<INPUT TYPE="HIDDEN" NAME="TNAVMARK" VALUE="#(TNAVMARK)#">
+		<INPUT TYPE="HIDDEN" NAME="EPRowId" VALUE="#(EPRowId)#">
+		<input type=hidden name="Params" value="#(EPRowId)#">
+<server>
+w "<TR>"
+f i=1:1:EPTotalDays d
+. ;s OSParRefs=""
+. &sql(SELECT DAYS_IPEpisodeRequired INTO :IPEpisodeRequired FROM SQLUser.MRC_ClinPathwEpDays WHERE DAYS_DayNumber=:i AND DAYS_ParRef=:EPRowId)
+. s (OrdItemIds(i),OSParRefs(i),OSRowIds(i))=""
+. i IPEpisodeRequired="Y" w "<TD align=center  width=1000 height=100 valign=top bgcolor=#00FF00><dd><DIV align=left valign=top><b>Day ",i,"</b>"
+. e  w "<TD align=center  width=1000 height=100 valign=top><dd><DIV align=left valign=top><b>Day ",i,"</b>"
+. w "&nbsp&nbsp<INPUT TYPE='CHECKBOX' ID='",i,"' NAME='",i,"'>"
+. ;
+. s rs=##Class(%Library.ResultSet).%New("web.MRCClinPathwEpDays:GetDaysRowId")	
+. i rs d
+. . d rs.Execute(i,EPRowId)
+. . f  q:'rs.Next()  d
+. . . i rs.GetDataByName("DAYSRowId")'="" d
+. . . . s OSParRef=rs.GetDataByName("DAYSRowId")
+. . . . ;s ^ZBOC($zn,"OSParRef",$O(^ZBOC($zn,"OSParRef",""),-1)+1)=OSParRef
+. . . . f  s OSChildsub=$o(^MRC("CPW",+$g(OSParRef),"EP",$p($g(OSParRef),"||",2),"DAYS",$p($g(OSParRef),"||",3),"OS",OSChildsub)) q:OSChildsub=""  d
+. . . . . s (str,OSOrdSetDR,OSARCIMDR)=""
+. . . . . i OSChildsub'=0 d 
+. . . . . . s OSRowIds(i)=OSRowIds(i)_"^"_+$g(OSParRef)_"||"_$p($g(OSParRef),"||",2)_"||"_$p($g(OSParRef),"||",3)_"||"_OSChildsub
+. . . . . . s str=^MRC("CPW",+$g(OSParRef),"EP",$p($g(OSParRef),"||",2),"DAYS",$p($g(OSParRef),"||",3),"OS",OSChildsub)
+. . . . . i str'="" d
+. . . . . . s OSOrdSetDR=$p(str,"^",1)
+. . . . . . s OSARCIMDR=$p(str,"^",2)
+. . . . . . i OSOrdSetDR'="" s OrdItemIds(i)=OrdItemIds(i)_"^"_OSOrdSetDR
+. . . . . . i OSARCIMDR'="" s OrdItemIds(i)=OrdItemIds(i)_"^"_OSARCIMDR
+. . . . i $tr(OrdItemIds(i),"^","")'="",$tr(OSRowIds(i),"^","")'="" s OSParRefs(i)=OSParRefs(i)_"^"_OSParRef
+. . d rs.%Close()
+. f  s SerSeq=$o(DAYSRowIds(i,SerSeq)) q:SerSeq=""  d
+. . s (SerOrdItemIds,SerOSRowIds,SerOSChildsub)=""
+. . f  s SerOSChildsub=$o(^MRC("CPW",+$g(DAYSRowIds(i,SerSeq)),"EP",$p($g(DAYSRowIds(i,SerSeq)),"||",2),"DAYS",$p($g(DAYSRowIds(i,SerSeq)),"||",3),"OS",SerOSChildsub)) q:SerOSChildsub=""  d
+. . . i SerOSChildsub'=0 d
+. . . . s SerOSRowIds=SerOSRowIds_"^"_+$g(DAYSRowIds(i,SerSeq))_"||"_$p($g(DAYSRowIds(i,SerSeq)),"||",2)_"||"_$p($g(DAYSRowIds(i,SerSeq)),"||",3)_"||"_SerOSChildsub
+. . . . s Serstr=^MRC("CPW",+$g(DAYSRowIds(i,SerSeq)),"EP",$p($g(DAYSRowIds(i,SerSeq)),"||",2),"DAYS",$p($g(DAYSRowIds(i,SerSeq)),"||",3),"OS",SerOSChildsub)
+. . . . i Serstr'="" d
+. . . . . s SerOrdSetDR=$p(Serstr,"^",1)
+. . . . . s SerARCIMDR=$p(Serstr,"^",2)
+. . . . . i SerOrdSetDR'="" s SerOrdItemIds=SerOrdItemIds_"^"_SerOrdSetDR
+. . . . . i SerARCIMDR'="" s SerOrdItemIds=SerOrdItemIds_"^"_SerARCIMDR
+. . s SERDesc=$p($g(^MRC("CPW",+$g(DAYSRowIds(i,SerSeq)),"EP",$p($g(DAYSRowIds(i,SerSeq)),"||",2),"DAYS",$p($g(DAYSRowIds(i,SerSeq)),"||",3))),"^",4)
+. . i SERDesc'="" d
+. . . ; log 62820
+. . . s DefaultItmID=$p(^RBC("SER",SERDesc),"^",1)
+. . . i DefaultItmID="" s DefaultItmID=$p(^RBC("SER",SERDesc),"^",2)
+. . . s SERDesc=$p(^RBC("SER",SERDesc),"^",6)
+. . i SERDesc'="" w "<BR>&nbsp&nbsp&nbsp<A style='cursor:hand' onClick=javascript:SerDescClickHandler('",$g(DAYSRowIds(i,SerSeq)),"','",$g(SerOSRowIds),"','",$g(SerOrdItemIds),"','",$g(IPEpisodeRequired),"','",$g(DefaultItmID),"')>",SERDesc,"</A>"
+. . ;s OSParRefs=OSParRefs_"^"_$g(DAYSRowIds(i,SerSeq)) ;leave this for debug
+. i $tr(OrdItemIds(i),"^","")'="",$tr(OSRowIds(i),"^","")'="" w "<BR><BR>&nbsp&nbsp&nbsp<A style='cursor:hand' onClick=javascript:ViewOrderClickHandler('",$g(OrdItemIds(i)),"','",OSParRefs(i),"','",OSRowIds(i),"','",$g(IPEpisodeRequired),"')>View Orders</A>"
+. e  w "<BR><BR>&nbsp&nbsp&nbsp<A style='cursor:hand' disabled='true')>View Orders</A>"
+. ;w "<INPUT TYPE='HIDDEN' ID='DAYSRowIdz",i,"' NAME='DAYSRowIdz",i,"' VALUE=",$g(DAYSRowIds(i,SerSeq)),">"
+. w "&nbsp;</TD>"
+. i i#5=0,i<EPTotalDays w "</TR><TR>"
+w "</TR>"
+
+</server>
+	</form>
+</table>
+<BR>
+</DIV>
+
+<server>
+ w !,"<SCRIPT language='Javascript'>"
+ w !,"function SetItemList() {"
+	f i=2:1:$l(ItemIds,"^") d
+	. s str=""
+	. s ItemId=$p(ItemIds,"^",i)
+	. i ItemId'="" d
+	. . i $l(ItemId,"||")<2 d
+	. . . s str=$g(^ARCOS(ItemId))
+	. . . i str'="" d
+	. . . . s ItemDesc=$p(str,"^",2)
+	. . . . ;s ItemType=$p(str,"^",3)
+	. . . . ;i ItemType'="" s ItemType=$p(^ARC("IC",ItemType),"^",2)
+	. . i $l(ItemId,"||")=2 d
+	. . . s str=$g(^ARCIM(+ItemId,$p(ItemId,"||",2),1))
+	. . . i str'="" d
+	. . . . s ItemDesc=$p(str,"^",2)
+	. . . . s ItemDesc=##class(websys.Conversions).EscapeUrl(ItemDesc)
+	. . i str'="" w !,"AddItemToList('",ItemId,"','",ItemDesc,"','');"
+ w !,"}"
+ w !,"</SCRIPT>"
+</server>
+
+<script>
+
+function mPiece(s1,sep,n) {
+	delimArray = s1.split(sep);
+	if ((n <= delimArray.length-1) && (n >= 0)) return delimArray[n];
+}
+
+function SerDescClickHandler(id,SerOSRowIds,SerOrdItemIds,IPEpisodeRequired,DefaultItmID) {
+	//alert (id+"*"+SerOSRowIds+"*"+SerOrdItemIds);
+	var link="";
+	var EPRowId="";
+	var EPEpisode="";
+	var obj=document.getElementById("EPRowId");
+	if (obj) EPRowId=obj.value;
+	var obj=document.getElementById("EPEpisode");
+	if (obj) EPEpisode=obj.value;
+	link="mrclinicalpathways.cycleedit.csp?&EPRowId="+EPRowId+"&EPEpisode="+EPEpisode+"&DAYSRowId="+id+"&OrdItemIds="+SerOrdItemIds+"&OSRowIds="+SerOSRowIds+"&IPFlag="+IPEpisodeRequired+"&DefaultItmID="+DefaultItmID;
+	window.open(link,window.name,"toolbar=no,location=no,menubar=no,width=800,height=600,resizable=yes");
+}
+
+function ViewOrderClickHandler(id,OSParRef,OSRowIds,IPEpisodeRequired) {
+	//alert ("View called "+id+"\n"+OSParRef+"\n"+OSRowIds);
+	var link="";
+	var EPRowId="";
+	var EPEpisode="";
+	var obj=document.getElementById("EPRowId");
+	if (obj) EPRowId=obj.value;
+	var obj=document.getElementById("EPEpisode");
+	if (obj) EPEpisode=obj.value;
+	link="mrclinicalpathways.cycleedit.csp?&EPRowId="+EPRowId+"&EPEpisode="+EPEpisode+"&OrdItemIds="+id+"&DAYSRowId="+OSParRef+"&OSRowIds="+OSRowIds+"&IPFlag="+IPEpisodeRequired;
+	window.open(link,window.name,"toolbar=no,location=no,menubar=no,width=800,height=600,resizable=yes");
+}
+
+function BodyloadHandler() {
+	//alert ("csp body");
+	SetFields();
+	SetItemList();
+	InitDaySelectHandler();
+}
+
+window.onload=BodyloadHandler;
+
+</script>
+</body>
+</html>

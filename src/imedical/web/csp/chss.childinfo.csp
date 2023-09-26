@@ -1,0 +1,122 @@
+
+<script language="cache" runat="server">
+
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+	s Action=$Get(%request.Data("actiontype",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	
+	s Name=$Get(%request.Data("Name",1))
+	s HelpCode=$Get(%request.Data("HelpCode",1))
+	s Sex=$Get(%request.Data("Sex",1))
+	s ChildHandBookCode=$Get(%request.Data("ChildHandBookCode",1))
+	s BcCode=$Get(%request.Data("BcCode",1))
+	s VaccinateHandbookCode=$Get(%request.Data("VaccinateHandbookCode",1))
+	s PregHealthCode=$Get(%request.Data("PregHealthCode",1))
+	s CopyDataRes=$Get(%request.Data("CopyDataRes",1))
+	s CardCode=$Get(%request.Data("CardCode",1))
+	s CardType=$Get(%request.Data("CardType",1))
+	s Birth=$Get(%request.Data("Birth",1))
+	s Weight=$Get(%request.Data("Weight",1))
+	s HandbookAdd=$Get(%request.Data("HandbookAdd",1))
+	s Address=$Get(%request.Data("Address",1))
+	s PostCode=$Get(%request.Data("PostCode",1))
+	s FatherName=$Get(%request.Data("FatherName",1))
+	s FMobTele=$Get(%request.Data("FMobTele",1))
+	s FatherTele=$Get(%request.Data("FatherTele",1))
+	s FatherPH=$Get(%request.Data("FatherPH",1))
+	s FatherAllergies=$Get(%request.Data("FatherAllergies",1))
+	s MotherName=$Get(%request.Data("MotherName",1))
+	s MMobTele=$Get(%request.Data("MMobTele",1))
+	s MotherTele=$Get(%request.Data("MotherTele",1))
+	s MotherPH=$Get(%request.Data("MotherPH",1))
+	s MotherAllergies=$Get(%request.Data("MotherAllergies",1))
+	s GestationalAge=$Get(%request.Data("GestationalAge",1))
+	s RenalDiseases=$Get(%request.Data("RenalDiseases",1))
+	s BirthPlace=$Get(%request.Data("BirthPlace",1))
+	s BirthSituation=$Get(%request.Data("BirthSituation",1))
+	s FosterMother=$Get(%request.Data("FosterMother",1))
+	s FosterMotherTele=$Get(%request.Data("FosterMotherTele",1))
+	s MobTele=$Get(%request.Data("MobTele",1))
+	s Email=$Get(%request.Data("Email",1))
+	s bNeonScreen=$Get(%request.Data("bNeonScreen",1))
+	s BornWeight=$Get(%request.Data("BornWeight",1))
+	s BornHeight=$Get(%request.Data("BornHeight",1))
+	s NetPassword=$Get(%request.Data("NetPassword",1))
+	s InputUnit=$Get(%request.Data("InputUnit",1))
+	s FinishTable=$Get(%request.Data("FinishTable",1))
+	s Operator=$Get(%request.Data("Operator",1))
+	s OperateDate=$Get(%request.Data("OperateDate",1))
+	s FillDate=$Get(%request.Data("FillDate",1))
+	s FinishTableName=$Get(%request.Data("FinishTableName",1))
+	s InputUnitName=$Get(%request.Data("InputUnitName",1))
+	s OperatorName=$Get(%request.Data("OperatorName",1))
+	s ChildDisease=$Get(%request.Data("ChildDisease",1))
+	
+	s ChildRowId=$Get(%request.Data("ChildRowId",1))
+	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	
+	s MainSymptom=$Get(%request.Data("MainSymptom",1))
+	
+	
+	
+	s ChildSearchName=$Get(%request.Data("ChildSearchName",1))
+	s ChildIdCard=$Get(%request.Data("ChildIdCard",1))
+	s ChildHandBookCode=$Get(%request.Data("ChildHandBookCode",1))
+	
+	
+	i Action="listFinish" d
+    .w ##class(CHSSWeb.ChildBaseInfo).ListFinish(CommunityCode, Start, Limit)
+	
+	i Action="listSearch" d
+	.s sql="select * from chss.childbaseinfo where communitycode="_CommunityCode_""
+	.i ChildSearchName'="" d
+	..s sql=sql_" and name like '%"_ChildSearchName_"%'"
+	.i ChildHandBookCode'="" d
+	..s sql=sql_" and ChildHandBookCode like '%"_ChildHandBookCode_"%'"
+	.i ChildIdCard'="" d 
+	..s sql=sql_" and PersonRowid  in (select PersonRowid from chss.personhealthrecordmain where IDCard like '%"_ChildIdCard_"%')"  
+    
+    .w ##class(CHSSWeb.ChildBaseInfo).ListSearch(sql,Start, Limit)
+
+	i Action="childnamesearch" d
+	.w ##class(CHSSWeb.ChildBaseInfo).ChildNameSearch(ChildSearchName, Start, Limit,CommunityCode)
+	
+	i Action="list2" d
+	.w ##class(CHSSWeb.ChildBaseInfo).List2(PersonRowId, Start, Limit)
+	
+	i Action="list" d
+	.w ##class(CHSSWeb.ChildBaseInfo).List(CommunityCode, Start, Limit)
+	
+	i Action="add" d
+	.w ##class(CHSSWeb.ChildBaseInfo).insert(PersonRowId,Name,HelpCode,Sex,ChildHandBookCode,BcCode,VaccinateHandbookCode,PregHealthCode,CopyDataRes,CardCode,CardType,Birth,Weight,HandbookAdd,Address,PostCode,FatherName,FMobTele,FatherTele,FatherPH,FatherAllergies,MotherName,MMobTele,MotherTele,MotherPH,MotherAllergies,GestationalAge,RenalDiseases,BirthPlace,BirthSituation,FosterMother,FosterMotherTele,MobTele,Email,bNeonScreen,BornWeight,BornHeight,NetPassword,InputUnit,FinishTable,Operator,OperateDate,CommunityCode,FillDate,FinishTableName,InputUnitName,OperatorName,ChildDisease)
+	
+	i Action="edit" d
+	.w ##class(CHSSWeb.ChildBaseInfo).updata(ChildRowId,PersonRowId,Name,HelpCode,Sex,ChildHandBookCode,BcCode,VaccinateHandbookCode,PregHealthCode,CopyDataRes,CardCode,CardType,Birth,Weight,HandbookAdd,Address,PostCode,FatherName,FMobTele,FatherTele,FatherPH,FatherAllergies,MotherName,MMobTele,MotherTele,MotherPH,MotherAllergies,GestationalAge,RenalDiseases,BirthPlace,BirthSituation,FosterMother,FosterMotherTele,MobTele,Email,bNeonScreen,BornWeight,BornHeight,NetPassword,InputUnit,FinishTable,Operator,OperateDate,CommunityCode,FillDate,FinishTableName,InputUnitName,OperatorName,ChildDisease)
+	
+	i Action="listChildDisease" d
+	.w ##class(CHSSWeb.ChildDiseaseHisService).List(Start,Limit)
+	
+	i Action = "insertWeak" d
+	.w ##class(CHSSWeb.ChildWeakRegisteService).insert(PersonRowId)
+	i Action = "statisticsAge" d
+	.s childcode=$Get(%request.Data("comcode",1))
+	.s childagedate=$Get(%request.Data("childagedate",1))
+	.w ##class(CHSSWeb.ChildBaseInfo).statisticsAge(childcode,childagedate)
+	i Action="guidang" d
+	.s childidd=$Get(%request.Data("guidangid",1))
+	.w ##class(CHSSWeb.ChildBaseInfo).guidang(childidd)
+	i Action="finishsearch" d 
+	.s serachname=$Get(%request.Data("name",1))
+    .w ##class(CHSSWeb.ChildBaseInfo).finishsearch(CommunityCode,serachname ,Start, Limit)
+	i Action="statisticsWork" d
+	.s childworkcode = $Get(%request.Data("childworkcode",1))
+	.s startwork= $Get(%request.Data("startwork",1))
+	.s endwork= $Get(%request.Data("endwork",1))
+	.w ##class(CHSSWeb.ChildBaseInfo).statisticsWork(childworkcode,startwork,endwork)
+</script>

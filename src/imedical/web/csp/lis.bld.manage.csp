@@ -1,0 +1,307 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S SingleViewModuleID=$G(%request.Data("SVModuleID",1))	 //单视图模块的ID
+ S SingleViewModuleTitle=$G(%request.Data("SVModuleTitle",1))
+ S SingleViewModuleURL=SingleViewModuleID
+ S patAdmID=$G(%request.Data("EpisodeID",1))
+ S userID=$G(%session.Data("LOGON.USERID"))
+ S userCode=$G(%session.Data("LOGON.USERCODE"))
+ S userName=$G(%session.Data("LOGON.USERNAME"))
+ S userGroupID=$G(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$G(%session.Data("LOGON.GROUPDESC"))
+ S userLocID=$G(%session.Data("LOGON.CTLOCID"))
+ S userLoc=##Class(LIS.Core.Util).GetLocation(userLocID)
+ S viewFlag=$G(%request.Data("viewFlag",1))
+ 
+ S patient=##Class(LIS.Core.Patient).OpenId(patAdmID)
+ S:'$L(patient) patient=##Class(LIS.Core.Patient).%New()
+ 
+ //当前患者信息
+ S patientID=patient.PatientId
+ S hospitalID=patient.HospitalId
+ 
+ S labelCss="<span style='color=#000000;font-size:15px;'>"
+ S txtCss="<span style='color=#000000;font-size:18px;font-weight:bold;'>"
+ S txtCss2="<span style='color=#000000;font-size:18px;'>"
+ S deli="&nbsp&nbsp&nbsp   "
+ //病人基本信息
+ S patientProfile=""
+ S patientProfile=patientProfile_labelCss_"病案号:</span>"_txtCss_patient.MedicareId_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"ID号:</span>"_txtCss_patient.PatientId_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"姓名:</span><span style='color=#000000;font-size:20px;font-weight:bold;'>"_patient.Name_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"性别:</span>"_txtCss_patient.Sex_"</span>"_deli
+ //S patientProfile=patientProfile_"年龄:"_patAge_deli
+ S patientProfile=patientProfile_labelCss_"出生日期:</span>"_txtCss_patient.DateOfBirth_"</span>"_deli
+ S patientProfile=patientProfile_"<BR>"_labelCss_"科室:</span>"_txtCss2_patient.Location_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"床号:</span>"_txtCss2_patient.Bed_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"涉密信息:</span>"_txtCss2_patient.SecretLevelAlias_" "_patient.PatientLevel_"</span>"_deli
+ S patientProfile=patientProfile_labelCss_"诊断:</span>"_txtCss2_patient.Diagnosis_"</span>"_deli
+ 
+ S showBloodGroupABO=patient.BloodGroupABO,showBloodGroupRhD=patient.BloodGroupRhD,showBloodGroupColor="#0000FF"
+ //S showBloodGroupABO="AB型",showBloodGroupRhD="阳性(+)"
+ I showBloodGroupRhD["阴" {
+ 	S showBloodGroupColor="#FF0000"
+ }
+ I '$L(showBloodGroupABO),'$L(showBloodGroupRhD) {
+	S showBloodGroupABO="血型未知"
+	S showBloodGroupColor="#FF0000"
+ }
+
+ //血型信息
+ S bloodGroupProfile="<span style='color="_showBloodGroupColor_";font-size:40px;margin-top:0;margin-bottom:0;'>"_showBloodGroupABO_"</span>"
+ S bloodGroupProfile=bloodGroupProfile_"<span style='color="_showBloodGroupColor_";font-size:25px;'>"_"&nbsp "_showBloodGroupRhD_"</span>"
+ //24小时累计申请血成份:
+ S profile=##Class(LIS.BS.BLD.REQ.BloodTransProfile).%New()
+ S profile=##Class(LIS.BS.BLD.REQ.BloodTransProfile).GetProfile(patAdmID,"24")
+ S total24hBloodComp="",total24hDetail=""
+ I $L(profile) {
+	S total24hBloodComp=profile.SummaryMl.RequestVolume_profile.SummaryMl.Unit	
+	I +profile.RedBloodCell.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.RedBloodCell.Desc_":"_profile.RedBloodCell.RequestVolume_profile.RedBloodCell.Unit_";"
+	}
+	I +profile.Plasma.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.Plasma.Desc_":"_profile.Plasma.RequestVolume_profile.Plasma.Unit_";"
+	}
+	I +profile.Platelet.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.Platelet.Desc_":"_profile.Platelet.RequestVolume_profile.Platelet.Unit_";"
+	}
+	I +profile.WholeBlood.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.WholeBlood.Desc_":"_profile.WholeBlood.RequestVolume_profile.WholeBlood.Unit_";"
+	}
+	I +profile.Cryoprecipitate.RequestVolume>0 {
+		S total24hDetail=total24hDetail_profile.Cryoprecipitate.Desc_":"_profile.Cryoprecipitate.RequestVolume_profile.Cryoprecipitate.Unit_";"
+	}
+ }
+ 
+ //查找最近未审核的申请单ID
+ I $L(patientID) {
+	K lastRequestIDs	
+	S requestID=""
+	F {
+		S requestID=$O(^DHCBLDAPPFORMi(0,"DEBTOR",patientID,requestID))
+		Q:'$L(requestID)
+		Continue:'$D(^DHCBLDAPPFORMi(0,"STATUS","S",requestID))
+		S reuqestTypeID=$P($G(^DHCBLDAPPFORM(requestID,"F")),"\",2)
+		Continue:'$L(reuqestTypeID)
+		S lastRequestIDs(reuqestTypeID)=requestID
+	} 
+ }
+ S lastIDNormal=$G(lastRequestIDs("N"))
+ S lastIDAutologous=$G(lastRequestIDs("S"))
+ S lastIDStemCell=$G(lastRequestIDs("C"))
+ 
+ S value=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"IsTransBlood")
+ S IsTransBlood=$S(value="有":"true",value=1:"true",value="无":"false",value=0:"false",1:"")
+ S value=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"IsReaction")
+ S IsTransReaction=$S(value="有":"true",value=1:"true",value="无":"false",value=0:"false",1:"")
+ S value=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"IsDrug")
+ S IsDrugAllergy=$S(value="有":"true",value=1:"true",value="无":"false",value=0:"false",1:"")
+ S Gravidity=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"Gravidity")
+ S Parity=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"Parity")
+ 
+ S TransDateInfo=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"TransDateInfo")
+ S TransDetail=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"TransDetail")
+ S ReactionDetail=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"ReactionDetail")
+ S DrugDetail=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"DrugDetail")
+ S value=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"IsBoneMarrowTrans")
+ S IsBoneMarrowTrans=$S(value="是":"true",value=1:"true",value="否":"false",value=0:"false",1:"")
+ S BMTDonorBloodGroup=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"BMTDonorBloodGroup")
+ S BMTRecipientBloodGroup=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"BMTRecipientBloodGroup")
+ S BMTDetail=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"BMTDetail")
+ S value=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"IsOrganTrans")
+ S IsOrganTrans=$S(value="是":"true",value=1:"true",value="否":"false",value=0:"false",1:"")
+ S OTDonorBloodGroup=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"OTDonorBloodGroup")
+ S OTRecipientBloodGroup=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"OTRecipientBloodGroup")
+ S OTDetail=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"OTDetail")
+ S patient.Apanage=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"Apanage")
+ 
+ S value=##Class(LIS.BLD.BT.REQ.Request).GetRecent(patientID,"IsConsent",patAdmID)
+ S IsConsent=$S(value="是":"true",value=1:"true",value="否":"false",value=0:"false",1:"")
+ 
+ S mainJavaScript="lis.bld.manage.js"
+ S showModule="T"
+ I showModule="T" {
+	 S mainJavaScript="lis.bld.manage.tabs.js"
+ }
+ //审核报告权限
+ S isAuthQuality=##Class(LIS.BS.BLD.REQ.Util).IsAuthorizeQuality(userCode)
+ S isAuthQuality=$S(isAuthQuality=1:"true",1:"false")
+ S isXBloodGroupQuality=isAuthQuality	//更改申请血型权限
+ S json=##Class(LIS.JSON.Json).%New()
+ S workflow=##Class(LIS.BS.BLD.REQ.Workflow).%New()
+ S workflow=##Class(LIS.BS.BLD.REQ.Workflow).GetWorkflow("LIS.BLD.REQ",userCode,userLocID,patAdmID)
+ F i=1:1:workflow.Modules.Count() {
+	 
+	S module=workflow.Modules.GetAt(i)
+	D json.AddKeyValue("id",module.Code)
+ 	D json.AddKeyValue("title",module.Title) 
+ 	D json.AddKeyValue("url",module.URL) 
+ 	D json.AddKeyValue("pars","") 
+ 	D json.AddKeyValue("iconCls",module.IconClass) 
+ 	I workflow.ActiveModuleID=(module.SystemID_"||"_module.Code) {
+ 		D json.AddKeyValue("isActive","true") 
+ 	} ELSE {
+	 	D json.AddKeyValue("isActive","false") 
+	}
+ 	D json.InsertRow(json.GetJson())	
+ }	 
+ S tabs=json.GetRowsJson()
+ S activeModule=##Class(LIS.BLD.CT.Module).%OpenId(workflow.ActiveModuleID)
+ S warnButtonText="备血申请"
+ I $L(activeModule) {
+	 S warnButtonText=activeModule.Title
+ }
+ 
+ S:workflow.IsStop workflow.IsWarn=workflow.IsStop
+ 
+ 
+</Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/grid.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/portal.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<!--Ext3 扩展补丁-->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/extend/Ext.ux.grid.CheckColumn.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/proxyhandler.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/print.js"></script>
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+       	//Ext.namespace('Global');
+			//----------------------------------------------
+			//--定义全局变量
+			function Patient(){};
+			function User(){};
+			function Util(){};
+			function View(){};
+			function Global(){};
+			function Recent(){};
+			function System(){}; 
+			function Warn(){}; 
+			Global.Patient=Patient;  //患者信息
+			Global.User=User;		//登录用户信息
+			Global.Util=Util;		//公共功能
+			Global.View=View;		//视图控制信息
+			Global.Recent=Recent;	//最近信息
+			Global.System=System;	//系统信息
+			Global.Warn=Warn;		//警告信息
+	 		//----------------------------------------------
+			//--视图信息
+			Global.View.SingleViewModuleID="#($G(SingleViewModuleID))#";
+			Global.View.SingleViewModuleURL="#($G(SingleViewModuleURL))#";
+			Global.View.SingleViewModuleTitle="#($G(SingleViewModuleTitle))#";
+			Global.View.ViewFlag="#($G(viewFlag))#";
+			//----------------------------------------------
+			//--当前病人信息 
+			Global.Patient.Profile="#($G(patientProfile))#"
+			Global.Patient.BloodGroupProfile="#($G(bloodGroupProfile))#"	
+			Global.Patient.Name="#(patient.Name)#";
+			Global.Patient.Sex="#(patient.Sex)#";
+			Global.Patient.AdmID="#($G(patAdmID))#";
+			Global.Patient.PatientID="#(patient.PatientId)#";
+			Global.Patient.Age="#(patient.Age)#";
+			Global.Patient.AgeValue="#(patient.AgeValue)#";
+			Global.Patient.AgeUnit="#(patient.AgeUnit)#";
+			Global.Patient.Birthday="#(patient.DateOfBirth)#";
+			Global.Patient.LocationID="#(patient.LocationId)#";
+			Global.Patient.Location="#(patient.Location)#";
+			Global.Patient.Ward="#(patient.Ward)#";
+			Global.Patient.Bed="#(patient.Bed)#";
+			Global.Patient.HomeAddress="#(patient.HomeAddress)#";
+			Global.Patient.MobileTelephone="#(patient.MobileTelephone)#";
+			Global.Patient.HomeTelephone="#(patient.HomeTelephone)#";
+			Global.Patient.Apanage="#(patient.Apanage)#";
+			Global.Patient.BloodGroupABO="#(patient.BloodGroupABO)#";
+			Global.Patient.BloodGroupABOCode="#(patient.BloodGroupABOCode)#";
+			Global.Patient.BloodGroup="#(patient.BloodGroup)#";
+			Global.Patient.BloodGroupID="#(patient.BloodGroupId)#";
+			Global.Patient.BloodGroupRhD="#(patient.BloodGroupRhD)#";
+			Global.Patient.BloodGroupRhDCode="#(patient.BloodGroupRhDCode)#";
+			Global.Patient.CardID="#(patient.CardId)#";
+			Global.Patient.Country="#(patient.Country)#";
+			Global.Patient.Diagnosis="#(patient.Diagnosis)#";
+			Global.Patient.MedicareID="#(patient.MedicareId)#";
+			Global.Patient.Nation="#(patient.Nation)#";
+			Global.Patient.Type="#(patient.PatientType)#";
+			Global.Patient.TypeID="#(patient.PatientTypeId)#";
+			Global.Patient.Province="#(patient.Province)#";
+			Global.Patient.ProvinceID="#(patient.ProvinceId)#";
+			Global.Patient.Room="#(patient.Room)#";
+			Global.Patient.SafetyNetCardNo="#(patient.SafetyNetCardNo)#";
+			Global.Patient.SexID="#(patient.SexId)#";
+			Global.Patient.WardID="#(patient.WardId)#";
+			Global.Patient.WorkTelephone="#(patient.WorkTelephone)#";
+			Global.Patient.CountryID="#(patient.CountryId)#";
+			Global.Patient.RoomID="#(patient.RoomId)#";
+			Global.Patient.HospitalID="#($G(hospitalID))#";
+			Global.Patient.Total24hBloodComp="#($G(total24hBloodComp))#";
+			Global.Patient.Total24hDetail="#($G(total24hDetail))#";
+			//----------------------------------------------
+			//--当前用户信息
+			Global.User.Name="#($G(userName))#";
+			Global.User.ID="#($G(userID))#";
+			Global.User.Code="#($G(userCode))#";
+			Global.User.GroupID="#($G(userGroupID))#";
+			Global.User.Group="#($G(userGroupDesc))#";
+			Global.User.LocationID="#($G(userLocID))#";
+			Global.User.Location="#($G(userLoc))#";
+			Global.User.IsAuthQuality=eval("#($G(isAuthQuality))#"); 
+			Global.User.IsXBloodGroupQuality=eval("#($G(isXBloodGroupQuality))#"); 
+			
+			//----------------------------------------------
+			//--最近信息
+			Global.Recent.IsTransBlood=eval("#($G(IsTransBlood))#");
+			Global.Recent.IsTransReaction=eval("#($G(IsTransReaction))#");
+			Global.Recent.IsDrugAllergy=eval("#($G(IsDrugAllergy))#");
+			Global.Recent.Gravidity="#($G(Gravidity))#";
+			Global.Recent.Parity="#($G(Parity))#";
+			Global.Recent.TransDateInfo="#($G(TransDateInfo))#";
+ 			Global.Recent.TransDetail="#($G(TransDetail))#";
+ 			Global.Recent.ReactionDetail="#($G(ReactionDetail))#";
+			Global.Recent.DrugDetail="#($G(DrugDetail))#";
+ 			Global.Recent.IsBoneMarrowTrans=eval("#($G(IsBoneMarrowTrans))#");
+ 			Global.Recent.BMTDonorBloodGroup="#($G(BMTDonorBloodGroup))#";
+ 			Global.Recent.BMTRecipientBloodGroup="#($G(BMTRecipientBloodGroup))#";
+ 			Global.Recent.BMTDetail="#($G(BMTDetail))#";
+ 			Global.Recent.IsOrganTrans=eval("#($G(IsOrganTrans))#");
+ 			Global.Recent.OTDonorBloodGroup="#($G(OTDonorBloodGroup))#";
+ 			Global.Recent.OTRecipientBloodGroup="#($G(OTRecipientBloodGroup))#";
+ 			Global.Recent.OTDetail="#($G(OTDetail))#";
+			Global.Recent.Apanage="#($G(PatApanage))#";
+			Global.Recent.IsConsent=eval("#($G(IsConsent))#");
+
+			Global.Recent.LastIDNormal="#($G(lastIDNormal))#";
+			Global.Recent.LastIDAutologous="#($G(lastIDAutologous))#";
+			Global.Recent.LastIDStemCell="#($G(lastIDStemCell))#";
+			Global.System.Tabs="#($G(tabs))#";
+			Global.Warn.Html="#(workflow.GetWarningHtml())#";
+			Global.Warn.isShow=eval("#($S(workflow.IsWarn:"true",1:"false"))#");
+			Global.Warn.isStop=eval("#($S(workflow.IsStop:"true",1:"false"))#");
+			Global.Warn.ButtonText="#($G(warnButtonText))#";
+	   </script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/bs/#($G(mainJavaScript))#"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/lis.bld.manage.core.js"></script>
+</HEAD>
+<body></body>
+</HTML>

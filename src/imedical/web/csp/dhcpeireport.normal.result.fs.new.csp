@@ -1,0 +1,96 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>	
+
+<SCRIPT language="Cache" RUNAT="SERVER">	
+		
+		s ArcimID=$P(^OEORD(+ARCIM,"I",$P(ARCIM,"||",2),1),"^",2)
+		
+		s JCLX=$G(^DHCPEDataEx("JCLX",ArcimID))
+		s JCBW=$G(^DHCPEDataEx("JCBW",ArcimID))
+		s JCFF=$G(^DHCPEDataEx("JCFF",ArcimID))
+		
+		s ODID=$O(^TMPReport(UserID,"Result", "Content",ARCIM,0))
+		s CurData=$G(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+		s TestDesc=$P(CurData,"^",1)
+		s TestResult=$P(CurData,"^",2)
+		i $L(TestResult,";诊断意见:")>1
+		{
+			s ZDYJ=$p(TestResult,";诊断意见:",2)
+			s Other=$p(TestResult,";诊断意见:",1)
+			s JCSJ=$p(Other,";检查所见:",2)
+			s Other=$p(Other,";检查所见:",1)
+			s LCZD=$p(Other,"临床诊断:",2)
+		}else
+		{
+			s JCSJ=""
+			s ZDYJ=TestResult
+		}
+		
+		
+	</SCRIPT>
+	
+	<table border="0" width="655" style="border-left-width: 0px; border-right-width: 0px; border-bottom-width:0px;">
+	<tr>
+		<td colspan="8">
+		<p align="center"><font face="华文隶书" size="6"><b>北京协和医院</b></font></td>
+	</tr>
+	<tr>
+		<td colspan="8">
+		<div style="border-bottom-style: solid; border-bottom-width: 1px; padding-bottom: 1px">
+		<p align="center"><b><font size="6">医学影像学诊断报告书</font></b></div>
+		</td>
+	</tr>
+	<tr>
+		<td width=14% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">检查类型:</td>
+		<td width=14% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">#(JCLX)#</td>
+		<td width=14% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">检查部位:</td>
+		<td width=14% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">#(JCBW)#</td>
+		<td width=9% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">　</td>
+		<td width=7% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">　</td>
+		<td width=14% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">检查日期:</td>
+		<td width=14% style="border-bottom-style: none; border-bottom-width: medium;font-size:16px">#(CheckDate)#</td>
+	</tr>
+	<tr>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px;" bordercolor="#000000">患者姓名:</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px" bordercolor="#000000">#(PatName)#</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px;" bordercolor="#000000">性别:</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px;" bordercolor="#000000">#(PatSex)#</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px;" bordercolor="#000000">年龄:</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px;" bordercolor="#000000">#(PatAge)#</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px;" bordercolor="#000000">申请科室:</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium;font-size:16px;" bordercolor="#000000">体检科</td>
+	</tr>
+	<tr>
+		<td colspan="8" style="border-top-style: solid; border-top-width: 1px;font-size:16px;" bordercolor="#000000">检查方法:</td>
+	</tr>
+	<tr>
+		<td height="71" valign="top" colspan="8">
+		<p align="left" style="text-indent: 2em;">#(JCFF)#</td>
+	</tr>
+	<tr>
+		<td colspan="8">影像所见：</td>
+	</tr>
+	<tr>
+		<td height="270" valign="top" colspan="8">
+		<p align="left" style="text-indent: 2em;">#(JCSJ)#</td>
+	</tr>
+	<tr>
+		<td colspan="8">印象：</td>
+	</tr>
+	<tr>
+		<td height="210" align="left" valign="top" colspan="8" style="text-indent: 2em;">#(ZDYJ)#</td>
+	</tr>
+	<tr>
+		<td colspan="2">
+		<p align="right">报告医师：</td>
+		<td colspan="2">#(Checker)#</td>
+		<td colspan="2">
+		<p align="right">主审医师：</td>
+		<td colspan="2">#(AuditUser)#</td>
+	</tr>
+</table>
+
+
+
+	

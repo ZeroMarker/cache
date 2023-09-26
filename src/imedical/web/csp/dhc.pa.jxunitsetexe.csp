@@ -1,0 +1,96 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent = $Get(%request.Data("parent",1))
+	s type = $Get(%request.Data("type",1))
+	s active= $Get(%request.Data("active",1))
+	s data = $Get(%request.Data("data",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s parRef = $Get(%request.Data("parRef",1))
+	s unittypedr = $Get(%request.Data("unittypedr",1))
+	s unitDr = $Get(%request.Data("unitDr",1))
+	s deptSetDr = $Get(%request.Data("deptSetDr",1))
+
+	i action="treelist"  d
+	.w ##class(dhc.nca.udata.uADeptSet).TreeList(active,searchField,searchValue,sortField,sortDir,start,limit,parent,type)
+
+	i action="gridlist"  d
+	.w ##class(dhc.nca.udata.uADeptSet).GridList(active,searchField,searchValue,sortField,sortDir,start,limit,parent,type)
+
+	i action="adeptlist"  d
+	.w ##class(dhc.nca.udata.uASubDept).List(active,parRef,searchField,searchValue,sortField,sortDir,start,limit)
+
+	i action="unittype"  d
+	.w ##class(dhc.nca.udata.uAUnitType).List(active,searchField,searchValue,sortField,sortDir,start,limit)
+
+	i action="unit"  d
+	.w ##class(dhc.nca.udata.uAUnit).List(active,searchField,searchValue,sortField,sortDir,start,limit,unittypedr)
+
+	i action="dept"  d
+	.w ##class(dhc.nca.udata.uASubDept).GetDeptComboBox(start,limit,searchValue,unitDr,deptSetDr)
+
+	i action="undist"  d
+	.w ##class(dhc.nca.udata.uASubDept).GetUnDistDept(start,limit,unitDr,deptSetDr)
+
+	i action = "add" d
+	.s result = ##class(dhc.nca.app.appADeptSet).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(dhc.nca.app.appADeptSet).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action="delete"  d
+	.s result = ##class(dhc.nca.app.appADeptSet).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "adddept" d
+	.s result = ##class(dhc.nca.udata.uASubDept).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "editdept" d
+	.s result = ##class(dhc.nca.udata.uASubDept).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action="deletedept"  d
+	.s result = ##class(dhc.nca.udata.uASubDept).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action="copy"  d
+	.s result = ##class(dhc.nca.app.appADeptSet).CopySet(type,deptSetDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

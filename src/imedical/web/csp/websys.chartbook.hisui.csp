@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--websys.chartbook.hisui.csp //-->
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD SoundScenes="chartbook"></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
+	<style>
+		#tabsReg .tabs-panels>.panel>.panel-body{
+			overflow:hidden;
+		}
+		#BButtonBar{
+			overflow:hidden;
+			float:right;
+		}
+	</style>
+</head>
+<server>
+	// &PersonBanner=dhcdoc.in.patient.banner.csp&PatientListPanel=test.patientlist.panel.csp&PatientListPage=test.patientlist.page.csp
+	Set PersonBanner = "dhcdoc.in.patient.banner.csp"
+	if $g(%request.Data("PersonBanner",1))'=""{
+		Set PersonBanner = $g(%request.Data("PersonBanner",1))
+	}
+	if $g(%request.Data("PatientBanner",1))'=""{ //为PersonBanner取个别名
+		Set PersonBanner = $g(%request.Data("PatientBanner",1))
+	}
+	Set NoPatientBanner="N"
+	if $g(%request.Data("NoPatientBanner",1))'=""{
+		Set NoPatientBanner=$g(%request.Data("NoPatientBanner",1))
+	}
+	Set PatientListPanel = "" 			//"dhcdoc.patientlist.csp"
+	if $g(%request.Data("PatientListPanel",1))'=""{
+		Set PatientListPanel = $g(%request.Data("PatientListPanel",1))
+	}
+	Set PatientListPage="" 				//"inpatientlist.csp" 2018-08-03 不默认病人列表,【病人列表】按钮不显示
+	if ($g(%request.Data("PatientListPage",1))'=""){
+		Set PatientListPage = $g(%request.Data("PatientListPage",1))
+	}
+	if ($g(%request.Data("ChartBookName",1))'=""){
+		//w $g(%request.Data("ChartBookName",1))
+		Set ChartBookID = ##class(epr.ChartBook).GetIdFromCodeOrDescription($g(%request.Data("ChartBookName",1)))
+	}
+	if ($g(%request.Data("ChartBookID",1))'=""){
+		Set ChartBookID = $g(%request.Data("ChartBookID",1))
+	}
+	set SwitchSysPat = "Y"
+	if ($g(%request.Data("SwitchSysPat",1))'=""){
+		Set SwitchSysPat = $g(%request.Data("SwitchSysPat",1))
+	}
+	Set tabItems = "[]"
+	if ChartBookID>0{
+		Set tabItems = ##class(epr.ChartBook).ToJson(ChartBookID)
+	}
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm=""
+	if EpisodeID'="" {
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+	}
+	Set AnaesthesiaID = $g(%request.Data("AnaesthesiaID",1))
+	Set BannerHeight=$G(%request.Data("BannerHeight",1),"36px")
+	Set AllowColumnEdit = ##class(web.SSGroup).GetAllowWebColumnManager(%session.Data("LOGON.GROUPID"))
+	Set LayoutType=1 ;1, | 2,
+	if $g(%request.Data("LayoutType",1))'="" Set LayoutType=$g(%request.Data("LayoutType",1))
+	
+	Set ShowButtons = $g(%request.Data("ShowButtons",1),0) //默认不显示
+	Set ShowCopyBtn = $g(%request.Data("ShowCopyBtn",1),"N")
+	if ShowCopyBtn="Y" Set ShowButtons=1
+	;set ShowButtons=1
+	;Set LayoutType=1,ShowButtons=1,NoPatientBanner="N"
+	;Set LayoutType=1,ShowButtons=1,NoPatientBanner="Y"
+	;Set LayoutType=1,ShowButtons=0,NoPatientBanner="N"
+	;Set LayoutType=1,ShowButtons=0,NoPatientBanner="Y"
+	;;Set LayoutType=2,ShowButtons=1,NoPatientBanner="N"
+	;Set LayoutType=2,ShowButtons=1,NoPatientBanner="Y"
+	;Set LayoutType=2,ShowButtons=0,NoPatientBanner="N"
+	;Set LayoutType=2,ShowButtons=0,NoPatientBanner="Y"
+	
+</server>
+<body class="hisui-layout">
+	<script type="text/javascript">
+	var SSUserLoginId = "#($g(%session.Data("LOGON.SSUSERLOGINID")))#";
+	var ChartBookID="#(ChartBookID)#"
+	var tabItemsJson = (#(tabItems)#);
+	var patientListPage= "#(PatientListPage)#";
+	var switchSysPat = "#(SwitchSysPat)#";
+	var PersonBanner="#(PersonBanner)#";
+	var BannerHeight = "#(BannerHeight)#";
+	/**
+	*刷新病人信息条
+	*/
+	var refreshBar = function (){
+		var frm = dhcsys_getmenuform();
+		if (frm) {
+			var papmi = frm.PatientID.value;
+			var adm = frm.EpisodeID.value;
+			if (adm > 0 ){
+				/*if($(".patientInfo").length>0){
+					$.m({ClassName:"web.DHCDocMain",MethodName:"GetPatientBaseInfo",papmi:papmi,adm:adm},function(html){
+						$(".patientInfo").html("");
+						var patJson = $.parseJSON(html);
+						patJson.baseIconProfile=reservedToHtml(patJson.baseIconProfile);
+						$("#patientInfoTpl").tmpl(patJson).appendTo(".patientInfo");
+					});
+				}*/
+				if($(".PatInfoItem").length>0){
+					$.m({ClassName:"web.DHCDoc.OP.AjaxInterface",MethodName:"GetOPInfoBar",CONTEXT:"",EpisodeID:adm},function(html){
+						if (html!=""){
+							$(".PatInfoItem").html(reservedToHtml(html));
+							$(".PatInfoItem").find("img").eq(0).css("top",0);
+						}else{
+							$(".PatInfoItem").html("获取病人信息失败。请检查【患者信息展示】配置。");
+						}
+					});
+				}
+			}else{
+				// 未选病人自动弹出病人列表
+				$("#InpatListDiv").data("AutoOpen",1);
+				if(window.showPatListWin) showPatListWin();
+			}
+		}
+	};
+	</script>
+   	<!--<div class="window-mask alldom" style="width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;"></div>-->
+	
+	<csp:if condition=PatientListPanel'="">
+	<csp:Include Page="#(PatientListPanel)#">
+	</csp:if>
+	<!--center start-->
+	<server>
+	if PatientListPanel="" {
+		if NoPatientBanner="N" {
+			w "<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:1px;overflow:hidden;padding-top:10px;"">"
+			d ..Include(PersonBanner)
+			w "</div>"
+		}
+		w "<div data-options=""region:'center',border:true"" style=""border:0px;"">"
+		w "	<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
+		w "</div>"
+		if ShowButtons {
+			w "	<div id=""ButtonBarReg"" data-options=""region:'south',border:true"" style=""height:52px;"">"
+			w "		<div id=""BButtonBar""></div>"
+    		w "	</div>"
+		}
+	}else{
+		if LayoutType=2 {
+			w !,"<div data-options=""region:'center',border:true"" style=""border:0px;z-index:3"">"
+			w !,"<div  class=""hisui-layout"" data-options=""fit:true"">"
+			;w !,"<div class=""window-mask alldom"" style=""width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;""></div>"
+			if NoPatientBanner="N" {
+				w !,"<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:1px;overflow:hidden;padding-top:10px;"">"
+				d ..Include(PersonBanner)
+				w !,"</div>"
+			}
+			w !,"<div data-options=""region:'center',border:true"" style=""border:0px;padding-bottom:10px;"">"
+			w !,"	<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
+			w !,"</div>"
+			if ShowButtons {
+				w !,"	<div id=""ButtonBarReg"" data-options=""region:'south',border:true"" style=""height:52px;"">"
+				w !,"		<div id=""BButtonBar""></div>"
+	    		w !,"	</div>"
+			}
+			w !,"</div>"
+			w !,"</div>"
+		}else{ //第一种布局, 病人信息条肯定是北边
+			if NoPatientBanner="N" {
+				w "<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:1px;overflow:hidden;padding-top:10px;"">"
+				d ..Include(PersonBanner)
+				w "</div>"
+			}
+			if ShowButtons {
+				w "<div class=""hisui-layout"" data-options=""region:'center',border:true"" style=""border:0px;z-index:3"">"
+				;w "	<div class=""window-mask alldom"" style=""width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;""></div>"
+				w "	<div data-options=""region:'center',border:true"" style=""border:0px;"">"
+				w "		<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
+				w "	</div>"
+				w "	<div id=""ButtonBarReg"" data-options=""region:'south',border:true"" style=""height:52px;"">"
+				w "		<div id=""BButtonBar""></div>"
+	    		w "	</div>"
+	    		w "</div>"
+			}else{ //无信息条 无按钮bar
+				w "<div data-options=""region:'center',border:true"" style=""border:0px;"">"
+				w "	<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
+				w "</div>"
+			}
+		}
+	}
+	</server>
+   <!--center end-->
+	<div data-options="region:'south',border:true" style="border:0px;display:none;">
+	    <iframe name="TRAK_hidden" src="" width="100%" min-height="500px" height="100%" frameborder="0"></iframe>
+	</div>
+<script type="text/javascript">
+var chartBookItems = [];
+var fEPRMENU = {"EpisodeID":{value:"#(EpisodeID)#"},"PatientID":{value:"#(PatientID)#"},"mradm":{value:"#(mradm)#"},"AnaesthesiaID":{value:"#(AnaesthesiaID)#"}};
+
+if (switchSysPat==="N"){
+	if(dhcsys_getmenuform){
+		dhcsys_getmenuform_origin = dhcsys_getmenuform;
+	}
+	var dhcsys_getmenuform = function (){
+		return window.fEPRMENU;
+	}
+}
+function getConfigUrl(userId,groupId,ctlocId){
+	return {title:"诊疗配置",url:"oeorder.oplistcustom.config.hui.csp",width:700,height:525};	
+}
+//重新load当前页面,并加载数据
+var hrefRefresh = function (forceRefresh){
+	// 解锁病人
+	tkMakeServerCall("web.DHCDocMainOrderInterface","ChartItemChange");
+	var frm = dhcsys_getmenuform();
+	if (frm) {
+		var papmi = frm.PatientID.value; //DHCDocMainView.PatientID;
+		var adm = frm.EpisodeID.value; //DHCDocMainView.EpisodeID;
+		var mradm = frm.mradm.value; //DHCDocMainView.EpisodeID;
+		var AnaesthesiaID=frm.AnaesthesiaID.value; 
+		var curTab = $('#tabsReg').tabs('getSelected');
+		var ilink = curTab.panel("options").ilink;
+		var isXhrRefresh = curTab.panel("options").isxhr;
+		var valueExp = curTab.panel("options").valueExp||"";
+		var oneTimeValueExp = curTab.panel("options").oneTimeValueExp||"";
+		if (valueExp!="" || oneTimeValueExp!="") valueExp = valueExp+"&"+oneTimeValueExp;
+		delete curTab.panel("options").oneTimeValueExp;
+        var curIframe = curTab.find("iframe").get(0);
+		if (curIframe){
+			if (adm > 0){
+				// isXhrRefresh=空,false都是全局刷新,或第一次刷新
+				if ((curIframe.src=="about:blank")||!isXhrRefresh){
+					var objParam = {PatientID: papmi, EpisodeID: adm, mradm: mradm, AnaesthesiaID:AnaesthesiaID, forceRefresh: (forceRefresh || false)};
+					// 把菜单中表达式转成json--->加到xhrRefresh入参中
+					var veArr = valueExp.split("&");
+					for(var ve=0; ve<veArr.length; ve++){
+						var veItem = veArr[ve].split("=");
+						if (veItem[0]&&veItem.length>1) objParam[veItem[0]] = veItem[1];
+					}
+			 		curIframe.src = rewriteUrl(ilink,objParam);
+				}else{
+					if (curIframe && curIframe.contentWindow){
+						if("function" === typeof curIframe.contentWindow.xhrRefresh ){
+							var obj = {papmi: papmi, adm: adm, mradm: mradm, AnaesthesiaID:AnaesthesiaID, forceRefresh: (forceRefresh || false)};
+							// 把菜单中表达式转成json--->加到xhrRefresh入参中
+							var veArr = valueExp.split("&");
+							for(var ve=0; ve<veArr.length; ve++){
+								var veItem = veArr[ve].split("=");
+								if (veItem[0]&&veItem.length>1) obj[veItem[0]] = veItem[1];
+							}
+							if (logger.level==Level.DEBUG) debugger;
+							// 调用panel页面iframe中的xhrRefresh方法
+							curIframe.contentWindow.xhrRefresh(obj);				
+						}
+					}
+				}
+			}else{
+				 if (curIframe.contentDocument){
+				 	curIframe.contentDocument.body.innerHTML="请选择患者"
+				 }
+			}
+		}
+	}
+}
+var createTab = function(tabItems){
+	for (var ind=0;ind<tabItems.length;ind++){
+		var item = tabItems[ind];
+		var jsonItem = {
+			id:item.id, 
+			title:item.title,
+			closable:false,
+			ilink:item.src,
+			isxhr:!item.allRefresh,
+			itarget:"TRAK_main",
+			valueExp:"",
+			content:'<iframe id="i'+item.id+'" name="i'+item.id+'" src="about:blank" width="100%" min-height="500px" height="100%" frameborder="0"></iframe>'
+		}
+		chartBookItems.push(jsonItem);
+		$("#tabsReg").tabs('add',jsonItem);	
+	}
+}
+
+/**
+*  @param {String} tabName 菜单Code.【菜单Code】
+*  @param {Object} cfg     附加参数
+*  切换页签功能,如果没有打开则打开
+* parent.switchTabByEMR("dhc.side.oe.diagrecord") 切换到代码为dhc.side.oe.oemanage的页签
+* parent.switchTabByEMR("dhc.side.oe.diagrecord",{oneTimeValueExp:"ReportId=123456"}) 切换到代码为dhc.side.oe.oemanage的页签
+*/
+function switchTabByEMR(tabName,cfg){
+	switchTabByEMRAndOpt(tabName,undefined,cfg);
+}
+function switchTabByEMRAndOpt(tabName,tabOption,cfg){
+	if (tabName==""){alert("请传入要打开的页签名!");}
+	tabName = tabName.split(".").join("_");
+	var tabsJObj = $("#tabsReg");
+	if (!tabsJObj.tabs("exists",tabName)){
+		
+	}else{
+		$.extend($('#tabsReg').tabs('getTab',tabName).panel("options"), cfg) ;
+		tabsJObj.tabs('select',tabName); 
+	}
+}
+/**
+* @param {String|Number} tabName  页签的【菜单标题名】或【菜单Code】或 tabs的index
+* @param {String} funName         JS方法名称
+* @param {....}  后面入参为funName的入参
+* 调用另一已打开过的页签界面的JS方法
+* parent.invokeChartFun("dhc.side.oe.oemanage","save","arg1","arg2")
+*/
+function invokeChartFun(tabName,funName){
+	//alert("tabName"+tabName+",funName="+funName);
+	var tab = $("#tabsReg").tabs('getTab',tabName);
+	if (!tab) { console.log("未找到【"+tabName+"】页签!");return ;}
+	var newTabframe = tab.find("iframe").get(0);
+	if ( newTabframe ){
+		var fun = "";
+		if ("function" === typeof newTabframe[funName]){
+			fun = newTabframe[funName]; 
+		}else if (newTabframe.contentWindow && "function" === typeof newTabframe.contentWindow[funName]){
+			fun = newTabframe.contentWindow[funName];
+		}
+		if(fun) {
+			var args=[],j=0;
+			for (var i=2; i<invokeChartFun.arguments.length; i++) {
+				args[j++]=invokeChartFun.arguments[i];
+			}
+			return fun.apply(newTabframe,args);
+		}			
+	}
+	return ;
+}
+var resetEprMenuForm = function(){
+	setEprMenuForm("","","","","");
+}
+var setEprMenuForm = function(adm,papmi,mradm,canGiveBirth,anaId){
+       //episodeId,patientId,mradm,"",AnaesthesiaID
+	var frm = dhcsys_getmenuform();
+	if((frm) &&(frm.EpisodeID.value != adm)){
+		frm.EpisodeID.value = adm;
+		frm.PatientID.value = papmi;
+		frm.AnaesthesiaID.value= anaId;
+		frm.mradm.value = mradm;
+	}
+}
+/**
+* 切换病人
+* scripts/dhcdoc/InPatientist.inPat.js---
+function doSwitch(PatientID,EpisodeID,mradm) {
+	if(top.frames[0] && top.frames[0].switchPatient){
+		top.frames[0].switchPatient(PatientID,EpisodeID,mradm);
+		top.frames[0].hidePatListWin();
+	}else{
+		parent.parent.switchPatient(PatientID,EpisodeID,mradm);
+		parent.parent.hidePatListWin();
+	}
+}
+*/
+function switchPatient(patientId,episodeId,mradm,AnaesthesiaID){
+	$("#InpatListDiv").data("AutoOpen",0);
+	setEprMenuForm(episodeId,patientId,mradm,"",AnaesthesiaID);
+	refreshBar();
+	hrefRefresh();
+}
+/**
+* @author wanghc
+* @date 2012/5/18
+* @param {String} str
+* @return {HTMLString} html html片段
+*/
+function reservedToHtml(str){	
+	var replacements = {"&lt;":"<", "&#60;":"<", "&gt;":">", "&#62;":">", "&quot;":"\"", "&#34;":"\"", "&apos;":"'",
+	"&#39;":"'", "&amp;":"&", "&#38;":"&"};
+	return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g,function(v){
+		return replacements[v];		
+	});
+}
+/**
+* @param {iframe} win        iframe|window
+* @param {String} funName    function name
+*/
+function getFrameFun(ifrm,funName){
+	var fun = "";
+	if ("function" === typeof ifrm[funName]){
+		fun = ifrm[funName]; 
+	}else if (ifrm.contentWindow && "function" === typeof ifrm.contentWindow[funName]){
+		fun = ifrm.contentWindow[funName];
+	}
+	if(fun) {return fun;}
+	return null;
+}
+function refDataBtnHandler(){
+	var _t = $(this);
+	var index = _t.data("i") 
+	var rtn = invokeChartFun(index,"getRefData");
+	if ("object"==typeof rtn){
+		if (!rtn.success) {
+			$.messager.alert("提示",rtn.msg,"info");
+		}else{
+			var toPageTitle=rtn.toTitle;
+			if (toPageTitle!=""){
+				parent.switchTabByEMR(toPageTitle,{oneTimeValueExp:"copyOeoris="+rtn.data+"&copyTo="});
+				parent.$("#CreatNewBook").dialog('close')
+			}
+		}
+	}else{
+		$.messager.alert("提示","复制的数据格式不对。格式如：{data:\"refdata\",toTitle:\"门诊病历\",msg:\"\",success:true}","error");
+	}
+}
+function init(){
+	createTab(tabItemsJson);
+	/*select tab*/
+	$.extend($("#tabsReg").tabs("options"),{
+		onSelect : function(title,index){ 
+			//所有界面刷新都走这
+			hrefRefresh(true);  //只要点击就强制刷新
+			var item = tabItemsJson[index];
+			$("#BButtonBar").empty();
+			if ("undefined"!=typeof item.BButtons && item.BButtons!=""){
+				$("#ButtonBarReg").panel("resize",{height:52})
+				if (item.BButtons.indexOf(",C,")>=0){
+					$("<a href='#' style='margin:10px;' data-i="+index+">复制</a>").appendTo("#BButtonBar").linkbutton({
+						iconCls:'icon-w-copy' 
+					}).click(refDataBtnHandler);
+				}
+				if (item.BButtons.indexOf(",R,")>=0){
+					$("<a href='#' style='margin:10px;' data-i="+index+">引用</a>").appendTo("#BButtonBar").linkbutton({
+						iconCls:'icon-w-copy'	 
+					}).click(refDataBtnHandler);
+				}
+			}else{
+				$("#ButtonBarReg").panel("resize",{height:0})
+			}
+		},
+		onBeforeClose : function(title,index){
+			var target = this;
+			var tab = $(target).tabs("getTab",title);	
+			var iframe = tab.find("iframe").get(0);
+			if ( iframe ){
+				var onBeforeCloseTab = getFrameFun(iframe,"onBeforeCloseTab");
+				if(onBeforeCloseTab) {
+					//如果返回false,不切换Chart
+					if (!onBeforeCloseTab()){return false;};	
+			    }			
+			}
+			return true;			
+		},
+		onBeforeSelect : function(title,newWhich){
+			var oldTab = $(this).tabs("getSelected");
+			if (oldTab==null) return ; //点chart的x		
+			var oldIframe = oldTab.find("iframe").get(0);	
+			if ( oldIframe ){
+				var chartOnBlur = getFrameFun(oldIframe,"chartOnBlur");
+				if(chartOnBlur) {
+					//如果返回false,不切换Chart
+					if (!chartOnBlur()){return false;};	
+			    }			
+			}	
+			//------------------	
+			var newTab = $(this).tabs("getTab",newWhich.attr("id"));
+			if (newTab==null) return ; //同一target内加载			
+			var newTabframe = newTab.find("iframe").get(0);	
+			if ( newTabframe ){
+				var chartOnFocus = getFrameFun(newTabframe,"chartOnFocus");
+				if (chartOnFocus) {
+					var frm = dhcsys_getmenuform();
+					var papmi="",adm="",mradm="";
+					if (frm) {
+						papmi = frm.PatientID.value;
+						adm = frm.EpisodeID.value; 
+						mradm = frm.mradm.value; 
+					}
+				    chartOnFocus({papmi: papmi, adm: adm, mradm: mradm});	
+				}			
+			}
+		}	
+	});
+	$("#tabsReg").tabs('select',0);
+	refreshBar();
+}
+function soundCloseEMR(){
+	if (patientListPage=="emr.browse.patientlist.csp"){
+		window.close();
+	}
+}
+$.parser.onComplete = function(context){
+	if (!!context) return ;
+	$(".window-mask.alldom").hide(); //.fadeOut("fast");
+	init();
+}
+</script>
+<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+<csp:if condition=AllowColumnEdit>
+	<style>
+		#alltabslist option, #usetabslist option{
+			font-size:16px;
+			padding-top:2px;
+		}
+		option.optshow{
+			color:black;
+			background-color:#b0c4de;
+		}
+		option.opthide{
+			color:darkgray;
+			backgroup-color:#ffffff;
+		}
+	</style>
+	<script type="text/javascript" >
+		var tabsRight = {
+			cfg:function(){
+				$.tabscfg({
+					tabsId:ChartBookID,
+					tabsShowJson:tabItemsJson,
+					userId:session['LOGON.USERID']
+				});
+			}
+		}
+		;$(function(){
+			$("#tabsReg").tabs('options').onContextMenu = function(e, title, index){
+				e.preventDefault();
+				$("#tabsrightmm").menu('show',{left:e.pageX,top:e.pageY});
+			};
+		});
+	</script>
+	<script type="text/javascript" src="../scripts/hisui/websys.chartbook.cfg.js"></script>
+	<div id="tabsrightmm" class="hisui-menu">
+		<div id="mm-tabs-cfg" onclick="tabsRight.cfg();">配置</div>
+	</div>
+</csp:if>
+</body>
+</html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>

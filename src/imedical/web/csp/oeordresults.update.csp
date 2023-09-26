@@ -1,0 +1,52 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<BODY>
+<SERVER>
+ n obj,ResultID,ResType
+ s ResultID=%request.Get("ResultID")
+ s ResType=%request.Get("ResType")
+ ;
+ i ResType="W" d
+ . s obj=##Class(User.OEOrdResult).%OpenId(ResultID,0)
+ . i obj d
+ . . s obj.RESDateRead=+$H
+ . . s obj.RESTimeRead=$p($H,",",2)
+ . . d obj.RESUserReadDRSetObjectId(%session.Get("LOGON.USERID"))
+ . . s save=obj.%Save(0)
+ . . d obj.%Save(0)
+ . . d obj.%Close()
+ i ResType="T" d
+ . s ResultID=%request.Get("TRRowid")
+ . i %request.Get("PatientID")="" d %request.Set("PatientID",##Class(web.OETextResult).GetPatientID(ResultID))
+ . s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . i frm s frm.HideMenus=1,frm.HideHeadings=1 d frm.Show(),frm.%Close()
+ . s frm=##Class(websys.Component).OpenName("OEOrdTextResult.List")
+ . i frm d frm.Show(),frm.%Close()
+ . i %request.Get("DateRead")="" d
+ . . s obj=##Class(User.OETextResult).%OpenId(ResultID,0)
+ . . i obj d
+ . . . s obj.TRDateRead=+$H
+ . . . s obj.TRTimeRead=$p($H,",",2)
+ . . . d obj.TRUserReadDRSetObjectId(%session.Get("LOGON.USERID"))
+ . . . s save=obj.%Save(0)
+ . . . d obj.%Save(0)
+ . . . d obj.%Close()
+ ;
+</SERVER>
+<SCRIPT>
+document.focus()
+</SCRIPT>
+</BODY>
+</HTML>
+

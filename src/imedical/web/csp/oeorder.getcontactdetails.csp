@@ -1,0 +1,64 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ n CProv,ContMethod,HospID,WINNAME,CProvID,Details,info,ContMethodDesc
+ s (CProv,ContMethod,HospID,WINNAME,CProvID,Details,info,ContMethodDesc)=""
+ s CProv=%request.Get("CProv")
+ s ContMethod=%request.Get("ContMethod")
+ s HospID=%request.Get("HospID")
+ s WINNAME=%request.Get("WINNAME")
+ ;s ^zpeterc($zn,"GetContactDetails")=CProv_","_ContMethod_","_HospID_","_WINNAME
+
+ s CProvID=##Class(web.CTCareProv).GetIdFromCodeOrUserDesc(CProv)
+ i ContMethod="NotifyClinician",CProvID'="" s ContMethod=$p($g(^CTPCP(CProvID,3)),"^",13)
+ ;s ^zpeterc($zn,"Hello")=CProvID_","_HospID
+ 
+ i CProvID'="",HospID'="" {
+	s Details=##Class(web.CTCareProvAddress).GetAddress(CProvID,HospID)
+ }
+
+ i Details'="" {
+	i ContMethod="" s ContMethod=$p($g(Details),"^",16)
+	i ContMethod="E" s info=$p($g(Details),"^",12)
+	i ContMethod="M" s info=$p($g(Details),"^",10)
+	i ContMethod="F" s info=$p($g(Details),"^",9)
+	i ContMethod="PG" s info=$p($g(Details),"^",11)
+	i ContMethod="HP" s info=$p($g(Details),"^",6)
+	i ContMethod="OP" s info=$p($g(Details),"^",7)
+	i ContMethod="OE" s info=$p($g(Details),"^",8)
+	
+ }
+ i ContMethod'="" s ContMethodDesc=##class(websys.StandardTypeItem).GetDescription("ContactFirstOn", ContMethod)
+ ;s ^zpeterc($zn,"Final")=ContMethodDesc
+ ;i info'="" {
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var cobj=detailFrame.document.getElementById(""ContactDetails"");"
+ w "if(cobj){"
+ w "	if (cobj) cobj.value='"_info_"';"
+ w "}"
+ w "var PCMobj=detailFrame.document.getElementById(""PrefConMethod"");"
+ w "if(PCMobj){"
+ w "	if (PCMobj) PCMobj.value='"_ContMethodDesc_"';"
+ w "}"
+ w "</script>"
+ ;}
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	
+	s projname     = $Get(%request.Data("projname",1))
+	s billcode     = $Get(%request.Data("billcode",1))
+	s year    	   = $Get(%request.Data("year",1))
+	s rowid  	   = $Get(%request.Data("rowid",1))	
+	s view         = $Get(%request.Data("view",1))
+	s ChkResult    = $Get(%request.Data("ChkResult",1))
+	s FundBillDR   = $Get(%request.Data("FundBillDR",1))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).List2(hospid,year, projname, billcode,userdr, sortField, sortDir, start, limit)
+	
+	i action = "yearList" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).year(start, limit, str)	
+	
+	i action = "projList" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).projName(hospid,userdr,start, limit, str)
+	
+	i action="submit" d
+	.s result= ##class(herp.budg.udata.uBudgProjFundReq).UpdState(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="check" d
+	.s result= ##class(herp.budg.udata.uBudgProjFundReq).UpdChkRec(rowid,view, ChkResult,userdr)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "yearmonth" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).yearmonth(start, limit, str)
+
+	i action = "itemlist" d
+	.w ##class(herp.budg.udata.uBudgProjFundReq).detailList(FundBillDR, sortField, sortDir, start, limit)
+		
+</script>

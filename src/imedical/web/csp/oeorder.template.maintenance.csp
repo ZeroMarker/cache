@@ -1,0 +1,70 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.-->
+<!--oeorder.template.maintenance.csp 医嘱模板维护-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDocOP:COMMONLIB></DHCDocOP:COMMONLIB>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.easyui.1.3.5.css"></LINK>
+<link rel="stylesheet" type="text/css" href="/dthealth/web/scripts/pharmacy/plugins/Font-Awesome-4.6.3/css/font-awesome.min.css" />
+<!--bootstrap icheck plugin--->
+<!--link rel="stylesheet" type="text/css" href="../scripts_lib/bootstrap-3.3.5/customplugins/icheck/skins/square/blue.css"-->
+<!--this page css -->
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/ordtempmaintencance.css">
+<!--script type='text/javascript' src='../scripts_lib/polyfill.min.js'></script-->
+<script charset="GB2312" type='text/javascript' src='../scripts/framework/ext.icare.Lookup.js'></script>
+<!--script type="text/javascript" src="../scripts/nurse/vueUI/vue.js"></script-->
+<script type='text/javascript' src='../scripts_lib/vue.js'></script>
+<!--script type="text/javascript" src="../scripts_lib/bootstrap-3.3.5/customplugins/icheck/icheck.js"></script-->
+
+<Server>
+s LogCTLocId=%session.Get("LOGON.CTLOCID")
+s EpisodeID=%request.Get("EpisodeID")
+s PreftabType=%request.Get("PreftabType") //User.SSUser User.CTLoc
+s paraPreftabType=PreftabType
+s CMFlag=%request.Get("CMFlag")
+s XCONTEXT=%request.Get("XCONTEXT")
+s XYDefaultContext="WNewOrderEntry"
+s CMDefaultContext="W50007"
+if (XCONTEXT="") s XCONTEXT=XYDefaultContext
+//根据登录科室得到医嘱模版类型标识,用于区分门,急,住院的医嘱个人模版
+s LocPrefType=##Class(epr.PreferencesQuery).GetPrefTypeByLoc(%session.Data("LOGON.CTLOCID"))
+s MenuName = "System.OEOrder.OrgFav.Save.SetSaveForLocation"
+;得到安全组是否有医嘱模板维护某一个保存菜单权限
+s IsHaveMenuAuthOrderOrgFav=##class(web.DHCDocOrderCommon).IsHaveMenuAuthOrderOrgFav(%session.Get("LOGON.GROUPID"),MenuName)
+if (PreftabType="") s PreftabType="User.SSUser"
+s LogCTLocDesc=$p($g(^CTLOC(LogCTLocId)),"^",2)
+if (PreftabType="User.SSUser"){
+	s SaveParam=%session.Get("LOGON.USERNAME")
+}elseif (PreftabType="User.CTLoc"){
+	s SaveParam=LogCTLocDesc
+}else{
+	s SaveParam=%session.Get("LOGON.USERNAME") //默认个人
+}
+</Server>
+</head>
+<body>
+<csp:Include Page="oeorder.template.maintenance.show.csp">
+ <SCRIPT language = 'javascript' >
+  var OrdTempGlobalObj={
+	  PreftabType:"#(PreftabType)#",
+	  XCONTEXT:"#(XCONTEXT)#",
+	  CMFlag:"#(CMFlag)#",
+	  SaveParam:"#(SaveParam)#",
+	  IsHaveMenuAuthOrderOrgFav:"#(IsHaveMenuAuthOrderOrgFav)#",
+	  LogCTLocDesc:"#(LogCTLocDesc)#",
+	  LocPrefType:"#(LocPrefType)#",
+	  XYDefaultContext:"#(XYDefaultContext)#",
+	  CMDefaultContext:"#(CMDefaultContext)#",
+	  paraPreftabType:"#(paraPreftabType)#"
+  }
+ </SCRIPT>
+ 
+  <script type="text/javascript" src="../scripts/dhcdoc/oeorder.Template.Maintenance.js"></script>
+
+</body>
+</html>

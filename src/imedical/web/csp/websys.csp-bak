@@ -1,0 +1,332 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ; Let's trap the errors and try and avoid those 5294 errors
+ s $zt="Error^"_$zn
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ n j,TFORM,TEVENT,TMENU,TNAVGOTO,TWKFL,TWKFLI,TPAGCNT,TPAGID,TSRTITM,TryAgain,e,val,TREPORT,thisdev,TOVERRIDE,compid,TWKFLL,TWKFLJ,Tinserted
+ s thisdev=$I
+ ;
+ s %response.ServerSideRedirect=""
+ s ISINLOOP=0
+ ;
+ ; Set this at every opportunity to try to avoid timeout problems
+ s %session.AppTimeout=$g(%session.Data("LOGON.TIMEOUT"),900)
+ ;
+ i $g(%session.Data("epr.default.csp"),1) d ##Class(websys.Conversions).LoadRequest() d %session.Kill("epr.default.csp")
+ ;
+ s TryAgain=0
+ d ##Class(websys.Conversions).CommonReload()
+:TryAgain ;
+ ;
+ s TFORM=$g(%request.Data("TFORM",1))
+ s TPAGCNT=$g(%request.Data("TPAGCNT",1))
+ s TPAGID=$g(%request.Data("TPAGID",1))
+ s TEVENT=$g(%request.Data("TEVENT",1))
+ s TMENU=$g(%request.Data("TMENU",1))
+ s TREPORT=$g(%request.Data("TREPORT",1))
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s TWKFLL=$g(%request.Data("TWKFLL",1))
+ s TWKFLJ=$g(%request.Data("TWKFLJ",1))
+ s TSRTITM=$g(%request.Data("TSRTITM",1))
+ i TPAGCNT="" s TWKFLI=TWKFLI+1
+ s TOVERRIDE=$g(%request.Data("TOVERRIDE",1))
+ ; Default to 'DIRTY=1'
+ ; If there is no ID default to TDIRTY=1 (assume that if there is no ID, the user may be doing an insert with all fields defaulted)
+ s TDIRTY=$g(%request.Data("TDIRTY",1),1) i $d(%request.Data("ID",1)),$g(%request.Data("ID",1))="" s TDIRTY=1
+ s compid=$e($p(TEVENT,"i",1),2,999)
+ s msg.ComponentDefault=compid
+ ;s ^TMP("msg",$I)=msg.Name
+ ;
+ k ^Temp("Upgrade","websys.csp")
+ m ^Temp("Upgrade","websys.csp","session",1)=%session.Data
+ m ^Temp("Upgrade","websys.csp","request",1)=%request.Data
+ d:TREPORT'="" ..Report()
+ d:TEVENT'="" ..Event()
+ d:TMENU'="" ..Menu()
+ m ^Temp("Upgrade","websys.csp","session",2)=%session.Data
+ m ^Temp("Upgrade","websys.csp","request",2)=%request.Data
+
+ ;
+ ;如果没有工作流,Kill, 如果工作流发生变化,将前面保存的临时工作流Id信息删除
+ i 'TWKFL k ^TMP("find",%session.SessionId)
+ i $g(^TMP("find",%session.SessionId))'=TWKFL k ^TMP("find",%session.SessionId)
+ ;
+ ;d:TWKFL'="" ..Workflow()
+ ;i $g(%request.Data("XTRELOADID",1))'="" s %response.ServerSideRedirect="websys.reloadplus.csp"
+ ;[TN] only check workflow stuff if we are not jumping to reload the same screen
+
+ i $g(%request.Data("TEDITFRAME",1))=1,$g(TRELOAD) s %response.ServerSideRedirect=$g(^TMP("reload",%session.SessionId,$g(TRELOADID),"RequestPageName")),ISINREDIRECT=1
+
+ i $g(%request.Data("XTRELOADID",1))="",$g(%request.Data("TEDITFRAME",1))'=1 d:TWKFL'="" ..Workflow()
+ ;
+ ; if nothing is specified and there is a mark for a previous page- go there
+ ;17-Apr-2002: required for end of workflows
+ i %response.ServerSideRedirect="",'TryAgain,'TWKFL s TryAgain=1 g TryAgain
+ ;
+ ; We're lost - let's go home !
+ ;i %response.ServerSideRedirect="websys.csp" s %response.ServerSideRedirect=""
+ ;[TN] for workflow jumping back to websys.csp need to set ISINLOOP
+ ;i '$g(msg.Count),%response.ServerSideRedirect="websys.csp" s %response.ServerSideRedirect=""
+ i $g(msg.Count) s ISINLOOP=1
+ i 'ISINLOOP,%response.ServerSideRedirect="websys.csp" s %response.ServerSideRedirect=""
+ s:%response.ServerSideRedirect="" %response.ServerSideRedirect="websys.home.csp"
+ s ISINLOOP=1
+ ;
+ s %request.Data("ServerSideRedirect",1)=%response.ServerSideRedirect
+ ;[TN] for jumping out of a frame when in workflow, don't set %request.Data("ServerSideRedirect",1) to websys.frameescape.csp
+ i $g(%request.Data("TFRAME",1))'="" s %response.ServerSideRedirect="websys.framesescape.csp"
+ ;
+ //KM 10-Oct-2001: The DONOTGOBACK variable is for overwriting the default ServerSideRedirect settings (there was an original reason for the misleading name DONOTGOBACK!!!)
+ i $g(%request.Data("DONOTGOBACK",1))'="" s %response.ServerSideRedirect=%request.Data("DONOTGOBACK",1)
+ i $g(%request.Data("DONOTGOBACK",1))=1 s %response.ServerSideRedirect="websys.tomainframe.csp"
+ ;
+ ;
+ ;执行d ##Class(websys.Conversions).CommonReload()会生成新的ReloadID到TRELOADNEW变量中,同时保存保存%request参数到^TMP("reload",%session.SessionId,TRELOADNEW)
+ ;执行..workflow里有一句话d ##Class(websys.Conversions).SaveReload(TRELOADNEW)保存%request参数
+ ;同时k ^TMP("reload",%session.SessionId,TRELOADNEW,"TMENU")
+
+ if $g(msg.Count) {
+	s TRELOADNEW=$s(TRELOADID'="":TRELOADID,1:TRELOADNEW)
+	i '$G(ISINREDIRECT) {
+		;to avoid subscript errors...
+		i $g(TRELOADID)'="" {
+			s %response.ServerSideRedirect=$g(^TMP("reload",%session.SessionId,$g(TRELOADID),"RequestPageName"))
+			s ISINREDIRECT=1
+			k %request.Data
+			d ##Class(websys.Conversions).LoadReload(TRELOADID)
+			;
+			;if error messages on after update udf but new insert has already updated record then return back newly inserted id
+			if $d(%request.Data("ID")),$g(%request.Data("ID",1))="",$g(Tinserted)'="" s msg.Data("ID",1)=Tinserted
+		}
+	}
+	d msg.%Save()
+ } else {
+	d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ }
+ d msg.%Close()
+ ;
+ ; Save %response info as it will disappear due to redirect
+ d ##Class(websys.Conversions).SaveRequest()
+ ; Useful if we want to put debug messages in this page
+ ;d %response.Flush()
+ ;
+ m ^Temp("Upgrade","websys.csp","session",3)=%session.Data
+ m ^Temp("Upgrade","websys.csp","request",3)=%request.Data
+ s ^Temp("Upgrade","ServerSideRedirect")=%response.ServerSideRedirect
+
+ u thisdev
+ ;
+ ; We are always going to redirect from here
+ q 1
+:Error ;
+ s ^Temp("Upgrade","websys.csp","error")=$ZE
+ d BACK^%ETN
+ q 0
+ quit 1
+</csp:method>
+
+
+<csp:method name=Report arguments="">
+ n rpt,code
+ s rpt=##Class(websys.Report).%OpenId(TREPORT,0)
+ i rpt s code=rpt.Code d rpt.%Close()
+ ;d ##Class(websys.Report).Print(code,%session.Get("LOGON.CTLOCID"),%session.Get("REMOTE_ADDR"))
+ ;KK 6/2/04 L:40045
+ i $g(%request.Data("noofcopies",1))'="" {
+ 	d ##Class(websys.Report).Print($g(%request.Data("ReportCode",1)),$g(%session.Data("LOGON.CTLOCID")),$g(%session.Data("REMOTE_ADDR")),"","","","","","","",$g(%request.Data("device",1)),$g(%request.Data("noofcopies",1)))
+ } else {
+ 	d ##Class(websys.Report).Print($g(%request.Data("ReportCode",1)),$g(%session.Data("LOGON.CTLOCID")),$g(%session.Data("REMOTE_ADDR")))
+ }
+ s TryAgain=1
+ q
+</csp:method>
+
+<csp:method name=Event arguments="">
+ n itmid,itm,compid,itmname,type,e
+
+ s type=$e(TEVENT,1)
+ s compid=$e($p(TEVENT,"i",1),2,999)
+ s itmname=$p(TEVENT,"i",2,99)
+ //s comp=##Class(websys.Component).%OpenId(compid,0)
+ //i comp d  //optimisation opportunity...
+ //optimised to use index
+ ;m ^TMPEVENT($i(^TMPEVENT))=%request.Data
+ i compid d
+ . s itm=""
+ . ;i type="t" f j=1:1:comp.TableItems.Count() i comp.TableItems.GetAt(j).Name=itmname s itm=comp.TableItems.GetAt(j) q
+ . ;i type="d" f j=1:1:comp.Items.Count() i comp.Items.GetAt(j).Name=itmname s itm=comp.Items.GetAt(j) q
+ . i type="t" s itmid=$o(^websys.ComponentTableItemsI("Name",compid," "_$zcvt(itmname,"U"),"")) i itmid s itm=##Class(websys.ComponentTableItems).%OpenId(compid_"||"_itmid,0)
+ . i type="d" s itmid=$o(^websys.ComponentItemsI("Name",compid," "_$zcvt(itmname,"U"),"")) i itmid s itm=##Class(websys.ComponentItems).%OpenId(compid_"||"_itmid,0)
+ . i itm d  ; find work around for invalid object 'comp'
+ . . s %response.ServerSideRedirect = itm.LinkUrl      ;;##class(ext.websys.Menu).TransCspName(  zhaocz 2011-06-11 edit
+ . . i itm.LinkComponent'="" s %session.Data("WEBSYS.TCOMPONENT")=itm.LinkComponent s %response.ServerSideRedirect="websys.default.csp"
+ . . ; If this page has invoked this method - don't do it again - this is to avoid double inserts, updates etc
+ . . i TPAGID'="",$d(^TMP("donemethod",%session.SessionId,TPAGID)) q
+ . . ; If the page is being sorted don't resubmit
+ . . i ($g(%request.Data("TSRT",1))=1)!($g(%request.Data("TSRT",1))=2) q
+ . . ; If it is a paged list after a submit don't re-update
+ . . i $d(%request.Data("TPAGCNT")) q
+ . . ;i itm.ClassMethod="" q
+ . . ; defer this to the websys save - later jude
+ . . ;i itm.ClassMethodIfDirty,'TDIRTY q
+ . . i 'TryAgain d
+ . . . i $d(%request.Data("ID",1)),$g(%request.Data("ID",1))="",itm.ParRef.DisplayType="E" s Tinserted=""
+ . . . d itm.InvokeMethod()
+ . . . i $d(Tinserted),$g(%request.Data("ID",1))'="" s Tinserted=$g(%request.Data("ID",1))  ;if there's a id, it has been inserted
+ 
+ . . ; only mark it as done if no fatal errors were reported
+ . . i TPAGID'="",+$g(msg.Count)=0 d
+ . . . s ^TMP("donemethod",%session.SessionId,TPAGID)=""
+ . . ; for OE !
+ . . s TRELOADNEW=##Class(websys.Conversions).SaveReload(TRELOADNEW)
+ . s $zt="skip"
+ . //d comp.%Close()
+:skip	;
+ q
+</csp:method>
+
+
+<csp:method name=Menu arguments="">
+ n mnu
+ s mnu=##Class(websys.Menu).%OpenId(TMENU,0)
+ i mnu d
+ . i mnu.ShowInNewWindow="" d ##Class(websys.SessionEvents).websysMenuChange(TMENU)
+ . d:'TryAgain mnu.InvokeMethod() ; watch out for double updates
+ . ; If menu links to workflow then start first page in workflow
+ . i mnu.WorkFlow s TWKFL=mnu.WorkFlow.%Id(),TWKFLI=1 s %request.Data("TWKFL",1)=TWKFL,%request.Data("TWKFLI",1)=TWKFLI q
+ . s %response.ServerSideRedirect= mnu.LinkUrl    ;zhaocz 2011-06-11 edit
+ . ;
+ . ;i mnu.ChartBook s %response.ServerSideRedirect="epr.chartbook.csp" s %request.Data("ChartBookID",1)=mnu.ChartBook.%Id() ;wanghc
+ . ;增加了对自定义chartbook的的处理 2012.03.28
+ . i mnu.ChartBook d
+ . . i mnu.LinkUrl="" s %response.ServerSideRedirect="epr.chartbook.csp"
+ . . s %request.Data("ChartBookID",1)=mnu.ChartBook.%Id() 
+ . ;
+ . i mnu.LinkComponent s %session.Data("WEBSYS.TCOMPONENT")=mnu.LinkComponent.Name ,%response.ServerSideRedirect="websys.default.csp"
+ . i mnu.Worklist s %response.ServerSideRedirect="epr.worklist.csp" s %request.Data("WorkID",1)=mnu.Worklist.%Id()
+ . i mnu.LinkReport s %request.Data("TREPORT",1)=mnu.LinkReport.%Id()
+ . i mnu.LinkReport,mnu.LinkReport.ParameterComponent s %session.Data("WEBSYS.TCOMPONENT")=mnu.LinkReport.ParameterComponent.Name s %response.ServerSideRedirect="websys.default.csp"
+ . i mnu.LinkReport,mnu.LinkReport.ParameterUrl'="" s %response.ServerSideRedirect=mnu.LinkReport.ParameterUrl q
+ i mnu d mnu.%Close()
+ q
+</csp:method>
+
+<csp:method name=Workflow arguments="">
+ n wfl,wflitmscnt,tframe
+ s %response.ServerSideRedirect=""
+ ; save this stuff in case we need it for 'sticky input'
+ i TWKFLI d
+ . i $g(^TMP("find",%session.SessionId))'=TWKFL k ^TMP("find",%session.SessionId)
+ . s ^TMP("find",%session.SessionId)=TWKFL
+ . k ^TMP("find",%session.SessionId,TWKFLI)
+ . m ^TMP("find",%session.SessionId,TWKFLI)=%request.Data
+ . i $o(^TMP("TPATLIST",%session.SessionId,""))'=TWKFL  k ^TMP("TPATLIST",%session.SessionId)
+ s wfl=##Class(websys.WorkFlow).%OpenId(TWKFL,0)
+ 
+ ; Find the next item in the sequence (else go to the start)
+ i wfl d
+ . k %request.Data("TMENU")
+ . ;
+ . i +$g(%request.Data("TWKFLIX",1)) d  q
+ . . s ix=$g(%request.Data("TWKFLIX",1))
+ . . d ##Class(websys.Menu).PatientSearchRetrieve()
+ . ;
+ . ; If we have reached then end then start again at the beginning
+ . ;i TWKFLI>wfl.WorkFlowItems.Count() s TWKFLI=1 k ^TMP("find",%session.SessionId)
+ . ;workflow cycling for selection...
+ . s wflitmscnt=wfl.WorkFlowItems.Count()
+ . s tframe=$g(%request.Data("TFRAME",1))
+ . i wfl.CycleSelection,TWKFLI>wflitmscnt d
+ . . i TWKFLL'="" s TWKFLI=1 k ^TMP("find",%session.SessionId)
+ . . i TWKFLL="" s %response.ServerSideRedirect="epr.default.csp" k ^TMP("find",%session.SessionId) ;for quitting out of looping workflow
+ . i wfl.CycleSelection,TWKFLI=1,TWKFLL'="" d ..WorkflowCycle(wflitmscnt,wfl.JumpToList)
+ . ;
+ . ;workflow looping back to the start
+ . i wfl.Loop,TWKFLI>wflitmscnt d
+ . . ;need to remove all existing page data from last item, but reset workflow details back to the beginning and keep frameescape details
+ . . s TWKFLI=1 k ^TMP("find",%session.SessionId)
+ . . k %request.Data
+ . . s %request.Data("TWKFL",1)=TWKFL,%request.Data("TWKFLI",1)=TWKFLI
+ . . i tframe'="" s %request.Data("TFRAME",1)=tframe
+ . ;
+ . ;workflow last page e.g when last page=eprstart page = wfl item 1
+ . i TWKFLI=wfl.WorkFlowItems.Count() k ^TMP("find",%session.SessionId)
+ . ;
+ . ;jump to a particular page when workflow completes
+ . i wfl.JumpToList,TWKFLI>wflitmscnt d ..WorkflowJump()
+ . ;
+ . ; if we have reached the end then jump out of the workflow (leave these until the next time round for pageing)
+ . i TWKFLI>wfl.WorkFlowItems.Count() k %request.Data("TWKFL"),%request.Data("TWKFLI") k ^TMP("find",%session.SessionId) s TWKFL="" q
+ . ; Find the first valid item
+ . s val=1
+ . f TWKFLI=TWKFLI:1:wfl.WorkFlowItems.Count() d  q:val
+ . . n exec,def
+ . . s %request.Data("TWKFLI",1)=TWKFLI
+ . . s val=1,exec=wfl.WorkFlowItems.GetAt(TWKFLI).ConditionalExpression d ##Class(websys.Conversions).expressionExecute(exec)
+ . . ;d %response.Flush()
+ . . ;if in looping workflow and bypassing last item in workflow, reset to start of workflow again.
+ . . i 'val,wfl.Loop,TWKFLI=wflitmscnt s TWKFLI=0 k ^TMP("find",%session.SessionId) k %request.Data s %request.Data("TWKFL",1)=TWKFL s:tframe'="" %request.Data("TFRAME",1)=tframe
+ . . ;if in cycleselection workflow and bypassing last item in workflow, reset to start of workflow again with next selected id
+ . . i 'val,wfl.CycleSelection,TWKFLI=wflitmscnt d ..WorkflowCycle(wflitmscnt,wfl.JumpToList)
+ . . ;;if skipping workflow item save current details against new details so if in edit screen and need to display error, can jump back to correct screen (twkfli)
+ . . i 'val,$g(TRELOADNEW) d ##Class(websys.Conversions).SaveReload(TRELOADNEW) k ^TMP("reload",%session.SessionId,TRELOADNEW,"TMENU")
+ . . i 'val q
+ . . ; allow override of context when specifically passed... as TCONTEXT
+ . . ;d %request.Set("CONTEXT","W"_TWKFL)
+ . . s %request.Data("CONTEXT",1)="W"_TWKFL
+ . . i $g(%request.Data("TCONTEXT",1))'="" s %request.Data("CONTEXT",1)=%request.Data("TCONTEXT",1)
+ . . ; If we are pageing don't evaluate this again
+ . . i TPAGCNT="" s exec=wfl.WorkFlowItems.GetAt(TWKFLI).TransitionExpression d ##Class(websys.Conversions).expressionExecute(exec)
+ . . s def=wfl.WorkFlowItems.GetAt(TWKFLI).Item
+ . . ;set to websys.default.csp with component, then override if non-default url is defined
+ . . i def,def.Component'="" s %response.ServerSideRedirect="websys.default.csp" s %session.Data("WEBSYS.TCOMPONENT")=def.Component.Name
+ . . i def,def.Component="" s %response.ServerSideRedirect=def.Url      ; zhaocz 2011-06-11 edit  ##class(ext.websys.Menu).TransCspName(
+ . . i def d def.%Close()
+ . . ; For the last item in the workflow end workflow (leave these until the next time round for pageing)
+ . . i TWKFLI>wfl.WorkFlowItems.Count() k %request.Data("TWKFL"),%request.Data("TWKFLI") k ^TMP("find",%session.SessionId) s TWKFL="" q
+ . ;
+ . i wfl.JumpToList,'val,TWKFLI=wflitmscnt d ..WorkflowJump()
+ i wfl d wfl.%Close()
+ 
+ q
+</csp:method>
+
+<csp:method name=WorkflowCycle arguments="cntWkflItems,dojump">
+ n idtype,idnext,idtemp,idcnt
+ s idtype=$p(TWKFLL,"^",1),idnext=$p(TWKFLL,"^",2)
+ ; if no more ids, exit workflow looping... jump to main/start epr page??? 
+ ; can't see how you can be in looping workflow if not in epr frame
+ i idnext="" d
+ . k %request.Data("TWKFLL") k ^TMP("find",%session.SessionId)
+ . s TWKFLI=cntWkflItems+1
+ . s %response.ServerSideRedirect="epr.default.csp"
+ . i dojump d ..WorkflowJump()
+ i idnext'="" d
+ . i TWKFLI=cntWkflItems,cntWkflItems'=1 s TWKFLI=0 ;when in workflow 'for' loop checking conditional expressions
+ . s idtemp=$p(TWKFLL,"^",3,$l(TWKFLL,"^"))
+ . s TWKFLL=idtype_"^"_idtemp s %request.Data("TWKFLL",1)=TWKFLL
+ . s %request.Data(idtype,1)=idnext
+ . ;;may need to find way to resolve for speed issue...
+ . i idtype="AppointmentID" s %request.Data("EpisodeID",1)=$p($g(^RBAS(+idnext,+$p(idnext,"||",2),"APPT",+$p(idnext,"||",3))),"^",4)
+ . i idtype="OEOrdItemID" s %request.Data("EpisodeID",1)=$p($g(^OEORD(+idnext)),"^",1)
+ . i idtype="WaitingListID" s %request.Data("PatientID",1)=$p($g(^PAWL(+idnext)),"^",12)
+ . i $d(%request.Data("EpisodeID")) s %request.Data("PatientID",1)=$p($g(^PAADM(+%request.Data("EpisodeID",1))),"^",1) s %request.Data("mradm",1)=$p($g(^PAADM(+%request.Data("EpisodeID",1))),"^",61)
+ q
+</csp:method>
+
+<csp:method name=WorkflowJump arguments="">
+ //[SP] Don't jump if we've got an error to display. log33909
+ i $g(msg.Count) q
+ ; TWKFLJ=pagename^treloadid
+ i $p(TWKFLJ,"^",2)'="" d
+ . s %response.ServerSideRedirect=$p(TWKFLJ,"^",1)
+ . s TRELOADID=$p(TWKFLJ,"^",2),TRELOAD=1
+ . k %request.Data("TWKFLJ"),%request.Data("TWKFL"),%request.Data("TWKFLI")
+ . s ISINLOOP=1,GOTRELOAD=0
+ . s %request.Data("TRELOADID",1)=TRELOADID
+ . s %request.Data("TRELOAD",1)=1
+ . k ^TMP("find",%session.SessionId)
+ q
+</csp:method>

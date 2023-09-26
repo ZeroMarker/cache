@@ -1,0 +1,63 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s StartDate = $Get(%request.Data("StartDate",1))
+	s EndDate = $Get(%request.Data("EndDate",1))
+	
+	s Dept = $Get(%request.Data("Dept",1))
+	s PaperNames = $Get(%request.Data("PaperNames",1))
+	s JournalNames = $Get(%request.Data("JournalNames",1))
+	s FisAuthor = $Get(%request.Data("FisAuthor",1))
+	s ComAuthor = $Get(%request.Data("ComAuthor",1))
+	s AuditState = $Get(%request.Data("AuditState",1))
+	s checkerdr =  $Get(%request.Data("checkerdr",1))
+	s view =  $Get(%request.Data("view",1))
+	s userdr =  $Get(%request.Data("userdr",1)) // µÇÂ½ÓÃ»§ID
+	s checker =  $Get(%request.Data("checker",1))
+	
+	
+	i action = "GetDeptField" d
+	.w ##class(herp.srm.udata.uSRMENRegPaperAudit).DeptList(start, limit, str)
+
+	i action = "GetFisAuthor" d
+	.w ##class(herp.srm.udata.uSRMENRegPaperAudit).UserList(start, limit, str)
+
+	i action = "GetComAuthor" d
+	.w ##class(herp.srm.udata.uSRMENRegPaperAudit).UserList(start, limit, str)
+	
+	i action = "GetUserID" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetSRMUserID(userdr)
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMENRegPaperAudit).AllList(start, limit, StartDate, EndDate, Dept, PaperNames, JournalNames, FisAuthor, ComAuthor, AuditState, userdr)
+	
+	
+	i action = "audit" d
+	.s result = ##class(herp.srm.udata.uSRMENRegPaperAudit).Audit(rowid,checker)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+   	i action = "noaudit" d
+	.s result= ##class(herp.srm.udata.uSRMENRegPaperAudit).NoAudit(rowid, view, checkerdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

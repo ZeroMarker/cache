@@ -1,0 +1,100 @@
+<!--
+Description: ÎÊ¾íÂ¼Èë  dhchm.questiondetailset.csp
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html lang="en">  
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhchm.questiondetailset.js"></script>
+	<style>
+		#Content{
+			
+			border-Radius: 4px;
+		}
+		.f24 {
+   			 font-size: 24px;
+		}
+		.mt15{
+			margin-top: 15px;
+		}
+		.mt25{
+			margin-top: 25px;
+		}
+		.lh200{
+			line-height: 200%;
+		}
+		.text_i2{
+			text-indent: 2em;
+		}
+		.detail_remark
+		{
+			padding:10px 0px;
+			margin-bottom: 10px;
+		}
+		a{
+			font-size:18px;
+		}
+	</style>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s QuesID=%request.Get("QuesID")
+		s:QuesID="" QuesID=1
+		s PreIADM=%request.Get("PreIADM")
+		s RegNo=""
+		s EQID=%request.Get("EQID")
+		i PreIADM'=""
+		{
+			s PIBI=$P(^DHCPEPreIADM(PreIADM),"^",1)
+			s RegNo=$P(^DHCPEPreIBI(PIBI),"^",1)
+			s EvaluationId=$G(^DHCPEDataNewEx("PreIADMToHM",PreIADM))
+			i (EvaluationId'="")&&(EQID="")
+			{
+				s QuestionChl=""
+				f  s QuestionChl=$o(^User.DHCHMOQEQuestionI("QEQCQuestionnaireDRIndex",QuesID,EvaluationId,QuestionChl),-1) q:(QuestionChl="")!(EQID'="")  d
+				.s EQID=EvaluationId_"||"_QuestionChl
+			}
+		}		
+		s SubjectOrder=%request.Get("SubjectOrder")
+		s Job=%request.Get("Job")
+		s ReadOnly=%request.Get("ReadOnly")
+		s SizeJSON=%request.Get("SizeJSON")
+		;w SizeJSON,!
+		i SubjectOrder=""
+		{
+			s Job=##class(web.DHCPE.HM.ExamSurveyHandler).QuerySurveyDetail(QuesID,RegNo,"","",EQID)
+			s SubjectOrder=1
+		}
+	</SCRIPT>
+	 <Script  type='text/javascript'>
+		var Job=#(Job)#
+		var QuesID=#(QuesID)#
+	</Script>
+</head>
+
+<body style="background-color: #fff;">
+	
+	<Div id="Content">
+		
+		
+		<div id="SubjectDiv" >
+			
+			<SCRIPT language="Cache" RUNAT="SERVER">
+				s Flag="0"
+				s:ReadOnly="Y" Flag="1"
+				d ##class(web.DHCPE.HM.ExamSurveyHandler).OutSurveyToWeb(Job,QuesID,SubjectOrder,Flag,SizeJSON)
+			</SCRIPT>
+		</div>
+	</Div>
+	<input type="hidden" id="RegNo" value="#(RegNo)#">  
+	<input type="hidden" id="PreIADM" value="#(PreIADM)#">  
+	<input type="hidden" id="appendStr" value=""/>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/websys.hisui.js"></script>
+	
+</body>
+</html>

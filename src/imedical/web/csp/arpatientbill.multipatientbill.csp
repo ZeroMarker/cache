@@ -1,0 +1,63 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</CSP:METHOD>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+
+	n context,patid,epid,epid2,twkfl,twkfli,LINK
+	n RegistrationNo,EpisodeNo,SelAdmissionType,AdmDateFrom,AdmDateTo,AdmLoc,AdmLocID,ToBill,Billed,Outstanding,Complete,BillStatus
+	s (context,patid,epid,epid2,twkfl,twkfli,LINK)=""
+	s (RegistrationNo,EpisodeNo,SelAdmissionType,AdmDateFrom,AdmDateTo,AdmLoc,AdmLocID,ToBill,Billed,Outstanding,Complete,BillStatus)=""
+
+	s patid  =$g(%request.Data("PatientID",1))
+	s epid   =$g(%request.Data("EpisodeID",1))
+	s RegistrationNo=$g(%request.Data("RegistrationNo",1))
+	s EpisodeNo=$g(%request.Data("EpisodeNo",1))
+	s SelAdmissionType=$g(%request.Data("SelAdmissionType",1))
+	s AdmDateFrom=$g(%request.Data("AdmDateFrom",1))
+	s AdmDateTo=$g(%request.Data("AdmDateTo",1))
+	s AdmLoc=$g(%request.Data("AdmLoc",1))
+	s AdmLocID=$g(%request.Data("AdmLocID",1))
+	s ToBill=$g(%request.Data("ToBill",1))
+	s Billed=$g(%request.Data("Billed",1))
+	s Outstanding=$g(%request.Data("Outstanding",1))
+	s Complete=$g(%request.Data("Complete",1))
+	s BillStatus=Outstanding_"^"_Complete_"^"_ToBill
+	
+	s ToBill="Y"
+	s Billed="Y"
+	s Outstanding="Y"
+	s Complete="Y"
+	s AdmDateFrom=""
+	s AdmDateTo=""
+	s SelAdmissionType=""
+	
+	s twkfl=%request.Get("TWKFL")
+	s twkfli=%request.Get("TWKFLI")
+	s context=%request.Get("CONTEXT")
+	s LINK="websys.default.csp?WEBSYS.TCOMPONENT=ARPatientBill.ListAll&Action=Receipting&GroupType=I&RegistrationNo="_RegistrationNo_"&EpisodeNo="_EpisodeNo_"&SelAdmissionType="_SelAdmissionType
+	s LINK=LINK_"&AdmDateFrom="_AdmDateFrom_"&AdmDateTo="_AdmDateTo_"&AdmLocID="_AdmLocID_"&BillStatus="_BillStatus
+	s LINK=LINK_"&CONTEXT="_context
+
+</SERVER>
+
+<FRAMESET rows="40%,*"  border="0" scrolling="auto" reSize>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARPatientBill.FindBill&PatientBanner=1&PatientID=#(patid)#&CONTEXT=#(context)#" name="frmFindBill" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1"> 
+	<frame src="#(LINK)#" name="ListAll" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="1">
+
+
+</FRAMESET>
+<BODY>
+</BODY>
+</HTML>

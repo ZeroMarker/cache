@@ -1,0 +1,106 @@
+﻿<!--高值材料批量退库(多单据)-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="hisui-layout BorderLine" data-options="region:'north',border:false">
+		<div data-options="region:'west',width:700,border:false">
+			<table class="Condition" id="Conditions">
+				<input id="RowId" name="RowId" type="hidden">
+				<input id="InitScg" name="InitScg" type="hidden">
+				<tr>
+					<td>库房</td>
+					<td><input id="InitToLoc" name="InitToLoc" class="textbox hisui-combobox"></td>
+					<td>单号</td>
+					<td><input id="InitNo" name="InitNo" class="textbox" disabled="true"></td>
+					<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+					<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				</tr>
+				<tr>
+					<td>退库科室</td>
+					<td><input id="InitFrLoc" name="InitFrLoc" class="textbox hisui-combobox" data-options="disabled:true"></td>
+					<td>制单日期</td>
+					<td><input id="InitDate" name="InitDate" class="hisui-datebox textbox" data-options="disabled:true"></td>
+					<td><a href="#" id="CompleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'">完成</a></td>
+					<td><a href="#" id="CancelCompBT" class="hisui-linkbutton">取消完成</a></td>
+				</tr>
+				<tr>
+					<td>出库备注</td>
+					<td><input id="InitRemarks" name="InitRemarks" class="textbox"></td>
+					<td>完成</td>
+					<td class="CkPadding">
+						<input id="InitComp" name="InitComp" class="hisui-checkbox" type="checkbox" value="Y" data-options="disabled:true">
+						<a href="#" id="SearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+					<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				</tr>
+			</table>
+		</div>
+		<div class="NonPadGrid" style="padding:4px;" data-options="region:'center',border:false">
+			<div class="hisui-panel panel-header-gray" data-options="fit:true">
+				<div id="MasterGrid"></div>
+			</div>
+		</div>
+	</div>
+
+	<div data-options="region:'center',border:false">
+		<table id="DetailGrid"></table>
+	</div>
+
+
+	<!--查询界面Dialog-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询出库单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="FindConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+						<td><label>退库科室</label><input id="FReqLoc" name="FrLoc" class="textbox hisui-combobox"></td>
+						<td><label>退库单号</label><input id="FInitNo" name="InitNo" class="textbox"></td>
+						<td><a href="#" id="FComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">选取</a></td>
+					</tr>
+					<tr>
+						<td><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						<td><label>单据状态</label><input id="FStatus" name="Status" class="textbox hisui-combobox"></td>
+						</td>
+						<td>
+							<a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							<a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'退库单',headerCls:'panel-header-gray',fit:true">
+					<table id="FMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',headerCls:'panel-header-gray',fit:true">
+					<table id="FDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfFindR.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfReturnVastHV.js"></script>
+</body>
+</html>

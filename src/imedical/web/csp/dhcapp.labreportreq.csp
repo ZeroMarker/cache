@@ -1,0 +1,76 @@
+<!-- 检验 dhcapp.labreportreq.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcapp.labreportreq.csp 检验申请单 //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+<script language="Cache" runat="server">
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+</script>
+<!--------------打印相关---------->
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/dhcappprintcom.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/printcommon.js"></script>
+<!-------------------------------->
+<link rel="stylesheet" href="../scripts/dhcdoc/dhcapp/css/labreportreq.css"/>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reporttarwin.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/labreportreq.js"></script>
+</head>
+<body>
+<div id="MainPanel" class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:'检验项目',headerCls:'panel-header-gray'"  border="true">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" border="false">
+                <label style="margin:0px 5px;">#(..Get("项目检索"))#</label><input id="item" style="width:245px;border:1px solid #95B8E7;margin:2px 3px;height:25px;" placeholder='#(..Get("请输入名称/拼音码"))#'/>
+                <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
+                </table>
+			</div>
+			<div data-options="region:'south',title:'',headerCls:'panel-header-gray'" style='height:420px;' border="false">
+				<div class="hisui-layout" fit="true">
+					<div id="SelPanel" data-options="region:'center',title:'已开项目列表',headerCls:'panel-header-gray'" style="border-right:0;border-left:0;">
+						<div id="ItemSelList" border="false"></div>
+					</div>
+					<div data-options="region:'south',title:'注意事项',collapsible:false,headerCls:'panel-header-gray'" style='height:200px;' border="false">
+						<div class="hisui-layout" fit="true">
+							<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="border-right:0;border-left:0;border-top:0;">
+								<div id="noteContent" style="background-color:#fff;margin: 0 auto;width: 97%;padding-top:10px;height:100px;">
+								</div>
+							</div>
+							<div data-options="region:'south',title:'',headerCls:'panel-header-gray'" style='height:45px;' border="false">
+								<div class="pt-butttom" style="padding-top:5px;padding-left:60px;">
+									<span class="myCost" >
+										<span class="myCostleft">#(..Get("总费用"))#</span>
+										<span class="myCostleftbl"></span>
+										<span id="arExaReqCost" class="myCostright">#(..Get("0元"))#</span>
+									</span>						
+									<a href="#" id="bt_sendreq" class="hisui-linkbutton btn-lightgreen m-left-20" data-options="iconCls:''" onclick="sendExaReq()">发送</a>
+									<a href="#" id = "bt_printreq" class="hisui-linkbutton" data-options="iconCls:''" onclick="printExaReq(2)">打印告知单</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--------------打印相关---------->
+<div id="hiddenEncrypt" style="width:0;height:0;">
+	<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+	</form>
+</div>
+<!-------------------------------->
+</body>
+</html>

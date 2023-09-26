@@ -1,0 +1,155 @@
+<!-- 病理检测项目字典维护 -->
+<!-- dhcapp.testitem.csp -->
+<html>
+<head>
+<HISUI/>
+<title>病理检测项目字典维护</title>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/testitem.js"></script>
+<style>
+input::-ms-clear { display: none;}
+input::-ms-reveal { display: none;}
+</style>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<style>
+	.datagrid-wrap
+	{
+		border-radius:0px;
+		border:0px;
+	}
+</style>
+</head>
+<body class="hisui-layout">   
+	<div data-options="region:'center',border:false,collapsible:false">
+		<!-- toolbar -->
+		<div id="toolbar" class="toolbar" >
+			<div id="queryForm" style="margin:10 0 10 10;">
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+						<td class="textLabel">项目代码<input style="margin-left:10px;margin-right:10px;" type="text" id="ATICode" name="ATICode" class="textbox" ></input> </td>	
+						<td class="textLabel">项目描述<input style="margin-left:10px;" type="text" id="ATIDesc" name="ATIDesc" class="textbox"></input> </td>
+						<td ><a style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
+						<td ><a style="margin-left:10px;"class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:commonReload({'datagrid':'#datagrid','formid':'#queryForm'})">重置</a> </td>
+					</tr>
+				</table>
+			</div>	
+			<div  style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    pageSize:20,
+		    pageList: [20,40,80],
+		    nowrap: false,
+		    onDblClickRow:onClickRow,
+			url:'dhcapp.broker.csp?ClassName=web.DHCAPPTestItem&MethodName=ListAPPTestItem'">
+			<thead>
+				<tr>
+					<th data-options="field:'ATICode',width:150,editor:{type:'validatebox',options:{required:true}}">项目代码</th>
+					<th data-options="field:'ATIDesc',width:180,editor:{type:'validatebox',options:{required:true}}">项目描述</th>
+					<th data-options="field:'ArcDesc',width:180,editor:{type:'combogrid',
+									
+											options:{
+												    id:'AORowId',
+												    fitColumns:true,
+												    fit: true,//自动大小  
+													pagination : true,
+													panelWidth:600,
+													textField:'text',
+													
+													mode:'remote',
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPTestItem&MethodName=getARCItmMast',
+													columns:[[
+															{field:'value',title:'id',hidden:true},
+															{field:'code',title:'代码',width:30},
+															{field:'text',title:'名称',width:50},
+															
+															]],
+														onSelect:function(rowIndex, rowData) {
+						                   					fillValue(rowIndex, rowData);
+						                				},
+						                				onChange:function(newValue, oldValue) {
+						                   				    ChangeValue(newValue, oldValue);
+						                				}		   
+													
+									}}">项目关联医嘱项</th>
+					<th data-options="field:'HospDesc',width:220,
+											
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false
+												}
+											}">医院标识</th>
+					<th data-options="field:'ActiveFlag',width:80,align:'center',
+					       					formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPTestItem&MethodName=ListIsActive',
+													required:true,
+													editable:false
+
+												}
+											}">是否可用</th>
+					<th data-options="field:'CatDesc',width:120,
+											
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCAPPTestItem&MethodName=QueryArcCatList',
+													required:true,
+													editable:false
+												}
+											}">检测分类</th>
+					<th data-options="field:'ArcDr',hidden:true">ArcDr</th>
+					<th data-options="field:'HospDr',hidden:true">HospDr</th>
+					<th data-options="field:'CatDr',hidden:true">CatDr</th>
+					<th data-options="field:'ATIid',hidden:true">ATIid</th>
+				</tr>
+			</thead>
+		</table>
+</div>
+
+<div data-options="region:'center'" style="background:#eee;">
+		
+
+		
+</div>   
+ 
+</body>
+</html>

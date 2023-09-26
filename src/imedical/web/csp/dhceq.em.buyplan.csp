@@ -1,0 +1,211 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RowID=$Get(%request.Data("RowID",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s Type=$Get(%request.Data("Type",1))	//add by csj 20190716
+	s flag=$Get(%request.Data("flag",1))
+	s BPPlanType=$Get(%request.Data("PlanType",1))
+	s BPPlanDate=##class(web.DHCEQCommon).TransValueToPage(+$H,"date")
+	s BPEquipType=##class(web.DHCEQCommon).GetDefaultEquipType(2)
+	s BPEquipTypeDR=##class(web.DHCEQCommon).GetDefaultEquipType(1)
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("2",RowID),CurRole,Action)
+	
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	//start by csj 2020-04-20 默认申购类别 需求号：1274509
+	s DeafultPurchaseTypeID=##class(web.DHCEQCommon).GetSysInfo("301009")
+	s DeafultPurchaseTypeDesc="" i DeafultPurchaseTypeID'="" d
+	.s DeafultPurchaseTypeDesc=$p($g(^DHCEQCCode("DHCEQCPurchaseType",DeafultPurchaseTypeID)),"^",2)
+	//end by csj 2020-04-20
+	s CompName="EM.G.BuyPlan.BuyPlanList"
+	s ComponentID=$o(^DHCEQCCode("DHCEQCComponent",0,"Name",CompName,""))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))	;add by csj 2020-03-25 ReadOnly
+</Script>
+<!--start by csj 2020-04-02 UI评审界面修改-->
+<Style>
+.eq-table
+{
+	width:100%;
+}
+.eq-table-label
+{
+	width:auto;
+	text-align:right;
+	padding:0 15px;
+}
+</Style>
+<body class="hisui-layout">
+    <div data-options="region:'center',border:false"><!--modified by csj 2020-04-10 UI调整-->
+        <div class="hisui-layout" data-options="fit:true,border:false">
+            <div data-options="region:'north',border:false" style="padding:10px;" id="BPTable"> <!--modified by csj 2020-04-10 UI调整-->
+                <div class="eq-table">
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cBPPlanNo" for="BPPlanNo">计划单号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BPPlanNo"
+                                disabled="true"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBPPlanDate" for="BPPlanDate">计划日期</label>
+                        </div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BPPlanDate"
+                                value=#(BPPlanDate)#></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBPPlanName" for="BPPlanName">计划名称</label>
+                        </div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BPPlanName"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cBPPurchaseTypeDR_PTDesc"
+                                for="BPPurchaseTypeDR_PTDesc">申购类别</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox"
+                                id="BPPurchaseTypeDR_PTDesc" data-options="'component':'PLAT.L.PurchaseType'" value=#(DeafultPurchaseTypeDesc)#></div> <!--modified by csj 2020-04-20-->
+                        <div class="eq-table-td eq-table-label"><label id="cBPEquipTypeDR_ETDesc"
+                                for="BPEquipTypeDR_ETDesc">管理类组</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox"
+                                data-options="'component':'PLAT.L.EquipType'" id="BPEquipTypeDR_ETDesc"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBPPurposeTypeDR_PTDesc"
+                                for="BPPurposeTypeDR_PTDesc">设备用途</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox"
+                                id="BPPurposeTypeDR_PTDesc" data-options="'component':'PLAT.L.PurposeType'"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cBPHold1_Desc" for="BPHold1">采购人</label>
+                        </div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox"
+                                data-options="'component':'PLAT.L.EQUser'" id="BPHold1_Desc"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBPHold2_Desc" for="BPHold2_Desc">派单人</label>
+                        </div>
+                        <div class="eq-table-td"><input class="hisui-validatebox"
+                                data-options="'component':'PLAT.L.EQUser'" id="BPHold2_Desc" disabled></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBPHold3" for="BPHold3">派单日期</label></div>
+                        <div class="eq-table-td"><input class="hisui-datebox textbox" id="BPHold3" disabled></div>
+
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cBPHold4" for="BPHold4">派单时间</label></div>
+                        <div class="eq-table-td"><input class="hisui-timespinner textbox" id="BPHold4" disabled></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBPHold5" for="BPHold5">有效截止日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BPHold5"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBPRemark" for="BPRemark">备注</label></div>
+                        <div class="eq-table-td eq-table-input"><textarea id="BPRemark" class="textbox"></textarea>
+                        </div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cEditOpinion" for="EditOpinion">审批意见</label>
+                        </div>
+                        <div class="eq-table-td eq-table-input"><textarea id="EditOpinion" class="textbox"></textarea>
+                        </div>
+                        <div class="eq-table-td eq-table-label"><label id="cRejectReason"
+                                for="RejectReason">拒绝原因</label></div>
+                        <div class="eq-table-td eq-table-input"><textarea id="RejectReason" class="textbox"></textarea>
+                        </div>
+                        <div class="eq-table-td eq-table-label"><label><a id="showOpinion"
+                                    class="eq-cursor-pointer">审批记录</a></label></div>
+                    </div>
+                </div>
+            </div>
+            <div data-options="region:'center',border:false" style="position:relative;padding:0 10px" id="BPGrid">
+                <div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'计划单明细'">
+                    <table id="DHCEQBuyPlan" class="hisui-datagrid"></table>
+                </div>
+                <span id="sumTotal" class="eq-total-sum" style="position:absolute;right:20px;top:5px;">合计</span>
+            </div>
+        </div>
+
+    </div>
+    <div data-options="region:'south',fit:true,border:false"
+        style="position:relative;margin:0 auto;padding-bottom:10px" class="eq-clearfix"> <!--modified by csj 2020-04-10 UI调整-->
+        <div
+            style="margin:0px auto;padding-top:10px;position:relative;float:left;left:50%;transform:translate(-50%,0)">
+            <div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BSubmit" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BIFBRequest" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">招标申请</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BCancelSubmit" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">取消提交</a></div>
+            <!--add by csj 20190716-->
+            <div class="eq-table-td eq-table-label">
+                <a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp"
+                    data-options="stopAllEventOnDisabled:true">审核</a>
+                <a id="BApprove2" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp"
+                    data-options="stopAllEventOnDisabled:true">审核</a>
+                <a id="BApprove3" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp"
+                    data-options="stopAllEventOnDisabled:true">审核</a>
+            </div>
+        </div>
+    </div>
+	<!--end by csj 2020-04-02 UI评审界面修改-->
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="BPRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="FromLocDR" value="">
+			<INPUT type="hidden" id="ReciverDR" value="">
+			<INPUT type="hidden" id="ToLocDR" value="">
+			<INPUT type="hidden" id="BPStatus" value="">
+			<INPUT type="hidden" id="BPEquipTypeDR" value="#(BPEquipTypeDR)#">
+			<INPUT type="hidden" id="BPPurchaseTypeDR" value="#(DeafultPurchaseTypeID)#">	<!--modified by csj 2020-04-20-->
+		    <INPUT type="hidden" id="BPPurposeTypeDR" >	
+			<INPUT type="hidden" id="StatCatDR" value="">
+			<INPUT type="hidden" id="Job" value="">
+			<INPUT type="hidden" id="BPPlanType" value="#(BPPlanType)#">
+ 			<INPUT type="hidden" id="BPHold1">
+			<INPUT type="hidden" id="BPHold2">
+			<!--INPUT type="hidden" id="BPHold3">
+			<INPUT type="hidden" id="BPHold4">
+			<INPUT type="hidden" id="BPHold5"--> 
+			<INPUT type="hidden" id="BPHold6">
+			<INPUT type="hidden" id="BPHold7">
+			<INPUT type="hidden" id="BPHold8">
+			<INPUT type="hidden" id="BPUrgencyFlag">
+			<INPUT type="hidden" id="BPBuyRemark">
+			<INPUT type="hidden" id="BPPlanYear">
+			<INPUT type="hidden" id="BPQuantityNum">
+			<INPUT type="hidden" id="BPTotalFee">
+			
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+			<INPUT type="hidden" id="Type" value=#(Type)#>	<!--add by csj 20190716-->
+			<INPUT type="hidden" id="flag" value=#(flag)#>
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="ApproveTypeCode" value="14">
+			<INPUT type="hidden" id="ApproveRoleDR" value="">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+			
+			<INPUT type="hidden" id="BPSourceTypeDR">	
+			<INPUT type="hidden" id="EQItemDR">
+			<INPUT type="hidden" id="BPEquipType" value=#(BPEquipType)#>
+			<INPUT type="hidden" id="GetComponentID" value="#(ComponentID)#">	<!--add by csj 20190807 组件ID-->
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">	<!--add by csj 2020-03-25 ReadOnly-->
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/em/buyplan.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- Log 57858 Bo: 19-07-2006 -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<script language="JavaScript">
+</script>
+</HEAD>
+<BODY>
+<server>
+
+ n comp,MRN,MRType,Volume,InactivatedFrom,InactivatedTo,InactivateReason,TrackingBatchNo
+ s MRN=%request.Get("MRN")
+
+ s MRType=%request.Get("MRType")
+ i MRType'="" s MRType=##Class(web.RTCMRecordType).GetIdFromCodeOrDescription(MRType)
+
+ s Volume=%request.Get("Volume")
+ 
+ s InactivatedFrom=%request.Get("InactivatedFrom")
+ i InactivatedFrom'="" s InactivatedFrom=##Class(websys.Conversions).DateHtmlToLogical(InactivatedFrom)
+
+ s InactivatedTo=%request.Get("InactivatedTo")
+ i InactivatedTo'="" s InactivatedTo=##Class(websys.Conversions).DateHtmlToLogical(InactivatedTo)
+
+ s InactivateReason=%request.Get("InactivateReason")
+ i InactivateReason'="" s InactivateReason=##Class(web.RTCReasonForCancel).GetIdFromCodeOrDescription(InactivateReason)
+
+ s TrackingBatchNo=%request.Get("TrackingBatchNo")
+ 
+ ; Set all variables for the search.
+ s %request.Data("flagAll",1)="Y"
+ s %request.Data("MRN",1)=MRN
+ s %request.Data("MRType",1)=MRType
+ s %request.Data("Volume",1)=Volume
+ s %request.Data("InactivatedFrom",1)=InactivatedFrom
+ s %request.Data("InactivatedTo",1)=InactivatedTo
+ s %request.Data("InactivateReason",1)=InactivateReason
+ s %request.Data("TrackingBatchNo",1)=TrackingBatchNo
+ 
+ s comp=##Class(websys.Component).OpenName("RTMasVol.InactivatedVolumesList")
+ d comp.LoadTrans()
+ 
+	s comp.HideHeadings=0
+	d comp.Show()
+ 
+ d comp.%Close()
+
+</server>
+
+</BODY>
+</HTML>

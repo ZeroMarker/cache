@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>PDF页面</title> 
+ <script language="cache" runat="server">
+ 	s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+	s MREpisodeID = ##class(DHCEPRFS.BL.BLMREpisode).GetMREpisodeIDByAdm(EpisodeID,"DHC")
+	s MRVersionID = ##class(DHCEPRFS.BL.BLMRVersion).GetMRVersionID(MREpisodeID)
+	s MRVerItemsIDs = ##class(DHCEPRFS.BL.BLMRVerItem).GetAllByVersionString(MRVersionID)
+    
+    s childPatNameList = "", childMRVerItemsIDList = ""
+    s childMREpisodeList = ##Class(DHCEPRFS.BL.BLMREpisode).GetChildByMRAdmID(MREpisodeID)
+    s childCount = $L(childMREpisodeList,"^")
+    for i=1:1:childCount
+    {
+	 	s childMREpisodeID = $p(childMREpisodeList,"^",1)
+       	quit:(childMREpisodeID="")    //遇到空值就退出?否则会导致前端看到的新生儿ID与数据不一致
+       	
+       	s childPatName = ##Class(DHCEPRFS.BL.BLMREpisode).GetPatName(childMREpisodeID)
+	    s childVersionID = ##class(DHCEPRFS.BL.BLMRVersion).GetMRVersionID(childMREpisodeID)
+    	s childVerItemsIDs = ##class(DHCEPRFS.BL.BLMRVerItem).GetAllByVersionString(childVersionID)
+
+	    s MRVerItemsIDs = MRVerItemsIDs_"^"_childVerItemsIDs
+    }
+    
+    s DataServiceUrl = ##class(web.DHCEPR).GetServiceURL()
+	s DBVersion = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBVersion")
+	s DBUserPassword = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBUserPassword")
+</script>
+<script type="text/javascript">
+    var MREpisodeID = '#(MREpisodeID)#';
+    var DataServiceUrl = '#(DataServiceUrl)#';
+    var MRVerItemsIDs = '#(MRVerItemsIDs)#';
+	var DBVersion = '#(DBVersion)#';
+	var DBUserPassword = '#(DBUserPassword)#';
+</script>
+</head>
+<body>
+
+<div id = "DIVPDF" style="width:100%; height:100%;"> 
+<object id="objPDF" height="100%" width="100%" classid="clsid:3C7CDA10-1178-4c80-BDB0-A49955500094" codebase="http://172.19.19.58/trakcarelive/trak/web/addins/client/PDFViewer.cab#version=2017,6,1"></object>
+</div>
+
+<script type="text/javascript">
+	document.body.onload = BodyLoadHandler;
+	function BodyLoadHandler() {
+       var obj = document.getElementById("objPDF");
+	   obj.ShowLeftNavg(true);
+	   obj.ShowBottomNavg(false);
+	   obj.ShowWaterMark(true);
+	   obj.ShowNotification(true);
+	   	   
+	   if ((DBVersion == "2015") || (DBVersion == "2016"))
+	   {
+		  obj.DBUserPassword(DBVersion, DBUserPassword);
+	   }
+	   
+       obj.InitParamMr1(MRVerItemsIDs, MREpisodeID,DataServiceUrl,1);
+    }
+  </script>
+  </body>
+</html>

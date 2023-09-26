@@ -1,0 +1,101 @@
+<script language="cache" runat="server">
+
+  s Action=$Get(%request.Data("actiontype",1))
+  
+  s Username=$Get(%request.Data("user",1))
+  s Pageid=$Get(%request.Data("pageid",1))
+  
+  s Start=$Get(%request.Data("start",1))
+  s Limit=$Get(%request.Data("limit",1))
+  s Dir=$Get(%request.Data("dir",1))
+  s Sort=$Get(%request.Data("sort",1))
+  
+  s WomanRowId=$Get(%request.Data("WomanRowId",1))
+  
+  s PersonName=$Get(%request.Data("PersonName",1))
+  s SpellCode=$Get(%request.Data("SpellCode",1))
+  s WoAge=$Get(%request.Data("WoAge",1))
+  s Birth=$Get(%request.Data("Birth",1))
+  s WomanHandBookCode=$Get(%request.Data("WomanHandBookCode",1))
+  s WorkUnit=$Get(%request.Data("WorkUnit",1))
+  s TelPhone=$Get(%request.Data("TelPhone",1))
+  s CellPhone=$Get(%request.Data("CellPhone",1))
+  s Email=$Get(%request.Data("Email",1))
+  s HusbandName=$Get(%request.Data("HusbandName",1))
+  s HusbandBirth=$Get(%request.Data("HusbandBirth",1))
+  s HusbandWorkUnit=$Get(%request.Data("HusbandWorkUnit",1))
+  s HusbandTele=$Get(%request.Data("HusbandTele",1))
+  s HusbandMobTele=$Get(%request.Data("HusbandMobTele",1))
+  s HusbandEmail=$Get(%request.Data("HusbandEmail",1))
+  s ResidenceAddress=$Get(%request.Data("ResidenceAddress",1))
+  s AfMaAddress=$Get(%request.Data("AfMaAddress",1))
+  s AftBeAddress=$Get(%request.Data("AftBeAddress",1))
+  s bDose=$Get(%request.Data("bDose",1))
+  s IdCard=$Get(%request.Data("IdCard",1))
+  s Card=$Get(%request.Data("Card",1))
+  s CardType=$Get(%request.Data("CardType",1))
+  s InHosCode=$Get(%request.Data("InHosCode",1))
+  s EBPeriod=$Get(%request.Data("EBPeriod",1))
+  s EBPeriodDes=$Get(%request.Data("EBPeriodDes",1))
+  s EBTime=$Get(%request.Data("EBTime",1))
+  s EBunit=$Get(%request.Data("EBunit",1))
+  s EBbefore=$Get(%request.Data("EBbefore",1))
+  s EBnum=$Get(%request.Data("EBnum",1))
+  s EBfrontCode=$Get(%request.Data("EBfrontCode",1))
+  s FinishTable=$Get(%request.Data("FinishTable",1))
+  s Operator=$Get(%request.Data("Operator",1))
+  s OperateDate=$Get(%request.Data("OperateDate",1))
+  s FinishIdentifier=$Get(%request.Data("FinishIdentifier",1))
+  s CommunityCode=$Get(%request.Data("CommunityCode",1))
+  
+  s PersonRowIdParref=$Get(%request.Data("PersonRowIdParref",1))
+  
+  
+  
+  i Action = "listSearch" d
+  .s SqlStr = ""
+  .i PersonName '= "" d
+  ..s SqlStr = SqlStr_" and PersonName like '%"_PersonName_"%'"
+  .i IdCard '= "" d
+  ..s SqlStr = SqlStr_" and IdCard like '%"_IdCard_"%'"
+  .i WomanHandBookCode '= "" d
+  ..s SqlStr = SqlStr_" and WomanHandBookCode like '%"_WomanHandBookCode_"%'"
+  
+  
+
+  s DateOfStart = $Get(%request.Data("DateOfStart",1))
+  s DateOfEnd = $Get(%request.Data("DateOfEnd",1))
+  
+  
+  i Action = "listEBDate" d
+  .s SqlStr = ""
+  .i PersonName '= "" d
+  ..s SqlStr = SqlStr_" and WomanRowIdParref->PersonName like '%"_PersonName_"%'"
+  .s DateOfStart=$zdh(DateOfStart,1)
+  .s DateOfEnd=$zdh(DateOfEnd,1)
+  .s SqlStr = SqlStr_" and EstimateBDate between "_DateOfStart_" and "_DateOfEnd
+  
+  
+  
+  i Action = "list" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).List(CommunityCode,Start,Limit,Sort)
+  i Action = "add" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).Insert(CommunityCode, PersonRowIdParref, PersonName, SpellCode, WoAge, Birth, WomanHandBookCode, WorkUnit, TelPhone, CellPhone, Email, HusbandName, HusbandBirth, HusbandWorkUnit, HusbandTele, HusbandMobTele, HusbandEmail, ResidenceAddress, AfMaAddress, AftBeAddress, bDose, IdCard, Card, CardType, InHosCode, EBPeriod, EBPeriodDes, EBTime, EBunit, EBbefore, EBnum, EBfrontCode, FinishTable, Operator, OperateDate, FinishIdentifier)
+  i Action = "edit" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).Update(WomanRowId, PersonRowIdParref, PersonName, SpellCode, WoAge, Birth, WomanHandBookCode, WorkUnit, TelPhone, CellPhone, Email, HusbandName, HusbandBirth, HusbandWorkUnit, HusbandTele, HusbandMobTele, HusbandEmail, ResidenceAddress, AfMaAddress, AftBeAddress, bDose, IdCard, Card, CardType, InHosCode, EBPeriod, EBPeriodDes, EBTime, EBunit, EBbefore, EBnum, EBfrontCode, FinishTable, Operator, OperateDate, FinishIdentifier)
+  i Action = "delete" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).Delete(WomanRowId)
+  i Action = "listwoman" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).ListWoman(PersonRowIdParref,Start,Limit,Sort)
+  i Action = "listarc" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).ListArc(CommunityCode,Start,Limit,Sort)
+  i Action = "editArcStatus" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).EditArcStatus(WomanRowId)
+  i Action = "listarcname" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).ListArcName(CommunityCode,Start,Limit,Sort,PersonName)
+  i Action = "listSearch" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).ListWomanSearch(CommunityCode,Start,Limit,Sort,SqlStr)
+  i Action = "listEBDate" d
+  .w ##class(CHSSWeb.WomenBaseInfoService).ListWomanEBDate(CommunityCode,Start,Limit,Sort,SqlStr)
+
+</script>   

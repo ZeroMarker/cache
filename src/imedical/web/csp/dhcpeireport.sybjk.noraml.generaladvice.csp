@@ -1,0 +1,74 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.noraml.generaladvice.csp
+		
+		s GeneralAdviceTitle="总检结论及建议:"
+		s GeneralAdvice=$G(^TMPReport("GeneralAdvice", "Advice"))
+		s j=$L(GeneralAdvice,$C(13,10))
+		s AduitUser=$G(^TMPReport("GeneralAdvice","AduitUser"))
+		s unCheckItems=##class(web.DHCPE.ResultEdit).GetUnAppedItems("",PatientID)
+		s unCheckItems=$P(unCheckItems,"^",2)
+		i unCheckItems'="" d
+		.s k=$L(unCheckItems,",")
+		.s items="<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+		.f i=1:1:k d
+		..s oneItems=$p(unCheckItems,",",i)
+		..s items=items_"("_i_")"_oneItems
+		..i i'=k d
+		...s items=items_";"
+		..e  d
+		...s items=items_"<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+		
+		.s unCheckItems="<br><b><font size=+1>温馨提示:</font></b><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;年度健康体检是为建立职工健康档案提供基本资料,今年您仍有以下体检项目没有完成<b>"_items
+		.s unCheckItems=unCheckItems_"</b>为了您的健康,请尽快在体检期限内与保健科联系完成相关项目联系电话 020-85253076,85252420"
+		/*
+		//s GeneralAdviceData=..EscapeHTML(GeneralAdvice)
+		
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(13,10)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(13,10),iLLoop)_"<br>"
+		.
+		
+		s GeneralAdvice=GeneralAdviceData
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(32)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(32),iLLoop)_"&nbsp;"
+		.
+		
+		s AduitDate=$G(^TMPReport("GeneralAdvice", "AduitDate"))
+		s AduitUser="" //$G(^TMPReport("GeneralAdvice","AduitUser"))*/
+
+	</Script>
+		
+<DIV class='Page GeneralAdvice'>
+	<TABLE  border=0 class="GeneralAdviceTable" width="655">
+		<THEAD>
+			<TR>
+				<TD width="655" class="GeneralAdviceTitle">#(GeneralAdviceTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+		<csp:LOOP COUNTER="I" FROM="1" TO="100">
+
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		//s GeneralAdvice=$G(^TMPReport("GeneralAdvice", "Advice"))
+		q:I>$L(GeneralAdvice,$C(13,10))
+		s GeneralAdviceData=$P(GeneralAdvice,$C(13,10),I)
+		
+		</Script>
+		<CSP:IF CONDITION=(""'=GeneralAdviceData)>
+				<TR>
+				<TD width="655" class="GeneralAdviceData">
+					#(GeneralAdviceData)#
+				</TD>		
+			</TR>
+		</CSP:IF>
+	</csp:LOOP>
+			<TR>
+				<TD class="GeneralDoctor"><br><br>总检医生:#(AduitUser)#</TD>	
+			</TR>
+			<TR>
+				<TD class="GeneralAdviceData">#(unCheckItems)#</TD>	
+			</TR>
+		</TBODY>
+	</TABLE>
+</DIV>

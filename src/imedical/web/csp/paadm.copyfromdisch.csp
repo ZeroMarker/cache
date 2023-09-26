@@ -1,0 +1,108 @@
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n PatientID,dept,AdmDate,AdmTime,OrigAdm,FlaggPatient,HospitalInsur,AdmPoint,payorcode,payorplan,payorincard
+ n orgConsentDVA,orgConsentWC,orgConsentMV,orgConsentDD,Remark,clergyvisit,indigliasonoff
+ n mpayorRank2,mplanRank2,mInsurCardNoRank2
+ s (AdmDate,AdmTime,dept,FlaggPatient,HospitalInsur,AdmPoint,payorcode,payorplan,payorincard)=""
+ s (orgConsentDVA,orgConsentWC,orgConsentMV,orgConsentDD,Remark,clergyvisit,indigliasonoff)=""
+ s (orgADMCat,orgConsultant,orgAdmSource,orgWard,admCurrBed,orgRefDoc,orgIPAT,orgFundingSource,orgRefDocClin,IdFF)=""
+ s (mpayorRank2,mplanRank2,mInsurCardNoRank2)=""
+ n A,B,C,D,E,F,EpisodeID
+ ;
+ s (A,B,C,D,E,F,EpisodeID,NewEpisode)=""
+ s CreateBooking=0
+ s EpisodeID=%request.Get("EpisodeID")
+ s IdFF=%session.Get("CopyEpisodeID")
+ i $g(IdFF)="",EpisodeID'="" d
+ .s InPatEpisode=$p($g(^PAADM(EpisodeID)),"^",29)
+ .i InPatEpisode'="",$g(^PAADM(InPatEpisode))'="" d 
+ ..s InPatStatus=$p($g(^PAADM(InPatEpisode)),"^",20)
+ ..s InPatType=$p($g(^PAADM(InPatEpisode)),"^",2)
+ ..i (((InPatStatus="A")||(InPatStatus="P"))&&(InPatType="I")) s NewEpisode=InPatEpisode
+ i $g(IdFF)'="",$g(^PAADM(IdFF))'="" s NewEpisode=$g(IdFF)
+ i EpisodeID,$g(%request.Data("PatientID",1))="" s %request.Data("PatientID",1)=$p($g(^PAADM(+EpisodeID)),"^",1)
+ i $g(%request.Data("EpisodeID",1)),NewEpisode="" d
+ .s OrigAdm=EpisodeID
+ .i OrigAdm'="" s dept=$p($g(^PAADM(OrigAdm)),"^",4)
+ .i OrigAdm'="" s PatientID=$p($g(^PAADM(OrigAdm)),"^",1)
+ .s AdmDate=+$h,AdmTime=$p($h,",",2)
+ .s FlaggPatient=$p($g(^PAADM(OrigAdm,1)),"^",17)
+ .s HospitalInsur=$p($g(^PAADM(OrigAdm,"ADM2")),"^",5)
+ .s AdmPoint=$p($g(^PAADM(OrigAdm,"ADM2")),"^",4)
+ .s orgConsentDVA=$p($g(^PAADM(OrigAdm,2)),"^",99) ;PAADMConsentDVA
+ .s orgConsentWC=$p($g(^PAADM(OrigAdm,2)),"^",100) ;PAADMConsentWorkCompens
+ .s orgConsentMV=$p($g(^PAADM(OrigAdm,2)),"^",101)	;PAADMConsentMotorVehicle
+ .s orgConsentDD=$p($g(^PAADM(OrigAdm,2)),"^",102)	;PAADMConsentDepOfDefence
+ .;s orginincdate=$p($g(^PAADM(orgadm,3)),"^",5)   ;PAADMInjuryIncidentDate
+ .;
+ .s orgADMCat=$p($g(^PAADM(OrigAdm)),"^",5) ; ADMCATDesc
+ .s orgConsultant=$p($g(^PAADM(OrigAdm)),"^",9) ; CTPCPDesc
+ .s orgAdmSource=$p($g(^PAADM(OrigAdm)),"^",10) ; ADSOUDesc
+ .s orgWard=$p($g(^PAADM(OrigAdm)),"^",70) ; WARDDesc
+ .s admCurrBed="&&R&"_orgWard
+ .s orgRefDoc=$p($g(^PAADM(OrigAdm)),"^",82) ; REFDDesc
+ .s orgRefDocClin=$p($g(^PAADM(OrigAdm,1)),"^",45) ; for CLNAddress1
+ .s orgIPAT=$p($g(^PAADM(OrigAdm,2)),"^",28) ; IPATDesc
+ .s orgFundingSource=$p($g(^PAADM(OrigAdm,2)),"^",36) ; FUNDARDesc
+ .s rn=0 f  s rn=$o(^PAADM(OrigAdm,"CMT",rn))  q:rn=""  d
+ ..i Remark'="" s Remark=Remark_$C(13,10)_^PAADM(OrigAdm,"CMT",rn)
+ ..i Remark="" s Remark=^PAADM(OrigAdm,"CMT",rn)
+ .s clergyvisit=$p($g(^PAADM(OrigAdm,"ADM2")),"^",3)   ;PAADM2ClergyVisit
+ .s indigliasonoff=$p($g(^PAADM(OrigAdm,"ADM2")),"^",2)   ;PAADM2IndigLiasionVisit
+ .d ##class(web.PAAdmInsurance).GetDetails(OrigAdm)
+ .s payorcode=%request.Get("InsurPayorID")
+ .s payorplan=%request.Get("InsurPlanID")
+ .s payorincard=%request.Get("InsurCardNo")
+ .s mInsurCardNoRank2=%request.Get("InsurCardNoRank2")
+ .s mpayorRank2=##Class(web.ARCInsuranceType).GetIdFromCodeOrDescription(%request.Get("InsurPayorCodeRank2") )
+ .s mplanRank2=##Class(web.ARCAuxilInsurType).GetIdFromPlanAndPayor(%request.Get("InsPlanRank2"),%request.Get("InsurPayorCodeRank2"))
+ .;s B="_zz^_zz^_zz^_zz^_zz^_zz^_zz^"_payorincard_"^_zz^_zz^_zz^_zz^_zz^"_Remark
+ .s B="_zz^_zz^_zz^_zz^_zz^_zz^_zz^"_payorincard_"^_zz^_zz^_zz^_zz^_zz^"_Remark_"^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^"_ mpayorRank2_"^"_ mplanRank2
+ .s C="_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^"_orgRefDocClin_"^_zz^_zz^_zz^_zz^_zz^"
+ .s D="_zz^"_orgADMCat_"^_zz^_zz^"_orgAdmSource_"^_zz^_zz^_zz^"_FlaggPatient_"^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^"_orgFundingSource_"^_zz^_zz^_zz^_zz^_zz^_zz^"
+ .s E="_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^"_orgIPAT_"^_zz^_zz^_zz^_zz^_zz^_zz^"_AdmPoint_"^"_HospitalInsur_"^"_indigliasonoff_"^"_clergyvisit_"^_zz^"
+ .s F="_zz^_zz^_zz^_zz^_zz^_zz^"_OrigAdm_"^_zz^_zz^_zz^_zz^_zz^_zz^PAAdm.Edit^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^_zz^"_orgConsentDVA_"^"_orgConsentDD_"^_zz^"_orgConsentMV_"^"_orgConsentWC_"^_zz^_zz^^"_"^"_mInsurCardNoRank2
+ .s NewEpisode=##Class(web.PAAdm).ADMInsert(PatientID,AdmDate,AdmTime,orgConsultant,dept,orgRefDoc,"",payorcode,payorplan,"","","","","I",admCurrBed,A,B,C,D,E,F)
+ i NewEpisode'="" d
+ .i $p($g(^PAADM(+NewEpisode)),"^",20)="A" s CreateBooking=1
+ .i AdmTime="" d
+ ..s ftrans=$$GetNextPrevTransactionNew^CPAAdmTransaction(NewEpisode,"","A","B","","","","","")
+ ..s ftrans=$p(ftrans,"^",1)
+ ..s transub=$p(ftrans,"||",2)
+ ..i ftrans,transub d
+ ...&SQL(DELETE %NOCHECK FROM PA_AdmTransaction WHERE TRANS_ParRef = :NewEpisode AND TRANS_Childsub = :transub)
+ .i EpisodeID'="" d
+ .&SQL(UPDATE SQLUser.PA_Adm SET PAADM_InPatNo = :NewEpisode WHERE PAADM_RowId = :EpisodeID)
+ .; ab 29.11.04 - 47833 - makr sure episode is preadmission and booking is created
+ .&SQL(UPDATE SQLUser.PA_Adm SET PAADM_VisitStatus='P' WHERE PAADM_RowId = :NewEpisode)
+ .i CreateBooking,AdmTime'="" d 
+ ..s transub=$p($p($$GetNextPrevTransactionNew^CPAAdmTransaction(NewEpisode,"","A","M","","","","",""),"^",1),"||",2)
+ ..i transub &SQL(DELETE %NOCHECK FROM SQLUser.PA_AdmTransaction WHERE TRANS_ParRef = :NewEpisode AND TRANS_Childsub = :transub)
+ ..d update^CPACWardAdm(NewEpisode,$g(orgWard),"_zz","R","_zz","_zz",$g(AdmDate),$g(AdmTime),"")
+ .s %request.Data("EpisodeID",1)=NewEpisode
+ .s %request.Data("ID",1)=NewEpisode
+ .k %session.Data("CopyEpisodeID",EpisodeID)
+ .d %session.Set("CopyEpisodeID",NewEpisode)
+ .i $g(%request.Data("PatientID",1)) d
+ ..s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+ ..i frm s frm.HideMenus=1,HideHeadings=1 d frm.Show() d frm.%Close()
+ .s frm=##Class(websys.Component).OpenName("PAAdm.Edit")
+ .i frm d frm.Show() d frm.%Close()
+ 
+</SERVER>
+</BODY>
+</HTML>
+
+

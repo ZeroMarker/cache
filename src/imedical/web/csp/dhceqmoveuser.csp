@@ -1,0 +1,97 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<!--DOCTYPE HTML-->
+<HEAD>
+<!--meta http-equiv="x-ua-compatible" content="IE=edge"-->
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<style type="text/css">
+
+</style>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s Guser=$g(%request.Data("guser",1))   ;用户Dr
+ s Group = $g(%request.Data("group",1)) ;安全组Dr
+ s GuserName=$g(%request.Data("guserName",1))   ;用户Dr
+ s GuserCode=$g(%request.Data("guserCode",1))   ;用户Dr
+ s GroupDesc = $g(%request.Data("groupDesc",1)) ;安全组Dr
+</Script>
+<!--依赖的jquery-->
+<script type="text/javascript" src="../scripts/dhceq/easyui/jquery-1.8.0.min.js"></script>
+<!--easyui全部-->
+<script type="text/javascript" src="../scripts/dhceq/easyui/jquery.easyui.min.js"></script>
+<!-- easyui需要的全局css -->
+<link rel="stylesheet" type="text/css" href="../scripts/dhceq/easyui/themes/default/easyui.css">
+<!-- easyui的小图标css -->
+<link rel="stylesheet" type="text/css" href="../scripts/dhceq/easyui/themes/icon.css">
+<script type="text/javascript" src="../scripts/dhceq/easyui/locale/easyui-lang-zh_CN.js"></script>
+
+<script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	}; 
+	
+</script>
+
+<script type='text/javascript' src='../scripts/dhceq/js/dhceqmoveuser.js'></script>
+</HEAD>
+
+<body>
+	<div style="margin:10px 0;" ></div>
+	<div class="easyui-layout" data-options="fit:true,border:true" style='width:100%;height:9.9%;display:block;'>
+		<div data-options="region:'north'" style="height:85px" title="设备配送进程管理">
+			<table id='tQueryPanel' class="chargeTable">
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>运单人</td><td><input id="UserDR"  type="text"></input></td><td class="tdspace"></td>
+					<td>备注</td><td><input id="Remark" type="text" ></input></td><td class="tdspace"></td>
+					<td></td><td><input id="Rowid" type="hidden"></input></td><td class="tdspace"></td>
+					<td></td><td><input id="MoveDR" type="hidden"></input></td><td class="tdspace"></td>
+					<td><a id="btnSave" href="#" class="easyui-linkbutton" >更新</a></td><td class="tdspace"></td>
+					<td><a id="btnDelete" href="#" class="easyui-linkbutton" >删除</a></td><td class="tdspace"></td>
+					<td><a id="btnColse" href="#" class="easyui-linkbutton" >关闭</a></td><td class="tdspace"></td>
+				</tr>
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp</td>
+				</tr>	
+			</table>
+		</div>
+		<div data-options="region:'center'">
+			<table id="tMoveUser"></table>
+		</div>
+	</div>
+</body>
+
+</HTML>

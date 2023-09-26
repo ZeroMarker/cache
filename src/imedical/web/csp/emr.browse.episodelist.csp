@@ -1,0 +1,196 @@
+﻿<div data-options="region:'west',border:false" style="width:255px;padding:10px 3px 10px 10px;">
+    <table id="episodeList" class="hisui-datagrid" title="病历浏览-就诊列表" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-add-note',toolbar:'#tb'"></table>
+    <div id="tb" style="padding:5px 0 5px 8px">
+        <div style="padding-top:3px;">  
+            <span>#(..Get("就诊类型"))#</span>
+            <input id="episodeType" name="episodeType" style="width:165px;"></input>
+        </div>
+        <div style="padding-top:3px;">
+            <span>#(..Get("开始日期"))#</span>
+            <input id="startDate" class="hisui-datebox textbox" data-options="width:165"/>
+        </div>
+        <div style="padding-top:3px;">
+            <span>#(..Get("结束日期"))#</span>
+            <input id="endDate" class="hisui-datebox textbox" data-options="width:165"/>
+        </div>
+        <div style="padding-top:3px;">
+            <span>#(..Get("诊断内容"))#</span>
+            <input id="diagnosDesc" class="hisui-validatebox textbox" type="text" placeholder="请输入诊断内容" style="vertical-align:middle;width:158px;"></input>
+        </div>
+        <div style="padding:3px 14px 0 75px;">
+            <a id="episodeSeek" href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>  
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var patientID = "";
+    var episodeID = "";
+$(function(){
+    var frm = dhcsys_getmenuform();
+    if (frm) { 
+        patientID = frm.PatientID.value;
+        episodeID = frm.EpisodeID.value;
+    }
+    //就诊类型
+    $('#episodeType').combobox({  
+        valueField:'id',  
+        textField:'text',
+        panelHeight:100,
+        data:[
+                {"id":"","text":emrTrans("全部")},
+                {"id":"O","text":emrTrans("门诊")},
+                {"id":"E","text":emrTrans("急诊")},
+                {"id":"I","text":emrTrans("住院")},
+                {"id":"H","text":emrTrans("体检")}
+             ],
+        onLoadSuccess:function()
+        {
+            //设置默认就诊类型
+            //$('#episodeType').combobox('setValue', patientEpisodeType);
+        }
+    }); 	
+    //就诊列表
+    $("#episodeList").datagrid({ 
+        loadMsg:'数据装载中......',
+        url:'../EMRservice.Ajax.hisData.cls?Action=GetEpisodeList&PatientID='+patientID+'&EpisodeType='+$('#episodeType').combobox('getValue'),
+        singleSelect:true,
+        rownumbers:true,
+        pagination:true,
+        pageSize:20,	    
+        idField:'EpisodeID',
+        fit:true,
+        columns:[[ 
+            {field:'EpisodeType',title:'类型',width:38,formatter:formatter,styler:formatColor}, 	     
+            {field:'EpisodeDate',title:'就诊日期',width:90},
+            {field:'DischargeDate',title:'出院日期',width:90},
+            {field:'EpisodeDeptDesc',title:'科室',width:100},   
+            {field:'MainDocName',title:'主治医生',width:65}, 
+            {field:'Diagnosis',title:'诊断',width:100}, 
+            {field:'MedicareNo',title:'病案号',width:65},
+            {field:'EpisodeID',title:'就诊号',width:40,hidden:true},
+            {field:'EpisodeDeptID',title:'科室ID',width:30,hidden:true}
+        ]],
+        onDblClickRow:function(rowIndex,rowData){
+           $("#episodeList").datagrid('unselectAll');
+           $("#episodeList").datagrid('selectRow',rowIndex);
+           switchPatient(patientID,rowData.EpisodeID,rowData.mradm);
+        },
+        onLoadSuccess: function(data) {
+            var rowsLength = data.rows.length;
+            for (i=0;i<rowsLength;i++)
+            {
+                if (data.rows[i].EpisodeID == episodeID)
+                {
+                    $("#episodeList").datagrid('selectRow',i);
+                    switchPatient(patientID,data.rows[i].EpisodeID,data.rows[i].mradm);
+                    break;
+                }
+            }
+        }
+    });	
+    $("#episodeSeek").click(function(){
+        queryData();
+    });
+    var pager = $('#episodeList').datagrid('getPager'); 
+    pager.pagination({
+        showPageList:false,
+        displayMsg:''
+    });
+});
+
+function formatColor(val,row)
+{
+    if (row.EpisodeType == "住院")
+    {
+        return 'color:#FFFFFF;background-color:#FB9A42;';
+    }
+    else if (row.EpisodeType == "门诊")
+    {
+        return 'color:#FFFFFF;background-color:#07B69C;align:center;';
+    }
+    else if (row.EpisodeType == "急诊")
+    {
+        return 'color:#FFFFFF;background-color:#EE5C57;align:center;'
+    }
+    else if (row.EpisodeType == "体检")
+    {
+        return 'color:#FFFFFF;background-color:#33C910;align:center;';
+    }	
+}
+
+function formatter(val,row)
+{
+    if (row.EpisodeType == "住院")
+    {
+        return '<span style="padding-left:3px;">#(..Get("住"))#</span>';
+    }
+    else if (row.EpisodeType == "门诊")
+    {
+        return '<span style="padding-left:3px;">#(..Get("门"))#</span>';
+    }
+    else if (row.EpisodeType == "急诊")
+    {
+        return '<span style="padding-left:3px;">#(..Get("急"))#</span>'
+    }	
+    else if (row.EpisodeType == "体检")
+    {
+        return '<span style="padding-left:3px;">#(..Get("体"))#</span>'
+    }
+}
+
+//查询就诊列表
+function queryData()
+{
+    var frm = dhcsys_getmenuform();
+    if (frm) { 
+        patientID = frm.PatientID.value;
+        episodeID = frm.EpisodeID.value;
+    }
+    var queryItem = document.getElementById("diagnosDesc").value;
+    var startDate = dateFormat($('#startDate').datebox('getText'));
+    var endDate = dateFormat($('#endDate').datebox('getText'));
+	if (startDate==""&&endDate!=""){
+		endDateObj = Dateparser(endDate);
+		var newDate=new Date(endDateObj.getTime()-(7*24*3600*1000))
+		newDate=Dateformatter(newDate);
+		$('#startDate').datebox('setValue',newDate);
+		startDate=newDate;
+	}else if(startDate!=""&&endDate=="")
+	{
+		var nowDate = new Date();
+		nowDate=Dateformatter(nowDate);
+		$('#endDate').datebox('setValue',nowDate);
+		endDate=nowDate;
+	}
+    $("#episodeList").datagrid('load', {
+        Action: "GetEpisodeList",
+        PatientID: patientID,
+        QueryItem: (queryItem == "请输入诊断内容")? "":queryItem,
+        EpisodeType: $('#episodeType').combobox('getValue'),
+        StartDate: startDate,
+        EndDate: endDate
+    });	
+}
+function Dateformatter(date)
+{
+	var y = date.getFullYear();
+	var m = date.getMonth()+1;
+	var d = date.getDate();
+	return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+function Dateparser(s)
+{
+	if (!s) return new Date();
+	var ss = s.split('-');
+	var y = parseInt(ss[0],10);
+	var m = parseInt(ss[1],10);
+	var d = parseInt(ss[2],10);
+	if (!isNaN(y) && !isNaN(m) && !isNaN(d))
+	{
+		return new Date(y,m-1,d);
+	} else {
+		return new Date();
+	}
+}
+</script>
+<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>

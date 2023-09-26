@@ -1,0 +1,126 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s id=$Get(%request.Data("id",1))
+	s parRef=$Get(%request.Data("parRef",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s active=$Get(%request.Data("active",1))
+	s itemDr=$Get(%request.Data("itemDr",1))
+	s deptDr=$Get(%request.Data("deptDr",1))
+	s unitsDr=$Get(%request.Data("unitsDr",1))
+	
+	i action = "listrule" d
+	.w ##class(dhc.ca.cache.udata.uInFiltRules).ListRec(searchField, searchValue, sortField, sortDir, start, limit, active)
+	
+	i action = "listitem" d
+	.w ##class(dhc.ca.cache.udata.uInFiltItems).ListRec(searchField, searchValue, sortField, sortDir, start, limit, parRef)
+	
+	i action = "listdept" d
+	.w ##class(dhc.ca.cache.udata.uInFiltfDepts).ListRec(searchField, searchValue, sortField, sortDir, start, limit, parRef)
+	
+	i action = "listtdept" d
+	.w ##class(dhc.ca.cache.udata.uInFilttDepts).ListRec(searchField, searchValue, sortField, sortDir, start, limit, parRef)
+	
+	i action = "listpatdept" d
+	.w ##class(dhc.ca.cache.udata.uInFiltPatDepts).ListRec(searchField, searchValue, sortField, sortDir, start, limit, parRef)
+	
+	i action = "items" d
+	.w ##class(dhc.ca.cache.udata.uInFiltItems).GetItems(parRef,id,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "depts" d
+	.w ##class(dhc.ca.cache.udata.uInFiltfDepts).GetDepts(parRef,unitsDr,"Y",searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "tdepts" d
+	.w ##class(dhc.ca.cache.udata.uInFilttDepts).GetDepts(parRef,unitsDr,"Y",searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "patdepts" d
+	.w ##class(dhc.ca.cache.udata.uInFiltPatDepts).GetDepts(parRef,unitsDr,"Y",searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "addrule" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltRules).InsertRec(code, name, itemDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editrule" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltRules).UpdateRec(id, code, name, itemDr, active)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "additem" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltItems).InsertRec(parRef, itemDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addfdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltfDepts).InsertRec(parRef, deptDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addtdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFilttDepts).InsertRec(parRef, deptDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+		
+	i action = "addpatdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltPatDepts).InsertRec(parRef, deptDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delitem" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltItems).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deldept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltfDepts).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deltdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFilttDepts).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delpatdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltPatDepts).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+</script>

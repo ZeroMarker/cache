@@ -1,0 +1,116 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcapp.piswontct.csp 妇科TCT申请单 //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script language="Cache" runat="server">
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+   </script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<!-------------------------------->
+	<link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet"></link>
+	<link href="../scripts/dhcdoc/dhcapp/css/piscom.css" rel="stylesheet"></link>
+	<!-- 打印条码 -->
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/printPathBarCode.js"></script>
+	<!-------------->
+	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>		
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/pisprintcom.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/piswontct.js"></script>
+</head>
+<body>
+	<div id="mainPanel" class="hisui-layout" fit="true"> 
+		<div data-options="region:'center',headerCls:'panel-header-gray'" border="false">
+		    <div id="mPanel" class="hisui-panel" title="妇科TCT申请信息" style="min-width:800px;height:150px;padding:0px 10px 20px 10px;" data-options="headerCls:'panel-header-gray'">
+				<table id="itemList" border="1" cellspacing="0" cellpadding="1" class="item-table"></table>
+			</div>
+			<div id="tPanel" class="hisui-panel" title="申请信息" style="min-width:300px;height:130px;padding:10px 10px 10px 10px;" data-options="headerCls:'panel-header-gray'">
+				<div>
+					<div style="padding:5px 0px 0px 5px;"> <!--增加申请科室、医生 qunianpeng 2018/2/5 -->
+						<label style="margin-left:10px;">医嘱名称</label>
+						<input id="TesItemID" class="hisui-validatebox" style="display:none;width:80px;">
+						<input id="TesItemDesc" class="hisui-validatebox" style="width:170px;">
+						<label style="margin-left:30px;">接收科室</label>
+						<input id="recLoc" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
+						<!--
+						<label style="margin-left:80px;">加急</label><input id="EmgFlag" class='hisui-checkbox' type="checkbox" data-options="checked:false">
+						<label style="margin-left:30px;">冰冻</label><input id="FrostFlag" class='hisui-checkbox' type="checkbox" data-options="checked:false">
+						-->
+						<label style="margin-left:60px;">申请单号</label>
+						<span id="PisNo"></span>
+					</div>
+					<div style="padding:5px 0px 0px 5px;"> <!--增加申请科室、医生 qunianpeng 2018/2/5 -->
+						<label style="margin-left:10px;">申请科室</label>
+						<input id="ApplyLoc" class="hisui-combobox" style="width:177px;height:30px;line-height:30px;" data-options="valueField:'value',textField:'text'"/>						
+						<label style="margin-left:30px;">申请医生</label>
+						<input id="ApplyDocUser" class="hisui-combobox" style="width:180px;height:30px;line-height:30px;" data-options="valueField:'value',textField:'text'"/>
+						<label style="margin-left:60px;">医&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp嘱</label>
+						<span id="Oeori"></span>						
+					</div>
+				</div>
+			</div>
+			<div id="cPanel" class="hisui-panel" title="综合信息" style="min-width:400px;height:160px;padding:10px 10px 0 10px;" data-options="headerCls:'panel-header-gray'">	
+				<div>
+					<label style="font-weight:bold;">妇科信息<font color="red">(必填项)</font></label>
+					<div style="padding:5px 0px 0px 10px;">
+						<label class="r-label">上次月经</label><input id="LastMensDate" class="hisui-datebox textbox" style="width:120px;">
+						<label class="r-label" style="margin-left:10px;">末次月经</label><input id="MensDate" class="hisui-datebox textbox" style="width:120px;">
+						<label class="r-label" style="margin-left:10px;">胎</label><input id="PreTimes" class="hisui-validatebox" style="width:50px;">
+						<label class="r-label" style="margin-left:10px;">产</label><input id="LyTimes" class="hisui-validatebox" style="width:50px;">
+						<label style="margin-left:10px;">绝经</label><input id="PauFlag" class='hisui-checkbox' type="checkbox" data-options="checked:false,onCheckChange:function(event,value){PauFlag_onClick(event,value)}">
+		            	<label style="margin-left:10px;">不详</label><input id="UnknownFlag" class='hisui-checkbox' type="checkbox" >
+						<label style="margin-left:10px;">子宫异常出血</label><input id="BloodFlag" class='hisui-checkbox' type="checkbox" >
+					</div>
+	            </div>
+				<div style="margin:10px 0px;">
+					<label style="font-weight:bold;">取材信息</label>
+					<div style="padding:5px 0px 0px 10px;">
+						<label class="r-label">取材日期</label><input id="SepDate" class="hisui-datetimebox textbox" style="width:120px;">
+						<!-- <label style="margin-left:20px;">取材科室</label><input id="LocID" class="textbox" style="width:140px;height:30px;line-height:30px;"/>
+						<label style="margin-left:20px;">取材医生</label><input id="DocDr" class="textbox" style="width:140px;height:30px;line-height:30px;"/> -->
+						<label class="r-label" style="margin-left:10px;">取材科室</label><input id="LocID"  class="hisui-combobox" style="width:120px;height:30px;line-height:30px;" data-options="valueField:'value',textField:'text'"/>
+						<label class="r-label" style="margin-left:10px;">取材医生</label><input id="DocDr" class="hisui-combobox" style="width:160px;height:30px;line-height:30px;" data-options="valueField:'value',textField:'text'"/>
+		            </div>
+	            </div>
+			</div>
+			<div id="pPanel" class="hisui-panel" title="非妇科综合信息" style="min-width:400px;height:375px;padding:0px 10px 0 10px;" data-options="headerCls:'panel-header-gray'">	
+				<table id="TesItem" border="1" cellspacing="0" cellpadding="1" class="item-table">
+				</table>
+				<div style="margin:10px 0px;">
+		            <label style="font-weight:bold;">临床所见</label>
+					<div style="height:80px;padding-top:10px;">
+						<textarea id="MedRecord"  style="width:100%;height:70px;resize:none;"></textarea>
+		            </div>
+	            </div>
+			</div>
+		</div>
+		<div id="btPanel" data-options="region:'south',headerCls:'panel-header-gray'" style="height:50px;" border="false">		
+			<div class="pt-butttom">
+				<div style="float:right;padding-right:90px;">
+					<a href="#" class="hisui-linkbutton btn-lightred" data-options="iconCls:''" onclick="RevPisNo()">取消申请</a>
+					<a href="#" class="hisui-linkbutton btn-lightgreen" data-options="iconCls:''" onclick="SavePisNo()">保存</a>
+					<a href="#" class="hisui-linkbutton btn-lightgreen" data-options="iconCls:''" onclick="SendPisNo()">发送</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="PrintPisBar(1)">打印条码</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="PrintPisNo()">打印</a>
+				</div>
+			</div>
+		</div> 
+	</div>
+	<!--------------打印相关---------->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCIPBILL">
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		</form>
+	</div>
+	<!-------------------------------->
+</body> 
+</html>

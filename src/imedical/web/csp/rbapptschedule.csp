@@ -1,0 +1,34 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n diaryType,treeType
+ s diaryType=$g(%request.Data("DiaryType",1))
+ s treeType=$g(%request.Data("TreeType",1))
+ i treeType="SCHED" {
+	s comp="RBApptSchedule.Tree"
+	s texp="tRBApptSchedule_Tree"
+	s name="RBApptScheduleTree"
+ } else {
+	s comp="RBResourceOT.Tree"
+	s texp="tRBResourceOT_Tree"
+	s name="RBResourceOTTree"
+ }
+</SERVER>
+<frameset rows="20%,*">
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=RBApptSchedule.Find&DiaryType=#(diaryType)#&TreeType=#(treeType)#&CONTEXT=#($g(%request.Data("CONTEXT",1)))#" name="RBApptScheduleFind" frameBorder=0>
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=#(comp)#&TEXPAND=#(texp)#&CONTEXT=#($g(%request.Data("CONTEXT",1)))#" name="#(name)#" frameBorder=0>
+</frameset>
+
+<BODY>
+</BODY>
+</HTML>

@@ -1,0 +1,77 @@
+<!--
+ 检验结果 输出测试
+ dhcpeireport.noraml.result.listest.csp
+ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<TITLE>体检报告效果调试</TITLE>
+
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.noraml.result.lis.css"></LINK>
+
+</head>
+<BODY>
+
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s ARCIM="23024||1"
+		s ARCIMDesc="一般检查"
+		s Checker="王雅杰"
+		s CheckDate="2007-03-21"
+		s CurData="XXX"
+	</Script>
+
+	
+	<DIV class='Page LISReport'>
+		<TABLE border=0 cellspacing=0>
+			<THEAD>
+				<TR>
+					<TD class='LISHead LISHeadARCIMDesc' colSpan=5>#(ARCIMDesc)#</TD>
+				</TR>
+			</THEAD>
+			<TBODY>
+				<TR>
+					<TD width="179" height="42" class="LISResultTtile">项目名称</TH>
+					<TD class="LISResultTtile" colspan=2>检查结果</TH>
+					<TD width="124" class="LISResultTtile">单位</TH>
+					<TD width="156" class="LISResultTtile">参考范围</TH>
+				</TR>
+					<!--  输出病患信息  -->
+	<csp:WHILE COUNTER=ODID CONDITION=(""'=CurData)>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s CurData=$g(^TMPReport("Result", "Content",ARCIM,ODID))
+		i (""'=CurData) d
+		.s TestDesc=$P(CurData,"^",1)
+		.s TestResult=$P(CurData,"^",2)
+		.
+		.s Normal=$P(CurData,"^",3)
+		.s TestNormal=""
+		.//s:("H"=Normal) TestNormal="?"
+		.//s:("H"=Normal) TestNormal="?"
+		.s TestUnit=$P(CurData,"^",4)
+		.s TestStandard=$P(CurData,"^",5)
+		</Script>
+		<CSP:IF CONDITION=(""'=CurData)>
+				<TR>
+					<TD class=LISResultName>#(TestDesc)#</TD>
+					<TD class=LISResultValue width="151">#(TestResult)#</TD>
+					<TD class=LISResultNormal width="20">#(TestNormal)#</TD>
+					<TD class=LISResultTestUnit>#(TestUnit)#</TD>
+					<TD class=LISResultStandard>#(TestStandard)#</TD>
+				</TR>
+		</CSP:IF>
+	</csp:WHILE>
+			</TBODY>
+			<TFOOT>
+				<TR>
+					<TD class='LISFooter LISFooterChecker' colspan=3>医生:<LABEL class=Checker>#(Checker)#</LABEL></TD>
+					<TD class='LISFooter LISFooterCheckDate' colspan=2>日期:<LABEL class=CheckDate>#(CheckDate)#</LABEL></TD>
+				</TR>
+			</TFOOT>
+		</TABLE>
+	</DIV>
+	
+	
+</body>
+</html>

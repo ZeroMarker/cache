@@ -1,0 +1,110 @@
+ 
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S noticeId=$ZCVT($G(%request.Data("noticeId",1)),"U")
+ S patAdmID=$G(%request.Data("EpisodeID",1))
+ S notice=##Class(LIS.BLD.BT.Notice).%OpenId(noticeId)
+ S sendContent="",noticeStatusId=""
+ I $L(notice) {
+	S:$L(notice.AdmId) patAdmID=notice.AdmId
+	S sendContent=notice.SendContent
+	S noticeStatusId=notice.StatusId	 
+ }
+ S userID=$G(%session.Data("LOGON.USERID"))
+ S userCode=$G(%session.Data("LOGON.USERCODE"))
+ S userName=$G(%session.Data("LOGON.USERNAME"))
+ S userGroupID=$G(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$G(%session.Data("LOGON.GROUPDESC"))
+ S userLocID=$G(%session.Data("LOGON.CTLOCID"))
+ 
+ S userLoc=##Class(LIS.Core.Util).GetLocation(userLocID)
+ S patient=##Class(LIS.Core.Patient).OpenId(patAdmID)
+ S:'$L(patient) patient=##Class(LIS.Core.Patient).%New()
+ 
+ S jsVersion=$H
+ S moduleJsFile="lis.bld.bpt.qry.notice.detail.js"
+ S moduleJsFile=moduleJsFile_"?ver="_jsVersion
+ 
+</Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<SCRIPT language="Javascript">
+       	//Ext.namespace('Global');
+			//----------------------------------------------
+			//--定义全局变量
+			function Patient(){};
+			function User(){};
+			function Util(){};
+			function View(){};
+			function Data(){};
+			function Global(){};
+			Global.Patient=Patient;  //患者信息
+			Global.User=User;		//登录用户信息
+			Global.Util=Util;		//公共功能
+		 	Global.Data=Data;
+			//----------------------------------------------
+			//--当前病人信息 
+			Global.Patient.Name="#(patient.Name)#";
+			Global.Patient.Sex="#(patient.Sex)#";
+			Global.Patient.AdmID="#($G(patAdmID))#";
+			Global.Patient.PatientID="#(patient.PatientId)#";
+			Global.Patient.Age="#(patient.Age)#";
+			Global.Patient.Birthday="#(patient.DateOfBirth)#";
+			Global.Patient.LocationID="#(patient.LocationId)#";
+			Global.Patient.Location="#(patient.Location)#";
+			Global.Patient.Ward="#(patient.Ward)#";
+			Global.Patient.Bed="#(patient.Bed)#";
+			Global.Patient.HomeAddress="#(patient.HomeAddress)#";
+			Global.Patient.MobileTelephone="#(patient.MobileTelephone)#";
+			Global.Patient.HomeTelephone="#(patient.HomeTelephone)#";
+			Global.Patient.Apanage="#(patient.Apanage)#";
+			Global.Patient.BloodGroupABO="#(patient.BloodGroupABO)#";
+			Global.Patient.BloodGroupABOCode="#(patient.BloodGroupABOCode)#";
+			Global.Patient.BloodGroup="#(patient.BloodGroup)#";
+			Global.Patient.BloodGroupID="#(patient.BloodGroupId)#";
+			Global.Patient.BloodGroupRhD="#(patient.BloodGroupRhD)#";
+			Global.Patient.BloodGroupRhDCode="#(patient.BloodGroupRhDCode)#";
+			Global.Patient.CardID="#(patient.CardId)#";
+			Global.Patient.Country="#(patient.Country)#";
+			Global.Patient.Diagnosis="#(patient.Diagnosis)#";
+			Global.Patient.MedicareID="#(patient.MedicareId)#";
+			Global.Patient.Nation="#(patient.Nation)#";
+			Global.Patient.Type="#(patient.PatientType)#";
+			Global.Patient.TypeID="#(patient.PatientTypeId)#";
+			Global.Patient.Province="#(patient.Province)#";
+			Global.Patient.ProvinceID="#(patient.ProvinceId)#";
+			Global.Patient.Room="#(patient.Room)#";
+			Global.Patient.SafetyNetCardNo="#(patient.SafetyNetCardNo)#";
+			Global.Patient.SexID="#(patient.SexId)#";
+			Global.Patient.WardID="#(patient.WardId)#";
+			Global.Patient.WorkTelephone="#(patient.WorkTelephone)#";
+			Global.Patient.CountryID="#(patient.CountryId)#";
+			Global.Patient.RoomID="#(patient.RoomId)#";
+			Global.Patient.HospitalID="#(patient.HospitalId)#";
+	
+			//----------------------------------------------
+			//--当前用户信息
+			Global.User.Name="#($G(userName))#";
+			Global.User.ID="#($G(userID))#";
+			Global.User.Code="#($G(userCode))#";
+			Global.User.GroupID="#($G(userGroupID))#";
+			Global.User.Group="#($G(userGroupDesc))#";
+			Global.User.LocationID="#($G(userLocID))#";
+			Global.User.Location="#($G(userLoc))#";
+			Global.Data.NoticeId="#($G(noticeId))#";
+			Global.Data.SendContent="#($G(sendContent))#";
+			Global.Data.NoticeStatusId="#($G(noticeStatusId))#";
+	   </script>
+</HEAD>
+<body>
+	<div id="lis.bld.bpt.qry.notice.detail" ></div>
+</body>
+<script type="text/javascript" src="../scripts/lisjs/btms/bs/#(moduleJsFile)#"></script>
+</html>
+ 

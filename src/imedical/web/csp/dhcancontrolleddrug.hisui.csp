@@ -1,0 +1,190 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	精麻药列表 </title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/dhccl/css/opmain.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/dhccl/css/dhcanoperationlist.css" />
+<script type="text/javascript" src="../scripts/dhccl/js/dhccl.method.js"></script>
+<script type="text/javascript" src="../scripts/dhccl/js/dhccl.common.js"></script>
+<script type="text/javascript" src="../scripts/dhccl/an/dhcancontrolleddrug.hisui.js"></script>
+<script type="text/javascript" src="../scripts/dhccl/js/datagridextend.js"></script>
+<script type="text/javascript" src="../scripts/excelprint.js"></script>
+<style type="text/css">
+.oper-drug-table
+{
+width:100%;
+padding:5px 10px 5px 10px;
+table-layout:fixed;  
+}
+
+.oper-drug-table tr td{
+padding:5px 5px 5px 5px;
+}
+.oper-drug-title
+{
+width:60px;
+text-align:right;
+}
+.oper-drug-titles
+{
+width:45px;
+text-align:right;
+}
+.dialog-button .l-btn
+{
+	margin-left:10px;
+}
+.dialog-button a
+{
+	margin:0 10px 10px 0;
+}
+#OperListButList .panel-body-noheader.panel-body
+{
+	border-radius:0 0 4px 4px;
+	border-top-width:0;
+	border-color: #ccc;
+	padding-top:0px;
+}
+#noTitleList .panel-body-noheader.panel-body
+{
+	border-radius:4px;
+	border-color: #ccc;
+}
+</style>
+
+</head>
+
+<body style="padding:10px 10px 10px 10px;">
+<div style="width:100%;height:100%;" class="hisui-layout">
+	<div data-options="region:'north',collapsible:false,headerCls:'panel-header-gray',border:false" style="height:131px;">
+		<div class="hisui-panel" data-options="title:'精麻药列表查询',headerCls:'panel-header-gray',iconCls:'icon-search'" style="border-style:solid solid dashed solid;padding:5px;border-radius:0 1px 0 1px;">
+		<form id="conditionForm">
+		<table class="condition-table">
+				<tr>
+					<td class="condition-td-title">开始日期</td>
+					<td><input type="text" id="DateFrom" class="hisui-datebox" style="width:155px;"/></td>
+						<td class="condition-td-title">状态</td>
+					<td><select id="OperStat" class="hisui-combobox" style="width:135px;"></select></td>
+				<td class="condition-td-title">病案号</td>
+					<td><input type="text" id="MedCareNo" class="textbox" style="width:113px;" /></td>
+				<td class="condition-td-title">登记号</td>
+					<td><input type="text" id="RegNo" class="textbox" style="width:113px;" onkeydown="RegSearch()"/></td>
+
+					<td><a href="#" id="btnSearch" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				</tr>
+				<tr>
+					<td class="condition-td-title">结束日期</td>
+					<td><input type="text" id="DateTo" class="hisui-datebox" style="width:155px;"/></td>
+					<td class="condition-td-title">患者病区</td>
+					<td><select id="PatWard" class="hisui-combobox" style="width:135px;"></select></td>
+					<td class="condition-td-title">手术间</td>
+					<td><select id="OperRoom" class="hisui-combobox" style="width:120px;"></select></td>
+					<td class="condition-td-title">手术号</td>
+					<td><input type="text" id="opaId" class="textbox" style="width:113px;"/></td>
+					<td><a href="#" id="btnExport" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'">导出</a></td>
+
+				</tr>
+			</table>
+		</form>
+		</div>
+	</div>
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+		<div id="OperListButList" style="width:100%;height:100%;border-radius:4px;">
+			<div id="operListNoTitle" style="width:100%;height:100%;">
+				<table id="OperListBox">
+				</table>
+			</div>
+		</div>
+	</div>
+	</div>
+<div style="width:100%;height:100%;display:none">
+<div id="operDialog" class="hisui-dialog" data-options="buttons:'#btnList',closed:true,width:1060,height:480,modal:true,
+	   onClose:function(){
+			$('#operationForm').form('clear');
+		}">
+        <form id="operationForm">
+		<table class="oper-drug-table">
+		<tr>
+			<td class="oper-drug-titles">
+				药物
+			</td>
+			<td>
+				<select id="Drug" class="hisui-combobox" style="width:140px;"></select>
+			</td>
+		<td class="oper-drug-title">
+			批号
+		</td>
+		<td>
+			<input type="text" id="BatchNo" class="textbox" style="width:113px;"/>
+		</td>
+		<td class="oper-drug-title">
+			数量
+		</td>
+		<td>
+			<input type="text" id="Quantity" class="textbox" style="width:40px;"/>
+			<select id="Unit" class="hisui-combobox" style="width:69px;"></select>
+		</td>
+			<td class="oper-drug-title">
+			用药量
+		</td>
+		<td>
+			<input type="text" id="Volume" class="textbox" style="width:40px;"/>
+			<select id="Uom" class="hisui-combobox" style="width:70px;"></select>
+		</td>
+		<td class="oper-drug-title">
+			余液处置
+		</td>
+		<td>
+			<input type="text" id="DisposalMeasures" class="textbox" style="width:126px;"/>
+		</td>
+		</tr>
+		<tr>
+			<td class="oper-drug-titles">
+				执行人
+			</td>
+			<td>
+				<select id="Handler" class="hisui-combobox" style="width:140px;"></select>
+			</td>
+		<td class="oper-drug-title">
+			复核人
+		</td>
+		<td>
+			<select id="ReChecker" class="hisui-combobox" style="width:120px;"></select>
+		</td>
+		<td class="oper-drug-title">
+			回收人
+		</td>
+			<td>
+				<select id="Reciever" class="hisui-combobox" style="width:120px;"></select>
+			</td>
+			<td class="oper-drug-title">
+			备注
+		</td>
+			<td clospan=3>
+				<input type="text" id="Note" class="textbox" style="width:336px;"/>
+			</td>
+		</tr>  
+		</table>
+		<div style="height:270px;margin:0 10px 0 10px;border-radius:4px;">
+		<div id="noTitleList" style="width:100%;height:100%;">
+		<table id="drugList"></table>
+		</div>
+		 <div id="operationTool" style="border-top-width:0px;">
+                 <a id="btnAddDrug" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a>
+                            <a id="btnEditDrug" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true">修改</a>
+                            <a id="btnDelDrug" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+                        </div>
+		</div>
+		<div id="btnList" style="padding:10px">
+            <a href="#" id="opwinsave" class="hisui-linkbutton" onClick="SaveDrugInfo()" >保存</a>
+            <a href="#" id="opwincancel" class="hisui-linkbutton" onClick="
+					$HUI.dialog('#operDialog').close();">关闭</a>
+		</div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

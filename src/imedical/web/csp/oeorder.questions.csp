@@ -1,0 +1,469 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts_gen/webcommon.DateAndTime.js"></SCRIPT>
+<SERVER>
+	n gotQuestn
+	s gotQuestn=(%request.Get("DisplayQuestionFlag")=1)
+</SERVER>
+<SCRIPT>
+	var gotQuestn=#(gotQuestn)#;
+	//alert(gotQuestn);
+	//if ((!gotQuestn)&&(self==top)) window.location="websys.reload.csp";
+</SCRIPT>
+</HEAD>
+
+<body>
+<SERVER>
+n AgeSexFlag,AgeSexString,AgeSexItem,DosageRange
+s (AgeSexFlag,AgeSexString,AgeSexItem,DosageRange)=""
+s AgeSexFlag=%request.Get("AgeSexFlag")
+s AgeSexString=%request.Get("AgeSexString")
+s AgeSexItem=%request.Get("AgeSexItem")
+s DosageRange=%request.Get("DosageRange")
+d %request.Set("AlertString",1)
+i DosageRange="",%request.Get("DupMsg")="" d %request.Set("AlertString",0)
+</SERVER>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<CSP:IF condition='%request.Get("LabFlag")'>
+<TRAK:COMPONENT id="OEOrder.ListLabEpisode" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<CSP:IF condition='%request.Get("AlertString")'>
+<TRAK:COMPONENT id="OEOrder.AlertMessage" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<CSP:IF condition='%request.Get("AllergyFlag")'>
+<TRAK:COMPONENT id="OEOrder.Allergy" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<CSP:IF condition='%request.Get("AgeSexFlag")'>
+<TRAK:COMPONENT id="OEOrder.AgeSex" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<SERVER>
+ n QSFlg
+ s QSFlg=0
+ s QSFlg=%request.Get("DisplayQuestionFlag")
+</SERVER>
+<CSP:IF condition='%request.Get("DisplayQuestionFlag")'>
+<SERVER>
+ ; OEOrder.Questions Section.
+ n ReqFields
+ s ReqFields=""
+ i %request.Get("DisplayQuestionFlag")=1 d
+ . d ##Class(web.OEOrder).DisplayQuestions("1")
+ . s ReqFields=%request.Get("ReqFields")
+</SERVER>
+<TRAK:COMPONENT id="OEOrder.Question" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<CSP:IF condition='QSFlg=0'>
+<SERVER>
+ d ##Class(web.OEOrder).DisplayQuestions("1")
+ s ReqFields=""
+</SERVER>
+</CSP:IF>
+ 
+<script language="javascript">
+var frm=document.forms["fOEORDER_Questions"];
+//PeterC 27/06/03 Log 35915 Commented out the line below
+//if (window.self==window.top) frm.elements['QUESrefresh'].value="1";
+var QUESForm=document.forms["fOEORDER_Questions"];	
+
+
+function checkKey(key) {
+	var targ;
+	if (key.target) targ = key.target; 
+		else if (key.srcElement) targ = key.srcElement; 
+	var keyVal=key.keyCode
+	if(keyVal==8){
+		if (targ)
+			targ[0].selected=true;
+		key.returnValue=false;
+		return false;
+
+	}	
+}
+
+function submitForm() {
+	//check that required fields have content.
+	var count=1;
+	var reqFields="#(ReqFields)#"  //variable taken from cache.
+	reqAry=reqFields.split(",");
+	for (var i=0;i<reqAry.length;i++) {
+		if (document.getElementById(reqAry[i])) {
+			if (document.getElementById(reqAry[i]).value=="") {
+				msg+="\'" + document.getElementById("lb"+reqAry[i]).innerText + "\' " + t['XMISSING'] + "\r";
+  			}
+  		}
+	}
+
+	while(true)
+	{
+		var obj=document.getElementById("QAz"+count);
+		if((obj)&&(obj.className=="clsInvalid")){
+			msg+="\n"+t['ENT_INVALID'];
+			break;
+		}
+		else if(!obj) break;
+		count++;
+	}	
+
+  	if (msg!="") {
+		alert(msg);
+		msg="";
+	} else {
+		if (QUESForm) SetHiddenFields();		
+		//alert("all dobne");
+		frm.submit();
+		//return Update1_click();
+	}
+}
+function SetHiddenFields(){
+//alert("sethidden fields ");
+	var QUESTABLE=document.getElementById("tOEORDER_Questions");
+	if (QUESTABLE) {
+		for (var i=1; i<QUESTABLE.rows.length; i++) {
+			var QAObj=QUESForm.document.getElementById("QAz"+i);
+			var RQAObj=QUESForm.document.getElementById("RQAz"+i);
+			var AQAObj=QUESForm.document.getElementById("AQAz"+i);
+			if ((QAObj)&&(QAObj.type=="checkbox")) {
+				if (QAObj.checked==false) QAObj.value="";
+			}
+			//if (QAObj) alert(QAObj+" RQA "+RQAObj.value)
+			if ((QAObj)&&(RQAObj)&&(RQAObj.value!="")&&(!AQAObj)) AddInputS(RQAObj.value,QAObj.value,"")
+			if ((QAObj)&&(RQAObj)&&(RQAObj.value!="")&&(AQAObj)) AddInputS(RQAObj.value,QAObj.value,AQAObj.value)			
+		}
+	}
+	//document.fOEOrder_Summary.kCounter.value = hidItemCnt;	
+}
+//ANA LOG 25687. Adding new elements to pass in the answers into the update method.
+function AddInputS(hidItemCnt,value,mlvalue) {
+	//Create a new element
+	var NewElement=document.createElement("INPUT");
+	//set the properties
+	var valARR=value.split(String.fromCharCode(13,10));
+	if ((valARR)&&(valARR.length>1)) value=valARR.join("|");
+	NewElement.id = 'OEQ' + hidItemCnt;
+	NewElement.name = 'OEQ' + hidItemCnt;
+	NewElement.value = value;
+	//alert(NewElement.value);
+	NewElement.type = "HIDDEN";
+	document.fOEORDER_Questions.dummy.insertAdjacentElement("afterEnd",NewElement);	
+	//alert("1 "+NewElement.id+" value "+NewElement.value);		
+	if (mlvalue!="") {
+		//alert(mlvalue); 
+		var mlArr=mlvalue.split(String.fromCharCode(13,10));
+		mlvalue=mlArr.join("|");
+		//+" "+mlvalue.split(String.fromCharCode(13,10))
+		var NewElement=document.createElement("INPUT");
+		NewElement.id = 'AOEQ' + hidItemCnt;
+		NewElement.name = 'AOEQ' + hidItemCnt;
+		NewElement.value = mlvalue;
+		//alert(NewElement.value);
+		NewElement.type = "HIDDEN";
+		document.fOEORDER_Questions.dummy.insertAdjacentElement("afterEnd",NewElement);	
+		//alert("2 "+NewElement.id+" value "+NewElement.value);		
+	}
+}
+function DeleteAllHiddenItems() {
+	for (i=1; i<=hidItemCnt; i++) {
+		//var id="'"+"hiddenitem"+hidItemCnt+"'";
+		var id="hiddenitem"+hidItemCnt;
+		var objhid=document.getElementById(id);
+		if (objhid) objhid.outerText='';		
+	}
+	hidItemCnt=0;
+}
+
+/* these functions already exist in OEOrder.Question.js
+function ValidateNumber(e){
+
+	// ANA LOG 24389.gettting rid of characters that are not valid numbers.
+	var decFlag=1;
+	var negFlag=1;
+	var key=websys_getKey(e);
+	var eSrc=websys_getSrcElement(e);
+	var id=eSrc.id;
+	var obj=document.getElementById(id);
+	var newString="";
+	var length=obj.value.length;
+	if (((key<35)||(key>40)) && (key!=46)) //this checks only HOME,END,DELETE & UP-DOWN ARROWS.
+	{
+		for (var i=0;i<length;i++){
+			var srcKey=obj.value.charCodeAt(i);
+			if ((srcKey==45)&&(i!=0)) {negFlag=0;}
+			if ( ((srcKey>47)&&(srcKey<58)) ||  ((srcKey==45)&&(negFlag)) || (((srcKey==44)||(srcKey==46))&&(decFlag)) ){
+				newString=newString+obj.value.charAt(i);
+			}
+			if ((srcKey==44)||(srcKey==46)) {decFlag=0;}
+		}
+		obj.value=newString;	
+	}
+}
+
+function ValidateNumeric(decAllow,PosOnly,e){
+	//alert("decAllow "+decAllow+" PosOnly "+PosOnly);
+	// ANA LOG 32541.gettting rid of characters that are not valid numbers.+/- and decimals determined by Question CT.
+	var decFlag=1;
+	var negFlag=1;
+	//var alertShowed=false;
+	if (decAllow=="N") decFlag=0;
+	if (PosOnly=="Y") negFlag=0;	
+	var e=window.event; // This line does not work with NetScape.
+	if (e) {
+		var key=websys_getKey(e);
+		var eSrc=websys_getSrcElement(e);
+		var id=eSrc.id;
+		var obj=document.getElementById(id);
+		var newString="";
+		var length=obj.value.length;
+		if (((key<35)||(key>40)) && (key!=46)) //this checks only HOME,END,DELETE & UP-DOWN ARROWS.
+		{
+			for (var i=0;i<length;i++){
+				var srcKey=obj.value.charCodeAt(i);
+				if ((srcKey==45)&&(i!=0)) {negFlag=0;}
+				if ( ((srcKey>47)&&(srcKey<58)) ||  ((srcKey==45)&&(negFlag)) || (((srcKey==44)||(srcKey==46))&&(decFlag)) ){
+					newString=newString+obj.value.charAt(i);
+				}
+				if ((srcKey==44)||(srcKey==46)) {decFlag=0;}
+			}
+			obj.value=newString;	
+		}
+	}
+}
+
+function ValidateNumOnActivate(Number,decAllow,PosOnly){
+	// ANA LOG 32541 Not used.
+	//alert("Hello 1"+Number+" "+decAllow+" "+PosOnly+" index "+Number.indexOf("."));
+	if ((decAllow=="N")&&(Number.indexOf(".")!=-1))  Number="";
+	if ((PosOnly=="Y")&&(Number.indexOf("-")!=-1))  Number="";
+	//alert("numb "+Number);
+	return Number;
+}
+function DummyLookUpHandler(qid){
+	var e=window.event; // This line does not work with NetScape.
+	//alert("ID "+id)
+	//alert("e "+e);
+	if (e) {
+		var QANum="";
+		var type=websys_getType(e);
+		var key=websys_getKey(e);
+		var iid=qid.split("z");
+		var obj=document.getElementById("selvals"+iid[1])
+		var QAobj=document.getElementById("QAz"+iid[1])
+		if (obj) selvals=obj.value;
+		if (QAobj) QANum=QAobj.value;
+		if ((type=='click')||((type=='keydown')&&(key==117))) {
+			var url='websys.lookup.csp';
+			url += "?ID=d1647iDummyLookUp&selvals="+selvals+"&qid="+qid+"&QA="+QANum;
+			var tmp=url.split('%');
+			url=tmp.join('%25');
+			//alert("url "+url);
+			websys_lu(url,1,'');
+			return websys_cancel();
+		}
+	}
+}
+function DummyLookUpSelectHandler(txt) {
+	//alert(txt);
+	var adata=txt.split("^");
+	var obj=""; var obj1="";
+	var desc = adata[0];
+	var qid = adata[1];
+	if (qid!="") obj=document.getElementById(qid);
+	if (obj) obj.value=desc;
+	obj1=document.getElementById("A"+qid);
+	//if (obj1) alert((obj1)+"   "+(obj1.disabled))
+	if ((obj)&&(obj.value!="")&&(obj1)&&(obj1.disabled)) obj1.disabled=false;
+	//--
+	//alert("ID= "+qid);
+	if(qid){
+		var Eobj=document.getElementById(qid);
+		if((Eobj)&&(Eobj.value!="")){
+			var returntext=DummyBrokerChangeHandler(qid);
+			if (returntext!="") {
+				Eobj.value=returntext;
+				Eobj.className="clsValid";
+			}
+			if (returntext=="") Eobj.className="clsInvalid";
+		}
+		else{
+			if(Eobj) Eobj.className="clsValid";
+		}
+	}
+	//--
+	
+}
+function DummyLookUpChangeHandler(e) {
+	var obj1="";
+	var Fld=websys_getSrcElement(e);
+	if ((Fld)&&(Fld.value=="")&&(Fld.id!="")) obj1=document.getElementById("A"+Fld.id);
+	if (obj1) {
+		obj1.innerText="";
+		obj1.disabled=true;
+	}
+	var ElemID=Fld.id;
+	
+	if(ElemID){
+		var Eobj=document.getElementById(ElemID);
+		if((Eobj)&&(Eobj.value!="")){
+			var returntext=DummyBrokerChangeHandler(ElemID);
+			if (returntext!="") {
+				Eobj.value=returntext;
+				Eobj.className="clsValid";
+			}
+			if (returntext=="") Eobj.className="clsInvalid";
+		}
+		else{
+			if(Eobj) Eobj.className="clsValid";
+		}
+	}
+}
+
+function DummyBrokerChangeHandler(ElemID){
+	var returntext,desc,items="";
+	var Eobj=document.getElementById(ElemID);
+	if(Eobj) desc=Eobj.value;
+	var iid=ElemID.split("z");
+	var obj=document.getElementById("selvals"+iid[1])
+	if(obj) items=obj.value;
+	var CommaArr=items.split(",");
+	var count=0;
+	for (i=0;i<CommaArr.length;i++)
+	{
+		var tempstr=CommaArr[i];
+		tempstr=tempstr.toLowerCase();
+		tempstr=Trim(tempstr);
+		desc=desc.toLowerCase();
+		desc=Trim(desc);
+		//alert("|"+tempstr+","+desc);
+		//alert(tempstr.indexOf(desc)==0);
+
+		if(tempstr==desc)
+		{
+			returntext=CommaArr[i];
+			return returntext;
+		}
+		if(tempstr.indexOf(desc)==0){
+			count++;
+			returntext=CommaArr[i];
+		}
+	}
+
+	if(count==1) return returntext;
+	else	return "";
+}
+*/
+
+function Trim(str)
+{
+	reTrim=/\s+$|^\s+/g;
+   	return str.replace(reTrim,"");
+}
+
+function EnterKey(e) {
+	try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+	if ((websys_getAlt(e)&&keycode!=18)||(keycode==33)||(keycode==34)) {
+		try {	
+			var key=String.fromCharCode(keycode);
+				if (key=="U") submitForm();
+				
+		}
+		catch(e) {}
+	}
+	
+}
+function PopUpExec(ordItmMastId,ordExecId,ordId,valPatient) {
+	var URL="oeordexec.edit.csp?PatientBanner=1&PatientID="+valPatient+"&PARREF="+ordId+"&ID="+ordExecId+"&refresh=0";
+	//alert("URL"+URL);
+	//Log: 59598, 03-07-2006 BC: add "status=yes"
+	var features='scrollbars=auto,toolbar=no,resizable=yes,status=yes'
+	//websys_createWindow(URL,'',features)
+	window.open(URL,'',features);
+}
+function matchExecCategory(orderSubCat,orderCode,IMSubCat,IMItem) {
+	//alert("in matchExecCategory "+orderSubCat+"*"+orderCode);
+	var grpIMSubCatArray=IMSubCat.split(",")
+	for (i=0;i<grpIMSubCatArray.length;i++) {
+		if (orderSubCat==grpIMSubCatArray[i]) {
+			return true;
+		}
+	}
+	var grpIMItemArray=IMItem.split(",")
+	for (i=0;i<grpIMItemArray.length;i++) {
+		if (orderCode==grpIMItemArray[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+function OrderDetailsOpen(OrderSetID) {
+	//alert("OrderSetID="+OrderSetID);
+	if (OrderSetID!="") {
+		//var par_win=window.opener.parent.frames['TRAK_main'];
+		var par_win=window.open('',"TRAK_main");
+		if (par_win.matchCategory("OS",par_win.mPiece(OrderSetID,"^",2),par_win.mPiece(OrderSetID,"^",3),par_win.mPiece(OrderSetID,"^",0))) {
+			par_win.OSItemListOpen(par_win.mPiece(OrderSetID,"^",0),par_win.mPiece(OrderSetID,"^",1),"YES","");
+		}
+	}
+	else {
+		//var par_win=window.opener.parent.frames['TRAK_main'];
+		var par_win=window.open('',"TRAK_main");
+		par_win.OrderDetailsShowing(par_win);
+	}
+}
+function NextSummQuesOpen(Counter) {
+	//var par_win=window.opener.parent.frames['TRAK_main'];
+	var par_win=window.open('',"TRAK_main");
+	par_win.PopUpQuesSummForEachOrder(Counter);
+}
+document.body.onkeydown=EnterKey;
+</script>
+<SERVER>
+;BM Log 35782
+n NewOrderId,OEExecSubCatID,OEExecItemID,valPatientID,valEpisodeID,ItemCounter,OrderSetID
+s NewOrderId=%request.Get("NewOrders")
+s ItemCounter=%request.Get("ItemCounter")
+d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID")) 
+s OEExecSubCatID=%request.Get("OEExecSubCatID")
+s OEExecItemID=%request.Get("OEExecItemID")
+s valPatientID=%request.Get("PatientID")
+s valEpisodeID=%request.Get("EpisodeID")
+s OrderSetID=%request.Get("OrderSetID")
+w "<script Language=""JavaScript"">"
+w "function PopUpExecAndOrderDetailScreen() {"
+w "OrderDetailsOpen('"_OrderSetID_"');"
+w "NextSummQuesOpen("_ItemCounter_");"
+f i=1:1:$l(NewOrderId,"^")-1 {
+	n NewItmMastDR,NewOrdIdDR,NewSubCat
+	s NewItmMastDR=$p($p(NewOrderId,"^",i),"*",1)
+	s NewOrdIdDR=$p($p(NewOrderId,"^",i),"*",2)
+	i NewItmMastDR="" q
+	i NewOrdIdDR="" q
+	;Log 64572 PeterC 09/08/07
+	s OrdType=""
+	s OrdType=$$ordertype^COEOrdItem(NewItmMastDR)
+	s NewSubCat=$p($g(^ARCIM(+NewItmMastDR,$p(NewItmMastDR,"||",2),1)),"^",10)
+	i $g(^OEORD(+NewOrdIdDR,"I",$p(NewOrdIdDR,"||",2),"X",0))'="" {
+		n NewExecIdDR
+		s NewExecIdDR=NewOrdIdDR_"||"_1
+		;Log 64572 PeterC 09/08/07
+		i (($g(OrdType)="X")||($g(OrdType)="I")||($g(OrdType)="R")) {
+			w "var bShowExec=matchExecCategory('"_+NewSubCat_"','"_NewItmMastDR_"','"_OEExecSubCatID_"','"_OEExecItemID_"');",$c(10,13)
+			w "if (bShowExec) PopUpExec('"_NewItmMastDR_"','"_NewExecIdDR_"','"_NewOrdIdDR_"','"_valPatientID_"');",$c(10,13)
+		}
+	}
+}
+w "return Update1_click();"
+w "}"
+
+w "</script>" 
+</SERVER>
+</body>
+</html>
+

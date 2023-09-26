@@ -1,0 +1,91 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	
+	s bfyear=$Get(%request.Data("bfyear",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s year=$Get(%request.Data("year",1))
+	s Year=$Get(%request.Data("Year",1))
+	s Name=$Get(%request.Data("Name",1))
+	s Code=$Get(%request.Data("Code",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	
+    s bsmyear=$Get(%request.Data("bsmyear",1))
+    s bsmcode=$Get(%request.Data("bsmcode",1))
+    s bsmname=$Get(%request.Data("bsmname",1))
+    s bsmitemcode=$Get(%request.Data("bsmitemcode",1))
+    s bsmorderby=$Get(%request.Data("bsmorderby",1))
+    s bsmischeck=$Get(%request.Data("bsmischeck",1))
+    s bsmfile=$Get(%request.Data("bsmfile",1))
+    s bsmishelpedit=$Get(%request.Data("bsmishelpedit",1))
+    s bsmissys=$Get(%request.Data("bsmissys",1))
+    s bsachkstep=$Get(%request.Data("bsachkstep",1))
+    s bmsuupschendr=$Get(%request.Data("bmsuupschendr",1))
+    s bidname=$Get(%request.Data("bidname",1))
+    s bcfmchkflowname=$Get(%request.Data("bcfmchkflowname",1))
+    s bsarstepno=$Get(%request.Data("bsarstepno",1))
+    s basriscurstep=$Get(%request.Data("basriscurstep",1))
+	s bsarchercker=$Get(%request.Data("bsarchercker",1))
+    
+	s bsaeditdeptdr=$Get(%request.Data("bsaeditdeptdr",1))
+	s bdeptname=$Get(%request.Data("bdeptname",1))
+	
+	
+	s BSMName=$Get(%request.Data("BSMName",1))
+	
+	
+	s SchemDr=$Get(%request.Data("SchemDr",1))
+	s bsarchkresult=$Get(%request.Data("bsarchkresult",1))
+	s bsardesc=$Get(%request.Data("bsardesc",1))
+	s DeptDR=$Get(%request.Data("DeptDR",1))
+	
+	s UserID=$Get(%request.Data("UserID",1))
+	s auditdr=$Get(%request.Data("auditdr",1))
+	s year=$Get(%request.Data("year",1))
+	
+
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditDeptYear).ListMain(hospid,Year, BSMName, UserID, searchField, searchValue, sortField, sortDir, start, limit)
+
+	
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditDeptYear).YearList(start,limit,str)
+	
+	i action = "bsmnamelist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditDeptYear).BSMNameList(hospid,UserID,year, start, limit, str)
+
+	i action = "submit1" d  
+	.s result1 = ##class(herp.budg.udata.uBudgSchemAuditDeptYear).UpdstateS(auditdr,SchemDr,bsarchkresult,bsardesc,UserID)
+	.i result1 = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result1_"'}"
+	
+	
+	i action = "cancleaudit" d
+	.s result1 = ##class(herp.budg.udata.uBudgSchemAuditDeptYear).CancleAudit(auditdr, SchemDr, UserID)
+	.i result1 = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result1_"'}"
+	
+	
+</script>

@@ -1,0 +1,64 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir = $Get(%request.Data("sortDir",1))
+	
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s CodeU=$Get(%request.Data("CodeU",1))
+	s NameU=$Get(%request.Data("NameU",1))
+	s CodeH=$Get(%request.Data("CodeH",1))
+	s NameH=$Get(%request.Data("NameH",1))
+	s TypeH=$Get(%request.Data("TypeH",1))
+	s data=$Get(%request.Data("data",1))
+	s SYSNo=$Get(%request.Data("SYSNo",1))
+	s TypeU=$Get(%request.Data("TypeU",1))
+	s DTypeID=$Get(%request.Data("DTypeID",1))
+		
+	i action = "list" d
+	.w ##class(herp.budg.udata.uU8Herp).List(hospid,CodeU, CodeH,TypeH,SYSNo, start, limit)
+			
+	i action = "getherpitem" d
+	.w ##class(herp.budg.udata.uU8Herp).GetHerpItem(start, limit, str)
+	
+	i action = "depttype" d
+	.w ##class(herp.budg.udata.uBudgDeptSet).CalDept(start, limit, str)
+	
+	i action = "dept" d
+	.w ##class(herp.budg.udata.uU8Herp).GetDept(start, limit, str)
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uU8Herp).InsertRec(CodeU,NameU,CodeH,NameH,SYSNo,"ฟฦสา",DTypeID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uU8Herp).UpdateRec(rowid, CodeU,NameU,CodeH,NameH,SYSNo,"ฟฦสา",DTypeID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uU8Herp).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

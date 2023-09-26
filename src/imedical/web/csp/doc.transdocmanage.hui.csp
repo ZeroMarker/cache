@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--doc.transdocmanage.hui.csp  HISUI轮转医生列表--> 
+<HTML lang="zh-CN">
+<HEAD>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI></HISUI>
+	<style>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+		/*padding: 0 10px;*/
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.panel-header{
+		border-bottom: 0;
+	}
+	.textbox{
+		width:140px;
+	}
+	.newclsInvalid{
+		border-color: red;
+		color: red;
+	}
+	.icon-MedUnit{
+	  background: url('../scripts/bdp/Framework/BdpIconsLib/DHC_CTLoc_MedUnit.png')  no-repeat center center;
+	}
+	.panel-title>span{
+		color:#DD5044;
+	}
+	#Prompt{
+	    margin: 0px 10px 0px 10px;
+	    width:90%;
+	}
+	.r-label{
+			padding: 0 10px;
+		}
+	
+	</style>
+</head>
+<body>
+	<server>
+		s QueryLocRowId=$G(%request.Data("loc",1))
+		i (QueryLocRowId="") s QueryLocRowId=%session.Data("LOGON.CTLOCID")
+		//轮转医生标识
+		s DocRotaryFlag=##Class(web.DHCSSDOCGROUPCONFIG).CheckTDocFlag(%session.Data("LOGON.USERID"))
+		
+	</server>
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			QueryLocRowId:"#(QueryLocRowId)#",
+			DocRotaryFlag:"#(DocRotaryFlag)#"
+		};
+	</SCRIPT>
+	<csp:Include Page="doc.transdocmanage.show.hui.csp">
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/Doc.TransDocManage.hui.js"></script>
+</body>
+</HTML>

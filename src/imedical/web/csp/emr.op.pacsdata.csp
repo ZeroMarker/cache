@@ -1,0 +1,63 @@
+﻿<html>
+    <head>
+    <title>检查信息</title>    
+    
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        
+        <script language="cache" runat="server">
+        s scheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PacsScheme")
+        s:(scheme = "") scheme = "<scheme><show><parent><item><code>EpisodeDate</code><desc>就诊日期</desc><hidden>N</hidden></item><item><code>DeptDesc</code><desc>就诊科室</desc><hidden>N</hidden></item><item><code>ItemName</code><desc>医嘱名称</desc><hidden>N</hidden></item><item><code>OrdCreateDate</code><desc>医嘱日期</desc><hidden>N</hidden></item><item><code>OrdCreateTime</code><desc>医嘱时间</desc><hidden>N</hidden></item><item><code>OEOrdItemDR</code><desc>OEOrdItemDR</desc><hidden>Y</hidden></item><item><code>RptRowID</code><desc>RptRowID</desc><hidden>Y</hidden></item><item><code>RrtDate</code><desc>报告日期</desc><hidden>N</hidden></item><item><code>RrtTime</code><desc>报告时间</desc><hidden>N</hidden></item></parent><child><item><code>OEItemRowID</code><desc>OEItemRowID</desc><hidden>Y</hidden></item><item><code>ExamDesc</code><desc>检查所见:</desc><hidden>N</hidden></item><item><code>strResult</code><desc>诊断意见:</desc><hidden>N</hidden></item><item><code>strOrderName</code><desc>检查方法:</desc><hidden>N</hidden></item></child></show><reference><parent><item><code>EpisodeDate</code><desc>就诊日期:</desc><separate>,</separate></item><item><code>DeptDesc</code><desc>就诊科室:</desc><separate>,</separate></item><item><code>ItemName</code><desc>医嘱名称:</desc><separate/></item></parent><child><item><code>ExamDesc</code><desc>检查所见:</desc><separate>,</separate><check>Y</check></item><item><code>strResult</code><desc>检查意见:</desc><separate>,</separate><check>Y</check></item><item><code>strOrderName</code><desc>检查方法:</desc><check>Y</check><separate/></item></child><separate>enter</separate></reference></scheme>"
+        s singleSelect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPResSingleSelect", "Y")
+    </script>
+    <script language="javascript">
+        var invoker = null;
+        try{
+            if (typeof(window.dialogArguments.emrEditor) != 'undefined') {
+                invoker = window.dialogArguments;
+            }
+        }
+        catch (e) {
+            invoker = parent;
+        }    
+        var patientID = invoker.patientID;
+        var episodeID = invoker.episodeID;
+        var scheme = '#(scheme)#'
+        var strXml = "";
+        var quoteData = {};
+        var singleSelect = '#(singleSelect)#';
+    </script>
+    
+</head>
+<body ondragstart="return false"  class="easyui-layout">
+    <div id="seekform" data-options="region:'north',border:false" style="height:33px;padding:3px">
+        <input id="currentEpisode" type="radio" name="episode"/><span>本次就诊</span>
+        <input id="allEpisode" type="radio" name="episode"/>
+        <span>所有就诊</span>
+        <span id="comboxEpisode">
+            <input id="EpisodeList" name="EpisodeList" style="width:120px;"/>
+            <a href="#" class="easyui-linkbutton" onclick="queryData()" style="vertical-align:middle;">查询</a>
+        </span>
+    </div>
+    <div data-options="region:'south',border:false" style="height:30px;padding-top:3px;">
+        <a href="#" class="easyui-linkbutton" onclick="getData()">引用</a>
+    </div>
+    <div class="easyui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+        <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+            <div data-options="region:'north',border:false" style="height:200px;width:100%;">
+            <table id="pacsData" style="width:100%;"></table>
+        </div>
+        <div data-options="region:'center',border:false" style="">
+        <table id="pacsSubData" cellpadding="0" cellspacing="0" style="width:100%; border:solid 1px #cccccc; font-size:12px;table-layout:fixed;"></table>
+    </div>
+</div>
+</div>
+<script type="text/javascript" src="../scripts/emr/js/op.res.commonfile.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/op.pacsdata.js"></script>
+</body>
+</html>

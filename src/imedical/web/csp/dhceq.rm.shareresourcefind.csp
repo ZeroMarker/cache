@@ -1,0 +1,88 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+.l-btn-text{padding:0 10px;}
+</style>
+</HEAD>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'共享资源'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="padding:5px 0 10px 0;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cShareType" for="ShareType">资源类型</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="ShareType"></div>
+							<div class="eq-table-td eq-table-label"><label id="cEquip" for="Equip">设备名称</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="Equip" data-options="component:'EM.L.Equip',paras:[{name:'Equip',type:'4',value:'Equip'}]"></div>
+							<div class="eq-table-td eq-table-label"><label id="cRentLoc" for="RentLoc">申请科室</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="RentLoc" data-options="'component':'PLAT.L.Loc'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cEquipStatus" for="EquipStatus">设备状态</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="EquipStatus"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">查找</a></div>
+						</div>
+					</div>
+					<!--Modify by zx 2020-04-20 样式调整 Bug ZX0084-->
+					<div style="padding:5px 0 0 10px;color:#666;">
+						背景色说明：<span style="color:#000;font-weight:900;">'设备状态'</span>列为
+						<span style="display:inline-block;width:24px;height:12px;margin:0 5px;background:#4caf50;"></span>
+						色表示设备完好，为
+						<span style="display:inline-block;width:24px;height:12px;margin:0 5px;background:#ee4f38;"></span>
+						色表示设备故障；<span style="color:#000;font-weight:900;">'清洗消毒处理'</span>列为
+						<span style="display:inline-block;width:24px;height:12px;margin:0 5px;background:#f58800;"></span>
+						色表示需要清洗消毒；<span style="color:#000;font-weight:900;">'检测处理'</span>列为
+						<span style="display:inline-block;width:24px;height:12px;margin:0 5px;background:#ffbd2e;"></span>
+						色表示需要检测
+					</div>
+				</div>
+				<!--Modify by zx 2020-04-20 样式调整 Bug ZX0084-->
+				<div id="tab-tools">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-blue-line',plain:true" onclick="javascript:rentAudit()">调配待办<span class="eq-radius" style="background:#f1c516;" id="ToDoNum">0</span></a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-change-loc',plain:true" onclick="javascript:rentRequest()">调配申请</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-add',plain:true" onclick="javascript:addShareResource()">资源上架</a>
+					<!--a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-green-chart',plain:true" onclick="javascript:rentStat()">租赁统计</a-->
+				</div>
+				<div id="ShareSourceTabs" class="hisui-tabs" data-options="tools:'#tab-tools',region:'center',border:false">
+					<div title='全部资源<span class="eq-radius" style="background:#509DE1;" id="AllNum">0</span>' data-options="iconCls:'icon-wax-stat'">
+						<table id="tDHCEQShareResourceFind_All" class="hisui-datagrid"></table>
+					</div>   
+					<div title='在库资源<span class="eq-radius" style="background:#509DE1;" id="StockNum">0</span>' data-options="iconCls:'icon-house'">
+						<table id="tDHCEQShareResourceFind_Stock" class="hisui-datagrid"></table>
+					</div>   
+					<div title='调出资源<span class="eq-radius" style="background:#509DE1;" id="LoanOutNum">0</span>' data-options="iconCls:'icon-mtpaper-redo'">
+						<table id="tDHCEQShareResourceFind_LoanOut" class="hisui-datagrid"></table>
+					</div>  
+					<div title='调入资源<span class="eq-radius" style="background:#509DE1;" id="LoanInNum">0</span>' data-options="iconCls:'icon-mtpaper-undo'">
+						<table id="tDHCEQShareResourceFind_LoanIn" class="hisui-datagrid"></table>
+					</div>
+					<div title='故障资源<span class="eq-radius" style="background:#509DE1;" id="FaultNum">0</span>' data-options="iconCls:'icon-alarm'">
+						<table id="tDHCEQShareResourceFind_Fault" class="hisui-datagrid"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="EquipDR">
+			<INPUT type="hidden" id="RentLocDR">
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/rm/shareresourcefind.js"></script>
+</body>
+</html>
+

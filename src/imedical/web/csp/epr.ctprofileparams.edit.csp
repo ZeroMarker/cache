@@ -1,0 +1,268 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>Profile Edit Page</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY><DIV id="PageContent">
+<SERVER>
+ k ^zkath("epr.ctprofileparams.edit.csp")
+ w ##Class(web.SSMessageRecipient).getMessageLink()
+ n obj,PPType,j,params,allcatval,allcattxt,allstatval,allstattxt,alltestsval,allteststxt,component,CID,allhospval,allhosptxt,allobsgrpval,allobsgrptxt
+ n allordprioval,allordpriotxt,allbloodprodval,allbloodprodtxt,labparams,allquesval,allquestxt,selsubcatval,selsubcattxt,selsubcatcode
+ n allquesprofval,allquesproftxt,alllocval,allloctxt,allresstatval,allresstattxt,alldoctypesval,alldoctypestxt
+ n testslen
+ s testslen=0
+ s PPType=%request.Get("PPType")
+ ;
+ s ProfileID=##Class(epr.CTProfileParams).GetIdFromCodeOrDescription(%request.Get("PPDesc"))
+ s %request.Data("ID",1)=ProfileID
+ s (params,allcatval,allcattxt,allstatval,allstattxt,alltestsval,allteststxt,component,CID,allhospval,allhosptxt,allobsgrpval,allobsgrptxt,allordprioval,allordpriotxt)=""
+ s (allbloodprodval,allbloodprodtxt,allquesval,allquestxt,selsubcatval,selsubcattxt,selsubcatcode,allquesprofval,allquesproftxt,alllocval,allloctxt,allresstatval,allresstattxt,alldoctypesval,alldoctypestxt)=""
+ ;
+ ; 28-06-2002 LOG 25467 AI: Set up lookups for Blood Transfusion Profile.
+ i PPType="BT" d
+ . s obj=##Class(%ResultSet).%New("web.CTBBPackStatus.LookUp")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s allstatval=allstatval_obj.GetDataByName("HIDDEN")_","
+ . . . s allstattxt=allstattxt_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allstatval)>0 s allstatval=$e($g(allstatval),1,$l($g(allstatval))-1)
+ . i $l(allstattxt)>0 s allstattxt=$e($g(allstattxt),1,$l($g(allstattxt))-1)
+ . ; Log 27755 - AI - 22-10-2002 : Add functionality for Blood Product.
+ . s obj=##Class(%ResultSet).%New("web.CTBBBloodProduct.LookUp")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s allbloodprodval=allbloodprodval_obj.GetDataByName("HIDDEN")_","
+ . . . s allbloodprodtxt=allbloodprodtxt_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allbloodprodval)>0 s allbloodprodval=$e($g(allbloodprodval),1,$l($g(allbloodprodval))-1)
+ . i $l(allbloodprodtxt)>0 s allbloodprodtxt=$e($g(allbloodprodtxt),1,$l($g(allbloodprodtxt))-1)
+ . ; end Log 27755
+ . ; Log 55627 YC - Location
+ . s obj=##Class(%ResultSet).%New("web.CTBBLocation.LookUp")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s alllocval=alllocval_obj.GetDataByName("Code")_","
+ . . . s allloctxt=allloctxt_obj.GetDataByName("Name")_"^"
+ . . d obj.%Close() k obj
+ . i $l(alllocval)>0 s alllocval=$e($g(alllocval),1,$l($g(alllocval))-1)
+ . i $l(allloctxt)>0 s allloctxt=$e($g(allloctxt),1,$l($g(allloctxt))-1)
+ . ; END 55627
+ ; end LOG 25467
+ ;
+ ; Log 41303 - AI - 12-12-2003 : Specifically exclude the new "Theatre Profile" for now.
+ ; Log 29736 - AI - 12-01-2004 : Specifically exclude the new "Observation Profile" for now.
+ ; Log 43334 - AI - 12-05-2004 : Specifically exclude the new "Questionnaire Edit Profile" for now.
+ i (PPType'="LC"),(PPType'="TP"),(PPType'="BP"),(PPType'="QP"),(PPType'="QE"),(PPType'="TL") d
+ . s obj=##Class(%ResultSet).%New("web.OECOrderCategory.LookUp")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s allcatval=allcatval_obj.GetDataByName("HIDDEN")_","
+ . . . s allcattxt=allcattxt_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allcatval)>0 s allcatval=$e($g(allcatval),1,$l($g(allcatval))-1)
+ . i $l(allcattxt)>0 s allcattxt=$e($g(allcattxt),1,$l($g(allcattxt))-1)
+ . ;
+ . s hosps=##Class(web.CTHospital).getHospital()
+ . s allhospval=$p(hosps,"|",1)
+ . s allhosptxt=$p(hosps,"|",2)
+ . ;
+ ; Log 41303 - AI - 12-12-2003 : Specifically exclude the new "Theatre Profile" for now.
+ ; Log 29736 - AI - 12-01-2004 : Specifically exclude the new "Observation Profile" for now.
+ ; Log 43334 - AI - 12-05-2004 : Specifically exclude the new "Questionnaire Edit Profile" for now.
+ i (PPType'="LC"),(PPType'="BT"),(PPType'="TP"),(PPType'="BP"),(PPType'="QP"),(PPType'="QE"),(PPType'="TL"),(PPType'="MC") d
+ . s stats=##Class(web.OECOrderStatus).getStatus("","Incl")
+ . s allstatval=$p(stats,"^",3)
+ . s allstattxt=$tr($p(stats,"^",4),",","^")
+ . ;
+ . ; Log 27755 - AI - 22-10-2002 : Add functionality for Blood Product.
+ . s bloodprods=##Class(web.CTBBBloodProduct).getBloodProduct()
+ . s allbloodprodval=$p(bloodprods,"^",1)
+ . s allbloodprodtxt=$p(bloodprods,"^",2)
+ . ; end Log 27755
+ ;
+ i PPType="LC" d
+ . ;
+ . ;s obj=##Class(epr.CTProfileParams).%OpenId(%request.Get("ID")) i obj s params=obj.PPParameters d obj.%Close()
+ . ;s labparams=$p(params,"|")
+ . ;i $l(labparams)> 0 f j=1:1:$l(labparams,"^") d
+ . ;. s alltestsval=alltestsval_$p(labparams,"^",j)_"^"
+ . ;. s allteststxt=allteststxt_$p($g(^TTAB("TC",$p(labparams,"^",j))),"\")_"^"
+ . ;
+ . s obj=##Class(%ResultSet).%New("web.CTTestCode.LookUp")
+ . i obj d
+ . . d obj.Execute("")
+ . . ; Log 49041 - AI - 08-02-2005 : Change the way allteststxt and alltestsval are built. Now it is possible to span fields, so the page does not error on MAXSTRING.
+ . . s testslen=1
+ . . s alltestsval(testslen)=""
+ . . s allteststxt(testslen)=""
+ . . f  q:'obj.Next()  d
+ . . . ; hard-coded to 30000 so it doesn't go near 32000
+ . . . i $l(allteststxt(testslen))>30000 d
+ . . . . s alltestsval(testslen)=$e($g(alltestsval(testslen)),1,$l($g(alltestsval(testslen)))-1)
+ . . . . s allteststxt(testslen)=$e($g(allteststxt(testslen)),1,$l($g(allteststxt(testslen)))-1)
+ . . . . s testslen=testslen+1
+ . . . . s alltestsval(testslen)=""
+ . . . . s allteststxt(testslen)=""
+ . . . s alltestsval(testslen)=alltestsval(testslen)_obj.GetDataByName("HIDDEN")_"^"
+ . . . s allteststxt(testslen)=allteststxt(testslen)_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(alltestsval(testslen))>0 s alltestsval(testslen)=$e($g(alltestsval(testslen)),1,$l($g(alltestsval(testslen)))-1)
+ . i $l(allteststxt(testslen))>0 s allteststxt(testslen)=$e($g(allteststxt(testslen)),1,$l($g(allteststxt(testslen)))-1)
+ . ; end Log 49041
+ ;
+ ; Questionnaires
+ i PPType="QP" d
+ . s obj=##Class(%ResultSet).%New("web.SSUserDefWindow.FindUDWGroups")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s allquesval=allquesval_obj.GetDataByName("HIDDEN")_"^"
+ . . . s allquestxt=allquestxt_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allquesval)>0 s allquesval=$e($g(allquesval),1,$l($g(allquesval))-1)
+ . i $l(allquestxt)>0 s allquestxt=$e($g(allquestxt),1,$l($g(allquestxt))-1)
+ ;
+ ; Log 43334 - AI - 12-05-2004 : The new Questionnaire Edit Profile.
+ ; Questionnaire Edit Profile
+ i PPType="QE" d
+ . s obj=##Class(%ResultSet).%New("web.SSUserDefWindow.LookUpAll")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s allquesprofval=allquesprofval_obj.GetDataByName("ID")_"^"
+ . . . s allquesproftxt=allquesproftxt_obj.GetDataByName("WINDesc")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allquesprofval)>0 s allquesprofval=$e($g(allquesprofval),1,$l($g(allquesprofval))-1)
+ . i $l(allquesproftxt)>0 s allquesproftxt=$e($g(allquesproftxt),1,$l($g(allquesproftxt))-1)
+ ;
+ ; Log 43911 - AI - 03-06-2004 : The Observation Profile.
+ ; Observation Profile
+ i PPType="BP" d
+ . s obj=##Class(%ResultSet).%New("web.MRCObservationGroup.Find")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . ; NOTE: web.MRCObservationGroup.Find returns Code and Desc the wrong way around.
+ . . . s allobsgrpval=allobsgrpval_obj.GetDataByName("ID")_"^"
+ . . . s allobsgrptxt=allobsgrptxt_obj.GetDataByName("GRPCode")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allobsgrpval)>0 s allobsgrpval=$e($g(allobsgrpval),1,$l($g(allobsgrpval))-1)
+ . i $l(allobsgrptxt)>0 s allobsgrptxt=$e($g(allobsgrptxt),1,$l($g(allobsgrptxt))-1)
+ ; Log 52540 YC - Order Priority
+ ; log 55226 PC Medication Profile also uses Order Priority
+ i (PPType="OP")!(PPType="MC") d
+ . s obj=##Class(%ResultSet).%New("web.OECPriority.LookUp")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s allordprioval=allordprioval_obj.GetDataByName("HIDDEN")_","
+ . . . s allordpriotxt=allordpriotxt_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allordprioval)>0 s allordprioval=$e($g(allordprioval),1,$l($g(allordprioval))-1)
+ . i $l(allordpriotxt)>0 s allordpriotxt=$e($g(allordpriotxt),1,$l($g(allordpriotxt))-1)
+ ;
+ ; Log 60604 - PJC - Adding Result Status Lookup to Result and Tabular Result Profiles
+ i (PPType="RP")!(PPType="LT") d
+ . s obj=##Class(%ResultSet).%New("websys.StandardTypeItem.LookUpByType")
+ . i obj d
+ . . d obj.Execute("ResultType","")
+ . . f  q:'obj.Next()  d
+ . . . s allresstatval=allresstatval_obj.GetDataByName("HIDDEN")_","
+ . . . s allresstattxt=allresstattxt_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(allresstatval)>0 s allresstatval=$e($g(allresstatval),1,$l($g(allresstatval))-1)
+ . i $l(allresstattxt)>0 s allresstattxt=$e($g(allresstattxt),1,$l($g(allresstattxt))-1)
+ ;
+ ; Log 63927 - KB - Adding Document type lookup to MRPictures Profile
+ i (PPType="PP") d
+ . s obj=##Class(%ResultSet).%New("web.PACDocumentType.LookUp")
+ . i obj d
+ . . d obj.Execute("")
+ . . f  q:'obj.Next()  d
+ . . . s alldoctypesval=alldoctypesval_obj.GetDataByName("HIDDEN")_","
+ . . . s alldoctypestxt=alldoctypestxt_obj.GetDataByName("Description")_"^"
+ . . d obj.%Close() k obj
+ . i $l(alldoctypesval)>0 s alldoctypesval=$e($g(alldoctypesval),1,$l($g(alldoctypesval))-1)
+ . i $l(alldoctypestxt)>0 s alldoctypestxt=$e($g(alldoctypestxt),1,$l($g(alldoctypestxt))-1)
+ ;
+ w "<BR>"_$c(13,10)
+ w "<SCRIPT language=JavaScript>"_$c(13,10)
+ // by wuqk 2011-06-16 ¾äÄ©Ìí¼Ó·ÖºÅ ; 
+ w "var allstatval='"_$ZCVT($g(allstatval),"O","JS")_"';"_$c(13,10)
+ w "var allstattxt='"_$ZCVT($g(allstattxt),"O","JS")_"';"_$c(13,10)
+ w "var allcatval='"_$ZCVT($g(allcatval),"O","JS")_"';"_$c(13,10)
+ w "var allcattxt='"_$ZCVT($g(allcattxt),"O","JS")_"';"_$c(13,10)
+ ; Log 49041 - AI - 08-02-2005 : Change the way allteststxt and alltestsval are built. Now it is possible to span fields, so the page does not error on MAXSTRING.
+ w "var alltestsval=new Array();"_$c(13,10)
+ w "var allteststxt=new Array();"_$c(13,10)
+ f j=1:1:testslen d
+ . w "alltestsval["_j_"]='"_$ZCVT($g(alltestsval(j)),"O","JS")_"';"_$c(13,10)
+ . w "allteststxt["_j_"]='"_$ZCVT($g(allteststxt(j)),"O","JS")_"';"_$c(13,10)
+ w "var testslen="_$ZCVT($g(testslen),"O","JS")_$c(13,10)
+ ; end Log 49041
+ w "var allhospval='"_$ZCVT($g(allhospval),"O","JS")_"';"_$c(13,10)
+ w "var allhosptxt='"_$ZCVT($g(allhosptxt),"O","JS")_"';"_$c(13,10)
+ w "var allquesval='"_$ZCVT($g(allquesval),"O","JS")_"';"_$c(13,10)
+ w "var allquestxt='"_$ZCVT($g(allquestxt),"O","JS")_"';"_$c(13,10)
+ ; Log 27755 - AI - 22-10-2002 : Add functionality for Blood Product.
+ w "var allbloodprodval='"_$ZCVT($g(allbloodprodval),"O","JS")_"';"_$c(13,10)
+ w "var allbloodprodtxt='"_$ZCVT($g(allbloodprodtxt),"O","JS")_"';"_$c(13,10)
+ ; end Log 27755
+ ; Log 41352 - AI - 30-01-2004 : Add functionality for Subcategory.
+ w "var selsubcatval='"_$ZCVT($g(selsubcatval),"O","JS")_"';"_$c(13,10)
+ w "var selsubcattxt='"_$ZCVT($g(selsubcattxt),"O","JS")_"';"_$c(13,10)
+ w "var selsubcatcode='"_$ZCVT($g(selsubcatcode),"O","JS")_"';"_$c(13,10)
+ ; end Log 41352
+ ; Log 43334 - AI - 12-05-2004 : Add functionality for Questionnaire Edit Profile.
+ w "var allquesprofval='"_$ZCVT($g(allquesprofval),"O","JS")_"';"_$c(13,10)
+ w "var allquesproftxt='"_$ZCVT($g(allquesproftxt),"O","JS")_"';"_$c(13,10)
+ ; end Log 43334
+ ; Log 43911 - AI - 03-06-2004 : Add functionality for Observation Profile.
+ w "var allobsgrpval='"_$ZCVT($g(allobsgrpval),"O","JS")_"';"_$c(13,10)
+ w "var allobsgrptxt='"_$ZCVT($g(allobsgrptxt),"O","JS")_"';"_$c(13,10)
+ ; end Log 43911
+ ; Log 55627 YC - location for BT profile
+ w "var alllocval='"_$ZCVT($g(alllocval),"O","JS")_"';"_$c(13,10)
+ w "var allloctxt='"_$ZCVT($g(allloctxt),"O","JS")_"';"_$c(13,10)
+ ; END log 55627
+ ; Log 52540 YC - Order Priority for order profile
+ w "var allordprioval='"_$ZCVT($g(allordprioval),"O","JS")_"';"_$c(13,10)
+ w "var allordpriotxt='"_$ZCVT($g(allordpriotxt),"O","JS")_"';"_$c(13,10)
+ ; END log 52540
+ w "var graphID='"_$g(graphID)_"'"_$c(13,10)
+ ; Log 60604 PJC - Result Status for Result and Tabular Result Profiles
+ w "var allresstatval='"_$ZCVT($g(allresstatval),"O","JS")_"';"_$c(13,10)
+ w "var allresstattxt='"_$ZCVT($g(allresstattxt),"O","JS")_"';"_$c(13,10)
+ ;
+ ; Log 63927 KB - Document types for MRPicture Profile
+ w "var alldoctypesval='"_$ZCVT($g(alldoctypesval),"O","JS")_"';"_$c(13,10)
+ w "var alldoctypestxt='"_$ZCVT($g(alldoctypestxt),"O","JS")_"';"_$c(13,10) 
+ ; END log 63927
+
+ w "</SCRIPT>"_$c(13,10)
+ ;
+ i %request.Get("WEBSYS.TCOMPONENT")="",PPType'="" {
+ 	s CID=##Class(epr.CTChartItemType).GetIdFromCodeOrDescription(PPType)
+ 	i CID s obj=##Class(epr.CTChartItemType).%OpenId(CID)
+ 	i obj s %request.Data("WEBSYS.TCOMPONENT",1)=obj.CITListProfileComponentDR.Name d obj.%Close()
+ }
+ i %request.Get("WEBSYS.TCOMPONENT")'="" {
+ 	d ##Class(websys.Conversions).SaveRequest()  //Save %response info as it will disappear due to redirect
+	s frm=##Class(websys.Component).OpenName(%request.Get("WEBSYS.TCOMPONENT")) i frm d frm.Show() d frm.%Close()
+ }
+</SERVER>
+</DIV></BODY>
+</HTML>

@@ -1,0 +1,498 @@
+<!--inpatientlist.inpat.csp-->
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;"/>
+    <!--增加DisableSound=0属性可关闭语音功能-->
+	<EXTHEALTH:HEAD SoundScenes="病人列表"></EXTHEALTH:HEAD>
+	
+    <!--
+    <DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+    
+	<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+	<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css" />
+	<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.easyui.1.3.5.css"></LINK>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/easyuicom.1.3.5.css">
+	-->
+	<HISUI></HISUI>
+	
+    <STYLE type='text/css'>
+        body,table{
+	       font-family: "Microsoft Yahei";
+	       font-size: 14px;
+	       background: #FFF;
+	    }
+	    body{
+			padding:0px;
+		}
+    	.backcolorcom{
+	    	padding: 2px 10px;
+	    	color: #FFF;
+	    	border-radius: 5px;
+	    }
+	    #BZCount{
+		    background: #F05AD7;
+		}
+		#BWCount{
+		    background: #F16D56;
+		}
+		#CurPatCount{
+		    background: #27B66B;
+		}
+		.panel-body{
+			border-color:#E7E7E7;
+		}
+		.inpatbtncom,.inpatdaybtncom{
+			font-size: 14px !important;  
+			position: relative;
+			display: block;
+			padding:0px 5px; 
+			border-radius: 4px;
+			float:left;
+			/*margin:0 5px;*/
+			margin-right:5px;
+			color:#ff4401;
+			
+			height: 26px;
+			line-height: 26px;
+			text-align: center;
+	   }
+	   .inpatbtncom:focus, 
+	   .inpatbtncom:hover,
+	   .selinpatbtn,
+	   .inpatdaybtncom:focus,
+	   .inpatdaybtncom:hover,
+	   .selinpatdaybtn{
+			background-color: #ffe9db;
+			
+			cursor: pointer;
+		}
+		.inpatbtncom:focus, 
+		.inpatbtncom:hover,
+		.inpatdaybtncom:focus, 
+		.inpatdaybtncom:hover{
+			text-decoration: none;
+		}
+		.search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+			/*padding: 0 10px;*/
+		}
+		.r-label{
+			padding-left: 10px;
+		}
+		.r-label-min{
+			padding:0 5px;
+			text-align:right;
+		}
+    </STYLE>
+</head>
+<body>
+    <server>
+    	s PatListType=%request.Get("PatListType")
+    	s isNurseLogin =##class(web.DHCDocMain).isNurseLogin()
+    	;s %session.Get("LOGON.USERID")=
+   		s DefindeListShow=""
+    	s DefaultCurrentGroupe=##class(web.DHCDocConfig).GetConfigNode1("layoutInPatList_Group",%session.Get("LOGON.GROUPID"))
+    	if (DefaultCurrentGroupe'="") s DefindeListShow=DefaultCurrentGroupe
+    	s DefaultCurrentUser=##class(web.DHCDocConfig).GetConfigNode1("layoutInPatList_User",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+   		if (DefaultCurrentUser'="") s DefindeListShow=DefaultCurrentUser
+   		s LogonWardId=%session.Get("LOGON.WARDID")
+   		s ShowFromPage=%request.Get("ShowFromPage")
+   		s DefaultCurrentWard=##class(web.DHCDocConfig).GetConfigNode1("DefaultCurrentWard",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+   </server>
+    <!--在院患者-->
+	    <csp:if condition='PatListType="InPat"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false">
+	    		<csp:if condition='ShowFromPage="FromChart"'>
+	    		  <!--患者列表在左侧的布局-->
+		    	  <div id="PatListSearchCons" data-options="region:'north'" style="height:196px;border-width:0px 0px 1px 0px;">
+		    	  	  <table class="search-table" style="width:100%;">
+							<tr>
+							    <td class="r-label-min"><label>#(..Get("病案号"))#</label></td>
+								<td>
+									<input class="hisui-validatebox" id="medicareNo" style="width:81px;"/>
+								</td>
+								<td class="r-label-min"><label>#(..Get("姓名"))#</label></td>
+				   				<td>
+									<input class="hisui-validatebox" id="patientName" style="width:81px;"/>
+								</td>
+							<tr>
+								<td class="r-label-min"><label>#(..Get("床号"))#</label></td>
+								<td>
+									<input class="hisui-validatebox" id="patbedNo" style="width:81px;"/>
+								</td>
+								<td colspan="2" id ="tdDeliveryPatient">
+									<input class='hisui-checkbox' id='DeliveryPatient' type="checkbox" label="产房病人">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label-min"><label>#(..Get("病区"))#</label></td>
+								<td>
+									<input class="textbox" id="wardcombo" style="width:88px;"/>
+								</td>
+								<td class="r-label-min"><label>#(..Get("医师"))#</label></td>
+								<td>
+									<input class="textbox" id="userName" style="width:88px;"/>
+								</td>
+							</tr>
+							<!--tr>
+								<td colspan="4" id ="tdDeliveryPatient">
+									<input class='hisui-checkbox' id='DeliveryPatient' type="checkbox" label="产房病人">
+									<a id="Search1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+								</td>
+							</tr-->
+							<tr>
+								<td colspan="4">
+									<a class="inpatbtncom" id="currentUserBtn" style="margin-left:5px;">#(..Get("本人"))#</a>
+									<a class="inpatbtncom" id="currentLocBtn" >#(..Get("本科"))#</a>
+									<a class="inpatbtncom" id="currentGroupBtn">#(..Get("本单元"))#</a>	
+									<a class="inpatbtncom" id="currentDocContorBtn">#(..Get("本科管辖"))#</a>								
+								</td>
+							</tr>
+							<tr>
+								<td colspan="4" class="r-label-min" style="text-align:left;">
+									<span class="backcolorcom" id="BZCount">#(..Get("病重"))#</span>
+									<span class="backcolorcom" id="BWCount">#(..Get("病危"))#</span>
+									<span class="backcolorcom" id="CurPatCount">#(..Get("新入"))#</span>
+								</td>
+							</tr>
+					  </table>
+		    	  </div>
+				<csp:else>
+					<div id="PatListSearchCons" data-options="region:'north'" style="height:130px;border-width:0px 0px 1px 0px;padding:0 0 5px 0">
+				    	<table class="search-table">
+							<tr>
+							    <td class="r-label"><label>#(..Get("病案号"))#</label></td>
+								<td>
+									<input class="hisui-validatebox" id="medicareNo"/>
+								</td>
+								<td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+				   				<td>
+									<input class="hisui-validatebox" id="patientName"/>
+								</td>
+								<td class="r-label"><label>#(..Get("床号"))#</label></td>
+								<td>
+									<input class="hisui-validatebox" id="patbedNo"/>
+								</td>
+								<td class="r-label"><a id="Search1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+								
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("病区"))#</label></td>
+								<td>
+									<input class="textbox" id="wardcombo"/>
+								</td>
+								<td class="r-label"><label>#(..Get("主管医师"))#</label></td>
+								<td>
+									<input class="textbox" id="userName"/>
+								</td>
+								<td></td>
+								<td id ="tdDeliveryPatient">
+									<input class='hisui-checkbox' id='DeliveryPatient' type="checkbox" label="产房病人">
+								</td>
+								<td></td>
+							</tr>
+							
+						</table>
+						<div>
+							<table>
+								<tr>
+									<td style="width:450px;">
+										<a class="inpatbtncom" id="currentUserBtn">#(..Get("本人"))#</a>
+										<a class="inpatbtncom" id="currentLocBtn" >#(..Get("本科"))#</a>
+										<a class="inpatbtncom" id="currentGroupBtn">#(..Get("本单元"))#</a>	
+										<a class="inpatbtncom" id="currentDocContorBtn">#(..Get("本科管辖"))#</a>								
+									</td>
+									<td>
+										<span class="backcolorcom" id="BZCount">#(..Get("病重"))#</span>
+										<span class="backcolorcom" id="BWCount">#(..Get("病危"))#</span>
+										<span class="backcolorcom" id="CurPatCount">#(..Get("新入"))#</span>
+									</td>
+								</tr>
+							</table>
+						</div>
+				    </div>
+				</csp:if>
+			    <div data-options="region:'center',border:false" id="PatListDiv">
+			    	<table id="patientListData" ></table>
+			    </div>
+			</div>
+	    </csp:if>
+	    <!--出院患者-->
+	    <csp:if condition='PatListType="OutPat"'>
+	        <div class="hisui-layout" data-options="fit:true,border:false">
+		    	<div id="PatListSearchCons" data-options="region:'north'" style="height:164px;border-width:0px 0px 1px 0px;">
+		    		<table class="search-table">
+			   			<tr>
+			   			    <td class="r-label"><label>#(..Get("登记号"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientNo"/>
+							</td>
+							<td class="r-label"><label>#(..Get("病案号"))#</label></td>
+							<td>
+								<input class="hisui-validatebox" id="medicareNo"/>
+							</td>
+							<td class="r-label"><a id="Search1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+			   			</tr>
+			   			<tr>
+			   			    <td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientName"/>
+							</td>
+							<td class="r-label"><label>#(..Get("主管医师"))#</label></td>
+							<td>
+								<input class="textbox" id="userName"/>
+							</td>
+			   			</tr>
+			   		</table>
+			   		<table>
+						<tr>
+							<td><a class="inpatbtncom" id="currentUserBtn">#(..Get("本人病人"))#</a></td>
+							<td><a class="inpatbtncom" id="currentLocBtn" >#(..Get("本科病人"))#</a></td>
+							<td><a class="inpatbtncom" id="currentGroupBtn">#(..Get("本单元病人"))#</a></td>
+						</tr>
+					</table>
+					<table style="margin-top:7px;">
+						<tr>
+							<td><a class="inpatdaybtncom" id="DateGap1Radio">#(..Get("当天"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap3Radio" >#(..Get("3天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap7Radio">#(..Get("7天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap30Radio">#(..Get("30天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap60Radio">#(..Get("60天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap90Radio">#(..Get("90天内"))#</a></td>
+						</tr>
+					</table>
+		    	</div>
+		    	<div data-options="region:'center',border:false" id="PatListDiv" style="padding:0 0px 10px 0px;"> <!--style="height:80%;width:805px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+		   </div>
+	    </csp:if>
+	    <!--转出患者-->
+	    <csp:if condition='PatListType="TransDept"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false" >
+		    	<div id="PatListSearchCons" data-options="region:'north'" style="height:82px;border-width:0px 0px 1px 0px;">
+		    		<table class="search-table">
+						<tr>
+							<csp:if condition='LogonWardId=""'>
+							<csp:else>
+								<td><a class="inpatbtncom" id="currentUserBtn">#(..Get("本人病人"))#</a></td>
+	    					</csp:if>
+							<td><a class="inpatbtncom" id="currentLocBtn" >#(..Get("本科病人"))#</a></td>
+							<td><a class="inpatbtncom" id="currentGroupBtn">#(..Get("本单元病人"))#</a></td>
+							<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientNo"/>
+							</td>
+							<td class="r-label"><label>#(..Get("病案号"))#</label></td>
+							<td>
+								<input class="hisui-validatebox" id="medicareNo"/>
+							</td>
+						</tr>
+					</table>
+					<table style="">
+						<tr>
+							<td><a class="inpatdaybtncom" id="DateGap1Radio">#(..Get("当天"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap3Radio" >#(..Get("3天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap7Radio">#(..Get("7天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap30Radio">#(..Get("30天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap60Radio">#(..Get("60天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap90Radio">#(..Get("90天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateFreeRadio">#(..Get("自定义日期"))#</a></td>
+						</tr>
+					</table>
+		    	</div>
+		    	<div id="PatListDiv" data-options="region:'center',border:false" style="padding:0 0px 10px 0px;"> <!--style="height:90%;width:805px;margin-top:7px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+			</div>
+	    </csp:if>
+	    <!--手术患者-->
+	    <csp:if condition='PatListType="OperationPat"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false">
+		    	<div id="PatListSearchCons" data-options="region:'north'" style="height:48px;border-width:0px 0px 1px 0px;">
+		    		<table class="search-table">
+						<tr>
+							<td><a class="inpatdaybtncom" id="DateGap1Radio">#(..Get("当天"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap3Radio" >#(..Get("3天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap7Radio">#(..Get("7天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap30Radio">#(..Get("30天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap60Radio">#(..Get("60天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap90Radio">#(..Get("90天内"))#</a></td>
+						</tr>
+					</table>
+		    	</div>
+		    	<div id="PatListDiv" data-options="region:'center',border:false" style="padding:0 0px 10px 0px;"> <!--style="height:95%;width:805px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+	    	</div>
+	    </csp:if>
+	    <!--危重患者 -->
+	    <csp:if condition='PatListType="CriticallyPat"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false">
+		    	<div data-options="region:'center',border:false" id="PatListDiv" style="padding:10px 10px 10px 0px;"> <!--style="height:100%;width:805px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+		    </div>
+	    </csp:if>  
+	    <!--本病区患者-->
+	    <csp:if condition='PatListType="CurWarPat"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false">
+		    	<div id="PatListSearchCons" data-options="region:'north'" style="height:100px;border:0px;">
+		    		<table>
+			   			<tr>
+			   			    <td class="r-label"><label>#(..Get("登记号"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientNo"/>
+							</td>
+							<td class="r-label"><label>#(..Get("病案号"))#</label></td>
+							<td>
+								<input class="hisui-validatebox" id="medicareNo"/>
+							</td>
+							<td class="r-label"><label>#(..Get("床号"))#</label></td>
+							<td>
+								<input class="hisui-validatebox" id="patbedNo"/>
+							</td>
+							
+			   			</tr>
+			   			<tr>
+			   			    <td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientName"/>
+							</td>
+							<td class="r-label"><label>#(..Get("主管医师"))#</label></td>
+							<td>
+								<input class="textbox" id="userName"/>
+							</td>
+							<td></td>
+							<td><a id="Search1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search'">#(..Get("预入患者"))#查询</a></td>
+			   			</tr>
+			   		</table>
+			   		<div style="margin:7px 10px 0px 0px;float:right;">
+						<tr>
+							<td><span class="backcolorcom" id="BZCount">#(..Get("病重"))#</span></td>
+							<td><span class="backcolorcom" id="BWCount">#(..Get("病危"))#</span></td>
+							<td><span class="backcolorcom" id="CurPatCount">#(..Get("新入"))#</span></td>
+						</tr>
+					</div>
+		    	</div>
+		    	<div id="PatListDiv" data-options="region:'center',border:false" style="padding:0 0px 10px 0px;"> <!--style="height:460px;width:805px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+	    	</div>
+	    </csp:if> 
+	    <!--在院转科患者-->  
+	    <csp:if condition='PatListType="InHospTransPat"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false">
+		    	<div id="PatListSearchCons" data-options="region:'north'" style="height:80px;border-width:0px 0px 1px 0px;">
+		    		<table>
+			   			<tr>
+			   			    <td class="r-label"><label>#(..Get("登记号"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientNo"/>
+							</td>
+							<td class="r-label"><label>#(..Get("病案号"))#</label></td>
+							<td>
+								<input class="hisui-validatebox" id="medicareNo"/>
+							</td>
+							<td><a id="Search1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search'">#(..Get("查询"))#</a></td>
+			   			</tr>
+			   			<tr>
+			   			    <td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientName"/>
+							</td>
+							<td class="r-label"><label>#(..Get("主管医师"))#</label></td>
+							<td>
+								<input class="textbox" id="userName"/>
+							</td>
+			   			</tr>
+			   		</table>
+		    	</div>
+		    	<div id="PatListDiv" data-options="region:'center',border:false" style="padding:0 0px 10px 0px;"> <!--style="height:480px;width:805px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+	    	</div>
+	    </csp:if> 
+	    <!--出院病人-->
+	    <csp:if condition='PatListType="DisChargePat"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false">
+		    	<div id="PatListSearchCons" data-options="region:'north'" style="height:30px;border:0px;">
+					<table style="">
+						<tr>
+							<td><a class="inpatdaybtncom" id="DateGap1Radio">#(..Get("当天"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap3Radio" >#(..Get("3天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap7Radio">#(..Get("7天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap30Radio">#(..Get("30天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap60Radio">#(..Get("60天内"))#</a></td>
+							<td><a class="inpatdaybtncom" id="DateGap90Radio">#(..Get("90天内"))#</a></td>
+						</tr>
+					</table>	
+		    	</div>
+		    	<div id="PatListDiv" data-options="region:'center',border:false" style="padding:0 0px 10px 0px;"> <!--style="height:510px;width:805px;margin-top:7px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+	    	</div>
+	    </csp:if>
+	    <!--预入院患者-->
+	    <csp:if condition='PatListType="PreAdmissionPatList"'>
+	    	<div class="hisui-layout" data-options="fit:true,border:false">
+		    	<div id="PatListSearchCons" data-options="region:'north'" style="height:54px;border-width:0px 0px 1px 0px;">
+					<table class="search-table">
+						<tr>
+			   			    <td class="r-label"><label>#(..Get("登记号"))#</label></td>
+			   				<td>
+								<input class="hisui-validatebox" id="patientNo"/>
+							</td>
+							<td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+							<td>
+								<input class="hisui-validatebox" id="patientName"/>
+							</td>
+							<td class="r-label"><a id="Search1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+			   			</tr>
+					</table>	
+		    	</div>
+		    	<div id="PatListDiv" data-options="region:'center',border:false" style="padding:0 0px 10px 0px;"> <!--style="height:510px;width:805px;margin-top:7px;"-->
+			    	<table id="patientListData"></table>
+			    </div>
+	    	</div>
+	    </csp:if> 
+	    <div id="DateFree-dialog" class="hisui-dialog" title="日期选择" style="padding:10px;top:50px;width:300px;height:160px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
+		<div class="hisui-panel" style="border-color:#ccc;" data-options="border:true,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
+				<table>
+				<tr>
+					<td class="r-label">
+						<label class="left_label" for="StartDate">#(..Get("开始日期"))#</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox"  id="StartDate"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label class="left_label" for="EndDate">#(..Get("结束日期"))#</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox"  id="EndDate"/>
+					</td>
+				</tr>
+				<tr>
+				<td colspan="2" style="text-align: center;"><a href="javascript:void(0)" id="BFindDate" data-options="iconCls:''" class="hisui-linkbutton">#(..Get("查询"))#</a></td>
+				</tr>
+				</table>
+		</div>
+	</div>
+    <script type="text/javascript">
+     var PatListObj={
+	     PatListType:"#(PatListType)#",
+	     isNurseLogin:"#(isNurseLogin)#",
+	     DefindeListShow:"#(DefindeListShow)#",
+	     BZStr:"",
+	     ShowFromPage:"#(ShowFromPage)#",
+	     DefaultCurrentWard:"#(DefaultCurrentWard)#"
+	 }
+	</script>
+    <script type="text/javascript" src="../scripts/dhcdoc/InPatientList.inPat.js"></script>
+</body>
+</html>

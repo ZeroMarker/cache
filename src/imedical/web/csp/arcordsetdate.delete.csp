@@ -1,0 +1,37 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ ;created 17/05/05 JPD
+ n RowID
+ s (RowID)=""
+ s RowID=%request.Get("RowID") 
+ ;
+ ;s ^zJPD($zn,"DELETEITEMCSP")="IN"_"^"_RowID
+ &sql(
+ DELETE FROM
+   ARC_OrdSetDate 
+ WHERE DATE_RowId = :RowID
+ )
+
+ d ##Class(websys.Conversions).SaveRequest()
+ s %response.ServerSideRedirect="websys.default.csp?WEBSYS.TCOMPONENT=ARCOrdSetDateItem.Find&Setid="_%request.Get("Setid")
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

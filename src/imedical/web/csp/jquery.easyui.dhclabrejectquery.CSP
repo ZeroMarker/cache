@@ -1,0 +1,51 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<HEAD>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		  <HISUI/>
+	</HEAD>
+	<SERVER>
+		 s HOSPID=$G(%session.Data("LOGON.HOSPID"))
+		 s CTLOCID=$G(%session.Data("LOGON.CTLOCID"))
+		 s WardID =$G(%session.Data("LOGON.WARDID")) 
+		 
+		 s (HospCode,LocCode,WardCode,LocationDR,HospitalDR,WardDR)=""
+		 
+		 i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+		 i $l(HospCode) s HospitalDR=$o(^dbo.BTHospitalI("IndexCode",$c(32)_HospCode,""))
+		 i $l(CTLOCID) s LocCode=$p($g(^CTLOC(CTLOCID)),"^",1)
+		 i $l(LocCode),$l(HospitalDR) s LocationDR=$o(^dbo.BTLocationI("IndexCode",HospitalDR,$c(32)_LocCode,""))
+		 i $l(WardID) s WardCode=$p($g(^PAWARD(WardID)),"^",1)
+		 i $l(WardCode) s WardDR=$o(^dbo.BTWardI("IndexCode",$c(32)_WardCode,""))
+
+	</SERVER>	
+
+	<body class="hisui-layout" id="lo" data-options='collapsible:false'>
+		<div region="north" data-options='collapsible:false' style="height:40px;">
+			日期：<input class="hisui-datebox" name="dtFindSttDate" id="dt_FindSttDate" data-options="" style="width: 110px;" />
+            -<input class="hisui-datebox" name="dtFindEndDate" id="dt_FindEndDate" data-options="" style="width: 110px;" />
+            登记号：<input id="txt_RegNo" style="width:100px">
+            病区：<input id="cmb_Ward" style="width:200px">
+			已处理<input type="checkbox" id="ckIsFinish" onclick="findRejectList();">
+			<a href="#" class="hisui-linkbutton" id="find" onclick="javascript:findRejectList();">查找</a>
+		</div>
+		<div region="center" data-options="border:false">
+			<table id="dgRejectSpec"></table>
+		</div>
+		<div id="win_ReportReject"></div>
+		<script src="../scripts/websys.jquery.js" type="text/javascript"></script>
+		<script src="../scripts/dhclab.rejectquery.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var EpisodeID= '#($g(%request.Data("EpisodeID",1)))#';
+			var PatientID= '#($g(%request.Data("PatientID",1)))#';
+			var HospitalDR = '#($g(HospitalDR))#';
+			var LocationDR = '#($g(LocationDR))#';
+			var WardDR = '#($g(WardDR))#';
+		</script>
+	</body>
+</HTML>

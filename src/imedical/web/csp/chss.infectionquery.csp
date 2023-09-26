@@ -1,0 +1,76 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	
+	
+	s InfectionCardRowId=$Get(%request.Data("InfectionCardRowId",1))
+	s InfectionRowIdParref=$Get(%request.Data("InfectionRowIdParref",1))
+	s GradeRowIdParref=$Get(%request.Data("GradeRowIdParref",1))
+	s TypeRowIdParref=$Get(%request.Data("TypeRowIdParref",1))
+	s CardCode=$Get(%request.Data("CardCode",1))
+	s GeoCode=$Get(%request.Data("GeoCode",1))
+	s InfectionType=$Get(%request.Data("InfectionType",1))
+	s PatientName=$Get(%request.Data("PatientName",1))
+	s ParentName=$Get(%request.Data("ParentName",1))
+	s Phone=$Get(%request.Data("Phone",1))
+	s ICCard=$Get(%request.Data("ICCard",1))
+	s Sex=$Get(%request.Data("Sex",1))
+	s Birth=$Get(%request.Data("Birth",1))
+	s WorkPlace=$Get(%request.Data("WorkPlace",1))
+	s BirthPlace=$Get(%request.Data("BirthPlace",1))
+	s CurrentAdd=$Get(%request.Data("CurrentAdd",1))
+	s Profession=$Get(%request.Data("Profession",1))
+	s Taken=$Get(%request.Data("Taken",1))
+	s Diagnose=$Get(%request.Data("Diagnose",1))
+	s Death=$Get(%request.Data("Death",1))
+	s CaseType=$Get(%request.Data("CaseType",1))
+	s ReportUnit=$Get(%request.Data("ReportUnit",1))
+	s DateOfRegister=$Get(%request.Data("DateOfRegister",1))
+	s Register=$Get(%request.Data("Register",1))
+	s DateOfReceiveCard=$Get(%request.Data("DateOfReceiveCard",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.PersonInfectionCardService).update(InfectionCardRowId,InfectionRowIdParref, GradeRowIdParref, TypeRowIdParref, CardCode, GeoCode, InfectionType, PatientName, ParentName, Phone, ICCard, Sex, Birth, WorkPlace, BirthPlace, CurrentAdd, Profession, Taken, Diagnose, Death, CaseType, ReportUnit, DateOfRegister, Register, DateOfReceiveCard, CommunityCode)
+	.i result = 0 d
+	..w "{success:'true',info:'修改成功!'}"
+    .e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.PersonInfectionCardService).ListPage(CommunityCode,Start,Limit)
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.PersonInfectionCardService).delete(InfectionCardRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功'}"
+    .e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.PersonInfectionCardService).insert(InfectionRowIdParref, GradeRowIdParref, TypeRowIdParref, CardCode, GeoCode, InfectionType, PatientName, ParentName, Phone, ICCard, Sex, Birth, WorkPlace, BirthPlace, CurrentAdd, Profession, Taken, Diagnose, Death, CaseType, ReportUnit, DateOfRegister, Register, DateOfReceiveCard, CommunityCode)
+	.w result
+	
+	i PatientName '= "" d
+	.s SqlStr = " and PatientName like '%"_PatientName_"%'"
+	i Sex '= "" d
+	.s SqlStr = " and Sex = '"_Sex_"'"
+	i CardCode '= "" d
+	.s SqlStr = " and CardCode = '"_CardCode_"'"
+	i ICCard '= "" d
+	.s SqlStr = " and ICCard = '"_ICCard_"'"
+	
+	i Action = "search" d
+	.w ##class(CHSSWeb.PersonInfectionCardService).Search(CommunityCode,Start,Limit,SqlStr)
+</script>
+

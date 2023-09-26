@@ -1,0 +1,111 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY onload="SubmitForm();">
+
+<SERVER language="Cache" RUNAT=SERVER>
+
+	; added to this page,
+	n (%request,%session,msg)
+
+	; audit this?
+	s cmp=##Class(websys.Component).OpenName("epr.externalviewer.edit")
+	i cmp d cmp.%Close()
+
+	s PatientID=$g(%request.Data("PatientID",1))
+	s OrderID=$g(%request.Data("OrderID",1))
+	s EpisodeID=$g(%request.Data("EpisodeID",1))
+
+	s accessionnumber=$g(%request.Data("accession_number",1))
+	s PACS=$g(%request.Data("Viewer",1))
+	s (linkdets,vpath,eId)=""
+
+	s URNumber=##Class(web.PAPatMas).GetRegistration(PatientID)
+	s URNumber1=URNumber
+
+	i URNumber'="" f  s c=$e(URNumber,1) q:c'="0"  s URNumber=$e(URNumber,2,$l(URNumber))
+
+	s (staffID,staffDesc)=""
+	s userID=%session.Get("LOGON.USERID")
+	i userID d
+	. s UserInitials=$p($g(^SSU("SSUSR",userID)),"^",1)
+	. s staffID=$p($g(^SSU("SSUSR",userID)),"^",74)
+	. i staffID s staffDesc=$p(^CT("STAFF",staffID),"^",2)
+
+	f  s eId=$o(^epr.CTExternalViewerD(eId)) q:eId=""  q:vpath'=""  d
+	. s pacsDetails=$g(^epr.CTExternalViewerD(eId)) i pacsDetails="" q
+	. s viewer=$lg(pacsDetails,2)
+	. i PACS'=viewer q
+	. s vpath=$lg(pacsDetails,5)
+ 	. s PACSsystem=$lg(pacsDetails,4)
+ 	. s PACSdesc=$lg(pacsDetails,3)
+ 	. s PACSusername=$lg(pacsDetails,7)
+	. s PACSusernameVal=$lg(pacsDetails,19)
+ 	. s PACSpassword=$lg(pacsDetails,6)
+	. s PACSpasswordVal=$lg(pacsDetails,16)
+	. s PACSScript=$lg(pacsDetails,9)
+ 	. s linkdets=""
+	. i PACSusername'="",PACSusernameVal'="" d
+	. . s param(PACSusername)=PACSusernameVal
+	. i PACSpassword'="",PACSpasswordVal'="" d
+	. . s param(PACSpassword)=PACSpasswordVal
+ 	. i PACSsystem="GE" d
+ 	. . s randomnumber=$r(1000000)
+ 	. . s MRN=##class(web.PAPatMas).GetRegistration(PatientID)
+ 	. . s datetime=$e(##class(%Collation).AlphaUp($zdatetime($h,3)),1,12)
+ 	. . s linkdets="/cgi-bin/OAPIExamList.cgi?"_MRN_"+"_datetime_"+"_randomnumber
+ 	. i PACSsystem="SRIS" d
+ 	. . s param("pi")=URNumber
+ 	. . s param("us")=PACSusername
+ 	. . s param("pw")=PACSpassword
+ 	. i PACSsystem="AGFA" d
+ 	. . s param("accession_number")=accessionnumber
+ 	. . s param("patient_id")=URNumber
+ 	. . s param("user")=PACSusername
+ 	. . s param("password")=PACSpassword
+ 	. . ; request thumbnails if viewing by patient
+ 	. . i OrderID="" s param("format")="image_thumbnail"
+	. i PACSsystem="AVMED" d
+	. . s param("PatientId")=URNumber1
+	. . s param("Type")=staffDesc
+	. . s param("StaffNo")=UserInitials
+	. ; Log 61524 YC - Custom PACS System (build EVlink in CacheScript, pass in OrderID and EVID)
+	. ; e.g. CacheScript: d ##Class(Custom.ExternalViewer).custom(EVID,OrderID)
+ 	. i PACSsystem="CUST" d
+ 	. . i PACSScript'="" d ##Class(websys.Conversions).expressionExecute(PACSScript)
+	. i PACSsystem="USRD" d
+	. . s udVals=##Class(epr.CTExternalViewer).GetUserDefinedLink(eId,EpisodeID,OrderID)
+	. . f i=1:1:$l(udVals,"&")  d
+	. . . s val=$p(udVals,"&",i)
+	. . . i val="" q
+	. . . s param($p(val,"=",1))=$p(val,"=",2)
+
+	i vpath'="" d
+	. w !,"<form method='post' action='"_vpath_linkdets_"' name='fExternalViewer' id='fExternalViewer'>"
+	. s px="" f  s px=$o(param(px)) q:px=""  d
+	. . w !,"   <INPUT NAME='"_px_"' type='hidden' value='"_$g(param(px))_"'>"
+	. w !,"</FORM>"
+</SERVER>
+<SCRIPT LANGUAGE="JAVASCRIPT">
+
+function SubmitForm() {
+	var frm=document.forms["fExternalViewer"];
+	if (frm) frm.submit();
+	return false;
+}
+</SCRIPT>
+
+</BODY>
+</HTML>
+

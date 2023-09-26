@@ -1,0 +1,180 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+	    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+        <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<TRAK:HEAD></TRAK:HEAD>
+		<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	<style>
+	.hidden{display:none}
+   </style>
+</head>
+<BODY class="hisui-layout" >
+      <div class="x-separator line-50-y" data-options="region:'north',headerCls:'panel-header-gray'">
+	          <label class="padding-both-10">年度</label>
+	          <input id="YearM" class="hisui-combobox combobox-width-177" data-options="required:true" placeholder="必选"/>
+	          <label class="padding-both-10">名称</label>
+	          <input class="textbox" id="NameM" style="width:174px" placeholder="请输入品目名称或编码" />
+	          <label class="padding-both-10">上级编码</label>
+	          <input class="textbox" id="SupercodeM" style="width:174px"/>
+	          <label class="padding-both-10">层级</label>
+	          <input class="textbox " id="LevelM" style="width:174px"/>
+	          <span class="padding-right-10"></span>
+	         <a id="FindBtn"  class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+	  </div>
+	  <div class="border-none" data-options="region:'center'">
+		  <table class="hisui-treegrid"  id="EconomicTree" >
+		  </table>
+	  </div>
+	  
+<!--新增明细窗口-->
+<div id="Addwin" title="新增" class="hisui-window hidden" data-options="closed:true, iconCls:'icon-w-add'" >
+    <center><div class="hisui-layout"  data-options="region:'center'" style="height:200px; padding:10px ">
+      <form id="addfm" class="flex-x-center" >
+       <table id="addtable"  style="border-collapse:separate; border-spacing:0px 10px;">
+         <tr>
+           <td class="r-label">年度</td>
+           <td>
+             <select class="hisui-combobox combobox-width-177" id="Year1Box" data-options="required:true" /></select>
+           </td>
+           <td class="r-label">拼音码</td>
+           <td>
+             <input class="textbox" id="Spell1Box" style="width:171px" placeholder="自动生成" disabled/>
+           </td>
+         </tr>
+         <tr>
+           <td class="r-label">名称</td>
+           <td>
+             <input class="hisui-validatebox textbox" id="Name1Box" style="width:171px" data-options="required:true" />
+           </td>
+           <td class="r-label">名称全拼</td>
+           <td>
+             <input class="textbox" id="NameAll1Box" style="width:171px" placeholder="自动生成" disabled/>
+           </td>
+         </tr>
+         <tr>
+           <td class="r-label">编码</td>
+           <td>
+             <input class="hisui-validatebox textbox" id="Code1Box" style="width:171px" data-options="required:true" />
+           </td>
+           <td class="r-label">借贷方向</td>
+           <td>
+             <select class="hisui-combobox combobox-width-177" id="Direction1Box" /></select>
+           </td>
+         </tr>
+         <tr>
+           <td class="r-label">类别</td>
+           <td>
+             <input class="textbox" id="TypeCode1Box" style="width:171px" />
+           </td>
+           <td class="r-label">单位</td>
+           <td>
+             <select class="hisui-combobox combobox-width-177" id="CalUnitDR1Box" /></select>
+           </td>   
+         </tr>
+         <tr>
+    	    <td colspan=4>
+    		<span class="r-label">是否有效</span>
+    		<input class="hisui-checkbox" type="checkbox" id="State1Box"/>
+    		<span class="r-label" style="padding-left:91px">是否末级</span>
+    		<input class="hisui-checkbox" type="checkbox" id="IsLast1Box"/>
+       		<span class="r-label" style="padding-left:91px">是否现金</span>
+    		<input class="hisui-checkbox" type="checkbox" id="IsCash1Box"/>
+    	    </td>
+        </tr>
+        </table>
+       </form>
+     </div></center>   	
+	 <div class="bottom-style"  data-options="region:'south'" >
+	    <a id="AddSave" class="hisui-linkbutton width-70" type="linkbutton" >保存</a>
+	    <span Class="padding-right-10"></span>
+	    <a id="AddClose" class="hisui-linkbutton width-70" >关闭</a>
+	 </div>
+</div>
+
+
+<!--修改明细窗口-->
+<div id="Editwin" title="修改" class="hisui-window hidden " data-options="closed:true, iconCls:'icon-w-edit'" >
+    <center><div class="hisui-layout"  data-options="region:'center'" style="height:200px; padding:10px">
+      <form id="editfm" class="flex-x-center">
+       <table id="edittable" style="border-collapse:separate; border-spacing:0px 10px;"> 
+         <tr>
+           <td class="r-label">年度</td>
+           <td><select class="hisui-combobox combobox-width-177" id="Year2Box"/></select></td>
+           <td class="r-label">拼音码</td>
+           <td> <input class="textbox" id="Spell2Box" style="width:171px" placeholder="自动生成" disabled/></td>
+         </tr>
+         <tr>
+           <td class="r-label">名称</td>
+           <td><input class="hisui-validatebox textbox" id="Name2Box" style="width:171px"  /></td>
+           <td class="r-label">名称全拼</td>
+           <td><input class="textbox" id="NameAll2Box" style="width:171px" placeholder="自动生成" disabled/></td>
+         </tr>
+         <tr>
+           <td class="r-label">编码</td>
+           <td><input class="hisui-validatebox textbox" id="Code2Box" style="width:171px"/></td>
+           <td class="r-label">借贷方向</td>
+           <td> <select class="hisui-combobox combobox-width-177" id="Direction2Box" /></select></td>
+         </tr>
+         <tr>
+           <td class="r-label">类别</td>
+           <td><input class="textbox" id="TypeCode2Box" style="width:171px" /></td>
+           <td class="r-label">单位</td>
+           <td> <select class="hisui-combobox combobox-width-177" id="CalUnitDR2Box" /></select></td>   
+         </tr>
+         <tr>
+    	    <td colspan=4 >
+    		<span class="r-label">是否有效</span>
+    		<input class="hisui-checkbox" type="checkbox" id="State2Box"/>
+    		<span class="r-label" style="padding-left:91px">是否末级</span>
+    		<input class="hisui-checkbox" type="checkbox" id="IsLast2Box"/>
+       		<span class="r-label" style="padding-left:91px">是否现金</span>
+    		<input class="hisui-checkbox" type="checkbox" id="IsCash2Box"/>
+    	    </td>
+        </tr>
+        </table>
+       </form>
+     </div></center>   	
+	 <div class="bottom-style"  data-options="region:'south'" >
+	    <a id="EditSave" class="hisui-linkbutton width-70" type="linkbutton" >保存</a>
+	    <span Class="padding-right-10"></span>
+	    <a id="EditClose" class="hisui-linkbutton width-70" >关闭</a>
+	 </div>
+</div>
+
+<!--复制明细窗口-->
+   <div id="Copywin" title="复制" class="hisui-window hidden padding-10" data-options="closed:true,iconCls:'icon-w-copy'" >
+       <center>
+         <div style="margin-bottom:10px;margin-top:15px">
+           <span class="r-label">历史年度</span>
+           <select class="hisui-combobox combobox-width-177" id="HisYearBox" data-options="required:true" /></select>
+         </div>
+           <span class="r-label" >预算年度</span>
+           <select class="hisui-combobox combobox-width-177" id="BudgYearBox" data-options="required:true"  /></select>
+       </center>   	
+	 <div class="bottom-style" style="margin-top:15px" >
+	    <a id="CopySave" class="hisui-linkbutton width-70" >保存</a>
+	    <span Class="padding-right-10"></span>
+	    <a id="CopyClose" class="hisui-linkbutton width-70" >关闭</a>
+	 </div>
+  </div>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/SessionAndUrl.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budg/common/pinying.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budg/common/quanpin.js"></script>
+	
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgitemdicteconomic/budgitemdicteconomic.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgitemdicteconomic/budgitemdicteconomicadd.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgitemdicteconomic/budgitemdicteconomicedit.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgitemdicteconomic/budgitemdicteconomiccopy.js"></script>
+		
+</body>
+</html>
+	

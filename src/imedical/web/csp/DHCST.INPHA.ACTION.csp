@@ -1,0 +1,136 @@
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	/*
+	住院药房公用csp用于action
+	createdate:2016-04-22
+	creator:yunhaibao
+	*/
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+   	s page=$Get(%request.Data("page",1))
+   	s rows=$Get(%request.Data("rows",1))
+   	s combotext=$Get(%request.Data("q",1)) // easyui combox默认匹配参数
+    i combotext="" s combotext=$Get(%request.Data("combotext",1))
+   	s style=$Get(%request.Data("style",1))
+	s hosp=$Get(%request.Data("HospId",1))
+	//获取安全组关联的科室
+	i action = "GetStockPhlocDs" d
+	.s groupId= $Get(%request.Data("groupId",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetPhaLocByGrp(groupId,combotext,style)
+	//获取病区集合(id为pacward id)
+	i action = "GetWardLocDs" d
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetWardLocDs(combotext,style)
+	//获取特殊科室以及病区集合(id为ctloc id)
+	i action="GetWardListByDocFlag" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.InfoCommon).jsGetWardListByDocFlag(params,combotext,style)
+	//根据别名获取药品集合
+	i action = "GetInciListByAlias" d
+	.s alias= $Get(%request.Data("alias",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetInciListByAlias(alias)
+	//根据别名获取药品弹窗的集合
+	i action = "GetIncItmForDialog" d
+	.s input= $Get(%request.Data("Input",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetIncItmForDialog(input)
+	//获取科室组
+	i action = "GetLocGroupDs" d
+	.s locId=$Get(%request.Data("locId",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetLocGroupDs(locId,combotext,style)
+	//获取病人基本信息
+	i action = "GetPatInfoByNo" d
+	.s patNo=$Get(%request.Data("patNo",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetPatInfoByNo(patNo)
+	//获取住院药房配置信息
+	i action="GetInPhaConfig" d
+	.s gLocId=$Get(%request.Data("gLocId",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetInPhaConfig(gLocId)
+	//获取住院退药原因
+	i action="GetInRetReason" d
+	.s type=$Get(%request.Data("Type",1))
+	.w ##CLASS(web.DHCINPHA.InfoCommon).GetInRetReason(type,hosp)
+    //获取科室发药类别
+	i action="GetLocDispTypeDs" d
+	.s locId=$Get(%request.Data("locId",1))
+	.w ##CLASS(web.DHCINPHA.InfoCommon).GetLocDispTypeDs(locId,style)
+	//获取住院拒绝发药原因
+	i action="GetRefuseDispReason" d
+	.w ##CLASS(web.DHCINPHA.InfoCommon).GetRefuseDispReasonDs(style,hosp)
+	//获取住院发药发药人下拉
+	i action="GetInPhaUser" d
+	.s groupId= $Get(%request.Data("groupId",1))
+	.s locId=$Get(%request.Data("locId",1))
+	.w ##CLASS(web.DHCINPHA.InfoCommon).GetInPhaUserDs(groupId,locId,combotext,style)
+	//获取发药类别下拉
+	i action="GetDispTypeDs" d
+	.s Type=$Get(%request.Data("Type",1))
+	.s HospId=$Get(%request.Data("HospId",1))
+	.w ##CLASS(web.DHCINPHA.InfoCommon).GetDispTypeDs(Type,HospId)
+	/******************上方公用,下方对应业务查询*********************/
+    //退药汇总
+	i action = "jsQueryInPhaRetTotal" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCSTPHARETURN).jsQueryInPhaRetTotal(page,rows,params)
+	//获取发药病区列表
+	i action="QueryDispWardList" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.Disp).jsQueryDispWardList(page,rows,params,style)
+	//获取发药登记号就诊列表
+	i action="QueryDispAdmList" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.Disp).jsQueryDispAdmList(page,rows,params)
+	//获取发药明细列表
+	i action="jsQueryDispList" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.Disp).jsQueryDispList(page,rows,params,style)
+	//获取发药汇总列表
+	i action="jsQueryDispTotalList" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.Disp).jsQueryDispTotalList(page,rows,params)
+	//直接获取汇总
+	i action="jsQueryDispTotal" d 
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.Disp).jsQueryDispTotal(page,rows,params,style)
+	i action="jsQueryInDisp" d
+	.s querytype=$Get(%request.Data("querytype",1))
+	.i querytype="total" s page=1,rows=9999
+	.s params= $Get(%request.Data("params",1))
+	.s pid=$Get(%request.Data("Pid",1))
+	.w ##CLASS(web.DHCINPHA.Disp).jsQueryInDisp(page,rows,params,querytype,pid,style)
+	//申请单退药获取申请单列表
+	i action="QueryReqListForReturn" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.Return).jsQueryReqListForReturn(page,rows,params,style)
+	//申请单退药获取申请单明细
+	i action="QueryReqDetail" d
+	.s params= $Get(%request.Data("params",1))
+	.i style="jqGrid" s page=1,rows=999
+	.w ##CLASS(web.DHCINPHA.Return).jsQueryReqDetail(page,rows,params)
+	//申请单退药获取申请单明细单品汇总
+	i action="QueryReqTotal" d
+	.s params= $Get(%request.Data("params",1))
+	.i style="jqGrid" s page=1,rows=999
+	.w ##CLASS(web.DHCINPHA.Return).jsQueryReqTotal(page,rows,params)
+	//住院直接退药列表
+	i action="QueryNeedReturn" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.Return).jsQueryNeedReturn(page,rows,params,style)
+	
+	//医生科室发药科室列表
+	i action="QueryDispDocLocList" d
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.DispDocLoc).jsQueryDispDocLocList(page,rows,params,style)
+	//医生科室发药汇总+明细列表
+	i action="jsQueryDispDocLoc" d
+	.s querytype=$Get(%request.Data("querytype",1))
+	.i querytype="total" s page=1,rows=9999
+	.s params= $Get(%request.Data("params",1))
+	.s pid=$Get(%request.Data("Pid",1))
+	.w ##CLASS(web.DHCINPHA.DispDocLoc).jsQueryInDispDocLoc(page,rows,params,querytype,pid,style)
+	
+	//根据登记号获取皮试记录列表
+	i action="jsQuerySkinTest" d
+	.s page=1,rows=9999
+	.s params= $Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCINPHA.InfoCommon).jsQuerySkinTest(page,rows,params)
+</script>

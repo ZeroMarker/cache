@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--doccure.curerecord.picupload.hui.csp--> 
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
+<STYLE type='text/css'>
+.form_table {
+	margin: 0px 0px;
+}
+
+.form_table td {
+	padding: 5px 0px; 
+}
+
+td.td_pic {
+	 padding: 5px 10px; font-size: 14px; text-align: right;
+}
+
+.form_table td.btn {
+	text-align: center;
+}
+#dpan div{
+	margin: 0px auto;
+	padding:10px;
+	height: 30px;
+	width: 500px;
+}
+</STYLE>
+</HEAD>
+<body class="hisui-layout" data-options="fit:true,border:false">
+	<csp:Include Page="doccure.curerecord.picupload.show.hui.csp">
+	<!--ftp上传模式
+	<csp:if condition='($data(%request.MimeData("FileStream",1)))'>
+		<ul>
+		<server>
+			s DCRRowId=%request.Get("DCRRowId")
+			s ^tmpnk("DCRRowId",1)=DCRRowId
+			;循环上传到ftp服务器
+			s Id=0
+			for {
+				s Id=$O(%request.MimeData("FileStream",Id)) Q:Id=""
+				s ^tmpnk("DCRRowId",Id)=%request.MimeData("FileStream",Id).FileName
+				s Ret=##class(DHCDoc.DHCDocCure.Record).UploadFile(DCRRowId,Id,%request.MimeData("FileStream",Id))
+				i +Ret'=0 {
+					s ErrorRet=$p(Ret,"^",2)
+					s ErrorMessage="文件名: <b>"_..EscapeHTML(%request.MimeData("FileStream",Id).FileName)_"</b><br>"
+					s ErrorMessage=ErrorMessage_"文件大小: <b>"_..EscapeHTML(%request.MimeData("FileStream",Id).Size)_"</b><br>"
+					s ErrorMessage=ErrorMessage_"错误信息: <b>"_..EscapeHTML(ErrorRet)_"</b><br>"
+					w "<SCRIPT Language=""Javascript"">"
+					w "$.messager.alert('提示','"_ErrorMessage_"');"
+					w "</SCRIPT>"
+				}else{
+					s ErrorMessage=..EscapeHTML(%request.MimeData("FileStream",Id).FileName)_" 上传成功."
+					w "<SCRIPT Language=""Javascript"">"
+					w "$.messager.alert('提示','"_ErrorMessage_"');"
+					w "</SCRIPT>"
+				}
+			}
+			
+		</server>
+		</ul>
+	</csp:if>-->
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.picupload.js"></script>
+</body>
+</html>

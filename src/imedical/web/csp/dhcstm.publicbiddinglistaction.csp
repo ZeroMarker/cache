@@ -1,0 +1,34 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+<script language="cache" runat="server">
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s ListDetail=$Get(%request.Data("ListDetail",1))
+	s RowId=$Get(%request.Data("rowid",1))
+
+	//查询招标信息
+	i Action = "Query" d
+	.s Params=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCSTM.PublicBiddingList).SelectAll(Start,Limit,Params)
+
+	//保存招标信息
+	i Action = "Save" d
+	.s result = ##class(web.DHCSTM.PublicBiddingList).Save(ListDetail)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除招标信息
+	i Action = "Delete" d
+	.s result = ##class(web.DHCSTM.PublicBiddingList).Delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

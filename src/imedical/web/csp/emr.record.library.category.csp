@@ -1,0 +1,53 @@
+﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/category.css">	
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s patientID = $Get(%request.Data("PatientID",1),"") 
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s isArchived = ##Class(EPRservice.Quality.BOQualityService).CheckArchived(episodeID)	//(0:Un-Archived 1:Archived)
+		//病历导航页面卡片分类显示
+		s cardClassificationDisplay = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("CardClassificationDisplay")
+   </script>
+	<script language="javascript">
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var isArchived = '#(isArchived)#';
+		var userID = parent.userID;
+		var ssgroupID = parent.ssgroupID;
+		var userLocID = parent.userLocID;
+		var userCode = parent.userCode;	
+		var userName = parent.userName;
+		var HasPatEncryptLevel = parent.HasPatEncryptLevel;
+		var IsSetToLog = parent.IsSetToLog;
+		var SecCode = parent.SecCode;  //病人密级代码
+		var cardClassificationDisplay = '#(cardClassificationDisplay)#';
+    </script>
+<title>	病历目录 </title>
+</head>
+<body>
+	<div class="easyui-layout" data-options="border:false,fit:true">
+	    <div id="navcategory" data-options="region:'west',split:true,border:false" style="width:150px">
+	    	<ul id="ulcategory" class="navcategory"></ul>
+	    </div>
+	    <div  data-options="region:'center',border:false">
+	    	<div id="templateCategory" class="easyui-layout" data-options="border:false,fit:true">
+	    		<div data-options="region:'center',border:false" style="overflow:hidden;">
+	    			<iframe id="framTemplateRecord" frameborder="0" src="" style="width:100%; height:100%;scrolling:no;"></iframe>	
+	    		</div>
+	    		<div id="layout-tools">
+	    			<input type="image" src="../scripts/emr/lib/JQuery/themes/icons/reload.png" onclick="Refresh();" style="float:left;"/>
+	    			<span onclick="Refresh();" style="width:25px;height:15px;cursor:hand;margin:0px 5px 0px 0px;">刷新</span>
+	    		</div>
+	    	</div>
+	    </div>
+    </div>
+	<script type="text/javascript" src="../scripts/emr/js/record.library.category.js"></script>	
+</body>
+</html>

@@ -1,0 +1,120 @@
+<html>
+    <head>
+    <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    if $g(%session.Data("LOGON.USERID"))=""
+    {
+        s rtn=##class(websys.SessionLogon).Logon()
+        s %response.ServerSideRedirect="emr.interface.medical.csp"
+    }
+    q 1
+    </csp:method>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+    <title> 病案首页编目-温岭 </title>
+    <style tyle="text/css">
+        #buttons {
+            display:inline-block;
+            float:left;
+        }
+        #insInfo {
+            display:inline-block;
+            float:right;
+            padding:5px;
+            margin-right:10px;
+        }
+        .spancolorleft {
+            font-weight:bold;
+        }
+    </style>
+    <script language="cache" runat="server">
+        d ##Class(EMRservice.SystemParameter).GetImportResource()
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s docID = $Get(%request.Data("DocID",1),"")
+        s instanceID = $Get(%request.Data("InstanceID",1),"") 
+        s tempParam = ##Class(EMRservice.BL.BLClientCategory).GetTempCateByDocID(docID,episodeID)
+        s patientID =  $P($g(^PAADM(episodeID)),"^",1)
+        s episodeType = $p($g(^PAADM(episodeID)),"^",2)
+        s userCode = %session.Get("LOGON.USERCODE")
+        s userName = %session.Get("LOGON.USERNAME")
+        s userID = %session.Get("LOGON.USERID")
+        s ssgroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+        s mradm = $p($g(^PAADM(episodeID)),"^",61)
+        s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+        s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+        s requiredFlag = ##Class(EMRservice.SystemParameter).GetRequiredFlag()
+        s signLogic = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("SignLogic","")
+        s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
+        s isEnableSelectUserLevel = ##Class(EMRservice.SystemParameter).IsEnableSelectUserLevel()
+        s CAServicvice = ""
+        s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
+        s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        if (IsCAON = "Y")&(IsCACTLoc = "1") { 
+            s CAServicvice = "1" 
+            d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+        }
+        s IsSetToPortal = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToPortal")
+    </script>
+    <script language="javascript">
+        var patientID = '#(patientID)#';
+        var episodeID = '#(episodeID)#';
+        var userCode = '#(userCode)#';
+        var userName = '#(userName)#';
+        var userID = '#(userID)#';
+        var ssgroupID = '#(ssgroupID)#';
+        var userLocID = '#(userLocID)#';
+        var userLocCode = '#(userLocCode)#';
+        var mradm = '#(mradm)#';
+        var recordParam = "";   
+        var setDefaultFontStyle = "#(setDefaultFontStyle)#";
+        var pluginUrl = "#(pluginUrl)#";
+        var PatientInfo = "";
+        var instanceID ='#(instanceID)#';
+        var recordParam = jQuery.parseJSON('#(tempParam)#');
+        if (instanceID != "")
+        {
+            recordParam.id = instanceID;
+            recordParam.actionType = "LOAD";
+        }
+        var ipAddress = getIpAddress();
+        var requiredFlag = eval(#(requiredFlag)#);
+        var episodeType = '#(episodeType)#';
+        var signLogic = '#(signLogic)#';
+        var isRevokeSign = '#(isRevokeSign)#';
+        var isEnableSelectUserLevel = '#(isEnableSelectUserLevel)#';
+        var CAServicvice = '#(CAServicvice)#';
+        var strServerRan = '';
+        var strServerSignedData = '';
+        var strServerCert = '';
+        var strKey = '';
+        var strUserSignedData = '';
+        var strUserCert = '';
+        var IsSetToPortal = '#(IsSetToPortal)#';
+        var iword = false;
+        var igrid = false;
+        var param = "";
+        var loadFalg = false;
+    </script>
+    </head>
+    <body ondragstart="return false" class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div data-options="region:'north',border:false" style="width:100%;height:38px;padding:5px;overflow:hidden;">
+            <div id="buttons">
+                <button id="binddatareload" type="button" style="height:30px;font-size:14px;font-weight:bold;margin-right:5px;">刷新绑定</button>
+                <button id="save" type="button" style="height:30px;font-size:14px;font-weight:bold;margin-right:5px;">保存</button>
+                <button id="sendData" type="button" style="height:30px;font-size:14px;font-weight:bold;">传送数据</button>
+            </div>
+            <div id="insInfo"></div>
+        </div>
+        <div data-options="region:'center',border:false" style="width:100%;height:100%;">
+            <div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+            <div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+        </div>
+        <script type="text/javascript" src="../scripts/emr/js/interface.medical.js"></script>
+        <script language="cache" runat="server">
+            d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS()
+        </script>
+    </body>
+</html>

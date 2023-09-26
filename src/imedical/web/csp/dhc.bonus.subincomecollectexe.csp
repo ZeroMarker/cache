@@ -1,0 +1,76 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s active= $Get(%request.Data("active",1))
+	s CycleDr = $Get(%request.Data("CycleDr",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s data = $Get(%request.Data("data",1))
+	s period = $Get(%request.Data("period",1))
+	s frequency = $Get(%request.Data("frequency",1))
+	s type = $Get(%request.Data("type",1))
+	s tieOff = $Get(%request.Data("tieOff",1))
+	s dataType = $Get(%request.Data("DataType",1))
+	
+    
+    s personDr = $Get(%request.Data("personDr",1))
+    
+	s interMethodDr = $Get(%request.Data("interMethodDr",1))
+	s locSetDr = $Get(%request.Data("locSetDr",1))
+	
+	i action="list"  d
+	.w ##class(dhc.bonus.usubs.uIncomeCollect).ListRec(locSetDr,interMethodDr,searchField,searchValue,sortField,sortDir,start,limit,CycleDr,period,frequency)
+
+	i action = "del" d  
+	.s result = ##class(dhc.bonus.usubs.uIncomeCollect).Delete(CycleDr,period,locSetDr,interMethodDr)
+	.i result = 0 d
+	..w "{success:'0',info:''}"
+	.e  d
+	..w "{success:'1',info:'"_result_"'}"
+
+	i action = "ImportStatus" d  
+	.s result = ##class(dhc.bonus.udata.uOutKPIData).GetImportStatus(CycleDr,period,locSetDr,interMethodDr)
+	.w "{success:'"_result_"',info:'ok'}"
+	
+
+	s str = $Get(%request.Data("str",1))
+	i action="locset"  d
+	.w ##class(dhc.bonus.udata.uInterData).LocSet(start,limit,str)
+
+	
+	i action = "collect" d
+	.s result = ##class(dhc.bonus.usubs.uIncomeCollect).IncomeInterMain(CycleDr,period,locSetDr,interMethodDr)
+	.i result = 0 d
+	..w "{success:'"_result_"',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+	i action = "import" d
+	.s result = ##class(dhc.bonus.usubs.uIncomeCollect).IncomeInterMain(CycleDr,period,locSetDr,interMethodDr)
+	.i result = 0 d
+	..w "{success:'"_result_"',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uCycle).UpdateRec(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+</script>

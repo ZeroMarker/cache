@@ -1,0 +1,218 @@
+
+<!-- dhcpegreport.csp --!>
+/// 创建时间		2007.01.15
+/// 创建人			xuwm 
+/// 主要功能		团体报告
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 
+-->
+ 
+<HTML>
+<HEAD>
+<!-- 强制网页不被存入Cache中 
+<meta http-equiv="pragma" content="no-cache">
+-->
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="../scripts/dhcpegreportHistogram.js"></SCRIPT>
+
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"/>
+<!---->
+<!-- 主页制作所使用的文字及语言ISO-8859-1
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+ -->
+ 
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.css"></LINK>
+<!-- 封面  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.cover.css"></LINK>
+
+
+ <!--meta http-equiv="Content-Type" content="text/html; charset=gb2312"-->
+<TITLE>团体汇总报告</TITLE>
+<style type="text/css">
+v\:*{ behavior:url(#default#VML); }
+.Canve{ 
+	display:block; 
+	position:relative; 
+	width:550px; 
+	height:500px; 
+	left: 0px; 
+	top: 0px; 
+	border: 0 solid black;
+	margin-bottom:0.2cm;
+}
+body{
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	text-align:center;
+}
+.DDiagnosisOut1{
+	dispay:block;
+	border-top:1 solid black;
+}
+ @media screen {
+#GroupReport{
+	display:block;
+	/* width:21.00cm; */
+	text-align:center;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm
+	/* margin:0.1cm 0.1cm 0.1cm 0.1cm; */
+	background:inherit;
+	/* border:1 solid black; */
+	text-align:left;
+	font-size: 18px;
+}
+ }
+ @media print {
+#GroupReport{
+		display:block;
+		margin:0.00cm 0.00cm 0.00cm 0.00cm; 
+		padding:0.00cm 0.00cm 0cm 0.00cm; 
+	text-align:center;
+	text-align:left;
+	font-size: 18px;
+}	 
+ }
+/* 文本输出 */
+.TextOut{
+	display:block;
+	width:100%;
+	background:inherit;
+	font-size: inherit;
+	border:none;
+	overflow:visible;
+	font-size: 14px;
+}
+.line{
+	
+}
+.tline{
+	display:block;
+	border-bottom:1 solid black;
+}
+/* 段落输出 */
+.ParagraphOut{
+	display:block;
+	width:100%;
+	font-family: "宋体";
+	text-indent:27pt;	/* 段落缩进 */
+	line-height: 150%;	/* 行距 */
+	font-size: 14px;
+}
+.DDiagnosisOut{
+	display:block;
+	width:100%;
+	margin-bottom:0.3cm;
+}
+.tdDiagnoseLabel{
+	text-align: left;
+	vertical-align: top;
+}
+#GroupHeader{
+	display:block;
+	width:100%;
+	
+}
+.GroupHeaderName {
+}
+.DReportFooter{
+
+}
+.style1 {
+	font-size: 16px;
+	font-weight: bold;
+}
+.Title1CSS{
+	font-size=16px;
+	font-weight:bold;
+}
+.Title2CSS{
+	font-size=12px;
+	font-weight:bold;
+	text-indent:27pt;	/* 段落缩进 */
+	line-height: 150%;	/* 行距 */
+}
+.Title3CSS{
+	font-size=12px;
+	text-indent:27pt;	/* 段落缩进 */
+	line-height: 150%;	/* 行距 */
+}
+.Diagnosis1Detail{
+	font-size=12px;
+	text-indent:27pt;	/* 段落缩进 */
+	line-height: 150%;	/* 行距 */
+}
+</style>
+
+</HEAD>
+
+<!--
+<BODY
+	onmouseup=document.selection.empty()
+	oncontextmenu="return false" 
+	onselectstart="return false"
+	ondragstart="return false" 
+	onbeforecopy="return false"
+	oncopy=document.selection.empty()
+	onselect=document.selection.empty()
+	>
+-->
+<BODY>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ 	s GID=$g(%request.Data("GID",1))
+</Script>
+<!-- 报告总结 -->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 获取团体信息
+	d ##class(web.DHCPE.GroupReport).GetGroupInfo(GID)
+</SCRIPT>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	k ^TMPGREPORT
+	// 统计团体病患
+	d ##class(web.DHCPE.GroupReport).GetGroupDiagnosisPercent(GID)
+	// 获取团体病患统计数据
+	d ##class(web.DHCPE.GroupReport).GetGADMStatisticData()
+	// 
+	d ##class(web.DHCPE.GroupReport).GetReportInfo()
+	//
+	d ##class(web.DHCPE.GroupReport).DiagnosisSort()
+	
+</Script>
+<DIV id=GroupReport class=page>
+		
+	<DIV id=GroupHeader>
+		<p class=GroupHeaderName><strong>#(GroupName)#:</strong></p>
+		<p class=Title1CSS><strong>一 体检人数及年龄性别分布</strong></p>
+		<p class=ParagraphOut>(一) 此次预约体检总人数#(TotalCount)#人,实际体检人数#(HTotalCount)#人,其中男性#(HMaleCount)#人,女性#(HFemaleCount)#人</p>
+		<p class=ParagraphOut>(二) 实际体检人中年龄分布为#(AgeAreaTotal)#</p>
+		<p class=Title1CSS><strong>二 疾病构成</strong></p>
+		<p class=Title2CSS>(一) 共发现疾病#(DiagnosisTotal)#种(括号内为患病人数和占体检人数的百分比)</p>
+		<p class=Diagnosis1Detail>#(DiagnosisStr)#</p>
+		<P class="style1"></p>
+	</DIV>
+	<DIV>
+		<p class=Title2CSS>(二) 按性别分类(括号内为患病人数和占男或女性人数的百分比)</p>
+		<p class=Title3CSS>(1) <strong>男性</strong>前几种疾病为:</p>
+		<p class=Diagnosis1Detail>#(MDiagnosisStr)#</p>
+		<P class="style1"></p>
+	</DIV>	
+	<DIV>
+		<p class=Title3CSS>(2) <strong>女性</strong>前几种疾病为:</p>
+		<p class=Diagnosis1Detail>#(FMDiagnosisStr)#</p>
+		<P class="style1"></p>
+	</DIV>
+	
+</DIV> <!-- GroupReport -->
+<SCRIPT SRC="../scripts/DHCPEReport.js"></SCRIPT>
+	
+</body>
+
+
+</HTML>

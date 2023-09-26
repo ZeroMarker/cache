@@ -1,0 +1,88 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!--<meta http-equiv="Content-Type" content="text/html; charset=gb2312" /> -->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310> 
+        <!--DHCMED:HEAD></DHCMED:HEAD-->
+        <script language='Cache' runat='SERVER'>
+           set menuCode="NINFCSSBedSurvRec"
+           set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+           set groupId=$g(%session.Data("LOGON.GROUPID"))
+           set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity(menuId,groupId)
+        </script>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+        <script type="text/javascript" src="../Scripts/dhcmed/ninf/Srv/PublicFunction/CustomFormItem.js"></script>
+        <!--script type="text/javascript" src="../Scripts/dhcmed/ninf/CSS/clinreport/gui.js"></script-->
+        <!--script type="text/javascript" src="../Scripts/dhcmed/ninf/CSS/clinreport/event.js"></script-->
+        <script type="text/javascript" src="../Scripts/dhcmed/ninf/CSS/clinreport/excelprint.js"></script>
+        
+        <script language='Cache' runat='SERVER'>
+           set ReportID=$g(%request.Data("ReportID",1))
+           if ReportID'="" {
+	           set objRep=##Class(DHCMed.NINF.CSS.ClinReport).GetObjById(ReportID)
+	           if $IsObject(objRep){
+		           set SurvNumber=objRep.CRSurvNumber
+		           set EpisodeID=objRep.CREpisodeID
+		       }
+	       } else {
+		       set SurvNumber=$g(%request.Data("SurvNumber",1))
+		       set EpisodeID=$g(%request.Data("EpisodeID",1))
+		   }
+	       set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+		   
+		   Set AdmLoc=$p($g(^PAADM(+EpisodeID)),"^",4)
+		   If AdmLoc'="" {
+			   Set HospitalID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(AdmLoc)
+		       Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(HospitalID,"NINF")
+		   } Else {
+			   Set HospitalID=""
+		       Set SSHospCode=""
+		   }
+		   
+		   //动态加载JS
+		   Set flg=##Class(DHCMed.NINFService.CSS.ClinReport).GetReportJS(SSHospCode,SurvNumber)
+		   
+           Set:ReportID="" ReportID=""""""
+           Set SurvNumber=""""_SurvNumber_""""
+           Set:EpisodeID="" EpisodeID=""""""
+           Set:PatientID="" PatientID=""""""
+           Set:HospitalID="" HospitalID=""""""
+           Set SSHospCode=""""_SSHospCode_""""
+      </script>
+       
+       <script type="text/javascript" language="javascript">
+			Ext.QuickTips.init();
+			
+			var ReportID=#(ReportID)#;
+			var SurvNumber=#(SurvNumber)#;
+			var EpisodeID=#(EpisodeID)#;
+			var PatientID=#(PatientID)#;
+			var HospitalID=#(HospitalID)#;
+			var SSHospCode=#(SSHospCode)#;
+			
+			function window_onload(){
+				Ext.onReady(InitCSSReport);
+			}
+	   </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</HEAD>
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

@@ -1,0 +1,58 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT language=javascript>
+this.focus();
+</SCRIPT>
+<!--move to style sheet - perhaps datetime.js -->
+<STYLE>
+A { TEXT-DECORATION: none }
+</STYLE>
+</HEAD>
+<BODY>
+
+<csp:method name=FormatColor arguments="row" returntype=%String>
+	n arow
+	s arow=$zabs(row-4)
+	i arow=0 q "ccffff"
+	i arow=1 q "99ffff"
+	i arow=2 q "66ffff"
+	q "0066cc"
+</csp:method>
+<P>
+<TABLE border=0 cellPadding=0 cellSpacing=0 >
+<csp:LOOP COUNTER="row" FROM="0" STEP="1" TO="3">
+	<TR>
+		<csp:LOOP COUNTER="col" FROM="0" STEP="1" TO="5">
+		    <TD bgcolor="#(..FormatColor(row*2))#" align=center width=60>
+		    <A HREF="#" title="#(##Class(websys.Conversions).TimeLogicalToHtml((row*6+col)*3600))#" onclick="alert('#(##Class(websys.Conversions).TimeLogicalToHtml((row*6+col)*3600))#');">
+		    <FONT color="black">#(##Class(websys.Conversions).TimeLogicalToHtml((row*6+col)*3600))#</FONT>
+		    </A>
+		    </TD>
+		</csp:LOOP>
+	</TR>
+	<TR>
+		<csp:LOOP COUNTER="col" FROM="0" STEP="1" TO="5">
+		    <TD bgcolor="#(..FormatColor(row*2+1))#" align=center nowrap>
+			<csp:LOOP COUNTER="mins" FROM="0" STEP="1" TO="3">
+			    <A HREF="#" title="#(##Class(websys.Conversions).TimeLogicalToHtml((row*6+col)*3600+(mins*15*60)))#" onclick="alert('#(##Class(websys.Conversions).TimeLogicalToHtml((row*6+col)*3600+(mins*15*60)))#');">
+			    <img SRC="../images/websys/#($s(mins=0:0,mins=1:15,mins=2:30,1:45))#.gif" BORDER="0">
+			    </A>
+			</csp:LOOP>
+			</TD>
+		</TD>
+		</csp:LOOP>
+	</TR>
+</csp:LOOP>
+</TABLE></P>
+
+</BODY>
+</HTML>

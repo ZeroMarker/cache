@@ -1,0 +1,284 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>牙位数据</title>
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/jquery-easyui-1.4/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/jquery-easyui-1.4/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/jquery-easyui-1.4/themes/color.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/jquery-easyui-1.4/demo.css">
+    <script type="text/javascript" src="../scripts/epr/jquery-easyui-1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="../scripts/epr/jquery-easyui-1.4/jquery.easyui.min.js"></script>
+    <style type="text/css">
+    table{
+	    border-collapse:collapse;
+	    border:none;
+    }
+    table td{
+	    display:block;
+	    padding:5px;
+    }
+    .tdleft{
+	    text-align:right;
+	    border-right: 2px solid #000000;
+    }
+    .tdright{
+	    float:left;
+    }
+    .tdbar{
+	 	 border-bottom: 2px solid #000000;  
+    }
+    #ToothAll{
+	    margin-left:85px;
+    }
+    #ToothPermanent{
+	    margin-left:15px;
+    }
+    #ToothDeciduous{
+	    margin-left:15px;
+    }
+   </style>
+    <script language="cache" runat="server"> 	
+  		s globalPatientID = $Get(%request.Data("PatientID",1),"")
+  		s globalEpisodeID = $Get(%request.Data("EpisodeID",1),"")
+  		if (globalPatientID = "")&&(globalEpisodeID '= "") 
+  		{s globalPatientID = $P($g(^PAADM(globalEpisodeID)),"^",1)}
+  		
+  		s globalOperedTooth = ##Class(EPRservice.BLL.Dental.BLToothRecord).GetOperedTooth(globalPatientID)
+  	</script>
+  
+    <script type="text/javascript">	
+  		var globalPatientID = "#(globalPatientID)#";
+  		var globalEpisodeID = "#(globalEpisodeID)#";
+  		var globalOperedTooth = "#(globalOperedTooth)#";
+  		
+  		var globalCurrentAdm = "0";
+  		var globalDataFlag = "21";
+  		var globalToothPositionCode = "0";
+  		
+  		//初始化有处置操作的牙位
+  		function InitOperedTooth() {
+	  		if (globalOperedTooth == "") return;
+	  		
+	  		var arrTooth = globalOperedTooth.split(",");
+	  		for (var i = 0; i < arrTooth.length; i++) {
+	    		var tooth = arrTooth[i];
+	    		$("#Tooth"+tooth).addClass("c3");	 
+			}
+		}
+  		
+  		
+  		//查询牙位数据
+  		function queryToothData(dataFlag, toothPositionCode){
+	   		//alert(dataFlag + "," + toothPositionCode)
+	   		globalDataFlag = dataFlag;
+	   		globalToothPositionCode = toothPositionCode;
+	   		
+	   		$("#dgToothRecordData").datagrid("loading"); 
+	   		
+	   		$.getJSON(
+	   			"../web.eprajax.dental.ToothRecord.cls",
+  				{
+				    PatientID: globalPatientID,
+					EpisodeID: globalEpisodeID,
+					DataFlag: dataFlag,
+					ToothPositionCode: toothPositionCode,
+					CurrentAdmFlag:globalCurrentAdm
+				},
+				function(data){
+					$.each(data.rows,function(idx,row){
+	        			if(row.RecordContent != ""){
+                     		//替换回车换行
+                     		row.RecordContent = row.RecordContent.replace(/\&keyenter/g, "</br>" );
+             			}
+           			});   
+           			           
+           			//debugger;
+           			$('#dgToothRecordData').datagrid('loadData', data);
+           			$("#dgToothRecordData").datagrid("loaded"); 
+   				}
+			);
+     	};
+     	
+     	//扩展easyui的datagrid
+     	(function (){ 
+			$.extend($.fn.datagrid.methods, { 
+			//显示遮罩 
+			loading: function(jq){ 
+			return jq.each(function(){ 
+			$(this).datagrid("getPager").pagination("loading"); 
+			var opts = $(this).datagrid("options"); 
+			var wrap = $.data(this,"datagrid").panel; 
+			if(opts.loadMsg) 
+			{ 
+			$("<div class=\"datagrid-mask\"></div>").css({display:"block",width:wrap.width(),height:wrap.height()}).appendTo(wrap); 
+			$("<div class=\"datagrid-mask-msg\"></div>").html(opts.loadMsg).appendTo(wrap).css({display:"block",left:(wrap.width()-$("div.datagrid-mask-msg",wrap).outerWidth())/2,top:(wrap.height()-$("div.datagrid-mask-msg",wrap).outerHeight())/2}); 
+			} 
+			}); 
+			} 
+			, 
+			//隐藏遮罩 
+			loaded: function(jq){ 
+			return jq.each(function(){ 
+			$(this).datagrid("getPager").pagination("loaded"); 
+			var wrap = $.data(this,"datagrid").panel; 
+			wrap.find("div.datagrid-mask-msg").remove(); 
+			wrap.find("div.datagrid-mask").remove(); 
+			}); 
+			} 
+			}); 
+			})(jQuery); 
+
+
+		//页面初始化执行
+     	$(function(){
+	     	//显示所有
+	     	$("#ToothAll").click(function(){
+		     	$("table tr td a").linkbutton('enable');	
+		    });
+		    
+		    //显示恒牙
+		    $("#ToothPermanent").click(function(){
+		     	$(".Permanent td a").linkbutton('enable');
+		     	$(".Deciduous td a").linkbutton('disable');	
+		    });
+		    //显示乳牙
+		    $("#ToothDeciduous").click(function(){
+		     	$(".Permanent td a").linkbutton('disable');
+		     	$(".Deciduous td a").linkbutton('enable');		
+		    }); 
+		    
+		    //复选框，选择当前就诊
+		    $("#CurrentAdm").change(function(){
+			    if($("#CurrentAdm")[0].checked)
+			    {
+				    globalCurrentAdm = "1";
+				}
+				else
+				{
+					globalCurrentAdm = "0";
+				}
+				
+				queryToothData(globalDataFlag, globalToothPositionCode);
+		    });
+		    
+		   	InitOperedTooth();
+		   	
+		    //默认加载所有牙位数据
+		    queryToothData("21","0");
+     	});
+     	
+  	</script>
+  
+</head>
+<body>
+
+<div class="easyui-layout" style="height:470px;width:97%">
+
+	<div data-options="region:'north',split:true" style="height:230px;">
+		<div style="padding:5px 0;">  
+			<input id="CurrentAdm" type="checkbox" name="qx" value="1"/>只显示当前就诊
+	        <a href="#" id="ToothAll" onclick="queryToothData(21,0)" class="easyui-linkbutton c1" style="width:80px">&nbsp;显示所有&nbsp;</a>
+	        <a href="#" id="ToothPermanent" onclick="queryToothData(22,0)" class="easyui-linkbutton c8" style="width:80px">&nbsp;&nbsp;恒&nbsp;&nbsp牙&nbsp;&nbsp;</a>
+	        <a href="#" id="ToothDeciduous" onclick="queryToothData(23,0)" class="easyui-linkbutton c4" style="width:80px">&nbsp;&nbsp;乳&nbsp;&nbsp;牙&nbsp;&nbsp;</a>
+    	</div>
+    	<div style="padding-left:5px;">
+	    	<table>
+	    		<tr class="Deciduous"> <!--乳牙 display:none;-->
+	    			<td class="tdleft "> 
+	    				<a href="#" id="Tooth55" onclick="queryToothData(1,55)" class="easyui-linkbutton">55</a>
+				        <a href="#" id="Tooth54" onclick="queryToothData(1,54)" class="easyui-linkbutton">54</a>
+				        <a href="#" id="Tooth53" onclick="queryToothData(1,53)" class="easyui-linkbutton">53</a>
+				        <a href="#" id="Tooth52" onclick="queryToothData(1,52)" class="easyui-linkbutton">52</a>
+				        <a href="#" id="Tooth51" onclick="queryToothData(1,51)" class="easyui-linkbutton">51</a>
+	    			</td>
+	    			<td class="tdright">
+				   		<a href="#" id="Tooth61" onclick="queryToothData(1,61)" class="easyui-linkbutton">61</a>
+				        <a href="#" id="Tooth62" onclick="queryToothData(1,62)" class="easyui-linkbutton">62</a>
+				        <a href="#" id="Tooth63" onclick="queryToothData(1,63)" class="easyui-linkbutton">63</a>
+				        <a href="#" id="Tooth64" onclick="queryToothData(1,64)" class="easyui-linkbutton">64</a>
+				        <a href="#" id="Tooth65" onclick="queryToothData(1,65)" class="easyui-linkbutton">65</a> 			
+	    			</td>
+	    		</tr>
+	    		 <!--恒牙-->
+	        	<tr class="Permanent">
+	    			<td  class="tdleft tdbar">
+				   		<a href="#" id="Tooth18" onclick="queryToothData(1,18)" class="easyui-linkbutton">18</a>
+				        <a href="#" id="Tooth17" onclick="queryToothData(1,17)" class="easyui-linkbutton">17</a>
+				        <a href="#" id="Tooth16" onclick="queryToothData(1,16)" class="easyui-linkbutton">16</a>
+				        <a href="#" id="Tooth15" onclick="queryToothData(1,15)" class="easyui-linkbutton">15</a>
+				        <a href="#" id="Tooth14" onclick="queryToothData(1,14)" class="easyui-linkbutton">14</a>
+				        <a href="#" id="Tooth13" onclick="queryToothData(1,13)" class="easyui-linkbutton">13</a>
+				        <a href="#" id="Tooth12" onclick="queryToothData(1,12)" class="easyui-linkbutton">12</a>
+				        <a href="#" id="Tooth11" onclick="queryToothData(1,11)" class="easyui-linkbutton">11</a> 			
+	    			</td>
+	    			<td  class="tdright tdbar">
+				   		<a href="#" id="Tooth21" onclick="queryToothData(1,21)" class="easyui-linkbutton">21</a>
+				        <a href="#" id="Tooth22" onclick="queryToothData(1,22)" class="easyui-linkbutton">22</a>
+				        <a href="#" id="Tooth23" onclick="queryToothData(1,23)" class="easyui-linkbutton">23</a>
+				        <a href="#" id="Tooth24" onclick="queryToothData(1,24)" class="easyui-linkbutton">24</a>
+				        <a href="#" id="Tooth25" onclick="queryToothData(1,25)" class="easyui-linkbutton">25</a>
+				        <a href="#" id="Tooth26" onclick="queryToothData(1,26)" class="easyui-linkbutton">26</a>
+				        <a href="#" id="Tooth27" onclick="queryToothData(1,27)" class="easyui-linkbutton">27</a>
+				        <a href="#" id="Tooth28" onclick="queryToothData(1,28)" class="easyui-linkbutton">28</a> 			
+	    			</td>
+	    		</tr>
+	    		<tr class="Permanent">
+	    			<td  class="tdleft">
+	    				<a href="#" id="Tooth48" onclick="queryToothData(1,48)" class="easyui-linkbutton">48</a>
+				        <a href="#" id="Tooth47" onclick="queryToothData(1,47)" class="easyui-linkbutton">47</a>
+				        <a href="#" id="Tooth46" onclick="queryToothData(1,46)" class="easyui-linkbutton">46</a>
+				        <a href="#" id="Tooth45" onclick="queryToothData(1,45)" class="easyui-linkbutton">45</a>
+				        <a href="#" id="Tooth44" onclick="queryToothData(1,44)" class="easyui-linkbutton">44</a>
+				        <a href="#" id="Tooth43" onclick="queryToothData(1,43)" class="easyui-linkbutton">43</a>
+				        <a href="#" id="Tooth42" onclick="queryToothData(1,42)" class="easyui-linkbutton">42</a>
+				        <a href="#" id="Tooth41" onclick="queryToothData(1,41)" class="easyui-linkbutton">41</a>	
+	    			</td>
+	    			<td  class="tdright">
+				  		<a href="#" id="Tooth31" onclick="queryToothData(1,31)" class="easyui-linkbutton">31</a>
+				        <a href="#" id="Tooth32" onclick="queryToothData(1,32)" class="easyui-linkbutton">32</a>
+				        <a href="#" id="Tooth33" onclick="queryToothData(1,33)" class="easyui-linkbutton">33</a>
+				        <a href="#" id="Tooth34" onclick="queryToothData(1,34)" class="easyui-linkbutton">34</a>
+				        <a href="#" id="Tooth35" onclick="queryToothData(1,35)" class="easyui-linkbutton">35</a>
+				        <a href="#" id="Tooth36" onclick="queryToothData(1,36)" class="easyui-linkbutton">36</a>
+				        <a href="#" id="Tooth37" onclick="queryToothData(1,37)" class="easyui-linkbutton">37</a>
+				        <a href="#" id="Tooth38" onclick="queryToothData(1,38)" class="easyui-linkbutton">38</a>  			
+	    			</td>
+	    		</tr>
+	    		<!--乳牙 display:none;-->
+	    		<tr class="Deciduous">
+	    			<td  class="tdleft">
+				    	<a href="#" id="Tooth85" onclick="queryToothData(1,85)" class="easyui-linkbutton">85</a>
+				        <a href="#" id="Tooth84" onclick="queryToothData(1,84)" class="easyui-linkbutton">84</a>
+				        <a href="#" id="Tooth83" onclick="queryToothData(1,83)" class="easyui-linkbutton">83</a>
+				        <a href="#" id="Tooth82" onclick="queryToothData(1,82)" class="easyui-linkbutton">82</a>
+				        <a href="#" id="Tooth81" onclick="queryToothData(1,81)" class="easyui-linkbutton">81</a>			
+	    			</td>
+	    			<td  class="tdright">
+				   		<a href="#" id="Tooth71" onclick="queryToothData(1,71)" class="easyui-linkbutton">71</a>
+				        <a href="#" id="Tooth72" onclick="queryToothData(1,72)" class="easyui-linkbutton">72</a>
+				        <a href="#" id="Tooth73" onclick="queryToothData(1,73)" class="easyui-linkbutton">73</a>
+				        <a href="#" id="Tooth74" onclick="queryToothData(1,74)" class="easyui-linkbutton">74</a>
+				        <a href="#" id="Tooth75" onclick="queryToothData(1,75)" class="easyui-linkbutton">75</a> 			
+	    			</td>
+	    		</tr>		
+	    	</table>
+    	</div>	
+	</div> 
+    <div data-options="region:'center'" style="padding:5px;background:#eee;">
+        <table id="dgToothRecordData" class="easyui-datagrid" title="" data-options="fit:true,autoRowHeight:true,singleSelect:true,collapsible:false">        
+    		<thead>            
+    		<tr>                
+    		<th data-options="field:'EpisodeID',width:80">就诊ID</th>
+    		<th data-options="field:'AdmDate',width:80">就诊日期</th>                
+    		<th data-options="field:'UpdateDate',width:80">更新日期</th> 
+    		<th data-options="field:'ToothPositionCode',width:80">牙位</th>                
+    		<th data-options="field:'RecordContent',width:80">处置内容</th>
+    		</tr>        
+    		</thead>    
+    	</table>
+    </div> 
+ </div>
+</body>
+</html>
+
+	

@@ -1,0 +1,249 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- 东华医疗事业部 dhcplanadminauthority.csp 排班权限控制-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+
+<Server>
+;s DHTMXPath="../scripts_lib/dhtmx/"
+s DHTMXPath=##class(ext.websys.DHTMLXLib).BasePath()
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxTree/codebase/dhtmlxtree.css"">",!
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxGrid/codebase/dhtmlxgrid.css"">",!
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxGrid/codebase/style.css"">",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxTabbar/codebase/dhtmlxcommon.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxTree/codebase/dhtmlxtree.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxGrid/codebase/dhtmlxgrid.js'></SCRIPT>",!
+</Server>
+<SCRIPT SRC='../scripts/dhtmlxcombo.js'></SCRIPT>
+<!--
+<LINK REL="STYLESHEET" type="text/css" href="../dhtmx/dhtmlxTree/codebase/dhtmlxtree.css">
+<LINK REL="STYLESHEET" type="text/css" href="../dhtmx/dhtmlxGrid/codebase/dhtmlxgrid.css">
+<SCRIPT SRC='../dhtmx/dhtmlxTabbar/codebase/dhtmlxcommon.js'></SCRIPT>
+<SCRIPT SRC='../scripts/dhtmlxcombo.js'></SCRIPT>
+<Script SRC="../dhtmx/dhtmlxTree/codebase/dhtmlxtree.js"></script>	
+<LINK REL="STYLESHEET" type="text/css" href="../dhtmx/dhtmlxGrid/codebase/style.css">
+-->
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<Server>
+Set SSGroupStr=##Class(%CSP.Page).Encrypt($lb("web.DHCDOCSetup.GetUser"))
+Set SSUserInertMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDOCSetup.AddUser"))
+Set GetAllUser=##Class(%CSP.Page).Encrypt($lb("web.DHCDOCSetup.GetAllUser"))
+Set GetCtloc=##Class(%CSP.Page).Encrypt($lb("web.DHCDOCSetup.GetCTLOC"))
+Set UpDateCTLOCByUser=##Class(%CSP.Page).Encrypt($lb("web.DHCDOCSetup.UpDateCTLOCByUser"))
+Set DelUser=##Class(%CSP.Page).Encrypt($lb("web.DHCDOCSetup.DelUser"))
+Write "<input id='SSGroupStr' name='SSGroupStr' type='hidden' value='"_SSGroupStr_"'>",$C(13,10)
+Write "<input id='SSUserInertMethod' name='SSUserInertMethod' type='hidden' value='"_SSUserInertMethod_"'>",$C(13,10)
+Write "<input id='GetAllUser' name='GetAllUser' type='hidden' value='"_GetAllUser_"'>",$C(13,10)
+Write "<input id='GetCtloc' name='GetCtloc' type='hidden' value='"_GetCtloc_"'>",$C(13,10)
+Write "<input id='UpDateCTLOCByUser' name='UpDateCTLOCByUser' type='hidden' value='"_UpDateCTLOCByUser_"'>",$C(13,10)
+Write "<input id='DelUser' name='DelUser' type='hidden' value='"_DelUser_"'>",$C(13,10)
+</Server>
+</HEAD>
+<BODY onload="BodyLoadHandler();">
+<SCRIPT language = 'javascript' >
+var user_comb;
+var tree;
+function BodyLoadHandler() {
+  user_comb = new dhtmlXCombo("userSearch", "alfa", 200);
+  user_comb.attachEvent("onChange", usercombChangehandler)
+  user_comb.attachEvent("onKeyPressed", usercombKeyenterhandler);
+
+  var obj = document.getElementById('ADDBUTTON');
+  if (obj) obj.onclick = UserInsert;
+
+  UserListShow();
+  var Obj = document.getElementById('userlist');
+  if (Obj) Obj.onclick = userlistclick;
+
+  var Obj = document.getElementById('SAVEBUTTON');
+  if (Obj) Obj.onclick = SAVEClick;
+  
+  var Obj = document.getElementById('DelBUTTON');
+  if (Obj) Obj.onclick = DelClick;
+}
+
+function DHCC_StrToArray(str) {
+  var x = new Array();
+  var Arr = str.split('^');
+  for (var i = 0; i < Arr.length; i++) {
+    var Arr1 = Arr[i].split(String.fromCharCode(1));
+    var label = Arr1[1];
+    var val = Arr1[0];
+    if ((typeof(val) == "undefined") || (val === null)) val = label;
+    x[i] = [val, label];
+  }
+  return x;
+}
+
+function usercombKeyenterhandler() {
+  var EnterStr = user_comb.getComboText();
+  if (EnterStr == '') {
+    return;
+  };
+  var SSGroupStrMethod = document.getElementById('SSGroupStr').value;
+  retStr = cspRunServerMethod(SSGroupStrMethod, EnterStr)
+  user_comb.clearAll();
+  var Arr = DHCC_StrToArray(retStr);
+  user_comb.addOption(Arr)
+}
+
+function usercombChangehandler() {
+  var userDesc = user_comb.getSelectedText();
+  var userValue = user_comb.getSelectedValue();
+  if ((userDesc == '') || (userValue == '')) return;
+  if (userDesc == user_comb.getComboText()) {
+    user_comb.clearAll();
+    user_comb.setComboText('');
+    return;
+  }
+
+}
+
+function UserInsert() {
+  var userValue = user_comb.getSelectedValue();
+  if (userValue == '') {
+    alert('用户为空');
+    return
+  }
+  var SSUserInertMethod = document.getElementById('SSUserInertMethod').value;
+  retStr = cspRunServerMethod(SSUserInertMethod, userValue);
+  if (retStr == '100') {
+    alert('用户已经存在');
+    return
+  };
+  if (retStr == '0') {
+    UserListShow();
+  } else {
+
+}
+  user_comb.clearAll();
+}
+
+function UserListShow() {
+  var obj = document.getElementById('userlist');
+  obj.options.length = 0;
+  var GetAllUser = document.getElementById('GetAllUser').value;
+  retStr = cspRunServerMethod(GetAllUser);
+  if (retStr != '') {
+    var retStrArr = retStr.split('^')
+    for (i = 0; i < retStrArr.length; i++) {
+      var Selvalue = retStrArr[i].split(String.fromCharCode(1))[1];
+      var SelText = retStrArr[i].split(String.fromCharCode(1))[0];
+      obj.add(new Option(Selvalue, SelText));
+    }
+  }
+}
+
+function userlistclick() {
+  var ListObj = document.getElementById('userlist');
+  var SelectValue = ListObj.value;
+  if (SelectValue == '') {
+    return
+  };
+  if (tree) {
+    tree.destructor()
+  }
+  tree = new dhtmlXTreeObject("box_tree", "100%", "100%", 0);
+  var ImagePath="#(DHTMXPath)#"+"dhtmlxTree/codebase/imgs/csh_bluefolders/";
+  tree.setImagePath(ImagePath);
+  
+  //tree.setImagePath("../dhtmx/dhtmlxTree/codebase/imgs/csh_bluefolders/");
+  tree.enableCheckBoxes(true);
+  tree.enableThreeStateCheckboxes(true);
+  var im0 = "leaf.gif";
+  var im1 = "leaf.gif";
+  var im2 = "leaf.gif";
+  tree.insertNewItem(0, 1, "湘雅二医院", 0, im0, im1, im2);
+  var GetCtlocMethod = document.getElementById('GetCtloc').value;
+  retStr = cspRunServerMethod(GetCtlocMethod, SelectValue);
+  if (retStr != '') {
+    var retStrArry = retStr.split('^');
+    for (i = 0; i < retStrArry.length; i++) {
+      var RowidArr = retStrArry[i].split(String.fromCharCode(1))[0];
+      var Desc = retStrArry[i].split(String.fromCharCode(1))[1];
+      var Rowid = RowidArr.split(String.fromCharCode(2))[0];
+      var flag = RowidArr.split(String.fromCharCode(2))[1];
+      tree.insertNewItem(1, Rowid, Desc, 0, im0, im1, im2);
+      if (flag == "1") {
+        tree.setCheck(Rowid, true);
+      }
+    }
+  }
+}
+
+function SAVEClick() {
+  var ListObj = document.getElementById('userlist');
+  var SelectValue = ListObj.value;
+
+  var Checklist = tree.getAllChecked();
+  //Checklist=Checklist.replace(",","^");
+  //alert(Checklist)
+  if (Checklist != '') {
+    var Str = '';
+    for (i = 0; i < Checklist.split(',').length; i++) {
+      if (Str == '') {
+        Str = Checklist.split(',')[i]
+      } else {
+        Str = Str + '!' + Checklist.split(',')[i]
+      }
+    }
+    Checklist = Str;
+  }
+  //alert(Checklist)
+  if (SelectValue == '') {
+    '没有选中的用户'
+  };
+  var UpDateCTLOCByUser = document.getElementById('UpDateCTLOCByUser').value;
+      retStr = cspRunServerMethod(UpDateCTLOCByUser, Checklist, SelectValue);
+  if (retStr == '0') {
+    alert('保存成功')
+  } else {
+    alert('保存失败')
+  }
+
+}
+
+function DelClick(){
+  var ListObj = document.getElementById('userlist');
+  var SelectValue = ListObj.value;
+  
+  if (SelectValue == '') {
+    '没有选中的用户'
+  };
+  
+  var PrivateConfirm = window.confirm('是否删除用户');
+  if (PrivateConfirm == true) {
+	  var DelUserMethod = document.getElementById('DelUser').value;
+	      retStr = cspRunServerMethod(DelUserMethod, SelectValue);
+	     if (retStr=='0'){
+		    window.location.reload();		              
+		  }
+	  }
+}
+</SCRIPT>
+<table width="830" border="0" cellspacing="0" cellpadding="0">
+<tr></tr>
+  <tr>
+  <td width="220"><DIV id="userSearch" style="width:220px; height:20px"></DIV></td>
+  <td width="200"><BUTTON id="ADDBUTTON">添加用户</BUTTON></td>
+  <td width="200"><BUTTON id="DelBUTTON">删除用户</BUTTON></td>
+  <td width="200"><BUTTON id="SAVEBUTTON">保存</BUTTON></td>
+   </tr>
+</table> 
+<table width="735" border="0" cellspacing="0" cellpadding="0" style="background-color: #FFF">
+  <tr>
+    <td width="288" height="403">
+      <select name="userlist" size="40" id="userlist" style="WIDTH: 220px;HEIGHT:500px"> </select>
+    </td>
+    <td width="727" height="400"><div id="box_tree" style="WIDTH:500px;height:500px"></div>
+    </td>
+  </tr>
+</table>
+</BODY>
+</HTML>

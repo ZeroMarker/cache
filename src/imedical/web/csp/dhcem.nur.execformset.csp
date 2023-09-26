@@ -1,0 +1,144 @@
+<!-- dhcem.nur.execformset.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/nur.execformset.css" />
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/nur.execformset.js"></script>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px' border="false">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'west',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='width:520px;' border="false">
+				<div class="hisui-panel" data-options="title:'护士执行设置<span style=\'color:red;margin-left: 20px;\' title=\'【输液单】、【注射单】、【检验单】、【治疗单】为固定描述开头，用于总览打印，不可有重复字样\'>提示信息</span>',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+					<table id="main" toolbar="#main_tb"></table>
+				</div>
+			</div>
+			<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding-left:5px' border="false">
+				<div id="tabArea" class="hisui-tabs tabs-gray" fit=true> 
+					<div title="执行单展示列设置" style="padding:10px;">
+						<div id="execColAreaAll" class="ppDiv">
+							<div id="columnsPanel1"><div style="height:10px"></div></div>
+						</div>
+						<div id="columnsSaveArea" class="ppDiv hasBtnDiv">
+							<a style="" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" id="columnsAddSelAll" onclick="columnsAddSelAll()">全选</a>
+							<a style="margin-top:30px" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'" id="columnsSaveBtn" onclick="columnsSave()">添加</a>
+							<a style="margin-top:30px" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-left'" id="columnsDel" onclick="columnsDel()">移除</a>
+						</div>
+						<div id="execColAreaCheck" class="ppDiv">
+							<div id="columnsPanel2"><div style="height:10px"></div></div>
+						</div>
+						<div id="columnsChecSaveArea" class="ppDiv hasBtnDiv">
+							<a style="" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" id="columnsDelSelAll" onclick="columnsDelSelAll()">全选</a>
+							<a style="margin-top:30px" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-up'" id="columnsMoveUpBtn" onclick="columnsMoveUp()">上移</a>
+							<a style="margin-top:30px" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-down'" id="columnsMoveDownBtn" onclick="columnsMoveDown()">下移</a>
+							<a style="margin-top:30px" class="hisui-linkbutton" data-options="iconCls:'	icon-w-save'" id="columnsSaveOrderBtn" onclick="columnsSaveOrder()" >保存</a>
+						</div>
+					</div>  
+		
+					<div id="execProTab" class="execProTab" title="医嘱属性设置" style="padding:10px 0px 0px 5px;overflow: hidden;">   
+						<div id="execProAreaDis" class="ppDiv epDiv" data-code="ExecDis"><!--处置状态-->
+							<div id="execProPanelDis"><div style="height:10px"></div></div>
+						</div>
+						<div id="execProAreaPro" class="ppDiv epDiv" data-code="ExecPro"><!--优先级-->
+							<div id="execProPanelPro"><div style="height:10px"></div></div>
+						</div>
+						<div id="execProAreaCat" class="ppDiv epDiv" data-code="ExecCat"><!--医嘱分类-->
+							<div id="execProPanelCat"><div style="height:10px"></div></div>
+						</div>
+						<div id="execProAreaStat" class="ppDiv epDiv" data-code="ExecStat"><!--医嘱状态-->
+							<div id="execProPanelStat"><div style="height:10px"></div></div>
+						</div>
+						
+						<div style="clear: both;"></div>
+						<div id="execProAreaPhi" class="ppDiv epDiv" data-code="ExecPhi"><!--用药途径-->
+							<div id="execProPanelPhi"><div style="height:10px"></div></div>
+						</div>
+						<div id="execProAreaSpec" class="ppDiv epDiv" data-code="ExecSpec"><!--标本类型-->
+							<div id="execProPanelSpec"><div style="height:10px"></div></div>
+						</div>
+						<div id="execProAreaRecLoc" class="ppDiv epDiv" data-code="ExecRecLoc"><!--接收科室-->
+							<div id="execProPanelRecLoc"><div style="height:10px"></div></div>
+						</div>
+						
+						<div style="text-align: center;">
+							<a style="" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" id="proSaveBtn" onclick="proSave()" >保存</a>
+						</div>
+					</div>
+					<div id="execGroupTab" title="执行安全组设置" style="padding:10px;">   
+						<div id="execGroupAreaAll" class="ppDiv">
+							<div id="groupPanelAll"><div style="height:10px"></div></div>
+						</div>
+						<div id="groupSaveAreaAll" class="ppDiv hasBtnDiv">
+							<a style="" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" id="groupAddSelAll" onclick="groupAddSelAll()">全选</a>
+							<a style="margin-top:30px" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'" id="groupSaveBtn" onclick="groupSave()">添加</a>
+							<a style="margin-top:30px" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-left'" id="groupDel" onclick="groupDel()">移除</a>
+						</div>
+						<div id="execGroupAreacheck" class="ppDiv">
+							<div id="groupPanelCheck"><div style="height:10px"></div></div>
+						</div>
+						<div id="groupSaveAreaCheck" class="ppDiv hasBtnDiv">
+							<a style="" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" id="groupDelSelCheck" onclick="groupDelSelAll()">全选</a>
+						</div>
+					</div>
+					<div id="execPrintSetTab" title="打印列设置" style="padding:10px;">   
+						<table id="execPrintSetTable" toolbar="#epst_tb"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="main_tb">
+	<div style="height:4px"></div>
+	<span style='margin-right:10px;margin-left:10px;' id="_HospListLabel">医院</span><input id="_HospList"></input>	
+	<span style='margin-right:10px;margin-left:5px'>代码</span><input id="ExecFormCode" name="ExecFormCode" class="hisui-validatebox textbox"></input>
+	<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+	<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteRow()">删除</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+<div id="item_tb">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertItmRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteItmRow()">删除</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveItemRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+<div id="group_tb">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertDetRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteDetRow()">删除</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveDetRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+
+<div id="epst_tb">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertEpstRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveEpstRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+</body>
+</html>

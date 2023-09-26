@@ -1,0 +1,61 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+    s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s sortField = $Get(%request.Data("sort",1))
+    s sortDir = $Get(%request.Data("dir",1))
+    
+
+	s action = $Get(%request.Data("action",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+    s JXUnit = $Get(%request.Data("JXUnit",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s schemDr=$Get(%request.Data("schemDr",1))
+	
+	s year=$Get(%request.Data("year",1))
+	s period=$Get(%request.Data("period",1))
+	s perioditem=$Get(%request.Data("perioditem",1))
+    s userID=$Get(%session.Data("LOGON.USERID"))
+	s jxUnitDrStr=$Get(%request.Data("jxUnitDrStr",1))
+	
+	
+	
+	i action = "schemlist" d
+	.w ##class(dhc.pa.udata.uUnitDeptSchem).SchemList(start, limit,period)
+	
+	
+	
+	i action = "jxunitlist" d
+	.w ##class(dhc.pa.udata.uUnitDeptSchem).JXUnitList(searchField, searchValue, sortField, sortDir,start, limit, schemDr)
+
+	i action = "jxunit" d
+	.w ##class(dhc.pa.udata.uUnitDeptSchem).JXUnitListNEW(start, limit, schemDr,userID)
+	
+	i action = "add" d
+	.s result = ##class(dhc.pa.udata.uUnitDeptSchem).Insert(JXUnit,schemDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uUnitDeptSchem).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "init" d
+	.s result = ##class(dhc.pa.udata.uUnitDeptSchem).InitSelCheked(year,period,perioditem)
+	.i result = "Succeed" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

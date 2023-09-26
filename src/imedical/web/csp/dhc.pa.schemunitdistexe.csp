@@ -1,0 +1,105 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s active= $Get(%request.Data("active",1))
+	s kpi = $Get(%request.Data("kpi",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s data = $Get(%request.Data("data",1))
+	s dataitemtypedr = $Get(%request.Data("dataitemtypedr",1))
+	s schem = $Get(%request.Data("schem",1))
+	s unit = $Get(%request.Data("unit",1))
+	s trend = $Get(%request.Data("trend",1))
+    s cycle = $Get(%request.Data("cycle",1))
+
+	i action="list"  d
+	.;w ##class(dhc.pa.udata.uUnitSchemDist).ListRec(start,limit,schem,kpi,unit)
+	.w ##class(dhc.pa.udata.uUnitSchemDist).List(start,limit,schem,unit,trend)
+		
+	i action="schemunitdetaildist"  d
+	.w ##class(dhc.pa.udata.uUnitSchemDist).ListPeriod(start,limit,schem,rowid)
+
+	
+	i action="schemdetail"  d
+	.w ##class(dhc.pa.udata.uSchemDetailDist).findDetail(start,limit,schem, trend)
+    
+	i action="detailaddlist"  d
+	.w ##class(dhc.pa.udata.uSchemDetailAdd).List(searchField,searchValue,sortField,sortDir,start,limit,schem,parent)
+	
+	i action = "edit" d
+	.s result = ##class(dhc.pa.udata.uUnitSchemDist).update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uSchem).DelRec(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    
+	i action = "stratagem" d
+	.w ##class(dhc.pa.udata.uAdjust).UnitList(start,limit,cycle)
+	
+	i action = "kpi" d
+	.w ##class(dhc.pa.udata.uUnitSchemDist).GetKPI(start,limit,schem,trend)
+	
+	i action = "findkpi" d
+	.w ##class(dhc.pa.udata.uSchemDetail).List(searchField,searchValue,sortField,sortDir,start,limit,schem,parent) 
+	
+	i action = "addkpi" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editorder" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).UpdateOrder(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editrate" d
+	.s result = ##class(dhc.pa.udata.uSchemDetail).UpdateRate(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editaddvalue" d
+	.s result = ##class(dhc.pa.udata.uSchemDetailAdd).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "schemdetaildistadd" d
+	.s result = ##class(dhc.pa.udata.uSchemDetailDist).InsertRec(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "schemdetaildistedit" d
+	.s result = ##class(dhc.pa.udata.uSchemDetailDist).Update(schem,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

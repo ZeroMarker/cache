@@ -1,0 +1,161 @@
+<html>
+<head>
+
+<DHCAPP:EASYUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/css/base.css"/>
+   <script src="../scripts/dhcnewpro/dhcem/nurmain.js"></script>  
+<style>
+.celllabel{ font-family: "微软雅黑";height:50px; color:#666; padding: 0; margin: 0; line-height: 25px;} 
+.celllabel h3{color:#036bc2; font-size: 1.2em; font-weight: bold;  padding: 0; margin: 0;}
+.celllabel h3 span{font-size:0.8em; padding-right:5px;color:#666}
+.celllabel h4{font-size:0.9em;padding: 0,margin: 0.3em;-webkit-margin-before: 0.3em;-webkit-margin-after: 0.3em;margin-bottom: 2px;margin-top: 2px;}
+.celllabel h4 span{font-size:1em;padding-right:5px;margin: 0;margin-bottom: 2px;margin-top: 2px;}
+
+.word-green-deep{ color:#060!important ;}
+.fontsize-28{ font-size:28px!important;}
+.word-deep-gray{ color:#666;}
+.fontsize-14{ font-size:14px!important ;}
+.patInfo{
+	font-family: "微软雅黑";
+	line-height:35px;
+    font-size: 16px;
+    font-weight: bold;	
+}
+.patInfo span{
+	padding: 10px;
+}
+.btn {
+
+	width:32%;
+}
+.form-label input{
+	width:138px;	
+}
+.form-label label{
+	padding-left: 0px;
+	padding-right: 0px
+}
+</style>
+
+</head>
+
+<body class="easyui-layout">
+	<div data-options="region:'west',iconCls:'icon-ok',border:false,title:'本科病人',tools: [{    
+        iconCls:'icon-reload',    
+        handler:function(){
+	        
+	        $(':input','#queryForm').not(':button, :submit, :reset, :hidden') .val('') .removeAttr('checked') .removeAttr('selected');
+	        $('#datagrid').datagrid('reload',{Level:'',EmPatNo:''})
+	    	    
+	    }    
+    },{    
+        iconCls:'icon-arrow_down',    
+        handler:function(){
+	       $('#toolbar ul .exp').each(function(){
+		   		if ($(this).css('display')=='none'){
+			   		$(this).css('display','block');
+			   		
+			   	}else{
+				   	$(this).css('display','none');
+				 }    
+		   });
+		   setHeight();
+
+
+	    }    
+    }] " style="width:220px" id="patList">		
+ 	<!--
+ 		<div id="searchAcccordion" class="easyui-accordion"  data-options="border:false" style="width:220px">
+ 
+			<div title="查询条件" data-options="iconCls:'icon-search',tools:[{
+					iconCls:'icon-reload',
+					handler:function(){
+						
+					}
+				}]" border="false" style="overflow:auto;background:#eee;">
+			</div>
+
+		</div>         		
+		-->
+		<div id="toolbar">
+			<div class="btn-toolbar">
+				<div class="btn-group">
+					
+					<!--
+					<button type="button" class="btn btn-info" >10/50</button> 
+					-->  
+					<button type="button" class="btn btn-danger" >10/50</button>
+					<button type="button" class="btn btn-warning" >20/50</button>
+					<button type="button" class="btn btn-success" >10/50</button> 
+				</div>
+			</div>
+			
+			<!--	
+        	 <input class="easyui-searchbox" data-options="prompt:'请输入登记号...'" style="width:200px" id="search">
+			-->
+			 <form id="queryForm">	
+        	 <ul style='padding-top:10px'>
+      		 <li class="form-li" style="margin-bottom:0">
+      		 		<div class="form-label" >
+		         		<label>登记号</label>
+		         		 <input name="EmPatNo" id="EmPatNo">
+		        	</div>
+				     <div class="form-label exp" style="display:none;">
+		         		<label>姓名</label>
+		         		 <input name="EmPatName" id="EmPatName" >
+		        	</div> 
+		        	<div class="form-label search-btn exp" style="display:none;">
+            			<label id="searcBTN" style="width:100px;cursor:hand;margin-left: 60px;color: #fff;background-color:rgb(91, 192, 222)" >查询</label>
+         			 </div>
+
+        		</li>
+        		</ul>
+        		</form>
+        </div>
+ 		<table id="datagrid" class="easyui-datagrid" fit="true" border='false'  
+			data-options="
+			toolbar:'#toolbar',
+		    method:'get',
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    onClickRow:selectPat,
+		    onLoadSuccess:onLoadSuccess,
+		    showHeader:false,
+		    striped:true,
+		    loadMsg:'加载中。。。',
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMPat&MethodName=QueryPat'">
+			<thead>
+				<tr>
+					<th data-options="field:'病人列表',width:200,formatter:setCellLabel"></th>
+					<th data-options="field:'EpisodeID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+ 	
+ 	</div>
+ 	<div data-options="region:'center',border:false">
+ 		
+ 		<div class="easyui-layout" data-options="fit:true">   
+            <div data-options="region:'north',border:false" style="height:42px;background: #c1e7ff;">
+            	<div class="patInfo">
+            		<span class="word-green-deep fontsize-28" >尉迟琳嘉</span>
+            		<span class="word-green-deep">绿区/A3</span>
+            		<span class="word-deep-gray fontsize-14">男/27岁/一级/ID：987987403/省医保/声带麻痹/2016/3/29 14:53</span>
+            	 </div>
+            </div>   
+            <div data-options="region:'center',border:false">
+            	<div id="tabs" class="easyui-tabs" fit="true" ></div>
+            </div>   
+        </div> 	
+
+	</div>
+</body>
+ 	<SERVER>
+	  s ChartBookID=%request.Get("ChartBookID")
+	  w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	  w "var ChartBookID="""_$g(ChartBookID)_""";"_$c(13,10)
+ 	  w "</SCRIPT>"
+   </SERVER>
+  
+</html>

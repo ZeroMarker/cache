@@ -1,0 +1,459 @@
+<!-- 
+ * FileName: insulocrecinfo.csp
+ * Creator: DingSH
+ * Date: 2018-10-18
+ * Description: 医保科室记录信息
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<title>	医保科室记录信息 </title>
+<HISUI/>
+<DHCBILL/>
+<script type="text/javascript" src="../scripts/jsonfun.js" charset='GB18030'></script>
+</head>
+<server>
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_LOCINFO")
+</server>
+<body>
+<div class="hisui-layout" fit="true">  
+		
+		<div id="center" data-options="border:false,region:'center'" fit="true" style="padding:10px;border:0px" >
+		<div class="hisui-panel" title="科室信息维护" style="height:370px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-apply-check',border:true">
+		<!--<div data-options="region:'north'" style="height:30px;padding:10px;">-->
+	    
+		<table class="search-table">
+		<tr>
+		<td class="r-label" >关键字</td>
+		<td >
+		 <input id="KeyWords" class="textbox" style="width:150px" name="KeyWords" ></input> 
+		</td>
+		<td style="padding:0px 20px 0px 20px">
+			<a id="btnSearch" href="#" class="hisui-linkbutton" iconCls="icon-w-find"  style="width:100px;"  onClick='QryInLoc()'>查询</a> 
+		</td>
+		<td style="padding:0px 20px 0px 0px"> 
+		<a id="btnUpdInLoc" href="#" class="hisui-linkbutton" style="width:145px" data-options="iconCls:'icon-w-update'" onClick='ReBuildInLoc()'  >同步科室信息</a> 
+		</td>
+		<td style="padding:0px 20px 0px 0px">
+		<a id="btnInLocImpt" href="#" class="hisui-linkbutton" style="width:120px" data-options="iconCls:'icon-w-import'" onClick='InLocImpt()'>科室导入</a> 
+		</td>
+	    <td style="padding:0px 20px 0px 0px">
+		<a id="btnInLocEpot" href="#" class="hisui-linkbutton" style="width:120px" data-options="iconCls:'icon-w-export'" onClick='InLocEpot()'>科室导出</a> 
+		</td>
+		</tr>
+		</table>
+		<!--</div>-->
+		   	<div class="hisui-panel" fit="true"  data-options="border:false"  style='border-top-width:1px;border-color:#cccccc'>
+			<table id="locdg" class="hisui-datagrid" style="height:242px;" ></table>
+	      </div>
+	     </div>
+	
+		<div id="center1" data-options="region:'center'" fit="true" style="padding:10px 0px 0px 0px">
+		<div class="hisui-panel" title="医保上传记录列表" fit="true"   data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-apply-adm'">
+	
+	    <table class="search-table" >
+		<tr>
+		<td class="r-label"  >医保类型</td>
+		<td>
+		 <select id="InsuType" class="hisui-combogrid" style="width:100px" name="InsuType"></select>
+		</td>
+	    <td style="padding:0px 20px 0px 20px">
+		<a id="btnUpdInLocRec" href="#" class="hisui-linkbutton" style="width:160px" data-options="iconCls:'icon-w-copy'" onClick='FrmRbdResShw()'>生成待上传记录</a> 
+		</td>
+		<td style="padding:0px 20px 0px 0px">
+		<a id="btnInLocUL" href="#" class="hisui-linkbutton" style="width:120px" data-options="iconCls:'icon-w-arrow-up'" onClick='InLocUL()'>科室上传</a> 
+		</td>
+		<td style="padding:0px 20px 0px 0px">
+		<a id="btnInLocDL" href="#" class="hisui-linkbutton" style="width:120px" data-options="iconCls:'icon-w-arrow-down'" onClick='InLocDL()'>科室下载</a> 
+		</td>
+		<td>
+	     </tr>
+		</table>
+		<div class="hisui-panel" fit="true"  data-options="border:false"  style='border-top-width:1px;border-color:#cccccc'>
+		<table id="locrecdg" class="hisui-datagrid" style="padding:10px 10px 0px 10px;height:210px" data-options="headerCls:'panel-header-gray'"></table>
+		</div>
+		</div>
+		</div>
+		</div>
+		
+		</div>-->
+		<!--上传记录生成框-->
+		<div id="locRecDlBd">
+		<div id="locRdPanel" class="hisui-panel"  style="fit:true;padding:10px 30px 20px 30px;border:0" data-options="modal:true">
+	    <table cellpadding="3" >
+	    <tr >
+	    <td class="r-label" style="padding:10px 9px 10px 10px">医保类型</td>
+	    <td>
+			<input id="RdInsuTypeDesc" class="textbox" readonly= "true">
+			<input id="RdInsuType" class="textbox" style="display:none;">
+		</td>
+		</tr>
+		<tr>
+		<td class="r-label" style="padding:10px 9px 10px 0px">行政区代码</td>
+	    <td>
+			<input id="RdStates" class="textbox" >
+		</td>
+		</tr>
+	   <tr>
+		<td class="r-label"style="padding:10px 9px 10px 0px">统筹区代码</td>
+	    <td>
+			<input id="RdCenter" class="textbox" >
+		</td>
+		</tr>
+		 <!--<tr>
+		    <td style="align:center;padding:20px 10px 10px 10px" ><a id="btnRbd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" >生成</a></td>
+			<td style="align:center;padding:20px 10px 10px 10px" >
+			<a id="btnRbC" href="#" class="hisui-linkbutton" style="padding:20px 10px 10px 10px" data-options="iconCls:'icon-w-close'" style="align:center;">关闭</a>
+			</td>
+		</tr>-->			
+	    </table>
+	    <!--<div  style="align:center;padding:20px 20px" >
+	    <a id="btnRbd"href="#"    class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" >生成</a>
+	    <a id="btnRbC"  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-w-close'" >关闭</a>
+	    </div>-->
+	     <table >
+	    <tr>
+		    <td style="align:center;padding:20px 20px 10px 30px" >
+		        <a id="btnRbd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" >生成</a>
+		    </td>
+			<td style="align:center;padding:20px 20px 10px 0px" >
+		    	<a id="btnRbC" href="#" class="hisui-linkbutton" style="padding:20px 10px 10px 10px" data-options="iconCls:'icon-w-close'" style="align:center;">关闭</a>
+			</td>
+		</tr>
+       </table>
+	    </div>					
+		</div>
+    <!--科室信息编辑框-->	
+	<div id="locDlEd">
+	<div id="locPanel" class="hisui-panel" style="fit:true;padding:10px;border:0px" iconCls="icon-big-paper-pen" >
+	<table >				
+		<tr >
+			<td class="r-label" align="right" style="padding:5px 10px 10px 20px" >医院科室编码</td>
+			<td>
+				<input id="DeptCode" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">医院科室名称</td>
+			<td>
+				<input id="DeptDesc" class="textbox" readonly= "true" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">科室类型</td>
+			<td>
+				<input id="DeptType" class="textbox" readonly= "true" style="width:140px">
+			</td>
+		</tr>
+		<tr >
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">标准科室编码</td>
+			<td>
+				<input id="StandDeptCode" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">专业科室代码</td>
+			<td>
+				<input id="ProfessionDeptCode" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">科室Dr</td>
+			<td>
+				<input id="DeptDr" class="textbox" readonly= "true" style="width:140px">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">批准床位数量</td>
+			<td>
+				<input id="SPBedNum" class="hisui-numberbox textbox" style="width:146px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">实际床位数量</td>
+			<td>
+				<input id="SJBedNum" class="hisui-numberbox textbox" style="width:146px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 12px">科室成立时间</td>
+			<td>
+				<input id="DeptSetUpDate" class="textbox" style="width:140px">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">医师数量</td>
+			<td>
+				<input id="DoctorNum" class="hisui-numberbox textbox" style="width:146px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">技师数量</td>
+			<td>
+				<input id="TechnicianNum" class="hisui-numberbox textbox" style="width:146px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">药师数量</td>
+			<td>
+				<input id="PharmacistNum" class="hisui-numberbox textbox" style="width:146px">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">护理人员数量</td>
+			<td>
+				<input id="NurseNum" class="hisui-numberbox textbox" style="width:146px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">科室负责人</td>
+			<td>
+				<input id="DeptHead" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">负责人电话</td>
+			<td>
+				<input id="DeptHeadTelNo" class="textbox" style="width:140px">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">病区护士长</td>
+			<td>
+				<input id="NurseHead" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">病区护士长电话</td>
+			<td>
+				<input id="NurseHeadTelNo" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">是否重点科室</td>
+			<td>
+				<input id="IsKeyDept" class="textbox" style="width:140px">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">重点科室等级</td>
+			<td>
+				<input id="KeyDeptLevel" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 12px">科室是否发生费用</td>
+			<td>
+				<input id="IsAllowFee" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">医院机构编码</td>
+			<td>
+				<input id="HospCode" class="textbox" readonly= "true" style="width:140px">
+			</td>
+		</tr>
+		
+		<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">开始日期</td>
+			<td>
+				<input id="StDate" class="textbox" readonly= "true" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">开始时间</td>
+			<td>
+				<input id="StTime" class="textbox" readonly= "true" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">结束日期</td>
+			<td>
+				<input id="EdDate" class="textbox" readonly= "true" style="width:140px">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">结束时间</td>
+			<td>
+				<input id="EdTime" class="textbox" readonly= "true" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">有效标志</td>
+			<td>
+				<input id="ActFlag" class="textbox" readonly= "true" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">经办人</td>
+			<td>
+				<input id="UserName" class="textbox" readonly= "true" style="width:140px">
+				<input id="UserDr" class="textbox" style="display:none;">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">经办日期</td>
+			<td>
+				<input id="Date" class="textbox" readonly= "true" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">经办时间</td>
+			<td>
+				<input id="Time" class="textbox" readonly= "true" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">备注</td>
+			<td>
+				<input id="Remark" class="textbox" style="width:140px">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">扩展01</td>
+			<td>
+				<input  id="ExtStr01" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">扩展02</td>
+			<td>
+				<input id="ExtStr02" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">扩展03</td>
+			<td>
+				<input id="ExtStr03" class="textbox" style="width:140px">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">扩展04</td>
+			<td>
+				<input id="ExtStr04" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label"align="right" style="padding:5px 10px 10px 4px" >扩展05</td>
+			<td>
+				<input id="ExtStr05" class="textbox" style="width:140px">
+			</td>
+			<td class="r-label" align="right" style="padding:5px 10px 10px 4px">IncRowid</td>
+			<td>
+				<input id="Rowid" class="textbox" readonly= "true" style="width:140px">
+			</td>
+		</tr>	
+		<tr>
+		<td ></td>
+		<td></td>
+			<td align="right" style="padding:20px 20px 5px 0px"><a id="btnS" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+			<td align="right" style="padding:20px 20px 5px 0px">
+				<a id="btnC" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+			</td>
+			<td></td>
+			<td></td>
+		</tr>			
+	</table>
+</div>
+</div>
+    <!--上传记录编辑框-->
+	<div id="locRecDlEd">
+	<div id="locRecPanel" class="hisui-panel"  style="fit:true;padding:10px 20px 20px 20px;border:0px" data-options="modal:true">
+	<table cellpadding="3">
+							
+		<tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医保科室指针</td>
+			<td>
+				<input id="RCTDr" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">统筹区编码</td>
+			<td>
+				<input id="RCenterNo" class="textbox" >
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">行政区代码</td>
+			<td>
+				<input id="RStates" class="textbox" >
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">申请流水号</td>
+			<td>
+				<input id="RSeriNo" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">发送方流水号</td>
+			<td>
+				<input id="RBusiNo" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医保类型</td>
+			<td>
+				<input id="RInsuTypeDesc" class="textbox" readonly= "true">
+				<input id="RInsuType" class="textbox" style="display:none;">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医院审批人</td>
+			<td>
+				<input id="RHSPUserName" class="textbox" readonly= "true">
+				<input id="RHSPUserDr" class="textbox" style="display:none;">
+			</td>
+			<td class="r-label"style="padding:10px 10px 10px 20px">医院审批状态</td>
+			<td>
+				<input id="RHSPFlag" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医院审批日期</td>
+			<td>
+				<input id="RHSPDate" class="textbox" readonly= "true">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医院审批时间</td>
+			<td>
+				<input id="RHSPTime" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医保审批人</td>
+			<td>
+				<input id="RISPUserDr" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医保审批状态</td>
+			<td>
+				<input id="RISPFlag" class="textbox" readonly= "true">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医保审批日期</td>
+			<td>
+				<input id="RISPDate" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">医保审批时间</td>
+			<td>
+				<input id="RISPTime" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">经办人</td>
+			<td>
+				<input id="RUserName" class="textbox" readonly= "true">
+				<input id="RUserDr" class="textbox" style="display:none;">
+			</td>
+		</tr>
+		 <tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">经办日期</td>
+			<td>
+				<input id="RDate" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">经办时间</td>
+			<td>
+				<input id="RTime" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">扩展01</td>
+			<td>
+				<input id="RExtStr01" class="textbox">
+			</td>
+		</tr>
+				<tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">扩展02</td>
+			<td>
+				<input id="RExtStr02" class="textbox">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">扩展03</td>
+			<td>
+				<input id="RExtStr03" class="textbox">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">扩展04</td>
+			<td>
+				<input id="RExtStr04" class="textbox" >
+			</td>
+		</tr>
+		
+		<tr>
+			<td class="r-label" style="padding:10px 10px 10px 20px">扩展05</td>
+			<td>
+				<input id="RExtStr05" class="textbox" >
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px">Rowid</td>
+			<td>
+				<input id="RRowid" class="textbox" readonly= "true">
+			</td>
+			<td class="r-label" style="padding:10px 10px 10px 20px"></td>
+			<td>
+				
+			</td>
+		</tr>
+
+	 </table>
+     <table>
+		<tr style="align:'center'">
+			
+			<td style="padding:20px 4px 10px 315px;">
+			<a id="btnS1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			</td>
+			<td style="padding:20px 4px 10px 20px">
+				<a id="btnC1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+			</td>
+	</table>
+</div>
+	</div>
+</div>  
+<script type="text/javascript" src="../scripts/insulocrecinfo.js" charset='GB18030'></script>
+<script type="text/javascript" src="../scripts/DHCINSUPort.js" charset='GB18030'></script>
+<DHCBILLINSUCloud/>	
+</body>
+</html>

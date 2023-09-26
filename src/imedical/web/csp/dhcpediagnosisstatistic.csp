@@ -1,0 +1,361 @@
+<!-- DHCPEDiagnosisCollect.csp -->
+<!-- 
+/// 创建时间		2006.11.15
+/// 创建人			xuwm 
+/// 主要功能		
+/// 关联文件		DHCPEPosStandard.js
+/// 主要功能		多团体,分年龄段,性别,查询阳性特征
+/// 最后修改时间	
+/// 最后修改人	 
+/// -->
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<TITLE>病患汇总</TITLE>
+<!-- TrakCare系统文件 -->
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<SCRIPT SRC="/csp/broker/cspbroker.js"> </SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+
+<!-- 与树型结构相关文件 -->
+<LINK REL="stylesheet" type="text/css" href="../scripts/DHCPETree.css"/>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPETree.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.xml.js"></SCRIPT>
+<!-- 本模块文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.Date.js"></SCRIPT> 
+<style type="text/css">
+/* 团体列表 */
+#DGroupList{
+	display:block;
+	position: relative;
+	height:6cm;
+	width:7cm; 
+	border-style:none;	
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+	overflow:none;
+}
+#GroupList{
+	display:block;
+	position: relative;
+	height:100%;
+	width:100%;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+}	
+/* 疾病列表 */
+#DIllnessStandardList{
+	display:block;
+	position: relative;
+	height:12cm;
+	width:7cm;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+
+}
+#IllnessStandardList{
+	display:block;
+	position: relative;
+	height:100%;
+	width:100%;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+
+}
+
+DIV.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	/* border-style: groove;  */
+}
+
+DIV.Ridge{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: inset ;
+
+}
+
+TABLE.Ridge caption{
+	display:block;
+	text-align:left;
+}
+
+TABLE.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: groove; 
+}
+
+TABLE.Groove caption{
+	display:block;
+	text-align:left;
+}
+
+#Panel{
+	display:block;
+	position: relative;
+	width:100%;
+}
+
+#Panel table tr td{
+	display:block;
+	position: relative;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;	
+	text-align: left;
+	
+}
+
+DIV.PanelRTop{
+	display:block;
+	position: relative;
+	width:18.7cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;
+	text-align: left;
+}
+
+DIV.PanelRTop table tr td{
+	text-align: right;
+}
+
+DIV.PanelShow{
+	display:block;
+	position: relative;
+	width:18.7cm;
+	height:18.19cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;	
+	border-style:none;
+	text-align: left;
+}
+	
+/* 查询结果 */
+#dataframe{
+	display:block;
+	width:100%;
+	height:100%;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;
+	border-style:none;	
+}
+
+
+</style>
+</HEAD>
+
+<BODY>
+<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT>
+</APPLET>
+
+
+<input type='hidden' id='GList' name='GList' value=''>
+<input type='hidden' id='QueryType' name='QueryType' value=''>
+
+
+<!-- 左边 体检单位和项目列表 -->
+<Table id=Panel>
+<tr>
+<td valign="top">
+	<DIV class=Groove>
+		<table>
+			<tr>
+				<td>
+					单位查找:
+				</td>
+				<td>
+					<input type="text" id="GName" name="GName" value="请输入单位名称" size="27"/>	
+				</td>
+			</tr>
+		</table>
+		<DIV id=DGroupList>
+			<IFRAME id="GroupList" name="GroupList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.GList"></iframe>
+		</DIV>
+	</DIV>
+
+	<DIV class="Groove">
+		<table>
+			<tr>
+				<td><input id=cb_Filter name=cb_Filter type="checkbox" checked/></td>
+				<td>筛选疾病</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><!--<input id="IllnessStandardType" name="IllnessStandardType" type="checkbox"><Label id=lIllnessStandardType>疾病</Label>--></td>
+			</tr>
+		</table>
+		<!-- 显示疾病列表 -->
+		<DIV class="DIllnessStandardList" id=DIllnessStandardList>
+			<IFRAME id="IllnessStandardList" name="IllnessStandardList" scrolling="auto" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.IllnessStandardList"></iframe>
+		</DIV>
+	</DIV>
+</DIV> 
+</td>
+<td valign="top">
+	<DIV class="Groove">
+		<DIV class="PanelRTop">
+			<fieldset>
+			<legend>查询条件</legend>
+
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr>
+                <td width="12%" id=r1d1><div align="right">体检日期从</div></td>
+                <td width="16%" id=r1d2>
+                	<input name="DateFrom" type="text" id="DateFrom" value="" size="10"/>
+                	<IMG id="ldDateFrom" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                <td width="2%" id=r1d3>到</td>
+                <td width="18%" id=r1d4>
+                	<input name="DateTo" type="text" id="DateTo" value="" size="10"/>
+                	<IMG id="ldDateTo" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                <td width="8%" id=r1d5>性别</td>
+                <td width="10%" id=r1d6>
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						d ##class(web.DHCPE.Report.PosQuery).OutSexListToHTML()
+					</SCRIPT>                
+                </td>
+                <td id=r1d7></td>
+                <td rowspan="2" id=r1d8>
+					<TABLE>
+              			<TBODY>
+              				<TR>
+                				<TD class="" align=left>
+                				<p>                
+                					<a href="#" id="BQuery" name="BQuery">
+                					<img src="../images/websys/find.gif" border="0">查询(<u>C</u>)
+                					</a>
+                				</p>
+                				<p><A id=DeleteItem href="#" name=DeleteItem>删除选项</A></p>
+                				</TD>
+                				<TD class="" vAlign=bottom align=left>
+                					<SELECT id=EDList style="WIDTH: 150px" multiple size=3 name=EDList>
+                					</SELECT> 
+    							</TD>
+    						</TR>
+    					</TBODY>
+    				</TABLE>
+                </td>
+              </tr>
+              <tr>
+                <td id=r2d1><div align="right">年龄范围从</div></td>
+                <td id=r2d2><input name="AgeFrom" type="text" id="AgeFrom" value="" size="10"/></td>
+                <td id=r2d3>到</td>
+                <td id=r2d4><input name="AgeTo" type="text" id="AgeTo" value="" size="10"/></td>
+                <td id=r2d5>婚姻</td>
+                <td width="10%" id=r2d6 colspan="2">
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						d ##class(web.DHCPE.Report.PosQuery).OutMarriedListToHTML()
+					</SCRIPT>                
+                </td>
+              </tr>
+            </table>
+            </fieldset>
+		</DIV>
+	</DIV>
+	<!-- 显示查询地结果 -->
+	<DIV class="PanelShow" id=PanelShow>
+		<IFRAME id="dataframe" name="dataframe" scrolling="auto" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.IllnessCollectList"></iframe>
+	</DIV>
+</td>
+</tr>
+</table>
+<!-- 本页面JavaScript文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPEIllnessCollect.js"></SCRIPT>
+
+<script language=javascript>
+	//检查目的listitem 是否有该值?
+	function ifexist(val,list)
+	{
+		for (var i=0;i<list.options.length;i++){
+			if (list.options[i].value==val)
+			{
+				return i;
+			}
+	}
+		return -1;
+	}	
+
+	// 从疾病列表页面获取 疾病查询条件 
+	function SetIllnessStandardList(EDDRList,EDDescList,operatorType){
+		var obj;
+		
+		obj=document.getElementById('cb_Filter');	
+		if (obj && !obj.checked) { return; }
+		
+		var iEDDR='';iEDDesc='';
+		var EDDRs=EDDRList.split('^');
+		var EDDescs=EDDescList.split('^');
+		
+		obj=document.getElementById('EDList');		
+		if (obj) {			
+			//obj.options.length=0;
+			for (var iLoop=0;iLoop<EDDRs.length;iLoop++) {
+				if (''!=EDDRs[iLoop]) {
+					if ('A'==operatorType) {						
+						if (-1==ifexist(EDDRs[iLoop],obj)) {
+							obj.options[obj.options.length]=new Option(EDDescs[iLoop],EDDRs[iLoop]);
+						}
+					}
+					else{
+						if (-1!=ifexist(EDDRs[iLoop],obj)) {
+							obj.options[ifexist(EDDRs[iLoop],obj)]=null;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	// 不使用了
+	// 从专家诊断页面获取 疾病查询条件 
+	function SetExpertDiagnosisList(EDDRList,EDDescList,operatorType){
+		var obj;
+		
+		obj=document.getElementById('cb_Filter');	
+		if (obj && !obj.checked) { return; }
+		
+		var iEDDR='';iEDDesc='';
+		var EDDRs=EDDRList.split('^');
+		var EDDescs=EDDescList.split('^');
+		
+		obj=document.getElementById('EDList');		
+		if (obj) {			
+			//obj.options.length=0;
+			for (var iLoop=0;iLoop<EDDRs.length;iLoop++) {
+				if (''!=EDDRs[iLoop]) {
+					if ('A'==operatorType) {						
+						if (-1==ifexist(EDDRs[iLoop],obj)) {
+							obj.options[obj.options.length]=new Option(EDDescs[iLoop],EDDRs[iLoop]);
+						}
+					}
+					else{
+						if (-1!=ifexist(EDDRs[iLoop],obj)) {
+							obj.options[ifexist(EDDRs[iLoop],obj)]=null;
+						}
+					}
+				}
+			}
+		}
+	}
+function SetGroupList(GroupList,TeamList){
+	var obj=document.getElementById('GList');
+	if (obj){ obj.value=GroupList+';'+TeamList; }
+}
+</script>
+</BODY>
+</HTML>

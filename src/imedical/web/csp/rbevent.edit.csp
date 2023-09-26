@@ -1,0 +1,183 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<TRAK:COMPONENT id="RBEvent.Edit" hideheadings=1></TRAK:COMPONENT>
+
+<CSP:IF condition=%request.Get("ID")>
+<TRAK:COMPONENT id="RBEventTimes.List" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<SCRIPT language=javascript>
+function ScanClickHandler(e) {
+	var obj=document.getElementById("Scan");
+	if ((obj)&&(obj.disabled)) {
+		return false
+	}
+	return Scan_click()
+}
+
+function AttendClickHandler(e) {
+	var obj=document.getElementById("Attendees");
+	if ((obj)&&(obj.disabled)) {
+		return false
+	}
+	return Attendees_click()
+}
+
+function DocumentLoadHandler() {
+	var obj=document.getElementById("ClientTypeCode");
+	if (obj) MandatoryFields(obj.value)
+
+	var obj=document.getElementById("update1");
+	if (obj) obj.onclick=UpdateClickHandler;
+
+	var obj=document.getElementById("EVVenue");
+	if (obj) obj.onchange=EVenuChangeHandler;
+
+	var obj=document.getElementById("VenueDetails");
+	if (obj) obj.onclick=VenueDetailsClickHandler;
+
+	var scanobj=document.getElementById("Scan");
+	var attobj=document.getElementById("Attendees");
+
+	//Set up the bold links
+	var blinksobj=document.getElementById("boldlinks");
+	if (blinksobj) {
+		var lu = blinksobj.value.split("^");
+	
+		if (attobj && lu[0]==1) attobj.style.fontWeight="bold";
+		if (scanobj && lu[1]==1) scanobj.style.fontWeight="bold";
+	}
+
+	//disable scanning link if new entry
+	var obj=document.getElementById("ID");
+	if ((scanobj)&&(obj.value=="")) {
+		scanobj.disabled=true;
+		scanobj.onclick=ScanClickHandler;
+	}
+	
+
+	//disable attendees link if new entry
+
+	if ((attobj)&&(obj.value=="")) {
+			attobj.disabled=true;
+			attobj.onclick=AttendClickHandler;
+	}
+
+	DisableFields();
+	try {
+		RBEvent_Edit_InitCustom();
+	} catch (e) {}
+}
+
+function VenueDetailsClickHandler() {
+	var obj=document.getElementById("ID");
+	if (obj) ID=obj.value;
+
+	var obj=document.getElementById("EVVenue");
+	if (obj) EVVenue=obj.value;
+
+	var obj=document.getElementById("EVVenueAddress1");
+	if (obj) EVVenueAddress1=obj.value;
+
+	var obj=document.getElementById("EVVenueAddress2");
+	if (obj) EVVenueAddress2=obj.value;
+
+	var obj=document.getElementById("EVVenueFax");
+	if (obj) EVVenueFax=obj.value;
+
+	var obj=document.getElementById("EVVenuePhone");
+	if (obj) EVVenuePhone=obj.value;
+
+	//var lnk=
+	websys_createWindow('websys.default.csp?WEBSYS.TCOMPONENT=RBEvent.VenueDetails.Edit&ID='+ID+'&EVVenue='+EVVenue+'&EVVenueAddress1='+EVVenueAddress1+'&EVVenueAddress2='+EVVenueAddress2+'&EVVenueFax='+EVVenueFax+'&EVVenuePhone='+EVVenuePhone,'VenueDetails','top=320,left=390,width=350,height=200');
+
+}
+
+function EVenuChangeHandler() {
+	var val=""
+	var obj=document.getElementById("ClientTypeCode")
+	if (obj) val=obj.value
+	MandatoryFields(val);
+}
+
+function UpdateClickHandler() {
+	if (CheckMandatoryFields()) return update1_click();
+}
+
+function ClientTypeSelectHandler(str) {
+	var lu = str.split("^");
+	var obj=document.getElementById("ClientTypeCode")
+	if (obj) obj.value=lu[2]
+	MandatoryFields(lu[2]);
+}
+
+function MandatoryFields(val) {
+	if (val=="") return;
+	var objRes=document.getElementById("cRESDesc");
+	if ((val=="CLT" || val=="CLC")) {
+		if (objRes) objRes.className = "clsRequired";
+	} else {
+		if (objRes) objRes.className = "";
+	}
+	var objEV=document.getElementById("EVVenue");
+	if ((objRes)&&(objEV)&&(objEV.value=="")) objRes.className = "clsRequired";
+}
+
+function CheckMandatoryFields() {
+	var msg=""
+	var obj = document.getElementById('RESDesc');
+	var cobj= document.getElementById('cRESDesc');
+	var objEV = document.getElementById('EVVenue');
+	if ((obj)&&(obj.value=="")&&(cobj.className=="clsRequired")) {
+			msg += "\'" + t['RESDesc'] + "\' " + t['XMISSING'] + "\n";
+	}
+	var obj = document.getElementById('EVDuration');
+	if ((obj)&&(obj.value=="")) {
+			msg += "\'" + t['EVDuration'] + "\' " + t['XMISSING'] + "\n";
+	}
+	var obj = document.getElementById('EVClientType');
+	if ((obj)&&(obj.value=="")) {
+			msg += "\'" + t['EVClientType'] + "\' " + t['XMISSING'] + "\n";
+	}
+	if (msg=="") {
+		return true;
+	} else {
+		alert(msg)
+		return false;
+	}
+}
+
+function DisableFields() {
+	var objStat = document.getElementById('EVStatusCode')
+	var objId = document.getElementById('ID')
+	if (objStat && objId && objStat.value=="B" && objId.vlaue!="") {
+		var obj = document.getElementById('EVClientType')
+		if (obj) obj.disabled=true; obj.className = "disabledField";
+		var obj = document.getElementById('cEVClientType')
+		if (obj) obj.disabled=true;
+		var obj = document.getElementById('EVDuration')
+		if (obj) obj.disabled=true; obj.className = "disabledField";
+		var obj = document.getElementById('cEVDuration')
+		if (obj) obj.disabled=true;
+		var obj = document.getElementById('RESDesc')
+		if (obj) obj.disabled=true; obj.className = "disabledField";
+		var obj = document.getElementById('cRESDesc')
+		if (obj) obj.disabled=true;
+	}
+}
+
+document.body.onload=DocumentLoadHandler;
+</SCRIPT>
+</BODY>
+</HTML>

@@ -1,0 +1,57 @@
+<!-- 
+ * FileName: dhcbill.conf.ip.monitor.fir.csp
+ * Anchor: ZhYW
+ * Date: 2020-01-08
+ * Description: 住院费用监控配置
+-->
+<!DOCTYPE html>
+<html>
+<head>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.layout-panel-center div.panel {
+			padding-bottom: 8px;
+		}
+	</style>
+	<server>
+		set moniId=+%request.Get("MoniId")
+		set hospId=+%request.Get("HospId")
+		set jsonStr=##class(web.DHCIPBillCostMonitorConfig).GetCheckDataByConfId(moniId)
+		set jsonObj=##class(%DynamicAbstractObject).%FromJSON(jsonStr)
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		MoniId: """_moniId_""",",!
+		w "		HospId: """_hospId_""",",!
+		w "		CDId: """_jsonObj.ID_"""",!
+		w "	};",!
+		w "</script>"
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',border:false" style="padding:10px;">
+			<csp:Include Page="dhcbill.conf.ip.monitor.explain.csp">
+			<div style="padding-bottom: 10px;">
+				<label style="padding-right:7px;">天数计算方式</label>
+				<input id="daysMode" class="hisui-combobox textbox" data-options="
+					panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
+					data:[{id:'0',text:'算入算出'},{id:'1',text:'算入不算出'}],
+					onLoadSuccess: function(data) {
+						$(this).combobox('select', '#(jsonObj.CDDaysMode)#');
+					}
+				"/>
+			</div>
+			<csp:Include Page="dhcbill.conf.ip.monitor.catelist.csp">
+		</div>
+		<div data-options="region:'south',border:false">
+			<div style="text-align:center;padding-bottom:10px;">
+				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.ip.monitor.fir.js"></script>	
+</body>
+</html>

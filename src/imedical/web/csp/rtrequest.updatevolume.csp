@@ -1,0 +1,61 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<BODY>
+
+<server>
+ n vol1,rtmav
+ s (rtmav,vol1,homeloc,voldesc,frm)=""
+ s rtmav=%request.Data("rtmav",1)
+ s frm=%request.Get("frm",1)
+
+ ;s ^zdenise($zn)=%request.Get("frm",1)
+ i rtmav'="",$p(rtmav,"||",2)'="" d
+ .s vol1="" 
+ .s vol1=$p($g(^RT(+rtmav,"RTMAV",$p(rtmav,"||",2))),"^",22) 
+ .i vol1="" d
+ ..s mrtype=$p($g(^RT(+rtmav)),"^",6)
+ ..s homeloc=$p($g(^RTC("TYPE",+mrtype)),"^",8)
+ ..i homeloc'="" d
+ ...s cthmloc=0 f  s cthmloc=$o(^CTLOC(homeloc,"MRTYPE",cthmloc))  q:cthmloc=""  d
+ ....s voldesc=$p($g(^CTLOC(homeloc,"MRTYPE",cthmloc)),"^",7)
+ ....s hmrtype=$p($g(^CTLOC(homeloc,"MRTYPE",cthmloc)),"^",5)
+ ....i ((hmrtype=mrtype)&(voldesc'="")) s vol1=voldesc
+ ....s ^zdenise($zn,cthmloc)=hmrtype_","_mrtype_","_voldesc
+ &SQL(UPDATE RT_MasVol SET RTMAV_VolDesc = :vol1 WHERE RTMAV_RowId = :rtmav)
+ 
+
+ i vol1="" q
+ w "<script>"
+ w "var f = top.frames[1];"
+ w "try { f.RefreshAfterNewVolume(); } catch(e) { "
+ w "var f = top.frames['TRAK_main'].frames[1];"
+ w "if (f) f.treload('websys.reload.csp')"
+ w "}"
+ ;w "if (f) f.refreshing(f);"
+ w "</script>"
+ w "<script>"
+ w "var f = top.frames[1];"
+ w "try { if (f) f.refreshing(f);} catch(e) {}"
+ w "</script>"
+ q
+
+</server>
+<script language="JavaScript">
+</script>
+
+</BODY>
+</HTML>
+
+

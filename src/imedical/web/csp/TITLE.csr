@@ -1,0 +1,23 @@
+<!-- CSP TRAK:TITLE Rules -->
+<!-- Copyright (c) 2000 TRAK Systems Pty. ALL RIGHTS RESERVED. -->
+
+<!-- TITLE TAG --------------------------------------------- -->
+
+<csr:rule name="TITLE" match="TRAK:TITLE">
+<csr:description>
+The <b>TRAK:TRAK</b> inserts the system title from the MEDTRAK configuration
+</csr:description>
+
+<csr:action>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		//w "##($p($g(^CF("SM",1)),"^",5))##"
+		w $p($g(^CF("SM",1)),"^",5)
+	    if $d(%session) {
+			s LogonLocID=%session.Data("LOGON.CTLOCID")
+			s LogonLocDesc=$s(LogonLocID'="":$P(^CTLOC(LogonLocID),"^",2),1:"")
+			s %session.Data("TITLE")=$p($g(^CF("SM",1)),"^",5)_" "_%session.Data("LOGON.USERNAME")_" "_%session.Data("LOGON.GROUPDESC")_" "_LogonLocDesc
+	    }
+	</SCRIPT>
+</csr:action>
+</csr:rule>
+

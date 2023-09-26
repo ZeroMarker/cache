@@ -1,0 +1,133 @@
+<!-- 
+ * FileName:	dhcbillmenu.orderlinktar.csp
+ * User:		TangTao
+ * Date:		2014-04-10
+ * Function:	医嘱项关联收费项
+ * Description: 
+-->
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+<TRAK:HEAD></TRAK:HEAD>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbillconfig/jqueryeasyui132/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbillconfig/jqueryeasyui132/demo/demo.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbillconfig/jqueryeasyui132/themes/default/easyui.css">
+<SCRIPT type="text/javascript" SRC="../scripts/dhcbillconfig/jqueryeasyui132/jquery-1.8.0.min.js"> </SCRIPT>
+<SCRIPT type="text/javascript" SRC="../scripts/dhcbillconfig/jqueryeasyui132/jquery.easyui.min.js"> </SCRIPT>
+<SCRIPT type="text/javascript" SRC="../scripts/dhcbillconfig/jqueryeasyui132/locale/easyui-lang-zh_CN.js"> </SCRIPT>
+<SCRIPT type="text/javascript" SRC="../scripts/dhcbill/dhcjs/dhcutil.js"> </SCRIPT>
+<server>
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("ORDERLINKTAR")
+</server>
+</head>
+<body class="easyui-layout">
+	<div id="tdiv1" data-options="region:'north'" style="height:35px">
+		<table id="tArcTable" class="form_table" width="100%" cellspacing="1" cellpadding="0" border="0">
+			<tr>
+	            <td><p align="right">医嘱项大类：</p></td>
+	            <td>
+					<input id="ComboOrdCat" class="easyui-combobox" style="width:100px" data-options="    
+			        valueField: 'OrcRowid',    
+			        textField: 'OrdCat',    
+			        url: './dhcbill.query.combo.easyui.csp',    
+			        onBeforeLoad:function(param){
+						param.ClassName = 'DHCBILLConfig.DHCBILLFIND';
+						param.QueryName = 'FindOrdCat';
+						param.Arg1 = 'OrdCat';
+						param.ArgCnt = '1';
+					},
+					onSelect:function(rec){
+						$(ComboArcItmCat).combobox('clear');
+						$(ComboArcItmCat).combobox({
+							url: './dhcbill.query.combo.easyui.csp',
+					        valueField: 'OrcRowid',    
+					        textField: 'OrdCat',
+							onBeforeLoad:function(param){
+								param.ClassName = 'DHCBILLConfig.DHCBILLFIND';
+								param.QueryName = 'FindOrdCat';
+								param.Arg1 = 'ArcItmCat';
+								param.Arg2 = rec.OrcRowid;
+								param.ArgCnt = '2';
+							}
+						});
+						FindClick();
+					},
+					onChange:function(newValue,oldValue){
+						if(newValue==''){
+							FindClick();
+						}
+					}" /></td>
+				</td>
+				<td><p align="right">医嘱项子类：</p></td>
+	            <td>
+					<input id="ComboArcItmCat" class="easyui-combobox" style="width:100px" data-options="    
+			        valueField: 'OrcRowid',    
+			        textField: 'OrdCat',    
+			        url: './dhcbill.query.combo.easyui.csp',    
+			        onBeforeLoad:function(param){
+						param.ClassName = 'DHCBILLConfig.DHCBILLFIND';
+						param.QueryName = 'FindOrdCat';
+						param.Arg1 = 'ArcItmCat'
+						param.ArgCnt = '1';
+					},
+					onSelect:function(rec){
+						FindClick();
+					},
+					onChange:function(newValue,oldValue){
+						if(newValue==''){
+							FindClick();
+						}
+					}" /></td>
+				</td>
+				<td><p align="right">医嘱项代码：</p></td>
+				<td>
+	                <input id="TxtArcCode" class="text" style="width:100px"/>
+				</td>
+				<td><p align="right">医嘱项别名：</p></td>
+				<td>
+					<input id="TxtArcAlias" class="text" style="width:100px"/>
+				</td>
+				<td><p align="right">医嘱项名称：</p></td>
+				<td>
+					<input id="TxtArcDesc" class="text" style="width:100px"/>
+	            </td>
+	            <td>
+					<a href="#" id="BtnFind" class="easyui-linkbutton" data-options="iconCls:'icon-search'" plain="true" >医嘱项查询</a>
+	            </td>
+	            <td>
+					<a href="#" id="BtnClear" class="easyui-linkbutton" data-options="iconCls:'icon-remove'" plain="true" >清除</a>
+	            </td>
+	        </tr>
+		</table>
+	</div>
+	<div id="tdiv2" data-options="region:'center'" style="height:200px">
+		<table id="tArcItem"></table>
+	</div>
+	<div id="tToolBar" class="easyui-toolbar" style="height:31px">  
+		<div style="margin-bottom:5px">
+			<table cellspacing="0" cellpadding="0">
+				<tbody>
+					<tr>
+						<td><a href="#" class="easyui-linkbutton" iconCls="icon-add" id="BtnTarAdd" plain="true">收费项添加</a></td>
+						<td><div class="datagrid-btn-separator"></div></td>
+						<td><a href="#" class="easyui-linkbutton" iconCls="icon-edit" id="BtnTarUpdate" plain="true">收费项修改</a></td>
+						<td><div class="datagrid-btn-separator"></div></td>
+						<td><a href="#" class="easyui-linkbutton" iconCls="icon-save" id="BtnTarSave" plain="true">收费项保存</a></td>
+						<td><div class="datagrid-btn-separator"></div></td>
+						<td><a href="#" class="easyui-linkbutton" iconCls="icon-search" id="BtnTarFind" plain="true">收费项查询</a></td>
+						<td><div class="datagrid-btn-separator"></div></td>
+						<td><a href="#" class="easyui-linkbutton" iconCls="icon-search" id="BtnArcTarFind" plain="true">根据收费项查询医嘱项</a></td>
+						<td><div class="datagrid-btn-separator"></div></td>
+						<td><a href="#" class="easyui-linkbutton" iconCls="icon-print" id="BtnExportLink" plain="true">导出关联关系</a></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>  
+	</div>
+	<div id="tdiv3" data-options="region:'south'" style="height:300px">
+		<table id="tTarItem"></table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbillmenu.orderlinktar.js"></script>
+</body>
+</html>

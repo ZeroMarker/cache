@@ -1,0 +1,40 @@
+﻿<html>
+<head>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	if $g(%session.Data("LOGON.USERID"))=""
+	{
+		s rtn=##class(websys.SessionLogon).Logon()
+		s %response.ServerSideRedirect="emr.record.quality.csp"
+	}
+	q 1
+   </csp:method>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>	
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script language="cache" runat="server">
+	    d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s episodeDept = ##class(EPRservice.HISInterface.PatientInfoAssist).CurrentDept(episodeID)		
+		s episodeLocID = $p(episodeDept,"^",1)
+  </script>
+	<script language="javascript">
+	  var patientID = '#(patientID)#';
+	  var episodeID = '#(episodeID)#';
+	  var episodeLocID = '#(episodeLocID)#';
+	  var admType="All";
+	  var url = "emr.browse.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeLocID="+episodeLocID+"&AdmType="+admType+"&Action=quality";
+	  $(function(){
+		$('#frameBrowsepage').attr("src",url);
+	  });
+   </script>
+	<title>病历浏览</title>
+</head>
+<body style="margin:0;padding:0;width:100%;height:100%">
+    <iframe id="frameBrowsepage" src="" style="width:100%; height:100%;" scrolling="no"></iframe>
+</body> 
+</html>

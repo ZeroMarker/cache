@@ -1,0 +1,40 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))
+	
+	s rowid  	   = $Get(%request.Data("rowid",1))	
+	s year    	   = $Get(%request.Data("year",1))
+	s projname     = $Get(%request.Data("projname",1))
+	s IsCurStep    = $Get(%request.Data("IsCurStep",1))
+	s applyname    = $Get(%request.Data("applyname",1))
+	s applyno      = $Get(%request.Data("applyno",1))
+	s view         = $Get(%request.Data("view",1))
+	s ChkResult    = $Get(%request.Data("ChkResult",1))
+	s FundBillDR   = $Get(%request.Data("FundBillDR",1))
+	s userid       = $Get(%request.Data("userid",1))
+	s prjname      = $Get(%request.Data("prjname",1))
+	s budgdeptname = $Get(%request.Data("budgdeptname",1))
+	s chkstate     = $Get(%request.Data("chkstate",1))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjClaimApply).ListMain(hospid,year,prjname,budgdeptname,chkstate,userid,sortField, sortDir, start, limit)
+	
+	i action = "yearList" d
+	.w ##class(herp.budg.udata.uBudgProjClaimApply).yearList(start, limit, str)	
+	
+	i action = "projName" d
+	.w ##class(herp.budg.udata.uBudgProjClaimApply).projName(hospid,userid,start, limit, str)
+
+</script>

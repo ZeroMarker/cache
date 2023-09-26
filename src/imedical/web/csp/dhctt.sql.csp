@@ -1,0 +1,257 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<title>查询sql</title>
+	<DHCTT:HEAD/>
+    <script src="../scripts_lib/jQuery/jquery-1.8.0.min.js" type="text/javascript"></script>
+</head>
+<body>
+<style>
+#resultSetTable th{
+	align:left; 
+	padding-left:2px;
+	padding-right:8px;
+}
+#resultSetDiv{
+	height:400px;
+	width:900px;
+	overflow-x:scroll;
+	overflow-y:scroll;
+}
+#resultSetTable a{TEXT-DECORATION:none}
+#resultSetTable a:hover{TEXT-DECORATION:underline}
+#Query {
+	height:90px;
+	width:100%;
+	background-color: transparent;
+	border: none;
+	resize: none;
+	color: #333;
+	display: block;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+</style>
+<SCRIPT language="CACHE" RUNAT=SERVER>
+	s myTmpQuery = $g(%request.Data("Query",1),"")
+	s myQuery=""
+	f i=1:1:$l(myTmpQuery,$c(13)) d
+	.s tmp=$p(myTmpQuery,$c(13),i)
+	.;q:$e(tmp,0,2)="--"
+	.if tmp["--" d
+	..s tmp = $e(tmp,0,$find(tmp,"--")-3)
+	.s myQuery = myQuery_tmp
+	
+	s tableName = $p($p($p(myQuery,"from",2),"where"),"--",1)
+	s tableName = $zstrip($tr($c(13,10)_tableName_$c(13,10),$C(9,13,10),"   "),"<>W")
+	s tableName = $p(tableName," ")
+	s tableName = ##class(web.Util.DHCJFClassGlobal).GetTableInfo(tableName)
+	s pojoPackageName = $p(tableName,"!",2)
+	s pojoClassName = $p(tableName,"!",3)
+	s masterIndex = $p(tableName,"!",4)
+	s tableName = $p(tableName,"!",1)
+	s tableRowidName = ##class(web.Util.DHCJFClassGlobal).GetUserRowid(pojoPackageName,pojoClassName)
+	//转换大小写
+	s MaxRows = $g(%request.Data("MaxRows",1),100)
+	//s PackageNameInput = $g(%request.Data("PackageNameInput",1),"User")
+	s RuntimeMode = $g(%request.Data("RuntimeMode",1),"")
+	s REFField=","
+	Set tmprs = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectColumn")
+	Set tSC = tmprs.Execute($p(tableName,"."), $p(tableName,".",2),"")
+	if $$$ISERR(tSC) Quit
+	while(tmprs.Next()){
+		s Type = tmprs.Data("Type")
+		if (Type'=""){
+			s REFField(tmprs.Data("Column"))=Type
+		}
+	}
+	d tmprs.Close()
+	s tmprs=""
+	Set UpdMaxCnt = $G(^DHCTTTEMP("config","UpdMaxCnt"),100) //100
+	Set DelMaxCnt = $G(^DHCTTTEMP("config","DelMaxCnt"),20) //100
+</script>
+<font class='greentitle'>#($namespace)#下的表查询</font>
+<form action="dhctt.sql.csp" method="post">
+<div style="margin:2px 5px 0px 20px" >
+		<table class="AutoForm" style="width:98%;">
+			<tbody>
+				<tr><td class="AutoFormButton" style="text-align:left;"><nobr>
+						&nbsp;&nbsp;Display:&nbsp;
+						<select id="RuntimeMode" class="AutoForm" title="Display mode used for the results" name="RuntimeMode">
+						<option class="AutoForm" value="" #($s(RuntimeMode="":"selected",1:""))#>
+						</option><option class="AutoForm" value="0" #($s(RuntimeMode=0:"selected",1:""))#>Logical Mode
+						</option><option class="AutoForm" value="1" #($s(RuntimeMode=1:"selected",1:""))#>ODBC Mode
+						</option><option class="AutoForm" value="2" #($s(RuntimeMode=2:"selected",1:""))#>Display Mode
+						</option></select>
+						&nbsp;&nbsp;
+						Max Rows:&nbsp;
+						<input class="AutoForm" type="text" title="Maximum number of rows to display" name="MaxRows" size="8" value="#(MaxRows)#">						
+						<!--Class Package:<input class="AutoForm" type="text" title="联想表名时,去遍历的包" id="PackageNameInput" name="PackageNameInput" value="#(PackageNameInput)#">-->
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;							
+						<input class="AutoFormButton" type="submit" name="$AUTOFORM_EXECUTE" value="Execute Query">&nbsp;
+						<label>模式名,表名,字段名提示快捷键 Alt+/, 双击修改数据</label>
+						<label><a href="javascript:void(0);" onclick='window.open("dhctt.config.csp","a","width=260,height=280,top=20,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");return false;'>配置</a></label>
+				</nobr></td></tr>
+				<tr class="AutoForm" valign="middle">			
+					<td class="AutoFormControl" nowrap="">
+						<div name="Query-wrap" id="Query-wrap" class='divMouseOut'>
+							<textarea spellcheck="false"  name="Query" id="Query" autocapitalize="off">#(myTmpQuery)#</textarea>
+							<SCRIPT language=cache runat=server>
+								w ##class(web.Util.DHCPlatformSQLParser).GetSqlHtmlBySql(myQuery)								
+							</SCRIPT>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	
+</div>
+<!--
+<div class="console-x1" id="consoleDiv">
+	<table id="consoleTbl">		
+		<tr><td>信息</td><td></td><td><a title="展开" id="consoleBtn" href="#">+</a></td></tr>		
+	</table>
+</div>
+//-->
+<SCRIPT language="CACHE" RUNAT=SERVER>
+	s SchemaQuery = ""
+	Set SchemaQuery = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectSchema")
+	Set %sc = SchemaQuery.Prepare()
+	If (+%sc=0) {
+	Do ..ShowError(%sc)
+	Quit
+	}
+	Set %sc = SchemaQuery.Execute()
+	If (+%sc=0) {
+	Do ..ShowError(%sc)
+	Quit
+	}
+	s SCHEMAARR=""
+	while(SchemaQuery.%Next()){
+		if (""=SCHEMAARR) s SCHEMAARR=""""_SchemaQuery.Data("Schema")_""""
+		else  s SCHEMAARR = SCHEMAARR_","_""""_SchemaQuery.Data("Schema")_""""
+	}
+</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhctt/DHCTable.js"></script>
+	<script type="text/javascript" src="../scripts/dhctt/sqlparser.js"></script>
+	<script type="text/javascript">
+		var tableName = "#(tableName)#";
+		var pojoPackageName ="#(pojoPackageName)#";
+		var pojoClassName = "#(pojoClassName)#";
+		var masterIndex = '#(masterIndex)#';
+		var SCHEMAARR = [#(SCHEMAARR)#];				
+	</script>
+	<script type="text/javascript" src="../scripts/dhctt/dhcttsql.js"></script>
+
+<SCRIPT language="CACHE" RUNAT=SERVER>
+	Quit:myQuery=""
+	Set FirstToken=""
+	Set sqlStatement=$zstrip($tr($c(13,10)_myQuery_$c(13,10),$C(9,13,10),"   "),"<>W")
+	;w sqlStatement,"<br>"
+	w "<div  style='margin:2px 5px 0px 20px'>"
+	if $g(%request.Data("$AUTOFORM_UPDATE",1))="ExecuteUpdate"{
+		Set UPDATEStatement = $g(%request.Data("UPDATEStatement",1))
+		d ##class(web.DHCTTSqlLog).ExecuteSQL(UPDATEStatement,RuntimeMode)		
+	}
+	if $g(%request.Data("$AUTOFORM_EXECUTE",1))="Execute Query"{
+		Set updateSqlObj = ##class(web.Util.DHCPlatformSQLParser).%New(sqlStatement)
+		Set FirstToken = updateSqlObj.FirstToken
+		;Set StatementTables = updateSqlObj.StatementTables	
+		If FirstToken'="SELECT" {
+			try {
+				if FirstToken="UPDATE"{
+					Set updateCount = updateSqlObj.GetCount()
+					Set updateSqlStatement = updateSqlObj.SQLStatement				
+					If ( $find($zcvt(updateSqlObj.SQLStatement,"U")," WHERE ")=0){
+						Write "警告: <font color='red'>"_FirstToken_"语句没有Where条件</font><br>"
+					}
+					Write "本句 ", FirstToken," 将修改 <span class=sqltable></span> 表中 " ,updateCount," 条记录.<br>"
+					if updateCount=0{
+						Write "无需运行!","<br>"
+					}elseif (updateCount<=UpdMaxCnt){
+						Write "<textarea name='UPDATEStatement' style='display:none'>"_updateSqlStatement_"</textarea>"
+						Write "<input type='submit' name='$AUTOFORM_UPDATE' value='ExecuteUpdate'>",updateSqlObj.GetSqlHtml(),"<br>"
+					}elseif updateCount>UpdMaxCnt{
+						Write "语句影响记录数超过",UpdMaxCnt,"条,请增加查询条件缩小影响范围!"
+					}
+				}
+				if FirstToken="DELETE"{
+					//Write "不允许使用Delete语句!"
+					Set updateCount = updateSqlObj.GetCount()
+					Set updateSqlStatement = updateSqlObj.SQLStatement				
+					If ( $find($zcvt(updateSqlObj.SQLStatement,"U")," WHERE ")=0){
+						Write "警告: <font color='red'>"_FirstToken_"语句没有Where条件</font><br>"
+					}
+					Write "本句 ", FirstToken," 将删除<span class=sqltable></span> 表中 " ,updateCount," 条记录.<br>"
+					if updateCount=0{
+						Write "无需运行!","<br>"
+					}elseif (updateCount<=DelMaxCnt){
+						Write "<textarea name='UPDATEStatement' style='display:none'>"_updateSqlStatement_"</textarea>"
+						Write "<input type='submit' name='$AUTOFORM_UPDATE' value='ExecuteUpdate'>",updateSqlObj.GetSqlHtml(),"<br>"
+					}elseif updateCount>DelMaxCnt{
+						Write "语句影响记录数超过",DelMaxCnt,"条,请增加查询条件缩小影响范围!"
+					}
+				}
+				if FirstToken = "INSERT"{
+					d ##class(web.DHCTTSqlLog).ExecuteSQL(sqlStatement,RuntimeMode)
+				}
+				;write !,$translate($justify("-",75)," ","-"),!
+			}catch tException {
+				do $system.Status.DisplayError(tException.AsStatus())
+			}
+			;Do ..ShowError($$$ERROR($$$CSPSQLOnlySelect,"28"))
+			;Quit
+		}
+		Set updateSqlObj=""
+	}
+	w "</div>"
+</SCRIPT>
+</form>
+<SCRIPT language="CACHE" RUNAT=SERVER>
+	if FirstToken'="SELECT" quit
+	if $g(%request.Data("$AUTOFORM_EXECUTE",1))="Execute Query"{
+		set query = ""
+		Set query = ##class(%ResultSet).%New()
+		Set query.RuntimeMode=RuntimeMode
+		Set %sc = query.Prepare(sqlStatement,0,"RUNTIME")
+		If (+%sc=0) {Do ..ShowError(%sc) Quit}
+		Set %sc = query.Execute()
+		If (+%sc=0) {Do ..ShowError(%sc) Quit}
+	}
+</Script>
+<table><tr><td><div id="selectedTables" style="margin:0px 0px 0px 20px;">
+<b>表名:</b><div id="tn" style="display:inline;">#(tableName)#</div>,<b>实体类名:</b>#(pojoPackageName_"."_pojoClassName)#,<b>主索引:</b>#(masterIndex)#,
+<b>RowId:</b><div id="in" style="display:inline;">#(tableRowidName)#</div><a href="dhctt.findtablestructure.csp?packageName=#(pojoPackageName)#&tableName=#(pojoClassName)#" target='_blank'>表结构详情</a>
+</div></td></tr></table>
+<div id="resultSetDiv">
+<table id="resultSetTable" border=1 bgcolor="" style="margin:0px 0px 0px 20px; padding=1px 1px 1px 1px;"  cellpadding="0" cellspacing="0"  >
+	<SCRIPT language="CACHE" RUNAT=SERVER>
+		s tmpcolcount = query.GetColumnCount(),RowIdColNo="",REFFieldNo = ","
+		w "<tr><th>#</th>"
+		f j=1:1:tmpcolcount d
+		.s:tableRowidName=query.GetColumnHeader(j) RowIdColNo = j
+		.i $d(REFField(query.GetColumnHeader(j))) s REFFieldNo=REFFieldNo_j_"," w "<th><U><a href=""#"" data-cn="""_query.GetColumnHeader(j)_""" onclick=""propertyClickHandler(this);"">"_(query.GetColumnHeader(j))_"</a></U><input id='colz"_j_"' type=hidden value='"_REFField(query.GetColumnHeader(j))_"'></th>"
+		.e  w "<th><a href=""#"" data-cn="""_query.GetColumnHeader(j)_""" onclick=""propertyClickHandler(this);"">"_(query.GetColumnHeader(j))_"</a></th>"
+		w "<tr>"
+		
+		s queryRow=0
+		while ((query.Next())&&(queryRow<MaxRows)){
+			s queryRow=queryRow+1
+			w "<tr><td data-id='"
+			w:RowIdColNo>0 query.GetData(RowIdColNo)
+			w "'><b>"_queryRow_"</b></td>"			
+			f j=1:1:tmpcolcount d
+			.i RowIdColNo=j w "<td class='rowidcol'><a href=""#"">"_query.GetData(j)_"</a></td>"
+			.else  if REFFieldNo[(","_j_",") w "<td><div><a class='tipitem' href=""#"" col="_j_">"_query.GetData(j)_"</a></div></td>"
+			.e  w "<td>"_query.GetData(j)_"</td>"			
+			w "<tr>"
+		}
+	</SCRIPT>	
+</table>
+</div>
+</body>
+</html>

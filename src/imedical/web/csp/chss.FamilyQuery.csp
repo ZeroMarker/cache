@@ -1,0 +1,111 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	s Username=$Get(%request.Data("user",1))
+	s UserId=$Get(%request.Data("UserId",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s RowId=$Get(%request.Data("RowId",1))
+	s FamilyRowId=$Get(%request.Data("FamilyRowId",1))
+	s FamilyCode=$Get(%request.Data("FamilyCode",1))
+	s DateOfRegister=$Get(%request.Data("DateOfRegister",1))
+	s DateOfInput=$Get(%request.Data("DateOfInput",1))
+	s Doctor=$Get(%request.Data("Doctor",1))
+	s Nurse=$Get(%request.Data("Nurse",1))
+	s Operator=$Get(%request.Data("Operator",1))
+	s HouseHoldName=$Get(%request.Data("HouseHoldName",1))
+	s FamilyPeopleNum=$Get(%request.Data("FamilyPeopleNum",1))
+	s CurrentNum=$Get(%request.Data("CurrentNum",1))
+	s AverageEarnings=$Get(%request.Data("AverageEarnings",1))
+	s HouseType=$Get(%request.Data("HouseType",1))
+	s HouseArea=$Get(%request.Data("HouseArea",1))
+	s FuelType=$Get(%request.Data("FuelType",1))
+	s ToiletType=$Get(%request.Data("ToiletType",1))
+	s FamilyAddress=$Get(%request.Data("FamilyAddress",1))
+	s FamilyPhone=$Get(%request.Data("FamilyPhone",1))
+	s CellPhone=$Get(%request.Data("CellPhone",1))
+	s EMail=$Get(%request.Data("EMail",1))
+	s Post=$Get(%request.Data("Post",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	s Remark=$Get(%request.Data("Remark",1))
+	s FamilyStatus=$Get(%request.Data("FamilyStatus",1))
+	s ProvinceDR=$Get(%request.Data("ProvinceDR",1))
+	s CityDR=$Get(%request.Data("CityDR",1))
+	s SectionDR=$Get(%request.Data("SectionDR",1))
+	s StreetDR=$Get(%request.Data("StreetDR",1))
+	s VillageDR=$Get(%request.Data("VillageDR",1))
+	
+	s DoorPlate=$Get(%request.Data("DoorPlate",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s PersonRowId = $Get(%request.Data("PersonRowId",1))
+	
+	s FamilyCode = $Get(%request.Data("FamilyCode",1))
+	s HouseHoldName = $Get(%request.Data("HouseHoldName",1))
+	s DoorPlate = $Get(%request.Data("DoorPlate",1))
+	s VillageName=$Get(%request.Data("VillageName",1))
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	s bEarthquakeFamily = $Get(%request.Data("bEarthquakeFamily",1))
+	s WaterSource = $Get(%request.Data("WaterSource",1))
+	s FamilyAddSearch = $Get(%request.Data("FamilyAddSearch",1))
+	
+	i FamilyCode '= "" d
+	.s SqlStr = " and FamilyCode like '%"_FamilyCode_"%'"
+
+	i HouseHoldName '= "" d
+	.s SqlStr = SqlStr_" and HouseHoldName like '%"_HouseHoldName_"%'"
+
+	i DoorPlate '= "" d
+	.s SqlStr = SqlStr_" and DoorPlate like '%"_DoorPlate_"%'"
+	i FamilyPhone '= "" d
+	.s SqlStr = SqlStr_" and FamilyPhone like '%"_FamilyPhone_"%'"
+	i FamilyAddSearch '= "" d
+	.s SqlStr = SqlStr_" and VillageName like '%"_FamilyAddSearch_"%'"
+	i Doctor '= "" d
+	.s SqlStr = SqlStr_" and Doctor = '"_Doctor_"'"
+
+	
+	i Action = "list" d
+	.i searchValue = "" d
+	..s Action = "list"
+	.i searchValue '= "" d
+	..s Action = "Search"
+	.i SqlStr '= "" d
+	..s Action = "SearchSql"
+	
+	//i UserId '= "" d
+	//.s CommunityCode = ##class(CHSSWeb.CommunityService).GetCommunityCode(UserId)
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.FamilyService).FamilyList(CommunityCode,Start,Limit,Sort)
+	i Action = "familyinfo" d
+	.w ##class(CHSSWeb.FamilyService).GetFamilyInfoWithFamilyRowId(FamilyRowId)
+	i Action = "Search" d
+	.w ##class(CHSSWeb.FamilySearchService).FamilySearch(CommunityCode,Start,Limit,Sort,searchField,searchValue)
+	i Action = "SearchSql" d
+	.w ##class(CHSSWeb.FamilySearchService).FamilySearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.FamilyService).Insert(FamilyCode,DateOfRegister,DateOfInput,Doctor,Nurse,Operator,HouseHoldName,FamilyPeopleNum,CurrentNum,AverageEarnings,HouseType,HouseArea,FuelType,ToiletType,FamilyAddress,FamilyPhone,CellPhone,EMail,Post,CommunityCode,Remark,FamilyStatus,ProvinceDR,CityDR,SectionDR,StreetDR,VillageDR,DoorPlate,VillageName,bEarthquakeFamily,WaterSource)
+	.w result
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.FamilyService).Update(RowId, FamilyCode,DateOfRegister,DateOfInput,Doctor,Nurse,Operator,HouseHoldName,FamilyPeopleNum,CurrentNum,AverageEarnings,HouseType,HouseArea,FuelType,ToiletType,FamilyAddress,FamilyPhone,CellPhone,EMail,Post,CommunityCode,Remark,FamilyStatus,ProvinceDR,CityDR,SectionDR,StreetDR,VillageDR,DoorPlate,VillageName,bEarthquakeFamily,WaterSource)
+	.w result
+	i Action = "systemid" d
+	.s result = ##class(CHSSWeb.SystemIdService).GetSystemId(CommunityCode,"FAMILYHEALTHRECORD")
+	.w result
+	i Action = "showfamily" d
+	.w ##class(CHSSWeb.FamilySearchService).GetFamilyInfoWithPersonRowId(PersonRowId)
+	i Action = "getfamilyinfo" d
+	.w ##class(CHSSWeb.FamilySearchService).GetFamilyInfoWithFamilyRowId(FamilyRowId)
+	i Action = "deletefamily" d
+	.w ##class(CHSSWeb.FamilyService).deleteFamily(FamilyRowId)
+</script>
+

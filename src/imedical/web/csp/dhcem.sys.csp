@@ -1,0 +1,249 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;" >
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/sysconfig.js"></script>
+<script Language="Javascript">
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+</script>
+</head>
+
+<body class="hisui-layout" style="margin-left:4px;margin-right:4px;margin-top:4px;">
+ <!--  <div data-options="region:'north',title:'功能配置',split:true" style="height:10px;">  
+   </div> <!--north end-->
+   <div data-options="region:'south',title:'产品功能授权表',split:true,headerCls:'panel-header-gray'" style="height:300px;padding-bottom:1px">
+    <!-- toolbar -->
+		<div id="toolbar2" class="toolbar">	
+			<div style="height:4px"></div>
+			<span style='margin-right:10px;margin-left:5px'>医院</span><input id="SAHospDrID" name="SAHospDrID" class="hisui-combobox"></input>	<!--hxy 2019-07-18-->
+			<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+			<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			<table cellspacing="0" cellpadding="0">
+				<tr>
+				  <!--add liyarong -->
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSysItmAut(0)" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSysItmAut()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelSysItmAut()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid2" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar2',
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListSysItmAutNull',
+		    rownumbers:true,
+		    method:'get',
+		    border:false,
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowAut
+			">
+			<!-- url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListSysItmAut&SAItmId=0' -->
+			<thead>
+				<tr>
+				    <th data-options="field:'SAParRefDr',hidden:true">SAParRefDr</th>				
+				    <th data-options="field:'SAPointer',hidden:true">SAPointer</th>			
+					<th data-options="field:'SAType',width:150,
+					formatter:function(value,row,index){
+												if (value=='G'){return '安全组';} 
+												else if(value=='L'){return '科室';}
+												else if(value=='U'){return '人员';}
+												else if(value=='D'){return '全院';}
+												
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													id:'comboboxid',
+													valueField:'value',
+													mode:'remote',
+													textField:'text',	//url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListIsWhich',
+													required:true,
+													editable:false,
+													onSelect: function () {
+                    									//获取选中的值
+                    									var varSelect = $(this).combobox('getValue');								
+                    									SAtypeID=varSelect;
+                   							   			//获取第二个combobox所在的datagrid Editor
+                    									var rowIndex=$('#datagrid2').datagrid('getRowIndex',$('#datagrid2').datagrid('getSelected'))
+                    									rowIndex=rowIndex==-1?0:rowIndex
+                   							 			var varEditor = $('#datagrid2').datagrid('getEditor', { index: rowIndex, field: 'PointerDesc' });
+                   										$(varEditor.target).combogrid('clear');//清空类型值
+                    									$(varEditor.target).combogrid( { 
+															url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListGroup&type='+SAtypeID+'&HospDr='+HospDr
+                    									})
+
+                    									
+                    								}
+                    
+												}
+											
+					                        }">类型</th>
+					<th id="SAPointer" data-options="field:'PointerDesc',width:153,editor:{
+							type:'combogrid',
+							options:{
+								required : true,
+							    id:'id',
+							    fitColumns:true,
+							    fit: true,//自动大小  
+								pagination : true,
+								panelWidth:300,
+								textField:'text',
+								mode:'remote',
+								url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListGroup&type='+'&HospDr='+HospDr,   //add  liyarong
+								columns:[[
+									
+									{field:'id',hidden:true},
+									{field:'text',title:'',width:60}
+								
+								]],
+								onSelect:function(rowIndex, rowData) {
+                   					fillValue(rowIndex, rowData);
+                				},
+                				onShowPanel: function () {
+									reloadTypeList();
+
+								}		
+							}
+									}">类型值</th>
+					<th data-options="field:'SAValue',width:250,editor:'password',formatter:function(value,row,index){ if(row.isPass==1){return '***';}else{return value;}}">参数值</th>
+					<th id="Hosp1" data-options="field:'SAHospDr',width:160,align:'center',
+					                      
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false,
+													disabled:false
+												}
+											}">医院</th>
+					<th data-options="field:'SAHospDrID',hidden:true">SAHospDrID</th>
+					<th data-options="field:'ID',hidden:true">id</th>				
+				</tr>
+			</thead>
+		</table>
+   </div>    <!--south end-->     
+   <div data-options="region:'west',title:'产品表',split:true,headerCls:'panel-header-gray'" style="width:480px;">
+   <div id="toolbar" class="toolbar" >
+   <form id="queryForm" action="javascript:void(0);" style="margin-top:5px;margin-bottom:5px">
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+				<td class="textLabel" style="padding-left:10px;">标识<input style="margin-left:10px" type="text" id="SYGroupName" name="SYGroupName" class="textbox"></input> </td>	
+				<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
+				<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:Reload()">重置</a> </td>
+				</tr>
+			</table>
+			</form>
+
+			<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSys()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSys()">保存</a> </td>
+			      <td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelSys()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+     <table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    border:false,
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowSys, 
+		    onClickRow:ClickRowSys,
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMSys&MethodName=ListSys'">
+			<thead>
+				<tr>
+					<th data-options="field:'SYCode',width:100,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'SYDesc',width:100,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'SYGroupName',width:100,editor:{type:'validatebox',options:{required:true}}">标识</th>
+					<th data-options="field:'SYActiveFlag',align:'center',width:80,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMSys&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th id="Hosp" data-options="field:'SYHospDr',width:160,align:'center',hidden:true,
+					                      
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:false,
+													editable:false
+												}
+											}">医院</th>
+					<th data-options="field:'SYHospDrID',hidden:true">SYHospDrID</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+</div>
+   </div>   <!--west end--> 
+   <div data-options="region:'center',title:'产品功能表',headerCls:'panel-header-gray'" style="background:#eee;">
+   <!-- toolbar -->
+		<div id="toolbar1" class="toolbar">	
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSysItm()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSysItm()">保存</a> </td>
+			      <td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelSysItm()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid1" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar1',
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItm&MethodName=ListSysItm&SAId=',
+		    rownumbers:true,
+		    method:'get',
+		    border:false,
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowSysItm, 
+		    onClickRow:ClickRowSysItm
+			">
+			<!--url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItm&MethodName=ListSysItm&SAId=0'-->
+			<thead>
+				<tr>
+				    <th data-options="field:'SYParRefDr',hidden:true">SYParRefDr</th>
+					<th data-options="field:'SYCode',width:70,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'SYDesc',width:70,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'SYRemark',width:250,editor:{type:'validatebox',options:{required:false}}">备注</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+   </div>  <!--center end--> 
+    <!-- add liyarong-->   
+    <div id="sysWin"></div>   
+   <!--授权类型窗口-->
+
+</body>  
+</html>

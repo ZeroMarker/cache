@@ -1,0 +1,40 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</head>
+
+<body>
+<SERVER>
+
+	s parref=%request.Get("PARREF")
+	i parref'="" s %request.Data("PARREF",1)=parref
+
+	n msgcode,intcode,intid,intdesc,j
+	s msgcode=""
+
+	w !,"<script language='javascript'>"
+	w !,"var aryPossibilities=new Array();"
+
+	s j=0
+	f  s msgcode=$o(^SSHL7i("MSG-TYPE",msgcode)) q:msgcode=""  d
+	. s intcode=""
+	. f  s intcode=$o(^SSHL7i("MSG-TYPE",msgcode,"LINK",intcode)) q:intcode=""  d
+	. . s intid=##Class(web.SSInterface).GetIdFromCodeOrDescription(intcode)
+	. . i intid'="" d
+	. . . s intdesc=$p(^SST("INT",intid),"^",2)
+	. . . w !,"aryPossibilities["_j_"]='"_$ZCVT(msgcode,"O","JS")_"^"_$ZCVT(intid,"O","JS")_"^"_$ZCVT(intcode,"O","JS")_"^"_$ZCVT(intdesc,"O","JS")_"';"
+	. . . s j=j+1
+	w !,"</script>"
+
+</SERVER>
+<TRAK:COMPONENT id="SSHL7MessageForwarding.Edit"></TRAK:COMPONENT>
+</body>
+</html>

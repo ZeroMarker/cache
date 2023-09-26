@@ -1,0 +1,80 @@
+﻿﻿<html>
+	<head>
+	<title> 门诊病历颜色选择页面 </title>
+		<script type="text/JavaScript">
+		var colorPicker = function(idStr){
+			this.colorPool = [
+			/*"#000000","#993300","#333300","#003300","#003366","#000080","#333399","#333333",
+			"#800000","#FF6600","#808000","#008000","#008080","#0000FF","#666699","#808080",
+			"#FF0000","#FF9900","#99CC00","#339966","#33CCCC","#3366FF","#800080","#969696",
+			"#FF00FF","#FFCC00","#FFFF00","#00FF00","#00FFFF","#00CCFF","#993366","#CCCCCC",
+			"#FF99CC","#FFCC99","#FFFF99","#CCFFCC","#CCFFFF","#99CCFF","#CC99FF","#FFFFFF"*/
+			"#000000","#800000","#FF0000","#FF00FF","#FF99CC",
+			"#993300","#FF6600","#FF9900","#FFCC00","#FFCC99",
+			"#333300","#808000","#99CC00","#FFFF00","#FFFF99",
+			"#003300","#008000","#339966","#00FF00","#CCFFCC",
+			"#003366","#008080","#33CCCC","#00FFFF","#CCFFFF",
+			"#000080","#0000FF","#3366FF","#00CCFF","#99CCFF",
+			"#333399","#666699","#800080","#993366","#CC99FF",
+			"#333333","#808080","#969696","#CCCCCC","#FFFFFF"
+			];
+			this.initialize(idStr);
+		}
+		colorPicker.prototype = {
+			initialize: function(idStr){
+				var count=0;
+				var html = '';
+				var self = this;
+				html+= '<table cellspacing="10" cellpadding="0" style="cursor:pointer;background:#F7F7F7" mce_style="cursor:pointer;background:#F7F7F7" >';
+				var sum = this.colorPool.length
+				for(j=0;j<sum;j++)
+				{
+					html+= '<td align="center" width="20" height="20" style="background:'+ this.colorPool[count]+'" mce_style="background:'+ this.colorPool[count]+'" unselectable="on"> </td>';
+					count++;
+				}
+				html+= '</table>';
+				this.trigger = document.getElementById(idStr);
+				this.div = document.createElement('div');
+				this.div.innerHTML = html;
+				var tds = this.div.getElementsByTagName('td');
+				for(var i=0,l=tds.length;i<l;i++){
+					tds[i].onclick = function(){
+						self.setColor(this.style.backgroundColor);
+					}
+				}
+				this.div.id = 'myColorPicker';
+				this.trigger.parentNode.appendChild(this.div);
+				this.div.style.position = 'absolute';
+				this.div.style.left = '-5px'
+				this.div.style.top = '0px';
+			},
+			setColor : function(c){
+				var color = this.colorRGBtoHex(c);
+				///编辑器
+				parent.iEmrPlugin.FONT_COLOR({
+					args:color
+				});
+			},
+			///RGB转16进制
+			colorRGBtoHex:function(color) {
+				var rgb = color.split(',');
+				var r = parseInt(rgb[0].split('(')[1]);
+				var g = parseInt(rgb[1]);
+				var b = parseInt(rgb[2].split(')')[0]);
+				var hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+				return hex;
+			}
+		}
+		function initColorPicker(){
+			picker = new colorPicker('demo');
+		}
+		</script>
+	</head>
+	<body>
+		<a href="#" mce_href="#" id="demo" style="position:absolute;display:none;">颜色选择</a>					
+	</body>
+
+	<script language="javascript">	
+		initColorPicker();
+	</script>
+</html>

@@ -1,0 +1,55 @@
+<HTML>
+<HEAD>
+	<TITLE>申请权限页面</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s userID = %session.Get("LOGON.USERID")
+		s currAuthor=""
+		if (userID'="")
+		{
+			s currAuthor = ##class(EPRmeta.Privilege.PowerUser).GetUserName(userID)
+		}
+		s userLoc = %session.Get("LOGON.CTLOCID")
+		s userLocDes = %session.Get("LOGON.CTLOCDESC")
+		s RequestReasonRequiredStr = ##Class(EPRservice.BOSysOption).GetValueByName("RequestReasonRequiredStr")
+		s RequestReasonRequiredStr = $zcvt(RequestReasonRequiredStr,"U")
+	</script>
+	<script type="text/javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var userID = '#(userID)#';
+		var currAuthor = '#(currAuthor)#';
+		var userLoc = '#(userLoc)#';
+		var userLocDes = '#(userLocDes)#';
+		
+		var reqReasonFL = '申请的原因';
+		var befReqConFL = '修改前内容';
+		var aftReqConFL = '修改后内容';
+		var RequestReasonRequiredStr = '#(RequestReasonRequiredStr)#';
+		var EditMust = RequestReasonRequiredStr.split("^");
+		if (EditMust[0] == "Y")
+		{
+			reqReasonFL = '申请的原因<font color="FF0000">(必填)</font>';
+		}
+		if (EditMust[1] == "Y")
+		{
+			befReqConFL = '修改前内容<font color="FF0000">(必填)</font>';
+		}
+		if (EditMust[2] == "Y")
+		{
+			aftReqConFL = '修改后内容<font color="FF0000">(必填)</font>';
+		}
+
+	</script>
+</HEAD>
+
+<BODY>
+	<script type="text/javascript" src="../scripts/epr/js/ActionRequest.js"></script>
+</BODY>
+</HTML>

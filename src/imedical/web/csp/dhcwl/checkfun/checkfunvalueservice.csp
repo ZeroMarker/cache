@@ -1,0 +1,409 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;dhccpm.rqreport.csp
+ //d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("DHCWL_CodeCfg.DHCWLCodeCfgType")  //调用数据平台接口
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	set action=$g(%request.Data("action",1))
+	set isArrayType=$g(%request.Data("isArrayType",1))
+	set className=$g(%request.Data("className",1))
+	set condSql=""
+	//s setId=$Get(%request.Data("setId",1))  
+	;s start=1,pageSize=9999999
+	s:start>1 start=start+1
+	s end=start+pageSize
+	s deli="&"
+	i action="mulSerchEValue" {
+		;set start = $g(%request.Data("start",1))
+	    ;set pageSize = $g(%request.Data("limit",1))
+	    ;s:start>1 start=start+1
+	    ;s end=start+pageSize
+		s date=+$h
+		s mDate=$zd(date,3)
+		s setId=$g(%request.Data("setId",1))    
+		s kpiId=$g(%request.Data("kpiId",1))
+		s nValue=$g(%request.Data("nValue",1))
+		s eDate=$g(%request.Data("eDate",1))
+		if condSql="" s condSql=condSql_" where"
+		e  s condSql=condSql_" and "
+		s condSql=condSql_" StandardValSet_Set_Dr ='"_setId_"'"
+		i eDate'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" StandardValSet_Date ='"_eDate_"'"
+		i nValue'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" StandardValSet_Value ='"_nValue_"'"
+		i kpiId'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" StandardValSet_KPI_Dr ='"_kpiId_"'"
+		s jsonPros="ID,StandardValSetKPIDr,StandardValSetValue,StandardValSetDate,StandardValSetUpdateDate,StandardValSetUpdateUser"
+		s sqlFields=##class(DHCWL.util.GetSetService).MapFildFromClassProByStr("DHCWL.CheckFun.StandardValSet",jsonPros)
+		s tableName=##class(DHCWL.util.GetSetService).GetTableName("DHCWL.CheckFun.StandardValSet")
+		s sql="select "_sqlFields_" from "_tableName_condSql_" order by ID"
+		s rs=##class(%Library.ResultSet).%New()
+	    d rs.Prepare(sql)
+	    d rs.Execute()
+	    s result=##class(DHCWL.CheckFunData.SaveData).GetValueBySetDate(mDate,setId)
+	    s json=##class(DHCWL.util.Json).Json("ID"_deli_"setkpiId"_deli_"setkpiDesc"_deli_"nValue"_deli_"eDate"_deli_"uDate"_deli_"uUser","result","root",deli)
+	    s num=0
+		While(rs.Next()){
+			i (num<start) continue
+			i (num>end) continue
+			s mid=rs.Data("ID")
+			s num=num+1
+ 			s kpiDr=rs.Data("StandardValSet_KPI_Dr")
+			s setUpdateDate=rs.Data("StandardValSet_UpdateDate")
+		    s kpiDesc=$list(^DHCWL.CheckFun.CheckKPID(kpiDr),3)
+		    //i setUpdateDate'="" s setUpdateDate=$zd(setUpdateDate,3)
+		    i setUpdateDate'="" s setUpdateDate=##class(websys.Conversions).DateLogicalToHtml(setUpdateDate)
+			d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("StandardValSet_KPI_Dr")_"'"_deli_"'"_kpiDesc_"'"_deli_"'"_rs.Data("StandardValSet_Value")_"'"_deli_"'"_rs.Data("StandardValSet_Date")_"'"_deli_"'"_setUpdateDate_"'"_deli_"'"_rs.Data("StandardValSet_UpdateUser")_"'")	
+		}
+		d rs.Close()	
+		d json.SetTotalNum(num)
+		i (+isArrayType=1) {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+	
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	    
+	}elseif action="getKpiDescCombo"{
+		
+		s sql="select ID,CheckKPI_Desc from DHCWL_CheckFun.DHCWLCheckKPI"   //Type_Code
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=",",str="['',''],"
+		While(rs.Next()){
+			//s ^TEMPDHCWLDJJ($J,"CheckKPI_Desc")=rs.Data("CheckKPI_Desc")
+			s str=str_"['"_rs.Data("ID")_"'"_deli_"'"_rs.Data("CheckKPI_Desc")_"'],"
+		}
+		d rs.Close()
+		w "["_$e(str,1,$l(str)-1)_"]"
+	}elseif action="addStandardValue"{
+		s dim("setId")=$g(%request.Data("setId",1))
+		s dim("kpiId")=$g(%request.Data("kpiId",1))
+		s dim("nvalue")=$g(%request.Data("nvalue",1))
+		s dim("medate")=$g(%request.Data("edate",1))
+		s dim("SetUpdateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s return=##class(DHCWL.CheckFunData.SaveData).AddStandardValue(.dim)
+		s tip=$p(return,"^",1)
+		s id=$p(return,"^",2)
+		s count=$p(return,"^",3)
+		w "{success:true,tip:'"_tip_"',id:'"_id_"',count:"_count_"}"
+	}elseif action="updateStandardValue"{
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("setId")=$g(%request.Data("setId",1))
+		s dim("kpiId")=$g(%request.Data("kpiId",1))
+		s dim("nvalue")=$g(%request.Data("nvalue",1))
+		s dim("edate")=$g(%request.Data("edate",1))
+		s dim("SetUpdateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s tip=##class(DHCWL.CheckFunData.SaveData).UpdateStandardValue(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="deleteStandardValue"{
+		s dim("ID")=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CheckFunData.SaveData).DeleteStandardValue(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="mulSerchHValue"{
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("setId")=$g(%request.Data("setId",1))
+		s dim("kpiId")=$g(%request.Data("historyId",1))
+		s start=$g(%request.Data("start",1))
+		s pageSize=$g(%request.Data("limit",1))
+		s:start>1 start=start+1
+	    s end=start+pageSize
+	    s dim("start")=start
+		s dim("end")=end
+		i $g(%request.Data("ID",1))'="" 
+		{
+	    	s ^TEMPDHCWLDJJ("KPI")=$g(%request.Data("ID",1))_"^"_$g(%request.Data("setId",1))_"^"_$g(%request.Data("historyId",1))
+		}
+	    i (dim("ID")="") 
+	    {	
+	    	s dim("ID")=$p($g(^TEMPDHCWLDJJ("KPI")),"^",1)
+			s dim("setId")=$p($g(^TEMPDHCWLDJJ("KPI")),"^",2)
+			s dim("kpiId")=$p($g(^TEMPDHCWLDJJ("KPI")),"^",3)
+		    } 
+		s ^TEMPDHCWLDJJ("startends")=dim("start")_"^"_dim("end")_"^"_dim("ID")_"^"_dim("setId")_"^"_dim("kpiId")
+		i dim("ID")=""{
+			s ^TEMPDHCWLDJJ("ttt")="333"
+			w "{success:false,info:'请选择一条当前值记录'}"
+			q
+		} 
+		s hValuePara=##class(DHCWL.CheckFunData.FunctionModule).GetHistoryValueBySetKpiId(.dim)
+		s count=$p(hValuePara,"^",2)
+		s hValueList=$p(hValuePara,"^",1)
+		s hValueList=$e(hValueList,1,$l(hValueList)-1)
+		w "{totalNums:"_count_",root:["_hValueList_"]}"
+		
+	}elseif action="mulSerchExValue"{
+		s dim("ID")=$g(%request.Data("extraId",1))
+		s dim("setId")=$g(%request.Data("setId",1))
+		s dim("objId")=$g(%request.Data("objId",1))
+		s dim("value")=$g(%request.Data("value",1))
+		//s dim("kpiId")=$g(%request.Data("historyId",1))
+		i dim("ID")=""{
+			w "{success:false,info:'请选择一条标准值记录'}"
+			q
+		}
+		s hValuePara=##class(DHCWL.CheckFunData.FunctionModule).GetExctraValueById(.dim)
+		s count=$p(hValuePara,"^",2)
+		s hValueList=$p(hValuePara,"^",1)
+		s hValueList=$e(hValueList,1,$l(hValueList)-1)
+		w "{totalNumss:"_count_",root:["_hValueList_"]}"
+	}elseif action="getObjDescCombo"{
+		s setId=$g(%request.Data("setId",1))
+		i setId="" {
+			w "{success:false,info:'考核方案未确定?'}"
+			q
+		}
+		s deli=",",str="['',''],"
+		s rs=##class(%ResultSet).%New("DHCWL.CheckFunData.CodeTypeItemQuery:CodeTypeItemQuery")
+		s sc=rs.Execute(setId,"","")
+		while rs.Next(.sc){
+			s str=str_"['"_rs.Data("ID")_"'"_deli_"'"_rs.Data("desc")_"'],"
+			//s ^TEMPDHCWLDJJ($J,"desc")=rs.Data("desc")
+			}
+
+		w "["_$e(str,1,$l(str)-1)_"]"
+
+		
+	}elseif action="addexceptValue"{
+		s dim("extraId")=$g(%request.Data("extraId",1))
+		s dim("value")=$g(%request.Data("value",1))
+		s dim("objId")=$g(%request.Data("objId",1))
+		s dim("extradateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s tip=##class(DHCWL.CheckFunData.SaveData).AddexceptValue(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="updateexceptValue"{
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("extraId")=$g(%request.Data("extraId",1))
+		s dim("value")=$g(%request.Data("value",1))
+		s dim("objId")=$g(%request.Data("objId",1))
+		s dim("extradateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s tip=##class(DHCWL.CheckFunData.SaveData).UpdateExceptValue(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="deleteexceptValue"{
+		s dim("ID")=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CheckFunData.SaveData).DeleteExceptValue(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="deleteHStandardValue"{
+		s dim("ID")=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CheckFunData.SaveData).DeleteHStandardValue(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="list-hisValue" {
+		s mid=$Get(%request.Data("id",1))    
+		s setId=$g(%request.Data("setId",1))
+		s kpiId=$g(%request.Data("kpiId",1))
+		i setId'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" StandardValSet_Set_Dr= '"_setId_"'"
+		i kpiId'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" StandardValSet_KPI_Dr= '"_kpiId_"'"
+		s jsonPros="ID,StandardValSetValue,StandardValSetDate,StandardValSetUpdateDate,StandardValSetUpdateUser"
+		s sqlFields=##class(DHCWL.util.GetSetService).MapFildFromClassProByStr("DHCWL.CheckFun.StandardValSet",jsonPros)
+		s tableName=##class(DHCWL.util.GetSetService).GetTableName("DHCWL.CheckFun.StandardValSet")
+		s sql="select "_sqlFields_" from "_tableName_condSql_" order by ID"
+		s rs=##class(%Library.ResultSet).%New()
+	    d rs.Prepare(sql)
+	    d rs.Execute()
+	    s json=##class(DHCWL.util.Json).Json("ID"_deli_"hValue"_deli_"eDate"_deli_"uDate"_deli_"uUser","result","root",deli)
+	    s num=0
+		While(rs.Next()){
+			s id=rs.Data("ID")
+			s uDate=rs.Data("StandardValSet_UpdateDate")
+		    i uDate'="" s uDate=##class(websys.Conversions).DateLogicalToHtml(uDate)
+		    
+		    i id'=mid d
+		    .s num=num+1
+			.d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("StandardValSet_Value")_"'"_deli_"'"_rs.Data("StandardValSet_Date")_"'"_deli_"'"_uDate_"'"_deli_"'"_rs.Data("StandardValSet_UpdateUser")_"'")
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		i (+isArrayType=1) {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+	
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	    
+	}elseif action="insertExcValue"{
+		//s dim("ID")=$g(%request.Data("ID",1))
+		//s dim("id")=$g(%request.Data("id",1))
+		s ID=$g(%request.Data("ID",1))
+		s id=$g(%request.Data("id",1))
+		s tip=##class(DHCWL.CheckFunData.SaveData).InsertExcValue(ID,id)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="list-kpiItem" {
+		s searcheCond = $g(%request.Data("searcheCond",1))
+	    s searcheValue = $g(%request.Data("searcheValue",1))
+	    s queryJsonPros="{start:"_start_",end:"_end_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CheckFunData.CodeTypeItemQuery:KpiItemQuery","",searcheCond,searcheValue)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif action="list-objItem" {
+		s setId=$g(%request.Data("setId",1))
+		i setId="" {
+			w "{success:false,info:'考核方案未确定?'}"
+			q
+		}
+		s searcheCond = $g(%request.Data("searcheCond",1))
+	    s searcheValue = $g(%request.Data("searcheValue",1))
+	    s queryJsonPros="{start:"_start_",end:"_end_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CheckFunData.CodeTypeItemQuery:ObjItemQuery","",setId,searcheCond,searcheValue)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif action="list-addStdValue" { 
+		s setId=$g(%request.Data("setId",1))
+		s kpiId=$g(%request.Data("kpiId",1))
+		s stId=$g(%request.Data("stId",1))
+		i setId'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" StandardValSet_Set_Dr= '"_setId_"'"
+		i kpiId'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" StandardValSet_KPI_Dr= '"_kpiId_"'"
+		s jsonPros="ID,StandardValSetValue,StandardValSetDate,StandardValSetUpdateDate,StandardValSetUpdateUser"
+		s sqlFields=##class(DHCWL.util.GetSetService).MapFildFromClassProByStr("DHCWL.CheckFun.StandardValSet",jsonPros)
+		s tableName=##class(DHCWL.util.GetSetService).GetTableName("DHCWL.CheckFun.StandardValSet")
+		s sql="select "_sqlFields_" from "_tableName_condSql_" order by ID"
+		s rs=##class(%Library.ResultSet).%New()
+	    d rs.Prepare(sql)
+	    d rs.Execute()
+	    s json=##class(DHCWL.util.Json).Json("ID"_deli_"hValue"_deli_"eDate"_deli_"uDate"_deli_"uUser","result","root",deli)
+	    s num=0
+		While(rs.Next()){
+			s id=rs.Data("ID")
+			s uDate=rs.Data("StandardValSet_UpdateDate")
+		    i uDate'="" s uDate=##class(websys.Conversions).DateLogicalToHtml(uDate)
+		    s num=num+1
+		    q:id=stId
+			d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("StandardValSet_Value")_"'"_deli_"'"_rs.Data("StandardValSet_Date")_"'"_deli_"'"_uDate_"'"_deli_"'"_rs.Data("StandardValSet_UpdateUser")_"'")
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		i (+isArrayType=1) {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+	
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	    
+	}elseif action="addInsertExcValue"{
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("stId")=$g(%request.Data("stId",1))
+		s dim("SetUpdateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s tip=##class(DHCWL.CheckFunData.SaveData).AddInsertExcValue(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="list-relKpiItem" {
+		s setId=$g(%request.Data("setId",1))
+		i setId="" {
+			w "{success:false,info:'考核方案未确定?'}"
+			q
+		}
+		s searcheCond = $g(%request.Data("searcheCond",1))
+	    s searcheValue = $g(%request.Data("searcheValue",1))
+	    s queryJsonPros="{start:"_start_",end:"_end_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CheckFunData.CodeTypeItemQuery:RelKpiItemQuery","",setId,searcheCond,searcheValue)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}elseif action="list-eDate" {
+		s setId=$g(%request.Data("setId",1))
+		i setId="" {
+			w "{success:false,info:'考核方案未确定?'}"
+			q
+		}
+		s searcheCond = $g(%request.Data("searcheCond",1))
+	    s searcheValue = $g(%request.Data("searcheValue",1))
+	    s queryJsonPros="{start:"_start_",end:"_end_",jsonProDeli:&}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.CheckFunData.CodeTypeItemQuery:EDateQuery","",setId,searcheCond,searcheValue)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}
+	
+</script>

@@ -1,0 +1,86 @@
+<!--
+Description: 问题内容套餐关联维护  dhchm.queslinkordersets.csp
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER"> 
+		set DID=$g(%request.Data("DID",1))	
+   </SCRIPT> 
+   	<style>
+   		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			text-align:right;
+			padding:0 10px;
+		}
+		.btn{
+			margin-left:30px;
+		}	
+   </style>
+</head>
+<body style="background-color:#fff" fit="true" class="hisui-layout">
+	<div>
+		<table class="hisui-table">
+			<tr>
+				<td class="labelTd">体检套餐</td>	
+				<td><select id="OrdSetsDR" class="hisui-combogrid"  style="width:250px;" data-options="
+           			panelWidth: 350,
+            		idField: 'OrderSetId',
+            		textField: 'OrderSetDesc',
+            		method: 'get',
+            		url:$URL+'?ClassName=web.DHCPE.HandlerOrdSetsEx&QueryName=queryOrdSet',
+            		onBeforeLoad:function(param){
+	            		param.Type='ItemSet';
+						param.OrdSetSDesc = param.q;
+					},
+					mode:'remote',
+					delay:200,
+            		columns: [[           				            			
+						{field:'OrderSetDesc',title:'套餐名称',width:200},
+						{field:'OrderSetPrice',title:'金额',align:'right',width:70},
+						{field:'OrderSetId',title:'ID',width:80}
+					]],
+            		fitColumns: true,
+            		pagination:true,
+					pageSize:20,
+					displayMsg:''">
+            		</select>    
+				</td>
+				<td class="labelTd">关联度</td>	
+				<td ><input id="Relevance" class="hisui-numberbox" data-options="required:true,min:1" type="text" style="width:120px;"></td>						
+			</tr>
+			<tr>
+				<td class="labelTd"><a id="tt1" href="#" title="如：(val>1)||(val['高血压')<br>表示当前值大于1或者包含高血压" class="hisui-tooltip" data-options="position:'right'">表达式</a></td>
+				<td colspan="3"><textarea rows='2' id="Expression" style="width:99%" data-options="required:true" class='hisyui-validatebox' ></textarea></td>
+			</tr>
+			<tr>
+				<td colspan="4" style="text-align:center;padding-left:40px;">
+					<a id="DSAddBtn" href="#"  onclick="dsAdd();" class="hisui-linkbutton btn" data-options="iconCls:'icon-w-add'">保存</a>
+					<a id="DSDeltBtn" href="#"  onclick="dsDelt();"  class="hisui-linkbutton btn" data-options="iconCls:'icon-w-cancel'">删除</a>
+					<a id="DSAddBtn" href="#"  onclick="dsSech();" class="hisui-linkbutton btn" data-options="iconCls:'icon-w-find'">查询</a>
+					<a id="DSDeltBtn" href="#"  onclick="dsClear();"  class="hisui-linkbutton btn" data-options="iconCls:'icon-w-clean'">清屏</a>
+				</td>
+			</tr>			
+		</table>
+		<div id="DSDiv"  style="height:310px;padding:0 10px 10px 10px">
+			<table id="DSLinkList" data-options="singleSelect:true,bodyCls:'panel-body-gray'"></table>			
+		</div>
+		<input type="hidden" id="DID" value="#(DID)#">
+		<input type="hidden" id="QDLSID" value="">
+	</div>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  	<script type="text/javascript" src="../scripts/dhchm.queslinkordsets.js"></script>
+</body>
+</html>

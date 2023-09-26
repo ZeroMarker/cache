@@ -1,0 +1,30 @@
+<csp:content charset="utf-8">
+<SERVER>
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s gGroupId=$Get(%session.Data("LOGON.GROUPID"))
+	s gLocId=$Get(%session.Data("LOGON.CTLOCID"))
+	s gUserId=$Get(%session.Data("LOGON.USERID"))
+	s gHospId=$Get(%session.Data("LOGON.HOSPID"))
+	
+	// 查询海虹主表数据
+	i Action = "QueryHHImport" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.w ##class(web.DHCST.HHImport).JSQueryHHImport(Start,Limit,Sort,Dir,StrParam)
+
+	// 查询海虹子表数据
+	i Action = "QueryHHImportDetail" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.w ##class(web.DHCST.HHImport).JSQueryHHImportDetail(Start,Limit,Sort,Dir,StrParam)
+	
+	// 根据海虹表生成入库单
+	i Action="CommitImport" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.s ret=##class(web.DHCST.HHImport).CommitImport(StrParam,gUserId)
+	.i $p(ret,"|@|",1)<0 d
+	..w "{success:'false',info:'"_$p(ret,"|@|",2)_"'}"
+	.e  w "{success:'true',info:'"_ret_"'}"
+</SERVER>

@@ -1,0 +1,125 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s year=$Get(%request.Data("year",1))
+	s deptdr=$Get(%request.Data("deptdr",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	s goal=$Get(%request.Data("goal",1))
+	s property=$Get(%request.Data("property",1))
+	s isgovbuy=$Get(%request.Data("isgovbuy",1))
+	s state=$Get(%request.Data("state",1))
+	s data=$Get(%request.Data("data",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	
+	s bdeptdr=$Get(%request.Data("bdeptdr",1))
+	s brand1=$Get(%request.Data("brand1",1))
+	s spec1=$Get(%request.Data("spec1",1))
+	s brand2=$Get(%request.Data("brand2",1))
+	s spec2=$Get(%request.Data("spec2",1))
+	s brand3=$Get(%request.Data("brand3",1))
+	s spec3=$Get(%request.Data("spec3",1))
+	s loginuser=$Get(%request.Data("loginuser",1))
+	s isaddedit=$Get(%request.Data("isaddedit",1))
+	s UserId=$Get(%request.Data("UserId",1))
+	s CTlocID=$Get(%request.Data("CTlocID",1))
+	
+	s plansdate=$Get(%request.Data("plansdate",1))
+	s planedate=$Get(%request.Data("planedate",1))
+	s realsdate=$Get(%request.Data("realsdate",1))
+	s realedate=$Get(%request.Data("realedate",1))
+	
+	s budgdept = $Get(%request.Data("budgdept",1))
+	s hospital1 = $Get(%request.Data("hospital1",1))
+	s GroupId=$G(%session.Data("LOGON.GROUPID"))
+    s LocId=$G(%session.Data("LOGON.CTLOCID"))
+    s UserId=$G(%session.Data("LOGON.USERID"))
+    s File=$Get(%request.MimeData("files",1))
+    
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).List(hospid,sortField,sortDir,start,limit, year, deptdr, property, state, isgovbuy,budgdept,userdr)
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).InsertRec(data)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).UpdateRec(rowid, code, name, year, bdeptdr, deptdr,plansdate,planedate,realsdate,realedate, userdr, goal, property, isgovbuy, state, loginuser,hospital1)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetDept" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).GetDept(UserId,CTlocID)
+	.i result '="" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "year" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).yearmonth(start,limit,str)
+		
+	i action = "caldept" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).CalDeptname(start,limit,str)
+	
+	i action = "caldept2" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).CalDeptname2(start,limit,userid)
+	
+	i action = "calItemdept" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).CalItemDeptname(hospid,start,limit,str)
+	
+	i action = "caluser" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).CalUsername(start,limit,str)
+	
+	i action = "Upload" d
+	.s Param=GroupId_"^"_LocId_"^"_UserId
+    .s result = ##class(herp.budg.udata.uBudgProjectDict).SaveVendPic(File,Param,rowid)
+    .i result=0 d
+    ..w "{success:'true',message:'上传成功'}"
+    .e  d
+    ..w "{success:'false',message:'上传失败_"_result_"'}"
+    
+     i action = "GetPic" d
+     .s result = ##class(herp.budg.udata.uBudgProjectDict).GetPicInfo(rowid)
+     .i result = "" d
+     ..w "{results:0,rows:[]}"
+     .e  d
+     ..w result
+     
+     i action = "DeletePic" d
+     .s Param=GroupId_"^"_LocId_"^"_UserId
+     .s PicSrc=$Get(%request.Data("picsrc",1))
+     .s result = ##class(herp.budg.udata.uBudgProjectDict).GetDelPicInfo(rowid,PicSrc,Param)
+     .i result = 0 d
+     ..w "{success:'true',info:''}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+	
+</script>

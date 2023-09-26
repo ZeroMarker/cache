@@ -1,0 +1,104 @@
+﻿ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+   <head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+		<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+		<script language="cache" runat="server">
+		    d ##Class(EMRservice.SystemParameter).GetImportResource()
+			s messageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("MessageScheme")
+			s:(messageScheme="") messageScheme = "{'alert':'2000','warning':'5000','forbid':'7000','height':'30','fontsize':'14'}"
+	   		s autoSave = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("AutoSave")
+			s:(autoSave = "") autoSave = "{'switch':'off','interval':''}"
+			s requiredFlag = ##Class(EMRservice.SystemParameter).GetRequiredFlag()
+			//是否启用病历信息订阅与发布
+			s disableObserver = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("Observer")
+			s:(disableObserver = "") disableObserver = "N"
+			//是否启用病历加锁
+			s isLock = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EnableLock")
+			s:(isLock = "") isLock = "N"
+			s signLogic = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("SignLogic","")
+			s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
+			s qualityColor = ##Class(EMRservice.SystemParameter).QulaityColor()
+			s isDeleteVerification = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("isDeleteVerification")
+			s:(isDeleteVerification = "") isDeleteVerification = "N"
+			s isSetCurrentRevisorIP = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("isSetCurrentRevisorIP")
+			s:(isSetCurrentRevisorIP = "") isSetCurrentRevisorIP = "Y"
+	   </script>
+<script language = "javascript">
+          var setting ={};
+		  var patientID = parent.patientID;
+		  var episodeID = parent.episodeID;
+		  var userCode = parent.userCode;
+		  var userID = parent.userID;
+		  var ssgroupID = parent.ssgroupID;
+		  var userLocID = parent.userLocID;
+		  var userName = parent.userName;
+		  var patientNo = parent.patientNo;
+		  var mradm = parent.mradm;
+		  var sessionID = parent.sessionID;
+		  var cardNo = parent.cardNo;
+		  var setDefaultFontStyle = parent.setDefaultFontStyle;
+		  var param = "";
+		  var pluginType = "";
+		  var iword = false;
+		  var igrid = false;
+		  var titleCode = "";
+		  var curStatus = "";
+		  var pluginUrl = parent.pluginUrl;
+		  var loadFalg = false;
+		  var loadContainer = "";
+		  var lockinfo = "";
+		  var messageScheme = eval("(" +"#(messageScheme)#"+ ")");
+		  var HasPatEncryptLevel = parent.HasPatEncryptLevel;
+		  var IsSetToLog = parent.IsSetToLog;
+		  var SecCode = parent.SecCode;   //病人密级代码
+		  var CAServicvice = parent.CAServicvice;
+		  var autoSave = eval(#(autoSave)#);
+		  var ipAddress = parent.ipAddress;
+		  var requiredFlag = eval(#(requiredFlag)#);
+		  //是否启用病历信息订阅与发布
+		  var Observer = '#(disableObserver)#';
+		  var IsSetToPortal = parent.IsSetToPortal;
+		  //var SignInfoToPortal = "";
+		  //是否启用病历加锁
+		  var enableLock = '#(isLock)#';
+		  var westWidth = eval(#(westWidth)#);
+		  var setRecReferenceLayout = parent.setRecReferenceLayout;
+		  var episodeType = parent.episodeType;
+		  var signLogic = '#(signLogic)#';
+		  var isRevokeSign = '#(isRevokeSign)#';
+		  var qulaityColor = eval(#(qualityColor)#);
+		  var isDeleteVerification = '#(isDeleteVerification)#';
+		  var isSetCurrentRevisorIP = '#(isSetCurrentRevisorIP)#';
+		</script>
+	    <title>电子病历书写</title>	
+   </head>
+   <body>
+        <div id="record" class="easyui-layout" data-options="fit:true">
+            <div id="messageInfo" data-options="region:'south'" style="height:0px;"></div>
+            <div data-options="region:'center',border:false" style="width:100%;height:100%">
+                <div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+                <div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+                <div id="memo" style="display:none;padding:5px;">
+                    <div><textarea id="memoText"  rows="13" style="width:100%;height:100%" ></textarea></div>
+                    <div style="margin-top:12px;text-align:right;">
+                        <a id="memoSure" href="javascript:void(0)" class="easyui-linkbutton">确定</a>
+                        <a id="memoCancel" href="javascript:void(0)" class="easyui-linkbutton">取消</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+   </body>
+    <script type="text/javascript" src="../scripts/emr/js/record.lock.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.edit.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.edit.center.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.his_service.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.hyperlink.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/handSign_BJCA.js"></script>
+</html>

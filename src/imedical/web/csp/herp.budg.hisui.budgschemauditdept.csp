@@ -1,0 +1,150 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	<style>
+		.width-100{
+			width:100px;
+		}
+		#main{
+		    width:680px;	
+		}
+		.panel-body{
+		border-left-width:1px;
+		border-right-width:1px;
+		border-top-width:0px;
+		border-bottom-width:1px
+		}
+	</style>
+</HEAD>
+<BODY >
+	<div class="hisui-layout " data-options="fit:true" >
+		<div id="main" class="border-none"  data-options="region:'west',split:true" style="padding-left:10px;padding-top:10px;padding-bottom:15px;">
+			<div id="tb" class="line-50-y">
+				<span class="padding-both-10">预算年度</span>
+				<input id="YearBox" class="hisui-combobox width-100" />
+				<span class="padding-both-10">预算类别</span>
+				<input id="SchTyBox" class="hisui-combobox width-100" />
+				<span class="padding-both-10">方案名称</span>
+				<input id="SchNBox" class="textbox width-100" />
+				<span class="padding-right-10"></span>
+				<a id="FindBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+			</div>
+			<table id="MainGrid" title="预算方案" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			</table>
+		</div>
+		<div id ="eastreg" class="border-none" data-options="region:'center'" style="padding-left:5px;padding-top:10px;padding-bottom:15px;padding-right:10px">
+			<div id="rtb">
+				<div class="line-50-y x-separator">
+					<span class="padding-both-10">科室名称</span>
+					<input id="DeptBox" class="textbox  combobox-width-177"/>
+					<span class="padding-right-10"></span>
+					<a id="RFindBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+				</div>
+				<div class="line-36-y">
+					<table>
+						<tr>
+							<td>
+								<a id="BtchBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-add',plain:true">批量增加</a>
+							</td>
+							<td>
+								<a id="AddBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+							</td>
+							<td>
+								<a id="SaveBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>	
+							</td>
+							<td>
+								<a id="DelBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<table id="DetailGrid" title="科室归口维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			</table>
+		</div>
+	</div>
+	<!--复制-->
+	<div id="CopyWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div id="copycenter" class="padding-10" data-options="region:'center'">
+				<form id="copyfm" class="flex-x-center">
+					<table class="text-right">
+						<tr>
+							<td class="padding-right-10 padding-bottom-20">目标年度</td>
+							<td class="padding-bottom-20">
+								<input id="GoalYbox" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+						<tr>
+							<td class="padding-right-10">目标方案</td>
+							<td>
+								<input disabled id="GoalSch" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+					</table> 
+				</form>	
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="CopySave" class="hisui-linkbutton width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="CopyClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div>	
+	<!--批量增加-->
+	<div id="BtchWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div id="btchcenter" class="padding-10-bottom-none"  data-options="region:'center'">
+				<form id="Btchfm" class="flex-x-center">
+					<table>
+						<tr>
+							<td class="r-label padding-bottom-10">预算编制责任人</td>
+							<td class="padding-bottom-10">
+								<input id="BtchUser" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label padding-bottom-10">编制科室</td>
+							<td class="padding-bottom-10">
+								<input id="BtchDept" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">适用科室类别</td>
+							<td>
+								<input id="BtchType" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">是否归口</td>
+							<td>
+								<input id="IsBudg" class="hisui-checkbox" type="checkbox"/>	
+							</td>
+						</tr>
+					</table> 
+				</form>						
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="BtchSave" class="hisui-linkbutton  width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="BtchClose" class="hisui-linkbutton width-70" href="#">取消</a>
+			</div>
+		</div>
+	</div>	   
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgschemauditDept/budgschemauditdeptmain.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/budgschemauditDept/budgschemeauditdeptitemmain.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+</BODY>
+</HTML>

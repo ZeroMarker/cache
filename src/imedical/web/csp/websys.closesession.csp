@@ -1,0 +1,51 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ // 解决F5问题
+ if $d(%session) {
+	 if ($d(%session.Data("LOGON.USERID"))&&($g(%session.Data("LOGON.USERID"))>0)) { //在线刷新界面
+		Set ^Temp(%session.SessionId)="inline"
+	 }else{
+		Set ^Temp(%session.SessionId)="outline"
+	 }
+ }
+ Set ^Wanghc("close",%session.SessionId,$I(^Wanghc))=1
+ ;如果是退出菜单,不校验session超时,直接关闭页面
+ ;点退出菜单会二次调用,unload
+ ;i ##Class(websys.SessionEvents).SessionExpired() q 1
+ d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ Do ##Class(web.SSUserLogin).SaveLogoffDateTime($g(%session.Data("LOGON.SSUSERLOGINID")))
+ d ##class(User.DHCClientLogin).LogoutById($g(%session.Data("LOGON.SSUSERLOGINID")))
+ k ^TMP("FP",$j),^TMP("WEB",$j)
+ k ^TMP("reload",%session.SessionId)
+ s %session.EndSession=1
+ ;s ^TMP("close",$h)=""
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT Language="JavaScript">
+function sys_close() {
+	/*try{
+		var fso = new ActiveXObject("Scripting.FileSystemObject");
+		var path = "D://Doctor.txt";
+		var	file = fso.OpenTextFile(path,2,true,-2);
+		file.WriteLine("");
+		file.Close();
+		file=""
+		fso = "";
+	}catch(e){
+		
+	}*/	
+	if ("#(%request.Get("relogon"))#"=="1"){
+		var win=window.open("../form.htm",'_self','top=0,left=0,width='+screen.availWidth+',height='+screen.availHeight+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,maximized=yes');
+		return ;
+	}
+	window.parent.close();
+}
+</SCRIPT>
+</HEAD>
+<BODY onload="sys_close();">
+</BODY>
+</HTML>

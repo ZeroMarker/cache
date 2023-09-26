@@ -1,0 +1,53 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+    s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	
+ 	
+ 	
+ 	s Username=$Get(%request.Data("Operator",1))
+ 
+ 	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+ 	s ReasonNo=$Get(%request.Data("ReasonNo",1))
+ 	s OperatorDate=$Get(%request.Data("OperatorDate",1))
+ 	s Remakr=$Get(%request.Data("Remakr",1))
+ 	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+ 	
+ 	s FamilyRowId=$Get(%request.Data("FamilyRowId",1))
+ 	s FamilyCode=$Get(%request.Data("FamilyCode",1))
+ 	s CurCommunity=$Get(%request.Data("CurCommunity",1))
+    s FamilyAddress=$Get(%request.Data("FamilyAddress",1))
+ 	s CurAdd=$Get(%request.Data("CurAdd",1))
+ 	
+ 
+ 
+ 
+    s searchField=$Get(%request.Data("searchField",1))    
+    s searchValue=$Get(%request.Data("searchValue",1))
+    
+    s SearchSql = ""
+    i searchValue'="" d
+    .s SearchSql =  " and "_searchField_" like '%"_searchValue_"%'"
+ 
+    i Action = "personrollout" d
+	.w ##class(CHSSWeb.RollInOutService).PersonRollOut(PersonRowId,Username,ReasonNo,OperatorDate,Remakr,CommunityCode)
+	
+	i Action = "personrollinlist" d
+	.w ##class(CHSSWeb.RollInOutService).PersonRollInList(Start,Limit,SearchSql)
+	i Action = "personrollin" d
+	.w ##class(CHSSWeb.RollInOutService).PersonRollIn(PersonRowId,CommunityCode)
+ 
+    i Action = "familyrollout" d
+	.w ##class(CHSSWeb.RollInOutService).FamilyRollOut(ReasonNo,FamilyRowId,FamilyCode,CommunityCode,CurCommunity,FamilyAddress,CurAdd,Username,OperatorDate,Remakr)
+	i Action = "familyrollin" d
+	.w ##class(CHSSWeb.RollInOutService).FamilyRollIn(FamilyRowId,CommunityCode)
+	i Action = "Familyrolloutlist" d
+	.w ##class(CHSSWeb.RollInOutService).FamilyRollInList(Start,Limit,SearchSql)
+	
+</script>

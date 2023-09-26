@@ -1,0 +1,278 @@
+﻿<html>
+<head>
+<title></title>
+<HISUI/>
+
+<script Language="Javascript">
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+</script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/showordnum.js" charset="gb2312"></script>
+<style>
+	.textLabel{
+		background-color:#FFF;	
+		font-size:14px;
+	}
+	
+	.icon-search-white {
+		background: url('../scripts/dhcnewpro/images/adv_search.png');
+	}
+	
+	form td{
+		padding-left:10px;	
+		font-size:14px;
+	}
+
+	/*.panel-header, .panel-body{
+		border:none !important;	
+	}hxy 2018-10-30注释*/
+	.floatLeft{
+		float:left;	
+	}
+	.tdDiv{
+		width:130px;
+		height:70px;
+		border: 1px solid #EEE;
+	}
+	
+	.tdDiv:hover{
+		cursor: pointer;
+	}
+	
+	.tdLeftDiv{
+		width:55px;
+		height:70px;
+		text-align: center;
+	}
+	.tdLeftDiv img{
+		margin-top:15px	
+	}
+	
+	.tdRightDiv{
+		width:75px;
+		height:70px;
+	}
+	
+	.tdRightDivTop{
+		height:35px;
+		width:65px;
+		display: table-cell;
+    	vertical-align: bottom;	
+	}
+	
+	.tdRightDivTopSpan{
+		font-size:14px;
+	}
+	
+	.tdRightDivBottom{
+		height:35px;
+		width:65px
+	}
+	
+	.tdRightDivBottomSpan{
+		font-size:27px;	
+	}
+	.selTdDiv{
+		background:url(../scripts/dhcnewpro/images/sel.png) !important;
+	}
+	.combo-arrow{position:relative;left:-4}/*hxy 2018-10-30*/
+</style>
+
+</head>
+
+<body class="hisui-layout" data-options="fit:true,border:false" style="margin:10px">  
+<div data-options="region:'center',title:'',title:'已执行医嘱查询',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false,title:''" style="height:50px;padding-top:10px;padding-left:10px;overflow:hidden">
+			<form id="" >
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+						<td style="padding-left:0px" class="textLabel">开始时间</td>	
+						<td>
+							<input type="text" id="stDate"  class="hisui-datebox textbox" name="stDate" ></input> 
+						<td>
+						<td style="padding-left:20px" class="textLabel">结束时间</td>
+						<td>
+							<input type="text" id="endDate" class="hisui-datebox textbox" name="endDate" ></input>
+						</td>
+						<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search-white'" onclick="commonQuery()">查询</a></td>
+						<!--<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="commonReload()">重置</a></td>-->
+					<tr>
+				</table>
+			</form>
+		</div>
+
+		<div data-options="region:'center',border:false,title:''" style="">
+			<div class="hisui-layout" data-options="fit:true">
+			 	<div data-options="region:'north',title:'',border:false" style="height:83px;overflow:hidden;padding-left:10px">
+			 		<table cellspacing="0" style="width:100%">
+			 			<tr>
+			 				<td>
+			 					<div class="tdDiv" data-type="ZSDO" style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/blueline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">注射单</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="ZSDO" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td>
+			 					<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/yellowline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">输液单</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="SYDO" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td>
+			 					<div class="tdDiv" data-type="ZLDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/greenline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">治疗单</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="ZLDO" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td>
+			 					<div class="tdDiv" data-type="JYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/smallgreenline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">检验单</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="JYDO" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td>
+			 					<div class="tdDiv" data-type="PSDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/redline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">皮试单</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="PSDO" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td>
+			 					<div class="tdDiv" data-type="JCDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/violet.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">检查单</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="JCDO" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td style="display:none">
+			 					<div class="tdDiv" data-type="ECCC"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/blueline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">二次穿刺</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="ECCC" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td>
+			 					<div class="tdDiv" data-type="XDT"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/yellowline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">心电图</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="XDT" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				<td>
+			 					<div class="tdDiv" data-type="JYDXQ" style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+			 						<div class="floatLeft tdLeftDiv">
+			 							<img src="../scripts/dhcnewpro/images/blueline.png"/>
+			 						</div>
+			 						
+			 						<div class="floatLeft tdRightDiv">
+			 							<div class="tdRightDivTop">
+			 								<span class="tdRightDivTopSpan">血气</span>
+			 							</div>
+			 							
+			 							<div class="tdRightDivBottom">
+			 								<span id="XQ" class="tdRightDivBottomSpan">0</span>
+			 							</div>
+			 						</div>
+			 					</div>
+			 				</td>
+			 				
+			 			</tr>
+			 		</table>
+			 	</div>
+			 	
+			 	<div id="layoutBorder" data-options="region:'center',border:true,bodyCls:'panel-header-gray',iconCls:'icon-paper'" style="border-left:0px;border-right:0px;padding-bottom:8px">
+			 		<table id="ordDetailTable"></table>
+			 	</div>
+			 </div>
+		</div>
+	</div>
+</div>	
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script language="JavaScript">
+</script>
+</HEAD>
+<script Language="JavaScript">
+	
+</script>
+<BODY>
+<TRAK:APPLET> 
+<server>
+ n rs,currMRType,currVolDesc,patid
+ s (rs,currMRType,currVolDesc,patid)=""
+ i %request.Get("PatientID")'="" s patid=%request.Get("PatientID")
+ n comp
+ i %request.Get("PatientID")'="" d
+ . s comp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . s comp.HideMenus=1
+ . s comp.HideHeadings=0
+ . d comp.Show()
+ . d comp.%Close()
+
+ s rs=##Class(%Library.ResultSet).%New("web.RTMasVol:FindVolReqTrans")
+ if rs'="" {
+	d rs.Execute(patid,"","","","")
+	f  {
+		q:'rs.Next()
+		s currMRType=currMRType_"^"_rs.GetDataByName("RTMAVTYPDesc")
+		s currVolDesc=currVolDesc_"^"_rs.GetDataByName("RTMAVVolDesc")
+	}
+ }
+ d rs.%Close()
+ d %request.Set("CURRENTMRTYPE",currMRType)
+ d %request.Set("CURRENTVOLDESC",currVolDesc)
+ ;s %response.TraceDump=1
+</server>
+<TRAK:COMPONENT id="RTMVTrans.MergeVolume">
+</TRAK:COMPONENT>
+
+
+<script language="JavaScript">
+
+</script>
+
+</BODY>
+</HTML>
+
+

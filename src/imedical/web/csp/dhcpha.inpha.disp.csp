@@ -1,0 +1,170 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<SERVER>
+ d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4()  //润乾打印
+</SERVER>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD></TRAK:HEAD> 
+<!-- Put your page Title here -->
+
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/jquery-ext.css" ></script> 
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/gridkey.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/gridkey.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/incitmwindow.js"></script>
+	<script language='javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script language='javascript' src='../scripts/DHCSTXMLPrint.js'></script>
+	<script language='javascript' src='../scripts/dhcpha.pha.dispprintcom.js'></script>
+	<script type="text/javascript" src="../scripts/dhcpha/inpha/dhcpha.inpha.disp.js"></script>
+	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+<style type="text/css"  >  
+   .datagrid-btable tr{
+	height:27px;   
+	}
+</style>	
+ </HEAD>
+<body>
+<div id="displayout" class="easyui-layout" fit="true" border="false"> 
+	<div data-options="region:'center',title:''" border="false" style=""> 
+	<div class="easyui-layout" fit="true" border="false"> 
+		<div id="dispconditiondiv" data-options="region:'north',title:'明细条件',split:true" style="height:110px">
+			<table style="padding:4px">
+				<tr>
+					<td ><input id="checkedOut" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedCondition"></input></td>
+					<td style="width:60px;">仅出院带药</td>
+					<td ><input id="checkedLong" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedCondition"></input></td>
+					<td style="width:60px;">仅长期医嘱</td>	
+					<td ><input id="checkedShort" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedCondition"></input></td>
+					<td style="width:60px;">仅临时医嘱</td>
+					<td ><input id="checkedEMY" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedCondition"></input></td>
+					<td style="width:60px;">仅草药急煎</td>	
+					<td ><input id="checkedIsPack" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedCondition"></input></td>
+					<td style="width:60px;">仅整包装</td>
+					<td ><input id="checkedNotPack" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedCondition"></input></td>
+					<td style="width:60px;">仅散包装</td>
+					<td ><input id="checkedReserve" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedReserve"></input></td>
+					<td style="width:60px;">冲减退药</td>
+					<td><a class="easyui-linkbutton" iconCls='icon-search' plain="true" id="btnCollect" style="width:100px">统　　计</a>
+					</td>
+					<td><a class="easyui-linkbutton" iconCls='icon-sum' plain="true" id="btnFindDisped" style="width:100px">已发药查询</a>	
+					</td>						
+				</tr>
+				<tr>
+					<td colspan=14>药品:
+						<input id="textInci"  style="width:240px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input>
+						<input id="textInciRowId"  style="display:none;" data-options="valueField:'val',textField:'text'"></input>
+					</td>
+					<td><a class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btnRefuse" style="width:100px">拒绝发药</a>
+					</td>
+					<td><a class="easyui-linkbutton" iconCls='icon-ok' plain="true" id="btnDisp" style="width:100px">发药并打印</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',title:''" border="false" style="background-color:#E6F1FA;"> 
+			<div id="tabsone" class="easyui-tabs"  fit="true" > 
+				<div data-options="title:'发药明细'" >
+					<table id="dispgrid" ></table>
+				</div>
+				<div data-options="title:'发药汇总'">
+					<table id="disptotalgrid" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div data-options="region:'west',title:'住院发药',split:true" border="false" style="background-color:#E6F1FA;width:400px"> 
+		<div class="easyui-layout" fit="true" border="false"> 
+			<div id="wardconditiondiv" data-options="region:'north',title:''">
+				<table style="padding:10px;">
+					<tr>
+						<td style="width:60px;" >开始日期:</td>
+						<td colspan='3'>
+							<input id="startDate" class="easyui-datebox" style="width:125px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input>
+							<input id="startTime" class="easyui-timespinner" style="width:95px; solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input>
+						</td>			
+					</tr>
+					<tr>
+						<td  style="width:60px;">截至日期:</td>
+						<td colpan="3">
+							<input id="endDate" class="easyui-datebox" style="width:125px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input>
+							<input id="endTime" class="easyui-timespinner" style="width:95px; solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input>
+						</td>
+					</tr>
+					<tr>
+						<td  style="width:60px;">发药科室:</td>
+						<td  colspan='4'><input id="phaLoc"  style="border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+					</tr>
+					<tr>
+						<td  style="width:60px;">病　　区:</td>
+						<td  colspan='4'><input id="wardLoc"  style="border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+					</tr>
+					<tr>
+						<td  style="width:60px;">　科室组:</td>
+						<td  colspan='4'><input id="locGroup"  style="border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+					</tr>
+					<tr>
+						<td colspan='4'>
+							<span style="margin-left:50px">
+								<input id="checkedTime" class="ui-checkbox" style="vertical-align:middle" type="checkbox" name="checkedTime"></input>
+							</span>
+							<span style="vertical-align:middle">定时刷新</span>
+							<span>
+								<input id="checkedLocal" class="ui-checkbox" style="vertical-align:middle" type="checkbox" name="checkedLocal"></input>
+							</span>
+							<span style="vertical-align:middle">取客户端配置</span>
+							<span>
+								<a class="easyui-linkbutton" iconCls='icon-search' plain="true" id="btnFind" style="width:80px">查找</a>
+							</span>
+						</td>
+					</tr>
+					<tr>
+						<td colspan='4'>
+							<input id="priority"  style="display:none;" data-options="valueField:'val',textField:'text'"></input>
+							<input id="macAddr"  style="display:none;" data-options="valueField:'val',textField:'text'"></input>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div data-options="region:'center',title:'',split:true" border="false" style="background-color:#E6F1FA;width:400px">       	
+				<div id="tabstwo" class="easyui-tabs"  fit="true" style="border: 0px none;" > 
+					<div data-options="title:'按病区'" >
+						<table id="dispwardgrid" ></table>
+					</div>
+					<div data-options="title:'登记号'">
+						<table id="dispadmgrid" ></table>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'south',title:''" style="background-color:#E6F1FA;height:30px;text-align:center">
+				<a class="easyui-linkbutton" iconCls='icon-sum' plain="true" id="btnFindSum" style="width:100px">统计选择病区</a>	
+			</div> 
+		</div>
+	</div> 
+</div>
+<div id="patconditiondiv">
+	<table>
+		<tr>
+			<td style="margin-left:5px;">登记号:<input id="patNo" style="width:250px;border:1px solid #95B8E7;"/></td>
+		</tr>
+		<tr>
+			<td  id="patInfo" style="margin-left:5px;font-weight:bold"></td>
+		</tr>
+	<table>
+</div> 
+
+</body>
+
+
+</HTML>

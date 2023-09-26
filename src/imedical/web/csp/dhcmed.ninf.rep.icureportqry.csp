@@ -1,0 +1,79 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/infection.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Base.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Const.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_App.js'></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/PublicFunction/CustomFormItem.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/ICUReportQry/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/ICUReportQry/event.js'></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/MKProblemViewICU/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/MKProblemViewICU/event.js'></script>	
+		<!--<script language='javascript' src='../scripts/dhcmed/ninf/Srv/ExportMinke/ExportMinke.js'></script>	-->	
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/MKExportToTxt/ExportMinke.js'></script>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+		    Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+		    Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"NINF")
+		    Set IsSecret=##class(DHCMed.SSIO.FromSecSrv).CheckIsSecret(LogonHospID)
+		
+			Set IsSecret=""""_IsSecret_""""
+			Set RepTypeCode=$g(%request.Data("RepTypeCode",1))	    //报告类型
+			Set:RepTypeCode="" RepTypeCode="ICU"
+			
+			Set RepTypeID="",RepTypeDesc=""
+			Set objRepType=##class(DHCMed.SS.Dictionary).GetByTypeCode("NINFInfReportType",RepTypeCode,"")
+			If $IsObject(objRepType) {
+				Set RepTypeID=objRepType.%Id()
+				Set RepTypeCode=objRepType.Code
+				Set RepTypeDesc=objRepType.Description
+			}
+			
+			Set:RepTypeID="" RepTypeID=""""""
+			Set RepTypeCode=""""_RepTypeCode_""""
+			Set RepTypeDesc=""""_RepTypeDesc_""""
+		</SCRIPT>
+		<script language="javascript" type="text/javascript">
+			Ext.QuickTips.init();
+            var objControlArry = new Array();
+            
+            var IsSecret=#(IsSecret)#
+            var RepTypeID=#(RepTypeID)#;
+            var RepTypeCode=#(RepTypeCode)#;
+            var RepTypeDesc=#(RepTypeDesc)#;
+            
+            function window_onload() {
+            	var objViewPort = new InitViewport();
+                objControlArry['ViewPort'] = objViewPort;
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

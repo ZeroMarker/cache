@@ -1,0 +1,103 @@
+<html>
+<head>
+	<title>电子病历数字签名</title>
+	<base target= "_self"> 
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+
+	//初始化CA服务环境session
+	   d ##Class(CA.DigitalSignatureService).CASessionDataInit()
+	   q 1
+	</csp:method>
+	
+	<script language="javascript">
+	 	var strServerRan = "#($g(%session.Data("ServerRan")))#";
+	 	var strServerSignedData = "#($g(%session.Data("ServerSignedData")))#";
+		var strServerCert = "#(^CF("CA","ServerCert"))#"; //"#($g(%session.Data("ServerCert")))#";	
+	    var parWindow = window.dialogArguments;
+	</script>
+</head>
+<body style="font-family:Tahoma,Verdana,Helvetica; background-color: #DFE8F7;font-size: 14px;" onload="document.getElementById('txtPassword').focus()" >   
+
+    <div id="cadiv" align="center" valign="middle" style="overflow:auto;width:100%;height:100%">
+    <!--p>
+      &nbsp;     
+    </p-->
+    <form id="caAuditForm" name="caAuditForm" width="100%" height="100%" style="margin-right: 0px;margin-bottom: 0px;margin-top: 0px;">
+    <input type=hidden name=hashValue value="">
+    
+    <table width="100%" align="center" valign="center" style="padding-left: 10px;">
+    <tr id="trUsrType" align="center" valign="center" style="display:none"> <!-- -->
+    <td>用户职务:</td>
+    <td>
+    <select name="cbxUsrType" id="cbxUsrType" style="width: 130px; height:90%; margin-right: 0px;margin-bottom: 10px;margin-top: 0px;"></select>
+    </td>
+    </tr>
+    
+    <tr align="center" valign="center">
+    <td>选择证书:</td>
+    <td>
+    <select name="cbxKey" id="cbxKey" style="width: 130px; height:90%; margin-right: 0px;margin-bottom: 10px;margin-top: 0px;"></select>
+    </td>
+    </tr>
+    <tr align="center" valign="center">
+    <td>证书口令:</td>
+    <td>
+    <input type="password" id="txtPassword" name="txtPassword" style="width: 130px; height:90%; margin-right: 0px;margin-bottom: 10px;margin-top: 0px;"/>
+    </td>
+    </tr>
+    <tr>
+    <td align="center" colspan="2">
+    <input type="button" id="submit" name="submit" onclick="caSign()" value="确  定" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+    <input type="button" id="reset" name="reset" onclick ="resetInput()" value="重  置" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+    </td>
+    </tr>
+    </table> 
+    </form>
+    <input type="hidden" id="UserSignedData" name="UserSignedData" value="">
+    <input type="hidden" id="UserCert" name="UserCert" value="">
+    <input type="hidden" id="ContainerName" name="ContainerName" value="">
+    <script type="text/javascript" src="../scripts/epr/JQuery/jquery-1.4.1.min.js"></script> 
+
+    <script language="cache" runat="server">
+	   d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+    </script>
+    <script type="text/javascript" src="../scripts/epr/js/caaudit.js"></script>	
+    
+    </div>
+</body>
+
+</html>
+
+<script language="cache" runat="server">
+	 d ##Class(CA.DigitalSignatureService).OnUsbChanged()
+	 
+	 //数字签名部分?使用职务进行签名
+	 s UserPost=""
+	 if ("1"=##Class(EPRservice.BLDigitalSignature).IsSignByUserPos())
+	 {
+		 s id=""
+		 for {
+			s id=$o(^DHCEPRM.UserPostD(id))
+			q:(id = "") 
+			
+			s obj=##Class(EPRmeta.UserPost).%OpenId(id)
+			if ("1"=obj.IsValid)
+			{
+				s UserPost=UserPost_"^"_obj.Description_"||"_obj.Name_"&&"_obj.OperAction
+			}
+		 }	 
+     }
+     s KeyInSession=##Class(CA.DigitalSignatureService).GetKeyInSession()
+</script>
+
+<script type="text/javascript">
+     var userPost="#(UserPost)#"
+     if (("undefined" != typeof(parWindow)) && ("1" == parWindow.IsShowUserPos)) {
+	     setUsrType();
+     }
+     var keyInSession="#(KeyInSession)#";
+     if ("" != keyInSession && Signature(keyInSession)) {
+	     window.close();	
+	 }
+</script>	
+<!--<html><head></head><body></body></html>-->

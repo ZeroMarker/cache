@@ -1,0 +1,140 @@
+<!--消毒包标签打印-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<server>
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</server>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px">
+		<div class="hisui-panel" data-options="title:'消毒包标签打印',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div id="UomTB">
+				<div>
+					<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
+					<table class="Condition" id="cleantable">
+					<input id="cleantypev" name="cleantypev" type="hidden">
+					<input id="cleanCodev" name="cleanCodev" type="hidden">
+					<input id="cleanStrov" name="cleanStrov" type="hidden">
+					<input id="Iscmt" name="Iscmt" type="hidden">
+					<tr>
+						<td>
+							<label>日期</label>
+							<input id="cleandate" name="cleandate" class="hisui-dateboxq textbox" style="width:130px"></input>
+						</td>
+						<td>
+							<label>清洗机号</label>
+							<input id="cleanmachine" name="cleanmachine" class="textbox" style="width:130px"></input>
+						</td>
+					</tr> 
+					<tr>
+						<td>
+							<label>清洗架</label>
+							<input id="cleanCode" name="cleanCode" class="textbox" style="width:124px"></input>
+						</td>
+						<td align="right">
+							<a href="#" id="query" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+						</td>                        
+					</tr>
+				</table>
+				</div>
+			</div>
+				<table id="tabDrugList"></table>
+		</div>
+	</div>
+
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:700px;padding-left:10px">
+			<div class="hisui-panel" data-options="title:'消毒包标签明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" style="padding-left:5px;padding-right:5px;margin-bottom:5px">
+		<div>
+			<table  class="Condition" id="Usertb">
+			   <input id="txtChkerv" name="txtChkerv" type="hidden">
+			   <input id="txtActorv" name="txtActorv" type="hidden">
+				<tr>
+					<td><label>审核人</label><input class="textbox" id="txtChker" name="txtChker" style="width:150px"></td>
+					<td><label>包装人</label><input class="textbox" id="txtActor" name="txtActor" style="width:150px"></td>
+				</tr>
+				<tr>
+					<td>
+						<label>灭菌日期</label><input id="stedate" name="stedate" class="hisui-datebox textboxq" style="width:158px"></input>
+					</td>
+					<td><label>有效期</label> <select id="PackType" name="PackType" class="hisui-combobox" style="width:158px;">
+					<option value="5">常规</option>
+						<option value ="0">7天</option>
+						<option value ="1">14天</option>
+						<option value="2">30天</option>
+						<option value="3">90天</option>
+						<option value="4">180天</option>
+					</select>
+					</td>
+					<td hidden><label>灭菌方式</label><input id="SterType" name="SterType" class="textbox hisui-combobox" style="width:138px">
+					</td>				 
+				</tr>
+				<tr>
+					<td><label>发放科室</label><input id="ToLoc" name="ToLoc" class="textbox hisui-combobox" style="width:158px"></td>
+					<td>
+						<label>锅号</label><input class="textbox" id="PotNo" name="PotNo" style="width:158x">
+						<input class="textbox" id="PotNoValue" name="PotNoValue" hidden>
+						<input class="textbox" id="PotNoSterType" name="PotNoSterType" hidden></td>
+					</td>
+					<td><label>炉次</label><input class="textbox" id="HeatNo" name="HeatNo" style="width:158x"></td>
+				</tr>
+			</table>
+		</div>
+		<div class="hisui-layout" data-options="fit:true">
+			<div  data-options="title:'',region:'south',border:false,headerCls:'panel-header-gray'" style="height:400px;padding-top:5px;padding-bottom:20%">
+				<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" style="border-color:#ccc">
+					<div id="UocTB">
+					<table  class="Condition">
+						<tr>
+							<td>手术包:</td>
+							<td><a href="#" id="oprGen" class="hisui-linkbutton">标签生成</a></td>
+							<td><a href="#" id="oprPrint" class="hisui-linkbutton">标签打印</a></td>
+							<td><a href="#" id="oprPrintNot" class="hisui-linkbutton">无明细</a></td>
+							<td><a href="#" id="extPrint" class="hisui-linkbutton">外来打印</a></td>
+							<td>编码</td>
+							<td><input id="FixLabel" name="FixLabel" class="textbox" onkeyup="this.value=this.value.replace(/[^\d]/g,'') " onafterpaste="this.value=this.value.replace(/[^\d]/g,'')"></input></td>
+							<td hidden><a href="#" id="fixLabelquery" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</tr>
+					</table>
+					</div>
+					<table id="OprList"></table>
+				</div>
+			</div>
+				<div data-options="title:'',region:'center',border:false,headerCls:'panel-header-gray'">
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" style="border-color:#ccc">
+						<div id="UoTb">
+							<table  class="Condition">
+							<tr>
+								<td>普通包:</td>
+								<td>生成个数</td>
+								<td><input id="num" name="num" class="hisui-numberbox textbox" style="width:80px"></input></td>
+								<td hidden>包装数</td>
+								<td hidden><input id="packNum" name="packNum" class="hisui-numberbox textbox" style="width:80px"></input></td>
+								<td><a href="#" id="ordGen" class="hisui-linkbutton">标签生成</a></td>
+								<td><a href="#" id="ordPrint" class="hisui-linkbutton">标签打印</a></td>
+								<td><a href="#" id="ordPrintNot" class="hisui-linkbutton">无明细打印</a></td>
+							</tr>
+							</table>
+						</div>	
+					<table id="OrdList"></table>
+			 			</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<CSP:INCLUDE PAGE="cssdhui.packagepack.cleanpackdetail.csp?type=car">
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></SCRIPT>
+	<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/PackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/CleanPackLabel.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n PatientID
+ //s CONTEXT=""
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ i TWKFL s CONTEXT="W"_TWKFL
+</SERVER>
+<frameset rows="50%,*">
+  <!--frame src="rbappointment.find.csp name="RBApptFind"-->
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.Find&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CONTEXT=#(CONTEXT)#&PatientBanner=1" name="RBApptFind" frameBorder=0>
+  <!--frame src="rbappointment.find.csp" name="RBServList" frameBorder=0-->
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.ApptList&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&CONTEXT=#(CONTEXT)#" name="RBApptList" frameBorder=0>
+  </frameset>
+  
+<BODY>
+</BODY>
+</HTML>

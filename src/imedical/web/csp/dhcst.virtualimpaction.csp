@@ -1,0 +1,18 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+i Action = "QueryDetail" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.w ##class(web.DHCST.DHCVIRTUALIMP).GetBatInfo(Start,Limit,Parref)
+i Action = "Save" d
+	.S MainInfo=$Get(%request.Data("MainInfo",1))
+	.S ListDetail=$Get(%request.Data("ListDetail",1))
+	.s ret=##class(web.DHCST.DHCVIRTUALIMP).Save(MainInfo,ListDetail)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..s ingdrecNo=$p(^DHCINGR(+ret),"^",1)
+	..w "{success:'true',info:'"_ret_"',ingdrecNo:'"_ingdrecNo_"'}"
+</SERVER>

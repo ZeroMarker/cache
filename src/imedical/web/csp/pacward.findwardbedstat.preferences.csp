@@ -1,0 +1,576 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+ 	s (deptGrpid,CTLOCRespUnitDR,CTLOCDepDR,RUid,exclude)=""
+ 	n groupid,init
+	s groupid=%request.Get("GroupDR")
+ 	s init=%request.Get("init")
+ 	i groupid {
+		n obj,j,tmp,security,rs,mnu,desc,descU,sort,enabled
+		d %request.Set("curContext","None")
+		;
+		;***********************************
+		; Get Preferences
+		s prefs=##Class(websys.Preferences).GetData("User.SSUser",%session.Get("LOGON.USERID"),"PACWARD","PACWard.FindWardBedStat.Preferences")
+		i prefs'="" {
+			d %request.Set("curContext","User ("_%session.Get("LOGON.USERCODE")_")")
+			d %request.Set("type","U")
+		}
+		i prefs="" {
+			s prefs=##Class(websys.Preferences).GetData("User.SSGroup",%session.Get("LOGON.GROUPID"),"PACWARD","PACWard.FindWardBedStat.Preferences") 
+			i prefs'="" {
+				d %request.Set("curContext","Group ("_%session.Get("LOGON.GROUPDESC")_")")
+				d %request.Set("type","G")
+			}
+		}
+		i prefs="" {
+			s prefs=##Class(websys.Preferences).GetData("SITE",%session.Get("LOGON.SITECODE"),"PACWARD","PACWard.FindWardBedStat.Preferences") 
+			i prefs'="" {
+				d %request.Set("curContext","Site ("_%session.Get("LOGON.SITECODE")_")")
+				d %request.Set("type","T")
+			}
+		}
+		;***********************************
+		;
+		s filters=$p(prefs,$c(1),2)
+		s allwards=$p(prefs,$c(1),3)
+		s alldept=$p(prefs,$c(1),4)
+		s allru=$p(prefs,$c(1),5)
+		s allgc=$p(prefs,$c(1),6)
+		s allgcat=$p(prefs,$c(1),7)
+		s tots=$p(prefs,$c(1),8)
+		s allhosp=$p(prefs,$c(1),9)
+		s allzone=$p(prefs,$c(1),10)
+		s alldistrict=$p(prefs,$c(1),11)
+		s alltrust=$p(prefs,$c(1),12)
+		s prefs=$p(prefs,$c(1))
+		;
+		i init d
+		. d %request.Set("filters",filters)
+		. i $p(filters,"$$",6)'="" d %request.Set("GC",$p(filters,"$$",6))
+		. i $p(filters,"$$",7)'="" d %request.Set("GCAT",$p(filters,"$$",7))
+		;
+		; ab 16.08.02 - no longer filtering the list of wards, now we optionally display department + resp unit summaries
+		s (deptGrpid,RUid,GCid)=""
+		;s deptGrpid=##Class(web.CTLoc).GetIdFromCodeOrDescription(%request.Get("DeptGrp"))
+		;s RUid=##Class(web.CTResponsibleUnit).GetIdFromCodeOrDescription(%request.Get("RU"))
+		;
+		; Get all Locations associated to this Security Group
+		; if no sec group, then get all ward/em/day surg locations
+		n obj,id,locDR
+		s LocListID=$p($g(^SSU("SSGRP",groupid)),"^",36)
+		i LocListID'="" d
+		. s rs=##Class(%Library.ResultSet).%New("web.CTLocationListLocations:Find")
+		. d rs.Execute(LocListID)
+		i LocListID="" d
+		. s rs=##Class(%Library.ResultSet).%New("web.CTLoc:LookUpLoc")
+		. d rs.Execute("","","W^EM^DS")
+		f  {
+			s (id,locDR,obj)=""
+			q:'rs.Next()
+			i LocListID'="" s locDR=rs.GetDataByName("CTLOCDR"),id=rs.GetDataByName("CTLOCCode")
+			i LocListID="" s locDR=rs.GetData(2),id=rs.GetData(3)
+			i locDR'="" s obj=##Class(User.CTLoc).%OpenId(locDR) 
+			i obj {
+				; Get all ward/locations assigned to this location
+				s wardid=$o(^PAWARD(0,"WARD_LocationDR",+locDR,""))
+				s found=0
+				s CTLOCDepDR=""
+				s row=0 f  s row=$o(^PAWARD(+wardid,"WBALL",row)) q:row=""  q:found  d
+				.s CTLOCDepDR=$p($g(^PAWARD(+wardid,"WBALL",row)),"^",2)
+				.i deptGrpid=CTLOCDepDR s found=1
+				;
+				; Get the Responsible Unit associated to this location
+				i obj.CTLOCRespUnitDR s CTLOCRespUnitDR=obj.CTLOCRespUnitDR.%Id()
+				s (validate,loctype)=0
+				i deptGrpid=CTLOCDepDR,RUid="" s validate=1
+				i RUid=CTLOCRespUnitDR,deptGrpid="" s validate=1
+				i deptGrpid=CTLOCDepDR,RUid=CTLOCRespUnitDR s validate=1
+				i deptGrpid="",RUid="" s validate=1
+				i ((obj.CTLOCType="W")!(obj.CTLOCType="EM")!(obj.CTLOCType="DS")) s loctype=1
+				;
+				i LocListID'="" s (desc,descU)=rs.GetDataByName("CTLOCDesc")
+				i LocListID="" s (desc,descU)=rs.GetData(1)
+				s descU=##Class(%Collation).Upper(descU)
+				i validate,loctype {
+					s found=0,enabled="false"
+					s cnt=1 f  s en=$p(prefs,"^",cnt) q:en=""  q:found=1  d
+					.i desc=$p(en,"|",1) s enabled=$p(en,"|",2) s found=1
+					.s cnt=cnt+1
+					; sort here  !!!!!
+					s sort(descU)=id_"^"_desc_"^"_enabled
+				} elseif loctype {
+					s exclude=exclude_desc_"|false^"
+				}
+			}
+		}
+		d rs.%Close()
+	}
+	s (sort,val,txt,sel)=""
+	f  {
+		s sort=$o(sort(sort))
+		q:sort=""
+		s val=val_$p(sort(sort),"^",1)_"^"
+		s txt=txt_$p(sort(sort),"^",2)_"^"
+		s sel=sel_$p(sort(sort),"^",3)_"^"
+	}
+	i $l(val)>0 s val=$e(val,1,$l(val)-1)
+	i $l(txt)>0 s txt=$e(txt,1,$l(txt)-1)
+	i $l(sel)>0 s sel=$e(sel,1,$l(sel)-1)
+</SERVER>
+</head>
+
+<body>
+<TRAK:COMPONENT id="PACWard.FindWardBedStat.Preferences">
+</TRAK:COMPONENT>
+<script Language="JavaScript" SRC="../scripts/websys.js"></script>
+<script Language="JavaScript" SRC="../scripts/websys.ListBoxes.js"></script>
+<script language="javascript">
+
+lst = document.getElementById("PrefList");
+aryval = "#(val)#".split("^");
+arytxt = "#(txt)#".split("^");
+arysel = "#(sel)#".split("^");
+AddItemToList(lst,arytxt,aryval);
+selectOptions(lst,arysel);
+
+var exclude = document.getElementById("excludeList");
+exclude.value="#(exclude)#";
+
+var allwards="#(allwards)#";
+var alldept="#(alldept)#";
+var allru="#(allru)#";
+var allgc="#(allgc)#";
+var allgcat="#(allgcat)#";
+var allhosp="#(allhosp)#";
+var tots="#(tots)#";
+var allzone="#(allzone)#";
+var alldistrict="#(alldistrict)#";
+var alltrust="#(alltrust)#";
+
+function BodyLoadHandler() {
+	websys_reSizeT();
+	var obj=document.getElementById('Update');
+	if (obj) obj.onclick=UpdateClickHandler;
+
+	var obj=document.getElementById("AllWards");
+	if (obj) {
+		obj.onclick=AllWardsClickHandler;
+		if (allwards=="Y") obj.checked=true;
+	}
+	AllWardsClickHandler();
+	
+	var obj=document.getElementById("ShowTot");
+	if (obj) {
+		if (tots=="Y") obj.checked=true;
+	}
+	
+	var obj=document.getElementById("AllDept");
+	if (obj) {
+		obj.onclick=AllDeptClickHandler;
+		if (alldept=="Y") obj.checked=true;
+	}
+	AllDeptClickHandler();
+	
+	var obj=document.getElementById("AllRU");
+	if (obj) {
+		obj.onclick=AllRUClickHandler;
+		if (allru=="Y") obj.checked=true;
+	}
+	AllRUClickHandler();
+	
+	var obj=document.getElementById("AllHosp");
+	if (obj) {
+		obj.onclick=AllHospClickHandler;
+		if (allhosp=="Y") obj.checked=true;
+	}
+	AllHospClickHandler();
+	
+	var obj=document.getElementById("AllGC");
+	if (obj) {
+		obj.onclick=AllGCClickHandler;
+		if (allgc=="Y") obj.checked=true;
+	}
+	AllGCClickHandler();
+	
+	var obj=document.getElementById("AllGCAT");
+	if (obj) {
+		obj.onclick=AllGCATClickHandler;
+		if (allgcat=="Y") obj.checked=true;
+	}
+	AllGCATClickHandler();
+	
+	// 12.03.03 Log 32431 HP
+	var obj=document.getElementById("AllZone");
+	if (obj) {
+		obj.onclick=AllZoneClickHandler;
+		if (allzone=="Y") obj.checked=true;
+	}
+	AllZoneClickHandler();
+	
+	var obj=document.getElementById("AllDistrict");
+	if (obj) {
+		obj.onclick=AllDistrictClickHandler;
+		if (alldistrict=="Y") obj.checked=true;
+	}
+	AllDistrictClickHandler();
+	
+	var obj=document.getElementById("AllTrust");
+	if (obj) {
+		obj.onclick=AllTrustClickHandler;
+		if (alltrust=="Y") obj.checked=true;
+	}
+	AllTrustClickHandler();
+	
+	SelectPreferences();
+	
+	// ab 15.12.03 - rewrote this to use a query on the listboxes rather than hidden brokers
+	
+	// run the hidden brokers to populate lists with the available units/ru/hosps
+	/*
+	var objList=document.getElementById("MultiDept");
+	
+	if (objList) {
+		var obj=document.getElementById("MultiDeptBroker");
+		if (obj) {obj.onchange();}
+	}
+	var objList=document.getElementById("MultiRU");
+	if (objList) {
+		var obj=document.getElementById("MultiRUBroker");
+		if (obj) obj.onchange();
+	}
+	var objList=document.getElementById("MultiHosp");
+	if (objList) {
+		var obj=document.getElementById("MultiHospBroker");
+		if (obj) obj.onchange();
+	}
+	var objList=document.getElementById("MultiZone");
+	if (objList) {
+		var obj=document.getElementById("MultiZoneBroker");
+		if (obj) obj.onchange();
+	}
+	var objList=document.getElementById("MultiDistrict");
+	if (objList) {
+		var obj=document.getElementById("MultiDistrictBroker");
+		if (obj) obj.onchange();
+	}
+	var objList=document.getElementById("MultiTrust");
+	if (objList) {
+		var obj=document.getElementById("MultiTrustBroker");
+		if (obj) obj.onchange();
+	}
+	*/
+}
+
+
+// hidden broker returns string which is then used to populate the lists
+function PopulateLists(str) {
+	var obj,ids,descs;
+	var val1=str.split("$$");
+	ids=val1[1].split("^");
+	descs=val1[2].split("^");
+	//alert(str);
+	
+	if ((val1[0])=="dept") obj=document.getElementById("MultiDept");
+	if ((val1[0])=="ru") obj=document.getElementById("MultiRU");
+	if ((val1[0])=="hosp") obj=document.getElementById("MultiHosp");
+	if ((val1[0])=="hca") obj=document.getElementById("MultiZone");
+	if ((val1[0])=="hcr") obj=document.getElementById("MultiDistrict");
+	if ((val1[0])=="trust") obj=document.getElementById("MultiTrust");
+	
+	if (obj) AddItemToList(obj,descs,ids);
+	// moved this call from bodyloadhandler as it was being called before lists were populated in 650
+	SelectPreferences();
+	return true;
+}
+
+function SelectPreferences() {
+	// select items in the lists based on preferences
+	// preference string is in format: val|sel^val|sel$$val|sel^ ....
+	var objfl=document.getElementById("filters");
+	var fl1,fl2,fl3,pos;
+	if ((objfl)&&(objfl.value!="")) {
+		var fl1=objfl.value.split("$$");
+		var objlst=document.getElementById("MultiDept");
+		if (objlst) SelectInList(objlst,fl1[0].split("^"));
+		var objlst=document.getElementById("MultiRU");
+		if (objlst) SelectInList(objlst,fl1[1].split("^"));
+		var objlst=document.getElementById("MultiHosp");
+		if (objlst) SelectInList(objlst,fl1[2].split("^"));
+		var objlst=document.getElementById("MultiZone");
+		if (objlst) SelectInList(objlst,fl1[3].split("^"));
+		var objlst=document.getElementById("MultiDistrict");
+		if (objlst) SelectInList(objlst,fl1[4].split("^"));
+		var objlst=document.getElementById("MultiTrust");
+		if (objlst) SelectInList(objlst,fl1[7].split("^"));
+	}
+}
+
+function SelectInList(objlst,fl2){
+	// find value in list and select
+	if (objlst) {
+		for (i=0;i<fl2.length;i++) {
+			fl3=fl2[i].split("|");
+			
+			if (fl3[1]=="true") {
+				pos=FindItemInList(objlst,fl3[0]);
+				if ((objlst.options[pos])&&(pos!=null)) objlst.options[pos].selected=true;
+			}
+		}
+	}
+}
+
+function FindItemInList(lst,itm) {
+	// finds a value in a listbox, returns position
+	var ret="";
+	if ((lst)&&(itm!="")) {
+		for (var i=0;i<lst.options.length;i++) {
+			if (lst.options[i].value==itm) {
+				ret=i;
+			}
+		}
+	}
+	return ret;
+}
+
+// ab 16.08.02 - no longer filtering the list of wards, now we optionally display department + resp unit summaries
+/*function FilterClickHandler() {
+	var obj=document.getElementById('FilterDeptGrp');
+	if (obj) DeptGrp=obj.value;
+
+	var obj=document.getElementById('FIlterRU');
+	if (obj) RU=obj.value;
+
+	var lnk="pacward.findwardbedstat.preferences.csp?DeptGrp="+DeptGrp+"&RU="+RU+"&GroupDR="+session['LOGON.GROUPID']
+	window.location.href=lnk;
+}*/
+
+function UpdateClickHandler() {
+	var gc="",gcat="";
+	var obj=document.getElementById('FIlterGC')
+	if (obj) gc=obj.value;
+	var obj=document.getElementById('FIlterGCAT')
+	if (obj) gcat=obj.value;
+	
+	var objAllWards=document.getElementById('checkallwards');
+	var objAllDept=document.getElementById('checkalldept');
+	var objAllRU=document.getElementById('checkallru');
+	var objAllGC=document.getElementById('checkallgc');
+	var objAllGCAT=document.getElementById('checkallgcat');
+	var objAllHosp=document.getElementById('checkallhosp');
+	var objTots=document.getElementById('checktots');
+	var objAllZone=document.getElementById('checkallzone');
+	var objAllDistrict=document.getElementById('checkalldistrict');
+	var objAllTrust=document.getElementById('checkalltrust');
+	
+	var objParams=document.getElementById('params');
+	var objlst=document.getElementById('PrefList');
+	var len=objlst.options.length
+	for (var i=0; i<len; i++) {
+		objParams.value=objParams.value+objlst.options[i].text+"|"+objlst.options[i].selected+"^"
+		//objParams.value=objParams.value+objlst.options[i].value+"|"+objlst.options[i].selected+"^"
+	}
+	objParams.value=objParams.value+exclude.value;
+	
+	// Build a string in the following format: dept2|show^dept2|show$$ru1|show^ru2|show ...
+	var objFilters=document.getElementById('filters');
+	if (objFilters) {
+		objFilters.value="";
+		var objlst=document.getElementById('MultiDept');
+		if (objlst) objFilters.value=BuildStringFromList(objlst,objFilters.value);
+		objFilters.value+="$$";
+		var objlst=document.getElementById('MultiRU');
+		if (objlst) objFilters.value=BuildStringFromList(objlst,objFilters.value);
+		objFilters.value+="$$";
+		var objlst=document.getElementById('MultiHosp');
+		if (objlst) objFilters.value=BuildStringFromList(objlst,objFilters.value);
+		objFilters.value+="$$";
+		var objlst=document.getElementById('MultiZone');
+		if (objlst) objFilters.value=BuildStringFromList(objlst,objFilters.value);
+		objFilters.value+="$$";
+		var objlst=document.getElementById('MultiDistrict');
+		if (objlst) objFilters.value=BuildStringFromList(objlst,objFilters.value);
+		objFilters.value+="$$"+gc+"$$"+gcat+"$$";
+		var objlst=document.getElementById('MultiTrust');
+		if (objlst) objFilters.value=BuildStringFromList(objlst,objFilters.value);
+	}
+	
+	var obj=document.getElementById("AllWards");
+	if ((obj)&&(obj.checked==true)) objAllWards.value="Y";
+	var obj=document.getElementById("ShowTot");
+	if ((obj)&&(obj.checked==true)) objTots.value="Y";
+	var obj=document.getElementById("AllDept");
+	if ((obj)&&(obj.checked==true)) objAllDept.value="Y";
+	var obj=document.getElementById("AllRU");
+	if ((obj)&&(obj.checked==true)) objAllRU.value="Y";
+	var obj=document.getElementById("AllGC");
+	if ((obj)&&(obj.checked==true)) objAllGC.value="Y";
+	var obj=document.getElementById("AllGCAT");
+	if ((obj)&&(obj.checked==true)) objAllGCAT.value="Y";
+	var obj=document.getElementById("AllHosp");
+	if ((obj)&&(obj.checked==true)) objAllHosp.value="Y";
+	var obj=document.getElementById("AllZone");
+	if ((obj)&&(obj.checked==true)) objAllZone.value="Y";
+	var obj=document.getElementById("AllDistrict");
+	if ((obj)&&(obj.checked==true)) objAllDistrict.value="Y";
+	var obj=document.getElementById("AllTrust");
+	if ((obj)&&(obj.checked==true)) objAllTrust.value="Y";
+	
+	return Update_click();
+}
+
+function BuildStringFromList(objlst,str) {
+	if (objlst) {
+		var len=objlst.options.length;
+		for (var i=0; i<len; i++) {
+			if (i!=0) str+="^";
+			str+=objlst.options[i].value+"|"+objlst.options[i].selected;
+		}
+	}
+	return str;
+}
+
+function AllWardsClickHandler() {
+	var obj=document.getElementById("AllWards");
+	var objlst=document.getElementById('PrefList');
+	if ((obj)&&(objlst)&&(obj.checked==true)) objlst.disabled=true;
+	if ((obj)&&(objlst)&&(obj.checked==false)) objlst.disabled=false;
+}
+
+function AllDeptClickHandler() {
+	var obj=document.getElementById("AllDept");
+	var objlst=document.getElementById("MultiDept");
+	if ((obj)&&(objlst)&&(obj.checked==true)) objlst.disabled=true;
+	if ((obj)&&(objlst)&&(obj.checked==false)) objlst.disabled=false;
+	
+}
+
+function AllRUClickHandler() {
+	var obj=document.getElementById("AllRU");
+	var objlst=document.getElementById("MultiRU");
+	if ((obj)&&(objlst)&&(obj.checked==true)) objlst.disabled=true;
+	if ((obj)&&(objlst)&&(obj.checked==false)) objlst.disabled=false;
+	
+}
+
+function AllHospClickHandler() {
+	var obj=document.getElementById("AllHosp");
+	var objlst=document.getElementById("MultiHosp");
+	if ((obj)&&(objlst)&&(obj.checked==true)) objlst.disabled=true;
+	if ((obj)&&(objlst)&&(obj.checked==false)) objlst.disabled=false;
+	
+}
+
+function AllGCClickHandler() {
+	var obj=document.getElementById("AllGC");
+	var objlst=document.getElementById("FIlterGC");
+	if ((obj)&&(objlst)&&(obj.checked==true))  {
+		DisableFldObj(objlst);
+		DisableLookup("ld1380iFilterGC");
+	}
+	if ((obj)&&(objlst)&&(obj.checked==false))  {
+		EnableFldObj(objlst);
+		EnableLookup("ld1380iFilterGC");
+	}
+}
+
+function AllGCATClickHandler() {
+	var obj=document.getElementById("AllGCAT");
+	var objlst=document.getElementById("FIlterGCAT");
+	if ((obj)&&(objlst)&&(obj.checked==true))  {
+		DisableFldObj(objlst);
+		DisableLookup("ld1380iFilterGCAT");
+	}
+	if ((obj)&&(objlst)&&(obj.checked==false))  {
+		EnableFldObj(objlst);
+		EnableLookup("ld1380iFilterGCAT");
+	}
+}
+
+function AllZoneClickHandler() {
+	var obj=document.getElementById("AllZone");
+	var objlst=document.getElementById("MultiZone");
+	if ((obj)&&(objlst)&&(obj.checked==true)) objlst.disabled=true;
+	if ((obj)&&(objlst)&&(obj.checked==false)) objlst.disabled=false;
+	
+}
+
+function AllDistrictClickHandler() {
+	var obj=document.getElementById("AllDistrict");
+	var objlst=document.getElementById("MultiDistrict");
+	if ((obj)&&(objlst)&&(obj.checked==true)) objlst.disabled=true;
+	if ((obj)&&(objlst)&&(obj.checked==false)) objlst.disabled=false;	
+}
+
+function AllTrustClickHandler() {
+	var obj=document.getElementById("AllTrust");
+	var objlst=document.getElementById("MultiTrust");
+	if ((obj)&&(objlst)&&(obj.checked==true)) objlst.disabled=true;
+	if ((obj)&&(objlst)&&(obj.checked==false)) objlst.disabled=false;	
+}
+
+function GetDesc(type) {
+	var desc = "User (" + session['LOGON.USERCODE'] + ")";
+	if (type=='L') desc = "Location (" + document.getElementById("LocDesc").value + ")";
+	if (type=='G') desc = "Group (" + session['LOGON.GROUPDESC'] + ")";
+	if (type=='T') desc = "Site (" + session['LOGON.SITECODE'] + ")";
+	return desc;
+}
+function SetOrgFavSaveAs(type) {
+	document.fPACWard_FindWardBedStat_Preferences.type.value=type;
+	document.getElementById('SaveAs').innerText=GetDesc(type);
+}
+
+function FilterGCLookupSelect(str) {
+	var val=str.split("^");
+	var obj=document.getElementById("FIlterGC");
+	if (obj) obj.value=val[1];
+	var obj=document.getElementById("FIlterGCAT");
+	if (obj) obj.value=val[2];
+}
+
+function DisableFldObj(fld) {
+	if (fld) {
+		fld.value = "";
+		fld.disabled = true;
+		fld.className = "disabledField";
+		var lbl = ('c'+fld.id);
+		if (lbl) lbl = lbl.className = "";
+	}
+}
+
+function EnableFldObj(fld) {
+	if (fld) {
+		fld.disabled = false;
+		fld.className = "";
+		var lbl = ('c'+fld.id);
+		if (lbl) lbl = lbl.className = "";
+	}
+}
+
+function DisableLookup(fldName)
+{
+ var obj=document.getElementById(fldName);
+ if (obj) obj.disabled=true;
+}
+
+function EnableLookup(fldName)
+{
+ var obj=document.getElementById(fldName);
+ if (obj) obj.disabled=false;
+}
+
+document.body.onload=BodyLoadHandler;
+</SCRIPT>
+</body>
+</html>
+

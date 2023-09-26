@@ -1,0 +1,207 @@
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<SCRIPT language=cache RUNAT=SERVER>
+	
+</SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcnuropexectable1.css"></LINK>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--meta http-equiv="refresh" content="60"-->
+<style>
+body{
+	background-color: #fff;
+	padding:10px;
+}
+.title-cls{
+	background-color: #40A2DE;
+	color: #fff;
+	padding-left: 5px;
+}
+/*table{
+	border-collapse:separate;
+	border-spacing:0 5px;
+}*/
+.tabbody-cls{
+	padding:0 5px;
+	width:47px;
+}
+label{
+	color: #878787;
+}
+</style>
+</HEAD>
+<body>
+
+<SCRIPT language=javascript>
+	
+  
+ </SCRIPT>
+<Server>
+s Userid=%session.Get("LOGON.USERID")
+s Locid=%request.Get("Locid")
+s BorUserId=%request.Get("BorUserId")
+k ^tempdhcallocroom
+s str=##class(web.DHCAlloc).GetExaboroughDocinfo(Userid,Locid,BorUserId)
+s count=0
+s ^TempAllocboderuser(Userid)=str
+if BorUserId'=""{
+	s ^TempAllocboder(BorUserId)=str
+}else{
+	s Initials=$p($g(^SSU("SSUSR",Userid)),"^",1)
+	s Zone=##class(web.DHCAlloc).GetFirstExabID(Initials)
+	if Zone'="" s ^TempAllocboder(Zone)=str
+}
+s lcurrpos=10,maxheight=55,maxwidth=0,MostUrgent=0
+s onelinemaxnum=100,curlinenum=0,ifTranLine=0
+s bedhistory=0
+//s str="内科诊区一诊室^内分科门诊^蒋荣猛^10^2^2^3^4^5^第10^第11^第12^第13"
+/*s str=str_"!"_str
+s str=str_"!"_str
+s str=str_"!"_str
+s str=str_"!"_str*/
+if str'=""{
+w "<DIV style=""position:absolute;"" id=""dhcdoctreatroomtable"">",$c(13,10)
+s i=0
+for {
+	s i=i+1
+	s ^temp("str")=str
+	s strayy=$p(str,"!",i)
+	q:strayy=""
+	s Exaroom=$p(strayy,"^",1)
+	s ^tempdhcallocroom=$G(^tempdhcallocroom)_"^"_Exaroom_"^"
+	s locdesc=$p(strayy,"^",2)
+	s docdesc=$p(strayy,"^",3)
+	s UnArrived=$p(strayy,"^",4)
+	s AgianArrived=$p(strayy,"^",5)
+	s Arrived=$p(strayy,"^",6)
+	s Unreport=$p(strayy,"^",7)
+	s PerPared=$p(strayy,"^",8)
+	s DocID=$p(strayy,"^",9)
+	s locid=$p(strayy,"^",10)
+	s DepMarkID=""
+	s SetDocID=""
+	for{
+		s DepMarkID=$O(^User.DHCDepMarkI("DepmMarkDrIndex",DocID,DepMarkID))
+		q:DepMarkID=""
+		s DepmDepDr=$List(^User.DHCDepMarkD(DepMarkID),8)
+		continue:DepmDepDr'=locid
+		s SetDocID=DepMarkID
+	}
+	s Arrived1=$p(strayy,"^",11)
+	s AvailSeqNoCount=$p(strayy,"^",13)
+	w "<DIV class=""orderUnPaid"" id=""",SetDocID,""" "
+	w "style=""left:",(ifTranLine*225),"px; top:",3+(curlinenum*165),"px; width:",215,"px; height:",130,"px; z-index:10; background-color:#FFFFFF;border:1px solid #ccc;border-radius:4px;"""
+ 	w " title=""",i,""" >"
+    //TABLE-LAYOUT:FIXED
+	w "<TABLE style=""width:100%;height:100%;"" id="""_i_""" count="""_i_""" title="""_""_""" border=0 cellpadding=0 cellspacing=0>",$c(13,10)
+		w "<tbody>"
+		w "<TR>","<td colspan='4' class='title-cls'>",Exaroom_" - "_docdesc,"</td>","</TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label>科室:</label></td>","<td class='' colspan='3'>",locdesc,"</td>","</TR>"
+		//w "<TR>","<td>","<label>医生:</label></td>","<td style=""font-size:16px;color:red;FONT-WEIGHT: bold;"">",docdesc,"</td>","</TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label>就诊:</label></td>","<td class=''>",Arrived,"</td>","<td class='tabbody-cls'><label>未报到:</label></td><td>",Unreport,"</td></TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label>准备:</label></td>","<td class=''>",PerPared,"</td>","<td class='tabbody-cls'><label>已就诊:</label></td><td>",Arrived1,"</td></TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label>未就诊:</label></td>","<td class=''>",(UnArrived+AgianArrived),"</td>","</TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label>剩号:</label></td>","<td class='' colspan='3'>",AvailSeqNoCount,"</td>","</TR>"
+		w "</tbody>"
+	w "</TABLE>"
+	w "</DIV>",$c(13,10)
+	s ifTranLine=ifTranLine+1
+ 	i $p((ifTranLine/onelinemaxnum),".",2)="" d
+ 	.s curlinenum=curlinenum+1
+ 	.i ifTranLine=onelinemaxnum d
+ 	..s ifTranLine=0
+ 	..s maxwidth=maxwidth+100
+ 	s count=count+1
+ 	
+ }
+/*s j=0
+s rtncall=##class(web.DHCAlloc).QueryExab1(Userid,BorUserId)
+for {
+	s j=j+1
+	s Exaroom=$p(rtncall,"^",j)
+	q:Exaroom=""
+	continue:$G(^tempdhcallocroom)[Exaroom
+	s locdesc=""
+	s docdesc=""
+	s UnArrived=""
+	s AgianArrived=""
+	s Arrived=""
+	s Unreport=""
+	s PerPared=""
+	w "<DIV class=""orderUnPaid"" id=""",i+j,""" "
+	w "style=""left:",(ifTranLine*225),"px; top:",3+(curlinenum*165),"px; width:",215,"px; height:",142,"px; z-index:10; background-color:#ffffff;border-style: solid;border-color:#82c2bb;border-width:1px;"""
+ 	w " title=""",i,""" >"
+
+	w "<TABLE style=""width:100%;TABLE-LAYOUT:FIXED"" id="""_i_""" count="""_i_""" title="""_""_""" border=0 cellpadding=0 cellspacing=0>",$c(13,10)
+		w "<tbody>"
+		w "<TR style=""font:12px;"" >","<span style=""font-size:16px;"">","诊室：</span>","<span style=""font-size:16px;"">",Exaroom,"</span>","</TR>"
+		w "<TR style=""font:12px;"" >","<span style=""font-size:16px;"">","科室：</span>","<span style=""font-size:16px;"">",locdesc,"</span>","</TR>"
+		;w "<TR style=""font:16px"" >","诊室："_Exaroom,"</TR>"
+		;w "<TR style=""font:16px"" >","科室："_locdesc,"</TR>"
+		w "<TR style=""font:12px;"" >","<span style=""font-size:16px;"">","医生：</span>","<span style=""font-size:20px;color:red;"">",docdesc,"</span>","</TR>"
+		;w "<TR style=""font:12px;"" >","医生："_docdesc,"</TR>"
+		;w "<TR style=""font:16px"" >","首诊："_UnArrived,"","&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;回诊："_AgianArrived,"</TR>"
+		;w "<TR style=""font:18px"" >","就诊："_Arrived,"</TR>"
+		;w "<TR style=""font:18px"" >","准备：","</TR>"
+		w "<TR style=""font:12px;"" >","<span style=""font-size:16px;"">","就诊：</span>","<span style=""font-size:16px;"">",Arrived,"</span>","&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;未报到：",Unreport,"</TR>"
+		w "<TR style=""font:16px"" >","准备："_PerPared,"</TR>"
+		w "<TR style=""font:16px"" >","首诊："_UnArrived,"","&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;回诊："_AgianArrived,"</TR>"
+		w "</tbody>"
+	w "</TABLE>"
+	w "</DIV>",$c(13,10)
+	s ifTranLine=ifTranLine+1
+ 	i $p((ifTranLine/onelinemaxnum),".",2)="" d
+ 	.s curlinenum=curlinenum+1
+ 	.i ifTranLine=onelinemaxnum d
+ 	..s ifTranLine=0
+ 	..s maxwidth=maxwidth+100
+ 	s count=count+1
+ 	
+ }*/
+
+ w "</DIV><!--ward floorplan-->",$c(13,10)
+}else{
+	w "<div style='text-align:center;height:133px;line-height:133px;color:gray;font-size:16px;'>没有正在出诊医生的号别信息<div>"
+}
+
+</Server>
+
+<SCRIPT language=javascript>
+	var DocID=""
+	$(function(){
+		$(".orderUnPaid").click(DocClickHandler)
+		})
+	function DocClickHandler(){
+		var SelecID=this.id
+		$(".orderUnPaid").each(function(index,element){
+			$(this).css("background-color", "#FFFFFF");
+			})
+		if (DocID!=SelecID){
+			DocID=SelecID
+			$("#"+SelecID).css("background-color", "#ccc");
+			window.parent.LoadPatQueue(DocID)
+		}else{
+			DocID=""
+			window.parent.LoadPatQueue("")
+			}
+		}
+	
+	
+	</SCRIPT>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.listrows.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.List.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.List.Tools.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/excelprint.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/dhtmlXCommon.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/dhtmlXCombo.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/DHCWeb.OPCommon.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/DHCVisComputerMark.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+﻿<HTML>
+<HEAD>
+	<TITLE>病历转移</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s mainDoc = $p(##class(EMRservice.HISInterface.PatientInfoAssist).MainDoc(episodeID), "^", 2) 	
+		s userID = %session.Get("LOGON.USERID")
+		s currAuthor=""
+		if (userID'="")
+		{
+			s currAuthor = ##class(EMRmeta.PowerUser).GetUserName(userID)
+		}
+		s userLoc = %session.Get("LOGON.CTLOCID")
+		s userLocDes = %session.Get("LOGON.CTLOCDESC")
+	</script>
+	<script type="text/javascript">
+		var episodeID = '#(episodeID)#';
+		var mainDoc = '#(mainDoc)#';
+		var userID = '#(userID)#';
+		var currAuthor = '#(currAuthor)#';
+		var userLoc = '#(userLoc)#'
+		var userLocDes = '#(userLocDes)#'
+	</script>
+</HEAD>
+
+<BODY>
+    <script type="text/javascript" src="../scripts/emr/js/record.recordtransferlog.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/record.recordtransfer.js"></script>
+</BODY>
+</HTML>

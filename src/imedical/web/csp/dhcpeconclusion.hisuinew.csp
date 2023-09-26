@@ -1,0 +1,117 @@
+<!--
+ * Description: 检查结论
+ * FileName: dhcpeconclusion.hisui.csp
+ * Anchor: wangguoying
+ * Date: 2020-01-20
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+
+<HISUI/>
+	<style>
+		.labelTd{			
+			width:98px;
+			padding-right:10px;
+			text-align:right;
+		}
+	</style>
+</head>
+<body>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s GSID=$g(%request.Data("GSID",1))
+ s UserID=$g(%request.Data("USERID",1))
+ s IADM=$P(^DHCPEGS(GSID,1),"^",1)
+ i IADM'="" d
+ .s VIPLevel=+##class(web.DHCPE.PreCommon).GetVIPLevel("IADM",IADM)
+ e  d
+ .s VIPLevel=1
+ s GSEXID=$O(^User.DHCPEGeneralSummarizeExI("GeneralSummarizeID",GSID,0))
+ w "<table border=0 width=100%>"
+ w "<tr><td class='labelTd'>职业病结论分类</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),3)
+ d ##class(web.DHCPE.Conclusion).OutConclusionHISUI("Conclusion",VIPLevel,Default,532)
+ w "</td></tr>"
+ 
+ w "<tr><td class='labelTd'>诊断标准</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),5)
+ d ##class(web.DHCPE.DiagnosticCriteria).OutDiagnosticCriteriaHISUI("DiagnosticCriteria",Default,532)
+ w "</td></tr>"
+ 
+ w "<tr><td class='labelTd'>处理意见</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),6)
+ w "<textarea rows=4 id='Suggestions' class='hisyui-validatebox textbox' style='width:526'>"_Default_"</textarea>"
+ w "</td></tr>"
+ 
+ w "<tr><td class='labelTd'>检查结果</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),7)
+ w "<textarea rows=4 id='TestResult' class='hisyui-validatebox textbox' style='width:526'>"_Default_"</textarea>"
+ w "</td></tr>"
+ 
+ w "<tr><td class='labelTd'>临床表现</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),8)
+ w "<textarea rows=4 id='Clinical' class='hisyui-validatebox textbox' style='width:526'>"_Default_"</textarea>"
+ w "</td></tr>"
+ 
+ w "<tr><td class='labelTd'>职业接触史</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),9)
+ w "<textarea rows=4 id='OccupationalHistory' class='hisyui-validatebox textbox'  style='width:526'>"_Default_"</textarea>"
+ w "</td></tr>"
+ w "<tr><td colspan=2 align='center' style='padding-top:10px;'><a  id='Save' href='#' onclick='Save()' data-options=""iconCls:'icon-w-save'"" class='hisui-linkbutton'>保存</a></td></tr>"
+ w "</table>"
+// q
+
+</Script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/websys.hisui.js"></script>
+<script language="javascript">
+function Save()
+{
+	var obj,Conclusion="",DiagnosticCriteria="",Suggestions="";
+	var TestResult="",Clinical="",OccupationalHistory="";
+	Conclusion=$("#Conclusion").combobox('getValue');
+	if(Conclusion==""){
+		$.messager.alert("提示","结论不能为空","info");
+		return false;
+	}
+	DiagnosticCriteria=$("#DiagnosticCriteria").combobox('getValue');
+	obj=document.getElementById("Suggestions");
+	if (obj) Suggestions=obj.value;
+	obj=document.getElementById("TestResult");
+	if (obj) TestResult=obj.value;
+	obj=document.getElementById("Clinical");
+	if (obj) Clinical=obj.value;
+	obj=document.getElementById("OccupationalHistory");
+	if (obj) OccupationalHistory=obj.value;
+	var GSID=#(GSID)#;
+	var Str=Conclusion+"^"+DiagnosticCriteria+"^"+Suggestions+"^"+TestResult+"^"+Clinical+"^"+OccupationalHistory;
+	//var UserID=#(UserID)#;
+	var ret=#server(web.DHCPE.GeneralSummarizeEx.Save(GSID,Str))#
+	//alert(ret)
+	if (ret.split("^")[0]=="-1"){
+		$.messager.alert("提示", "更新失败"+ret.split("^")[1],"error");
+	}else{
+			
+		$.messager.alert("提示", "更新成功","success",function(){
+			window.location.reload();
+		});
+		
+	}
+}
+</script>
+
+</body>
+</html>

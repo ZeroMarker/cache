@@ -1,0 +1,89 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	 
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s str=$Get(%request.Data("str",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s valid=$Get(%request.Data("valid",1))
+	s TargetName=$Get(%request.Data("TargetName",1))
+	
+	s sValue=$Get(%request.Data("sValue",1))
+	s targetID=$Get(%request.Data("targetID",1))
+	s typegroupID=$Get(%request.Data("typegroupID",1))
+	S CalcTypeID=$Get(%request.Data("CalcTypeID",1))
+	s schemeID=$Get(%request.Data("schemeID",1)) 
+	s UnitID=$Get(%request.Data("UnitID",1)) 
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uBonusCalculateType).List(searchField,searchValue,sortField,sortDir,typegroupID,start,limit)
+	
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uBonusCalculateType).InsertRec(code,name,typegroupID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uBonusCalculateType).UpdateRec(rowid,code,name,sValue,targetID,typegroupID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uBonusCalculateType).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "BonusTarget" d
+	.w ##class(dhc.bonus.udata.uBonusCalculateType).BonusTarget(start,limit,TargetName)
+	
+	;-----------------添加核算类别关联指标-------------------------------
+	i action = "listBt" d
+	.w ##class(dhc.bonus.udata.uCalculateTypeTarget).List(CalcTypeID,start,limit)
+	
+	i action = "listUT" d
+	.w ##class(dhc.bonus.udata.uCalculateTypeTarget).ListUT(UnitID,CalcTypeID,start,limit)
+	
+	
+	i action = "addBT" d
+	.s result = ##class(dhc.bonus.udata.uCalculateTypeTarget).InsertRec(targetID,CalcTypeID,sValue,schemeID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editBT" d
+	.s result = ##class(dhc.bonus.udata.uCalculateTypeTarget).UpdateRec(rowid,CalcTypeID,targetID,sValue,schemeID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delBT" d
+	.s result = ##class(dhc.bonus.udata.uCalculateTypeTarget).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

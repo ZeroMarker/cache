@@ -1,0 +1,317 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+</HEAD>
+<SERVER>
+ s (eq,cp,locid,res,prev,next,hospid)=""
+ s mode=%request.Get("Mode")
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s LocDesc=%request.Get("CTLOCDesc")
+ s RescID=%request.Get("RescID")
+ s ServID=%request.Get("ServID")
+ s GetNext=%request.Get("GetNext")
+ s GetPrev=%request.Get("GetPrev")
+ s HCAID=%request.Get("HCAId")
+ s SESSDesc=%request.Get("SESSDesc")
+ s HospIDs=%request.Get("HospIds")
+ s QLDOutChk=%request.Get("QLDOutChk")
+ ; LOG 52747 RC 01/06/05 Passing Pat and Ep IDs through here for the single appointment workflow that now is able to use
+ ; the multi calendar screen, where it couldn't before.
+ s EpisodeID=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+ s SingleApptOB=$g(%request.Data("SingleApptOB",1))
+ 
+ ;//LOG 31208 BC 4-2-2003 
+ s OBParam="", OBParam=$g(%request.Data("OBParam",1))
+ i OBParam'="" s %request.Data("OBParam",1)=OBParam
+ s work=$lb(TWKFL,TWKFLI,ServID,OBParam)
+
+ ; Counter Globals 
+ s gblCntMax=%request.Get("gblCntMax")
+ s gblCnt=%request.Get("gblCnt") i gblCnt="" s gblCnt=1
+ s cMaxRec=0
+ s pgCnt=4
+ s found=0
+ s arcim=$p($g(^RBC("SER",+ServID)),"^"),arcos=$p($g(^RBC("SER",+ServID)),"^",2),key=arcim_"&"_arcos
+ ; 43315 RC 17/09/04 If there is a Health care Area, and no selected hospitals, then get all the hospitals for that area.
+ i HCAID'="",HospIDs="" {
+ 	s rs=##Class(%Library.ResultSet).%New("web.CTHospital:LookUpHospbyHCA")
+ 	i rs {
+ 		d rs.Execute("",HCAID)	
+ 		f  {
+ 			q:'rs.Next()
+ 			i HospIDs'="" s HospIDs=HospIDs_"|"_rs.GetData(2)
+ 			i HospIDs="" s HospIDs=rs.GetData(2)
+ 		}
+ 		d rs.%Close()
+ 	}
+ }
+ ;
+ i (LocDesc="") ! (RescID="") {
+	i mode="" {
+		i GetNext s gblCnt=gblCnt+1
+		i GetPrev s gblCnt=gblCnt-1
+		;s ^zsb("GETNEXT")="GetNext: "_GetNext_" GetPrev: "_GetPrev
+		i RescID="", LocDesc="", HospIDs'="" {
+			; If get previous then jump backwards 4 records
+			i GetPrev'="" s cnt=0 f  s GetPrev=$o(^CTLOC(0,"Hosp",+HospIDs,locid),-1)  q:GetPrev=""  q:cnt=4  s cnt=cnt+1
+			f i=1:1:$l(HospIDs,"|") d 
+			. s hospid=$p(HospIDs,"|",i)
+			. q:hospid=""
+			. s locid="" f  s locid=$o(^CTLOC(0,"Hosp",hospid,locid))  q:locid=""  d
+			. . ;i QLDOutChk="Y",$p($g(^CTLOC(locid)),"^",68)'="Y" q
+			. . s tmp="" f  s tmp=$o(^RB("RES",0,"CTLOC",locid,tmp))  q:tmp=""  d
+			. . . i ServID'="",$d(^RB("RES",0,"SER1",key,tmp))=0 q
+			. . . s cMaxRec=cMaxRec+1
+		}
+		i RescID="", LocDesc="", HospIDs="" {
+			;s arcim=$p($g(^RBC("SER",+ServID)),"^"),arcos=$p($g(^RBC("SER",+ServID)),"^",2),key=arcim_"&"_arcos
+			;i GetPrev'="" s cnt=0 f  s GetPrev=$o(^RB("RES",0,"SER1",key,GetPrev),-1)  q:GetPrev=""  q:cnt=4  s cnt=cnt+1
+			;s GetPrev="131"
+			s tmp="" f  s tmp=$o(^RB("RES",0,"SER1",key,tmp))  q:tmp=""  s cMaxRec=cMaxRec+1
+		}
+		i RescID'="" {
+			s cp=$p($g(^RB("RES",RescID)),"^",2)
+			s eq=$p($g(^RB("RES",RescID)),"^",3)
+			
+			; If get previous then jump backwards 4 records
+			i cp'="" {
+				i GetPrev'="" s cnt=0 f  s GetPrev=$o(^RB("RES",0,"CTPCP",cp,GetPrev),-1)  q:GetPrev=""  q:cnt=4  s cnt=cnt+1
+				s tmp="" f  s tmp=$o(^RB("RES",0,"CTPCP",cp,tmp))  q:tmp=""  d
+				. i ServID'="",$d(^RB("RES",0,"SER1",key,tmp))=0 q
+				. ;BR 47603, don't include if location is not assigned to Hospital being searched.
+				. i HospIDs'="",HospIDs'[ $p(^CTLOC(tmp),"^",22) q
+				. s cMaxRec=cMaxRec+1
+			}
+			i eq'="" {
+				i GetPrev'="" s cnt=0 f  s GetPrev=$o(^RB("RES",0,"EQ",eq,GetPrev),-1)  q:GetPrev=""  q:cnt=4  s cnt=cnt+1
+				s tmp="" f  s tmp=$o(^RB("RES",0,"EQ",eq,tmp))  q:tmp=""  d
+				. i ServID'="",$d(^RB("RES",0,"SER1",key,tmp))=0 q
+				. s cMaxRec=cMaxRec+1
+			}
+			
+			;&sql(select COUNT(RES_RowId) into :cMaxRec from RB_Resource where RES_CTPCP_DR=:cp)
+		}
+		i LocDesc'="" {
+			s locid=##Class(web.CTLoc).GetIdFromCodeOrDescription(LocDesc)
+			;s locid=##Class(web.CTLoc).IsValidDesc(LocDesc)
+			; If get previous then jump backwards 4 records
+			;s ^zTRAK("zrod",$zn,"locid",$o(^zTRAK("zrod",$zn,"locid",""),-1)+1)=locid_","_ServID
+			i locid'="" {
+				;Check if Location is an outpatient Unit
+				s OutpatUnit=$p(^CTLOC(locid),"^",68)
+				;Check if User Group is only allowed to see OP units
+				s OPFlag=$p($g(^SSU("SSGRP",%session.Get("LOGON.GROUPID"))),"^",109)
+				;BR 47240: If Group is only allowed to see OP units and this isn't one, don't use it.
+				i OPFlag="Y" {
+					if OutpatUnit="Y" {
+						i GetPrev'="" s cnt=0 f  s GetPrev=$o(^RB("RES",0,"CTLOC",locid,GetPrev),-1)  q:GetPrev=""  q:cnt=4  s cnt=cnt+1
+						s tmp="" f  s tmp=$o(^RB("RES",0,"CTLOC",locid,tmp))  q:tmp=""  d
+						. i ServID'="",$d(^RB("RES",0,"SER1",key,tmp))=0 q
+						. s cMaxRec=cMaxRec+1
+					} else {
+						s locid=""
+					}
+				} else {
+					i GetPrev'="" s cnt=0 f  s GetPrev=$o(^RB("RES",0,"CTLOC",locid,GetPrev),-1)  q:GetPrev=""  q:cnt=4  s cnt=cnt+1
+					s tmp="" f  s tmp=$o(^RB("RES",0,"CTLOC",locid,tmp))  q:tmp=""  d
+					. i ServID'="",$d(^RB("RES",0,"SER1",key,tmp))=0 q
+					. s cMaxRec=cMaxRec+1
+				}
+			} else {
+				s tmp=""
+				s cMaxRec=1
+			}
+			;&sql(select COUNT(RES_RowId) into :cMaxRec from RB_Resource where RES_CTLOC_DR=:locid)
+		}
+		s gblCntMax=cMaxRec\4 i cMaxRec#4'=0 s gblCntMax=gblCntMax+1
+		;s itmCnt=gblCntMax*4 i itmCnt>cMaxRec s pgCnt=4-(itmCnt-cMaxRec)
+		s pgCnt=4
+		i pgCnt=1 {
+			;w "<frameset rows='273,*,70' frameborder='NO' border='0' framespacing='0' cols='*'>"
+			w "<frameset rows='300,*,70' frameborder='NO' border='0' framespacing='0' cols='*'>"
+		} else {
+			w "<frameset rows='*,*,70' frameborder='NO' border='0' framespacing='0' cols='*'>"
+		}
+		s cnt=0
+		i locid="",cp="",eq="",+HospIDs'="" {
+			k hosplocres
+			s res=GetNext
+			i GetPrev s res=GetPrev
+			s notfound=1
+			s:res="" notfound=0
+			f i=1:1:$l(HospIDs,"|") d
+			. s hospid=$p(HospIDs,"|",i)
+			. q:hospid="" 
+			. s locID="" f  s locID=$o(^CTLOC(0,"Hosp",hospid,locID))  q:locID=""  d
+			. . ;i QLDOutChk="Y",$p($g(^CTLOC(locid)),"^",68)'="Y" q
+			. . s rs="" f  s rs=$o(^RB("RES",0,"CTLOC",locID,rs))  q:rs=""  d
+			. . . i ServID'="",$d(^RB("RES",0,"SER1",key,rs))=0 q
+			. . . i rs=res s notfound=0
+			. . . q:notfound
+			. . . s hosplocres(hospid,locID,rs)=""
+			
+			s (hospid,locID)=""
+			f  s hospid=$o(hosplocres(hospid)) q:hospid=""  d
+			. f  s locID=$o(hosplocres(hospid,locID)) q:locID=""  d 
+			. . f  s res=$o(hosplocres(hospid,locID,res)) q:res=""  q:cnt=4  d
+			. . . i $p($g(^RB("RES",res)),"^",19)'="",$p($g(^RB("RES",res)),"^",19)<+$h q
+			. . . d DisplayPage^CRBCalendar(res,cnt,pgCnt,work,SESSDesc,EpisodeID,PatientID,SingleApptOB)
+			. . . i cnt=0 s prev=res
+			. . . s cnt=cnt+1
+			. . . s next=res
+		}
+		i ServID'="",locid="",cp="",eq="",HospIDs="" {
+			s res=GetNext
+			i GetPrev s res=GetPrev			
+			f  s res=$o(^RB("RES",0,"SER1",key,res))  q:res=""  q:cnt=4  d
+			. i $p($g(^RB("RES",res)),"^",19)'="",$p($g(^RB("RES",res)),"^",19)<+$h q
+			. d DisplayPage^CRBCalendar(res,cnt,pgCnt,work,SESSDesc,EpisodeID,PatientID,SingleApptOB)
+			. i cnt=0 s prev=res
+			. s cnt=cnt+1
+			. s next=res
+		}
+		i locid'="" {
+			s res=GetNext
+			i GetPrev s res=GetPrev
+			f  s res=$o(^RB("RES",0,"CTLOC",locid,res))  q:res=""  q:cnt=4  d
+			. i ServID'="",$d(^RB("RES",0,"SER1",key,res))=0 q
+			. i $p($g(^RB("RES",res)),"^",19)'="",$p($g(^RB("RES",res)),"^",19)<+$h q
+			. d DisplayPage^CRBCalendar(res,cnt,pgCnt,work,SESSDesc,EpisodeID,PatientID,SingleApptOB)
+			. i cnt=0 s prev=res
+			. s cnt=cnt+1
+			. s found=1
+			. s next=res
+		}
+		i cp'="" {
+			s loc=GetNext
+			i GetPrev s loc=GetPrev
+			f  s loc=$o(^RB("RES",0,"CTPCP",cp,loc))  q:loc=""  q:cnt=4  d
+			. s res="" f  s res=$o(^RB("RES",0,"CTPCP",cp,loc,res))  q:res=""  q:cnt=4  d
+			. . i ServID'="",$d(^RB("RES",0,"SER1",key,res))=0 q
+			. . ;BR 47603, don't include if location is not assigned to Hospital being searched.
+			. . i HospIDs'="",HospIDs'[ $p(^CTLOC(loc),"^",22) q
+			. . i $p($g(^RB("RES",res)),"^",19)'="",$p($g(^RB("RES",res)),"^",19)<+$h q
+			. . d DisplayPage^CRBCalendar(res,cnt,pgCnt,work,SESSDesc,EpisodeID,PatientID,SingleApptOB)
+			. . i cnt=0 s prev=loc
+			. . s cnt=cnt+1
+			. . s next=loc
+		}
+		i eq'="" {
+			s loc=GetNext
+			i GetPrev s loc=GetPrev
+			f  s loc=$o(^RB("RES",0,"EQ",eq,loc))  q:loc=""  q:cnt=4  d
+			. s res="" f  s res=$o(^RB("RES",0,"EQ",eq,loc,res))  q:res=""  q:cnt=4  d
+			. . i ServID'="",$d(^RB("RES",0,"SER1",key,res))=0 q
+			. . i $p($g(^RB("RES",res)),"^",19)'="",$p($g(^RB("RES",res)),"^",19)<+$h q
+			. . d DisplayPage^CRBCalendar(res,cnt,pgCnt,work,SESSDesc,EpisodeID,PatientID,SingleApptOB)
+			. . i cnt=0 s prev=loc
+			. . s cnt=cnt+1
+			. . s next=loc
+		}
+	
+		; SB: fill in the empty gaps with websys.default.csp
+		f  q:cnt=4  d DisplayPage^CRBCalendar(res,cnt,pgCnt,work,SESSDesc,EpisodeID,PatientID,SingleApptOB) s cnt=cnt+1
+		;s ^zsb("ALERT")="locid: "_locid_" cp: "_cp_" LocDesc: "_LocDesc_" res: "_res_" ServID: "_ServID_"**** cMaxcnt="_found
+		w " <frame name='bottomFrame' src='rbcalendar.multi.csp?Mode=KEY&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&gblCntMax="_gblCntMax_"&gblCnt="_gblCnt_"&RescID="_RescID_"&CTLOCDesc="_LocDesc_"&ServID="_$ZCVT(ServID,"O","URL")_"&GetNext="_next_"&GetPrev="_prev_"&OBParam="_OBParam_"&HCAId="_HCAID_"&HospIds="_HospIDs_"&QLDOutChk="_QLDOutChk_"&EpisodeID="_EpisodeID_"&PatientID="_PatientID_"'>"
+		w "</frameset>"
+	}
+	
+	i mode="KEY" {
+		s obj=##Class(websys.Component).OpenName("RBMessages")
+		i obj d obj.LoadTrans(),obj.%Close()
+		s RBNoAppts=t("RBNoAppts")
+		s RBSomeAppts=t("RBSomeAppts")
+		s RBFullAppts=t("RBFullAppts")
+		s RBOverbook=t("RBOverbook")
+		s RBPartNA=t("RBPartNA")
+		s RBAllNA=t("RBAllNA")
+		s RBNoSched=t("RBNoSched")
+		w "<BODY>",$c(13)
+		w "<TRAK:APPLET><TRAK:COMPONENT id='RBResEffDateSessServices.Find' hideheadings=1></TRAK:COMPONENT>"
+		w "<table border='0' cellpadding='0' cellspacing='0'>",$c(13)
+		w " <tr>",$c(13)
+		w "  <td width='30%' align=left valign='top'>",$c(13)
+		;s ^zsb("gblCnt")=gblCnt_","_gblCntMax
+		i gblCnt'=1 w "   <img SRC='../images/websys/pageprev.gif' BORDER='0' onclick='PrevPage();'>",$c(13)
+		i gblCnt=1 w "   &nbsp;"
+		i gblCntMax>0 {
+		i gblCnt=1,gblCnt=gblCntMax {} else {w "&nbsp;<SMALL>"_gblCnt_"</SMALL>&nbsp;",$c(13)}
+		i gblCnt'=gblCntMax w "   <img SRC='../images/websys/pagenext.gif' BORDER='0' onclick='NextPage();'>",$c(13)
+	}
+	w "  </td>",$c(13)
+	w "<td width='70%' align=left valign='top' nowrap>",$c(13)
+	}
+ }
+ i mode="KEY" {
+	w "</td>",$c(13)
+   	w "  <td width='20%' align='right' valign='top'><table>",$c(13)
+   	w "   <tr><td nowrap><span id='noapptkey'></span>"_RBNoAppts_"</td>",$c(13)
+   	w "   	<td nowrap><span id='partunavailkey'></span>"_RBPartNA_"</td>",$c(13)
+   	w "   <tr><td nowrap><span id='apptkey'></span>"_RBSomeAppts_"</td>",$c(13)
+   	w "   	<td nowrap><span id='unavailkey'></span>"_RBAllNA_"</td></tr>",$c(13)
+   	w "   <tr><td nowrap><span id='maxapptkey'></span>"_RBFullAppts_"</td>",$c(13)
+   	w "   	<td nowrap><span id='noschedkey'></span>"_RBNoSched_"</td></tr>",$c(13)
+   	w "   <tr><td nowrap><span id='overbookkey'></span>"_RBOverbook_"</td></tr>",$c(13)
+   	w "  </td></table>",$c(13)
+   	w " </tr>",$c(13)
+   	w "</table>",$c(13)
+ }
+</SERVER>
+<!-- This went about the mode="KEY" up there, but removed it cause it wasn't necessary anymore.
+</SERVER>
+<TRAK:APPLET><TRAK:COMPONENT id='RBResEffDateSessServices.Find' hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<SERVER> -->
+<SCRIPT language=javascript>
+ win=top.window
+ if (top.frames["TRAK_main"]) win=top.frames["TRAK_main"]
+ resetSize()
+ //alert("pgCnt: #(pgCnt)#" + "cMaxRec: #(cMaxRec)#")
+ //alert("locid: #(locid)#," + "cp: #(cp)#," + "LocDesc: #(LocDesc)#," + "res: #(res)#," + "ServID: #(ServID)#,")
+ //alert("GetNext: #(GetNext)#," + "GetPrev: #(GetPrev)#")
+ //alert("#(LocDesc)#," + "#(RescID)#")
+ if (("#(LocDesc)#"!="" && "#(RescID)#"!="")) {
+	var url="rbcalendar.csp?RescID=#(RescID)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&CTLOCDesc=#(LocDesc)#&ServID="+escape("#(ServID)#")+"&OBParam=#(OBParam)#&SESSDesc=#(SESSDesc)#&EpisodeID=#(EpisodeID)#&PatientID=#(PatientID)#&SingleApptOB=#(SingleApptOB)#";
+	//alert(url);
+	window.location=url;
+ } else {}
+ 
+function NextPage() {
+	//alert('#(TWKFL)#'+","+'#(TWKFLI)#'+","+'#(gblCnt)#'+","+'#(RescID)#'+","+'#(LocDesc)#'+","+'#(ServID)#'+","+'#(GetNext)#'+","+'#(OBParam)#'+","+'#(HCAID)#'+","+'#(HospIDs)#');
+ 	win.location.href="rbcalendar.multi.csp?TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&gblCnt=#(gblCnt)#&RescID=#(RescID)#&CTLOCDesc=#(LocDesc)#&ServID="+escape("#(ServID)#")+"&GetNext=#(GetNext)#&OBParam=#(OBParam)#&SESSDesc=#(SESSDesc)#&HCAId=#(HCAID)#&HospIds=#(HospIDs)#&QLDOutChk=#(QLDOutChk)#&EpisodeID=#(EpisodeID)#&PatientID=#(PatientID)#&SingleApptOB=#(SingleApptOB)#";
+}
+function PrevPage() {
+ 	//win.location.href="rbcalendar.multi.csp?gblCnt=#(gblCnt)#&RescID=#(RescID)#&CTLOCDesc=#(LocDesc)#&GetPrev=#(GetPrev)#&OBParam=#(OBParam)#";
+ 	history.back()
+}
+function Page() {
+	var keycode;
+	try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+	if (keycode==33) { PrevPage();}
+	else if (keycode==34) { NextPage();}
+	else {websys_sckey(e);}
+}
+function resetSize()  {
+  var posX=screen.availWidth;
+  var posY=screen.availHeight;
+  var winWidth=screen.availWidth;
+  var winHeight=screen.availHeight;
+  posX=posX-winWidth; if(posX<0) posX=0; else posX=posX/2;
+  posY=posY-winHeight; if (posY<0) posY=0; else posY=posY/2;
+  win.self.moveTo(posX,posY);
+  win.self.resizeTo(winWidth,winHeight);
+}
+document.onkeydown=Page;
+</SCRIPT>
+</BODY>
+</HTML>

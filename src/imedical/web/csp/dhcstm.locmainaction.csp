@@ -1,0 +1,46 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+	
+	s Parref=$Get(%request.Data("Parref",1))
+    s MainInfo=$Get(%request.Data("MainInfo",1))
+    s ListDetail=$Get(%request.Data("ListDetail",1))
+    s StrParam=$Get(%request.Data("StrParam",1))
+	s UserId=$Get(%request.Data("UserId",1))
+	
+i Action = "Save" d
+	.s ^bintmp("locmain")=MainInfo_","_ListDetail
+    .s result = ##class(web.DHCSTM.LocMaintain).Save(MainInfo,ListDetail)
+    .i +result<0 d
+    ..w "{success:'false',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'true',info:'"_result_"'}"
+    
+i Action = "SaveItm" d
+	.s ^bintmp("locmain")=Parref_","_ListDetail_","_UserId
+    .s result = ##class(web.DHCSTM.LocMaintain).SaveItm(Parref,ListDetail,UserId)
+    .i +result<0 d
+    ..w "{success:'false',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'true',info:'"_result_"'}"	
+//查询注册信息
+i Action = "Query" d
+	.s ^bintmp("locmainquery")=Start_","_Limit_","_StrParam
+    .d ##class(web.DHCSTM.LocMaintain).Query(Start,Limit,Sort,Dir,StrParam)
+    .
+//查询注册信息
+i Action = "QueryItem" d
+	.s ^bintmp("locitm")=Start_","_Limit_","_Parref
+    .d ##class(web.DHCSTM.LocMaintainItm).Query(Start,Limit,Parref)
+    .
+</script>

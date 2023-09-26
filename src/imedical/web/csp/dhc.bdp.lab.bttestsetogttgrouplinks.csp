@@ -1,0 +1,116 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+    @CSP：dhc.bdp.lab.bttestsetogttgrouplinks.csp 
+    @JS:BT_BTTestSetOGTTGroupLinks.js
+    @Title：合报告分组关联维护
+    @Creator:基础数据平台组-钟荣枫
+    @Description:合报告分组及合报告分组关联维护
+    @CreateDate：2020-4-16
+*/ 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/Lab/BT_TestSetOGTTGroupLinks.js"></script>
+<style>   
+</style>
+
+</HEAD>
+<BODY>
+	<!--整体布局-->
+	<div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+		<div  data-options="region:'west',split:true"  style="width:600px;" border="false" >
+			<div class="hisui-layout" data-options="fit:true" id="layoutW">
+				<div data-options="region:'north',split:true,collapsible:false" style="height:300px" border="false" >
+					<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="Groupgrid" border="true" toolbar="#Groupbar" title="合报告分组"></table>
+				</div>
+				<div data-options="region:'center',split:true"border="false">
+					<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="Linkgrid" border="true" toolbar="" title="合报告分组关联"></table>
+				</div>
+			</div>
+		</div>
+		<div  data-options="region:'center',split:true" border="false" style="">
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="TestSetgrid" border="true" toolbar="#TestSetbar" title="项目组合套"></table>
+		</div>
+	</div>
+	<!--合报告分组工具条-->
+    <div id="Groupbar">
+    	
+	 	<table style="padding-top:10px;padding-bottom:10px;">
+	  		<tr>
+		  		<td class="tdlabel">名称</td>
+				<td><input style="" class='textbox hisui-validatebox' id="GroupTextCName"></td>		
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="btnSearchGroup">查询</a>
+				</td>
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="GroupbtnRefresh" >重置</a>
+				</td>
+			</tr>
+	  	</table> 
+	   	<div style="border-bottom: 1px dashed #C0C0C0;"></div>	
+	  	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a> 
+	</div> 
+	<!--项目组合套-->   
+    <div id="TestSetbar">
+	   <table style="padding-top:10px;padding-bottom:10px;" >
+	   	 <tr>
+	    	<td class="tdlabel">名称</td>
+	    	
+			<td><input  class='textbox hisui-validatebox' id="TextTestSet"></td>		
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="btnSearch">查询</a>
+			</td>
+
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="btnRefresh" >重置</a>
+			</td>
+		 </tr> 
+	   </table>  
+	</div> 
+	 <!--合报告分组增改弹窗-->
+    <div id="myWin" style="width:320px;height:300px;padding:10px;display:none;">
+        <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+	      	<table id="addtable" align="center">
+	          	<tr style="display:none">
+				  	<td class="tdlabel">RowID</td>
+				   	<td><input id="RowID" name="RowID" type="text" class="textbox hisui-validatebox"></td>
+				</tr>
+				<tr>
+				   	<td class="tdlabel"><font color=red>*</font>代码</td>
+				  	<td><input id="Code" name="Code" type="text" class="textbox hisui-validatebox" data-options="required:true,validType:'maxLength[10]'"></td>
+				 </tr>
+				 <tr>
+				 	 <td class="tdlabel" ><font color=red>*</font>名称</td>
+				  	 <td><input id="CName" name="CName" type="text" class="textbox hisui-validatebox" data-options="required:true,validType:'maxLength[50]'"></td>
+				 </tr>
+				 <tr>
+	              	 <td class="tdlabel"><font color=red>*</font>医院</td>
+	             	 <td><input id="HospitalDR" name="HospitalDR" class="textbox hisui-combobox"  data-options="required:true"/></td>
+	           	 </tr>
+	           	 <tr>
+	             	 <td class="tdlabel"><font color=red>*</font>序号</td>
+	             	 <td><input id="Sequence" name="Sequence"  class="textbox hisui-numberbox" data-options="required:true"/></td>
+	          	 </tr>
+	             <tr>
+	             	 <td class="tdlabel">激活</td>
+	             	 <td><input id="Active" name="Active" class="hisui-checkbox" type="checkbox" value="1"/></td>
+	             </tr>
+		 	</table>
+		</form>  
+	</div>
+       
+</BODY>
+</HTML>
+																						

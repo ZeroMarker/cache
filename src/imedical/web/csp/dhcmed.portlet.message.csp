@@ -1,0 +1,48 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+<head>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+    <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+	<DHCMED:HEAD></DHCMED:HEAD>
+</head>
+
+<body>
+ <server>
+ //d $System.OBJ.Dump(objPortlet)
+
+; w !,Message_"</br>"
+ s objPortlet= ##class(DHCMed.SS.Portlets).GetObjById(portletId)
+ s strClass=objPortlet.MsgClassMethod
+ if strClass'=""{
+	 s strClassName=$p(strClass,"||",1)
+	 s strMethodName=$p(strClass,"||",2)
+	 s arg=$p(strClass,"||",3)
+	 s execute="s ret=$ZOBJCLASSMETHOD(strClassName,strMethodName"
+	 f i=1:1:$l(arg,",") {
+		 s execute=execute_","_$p(arg,",",i)
+     }
+	 s execute=execute_")"
+	 //s execute=execute_","_arg_")"
+	 x execute
+	 s Message=Message_":</br>"_ret
+	 ; w !,ret
+	 s frequency=+(objPortlet.Frequency)*60    //×Ô¶¯Ë¢ÐÂ
+ 	 w:(objPortlet.AutoRefreash=1)&(frequency'=0) "<head><meta http-equiv="""_"refresh"_""" content="""_frequency_"""></head>"
+
+}
+//bgcolor="#FFFFFF" width="100%" height="100%" border="0" align="center" cellpadding="0" cellspacing="0"
+</server>
+	<table align="center" height="100%"> 
+	<tr>
+	<td align="center">
+		<font color="red" size="2">#(Message)#</font>
+	</td>
+	</tr>
+	</table>
+</body>
+</html>

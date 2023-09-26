@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.main.css">
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script language="cache" runat="server">
+	    s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s:(patientID = "") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s categoryID = $Get(%request.Data("CategoryID",1),"")
+		s userID = %session.Get("LOGON.USERID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s hospitalID = %session.Get("LOGON.HOSPID")
+    </script>
+    <script language="javascript">
+        var setting = {
+            patientId: '#(patientID)#',
+            episodeId: '#(episodeID)#',
+            categoryId: '#(categoryID)#',
+            userId:'#(userID)#',
+            userLocId:'#(userLocID)#',
+			hospitalID:'#(hospitalID)#'
+        }
+    </script>
+	<title>住院病历</title>
+</head>
+<body class="hisui-layout" data-options="border:false">
+	<div id="nav">
+		<iframe id="frameNav" src="" frameborder=0 style="width:100%;height:100%;margin:0;padding:0;overflow:hidden"></iframe>
+	</div>
+    <div id="editor">
+    	<iframe id="framRecord" src="" frameborder=0 style="width:100%; height:100%;margin:0;padding:0;overflow:hidden"></iframe>
+    </div>
+    <div id="dialog"></div> 
+   <script type="text/javascript" src="../scripts/emr/js/ip.main.js"></script>
+   <script type="text/javascript" src="../scripts/emr/js/ip.userconfig.js"></script>
+   <script language="cache" runat="server">
+		d ##class(EMRservice.BL.BLCDSSService).getCDSSUrl()
+   </script>
+</body>  
+</html>

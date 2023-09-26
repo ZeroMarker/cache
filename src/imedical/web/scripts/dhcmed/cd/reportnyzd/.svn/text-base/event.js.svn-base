@@ -1,0 +1,280 @@
+﻿function InitViewPortEvent(obj) {
+	obj.PatientCls=ExtTool.StaticServerObject("DHCMed.CD.CRReportPAT");
+	obj.ReportNYZDCls=ExtTool.StaticServerObject("DHCMed.CD.CRReportNYZD");
+	obj.ReportCls=ExtTool.StaticServerObject("DHCMed.CD.CRReport");
+	obj.RepUpdateCls=ExtTool.StaticServerObject("DHCMed.CDService.UpdateService");
+	obj.CtlocSrv = ExtTool.StaticServerObject("DHCMed.Base.Ctloc")
+	obj.PatientSrv = ExtTool.StaticServerObject("DHCMed.Base.Patient")
+	obj.ReportBZQTCls = ExtTool.StaticServerObject("DHCMed.CD.CRReportBZQT")
+	obj.LoadEvent = function(args)
+    {
+		obj.btnSave.on("click",obj.btnSave_click,obj);
+		obj.btnDelete.on("click",obj.btnDelete_click,obj);
+		obj.btnCheck.on("click",obj.btnCheck_click,obj);
+		obj.btnExport.on("click",obj.btnExport_click,obj);
+		obj.btnPrint.on("click",obj.btnPrint_click,obj);
+		obj.btnCancle.on("click",obj.btnCancle_click,obj);
+		
+		obj.cboProvince1.on('expand',obj.cboProvince1_expand,obj);
+		obj.cboCity1.on('expand',obj.cboCity1_expand,obj);
+		obj.cboCounty1.on('expand',obj.cboCounty1_expand,obj);
+		obj.cboVillage1.on('expand',obj.cboVillage1_expand,obj);
+		obj.cboProvince1.on('select',obj.cboProvince1_Select,obj);
+		obj.cboCity1.on('select',obj.cboCity1_Select,obj);
+		obj.cboCounty1.on('select',obj.cboCounty1_Select,obj);
+		obj.cboVillage1.on('select',obj.cboVillage1_Select,obj);
+		
+		Common_SetDisabled("txtCRKPBH",true);
+		obj.DisplayRepInfo();
+  	};
+	
+	
+	obj.cboProvince1_expand = function(){
+		obj.cboProvince1.setValue('');
+		obj.cboCity1.setValue('');
+		obj.cboCounty1.setValue('');
+		obj.cboVillage1.setValue('');
+	}
+	obj.cboCity1_expand = function(){
+		obj.cboCity1.clearValue();
+		obj.cboCounty1.clearValue();
+		obj.cboVillage1.clearValue();
+	}
+	obj.cboCounty1_expand = function(){
+		obj.cboCounty1.clearValue();
+		obj.cboVillage1.clearValue();
+	}
+	obj.cboVillage1_expand = function(){
+		obj.cboVillage1.clearValue();
+	}
+
+	obj.cboProvince1_Select = function(){
+		obj.cboCity1.getStore().load({}); 
+		obj.cboCounty1.getStore().load({}); 
+		obj.cboVillage1.getStore().load({}); 
+	}
+	obj.cboCity1_Select = function(){
+		obj.cboCounty1.getStore().load({}); 
+		obj.cboVillage1.getStore().load({}); 
+	}
+	obj.cboCounty1_Select = function(){
+		obj.cboVillage1.getStore().load({}); 
+	}
+	obj.cboVillage1_Select = function(){
+	}
+	
+	obj.DisplayRepInfo = function(){
+		if(obj.ReportID==""){
+			Common_SetValue("txtReportUser",session['LOGON.USERNAME']);
+			Common_SetValue("txtReportOrgan",HospDesc);
+			if(PatientID!=""){
+				var objPat=obj.PatientSrv.GetObjById(PatientID);
+				Common_SetValue("txtPatName",objPat.PatientName);
+				Common_SetValue("txtPatSex",objPat.Sex);
+				Common_SetValue("txtPatCardNo",objPat.PersonalID);
+				Common_SetValue("txtLXDH",objPat.Telephone);
+			}
+		}else{
+			var objRep=obj.ReportCls.GetStringById(obj.ReportID);
+			var objNYZD=obj.ReportNYZDCls.GetStringByParRef(obj.ReportID);
+			var objPat=obj.PatientCls.GetStringByParRef(obj.ReportID);
+			var arrRep=objRep.split("^");
+			var arrNYZD=objNYZD.split("^");
+			var arrPat=objPat.split("^");
+			Common_SetValue("txtCRKPBH",arrNYZD[0]);
+			Common_SetValue("txtPatName",arrPat[4]);
+			Common_SetValue("txtPatCardNo",arrPat[11]);
+			Common_SetValue("txtPatSex",arrPat[6]);
+			var patAge="";
+			var patAgeDW="";
+			if(arrPat[8]!=""){
+				patAge=arrPat[8];
+				patAgeDW="岁";
+			}else if(arrPat[9]!=""){
+				patAge=arrPat[9];
+				patAgeDW="月";
+			}else{
+				patAge=arrPat[10];
+				patAgeDW="天";
+			}
+			Common_SetValue("txtPatAge",patAge);
+			Common_SetValue("cboPatAgeDW","",patAgeDW);
+			Common_SetValue("txtLXDH",arrPat[20]);
+			Common_SetValue("cboProvince1",arrPat[29].split(CHR_1)[0],arrPat[29].split(CHR_1)[1]);
+			Common_SetValue("cboCity1",arrPat[30].split(CHR_1)[0],arrPat[30].split(CHR_1)[1]);
+			Common_SetValue("cboCounty1",arrPat[31].split(CHR_1)[0],arrPat[31].split(CHR_1)[1]);
+			Common_SetValue("cboVillage1",arrPat[32].split(CHR_1)[0],arrPat[32].split(CHR_1)[1]);
+			Common_SetValue("txtCUN1",arrPat[33]);
+			Common_SetValue("txtAdress1",arrPat[34]);
+
+			Common_SetValue("txtZDNYMC",arrNYZD[1]);
+			Common_SetValue("cbgNYZLSL",arrNYZD[2].split(CHR_1)[0],arrNYZD[2].split(CHR_1)[1]);
+			Common_SetValue("cbgZDYY",arrNYZD[3].split(CHR_1)[0],arrNYZD[3].split(CHR_1)[1]);
+			Common_SetValue("cbgZSPX",arrNYZD[4].split(CHR_1)[0],arrNYZD[4].split(CHR_1)[1]);
+			Common_SetValue("cbgSYFS",arrNYZD[5].split(CHR_1)[0],arrNYZD[5].split(CHR_1)[1]);
+			Common_SetValue("cbgWXXW",arrNYZD[6]);
+			
+			Common_SetValue("cbgZDZG",arrNYZD[7].split(CHR_1)[0],arrNYZD[7].split(CHR_1)[1]);
+			Common_SetValue("txtZDQR",arrNYZD[8]);
+			Common_SetValue("txtSWRQ",arrNYZD[9]);
+			
+			Common_SetValue("txtCRQTZG",obj.ReportBZQTCls.GetByPaCode(obj.ReportID,"CRQTZG"));
+			
+			Common_SetValue("txtReportUser",arrRep[5]);
+			Common_SetValue("txtReportOrgan",arrRep[6]);
+			Common_SetValue("txtReportDate",arrRep[7]);
+		}
+	};
+	
+	obj.GetRepData = function (step) {
+		var InputStr=obj.ReportID;
+		InputStr=InputStr+"^"+EpisodeID;
+		InputStr=InputStr+"^"+"NYZD";
+		InputStr=InputStr+"^"+step;   //CRReportStatus:1上报，2审核，3删除
+		InputStr=InputStr+"^"+session['LOGON.CTLOCID'];
+		InputStr=InputStr+"^"+Common_GetValue("txtReportUser");
+		InputStr=InputStr+"^"+Common_GetValue("txtReportOrgan");
+		InputStr=InputStr+"^"+Common_GetValue("txtReportDate");
+		InputStr=InputStr+"^"+session['LOGON.USERID'];
+		InputStr=InputStr+"^"+session['LOGON.CTLOCID'];
+		return InputStr;
+	}
+	
+	obj.GetNYZDData = function () {
+		var InputStr=obj.ReportID;
+		InputStr=InputStr+"^"+Common_GetValue("txtCRKPBH");
+		InputStr=InputStr+"^"+Common_GetValue("txtZDNYMC");
+		InputStr=InputStr+"^"+Common_GetValue("cbgNYZLSL");
+		InputStr=InputStr+"^"+Common_GetValue("cbgZDYY");
+		InputStr=InputStr+"^"+Common_GetValue("cbgZSPX");
+		InputStr=InputStr+"^"+Common_GetValue("cbgSYFS");
+		InputStr=InputStr+"^"+Common_GetValue("cbgWXXW");
+		InputStr=InputStr+"^"+Common_GetValue("cbgZDZG");
+		InputStr=InputStr+"^"+Common_GetValue("txtZDQR");
+		InputStr=InputStr+"^"+Common_GetValue("txtSWRQ");
+		
+		return InputStr;
+	}
+	
+	obj.GetPatData = function () {
+		var InputStr=obj.ReportID;
+		InputStr=InputStr+"^"+PatientID;
+		InputStr=InputStr+"^"+Common_GetValue("txtPatName");
+		InputStr=InputStr+"^"+Common_GetValue("txtPatCardNo");
+		InputStr=InputStr+"^"+Common_GetValue("txtPatSex");
+		InputStr=InputStr+"^"+Common_GetValue("txtPatAge");
+		InputStr=InputStr+"^"+Common_GetValue("cboPatAgeDW");  //7
+		InputStr=InputStr+"^"+Common_GetValue("txtLXDH");
+		InputStr=InputStr+"^"+"";
+		InputStr=InputStr+"^"+"";  //10
+		InputStr=InputStr+"^"+"";
+		InputStr=InputStr+"^"+Common_GetValue("cboProvince1");
+		InputStr=InputStr+"^"+Common_GetValue("cboCity1");   //13
+		InputStr=InputStr+"^"+Common_GetValue("cboCounty1");
+		InputStr=InputStr+"^"+Common_GetValue("cboVillage1");
+		InputStr=InputStr+"^"+Common_GetValue("txtCUN1");    //16
+		InputStr=InputStr+"^"+Common_GetValue("txtAdress1");
+		
+		return InputStr;
+	}
+	
+	obj.GetExtraData = function () {
+		var InputStr=obj.ReportID;
+		InputStr=InputStr+"^"+"CRQTZG"+CHR_1+"其他转归"+CHR_1+Common_GetValue("txtCRQTZG");
+		
+		return InputStr;
+	}
+	
+	obj.btnSave_click = function(){
+		var RepData=obj.GetRepData(1);
+		var SHKData=obj.GetNYZDData();
+		var PatData=obj.GetPatData();
+		var ExtraData=obj.GetExtraData();
+		var ret=obj.RepUpdateCls.SaveRepData(RepData,SHKData,PatData,ExtraData);
+		if(parseInt(ret)<=0){
+			ExtTool.alert("错误","数据保存错误!"+ret);
+			return;
+		}else{
+			ExtTool.alert("提示","数据保存成功!");
+			obj.ReportID=ret;
+		}
+	};
+	obj.btnDelete_click = function(){
+		if(obj.ReportID==""){
+			ExtTool.alert("错误","还未上报!");
+			return;
+		}
+		Ext.MessageBox.confirm("提示","请确认是否删除?",function(btn){
+			if(btn=="yes"){
+				var DeleteStr=obj.ReportID;
+				DeleteStr=DeleteStr+"^"+3
+				DeleteStr=DeleteStr+"^"+session['LOGON.USERID'];
+				DeleteStr=DeleteStr+"^"+session['LOGON.CTLOCID'];
+				DeleteStr=DeleteStr+"^"+"DELETE";
+				var ret=obj.ReportCls.DeleteReport(DeleteStr,"^");
+				if(parseInt(ret)<=0){
+					ExtTool.alert("错误","删除失败!"+ret);
+					return;
+				}else{
+					ExtTool.alert("提示","报告删除成功!");
+				}
+			}
+		});
+	};
+	obj.btnCheck_click = function(){
+		if(obj.ReportID==""){
+			ExtTool.alert("错误","请先做【上报】操作");
+			return;
+		}
+		var CheckStr=obj.ReportID;
+		CheckStr=CheckStr+"^"+2
+		CheckStr=CheckStr+"^"+session['LOGON.USERID'];
+		CheckStr=CheckStr+"^"+session['LOGON.CTLOCID'];
+		var ret=obj.ReportCls.CheckReport(CheckStr,"^");
+		if(parseInt(ret)<=0){
+			ExtTool.alert("错误","报告审核失败!"+ret);
+			return;
+		}else{
+			ExtTool.alert("提示","报告审核成功!");
+		}
+	};
+	obj.btnExport_click = function(){
+		if(obj.ReportID==""){
+			ExtTool.alert("错误","请先做【上报】操作");
+			return;
+		}
+		var ExportStr=obj.ReportID;
+		ExportStr=ExportStr+"^"+session['LOGON.USERID'];
+		ExportStr=ExportStr+"^"+session['LOGON.CTLOCID'];
+		ExportStr=ExportStr+"^"+"EXPORT";
+		var ret=obj.ReportCls.ExportReport(ExportStr,"^");
+		if(parseInt(ret)<=0){
+			ExtTool.alert("错误","报告导出失败!"+ret);
+			return;
+		}else{
+			var cArguments=obj.ReportID;
+			//var flg=ExportDataToExcel("","","伤害报告卡("+Common_GetValue("txtPatName")+")",cArguments);
+		}
+	};
+	obj.btnPrint_click = function(){
+		if(obj.ReportID==""){
+			ExtTool.alert("错误","请先做【上报】操作");
+			return;
+		}
+		var PrintStr=obj.ReportID;
+		PrintStr=PrintStr+"^"+session['LOGON.USERID'];
+		PrintStr=PrintStr+"^"+session['LOGON.CTLOCID'];
+		PrintStr=PrintStr+"^"+"PRINT";
+		var ret=obj.ReportCls.ExportReport(PrintStr,"^");
+		if(parseInt(ret)<=0){
+			ExtTool.alert("错误","报告打印失败!"+ret);
+			return;
+		}else{
+			var cArguments=obj.ReportID;
+			//var flg=PrintDataToExcel("","","伤害报告卡("+Common_GetValue("txtPatName")+")",cArguments);
+		}
+	};
+	obj.btnCancle_click = function(){
+		window.close();
+	};
+}	

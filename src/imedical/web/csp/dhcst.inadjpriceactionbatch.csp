@@ -1,0 +1,107 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$g(%request.Data("sort",1))
+s Dir=$g(%request.Data("dir",1))
+;
+i Action = "Save" d
+	.S StkGrp=$Get(%request.Data("StkGrp",1))
+	.S LocId=$Get(%request.Data("LocId",1))
+	.S AspNo=$Get(%request.Data("AspNo",1))
+	.S list=$Get(%request.Data("list",1))
+	.s ret=##class(web.DHCST.INAdjPriceBatch).Save(AspNo,StkGrp,LocId,list)
+	.i $l(ret,"^")>1  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	..
+i Action="GetMtSp"  d
+	.s ItmId=$g(%request.Data("InciId",1))
+	.s UomId=$g(%request.Data("UomId",1))
+	.s Rp=$g(%request.Data("Rp",1))
+	.s Sp=##class(web.DHCST.Common.PriceCommon).GetMtSp(ItmId,UomId,Rp)
+	.w Sp
+i Action = "QueryAspBatInfo" d
+	.S StartDate=$Get(%request.Data("StartDate",1))
+	.S EndDate=$Get(%request.Data("EndDate",1))
+	.s Params=$g(%request.Data("Others",1))
+	.w ##class(web.DHCST.INAdjPriceBatch).QueryAspBatInfo(Start,Limit,StartDate,EndDate,Params)
+	.
+i Action = "DeleteAspBatItm" d
+	.S AspBatId=$Get(%request.Data("AspBatId",1))
+	.s ret=##class(web.DHCST.INAdjPriceBatch).Delete(AspBatId)
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+i Action = "AuditAspBat" d
+	.S AspIdStr=$Get(%request.Data("StrAspId",1))
+	.S AuditUserId=$Get(%request.Data("AuditUser",1))
+	.s Params=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.INAdjPriceBatch).Audit(AspIdStr,AuditUserId,Params)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+i Action = "CancelAuditAPB" d
+	.S AspIdStr=$Get(%request.Data("StrAspId",1))
+	.S AuditUserId=$Get(%request.Data("CancelUser",1))
+	.s ret=##class(web.DHCST.INAdjPriceBatch).CancelAudit(AspIdStr,AuditUserId)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+i Action = "UpdatePriceAPB" d
+	.S ListData=$Get(%request.Data("ListData",1))
+	.S Params=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.INAdjPriceBatch).BatUpdatePriceAPB(ListData,Params)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Execute" d
+	.S StrAspBatId=$Get(%request.Data("StrAspBatId",1))
+	.S Params=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.INAdjPriceBatch).SetExe(StrAspBatId,Params)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.	
+i Action = "QueryAspBatNo" d
+	.S Params=$Get(%request.Data("Others",1))
+	.S StartDate=$Get(%request.Data("StartDate",1))
+	.S EndDate=$Get(%request.Data("EndDate",1))
+	.w ##class(web.DHCST.INAdjPriceBatch).QueryAspBatNo(Start,Limit,StartDate,EndDate,Params)
+	.
+i Action = "QueryAspBatDetail" d
+	.S AspBatNo=$Get(%request.Data("AspBatNo",1))
+	.S Status=$Get(%request.Data("Status",1))
+	.s StkGrpId=$g(%request.Data("StkGrpId",1))
+	.s IncId=$g(%request.Data("IncId",1))
+	.w ##class(web.DHCST.INAdjPriceBatch).Query(Start,Limit,AspBatNo,Status,StkGrpId,IncId)
+	.
+i Action = "QueryAspBatchAmount" d
+	.S StartDate=$Get(%request.Data("StartDate",1))
+	.s EndDate=$g(%request.Data("EndDate",1))
+	.s Others=$g(%request.Data("Others",1))
+	.s StartTime=$g(%request.Data("StartTime",1))
+	.s EndTime=$g(%request.Data("EndTime",1))
+	.s ^xuantmp("tmp")=Start_","_Limit_","_Sort_","_Dir_","_StartDate_","_EndDate_","_Others_","_StartTime_","_EndTime
+	.s ret=##class(web.DHCST.AspAmount).jsQueryAspBatAmount(Start,Limit,Sort,Dir,StartDate,EndDate,Others,StartTime,EndTime)
+	.i ret=""  d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w ret
+	.
+i Action="GetParamProp"  d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.INAdjPriceBatch).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+</SERVER>

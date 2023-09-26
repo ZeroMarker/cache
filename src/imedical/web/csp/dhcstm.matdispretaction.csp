@@ -1,0 +1,40 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+    
+	//查询门诊材料退回列表
+    i Action = "QueryMatDispReturn" d
+    .s params=$Get(%request.Data("params",1))
+    .d ##class(web.DHCSTM.DHCMatReturn).jsQueryMatDispReturn(Start,Limit,params)
+    
+    //退回材料
+	i Action = "MatDisReturn" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s UserId=$Get(%request.Data("UserId",1))
+	.s Data=$Get(%request.Data("data",1))
+	.s dispiRow=$Get(%request.Data("dispiRow",1))
+	.s invRowId=$Get(%request.Data("invRowId",1))
+	.s ret=##class(web.DHCSTM.DHCMatReturn).MatDisReturn(LocId,UserId,Data,dispiRow)
+	.i +ret<=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	
+	//查询退回申请列表
+    i Action = "QueryMatRetByReq" d
+    .s params=$Get(%request.Data("params",1))
+    .d ##class(web.DHCSTM.DHCMatReturn).jsQueryMatRetByReq(Start,Limit,params)
+    
+    //查询门诊材料退回列表(依据退回申请)
+    i Action = "QueryMatRetItmByReq" d
+    .s params=$Get(%request.Data("params",1))
+    .d ##class(web.DHCSTM.DHCMatReturn).jsQueryMatRetItmByReq(Start,Limit,params)
+</script>

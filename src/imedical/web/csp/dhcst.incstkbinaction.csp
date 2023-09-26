@@ -1,0 +1,70 @@
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+;
+i Action = "Query" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.S SbDesc=$Get(%request.Data("sbDesc",1))
+	.w ##class(web.DHCST.INCStkBin).jsLocINCStkBin(Start,Limit,LocId,SbDesc)
+	.
+i Action = "Save" d
+	.S LocId=$Get(%request.Data("LocId",1))
+	.s Detail=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCST.INCStkBin).Save(LocId,Detail)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Delete" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.INCStkBin).Delete(rowid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+	
+i Action = "QueryLocInci" d
+	.S Start=$Get(%request.Data("start",1))
+	.S Limit=$Get(%request.Data("limit",1))
+	.S StrPar=$Get(%request.Data("StrPar",1))
+	.w ##class(web.DHCST.INCItmLoc).jsLocInciDs(Start,Limit,StrPar)
+	
+	
+i Action = "SaveLocItmBin" d
+	.S savestr=$Get(%request.Data("savestr",1))
+	.s ret=0
+	.s ret=##class(web.DHCST.INCStkBin).SaveLocItmBin(savestr)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "QueryLocItmBin" d
+	.S StrPar=$Get(%request.Data("StrPar",1))
+	.S Start=$Get(%request.Data("start",1))
+	.S Limit=$Get(%request.Data("limit",1))
+	.w ##class(web.DHCST.INCStkBin).jsLocIncStkBinDs(Start,Limit,StrPar)
+
+	
+i Action = "QueryLocBinInc" d
+	.S StrPar=$Get(%request.Data("StrPar",1))
+	.S Start=$Get(%request.Data("start",1))
+	.S Limit=$Get(%request.Data("limit",1))
+	.w ##class(web.DHCST.INCStkBin).jsLocLocBinIncDs(Start,Limit,StrPar)
+	
+
+i Action = "DelBinInci" d
+	.S ParStr=$Get(%request.Data("ParStr",1))
+	.s ret=##class(web.DHCST.INCStkBin).DelBinInci(ParStr)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.	
+	
+</SERVER>

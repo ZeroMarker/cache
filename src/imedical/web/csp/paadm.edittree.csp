@@ -1,0 +1,370 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+s (patid,epid,pbanner,twkfl,twkfli,mradm,admtype,paycat,loctype,eptype,visstat)=""
+s patid=$g(%request.Data("PatientID",1))
+s epid=$g(%request.Data("EpisodeID",1))
+i epid d
+ . s eptype=$p($g(^PAADM(epid)),"^",2)
+ . s visstat=$p($g(^PAADM(epid)),"^",20)
+s pbanner=$g(%request.Data("PatientBanner",1),1)
+s twkfl=$g(%request.Data("TWKFL",1))
+s twkfli=$g(%request.Data("TWKFLI",1))
+s admtype=$g(%request.Data("admType",1))
+s mradm=$g(%request.Data("mradm",1))
+s paycat=$g(%request.Data("payCategory",1))
+s loctype=$g(%request.Data("locType",1))
+s context=$g(%request.Data("CONTEXT",1))
+s num=+$p($g(context),"W",2)
+s context="W"_num
+;s contexte=context_"P"_eptype_$s(visstat'="":","_context_"P"_eptype_visstat,1:"")
+;s contexte=context_"P"_eptype_visstat
+</SERVER>
+
+<SCRIPT language='Javascript'>
+
+function InitTree() {
+/*if (parent.frames["tree_top"]) {
+	parent.refreshTopRequired=0;
+	parent.frames["tree_list"].location.reload();
+}*/
+	var epid="";
+	epid="#(epid)#";
+	
+	// sometimes doesnt recognise frames when first loading, so keep retrying until they exist
+	//if (!frames) { setTimeout("InitTree()",3000); return;}
+	
+	var tree=frames['tree_list'];
+	var edit=frames['tree_top'];
+	var tbl=tree.document.getElementById("tPAAdm_Tree");
+	var f=tree.document.getElementById("fPAAdm_Tree");
+	
+	/*if (!tree.document.selectedRowObj) {
+		tree.document.selectedRowObj=new Object();
+		tree.document.selectedRowObj.rowIndex="";
+	}*/
+	
+	var update=tree.document.getElementById("update1");
+	if (update) {
+		update.onclick=updateClickHander;
+	}
+		
+	/*var update=edit.document.getElementById("update1");
+	if (update) {
+		//update.target="_parent";
+		//var	linkvar=New1.href;
+		update.onclick=updateEditClickHander;
+	}*/
+	
+
+	//var newb=edit.document.getElementById("new");
+	var newb=tree.document.getElementById("new");
+	if (newb) {
+		newb.onclick=NewClickHander;
+	}
+	var deleteb=edit.document.getElementById("Delete1");
+	if (deleteb) {//alert("here")
+		deleteb.onclick=deleteClickHander;
+	}
+	if ((tree)&&(tbl)) {
+	
+		// select the currently displayed episode, and set onclick handlers
+		for (var i=1; i<(tbl.rows.length); i++) {
+			row=tbl.rows[i];
+			while((row.tagName != "TR")||((row.tagName == "TR")&&(row.id!=""))) {
+				row=websys_getParentElement(row);
+			}
+			for (var j=0;j<row.children[0].children.length;j++) {
+				var obj=row.children[0].children[j];
+				if (mPiece(obj.id,"z",0)=="EpisodeID") epz=obj;
+			}
+		
+			//var epz=tree.document.getElementById("EpisodeIDz"+i);
+			if ((epz)&&(epz.value!="")&&(epz.value==epid)) { epz.click(); }
+
+			var datez=tree.document.getElementById("PAADMAdmDatez"+i);
+			if (datez) { datez.onclick=TreeLinkDisable; }
+			
+			tbl.rows[i].onclick=TreeRowClickHandler;
+		} 
+	}
+	return;
+}
+</SCRIPT>
+
+<!-- ab 23.07.02 - 25843 -->
+<!--
+<frame name="tree_top" src="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.Edit&PatientBanner=#(pbanner)#&TWKFL=#(twkfl)#&TWKFLI=#(twkfli)#&PatientID=#(patid)#&ID=#(epid)#&EpisodeID=#(epid)#&CONTEXT=#(contexte)#">
+-->
+
+<frameset rows="*,25%" frameborder="0" border="0">
+<frame name="tree_top" src="paadm.edit.csp?PatientBanner=#(pbanner)#&PatientID=#(patid)#&ID=#(epid)#&EpisodeID=#(epid)#&CONTEXT=#(context)#&TWKFL=#(twkfl)#&TWKFLI=#(twkfli)#&TEDITFRAME=1">
+<frame name="tree_list" src="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.Tree&PatientID=#(patid)#&TWKFL=#(twkfl)#&TWKFLI=#(twkfli)#&ShowPatientBanner=#(pbanner)#&EpisodeID=#(epid)#&CONTEXT=#(context)#">
+</frameset>
+
+<script language="Javascript">
+
+
+/* ab 9.12.03 - not used?
+function updateEditClickHander() {
+	var edit=frames['tree_top'];
+	
+	var update=edit.document.getElementById("update1");
+	if (update) {
+		//update.target="_self";
+		//return update1_click();
+		
+	}
+	
+	//return UpdateAll();	
+}
+*/
+
+function TreeLinkDisable(evt) {
+    var tree=frames['tree_list'];
+    var eSrc=tree.event.srcElement;
+    eSrc.href="";
+	return false;
+}
+
+function TreeRowClickHandler(e) {
+	var tree=frames['tree_list'];
+	var doc=frames['tree_top'];
+	
+	if (tree) {
+		var eSrc=tree.event.srcElement;
+		if (eSrc.value) return;
+		var rowObj=tree.getRow(eSrc);
+		if (tree.getTable(rowObj).id!="tPAAdm_Tree") {
+			//if clicking links in nested component (eg, service link on rbappt list
+			if (eSrc.tagName == "A") return true;
+			if ((eSrc.tagName == "IMG")&&(eSrc.parentElement.tagName=="A")) return true;
+		}
+
+		if ((rowObj)&&(tree.selectedRowObj)&&(tree.selectedRowObj==rowObj)) {
+			//deselection sets new edit
+			if (top.frames["eprmenu"]) {
+				top.MainClearEpisodeDetails();
+				top.SetSingleField("PatientID",tree.document.forms['fPAAdm_Tree'].elements['PatientID'].value);
+			}
+			NewClickHander(e);
+			return;
+			/*
+			//deselection does nothing, keep selected
+			//code deselects websys.js rowselected as the list onclick bubbling will handle this again
+			rowObj.className=rowObj.PrevClassName;
+			tree.selectedRowObj=new Object();
+			tree.selectedRowObj.rowIndex="";
+			return;
+			*/
+		}
+		
+		var OriginaleSrc=eSrc;
+		// cjb 09/09/2003 37755.  the WLType (link with no icon) and PAADMRemark (textarea) didn't have an id, so weren't being picked up, so use the first child of the parent (!)
+		while((eSrc.tagName != "TR")||((eSrc.tagName == "TR")&&(eSrc.id!=""))) {
+			
+			eSrc=websys_getParentElement(eSrc);
+			//alert(eSrc.tagName);
+		}
+		
+
+		var patid="",epid="",pbanner="",twkfl="",twkfli="",mradm="",paycat="",admtype="",loctype="",admtype="",lnk="";
+		var pbanner=tree.document.getElementById("ShowPatientBanner");
+		if (pbanner) pbanner=pbanner.value;
+		var twkfl=tree.document.getElementById("TWKFL");
+		if (twkfl) twkfl=twkfl.value;
+		var twkfli=tree.document.getElementById("TWKFLI");
+		if (twkfli) twkfli=twkfli.value;
+		var loctype=tree.document.getElementById("loctype");
+		if (loctype) loctype=loctype.value;
+		// access these objects directly instead of doing getElementById(name+i) so we dont get the ones from the appointment table
+		for (var i=0;i<eSrc.children[0].children.length;i++) {
+			var obj=eSrc.children[0].children[i];
+			if (mPiece(obj.id,"z",0)=="PatientID") patid=obj.value;
+			if (mPiece(obj.id,"z",0)=="EpisodeID") epid=obj.value;
+			if (mPiece(obj.id,"z",0)=="PAADM_MainMRADM_DR") mradm=obj.value;
+			if (mPiece(obj.id,"z",0)=="payorCategory") paycat=obj.value;
+			if (mPiece(obj.id,"z",0)=="admtype") admtype=obj.value;
+		}
+		// ab 30.10.03 - dont load anything if no episode id (eg. clicked on blank TR in the subcomponent)
+		if (epid=="") return true;
+		
+		eSrc=eSrc.children[0].firstChild;
+		//alert("eSrc.id "+eSrc.id+"^"+eSrc.tagName);
+		
+		if ((eSrc)&&(eSrc.id)) {
+			if ((OriginaleSrc)&&(OriginaleSrc.id)) {
+				var Originalrow=OriginaleSrc.id.split("z");
+				if (Originalrow[0]=="PAADM_ADMNo") return;
+			}
+			
+			var row=eSrc.id.split("z");
+			var row=row[1];
+			
+			
+			/*
+			var patid=tree.document.getElementById("PatientIDz"+row);
+			if (patid) patid=patid.value;
+			var epid=tree.document.getElementById("EpisodeIDz"+row);
+			if (epid) epid=epid.value;
+
+			var mradm=tree.document.getElementById("PAADM_MainMRADM_DRz"+row);
+			if (mradm) mradm=mradm.value;
+			var paycat=tree.document.getElementById("payorCategoryz"+row);
+			if (paycat) paycat=paycat.value;
+			var admtype=tree.document.getElementById("admtypez"+row);
+			if (admtype) admtype=admtype.value;
+			
+			
+			if (doc) {
+				var ep=doc.document.getElementById("EpisodeID");
+				if ((ep)&&(ep.value!="")) {
+					if (ep.value==epid) return;
+				}
+			}*/
+			
+			//build link from parameters from row
+			
+			lnk="paadm.edit.csp?ID="+epid+"&EpisodeID="+epid+"&PatientID="+patid+"&PatientBanner="+pbanner+"&TWKFL="+twkfl+"&TWKFLI="+twkfli+"&admType="+admtype+"&mradm="+mradm+"&payCategory="+paycat+"&locType="+loctype+"&CONTEXT=#(context)#&TEDITFRAME=1";
+			//alert(lnk);
+			websys_createWindow(lnk,"tree_top","");
+		}
+	}
+	return;
+}
+
+/*
+function UpdateTreeClose0() {
+	// function to close the tree when updating the episode screen (load the next page into the parent window)
+	var doc=frames['tree_top'];
+	var tree=frames['tree_list']; 
+	var TWKFL=doc.document.getElementById("TWKFL")
+	var TWKFLI=doc.document.getElementById("TWKFLI")
+	var update=doc.document.getElementById("update1");
+	if (update.href) {
+		var temp1=update.href.split("&TWKFLI=");
+		var temp2=update.href.split("&admType");
+		TWKFLI.value=TWKFLI.value-2;
+		doc.document.getElementById("update1").href = temp1[0] + "&TWKFLI=" + TWKFLI.value + "&admType" + temp2[1];
+		doc.document.getElementById("update1").target="_parent";
+	}
+
+	var treeTWKFLI=tree.document.getElementById("TWKFLI")
+	treeTWKFLI.value=treeTWKFLI.value-1
+	
+	var frm=doc.document.fPAAdm_Edit;
+	frm.TWKFLI.value=frm.TWKFLI.value-1;
+
+	//doc.document.getElementById("TWKFLI").value=TWKFLI.value-2;
+	//tree.document.getElementById("TWKFLI").value=TWKFLI.value-2;
+	//alert(doc.document.getElementById("TWKFLI").value);
+	
+	//if ((tree)&&(doc)) {
+		//window.location=update.href;
+	//	var frm=doc.document.forms["fPAAdm_Edit"];
+	//	if (frm) frm.target="_parent";
+	//}
+	return true;
+}
+*/
+
+// cjb 09/09/2003 37755.  re-written so that the csp is reloaded when the .Edit update is pressed.
+function UpdateTreeClose() {
+	//alert(window.name)
+	var edit=frames['tree_top'];
+	if (edit) {
+		var frm=edit.document.forms['fPAAdm_Edit'];
+		if (frm) {
+			frm.elements['TFRAME'].value=window.name;
+			frm.TWKFLI.value=frm.TWKFLI.value-1;
+			//frm.target="_parent"
+		}
+	}
+}
+
+// cjb 09/09/2003 37755.  reload top frame with no episodeid
+function NewClickHander() {
+	var tree=frames['tree_list'];
+	if (tree) {
+		var el
+		var EpiID="",PatID="",PARREF="",TWKFL="",TWKFLI="";
+		var lnk="paadm.edit.csp?PatientBanner=1"
+		
+		var el=tree.document.getElementById("EpisodeID")
+		if (el) lnk+="&EpisodeID="+el.value+"&ID="+el.value;
+		var el=tree.document.getElementById("PatientID")
+		if (el) lnk+="&PatientID="+el.value;
+		var el=tree.document.getElementById("PARREF");
+ 		if (el) lnk+="&PARREF="+el.value;
+ 		var el=tree.document.getElementById("hiddenLinks");
+ 		if (el) lnk+="&hiddenLinks="+el.value;
+		var el=tree.document.getElementById("admType");
+ 		if (el) lnk+="&admType="+el.value;
+		var el=tree.document.getElementById("TWKFL")
+		if (el) lnk+="&TWKFL="+el.value;
+		var el=tree.document.getElementById("TWKFLI")
+		if (el) lnk+="&TWKFLI="+el.value;
+		el=session["CONTEXT"];
+		if (el) lnk+="&CONTEXT="+el;
+		//alert(lnk);
+		var el=tree.document.getElementById("OPDeceased")
+		if ((el)&&(el.value=="OPY")) {
+				alert(tree.t["NEWDECEASEDEP"]) 
+				return false;
+									}
+		//var lnk="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.Edit&" +"&EpisodeID="+EpiID+"&PatientID="+PatID+"&PARREF="+PARREF+"&TWKFL="+TWKFL+"&TWKFLI="+TWKFLI+"&hiddenLinks="+hidlnk+"&admType="+admtype+"&PatientBanner=1"
+		websys_createWindow(lnk,"tree_top","");
+		return false;
+	}
+}
+
+// cjb 09/09/2003 37755.  Update on the .Tree to continue through the workflow, using the episode displayed in the .Edit component.  (if no episode in .Edit use the last one in the list)
+function updateClickHander() {
+	var tree=frames['tree_list'];
+	var edit=frames['tree_top'];
+	var episodeid=edit.document.getElementById("EpisodeID");
+	var RSTDesc=edit.document.getElementById("RSTDesc");
+	
+	var update=tree.document.getElementById("update1");
+	if (update) {
+		update.target="_parent";
+		if (episodeid.value!="") {
+			var temp1=update.href.split("&EpisodeID=");
+			update.href = temp1[0] + "&EpisodeID=" + episodeid.value;
+		}
+		if (RSTDesc&&RSTDesc.value!="") {
+			update.href = update.href + "&RSTDesc=" + RSTDesc.value;
+		}
+	}
+}
+function deleteClickHander() {
+	return UpdateTreeClose;
+}
+function mPiece(s1,sep,n) {
+	//Split the array with the passed delimeter
+      delimArray = s1.split(sep);
+
+	//If out of range, return a blank string
+      if ((n <= delimArray.length-1) && (n >= 0)) {
+        return delimArray[n];
+	} else {
+	  return ""
+      }
+}
+//TN:12-FEB-2004 InitTree now called from PAAdm.Tree.js
+//document.body.onload=InitTree;
+
+</script>
+
+</HTML>

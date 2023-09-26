@@ -1,0 +1,82 @@
+<html>
+<head>
+	<DHCTT:HEAD/>
+</head>	
+<body>
+	<table>
+		<tr>
+			<td><label class='greentitle'>待导入组件列表</label></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td><td>				
+				<form enctype="multipart/form-data" method="post" action="dhctt.xmlimport.csp">
+					XML路径名:					
+					<input type=file size=30 name=FileStream  accept="text/xml" multiple>
+					<input type="submit" value="上传">					
+				</form>
+			</td>
+		</tr>
+	</table>	
+	<div class='line' id='ImportXmlInfo'>		
+		<pre id="ImportXmlInfoPre">
+		<csp:if condition='($data(%request.MimeData("FileStream",1)))'>			
+			<script language="Cache" runat="server">
+				New fileStream,bytes,file
+				Set componentxml = "\temp\componentxml\"
+				s dirname = ##class(ext.util.String).GetPhysicalPath("",componentxml)
+				Set fileStream = %request.MimeData("FileStream",1),Status=""
+				if ($zcvt($e(fileStream.FileName,$l(fileStream.FileName)-3,$l(fileStream.FileName)),"L")=".xml"){
+					Set isCompXML=0
+					set fileStream.FileName = ##class(%File).GetFilename(fileStream.FileName)
+					Do fileStream.Rewind()
+					Set bytes = fileStream.Read(128)
+					if (bytes["DHCCOMPONENTEXPORT") Set isCompXML=1
+					if isCompXML {
+						Set file = ##class(%FileBinaryStream).%New()
+						Set file.Filename=dirname_fileStream.FileName
+						Do fileStream.Rewind()
+						While('fileStream.AtEnd){
+							Set bytes = fileStream.Read(1024)
+							Do file.Write(bytes)
+						}
+						Do file.Flush()
+						Do file.%Save()
+						Do file.%Close()
+						Set file=""
+						w "<a href='dhctt.xmlimport.csp?importXml="_fileStream.FileName_"'>导入XML到组件</a>"
+					}else{
+						SEt Status = "组件XML内容不正确，请确定是否为组件XML"
+					}
+				}ELSE{
+					SEt Status = "文件类型不对，应为组件XML文件"
+				}
+			</script>
+			<hr><br>
+			<csp:if condition=Status="">
+			<b>上传成功到 #(##class(ext.util.String).GetPhysicalPath("",componentxml))#</b><br>
+			文件名: <b>#(..EscapeHTML(%request.MimeData("FileStream",1).FileName))#</b><br>
+			文件大小: <b>#(..EscapeHTML(%request.MimeData("FileStream",1).Size))#</b><br>
+			文档类型: <b>#(..EscapeHTML(%request.MimeData("FileStream",1).ContentType))#</b><br>
+			<br>
+			<csp:else>
+				<b>#(Status)#</b>
+			</csp:if>		 
+		</csp:if>
+		<csp:if condition='($data(%request.Data("importXml",1)))'>
+			<script language="Cache" runat="server">
+				s filename = $g(%request.Data("importXml",1))
+				s filename = ##class(%File).GetFilename(filename)
+				if (filename'=""){
+					Set componentxml = "\temp\componentxml\"
+					s dirname = ##class(ext.util.String).GetPhysicalPath("",componentxml)
+					k %objlasterror
+					d ##class(web.Util.UtilService).PutComponent(dirname_filename)
+					if ($g(%objlasterror)) d $system.OBJ.DisplayError()
+				}
+			</script>
+		</csp:if>
+		</pre>		
+	</div>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>麻醉科手术检索</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',title:'',headerCls:'panel-header-gray',border:false" style="height:100px;padding-left:5px;">
+    	<form id="conditionForm">
+    		<p>
+    		<label style="padding-left:5px;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="display:inline-block;width:120px;text-align:right;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<label style="display:inline-block;width:80px;text-align:right;">麻醉医生</label>
+    		<input type="text" id="AnaDoctor" name="AnaDoctor" class="hisui-combobox textbox" data-options="textField: 'Description',valueField: 'RowId'">
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:20px;">查询</a>
+    		</p>
+    		<p>
+    		<label style="padding-left:5px;">申请科室</label>
+    		<input type="text" id="AppDept" name="AppDept" class="hisui-combobox textbox" data-options="textField: 'Description',valueField: 'RowId'">
+    		<label style="display:inline-block;width:120px;text-align:right;">手术名称包含</label>
+    		<input type="text" id="OperName" name="OperName" class="textbox" style="width:173px;">
+    		<label style="display:inline-block;width:80px;text-align:right;">事件包含</label>
+    		<input type="text" id="EventName" name="EventName" class="textbox" style="width:173px;">
+    		</p>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'手术查询结果：<span>共<span id=\'badge_opercount\' style=\'margin:0 5px;\'></span>台</span>',headerCls:'panel-header-gray' ">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		border:false,
+        		//nowrap: true,
+        		toolbar: "",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.AnesthetistWorkload",
+            		QueryName: "FindOperScheduleList",
+            		ArgCnt: 6
+        		},
+        		columns: [[{
+                    field: "OperDate",
+                    title: "手术日期",
+                    width: 100
+                }, {
+                    field: "OperTime",
+                    title: "手术时间",
+                    width: 160
+                },
+                {
+                    field: "AppDeptDesc",
+                    title: "申请科室",
+                    width: 100
+                },
+                {
+                    field: "Patient",
+                    title: "患者",
+                    width: 120
+                },
+                {
+                    field: "WardBed",
+                    title: "病区床位",
+                    width: 120,
+                    hidden: true
+                },
+                {
+                    field: "MedcareNo",
+                    title: "住院号",
+                    width: 80
+                },
+                {
+                    field: "AnaStartDT",
+                    title: "麻醉开始",
+                    width: 160
+                },
+                {
+                    field: "AnaFinishDT",
+                    title: "麻醉结束",
+                    width: 160
+                },
+                {
+                    field: "AnaCareProv",
+                    title: "麻醉医护",
+                    width: 130
+                },
+                {
+                    field: "OperDeptDesc",
+                    title: "手术室",
+                    width: 100,
+                    hidden: true
+                },
+                {
+                    field: "OperDesc",
+                    title: "手术名称",
+                    width: 240
+                },
+                {
+                    field: "SurgeonDesc",
+                    title: "手术医生",
+                    width: 80
+                },
+                {
+                    field: "SurgeonShortDesc",
+                    title: "医生别名",
+                    width: 80,
+                    hidden: true
+                },
+                {
+                    field: "AsstDesc",
+                    title: "手术助手",
+                    width: 100
+                },
+                {
+                    field: "SurCareProv",
+                    title: "手术医护",
+                    width: 120,
+                    hidden: true
+                },
+                {
+                    field: "AdmReason",
+                    title: "费别",
+                    width: 100
+                },
+                {
+                    field: "SourceTypeDesc",
+                    title: "类型",
+                    width: 60,
+                    hidden: true
+                },
+                {
+                    field: "OperStatusDesc",
+                    title: "手术状态",
+                    width: 80,
+                    hidden: true
+                }
+           	]],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = $("#AnaDoctor").combobox('getValue');
+            	param.Arg4 = $("#AppDept").combobox('getValue');
+            	param.Arg5 = $("#OperName").val();
+            	param.Arg6 = $("#EventName").val();
+            	if (!param.Arg3) param.Arg3 = "All";
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	onLoadSuccess: function(data) {
+	        	$("#badge_opercount").text(data.total);
+	        },
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	dhccl.getDatas(ANCSP.DataQuery, {
+        	ClassName: CLCLS.BLL.Admission,
+        	QueryName: "FindCareProvByLoc",
+        	Arg1: "",
+        	Arg2: session.DeptID,
+        	Arg3: "Y",
+        	ArgCnt: 3
+    	}, 'json', true, function(data) {
+        	$("#AnaDoctor").combobox('loadData', data);
+    	});
+    	
+    	dhccl.getDatas(ANCSP.DataQuery, {
+        	ClassName: CLCLS.BLL.Admission,
+        	QueryName: "FindLocationOld",
+        	Arg1:"",
+        	Arg2:"INOPDEPT^OUTOPDEPT^EMOPDEPT",
+        	ArgCnt: 2
+    	}, 'json', true, function(data) {
+        	$("#AppDept").combobox('loadData', data);
+    	});
+	});
+	</script>
+</body>
+</html>

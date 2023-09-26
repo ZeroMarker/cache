@@ -1,0 +1,41 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+		//获取参数
+		s searchCode=$g(%request.Data("queryCode",1))
+    	s lstEpisodeId = $g(%request.Data("lstEpisodeId",1))
+    	s PatientID = $g(%request.Data("PatientID",1))
+    	s actionCode =  $g(%request.Data("actionCode",1))
+    	s departNames =  $g(%request.Data("DepartNames",1))
+    	//显示的科室名
+    	if (departNames '="")
+    	{
+	    	Set %session.Data(PatientID_"ShowDeparts",1)= departNames
+	    	w "()"
+	    	quit
+    	}
+    	//获取病人列表
+    	if (actionCode ="GetPatientList")
+    	{
+	    	write "("
+	    	//若是急诊科室  方法来自dhcdoc.main.view.out.csp
+	    	if %session.Get("LOGON.CTLOCID")>0,##class(web.DHCOPAdmReg).IsEmergency(%session.Get("LOGON.CTLOCID"))=1{
+		    	s sc=##class(icare.TimeLineEmergencyView).GetLocDocPatient()
+		    }else{
+	    		s sc=##class(icare.TimeLineOutpatientView).GetLocDocPatient()
+		    }
+	    	write ")"
+	    	quit
+    	}
+    	if (lstEpisodeId = "") || (PatientID ="")
+    	{
+	    	quit
+    	}
+    	//取得展现数据
+    	if (actionCode ="GetDisplayData")
+    	{
+	    	write "("
+	    	s sc=##class(icare.TimeLineOutpatientView).GetOutpatientDisplayInfor(searchCode,PatientID,lstEpisodeId)
+	    	write ")"
+	    	quit
+    	}
+</script>

@@ -1,0 +1,127 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n id
+	s id=""
+	
+	i $g(%request.Data("PatientBannerExclude",1))="" d
+	. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	. i cmp d
+	. s cmp.HideMenus=1,cmp.HideHeadings=1
+	. d cmp.Show(),cmp.%Close()
+	
+</SERVER>
+<TRAK:COMPONENT id="PAPersonAllAlias.List" hidemenus=1 style="TOP:0; LEFT:0; HEIGHT:200; WIDTH:100%; OVERFLOW: auto; BORDER-BOTTOM: 2px inset; BORDER-LEFT: 2px inset; BORDER-RIGHT: 2px inset; BORDER-TOP: 2px inset;">
+</TRAK:COMPONENT>
+
+<SCRIPT language="javascript">
+
+var tbl=document.getElementById("tPAPersonAllAlias_List")
+
+var el;
+function SelectRowHandler(evt) {
+	var eSrc=websys_getSrcElement(evt);
+	var rowObj=getRow(eSrc);
+	
+	if (rowObj.tagName != "TH") {
+		//alert(eSrc.tagName);
+		if (eSrc.tagName != "A") eSrc=websys_getParentElement(eSrc);
+		//alert(eSrc.tagName);
+		if (eSrc.tagName != "A") return;
+		
+		// cjb 01/09/2003 38689 use rowObj.TRAKListIndex instead of rowObj.rowIndex
+		//var rowsel=rowObj.rowIndex;
+		var rowsel=rowObj.TRAKListIndex;
+		
+	
+		var lnk="paperson.all.aliasall.list.csp?TWKFL="+document.getElementById("TWKFL").value+"&TWKFLI="+(document.getElementById("TWKFLI").value);
+		//var lnk="websys.csp?TEVENT=d1760iAlias&TPAGID=23277054";
+		el=document.getElementById("rowidz"+rowsel);
+		if (el) lnk+="&ID="+el.value;
+		el=document.getElementById("tablez"+rowsel);
+		if (el) lnk+="&table="+el.value;
+		el=document.getElementById("EpisodeID")
+		if (el) lnk+="&EpisodeID="+el.value;
+		el=document.getElementById("patientidz"+rowsel);
+		if (el) lnk+="&PatientID="+el.value+"&PARREF="+el.value;
+		window.location=lnk;
+		//alert(lnk);
+		return false;
+	}
+}
+var selectedID='#(id)#';
+try {
+	if ((tbl)&&(selectedID!="")) {
+		var notfound=1;
+		for (var i=0; i<tbl.rows.length,notfound; i++) {
+			el=document.getElementById("rowidz"+i);
+			if ((el)&&(el.value==selectedID)) {
+				tbl.rows[i].className='clsRowSelected';
+				selectedRowObj=tbl.rows[i];
+				notfound=0;
+			}
+		}
+	}
+} catch(e) {}
+
+
+
+</SCRIPT>
+<SERVER>
+	
+	n table,rowid,user,defdept
+	s (user,defdept,rowid)=""
+	
+	s table=$g(%request.Data("table",1))
+	s rowid=$g(%request.Data("ID",1))
+	i rowid'="",table'=""  d
+	.s x="s obj=##Class(User."_table_").%OpenId(rowid)"
+	.x x
+	.i obj,table="PAPersonSurnameAlias" d
+	..s type=obj.SURType
+	..s %request.Data("Active",1)=obj.SURActive
+	..i obj.SURUserDR s user=obj.SURUserDR.%Id()
+	..i type="SU" s %request.Data("Surname",1)=obj.SURName
+	..i type="D" s %request.Data("DOB",1)=##Class(websys.Conversions).DateLogicalToHtml(obj.SURDob)
+	..i type="S" i obj.SURSexDR s %request.Data("Sex",1)=obj.SURSexDR.CTSEXDesc
+	..;md 13/01/2004
+	..s %request.Data("UDate",1)=##Class(websys.Conversions).DateLogicalToHtml(obj.SURDate)
+	..s %request.Data("UTime",1)=##Class(websys.Conversions).TimeLogicalToHtml(obj.SURTime)
+	..i obj.SURLastUpdateHospitalDR s %request.Data("UserHospital",1)=obj.SURLastUpdateHospitalDR.HOSPDesc
+	..d obj.%Close()
+	.i obj,table="PAPersonAlias" d
+	..i obj.ALIASUserDR s user=obj.ALIASUserDR.%Id()
+	..s type=obj.ALIASType
+	..i type="" s type="G"
+	..s %request.Data("Active",1)=obj.ALIASActive
+	..i type="G" s %request.Data("GivenName",1)=obj.ALIASText
+	..i type="O" s %request.Data("OtherName",1)=obj.ALIASText
+	..;md 13/01/2004
+	..s %request.Data("UDate",1)=##Class(websys.Conversions).DateLogicalToHtml(obj.ALIASDate)
+	..s %request.Data("UTime",1)=##Class(websys.Conversions).TimeLogicalToHtml(obj.ALIASTime)
+	..i obj.ALIASLastUpdateHospitalDR s %request.Data("UserHospital",1)=obj.ALIASLastUpdateHospitalDR.HOSPDesc
+	
+	..d obj.%Close()
+	
+	;i user'="" s defdept=$p(^SSU("SSUSR",user),"^",4) i defdept'="" s %request.Data("UserHospital",1)=$p(^CT("HOSP",$p(^CTLOC(defdept),"^",22)),"^",2)
+	;md 13/01/2004
+	i user'="" d
+	.s %request.Data("UUserN",1)=$p($g(^SSU("SSUSR",user)),"^",2)
+	.s %request.Data("UUserI",1)=$p($g(^SSU("SSUSR",user)),"^",1)
+	s cmp=##Class(websys.Component).OpenName("PAPersonAllAlias.EditCustom")
+	i cmp d cmp.Show(),cmp.%Close()
+ 	
+</SERVER>
+</BODY>
+</HTML>

@@ -1,0 +1,70 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<SERVER>
+</SERVER>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<body>
+<SERVER>
+	n PatientBanner,EpisodeID,ResultID,PatientID,ChartID,ItemID,Type,OrderID
+	s (PatientBanner,EpisodeID,ResultID,PatientID,ChartID,ItemID,Type,OrderID)=""
+
+	; Parameters for OEOrdItem.LabResult
+	s PatientBanner=%request.Get("PatientBanner")
+	s EpisodeID=%request.Get("EpisodeID")
+	i EpisodeID'="" s %request.Data("EpisodeID",1)=EpisodeID
+	s ResultID=%request.Get("ResultID")
+	i ResultID'="" s %request.Data("ResultID",1)=ResultID
+	s PatientID=%request.Get("PatientID")
+	i PatientID'="" s %request.Data("PatientID",1)=PatientID
+	s ChartID=%request.Get("ChartID")
+	i ChartID'="" s %request.Data("ChartID",1)=ChartID
+	s ItemID=%request.Get("ItemID")
+	i ItemID'="" s %request.Data("ItemID",1)=ItemID
+	s Type=%request.Get("Type")
+	i Type'="" s %request.Data("Type",1)=Type
+	s OrderID=%request.Get("OrderID")
+	i OrderID'="" s %request.Data("OrderID",1)=OrderID
+	s LabTestSetRow=$p($g(^OEORD(+OrderID,"I",+$p(OrderID,"||",2),3)),"^",35)
+	s (TestItemID,TestItemDesc)=""
+	i LabTestSetRow'="" d
+	. s LabEpisodeNo=$p(LabTestSetRow,"||",1)
+	. s TestSet=$p(LabTestSetRow,"||",2)
+	. s Counter=+$p(LabTestSetRow,"||",3)
+	. s TestItem=%request.Get("TestItem")
+	. i TestItem'="" s TestItemDesc=$p($g(^TTAB("TC",TestItem)),"\")
+	. s TestItemID=LabEpisodeNo_"||"_TestSet_"||"_Counter_"||"_TestItem
+	
+	; Parameters for SSAuditTrail.List
+	s %request.Data("table",1)="OE_OrdItem"
+	s %request.Data("tablerowid",1)=OrderID
+	
+	i PatientBanner=1 d
+	. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	. i cmp d cmp.Show(),cmp.%Close()
+	s cmp=##Class(websys.Component).OpenName("OEOrdItem.LabResult")
+	i cmp d cmp.Show(),cmp.%Close()
+	;s cmp=##Class(websys.Component).OpenName("SSAuditTrail.List")
+	;i cmp d cmp.Show(),cmp.%Close()
+
+	; 44071 - use the lab test set audit
+	s %request.Data("TestItemID",1)=TestItemID
+	;s %request.Data("TestItem",1)=##class(websys.Conversions).HtmlFriendly(TestItemDesc)
+	s %request.Data("TestItem",1)=TestItemDesc
+	s cmp=##Class(websys.Component).OpenName("EPVisitTestSet.LabAuditList")
+	i cmp d cmp.Show(),cmp.%Close()	
+
+
+</SERVER>
+<SCRIPT>
+</SCRIPT>
+</body>
+</html>

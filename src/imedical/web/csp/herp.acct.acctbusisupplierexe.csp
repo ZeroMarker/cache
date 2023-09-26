@@ -1,0 +1,66 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir = $Get(%request.Data("sortDir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s userid =%session.Data("LOGON.USERID")
+	s str= $Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("AcctBusiSupplierMapID",1))
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))
+	s BookName=$Get(%request.Data("AcctBookName",1))
+	
+	s SysBusiness=$Get(%request.Data("SysBusinessID",1))
+	s AcctSupplier=$Get(%request.Data("AcctSupplier",1))
+	s BusiSupplier=$Get(%request.Data("BusiSupplier",1))
+	
+	s AcctBook=$Get(%request.Data("BookName",1))
+	s SysBusinessID=$Get(%request.Data("SystemName",1))
+	s AcctSupplierCodeName=$Get(%request.Data("AcctSupplierName",1))
+	s BusiSupplierCode=$Get(%request.Data("BusiSupplierCode",1))
+	s BusiSupplierName=$Get(%request.Data("BusiSupplierName",1))
+	
+	i action = "AcctBook"  d
+	.w ##class(herp.acct.udata.uAcctBusiSupplier).GetAcctBook(start,limit,str)	
+	
+	i action = "GetAcctSupplier"  d
+	.w ##class(herp.acct.udata.uAcctBusiSupplier).GetAcctSupplier(start, limit, AcctBookID, BookName, str)
+	
+	i action = "GetBusiSys"  d
+	.w ##class(herp.acct.udata.uAcctBusiSupplier).GetBusiSys(start,limit,str)	
+
+	i action = "list"  d
+	.w ##class(herp.acct.udata.uAcctBusiSupplier).ListData(start, limit, AcctBookID, AcctSupplier, BusiSupplier, SysBusiness)
+	
+	i action = "add" d
+	.s result= ##Class(herp.acct.udata.uAcctBusiSupplier).AddData(AcctBook,SysBusinessID,AcctSupplierCodeName,BusiSupplierCode,BusiSupplierName)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result= ##Class(herp.acct.udata.uAcctBusiSupplier).DelData(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result= ##Class(herp.acct.udata.uAcctBusiSupplier).EditData(rowid,AcctBook,SysBusinessID,AcctSupplierCodeName,BusiSupplierCode,BusiSupplierName)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

@@ -1,0 +1,31 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+		s %response.Timeout=180000
+		s action=$g(%request.Data("action",1))
+		q 1
+   </script>
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+	if "checkedInput"=action {
+		b
+		s impData=$g(%request.Data("impDataObj",1))
+		d ##class(DHCWL.CSPService.kpiImpFromExl).CheckImpData(impData)
+		q
+	}elseif "importData"=action {
+		s impData=$g(%request.Data("impDataObj",1))
+		b
+		TSTART
+		s ret=##class(DHCWL.CSPService.kpiImpFromExl).importData(impData)
+		if ret'="success" {
+			trollback
+			w "{success:true,tip:'"_ret_"'}"
+		}else{
+			TCOMMIT
+			w "{success:true,tip:'ok'}"
+		}
+		q
+	}
+</script>
+
+

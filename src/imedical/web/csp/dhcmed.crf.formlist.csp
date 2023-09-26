@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>表单列表</title>
+    <script type="text/javascript" src="../Scripts/dhcmed/crf/js/jquery-1.4.1.min.js"></script>
+    <script type="text/javascript" src="../Scripts/dhcmed/crf/js/jquery.json.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var formInfo = function () {
+                var curSelectedTds = $("#grid").find("tr[selected=true]").find("td");
+                this.ID = escape($(curSelectedTds[0]).text());
+                this.ESchema = escape($(curSelectedTds[1]).text());
+                this.Type = escape($(curSelectedTds[2]).text());
+                this.EName = escape($(curSelectedTds[3]).text());
+                this.CName = escape($(curSelectedTds[4]).text());
+                
+            }
+				    $.ajax({
+				        type: "POST",
+				        dataType: "text",
+				        url: "dhc.med.query.csp",
+				        async: false,
+				        data:{ClassName:"DHCMed.CR.PO.Form",QueryName:"QueryQll",ArgCnt:0},
+				        success: function (ret) {
+				        	ret = eval("("+ret+")");
+				        	if (ret.record) {
+                    var innerHtml = "<table border='0' cellpadding='0' cellspacing='1' style='background-color:Green'>";
+                    for (var i = 0; i < ret.record.length; i++) {
+                        innerHtml += "<tr><td>" + ret.record[i].ID + "</td><td>" ;
+                        innerHtml +=  ret.record[i].ESchema + "</td><td>" ;
+                        innerHtml +=  ret.record[i].Type + "</td><td>" ;
+                        innerHtml += ret.record[i].EName + "</td><td>" ;
+                        innerHtml += ret.record[i].CName + "</td></tr>" ;
+                    }
+                    innerHtml += "</table>";
+										
+                    $("#grid").html(innerHtml);
+
+                    $("#grid").find("tr").click(function () {
+                        $("#grid").find("td").css("background-color", "White");
+                        $("#grid").find("tr").attr("selected", false);
+                        $(this).find("td").css("background-color", "Gray");
+                        $(this).attr("selected", true);
+                    });}
+            		},
+		        		error: function (d) {}
+		        	});
+				        
+		        	
+            $("#btnOpenForm").click(function () {
+                var curForm = new formInfo();
+                //window.open("DHCWebForm/Default.htm?forminfo=" + $.toJSON(curForm));
+                window.open("../service/dhcmedwebform/Default.htm?forminfo=" + $.toJSON(curForm));
+                //window.open("Default.htm?forminfo=" + $.toJSON(curForm));
+                //window.open("../../csp/dhcmed.crf.layout.csp?forminfo=" + $.toJSON(curForm));
+            });
+        });
+    </script>
+    <style type="text/css">
+        td
+        {
+            width:100px;
+            background-color:White;
+        }
+    </style>
+</head>
+<body style="text-align:center; font-family:宋体; font-size:14px">
+    <div>
+        <div id="grid"  style="text-align:center; padding-top:45px">
+        
+        </div>
+        <div style="width:500px; padding-top:30px">
+            <input type="button" id="btnOpenForm" value="设计表单" />
+        </div>
+    </div>
+</body>
+</html>

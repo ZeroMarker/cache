@@ -1,0 +1,96 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE>儿童死亡报告卡</TITLE>
+	    <!--<meta http-equiv="Content-Type" content="text/html; charset=gb2312" /> -->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310> 
+        <!--DHCMED:HEAD></DHCMED:HEAD--> 
+        <script language='Cache' runat='SERVER'>
+		set menuCode="DTHChildReportList"
+		set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+		set groupId=$g(%session.Data("LOGON.GROUPID"))
+		set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"DTHChildReport",groupId)
+        </script>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/ss/PublicFunction/CustomFormItem.js'></script>	
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/CommonFunction.js"></script>
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/childreport/GUI.js"></script>
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/childreport/Event.js"></script>
+        <script type="text/javascript" src="../Scripts/dhcmed/dth/childreport/excelprint.js"></script>
+        <script type="text/javascript" src="../Scripts/DHCCPMRQCommon.js"></script>
+        <script language='Cache' runat='SERVER'>
+           set ReportID=$g(%request.Data("ReportID",1))
+           Set DthReportID=$g(%request.Data("DthReportID",1))
+           Set PatientID=$g(%request.Data("PatientID",1))
+           Set EpisodeID=$g(%request.Data("EpisodeID",1))
+           Set CTLocID=$g(%request.Data("CTLocID",1))
+           Set:CTLocID="" CTLocID=$g(%session.Data("LOGON.CTLOCID"))
+           Set UserID=$g(%session.Data("LOGON.USERID"))
+           if DthReportID'="" {
+	           Set ReportID=##class(DHCMed.DTH.ChildReport).GetRepIDByDthID(DthReportID)
+	           set objRep=##Class(DHCMed.DTH.Report).GetObjById(DthReportID)
+	           if $IsObject(objRep){
+	           	set PatientID=objRep.PatientID
+	           	Set EpisodeID=objRep.EpisodeID
+	           	//set CTLocID=objRep.RepLocDR
+	           }
+	       }
+	       if ReportID'="" {
+	           set objChildRep=##Class(DHCMed.DTH.ChildReport).GetObjById(ReportID)
+	           if $IsObject(objChildRep){
+	           	set PatientID=objChildRep.PatientID
+	           	Set EpisodeID=objChildRep.EpisodeID
+	           	set CTLocID=objChildRep.RepLocDR
+	           	Set UserID=objChildRep.RepUsrDR
+	           }
+	       }
+	       Set:DthReportID="" DthReportID=""""""
+           Set:PatientID="" PatientID=""""""
+           Set:EpisodeID="" EpisodeID=""""""
+           Set:CTLocID="" CTLocID=""""""
+           Set:ReportID="" ReportID=""""""
+           Set:UserID="" UserID=""""""
+      </script>
+       
+       <script type="text/javascript" language="javascript">
+			Ext.QuickTips.init();
+			var CHR_1=String.fromCharCode(1);
+			var CHR_2=String.fromCharCode(2);
+			var CHR_3=String.fromCharCode(3);
+			
+			var dthReportID=#(DthReportID)#;
+			var reportId=#(ReportID)#;
+			var patientId=#(PatientID)#;
+			var EpisodeID=#(EpisodeID)#;
+			var RepLocDR=#(CTLocID)#;
+			var UserId=#(UserID)#;
+			function window_onload(){
+				Ext.onReady(InitDthChild);
+			}
+	   </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</HEAD>
+	<body onload="return window_onload()">
+	<!-- //注释，不需要报表打印
+	<script language='Cache' runat='SERVER'>
+	     d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4()
+	   </script>
+    -->
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

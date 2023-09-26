@@ -1,0 +1,121 @@
+﻿<html>
+    <head>
+        <title>    门诊电子病历 1 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css" />
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.combobox.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.gh-buttons.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.main.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.admHistoryLst.css"/>
+        <script type="text/javascript" src="../scripts/emr/js/op.keysign.js"></script>
+        
+        <script language="cache" runat="server">
+        s CAServicvice=""
+        s IsCAON=##Class(CA.DigitalSignatureService).IsCAON()
+        s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        if ("Y"=IsCAON)&("1"=IsCACTLoc) { 
+            s CAServicvice="1" 
+            d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+        }
+        </script>
+          <script language="javascript">
+        var readonly="0"
+        </script>
+    </head>
+    <body ondragstart="return false"  class="easyui-layout">
+        <div id="emrEditor" class="easyui-panel" data-options="region:'west',border:false" style="width:700px;">
+        </div>
+        <div class="easyui-layout" data-options="region:'center',border:false" style="overflow:hidden;">
+            <div class="easyui-panel" data-options="region:'center',border:false,fit:true" style="overflow:hidden;">
+                <div id="res_region" class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                    <div id="histools" class="easyui-panel" data-options="region:'south',border:false" style="height:10px;">
+                    </div>
+                    <div class="easyui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
+                        <div id="dataTabs" class="easyui-tabs" data-options="fit:true,border:true" style="">                                                
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>    
+    </div>
+
+ 
+    <script language="cache" runat="server">
+    s patientID = $Get(%request.Data("PatientID",1),"")
+    s episodeID = $Get(%request.Data("EpisodeID",1),"")
+    s sessionID = %session.SessionId
+    s userCode = %session.Get("LOGON.USERCODE")
+    s userName = %session.Get("LOGON.USERNAME")
+    s userID = %session.Get("LOGON.USERID")
+    s ssgroupID = %session.Get("LOGON.GROUPID")
+    s userLocID = %session.Get("LOGON.CTLOCID")
+    s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+    s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+    s mradm = $p($g(^PAADM(episodeID)),"^",61)
+    s id = $Get(%request.Data("id",1),"")
+    s chartItemType = $Get(%request.Data("chartItemType",1),"")
+    s pluginType = $Get(%request.Data("pluginType",1),"")
+    s emrDocId = $Get(%request.Data("emrDocId",1),"")
+    s url = $Get(%request.Data("url",1),"")
+    //s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+    //s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")
+    s argConnect = ""
+    s DECRYPTKEY = ""
+    s netConnect = ##Class(EMRservice.BL.BLNetConnect).GetNetConnect()
+    if (netConnect '= ""){
+        s argConnect = netConnect.DecryptConnect
+        s DECRYPTKEY = netConnect.DecryptKey
+    }    
+    s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+    s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+    //d ##Class(EMRservice.OutputHtml).OutPutJSRefHtml(userLocID)
+    s recodeParam = ##Class(EMRservice.Ajax.opInterface).GetEMRRecordOP(userLocID, "Running", episodeID, userID)
+    s OPAutoSaveInterval = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPAutoSaveInterval","")
+    s MessageScheme=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("MessageScheme","")
+    </script>
+    <script language="javascript">
+    var param = '';  //{};
+    var sessionID = '#(sessionID)#';
+    var patientID = '#(patientID)#';
+    var episodeID = '#(episodeID)#';
+    var userCode = '#(userCode)#';
+    var userName = '#(userName)#';
+    var userID = '#(userID)#';
+    var ssgroupID = '#(ssgroupID)#';
+    var userLocID = '#(userLocID)#';
+    var userLocCode = '#(userLocCode)#';
+    var userLocName = '#(userLocName)#';
+    var mradm = '#(mradm)#';
+    var iword = false;
+    var igrid = false;
+    var pluginUrl = "#(pluginUrl)#";
+    var setDefaultFontStyle = "#(setDefaultFontStyle)#";
+    
+    var argConnect = "#(argConnect)#";
+    var key = "#(DECRYPTKEY)#";
+    if (argConnect=="" || key=="") { document.location.href = 'emr.blank.csp?info=NetConnectError'; }
+    argConnect = argConnect.replace(/\'/g, "\"");    
+    argConnect = {"Params":argConnect,"Key": key};    
+    var DECRYPTKEY="#(DECRYPTKEY)#"
+    var recodeParam = '#(recodeParam)#';
+    var titleCode = '';
+    var CAServicvice= '#(CAServicvice)#';
+    var OPAutoSaveInterval = '#(OPAutoSaveInterval)#';
+    var messageScheme = eval("(" +"#(MessageScheme)#"+ ")");
+    var SetDisease=0;
+    </script>
+ 
+    <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.quality.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.main.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/op.resource.js"></script>
+    
+</body>
+</html>

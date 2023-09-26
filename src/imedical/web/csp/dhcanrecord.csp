@@ -1,0 +1,64 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	DHC手术麻醉监护信息系统 </title>
+
+</head>
+<script language="cache" runat="server">
+	Set curUrl=%request.URL
+	s remoteAddr=%session.Data("REMOTE_ADDR")
+	Set userId=%session.Get("LOGON.USERID")
+	Set monId=%request.Data("opaId",1)
+	Set connString=%session.Get("LOGON.LAYOUTMANAGER")
+	Set groupId=%session.Get("LOGON.GROUPID")
+	Set ctLocId=%session.Get("LOGON.CTLOCID")
+	Set documentType="AN" //%request.Data("documentType",1)
+</script>
+<body>
+<script language="javascript">
+	var lnk="#(..EscapeHTML(curUrl))#";
+	//alert(lnk)
+	if (lnk.indexOf("monId=&")>-1)
+	{
+		alert("opaId为空！请选中手术病人后再启动麻醉监护。");
+		window.close();
+	}
+	else
+	{
+	var userId="#(..EscapeHTML(userId))#";
+	var monId="#(..EscapeHTML(monId))#";
+	var groupId="#(..EscapeHTML(groupId))#";
+	var ctLocId="#(..EscapeHTML(ctLocId))#";
+	var connString="#(..EscapeHTML(connString))#";
+	var documentType="#(..EscapeHTML(documentType))#";
+	//alert(userId+"^"+monId+"^"+groupId+"^"+ctLocId);
+	var paras=monId+"#"+userId+"#"+groupId+"#"+ctLocId+"#"+connString+"#"+documentType;
+	var paraFso=new ActiveXObject("Scripting.FileSystemObject");
+	var paraFile=paraFso.OpenTextFile("C:\\DHCClinic\\ANParaFile.txt",2,true);
+	paraFile.WriteLine(paras);
+	paraFile.Close();
+	var shell = new ActiveXObject("WSCRIPT.Shell");
+	shell.Run("C:\\DHCClinic\\ANLink.exe");
+	var left=5;
+	Show();
+	}
+	
+	function Show()
+	{
+		left--;
+		if(left==0)
+		{
+			window.opener=null;
+			window.close();
+				
+		}
+		else
+		{
+			setTimeout("Show()",1000);	
+		}	
+	}
+</script>
+
+</body>
+</html>

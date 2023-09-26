@@ -1,0 +1,111 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		<script language='Cache' runat='SERVER'>
+		set menuCode="SPEContral"
+		set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+		set groupId=$g(%session.Data("LOGON.GROUPID"))
+		set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"SPEContral",groupId)
+        </script>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Base.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Const.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_App.js'></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/PublicFunction/CustomFormItem.js'></script>
+		<script language='javascript' src="../Scripts/dhcmed/ss/PublicFunction/CustomFormItem.js"></script>
+        <script language='javascript' src='../scripts/dhcmed/spe/CtlResultList/Gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/spe/CtlResultList/Event.js'></script>		
+		<script language='javascript' src='../scripts/dhcmed/spe/CtlResultList/RowExpander.js'></script>	
+		<script language='javascript' src="../scripts/dhcmed/spe/CtlResultList/excelprint.js"></script>
+		<script language='javascript' src='../scripts/dhcmed/spe/SpeMark/Gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/spe/SpeMark/Event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/spe/ViewPatInfo/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/spe/ViewPatInfo/event.js'></script>
+		
+		<SCRIPT language=JScript event="OnCompleted(hResult,pErrorObject,pAsyncContext)" for=foo>  
+			//alert(MACAddr);
+		</SCRIPT>
+		<SCRIPT language=JScript event=OnObjectReady(objObject,objAsyncContext) for=foo>  
+			if ((objObject.IPEnabled != null)&&(objObject.IPEnabled != "undefined")&&(objObject.IPEnabled == true))
+			{
+				if ((objObject.MACAddress != null)&&(objObject.MACAddress != "undefined"))
+				{
+					MACAddr = objObject.MACAddress;
+				}
+				if ((objObject.IPAddress(0) != null)&&(objObject.IPAddress(0) != "undefined"))
+				{
+					IPAddr = objObject.IPAddress(0);
+				}
+				if ((objObject.DNSHostName != null)&&(objObject.DNSHostName != "undefined"))
+				{
+					sDNSName = objObject.DNSHostName;
+				}
+			}
+		</SCRIPT>
+		
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"SPE")
+			
+			Set SubjectCode=$g(%request.Data("SubjectCode",1))    //主题配置Code
+			Set:SubjectCode="" SubjectCode="SPECCS"               //默认为"SPECCS"
+			Set IsSecret=##class(DHCMed.SSIO.FromSecSrv).CheckIsSecret(LogonHospID)
+			Set IsSecret=""""_IsSecret_""""
+		</SCRIPT>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			
+			var MACAddr;
+			var IPAddr;
+			var DomainAddr;
+			var sDNSName;
+			
+			var LogonLocID='#(LogonLocID)#';
+			var LogonHospID='#(LogonHospID)#';
+			var SSHospCode='#(SSHospCode)#';
+			var SubjectCode='#(SubjectCode)#';
+			var IsSecret=#(IsSecret)#
+			var objControlArry = new Array();
+			var service = null;
+            function window_onload() {
+	            service = locator.ConnectServer();
+	            service.Security_.ImpersonationLevel=3;
+				service.InstancesOfAsync(foo,'Win32_NetworkAdapterConfiguration');
+				
+            	var objWinControl = new InitWinControl();
+            	objControlArry['WinControl'] = objWinControl;
+            }
+        </script>
+        <!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body onload="return window_onload()" ondragstart="return false" onContextMenu="return false" onSelectStart="return false" >
+		<!--fix bug 135538 by pylian 2015-10-09 右击特殊患者记录，总是伴随着弹出有”刷新”/”属性”等 -->
+		<!--<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET> -->
+		<OBJECT id=locator classid=CLSID:76A64158-CB41-11D1-8B02-00600806D9B6   VIEWASTEXT></OBJECT>
+		<OBJECT id=foo classid=CLSID:75718C9A-F029-11d1-A1AC-00C04FB6C223></OBJECT>
+	</body>
+</html>

@@ -1,0 +1,829 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  	<TITLE>报表管理</TITLE>
+  	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+  	<HISUI/>
+  	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+  	<link rel="stylesheet" href="../scripts/dhcwl/v1/rptmgmt/rptmgmt.css" type="text/css" />
+	<script type="text/javascript" src="../scripts_lib/ckeditor/ckeditor.js"></script>	
+	<ADDINS require="CmdShell" />
+</head>
+<body class="hisui-layout my-interface">
+	<!--报表管理主界面工具栏 class="searchboxRight toolbarsearchbox"-->
+	<div id="rptmgmtmainTB" class="datagrid-toolbar" >
+		<form id="toolForm" class="toolform">
+			<table cellspacing="0" cellpadding="0" style="width:100%;">
+				<tr >
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnmainadd" data-options="iconCls:'icon-add'" plain="true">新增</a>
+					</td>
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnmainmodify" data-options="stopAllEventOnDisabled:true,iconCls:'icon-write-order'" disabled='true' plain="true">修改</a>			
+					</td>					
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btncompare" data-options="iconCls:'icon-apply-opr'" plain="true">对比</a>			
+					</td>
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnexport" data-options="iconCls:'icon-paste'" plain="true">导出</a>			
+					</td>
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnimport" data-options="iconCls:'icon-copy'" plain="true">导入</a>			
+					</td>					
+					<td>
+						&nbsp;
+					</td>
+	
+					<td style="width:180px">
+						<input id="searchBtn" class="hisui-searchbox"  plain="true"/>
+					</td>													
+				</tr>
+			</table>
+		</form>
+	</div>
+		
+		
+		<!--
+		<div id="rptmgmtmainTB">
+			<table class="tooltable" cellspacing="0" cellpadding="0" style="width:100%">
+				<tr>
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnmainadd" data-options="iconCls:'icon-add'" plain="true">新增</a>
+					</td>
+					<td style="width:2px">
+						&nbsp;
+					</td>
+					
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnmainmodify" data-options="iconCls:'icon-write-order'" disabled='true' plain="true">修改</a>			
+					</td>
+					<td style="width:2px">
+						&nbsp;
+					</td>				
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btncompare" data-options="iconCls:'icon-apply-opr'" plain="true">对比</a>			
+					</td>
+					<td style="width:2px">
+						&nbsp;
+					</td>				
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnexport" data-options="iconCls:'icon-paste'" plain="true">导出</a>			
+					</td>
+					<td style="width:2px">
+						&nbsp;
+					</td>				
+					<td style="width:70px">
+						<a href="javascript:void(0)"  class="hisui-linkbutton" id="btnimport" data-options="iconCls:'icon-copy'" plain="true">导入</a>			
+					</td>
+					
+					<td>
+						&nbsp;
+					</td>				
+				
+					<td style="width:180px">
+						<input id="searchdatashowText" class="hisui-searchbox"  plain="true">
+					</td>
+				</tr>
+			</table>		
+		</div>
+		-->
+		
+	<!--报表管理主界面grid部分-->	
+	<div class="hisui-panel"  data-options="fit:true" style="padding:10px;border:none;">
+		<table title="报表管理" id="rptmgmt-datashow" class="hisui-datagrid" data-options="singleSelect:true, headerCls:'panel-header-gray'" rownumbers="true" toolbar="#rptmgmtmainTB">   
+		</table>
+	</div>	
+	
+	<!--显示链接-弹出窗口-->	
+	<div id="rptmgmt-showLinkDlg" title="链接文本" closed="true" style="width:500px;height:400px;padding:5px 10px;">   
+		<h3 align="center">超链接文本</h1>
+		<hr>
+		生成的超链接文本：
+		</br>
+		</br>
+		</br>
+		</br>
+		<p id="showLinkText" style='display:block;word-break: break-all;word-wrap: break-word;'>
+			
+		</p>
+		</br>
+		</br>
+		</br>
+		<p style="font-size: 14px;text-indent:2em;">可将上面文本复制到润乾文件中，作为超链接表达式的值</p>
+	</div>
+ 
+  	<!--"新增对话框"-->
+	<div id="rptmgmt-add" title="新增" closed="true" style="border:none;padding:10px;width:800px;height:500px;"> 
+	<!--
+	<div class="hisui-panel" data-options="fit:true" style="padding:10px;">	
+	-->		
+		<table class="formtable" >
+			<tr>
+				<!--第1列-->
+				<td>
+					<div class="hisui-panel formPanel" title="智能报表说明"  data-options="headerCls:'panel-header-card'">
+						<table  class="formtable">
+							<tr >
+								<td class="label-r">菜单名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="MenuName" data-options="required:false" />
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">当前页面名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="AuxiliaryMenuName" data-options="required:false"></input>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">raq名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="RaqName" data-options="required:false" />
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">CSP名称</td>
+								<td class="field-combo">
+									
+									<select id="CSPName" class="hisui-combobox  combobox-element " name="CSPName">
+										<option>dhccpmrunqianreport.csp</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">主程序query</td>
+								<td class="field-combo">
+									<select id="QueryName" class="hisui-combobox  combobox-element" name="QueryName" >
+										<option>DHCWL.MKPIService.MKPIQuery.QueryMKPIByDate</option>
+									</select>
+								</td>
+							</tr>									
+						</table>
+					</div>
+					
+					<div class="hisui-panel formPanel" title="条件说明" style="padding:10px 10px 10px 10px;" data-options="headerCls:'panel-header-card'">
+						<table  class="formtable">
+							<tr >
+								<td class="label-r">数据条件</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="Filter" data-options="required:false" />
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">显示条件</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="RowColShow" data-options="required:false"></input>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">单元格-子组关系</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="CellSubgrpMap" data-options="required:false" />
+								</td>
+							</tr>
+
+						</table>
+					</div>						
+								
+				</td>
+				<!--第2列-->
+				<td style="width:10px">&nbsp</td>
+				<!--第3列-->
+				<td >
+					<div class="hisui-panel formPanel" title="数据说明" style="padding:10px 10px 10px 10px;" data-options="headerCls:'panel-header-card'">
+						<table  class="formtable">
+							<tr>
+								<td class="label-r">统计口径</td>
+								<td class="field-combo">
+									<select id="Spec" class="hisui-combobox combobox-element" name="Spec">
+										<option>医嘱日期</option>
+										<option>结算日期</option>
+										<option>出院日期</option>
+										<option>入院日期</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">业务表</td>
+								<td class="field-combo">
+									<select id="HisTableName" class="hisui-combobox combobox-element" name="HisTableName" >
+										<option>DHC_WorkLoad</option>
+										<option>DHCMRIPDay</option>
+										<option>DHCWorkRegReport</option>
+										<option>DHCWL_AnOperation</option>	
+										<option>DHCMRInfo</option>
+										<option>DHCMRBase</option>
+										<option>PA_Adm</option>
+										<option>DHCWL_AnOperation</option>
+										<option>PA_AdmTransaction</option>
+										<option>DHC_PatientBill</option>
+										<option>DHC_PatBillOrder</option>
+										<option>DHC_PatBillDetails</option>		
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">指标</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="KPIName" data-options="required:false"></input>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">逻辑说明</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="ProgramLogic" data-options="required:false"></input>
+								</td>
+							</tr>
+							
+						</table>
+					</div>					
+
+					<div class="hisui-panel formPanel" title="关系人" style="padding:10px 10px 10px 10px;" data-options="headerCls:'panel-header-card'">
+						<table  class="formtable">
+							<tr>
+								<td class="label-r">高级客户</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="AdvUser" data-options="required:false"></input>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">项目工程师</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="ProMaintainer" data-options="required:false"></input>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">开发工程师</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="DepMaintainer" data-options="required:false"></input>
+								</td>
+							</tr>
+							<tr>
+								<td class="label-r">使用(科室)部门</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" id="UsedByDep" data-options="required:false"></input>
+								</td>
+							</tr>
+							
+						</table>
+					</div>
+					
+									
+				</td>
+			</tr>
+			
+			<!--备注	-->
+			<tr>
+				<td colspan="3">
+					<div class="hisui-panel formPanel" title="备注说明" style="padding:10px 10px 10px 10px;" data-options="headerCls:'panel-header-card'">
+						<table  class="formtable">
+							<tr>
+								<td>
+									<textarea id="idckeditor" name="idckeditor" class="ckeditor">This is my textarea to be replaced with CKEditor</textarea>
+
+								</td>
+							</tr>
+						</table>
+					</div>			
+				</td>
+			</tr>			
+		</table>
+	<!--
+	</div>
+	-->
+	</div>
+
+	<!--引入HIS菜单数据界面-工具栏-->	
+	
+	<div id="importHisDataTB">
+	<form>
+		<table class="tooltable"  cellspacing="0" cellpadding="0" >
+			<tr>
+				<td class="toollabel-r" >菜单名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="MenuName"  data-options="required:false"/>
+				</td>
+				
+				<td class="toollabel-r">raq名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="RaqName" data-options="required:false"/>
+				</td>
+				<td class="toollabel-r">CSP名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="CSPName" data-options="required:false"/>
+				</td>
+				<td style="width:2px">
+					&nbsp;
+				</td>				
+				<td >
+					<a href="javascript:void(0)" id="searchHIsMenuText" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"  plain="false">查询</a>							
+				</td>
+			</tr>
+		</table>
+	</form>	
+	</div>
+	
+	<!--
+	<div id="importHisDataTB" class="datagrid-toolbar">
+		<form class="toolform">
+			<table cellspacing="0" cellpadding="0" style="width:100%;table-layout:fixed;">
+				<tr >
+					<td style="width:10px;">
+						&nbsp;
+					</td>
+					<td style="width:56px;">菜单名称</td>
+					<td style="width:10px;">
+						&nbsp;
+					</td>							
+					<td style="width:70px;">
+						<input class="hisui-validatebox" name="MenuName" data-options="required:false,validType:'isForm'" />
+					</td>
+					<td style="width:20px;">
+						&nbsp;
+					</td>
+					<td style="width:56px;">raq名称</td>
+					<td style="width:10px;">
+						&nbsp;
+					</td>							
+					<td style="width:70px;">
+						<input class="hisui-validatebox" name="RaqName" data-options="required:false,validType:'isForm'" />
+					</td>					
+					<td style="width:20px;">
+						&nbsp;
+					</td>
+					<td style="width:56px;">CSP名称</td>
+					<td style="width:10px;">
+						&nbsp;
+					</td>							
+					<td style="width:70px;">
+						<input class="hisui-validatebox" name="CSPName" data-options="required:false,validType:'isForm'" />
+					</td>					
+					<td style="width:20px;">
+						&nbsp;
+					</td>
+					<td >
+						<a href="javascript:void(0)" id="searchHIsMenuText" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"  plain="false">查询</a>							
+					</td>
+					<td>
+						&nbsp;
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>	
+	-->
+	
+	<!--引入HIS菜单数据界面grid   -->	
+	<div id="rptmgmt-add-importHISDataDlg"  title="引入HIS菜单数据" closed="true" style="width:700px;height:450px;padding:10px;">   
+		<table id="rptmgmt-add-importHISDataGrid" class="hisui-datagrid" data-options="singleSelect:true, headerCls:'panel-header-gray'" rownumbers="true" toolbar="#importHisDataTB">   
+		</table>
+	</div>
+
+	
+	
+	<!--引入其他说明数据-工具栏-->
+	
+	<div id="importOtherDataTB">
+		<table class="tooltable"  cellspacing="0" cellpadding="0" >
+			<tr>
+				<td class="toollabel-r" >菜单名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="MenuName"  data-options="required:false"/>
+				</td>
+				
+				<td class="toollabel-r">raq名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="RaqName" data-options="required:false"/>
+				</td>
+				<td class="toollabel-r">CSP名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="CSPName" data-options="required:false"/>
+				</td>
+				<td style="width:2px">
+					&nbsp;
+				</td>
+				<td >
+					<a href="javascript:void(0)" id="searchOtherDataText" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"  plain="false">查询</a>							
+				</td>
+			</tr>
+		</table>	
+	</div>	
+	
+	<!--
+	<div id="importOtherDataTB" class="datagrid-toolbar">
+		<form class="toolform">
+			<table cellspacing="0" cellpadding="0" style="width:100%;">
+				<tr >
+					<td style="width:10px;">
+						&nbsp;
+					</td>
+					<td style="width:56px;">菜单名称1</td>
+					<td style="width:10px;">
+						&nbsp;
+					</td>							
+					<td class="toolfield" style="width:140px;">
+						<input class="hisui-validatebox" name="MenuName" data-options="required:false,validType:'isForm'" />
+					</td>
+					<td style="width:20px;">
+						&nbsp;
+					</td>
+					<td style="width:56px;">raq名称</td>
+					<td style="width:10px;">
+						&nbsp;
+					</td>							
+					<td class="toolfield" style="width:140px;">
+						<input class="hisui-validatebox" name="RaqName" data-options="required:false,validType:'isForm'" />
+					</td>					
+					<td style="width:20px;">
+						&nbsp;
+					</td>
+					<td style="width:56px;">CSP名称</td>
+					<td style="width:10px;">
+						&nbsp;
+					</td>							
+					<td class="toolfield" style="width:140px;">
+						<input class="hisui-validatebox" name="CSPName" data-options="required:false,validType:'isForm'" />
+					</td>					
+					<td style="width:20px;">
+						&nbsp;
+					</td>
+					<td style="text-align:center;width:90px;">
+						<a href="javascript:void(0)" id="searchOtherDataText" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"  plain="false">查询</a>							
+					</td>
+					<td>
+						&nbsp;
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>	
+	-->									
+
+	<!--引入其他说明数据grid   -->	
+	<div id="rptmgmt-add-importOtherDataDlg" class="framegrid" title="引入其他说明数据" closed="true" style="width:700px;height:450px;top:20px;left:300px;">   
+		<table id="rptmgmt-add-importOtherDataGrid" class="hisui-datagrid" data-options="singleSelect:true, headerCls:'panel-header-gray'" rownumbers="true" toolbar="#importOtherDataTB">   
+		</table>
+	</div>	
+
+	
+	<!--对比面板   -->	
+	<div id="rptmgmt-compareDlg" title="对比" closed="true" style="width:800px;height:500px;padding:5px 10px;top:20px;left:200px;">   
+		<table class="formtable">
+			<tr>
+				<!--第1列-->
+				<td>
+					<div  id="compare-firstCol" class="hisui-panel formPanel" title="报表描述1"  data-options="headerCls:'panel-header-card'">
+						<table  class="formtable">
+							<tr >
+								<td class="label-r">菜单名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="MenuName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">当前页面名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="AuxiliaryMenuName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">raq名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="RaqName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">CSP名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="CSPName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">主程序query</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="QueryName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>	
+							<tr >
+								<td class="label-r">数据条件</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="Filter" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">显示条件</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="RowColShow" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">单元格-子组关系</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="CellSubgrpMap" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">统计口径</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="Spec" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">业务表</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="HisTableName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">指标</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="KPIName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">高级客户</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="AdvUser" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">项目工程师</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="ProMaintainer" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">开发工程师</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="DepMaintainer" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">使用(科室)部门</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="UsedByDep" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">逻辑说明</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="ProgramLogic" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							
+							<!--tr >
+								<td class="label-r">备注说明</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="Demo" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr-->
+							<tr>
+								<td colspan="2" style="width:100%;">备注说明</td>
+							</tr>
+							<tr>
+								<td colspan="2" style="width:100%;">
+									<textarea id="idckeditor1" name="idckeditor1" class="ckeditor" rows="5" style="width:100%;"></textarea>
+								</td>
+							</tr>
+
+						</table>
+					</div>
+				</td>
+				
+					
+				<!--第2列-->
+				<td>
+					<div  id="compare-secCol" class="hisui-panel formPanel" title="报表描述2"  data-options="headerCls:'panel-header-card'">
+						<table  class="formtable">
+							<tr >
+								<td class="label-r">菜单名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="MenuName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">当前页面名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="AuxiliaryMenuName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">raq名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="RaqName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">CSP名称</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="CSPName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">主程序query</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="QueryName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>	
+							<tr >
+								<td class="label-r">数据条件</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="Filter" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">显示条件</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="RowColShow" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">单元格-子组关系</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="CellSubgrpMap" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>							
+							<tr >
+								<td class="label-r">统计口径</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="Spec" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">业务表</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="HisTableName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">指标</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="KPIName" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">高级客户</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="AdvUser" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">项目工程师</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="ProMaintainer" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">开发工程师</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="DepMaintainer" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">使用(科室)部门</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="UsedByDep" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<tr >
+								<td class="label-r">逻辑说明</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="ProgramLogic" data-options="required:false"  readonly="true"/>
+								</td>
+							</tr>
+							<!--tr >
+								<td class="label-r">备注说明</td>
+								<td class="field-text">
+									<input class="hisui-validatebox" type="text" name="Demo" data-options="required:false"  readonly="true"/>								
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">备注说明</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<textarea id="idckeditor2" name="idckeditor2" class="ckeditor">This is my textarea to be replaced with CKEditor</textarea>
+								</td>
+							</tr-->
+							
+							<tr>
+								<td colspan="2" style="width:100%;">备注说明</td>
+							</tr>
+							<tr>
+								<td colspan="2" style="width:100%;">
+									<div id="div-idckeditor2">
+										<textarea id="idckeditor2" name="idckeditor2" class="ckeditor" rows="5" style="width:100%;"></textarea>
+									</div>
+								</td>
+							</tr>							
+							
+														
+						</table>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+
+		
+	<!--导出窗口的工具栏class="searchboxRight toolbarsearchbox style="height:24px !important;""-->	
+	<div id="expDataTB">
+		<table class="tooltable"  cellspacing="0" cellpadding="0" >
+			<tr>
+				<td class="toollabel-r" >菜单名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="MenuName"  data-options="required:false"/>
+				</td>
+				
+				<td class="toollabel-r">raq名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="RaqName" data-options="required:false"/>
+				</td>
+				<td class="toollabel-r">CSP名称</td>
+				<td class="tool-text">
+					<input class="hisui-validatebox" type="text" name="CSPName" data-options="required:false"/>
+				</td>
+				<td style="width:2px">
+					&nbsp;
+				</td>				
+				<td >
+					<a href="javascript:void(0)" id="expDataSearchText" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"  plain="false">查询</a>							
+				</td>
+				<!--td>
+					<input id="expDataSearchText" class="hisui-searchbox" style="width:180px;">
+				</td-->
+			</tr>
+		</table>	
+	</div>		
+	
+
+	
+	<!--导出窗口的grid   -->	
+	<div id="rptmgmt-expDataDlg" class="framegrid"   title="导出" closed="true" style="width:800px;height:500px;top:20px;left:200px;">   
+		<table id="rptmgmt-expDataGrid" class="hisui-datagrid" data-options="singleSelect:false, headerCls:'panel-header-gray'" rownumbers="true" toolbar="#expDataTB">   
+		</table>
+		
+	</div>		
+		
+	<!--导入工具栏-->
+	<div id="impDataTB">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+				<td style="padding:0 10px 0 5px">文件路径</td>
+				<td>
+					<!--input type="file" id="impFileName" name="impFileName"  data-options="width:300,buttonText:'选择'" /-->
+					<input class="hisui-validatebox" type="text" id="txtImpFileName" name="txtImpFileName"   data-options="required:false"/>
+					<a href="javascript:void(0)" id="btnImpFileName" class="hisui-linkbutton" plain="false">确定</a>
+					
+				</td>
+			</tr>
+		</table>	
+	</div>	
+	
+	<!--导入grid  -->
+	<div id="rptmgmt-impDataDlg"  class="framegrid"  title="导入" closed="true" style="width:800px;height:500px;top:20px;left:200px;">   
+		<table id="rptmgmt-impDataGrid" class="hisui-datagrid" data-options="singleSelect:false, headerCls:'panel-header-gray'" rownumbers="true" toolbar="#impDataTB">   
+		</table>
+		
+	</div>		
+	
+ 	<script type="text/javascript"> 
+ 		//CKEDITOR.replace('idckeditor');
+ 		//var editor = CKEDITOR.replace("idckeditor");
+		//editor.setData("输入文字");
+		
+
+//CKEDITOR.replace( 'idckeditor');
+/*		
+CKEDITOR.editorConfig = function( config ) {
+	// Define changes to default configuration here. For example:
+	// config.language = 'fr';
+	// config.uiColor = '#AADC6E';
+	//config.toolbarCanCollapse = true;
+	//config.toolbar = 'Full';
+	//config.toolbar_Full = [['Source','Save']];
+	[
+       ['Undo','Redo'],
+       ['Bold','Italic','Underline',],
+        ['NumberedList','BulletedList','-','Outdent','Indent','Blockquote'],
+        ['JustifyLeft','JustifyCenter','JustifyRight'],
+        ['TextColor','BGColor']
+    ];
+}
+    */
+    	
+ 	</script>
+ 
+	<!--引入js文件JSURL-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/rptmgmt/rptmgmtmain.js"></script>
+    <!--当前csp文件路径CSPURL-->
+    <span style="display:none;">#(%request.URL)#</span> 
+</body>	
+</html>
+

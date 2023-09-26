@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<server>
+	; Set up some details for display
+	; Use %request so we don't have to worry about cleaning up the variables
+	; Page Details
+	n t
+	;
+	;get translations
+	d ##Class(websys.Component).GetComponentMessages(.t,"websys.Component.CustomiseLayout")
+	s %request.Data("SSUser",1)=$g(t("SSUser"),"User"),%request.Data("SSGroup",1)=$g(t("SSGroup"),"Group")
+	s %request.Data("CTHospital",1)=$g(t("CTHospital"),"Hospital"),%request.Data("PACTrust",1)=$g(t("PACTrust"),"Trust")
+	s %request.Data("SITE",1)=$g(t("SITE"),"Site"),%request.Data("SYS",1)=$g(t("SYS"),"System"),%request.Data("NONE",1)=$g(t("NONE"),"NONE")
+	;
+	if ($g(%request.Data("TEVENT",1))'="t1058itbliText")&&('$g(msg.Count("E",1058))) {
+		k %request.Data("Code"),%request.Data("Text")
+	}
+</server>
+<script language='javascript'>
+	var local=new Array();
+	local["SYSTEM"]='#(%request.Data("SYS",1))# (TRAK)';
+	local["LOGON.SITECODE"]='#(%request.Data("SITE",1))# (#($g(%session.Data("LOGON.SITECODE")))#)';
+	local["LOGON.TRUSTDESC"]='#(%request.Data("PACTrust",1))# (#($zcvt($g(%session.Data("LOGON.TRUSTDESC")),"O","JS"))#)';
+	local["LOGON.HOSPDESC"]='#(%request.Data("CTHospital",1))# (#($zcvt($g(%session.Data("LOGON.HOSPDESC")),"O","JS"))#)';
+	local["LOGON.GROUPDESC"]='#(%request.Data("SSGroup",1))# (#($zcvt($g(%session.Data("LOGON.GROUPDESC")),"O","JS"))#)';
+	local["LOGON.USERCODE"]='#(%request.Data("SSUser",1))# (#($zcvt($g(%session.Data("LOGON.USERCODE")),"O","JS"))#)';
+
+	local["LOGON.TRUSTID"]='#($g(%session.Data("LOGON.TRUSTID")))#';
+	local["LOGON.HOSPID"]='#($g(%session.Data("LOGON.HOSPID")))#';
+
+</script>
+</head>
+
+<BODY>
+<TRAK:COMPONENT id="epr.CannedText.Setup"></TRAK:COMPONENT>
+</body>
+</html>

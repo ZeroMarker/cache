@@ -1,0 +1,134 @@
+<!--清洗进锅-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+	
+
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:10px">
+		<div class="hisui-panel" data-options="title:'清洗信息采集',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div id="UomTB">
+				<div> 
+					<table class="Condition" id="cleantable">
+						<input id="cleantypev" name="cleantypev" type="hidden">
+						<input id="cleanCodev" name="cleanCodev" type="hidden">
+						<input id="cleanStrov" name="cleanStrov" type="hidden">
+						<input id="cleanerv" name="cleanerv" type="hidden">
+						<input id="MachineNoValue" name="MachineNoValue" type="hidden">
+						<tr>
+							<td>
+							<label>日期</label><input id="cleandate" name="cleandate" class="textbox hisui-dateboxq" style="width:128px"></input>
+							</td>
+							<td style="padding-left:20px">
+							<label>清洗方式</label><input id="cleantype" name="cleantype" class="textbox" style="width:120px"></input>
+  							</td>
+  							<td style="padding-left:20px">
+  								<a href="#" id="btnCommit" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">进锅</a>
+  							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>清洗机号</label><input id="cleanmachine" name="cleanmachine" class="textbox" style="width:120px"></input>
+							</td>
+							<td style="padding-left:20px">
+								<label>清洗架号</label><input id="cleanCode" name="cleanCode" class="textbox" style="width:120px"></input>
+							</td>
+							<td style="padding-left:20px">
+  								<a href="#" id="clear" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+  							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>清洗程序</label><input id="cleanStro" name="cleanStro" class="textbox" style="width:120px"></input>
+							</td>
+							<td style="padding-left:20px">
+								<label>清洗人</label><input id="cleaner" name="cleaner" class="textbox" style="width:120px"></input>
+							</td>
+							<td style="padding-left:20px">
+								<a href="#" id="query" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+						</tr>
+						<tr align="center">	
+							<td colspan="2">
+								<a href="#" id="add" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="display:none">新建</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+				<table id="tabDrugList"></table>
+		</div>
+	</div>
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:600px;padding-left:0px">
+		<div class="hisui-panel" data-options="title:'清洗明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div id="InputTB">
+				<div class="BorderLine">
+					<table id="CleanDetailTable" class="Condition">
+						<tr>
+							<td><label>条码</label><input class="textbox" id="BarCode" name="BarCode" style="width:85px" onkeyup="this.value=this.value.replace(/[^\d]/g,'') " onafterpaste="this.value=this.value.replace(/[^\d]/g,'')"></td>
+							<td><label>普通包</label><input id="CommonPackage" class="textbox hisui-combobox" style="width:140px"></td>
+							<td><label>数量</label><input id="CommonPackageNum" name="CommonPackageNum" class="hisui-numberbox textbox" style="width:80px"></td>
+							<td><a href="#" id="CommonPackageCreateBT" class="hisui-linkbutton" style="width:80px;">添加</a></td>
+						</tr>
+					</table>
+				</div>
+				<table class="Condition">
+					<tr>
+						<td colspan="2" align="left"><a href="#" id="AddItemBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">待清洗专科器械包</a>
+							<a href="#" id="AddGYB" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">待清洗公用包</a>		
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table id="ItemList"></table>
+		</div>
+	</div>
+	<div id="SelReqWin" class="hisui-dialog FindWin GridPadding" data-options="closed:'true',modal:true,iconCls:'icon-w-find',headerCls:'panel-header-gray'" title="待清洗专科器械包">
+		<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc"> 
+			<div data-options="region:'north',border:false">
+				<div id="SelReqWinTB">
+				<table id="SelReqConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="SelReqWinStartDate" name="SelReqWinStartDate" class="textbox hisui-dateboxq"></td>
+						<td><label>截止日期</label><input id="SelReqWinEndDate" name="SelReqWinEndDate" class="textbox hisui-dateboxq"></td>
+						<td><a href="#" id="querySelReqWin" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px;">查询</a></td>
+						<td><a href="#" id="SelBarCodeCreateBT" class="hisui-linkbutton" style="width:116px;">添加消毒包</a></td>
+					</tr>
+				</table>
+				</div>
+			</div>
+			<table id="UnCleanList"></table>
+		</div>
+	</div>	
+	
+	<div id="OrdWin" class="hisui-dialog FindWin GridPadding" data-options="closed:'true',modal:true,iconCls:'icon-w-find',headerCls:'panel-header-gray'" title="待清洗公用包">
+		<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc">
+			<div data-options="region:'north',border:false">
+  				<div id="OrdWinTB">
+  				<table id="uncleanord" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="SelReqStartDate" name="StartDate" class="textbox hisui-dateboxq"></td>
+						<td><label>截止日期</label><input id="SelReqEndDate" name="EndDate" class="textbox hisui-dateboxq"></td>
+						<td><a href="#" id="queryord" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px;">查询</a></td>
+						<td><a href="#" id="AddUnCleanOrd" class="hisui-linkbutton" style="width:116px;">添加消毒包</a></td>
+					</tr>
+				</table>
+				</div>
+			</div>
+			<table id="UnCleanOrdList"></table>
+		</div>
+	</div>
+</div>
+	<script type="text/javascript" src="../scripts/cssd/Clean/CleanCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/CleanInfoCollect.js"></script>
+</body>
+</html>

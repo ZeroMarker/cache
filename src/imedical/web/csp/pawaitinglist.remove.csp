@@ -1,0 +1,36 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n list,comp
+	i %request.Get("PatientID") {
+ 		s comp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ 		i comp d comp.Show(),comp.%Close()
+ 	}
+	d %request.Set("ID",%request.Get("WaitingListID"))
+	s list=##Class(User.PAWaitingList).%OpenId(%request.Get("WaitingListID"),0)
+	i list {
+		if list.WLWaitListStatusDR,list.WLWaitListStatusDR.WLSCode="R" {
+			d %request.Set("remove","on")
+		}
+		d list.%Close()
+	}
+</SERVER>
+
+
+<TRAK:COMPONENT id="PAWaitingList.EditRemoveReinstate" hidemenus=1>
+</TRAK:COMPONENT>
+
+</BODY>
+</HTML>
+

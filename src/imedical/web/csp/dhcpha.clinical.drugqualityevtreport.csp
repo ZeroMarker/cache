@@ -1,0 +1,196 @@
+<HTML>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	</script>
+<!-- Put your page Title here -->
+		<EASYUI:CLINICAL/>
+		<script type="text/javascript" src="../scripts/websys.js"></script>
+		<script type="text/javascript" src="../scripts/dhcpha/clinical/drugqualityevtreport.js"></script>
+	    <style type="text/css">
+	    .cb{background-image:url(../scripts/dhcpha/images/icon.png);}		
+		.cb_active{background-position:0 -13px;}
+		.s_ipt_wr:hover {border: 5px solid red;}
+		.datagrid-row-selected {
+  			background: #ADFAFC;
+		}
+       </style> 
+</head>
+<body>
+	<div id="mainpanel" class="easyui-layout" fit="true">
+		<div data-options="region:'center'" title="药品质量事件报告表<span style='color:red;'>[红色*号标注的为必填项]</span>" style="background:#F8F8FF;">
+			<div style="border:2px solid #95B8E7;margin-left:150px;margin-right:auto;margin-top:5px;height:1260px;width:1002px;background:#F8F8FF;">
+				<div style="font-size:30px;font-weight:bold;text-align:center;">
+					<span>药 品 质 量 事 件 报 告 表</span>
+					<input id="dqEvtRepID" style="display:none;width:100px;"></input>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:5px;width:998px;">
+					<input id="RepLocID" style="width:80px;display:none;"></input>
+					<span style="font-family:宋体;padding:0px 0px 6px 0px;"><span style="color:red;">*</span>报告科室/部门：<input id="RepLoc"  style="width:200px;border:1px solid #95B8E7;" readonly></input></span>  <!-- qunianpeng 2016-07-25-->
+					<span style="font-family:宋体;margin-left:80px;"><span style="color:red;">*</span>报告时间：<input id="RepDate" type="text" class="easyui-datebox" style="width:130px;margin-left:2px;" ></input></span>  <!-- qunianpeng 2016-07-25-->
+					<span style="font-family:宋体;margin-left:80px;">编码：<input id="RepCode" style="width:200px; border:1px solid #95B8E7;"></input></span>  <!-- qunianpeng 2016-07-25-->
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;margin:5px;width:998px;">
+					<input id="PatID" style="display:none;width:100px;border:1px solid #95B8E7;"></input>
+					<span style="font-family:宋体"><span style="color:red;">*</span>患者姓名：<input id="PatName"  style="width:100px;border:1px solid #95B8E7;" readonly ></input></span>  <!-- qunianpeng 2016-07-25-->
+					<span style="font-family:宋体;margin-left:40px;"><span style="color:red;">*</span>出生日期：<input id="PatDOB" type="text" class="easyui-datebox" style="width:100px;border:1px solid #95B8E7;" readonly ></input></span>  <!-- qunianpeng 2016-07-25-->
+					<span style="font-family:宋体;margin-left:5px;"><span style="color:red;">*</span>年龄：<input id="PatAge"  style="width:80px;border:1px solid #95B8E7;" readonly ></input><!-- <span style="margin:0px 3px">岁</span> --></span>  <!-- qunianpeng 2016-07-25-->
+					<span style="font-family:宋体;margin-left:40px;"><span style="color:red;">*</span>性别：<input id="PatSex" class="easyui-combobox" style="width:70px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'" readonly  ></input></span>  <!-- qunianpeng 2016-07-25-->
+					<span style="font-family:宋体;margin-left:40px;"><span style="color:red;">*</span>登记号：<input id="PatMedNo"  style="width:130px;border:1px solid #95B8E7;" readonly ></input></span>  <!-- qunianpeng 2016-07-25-->
+				</div>
+				<!--就诊信息-->
+				<div style="border-bottom:1px solid #95B8E7;margin:5px;width:998px;">
+						<input id="AdmLocID" style="display:none;width:100px;border:1px solid #95B8E7;"></input>
+						<span><span style="color:red;">*</span>就诊科室：<input id="AdmLoc" style="width:200px;border:1px solid #95B8E7;" readonly ></input></span> <!-- qunianpeng 2016-07-25-->
+						<span style="margin-left:100px;"><span style="color:red;">*</span>事件发生时间：<input id="EvtOccDate" type="text" class="easyui-datebox" style="width:130px;margin-left:2px;"></input></span>
+						<span style="margin-left:100px;"><span style="color:red;">*</span>发现时间：<input id="DisEvtDate" type="text" class="easyui-datebox" style="width:130px;margin-left:2px;"></input></span>
+				</div>
+				<!--事件分级-->
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;"> <!-- qunianpeng  2016-07-25-->
+					<div style="border:1px solid #95B8E7;width:200px;height:243px;float:left;text-align:center;line-height:245px;"><span style="color:red;">*</span>事件分级</div>
+					<div style="border:1px solid #95B8E7;width:987px;">
+						<span style="display:block;margin:10px;"><input id="A" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>A</b>&nbsp级：客观环境或条件可能引发药品质量问题;</span>
+						<span style="display:block;margin:10px;"><input id="B" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>B</b>&nbsp级：药品存在质量问题，及时发现，未发给患者，或已发给患者但未使用;</span>
+						<span style="display:block;margin:10px;"><input id="C" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>C</b>&nbsp级：患者已使用，需要监测该药品对患者的后果，并根据后果判断是否需要采取措施预防和减少伤害;</span>
+						<span style="display:block;margin:10px;"><input id="D" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>D</b>&nbsp级：患者使用了该药品，造成暂时性伤害，需要采取防治措施;</span>
+						<span style="display:block;margin:10px;"><input id="E" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>E</b>&nbsp级：患者使用了该药品，导致住院或住院时间延长;</span>
+						<span style="display:block;margin:10px;"><input id="F" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>F</b>&nbsp级：患者使用了该药品，对其造成永久性伤害;</span>
+						<span style="display:block;margin:10px;"><input id="G" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>G</b>&nbsp级：患者使用了该药品，导致生命垂危;</span>
+						<span style="display:block;margin:10px;"><input id="H" name="ErrorLevel" class="cb" type="checkbox" style="margin-right:10px;margin-left:10px;" /><b>H</b>&nbsp级：患者使用了该药品，导致死亡。</span>
+						<span style="margin:10px;">以上<b>C-H</b>&nbsp级属于药品损害事件。</span>					
+					</div>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;"> <!-- qunianpeng  2016-07-25-->
+					<div style="border:1px solid #95B8E7;width:200px;height:42px;float:left;text-align:center;line-height:40px;"><span style="color:red;">*</span>事件发生地点</div>
+					<div style="border:1px solid #95B8E7;width:987px;">
+						<div style="margin:10px;">
+							<span><input id="EOL10" value="10" name="EvtOccLoc" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;" />药库</span>
+							<span><input id="EOL11" value="11" name="EvtOccLoc" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;" />药房</span>
+							<span><input id="EOL12" value="12" name="EvtOccLoc" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;" />病区</span>
+							<span><input id="EOL13" value="13" name="EvtOccLoc" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;" />制剂室</span>
+							<span><input id="EOL14" value="14" name="EvtOccLoc" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;" />输液室</span>
+							<span><input id="EOL15" value="15" name="EvtOccLoc" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;" />患者取回家中</span>
+				            <span><input id="EOL99" value="99" name="EvtOccLoc" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;" />其他<input id="EvtOccLocDesc" style="border:0px none;width:200px;border-bottom:1px solid #95B8E7;" disabled="true"></input></span>
+						</div>
+					</div>
+				</div>
+				<!--事件相关药品信息-->
+                <div id="tt" style="height:168px;border:1px solid #95B8E7;margin:5px;width:987px;">
+                	<table id="susdrgdg"></table>
+                </div>
+                <!--是否能够提供药品标签、处方复印件等资料-->
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;">
+					<div style="border:1px solid #95B8E7;width:200px;height:41px;float:left;text-align:center;line-height:20px;padding-top:3px;"><span style="color:red;">*</span>是否能够提供药品标签、</br>处方复印件等资料</div>
+					<div style="width:793px;height:30px;padding-top:15px;">
+							<span><input id="ER10" value="10" name="RelateInfo" class="cb1" type="checkbox" style="margin-right:10px;margin-left:10px;"></input>是</span>
+						    <span><input id="ER11" value="11" name="RelateInfo" class="cb1" type="checkbox" style="margin-right:10px;margin-left:30px;"></input>否</span>
+						    <span><input id="ER99" value="99" name="RelateInfo" class="cb1" type="checkbox" style="margin-right:10px;margin-left:30px;"></input>其他<input id="EvtRelaDesc" style="border:0px none;width:300px;border-bottom:1px solid #95B8E7;" disabled="true"></input></span>
+					</div>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;">
+					<div style="border:1px solid #95B8E7;width:200px;height:65px;float:left;text-align:center;line-height:64px;"><span style="color:red;">*</span>事件发生经过</div>
+					<div>
+						<textarea id="dqEvtProc" rows="4" cols="120"></textarea>
+					</div>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:5px 5px 6px 5px;width:987px;">
+					<div style="border:1px solid #95B8E7;width:200px;float:left;text-align:center;line-height:216px;">患者伤害情况</div>
+					<div style="border:1px solid #95B8E7;width:987px;">
+						<div style="margin:10px;width:987px;">
+							<!--nisijia 2016-09-09-->
+							<span><input id="death" class="cb1" name="HarmLevel" type="checkbox" style="margin-right:10px "></input>死亡(直接死因)：<input id="facOfdeath" style="border:0px none;width:300px;border-bottom:1px solid #95B8E7;" disabled="true"></input></span>
+							<span>死亡时间：<input id="deathdate" type="text" class="easyui-datetimebox" style="width:160px;margin-left:2px;" disabled=true></input></span>
+						</div>
+						<div style="margin:10px;">
+							<span><input id="CriticallyIll" class="cb" name="HarmLevel"  type="checkbox" style="margin-right:10px;"></input>生命垂危，需抢救(报告)：<input id="CriIllReport" style="border:0px none;width:500px;border-bottom:1px solid #95B8E7;" disabled="true"></input></span>
+						</div>
+						<div style="margin:10px;">
+								<span><input id="HL10" value="10" name="HarmLevel" class="cb" type="checkbox" style="margin-right:10px;"></input>无明显伤害</span>
+						</div>
+						<div style="margin:10px;">
+								<span><input id="HL11" value="11" name="HarmLevel" class="cb" type="checkbox" style="margin-right:10px;"></input>暂时伤害(部位、程度)：<input id="HarmDesc11" style="border:0px none;width:500px;border-bottom:1px solid #95B8E7;" disabled="true"></input></span>
+						</div>
+						<div style="margin:10px;">
+							<span><input id="HL12" value="12" name="HarmLevel" class="cb" type="checkbox" style="margin-right:10px;"></input>永久性伤害(部位、程度)：<input id="HarmDesc12" style="border:0px none;width:500px;border-bottom:1px solid #95B8E7;" disabled="true"></input></span>
+						</div>
+						<div style="margin:10px;">
+							<span><input id="dgExtHospTime" name="HarmLevel"  class="cb" type="checkbox" style="margin-right:10px;"></input>住院时间延长</span>
+						</div>
+						<div style="margin:10px;">
+								<span>恢复过程[<span><input id="RP10"  name="HarmLevel" value="10" name="RecProc" class="cb" type="checkbox" style="margin-left:20px;margin-right:10px;"></input>住院治疗</span><span><input id="RP11"  value="11" name="RecProc" class="cb" type="checkbox" style="margin-left:20px;margin-right:10px;"></input>门诊随访治疗</span><span><input id="RP12"  value="12" name="RecProc" class="cb" type="checkbox" style="margin-left:20px;margin-right:10px;"></input>自行恢复</span>]</span>
+						</div>
+					</div>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;">
+					<div style="border:1px solid #95B8E7;width:200px;float:left;text-align:center;line-height:64px;"><span style="color:red;">*</span>引发事件因素</div>
+					<div style="border:1px solid #95B8E7;width:987px;">
+						<div style="margin:10px;">
+							<span><input id="DR10" class="cb" type="checkbox" style="margin:0px 10px;"></input>药品自身缺陷，企业召回</span>
+							<span><input id="DR11" class="cb" type="checkbox" style="margin:0px 10px;"></input>药品贮存不当，性质发生变化</span>
+							<span><input id="DR12" class="cb" type="checkbox" style="margin:0px 10px;"></input>使用中与其他药品产生配伍禁忌</span>
+						</div>
+						<div style="margin:10px;">
+							<span style="margin-left:5px"><input id="DR13" class="cb1" type="checkbox"></input>&nbsp;使用方法不当</span>
+							<span style="margin-left:78px;"><input id="DR99" class="cb1" type="checkbox"></input>&nbsp;其他<input id="DRdesc" style="border:0px none;width:200px;border-bottom:1px solid #95B8E7;" disabled="true"></input></span>
+						</div>
+					</div>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;">
+					<div style="border-right:1px solid #95B8E7;width:200px;height:70px;float:left;text-align:center;line-height:70px;"><span style="color:red;">*</span>事件处理情况</div>
+					<div>
+						<textarea id="dqEvtHandleInfo" rows="4" cols="120"></textarea>
+					</div>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;">
+					<div style="border-right:1px solid #95B8E7;width:200px;height:70px;float:left;text-align:center;line-height:70px;">改进措施</div>
+					<div>
+						<textarea id="dqEvtImproMeasure" rows="4" cols="120"></textarea>
+					</div>
+				</div>
+				
+				<div style="border:1px solid #95B8E7;margin:5px;width:987px;">
+					<div style="border-bottom:1px solid #95B8E7;margin:5px;width:983px;">
+						<input id="RepUserID" style="width:80px;display:none;"></input>
+						<span style="margin:100px;"><span style="color:red;">*</span>报告人：<input id="RepUser" style="border:0px none;width:150px;border-bottom:1px solid #95B8E7;"></input></span>
+						<span style="margin:100px;"><span style="color:red;">*</span>科室(部门)负责人：<input id="PriOfDept" style="border:0px none;width:150px;border-bottom:1px solid #95B8E7;"></input></span>
+					</div>
+				</div>
+				<div style="margin:5px;width:987px;text-align:center;">
+					<a href="#" style="width:90px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveDrgQEvtRep(0)">保存</a>
+					<a href="#" style="width:90px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveDrgQEvtRep(1)">提交</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--病人用药信息窗口-->
+	<div id="mwin">
+		<div class="easyui-layout" fit="true">
+			<!--用药信息-->
+			<div data-options="region:'center'">
+				<div id="medInfo" toolbar="#tb"></div>
+			</div>
+		</div>
+		<div id="tb" style="padding:5px;height:auto">
+			<a href="#" id="adddrg" class="easyui-linkbutton" iconCls="icon-add" plain="true">添加药品</a>
+			<a href="#" id="cancel" class="easyui-linkbutton" iconCls="icon-cancel" plain="true">取消</a>
+			<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('S')">长期医嘱</a>
+			<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('NORM')">临时医嘱</a>
+		</div>
+	</div>
+</body>
+</html>

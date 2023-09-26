@@ -1,0 +1,109 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+</STYLE>
+<link rel="stylesheet" href="../scripts/websys.css" type="text/css">
+<SERVER>
+
+	//s BottomHeight=
+</SERVER>
+</head>
+<body>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s GSID=$g(%request.Data("GSID",1))
+ s UserID=$g(%request.Data("USERID",1))
+ s IADM=$P(^DHCPEGS(GSID,1),"^",1)
+ i IADM'="" d
+ .s VIPLevel=+##class(web.DHCPE.PreCommon).GetVIPLevel("IADM",IADM)
+ e  d
+ .s VIPLevel=1
+ s GSEXID=$O(^User.DHCPEGeneralSummarizeExI("GeneralSummarizeID",GSID,0))
+ w "<table border=1 width=100%>"
+ w "<tr><td colspan=2 style='maintitle'>体检检查结论</td></tr>"
+ ;w "<tr><td width=20%>结论</td><td>"
+ w "<tr><td width=20%>职业病结论分类</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),3)
+ d ##class(web.DHCPE.Conclusion).OutConclusion("Conclusion",VIPLevel,Default)
+ w "</td></tr>"
+ 
+ w "<tr><td width=20%>诊断标准</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),5)
+ d ##class(web.DHCPE.DiagnosticCriteria).OutDiagnosticCriteria("DiagnosticCriteria",Default)
+ w "</td></tr>"
+ 
+ w "<tr><td width=20%>处理意见</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),6)
+ w "<textarea rows=4 id='Suggestions' style='width:100%'>"_Default_"</textarea>"
+ w "</td></tr>"
+ 
+ w "<tr><td width=20%>检查结果</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),7)
+ w "<textarea rows=4 id='TestResult' style='width:100%'>"_Default_"</textarea>"
+ w "</td></tr>"
+ 
+ w "<tr><td width=20%>临床表现</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),8)
+ w "<textarea rows=4 id='Clinical' style='width:100%'>"_Default_"</textarea>"
+ w "</td></tr>"
+ 
+ w "<tr><td width=20%>职业接触史</td><td>"
+ s Default=""
+ s:GSEXID'="" Default=$LG(^User.DHCPEGeneralSummarizeExD(GSEXID),9)
+ w "<textarea rows=4 id='OccupationalHistory' style='width:100%'>"_Default_"</textarea>"
+ w "</td></tr>"
+ w "<tr><td colspan=2><button onclick='Save()' class='i-btn'>保存</button></td></tr>"
+ w "</table>"
+// q
+
+</Script>
+<script language="javascript">
+function Save()
+{
+	var obj,Conclusion="",DiagnosticCriteria="",Suggestions="";
+	var TestResult="",Clinical="",OccupationalHistory="";
+	obj=document.getElementById("Conclusion");
+	if (obj) Conclusion=obj.value;
+	if(Conclusion==""){
+		alert("结论不能为空");
+		return false;
+	}
+	obj=document.getElementById("DiagnosticCriteria");
+	if (obj) DiagnosticCriteria=obj.value;
+	obj=document.getElementById("Suggestions");
+	if (obj) Suggestions=obj.value;
+	obj=document.getElementById("TestResult");
+	if (obj) TestResult=obj.value;
+	obj=document.getElementById("Clinical");
+	if (obj) Clinical=obj.value;
+	obj=document.getElementById("OccupationalHistory");
+	if (obj) OccupationalHistory=obj.value;
+	var GSID=#(GSID)#;
+	var Str=Conclusion+"^"+DiagnosticCriteria+"^"+Suggestions+"^"+TestResult+"^"+Clinical+"^"+OccupationalHistory;
+	//var UserID=#(UserID)#;
+	var ret=#server(web.DHCPE.GeneralSummarizeEx.Save(GSID,Str))#
+	//alert(ret)
+if (ret.split("^")[0]=="-1"){
+		alert("更新失败"+ret.split("^")[1])
+	}else{
+			
+		alert("更新成功")
+		window.location.reload();
+	}
+}
+</script>
+
+</body>
+</html>

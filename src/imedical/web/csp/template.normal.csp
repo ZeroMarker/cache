@@ -1,0 +1,44 @@
+<!--csp普通模板,csp:template.normal.csp(页面功能注释,csp:本csp的名称,在这里写上csp名称方便在页面源代码中查看)--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+
+<!-- todo 本页面自定义样式的引用 -->
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdocCustomEasyUI.css">
+
+<!-- todo 调用服务端方法获取数据,谨慎使用,仅限在初始化时必须要获取的数据 -->
+<Server>
+s EpisodeID=%request.Get("EpisodeID")
+s PAAdmType=$p(^PAADM(EpisodeID),"^",2)
+s GetTemplateDataMethod=##Class(%CSP.Page).Encrypt($lb("DHCDoc.opdoc/GetTemplateData"))
+</Server>
+</head>
+ 
+<body>
+<!-- todo 载入显示标签的csp -->
+<csp:if condition='PAAdmType="E"'>
+<csp:Include Page="EmerpatientList.show.csp">
+<csp:else>
+<csp:Include Page="opdoc.outpatientList.show.csp">
+</csp:if>
+<!-- todo 添加本页面从后台获取的数据作为全局变量,谨慎使用.
+1. 从连接参数或后台获取的数据且贯穿整个页面使用过程的变量
+2. 请求后台服务的加密值变量 -->
+<SCRIPT language = 'javascript' >
+//全局请求后台服务对象
+var ServerObj={
+EpisodeID:"#(EpisodeID)#",
+GetTemplateDataMethod:"#(GetTemplateDataMethod)#"
+}
+</SCRIPT>
+
+<!-- todo 添加本页面的逻辑处理js -->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.Diagnos.Entry.js"></script>
+</body>
+</html>

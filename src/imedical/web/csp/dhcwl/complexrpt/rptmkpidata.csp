@@ -1,0 +1,62 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+	s start=$g(%request.Data("start",1))
+	s pageSize = $g(%request.Data("limit",1))
+	s onePage=$g(%request.Data("onePage",1))
+	i +start=0 s start=1
+	i +pageSize=0 s pageSize=100
+	s:start>1 start=start+1
+	s end=start+pageSize-1
+	s deli="&"
+	if "creatRptKpiData"=action {
+		s kpis=$g(%request.Data("KpiCodes",1)) ;指标串
+		s startDate=$g(%request.Data("StartDate",1)) ;开始时间
+		s endDate=$g(%request.Data("EndDate",1)) ;结束时间
+		// 1、通过报表编码获得关联指标串
+		// 2、调用指标数据接口生成指标数据
+		s rs=##class(DHCWL.ComplexRptData.RptService).CreateKpiData(kpis,startDate,endDate,1)
+		i rs=1{
+			w "{success:true,tip:'ok'}"	
+		}else{
+			w "{success:true,tip:'数据生成失败！'}"
+		}
+		q
+	}elseif "getRptKpiInfo"=action {
+		s rptCode=$g(%request.Data("RptCode",1))
+		/// 通过报表编码获得报表的关联指标串
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.ComplexRptData.RptService:QueryRptlinkKpi",,rptCode)
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+		
+	}elseif "getRptKpiData"=action {
+		s rptCode=$g(%request.Data("RptCode",1))
+		s startDate=$g(%request.Data("StartDate",1))
+		s endDate=$g(%request.Data("EndDate",1))
+		s para="{start:"_start_",end:"_end_",jsonProDeli:&,}"
+		s json=##class(DHCWL.util.UniteQueryData).GetJsonFromQuery("DHCWL.ComplexRptData.RptService:QueryReportData",para,rptCode,,startDate,endDate,,"O")
+		i json="" {
+			w "{result:0,totalNum:0,root:[]}"
+			q
+		}
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	}
+
+</script>

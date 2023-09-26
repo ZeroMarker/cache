@@ -1,0 +1,158 @@
+<!--库存查询-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" style="width:350px;" data-options="region:'west',border:false" >
+		<div class="hisui-panel" data-options="title:'库存查询',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table id="Conditions" class="Condition">
+						<input id="Inci" name="Inci" type="hidden">
+						<tr>
+							<td><label class="required">*</label><label>科室</label><input id="PhaLoc" name="PhaLoc" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>类型</label><input id="StockType" name="StockType" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>类组</label><input id="StkGrpId" name="StkGrpId" class="textbox hisui-stkscgcombotree" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>物资别名</label><input id="InciAlias" name="InciAlias" class="textbox" style="width:148px;"></td>
+						</tr>
+						<tr>
+							<td><label>进口标志</label><input id="INFOImportFlag" name="INFOImportFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>库存分类</label><input id="StkCat" name="StkCat" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>医嘱子类</label><input id="ARCItemCat" name="ARCItemCat" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>厂商</label><input id="PhManufacturer" name="PhManufacturer" class="textbox hisui-combobox CommonInput" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>管理组</label><input id="LocManGrp" name="LocManGrp" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>医保类别</label><input id="InsuType" name="InsuType" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>监管级别</label><input id="Supervision" name="Supervision" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>收费标志</label><input id="ChargeFlag" name="ChargeFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>可用标志</label><input id="UseFlag" name="UseFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>高值标志</label><input id="HvFlag" name="HvFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>重点关注标志</label><input id="ManageDrugFlag" name="ManageDrugFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+					</table>
+				</div>
+				<div class="PartLine" data-options="region:'south',border:false" style="height:51px;">
+					<table class="Condition" align="center">
+						<tr>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							<!--<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>-->
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="border:false,region:'center'"> 
+		<div class="hisui-layout" data-options="fit:true"> 
+			<div data-options="region:'center',border:false" style="padding-left:0px;height:300px;" class="GridPadding"> 
+				<div class="hisui-panel" data-options="title:'库存',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">  
+					<table id="StkQtyGrid"></table>
+						<div id="StkQtyRightMenu" class="easyui-menu" style="display:none;width:170px;">
+							<div name="TransMoveInfo">台账信息</div>
+							<div name="HVBarcodeInfo">高值条码</div>
+				 			<div name="SynIncilData">科室单品库存同步</div>
+				 			<div name="ClrResQtyLocInci">清除科室在途数</div>
+						</div>				
+	   		 	</div>
+	   		 </div>
+			 <div data-options="region:'south',border:false" style="padding-top:0px;padding-left:0px;height:300px;" class="GridPadding"> 
+				<div class="hisui-panel" data-options="title:'批次信息',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">   
+					<table id="BatGrid"></table>
+						<div id="BatNoRightMenu" class="easyui-menu" style="display:none;width:170px;">
+							<div name="DirtyQtyInfo">查看占用单据</div>
+							<div name="InclbHVBarcodeInfo">高值条码</div>
+							<div name="InclbTransMoveInfo">批次台账信息</div>
+						</div>				
+	   			</div>
+	   		 </div>
+	   	</div>
+   	</div>
+	<!-- 台账信息弹窗 -->
+	<div id="TransMoveInfoWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="台账信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="FindConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="FStartDate" name="StartDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><label>截止日期</label><input id="FEndDate" name="EndDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="headerCls:'panel-header-gray',region:'center'">
+				<table id="FDetailInfoGrid"></table>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 高值条码弹窗 -->
+	<div id="HVBarcodeInfoWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="高值条码">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="headerCls:'panel-header-gray',region:'center'">
+				<table id="FHVBarCodeInfoGrid"></table>
+			</div>
+		</div>
+	</div>
+	<!--占用信息单据弹窗 -->
+	<div id="DirtyQtyInfoWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="占用单据信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="headerCls:'panel-header-gray',region:'center'">
+				<table id="DirtyQtyGrid"></table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/encode.js"></script>
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/StockQuery/LocItmStk.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/StockQuery/DirtyQtyInfo.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/StockQuery/LocItmTrans.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/StockQuery/LocItmHVBarcode.js"></script>
+</body>
+</html>

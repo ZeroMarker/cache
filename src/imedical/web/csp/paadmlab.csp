@@ -1,0 +1,32 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n frm
+ //KM 20-Nov-2001:  Not sure what the below four lines are for!!! but seems to cause no harm and may even cause some good! so I will leave it
+ i %request.Get("PARREF")'=%request.Get("EpisodeID") {
+ 	s %request.Data("ID",1)=%request.Get("PARREF")
+	s %request.Data("PARREF",1)=%request.Get("EpisodeID")
+ }
+ s frm=##Class(websys.Component).OpenName("PAAdmLab.Edit")
+ i frm  d frm.Show(),frm.%Close()
+ 
+ i %request.Get("ID")'="" {
+	s frm=##Class(websys.Component).OpenName("PALabourNewBorn.List")
+ 	i frm  d frm.Show(),frm.%Close()
+ }
+
+</SERVER>
+</BODY>
+</HTML>
+

@@ -1,0 +1,228 @@
+<!--住院发药科室维护 
+	csp: csp/dhcpha.inpha.phalocation.csp
+	js:  scripts/dhcpha/inpha/dhcpha.inpha.phalocation.js
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <JQUERY:EASYUI136 />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/Font-Awesome-4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/dhcpha.easyui.css">
+    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/component.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpha/inpha/dhcpha.inpha.phalocation.js"></script>
+</HEAD>
+<style type="text/css">
+    #phalocationwin input {
+        border: 1px solid #95B8E7;
+    }
+
+    .phalocinputw {
+        width: 75px;
+    }
+
+    #phalocationwin .con-chk-span {
+        vertical-align: middle;
+    }
+
+    #phalocationwin .con-span {
+        padding-top: 20px;
+    }
+
+    #phalocationwin .con-span-split {
+        padding-left: 20px;
+    }
+</style>
+
+<body style="background:white">
+    <div class="easyui-layout" fit="true" border="false">
+        <div data-options="region:'center',title:'住院发药科室维护'">
+            <table id="phalocgrid"></table>
+        </div>
+        <div data-options="region:'south',split:true,border:false" style="height:300px;">
+            <div class="easyui-layout" fit="true" border="false">
+                <div data-options="region:'center',title:'科室发药类别<双击设置>'">
+                    <table id="locdisptypegrid"></table>
+                </div>
+                <div data-options="region:'east',title:'不需领药审核医嘱子类<双击设置>',split:true,width:500">
+                    <table id="locarccatgrid"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="btnbar1">
+        <table>
+            <tr>
+                <td colspan=8>
+                    <a style="margin-left:3px;" class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btnAdd">增加</a>
+                    <a style="margin-left:3px;" class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btnUpdate">修改</a>
+                    <a style="margin-left:3px;" class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btnDelete">删除</a>
+                </td>
+            </tr>
+            <table>
+    </div>
+    <div id="phalocationwin" class="easyui-window" title="发药科室配置" closed="true" modal="true" style="width:900px;height:525px;top:20px;left:20px;">
+        <div class="easyui-layout" data-options="fit:true" text-align="right">
+            <div style="margin-top:10px"><span style="margin-left:20px"><b>发药配置(病区发药默认显示值:0-临嘱,1-长嘱,2-长嘱+临嘱)</b></span>
+            </div>
+            <div style="border:1px solid #95B8E7;margin:8px;">
+
+            </div>
+            <div style='margin-top:5px;margin-left:20px'>
+                <input type="hidden" id="phaLocationRowId" name="txtcondition"></input>
+                <span style="display:block;width:270px;float:left">
+                    　　　　发药科室<input id="phaLoc" class="phalocinputw" data-options="valueField:'val',textField:'text'"></input>
+                </span>
+                　　
+                <!--发药单号前缀<input id="dispNoPrefix"  class="phalocinputw" name="txtconditon"  data-options="valueField:'val',textField:'text'"></input>-->
+                　　
+                <!--发药单流水号<input id="dispNoCount"  class="phalocinputw" name="txtconditon"  data-options="valueField:'val',textField:'text'"></input>-->
+                <span style="margin-left:-63px;">
+                    病区发药默认显示<input id="ordDisplay" class="phalocinputw" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                </span>
+            </div>
+            <div style="margin-top:5px;margin-left:20px">
+                <span style="display:block;width:270px;float:left">
+                    默认发药起始日期<input id="dispStartDate" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                </span>
+                默认发药起始时间<input id="dispStartTime" class="phalocinputw" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                默认发药截止日期<input id="dispEndDate" class="phalocinputw" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                默认发药截止时间<input id="dispEndTime" class="phalocinputw" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+            </div>
+            <div style="margin-top:5px;margin-left:20px">
+                <span style="display:block;width:270px;float:left">
+                    默认统计起始日期<input id="cacuStartDate" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                </span>
+                默认统计起始时间<input id="cacuStartTime" class="phalocinputw" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                默认统计截止日期<input id="cacuEndDate" class="phalocinputw" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                默认统计截止时间<input id="cacuEndTime" class="phalocinputw" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+            </div>
+            <div style="margin-top:10px;margin-left:20px">
+                <span class="con-chk-span con-span-split" style="display:none">
+                    <input id="chkEMY" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkEMY"> 发药列表显示加急</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkNurseAudit" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkNurseAudit"> 发药是否领药审核</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkBill" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkBill"> 病区发药控制欠费</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkDefDispType" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkDefDispType"> 默认选择发药类别</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkMachine" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkMachine"> 发药发送到包药机</label>
+                    </input>
+                </span>
+            </div>
+            <div style="margin-top:10px;margin-left:20px">
+                <span class="con-chk-span con-span-split">
+                    <input id="chkOrderAudit" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkOrderAudit"> 发药前需药师审核</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkDealOrd" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkDealOrd"> 发药前需医嘱处理</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkDispUser" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkDispUser"> 发药时录入发药人</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkCollUser" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkCollUser"> 发药时录入摆药人</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split" style="display:none">
+                    <input id="chkOutPrint" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkOutPrint"> 出院带药打印个人</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    <input id="chkLocal" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkLocal"> 发药类别取本地配置＜限发＞</label>
+                    </input>
+                </span>
+            </div>
+            <div style="margin-top:10px;margin-left:20px">
+                <span class="con-chk-span con-span-split">
+                    <input id="chkOrd" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkOrd"> 病区发药长临嘱按钮必选其一</label>
+                    </input>
+                </span>
+            </div>
+            <div style="margin-top:10px;margin-left:20px" style="display:none;">
+                <span class="con-chk-span con-span-split">
+                    <input id="chkReqWard" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkReqWard"> 病区退药申请单只能填写本病区已发药品</label>
+                    </input>
+                </span>
+            </div>
+            <div style="margin-top:20px"><span style="margin-left:20px"><b>配液中心配置</b></span></div>
+            <div style="border:1px solid #95B8E7;margin:8px;"></div>
+            <div style="margin-top:10px;margin-left:20px">
+                <span class="con-chk-span con-span-split">
+                    <input id="chkPreRet" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkPreRet"> 打停止签时自动退药</label>
+                    </input>
+                </span>
+            </div>
+            <div style="margin-top:20px"><span style="margin-left:20px"><b>冲减配置(分类冲减见类别设置界面)</b></span></div>
+            <div style="border:1px solid #95B8E7;margin:8px;"></div>
+            <div style="margin-top:5px;margin-left:20px">
+            </div>
+            <div style="margin-top:10px;margin-left:20px">
+                <span class="con-chk-span con-span-split">
+                    <input id="chkReserve" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkReserve"> 冲减退药</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split" style="display:none;">
+                    <input id="chkAllRes" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox">
+                    <label for="chkAllRes"> 全部冲减</label>
+                    </input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    默认冲减起始日期<input id="resStartDate" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                </span>
+                <span class="con-chk-span con-span-split">
+                    默认冲减截止日期<input id="resEndDate" name="txtconditon" data-options="valueField:'val',textField:'text'"></input>
+                </span>
+            </div>
+            <div style="position:absolute;bottom: 5px;width:100%;">
+                <div><span style="margin-left:20px"><b>操作</b></span></div>
+                <div style="border:1px solid #95B8E7;margin:8px;"></div>
+                <div style="margin-top:5px;margin-right:20px;text-align:right">
+                    <a class="easyui-linkbutton" iconCls='icon-save' plain="true" id="btnSave">保存</a>
+                    <a class="easyui-linkbutton" iconCls='icon-cancel' plain="true" id="btnCancel">关闭</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+</body>
+
+</HTML>

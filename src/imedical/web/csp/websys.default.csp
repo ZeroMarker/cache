@@ -1,0 +1,67 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:EXT321/>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<server>
+if $g(%request.Data("WEBSYS.TCOMPONENT",1))="PAPerson.Banner"{
+	w "<style>body{padding:0;}</style>"
+}
+</server>
+<style>
+#zdhcpopup .x-grid3-row td,#zdhcpopup.x-grid3-summary-row td {
+    line-height: 12px;
+    padding-bottom: 1px;
+    padding-top: 1px;
+    font: normal 12px "Microsoft Yahei", arial, helvetica, sans-serif;
+}
+</style>
+</HEAD>
+
+<BODY><DIV id="PageContent">
+<SERVER>
+ if ##class(websys.Conversions).IsValidMethodName("websys.AddInsTmpl","WriteInvokeJsCode") {
+	 d ##class(websys.AddInsTmpl).WriteInvokeJsCode()
+ }
+ ;k ^Temp("Upgrade","websys.default.csp")
+ ;m ^Temp("Upgrade","websys.default.csp","%request")=%request.Data
+
+ ;w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+
+</SERVER>
+
+<CSP:COMMENT>
+no need to call applet... use cache's xmlhttp for broker calls
+</CSP:COMMENT>
+<EXTHEALTH:COMPONENT id=#($s($g(%request.Data("WEBSYS.TCOMPONENT",1))'="":%request.Data("WEBSYS.TCOMPONENT",1),1:$g(%session.Data("WEBSYS.TCOMPONENT"))))# >
+</EXTHEALTH:COMPONENT>
+<!--<script language='javascript' src='../scripts/framework/websys.default.js'></script>-->
+<script language='javascript' src='../scripts/framework/ext.icare.Lookup.js'></script>
+<script language='javascript' src='../scripts/framework/dhcc.icare.lu.js'></script>
+<SERVER>
+	Set cmp = $s($g(%request.Data("WEBSYS.TCOMPONENT",1))'="":%request.Data("WEBSYS.TCOMPONENT",1),1:$g(%session.Data("WEBSYS.TCOMPONENT")))
+	if (cmp'="UDHCJFSearchCopy"){
+		//Write "<script language='javascript' src='../scripts/framework/dhcc.icare.lu.js'></script>",!
+	}
+</SERVER>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+ //
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+
+</SERVER>
+</DIV></BODY>
+</HTML>

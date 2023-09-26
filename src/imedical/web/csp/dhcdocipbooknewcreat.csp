@@ -1,0 +1,118 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. dhcdocipbooknewcreat.csp--> 
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css" />
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.easyui.1.3.5.css"></LINK>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/easyuicom.1.3.5.css">
+<script language='javascript' src='../scripts/framework/dhcc.icare.lu.js'></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure/dhcdoc.cure.commonutil.js"></script>
+<SCRIPT type="text/javascript" SRC='../SCRIPTS/DHCOPAdm.Common.js'></SCRIPT>
+<SCRIPT type="text/javascript" SRC='../SCRIPTS/DHCWeb.OPCommon.js'></SCRIPT>
+<SCRIPT type="text/javascript" SRC='../SCRIPTS/DHCPrtComm.js'></SCRIPT>
+</head>
+
+
+<STYLE type='text/css'>
+/*
+BODY INPUT {
+    FONT-SIZE: 20px;
+    FONT-FAMILY: "Microsoft Yahei", "Tahoma", "Helvetica", "Arial", sans-serif;
+    border: 1px solid #b5b8c8;
+    height: 30px;
+    width:130px;
+  }
+  */
+ SELECT{
+	 width: 150px;
+ }
+ p{
+	text-align: right; 
+ }
+ BODY INPUT[type=checkbox]{
+	 vertical-align: middle;
+ }
+</STYLE>
+
+
+<body onload="BodyLoadHandler();">
+<Server>
+s IPBKFlag=%request.Get("IPBKFlag")
+s EpisodeID=%request.Get("EpisodeID")
+s PatientID=%request.Get("PatientID")
+s mradm=%request.Get("mradm")
+s BookID=%request.Get("BookID")
+s NowDate=##class(websys.Conversions).DateLogicalToHtml(+$h) //$ZD(+$H,3)
+
+
+//获取患者基本信息
+s GetPatDetail=##Class(%CSP.Page).Encrypt($lb("web.DHCDocIPBookNew.GetPatDetail"))
+//获取患者就诊信息
+s GetPatAdmMes=##Class(%CSP.Page).Encrypt($lb("web.DHCDocIPBookNew.GetPatAdmMes"))
+//获取住院证信息
+s GetPatBookMes=##Class(%CSP.Page).Encrypt($lb("web.DHCDocIPBookNew.GetBookMesage"))
+//获取关联就诊的标准ICD诊断
+s GetAdmICDList=##Class(%CSP.Page).Encrypt($lb("web.DHCDocIPBookNew.GetAdmICDList"))
+//住院证保存
+s UpdateBook=##Class(%CSP.Page).Encrypt($lb("web.DHCDocIPBookNew.SaveBookMeth"))
+//打印
+s InvPrintEncrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+s DoctorType=##class(web.SSUser).GetDefaultCareProviderType(%session.Get("LOGON.USERID"))
+w "<input id='GetPatDetail' name='GetPatDetail' type='hidden' value='"_GetPatDetail_"'>",$C(13,10)
+w "<input id='GetPatAdmMes' name='GetPatDetail' type='hidden' value='"_GetPatAdmMes_"'>",$C(13,10)
+w "<input id='GetPatBookMes' name='GetPatDetail' type='hidden' value='"_GetPatBookMes_"'>",$C(13,10)
+w "<input id='UpdateBook' name='UpdateBook' type='hidden' value='"_UpdateBook_"'>",$C(13,10)
+w "<input id='GetAdmICDList' name='GetAdmICDList' type='hidden' value='"_GetAdmICDList_"'>",$C(13,10)
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_InvPrintEncrypt_"'>",$C(13,10)
+
+</Server>
+<csp:Include Page="dhcdocipbooknew.show.csp">
+<SCRIPT Language="Javascript">
+
+//设置全局标量
+var IPBKFlag="#(IPBKFlag)#"  //如果是 IPBKFlag="Booking" 该界面是医生所用预约界面  否则是修改信息所用界面
+var EpisodeID="#(EpisodeID)#"
+var PatientID="#(PatientID)#"
+var mradm="#(mradm)#"
+var NowDate="#(NowDate)#"
+var BookIDMain="#(BookID)#" //住院证ID 全局变量。如果是外部传入的初始化时候存在值
+var EpisodeIDIP="" //住院证关联住院Adm
+
+var BookListDataGrid; //住院证详情
+var AdmDataGrid; //就诊记录详情
+var DianosListICD="" //诊断列表
+var BookStr="Booking^Cancel^PreInPatient" //预约时候可显示状态 -PreInPatient预住院暂时不发布 SignBed
+var OtherBookStr="Booking^Cancel" //PreInPatient Admission^ -SignBed
+var SelectBookRow="-1" //选中预约记录
+var SelectAdmRow="-1"  //选中就诊记录
+var LogonDoctorType="#(DoctorType)#"
+//打印XML模板
+DHCP_GetXMLConfig("InvPrintEncrypt","DHCDocIPBookPrt");
+var CanSave="Y"
+
+//相关住院证基础数据表 DHCDocIPBDictory
+//IPBookingAdmSource 入院途径
+//IPBookingStateChangeReason 操作原因
+//IPBookingState 住院证当前状态
+//IPBookingAdmInitState 病情数据
+//IPBookingBedType 建议床位类型
+//IPBookingPatientLevel 患者等级
+//IPBookingTreatedPrinciple 收治原则
+
+
+//住院:Admission
+//申请:Booking
+//撤销:Cancel
+//预住院:PreInPatient 
+//收住院:Register 住院处使用
+//签床:SignBed 床管中心使用
+//作废:Void 床管中心使用
+//挂起:Suspend 床管中心使用
+</SCRIPT>
+<script type="text/javascript" src="../scripts/DHCDocIPBookNewC.js"></script>
+</body>
+
+</html>

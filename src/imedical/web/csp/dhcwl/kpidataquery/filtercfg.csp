@@ -1,0 +1,49 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "getSearchItemValue"=action {
+		s code=$g(%request.Data("code",1))
+		s searchV=$g(%request.Data("query",1))
+		s roleCode=$p(code,"->",1)
+		s proCode=$p(code,"->",2)
+		
+
+		s dimTypeCode=##class(DHCWL.DataQuery.ServOfCSP).GetDimTypeFromRole(roleCode)
+		if $E(roleCode,1)="$" {
+			w "{result:2,totalNum:2,root:[{value:'$startDate'},{value:'$endDate'}]}"
+			q
+			
+		}else{
+			s start=+$g(%request.Data("start",1))
+			s limit=+$g(%request.Data("limit",1))
+			s end=0
+			if limit>0 {
+				s end=start+limit
+				s start=start+1		
+			}	
+		
+			s qryName="DHCWL.DataQuery.Serv:QryOptionalProValue"
+			s arguments=dimTypeCode_$C(2)_proCode_$C(2)_searchV
+			//w !,arguments
+			//q
+			s jsonPro="value"
+		
+			s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,arguments,"",start,end,jsonPro)
+			w json.GetHead()
+			d{
+				s obj=json.Next()
+				w obj
+			}while(obj'="")
+			i json.GetCount()=0 w "]}"	
+		}
+		q
+	}elseif "getTreeNodeOfDimPro"=action {
+
+	}
+	
+	
+	
+</script>

@@ -1,0 +1,371 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(DHCMRQ.Base.Util.Verification).SessionVerifi() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+		if (top == self) {
+    		top.location = 'dhcmrq.index.csp';
+		}
+	   </script>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/font-awesome-4.6.3/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-validator/css/bootstrapValidator.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/datatable-1.10.12/datatables.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/css/main.css">
+		<!--[if lte IE 6]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap-ie6.css">
+	  <![endif]-->
+	  <!--[if lte IE 8]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/ie.css">
+			<style media="screen">
+				.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9{
+					padding-left: 0;
+					padding-right: 0;
+				}
+			</style>
+	  <![endif]-->
+
+		<style media="screen">
+			label.col-sm-3{
+				padding-right: 0;
+			}
+			.table>tbody>tr.selected{
+				background-color: #16c79e;
+				color: #fff;
+				transition: all .2s;
+			}
+			.panel-footer{
+				text-align: right;
+			}
+			.table th, .table td{
+				text-align: left;
+			}
+			#iconShow{
+				cursor: pointer;
+			}
+			#iconShow:hover .fa{
+				color:#4dd6ff;
+			}
+			
+			#icons{
+				position: absolute;
+				z-index:999;
+    			bottom: 34px;
+    			margin: 0 -15px;
+    			overflow-y: scroll;
+				height:0px;
+				width:100%;
+				background:#fff;
+				transition:all .2s;
+				padding-right:5px;
+				box-shadow:0 2px 8px rgba(0,0,0,.2);
+			}
+			#iconShow:hover+#icons,#icons:hover{
+				height:200px;
+				border:1px solid #bce8f1;
+			}
+			#icons h4{
+				color:#555;
+				background:#bce8f1;
+			}
+			#icons .fa{
+				cursor: pointer;
+				font-size: 25px;
+				color:#555;
+    			margin: 5px;
+    			transition:all .1s;
+			}
+			#icons .fa:hover{
+				color:#16c79e;
+				transform:scale(2);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="boxcq" id="two">
+					<div class="ti">
+
+					</div>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-md-8">
+									<table id="menuTable" class="table table-striped" width="100%">
+										<thead>
+											<tr><th>菜单代码</th><th>菜单名称</th><th>菜单图标</th><th>菜单URL</th><th>菜单顺序</th><th>操作&nbsp;&nbsp;</th></tr>
+										</thead>
+										<tbody>
+
+										</tbody>
+									</table>
+								</div>
+								<div class="col-md-4">
+									<div class="panel panel-info">
+									  <div class="panel-heading">操作</div>
+									  <div class="panel-body">
+									  		<input type="hidden" id="mId">
+											<form id="menuForm" class="form-horizontal" role="form">
+												<div class="form-group">
+											    <label for="mCode" class="col-sm-3 control-label">菜单代码</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="mCode" name="Params">
+											    </div>
+											  </div>
+											  <div class="form-group">
+											    <label for="mDesc" class="col-sm-3 control-label">菜单名称</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="mDesc" name="mDesc">
+											    </div>
+											  </div>
+												<div class="form-group">
+											    <label for="mResource" class="col-sm-3 control-label">菜单URL</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="mResource" name="mResource">
+											    </div>
+											  </div>
+												<div class="form-group">
+											    <label for="mOrder" class="col-sm-3 control-label">菜单顺序</label>
+											    <div class="col-sm-9">
+											      <input type="text" class="form-control" id="mOrder" name="mOrder">
+											    </div>
+											  </div>
+											  <div class="form-group">
+											    <label for="mIcon" class="col-sm-3 control-label">菜单图标</label>
+											    <div class="col-sm-9">
+											      <input type="hidden" class="form-control" id="mIcon" name="mIcon" value="list-ul">
+											      <div class="form-control" id="iconShow"><i class="fa fa-list-ul fa-lg"></i></div>
+											      <div id="icons"></div>
+											    </div>
+											  </div>
+											</form>
+									  </div>
+										<div class="panel-footer">
+											<button type="button" onclick="saveMenu()" class="btn btn-info">保存</button>
+											<!--<button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">删除</button>-->
+										</div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">确认</h4>
+      </div>
+      <div class="modal-body">
+        确定要删除吗？
+      </div>
+      <div class="modal-footer">
+        
+        <button type="button" class="btn btn-danger" onclick="deleteMenu()" data-dismiss="modal">删除</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+		<DHCMRQ:HEAD></DHCMRQ:HEAD>
+		<script type="text/javascript">
+			var dt;
+			$(function(){
+				loadTable();
+				getAllIcons();
+				
+				//code值改变时，认为要新增记录，所以启动验证
+				$('#mCode').on('input',function(){
+					$('#menuForm').bootstrapValidator('enableFieldValidators', 'Params', true);
+				})
+				
+	$('#menuForm').bootstrapValidator({
+		//live: 'disabled',
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            mDesc: {
+                validators: {
+                    notEmpty: {
+                        message: '菜单名不能为空'
+                    }
+                }
+            },
+            mResource: {
+                validators: {
+                    notEmpty: {
+                        message: '菜单URL不能为空'
+                    }
+                }
+            },
+            Params: {
+                message: 'The Code is not valid',
+                validators: {
+                    notEmpty: {
+                        message: '菜单代码不能为空'
+                    },
+                    stringLength: {
+                        min: 4 ,
+                        max: 30,
+                        message: '菜单代码要大于4位小于30位字符'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: '菜单代码只能包含字母数字和下划线'
+                    },
+                    remote: {
+                        url: 'dhcmrq.service.csp?ClassName=DHCMRQ.Base.MRQMenu&MethodName=CheckMenuCode',
+                        message: '菜单代码已存在'
+                    }
+                }
+            },
+            mOrder: {
+                message: 'The Code is not valid',
+                validators: {
+                    regexp: {
+                        regexp: /^[0-9]+(\.[0-9]+)?$/,
+                        message: '顺序错误'
+                    }
+                }
+            }
+        }
+    });
+			})
+
+			function loadTable(){
+				$.ajax({
+						type: 'post',
+						url: 'dhcmrq.service.csp',
+						data: {ClassName:'DHCMRQ.Base.MRQMenu',
+							   MethodName:'GetAllMenu',
+							   Params:''
+						},
+						success: function (res) {
+							//console.log(res);
+							dt = $('#menuTable').DataTable( {
+									data: JSON.parse(res),
+									lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "全部"] ],
+									columnDefs: [
+    										{ "orderable": false,"targets": [2,3,5] }
+ 									],
+									columns: [
+												{ "data": "mCode" },
+												{ "data": "mDesc" },
+												{ "data": "mIcon" ,
+													"render": function ( data, type, full, meta ) {
+															return '<i class="fa fa-'+full.mIcon+' fa-lg"></i>';
+													}
+												},
+												{ "data": "mResource" },
+												{ "data": "mOrder" },
+												{ "data": "oper" ,
+													"render": function ( data, type, full, meta ) {
+														return '<a class="link" href="#" onclick="deleteMenu(\''+full.mId+'\')">删除</a>'
+															
+													}
+												}
+										],
+										order: [[4, 'asc']],
+							});
+
+							$('#menuTable tbody').on( 'click', 'tr', function () {
+									dt.$('tr.selected').removeClass('selected');
+									$(this).addClass('selected');
+									var rowData = dt.rows('.selected').data()[0];
+									$('#iconShow').html('<i class="fa fa-'+rowData['mIcon']+' fa-lg"></i>');
+									for (var key in rowData) {
+										$('#'+key).val(rowData[key]);
+									}
+									
+									$('#menuForm').bootstrapValidator('enableFieldValidators', 'Params', false);
+
+							});
+		        }
+		    });
+			}
+
+			function saveMenu(){
+				//验证表单
+				$('#menuForm').bootstrapValidator('validate');
+				if(!$('#menuForm').data('bootstrapValidator').isValid()) return;
+				
+				$.ajax({
+						type: 'post',
+						url: 'dhcmrq.service.csp',
+						data: {ClassName:'DHCMRQ.Base.MRQMenu',
+									 MethodName:'Update',
+									 Params:decodeURIComponent($('#menuForm').serialize().replace(/&.*?=/g,'^').replace(/^.*?=/g,''))
+						},
+						success: function (res) {
+							//console.log(decodeURIComponent($('#menuForm').serialize().replace(/&.*?=/g,'^').replace(/^.*?=/g,'')))
+							//console.log(res);
+		          			loadTable();
+		          			msg('success','更新成功!',2000);
+		        }
+		    });
+			}
+
+			function deleteMenu(mId){
+				if(confirm('确定删除吗？')){
+					$.ajax({
+						type: 'post',
+						url: 'dhcmrq.service.csp',
+						data: {ClassName:'DHCMRQ.Base.MRQMenu',
+									 MethodName:'DeleteById',
+									 Params:mId
+						},
+						success: function (res) {
+							//console.log(res);
+							if(res>0){
+								msg('success','菜单删除成功!',2000);
+								//loadTable();
+								location.reload();
+							} else if(res<0){
+								msg('danger','菜单删除失败!',2000);
+							} else {
+								msg('warning','菜单已分配，不能删除!',2000);
+							}
+						}
+					});
+				}
+			}
+			
+			function getAllIcons(){
+				$.ajax({
+						type: 'get',
+						url: '../scripts/dhcmrq/fa-icon.json',
+						dataType:'json',
+						success: function (res) {
+							var $icons = $('#icons');
+							$.each(res,function(i,n){
+								$icons.append('<h4>'+n['class']+'</h4>');
+								$.each(n.icons,function(j,icon){
+									$icons.append('<i class="fa fa-'+icon+'" title="'+icon+'"></i>');
+								})
+							});
+							$('#icons .fa').on('click',function(){
+								$('#mIcon').val($(this).attr('title'));
+								$('#iconShow').html('<i class="fa fa-'+$(this).attr('title')+' fa-lg"></i>');
+							})
+						}
+				});
+			}
+		</script>
+	</body>
+</html>

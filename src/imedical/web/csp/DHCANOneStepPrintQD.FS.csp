@@ -1,0 +1,612 @@
+<HTML>
+<HEAD>
+	<TITLE>手术麻醉相关打印</TITLE>
+		<link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+ 	<script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+ 	<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.js"></script>  
+	<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.Setting.js"></script>  
+	<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.DesignerHelper.js"></script>
+	
+	<script type = "text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type = "text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<script type = "text/javascript" src="../scripts/websys.js"></script>
+	
+	<script type="text/javascript" src='../scripts/excelprint.js'></script>
+	<script language="cache" runat="server">
+    &sql(select LayoutManager into :ConnectStr from websys.configuration)
+   </script>
+    <server>
+   s GetOpaIdStr=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCom.GetOpaIdStr"))
+   s GetOpaIdCountStr=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCom.GetOpaIdCountPrtStr"))
+   s GetAnLocId=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCom.GetAnLocId"))
+   s GetAnoEvent=##Class(%CSP.Page).Encrypt($lb("web.DHCANOrder.GetAnoEvent"))
+   s GetPatInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCareRecord.GetPatInfo"))
+   s GetCareRecord=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCareRecord.GetCareRecord"))
+   s GetPackInfoByLabel=##Class(%CSP.Page).Encrypt($lb("web.DHCANCOPCount.GetPackInfoByLabel"))
+   s OpaIdStrByOPCount=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPCom.OpaIdStrByOPCount"))
+   s EpisodeID = $Get(%request.Data("EpisodeID",1))
+   </server>
+	<script type="text/javascript">
+	    var connectStr='#(ConnectStr)#';
+		var EpisodeID = '#(EpisodeID)#';
+		var GetOpaIdStr='#(GetOpaIdStr)#';
+		var GetOpaIdCountStr='#(GetOpaIdCountStr)#';
+	    var GetAnLocId='#(GetAnLocId)#';
+	    var GetAnoEvent='#(GetAnoEvent)#';
+	    var GetPatInfo='#(GetPatInfo)#';
+	    var GetCareRecord='#(GetCareRecord)#';
+	    var GetPackInfoByLabel='#(GetPackInfoByLabel)#';
+		var OpaIdStrByOPCount='#(OpaIdStrByOPCount)#';
+   </script>
+   
+</HEAD>
+<BODY >
+<!--<script type="text/javascript" src="../scripts/dhcclinic/PACU/onestepprint/DHCANOneStepPrint.js">-->
+ <script type="text/javascript">
+ beginPrint();
+ //Ext.onReady( function ()
+ //{ 
+	//debugger;
+	//alert("incsp");
+	
+	function beginPrint()
+	{
+  var objFormICU,str1="AN",str2="";
+  if(!objFormICU)
+   {
+     //objFormICU=document.getElementById("FormICU"); 
+   }
+   var OpaIdStrByOPCount='#(..EscapeHTML(OpaIdStrByOPCount))#';
+   var opaIdStr=cspRunServerMethod(OpaIdStrByOPCount,EpisodeID);
+   //alert(opaIdStr);
+   if(opaIdStr=="") return;
+ 
+    var str3="OPCOUNT"
+    if(str3!="")
+	{
+	  var count=opaIdStr.split("^").length;
+      var i;
+      for(i=0;i<count;i++)
+      {	
+        opaId=opaIdStr.split("^")[i];
+        //alert(opaId);
+        if(opaId=="")continue;
+		var storeProxy = new Ext.data.HttpProxy(new Ext.data.Connection({
+	     url : ExtToolSetting.RunQueryPageURL
+	      }));
+        var store = new Ext.data.Store({
+	    proxy: storeProxy,
+	    reader: new Ext.data.JsonReader({
+	    root: 'record',
+	    totalProperty: 'total',
+	    idProperty: 'tANOPCId'
+		}, 
+		[
+			 {name: 'tANOPCId', mapping: 'tANOPCId'}
+			,{name: 'OPCountDesc', mapping: 'OPCountDesc'}
+			,{name: 'tPreOperNum', mapping: 'tPreOperNum'}
+			,{name: 'tAddNum', mapping: 'tAddNum'}
+			,{name: 'tUnSewNum', mapping: 'tUnSewNum'}			
+			,{name: 'tSewedNum', mapping: 'tSewedNum'}
+			,{name: 'OPCountId', mapping: 'OPCountId'}
+			,{name: 'tSelfDefine', mapping: 'tSelfDefine'}
+		])
+	});
+	 storeProxy.on('beforeload', function(objProxy, param){
+			param.ClassName = 'web.DHCANCOPCount';
+			param.QueryName = 'FindTypeSel';
+			param.Arg1 = '';
+			param.Arg2 = opaId;
+			param.Arg3 = '';
+			param.ArgCnt = 3;
+		});
+	store.load({
+	  params:{opaId:opaId},
+	  callback:function(records,option,success)
+	  {
+	    //如果在这里引用opaId全局变量，这个回调函数属于异步调用，外面的循环比里面这个回调函数快，所以opaId很快变为最后一个值，而这个回调函数才到引用opaId的时候，外面的循环走完了，回调函数才开始按部就班的走那三个循环导致了一直引用的是最后一个全局变量的值。
+	   if(success)
+	   {
+	    var opaId=option.params.opaId
+	    if(records.length>0)
+	    {
+		    PrintOPCountQD(records,opaId);
+	    }
+	    
+	   }
+	  }
+	  })
+      parent.finishOneItemJobAsyn();
+      }
+	  }
+	  setTimeout("parent.printNext();", 3000 );
+	}
+	
+//})
+ function PrintOPCountQD(records,opaId) {
+	var xlsExcel,xlsSheet,xlsBook;
+	var titleRows,titleCols,LeftHeader,CenterHeader,RightHeader
+	var LeftFooter,CenterFooter,RightFooter;
+	var path,fileName;
+	path = GetFilePath();
+	fileName = path + "DHCANCOPCountSY.xls";
+	//fileName="C:\\DHCANCOPCount.xls";
+	xlsExcel = new ActiveXObject("Excel.Application");
+	xlsBook = xlsExcel.Workbooks.Add(fileName);
+	xlsSheet = xlsBook.ActiveSheet;
+	xlsTop = 1;
+	xlsLeft = 1;
+	var patOpDate = "",
+	patLoc = "",
+	patMedCareNo = "",
+	patName = "",
+	patSex = "",
+	patAge = "",
+	patPreDiag = "",
+	patOpName = "",
+	patOpDoc = "",
+	InstrNur = "",
+	cirNur = "";
+       shiftScrNur=""
+       shiftCirNur=""
+	if (opaId == "") {
+		alert(t['alert:selop']);
+		return;
+	}
+	var GetPatInfo='#(..EscapeHTML(GetPatInfo))#';
+	if (GetPatInfo) {
+		var PatInfoStr = cspRunServerMethod(GetPatInfo, opaId);
+		var patInfo = PatInfoStr.split("^");
+		patLoc = patInfo[0];
+		patMedCareNo = patInfo[4];
+		patName = patInfo[1];
+		patSex = patInfo[2];
+		patAge = patInfo[3];
+		patPreDiag = patInfo[13];
+		patOpDate = patInfo[7];
+		plOpDes = patInfo[8];
+		patOpDoc = patInfo[14];
+		InstrNur = patInfo[11];
+		cirNur = patInfo[12];
+		patOpName = patInfo[15]          
+        //shiftScrNur=patInfo[16]          
+        //shiftCirNur=patInfo[17]          
+	}
+       
+	var row = 3;
+	xlsSheet.cells(row, 8) = patOpDate;
+	row = row + 1;
+	xlsSheet.cells(row, 2) = patLoc;
+	xlsSheet.cells(row, 4) = patMedCareNo;
+	xlsSheet.cells(row, 7) = patName;
+	xlsSheet.cells(row, 10) = patSex;
+	xlsSheet.cells(row, 12) = patAge;
+	row = row + 1;
+	xlsSheet.cells(row, 3) = patPreDiag;
+	xlsSheet.cells(row, 9) = patOpDoc;
+	row = row + 1;
+	xlsSheet.cells(row, 3) = plOpDes;
+	var GetCareRecord='#(..EscapeHTML(GetCareRecord))#';
+	var res = cspRunServerMethod(GetCareRecord, opaId);
+	var CareRecord = res.split("@");
+	var SQCareRecord = CareRecord[0];
+	var SZCareRecord = CareRecord[1];
+	var SHCareRecord = CareRecord[2];
+	//SQ
+	var tmpSQCareRecord = SQCareRecord.split("^");
+	//SZ
+	var tmpSZCareRecord = SZCareRecord.split("^");
+	//SH
+	var tmpSHCareRecord = SHCareRecord.split("^");
+	row++;
+	// ^^^^^^^^N^N^^^@仰卧位^^^^^^有^N^N^^^无^@^^有^^^^,^,
+	//TiWei
+	var OperPosition = tmpSZCareRecord[0];
+	xlsSheet.cells(row, 3) = OperPosition;
+	
+    var freezingSlice=tmpSZCareRecord[13];
+	xlsSheet.cells(row, 7) = freezingSlice
+	var pathologSection=tmpSHCareRecord[8];
+	xlsSheet.cells(row, 9) = pathologSection;
+	
+	var BloodTranfused = tmpSZCareRecord[11];
+	xlsSheet.cells(row, 12) = BloodTranfused;
+	
+	// 邓体进添加
+	// 2012-04-16
+	row++;
+	var ANSNote = tmpSHCareRecord[5];
+	xlsSheet.cells(row, 3) = ANSNote;
+	
+	var count=records.length;
+	var num=0
+	for (var i = 1; i < count; i++) {
+		var record=records[i];
+		 var OPCountDesc=record.get('OPCountDesc');
+		var PreOperNum=record.get('tPreOperNum');
+		var AddNumStr=record.get('tAddNum');
+		var UnSewNum=record.get('tUnSewNum');
+		var SewedNum=record.get('tSewedNum');
+		if((PreOperNum=='0')&&(AddNumStr=='0')&&(UnSewNum=='0')&&(SewedNum=='0'))
+		{
+		  num=num+1;
+		}
+		}
+			
+
+    var totalRow = Math.round((count-num) / 2 )
+
+	var sourceCell = xlsSheet.Cells(row + 5, 1); //当前被选择的单元格??
+	row += 1;
+	var rNum=0;
+	for (var i = 0; i < count; i++) {
+
+		var record=records[i];
+		 var OPCountDesc=record.get('OPCountDesc');
+		var PreOperNum=record.get('tPreOperNum');
+		var AddNumStr=record.get('tAddNum');
+		var UnSewNum=record.get('tUnSewNum');
+		var SewedNum=record.get('tSewedNum');
+            
+		if((PreOperNum=='0')&&(AddNumStr=='0')&&(UnSewNum=='0')&&(SewedNum=='0'))
+		{
+		  continue;
+		}
+
+		rNum=rNum+1;
+		var arrAddNum=AddNumStr.split(","); 
+	    var sum=0
+	    for(ai=0;ai<arrAddNum.length;ai++)
+	    {
+	     arrAddNum[ai]=arrAddNum[ai].replace(" ","");
+	     if((arrAddNum[ai]==null)||(arrAddNum[ai]==""))
+	     {
+	       arrAddNum[ai]=0
+		 }
+		if(!isNaN(arrAddNum[ai]))
+		{
+	      sum=sum+parseInt(arrAddNum[ai]);
+	     }
+	     else  arrAddNum[ai]=0;
+	    }
+		var AddNum=sum;
+	var iAddNum = parseInt(sum);		
+		if (rNum <= totalRow) {
+			xlsSheet.cells(row + rNum, 1) = OPCountDesc;
+			xlsSheet.cells(row + rNum, 3) = PreOperNum;
+			xlsSheet.cells(row + rNum, 4) = AddNum;
+			xlsSheet.cells(row + rNum, 5) = UnSewNum;
+			xlsSheet.cells(row + rNum, 6) = SewedNum;
+			// 18行已经设置好
+			if (rNum < 10)
+				continue;
+			for (var j = 1; j <= 12; j++) {
+				gridlist(xlsSheet, row + rNum, row + rNum, j, j);
+			}		
+			xlcenter(xlsSheet, row + rNum, 1, 12);
+			nmergcell(xlsSheet, row + rNum, row + rNum, 1, 2);
+			nmergcell(xlsSheet, row + rNum, row + rNum, 7, 8);			
+		} else {
+			xlsSheet.cells(row + rNum - totalRow, 7) = OPCountDesc;
+			xlsSheet.cells(row + rNum - totalRow, 9) = PreOperNum;
+			xlsSheet.cells(row + rNum - totalRow, 10) = AddNum;
+			xlsSheet.cells(row + rNum - totalRow, 11) = UnSewNum;
+			xlsSheet.cells(row + rNum - totalRow, 12) = SewedNum;
+              }
+	}
+	if (totalRow <= 18) totalRow = 18;
+	
+	row=totalRow + row ;
+	var GetPackInfoByLabel='#(..EscapeHTML(GetPackInfoByLabel))#';
+	//var PackInfo = document.getElementById("GetPackInfoByLabel");
+	if (GetPackInfoByLabel) 
+	{
+		var PackInfoStr = cspRunServerMethod(GetPackInfoByLabel, opaId);
+		//alert(PackInfoStr)
+		var length=PackInfoStr.split("@").length;
+		//alert(length)
+		if(length>0)
+		{
+			//1   3  4  6  7  9
+			for(i=0;i<length;i++)
+			{
+				pack=PackInfoStr.split("@")
+				nmergcell(xlsSheet, row+3*i+1,row+3*(i+1), 1,12);
+				xlsSheet.cells(row+3*i+1 , 1) = pack[i];
+			}
+		}			
+	}
+	
+	/*xlsSheet.Cells(row, 1) = "器械护士:";
+       xlsSheet.Cells(row, 1).HorizontalAlignment=4
+	xlsSheet.Cells(row, 9) = "巡回护士:";
+       xlsSheet.Cells(row, 9).HorizontalAlignment=4
+	//xlcenter(xlsSheet,row,1,12);
+	xlsSheet.Cells(row, 1).Font.Bold=true;
+	xlsSheet.Cells(row, 9).Font.Bold=true;
+	nmergcell(xlsSheet, row, row, 1, 2);
+	nmergcell(xlsSheet, row, row , 9, 10);
+	nmergcell(xlsSheet,  row , row , 3, 5);
+	nmergcell(xlsSheet, row , row , 11, 12);
+	xlsSheet.cells(row, 3) = InstrNur; // "Test Text总是有测不完的测试不断要测试";
+	xlsSheet.cells(row, 11) = cirNur; */
+	  InstrNur=InstrNur.replace(/\r\n/g,"")
+	  InstrNur=InstrNur.replace(/\n/g,"")
+	  cirNur=cirNur.replace(/\r\n/g,"")
+	  cirNur=cirNur.replace(/\n/g,"")
+	  LeftFooter = "器械护士："+InstrNur
+       if(shiftScrNur!="")
+       {
+	     LeftFooter=LeftFooter+" "+"交器械护士："+shiftScrNur
+         /*xlsSheet.Cells(row+1, 1) = "交器械护士:";
+         xlsSheet.Cells(row+1, 1).HorizontalAlignment=4
+         //xlcenter(xlsSheet,row+1,1,12);
+         xlsSheet.Cells(row+1, 1).Font.Bold=true;
+         mergcell(xlsSheet,row+1, 1, 2);
+	     mergcell(xlsSheet,row+1,3,5);
+         xlsSheet.cells(row+1, 3) =shiftScrNur*/
+       }
+	   LeftFooter=LeftFooter+"  "+"巡回护士："+cirNur
+       if(shiftCirNur!="")
+       {
+	      LeftFooter=LeftFooter+" "+"交巡回护士："+shiftCirNur
+          /*xlsSheet.Cells(row+1, 9) = "交巡回护士:";
+          xlsSheet.Cells(row+1, 9).HorizontalAlignment=4
+          //xlcenter(xlsSheet,row+1,1,12);
+          xlsSheet.Cells(row+1, 9).Font.Bold=true;
+          mergcell(xlsSheet,row+1, 8,10);
+          mergcell(xlsSheet,row+1,11,12);
+          xlsSheet.cells(row+1, 11) =shiftCirNur*/
+       }
+	
+	var maxLength=InstrNur.length>cirNur.length?InstrNur.length:cirNur.length;
+	
+	var rowHight = (maxLength / 6) * 14.25; 
+	if(rowHight<22)
+		rowHight=22;
+	xlsSheet.Rows(row).RowHeight=rowHight;
+    xlsSheet.Rows(row+1).RowHeight=rowHight;
+	titleRows=9;
+	titleCols=1;
+	LeftHeader = " ",CenterHeader = " ",RightHeader = " ";RightFooter = " &N - &P ";
+	countExcelSet(xlsSheet, titleRows, titleCols, LeftHeader, CenterHeader, RightHeader, LeftFooter, CenterFooter, RightFooter) 
+	if ("exportBtn" == this.id) {
+		xlsExcel.Visible = true; //设置Excel的属性
+		xlsExcel.UserControl = true;
+		return;
+	}
+	//xlsExcel.Visible = true;
+	//xlsSheet.PrintPreview;
+	xlsSheet.PrintOut;
+	xlsSheet = null;
+	xlsBook.Close(savechanges = false)
+	xlsBook = null;
+	xlsExcel.Quit();
+	xlsExcel = null;
+	return;
+}
+function PrintOPCount(records,opaId)
+{
+    var xlsExcel,xlsSheet,xlsBook;
+    var titleRows,titleCols,LeftHeader,CenterHeader,RightHeader;
+    var LeftFooter,CenterFooter,RightFooter;
+    var path,fileName;
+    path = GetFilePath();
+    //fileName = path + "DHCANCOPCountSY.xls";
+    fileName = path + "DHCANCOPCount.xls";
+    //alert(fileName);
+    xlsExcel = new ActiveXObject("Excel.Application");
+    xlsBook = xlsExcel.Workbooks.Add(fileName);
+    xlsSheet = xlsBook.ActiveSheet;
+    xlsTop=1;xlsLeft=1;
+    var patOpDate = "",patLoc = "",patMedCareNo = "",patName = "",patSex = "",patAge = "",patPreDiag = "",patOpName = "",patOpDoc = "",InstrNur = "",cirNur = "";
+    var shiftScrNur="";
+    var shiftCirNur="";
+	  if (opaId==""){alert("该病人未做手术！");return;}
+ 	  var _DHCANOPCareRecord=ExtTool.StaticServerObject('web.DHCANOPCareRecord');
+	  var patInfoStr=_DHCANOPCareRecord.GetPatInfo(opaId)
+	  var patInfo=patInfoStr.split("^");
+	  patLoc = patInfo[0];
+	  patMedCareNo = patInfo[4];
+	  patName = patInfo[1];
+	  patSex = patInfo[2];
+	  patAge = patInfo[3];
+	  patPreDiag = patInfo[13];
+		patOpDate = patInfo[7];
+		plOpDes = patInfo[8];
+		patOpDoc = patInfo[14];
+		instrNur = patInfo[11];
+		cirNur = patInfo[12];
+		patOpName = patInfo[15]          
+    //shiftScrNur = patInfo[16]          
+   // shiftCirNur = patInfo[17] 
+    //patitent base information
+	  var row = 3;
+    xlsSheet.cells(row, 8) = patOpDate;
+	  row = row + 1;
+	  xlsSheet.cells(row, 2) = patLoc;
+	  xlsSheet.cells(row, 4) = patMedCareNo;
+	  xlsSheet.cells(row, 7) = patName;
+	  xlsSheet.cells(row, 10) = patSex;
+	  xlsSheet.cells(row, 12) = patAge;
+	 //xlsSheet.cells(row,12)=patPreDiag;
+	  row = row + 1;
+	  xlsSheet.cells(row, 3) = patPreDiag;
+	  xlsSheet.cells(row, 9) = patOpDoc;
+	  row = row + 1;
+	  xlsSheet.cells(row, 3) = plOpDes;
+    var retStr=_DHCANOPCareRecord.GetCareRecord(opaId);
+    var careRecord = retStr.split("@");
+    var SQCareRecord = careRecord[0];
+	  var SZCareRecord = careRecord[1];
+	  var SHCareRecord = careRecord[2];
+    //SQ alert(4)
+	  var tmpSQCareRecord = SQCareRecord.split("^");
+	  //SZ
+	  var tmpSZCareRecord = SZCareRecord.split("^");
+	  //SH
+	  var tmpSHCareRecord = SHCareRecord.split("^");
+	  row++;
+    var operPosition = tmpSZCareRecord[0];
+	  xlsSheet.cells(row, 3) = operPosition;
+    var freezingSlice=tmpSZCareRecord[13];
+	  xlsSheet.cells(row, 7) = freezingSlice
+    var pathologSection=tmpSHCareRecord[8];
+	  xlsSheet.cells(row, 9) = pathologSection;
+    var bloodTranfused = tmpSZCareRecord[11];
+	  xlsSheet.cells(row, 12) = bloodTranfused;
+    row++;
+	  var ANSNote = tmpSHCareRecord[5];
+	  xlsSheet.cells(row, 3) = ANSNote;
+    var count=records.length;
+    var num=0
+    for(var m=1;m<count;m++)
+    {
+	     var record=records[m];
+         var tmpPreOperNum=record.get('tPreOperNum');
+		 var tmpAddNum=record.get('tAddNum');
+		 var tmpUnSewNum=record.get('tUnSewNum');
+		 var tmpSewedNum=record.get('tSewedNum');
+     if((tmpPreOperNum=='0')&&(tmpAddNumStr=='0')&&(tmpUnSewNum=='0')&&(tmpSewedNum=='0'))
+		 {
+		  num=num+1;
+		 }
+    }
+    var totalRow = Math.round((count-1-num) / 2 );
+    var sourceCell = xlsSheet.Cells(row + 5, 1); //当前被选择的单元格??
+	  //var ClearStr="A3:J28";	//Set Clear Area
+	  row += 1;
+	  var rNum=0;
+	  for(var i=1;i<count;i++)
+	  {
+	   var record=records[i];
+		 var opCountDesc=record.get('OPCountDesc');
+		var preOperNum=record.get('tPreOperNum');
+		var addNumStr=record.get('tAddNum');
+		var unSewNum=record.get('tUnSewNum');
+		var sewedNum=record.get('tSewedNum');
+    if(parseInt(unSewNum)!=parseInt(sewedNum))
+    {
+      alert(opCountDesc+'关后清点数与关前清点数不相等！')
+      return;
+    }
+    if((preOperNum=='0')&&(addNumStr=='0')&&(unSewNum=='0')&&(sewedNum=='0'))
+		{
+		  continue;
+		}
+		
+    rNum=rNum+1;
+		var arrAddNum=addNumStr.split(","); 
+	  var sum=0
+	  for(ai=0;ai<arrAddNum.length;ai++)
+	  {
+	    arrAddNum[ai]=arrAddNum[ai].replace(" ","");
+	    if((arrAddNum[ai]==null)||(arrAddNum[ai]==""))
+	    {
+	       arrAddNum[ai]=0
+		  }
+		  if(!isNaN(arrAddNum[ai]))
+		  {
+	      sum=sum+parseInt(arrAddNum[ai]);
+	    }
+	     else  arrAddNum[ai]=0;
+	  }
+    var addNum=sum;
+    var iAddNum = parseInt(sum);
+    if (rNum <= totalRow) {
+			xlsSheet.cells(row + rNum, 1) = opCountDesc;
+			xlsSheet.cells(row + rNum, 3) = preOperNum;
+			xlsSheet.cells(row + rNum, 4) = addNum;
+			xlsSheet.cells(row + rNum, 5) = unSewNum;
+			xlsSheet.cells(row + rNum, 6) = sewedNum;
+			// 18行已经设置好
+      if (rNum < 10)
+				continue;
+			for (var j = 1; j <= 12; j++) {
+				gridlist(xlsSheet, row + rNum, row + rNum, j, j);
+			}		
+			xlcenter(xlsSheet, row + rNum, 1, 12);
+			nmergcell(xlsSheet, row + rNum, row + rNum, 1, 2);
+			nmergcell(xlsSheet, row + rNum, row + rNum, 7, 8);			
+		} else {
+			xlsSheet.cells(row + rNum - totalRow, 7) = opCountDesc;
+			xlsSheet.cells(row + rNum - totalRow, 9) = preOperNum;
+			xlsSheet.cells(row + rNum - totalRow, 10) = addNum;
+			xlsSheet.cells(row + rNum - totalRow, 11) = unSewNum;
+			xlsSheet.cells(row + rNum - totalRow, 12) = sewedNum;
+          }
+	}
+   	if (totalRow <= 18) totalRow = 18;
+	  row=totalRow + row + 2;
+    LeftFooter = "器械护士："+instrNur
+    if(shiftScrNur!="")
+    {
+	     LeftFooter=LeftFooter+" "+"交器械护士："+shiftScrNur
+    }
+    LeftFooter=LeftFooter+"  "+"巡回护士："+cirNur
+    if(shiftCirNur!="")
+    {
+	      LeftFooter=LeftFooter+" "+"交巡回护士："+shiftCirNur
+    }
+    var maxLength=InstrNur.length>cirNur.length?InstrNur.length:cirNur.length;
+	
+	var rowHight = (maxLength / 6) * 14.25; 
+	if(rowHight<22)
+		rowHight=22;
+	xlsSheet.Rows(row).RowHeight=rowHight;
+    xlsSheet.Rows(row+1).RowHeight=rowHight;
+	titleRows=9;
+	titleCols=1;
+	LeftHeader = " ",CenterHeader = " ",RightHeader = " ";RightFooter = " &N - &P ";
+	countExcelSet(xlsSheet, titleRows, titleCols, LeftHeader, CenterHeader, RightHeader, LeftFooter, CenterFooter, RightFooter) 
+	if ("exportBtn" == this.id) {
+		xlsExcel.Visible = true; //设置Excel的属性
+		xlsExcel.UserControl = true;
+		return;
+	}
+    xlsSheet.PrintOut
+    xlsSheet = null;
+    xlsBook.Close(savechanges=false)
+    xlsBook = null;
+    xlsExcel.Quit();
+    xlsExcel = null;
+    return;
+}
+  function countExcelSet(objSheet, titleRows, titleCols, LeftHeader, CenterHeader, RightHeader, LeftFooter, CenterFooter, RightFooter)
+  {
+    var titleRowsStr, titleColsStr
+    if (titleRows > 0) {titleRowsStr="$1:$"+titleRows}
+    else { titleRowsStr = ""}
+    titleColsStr = "";
+    if (titleCols==1) titleColsStr = "$A:$A"    //'maxcols is 5
+    if (titleCols==2) titleColsStr = "$A:$B"
+    if (titleCols==3) titleColsStr = "$A:$C"
+    if (titleCols==4) titleColsStr = "$A:$D"
+    if (titleCols==5) titleColsStr = "$A:$E"
+   
+    objSheet.PageSetup.PrintTitleRows = titleRowsStr
+    objSheet.PageSetup.PrintTitleColumns = titleColsStr
+        
+    objSheet.PageSetup.PrintArea = ""
+    objSheet.PageSetup.LeftHeader = LeftHeader
+    objSheet.PageSetup.CenterHeader = CenterHeader
+    objSheet.PageSetup.RightHeader = RightHeader
+    objSheet.PageSetup.LeftFooter = LeftFooter
+    objSheet.PageSetup.CenterFooter = CenterFooter
+    objSheet.PageSetup.RightFooter = RightFooter
+  }
+ function GetFilePath()
+ {
+    var _DHCLCNUREXCUTE=ExtTool.StaticServerObject('web.DHCLCNUREXCUTE');
+	var path=_DHCLCNUREXCUTE.GetPath();
+	return path;
+ }
+function xlHVRight(objSheet,row1,row2,c1,c2)
+{
+  objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).HorizontalAlignment =-4108;
+  objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).VerticalAlignment =-4108;
+}
+</script>
+</BODY>
+</HTML>

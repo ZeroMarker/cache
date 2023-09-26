@@ -1,0 +1,66 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n schedID,checked,status,rowid,KeepLock,load,cs,apptcnt,lastcs,sessionID,apptid
+	s (load,apptcnt,lastcs,sessionID,apptid)=""
+	s schedID=%request.Get("scheduleID")
+	s checked=%request.Get("checked")
+	s rowid=%request.Get("rowid")
+	s row=%request.Get("row")
+	s KeepLock=%request.Get("KeepLock")		; cjb 01/11/2005 52820 - this is passed from RBAppointment.ApptList.js, function KeepLock
+	s obj=##Class(websys.Component).OpenName("RBAppointment.ApptList")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s blockmsg=t("SlotBlocked")
+	s sessionID=%session.SessionId
+	i schedID d 
+	. s load=$p($g(^RBAS(+schedID,+$p(schedID,"||",2))),"^",2)
+	. s apptcnt=$p($g(^RBAS(+schedID,+$p(schedID,"||",2))),"^",11)
+	s lastcs=$o(^RBAS("APPT_Status","P",+schedID,+$p(schedID,"||",2),""),-1)
+	s cs=lastcs+1  f  q:cs=""  d
+	. i $d(^websys.LockI("Lock","User.RBAppointment",schedID_"||"_cs)) d
+	. . s lastcs=cs
+	. . s cs=cs+1
+	. . s apptcnt=apptcnt+1 
+	. e  d
+	. . s cs=""
+	i checked=1 d
+	. s lastcs=lastcs+1,apptcnt=apptcnt+1
+	. i apptcnt>load d
+ 	. . w "<SCRIPT Language=""Javascript"">"
+ 	. . w "alert('"_blockmsg_"');"
+ 	. . w "var chk=top.frames['TRAK_main'].frames['RBApptList'].document.getElementById('chkz'+"_rowid_");"
+ 	. . w "if (chk) chk.checked=!(chk.checked);"
+ 	. . w "</script>"
+	. e  d
+	. . i ##Class(websys.Lock).Lock($lb(schedID_"||"_lastcs,"User.RBAppointment"),sessionID,%session.Get("LOGON.USERID"),.status,$g(%session.Data("LOGON.CTLOCID"))) d
+	. . . ; cjb 01/11/2005 52820 - if KeepLock is passed, don't run the chkClickHandler (it will have already run when the user clicked it)
+	. . . i KeepLock'=1 d
+	. . . . w "<SCRIPT Language=""Javascript"">"
+	. . . . w "top.frames['TRAK_main'].frames['RBApptList'].chkClickHandler('"_row_"');"
+	. . . . w "</script>"
+	
+	i checked=0	d
+	. ;RC Get the correct dummy apptid to clear, based on sessionID
+	. &sql(SELECT Id INTO :apptid FROM websys.Lock where SessionId=:sessionID and ClassName='User.RBAppointment')
+	. d ##Class(websys.Lock).LockClear($lb(apptid,"User.RBAppointment"),sessionID)
+	. w "<SCRIPT Language=""Javascript"">"
+	. w "top.frames['TRAK_main'].frames['RBApptList'].chkClickHandler('"_row_"');"
+	. w "</script>"
+	
+	q
+	
+</SERVER>
+</BODY>
+</HTML>

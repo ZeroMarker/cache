@@ -1,0 +1,61 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+<server>
+ n DrugAlert,drugs,startdate,itmMast,durid,selord,returncode
+ s (DrugAlert,drugs,startdate,itmMast,durid,selord,returncode,itmdesc)=""
+ s DrugAlert="N",startdate=+$h,drugs=%request.Get("drugs"),selord=""
+ s $p(drugs,$C(2),2)=startdate 
+ s selord=%request.Get("itmMast")_$C(2)_startdate_$C(2)_%request.Get("durid")
+ ;s ^ZDENISE("selord")=selord
+ k PLIST
+ f i=1:1 {
+	s PLIST(i)=$p(drugs,$C(5),i)
+	i $p(drugs,$C(5),i)="" Q
+ }
+ s returncode=$$drugint^MVBOEORD(%request.Get("EpisodeID"),selord)
+ s DrugAlert=$p(returncode,"^",1)
+ s itmdesc=$p(returncode,"^",2)
+ ;s ^ZDENISE("DrugAlert")=DrugAlert
+ w !,"<script>"
+ w !,"var DrugAlert='"_$g(DrugAlert)_"';"
+ i DrugAlert="Y" d
+ . ;s ^ZDENISE("DrugAlert-in")="in"
+ . w "var DrugAlert=""Y"";" 
+ . ;w "websys_createWindow(""websys.default.csp?WEBSYS.TCOMPONENT=oeorder.mainloop.csp"");"
+ . ;Log 59598 - BC - 29-06-2006 : remove statusbar variable (status=) to display the status bar.
+ . w "websys_createWindow(""oeorder.mainloop.csp?itmdesc="_itmdesc_"&ordDesc="_%request.Get("ordDesc")_"&OEORIItmMastDR="_%request.Get("itmMast")_"&DrugAlert="_%request.Get("DrugAlert")_"&forderset="_%request.Get("forderset")_""","""",""toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes"");"
+ i DrugAlert="N" d
+ . ;s ^ZDENISE("DrugAlert-n")=DrugAlert
+ . w !,"var DrugAlert=""N"";" 
+ . w !,"if (window.top.frames['TRAK_main'].websys_windows['frmOSList']) {"
+ . w !," window.top.frames['TRAK_main'].websys_windows['frmOSList'].focus();"
+ . w !,"}"
+ . ;w "if (top.frames[""'TRAK_main'""]) document.fOEOrder_Custom.target=""TRAK_main"";"
+ w !,"</script>"
+ Q
+ ;q
+ ;s frm=##Class(websys.Component).OpenName("OEOrder.DrugInteractions")
+ ;i frm d frm.Show(),frm.%Close()
+ ;
+</server>
+</HEAD>
+<body>
+<!--TRAK:APPLET-->
+<script language=Javascript>
+ /***var arrChildWin=window.top.frames['TRAK_main'].websys_windows;
+ for (var i in arrChildWin) {
+	alert("WIN:"+i);
+ }***/
+</script>
+
+</body>
+</html>

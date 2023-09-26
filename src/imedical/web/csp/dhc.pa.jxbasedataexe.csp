@@ -1,0 +1,118 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s data=$Get(%request.Data("data",1))
+	s period=$Get(%request.Data("period",1))
+	s str=$Get(%request.Data("str",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s userID=$Get(%request.Data("userID",1))
+	s periodType=$Get(%request.Data("periodType",1))
+	s aValue=$Get(%request.Data("aValue",1))
+
+	
+	i action="list" d
+	.;w "searchField="_searchField," searchValue="_searchValue," sortField="_sortField," sortDir="_sortDir," start="_start," limit="_limit," period="_period," periodType="_periodType," userID="_userID,!
+	.w ##class(dhc.pa.udata.uJXBaseData).List(searchField,searchValue,sortField,sortDir,start,limit,period,periodType,userID)
+
+	i action = "period" d
+	.w ##class(dhc.pa.udata.uJXBaseData).GetPeriod(start,limit,str)
+
+	i action = "jxunit" d
+	.w ##class(dhc.pa.udata.uJXBaseData).GetJXUnit(start,limit,str,userCode)
+
+	i action = "kpi" d
+	.w ##class(dhc.pa.udata.uJXBaseData).GetKPI(start,limit,str,userCode)
+
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "aduit" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).Aduit(period,periodType,userCode)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "add" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "import" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).Import(period,periodType)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	/*
+	.;i periodType="Q" d
+	.;.s result = ##class(dhc.pa.udata.uJXBaseData).Import2(period,periodType)
+    */
+	
+	i action = "canceladuit" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).CancelAduit(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "correct" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).UpdateActValue(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "init" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).ManualEntryInit(period,periodType,userID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "update" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).Update(rowid,aValue)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+	i action = "del1" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).DeleteByInter(period,periodType)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "initSum" d
+	.s result = ##class(dhc.pa.udata.uJXBaseData).InitSum(period,periodType,userID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

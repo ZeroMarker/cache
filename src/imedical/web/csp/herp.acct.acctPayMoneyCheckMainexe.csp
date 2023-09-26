@@ -1,0 +1,58 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str = $Get(%request.Data("str",1))
+	s month = $Get(%request.Data("month",1))
+	s year = $Get(%request.Data("year",1))
+	s PayBillNo= $Get(%request.Data("PayBillNo",1))
+	s rowid= $Get(%request.Data("rowid",1))
+	s PayMoneyMainID= $Get(%request.Data("PayMoneyMainID",1))
+	s PayBillNo= $Get(%request.Data("PayBillNo",1))
+	s CheckNo= $Get(%request.Data("CheckNo",1))
+	s CheckDesc= $Get(%request.Data("CheckDesc",1))
+	s username= $Get(%request.Data("username",1))
+	s status= $Get(%request.Data("status",1))
+	s BankNo= $Get(%request.Data("BankNo",1))
+	i action = "list" d
+	.w ##class(herp.acct.upay.uPayMoneyCheck).List(year, month, str, start, limit,username,status)
+
+	i action ="through" d
+	.s result =##class(herp.acct.upay.uPayMoneyCheck).Through(PayMoneyMainID, PayBillNo, CheckNo, CheckDesc, username)
+    .i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	
+	i action = "notthrough" d
+	.s result = ##class(herp.acct.upay.uPayMoneyCheck).NotThrough(PayMoneyMainID, PayBillNo, CheckNo, CheckDesc, username)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "BankList" d
+	.w ##class(herp.acct.upay.uPayMoneyCheck).BankList(start,limit,str)
+	
+	i action = "AddBank" d
+	.s result = ##class(herp.acct.upay.uPayMoneyCheck).AddBank(rowid,BankNo)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "IsLastCheck" d
+	.w ##class(herp.acct.upay.uPayMoneyCheck).IsLastCheck()
+	
+    
+</script>

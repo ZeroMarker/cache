@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<!--reg.cardreg.hui.csp HISUI建卡--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!--EXTHEALTH:HEAD></EXTHEALTH:HEAD-->
+<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+<SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+<HISUI></HISUI>
+<ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+<style>
+body {
+	padding:0;
+	background:#fff;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	table-layout:fixed
+}
+.r-label{
+	padding: 0 10px;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-footer{
+	text-align: center;
+	margin:5px 0;
+}
+#NewCard,#BModifyInfo{
+	width: 100px;
+}
+.addressinfo,.baseinfo,.payinfo{
+	display: none;
+}
+.addressinfo-expand{
+	height: 215px !important;
+}
+.addressinfo-collapse{
+	height: 45px !important;
+}
+.baseinfo-expand{
+	height: 345px !important;
+}
+.baseinfo-collapse{
+	height: 175px !important;
+}
+.payinfo-expand{
+	height: 145px !important;
+}
+.payinfo-collapse{
+	height: 50px !important;
+}
+iframe{
+	vertical-align:top;
+	display:block;
+}
+.min-textbox{
+	width:110px !important;
+}
+/*#imgPic{
+	content:url(../images/uiimages/patdefault.png);
+}*/
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+</style>
+<Server>
+d ##Class(websys.Configuration).HeadSession()
+s GetreceipNO=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.CARDIF.ICardINVPRTInfo.ReadReceiptNOForCard"))
+s CardPatUIDefStr=##class(web.DHCBL.UDHCUIDefConfig).ReadCardPatUIDef("","","","",.defaultObj)
+w "<input id='CardRowID' name='CardRowID' type='hidden' value=''>",$C(13,10)
+w "<input id='PAPMIRowID' name='PAPMIRowID' type='hidden' value=''>",$C(13,10)
+w "<input id='ComputerIP' name='ComputerIP' type='hidden' value=''>",$C(13,10)
+w "<input id='SecurityNo' name='SecurityNo' type='hidden' value=''>",$C(13,10)
+w "<input id='UserDR' name='UserDR' type='hidden' value='"_%session.Get("LOGON.USERID")_"'>",$C(13,10)
+w "<input id='LogonHospDR' name='LogonHospDR' type='hidden' value='"_%session.Get("LOGON.HOSPID")_"'>",$C(13,10)
+w "<input id='HospitalID' name='HospitalID' type='hidden' value='"_%session.Get("LOGON.HOSPID")_"'>",$C(13,10)
+
+w "<input id='IDCardNo1' name='IDCardNo1' type='hidden' value=''>",$C(13,10)
+w "<input id='OtherCardInfo' name='OtherCardInfo' type='hidden' value=''>",$C(13,10)
+w "<input id='AccountType' name='AccountType' type='hidden' value=''>",$C(13,10)
+w "<input id='PassWord' name='PassWord' type='hidden' value=''>",$C(13,10)
+w "<input id='DepPrice' name='DepPrice' type='hidden' value=''>",$C(13,10)
+w "<input id='ReceiptsNo' name='ReceiptsNo' type='hidden' value=''>",$C(13,10)
+w "<input id='DepositPrintEncrypt' name='DepositPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+
+w "<input id='ReadCardINVEncrypt' name='ReadCardINVEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetRegINVPRTData"))_"'>",$C(13,10)
+w "<input id='ReadAccDPEncrypt' name='ReadAccDPEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPrtInfo"))_"'>",$C(13,10)
+w "<input id='ReadFirstPageEncrypt' name='ReadFirstPageEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPatInfoForFirstPage"))_"'>",$C(13,10)
+
+
+w "<input id='PhotoInfo' name='PhotoInfo' type='hidden' value=''>",$C(13,10)
+w "<input id='InitPatMasEntity' name='InitPatMasEntity' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.PCA.PATMAS")_"'>",$C(13,10)
+w "<input id='InitCardRefEntity' name='InitCardRefEntity' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.PCA.CardRef")_"'>",$C(13,10)
+w "<input id='InitCardINVPRTEntity' name='InitCardINVPRTEntity' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.PCA.CardINVPRT")_"'>",$C(13,10)
+w "<input id='InitAccManagerEntity' name='InitAccManagerEntity' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.PCA.AccManager")_"'>",$C(13,10)
+w "<input id='InitAccPreDepositEncrypt' name='InitAccPreDepositEncrypt' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.PCA.AccPreDeposit")_"'>",$C(13,10)
+
+w "<input id='ReadFirstPageEncrypt' name='ReadFirstPageEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPatInfoForFirstPage"))_"'>",$C(13,10)
+//打印预交金条的类方法
+w "<input id='ReadAccDPEncrypt' name='ReadAccDPEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPrtInfo"))_"'>",$C(13,10)
+
+s HospName=""
+i %session.Get("LOGON.HOSPID")'="" s HospName=$p(^CT("HOSP",%session.Get("LOGON.HOSPID")),"^",2)
+w "<input id='HospName' name='HospName' type='hidden' value='"_HospName_"'>",$C(13,10)
+s HospCodeNode="HospDr_"_%session.Get("LOGON.HOSPID")
+s ForeignInfoByAge=$g(^DHCDocCardConfig(HospCodeNode,"ForeignInfoByAge"))	
+s BuildAddrHomeByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrHomeByIDCard"))
+s BuildAddrBirthByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrBirthByIDCard"))
+s BuildAddrLookUpByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrLookUpByIDCard"))
+s BuildAddrHouseByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrHouseByIDCard"))
+
+s sysDateFormat=##class(websys.Conversions).DateFormat()
+if (sysDateFormat=4){
+	s dtformat="DMY"
+}
+if (sysDateFormat=3){
+	s dtformat="YMD"
+}
+s LimitAge=$p($zd(+$h,3),"-",1)-1840
+s ConfigVersion=##class(web.DHCOPConfig).GetVersion()
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+d ##class(web.UDHCCardCommLinkRegister).GetPWDKeyPressHardJSFunction()
+//w "<input id='BankCode' name='BankCode' type='hidden' value=''>",$C(13,10)
+//w "<input id='BankSignFlag' name='BankSignFlag' type='hidden' value=''>",$C(13,10)
+//w "<input id='ActiveFlag' name='ActiveFlag' type='hidden' value=''>",$C(13,10)
+//CFDate CFAccNoDR CFTime CardINVPRTDR Note4 Note5
+//Allergy EMail OpMedicare UpdateDate UpdateTime MedicalCardNo AdmReason MedUnionCard
+//HealthCareRegion AdmSource
+//VIPFlag BirthPlace BloodType ForeignPostCode GPOrgAddress
+//HomePlace  HouseArea  Flag ChequeDate Date Time Remark
+// PhotoInfo  Depprice OCDate OCTime amt BackReason
+s CardRefgDOMCache=1
+s rtn=##class(web.DHCBL.CARD.CardPATRegConfig).GetCardRegDOMCache(%session.Get("LOGON.HOSPID"))
+if (rtn="") s CardRefgDOMCache=""
+s sessinStr="^"_%session.Get("LOGON.USERID")_"^"_%session.Get("LOGON.CTLOCID")_"^"_%session.Get("LOGON.GROUPID")_"^"_%session.Get("LOGON.HOSPID")_"^"_%session.Get("LOGON.SITECODE")_"^"
+;获取账户默认信息
+s DefaultAccPara=##class(web.DHCACBaseConfig).GetAccPara()
+;民族
+s DefaultNationPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTNATION","^^^HUIJSON")
+;关系
+s DefaultRelationPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTRelation","^^^HUIJSON")
+;职业
+s DefaultOccuptionPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTOCCUPATION","^^^HUIJSON")
+;性别
+s DefaultSexPara=##class(web.UDHCOPOtherLB).ReadSex("GetSexToHUIJson","")
+;入院来源
+s DefaultIpSourcePara=##class(web.UDHCOPOtherLB).ReadIpSource("GetIpSourceToHUIJson","")
+;籍贯
+s DefaultCTCountryPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTCOUNTRY","^^^HUIJSON")
+;支付方式
+s DefaultPaymodePara=##class(web.UDHCOPOtherLB).ReadPayMode("GetPayModeToHUIJson","",%session.Get("LOGON.GROUPID"))
+;银行
+s DefaultBankPara=##class(web.UDHCOPOtherLB).ReadBankListBroker("GetBankToHUIJson","")
+;银行卡类型
+s DefaultBankCardTypePara=##class(web.UDHCOPOtherLB).ReadBankCardType("GetBankCardTypeToHUIJson","")
+;设备类型
+s DefaultIETypePara=##class(web.UDHCCardCommLinkRegister).GetReadHardComList("IE","")
+;卡类型
+s DefaultCardTypePara=##class(web.UDHCOPOtherLB).ReadCardTypeDefineListBroker("GetCardTypeToHUIJson","",sessinStr,.defCardDr)
+;证件类型
+s DefaultCredTypePara=##class(web.UDHCOPOtherLB).ReadCredTypeExp("GetCredTypeToHUIJson","")
+;患者类型
+s DefaultPatTypePara=##class(web.UDHCOPOtherLB).ReadPatType("GetPatTypeToHUIJson","",sessinStr)
+;婚姻
+s DefaultMaritalPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTMarital","^^^HUIJSON")
+;患者级别
+s DefaultPoliticalLevPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("PoliticalLevel","^^^HUIJSON")
+;患者密级
+s DefaultSecretLevelPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("SecretLevel","^^^HUIJSON")
+;合同单位
+s DefaultHCPDRPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("HCPDR","^^^HUIJSON")
+;票据信息
+s DefaultCurrentRecNoPara=##class(web.UDHCAccAddDeposit).GetCurrentRecNo(%session.Get("LOGON.USERID"),%session.Get("LOGON.HOSPID"))
+;患者默认基本信息
+s DefaultCardPatRegConfigPara=##class(web.DHCBL.CARD.UCardPATRegConfig).GetCardPatRegConfig("")
+s PatientNoReg=%request.Get("PatientNoReg")
+;获取默认的省信息
+s DefaultCTProvince=""
+if defaultObj.CountryDr'=""{
+	s DefaultCTProvince=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTProvince",defaultObj.CountryDr_"^^^HUIJSON")
+}
+;默认卡类型信息
+s RegCardConfigXmlData=""
+if +defCardDr'=0{
+	s RegCardConfigXmlData=##class(web.DHCBL.CARD.UCardPATRegConfig).ReadDefaultCardTypeConfigByDR(+defCardDr,"")
+}
+w "<input id='RegCardConfigXmlData' name='RegCardConfigXmlData' type='hidden' value='"_RegCardConfigXmlData_"'>",$C(13,10)
+	
+</Server>
+</head>
+<body>
+	<csp:Include Page="reg.cardreg.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			GetreceipNO:"#(GetreceipNO)#",
+			CardPatUIDefStr:"#(CardPatUIDefStr)#",
+			dtformat:"#(dtformat)#",
+			sysDateFormat:"#(sysDateFormat)#",
+			ConfigVersion:"#(ConfigVersion)#",
+			LimitAge:"#(LimitAge)#",
+			ForeignInfoByAge:"#(ForeignInfoByAge)#",
+			BuildAddrHomeByIDCard:"#(BuildAddrHomeByIDCard)#",
+			BuildAddrBirthByIDCard:"#(BuildAddrBirthByIDCard)#",
+			BuildAddrLookUpByIDCard:"#(BuildAddrLookUpByIDCard)#",
+			BuildAddrHouseByIDCard:"#(BuildAddrHouseByIDCard)#",
+			CardRefgDOMCache:"#(CardRefgDOMCache)#",
+			
+			DefaultAccPara:"#(DefaultAccPara)#",
+			DefaultNationPara:'#(DefaultNationPara)#',
+			DefaultRelationPara:'#(DefaultRelationPara)#',
+			DefaultOccuptionPara:'#(DefaultOccuptionPara)#',
+			DefaultSexPara:'#(DefaultSexPara)#',
+			DefaultIpSourcePara:'#(DefaultIpSourcePara)#',
+			DefaultCTCountryPara:'#(DefaultCTCountryPara)#',
+			DefaultPaymodePara:'#(DefaultPaymodePara)#',
+			DefaultBankPara:'#(DefaultBankPara)#',
+			DefaultBankCardTypePara:'#(DefaultBankCardTypePara)#',
+			DefaultIETypePara:'#(DefaultIETypePara)#',
+			DefaultCardTypePara:'#(DefaultCardTypePara)#',
+			DefaultCredTypePara:'#(DefaultCredTypePara)#',
+			DefaultPatTypePara:'#(DefaultPatTypePara)#',
+			DefaultMaritalPara:'#(DefaultMaritalPara)#',
+			DefaultPoliticalLevPara:'#(DefaultPoliticalLevPara)#',
+			DefaultSecretLevelPara:'#(DefaultSecretLevelPara)#',
+			DefaultHCPDRPara:'#(DefaultHCPDRPara)#',
+			DefaultCurrentRecNoPara:"#(DefaultCurrentRecNoPara)#",
+			DefaultCardPatRegConfigPara:'#(DefaultCardPatRegConfigPara)#',
+			PatientNoReg:"#(PatientNoReg)#",
+			
+			
+			//逻辑默认数据
+			defaultCountryDr:"#(defaultObj.CountryDr)#",
+			DefaultCTProvince:'#(DefaultCTProvince)#',
+			defCardDr:"#(defCardDr)#",
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.JS"></script>
+	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+	<script type="text/javascript" src="../scripts/Reg/ComboboxQuery.hui.js"></script>
+	<script type="text/javascript" src="../scripts/Reg/CardReg.hui.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.JS"></script>
+	
+</body>
+</html>

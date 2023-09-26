@@ -1,0 +1,56 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("str",1))
+
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s year= $Get(%request.Data("year",1))
+	s PrjDR = $Get(%request.Data("PrjDR",1))
+	s ItemName = $Get(%request.Data("ItemName",1))
+	s Total = $Get(%request.Data("Total",1))
+	s FundGov = $Get(%request.Data("FundGov",1))
+	s FuncDesc = $Get(%request.Data("FuncDesc",1))
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMHorizontalPrjApply).ListItemInfo(sortField, sortDir, start, limit,PrjDR)
+	
+	i action = "ItemList" d 
+	.w ##class(herp.srm.udata.uSRMHorizontalPrjApply).GetItemName(year, start, limit, str)
+	
+	i action = "PrjInfoList" d
+	.w ##class(herp.srm.udata.uSRMHorizontalPrjApply).GetPrjInfos(start, limit, PrjDR,year,str)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uSRMHorizontalPrjApply).InsertItemInfo(PrjDR, ItemName, Total, FundGov, FuncDesc)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uSRMHorizontalPrjApply).UpdateItemInfo(rowid, PrjDR, ItemName, Total, FundGov, FuncDesc)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uSRMHorizontalPrjApply).DelItemInfo(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

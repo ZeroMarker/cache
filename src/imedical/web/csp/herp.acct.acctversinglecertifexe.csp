@@ -1,0 +1,40 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s vercode=$Get(%request.Data("vercode",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	s ChkResult=$Get(%request.Data("ChkResult1",1))
+	s view1=$Get(%request.Data("view1",1))
+	s statusid=$Get(%request.Data("statusid",1))
+    s VouchID=$Get(%request.Data("VouchID",1))
+    s ^sshh= 2                                                                      /// vercode,userdr,ChkResult,view1,statusid                                                           
+	i action = "veraudit" d 
+	.s result = ##class(herp.acct.udata.uAcctVerSingleCertificate).InsertUpdRec(vercode,userdr,ChkResult,view1,statusid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "audit" d 
+	.s result = ##class(herp.acct.udata.uAcctVerSingleCertificate).IfVerState(vercode,userdr)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "listd" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetVouchProgress(start,limit,VouchID) 
+	
+	
+</script>

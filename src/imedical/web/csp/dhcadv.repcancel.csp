@@ -1,0 +1,238 @@
+<html>
+<head>
+<exthealth:head></exthealth:head>
+<meta http-equiv="X-UA-Compatible"  content="IE=edge"/> 
+<script language="Cache" runat="server">
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</script>
+<ADDINS require="CmdShell" />
+<FORM:EASYUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/css/easyuicommonnew.css"/>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/repcancel.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/advprint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/advexport.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcprt/comPrint.js"></script>
+	<style type="text/css">
+	  .tdtext{
+	   	  margin:5px 10px 0 0; 
+	   	  float:right;
+	   	  width:80px;
+	   	  text-align:right;
+	   }
+	   /*.panel-body{
+		   border-color: transparent!important;
+	   }hxy 去掉border*/
+	   #reqList > div > div{
+		   border-color: transparent!important;
+	   }/*hxy 去掉border*/
+	   .datagrid-header,.datagrid-htable{
+		   min-height:36px;
+	   }/*hxy table标题行高 38*/
+	   .datagrid-header-check{
+		   height:26px;
+	   }/*hxy checkbox显示不全微调*/
+	   .datagrid-cell-check{
+		   margin-top: -4px;
+		   height:22px;
+	   }/*hxy checkbox显示不全、对不齐微调 08-30*/
+	   /*hxy审核弹窗样式st */
+	   .window-header > .panel-title{
+		   color:#fff;
+		   height:36px;
+		   font-size:15px!important;
+		   line-height:36px;
+		   background-color:#566982;
+		   padding-left:10px;
+	   }
+	   .window,.window .window-header{
+		   padding:0;
+	   }/*ed*/
+	   .combo-arrow{
+		   width:28px;
+	   }/*hxy 09-12下拉框图标太小调整*/
+		.floatLeft{
+			float:left;	
+		}
+		.textLabel{
+			background:#fff;	
+		}
+		#allItmTableDiv{
+			width:40%;	
+			height:100%;
+			background:#ccc;
+		}
+
+		#setItmTableDiv{
+			width:40%;
+			height:100%;	
+			
+		}
+
+		#cuidDiv{
+			width:20%;
+			height:100%;
+				
+		}
+
+
+		#cuidTable{
+			width: 100%;
+			text-align: center;	
+		}
+
+		#cuidTable tr{
+			height:60px;	
+		}
+		#allItmTableDiv>panel-body{
+		   border-color: red!important;
+	   }
+	   
+   </style>
+</head> 
+<!--以下定义不良反应上报界面-->
+<body class="easyui-layout" style="background-color:#FFFFFF">
+	<div id="top"></div>
+	<!--block 1-->
+	<div data-options="region:'north',border:false" style="margin:10px 100px 10px 100px;height:178px;">
+		<div style="font-size:20px;font-weight:bold;text-align:center;color:#0e2d5f;margin-bottom:10px;width:90%;">
+			<span class="title-big">报告作废查询</span>
+		</div>
+		<div class="dhcc-panel" style="float:left;width:90%;"> 
+			<div class="dhcc-panel-header"> 
+			 	<div id="querytitle" class="dhcc-panel-title">报告作废查询</div> 
+			</div> 
+			<div class="dhcc-panel-body" style="height:90px;padding-top:10px!important;margin-bottom:-10px">
+				<table cellspacing="0" cellpadding="0">
+					<tr style="height:20">
+					    <td width="20"></td>
+						<td ></td>
+						<td></td>
+						<td width="40"></td>
+						<td ></td>
+						<td></td>
+						<td width="40"></td>
+						<td ></td>
+						<td></td>
+						<td width="40"></td>
+						<td ></td>
+						<td></td>
+						<td width="40"></td>
+						<td ></td>				
+					</tr>
+					<tr>
+						<td></td>
+						<td class="tdtext">开始日期</td>
+						<td><input id="stdate" type="text" class="easyui-datebox" required="required" style="width:130"></input></td>
+						<td></td>
+						<td class="tdtext">结束日期</td>
+						<td><input id="enddate" type="text" class="easyui-datebox" required="required" style="width:130"></input></td>
+						<td></td>
+						<td class="tdtext">类型</td>
+						<td><input id="typeevent" style="width:130" class="easyui-combobox" data-options="valueField:'value',textField:'text'"/></td>
+						<td></td>
+						<td class="tdtext">报告科室</td>
+						<td><input id="dept" style="width:130" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></td>
+						<td></td>
+						<td width="150"><div class="dhcc-btn-search"></div><button id="Find" class="dhcc-btn-icon">查询</button></td>
+					</tr>
+				</table>
+			</div> 
+		</div> 
+	</div>
+	<div data-options="region:'center',border:false" style="margin:10px 100px 0 100px;">
+		<div id="toolbar" class="toolbar" style="background-color:#fff;padding-left:0px;padding-right:0px">
+			<!--<span>
+				<img src="../scripts/dhcadvEvt/images/adv_sel_1.png">
+			</span>
+			<span>刷新</span>-->
+			<table cellspacing="0" cellpadding="0" >
+				<tr style="height:36px">
+			      <td id="Refresh" class="toolbar-refresh">&nbsp;刷新</td>
+			      <td id="Export" class="toolbar-export">&nbsp;导出</td>
+			      <td id="Printhtml" style="display:none;" class="toolbar-print">&nbsp;打印(HTML)</td>
+			      <td id="Print" class="toolbar-print">&nbsp;打印</td>	
+			    </tr>
+			</table>
+		    <div class="tool-bar-line" style="margin-bottom:3px;border-bottom-width:1px"></div>	
+		</div>
+		<div class="dhcc-panel" style="float:left;width:90%;"> 
+			<div class="dhcc-panel-header"> 
+			 	<div class="dhcc-panel-title">报告列表</div> 
+			</div> 
+			<div id="reqList" class="dhcc-panel-body" style="width:100%;height:375px;padding-top:0px!important">
+				<div id="maindg"></div>
+			</div>
+		</div>
+ 	</div>
+ 
+	<!--回首页-->
+	<div id="gologin" style="width:49px;height:47px; position:fixed;right:30px;bottom:142px;z-index:3;">
+		<a style="cursor:pointer" onclick="Gologin()">
+			<img src="../scripts/dhcadvEvt/images/gologin.png" onMouseOver='this.src="../scripts/dhcadvEvt/images/gologin_hover.png"' onMouseOut='this.src="../scripts/dhcadvEvt/images/gologin.png"'>
+		</a>
+	</div>
+	<!--回顶部-->	
+	<div id="gotop" style="width:49px;height:47px; position:fixed;right:30px;bottom:85px;z-index:3;">
+		<a href="#top">
+			<img src="../scripts/dhcadvEvt/images/gotop_hover.png" onMouseOver='this.src="../scripts/dhcadvEvt/images/gotop_hover.png"' onMouseOut='this.src="../scripts/dhcadvEvt/images/gotop.png"'>
+		</a>
+	</div>
+	<!--底部版权-->
+	<!-- <div id="footer" style="width:100%;height:40px;color:#999;background-color:#e3e4e6;text-align:center;padding-top:20px;position:fixed;left:0;bottom:0;z-index:3;">
+		Copyright ? 2017 DHC. All Rights Reserved.
+	</div> -->
+	<!--在线分享评论-->
+	</div>
+		<div id="newConWin" style="padding:0px">
+	</div>
+	<!--动态导出操作 TranWin-->
+	<div id="ExportWin" style="border-right-color: #40a2de !important;">
+		<div class="easyui-layout"  data-options="fit:true" >
+			<div data-options="region:'center',title:''" style="">
+			    <div class="floatLeft" id="allItmTableDiv">
+			 		<table id="allItmTable"></table>
+			 	</div>
+		 		<div class="floatLeft" id="cuidDiv">
+		 			<table id="cuidTable">
+		 				<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-add">添加元素</a>
+			 				</td>
+		 				</tr>
+		 				<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-remove">删除元素</a>
+			 				</td>
+			 			</tr>
+			 			<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-remove">全部删除</a>
+			 				</td>
+			 			</tr>
+			 			<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-redo">全部选中</a>
+			 				</td>
+		 				</tr>
+		 				<tr>
+			 				<td>
+			 					<a href="#" class="easyui-linkbutton" plain="true" iconCls="icon-undo">取消选中</a>
+			 				</td>
+		 				</tr>
+		 				
+		 			</table>
+		 		</div>
+		 		<div class="floatLeft" id="setItmTableDiv">
+		 			<table id="setItmTable"></table>
+		 		</div>
+	 		</div>
+	 		<div data-options="region:'south',title:''" style="height:40px;border-top-color:#40a2de !important;">
+	 			<button id="exportok" class="dhcc-btn" style="margin-left:5px;margin-top:5px;margin-left:600px; " onclick="ExportOK()">确定</button>
+				<button id="exportno" class="dhcc-btn" style="margin-left:5px;margin-top:5px;" onclick="$('#ExportWin').window('close')">取消</button>
+	 		</div>
+		</div>
+	</div>
+
+</body>
+
+</html>

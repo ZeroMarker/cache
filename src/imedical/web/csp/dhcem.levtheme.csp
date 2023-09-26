@@ -1,0 +1,259 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;" >
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/levtheme.js"></script>
+<script Language="Javascript">
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+</script>
+<style>
+.combo-arrow{position:relative;left:-4}
+.panel-body{border-color:#ccc}
+</style>
+</head> 
+<body class="hisui-layout" style="margin-left:4px;margin-right:4px;margin-top:4px;">
+	<div data-options="region:'west',title:'分级指标主题库维护',split:true,headerCls:'panel-header-gray'" style="width:200px;overflow: hidden;">
+<!--		<div style="margin:5px 10;">
+			<a href="#" class="hisui-linkbutton" id="newT" onclick="javascript:newT()">主题</a>
+			<a href="#" class="hisui-linkbutton" id="newP" onclick="javascript:newP()">项目	</a>   
+		</div> -->
+	  <div class="hisui-layout" style="" fit="true"><!--hxy 2020-06-04-->
+		<div data-options="region:'north'" border="false" style="height:55px"><!--hxy 2020-06-04-->
+			<div style="padding-top:10px;padding-bottom:10px">			
+				<span style="margin-left:10px"><span style="padding-right:10px">分级</span><select id="SelectLTILev" class="hisui-combobox" name="SelectLTILev" style="width:130px;"
+				data-options="
+							onSelect: function (rec) {
+								$('#queryForm').form('clear');
+								var box = document.getElementsByName('LEXActiveFlag');
+					            box[0].checked = true;
+					            $('#themeHidden').val(themeID);//隐藏主题id赋值
+								var varSelect = $(this).combobox('getValue');
+								if(varSelect=='0'){varSelect=''} 
+								$('#LTILev').val(varSelect);//给分级赋值
+								commonQuery({'datagrid':'#datagrid1','formid':'#queryForm'})
+								$('#LTILev').val('');//给分级赋空
+								}
+							">   
+	    												<option value="0">全部</option>
+	    												<option value="1">1</option>   
+													    <option value="2">2</option>   
+													    <option value="3">3</option>   
+													    <option value="4">4</option>   
+													</select>    </span>			
+			</div>
+			<div class="tool-bar-line" style="border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:solid;"></div>
+		</div><!--hxy 2020-06-04-->
+		<div data-options="region:'center'" border="false"><!--hxy 2020-06-04-->
+			<div class="hisui-panel" style="width:194px" data-options="border:false">
+			    <ul id="ThemeTree" class="hisui-tree"></ul>
+		    </div>	
+	    </div><!--hxy 2020-06-04-->
+	  </div><!--hxy 2020-06-04-->
+    </div>
+        
+	<div data-options="region:'center'" border="false">
+	 
+		<div id="tabs" class="hisui-tabs tabs-gray" fit="true" border="true">
+		
+		   <div title="分级指标主题库" style="padding:0px">
+			<!-- toolbar -->
+		      <div id="toolbar" class="toolbar" >
+		        <div style="height:10px"></div><!--hxy 2019-07-20-->
+				<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	
+				<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+				<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+				
+			    <table cellspacing="0" cellpadding="0" >
+				  <tr>
+			       <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			       <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>	
+			      <!-- <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			       <td><div class="datagrid-btn-separator"> </div> </td> -->
+			     </tr>
+			    </table>
+		      </div>
+			<table id="datagrid" class="hisui-datagrid" fit="true" title="" 
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    border:false,
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRow, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMLevTheme&MethodName=ListLevTheme'">
+			<thead>
+				<tr>
+					<th data-options="field:'LTHCode',width:120,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'LTHDesc',width:120,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'LTHActiveFlag',align:'center',width:70,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevTheme&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th data-options="field:'LTHRemark',width:250,editor:{type:'validatebox',options:{required:false}}">备注</th>						
+					<th id ="a" data-options="field:'LTHHospDr',width:160,align:'center',
+					                       
+
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false
+												}
+											}">医院</th>
+                    <th data-options="field:'LTHHospDrID',hidden:true">LTHHospDrID</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			  </thead>
+		   </table>
+
+		</div>
+		   
+  <div title="分级指标表达式库" data-options="closable:false" style="padding:0px">
+   <div class="hisui-layout" data-options="fit:true">    
+          <div data-options="region:'center'" style="overflow:hidden;border-left:0px;border-top:0px;border-bottom:0px" >
+          <form id="queryForm" method="post">
+			<table cellspacing="0" cellpadding="5" >
+				<tr>
+					<td class="r-label">代码</td>
+					<td><input data-options="required:true" style="margin-right:0px" type="text" id="LEXCode" name="LEXCode" class="textbox"></input> </td>
+					<td class="r-label">描述</td>
+					<td><input style="margin-right:0px" type="text" id="LEXDesc" name="LEXDesc" class="textbox"></input> </td>
+				</tr>
+				<tr>
+					<td class="r-label">备注</td>
+					<td><input data-options="required:true" style="margin-right:0px" type="text" id="LEXRemark" name="LEXRemark" class="textbox"></input> </td>	
+					<td class="r-label">分级
+					<td><input style="margin-right:0px" type="text" id="LTILev" name="LTILev" class="textbox" onkeyup="this.value=this.value.replace(/\D/g,'')"></input>(请填写数字)</td>	
+				</tr>
+				<tr>
+					<td class="r-label">表达式</td>
+					<td colspan="3"><textarea id="LEXText" data-options="multiline:true" style="width:650px;height:40px;margin-right:0px" name="LEXText" class="textbox"></textarea> </td>	
+				</tr>
+				
+				<tr>
+					
+				</tr>
+				<tr>
+					<td colspan="4">
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('>')">></a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('>=')">>=</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('<')">&lt</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('<=')">&lt=</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('+')">+</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('-')">?</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('*')">*</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('/')">/</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('.and.')">.and.</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('.or.')">.or.</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big('(')">(</a>
+						<a href="#" class="hisui-linkbutton" onclick="javascript:big(')')">)</a>
+						<input style="margin-left:20px;margin-bottom:-2px" type="checkbox" checked="true" id="LEXActiveFlag" name="LEXActiveFlag" >是否可用</input>
+					</td>
+				</tr>
+				<tr>
+				    <td style='font-size:12px' colspan="3">
+						<a href="#" class="hisui-linkbutton" id="SelectT" >参数</a>
+						<a href="#" class="hisui-linkbutton" id="Clear" onclick="javascript:Clear()">清空表达式</a>
+						<a id="add" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:addRowLib()" >清屏</a>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:saveExpress()">保存</a>
+			        </td>
+				</tr>
+				
+			</table>
+			<input id="themeHidden" name="themeHidden" type="text" style="display:none"></input><!--隐藏主题id -->
+			</form>
+	    <!-- toolbar -->
+		<div id="toolbar1" class="toolbar" style="padding:0px;magin:0px;">
+			<table cellspacing="0" cellpadding="0"  >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelExpress()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+		<div style="width:100%;height:320px">
+		<table id="datagrid1" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar1',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false, 
+		    scrollbarSize:10,
+		    border:false,
+		    onClickRow:onClickRowE,
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMLevExpress&MethodName=ListLevExpress',
+			onLoadSuccess: function (data) {
+							//$('#datagrid1').datagrid('selectRow', 0);
+							//onClickRowE();
+							}
+							">
+			<thead>
+				<tr>
+					<th data-options="field:'LEXCode',width:90,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'LEXDesc',width:90,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'LEXText',width:400,editor:{type:'validatebox',options:{required:true}}">表达式</th>
+					<th data-options="field:'LTILev',width:40,editor:{type:'validatebox',options:{required:true}}">分级</th>
+					<th data-options="field:'LEXActiveFlag',align:'center',width:40,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevTheme&MethodName=ListIsActive',
+													required:true
+												}
+											}">可用</th>
+					<th data-options="field:'LEXRemark',width:200,editor:{type:'validatebox',options:{required:true}}">备注</th>						
+					
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table></div>
+		</div><!--tab2 center-->
+		<div data-options="region:'east',split:true" border="false" style="width:168px;">
+		    <div style="padding:5px"><strong>函数库</strong></div>
+			<div class="hisui-panel" style="padding:5px,0,0,0" border=false>
+		    	<ul id="CatLib" class="hisui-tree"></ul>
+	    	</div>	
+		</div><!--tab2 east-->
+        </div><!--tab2 class="hisui-layout"-->
+		</div><!--tab2-->
+		
+		</div><!--tabs--></div>
+	
+	</div><!--center-->
+	<!--弹出框-->
+	    <div id="detail" class="hisui-window" title="主题关键字(双击选择)"
+		             data-options="modal:true,width:420,height:240,closed:true,maximizable:true"
+					 style="vertical-align: middle">
+		             <table id="detailgrid" ></table>
+	    </div>
+</body>
+</html>

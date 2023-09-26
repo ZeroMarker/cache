@@ -1,0 +1,40 @@
+<csp:content charset="UTF-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+
+
+	//查询
+	i Action = "UnAuthorOrdCat" d
+	.d ##class(web.DHCSTM.MatOrdCat).UnAuthorOrdCat()
+	
+
+	//查询
+	i Action = "MatOrdCat" d
+	.d ##class(web.DHCSTM.MatOrdCat).MatOrdCat()
+	
+	//增加
+	i Action = "AddMatOrdCat" d
+	.s OrdCatRowId=$Get(%request.Data("OrdCatRowId",1))
+	.s ret=##class(web.DHCSTM.MatOrdCat).AddMatOrdCat(OrdCatRowId)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	
+	//删除
+	i Action = "DelMatOrdCat" d
+	.s MatOrdCatRowId=$Get(%request.Data("MatOrdCatRowId",1))
+	.s result = ##class(web.DHCSTM.MatOrdCat).DelMatOrdCat(MatOrdCatRowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

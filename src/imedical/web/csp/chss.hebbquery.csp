@@ -1,0 +1,64 @@
+
+<script language="cache" runat="server">
+
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+	s Action=$Get(%request.Data("actiontype",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	s RowId=$Get(%request.Data("RowId",1))
+	s Titel=$Get(%request.Data("Titel",1))
+	s Address=$Get(%request.Data("Address",1))
+	s Unit=$Get(%request.Data("Unit",1))
+	s PutDate=$Get(%request.Data("PutDate",1))
+	s PlanContent=$Get(%request.Data("PlanContent",1))
+	s PlanTarget=$Get(%request.Data("PlanTarget",1))
+	s Remark=$Get(%request.Data("Remark",1))
+	s Summarize=$Get(%request.Data("Summarize",1))
+	s DateOfStart=$Get(%request.Data("DateOfStart",1))
+	s StaffOfCreate=$Get(%request.Data("StaffOfCreate",1))
+	s DateOfEnd=$Get(%request.Data("DateOfEnd",1))
+	s DateOfCreate=$Get(%request.Data("DateOfCreate",1))
+	
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.HealthEducationBulletinBoardService).ListPage(CommunityCode,Start,Limit)
+	
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.HealthEducationBulletinBoardService).insert(Titel,Address, Unit, PutDate, PlanContent, PlanTarget, Summarize, DateOfStart, DateOfEnd, Remark, DateOfCreate, StaffOfCreate, CommunityCode)
+	.w result
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.HealthEducationBulletinBoardService).update(RowId,Titel,Address, Unit, PutDate, PlanContent, PlanTarget, Summarize, DateOfStart, DateOfEnd, Remark, DateOfCreate, StaffOfCreate, CommunityCode)
+	.i result = 0 d
+	..w "{success:'true',info:'修改成功!'}"
+    .e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.HealthEducationBulletinBoardService).delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功!'}"
+    .e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Titel '="" d
+	.s SqlStr = " and Titel like '%"_Titel_"%'"
+	i Address '="" d 
+	.s SqlStr = " and Address like '%"_Address_"%'"
+	i PlanContent '="" d
+	.s SqlStr = " and PlanContent like '%"_PlanContent_"%'"
+	i PlanTarget '= "" d
+	.s SqlStr = " and PlanTarget like '%"_PlanTarget_"%'"
+	i Unit '="" d
+	.s SqlStr = " and Unit like '%"_Unit_"%'"
+	
+	i Action = "search" d
+	.w ##class(CHSSWeb.HealthEducationBulletinBoardService).Search(CommunityCode,Start,Limit,SqlStr)
+</script>
+

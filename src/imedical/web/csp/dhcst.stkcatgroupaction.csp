@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+	s StkGrpId=$Get(%request.Data("StkCatGroupId",1))
+	s HospId=$Get(%request.Data("HospId",1))
+
+	//查询库存组
+	i Action = "selectAll" d
+	.s result = ##class(web.DHCST.INCSTKCAT).SelectAll(HospId)
+	.i result ="" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//保存库存组
+	i Action = "save" d
+	.s result = ##class(web.DHCST.INCSTKCAT).Save(listData,HospId)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除库存组
+	i Action = "delete" d
+	.s result = ##class(web.DHCST.INCSTKCAT).Delete(RowId,HospId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//根据库存组查询库存小类
+	i Action = "selectStkCatBySCG" d
+	.s result = ##class(web.DHCST.INCSTKCAT).SelectRelationCat(StkGrpId,HospId)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//保存库存组与库存小类的关系记录
+	i Action = "addRelation" d
+	.s result = ##class(web.DHCST.INCSTKCAT).AddRelation(listData)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除库存组与库存小类的关系记录
+	i Action = "deleteRelation" d
+	.s result = ##class(web.DHCST.INCSTKCAT).DeleteRelation(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//查询库存组小类的CommBox
+	i Action = "INCSCStkGrp" d
+	.w ##class(web.DHCST.INCSTKCAT).SelectNoRelationCat(HospId)
+</script>

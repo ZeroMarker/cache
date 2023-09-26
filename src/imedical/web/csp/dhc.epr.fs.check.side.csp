@@ -1,0 +1,64 @@
+<HTML>
+<HEAD>
+
+<TITLE>	PDFPortal </TITLE>
+  	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/1xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/FS.Check.Side.js"></script>
+</HEAD>
+
+<script language="cache" runat="server">
+    s Post =  $Get(%request.Data("Post",1),"")
+    s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+
+    s Type = ##Class(DHCEPRFS.BL.BLRecordCheck).GetValueByTypeStr(Post)
+    
+    s count = 0
+    if (Post = "Right")
+    {
+		s count = ##Class(DHCEPRFS.BL.BLRecordCheck).GetCountByTypeStr("Left") - 1   
+	}
+    
+    s Papmi = ##class(DHCEPRFS.BL.HISInfo.BLPatientInfo).GetPapmiDR(EpisodeID)
+    s PatientID = ##class(DHCEPRFS.BL.HISInfo.BLPatientInfo).GetRegNo(Papmi)
+    s Mradm = ##class(DHCEPRFS.BL.HISInfo.BLPatientInfo).GetMRAdmDR(EpisodeID)
+</script>
+
+</HEAD>
+
+<BODY leftmargin="0" topmargin="0">
+
+
+
+ <script type="text/javascript">
+   var Post = '#(Post)#';
+   var Type = '#(Type)#';
+   var count = '#(count)#';
+   var Type = Type.replace(/\[episodeID\]/g,'#(EpisodeID)#');
+   var Type = Type.replace(/\[patientID\]/g,'#(PatientID)#');
+   var Type = Type.replace(/\[mradm\]/g, '#(Mradm)#')
+
+   var tabPanel = createTabPanel(Post)
+   var Types = Type.split("$");
+   
+   for (i = 0; i < Types.length; i++){
+	   var temp = Types[i].split("^")
+	   var instanceCount = parseInt(count) + i;
+	   var panel = createPortal(temp[0],temp[1],'<iframe width="100%" frameborder="0" marginheight="0" marginwidth ="0" height="100%"  scrolling=no src="'+temp[2]+'&Count='+instanceCount+'"></iframe>');
+	   tabPanel.add(panel);
+   } 
+   new Ext.Viewport({
+	 	layout:'fit',
+	 	border:false,
+	 	bodyborder:false,
+ 		items:tabPanel
+ 	});
+ 	
+ </script>
+  
+</BODY>
+</HTML>

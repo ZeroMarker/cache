@@ -1,0 +1,74 @@
+<HTML>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+<title>修改实际会诊人员</title>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/updconsdoc.js"></script>
+<!-- 配置 -->
+<server>
+  s LgHospID=%session.Get("LOGON.HOSPID")
+  /// 添加组内科室是否采用方式
+  s TakGrpLocModel=##Class(web.DHCMDTCom).GetEmSysConfig("TAKLOCMODEL",LgHospID)
+  /// 会诊专家控制
+  s memControlFlag=##Class(web.DHCMDTCom).GetEmSysConfig("MENCONTROL",LgHospID)
+  w "<script Language=""JavaScript"">"_$c(13,10)
+  w "var TakGrpLocModel="""_$g(TakGrpLocModel)_""";"_$c(13,10)
+  w "var memControlFlag="""_$g(memControlFlag)_""";"_$c(13,10)
+  w "</script>"
+</server>
+<style>
+.panel-body, .panel-header {
+    border-color: #ccc;
+}
+</style>
+</head>
+<body class="hisui-layout">   
+	<div data-options="region:'center'" border="false" style="overflow:hidden;">
+		<div style="margin:10px 10px;">
+			<div style="height:238px;border:1px solid #ccc;border-radius: 4px 4px 4px 4px;">
+				<table id="LocGrpList" toolbar="#ingrp_tb"></table>
+            </div>
+        </div>
+		<div style="margin:10px 10px;">
+			<div style="height:238px;border:1px solid #ccc;border-radius: 4px 4px 4px 4px;">
+				<table id="mainList" toolbar="#outgrp_tb"></table>
+            </div>
+        </div>
+	</div>
+	<div data-options="region:'south',headerCls:'panel-header-gray',title:'',collapsible:false" style="height:50px;border:0;" >
+		<div id="mdtWinTool" style="text-align: right;padding-top:10px;text-align:center">
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="TakClsWin()" style="margin-left:15px">取消</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="TakPreTime()" style="margin-left:30px">保存</a>
+		</div>
+	</div>
+	<!-- mdt会诊专家窗口 -->
+	<div id="mdtWin" style="overflow:hidden;">
+		<iframe id="mdtFrames" src="" width="100%" height="100%" frameborder="0" style="display:block;"></iframe>
+	</div>
+	<div id="ingrp_tb">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AddLocWin()" id="bt_grpaddloc">新增</a></td>
+		      <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear',plain:true" onclick="Clear('G')" id="bt_grpcencel">清空</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:delLocRow()">删除</a></td>
+		    </tr>
+		</table>
+	</div>
+	<div id="outgrp_tb">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+		      <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear',plain:true" onclick="Clear('I')" id="bt_cencel">清空</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:delRow()">删除</a></td>
+		    </tr>
+		</table>
+	</div>
+</body>
+</html>

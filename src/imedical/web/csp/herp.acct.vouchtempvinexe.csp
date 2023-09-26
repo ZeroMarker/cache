@@ -1,0 +1,57 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent= $Get(%request.Data("parent",1))
+	s str   = $Get(%request.Data("query",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s UserID = $Get(%request.Data("UserID",1))
+
+	s TempNo = $Get(%request.Data("TempNo",1))
+	s TempName = $Get(%request.Data("TempName",1))
+	s VouchType = $Get(%request.Data("VouchType",1))
+    s Tempdesc = $Get(%request.Data("Tempdesc",1))
+	s IsShelf = $Get(%request.Data("IsShelf",1))
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))
+
+	i action="list" d
+	.w ##class(herp.acct.udata.uAcctVouchTempVin).ListRec(start, limit,AcctBookID,UserID)
+	
+            
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctVouchTempVin).DeleteRec(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+        
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctVouchTempVin).InsertRec(TempNo, TempName, VouchType, Tempdesc, UserID, IsShelf, AcctBookID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+    i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctVouchTempVin).UpdateRec(rowid,TempNo,TempName,VouchType,Tempdesc,AcctBookID,UserID,IsShelf)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action= "VouchTypeList" d
+	.w ##class(herp.acct.udata.uAcctVouchTempVin).GetVouchType(str,start,limit)
+</script>

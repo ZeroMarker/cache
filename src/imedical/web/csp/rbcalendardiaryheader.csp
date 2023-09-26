@@ -1,0 +1,73 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+</HEAD>
+<SERVER>
+	n CurrentDate,PatientID,EpisodeID,RescID,Location,DiaryType
+	s (CurrentDate,PatientID,EpisodeID,RescID,Location,DiaryType)=""
+	s TWKFL=%request.Get("TWKFL")
+ 	s TWKFLI=%request.Get("TWKFLI")
+ 	s DiaryType=%request.Get("DiaryType")
+ 	s Location=%request.Get("Location")
+ 	s PatientID=%request.Get("PatientID")
+ 	s EpisodeID=%request.Get("EpisodeID")
+  	i (%request.Get("CurrentDate")'="") s CurrentDate=%request.Get("CurrentDate")
+	i (%request.Get("CurrentDate")="") s CurrentDate=+$h
+ 	s userId=%session.Get("LOGON.USERID")
+	s RESCDesc=%request.Get("RESCDesc")
+	s RescID=%request.Get("RescID")
+	s RescDesc="", RescDesc=$p($g(^RB("RES",RescID)),"^",17)
+	;Log 43299 14/7/04 - OTFullPageDiary flag
+	s OTFullPageDiary = %request.Get("OTFullPageDiary")
+
+	s monthURL="rbcalendardiaryview.csp?RESCDesc="_$g(rescName)_"&RescID="_$g(RescID)_"&Location="_$g(Location)_"&DiaryType="_$g(DiaryType)_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&OTFullPageDiary="_OTFullPageDiary
+	s dayURL="rbappointment.singlerescsched.csp?RESCDesc="_$g(rescName)_"&RescID="_$g(RescID)_"&Location="_$g(Location)_"&DiaryType="_$g(DiaryType)_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&OTFullPageDiary="_OTFullPageDiary
+	i DiaryType="OT" s DeptURL="epr.worklist.csp?WorkName=Trak.OTWorkList&Location="_Location_"&DiaryType="_DiaryType
+	i DiaryType="R" s DeptURL="epr.worklist.csp?WorkName=DiaryView&Location="_Location_"&DiaryType="_DiaryType
+	i DiaryType="O" s DeptURL="epr.worklist.csp?WorkName=OPD Book&Location="_Location_"&DiaryType="_DiaryType
+	;Log 43299 - If DiaryType is 'OT' and OTFullPageDiary=1, then don't want to refresh to OTWorkList
+	i DiaryType="OT",OTFullPageDiary=1 s DeptURL="rbappointment.locationrescsched.csp?Location="_Location_"&DiaryType="_DiaryType_"&OTFullPageDiary="_OTFullPageDiary
+
+	w "<TABLE width=100%>"
+	w "<TR><TD align=left>&nbsp</td>"
+	w "<th bordercolorlight=""silver"" width=75% ><CENTER>",RescDesc,"&nbsp&nbsp"
+	i (DiaryType="R") w "  <a href=""#"" onclick=""javascript:ExpandResource('",RescDesc,"','",RescID,"')"">Resource Workbench</a> "
+	;w "<a href=""#"" onclick=""javascript:LoadIntoTopFrame('",monthURL,"')""><IMG SRC=../images/webemr/monthdiary.gif BORDER=0></a>"
+	;w " <a href=""#"" onclick=""javascript:LoadIntoTopFrame('",dayURL,"')""><IMG SRC=../images/webemr/daydiary.gif BORDER=0></a>"
+	w " <a href=""#"" onclick=""javascript:LoadIntoMainFrame('",DeptURL,"')""><IMG SRC=../images/webemr/deptdiary.gif BORDER=0></a>"
+	w "</CENTER></TH>"
+	w "<td align=right>&nbsp</td><tr></table>"
+
+</SERVER>
+<BODY>
+</BODY>
+</HTML>
+
+<script Language="JavaScript">
+function ResourceDiary(url)
+{
+	top.frames["TRAK_main"].frames["work_top"].document.location.href=url;
+
+}
+function ExpandResource(rescName,RescID)
+{
+	top.frames["TRAK_main"].document.location.href="epr.worklist.csp?WorkName=RadWorklist&RESCDesc="+rescName+"&RescID="+RescID;
+}
+
+function LoadIntoTopFrame(url) {
+	top.frames["TRAK_main"].frames["work_top"].document.location.href=url
+}
+
+function LoadIntoMainFrame(url) {
+	top.frames["TRAK_main"].document.location.href=url
+}
+</script>

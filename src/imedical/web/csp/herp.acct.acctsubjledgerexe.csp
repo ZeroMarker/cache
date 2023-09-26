@@ -1,0 +1,75 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))	
+    s str=$Get(%request.Data("query",1))
+	
+	s subjcode = $Get(%request.Data("subjcode",1))
+	s subjType = $Get(%request.Data("AcctType",1))
+	s subjLevel =$Get(%request.Data("subjLevel",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	
+	s SubjID = $Get(%request.Data("SubjID",1))
+	s BeginSum = $Get(%request.Data("BeginSum",1))
+	s TotalDebitSum =$Get(%request.Data("TotalDebitSum",1))
+	s TotalCreditSum = $Get(%request.Data("TotalCreditSum",1))
+
+	
+	s bookID = $Get(%request.Data("bookID",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	
+	i action = "GetAcctType" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetAcctType(start,limit,str)
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctSubjLedger).AcctLedgerList(start, limit, subjcode, subjType, subjLevel,bookID)
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctSubjLedger).UpdateRec(rowid, SubjID,BeginSum, TotalDebitSum, TotalCreditSum,bookID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctSubjLedger).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "getBookInitState" d
+	.s result = ##class(herp.acct.udata.uAcctCommon).getBookInitState(bookID)
+	.i result '= "" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetStartMonth" d
+	.s result =##class(herp.acct.udata.uAcctSubjLedger).GetStartMonth(bookID)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+    
+     i action="GetURL" d
+	.s result=##class(herp.acct.udata.uAcctCommon).GetURL(bookID)
+    .i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+  	
+  	
+  	i action = "Ledgersave" d
+	.s result = ##class(herp.acct.udata.uAcctSubjLedger).Ledgersave(bookID,userdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+  	
+</script>

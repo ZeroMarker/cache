@@ -1,0 +1,129 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<FORM ACTION="websys.csp" method=post name="fDHCMedRMOPSVG" id="fDHCMedRMOPSVG">
+
+<script language="Cache" method="MyMethod" arguments="Arg1:%String" returntype="%String">
+ ;s ret=$g(%request.Data("Tsvg",1))
+ s ret=%request.URL
+ Quit ret
+</script>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ set svgYline=460
+</script>
+<TABLE width="100%" border=0 id="T_Frame" align="left">
+  <TR>
+    <TD class="" vAlign=top width="80%">
+      <TABLE width="100%" border=0>
+        <TR>
+          <TD>
+            <DIV id="Draw"></DIV>
+          </TD>
+          <TD>
+          	<table>
+          	<tr>门诊科室</tr>
+          	<tr>
+            <csp:query name="query" classname="web.DHCMedOPRMPatInfo" queryname="CtLocQuery" P1="E">
+			<select name='department' id="department" style='WIDTH: 130px; HEIGHT: 35px' >
+			<option value="">--------请选择--------</option>
+			<csp:while counter=queryRow condition=query.Next()>
+			<option value=#(query.GetData(2))#>#(query.GetData(1))#</option>
+			</csp:while>
+			</select>
+			</tr>
+			<br><br><br>
+			<tr>门诊业务</tr>
+          	<tr>
+          	<csp:query name="query" classname="web.DHCMedOPRMPatInfo" queryname="XiQuery" P1="" P2="">
+			<select name='lines' id="lines" size=5 style='WIDTH: 130px; HEIGHT: 250px' multiple>
+			<csp:while counter=queryRow condition=query.Next()>
+			<option value=#(query.GetData(1))#>#(query.GetData(2))#</option>
+			</csp:while>
+			</select>
+			</tr>
+			<tr>
+			<a href="#" id="viewline" name="viewline" onclick="View()"/>查看折线图</a>
+			</tr>
+			<br><br><br>
+			<tr>等候业务</tr>
+			<tr>
+			<csp:query name="query" classname="web.DHCMedOPRMPatInfo" queryname="XiQuery" P1="X" P2="">
+			<select name='xLines' id="xLines" size=5 style='WIDTH: 130px; HEIGHT: 80px' multiple>
+			<csp:while counter=queryRow condition=query.Next()>
+			<option value=#(query.GetData(1))#>#(query.GetData(2))#</option>
+			</csp:while>
+			</select>
+			</tr>
+			<tr align="center">
+			<a href="#" id="viewpie" name="viewpie" onclick="ViewPie()"/>  查看饼图</a>
+			</tr>
+			</table>
+		</TD>
+        </TR>
+ </TABLE>
+
+</FORM>
+</BODY>
+
+<SCRIPT language="javascript">
+function Load(){
+	var svgstring='<EMBED id="SVGEmbed" name="SVGEmbed" type="image/svg-xml" src="dhc.med.oprm.svgline.csp" height="560" width="840">';
+	var obj=document.getElementById("Draw");
+    obj.innerHTML=svgstring;
+}
+//查看折线图
+function View(){
+	var checkedLines = getCheckedLines("lines");
+	var ctlocRowID = getCheckedLines("department");
+	var date="60943";
+	var svgstring='<EMBED id="SVGEmbed" name="SVGEmbed" type="image/svg-xml" src="dhc.med.oprm.svgline.csp?checkedLines='+checkedLines+'&ctlocRowID='+ctlocRowID+'&date='+date+'" height="560" width="840">';
+	var obj=document.getElementById("Draw");
+    obj.innerHTML=svgstring;
+}
+//查看饼图
+function ViewPie()
+{
+	var checkedLines = getCheckedLines("xLines")
+	var ctlocRowID = getCheckedLines("department");
+	var date="60943";
+ 	var svgstring='<EMBED id="SVGEmbed" name="SVGEmbed" type="image/svg-xml" '+'src="dhc.med.oprm.svgpie.csp?checkedLines='+checkedLines+'&ctlocRowID='+ctlocRowID+'&date='+date+'&svgX=800&svgY=600" '+'height="600" width="840">';
+	var obj=document.getElementById("Draw");
+    obj.innerHTML=svgstring;
+}
+//点击饼图区域触发查询病人信息
+function clickPIE(xCode){
+	var iDate="60943";
+	var lnk="websys.default.csp?WEBSYS.TCOMPONENT=DHC.Med.OPRM.PatInfo.List&iDate="+iDate+"&xCode="+xCode;
+	window.open(lnk);
+}
+// View()和ViewPie()公用方法?用于获取选中查看项目字符串
+function getCheckedLines(element){
+	var obj=document.getElementById(element);
+	var s = "";
+	var len=obj.options.length;
+	for( var i = 0; i < len; i++ )
+	{
+		if ( obj.options.item(i).selected ){
+		s+= obj.options.item(i).value+"^";
+		}
+	}
+	var checkedLines = s.substr(0,s.length-1);
+	return checkedLines;
+}
+
+Load();
+</SCRIPT>
+</HTML>

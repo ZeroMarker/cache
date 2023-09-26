@@ -1,0 +1,181 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.kb.dhcoperremind.csp
+	@JS:bdp/App/KB/NewBus/DHC_OPERRemind.js
+	@Title:手术项目编辑器——高危提醒
+	@Description:高危提醒的增删改
+	@Creator:基础数据平台组 - 丁亚男
+	@CreateDate:2018-09-17
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+	
+<style type="text/css">
+/*多选框*/
+.mulitiDiv {
+	width:560px;
+	height:360px;
+	border: 1px solid #40a2de;
+}
+.webui-popover-title {
+	padding:8px 14px;
+	display: block;
+    background-color: #f9f9fa;
+    border-bottom: 1px solid #cccccc;
+    border-radius: 5px 5px 0 0;
+    color: black
+}
+.webui-popover .webui-popover-content {
+    padding: 1px 5px;
+}
+.panel-header-noborder {
+    border-width: 0 0 0px 0;
+}
+</style>
+<script type="text/javascript"  >
+    $(function(){
+              BodyLoadHandler();
+
+    });
+</script>
+</HEAD>
+
+<BODY>
+<server>
+	s GlPGenDr=%request.Get("GlPGenDr")
+    s GlPPointer=%request.Get("GlPPointer")
+    s GlPPointerType=%request.Get("GlPPointerType")
+</server>
+     <div class="hisui-layout" data-options="fit:true" border="false" >
+    	<!--上面选择-->
+    	<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',split:true"  style="height:148px;" border="false" title="高危提醒"> 
+			<table data-options="fit:true,nowrap:false" id="mygrid" border="false"></table> 
+		</div>
+   		 <!--下面编辑面板-->
+       	<div data-options="headerCls:'panel-header-gray',region:'center'" border="false" > 
+       		<div class="hisui-layout" data-options="fit:true" border="false">
+       			<div id="mytbar" data-options="region:'north',split:false"  style="height:34px;text-align:left;border-top:1px solid #C0C0C0;border-bottom:1px dashed #C0C0C0;overflow:hidden" border="false">
+	 			   	 <a   class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAdd">新增</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-write-order' plain="true" id="btnUpd">修改</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-cancel' plain="true" id="btnDel">删除</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-refresh' plain="true" id="btnRel">清屏</a>
+				</div>	
+				
+	       		<div data-options="region:'center',split:false" style="padding:4px 30px 20px 10px" border="false">
+			    	 <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    	 <table cellpadding="5">
+			    	 	
+			    	     <!--年龄框-->
+			    	      <tr>
+				    		   <td class="tdleftlabel">年龄</td>
+				    		   <td>
+				               		<table>
+						    		  <tr>
+				    		   			<td><input id="PDAAgeDrF" name="PDAAgeDr"  style="width:160px;"></td>
+				    		   			<!--年龄限制框-->
+				    		   			<td class="tdlabel" width="80px">年龄限制</td>
+				    		   			<td><input id="PDAMinValF" name="PDAMinVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+							            <td>-</td>
+							            <td><input id="PDAMaxValF" name="PDAMaxVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+							            <td><input id="PDAUomDrF" name="PDAUomDr"  style="width:110px;"></td>
+					   				 	<td class="tdlabel" width="40px">BMI</td>
+					   				 	<td><input id="PHINSTBMIMinF" name="PHINSTBMIMin" type="text" class="hisui-validatebox" style="width:60px" ></td>
+							            <td>-</td>
+							            <td><input id="PHINSTBMIMaxF" name="PHINSTBMIMax" type="text" class="hisui-validatebox" style="width:65px" ></td>
+					   				 </tr>
+					   				</table>
+				              </td>
+					    </tr>
+					    <!--级别框-->
+			    	     <tr>
+				    		   <td class="tdleftlabel">级别</td>
+				    		   <td>
+				               		<table>
+						    		  <tr>
+						    		  	<td><input id="PHINSTModeF" name="PHINSTMode"  style="width:160px;"></td>
+						    		  	<td class="tdlabel" width="80px">收缩压</td>
+				    		   			<td><input id="SysPressMinValF" name="SysPressMinVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+							            <td>-</td>
+							            <td><input id="SysPressMaxValF" name="SysPressMaxVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+					   				 	<td class="tdlabel" width="30px">mmHg</td>
+					   				 	<td class="tdlabel" width="80px">舒张压</td>
+					   				 	<td><input id="DiaPressMinValF" name="DiaPressMinVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+							            <td>-</td>
+							            <td><input id="DiaPressMaxVal" name="DiaPressMaxVal" type="text" class="hisui-validatebox" style="width:65px" ></td>
+							            <td class="tdlabel" width="40px">mmHg</td>
+					   				 </tr>
+					   				</table>
+				              </td>
+					    </tr>
+					    <!--描述栏-->					    				
+					    <tr>
+				    		  <td class="tdleftlabel">描述</td>				            
+				              <td><textarea id="PHINSTTextF" name="PHINSTText" type="text" class="hisui-validatebox" style="width:780px;height:60px;overflow:hidden" data-options="required:true"></textarea></td>
+					    </tr> 
+					    <tr>
+					       <table>
+					        <tr>
+	                        <td>
+	                        	<!--病症框-->
+		                        <div class="hisui-panel" title="病症" style="width:415px;height:280px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',">   
+									<table style="width:380px;height:260px;"  id="diaGrid" border="false" toolbar="#myDiatbar"></table>
+								</div>	
+	                        </td>
+	                        <td   style="padding: 2px 0px 2px 10px;">
+		                        <!--特殊人群-->	
+		                        <div class="hisui-panel" title="特殊人群" style="width:420px;height:280px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',"> 
+										<table style="height:auto" width="100%" id="PopuGrid" border="false" toolbar="#myPoputbar"></table>
+								</div>	
+	                        </td>
+	                        </tr>
+	                        </table>
+	                    </tr>	                    		                   		    
+					 </table >
+					 </form>
+				</div>
+	    	</div>
+		</div>		 
+    </div> 
+    <!--已选病症列表工具条-->
+    <div id="myDiatbar"  style="padding: 1px; height: auto; "  >
+		<a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddDia">新增病症</a>								    
+	 </div> 
+	 <!--已选特殊人群列表工具条-->
+    <div id="myPoputbar"  style="padding: 1px; height: auto; "  >
+		<a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddPopu">新增特殊人群</a>								    
+	 </div> 
+    
+    <!--未选病症列表工具条-->
+    <div id="myunDiatbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <a href="#" class="hisui-searchbox" data-options="stopAllEventOnDisabled:true" id="btnDiaSearch"></a>
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaReset">清屏</a> 
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnDiaSave">保存</a>        
+    </div> 
+	
+	
+	<!--未选特殊人群列表工具条-->
+    <div id="myunPoputbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <a href="#" class="hisui-searchbox" data-options="stopAllEventOnDisabled:true" id="btnPopuSearch"></a>
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnPopuReset">清屏</a> 
+        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnPopuSave">保存</a>        
+    </div> 
+
+	<script type="text/javascript">
+     var  GlPGenDr="#(GlPGenDr)#"
+     var  GlPPointer="#(GlPPointer)#"
+     var  GlPPointerType="#(GlPPointerType)#"
+   </script>
+	<script type="text/javascript" src="../scripts/bdp/App/KB/NewBus/DHC_OPERRemind.js"></script>
+</BODY>
+</HTML>

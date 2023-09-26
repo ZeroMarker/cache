@@ -1,0 +1,28 @@
+<!--span id="includefooter" > </span-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s sStationSequence=""
+	f  s sStationSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence)) q:sStationSequence=""  d
+	.s StationId=""
+	.f  s StationId=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId)) Q:(""=StationId)  d
+	..s sARCSequence=""
+	..f  s sARCSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence)) Q:(""=sARCSequence)  d
+	...s iiiLLoop=0
+	...f  s iiiLLoop=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop)) Q:(""=iiiLLoop)  d
+	....s ARCIM=$G(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop))
+	....s OtherInfo=##class(web.DHCPE.ReportShowOther).GetOtherURL(ARCIM)
+	....q:OtherInfo=""
+	....s Length=$L(OtherInfo,"^")
+	....s Flag=$P(OtherInfo,"^",1)
+	....f i=2:1:Length  d
+	.....s OneUrl=$P(OtherInfo,"^",i)
+	.....i Flag="HTML" d
+	......w "<iframe src='"_OneUrl_"' width='660' height='935' frameborder='0' scrolling='no'>"
+	......w "</iframe>" 
+	.....i Flag="IMG" d
+	......w "<table border=0 cellspacing=0><tr><td><P>"
+	......w "<img id='"_ARCIM_i_"' src='"_OneUrl_"' width='660' height='935'>"
+	......w "</P></td></tr></table>"
+	.....i Flag="PDF" d
+	......w "<embed width='660' height='935' src='"_OneUrl_"'></embed>" 
+
+</SCRIPT>

@@ -1,0 +1,104 @@
+<!--
+Description:  健康提示  dhchm.medicaltips.csp  
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER"> 
+		set EQID=$g(%request.Data("EQID",1))
+		;w EQID,!	
+   </SCRIPT>
+	<style>
+	.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+	.labelTd{
+		text-align:right;
+		padding:0 10px;
+	}
+   </style>
+</head>
+<body class="hisui-layout"  fit="true"  >
+	<div id='MTPanel'  data-options="region:'west',headerCls:'panel-header-gray',border:false," style=" padding:10px;width:200px;">		
+		<div fit="true" style="height:100%;">
+			<div id="OQMTList" ></div>
+		</div>
+	</div>
+	<div id="LeftPanel" data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px 10px 10px 0;">
+		<div class="hisui-panel" id="TipPanel" fit="true" style="padding:0 10px;height:100%;width:100%" title="健康提示"  data-options="headerCls:'panel-header-gray',iconCls:'icon-tip',fit:true,closable:false,collapsible:false,minimizable:false,maximizable:false">
+			<table class="hisui-table">
+				<tr>
+					<td class="labelTd" style="padding-left:0;">结论</td>	
+					<td><select id="MTDR" class="hisui-combogrid"  style="width:180px;" data-options="
+           				panelWidth: 420,
+            			idField: 'ID',
+            			textField: 'MTDesc',
+            			method: 'get',
+            			url:$URL+'?ClassName=web.DHCHM.OEvaluationRecord&QueryName=CMedicalTips',
+            			onBeforeLoad:function(param){
+	            			param.QueID='#(EQID)#';
+							param.vdesc = param.q;
+						},
+						mode:'remote',
+						delay:200,
+            			columns: [[           				            			
+							{field:'MTCode',title:'代码',width:80},
+							{field:'MTDesc',title:'描述',width:80},
+							{field:'MTDetail',title:'详细',width:150,
+								formatter:function(value,row,index){
+									return '点击查看详情';
+								}
+							},
+							{field:'MTRemark',title:'备注',width:80},
+							{field:'ID',title:'ID',hidden:true}
+						]],
+						onSelect:function(rowIndex,rowData){
+							
+							if((isExist(rowData.ID))&&($('#OMTID').val()=='')){
+								
+								$.messager.alert('提示','结论已存在','info');
+								$('#MTDR').combogrid('setValue', '');
+								return;
+							}
+							if($('#OMTID').val()==''){
+								$('#PMTDesc').val(rowData.MTDesc);
+								EditorObj.setData(rowData.MTDetail);
+							}
+							
+						},
+            			fitColumns: true,
+            			pagination:true,
+						pageSize:20,
+						displayMsg:''">
+            			</select></td>
+					<td class="labelTd">描述</td>
+					<td><input id="PMTDesc" class="hisui-validatebox textbox" type="text"  style="width:180px;"></td>
+					<td style="padding:0 20px;"><a id="Save" onclick="Save_onclick();"  href="#" class="hisui-linkbutton head-btn" data-options="iconCls:'icon-w-save'">保存</a></td>			
+					<td style="padding:0 10px;"><a id="Clear" onclick="Clear_onclick();"  href="#" class="hisui-linkbutton head-btn" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				</tr>
+			</table>
+			<textarea id="PMTDetail" class='ckeditor' /></textarea>
+			<input type="hidden" id='OMTID' value=''>
+			<input type="hidden" id="EQID" value='#(EQID)#'>
+	
+		</div> <!--hisui panel -->
+	</div><!-- west region end //-->
+	
+
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  	<script type="text/javascript" src="../scripts_lib/ckeditor/ckeditor.js"></script>
+  	<script type="text/javascript" src="../scripts/dhchm.medicaltips.js"></script>
+
+</body>
+</html>
+

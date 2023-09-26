@@ -1,0 +1,66 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<DHCEQ:Report></DHCEQ:Report>
+<HISUI/>
+</HEAD>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="动态分析报表" data-options="'eqtitle':'maintitle',fit:true"> <!--add by wl 2019-11-4 WL007-->	
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="height:80px">
+					<div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable for="Equip">设备名称</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'EM.L.Equip'" id="Equip"></div>
+							<div class="eq-table-td eq-table-label"><lable for="UseLoc">科室</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Loc'" id="UseLoc"></div>
+							<div class="eq-table-td eq-table-label"><lable for="DCRate">折现率(%)</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="DCRate"></div>
+							<div class="eq-table-td eq-table-label"></div>                           <!--add by wl 2019-11-4 WL007-->
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+							<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div> <!--modify by wl 2019-11-4 WL007-->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable for="StartDate">开始月份</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate" value=#(CurMonth)# data-options='validParams:"YM"'></div> <!--modified by csj 20191111-->
+							<div class="eq-table-td eq-table-label"><lable for="EndDate">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate" value=#(CurMonth)# data-options='validParams:"YM"'></div> <!--modified by csj 20191111-->	
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="overflow:hidden;">
+				<iframe id="ReportFile" name="ReportFile" src=#(ReportFileSrc)# width=100% height=100% scrolling="no"></iframe>
+				<iframe id="ReportFilePrint" name="ReportFilePrint" src=#(ReportFilePrintSrc)# width=100% height=0%></iframe>
+				</div>
+			</div>
+		</div>  <!--add by wl 2019-11-4 WL007-->
+	</div>
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<INPUT TYPE="hidden" name="EquipDR" id="EquipDR">
+			<INPUT TYPE="hidden" name="UseLocDR" id="UseLocDR">
+			<INPUT TYPE="hidden" name="PrintFlag" id="PrintFlag" value=#(PrintFlag)#>
+			<INPUT TYPE="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)#>
+			<INPUT TYPE="hidden" name="ReportFilePrintSrc" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>
+		</form>
+	</div>
+	<script type='text/javascript'>
+		MonthBox('StartDate');
+		MonthBox('EndDate');
+	</script>
+
+</body>
+</HTML>

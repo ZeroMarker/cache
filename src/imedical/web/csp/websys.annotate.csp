@@ -1,0 +1,114 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+ n EpisodeID,FilePath,VirtualDirectory,objPD,FileName,x,ID,Actual,FileName,vdir,EXT
+ s (EpisodeID,FilePath,VirtualDirectory,objPD,FileName,x,ID,Actual,FileName,vdir,EXT)=""
+ ;
+ ;d ##Class(websys.Component).GetComponentMessages(.t,"PAComplaintDocuments.Edit")
+ s (VirtualDirectory,FileName,ActualDirectory)=""
+ s EpisodeID=%request.Get("PARREF")
+ s ID=%request.Get("ID")
+ s FileName=%request.Get("FileName")
+ ;s ^zanju($zn,"file name")=$g(FileName)
+ i $g(FileName)'="" d
+ . s FileName=$tr($g(FileName),"\","/")
+ . s FileName="20021010/308.TIF"
+ . s EXT=##Class(%Collation).AlphaUp($p(FileName,".",$l(FileName,".")))
+ . s FilePath=$p(##Class(web.CFSystemFilePath).GetPathFromFileExt(EXT),$c(1),1)
+ . d ##Class(web.CFSystemFileDefinition).GetVirtualDirectories(.vdir)
+ . i EXT'="" s VirtualDirectory="http://"_%session.Get("SERVER_NAME")_$p($g(vdir(EXT)),"^")
+ . i ($l(VirtualDirectory)'=0),($e(VirtualDirectory,$l(VirtualDirectory)-1,$l(VirtualDirectory))'="/") s VirtualDirectory=VirtualDirectory_"/"
+ ;s ^zanju($zn,"VirtualDirectory")=VirtualDirectory
+</SERVER>
+<STYLE>
+FORM TABLE
+{
+    BACKGROUND-COLOR: #336699
+}
+BODY A
+{
+    COLOR: #336699;
+    TEXT-DECORATION: none
+	BACKGROUND-COLOR: #336699;
+}
+BODY A:active
+{
+    COLOR: #336699;
+    BACKGROUND-COLOR: #336699;
+
+}
+</STYLE>
+
+<SCRIPT Language="JavaScript">
+var FileName="#(FileName)#";
+var VirtualDirectory="#(VirtualDirectory)#";
+
+function Viewer_addImage()
+{  
+	try {
+		alert("ooooooooooooooo "+VirtualDirectory+FileName);
+		//DicomAnnot.addSeries("1","1","1",VirtualDirectory+FileName);
+		DicomAnnot.addSeries("1","0","0",VirtualDirectory+FileName);
+		alert("hello ");
+		DicomAnnot.showSeries()
+		//alert("hello ");
+		//DicomAnnot.setMode("FITTOWIN");
+	} catch(e) { 
+		alert(t['FailedToLoadImage']);
+	}
+}
+function Init(){
+	Viewer_addImage()
+}
+function Viewer_pan()
+{
+	DicomAnnot.setMode("PAN");
+	return false;
+}
+function Viewer_zoom()
+{
+	DicomAnnot.setMode("ZOOM");
+	return false;
+}
+function Viewer_forwards()
+{
+    DicomAnnot.nextFrame();
+	return false;
+}
+function Viewer_backwards()
+{
+    DicomAnnot.previousFrame();
+	return false;
+}
+var obj=document.getElementById('Pan');
+if (obj) {
+	obj.onclick = Viewer_pan;
+}
+var obj=document.getElementById('Zoom');
+if (obj) {
+	obj.onclick = Viewer_zoom;	
+}
+var obj=document.getElementById('Next');
+if (obj) {
+	obj.onclick = Viewer_forwards;
+}
+var obj=document.getElementById('Previous');
+if (obj) {
+	obj.onclick = Viewer_backwards;
+}
+</SCRIPT>
+</HEAD>
+<BODY ONLOAD="Init();">
+<TRAK:COMPONENT id="webtrak.annotate" hidemenus=1></TRAK:COMPONENT>
+</BODY>
+</HTML>
+

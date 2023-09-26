@@ -1,0 +1,176 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S moduleTypeId=$G(%request.Data("moduleTypeId",1))
+ S admId=$G(%request.Data("EpisodeID",1))
+ S userID=$G(%session.Data("LOGON.USERID"))
+ S userCode=$G(%session.Data("LOGON.USERCODE"))
+ S userName=$G(%session.Data("LOGON.USERNAME"))
+ S userGroupID=$G(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$G(%session.Data("LOGON.GROUPDESC"))
+ S userLocID=$G(%session.Data("LOGON.CTLOCID"))
+ S userLoc=##Class(LIS.Core.Util).GetLocation(userLocID)
+ 
+ S requestId="",notice="",isReject="",noticeIds=""
+ I moduleTypeId="BED" {
+	 //S notice=##Class(LIS.BLD.BT.Notice).%New()
+	 S notice=##Class(LIS.BS.BLD.Notice).GetLastNotice("",admId,"REQ.MD.AP","SV")
+	 I '$L(notice) {
+		W "<span style='color:red;font-size:25px;'>消息已经处理</span>"
+		Q
+	 } ELSE {
+		S noticeIds=notice.NoticeId
+		S approval=##Class(LIS.BLD.BT.APP.Approval).%OpenId(notice.DataId)
+		I '$L(approval) {
+			S request=##Class(LIS.BLD.BT.REQ.Request).GetRequestByLabno(notice.SampleId)
+			S:$L(request) requestId=request.RequestID
+		} ELSE {
+			S requestId=approval.RecordId
+			I approval.StatusId="R" {
+				S isReject="Y"	
+			}
+		}
+		I '$L(requestId) {
+			W "<span style='color:red;font-size:25px;'>审批消息已经处理</span>"
+			Q
+		}
+	 }
+ }
+ S:'$L(requestId) requestId=$G(%request.Data("requestId",1))
+ S request=##Class(LIS.BLD.BT.REQ.Request).%OpenId(requestId)
+ I '$L(request) {
+	W "<span style='color:red;font-size:25px;'>申请单号错误</span>"
+	Q
+ }
+ I $L(notice) {
+	D notice.DoReadLog(userCode) 
+	I isReject="Y",request.GetRequestUserId()=userCode {
+		D notice.DoReceive(userCode)	
+	}	 
+ }
+ S json=##Class(LIS.JSON.Json).%New()
+ D json.AddKeyValue("RequestId",request.RequestID)	//申请单号
+ D json.AddKeyValue("TypeId",request.TypeID)	//申请单类型代码
+ S requestTypeId=request.TypeID
+ D json.AddKeyValue("Type",request.GetType())	//申请单类型
+ D json.AddKeyValue("RequestDateTime",request.GetRequestDate()_" "_request.GetRequestTime())	//申请(创建)日期时间
+ D json.AddKeyValue("RequestUser",request.GetRequestUser())	//申请(创建)者
+ D json.AddKeyValue("AuthorizeDateTime",request.GetAuthorizeDate()_" "_request.GetAuthorizeTime())	//审核日期时间
+ D json.AddKeyValue("AuthorizeUser",request.GetAuthorizeUser())	//审核者
+ D json.AddKeyValue("StatusId",request.StatusID)	//状态代码
+ D json.AddKeyValue("Status",request.GetStatus())	//状态描述
+ D json.AddKeyValue("TransType",request.GetTransType())	//申请类型
+ D json.AddKeyValue("TransDateTime",request.GetTransDate()_" "_request.GetTransTime())	//计划用血日期时间
+ D json.AddKeyValue("Orders",request.GetOrderString("BC"))	//备血医嘱信息
+ D json.AddKeyValue("Purposes",request.GetPurposeString())	//输血目的
+ D json.AddKeyValue("Anamnesis",request.GetAnamnesisString())	//既往史
+ D json.AddKeyValue("Labno",request.GetLabno())	//检验号
+ D json.AddKeyValue("RequestABO",request.RequestABO)
+ D json.AddKeyValue("RequestRhD",request.RequestRhD)
+ D json.AddKeyValue("ColBloodVolume",request.ColBloodVolume)
+ D json.AddKeyValue("CollectDateTime",request.GetCollectDate()_" "_request.GetCollectTime())
+ D json.AddKeyValue("Remark",request.Remark)
+ D json.AddKeyValue("PatientId",request.Patient.PatientID)		//登记号
+ D json.AddKeyValue("AdmId",request.Patient.AdmID)			//就诊号
+ S admId=request.Patient.AdmID
+ D json.AddKeyValue("MedicareId",request.Patient.Medicare)		//病案号
+ D json.AddKeyValue("PatientName",request.Patient.Name)			//姓名
+ D json.AddKeyValue("Sex",request.Patient.Sex)				//性别
+ D json.AddKeyValue("Age",request.Patient.Age)				//年龄
+ D json.AddKeyValue("Location",request.Patient.GetLocation())	//科室
+ D json.AddKeyValue("Ward",request.Patient.GetWard())		//病区
+ D json.AddKeyValue("Bed",request.Patient.Bed)				//床号
+ D json.AddKeyValue("BloodGroupABO",request.Patient.BloodGroupABO)	//病人ABO血型
+ D json.AddKeyValue("BloodGroupRhD",request.Patient.BloodGroupRhD)	//病人RhD血型
+  D json.AddKeyValue("BloodGroup",request.Patient.BloodGroupABO_request.Patient.BloodGroupRhD)	//病血型
+ D json.AddKeyValue("BloodPressure",request.Patient.BloodPressure)	//血压
+ D json.AddKeyValue("BodyTemperature",request.Patient.BodyTemperature)	//体温
+ D json.AddKeyValue("BodyWeight",request.Patient.BodyWeight)		//体重
+ D json.AddKeyValue("Height",request.Patient.Height)			//身高
+ D json.AddKeyValue("Pulse",request.Patient.Pulse)			//脉搏
+ D json.AddKeyValue("PatientType",request.Patient.GetType())		//病人类型
+ D json.AddKeyValue("CardId",request.Patient.CardID)			//身份证
+ D json.AddKeyValue("DiagnoseDesc",request.Patient.DiagnoseDesc)	//诊断	
+ S mdApp=##Class(LIS.BS.BLD.APP.Approval).GetLastApproval("REQ","N",request.RequestID,request.Patient.PatientID)
+ S mdAppInfo=""
+ I $L(mdApp) {
+		//N=申请审批(待审批),A=审批通过,R=拒绝审批,I=作废
+	I mdApp.StatusId="N" {
+		S mdAppInfo="等待审批"
+	}
+	I mdApp.StatusId="A" {
+		S mdAppInfo="审批通过"
+	}	
+	I mdApp.StatusId="R" {
+		S mdAppInfo="拒绝审批:"_mdApp.ApprovalOpinion
+	}		
+ }
+ D json.AddKeyValue("MDApproval",mdAppInfo)
+ D json.AddRow()
+ S requestJsonString=json.GetJsonStoreData()
+
+ S mainJavaScript="lis.bld.req.bs.preview.bed.js"
+</Script>
+
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/grid.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/portal.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<!--Ext3 扩展补丁-->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/extend/Ext.ux.grid.CheckColumn.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/proxyhandler.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/print.js"></script>
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+			//--定义全局变量
+			function Data(){};
+			function User(){};
+			function Global(){};
+	
+			Global.Data=Data;
+			Global.User=User;		//登录用户信息
+			Global.Data.RequestId="#($G(requestId))#";
+			Global.Data.AdmId="#($G(admId))#";
+			Global.Data.RequestTypeId="#($G(requestTypeId))#";
+			Global.Data.IsReject="#($G(isReject))#";
+			Global.Data.NoticeIds="#($G(noticeIds))#";
+			
+	 		//--当前用户信息
+			Global.User.Name="#($G(userName))#";
+			Global.User.ID="#($G(userID))#";
+			Global.User.Code="#($G(userCode))#";
+			Global.User.GroupID="#($G(userGroupID))#";
+			Global.User.Group="#($G(userGroupDesc))#";
+			Global.User.LocationID="#($G(userLocID))#";
+			Global.User.Location="#($G(userLoc))#";
+			var gRequestJsonString=Ext.util.JSON.decode("#($G(requestJsonString))#"); 
+	   </script>
+		
+		<script type="text/javascript" src="../scripts/lisjs/btms/util/lis.bld.manage.core.js"></script>
+</HEAD>
+<body>
+	<div id="lis.bld.req.bs.preview.bed" ></div>
+	<script type="text/javascript" src="../scripts/lisjs/btms/bs/#($G(mainJavaScript))#"></script>
+</body>
+</HTML>

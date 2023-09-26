@@ -1,0 +1,308 @@
+<html>
+<head>
+  	<title></title>
+  	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+    
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script> 
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+ 	
+ 	<!--add by loo on 2010-4-26-->
+ 	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+ 	
+ 	<style type="text/css">
+		.spanColor
+		{
+			color: black;
+		}
+		.spanColorLeft
+		{
+			color: #666;
+		}
+		
+		#divInfo
+		{
+			top: 8; position: relative; height:27;  font-size:12px; text-align: left; border-style: none;
+		}
+		#divInfoParent
+		{
+			height:27; background-image: url('../scripts/epr/Pics/title.gif'); background-attachment: fixed; border-style: none;			
+		}
+		#divState
+		{
+			top: 3; position: relative; background-color: cdd4dc; color: black; font-size: 12; height: 20; border-style: none;
+		}
+		.divStateParent
+		{
+			background-color: cdd4dc; height:24; border-style: none;
+		}
+		
+	</style>
+</head>
+<body>  
+  <div id="centerTabList" style="overflow:auto;width:100%;height:100%">
+  </div>  
+ </body>
+  <script language="cache" runat="server">
+  	if (%session.Get("LOGON.USERID") = "")
+  	{
+		s %response.ServerSideRedirect = "epr.newfw.sessiontimedout.csp"
+	}
+
+	s chartItemID = $Get(%request.Data("ChartItemID",1),"")
+	s length = $Length(chartItemID)
+	s prtTemplateDocID = $EXTRACT(chartItemID, 3, length)    
+	s curPrintTemplateID = ##class(web.eprajax.ajaxCreateEprEdit).GetBindPrintTemplateID(prtTemplateDocID)
+	
+	s userid = %session.Get("LOGON.USERID")
+	s EpisodeID = $Get(%request.Data("EpisodeID",1),"-1")
+	s PatientID = $Get(%request.Data("PatientID",1),"-1")
+	s ctlocid=%session.Get("LOGON.CTLOCID")
+	s docID = prtTemplateDocID
+	s ssgroupid = %session.Get("LOGON.GROUPID")
+	s bindTemplateCategoryID = "-1"
+	s bindTemplateID = "-1"
+	s templateDocID = $Get(%request.Data("TemplateDocID",1),"-1")
+	if (templateDocID '= "-1")
+	{
+		s category = ##class(EPRmeta.EPRTemplate).%OpenId(templateDocID)	
+		s bindTemplateCategoryID = category.BindTemplateCategoryID	
+		s bindTemplateID = category.BindTemplateID
+		d category.%Close()
+		s category = ""
+	}
+	s eprNum = $Get(%request.Data("EPRNum",1),"-1")
+	
+	s instanceDataID = $Get(%request.Data("InstanceDataID",1),"-1") //ecRecordID_"||"_childSub
+	
+	//权限
+	s arr = ##class(web.eprajax.ajaxGetPower).GetPowerArray(userid, EpisodeID, PatientID, ctlocid, bindTemplateID, ssgroupid, bindTemplateCategoryID, docID, eprNum)
+	
+	//病历当前状态		//add by zhuj on 2009-12-21
+	s currState = ##class(EPRinstance.EPRLogs).GetEPRStatus(EpisodeID, docID, eprNum)
+	
+	//病人信息
+	s patientInfo = ##class(web.eprajax.ajaxCreateEprEdit).GetPatientInfo(EpisodeID, prtTemplateDocID)
+	
+	//就诊类型
+  	s paAdmType = ##class(EPRservice.BLAdmType).GetAdmType(PatientID, EpisodeID)
+  	
+	//日志记录状态
+	s eprLogsID = ##Class(EPRservice.BOEPRLogs).GetEPRLogsID(EpisodeID, prtTemplateDocID, eprNum)  		
+	/*
+	//s divStateServer = ##class(EPRinstance.EPRLogs).GetCurrStatus(EpisodeID, prtTemplateDocID, $Get(%request.Data("EPRNum",1),"-1"))
+	s divStateServer = ##class(EPRinstance.EPRLogs).GetLogStatus(EpisodeID, prtTemplateDocID, $Get(%request.Data("EPRNum",1),"-1"))
+    
+	
+    s signLog=##Class(EPRservice.BLDigitalSignature).GetSignLog(EpisodeID, prtTemplateDocID, $Get(%request.Data("EPRNum",1),"-1"))
+	if (signLog'="") {s divStateServer = divStateServer_signLog }
+	*/
+	s divStateServer = ##Class(EPRservice.BOEPRLogs).GetStatusHtml(EpisodeID, prtTemplateDocID, $Get(%request.Data("EPRNum",1),"-1"))	
+	//自动保存
+	s autoSaveStr = ##class(EPRmeta.SysOption).GetOptionValueByName("AutoSaveTime")
+	
+	//字体
+ 	s fontSize = ##class(EPRmeta.SysOption).GetOptionValueByName("DefaultFontSize")
+ 	
+ 	//禁止某些病历操作触发病历图片生成动作
+	s actionDisableImage = ##class(EPRmeta.SysOption).GetOptionValueByName("ActionDisableImage")
+    //是否需要进行手写签名
+	//s isHandWrittenSignPage = ##Class(EPRservice.BLHandWrittenSign).IsNeedHandWritten(docID)	
+	s isHandWrittenSignPage = ##Class(EPRservice.BLHandWrittenSign).CanHandWritten(ctlocid, docID)	
+    /// Desc 某些医院需要使用身份进行数字签名?
+    /// 此函数决定"数字签名窗口"是否会有身份选择框
+    s IsSignByUserPos=##class(EPRmeta.SysOption).GetOptionValueByName2("IsSignByUserPos","N")  
+    if (IsSignByUserPos="N") { s IsSignByUserPos = "0" } else { s IsSignByUserPos = "1" }
+	//留痕
+	s Revision = ##class(EPRmeta.SysOption).GetOptionValueByName("Revision")		//add by zhuj on 2009-12-30
+	s RevisionActiveStatus = ##Class(EPRservice.BLL.BLEPRRevision).GetRevisionActiveStatus(docID)
+	
+ </script>
+ <server>
+	set iframeScript = ""
+	
+	If ($Data(%request.Data("EpisodeID"))) {
+		set EpisodeID = $Get(%request.Data("EpisodeID",1))		
+	}
+	else {
+		set EpisodeID = ""			
+	}
+			
+	If ($Data(%request.Data("CategoryID",1))) {
+		set CategoryID = $Get(%request.Data("CategoryID",1))	
+	}
+	else {
+		set CategoryID = ""			
+	}
+
+	If ($Data(%request.Data("InstanceDataID"))) {
+		set InstanceDataID = $Get(%request.Data("InstanceDataID",1))
+		
+		If ($Data(%request.Data("TemplateID",1))) {
+			set TemplateID = $Get(%request.Data("TemplateID",1))
+		}
+		else {
+			set TemplateID = ""			
+		}
+		if (TemplateID = "")
+		{
+			s TemplateID = bindTemplateID
+		}
+				
+		If ($Data(%request.Data("ProfileID",1))) 
+		{	
+			set ProfileID = $Get(%request.Data("ProfileID",1))
+			s iframeScript = "<iframe id='eprlisteditordll' name='eprlisteditordll' scrolling='no' frameborder='0' src='epr.newfw.eprlisteditordll.csp?InstanceDataID="_InstanceDataID_"&ProfileID="_ProfileID_"&EpisodeID="_EpisodeID_"&CategoryID="_CategoryID_"&prtDocID="_$Get(%request.Data("prtDocID",1),"-1")_"&EPRNum="_$Get(%request.Data("EPRNum",1),"-1")_"&PatientID="_$Get(%request.Data("PatientID",1),"")_"&TemplateID="_TemplateID_"' style='WIDTH:100%; HEIGHT:100%'></iframe>"
+		}
+		else 
+		{
+			s iframeScript = "<iframe id='eprlisteditordll' name='eprlisteditordll' scrolling='no' frameborder='0' src='epr.newfw.eprlisteditordll.csp?InstanceDataID="_InstanceDataID_"&EpisodeID="_EpisodeID_"&CategoryID="_CategoryID_"&prtDocID="_$Get(%request.Data("prtDocID",1),"-1")_"&EPRNum="_$Get(%request.Data("EPRNum",1),"-1")_"&PatientID="_$Get(%request.Data("PatientID",1),"")_"&TemplateID="_TemplateID_"' style='WIDTH:100%; HEIGHT:100%'></iframe>"
+		}
+	}
+	else	
+	{
+		If ($Data(%request.Data("PatientID"))) {
+			set PatientID = $Get(%request.Data("PatientID",1))		
+		}
+		else {
+			set PatientID = ""			
+		}
+			
+		If ($Data(%request.Data("TemplateID",1))) {
+			set TemplateID = $Get(%request.Data("TemplateID",1))	
+		}
+		else {
+			set TemplateID = ""			
+		}
+		
+		If ($Data(%request.Data("CategoryType",1))) {
+			set CategoryType = $Get(%request.Data("CategoryType",1))	
+		}
+		else {
+			set CategoryType = ""			
+		}
+			
+		If ($Data(%request.Data("TemplateName",1))) {
+			set TemplateName = $Get(%request.Data("TemplateName",1))
+		}
+		else {
+			set TemplateName = ""
+			if (TemplateID '= "")&&(TemplateName="")
+			{
+				s objTemplate = ##Class(EPRmeta.Template).%OpenId(TemplateID)
+				s TemplateName = objTemplate.Name
+			}			
+		}
+	
+		If ($Data(%request.Data("ChartItemID",1))) {
+			set ChartItemID = $Get(%request.Data("ChartItemID",1))
+		}
+		else {
+			set ChartItemID = ""			
+		}
+		
+		If ($Data(%request.Data("ProfileID",1))) {
+			set ProfileID = $Get(%request.Data("ProfileID",1))
+		}
+		else {
+			set ProfileID = ""			
+		}		
+		
+		
+		s docID = $e(ChartItemID, 3, $l(ChartItemID))
+		
+		s iframeScript = "<iframe id='eprlisteditordll' name='eprlisteditordll' scrolling='no' frameborder='0' src='epr.newfw.eprlisteditordll.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&TemplateID="_TemplateID_"&CategoryID="_CategoryID_"&CategoryType="_CategoryType_"&TemplateName="_TemplateName_"&ChartItemID="_ChartItemID_"&ProfileID="_ProfileID_"&prtDocID="_docID_"' style='WIDTH:100%; HEIGHT:100%;'></iframe>"
+	}
+	
+</server>
+
+<script type="text/javascript">	
+ 	var pateintID = '#($Get(%request.Data("PatientID",1),""))#';
+	var episodeID = '#($Get(%request.Data("EpisodeID",1),""))#';
+	
+	var paAdmType = '#(paAdmType)#';	
+	var ListChartItemID = '#($Get(%request.Data("ChartItemID",1),""))#';
+	var printTemplateDocId = ListChartItemID.substring(2, ListChartItemID.length);
+	
+	var templateDocID = '#($Get(%request.Data("TemplateDocID",1),""))#';
+	
+	var state = '#($Get(%request.Data("State",1),""))#';
+	
+	var EPRNum = '#($Get(%request.Data("EPRNum",1),"-1"))#';
+	
+	var userID = '#(%session.Get("LOGON.USERID"))#';
+	var happenDate = '';
+	var happenTime = '';
+	
+	var templateID = '#(TemplateID)#';
+	var bindPrnTemplateID = '#(curPrintTemplateID)#';
+	
+	var instanceDataID = '#(instanceDataID)#'
+	
+	var canView = '#(arr.GetAt("canView"))#';
+	var canSwitchTemplate = '#(arr.GetAt("canSwitchTemplate"))#';
+	var canSave = '#(arr.GetAt("canSave"))#';
+	var canCommit = '#(arr.GetAt("canCommit"))#';		//add by zhuj on 2009-12-21
+	var canReference = '#(arr.GetAt("canReference"))#';
+	var canDelete='#(arr.GetAt("canDelete"))#';
+	var canCASign = '#(arr.GetAt("canCASign"))#';
+	var canHandSign = '#(arr.GetAt("canHandSign"))#';
+	var canChiefCheck = '#(arr.GetAt("canChiefCheck"))#'
+	var canAttendingCheck = '#(arr.GetAt("canAttendingCheck"))#'	
+	var interval;
+	
+	//病历当前状态 add by zhuj on 2009-12-21
+	var currState = '#(currState)#';
+	var eprLogsID = '#(eprLogsID)#';
+	
+	//切换时是否提示
+	var isSave = true;
+ 	
+ 	//病人基本信息
+ 	var pInfo = eval("[{" + "#(patientInfo)#" + "}]"); 	
+ 	
+ 	//病历当前状态
+	var divStateServer = '#(divStateServer)#';
+ 	
+ 	//自动保存时间
+	var autoSaveStr = '#(autoSaveStr)#';
+ 	var autoSaveTime = parseInt(autoSaveStr, 10);
+ 	
+ 	//病人信息字体
+ 	var fontSize = '#(fontSize)#' + "pt";
+ 	 	
+ 	var _IframeScript = "#(iframeScript)#";
+ 	
+ 	var actionDisableImage = '#(actionDisableImage)#';
+	var isHandWrittenSignPage = "#(isHandWrittenSignPage)#";
+	var IsSignByUserPos = "#(IsSignByUserPos)#";
+	var revision = '#(Revision)#';
+	var revisionActiveStatus = "#(RevisionActiveStatus)#"    	
+</script>
+<script type="text/javascript" src="../scripts/epr/js/centerTabListDetialMethod.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/centerTabListDetial.js"></script>
+<script type="text/javascript" src="../scripts/epr/js/auditListOnRec.js"></script>
+<script type="text/javascript"> 	
+ 	//病人信息
+ 	//setPatientInfo();
+ 	//病历状态
+ 	setEprState();
+ 	
+ 	//设置权限
+ 	setPower();
+ 	//自动保存
+ 	setSaveTime();
+	
+	//如果是打开历次就诊?则不显示病历引用功能按钮
+ 	if (state == "old") {
+		document.getElementById("btnReference").style.visibility = 'hidden';
+	}else{
+		document.getElementById("btnReference").style.visibility = 'visible';
+	}
+</script> 
+</html>
+<script type="text/javascript">
+	//加载完毕释放最外层遮罩
+	parent.parent.frmMainContent.getEl().unmask();
+</script>

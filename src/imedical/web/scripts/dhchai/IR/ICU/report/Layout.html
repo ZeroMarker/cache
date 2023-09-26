@@ -1,0 +1,899 @@
+﻿<!-- 主页面（Container）-->
+<div class="container-fluid" style="height:100%">
+	<div class="page-width-1200">
+		<div class="listterm left-table" id="divLeft">
+			<ul id="ulPaadmStatus" class="nav nav-secondary nav-justified">
+				<li class="active" value="0" style="width:50%"><a href="#">在科病人</a></li>
+				<li class="last-li" value="1" style="width:50%"><a href="#">出科病人</a></li>
+			</ul>
+			<div class="panel-body" >
+				<form class="form-horizontal" role="form">
+					<div class="form-group">
+						<label class="col-sm-3 col-xs-3 control-label" for="cboHospital">院区</label>
+						<div class="col-sm-9 col-xs-9 form-group form-group-sm" style="margin-left:0px;margin-right:0;">
+							<select class="form-control" id="cboHospital"  data-set="DHCHAI.BTS.HospitalSrv:QryHospListByLogon" data-col="ID^HospDesc" placeholder="请选择院区">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 col-xs-3 control-label" for="startDate">开始日期</label>
+						<fieldset class="col-sm-9 col-xs-9">
+							<div class="input-group">
+								<input id="startDate" class="form-control input-sm" placeholder="">
+								<span class="input-group-addon">
+									<span class="icon-calendar"></span>
+								</span>
+							</div>
+	        			</fieldset>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 col-xs-3 control-label" for="endDate">结束日期</label>
+						<fieldset class="col-sm-9 col-xs-9">
+							<div class="input-group">
+								<input id="endDate" class="form-control input-sm" placeholder="">
+								<span class="input-group-addon">
+									<span class="icon-calendar"></span>
+								</span>
+							</div>
+	        			</fieldset>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 col-xs-3 control-label" for="cboIntuType">插管类型</label>
+						<div class="col-sm-9 col-xs-9 form-group form-group-sm" style="margin-left:0px;margin-right:0;">
+							<select class="form-control" id="cboIntuType" placeholder="请选择类型">
+								<option value="">全部</option>
+								<option value="VAP">呼吸机</option>
+								<option value="UC">导尿管</option>
+								<option value="PICC">静脉导管</option>
+							</select>
+						</div>
+					</div>
+					<div class="left-list" id="divPanel" style="overflow-y:auto">	
+						<ul id="ulLoc"></ul>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div id="divMain" style="overflow-y:auto;overflow-x:hidden;padding-left:10px;">
+			<!--Start ICU列表  -->
+			<div class="icu-mode-list row">
+				<div class="col-sm-12 col-xs-12">
+					<div class="page-header">
+						<h1>ICU调查登记表</h1>
+					</div>
+					<div class="tab-header">
+						<div class="tab-button"> 
+							<a class="tabbtn" id="btnExport"  href="#">
+								<img src="../scripts/dhchai/img/export.png"><span>导出</span>
+							</a>
+							<!--
+							<a class="tabbtn" id="btnPrint"  href="#">
+								<img src="../scripts/dhchai/img/print.png"><span>打印</span>
+							</a>
+							-->
+						</div>
+				
+						<div class="tab-search" >
+							<div class="input-group input-group-sm" style="width: 150px;">
+							   <input type="text" name="table_search" class="form-control pull-right" id="search" placeholder="搜索">
+							   <div class="input-group-btn">
+								  <button type="submit" class="btn btn-flat" id="btnsearch" ><i class="fa fa-search"></i></button>
+							   </div>
+							</div>
+						</div>
+					</div>			
+					<div class="tab-content" style="margin-bottom: 9px;">
+						<table id="gridLogs" class="table table-striped table-bordered" cellspacing="0" style="white-space: nowrap;">
+							<thead>
+								<tr>
+									<th width = "80px">病案号</th>
+									<th width = "100px">姓名</th>
+									<th width = "80px">性别</th>
+									<th width = "80px">年龄</th>
+									<th width = "120px">入院日期</th>
+									<th width = "120px">出院日期</th>
+									<th width = "160px">就诊科别</th>
+									<th width = "80px">床号</th>
+									<th width = "80px">呼吸机</th>
+									<th width = "80px">导尿管</th>
+									<th width = "80px">静脉导管</th>
+									<th width = "80px">状态</th>
+									<th width = "100px">填报人</th>
+									<th width = "120px">填报日期</th>
+									<th width = "80px">调查表</th>
+								</tr>							
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div><!--End ICU列表  -->
+			
+			<!--Start NICU列表  -->
+			<div class="nicu-mode-list row">
+				<div class="col-sm-12 col-xs-12">
+					<div class="page-header">
+						<h1>NICU调查登记表</h1>
+					</div>
+					<div class="tab-header">
+						<div class="tab-button"> 
+							<a class="tabbtn" id="btnExportN"  href="#">
+								<img src="../scripts/dhchai/img/export.png"><span>导出</span>
+							</a>
+							<!--
+							<a class="tabbtn" id="btnPrintN"  href="#">
+								<img src="../scripts/dhchai/img/print.png"><span>打印</span>
+							</a>
+							-->
+						</div>
+				
+						<div class="tab-search" >
+							<div class="input-group input-group-sm" style="width: 150px;">
+							   <input type="text" name="table_search" class="form-control pull-right" id="searchN" placeholder="搜索">
+							   <div class="input-group-btn">
+								  <button type="submit" class="btn btn-flat" id="btnsearchN" ><i class="fa fa-search"></i></button>
+							   </div>
+							</div>
+						</div>
+					</div>			
+					<div class="tab-content" style="margin-bottom: 9px;">
+						<table id="gridLogsN" class="table table-striped table-bordered" cellspacing="0" style="white-space: nowrap;">
+							<thead>
+								<tr>
+									<th width = "80px">病案号</th>
+									<th width = "100px">姓名</th>
+									<th width = "80px">性别</th>
+									<th width = "80px">年龄</th>
+									<th width = "120px">入院日期</th>
+									<th width = "120px">出院日期</th>
+									<th width = "160px">就诊科别</th>
+									<th width = "80px">床号</th>
+									<th width = "80px">体重(g)</th>
+									<th width = "80px">呼吸机</th>									
+									<th width = "80px">脐/静脉插管</th>
+									<th width = "80px">状态</th>
+									<th width = "100px">填报人</th>
+									<th width = "120px">填报日期</th>
+									<th width = "80px">调查表</th>
+								</tr>
+							</thead>
+							
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div><!--End NICU列表  -->
+		</div>
+	</div><!--/.fluid-row-->
+</div><!--/.fluid-container-->
+
+<!-- 弹出编辑页面（Modal） -->
+<div class="layer" id="LayerICURep" style="display:none;">
+	<div class="modal-body" style="padding:0px">
+		<div class="col-md-8 col-xs-8">
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/baseInfo.png"><span>基本信息</span></a>
+			</div>
+			<div class="tab-content">
+				<div class="form-horizontal">
+					<div class="form-group form-group-sm">
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pRegNo">登记号:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pRegNo" type="text" name="FormVo.pRegNo" class="form-control" readonly />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pName">姓名:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pName" type="text" name="FormVo.pName" class="form-control" readonly />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pNo">病案号:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pNo" type="text" name="FormVo.pNo" readonly class="form-control" />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pSex">性别:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pSex" type="text" name="FormVo.pSex" readonly class="form-control" />
+						</div>
+					</div>
+					<div class="form-group form-group-sm" id="personal-inf">
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pAge">年龄:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pAge" type="text" name="FormVo.pAge" readonly class="form-control" />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pAdmDate">入院日期:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pAdmDate" type="text" name="FormVo.pAdmDate" readonly class="form-control" />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pDisDate">出院日期:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pDisDate" type="text" name="FormVo.pDisDate" readonly class="form-control" />
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- PICC  -->
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/中央导管.png"><span>中心静脉插管</span></a>
+				<a class="pull-right button" id="btnPiccDel">
+					<img src="../scripts/dhchai/img/delete.png"><span>删除</span>
+				</a>
+				<a class="pull-right button" id="btnPiccAdd">
+					<img src="../scripts/dhchai/img/add.png"><span>添加</span>
+				</a>
+			</div>
+			<div class="tab-content">
+				<table id="gridPICC" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>导管类型</th>
+							<th>导管腔数</th>
+							<th>置管部位</th>
+							<th>置管时间</th>
+							<th>拔管时间</th>
+							<th>置管人员</th>
+							<th>置管地点</th>
+							<th>是否感染</th>
+							<th>感染日期</th>
+							<th>感染症状</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/呼吸机.png" style="max-width:16px;"><span>呼吸机</span></a>
+				<a class="pull-right button" id="btnVapDel">
+					<img src="../scripts/dhchai/img/delete.png"><span>删除</span>
+				</a>
+				<a class="pull-right button" id="btnVapAdd">
+					<img src="../scripts/dhchai/img/add.png"><span>添加</span>
+				</a>
+			</div>
+			<div class="tab-content">
+				<table id="gridVAP" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>气管类型</th>
+							<th>上机时间</th>
+							<th>脱机时间</th>
+							<th>置管人员</th>
+							<th>置管地点</th>
+							<th>是否感染</th>
+							<th>感染日期</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/泌尿道导管.png"><span>泌尿道插管</span></a>
+				<a class="pull-right button" id="btnUcDel">
+					<img src="../scripts/dhchai/img/delete.png"><span>删除</span>
+				</a>
+				<a class="pull-right button" id="btnUcAdd">
+					<img src="../scripts/dhchai/img/add.png"><span>添加</span>
+				</a>
+			</div>
+			<div class="tab-content">
+				<table id="gridUC" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>尿管类型</th>
+							<th>插管时间</th>
+							<th>拔管时间</th>
+							<th>置管人员</th>
+							<th>置管地点</th>
+							<th>是否感染</th>
+							<th>感染日期</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div> <!--left div end -->
+		<div class="col-md-4 col-xs-4" style="padding-left:0px">
+			<div class="page-header">
+				<h1>三管医嘱</h1>
+			</div>
+			<div class="tab-content">
+				<ul id="ulOeItem" class="nav nav-secondary">
+				  <li class="active col-md-3 col-xs-3" value="0"><a href="#">全部</a></li>
+				  <li class="col-md-3 col-xs-3" value="1"><a href="#">静脉置管</a></li>
+				  <li class="col-md-3 col-xs-3" value="2"><a href="#">呼吸机</a></li>
+				  <li class="col-md-3 col-xs-3" value="3"><a href="#">导尿管</a></li>
+				</ul>
+				<table id="gridICUOEItems" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>医嘱名称</th>
+							<th>开嘱时间</th>
+							<th>停嘱时间</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- 弹出编辑页面（Modal） -->
+<div class="layer" id="LayerPICC" style="display:none;">
+	<div class="modal-body">
+		<form class="form-horizontal" role="form">
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRPICCType">导管类型</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRPICCType" name="cboIRPICCType" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUPICCIntubateType^">
+					</select>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRPICCCnt">导管腔数</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRPICCCnt" name="cboIRPICCCnt" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUPICCIntubateNum^">
+					</select>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRPICCPos">置管部位</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRPICCPos" name="cboIRPICCPos" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUPICCIntubateRegion^">
+					</select>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRIntuDate">置管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRIntuDate" class="form-control input-sm" placeholder="置管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>
+						
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRExtuDate">拔管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRExtuDate" class="form-control input-sm" placeholder="拔管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIROperDoc">置管人员</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIROperDoc" name="cboIROperDoc" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUIntubateUserType^">
+					</select>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIROperLoc">置管地点</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIROperLoc" name="cboIROperLoc" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUIntubatePlace^">
+					</select>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="chkIRIsInf">是否感染</label>
+				<div class="col-sm-4 col-xs-4">
+					<input type="checkbox" id="chkIRIsInf">
+					<label for="chkIRIsInf" class=""></label>
+				</div>	
+			</div>	
+			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRInfDate">感染日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+						<input id="txtIRInfDate" class="form-control input-sm" placeholder="感染日期">
+						<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRInfSymptoms">感染症状</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRInfSymptoms" name="cboIRInfSymptoms" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUIntubateINFSymptom^">
+					</select>
+				</div>
+			</div>
+			<!-- 
+			<div id="chkGrp">
+				<div class="col-sm-8">
+				<input id ='key1' type='checkbox' checked> 
+				<input id ='key2' type='checkbox'>
+				<input id ='key3' type='checkbox' checked> 
+				</div>
+			</div>
+			-->
+		</form>
+	</div>
+</div>
+<!-- 弹出编辑页面（Modal） -->
+<div class="layer" id="LayerVAP" style="display:none;">
+	<div class="modal-body">
+		<form class="form-horizontal" role="form">				
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRVAPType">气道类型</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRVAPType" name="cboIRVAPType" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUVAPIntubateType^">
+					</select>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRIntuDateV">上机时间</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRIntuDateV" class="form-control input-sm" placeholder="上机时间">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>
+						
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRExtuDateV">脱机时间</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRExtuDateV" class="form-control input-sm" placeholder="脱机时间">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIROperDocV">置管人员</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIROperDocV" name="cboIROperDocV" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUIntubateUserType^">
+					</select>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIROperLocV">置管地点</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIROperLocV" name="cboIROperLocV" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUIntubatePlace^">
+					</select>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="chkIRIsInfV">是否感染</label>
+				<div class="col-sm-4 col-xs-4">
+					<input type="checkbox" id="chkIRIsInfV">
+					<label for="chkIRIsInfV" class=""></label>
+				</div>	
+			</div>		
+			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRInfDateV">感染日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+						<input id="txtIRInfDateV" class="form-control input-sm" placeholder="感染日期">
+						<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<!-- 弹出编辑页面（Modal） -->
+<div class="layer" id="LayerUC" style="display:none;">
+	<div class="modal-body">
+		<form class="form-horizontal" role="form">						
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRUCType">尿管类型</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRUCType" name="cboIRUCType" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUUCUrineBagType^">
+					</select>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRIntuDateU">插管时间</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRIntuDateU" class="form-control input-sm" placeholder="插管时间">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>
+						
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRExtuDateU">拔管时间</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRExtuDateU" class="form-control input-sm" placeholder="拔管时间">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIROperDocU">置管人员</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIROperDocU" name="cboIROperDocU" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUIntubateUserType^">
+					</select>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIROperLocU">置管地点</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIROperLocU" name="cboIROperLocU" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="ICUIntubatePlace^">
+					</select>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="chkIRIsInfU">是否感染</label>
+				<div class="col-sm-4 col-xs-4">
+					<input type="checkbox" id="chkIRIsInfU">
+					<label for="chkIRIsInfU" class=""></label>
+				</div>	
+			</div>	
+			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRInfDateU">感染日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+						<input id="txtIRInfDateU" class="form-control input-sm" placeholder="感染日期">
+						<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				
+			</div>
+			
+		</form>
+	</div>
+</div>
+
+<!-- 弹出编辑页面（NIUC） 开始-->
+<div class="layer" id="LayerNICURep" style="display:none;">
+    <div class="modal-body" style="padding:0px">
+		<div class="col-md-8 col-xs-8">
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/baseInfo.png"><span>基础信息</span></a>
+			</div>
+			<div class="tab-content">
+				<div class="form-horizontal">
+					<div class="form-group form-group-sm">
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pRegNoN">登记号:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pRegNoN" type="text" name="FormVo.pRegNoN" class="form-control" readonly />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pNameN">姓名:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pNameN" type="text" name="FormVo.pNameN" class="form-control" readonly />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pNoN">病案号:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pNoN" type="text" name="FormVo.pNoN" readonly class="form-control" />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pSexN">性别:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pSexN" type="text" name="FormVo.pSexN" readonly class="form-control" />
+						</div>
+					</div>
+					<div class="form-group form-group-sm">
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pAgeN">年龄:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pAgeN" type="text" name="FormVo.pAgeN" readonly class="form-control" />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pAdmDateN">入院日期:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pAdmDateN" type="text" name="FormVo.pAdmDateN" readonly class="form-control" />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pDisDateN">出院日期:</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pDisDateN" type="text" name="FormVo.pDisDateN" readonly class="form-control" />
+						</div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pPatWeight">体重(g):</label>
+						<div class="col-sm-2 col-xs-2">
+							<input id="FormVo.pPatWeight" type="text" name="FormVo.pPatWeight" class="form-control" />
+						</div>
+					</div>
+				</div>
+			</div>
+				<!-- PICC  -->
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/中央导管.png"><span>中央导管</span></a>
+				<a class="pull-right button" id="btnNPiccDel">
+					<img src="../scripts/dhchai/img/delete.png"><span>删除</span>
+				</a>
+				<a class="pull-right button" id="btnNPiccAdd">
+					<img src="../scripts/dhchai/img/add.png"><span>添加</span>
+				</a>
+			</div>
+			<div class="tab-content">
+				<table id="gridNPICC" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>置管时间</th>
+							<th>拔管时间</th>
+							<th>是否感染</th>
+							<th>感染日期</th>
+							<th>病原体</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/气管插管.png"><span>气管插拔</span></a>
+				<a class="pull-right button" id="btnNVapDel">
+					<img src="../scripts/dhchai/img/delete.png"><span>删除</span>
+				</a>
+				<a class="pull-right button" id="btnNVapAdd">
+					<img src="../scripts/dhchai/img/add.png"><span>添加</span>
+				</a>
+			</div>
+			<div class="tab-content">
+				<table id="gridNVAP" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>置管时间</th>
+							<th>拔管时间</th>
+							<th>是否感染</th>
+							<th>感染日期</th>
+							<th>病原体</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<div class="page-header">
+				<a class="Info"><img src="../scripts/dhchai/img/脐静脉.png"><span>脐静脉</span></a>	
+				<a class="pull-right button" id="btnNUcDel">
+					<img src="../scripts/dhchai/img/delete.png"><span>删除</span>
+				</a>
+				<a class="pull-right button" id="btnNUcAdd">
+					<img src="../scripts/dhchai/img/add.png"><span>添加</span>
+				</a>
+			</div>
+			<div class="tab-content">
+				<table id="gridNUC" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>置管时间</th>
+							<th>拔管时间</th>
+							<th>是否感染</th>
+							<th>感染日期</th>
+							<th>病原体</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div> <!--left div end -->
+		<div class="col-md-4 col-xs-4" style="padding-left:0px">
+			<div class="page-header">
+				<h1>三管医嘱</h1>
+			</div>
+			<div class="tab-content">
+				<ul id="ulNOeItem" class="nav nav-secondary">
+				  <li class="active col-md-4 col-xs-4" value="0"><a href="#">全部</a></li>
+				  <li class="col-md-4 col-xs-4" value="1"><a href="#">静脉置管</a></li>
+				  <li class="col-md-4 col-xs-4" value="2"><a href="#">呼吸机</a></li>
+				</ul>
+				<table id="gridNICUOEItems" class="table table-striped table-bordered" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th>医嘱名称</th>
+							<th>开嘱时间</th>
+							<th>停嘱时间</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 弹出编辑页面（Modal） -->
+<div class="layer" id="LayerNPICC" style="display:none;">
+	<div class="modal-body">
+		<form class="form-horizontal" role="form">						
+			<div class="form-group">			
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRIntuDateN">置管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRIntuDateN" class="form-control input-sm" placeholder="置管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRExtuDateN">拔管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRExtuDateN" class="form-control input-sm" placeholder="拔管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>						
+						
+			<div class="form-group">	
+				<label class="col-sm-2 col-xs-2 control-label" for="chkIRIsInfN">是否感染</label>
+				<div class="col-sm-4 col-xs-4">
+					<input type="checkbox" id="chkIRIsInfN">
+					<label for="chkIRIsInfN" class=""></label>
+				</div>	
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRInfDateN">感染日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+						<input id="txtIRInfDateN" class="form-control input-sm" placeholder="感染日期">
+						<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>			
+			<div class="form-group">			
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRBacteria">病原体</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRBacteria" name="cboIRBacteria" data-set="DHCHAI.DPS.LabBactSrv:QryLabBacteria" data-col="ID^BacDesc">
+					</select>
+				</div>
+			</div>	
+		</form>
+	</div>
+</div>
+<!-- 弹出编辑页面（Modal） -->
+<div class="layer" id="LayerNVAP" style="display:none;">
+	<div class="modal-body">
+		<form class="form-horizontal" role="form">					
+			<div class="form-group">	
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRIntuDateVN">置管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRIntuDateVN" class="form-control input-sm" placeholder="置管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRExtuDateVN">拔管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRExtuDateVN" class="form-control input-sm" placeholder="拔管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				
+				<label class="col-sm-2 col-xs-2 control-label" for="chkIRIsInfVN">是否感染</label>
+				<div class="col-sm-4 col-xs-4">
+					<input type="checkbox" id="chkIRIsInfVN">
+					<label for="chkIRIsInfVN" class=""></label>
+				</div>	
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRInfDateVN">感染日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+						<input id="txtIRInfDateVN" class="form-control input-sm" placeholder="感染日期">
+						<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRBacteriaV">病原体</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRBacteriaV" name="cboIRBacteriaV" data-set="DHCHAI.DPS.LabBactSrv:QryLabBacteria" data-col="ID^BacDesc">
+					</select>
+				</div>
+			</div>	
+		</form>
+	</div>
+</div>
+<!-- 弹出编辑页面（Modal） -->
+<div class="layer" id="LayerNUC" style="display:none;">
+	<div class="modal-body">
+		<form class="form-horizontal" role="form">			
+			<div class="form-group">	
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRIntuDateUN">置管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRIntuDateUN" class="form-control input-sm" placeholder="置管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRExtuDateUN">拔管日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+					<input id="txtIRExtuDateUN" class="form-control input-sm" placeholder="拔管日期">
+					<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="chkIRIsInfUN">是否感染</label>
+				<div class="col-sm-4 col-xs-4">
+					<input type="checkbox" id="chkIRIsInfUN">
+					<label for="chkIRIsInfUN" class=""></label>
+				</div>	
+				<label class="col-sm-2 col-xs-2 control-label" for="txtIRInfDateUN">感染日期</label>
+				<div class="col-sm-4 col-xs-4">
+					<div class="input-group">
+						<input id="txtIRInfDateUN" class="form-control input-sm" placeholder="感染日期">
+						<span class="input-group-addon"><span class="icon-calendar"></span></span>
+					</div>
+				</div>
+			</div>			
+			<div class="form-group">
+				<label class="col-sm-2 col-xs-2 control-label" for="cboIRBacteriaU">病原体</label>
+				<div class="col-sm-4 col-xs-4">
+					<select class="form-control" id="cboIRBacteriaU" name="cboIRBacteriaU" data-set="DHCHAI.DPS.LabBactSrv:QryLabBacteria" data-col="ID^BacDesc">
+					</select>
+				</div>
+			</div>	
+		</form>
+	</div>
+</div>
+<!-- 弹出感染报告页面（Modal） -->
+<div class="layer" id="LayerInfRep" style="display:none;">
+	<div class="modal-body" style = "padding-top: 0px;">
+		<div class="page-header">
+			<h1>基础信息</h1>
+		</div>
+		<div class="panel">
+			<div class="panel-body">
+				<div class="form-horizontal">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVo.pIRegNo">登记号:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pIRegNo" type="text" name="FormVo.pIRegNo" class="form-control" readonly />
+                        </div>
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVo.pIName">姓名:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pIName" type="text" name="FormVo.pIName" class="form-control" readonly />
+                        </div>
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVo.pINo">病案号:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pINo" type="text" name="FormVo.pINo" readonly class="form-control" />
+                        </div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pISex">性别:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pISex" type="text" name="FormVo.pISex" readonly class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVo.pIAge">年龄:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pIAge" type="text" name="FormVo.pIAge" readonly class="form-control" />
+                        </div>
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVo.pIAdmDate">入院日期:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pIAdmDate" type="text" name="FormVo.pIAdmDate" readonly class="form-control" />
+                        </div>
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVo.pIDisDate">出院日期:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pIDisDate" type="text" name="FormVo.pIDisDate" readonly class="form-control" />
+                        </div>
+						<label class="col-sm-1 col-xs-1 control-label" for="FormVo.pIRepUser">填报人:</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <input id="FormVo.pIRepUser" type="text" name="FormVo.pIRepUser" readonly class="form-control" />
+                        </div>
+                    </div>
+					<div class="form-group form-group-sm">
+                        <label class="col-sm-1 col-xs-1 control-label" for="cbopInfLoc">感染科室</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <select class="form-control" id="cbopInfLoc" name="cbopInfLoc" data-set="DHCHAI.IRS.INFReportSrv:QryLocByTrans" data-col="ID^LocDesc">
+							</select>
+                        </div>
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVopInfDate">感染日期</label>
+                        <div class="col-sm-2 col-xs-2">
+							<div class="input-group">
+								<input id="FormVopInfDate" class="form-control input-sm" placeholder="感染日期">
+								<span class="input-group-addon"><span class="icon-calendar"></span></span>
+							</div>
+                        </div>
+						<label class="col-sm-1 col-xs-1 control-label" for="cbopInfPos">感染诊断</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <select class="form-control" id="cbopInfPos" name="cbopInfPos" data-set="DHCHAI.BTS.InfPosSrv:QryInfPos" data-col="ID^Desc" data-param="">
+							</select>
+                        </div>
+						<label class="col-sm-1 col-xs-1 control-label" for="cbopInfPosSub">诊断分类</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <select class="form-control" id="cbopInfPosSub" name="cbopInfPosSub" data-set="DHCHAI.BTS.InfSubSrv:QryInfSub" data-col="ID^Desc">
+							</select>
+                        </div>
+                    </div>
+					<div class="form-group form-group-sm">
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVo.pInfEffect">疾病转归</label>
+                        <div id="divpInfEffect" class="col-sm-8" data-set="DHCHAI.BTS.DictionarySrv:QryDic" data-col="ID^DicDesc" data-param="InfDiseasePrognosis^" data-span="2" data-ctype="radio">                            
+                        </div>
+                        <label class="col-sm-1 col-xs-1 control-label" for="FormVopIRInfXDate">结束日期</label>
+                        <div class="col-sm-2 col-xs-2">
+                            <div class="input-group">
+								<input id="FormVopIRInfXDate" class="form-control input-sm" placeholder="感染日期">
+								<span class="input-group-addon"><span class="icon-calendar"></span></span>
+							</div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+		</div>	
+	</div> 
+</div>
+<!-----------------------------------------友情提示结束--------------------------------------------->
+<div class="Loading_animate_content"></div>

@@ -1,0 +1,49 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+ 	
+	
+	s NewBornRowId=$Get(%request.Data("NewBornRowId",1))
+	s WomanRowId=$Get(%request.Data("WomanRowId",1))
+	s BirthWeight=$Get(%request.Data("BirthWeight",1))
+	s Sex=$Get(%request.Data("Sex",1))
+	s Name=$Get(%request.Data("Name",1))
+	s BirthSort=$Get(%request.Data("BirthSort",1))
+	
+	s Start=0
+	s Limit=100
+	
+		
+	i Action = "list" d
+	.w ##class(CHSSWeb.WhNewBornService).ListPage(Start,Limit,WomanRowId)
+	i Action = "info" d
+	.w ##class(CHSSWeb.WhNewBornService).ShowInfo(Start,Limit,WomanRowId)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.WhNewBornService).insert(WomanRowId, BirthWeight, Sex, Name, BirthSort)
+	.i result = 0 d
+	..w "{success:'true',info:'添加成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.WhNewBornService).update(NewBornRowId, BirthWeight, Sex, Name, BirthSort)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "delete" d
+	.s result = ##class(CHSSWeb.WhNewBornService).delete(NewBornRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+</script>

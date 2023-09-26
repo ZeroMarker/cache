@@ -1,0 +1,223 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()  
+ q 1
+ // dhc.bdp.bdp.dictionary.csp
+ // 名称: 基础数据平台配置-通用字典
+ // 编写者:基础数据平台组 - sunfengchao
+ // 编写日期:2019-02-01
+</csp:method> 
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_DataDictionary.js"> </script>
+ <style type="text/css">
+ .icon-export{
+       background: url('../scripts_lib/hisui-0.1.0/dist/css/icons/export.png') no-repeat center center;
+ }
+</style>
+</head>
+
+  <body>
+    <div class="hisui-layout" data-options="fit:true" border="false">
+        <div id="layoutwest" data-options="region:'west',split:true"  style="width:350px;padding:4px 0px 4px 4px;" border="false" >
+            <table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="Tree" border="true" toolbar="#dicbar" title="字典目录"></table>
+        </div>
+        <div id="layoutcenter" data-options="region:'center',split:true"  border="false" style="padding:4px 4px 4px 0px"> 
+            <table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper'" id="DataGrid" border="false" title="数据列表" toolbar="#mybar"></table> 
+        </div> 
+    </div>
+    
+     
+    
+    <div id="dicbar">  
+       <table style="padding-top:5px;padding-bottom:5px" >
+         <tr>
+           <td class="tdlabel">字典描述</td>
+            <td><input id="TextDicDesc" href="#"  class="textbox hisui-searchbox" style="width:100px"></td>     
+            <td class="tdlabel-b"> <a href="#" id="btnDicRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a></td>
+          </tr> 
+       </table>
+          
+          <div style="border-bottom: 1px dashed #C0C0C0;">  </div>
+          <div>
+             <a href="#" class="hisui-linkbutton" iconCls='icon-add' plain="true" id="add_btn" >新增</a> 
+             <a href="#" class="hisui-linkbutton" iconCls='icon-write-order' plain="true" id="update_btn" >修改</a> 
+             <a href="#" class="hisui-linkbutton" iconCls='icon-cancel' plain="true" id="del_btn" >删除</a>  
+          </div>   
+    </div> 
+        
+
+   <div id="mybar">  
+        <table style="padding-top:5px;padding-bottom:5px" >
+            <tr>
+                <td class="tdlabel" style="width:50px">代码</td>
+                <td><input id="TextCode" type="text" class="textbox hisui-validatebox" style="width:120px"></td> 
+                <td class="tdlabel" style="width:50px">描述</td>
+                <td><input id="TextDesc" type="text" class="textbox hisui-validatebox" style="width:120px"></td> 
+                <td class="tdlabel-b"> <a href="#" id="btnSearch" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a></td>
+                <td class="tdlabel-b"> <a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a></td>
+            </tr> 
+        </table> 
+       
+         <div style="border-bottom: 1px dashed #C0C0C0;"> </div>
+         <div>
+             <a href="#" class="hisui-linkbutton" iconCls='icon-add' plain="true" id="data_addbtn" >新增</a>
+             <a href="#" class="hisui-linkbutton" iconCls='icon-write-order' plain="true" id="data_updatebtn" >修改</a>
+             <a href="#" class="hisui-linkbutton" iconCls='icon-cancel' plain="true" id="data_delbtn" >删除</a>   
+             <a href="#" class="hisui-linkbutton" iconCls='icon-import-xls' plain="true" id="import_btn" >导入</a>  
+             <a href="#" class="hisui-linkbutton" iconCls='icon-export' plain="true" id="export_btn" >导出</a>   
+         </div> 
+    </div> 
+ 
+    
+ 
+  <!---新增字典时的对话框--->   
+   <div id="dlgEdit" style="width:650px;height:420px;padding:10px;display:none;">    
+    <div id="dictab" class="hisui-tabs tabs-gray" style="width:630px;height:320px;" >   
+    <div title="基本信息" style="padding:10px;" >    
+      <form id="form-save2" method="post" data-options="fit:true,border:false,plain:true"> 
+            <table align="center">
+                <tr style="display:none">
+                    <td></td>
+                    <td><input id="BDPDictionaryRowIdF2" name="BDPDictionaryRowId" type="text" class="hisui-validatebox"></td>
+                </tr>
+                <tr>
+                   <td  class="tdlabel"><font color=red>*</font>代码</td>
+                   <td><input id="BDPDictionaryCodeF2" name="BDPDictionaryCode" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+                 </tr>
+                 
+                  <tr>
+                   <td class="tdlabel"><font color=red>*</font>名称</td>
+                   <td><input id="BDPDictionaryDescF2" name="BDPDictionaryDesc" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+                <tr>
+                <tr> 
+                   <td  class="tdlabel">所属目录</td>
+                   <td><input id="BDPParentMenuDR" class='textbox hisui-combotree'  name="BDPParentMenuDr" type="text" data-options="" ></td> 
+                </tr>
+                <tr>
+                    <td class="tdlabel"><font color=red>*</font>开始日期</td>
+                    <td><input  id="datefrom2" name="BDPDictionaryDateFrom" class="textbox hisui-datebox" ></input></td>
+                </tr>
+                
+                <tr>
+                    <td class="tdlabel">结束日期</td>
+                    <td><input  id="dateto2" name="BDPDictionaryDateTo"  class="textbox hisui-datebox" ></input></td>
+                </tr> 
+                
+                 <tr>
+                   <td class="tdlabel">根据表结构登记生成扩展字段</td> 
+                   <td><input class='hisui-checkbox' type="checkbox" id="BDPConfigFlag" name="BDPConfigFlag" data-options="checked:false" value="Y"></td>
+                </tr> 
+                
+                <tr>
+                   <td  class="tdlabel">扩展字段来源</td>
+                   <td><input id="BDPMenu" class='textbox hisui-combobox'  name="BDPExtMenuDr" type="text" ></td> 
+                </tr>
+                <tr> 
+            </table > 
+        </form>   
+    </div>
+    <div title="自定义扩展信息"  style="padding:0px ">   
+        <table  id="PropertyGrid" border="false"  ></table> 
+    </div>
+         
+ </div>
+ </div>
+ 
+ <div id="myWin" style="width:450px;height:400px;padding:10px;display:none;">    
+   <div id="tt" class="hisui-tabs tabs-gray" style="width:430px;height:300px;"  border="true">   
+    <div title="基本信息" style="padding:10px;" >   
+      <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+            <table align="center">
+                <tr style="display:none">
+                    <td></td>
+                    <td><input id="BDPDictionaryRowId" name="BDPDictionaryRowId" type="text" class="hisui-validatebox"></td>
+                </tr>
+                <tr>
+                   <td  class="tdlabel"><font color=red>*</font>代码</td>
+                   <td><input id="BDPDictionaryCode" name="BDPDictionaryCode" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+                 </tr>
+                 
+                  <tr>
+                   <td class="tdlabel"><font color=red>*</font>名称</td>
+                   <td><input id="BDPDictionaryDesc" name="BDPDictionaryDesc" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+                 </tr>
+                 
+                <tr style="display:none">
+                   <td  class="tdlabel">所属字典</td>
+                   <td><input id="BDPDictionaryDR" class='textbox hisui-validatebox'  name="BDPDictionaryDR" type="text" data-options="" ></td> 
+                </tr>
+                <tr>
+                
+                <tr>
+                    <td class="tdlabel"><font color=red>*</font>开始日期</td>
+                    <td><input id="BDPDictionaryDateFrom" class="textbox hisui-datebox" name="BDPDictionaryDateFrom" type="text" ></input></td>
+                </tr>
+                
+                <tr>
+                    <td  class="tdlabel">结束日期</td>
+                    <td><input  id="BDPDictionaryDateTo"  class="textbox hisui-datebox" name="BDPDictionaryDateTo" type="text"></input></td>
+                </tr> 
+            </table >
+        </form>  
+    </div>      
+    
+    <div title="自定义扩展信息" data-options="closable:false" style="padding:0px;">    
+         <table  id="ExtendGrid" border="false"></table> 
+    </div>
+    
+    </div>        
+    </div>
+
+    <!-- 目录树右键菜单-->
+    <div id="TreeMenu" class="hisui-menu" style="width:160px;display:none"> 
+       <div onclick="AddTJProperty()" iconCls="icon-add" id="PropertyAddSelf">新增同级目录</div> 
+       <div onclick="AddProperty()" iconCls="icon-add" id="PropertyAddNextSelf">新增下级目录</div>   
+       <div onclick="UpdateProperty()" iconCls="icon-write-order" id="PropertyModify">修改目录</div>
+       <div onclick="removes()" iconCls="icon-cancel" id="PropertyDelete">删除目录</div> 
+    </div> 
+  
+ <div id="importExcel"  title="数据导入" style="height:390px;width:650px;padding:10px;10px;0px;10px;" data-options="headerCls:''">
+        <div >  
+            <table  cellpadding="3"> 
+                <tr>
+                    <td class="tdlabel" style="width:100px" ><font color=red>*</font>导入Excel文件</td> 
+                    <td>
+                        <input  class="hisui-filebox" name="file2"   data-options="width:332,buttonText:'',buttonIcon:'icon-folder',plain:true"  id="ExcelImportPath"> 
+                    </td> 
+                    <td class="tdlabel-b"> 
+                        <a href="#" id="import_template_btn" class="hisui-linkbutton" data-options="iconCls:'icon-w-download',stopAllEventOnDisabled:true"  style="width:160px">下载数据模板</a></td> 
+                    </td> 
+                </tr> 
+            </table>
+         </div>
+        <div style="padding:10px 0 0 0"> </div>
+        <div class="hisui-panel" style="border-width:1px;border-radius:5px; width:630px;height:240px;background:#E3F7FF;padding:10px 10px 10px 10px;" > 
+               <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"><font color=#1278b8> <b> 注意事项:</b></font> </a>
+               <div>  
+                   <ul style="padding:10px 10px 0px 10px;">
+                     <li class="notediv"><font color=#1278b8>1.需在IE下执行操作，请先确认本机有安装office软件，并且要读取的表格文件不是受保护视图。打开IE,在[internet选项]-[安全]-[受信任的站点]-[站点]中添加开始界面到可信任的站点，然后在[自定义级别]中对[没有标记为安全的ActiveX控件进行初始化和脚本运行]这一项设置为启用，确定后，重启浏览器。</font></li> 
+                     <li class="notediv"><font color=#1278b8>2.下载下来的模板请勿随意修改，否则会影响数据导入！</font></li>
+                     <li class="notediv"><font color=#1278b8>3.csv录入时要严格遵循示例格式。</font></li> 
+                     <li class="notediv"><font color=#1278b8>4.若下载时提示文件不存在，说明服务器上没有该模板，请联系开发人员。</font></li>
+                     <li class="notediv"><font color=#1278b8>5.若导入模板过程中报错或插入失败，请仔细检查录入数据是否正确。修改后的数据可在相应界面手动录入，也可重新导一遍。</font></li>
+                 </ul> 
+           </div>
+        </div>  
+  </div>
+
+    <!--进度条弹框-->
+    <div id="importload"  title="完成进度" style="width:300px;height:150px;"> 
+        <div style="padding: 30px 30px 10px 30px"> 
+            <div id="pro"  class="hisui-progressbar" style="width:200px;"></div>
+        </div>  
+    </div> 
+    
+</body>
+ 
+</html>

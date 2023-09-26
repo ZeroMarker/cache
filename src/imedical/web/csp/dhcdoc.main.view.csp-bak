@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/dhcdocCustomExt.css" />
+<script type="text/javascript" src="../scripts/framework/dhcc.icare.MixGridPanel.js" ></script>	
+<script Language="JavaScript" SRC="../scripts/DHCMessage.js"></script>
+</head>
+<body>
+<server>
+	s tabItems = ""
+	#dim chartBookObj As epr.ChartBook
+	#dim list As %Collection.ListOfObj
+	#dim chartObj As epr.Chart
+	#dim paramsObj As epr.CTProfileParams
+	s orderTabIndex=-1
+	Set ChartBookID = $g(%request.Data("ChartBookID",1))
+	i ChartBookID="" w "EPR ChartBook is null !" q 1
+	Set PAADMType = $g(%request.Data("PAADMType",1),"I")	//默认为住院
+	i ChartBookID'="" s chartBookObj = ##class(epr.ChartBook).%OpenId(ChartBookID,0)
+	s langId = %session.Data("LOGON.LANGID")
+	if ($IsObject(chartBookObj)) d
+	.s list = chartBookObj.ChartList
+	.s len = list.Count()
+	.f i=1:1:len d
+	..s (chartObj,tabTitle,CTProfileParamsType,cspframe,cspname,csprefresh) = ""
+	..s chartObj = list.GetAt(i)
+	..s csprefresh=1	;全局刷
+	..q:'$IsObject(chartObj)
+	..s tabTitle = chartObj.Name
+	..s:tabTitle="DHCOE" orderTabIndex=i-1
+	..s tabTitle=##Class(websys.TranslationEPR).GetTrans("epr.Chart","Name",langId,tabTitle)
+	..s cspframe = "dataframe"_chartObj.%Id()
+	..s cspname="epr.chart.csp?PatientID=&EpisodeID=&EpisodeIDs=&mradm=&ChartID="_chartObj.%Id()_"&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID="
+	..s cspname=##class(ext.epr.Chart).RedirctCharURL(chartObj.%Id(),cspname)
+	..i chartObj.ChartSettings.Count()>0 d
+	...s CTProfileParamsType = chartObj.ChartSettings.GetAt(1).ItemType
+	...s CTProfileParamsId = chartObj.ChartSettings.GetAt(1).Item
+	...s paramsObj = ##class(epr.CTProfileParams).%OpenId(CTProfileParamsId)	
+	...i $IsObject(paramsObj)&&(CTProfileParamsType="CSPNAME") d
+	....s cspname = $p(paramsObj.PPParameters,"^",1)
+	....s csprefresh = $p(paramsObj.PPParameters,"^",2)
+	....d paramsObj.%Close()
+	....s paramsObj= ""	
+	..i tabItems="" s tabItems = "{title:'"_tabTitle_"', id:'"_cspframe_"', html: '<iframe id="_cspframe_" name="_cspframe_" width=100% height=100% src="_cspname_"></iframe>',frameName:'"_cspframe_"',src:'"_cspname_"',allRefresh:"_$s(csprefresh=1:"true",1:"false")_"}"
+	..e  s tabItems=tabItems_",{title:'"_tabTitle_"', id:'"_cspframe_"', frameName:'"_cspframe_"',src:'"_cspname_"',allRefresh:"_$s(csprefresh=1:"true",1:"false")_"}"
+    d chartBookObj.%Close()
+    s chartBookObj=""
+    s flag = ##class(web.DHCDocMain).isNurseLogin()
+	s DefaultPatListType = ##class(web.DHCDocMain).GetDefaultPatListType()
+	i flag s TypeCBJson="[0,'本病区病人'],[1,'在院转科病人']"
+	e  d
+	.i DefaultPatListType=1 s TypeCBJson="[1,'本科室病人'],[0,'本人病人'],[2,'本单元病人'],[3,'在院转科病人']"
+	.e  i DefaultPatListType=2 s TypeCBJson="[2,'本单元病人'],[0,'本人病人'],[1,'本科室病人'],[3,'在院转科病人']"
+	.e  i DefaultPatListType=3 s TypeCBJson="[3,'在院转科病人'],[0,'本人病人'],[1,'本科室病人'],[2,'本单元病人']"
+	.e  s TypeCBJson="[0,'本人病人'],[1,'本科室病人'],[2,'本单元病人'],[3,'在院转科病人']"
+	
+	s len=10
+	s PATCFid=$o(^CF("PATCF",""))	
+	i PATCFid'="" s len=$p($g(^CF("PATCF",PATCFid,3)),"^",5)
+	s patientTreeMetaDataJson=##class(ext.websys.QueryBroker).ReadRSNew2("web.DHCDocMain","FindCurrentAdmProxy")
+	s IsUseProgressBar = ##class(web.DHCDocMain).GetUseProgressBarConfig()
+	s PatListCollapseConfig = ##class(web.DHCDocMain).GetPatListCollapseConfig()
+
+</server>
+<script type="text/javascript">
+	var tabItemsJson = ([#(tabItems)#]);
+	var typeCBJson = ([#(TypeCBJson)#]);
+	var regLength = #(len)#;
+	var patientTreeMetaDataJson = #(patientTreeMetaDataJson)#;
+	var orderTabIndex = #(orderTabIndex)#;
+	var patientTreePanelWidth = #($g(^DHCDocOrderBillConfig("Main","PatientListWidth"),210))#; //wanghc 20121224
+	var PAADMType = "#(PAADMType)#";
+	var IsUseProgressBar = #(IsUseProgressBar)#;
+	var PatListCollapseConfig = #(PatListCollapseConfig)#;
+	var DefaultPatListType = #(DefaultPatListType)#;
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDocMainView.js" ></script>	
+</body>
+</html>

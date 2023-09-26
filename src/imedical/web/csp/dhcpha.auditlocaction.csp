@@ -1,0 +1,73 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("action",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+    s ComboText=$Get(%request.Data("combotext",1))
+    s Hosp=$Get(%request.Data("HospId",1))
+    //获取药房集合  
+	i Action = "GetPhaLocDs" d
+	.s logonloc=$Get(%request.Data("logonloc",1))
+	.w ##class(web.DHCSTPHAUDITLOC).GetPhaLocDs(logonloc,ComboText,Hosp)
+	
+	 //获取科室集合  
+	i Action = "GetOrdLocDs" d
+	.s logonloc=$Get(%request.Data("logonloc",1))
+	.w ##class(web.DHCSTPHAUDITLOC).GetOrdLocDs(logonloc,ComboText,Hosp)
+    
+    //获取审核人集合  
+	i Action = "GetAuditUserDs" d
+	.s logonloc=$Get(%request.Data("logonloc",1))
+	.w ##class(web.DHCSTPHAUDITLOC).GetPhaDs(logonloc,Hosp)
+    
+   
+    //查询审核明细
+    i Action = "QueryAuditOrdDetail" d
+    .s datestr=$Get(%request.Data("datestr",1))
+    .s audituser=$Get(%request.Data("audituser",1))
+    .s phalocdr=$Get(%request.Data("phalocdr",1))
+    .s ordlocdr=$Get(%request.Data("ordlocdr",1))
+    .w ##class(web.DHCSTPHAUDITLOC).QueryAuditedDetail(datestr, audituser, ordlocdr, phalocdr)
+    .;s retvalue=##class(web.DHCSTPHAUDITLOC).QueryAuditedDetail(datestr, audituser, ordlocdr, phalocdr)
+    .;s retinfo=retvalue
+	.;w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+    
+    
+    //增加需审核的开单科室
+	i Action = "AddAuditLoc" d
+	.s PhaLocDr= $Get(%request.Data("PhaLocDr",1))
+	.s OrdLocDr= $Get(%request.Data("OrdLocDr",1))
+	.s retvalue=##class(web.DHCSTPHAUDITLOC).AddAuditLoc(PhaLocDr,OrdLocDr)
+	.s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+
+    //删除需审核的开单科室
+    i Action = "AuditLocDel" d
+    .s palid= $Get(%request.Data("palid",1)) 
+    .s retvalue = ##class(web.DHCSTPHAUDITLOC).AuditLocDel(palid)
+    .s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	 //查询已经维护需审核的开单科室
+    i Action = "QueryAuditLocDetail" d
+    .s logonloc=$Get(%request.Data("logonloc",1))
+    .s phalocdr=$Get(%request.Data("PhaLocDr",1))
+    .s ordlocdr=$Get(%request.Data("OrdLocDr",1))
+    .w ##class(web.DHCSTPHAUDITLOC).QueryAuditLocDetail(logonloc, phalocdr, ordlocdr,Hosp)
+    .;s retvalue=##class(web.DHCSTPHAUDITLOC).QueryAuditedDetail(datestr, audituser, ordlocdr, phalocdr)
+    .;s retinfo=retvalue
+	.;w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+
+	
+	
+
+</script>
+

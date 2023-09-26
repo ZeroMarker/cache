@@ -1,0 +1,144 @@
+<!-- http://localhost/dthealth/web/csp/dhcpeprintdjd.csp?PAADM=1375 -->
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    
+<title>体检拍照</title>
+<link href="cs.css" rel="stylesheet" type="text/css">
+<script src="../scripts_lib/jQuery/jquery-1.8.0.min.js"></script>
+<script src="../scripts_lib/webcam/jquery.webcam.min.js"></script>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RegNo=$g(%request.Data("RegNo",1))
+	s PAPMIID=$O(^PAPERi("PAPMI_PatNo",RegNo,""))
+	s Name=""
+	i PAPMIID'="" d
+	.s Name=$p(^PAPER(PAPMIID,"ALL"),"^",1)
+	s PthotoStr=##class(web.DHCPE.PreIBIUpdate).GetPhoto(RegNo)
+	
+</SCRIPT>
+</head>
+
+<BODY>
+	<!--div id="status">倒计时</div-->
+	<table>
+	<TR><TD colspan=2><table border = 0><TR><TD><button class="play">拍照</button></TD><TD colspan=3><button class="OK" disabled='disabled'>确定</button></TD><TR>
+	<TR><TD>登记号：</TD><TD  id="RegNo">#(RegNo)#</TD><TD>姓名：</TD><TD>#(Name)#</TD></TR>
+	</table></TD></TR>
+	<TR>
+	<TD valign="top"><br><br><br><br><br><br><br>
+	<img id='Photo' src="data:image/png;base64,#(PthotoStr)#" width=225 height=300>
+	</TD>
+	<TD valign="top">
+	<div id="webcam" width=225 height=300></div>
+    </TD>
+    </TR>
+    
+    </table>
+    
+</BODY>
+<script language="javascript">
+	var w = 450, h = 600;                                       //摄像头配置,创建canvas
+    var pos = 0, ctx = null, saveCB, image = [];
+    var canvas = document.createElement("canvas");
+    $("body").append(canvas);
+    canvas.setAttribute('width', w);
+    canvas.setAttribute('height', h);
+    canvas.setAttribute("style","display:none");
+    ctx = canvas.getContext("2d");
+    image = ctx.getImageData(0, 0, w, h);
+
+    $("#webcam").webcam({
+        width: w,
+        height: h,
+        mode: "callback",                       //stream,save，回调模式,流模式和保存模式
+        swffile: "../scripts_lib/webcam/jscam.swf",
+        onTick: function(remain) { 
+            if (0 == remain) {
+                $("#status").text("拍照成功!");
+            } else {
+                $("#status").text("倒计时"+remain + "秒钟...");
+            }
+        },
+        onSave: function(data){              //保存图像
+		
+            var col = data.split(";");
+            var img = image;
+            for(var i = 0; i < w; i++) {
+                var tmp = parseInt(col[i]);
+                img.data[pos + 0] = (tmp >> 16) & 0xff;
+                img.data[pos + 1] = (tmp >> 8) & 0xff;
+                img.data[pos + 2] = tmp & 0xff;
+                img.data[pos + 3] = 0xff;
+                pos+= 4;
+            }
+            if (pos >= 4 * w * h) {
+                ctx.putImageData(img,0,0);      //转换图像数据，渲染canvas
+                pos = 0;
+                Imagedata=canvas.toDataURL().substring(22);  //上传给后台的图片数据
+                var obj=document.getElementById("Photo");
+                if (obj) obj.src=canvas.toDataURL();
+                $(".OK").attr('disabled',false);
+            }
+        },
+        onCapture: function () {               //捕获图像
+            webcam.save();      
+        },
+        debug: function (type, string) {       //控制台信息
+            console.log(type + ": " + string);
+        },
+        onLoad: function() {                   //flash 加载完毕执行
+            console.log('加载完毕！')
+            var cams = webcam.getCameraList();
+            for(var i in cams) {
+                $("body").append("<p>" + cams[i] + "</p>");
+            }
+        }
+    });  
+
+    $(".play").click(function(){
+	    $(".OK").attr('disabled',true);
+        webcam.capture(1);        //拍照，参数5是倒计时
+		
+    });
+    
+ 	$(".OK").click(function(){
+        var obj=document.getElementById("RegNo");
+        if (obj){
+	    	var RegNo=obj.innerText;
+           	var obj=document.getElementById("Photo");
+            if (obj) Imagedata=obj.src;
+            Imagedata=Imagedata.substring(22);
+           	var ret=#server(web.DHCPE.PreIBIUpdate.SavePhoto(RegNo,Imagedata))#;
+			if(ret!=""){
+		         alert("拍照失败,请重新操作");
+		         
+		         
+
+	        }
+        }
+		
+		parent.InitPicture()
+		parent.$('#PhotoWin').window('close');
+		window.close();
+    });
+
+function UploadImg(ImgBase64,RegNo)
+{
+	var myobj=document.getElementById('ClsSaveBase64IMG');
+	var sFiletype= "gif"
+	if (myobj)
+	{
+		var ImgBase64="aaaa"
+		var rtn=myobj.WriteFile(RegNo,ImgBase64,sFiletype);
+		if (!rtn){
+			alert("转为图片出错");
+			return false;
+		}
+		
+	}
+
+}
+</script>
+
+</HTML>

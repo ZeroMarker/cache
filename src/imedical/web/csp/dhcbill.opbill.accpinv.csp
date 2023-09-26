@@ -1,0 +1,125 @@
+<!-- 
+ * FileName: dhcbill.opbill.accpinv.csp
+ * Anchor: ZhYW
+ * Date: 2019-08-29
+ * Description: 门诊集中打印发票
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.accpinv.css'/>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script type='text/javascript' src='../scripts/dhcbill/dhcopbill/dhcbill.opbill.common.js'></script>
+	<script type='text/javascript' src='../scripts/DHCInsuPort.js'></script>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPYBComm.js'></script>
+	<server>
+		set PatientListPage=""
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",!
+		w "<input id='ReadOPDataEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCOPINVPrtIF.GetOPPrtData"))_"'>",!
+		w "<input id='DHCVersion' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPConfig.GetVersion"))_"'>",!
+		w "<input id='papmi' type='hidden'>",!
+		w "<input id='accMRowId' type='hidden'>",!
+		w "<input id='CID' type='hidden'>",!
+	</server>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;">
+		<csp:Include Page="dhcbill.out.patient.banner.csp">
+	</div>
+	<div data-options="region:'center',border:false" style="padding-bottom:10px;">
+		<div class="hisui-layout" data-options="fit:true" id="head-menu" style="border-top:1px dashed #cccccc;">
+			<div data-options="region:'north',border:false">
+				<table class="search-table" style="width:100%;">
+					<tr>
+						<td class="r-label td-first-col"><label>卡类型</label></td>
+						<td><input id="cardType" class="hisui-combobox textbox"/></td>
+						<td class="r-label"><label>卡号</label></td>
+						<td><input id="cardNo" class="textbox" placeholder="刷卡/请输入卡号"/></td>
+						<td class="r-label td-first-col"><label>登记号</label></td>
+						<td><input id="patientNo" class="textbox"/></td>
+						<td class="r-label"><label>患者类型</label></td>
+						<td><input id="patType" class="hisui-combobox textbox" data-options="disabled:true"/></td>
+						<td class="tb-btn">
+							<span class="spacing-btn"><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡(F4)</a></span>
+							<span class="spacing-btn"><a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'">清屏(F7)</a></span>
+							<span class="spacing-btn"><a href="javascript:;" class="hisui-linkbutton" id="btn-more">更多</a></span>
+						</td>
+					</tr>
+					<tr class="display-more-tr">
+						<td class="r-label"><label>开始日期</label></td>
+						<td><input id="stDate" class="hisui-datebox textbox"/></td>
+						<td class="r-label"><label>结束日期</label></td>
+						<td><input id="endDate" class="hisui-datebox textbox"/></td>
+						<td class="r-label"></td>
+						<td colspan="3">
+							<span class="spacing-ck"><input id="regInvCK" class='hisui-checkbox' type="checkbox" label="挂号"></span>
+							<span class="spacing-ck"><input id="insuDivCK" class='hisui-checkbox' type="checkbox" label="医保已结算"></span>
+							<span class="spacing-ck"><input id="stayInvCK" class='hisui-checkbox' type="checkbox" label="留观结算"></span>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:0 10px 0 10px;">
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'center',border:false">
+						<table id="payList" class="hisui-datagrid"></table>
+					</div>
+					<div data-options="region:'east',border:false" id="panelCate" style="width:280px;padding-left:10px;">
+						<table id="cateList" class="hisui-datagrid"></table>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'south',border:false" style="height:190px;padding-left:10px;">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'center',border:false" style="padding-top: 10px;">
+						<table id="invList" class="hisui-datagrid"></table>
+					</div>
+					<div data-options="region:'east',border:false" style="width:950px;padding-right:120px;">
+						<table class="search-table" style="width:100%">
+							<tr>
+								<td class="r-label"><label>当前票据号</label></td>
+								<td><input id="receiptNo" class="textbox text-bold" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a></td>
+								<td class="r-label"><label>发票总费用</label></td>
+								<td><input id="totalSum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td><input id="selfPayCK" class='hisui-checkbox' type="checkbox" label="自费"></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>医保支付总额</label></td>
+								<td><input id="insuTotalSum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td class="r-label"><label>医保账户支付</label></td>
+								<td><input id="insuAccPaySum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td><a href="javascript:;" class="hisui-linkbutton print-btn green" id="btn-print">打印(F9)</a></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>医保统筹支付</label></td>
+								<td><input id="insuPaySum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td class="r-label"><label>医保大病支付</label></td>
+								<td><input id="insuDBSum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td><a href="javascript:;" class="hisui-linkbutton print-btn" id="btn-skipNo">跳号</a></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>个人自付总额</label></td>
+								<td><input id="selfPaySum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td class="r-label"><label>退款总额</label></td>
+								<td><input id="refundSum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.accpinv.js"></script>
+</body>
+</html>

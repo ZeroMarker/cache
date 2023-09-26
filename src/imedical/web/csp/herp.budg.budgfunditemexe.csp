@@ -1,0 +1,61 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s year=$Get(%request.Data("year",1))
+	s name=$Get(%request.Data("name",1))
+	s direct=$Get(%request.Data("direct",1))
+	s Year=$Get(%request.Data("Year",1))
+	s citemcode=$Get(%request.Data("citemcode",1))
+	s citemname=$Get(%request.Data("citemname",1))
+	s Value=$Get(%request.Data("Value",1))
+	s LastValue=$Get(%request.Data("LastValue",1))
+	s cDirection=$Get(%request.Data("cDirection",1))
+	s Rate=$Get(%request.Data("Rate",1))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgFundItem).List(start, limit, year, name, direct,hospid)
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgFundItem).InsertRec(Year, citemcode, citemname, Value, LastValue, cDirection, Rate,hospid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgFundItem).UpdateRec(rowid,Year, citemcode, citemname, Value, LastValue, cDirection, Rate,hospid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgFundItem).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetLastValue" d
+	.s result = ##class(herp.budg.udata.uBudgFundItem).GetLastValue(year)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

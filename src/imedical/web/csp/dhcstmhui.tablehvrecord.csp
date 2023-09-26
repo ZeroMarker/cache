@@ -1,0 +1,57 @@
+﻿<!--跟台高值明细信息记录-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCBillPrint).InvBillPrintCLSID()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div id="North" data-options="region:'north',border:false" class="GridPadding" style="padding-top:0;padding-bottom:0;">
+		<table id="MainConditions" class="Condition">
+			<input id="Inci" name="Inci" type="hidden">
+			<input id="TableFlag" name="TableFlag" value="Y" type="hidden">
+			<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
+			<tr>
+				<td><label>医嘱接收科室</label><input id="OrdLoc" name="OrdLoc" class="textbox hisui-combobox"></td>
+				<td><label>开始日期</label><input id="FromDate" name="FromDate" class="hisui-datebox textbox" style="width: 120px;"></td>
+				<td><label>登记信息</label><input id="RegInfo" name="RegInfo" class="textbox" disabled style="width: 120px;"></td>
+				<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+			</tr>
+			<tr>
+				<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
+				<td><label>截止日期</label><input id="ToDate" name="ToDate" class="hisui-datebox textbox" style="width: 120px;"></td>
+				<td><label>登记号</label><input id="PaAdmNo" name="PaAdmNo" class="textbox" style="width: 120px;"></td>
+				<td>
+					<input class='hisui-radio' type="radio" label='全部' name='INGRFlag' value='0' >
+					<input class='hisui-radio' type="radio" label='已入库' name='INGRFlag' value='1'>
+					<input class='hisui-radio' type="radio" label='未入库' name='INGRFlag' value='2' data-options="checked:'true'">
+				</td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-panel" data-options="iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray',border:false">
+			<table id="TableHVRecordGrid"></table>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCodePrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/OeoriBindInci/TableHVRecord.js"></script>
+
+</body>
+</html>

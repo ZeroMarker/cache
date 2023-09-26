@@ -1,0 +1,71 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!--修改部分--TOP--将调用的CSS原样式名TB.CSS改成TBMENU.CSS
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/tbmenu.css"></LINK>
+-->
+<!--修改部分--END-->
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!-- TRAK TOOLBAR  -->
+<SCRIPT SRC="../scripts/tb.js"></SCRIPT>
+<SCRIPT Language="JavaScript">
+//called from menu definition
+function SetKeepOpen(url,newwin) {
+	parent.keepopen=true;
+	parent.location.href=url;
+}
+function websysChangeMenu(url,newwin){
+	top.keepopen=true;
+	top.location.href=url;
+}
+function ReleaseFieldFocus(win) {
+	if (win.frames.length) {
+		for (var i=0; i<win.frames.length; i++) {
+			ReleaseFieldFocus(win.frames[i]);
+		}
+	} else {
+		win.document.selection.empty(); //removes the text cursor that is in an editable field
+	}
+}
+
+</SCRIPT>
+<script language='javascript' src='../scripts/framework/ext.websys.menu.js'></script>
+<script language='javascript' src='../scripts/framework/Ext.ux.Notification.js'></script>
+
+</head>
+
+<body class=websys_menu>
+	<FORM name="fEPRMENU">
+		<!--会计核算成品-帐套-->
+		<INPUT TYPE="hidden" name="AcctBookID" id="AcctBookID" value="">
+		<INPUT TYPE="hidden" name="AcctBookName" id="AcctBookName" value="">
+		<INPUT TYPE="hidden" id="checkNewMessage" value='<%=##Class(%CSP.Page).Encrypt($LB("web.SSMessageRecipient.countNewMessages"))%>'>
+	</FORM>
+	<DIV style="LEFT: 0px; POSITION: absolute; TOP: 0px">
+	<!--	<A HREF="http://www.trak.com.au" target="_top">
+			<IMG alt="" border=0 src="../images/trak/trak125.gif"><BR>
+		</A>
+	-->
+
+	<br>
+	</DIV>
+
+<SCRIPT language="Javascript">
+//add by wuqk 2011-07-16,show Message 
+//var times=eval(session['LOGON.TIMEOUT'])/10*1000;
+var times=10000;                 //10秒钟刷新一次
+var times=600000;                 //10分钟刷新一次
+popMessage();
+setInterval("popMessage()", times);
+</SCRIPT>
+</body>
+</html>
+
+
+

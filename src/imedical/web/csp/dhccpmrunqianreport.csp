@@ -1,0 +1,115 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ ;http://localhost:8080/runqianReport/report/jsp/directprint1.jsp?report={类名称查询.raq(classname=web)}&prompt=no
+</csp:method>
+<!-- dhccpmrunqianreport.csp -->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<!-- DHC Add for lookup   -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/lookup.css"></LINK>
+<!--DHC End   -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+</HEAD>
+<body style="overflow:hidden">
+<script language="Cache" runat="server">
+	s myrepservername=$g(%session.Data("SERVER_NAME"))
+	s myrepservername = ##class(web.DHCBL.RQ.WebServerConfig).GetSourceID()
+	s reportName=""
+	s rqappserver=##class(web.DHCBL.RQ.ServerConfig).GetReportServiceUrl(myrepservername)
+	s menuid=%request.Get("BDPMENU")   //菜单id
+	if menuid'=""
+	{
+		s menuobj=##class(User.BDPMenu).%OpenId(menuid)
+		s LinkUrl=menuobj.LinkUrl	
+		s Expression=$p(LinkUrl,"?",2)
+		if Expression'=""
+		{
+			s ValueLength=$l(Expression,"&")
+			for i=1:1:ValueLength
+			{
+				s valuei=$p(Expression,"&",i)
+				s valuename=$p(valuei,"=",1)
+				s value=$p(valuei,"=",2)
+				continue:valuename=""
+				continue:value=""
+				s %request.Data(valuename,1)=value	
+				
+			}			
+		}
+	}
+	s reportName=$g(%request.Data("reportName",1))
+	s reportType=$g(%request.Data("reportType",1))
+	
+	
+	s reportUrlType=0
+	//对中文判断
+	s reportName=$ZCONVERT(reportName,"O","URL")
+	i (reportName["%u"){
+		s reportName = ##class(web.DHCBL.RQ.WebServerConfig).Replace(reportName,"%u","__u")
+		s reportUrlType=1
+	}elseif (reportName["__u"){
+		s reportUrlType=1
+	}
+	s reportName=reportName_"&reportUrlType="_reportUrlType
+	
+	
+	i (reportName=""){
+		;s reportName="类名称查询1.raq"
+	}
+	s myrtn=##class(web.DHCBL.Sys.SessionShareInfo).CheckDtSessionSync()
+	
+	s myjspsessioninfo=""
+	s mycspsinfo=""
+	i (myrtn){
+		;同步过的信息
+		s myobj=##class(web.DHCBL.Sys.SessionShareInfo).GetShareSession(%session.SessionId)
+		s myjspsessioninfo=";jsessionid="_myobj.TargetSessionId
+	}
+	s mycspsinfo="&cspsessionid="_%session.SessionId
+	;
+	;获取 request info
+	s myreqstr=""
+	s mystr=""
+	f {
+		s myreqstr=$o(%request.Data(myreqstr))
+		q:(myreqstr="")
+		s mystr=mystr_"&"
+		s otherstr=%request.Data(myreqstr,1)
+		s otherstr=$ZCONVERT(otherstr,"O","URL")
+		i (otherstr["%u"){
+			s otherstr = ##class(web.DHCBL.RQ.WebServerConfig).Replace(otherstr,"%u","__u")
+		}
+		s mystr=mystr_""_myreqstr_"="_otherstr
+	}
+	
+	/*
+	f {
+		s myreqstr=$o(%request.Data(myreqstr))
+		q:(myreqstr="")
+		s mystr=mystr_"&"
+		s mystr=mystr_""_myreqstr_"="_%request.Data(myreqstr,1)
+		s ^Tempmzc(mystr)=mystr
+	}*/
+	s mycspsinfo=mycspsinfo_""_mystr
+	s myjspFile = "dhccpmrunqianreport.jsp"
+	s reportType = $zconvert(reportType,"U")
+	i ((reportType="G")||(reportType="GROUP")) {
+		s myjspFile = "dhccpmshowreportgroup.jsp"
+	}elseif ((reportType="I")||(reportType="ITEM")) {
+		s myjspFile = "dhccpmrunqianreportitem.jsp"
+	}elseif ((reportType="P")||(reportType="PRINT")) {
+		s myjspFile = "dhccpmrunqianreportprint.jsp"
+	}
+	
+	//
+</script>
+
+
+<iframe name="RunQianReport" src="#(rqappserver)#report/jsp/#(myjspFile_myjspsessioninfo)#?report=#(reportName)##(mycspsinfo)#" height="100%" width="100%" style=" background-color:#ffffff;" ></iframe>
+
+</body>
+</HTML>

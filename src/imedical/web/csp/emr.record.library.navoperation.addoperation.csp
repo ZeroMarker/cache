@@ -1,0 +1,279 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" id="selectcss" href="../scripts/emr/css/operation.css"/>
+<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="../scripts/emr/lib/tool/datetime/laydate.js"></script>
+<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+<title>	手术索引 </title>
+ <script language="cache" runat="server">
+    d ##Class(EMRservice.SystemParameter).GetImportResource()
+</script>
+  <script language="javascript">
+	var patientID = '#($Get(%request.Data("PatientID",1),""))#';
+	var episodeID = '#($Get(%request.Data("EpisodeID",1),""))#';
+</script>	
+</head>
+<body>
+    <div class="group"> 
+    	<input id ="ID" type="hidden" name="ID" value=""/>
+    	<div class="linegroup"> 
+    		<span class="operItem">
+	       		<label class="required">*</label>
+	       		<label class="name">手术日期</label>
+	       		<input class="laydate-icon value" id="OperDate" style="width:122px" type="text" onClick="laydate({elem:'#OperDate'})"></input>	    	
+       		</span>
+       		<span class="operItem">
+	       		<label class="name">手术室</label>
+		    	<input class="value" id="OperLoc" key="" type="keyvalue" style="width:245px;"/>	       		
+	       		<a class="button" href="#" id="btOperLoc">…</a>
+       		</span> 
+       		<span class="operItem"> 
+	       		<label class="name">申请科室</label>
+		    	<input class="value" id="OperAppLoc" key="" type="keyvalue" style="width:245px;"/>
+		    	<a class="button" href="#" id="btOperAppLoc">…</a>
+       		</span>
+    	</div>
+    	<div class="linegroup">
+    		<span class="operItem">
+	    	    <label class="required">*</label>
+	    	    <label class="name">术前诊断</label>
+	    	    <input class="value" id="OperPreopDiag" key="" type="keyvalue" style="width:304px"></input>
+	    	    <a class="button" href="#" id="btOperPreopDiag">…</a>	
+    	    </span>
+    	    <span class="operItem">
+	    	    <label class="name">诊断备注</label>
+	    	    <input class="value" id="OperDiagMemo" type="text" style="width:265px;"></input>
+    	    </span>	
+    	</div>
+    	<div class="linegroup">
+    		<span class="operItem">
+	    		<label class="required">*</label>
+	    		<label class="name">手术医师</label>
+	    		<input class="value" id="OperDoc" key="" type="keyvalue" style="width:206px;"></input>
+	    		<a class="button" href="#" id="btOperDoc">…</a>
+    		</span>
+    		<span class="operItem">
+	    		<label class="name">一助</label>
+	    		<input class="value" id="OperAssistFirst" key="" type="keyvalue" style="width:220px;"></input>
+	    		<a class="button" href="#" id="btOperAssistFirst">…</a>
+    		</span>
+    		<span class="operItem">
+	    		<label class="name">二助</label>
+	    		<input class="value" id="OperAssistSecond" key="" type="keyvalue" style="width:220px;"></input>
+	    		<a class="button" href="#" id="btOperAssistSecond">…</a>
+    		</span>
+    	</div>
+    	<div class="opergroup">
+    		<div class="linegroup">
+    			<span class="item">
+		    		<label class="required">*</label>
+		    		<label class="name">手术名称</label>
+		    		<input class="value" id="Oper" key="" type="keyvalue" style="width:322px"></input>
+		    		<a class="button" href="#" id="btOper">…</a>
+	    		</span>
+	    		<span class="item">
+		    		<label class="name">手术备注</label>
+		    		<input class="value" id="OperMemo" type="text" style="width:375px;"></input>	 
+	    		</span>   	
+    		</div>
+    		<div class="linegroup">
+    			<span class="item">
+		    		<label class="required">*</label>
+		    		<label class="name">手术级别</label>
+					<input class="value" id="OperLevel" key="" type="keyvalue" style="width:135px"></input>	
+					<a class="button" href="#" id="btOperLevel">…</a>
+	    		</span>
+	    		<span class="item">
+		    		<label class="name">切口</label>
+		    		<input class="value" id="OperBladeType" key="" type="keyvalue" style="width:180px"></input>
+	    			<a class="button" href="#" id="btOperBladeType">…</a>
+	    		</span>
+	    		<span>
+		    		<a href="#" id="btOperationAdd">增加</a>
+    			</span>
+    		</div>	    		    		    	
+	    	<table class="table" id="operations" >
+		        <tr style="height:25px;">  
+		        	<th style="width:0px;">手术名称ID</th>
+		            <th style="width:25%;">手术名称</th> 
+		            <th style="width:0px;">手术级别ID</th> 
+		            <th style="width:15%;">手术级别</th>
+		            <th style="width:0px;">切口ID</th> 
+		            <th style="width:15%;">切口</th> 
+		            <th style="width:30%;">备注</th>
+		            <th>操作</th>
+		        </tr>  
+	    	</table>
+    	</div>
+    	<div class="linegroup">
+    		<span class="operItem">
+	    		<label class="name">&nbsp;&nbsp;手术部位</label>
+	    		<input class="value" id="BodsDesc" key="" type="keyvalue" style="width:160px"></input>
+	    		<a class="button" href="#" id="btBodsDesc">…</a>
+    		</span>
+    		<span class="operItem">
+	    		<label class="name">手术体位</label>
+	    		<input class="value" id="OperPosition" key="" type="keyvalue" style="width:160px"></input>
+	    		<a class="button" href="#" id="btOperPosition">…</a>
+    		</span>
+    		<span class="operItem">
+    			<input class="value" id="OperCirculation" type="checkbox">是否体外循环</input>
+    		</span>
+    		<span Class="operItem">
+    		    <input class="value" id="OperUseSelfBlood" type="checkbox">自体血回输</input>
+    		</span>
+    	</div>
+    	<div class="linegroup">
+    		<span class="operItem">
+	    		<label class="required">*</label>
+	    		<label class="name">血型</label>
+	    		<select class="value" id="OperBloodType" type="select" style="width:70px"></select>	    		
+    		</span>
+    		<span class="operItem">
+	    		<label class="required">*</label>
+	    		<label class="name">RH血型</label>
+	    		<select class="value" id="OperRhBloodType" type="select" style="width:70px"></select>	 
+    		</span>   	
+    		<span class="operItem">	
+	    		<label class="required">*</label>
+	    		<label class="name">HbsAg</label>
+	    		<select class="value" id="OperHBsAg" type="select" style="width:70px"></select>	
+    		</span>
+    		<span class="operItem">	    		
+				<label class="required">*</label>
+				<label class="name">HCV_Ab</label>
+				<select class="value" id="OperHCVAb" type="select" style="width:70px"></select>
+			</span>
+			<span class="operItem">
+				<label class="required">*</label>
+				<label class="name">Hiv_Ab</label>
+				<select class="value" id="OperHivAb" type="select" style="width:70px"></select>
+			</span>
+			<span class="operItem">
+				<label class="required">*</label>
+				<label class="name">梅毒</label>
+				<select class="value" id="OperTPAb" type="select" style="width:70px"></select>
+			</span>
+			<span class="operItem">
+				<label class="name">其他</label>
+				<input class="value" id="OperOther" type="text" style="width:80px"></input>
+			</span>
+    	</div>	    		   
+    </div>  
+    <div class="group"> 
+    	<div class="linegroup"> 
+	    	<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">麻醉主治医师</label>
+				<input class="value" id="AnaDoctor" key="" type="keyvalue" style="width:180px;"></input>
+				<a class="button" href="#" id="btAnaDoctor">…</a>
+			</span>
+			<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">麻醉方法</label>
+				<input class="value" id="AnaMethod" key="" type="keyvalue" style="width:200px"></input>
+				<a class="button" href="#" id="btAnaMethod">…</a>
+			</span>
+		</div>
+		<div class="linegroup"> 	
+			<span class="operItem">
+		   		<!--<label class="required">*</label>-->
+		   		<label class="name">麻醉开始日期</label>
+		   		<input class="laydate-icon value" id="AnaStart" style="width:184px" type="datetime" onClick="laydate({elem:'#AnaStart',istime:true,format:'YYYY-MM-DD hh:mm:ss'})"></input>
+	   		</span>	  
+	   		<span class="operItem">  	
+		   		<!--<label class="required">*</label>-->
+		   		<label class="name">麻醉结束日期</label>
+		   		<input class="laydate-icon value" id="AnaEnd" style="width:183px" type="datetime" onClick="laydate({elem:'#AnaEnd',istime:true,format:'YYYY-MM-DD hh:mm:ss'})"></input>
+	   		</span>	
+   		</div>    		    	
+    </div> 
+    <div class="group"> 
+    	<div class="linegroup">
+    		<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">手术间</label>
+				<input class="value" id="OperRoom" key="" type="keyvalue" style="width:175px"></select>
+				<a class="button" href="#" id="btOperRoom">…</a>
+			</span>
+			<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">台次</label>
+				<input class="value" id="OperOrdNo" type="text" style="width:130px"></input>
+			</span>
+		</div>
+		<div class="linegroup">
+			<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">安排时间</label>
+				<input class="laydate-icon value" id="OperArrange" style="width:168px" type="datetime" onClick="laydate({elem:'#OperArrange',istime:true,format:'YYYY-MM-DD hh:mm:ss'})"></input>
+			</span>	
+			<span class="operItem">    		    	
+		    	<!--<label class="required">*</label>-->
+		    	<label class="name">入室时间</label>
+		    	<input class="laydate-icon value" id="InRoom" style="width:157px" type="datetime" onClick="laydate({elem:'#InRoom',istime:true,format:'YYYY-MM-DD hh:mm:ss'})"></input>
+			</span>
+			<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">离室时间</label>
+				<input class="laydate-icon value" id="LeaveRoom" style="width:158px" type="datetime" onClick="laydate({elem:'#LeaveRoom',istime:true,format:'YYYY-MM-DD hh:mm:ss'})"></input>    	
+    		</span>
+    	</div>
+    	<div class="linegroup">
+    		<span class="operItem">
+	    		<!--<label class="required">*</label>-->
+				<label class="name">器械护士一</label>
+				<input class="value" id="ScrubNurFirst" key="" type="keyvalue" style="width:150px;"></input>
+				<a class="button" href="#" id="btScrubNurFirst">…</a>
+    		</span>
+    		<span class="operItem">
+				<label class="name">器械护士二</label>
+				<input class="value" id="ScrubNurSecond" key="" type="keyvalue" style="width:150px;"></input>
+				<a class="button" href="#" id="btScrubNurSecond">…</a>
+			</span>
+			<span class="operItem">
+				<label class="name">器械护士三</label>
+				<input class="value" id="ScrubNurThird" key="" type="keyvalue" style="width:150px;"></input>
+				<a class="button" href="#" id="btScrubNurThird">…</a>
+			</span>
+    	</div>
+    	<div class="linegroup">
+    		<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">巡回护士一</label>
+				<input class="value" id="CirculNurFirst" key="" type="keyvalue" style="width:150px;"></input>
+				<a class="button" href="#" id="btCirculNurFirst">…</a>
+			</span>
+			<span class="operItem">
+				<label class="name">巡回护士二</label>
+				<input class="value" id="CirculNurSecond" key="" type="keyvalue" style="width:150px;"></input>
+				<a class="button" href="#" id="btCirculNurSecond">…</a>
+			</span>
+			<span class="operItem">
+				<label class="name">巡回护士三</label>
+				<input class="value" id="CirculNurThird" key="" type="keyvalue" style="width:150px;"></input>
+				<a class="button" href="#" id="btCirculNurThird">…</a>
+			</span>
+    	</div>
+    	<div class="linegroup">
+    		<span class="operItem">
+		    	<!--<label class="required">*</label>-->
+		    	<label class="name">手术开始时间</label>
+		    	<input class="laydate-icon value" id="OperStart" style="width:144px" type="datetime" onClick="laydate({elem:'#OperStart',istime:true,format:'YYYY-MM-DD hh:mm:ss'})"></input>
+	    	</span>
+	    	<span class="operItem">
+				<!--<label class="required">*</label>-->
+				<label class="name">手术结束时间</label>
+				<input class="laydate-icon value" id="OperEnd" style="width:133px" type="datetime" onClick="laydate({elem:'#OperEnd',istime:true,format:'YYYY-MM-DD hh:mm:ss'})"></input>  
+			</span>  		    	
+   		</div>
+    </div> 
+    <div class="tool">
+    	<a href="#" id="btClose" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'" style="float:right;">关闭</a>	        
+		<a href="#" id="btSave" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-save'" style="float:right;">保存</a>	    
+    </div>
+    <script type="text/javascript" src="../scripts/emr/js/record.library.navoperation.addoperation.js"></script> 
+</body>
+</html>

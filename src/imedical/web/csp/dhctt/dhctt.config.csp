@@ -1,0 +1,42 @@
+<html>
+<head>	
+	<DHCTT:HEAD/>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+s l="language",h="history"
+s act = $g(%request.Data("act",1))		
+s mytmp =""
+s ip = %request.GetCgiEnv("REMOTE_ADDR")		
+if (act="config"){
+	f i=l,h d
+	.s ^DHCTTTEMP("config",ip,i)=$g(%request.Data(i,1))	
+}
+d ##class(web.Util.DHCTTLanguageManager).getLanguage().initConfigPage(.t)
+q 1
+</csp:method>
+	<title>#(t("CacheTT Config Title"))#</title>
+</head>
+<body>
+	<DHCTT:MENU/>
+	<table>
+	<tr><td class='greentitle'>≈‰÷√</td><td></td></tr>
+	<tr>
+		<td></td>
+		<td>
+			<form action="dhctt.config.csp" align="center" type="POST">
+				<input type="hidden" value="config" name="act"/>
+				<table>
+					<tr><td> #(t("history list"))#</td><td>
+						<input type="checkbox" name="#(h)#" #($s(($g(^DHCTTTEMP("config",ip,h))="on"):"checked",1:""))# >
+					</td></tr>
+					<tr><td>#(t("Language Select"))#:</td><td>
+						<input type="radio" value="Chinese" name="#(l)#" #($s(($g(^DHCTTTEMP("config",ip,l))="Chinese"):"checked",1:""))# /> #(t("Chinese"))#
+						<input type="radio" value="English" name="#(l)#" #($s(($g(^DHCTTTEMP("config",ip,l))="English"):"checked",1:""))# /> #(t("English"))#
+					</td></tr>						
+					<tr><td><input type="submit" value="#(t("Submit"))#"/></td></tr>
+				</table>
+			</form>
+		</td>
+	</tr>
+	</table>	
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<SERVER>
+	d ##Class(websys.Conversions).LoadRequest()
+	n OEOrdItemID,AllAtOnce,allOEIDsToLoop,OS,idcount,tempids,i,neworder
+	
+	;log61398 TedT if item has been changed, update the item id
+	s neworder=$o(^TMP("WEB",%session.SessionId,"Change",""))
+	i neworder'="" d
+	. s %request.Data("OEOrdItemID",1)=neworder
+	. s allOEIDsToLoop=$g(%request.Data("allOEIDsToLoop",1))
+	. i allOEIDsToLoop'="" s $p(allOEIDsToLoop,"^",1)=neworder
+	. s %request.Data("allOEIDsToLoop",1)=allOEIDsToLoop
+	k ^TMP("WEB",%session.SessionId,"Change")
+	
+	s idcount=0
+	s OEOrdItemID=$g(%request.Data("OEOrdItemID",1))
+	s AllAtOnce=$g(%request.Data("AllAtOnce",1))
+	s allOEIDsToLoop=$g(%request.Data("allOEIDsToLoop",1))
+	s OS=$g(%request.Data("OS",1))
+	i allOEIDsToLoop="" s %request.Data("ENDLOOP",1)="1" 
+	//allOEIDsToLoop contains all OEOrdItem IDs selected
+	//if completing all items at once (ALLAtOnce) then allOEIDsToLoop is set to blank and OEOrdItemID contains all OEOrdItem IDs
+	//if cycling thru multiple items individually, set OEOrdItemID to be the first and 
+	// remove this item from allOEIDsToLoop so that it now contains OEOrdItem IDs of those remaining to be done. Also
+	// sets firstOEIDsInLoop to be the very first item in all selected items to carry thru default details.
+	;s ^zanju($zn,"PatientIDChecked ")=%request.Get("OEORIPatientIDChecked")
+	i allOEIDsToLoop'="" {
+		s idcount=$l(allOEIDsToLoop,"^")
+		if (AllAtOnce) {
+			s %request.Data("OEOrdItemID",1)=allOEIDsToLoop
+			s %request.Data("allOEIDsToLoop",1)=""
+			s %request.Data("firstOEIDsInLoop",1)=""
+		} else {
+			s %request.Data("OEOrdItemID",1)=$p(allOEIDsToLoop,"^",1)
+			;s tempids=$p(allOEIDsToLoop,"^",2)
+			;if tempids'="" f i=3:1:idcount s tempids=tempids_"^"_$p(allOEIDsToLoop,"^",i)
+			s tempids=$p(allOEIDsToLoop,"^",2,idcount)
+			s %request.Data("allOEIDsToLoop",1)=tempids
+			;LOG 40009 RC 28/10/03 This was needed because when the orders were cycled seperately, it was putting the last
+			;Non Standard Report Reason into the current order, when it shouldn't be doing that.
+			d %request.Set("NonStDRepIssReason","")
+		}
+		;s ^zanju($zn," all orders, first order, AllAtOnce ")=allOEIDsToLoop_","_%request.Get("firstOEIDsInLoop")_","_AllAtOnce
+		d ##Class(web.OEFilmExecute).GetMultiplePrePostExam($g(%request.Data("OEOrdItemID",1)),$g(%request.Data("firstOEIDInLoop",1)))
+		if idcount>1,$g(%request.Data("firstOEIDInLoop",1))="" s %request.Data("firstOEIDInLoop",1)=$p(allOEIDsToLoop,"^",1)
+	}
+	i OS="" s OS=$g(%request.Data("ARCIMItemCatDR",1))
+	i OS'="" s %request.Data("CONTEXT",1)="OS"_OS
+	d ##Class(websys.Conversions).SaveRequest()
+	i idcount<2 {
+		k PLIST
+		s code=$$select^COEOrdItem3(OEOrdItemID)
+		s %request.Data("OEORIRBResourceDR",1)=PLIST(43)
+	}
+</SERVER>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body>
+<SERVER>
+	;i $g(%request.Data("ENDLOOP",1))="1" s %response.ServerSideRedirect="epr.default.csp" q
+	;instead of going back to start page, go to end of workflow and let generic stuff determine what it should do
+	s twkfli=$g(%request.Data("TWKFLI",1))
+	i $g(%request.Data("ENDLOOP",1))'="1" s %request.Data("TWKFLI",1)=$s(twkfli-1>0:twkfli-1,1:"")
+	i $g(%request.Data("allOEIDsToLoop",1))="" s %request.Data("TWKFLI",1)=twkfli
+	;
+	s %request.Data("EpisodeID",1)=%request.Get("EpisodeID")
+	;
+	s %request.Data("PatientID",1)=##Class(web.OEOrdItem).GetPatientID($g(%request.Data("OEOrdItemID",1)))
+	i +$g(%request.Data("PatientID",1)) {
+		s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+		i cmp d cmp.Show(),cmp.%Close()
+	}
+	
+	;LOG 36495 RC 17/06/03 need to check all OrderItemIDs and lock the component if one of them is being used.
+	n islocked,status,itemID,IDCount,OEOrdItemID,i
+	s islocked=0 s i=1
+	s OEOrdItemID=$g(%request.Data("OEOrdItemID",1))
+	i OEOrdItemID'="" d
+	. s IDCount=$l(OEOrdItemID,"^")
+	. f i=1:1:IDCount d
+	. . s itemID=$p(OEOrdItemID,"^",i)
+	. . i '##Class(websys.Lock).Lock($lb(itemID,"User.OEOrdItem"),%session.SessionId,%session.Get("LOGON.USERID"),.status,$g(%session.Data("LOGON.CTLOCID"))) d
+	. . . s islocked=1 w "<DIV><STRONG><FONT COLOR=RED>",status,"</FONT></STRONG></DIV>",$c(13,10)
+	
+	;log61398 TedT get category details
+	s arcim=##Class(User.ARCItmMast).%OpenId(%request.Get("OEORIItmMastDR"))
+	i arcim d  d arcim.%Close()
+	. i arcim.ARCIMItemCatDR'=""  d
+	. . d %request.Set("Desc",arcim.ARCIMDesc)
+	. . d %request.Set("subCatID",arcim.ARCIMItemCatDR.%Id())
+	. . d %request.Set("subcatCode",arcim.ARCIMItemCatDR.ARCICDesc)
+	. . i arcim.ARCIMItemCatDR.ARCICOrdCatDR d
+	. . . d %request.Set("catID",arcim.ARCIMItemCatDR.ARCICOrdCatDR.%Id())
+	. . . d %request.Set("catDesc",arcim.ARCIMItemCatDR.ARCICOrdCatDR.ORCATDesc)
+	
+	;log 61398 TedT set the change item flag
+	s (exe,changeItem)=0
+	s (ordstat,stat)=""
+	s ordid=%request.Get("OEOrdItemID")
+	s stat=$o(^OEC("OSTAT",0,"Code","E",""))
+	i $l(ordid,"^")'>1 s ordstat=$p(^OEORD(+ordid,"I",$p(ordid,"||",2),1),"^",13)
+	i ordstat'="",stat'="" s exe=(ordstat=stat)
+	i $l(ordid,"^")'>1,'exe s changeItem=1
+	
+	s cmp=##Class(websys.Component).OpenName("OEOrdItem.PreExam")
+	i cmp s:islocked cmp.Disabled=1 d cmp.Show(),cmp.%Close()
+
+	n cmpid
+	;do not new preFields
+	s preFields="""OEORIAssistantDR"",""OEORIPersonInjectDR"",""OEORIQty"",""OEORIExamStartTime"",""OEORIPatientIDChecked"",""OEORIDepProcNotes"",""OEORILMPDate"",""OEORIPregnancyCheck"",""OEORIRBResourceDR"""
+	s cmpid=1234 ;##Class(websys.Component).GetIdFromCodeOrDescription("OEOrdItem.PostExam")
+ 	;if error messages from PostExam update (ie. invalid pin), then prepopulate PreExam details
+ 	i +$g(msg.Count)&($d(msg.Name(cmpid))) {
+		w !,"<SCRIPT>"
+		w !,"var frmPre=document.forms['fOEOrdItem_PreExam'];"
+		;x "f i="_preFields_" s:$d(msg.Data(i)) %request.Data(i,1)=$g(msg.Data(i,1))"
+		x "f i="_preFields_" w:$d(msg.Data(i)) !,""if (frmPre.elements['""_i_""']) frmPre.elements['""_i_""'].value='""_$g(msg.Data(i,1))_""';"" "
+		w !,"</SCRIPT>"
+	}
+
+	s cmp=##Class(websys.Component).OpenName("OEOrdItem.PostExam")
+	i cmp s:islocked cmp.Disabled=1 d cmp.Show(),cmp.%Close()
+</SERVER>
+<SCRIPT language=javascript>
+
+var changeItem="#(changeItem)#"; //log61398 TedT
+
+//updating post exam also requires the Pre exam details to be submitted as well.
+var frmPre=document.forms["fOEOrdItem_PreExam"];
+var frmPost=document.forms["fOEOrdItem_PostExam"];
+var updatePost=document.getElementById("updatePost");
+if (updatePost) updatePost.onclick=UpdatePostExam;
+function UpdatePostExam() {
+	var doupdate=1;
+	frmPre.target="TRAK_hidden";
+	var lblPINPre=document.getElementById('cPINPre');
+	var copyPINPre=0
+	if ((frmPre.PINPre) && (frmPre.PINPre.value=='') && (lblPINPre) && (lblPINPre.className=='clsRequired')) {
+		if ((frmPost.PINPost) && (frmPost.PINPost.value!='')) frmPre.PINPre.value=frmPost.PINPost.value;
+		else frmPre.PINPre.value='*'; //set something so the PreExam generic javascript mandatory check can bypass this field.
+		copyPINPre=1;
+	}
+	try {
+		//if (fOEOrdItem_PreExam_submit()) updatePre_click();
+		//else doupdate=0;
+
+		if (!fOEOrdItem_PreExam_submit()) doupdate=0;
+	} catch(err) {}
+	if (doupdate) {
+		try {
+			var preFields=new Array(#(preFields)#);
+			//for each editable field in PreExam, copy into PostExam form
+			for (var i in preFields) {
+				if (frmPre.elements[preFields[i]]) {
+					//if field already exists in PostExam and is blank, copy value from Pre into Post, otherwise create new hidden fields into Post
+					if (frmPost.elements[preFields[i]]) {
+						if (frmPost.elements[preFields[i]].value=="") frmPost.elements[preFields[i]].value = frmPre.elements[preFields[i]].value;
+					} else {
+						//Create a new element
+						var NewElement=document.createElement("INPUT");
+						NewElement.id = preFields[i];
+						NewElement.name = preFields[i];
+						NewElement.value = frmPre.elements[preFields[i]].value;
+						NewElement.type = "HIDDEN";
+						frmPost.OEORIItmMastDR.insertAdjacentElement("afterEnd",NewElement);
+					}
+				}
+			}
+
+			UpdatePostClickHandler();
+		} catch(err) {}
+	} else if (copyPINPre) frmPre.PINPre.value='';
+	return false;
+}
+</SCRIPT>
+</body>
+</html>

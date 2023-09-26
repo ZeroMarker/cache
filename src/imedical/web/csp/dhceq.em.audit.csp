@@ -1,0 +1,127 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<style type="text/css">
+.eq-total-sum{
+	font-size:120%;
+	color:#F00;
+	float:right;
+}
+</style>
+<script language=Cache runat=server>
+	/*
+	s IFBStatus=$Get(%request.Data("Status",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s Type=$Get(%request.Data("Type",1))
+	s IFBRowID=$Get(%request.Data("RowID",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s Action=$Get(%request.Data("Action",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("17",IFBRowID),CurRole,Action)
+	s GetSourceType=##class(web.DHCEQCommon).GetSysInfo("103003")
+	*/
+	s PlanListIDs=$Get(%request.Data("PlanListIDs",1))
+</script>
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="议价会签审批表" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:200px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cIFBManageLocDR_CTLOCDesc" for="IFBManageLocDR_CTLOCDesc">申请科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" disabled="true" id="IFBManageLocDR_CTLOCDesc" data-options="'component':'PLAT.L.Loc'"></div>
+						<div class="eq-table-td eq-table-label"><label id="cIFBUseLocDR_CTLOCDesc" for="IFBUseLocDR_CTLOCDesc">使用科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" disabled="true" id="IFBUseLocDR_CTLOCDesc" data-options="'component':'PLAT.L.Loc'"></div>
+						<div class="eq-table-td eq-table-label"><label id="cIFBBHold1" for="IFBBHold1">项目名称</label></div>
+						<div class="eq-table-td eq-table-input"><input data-options="required:true" class="hisui-validatebox" id="IFBBHold1"></div>
+				        <!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" >保存</a></div>	
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="">预算金额</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id=""></div>
+						<div class="eq-table-td eq-table-label"><label for="">工期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="IFBDeosit"></div>
+						<div class="eq-table-td eq-table-label"><label for="">预计完工日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id=""></div>
+				        <!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">提交</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="IFBBuyTypeDR_BTDesc">采购方式</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.BuyType'" id="IFBBuyTypeDR_BTDesc" ></div>
+						<div class="eq-table-td eq-table-label"><label for="">经费来源</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox " id=""></div>
+						<div class="eq-table-td eq-table-label"><label for="">项目类别</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id=""></div>
+				        <!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">删除</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="">项目联系人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id=""></div>
+						<div class="eq-table-td eq-table-label"><label for="">联系电话</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox " id=""></div>
+						<div class="eq-table-td eq-table-label"><label for="">三人以上签字</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id=""></div>
+				        <!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">取消提交</a></div>
+				    </div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="">是否院外采购</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id=""></div>
+						<div class="eq-table-td eq-table-label"><label for="">委托机构名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id=""></div>
+						<div class="eq-table-td eq-table-label"><label for="">项目编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id=""></div>
+				        <!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label"><a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核1</a></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<!--
+			<INPUT type="hidden" id="IFBStatus" value="#(IFBStatus)#">
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="Type" value=#(Type)#>	
+			<INPUT type="hidden" id="IFBRowID" value="#(IFBRowID)#">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="GetSourceType" value="#(GetSourceType)#">
+			<INPUT type="hidden" id="Action" value=#(Action)#>
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="PlanListIDs" value=#(PlanListIDs)#>
+			<INPUT type="hidden" id="ApproveSetDR" >
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="NextFlowStep">	
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="IFBModeDR">	
+		    <INPUT type="hidden" id="IFBBuyTypeDR">	
+			<INPUT type="hidden" id="IFBAgencyDR">
+			<INPUT type="hidden" id="IFBBExtendType">	
+			<INPUT type="hidden" id="IFBBExtendType_Desc">
+			<INPUT type="hidden" id="IFBBExtendID">	
+			<INPUT type="hidden" id="IFBBRowID">
+			-->
+			<INPUT type="hidden" id="PlanListIDs" value=#(PlanListIDs)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/audit.js'></script>
+</body>
+</html>

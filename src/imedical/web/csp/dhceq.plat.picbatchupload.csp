@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+	<title>批量图片上传</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+	<link href="../scripts/dhceq/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/default.css">
+    <link href="../scripts/dhceq/fileinput/css/fileinput.css" media="all" rel="stylesheet" type="text/css" />	
+</head>
+<script language="cache"  runat="server">
+	s PTRowID=$Get(%request.Data("PTRowID",1))
+	s maxFileSize=##class(web.DHCEQCommon).GetSysInfo("990027")	//(系统参数设置单位:MB  上传判断单位:KB)
+	i maxFileSize="" s maxFileSize=1
+	s maxFileSize=maxFileSize*1024			//Modify DJ 2019-08-23
+	s maxFilesNum=##class(web.DHCEQCommon).GetSysInfo("990049")
+	i maxFilesNum="" s maxFilesNum=10
+	s PicTypeData=$Get(%request.Data("PicTypeData",1))
+	s PicType=$Get(%request.Data("PicType",1))
+	s SourceType=$Get(%request.Data("SourceType",1))
+	s SourceID=$Get(%request.Data("SourceID",1))
+	s PicName=$Get(%request.Data("PicName",1))
+</script>
+<body>
+	<div class="htmleaf-container">
+		<div class="container kv-main">
+            <form enctype="multipart/form-data">
+                <div class="form-group">
+                    <input id="file-1" name="FileStream" type="file" multiple class="file" data-overwrite-initial="true" data-min-file-count="1">
+                </div>
+            </form>
+            <div class="eq-table">
+            	<div class="eq-table-tr">
+            		<div class="eq-table-td eq-table-label"><label id="cPicType" for="PicType">图片类型:</label></div>
+            		<div class="eq-table-td eq-table-input"><input id="PicType" class="hisui-combobox textbox" value=#(PicType)# data-options="valueField: 'id',textField: 'text',data:#(PicTypeData)#"></div>
+            		<div class="eq-table-td eq-table-label"><label id="cPicName" for="PicName">图片名称:</label></div>
+            		<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PicName" value=#(PicName)#></input></div>
+            		<!--以下元素隐藏-->
+            		<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PTRowID" hidden=true value=#(PTRowID)#></input></div>
+            		<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SourceType" hidden=true value=#(SourceType)#></input></div>
+            		<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SourceID" hidden=true value=#(SourceID)#></input></div>
+            	</div>
+            </div>
+        </div>
+	</div>
+    <script src="../scripts/dhceq/fileinput/js/fileinput.js" type="text/javascript"></script>
+    <script src="../scripts/dhceq/fileinput/js/fileinput_locale_zh.js" type="text/javascript"></script>
+    <script src="../scripts/dhceq/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script language="javascript">
+    	if (#(PicType)#>0)
+    	{
+	    	$("#PicType").combobox({disabled: true});
+    	}
+    	if (getElementValue("PicName")!="")
+    	{
+	    	disableElement("PicName",true)
+    	}
+		$("#file-1").fileinput
+		({
+			uploadUrl: '../csp/dhceq.process.pictureaction.csp?&actiontype=UploadByFtpStream&PTRowID=#(PTRowID)#&PicSort=1',
+			allowedFileExtensions : ['jpg','png','gif','bmp'],
+		    overwriteInitial: false,
+		    maxFileSize: #(maxFileSize)#,
+		    maxFilesNum: #(maxFilesNum)#,
+		    slugCallback: function(filename)
+		    {
+		    	return filename.replace('(', '_').replace(']', '_');
+		    }
+		});
+		//add by lmm 404187 2017-08-01 begin 
+		$('#file-1').on('fileuploaded', function(event, data, previewId, index) {
+			opener.UpdateForPicListChange() 
+		});
+		//add by lmm 404187 2017-08-01 end
+		$(document).ready(function(){});
+   </script>
+</body>
+</html>

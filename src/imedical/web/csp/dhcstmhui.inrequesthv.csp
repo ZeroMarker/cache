@@ -1,0 +1,145 @@
+﻿<!--库存请求(高值)制单界面-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+	s RowId = $G(%request.Data("RowId",1))
+</SERVER>
+<head>
+	<script language=javascript>
+		var gHVInRequest=true;	//高值制单
+		var gReqId = "#(RowId)#";
+	</script>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+		<table id="MainConditions" class="Condition">
+			<input id="RowId" name="RowId" type="hidden">
+			<input id="ReqType" name="ReqType" type="hidden">
+			<tr>
+				<td>请求科室</td>
+				<td><input id="ReqLoc" name="ReqLoc" class="textbox hisui-combobox" ></td>
+				<td>制单人</td>
+				<td><input id="User" name="User" class="textbox hisui-combobox" data-options="disabled:true" ></td>
+				<td>单号</td>
+				<td><input id="ReqNo" name="ReqNo" class="textbox" disabled="true" ></td>
+				<td><input id="Template" name="Template" class='hisui-checkbox' type="checkbox" value="Y" label="模板标志"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="FindTemBT" class="hisui-linkbutton" >查询模板</a></td>
+			</tr>
+			<tr>
+				<td>供应科室</td>
+				<td><input id="SupLoc" name="SupLoc" class="textbox hisui-combobox" ></td>
+				<td>制单日期</td>
+				<td><input id="Date" name="Date" class="textbox hisui-datebox" data-options="disabled:true" ></td>
+				<td valign="top" rowspan="2">备注</td>
+				<td valign="top" rowspan="2"><textarea style="width:151px" id="ReqRemarks" rows="4" cols="10" name="ReqRemarks"></textarea>
+				<td><input id="Comp" name="Comp" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="完成标志"></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:86px">完成</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" style="width:86px">打印</a></td>
+			</tr>
+			<tr>
+				<td>类组</td>
+				<td><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree" ></td>
+				<td>制单时间</td>
+				<td><input id="Time" name="Time" class="textbox hisui-timespinner" data-options="disabled:true" style="width:156px"></td>
+				<td></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:88px">删除</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton">取消完成</a></td>
+				
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="InRequestGrid"></table>
+	</div>
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询请求单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="" data-options="region:'north',border:false">
+				<table id="FindConditions" class="Condition">
+					<input id="HvFlag" name="HvFlag" class="textbox" type="hidden">
+					<tr>
+						<td>起始日期</td>
+						<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox" ></td>
+						<td>请求科室</td>
+						<td><input id="FReqLoc" name="ReqLoc" class="textbox hisui-combobox" ></td>
+						<td colspan="2">
+						完成标志
+						<input id="Complate" name="Complate" class='textbox hisui-simplecombobox' >
+						</td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton">查询</a></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton">清屏</a></td>
+					</tr>
+					<tr>
+						<td>截止日期</td>
+						<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox" ></td>
+						<td>供应科室</td>
+						<td><input id="FSupLoc" name="SupLoc" class="textbox hisui-combobox" ></td>
+						<td colspan="2">
+						<input id="AllTransfer" name="AllTransfer" class='hisui-checkbox' type="checkbox" value="Y"  label="全部转移">
+						<input id="PartTransfer" name="PartTransfer" class='hisui-checkbox' type="checkbox" value="Y" label="部分转移">
+						<input id="NoTransfer" name="NoTransfer" class='hisui-checkbox' type="checkbox" value="Y" label="未转移">
+						</td>
+						<td><a href="#" id="FComBT" class="hisui-linkbutton">选取</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="GridPadding" data-options="region:'west',border:false" style="padding-top:0;width:500px;">
+				<div class="hisui-panel" data-options="title:'请求单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="RequestMainGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-top:0;padding-left:0;">
+				<div class="hisui-panel" data-options="title:'请求单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="RequestDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="TemWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="请求单模板">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="TConditions" class="Condition">
+					<input id="HvFlag" name="HvFlag" class="textbox" type="hidden">
+					<input id="ReqType" name="ReqType" class="textbox" type="hidden">
+					<tr>
+						<td>请求科室</td>
+						<td><input id="TReqLoc" name="ReqLoc" class="textbox hisui-combobox"></td>
+						<td><a href="#" id="TQueryBT" class="hisui-linkbutton">查询</a></td>
+						<td><a href="#" id="TClearBT" class="hisui-linkbutton">清屏</a></td>
+						<td><a href="#" id="TModBT" class="hisui-linkbutton">选取修改</a></td>
+						<td><a href="#" id="TCreBT" class="hisui-linkbutton">选取制单</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="GridPadding" data-options="region:'west',border:false" style="width:500px;">
+				<div class="hisui-panel" data-options="title:'请求单模板',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="TRequestMainGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-left: 0px;">
+				<div class="hisui-panel" data-options="title:'请求单模板明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="TRequestDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/INRequestCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/INRequest.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/findWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/INRequestPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/findReqTemplateWin.js"></script>
+</body>
+</html>

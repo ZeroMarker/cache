@@ -1,0 +1,372 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!--本组css文件-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<style>
+		.my-interface>div>div{
+			border:none;
+		}
+		/*--解决私有明细维护表头底线重叠问题--*/
+		.my-interface #grpDetailDialog div.panel-header.panel-header-gray{
+			border-bottom:none;
+		}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface">
+	
+	
+	
+	<!--大组表格-->
+	<div data-options="region:'center'" style = "fit:true;padding:10px 5px 10px 10px;border:false">
+		<table id="grpTable" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'" title="医技工作量大组维护">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:120,hidden:true">ID</th>
+					<th data-options="field:'code',width:150">大组编码</th>
+					<th data-options="field:'desc',width:150">大组描述</th>
+					<th data-options="field:'IItem',width:100">住院口径</th>
+					<th data-options="field:'OItem',width:100">门诊口径</th>
+					<th data-options="field:'EItem',width:100">急诊口径</th>
+					<th data-options="field:'HItem',width:100">检验口径</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	
+	<!--子组表格-->
+	<div data-options="region:'east',collapsed:false,collapsible:false" style="width:600px;padding:10px 10px 10px 5px;border:false">
+		<table id="subGrpTable" data-options="headerCls:'panel-header-gray',fit:true,singleSelect:true,iconCls:'icon-paper'" title="医技工作量子组维护">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:120,hidden:true">ID</th>
+					<th data-options="field:'code',width:150">子组编码</th>
+					<th data-options="field:'desc',width:150">子组描述</th>
+					<th data-options="field:'IItem',width:100">住院口径</th>
+					<th data-options="field:'OItem',width:100">门诊口径</th>
+					<th data-options="field:'EItem',width:100">急诊口径</th>
+					<th data-options="field:'HItem',width:100">检验口径</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	
+    <!--大组头部功能菜单维护区-->
+  	<div id="grpToobar" class="searchboxRight toolbarsearchbox" style="display:none">	
+    	<!--检索框//-->
+    	<input id="searchGrpApp" class="hisui-searchbox" data-options="prompt:'检索'" style="width:130px">
+		
+		<a href="javascript:void(0)" id="addButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+    	<a href="javascript:void(0)" id="modifyButton" class="hisui-linkbutton" data-options="iconCls:'icon-write-order'" plain="true">修改</a>
+		<a href="javascript:void(0)" id="deleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	<!--大组新增-->
+  	<div id="grpAddDialog" style="width:350px;display:none;padding:0px 4px" title="大组新增">
+  		<form id="grpAddForm" class="myFormShow" style="fit:true">
+			<div>
+				<label for="grpAddCode">大组编码</label>
+				<input class="hisui-validatebox" type="text" id="grpAddCode" data-options="required:true,validType:'isCode'" style="width:220px"/>
+			</div>
+			<div>
+				<label for="grpAddDesc">大组描述</label>
+				<input class="hisui-validatebox" type="text" id="grpAddDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="grpIAddCombo">住院口径</label>
+				<select id="grpIAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="grpOAddCombo">门诊口径</label>
+				<select id="grpOAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="grpEAddCombo">急诊口径</label>
+				<select id="grpEAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="grpHAddCombo">检验口径</label>
+				<select id="grpHAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+		</form><!--配置统计大组信息表单结束-->
+  	</div>
+  	<!--归集大组新增结束-->
+	
+	
+	<!--大组修改-->
+  	<div id="grpModDialog" style="width:350px;display:none;padding:0px 4px;" title="大组修改">
+  		<form id="grpModForm" class="myFormShow" style="fit:true">
+			<div>
+				<label for="grpModCode">大组编码</label>
+				<input class="hisui-validatebox" type="text" id="grpModCode" disabled="true" data-options="required:true,validType:'isCode'" style="width:220px"/>
+			</div>
+			<div>
+				<label for="grpModDesc">大组描述</label>
+				<input class="hisui-validatebox" type="text" id="grpModDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="grpIModCombo">住院口径</label>
+				<select id="grpIModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="grpOModCombo">门诊口径</label>
+				<select id="grpOModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="grpEModCombo">急诊口径</label>
+				<select id="grpEModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="grpHModCombo">检验口径</label>
+				<select id="grpHModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+		</form>
+  	</div><!--归集大组修改结束-->
+	
+	
+	
+	<!--子组头部功能菜单维护区-->
+  	<div id="subGrpToobar" class="searchboxRight toolbarsearchbox" style="display:none">	
+    	<!--检索框//-->
+    	<input id="searchSubGrpApp" class="hisui-searchbox" data-options="prompt:'检索'" style="width:130px">
+		
+		<a href="javascript:void(0)" id="subGrpAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+    	<a href="javascript:void(0)" id="subGrpModifyButton" class="hisui-linkbutton" data-options="iconCls:'icon-write-order'" plain="true">修改</a>
+		<a href="javascript:void(0)" id="subGrpDeleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+		<a href="javascript:void(0)" id="subGrpDetailButton" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg'" plain="true">明细维护</a>
+  	</div><!--头部功能菜单维护区配置结束-->
+  		
+	
+	
+	<!--子组新增-->
+  	<div id="subGrpAddDialog" style="width:350px;display:none;padding:0px 4px;" title="子组新增">
+  		<form id="subGrpAddForm" class="myFormShow" style="fit:true">
+			<div>
+				<label for="subGrpAddCode">子组编码</label>
+				<input class="hisui-validatebox" type="text" id="subGrpAddCode" data-options="required:true,validType:'isCode'" style="width:220px"/>
+			</div>
+			<div>
+				<label for="subGrpAddDesc">子组描述</label>
+				<input class="hisui-validatebox" type="text" id="subGrpAddDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="subGrpIAddCombo">住院口径</label>
+				<select id="subGrpIAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="subGrpOAddCombo">门诊口径</label>
+				<select id="subGrpOAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="subGrpEAddCombo">急诊口径</label>
+				<select id="subGrpEAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="subGrpHAddCombo">检验口径</label>
+				<select id="subGrpHAddCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+		</form><!--配置统计子组信息表单结束-->
+  	</div>
+	
+	
+	<!--子组修改-->
+  	<div id="subGrpModDialog" style="width:350px;display:none;padding:0px 4px;" title="子组修改">
+  		<form id="subGrpModForm" class="myFormShow" style="fit:true">
+			<div>
+				<label for="subGrpModCode">子组编码</label>
+				<input class="hisui-validatebox" type="text"  disabled="true" id="subGrpModCode" data-options="required:true,validType:'isCode'" style="width:220px"/>
+			</div>
+			<div>
+				<label for="subGrpModDesc">子组描述</label>
+				<input class="hisui-validatebox" type="text" id="subGrpModDesc" data-options="required:true,validType:'isForm'"  style="width:220px"/>
+			</div>
+			<div>
+				<label for="subGrpIModCombo">住院口径</label>
+				<select id="subGrpIModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="subGrpOModCombo">门诊口径</label>
+				<select id="subGrpOModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="subGrpEModCombo">急诊口径</label>
+				<select id="subGrpEModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+			<div>
+				<label for="subGrpHModCombo">检验口径</label>
+				<select id="subGrpHModCombo" class="hisui-combobox" style="width:227px" data-options="required:true,editable:false">
+					<option value="JF">计费</option>
+					<option value="EXE">执行</option>
+					<option value="JYInter">检验接口</option>
+					<option value="JCInter">检查接口</option>
+					<option value="HSZX">护士执行</option>
+				</select>
+			</div>
+		</form>
+  	</div><!--归集子组修改结束-->
+	
+
+	
+	
+	
+	
+	<!--统计组明细新增界面-->
+  	<div id="grpDetailDialog" style="width:1000px;height:450px;display:none;" title="项目归集明细维护">
+  		<div class="hisui-layout" fit="true">
+  			<div data-options="region:'center'" style="fit:true;padding:10px 5px 10px 10px;border:none;">
+		  		<table id="grpSelectDetailGrid" data-options="fit:true,singleSelect:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="已选明细">
+		  			<!--thead>
+		  				<tr>
+							<th data-options="field:'ID',width:50,hidden:true">ID</th>
+							<th data-options="field:'grpDetailID',width:50">ID</th>
+		  					<th data-options="field:'desc',width:100,formatter:formatCellTooltip">描述</th>
+							<th data-options="field:'IItem',width:100,editor:'text'">住院口径</th>
+							<th data-options="field:'OItem',width:100,editor:'text'">门诊口径</th>
+							<th data-options="field:'EItem',width:100,editor:'text'">急诊口径</th>
+							<th data-options="field:'HItem',width:100,editor:'text'">检验口径</th>
+		  				</tr>
+		  			</thead-->
+		  		</table>
+		  	</div>	
+		  	<div data-options="region:'east'" style="width:450px;padding:10px 10px 10px 5px;border:none;">
+				<table id="grpAllDetailGrid" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="待选明细">
+		  			<thead>
+		  				<tr>
+							<th data-options="field:'box',checkbox:true">box</th>
+		  					<th data-options="field:'ID',width:50">ID</th>
+		  					<th data-options="field:'code',width:100">代码</th>
+		  					<th data-options="field:'desc',width:100,formatter:formatCellTooltip">描述</th>
+		  				</tr>
+		  			</thead>
+		  		</table>
+		  	</div>
+  		</div>
+  	</div>
+	
+	<!--所有明细维护toolbar-->
+	<div id="grpDetailToobar" class="searchboxRight toolbarsearchbox" style="display:none">	
+    	<!--检索框//-->
+    	<input id="searchGrpDetailApp" class="hisui-searchbox" data-options="prompt:'检索'" style="width:130px">
+		
+		<a href="javascript:void(0)" id="grpDetailAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	<!--已维护明细维护toolbar-->
+	<div id="grpSelectDetailToobar" class="searchboxRight toolbarsearchbox" style="display:none">	
+    	<!--检索框//-->
+    	<input id="searchGrpSelectDetail" class="hisui-searchbox" data-options="prompt:'检索'" style="width:130px">
+		
+		<a href="javascript:void(0)" id="selectDetailDelete" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+		<a href="javascript:void(0)" id="selectAllDetailDelete" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">全部删除</a>
+
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	<!--引入js文件JSURL-->
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/wl/wlcfg.js"></script>
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    
+
+    i Action = "GetParamProp" d
+    .s GroupId=$g(%request.Data("GroupId",1))
+    .s LocId=$g(%request.Data("LocId",1))
+    .s UserId=$g(%request.Data("UserId",1))
+    .s Param=GroupId_"^"_LocId_"^"_UserId
+    .s ret=##class(web.DHCSTM.Common.FtpFile).GetFtpConfig(Param)
+    .w "{success:'true',info:'"_ret_"'}"
+
+	i Action="NewFileName" d
+	.s AppName=##class(web.DHCSTM.Common.FtpFile).%GetParameter("AppName")  //ftp公共单号规则
+    .s FileName=##class(web.DHCSTM.Common.AppCommon).GetAppNo(AppName,"","")
+	.w "{success:'true',info:'"_FileName_"'}"
+
+	
+
+</script>

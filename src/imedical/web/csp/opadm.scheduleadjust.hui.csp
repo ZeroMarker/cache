@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--opadm.scheduleadjust.hui.csp HISUI医生坐诊信息调整--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link rel="stylesheet" href="../scripts_lib/kalendae/kalendae.css" type="text/css">
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+iframe{
+	vertical-align:top;
+	display:block;
+}
+.editcls{
+	cursor:point;
+	text-decoration:underline;
+}
+.tabItem_badge{
+	position:absolute;
+	right:2px;
+	top:4px;
+	width:8px;
+	height:8px;
+	border-radius:4px;
+	background:red;
+}
+#ColorSynopsis{
+	width:180px;
+	position: fixed;
+	right: 20px;
+	top: 57px;
+}
+#ColorSynopsis span{
+	display:inline-block;
+	width:40px;
+	height:20px;
+	margin-left:5px;
+}
+</style>
+<Server>
+s sysDateFormat=##class("websys.Conversions").DateFormat()
+s CurrDate=##class(web.DHCBatchStopNew).GetCurrDate()
+w "<SCRIPT language = 'javascript' >",!
+	w $C(9),"var TRArr=new Array();",!
+	s Rowid=0
+	f  s Rowid=$O(^DHCTimeRange(Rowid)) q:Rowid=""  d
+	.s SttTime=$P(^DHCTimeRange(Rowid),"^",3)
+	.s SttTime=$ZT(+SttTime)
+	.s EndTime=$P(^DHCTimeRange(Rowid),"^",4)
+	.s EndTime=$ZT(+EndTime)
+	.w $C(9),"TRArr["_Rowid_"]='"_SttTime_"^"_EndTime_"';",!
+	
+	w $C(9),"var APTMArr=["
+	s Rowid=0,count=0
+	f  s Rowid=$O(^RBC("APTM",Rowid)) q:Rowid=""  d
+	.s Desc=$P(^RBC("APTM",Rowid),"^",2)
+	.i $I(count)>1 w ","
+	.w "{'Rowid':'"_Rowid_"','Desc':'"_Desc_"'}"
+	w "];",!
+w "</SCRIPT>"
+w !," <input id='MNew' name='MNew' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.InsertOneSchedule"))_"'>"
+</Server>
+</head>
+<body>
+	<csp:Include Page="opadm.scheduleadjust.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			sysDateFormat:"#(sysDateFormat)#",
+			CurrDate:"#(CurrDate)#"
+		};
+	</SCRIPT>
+	<!--日期多选插件-->
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts_lib/kalendae/kalendae.standalone.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/OPAdm/ScheduleAdjust.hui.js"></script>
+</body>
+</html>

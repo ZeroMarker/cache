@@ -1,0 +1,93 @@
+<!--(移动药房)备药路线规则维护csp:dhcpha/dhcpha.inpha.mtdrawsort.csp--> 
+<!--(移动药房)备药路线规则维护js:pharmacy/inpha/dhcpha.inpha.mtdrawsort.js-->
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;">
+	<Server language="CACHE" runat="Server">
+   	s Application=%request.Application
+   </Server>
+	<TRAK:HEAD/>
+	<DHCAPP:PHAEASYUI/>
+	<!-- Put your page Title here -->
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.mtdrawsort.js"></script>
+	<style type="text/css">
+	.datagrid-row-selected {
+  		background: #ADFAFC;
+	}
+	.datagrid-row {
+		height: 30px;
+	}
+   </style>
+</head> 
+<body>
+	<div id="mainpanel" class="easyui-layout"  fit="true">
+		<div data-options="region:'west',title:'查询条件'" style="width:420px;">
+				<div class="easyui-layout"  fit="true">
+					<div data-options="region:'north',title:''" style="height:140px;">
+						<!--查询条件布局使用table-->
+						<form id="queryForm" >
+						<table style="font-size:13px;margin:10px 0px 0px 30px" >
+		
+								<tr height=50 >
+									<td style="padding-left:5px">药房:</td>
+									<td><input id="CombPhaloc" name="PhLoc" style="width:230;border:1px solid #95B8E7;" value=""/></td>
+									<td><a class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
+								</tr>
+								<tr height=50 >
+									<td style="padding-left:5px">货位码:</td>
+									<td><input id="sbdesctext" name="SBDesc" style="width:230;border:1px solid #95B8E7;" value=""/></td>
+									<td><a class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="javascript:find()">检索</a></td>
+								</tr>
+						</table>
+						</form>
+					</div>
+					<div data-options="region:'center',title:'备药排序规则'" border="false" style="width:400px;height:450px;float:left;border-right:1px soild #ffffff">
+						<div id="mainpanel" class="easyui-layout"  fit="true">
+						<div data-options="region:'north'" border="false" style="height:30px">						
+						<table cellspacing="0" cellpadding="0" >
+							<tr>
+						      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >增加</a></td>
+						      <td><div class="datagrid-btn-separator"> </div> </td>
+						      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+						      <td><div class="datagrid-btn-separator"> </div> </td>	
+						      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:cancel()">删除</a></td>	
+						      <td><div class="datagrid-btn-separator"> </div> </td>
+						    </tr>
+						</table>
+						</div>
+						<div data-options="region:'center'" border="false">
+						<table id="datagrid" class="easyui-datagrid" fit="true" 
+							data-options="
+							toolbar:'#toolbar',
+						    rownumbers:true,
+						    method:'get',
+						    fitColumns:false,
+						    pageSize:10,  
+						    pageList:[10,20,30,50],
+						    singleSelect:true,
+						    pagination:true,
+						    nowrap: false,
+						    onDblClickRow:onDblClickRow, 
+						    onClickRow:onClickRow,
+						    onLoadSuccess:LoadSuccessRow,
+							url:'dhcapp.broker.csp?ClassName=web.DHCINPHA.MTDrawSort.DrawSortQuery&MethodName=GetDrawSortList'">
+							<thead>
+								<tr>
+									<th data-options="field:'ID',hidden:true">id</th>
+									<th data-options="field:'PhLocId',hidden:true">phloc</th>
+									<th data-options="field:'DSCode',width:100,editor:{type:'validatebox',options:{required:true}}">代码</th>
+									<th data-options="field:'DSDesc',width:266,editor:{type:'validatebox',options:{required:true}}">描述</th>
+								</tr>
+							</thead>
+						</table>
+						</div>
+						</div>
+					</div>
+				</div>
+		</div>
+		<div data-options="region:'center',split:true,title:'规则明细列表'" style="border: 0px none;">
+			<table id="drawsortdetail" ></table>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<csp:content charset="utf-8">
+<SERVER>
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Desc = $Get(%request.Data("Desc",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s HospId=$Get(%request.Data("HospId",1))
+	/// 医院d
+	i Action = "Hosp" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetHosp(Start,Limit)
+	/// 单位
+	i Action = "CTUom" d
+	.s CTUomDesc = $Get(%request.Data("CTUomDesc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetCTUom(CTUomDesc, Start,Limit)
+	/// 批号~效期
+	i Action = "BatExDate" d
+	.s ItmRowid=$g(%request.Data("ItmRowid",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s Desc = $Get(%request.Data("Desc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetBatExDate(ItmRowid,LocId,Desc,Start,Limit)
+	/// 取和已知单位存在转换关系的单位
+	i Action = "CONUom" d
+	.s UomId = $Get(%request.Data("UomId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetConUom(UomId, Start,Limit)
+	/// 基本,入库单位
+	i Action = "INCIUom" d
+	.s ItmRowid = $Get(%request.Data("ItmRowid",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetItmUom(ItmRowid)
+	/// 库存分类
+	i Action = "INCSCStkGrp" d
+	.s StkType = $Get(%request.Data("StkType",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetINCSCStkGrp(StkType, Start,Limit,HospId)
+	/// 出入库类型
+	i Action = "OperateType" d
+	.s Type = $Get(%request.Data("Type",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetOperateType(Type)
+	/// 根据类组获取库存分类
+	i Action = "StkCat" d
+	.s StkGrpId = $Get(%request.Data("StkGrpId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetStkCat(StkGrpId, Start, Limit)
+	/// 根据类祖串获取库存分类
+	i Action = "StkCatByGrant" d
+	.s StkGrpIdStr = $Get(%request.Data("StkGrpIdStr",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetStkCatByGrant(StkGrpIdStr, Start, Limit,HospId)
+	/// 已停用-药学大类
+	i Action = "PhcCat" d
+	.S PhccDesc = $Get(%request.Data("PhccDesc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhcCat(PhccDesc, Start, Limit)
+	/// 已停用-药学子类
+	i Action = "PhcSubCat" d
+	.s PhcCatId = $Get(%request.Data("PhcCatId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhcSubCat(PhcCatId, Start, Limit)
+	/// 已停用-药学小类
+	i Action = "PhcMinCat" d
+	.s PhcSubCatId = $Get(%request.Data("PhcSubCatId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhcMinCat(PhcSubCatId, Start, Limit)
+	/// 处方通用名
+	i Action = "PhcGeneric" d
+	.s PhcGeName = $Get(%request.Data("PhcGeName",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhcGeneric(PhcGeName, Start, Limit)
+	/// 剂型
+	i Action = "PhcForm" d
+	.s PHCFDesc = $Get(%request.Data("PHCFDesc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhcForm(PHCFDesc, Start, Limit)
+	/// 用法
+	i Action = "PHCInstruc" d
+	.s PHCInDesc = $Get(%request.Data("PHCInDesc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPHCInstruc(PHCInDesc, Start, Limit)
+	/// 频次
+	i Action = "PHCFreq" d
+	.s PhcFrDesc = $Get(%request.Data("PhcFrDesc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPHCFreq(PhcFrDesc, Start, Limit)
+	/// 疗程
+	i Action = "PhcDuration" d
+	.s PhcDuDesc = $Get(%request.Data("PhcDuDesc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhcDuration(PhcDuDesc, Start, Limit)
+	/// 根据Type获取相关信息
+	i Action = "OfficeCode" d
+	.s Type = $Get(%request.Data("Type",1)) 
+	.w ##class(web.DHCST.Util.DrugUtil).GetOfficeCode(Type,Start, Limit)
+	/// 管制分类
+	i Action = "PhcPoison" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhcPoison(Start, Limit)
+	/// 费用大类
+	i Action = "ArcBillGrp" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetArcBillGrp(Start, Limit)
+	/// 费用子类
+	i Action = "ArcBillSub" d
+	.s ARCBGRowId = $Get(%request.Data("ARCBGRowId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetArcBillSub(ARCBGRowId)
+	/// 医嘱大类
+	i Action = "OrderCategory" d
+	.s StkType=$Get(%request.Data("StkType",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetOrderCategory(StkType, Start, Limit)
+	/// 医嘱子类
+	i Action = "ArcItemCat" d
+	.s Desc = $Get(%request.Data("Desc",1))
+	.s OrderCat= $Get(%request.Data("OrderCat",1))
+	.s StkType=$Get(%request.Data("StkType",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetArcItemCat(OrderCat,Desc,Start,Limit,StkType)
+	/// 医嘱优先级
+	i Action = "OECPriority" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetOECPriority(Start, Limit)
+	/// 定价类型
+	i Action = "MarkType" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetMarkType(HospId)
+	/// 招标名称
+	i Action = "PublicBiddingList" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetPublicBiddingList(HospId)
+	/// 帐簿分类
+	i Action = "BookCat" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetBookCat(HospId)
+	/// 根据库存项ID取药品信息
+	i Action = "GetItmInfo" d
+	.s ItmRowid = $Get(%request.Data("ItmRowid",1))
+	.s HospId = $Get(%request.Data("HospId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetItmInfo(ItmRowid,HospId)
+	/// 根据库存项代码取药品信息
+	i Action = "GetItmInfoByCode" d
+	.S ItmCode=$Get(%request.Data("ItmCode",1))
+	.S HospId=$Get(%request.Data("HospId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetItmInfoByCode(ItmCode,HospId)
+	/// 药品弹窗-读取药品信息
+	i Action = "GetPhaOrderItemForDialog" d
+	.s Input=$Get(%request.Data("Input",1))
+	.s StkGrpRowId=$Get(%request.Data("StkGrpRowId",1))
+	.s StkGrpType=$Get(%request.Data("StkGrpType",1))
+	.s Locdr=$Get(%request.Data("Locdr",1))
+	.s NotUseFlag=$Get(%request.Data("NotUseFlag",1))
+	.s QtyFlag=$Get(%request.Data("QtyFlag",1))
+	.s HospID=$Get(%request.Data("HospID",1))
+	.s User=$G(%session.Data("LOGON.USERID")) //zhwh 2013-07-12 add
+	.s ReqLocDr=$Get(%request.Data("ReqLocDr",1))
+	.s AllCatGrpFlag=$Get(%request.Data("AllCatGrpFlag",1))
+	.s BDPHospAut=##class(PHA.FACE.IN.Com).GetHospAut() //医院级别授权是否开启
+	.i (BDPHospAut="Y")&&(HospID="") s HospID=HospId
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhaOrderItemInfo(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, QtyFlag, HospID, Start, Limit,User,ReqLocDr,AllCatGrpFlag)
+	/// 药品弹窗-读取所有药品信息
+	i Action = "GetPhaOrderItemForDialogAll" d
+	.s Input=$Get(%request.Data("Input",1))
+	.s StkGrpRowId=$Get(%request.Data("StkGrpRowId",1))
+	.s StkGrpType=$Get(%request.Data("StkGrpType",1))
+	.s NotUseFlag=$Get(%request.Data("NotUseFlag",1))
+	.s HospID=$Get(%request.Data("HospID",1))
+	.s User=$G(%session.Data("LOGON.USERID")) //zhwh 2013-07-12 add
+	.s BDPHospAut=##class(PHA.FACE.IN.Com).GetHospAut() //医院级别授权是否开启
+	.i (BDPHospAut="Y")&&(HospID="") s HospID=HospId
+	.w ##class(web.DHCST.Util.DrugUtil).GetPhaOrderItemInfoAll(Input, StkGrpRowId, StkGrpType, NotUseFlag, HospID, Start, Limit,User)
+	/// 根据科室和药品库存项查询药品的批次列表
+	i Action = "GetDrugBatInfo" d
+	.S InciDr=$Get(%request.Data("IncId",1))
+	.S ProLocId=$Get(%request.Data("ProLocId",1))
+	.S ReqLocId=$Get(%request.Data("ReqLocId",1))
+	.s QtyFlag=$Get(%request.Data("QtyFlag",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetDrugBatInfo(InciDr, ProLocId, ReqLocId,QtyFlag,Start,Limit,"G","",Sort,Dir)
+	/// 根据库存项id取INC_ItmBat表的药品的批次
+	i Action = "GetDrugBatInfoAll" d
+	.S InciDr=$Get(%request.Data("IncId",1))
+	.S LocId=$Get(%request.Data("LocId",1)) //登录科室
+	.s ret=##class(web.DHCST.Util.DrugUtil).GetDrugBatInfoAll(InciDr,LocId,Start,Limit)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+	/// 质量层次
+	i Action = "GetQualityLevel" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetQualityLevel()
+	/// 医保类别
+	i Action = "GetInsuCat" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetInsuCat()
+	/// 招标级别
+	i Action = "GetPBLevel" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetPBLevel(HospId)
+	/// 不可用原因
+	i Action = "GetItmNotUseReason" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetItmNotUseReason()
+	/// 小数规则
+	i Action = "StkDecimal" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetStkDecimal(HospId)
+	/// 货位码
+	i Action = "GetStkBin" d
+	.s Desc = $Get(%request.Data("Desc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetAllStkBin(Desc, Start, Limit)
+	/// 科室货位码
+	i Action = "GetLocStkBin" d
+	.s Desc = $Get(%request.Data("Desc",1))
+	.s Loc=$g(%request.Data("LocId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetLocStkBin(Loc,Desc, Start, Limit)
+	/// 科室药品货位码
+	i Action = "GetLocStkBinQ" d
+	.s ItmRowid=$g(%request.Data("ItmRowid",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s Desc = $Get(%request.Data("Desc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetLocStkBinQ(ItmRowid,LocId,Desc, Start, Limit)
+	/// 子分类
+	i Action = "GetTarSubCate" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetTarSubCate(Desc, Start, Limit)
+	/// 会计子分类
+	i Action = "GetTarAcctCate" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetTarAcctCate(Desc, Start, Limit)
+	/// 住院子分类
+	i Action = "GetTarInpatCate" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetTarInpatCate(Desc, Start, Limit)
+	/// 病历首页分类
+	i Action = "GetTarMRCate" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetTarMRCate(Desc, Start, Limit)
+	/// 核算子分类
+	i Action = "GetTarEMCCate" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetTarEMCCate(Desc, Start, Limit)
+	/// 门诊子分类
+	i Action = "GetTarOutpatCate" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetTarOutpatCate(Desc, Start, Limit)
+	/// 根据库存项ID取所有科室库存量信息"
+	i Action = "GetAllLocStk" d
+	.s Inci=$Get(%request.Data("Inci",1))
+	.s start=$Get(%request.Data("start",1))
+	.s limit=$Get(%request.Data("limit",1))
+	.w ##class(web.DHCST.Util.DrugUtil).jsGetAllLocStk(start,limit,Inci)
+	/// 新病案首页
+	i Action = "GetTarNewMRCate" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetTarNewMRCate(Desc, Start, Limit)
+	/// 根据科室库存项ID取入库批次信息"
+	i Action = "GetInciRecList" d
+	.s Inci=$Get(%request.Data("Inci",1))
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s start=$Get(%request.Data("start",1))
+	.s limit=$Get(%request.Data("limit",1))
+	.w ##class(web.DHCST.Util.DrugUtil).jsGetInciRecList(start,limit,Inci,LocId)
+    /// 库存所在的科室
+	i Action="GetInciLoc" d
+	.S Arcitm=$Get(%request.Data("Arcitm",1))
+	.s Input=$Get(%request.Data("phadisploc",1))
+	.w ##class(web.DHCST.DispUom).GetInciLoc(Arcitm,Input)
+    /// 根据代码获取限制科室用药的下拉
+	i Action = "GetDescInfo" d
+	.s Type=$Get(%request.Data("Type",1))
+	.s PointerDesc=$Get(%request.Data("PointerDesc",1))
+	.w ##class(web.DHCST.RestrictDoc).GetDesc(Type,PointerDesc)	
+    /// 草药备注
+	i Action = "PHCSpecInc" d
+	.s PHCSpecInDesc = $Get(%request.Data("PHCSpecInDesc",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetPHCSpecInc(PHCSpecInDesc, Start, Limit)
+	/// 科室
+	i Action = "GetLocInfoForDialog" d
+	.s Input=$Get(%request.Data("Input",1))
+	.w ##class(web.DHCST.Util.OrgUtil).GetRelLoc(Start,Limit,Input,HospId)
+	/// whoDDD单位
+	i Action = "PHCDFWhoDDDUom" d
+	.s PHCDFWhoDDDName = $Get(%request.Data("PHCDFWhoDDDName",1))
+	.s PHCDFCode = $Get(%request.Data("PHCDFCode",1))
+	.w ##class(web.DHCST.Util.DrugUtil).PHCDFWhoDDDUom(PHCDFWhoDDDName, PHCDFCode,Start, Limit)	
+	/// 配液分类
+	i Action = "GetPHCPivaCat" d
+	.w ##class(web.DHCST.Util.DrugUtil).GetPHCPivaCat(Desc, Start, Limit)
+</SERVER>

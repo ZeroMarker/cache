@@ -1,0 +1,277 @@
+<!-- DHCPEPosStandard.csp DHCPEPosQuery.csp -->
+<!-- 
+/// 创建时间		2006.11.15
+/// 创建人		xuwm 
+/// 主要功能		
+/// 关联文件		DHCPEPosStandard.js
+/// 主要功能		多团体?分年龄段?性别 查询阳性特征
+/// 最后修改时间	
+/// 最后修改人	 
+/// -->
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<TITLE>病患汇总</TITLE>
+<!-- TrakCare系统文件 -->
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<SCRIPT SRC="/csp/broker/cspbroker.js"> </SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+
+<!-- 与树型结构相关文件 -->
+<LINK REL="stylesheet" type="text/css" href="../scripts/tree.css"/>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/tree.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.xml.js"></SCRIPT>
+<!-- 本模块文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.Date.js"></SCRIPT> 
+<style type="text/css">
+
+#tree{
+	display:block;
+	position: relative;
+	height:12cm;
+	width:7cm;  
+	border-style: inset;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.1cm 0.1cm 0.1cm;
+	overflow:scroll;
+}
+
+
+#dGroupList{
+	display:block;
+	position: relative;
+	height:6cm;
+	width:7cm; 
+	border-style: inset;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.1cm 0.1cm 0.1cm;
+	overflow:scroll;
+}	
+
+DIV.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	/* border-style: groove;  */
+}
+
+DIV.Ridge{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: inset ;
+
+}
+
+TABLE.Ridge caption{
+	display:block;
+	text-align:left;
+}
+
+TABLE.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: groove; 
+}
+
+TABLE.Groove caption{
+	display:block;
+	text-align:left;
+}
+
+#Panel{
+	display:block;
+	position: relative;
+	width:100%;
+}
+
+#Panel table tr td{
+	display:block;
+	position: relative;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;	
+	text-align: left;
+	
+}
+
+DIV.PanelRTop{
+	display:block;
+	position: relative;
+	width:18.7cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;
+	text-align: left;
+}
+
+DIV.PanelRTop table tr td{
+	text-align: right;
+}
+
+DIV.PanelShow{
+	display:block;
+	position: relative;
+	width:18.7cm;
+	height:18.19cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;	
+	border-style:none;
+	text-align: left;
+}
+
+#AgeFrom{
+	width:1.8cm;
+}
+#AgeTo{
+	width:1.8cm;
+}	
+	
+#dataframe{
+	display:block;
+	width:100%;
+	height:100%;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;
+	border-style:none;	
+}
+
+
+</style>
+</HEAD>
+
+<BODY>
+<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>
+
+<!-- 后台函数 -->
+<script language=cache runat=server>
+	s GroupList=##Class(%CSP.Page).Encrypt($lb("web.DHCPE.PosQuery.OutGroupListToXML"))
+	s PETestList=##Class(%CSP.Page).Encrypt($lb("web.DHCPE.PosQuery.OutGetPETestListToXML"))
+</script>
+<input type='hidden' id='GroupList' name='GroupList' value='#(GroupList)#'>
+<input type='hidden' id='PETestList' name='PETestList' value='#(PETestList)#'>
+
+<!-- 获取数据 -->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 获取团体列表
+	s GName=""
+	w ##class(web.DHCPE.PosQuery).OutGroupListToXML("","",GName,"1")
+</SCRIPT>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	//获取项目列表
+	s SId=""
+	s AName=""		//大项名称
+	s OName=""		//细项名称
+	d ##class(web.DHCPE.PosQuery).OutGetPETestListToXML("","",SId,AName,OName)
+</SCRIPT>
+
+
+
+<!-- 左边 体检单位和项目列表 -->
+<Table id=Panel>
+<tr>
+<td valign="top">
+	<DIV class=Groove>
+		<table>
+			<tr>
+				<td>
+					单位查找:
+				</td>
+				<td>
+					<input type="text" id="GName" name="GName" value="请输入单位名称" size="27"/>	
+				</td>
+			</tr>
+		</table>
+		<DIV id=dGroupList>无法查看团体...</DIV>
+	</DIV>
+
+	<DIV class="Groove">
+		<table>
+			<tr>
+				<td>项目查找:</td>
+				<td><input type="text" id="TName" name="TName" value="请输入项目名称" size="27"/></td>
+			</tr>
+		</table>
+		<DIV Class="tree" id=tree>
+			<!-- 树型表头 -->
+			<TABLE Class="TreeHead" BORDER="1" CELLSPACING="0" CELLPADDING="0">
+				<TR STYLE="background-color: #5389bc;">
+					<TD><DIV CLASS="bOut" ONMOUSEOVER="swapClass(this, 'bOver')" ONMOUSEOUT="swapClass(this, 'bOut')" ONCLICK="expandAll(DivTree)">+</DIV></TD>
+					<TD><DIV CLASS="bOut" ONMOUSEOVER="swapClass(this, 'bOver')" ONMOUSEOUT="swapClass(this, 'bOut')" ONCLICK="collapse(DivTree)">-</DIV></TD>
+					<TD WIDTH="100%"></TD>
+				</TR>
+			</TABLE>
+			<!-- 以树型结果显示数据 -->
+			<DIV id="DivTree">无法查看项目...</DIV>
+		</DIV>
+
+	</DIV>
+</DIV> 
+</td>
+<td valign="top">
+	<DIV class="Groove">
+		<DIV class="PanelRTop">
+			<fieldset>
+			<legend>查询条件</legend>
+
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr>
+                <td width="12%"><div align="right">体检日期从</div></td>
+                <td width="16%">
+                	<input name="DateFrom" type="text" id="DateFrom" value="" size="10"/>
+                	<IMG id="ldDateFrom" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                <td width="2%">到</td>
+                <td width="18%">
+                	<input name="DateTo" type="text" id="DateTo" value="" size="10"/>
+                	<IMG id="ldDateTo" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                <td width="12%"><div align="right">年龄范围从</div></td>
+                <td width="11%"><input name="AgeFrom" type="text" id="AgeFrom" value="" size="4"/></td>
+                <td width="2%" >到</td>
+                <td width="11%" ><input name="AgeTo" type="text" id="AgeTo" value="" size="4"/></td>
+                <td width="5%">性别</td>
+                <td width="12%">
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						d ##class(web.DHCPE.PosQuery).OutSexListToHTML()
+					</SCRIPT>              
+                </td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td colspan="8">
+                <a href="#" id="BQuery" name="BQuery">
+                <img src="../images/websys/find.gif" border="0">查询(<u>C</u>)</a>
+                </td>
+              </tr>
+            </table>
+            </fieldset>
+		</DIV>
+	</DIV>
+	<!-- 显示查询地结果 -->
+	<DIV class="PanelShow" id=PanelShow>
+		<IFRAME id="dataframe" name="dataframe" scrolling="auto" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEPosQuery"></iframe>
+	</DIV>
+</td>
+</tr>
+</table>
+<!-- 本页面JavaScript文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPEPosStandard.js"></SCRIPT>
+
+<script language=javascript>
+	//setDataFrameSize();
+</script>
+</BODY>
+</HTML>

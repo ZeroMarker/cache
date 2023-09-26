@@ -1,0 +1,268 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+    <style>
+    .combobox-width-150{
+       width:150px;     
+    }
+    .width-text{
+        width:155px;
+    }
+    .height-430{
+		height: 430px;	
+	}
+    .height-120{
+        height: 120px;
+    }
+    .panel-body{
+		border-top-width:1px;
+		border-left-width:1px;
+		border-right-width:1px;
+	}
+	.padding-top-8{
+		padding-top:8px;	
+	}
+    </style>
+</HEAD>
+<BODY class="hisui-layout">
+    <div class="border-none" data-options="region:'center'">
+        <div id="tb">
+			<div id="tbfm" class="padding-10 x-separator">
+				<table class="text-right">
+					<tr>
+						<td>申请年月</td>
+						<td class="padding-both-10">
+							<input id="YMbox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td>申请单号</td>
+						<td class="padding-both-10">
+							<input id="ApplyCbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td>申请人</td>
+						<td class="padding-both-10">
+							<input id="Applyerbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td>审批金额范围</td>
+						<td class="padding-both-10">
+							<input id="StPricebox" class="hisui-numberbox" style="width:150px;" data-options="min:0,precision:2"/>	
+						</td>
+						<td>
+							<a id="FindBn" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+						</td>				
+					</tr>
+					<tr>
+						<td class="padding-top-8">归口科室</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="OwnDeptbox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td class="padding-top-8">申请科室</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="ApplyDbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td class="padding-top-8">单据状态</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="Statebox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td class="padding-spac">至</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="EdPricebox" class="hisui-numberbox" style="width:150px;" data-options="min:0,precision:2"/>	
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="line-36-y">
+				<a id="AddBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+			</div>
+		</div>		 	
+        <table id="MainGrid" >
+        </table>
+    </div>
+    <!--创建申请单窗口-->
+    <div id="AddWin" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout height-430" data-options="fit:true">
+            <div id="Addnorth">
+			   	<div id="Addform" class="padding-topbot-10 flex-x-center x-separator">
+                    <table class="text-right">
+                      <tr>
+                        <td>申请单号</td>
+                        <td class="padding-both-10">
+                            <input disabled id="AddApplyCbox" class="textbox"/>
+                        </td>
+                        <td class="padding-left-10">申请人</td>
+                        <td class="padding-both-10">
+                            <input id="AddUserbox" class="hisui-combobox width-text"/>   
+                        </td>
+                        <td class="padding-left-10">申请科室</td>
+                        <td class="padding-both-10">
+                            <input id="AddDeptbox" class="hisui-combobox width-text"/> 
+                        </td>
+                        <td class="padding-left-10">审批流</td>
+                        <td class="padding-both-10">
+                            <input id="CheckFlowbox" class="hisui-combobox width-text"/>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>预算期</td>
+                        <td class="padding-10">
+                            <input id="AddYMbox" class="hisui-combobox width-text"/>
+                        </td>
+                        <td class="padding-left-10">支付方式</td>
+                        <td class="padding-10">
+                            <input id="AddPaybox" class="hisui-combobox width-text"/>  
+                        </td>
+                        <td class="padding-left-10">银行</td>
+                        <td class="padding-10">
+                            <input disabled id="AddBankbox" class="textbox" />
+                        </td>
+                        <td class="padding-left-10">银行卡号</td>
+                        <td class="padding-10">
+                            <input disabled id="AddNumberbox" class="textbox" />   
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>归口科室</td>
+                        <td class="padding-both-10">
+                            <input id="AddOwnbox" class="hisui-combobox width-text"/>
+                        </td>
+                        <td class="padding-left-10">借款说明</td>
+                        <td class="padding-both-10">
+                            <textarea id="AddDescbox" class="textbox"></textarea> 
+                        </td>
+                     </tr>
+                    </table>    
+                </div>
+			    <div class="line-36-y">
+					<table>
+						<tr>
+							<td>
+								<a id="AddDetail" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+							</td>
+							<td>
+								<a id="DelBt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>	
+							</td>
+							<td>
+								<a id="ClearBT" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true">清屏</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="padding-10-bottom-none" data-options="region:'center'" >
+                <table id="AddMainGrid">     
+                </table>
+            </div>
+            <div class="bottom-style"  data-options="region:'south'">
+                <a id="AddSave" class="hisui-linkbutton width-70" href="#">保存</a>
+                <span class="padding-right-10"></span>
+                <a id="AddClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+            </div>
+        </div>
+    </div>
+    <!--单据状态窗口-->
+    <div id="BillState" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout"data-options="fit:true">
+            <div class="padding-10-bottom-none" data-options="region:'center'" >
+                <table id="StateGrid">       
+                </table>
+            </div>
+            <div class="bottom-style"  data-options="region:'south'">
+                <a id="StateClose" class="hisui-linkbutton" href="#">关闭</a>
+            </div>
+        </div>
+    </div>
+    <!--修改报销单窗口-->
+    <div id="EditWin" class="hisui-window" data-options="closed:true">   
+        <div class="hisui-layout height-430" data-options="fit:true">
+            <div id="Editnorth">
+				<div id="Editform" class="padding-topbot-10 flex-x-center x-separator">
+                   <table class="text-right">
+				      <tr>
+						<td>申请单号</td>
+						<td class="padding-both-10">
+							<input disabled id="EditApplyC" class="textbox" />
+						</td>
+						<td class="padding-left-10">申请人</td>
+						<td class="padding-both-10">
+							<input id="EditUser" class="hisui-combobox width-text"/>	
+						</td>
+						<td class="padding-left-10">申请科室</td>
+						<td class="padding-both-10">
+							<input id="EditDept" class="hisui-combobox width-text"/>	
+						</td>
+						<td class="padding-left-10">审批流</td>
+						<td class="padding-both-10">
+							<input id="EditCheckFlow" class="hisui-combobox width-text"/>
+						</td>
+					  </tr>
+					  <tr>
+						<td>预算期</td>
+						<td class="padding-10">
+							<input id="EditYM" class="hisui-combobox width-text"/>
+						</td>
+						<td class="padding-left-10">支付方式</td>
+						<td class="padding-10">
+							<input id="EditPay" class="hisui-combobox width-text"/>	
+						</td>
+						<td class="padding-left-10">银行</td>
+						<td class="padding-10">
+							<input disabled id="EditBank" class="textbox"/>	
+						</td>
+						<td class="padding-left-10">银行卡号</td>
+						<td class="padding-10">
+							<input disabled id="EditNumber" class="textbox"/>	
+						</td>
+					 </tr>
+					 <tr>
+						<td>归口科室</td>
+						<td class="padding-both-10">
+							<input id="EditOwn" class="hisui-combobox width-text"/>
+						</td>
+						<td class="padding-left-10">报销说明</td>
+						<td class="padding-both-10">
+							<input id="EditDesc" class="textbox"/>	
+						</td>
+					 </tr>
+				   </table>
+				</div>
+				<div class="line-36-y">
+					<table>
+						<tr>
+							<td>
+								<a id="EditAddDetail" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+							</td>
+							<td>
+								<a id="EditDelBt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>	
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="padding-10-bottom-none" data-options="region:'center'" >
+				<table id="EditMainGrid">		
+				</table>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="EditSave" class="hisui-linkbutton width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="EditClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div>     
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/budgFundApply/budgfundapplymain.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/budgFundApply/addfun.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/budgFundApply/billstate.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/budgFundApply/editfun.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+    <script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+</BODY>
+</HTML>

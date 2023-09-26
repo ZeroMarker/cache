@@ -1,0 +1,578 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server>
+	s loc=""
+	s res=""
+	s ser=""
+	s locid=""
+	s resid=""
+	s serid=""
+	s Transport=""
+	s Review=""
+	s Letter=""
+	s Interpret=""
+	s ApptDate=""
+	s ApptTime=""
+	n LocDesc,DocDesc,LocID,DocID
+	s LocDesc=""
+	s DocDesc=""
+	s LocID=""
+	s DocID=""
+	s WaitListStr=""
+	s LinkedAppts=""
+	s Defaults=""
+	s conflictmess=""
+	s AllowAutoFind=""
+	s AllowAutoFind=$p($g(^SSU("SSGRP",%session.Get("LOGON.GROUPID"))),"^",78)
+	s obj=##Class(websys.Component).OpenName("RBMessages")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s RBDeceased=t("RBDeceased")
+	s RBEpisodeDischarged=t("RBEpisodeDischarged")
+	;
+	; Check to see if we are transferring or creating a new appointment.
+	s transfer=0
+	s autofind=%request.Get("autofind")
+	; LOG 28336 Check to see if this Security group allows Auto Find on appointments
+	; "Y" or blank will allow Auto Find. If they are not allow then set autofind to "0"
+	; Piece 78 of the global ^SSU("SSGRP",{SSGRP_RowId}) cpntains the appropriate flag
+	i AllowAutoFind="N" s autofind=0
+	s TransAppt=%request.Get("TransAppt") i TransAppt'="" s transfer=1
+	s LinkedAppts=##Class(web.RBAppointment).CheckLinkAppts(TransAppt)
+	;
+	n PatientID, EpisodeID
+	n DOW, delimAlt,Adm,RefExpDate,appt,res,ser,loc,deceased,InsTypeDR,InsAuxDR,InsTypeDesc,InsAuxDesc,visistStat,Transport
+	s (InsTypeDR,InsAuxDR,InsTypeDesc,InsAuxDesc,Transport,TPCode)=""
+	;
+	; Get Default Day of the Week fields
+	s DOW=""
+	s delimAlt=$c(2)
+	i $$getall^MVBCTDOW()
+	s DOW=PLIST(1)_"^"_PLIST(2)_"^"_PLIST(3)_"^"_PLIST(4)_"^"_PLIST(5)_"^"_PLIST(6)_"^"_PLIST(7)
+	;
+	; Get the Referal Expiry Date... checked on the Update Click
+	s RefExpDate=""
+	s EpisodeID=%request.Get("EpisodeID")
+	s PatientID=%request.Get("PatientID")
+	s WaitListID=%request.Get("WaitListID")
+	s oeoriID=%request.Get("oeoriID")
+	s compref=%request.Get("compref")
+	s FollowUpApptID=%request.Get("FollowUpApptID")
+	;
+	s visitStat=""
+	;
+	i EpisodeID'="" {
+		s Adm=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+		i Adm {
+			s RefExpDate=Adm.PAADMRefExpiryDate
+			s RefExpDate=##Class(websys.Conversions).DateLogicalToHtml(RefExpDate)
+			s visitStat=Adm.PAADMVisitStatus
+			i transfer=1 {
+				s Appt=##Class(User.RBAppointment).%OpenId(TransAppt)
+				i Appt {
+					i Appt.APPTTransportDR s Transport=Appt.APPTTransportDR.APTRDesc
+					i Appt.APPTReviewPeriodDR s Review=Appt.APPTReviewPeriodDR.REFPERDesc
+					s Letter=Appt.APPTAppointLetter
+					;BR 06/08/02 (27179) Pass across the Date and Time of this appt to make it easier to search. especially if there are Transferred Appts.
+					s Sched=##Class(User.RBApptSchedule).%OpenId(Appt.APPTASParRef.%Id())
+					i Sched {
+						s ApptDate=##Class(websys.Conversions).DateLogicalToHtml(Sched.ASDate)
+						s ApptTime=##Class(websys.Conversions).TimeLogicalToHtml(Sched.ASSessStartTime)
+						d Sched.%Close()
+					}
+					s Interpret=Appt.APPTInterpreterRequired
+					d Appt.%Close()
+				}
+			}
+			i Adm.PAADMAppointTransportDR  s Transport=Adm.PAADMAppointTransportDR.APTRDesc
+			s InsStr=$o(^PAADM(EpisodeID,"INS",0))
+			s AdmIns=##Class(User.PAAdmInsurance).%OpenId(Adm.%Id()_"||1")
+			i AdmIns {
+				i AdmIns.INSInsTypeDR  {
+					s InsTypeDR=AdmIns.INSInsTypeDR.%Id()
+					s InsTypeDesc=AdmIns.INSInsTypeDR.INSTDesc
+				}
+				i AdmIns.INSAuxInsTypeDR  {
+					s InsAuxDR=AdmIns.INSAuxInsTypeDR.%Id()
+					s InsAuxDesc=AdmIns.INSAuxInsTypeDR.AUXITDesc
+				}
+				d AdmIns.%Close()
+			}
+			; SA 7.12.01: Log 21590 Default Doctor/Department from Admission
+			; Overwrite to default from WL entry, if exists
+			; These will be susequently overwritten from call ##Class(web.RBAppointment).GetResourceDetails(appt)
+			; if a previous appointment exists.
+			//n LocDesc,DocDesc,LocID,DocID
+			//s (LocDesc,DocDesc,LocID,DocID)=""
+			i Adm.PAADMDepCodeDR {
+				s LocDesc=Adm.PAADMDepCodeDR.CTLOCDesc
+				s LocID=Adm.PAADMDepCodeDR.%Id()
+				s tmpLoc="PAADMDepCodeDR ="_LocID
+				s Defaults="PAADM"
+			}
+			i Adm.PAADMAdmDocCodeDR {
+				s DocDesc=Adm.PAADMAdmDocCodeDR.CTPCPDesc
+				d ##Class(web.RBResource).GetResource(DocDesc,LocDesc,"",compref)
+				s DocID=%request.Get("RescID")
+			}
+			// SB 05/06/02: This was commented out at Renato's request.
+			/* i Adm.PAADMWaitListDR {
+				i Adm.PAADMWaitListDR.WLCTLOCDR {
+					s LocDesc=Adm.PAADMWaitListDR.WLCTLOCDR.CTLOCDesc
+					s LocID=Adm.PAADMWaitListDR.WLCTLOCDR.%Id()
+					s tmpLoc="PAADMWaitListDR ="_LocID
+					s Defaults="WaitList"
+				}
+				i Adm.PAADMWaitListDR.WLDoctorDR {
+					s DocDesc=Adm.PAADMWaitListDR.WLDoctorDR.CTPCPDesc
+					d ##Class(web.RBResource).GetResource(DocDesc,LocDesc,"",compref)
+					s DocID=%request.Get("RescID")
+				s DocID=%request.Get("RescID")
+				}
+			} */
+			d %request.Set("CTLOCDesc",LocDesc)
+			d %request.Set("RESDesc",DocDesc)
+			d %request.Set("LOCID",LocID)
+			d %request.Set("RESID",DocID)
+			d Adm.%Close()
+		}
+
+	}
+	//SB 16/08/02 (27441): If episode does not exist then attempt to get the waiting list id to default fields.
+	i WaitListID'="", EpisodeID="" {
+		s WList=##Class(User.PAWaitingList).%OpenId(WaitListID,0)
+		i WList {
+			i WList.WLCTLOCDR {
+					s LocDesc=WList.WLCTLOCDR.CTLOCDesc
+					s LocID=WList.WLCTLOCDR.%Id()
+					s tmpLoc="PAADMWaitListDR without episode ="_LocID
+					s Defaults="WaitList without episode"
+			}
+			d %request.Set("CTLOCDesc",LocDesc)
+			d %request.Set("LOCID",LocID)
+			/* SB 22/08/02 (27441): Site only wants location to default, not resource.
+			i WList.WLDoctorDR {
+					s DocDesc=WList.WLDoctorDR.CTPCPDesc
+					d ##Class(web.RBResource).GetResource(DocDesc,LocDesc,"",compref)
+					s DocID=%request.Get("RescID")
+			}
+			d %request.Set("RESDesc",DocDesc)
+			d %request.Set("RESID",DocID)
+			*/
+		}
+	}
+	;
+	s ser=""
+	s serid=""
+	s appt=""
+	; Default Location/Resource/Service from last appointment
+	i transfer {
+		d ##Class(web.RBAppointment).GetResourceDetails(TransAppt)
+	} else {
+		s appt=FollowUpApptID
+		i appt="" s appt=$$currapptselect^MVBAPPT(EpisodeID)
+		d ##Class(web.RBAppointment).GetResourceDetails(appt)
+	}
+	s loc=%request.Get("CTLOCDesc")
+	s resd=%request.Get("RESDesc")
+	s ser=%request.Get("SERDesc")
+	s locid=%request.Get("LOCID")
+	;s tmpLoc="LOCID ="_LocID
+	s resid=%request.Get("RESID")
+	s serid=%request.Get("SERID")
+	i LocID'=locid s Defaults="Appointment"
+	;
+	; SB: Set any Appointments stored for waiting list
+	; SB 09/07/02 (25929): I think the following code is redundant now that we only default order details.
+	n WaitListStr
+	s WaitListStr=""
+	i WaitListID {
+	  &sql(DECLARE WLR CURSOR FOR
+	        SELECT RB_Service_DR,RB_Service_DR->SER_Desc
+	        FROM PA_WaitingListRB
+	        WHERE RB_ParRef = :WaitListID)
+	  ;
+	  &SQL(OPEN WLR)
+	  ;
+	  s SQLCODE=0
+	  f  d  q:SQLCODE
+	  . &SQL(FETCH WLR INTO :ser,:des)
+	  . q:SQLCODE
+	  . s WaitListStr=WaitListStr_ser_"|"_des_"^"
+	  ;
+	  &SQL(CLOSE WLR)
+	}
+	n defaultServStr
+	s defaultServStr=""
+	; SB 15/04/02: There are two types of defaults coming through, first we see if there are any waiting list entries
+	;	       with appointments... if not then we add orders.
+	; SB 09/07/02 (25929): We are no longer defaulting from the waitinglist entry. We will always default the order details.
+	;i WaitListStr="" {
+ 		n i,oeid,OElocid,OElocdesc,arcimid,OEservid,OEservdesc,delim,SERlist
+ 		s delim="*"
+ 		k SERlist
+ 		s SERlist=""
+ 		f i=1:1:$l(oeoriID,"^") d
+ 		. s oeid=$p(oeoriID,"^",i)
+ 		. &sql(SELECT OEORI_RecDep_DR,OEORI_RecDep_DR->CTLOC_Desc,OEORI_ItmMast_DR INTO :OElocid,:OElocdesc,:arcimid FROM SQLUser.OE_OrdItem WHERE OEORI_RowID=:oeid)
+ 		. i 'SQLCODE,'$d(SERlist(+OElocid,arcimid_"Z")) d
+ 		. . &sql(SELECT SER_RowID,SER_Desc INTO :OEservid,:OEservdesc FROM SQLUser.RBC_Services WHERE SER_ARCIM_DR=:arcimid)
+ 		. . i 'SQLCODE s defaultServStr=defaultServStr_delim_OEservdesc_delim_OElocdesc_delim_delim_delim_delim_delim_delim_delim_OEservid_delim_OElocid_delim_delim_delim_delim_delim_"^"
+ 		. . s SERlist(+OElocid,arcimid_"Z")=""
+	;}
+	;
+	;BR 06/08/02 (27179) Create list of services for linked Appts
+	n LinkedApptServStr,objAppt,LinkedFlag
+	s LinkedApptServStr=""
+	s LinkedFlag=%request.Get("LinkedAppts")
+	i LinkedAppts'="",LinkedFlag="Y"  {
+		f t=1:1:$l(LinkedAppts,"^") {
+			s linkId=$p(LinkedAppts,"^",t)
+			s objAppt=##Class(User.RBAppointment).%OpenId(linkId)
+			i objAppt {
+				i objAppt.APPTRBCServDR {
+					s ServDesc=objAppt.APPTRBCServDR.SERDesc
+					s ServID=objAppt.APPTRBCServDR.%Id()
+				}
+				s Res=##Class(User.RBResource).%OpenId($p(linkId,"||",1))
+				i Res {
+					s DocID=Res.RESRowId
+					s DocDesc=Res.RESDesc
+					s LocDesc=Res.RESCTLOCDR.CTLOCDesc
+					s LocID=Res.RESCTLOCDR.%Id()
+					d Res.%Close()
+				}
+				s ApptSched=##Class(User.RBApptSchedule).%OpenId(objAppt.APPTASParRef.%Id())
+				i ApptSched {
+					s AdmDate=##Class(websys.Conversions).DateLogicalToHtml(ApptSched.ASDate)
+					s AdmTime=##Class(websys.Conversions).TimeLogicalToHtml(ApptSched.ASSessStartTime)
+					d ApptSched.%Close()
+				}
+				s AdmIns=##Class(User.PAAdmInsurance).%OpenId(objAppt.APPTAdmDR.%Id()_"||1")
+				i AdmIns {
+					i AdmIns.INSInsTypeDR  {
+						s InsTypeDR=AdmIns.INSInsTypeDR.%Id()
+						s InsTypeDesc=AdmIns.INSInsTypeDR.INSTDesc
+					}
+					i AdmIns.INSAuxInsTypeDR  {
+						s InsAuxDR=AdmIns.INSAuxInsTypeDR.%Id()
+						s InsAuxDesc=AdmIns.INSAuxInsTypeDR.AUXITDesc
+					}
+					d AdmIns.%Close()
+				}
+				s LinkedApptServStr=LinkedApptServStr_delim_ServDesc_delim_LocDesc_delim_DocDesc_delim_delim_AdmDate_delim_AdmTime_delim_InsTypeDesc_delim_InsAuxDesc_delim_ServID_delim_LocID_delim_DocID_delim_InsTypeDR_delim_InsAuxDR_delim_delim_"^"
+				d objAppt.%Close()
+			}
+		}
+	}
+
+	s deceased=""
+	i PatientID'="" {
+		s deceased=##Class(web.PAPerson).CheckDeceased(PatientID)
+	}
+	s process=$j
+	;
+	;LOG 24504 BC 17-5-2002 Move the appointment conflict warning from the "Update" to the page load
+	s obj=##Class(websys.Component).OpenName("PAAdm.Edit")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s PAType=t("TYPE")
+	s PAWL=t("WAIT_LIST")
+	s PADate=t("DATE")
+	s PALoc=t("LOCATION")
+	s PACP=t("CARE_PROV")
+	s PAOP=t("OPER")
+	s PADiag=t("DIAG")
+	s PAAdmTCI=t("PRE_ADM_TCI")
+	s PAAppt=t("APPT")
+	s PAConExist=t("CONFL_EXISTS")
+	s PATime=t("TIME")
+	; Check User Group for displaying future appointments
+	s GroupID=%session.Get("LOGON.GROUPID")
+	;LOG 28901 BC 25-9-2002 moved back to update
+	;s ShowFutAppts=$p(^SSU("SSGRP",GroupID),"^",59)
+	;s conflictmess=""
+	;i ShowFutAppts="Y" s conflictmess=##Class(web.PAAdm).GetConflictMessageForAppt(PatientID,EpisodeID,WaitListID,"")
+	;LOG 24504
+	;LOG 25281 BC 27-5-2002 Warn that the referral is "Urgent Cancer"
+	s urgcancerwarning=""
+	;s ^zbrad($zn,"1")=urgcancerwarning
+	i EpisodeID'="" s urgcancerwarning=##Class(web.PAAdm).GetUrgentCancerMessage(EpisodeID)
+	;s ^zbrad($zn,"2")=urgcancerwarning
+	;LOG 26886 BC 16-8-2002 Warn that the resource is "End Dated"
+	s enddatewarning=""
+	s ^zbrad($zn,"1")=enddatewarning
+	i DocID'="" s enddatewarning=##Class(web.RBResource).GetEndDatedMessage(DocID)
+	;s ^zbrad($zn,"2")=enddatewarning
+	;
+	;LOG 2581
+</server>
+<SCRIPT>
+	//alert("Appt: #(TransAppt)#")
+	//alert("process: #(process)#")
+	//alert("defaults: #(Defaults)#")
+	//alert("followUp: #(FollowUpApptID)#")
+	//alert("#(compref)#")
+	var appid='#(appt)#';
+	var patid='#(PatientID)#';
+	var epid='#(EpisodeID)#';
+	var data="#(DOW)#";
+	var alt="#(delimAlt)#";
+	var transfer="#(transfer)#";
+	var AllowAutoFind="#(AllowAutoFind)#";
+	var autofind="#(autofind)#";
+	var LocID="#(LocID)#";
+	var DocID="#(DocID)#";
+	var WaitListStr='#(WaitListStr)#';
+	var defaultServStr='#(defaultServStr)#';
+	var LinkedApptServStr='#(LinkedApptServStr)#';
+	var LinkedFlag='#(LinkedFlag)#';
+	var str="";
+	var delim="*";
+	chkAry=data.split("^");
+	var Finddoc=null;
+	//LOG 26886 BC 16-8-2002 Warn that the resource is "End Dated"
+	var EndDateWarning='#(enddatewarning)#'
+	if (EndDateWarning!="") alert(EndDateWarning);
+	// End LOG 26886
+	Finddoc=top.frames["TRAK_main"].frames["RBApptFind"].document;
+	/****
+	//TN:test
+	if (top.frames["TRAK_main"].frames["RBApptFind"]) Finddoc=top.frames["TRAK_main"].frames["RBApptFind"].document;
+	if ((!Finddoc)&&(window.opener)) {
+		Finddoc=window.opener.frames["RBApptFind"].document;
+	}
+	****/
+	var daycaption="chkMon,chkTue,chkWed,chkThu,chkFri,chkSat,chkSun";
+	var dayAry=daycaption.split(",");
+
+	for (var i=0; i<7; i++) {
+		var obj=Finddoc.getElementById(dayAry[i]);
+		Ary=chkAry[i].split(alt);
+		if (Ary[1]=="Y") {
+			if (obj) obj.checked="true";
+		}
+	}
+	var obj=Finddoc.getElementById("PAADMRefExpiryDate");
+	if (obj) obj.value="#(RefExpDate)#"
+
+	TabDefault="PIN"
+	//alert(TabDefault)
+
+	if (transfer==1) {
+		var obj=Finddoc.getElementById("SERDesc");
+		if (obj) {obj.value="#(ser)#"; if (obj.value=="") TabDefault="SERDesc"}
+		//alert(TabDefault)
+
+		var obj=Finddoc.getElementById("ServId");
+		if (obj) obj.value="#(serid)#"
+	}
+
+	var obj=Finddoc.getElementById("RESDesc");
+	if (obj) {obj.value="#(resd)#"; if (obj.value=="") TabDefault="RESDesc"}
+	//alert(TabDefault)
+	//alert("Location:"+obj.value);
+
+	var obj=Finddoc.getElementById("CTLOCDesc");
+	if (obj) {obj.value="#(loc)#"; if (obj.value=="") TabDefault="CTLOCDesc"}
+	//alert("Location:"+obj.value);
+	//alert(TabDefault)
+	websys_setfocus("RESDesc"); //jump to first empty field
+
+	var obj=Finddoc.getElementById("ResId");
+	if (obj) obj.value="#(resid)#"
+	//alert("ResID:"+obj.value);
+
+	var obj=Finddoc.getElementById("LocId");
+	if (obj) obj.value="#(locid)#"
+	//alert("LocID:"+obj.value);
+
+	//BR: Italians were having problems with default fields. These IF statements were implemented as a test to try and solve their problem
+	if ('#(InsTypeDesc)#'!="") {
+		var obj=Finddoc.getElementById("InsurPayor");
+		if (obj) obj.value="#(InsTypeDesc)#"
+	}
+	if ('#(InsAuxDesc)#'!="") {
+		var obj=Finddoc.getElementById("InsurPlan");
+		if (obj) obj.value="#(InsAuxDesc)#"
+	}
+
+	var obj=Finddoc.getElementById("PayId");
+	if (obj) obj.value="#(InsTypeDR)#"
+
+	var obj=Finddoc.getElementById("PlanId");
+	if (obj) obj.value="#(InsAuxDR)#"
+
+	var obj=Finddoc.getElementById("Transport");
+	if (obj) obj.value="#(Transport)#"
+
+	var obj=Finddoc.getElementById("RevPeriod");
+	if (obj) obj.value="#(Review)#"
+
+	//LOG 28288 BC 6-9-2002 Only default the date and time if the appointment is a linked appointments
+	//Previously....
+	//var obj=Finddoc.getElementById("Date");
+	//if (obj) obj.value="#(ApptDate)#"
+	//now...
+	var obj2=Finddoc.getElementById("LinkedAppts");
+	var obj=Finddoc.getElementById("Date");
+	if ((obj)&&(obj2)&&(obj2.value!="N")&&(obj="")) obj.value="#(ApptDate)#"
+	//LOG 28960 RC 02/10/02 only default the date and time (above and below) if there is no default time
+	//or date somewhere else (i.e. if they are already set in the active layout editor properties)
+	//Previously....
+	//var obj=Finddoc.getElementById("StartTime");
+	//if (obj) obj.value="#(ApptTime)#"
+	//now...
+	var obj=Finddoc.getElementById("StartTime");
+	if (obj&&(obj2)&&(obj2.value!="N")&&(obj="")) obj.value="#(ApptTime)#"
+
+	var obj=Finddoc.getElementById("ApptLetter");
+	if (obj) {if ("#(Letter)#"=="Y") obj.checked='true'}
+
+	var obj=Finddoc.getElementById("IntReq");
+	if (obj) {if ("#(Interpret)#"=="Y") obj.checked='true'}
+	
+	if ('#(deceased)#'=="Y") alert('#(RBDeceased)#');
+
+	if ('#(visitStat)#'=="D") {
+		alert('#(RBEpisodeDischarged)#');
+		var obj=Finddoc.getElementById("Update");
+		if (obj) obj.disabled=true;
+	}
+	// SB 09/07/02 (25929): We are no longer defaulting from the waitinglist entry. We will always default the order details.
+	if (defaultServStr!="") {
+		top.frames["TRAK_main"].frames["RBServList"].Refresh("Add","","",defaultServStr,autofind);
+	}
+	//BR 06/08/02 (27179) Add all services for linked Appts
+	//AmiN 16/aug/2002  log 27486
+	if (LinkedFlag=="Y") {
+		top.frames["TRAK_main"].frames["RBServList"].Refresh("Add","","",LinkedApptServStr,autofind);
+	}
+	/*if (WaitListStr!="") {
+		WaitListAry=WaitListStr.split("^");
+		for (var i=0; i<WaitListAry.length-1; i++) {
+			str=str + delim + mPiece(WaitListAry[i],"|",1) + delim + "#(loc)#" + delim + "#(resd)#" + delim + delim + delim + delim + "#(InsTypeDesc)#" + delim + "#(InsAuxDesc)#" + delim + mPiece(WaitListAry[i],"|",0) + delim + "#(locid)#" + delim + "#(resid)#" + delim + "#(InsTypeDR)#" + delim + "#(InsAuxDR)#" + delim + delim + "^";
+		}
+		top.frames["TRAK_main"].frames["RBServList"].Refresh("Add","","",str);
+	} else if (defaultServStr!="") {
+		top.frames["TRAK_main"].frames["RBServList"].Refresh("Add","","",defaultServStr);
+	}*/
+
+	//alert(transfer+","+LinkedFlag)
+	if ((transfer==1)&&(LinkedFlag!="Y")&&(AllowAutoFind!="N")) {
+		top.frames["TRAK_main"].frames["RBApptFind"].FindClickHandler();
+	}
+	//LOG 24504 BC 17-5-2002 Move the appointment conflict warning from the "Update" to the page load
+	var t=new Array;
+	t['TYPE']='#(PAType)#';
+	t['WAIT_LIST']='#(PAWL)#';
+	t['DATE']='#(PADate)#';
+	t['LOCATION']='#(PALoc)#';
+	t['CARE_PROV']='#(PACP)#'
+	t['OPER']='#(PAOP)#';
+	t['DIAG']='#(PADiag)#';
+	t['PRE_ADM_TCI']='#(PAAdmTCI)#';
+	t['APPT']='#(PAAppt)#';
+	t['CONFL_EXISTS']='#(PAConExist)#';
+	t['TIME']='#(PATime)#';
+	/*LOG 28901 BC 25-9-2002 moved back to update
+	if (ShowFutAppts=='Y') {
+		var ConfMsg='#(conflictmess)#';
+		if (ConfMsg!="") {
+			DisplayConflictMessages(ConfMsg);
+		}
+	}*/
+	//LOG 24504
+	//LOG 25281 BC 27-5-2002 Warning if the referral status is "Urgent Cancer"
+	var cancermess='#(urgcancerwarning)#';
+	if (cancermess!="") alert(cancermess);
+
+	//LOG 2581
+
+
+function mPiece(s1,sep,n) {
+    //Split the array with the passed delimeter
+    delimArray = s1.split(sep);
+    //If out of range, return a blank string
+    if ((n <= delimArray.length-1) && (n >= 0)) {
+        return delimArray[n];
+    }
+ }
+ //LOG 24504 BC 17-5-2002 Move the appointment conflict warning from the Update to the page load
+function DisplayConflictMessages(ConfMsg) {
+	var sSingleMsg;
+	var sMsgBoxMsg=t['CONFL_EXISTS']+"\n"+"\n";
+	//var ConfMsg=objConfMsg.value;
+	var fdate;
+	var ftime;
+	var floc;
+	var fdoc;
+	var foper;
+	var fdiag;
+	var fstat;
+	for (var i=0; mPiece(ConfMsg,"|",i)!=""; i++) {
+		sSingleMsg=mPiece(ConfMsg,"|",i);
+		if (mPiece(sSingleMsg,"^",0)=="wl") {
+			// Waitlist messages return in the form
+			// "wl^"_fdate_"^"_floc_"^"_fdoc_"^"_foper_"^"_fdiag_"|"
+			fdate=mPiece(sSingleMsg,"^",1);
+			floc=mPiece(sSingleMsg,"^",2);
+			fdoc=mPiece(sSingleMsg,"^",3);
+			foper=mPiece(sSingleMsg,"^",4);
+			fdiag=mPiece(sSingleMsg,"^",5);
+			sMsgBoxMsg+=t['TYPE']+": "+t['WAIT_LIST']+"\n";
+			sMsgBoxMsg+=t['DATE']+": "+fdate+"\n";
+			sMsgBoxMsg+=t['LOCATION']+": "+floc+"\n";
+			sMsgBoxMsg+=t['CARE_PROV']+": "+fdoc+"\n";
+			sMsgBoxMsg+=t['OPER']+": "+foper+"\n";
+			sMsgBoxMsg+=t['DIAG']+": "+fdiag+"\n";
+			sMsgBoxMsg+="\n";
+		} else if (mPiece(sSingleMsg,"^",0)=="adm") {
+			// Preadmission messages return in the form
+			// "adm^"_fdate_"^"_ftime_"^"_floc_"^"_fdoc_"|"
+			fdate=mPiece(sSingleMsg,"^",1);
+			ftime=mPiece(sSingleMsg,"^",2);
+			floc=mPiece(sSingleMsg,"^",3);
+			fdoc=mPiece(sSingleMsg,"^",4);
+			sMsgBoxMsg+=t['TYPE']+": "+t['PRE_ADM_TCI']+"\n";
+			sMsgBoxMsg+=t['DATE']+": "+fdate+"\n";
+			sMsgBoxMsg+=t['TIME']+": "+ftime+"\n";
+			sMsgBoxMsg+=t['LOCATION']+": "+floc+"\n";
+			sMsgBoxMsg+=t['CARE_PROV']+": "+fdoc+"\n";
+			sMsgBoxMsg+="\n";
+		} else if (mPiece(sSingleMsg,"^",0)=="appt") {
+			// Appointment messages return in the form
+			// "appt^"_fdate_"^"_ftime_"^"_floc_"^"_fdoc_"|"
+			fdate=mPiece(sSingleMsg,"^",1);
+			ftime=mPiece(sSingleMsg,"^",2);
+			floc=mPiece(sSingleMsg,"^",3);
+			fdoc=mPiece(sSingleMsg,"^",4);
+			fstat=mPiece(sSingleMsg,"^",5);
+			sMsgBoxMsg+=t['TYPE']+": "+t['APPT']+" ("+fstat+")\n";
+			sMsgBoxMsg+=t['DATE']+": "+fdate+"\n";
+			sMsgBoxMsg+=t['TIME']+": "+ftime+"\n";
+			sMsgBoxMsg+=t['LOCATION']+": "+floc+"\n";
+			sMsgBoxMsg+=t['CARE_PROV']+": "+fdoc+"\n";
+			sMsgBoxMsg+="\n";
+		}
+	}
+	alert(sMsgBoxMsg);
+ }
+ // End LOG 24504
+
+</SCRIPT>
+</body>
+</html>
+
+
+
+

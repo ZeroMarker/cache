@@ -1,0 +1,541 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts_gen/webcommon.DateAndTime.js"></SCRIPT>
+<server>
+d %request.Set("AlertString",1)
+i %request.Get("DosageRange")="",%request.Get("DupMsg")="" d %request.Set("AlertString",0)
+n gotQuestn,gotAnyAlerts,gotOEMsg,b9,NewOrders,ARCIMRowDR,DelStockInOtherLoc,StockInOtherLoc,PregnBrFdItem
+n DelOrderNum,NewOrderNum,NewNewOrders,bmind7
+s NewOrders=""
+i $d(^TMP("WEB","ORDER_ENTRY","NewOrders1",%session.SessionId)) s NewOrders=^TMP("WEB","ORDER_ENTRY","NewOrders1",%session.SessionId)
+;Log 61953 PeterC 02/01/2007
+i $g(NewOrders)="" s NewOrders=%request.Get("NewOrders")
+;Log 59558 PeterC 06/06/06
+k ^TMP("WEB","ORDER_ENTRY","NewOrders1",%session.SessionId)
+s DupMsg=""
+s DosageRange=""
+i $d(^TMP("WEB","ORDER_ENTRY","DupMsg",%session.SessionId)) s DupMsg=^TMP("WEB","ORDER_ENTRY","DupMsg",%session.SessionId)
+i $g(DupMsg)'="" s DupMsg=##Class(%CSP.Page).UnescapeURL(DupMsg)
+k ^TMP("WEB","ORDER_ENTRY","DupMsg",%session.SessionId)
+d %request.Set("DupMsg",DupMsg)
+i $d(^TMP("WEB","ORDER_ENTRY","DosageRange",%session.SessionId)) s DosageRange=^TMP("WEB","ORDER_ENTRY","DosageRange",%session.SessionId)
+i $g(DosageRange)'="" s DosageRange=##Class(%CSP.Page).UnescapeURL(DosageRange)
+k ^TMP("WEB","ORDER_ENTRY","DosageRange",%session.SessionId)
+d %request.Set("DosageRange",DosageRange)
+
+;Log 58325
+s PregnBrFdItem=%request.Get("PregnBrFdItem")
+d %request.Set("PregnBrFdItem",PregnBrFdItem)
+;Log 60869 PeterC 07/09/06
+s DrugIntString=""
+i $d(^TMP("WEB","ORDER_ENTRY","DrugIntString",%session.SessionId)) s DrugIntString=^TMP("WEB","ORDER_ENTRY","DrugIntString",%session.SessionId)
+i $g(DrugIntString)'="" s DrugIntString=##Class(%CSP.Page).UnescapeURL(DrugIntString)
+;Log 61757 PeterC 03/01/2007
+i $g(DrugIntString)="" s DrugIntString=%request.Get("DrugIntString")
+k ^TMP("WEB","ORDER_ENTRY","DrugIntString",%session.SessionId)
+d %request.Set("DrugIntString",DrugIntString)
+
+s DelStockInOtherLoc=%request.Get("DelStockInOtherLoc")
+s DelOrderNum=$l(DelStockInOtherLoc,"^")-1
+s NewOrderNum=$l(NewOrders,"^")-1
+s NewNewOrders=NewOrders
+i DelStockInOtherLoc'="" {
+	s NewNewOrders=""
+	f bmind7=1:1:$l(NewOrders,"^")-1 {
+		i $l(DelStockInOtherLoc,$p($p(NewOrders,"^",bmind7),"*",2)_"^")=1 s NewNewOrders=NewNewOrders_$p(NewOrders,"^",bmind7)_"^"
+	}
+}
+s StockInOtherLoc=%request.Get("StockInOtherLoc")
+s gotOEMsg=0
+f b9=1:1:$l(NewOrders,"^")-1 {
+	s ARCIMRowDR=$p($p(NewOrders,"^",b9),"*",1)
+	i $g(^ARCIM(+ARCIMRowDR,$p(ARCIMRowDR,"||",2),"OEM",1))'="" s gotOEMsg=1
+}
+s gotQuestn=(%request.Get("DisplayQuestionFlag")=1!%request.Get("AgeSexFlag")=1!%request.Get("HasDSSMsg")=1!%request.Get("AllergyFlag")=1!%request.Get("AlertString")=1!gotOEMsg=1) 
+s gotAnyAlerts=(%request.Get("AgeSexFlag")=1!%request.Get("HasDSSMsg")=1!%request.Get("AllergyFlag")=1!%request.Get("InteractFlag")=1!%request.Get("AlertString")=1!gotOEMsg=1!%request.Get("PregnBrFdFlag")=1) 
+i DelOrderNum=NewOrderNum s gotQuestn=0
+i DelOrderNum=NewOrderNum s gotAnyAlerts=0
+d %request.Set("AllAlerts",gotAnyAlerts)
+d %request.Set("NewOrders",NewNewOrders)
+s ^zJPD($zn)=gotAnyAlerts_"^"_gotQuestn
+s NewDurat=""
+s NewDurat=%request.Get("NewDurat")
+</server>
+<SCRIPT language=javascript>
+	var gotQuestn=#(gotQuestn)#;
+	var gotAnyAlerts=#(gotAnyAlerts)#;
+	if ((!gotQuestn)&&(!gotAnyAlerts)&&(self==top)) window.location="websys.reload.csp";
+</SCRIPT>
+</HEAD>
+<BODY>
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<SCRIPT language=javascript>
+var DSSMessage=document.forms["fOEOrder_DSSMessage"];
+if (DSSMessage) {
+	var imageobj=DSSMessage.document.getElementById('ld1643iDSSOverReason');
+	if (imageobj) imageobj.style.visibility='hidden';
+}
+</SCRIPT>
+<CSP:IF condition='%request.Get("AllAlerts")'>
+<TRAK:COMPONENT id="OEOrder.AllAlerts" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<SCRIPT language=javascript>
+var AAForm=document.forms["fOEOrder_AllAlerts"];
+if (AAForm) {
+	var imageobj=AAForm.document.getElementById('ld1884iOverReason');
+	if (imageobj) imageobj.style.visibility='hidden';
+}
+</SCRIPT>
+<CSP:IF condition='%request.Get("DisplayQuestionFlag")'>
+	<!--SERVER>
+		d ##Class(web.ARCItemQuestion).DisplayQuestions()
+	</SERVER>
+	<TRAK:COMPONENT id="OEOrder.Question" hidemenus=1></TRAK:COMPONENT-->
+ <server>
+ s displayQAonSumm=$p($g(^SSU("SSGRP",+$g(%session.Data("LOGON.GROUPID")))),"^",107)
+ if (displayQAonSumm'="A") d
+ . d ##Class(web.ARCItemQuestion).OEOrderQuestionPresetData($g(%request.Data("NewOrders",1)))
+ . s %request.Data("ScreenType",1)="A"
+ . s cmp=##Class(websys.Component).OpenName("OEOrder.Question")
+ . i cmp d cmp.Show(),cmp.%Close()
+ . //for backward compatibility where layout does not contain the list
+ . n rs,gotQue
+ . s rs=##Class(%Library.ResultSet).%New("web.ARCItemQuestion:FindAllQuestions")
+ . d rs.Execute($g(%request.Data("ARCItmMastIDs",1)),$g(%request.Data("PatientID",1)),$g(%request.Data("distinct",1)),$g(%request.Data("NewOrders",1)),$g(%request.Data("EpisodeID",1)))
+ . i rs.Next() s gotQue=1
+ . d rs.%Close()
+ . if +$g(gotQue) d
+ . . w "<SCRIPT>"
+ . . &javascript<
+ 	 	var quetbl=document.getElementById("tOEOrder_Question");
+ 	 	if (!quetbl) document.writeln("OEOrder.Question: "+t["NoListInLE"]+"<BR>&nbsp;<BR>");
+ 	 >
+ . . w "</SCRIPT>"
+ </server>
+</CSP:IF>
+<TRAK:COMPONENT id="OEOrder.AlertScreen" hidemenus=1></TRAK:COMPONENT>
+<script Language="JavaScript">
+var AGEForm=document.forms['fOEOrder_AgeSex'];
+var ALGForm=document.forms['fOEOrder_Allergy'];
+var DRGForm=document.forms['fOEOrder_DrugInteractions'];
+var AlertForm=document.forms['fOEOrder_AlertScreen'];
+if (AAForm) {
+	var AFORObj=AAForm.document.getElementById('OverReason');
+	var AFORIDObj=AAForm.document.getElementById('OverReasonID');
+}
+function Trim(str)
+{
+	reTrim=/\s+$|^\s+/g;
+   	return str.replace(reTrim,"");
+}
+
+function EnterKey(e) {
+	try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+	if ((websys_getAlt(e)&&keycode!=18)||(keycode==33)||(keycode==34)) {
+		try {	
+			var key=String.fromCharCode(keycode);
+				if (key=="U") submitFormNew();
+				
+		}
+		catch(e) {}
+	}
+	
+}
+function PopUpExec(ordItmMastId,ordExecId,ordId,valPatient,ValEpisode) {
+	//Log 64787 PeterC 02/01/08: Do not launch exec. screen if multiple patient
+	var EpisStr;
+	var isOK="Y";
+	EpisStr=ValEpisode.split("^");
+	if(EpisStr.length > 1) isOK="N";
+
+	//log60736 TedT added new pending flag
+	var URL="oeordexec.edit.csp?PatientBanner=1&PatientID="+valPatient+"&PARREF="+ordId+"&ID="+ordExecId+"&refresh=0&pending=1"+"&EpisodeID="+ValEpisode;
+	//Log: 59598, 03-07-2006 BC: add "status=yes"
+	var features='scrollbars=yes,toolbar=no,resizable=yes,status=yes'
+	var OD="";
+	var windesc="";
+	if(ordId!="") OD=ordId.split("||");
+	if((OD)&&(OD[1])) windesc="ORDEXEC"+OD[1];
+	if (isOK=="Y") window.open(URL,windesc,features);
+}
+function PopUpExecWithoutExecTime(ordId,valPatient,ValEpisode) {
+	//Log 64787 PeterC 02/01/08: Do not launch exec. screen if multiple patient
+	var EpisStr;
+	var isOK="Y";
+	EpisStr=ValEpisode.split("^");
+	if(EpisStr.length > 1) isOK="N";
+
+	//log60736 TedT added new pending flag
+	var URL="oeordexec.edit.csp?PatientBanner=1&PatientID="+valPatient+"&PARREF="+ordId+"&ID=&refresh=0&pending=1"+"&EpisodeID="+ValEpisode;
+	//Log: 59598, 03-07-2006 BC: add "status=yes"
+	var features='scrollbars=yes,toolbar=no,resizable=yes,status=yes'
+	if (isOK=="Y") window.open(URL,'',features);
+}
+function matchExecCategory(orderSubCat,orderCode,IMSubCat,IMItem) {
+	var grpIMSubCatArray=IMSubCat.split(",")
+	for (i=0;i<grpIMSubCatArray.length;i++) {
+		if (orderSubCat==grpIMSubCatArray[i]) {
+			return true;
+		}
+	}
+	var grpIMItemArray=IMItem.split(",")
+	for (i=0;i<grpIMItemArray.length;i++) {
+		if (orderCode==grpIMItemArray[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+function IsDeletedOrder(NewOrdIdDR) {
+	var tempRowID=cHasErrorORIRowId.split(NewOrdIdDR+"^");
+	if (tempRowID.length>1) {
+		return true;
+	}
+	return false;
+}
+function DeleteErrorLabOrders(OrderWindow) {
+	if (cHasErrorORIRowId!="") {
+		var par_win=window.open('',OrderWindow);
+		if (par_win) par_win.DeleteErrorLabOrders(cHasErrorORIRowId);
+	}
+}
+function OrderDetailsOpen(OrderSetID,OrderWindow) {
+		var par_win=window.open('',OrderWindow);
+		//alert(OrderSetID+","+OrderWindow);
+		if (par_win) {
+			if (par_win.lstOrders.selectedIndex != -1) {
+				par_win.OrderDetailsShowing(par_win);
+			}
+		}
+}
+function VerifyOrders(OrderWindow) {
+	if (OrderWindow!="frmScanOrders") return false;
+	var par_win=window.open('',OrderWindow);
+	if (par_win) {
+		par_win.VerifyOrders();
+	}
+}
+function SaveAnswerEntered() {
+	var AnswerEntered="";
+	var OATable=document.getElementById("tOEOrder_Question");
+	if (OATable) {
+		var QAObj="";
+		for (var i=1; i<OATable.rows.length; i++) {
+			QAObj=document.getElementById("QAz"+i);
+			AQAObj=document.getElementById("AQAz"+i);
+			if (QAObj) {
+				if (QAObj.type=="text") AnswerEntered=AnswerEntered+QAObj.value;
+				else if (QAObj.type=="checkbox") AnswerEntered=AnswerEntered+QAObj.value;
+				else if (QAObj.type=="textarea") AnswerEntered=AnswerEntered+QAObj.innerText;
+				if (AQAObj) {
+					if (AQAObj.type=="text") AnswerEntered=AnswerEntered+"|"+AQAObj.value;
+					else if (AQAObj.type=="checkbox") AnswerEntered=AnswerEntered+"|"+AQAObj.value;
+					else if (AQAObj.type=="textarea") AnswerEntered=AnswerEntered+"|"+AQAObj.innerText;
+				}
+				AnswerEntered=AnswerEntered+"^";
+			}
+			else AnswerEntered=AnswerEntered+"^";
+		}
+	}
+	var AnswerEnteredObj=document.getElementById("AnswersEntered");
+	if (AnswerEnteredObj) AnswerEnteredObj.value=AnswerEntered;
+	//alert(AnswerEntered);
+}
+
+// cjb 16/06/2006 59730 - new change handlers
+function QuestionDate_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	if (!IsValidDate(eSrc)) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+function QuestionTime_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	if (!IsValidTime(eSrc)) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+//61744 BoC 05/12/06
+function QuestionInteger_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+		if (!IsValidInteger(eSrc)) isValid=0;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+function QuestionFloatPositive_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+		if (!IsPositiveNumber(eSrc)) isValid=0;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+function QuestionIntegerPositive_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+		if (!IsValidInteger(eSrc)) isValid=0;
+		if (!IsPositiveNumber(eSrc)) isValid=0;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+function QuestionFloat_changehandler(fld) {
+	var p1="";
+	var eSrc=document.getElementById(fld);
+	var isValid=0;
+	if (IsValidNumber(eSrc)) {
+		isValid=1;
+	}
+	if (!isValid) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.name);
+		return  websys_cancel();
+	} else {
+		eSrc.className=""
+	}
+}
+
+var bUpdatedOrCancelled=false;
+
+</script>
+<SERVER>
+;BM Log 35782
+n NewOrderId,OEExecSubCatID,OEExecItemID,valPatientID,valEpisodeID,OrderSetID,OrderWindow,OEQuesCatID,OEQuesSubCatID
+s NewOrderId=%request.Get("NewOrders")
+s DietPage=""
+s NewDurat=""
+d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID")) 
+s OEExecSubCatID=%request.Get("OEExecSubCatID")
+s OEExecItemID=%request.Get("OEExecItemID")
+s valPatientID=%request.Get("PatientID")
+s valEpisodeID=%request.Get("EpisodeID")
+s OrderSetID=%request.Get("OrderSetID")
+
+s OrderWindow=%request.Get("OrderWindow")
+s DietPage=%request.Get("DietPage")
+;Log 61757 PeterC 03/01/07 Added the logic for NewDurat
+s NewDurat=%request.Get("NewDurat")
+i DietPage'="Y" {
+i OrderWindow="" s OrderWindow="oeorder_entry"
+w "<script Language=""JavaScript"">"
+w "var win=window.open('','"_OrderWindow_"');",!
+w "if (win) {var updateobj=win.document.getElementById(""Update"");",!
+w "if (updateobj) updateobj.disabled=true;}",!
+;
+w "function PopUpExecAndOrderDetailScreen() {",!
+w "SaveAnswerEntered();"
+w "var ret=submitFormNew();",!
+w "if (!ret) return false;",!
+i OrderWindow'="frmScanOrders" {
+	w "if (cHasErrorLabOrder) DeleteErrorLabOrders('"_OrderWindow_"');",!
+	w "var win=window.open('','"_OrderWindow_"');",!
+	w "if (win) {"
+	w "		win.DisableOrderDetailsButton('"_0_"');"
+	w "		win.DisableCheckPricesButton('"_0_"');"
+	w "		win.DisableUpdateButton('"_0_"');"
+	w "     win.RefreshSessionList();",! ; 54852
+	w "}",!
+	f i=1:1:$l(NewOrderId,"^")-1 {
+		n NewItmMastDR,NewOrdIdDR,NewSubCat
+		s NewItmMastDR=$p($p(NewOrderId,"^",i),"*",1)
+		s NewOrdIdDR=$p($p(NewOrderId,"^",i),"*",2)
+		i NewOrdIdDR'="" w "if (!IsDeletedOrder('"_NewOrdIdDR_"')) {"
+		i NewItmMastDR="" q
+		i NewOrdIdDR="" q
+		;Log 64572 PeterC 09/08/07
+		s OrdType=""
+		s OrdType=$$ordertype^COEOrdItem(NewItmMastDR)
+
+		s NewSubCat=$p($g(^ARCIM(+NewItmMastDR,$p(NewItmMastDR,"||",2),1)),"^",10)
+		i $g(^OEORD(+NewOrdIdDR,"I",$p(NewOrdIdDR,"||",2),"X",0))'="" {
+			n NewExecIdDR
+			;Log 62348 PeterC 08/02/07
+			s NewExecIdDR=""
+			s NewExecIdDR=$o(^OEORD(+NewOrdIdDR,"I",$p(NewOrdIdDR,"||",2),"X",0))
+			i $g(NewExecIdDR)'="" s NewExecIdDR=NewOrdIdDR_"||"_NewExecIdDR
+			;s NewExecIdDR=NewOrdIdDR_"||"_1
+			;Log 64572 PeterC 09/08/07
+			i (($g(OrdType)="X")||($g(OrdType)="I")||($g(OrdType)="R")) {
+				i NewDurat="" w "var bShowExec=matchExecCategory('"_+NewSubCat_"','"_NewItmMastDR_"','"_OEExecSubCatID_"','"_OEExecItemID_"');"
+				i NewDurat="" w "if (bShowExec) PopUpExec('"_NewItmMastDR_"','"_NewExecIdDR_"','"_NewOrdIdDR_"','"_valPatientID_"','"_valEpisodeID_"');"
+			}
+		}
+		i $g(^OEORD(+NewOrdIdDR,"I",$p(NewOrdIdDR,"||",2),"X",0))="" {
+			i $p($g(^OEORD(+NewOrdIdDR,"I",$p(NewOrdIdDR,"||",2),3)),"^",8)'="R" {
+		 		i $p($g(^OEORD(+NewOrdIdDR,"I",$p(NewOrdIdDR,"||",2),8)),"^",21)="" {
+					;Log 64572 PeterC 09/08/07
+					i (($g(OrdType)="X")||($g(OrdType)="I")||($g(OrdType)="R")) {
+						i NewDurat="" w "var bShowExec=matchExecCategory('"_+NewSubCat_"','"_NewItmMastDR_"','"_OEExecSubCatID_"','"_OEExecItemID_"');"
+						i NewDurat="" w "if (bShowExec) PopUpExecWithoutExecTime('"_NewOrdIdDR_"','"_valPatientID_"','"_valEpisodeID_"');"	
+					}
+				}
+			}
+		}
+		w "}" 
+	}
+	w "OrderDetailsOpen('"_OrderSetID_"','"_OrderWindow_"');"
+}
+
+
+
+i OrderWindow="frmScanOrders" w "VerifyOrders('"_OrderWindow_"');"
+w "bUpdatedOrCancelled=true;"
+;Log 48663 PeterC 12/09/05
+;w "return Update_click();"
+w "Update_click();"
+;w "window.close();"
+i NewDurat="Y" w "window.close();"
+w "}",!
+i OrderWindow'="frmScanOrders" {
+	w "function BodyUnLoadHandler() {",!
+	w "var win=window.open('','"_OrderWindow_"');",!
+	w "if (win) {",!
+	w "		var updateobj=win.document.getElementById(""Update"");",!
+	w "		if (updateobj) updateobj.disabled=false;",!
+	w "		win.DisableUpdateButton('"_0_"');",!
+	w "		var odobj=win.document.getElementById(""OrderDetails"");",!
+	w "		if (odobj) odobj.disabled=false;",!
+	w "     win.DisableOrderDetailsButton('"_0_"');",!
+	w "     win.DisableCheckPricesButton('"_0_"');",!
+	w "		var NOObj=document.getElementById('NewOrders');",!
+	w "		var cusNOObj=win.document.getElementById(""NewOrders"");",!
+	w "		if ((NOObj)&&(cusNOObj)) cusNOObj.value=NOObj.value;",!
+	w "}",!
+	w "if (!bUpdatedOrCancelled) CancelClickHandler();",!
+	w "}",!
+	w "document.body.onunload = check_closed;",!
+}
+i OrderWindow="frmScanOrders" {
+	w "function BodyUnLoadHandler() {",!
+	w "if (!bUpdatedOrCancelled) CancelClickHandler();"
+	w "}",!
+	w "document.body.onunload = check_closed;",!
+}
+
+
+
+w "function check_closed() {",!
+w " if (document.all) {",!
+W " 	var top=self.screenTop;",!
+w "     if (top>9000) {",!
+w "			BodyUnLoadHandler();",!
+w "		}",!
+w " }",! 
+w "}",!
+w "var cHasErrorLabOrder=false;",!
+w "var cHasErrorORIRowId='';",!
+w "var updobj=document.getElementById('Update');",!
+w "if (updobj) updobj.onclick=PopUpExecAndOrderDetailScreen;",!
+;
+w "function CancelClickHandler() {",!
+;w "alert('"_OrderWindow_"');",!
+i OrderWindow'="frmScanOrders" {
+	w "var win=window.open('','"_OrderWindow_"');",!
+	w "if (win) {"
+	//log61971 TedT use alert orders string instead of new orders
+	w "		var AlertObj=document.getElementById('alertOrders');",!
+	w "		if(AlertObj) win.DeleteItemIDs(AlertObj.value);"
+	w "		else win.DeleteItemIDs('"_NewOrderId_"');"
+	w "		win.DisableUpdateButton('"_0_"');"
+	w "		win.DisableOrderDetailsButton('"_0_"');"
+	w "		win.DisableCheckPricesButton('"_0_"');"
+	w "}",!
+}
+i OrderWindow="frmScanOrders" {
+	w "var win=window.open('','"_OrderWindow_"');",!
+	w "if (win) {"	
+	w "		var NewOrdersobj=win.document.getElementById(""NewOrders"");",!
+	w "		NewOrdersobj.value="""";",!
+	w "}",!
+}
+w "bUpdatedOrCancelled=true;",!
+w "window.close();",!
+w "}",!
+w "var cdobj=document.getElementById('Cancel');",!
+w "if (cdobj) cdobj.onclick=CancelClickHandler;",!
+w "</script>"
+}
+i DietPage="Y" {
+w "<script Language=""JavaScript"">",!
+w "	function PopUpExecAndOrderDetailScreen() {",!
+w "	SaveAnswerEntered();",!
+w "	var ret=submitFormNew();",!
+w "	if (!ret) return false;",!
+w "	bUpdatedOrCancelled=true;",!
+w "	return Update_click();",!
+w "	}",!
+w "	document.body.onunload = DietBodyUnLoadHandler;",!
+
+w "	function DietBodyUnLoadHandler() {",!
+w "	if (bUpdatedOrCancelled) {",!
+w "		var ORIRowIDs='';",!
+w "		var OIDObj=document.getElementById('ORIRowIDs');",!
+w "		if (OIDObj) {",!
+w "			ORIRowIDs=OIDObj.value;",!
+w "			var path='oeorder.changestatusdiet.csp?ORIRowIDs='+ORIRowIDs;",!
+w "			websys_createWindow(path,'TRAK_hidden');",!
+
+w "		}",!
+w "	}",!
+w "	}",!
+
+w "	var cdobj=document.getElementById('Cancel');",!
+w "	if (cdobj) cdobj.onclick=CancelClickHandlerDiet;",!
+w "	var updobj=document.getElementById('Update');",!
+w "	if (updobj) updobj.onclick=PopUpExecAndOrderDetailScreen;",!
+w "</script>"
+}
+</SERVER>
+</BODY>
+</HTML>

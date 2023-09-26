@@ -1,0 +1,123 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+	
+
+	s parent = $Get(%request.Data("parent",1))    
+	s name =$Get(%request.Data("name",1))	
+	s code=$Get(%request.Data("code",1))
+	s shortcut=$Get(%request.Data("shortcut",1))
+	s type=$Get(%request.Data("type",1))
+	s desc=$Get(%request.Data("desc",1))
+	s calunit=$Get(%request.Data("calunit",1))
+	s level=$Get(%request.Data("level",1))
+	s isend=$Get(%request.Data("isend",1))
+	s parent=$Get(%request.Data("parent",1))
+	
+	s flag=$Get(%request.Data("flag",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s newname =$Get(%request.Data("newname",1))
+	s newunit=$Get(%request.Data("newunit",1))	
+	s newcode=$Get(%request.Data("newcode",1))
+	s newtype=$Get(%request.Data("newtype",1))
+	s newdesc=$Get(%request.Data("newdesc",1))
+	
+	s billstate=$Get(%request.Data("billstate",1))  
+	s budgetsurplus=$Get(%request.Data("budgetsurplus",1))
+	s budgcotrol=$Get(%request.Data("budgcotrol",1))
+	s view         = $Get(%request.Data("view",1))
+	s ChkResult    = $Get(%request.Data("ChkResult",1))
+	
+	s billcodes=$Get(%request.Data("billcodes",1))
+    s filename=$Get(%request.Data("filename",1))
+    s fileconte=$Get(%request.Data("fileconte",1))
+	
+
+	i action = "list" d
+	.w ##class(dhc.pa.udata.uSelfmaintain).List(parent)
+	
+    i action = "GetCalUnit" d
+	.w ##class(dhc.pa.udata.uSelfmaintain).GetCalUnit(start, limit)
+	
+	i action = "Getparent" d
+	.w ##class(dhc.pa.udata.uSelfmaintain).Getparent(start, limit)
+	
+	i action = "Getparentname" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).Getparentname(parent)
+	.w "{info:'"_result_"'}"
+
+
+	i action = "add" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).InsertInfo(name,code,type,desc,calunit,level,isend,parent)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).Update(rowid,newcode,newname,newunit,newdesc,newtype,parent,flag)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "findchildren" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).Findchildren(rowid)
+	.i result = 100 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "lastcode" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).Lastcode(parent)
+	.w result
+    
+    i action = "parentcode" d
+    .s result = ##class(dhc.pa.udata.uSelfmaintain).Findparentcode(parent)
+    .w result
+    
+    i action = "submit" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).submit(userid,rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  i result = 8888  d
+	..w "{success:'hhhh',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+       
+
+    i action = "backout" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).backout(userid,rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  i result = 8888  d
+	..w "{success:'hhhh',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+    i action = "upload" d
+	.s result = ##class(dhc.pa.udata.uSelfmaintain).upload(rowid,filename,fileconte)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

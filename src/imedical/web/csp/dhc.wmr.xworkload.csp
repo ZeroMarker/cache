@@ -1,0 +1,69 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+</STYLE>
+<link rel="stylesheet" href="styles.css" type="text/css">
+<script type="text/javascript"  src="/trakcarelive/trak/web/SCRIPTS/dhtmlxcommon.js" ></script>
+<script type="text/javascript"  src="/trakcarelive/trak/web/SCRIPTS/dhtmlxcombo.js" ></script>
+<link rel="STYLESHEET" type="text/css" href="/trakcarelive/trak/web/SCRIPTS/dhtmlxcombo.css">
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SCRIPT language="Javascript">
+
+</SCRIPT>
+</head>
+<BODY>
+<server>
+ 	s cmp=##Class(websys.Component).OpenName("DHC.WMR.XWorkload.Qry")
+ 	i cmp d
+	.s cmp.HideMenus=1,cmp.HideHeadings=1
+ 	.d cmp.Show(),cmp.%Close()
+ 	
+ 	s cmp=##Class(websys.Component).OpenName("DHC.WMR.XWorkload.List")
+ 	i cmp d
+	.s cmp.HideMenus=1,cmp.HideHeadings=1
+ 	.d cmp.Show(),cmp.%Close()
+</server>
+<SCRIPT language="Javascript">
+
+</SCRIPT>
+
+</BODY>
+
+
+</HTML>
+
+ 
+ <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s MrType=$g(%request.Data("MrType",1))
+	s ItemStr=$g(%request.Data("ItemStr",1))
+	//集团化分号获取病案类型
+	s AdmType=$g(%request.Data("AdmType",1))
+	s CTLocID=%session.Get("LOGON.CTLOCID")
+	if (MrType=""){
+		s MrType=##class(web.DHCWMRGroup.DHCWMRGroupReceipt).GetGroupMrType(CTLocID,AdmType)
+	}
+</Script>
+<frameset rows="16%,*" frameborder="0" framespacing="0">
+	<frame name="RPtop" src="websys.default.csp?WEBSYS.TCOMPONENT=DHC.WMR.XWorkload.Qry&MrType=#(MrType)#&ItemStr=#(ItemStr)#&Version=P5">
+	<frame name="RPbottom" src="websys.default.csp?WEBSYS.TCOMPONENT=DHC.WMR.XWorkload.List">
+</frameset>
+</HTML>

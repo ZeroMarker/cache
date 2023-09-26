@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("str",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s unitDr=$Get(%request.Data("unitDr",1))
+	s data=$Get(%request.Data("data",1))
+	
+	
+	i action="list" d
+	.w ##class(dhc.pa.udata.uJXUnit).List(searchField,searchValue,sortField,sortDir,start,limit,parent)
+
+	i action = "stratagem" d
+	.w ##class(dhc.pa.udata.uJXUnit).GetStratagem(start,limit,str)
+	
+	i action = "loctype" d
+	.w ##class(dhc.pa.udata.uJXUnit).GetLocType(start,limit,str)
+
+	i action = "unit" d
+	.w ##class(dhc.pa.udata.uJXUnit).GetUnit(start,limit,str)
+
+	i action = "dept" d
+	.w ##class(dhc.pa.udata.uJXUnit).GetDept(start,limit,str,unitDr)
+
+	i action = "add" d
+	.s result = ##class(dhc.pa.udata.uJXUnit).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(dhc.pa.udata.uJXUnit).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uJXUnit).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "findfather" d
+	.s result = ##class(dhc.pa.udata.uJXUnit).GetFatherNode(parent)
+	.w "{success:'true',info:'"_result_"'}"
+	
+	i action = "stopKPI" d //2016-7-26 add cyl
+	.s result = ##class(dhc.pa.udata.uJXUnit).StopKPI(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

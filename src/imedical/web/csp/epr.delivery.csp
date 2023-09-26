@@ -1,0 +1,54 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<CSP:IF condition=(%request.Get("PatientBanner")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+</HEAD>
+<BODY LANGUAGE=VBScript ONLOAD="Page_Initialise">
+
+<SERVER>
+ n OrderItemIDs,Error,FirstTRID,trid,x
+ s Error=0
+ d ##Class(websys.Component).GetComponentMessages(.t,"epr.Menu.Messages,OEOrdCollectionResult.List")
+ s OrderItemIDs=%request.Get("OEOrdItemID")
+ s FirstTRID=##Class(web.OETextResult).GetTextResultIDFromOrderID($p(OrderItemIDs,"^",1))
+ s Error=0 f x=2:1:$l(OrderItemIDs,"^")  d
+ . s trid=##Class(web.OETextResult).GetTextResultIDFromOrderID($p(OrderItemIDs,"^",x))
+ . i FirstTRID'=trid s Error=1
+ i Error=1 w $g(t("MultipleTextResults"))
+ ; Log 51886 - AI - 16-05-2005 : Method combined with the "Word" method.
+ s OrderItemIDs=##class(web.OEOrdItem).AddAssocOrders(OrderItemIDs)
+ ; end Log 51886
+ d %request.Set("OEOrdItemID",OrderItemIDs)
+ ;d %request.Set("TextResultID",FirstTRID)
+ ;d %request.Set("ID",FirstTRID)
+</SERVER>
+
+<CSP:IF condition=(Error=0)>
+<TRAK:COMPONENT id="OEOrdCollectionResult.List" hidemenus=1>
+</TRAK:COMPONENT>
+</CSP:IF>
+
+
+</TRAK:APPLET>
+</BODY>
+</HTML>
+<script Language="JavaScript">
+//This must be at bottom of page so that all other javascript functions and event triggers have loaded.
+function DeliveryDetailsLoadHandler() {
+	//If any of the epr pages have their own document.body.onload handlers then call each of them individually from here.
+	//try {OETextResultListLoadHandler();} catch(e){}
+}
+document.body.onload=DeliveryDetailsLoadHandler;
+</script>
+
+

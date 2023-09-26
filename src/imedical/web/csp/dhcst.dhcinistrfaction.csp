@@ -1,0 +1,156 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s User=$G(%session.Data("LOGON.USERID"))
+i Action = "Save" d
+    .S InitId=$Get(%request.Data("Rowid",1))
+    .S MainInfo=$Get(%request.Data("MainInfo",1))
+    .S ListDetail=$Get(%request.Data("ListDetail",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).Save(InitId,MainInfo,ListDetail)
+    .i +ret<=0  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'true',info:'"_ret_"'}"
+i Action = "Select" d
+    .S InitId=$Get(%request.Data("Rowid",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).Select(InitId) 
+    .w "{success:'true',info:'"_ret_"'}"
+i Action = "QueryDetail" d
+    .S Parref=$Get(%request.Data("Parref",1))
+    .w ##class(web.DHCST.DHCINIsTrfItm).jsDHCINIsTrfD(Start,Limit,Parref)
+    .
+i Action = "QueryInIsTrfDetail" d
+    .S Parref=$Get(%request.Data("Parref",1))
+    .d ##class(web.DHCST.DHCINIsTrfItm).jsDHCINIsTrfDetail(Start,Limit,Parref)
+	.
+i Action = "Delete" d
+    .S Parref=$Get(%request.Data("Rowid",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).Delete(Parref)
+    .i +ret'=0  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .
+i Action = "DeleteDetail" d
+    .S Initi=$Get(%request.Data("RowId",1))
+    .s ret=##class(web.DHCST.DHCINIsTrfItm).Delete(Initi)
+    .i +ret'=0  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .
+i Action = "Query" d
+    .s ListParam=$Get(%request.Data("ParamStr",1))
+    .w ##class(web.DHCST.DHCINIsTrf).jsDHCINIsTrfM(Start,Limit,Sort,Dir,ListParam)
+    .
+i Action = "MakeComplete" d
+    .s InitId=$Get(%request.Data("Rowid",1))
+    .s Status=$Get(%request.Data("Status",1))
+    .s Complete=$Get(%request.Data("Complete",1))
+    .s Type=$Get(%request.Data("Type",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).SetCompleted(InitId,Complete,Status,Type)
+    .i +ret'=0  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .
+i Action = "Audit" d
+    .s Init=$Get(%request.Data("Rowid",1))
+    .s UserId=$Get(%request.Data("User",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).TransOutAuditYes(Init,UserId)
+    .i +ret=0  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .
+i Action = "AuditNo" d
+    .s Init=$Get(%request.Data("Rowid",1))
+    .s UserId=$Get(%request.Data("User",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).TransOutAuditNo(Init,UserId)
+    .i ret=0  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .
+i Action = "QueryReq" d
+    .s ListParam=$Get(%request.Data("ParamStr",1))
+    .w ##class(web.DHCST.DHCINIsTrf).jsINReqForTransfer(Start,Limit,Sort,Dir,ListParam)
+    .
+i Action = "QueryReqDetail" d
+    .S Parref=$Get(%request.Data("Params",1))
+    .w ##class(web.DHCST.DHCINIsTrfItm).GetDetailForTransByReq(Start,Limit,Sort,Dir,Parref)
+    .
+i Action = "QueryDetailForTransByLim" d
+    .S ParamStr=$Get(%request.Data("ParamStr",1))
+    .w ##class(web.DHCST.DHCINIsTrfAuxByLim).jsRecLocItmForTransfer(Start,Limit,Sort,Dir,ParamStr,User)
+    .
+i Action = "QueryDetailForTransByConsume" d
+    .S ParamStr=$Get(%request.Data("ParamStr",1))
+    .w ##class(web.DHCST.DHCINIsTrfAuxByConsume).jsRecLocItmForTransfer(Start,Limit,Sort,Dir,ParamStr,User)
+    .
+i Action = "AuditIn" d
+    .s Init=$Get(%request.Data("Rowid",1))
+    .s UserId=$Get(%request.Data("User",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).TransInAuditYes(Init,UserId)
+    .i ret=0  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .
+i Action = "AuditInNo" d
+    .s Init=$Get(%request.Data("Rowid",1))
+    .s UserId=$Get(%request.Data("User",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).TransInAuditNo(Init,UserId)
+    .i ret=0  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .
+i Action = "QueryImport" d
+    .s ListParam=$Get(%request.Data("ParamStr",1))
+    .w ##class(web.DHCST.DHCINIsTrfAuxByRec).QueryImportForTrans(Start,Limit,Sort,Dir,ListParam,User)
+    .
+i Action = "QueryImportDetail" d
+    .S Parref=$Get(%request.Data("Parref",1))
+    .w ##class(web.DHCST.DHCINIsTrfAuxByRec).QueryInportDetailForTrans(Parref)
+    .
+i Action = "CreateTransferByReq" d
+    .S MainInfo=$Get(%request.Data("MainInfo",1))
+    .S ReqId=$Get(%request.Data("ReqId",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).CreateTransferByReq(MainInfo,ReqId)
+    .i +ret<=0  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'true',info:'"_ret_"'}"   
+    .
+i Action = "GetParamProp" d
+    .s GroupId=$g(%request.Data("GroupId",1))
+    .s LocId=$g(%request.Data("LocId",1))
+    .s UserId=$g(%request.Data("UserId",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).GetParamProp(GroupId,LocId,UserId)
+    .w "{success:'true',info:'"_ret_"'}"
+    .
+i Action = "AuditInPart" d
+    .s Init=$Get(%request.Data("Rowid",1))
+    .s UserId=$Get(%request.Data("User",1))
+    .s Strrowid=$Get(%request.Data("Strrowid",1))
+    .s ret=##class(web.DHCST.DHCINIsTrf).TransInAuditYesPart(Init,UserId,Strrowid)
+    .i ret=0  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_ret_"'}"
+ i Action = "GetDrugInvInfo" d
+	.S InciDr=$Get(%request.Data("IncId",1))
+	.S ProLocId=$Get(%request.Data("ProLocId",1))
+	.S ReqLocId=$Get(%request.Data("ReqLocId",1))
+	.s QtyFlag=$Get(%request.Data("QtyFlag",1))
+	.s ret=##class(web.DHCST.DHCINIsTrf).GetDrugInvInfo(InciDr, ProLocId, ReqLocId,QtyFlag,Start,Limit)
+	.i ret=""  d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w ret
+</SERVER>

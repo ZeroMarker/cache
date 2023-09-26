@@ -1,0 +1,55 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<script language="cache" runat="server"> 
+	s action = $Get(%request.Data("action",1))
+	s id = $Get(%request.Data("id",1))
+	s code = $Get(%request.Data("code",1))
+	s funcPrototype = $Get(%request.Data("funcPrototype",1))
+	s execCode = $Get(%request.Data("execCode",1))
+	i $f(execCode,"class(")&&$f(execCode,".") s execCode="##"_execCode
+	s funcDesc = $Get(%request.Data("funcDesc",1))
+	s obj=##class(DHCWL.SysService.SysFilterFunc).BuildFilterFuncObj(id,code,funcPrototype,execCode,funcDesc)
+	s json=""
+	if ("save"=action){
+		s result=##class(DHCWL.SysService.SysFilterFunc).Insert(obj)
+		if (1=result){
+			s result="ok"
+			w "{success:true,tip:'"_result_"'}"
+		}else{
+			w "{success:false,tip:'"_result_"'}"
+		}
+	}elseif ("update"=action){
+		s result=##class(DHCWL.SysService.SysFilterFunc).Update(obj)
+		if (1=result){
+			s result="ok"
+			w "{success:true,tip:'"_result_"'}"
+		}else{
+			w "{success:false,tip:'"_result_"'}"
+		}
+	}elseif ("lookup"=action){
+		s json=##class(DHCWL.SysService.SysFilterFunc).QueryFilterFunc(code,funcPrototype,execCode,funcDesc)
+		if (""=json)||(0=json){
+			write "{result:0,totalNum:0,root:[]}"
+			quit
+		}
+		set limit=""
+		set start = $g(%request.Data("start",1))
+		set maxRecordNum = $g(%request.Data("pageSize",1))
+		set limit=$g(%request.Data("limit",1))
+		if (""'=limit) set maxRecordNum=limit
+		if (""'=json){
+			write json.GetHead()
+			set json.privor=start
+			do{
+				set obj=json.Next()
+				set obj=$tr(obj,"¡Ä","^")
+				if ((json.privor)=(start+maxRecordNum)){
+					set obj=$p(obj,"}",1)
+				 	set obj=obj_"}]}"
+				}
+				write obj
+				set ^JEFF("me")=(json.privor)_":"_(start+maxRecordNum)_":"_json.count_":"_obj
+			}while((obj'="")&&(json.privor<(start+maxRecordNum))&&(json.privor<json.count))
+		}
+	}
+</script>

@@ -1,0 +1,66 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s StrParam=$Get(%request.Data("StrParam",1))
+
+i Action = "GetAllManf" d
+	.d ##class(web.DHCSTM.ManfCatGroup).GetAllManf(Start,Limit,Sort,Dir,StrParam)
+
+//获取厂商已授权的类组
+i Action = "GetManfScg" d
+	.d ##class(web.DHCSTM.ManfCatGroup).GetManfScg(Start,Limit,StrParam)
+
+//获取商未授权的类组
+i Action = "GetUnManfScg" d
+	.d ##class(web.DHCSTM.ManfCatGroup).GetUnManfScg(Start,Limit,StrParam)
+
+//获得所有的类组
+i Action = "GetAllScg" d
+	.d ##class(web.DHCSTM.ManfCatGroup).GetAllScg(Start,Limit,Sort,Dir,StrParam)
+
+//获取某类组已授权的厂商
+i Action = "GetScgManf" d
+	.d ##class(web.DHCSTM.ManfCatGroup).GetScgManf(Start,Limit,Sort,Dir,StrParam)
+
+//获取某类组未授权的厂商
+i Action = "GetUnScgManf" d
+	.d ##class(web.DHCSTM.ManfCatGroup).GetUnScgManf(Start,Limit,Sort,Dir,StrParam)
+
+i Action = "Save" d
+	.s ScgStr=$Get(%request.Data("ScgStr",1))
+	.s ManfIdStr=$Get(%request.Data("ManfIdStr",1))
+	.s ret=##class(web.DHCSTM.ManfCatGroup).Save(ManfIdStr,ScgStr)
+	.i ret="" d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+
+//修改授权是否可用的状态
+i Action = "Update" d
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s ret=##class(web.DHCSTM.ManfCatGroup).Update(ListData)
+	.i ret=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+
+i Action = "Delete" d
+	.s ScgStr=$Get(%request.Data("ScgStr",1))
+	.s ManfIdStr=$Get(%request.Data("ManfIdStr",1))
+	.s result = ##class(web.DHCSTM.ManfCatGroup).Delete(ManfIdStr,ScgStr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

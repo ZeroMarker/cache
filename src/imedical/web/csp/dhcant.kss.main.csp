@@ -1,0 +1,214 @@
+<!-- Copyright (c) 2016-09-03 QiuPeng. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+<head>
+<title>抗菌药物申请单</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+	<meta http-equiv="X-UA-Compatible" content="IE=9" />
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCANT:LIB></DHCANT:LIB>
+	<DHCANT:HEAD></DHCANT:HEAD>
+	<server>
+		set ShowTabStr = %request.Get("ShowTabStr")
+		set PAADMRowid = %request.Get("EpisodeID")
+		set ArcimRowid = %request.Get("ArcimRowid")
+		set OrderPoisonCode = %request.Get("OrderPoisonCode")
+		set OrderAntibApplyRowid = %request.Get("OrderAntibApplyRowid")
+		set UserReasonId = %request.Get("UserReasonId")
+		set PAAdmType = %request.Get("PAAdmType")
+		set EmerFlag = %request.Get("EmerFlag")
+	</server>
+	<script language="javascript" type="text/javascript">
+		var PARAMObj = {};
+		PARAMObj.ShowTabStr= "#(ShowTabStr)#";
+		PARAMObj.PAADMRowid = "#(PAADMRowid)#";
+		PARAMObj.ArcimRowid = "#(ArcimRowid)#";
+		PARAMObj.OrderPoisonCode = "#(OrderPoisonCode)#";
+		PARAMObj.OrderAntibApplyRowid = "#(OrderAntibApplyRowid)#";
+		PARAMObj.UserReasonId = "#(UserReasonId)#";
+		PARAMObj.PAAdmType = "#(PAAdmType)#";
+		PARAMObj.EmerFlag = "#(EmerFlag)#";
+	</script>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/css/dhcant.kss.main.css" />
+    <script type="text/javascript" src="../scripts/dhcdocant/kssmain/dhcant.kss.eaysui-tool.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/kssmain/dhcant.kss.main.init.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/kssmain/dhcant.kss.main.js"></script>
+</head>
+<body class="easyui-layout">
+	<div id="i-main" class="container-fluid">
+		<div id="i-baseinfo" class="row">
+			<div id="i-baseinfo-panel" class="col-xs-12 easyui-panel c-panel" title="&nbsp;基本信息"    
+        		data-options="iconCls:'icon-baseinfo',closable:false,   
+                collapsible:true,minimizable:false,maximizable:true"> 
+        		<div id="i-baseinfo-drug" class="row c-baseinfo-drug">
+    				<div class="col-xs-2 c-antlabel" id="i-baseinfo-drug-label">药品信息</div>
+    				<div class="col-xs-9 " id="i-baseinfo-drug-content">
+    					<div class="row c-antinfo" id="i-baseinfo-drug-content-div">
+    						<div class="col-xs-4 " id="i-baseinfo-drug-content-drugname"></div>
+    						<div class="col-xs-3 " id="i-baseinfo-drug-content-drugform"></div>
+    						<div class="col-xs-2 " id="i-baseinfo-drug-content-ksslevel"></div>
+    						<div class="col-xs-2 " id="i-baseinfo-drug-content-ddd"></div>
+    					</div>
+    				</div>
+				</div>
+				<div id="i-baseinfo-doc" class="row c-baseinfo-doc">
+    				<div class="col-xs-2 c-antlabel" id="i-baseinfo-doc-label">医师信息</div>
+    				<div class="col-xs-9 " id="i-baseinfo-doc-content">
+    					<div class="row c-antinfo" id="i-baseinfo-doc-content-div">
+    						<div class="col-xs-3 " id="i-baseinfo-doc-content-docname"></div>
+    						<div class="col-xs-2 " id="i-baseinfo-doc-content-docLevel"></div>
+    						<div class="col-xs-7 c-input-fillstyle " id="i-baseinfo-doc-content-process"></div>
+    					</div>
+    				</div>
+				</div>
+        	</div>
+        </div>
+		<div class="row" id="i-useaim">
+			<div id="i-useaim-panel" class="col-xs-12 easyui-panel c-panel" title="&nbsp;使用目的"    
+        		data-options="iconCls:'icon-useaim',closable:false,   
+                collapsible:true,minimizable:false,maximizable:true"> 
+                <div class="row c-useaim-row">
+                	<div class="col-xs-2 c-useaim-label">使用目的<i style="color:red;">*</i></div>
+                	<div class="col-xs-3 c-useaim-combdiv">
+                		<input id="i-useaim-panel-aim"  />
+                	</div>
+                	<div class="col-xs-2 c-useaim-label">用药指征<i style="color:red;">*</i></div>
+                	<div class="col-xs-3 c-useaim-combdiv">
+                		<input id="i-useaim-panel-usedrugindication" />
+                	</div>
+                	<div id="i-useaim-panel-kss3indication-lab" class="col-xs-2 c-useaim-label c-item-hidden">特抗药指征<i style="color:red;">*</i></div>
+                </div>
+                <div class="row c-useaim-row">
+                	<div class="col-xs-2 c-useaim-label">感染部位<i style="color:red;">*</i></div>
+                	<div class="col-xs-3 c-useaim-combdiv">
+                		<input id="i-useaim-panel-infectionsite" />
+                	</div>
+                	
+                	<div class="col-xs-2 c-useaim-label">用药时机</div>
+                	<div class="col-xs-3 c-useaim-combdiv">
+                		<input id="i-useaim-panel-usedrugtime" />
+                	</div>
+                	<div id="i-useaim-panel-kss3indication-div" class="col-xs-2 c-useaim-combdiv c-item-hidden">
+                		<input id="i-useaim-panel-kss3indication" style="width:110px;"/>
+                	</div>
+                </div>
+				<div id="i-useaim-aetiology-panel" class="col-xs-12 easyui-panel" title="&nbsp;病原学相关"    
+        			data-options="iconCls:'icon-aetiology',closable:false,   
+                	collapsible:true,minimizable:false,maximizable:true">
+            		<div class="row c-useaim-row">
+            			<div class="col-xs-2 c-useaim-label">是否送检<i style="color:red;">*</i></div>
+                		<div class="col-xs-3 c-useaim-combdiv">
+                			<input id="i-useaim-aetiology-panel-islab" />
+                		</div>
+                		<div class="col-xs-2 c-useaim-label c-item-hidden" id="i-useaim-aetiology-panel-zbjlabel">致病菌<i style="color:red;">*</i></div>
+                		<div class="col-xs-3 c-useaim-combdiv c-item-hidden" id="i-useaim-aetiology-panel-zbjcontent">
+                			<input id="i-useaim-aetiology-panel-zbjinput" />
+                		</div>
+                	</div>
+            	</div>
+				<div id="i-useaim-sensitive-panel" class="col-xs-12 easyui-panel c-hidden" title="&nbsp;药敏记录"    
+        			data-options="iconCls:'icon-sensitive',closable:false,   
+                	collapsible:true,minimizable:false,maximizable:true,headerCls:'c-no-border'"> 
+            		<div id="i-useaim-sensitive-row" class="row c-useaim-sensitive">
+                		<div class="col-xs-9" id="i-useaim-sensitive-grid"></div>
+                	</div>
+                
+            	</div>
+				<div id="i-useaim-operlist-panel" class="col-xs-12 easyui-panel c-panel c-hidden" title="&nbsp;手术记录"    
+        			data-options="iconCls:'icon-operlist',closable:false,   
+                	collapsible:true,minimizable:false,maximizable:true,headerCls:'c-no-border'"> 
+            
+            		<div id="i-useaim-operlist-row" class="row c-useaim-operlist">
+                		<div class="col-xs-12" id="i-useaim-operlist-grid"></div>
+                	</div>
+                
+            	</div>
+            	<div id="i-useaim-drugtime" class="c-item-hidden">	
+                	<div id="i-useaim-drugtime-panel" class="col-xs-12 c-hidden">
+            			<div class="row c-useaim-drugtime-row">
+                			<div class="col-xs-2 c-useaim-label">&nbsp;&nbsp;&nbsp;当次可用药天数</div>
+                			<div class="col-xs-1 c-useaim-combdiv">
+                				<input id="i-useaim-drugtime-existime" class="c-useaim-drugtime-mininput c-input-fillstyle">
+                			</div>
+                			<div class="col-xs-2 c-useaim-label">&nbsp;&nbsp;预计用药天数</div>
+                			<div class="col-xs-1 c-useaim-combdiv">
+                				<input id="i-useaim-drugtime-pretime" class="c-useaim-drugtime-mininput c-input-fillstyle">
+                			</div>
+                			<div class="col-xs-2 c-useaim-label">延长用药原因</div>
+                			<div class="col-xs-4 c-useaim-combdiv">
+                				<input id="i-useaim-drugtime-extensionreason" class="c-useaim-drugtime-input c-input-fillstyle">
+                			</div>
+                		</div>
+            		</div>
+				</div>
+			</div> 
+		</div>
+		<div class="row c-item-hidden" id="i-apply">
+            <div id="i-apply-panel" class="col-xs-12 c-hidden">
+                <div class="col-xs-2 c-apply-label">是否越级</div>
+                <div class="col-xs-1 c-apply-combdiv">
+                	<input id="i-apply-panel-isem" type="checkbox" class="c-apply-isem" />
+                </div>
+                <div class="col-xs-2 c-apply-label">越级原因</div>
+                <div class="col-xs-7 c-apply-combdiv">
+                	<input id="i-apply-panel-emreason" disabled="disabled" class="c-apply-emergencyreson-input" />
+                </div>
+            </div>
+        </div>
+		<div class="row c-item-hidden" id="i-consulation">
+            <div id="i-consulation-panel" class="col-xs-12 c-hidden">
+                <div class="row c-consulation-row" id="i-consulation-panel-row1">
+                	<div class="col-xs-2 c-consulation-label">会诊科室</div>
+                	<div class="col-xs-3 c-consulation-combdiv">
+                		<input id="i-consulation-panel-row1-conloc" />
+                	</div>
+                	
+                	<div class="col-xs-2 c-consulation-label">会诊医生</div>
+                	<div class="col-xs-3 c-consulation-combdiv">
+                		<input id="i-consulation-panel-row1-condoc" />
+                	</div>
+                </div>
+                <div class="row c-consulation-row c-item-hidden" id="i-consulation-panel-row2">
+                	<div class="col-xs-2 c-consulation-label">会诊科室</div>
+                	<div class="col-xs-3 c-consulation-combdiv">
+                		<input id="i-consulation-panel-row2-conloc" />
+                	</div>
+                	<div class="col-xs-2 c-consulation-label">会诊医生</div>
+                	<div class="col-xs-3 c-consulation-combdiv">
+                		<input id="i-consulation-panel-row2-condoc" />
+                	</div>
+                </div>
+                <div class="row c-consulation-row c-item-hidden" id="i-consulation-panel-row3">
+                	<div class="col-xs-2 c-consulation-label">会诊科室</div>
+                	<div class="col-xs-3 c-consulation-combdiv">
+                		<input id="i-consulation-panel-row3-conloc" />
+                	</div>
+                	<div class="col-xs-2 c-consulation-label">会诊医生</div>
+                	<div class="col-xs-3 c-consulation-combdiv">
+                		<input id="i-consulation-panel-row3-condoc" />
+                	</div>
+                </div>
+            </div>
+        </div>
+		<div class="row c-btn" id="i-btn">
+			<div id="i-btn-panel" class="col-xs-12 easyui-panel c-btn-panel"    
+        		data-options="iconCls:'icon-shuttlecock',closable:false,border:false,  
+                collapsible:false,minimizable:false,maximizable:false"> 
+            	<div class="col-xs-4"></div>
+				<div class="col-xs-2">
+            		<a id="i-btn-submit" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-msave'">保存</a>
+            	</div>
+            	<div class="col-xs-2">
+            		<a id="i-btn-cancel" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-mclose'">取消</a>
+            	</div>
+            	<div class="col-xs-2"></div>
+        	</div>
+		</div>	
+	</div>
+</body>
+</html>

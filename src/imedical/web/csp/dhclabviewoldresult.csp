@@ -1,0 +1,132 @@
+<!--dhclabviewoldresult.csp Copyright (c) 2009 DHCC LABTRAK. ALL RIGHTS RESERVED. --> 
+<!--<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>  -->
+<HTML XMLNS=TRAK>
+<SERVER>
+ n style,cmp,a,j,idx,posn,closeformatlist,endstr,theline,thestring,orderid,tsrowid,ord,int
+ n jj,str,len1,len2,labnmspc,recloc 
+ n PLIST,STARTTAG,ENDTAG,FORMATLIST
+ s CRLF=$c(13,10)
+ ; Display Patient Banner
+ //i +%request.Get("PatientBanner"),+%request.Get("PatientID") d
+ //. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ //. i cmp d cmp.Show(),cmp.%Close()
+ ; Get Test Set Row ID
+ s orderid=%request.Get("OrderID")
+ s StartDate=%request.Get("StartDate")
+ s orderid=$p(orderid,",")
+ s ord=$p(orderid,"||",1),int=$p(orderid,"||",2)
+ i (ord="")!(int="") w """"_orderid_""" is an invalid Order ID" q
+ ; don't allow preview for non-labtrak - no Layout....
+ s recloc=$p(^OEORD(ord,"I",int,3),"^",6)
+ i $$extlab^COEOrdItem(recloc)="Y" d  q
+ . w "<B>No layout defined for non-LabTrak systems</B>"
+ s tsrowid=$p($g(^OEORD(ord,"I",int,3)),"^",35)
+ s arcid=$p($g(^OEORD(ord,"I",int,1)),"^",2)
+ i tsrowid="" w "医嘱未审核！" q
+ ; Set up style lists
+ ; get 'em form LabTrak namespace..
+ //s labnmspc=$lg(^websys.ConfigurationD(1),21)
+ s labno=$p(tsrowid,"||",1),ts=$p(tsrowid,"||",2),tscnt=$p(tsrowid,"||",3)
+ s debtor=$p(^TEPI(labno),"\",18)
+ i '$l(debtor) w "<B>No debtorno in  non-LabTrak systems</B>" q
+ s Days=""
+ i $l(StartDate) s Days=+$h-$zdh(StartDate,3)
+ i $$GetHisResult^DHCLabOldResults(debtor,tsrowid,Days,"")
+ s tsname=$p(^ARCIM($p(arcid,"||",1),$p(arcid,"||",2),1),"^",2)
+ //w "</font></pre>"
+ //w "<br>"
+ //w "<H1>",tsname,"</H1>"
+ //w "<br>" 
+ s num="",ColMdl="",fldName="",data=""
+ s cnt=0,cols=2
+ s colData=""
+ s rendererRanges="renderer:rangesColor"
+ s rendererShowImage="renderer:showImage"
+ f {
+	 s num=$o(^TMP("DHCLabOldResults",debtor,"DATA",num))
+	 quit:num=""
+	 s temstr=^(num)
+	 s cnt=cnt+1
+	 s subdata=""
+	 f temi=1:1:$l(temstr,$c(9)) {
+		s substr=$p(temstr,$c(9),temi)
+		if cnt=1{
+	        if ColMdl="" {
+	           s ColMdl="{text:'"_substr_"',sortable:false,locked:true,dataIndex:'tcname'}"
+	           s fldName="{name:'tcname'}"
+	           s ColMdl=ColMdl_",{text:'曲线图',"_rendererShowImage_",sortable:false,locked:true,width:50,dataIndex:'showImg'}"
+	           s fldName=fldName_",{name:'showImg'}"
+	        }
+	        else{
+		       if temi=2{
+	           	   s ColMdl=ColMdl_",{text:'"_substr_"',sortable:false,hidden:true,dataIndex:'ranges'}"
+	               s fldName=fldName_",{name:'ranges'}"
+			   }
+			   else{ 
+	           	   s ColMdl=ColMdl_",{text:'"_substr_"',"_rendererRanges_",sortable:false,dataIndex:'date"_temi_"'}"
+	               s fldName=fldName_",{name:'date"_temi_"'}"
+		           s colData=colData_","_substr
+	               s cols=cols+1
+			   }
+		    }
+		}
+		else{	    
+		   if subdata=""{
+		   	  s subdata="'"_substr_"',"
+		   }
+		   else{
+			  if temi=2{
+		   	      s subdata=subdata_",'"_substr_"'"
+			  }else{
+		   	      s subdata=subdata_",'"_substr_"'"
+			  }
+		   }
+		}   
+	 }
+	 if $l(subdata){
+		if data=""{s data="["_subdata_"]"
+	    }else{s data=data_",["_subdata_"]"}
+	 }   
+ }
+ s gGridData="{success:true,data:["_data_"],"
+ s gGridData1="fieldsNames:["_fldName_"],"
+ s gGridData2="columModle:["_ColMdl_"]}"
+ k ^TMP("DHCLabOldResults",debtor)
+ ///设置缺省结果日期
+ //s tmpDate=+$h-30
+ //s gFindDate=$zd(tmpDate,3)
+ 
+</SERVER>
+
+
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext4.0.7/resources/css/ext-all.css" />
+		<script type="text/javascript" src="../scripts_lib/ext4.0.7/ext-all.js"></script>
+        
+		<SCRIPT language="Javascript">
+ 			var gGridData="#($g(gGridData))#";
+ 			var gGridData1="#($g(gGridData1))#";
+ 			var gGridData2="#($g(gGridData2))#";
+ 			gGridData=gGridData+gGridData1+gGridData2;
+ 			var gCols="#($g(cols))#";   ///返回结果总列数
+ 			var gColData="#($g(colData))#";
+ 			var gTSName="#($g(tsname))#";
+ 			var StartDateValue="#($g(StartDate))#";  ///开始日期
+ 			var OrderID="#($g(orderid))#";
+	   </script>
+	
+		<script type="text/javascript" src="../scripts/DHCLabViewOldResult.js"></script>
+</HEAD>
+<BODY>
+    <div id="headpanel"> </div>
+    <div id="container"> </div>
+    <div id="box"></div>
+<TRAK:APPLET>
+</BODY>
+</HTML>
+

@@ -1,0 +1,383 @@
+
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	set action=$g(%request.Data("action",1))
+	set isArrayType=$g(%request.Data("isArrayType",1))
+	set className=$g(%request.Data("className",1))
+	set condSql=""
+	;s start=1,pageSize=9999999
+	s:start>1 start=start+1
+	s end=start+pageSize
+	s deli="&"
+	i action="mulSearchSet" {
+		s id=$Get(%request.Data("ID",1))     //$g(%session.Data("kpiId"))
+		s CheckSetCode=$g(%request.Data("CheckSetCode",1))
+		s CheckSetDesc=$g(%request.Data("CheckSetDesc",1))
+		s CheckSetSectionType=$g(%request.Data("CheckSetSectionType",1))
+		s CheckSetObjType=$g(%request.Data("CheckSetObjType",1))
+		s CheckSetObjDim=$g(%request.Data("CheckSetObjDim",1))
+		s CheckSetUpdateDate=$g(%request.Data("CheckSetUpdateDate",1))
+		s CheckSetUpdateUser=$g(%request.Data("CheckSetUpdateUser",1))
+		i CheckSetCode'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckSet_Code like '%"_CheckSetCode_"%'"
+		i CheckSetDesc'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckSet_Desc like '%"_CheckSetDesc_"%'"
+		i CheckSetSectionType'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckSet_SectionType like '%"_CheckSetSectionType_"%'"
+		i CheckSetObjType'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckSet_ObjType = "_+CheckSetObjType
+		i CheckSetObjDim'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckSet_ObjDim ="_+CheckSetObjDim
+		/*i CheckSetObjType'=""  d
+		.s searcheSql="select ID from DHCWL_CodeCfg.DHCWLCodeCfgType where Type_Desc like '%"_CheckSetObjType_"%'"
+		.s condRs=##class(%Library.ResultSet).%New()
+		.d condRs.Prepare(searcheSql)
+		.d condRs.Execute()
+		.While(condRs.Next()){
+		.s ID(condRs.Data("ID"))=""
+		.}
+		.d condRs.Close()
+		.s ids="",tempId="" f  s tempId=$o(ID(tempId)) q:tempId=""  d
+		..s ids=ids_tempId_","
+		.s ids=$e(ids,1,$l(ids)-1)
+		.if $g(ids)'="" d
+		..if condSql="" s condSql=condSql_" where "
+		..e  s condSql=condSql_" and "
+		..s condSql=condSql_" CheckSet_ObjType in ("_ids_")"
+		..k ID
+		*/
+		s jsonPros="ID,CheckSetCode,CheckSetDesc,CheckSetSectionType,CheckSetObjType,CheckSetObjDim,CheckSetUpdateDate,CheckSetUpdateUser"
+		s sqlFields=##class(DHCWL.util.GetSetService).MapFildFromClassProByStr("DHCWL.CheckFun.CheckSet",jsonPros)
+		s tableName=##class(DHCWL.util.GetSetService).GetTableName("DHCWL.CheckFun.CheckSet")
+		s sql="select "_sqlFields_" from "_tableName_condSql_" order by ID"
+		s rs=##class(%Library.ResultSet).%New()
+	    d rs.Prepare(sql)
+	    d rs.Execute()
+	    s json=##class(DHCWL.util.Json).Json("ID"_deli_"CheckSetCode"_deli_"CheckSetDesc"_deli_"CheckSetSectionType"_deli_"CheckSetObjType"_deli_"CheckSetObjDim"_deli_"CheckSetKpi"_deli_"CheckSetUpdateDate"_deli_"CheckSetUpdateUser"_deli_"CheckSetObjId"_deli_"CheckSetDimId","result","root",deli)
+
+	    s num=0
+		While(rs.Next()){
+			s num=num+1
+			i (num<start) continue
+			i (num>end) continue
+			s setUpdateDate=rs.Data("CheckSet_UpdateDate")
+			s setObjType=rs.Data("CheckSet_ObjType")
+			s objDesc=$list(^DHCWL.MKPI.MKPIDimTypeD(setObjType),5)
+			s setObjDim=rs.Data("CheckSet_ObjDim")
+			s objDimDesc=""
+			i setObjDim'="" s objDimDesc=$list(^DHCWL.MKPI.DimPropertyD(setObjDim),4)
+			s id=rs.Data("ID")
+			i $d(^DHCWL.CheckFun.SetKpiReI("Set",id)) s kpiFlag="是"
+			e  s kpiFlag="否"
+		    //i setUpdateDate'="" s setUpdateDate=$zd(setUpdateDate,3)
+		    i setUpdateDate'="" s setUpdateDate=##class(websys.Conversions).DateLogicalToHtml(setUpdateDate)
+			d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("CheckSet_Code")_"'"_deli_"'"_rs.Data("CheckSet_Desc")_"'"_deli_"'"_rs.Data("CheckSet_SectionType")_"'"_deli_"'"_objDesc_"'"_deli_"'"_objDimDesc_"'"_deli_"'"_kpiFlag_"'"_deli_"'"_setUpdateDate_"'"_deli_"'"_rs.Data("CheckSet_UpdateUser")_"'"_deli_"'"_setObjType_"'"_deli_"'"_setObjDim_"'")
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		i (+isArrayType=1) {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+	
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	    
+	}elseif action="mulSearch" {
+		s session=$g(%request.Data("session",1))
+		s className=$g(%request.Data("className",1))
+		s isArrayType=$g(%request.Data("isArrayType",1))
+		s PV=""
+		s para="" f  s para=$o(%request.Data(para)) q:para=""  d
+		.s PV(para)=$g(%request.Data(para,1))
+		.if className="DHCWL.CheckFun.CheckSet" s %session.Data("SET",para)=$g(%request.Data(para,1))
+		i session'="" d
+		.k PV
+		.s para="" f  s para=$o(%session.Data(session,para)) q:para=""  d
+		..s PV(para)=%session.Data(session,para)
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) ;$g(%request.Data("pageSize",1))
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		i isArrayType=1 {
+			s start="",pageSize=""
+		}
+		s json=##class(web.DHCWL.KPI.MaintainKpi).GetObjsByClassName(className,$g(start),end,.PV)
+		;w json
+		;q
+		i isArrayType=1 {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+		w json.GetHead()
+		;有一些代替此方法（因为数据量大时string会溢出）
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+		
+	}elseif action="getObjTypeCombo"{
+		
+		s sql="select ID,Type_Desc from DHCWL_CodeCfg.DHCWLCodeCfgType"   //Type_Code
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=",",str="['',''],"
+		While(rs.Next()){
+			s str=str_"['"_rs.Data("ID")_"'"_deli_"'"_rs.Data("Type_Desc")_"'],"
+		}
+		d rs.Close()
+		w "["_$e(str,1,$l(str)-1)_"]"
+	}elseif action="addCheckFunSet"{
+		s dim("SetCode")=$g(%request.Data("SetCode",1))
+		s dim("SetDesc")=$g(%request.Data("SetDesc",1))
+		s dim("SetSecType")=$g(%request.Data("SetSecType",1))
+		s dim("SetObjType")=$g(%request.Data("SetObjType",1))
+		s dim("SetObjDim")=$g(%request.Data("SetObjDim",1))
+		s dim("SetUpdateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s return=##class(DHCWL.CheckFunData.SaveData).AddCheckFunSet(.dim)
+		s tip=$p(return,"^",1)
+		s id=$p(return,"^",2)
+		s name=$p(return,"^",3)
+		w "{success:true,tip:'"_tip_"',ROWID:'"_id_"',name:'"_name_"'}"
+		//w "{success:true,tip:'"_tip_"',ROWID:"_id_"}"
+	}elseif action="updateCheckFunSet" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("SetCode")=$g(%request.Data("SetCode",1))
+		s dim("SetDesc")=$g(%request.Data("SetDesc",1))
+		s dim("SetSecType")=$g(%request.Data("SetSecType",1))
+		s dim("SetObjType")=$g(%request.Data("SetObjType",1))
+		s dim("SetObjDim")=$g(%request.Data("SetObjDim",1))
+		s dim("SetUpdateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s tip=##class(DHCWL.CheckFunData.SaveData).UpdateCheckFunSet(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}
+	elseif action="deleteCheckFunSet" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s id=$g(%request.Data("ID",1))
+		//s ^DHCWLTEMPDJJ("ID",id)=""
+		s tip=##class(DHCWL.CheckFunData.SaveData).DeleteCheckFunSet(.dim)
+		//s ^DHCWLTEMPDJJ("ID",id)=""
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="addCheckFunKpi" {
+		s dim("KpiCode")=$g(%request.Data("kpiCode",1))
+		s dim("KpiDesc")=$g(%request.Data("kpiDesc",1))
+		s dim("KpiFlag")=$g(%request.Data("kpiFlag",1))
+		s dim("KpiUpdateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s tip=##class(DHCWL.CheckFunData.SaveData).AddCheckFunKpi(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="updateCheckFunKpi" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s dim("KpiCode")=$g(%request.Data("kpiCode",1))
+		s dim("KpiDesc")=$g(%request.Data("kpiDesc",1))
+		s dim("KpiFlag")=$g(%request.Data("kpiFlag",1))
+		s dim("KpiUpdateUser")=$g(%session.Data("LOGON.USERNAME"))
+		s tip=##class(DHCWL.CheckFunData.SaveData).UpdateCheckFunKpi(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="deleteCheckFunKpi" {
+		s dim("ID")=$g(%request.Data("ID",1))
+		s tip=##class(DHCWL.CheckFunData.SaveData).DeleteCheckFunKpi(.dim)
+		w "{success:true,tip:'"_tip_"'}"
+	}elseif action="mulSearchKpi" {
+		s id=$Get(%request.Data("ID",1))     //$g(%session.Data("kpiId")) 20150828
+		s CheckKPICode=$g(%request.Data("kpiCode",1))
+		s CheckKPIDesc=$g(%request.Data("kpiDesc",1))
+		s CheckKPIFlag=$g(%request.Data("kpiFlag",1))
+		s CheckKPIUpdateDate=$g(%request.Data("kpiUpdateDate",1))
+		s CheckKPIUpdateUser=$g(%request.Data("kpiUpdateUser",1))
+		i CheckKPICode'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckKPI_Code like '%"_CheckKPICode_"%'"
+		i CheckKPIDesc'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckKPI_Desc like '%"_CheckKPIDesc_"%'"
+		i CheckKPIFlag'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckKPI_Flag like '%"_CheckKPIFlag_"%'"
+		s jsonPros="ID,CheckKPICode,CheckKPIDesc,CheckKPIFlag,CheckKPIUpdateDate,CheckKPIUpdateUser"
+		s sqlFields=##class(DHCWL.util.GetSetService).MapFildFromClassProByStr("DHCWL.CheckFun.CheckKPI",jsonPros)
+		s tableName=##class(DHCWL.util.GetSetService).GetTableName("DHCWL.CheckFun.CheckKPI")
+		s sql="select "_sqlFields_" from "_tableName_condSql_" order by ID"
+		s rs=##class(%Library.ResultSet).%New()
+	    d rs.Prepare(sql)
+	    d rs.Execute()
+	    //s json=##class(DHCWL.util.Json).Json("ID"_deli_"kpiCode"_deli_"kpiDesc"_deli_"kpiFlagMain"_deli_"kpiUpdateDate"_deli_"kpiUpdateUser","result","root",deli)
+	    s json=##class(DHCWL.util.Json).Json("ID"_deli_"kpiCode"_deli_"kpiDesc"_deli_"kpiFlag"_deli_"kpiUpdateDate"_deli_"kpiUpdateUser","result","root",deli)
+	    //s ^yxtest("json")=json
+	    s num=0
+		While(rs.Next()){
+			s num=num+1
+			i (num<start) continue
+			i (num>end) continue
+			s flag=rs.Data("CheckKPI_Flag")
+		    s flagdesc=$Case(flag,"Y":"是","N":"否",:"")
+		    s updateDate=rs.Data("CheckKPI_UpdateDate")
+		    //i updateDate'="" s updateDate=$zd(updateDate,3)
+		    i updateDate'="" s updateDate=##class(websys.Conversions).DateLogicalToHtml(updateDate)
+			d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("CheckKPI_Code")_"'"_deli_"'"_rs.Data("CheckKPI_Desc")_"'"_deli_"'"_flagdesc_"'"_deli_"'"_updateDate_"'"_deli_"'"_rs.Data("CheckKPI_UpdateUser")_"'")
+
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		i (+isArrayType=1) {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+	
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	    
+	}elseif action="selDimPro"{
+		s objType=$g(%request.Data("objType",1))
+		s sql="select ID,DimPro_Name from DHCWL_MKPI.DHCWLDimProperty where DimPro_DimDr ="_+objType   //get DimProperty 
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=","
+		s json=##class(DHCWL.util.Json).Json("dimCode"_deli_"dimDesc","result","root",deli)
+		s recCnt=0
+		while(rs.Next()){
+			s recCnt=recCnt+1
+			s code=rs.Data("ID")
+			s name=rs.Data("DimPro_Name")
+			d json.Insert("'"_code_"'"_deli_"'"_name_"'")
+			}
+			d rs.Close()
+			d json.SetTotalNum(recCnt)
+			s jsonHead=json.GetHead()
+			w jsonHead
+			d{
+				s obj=json.Next()
+				w obj
+				}while(obj'="")
+			i json.GetCount()=0 w "]}"	
+	}elseif action="getobjTypeCbo"{
+		
+		s sql="select ID,KDT_Name from DHCWL_MKPI.DHCWLMKPIDimType"   //Type_Code
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		//s ^TEMPDHCWLDJJ($j,"DDD")=sql
+		s deli=",",str="['',''],"
+		While(rs.Next()){
+			s str=str_"['"_rs.Data("ID")_"'"_deli_"'"_rs.Data("KDT_Name")_"'],"
+			//s ^TEMPDHCWLDJJ($j,"str")=str
+		}
+		d rs.Close()
+		w "["_$e(str,1,$l(str)-1)_"]"
+	}elseif action="mulSearchKpiMain" {
+		s id=$Get(%request.Data("ID",1))     //$g(%session.Data("kpiId"))
+		s CheckKPICode=$g(%request.Data("kpiCode",1))
+		s CheckKPIDesc=$g(%request.Data("kpiDesc",1))
+		s CheckKPIFlag=$g(%request.Data("kpiFlagMain",1))
+		s CheckKPIUpdateDate=$g(%request.Data("kpiUpdateDate",1))
+		s CheckKPIUpdateUser=$g(%request.Data("kpiUpdateUser",1))
+		i CheckKPICode'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckKPI_Code like '%"_CheckKPICode_"%'"
+		i CheckKPIDesc'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckKPI_Desc like '%"_CheckKPIDesc_"%'"
+		i CheckKPIFlag'="" d
+		.if condSql="" s condSql=condSql_" where"
+		.e  s condSql=condSql_" and "
+		.s condSql=condSql_" CheckKPI_Flag like '%"_CheckKPIFlag_"%'"
+		s jsonPros="ID,CheckKPICode,CheckKPIDesc,CheckKPIFlag,CheckKPIUpdateDate,CheckKPIUpdateUser"
+		s sqlFields=##class(DHCWL.util.GetSetService).MapFildFromClassProByStr("DHCWL.CheckFun.CheckKPI",jsonPros)
+		s tableName=##class(DHCWL.util.GetSetService).GetTableName("DHCWL.CheckFun.CheckKPI")
+		s sql="select "_sqlFields_" from "_tableName_condSql_" order by ID"
+		s rs=##class(%Library.ResultSet).%New()
+	    d rs.Prepare(sql)
+	    d rs.Execute()
+	    s json=##class(DHCWL.util.Json).Json("ID"_deli_"kpiCode"_deli_"kpiDesc"_deli_"kpiFlagMain"_deli_"kpiUpdateDate"_deli_"kpiUpdateUser","result","root",deli)
+	    //s ^yxtest("json")=json
+	    s num=0
+	    
+	    set start = $g(%request.Data("start",1))
+	    //w !,start
+		set pageSize = $g(%request.Data("limit",1))
+		s end=start+pageSize
+	    s start=start+1
+	    //w !,start
+		While(rs.Next()){
+			s num=num+1
+			i (num<start) continue
+			i (num>end) continue
+			s flag=rs.Data("CheckKPI_Flag")
+		    s flagdesc=$Case(flag,"Y":"是","N":"否",:"")
+		    s updateDate=rs.Data("CheckKPI_UpdateDate")
+		    //i updateDate'="" s updateDate=$zd(updateDate,3)
+		    i updateDate'="" s updateDate=##class(websys.Conversions).DateLogicalToHtml(updateDate)
+			d json.Insert(rs.Data("ID")_""_deli_"'"_rs.Data("CheckKPI_Code")_"'"_deli_"'"_rs.Data("CheckKPI_Desc")_"'"_deli_"'"_flagdesc_"'"_deli_"'"_updateDate_"'"_deli_"'"_rs.Data("CheckKPI_UpdateUser")_"'")
+
+		}
+		d rs.Close()
+		d json.SetTotalNum(num)
+		i (+isArrayType=1) {
+			w "["
+			d {
+				s obj=json.GetNextJsonArray()
+				i obj'="" w obj,","
+			}while(obj'="")
+			w "]"
+			q
+		}
+	
+		s jsonHead=json.GetHead()
+		//w json.GetJson()有一些代替此方法（因为数据量大时string会溢出）
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+	    
+	}
+	
+</script>

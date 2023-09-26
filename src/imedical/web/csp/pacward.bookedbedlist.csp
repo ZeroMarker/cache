@@ -1,0 +1,41 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<CENTRE><LABEL>Booked Bed List</LABEL></CENTER>
+</head>
+
+<body>
+<server>
+ n ColCaptionLIST,dataLIST,BookedBedLIST
+ s (ColCaptionLIST,dataLIST,BookedBedLIST)=""
+ d ##Class(web.PACWard).BookedBedListGet(%request.Get("WardID"),%request.Get("LocationID"),.ColCaptionLIST,.dataLIST,.BookedBedLIST)
+ d ##Class(web.PACWard).BookedBedListShow(.ColCaptionLIST,.dataLIST,.BookedBedLIST)
+</server>
+<script language="Javascript">
+function HighlightRows(obj) {
+	for (var i=1; i<obj.rows.length; i++) {
+		if ((i % 2)==0) obj.rows[i].className="RowEven";
+		if ((i % 2)==1) obj.rows[i].className="RowOdd";
+		
+	}
+}
+
+function BodyLoadHandler() {
+	
+	var eTABLE=document.getElementById("tPACWard_BookedBedList");
+	if (eTABLE) HighlightRows(eTABLE);
+}
+document.body.onload = BodyLoadHandler;
+
+</SCRIPT>
+</body>
+</html>
+

@@ -1,0 +1,72 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<server>
+	;KK 16/Feb/2004  L:37859
+	n groupermessage,grouped,failed,grpfinished,grouperstarted,SessionId,error
+	s (groupermessage,grouped,failed,grouperstarted,SessionId,error)=""
+	s grpfinished="0"
+	s grouped="''"
+	s failed="''"
+	s error="''"
+	i $d(%session) s SessionId=%session.SessionId
+	
+	s ^zTRAK("cjb",$zn,$j,1)=$g(^TMP("WEB","BatchGroup"),"NO")_"$$$"_$d(%session) i $d(%session) s ^zTRAK("cjb",$zn,$j,1,"SessionId",%session.SessionId)=%session.SessionId
+	
+	s grouperstarted=$g(%request.Data("grouperstarted",1))
+	;i grouperstarted="" k ^TMP("WEB","BatchGroup") q
+	s groupermessage=$g(^TMP("WEB","BatchGroup"))
+	
+	w "!!!     groupermessage="_$g(groupermessage)_"^grouperstarted="_$g(grouperstarted)
+	
+	; cjb 13/02/2007 52998 - this temp global is set up in web.PAAdmCoding.BatchProcess if the process can't obtain the lock.  If set display a message to the user.
+	i $g(^TMP("WEB","BatchGroup",SessionId))="Locked" {
+		
+		d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,PAAdm.DRGCoding,PAAdmCoding.Edit3MDRG") 
+		
+		s error="'"_$g(t("GROUPER_ERROR"))_"\n"_$g(t("LOCK_FAILED"))_"'"
+		
+		s ^zTRAK("cjb",$zn,$j,3)=^TMP("WEB","BatchGroup")_"$$$"_$d(%session)_"^"_error i $d(%session) s ^zTRAK("cjb",$zn,$j,1,"SessionId",%session.SessionId)=%session.SessionId
+		s grpfinished="1"
+		k ^TMP("WEB","BatchGroup",SessionId)
+	}
+	
+	i $p($g(groupermessage),"^",1)="BatchGroupEnd" {
+		s grouped=$p($g(groupermessage),"^",2)
+		s failed=$p($g(groupermessage),"^",3)	
+		s grpfinished="1"
+		;k ^TMP("WEB","BatchGroup")
+	}
+	
+</server>
+<script Language="JavaScript">
+	if ("#(grpfinished)#"=="1"){
+		var grouped=#(grouped)#;
+		var failed=#(failed)#;
+		var error=#(error)#;
+		// cjb 16/05/2005 52236 - 0 equates to "".  No need for this as we're checking grpfinished
+		//if (grouped!="") {
+		if (error!="") {
+			alert(error);
+		} else {
+			alert("Batch Process Complete " + "\n" + "Number of episodes grouped:" + grouped + "\n" + "Number of episodes failed to group:" + failed);
+		}
+			if(parent.frames["TRAK_main"]) var frm = parent.frames["TRAK_main"].document.forms["fPAAdmCoding_FindBatch"];
+			if (frm) {
+				frm.BatchGroupMsg.value="1";
+			}
+		//}
+	}
+</script>
+</HTML>
+

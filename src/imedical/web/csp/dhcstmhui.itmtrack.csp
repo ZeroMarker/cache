@@ -1,0 +1,89 @@
+﻿<!--高值跟踪查询-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+	d ##class(web.DHCBillPrint).InvBillPrintCLSID()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false">
+		<table id="FindConditions" class="Condition">
+			<input id="Inci" name="Inci" type="hidden">
+			<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
+			<tr>
+				<td><label>条码</label><input id="BarCode" name="BarCode" class="textbox"></td>
+				<td><label>条码状态</label><input id="Status" name="Status" class="textbox hisui-simplecombobox"></td>
+				<td>供应商</td>
+				<td><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
+				<td><label>开始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
+			</tr>
+			<tr>
+				<td><label>自带条码</label><input id="OrgianlBarCode" name="OrgianlBarCode" class="textbox"></td>
+				<td><label>当前科室</label><input id="LocId" name="LocId" class="textbox hisui-combobox"></td>
+				<td>批号</td>
+				<td><input id="BatchNo" name="BatchNo" class="textbox"></td>
+				<td><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
+			</tr>
+			<tr>
+				<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
+				<td><label>登记号</label><input id="wardno" name="wardno" class="textbox"></td>
+				<td>呆滞</td>
+				<td class="CkPadding">
+					<input id="outed" name="outed" class='hisui-checkbox' type="checkbox" value="Y">
+					<label>天数</label><input id="DayNum" name="DayNum" class="textbox" style="width:75px;">
+				</td>
+				<td>
+					<input class='hisui-radio' type="radio" label='不考虑' name='DateFlag' value='' data-options="checked:true">
+					<input class='hisui-radio' type="radio" label='按注册' name='DateFlag' value='1'>
+					<input class='hisui-radio' type="radio" label='按医嘱' name='DateFlag' value='2'>
+				</td>
+			</tr>
+			<tr>
+				<td><label>打印状态</label><input id="PrintStatus" name="PrintStatus" class="textbox hisui-simplecombobox"></td>
+				<td colspan="2" style="text-align:left;">
+					<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					<a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class="GridPadding" style="padding-top:0;" data-options="region:'center',border:false,collapsible:false">
+		<div class="hisui-panel" title="条码信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			<table id="BarMainGrid"></table>
+		</div>
+	</div>
+	<div class="GridPadding" style="width:500px;padding-top:0;padding-left:0;" data-options="region:'east',border:false,collapsible:false">
+		<div class="hisui-panel" title="条码信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			<table id="BarDetailGrid"></table>
+		</div>
+	</div>
+
+	<div id="BarCodePackItmWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="GridPadding" style="" data-options="region:'center',border:false">
+				<div class="hisui-panel panel-header-gray" data-options="title:'',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="PackItmGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCodePrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/BarCodePackItm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrack.js"></script>
+</body>
+</html>

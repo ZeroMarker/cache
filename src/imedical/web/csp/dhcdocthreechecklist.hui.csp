@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--dhcdocthreechecklist.hui.csp 三级检诊维护--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 40px;
+}
+ .left_label{
+	 margin-left:0px;
+ }
+</style>
+<Server>
+	s EpisodeID=%request.Get("EpisodeID")
+	s LocID=%request.Get("LocID")
+	s UserID=%request.Get("UserID")
+	s CurrUserFlag=0
+	if (EpisodeID'=""){
+		Set CurrDocDr = $P($g(^PAADM(EpisodeID)),"^",9)
+		if (CurrDocDr'=""){
+			Set DoctorUserDr = $o(^SSU("SSUSR",0,"CTPCP",CurrDocDr,""))
+			if (DoctorUserDr'=UserID) s CurrUserFlag=1,UserID=DoctorUserDr
+		}else{
+			s UserID=""
+			s CurrUserFlag=1
+			}
+		}
+</Server>
+</head>
+<body>
+	<csp:Include Page="dhcdocthreechecklist.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			LocID:"#(LocID)#",
+			UserID:"#(UserID)#",
+			CurrUserFlag:"#(CurrUserFlag)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/DHCDocThreeCheckList.hui.js"></script>
+</body>
+</html>

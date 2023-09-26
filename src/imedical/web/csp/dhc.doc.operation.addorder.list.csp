@@ -1,0 +1,298 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.-->
+<!--dhc.doc.operation.addorder.list.csp HUI补录医嘱-》手术患者列表--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<Server>
+    s EpisodeID=%request.Get("EpisodeID")
+    s DateDefaultFormat=##Class(websys.Conversions).DateFormat()
+</Server>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.textbox{
+	width: 130px;
+}
+</style>
+ </head>
+ <body >
+ <div class="hisui-layout" data-options="fit:true,border:false">
+    <div data-options="region:'north',split:false,border:false,collapsible:false" style="height:255px;padding:10px 10px 0 10px;"> 
+    	<div class="hisui-panel" data-options="title:'手术病人列表',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0;">
+	    	<table class="search-table">
+	    		<tr>
+	    			<td class="r-label"><lable for="StDate">开始时间</lable></td>
+	    			<td><input id="StDate" class="textbox" ></input></td>
+	    			<td class="r-label"><lable for="EndDate">结束时间</lable></td>
+	    			<td><input id="EndDate" class="textbox" ></input></td>
+	    		<tr>
+	    		<tr>
+	    			<td class="r-label"><lable for="MedCareNo">病案号</lable></td>
+	    			<td><input id="MedCareNo" class="textbox" ></input></td>
+	    			<td class="r-label"><lable for="comAppLoc">申请科室</lable></td>
+	    			<td><input id="comAppLoc" class="textbox" ></input></td>
+	    		<tr>
+	    		<tr>
+	    			<td class="r-label"><lable for="comOperStat">手术状态</lable></td>
+	    			<td><input id="comOperStat" class="textbox" ></input></td>
+	    			<td class="r-label"><lable for="comOpRoom">手术间</lable></td>
+	    			<td><input id="comOpRoom" class="textbox" ></input></td>
+	    		<tr>
+	    		<tr class="r-label">
+	    			<td colspan="4"><a id="Search" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+	    		<tr>
+	    	</table>
+    	</div>
+    </div>
+    <div data-options="region:'center',split:false,border:false" style="padding:0 10px 10px 10px;"> 
+    	<div class="hisui-panel" data-options="fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+        	<table id="taboperationList"></table> 
+        </div>
+	</div>
+</div>
+<SCRIPT language = 'javascript' >
+	var EpisodeID="#(EpisodeID)#";
+	var DateDefaultFormat="#(DateDefaultFormat)#";
+	var OperationListDataGrid;
+	var AppLocRowID="",OpRoomRowID="",OperStatRowID="";
+	$(function(){
+		InitLayOut();
+	});
+	function InitLayOut(){
+		$("#StDate,#EndDate").datebox({
+			formatter:myformatter,
+			parser:myparser
+			
+		});
+		$("#StDate,#EndDate").datebox('setValue', myformatter(new Date()));
+		InitCombo();
+		var OperationListColumns=[[ 
+			{ field: 'status', title: '手术状态',width: 70, align: 'center', sortable: false, resizable: true},
+			{ field: 'oproom', title: '术间',width: 70, align: 'center', sortable: false, resizable: true},
+			{ field: 'opordno', title: '台次',width: 70, align: 'center', sortable: false, resizable: true},
+			{ field: 'regno', title: '登记号',width: 100, align: 'center', sortable: false, resizable: true},
+			{ field: 'patname', title: '病人姓名',width: 70, align: 'center', sortable: false, resizable: true},
+			{ field: 'diag', title: '术前诊断',width: 120, align: 'center', sortable: false, resizable: true},
+			{ field: 'opname', title: '手术名称',width: 120, align: 'center', sortable: false, resizable: true},
+			{ field: 'loc', title: '科室\床位',width: 100, align: 'center', sortable: false, resizable: true},
+			{ field: 'opdoc', title: '手术医生',width: 70, align: 'center', sortable: false, resizable: true},
+			{ field: 'bloodType', title: '血型',width: 50, align: 'center', sortable: false, resizable: true},
+			{ field: 'AnaesthesiaID',hidden:true},
+			{ field: 'adm',hidden:true},
+			{ field: 'PatientID',hidden:true},
+			{ field: 'PAADMMainMRADMDR',hidden:true},
+			{ field: 'opaId',hidden:true}
+		 ]];
+		OperationListDataGrid=$('#taboperationList').datagrid({ 
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			rownumbers:true,
+			pagination : true,  
+			rownumbers : true,  
+			pageSize: 20,
+			pageList : [20,100,200],
+			idField:'AnaesthesiaID',
+			columns :OperationListColumns,
+			onClickRow:function(rowIndex, rowData){
+				var frm=dhcsys_getmenuform();
+				if (typeof frm !="object"){return;}
+				var adm=rowData.adm;
+				var AnaesthesiaID=rowData.AnaesthesiaID;
+				if ((adm==frm.EpisodeID.value)&&(AnaesthesiaID==frm.AnaesthesiaID.value)) {return;}
+				var PatientID=rowData.PatientID;
+				var PAADMMainMRADMDR=rowData.PAADMMainMRADMDR;
+				
+				frm.EpisodeID.value=adm;
+				frm.PatientID.value=PatientID;
+				frm.mradm.value=PAADMMainMRADMDR;
+				frm.AnaesthesiaID.value=AnaesthesiaID;
+			},
+			onDblClickRow: function() {
+				var seleRow = $('#taboperationList').datagrid('getSelected');
+				if (seleRow){
+					doSwitch(seleRow.PatientID,seleRow.adm,seleRow.PAADMMainMRADMDR); 
+				}
+			}
+		});
+		$("#Search").click(function(){
+			//OperationListDataGrid.datagrid("reload");
+			OperationListDataGridLoad();
+		});
+		OperationListDataGridLoad();
+		function OperationListDataGridLoad(){
+			var AppLocDesc=$("#comAppLoc").lookup('getText');
+		    if (AppLocDesc=="") AppLocRowID="";
+		    var oproomDesc=$("#comOpRoom").lookup('getText');
+		    if (oproomDesc=="") OpRoomRowID="";
+		    var opstaDesc=$("#comOperStat").lookup('getText');
+		    if (opstaDesc=="") OperStatRowID="";
+			$.cm({
+			    ClassName : "web.UDHCANOPArrange",
+			    QueryName : "GetAnOpList",
+			    stdate:$('#StDate').datebox('getValue'),
+			    enddate:$('#EndDate').datebox('getValue'), 
+			    stat:OperStatRowID, 
+			    oproom:OpRoomRowID, 
+			    Dept:AppLocRowID, 
+			    appType:"", userLocId:session['LOGON.CTLOCID'], IsAppT:"", MedCareNo:$('#MedCareNo').val(),
+			    oprFloorId:"", patWardId:"", paidType:"", LogUserType:"OPNURSE", ifAllLoc:"", ifOutOper:"",mulStr:"",
+			    Pagerows:OperationListDataGrid.datagrid("options").pageSize,rows:99999
+			},function(GridData){
+				OperationListDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+			});
+		}
+		function myformatter(date){
+			var y = date.getFullYear();
+			var m = date.getMonth()+1;
+			var d = date.getDate();
+			if (DateDefaultFormat==3) return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+			else if (DateDefaultFormat==4) return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y
+			else return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+		}
+		function myparser(s){
+		    if (!s) return new Date();
+		    if(DateDefaultFormat==4){
+				var ss = s.split('/');
+				var y = parseInt(ss[2],10);
+				var m = parseInt(ss[1],10);
+				var d = parseInt(ss[0],10);
+			}else{
+				var ss = s.split('-');
+				var y = parseInt(ss[0],10);
+				var m = parseInt(ss[1],10);
+				var d = parseInt(ss[2],10);
+			}
+			if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+				return new Date(y,m-1,d);
+			} else {
+				return new Date();
+			}
+		}
+	}
+	
+	function InitCombo(){
+		///申请科室
+		$("#comAppLoc").lookup({
+	        url:$URL,
+	        mode:'remote',
+	        method:"Get",
+	        idField:'ctlocId',
+	        textField:'ctlocDesc',
+	        columns:[[  
+	            {field:'ctlocId',title:'',hidden:true},
+				{field:'ctlocDesc',title:'名称',width:350}
+	        ]], 
+	        pagination:true,
+	        panelWidth:400,
+	        isCombo:true,
+	        //minQueryLen:2,
+	        delay:'500',
+	        queryOnSameQueryString:true,
+	        queryParams:{ClassName: 'web.DHCClinicCom',QueryName: 'FindLocList'},
+	        onBeforeLoad:function(param){
+		        var desc=param['q'];
+				param = $.extend(param,{desc:desc, locListCodeStr:"INOPDEPT^OUTOPDEPT^EMOPDEPT", EpisodeID:""});
+		    },
+		    onSelect:function(index, rec){
+			    setTimeout(function(){
+					if (rec!=undefined){
+						AppLocRowID=rec['ctlocId'];
+					}
+				});
+			}
+	    });
+		///手术状态
+		$("#comOperStat").lookup({
+	        url:$URL,
+	        mode:'remote',
+	        method:"Get",
+	        idField:'tCode',
+	        textField:'tDesc',
+	        columns:[[  
+	            {field:'tCode',title:'',hidden:true},
+				{field:'tDesc',title:'名称',width:350}
+	        ]], 
+	        pagination:true,
+	        panelWidth:400,
+	        isCombo:true,
+	        //minQueryLen:2,
+	        delay:'500',
+	        queryOnSameQueryString:true,
+	        queryParams:{ClassName: 'web.DHCClinicCom',QueryName: 'LookUpComCode'},
+	        onBeforeLoad:function(param){
+		        var desc=param['q'];
+				param = $.extend(param,{type:"OpaStatus"});
+		    },
+		    onSelect:function(index, rec){
+			    setTimeout(function(){
+					if (rec!=undefined){
+						OperStatRowID=rec['tCode'];
+					}
+				});
+			}
+	    });
+		///手术间
+		$("#comOpRoom").lookup({
+	        url:$URL,
+	        mode:'remote',
+	        method:"Get",
+	        idField:'oprId',
+	        textField:'oprDesc',
+	        columns:[[  
+	            {field:'oprId',title:'',hidden:true},
+				{field:'oprDesc',title:'名称',width:350}
+	        ]], 
+	        pagination:true,
+	        panelWidth:400,
+	        isCombo:true,
+	        //minQueryLen:2,
+	        delay:'500',
+	        queryOnSameQueryString:true,
+	        queryParams:{ClassName: 'web.UDHCANOPArrange',QueryName: 'FindAncOperRoom'},
+	        onBeforeLoad:function(param){
+		        var desc=param['q'];
+		        var AppLocDesc=$("#comAppLoc").lookup('getText');
+		        if (AppLocDesc=="") AppLocRowID="";
+				param = $.extend(param,{oprDesc:desc, locDescOrId:'', locListCodeStr:'OP^OUTOP^EMOP', EpisodeID:'', opaId:'', oprBedType:'T', appLocDescOrId:AppLocRowID});
+		    },
+		    onSelect:function(index, rec){
+			    setTimeout(function(){
+					if (rec!=undefined){
+						OpRoomRowID=rec['oprId'];
+					}
+				});
+			}
+	    });
+	}
+//Desc:切换患者
+function doSwitch(PatientID,EpisodeID,mradm) {
+	if(top.frames[0] && top.frames[0].switchPatient){
+		top.frames[0].switchPatient(PatientID,EpisodeID,mradm);
+		top.frames[0].hidePatListWin();
+	}else{
+		parent.parent.switchPatient(PatientID,EpisodeID,mradm);
+		parent.parent.hidePatListWin();
+	}
+	return ;
+}
+</SCRIPT>
+</body>
+
+
+</html>

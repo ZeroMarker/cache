@@ -1,0 +1,81 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))   
+	s str = $Get(%request.Data("query",1))
+	
+	s userid=$Get(%request.Data("userid",1))	
+	s projdr=$Get(%request.Data("projdr",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	s FileName=$Get(%request.Data("upLoadFileName",1))
+	s File=$Get(%request.MimeData("files",1))
+	s GroupId=$G(%session.Data("LOGON.GROUPID"))
+                s LocId=$G(%session.Data("LOGON.CTLOCID"))
+                s UserId=$G(%session.Data("LOGON.USERID"))
+    
+	i action = "Upload" d
+	.s Param=GroupId_"^"_LocId_"^"_UserId
+                .s result = ##class(herp.budg.udata.uBudgProjClaimApply).SaveVendPic(File,Param,rowid)
+    .i result=0 d
+    ..w "{success:'true',message:'上传成功'}"
+    .e  d
+    ..w "{success:'false',message:'上传失败_"_result_"'}"
+    
+     i action = "GetPic" d
+     .s result = ##class(herp.budg.udata.uBudgProjClaimApply).GetPicInfo(rowid)
+     .i result = "" d
+     ..w "{results:0,rows:[]}"
+     .e  d
+     ..w result
+     
+     i action = "DeletePic" d
+     .s Param=GroupId_"^"_LocId_"^"_UserId
+     .s PicSrc=$Get(%request.Data("picsrc",1))
+     .s result = ##class(herp.budg.udata.uBudgProjClaimApply).GetDelPicInfo(rowid,PicSrc,Param)
+     .i result = 0 d
+     ..w "{success:'true',info:''}"
+     .e  d
+     ..w "{success:'false',info:'"_result_"'}"
+     
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjClaimApply).List(hospid,userid,projdr,sortField, sortDir, start, limit)
+	
+	i action = "submit" d
+	
+	.s result = ##class(herp.budg.udata.uBudgProjClaimApply).Submit(rowid,userid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "unsubmit" d
+	.s result = ##class(herp.budg.udata.uBudgProjClaimApply).unSubmit(rowid,userid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "Del" d
+	.s result = ##class(herp.budg.udata.uBudgProjClaimApply).DeleteRec(rowid,userid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "billcode" d
+	.w ##class(herp.budg.udata.uBudgProjClaimApply).billcode(userdr,projdr,start, limit, str)
+	
+
+		
+</script>

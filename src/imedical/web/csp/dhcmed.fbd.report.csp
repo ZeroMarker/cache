@@ -1,0 +1,70 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<!--TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE-->
+		<TITLE>食源性疾病报告</TITLE>
+		<!-- <meta http-equiv="Content-Type" content="text/html;" /> -->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310> 
+		<DHCMED:HEAD></DHCMED:HEAD>   
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/foodborne.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/fbd/report/gui.js'></script>	
+		<script language='javascript' src='../scripts/dhcmed/fbd/report/event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/fbd/report/print.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set PortalFlag=+$g(%request.Data("PortalFlag",1))	    //报告ID
+			Set ReportID=$g(%request.Data("ReportID",1))	//当前报告ID
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))	//当前病人就诊ID
+ 			Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+			Set LocFlag=+$g(%request.Data("LocFlag",1))		//上报权限的标记
+			Set:ReportID="" ReportID=""""""
+			Set:PatientID="" PatientID=""""""
+			Set:EpisodeID="" EpisodeID=""""""
+			Set:LocFlag="" LocFlag=""""""
+		</Script>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+            
+            var PatientID=#(PatientID)#;
+            var EpisodeID=#(EpisodeID)#;
+            var ReportID=#(ReportID)#;
+            var LocFlag=#(LocFlag)#;
+            var PortalFlag=#(PortalFlag)#;
+            
+            var objControlArry = new Array();
+            function window_onload() {
+            	var objviewScreen = new InitviewScreen();
+                objControlArry['viewScreen'] = objviewScreen;
+            }
+        </script>
+	    <!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</HEAD>
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+		<Server>
+			w "<input id='LocFlag' name='LocFlag' type='hidden' value='"_%request.Get("LocFlag")_"'>",$C(13,10)
+			w "<input id='PatientID' name='PatientID' type='hidden' value='"_%request.Get("PatientID")_"'>",$C(13,10)
+			w "<input id='EpisodeID' name='EpisodeID' type='hidden' value='"_%request.Get("EpisodeID")_"'>",$C(13,10)
+			w "<input id='ReportID' name='ReportID' type='hidden' value='"_%request.Get("ReportID")_"'>",$C(13,10)
+			w "<input id='DiseaseAlias' name='DiseaseAlias' type='hidden' value='"_%request.Get("DiseaseAlias")_"'>",$C(13,10)
+		</Server>
+	</body>
+</html>

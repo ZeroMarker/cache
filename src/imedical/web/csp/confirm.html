@@ -1,0 +1,114 @@
+<html>
+<head>
+<title>确认信息</title>
+<meta charset="GB2312">
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css">
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js" charset="utf-8"></script>
+</head>
+<body style="overflow-y:hidden;" >
+	<table style="width:100%;height:100%;">
+		<tr>
+			<td>
+				<table id="tbl" align="center" style="width:350px;height:20px;" border=0 cellSpacing=0 cellPadding=0>
+					<tr>
+						<td style="width:40px;">
+							<div class="messager-icon messager-question"></div>
+						</td>
+						<td>
+							<div id="DivMsg"></div>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>		
+		<tr>
+			<td align="center">
+				<a id="BtnYES" class="hisui-linkbutton">是</a><span style="width:10px;display:inline-block;">&nbsp;</span>
+				<a id="BtnNO" class="hisui-linkbutton">否</a>
+			</td>			
+		</tr>
+		<tr>
+			<td align="center" style="height:10px"></td>
+		</tr>
+	</table>
+	
+	<script type="text/javascript">
+		window.onload = function(){
+			var divObj = document.getElementById("DivMsg");
+			var btnYESObj = document.getElementById("BtnYES");
+			var btnNOObj = document.getElementById("BtnNO");
+			var tblObj = document.getElementById("tbl");
+			var defaultFocus = "YES";
+			var btnValue = "是|否";
+			var fontSize = 14;
+			var width ='250',height='100';
+			if (typeof dialogArguments!="undefined" && dialogArguments && dialogArguments.YesOrNo){
+				defaultFocus = dialogArguments.YesOrNo;
+			}
+			if (typeof dialogArguments!="undefined" && dialogArguments && dialogArguments.btnValue){
+				btnValue = dialogArguments.btnValue;
+			}
+			if (typeof dialogArguments!="undefined" && dialogArguments && dialogArguments.fontSize){
+				fontSize = dialogArguments.fontSize;
+			}
+			if (typeof dialogArguments!="undefined" && dialogArguments && dialogArguments.width){
+				width = dialogArguments.width;
+			}
+			if (typeof dialogArguments!="undefined" && dialogArguments && dialogArguments.height){
+				height = dialogArguments.height;
+			}
+			var btnValueArr = btnValue.split("|");
+			$("#BtnYES").find(".l-btn-text").text(btnValueArr[0]).css({fontSize:fontSize});
+			$("#BtnNO").find(".l-btn-text").text(btnValueArr[1]).css({fontSize:fontSize});
+			tblObj.style.width = (width-50)+"px"
+			tblObj.style.height = (height-80)+"px";
+			
+			if (typeof dialogArguments!="undefined" && dialogArguments && dialogArguments.msg) {
+				divObj.innerHTML = dialogArguments.msg;
+			}else{
+				divObj.innerHTML = "请为dhcsys_confirm方法传入提示信息";
+			}
+			divObj.style.fontSize = fontSize; 
+			btnYESObj.onclick = function(){
+				returnValue = true;
+				window.close();	
+			};		
+			btnNOObj.onclick = function(){
+				returnValue = false;
+				window.close();	
+			};
+			if(defaultFocus=="NO"){				
+				$("#BtnNO").addClass('active');
+			}else{				
+				$("#BtnYES").addClass('active');
+			}	
+			document.onkeyup = function(e){
+				var keycode=websys_getKey(e);
+				if (keycode==37){ //left
+					$("#BtnNO").removeClass('active');
+					$("#BtnYES").addClass('active');
+				}else if(keycode==39){ //right
+					$("#BtnYES").removeClass('active');
+					$("#BtnNO").addClass('active');
+				}else if(keycode==13 || keycode==32){
+					if ($("#BtnNO").hasClass('active')){
+						returnValue = false;
+					}else{
+						returnValue = true;
+					}
+					window.close();	
+				}else if (keycode==27){
+					returnValue = false;
+					window.close();
+				}
+			}
+			if ("120px"==dialogHeight){ //如果是默认高度,则自动计算高度
+				var h = $("#DivMsg").height();
+				dialogHeight = parseInt(h)+100+"px";
+			}
+		}
+	</script>
+</body>
+</html>

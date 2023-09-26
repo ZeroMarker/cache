@@ -1,0 +1,65 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s type=$Get(%request.Data("type",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s unitDr=$Get(%request.Data("unitDr",1))
+	s str=$Get(%request.Data("str",1))
+	s data=$Get(%request.Data("data",1))
+
+	s active=$Get(%request.Data("active",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s appSysDr=$Get(%request.Data("appSysDr",1))
+	s desc=$Get(%request.Data("desc",1))
+	s order=$Get(%request.Data("order",1))
+	s isInner=$Get(%request.Data("isInner",1))
+	s unitTypeDr=$Get(%request.Data("unitTypeDr",1))
+
+	
+	i action = "list" d
+	.w ##class(dhc.pa.udata.uJXGroup).List(type,searchField,searchValue,sortField,sortDir,start,limit)
+
+	i action = "kpi" d
+	.w ##class(dhc.pa.udata.uJXGroup).GetEndKPI(userCode)
+
+	i action = "getJXUnit" d
+	.w ##class(dhc.pa.udata.uJXGroup).GetJXUnit(unitTypeDr)
+	
+	i action = "add" d
+	.s result = ##class(dhc.pa.udata.uJXGroup).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.pa.udata.uJXGroup).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uJXGroup).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "unittype" d
+	.w ##class(dhc.pa.udata.uJXGroup).GetUnitType(str)
+</script>

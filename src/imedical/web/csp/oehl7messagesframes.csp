@@ -1,0 +1,190 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+	s LinkID = %request.Get("LinkID")
+	s HL7RejectionType = %request.Get("HL7RejectionType")
+	s DateRecFrom = %request.Get("DateRecFrom")
+	s DateRecTo = %request.Get("DateRecTo")
+	s OEHLRowId = %request.Get("OEHLRowId")
+
+	d ##Class(websys.Component).GetComponentMessages(.t,"OEHL7Messages.Find")
+	s RejectionTypeReq = t("RejectionTypeReq")
+	s DateFromReq = t("DateFromReq")
+	s DateToReq = t("DateToReq")
+
+</SERVER>
+
+<!-- Log 57591 - AI - 17-01-2006 : javascript code moved to before frameset code because this is now opening in a new window. -->
+
+<script language=javascript>
+	var RejectionTypeReq ="#(RejectionTypeReq)#";
+	var DateFromReq = "#(DateFromReq)#"
+	var DateToReq = "#(DateToReq)#"
+
+function DocLoadHandler() {
+
+	var win=window.frames["FindOEHL7Messages"];
+	if (win) {
+		var doc=win.document;
+		if (doc) {
+
+			var obj=doc.getElementById('ViewAckRejections');
+			if (obj) obj.onchange=ViewAckChangeHandler;
+
+			// Log 45047 - AI - 13-09-2004 : Set up the new SearchString functionality.
+			var obj=doc.getElementById('SearchString');
+			if (obj) {
+				obj.onblur=SearchStringBlurHandler;
+			}
+
+			// Log 45047 - AI - 13-09-2004 : Add a Find Click Handler, to check validation before continuing.
+			var obj=doc.getElementById('find1');
+			if (obj) {
+				obj.onclick=FindClickHandler;
+			}
+		}
+	}
+}
+
+// chkobj is the checkbox, txtobj is the textbox.
+// also note the chk is "ViewAck" and txt is "ViewUnAck", so reverse the values found.
+function ViewAckChangeHandler() {
+
+	var win=window.frames["FindOEHL7Messages"];
+	if (win) {
+		var doc=win.document;
+		if (doc) {
+
+			var chkobj=doc.getElementById("ViewAckRejections");
+			var txtobj=doc.getElementById("ViewUnAck");
+			if ((chkobj) && (txtobj)) {
+				if (chkobj.checked) {
+					txtobj.value="N";
+				}
+				else {
+					txtobj.value="Y";
+				}
+			}
+		}
+	}
+}
+
+// Log 45047 - AI - 13-09-2004 : Set up the new SearchString functionality.
+function SearchStringBlurHandler() {
+
+	var win=window.frames["FindOEHL7Messages"];
+	if (win) {
+		var doc=win.document;
+		if (doc) {
+
+			var obj=doc.getElementById('SearchString');
+			if (obj) {
+				if (obj.value!="") {
+					var obj2=doc.getElementById('cDateRecFrom');
+					if (obj2) obj2.className="clsRequired";
+					var obj3=doc.getElementById('cDateRecTo');
+					if (obj3) obj3.className="clsRequired";
+				} else {
+					var obj2=doc.getElementById('cDateRecFrom');
+					if (obj2) obj2.className="";
+					var obj3=doc.getElementById('cDateRecTo');
+					if (obj3) obj3.className="";
+				}
+			}
+		}
+	}
+}
+
+function FindClickHandler() {
+
+	var win=window.frames["FindOEHL7Messages"];
+	var doc=win.document;
+
+	// if Search String exists, ONLY continue IF Search Date From and Search Date To have values.
+	var searchstr="";
+	var obj=doc.getElementById("SearchString");
+	if (obj) searchstr=obj.value;
+	var errmsg="";
+	var obj2=doc.getElementById('cDateRecFrom');
+	var objval2=doc.getElementById('DateRecFrom');
+	if ((obj2)&&(obj2.className=="clsRequired")&&(objval2.value=="")&&(searchstr!="")) {
+		if (errmsg!="") errmsg=errmsg+"\n"+tDateFromReq;
+		if (errmsg=="") errmsg=DateFromReq;
+		if (objval2) objval2.className="clsInvalid";
+	} else {
+		if (objval2) objval2.className="";
+	}
+
+	var obj3=doc.getElementById('cDateRecTo');
+	var objval3=doc.getElementById('DateRecTo');
+	if ((obj3)&&(obj3.className=="clsRequired")&&(objval3.value=="")&&(searchstr!="")) {
+		if (errmsg!="") errmsg=errmsg+"\n"+DateToReq;
+		if (errmsg=="") errmsg=DateToReq;
+		if (objval3) objval3.className="clsInvalid";
+	} else {
+		if (objval3) objval3.className="";
+	}
+
+	var obj4=doc.getElementById('cHL7RejectionTypeDesc');
+	var objval4=doc.getElementById('HL7RejectionTypeDesc');
+	if ((obj4)&&(obj4.className=="clsRequired")&&(objval4.value=="")) {
+		if (errmsg!="") errmsg=errmsg+"\n"+RejectionTypeReq;
+		if (errmsg=="") errmsg=RejectionTypeReq;
+		if (objval4) objval4.className="clsInvalid";
+	} else {
+		if (objval4) objval4.className="";
+	}
+
+	if (errmsg!="") {
+		alert(errmsg);
+		return false;
+	}
+
+	var obj=doc.getElementById("LinkID");
+	if (obj) LinkID=obj.value;
+	var obj=doc.getElementById("HL7RejectionType");
+	if (obj) HL7RejectionType=obj.value;
+	var obj=doc.getElementById("DateRecFrom");
+	if (obj) DateRecFrom=obj.value;
+	var obj=doc.getElementById("DateRecTo");
+	if (obj) DateRecTo=obj.value;
+	var obj=doc.getElementById("Searchstring");
+	if (obj) SearchString=obj.value;
+	var obj=doc.getElementById("ViewUnAck");
+	if (obj) ViewUnAck=obj.value;
+
+	var url="websys.default.csp?WEBSYS.TCOMPONENT=OEHL7Messages.List";
+	url=url+"&LinkID="+LinkID+"&DateRecFrom="+DateRecFrom+"&DateRecTo="+DateRecTo+"&SearchString="+SearchString+"&HL7RejectionType="+HL7RejectionType+"&ViewUnAck="+ViewUnAck;
+	var win2=window.frames["ListOEHL7Messages"];
+	if (win2) win2.location=url;
+
+	return;
+
+}
+</script>
+
+<!-- Log 57591 - AI - 17-01-2006 : frameset code moved to after javascript code because this is now opening in a new window. -->
+
+<frameset rows="27%,*" onload="DocLoadHandler()">
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=OEHL7Messages.Find&LinkID=#(LinkID)#&HL7RejectionType=#(HL7RejectionType)#&DateRecFrom=#(DateRecFrom)#&DateRecTo=#(DateRecTo)#" name="FindOEHL7Messages">
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=OEHL7Messages.List&LinkID=#(LinkID)#&HL7RejectionType=#(HL7RejectionType)#&DateRecFrom=#(DateRecFrom)#&DateRecTo=#(DateRecTo)#&OEHLRowId=#(OEHLRowId)#" name="ListOEHL7Messages">
+</frameset>
+<noframes>
+    <body>
+    <p></p>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+</HTML>

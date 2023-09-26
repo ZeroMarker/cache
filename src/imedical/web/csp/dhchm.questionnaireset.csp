@@ -1,0 +1,106 @@
+<!--
+Description: 问卷维护  dhchm.questionnaireset.csp
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			text-align:right;
+			padding:0 10px;
+		}
+   </style>
+</head>
+<body class="hisui-layout" style="padding:10px;background-color:white" >
+	<div id="ContentDiv" class="hisui-layout" fit="true" style="height:100%;width:100%">
+	<div id="WestPanel" data-options="region:'west',title:'问卷维护',headerCls:'panel-header-gray',iconCls:'icon-paper-opr-record'" style="border-radius:0 0 4px 4px ; width:300px;">
+		<table class="hisui-table" style="height:260px;">
+				<tr>
+					<td class="labelTd">编码</td>	
+					<td><input id="QCode" class="hisui-validatebox textbox"  data-options="required:true" type="text" style="width:200px;" ></td>				
+				</tr>
+				<tr>
+					<td class="labelTd">描述</td>
+					<td><input id="QDesc" class="hisui-validatebox textbox" data-options="required:true"  type="text" style="width:200px;" ></td>						
+				</tr>
+				<tr>
+					<td class="labelTd">类型</td>
+					<td><select id="QType" class="hisui-combobox" style="width:208px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true">
+							<option value="HM">健康管理</option>
+							<option value="CRM">随访</option>
+					</select></td>
+				</tr>
+				<tr>
+					<td class="labelTd">备注</td>
+					<td><textarea id="QRemark"   style="width:206px;" rows="2"   ></textarea></td>						
+				</tr>
+				<tr>
+					<td class="labelTd">激活</td>
+					<td><input id="QActive" class="hisui-checkbox" type="checkbox" checked   ></td>						
+				</tr>
+				<tr>
+					<td colspan="2" >
+						<a id="QSaveBtn" href="#"  onclick="QSave_onclick();"  style="margin-left:50px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						<a id="QClearBtn" href="#"  onclick="QClear_onclick();" style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>								
+					</td>
+				</tr>
+			</table>
+			<input type="hidden" id="QNID">
+			<div id="QNListDiv" fit="true" style="border-top:1px solid #ccc;">
+				<table id="QNList" data-options="border:false,bodyCls:'panel-body-gray'"></table>	
+			</div>
+	</div><!-- west region end <div ></div> //-->
+	<div id='CenterPanel' data-options="region:'center',border:false,headerCls:'panel-header-gray'" style="padding-left:10px;">
+		<div id="TabPanel"   class="hisui-tabs tabs-gray" fit="true" style="height:100%">
+			<div id="SubjectTab" title="主题内容" style="overflow:hidden;padding:10px;"></div>   
+			<div id="EvaluateDiv" title="评估内容">
+				<div   fit="true" style="height:100%">  
+					<table class="hisui-table">
+						<tr>
+							<td class="labelTd">评估内容</td>	
+							<td><select id="EvaluationID"   style="width:401px;" data-options=""></select> </td>
+            				<td><a onclick="evaluation_save();"  style="margin-left:20px;"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></TD>	
+            			</tr>
+            			<tr>
+							<td class="labelTd">显示顺序</td>
+							<td><input id="EvaOrder" class="hisui-numberbox textbox" style="width:400px;" ></td>
+							<td><a onclick="evaluation_clean();" style="margin-left:20px;"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>				</td>
+						</tr>
+						<tr>
+							<td class="labelTd">计算顺序</td>
+							<td><input id="EvaCalcOrder" class="hisui-numberbox textbox" style="width:400px;" ></td>
+						</tr>
+						<tr>
+							<td class="labelTd">激活</td>
+							<td><input id="EvaActive" class='hisui-checkbox' type="checkbox" checked></td>
+						</tr>
+					</table>
+					<input type="hidden" id="EDLID" value="">		
+				
+				<div id="EDListDiv" fit="true" style="border-top:1px solid #ccc">
+					<table id="EDList" data-options="bodyCls:'panel-body-gray',border:false"></table>	
+				</div>
+			</div>
+			</div>   
+		</div>
+		
+	</div>
+	</div>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  	<script type="text/javascript" src="../scripts/dhchm.questionnaireset.js"></script>
+ 
+</body>
+</html>

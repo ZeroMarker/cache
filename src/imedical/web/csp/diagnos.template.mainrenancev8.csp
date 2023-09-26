@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--diagnos.template.mainrenancev8.csp V8诊断模板维护hisui版本-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!--EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<!--script type='text/javascript' src='../scripts/framework/ext.icare.Lookup.js'></script-->
+<style>
+ a{
+	 color:blue;
+	 text-decoration: underline;
+ }
+ a:hover{
+	 cursor: pointer;
+ }
+ .search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*margin:0 auto;
+	padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header{
+	border-bottom: 0;
+}
+.datagrid-cell{
+	height:30px;
+	line-height:30px;
+}
+</style>
+<Server>
+s UserLogonLocStr=##class(web.DHCDocDiagnosEntryV8).GetUserLogonLocList(%session.Get("LOGON.USERID"),"")
+if (UserLogonLocStr'="") s UserLogonLocStr="^"_UserLogonLocStr_"^"
+s MenuName = "System.DiagFav.Save.SaveAsLoc"
+;得到安全组是否有医嘱模板维护某一个保存菜单权限
+s IsHaveMenuAuthDiagFav=##class(web.DHCDocDiagnosNew).IsHaveMenuAuthDiagFav(%session.Get("LOGON.GROUPID"),MenuName)
+s SaveTemplICDDiagNotesMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.SaveTemplICDDiagNotes"))
+</Server>
+</head>
+<body>
+	<csp:Include Page="diagnos.template.mainrenancev8.show.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			UserLogonLocStr:"#(UserLogonLocStr)#",
+			IsHaveMenuAuthDiagFav:"#(IsHaveMenuAuthDiagFav)#",
+			SaveTemplICDDiagNotesMethod:"#(SaveTemplICDDiagNotesMethod)#"
+		}
+		//页面加载完之后在赋值，防止事件未定义导致报错
+		$(function(){
+		});
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/diagnos.Template.MaintenanceV8.js"></script>
+</body>
+</html>

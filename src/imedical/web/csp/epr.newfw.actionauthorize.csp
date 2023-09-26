@@ -1,0 +1,57 @@
+<HTML>
+<HEAD>
+	<TITLE>会诊病历授权页面</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+ 	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")					//主动批准人
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")		//当前就诊ID
+		s consultID = $Get(%request.Data("ConsultID",1),"")		//会诊申请ID
+		s consdocID = $Get(%request.Data("ConsdocID",1),"")		//会诊医生ID
+		s consLocID = $Get(%request.Data("ConslocID",1),"")		//会诊科室ID
+		s consultType = $Get(%request.Data("ConsultType",1),"")	//会诊类型
+		s appointType = $Get(%request.Data("AppointType",1),"")	//授权类型(0:个人; 1:科室)
+		/*
+		if (consLocID = "" && consdocID '= "")
+		{
+			&sql(	select SSUSR_DefaultDept_DR into:consLocID from SQLUser.SS_User where SSUSR_RowId = :consdocID and (SSUSR_Active='Y' or SSUSR_Active='Yes'))
+		}
+		*/
+		//根据episodeID判断该患者写的是二版病历还是三版病历
+		s DHCEMR = 0
+		s EPRCategoryID = $o(^DHCEPRI.ECRecordI("IdxEpisodeIDCategoryID"," "_episodeID,""))
+		if (EPRCategoryID = "") //没有二版病历数据
+		{
+			s EMRChartItemID = $O(^DHCEMRI.ECRecordI("IdxEpisodeIDChartItemID"," "_episodeID, ""))
+			if (EMRChartItemID '= "") //有三版病历数据
+			{
+				s DHCEMR = 1
+			}
+			else  //既没有二版数据也没有三版数据，患者未写病历，需判断当前系统是否有三版病历环境，有则去写三版病历，没有则写二版病历；
+			{
+				s SysOptionData = $g(^DHCEMRM.SysOptionD)   //判断三版系统参数数据，来确定是否有三版病历环境
+				if (SysOptionData > 0)   //有三版系统参数数据，说明有三版病历环境，至于部分科室是三版病历，部分科室是二版病历，有需要再进一步判断患者所在科室；
+				{
+					s DHCEMR = 1
+				}
+			}
+		}
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var episodeID = '#(episodeID)#';
+		var consultID = '#(consultID)#';
+		var consdocID = '#(consdocID)#';
+		var consLocID = '#(consLocID)#';
+		var consultType = '#(consultType)#';
+		var appointType = '#(appointType)#';
+		var DHCEMR = '#(DHCEMR)#';
+	</script>
+</HEAD>
+<BODY>
+	<script type="text/javascript" src="../scripts/epr/js/ActionAuthorizeEPRorEMR.js"></script>
+</BODY>
+</HTML>

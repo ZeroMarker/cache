@@ -1,0 +1,76 @@
+<!-- CSP TRAK:HEAD Rules -->
+<!-- Copyright (c) 2000 TRAK Systems Pty. ALL RIGHTS RESERVED. -->
+
+<!-- HEAD TAG --------------------------------------------- -->
+<!-- Bootstrap版本药房引用公共文件-->
+<csr:rule name="DHCPHARMACY.COMMONLIB" match="DHCPHARMACY:COMMONLIB">
+<csr:description>
+The <b>DHCPHARMACY.COMMONLIB</b> tag defines defines standard header info and initialisation for each page. For example javascript utilties, style sheet, theme and initialisation code
+</csr:description>
+<csr:action>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	/// 加载插件
+	d ##class(DHCPHA.CommonLib).LoadBootstrapLib()
+	d ##class(PHA.COM.Print).LoadCommon()			//打印插件
+	/// 设置登录默认值
+	s DHCPHACTLOCID=$G(%session.Data("LOGON.CTLOCID"))
+	s DHCPHACTLOCDESC=$p($g(^CTLOC(+DHCPHACTLOCID)),"^",2)
+	i DHCPHACTLOCDESC["-" s DHCPHACTLOCDESC=$p(DHCPHACTLOCDESC,"-",2,$l(DHCPHACTLOCDESC,"-"))
+	s DHCPHACTLOCTYPE=$p($g(^CTLOC(+DHCPHACTLOCID)),"^",13)
+	s DHCPHAWARDID=$G(%session.Data("LOGON.WARDID"))
+	s DHCPHAWARDDESC=$s(DHCPHAWARDID'="":$p($g(^PAWARD(+DHCPHAWARDID)),"^",2),1:"")
+	s DHCPHAHOSPDESC=$G(%session.Data("LOGON.HOSPDESC"))
+	s DHCPHADATEFMT=##class(web.DHCSTInterfaceFromElse).DateFormat() // 系统日期格式
+	s DHCPHADATEFMT=$case(DHCPHADATEFMT,1:"MM/DD/YYYY",3:"YYYY-MM-DD",4:"DD/MM/YYYY",:"YYYY-MM-DD")
+	s Perv="^^^^"_$G(%session.Data("LOGON.HOSPID"))_"^DHC"
+	s DHCPHARAFMT=##Class(web.DHCSTCOMMPARA).GetCommPropValue("FmtRA",Perv) // 进价金额位数
+	s DHCPHASAFMT=##Class(web.DHCSTCOMMPARA).GetCommPropValue("FmtSA",Perv) // 售价金额位数
+	s DHCPHARAFMT=$s(DHCPHARAFMT="":2,1:+$l($p(DHCPHARAFMT,".",2)))
+	s DHCPHASAFMT=$s(DHCPHASAFMT="":2,1:+$l($p(DHCPHASAFMT,".",2)))
+	</SCRIPT>
+	<script language="javascript">
+		var DHCPHA_CONSTANT={
+			SESSION:{
+				GROUP_ROWID : session['LOGON.GROUPID'],			// DHCPHA_CONSTANT.SESSION.GROUP_ROWID
+		        GROUP_DESC : session['LOGON.GROUPDESC'],		// DHCPHA_CONSTANT.SESSION.GROUP_DESC
+		        GUSER_ROWID : session['LOGON.USERID'],			// DHCPHA_CONSTANT.SESSION.GUSER_ROWID
+		        GUSER_NAME : session['LOGON.USERNAME'],			// DHCPHA_CONSTANT.SESSION.GUSER_NAME
+		        GUSER_CODE : session['LOGON.USERCODE'],			// DHCPHA_CONSTANT.SESSION.GUSER_CODE
+		        GCTLOC_ROWID : session['LOGON.CTLOCID'], 		// DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID
+		        GHOSP_ROWID : session['LOGON.HOSPID'],  		// DHCPHA_CONSTANT.SESSION.GHOSP_ROWID
+		        GHOSP_DESC : "#(DHCPHAHOSPDESC)#",  			// DHCPHA_CONSTANT.SESSION.GHOSP_DESC
+		        GWARD_ROWID :session['LOGON.WARDID']||"",		// DHCPHA_CONSTANT.SESSION.GWARD_ROWID
+		        GWARD_DESC : "#(DHCPHAWARDDESC)#"				// DHCPHA_CONSTANT.SESSION.GWARD_DESC
+			},
+			COOKIE:{
+				NAME:session['LOGON.CTLOCID']+"^"+session['LOGON.USERID']
+			},
+			URL:{
+				PATH:"",
+				COMMON_OUTPHA_URL : "DHCST.OUTPHA.ACTION.csp", 	// DHCPHA_CONSTANT.URL.COMMON_OUTPHA_URL 门诊药房公共csp
+				COMMON_INPHA_URL : "DHCST.INPHA.ACTION.csp",	// DHCPHA_CONSTANT.URL.COMMON_INPHA_URL  住院药房公共csp
+				COMMON_PHA_URL: "DHCST.COMMONPHA.ACTION.csp",  	// DHCPHA_CONSTANT.URL.COMMON_PHA_URL	 药房公共csp
+				EASYUI_QUERY_URL:"DHCST.QUERY.GIRD.EASYUI.csp" 	// DHCPHA_CONSTANT.URL.EASYUI_QUERY_URL  EASYUI-datagrid 查询封装的csp
+			},
+			DEFAULT:{
+				LOC:{											// DHCPHA_CONSTANT.DEFAULT.LOC			登陆科室信息
+					id:"#(DHCPHACTLOCID)#",
+					text:"#(DHCPHACTLOCDESC)#",
+					type:"#(DHCPHACTLOCTYPE)#"
+				},												
+				PATNOLEN:""  									// DHCPHA_CONSTANT.DEFAULT.PATNOLEN	 	登记号长度
+			},
+			VAR:{
+				SPLIT:"|@|",  									// DHCPHA_CONSTANT.VAR.SPLIT  			查询参数分隔
+				MSPLIT:"^"	  									// DHCPHA_CONSTANT.VAR.MSPLIT  			后台方法参数分隔
+			},
+			PLUGINS:{
+				DATEFMT:"#(DHCPHADATEFMT)#",					// DHCPHA_CONSTANT.PLUGINS.DATEFMT  	系统参数日期格式
+				RAFMT:"#(DHCPHARAFMT)#",						// DHCPHA_CONSTANT.PLUGINS.RAFMT		系统进价金额位数
+				SAFMT:"#(DHCPHASAFMT)#"							// DHCPHA_CONSTANT.PLUGINS.SAFMT	  	系统售价金额位数
+			} 
+		};
+	</script>
+</csr:action>
+</csr:rule>
+

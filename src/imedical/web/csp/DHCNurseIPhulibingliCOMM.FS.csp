@@ -1,0 +1,267 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+</HEAD>
+<BODY>
+ 	<!--<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script> -->
+ 	<!--<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>-->
+ 	<!--<script type="text/javascript" src="../scripts/DHCDocIPBookNew.Print.js"></script>-->
+	<server>
+		d ##class(web.DHCMGNurData).PrintLinkFile()
+ 		s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ 		s CacheDB=$P(setstr,"^")
+		s webIP=$P(setstr,"^",2)
+		//s webIP="http://172.26.203.57"
+		s dllstr=webIP_"/dhcmg/PrintCommPic.dll#PrintComm.PrintCom"
+		//s dllstr=webIP_"/dhcmg/PrintCommPic.dll#PrintCommPic.PrintCom"
+ 		w "<OBJECT id=""PrintCommPic""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+ 		w "<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/DHCNURPRINT.js""></script>"
+ 		//s startPageNumber = ##class(EPRservice.BOPrintPageNumber).GetPageNumber(pageInfoID)
+ 		s GetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.GetPageNumber"))
+        s SetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.SetPageNumber"))
+        s GetPerModel=##Class(%CSP.Page).Encrypt($lb("User.DHCNURMoudelLink.GetPerModel"))
+ 		s PatInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurComm.PatInfo"))
+ 		s GetHead=##Class(%CSP.Page).Encrypt($lb("web.DHCNurseRecordPrint.GetHead"))
+ 		//s PatInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCNurseRecordPrint.GetHead"))
+ 		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s categoryDetail = $Get(%request.Data("CategoryDetail",1),"")
+  		s pageInfoID = $Get(%request.Data("PageInfoID",1),"")
+  		s PatientID = $Get(%request.Data("PatientID",1),"")
+  		s categoryID = $Get(%request.Data("CategoryID",1),"")
+	</server>
+	<SCRIPT Language="Javascript">
+	    var PatInfo = "#(PatInfo)#";
+	    var GetHead = "#(GetHead)#";
+	    var GetPerModel = "#(GetPerModel)#";
+	    var GetPageNumMethod="#(GetPageNumMethod)#";
+	    var SetPageNumMethod="#(SetPageNumMethod)#";
+	    //var EpisodeID = window.dialogArguments.EpisodeID;
+		var EpisodeID = '#(EpisodeID)#';
+		//var EpisodeID = window.dialogArguments.EpisodeID;
+		var pageInfoID = '#(pageInfoID)#';
+		var categoryDetail = '#(categoryDetail)#';
+		//alert(categoryDetail);
+		//printcomm(EpisodeID) 
+		var totelnum=0
+		document.body.onload = BodyLoadHandler;
+	function BodyLoadHandler() 
+	{   
+	    ///获取打印起始页码
+	    //alert("EpidoeID:" + EpisodeID);
+	    //alert("PageInfoID:" + pageInfoID);
+	    totelnum=0;
+	    var ret=""
+	    //var startPageNumber=cspRunServerMethod(GetPageNumMethod,pageInfoID);
+	    var ret=cspRunServerMethod(GetPerModel,EpisodeID);
+	    //var pinfo=cspRunServerMethod(PatInfo,EpisodeID);
+	    //alert(ret)
+	    if (EpisodeID=="9089583")
+	    {
+		  //alert(ret) 
+		    
+		}
+		//alert("csprun:" + ret);
+	    if (ret!="")
+	    {   var arr=ret.split("|")
+	   
+	    var totelnum=arr.length
+	    for (i=1;i<=totelnum;i++)
+	    {
+		     var isPrint=0;
+		     if (EpisodeID=="7035104")
+	         {
+		       //alert(i+" *"+isPrint) 
+		      // if (i==2) continue;
+		        isPrint = print(i);
+		     }
+		     else
+		     {
+			    isPrint = print(i); 
+			     
+			 }
+		    if (isPrint == 1)
+	    	{	
+	    	  //alert(isPrint)
+	    	 parent.finishOneItemJobAsyn();
+	    	
+	    	}
+	    }
+	    //var curpage=startPageN
+	    }
+	    
+	    setTimeout("parent.printNext();", 3000 )
+	}	
+	function print(num) 
+	{  
+		var hasPrint = 0;
+	    //alert(num)
+	    //var num=2
+		//alert("print:1");
+	    ///获取打印起始页码
+	    //alert(121)
+	    var startPageNumber=cspRunServerMethod(GetPageNumMethod,pageInfoID);
+	    //alert("print:2"+EpisodeID);
+	    var ret=cspRunServerMethod(GetPerModel,EpisodeID);
+	   // alert(ret);
+	    var pinfo=cspRunServerMethod(GetHead,EpisodeID);
+		//alert(pinfo)
+		var hh=pinfo.split("^");
+		//alert(hh)
+	  // alert("print:4");
+	   if (ret!="")
+	   {   
+	    
+	    var arr=ret.split("|")
+	    
+	    var l=arr.length
+	    var curpage=startPageNumber-1
+	   // alert(startPageNumber)
+		var str=arr[num-1]
+		var str=str.split("^")
+		//alert(str)
+		var Code=str[0]      //界面模板
+		var PrintCode=str[1] //打印模板
+		var Type=str[2]      //模板类型
+		var PrintCommPic;
+		//alert("print:5");
+		//alert(dllstr);
+	    PrintCommPic = document.getElementById("PrintCommPic"); 
+	    //alert(PrintCommPic);
+	    //PrintCommPic.SetPreView("1");
+		//alert("print:7");
+		//PrintCommPic.SetConnectStr("#(CacheDB)#");
+    	//alert(Type);
+    	PrintCommPic.WebUrl="#(webIP)#"+"/dthealth/web/DWR.DoctorRound.cls";
+    	//alert(Type);
+		if ((Type=="表格")||(Type=="表格记录单"))
+		{   
+		
+	    //alert(pinfo)
+		PrintCommPic.TitleStr=pinfo;
+	    //PrintCommPic.RHeadCaption=hh[1];
+		//PrintCommPic.LHeadCaption=hh[0];
+		PrintCommPic.SetPreView("0");
+		
+		//alert(33)
+		PrintCommPic.PrnLoc="";
+		//PrintCommPic.CAStart="1";
+		//PrintCommPic.IsVerifyCALoc="1";
+		PrintCommPic.PrnBed="";//转科关联为空打印当前床号
+		//PrintCommPic.qmwildth="50" //签名图片宽
+		//PrintCommPic.qmheight="16" //签名图片高
+		//PrintCommPic.qmleft = 2; //电子签名图片左边距 默认是2
+        //PrintCommPic.qmtop = 2; //电子签名图片上边距  默认是2
+        ///PrintCommPic.qmhori = 10; //电子签名图片水平打印时两个图片间隔 默认是10
+        //PrintCommPic.qmport = 2; //电子签名图片垂直打印时图片间隔 默认是2
+       // PrintCommPic.qmprnorientation =1; //多个电子签名图片打印方向1 横向 0 纵向  默认是横向   //纵向打印时需修改类 两个签名用&拼接，默认是" "拼接
+		PrintCommPic.stPage=0;
+		PrintCommPic.stRow=0;
+		PrintCommPic.previewPrint="0"; //是否弹出设置界面
+		PrintCommPic.stprintpos=0;
+		PrintCommPic.ItmName = PrintCode; 		
+		var parr=EpisodeID+"!"+"!"+"!"+"!"+"!"+Code+"!"+"!";
+		PrintCommPic.ID = "";
+		PrintCommPic.MultID = "";
+		PrintCommPic.curPages=curpage;		
+		PrintCommPic.SetParrm(parr); 
+		PrintCommPic.PrintOut();
+		hasPrint = 1;
+		curpage=PrintCommPic.Pages+1;
+		}
+		if (Type=="单次评估单")
+		{   //alert(curpage)
+			PrintCommPic.ItmName = PrintCode;
+			//PrintCommPic.CAStart="1";
+	        PrintCommPic.SetPreView("0");
+	        PrintCommPic.previewPrint="1";
+		    //PrintCommPic.IsVerifyCALoc="1"; 
+			PrintCommPic.curPages=curpage;
+		    var parr="@"+EpisodeID+"@"+Code;
+		    PrintCommPic.MthArr="web.DHCNurMouldDataComm:GetPrnValComm&parr:"+parr;
+		    PrintCommPic.PrintOut();
+		    hasPrint = 1;
+		    curpage=PrintCommPic.Pages+2;
+		    //alert(curpage)
+		    //curpage=curpage+2
+		    //startPageNumber=PrintCommPic.Pages;
+		    
+		}
+		if (Type=="会诊")
+		{
+			
+	        PrintCommPic.ItmName = "DHCConsultPrn";
+	        PrintCommPic.ID = "";
+	        //PrintCommPic.CAStart="1";
+	        PrintCommPic.SetPreView("0");
+		    //PrintCommPic.IsVerifyCALoc="1";
+	        PrintCommPic.curPages=curpage;
+	        //PrintCommPic.previewPrint="1";
+	        PrintCommPic.MultID = "";
+	        PrintCommPic.MthArr = "web.DHCConsult:getConsultInfo&id:" + Code;
+	        PrintCommPic.PrintOut();
+	        hasPrint = 1;
+	        curpage=PrintCommPic.Pages+2;
+		}
+        if (Type=="多次评估单")
+		{
+	        //PrintCommPic.WebUrl=WebIp+"/dthealth/web/DWR.DoctorRound.cls";
+	        PrintCommPic.ItmName =PrintCode;
+	        PrintCommPic.ID = "";
+	        //PrintCommPic.CAStart="1";
+	        PrintCommPic.SetPreView("0");
+		    //PrintCommPic.IsVerifyCALoc="1";
+	        PrintCommPic.previewPrint="1";
+	        PrintCommPic.curPages=curpage;
+	        PrintCommPic.MultID = "";
+	        //alert(PrintCode)
+	        PrintCommPic.MthArr="Nur.DHCNurseData:getVal2&parr:"+Code+"!flag:";
+	        PrintCommPic.PrintOut();
+	        hasPrint = 1;
+	        curpage=PrintCommPic.Pages+1;
+	       
+		}
+		 if (Type=="生活能力评分")
+		{
+	        //PrintCommPic.WebUrl=WebIp+"/dthealth/web/DWR.DoctorRound.cls";
+	        PrintCommPic.ItmName =PrintCode;
+	        PrintCommPic.ID = "";
+	        PrintCommPic.SetPreView("0");
+	        PrintCommPic.previewPrint="1";
+	        PrintCommPic.curPages=curpage;
+	        PrintCommPic.MultID = "";
+	        //alert(Code)
+	        PrintCommPic.MthArr = "Nur.DHCMoudDataSub:getVal1&parr:"+Code+"!flag:";
+	        PrintCommPic.PrintOut();
+	        hasPrint = 1;
+	        curpage=PrintCommPic.Pages+1;
+	       
+		}
+		if (Type=="混合")
+		{
+			
+		}
+		//alert("grid8");
+	    var endpage=curpage
+	    //alert(endpage);
+	    //保存设置页码
+	    var RetVal=cspRunServerMethod(SetPageNumMethod,endpage,pageInfoID);	
+	  	//alert("grid10");
+	  	
+	  	return hasPrint;
+	  }
+		//alert("settimeout");
+		//setTimeout("parent.printNext();", 3000 )
+	}
+		
+	</SCRIPT>
+</BODY>
+</HTML>

@@ -1,0 +1,57 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+
+	s topCount = $Get(%request.Data("topCount",1))
+	s orderby = $Get(%request.Data("orderby",1))
+	
+	s bonusYear = $Get(%request.Data("bonusYear",1))
+	s bonusPeriod = $Get(%request.Data("bonusPeriod",1))
+	s schemeType= $Get(%request.Data("schemeType",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s rowid = $Get(%request.Data("rowid",1))
+	s IsAuditing = $Get(%request.Data("IsAuditing",1))	
+	s IsPay = $Get(%request.Data("IsPay",1))	
+	
+	s BonusSchemeCode = $Get(%request.Data("BonusSchemeCode",1))
+	s sBonusPeriod = $Get(%request.Data("sBonusPeriod",1))
+	
+	s sMainSchemeCode = $Get(%request.Data("sMainSchemeCode",1))
+	s empCode= $Get(%request.Data("userCode",1))
+	
+	s fileTypeID= $Get(%request.Data("fileTypeID",1))
+	s sDate= $Get(%request.Data("sDate",1))
+	s eDate= $Get(%request.Data("eDate",1))
+	s OnloadFileID = $Get(%request.Data("OnloadFileID",1))
+	s ImpUnitMainID = $Get(%request.Data("ImpUnitMainID",1))
+	
+	
+	i action = "Mlist" d
+	.w ##class(dhc.bonus.udata.uImpUnitMainTmp).List(fileTypeID,sDate,eDate,empCode,start,limit)
+ 
+
+	
+	i action = "getTitleInfo" d
+	.w ##class(dhc.bonus.udata.uImpUnitMainTmp).GetGridTitle(OnloadFileID)
+	
+	i action = "ImpEmpDetail" d
+	.w ##class(dhc.bonus.udata.uImpUnitMainTmp).GetImpEmpDetail(ImpUnitMainID,start,limit)
+	
+	i action = "upImpEmp" d
+	.s result = ##class(dhc.bonus.udata.uImpUnitMainTmp).upImpEmp(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+
+</script>

@@ -1,0 +1,57 @@
+<html>
+<head>
+  <title>电子病历一键打印</title>
+  <script language="cache" runat="server">
+  		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s patientID = $Get(%request.Data("PatientID",1),"")
+  		s categoryDetail = $Get(%request.Data("CategoryDetail",1),"")
+  		s pageInfoID = $Get(%request.Data("PageInfoID",1),"")
+  </script>
+  <script language="javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var categoryDetail = '#(categoryDetail)#';
+		var pageInfoID = '#(pageInfoID)#';
+  		function closeWindowAfterPrint()
+  		{
+			if (uconestepprint.IsPrintFinished())
+			{
+  	 	 		setTimeout("parent.printNext();", 500 );
+			}
+			else
+  	  		{
+	  	 	 	setTimeout("closeWindowAfterPrint();", 3000 );
+  	 	 	}
+		}
+  </script>
+</head>	
+
+<body  leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onLoad="closeWindowAfterPrint()">
+
+<server>
+	w "<object width=0 height=0 id='config' name='config' classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	w "<param name='URL' value='" _ ##class(web.DHCEPR).GetServiceURL() _ "'>",!
+	w "</object>",!
+		
+	w "<object id='uconestepprint' name='uconestepprint'  classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.onestepprint.UCOneStepPrint' Width='100%' Height='100%' VIEWASTEXT >", !
+	//w "<param name='PrintParameters' value='"_printParameters_"'>",!
+	w "</object>"
+</server>
+
+ <script language="javascript">	
+ 	
+ 	var uconestepprint = document.getElementById("uconestepprint");
+ 	if (uconestepprint)
+ 	{
+	 	uconestepprint.PrintParameters = categoryDetail
+	 	uconestepprint.PageInfoID = pageInfoID
+	 	uconestepprint.IsCentralizedPrint = "true"
+	 	//uconestepprint.PrintInSingleThread();
+	 	uconestepprint.PrintInMultipleThread();
+ 	}
+ 	
+ </script>
+	
+</body>
+</html>
+

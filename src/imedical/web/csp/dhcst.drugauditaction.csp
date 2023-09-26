@@ -1,0 +1,29 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("Start",1))
+s Limit=$Get(%request.Data("Limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s HospitalID=$get(%session.Data("LOGON.HOSPID"))
+s User=$get(%session.Data("LOGON.USERID"))
+s GroupID=$get(%session.Data("LOGON.GROUPID"))
+s CtlocID=$get(%session.Data("LOGON.CTLOCID"))
+i Action="QueryPHCDrgForm" d
+	.s StDate=$Get(%request.Data("StDate",1))
+	.s EndDate=$Get(%request.Data("EndDate",1))
+	.s Grp=$Get(%request.Data("Grp",1))
+	.s inci=$Get(%request.Data("inci",1))
+	.s Other=$Get(%request.Data("Other",1))
+	.
+	.w ##class(web.DHCST.DrugInfoAudit).GetPhcChangedInfoNew(Start,Limit,StDate,EndDate,Grp,inci,Other)
+i Action="DrugAudit" d
+	.s InciStr=$Get(%request.Data("InciStr",1))
+	.s User=$Get(%request.Data("User",1))
+	.s Flag=$Get(%request.Data("Flag",1))
+	.s result=##class(web.DHCST.DrugInfoAudit).DrugAudit(InciStr,User,Flag)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</SERVER>

@@ -1,0 +1,94 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))	
+	s projdr=$Get(%request.Data("prjdr",1))
+	s prjdr=$Get(%request.Data("prjdr",1))
+    s code=$Get(%request.Data("code",1))
+    s name=$Get(%request.Data("name",1))
+    s year=$Get(%request.Data("year",1))
+    s deptdr=$Get(%request.Data("deptdr",1))
+    s dutydr=$Get(%request.Data("dutydr",1))
+    s property=$Get(%request.Data("property",1))
+    s isgovbuy=$Get(%request.Data("isgovbuy",1))
+    s fundtotal=$Get(%request.Data("fundtotal",1))
+    s fundown=$Get(%request.Data("fundown",1))
+    s fundgov=$Get(%request.Data("fundgov",1))
+    s chkstate=$Get(%request.Data("chkstate",1))
+    s state=$Get(%request.Data("state",1))
+    s prjcode=$Get(%request.Data("prjcode",1))
+    s usercode=$Get(%request.Data("usercode",1))
+	s userid=$Get(%request.Data("userid",1))	
+	s pname=$Get(%request.Data("pname",1))
+	
+	s prjtype = $Get(%request.Data("prjtype",1))
+	s sourcetype = $Get(%request.Data("fundsource",1))
+	s itemdr = $Get(%request.Data("itemname",1))
+	s sysno  = $Get(%request.Data("sysno",1))
+	s budgvalue = $Get(%request.Data("budgvalue",1))
+	s budgdesc = $Get(%request.Data("budgdesc",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	
+	i action="list" d
+	.w ##class(herp.srm.udata.uPrjBudgFundsApply).ListMain(year,prjtype, prjcode, usercode, sortField, sortDir, start, limit)
+	
+	i action="listdetail" d
+	.w ##class(herp.srm.udata.uPrjBudgFundsApply).ListDetail(year,prjdr, usercode, sortField, sortDir, start, limit)
+	
+	i action = "yearlist" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetYear(start,limit,str)
+	
+	i action = "prjtypelist" d
+	.w ##class(herp.srm.udata.uSRMCommon).CalSubSource(start,limit,str)
+
+	i action = "GetIsApproval" d
+	.s result = ##class(herp.srm.udata.uPrjBudgFundsApply).GetIsApproval(sysno)
+	.w "{success:'true',info:'"_result_"',refresh:'true'}"
+	
+	i action = "itemname" d
+	.w ##class(herp.srm.udata.uPrjBudgFundsApply).ItemName(year, start, limit, str)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uPrjBudgFundsApply).InsertDetail(projdr, itemdr, sourcetype, budgvalue, budgdesc, usercode)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uPrjBudgFundsApply).UpdateDetail(rowid, projdr, itemdr, budgvalue, sourcetype, budgdesc)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uPrjBudgFundsApply).DelDetail(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "submit" d
+	.s result = ##class(herp.srm.udata.uPrjBudgFundsApply).Submit(userdr, rowid, sysno)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+</script>

@@ -1,0 +1,59 @@
+<HTML>
+<HEAD>
+<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+
+<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>	
+</HEAD>
+<BODY>
+	<server>
+		//s RuleID = $Get(%request.Data("RuleID",1),"")
+		s RuleID=1
+		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+		s SignUserID = $g(%session.Data("LOGON.USERID"))
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s CTLocatID = $g(%session.Data("LOGON.CTLOCID"))
+		s action = $Get(%request.Data("action",1))
+		s TriggerDate = $zd(+$h,3)
+		s Score = ##Class(EPRservice.Quality.BOManualCheck).GetScoreByEpisodeID(EpisodeID,SSGroupID,CTLocatID,action)
+		s InstanceId = $Get(%request.Data("InstanceId",1),"")
+		s emrDocId = $Get(%request.Data("emrDocId",1),"")
+		s YSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("YSSGroup")
+		s KSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("KSSGroup")
+	</server>
+	<script type="text/javascript">
+		var RuleID = '#(RuleID)#'
+		var EpisodeID = '#(EpisodeID)#'
+		var SignUserID = '#(SignUserID)#'
+		var SSGroupID = '#(SSGroupID)#'
+		var CTLocatID = '#(CTLocatID)#'
+		var TriggerDate = '#(TriggerDate)#'
+		var Score = '#(Score)#'
+		var action = '#(action)#'
+		var InstanceId = '#(InstanceId)#'
+		var emrDocId = '#(emrDocId)#'
+		var YSSGroup = '#(YSSGroup)#'
+		var KSSGroup = '#(KSSGroup)#'
+	</script>
+	<div id="seekform" style="height:3%;width:100%;background:#D4E3F4;">
+		<div style="float:left;">
+			<input id="combo" name="episode"/>
+		</div>
+		<div style="float:right;">
+		    <button onclick="GetProblemList()">自动缺陷查看</button>
+		</div>
+		<div style="float:right;margin-right:5px;">
+		    <button id="revision" onclick="changeRevisionStatus();">关闭留痕</button>
+		</div>
+	</div>
+	<div id="currentDocs" style="float:right;overflow:visible;width:100%;height:60%">
+  	</div>
+  	<div id="ChangeFS" style="float:right;overflow:visible;width:100%;height:33%">
+  	</div>
+	<script type="text/javascript" src="../scripts/DHC.EPR.Quality.EntryGrid.js"></script>
+	<script type="text/javascript" src="../scripts/DHC.EPR.Quality.ManualCheckFS.js"></script>	
+	
+</BODY>
+</HTML>

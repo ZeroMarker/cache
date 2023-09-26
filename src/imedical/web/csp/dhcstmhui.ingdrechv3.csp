@@ -1,0 +1,109 @@
+﻿<!--入库单制单(高值供应商科室拆分)-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ 	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+ 	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="hisui-layout BorderLine" data-options="region:'north',border:false,headerCls:'panel-header-gray'"> 
+		<div data-options="region:'west',border:false,headerCls:'panel-header-gray'" style="width:700px;">
+			<table id="MainConditions"  class="Condition">
+				<tr>
+					<td>入库科室</td>
+					<td><input id="RecLoc" name="RecLoc" class="hisui-combobox" style="width:130px;"></td>
+					<td align="left"><input id="VirtualFlag" name="VirtualFlag" class='hisui-checkbox' type="checkbox" value="N" label="暂存库" style="width:100px;"></td>
+					<td valign="top" rowspan="2">备注</td>
+					<td valign="top" rowspan="2"><textarea id="InGrRemarks" name="InGrRemarks" rows="2" cols="9" style="width:140px;height:65px;"></textarea></td>
+				</tr>
+				<tr>
+					<td>入库类型</td>
+					<td><select id="IngrTypeId" name="IngrTypeId" class="hisui-combobox" style="width:130px;"></select></td>
+					<td align="left"><input id="AdjCheque" name="AdjCheque" class='hisui-checkbox' type="checkbox" value="Y" label="调价换票"></td>
+				</tr>
+				<tr>
+					<td>资金来源</td>
+					<td><input id="SourceOfFund" name="SourceOfFund" class="hisui-combobox" style="width:130px;"></td>
+					<td align="left"><input id="GiftFlag" name="GiftFlag" class='hisui-checkbox' type="checkbox" value="Y" label="捐赠标志"></td>
+					<td></td>
+					<td>
+						<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:145px">清屏</a>
+					</td>
+					<td>
+						<a href="#" id="ComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" style="width:100px">完成</a>
+					</td>
+				</tr>
+				<tr>
+					<td>采购人员</td>
+					<td><input id="PurchaseUser" name="PurchaseUser" class="hisui-combobox" style="width:130px;"></td>
+					<td></td><td></td>
+					<td><a href="#" id="PrintHVColBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">高值汇总打印</a></td>
+					<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:100px">打印</a></td>
+					
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false" style="padding:4px;float:right;overflow:hidden;">   
+			<div class="NonPadGrid hisui-panel" data-options="title:'入库单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+				<div id="InGdRecMainGrid"></div>
+			</div>
+		</div>
+	</div>
+	<div  data-options="region:'center',border:false">
+		<table id="InGdRecGrid"></table>
+	</div>
+	<div id="AdjPriceWin" class="hisui-dialog" data-options="closed:'true'" title="调价确认" style="width:700px;height:200px;top:10px;left:50px;padding:10px;"> 
+	<div class="hisui-layout" data-options="fit:true">
+			<table id="AdjPriceConditions" class="Condition">
+				<tr>
+					<td style="width:80px;">物资代码</td>
+					<td><input id="Code" name="Code" class="textbox" style="width:100px;" disabled></td>
+					<td style="width:80px;">物资名称</td>
+					<td><input id="Description" name="Description" class="textbox" style="width:100px;" disabled></td>
+				</tr>
+				<tr>
+					<td>调前售价</td>
+					<td><input id="PriorSpUom" name="PriorSpUom" class="textbox" style="width:100px;" disabled></td>
+					<td>调前进价</td>
+					<td><input id="PriorRpUom" name="PriorRpUom" class="textbox" style="width:100px;" disabled></td>
+				</tr>
+				<tr>
+				</tr>
+				<tr>
+				</tr>
+				<tr>
+					<td>调后售价</td>
+					<td><input id="ResultSpUom" name="ResultSpUom" class="textbox" style="width:100px;" ></td>
+					<td>调后进价</td>
+					<td><input id="ResultRpUom" name="ResultRpUom" class="textbox" style="width:100px;" ></td>
+					<td>调价单位</td>
+					<td><select id="AspUomId" name="AspUomId" class="hisui-combobox" style="width:100px;" disabled></select></td>
+				</tr>
+				<tr>
+					<td></td><td></td>
+					<td></td><td></td>
+					<td></td>
+					<td valign="right"><a href="#" id="SaveAdjPrBT" class="hisui-linkbutton" data-options="plain:true">确定</a></td>
+				</tr>
+			</table>
+	</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/AdjWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecHV3.js"></script>
+</body>
+</html>

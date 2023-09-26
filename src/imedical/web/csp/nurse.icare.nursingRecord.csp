@@ -1,0 +1,210 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+			s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+			s PatientListPage=""
+        </script>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript"
+			src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript"
+			src="../scripts/nurse/hisui/utils.js"></script>
+	<script type="text/javascript"
+			src="../scripts/nurse/hisui-0.1.0/dist/js/nursingRecords.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding: 5px!important;
+        }
+		.west_patients {
+			width: 225px;
+			border: none;
+			display:none;
+		}
+		.west_north_search {
+			padding: 5px;
+			height: 95px;
+			border: 1px solid #ccc;
+		}
+		#wardPatientCondition {
+			margin-top: 5px;
+			width: 208px;
+		}
+		.west_center_list {
+			padding: 0 10px;
+		}
+		.center_templates {
+			border: none;
+			left:0px;
+			width: 100%!important
+		}
+		.center_templates>.layout, .center_templates>.layout>.panel{
+			width:100%!important	
+		}
+		.center_north_patinfo {
+			height:38px;
+			border:none;
+			display:none;
+		}
+		.center_center_list {
+			border: none;
+			border-radius: 4px;
+			width:100%!important
+		}
+		.center_center_list>.layout{
+			width: 100%!important;	
+		}
+		.center_center_list>.layout>.layout-panel-center{
+			width: calc(100% - 230px)!important;	
+		}
+		.center_center_list .layout-panel-center>.panel-body, .center_center_list .tabs-container, .center_center_list .tabs-header .tabs-wrap{
+			width: 100%!important;	
+		}
+		.center_center_list .tabs-container .tabs-header, .center_center_list .tabs-container .tabs-panels{
+			width: calc(100% - 2px)!important;
+		}
+		.tabs-container.tabs-gray .tabs-scroller-right{
+			z-index: 10;		
+		}
+		.center_center_tree {
+			border: none;
+			border-top: 1px solid #509de1;
+			padding: 10px;
+		}
+		.PatInfoItem{
+	        top:0 !important;
+	        left:0 !important;
+	        margin-left:0 !important;
+        }
+		.searchbox .searchbox-prompt {
+			padding-left: 5px !important;
+		}
+		.leftcss
+		{
+			left:0px !important
+		}
+		.widthcss
+		{
+			width:100% !important
+		}
+	</STYLE>
+	<script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var AuthorityFlag = "#(AuthorityFlag)#"
+    </script>
+</head>
+<body>
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true" style="left:0px !important;width:100%;">   
+		<div data-options="region:'west',split:true,headerCls:'panel-header-gray'"
+			 class="west_patients">
+			<div class="hisui-layout"
+				 data-options="fit:true">
+				<div data-options="region:'north',split:true" 
+					 class="west_north_search">
+					<input id="wardPatientSearchBox"
+						   class="hisui-searchbox"
+						   style="width:208px;"/>
+					<div id="wardPatientCondition" 
+						 class="hisui-switchbox" 
+						 data-options="onText:'全部',offText:'责组',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+					</div>
+				</div> 
+			</div> 
+		</div>  
+		<div class="center_templates"
+			 data-options="region:'center',split:true">
+			<div class="hisui-layout" 
+				 data-options="fit:true,split:true"
+				 style="border:none;">
+				<div class="center_center_list" 
+				     data-options="region:'center',split:true"
+					 style="border:none;width:100% !important;">
+					<div class="hisui-layout" 
+						 data-options="fit:true,split:true"
+						 style="border:none;">
+						<div data-options="region:'west',title:'模板列表',headerCls:'panel-header-gray',showCollapsedTitle:false,split:true,iconCls:'icon-apply-check'" 
+							 style="width:230px;">
+							<div class="hisui-layout" 
+							     data-options="fit:true,split:true">
+								<div data-options="region:'north',split:true" 
+									 style="height:45px;border:none;padding:5px;">
+									<input id="savedSearchBox" 
+									       class="hisui-searchbox" 
+										   style="width:150px"/>
+									<a id="btnMore" 
+									   class="hisui-linkbutton" href="#" 
+									   style="width:58px">更多</a>
+								</div> 
+								<div class="center_center_tree"
+									 data-options="region:'center',tools:'#tab-tools',split:true,iconCls:'icon-template'" >
+									<ul id="savedTemplateTree" 
+										data-options="animate:true">
+									</ul>
+								</div> 
+							</div>
+						</div> 
+						<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" style="width:230px;border:none;">
+							<div id="recordTabs" class="hisui-tabs tabs-gray" data-options="fit:true">
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+	</div>
+	<div id="windowMore" class="hisui-window" title="更多模板" 
+		 style="width:300px;height:680px;top:px;left:230px;padding:5px" 
+		 data-options="iconCls:'icon-w-list',closed:true,collapsible:false,minimizable:false,maximizable:false,resizable:false,modal:false,isTopZindex:true">
+		<div class="hisui-layout" data-options="fit:true,split:true"
+			 style="border:none;">
+			<div data-options="region:'north'" 
+				 style="height:35px;border:none;">
+				<input id="moreSearchBox" 
+					   class="hisui-searchbox" 
+					   style="width:290px"/>
+			</div>
+			<div data-options="region:'center'"
+				 style="border:none;">
+				<div id="templateTabs" 
+					 class="hisui-tabs tabs-gray" 
+					 data-options="region:'center',fit:true">
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+<script>
+	$(function(){
+			var parent1 = $(".center_templates").parent()
+		    parent1.addClass("leftcss")
+		    parent1.addClass("widthcss")
+		  //$(".center_templates").parent().addClass("widthcss")
+		//$(".center_templates").addClass("widthcss")
+		//$(".center_templates").children().addClass("widthcss")
+		
+		//$(".center_center_list").addClass("widthcss")
+		//$(".center_center_list").parent().addClass("widthcss")
+		//$(".center_center_list").children().addClass("widthcss")
+		
+		//$(".leftcss").parent().addClass("leftcss")
+		//$("#recordTabs").addClass("widthcss")
+		//$("#recordTabs").addClass("widthcss")
+		//$("#windowMore").css("left"，"200px !important");
+	});
+</script>
+</html>

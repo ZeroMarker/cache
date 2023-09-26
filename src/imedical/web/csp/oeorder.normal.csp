@@ -1,0 +1,134 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+<script Language="JavaScript" SRC="../Scripts/OEOrder.Common.js"></script>
+</head>
+
+<body>
+<!--AmiN Log 24827   on 02 May 2002><-->
+<CSP:IF condition=(($l($g(%request.Data("EpisodeID",1)),"^")=1)&&($g(%request.Data("PatientID",1))'=""))>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<server>
+ d ##Class(websys.Component).GetComponentMessages(.t,"OEOrder.Normal")
+ ; BM add Temp Location in order.custom
+ s EpisodeID=%request.Get("EpisodeID")
+ i EpisodeID'="",$l(EpisodeID,"^")=1 d
+ . s obj=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+ . i obj.PAADMTempLocDR d 
+ . . d %request.Set("TempLocID",obj.PAADMTempLocDR.%Id())
+ . . d %request.Set("TempLoc",obj.PAADMTempLocDR.CTLOCDesc)	
+ . . d obj.%Close()
+ w "<br>"
+ 
+ i %request.Get("LOCKMSG")'="" d
+ . w "<P><center><B><font color='red'>"_%request.Get("LOCKMSG")_"</font></B></center></P>"
+ ; seanl log 58161 Questionnaire link will turn bold if questionnaire has already been 
+ ; filled in
+ n oid,QuestRowID,QuestRowIDFinal
+ s (oid,QuestRowID,QuestRowIDFinal)=""
+ s oid=%request.Get("ID") 
+ i oid'="",$p(oid,"||",2)'="" s QuestRowID=$g(^OEORD(+oid,"I",$p(oid,"||",2),12)) 
+ i QuestRowID'="" s QuestRowID=$p(QuestRowID,"^",15) 
+ i QuestRowID'="" s QuestRowIDFinal=$p(QuestRowID,"||",2)
+ i QuestRowIDFinal'="" w "<B>"
+ i %request.Get("QuestionnaireDesc")'="" d
+ . w "<center>"
+ . w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ . w "<br>"
+ . w "</center>"
+ i QuestRowIDFinal'="" w "</B>" 
+
+ ;i %request.Get("QuestionnaireDesc")'="" d
+ ;. w "<center>"
+ ;. w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ ;. w "<br>"
+ ;. w "</center>"
+ ;LOG 35167 RC 06/06/03 This has been commented out because Log 35170 added 3 new customizable links to 
+ ;replace this one.
+ ;i %request.Get("FileNotes")'="" d
+ ;. w "<center>" 
+ ;. w "<A href=""javascript:PatientOrderProfile();"" accesskey=""P""><U>P</U>atientOrderProfile-",%request.Get("FileNotes"),"</A>"
+ ;. w "</center>"
+ s OrderID=""
+ s OrderID=%request.Get("ID")
+ i OrderID'="",$p(OrderID,"||",2)'="" d
+ . i $p($g(^OEORD(+OrderID,"I",$p(OrderID,"||",2),9)),"^",14)'="" d %request.Set("AuthoriseOrder","on")
+</server>
+<TRAK:COMPONENT id="OEOrder.Normal">
+</TRAK:COMPONENT>
+<server>
+ n PatID,OrderWindow
+ s (CPLIST,OrderWindow)=""
+ s CPList=%request.Get("CareProvList")
+ s RefDOcList=%request.Get("RefDoctorList")
+ s PatID=%request.Get("PatientID")
+ s TSRTITM=%request.Get("TSRTITM")
+ s TSRTORD=%request.Get("TSRTORD")
+ s CONTEXT=%request.Get("CONTEXT")
+ s CTPCPDesc=%request.Get("CTPCPDesc")
+ s CTLOCDesc=%request.Get("CTLOCDesc")
+ s DateFrom=%request.Get("DateFrom")
+ s DateTo=%request.Get("DateTo")
+ s RegistrationNo=%request.Get("RegistrationNo")
+ s STATDesc=%request.Get("STATDesc")
+ s TestEpisodeNo=%request.Get("TestEpisodeNo")
+ s ConsCTPCPDesc=%request.Get("ConsCTPCPDesc")
+ s RESCDesc=%request.Get("RESCDesc")
+ s OrderWindow=%request.Get("OrderWindow")
+</server>
+
+<script language="Javascript">
+ var TSRTITM="#(TSRTITM)#";
+ var TSRTORD="#(TSRTORD)#";
+ var CTPCPDesc="#(CTPCPDesc)#";
+ var CTLOCDesc="#(CTLOCDesc)#"
+ var DateFrom="#(DateFrom)#";
+ var DateTo="#(DateTo)#";
+ var RegistrationNo="#(RegistrationNo)#";
+ var STATDesc="#(STATDesc)#";
+ var TestEpisodeNo="#(TestEpisodeNo)#";
+ var ConsCTPCPDesc="#(ConsCTPCPDesc)#";
+ var RESCDesc="#(RESCDesc)#";
+ var CPList = "#(CPList)#";
+ var RefDOcList="#(RefDOcList)#";
+ var OrderWindow="#(OrderWindow)#";
+ var Updated=0;   //log 30710
+</SCRIPT>
+<server>
+ i %request.Get("ID")'="" d
+ . n billedflag
+ . s billedflag=##Class(web.OEOrder).GetBilledFlag($g(%request.Data("ID",1)))
+ . i billedflag="P" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i billedflag="TR" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i billedflag="R" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ ;
+ //when page is returned after cache error (such as invalid pin, invalid ct, etc)
+ n val
+ i $g(%request.Data("ID",1))'="",$d(msg.Data("hiddenitem1")) d
+ . w "<SCRIPT Language=""Javascript"">",$C(13,10)
+ . s val=$zcvt($g(msg.Data("hiddenitem1",1)),"I","URL")
+ . ;override CPList from above js, as this is the new selected list items.
+ . w "CPList='"_$p(val,$c(1),51)_"';",$c(13,10)
+ . w "</SCRIPT>",$C(13,10)
+</server>
+</form>
+</body>
+</html>

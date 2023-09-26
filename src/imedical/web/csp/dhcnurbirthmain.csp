@@ -1,0 +1,79 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<!--<EXTHEALTH:HEAD></EXTHEALTH:HEAD>-->
+<!--OBJECT id="PrintComm"  classid="http://127.0.0.1/dhcmg/PrintComm.dll#PrintComm.PrintCom" IEWASTEXT>
+        </OBJECT--> 
+ <SERVER>
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s CacheDB=$P(setstr,"^")
+ s webIP=$P(setstr,"^",2)
+ s dllstr=webIP_"/dhcmg/BirthMain.dll#BirthMain.IBirthMain"
+;s dllstr=webIP_"/dhcmg/TestDll.dll#TestDll.Load"
+
+
+</SERVER>
+<Server>
+ w "<OBJECT id=""BirthMain""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+ //w "<frameset cols=""25%,50%,25%"">"
+ //w "<img id=""myImg"" height=""800"" src=""http://127.0.0.1/Test.jpeg""  />"
+ //w "</frameset>"
+ //w "</div>"
+</Server>
+</HEAD>
+
+<BODY>
+</DIV>
+
+<TRAK:APPLET>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+</SERVER>
+
+
+</DIV>
+
+<SCRIPT Language="Javascript">
+var CacheDB="#(CacheDB)#";
+var WebIp="#(webIP)#";
+debugger;
+
+onload=function f(){
+document.getElementById("insert").innerHTML='<img src="http://127.0.0.1/Test.jpeg" height="100" width="100" />';
+}
+//document.getElementById("myFrame").style.backgroundImage = "C://Test.jpeg";
+function ShowWindow(Adm)
+{
+	BirthMain.UserId = session['LOGON.USERID'];
+	BirthMain.CtlocId = session['LOGON.CTLOCID'];
+	//BirthMain.XmlPath = WebIp+"/dhcmg/XMLCurveH.xml"; //横向显示和打印
+	BirthMain.XmlPath = WebIp+"/dhcmg/XMLCurveV.xml";  //纵向显示和打印
+	BirthMain.ServiceUrl = WebIp+"/dthealth/web";
+	BirthMain.Show(); 
+	window.close();
+
+}
+window.onload=ShowWindow
+
+
+//(PregRowId);
+//alert(comlayout)
+</SCRIPT>
+</div>
+
+</BODY>
+</HTML>

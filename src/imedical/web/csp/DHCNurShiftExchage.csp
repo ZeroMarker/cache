@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="24" zv="Cache for UNIX (IBM AIX for System P5-64) 2010.2.7 (Build 1004U)" ts="2013-03-13 10:39:03">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<SERVER>
+
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s CacheDB=$P(setstr,"^")
+ s webIP=$P(setstr,"^",2)
+ s dllstr=webIP_"/dhcmg/PrintComm.dll#PrintComm.PrintCom"
+ s getSingleConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.getSingleConsult"))
+// s ComponentName=%request.Get("EmrCode")
+ s GetConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.GetConsult"))
+ s SaveCon=##Class(%CSP.Page).Encrypt($lb("User.DHCConsultation.Save"))
+ s GetLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCNurShiftExchage.getloc"))
+ s GetLocation=##Class(%CSP.Page).Encrypt($lb("web.DHCNurShiftExchage.getlocation"))
+ s pdata1=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.getPagData"))
+ s pdata=##Class(%CSP.Page).Encrypt($lb("web.DHCMGPageData.GetPagData1"))
+ s GetConsultStat=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.GetConsultStat"))
+ s GetMainPat=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakePernum"))
+ s MakeAdmData=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakeAdmData"))
+ s GetEmrCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.ParseNurEmrCode"))
+ ///s SavePerson=##Class(%CSP.Page).Encrypt($lb("User.DHCPregPerson.save"))
+ S EpisodeID=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+ s PregRowId=%request.Get("PregRowId")  //##class(web.DHCPregComm).GetPRegId(EpisodeID,%session.Data("LOGON.USERID"))
+ s EmrCode="DHCNurShiftExchage"
+ s ComponentName="DHCNurShiftExchage"
+
+ s file=##class(web.DHCNUREMR).getcomflag(EmrCode,EpisodeID,"")
+ //w !,file
+ s LogLoc=##Class(%CSP.Page).Encrypt($lb("web.CTLoc.GetDescFromRowId"))
+ //s LogLoc=##Class(web.CTLoc).GetDescFromRowId(%session.Get("LOGON.CTLOCID"))
+ //i $L(LogLoc,"-")>1 s LogLoc=$P(LogLoc,"-",2)
+ //s PregRowId=##class(web.DHCPregComm).GetPRegId(EpisodeID,%session.Data("LOGON.USERID"))
+ //w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+// s comret=##class(web.DHCNUREMR).getPagData("",%request.Get("EmrCode"),EpisodeID,"")
+ // s a=##class(web.DHCMGPageData).GetPagData()
+ s itm="" f  s itm=$O(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm)) q:itm=""  d
+ .s link=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":"),id=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":",2)
+ .s val=##Class(%CSP.Page).Encrypt($lb(link))
+ . w "<input id="""_id_""" name="""_id_""" type=""hidden"" value="""_val_""">",!
+ w "<OBJECT id=""PrintComm""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+</SERVER>
+
+</HEAD>
+<BODY>
+</DIV>
+<TRAK:APPLET>
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+ ////var ChgConStatus="#(ChgConStatus)#";
+//var SavePerson="#(SavePerson)#";
+
+</SERVER>
+</DIV>
+<SCRIPT Language="Javascript">
+var WebIp="#(webIP)#";
+var CacheDB="#(CacheDB)#";
+var EmrCode="#(ComponentName)#";
+var GetConsult="#(GetConsult)#";
+var getSingleConsult="#(getSingleConsult)#";
+var SaveCon="#(SaveCon)#";
+var getloc="#(GetLoc)#";
+var getlocation="#(GetLocation)#";
+var GetConsultStat="#(GetConsultStat)#";
+var GetMainPat="#(GetMainPat)#";
+var GetEmrCode="#(GetEmrCode)#";
+var EpisodeID="#(%request.Get("EpisodeID"))#"
+var PregRowId="#(PregRowId)#";  //妊娠Id
+var pdata1="#(pdata1)#";
+var pdata="#(pdata)#";
+var PatientID="#(PatientID)#";
+var ComponentName="#(ComponentName)#";
+var LogLoc="#(LogLoc)#";
+</SCRIPT>
+
+<script type="text/javascript" src="../scripts/nurse/comm/dhcmgcomm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHCNURComm.js"></script><!-- Put your page Title here -->
+<Server>
+ w "<script type=""text/javascript"" src=""../scripts_gen/dhcmg/"_ComponentName_".js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts/nurse/dhcnur/"_ComponentName_".js""></script>"
+</Server>
+</BODY>
+</HTML></CSP>
+</Export>

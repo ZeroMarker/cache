@@ -1,0 +1,109 @@
+<!--
+Description: 调查问卷推荐套餐  dhchm.recommenditem.csp
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s PreIADM=%request.Get("PreIADM")	
+		s QuesID=1 ;%request.Get("QuesID")
+		s OEvaID=$G(^DHCPEDataNewEx("PreIADMToHM",PreIADM))
+		s JsonStr=##class(web.DHCPE.HM.ExamSurveyHandler).GetRecommendItems(QuesID,OEvaID)
+	
+	</SCRIPT>
+</head>
+<body class="hisui-layout" style="background:#fff;">
+	<div style="padding:10px;">
+		<div id="MainDiv" >
+			<table id="tab" data-options="bodyCls:'panel-body-gray'"></table>
+		</div>
+		<div style="margin-top:10px;" align="center">
+              <a id="Confirm" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" >确定</a>
+              <a id="Cancel" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-cancel'" style="margin-left:20px;">取消</a>
+        </div>      
+	</div>
+</body>
+</html>
+<script type="text/javascript">
+	var JsonStr='#(JsonStr)#';
+	$(function(){
+		if(JsonStr==""){
+			$.messager.alert("提示","未找到合适的套餐，请自主选择体检项目","info",function(){
+					parent.window.$("#RecommendWin").window("close");
+				});
+		}else{
+			var JsonData=$.parseJSON(JsonStr);
+			if(JsonData.total==0) {
+				$.messager.alert("提示","未找到合适的套餐，请自主选择体检项目","info",function(){
+					parent.window.$("#RecommendWin").window("close");
+				});
+			}							
+			//alert(JsonStr);
+			var GridObj=$HUI.datagrid('#tab',{
+			autoSizeColumn:false,
+			fitColumns:true,
+			columns:[[
+				{field:'Select',checkbox:true,width:50},
+				{field:'Seq',hidden:true,sortable:'true'},
+				{field:'OrdSetsDR',title:'预览',width:50,
+					formatter:function(value,row,index){
+						return "<a href='#' onclick='openSetWin(\""+value+"\")'>\
+							<img style='padding-left:7px;' src='../scripts_lib/hisui-0.1.0/dist/css/icons/eye.png' border=0/>\
+							</a>";
+				}},
+				{field:'OrdSetsDesc',title:'套餐',width:300},
+				{field:'Relevance',title:'关联度',width:210}
+				
+			]],
+			data:JsonData,
+			singleSelect:true,
+			pagination:true,
+			pageSize:10,
+			fit:true,
+			rownumbers:true
+			});
+		}
+		$("#Confirm").click(function(arg){
+			var rows = GridObj.getSelections();
+			if (rows.length>1){
+				$.messager.alert("提示","该模式不可多选","info");
+			}else if (rows.length==1){
+				parent.window.afterRecommend(rows[0].OrdSetsDR,"#(PreIADM)#");
+				parent.window.$("#RecommendWin").window("close");												
+			}else{
+				$.messager.alert("提示","请选择套餐","info");
+			}
+		});	
+		
+		$("#Cancel").click(function(arg){
+			parent.window.afterRecommend("","");
+			parent.window.$("#RecommendWin").window("close");													
+		});	
+		setGridHeight();		
+	})
+	/**
+	 * 设置DataGrid 高度
+	 * @Author   wangguoying
+ 	* @DateTime 2019-04-03
+ 	*/
+	function setGridHeight()
+	{
+		var height=$(document).height()-60;
+		$("#MainDiv").height(height);
+		$("#tab").datagrid("resize");
+	}
+	
+	function openSetWin(SetId)
+	{
+		parent.window.openSetWin(SetId);
+	}
+		
+</script>

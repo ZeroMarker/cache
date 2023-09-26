@@ -1,0 +1,55 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</CSP:METHOD>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+ <SERVER>
+
+ s %request.Data("GroupType",1)="I" 
+ s %request.Data("PageType",1)="Batch"
+ ; Log 60693 - 29.08.2006 - Pass a parameter to indicate if called from "Sundry Batch Invoicing" or "Sundry Batch Letters/Statements" 
+ ;s %request.Data("BTCHLTTR",1)="1"
+
+ s PageType="Batch"
+ s ChkBills="Y"
+ s ChkEpisodes=""
+ 
+ s TWKFL        =$g(%request.Data("TWKFL",1))
+ s TWKFLI       =$g(%request.Data("TWKFLI",1))
+ s TWKFLL       =$g(%request.Data("TWKFLL",1))
+ s TWKFLJ       =$g(%request.Data("TWKFLJ",1))
+ s CONTEXT      =$g(%request.Data("CONTEXT",1))
+ s DepositRowIDs=$g(%request.Data("DepositRowIds",1))
+ s BillRowIDs   =$g(%request.Data("BillRowIDs",1))
+ s Hospital     =$g(%request.Data("Hospital",1))
+ s InvoiceNumber=$g(%request.Data("InvoiceNumber",1))
+ s ChkUnpBillsOnly=$g(%request.Data("ChkUnpBillsOnly",1))
+ s CareProvDesc =$g(%request.Data("CareProvDesc",1))
+ s BatchNum     =$g(%request.Data("BatchNum",1))
+ s DateFrom     =$g(%request.Data("DateFrom",1))
+ s DateTo       =$g(%request.Data("DateTo",1))
+ s HiddenParams =$g(%request.Data("HiddenParams",1))
+
+ ;s ^zTRAK("aji",$zn,"arcsundry.csp")=$g(CareProvDesc)_"^"_$g(BatchNum)_"^"_$g(DateFrom)_"^"_$g(DateTo)_"^"_$g(BillRowIDs)_"^"_$g(DepositsRowID)_"^"_$g(Hospital)_"^"_$g(HiddenParams)
+
+ </SERVER>
+ <script>
+ </script>
+  <frameset rows="25%,10%,*">
+
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARCSundryDebtor.FindBills&BatchNum=#(BatchNum)#&DateFrom=#(DateFrom)#&DateTo=#(DateTo)#&CareProvDesc=#(CareProvDesc)#&BillRowIDs=#(BillRowIDs)#&Hospital=#(Hospital)#&HiddenParams=#(HiddenParams)#&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" name="FRAMEARCSundryFindBills" frameBorder=0 resizeable=no>
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARCSundryDebtor.FindBatch&BillRowIDs=#(BillRowIDs)#&Hospital=#(Hospital)#&CareProvDesc=#(CareProvDesc)#&InvoiceNumber=#(InvoiceNumber)#&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL )#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" name="FRAMEARCSundryFindBatch" frameBorder=0 resizeable=no>
+  <!-- Log 60693 - 29.08.2006 -->
+  <!--<frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARCSundryDebtor.ListBills&BatchNum=#(BatchNum)#&DateFrom=#(DateFrom)#&DateTo=#(DateTo)#&CareProvDesc=#(CareProvDesc)#&BillRowIDs=#(BillRowIDs)#&DepositRowIDs=#(DepositRowIDs)#&Hospital=#(Hospital)#&HiddenParams=#(HiddenParams)#&ChkUnpBillsOnly=#(ChkUnpBillsOnly)#&PageType=#(PageType)#&Letters=1&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&BTCHLTTR=1"  name="FRAMEARCSundryListBills" frameBorder=0 resizeable=no scrolling="auto" >  </frameset>-->
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARCSundryDebtor.ListBills&BatchNum=#(BatchNum)#&DateFrom=#(DateFrom)#&DateTo=#(DateTo)#&CareProvDesc=#(CareProvDesc)#&BillRowIDs=#(BillRowIDs)#&DepositRowIDs=#(DepositRowIDs)#&Hospital=#(Hospital)#&HiddenParams=#(HiddenParams)#&ChkUnpBillsOnly=#(ChkUnpBillsOnly)#&PageType=#(PageType)#&Letters=1&CONTEXT=#(CONTEXT)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#"  name="FRAMEARCSundryListBills" frameBorder=0 resizeable=no scrolling="auto" >  </frameset>
+ </HTML>

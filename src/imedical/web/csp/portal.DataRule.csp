@@ -1,0 +1,136 @@
+<html>
+<head>
+<FORM:EASYUI/>
+<script src="../scripts/DtPortal/common/common.js" type="text/javascript"></script>
+<script type="text/javascript" src="../scripts/DtPortal/common/xlsx.core.min.js"></script>
+<script type="text/javascript" src="../scripts/DtPortal/configure/DataRule.js"></script>
+</head> 
+<body bgcolor="#F0F0F0" class="easyui-layout body">  
+	<div data-options="region:'center',title:'数据规则查询',split:true" style="overflow: hidden;background:#ebf3ff;"> 
+      	<form id="Form" method="post">
+		<table cellspacing="0" cellpadding="5" >
+			<tr>
+				<td class="textLabel" style="width:250px;"><div style="width:80px;float:left;text-align:left">配置code:</div><div style="width:110px;float:left;text-align:left"><input data-options="required:true" style="width:150px;border: 1px solid #95B8E7"  type="text"  id="code"  class="easyui-textbox"></input></div></td>
+				<td class="textLabel" style="width:250px;"><div style="width:80px;float:left;text-align:left">配置描述:</div><div style="width:110px;float:left;text-align:left"><input data-options="required:true" style="width:150px;border: 1px solid #95B8E7"  type="text"  id="desc"  class="easyui-textbox"></input></div></td>
+				<td class="textLabel" style="width:250px;">配置分类:
+					<select id="type" name="type" class="easyui-combobox" style="width:150px;">
+						 <option value="">全部</option>
+						 <option value="1">系统版本</option>
+	    				 <option value="2">时间范围</option>
+	   					 <option value="3">值范围</option>
+	   					 <option value="other">其他</option>
+					</select>
+				</td>
+				<td class="textLabel" style="width:250px;">角色：
+			    	 <input id="selectRole" class="easyui-combobox" name="selectRole" style="width:150px;"   
+	        			data-options="    
+				          	valueField:'RoleCode',
+							textField:'RoleDesc',
+							mode:'remote', 
+				            url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.DataRule&MethodName=qureyRole'    
+				         "/>				      
+			   
+		   		</td>
+			</tr>						
+		</table>
+		</form>					
+		<div class="toolbar" style="padding:0px;magin:0px;">
+			<table cellspacing="0" cellpadding="0" style="padding:10px 0 0 0" >
+			<tr>
+			  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="javascript:find()">查询</a> </td>
+		      <td><div class="datagrid-btn-separator"> </div> </td>
+			  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:add()">增加</a> </td>
+		      <td><div class="datagrid-btn-separator"> </div> </td>
+		      <td><a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-update',plain:true" onclick="javascript:update()" >修改</a></td>
+			  <td><div class="datagrid-btn-separator"> </div> </td>
+		      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteData()">删除</a></td>	
+		      <td><div class="datagrid-btn-separator"> </div> </td>
+		      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="javascript:formExp()">导出</a> </td>	
+			  <td><div class="datagrid-btn-separator"> </div> </td>
+			  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:openFormImp()">导入</a> </td>
+		    </tr>
+			</table>
+		</div>
+		<table id="DataRuleTable">
+	   </table>
+	   <!--导入弹出框-->
+	   <div id="dataAddDiv" class="easyui-window" title="数据项目维护"
+						 data-options="modal:true,width:680,height:350,closed:true,maximizable:true,onClose:function(){formClear();$('#DataRuleTable').datagrid('load');}"
+						 style="vertical-align: middle;background:#E6F1FA">
+		  <form id="FormAdd" method="post">
+		  <div style="height:280px;">
+		  	 <div style="width:300px;float:left">
+					 <table cellspacing="0" cellpadding="5" >
+						<tr>
+							<td class="textLabel" style="width:270px;"><div style="width:70px;float:left;text-align:left">配置code:</div><input data-options="required:true" style="width:200px;border: 1px solid #95B8E7"  type="text" id="AddCode"  class="easyui-textbox"></input></td>
+						</tr>
+						<tr>
+							<td class="textLabel" style="width:270px;"><div style="width:70px;float:left;text-align:left">配置描述:</div><input data-options="required:true" style="width:200px;border: 1px solid #95B8E7"  type="text" id="AddDesc"  class="easyui-textbox"></input></td>
+						</tr>
+						<tr>
+							<td class="textLabel"><div style="width:70px;float:left;text-align:left">配置分类:</div>
+								<select id="type2" name="type2" class="easyui-combobox" style="width:200px;">
+									 <option value="1">系统版本</option>
+				    				 <option value="2">时间范围</option>
+				   					 <option value="3">值范围</option>
+				   					 <option value="other">其他</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td class="textLabel" style="width:270px;"><div style="width:70px;float:left;text-align:left">对应角色:</div><div style="width:200px;float:left;text-align:left"  id="role"></div></td>
+						</tr>
+						<tr>
+							<td class="textLabel"><div style="width:90px;float:left;text-align:left">备注:</div><div style="width:200px;float:left;text-align:left"  id="conValue"><textarea rows="8" cols="20" id="Remarks" style="width:200px;hight:200px;resize:none;border: 1px solid #95B8E7" class="easyui-textbox"></textarea></input></div></td>
+						<tr>						
+					 </table>
+				 </form>
+			  </div>
+			  <div style="width:300px;;float:right;padding:5px 0 0 0">
+					<div style="width:80px;float:left;text-align:left">值类型:</div>
+					<select id="valueType" name="valueType" class="easyui-combobox" style="width:200px;">
+						 <option value="1">数值</option>
+	    				 <option value="2">单选</option>
+	   					 <option value="3">多选</option>
+					</select>
+					<div style="width:260px;padding:5px 0 0 0">
+						<div style="width:270px;padding:5px 0 5px 0"><div style="width:80px;float:left;text-align:left" id="optionValue">配置值:</div><input data-options="required:true" style="width:100px;border: 1px solid #95B8E7"  type="text" id="value"  class="easyui-textbox"></input>
+							<div style="float:right;display:none" id="optionDelete"><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteOption()">删除</a></div>
+						</div>
+						<div style="width:270px;padding:5px 0 5px 0"><div style="width:80px;float:left;text-align:left" id="optionValueDesc">值描述:</div><input data-options="required:true" style="width:100px;border: 1px solid #95B8E7"  type="text" id="valueDesc"  class="easyui-textbox"></input> 
+							<div style="float:right;display:none" id="optionAdd"><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addOption()">增加</a></div>
+							<div style="float:right;display:none" id="optionSave"><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveOption()">保存</a></div>
+						</div>
+					</div>
+					<div id="optionShow">
+						
+					</div>	
+			  </div>
+		  </div>
+		  </form>
+		  <div>
+		  	<div style="width:80px;float:right;padding:0 120px 0 0">
+		  	<a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a>
+		  	</div>
+		  </div>
+	   </div>
+    </div>
+   <!--导入弹出框-->
+   <div id="formImpDiv" class="easyui-window" title="数据导入"
+		             data-options="modal:true,width:600,height:160,closed:true,maximizable:true,onClose:function(){$('#DataRuleTable').datagrid('load');}"
+					 style="vertical-align: middle;background-color:#E6F1FA">
+	  <div style="background:#FFFFFF;color:red">注意：数据导入会先删除原先数据！！！</div>
+	  <form id="FormAdd" method="post">
+		 <table cellspacing="0" cellpadding="5" align="left">
+			<tr>
+				<td class="textLabel" style="width:600px;"><div style="width:130px;float:left">选取文件:</div><input style="width:330px;" type="file" name="filepath" id="filepath" /></input></td>
+			</tr>
+			<tr>
+				<td class="textLabel"><a class="easyui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="javascript:formImp()">导入</a> </td>
+			</tr>
+										
+		 </table>
+	  </form>
+   </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+i Action = "QueryBatch" d									//批次界面添加,对应类方法增加
+	.S StrParam=$Get(%request.Data("Params",1))
+	.s User=$get(%session.Data("LOGON.USERID"))
+	.d ##class(web.DHCST.INCItmLcBt).jsDHCSTLocItmBatch(Start,Limit,Sort,Dir,StrParam,User)
+	.
+
+i Action = "SaveBatch" d									//批次界面添加,对应类方法增加
+	.S ListData=$Get(%request.Data("Detail",1))
+	.s ret=##class(web.DHCST.INCItmLcBt).SaveBatch(ListData)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+</SERVER>

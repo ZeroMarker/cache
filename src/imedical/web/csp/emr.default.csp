@@ -1,0 +1,41 @@
+﻿<html>
+<head>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+		if $g(%session.Data("LOGON.USERID"))=""
+		{
+			s rtn=##class(websys.SessionLogon).Logon()
+			s %response.ServerSideRedirect="emr.default.csp"
+		}
+		q 1
+	</csp:method>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+	    s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s:(patientID = "") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)		
+   </script>
+	<script language="javascript">
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var userID = '#(%session.Get("LOGON.USERID"))#';
+		var ssgroupID = '#(%session.Get("LOGON.GROUPID"))#';
+		var userLocID = '#(%session.Get("LOGON.CTLOCID"))#';
+		var userName = '#(%session.Get("LOGON.USERNAME"))#';
+   </script>
+	<title>电子病历</title>
+</head>
+<body class="easyui-layout" data-options="border:false,fit:true">
+    <div id="patientList" data-options="region:'west',split:true,title:'患者列表',collapsed:true,border:false" style="width:1024px"></div>
+    <div id="patientRecord" data-options="region:'center',border:false" style="overflow:hidden;"></div>
+    <input type="password" id="chartOnBlur" value="chartOnBlur" style="height:1px;width:1px;border:0px"/>
+    <script type="text/javascript" src="../scripts/emr/js/default.js"></script>
+</body>
+</html>
+﻿

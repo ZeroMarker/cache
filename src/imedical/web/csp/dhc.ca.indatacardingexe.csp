@@ -1,0 +1,95 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s id=$Get(%request.Data("id",1))
+	s parRef=$Get(%request.Data("parRef",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s itemDr=$Get(%request.Data("itemDr",1))
+	s srDeptDr=$Get(%request.Data("srDeptDr",1))
+	s remark=$Get(%request.Data("remark",1))
+	s deDeptDr=$Get(%request.Data("deDeptDr",1))
+	s priority=$Get(%request.Data("priority",1))
+	s active=$Get(%request.Data("active",1))
+	s PatTypeCode=$Get(%request.Data("PatTypeCode",1))
+	s CardRuleId=$Get(%request.Data("CardRuleId",1))
+	
+	i action = "listrule" d
+	.w ##class(dhc.ca.cache.udata.uInDataCarding).ListRec(searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "listCardRule" d
+	.w ##class(dhc.ca.cache.udata.uInDataCardRule).ListRec(searchField, searchValue, sortField, sortDir, start, limit, parRef)
+	
+	i action = "addCarding" d
+	.s result = ##class(dhc.ca.cache.udata.uInDataCarding).InsertRec(priority, code, name, remark)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editCarding" d
+	.s result = ##class(dhc.ca.cache.udata.uInDataCarding).UpdateRec(id, priority, code, name, remark,active)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "addCardRule" d
+	.s result = ##class(dhc.ca.cache.udata.uInDataCardRule).InsertRec(parRef, srDeptDr, PatTypeCode, itemDr, deDeptDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//zjw ÐÂÔö 20160121
+	i action = "editCardRule" d
+	.s result = ##class(dhc.ca.cache.udata.uInDataCardRule).UpdateRec(CardRuleId, srDeptDr, PatTypeCode, itemDr, deDeptDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delCarding" d
+	.s result = ##class(dhc.ca.cache.udata.uInDataCarding).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delCardRule" d
+	.s result = ##class(dhc.ca.cache.udata.uInDataCardRule).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deltdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFilttDepts).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delpatdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInFiltPatDepts).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+</script>

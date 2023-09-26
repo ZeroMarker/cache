@@ -1,0 +1,69 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<server>
+
+ n wlid,cmp
+ s wlid=%request.Get("ID")
+ ;i wlid'="" d
+ ;.s ind=0 f  s ind=$o(^RBAS("WaitList",wlid,ind)) q:ind=""  d
+ ;. . s sched=0 f  s sched=$o(^RBAS("WaitList",wlid,ind,sched)) q:sched=""  d
+ ;. . . s sess=0 f  s sess=$o(^RBAS("WaitList",wlid,ind,sched,sess))  q:sess=""  d
+ ;. . . . s appt=^RBAS(ind,sched,"APPT",sess)
+ ;. . . . s apptstat=$p(appt,"^",3)
+ ;. . . . d %request.Set("ApptStat",apptstat)
+
+ ;gr this was displaying incorrect info
+ i wlid'="" {
+            s apptstat="" ;,appt=$$currapptselect^CPAWaitingList(preadm,stat)
+            s stat=$p(^PAWL(wlid),"^",10)
+            s appt=$$currapptselect1^CPAWaitingList(wlid,stat)
+            s apptdate=$p($g(^RBAS(+appt,+$p(appt,"||",2))),"^")
+            i appt s apptstat=$p($g(^RBAS(+appt,+$p(appt,"||",2),"APPT",+$p(appt,"||",3))),"^",3)
+            i apptstat'="" d %request.Set("ApptStat",apptstat)
+ }
+
+
+</server>
+
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1>
+</TRAK:COMPONENT>
+
+<TRAK:COMPONENT id="PAWaitingList.Edit" hidemenus=1>
+</TRAK:COMPONENT>
+
+<server>
+ n wlid,cmp
+ s wlid=%request.Get("ID")
+ ; RQG 09.01.03 Log30995
+ ;s ^zrger($zn,"wlid")=wlid
+ i wlid {
+   s wlobj=##Class(User.PAWaitingList).%OpenId(wlid)
+   i wlobj,wlobj.WLWaitListStatusDR {
+   	s status=wlobj.WLWaitListStatusDR.WLSCode
+   	d wlobj.%Close()
+   	d %request.Set("WLSCode",status)
+   }
+ }
+ i ##class(web.PAWaitingListRB).checkservicesExist(wlid) d
+ . s cmp=##Class(websys.Component).OpenName("PAWaitingListRB.List")
+ . i cmp d cmp.Show() 
+
+</server>
+</TRAK:APPLET>
+</BODY>
+</HTML>
+
+
+

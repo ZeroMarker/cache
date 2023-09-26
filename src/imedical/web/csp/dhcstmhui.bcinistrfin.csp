@@ -1,0 +1,127 @@
+﻿<!--被服类转转入-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',border:false">
+		<table class="Condition" id="Conditions">
+			<input id="RowId" name="RowId" type="hidden">
+			<input id="InitComp" name="InitComp" type="hidden">
+			<tr>
+				<td><label>退库科室</label><input id="InitFrLoc" name="InitFrLoc" class="textbox hisui-combobox"></td>
+				<td><label>转移单号</label><input id="InitNo" name="InitNo" class="textbox" disabled="true"></td>
+				<td><label>出库备注</label><input id="InitRemarks" name="InitRemarks" class="textbox"></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="CompleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'" style="width:100px;">完成</a></td>
+				<td><a href="#" id="SearchBT" class="hisui-linkbutton" >查询转入单</a></td>
+			</tr>
+			<tr>
+				<td><label>库房</label><input id="InitToLoc" name="InitToLoc" class="textbox hisui-combobox"></td>
+				<td><label>制单日期</label><input id="InitDate" name="InitDate" class="hisui-datebox textbox" data-options="disabled:true"></td>
+				<td><label>单据状态</label><input id="InitState" name="InitState" class="textbox simplecombobox" disabled="true"></td>
+				</td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="width:100px;">删除</a></td>
+				<!-- <td><a href="#" id="CancelCompBT" class="hisui-linkbutton" style="width:88px;">取消完成</a></td> -->
+			</tr>
+			<tr>
+				<td><label>类组</label><input id="InitScg" name="InitScg" class="textbox hisui-stkscgcombotree"></td>
+				<td><label>出库类型</label><input id="OperateType" name="OperateType" class="textbox hisui-combobox"></td>
+				<td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				<td><a href="#" id="SelTransBT" class="hisui-linkbutton" style="width:100px;">选取转出单</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="DetailGrid"></table>
+	</div>
+
+
+	<!--查询界面Dialog-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询转入单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="FindConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+						<td><label>退库科室</label><input id="FInitFrLoc" name="FrLoc" class="textbox hisui-combobox"></td>
+						<td><label>转移单号</label><input id="FInitNo" name="InitNo" class="textbox"></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					</tr>
+					<tr>
+						<td><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						<td><label>库房</label><input id="FReqLoc" name="ToLoc" class="textbox hisui-combobox"></td>
+						<td><label>单据状态</label><input id="FStatus" name="Status" class="textbox hisui-simplecombobox"></td>
+						<td><a href="#" id="FComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">选取</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'库存转移单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="FMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="FDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--批次弹窗-->
+	<csp:Include Page="dhcstmhui.incitmbatwindow.csp">
+
+	<!--选取转出单Dialog-->
+	<div id="TransWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-card'" title="选取转出单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="TransConditions" class="Condition">
+					<input id="TransInciId" name="InciId" value="" type="hidden">
+					<tr>
+						<td><label>起始日期</label><input id="TransStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+						<td><label>截止日期</label><input id="TransEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						<td><label>接收科室</label><input id="TransLoc" name="ToLoc" class="textbox hisui-combobox"></td>
+						<td><a href="#" id="TransQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="TransSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'转出单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="TransMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="TransDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/IncItmBatWindow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BeddingClothing/BCInIsTrfPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BeddingClothing/BCInIsTrfFind.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BeddingClothing/SelInIsTrfOut.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BeddingClothing/BCInIsTrfIn.js"></script>
+
+</body>
+</html>

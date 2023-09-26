@@ -1,0 +1,120 @@
+<!-- 会诊申请字典类型表 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultdictype.js"></script>
+	<style>
+	.datagrid {
+	    border-radius: 4px 4px 4px 4px;
+	    border: 1px solid #ccc;
+	}
+	</style>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'west',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='width:570px;padding:10px 5px 10px 10px' border="false">
+		<div id="main" toolbar="#main_tb"></div>
+	</div>
+	<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px 10px 10px 5px' border="false">
+		<div id="" class="hisui-tabs tabs-gray" fit=true>
+			<div title="项目属性设置" style="">
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px' border="false">
+						<div id="item" toolbar="#item_tb"></div>
+					</div>
+					<div data-options="region:'south',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='height:300px;padding:0px 10px 10px 10px' border="false">
+						<div id="detail" toolbar="#detail_tb"></div>
+					</div>
+				</div>
+			</div>
+			<div title="树形配置设置" style="">
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px' border="false">
+						<div id="tree" toolbar="#tree_tb"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="main_tb">
+	<div style="height:10px"></div>
+	<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	<!--hxy 2019-07-18-->
+	<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+	<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>	
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteRow()">删除</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+<div id="item_tb">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertItmRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteItmRow()">删除</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveItemRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+<div id="detail_tb">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertDetRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteDetRow()">删除</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveDetRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+
+<div id="tree_tb">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertTreeRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-edit" onclick="updTreeRow()">修改</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteTreeRow()">删除</a></td>
+	    </tr>
+	</table>
+</div>
+</body>
+ 
+ <!---->
+<div id="treeOpPanel" class="hisui-window" title="" data-options="iconCls:'icon-w-add',closed:'true',modal:true,collapsible:false,maximizable:false,minimizable:false" style="width:480px;height:200px;padding:10px;"><!--hxy 2018-09-13 加遮罩-->
+	<div>
+		<table style="border-spacing: 2px;">
+			<tr style="display:none">
+				<td style="width:50px;padding-right:10px;" align="right">ID</td>
+				<td><input id="tID" type="text"  class="hisui-validatebox"/></td>
+			</tr>
+			<tr>
+				<td style="width:50px;padding-right:10px;" align="right">代码</td>
+				<td><input id="Code" type="text"  class="hisui-validatebox"/></td>	
+				<td style="width:50px;padding-right:10px;" align="right">描述</td>
+				<td ><input id="Desc" type="text" class="hisui-validatebox"/></td>	
+			</tr>
+			<tr style="height:10px"></tr>
+			<tr>
+				<td style="width:50px;padding-right:10px;" align="right">父节点</td>
+				<td ><input id="ParList" type="text" class="hisui-validatebox"/></td>	
+				<td style="width:50px;padding-right:10px;" align="right">启用</td>
+				<td ><input id="Active" type="text"  class="hisui-validatebox"/></td>	
+			</tr>
+		</table>
+	</div>
+	<div style="text-align:center;padding-top:10px">
+		<a href="#" class="hisui-linkbutton" iconCls="icon-save" onclick="treeItmSave()">保存</a>
+	</div>
+</div>
+ 
+</html>

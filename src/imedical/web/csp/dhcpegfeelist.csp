@@ -1,0 +1,38 @@
+<!--
+Description: 查询到达了但未交钱的团体费用
+-->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+</HEAD>
+
+
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s StartDate=%request.Get("StartDate")
+	s EndDate=%request.Get("EndDate")
+	s PayStatus=%request.Get("PayStatus")
+	i StartDate'=""  s StartDate=##class(websys.Conversions).DateHtmlToLogical(StartDate)
+	i EndDate'=""  s EndDate=##class(websys.Conversions).DateHtmlToLogical(EndDate)
+	
+</Script>
+
+
+
+
+    <body>
+    <SCRIPT language="Cache" RUNAT="SERVER">
+      if ((PayStatus=0)||(PayStatus=2)){
+	d ##Class(web.DHCPE.Report.FeeQuery).OutGroupNoPayToHTML(StartDate,EndDate,PayStatus)}
+	if (PayStatus=1) {d ##Class(web.DHCPE.Report.FeeQuery).OutGroupPayedToHTML(StartDate,EndDate)}
+</Script>
+ <script type="text/javascript" src="../scripts/DHCPEGNoPayFeeFind.JS"></script>
+    </body>
+
+
+</HTML>

@@ -1,0 +1,98 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s str=$Get(%request.Data("query",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s valid=$Get(%request.Data("valid",1))
+	
+	s unitdr=$Get(%request.Data("unitdr",1))
+	s configname=$Get(%request.Data("configname",1))
+	s filetype=$Get(%request.Data("filetype",1))
+	s CalGroupID=$Get(%request.Data("CalGroupID",1))
+	s ColNum=$Get(%request.Data("ColNum",1))
+
+	s sUnitID=$Get(%request.Data("sUnitID",1))
+	s BonusUnitTypeID =$Get(%request.Data("BonusUnitTypeID",1))
+	s fileTypeID=$Get(%request.Data("fileTypeID",1))
+	s modelType=$Get(%request.Data("modelType",1))
+	s onloadFileID=$Get(%request.Data("onloadFileID",1))
+	s Target=$Get(%request.Data("Target",1))
+	s ItemName=$Get(%request.Data("ItemName",1))
+
+	
+	i action = "unitemp" d
+	.w ##class(dhc.bonus.udata.uBonusEmployee).GetUnitEmp(sUnitID)
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uImportFileType).List(searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "FileConfig" d
+	.w ##class(dhc.bonus.udata.uImportFileType).GetFileConfig(fileTypeID,Target,str,start,limit)
+	
+	i action = "excelPos" d
+	.w ##class(dhc.bonus.udata.uImportFileType).GetFileConfigList(onloadFileID,modelType,start,limit)
+		
+		
+	i action = "unit" d
+	.w ##class(dhc.bonus.udata.uBonusEmployee).BonusUnit(start,limit,str,BonusUnitTypeID)
+	
+	
+	i action = "addFileConfig" d
+	.s result =##class(dhc.bonus.udata.uImportFileType).InsertFileConfig(filetype,fileTypeID,CalGroupID,ItemName,ColNum)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "updateFileConfig" d
+	.s result = ##class(dhc.bonus.udata.uImportFileType).UpdateFileConfig(filetype,fileTypeID,CalGroupID,ItemName,ColNum,rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deleteFileConfig" d
+	.s result = ##class(dhc.bonus.udata.uImportFileType).DeleteFileConfig(filetype,rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uImportFileType).InsertRec(code,name,configname,filetype,Target)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uImportFileType).UpdateRec(rowid,code,name,configname,filetype,Target)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uImportFileType).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

@@ -1,0 +1,42 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ n Validated,compid,compref,UserCode,PIN,msg
+ s (Validated,compid,compref,UserCode,PIN)=""
+ s UserCode=%request.Get("UserCode")
+ s PIN=%request.Get("PIN")
+ s WINNAME=%request.Get("WINNAME")
+ s compref=%request.Get("TEVENT")
+ s msg=##Class(websys.Message).%New()
+ s compid=$e($p(compref,"i",1),2,999)
+ s Validated=##Class(web.SSUser).ValidatePIN(%request.Get("UserCode"),%request.Get("PIN"),compid,"")
+ ;s ^zJOHND($zn,"VALIDATED")=Validated
+ i 'Validated q
+ ;s ^zJOHND($zn,"VALIDATED2")=Validated
+ 
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var ValidPIN=detailFrame.document.getElementById(""ValidPin"");"
+ w "var PIN=detailFrame.document.getElementById(""PIN"");"
+ w "if (ValidPIN) ValidPIN.checked=true;"
+ w "PIN.className="""";"
+ w "</script>"
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

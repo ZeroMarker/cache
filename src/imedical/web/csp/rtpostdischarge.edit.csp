@@ -1,0 +1,107 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+
+<!-- *****  Log# 28200; AmiN ; 02/Oct/2002  Restructured web page.  need the csp when page refreshes and when click on ep link from other pasge *****  -->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<script language="JavaScript">
+</script>
+</HEAD>
+<BODY>
+<TRAK:APPLET> 
+
+<server>
+ 
+ n RegistrationNo,Ward,EpisodeID,PatientID,status,Patid,PassedInVolumeNo
+ s (RegistrationNo,Ward,EpisodeID,PatientID,status,Patid,PassedInVolumeNo)=""
+   
+ i %request.Get("VolumeNo")'="" s PassedInVolumeNo=%request.Get("VolumeNo")  
+  i %request.Get("PatientID")'="" {
+  		s PatientID=%request.Get("PatientID")
+		s RegistrationNo=##Class(web.PAPatMas).GetRegistration(PatientID)
+		i RegistrationNo'=""  d %request.Set("RegistrationNo",RegistrationNo)
+		s Volume=##class(web.RTMasVol).NumberofVolCheck(PatientID)	
+		s VolumeNo=$p(Volume,$c(1),1)
+		s VolumeId=$p(Volume,$c(1),2)
+		d %request.Set("VolumeNo",VolumeNo)
+		d %request.Set("RTMAVRowID",VolumeId)
+  }
+
+  ;i %request.Get("VolumeNo")'="" s VolumeNo=%request.Get("VolumeNo")
+  i %request.Get("EpisodeID")'="" s EpisodeID=%request.Get("EpisodeID")	  
+ 
+ if EpisodeID'="" { 
+ 	s adm=##class(User.PAAdm).%OpenId(EpisodeID,0)
+ 	if adm'="" {
+		s Visit=""
+		if adm.PAADMVisitStatus'="" { 
+			; AmiN Added Oct 17 Automatic Status of discharge when PPAADM_PostDischStatus_DR is blank and PAADM_VisitStatus = Discharge
+			d %request.Set("PAADMVisitStatus",adm.PAADMVisitStatus) 
+			s Visit=adm.PAADMVisitStatus			
+		}
+
+ 		if adm.PAADMADMNo'="" d %request.Set("PAADMADMNo",adm.PAADMADMNo)
+		if adm.PAADMAdmDate'="" d %request.Set("PAADMAdmDate",adm.PAADMAdmDate)
+		if adm.PAADMDischgDate'="" d %request.Set("PAADMDischgDate",adm.PAADMDischgDate)
+		if adm.PAADMDischgTime'="" d %request.Set("PAADMDischgTime",adm.PAADMDischgTime)			
+		if adm.PAADMCurrentWardDR'="" d %request.Set("Ward",adm.PAADMCurrentWardDR.WARDDesc)	
+		;commented out the next line for log 40813	
+		;i adm.PAADMAdmDocCodeDR'="" d %request.Set("CareProv",adm.PAADMAdmDocCodeDR.CTPCPDesc)
+		i adm.PAADMDischgDocDR'="" d %request.Set("CareProv",adm.PAADMDischgDocDR.CTPCPDesc)
+		i adm.PAADMDepCodeDR'="" d %request.Set("Location",adm.PAADMDepCodeDR.CTLOCDesc)
+		i adm.PAADMPostDischStatusDR'="" d %request.Set("Status",adm.PAADMPostDischStatusDR.MRSTATDesc)
+		i adm.PAADMPAPMIDR'="" s Patid=adm.PAADMPAPMIDR.%Id()
+		i Patid'="" d %request.Set("PatientID",Patid) 
+		s RegistrationNo=##Class(web.PAPatMas).GetRegistration(Patid)
+		i RegistrationNo'="" d %request.Set("RegistrationNo",RegistrationNo)		
+		s Volume=##class(web.RTMasVol).NoOfVolInEpis(EpisodeID)			 
+		;s Volume=##Class(web.RTMasVol).FindLatestVolAssignedToEpis(EpisodeID)
+		i ($tr(Volume,$c(1))="") s Volume=##class(web.RTMasVol).NumberofVolCheck(Patid)				
+		s VolumeNo=$p(Volume,$c(1),1)
+		s VolumeId=$p(Volume,$c(1),2)
+		d %request.Set("VolumeNo",VolumeNo)
+		d %request.Set("RTMAVRowID",VolumeId)
+		
+ 	   d adm.%Close()
+ 	}	
+ }	
+ 
+ if %request.Get("VolumeNo")="",PassedInVolumeNo'="" d %request.Set("VolumeNo",PassedInVolumeNo)
+ 
+ if %request.Get("PatientID")'="" {
+ 	s comp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ 	if comp'="" {
+	 	s comp.HideHeadings=0
+	 	d comp.Show()
+		d comp.%Close()
+ 	} 	
+ }
+ 
+ s comp=##Class(websys.Component).OpenName("RTPostDischarge.Edit")
+ if comp'="" {
+ 	s comp.HideHeadings=0
+ 	d comp.Show()
+	d comp.%Close()
+ }
+ 
+
+</server>
+
+<script language="JavaScript">
+
+</script>
+
+</BODY>
+</HTML>
+
+

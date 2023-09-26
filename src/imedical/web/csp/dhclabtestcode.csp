@@ -1,0 +1,49 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<SERVER>
+</SERVER>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+<body>
+
+<SERVER>
+	n PatientBanner,EpisodeID,ResultID,PatientID,ChartID,ItemID,Type,OrderID
+	s (PatientBanner,EpisodeID,ResultID,PatientID,ChartID,ItemID,Type,OrderID)=""
+
+	; Parameters for OEOrdItem.LabResult
+	s PatientBanner=%request.Get("PatientBanner")
+	s LabTestSetRow=%request.Get("TestSetRowID")
+	s ^TMPCSP=PatientBanner_","_LabTestSetRow
+	/*
+	s OrderID=%request.Get("OrderID")
+	i OrderID'="" s %request.Data("OrderID",1)=OrderID
+	s LabTestSetRow=$p($g(^OEORD(+OrderID,"I",+$p(OrderID,"||",2),3)),"^",35)
+	*/
+	s (TestItemID,TestItemDesc)=""
+	i LabTestSetRow'="" d
+	. s LabEpisodeNo=$p(LabTestSetRow,"||",1)
+	. s TestSet=$p(LabTestSetRow,"||",2)
+	. s Counter=+$p(LabTestSetRow,"||",3)
+	. s TestItem=$p(LabTestSetRow,"||",4) ;%request.Get("TestItem")
+	. i TestItem'="" s TestItemDesc=$p($g(^TTAB("TC",TestItem)),"\")
+	. s TestItemID=LabEpisodeNo_"||"_TestSet_"||"_Counter_"||"_TestItem
+	. s TCRowId=TestItemID
+	i '$l(TestItemID) q
+	i PatientBanner=1 d
+	. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	. i cmp d cmp.Show(),cmp.%Close()
+	s cmp=##Class(websys.Component).OpenName("DHCLabTestCodeRanges")
+	i cmp d cmp.Show(),cmp.%Close()
+	;s cmp=##Class(websys.Component).OpenName("SSAuditTrail.List")
+</SERVER>
+<SCRIPT>
+</SCRIPT>
+</body>
+</html>

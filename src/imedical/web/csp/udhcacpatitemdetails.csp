@@ -1,0 +1,97 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<STYLE type='text/css'>
+.selectedPrescTypeTab {
+	PADDING: 3px;
+	MARGIN: 3px;
+	COLOR: yellow;
+	BACKGROUND-COLOR: #336699;
+	BORDER: 2px outset #336699;
+	FONT-WEIGHT: bold;
+	cursor: hand;
+}
+.PrescTypeTab {
+	PADDING: 3px;
+	MARGIN: 3px;
+	BACKGROUND-COLOR: #cfcfff;
+	BORDER: 1px outset #cfcfff;
+	cursor: hand;
+}
+<!--
+SPAN    {
+        cursor:hand;
+        }
+-->
+</STYLE>
+
+
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<SCRIPT language="Javascript">
+function showright(){
+	//
+	}
+
+</SCRIPT>
+
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	;udhcacpatitemdetails.csp
+	;CSP
+	n myComName
+	
+	s myComName=""
+	
+	s mysFlag=$g(%request.Data("sFlag",1))
+	s myPRowID=$g(%request.Data("myPRowID",1))
+	
+	s myVer=##class(web.DHCOPConfig).GetVersion()
+	if (+myVer=0){
+		;北京积水潭
+		;s myComName="udhcOPHandin"
+	}elseif (+myVer=1){
+		;合肥
+		;"&ReceipRowid="_rs.GetDataByName("OPRTRowID")
+		i mysFlag="PL" d
+		.s myComName="UDHCACAcc.PatPOEList"
+		.s %request.Data("ReceipRowid")=myPRowID
+		
+		i mysFlag="PD" d
+		.s myComName=""
+		
+	}elseif (+myVer=4){
+		;宁波明州医院
+		;s myComName="udhcOPHandin.NBMZYYRep"
+		;
+	}else{
+		;s myComName="udhcOPHandin"
+	}
+	
+	q:myComName=""
+	
+	;s %request.Data("RepID")=myRepID
+	
+	s mobj=##Class(websys.Component).OpenName(myComName)
+	
+	w %request.Data("ReceipRowid")
+	
+	i mobj d
+	.s mobj.HideMenus=1
+	.s mobj.HideHeadings=1
+	.s mobj.Style="LEFT:0; WIDTH:100%; POSITION:relative;top:10"
+	.d mobj.Show()
+	.d mobj.%Close()
+	
+	
+</Script>
+
+
+</HTML>

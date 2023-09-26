@@ -1,0 +1,93 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action=$Get(%request.Data("action",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s data=$Get(%request.Data("data",1))
+
+	s DeptName = $Get(%request.Data("DeptName",1))
+	s userName = $Get(%request.Data("userName",1))
+	s objDeptName = $Get(%request.Data("objDeptName",1))
+	s state = $Get(%request.Data("state",1))
+
+	s year = $Get(%request.Data("year",1))	
+	s type = $Get(%request.Data("type",1))
+	s bname = $Get(%request.Data("bname",1))
+	s bcode = $Get(%request.Data("bcode",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))	
+	s str = $Get(%request.Data("query",1))
+	s SplitMeth = $Get(%request.Data("SplitMeth",1))
+	s splitMeth = $Get(%request.Data("splitMeth",1))
+	s splitmeth = $Get(%request.Data("splitmeth",1))
+	s SplitLayer = $Get(%request.Data("SplitLayer",1))
+	s isLast = $Get(%request.Data("isLast",1))
+	s code= $Get(%request.Data("code",1))
+	s Year = $Get(%request.Data("year",1))
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgSchSplitAccDept).List(hospid,year, type, bname, bcode, sortField, sortDir, start, limit)	
+	
+	i action="Yaerlist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitAccDept).year(start, limit, str)	
+	
+	i action="BudgTyplist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitAccDept).AcctSubjTyp(start, limit, str)
+			
+	i action="SplitEdit" d
+	.s result= ##class(herp.budg.udata.uBudgSchSplitAccDept).UpdateRec(hospid,rowid,Year,isLast, code, SplitMeth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',refresh:'true',info:'²»ÊÇÄ©¼¶'}"
+	
+	i action="edit" d
+	.s result= ##class(herp.budg.udata.uBudgSchSplitAccDept).UpdateRec(hospid,rowid,Year,isLast, code, splitMeth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+	
+	
+	
+	i action="descNamelist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitAccDept).descName(start, limit, str)
+	
+	i action="userNamelist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitAccDept).UserName(start, limit, str)
+	
+	i action="DescNlist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitAccDept).DescNlist(start, limit, Dname)
+	
+	i action="add1" d
+	.s result= ##class(herp.budg.udata.uBudgSchSplitAccDept).InsertRec(schemeDr, DeptName, userName)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	
+	i action="del" d
+	.s result= ##class(herp.budg.udata.uBudgSchSplitAccDept).ItemDelete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+	
+</script>

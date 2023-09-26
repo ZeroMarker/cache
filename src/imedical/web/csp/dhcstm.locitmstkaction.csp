@@ -1,0 +1,76 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s User=$G(%session.Data("LOGON.USERID"))
+
+i Action = "LocItmStk" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.;d ##class(web.DHCSTM.LocItmStk).LocItmStk(Start,Limit,Sort,Dir,StrParam)
+	.;界面添加打印,统一使用query取值
+	.d ##class(web.DHCSTM.Common.JsonObj).getJsonByQuery("web.DHCSTM.LocItmStk","LocItmStkDetail",Start,Limit,Sort,Dir,StrParam)
+	.
+i Action = "Batch" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCSTM.LocItmStk).Batch(Start,Limit,Sort,Dir,StrParam)
+	.
+i Action = "LocItmStkMoveSum" d
+	.S StartDate=$Get(%request.Data("startdate",1))
+	.S EndDate=$Get(%request.Data("enddate",1))
+	.S PhaLoc=$Get(%request.Data("phaloc",1))
+	.S StrParam=$Get(%request.Data("others",1))
+	.d ##class(web.DHCSTM.LocItmTransMove).LocItmStkMoveSum(Start,Limit,StartDate,EndDate,PhaLoc,StrParam,User)  //zhwh 20130717增加参数User
+	.
+i Action = "LocItmStkMoveDetail" d
+	.S Incil=$Get(%request.Data("incil",1))
+	.S StartDate=$Get(%request.Data("startdate",1))
+	.S EndDate=$Get(%request.Data("enddate",1))
+	.S RpType=$Get(%request.Data("RpType",1))
+	.d ##class(web.DHCSTM.LocItmTransMove).LocItmStkMoveDetail(Start,Limit,StartDate,EndDate,Incil,RpType)
+	.
+i Action = "jsLocItmBatOfExp" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCSTM.LocItmExpDate).jsLocItmBatOfExp(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmStkQtyLimitWarn" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCSTM.LocItmStkQtyWarn).jsLocItmStkQtyLimitWarn(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmStkQtyDispensingWarn" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCSTM.LocItmStkQtyWarn).jsLocItmQtyDspWarn(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmSluggishGoods" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCSTM.LocItmSluggishGoods).jsLocItmSluggishGoods(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "jsLocItmMoveInfo" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCSTM.LocItmMoveInfo).jsLocItmMoveInfo(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+	.
+i Action = "GetDirtyQtyInfo" d
+	.S Inclb=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCSTM.LocItmStk).GetDirtyQtyInfo(Inclb)
+	.
+i Action = "SynIncilStkQty" d
+	.s Incil=$Get(%request.Data("Incil",1))
+	.s ret=##class(web.DHCSTM.LocItmStk).SynIncilStkQty(Incil)
+	.i ret'=0 d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:''}"
+i Action = "ClrLocInciResQty" d
+	.s Incil=$Get(%request.Data("Incil",1))
+	.s ret=##class(web.DHCSTM.LocItmStk).ClrLocInciResQty(Incil)
+	.i ret'=0 d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:''}"
+i Action = "jsLocItmSpecStkQtyLimitWarn" d
+ .S StrParam=$Get(%request.Data("Params",1))
+ .d ##class(web.DHCSTM.LocItmStkQtyWarn).jsLocItmSpecStkQtyLimitWarn(Start,Limit,Sort,Dir,StrParam,User) //zhwh 20130717增加参数User
+ .
+</SERVER>

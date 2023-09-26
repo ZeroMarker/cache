@@ -1,0 +1,105 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body id="body">
+<SCRIPT language="cache" runat=SERVER>
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+ n oeordexecid,oeorditemid,ReadOnly,obj,ObsDate,ObsTime,obsID
+ s oeordexecid=$g(%request.Data("oeordexecid",1))
+ s (oeorditemid,%request.Data("oeorditemid",1))=$g(%request.Data("PARREF",1))
+ s ReadOnly=$g(%request.Data("ReadOnly",1))
+ ;d ##Class(web.MRObservations).TakeObservations(%request.Get("ObsGrpID"),%request.Get("mradm"),oeordexecid,oeorditemid,%request.Get("ObsDate"),%request.Get("ObsTime"),ReadOnly)
+ s obj=##Class(User.OEOrdExec).%OpenId(oeordexecid,0)
+ i obj d
+ . i obj.OEOREOrderStatusDR s %request.Data("STATDesc",1)=obj.OEOREOrderStatusDR.STATDesc
+ . s (%request.Data("OEOREDateExecuted",1),ObsDate)=obj.OEOREDateExecuted
+ . s (%request.Data("OEORETimeExecuted",1),ObsTime)=obj.OEORETimeExecuted
+ . s %request.Data("OEOREPrimaryIntervention",1)=obj.OEOREPrimaryIntervention
+ . ; log 49989 - YC - 2nd Signature for order item subcategories with overseer flag set to "Y"
+ . i obj.OEOREOverseeUserDR s %request.Data("OEOREOverseeUserDR",1)=$li(##class(web.SSUser).GetCodeDescriptionFromId(obj.OEOREOverseeUserDR.%Id()),3)
+ . d obj.%Close()
+ ;
+ ; Or from obs notes, providing we have a valid observation date and time
+ ; ab 2.11.06 55575 - always get last update details from obs notes, get exec notes if execid exists
+ i 'oeordexecid d
+ . s (%request.Data("OEOREDateExecuted",1),ObsDate)=$g(%request.Data("ObsDate",1)) 
+ . s (%request.Data("OEORETimeExecuted",1),ObsTime)=$g(%request.Data("ObsTime",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s obsID=""
+ i mradm'="",ObsDate'="",ObsTime'="" d
+ . s data=##class(web.MRObservations).GetNoteData(mradm,ObsDate,ObsTime,$g(%request.Data("node",1)),$g(%request.Data("ReverseDateOrder",1)),$c(13,10),oeordexecid)
+ . s %request.Data("obsnoteid",1)=$p(data,"^",7)
+ . s %request.Data("OEOREDesc",1)=$p(data,"^",1)
+ . s %request.Data("OBSNLastUpdateDate",1)=$p(data,"^",2)
+ . s %request.Data("OBSNLastUpdateTime",1)=$p(data,"^",3)
+ . s %request.Data("OBSNLastUpdateUserDR",1)=$p(data,"^",4)
+ . s %request.Data("OBSNLastUpdateHospitalDR",1)=$p(data,"^",5)
+ . s %request.Data("OBSNLastUpdateObsGroupDR",1)=$p(data,"^",6)
+ 
+ ; stick the header stuff here.....
+ ;
+ n grpDesc s grpDesc=$g(%request.Data("ObsGrpID",1))
+ i grpDesc'="" s grpDesc=$li(##class(web.MRCObservationGroup).GetCodeDescriptionFromId(grpDesc),1)
+ s %request.Data("Header",1)=grpDesc
+ ;Log 48856
+ n oearcimdr,DrugFormDR,GenericDR,ordGenericDrugDesc,StrengthDR,Strength,FormDR,Form,RouteDR,Route
+ s (oearcimdr,DrugFormDR,GenericDR,ordGenericDrugDesc,StrengthDR,Strength,FormDR,Form,RouteDR,Route)=""
+ i oeorditemid'="" s oearcimdr=$p($g(^OEORD(+oeorditemid,"I",$p(oeorditemid,"||",2),1)),"^",2)
+ i oearcimdr'="" s DrugFormDR=$p($g(^ARCIM(+oearcimdr,$p(oearcimdr,"||",2),1)),"^",12)
+ i DrugFormDR'="" s GenericDR=$p($g(^PHCD(+DrugFormDR,4)),"^",1)
+ i GenericDR'="" s ordGenericDrugDesc=$p($g(^PHCGE("GE",GenericDR)),"^",2)
+ i DrugFormDR'="" {
+ 	s StrengthDR=$p($g(^PHCD(+DrugFormDR,"DF",$p(DrugFormDR,"||",2),1)),"^",6)
+ 	i StrengthDR'="" s Strength=$p($g(^PHCS(StrengthDR)),"^",2)
+ 	s FormDR=$p($g(^PHCD(+DrugFormDR,"DF",$p(DrugFormDR,"||",2),1)),"^",1)
+ 	i FormDR'="" s Form=$p($g(^PHCF(FormDR)),"^",2)
+ 	s RouteDR=$p($g(^PHCD(+DrugFormDR,"DF",$p(DrugFormDR,"||",2),3)),"^",9)
+ 	i RouteDR'="" s Route=$p($g(^OEC("ROUTE",RouteDR)),"^",2)
+ }
+ i ordGenericDrugDesc'="",Strength'="" s ordGenericDrugDesc=ordGenericDrugDesc_","_Strength
+ i ordGenericDrugDesc'="",Form'="" s ordGenericDrugDesc=ordGenericDrugDesc_","_Form
+ i ordGenericDrugDesc'="",Route'="" s ordGenericDrugDesc=ordGenericDrugDesc_","_Route
+ d %request.Set("GenericDrugDesc",ordGenericDrugDesc)
+ ;
+ s cmp=##Class(websys.Component).OpenName("MRObservations.EditList")
+ i cmp d 
+ . i ReadOnly=1 s cmp.Disabled=1
+ . d cmp.Show()
+ . d cmp.%Close()
+</SCRIPT>
+<script language="javascript">
+function reSizeT() {
+	var w=0;var h=0;
+	var arrTABLES=document.getElementsByTagName("TABLE");
+	for (var i=0; i<arrTABLES.length; i++) {
+		if (arrTABLES[i].offsetWidth>w) w=arrTABLES[i].offsetWidth;
+		//if (arrTABLES[i].offsetHeight>h) h=arrTABLES[i].offsetHeight;
+		h += arrTABLES[i].offsetHeight + arrTABLES[i].offsetTop;
+	}
+	w+=30;h+=60
+	if (w>eval(window.screen.Width-window.screenLeft)) w=eval(window.screen.Width-window.screenLeft)-40;
+	if (w<282) w=282;
+	if (h>eval(window.screen.Height-window.screenTop)) h=eval(window.screen.Height-window.screenTop);
+	this.resizeTo(w,h);
+}
+
+//if (self == top) reSizeT();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,109 @@
+<html>
+<head>
+  	<title>加载界面模板</title>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script> 
+ 	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+</head>
+<script language="cache" runat="server">
+	s userID	  = %session.Get("LOGON.USERID")
+	s ctLocID 	  = %session.Get("LOGON.CTLOCID")
+	s ssGroupID   = %session.Get("LOGON.GROUPID")
+	s userName 	  = %session.Get("LOGON.USERNAME")
+	
+	s refresh	  = $g(%request.Data("Refresh",1),"")
+	s loadType	  = $g(%request.Data("LoadType",1),"")
+	s episodeID   = $g(%request.Data("EpisodeID",1),"")
+	s instanceID  = $g(%request.Data("InstanceID",1),"")
+	
+	s objInstance = ##Class(EPRinstance.InstanceData).%OpenId(instanceID)
+	
+	s ecrecordID  = $p(instanceID,"||",1)
+	s objECRecord = ##Class(EPRinstance.ECRecord).%OpenId(ecrecordID)
+
+	s episodeType 	= $p($g(^PAADM(episodeID)),"^",2)
+	s patientID 	= objECRecord.PatientID
+	s categoryID 	= objECRecord.CategoryID
+	s objCategory 	= $g(^DHCEPRM.TemplateCategoryD(categoryID))
+	s categoryName 	= $listget(objCategory,3)
+	s categoryType 	= objECRecord.CategoryType
+	s chartItemID 	= objECRecord.ChartItemID
+	s templateID 	= objInstance.TemplateID
+	s templateName 	= $listget($g(^DHCEPRM.TemplateD(templateID)),5)
+	s formURL = ##Class(web.DHCEPR).GetFormURL("1")
+	s bgColor = ##Class(EPRmeta.SysOption).GetOptionValueByName("BGColor")
+</script>
+<server>
+	w "<object id='refconfig' name='refconfig' width=0 height=0 classid='" _formURL_ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	w "<param name='URL' value='"_##Class(web.DHCEPR).GetServiceURL()_"'>",!
+	w "<param name='DBUserPassword' value='" _ ##class(web.DHCEPR).GetUserPassword() _ "'>",!
+	w "<param name='FormURL' value='"_formURL_"'>",!
+	w "</object>",!	
+	
+	if (loadType = "Single")
+	{
+		s categoryID = ""	//唯一模板初始化必须为空?否则异常(调用老实例数据)
+		s chartItemID = $g(%request.Data("TemplateDocID",1),"")	//唯一模板ChartItemID为TemplateDocID
+		
+		w "<object id='refeprform' name='refeprform' classid='" _formURL_ "WebClient.dll#dhcc.epr.webclient.EPRNormal' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<param name='IsTotalLoad' value='True'>",!
+		w "<param name='IsNewFramework' value='True'>",!
+		w "<param name='Revisionable' value='False'>",!
+		w "<param name='Browsable' value='True'>",!
+		w "<param name='BGColor' value='"_bgColor_"'>",!
+		w "<param name='UserID' value='"_userID_"'>",!	
+		w "<param name='UserName' value='"_userName_"'>",!
+		w "<param name='PatientID' value='"_patientID_"'>",!	
+		w "<param name='EpisodeID' value='"_episodeID_"'>",!
+		w "<param name='EpisodeType' value='"_episodeType_"'>",!		
+		w "<param name='CategoryName' value='"_categoryName_"'>",!
+		w "<param name='CategoryID' value='"_categoryID_"'>",!
+		w "<param name='CategoryType' value='"_categoryType_"'>",!
+		w "<param name='ChartItemID' value='"_chartItemID_"'>",!
+		w "<param name='ProfileID' value='"_chartItemID_"'>",!
+		w "<param name='ChartItemType' value='Single'>",!
+		w "<param name='ChartListNo' value='1'>",!
+		w "<param name='SSGroupID' value='"_ssGroupID_"'>",!
+		w "<param name='CTLocID' value='"_ctLocID_"'>",!
+		w "</object>"
+	}
+	else
+	{
+		w "<object id='refeprform' name='refeprform' classid='" _formURL_ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<param name='IsTotalLoad' value='True'>",!
+		w "<param name='IsNewFramework' value='True'>",!
+		w "<param name='Revisionable' value='False'>",!
+		w "<param name='Browsable' value='True'>",!
+		w "<param name='BGColor' value='"_bgColor_"'>",!
+		w "<param name='UserID' value='"_userID_"'>",!	
+		w "<param name='UserName' value='"_userName_"'>",!
+		w "<param name='PatientID' value='"_patientID_"'>",!	
+		w "<param name='EpisodeID' value='"_episodeID_"'>",!
+		w "<param name='TemplateID' value='"_templateID_"'>",!
+		w "<param name='TemplateName' value='"_templateName_"'>",!
+		w "<param name='CategoryID' value='"_categoryID_"'>",!
+		w "<param name='CategoryType' value='"_categoryType_"'>",!
+		w "<param name='ChartItemID' value='"_chartItemID_"'>",!
+		w "<param name='ProfileID' value='"_chartItemID_"'>",!
+		w "<param name='InstanceDataID' value=''>",!
+		w "<param name='ChartItemType' value='Single'>",!
+		w "<param name='ChartListNo' value='-1'>",!
+		w "<param name='SSGroupID' value='"_ssGroupID_"'>",!
+		w "<param name='CTLocID' value='"_ctLocID_"'>",!
+		w "</object>"	
+	}	
+</server>
+<body>  
+	 
+</body>
+</html>
+<script language="javascript">
+	var refresh = '#(refresh)#';
+	var instanceID = '#(instanceID)#';
+	var eprform = document.getElementById("refeprform");
+	if (refresh != "0")
+	{
+		//重新获取绑定数据
+		eprform.ReplaceInstanceData(instanceID);
+	}
+</script>

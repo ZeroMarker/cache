@@ -1,0 +1,47 @@
+<csr:rule name="DHCEQ.Report" match="DHCEQ:Report">
+<csr:description>
+The <b>DHCEQ.Report</b> tag defines defines standard header info and initialisation for each page. For example javascript utilties, style sheet, theme and initialisation code
+</csr:description>
+<csr:action>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	//add by wl 2020-03-20 增加颜色参数 WL0065
+	 s ColTColor=##class(web.DHCEQCommon).GetSysInfo("902001")
+ 	 s DataColor=##class(web.DHCEQCommon).GetSysInfo("902002")
+ 	 s SumColor=##class(web.DHCEQCommon).GetSysInfo("902003")
+ 	 s Colorstr="&ColTColor="_ColTColor_"&DataColor="_DataColor_"&SumColor="_SumColor
+ 	 s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+ 	 if ChromeFlag=0
+ 	 {
+	 	d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4()  //润乾打印
+ 	 }
+ 	 s ReportFileName=$Get(%request.Data("ReportFileName",1))	;润乾报表名
+ 	 s CurMonth=$E($ZD(+$H,3),1,7)
+ 	 s ReportStyle="margin-top:5px;"
+ 	 s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990064")
+ 	 s ReportFileSrc="dhccpmrunqianreport.csp?reportName="_ReportFileName_Colorstr
+ 	 i PrintFlag=2 s ReportFileSrc=ReportFileSrc_"&PrintFlag=1"_Colorstr
+ 	 s ReportFilePrintSrc=""
+ 	 i PrintFlag=1 s ReportFilePrintSrc="dhccpmrunqianreport.csp?reportName="_ReportFileName_"&PrintFlag=1"_Colorstr
+	 // add by wl 2020-04-10 增加报表组所需参数
+	 s suffixName=""
+	 i ReportFileName'="" s suffixName=$p(ReportFileName,".",2)
+ 	 s reportType=""
+ 	 i suffixName="rpg"   d 
+ 	 .s ReportFileSrc=ReportFileSrc_"&reportType=G" 
+ 	 .s reportType="G"
+	</Script>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	Set pJQueryLibPath = "../scripts/dhceq/"
+	
+	Write "<script type='text/javascript' src='"_pJQueryLibPath_"common/rptcommon.js'>" 
+	Write "<"_"/script>"
+	Write !
+	
+	Write "<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'>" 
+	Write "<"_"/script>"
+	Write !
+	
+	</SCRIPT>
+	<INPUT TYPE="hidden" name="reportType" id="reportType" value=#(reportType)#><!--add by wl 2020-04-10 报表组查询调用参数-->
+</csr:action>
+</csr:rule>

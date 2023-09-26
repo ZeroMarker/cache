@@ -1,0 +1,74 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<server>
+s QXType=$g(%request.Data("QXType",1))
+s InStockListStr=$g(%request.Data("InStockListStr",1))
+s ShowType=$g(%request.Data("ShowType",1))
+s ShowFlag=$g(%request.Data("ShowFlag",1))
+s RequestLocDR=$g(%request.Data("RequestLocDR",1))
+s ProviderDR=$g(%request.Data("ProviderDR",1))
+s Provider=""
+i ProviderDR'="" s Provider=##class(web.DHCEQCommon).GetTrakNameByID("prov",ProviderDR)
+s BussType=$g(%request.Data("BussType",1))	;Mozy003005	1248930		2020-4-1
+s RequestLoc=##Class(web.DHCEQCommon).GetTrakNameByID("dept",RequestLocDR)
+</server>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel"  title="发票信息查询" data-options="fit:true,eqtitle:'maintitle'" style="width:100%;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;width:150%;height:90%;border-bottom:solid 1px #ccc;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cProvider" for="Provider">供应商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Provider" data-options="'component':'PLAT.L.Vendor'" value=#(Provider)#></div>
+							<div class="eq-table-td eq-table-label"><label id="cMinAmountFee" for="MinAmountFee">发票金额</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MinAmountFee"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMaxAmountFee" for="MaxAmountFee">至</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MaxAmountFee"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:120px;margin-right:20px">查询</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceNo" for="InvoiceNo">发票号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceNo"></div>
+							<div class="eq-table-td eq-table-label"><lable id="cStartDate" for="StartDate">开票日期</lable></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="StartDate"></div>
+							<div class="eq-table-td eq-table-label"><lable id="cEndDate" for="EndDate">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EndDate"></div>
+							<div class="eq-table-td eq-table-label"><label id="cRequestLoc" for="RequestLoc">管理科室</label></div>
+							<div class="eq-table-td eq-table-input"><input id="RequestLoc" class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" data-options="'component':'PLAT.L.Loc','paras':[{'name':'Type','type':'2','value':'0'},{'name':'CTLocAllFlag','type':'2','value':'Y'},{'name':'LocType','type':'2','value':'0101'}]," value=#(RequestLoc)#></div>						
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="invoicefinddatagrid" data-options="fit:true,border:false"></table>
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+            <input id="RequestLocDR" name="RequestLocDR" type="hidden" value=#(RequestLocDR)#>
+            <input id="ProviderDR" name="ProviderDR" type="hidden" value=#(ProviderDR)#>
+            <input id="BussType" name="BussType" type="hidden" value=#(BussType)#>	<!--Mozy003005	1248930		2020-4-1-->
+            <input id="InStockListStr" name="InStockListStr" type="hidden" value=#(InStockListStr)#>
+            <input id="ShowType" name="ShowType" type="hidden" value=#(ShowType)#>
+            <input id="ShowFlag" name="ShowFlag" type="hidden" value=#(ShowFlag)#>
+		</form>
+	</div>
+<script type='text/javascript' src='../scripts/dhceq/plat/invoicefind.js'></script>
+</body>
+
+</html>

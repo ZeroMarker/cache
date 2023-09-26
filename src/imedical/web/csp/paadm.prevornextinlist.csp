@@ -1,0 +1,119 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<!-- should be called in hidden frame -->
+<SERVER>
+ n obj,cls,qry,sqlqry,ListType,EpisodeID,logonDoctor,DocID,objDoc
+ s (cls,qry,sqlqry)=""
+ s (newEpisodeID,newPatientID,newmradm,newPAPMIEPRDescription)=""
+ s ListType=%request.Get("ListType")
+ s EpisodeID=%request.Get("EpisodeID")
+ ;w !,EpisodeID,!
+ s obj=##Class(websys.Component).OpenName("PAAdm.List")
+ i (obj) d obj.LoadTrans(),obj.%Close()
+ 
+ /*
+ !!!!somehow got to associate a query!!!!
+ and pass relevent search criteria along
+ ...??perhaps associate a list component with the menu??
+ This method is used by PAAdm.ListDocCurrent only - as far as I can tell
+ It has been changed for that specific query.  Although there are many field you can
+ search it will only work if you use the default care provider and donot have any other search criteria
+ */
+ 
+ //!!!!hack now only for the PAAdm.ListDocCurrent component!!!!
+ s logonDoctor=""
+ s DocID=##Class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
+ i DocID {
+ 	s objDoc=##Class(User.CTCareProv).%OpenId(DocID)
+ 	i objDoc {
+		s logonDoctor=objDoc.CTPCPDesc
+		d objDoc.%Close()
+	}
+ }
+ //s cls="web.PAAdm"
+ s cls="web.OEOrder"
+ s qry="FindDocCurrentAdm"
+ if cls'="",qry'="" {
+ 	;w "top.frames['eprmenu'].alert('"_cls_" : "_qry_"');",$c(13,10)
+	s rs=##Class(%ResultSet).%New(cls_":"_qry)
+	s paramcnt=rs.GetParamCount()
+	s x="i $$InvokeMethod^%apiOBJ(""%ResultSet"",rs,""Execute"""
+	f j=1:1:paramcnt {
+		; Convert based on derived type - dangerous... yep - perhaps we should only do this for dynamic queries
+		; perhaps it would be nice if the query published the type
+		s paramname=rs.GetParamName(j)
+		s val=$g(%request.Data(paramname,1))
+		i val="" i ##Class(%Collation).Upper(paramname)["DATE" s val=##Class(websys.Conversions).DateHtmlToLogical(val)
+		i val="" i ##Class(%Collation).Upper(paramname)["TIME" s val=##Class(websys.Conversions).TimeHtmlToLogical(val)
+		i paramname="Doctor" s val=logonDoctor
+		s x=x_","""_val_""""
+	}
+	s x=x_")"
+	d ##Class(websys.Conversions).expressionExecute(x)
+	s (got,match)=0
+	f  {
+		i 'rs.Next() s:'match (newEpisodeID,newPatientID,newmradm,newPAPMIEPRDescription)=""  q
+		q:got
+		if EpisodeID="" {
+			s newEpisodeID=rs.GetDataByName("ID")
+			s newPatientID=rs.GetDataByName("PatientID")
+			s newmradm=rs.GetDataByName("mradm")
+			s newPAPMIEPRDescription=rs.GetDataByName("PAPMIEPRDescription")
+ 			i ListType="P" s (newEpisodeID,newPatientID,newmradm,newPAPMIEPRDescription)=""
+			s got=1
+		} else {
+			if match,ListType="N" {
+				s newEpisodeID=rs.GetDataByName("ID")
+				s newPatientID=rs.GetDataByName("PatientID")
+				s newmradm=rs.GetDataByName("mradm")
+				s newPAPMIEPRDescription=rs.GetDataByName("PAPMIEPRDescription")
+				s got=1
+			}
+		i EpisodeID=rs.GetDataByName("ID") {
+				s match=1
+			} elseif (ListType="P") {
+				s newEpisodeID=rs.GetDataByName("ID")
+				s newPatientID=rs.GetDataByName("PatientID")
+				s newmradm=rs.GetDataByName("mradm")
+				s newPAPMIEPRDescription=rs.GetDataByName("PAPMIEPRDescription")
+			}
+			if match,ListType="P" {
+				s got=1
+			}
+		}
+	}
+	d rs.%Close()
+	
+ 	w "<SCRIPT>",$c(13,10)
+ 	if (newEpisodeID'="") {
+ 		s newPAPMIEPRDescription=##Class(%CSP.Page).QuoteJS(newPAPMIEPRDescription)
+ 		s ^ZJOHN("paadm","A1")="top.SetEpisodeDetails('"_newPatientID_"','"_newEpisodeID_"','"_newmradm_"',"_newPAPMIEPRDescription_");"
+		s ^ZJOHN("paadm","A2")="top.frames['TRAK_main'].location='epr.chart.csp?EpisodeID="_newEpisodeID_"';"
+ 		w "top.SetEpisodeDetails('"_newPatientID_"','"_newEpisodeID_"','"_newmradm_"',"_newPAPMIEPRDescription_");",$c(13,10)
+		w "top.frames['TRAK_main'].location='epr.chart.csp?EpisodeID="_newEpisodeID_"';",$c(13,10)
+	} elseif (ListType = "P") {
+		w "top.frames['eprmenu'].alert("_##Class(%CSP.Page).QuoteJS($p($g(t("NoPREV"),"No Previous Patient"),"^",1))_");",$c(13,10)
+	} else {
+ 		w "top.frames['eprmenu'].alert("_##Class(%CSP.Page).QuoteJS($p($g(t("NoNEXT"),"No Next Patient"),"^",1))_");",$c(13,10)
+ 	}
+ 	w "</SCRIPT>",$c(13,10)
+ } else {
+ 	w "<SCRIPT>",$c(13,10)
+ 	w "top.frames['epr.menu'].alert("_##Class(%CSP.Page).QuoteJS($p($g(t("NoQUERY"),"No Associated List"),"^",1))_");",$c(13,10)
+ 	w "</SCRIPT>",$c(13,10)
+ }
+</SERVER>
+</BODY>
+</HTML>

@@ -1,0 +1,133 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<BODY>
+
+<SERVER>
+	; ab 29.03.06 45135 - run cache code before calling the crystalpreview.asp, originally written by AI
+	
+	;s ^zab($zn,0)=1
+	n (%request,%session,%response,msg)
+	d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,websys.Report.Edit")
+
+	s a=$g(%request.Data("a",1)),report=$g(%request.Data("report",1)),rptid=$g(%request.Data("ID",1)),DischID=$g(%request.Data("DischID",1))
+	s prompt0=$g(%request.Data("prompt0",1)),prompt1=$g(%request.Data("prompt1",1)),prompt2=$g(%request.Data("prompt2",1))
+	s prompt3=$g(%request.Data("prompt3",1)),prompt4=$g(%request.Data("prompt4",1)),prompt5=$g(%request.Data("prompt5",1))
+	s prompt6=$g(%request.Data("prompt6",1)),prompt7=$g(%request.Data("prompt7",1)),prompt8=$g(%request.Data("prompt8",1))
+	s pathtoreports=$g(%request.Data("pathtoreports",1))
+	s reportmanagerdsn=$g(%request.Data("reportmanagerdsn",1))
+	s configmanagerdsn=$g(%request.Data("configmanagerdsn",1))
+	s urltocrystal=$g(%request.Data("urltocrystal",1))
+
+	; ab 6.11.06 60603 - if an external crystal URL is set, then use it. allows seperation of csp and asp files..
+	i urltocrystal'="" d
+	. i $e(urltocrystal,$l(urltocrystal))'="/" s urltocrystal=urltocrystal_"/"
+	. s pathtocsp=urltocrystal
+	; wherever we are (javascript, csp, etc), go back one level, then to csp directory.
+	i urltocrystal="" s pathtocsp="../csp/"
+
+	; check that the report is not "disabled"
+	s dis=0,PrintedExpression=""
+	i rptid d
+	. s dis=$lg(^websys.ReportD(+rptid),45)
+	. s PrintedExpression=$lg(^websys.ReportD(+rptid),34)
+	
+	;s ^zab($zn,1)=rptid_"^"_report_"^"_dis_"^"_urltocrystal
+	
+	; If the report is disabled, show an error and stop, otherwise preview the report.
+	i dis d
+	. w "<BR>&nbsp;"_$g(t("REPORT_DISABLED"))_"<BR><BR>"
+	. w "&nbsp;<a href=""javascript:window.close();"">"_$g(t("REPORT_CLOSE"))_"</a>"
+	i dis q
+	
+	; ab 20.10.06 58537 - run cache expression before loading crystal preview
+	s type=$lg(^websys.ReportD(+rptid),8)
+	i type="Cache+Crystal" d
+	. ; first set all variables from report
+	. f i=23:1:31 d
+	. . s PNAME((i-22))=$lg(^websys.ReportD(+rptid),i)
+	. f i=14:1:22 d
+	. . s PVALUE((i-13))=$lg(^websys.ReportD(+rptid),i)
+	. s p="",expr="" f  s p=$o(PNAME(p)) q:p=""  d
+	. . i PNAME(p)'="",PVALUE(p)'="" s expr="s "_PNAME(p)_"="_PVALUE(p) x expr
+	. ; run expression from report
+	. s expr=$lg(^websys.ReportD(+rptid),10)
+	. s retval=""
+	. i expr'="" w "<BR>"_$g(t("RUNNING_EXPR"))_"<BR>" x "s retval="_expr
+
+	w "<BR>"_$g(t("WAIT_LOADING"))
+
+
+	; Set up the PathToReports to be HTML-friendly : needs a terminating slash on the path, and all "\" must be doubles, so no encoding occurs. eg. "\\new" is "\new", "\new" is [newline]ew.
+	s delimChar=""
+	; The variable len is the length of the string pathtoreports.
+	s len=$l(pathtoreports)
+	; The variable lastChar is the last character of the string pathtoreports.
+	s lastChar=$e(pathtoreports,len,len)
+	; Loop through all of the pathtoreports string until we find a path separator - "\" or "/".
+	; From 1, by 1, until we get to the end.
+	f i=1:1:len {
+		; The variable sChar is the current character of the string pathtoreports.
+		s sChar=$e(pathtoreports,i)
+		; If sChar is a path separator character, set delimChar to be that character, and quit the loop.
+		i (sChar="\")!(sChar="/") s delimChar=sChar q
+	}
+	; Add the path separator character to the path string if required.
+	i lastChar'=delimChar s pathtoreports=pathtoreports_delimChar
+	; All "\" must be doubles, so no encoding occurs. eg. "\\new" is "\new", "\new" is [newline]ew.
+	i delimChar="\" {
+		; Firstly, change all slashes to a carats, so we don't confuse the loop below.
+		s tmpPath=$tr(pathtoreports,"\","^")
+		s newPath=""
+		; Loop through all but the last slash (now carat), and add "\\" in between each piece and on to the end.
+		f i=1:1:$l(tmpPath,"^")-1 {
+			s newPath=newPath_$p(tmpPath,"^",i)_"\\"
+		}
+		; Set the pathtoreports back to this newly created "double-slash" path.
+		s pathtoreports=newPath
+	}
+
+	
+	; ../csp/crystalpreview.asp?a=a&report=QHDS001_DischargeSummary.rpt&DischID=694&prompt0=694&prompt1=L&prompt2=&prompt3=&prompt4=&prompt5=&prompt6=&prompt7=&prompt8=&pathtoreports=\\gecko\w650\dev\web\custom\TRAKDEV\reports\&reportmanagerdsn=&configmanagerdsn=DEV-WEBSRC
+	s submitpath=pathtocsp_"crystalpreview.asp?a="_a_"&report="_report_"&DischID="_DischID_"&prompt0="_prompt0_"&prompt1="_prompt1_"&prompt2="_prompt2_"&prompt3="_prompt3_"&prompt4="_prompt4_"&prompt5="_prompt5_"&prompt6="_prompt6_"&prompt7="_prompt7_"&prompt8="_prompt8_"&pathtoreports="_pathtoreports_"&reportmanagerdsn="_reportmanagerdsn_"&configmanagerdsn="_configmanagerdsn
+	
+	;s ^zab($zn,2)=submitpath
+	
+	d ##Class(websys.Conversions).SaveRequest()
+	
+	;must do it this way as ServerSideRedirect wont load an .asp
+	
+	w "<script language=""JavaScript"">"
+
+	; Log 52857 - AI - 04-05-2006 : If we need to resize the opened "preview" window to "full screen", use the following.
+	;                             : Currently, the window is being opened in "full screen" size.
+	;w "window.moveTo(0,0);"
+	;w "window.resizeTo(screen.width,screen.height);"
+	; end Log 52857
+
+	s dsn=$s(reportmanagerdsn'="":reportmanagerdsn,1:configmanagerdsn)
+	d ##class(websys.PrintHistory).AddItem($g(%session.Data("LOGON.USERID")),rptid,"","",prompt0,prompt1,prompt2,prompt3,prompt4,prompt5,prompt6,prompt7,prompt8,PrintedExpression,"V","","","","","","","",$g(%session.Data("LOGON.CTLOCID")),"","","","","","",0,dsn)
+	
+	w "window.location.href="""_submitpath_""";"
+	w "</script>"
+	
+	q
+
+</SERVER>
+
+</BODY>
+
+
+
+</HTML>
+

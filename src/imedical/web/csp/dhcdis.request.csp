@@ -1,0 +1,418 @@
+<!-- dhcdis.request.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/plugins/font-awesome/font-awesome.min.css"/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcdis/request.js"></script>
+	<script Language="Javascript">
+		var EpisodeID="#(%request.Get("EpisodeID"))#" //医嘱ID 
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+		var wardId="#(%session.Get("LOGON.WARDID"))#"  //病区ID
+		var UserID="#(%session.Data("LOGON.USERID"))#"  //用户ID
+		var LocDesc="#(%session.Data("LOGON.CTLOCDESC"))#" //科室描述
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	</script>
+<style>
+/*#List > div{min-width:224px!important}*/
+#List .datagrid-row-selected{background-color:#D2EAFE}
+#List .panel-tool{right:25px}
+#List-test{
+	 SCROLLBAR-FACE-COLOR:#288BDB;
+	 SCROLLBAR-HIGHLIGHT-COLOR:#288BDB;
+	 SCROLLBAR-SHADOW-COLOR:#288BDB;
+	 SCROLLBAR-3DLIGHT-COLOR:#288BDB;
+	 SCROLLBAR-ARROW-COLOR:#288BDB;
+	 SCROLLBAR-TRACK-COLOR:#288BDB;
+	 SCROLLBAR-DARKSHADOW-COLOR:#288BDB;
+	 SCROLLBAR-BASE-COLOR:#288BDB;
+	}
+/* 病人卡片 */
+.celllabel{font-family: "微软雅黑";height:30px;color:#666;padding-left:5px;padding-top:3px;margin:0;line-height:25px;} 
+.celllabel h3{color:#000;font-size:14px;font-weight:normal;padding:0;margin:0;}
+.celllabel h3 span{font-size:14px; padding-right:5px;color:#666}
+.celllabel h4{color:#999;font-size:14px;font-weight:normal;padding:0,margin:0.3em;-webkit-margin-before:0.3em;-webkit-margin-after:0.3em;margin-bottom:2px;margin-top:2px;}
+.celllabel h4 span{font-size:14px;color:#000;padding-right:5px;margin:0;margin-bottom:2px;margin-top:2px;}
+/*列表宽度*/
+/*#List>td{width:196px!important}
+/*datagrid-header样式*/
+.datagrid-header td.datagrid-header-over {
+  background: #F4F6F5;
+  cursor: default;
+}
+.datagrid-header,.datagrid-htable{
+	 background-color:#F4F6F5!important;
+}
+/*输入框START #6BB7E6*/
+.input-mini{  
+	width:100px;
+	height:30px;
+	line-height: normal;
+	font-size:14px;
+	font-family: "微软雅黑";
+	color:#555;
+	border-radius:2px;
+	backgroud-color:#FFFFFF;
+	border:1px solid #40a2de;
+	padding-left:5px;
+}
+/*输入框获得焦点边框样式 #40A2DE*/
+.input-mini:focus{
+	box-shadow: 0 0 5px #40a2de;
+	border:1px solid #A4C6FD;
+}
+/*form 区域*/
+.form-input{width:50%;float:left}
+.form-row{margin-top:4px;width:100%;float:left}
+.form-input-div{padding-left:5px}
+.admname{  
+	width:130px;
+	height:30px;
+	line-height: normal;
+	font-size:14px;
+	font-family: "微软雅黑";
+	color:#555;
+	border-radius:2px;
+	backgroud-color:#FFFFFF;
+	border:1px solid #40a2de;
+	padding-left:2px;
+}
+.tabs-gray .tabs-header
+	{
+		border-radius:0px;
+		border:none;
+	}
+	.tabs-gray .tabs-panels
+	{
+		border-radius:0px;
+	}
+	.panel-body-noheader.panel-body
+	{
+		border-radius:0px;
+		
+	}
+	.datagrid-wrap
+	{
+		border:0px;
+	}
+	.pagination-page-list,.pagination-btn-separator
+	{
+		display:none;
+	}
+	.datagrid-header
+		{
+			border:0px;
+		}
+</style>
+</head>
+<body>
+<input type="hidden" id="EpisodeID">
+<input type="hidden" id="BedId">
+<div id="MainPanel" class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:''" border="false">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'west',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:4px 4px 4px 4px;width:230px;" id="List">
+				 <div class="hisui-panel" data-options="title:'患者列表',fit:true,headerCls:'panel-header-acc'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+				 	 <div class="hisui-layout" fit="true">
+					 	<div id="DisReqPatTb" toolbar="#histb" ></div>
+					 </div>
+				</div>
+			</div>
+			<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:4px 4px 4px 0px;" >
+				<div id="CenPanel" class="hisui-layout" fit="true" border="false">
+					<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style="height:300px;" border="false">
+						<div class="hisui-panel" data-options="title:'陪送申请',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-bottom:0px;border-radius:0px;">
+							<div class="hisui-layout" fit="true">
+								<table style="margin-top:5px">
+									<tr >
+										<td><span style="margin-left:85px;margin-right:5px;">接收科室</span> 	
+					        				<input id="RecLoc" class="hisui-combobox" style="max-width:130px;">
+					        			</td>
+									</tr>
+									<tr>
+										<td ><span style="margin-left:85px;margin-right:5px;">陪送日期</span> 	
+					        				<input id="StartDate" type="text" class="hisui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;"></input>
+					        			</td>
+					        		</tr>
+									<tr >
+										<td ><span style="margin-left:85px;margin-right:5px;" >陪送方式</span> 	
+					        				<input id="ReqWay" class="form-control" style="max-width:130px;">
+					        			</td>
+					        			
+					        		</tr>
+					        		<tr >
+										<td ><span style="margin-left:85px;margin-right:5px;">陪送时间</span> 	
+					        				<input id="Time" class="hisui-combobox" style="max-width:130px;" ></input>
+					        			</td>
+									</tr>
+									<tr>
+										<td ><span style="margin-left:85px;margin-right:5px;">陪送类型</span> 	
+					        				<input id="ReqType" class="hisui-combobox" style="max-width:130px;">
+					        			</td>
+					        		</tr>
+					        		<tr>
+										<td ><span style="margin-left:113px;margin-right:5px;">备注</span> 	
+					        				<input id="note" type="text" class="textbox" placeholder="请录入" style="width:125px;"></input>
+					        			</td>
+									</tr>
+									<tr>
+										<td><span style="margin-left:85px;margin-right:5px;">陪送人员</span>
+					        			<input id="Escortper" class="hisui-combobox" style="max-width:130px;"></td>
+									</tr>
+									<tr>
+										<td><a href="#" class="hisui-linkbutton" id="save" data-options="iconCls:'icon-w-save'" style="margin-left:150px">保存</a></td>
+									</tr>
+								</table>		
+							</div>
+						</div>
+					</div>
+					<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="border:none;width:100%;padding-top:0px">
+						<div class="hisui-layout" fit="true">
+							<div class="hisui-tabs tabs-gray" fit="true" data-options="tabWidth:60" id="tab">
+								<div title="医嘱" >
+				            		<table id="DisReqOrdTb" class="hisui-datagrid" fit="true" border="false" title="" 
+										data-options="
+										headerCls:'panel-header-gray',
+										toolbar:'#toolbararc',
+								    	rownumbers:true,
+								    	pageSize:100,
+		    							pageList:[100,200],
+								    	method:'get',
+								    	fitColumns:true,
+								    	//singleSelect:true,
+								    	pagination:true,
+								    	//nowrap: false,
+								    	//onDblClickRow:onDbClickRow, 
+								    	onSelect:onClickOrdRow,
+								    	onUnselect:onUnClick,
+										url:'dhcapp.broker.csp?ClassName=web.DHCDISRequest&MethodName=ListOrd'">
+										<thead>
+											<tr>
+												<th data-options="field:'arcItmDesc',width:150,editor:{type:'validatebox',options:{required:true}}">项目描述</th>
+												<th data-options="field:'OrderExeDate',width:150,editor:{type:'validatebox',options:{required:true}}">检查时间</th>
+												<th data-options="field:'recLoc',editor:{type:'validatebox',options:{required:true}}">检查科室</th>
+												<th data-options="field:'recLocID',hidden:true,width:150,editor:{type:'validatebox',options:{required:true}}">科室ID</th>
+												<th data-options="field:'ID',hidden:true">id</th>
+											</tr>
+										</thead>
+								</table>
+				        	 </div>
+				        	 <div title="其他">
+				            	<table id="DisReqOthTb" class="hisui-datagrid" fit="true" border="false" title=""
+									data-options="
+									headerCls:'panel-header-gray',
+									toolbar:'#toolbarOth',
+							    	rownumbers:true,
+							    	pageSize:100,
+	    							pageList:[100,200],
+							    	method:'get',
+							    	fitColumns:true,
+							    	singleSelect:true,
+							    	pagination:true,
+							    	nowrap: false,
+							    	//onDblClickRow:onDbClickRow, 
+							    	onSelect:onClickOthRow,
+							    	onUnselect:onUnClicki, 
+									url:'dhcapp.broker.csp?ClassName=web.DHCDISRequest&MethodName=ListLocItem'">
+									<thead>
+										<tr>
+											<th data-options="field:'LICode',hidden:true">未选项目</th>
+											<th data-options="field:'LIDesc',width:150,editor:{type:'validatebox',options:{required:true}}">项目描述</th>
+											<!-- <th data-options="field:'LIlocDesc',width:150,editor:{type:'validatebox',options:{required:true}}">接收科室</th> -->
+											<th data-options="field:'ID',hidden:true">id</th>
+										</tr>
+									</thead>
+								</table>	
+							  </div>
+			        		</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'east',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style='width:740px;'>
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'north',border:false,collapsible:false" style="padding:4px 4px 0px 0px;height:85px;">
+						<div class="hisui-panel" data-options="title:'陪送申请确认',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-bottom-style:dashed;border-radius:0px;">
+							<div class="hisui-layout" fit="true">	
+								<table style="margin-top:5px">
+									<tr>
+										<td ><span style="margin-left:5px;margin-right:5px;" >开始日期</span> 	
+							        	<input id="StrDateS" type="text" class="hisui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;"></td>
+										<td ><span style="margin-left:5px;margin-right:5px;" >截至日期</span> 	
+							        	<input id="EndDateS" type="text" class="hisui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;height:30px"></td>
+										<td ><span style="margin-left:5px;margin-right:5px;" >状态</span> 	
+							        	<input id="AffirmStatusS" class="hisui-combobox" style="max-width:130px;"></input></td>
+										<td style="padding-left:15px;display:none"><span>申请科室</span>  	
+							        	<input id="ApplayLocS" class="hisui-combobox" style="max-width:130px;height:30px;display:none"></input ></td>
+							        	<td style="padding-left:15px;display:none"><span>验证码</span> 	
+							        	<input id="TaskIDS" type="text" class="input-mini" placeholder="请录入" style="width:130px;display:none"></td>
+										<td ><a style="margin-left:5px" href="#" class="hisui-linkbutton" id="searchBtn" data-options="iconCls:'icon-w-find'" >查询</a></td>
+										<td style="padding-left:15px;display:none"><span>住&nbsp;&nbsp;院&nbsp;&nbsp;号</span>  	
+							        	<input id="HosNoS" type="text" class="input-mini" placeholder="请录入" style="width:130px;display:none"></td>
+							        	<td style="padding-left:15px;display:none"><span>登记号</span> 	
+							        	<input id="RegNoS" type="text" class="input-mini" placeholder="请录入" style="width:130px;display:none"></td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:0px 4px 0px 0px;">
+						<div class="hisui-panel" data-options="title:'',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">
+	    					<table id="cspAffirmStatusTb" toolbar="#bar" class="hisui-datagrid" style='height:350px;border:0px;'>
+	    	 				</table> 
+	    	 			</div>
+    				</div>
+    				<div data-options="region:'south',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:4px 4px 4px 0px;">
+    					<div class="hisui-panel" data-options="title:'申请明细',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:2px 0px 0px 0px ;height:180px;border:1px solid #ccc;border-top:0;border-radius:0px;">
+	 		 				<table id="cspAffirmStatusCarefulTb" class="hisui-datagrid"
+	 		 				data-options="toolbar:''" toolbar="#toolbardetail" style="height:145px;">
+	    					</table>
+	    				</div>
+					</div> 
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="histb">
+	<div>
+		<span style="margin-left:8px;">门急诊患者<input id="Adm" class="hisui-checkbox" name="Adm" type="checkbox" style="margin-left:5px;" value="0"></input></span>
+	</div>
+	<div style="margin-top:5px;" id="AdmLoc">
+		<span style="margin-left:8px;margin-right:5px;">就诊科室</span> 
+		<input id="VisLoc" class="hisui-combobox" style="max-width:130px;"></input > 
+	</div>
+	<div style="margin-top:5px;" id="AdmDate">
+		<span style="margin-left:8px;margin-right:5px;">就诊日期</span> 
+		<input id="VisDate" class="hisui-datebox" style="margin-left:10px;max-width:130px;"></input > 
+	</div>
+	<div style="margin-top:5px;" id="PatName">
+		<span style="margin-left:8px;">患者姓名</span> 
+		<input id="AdmName" type="text" placeholder="请录入" class="textbox" style="margin-left:5px;max-width:125px;"></input > 
+	</div>
+	<div style="margin-top:5px;" id="PatRegNo">
+		<span style="margin-left:22px;">登记号</span> 
+		<input id="PatNo" type="text" placeholder="请录入" class="textbox" style="margin-left:5px;max-width:125px;"></input > 
+	</div>
+	<div style="margin-top:5px;display:none;" id="SearStDate">
+		<span style="margin-left:8px;margin-right:5px;">开始日期</span> 
+		<input id="StDate" class="hisui-datebox" style="margin-left:10px;max-width:130px;"></input > 
+	</div>
+	<div style="margin-top:5px;display:none;" id="SearEndDate" >
+		<span style="margin-left:8px;margin-right:5px;">结束日期</span> 
+		<input id="EndDate" class="hisui-datebox" style="margin-left:10px;max-width:130px;"></input > 
+	</div>
+	<div style="margin-top:5px;display:none;" id="SeaPatNo">
+		<span style="margin-left:22px;">登记号</span> 
+		<input id="PatNoSearch" type="text" placeholder="请录入" class="textbox" style="margin-left:5px;max-width:125px;"></input > 
+	</div>
+	<div style="margin-left:60px;margin-top:5px;">
+		<a id="search" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >查询</a>
+	</div>
+</div>
+<div id="bar" >
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+			<td><a id="exeBtn" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" >完成确认</a></td>
+			<td><a class="hisui-linkbutton" data-options="iconCls:'icon-paper-info',plain:true" id="detailsbtn">详情</a></td>
+			<td><a id="undoBtn" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-left-top',plain:true" >撤销申请</a></td>
+			<td><a id="requestCopy" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" >复制</a></td>
+		</tr>
+	</table>
+</div>
+<div id="toolbardetail" class="toolbar" style="height:0">
+	<table cellspacing="0" cellpadding="0" >
+		<tr >
+	 		<td align="center" style="width:100px;color:#38AAFF"></td>
+		</tr>
+	</table>
+</div>
+<div id="toolbarOth" class="toolbar" style="height:2px;">
+	<table cellspacing="0" cellpadding="0" >
+		<tr >
+	 		<td align="center" style="width:100px;color:#38AAFF"></td>
+		</tr>
+	</table>
+</div>
+<div id="toolbararc" class="toolbar" style="height:2px;">
+	<table cellspacing="0" cellpadding="0" >
+		<tr >
+	 		<td align="center" style="width:100px;color:#38AAFF"></td>
+		</tr>
+	</table>
+</div>
+<!-- 复制修改时间弹出 -->
+<div id="copyTimePanel" >
+	<!--数据列区域-->
+	<div style="width:480px;margin-top:5px;margin-left:5px;">
+		<table>
+			<tr>
+				<th><span style="margin-left:20px;margin-right:10px;">接收科室</span></th>
+				<th><input id="CopyRecLoc" class="hisui-combobox" style="width:130px;"></input > </th>
+				<th ><span style="margin-left:20px;margin-right:10px;">陪送日期</span></th>
+				<th ><input id="CopyStartDate" class="hisui-datebox textbox" data-options="showSeconds:false,editable:false" style="width:130px;"></th>
+			</tr>
+			<tr>
+				<th ><span style="margin-left:20px;margin-right:10px;">陪送方式</span></th>
+				<th ><input id="CopyReqWay" class="form-control" style="width:130px;" ></input></th>
+				<th ><span style="margin-left:20px;margin-right:10px;">陪送时间</span></th>
+				<th ><input id="CopyTime" class="hisui-combobox" style="width:130px;"  ></input></th>
+			</tr>
+			<tr>
+				<th ><span style="margin-left:20px;margin-right:10px;">陪送类型</span></th>
+				<th ><input id="CopyReqType" class="hisui-combobox" style="width:130px;"></input></th>
+				<th ><span style="margin-left:48px;margin-right:10px;">备注</span></th>
+				<th ><input id="CopyNote" type="textbox"  placeholder="请录入" style="width:130px;"></th>
+			</tr>
+			<tr>
+				<th><span style="margin-left:20px;margin-right:10px;">陪送人员</span></th> 	
+				<th><input id="EsCopyper" class="hisui-combobox" style="max-width:130px;"></th>
+			</tr>
+		</table>
+			<div style="margin:20px 0px 0px 132px;">
+				<button class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'" onclick="javascript:SureRequestCopy()">确认</button>
+				<span style="margin-left:20px;"><button class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="javascript:CancleRequestCopy()">取消</button></span>
+			</div>
+			<!-- <div style="margin:20px 0px 0px 120px;"><a href="#" class="hisui-linkbutton" onclick="javascript:SureRequestCopy();">确认</a></div> -->
+		</div>
+</div>
+<div style="display:none">
+	<table>
+			<tr>
+				<th><span style="margin-left:20px;margin-right:10px;">登记号</span></th>
+				<th><input id="regNo" type="textbox"  style="width:130px;"></input > </th>
+				<th ><span style="margin-left:20px;margin-right:10px;">病区ID</span></th>
+				<th ><input id="wardId"  type="textbox"  style="width:130px;"></th>
+			</tr>
+			<tr>
+				<th ><span style="margin-left:20px;margin-right:10px;">床ID</span></th>
+				<th ><input id="BedId"  type="textbox"  style="width:130px;"></input></th>
+				<th ><span style="margin-left:20px;margin-right:10px;">床号</span></th>
+				<th ><input id="bedNo"  type="textbox"  style="width:130px;" ></input></th>
+			</tr>
+			<tr>
+				<th ><span style="margin-left:20px;margin-right:10px;">病区</span></th>
+				<th ><input id="ward"  type="textbox"  style="width:130px;"></input></th>
+				<th ><span style="margin-left:48px;margin-right:10px;">验证码</span></th>
+				<th ><input id="jobId" type="textbox"  placeholder="请录入" style="width:130px;"></th>
+			</tr>
+		</table>
+</div>
+</body>
+</html>
+

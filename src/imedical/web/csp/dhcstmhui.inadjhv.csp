@@ -1,0 +1,105 @@
+﻿<!--库存调整-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	s gInadjId=$Get(%request.Data("gInadjId",1))
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</HEAD>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+		<table id="MainConditions" class="Condition">
+			<input id="RowId" name="RowId" type="hidden">
+			<tr>
+				<td>制单科室</td>
+				<td><input id="AdjLoc" name="AdjLoc" class="textbox hisui-combobox"></input></td>
+				<td>调整单号</td>
+				<td><input id="INAdjNo" name="INAdjNo" class="textbox hisui-textbox" disabled="true"></input></td>
+				<td>制单人</td>
+				<td><input id="User" name="User" class="textbox hisui-combobox" data-options="disabled:true"></input></td>
+				<td><label>完成标志</label><input id="INADCompleted" name="INADCompleted" class='hisui-checkbox' data-options="disabled:true,boxPosition:'right'" type="checkbox" value="Y">
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+			</tr>
+			<tr>
+				<td>类组</td>
+				<td><input id="ScgStk" name="ScgStk" class="hisui-stkscgcombotree textbox"></input></td>
+				<td>制单日期</td>
+				<td><input id="Date" name="Date" class="hisui-datebox textbox" data-options="disabled:true"></input></td>
+				<td valign="top">备注</td>
+				<td valign="top" rowspan="2"><textarea id="Remark" rows="4" cols="10" name="Remark" class="textbox"></textarea>
+				<td></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:88px">完成</a></td>
+			</tr>
+			<tr>
+				<td>调整原因</td>
+				<td><input id="ForAdjustReasonId" name="ForAdjustReasonId" class="hisui-combobox textbox"></td>
+				<td>制单时间</td>
+				<td><input id="Time" name="Time" class="textbox hisui-textbox" disabled="true"></input></td>
+				<td colspan="3"></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton" style="width:88px">取消完成</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="INAdjMGrid"></table>
+	</div>
+
+	<csp:Include Page="dhcstmhui.incitmbatwindow.csp">
+
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-card'" title="查询库存调整单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="" data-options="region:'north',border:false">
+				<table id="FindConditions" class="Condition">
+					<tr>
+						<td>制单科室</td>
+						<td><input id="FAdjLoc" name="AdjLoc" class="textbox hisui-combobox"></input></td>
+						<td>起始日期</td>
+						<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></inpput></td>
+						<td>截止日期</td>
+						<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></input></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="FComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">选取</a></td>
+					</tr>
+					<tr>
+						<td >完成状态</td>
+						<td><input id="Complate" name="Complate" class='textbox hisui-simplecombobox'></input></td>
+						<td><input id="Audit" type="hidden" name="Audit" value="N" ></input></td>
+						<td></td><td></td><td></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="GridPadding" data-options="region:'west',border:false" style="padding-top:0;width:500px;">
+				<div class="hisui-panel" data-options="fit:true,iconCls:'icon-paper',title:'调整单',headerCls:'panel-header-gray'">
+					<table id="INAdjMainGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-top:0;padding-left:0;">
+				<div class="hisui-panel" data-options="fit:true,iconCls:'icon-paper',title:'调整单明细',headerCls:'panel-header-gray'">
+					<table id="INAdjDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INAdj/InAdjCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/IncItmBatWindow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INAdj/FindAdj.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INAdj/InAdjPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INAdj/INAdjhv.js"></script>
+</body>
+</HTML>

@@ -1,0 +1,206 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+		<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+		<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script> 
+		<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+		
+		<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+		
+		<style type="text/css">
+			.spanColor
+			{
+				color: black;
+			}
+			.spanColorLeft
+			{
+				color: #666;
+			}
+			
+			#divInfo
+			{
+				top: 8; position: relative; height:27;  font-size:12px; text-align: left; border-style: none;
+			}
+			#divInfoParent
+			{
+				height:27; background-image: url('../scripts/epr/Pics/title.gif'); background-attachment: fixed; border-style: none;			
+			}
+			#divState
+			{
+				top: 3; position: relative; background-color: cdd4dc; color: black; font-size: 12; height: 20; border-style: none;
+			}
+			.divStateParent
+			{
+				background-color: cdd4dc; height:24; border-style: none;
+			}
+		</style>
+		
+		<script language="cache" runat="server">
+			//Session信息
+			set userid=$g(%request.Data("UserId",1),"")
+			set ctlocid=$g(%request.Data("CtlocId",1),"")
+			set ssgroupid=$g(%request.Data("GroupId",1),"")
+			set:userid="" userid=%session.Get("LOGON.USERID")
+			
+			//if (%session.Get("LOGON.USERID") = "")
+			if (userid = "")
+			{
+				set %response.ServerSideRedirect = "epr.newfw.sessiontimedout.csp"
+			}
+			//set userid = %session.Get("LOGON.USERID")
+			set:ctlocid="" ctlocid=%session.Get("LOGON.CTLOCID")
+			set:ssgroupid="" ssgroupid = %session.Get("LOGON.GROUPID")
+			
+			//患者信息
+			set episodeID = $Get(%request.Data("EpisodeID",1),"")
+			set patientID = $Get(%request.Data("PatientID",1),"")
+			
+			//病历模板信息
+			s templateDocID = $Get(%request.Data("TemplateDocID",1),"")
+			s printDocID = $Get(%request.Data("PrintDocID",1),"")
+			s chartItemID = $Get(%request.Data("ChartItemID",1),"")
+			
+			//病历实例数据信息
+			set instanceDataID = $Get(%request.Data("InstanceDataID",1))
+			if (instanceDataID = "-1")
+			{
+				s instanceDataID = ""
+			}
+			set eprNum = $Get(%request.Data("EPRNum",1),"-1")
+			if (eprNum = "")
+			{
+				s eprNum = "-1"
+			}
+			
+			// add by liuyh 2012-08-10 添加临床上报报告状态、报告ID
+			set RepStatus = $Get(%request.Data("RepStatus",1))
+			set ReportID = $Get(%request.Data("ReportID",1))
+			
+			set SubjectID = $Get(%request.Data("SubjectID",1))
+			
+			set profileID = chartItemID
+			
+			set categoryID = "", templateID = ""
+			if (templateDocID '= "")
+			{
+				s objEPRTemplate = ##class(EPRmeta.EPRTemplate).%OpenId(templateDocID)	
+				s categoryID = objEPRTemplate.BindTemplateCategoryID	
+				s templateID = objEPRTemplate.BindTemplateID
+				s objEPRTemplate = ""
+			}
+			
+			set templateName = "无标题"
+			if (templateID '= "")
+			{
+				s objTemplate = ##Class(EPRmeta.Template).%OpenId(templateID)
+				s templateName = objTemplate.Name
+				s objTemplate = ""
+			}
+			
+			set categoryType = ""
+			if (categoryID '= "")
+			{
+				s objTemplateCategory = ##Class(EPRmeta.TemplateCategory).%OpenId(categoryID)
+				s categoryType = objTemplateCategory.CategoryType
+				s objTemplateCategory = ""
+			}
+			
+			set printTemplateID = ##class(web.eprajax.ajaxCreateEprEdit).GetBindPrintTemplateID(printDocID)
+			
+			//权限
+			s arr = ##class(web.eprajax.ajaxGetPower).GetPowerArray(userid, episodeID, patientID, ctlocid, templateID, ssgroupid, categoryID, printDocID, eprNum)
+			
+			//病历当前状态
+			s currState = ##class(EPRinstance.EPRLogs).GetEPRStatus(episodeID, printDocID, eprNum)
+			
+			//日志记录状态  		
+			s divStateServer = ##class(EPRinstance.EPRLogs).GetCurrStatus(episodeID, printDocID, eprNum)
+			
+			//自动保存
+			s autoSaveStr = ##class(EPRmeta.SysOption).GetOptionValueByName("AutoSaveTime")
+			
+			//字体
+			s fontSize = ##class(EPRmeta.SysOption).GetOptionValueByName("DefaultFontSize")
+			
+			s iframeScript = ""
+			if (instanceDataID = "")
+			{
+				//新建病历
+				s iframeScript = "<iframe id='eprlisteditordll' name='eprlisteditordll' scrolling='no' frameborder='0' src='epr.newfw.eprlisteditordll.csp?PatientID="_patientID_"&EpisodeID="_episodeID_"&TemplateID="_templateID_"&CategoryID="_categoryID_"&CategoryType="_categoryType_"&TemplateName="_templateName_"&ChartItemID="_chartItemID_"&ProfileID="_profileID_"&prtDocID="_printDocID_"' style='WIDTH:100%; HEIGHT:100%;'></iframe>"
+			}
+			else
+			{
+				//打开病历
+				s iframeScript = "<iframe id='eprlisteditordll' name='eprlisteditordll' scrolling='no' frameborder='0' src='epr.newfw.eprlisteditordll.csp?InstanceDataID="_instanceDataID_"&ProfileID="_profileID_"&EpisodeID="_episodeID_"&CategoryID="_categoryID_"&prtDocID="_printDocID_"&EPRNum="_eprNum_"&PatientID="_patientID_"&TemplateID="_templateID_"' style='WIDTH:100%; HEIGHT:100%'></iframe>"
+			}
+		</script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	
+	<body>  
+	  <div id="centerTabList" style="overflow:auto;width:100%;height:100%"></div>  
+	</body>
+	
+	<script type="text/javascript">	
+		var pateintID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		
+		// add by liuyh 2012-08-10 添加临床上报报告状态、ID
+		var RepStatus = '#(RepStatus)#';
+		var ReportID = '#(ReportID)#';
+		
+		var SubjectID = '#(SubjectID)#';
+			
+		var chartItemID = '#(chartItemID)#';
+		var printTemplateDocId = '#(printDocID)#';
+		
+		var templateDocID = '#(templateDocID)#';
+		
+		var EPRNum = '#($Get(%request.Data("EPRNum",1),"-1"))#';
+		
+		var userID = '#(userid)#';
+		var happenDate = '';
+		var happenTime = '';
+		
+		var templateID = '#(templateID)#';
+		var bindPrnTemplateID = '#(printTemplateID)#';
+		
+		var canView = '#(arr.GetAt("canView"))#';
+		var canSwitchTemplate = '#(arr.GetAt("canSwitchTemplate"))#';
+		var canSave = '#(arr.GetAt("canSave"))#';
+		var canCommit = '#(arr.GetAt("canCommit"))#';
+		var canReference = '#(arr.GetAt("canReference"))#';
+		
+		var interval;
+		
+		//病历当前状态 
+		var currState = '#(currState)#';
+		
+		//切换时是否提示
+		var isSave = true;
+		
+		//病历当前状态
+		var divStateServer = '#(divStateServer)#';
+		
+		//自动保存时间
+		var autoSaveStr = '#(autoSaveStr)#';
+		var autoSaveTime = parseInt(autoSaveStr, 10);
+		
+		//病人信息字体
+		var fontSize = '#(fontSize)#' + "pt";
+			
+		var _IframeScript = "#(iframeScript)#";
+	</script>
+	<script type="text/javascript" src="../scripts/dhcmed/ninf/aim/dhcmedpubliccentertablistdetail.js"></script>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!--配液排批
+	csp:dhcpha.pivas.batupdate.csp
+	js:scripts/pharmacy/pivas/batupdate.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css"></link>
+    <STYLE>
+        .pivas-toolbar-context {
+            float: right;
+            line-height: 35px;
+            margin-top: -2px;
+            background: #f4f6f5;
+            color:#509de1
+        }
+        
+        .pivas-toolbar-context>div {
+            float: left;
+            border-left: 1px solid #dddddd;
+            padding: 0px 10px;
+        }
+    </STYLE>
+</HEAD>
+<body style="overflow:hidden;">
+	<div class="dhcpha-win-mask">
+		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
+	</div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'north',title:'配液排批',iconCls:'icon-panel-bat-update',split:true,headerCls:'panel-header-gray',collapsible:false" class="dhcpha-north-r3">
+                    <table class="dhcpha-north-tbl">
+                        <tr>
+                            <td>
+                                <label for="dateStart">用药开始日期</label>
+                                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbLocGrp">科室组</label>
+                                <input id="cmbLocGrp" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbPivaCat">配液大类</label>
+                                <input id="cmbPivaCat" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbPriority">医嘱优先级</label>
+                                <input id="cmbPriority" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbPack">打包类型</label>
+                                <input id="cmbPack" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbUpdated">排批状态</label>
+                                <input id="cmbUpdated" type="text" />
+                            </td>
+                            <td>
+                                <!--a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false">查询</a-->
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="dateEnd">用药结束日期</label>
+                                <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbWard">病区</label>
+                                <input id="cmbWard" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbWorkType">工作组</label>
+                                <input id="cmbWorkType" type="text" />
+                            </td>
+                            <td colspan=2>
+                                <label for="cmgIncItm">药品</label>
+                                <input id="cmgIncItm" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbPrt">打签状态</label>
+                                <input id="cmbPrt"/>
+                            </td>
+                            <td>
+                                <!--a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false">查询</a-->
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align:left">
+                                <div id="DivBatNo" style="float:left">　　　　批次</div>
+                            </td>
+							<td colspan="3" style="text-align:left">
+								<div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 4px;">
+									<img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;"></img>
+								　	【 排 批 】 处 理 所 有 分 页 勾 选 数 据 ，【 其 他 操 作 】 处 理 当 前 页 。
+								</div>
+							</td>
+                            <td>
+                                <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false">查询</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div data-options="region:'center'" border="false">
+                    <div class="hisui-layout" fit="true" border="false">
+                        <div data-options="region:'west',split:true,headerCls:'panel-header-gray',width:300" border="false" style="border-radius: 4px;">
+                            <div id="tabsOne" class="hisui-tabs" fit="true">
+                                <div data-options="title:'病区列表',selected:true" border="false">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridWard"></table>
+                                        </div>
+                                        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px;">
+                                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFindDetail">查询</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-options="title:'按登记号'">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridAdm"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-options="region:'center'" class="dhcpha-hisui-border"  style="border-radius: 4px;">
+                            <div id="gridOrdExe" data-options="fit:true">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridOrdExeBar" style="height:32px;padding-top:2px;padding-right:0px;">
+        <div style="float:left;padding-top:2px;">
+           	<div style="float:left">
+				<a class="hisui-linkbutton" plain="true" iconCls='icon-all-select' id="btnSelectAll">全选</a>
+				<a class="hisui-linkbutton" iconCls='icon-all-unselect' plain="true" id="btnUnSelectAll">全消</a>
+        	</div>
+        	<div class="datagrid-btn-separator"></div>   
+        	<div style="float:left">
+				<a class="hisui-linkbutton" plain="true" iconCls='icon-ok' id="btnSave">排批</a>
+				<a class="hisui-linkbutton" iconCls='icon-btn-pack' plain="true" id="btnPack">打包</a>
+				<a class="hisui-linkbutton" iconCls='icon-edit' plain="true" id="btnUpdBat">修改批次</a>
+        	</div>
+        	<div class="datagrid-btn-separator"></div>
+			<div style="float:left">
+				<a id="mcancel-toolbar" class="hisui-menubutton"  data-options="menu:'#mmcancel-toolbar',iconCls:'icon-undo',otherCls:'menubutton-toolbar'">取消</a>
+				<div id="mmcancel-toolbar">
+					<div id="btnUnPack" data-options="iconCls:'icon-btn-pack-cancel'">取消打包</div>
+					<div id="btnUnSave" data-options="iconCls:'icon-undo'">取消排批</div>
+				</div>
+			</div>
+        </div>
+        <div class="pivas-toolbar-context">
+        </div>
+    </div>
+
+    <div id="gridAdmBar">
+        <div>
+            <div>
+            	<input id="txtPatNo" class="hisui-validatebox" placeholder="登记号..." style="height:30px" />
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/batupdate.js"></script>
+</body>
+
+</HTML>

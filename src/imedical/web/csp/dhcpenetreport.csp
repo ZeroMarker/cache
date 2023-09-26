@@ -1,0 +1,120 @@
+<!-- DHCPENetReport.csp 
+	 dhcpenetreport.csp
+-->
+<!-- 
+/// ´´½¨Ê±¼ä		2006.10.31
+/// ´´½¨ÈË		xuwm 
+/// Ö÷Òª¹¦ÄÜ		ÊäÈë¸öÈËÌå¼ì±¨¸æ
+/// ¹ØÁªÎÄ¼þ		DHCPEReport.js,DHCPEReport.css
+/// ×îºóÐÞ¸ÄÊ±¼ä	
+/// ×îºóÐÞ¸ÄÈË	 
+/// -->
+
+<HTML>
+<HEAD>
+<!-- Ç¿ÖÆÍøÒ³²»±»´æÈëCacheÖÐ 
+<meta http-equiv="pragma" content="no-cache">
+-->
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"/>
+
+<!-- Ö÷Ò³ÖÆ×÷ËùÊ¹ÓÃµÄÎÄ×Ö¼°ÓïÑÔISO-8859-1
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+ -->
+ <meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<TITLE>Ìå¼ì±¨¸æ</TITLE>
+<style type="text/css">
+body{
+	margin:0.2cm 0.3cm 0cm 0.3cm;
+	text-align:center;
+}
+</style>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ 	s RegNo=$g(%request.Data("PatentID",1))
+	s DateFrom = $g(%request.Data("StDate",1))
+	s DateTo = $g(%request.Data("EndDate",1))
+</Script>
+
+<!--
+<BODY
+	onmouseup=document.selection.empty()
+	oncontextmenu="return false" 
+	onselectstart="return false"
+	ondragstart="return false" 
+	onbeforecopy="return false"
+	oncopy=document.selection.empty()
+	onselect=document.selection.empty()
+	>
+-->
+<BODY>
+<div id="DPatInfo">
+<TABLE class=tblList id="tList" Name="tList" CELLSPACING=1 width="100%">
+	<THEAD>
+	<TH style='display:none;'></TH>
+	<TH id=3  NOWRAP>²é¿´±¨¸æ</TH>
+	<TH id=3  NOWRAP>µÇ¼ÇÈÕÆÚ</TH>
+	<TH id=3  NOWRAP>µÇ¼ÇºÅ</TH>
+	<TH id=4  NOWRAP>ÐÕÃû</TH>
+	<TH id=7  NOWRAP>ÐÔ±ð</TH>
+	<TH id=6  NOWRAP>ÉúÈÕ</TH>
+	</THEAD>
+	
+	<script language=Cache runat=server>
+		s iLLoop=1
+		s RowType="RowOdd"
+		
+		s:(""=RegNo) RegNo="00010001"
+		s PatName=""
+		s DateFrom = ""
+		s DateTo = ""
+		s ReportStatus = "=^NA^NoAudit^UNCHECKED^CHECKED^Audited^A^PRINTED^P^SEND^S" //Ä¬ÈÏÖ»²éÑ¯ÒÑÉóºË±¨¸æ
+	</script>
+	
+	<csp:query name=rs classname="web.DHCPE.Report" queryname="SearchIReport" P1=#(RegNo)# P2=#(PatName)# P3=#(DateFrom)# P4=#(DateTo)# P5=#(ReportStatus)#>
+	
+	<csp:while condition="rs.Next()">
+
+	<TR class=#(RowType)# NOWRAP>
+		<TD style='display:none;'>
+			<input id="RPT_RowIddz#(iLLoop)#" name="RPT_RowIdz#(iLLoop)#" type="hidden" value="#(rs.GetDataByName("RPT_RowId"))#">
+			<input id="RPT_IADM_DRz#(iLLoop)#" name="RPT_IADM_DRz#(iLLoop)#" type="hidden" value="#(rs.GetDataByName("RPT_IADM_DR"))#">
+			<input id="RPT_PAADM_DRz#(iLLoop)#" name="RPT_PAADM_DRz#(iLLoop)#" type="hidden" value="#(rs.GetDataByName("RPT_PAADM_DR"))#">
+		</TD>
+		<TD align="center"><A id="ShowReportz#(iLLoop)#" name="ShowReportz#(iLLoop)#" HREF="#" onClick="websys_lu('DHCPENetReportDetail.csp?PatentID=#(rs.GetDataByName("RPT_PAADM_DR"))#',false,'height=500,width=900,left=50');" tabIndex="0">&nbsp;&nbsp;&nbsp;&nbsp;<img SRC="../images/websys/edit.gif" BORDER="0">&nbsp;&nbsp;&nbsp;&nbsp;</A></TD>
+		<TD><label id="RPT_IADM_RegDatez#(iLLoop)#" name="RPT_IADM_RegDatez#(iLLoop)#">#(rs.GetDataByName("RPT_IADM_RegDate"))#</label></TD>
+		<TD><label id="RPT_RegNoz#(iLLoop)#" name="RPT_RegNoz#(iLLoop)#">#(rs.GetDataByName("RPT_RegNo"))#</label></TD>
+		<TD><label id="RPT_IADM_DR_Namez#(iLLoop)#" name="RPT_IADM_DR_Namez#(iLLoop)#">#(rs.GetDataByName("RPT_IADM_DR_Name"))#</label></TD>
+		<TD><label id="RPT_IADM_Sexz#(iLLoop)#" name="RPT_IADM_Sexz#(iLLoop)#">#(rs.GetDataByName("RPT_IADM_Sex"))#</label></TD>
+		<TD><label id="RPT_IADM_DOBz#(iLLoop)#" name="RPT_IADM_DOBz#(iLLoop)#">#(rs.GetDataByName("RPT_IADM_DOB"))#</label></TD>
+
+	</TR>
+	<script language=Cache runat=server>
+		s iLLoop=iLLoop+1
+		i "RowEven"=RowType d
+		.s RowType="RowOdd"
+		e  d
+		.s RowType="RowEven"
+	</script>
+	</csp:while>
+	
+</TABLE>
+
+</DIV>
+<SCRIPT SRC="../scripts/DHCPEReport.js"></SCRIPT>
+
+<!--
+<SCRIPT SRC="../scripts/DHCPECommon.encrypt.js"></SCRIPT>
+-->
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+
+</Script>
+
+</body>
+
+
+</HTML>

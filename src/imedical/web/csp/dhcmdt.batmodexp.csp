@@ -1,0 +1,79 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcmdt.batmodexp.csp  批量修改专家 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcmdt/css/batmodexp.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/batmodexp.js"></script>
+		<!-- 会诊配置 -->
+	<server>	  
+	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  /// 会诊专家控制
+	  s memControlFlag=##Class(web.DHCMDTCom).GetEmSysConfig("MENCONTROL",LgHospID)
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var memControlFlag="""_$g(memControlFlag)_""";"_$c(13,10)
+	  w "</script>"
+	</server>
+</head>
+<body class="background-warp">
+	<div class="container">
+		<div class="bd-head">
+    		<div>
+				<label>#(..Get("开始日期"))#</label>
+				<input id="StartDate" style="width:140px" class="hisui-datebox textbox"/>
+				<label style="margin-left:15px;">#(..Get("结束日期"))#</label>
+	        	<input id="EndDate"  style="width:140px" class="hisui-datebox textbox"/>
+	        	<label style="margin-left:15px;">#(..Get("疑难病种"))#</label>
+				<input id="mdtDisGrp" class="textbox" style="width:140px;height:30px;line-height:30px;"/>
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="find_click()" style="margin-left:20px;">查询</a>
+			</div>
+		</div>
+		<div class="bd-body">
+			<div class="bd-center">
+				<div class="list-title">
+					<div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcmdt/images/infomation.png" border=0/>
+					</div>
+					<label>#(..Get("明细列表"))#</label>
+					<div class="list-tools">
+					</div>
+		        </div>
+		    	<div class="list-order-detail">
+		    		<table id="bmDetList"></table>
+		    	</div>
+			</div>
+			<div class="bd-right">
+				<div class="list-title">
+					<div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcmdt/images/infomation.png" border=0/>
+					</div>
+					<label>#(..Get("修改"))#</label>
+					<div class="list-tools">
+					</div>
+		        </div>
+		    	<div class="list-order-item">
+		    		<table id="bmDocList" toolbar="#item_tb"></table>
+		    	</div>
+			</div>
+		</div>
+	</div>
+	<div id="item_tb">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insRow()">新增</a></td>
+		      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="delRow()">删除</a></td>
+		      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveRow()">保存</a></td>
+		    </tr>
+		</table>
+	</div>
+</body>
+</html>

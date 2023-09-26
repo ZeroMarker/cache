@@ -1,0 +1,88 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+</STYLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<link rel="stylesheet" href="../scripts/styles.css" type="text/css">
+<script type="text/javascript"  src="../SCRIPTS/DHCPEDocPatient.Tree.js" ></script>
+
+<SERVER>
+
+	
+</SERVER>
+<SCRIPT language="Cache" RUNAT="SERVER">
+s PAADM=%request.Get("PAADM")
+i PAADM="" s PAADM=%request.Get("EpisodeID")
+;s OrderInfo=##class(web.DHCPE.DocPatientFind).GetOrdInfo(PAADM)
+</Script>
+</head>
+<body>
+
+<!-- 左边 体检单位和项目列表
+?WEBSYS.TCOMPONENT=DHCPEGeneralResult
+?WEBSYS.TCOMPONENT=DHCPEGeneralDiagnosis
+ -->
+<Table id=Panel  border="0" width="100%" >
+<!--TR>
+    <TD id="OrderInfo" style="display:none;">#(OrderInfo)#</TD>
+</TR--> 
+<tr>
+	<td valign="left"  width = "15%"  height=100%>		
+	<table width=100% border="0" cellspacing="0" cellpadding="0">
+		<tr width = 100%>
+			<td  valign="top" width=100%>
+				<iframe  height=390 width = "100%" id="query" name="query" scrolling="no" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEDocPatient.Find&PAADM=#(PAADM)#&Type=ZJ"></iframe>
+			</td>
+		</tr>
+		<tr width = 100%>
+			<td  valign="top"  width=100%>
+				<div id='tree'></div>		
+			</td>
+		</tr>
+		</table>
+	</td>
+	<td valign="left" width=100% height=100%>
+		<table width=100% border="0" cellspacing="0" cellpadding="0">
+		<tr width = 100%>
+				<td  valign="top" width=100%>
+					<iframe onload="Javascript:SetWinHeight(this)" width=100% id="result" name="result" scrolling="yes" src="websys.default.csp"></iframe>
+				</td>
+				<td  valign="top"  width=0%>
+					<iframe  onload="Javascript:SetWinHeight(this)" width=100%  id="diagnosis" name="diagnosis" scrolling="yes" src="websys.default.csp"></iframe>		
+				</td>
+		</tr>
+		<!--tr width = 100%>
+				
+		</tr-->
+		</table>
+	</td>
+</tr>
+</table>
+<SCRIPT language="Javascript">
+// onload="Javascript:SetWinHeight(this)"
+function SetWinHeight(obj) 
+{
+	BottomHeight=100;
+	parentHeight=parent.window.screen.height
+	var win=obj; 
+	if (document.getElementById) 
+	{ 
+		if (win && !window.opera) 
+		{
+			if (win.contentDocument && win.contentDocument.body.offsetHeight){
+				win.height = win.contentDocument.body.offsetHeight;
+				TreeHeight = win.height - 290;
+			}else if(win.Document && win.Document.body.scrollHeight){
+				win.height = parentHeight-BottomHeight //win.Document.body.scrollHeight; 
+				TreeHeight = win.height - 290;
+			}
+		} 
+	}
+	
+} 
+</SCRIPT>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "expExcel"=action {
+		s sqlTableName=$g(%request.Data("sqlTableName",1))
+		s rangeRecs=$g(%request.Data("rangeRecs",1))
+		s fieldNames=$g(%request.Data("fieldNames",1))
+
+				
+		s sql="SELECT "_fieldNames
+		s sql=sql_" from "_sqlTableName
+		if rangeRecs'="" {
+			if rangeRecs="allRecs" {
+				
+			}else{
+				s sql=sql_" where ID IN ("_rangeRecs_")"
+			}
+		}
+			
+		s jsonPro=fieldNames
+
+		s qryName="%DynamicQuery:SQL"	
+		s json=##class(DHCWL.RptMgmt.Util).GetJsonByQry(qryName,"",sql,0,0,jsonPro)
+
+
+		//s json=##class(DHCWL.util.GetSetService).GetJsonBySQL(sql,0,0,jsonPro)
+		w "["
+		d {
+			s obj=json.GetNextJsonArray()
+			i obj'="" w obj,","
+		}while(obj'="")
+		w "]"
+		q
+	}elseif "expXml"=action {
+		//d %response.Flush()
+		s sqlTableName=$g(%request.Data("sqlTableName",1))
+		s rangeRecs=$g(%request.Data("rangeRecs",1))
+		s fieldNames=$g(%request.Data("fieldNames",1))
+		s inParam("sqlTableName")=sqlTableName
+		s inParam("rangeRecs")=rangeRecs
+		s inParam("fieldNames")=fieldNames
+		
+		d ##class(DHCWL.RptMgmt.Interface).expXml(.inParam,.outParam)
+		//d %response.Flush()
+		q		
+	}elseif "updateRec"=action {
+		s inParam("MenuName")=$g(%request.Data("MenuName",1))
+		s inParam("RaqName")=$g(%request.Data("RaqName",1))
+		s inParam("CSPName")=$g(%request.Data("CSPName",1))
+		s inParam("QueryName")=$g(%request.Data("QueryName",1))
+		s inParam("AuxiliaryMenuName")=$g(%request.Data("AuxiliaryMenuName",1))
+		s inParam("Spec")=$g(%request.Data("Spec",1))
+		s inParam("HisTableName")=$g(%request.Data("HisTableName",1))
+		s inParam("KPIName")=$g(%request.Data("KPIName",1))
+		s inParam("Filter")=$g(%request.Data("Filter",1))
+		s inParam("RowColShow")=$g(%request.Data("RowColShow",1))
+		s inParam("ProgramLogic")=$g(%request.Data("ProgramLogic"))
+		s inParam("AdvUser")=$g(%request.Data("AdvUser",1))
+		s inParam("ProMaintainer")=$g(%request.Data("ProMaintainer",1))		
+		s inParam("DepMaintainer")=$g(%request.Data("DepMaintainer",1))
+		s inParam("Demo")=$g(%request.Data("Demo",1))
+		s inParam("ID")=$g(%request.Data("ID",1))
+				
+		TSTART
+		s ret=##class(DHCWL.RptMgmt.RptCfg).Update(.inParam,.outParam)
+		if ret'="" {
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+			Trollback
+			q		
+		}
+		TCOMMIT
+		w "{success:true,tip:'ok',MSG:'操作成功'}"
+		Q
+	}elseif "impChk"=action {
+		k inParam
+		k outParam
+		s inputList=$g(%request.Data("inputList",1))
+		//w !,inputList
+		s listCnt=$l(inputList,",")/4
+		s RCParam=""
+		f inx=1:1:listCnt {
+			s pos=(inx-1)*4
+			s RaqName=$p(inputList,",",pos+2)
+			s CSPName=$p(inputList,",",pos+3)
+			s AuxiliaryMenuName=$p(inputList,",",pos+4)
+			s inParam(RaqName_"^"_CSPName_"^"_AuxiliaryMenuName)=""
+		}
+		
+		//zw inParam
+		s ret=##class(DHCWL.RptMgmt.RptCfg).CheckRepeat(.inParam,.outParam)
+
+		if ret="" {
+			s num=0
+			w "{success:true,tip:'ok',root:["
+			s repData=""
+			f {
+				s repData=$o(outParam(repData))
+				q:repData=""
+				i num>0 w ","
+				w "{repData:'"_repData_"'}"
+				s num=num+1
+
+			}
+			w "],totalNum:"_num_"}"			
+			
+		}else{
+			w "{success:true,tip:'false',MSG:'"_ret_"'}"
+		}
+	}elseif "impFromExl"=action {
+		k inParam
+		k outParam
+		s inputList=$g(%request.Data("impDataObj",1))
+		s fieldNames=$g(%request.Data("fieldNames",1))
+		
+		//w !,inputList
+		s fieldlength=$l(fieldNames,",")
+		s dataLength=$l(inputList,$c(2))
+		s recsLength=dataLength/fieldlength
+		
+		s ret=""
+		TSTART
+		f i=1:1:recsLength{
+			k inParam
+			f j=1:1:fieldlength{
+				s field=$p(fieldNames,",",j)
+				s pos=+(i-1)*fieldlength
+				s data=$p(inputList,$c(2),pos+j)
+				s inParam(field)=data
+			}
+
+			//已存在就更新	
+			if $d(^DHCWL.RptMgmt.RptCfgI("InxRaqCspTitle",($g(inParam("RaqName"))_"|"_$g(inParam("CSPName"))_"|"_$g(inParam("AuxiliaryMenuName"))))) {
+				s inParam("ID")=$o(^DHCWL.RptMgmt.RptCfgI("InxRaqCspTitle",$g(inParam("RaqName"))_"|"_$g(inParam("CSPName"))_"|"_$g(inParam("AuxiliaryMenuName")),""))
+				s ret=##class(DHCWL.RptMgmt.RptCfg).Update(.inParam,.outParam)
+				if ret'="" {
+					w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+					Trollback
+					q		
+				}	
+			}else{	//不存在就插入
+				s ret=##class(DHCWL.RptMgmt.RptCfg).Insert(.inParam,.outParam)
+				if ret'="" {
+					w "{success:true,tip:'false',MSG:'"_ret_"'}"	
+					Trollback
+					q		
+				}				
+			}
+		}
+		if ret="" {
+			TCOMMIT	
+			w "{success:true,tip:'ok',MSG:'操作成功'}"
+		}
+
+	}elseif "UPFILE"=action {
+		
+		s theStep=+$g(%request.Data("theStep",1))
+		s node="NODE"_$g(^DHCWL.MKPI.TEMPCONT("NODEINDEX"))
+		s wrong=0,wrongMes=""
+		s deli=##class(DHCWL.util.DirectoryFile).SetPathOS()
+		s deli=$p(deli,"||",2)
+		s tmp=##class(DHCWL.util.DirectoryFile).GetTempDir()
+		i $e(tmp,$l(tmp))'=deli s tmp=tmp_deli
+		s index=$g(^DHCWL.MKPI.TEMPCONT("NODEINDEX")) 
+		s fileName="tempDHCWLXML"_index_".xml"
+		s tempFile=tmp_fileName
+		s index=+index+1
+		s ^DHCWL.MKPI.TEMPCONT("NODEINDEX")=index
+		i ##class(%File).Exists(tempFile) d ##class(%File).Delete(tempFile)
+		s file=##class(%File).%New(tempFile)
+		d file.Open("WN")
+		for i=1:1:theStep {
+			s content=$g(%request.Data("Node"_i,1))
+			s ^DHCWL.MKPI.TEMPCONT("Node"_i)=content
+			s sc=file.Write(content)
+			if sc'=1 {
+				s wrongMes=sc
+				s wrong=1
+				q
+			}
+			;w content
+			;d:$g(content)'="" ##class(web.DHCWL.KPI.KpiIOService).SaveParaOfContent(node,content,i,i=1)
+		}
+		d:file'="" file.Close()
+		s ^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",+$h,index-1)=tempFile
+		if wrong=0{
+			w "{data:"
+			d ##class(DHCWL.RptMgmt.ImpServ).JsonData(tempFile)
+			w ",tips:"""_fileName_""",tempFile:"""_tempFile_"""}"
+
+		}else {
+			w "{success:true,info:'wrong',tips:'文件上传失败?形薹?进行下面的操作'}"
+		}
+		d %response.Flush()
+		//若历史上有没有删除掉的临时文件?墼蛉?部删除了?z
+		s day=+$h f  s day=$o(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day),-1) q:day=""  d
+		.s indI="" f  s indI=$o(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day,indI)) q:indI=""  d
+		..s tf=$g(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day,indI))
+		..i tf'="" d
+		...i ##class(%File).Exists(tf) d ##class(%File).Delete(tf)
+		.k ^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day)
+		
+		
+	}
+
+	
+</script>

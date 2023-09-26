@@ -1,0 +1,60 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;dhccpm.rqreport.csp
+ //d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("DHCWL_CodeCfg.DHCWLCodeCfgType")  //调用数据平台接口
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s deli = "&"
+	set start = $g(%request.Data("start",1))
+	set limit = $g(%request.Data("limit",1))
+	set action=$g(%request.Data("action",1))
+	set pageSize = $g(%request.Data("limit",1))
+	set isArrayType=$g(%request.Data("isArrayType",1))
+	set className=$g(%request.Data("className",1))
+	set condSql=""
+	s:start>1 start=start+1
+	s end=start+pageSize
+		if (action = "addCalItem") {
+		s docKpiId = $Get(%request.Data("mdocKpiId",1))
+		s calExp = $Get(%request.Data("calExp",1))
+		s sql = "select count(*) number from DHCWL_DocQuery.DHCWLDocKpiRelKpi where MDocKPI_Dr = "_docKpiId
+		s rs = ##class(%Library.ResultSet).%New()
+ 		s sc = rs.Prepare(sql)
+ 		s sc = rs.Execute()
+ 		While(rs.Next()){
+ 			s num=rs.Data("number")
+ 		}
+ 		i num>0  w "{success:false"_",msg:'此指标已存在对应过滤规则'}"
+		else  s msg=##class(DHCWL.DocQueryData.SaveData).addKpiDef(docKpiId,calExp) w "{success:"_$p(msg,"^",1)_",msg:'"_$p(msg,"^",2)_"'}"	
+		}
+		elseif ("searchCalItem"=action) {
+			s docKpiId = $Get(%request.Data("mdocKpiId",1))
+			//s docClass = $Get(%request.Data("mdocClass",1))
+			s sql = "SELECT OtherFilter_Rule rule FROM DHCWL_DocQuery.DHCWLDocKpiRelKpi WHERE MDocKPI_Dr = "_docKpiId
+			s rs = ##class(%Library.ResultSet).%New()
+ 			s sc = rs.Prepare(sql)
+ 			s sc = rs.Execute()
+ 			s rule = ""
+ 			While(rs.Next()){
+ 				s rule=rs.Data("rule")	
+ 			}
+ 			w "{success:true,tip:'ok',CalExp:'"_rule_"'}"
+		}
+		elseif ("updateCalItem"=action){
+			s docKpiId = $Get(%request.Data("mdocKpiId",1))
+			s calExp = $Get(%request.Data("calExp",1))
+			//s ^TEMPDHCWLDUH("calExp") = calExp
+			s msg = ##class(DHCWL.DocQueryData.SaveData).updateKpiDef(docKpiId,calExp)
+			w "{success:"_$p(msg,"^",1)_",msg:'"_$p(msg,"^",2)_"'}"
+			}
+		elseif ("addFilterRule"=action){
+			s filterRule = $Get(%request.Data("filterRule",1))
+			s dKpiId = $Get(%request.Data("dKpiId",1))
+			;w filterRule_","_dKpiId,!
+			s msg = ##class(DHCWL.DocQueryData.SaveData).updateFilterRule(dKpiId,filterRule)
+			w "{success:"_$p(msg,"^",1)_",msg:'"_$p(msg,"^",2)_"',dKpiId:'"_dKpiId_"'}"
+			}
+</script>

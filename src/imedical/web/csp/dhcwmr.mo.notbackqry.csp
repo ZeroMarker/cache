@@ -1,0 +1,63 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcwmr/css/main.css" />
+		<script type="text/javascript" src="../scripts/dhcwmr/ext.ux/ext-basex.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.Setting.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.DesignerHelper.js"></script>
+		<script type="text/javascript" src='../scripts/dhcwmr/ss/common/CustomFormItem.js'></script>
+		<script type="text/javascript" src='../scripts/dhcwmr/mo/lend/notbackqry/event.js'></script>
+		<script type="text/javascript" src='../scripts/dhcwmr/mo/lend/notbackqry/gui.js'></script>
+		
+		<script type="text/javascript" src="../Scripts/dhcwmr/export/Excel_Class.js"></script>
+		<script type="text/javascript" src="../Scripts/dhcwmr/export/Excel_Class.js"></script>
+		
+		<script language="cache" runat="server">
+			Set MrClass=$Get(%request.Data("MrClass",1),"")
+			//Set:MrClass="" MrClass="I"			//如果为空，设置为住院病案
+			Set CTLocID=%session.Get("LOGON.CTLOCID","")
+	  		Set CTHospID=##class(DHCWMR.SSService.HospitalSrv).GetCTHospID(CTLocID)
+	  		Set:CTHospID'="" CTHospDesc=$p($g(^CT("HOSP",CTHospID)),"^",2)
+	  		Set SSHospCode=##class(DHCWMR.SSService.HospitalSrv).GetSSHospCode(CTHospID)
+	  		Set IsSecret=##class(DHCWMR.IO.FromSecSrv).CheckIsSecret(CTHospID)
+	   </script>
+	   <ADDINS require="LODOP,CmdShell"/>
+		<script language="javascript" type="text/javascript">
+		
+			var MrClass = '#(MrClass)#';
+			var CTHospID = '#(CTHospID)#';
+			var CTHospDesc = '#(CTHospDesc)#';
+			var SSHospCode = '#(SSHospCode)#';
+			var IsSecret = '#(IsSecret)#';
+			
+			Ext.QuickTips.init();
+			var objControlArry = new Array();
+			function window_onload() {
+				var objViewPort = new InitViewport();
+                objControlArry['ViewPort'] = objViewPort;
+			}
+		</script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</HEAD>
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</HTML>
+

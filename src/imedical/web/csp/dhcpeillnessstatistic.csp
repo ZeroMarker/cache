@@ -1,0 +1,99 @@
+<!-- DHCPEIllnessStatistic.csp -->
+<!-- 
+/// 创建时间		2006.09.06
+/// 创建人			xuwm 
+/// 主要功能		框架页面 包括专家诊断列表和患者统计
+/// 主要功能		疾病统计
+/// 最后修改时间	
+/// 最后修改人	 
+/// -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s FFF=$g(%request.Data("FFF",1))
+ s PAADMRowid=$p(FFF,"^")
+ s PatientID=$p(FFF,"^",3)
+</Script>
+<script language=javascript>
+	//检查目的listitem 是否有该值?
+	function ifexist(val,list)
+	{
+		for (var i=0;i<list.options.length;i++){
+			if (list.options[i].value==val)
+			{
+				return i;
+			}
+	}
+		return -1;
+	}
+	// 从疾病列表页面获取 疾病查询条件 
+	function SetIllnessStandardList(ISDRList,ISDescList,operatorType){
+		var iEDDR='';iEDDesc='';
+		var EDDRs=ISDRList.split('^');
+		var EDDescs=ISDescList.split('^');
+		var obj=frames['DHCPEIllnessStatistic.IllnessStatistic'].document.getElementById('EDList');
+		if (obj) {
+			//obj.options.length=0;
+			for (var iLoop=0;iLoop<EDDRs.length;iLoop++) {				
+				if (''!=EDDRs[iLoop]) {
+					if ('A'==operatorType) {
+						if (-1==ifexist(EDDRs[iLoop],obj)) {
+							
+							obj.options[obj.options.length]=new Option(EDDescs[iLoop],EDDRs[iLoop]);
+						}
+					}
+					else{
+						if (-1!=ifexist(EDDRs[iLoop],obj)) {
+							obj.options[ifexist(EDDRs[iLoop],obj)]=null;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	
+	// 不使用了	
+	// 从专家诊断页面获取 疾病查询条件 
+	function SetExpertDiagnosisList(EDDRList,EDDescList,operatorType){
+		var iEDDR='';iEDDesc='';
+		var EDDRs=EDDRList.split('^');
+		var EDDescs=EDDescList.split('^');
+		var obj=frames['DHCPEIllnessStatistic.IllnessStatistic'].document.getElementById('EDList');
+		if (obj) {
+			//obj.options.length=0;
+			for (var iLoop=0;iLoop<EDDRs.length;iLoop++) {				
+				if (''!=EDDRs[iLoop]) {
+					if ('A'==operatorType) {
+						if (-1==ifexist(EDDRs[iLoop],obj)) {
+							
+							obj.options[obj.options.length]=new Option(EDDescs[iLoop],EDDRs[iLoop]);
+						}
+					}
+					else{
+						if (-1!=ifexist(EDDRs[iLoop],obj)) {
+							obj.options[ifexist(EDDRs[iLoop],obj)]=null;
+						}
+					}
+				}
+			}
+		}
+	}
+
+</script>
+<frameset cols="270px,*">
+	<frame name="DHCPEIllnessStatistic.IllnessStandardList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.IllnessStandardList" frameborder=0>
+	<frame name="DHCPEIllnessStatistic.IllnessStatistic" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.IllnessStatistic&EDIDs=&PatName=&RegNo=&DateFrom=&DateTo=" frameborder=0>	
+</frameset>
+
+
+</HTML>

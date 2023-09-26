@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+     q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+    s action = $Get(%request.Data("action",1))
+    s sortField = $Get(%request.Data("sort",1))
+    s sortDir = $Get(%request.Data("dir",1))
+    s start = $Get(%request.Data("start",1))
+    s limit = $Get(%request.Data("limit",1))
+    s str = $Get(%request.Data("str",1))
+    s sdata = $Get(%request.Data("query",1))
+    s searchField = $Get(%request.Data("searchField",1))
+    s searchValue = $Get(%request.Data("searchValue",1))
+    
+    s rowid = $Get(%request.Data("rowid",1))
+    s BusiModuleName = $Get(%request.Data("BusiModuleName",1))
+    s ItemCode = $Get(%request.Data("ItemCode",1))
+    s ItemName = $Get(%request.Data("ItemName",1))
+    s AcctDeptTypeName = $Get(%request.Data("AcctDeptTypeName",1))
+    ;s AcctSubjCode = $Get(%request.Data("AcctSubjCode",1))
+    s AcctSubjName = $Get(%request.Data("AcctSubjName",1))
+    s AcctSummary  = $Get(%request.Data("AcctSummary",1))
+    s AcctDirection = $Get(%request.Data("AcctDirection",1))
+    s AcctBookName = $Get(%request.Data("AcctBookName",1))
+    
+    s ParamValueCon=$Get(%request.Data("ParamValueCon",1))
+    s BusiModuleNameCon=$Get(%request.Data("BusiModuleNameCon",1))
+    s ProjCodeName=$Get(%request.Data("ProjCodeName",1))
+    s SubjCodeName=$Get(%request.Data("SubjCodeName",1))
+    s ZjlxID=$Get(%request.Data("CashFlowCom",1))
+    s IsAuto=$Get(%request.Data("IsAutoCom",1))
+    s acctbookid=$Get(%request.Data("acctbookid",1))
+    s AcctBookID=$Get(%request.Data("AcctBookID",1))
+    s moneySource=$Get(%request.Data("MoneySource",1))
+    s BookName=$Get(%request.Data("BookName",1))
+    i action = "AcctBook"  d
+    .w ##class(herp.acct.udata.uAcctVouchInterTemp).GetAcctBook(start,limit,str)
+    
+    i action = "GetSubjList"  d
+    .w ##class(herp.acct.udata.uAcctVouchInterTemp).GetSubjList( start, limit, sdata,AcctBookID,BookName)
+    
+    i action = "caldept" d
+    .w ##class(herp.acct.udata.uAcctVouchInterTemp).CalDept(start,limit,str)
+    
+    i action = "list" d
+    .w ##class(herp.acct.udata.uAcctVouchInterTemp).List(acctbookid,start,limit,ParamValueCon,BusiModuleNameCon,ProjCodeName,SubjCodeName)
+    
+    i action = "busimodulenamelist" d
+    .w ##class(herp.acct.udata.uAcctVouchInterTemp).BusiModuleNameList(start,limit,str)
+    
+   ;i action = "acctdepttypelist" d
+    .;w ##class(herp.acct.uinter.uVouchInterfaceMap).AcctDeptTypeList(start,limit,str)
+    
+    ;i action = "acctsubjlist" d
+    .;w ##class(herp.acct.uinter.uVouchInterfaceMap).AcctSubjList(start,limit,sdata)
+    
+    ;i action = "acctbooklist" d
+    .;w ##class(herp.acct.uinter.uVouchInterfaceMap).AcctBookList(start,limit,str)
+    
+    i action = "add" d
+    .s result = ##class(herp.acct.udata.uAcctVouchInterTemp).InsertRec(BusiModuleName,ItemCode,ItemName,AcctDeptTypeName,AcctSubjName,AcctSummary,AcctDirection,ZjlxID,IsAuto,AcctBookName,moneySource)
+    .i result = 0 d
+    ..w "{success:'true',refresh:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    
+    i action = "edit" d
+    .s result = ##class(herp.acct.udata.uAcctVouchInterTemp).UpdateRec(rowid,BusiModuleName,ItemCode,ItemName,AcctDeptTypeName,AcctSubjName,AcctSummary,AcctDirection,ZjlxID, IsAuto,AcctBookName,moneySource)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    
+    i action = "del" d
+    .s result = ##class(herp.acct.udata.uAcctVouchInterTemp).Delete(rowid)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    
+
+</script>

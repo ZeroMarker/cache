@@ -1,0 +1,58 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="server">
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s action=$Get(%request.Data("action",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s data=$Get(%request.Data("data",1))
+	s type=$Get(%request.Data("type",1))
+	s unitDr=$Get(%request.Data("unitDr",1))
+	s state=$Get(%request.Data("state",1))
+	s targetType=$Get(%request.Data("targetType",1))
+	s targetDr=$Get(%request.Data("targetDr",1))
+	s BankNo=$Get(%request.Data("BankNo",1))
+	s sName=$Get(%request.Data("sName",1))
+	s sValue=$Get(%request.Data("sValue",1))
+	s CardNo=$Get(%request.Data("CardNo",1))
+	s BonusRate=$Get(%request.Data("BonusRate",1))
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.udata.uBankAccount).List("",searchValue,"","",start,limit,unitDr,BankNo,CardNo)	
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uBankAccount).InsertRec(unitDr, BankNo,CardNo,BonusRate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uBankAccount).UpdateRec(rowid, sName,sValue)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uBankAccount).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "unitlist" d
+	.w ##class(dhc.bonus.udata.uBankAccount).UnitList(start,limit)	
+	
+	i action = "personslist" d
+	.w ##class(dhc.bonus.udata.uBankAccount).PersonsList(start,limit,unitDr)	
+
+</script>

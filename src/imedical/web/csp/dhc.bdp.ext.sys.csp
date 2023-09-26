@@ -1,0 +1,119 @@
+<!-- Copyright (c) 2000 TRAK Systems Pty. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ; Let's trap the errors and try and avoid those 5294 errors
+ s $zt="Error^"_$zn
+ ;;dhc.bdp.ext.sys.csp
+ 
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //等保测评,预防xss漏洞 chenying2020-03-19
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ 
+ n j,TFORM,TEVENT,TMENU,TNAVGOTO,TWKFL,TWKFLI,TPAGCNT,TPAGID,TSRTITM,TryAgain,e,val,TREPORT,thisdev,TOVERRIDE,compid,TWKFLL,TWKFLJ,Tinserted
+ s thisdev=$I
+ ;
+ s %response.ServerSideRedirect=""
+ s ISINLOOP=0
+ ;
+ ; Set this at every opportunity to try to avoid timeout problems
+ s %session.AppTimeout=$g(%session.Data("LOGON.TIMEOUT"),900)
+ 
+ ;;; zhaocz  屏蔽
+ 
+ ;i $g(%session.Data("epr.default.csp"),1) d ##Class(websys.Conversions).LoadRequest() d %session.Kill("epr.default.csp")
+ 
+ ;
+ s TryAgain=0
+  
+:TryAgain ;
+ ;
+ s TFORM=$g(%request.Data("BDPFORM",1))
+ s TPAGCNT=$g(%request.Data("BDPPAGCNT",1))
+ s TPAGID=$g(%request.Data("BDPPAGID",1))
+ s TEVENT=$g(%request.Data("BDPEVENT",1))
+ s TMENU=$g(%request.Data("BDPMENU",1))
+ s TREPORT=$g(%request.Data("BDPREPORT",1))
+ ;
+ 
+ s compid=$e($p(TEVENT,"i",1),2,999)
+ ;s msg.ComponentDefault=compid
+ ;
+ ;d:TREPORT'="" ..Report()
+ ;d:TEVENT'="" ..Event()
+ ///2018-11-5 防止用户直接拿链接登录 越权访问界面
+ ///http://127.0.0.1/dthealth/web/csp/dhc.bdp.ext.sys.csp?BDPMENU=130
+ if $d(%session)
+ {
+	 if TMENU'=""
+	 {
+		s strAutMenu=##class(web.DHCBL.Authorize.Menu).DHCGetDataByDefaultSession()
+		//判断菜单是否有权显示
+		s grpId=$g(%session.Data("LOGON.GROUPID"))
+		s strMenu="{ID:"_TMENU_"}"
+		if '((strAutMenu[strMenu)||(1=grpId))
+		{
+			q 1
+		}
+	 }
+ }
+ else
+ {
+	 q 1
+ }
+ d:TMENU'="" ..Menu()
+ 
+ ;
+ 
+ ; Useful if we want to put debug messages in this page
+ ;d %response.Flush()
+ ;
+ u thisdev
+ ;
+ q 1
+:Error ;
+ d BACK^%ETN
+ q 0
+ quit 1
+</csp:method>
+
+
+<csp:method name=Menu arguments="">
+	n mnu
+	s mnu=##Class(User.BDPMenu).%OpenId(TMENU,0)
+	i mnu {
+		;i mnu.ShowInNewWindow="" d ##Class(websys.SessionEvents).websysMenuChange(TMENU)
+ 		; If menu links to workflow then start first page in workflow
+		;i mnu.WorkFlow s TWKFL=mnu.WorkFlow.%Id(),TWKFLI=1 s %request.Data("TWKFL",1)=TWKFL,%request.Data("TWKFLI",1)=TWKFLI q
+		s %response.ServerSideRedirect=mnu.LinkUrl
+		s myextfilename = ##class(web.DHCBL.BDP.BDPMenuDefine).GetExtfileByID(TMENU)
+		s %request.Data("extfilename",1)=myextfilename
+		;i mnu.ChartBook s %response.ServerSideRedirect="epr.chartbook.csp" s %request.Data("ChartBookID",1)=mnu.ChartBook.%Id()
+		///功能 （基础数据平台 dhc.bdp.ext.default.csp)
+		i mnu.LinkFuntionDR s %session.Data("BDPSYS.Function")=mnu.LinkFuntionDR.Code s %response.ServerSideRedirect="dhc.bdp.ext.default.csp"
+		///解析地址，csp/  组件就填dhc.bdp.ext.menu.csp  
+		i mnu.LinkUrl'="" s %response.ServerSideRedirect = mnu.LinkUrl
+		
+		if mnu.LinkUrl="websys.default.jquery.csp" s %response.ServerSideRedirect = "dhc.bdp.ext.menujquery.csp"    //jquery
+		if mnu.LinkUrl="websys.default.csp" s %response.ServerSideRedirect = "dhc.bdp.ext.menu.csp"  //组件
+		/*
+		//2020-03-20测试获取url的参数
+		s Expression=$p(mnu.LinkUrl,"?",2)
+		if Expression'=""
+		{
+			s ValueLength=$l(Expression,"&")
+			for i=1:1:ValueLength
+			{
+				s valuei=$p(Expression,"&",i)
+				s valuename=$p(valuei,"=",1)
+				s value=$p(valuei,"=",2)
+				continue:valuename=""
+				continue:value=""
+				s %request.Data(valuename,1)=value
+			}			
+		}
+		*/	 
+	}
+	i mnu d mnu.%Close()
+	k mnu
+	q
+</csp:method>
+

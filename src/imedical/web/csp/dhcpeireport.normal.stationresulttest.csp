@@ -1,0 +1,51 @@
+<!-- 体检结果 
+dhcpeireport.normal.stationresulttest.csp
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+
+<TITLE>体检报告效果调试</TITLE>
+
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.css"></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.noraml.summarize.css"></LINK>
+<!-- 通用格式  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.noraml.result.nor.css"></LINK>
+<!-- 检验结果  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.noraml.result.lis.css"></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.noraml.stationresult.css"></LINK>
+
+</head>
+
+<body>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 结果输出方式 SummarizeGather=将结果与小节一起输出
+	s ReultOutType="SummarizeGather"
+	s StationId=""
+	f  s StationId=$O(^TMPReport("Result","Station",StationId)) Q:(""=StationId)  d
+	.w "<DIV class='Page StationResult'>"
+	.s iLLoop=0
+	.f  s iLLoop=$O(^TMPReport("Result","Station",StationId,iLLoop)) Q:(""=iLLoop)  d
+	..
+	..s ARCIM=$G(^TMPReport("Result","Station",StationId,iLLoop))
+	..
+	..s CurData=$G(^TMPReport("Result", "ARCIM", ARCIM))
+	..
+	..s ARCIMDesc=$P(CurData,"^",1)
+	..s Checker=$P(CurData,"^",2)
+	..s CheckDate=$P(CurData,"^",3)
+	..s ReportFormat=$P(CurData,"^",4)
+	..
+	..d:(ReportFormat["LIS") ##Class(csp.csp.dhcpeireport.noraml.result.lis).OnPageCSPROOT()
+	..d:(ReportFormat["NOR") ##Class(csp.csp.dhcpeireport.noraml.result.nor).OnPageCSPROOT()
+	..d:(ReportFormat["RIS") ##Class(csp.csp.dhcpeireport.noraml.result.nor).OnPageCSPROOT()
+	.
+	.d ##class(csp.csp.dhcpeireport.noraml.stationsummarize).OnPageCSPROOT()
+	.w "</DIV>"
+	
+</SCRIPT>
+		
+</body>
+</html>

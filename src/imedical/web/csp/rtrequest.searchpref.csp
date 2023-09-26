@@ -1,0 +1,29 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ k %request.Data("OEPARAMS"),%request.Data("DISPLAYCONTEXT")
+ n app,params
+ s (app,params)=""
+ ;s params=##Class(websys.Preferences).GetDataExPlus("130","40","TRAKDEV","22","",.app,"MEDRECORDS","RTRequest.SearchPref")
+ s params=##Class(websys.Preferences).GetDataExPlus(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),%session.Get("LOGON.SITECODE"),%session.Get("LOGON.CTLOCID"),"",.app,"MEDRECORDS","RTRequest.SearchPref")
+ s ^zanju($zn," params 00 ")=params
+ d %request.Set("Params",params)
+ ;
+</SERVER>
+<TRAK:COMPONENT id="RTRequest.SearchPref.Edit"></TRAK:COMPONENT>
+</BODY>
+</HTML>
+
+

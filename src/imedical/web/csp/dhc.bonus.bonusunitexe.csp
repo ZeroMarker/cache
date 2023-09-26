@@ -1,0 +1,87 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+
+	s data=$Get(%request.Data("data",1))
+	
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	
+	s spell=$Get(%request.Data("spell",1))
+	s unitFlag=$Get(%request.Data("unitFlag",1))
+	s unitType=$Get(%request.Data("unitType",1))
+	s lastStage=$Get(%request.Data("lastStage",1))
+	s parent=$Get(%request.Data("parent",1))
+	s level=$Get(%request.Data("level",1))
+		
+	s sUnitFlag = $Get(%request.Data("unitFlag",1))
+	s sLastStage=$Get(%request.Data("LastStage",1))
+	s sumUnit = $Get(%request.Data("sumunit",1))
+	s startDate=$Get(%request.Data("startDate",1))
+
+	
+	i action="lastunit" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetLastUnit(sUnitFlag,sLastStage,start,limit)
+	
+	i action="UnitList" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetUnitList(sUnitFlag,sLastStage,str,start,limit)
+
+
+	i action="FlagUnit" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetUnitByUnitFlag(sUnitFlag,start,limit)
+	
+	i action="GetUnitBySuper" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetUnitBySuper(parent,start,limit)
+	
+	
+	i action="list" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).List(searchField,searchValue,sortField,sortDir,start,limit,parent)
+
+	i action = "type" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).unitType(start,limit,str,sUnitFlag)
+
+
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uBonusUnit).InsertRec(code,name,spell,unitFlag,unitType,lastStage,parent, level,sumUnit,startDate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uBonusUnit).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uBonusUnit).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "findfather" d
+	.s result = ##class(dhc.bonus.udata.uBonusUnit).GetFatherNode(parent)
+	.w "{success:'true',info:'"_result_"'}"
+
+</script>

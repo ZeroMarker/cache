@@ -1,0 +1,126 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ 	n resrow,currsess,RescID,sceddate,apptid,Schedule,updDate,updTime,updUser,updHosp,validated
+	s (updDate,updTime,updUser,updHosp,validated)=""
+ 	s adm=$g(%request.Data("EpisodeID",1))
+	s pat=$g(%request.Data("PatientID",1))
+	s RescID=$g(%request.Data("RescID",1))
+	s date=$g(%request.Data("date",1))
+	s PresentStatus=$g(%request.Data("PresentStatus",1))
+	s ApptID=$g(%request.Data("ApptID",1))
+	;s payor=$g(%request.Data("Payor",1))
+	;s plan=$g(%request.Data("Plan",1))
+	
+	i adm {
+		s sub=$o(^PAADM(+adm,"INS",""),-1)
+		i +sub {
+			s payor=$p(^PAADM(+adm,"INS",sub),"^",1)
+			s plan=$p(^PAADM(+adm,"INS",sub),"^",10)
+		}
+	} 
+
+	/*
+	d ##class(websys.Component).GetComponentMessages(.t,"SSUser.EditPassword")
+	s invpin=$g(t("INVALID_PIN"))
+	;
+	s validated=0
+	s UserCode=%request.Get("UserCode")
+	s PIN=%request.Get("PIN")
+	s UserID="",UserID=##Class(web.SSUser).GetIdFromCodeOrDescription(UserCode)
+	s UserObj=##Class(User.SSUser).%OpenId(UserID,0)
+	i UserObj {
+		s EncryptPIN=##Class(web.SSUser).Encrypt(PIN)
+		i UserObj.SSUSRPin=EncryptPIN {
+			s validated=1
+		}
+		d UserObj.%Close()
+	}
+	i PIN="" s validated=1
+	;s validated=##Class(web.SSUser).ValidatePIN($g(%request.Data("UserCode",1)),$g(%request.Data("PIN",1)),"","PIN")
+	;SB 13/06/03 (33878): If payor or plan not entered pop-up the PAAdm.PayorPlan screen
+	i adm {
+		s sub=$o(^PAADM(+adm,"INS",""),-1)
+		i sub,payor="",plan="" {
+			s payor=$p(^PAADM(+adm,"INS",sub),"^",1)
+			s plan=$p(^PAADM(+adm,"INS",sub),"^",10)
+			s updDate=$p(^PAADM(+adm,"INS",sub),"^",51)
+			s updTime=$p(^PAADM(+adm,"INS",sub),"^",52)
+			s updUser=$p(^PAADM(+adm,"INS",sub),"^",53)
+			s updHosp=$p(^PAADM(+adm,"INS",sub),"^",54)
+		} elseif payor'="",plan'="" {
+			i validated {
+				i sub s obj=##Class(User.PAAdmInsurance).%OpenId(adm_"||"_sub)
+				i 'sub s obj=##Class(User.PAAdmInsurance).%New(adm)
+				i obj {
+					d obj.INSParRefSetObjectId(adm)
+					d obj.INSInsTypeDRSetObjectId(payor)
+					; SB 11/09/03 (33878): Need to set rank to 1 (for new insurance) so that it shows in PAAdm.Edit
+					s obj.INSRank=1
+					d obj.INSAuxInsTypeDRSetObjectId(plan)
+					s obj.INSUpdateDate=+$h
+					s obj.INSUpdateTime=$p($h,",",2)
+					d obj.INSUpdateUserDRSetObjectId(%session.Get("LOGON.USERID"))
+					i (%session.Get("LOGON.CTLOCID")) {
+ 						s userloc=##Class(User.CTLoc).%OpenId(%session.Get("LOGON.CTLOCID"))
+ 						i (userloc),(userloc.CTLOCHospitalDR) {
+ 							d obj.INSUpdateUserHospitalDRSetObjectId(userloc.CTLOCHospitalDR.%Id())
+ 							d userloc.%Close()
+ 						}
+ 					}
+					s save=obj.%Save(0)
+					d obj.%Close()	
+				}
+			}
+		}
+	}
+	*/
+</SERVER>
+...
+<script>
+
+/*****
+	//alert("#(UserCode)#")
+	//alert("#(PIN)#")
+	var adm="#(adm)#"
+	var pat="#(pat)#"
+	var payor="#(payor)#"
+	var plan="#(plan)#"
+	var ApptID="#(ApptID)#"
+	var RescID="#(RescID)#"
+	var date="#(date)#"
+	var updDate="#(updDate)#"
+	var updTime="#(updTime)#"
+	var updUser="#(updUser)#"
+	var updHosp="#(updHosp)#"
+	var PresentStatus="#(PresentStatus)#"
+	var validated="#(validated)#"
+	if (validated==0) alert("#(invpin)#")
+	//alert(validated)
+	if (payor=="" || plan=="" || validated==0) {
+			var itms="&EpisodeID=" + adm + "&PatientID=" + pat + "&Payor=" + payor + "&Plan=" + plan
+			itms += "&ApptID=" + ApptID + "&RescID=" + RescID + "&date=" + date + "&PresentStatus=" + PresentStatus
+			itms += "&updDate=" + updDate + "&updTime=" + updTime + "&updUser=" + updUser + "&updHosp=" + updHosp
+			var lnk="websys.default.csp?WEBSYS.TCOMPONENT=PAAdm.PayorPlan.Edit" + itms
+			window.location=lnk
+			window.self.moveTo('100','100');
+			window.self.resizeTo(500,250);
+	} else {
+			window.location='rbappointment.changestatus.csp?Status=A&RescID=#(RescID)#&date=#(date)#&ApptID=#(ApptID)#&PresentStatus=#(PresentStatus)#';
+	}
+****/
+</script>
+</BODY>
+</HTML>

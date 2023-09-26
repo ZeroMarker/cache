@@ -1,0 +1,182 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+
+    s PurNo=$Get(%request.Data("purNo",1))
+    s LocId=$Get(%request.Data("locId",1))
+    s LncId=$Get(%request.Data("lncId",1))
+    s StkGrpId=$Get(%request.Data("stkGrpId",1))
+    s UserId=$Get(%request.Data("userId",1))
+    s UomId=$Get(%request.Data("uomId",1))
+    s HospId=$Get(%request.Data("hospId",1))
+
+    s listData=$Get(%request.Data("data",1))
+    s RowId=$Get(%request.Data("rowid",1))
+    s StrParam=$Get(%request.Data("strParam",1))
+    s Parref=$Get(%request.Data("parref",1))
+    s GroupId=$G(%session.Data("LOGON.GROUPID"))
+    //查询采购计划
+    i Action = "query" d
+    .d ##class(web.DHCSTM.INPurPlan).Query(Start,Limit,Sort,Dir,StrParam)
+
+    //保存采购计划及其明细信息
+    i Action = "save" d
+    .s Remark=$Get(%request.Data("Remark",1))
+    .s result = ##class(web.DHCSTM.INPurPlan).Save(PurNo,LocId,UserId,StkGrpId,listData,Remark)
+    .i result >0 d
+    ..w "{success:'true',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //查询采购计划明细
+    i Action = "queryItem" d
+    .d ##class(web.DHCSTM.INPurPlanItm).Query(Start,Limit,Sort,Dir,Parref)
+
+    //删除采购计划单
+    i Action = "delete" d
+    .s result = ##class(web.DHCSTM.INPurPlan).Delete(RowId)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //删除采购计划单明细
+    i Action = "deleteItem" d
+    .s result = ##class(web.DHCSTM.INPurPlanItm).Delete(RowId)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //完成采购计划单
+    i Action = "finsh" d
+    .s result = ##class(web.DHCSTM.INPurPlan).SetComplete(RowId,GroupId)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //取消完成采购计划单
+    i Action = "noFinsh" d
+    .s result = ##class(web.DHCSTM.INPurPlan).CancelComplete(RowId)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+
+    //查询药品信息
+    i Action = "GetItmInfo" d
+    .s Params=$Get(%request.Data("Params",1))
+    .s result=##class(web.DHCSTM.INPurPlan).GetItmInfo(LncId, Params)
+    .s result=##class(web.DHCSTM.Common.UtilCommon).hJsonChar(result)
+    .w "{success:'true',info:'"_result_"'}"
+
+    //取进价^售价
+    i Action = "GetItmPrice" d
+    .w ##class(web.DHCSTM.Common.PriceCommon).GetConfigPrice(LncId,UomId,"DHCSTPURPLANAUDIT",HospId)
+
+    //审批采购计划单
+    i Action = "Audit" d
+    .s groupId=$Get(%request.Data("groupId",1))
+    .s result = ##class(web.DHCSTM.INPurPlan).Audit(RowId,UserId,groupId)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+     //拒绝采购计划单
+    i Action = "Deny" d
+    .s groupId=$Get(%request.Data("groupId",1))
+    .s RefuseCase=$Get(%request.Data("RefuseCase",1))
+    .s result = ##class(web.DHCSTM.INPurPlan).Deny(RowId,UserId,groupId,RefuseCase)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    
+    i Action = "QueryLocItmForPurch" d
+    .d ##class(web.DHCSTM.INPurPlanAuxByConsume).QueryLocItmForPurch(StrParam)
+
+    i Action = "QueryAllItmForPurch" d
+    .d ##class(web.DHCSTM.INPurPlanAuxByConsume).QueryAllItmForPurch(StrParam)
+
+    i Action = "QueryLocItmForPurchByLim" d
+    .d ##class(web.DHCSTM.INPurPlanAuxByLim).QueryLocItmForPurch(StrParam)
+	
+    //取参数
+    i Action = "GetParamProp" d
+    .s GroupId=$Get(%request.Data("groupId",1))
+    .w ##class(web.DHCSTM.INPurPlan).GetParamProp(GroupId,LocId,UserId)
+    .
+    //查询请求单主信息
+    i Action = "INReqM" d
+    .d ##class(web.DHCSTM.INPurPlanAuxByReq).INReqM(Start,Limit,Sort,Dir,StrParam)
+
+    //查询请求单明细
+    i Action = "INReqD" d
+    .s LocId=$Get(%request.Data("locId",1))
+    .d ##class(web.DHCSTM.INPurPlanAuxByReq).INReqD(Start,Limit,Sort,Dir,Parref,LocId)
+
+    //根据采购计划单Id查询相关信息
+    i Action = "select" d
+    .s PurId=$Get(%request.Data("purId",1))
+    .w ##class(web.DHCSTM.INPurPlan).Select(PurId)
+
+    //依据转移请求生产采购计划单
+    i Action = "create" d
+    .s ListReqId=$Get(%request.Data("listReqId",1))
+    .s result = ##class(web.DHCSTM.INPurPlanAuxByReq).Create(LocId,UserId,ListReqId,StkGrpId,GroupId)
+    .i result > 0 d
+    ..w "{success:'true',info:'"_result_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+	//取出采购单主表信息用于打印
+	i Action = "SelectMain" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.s ret=##class(web.DHCSTM.INPurPlan).SelectMain(Parref)	
+	.w "{success:'true',info:'"_ret_"'}"
+	//查询采购计划
+    i Action = "querydetail" d
+    .d ##class(web.DHCSTM.INPurPlanItm).QueryDetail(Start,Limit,Sort,Dir,StrParam)
+    
+    
+    //审批采购计划单
+    i Action = "AuditStr" d
+    .s groupId=$Get(%request.Data("groupId",1))
+    .s ListDetail=$Get(%request.Data("ListDetail",1))
+    .s result=##class(web.DHCSTM.INPurPlan).AuditStr(RowId,UserId,groupId,ListDetail)
+    .w "{success:'true',info:'"_result_"'}"
+    
+     //拒绝采购计划单
+    i Action = "DenyDetail" d
+    .s RowIdStr=$Get(%request.Data("RowIdStr",1))
+    .s result = ##class(web.DHCSTM.INPurPlanItm).DenyDetail(RowIdStr,UserId)
+    .i result = 0 d
+    ..w "{success:'true',info:''}"
+    .e  d
+    ..w "{success:'false',info:'"_result_"'}"
+    
+    //查询采购计划
+    i Action = "queryAll" d
+    .d ##class(web.DHCSTM.INPurPlanItm).QueryAll(Start,Limit,Sort,Dir,StrParam)
+    
+    i Action = "PrintMBPL" d
+	.S inpRowid=$Get(%request.Data("inpRowid",1))
+	.s HospId=$Get(%request.Data("HospId",1))
+	.S User=$Get(%request.Data("user",1))
+	.s ret=##class(web.DHCSTM.INPurPlan).InserMBPL(inpRowid,HospId,User)	
+	.w "{success:'true',info:'"_ret_"'}"
+	//查询采购明细修改记录
+    i Action = "GetChangeDetail" d
+    .S InpiId=$Get(%request.Data("InpiId",1))
+    .d ##class(web.DHCSTM.INPurPlan).GetChangeDetail(Start,Limit,InpiId)
+</script>

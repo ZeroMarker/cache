@@ -1,0 +1,143 @@
+<!-- Copyright (c) 2007 DHCC, ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>	
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+    <link rel="stylesheet" type="text/css" href="../scripts/DHCCRM/herpgrid.css" />
+	<script type="text/javascript" src="../scripts/DHCCRM/DHCCRMPatFURecord.js"></script>
+	<!--script type="text/javascript" src="../scripts/DHCCRM/MultiComboBox.js"></script-->
+	<script type="text/javascript" src="../scripts/DHCCRM/DHCCRMPatFURecord.fix.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcpecommon.js"></script>
+	<script language="cache" runat="server">
+	s getTitle=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.GetSubjectByIP"))
+	s getDetail=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.GetDetailBySubject"))
+	s getSelect=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.GetSelectByDetail"))
+	s saveClass=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.FUSave"))
+	s getPatientInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.GetPatientInfo"))
+	s getRecord=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.SaveRecord"))
+	s setdeadflag=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.SetDeadFlag"))
+	s setlinkflag=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.SetLinkFlag"))
+	s getRecordID=##Class(%CSP.Page).Encrypt($lb("web.DHCCRM.FUSubject.GetRecord"))
+	s NowDate=+$h
+	s NowTime=$p($h,",",2)
+	s Job=$j
+	</script>
+	<script language="javascript">
+	var getTitle='#(getTitle)#'
+	var getDetail='#(getDetail)#'
+	var getSelect='#(getSelect)#'
+	var saveClass='#(saveClass)#'
+	var getPatientInfo='#(getPatientInfo)#'
+	var getRecord='#(getRecord)#'
+	var setdeadflag='#(setdeadflag)#'
+	var setlinkflag='#(setlinkflag)#'
+	var getRecordID='#(getRecordID)#'
+	var NowDate='#(NowDate)#'
+	var NowTime='#(NowTime)#'
+	var Job='#(Job)#'
+	</script>
+	
+	<script language="javascript">
+	
+	
+	function InitSoftPhone(extnumber, groupid, agentid)
+	{
+		SoftPhone.SetServerIP("10.10.10.253");
+		SoftPhone.SetServerPort("207");
+		SoftPhone.SetDeviceID(extnumber);	
+		SoftPhone.SetAgentID(agentid);	
+		SoftPhone.SetGroupID(groupid);	
+		SoftPhone.InitSoftPhone();
+		
+		var vlclientIp = "10.10.10.253";
+		$("vlclient").OpenRecService(vlclientIp, 6005);
+		return;
+	}
+	
+	
+	function MakeCall(ret,telnumber)
+	{
+		var extnumber=ret.split("^")[0];
+		var agentid=ret.split("^")[2];
+		var groupid=ret.split("^")[1];
+		SoftPhone.ClearConn(extnumber);  //挂机
+		SoftPhone.ChangeAgentState(extnumber,agentid,groupid,1,4); //签出
+		SoftPhone.ChangeAgentState(extnumber,agentid,groupid,0,4); //签入
+		SoftPhone.ChangeAgentState(extnumber,agentid,groupid,3,4); //准备
+		
+		
+		SoftPhone.MakeCall(extnumber,telnumber,"",""); //拨号
+		return;
+	}
+	
+	
+	function DoMakeCall(telnumber,telfup){
+		
+		DHCTel.InitFrom(Job);
+		DHCTel.Dialing(telnumber);
+		
+		var savefile="C:\\"+NowDate+NowTime+telnumber+".wav";
+		var savefile="C:\\"+telfup+".wav";
+		DHCTel.StartRecord(savefile,1);
+		var saveret=#server(web.DHCCRM.PatInfo.SaveSound(savefile,telfup))#;
+		var saveret=#server(web.DHCCRM.PatInfo.SaveStartTime(telfup))#;
+	}
+	
+	function DoHangupCall(telfup)
+	{
+		
+		DHCTel.StopRecord();
+		DHCTel.HangTel();
+		var saveret=#server(web.DHCCRM.PatInfo.SaveEndTime(telfup))#;
+		var RadioTime=#server(web.DHCCRM.PatInfo.GetRadioTime(telfup))#;
+		if(RadioTime<30)
+		{
+			if (!confirm("录音时间少于30秒,是否保存?")) return false;
+		}
+		alert("上传")
+		/*
+		var FTPArr = PhotoFtpInfo.split("^");
+	
+		PEImgPhoto.FileName = "C:\\"+telfup+".wav"; // 保存图片的名称包括后缀
+		PEImgPhoto.DBFlag = "0" // 是否保存到数据库 0 1
+		PEImgPhoto.FTPFlag = "1" // 是否保存到FTP 0 1
+		PEImgPhoto.AppName = "DHCCRMLuYin/";// ftp目录
+		PEImgPhoto.FTPString = FTPArr[0] + "^" + FTPArr[1] + "^"
+							+ FTPArr[2] + "^" + FTPArr[3] // FTP服务器
+
+		PEImgPhoto.PatientID = telfup// PAADM表的ID
+
+		PEImgPhoto.SaveFile("wav") // 对于已经存在图片保存到数据库同时上传FTP的标志有效                    
+		*/
+	}
+	function StartRecord(telnumber)
+	{
+		               
+	}
+	function EndRecord()
+	{
+		
+	}	
+	function GetLuYinFile(telfup)
+	{
+		var LuYinFile=#server(web.DHCCRM.PatInfo.GetSound(telfup))#;
+		return LuYinFile
+		}
+	</script>
+<!--OBJECT ID='PEImgPhoto' CLASSID='CLSID:6939ADA2-0045-453B-946F-44F0D6424D8A' CODEBASE='../addins/client/PEPhoto.CAB#version=2,0,0,58'></OBJECT-->
+<!--OBJECT id="DHCTel"  style="DISPLAY: none" classid='clsid:A418F5E7-CFEF-4C27-9488-FDE1987D9198' codebase="../addins/client/DHCTel.CAB#version=1,0,0,0" > </OBJECT!-->
+<!--OBJECT ID="SoftPhone" CLASSID="CLSID:64E70C13-F624-4E12-9315-171467135911" HEIGHT=0 WIDTH=0 CODEBASE="../addins/client/Softphone.cab#Version=2,9,9,2"> </OBJECT>
+<OBJECT ID="vlclient" CLASSID="CLSID:710179D8-0565-4C27-839F-D9F6016856C0" HEIGHT=0 WIDTH=0 CODEBASE="../addins/client/vlclient.cab#Version=1,2,0,2"> </OBJECT-->
+</HEAD>
+	
+<body>
+</body>
+</html>

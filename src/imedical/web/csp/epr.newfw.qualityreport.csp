@@ -1,0 +1,132 @@
+<html>
+<head>
+  <title>病历质量报告</title>
+  
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+  
+  <script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+  <script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+  <script type="text/javascript" src="../scripts/epr/js/dataupdate.js"></script>
+  <SCRIPT type="text/javascript" SRC="../scripts/epr/js/dgrid.js"></SCRIPT>
+  
+  <!--add by loo on 2010-4-26-->
+  <script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+   
+  <server>
+  	 s examRuleRowID = ""
+     s examRuleRowIDSysOptionID = $o(^DHCEPRM.SysOptionI("NameIndex"," EPREXAMRULEDR",""))
+	 if examRuleRowIDSysOptionID'=""
+	 {
+		s examRuleRowID=$li(^DHCEPRM.SysOptionD(examRuleRowIDSysOptionID),4)	
+	 }
+  </server>
+  <style type="text/css">
+     .tip
+     {
+	     font:20px/1.8 arial;
+	     width:350px;
+	     border:1px solid #ccc;
+	     padding:5px;
+	     background:#fff;
+	     color:#000;
+	     position:absolute;
+	     text-align:left;
+	  }
+</style>
+  <script language="javascript">
+  	var lastSelectTr = '';		//add by zhuj on 2009-12-23
+  	var funurl = '../web.eprajax.reportlistgrid.cls';
+  	var _EpisodeID = "#($Get(%request.Data("EpisodeID",1),"-1"))#";
+  	var _ExamRuleRowID = "#(examRuleRowID)#";
+  	
+	function onTBButtonClick(btn) {
+		 if(btn.id=='btnrefresh'){ajaxAction();}
+	}
+  
+	function getFunParams()
+	{
+		var funparams = {
+				EpisodeID:_EpisodeID,
+				ExamRuleRowID:_ExamRuleRowID
+				};			
+		return funparams;
+	}
+	
+	function afterFunOperate(issuc,functiontype, rtnmsg, rtndata)
+	{
+		lastSelectTr = '';		//add by zhuj on 2009-12-24
+		if (issuc && functiontype=="html"){document.getElementById("ReportList").innerHTML = rtndata;}
+	}
+	
+	function ajaxAction()
+	{
+		document.getElementById("ReportList").innerHTML = "<img width=16 height=16 src='../scripts/epr/Pics/loading.gif'>载入数据,请稍候...</img>";
+		callfunction();
+	}
+	
+	var tip={$:function(ele)
+	{
+		if(typeof(ele)=="object")
+		    return ele;
+		else if(typeof(ele)=="string"||typeof(ele)=="number")
+		    return document.getElementById(ele.toString());
+		    return null;
+	},
+	mousePos:function(e)
+	{
+		var x,y;
+		var e = e||window.event;
+		return{x:e.clientX+document.body.scrollLeft+document.documentElement.scrollLeft,y:e.clientY+document.body.scrollTop+document.documentElement.scrollTop};
+	},
+	start:function(obj)
+	{
+		var self = this;
+		var t = self.$("mjs:tip");
+		obj.onmousemove=function(e)
+		{
+			var mouse = self.mousePos(e);
+			t.style.left = mouse.x + 10 + 'px';
+			t.style.top = mouse.y + 10 + 'px';
+			t.innerHTML = obj.getAttribute("innerText");
+			t.style.backgroundColor='#fff'
+			t.style.display = '';
+		};
+		obj.onmouseout=function()
+		{
+			t.style.display = 'none';
+		};
+	}}
+  </script>
+</head>
+<body bgcolor="#F6FAFD" leftmargin="6" topmargin="2" marginwidth="0" marginheight="0">
+	<table width='100%' border='0' cellspacing='0' cellpadding='2'><tr><td class='x-toolbar' nowrap><span class='T2'>&nbsp病历质控提示</span></td><td width=100%><div id='pagetoolbar'></div></td></tr></table>
+	<script language='javascript'>
+	Ext.onReady(function(){
+		var qualityTbar = new Ext.Toolbar({bodrder: false, renderTo: 'pagetoolbar', items:[ '->','-',{id:'btnrefresh',text:'刷新',cls: 'x-btn-text-icon' ,icon:'../scripts/epr/Pics/upda.gif',pressed:false,handler: onTBButtonClick},'-']});
+		function getVPQuality()
+		{
+			var vpQuality = new Ext.Viewport(
+	        {
+	            id: 'qualityTabViewPort',
+	            shim: false,
+	            animCollapse: false,
+	            constrainHeader: true, 
+	            margins:'0 0 0 0',           
+	            layout: 'border',                     
+	            items: [
+	            		{ region: 'center', layout: 'border', html: '<div id="ReportList"></div>'},
+	                    { region: 'north', layout: 'fit', itmes: qualityTbar}
+	                   ]
+	         });
+	         return vpQuality;
+		}
+		//getVPQuality();
+	});	
+	</script>
+	<div id="ReportList"></div>
+	<div id="mjs:tip" class="tip" style="position:absolute;left:0;top:0;display:none;"></div>
+</body>
+<script language="javascript">ajaxAction()</script>
+</html>

@@ -1,0 +1,504 @@
+<!-- dhcpegreport.csp --!>
+/// 创建时间		2007.01.15
+/// 创建人			xuwm 
+/// 主要功能		团体报告
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 
+-->
+ 
+<HTML>
+<HEAD>
+<!-- 强制网页不被存入Cache中 
+<meta http-equiv="pragma" content="no-cache">
+-->
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="../scripts/dhcpegreportHistogram.js"></SCRIPT>
+
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"/>
+<!---->
+<!-- 主页制作所使用的文字及语言ISO-8859-1
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+ -->
+ 
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.css"></LINK>
+<!-- 封面  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.cover.css"></LINK>
+
+
+<TITLE>团体汇总报告</TITLE>
+<style type="text/css">
+v\:*{ behavior:url(#default#VML); }
+.Canve{ 
+	display:block; 
+	position:relative; 
+	width:550px; 
+	height:500px; 
+	left: 0px; 
+	top: 0px; 
+	border: 0 solid black;
+	margin-bottom:0.2cm;
+	PAGE-BREAK-AFTER: always ;
+}
+body{
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	text-align:center;
+}
+.DDiagnosisOut1{
+	dispay:block;
+	border-top:1 solid black;
+}
+ @media screen {
+#GroupReport{
+	display:block;
+	/* width:21.00cm; */
+	text-align:center;
+	padding:2.54cm 3.17cm 3.17cm 2.54cm;
+	/* margin:0.1cm 0.1cm 0.1cm 0.1cm; */
+	background:inherit;
+	/* border:1 solid black; */
+	text-align:left;
+	font-size: 18px;
+}
+ }
+ @media print {
+#GroupReport{
+		display:block;
+		margin:0.00cm 0.00cm 0.00cm 0.00cm; 
+		padding:0.00cm 0.00cm 0cm 0.00cm; 
+	text-align:center;
+	text-align:left;
+	font-size: 18px;
+}	 
+ }
+/* 文本输出 */
+.TextOut{
+	display:block;
+	width:100%;
+	background:inherit;
+	font-size: inherit;
+	border:none;
+	overflow:visible;
+	font-size: 14px;
+}
+.line{
+	text-indent:27pt;	/* 段落缩进 */
+}
+.tline{
+	display:block;
+	border-bottom:0 solid black;
+}
+/* 段落输出 */
+.ParagraphOut{
+	display:block;
+	width:100%;
+	font-family: "宋体";
+	text-indent:27pt;	/* 段落缩进 */
+	line-height: 150%;	/* 行距 */
+	font-size: 14px;
+}
+.DDiagnosisOut{
+	display:block;
+	width:100%;
+	margin-bottom:0.3cm;
+}
+.DiagnosisString{
+	text-align: left;
+    font-size: 14px;
+    padding:0 0 0 10
+}
+.tdDiagnoseLabel{
+	text-align: left;
+	vertical-align: top;
+}
+#GroupHeader{
+	display:block;
+	width:100%;
+	
+}
+.GroupHeaderName {
+}
+.DReportFooter{
+
+}
+.style1 {
+	font-size: 16px;
+	font-weight: bold;
+}
+.style2 {
+	font-size: 16px;
+	font-weight: bold;
+	PAGE-BREAK-AFTER: always ;
+}
+.Title1CSS{
+	font-size:16px;
+	font-weight:bold;
+	}
+.Title2CSS{
+	font-size:12px;
+	font-weight:bold;
+	text-indent:27pt;	/* 段落缩进 */
+	line-height: 150%;	/* 行距 */
+}
+.Title3CSS{
+	font-size:12px;
+	text-indent:27pt;	/* 段落缩进 */
+	line-height: 150%;	/* 行距 */
+}
+.table {
+	border-collapse:collapse;
+	border: 1px solid #000000;
+	width:550px;
+}
+.td {                                            
+	border-collapse:collapse;   
+	border: 1px solid #000000;
+	white-space:nowrap;
+	font-size:12px;
+}
+</style>
+
+</HEAD>
+<!--
+<BODY
+	onmouseup=document.selection.empty()
+	oncontextmenu="return false" 
+	onselectstart="return false"
+	ondragstart="return false" 
+	onbeforecopy="return false"
+	oncopy=document.selection.empty()
+	onselect=document.selection.empty()
+	>
+-->
+<BODY>
+
+<OBJECT id="PrintActiveX"  style="DISPLAY: none" classid='clsid:3EDE745C-4ADB-42A6-AB25-5621EDBDFD6B' codebase="../addins/client/QWPrint.cab#version=1,0,1,1" > </OBJECT>
+ 
+<input type=button id=SaveAs value=另存为 onclick="saveAs()" class="NOPRINT">
+
+<input type=button value="打印" onclick="PrintReport()" class="NOPRINT">   
+<!--input type=button value="页面设置" onclick="factory.printing.PageSetup()" class="NOPRINT"-->   
+<input type=button value="打印预览" onclick="PrintActiveX.PrintView()" class="NOPRINT">             
+<input type="button" value="关闭" onclick="window.close();" class="NOPRINT"> 
+<input type="button" value="打印封面" onclick="printCover();" class="NOPRINT">
+
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ 	s GID=$g(%request.Data("GID",1))
+ 	s Flag=$g(%request.Data("Flag",1))                                 //add by zhouli
+    s PreIADMStr=$g(%request.Data("PreIADMStr",1))                     //add by zhouli
+</Script>
+<!-- 报告总结 -->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 获取团体信息
+	d ##class(web.DHCPE.GroupReport).GetGroupInfo(GID)
+</SCRIPT>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s loc=%session.Get("LOGON.CTLOCID")
+	s HospCode=$zcvt($G(^DHCPESetting("DHCPE","ReportCode",loc)),"L")
+	s Method="csp.csp.dhcpegreport."
+	i HospCode'="" s HospCode=HospCode_"."
+	// 打印封面
+	s Method=Method_HospCode_"normal.cover"
+	// 打印封面
+	d $zobjclassmethod(Method,"OnPageCSPROOT")
+	// 打印封面
+	//d ##Class(csp.csp.dhcpegreport.normal.cover).OnPageCSPROOT()
+
+</Script>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	k ^TMPGREPORT
+	// 统计团体病患
+	// ##class(web.DHCPE.GroupReport).GetGroupDiagnosisPercent(GID)
+	d ##class(web.DHCPE.GroupReport).GetGroupDiagnosisPercent(GID,Flag,PreIADMStr)       //modify by zhouli
+	// 获取团体病患统计数据
+	d ##class(web.DHCPE.GroupReport).GetGADMStatisticData()
+	// 
+	d ##class(web.DHCPE.GroupReport).GetReportInfo()
+	//
+	d ##class(web.DHCPE.GroupReport).DiagnosisSort()
+	//
+	d ##class(web.DHCPE.GroupReport).GetGDiagnosis(GID)
+	
+</Script>
+<DIV id=GroupReport class=page>
+		
+	<DIV id=GroupHeader>
+		<p class=GroupHeaderName><strong>#(GroupName)#:</strong></p>
+		<p class=Title1CSS><strong>一 体检人数及年龄性别分布</strong></p>
+		<p class=ParagraphOut>(一) 此次预约体检总人数#(TotalCount)#人,实际体检人数#(HTotalCount)#人,其中男性#(HMaleCount)#人,女性#(HFemaleCount)#人</p>
+		<p class=ParagraphOut>(二) 实际体检人中年龄分布为#(AgeAreaTotal)#</p>
+		<p class=Title1CSS><strong>二 疾病构成</strong></p>
+		<p class=Title2CSS>(一) 共发现疾病#(DiagnosisTotal)#种(括号内为患病人数和占体检人数的百分比)</p>
+		<p><TABLE class=table align="center">#(DiagnosisStr)#</TABLE></p>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s i=0
+		</Script>
+
+	</DIV>
+	
+	
+
+	<DIV id=Graph class="Canve"></DIV>
+	<DIV class="style2">
+		<p class=Title2CSS>(二) 按性别分类(括号内为患病人数和占男或女性人数的百分比)</p>
+		<CSP:IF CONDITION=((""'=MDiagnosisStr))>
+		<p class=Title3CSS>(1) <strong>男性</strong>前几种疾病为:</p>
+		<p><TABLE class=table align="center">#(MDiagnosisStr)#</TABLE></p>
+		<p class=Title3CSS><strong>男性年龄段疾病人数为:</p>
+	    <p><TABLE class=table align="center">#(AgeMDiagnosisStr)#</TABLE></p>
+		<P class="style1"></p>
+		</CSP:IF>
+	</DIV>	
+	<DIV id= Graph2 class="Canve"></DIV>
+	
+	  <CSP:IF CONDITION=((""'=FMDiagnosisStr))>
+	<DIV class="style2">
+		<p class=Title3CSS>(2) <strong>女性</strong>前几种疾病为:</p>
+		<p><TABLE class=table align="center">#(FMDiagnosisStr)#</TABLE></p>
+		<p class=Title3CSS><strong>女性年龄段疾病人数为:</p>
+		  <p><TABLE class=table align="center">#(AgeFMDiagnosisStr)#</TABLE></p>
+		<P class="style1"></p>
+	</DIV>
+	 </CSP:IF>
+	<DIV id= Graph3 class="Canve"></DIV>	
+	<DIV>
+		<p class=Title1CSS><strong>三 建议(只取前20种)</strong></p>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			s SortCount=0
+			s DiagnosisType=$P($G(^DHCPESetting("DHCPE","GRDiagnosisType")),"^",2)
+			s i=0
+		</Script>
+	
+		<!--  输出病患信息友谊只取前20种建议 -->
+		<csp:WHILE CONDITION=((""'=SortCount)&&(SortCount<=20))>
+			<SCRIPT language="Cache" RUNAT="SERVER">
+				
+				s i=i+1
+				i DiagnosisType="N"
+				{
+					s SortCount=$O(^TMPGREPORT("DS","DiagnosisSort", SortCount))
+				}
+				else
+				{
+					s SortCount=$O(^TMPGREPORT("GDiagnosis","RowID", SortCount))
+				}
+					i (""'=SortCount)
+					{
+						i DiagnosisType="N"
+						{
+							s Diagnosis=$G(^TMPGREPORT("DS","DiagnosisSort", SortCount))
+							// 疾病名称
+							s DiagnosisDesc=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis))
+							//13264295361
+							// 患病人数
+							s DiagnosisCount=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis, "DiagnosisCount"))
+	
+							// 患病比率
+							s DiagnosisPercent=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis, "Percent"))
+							// 患病名单
+							s PersonList=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis, "List"))
+							s PersonList=$P(PersonList,",",2,$l(PersonList,","))
+							// 建议
+							s DiagnoseDetail=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis,"DiagnoseDetail"))
+						}
+						else
+						{
+							s Diagnosis=$G(^TMPGREPORT("GDiagnosis","RowID", SortCount))
+							// 疾病名称
+							s DiagnosisDesc=$G(^TMPGREPORT("GDiagnosis", "Desc", Diagnosis))
+							//建议
+							s DiagnoseDetail=$G(^TMPGREPORT("GDiagnosis", "Detail", Diagnosis))
+							
+						}
+					}
+			</Script>
+	
+			<CSP:IF CONDITION=((""'=SortCount)&&(SortCount<=20))>  
+				<DIV class=DDiagnosisOut>
+					<table class=tline width=100% cellspacing=0>
+						<tr>
+							<td class=line >#(i)# <strong>#(DiagnosisDesc)#</strong>:#(DiagnoseDetail)#</td>
+							<!--td class=line >#(i)# <strong>#(PersonList)#</strong></td-->
+						</tr>
+					</table>
+				</DIV> <!-- DDiagnosisOut -->
+			</CSP:IF>
+		</csp:WHILE>
+		
+
+		
+	</DIV>
+		<DIV>
+		<Table>
+		<tr>
+			<td>		 
+				<div>#($G(GroupReportAdvice))#</div>
+			</td>
+		</tr>
+	</table>
+	</DIV>
+	<DIV>
+		<p class=Title1CSS><strong>四 感谢</strong></p>
+		<p class=ParagraphOut>非常感谢贵单位对我们的信任和支持,在体检的过程中,由于我们工作得不到位,可能给您们的员工带来了不便,请您们转达我们向大家表示的歉意,欢迎您们提出宝贵意见,帮助我们不断改进工作,我们将更好的为您们服务.
+
+	 	</p>
+		<table height="34">
+		<tr>
+		<td  width="328">
+		</td>
+			<td  width="208">		 
+				<div align="center"><strong>#($G(HosptionName))#</strong></div>
+			</td>
+		</tr>
+		</table>
+	</DIV>
+	
+	
+</DIV> <!-- GroupReport -->
+<SCRIPT SRC="../scripts/DHCPEReport.js"></SCRIPT>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	w "<SCRIPT language='javascript'>",!
+	w "var values=new Array();",!
+	w "var Labels=new Array();",!
+	s iLLoop=0
+	s SortCount=0
+	f  s SortCount=$O(^TMPGREPORT("DS", "DiagnosisSort", SortCount)) Q:(""=SortCount)||(+iLLoop>9)  d
+	.s Diagnosis=$g(^TMPGREPORT("DS", "DiagnosisSort", SortCount))
+	.s DiagnosisPercent=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis, "Percent"))
+	.w "values["_iLLoop_"]='"_DiagnosisPercent_"';",!
+	.s DiagnosisDesc=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis))
+	.w "Labels["_iLLoop_"]='"_DiagnosisDesc_"';",!
+	.s iLLoop=+iLLoop+1
+	w "var values2=new Array();",!
+	w "var Labels2=new Array();",!
+	s iLLoop=0
+	s Sex="男"
+	s SortCount=0
+	f  s SortCount=$O(^TMPGREPORT("DS", "DiagnosisSexSort",Sex, SortCount)) Q:(""=SortCount)||(+iLLoop>9)  d
+	.s Diagnosis=$g(^TMPGREPORT("DS", "DiagnosisSexSort", Sex,SortCount))
+	.s DiagnosisPercent=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis, "Sex", "Sex/Total", Sex))
+	.w "values2["_iLLoop_"]='"_DiagnosisPercent_"';",!
+	.s DiagnosisDesc=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis))
+	.w "Labels2["_iLLoop_"]='"_DiagnosisDesc_"';",!
+	.s iLLoop=+iLLoop+1
+	w "var values3=new Array();",!
+	w "var Labels3=new Array();",! 
+	s iLLoop=0
+	s Sex="女"
+	s SortCount=0
+	f  s SortCount=$O(^TMPGREPORT("DS", "DiagnosisSexSort",Sex, SortCount)) Q:(""=SortCount)||(+iLLoop>9)  d
+	.s Diagnosis=$g(^TMPGREPORT("DS", "DiagnosisSexSort", Sex,SortCount))
+	.s DiagnosisPercent=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis, "Sex", "Sex/Total", Sex))
+	.w "values3["_iLLoop_"]='"_DiagnosisPercent_"';",!
+	.s DiagnosisDesc=$G(^TMPGREPORT("DS", "Diagnosis", Diagnosis))
+	.w "Labels3["_iLLoop_"]='"_DiagnosisDesc_"';",!
+	.s iLLoop=+iLLoop+1
+	w "DrawHistogram(Graph,Labels,values,400,300);",!
+	w "DrawHistogram(Graph2,Labels2,values2,400,300);",!
+	w "DrawHistogram(Graph3,Labels3,values3,400,300);",!
+	w !,"<"_"/SCRIPT>",!
+			
+</Script>
+	
+
+
+<SCRIPT language="javascript">
+	var idTmr="";
+	PrintActiveX.paddingTop=255;
+	PrintActiveX.paddingRight=185;
+	PrintActiveX.paddingBottom=220;
+	PrintActiveX.paddingLeft=185;
+	PrintActiveX.isHtmlHeadFoot=true;
+	
+	var obj,groupName="",regNo="",startDate="",endDate="";
+	obj=document.getElementById("groupName");
+	if (obj) groupName=obj.innerText;
+	obj=document.getElementById("regNo");
+	if (obj) regNo=obj.innerText;
+	obj=document.getElementById("startDate");
+	if (obj) startDate=obj.innerText;
+	obj=document.getElementById("endDate");
+	if (obj) endDate=obj.innerText;
+	var str="北京协和医院体检中心团体体检结果统计分析报告"
+	//上面图片
+	var header="<div style=\"float:center;border-bottom:2px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\"><img src=\"http://10.21.15.1/dthealth/web/images/dhcpe/yylogo.bmp\" height=\"53\" align=\"absmiddle\">"+str+"</span></div><br>"
+	//下面病人信息
+	//+"<div style=\"float:center;border:3px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\">"+str+"</span></div>"
+	PrintActiveX.header=header;
+	//PrintActiveX.pageWidth=2000; #eeeeee #eeeeee
+	//PrintActiveX.pageHeight=800; #eeeeee
+	var footer="&b<div style=\"float:center;border-top:3px solid;padding:15px;\">第&p页 (共&P页)</div>&b";
+	PrintActiveX.footer=footer;
+	PrintActiveX.orientation=1;
+	PrintActiveX.pageName="A4"
+/*
+function BodyLoadHandler(){
+
+	setTimeout("PrintReport()",0);
+
+	
+	
+}	
+document.body.onload = BodyLoadHandler;
+*/
+	function PrintReport()
+	{
+		
+		printCover()
+		PrintActiveX.Print(false);
+		window.close();
+		//document.all.WebBrowser.ExecWB(6,1)
+		
+	}
+function   saveAs(){
+	var FileName=#server(web.DHCPE.ReportGetInfor.GetPatInfo("PatName"))#+"的体检报告.htm"	
+	document.execCommand   ( "saveAs",true, FileName); 
+} 
+function printCover()
+{
+	
+	var Templatefilepath=#server(web.DHCPE.Report.MonthStatistic.getpath())#+'DHCPEGReportCover.xls';
+	try
+	{
+		//groupName="",regNo="",startDate="",endDate=""
+		xlApp = new ActiveXObject("Excel.Application");  //固定
+		xlBook = xlApp.Workbooks.Add(Templatefilepath);  //固定
+		xlsheet = xlBook.WorkSheets("Sheet1");     //Excel下标的名称
+		xlsheet.cells(8,4)=groupName;
+		xlsheet.cells(10,4)=regNo;
+		xlsheet.cells(12,4)=startDate;
+		xlsheet.cells(14,4)=endDate;
+		xlsheet.printout;
+		xlBook.Close (savechanges=false);
+		xlApp.Quit();
+		xlApp=null;
+		xlsheet=null
+
+		idTmr   =   window.setInterval("Cleanup();",1); 
+	
+	}
+	catch(e)
+	{
+		alert(e+"^"+e.message);
+	}
+}
+
+function   Cleanup()   {   
+	window.clearInterval(idTmr);   
+	CollectGarbage();   
+}
+
+</SCRIPT>	
+</body>
+
+
+</HTML>

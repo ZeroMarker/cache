@@ -1,0 +1,120 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<JQUERY:EASYUI132/>
+		<style>
+		.i-searchbox tr{
+			height:30px;	
+		}
+		.i-searchbox tr>td:nth-child(1),.i-searchbox tr>td:nth-child(3){
+			text-align:right;	
+			width:80px;
+		}
+		</style>
+	</HEAD>
+	
+	<body>
+		<div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">加载中···</font></h1></div>
+		<DIV id="PageContent" style="height:100%">
+			<table width="100%">
+				<tbody><tr><td class="maintitle">消息处理</td></tr><tr><td class="i-tableborder"><table width="100%" class="i-searchbox"><tbody><tr><td>
+				<label id="cActionType">消息类型</label>
+				</td><td>
+				<div class="i-input">					
+						<select id="ActionType" class="easyui-combobox" style="width:200px;height:24px" data-options='onSelect:ActionTypeOnChange'>
+						  <option value ="">全部</option>
+						  <server>
+						  	set ActionDr="" for  set ActionDr=$o(^websys.DHCMessageActionTypeD(ActionDr)) q:ActionDr=""  d
+						 	.set ActionCode = $lg(^websys.DHCMessageActionTypeD(ActionDr),2)
+							.set ActionDesc = $lg(^websys.DHCMessageActionTypeD(ActionDr),3)
+							.w "<option value =",ActionDr,">",ActionDesc,"</option>"
+						 </server>
+						</select>
+				</div></td>
+				<td>
+				<label id="cExecFlag">患者姓名</label>
+				</td><td>
+				<div class="i-input"><input id="PatName" name="PatName" value="" style="width:200px;height:24px">
+				</div></td>
+				<!--
+				<td>
+				<label id="cExecFlag">处理状态</label>
+				</td><td>
+				<div class="i-input">
+					<select id="ExecFlag" class="easyui-combobox" style="width:200px;height:24px" data-options='onSelect:ExecFlagOnChange'>
+						<option value ="N">未处理</option>
+						<option value ="Y">已处理</option>
+					</select>
+				</div></td>
+				-->
+				<td>
+				<a href="#" id="FindBtn" name="FindBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+				</td></tr><tr><td>
+				<label id="cFromUser">发送用户</label>
+				</td><td>
+				<div class="i-input"><input id="FromUser" name="FromUser" value="">
+				</div></td><td>
+				<label id="cToUser">接收用户</label>
+				</td><td>
+				<div class="i-input"><input id="ToUser" name="ToUser" value="">
+				</div></td><td>
+				<a href="#" id="ExecBtn" name="ExecBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit'">处理</a>
+				</td></tr><tr><td>
+				<label id="cDateStart">开始日期</label>
+				</td><td>
+				<div class="i-input"><input id="DateStart" name="DateStart" style="width:200px;height:24px" class="easyui-datebox" value="">
+				</div></td><td>
+				<label id="cDateEnd">结束日期</label>
+				</td><td>
+				<div class="i-input"><input id="DateEnd" name="DateEnd" style="width:200px;height:24px" class="easyui-datebox"  value="">
+				</div></td><td>
+				<a href="#" id="ClearBtn" name="ClearBtn" class="easyui-linkbutton" data-options="iconCls:'icon-clearscreen'">清屏</a>
+				</td></tr></tbody></table></td></tr></tbody>
+			</table> <!--查询条件区table-->
+			<table width="100%">
+			<tbody><tr><td class="listtitle">消息列表</td></tr><tr><td class="i-tableborder">
+			<TABLE ID="tDHCMessageContent"></TABLE>   <!--Content的datagrid-->
+			</td></tr></tbody></table>
+			<TABLE ID="test"></TABLE>
+		</DIV>
+		<div id="mydialog" title="Details管理" modal=true  draggable=false class="easyui-dialog" closed=true style="width:950px;height:455px;">
+	    	<input type="hidden" id="DetailsContentId" name="DetailsContentId" value="" />
+			<table width="100%">
+				<tbody><tr><td class="defaulttitle"><span id="ContentInfo"></span></td></tr><tr><td class="i-tableborder"><table width="100%"><tbody><tr><td>
+				<label id="cToUser">接收用户</label>
+				</td><td>
+				<div class="i-input"><input id="DToUser" name="DToUser" value="">
+				</div></td><td>
+				<a href="#" id="DFindBtn" name="DFindBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+				</td><td>
+				<a href="#" id="DExecBtn" name="DExecBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit'">处理选中</a>
+				</td></tr><tr><td>
+				<label id="cExecFlag">处理状态</label>
+				</td><td>
+				<div class="i-input">
+					<select id="DExecFlag" class="easyui-combobox" style="width:200px;height:24px" data-options='onSelect:DExecFlagOnChange'>
+						<option value ="N">未处理</option>
+						<option value ="Y">已处理</option>
+					</select>
+				</div></td><td>
+				<a href="#" id="DClearBtn" name="DClearBtn" class="easyui-linkbutton" data-options="iconCls:'icon-clearscreen'">清屏</a>
+				</td><td>
+				<a href="#" id="DExecAllBtn" name="DExecAllBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit'">处理所有</a>
+				</td></tr></tbody></table></td></tr></tbody>
+			</table> <!--查询条件区table-->
+			<TABLE ID="tDHCMessageDetails" ></TABLE>   <!--Content的datagrid-->
+ 		</div>
+		<script type="text/javascript">	
+			var dateformat="#(##class(websys.Conversions).DateFormat())#";
+			var now = "#($zd(+$h,##class(websys.Conversions).DateFormat()))#";
+			$(function(){$("#Loading").fadeOut("fast");});
+		</script>
+		<script src="../scripts/websys.jquery.js" type="text/javascript" ></script>
+		<script src="../scripts/dhcmessagehistorymgr.js" type="text/javascript" ></script>
+	</body>
+</HTML>

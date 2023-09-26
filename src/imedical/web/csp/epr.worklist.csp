@@ -1,0 +1,194 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+	; ab 28.06.02
+	; open worklist from request param and read the options, set up frameset from defined style
+	;
+	n WorkID,obj,workname,style,border,resize,linktop,linkbot,linkright,linkleft,size1,size2,size3,user,msg,MsgNotif,config,params,x
+	s (size1,size2,size3,user,msg,MsgNotif,params)=""
+	s MAXLINKSTRING=1500
+	;
+	s WorkID=$g(%request.Data("WorkID",1))
+	s user=%session.Get("LOGON.USERID")
+	i WorkID="" s WorkID=##class(epr.Worklist).GetIdFromCodeOrDescription($g(%request.Data("WorkName",1)))
+	i WorkID="" w "No worklist defined! (check workflow/menu settings)" q
+	;
+	k %request.Data("TMENU"),%request.Data("TEPRSTART"),%request.Data("TEVENT"),%request.Data("TWKFL"),%request.Data("TWKFLI")
+	;
+	; send through all the request parameters
+	; ab 10.01.06 - 57326 - limit length of link string
+	s x=""  f  s x=%request.Next(x)  q:x=""  d
+	. i $l(params)<MAXLINKSTRING s params=params_"&"_x_"="_##Class(websys.Conversions).EscapeUrl($g(%request.Data(x,1)))
+	. ; ab 14.08.06 60554 - override to always include 'admtype' variable
+	. i $l(params)'<MAXLINKSTRING,x="admType" s params=params_"&"_x_"="_##Class(websys.Conversions).EscapeUrl($g(%request.Data(x,1)))
+	;
+	s linktop="epr.worklist.frame.csp?WorkID="_WorkID_"&frame=T"_params
+	s linkbot="epr.worklist.frame.csp?WorkID="_WorkID_"&frame=B"_params
+	s linkright="epr.worklist.frame.csp?WorkID="_WorkID_"&frame=R"_params
+	s linkleft="epr.worklist.frame.csp?WorkID="_WorkID_"&frame=L"_params
+	;
+	s obj=##Class(epr.Worklist).%OpenId(WorkID)
+	i 'obj w "This worklist no longer exists!" q
+	i obj
+	{
+		s style=obj.Style
+		;s style=##class(websys.StandardTypeItem).GetDescription("WorklistStyle",obj.Style)
+		;s style=##class(websys.StandardTypeItem).GetCodeFromCodeOrDescription("WorklistStyle",style)
+		i style="" w "No style defined for this worklist, please add worklist items!" d obj.%Close() q
+		s border=obj.Border
+		s resize=obj.Resizeable
+		s workname=obj.Name
+		s size1=obj.FrameSize1,size2=obj.FrameSize2,size3=obj.FrameSize3
+		;
+		; display a small frame up the top if they have any medtrak messages
+		i $ld(^websys.ConfigurationD(1)) s MsgNotif=$li(^websys.ConfigurationD(1),35)
+		s msg=##Class(web.SSMessageRecipient).countNewMessages(user)
+        i MsgNotif,msg {
+            // ab 29.04.05 - 51682 - previous component was being kept in this variable for discharge workflow
+            k %session.Data("WEBSYS.TCOMPONENT")
+			w "<frameset rows=""25,*"""
+			i border'=1 w " frameborder='0' border='0'"
+			w ">",!
+			w "<frame name=""work_msg"" src=""websys.default.csp"" "_$s(resize=0:"noresize",1:"")_">"
+		}
+		;
+		i style'="QUAD" {
+			; InitWorklist is called in epr.worklist.frame.csp for each frame
+			;w "<frameset onload=""InitWorklist();"" "
+			w "<frameset "
+			i style="LR" w "cols='"_$s(size1'="":size1,1:"50")_"%,*'"
+			i style="TB" w "rows='"_$s(size2'="":size2,1:"50")_"%,*'"
+			i style="TLR" w "rows='"_$s(size2'="":size2,1:"30")_"%,*'"
+			i style="BLR" w "rows='"_$s(size2'="":size2,1:"70")_"%,*'"
+			i style="ALL" w "rows='"_$s(size2'="":size2,1:"25")_"%,"_$s(size3'="":size3,1:"50")_"%,*'"
+			i border'=1 w " frameborder='0' border='0'"
+			w ">",!
+			;
+			i style="LR" w "<frame name='work_left' src='"_linkleft_"' "_$s(resize=0:"noresize",1:"")_">"
+			i (style="TB")!(style="TLR")!(style="ALL") w "<frame name='work_top' src='"_linktop_"' "_$s(resize=0:"noresize",1:"")_">"
+			i style="BLR" {
+				w "<frameset cols='"_$s(size1'="":size1,1:"50")_"%,*'"
+				i border'=1 w " frameborder='0' border='0'"
+				w ">",!,"<frame name='work_left' src='"_linkleft_"' "_$s(resize=0:"noresize",1:"")_">",!
+				w "<frame name='work_right' src='"_linkright_"' "_$s(resize=0:"noresize",1:"")_"></frameset>"
+			}
+			;
+			i style="ALL" {
+				w "<frameset cols='"_$s(size1'="":size1,1:"50")_"%,*'"
+				i border'=1 w " frameborder='0' border='0'"
+				w ">",!,"<frame name='work_left' src='"_linkleft_"' "_$s(resize=0:"noresize",1:"")_">",!
+				w "<frame name='work_right' src='"_linkright_"' "_$s(resize=0:"noresize",1:"")_"></frameset>"
+			}
+			;
+			i style="LR" w "<frame name='work_right' src='"_linkright_"' "_$s(resize=0:"noresize",1:"")_">"
+			i (style="TB")!(style="BLR")!(style="ALL") w "<frame name='work_bottom' src='"_linkbot_"' "_$s(resize=0:"noresize",1:"")_">"
+			i style="TLR" {
+				w "<frameset cols='"_$s(size1'="":size1,1:"50")_"%,*'"
+				i border'=1 w " frameborder='0' border='0'"
+				w ">",!,"<frame name='work_left' src='"_linkleft_"' "_$s(resize=0:"noresize",1:"")_">",!
+				w "<frame name='work_right' src='"_linkright_"' "_$s(resize=0:"noresize",1:"")_"></frameset>"
+			}
+			;
+			w "</frameset>",!
+		}
+		;
+		i style="QUAD" {
+		  ;w "<frameset onload=""InitWorklist();"" cols='"_$s(size1'="":size1,1:"50")_"%,*'"
+		  w "<frameset cols='"_$s(size1'="":size1,1:"50")_"%,*'"
+		  i border'=1 w " frameborder='0' border='0'"
+		  w ">",!
+            w "<frameset rows='"_$s(size2'="":size2,1:"50")_"%,*'"
+            i border'=1 w " frameborder='0' border='0'"
+            w ">",!
+              w "<frame name='work_left' src='"_linkleft_"' "_$s(resize=0:"noresize",1:"")_">",!
+              w "<frame name='work_top' src='"_linktop_"' "_$s(resize=0:"noresize",1:"")_">",!
+            w "</frameset>",!
+            w "<frameset rows='"_$s(size3'="":size3,1:"50")_"%,*'"
+            i border'=1 w " frameborder='0' border='0'"
+            w ">",!
+              w "<frame name='work_right' src='"_linkright_"' "_$s(resize=0:"noresize",1:"")_">",!
+              w "<frame name='work_bottom' src='"_linkbot_"' "_$s(resize=0:"noresize",1:"")_">",!
+            w "</frameset>",!
+          w "</frameset>",!
+		}
+		;
+		i MsgNotif,msg {
+			w "</frameset>"
+		}
+		;
+		i obj.Script'="" {
+		  s ScriptCount=$l(obj.Script,",")
+		  f i=1:1:ScriptCount {
+          		  w "<script language=""Javascript"" src=""../SCRIPTS/"_$p(obj.Script,",",i)_"""></script>",!
+  		  }
+		}
+		;
+		d obj.%Close()
+	}
+</SERVER>
+
+<noframes>
+    <body>
+    <p></p>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+<script language="Javascript">
+	var WorkID="#(WorkID)#";
+	
+	// Please do not use this space for worklist-specific script, use the 'Script' field to link other scripts
+	function InitWorklist() {
+		//SetupLists();
+		return;
+	}
+
+	//TN:29-Nov-2002: this should not be called anymore, moved to websys.List.js called EPR_DynamicNameChange() (without the frames loop)
+	// needed when multiple of the same lists are on one frame, to rename every form and set the event handlers seperately
+	function SetupLists() {
+		var ary=window.frames;
+		for (var i=0;i<ary.length;i++) {
+			var doc=window.frames[i].document;
+			//see EPR_DynamicNameChange() from websys.list.csp
+		}
+    }
+	
+	// generic function for finding a component in another frame, useful for cross-frame interactions
+	// ret 1: returns ^ delim string of frame names
+	// ret other: returns (last found) component object
+	function FindComponent(par,name,ret)
+	{
+		var frame="",comp="";
+		if ((par)&&(name)&&(name!="")) {
+			var fr=par.frames;
+			if ((fr)&&(fr.length>0)) {
+				for (var i=0; i<fr.length; i++) {
+					// look for the correct window containing the component
+					if (fr[i].document.getElementById(name)) {
+						if (frame!="") frame=frame+"^";
+						frame=frame+fr[i].name;
+						var comp=fr[i].document.getElementById(name);	
+					} 
+				}
+			}
+		}
+		if (ret==1)
+			return frame
+		else
+			return comp;
+	}
+	
+</script>
+
+</HTML>

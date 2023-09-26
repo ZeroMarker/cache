@@ -1,0 +1,132 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s id=$Get(%request.Data("id",1))
+	s unitsDr=$Get(%request.Data("unitsDr",1))
+	s itemDr=$Get(%request.Data("itemDr",1))
+	s remark=$Get(%request.Data("remark",1))
+	s fee=$Get(%request.Data("fee",1))
+	s cost=$Get(%request.Data("cost",1))
+	s monthDr=$Get(%request.Data("monthDr",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s userDr=$Get(%request.Data("userDr",1))
+	s fDeptDr=$Get(%request.Data("fDeptDr",1))
+	s tDeptDr=$Get(%request.Data("tDeptDr",1))
+	s patDeptDr=$Get(%request.Data("patDeptDr",1))
+	s feeDate=$Get(%request.Data("feeDate",1))
+	s patType=$Get(%request.Data("patType",1))
+	s ruleDr=$Get(%request.Data("ruleDr",1))
+	s deptTypeDr=$Get(%request.Data("deptTypeDr",1))
+	
+	s itemCode=$Get(%request.Data("itemCode",1))
+	s itemName=$Get(%request.Data("itemName",1))
+	s fDeptCode=$Get(%request.Data("fDeptCode",1))
+	s fDeptName=$Get(%request.Data("fDeptName",1))
+	s tDeptCode=$Get(%request.Data("tDeptCode",1))
+	s tDeptName=$Get(%request.Data("tDeptName",1))
+	s patDeptCode=$Get(%request.Data("patDeptCode",1))
+	s patDeptName=$Get(%request.Data("patDeptName",1))
+	s ruleone=$Get(%request.Data("ruleone",1))
+	s ruletwo=$Get(%request.Data("ruletwo",1))
+	s rulethree=$Get(%request.Data("rulethree",1))
+	
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uIncomeDatas).ListRec(searchField,searchValue,sortField,sortDir,start,limit,monthDr)
+	
+	i action = "find" d
+	.w ##class(dhc.ca.cache.udata.uIncomeDatas).FindRec(searchField,searchValue,sortField,sortDir,start,limit,monthDr,feeDate, itemDr, fDeptDr, tDeptDr, patDeptDr, itemCode, itemName, fDeptCode, fDeptName, tDeptCode, tDeptName, patDeptCode, patDeptName)
+	
+	i action = "listremain" d
+	.w ##class(dhc.ca.cache.udata.uIncomeDatas).ListRemain(monthDr,searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "persons" d
+	.w ##class(dhc.ca.cache.udata.uUnitPersons).ListRec(searchField, searchValue, sortField, sortDir, start, limit, id, "Y", "")
+	
+	i action = "depts" d
+	.w ##class(dhc.ca.cache.udata.uUnitDepts).ListRec(unitsDr,"Y",searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "months" d
+	.w ##class(dhc.ca.cache.udata.uAccountMonths).ListRec("desc", searchValue, sortField, sortDir, start, limit, "", "", "")
+	
+	i action = "items" d
+	.w ##class(dhc.ca.cache.udata.uDataItemCorres).ListRec(id,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "loadrules" d
+	.w ##class(dhc.ca.cache.udata.uLoadRules).ListRec(searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "check" d
+	.w ##class(dhc.ca.cache.udata.uIncomeDatas).CheckUser(userCode)
+	
+	i action = "refresh" d
+	.s result = ##class(dhc.ca.cache.udata.uIncomeDatas).refreshRec(monthDr,ruleDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "checkMonth" d
+	.s result = ##class(dhc.ca.cache.udata.uIncomeDatas).getDayActive(monthDr)
+	.i result = "Y" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uIncomeDatas).InsertRec(monthDr, feeDate, patType, itemDr, fee, cost, fDeptDr, tDeptDr, patDeptDr, userDr, remark)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "innerdept" d
+	.s result = ##class(dhc.ca.cache.udata.uInDataCardRule).InnerDeptControl(monthDr,deptTypeDr,ruleone,ruletwo,rulethree)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.ca.cache.udata.uIncomeDatas).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delRemark" d
+	.s result = ##class(dhc.ca.cache.udata.uIncomeDatas).DelRecByRemark(remark)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delMonth" d
+	.s result = ##class(dhc.ca.cache.udata.uIncomeDatas).DelRecByMonth(monthDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uIncomeDatas).UpdateRec(id, itemCode, itemName, fDeptCode, fDeptName, tDeptCode, tDeptName, patDeptCode, patDeptName, fee, cost, remark, userDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "import" d
+	.w "{success:'true',info:'导入成功,请半小时后查看!'}"
+	.d ##class(dhc.ca.cache.comm.DataLoadHS).HISDataSet(monthDr,userCode,"load",ruleDr)
+	
+</script>

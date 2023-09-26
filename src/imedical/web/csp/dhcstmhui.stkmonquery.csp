@@ -1,0 +1,131 @@
+<!--月报明细-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+ <link href="../scripts/dhcstmhisui/Common/css/Tab.css" type="text/css" rel="stylesheet"/>	
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'west',border:false,collapsible:false" style="width:420px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="GridPadding" data-options="region:'center',border:false,collapsible:false">
+				<div class="hisui-panel" title="历史月报" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false,collapsible:false">
+							<table id="HistoryStkMonStatConditions" class="Condition">
+								<tr>
+									<td>月报科室</td>
+									<td colspan="3"><input id="HistoryStkMonStatLoc" name="HistoryStkMonStatLoc" class="hisui-combobox" style="width:209px;"></td>									
+								</tr>
+								<tr>
+									<td>月报范围</td>
+									<td align="left"><input id="StYear" name="StYear" class="textbox" style="width:80px;"></td>
+									<td align="left">年</td>
+									<td align="left"><input id="StMonth" name="StMonth" class="textbox" style="width:80px;"></td>
+									<td align="left">月</td>
+								</tr>
+								<tr>
+									<td>至</td>
+									<td align="left"><input id="EdYear" name="EdYear" class="textbox" style="width:80px;"></td>
+									<td align="left">年</td>
+									<td align="left"><input id="EdMonth" name="EdMonth" class="textbox" style="width:80px;"></td>
+									<td align="left">月</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><a href="#" id="SearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+									<td></td>
+									<td align="left"><a href="#" id="SubmitBT" class="hisui-linkbutton" >凭证提交</a></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+									<td></td>
+									<td align="left"><a href="#" id="CancelSubmitBT" class="hisui-linkbutton">取消提交</a></td>	
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false,collapsible:false">
+							<table id="HistoryStkMonStatGrid"></table>
+						</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+
+	<div class="GridPadding" data-options="region:'center',border:false,collapsible:false" style="padding-left:0px">
+		<div class="hisui-panel" title="月报明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false">
+					<table id="StkMonTabConditions" class="Condition" >
+						<tr>
+							<td>类组</td>
+							<td><input id="StkGrpId" name="StkGrpId" class="hisui-stkscgcombotree" style="width:90px;"></td>
+							<td><input id="FinancialFlag" name="FinancialFlag" class='hisui-checkbox' type="checkbox" value="Y" label="财务类组"></td>
+							<td>库存分类</td>
+							<td><select id="StkCatBox" name="StkCatBox" class="hisui-combobox" style="width:90px;"></select></td>
+							<td>物资名称</td>
+							<td><input id="InciDesc" name="InciDesc" class="textbox" style="width:90px;"></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">筛选</a></td>
+						</tr>
+					</table>
+				</div>
+
+				<div id="StkMonTab" class="hisui-tabs tabs-gray" data-options="region:'center',border:false">
+					<div title="月报出库汇总(交叉报表)"  class="hisui-layout ReportImage" data-options="headerCls:'panel-header-gray',fit:true">
+						<iframe id="frameReportInIsRpLocCat" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>   
+					</div>
+					<div title="月报入库汇总(供应商)"  class="hisui-layout ReportImage" data-options="headerCls:'panel-header-gray',fit:true">
+						<iframe id="frameImportVendorSum" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>   
+					</div>
+					<div title="类组汇总(进价)"  class="hisui-layout ReportImage" data-options="headerCls:'panel-header-gray',fit:true">
+						<iframe id="frameDetailSCGRp" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>   
+					</div>
+					<div title="类组汇总(售价)"  class="hisui-layout ReportImage" data-options="headerCls:'panel-header-gray',fit:true">
+						<iframe id="frameDetailSCGSp" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>   
+					</div>
+					<div title="多级类组"  class="hisui-layout ReportImage" data-options="headerCls:'panel-header-gray',fit:true">
+						<iframe id="frameMulScgRp" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>   
+					</div>
+					<div title="库存分类汇总"  class="hisui-layout ReportImage" data-options="headerCls:'panel-header-gray',fit:true">
+						<iframe id="frameStkCatRp" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>   
+					</div>
+					<div title="库存分类出库交叉汇总"  class="hisui-layout ReportImage" data-options="headerCls:'panel-header-gray',fit:true">
+						<iframe id="frameStkCatTransRp" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>   
+					</div>
+					<div title="月报明细(售价)"  class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">   
+						<table id="StkMonStatDetailSpGrid"></table>
+					</div>
+					<div title="月报明细(进价)"  class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">   
+						<table id="StkMonStatDetailRpGrid"></table>
+					</div>
+					<div title="月报明细批次(售价)"  class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">   
+						<table id="StkMonStatDetailLBSpGrid"></table>
+					</div>
+					<div title="月报明细批次(进价)"  class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">   
+						<table id="StkMonStatDetailLBRpGrid"></table>
+					</div>
+				</div>
+			
+			</div>
+		</div>
+	</div>
+	
+	
+    <script type="text/javascript" src="../scripts/dhcstmhisui/StkMonRep/DHCStkMonRepPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/StkMonRep/DHCStkMonRepQuery.js"></script>
+</body>
+</html>

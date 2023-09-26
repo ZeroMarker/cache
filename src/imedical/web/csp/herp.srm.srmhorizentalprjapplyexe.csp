@@ -1,0 +1,118 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s StartDate= $Get(%request.Data("StartDate",1))
+	s Name = $Get(%request.Data("Name",1))
+	s SubNo = $Get(%request.Data("SubNo",1))
+	s DeptDr = $Get(%request.Data("DeptDr",1))
+	s AppFunds = $Get(%request.Data("AppFunds",1))
+	s EndDate = $Get(%request.Data("EndDate",1))
+	s PatentNum = $Get(%request.Data("PatentNum",1))
+	s Inventors = $Get(%request.Data("Inventors",1))
+	s ConDate = $Get(%request.Data("ConDate",1))
+
+	s userdr =  $Get(%request.Data("userdr",1)) // µÇÂ½ÓÃ»§CODE
+	
+	s ParticipantsIDs = $Get(%request.Data("ParticipantsIDs",1))
+	s RelyUnitsIDs = $Get(%request.Data("RelyUnitsIDs",1))
+		
+	s RelyUnit = $Get(%request.Data("RelyUnit",1))
+	s SubUser = $Get(%request.Data("SubUser",1))
+	s Remark = $Get(%request.Data("Remark",1))
+	
+	s ApplyStart =  $Get(%request.Data("ApplyStart",1)) 
+	s Applyend  =  $Get(%request.Data("Applyend",1))
+	s deptdr    =  $Get(%request.Data("deptdr",1))	
+	s SubSource =  $Get(%request.Data("SubSource",1))
+	s ResAudit  =  $Get(%request.Data("ResAudit",1)) 
+	s Participants =  $Get(%request.Data("Participants",1))
+	s HeadDr =  $Get(%request.Data("HeadDr",1))
+	s PName =  $Get(%request.Data("PName",1))
+	
+	s usercheckdr =  $Get(%request.Data("usercheckdr",1))
+	s checker =  $Get(%request.Data("checker",1))
+	s view =  $Get(%request.Data("view",1))
+    s ProjectsName = $Get(%request.Data("ProjectsName",1))
+	
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).List(sortField, sortDir, start, limit, ApplyStart, Applyend,deptdr, SubSource, ResAudit, HeadDr, PName, userdr)
+	
+	i action = "deptList" d 
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).CalDeptName(start, limit, str)
+	
+	i action = "applyerList" d
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).UserList(start, limit, str)
+	
+	i action = "sourceList" d 
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).CalSubSource(start, limit, str)
+	
+	
+	i action = "ParticipantsID" d
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).ParticipantsList(start, limit, ParticipantsIDs)
+	
+	i action = "RelyUnitsID" d
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).RelyUnitsList(start, limit, RelyUnitsIDs)
+
+	i action = "GetDept" d
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).CalDeptName(start, limit, str)
+
+	i action = "GetYear" d
+	.w ##class(herp.srm.udata.uPatentInfo).YearList(start, limit, str)
+
+	i action = "GetHead" d
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).UserList(start, limit, str)
+
+	i action = "GetParticipants" d
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).UserList(start, limit, str)
+	
+	i action = "GetRelyUnit" d 
+	.w ##class(herp.srm.udata.uHorizontalPrjApply).CalRelyUnit(start, limit, str)
+	
+	
+	
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uHorizontalPrjApply).InsertRec(ProjectsName, DeptDr, HeadDr, Participants, SubSource, SubNo, AppFunds, StartDate, EndDate, ConDate, RelyUnit, SubUser, Remark)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uHorizontalPrjApply).UpdateProjectsInfo(rowid, ProjectsName, Participants, HeadDr, EndDate, SubSource, SubNo, AppFunds, StartDate, SubUser, DeptDr, ConDate, RelyUnit, Remark)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uHorizontalPrjApply).DelProjectsInfo(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "ChangeDataStatus" d
+	.s result = ##class(herp.srm.udata.uHorizontalPrjApply).ChangeDataStatus(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

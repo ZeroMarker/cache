@@ -1,0 +1,44 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<server>
+n (msg,%session,%request,%response)
+s UserID=$g(%session.Data("LOGON.USERID"))
+i 'UserID w "Logon user not defined" q
+
+s ID=$g(%request.Data("ListID",1))
+i ID="" s ID=##class(epr.FavEpisodeList).GetDefaultList(UserID)
+s %request.Data("ID",1)=ID
+
+s AddEpisode=$g(%request.Data("AddEpisode",1))
+i AddEpisode,ID d ##class(epr.FavEpisodeList).AddEpsToList(ID,AddEpisode)
+</server>
+
+<TRAK:COMPONENT id="epr.FavEpisodeList">
+</TRAK:COMPONENT>
+
+<server>
+; get the list of episodes to pass to PAAdm.Tree
+s EpisodeIDs=##class(epr.FavEpisodeList).GetEpsList(ID,"^")
+s %request.Data("EpisodeIDs",1)=$g(EpisodeIDs)
+s %request.Data("ListID",1)=ID
+</server>
+
+<TRAK:COMPONENT id="PAAdm.Tree">
+</TRAK:COMPONENT>
+
+</BODY>
+</HTML>
+

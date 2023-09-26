@@ -1,0 +1,566 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/CitySelect/cityselect.css">
+	<style>
+	.combobox-width-150{
+	   width:150px;     
+	}
+	.width-text{
+		width:153px;
+	}
+	.padding-bottom-1{
+    	padding-bottom:1px;  
+	}
+	#mainreg{
+		width:260px;	
+	}
+	#eastreg{
+		width:690px;	
+	}
+	.height-430{
+		height: 430px;	
+	}
+	.padding-top-8{
+		padding-top:8px;	
+	}
+	.panel-body{
+		border-top-width:1px;
+		border-left-width:1px;
+		border-right-width:1px;
+	}
+	tbody>tr>td>input,tfoot>tr>th>input,tfoot>tr>td>input{
+		border-width:0px;
+		background:#ffffff;
+		}
+	#TravelGrid>tbody>tr>td{
+		border:1px #cccccc solid;
+		background: #ffffff;
+	}
+	tfoot>tr>th{
+		border-bottom-width:0px;
+		}
+	.theadtop>th{
+		border: 1px #cccccc solid;
+		text-align: center;
+		font-size: 14px;
+		line-height: 200%;
+		}
+	tfoot>tr>td{
+		border-right:1px #cccccc solid;
+		}
+	.partdata2, .partdata4, .partdata9{
+		border:1px #378EC4 solid;
+		}
+	.r-label {
+		padding-left: 10px
+		}
+	.bottom-style{
+    	padding: 10px;
+		height:50px;
+		text-align: center;
+    	border: none;
+}
+	</style>	
+</HEAD>
+<BODY class="hisui-layout">
+	<div class="border-none" data-options="region:'center'">
+		<div id="tb">
+			<div id="tbfm" class="padding-10 x-separator">
+				<table class="text-right">
+					<tr>
+						<td>申请年月</td>
+						<td class="padding-both-10">
+							<input id="YMbox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td>申请单号</td>
+						<td class="padding-both-10">
+							<input id="ApplyCbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td>申请人</td>
+						<td class="padding-both-10">
+							<input id="Applyerbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td>审批金额范围</td>
+						<td class="padding-both-10">
+							<input id="StPricebox" class="hisui-numberbox" style="width:150px;" data-options="min:0,precision:2"/>	
+						</td>
+						<td>
+							<a id="FindBn" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+						</td>				
+					</tr>
+					<tr>
+						<td class="padding-top-8">归口科室</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="OwnDeptbox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td class="padding-top-8">申请科室</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="ApplyDbox" class="hisui-combobox combobox-width-150"/>	
+						</td>
+						<td class="padding-top-8">单据状态</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="Statebox" class="hisui-combobox combobox-width-150"/>
+						</td>
+						<td class="padding-spac">至</td>
+						<td class="padding-both-10 padding-top-8">
+							<input id="EdPricebox" class="hisui-numberbox" style="width:150px;" data-options="min:0,precision:2"/>	
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="line-36-y">
+				<a id="AddBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增报销单</a>
+				<a id="AddTravelBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增差旅费报销单</a>
+			</div>
+		</div>		 	
+		<table id="MainGrid">
+		</table>
+	</div>
+	<!--创建报销单窗口-->
+	<div id="AddWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout height-430" data-options="fit:true">
+			<div id="Addnorth">
+			   	<div id="Addform" class="padding-topbot-10 flex-x-center x-separator">
+				    <table class="text-right">
+				      <tr>
+						<td>单号</td>
+						<td class="padding-both-10">
+							<input disabled id="AddApplyCbox" class="textbox"/>
+						</td>
+						<td class="padding-left-10" >
+							冲销借款	
+						</td>
+						<td class="padding-both-10" style="text-align: left;">
+							<input id="ChargeAgst" class="hisui-checkbox" type="checkbox"/>
+						</td>						
+						<td class="padding-left-10">
+							预报销	
+						</td>
+						<td class="padding-both-10" style="text-align: left;">
+							<input id="PrePaybox" class="hisui-checkbox" type="checkbox"/>
+						</td>	
+					  </tr>
+					  <tr>
+						<td>申请人</td>
+						<td class="padding-10">
+							<input id="AddUserbox" class="hisui-combobox width-text " />	
+						</td>
+						<td class="padding-left-10">申请科室</td>
+						<td class="padding-10">
+							<input id="AddDeptbox" class="hisui-combobox width-text"/>	
+						</td>
+						<td class="padding-left-10">支付方式</td>
+						<td class="padding-10">
+							<input id="AddPaybox" class="hisui-combobox width-text "/>	
+						</td>
+						<td class="padding-left-10">银行</td>
+						<td class="padding-10">
+							<input disabled id="AddBankbox" class="textbox" />	
+						</td>
+					  </tr>
+					  <tr>
+						<td >卡号</td>
+						<td class="padding-both-10">
+							<input disabled id="AddNumberbox" class="textbox" />	
+						</td>
+						<td class="padding-left-10">预算期</td>
+						<td class="padding-both-10">
+							<input id="AddYMbox" class="hisui-combobox width-text"/>
+						</td>
+						<td class="padding-left-10">报销说明</td>
+						<td class="padding-both-10" colspan="3">
+							<input id="AddDescbox" class="textbox" style="width: 395px;"/>	
+						</td>
+					  </tr>
+					  <tr>
+						<td>控制方式</td>
+						<td class="padding-10">
+							<input id="contMethodbox" class="hisui-combobox width-text "/>
+						</td>
+						<td class="padding-left-10">报销项目</td>
+						<td class="padding-10">
+							<input id="itemCodebox" class="hisui-combobox width-text"/>	
+						</td>
+						<td class="padding-left-10">经济科目</td>
+						<td class="padding-10">
+							<input disabled id="ecoCodebox" class="hisui-combobox width-text " />	
+						</td>
+						<td class="padding-left-10">采购品目</td>
+						<td class="padding-10">
+							<input disabled id="purCodebox" class="hisui-combobox width-text " />	
+						</td>
+						<td >
+							<a id="addButton" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"></a>
+						</td>
+					 </tr>
+					 <tr>
+						<td>借款单</td>
+						<td class="padding-both-10" colspan="3">
+							<input disabled id="FundApplybox" class="textbox" style="width: 395px;"/>	
+						</td>
+						<td class="padding-left-10">预报销单</td>
+						<td class="padding-both-10" colspan="3">
+							<input disabled id="PrePayBillbox" class="textbox" style="width: 395px;"/>	
+						</td>
+					 </tr>
+				    </table>
+			    </div>
+			    <div class="line-36-y">
+					<table>
+						<tr>
+							<td>
+								<a id="DelBt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>	
+							</td>
+							<td>
+								<a id="ClearBT" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true">清屏</a>
+							</td>
+							<td>
+								<a id="printShow" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true">打印预览</a>
+							</td>
+							<td>
+								<a id="printBt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true">打印</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="padding-10-bottom-none" data-options="region:'center'" >
+				<table id="AddMainGrid" class="panel-border">		
+				</table>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="AddSave" class="hisui-linkbutton width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="AddClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div>
+	<!--冲抵借款单窗口-->
+	<div id="FundApplyWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout"data-options="fit:true">
+			<div id="mainreg" class="border-none padding-10-bottom-none padding-bottom-1" data-options="region:'center'" >
+				<div id="FundApplytb" class="padding-left-10" >
+					<table cellpadding="5">
+						<tr>
+							<td class="r-label">预算期</td>
+							<td>
+								<input id="FAYMBox" class="hisui-combobox combobox-width-150"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">申请单号</td>
+							<td>
+								<input id="BillBox" class="textbox " style="width:145px"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label"></td>
+							<td>
+								<a id="FABn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<table  id="FundApplyGrid">		
+				</table>
+			</div>
+			<div id="eastreg" class="border-none padding-topr-10 padding-bottom-1" data-options="region:'east'" >
+				<table  id="FADetailGrid">		
+				</table>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="FAClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div> 
+	<!--冲抵预报销单窗口-->
+	<div id="PrePayWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout"data-options="fit:true">
+			<div id="mainreg" class="border-none padding-10-bottom-none padding-bottom-1" data-options="region:'center'" >
+				<div id="PrePaytb" class="padding-left-10">
+					<table cellpadding="5">
+						<tr>
+							<td class="r-label">预算期</td>
+							<td>
+								<input id="PreYMBox" class="hisui-combobox combobox-width-150"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">申请单号</td>
+							<td>
+								<input id="PreBillBox" class="textbox " style="width:145px"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label"></td>
+							<td>
+								<a id="PreFBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<table  id="PrePayApplyGrid">		
+				</table>
+			</div>
+			<div id="eastreg" class="border-none padding-topr-10 padding-bottom-1" data-options="region:'east'" >
+				<table  id="PrePayDetailGrid">		
+				</table>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="PreClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div> 
+	<!--附件-->
+    <!--<div id="uploadpanel">
+        <div>
+            <table>
+                <tr>
+                    <td>选择附件：</td>
+                    <td>
+                        <input id="imgfile" type="file" runat="server" /><span style="color: Red">(附件大小&lt;1m)</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>-->	
+	<!--差旅费窗口-->
+<div id="AddTravel" class="hisui-window" data-options="closed:true">
+    <div class="hisui-layout">
+        <div style="border:1px #cccccc solid; margin:10px">
+            <form id="Addform" class="x-separator flex-x-center">
+                <table style="padding-top:10px; padding-bottom:10px; padding-right:20px" >
+                    <tr>
+                        <td class="r-label">单号</td>
+                        <td><input disabled id="TrApplyCbox" class="textbox" style="width:130px" onblur="inputPayCode()"/></td>
+                        <td class="r-label">出差人</td>
+                        <td><input id="TrUserbox" class="hisui-combobox" style="width:136px" /></td>
+                        <td class="r-label">支付方式</td>
+                        <td><input id="TrPaybox" class="hisui-combobox" style="width:136px" /></td>
+                        <td class="r-label">银行</td>
+                        <td><input id="TrBankbox" class="textbox" style="width:130px" /></td>
+                        <td class="r-label">卡号</td>
+                        <td><input id="TrNumberbox" class="textbox" style="width:130px" /></td>
+                    </tr>
+                    <tr>
+                        <td class="r-label">预算期</td>
+                        <td><input id="TrYMbox" class="hisui-combobox" style="width:136px" /></td>
+                        <td class="r-label">控制方式</td>
+                        <td><select id="TrcontMethodbox" class="hisui-combobox" style="width:136px"></select></td>
+                        <td class="r-label">报销项目</td>
+                        <td><select id="TritemCodebox" class="hisui-combobox" style="width:136px"></select></td>
+                        <td class="r-label">经济科目</td>
+                        <td><input id="TrecoCodebox" class="hisui-combobox" style="width:136px" /></td>
+                        <td class="r-label">采购品目</td>
+                        <td><input id="TrpurCodebox" class="hisui-combobox" style="width:136px" /></td>
+                    </tr>
+                    <tr>
+                        <td class="r-label">申请科室</td>
+                        <td><input id="TrDeptbox" class="hisui-combobox" style="width:136px" /></td>
+                        <td class="r-label">冲销借款</td>
+                        <td><input id="ChargePay" class="hisui-checkbox" type="checkbox" /></td>
+                        <td class="r-label">借款单</td>
+                        <td><input id="TrPayCode" class="hisui-triggerbox textbox" style="width:130px" data-options="handler:msgFn" onfocus="msgFn()"/></td>
+                        <td class="r-label">冲销预报销</td>
+                        <td><input id="ChargePrePay" class="hisui-checkbox" type="checkbox" /></td>
+                        <td class="r-label">冲销预报销单</td>
+                        <td><input id="TrPrePayCode" class="hisui-triggerbox textbox" style="width:130px" data-options="handler:msgChargePrePay" onfocus=""/></td>
+                    </tr>
+                    <tr>
+                    	<td class="r-label">归口科室</td>
+                        <td><input id="TrAuDeptbox" class="hisui-combobox" style="width:136px" /></td>
+                        <td class="r-label">结余</td>
+                        <td><input id="TrBalancebox" class="textbox" style="width:130px" disabled/></td>
+                        <td class="r-label">说明</td>
+                        <td colspan=5><input id="TrDescbox" class="textbox" style="width:606px" /></td>
+                    </tr>
+                </table>
+            </form>
+            <div class="line-36-y">
+                <table>
+                    <tr>
+                        <td>
+                            <a id="TrAddBt" href="#" class="hisui-linkbutton"
+                                data-options="iconCls:'icon-add',plain:true">新增</a>
+                        </td>
+                        <td>
+                            <a id="TrClearBt" href="#" class="hisui-linkbutton"
+                                data-options="iconCls:'icon-clear-screen',plain:true">清空</a>
+                        </td>
+                        <td>
+                            <a id="TrPrintShow" href="#" class="hisui-linkbutton"
+                                data-options="iconCls:'icon-print',plain:true">打印预览</a>
+                        </td>
+                        <td>
+                            <a id="TrPrintBt" href="#" class="hisui-linkbutton"
+                                data-options="iconCls:'icon-print',plain:true">打印</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table id="TravelGrid" style="border-collapse:collapse;">
+                    <thead>
+                        <tr class="theadtop" >
+                            <th colspan=1 style="border-left:0"></th>
+                            <th colspan=2 >出发</th>
+                            <th colspan=2>到达</th>
+                            <th rowspan=2 style="width:135px">交通工具</th>
+                            <th colspan=3>交通费</th>
+                            <th colspan=3 style="border-right-width:0px">其他费用</th>
+                        </tr>
+                        <tr class="theadtop" >
+                        	<th rowspan=1 style="width:20px; border-left:0"></th>
+                            <th rowspan=1 style="width:140px">日期</th>
+                            <th rowspan=1 style="width:75px">地点</th>
+                            <th rowspan=1 style="width:140px">日期</th>
+                            <th rowspan=1 style="width:75px">地点</th>
+                            <th rowspan=1 style="width:75px">标准费用</th>
+                            <th rowspan=1 style="width:75px">单据张数</th>
+                            <th rowspan=1 style="width:75px">金额</th>
+                            <th rowspan=1 style="width:90px">项目</th>
+                            <th rowspan=1 style="width:75px">票据张数</th>
+                            <th rowspan=1 style="width:75px; border-right-width:0px">总金额</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr style="border-bottom:1px #cccccc solid; border-left:0">
+                            <td colspan=5 style="text-align:center; width:72x;border-left:0">合计</td>
+                            <td colspan=3 style="text-align:center">
+                                <input id="sumcost" type="text" style="text-align:center; width:250px" disabled/>
+                            </td>
+                            <td colspan=2 style="text-align:center; width:75px">合计</td>
+                            <td colspan=1>
+                                <input id="sumnumber" type="text" style="text-align:center; width:77px" disabled/>
+                            </td>
+                            <td colspan=1 style="border-right-width:0px">
+                                <input id="spartmoney" type="text" style="text-align:center; width:77px" disabled/>
+                            </td>
+                        </tr>
+                        <tr style="border-left:0">
+                        	<th rowspan=2 style="border-bottom-width:0px;border-left:0"></th>
+                            <th rowspan=2 style="border-bottom-width:0px">总额</th>
+                            <th rowspan=2 colspan=3 style="text-align:center">
+                                <input id="reqpay" type="text" style="text-align:center; width:345px" disabled onchange="inputPayCode()"/></th>
+                            <th rowspan=2 style="text-align:center">予借旅费</th>
+                            <th rowspan=2 colspan=1></th>
+                            <th rowspan=2 colspan=2 style="text-align:center">
+                                <input id="reqfee" type="text" style="text-align:left; width:140px" disabled/></th>
+                            <th rowspan=1 style="text-align:center">补领金额</th>
+                            <th rowspan=1 colspan=2 style="border-right-width:0px">
+                                <input id="supplyfee" type="text" style="text-align:left; width:140px" disabled/></th>
+
+                        </tr>
+                        <tr >
+                            <th rowspan=1 style="border-left:0">退还金额</th>
+                            <th rowspan=1 colspan=2 style="border-right-width:0px">
+                                <input id="backfee" type="text" style="text-align:left; width:140px" disabled/></th>
+                        </tr>
+                    </tfoot>
+                    <tbody id="traveltbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="bottom-style">
+            <a id="TravelSave" class="hisui-linkbutton width-70" href="#">保存</a>
+            <span class="padding-right-10"></span>
+            <a id="TravelClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+        </div>
+    </div>
+</div>
+	
+    
+	<!--单据状态窗口-->
+	<div id="BillState" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout"data-options="fit:true">
+			<div class="padding-10-bottom-none" data-options="region:'center'" >
+				<table class="hisui-datagrid" id="StateGrid">		
+				</table>
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="StateClose" class="hisui-linkbutton" href="#">关闭</a>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimApply/CostTravelPage.js"></script>	   
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimApply/budgcostclaimapplymain.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimApply/addfun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimApply/detailWin.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimApply/editfun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgVehicle/cityselect.js"></script>
+	
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/ctrlbg/BudgCostClaimApply/addReqFun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/billcheckstate.js"></script>
+</BODY>
+<script type="text/javascript">
+   function msgFn(){
+	//检查主表信息
+        var UserDR= $('#TrUserbox').combobox('getValue');
+        if (!UserDR) {
+            var message = "请选择申请人!";
+            $.messager.popover({
+                msg: message,
+                type:'info',
+                showType:'show',
+                style:{
+                    "position":"absolute", 
+                    "z-index":"9999",
+                    left:-document.body.scrollTop - document.documentElement.scrollTop/2,
+                    top:10
+                }               
+            });
+           return false;
+        }
+        if(UserDR){
+            //弹出待冲抵借款单
+            var data = UserDR;
+            var fundApplyNo =$("#TrPayCode");
+            AddReqFun(fundApplyNo, data,1);
+        }
+        
+    }
+    
+    function msgChargePrePay(){
+        //检查主表信息
+        var UserDR= $('#TrUserbox').combobox('getValue');
+        if (!UserDR) {
+            var message = "请选择申请人!";
+            $.messager.popover({
+                msg: message,
+                type:'info',
+                showType:'show',
+                style:{
+                    "position":"absolute", 
+                    "z-index":"9999",
+                    left:-document.body.scrollTop - document.documentElement.scrollTop/2,
+                    top:10
+                }               
+            });
+           return false;
+        }
+        if(UserDR){
+            //弹出待冲抵预报销单
+            var data = UserDR;
+            var PrePayBillNo =$("#TrPrePayCode");
+            AddReqFun(PrePayBillNo, data,2);
+        }
+        
+    }
+    </script>
+</HTML>

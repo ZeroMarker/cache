@@ -1,0 +1,144 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	s context=%request.Get("CONTEXT")
+	s TWKFL=%request.Get("TWKFL")
+	s TWKFLI=%request.Get("TWKFLI")
+	s TWKFLL=%request.Get("TWKFLL")
+	s TWKFLJ=%request.Get("TWKFLJ")
+	;
+	; messages for warnings
+	d ##Class(websys.Component).GetComponentMessages(.t,"RBOperatingRoom.List")
+	s RBOPOnlyBooked=t("RBOPOnlyBooked")
+	s RBOPNonSelected=t("RBOPNonSelected")
+	s RBOPTotal1=t("RBOPTotal1")
+	s RBOPTotal2=t("RBOPTotal2")
+	;
+	s (nOpList,ApptList)=""
+	s found=0,dur=0,cnts=0
+	;
+	w !,"Processing Bookings<BR>"
+	s type="",type=%request.Data("type",1)
+	i $g(type)="" s type="S"
+	s BulkOpList="",BulkOpList=%request.Data("BulkOpList",1)
+	i $g(type)="A" d
+	. s RBOPDateOper=%request.Get("RBOPDateOper")
+	. s CTLocID=%request.Get("CTLocID")
+	. s ResID=%request.Get("ResID")
+	. s Anesthetiest=%request.Get("Anesthetiest")
+	. s RBOPOperDepartmentID=%request.Get("RBOPOperDepartmentID")
+	. s OPStatus=%request.Get("OPStatus")
+	. s dateto=%request.Get("dateto")
+	. s surgeonid=%request.Get("surgeonid")
+	. s NoAppt=%request.Get("NoAppt")
+	. s RBOPOperation=%request.Get("RBOPOperation")
+	. s RBOPStatePPP=%request.Get("RBOPStatePPP")
+	. s RegistrationNo=%request.Get("RegistrationNo")
+	. s Surgeon=%request.Get("Surgeon")
+	. s Params=%request.Get("Params")
+	. w !,"<BR>",RBOPDateOper,",",CTLocID,",",ResID,",",Anesthetiest,",",RBOPOperDepartmentID,",",OPStatus,",",dateto,",",surgeonid,",",NoAppt,",",RBOPOperation,",",RBOPStatePPP,",",RegistrationNo,",",Surgeon,",",Params
+	. s rs=##Class(%Library.ResultSet).%New("web.RBOperatingRoom:FindOperation")
+	. i rs d
+	. . d rs.Execute("","",RBOPDateOper,CTLocID,ResID,Anesthetiest,RBOPOperDepartmentID,OPStatus,dateto,surgeonid,NoAppt,RBOPOperation,RBOPStatePPP,RegistrationNo,Surgeon,Params)
+	. . f  q:'rs.Next()  d
+	. . . w !,"<BR> ",rs.Data("Status"),"  ",rs.Data("OperRoomID")
+ 	. . . i ##Class(websys.StandardTypeItem).GetIdFromCodeOrDescription("RBOperatingRoomStatus",(rs.Data("Status")))="B" d
+ 	. . . . i nOpList'="" s nOpList=nOpList_"^"_rs.Data("OperRoomID")
+	. . . . i nOpList="" s nOpList=rs.Data("OperRoomID")
+	. . . . s operatingroom=$g(^RBOP(rs.Data("OperRoomID"))),apptid=$p($g(operatingroom),"^",28)
+	. . . . i ApptList'="" s ApptList=ApptList_"^"_apptid
+	. . . . i ApptList="" s ApptList=apptid
+	. . . . s dur=dur+$p($g(operatingroom),"^",16)
+ 	. . . . s cnts=cnts+1
+ 	. . d rs.Close()
+ 	w !,"<BR>"
+	; Test the list for any non "Booked" OT bookings
+	i $g(type)="S" d
+	. s (nOpList,ApptList)=""
+	. f j=1:1:$l(BulkOpList,"^") d 
+	. . s OperID="",OperID=$p(BulkOpList,"^",j)
+	. . i OperID'="" d
+	. . . s operatingroom=$g(^RBOP(OperID)),apptid=$p($g(operatingroom),"^",28),stat=$p($g(operatingroom),"^",9)
+	. . . i stat'="B" s found=1
+	. . . i stat="B" d
+	. . . . i nOpList'="" s nOpList=nOpList_"^"_OperID
+	. . . . i nOpList="" s nOpList=OperID
+	. . . . i ApptList'="" s ApptList=ApptList_"^"_apptid
+	. . . . i ApptList="" s ApptList=apptid
+	. . . . s dur=dur+$p($g(operatingroom),"^",16)
+	. . . . s cnts=cnts+1
+	w !,nOpList,"<BR>"
+	w !,ApptList,"<BR>"
+	w !,"Total Duration=",dur,"<BR>"
+	w !,found
+	;
+	;Log 43306 22/7/04 - Go through all RBOperatingRoom rows (nOpList) 
+	;and see if they have the same surgeon and anaesthetist.  If so default those values on RBOperatingRoom.BulkTransfer
+	s (defAnae,defSurg,tmpAnae,tmpSurg)=""
+	if nOpList'=""{
+		for x=1:1:$l(nOpList,"^") {
+			s tmpAnae = $p(^RBOP($p(nOpList,"^",x)),"^",26)
+			;set first Anaesthetist to defAnae and compare subsequent Anaesthetists with the first one
+			if x=1 {
+				s defAnae = tmpAnae
+			}
+			else {
+				if defAnae'=tmpAnae {
+					s defAnae=""
+					q	
+				}	
+			}		
+		} 		
+		for x=1:1:$l(nOpList,"^") {
+			s tmpSurg = $p(^RBOP($p(nOpList,"^",x)),"^",5)
+			;set first Surgeon to defSurg and compare subsequent Surgeons with the first one
+			if x=1 {
+				s defSurg = tmpSurg
+			}
+			else {
+				if defSurg'=tmpSurg {
+					s defSurg=""
+					q	
+				}	
+			}		
+		} 		
+	}
+</SERVER>
+<script>
+	var notfail=true;
+	var dur="#(dur)#";
+	var type="#(type)#";
+	var cnts="#(cnts)#";
+	var OpList="#(nOpList)#";
+	var ApptList="#(ApptList)#";
+	var RBOPOnlyBooked='#(RBOPOnlyBooked)#';
+	var RBOPNonSelected='#(RBOPNonSelected)#';
+	var RBOPTotal1='#(RBOPTotal1)#';
+	var RBOPTotal2='#(RBOPTotal2)#';
+	var found="#(found)#";
+	if (found==1) alert(RBOPOnlyBooked);
+	if ((cnts==0)) {
+		alert(RBOPNonSelected);
+		notfail=false	
+	}
+	
+	if (((type=="A")&&(cnts>0))||((found==1)&&(cnts>0))) {
+			notfail=confirm(cnts+" "+RBOPTotal1+" "+dur+" "+RBOPTotal2);
+	}
+	
+	var lnk="websys.default.csp?WEBSYS.TCOMPONENT=RBOperatingRoom.BulkTransfer&OpList=#(nOpList)#&ApptList=#(ApptList)#&TotalDuration=#(dur)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(context)#&defAnae=#(defAnae)#&defSurg=#(defSurg)#"
+	if (notfail) websys_createWindow(lnk,'out','top=10,left=10,width=610,height=410');
+</script>
+</BODY>
+</HTML>

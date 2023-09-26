@@ -1,0 +1,136 @@
+<!-- CSP DHCHAI:BOOTSTRAP Rules -->
+<!-- Copyright (c) 2017 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+
+<csr:rule name="DHCHAI.BOOTSTRAP" match="DHCHAI:BOOTSTRAP">
+<csr:description>
+The <b>DHCHAI:BOOTSTRAP</b> tag defines defines standard header info and initialisation for each page. For example javascript utilties, style sheet, theme and initialisation code
+</csr:description>
+
+<csr:action>
+	<!-- charset=utf-8 -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+	
+	<!-- Bootstrap 3.3.6 --> 
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/css/zui.css">
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/css/font-awesome.min.css">
+	<script src="../scripts_lib/Bootstrap-3.3.6/jquery-1.9.1.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/js/zui.min.js"></script>
+	
+	<!-- 滚动条 mCustomScrollbar -->
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/plugins/mCustomScrollbar/jquery.mCustomScrollbar.css">
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/mCustomScrollbar/jquery.mousewheel.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/mCustomScrollbar/jquery.mCustomScrollbar.js"></script>
+	
+	<!-- 表格 DataTables -->
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/css/jquery.dataTables.min.css">
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/css/buttons.bootstrap.min.css">
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Select/css/select.bootstrap.min.css">
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/js/jquery.dataTables.min.js"></script>
+
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/js/dataTables.buttons.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/js/buttons.bootstrap.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Select/js/dataTables.select.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Paging/input.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/colResizable/colResizable-1.6.min.js"></script>
+	
+	<!-- 表格 DataTables buttons tools -->
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/js/buttons.flash.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/js/jszip.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/js/vfs_fonts.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/js/buttons.html5.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/datatables/extensions/Buttons/js/buttons.print.js"></script>
+	
+	<!-- 下拉框 select2 -->
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/plugins/select2/select2.min.css">
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/select2/select2.full.min.js"></script>
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/select2/i18n/zh-CN.js"></script>
+	
+	<!-- dialog、confirm、alert样式 bootbox -->
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/bootbox/bootbox.min.js"></script>
+	<!--layer弹出层-->
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/layer/layer.js"></script>
+	
+	<!-- 复选框/单选钮 iCheck -->
+	<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/plugins/iCheck/all.css">
+	<script src="../scripts_lib/Bootstrap-3.3.6/plugins/iCheck/icheck.min.js"></script>
+	
+	<!-- FrameWork -->
+	<script src="../Scripts/dhchai/DHCHAI.JQ.Framework.js"></script>
+	
+	<!-- 自定义样式 -->
+	<!--
+	<link rel="stylesheet" href="../Scripts/dhchai/themes/MainLTE.css">
+	<link rel="stylesheet" href="../Scripts/dhchai/css/userdef-custom-style.css">
+	-->
+	<link rel="stylesheet" href="../Scripts/dhchai/themes/MainLTENew.css">
+	
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		Set MenuID=$g(%request.Data("MenuID",1))
+		
+		Set HISCode=""  //未设置HIS医院与HAI医院对照关系 必须手工设置
+		Set XUserID=$g(%session.Data("LOGON.USERID"))
+		Set XLocID=$g(%session.Data("LOGON.CTLOCID"))
+		Set XHospID=$p($g(^CTLOC(+XLocID)),"^",22)
+		Set:XHospID="" XHospID=$o(^CT("HOSP",0))  //部分科室没有关联医院
+		Set objHospMap=##class(DHCHAI.BT.HospitalMap).GetObjByXCode("HISSYS",XHospID)
+		If $IsObject(objHospMap){
+			Set objHosp=objHospMap.BTMapHospDr
+			Set:$IsObject(objHosp) HISCode=$p(objHosp.BTXCode,"||",1)
+		}
+		
+		Set XUserCode=$p($g(^SSU("SSUSR",XUserID)),"^",1)
+		Set (UserID,UserCode,UserDesc)=""
+		Set objUser=##class(DHCHAI.BT.SysUser).GetObjByUserCode(HISCode,XUserCode)
+		If $IsObject(objUser){
+			Set UserID=objUser.%Id()
+			Set UserCode=objUser.BTCode
+			Set UserDesc=objUser.BTDesc
+		}
+		
+		Set XLocCode=$p($g(^CTLOC(XLocID)),"^",1)
+		Set (LocID,LocCode,LocDesc,HospID,HospDesc,HospGrpID)=""
+		Set objLoc=##class(DHCHAI.BT.Location).GetObjByLocCode(HISCode,XLocCode)
+		If $IsObject(objLoc){
+			Set LocID=objLoc.%Id()
+			Set LocCode=objLoc.BTCode
+			Set LocDesc=objLoc.BTDesc
+			If $IsObject(objLoc.BTHospDr){
+				Set HospID=objLoc.BTHospDr.%Id()
+				Set HospDesc=objLoc.BTHospDr.BTDesc
+				If $IsObject(objLoc.BTHospDr.BTGroupDr){
+					Set HospGrpID=objLoc.BTHospDr.BTGroupDr.%Id()
+				}
+			}
+		}
+	</SCRIPT>
+	<script language="javascript" type="text/javascript">
+		$.LOGON = new Object();
+		$.LOGON.USERID   = '#(UserID)#';
+		$.LOGON.USERCODE = '#(UserCode)#';
+		$.LOGON.USERDESC = '#(UserDesc)#';
+		$.LOGON.LOCID    = '#(LocID)#';
+		$.LOGON.LOCCODE  = '#(LocCode)#';
+		$.LOGON.LOCDESC  = '#(LocDesc)#';
+		$.LOGON.HOSPID   = '#(HospID)#';
+		$.LOGON.HOSPDESC = '#(HospDesc)#';
+		$.LOGON.HOSPGRPID = '#(HospGrpID)#';
+		$.LOGON.XHospID   = '#(XHospID)#';
+		$.LOGON.HISCode   = '#(HISCode)#';
+		$.LOGON.XLocID   = '#(XLocID)#';
+		
+		if ($.LOGON.USERID == '') {
+			alert('当前登录用户未配置!');
+		}
+		
+		if ($.LOGON.LOCID == '') {
+			alert('当前登录科室未配置!');
+		}
+		
+		if ($.LOGON.HOSPID == '') {
+			alert('当前登录医院未配置!');
+		}
+		
+	</script>
+</csr:action>
+</csr:rule>

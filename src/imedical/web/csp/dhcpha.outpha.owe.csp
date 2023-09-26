@@ -1,0 +1,110 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD>
+
+</TRAK:HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s CardTypeArray=##class(web.UDHCOPOtherLB).ReadCardTypeDefineListBroker("GetCardTypeToJson","")
+ s ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+ s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+
+</Script>
+<script type="text/javascript">
+ var CardTypeArray="#(CardTypeArray)#";
+</script>  
+<!-- Put your page Title here -->
+
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/jquery-ext.css" ></script> 
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/gridkey.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/incitmwindow.js"></script>
+	<script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script type="text/javascript" src='../scripts/DHCSTXMLPrint.js'></script>
+	<script type="text/javascript" src='../scripts/dhcpha/outpha/dhcpha.outpha.printcom.js'></script>
+	<script type="text/javascript" src="../scripts/dhcpha/outpha/dhcpha.outpha.owe.js"></script>
+<style type="text/css"  >  
+   .datagrid-btable tr{
+	height:27px;   
+	}
+</style>	
+ </HEAD>
+<body>
+<div id="title" class="easyui-layout" fit="true" border="false"> 
+	<div data-options="region:'center',title:'门诊药房欠药管理',split:true">
+		<div id="owegrid" data-options="fit:true" border="false"> 
+	  	</div>  
+	</div>
+	<div data-options="region:'south',title:'',split:true" style="height:300px;">
+		<div id="owedetailgrid" data-options="fit:true" border="false"> 
+	  	</div>  
+	</div>
+</div>
+<div id="conditiondiv" data-options="region:'north',title:''">
+	<table style="padding:4px">
+		<tr>
+			<td>起始日期:</td>
+			<td><input id="startDate" class="easyui-datebox" style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>截止日期:</td>
+			<td><input id="endDate" class="easyui-datebox" style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>登记号:</td>
+			<td><input id="patNo" style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>卡类型:</td>
+			<td><input id="cardType" style="width:50px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>卡号:</td>
+			<td><input id="cardNo"  style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td><a class="easyui-linkbutton" iconCls="icon-readcard" plain="true" id="btnReadCard" style="width:75px">读卡[F4]</a>
+			</td>
+			<td>处方号:</td>
+			<td><input id="prescNo" style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>药品名称:</td>
+			<td><input id="inciDesc" style="width:150px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+		</tr>
+		<tr>
+		  <td>状　　态:</td>
+	      <td><input id="oweStat" name="dispStat"  style="width:100px;HEIGHT: 22px;border:1px solid #95B8E7;"class="easyui-combobox" data-options="
+				valueField: 'label',
+				textField: 'value',
+				panelHeight:'true',
+				data: [{
+					label: '1',
+					value: '已发药'
+				},{
+					label: '0',
+					value: '已退药'
+				}]">
+				</input>
+			</td>
+			<td colspan="13">
+				<a class="easyui-linkbutton" iconCls='icon-search' plain="true" id="btnFind" style="width:80px">查找[F7]</a>
+				<a class="easyui-linkbutton" iconCls='icon-ok' plain="true" id="btnFYSure" style="width:100px">确认发药[F8]</a>
+				<a class="easyui-linkbutton" iconCls='icon-back' plain="true" id="btnTYSure" style="width:100px">执行退药[F9]</a>
+				<a class="easyui-linkbutton" iconCls='icon-reload' plain="true" id="btnClear" style="width:90px">清空[F10]</a>
+			</td>
+		</tr>
+	</table>
+	<div style ="border-bottom: 1px solid #95B8E7;border-top: 1px solid #95B8E7">
+		<div style ="border-bottom: 5px solid #E6EEF8">
+		</div>
+	</div>
+</div>	    
+ 
+ 
+</body>
+<!--server>
+write "<object id='CaesarComponent' classid='clsid:8C028072-4FD2-46AE-B6D2-63E9F9B4155F' codebase = '../addins/client/dtywzxUIForMS.cab#version1.0.0.1'>"
+write "</object>"
+</server-->
+
+</HTML>

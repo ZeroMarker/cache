@@ -1,0 +1,49 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+	</head>
+	<body>
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/DTH/deathlist/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/DTH/deathlist/Event.js"></script>
+		<script language='Cache' runat='SERVER'>
+			Set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"DTH")
+			Set IsSecret=##class(DHCMed.SSIO.FromSecSrv).CheckIsSecret(LogonHospID)
+			
+			Set IsSecret=""""_IsSecret_""""
+			Set LogonLocID=""""_LogonLocID_""""
+			Set LogonHospID=""""_LogonHospID_""""
+			Set SSHospCode=""""_SSHospCode_""""
+		</script>
+		<script language="javascript" type="text/javascript">
+			
+			var LogonLocID=#(LogonLocID)#;
+			var LogonHospID=#(LogonHospID)#;
+			var SSHospCode=#(SSHospCode)#;
+			var IsSecret=#(IsSecret)#
+			
+			$(document).ready(function(){
+				var url = "../scripts/DHCMA/DTH/deathlist/Layout.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					InitPatientAdm();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+		</script>
+	</body>
+</html>

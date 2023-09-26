@@ -1,0 +1,244 @@
+<html>
+<head>
+
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/model.design.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/skin/css/form.css" />
+<style>
+	.datagrid-cell-check, .datagrid-header-check{
+		height:30px;
+	}
+
+</style>
+</head>
+
+<body>
+	<div id="dicDia" class="hisui-dialog" title="添加字典" 
+    	data-options="iconCls:'icon-save',maximized:false,modal:true,closed:true,buttons: '#dlg-buttons'" style="width:500;height:400px" >
+    	<ul id="dicTree">
+    	<div id="dlg-buttons">
+			<a href="javascript:void(0)" class="hisui-linkbutton" onclick="javascript:saveDic();">保存</a>
+			<a href="javascript:void(0)" class="hisui-linkbutton" onclick="javascript:$('#dicDia').dialog('close')">关闭</a>
+		</div>
+	</div>
+	<div class="hisui-layout" fit=true >
+		    <div data-options="region:'west'" border=false style='width:500px;padding:5px 5px 5px 5px'>
+		    	<!-- toolbar -->
+				<div id="dicToolbar" class="datagrid-toolbar">
+					<table cellspacing="0" cellpadding="0" style="margin-top:4px;margin-bottom:4px;">
+					     <tr>
+					     	<input type='hidden' name="queryForm" id="queryForm" value=0 />
+					     	<input type='hidden'  id="modelId"  value=#(%request.Get("modelId"))# >
+							<td>字典名称<input type="text" name="queryField" class="textbox" style="width:100px" /></td>
+							<td><a class="hisui-linkbutton"  data-options="iconCls:'icon-search',plain:true" onclick="javascript:commonQuery({'datagrid':'#dicDatagrid','formid':'#dicToolbar'})" >查询</a></td>
+							<td>
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addDic()"  >添加到</a>
+								<input class='hisui-radio' type="radio" label='x轴' name='axisDicLabel' value='x'>
+								<input class='hisui-radio' type="radio" label='y轴' name='axisDicLabel' value='y' data-options="checked:true" >
+							</td>
+					     </tr>
+					</table>
+				</div>
+		    	<div class="hisui-tabs tabs-gray" fit=true>   
+					<div title="字典" >   
+						<table id="dicDatagrid" class="hisui-datagrid" fit="true" 
+							data-options="
+							toolbar:'#dicToolbar',
+							border:false,
+						    rownumbers:true,
+						    iconCls:'icon-paper',
+						    headerCls:'panel-header-gray',
+						    method:'get',
+						    url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listGrid&queryForm=#(%request.Get("formNameId"))#',
+						    fitColumns:true,
+						    pagination:true,
+						    pageSize:10,
+						    pageList:[10,20,100]">
+							<thead>
+								<tr>
+									<th data-options="field:'ck',checkbox:true"></th>
+									<th data-options="field:'ID',hidden:true">id</th>
+									<th data-options="field:'field',width:100">代码</th>
+									<th data-options="field:'title',width:100">名称</th>
+									<th data-options="field:'style',width:50">类型</th>
+								</tr>
+							</thead>
+						</table>
+					</div>   
+					<div title="日期范围"  style="padding:5px;">
+				    		<table cellspacing="0" cellpadding="0" style="margin-top:4px;margin-bottom:4px;">
+							     <tr>
+									<td>
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:saveModelAttrCom('dateRange')" >添加到</a>
+										<input class='hisui-radio' type="radio" label='x轴' name='axisDateLabel' value='x' data-options="checked:true" >
+										<input class='hisui-radio' type="radio" label='y轴' name='axisDateLabel' value='y'  >
+										&nbsp&nbsp系数&nbsp&nbsp<input class="hisui-numberbox textbox" value=1 id="dataValInput" >
+									</td>
+							     </tr>
+			     
+							</table>
+							<table class="dhc-table" style="width:100%;margin-top:10px">
+								<thead>
+									<tr align="center">
+										<th width="50%">时间单位</th>
+									</tr>
+								</thead>
+								<tr>
+							     	<td  style='padding-left:220px;'>
+							     		<input class='hisui-radio' type="radio" label='&nbsp;年' name='measure' value='year' data-options="checked:true" >
+							     	</td>
+
+							     </tr>
+							     <tr>
+							     	<td  style='padding-left:220px;'>
+							     		<input class='hisui-radio' type="radio" label='&nbsp;季度' name='measure' value='quarter'>
+							     	</td>
+							     </tr>
+							     <tr>
+							     	<td style='padding-left:220px;'>
+							     		<input class='hisui-radio' type="radio" label='&nbsp;月' name='measure' value='month'>
+							     	</td>
+							     </tr>
+							     <tr>
+							     	<td style='padding-left:220px;'>
+							     		<input class='hisui-radio' type="radio" label='&nbsp;周' name='measure' value='week'>
+							     	</td>
+							     </tr>
+							     <tr>
+							     	<td style='padding-left:220px;'>
+							     		<input class='hisui-radio' type="radio" label='&nbsp;天' name='measure' value='day'>
+							     	</td>
+							     </tr>							 							     							     							     
+							</table>
+					</div>
+					<div title="Master表"  >
+						<div id="tableColumnDatagrid" class="hisui-datagrid" fit=true ></div>
+						<!-- toolbar -->
+						<div id="columnToolbar" class="datagrid-toolbar">
+							<table cellspacing="0" cellpadding="0" style="margin-top:4px;margin-bottom:4px;">
+							     <tr>
+									<td>
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:saveModelAttrCom('User.DHCAdvMaster')" >添加到</a>
+										<input class='hisui-radio' type="radio" label='x轴' name='axisColumnLabel' value='x' data-options="checked:true" >
+										<input class='hisui-radio' type="radio" label='y轴' name='axisColumnLabel' value='y'  >
+									</td>
+							     </tr>
+							</table>
+						</div>
+					</div>
+				</div>
+		    </div>
+		    <div data-options="region:'center'" border=false style='padding:5px 5px 5px 5px'>
+		    	<div class="hisui-panel" title="维度"  fit=true data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		    		<table cellspacing="0" cellpadding="0" style="margin-top:4px;margin-bottom:4px;">
+					     <tr>
+							<td><a class="hisui-linkbutton"  data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:removeModelAttr()" >删除</a></td>
+							<!--
+							<td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveModelAttrSort()" >保存排序</a> </td>
+					     	-->
+					     </tr>
+					</table>
+		    		<ul id="dimensionTree" >
+		    		</ul>
+		    	</div>
+		    </div>
+		    <div data-options="region:'east'" border=false style='padding:5px 5px 5px 5px;width:400px'>
+		    	<div class="hisui-tabs tabs-gray" fit=true>   
+						<div title="维度属性" >  
+			    		<table cellspacing="10" cellpadding="0" style="margin-top:4px;margin-bottom:4px;" id="modelAttrTable">
+						     <input id="ID" class="textbox" type="hidden" />
+						     <input id="model" class="textbox" type="hidden" value=#(%request.Get("modelId"))# />
+						     <input id="type" class="textbox" type="hidden" />
+						     <tr>
+								<td colspan=2><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveModelAttr()" >保存属性</a> </td>
+						     </tr>
+						     <tr>
+								<td colspan=2 >
+									<ul class="kw-section-list" id="attrKeyWord">
+										
+									</ul>
+								</td>
+						     </tr>
+						     <tr>
+								<td>显示名称</td>
+								<td>
+									<input id="displayTitle" class="textbox" type="input" />
+								</td>
+						     </tr>
+						     <tr>
+								<td>排序</td>
+								<td>
+									<input id="seq" class="textbox" type="input" />
+								</td>
+						     </tr>
+						     <tr>
+								<td>函数类名称</td>
+								<td>
+									<input id="class" class="textbox" type="input" />
+								</td>
+						     </tr>
+						  	  <tr>
+								<td>函数方法名称</td>
+								<td>
+									<input id="func" class="textbox" type="input" />
+								</td>
+						     </tr>
+						     <tr style="display:none">
+								<td>过滤条件</td>
+								<td>
+									<textarea rows="4" id="filter" class="enter" type="text" style="width:100%"></textarea>
+								</td>
+						     </tr>
+						     <tr>
+								<td>维度</td>
+								<td>
+									 <input class='hisui-radio' type="radio" label='x轴' name='type' value='x'>
+	            					 <input style="margin-left:20px;" class='hisui-radio' type="radio" label='y轴' name='type' value='y' data-options="checked:true">
+								</td>
+						     </tr>
+						     <tr>
+								<td>显示比率</td>
+								<td>
+									 <input class='hisui-radio' type="radio" label='是' name='displayRate' value='y'>
+	            					 <input style="margin-left:20px;" class='hisui-radio' type="radio" label='否' name='displayRate' value='n' data-options="checked:true">
+								</td>
+						     </tr>
+						     <tr>
+						     	<td >度量类型</td>
+								<td>
+						     		<input class='hisui-radio' type="radio" label='取值' name='measureType' value='value'>
+						     		<input class='hisui-radio' type="radio" label='count' name='measureType' value='count'  data-options="checked:true">
+						     	</td>
+							</tr>
+							<tr>
+						     	<td >扩展方式</td>
+								<td>
+						     		<input class='hisui-radio' type="radio" label='字典' name='extendType' value='dic' data-options="checked:true">
+						     		<input class='hisui-radio' type="radio" label='值' name='extendType' value='value'  >
+						     	</td>
+							</tr>
+							<tr>
+						     	<td >隐藏</td>
+								<td>
+						     		<input class='hisui-radio' type="radio" label='是' name='hidden' value='y' >
+						     	
+						     		<input class='hisui-radio' type="radio" label='否' name='hidden' value='n'  data-options="checked:true">
+						     	</td>
+							</tr>
+							<tr>
+						     	<td >显示合计列</td>
+								<td>
+						     		<input class='hisui-radio' type="radio" label='是' name='displayTotal' value='y' >
+						     		<input class='hisui-radio' type="radio" label='否' name='displayTotal' value='n'  data-options="checked:true">
+						     	</td>
+							</tr>	
+						</table>
+			    	</div>
+		    	</div>
+		    </div>
+		</div>
+</body>
+</html>

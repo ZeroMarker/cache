@@ -1,0 +1,174 @@
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+
+s SourceType=$G(%request.Data("SourceType",1))
+s SourceID=$G(%request.Data("SourceID",1))
+s OCType=##Class(web.DHCEQCommon).GetSysInfo("201003")  ///modify by lmm 350826
+s Name="DHCEQLifeInfo"
+s Link=""
+i SourceType="11" //开箱验收
+{
+	i OCType'=0 //批量验收	 MZY0027	1289729		2020-05-21
+	{
+		s RowID=$p($g(^DHCEQOpenCheckList(SourceID)),"^",1)
+		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheckRequest&RowID="_RowID_"&ReadOnly=1"
+	}
+	else //单设备验收
+	{
+		s RowID=SourceID
+		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheck&RowID="_RowID_"&ReadOnly=1"
+	}
+}
+i SourceType="21" //入库
+{
+	s RowID=$p($g(^DHCEQInStockList(SourceID)),"^",1)
+	s Link="dhceq.em.instock.csp?RowID="_RowID_"&ReadOnly=1&Type=1"
+}
+i SourceType="22" //转移
+{
+	s RowID=$p($g(^DHCEQStoreMoveList(SourceID)),"^",1)
+	s Link="dhceq.em.storemove.csp?RowID="_RowID_"&ReadOnly=1"
+}
+i SourceType="23" //减少
+{
+	s RowID=$p($g(^DHCEQReturnList(SourceID)),"^",1)
+	s OutType=$p($g(^DHCEQReturn(RowID)),"^",17)
+	i OutType="1"
+	{
+		s Link="dhceq.em.return.csp?RowID="_RowID_"&ReadOnly=1&ROutTypeDR=1"	
+	}
+	else
+	{
+		s Link="dhceq.em.outstock.csp?RowID="_RowID_"&ReadOnly=1&&ROutTypeDR=2"	
+	}
+}
+i SourceType="31" //维修
+{
+	s RowID=SourceID
+	;需求号:279695	Mozy	20161101
+	;s EquipDR=$p($g(^DHCEQMaintRequest(RowID)),"^",1)
+	;s Link="dhceqmaintrequestnew.csp?&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
+	;需求序号:	414543		Mozy	20170731	增加传入Status参数
+	s Link="dhceq.em.mmaintrequest.csp?RowID="_RowID_"&ReadOnly=1&Status=2"
+}
+i SourceType="32" //保养
+{
+	s RowID=SourceID
+	s EquipDR=$p($g(^DHCEQMaint(RowID)),"^",1)
+	s Link="dhceq.em.maint.csp?BussType=1&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
+}
+i SourceType="33" //检查
+{
+	s RowID=SourceID
+	s EquipDR=$p($g(^DHCEQMaint(RowID)),"^",1)   //modified by czf 388716
+	s Link="dhceq.em.inspect.csp?BussType=2&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
+}
+//add by lmm 2020-05-14 begin
+i SourceType="72-1" //计量检查
+{
+	s RowID=SourceID
+	s EquipDR=$p($g(^DHCEQMaint(RowID)),"^",1) 
+	s Link="dhceq.em.meterage.csp?BussType=2&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
+}
+//add by lmm 2020-05-14 end
+i SourceType="34" //报废
+{
+	s RowID=$p($g(^DHCEQDisuseRequestList(SourceID)),"^",1)
+	;Modified by jdl 2011-12-13 JDL0104
+	if $p($g(^DHCEQDisuseRequest(RowID)),"^",44)="2"
+	{
+		s Link="dhceq.em.disusesimlpe.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequestSimple&RowID="_RowID_"&ReadOnly=1"   ;modified by kdf 2019-03-27 需求号：853015
+	}
+	else
+	{
+		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBatchDisuseRequest&RowID="_RowID_"&ReadOnly=1"
+	}
+}
+i SourceType="41" //使用   //add by mwz 20170330
+{
+    s RowID=SourceID
+    s EquipDR=$p($g(^DHCEQChangeInfo(RowID)),"^",1)
+    s ChangeTypeDR=$p($g(^DHCEQChangeInfo(RowID)),"^",3)
+    s FromStatusDR=$p($g(^DHCEQChangeInfo(RowID)),"^",8)
+    s FromStatus=##Class(web.DHCEQEquip).GetEquipStatusDisplay(FromStatusDR)
+    i ChangeTypeDR=2
+    {
+	    s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQEquipStop&EquipID="_EquipDR_"&FromStatusDR="_FromStatusDR_"&FromStatus="_FromStatus_"&ReadOnly=1&StopFlag=Y&CIRowID="_RowID
+    }
+    i ChangeTypeDR=1
+    {
+	    s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQEquipStart&EquipID="_EquipDR_"&FromStatusDR="_FromStatusDR_"&FromStatus="_FromStatus_"&ReadOnly=1&StartFlag=Y&CIRowID="_RowID
+    }
+}
+i SourceType="51" //设备调账
+{	
+	s RowID=SourceID
+	s EquipDR=$p($g(^DHCEQChangeAccount(RowID)),"^",1)
+	s Link="dhceqchangeaccount.csp?&RowID="_EquipDR_"&ReadOnly=1"
+}
+i SourceType="61" //数据调整 add by wy 2017-9-27
+{		
+    s RowID=SourceID
+	s AdjuestDataDR=$p($g(^DHCEQAdjustDataList(RowID)),"^",1)
+	s EquipDR=$p($g(^DHCEQAdjustDataList(RowID)),"^",2)
+	s Hold1=$p($g(^DHCEQAdjustData(AdjuestDataDR)),"^",20)
+	i Hold1=0  //单台数据调整
+    {
+	   s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAdjustDataA&RowID="_AdjuestDataDR_"&ReadOnly=1"    //modified by wy 2019-12-2 需求1110755
+    }
+    else
+	{
+		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAdjustDataB&RowID="_AdjuestDataDR_"&ReadOnly=1"	 //modified by wy 2019-12-2 需求1110755
+	}
+}
+i SourceType="82" //设备鉴定报告	Mozy0226	2019-9-22
+{
+	s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAppraisalReport&RowID="_SourceID_"&ReadOnly=1"
+}
+i SourceType="94" //设备合同生命周期	//add by ZY0165 2018-04-26  生命周期增加合同的节点
+{
+	//add by zx 2019-01-24 参数为合同主表ID
+	s ContractID=SourceID
+	s ContractType=$p($g(^DHCEQContract(ContractID)),"^",39)
+
+	if (ContractType=1)
+    {
+	   s Link="dhceq.con.contractformaint.csp?RowID="_ContractID_"&ReadOnly=1&ContractType="_ContractType
+    }
+    else
+	{
+		s Link="dhceq.con.contract.csp?RowID="_ContractID_"&ReadOnly=1&ContractType="_ContractType
+	}
+}
+//add by ZY0165 2018-04-26  生命周期增加申请、计划、招标的节点
+//modified by wy 2019-3-27 需求：850473，850469
+i SourceType="91" 
+{
+    s RowID=SourceID
+	s Link="dhceq.em.buyrequest.csp?RowID="_RowID_"&ReadOnly=1"  //modify by lmm 2019-10-29 1070845 LMM0048
+}
+i SourceType="92"
+{
+    s RowID=SourceID
+	s Link="dhceq.em.buyplan.csp?RowID="_RowID_"&ReadOnly=1"	//modified by csj 20190528 需求号：865869
+}
+i SourceType="93"
+{
+    s RowID=SourceID
+	s Link="dhceq.em.ifbnew.csp?RowID="_RowID_"&ReadOnly=1"     
+}
+</Script>
+<SCRIPT language="javascript">
+	if (#(SourceType)#=="35")
+	{
+		alert('折旧没有详细信息!'); //add by wy 2017-5-12
+	}
+</Script>
+<frameset>
+	<frame name=#(Name)# src=#(Link)#>
+</frameset>
+</HTML>

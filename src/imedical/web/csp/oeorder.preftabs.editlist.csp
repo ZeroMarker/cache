@@ -1,0 +1,32 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body>
+<SERVER>
+ //draws a dummy form to post submit details of selected Tab to the OEOrder.PrefTabs.Edit screen
+ w !,"<form name='custom_OEOrderPrefTabsEditList_TabEdit' action='websys.csp' target='ORDERFAVPANEL' method='post'>"
+ w !,"<input name='TEVENT' id='TEVENT' type='hidden' value='d1286iTabEdit'>"
+ w !,"<input name='EpisodeID' id='EpisodeID' type='hidden' value='"_$g(%request.Data("EpisodeID",1))_"'>"
+ w !,"<input name='TABDESC' id='TABDESC' type='hidden' value=''>" ;js will fill this in
+ w !,"<input name='TABITEMS' id='TABITEMS' type='hidden' value=''>" ;js will fill this in
+ w !,"</form>",!
+ 
+ ;s %request.Data("ObjectType",1)="User.CTLoc"
+ s PreftabType=$g(%request.Data("PreftabType",1))
+ d ##Class(epr.PreferencesQuery).GetOEPrefTabs()
+ ;d ##Class(web.DHCDocOrderCommon).GetOEPrefTabs(objectType)
+</SERVER>
+<EXTHEALTH:COMPONENT id="OEOrder.PrefTabs.EditList"></EXTHEALTH:COMPONENT>
+<!--<TRAK:COMPONENT id="OEOrder.PrefTabs.EditList"></TRAK:COMPONENT>-->
+</body>
+</html>

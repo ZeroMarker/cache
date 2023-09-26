@@ -1,0 +1,111 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+    @CSP：dhc.bdp.kb.dhcphinstlabel.csp
+    @JS:DHC_PHInstLabel.js
+    @Title：知识库目录字典
+    @Creator:石萧伟
+    @Description:知识库目录字典
+    @CreateDate：2018-07-23
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/App/KB/NewDic/DHC_PHInstLabel.js"></script>
+<style>
+</style>
+</HEAD>
+<BODY>
+     <div class="hisui-layout" data-options="fit:true" border="true" id="layout" style="">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;" title="" border="false">
+	    	 <table style="padding-top:10px;padding-bottom:10px" >
+			    <tr>
+			   	 	<td class="tdlabel">代码</td>
+		    		<td><input id="TextCode" type="text" class="hisui-validatebox"  style="width:165px" ></td>
+		    		<td class="tdlabel">描述</td>
+		    		<td><input id="TextDesc" type="text" class="hisui-validatebox"  style="width:165px" ></td>
+		    		<td class="tdlabel">知识库标识</td>
+		    		<td><input id="TextLib" type="text" style="width:165px" ></td>
+		    		<td class="tdlabel-b">
+						<a href="#" id="btnSearch" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" class="hisui-linkbutton">查询</a>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnRefresh" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" class="hisui-linkbutton">清屏</a>
+					</td>
+				</tr> 
+			 </table >
+		 </div>      
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+			<table data-options="fit:true" id="mygrid" border="false" toolbar="#allbar" style="border-radius:4px;"></table> <!--toolbar="#allbar"-->
+		</div>      
+ 	</div> 
+     <!--增改弹窗-->
+     <div id="myWin" style="width:550px;height:450px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table id="addtable" align="center">
+				 <tr>
+				   <td class="tdlabel"><font color=red>*</font>代码</td>
+				   <td><input id="PINLCode" name="PINLCode" type="text" class="textbox hisui-validatebox" style="width:250px"></td>
+				 </tr>
+				 <tr>
+				   <td class="tdlabel"><font color=red>*</font>描述</td>
+				   <td><input id="PINLDesc" name="PINLDesc" type="text" class="textbox hisui-validatebox" style="width:250px"></td>
+				 </tr>
+				 <tr>
+				 	<td class="tdlabel">知识库标识</td>
+				 	<td><input id="PINLLabelDr" name="PINLLabelDr" style="width:257px"></td>
+				 </tr>
+				 <tr>
+				 	<td class="tdlabel">顺序</td>
+				 	<td><input id="PINLOrderNum" name="PINLOrderNum" style="width:256px" class="hisui-numberbox textbox"></td>
+				 </tr>
+				 <tr>
+				 	<td class="tdlabel">管理模式</td>
+				 	<td><input id="PINLManageMode" name="PINLManageMode" style="width:256px" class="textbox hisui-combobox"></td>
+				 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">图标路径</td>
+				   <td><input type="text" id="PINLIcon" name="PINLIcon" class="textbox hisui-validatebox" style="width:250px"></td>
+				 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">提示消息</td>
+				   <td><input type="text" label="" id="PINLAlertMsg" name="PINLAlertMsg" class="textbox hisui-validatebox" style="width:250px"></td>
+				 </tr>
+				 <tr>
+	    		   <td class="tdlabel">是否全部通过</td>
+				   <td><input class='hisui-checkbox' type="checkbox" id="PINLAllFlag" name="PINLAllFlag" data-options="checked:true" value="Y"></td>
+				 </tr>				 				 				 
+				 <tr>
+	    		   <td class="tdlabel">在药品通用名显示</td>
+				   <td><input class='hisui-checkbox' type="checkbox" id="PINLGenFlag" name="PINLGenFlag" data-options="checked:true" value="Y"></td>
+				 </tr>
+				 <tr>
+	    		   <td class="tdlabel">在药品商品名显示</td>
+				   <td><input class='hisui-checkbox' type="checkbox" id="PINLProFlag" name="PINLProFlag" data-options="checked:true" value="Y"></td>
+				 </tr>				 				 
+	    		 <tr>
+	    		   <!--<td class="tdlabel">顺序</td>-->
+				   <td><input type="text" id="PINLOrderNum" name="PINLOrderNum" class="hisui-numberbox" style="width:250px" type="hidden"></td>
+				 </tr>				 								
+			</table >
+		</form>
+	</div>
+    <!--数据面板工具栏-->
+    <div id="allbar">
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>    	
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-shiftup',plain:true,stopAllEventOnDisabled:true" id="btnUp">上移</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-shiftdown',plain:true,stopAllEventOnDisabled:true" id="btnDown">下移</a> 
+    </div>  
+</BODY>
+</HTML>

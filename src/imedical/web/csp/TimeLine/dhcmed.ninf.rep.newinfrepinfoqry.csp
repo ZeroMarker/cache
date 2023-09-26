@@ -1,0 +1,94 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/infection.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		<script type="text/javascript" src="../Scripts/dhcmed/ss/PublicFunction/CustomFormItem.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Base.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Const.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_App.js'></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/PublicFunction/CustomFormItem.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/NewInfRepInfoQry/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/NewInfRepInfoQry/event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfRepInfoSub/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfRepInfoSub/event.js'></script>
+		
+		<!--Add By LiYang 2013-05-18 增加医院感染结束日期编辑界面-->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/Module_INFPos_EndDate.js'></script>
+		
+		
+		<!-- Add By LiYang 2013-01-08 增加到民科系统接口问题提示 -->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/MKProblemView/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/MKProblemView/event.js'></script>	
+		<script language='javascript' src='../scripts/dhcmed/ninf/Srv/MKExportToTxt/ExportMinke.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+		    Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+		    Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"DTH")
+            Set LogonLocID=""""_LogonLocID_""""
+            Set LogonHospID=""""_LogonHospID_""""
+            Set SSHospCode=""""_SSHospCode_""""
+			
+			Set AdminPower=+$g(%request.Data("AdminPower",1))	    //管理员权限
+			Set RepTypeCode=$g(%request.Data("RepTypeCode",1))	    //报告类型
+			Set:RepTypeCode="" RepTypeCode="NCOM"
+			
+			Set RepTypeID="",RepTypeDesc=""
+			Set objRepType=##class(DHCMed.SS.Dictionary).GetByTypeCode("NINFInfReportType",RepTypeCode,"")
+			If $IsObject(objRepType) {
+				Set RepTypeID=objRepType.%Id()
+				Set RepTypeCode=objRepType.Code
+				Set RepTypeDesc=objRepType.Description
+			}
+			
+			Set:RepTypeID="" RepTypeID=""""""
+			Set RepTypeCode=""""_RepTypeCode_""""
+			Set RepTypeDesc=""""_RepTypeDesc_""""
+			Set AdminPower=""""_AdminPower_""""
+		</SCRIPT>
+		<script language="javascript" type="text/javascript">
+			Ext.QuickTips.init();
+            var objControlArry = new Array();
+            
+            var LogonLocID=#(LogonLocID)#;
+			var LogonHospID=#(LogonHospID)#;
+			var SSHospCode=#(SSHospCode)#;
+            
+            var RepTypeID=#(RepTypeID)#;
+            var RepTypeCode=#(RepTypeCode)#;
+            var RepTypeDesc=#(RepTypeDesc)#;
+            var AdminPower=#(AdminPower)#;
+            
+            function window_onload() {
+            	var objViewPort = new InitViewport();
+                objControlArry['ViewPort'] = objViewPort;
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	< body onload="return window_onload()" >
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

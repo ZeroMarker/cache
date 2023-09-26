@@ -1,0 +1,158 @@
+<html >
+<head>
+<title>dhcadv.model.csp</title>
+<script type='text/javascript' src='../scripts/websys.js'></script>
+<HISUI/>
+<script language="Cache" runat="server">
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</script>
+<!-- ECharts文件引入 -->
+<script type="text/javascript" src="../scripts/dhcadvEvt/model/echarts/Echarts-all.js" charset="utf-8"></script>
+<!-- --> 
+<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/pagination/jquery.pagination.min.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/jqueryplugins/pagination/jquery.pagination.css" />	
+
+<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/model.report.chart.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/model.export.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/model.print.js"></script>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+</script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/skin/css/form.css" />
+<style type="text/css">
+ .combox{
+    height: 29px;
+    border-color: #40a2de;
+    white-space: nowrap;
+    margin: 0 6 0 6;
+    border-width: 1px;
+    border-style: solid;
+    vertical-align: middle;
+    width:70px;
+  }
+  .panel-body {
+    padding-top: 0px;
+  }
+ .toggle-btn {
+    color: #40a2de;
+    text-decoration: underline;
+    padding-right: 13px;
+    background: url(../images/fa-angle-double-down_40a2de_12.png) no-repeat center right;
+    line-height: 13px;
+    display: inline-block;
+    border-bottom: 1px solid #40a2de;
+    cursor: pointer;
+}
+.toggle-btn.expanded {
+    background-image: url(../images/fa-angle-double-up_40a2de_12.png);
+}
+.dashline-div {
+    height: 0px;
+    border-top: 1px dashed #ccc;
+    margin: 7 0 7 0
+}
+</style>
+</head>
+<body class="hisui-layout">
+	
+		<script language="Cache" runat="server">
+			s code=%request.Get("code")
+			s quoteflag=%request.Get("quoteflag")
+			i (code="")&&(quoteflag'="") d
+			.w "<h1 style='color:red'>请选择统计模板！</h1>"
+			e  i (code="")&&(quoteflag="") d
+			.w "<h1 style='color:red'>code 不能为空！</h1>"
+			e  d
+			.s model=+$o(^DHCADVMODEL(0,"Code",code,""))
+			.i model=0 d
+			..w "<h1 style='color:red'>code 错误</h1>"
+			.e  d
+			..w "<input type='hidden' id='quoteflag' value="_quoteflag_" >"
+			..w "<input type='hidden' id='modelId' value="_model_" >"
+			..w "<input type='hidden' id='formNameId' value="_$p(^DHCADVMODEL(model),"^",3)_" >"
+	   </script>
+		<div id="dicDia" class="hisui-dialog" title="选择字典" 
+	    	data-options="iconCls:'icon-save',maximized:true,closed:true" style="width:500;height:500">
+	    </div>
+   
+		<div id="report-tab" class="hisui-tabs tabs-gray" fit=true  >
+			<div title="数据集" style="padding:20px;">
+				
+				<table>
+						<tr>
+						<td><span style="margin-left:10px;"></span>开始日期<span style="margin-left:10px;"></span><input type="text" id="querySt" class="hisui-datebox textbox" style="width:150px" /> </td>	
+						<td><span style="margin-left:10px;"></span>结束日期<span style="margin-left:10px;"></span><input type="text" id="queryEd" class="hisui-datebox textbox" style="width:150px" /> </td>        
+						<td ><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" id="queryBTN" style="width:110px" >查询</a> </td>				
+						<td ><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-export'" id="exportBTN" style="width:110px" >导出</a> </td>
+						<td ><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-print'" id="printBTN" style="width:110px" >打印</a> </td>
+						<td><span style="margin:0 10 0 10"><span onclick="toggleExecInfo(this);" class="toggle-btn">高级查询</span></span></td>
+						<td id="condTd" style='display:none'>逻辑关系
+									<select id="condCombox" class="combox">
+										<option value="and">并且</option>
+										<option value="or">或者</option>
+									</select>
+						</td>
+						</tr>
+				</table>
+				<div class="dashline-div" id="dashline" style="display: none;"></div>
+				<table style="margin: 0 15 5 15;display:none" id="condTable">
+					
+				</table>
+				
+				<!-- table -->
+				<table class="dhc-table" style="width:100%;margin-top:10px">
+					<thead>
+						<script language="Cache" runat="server">
+								s pid=##class(web.DHCADVModel).listColumn($g(%request.Data("code",1),""))
+
+					   </script>
+					</thead>
+					<tbody id="tableData">
+						
+					</tbody>
+				</table>
+				<div id="pagination" class="page fl"></div>	
+			</div>
+			
+			<div title="柱状图" style="padding:20px;">
+				<div id="barDiv" style="width: 1250;height:400;">
+					
+				</div>
+			</div>
+			<div title="饼图" style="padding:20px;">
+				<div id="pieDiv" style="width: 1250;height:400;">
+					
+				</div>
+			</div>
+			<div title="折线图" style="padding:20px;">
+				<div id="lineDiv" style="width: 1250;height:400;">
+					
+				</div>
+			</div>
+		</div>
+	
+	<div id="exportTableData" style="display: none"></div>
+
+	<!--回首页-->
+	<!--<div id="gologin" style="width:49px;height:47px; position:fixed;right:30px;bottom:142px;z-index:3;display:none;">
+		<a style="cursor:pointer" onclick="Gologin()">
+			<img src="../scripts/dhcadvEvt/images/gologin.png" onMouseOver='this.src="../scripts/dhcadvEvt/images/gologin_hover.png"' onMouseOut='this.src="../scripts/dhcadvEvt/images/gologin.png"'>
+		</a>
+	</div>-->
+	<script language="Cache" runat="server">
+		w $$$cspStrictJavaScriptStart
+		w "var pid="_pid_";"
+		w $$$cspJavaScriptEnd
+   </script>
+   <script type="text/javascript" src="../scripts/dhcadvEvt/model.report.js"></script>
+</body>
+</html>

@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--opdoc.oeorder.cmlistcustom.csp 新草药录入--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
+<HISUI></HISUI>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/ui.jqgrid.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/ipdoc/css/dhcdocCustomjqGrid.css">
+<!--放大镜-->
+<!--script type='text/javascript' src='../scripts/framework/ext.icare.Lookup.js'></script-->
+<!-- jqgrid js-->
+<script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/jquery.jqGrid.src.js"></script>
+<script src="../scripts/dhcdoc/opdoc/UDHCOEOrder.CHNMEDEntry.js"></script>
+<style>
+.infosel-div{
+	margin:5px 10px;
+}
+.infosel-div label{
+	margin-right:5px;
+}
+#ordEntryType_change_Btn{
+	position:absolute;
+	background:#40A2DE;
+	right:20px;
+	top:13px;
+	color:white;
+	border-top:1px dashed #40A2DE;
+}
+#ordEntryType_change_Btn:hover{
+	background:#378ec4;
+}
+.infosel-div .combo,.infosel-div .textbox{
+	margin-right:10px;
+}
+.search-table{
+	width:100%;
+	border-collapse:separate;
+	border-spacing:0 10px;
+	border-left:1px solid #ccc;
+	border-right:1px solid #ccc;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.in-table{
+	border-top:1px solid #ccc;
+	border-radius:4px 4px 0 0;
+}
+#Update .l-btn-text {
+	color:red;
+	font-weight:bold;
+}
+#gbox_CMOrdEntry_DataGrid{
+	border-radius: 0 0 4px 4px;
+}
+.ui-widget-content{
+	border-color:#ccc;
+}
+.ui-jqgrid td input, .ui-jqgrid td select .ui-jqgrid td textarea{
+	padding: 0 0 0 5px;
+}
+#CMPrescTypeKW .kw-section-list >li{
+	margin:0 5px;
+}
+/* 模版通用样式 */
+.template_div{
+	margin-right:5px;
+	float:left;
+	width:210px;
+	height:278px;
+}
+/*个人 科室模板选中样式*/
+.seltemplate_btn{
+	color: #006699;
+	font-Weight: bold;
+}
+.templateItemSelect {
+	color: blue;
+	font-size:14px;
+	font-weight:bold;
+   background-color: #E0ECFF;
+}
+.tabs-panels{
+	border-bottom:0;
+}
+select{
+	height:30px !important;
+}
+.tab_body{
+	white-space:nowrap;
+	float:left;
+	height:0;
+	padding:0 0 35px;
+	line-height:35px;
+	z-index:200;
+	border-top:1px solid #ccc;
+}
+.tab_body li{
+	float:left;
+	border:0;
+	height:35px;
+	line-height:35px;
+	overflow-y:hidden;
+	border-right:1px solid #ccc;
+	border-bottom:1px solid #ccc;
+}
+.tabItem.is-selected{
+	position:relative;
+	top:-1px;
+	height:32px;
+	line-height:32px;
+	border-top:3px solid #509de1;
+	border-bottom:0;
+	background-color:#fff;
+	color:#509de1;
+	pointer-events:none
+}
+.tabItem{
+	padding:0 12px;
+	display:inline-block;
+}
+BODY INPUT:focus{
+	background-color:#f4faff !important;
+}
+/*.ext-webkit :focus {
+	outline:#95B8E7 solid 2px !important;
+}*/
+th{
+	font-weight:100;
+}
+object{
+	display:none;
+}
+#Prompt {
+    float: left;
+    font-size: 14px;
+    width: 100%;
+    height: 28px;
+    line-height: 28px;
+    text-align:left;
+    background: #FFE3E3;
+    color: #FF3D2C;
+    border: 1px solid #FF3D2C;
+    border-radius: 4px;
+    padding-left: 5px;
+    margin: 3px 0 2px 2px;
+}
+input{
+	ime-mode:inactive;
+}
+.datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-text{
+	padding:0 4px 0 25px;
+}
+.datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-empty{
+	padding:0 3px 0 0;
+}
+.datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-icon{
+	left:0;
+}
+#webuiPopover0{
+	left:0 !important;
+}
+#webuiPopover0 .webui-arrow{
+	left:25px !important;
+}
+
+</style>
+<Server>
+ s (EpisodeID,PatientID,notMatch)=""
+ s EpisodeID=%request.Get("EpisodeID") 
+ s PatientID="",mradm=""
+ if (EpisodeID'=""){
+     s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+     s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+ }
+ ;会诊记录ID
+ s EmConsultItm=$g(%request.Data("EmConsultItm",1))
+ ;菜单传递的病人和就诊是否匹配
+ i PatientID,EpisodeID d
+ . i $p($g(^PAADM(EpisodeID)),"^",1)'=PatientID d
+ . . s notMatch=1
+ . . w "<SCRIPT Language=""Javascript"">"
+ . . w "document.write('"_$g(t("PatientID_Not_Match_EpisodeID"))_"');"
+ . . w "</script>"
+ . . q
+ i notMatch q
+ ;临时科室处理
+ i EpisodeID'="",$l(EpisodeID,"^")=1 d
+ . s obj=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+ . i obj.PAADMTempLocDR d 
+ . . d %request.Set("TempLocID",obj.PAADMTempLocDR.%Id())
+ . . d %request.Set("TempLoc",obj.PAADMTempLocDR.CTLOCDesc)	
+ . . d obj.%Close()
+ 
+ n app,params,oeord,orderrow
+ s app=""
+ k %request.Data("OEPARAMS")
+ 
+ s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+ s Hospital=##Class(web.DHCDocConfig).GetConfigNode("CurrentHospital")
+ i Hospital'="" s HospitalCode=$P(Hospital,"^",1)
+ e  s HospitalCode=""
+ ;显示跨院选项
+ s CMOpenForAllHosp=##class(web.DHCDocConfig).GetConfigNode("CMOpenForAllHosp")
+ ;登陆用户身份类型
+ s CareProvType=##class(web.DHCDocOrderCommon).GetCareProvType(%session.Get("LOGON.USERID"))
+ s CareProvType=$zcvt(CareProvType,"U")
+ 
+ s CopyOeoris = $g(%request.Data("copyOeoris",1))
+ s len = $l(CopyOeoris,"^")
+ if (CopyOeoris'=""){
+ 	w "<script type=""text/javascript"">",$c(13,10)
+ 		w "var CopyOeoriDataArr = [];",$c(13,10)
+ 	f j=1:1:len {
+	 	s dataItem = ##class(web.DHCDocMain).CreateCopyItem($p(CopyOeoris,"^",j),"",%session.Get("LOGON.USERID"))
+		if (dataItem="") continue
+		w "CopyOeoriDataArr["_(j-1)_"] = """_dataItem_""";",$c(13,10)
+	}
+	w "</script>",$c(13,10)
+ }
+ 
+ ;登陆用户身份类型
+ s CareProvType=##class(web.DHCDocOrderCommon).GetCareProvType(%session.Get("LOGON.USERID"))
+ s CareProvType=$zcvt(CareProvType,"U")
+ 
+ ;出院带药医嘱
+ s OutOrderPriorRowid=$O(^OECPR(0,"Code","OUT",0))
+ ;取药医嘱
+ s OneOrderPriorRowid=$O(^OECPR(0,"Code","ONE",0))
+ ;长期医嘱
+ s LongOrderPriorRowid=$O(^OECPR(0,"Code","S",0))
+ ;临时医嘱
+ s ShortOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+ ;自备药临时医嘱
+ s OMOrderPriorRowid=$O(^OECPR(0,"Code","OM",0))
+ ;自备药长期医嘱
+ s OMSOrderPriorRowid=$O(^OECPR(0,"Code","OMST",0))
+ ;即刻医嘱
+ s STATOrderPriorRowid=$O(^OECPR(0,"Code","STAT",0))
+ ;PRN医嘱
+ s PRNOrderPriorRowid=$O(^OECPR(0,"Code","PRN",0))
+ ;长期嘱托
+ s OMCQZTOrderPriorRowid=$O(^OECPR(0,"Code","OMCQZT",0))
+ ;临时嘱托
+ s OMLSZTOrderPriorRowid=$O(^OECPR(0,"Code","OMLSZT",0))
+ 
+ s ViewGroupSum=##Class(web.DHCDocConfig).GetConfigNode("ViewGroupSum")
+ s ViewGroupSumUserID=##class(web.DHCDocConfig).GetConfigNode1("ViewGroupSum_UserID",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+ i ViewGroupSumUserID'="" d
+ .s ViewGroupSum=ViewGroupSumUserID
+ e  d
+ .s ViewGroupSumGroupID=##class(web.DHCDocConfig).GetConfigNode1("ViewGroupSum_Group",%session.Get("LOGON.GROUPID"))
+ .i ViewGroupSumGroupID'="" s ViewGroupSum=ViewGroupSumGroupID
+ s ViewGroupSum=+ViewGroupSum
+ if ViewGroupSum<1 s ViewGroupSum=4
+ s CMOrdDirectSave=##Class(web.DHCDocConfig).GetConfigNode("CMOrdDirectSave")
+ ;得到页面用户UI设置 ^DHCDocConfig("UIConfigObj")
+ s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("UIConfigObj",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+ i UIConfigObj="" {
+	 //若用户没有设置过，则走安全组设置
+	 s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("UIConfigObj_Group",%session.Get("LOGON.GROUPID"))
+ }
+ i UIConfigObj="" s UIConfigObj="{}"
+ d ##class(web.DHCDocUtil).GetArrayByObjStr(UIConfigObj,.UIConfigArray)
+ s DefaultCMExpandTemplate=0
+ if (UIConfigObj'="{}")&&($d(UIConfigArray("DefaultCMExpendTemplate")))&&(UIConfigArray("DefaultCMExpendTemplate")="true"){
+	 s DefaultCMExpandTemplate=1
+ }
+ ;得到默认用药副数
+ s CNMedDefaultDurRowid=##Class(web.DHCDocConfig).GetConfigNode("CNMedDefaultDuration")
+ ;得到默认使用方式
+ s CNMedDefaultInstrRowid=##Class(web.DHCDocConfig).GetConfigNode("CNMedDefaultInstruction")
+ ;得到默认用药频次
+ s CNMedDefaultFreqRowid=##Class(web.DHCDocConfig).GetConfigNode("CNMedDefaultFrequence") 
+ ;单次默认用量
+ s CNMedDefaultQty=##Class(web.DHCDocConfig).GetConfigNode("CNMedDefaultQty")
+ 
+ ;草药子类
+ s CNMedItemCatStr=##Class(web.DHCDocConfig).GetConfigNode("CNMedItemCat")
+ s OrderPhamacyWithDiagnos=##Class(web.DHCDocConfig).GetConfigNode("OrderPhamacyWithDiagnos")
+ ;自动计算附加材料数量
+ s CNMedAppendItemQtyCalcu=##Class(web.DHCDocConfig).GetConfigNode("CNMedAppendItemQtyCalcu")
+ s CMMedNotOpenARCOS=##Class(web.DHCDocConfig).GetConfigNode("CMMedNotOpenARCOS")
+ 
+ s CNMedAppendItemRowid=##Class(web.DHCDocConfig).GetConfigNode("CNMedAppendItem")
+ s IPCookModeFeeNoAutoAdd=##Class(web.DHCDocConfig).GetConfigNode("IPCookModeFeeNoAutoAdd")
+ s CNMedCookModeFeeItemRowid=##Class(web.DHCDocConfig).GetConfigNode("CNMedCookModeFeeItem")
+ if (CNMedCookModeFeeItemRowid=0) s CNMedCookModeFeeItemRowid=""
+ s DoctorID=##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
+ s DoctorType=##class(web.SSUser).GetDefaultCareProviderType(%session.Get("LOGON.USERID")) 
+ s OrderLimit=##Class(web.DHCDocConfig).GetConfigNode1("OrderLimit",%session.Get("LOGON.GROUPID"))
+ 
+ ;CA:数字签名加载JS  ---START---
+ s CAInit=0
+ i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+ .s CAInit=1
+ .d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+ ;------END-----
+ s AddMRCPWItemToListMethod=##Class(%CSP.Page).Encrypt($lb("DHCMA.CPW.IO.ToDoc.AddMRCPWItemToList"))
+ ;保留界面数据
+ s StoreUnSaveData=##Class(web.DHCDocConfig).GetConfigNode("StoreUnSaveData")
+ ;是否进行欠费控制及科室是否进行欠费控制
+ s CheckIPLocDeposit=1 //0 控制 1 不控制
+ s CheckIPDeposit=##Class(web.DHCDocConfig).GetConfigNode("CheckIPDeposit")
+ i CheckIPDeposit="1" d
+ .s CheckIPLocDeposit=##Class(web.UDHCJFARREARSMANAGE).CheckLoc(%session.Get("LOGON.CTLOCID"))
+ ;可以录入小数的子类
+ s AllowEntryDecimalItemCat=##class(web.DHCDocConfig).GetConfigNode("AllowEntryDecimalItemCat")
+ s XCONTEXT=""
+
+  ;草药录入必须有中医诊断
+ s CMOrdNeedTCMDiag=##Class(web.DHCDocConfig).GetConfigNode("CMOrdNeedTCMDiag")
+  ;同处方不允许录入相同医嘱名的医嘱
+ s CMOrdSameArcName=##Class(web.DHCDocConfig).GetConfigNode("CMOrdSameArcName")
+  ;草药医嘱备注
+  s PhSpecInstrList=##class(DHCDoc.OPDoc.CMOrderEntry).GetCNMedItemPhSpecInstr(%session.Get("LOGON.HOSPID"))
+  ;协定处方允许增加草药
+  s FormulaCanAppendItem=##Class(web.DHCDocConfig).GetConfigNode("FormulaCanAppendItem")
+  ;协定处方允许修改数量
+  s FormulaCanChangeDose=##Class(web.DHCDocConfig).GetConfigNode("FormulaCanChangeDose")
+  ;科室扩展设定->出院带药允许开精神毒麻类药品
+  s OutPriorAllowPoisonDrug=+##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),23)
+  ;对于医嘱录入非必须前端处理的判断逻辑可以在此处理
+ s CheckBeforeSaveMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItem.CheckCMBeforeSave"))
+ ///是否为实习生
+ s practiceFlag=##class(web.DHCOEOrdItem).practice(DoctorID)
+ s InsertPrcaticeDocMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCPracticeDocPreOrder.InsertPracticeOrder"))
+ 
+ s GetItemCongeriesToListMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItemCMView.GetItemCongeriesToList"))
+ ;疗程
+ s PrescDurationJson=##class(DHCDoc.OPDoc.CMOrderEntry).GetCMComList("PrescDuration")
+ ;用法
+ s PrescInstructionJson=##class(DHCDoc.OPDoc.CMOrderEntry).GetCMComList("PrescInstruction",EpisodeID)
+ ;频次
+ s PrescFrequenceJson=##class(DHCDoc.OPDoc.CMOrderEntry).GetCMComList("PrescFrequence",EpisodeID)
+ 
+ ;长期医嘱列表
+ s AddLongOrderJson=##class(DHCDoc.OPDoc.CMOrderEntry).GetCMComList("AddLongOrder")
+ ;煎药方式
+ s CookModeJson=##class(DHCDoc.OPDoc.CMOrderEntry).GetCMComList("CookMode",EpisodeID)
+ ;默认日期样式
+ s defaultDataCache=##class(websys.Conversions).DateFormat()
+ ;药量齐开、分开配置
+ s CMDrugAndQtySplitConfig=##class(web.DHCDocConfig).GetConfigNode1("CMDrugAndQtySplit",%session.Get("LOGON.USERID"))
+ //*******************与选中病人相关的变量集*****************************///
+ s EpisPatInfo=##Class(web.DHCDocViewDataInit).InitPatOrderViewGlobalCM(%request.Get("EpisodeID"),EmConsultItm)
+ //--包含部分影响界面元素的变量，需要在局部刷新方法中特殊处理
+ ;危急值ID
+ s AntCVID=%request.Get("AntCVID") 
+ ;医嘱类型
+ s PrescPriorJson=##class(DHCDoc.OPDoc.CMOrderEntry).GetCMComList("PrescPrior",PAAdmType)
+ s NotDoCheckDeposit=+##class(web.DHCDocConfig).GetConfigNode1("NotDoCheckDeposit",%session.Get("LOGON.GROUPID"))
+ ;补录模式
+ s SupplementMode=##Class(web.DHCDocConfig).GetConfigNode1("SupplementMode",%session.Get("LOGON.GROUPID"))
+ s GroupCPPFlag=##Class(web.UDHCOPGSConfig).GetGroupCPPFlag(%session.Get("LOGON.GROUPID"),%session.Get("LOGON.HOSPID"))
+ ;------------------------------------------------------------------------------------------------------------
+ ;得到草药医嘱录入的表格配置对象
+ s ListColSetCls="DHCDoc.OPDoc.CMOrdListCommon"
+ s ListColSetMth="GetListColSet"
+ s XCONTEXT=""
+ k colNames,colModelAry,ParamAry
+ s colNames=""
+ //从后台返回的下拉列表数据
+ s ParamAry("OrderPhSpecInstr1")=PhSpecInstrList 
+ s ParamAry("OrderPhSpecInstr2")=PhSpecInstrList 
+ s ParamAry("OrderPhSpecInstr3")=PhSpecInstrList 
+ s ParamAry("OrderPhSpecInstr4")=PhSpecInstrList 
+ d ##class(DHCDoc.OPDoc.CMOrdListCommon).ReadListColSet(ListColSetCls,ListColSetMth,.colNames,.colModelAry,.ParamAry,XCONTEXT)
+ s PageName=%request.PageName
+ w "<SCRIPT Language=""Javascript"">",!
+ w "var ListConfigObj={colNames:null,colModel:null};",!
+ w "var colNamesAry=new Array();",!
+ w "var colModelAry=new Array();",!
+ for i=1:1:$l(colNames,",") {
+	 s colName=$p(colNames,",",i)
+	 continue:colName=""
+	 s colModel=colModelAry(colName)
+	 w "colNamesAry.push('"_colName_"');",!
+	 w "colModelAry.push("_colModel_");",!
+ }
+ w "ListConfigObj.colNames=colNamesAry;",!
+ w "ListConfigObj.colModel=colModelAry;",!
+ d ##class(web.DHCDocOrderListCommon).GetMessageArray(PageName,%session.Get("LOGON.LANGID"))
+ w "</SCRIPT>",!
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ARCOSRowId' type='hidden' value=''>"
+w "<input id='PrescEmergency' type='hidden' value=''>"
+w "<input id='StartDate' type='hidden' value=''><input id='EndDate' type='hidden' value=''>"
+
+ ///加载合理用药,初始化;
+ s HLYYConfigObj=##class(web.DHCDocHLYYInterface).Init(%session.Get("LOGON.CTLOCID"),"CMOEOrd")
+ 
+</Server>
+  </head>
+<body>
+	<div class="window-mask alldom" style="display: none;width:100%;height:100%;z-index:10000;top:0px;left:0px;position:absolute;filter:alpha(opacity=100);opacity: 1;font-size:1px;background-color:#ccc;text-align:center;padding-top: 20%;">
+		<h1>
+			<font color="#15428B">加载中···</font>
+		</h1>
+	</div>
+	<!--分两种布局模式: 1.模板区域在页面最下方 2.模板在左侧,默认按照模板在左侧处理,切换布局模式时需同时修改参数templLayOutconfig的值-->
+	<!--1.模板区域在页面最下方-->
+	<!--csp:Include Page="opdoc.oeorder.cmlistcustom.templ.show.csp"-->
+	<!--2.模板在左侧-->
+	<csp:Include Page="opdoc.oeorder.cmlistcustom.show.csp">
+	<SCRIPT language = 'javascript' >
+	 //合理用药对象
+	 var HLYYConfigObj=#(HLYYConfigObj)#;
+	 //全局请求后台服务对象
+		var GlobalObj={
+	         CNMedDefaultDurRowid:"#(CNMedDefaultDurRowid)#",
+	         CNMedDefaultInstrRowid:"#(CNMedDefaultInstrRowid)#",
+	         CNMedDefaultFreqRowid:"#(CNMedDefaultFreqRowid)#",
+	         CNMedDefaultQty:"#(CNMedDefaultQty)#",
+	         lookupListComponetId:1872,
+	         ListColSetCls:"#(ListColSetCls)#",
+		     ListColSetMth:"#(ListColSetMth)#",
+		     XCONTEXT:"#(XCONTEXT)#",
+		     Hospital:"#(Hospital)#",
+		     HospitalCode:"#(HospitalCode)#",
+		     ViewGroupSum:"#(ViewGroupSum)#",
+	         CNMedItemCatStr:"#(CNMedItemCatStr)#",
+	         OrderPhamacyWithDiagnos:"#(OrderPhamacyWithDiagnos)#",
+	         CNMedAppendItemQtyCalcu:"#(CNMedAppendItemQtyCalcu)#",
+	         OutOrderPriorRowid:"#(OutOrderPriorRowid)#",
+			 OneOrderPriorRowid:"#(OneOrderPriorRowid)#",
+			 LongOrderPriorRowid:"#(LongOrderPriorRowid)#",
+			 ShortOrderPriorRowid:"#(ShortOrderPriorRowid)#",
+			 OMOrderPriorRowid:"#(OMOrderPriorRowid)#",
+			 OMSOrderPriorRowid:"#(OMSOrderPriorRowid)#",
+			 STATOrderPriorRowid:"#(STATOrderPriorRowid)#",
+			 PRNOrderPriorRowid:"#(PRNOrderPriorRowid)#",
+		     OMCQZTOrderPriorRowid:"#(OMCQZTOrderPriorRowid)#",
+		     OMLSZTOrderPriorRowid:"#(OMLSZTOrderPriorRowid)#",
+		     CheckIPDeposit:"#(CheckIPDeposit)#",
+		     CheckIPLocDeposit:"#(CheckIPLocDeposit)#",
+		     CNMedAppendItemRowid:"#(CNMedAppendItemRowid)#",
+		     IPCookModeFeeNoAutoAdd:"#(IPCookModeFeeNoAutoAdd)#",
+		     CNMedCookModeFeeItemRowid:"#(CNMedCookModeFeeItemRowid)#",
+		     LogonDoctorID:"#(DoctorID)#",
+		     LogonDoctorType:"#(DoctorType)#",
+		     StoreUnSaveData:"#(StoreUnSaveData)#",
+		     CMOrdDirectSave:"#(CMOrdDirectSave)#",
+		     AddLongOrder:"#(AddLongOrder)#",
+		     IsCAWin:"",
+		     CAInit:"#(CAInit)#",
+		     strServerRan:"#($g(%session.Data("ServerRan")))#",
+			 strServerCert:"#($g(%session.Data("ServerCert")))#",
+			 strServerSignedData:"#($g(%session.Data("ServerSignedData")))#",
+			 CMMedNotOpenARCOS:"#(CMMedNotOpenARCOS)#",
+			 CareProvType:"#(CareProvType)#",
+			 AllowEntryDecimalItemCat:"#(AllowEntryDecimalItemCat)#",
+			 DefaultCMExpandTemplate:"#(DefaultCMExpandTemplate)#",
+			 FormulaCanAppendItem:"#(FormulaCanAppendItem)#",
+			 FormulaCanChangeDose:"#(FormulaCanChangeDose)#",
+			 ///合理用药
+			 HLYYInterface:HLYYConfigObj.HLYYInterface,
+			 HLYYLayOut:"CMOEOrd",
+			 CurrCompanyCode:HLYYConfigObj.CurrCompanyCode,
+			 DTDepNotDoUpLoad:HLYYConfigObj.DTDepNotDoUpLoad,
+			 McSynCheckMode:HLYYConfigObj.McSynCheckMode,
+			 GetPrescXML:HLYYConfigObj.GetPrescXML,
+			 GetDTYDTS:HLYYConfigObj.GetDTYDTS,
+			 BaseInfo:HLYYConfigObj.BaseInfo,
+		     //--
+		     OrderLimit:"#(OrderLimit)#",
+		     AddMRCPWItemToListMethod:"#(AddMRCPWItemToListMethod)#",
+		     CMOpenForAllHosp:"#(CMOpenForAllHosp)#",
+		     CMOrdNeedTCMDiag:"#(CMOrdNeedTCMDiag)#",
+		     OutPriorAllowPoisonDrug:#(OutPriorAllowPoisonDrug)#,
+		     practiceFlag:"#(practiceFlag)#",
+		     InsertPrcaticeDocMethod:"#(InsertPrcaticeDocMethod)#",
+		     AntCVID:"#(AntCVID)#",
+		     PrescDurationJson:'#(PrescDurationJson)#',
+			 PrescInstructionJson:'#(PrescInstructionJson)#',
+			 PrescFrequenceJson:'#(PrescFrequenceJson)#',
+			 AddLongOrderJson:'#(AddLongOrderJson)#',
+			 PrescPriorJson:'#(PrescPriorJson)#',
+			 defaultDataCache:"#(defaultDataCache)#",
+			 CMDrugAndQtySplitConfig:"#(CMDrugAndQtySplitConfig)#",
+			 GetItemCongeriesToListMethod:"#(GetItemCongeriesToListMethod)#",
+			 CheckBeforeSaveMethod:"#(CheckBeforeSaveMethod)#",
+			 CookModeJson:'#(CookModeJson)#',
+			 CMOrdSameArcName:"#(CMOrdSameArcName)#",
+			 OrderBillTypeRowid:"",
+			 NotDoCheckDeposit:"#(NotDoCheckDeposit)#",
+			 SupplementMode:"#(SupplementMode)#"
+		};
+		function GetList_pnp() {
+		   var strTemp =GetUserList();
+		   if (strTemp!="") GlobalObj.IsCAWin=strTemp;
+		   else GlobalObj.IsCAWin="";
+		}
+		if(GlobalObj.CAInit==1) GetList_pnp();
+		InitPatOrderViewGlobalCM("#(EpisPatInfo)#");
+		//页面加载完之后在赋值，防止事件未定义导致报错
+		$(function(){
+			Init();
+		});
+	</SCRIPT>
+	<server>
+		s EpisodeID=%request.Get("EpisodeID")
+		d ##class(web.DHCDocOrderListCommon).ComonItemWinte(EpisodeID)
+	</server>
+	<script defer="defer" type="text/javascript" src="../scripts/DHCOPBillLocCheckOut.js"></script>
+	<!--readcard control-->
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script defer="defer" type="text/javascript" src="../scripts/DHCMA/SS/interface/ToDoctor.js"></script>
+</body>
+</html>

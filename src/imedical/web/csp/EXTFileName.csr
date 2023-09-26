@@ -1,0 +1,33 @@
+<!-- CSP TRAK:HEAD Rules -->
+<!-- Copyright (c) 2000 TRAK Systems Pty. ALL RIGHTS RESERVED. -->
+
+<!-- HEAD TAG --------------------------------------------- -->
+
+<csr:rule name="EXTHEALTH.EXTFILENAME" match="EXTHEALTH:EXTFILENAME">
+<csr:description>
+The <b>EXTHEALTH:EXTFILENAME</b> tag defines defines standard header info and initialisation for each page. For example javascript utilties, style sheet, theme and initialisation code
+</csr:description>
+
+<csr:action>
+  <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+  ;
+  ;EXTFileName.csr
+  ;
+  n extfilename
+  s extfilename = $g(%request.Data("extfilename",1))
+  if extfilename=""{
+    w "<SCRIPT language='javascript'>"
+    w " alert('没有传入js文件名,请传入extfilename入参值。')"
+    w "<"_"/SCRIPT>"
+  }else{
+    i extfilename'[".js"{
+      s extfilename = extfilename_".js"
+    }
+    s extafterloadname="Ext.BDP.FunLib.AfterLoad.js"
+    w "<script language='javascript'"_" src='../scripts/bdp/"_extfilename_"'>"_"<"_"/script>"
+    w !,"<script language='javascript'"_" src='../scripts/bdp/Framework/scripts/"_extafterloadname_"'>"_"<"_"/script>" 
+  }
+  </SCRIPT>
+</csr:action>
+</csr:rule>
+

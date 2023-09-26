@@ -1,0 +1,488 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!doctype html>
+<html>
+<head>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<meta http-equiv="X-UA-Compatible" content="edge" />
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<JQUERY:EASYUI132/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhctt/xmldesigner/main.css"/>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+	<script language="javascript" src="../scripts/websys.chrome.js"></script>
+	<script language="javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/edit_area/edit_area_full.js"></script>
+	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/xmldesigner.js" charset='utf-8'></script>
+	<server> 
+		// DHCJFDeposit "&reportName=DHCRisBill_CT1"
+		Set reportName = $g(%request.Data("reportName",1)) ;"mytest" //"DHCJFIPReceipt" //;"DHCRisBill_MRI" ;"DHCJFDeposit" //%request.Get("reportName")
+		Set reportId=""
+		if (reportName'=""){
+			Set reportId = ##class(web.DHCXMLPConfig).GetIdByName(reportName)
+			Set xmlPrint = ##class(web.DHCXMLPConfig).ReadXmlByID(reportId)
+			Set xml = $e(xmlPrint,1)
+			Set len = $l(xmlPrint)
+			for i=1:1:len-1{
+				Set pre = $e(xmlPrint,i)
+				Set cur = $e(xmlPrint,i+1)
+				if (pre=cur) && ((pre=" ")||(pre=$c(9)) || (pre=$c(13))) {
+					;去掉重复的tab ,space, enter
+				}else{
+					Set xml = xml_cur
+				}
+			}
+		}
+	</server>
+	<script type="text/javascript">
+		var reportName = "#(reportName)#"
+		var reportId = "#(reportId)#"
+   </script>
+   <style>
+   	.txtStyle,.numberStyle,.selStyle{
+	   	width:160px;
+	   	margin:2px 0;
+   	}
+   	.selStyle{
+	   	height:20px;
+   	}
+   </style>
+</head>
+<body>
+<div class="easyui-layout" data-options="fit:true"  id="lo">
+<div data-options="region:'north',border:true,split:true" style="height:40px;min-height:33px;background-color:#E0ECFF;zoom:1;">
+	<table id='menuBar' cellpadding="2" cellspacing="2">
+       <tr>
+           <td width='3px'><div class="pic pic_10"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="NewXml">
+           		<div title='新建' class="pic pic_26"></div></td>
+           </td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="OpenXml">
+		   		<div title='打开' class="pic pic_27"></div>
+		   </td>
+		   <td width='3px'><div class="pic pic_10"></div></td>
+		   <td width='22px' name='menuItem' class="menuItem" cmd="PrintView">
+		   		<div title='预览' class="graypic gray_printview" id="PrintViewMenu"></div>
+		   </td>
+		   <td width='22px' name='menuItem' class="menuItem" cmd="PrintOut">
+		   		<div title='CAB打印' class="graypic gray_printout" id="PrintOutMenu"></div>
+		   </td>
+		    <td width='22px' name='menuItem' class="menuItem" cmd="PrintOutLODOP">
+		   		<div title='LODOP打印' class="graypic gray_printout" id="PrintOutLODOPMenu"></div>
+		   </td>	          
+           <td width='22px' name='menuItem' class="menuItem" cmd="Save">
+           		<!--pic pic_save-->
+		   		<div title='保存报表'  class="graypic gray_save" id="SaveMenu"></div>
+		   </td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="SaveAs">
+		   		<div title='另存报表'  class="graypic gray_saveas" id="SaveAsMenu"></div>
+		   </td>
+           
+            <td width='22px' name='menuItem' class="menuItem" cmd="Delete">
+	            <!--pic pic_del-->
+	            <div title='删除控件'  class="graypic gray_del" id="DelMenu"></div>
+            </td>
+            <td width='3px'><div class="pic pic_10"></div></td>
+           <!--<td width='22px' name='menuItem' class="menuItem" cmd="Cut">
+			<div title='剪切控件'  class="pic pic_3"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="Copy">
+			<div title='复制控件'  class="pic pic_2"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="Paste">
+		   <div title='粘贴控件'  class="pic pic_11"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="Delete">
+		   <div title='删除控件'  class="pic pic_4"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="Undo">
+		   <div title='撤销操作'  class="pic pic_22"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="Redo">
+		   <div title='重复操作'  class="pic pic_14"></div></td>
+           <td width='3px'><div class="pic pic_10"></div></td>
+           //-->
+           <td width='22px' name='menuItem' class="menuItem" cmd="leftAlign">
+		   <div title='左对齐'  class="pic pic_9"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="bottomAlign">
+		   <div title='底对齐'  class="pic pic_1"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="rightAlign">
+		   <div title='右对齐'  class="pic pic_15"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="topAlign">
+		   <div title='顶对齐'  class="pic pic_21"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="h-Align">
+		   <div title='水平对齐'  class="pic pic_6"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="v-Align">
+		   <div title='垂直对齐'  class="pic pic_23"></div></td>
+           <td width='3px'><div class="pic pic_10"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="h-Equal">
+		   <div title='高度相等'  class="pic pic_7"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="w-Equal">
+		   <div title='宽度相等'  class="pic pic_25"></div></td>
+           <td width='22px' name='menuItem' class="menuItem" cmd="s-Equal">
+		   <div title='大小相等'  class="pic pic_18"></div>
+		   </td>
+		   <td width='3px'><div class="pic pic_10"></div></td>
+		   <td width='22px' name='menuItem' class="menuItem" cmd="selectedMove">
+		   		<div title='整体移动'  class="pic pic_28"></div>
+		   	</td>
+		   <td>
+		   	<div style="float:left;">当前XML模板:</div>
+		   	<div style="float:left;color:blue;cursor:pointer;" id="currentXmlTplDesc"></div>
+		   	<div style="float:left;color:blue;cursor:pointer;">-</div>
+		   	<div style="float:left;color:blue;cursor:pointer;" id="currentXmlTplName">#(reportName)#</div>
+		   </td>
+		   <td>
+		   		<div style="width:30px;"></div>
+		   </td>
+		   <td>
+		   		<div><a href="#" id="printTestA" class="i-btn" target="_blank">例子界面</a></div>
+		   </td>
+		   <td>
+		   		<div><a href="#" id="printHelpA" class="i-btn" target="_blank">帮助文档</a></div>
+		   </td>
+        </tr>
+    </table>
+</div>
+<div data-options="title:'工具箱',region:'west',border:true,split:true" style="width:120px;min-width:110px;background-color:#E0ECFF;">
+	<div class="toolbar">
+		<div class="CtrlItem" ctrlType="label" draggable='true'>
+			<img title="标签" class="CtrlImg" src="../scripts/dhctt/xmldesigner/img/label.gif" /><label>文本</label>
+		</div>
+		 <div class="CtrlItem" ctrlType="line" draggable='true'>
+			<img title="线" class="CtrlImg" src="../scripts/dhctt/xmldesigner/img/canvas.png" /><label>线</label>
+		</div>
+		 <div class="CtrlItem" ctrlType="list" draggable='true'>
+			<img  title="列表" class="CtrlImg" src="../scripts/dhctt/xmldesigner/img/grid.png" /><label>列表</label>
+		</div>
+		<div class="CtrlItem" ctrlType="listItem" draggable='true'>
+			<img  title="列表项" class="CtrlImg" src="../scripts/dhctt/xmldesigner/img/column.png"/><label>列表项</label>
+		</div>
+		 <div class="CtrlItem" ctrlType="img">
+			<img title="图片" class="CtrlImg" src="../scripts/dhctt/xmldesigner/img/project.png"/><label>图片</label>
+		</div>
+		<div class="CtrlItem" ctrlType="qrcode">
+			<img title="二维码" class="CtrlImg" src="../scripts/dhctt/xmldesigner/img/qr.png"/><label>二维码</label>
+		</div>
+		<div class="CtrlItem" ctrlType="barcode">
+			<img title="条形码" class="CtrlImg" src="../scripts/dhctt/xmldesigner/img/barcode.png"/><label>条形码</label>
+		</div>
+	</div>
+</div>
+<div data-options="region:'center',border:true,split:true">	 
+	<div class="easyui-layout" data-options="fit:true">  
+		<div data-options="region:'center',border:false" class="centerbar" id="centerdesignebar">
+			<!--chrome tabindex=0 -enable keydown--   -->
+			<div id="dbLayout" class="centerlayout" droppable='true'  tabindex=0>
+				 <canvas id='lineLayout' name='lineLayout' data-ind=0 data-type="layout" width='100' height='100'>not support canvas</canvas>
+			</div>
+			<textarea id="xmlTextArea" class="xmlcontent" style="display:none;overflow:hidden;border:0px;" onkeydown="xmlTextAreaKeyDown();" onmousedown="xmlTextAreaKeyDown();"></textarea>	
+		</div>
+		<div data-options="region:'south',border:false" style="height:30px;background-color:#E0ECFF;">
+			<div id="navLayout" class="pagebg centerbar">
+				<ul class="pager">
+				<li><a href="#" onclick="showDesView()">设计视图</a></li>
+				<li><a href="#" onclick="showXmlView()">XML视图</a></li>
+				</ul>
+			</div>	
+		</div>  
+	</div>
+</div>
+<div data-options="title:'属性',region:'east',border:true,split:true" style="width:320px;background-color:#E0ECFF;">
+    <div class="attrbar">
+	    <table id="tbCtrlAttr" cellpadding="0" cellspacing="0" style="width:100%" border="0px;">
+	    	<tr id="tr-ind" class="trCtrlAttr" style="height:1px;display:none;">
+	    		<td class ="tdCtrlAttrLeft"><input id="t-type" value="" name="t-type" type="hidden" class ="txtStyle"></td>
+	    		<td class ="tdCtrlAttrRight"><input id="t-ind" value="" name="t-ind" type="hidden" class ="txtStyle"></td>
+	    	</tr>
+	    	<tr id = "tr-name" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">元素名</td>
+				<td class ="tdCtrlAttrRight"><input id="t-name" type="text" class ="txtStyle"/></td>
+			</tr>
+			<tr id = "tr-defaultvalue" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">默认值</td>
+				<td class ="tdCtrlAttrRight"><input id="t-defaultvalue" type="text"  class ="txtStyle"/></td>
+			</tr>
+			<tr id = "tr-x" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">X坐标</td>
+				<td class ="tdCtrlAttrRight"><input id="t-x" type="text" class ="numberStyle" maxlength="3"/></td>
+			</tr>
+			<tr id = "tr-y" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">Y坐标</td>
+				<td class ="tdCtrlAttrRight"><input id="t-y" type="text" class ="numberStyle" maxlength="3"/></td>
+			</tr>
+			<tr id = "tr-height" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft"><a href="#" title="文本宽与高只有lodop打印才有效">高度</a></td>
+				<td class ="tdCtrlAttrRight"><input id="t-height" type="text" class ="numberStyle" maxlength="5"/></td>
+			</tr>
+			<tr id = "tr-width" class="trCtrlAttr">
+				<td class="tdCtrlAttrLeft"><a href="#" title="文本宽与高只有lodop打印才有效">宽度</a></td>
+				<td class="tdCtrlAttrRight"><input id="t-width" type="text" class ="numberStyle" maxlength="5"/></td>
+			</tr>
+			<tr id = "tr-PrtPage" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">打印纸张</td>
+				<td class ="tdCtrlAttrRight">
+				<input id="t-PrtPage" class="txtStyle"></input></td>
+			</tr>
+			<tr id = "tr-PrtPaperSet" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft"><a href="#" title="WIN:表示在打印机中设定,HAND:表示在XML中设定">纸张设置</a></td>
+				<td class ="tdCtrlAttrRight">
+				<select id="t-PrtPaperSet" class="selStyle">
+				<option value="WIN">按打印机纸张大小</option>
+				<option value="HAND">自定义纸张大小</option>
+				</select></td>
+			</tr>
+			<tr id = "tr-PaperDesc" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">纸张设置描述</td>
+				<td class ="tdCtrlAttrRight">
+				<input id="t-PaperDesc" class="txtStyle"></input></td>
+			</tr>
+			<tr id = "tr-PrtDevice" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">打印机</td>
+				<td class ="tdCtrlAttrRight">
+				<input id="t-PrtDevice" class="txtStyle"></input></td>
+			</tr>
+			<tr id = "tr-LandscapeOrientation" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">打印方向</td>
+				<td class ="tdCtrlAttrRight">
+				<select id="t-LandscapeOrientation" class="selStyle">
+				<option value="Y">横向--纸张旋转90度后打印</option>
+				<option value="X">纵向--按纸张设置方向打印</option>
+				<option value="Z">纵向且即打即停-限LODOP</option>
+				</select>
+				</td>
+			</tr>
+			<tr id="tr-XMLClassMethod" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">类方法名称</td>
+				<td class ="tdCtrlAttrRight">
+				<input id="t-XMLClassMethod" class="txtStyle"></input></td>
+			</tr>
+			<tr id="tr-XMLClassQuery" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">Query方法名称</td>
+				<td class ="tdCtrlAttrRight">
+				<input id="t-XMLClassQuery" class="txtStyle"></input></td>
+			</tr>
+			
+			<tr id = "tr-fontsize" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">字体大小</td>
+				<td class ="tdCtrlAttrRight"><input id="t-fontsize" type="text" class ="numberStyle"  maxlength="2"/></td>
+			</tr>
+			<tr id = "tr-fontbold" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">是否粗体</td>
+				<td class ="tdCtrlAttrRight">
+				<select id="t-fontbold" class="selStyle" attrName="fontbold">
+				<option value="true">是</option>
+				<option value="false">否</option>
+				</select>
+				</td>
+			</tr>
+			<tr id = "tr-fontname" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">字体名</td>
+				<td class ="tdCtrlAttrRight"><select id="t-fontname" class="selStyle" attrName="fontname">
+				<OPTION value="C39P36DmTt">C39P36DmTt</OPTION>
+				<OPTION value="Code 128">Code 128</OPTION>
+				<OPTION value="IDAutomationHC39M">IDAutomationHC39M</OPTION>
+				<OPTION value=@Fixedsys>@Fixedsys</OPTION><OPTION value=@MingLiU>@MingLiU</OPTION>
+				<OPTION value=@PMingLiU>@PMingLiU</OPTION><OPTION value=@SyStem>@SyStem</OPTION>
+				<OPTION value=@Terminal>@Terminal</OPTION><OPTION value=@方正舒体>@方正舒体</OPTION>
+				<OPTION value=@方正姚体>@方正姚体</OPTION>
+				<OPTION value=@仿宋_GB2312>@仿宋_GB2312</OPTION><OPTION value=@黑体>@黑体</OPTION>
+				<OPTION value=@华文彩云>@华文彩云</OPTION><OPTION value=@华文细黑>@华文细黑</OPTION>
+				<OPTION value=@华文新魏>@华文新魏</OPTION><OPTION value=@华文行楷>@华文行楷</OPTION>
+				<OPTION value=@华文中宋>@华文中宋</OPTION><OPTION value=@楷体_GB2312>@楷体_GB2312</OPTION>
+				<OPTION value=@隶书>@隶书</OPTION><OPTION value=@宋体>@宋体</OPTION>
+				<OPTION value=@新宋体>@新宋体</OPTION><OPTION value=@幼体>@幼体</OPTION>
+				<OPTION value=Arial>Arial</OPTION><OPTION value="Arial Black">Arial Black</OPTION>
+				<OPTION value="Arial Narrow">Arial Narrow</OPTION><OPTION value=Basemic>Basemic</OPTION>
+				<OPTION value="Basemic Symbol">Basemic Symbol</OPTION><OPTION value="Basemic Times">Basemic Times</OPTION>
+				<OPTION value="Book Antiaua">Book Antiaua</OPTION><OPTION value="Bookman Old Style">Bookman Old Style</OPTION>
+				<OPTION value="Cemtury Bothic">Cemtury Bothic</OPTION><OPTION value="Comic sams MS">Comic sams MS</OPTION>
+				<OPTION value="Copperplate ">Copperplate</OPTION><OPTION value=Gothic>Gothic</OPTION>
+				<OPTION value="Copperplate ">Copperplate</OPTION><OPTION value=Gothic>Gothic</OPTION>
+				<OPTION value=Courier>Courier</OPTION><OPTION value="Courier New">Courier New</OPTION>
+				<OPTION value=FixedSyS>FixedSyS</OPTION><OPTION value=Garamond>Garamond</OPTION>
+				<OPTION value=Ceorgia>Ceorgia</OPTION><OPTION value=HarettemSchweiler>HarettemSchweiler</OPTION>
+				<OPTION value=Impact>Impact</OPTION><OPTION value="Kingsoft Phonetic">Kingsoft Phonetic</OPTION>
+				<OPTION value="Lucida console">Lucida console</OPTION><OPTION value="Lucida Sans ">Lucida Sans</OPTION>
+				<OPTION value=Unicod>Unicod</OPTION><OPTION value=Marlett>Marlett</OPTION>
+				<OPTION value="Microsoft sans ">Microsoft sans</OPTION><OPTION value=ser>ser</OPTION>
+				<OPTION value=MingLiU>MingLiU</OPTION><OPTION value=Modern>Modern</OPTION>
+				<OPTION value="Monotype corsive">Monotype corsive</OPTION>
+				<OPTION value="MS Sans serif">MS Sans serif</OPTION><OPTION value="Ms Serif">Ms Serif</OPTION>
+				<OPTION value="palatino Linotype">palatino Linotype</OPTION><OPTION value=PMingLiU>PMingLiU</OPTION>
+				<OPTION value=Roman>Roman</OPTION><OPTION value=Script>Script</OPTION><OPTION value="Small Fonts">Small Fonts</OPTION>
+				<OPTION value=Symbol>Symbol</OPTION><OPTION value=SyStem>SyStem</OPTION><OPTION value=Tahoma>Tahoma</OPTION>
+				<OPTION value=Terminal>Terminal</OPTION><OPTION value="Times New Roman">Times New Roman</OPTION>
+				<OPTION value="Trebucher MS">Trebucher MS</OPTION><OPTION value=Verdana>Verdana</OPTION>
+				<OPTION value=Webdings>Webdings</OPTION><OPTION value=Wingdings>Wingdings</OPTION>
+				<OPTION value="Wingdings 2">Wingdings 2</OPTION><OPTION value="Wingdings 3">Wingdings 3</OPTION>
+				<OPTION value=方正舒体>方正舒体</OPTION><OPTION value=方正姚体>方正姚体</OPTION><OPTION value=仿宋_GB2312>仿宋_GB2312</OPTION>
+				<OPTION value=黑体>黑体</OPTION><OPTION value=华文彩云>华文彩云</OPTION><OPTION value=华文细黑>华文细黑</OPTION>
+				<OPTION value=华文新魏>华文新魏</OPTION><OPTION value=华文行楷>华文行楷</OPTION>
+				<OPTION value=华文中宋>华文中宋</OPTION><OPTION value=楷体_GB2312>楷体_GB2312</OPTION>
+				<OPTION value=隶书>隶书</OPTION><OPTION value=宋体>宋体</OPTION><OPTION value=新宋体>新宋体</OPTION>
+				<OPTION value=幼圆>幼圆</OPTION>
+				</select>
+				</td>
+			</tr>
+			<tr id = "tr-barcodetype" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">字体名</td>
+				<td class ="tdCtrlAttrRight"><select id="t-barcodetype" class="selStyle" attrName="barcodetype">
+				<OPTION value="128A">Code128A</OPTION>
+				<OPTION value="128B">Code128B</OPTION>
+				<OPTION value="128C">Code128C</OPTION>
+				<OPTION value="128Auto">Code128Auto</OPTION>
+				<OPTION value="EAN8">EAN8</OPTION>
+				<OPTION value="EAN13">EAN13</OPTION>
+				<OPTION value="EAN128A">EAN128A</OPTION>
+				<OPTION value="EAN128B">EAN128B</OPTION>
+				<OPTION value="EAN128C">EAN128C</OPTION>
+				<OPTION value="Code39">Code39</OPTION>
+				<OPTION value="39Extended">39Extended</OPTION>
+				<OPTION value="2_5interleaved">2_5interleaved</OPTION>
+				<OPTION value="2_5industrial">2_5industrial</OPTION>
+				<OPTION value="2_5matrix">2_5matrix</OPTION>
+				<OPTION value="UPC_A">UPC_A</OPTION>
+				<OPTION value="UPC_E0">UPC_E0</OPTION>
+				<OPTION value="UPC_E1">UPC_E1</OPTION>
+				<OPTION value="UPCsupp2">UPCsupp2</OPTION>
+				<OPTION value="UPCsupp5">UPCsupp5</OPTION>
+				<OPTION value="Code93">Code93</OPTION>
+				<OPTION value="93Extended">93Extended</OPTION>
+				<OPTION value="MSI">MSI</OPTION>
+				<OPTION value="PostNet">PostNet</OPTION>
+				<OPTION value="Codabar">Codabar</OPTION>
+				<OPTION value="QRCode">二维码QRCode</OPTION>
+				<OPTION value="PDF417">二维码PDF417</OPTION>
+				</select>
+			</tr>
+			<tr id = "tr-isshowtext" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft"><a href="#" title="只有lodop打印才有效">是否显示文字</a></td>
+				<td class ="tdCtrlAttrRight">
+				<select id="t-isshowtext" class="selStyle" attrName="isshowtext">
+				<OPTION value="">显示</OPTION>
+				<OPTION value="N">隐藏</OPTION>
+				</select>
+			</tr>
+			<!--src=http的图片URL路径-->
+			<tr id = "tr-src" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">图片URL</td>
+			<td class ="tdCtrlAttrRight"><input id="t-src" type="text"  class ="txtStyle"/></td>
+			</tr>
+			<tr id = "tr-angle" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft"><a href="#" title="逆时针旋转,只有lodop打印才有效,且旋转后宽高会变化,请以真实打印效果为准">旋转度数</a></td>
+				<td class ="tdCtrlAttrRight"><input id="t-angle" type="text"  class ="txtStyle"/></td>
+			</tr>
+			<!--list data-->
+			<tr id = "tr-PageRows" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">一页显示行数</td>
+			<td class ="tdCtrlAttrRight"><input id="t-PageRows" type="text" class ="numberStyle" attrName="PageRows" maxlength="2"/></td>
+			</tr>
+			<tr id = "tr-CurrentRow" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">当前行号</td>
+			<td class ="tdCtrlAttrRight"><input id="t-CurrentRow" type="text" class ="numberStyle" attrName="CurrentRow" maxlength="2"/></td>
+			</tr>
+			
+			<tr id = "tr-YStep" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">行高</td>
+			<td class ="tdCtrlAttrRight"><input id="t-YStep" type="text" class ="numberStyle" maxlength="2"/></td>
+			</tr>
+			<tr id = "tr-BackSlashWidth" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft"><a href="#" title="列表信息打印完后,打印反斜线的宽度">结束反斜线宽</a></td>
+			<td class ="tdCtrlAttrRight"><input id="t-BackSlashWidth" type="text" class ="numberStyle" maxlength="4"/></td>
+			</tr>
+			<!--line-->
+			<tr id = "tr-stx" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">开始X值</td>
+			<td class ="tdCtrlAttrRight"><input id="t-stx" type="text" class ="numberStyle" maxlength="3"/></td>
+			</tr>
+			<tr id = "tr-sty" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">开始Y值</td>
+			<td class ="tdCtrlAttrRight"> <input id="t-sty" type="text" class ="numberStyle" maxlength="3"/></td>
+			</tr>
+			<tr id = "tr-endx" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">结束X值</td>
+			<td class ="tdCtrlAttrRight"><input id="t-endx" type="text" class ="numberStyle" maxlength="3"/></td>
+			</tr>
+			<tr id = "tr-endy" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">结束Y值</td>
+			<td class ="tdCtrlAttrRight"> <input id="t-endy" type="text" class ="numberStyle" maxlength="3"/></td>
+			</tr>
+			
+			<tr id = "tr-RePrtHeadFlag" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">重复打印</td>
+			<td class ="tdCtrlAttrRight">
+			<select id="t-RePrtHeadFlag" class="selStyle">
+			<option value="Y">是</option>
+			<option value="N">否</option>
+			</select></td>
+			</tr>
+			<tr id = "tr-ReportCol" class="trCtrlAttr">
+			<td class ="tdCtrlAttrLeft">设置列</td>
+			<td class ="tdCtrlAttrRight">
+			<button id="btnSetCol" class="buttonStyle">设定</button>
+			</td>
+			</tr>
+			
+			<tr><td></td></tr>
+		</table>
+    </div>
+</div>
+</div><!--end layout-->
+		<div id="XMLListWin" class="easyui-window" title="打开XML模板" style="width:600px;height:400px;top:100px;"  
+	        data-options="iconCls:'icon-search',modal:true,collapsible:false,minimizable:false,maximizable:false,closed:true">
+	     <div  class="easyui-layout" data-options='collapsible:false,fit:true'>
+		     <div region="south" data-options='collapsible:false' style="height:60px;">
+				<table width="100%">
+					<tr style="height:10px;"><td></td><td></td><td></td><td></td><td></td></tr>
+					<tr>
+						<td>XML模板名称:</td>
+						<td><input id="XMLTplName"></td>
+						<td style="width:150px;">
+						<a href="#" class="easyui-linkbutton" onclick="javascript:OpenXMLTpl();" data-options="iconCls:'icon-ok'">打开</a>
+						</td>
+						<td>
+						<a href="#" class="easyui-linkbutton" onclick="javascript:DelXMLTpl();" data-options="iconCls:'icon-no'">删除</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div region="center">
+				<table id="XMLListTbl"></table>
+			</div>
+		</div>
+	</div>
+	<div id="XMLNewNameWin" class="easyui-window" title="新建XML模板" style="width:400px;height:300px"  
+	        data-options="iconCls:'icon-add',modal:true,collapsible:false,minimizable:false,maximizable:false,closed:true">
+	     <table width="100%">
+			<tr style="height:10px;">
+				<td style="width:20px;"></td><td></td><td><input id="xmlNewId" type="hidden" ></td><td></td>
+			</tr>
+			<tr style="height:50px;">
+				<td style="width:20px;"></td><td>XML模板名称:</td><td><input id="xmlNewName" ></td><td></td>
+			</tr>
+			<tr style="height:50px;">
+				<td style="width:20px;"></td><td>XML模板描述:</td><td><input id="xmlNewDesc" ></td><td></td>
+			</tr>
+			<tr style="height:50px;">
+				<td style="width:20px;"></td><td></td><td>
+			<a href="#" class="easyui-linkbutton" onclick="javascript:NewXMLTplClick();">确定</a></td><td></td>
+			<tr style="height:50px;">
+				<td style="width:20px;"></td><td colspan=3><label id="XMLNewNameError" style="color:red;"></label></td>
+			</tr>
+		</table>
+	</div>
+	<div id="XMLPrintViewWin" class="easyui-window" title="打印预览" style="width:600px;height:600px"  
+	        data-options="iconCls:'icon-print',modal:true,collapsible:false,closed:true,closable:false">
+		<!--<iframe width="100%" height="100%" src="dhctt.xmlprint.csp?xmlname=DHCJFIPReceipt">
+	    
+		</iframe>-->
+	</div>
+	<form id="myForm" name="myForm" action="dhctt.xmlpreview.csp" method="post" target="previewprint">
+		<INPUT TYPE="hidden" id="XMLTxtData" name="XMLTxtData" value="">
+		<INPUT TYPE="hidden" id="xmldesigner" name="xmldesigner" value="1">
+		<INPUT TYPE="hidden" id="xmlName" name="xmlName" value="">
+	</form>
+    <!--<script type="text/javascript" src="../scripts_lib/require.js" data-main="../scripts/xmldesigner/main"></script>!-->
+     <script type="text/javascript" src="../scripts/dhctt/xmldesigner/main.js" charset='utf-8'></script>
+</body>
+</html>

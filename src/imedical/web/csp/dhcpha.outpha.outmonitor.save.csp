@@ -1,0 +1,136 @@
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	// session
+	s SessionHosp=$g(%session.Data("LOGON.HOSPID"))
+    // 执行动作
+   	s action = $Get(%request.Data("action",1))
+   	// 参数
+    s input=$Get(%request.Data("input",1))
+    s style=$Get(%request.Data("style",1))
+    
+    // 获取住院医嘱审核病人列表
+	i action = "GetAdmTreeData" d
+	.s input= $Get(%request.Data("input",1))
+	.s start= $Get(%request.Data("start",1))
+	.s limit= $Get(%request.Data("limit",1))
+	.i style="jqGrid" d
+	..s start=$Get(%request.Data("page",1))
+    ..s limit=$Get(%request.Data("rows",1))
+	.w ##CLASS(web.DHCSTCNTSIPMONITOR).GetAdmWardList(input,start,limit,style)
+	
+    // 获取住院医嘱审核病区列表
+	i action = "GetWardListData" d
+	.s input= $Get(%request.Data("input",1))
+	.s start= $Get(%request.Data("start",1))
+	.s limit= $Get(%request.Data("limit",1))
+	.i style="jqGrid" d
+	..s start=$Get(%request.Data("page",1))
+    ..s limit=$Get(%request.Data("rows",1))
+	.w ##CLASS(web.DHCSTCNTSIPMONITOR).GetWardListData(input,start,limit,style)
+		
+	// 查处方医嘱明细
+	i action = "FindOrdDetailData" d
+	.s PrescNo = $Get(%request.Data("PrescNo",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSOUTMONITOR).GetOrdDetailData(PrescNo,StPage,Limit,Input,style)
+	
+	// 获取安全组关联的科室
+	i action = "GetStockPhlocDs" d
+	.s GrpDr= $Get(%request.Data("GrpDr",1))
+	.w ##CLASS(web.DHCSTCNTSCOMMON).GetStockPhlocDs(GrpDr,SessionHosp)
+	
+	// 获取sessino科室描述
+	i action = "GetSessionLoc" d
+	.s LocDr= $Get(%request.Data("LocDr",1))
+	.s ctlocdesc=##CLASS(web.DHCSTCNTSCOMMON).GetSessionLoc(LocDr)
+	.s retinfo=""
+	.w "{success:'"_ctlocdesc_"'}"
+	
+	// 获取住院病人基本信息
+	i action = "GetInPatInfo" d
+    .s adm=$Get(%request.Data("Adm",1))
+	.s retvalue=##class(web.DHCSTCNTSCOMMON).GetAdmBasicInfo(adm)
+	.w "{retvalue:'"_retvalue_"'}"	
+	
+	// 获取处方列表
+	i action = "GetAdmPrescList" d
+    .s start= $Get(%request.Data("stpage",1))
+	.s limit= $Get(%request.Data("limit",1))
+	.i style="jqGrid" d
+	..s start=$Get(%request.Data("page",1))
+    ..s limit=$Get(%request.Data("rows",1))
+	.s input= $Get(%request.Data("input",1))
+	.w ##class(web.DHCSTCNTSOUTMONITOR).GetAdmPrescList(start, limit, input,style)
+	
+	
+	// 门诊审核医嘱
+	i action = "SaveOPAuditResult" d
+	.s Input= $Get(%request.Data("Input",1))
+	.s ReasonDr=$Get(%request.Data("ReasonDr",1))
+	.s ret=##class(web.DHCSTCNTSOUTMONITOR).SaveOPAuditResult(ReasonDr,Input)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{"_""""_"retvalue"_""""_":"""_retvalue_""","_""""_"retinfo"_""""_":"""_retinfo_"""}"	
+	
+	// 住院审核医嘱合格
+	i action = "SaveItmResultIPMo" d
+	.s Input= $Get(%request.Data("Input",1))
+	.s ReasonDr=$Get(%request.Data("ReasonDr",1))
+	.s PrescNo=$Get(%request.Data("PrescNo",1))
+	.s ret=##class(web.DHCSTCNTSIPMONITOR).SaveAuditResult(ReasonDr,Input,PrescNo)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{"_""""_"retvalue"_""""_":"""_retvalue_""","_""""_"retinfo"_""""_":"""_retinfo_"""}"
+	
+	// 获取审核结果日志
+	i action = "GetIPOrdAuditLog" d
+	.s OrdItm=$Get(%request.Data("OrdItm",1))
+	.w ##class(web.DHCSTCNTSIPMONITOR).GetIPOrdAuditLog(OrdItm,0,200,style)
+		
+	// 获取审核结果明细日志
+	i action = "GetIPOrdAuditItmLog" d
+	.s PHOMDR=$Get(%request.Data("PHOMDR",1))
+	.w ##class(web.DHCSTCNTSIPMONITOR).GetIPOrdAuditItmLog(PHOMDR,0,200,style)
+		
+	// 取消审核日志
+	i action = "CancelPhOrdAudit" d
+	.s Input= $Get(%request.Data("Input",1))
+	.s ret=##class(web.DHCSTCNTSIPMONITOR).CancelPhOrdAudit(Input)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{"_""""_"retvalue"_""""_":"""_retvalue_""","_""""_"retinfo"_""""_":"""_retinfo_"""}"
+	
+	// 获取登记号下的所在就诊
+	i action = "GetAdmDs" d
+	.s RegNo=$Get(%request.Data("RegNo",1))
+	.w ##class(web.DHCSTCNTSIPMONITOR).GetAdmDs(RegNo,style,SessionHosp)
+		
+	// 获取病区DS
+	i action = "GetWardDs" d
+	.w ##CLASS(web.DHCSTCNTSCOMMON).GetWardDs()
+	
+	// 发药审核前获取住院医嘱信息
+	i action = "FindIPOrdDetailDs" d
+	.s input=$Get(%request.Data("input",1))
+	.s StPage = $Get(%request.Data("start",1))
+	.s Limit = $Get(%request.Data("limit",1))
+	.i style="jqGrid" d
+	..s StPage=$Get(%request.Data("page",1))
+    ..s Limit=$Get(%request.Data("rows",1))
+	.w ##class(web.DHCSTCNTSIPMONITOR).FindIPAdmOrdData(input,StPage,Limit,style)
+	
+	// 获取门诊审方窗口DS
+	i action = "GetAdtWinDs" d
+	.s CTlocDr=$Get(%request.Data("CTlocDr",1))
+	.w ##CLASS(web.DHCSTCNTSOUTMONITOR).GetAdtWinDs(CTlocDr)
+
+  	// 获取科室组DS
+	i action = "GetLocGrpDs" d
+	.s CTlocDr=$Get(%request.Data("LocId",1))
+	.w ##CLASS(web.DHCST.Util.OrgUtil).GetLocSLG(0,20,"",CTlocDr)	
+</script>

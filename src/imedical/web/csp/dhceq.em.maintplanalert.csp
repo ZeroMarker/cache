@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<HISUI/>
+<script type='text/javascript' src='../scripts/dhceq/em/maintplanalert.js'></script>
+
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s QXType=$g(%request.Data("QXType",1))
+ s BussType=$g(%request.Data("BussType",1))
+ s MaintLocDR=$g(%request.Data("MaintLocDR",1))
+ s MaintTypeDR=$g(%request.Data("MaintTypeDR",1))
+ //add by lmm 2019-01-12 begin
+ i (BussType=2)&&(MaintTypeDR=5)
+ {
+	s title="设备计量预警" 
+	 
+ }
+ elseif (BussType=2)&&(MaintTypeDR=4)
+ {
+	s title="设备巡检预警" 
+	 
+ }
+ elseif (BussType=1)
+ {
+	s title="设备保养预警" 
+	 
+ }
+ //add by lmm 2019-01-12 end
+ </Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title=#(title)# data-options="eqtitle:'maintitle',fit:true">  <!--modify by lmm 2019-01-12-->
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;height:75px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMPPlanNo" for="MPPlanNo">计划单号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MPPlanNo"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMPName" for="MPName">计划名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MPName"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMPMaintLocDR_LocDesc" for="MPMaintLocDR_LocDesc">执行部门</label></div>  <!--modify by lmm 2019-01-12-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MPMaintLocDR_LocDesc" data-options="component:'PLAT.L.Loc'"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" style="margin-left:12%;" data-options="stopAllEventOnDisabled:true">查询</a></div>
+							<div class="eq-table-td eq-table-label"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMPSchedule" for="MPSchedule">执行进度</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MPSchedule" class="hisui-combobox textbox" data-options="valueField: 'id',textField: 'text',data:[{id:'0',text:'All'},{id:'1',text:'未执行'},{id:'2',text:'执行中'}]"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMPMaintUserDR_UserName" for="MPMaintUserDR_UserName">负责人</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MPMaintUserDR_UserName" class="hisui-validatebox textbox" data-options="component:'PLAT.L.EQUser'"></input></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="tMaintPlanAlert" data-options="border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<input type="hidden" id="QXType" value=#(QXType)#>
+			<input type="hidden" id="BussType" value=#(BussType)#>
+			<input type="hidden" id="MPMaintLocDR" value=#(MaintLocDR)#>
+			<input type="hidden" id="MaintTypeDR" value=#(MaintTypeDR)#>
+			<!--add by lmm 2019-01-12 804709-->
+			<input type="hidden" id="MPMaintLocDR">
+			<input type="hidden" id="MPMaintUserDR">
+		</form>
+	</div>
+</body>
+</html>

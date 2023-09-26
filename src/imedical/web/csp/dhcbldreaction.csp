@@ -1,0 +1,110 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+  //dhcblduntowardeffect.csp untoward effect 不良反应
+ S patAdmID=$g(%request.Data("EpisodeID",1))
+ S userID=$g(%session.Data("LOGON.USERID"))
+ S userCode=$g(%session.Data("LOGON.USERCODE"))
+ S userName=$g(%session.Data("LOGON.USERNAME"))
+ S userGroupID=$g(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$g(%session.Data("LOGON.GROUPDESC"))
+ S userLocID=$g(%session.Data("LOGON.CTLOCID"))
+ //http-equiv="Content-Type"
+ 
+ S formLayoutData=##class(web.DHCBldSymptomLayout).GetFormLayout(patAdmID) 
+ S gPatInfo=$P(formLayoutData,$C(2),1)		//基本信息
+ S gPackInfo=$P(formLayoutData,$C(2),2)		//血袋信息
+ S symArrayStr=$P(formLayoutData,$C(2),3)   //反应症状布局
+ S gSymStoreData=$P(formLayoutData,$C(2),4) //反应症状数据
+ S reacTypeStr=$P(formLayoutData,$C(2),5)	//反应类型
+ S gReacTypeStoreData=$P(formLayoutData,$C(2),6) //反应类型数据
+ S vitalSign=$P(formLayoutData,$C(2),7)		//生命体征
+ S clinProcStr=$P(formLayoutData,$C(2),8)	//临床处理情况
+ S effectStr=$P(formLayoutData,$C(2),9)		//不良反应结果
+ S formread=$P(formLayoutData,$C(2),11)
+ S gFormRead=##class(web.DHCBldSymptomLayout).BuildFormRead(formread)
+ //生命体征
+ //临床处理情况
+ //不良反应结果
+ //既往史
+ //输血科处理情况
+ 
+ </Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/grid.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<!--
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		-->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/CheckColumnExtend.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/util/DHCLabUtil.js"></script>
+		
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+ 			var EpisodeID="#($g(EpisodeID))#";
+ 			//病人基本信息
+ 			var gPatAdmID="#($g(patAdmID))#";
+ 			var lgUserID="#($g(userID))#";
+ 			var lgUserCode="#($g(userCode))#";
+ 			var lgUserName="#($g(userName))#";
+ 			var lgUserGroupID="#($g(userGroupID))#";
+ 			var lgUserGroupDesc="#($g(userGroupDesc))#";
+ 			var lgUserLocID="#($g(userLocID))#";	
+ 			var gCurRecordID="";
+ 			var gCurRecordStatus="";	
+ 			var gPatInfo=eval("#($g(gPatInfo))#");					//病人信息
+			var gPackInfo="#($g(gPackInfo))#";	
+ 			var gSymArrayStr=eval("#($g(symArrayStr))#");
+ 			var gReacTypeArrayStr=eval("#($g(reacTypeStr))#");
+ 			//var arrSymData=new Array();
+ 			var gSymStoreData="#($g(gSymStoreData))#".split("#($C(3))#")
+ 			var gReacTypeStoreData="#($g(gReacTypeStoreData))#".split("#($C(3))#")
+ 			//var gReacType=eval("#($g(reacTypeStr))#");
+ 			var gVitalSign=eval("#($g(vitalSign))#");
+ 			var gClinProc=eval("#($g(clinProcStr))#");
+ 			var gEffect=eval("#($g(effectStr))#"); 
+ 			var gFormRead=eval("#($g(gFormRead))#"); 
+ 			
+	   </script>
+		<script type="text/javascript" src="../scripts/lisjs/business/DHCBldReactionCore.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/business/PrintReaction.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/business/DHCBldReactionLayout.js"></script>
+		
+		<script language="Javascript">
+			Ext.onReady(DHCBldReaction.app.init, DHCBldReaction.app);
+	   </script>
+</HEAD>
+ <body>
+    <!-- use class="x-hide-display" to prevent a brief flicker of the content -->
+   
+
+    <div id="divUntowardEffect"></div>
+   
+    
+   
+
+</div>
+
+</body>
+</HTML>

@@ -1,0 +1,36 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s active=$Get(%request.Data("active",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s jxunitdr=$Get(%request.Data("jxunitdr",1))
+	s userCode=$Get(%request.Data("userCode",1))
+	s schemDr=$Get(%request.Data("schemDr",1))
+	s period=$Get(%request.Data("period",1))
+	s parent=$Get(%request.Data("parent",1))
+	
+	i action = "schemlist" d
+	.w ##class(dhc.pa.udata.uUnitSchem).SchemList(active,searchField,searchValue,sortField,sortDir,start,limit,period)
+
+	i action = "schemdetaillist" d
+	.w ##class(dhc.pa.udata.uSchemAudit).GetSchemDetail(parent,schemDr,searchField,searchValue,sortField,sortDir)
+
+	i action = "audit" d
+	.s result = ##class(dhc.pa.udata.uSchemAudit).Audit()
+	.w "{success:'true',info:'"_result_"'}"
+
+	i action = "jxunitmethoddetails" d
+	.w ##class(dhc.pa.udata.uSchemAudit).GetMethodDetail()
+</script>

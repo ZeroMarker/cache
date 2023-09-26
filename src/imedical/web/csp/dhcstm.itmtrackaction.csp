@@ -1,0 +1,90 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	
+i Action = "Save" d
+	.s type=$Get(%request.Data("Type",1))
+	.s pointer=$Get(%request.Data("Pointer",1))
+	.s operData=$Get(%request.Data("OperData",1))
+	.s labels=$Get(%request.Data("Labels",1))
+	.s result = ##class(web.DHCSTM.DHCItmTrack).Save(type,pointer,operData,labels)
+	.i result=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//高值跟踪查询
+i Action = "Query" d
+	.s inci=$Get(%request.Data("inci",1))
+	.s label=$Get(%request.Data("label",1))
+	.s others=$Get(%request.Data("others",1))
+	.d ##class(web.DHCSTM.DHCItmTrack).Query(Start,Limit,inci,label,others)
+	.
+
+//跟踪数据明细
+i Action = "QueryItem" d
+	.s Parref=$Get(%request.Data("Parref",1))
+	.d ##class(web.DHCSTM.DHCItmTrack).QueryItem(Start,Limit,Sort,Dir,Parref)
+	.
+i Action = "Compare" d
+	.s label=$Get(%request.Data("Label",1))
+	.s inci=$Get(%request.Data("Inci",1))
+	.s ret=##class(web.DHCSTM.DHCItmTrack).Compare(label,inci)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+///检查单据的条码录入情况
+i Action = "CheckLabelsByPointer" d
+	.s type=$Get(%request.Data("Type",1))
+	.s main=$Get(%request.Data("Main",1))
+	.s ret=##class(web.DHCSTM.DHCItmTrack).CheckLabelsByPointer(type,main)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "GetInfoByPointer" d
+	.s type=$Get(%request.Data("Type",1))
+	.s pointer=$Get(%request.Data("Pointer",1))
+	.s result=##class(web.DHCSTM.DHCItmTrack).GetInfoByPointer(type,pointer)
+	.w "{success:'true',info:'"_result_"'}"
+	.
+i Action = "GetItmByBarcode" d
+	.s barcode=$Get(%request.Data("Barcode",1))
+	.s result=##class(web.DHCSTM.DHCItmTrack).GetItmByBarcode(barcode)
+	.i +result=0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action = "GetParamProp" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCSTM.DHCItmTrack).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "GetEnableBarcodes" d
+	.s incil=$Get(%request.Data("incil",1))
+	.d ##class(web.DHCSTM.DHCItmTrack).GetEnableBarcodes(Start,Limit,incil)
+	
+i Action = "Select" d
+	.S label=$Get(%request.Data("label",1))
+	.s ret=##class(web.DHCSTM.DHCItmTrack).Select(label)	
+	.w "{success:'true',info:'"_ret_"'}"
+	
+i Action = "SaveHv" d
+	.S LAbel=$Get(%request.Data("LAbel",1))
+	.s ret=##class(web.DHCSTM.DHCItmTrack).SaveHv(LAbel)
+	.i ret<0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d		
+	..w "{success:'true',info:'"_ret_"'}"	
+</script>

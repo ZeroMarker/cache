@@ -1,0 +1,106 @@
+<HTML>
+<HEAD>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>直接授权</title>
+	
+	<script language="cache" runat="server">
+  		s appointUserID = %session.Get("LOGON.USERID")
+		s appointUserLoc = %session.Get("LOGON.CTLOCID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")	
+		
+		s authorizationSSGroupID =##class(EPRmeta.SysOption).GetOptionValueByName("AuthorizationSSGroupID")
+		s length = $l(authorizationSSGroupID,"^")
+		s onlyCurrentDept = "1"
+		for index=1:1:length
+		{
+			if ($p(authorizationSSGroupID,"^",index) = ssgroupID){
+				s onlyCurrentDept = "2"	//1-本科室的病人的授权申请?非1-全部的病人授权申请	
+			}
+		}
+  	</script>
+	<script type="text/javascript">
+		var appointUserID = '#(appointUserID)#';
+		var appointUserLoc = '#(appointUserLoc)#';	
+		var onlyCurrentDept = '#(onlyCurrentDept)#';
+	</script>
+	
+	<script src="../scripts/epr/JQuery/jquery-1.8.0.min.js"></script>
+    <script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+    <script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+    
+    <script src="../scripts/epr/js/eprDirectAuthorization.js"></script>
+
+</HEAD>
+
+<body class="easyui-layout">
+	<div data-options="region:'center'">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center'">
+				<div id="patientListTableTBar" style="padding:5px;height:50">	
+					<div>
+						患者就诊科室: <select id="inputPatientLoc" name="inputPatientLoc" style="width:100px;height:20px;"></select>
+						患者就诊病区: <select id="inputPatientWard" name="inputPatientWard" style="width:100px;height:20px;"></select>
+						患者姓名：<input id="inputPatientName" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者登记号：<input id="inputPatientRegNo" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者就诊号：<input id="inputPatientEpisodeID" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者病人号：<input id="inputPatientID" class="easyui-textbox" style="width:100px;height:20px;" />
+						患者病案号：<input id="inputMedicareNo" class="easyui-textbox" style="width:100px;height:20px;" />
+					</div>
+					<div style="margin:5px">
+						<a href="#" id="patientSearchBtn" class="easyui-linkbutton" iconCls="icon-search">查询患者</a>
+						<a href="#" id="patientResetBtn" class="easyui-linkbutton" iconCls="icon-reload">清空条件</a>
+					</div>		
+				</div>
+				<table id="patientListTable" data-options="fit:true"></table>
+			</div>
+			<div data-options="region:'south'" style="height:300">
+				<div id="docListTableTBar" style="padding:5px;height:50">	
+					<div>
+						医生所在科室: <select id="inputDocLoc" name="inputDocLoc" style="width:100px;height:20px;"></select>
+						医生所在安全组: <select id="inputDocSSGroup" name="inputDocSSGroup" style="width:100px;height:20px;"></select>
+						医生姓名：<input id="inputDocName" class="easyui-textbox" style="width:100px;height:20px;" />
+						医生用户名：<input id="inputDocUserCode" class="easyui-textbox" style="width:100px;height:20px;" />
+					</div>
+					<div style="margin:5px">
+						<a href="#" id="docSearchBtn" class="easyui-linkbutton" iconCls="icon-search">查询医生</a>
+						<a href="#" id="docResetBtn" class="easyui-linkbutton" iconCls="icon-reload">清空条件</a>
+					</div>		
+				</div>
+				<table id="docListTable" data-options="fit:true"></table>
+			</div>
+		</div>
+	</div>
+	<div id="eastPanel" data-options="region:'east',collapsible:false" style="width:400">
+		<div id="emrTreeDiv" class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north'" style="height:100">
+				<div id="treeTBar" style="padding:5px;height:60">
+					<div>
+						授权时间(小时): <input type="text" id="inputGivePowerSpan" style="width:100px;height:20px;"></input>  
+						授权操作类型: <select id="inputGivePowerType" name="inputGivePowerType" style="width:100px;height:20px;"></select>
+					</div>	
+					<div style="margin:5px">
+						<a href="#" id="treeGivePowerBtn" class="easyui-linkbutton" iconCls="icon-ok">给予权限</a>
+						<a href="#" id="treeHistoryBtn" class="easyui-linkbutton" iconCls="icon-search">查看授权历史</a>
+					</div>	
+				</div>
+			</div>
+			<div data-options="region:'center'">
+				<ul id="emrTree"></ul>
+			</div>
+		</div>
+	</div>
+	<div id="treeHistoryWin">
+		<div id="historyTableTBar" style="padding:5px;height:60">	
+			<div>
+				是否当前有效: <select id="isCurrentValidSelect" name="isCurrentValidSelect" style="width:100px;height:20px;"></select>
+			</div>	
+			<div style="margin:5px">
+				<a href="#" id="withdrawBtn" class="easyui-linkbutton" iconCls="icon-cancel">撤销生效中授权</a>
+			</div>
+		</div>
+		<table id="historyTable" data-options="fit:true"></table>
+	</div>
+</body>
+</HTML>

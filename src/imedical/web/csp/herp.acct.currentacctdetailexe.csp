@@ -1,0 +1,35 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+s action = $Get(%request.Data("action",1))
+s str = $Get(%request.Data("str",1))
+s acctSubj = $Get(%request.Data("acctSubj",1))
+
+s start = $Get(%request.Data("start",1))
+s limit = $Get(%request.Data("limit",1))
+
+s userid = $Get(%request.Data("userid",1))
+s bookID = $Get(%request.Data("bookID",1))
+
+i action = "GetAcctYear" d
+   . w ##class(herp.acct.report.uCurrentAcctDetail).AcctYearJson(bookID)
+
+i action = "GetCurSubj" d
+   . w ##class(herp.acct.udata.uAcctCommon).GetCheckSubjName(start,limit,str,userid)
+   
+i action = "GetCurType" d
+    .;w ##Class(herp.acct.udata.uAcctCommon).GetAcctCheckType(0,15,str)
+    .w ##Class(herp.acct.report.uCurrentAcctDetail).checkSubjType(start,limit,str,userid,acctSubj)
+
+i action = "GetCurObj" d
+    .;w ##Class(herp.acct.udata.uAcctCommon).GetCheckItemName(0,15,str,"1",acctSubj)
+    .s acctCurType = $Get(%request.Data("acctCurType",1))
+    . w ##Class(herp.acct.report.uCurrentAcctDetail).RunCheckItem(start,limit,str,userid,acctSubj,acctCurType)
+
+
+    
+</script>

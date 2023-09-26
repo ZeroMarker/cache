@@ -1,0 +1,76 @@
+
+<SERVER>
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+	
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+
+	s TableName=$Get(%request.Data("tableName",1))
+	s Rowid=$Get(%request.Data("RowId",1))
+	s Code=$Get(%request.Data("Code",1))
+	s Description=$Get(%request.Data("Description",1))
+	s StartDate=$Get(%request.Data("StartDate",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+	s Active=$Get(%request.Data("Active",1))
+	s Sort=$Get(%request.Data("Sort",1))
+	s Type=$Get(%request.Data("Type",1))
+	
+	s SearchStr=$Get(%request.Data("SearchStr",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	s RowIdParref = ""
+	
+	i TableName = "SS_User" d
+	.s SearchStr = " SSUSR_Name like '%"_SearchStr_"%'"
+	.i CommunityCode '= "" d
+	..s SearchStr = SearchStr_" and SSUsr_Hospital_DR->HOSP_Code = '"_CommunityCode_"'"
+
+	i Action = "listdistrict" d
+	.s RowIdParref = $Get(%request.Data("RowIdParref",1))
+
+	i Action = "list" d
+	.w ##class(CHSSWeb.DictService).ListPage1(Start,Limit,TableName)
+	
+	i Action = "listold" d
+	.w ##class(CHSSWeb.CommonDictService).ListOld(Start,Limit,TableName)
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.DictService).delete(Rowid,TableName)
+	.i result = 1 d
+	..w "{success:'true',info:'删除成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.DictService).insert(Code, Description, StartDate, EndDate, Active, Sort, TableName)
+	.i result = 1 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.DictService).update(Rowid, Code, Description, StartDate, EndDate, Active, Sort, TableName)
+	.i result = 1 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'true',info:'保存失败'}"
+	
+	i Action = "listdistrict" d
+	.w ##class(CHSSWeb.DictDistrictService).ListPage(Start,Limit,TableName,RowIdParref)
+	
+	i Action = "listsearch" d
+	.w ##class(CHSSWeb.CommonDictService).ListSearch(Start,Limit,TableName,SearchStr)
+	
+	i Action = "listoldsearch" d
+	.w ##class(CHSSWeb.CommonDictService).ListOldSearch(Start,Limit,TableName,SearchStr)
+	
+	i Action = "listwithtype" d
+	.w ##class(CHSSWeb.DictService).ListPageWithType(Start,Limit,TableName,Type)
+	
+	i Action = "listdistrictsearch" d
+	.s RowIdParref = $Get(%request.Data("RowIdParref",1))
+	.w ##class(CHSSWeb.DictHospitalService).ListSearch(Start,Limit,TableName,SearchStr,RowIdParref)
+	i Action = "listoldsearchgroup" d
+	.w ##class(CHSSWeb.CommonDictService).ListOldSearchGroup(Start,Limit,TableName,SearchStr)
+	
+</SERVER>
+

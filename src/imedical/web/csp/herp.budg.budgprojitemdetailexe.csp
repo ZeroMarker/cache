@@ -1,0 +1,62 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	s year=$Get(%request.Data("year",1))
+	s strs=$Get(%request.Data("strs",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s CompDR=$Get(%request.Data("CompDR",1))
+	s Year=$Get(%request.Data("Year",1))
+	s Code=$Get(%request.Data("Code",1))
+	s SuperCode=$Get(%request.Data("SuperCode",1))
+	s Name=$Get(%request.Data("Name",1))
+	s NameAll=$Get(%request.Data("NameAll",1))
+	s Spell=$Get(%request.Data("Spell",1))
+	s upper=$Get(%request.Data("upper",1))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjItemDetailDict).List(year,strs,upper,start, limit)
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgProjItemDetailDict).InsertRec(CompDR, Year, Code, SuperCode,Name,NameAll,Spell)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+		
+	i action = "GetUpper" d
+	.w ##class(herp.budg.udata.uBudgProjItemDetailDict).GetUpper(start, limit, str,year)
+		
+	i action = "Getyear" d
+	.w ##class(herp.budg.udata.uBudgProjItemDetailDict).Getyear(start, limit, str)
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgProjItemDetailDict).UpdateRec(rowid,CompDR, Year, Code, SuperCode,Name,NameAll,Spell)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgProjItemDetailDict).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

@@ -1,0 +1,139 @@
+<html>
+<head>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT330></EXTHEALTH:EXT330>
+<DHCST:EXTCOMMONJS></DHCST:EXTCOMMONJS>
+
+ <script type="text/javascript">
+	Ext.onReady(function(){		
+		var reportPanel=new Ext.Panel({	
+		height:window.screen.availHeight-190,
+		layout:'fit',
+		//html:'<iframe id="frameReport" height="100%" width="100%" src="../scripts/dhcst/ExtUX/images/logon_bg.jpg"/>'
+		html: '<iframe id="frameReport" width=100% height=100%  src='+DHCSTBlankBackGround+'></iframe>'
+	});
+		var findBT = new Ext.Toolbar.Button({
+		text : '查询',
+		tooltip : '点击查询',
+		iconCls : 'page_find',
+		height:30,
+		width:70,
+		handler : function() {
+			stat();
+		}
+	});
+
+	var startDate = new Ext.ux.DateField({		
+			id: 'startDate',
+			name: 'startDate',
+			fieldLabel :"开始日期",
+			value : new Date()
+		});
+		
+	var endDate = new Ext.ux.DateField({	
+			id: 'endDate',
+			name: 'endDate',
+			fieldLabel :"结束日期",
+			value : new Date()
+		});
+		
+		var statTypes = [
+			[1, "按药理统计"],
+			[2, "按剂型统计"],
+			
+			];
+			 
+  
+	var statTypestore = new Ext.data.Store({  
+   	 	proxy: new Ext.data.MemoryProxy(statTypes),  
+   		reader: new Ext.data.ArrayReader({
+	    	fields : ["value","name"]
+	    })  
+	});  
+	
+	var statType = new Ext.form.ComboBox({
+					id : 'statType',
+					name : 'statType',
+					fieldLabel : '统计类型',
+					triggerAction: "all",
+					store: statTypestore,
+					valueField: "value",
+					displayField: "name",
+					mode: "remote",
+					emptyText: "请选择统计类型",
+					anchor : '90%',
+					listeners: {   //监听事件  
+       					select:function(combo,record,opts){ 
+        }  
+     }, 
+					
+});
+	
+	var InfoFormS = new Ext.form.FormPanel({
+		renderTo: Ext.getBody(),
+		tbar : [findBT],
+		frame : true,
+		labelAlign : 'right',
+		
+		id : "InfoFormS",
+		labelWidth: 60, 
+		items : [{
+			layout: 'column',
+			xtype:'fieldset',
+			height: 60,
+			title:'查询条件',
+			style:'padding:5px 0px 0px 0px',
+			defaults: {border:false},
+			items:[{ 
+				columnWidth: 0.3, // 父元素的50%宽
+		        xtype: 'fieldset',
+		        items: [startDate] //引用输入框-第一列
+			},{ 
+				columnWidth: 0.3,
+		        xtype: 'fieldset',
+		        items: [endDate] //引用输入框-第二列
+						
+			},{ 
+				columnWidth: 0.3,
+		        xtype: 'fieldset',
+		        items: [statType] //引用输入框-第二列
+						
+			}]
+		},{
+			items:reportPanel,
+			
+				}]
+	});
+	function stat(){
+		var reportFrame=document.getElementById("frameReport");
+		console.log(reportFrame);
+		var startDate = Ext.getCmp('startDate').value
+		var endDate = Ext.getCmp('endDate').value;
+		var statType =  Ext.getCmp('statType').value;
+		if((!startDate)&&(!endDate)){Ext.MessageBox.alert("提示", "请选择开始日期和结束日期");return;}
+		if(!startDate){Ext.MessageBox.alert("提示", "请选择开始日期");return;}
+		if(!endDate){Ext.MessageBox.alert("提示", "请选择结束日期");return;}
+		if(!statType){Ext.MessageBox.alert("提示", "请选择统计类型");return;}
+		var RQDTFormat=App_StkRQDateFormat+" "+App_StkRQTimeFormat;
+		if(statType==1){
+				var p_URL = 'dhccpmrunqianreport.csp?reportName=DHCST_DispStat_DrugByDrgForm.raq&start='+
+					startDate +'&end=' +endDate+"&RQDTFormat="+RQDTFormat;
+				reportFrame.src=p_URL;
+		}else{
+				var p_URL = 'dhccpmrunqianreport.csp?reportName=DHCST_DispStat_DrugByDrgCat.raq&start='+
+					startDate +'&end=' +endDate+"&RQDTFormat="+RQDTFormat;
+				reportFrame.src=p_URL;	
+		}	
+	}
+});
+			
+</script>
+
+<title>	Cache Server Page </title>
+
+</head>
+
+<body>
+	
+</body>
+</html>

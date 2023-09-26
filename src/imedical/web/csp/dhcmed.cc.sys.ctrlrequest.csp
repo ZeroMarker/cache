@@ -1,0 +1,17 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+ If ##Class(websys.SessionEvents).SessionExpired() Quit $$$ERROR($$$CSPSessionTimeout)
+ s strClassName=%request.Data("ClassName",1)
+ s strMethodName=%request.Data("MethodName",1)
+ s ArgCnt=%request.Data("ArgCnt",1)
+ s ret=""
+ k PLIST
+ s execute="s ret=$ZOBJCLASSMETHOD(strClassName,strMethodName"
+ f i=1:1:ArgCnt  d 
+ .s strArgName="Arg"_i
+ .s PLIST(i)=%request.Data(strArgName,1)
+ .s execute=execute_",PLIST("_i_")"
+ s execute=execute_")"
+ x execute
+ w ret
+</SERVER>

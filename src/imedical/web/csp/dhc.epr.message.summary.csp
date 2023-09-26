@@ -1,0 +1,99 @@
+<HTML>
+<HEAD>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<TITLE>MessageSummary</TITLE>	
+	<script language="cache" runat="server">
+  		s userID = %session.Get("LOGON.USERID")
+		s userLoc = %session.Get("LOGON.CTLOCID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var userLoc = '#(userLoc)#';
+		var ssgroupID = '#(ssgroupID)#';
+	</script>
+	
+	<script src="../scripts/epr/JQuery/jquery-1.8.0.min.js"></script>
+	<script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+	<script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+    
+	<script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+	
+	<script src="../scripts/epr/js/eprMessageSummary.js"></script>
+	
+</HEAD>
+
+<body class="easyui-layout" data-options="fit:true">
+	<div data-options="region:'center'">
+		<div id="messageListTableTBar" style="padding:5px;height:30">	
+			<div style="float:left;">
+				<input type="radio" name="Radio" id="uMessageRadio" checked=true onclick="radioCheck()" value="U|U|U" >未处理消息</input>
+				<input type="radio" name="Radio" id="eMessageRadio" onclick="radioCheck()" value="R|E|U" >医生已处理消息</input>
+				<input type="radio" name="Radio" id="cMessageRadio" onclick="radioCheck()" value="R|E|C" >确认已修复消息</input>
+ 				开始时间：<input id="inputCreateDateStart" class="easyui-datebox" />
+ 				结束时间：<input id="inputCreateDateEnd" class="easyui-datebox" />
+ 			</div>	
+ 			<div style="float:right;">
+			 	<a id="CancelBtn" href="#" data-options="iconCls:'icon-undo'" class="easyui-linkbutton" style="margin-right:15px;">撤回质控消息</a>		
+ 				<a id="ConfirmBtn" href="#" data-options="iconCls:'icon-ok'" class="easyui-linkbutton" style="margin-right:15px;">确认已修复</a>		
+ 			</div>
+		</div>
+		<table id="messageListTable" data-options="fit:true"></table>
+	</div>
+	<div data-options="region:'south'" style="height:300">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center'">
+				<div id="docListTableTBar" style="padding:5px;height:50">	
+					<div>
+						医生所在科室: <select id="inputDocLoc" name="inputDocLoc" style="width:100px;height:20px;"></select>
+						医生所在安全组: <select id="inputDocSSGroup" name="inputDocSSGroup" style="width:100px;height:20px;"></select>
+						医生姓名：<input id="inputDocName" class="easyui-textbox" style="width:100px;height:20px;" />
+						医生用户名：<input id="inputDocUserCode" class="easyui-textbox" style="width:100px;height:20px;" />
+					</div>
+					<div style="margin:5px">
+						<a href="#" id="docSearchBtn" class="easyui-linkbutton" iconCls="icon-search">查询医生</a>
+						<a href="#" id="docResetBtn" class="easyui-linkbutton" iconCls="icon-reload">清空条件</a>
+					</div>		
+				</div>
+				<table id="docListTable" data-options="fit:true"></table>
+			</div>
+			<div data-options="region:'east'" style="width:600">
+				<div style="padding:5px 20px 10px 20px">
+					<form id="ff" method="post">
+						<table cellpadding="5">
+							<tr>
+								<td>收消息者:</td>
+								<td><input class="easyui-textbox" type="text" name="inputReceiveUserName" id="inputReceiveUserName" readonly="true" disabled data-options="required:true" style="width:350px" />
+									<input type="hidden" name="inputReceiveUserID" id="inputReceiveUserID" />
+								</td>
+							</tr>
+							<tr>
+								<td>紧急程度:</td>
+								<td><select id="inputPriority" name="inputPriority" style="width:350px"></select>
+									<input type="hidden" name="inputPriorityValue" id="inputPriorityValue" />
+								</td>
+							</tr>
+							<tr>
+								<td>消息标题:</td>
+								<td><input class="easyui-textbox" type="text" name="inputMessageHeader" id="inputMessageHeader" data-options="required:true" style="width:350px" /></td>
+							</tr>
+							<tr>
+								<td>消息:</td>
+								<td><input class="easyui-textbox" name="inputMessage" id="inputMessage" data-options="multiline:true" style="width:350px;height:80px" /></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td><a href="#" id="sendBtn" class="easyui-linkbutton" iconCls="icon-redo">发送</a></td>
+							</tr>
+						</table>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</HTML>
+

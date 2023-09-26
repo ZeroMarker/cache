@@ -1,0 +1,115 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+               
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action=$Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))	
+	s str = $Get(%request.Data("query",1))
+	
+	s rowid = $Get(%request.Data("rowid",1))
+	s userID = $Get(%request.Data("userID",1))
+	s BillCode = $Get(%request.Data("BillCode",1))
+	s billcode = $Get(%request.Data("billcode",1))
+	s datad	= $Get(%request.Data("datad",1))
+	s datam	= $Get(%request.Data("datam",1))
+	s deptdr = $Get(%request.Data("deptdr",1))
+	s yearmonth = $Get(%request.Data("yearmonth",1))
+	s itemcode = $Get(%request.Data("itemcode",1))
+	s rowidm = $Get(%request.Data("rowidm",1))
+	s ReqPay = $Get(%request.Data("ReqPay",1))
+	s year = $Get(%request.Data("year",1))
+	s state = $Get(%request.Data("state",1))
+	s rowidd = $Get(%request.Data("rowidd",1))
+	s flag = $Get(%request.Data("flag",1))
+	s audeptdr = $Get(%request.Data("audeptdr",1))
+	s userdr=$G(%session.Data("LOGON.USERID"))
+   	s hisdeptdr=$G(%session.Data("LOGON.CTLOCID"))
+	s limit = $Get(%request.Data("limit",1))
+	s type = $Get(%request.Data("type",1))
+	s data = $Get(%request.Data("data",1))
+	
+	i action = "getbcode" d
+	.s result = ##class(herp.budg.udata.uBudgCtrlFundBillMng).Getbcode(yearmonth)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "getdept" d
+	.s result = ##class(herp.budg.udata.uBudgCtrlFundBillMng).Getdept(userID)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "getcheckdr" d
+	.s result = ##class(herp.budg.udata.uBudgCtrlFundBillMng).Getcheckdr()
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgCtrlFundBillMng).List(hospid,BillCode,start,limit)
+	
+	i action = "checkflowlist" d
+	.w ##class(herp.budg.udata.uBudgCtrlFundBillMng).CheckList(hospid,start, limit, str)
+	
+	i action = "itemcodelist" d
+	.w ##class(herp.budg.udata.uBudgCtrlFundBillMng).Getitemcode(userdr,year,hisdeptdr,hospid,start, limit, str)
+	
+	i action = "deptlist" d
+	.;s ^aa = userdr_"^"_hisdeptdr_"^"_flag_"^"_hospid
+	.w ##class(herp.budg.udata.uBudgCtrlFundBillMng).deptList(userdr,hisdeptdr,flag,hospid,start, limit, str)
+	
+	i action = "add" d  
+	.s result = ##class(herp.budg.udata.uBudgCtrlFundBillMng).InsertRec(datad, datam)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "getcurbalance" d
+	.s result = ##class(herp.budg.udata.uBudgCtrlFundBillMng).GetCurBalance(data)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d  
+	.s result = ##class(herp.budg.udata.uBudgCtrlFundBillMng).UpdateRec(rowidm, rowid, datad, datam)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d	
+	.s result= ##class(herp.budg.udata.uBudgCtrlFundBillMng).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "submit" d	
+	.s result= ##class(herp.budg.udata.uBudgCtrlFundBillMng).Submit(rowid,yearmonth,deptdr,audeptdr,itemcode,ReqPay)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	;´òÓ¡¹¦ÄÜ
+	i action = "print" d	
+	.s result= ##class(herp.budg.udata.ubudgAuditFundApply).Print(billcode)
+	.i result '="" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

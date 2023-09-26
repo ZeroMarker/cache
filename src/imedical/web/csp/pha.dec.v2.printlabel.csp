@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--煎药流程-打签
+	csp:pha.dec.v2.printlabel.csp
+	js: scripts/pha/dec/v2/printlabel.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHADECV2/>
+</HEAD>
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+        	<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">
+            	<div data-options="region:'center',title:'煎药打签',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray',collapsible:true">
+                	<div class="hisui-layout" fit="true">
+                		<div data-options="region:'north',border:false,split:true" class="dhcpha-north-tbl-2" style="overflow:hidden">
+                			<div class="pha-row">
+                				<div class="pha-col">
+                					<label for="dateStart">开始日期</label>
+                				</div>
+                				<div class="pha-col">
+	                                <input id='dateStart' class="hisui-datebox phadec-date">
+	                            </div>
+	                            <div class="pha-col">
+	                                <input id='timeStart' class="hisui-timespinner" showSeconds="true" data-options="width:90">
+	                            </div>
+	                            <div class="pha-col" style="margin-left:10px;">
+	                                <label for="cmbDecLoc">煎药室</label>
+	                            </div>
+	                            <div class="pha-col">
+	                                <input id="cmbDecLoc" class="hisui-combobox phadec-combobox">
+	                            </div>
+	                            <div class="pha-col">
+	                                <label for="cmbDocLoc">开方科室</label>
+	                            </div>
+	                            <div class="pha-col">
+	                                <input id="cmbDocLoc" class="hisui-combobox phadec-combobox">
+	                            </div>
+	                            <div class="pha-col">
+						            <input class='hisui-radio' type="radio" label='全部' name='busType' value="" checked data-options="required:true">
+									<input class='hisui-radio' type="radio" label='门诊' name='busType' value="O" data-options="required:true">
+									<input class='hisui-radio' type="radio" label='住院' name='busType' value="I" data-options="required:true">
+						        </div>
+						        <div class="pha-col">
+	                                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryPrtLabList()">查询</a>
+	                            </div>
+                			</div>
+                			<div class="pha-row">
+                				<div class="pha-col">
+                					<label for="dateEnd">截止日期</label>
+                				</div>
+                				<div class="pha-col">
+	                                <input id='dateEnd' class="hisui-datebox phadec-date">
+	                            </div>
+	                            <div class="pha-col">
+	                                <input id='timeEnd' class="hisui-timespinner" showSeconds="true" data-options="width:90">
+	                            </div>
+	                            <div class="pha-col">
+	                                <label for="cmbPhaLoc">调剂药房</label>
+	                            </div>
+	                            <div class="pha-col">
+	                                <input id="cmbPhaLoc" class="hisui-combobox phadec-combobox">
+	                            </div>
+	                            <div class="pha-col" style="margin-left:10px;">
+	                                <label for="txtPatNo">登记号</label>
+	                            </div>
+	                            <div class="pha-col">
+	                                <input id="txtPatNo" type="text" class="hisui-validatebox textbox" style="width:153px;"/>
+	                            </div>
+	                            <div class="pha-col" style="margin-left:170px;">
+	                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" onclick="javascript:SetDefVal()">清屏</a>
+	                            </div>
+                			</div>
+						</div>
+						<div data-options="region:'center'" border="false" class="pha-body" style="padding-top:0px;">
+							<div class="hisui-layout" fit="true" id="mainLayout">
+								<div data-options="region:'center',border:false">
+									<div id="tabPrt" class="hisui-tabs tabs-gray" fit="true">   
+										<div id="tabScanLable" title="扫码打签" data-options="closable:false">
+											<div class="hisui-layout" fit="true" >
+												<div data-options="region:'center',split:true,bodyCls:'panel-body-gray'" border="false">
+													<table id="gridPresc"></table>
+												</div>
+											</div>
+										</div>   
+										<div id="tabPrintBatLable" title="批量打签" data-options="closable:false,border:false" >
+											<div class="hisui-layout" fit="true">
+												<div data-options="region:'center',bodyCls:'panel-body-gray'" border="false">
+													<table id="gridPrescList" border="false"></table>
+												</div>
+											</div>
+										</div> 
+										<div id="tabQueryLable" title="已打签查询" data-options="closable:false,border:false" >
+											<div class="hisui-layout" fit="true">
+												<div data-options="region:'center',bodyCls:'panel-body-gray'" border="false">
+													<table id="gridPrescListPrt" border="false"></table>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+    <div id="toolBarPresc">
+    	<div class="pha-row">
+			<div class="pha-col">
+				<label for="txtPackNum">打签数量</label>
+			</div>
+			<div class="pha-col">
+				<input id="txtPackNum" class="hisui-numberbox textbox" style="width:60px;">
+			</div>
+			<div class="pha-col">
+				<label for="txtBarCode">处方号</label>
+			</div>
+			<div class="pha-col">
+				<input id="txtBarCode" type="text" class="hisui-validatebox textbox"/>
+			</div>
+			<div class="pha-col">
+				<a id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" onclick="javascript:savePrtLabState()">确定</a>
+			</div>
+    	</div>
+    </div>
+    <div id="toolBarPrescList">
+    	<div class="pha-row">
+	    	<div class="pha-col">
+	    		<a id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick="javascript:printSelPrtLab()">确认打印</a>
+	    	</div>
+	    	<div class="pha-col">
+	    		<input id="txtEditNum" class="hisui-numberbox textbox" style="width:60px;">
+	    		<a id="btnEditLabNum" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" style="margin:-4px;" onclick="javascript:editLabNumBat()">批量修改标签数</a>
+			</div>
+			<div class="pha-col" style="border-left: 1px solid #CCCCCC;">
+				<a title="点击标签数单元格可修改标签数量。" class="hisui-tooltip" data-options="position:'left'" style="position:absolute;right:10px;top:20px;">
+	    			<img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png"></img>
+	    		</a>
+			</div>
+		</div>
+	</div>
+    <div id="toolBarPrescListPrt">
+    	<div class="pha-row">
+	    	<div class="pha-col">
+	    		<a id="btnRePrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick="javascript:printPrtLab()">确认打印</a>
+	    	</div>
+	    	<div class="pha-col">
+	    		<input id="txtReEditNum" class="hisui-numberbox textbox" style="width:60px;">
+	    		<a id="btnReEditLabNum" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" style="margin:-4px;" onclick="javascript:reEditLabNumBat()">批量修改标签数</a>
+			</div>
+			<a title="点击标签数单元格可修改标签数量。" class="hisui-tooltip" data-options="position:'left'" style="position:absolute;right:10px;top:20px;">
+		    	<img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png"></img>
+		    </a>
+	    </div>
+	</div>
+    
+    <script type="text/javascript" src="../scripts/pha/dec/v2/xmlprint.js"></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/printlabel.js"></script>
+</body>
+<server>
+    // 加载lodop
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</server>
+</HTML>

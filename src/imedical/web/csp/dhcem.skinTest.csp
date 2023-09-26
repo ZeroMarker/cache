@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8 ">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js" charset="gb2312"></script>
+<script src="../scripts/dhcnewpro/dhcem/skinTest.js" charset="gb2312"></script>
+ <script language="Javascript">
+ 	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	var LgAddr="#(%session.Get("REMOTE_ADDR"))#";  
+	var RegNo = '#($g(%request.Data("RegNo",1)))#';           //登记号  2016-10-26
+	var oeoreId='#($g(%request.Data("oeoreId",1)))#'          //医嘱ID 
+	var adm='#($g(%request.Data("adm",1)))#'                  //就诊ID 
+	var Allgryflag='#($g(%request.Data("Allgryflag",1)))#'    //过敏标志  2016-10-26
+</script>
+<SERVER>  
+	s ISSHOWATTACH=+##class(web.DHCEMNurExe).GetConfigBySession("SKINNEEDPC")  //皮试是否需要记录批次
+	s SKINNEEDSIGN=##class(web.DHCEMNurExe).GetConfigBySession("SKINNEEDSIGN")  //置皮试结果时是否需要签名
+	s SKINAUTOEXE=##class(web.DHCEMNurExe).GetConfigBySession("SKINAUTOEXE")	//原液医嘱置结果时是否取消自动执行(医生站接口返回1也当成原液)
+	w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	w "var ISSHOWATTACH="""_ISSHOWATTACH_""";"_$c(13,10)
+	w "var SKINNEEDSIGN="""_SKINNEEDSIGN_""";"_$c(13,10)
+	w "var SKINAUTOEXE="""_SKINAUTOEXE_""";"_$c(13,10)
+	w "</SCRIPT>"
+</SERVER>
+ <style>
+ #mainPanel {padding-left:0px;padding-right:0px;padding-top:5px;padding-bottom:0px}
+ #mainPanel td{padding:2px;}
+ #mainPanel .btn-group-justified{padding-left:5px;padding-right:0px;padding-top:5px}
+
+.panel-body div{
+	font-family: "微软雅黑";
+		
+}
+
+.spantext{
+	width:70px;
+}
+.inputtext{
+	width:150px;
+}
+/*modal 弹出层*/
+.modal-content{
+  min-width: 470px;
+  min-height: 216px;
+  border-radius: 4px;
+}
+.modal-header{
+  border-bottom: 0px;
+  background-color: #556983;
+  height: 36px;
+  color: white;
+  padding: 12px 12px 24px 20px;
+}
+.modal-header .close{
+ margin-top: -5px;
+ opacity: 1;
+ width: 10px;
+ height: 10px;
+ color: #fff;
+}
+.modal-header-title{
+  margin-top: -4px;
+}
+.modal-body{
+  margin-left: 130px;
+}
+.modal-footer{
+  border-top: 1px dotted #556983;  /*设置虚线分割*/
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.col-lg-10{
+	margin-left:0px;	
+}
+.magic-checkbox{
+	margin-left:5px;	
+}
+.col-sm-1{
+	margin-top:10px;
+	width:90px;	
+}
+
+</style>
+</head>
+<body style="">
+    <div class="col-md-12" >
+        <div id="mainPanel" class=" " >
+            <div class="">
+            	<div id="allergymess" style="color:red;display:none;">该病人属于过敏体质,皮试时请注意！</div>
+				<div style ="height:50px;border:1px solid #AFD1EF;margin-bottom:5px;">
+					
+					<div class="input-group"style="display: inline-table;float:left;margin-top:10px;">
+						<span>皮试方法： </span> 
+					    <input id="TestMethodSel" class="hisui-combobox" style="width:150px;">
+					    </select> 
+					</div>
+					<div style="margin-left:10px;height: 20px;line-height: 20px;float:left;margin-top:15px;">
+						<input name="ObserveTime" id="OT0" class="magic-checkbox" type="checkbox" value="0">
+                		<label for="OT0">10分钟</label>
+            			<input name="ObserveTime" id="OT1" class="magic-checkbox" type="checkbox" value="1">
+                		<label for="OT1">15分钟</label>
+						<input name="ObserveTime" id="OT2" class="magic-checkbox" type="checkbox" value="2">
+                		<label for="OT2">20分钟</label>
+            			<input name="ObserveTime" id="OT3" class="magic-checkbox" type="checkbox" value="3">
+                		<label for="OT3">48小时</label>
+            			<input name="ObserveTime" id="OT4" class="magic-checkbox" type="checkbox" value="4">
+                		<label for="OT4">72小时</label>
+						
+						<input class="textbox"style="width:50px;" id="ObserveDefine" type="text" placeholder="" >分钟
+						<td style="padding-left:30px"><a id="btnStartSkinTest" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="StartSkinTest()">计时</a></td>
+					</div>						
+        		</div>
+				<div >
+					<div class="" style ="background-color: #FFFFFF;height:200px;float:left;padding-left:0px;width:50%">
+						<div>皮试结果：</div>
+						<div class="skinResult" style="border:1px solid #AFD1EF;margin-left:0px;height:50px;line-height:50px;">
+							<span style="height:20px;line-height:20px;">
+								<input name="skinTestResult" id="sTR0" class="magic-checkbox" type="checkbox" value="Y">
+			            		<label for="sTR0">皮试阳性</label>
+								<input name="skinTestResult" id="sTR1" class="magic-checkbox" type="checkbox" value="N">
+			            		<label for="sTR1">皮试阴性</label>
+			            		<span class="spantext skinSizeItm" style ="display:none;margin-left:20px;background-color: #FF0000">皮试批次:</span>
+								<span class="inputtext skinSizeItm" style="display:none;"><input  class="textbox" type="text" id="skinSize"></span>
+		            		</span>
+						</div>
+						<div class="skinPas">用户密码：</div>
+						<div class="skinPas" style="border:1px solid #AFD1EF;margin-left:0px;height:110px;">
+							<div style="height:50px;padding-top:10px">
+								<div style="">
+									<span class="spantext">皮试用户:</span>
+									<span class="inputtext"><input  class="textbox" type="text" id="userCode"></span>
+									<span class="spantext">密&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;码:</span>
+									<span class="inputtext"><input  class="textbox" type="password" id="passWord"></span>
+									<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="butUpdateFn()">确认</a></td>
+								</div>
+							</div>
+							
+							<div style="">
+								<span class="spantext">复核用户:</span>
+								<span class="inputtext"><input  class="textbox" type="text" id="userCodeAudit"></span>
+								<span class="spantext">复核密码:</span>
+								<span class="inputtext"><input  class="textbox" type="password" id="passWordAudit"></span>		
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-6" style ="background-color: #FFFFFF;height:200px;float:left;margin-left:0px;padding-right:0px;width:50%" id="pddDiv">
+						<div>PPD实验结果：</div>
+						<div style="border:1px solid #AFD1EF;margin-left:0px;height:180px;line-height:180px;">
+							<div style="height: 40px;line-height: 40px;">
+								<span class="spantext" >皮肤硬结:</span>
+								<input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNoteText1">mm
+								<span style="margin-left:10px;margin-right:10px;">*</span>
+								<span><input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNoteText2">mm</span>
+							</div>
+							<div style="height: 40px;line-height: 40px;">
+								<span class="spantext">局部水泡:</span>
+								<input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote1Text1">mm
+								<span style="margin-left:10px;margin-right:10px;">*</span>
+								<span><input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote1Text2">mm</span>								
+								<span style="margin-left:10px;height: 20px;line-height: 20px;">
+									<input name="AbnormalNote" id="AN0" class="magic-checkbox" type="checkbox" value="0">
+				            		<label for="AN0">单个</label>
+									<input name="AbnormalNote" id="AN1" class="magic-checkbox" type="checkbox" value="1">
+				            		<label for="AN1">散在</label>
+								</span>
+							</div>
+							<div style="height: 40px;line-height: 40px;">
+								<span class="spantext">红&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;肿:</span>
+								<input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote4Text1">mm
+								<span style="margin-left:10px;margin-right:10px;">*</span>
+								<span><input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote4Text2">mm</span>								
+								<span class="spantext">PPD结果:</span>
+								<input class="textbox" style="width:80px" type="text" disabled=true id="PPDResult" readonly='true'>							
+							</div>
+							<div  style="height: 40px;line-height: 40px;width:200px;text-align:center">
+								<span style="height: 20px;line-height: 20px;">
+									<input name="AbnormalNote2" id="AN10" class="magic-checkbox" type="checkbox" value="10">
+				            		<label for="AN10">坏死</label>
+									<input name="AbnormalNote3" id="AN11" class="magic-checkbox" type="checkbox" value="11">
+				            		<label for="AN11">淋巴管炎</label>
+								</span>	
+							</div>
+						</div>				
+					</div>
+					<div  style ="width:100%;background-color: #FFFFFF;float:left;margin-top:10px;">
+						<div>
+							<div>
+								
+							</div>
+						</div>
+						<div>当前皮试结果:<span id="skinRs"></span></div>
+						<table id="skinTesttb"></table>
+					</div>
+            	</div>
+        	</div>
+        </div>
+    </div>
+</body>
+</html>

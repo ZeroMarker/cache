@@ -1,0 +1,112 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../scripts/dhceq/easyui/dhceqlifeinfo/css/about.css">
+<style>
+.page { width:100%;background:#F0F0F0 url('../scripts/dhceq/easyui/dhceqlifeinfo/img/dian2.png') repeat-x; }
+</style>
+<title>生命周期时间轴</title>
+</head>
+<body>
+<!--<font color="#0000FF" size="+2"><b>生命周期时间轴 </b></font>-->
+<script language=Cache runat=server>
+	s EquipDR=$Get(%request.Data("EquipDR",1))
+	i EquipDR'=""
+	{
+	set rs=##class(%ResultSet).%New()
+	set rs.ClassName="web.DHCEQLifeInfo"
+	set rs.QueryName="LifeInfo"
+	set sc=rs.Execute(EquipDR,"","","","","","","")  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit
+	s i=0
+	while(rs.Next())
+	{
+		s TEquip=$get(rs.Data("TEquip")) 			//设备
+		s TChangeDate=rs.GetDataByName("TChangeDate")	//变动日期
+		s TAppendType=$get(rs.Data("TAppendType"))	//变动类型
+		s TSourceTypeDR=$get(rs.Data("TSourceTypeDR")) 			
+		s TSourceID=$get(rs.Data("TSourceID")) 			
+		s TChangeTime=$get(rs.Data("TChangeTime"))
+		s TUsedFee= $get(rs.Data("TUsedFee"))	
+		s LifeInfoData(##Class(web.DHCEQCommon).TransValueFromPage(TChangeDate,"date"),$I(i))=$LB(TEquip,TAppendType,TSourceTypeDR,TSourceID,TUsedFee)
+		//s ^GR(0)=LifeInfoData(TChangeDate)
+	}
+	w "<div class=""box"">"
+	//w ..EscapeHTML("<ul class=""event_list"">")
+	w "<ul class=""event_year"">"
+	s tempdate=""
+	s lastyear=""
+	for  s tempdate=$o(LifeInfoData(tempdate),-1) q:tempdate=""  d
+	.s index=""
+	.for  s index=$o(LifeInfoData(tempdate,index),-1) q:index=""  d
+	..s year=$p($zd(tempdate,4),"/",3)
+	..i lastyear="" w "<li class=""current""><label for="_year_">"_year_"</label></li>"
+	..e  i lastyear'=year w "<li><label for="_year_">"_year_"</label></li>"
+	..s lastyear=year
+	w "</ul>"
+	s tempdate=""
+	s lastyear=""
+	w "<ul class=""event_list"">"	
+	for  s tempdate=$o(LifeInfoData(tempdate),-1) q:tempdate=""  d
+	.s index=""
+	.for  s index=$o(LifeInfoData(tempdate,index),-1) q:index=""  d
+	..s day=$p($zd(tempdate,4),"/",1)
+	..s month=$p($zd(tempdate,4),"/",2)
+	..s year=$p($zd(tempdate,4),"/",3)
+	..w:lastyear'=year "<div><h3 id="_year_">"_year_"</h3>"
+	..w "<li>"
+	..w "<span>"_month_"/"_day_"</span>"
+	..s Html="<p><span>"_$List(LifeInfoData(tempdate,index),1)_"  <a href=""###"" onclick=""javascript:openBussDetail("_$List(LifeInfoData(tempdate,index),3)_","_$List(LifeInfoData(tempdate,index),4)_")"">"_$List(LifeInfoData(tempdate,index),2)_"</a>"
+	..i $List(LifeInfoData(tempdate,index),3)="94" d 
+	...s Html=Html_"&nbsp;&nbsp; <a href=""###"" onclick=""javascript:openBussPic("_$List(LifeInfoData(tempdate,index),3)_","_$List(LifeInfoData(tempdate,index),4)_",2,1)"">图片</a>"
+	..e  i $List(LifeInfoData(tempdate,index),3)="11" d
+	...s Html=Html_"&nbsp;&nbsp; <a href=""###"" onclick=""javascript:openBussPic("_$List(LifeInfoData(tempdate,index),3)_","_$List(LifeInfoData(tempdate,index),4)_",2,1)"">图片</a>"
+	..e  i $List(LifeInfoData(tempdate,index),3)="31" d
+	...s Html=Html_"&nbsp;&nbsp; <a href=""###"" onclick=""javascript:openBussPic("_$List(LifeInfoData(tempdate,index),3)_","_$List(LifeInfoData(tempdate,index),4)_",2,1)"">图片</a>"
+	..
+	..i $List(LifeInfoData(tempdate,index),5)'="" s Html=Html_"   费用:"_$List(LifeInfoData(tempdate,index),5)_""
+	..s Html=Html_"</span>"_"</p>"
+	..w Html
+	..
+	..//i $List(LifeInfoData(tempdate,index),5)'="" d 
+	..//.w "<p><span>"_$List(LifeInfoData(tempdate,index),1)_"  <a href=""dhceqlifeinfo.csp?&SourceType="_$List(LifeInfoData(tempdate,index),3)_"&SourceID="_$List(LifeInfoData(tempdate,index),4)_""" target=""_blank"">"_$List(LifeInfoData(tempdate,index),2)_"</a>    费用:"_$List(LifeInfoData(tempdate,index),5)_"</span></p>"
+	..//e  d
+	..//.w "<p><span>"_$List(LifeInfoData(tempdate,index),1)_"  <a href=""dhceqlifeinfo.csp?&SourceType="_$List(LifeInfoData(tempdate,index),3)_"&SourceID="_$List(LifeInfoData(tempdate,index),4)_""" target=""_blank"">"_$List(LifeInfoData(tempdate,index),2)_"</a></span></p>"
+	..w "</li>"
+	..w:lastyear'=year "</div>"
+	..s lastyear=year
+	w "</ul>"
+	
+	w "<div class=""clearfix""></div></div>"
+	}
+</script>
+
+
+
+<script type="text/javascript" src="../scripts/dhceq/easyui/jquery.min.js"></script>
+<script type="text/javascript">
+$(function(){
+	$('label').click(function(){
+		$('.event_year>li').removeClass('current');
+		$(this).parent('li').addClass('current');
+		var year = $(this).attr('for');
+		$('#'+year).parent().prevAll('div').slideUp(800);
+		$('#'+year).parent().slideDown(800).nextAll('div').slideDown(800);
+	});
+});
+//add by zx 2019-08-08 弹框方法
+function openBussPic(SourceType,SourceID,vStatus,vReadOnly)
+{
+	var url="dhceq.plat.picturemenu.csp?&CurrentSourceType="+SourceType+"&CurrentSourceID="+SourceID+"&Status="+vStatus+"&ReadOnly="+vReadOnly;
+	window.open(url,"图片信息",'_blank',',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=1100,height=640,left=80,top=0');
+}
+function openBussDetail(SourceType,SourceID)
+{
+	var url="dhceqlifeinfo.csp?&SourceType="+SourceType+"&SourceID="+SourceID
+	window.open(url,"",'_blank',',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=1100,height=640,left=80,top=0');
+}
+</script>
+<div style="text-align:center;clear:both">
+<!--p>适用浏览器：IE8、360、FireFox、Chrome、Safari、Opera、傲游、搜狗、世界之窗.</p-->
+</div>
+</body>
+</html>

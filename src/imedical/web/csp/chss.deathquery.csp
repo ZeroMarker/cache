@@ -1,0 +1,117 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+	s UserId=$Get(%request.Data("UserId",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+    s CommunityCode=$Get(%request.Data("CommunityCode",1))
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	
+	s CardRowId=$Get(%request.Data("CardRowId",1))
+    
+    s PersonCode=$Get(%request.Data("PersonCode",1))
+    
+    s CardCode = $Get(%request.Data("CardCode",1))
+    s PatientName = $Get(%request.Data("PatientName",1))
+    s Sex = $Get(%request.Data("Sex",1))
+ 
+    s ID = $Get(%request.Data("ID",1))
+    s Birthday = $Get(%request.Data("Birthday",1))
+    s Nation = $Get(%request.Data("Nation",1))
+    s Marriage = $Get(%request.Data("Marriage",1))
+    s WorkType = $Get(%request.Data("WorkType",1))
+    s DeuLevel = $Get(%request.Data("DeuLevel",1))
+    s Addr = $Get(%request.Data("Addr",1))
+    s PlaceType = $Get(%request.Data("PlaceType",1))
+    s RegisterAddr = $Get(%request.Data("RegisterAddr",1))
+    s AreaType = $Get(%request.Data("AreaType",1))
+    
+    s WorkPlace = $Get(%request.Data("WorkPlace",1))
+    s DeadDate = $Get(%request.Data("DeadDate",1))
+    s DeadZone = $Get(%request.Data("DeadZone",1))
+    s DeadZoneCode = $Get(%request.Data("DeadZoneCode",1))
+    s FolkName = $Get(%request.Data("FolkName",1))
+    s FolkTel = $Get(%request.Data("FolkTel",1))
+    s FolkAddr = $Get(%request.Data("FolkAddr",1))
+    s ACause = $Get(%request.Data("ACause",1))
+    s AICD10 = $Get(%request.Data("AICD10",1))
+    s AScopeTime = $Get(%request.Data("AScopeTime",1))
+    s AScopeTimeUnit = $Get(%request.Data("AScopeTimeUnit",1))
+    s BCause = $Get(%request.Data("BCause",1))
+    s BICD10 = $Get(%request.Data("BICD10",1))
+    s BScopeTime = $Get(%request.Data("BScopeTime",1))
+    s BScopeTimeUnit = $Get(%request.Data("BScopeTimeUnit",1))
+    s CCause = $Get(%request.Data("CCause",1))
+    s CICD10 = $Get(%request.Data("CICD10",1))
+    s CScopeTime = $Get(%request.Data("CScopeTime",1))
+    s CScopeTimeUnit = $Get(%request.Data("CScopeTimeUnit",1))
+    s DCause = $Get(%request.Data("DCause",1))
+    s DICD10 = $Get(%request.Data("DICD10",1))
+    s DScopeTime = $Get(%request.Data("DScopeTime",1))
+    s DScopeTimeUnit = $Get(%request.Data("DScopeTimeUnit",1))
+    s OtherCause = $Get(%request.Data("OtherCause",1))
+    s OtherICD10 = $Get(%request.Data("OtherICD10",1))
+    s BaseCause = $Get(%request.Data("BaseCause",1))
+    s BSICD10 = $Get(%request.Data("BSICD10",1))
+    s DorgLevel = $Get(%request.Data("DorgLevel",1))
+    s DiagnoseBy = $Get(%request.Data("DiagnoseBy",1))
+    s HospitalNo = $Get(%request.Data("HospitalNo",1))
+    s FillDate = $Get(%request.Data("FillDate",1))
+    s Doctor = $Get(%request.Data("Doctor",1))
+    s Note = $Get(%request.Data("Note",1))
+     
+
+	s InvestRowId = $Get(%request.Data("InvestRowId",1))
+	s Symptom = $Get(%request.Data("Symptom",1))
+	s Informan = $Get(%request.Data("Informan",1))
+	s Relationship = $Get(%request.Data("Relationship",1))
+	s InformanTAddr = $Get(%request.Data("InformanTAddr",1))
+	s InformanTTEL = $Get(%request.Data("InformanTTEL",1))
+	s Investigator = $Get(%request.Data("Investigator",1))
+	s DeathReason = $Get(%request.Data("DeathReason",1))
+	s InvestigateDate = $Get(%request.Data("InvestigateDate",1))
+
+	
+	s SqlStr = ""
+	
+	i PatientName '= "" d
+	.s SqlStr = " and PersonName like '%"_PatientName_"%'"
+	i Sex '= "" d
+	.s SqlStr = SqlStr_" and SexDR = "_Sex
+	i PersonCode '= "" d
+	.s SqlStr = " and PersonCode = '%"_PersonCode_"%'"
+	i ID '= "" d
+	.s SqlStr = " and IDCard = '"_ID_"'"
+	/**
+	i CardNumber '= "" d
+	.s SqlStr = " and CardNumber = '"_CardNumber_"'"
+	i ChronicDiseaseType '= "" d
+	.s SqlStr = SqlStr_" and PersonRowId in (select PersonRowIdParref from CHSS.PersonHealthDiagnose where ItemdCode = '22' and ItemAssortName = '"_ChronicDiseaseType_"')"
+	i ElderGradeType '= "" d
+	.s SqlStr = SqlStr_" and PersonRowId in (select PersonRowId from CHSS.ElerlyBaseInfo where ElerlyGrade = '"_ElderGradeType_"')"
+	i FamilyAddSearch '= "" d
+	.s SqlStr = SqlStr_" and FamilyRowId in (select FamilyRowId from CHSS.FamilyHealthRecord where VillageName like '%"_FamilyAddSearch_"%')"
+	i Address '= "" d
+	.s SqlStr = SqlStr_" and PersonRowId in (select PersonRowId from CHSS.PersonHealthRecordMain where Address like '%"_Address_"%')"
+	**/
+
+	
+	i Action = "list" d
+	.s SqlStr = SqlStr_" "
+	.w ##class(CHSSWeb.DeathSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+    i Action = "listOneDeath" d
+    .w ##class(CHSSWeb.DeathSearchService).DeathCardInfo(PersonCode)
+     i Action="edit" d
+     .w ##class(CHSSWeb.DeathSearchService).Update(CardRowId, CardCode, PatientName, Sex, ID, Birthday, Nation, Marriage, WorkType, DeuLevel, Addr, PlaceType, RegisterAddr, AreaType, WorkPlace, DeadDate, DeadZone, DeadZoneCode, FolkName, FolkTel, FolkAddr, ACause, AICD10, AScopeTime, AScopeTimeUnit, BCause, BICD10, BScopeTime, BScopeTimeUnit, CCause, CICD10, CScopeTime, CScopeTimeUnit, DCause, DICD10, DScopeTime, DScopeTimeUnit, OtherCause, OtherICD10, BaseCause, BSICD10, DorgLevel, DiagnoseBy, HospitalNo, FillDate,Doctor,Note,InvestRowId,Symptom ,Informan ,Relationship ,InformanTAddr,InformanTTEL ,Investigator ,DeathReason ,InvestigateDate)
+
+
+</script>
+

@@ -1,0 +1,40 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ s (PatientID,ordExecId,OrderID)=""
+ s OrderID=%request.Get("OrderID")
+ i OrderID'="" d
+ . s EpisodeID=$p($g(^OEORD(+OrderID)),"^",1)
+ . i EpisodeID'="" s PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+ . s exec=""
+ . s exec=$o(^OEORD(+OrderID,"I",$p(OrderID,"||",2),"X",0))
+ . i exec'="" s ordExecId=+OrderID_"||"_$p(OrderID,"||",2)_"||"_exec
+ . ; log 63172
+ . s OSTATCode=$p(^OEORD(+OrderID,"I",$p(OrderID,"||",2),11),"^",52)
+ . i OSTATCode'="" s OSTATCode=$p($g(^OEC("OSTAT",OSTATCode)),"^",1)
+ ;
+</server>
+<script language=Javascript>
+	var ordExecId="#(ordExecId)#";
+	var OrderID="#(OrderID)#";
+	var PatientID="#(PatientID)#";
+	var OSTATCode="#(OSTATCode)#";
+	//log60736 TedT added pending flag
+	var URL="oeordexec.edit.csp?PatientBanner=1&PatientID="+PatientID+"&PARREF="+OrderID+"&ID="+ordExecId+"&refresh=0&pending=1"+"&OSTATCode="+OSTATCode;
+	window.location=URL;
+
+</script>
+
+</body>
+</html>

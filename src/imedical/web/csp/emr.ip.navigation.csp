@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.navigation.css">
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s categoryID = $Get(%request.Data("CategoryID",1),"")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s docID = $Get(%request.Data("DocID",1),"")
+    </script>
+    <script language="javascript">
+    	var gl=
+    	{
+			patientId:'#(patientID)#',
+			episodeId:'#(episodeID)#',
+			categoryId:'#(categoryID)#',
+			userId :'#(userID)#',
+			userName:'#(userName)#',
+			userLocId:'#(userLocID)#',
+			ssgroupId:'#(ssgroupID)#',
+			docID:'#(docID)#'
+    	}
+    </script>
+	<title>住院病历</title>
+</head>
+<body id="nav" class="hisui-layout" data-options="border:false,fit:true">
+	<div data-options="region:'north',border:false" style="height:100px;padding:0;margin:0;overflow:hidden"></div>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false"  style="height:40px;padding:9px 5px 0 0;overflow:hidden">
+				<div style="float:right">
+				<input type="text" class="hisui-searchbox" id="searchRecord" data-options="prompt:emrTrans('输入病历名称搜索!')" />
+				<a href="#" id="card" class="hisui-linkbutton displayspan">#(..Get("卡片视图"))#</a>
+				<a href="#" id="list" class="hisui-linkbutton displayspan">#(..Get("列表视图"))#</a>
+				<a href="#" id="sequence" class="hisui-linkbutton displayspan">#(..Get("倒序"))#</a>
+				</div>
+		    </div>
+			<div id="navpage" data-options="region:'center',border:false" style="height:400px;overflow:hidden">
+				<iframe id="framenav" frameborder="0" src="" style="width:100%;height:100%;"></iframe>
+			</div>
+		</div>
+	</div>	
+   <script type="text/javascript" src="../scripts/emr/js/ip.navigation.js"></script>
+   <script type="text/javascript" src="../scripts/emr/js/ip.userconfig.js"></script>
+</body>  
+</html>

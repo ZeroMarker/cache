@@ -1,0 +1,84 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<!--DHCMED:HEAD></DHCMED:HEAD-->
+		<script language='Cache' runat='SERVER'>
+           set menuCode="DHCWMRIMWorkFlowRun"
+           
+		   //update by zf 2015-01-19
+		   //主要处理非住院病历权限操作问题
+           set MrClass=$Get(%request.Data("MrClass",1),"")
+           set:MrClass="" MrClass="I"
+           set:MrClass="O" menuCode="DHCWMROMWorkFlowRun"
+           set:MrClass="E" menuCode="DHCWMREMWorkFlowRun"
+           set:MrClass="L" menuCode="DHCWMRLMWorkFlowRun"
+           
+           set menuId=$o(^DHCWMR.Main.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+           set groupId=$g(%session.Data("LOGON.GROUPID"))
+           set operaJson=##class(DHCWMR.MainService.MainSrv).GetMenuOperSecurity(menuId,groupId)
+       </script>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcwmr/css/main.css" />
+		<script type="text/javascript" src="../scripts/dhcwmr/ext.ux/ext-basex.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.Setting.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcwmr/ss/common/CustomFormItem.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/main_gui.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/main_event.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/volselect_gui.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/volselect_event.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/extraitem_gui.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/extraitem_event.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/checkuser_gui.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/wf/workflowrun/checkuser_event.js'></script>
+		<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>		<!--add-->
+        
+        <script language='Cache' runat='SERVER'>
+			Set MrClass=$Get(%request.Data("MrClass",1),"")
+			Set:MrClass="" MrClass="I"			//如果为空，设置为住院病案
+			Set CTLocID=%session.Get("LOGON.CTLOCID","")
+	  		Set CTHospID=##class(DHCWMR.SSService.HospitalSrv).GetCTHospID(CTLocID)
+	  		Set:CTHospID'="" CTHospDesc=$p($g(^CT("HOSP",CTHospID)),"^",2)
+	  		Set SSHospCode=##class(DHCWMR.SSService.HospitalSrv).GetSSHospCode(CTHospID)
+	  		Set IsSecret=##class(DHCWMR.IO.FromSecSrv).CheckIsSecret(CTHospID)
+	  		d ##class(web.DHCXMLPConfig).LODOPInit()	// add
+       </script>
+        <input id="InvPrintEncrypt" name="InvPrintEncrypt" type=hidden value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">		<!--add-->
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+            var objControlArry = new Array();
+            
+			var MrClass = '#(MrClass)#';
+			var CTHospID = '#(CTHospID)#';
+			var CTHospDesc = '#(CTHospDesc)#';
+			var SSHospCode = '#(SSHospCode)#';
+			var IsSecret = '#(IsSecret)#';
+			
+            function window_onload() {
+            	var objViewport1 = new InitViewport1();
+                objControlArry['Viewport1'] = objViewport1;
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

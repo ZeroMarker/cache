@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<!--
+	配伍详情审核
+	csp: csp/dhcpha.pivas.oeaudit.one.csp
+	js:	 scripts/pharmacy/pivas/oeaudit.one.js
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <link rel="stylesheet" type="text/css"
+        href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
+    </link>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
+    </link>
+</HEAD>
+<style type="text/css">
+    .pha-oe-label {
+        float: left;
+        width: 4.3em;
+        text-align-last: justify;
+    }
+
+    .pha-oe-label:after {
+        content: ' ：';
+        position: absolute;
+    }
+
+    .pha-oe-val {
+        font-weight: bold;
+        font-size: 14px;
+        float: left;
+        width: 75px;
+        padding-left: 10px;
+    }
+
+    .pha-oe-val-d {
+        font-weight: bold;
+        font-size: 14px;
+        float: left;
+    }
+
+    .pha-oe-cell {
+        float: left;
+        line-height: 25px;
+
+    }
+
+    .pha-oe-row-line {
+        border-top: 1px dashed #dddddd;
+        clear: both;
+        padding-top: 1px;
+    }
+
+    .pha-oe-row {}
+
+    #lyWinCen .datagrid-header {
+        display: none
+    }
+
+    #lyWinCen {
+        border-top: none;
+    }
+
+
+    .panel-body-noheader {
+        border-color: #cccccc;
+    }
+
+    .grid-oe-pass-ok {
+        background: #b2efd0;
+    }
+
+    .grid-form-high {
+        background: #ffe3e3;
+        color:#ff3d2c;
+    }
+
+    .grid-form-low {
+        background: #fff3dd;
+        color:#ff7e00;
+    }
+
+    .grid-oe-pass-ok:hover,
+    .grid-oe-pass-no:hover,
+    .grid-form-high:hover,
+    .grid-form-low:hover {
+        background: #eaf2ff;
+        color: #000000;
+        cursor: default;
+    }
+
+    .grid-oe-pass-no {
+        background: #FFC0CB;
+    }
+
+    .grid-oe-pass-back {
+        background: #ffeecf;
+    }
+
+    .datagrid-row-selected {
+        background: #ffe48d;
+        color: #000000;
+    }
+
+    .grpViewBase div {
+        float: left;
+        padding-left: 10px;
+    }
+
+    .grpViewWard div,
+    .grpViewPat div,
+    .grpViewOrd div {
+        float: left;
+        padding-left: 10px;
+        font-weight: bold;
+    }
+
+    .grpViewPat {
+        padding-left: 30px;
+        width: 400px;
+    }
+
+    .grpViewOrd {
+        width: 250px;
+        color: #13B694;
+    }
+
+    .grpViewWard {
+        width: 170px;
+        /* color: #0D82AA;  */
+    }
+    .datagrid-group{
+        background-color:#f4f6f5;
+    }
+</style>
+
+<body style="overflow:hidden;">
+	<div class="dhcpha-win-mask">
+		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
+	</div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',title:'配伍详情审核',iconCls:'icon-panel-oeaudit',split:true,headerCls:'panel-header-gray',collapsible:false"
+                    class="dhcpha-hisui-border dhcpha-north-r2" style="border-top:none;">
+                    <table class="dhcpha-north-tbl">
+                        <tr>
+                            <td>
+                                <label for="dateStart">用药开始日期</label>
+                                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbLocGrp">科室组</label>
+                                <input id="cmbLocGrp" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbPivaCat">配液大类</label>
+                                <input id="cmbPivaCat" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbPassStat">审核状态</label>
+                                <input id="cmbPassStat" type="text" />
+                            </td>
+                            <td style="display:none">
+                                <label for="cmbNurAudit">护士审核</label>
+                                <input id="cmbNurAudit" type="text" />
+                            </td>
+                            <td colspan="2">
+                                <label for="cmgIncItm">　药品</label>
+                                <input id="cmgIncItm" type="text" />
+                            </td>
+                            <td></td>
+
+
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="dateEnd">用药结束日期</label>
+                                <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbWard">病区</label>
+                                <input id="cmbWard" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbWorkType">工作组</label>
+                                <input id="cmbWorkType" type="text" />
+                            </td>
+                            <td>
+                                <label for="cmbPassResult">审核结果</label>
+                                <input id="cmbPassResult" type="text" />
+                            </td>
+                            <td style="text-align:left">
+                                <label for="cmbPriority">优先级</label>
+                                <input id="cmbPriority" type="text" />
+                            </td>
+                            <td>
+                                <a id="btnFind" class="hisui-linkbutton"
+                                    data-options="iconCls:'icon-w-find',plain:false">查询</a>
+                            </td>
+
+                        </tr>
+                    </table>
+                </div>
+                <div data-options="region:'center'" border="false">
+                    <div class="hisui-layout" fit="true" border="false">
+                        <div data-options="region:'west',headerCls:'panel-header-gray',width:300,split:true"
+                            border="false" style="border-radius: 4px;">
+                            <div id="tabsOne" class="hisui-tabs" fit="true">
+                                <div data-options="title:'病区列表'">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridWard"></table>
+                                        </div>
+                                        <div data-options="region:'south'" border="false"
+                                            style="text-align:center;padding-bottom:10px">
+                                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false"
+                                                style="overflow:hidden;" id="btnFindDetail">查询</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-options="title:'按登记号'">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridAdm"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'"
+                            class="dhcpha-hisui-border" style="border-radius: 4px;">
+                            <div id="gridOrdItem"></div>
+                        </div>
+                        <div id="lyOrdDetail"
+                            data-options="region:'east',split:true,headerCls:'panel-header-gray',width:500,title:'',iconCls:'icon-panel-pivas-drug'"
+                            style="border-radius: 4px;">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'north'" border="false">
+                                    <div style="height:32px;padding-top:2px">
+                                        <div style="float:left">
+
+                                            <a class="hisui-linkbutton" iconCls='icon-btn-ordpass' plain="true"
+                                                id="btnAuditOk">审核通过</a>
+                                            <a class="hisui-linkbutton" iconCls='icon-btn-ordrefuse' plain="true"
+                                                id="btnAuditNo">审核拒绝</a>
+                                            <a class="hisui-linkbutton" iconCls='icon-btn-ordcancel' plain="true"
+                                                id="btnCancelAudit">取消审核</a>
+                                        </div>
+					                    <div class="datagrid-btn-separator"></div>
+					                    <div style="float:left">
+					                    	<a class="hisui-linkbutton" iconCls='icon-stamp' plain="true"
+					                            id="btnPhaRemark">药师标注</a>
+					             		</div>
+                                    </div>
+                                    <div style="border-top:1px dashed #cccccc;padding-top:5px"></div>
+                                </div>
+                                <div data-options="region:'center',border:false" class="newScroll"
+                                    style="overflow: hidden;">
+                                    <div
+                                        style="padding-left:10px;padding-right:20px;margin-top:-5px;padding-bottom: 10px;">
+                                        <div>
+                                            <div>
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        基本信息
+                                                    </div>
+                                                    <div class="pha-oe-val" style="width:229px">
+                                                        <div class="pha-oe-val-d" id="oePatName" style="width:65px">
+                                                            [姓名]
+                                                        </div>
+                                                        <div class="pha-oe-val-d" id="oePatSex" style="width:50px">
+                                                            [性别]
+                                                        </div>
+                                                        <div class="pha-oe-val-d" id="oePatNo" style="width:75px">
+                                                            [登记号]
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        床号
+                                                    </div>
+                                                    <div class="pha-oe-val" id="oeBedNo">
+                                                        [床号]
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="pha-oe-row-line"></div>
+                                            <div style="clear:both;">
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        身高体重
+                                                    </div>
+                                                    <div class="pha-oe-val" style="width:229px">
+                                                        <div class="pha-oe-val-d" id="oePatHeight" style="width:65px">
+                                                            [身高]
+                                                        </div>
+                                                        <div class="pha-oe-val-d" id="oePatWeight" style="width:50px">
+                                                            [体重]
+                                                        </div>
+                                                        <div class="pha-oe-val-d" id="oePatAge" style="width:70px">
+                                                            [年龄]
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        体表面积
+                                                    </div>
+                                                    <div class="pha-oe-val" id="oePatArea">
+                                                        [体表面积]
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="pha-oe-row-line"></div>
+                                            <div style="clear:both">
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        用法频次
+                                                    </div>
+                                                    <div class="pha-oe-val" style="width:229px">
+                                                        <div class="pha-oe-val-d" id="oeInstruc" style="width:115px">
+                                                            [用法]
+                                                        </div>
+                                                        <div class="pha-oe-val-d" id="oeFreq" style="width:auto">
+                                                            [频次]
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        医生
+                                                    </div>
+                                                    <div class="pha-oe-val" id="oeDoctor">
+                                                        [医生姓名]
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div class="pha-oe-row-line"></div>
+                                            <div style="clear:both">
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        医嘱备注
+                                                    </div>
+                                                    <div class="pha-oe-val" style="width:auto;font-weight: normal"
+                                                        id="oeDocRemark">
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="pha-oe-row-line"></div>
+                                            <div style="clear:both">
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        诊断信息
+                                                    </div>
+                                                    <div class="pha-oe-val"
+                                                        style="width:375px;font-weight: normal;overflow:hidden;height:25px;"
+                                                        id="oeDiag">
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="pha-oe-row-line"></div>
+                                            <div style="clear:both">
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        滴速
+                                                    </div>
+                                                    <div class="pha-oe-val" id="oeIvgttSpeed" style="width:229px">
+
+                                                    </div>
+                                                </div>
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        液体总量
+                                                    </div>
+                                                    <div class="pha-oe-val" id="oeLiquid">
+                                                        
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="pha-oe-row-line"></div>
+                                            <div style="clear:both">
+                                                <div class="pha-oe-cell">
+                                                    <div class="pha-oe-label">
+                                                        药师标注
+                                                    </div>
+                                                    <div class="pha-oe-val" style="width:auto;font-weight: normal"
+                                                        id="oePhaRemark">
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="pha-oe-row-line"></div>
+                                        </div>
+                                        <div style="clear:both;padding-top:5px">
+                                            <div
+                                                style="height:200px;width:auto;clear:both;border:1px solid #cccccc;border-radius: 4px">
+                                                <table id="gridOrderDrugs"></table>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div id="kwMore" style="clear:both"></div>
+                                            <div id="divMoreInfo" style="clear:both">
+                                                <div id="divMedInfo">
+                                                    <div id="divMedInfoGrid" style="height: 600px">
+                                                        <table id="gridMedInfo"></table>
+                                                    </div>
+                                                </div>
+                                                <div id="divTPN" style="display:none;">
+                                                    <div id="divTPNGrid">
+                                                        <table id="gridTPN"></table>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                                <div id="divMedHistory" style="display:none;">
+                                                    <div id="divMedHistoryGrid">
+                                                        <table id="gridMedHistory"></table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridAdmBar">
+        <div>
+            <div style="padding:5px">
+                <input id="txtPatNo" class="hisui-validatebox" placeholder="登记号..." style="height:30px;width:125px;" />
+            </div>
+        </div>
+    </div>
+    <div id="gridOrdItemBar" style="height:32px;">
+        <a class="hisui-linkbutton" iconCls='icon-btn-pass' plain="true" id="btnAnalyPresc"
+            style="padding-top:5px;padding-bottom:5px;margin-top:0px;">合理分析</a>
+        <a class="hisui-linkbutton" iconCls='icon-btn-pass-tip' plain="true" id="btnMedTips"
+            style="padding-top:5px;padding-bottom:5px;margin-top:0px;display:none;">药典提示</a>
+        <a class="hisui-linkbutton" iconCls='icon-btn-medsee' plain="true" id="btnPrBroswer"
+            style="padding-top:5px;padding-bottom:5px;margin-top:0px;">病历浏览</a>
+        <a class="hisui-linkbutton" iconCls='icon-btn-record' plain="true" id="btnAuditRecord"
+            style="padding-top:5px;padding-bottom:5px;margin-top:0px;">审核记录</a>
+
+    </div>
+    <div id="reasonSelectDiv" class="hisui-dialog" title='选择原因' style="width:1000px;height:500px;color:white"
+        data-options="closable:true,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-list',
+	buttons:[{
+		text:'确认',
+		handler:function(){
+			AuditNo();
+		}
+	},{
+		text:'取消',
+		handler:function(){
+			$('#reasonSelectDiv').dialog('close');
+		}
+	}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" class="dhcpha-hisui-container">
+                <div class="hisui-layout" fit="true" border="false">
+                    <div id="lyWinCen"
+                        data-options="region:'center',split:true,headerCls:'panel-header-gray',title:'配伍原因'"
+                        class="dhcpha-hisui-border">
+                        <table id="treeGridReason"></table>
+                    </div>
+                    <div data-options="region:'east',split:true,headerCls:'panel-header-gray',width:400" border="false">
+                        <div class="hisui-layout" fit="true" border="false">
+                            <!--div data-options="region:'center',title:'备注模板列表',split:true,headerCls:'panel-header-gray'">
+	                        <table id="gridRemark"></table>
+	                    </div-->
+                            <div data-options="region:'center',title:'备注',split:false,headerCls:'panel-header-gray',height:200"
+                                class="dhcpha-hisui-border" style="overflow:hidden">
+                                <textarea id="txtReasonNotes"
+                                    style="width:100%;height:100%;overflow:hidden;border:none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mousewheel.min.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.min.js">
+    </script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/echarts/echarts.min.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/datagrid-view/datagrid-groupview.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script>
+    <!--script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.dtpass.js"></script-->
+    <!--script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.mkpass.js"></script-->
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/pass.tpn.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/oeaudit.one.js"></script>
+</body>
+
+</HTML>

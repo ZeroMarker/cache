@@ -1,0 +1,56 @@
+
+
+<script language="cache" runat="server">
+
+ s patientID = $Get(%request.Data("patientID",1))
+ s Info=##class(web.DHCCRM.CRMGrowthCurve).GetWHInfoBy0to2(patientID)
+ s CurData=$p(Info,$c(1),1)
+ 
+ s Sex=$p(Info,$c(1),2)
+ s path="../images/dhcpe/wlboyscht0_2.png"
+ i Sex="M" s path="../images/dhcpe/wlboyscht0_2.png"
+ i Sex="F" s path="../images/dhcpe/wlgirlscht0_2.png"
+ 
+ 
+</script>
+
+
+
+<div style="position:absolute; left:0; top:0; width:1300; height:1860; visibility:visible"><img src=#(path)# width=100% height=100%></div>
+	<csp:WHILE COUNTER=Counter CONDITION=(""'=CurData)>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s CurData=$p(Info,"^",Counter)
+	q:CurData=""
+	s CurDataW=$p(CurData,"$",1)
+	s CurDataH=$p(CurData,"$",2)
+	s CurDataM=$p(CurData,"$",3)
+	
+	s MWPointX=198,MWPointY=904,MWSpaceX=38.6,MWSpaceY=7.9,MWPoint=1.4,MWSpace=0.2
+	s FWPointX=200,FWPointY=903,FWSpaceX=38.5,FWSpaceY=8.4,FWPoint=1.4,FWSpace=0.2
+	
+	s MHPointX=198,MHPointY=1691,MHSpaceX=38.6,MHSpaceY=12,MHPoint=45,MHSpace=1
+	s FHPointX=198,FHPointY=1691,FHSpaceX=38.5,FHSpaceY=11.9,FHPoint=45,FHSpace=1
+	
+	i Sex="M" d
+	.s WPointY=MWPointY-((CurDataW-MWPoint)/MWSpace*MWSpaceY)
+	.s WPointX=CurDataM*MWSpaceX+MWPointX
+	.
+	.s WStyle="position:absolute;left:"_WPointX_";top:"_WPointY_";color:balck; visibility:visible"
+	.
+	.s HPointY=MHPointY-((CurDataH-MHPoint)/MHSpace*MHSpaceY)
+	.s HPointX=CurDataM*MHSpaceX+MHPointX
+	.
+	.s HStyle="position:absolute;left:"_HPointX_";top:"_HPointY_";color:balck; visibility:visible"
+	i Sex="F" d
+	.s WPointY=FWPointY-((CurDataW-FWPoint)/FWSpace*FWSpaceY)
+	.s WPointX=CurDataM*FWSpaceX+FWPointX
+	.s WStyle="position:absolute;left:"_WPointX_";top:"_WPointY_";color:balck; visibility:visible"
+	.
+	.s HPointY=FHPointY-((CurDataH-FHPoint)/FHSpace*FHSpaceY)
+	.s HPointX=CurDataM*FHSpaceX+FHPointX
+	.s HStyle="position:absolute;left:"_HPointX_";top:"_HPointY_";color:balck; visibility:visible"
+	</SCRIPT>
+	<div style=#(WStyle)#><h2>*</div>
+	<div style=#(HStyle)#><h2>*</div>
+	
+    </CSP:WHILE>

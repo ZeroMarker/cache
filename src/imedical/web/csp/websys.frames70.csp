@@ -1,0 +1,106 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+    <SERVER> 
+	;add by wuqk 2011-07-16 To display the system security message	
+	n securitymsg
+	s securitymsg=##Class(web.SSUser).GetSystemSecurityMessage(%session.Get("LOGON.USERID"))
+	
+	</SERVER>
+
+<SCRIPT language="Javascript">
+var securitymsg="#(securitymsg)#";
+if (securitymsg!="") alert(securitymsg);
+self.moveTo(0,0);
+self.resizeTo(screen.availWidth,screen.availHeight);
+
+//This is a workaround to try and distinguish between reloading the frame and closing the window
+var keepopen=false;
+function unlockonunload() {
+	//call websys.close.csp to close open locks
+	/*if (!keepopen) {
+		window.location.href="websys.closesession.csp";
+		return false;
+	}*/
+	if (window.event) {
+		if (window.event.clientX < 0)
+		{
+		   try {unloadHandler();} catch(e) {}
+		   ///alert("The browser is closing...");
+		   window.location.href="websys.closesession.csp";
+		   ///alert("is closed.");
+		}
+		else
+		{
+		   //alert("The user is refreshing or navigating away...");
+		}
+	}
+	return true;
+}
+
+//removed due to bizarre bahaviour
+//function onbeforeunloadHandler() {
+//	if (window.event) {
+//		if (window.event.clientY < 0)
+//			return "This will close your MEDTRAK session!";
+//		else
+//			return;
+//	}
+//}
+
+function unloadHandler() {
+
+	// SA 13.8.02 - log 26697: Function written in order to close Medicode 
+	// when Medtrak is closed. While this code is only relevant to RIE, because 
+	// there is no single component associated with this code, SP and I have agreed
+	// that this code needs to be here rather than in a custom javascript.
+	// This code also appears in epr.frames.csp
+	
+	// DDE object
+	var objDDE;
+
+	//alert("Syd Testing Medtrak Unload: websys.frames.csp");
+	
+	try {		
+
+		objDDE = new ActiveXObject("tkDDEInterface.clsConnect");
+		objDDE.DDELinkTopic = "OINSIGHT|MW_MAINFORM.TXT_HOST_ID";
+		objDDE.DDELinkMode = 2;
+		objDDE.DDELinkItem = "TEXT";
+		objDDE.DDEText = "MEDICODE_EXIT"
+		objDDE.DDEPoke();
+	
+	} catch(e) {}
+
+}
+</SCRIPT>
+
+	
+
+<SCRIPT language="Javascript">
+</SCRIPT>
+</head>
+<!-- 125 matches width of trak125.gif logo -->
+<frameset cols="200,*,0"  border="0" scrolling="auto" onunload="return unlockonunload();">
+  <frame src="websys.menu.csp" name="TRAK_menu" scrolling="auto">
+  <!--frame src="websys.home.csp" name="TRAK_main" scrolling="auto"-->
+  <!-- TN:17-July-2002 websys.csp from here should locate websys.home.csp anyway, need to go thru websys.csp to be able to show msg.AddItems-->
+  <frame src="websys.csp" name="TRAK_main" scrolling="auto">
+  <frame src="" name="TRAK_hidden" noresize="noresize">
+</frameset>
+
+<noframes>
+    <body>
+    <p></p>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+</html>

@@ -1,0 +1,260 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/framework/EXTCustom/ux_VerticalTabPanel.css">
+
+<script language='javascript' src='../scripts/framework/EXTCustom/ux_VerticalTabPanel.js'></script>
+<script language='javascript' src='../scripts/framework/ext.epr.chartbook.show.js'></script>
+
+<SCRIPT language=javascript>
+var selected="";
+
+function ColourText(objsrc,textcol) {
+	var arrAncs = objsrc.getElementsByTagName("A");
+	if (arrAncs.length) {
+		// Log 58796 YC - Commented code from TN's changes
+		//arrAncs[0].style.textDecoration="none";
+		arrAncs[0].style.color=textcol;
+	}
+}
+
+function ClearSelected() {
+	if (selected!="") {
+		var obj=document.getElementById(selected);
+		if (obj) {
+			obj.className="chartitem";
+
+			// Log 58796 YC - Added code from TN's changes
+			if (obj.getAttribute("ChartColour")!="") {
+				obj.style.backgroundColor=obj.getAttribute("ChartColour");
+			}
+			else obj.style.backgroundColor="";
+			if (obj.getAttribute("TextColour")!="") {
+				obj.style.color=obj.getAttribute("TextColour");
+			}
+			else obj.style.color="";
+		}
+	}
+	selected="";
+}
+function SelectChart(eSrc) {
+
+		// Log 58796 YC - Added code from TN's changes
+		if (eSrc.getAttribute("SELChartColour")!="") {
+			eSrc.style.backgroundColor=eSrc.getAttribute("SELChartColour");
+		}
+		else eSrc.style.backgroundColor="";
+		if (eSrc.getAttribute("SELTextColour")!="") {
+			eSrc.style.color=eSrc.getAttribute("SELTextColour");
+		}
+		else eSrc.style.color="";
+		var div=document.getElementById("data");
+		//div.height="1768px";
+		var df=document.getElementById("dataframe");
+		//df.height="1768px";
+		df.src=eSrc.getAttribute("chLINK");
+
+		// PC
+		//setDataFrameSize();
+		// PC
+
+
+	//}
+}
+</script>
+</HEAD>
+<body>
+<SERVER>
+ n PatientID,EpisodeID,mradm,ChartBookID,PAAdmCodingID,objCoding,PAAdmTransactionID,NoPatientBanner,unreadexists
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s EpisodeIDs=%request.Get("EpisodeIDs")
+ s DischID=%request.Get("DischID")
+ ; the current ID when we're creating a new version
+ s CurrDischID=%request.Get("CurrDischID")
+ s DischEpisodes=%request.Get("DischEpisodes")
+ s doctype=%request.Get("doctype")
+ s mradm=%request.Get("mradm")
+ s ChartBookID=%request.Get("ChartBookID")
+ s ShowCharts=%request.Get("ShowCharts")
+ s PAAdmCodingID=%request.Get("PAAdmCodingID")
+ s NoPatientBanner=%request.Get("NoPatientBanner")
+ s OperRoomID=%request.Get("OperRoomID")
+ s ConsultID=%request.Get("ConsultID")
+ s objCoding=##Class(User.PAAdmCoding).%OpenId(PAAdmCodingID)
+ s PAAdmTransactionID=""
+ s SelectedChart=""""_%request.Get("SelectedChart")_""""
+ i objCoding {
+	i objCoding.CODTransactionDR s PAAdmTransactionID=objCoding.CODTransactionDR.%Id()
+	d objCoding.%Close()
+ }
+ ; 59250
+ s apptID=$g(%request.Data("apptID",1))
+ //add by zhouzq
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+</SERVER>
+ <!--
+ <DIV id="chartbook">
+ <DIV id="charttabs">
+ -->
+<SERVER>
+	n ChartID,ChartName,count,obj,jh,lst,unread,cmp
+	s ChartID="",jh=0,count=0,unread="",cmp=""
+	s obj=##Class(websys.Component).OpenName("epr.ChartBook.List")
+	i (obj) d obj.LoadTrans(),obj.%Close()
+	
+	s obj=##Class(epr.ChartBook).%OpenId(ChartBookID,0)
+	//i 'obj w $p($g(t("NoChartBook"),"No ChartBook selected"),"^",1)
+	i obj {
+		if %request.Get("List")="L" {
+			s lst=obj.LeftChartList
+			s ChartType="L"
+		} else {
+			s lst=obj.ChartList
+			s ChartType="C"
+		}
+		s TimeLine=obj.ShowTimeline
+		s chartJSONStr=##class(ext.epr.Chart).ShowNoEpisodeChartJson(ChartBookID, ChartType,PatientID,EpisodeID,EpisodeIDs,mradm,apptID,ConsultID,PAAdmTransactionID,OperRoomID,DischID,CurrDischID,DischEpisodes,doctype,TWKFL,TWKFLI)
+		
+		//s count=lst.Count()
+		//i count=0 w $p($g(t("NoChartItems"),"No charts within ChartBook selected"),"^",1)
+		/*
+		s unre
+		adexists=##class(epr.Chart).UnreadResults(EpisodeID,mradm,.unread)
+		f jh=1:1:count {
+			i lst.GetAt(jh) {
+			  s ChartID=lst.GetAt(jh).%Id()
+			  s flag=##class(web.DHCPE.Public.Setting).ShowChartPage(EpisodeID,ChartID)
+			 continue:flag=0
+			  ; 59418
+			  i (ShowCharts="")!((","_ShowCharts_",")[(","_ChartID_",")) {
+				;s ChartName=lst.GetAt(jh).Name
+				n chrt
+				s chrt=##class(epr.Chart).%OpenId(ChartID),IsHistPage=0,(ChartColour,TextColour)=""
+				i chrt d
+				. s IsHistPage=chrt.IsHistoryPage
+				. ; 51477
+				. s ChartColour=chrt.ChartColour
+				. s TextColour=chrt.TextColour
+				. s SELChartColour=chrt.SELChartColour
+				. s SELTextColour=chrt.SELTextColour
+				. d chrt.%Close()
+				s ChartName=##Class(websys.TranslationEPR).GetTrans("epr.Chart","Name",$g(%session.Data("LOGON.LANGID")),lst.GetAt(jh).Name)
+				
+				w "<DIV class='chartitem' id='chart",ChartID,"' onclick='SelectChart(this);' "
+				w " ChartColour='"_ChartColour_"' TextColour='"_TextColour_"'"
+				w " SELChartColour='"_SELChartColour_"' SELTextColour='"_SELTextColour_"'"
+				// Log 58796 YC - New line according to TN's changes
+				w " style='" w:ChartColour'="" "BACKGROUND-COLOR:"_ChartColour_";" w:TextColour'="" "COLOR:"_TextColour_";" w "' "
+				i IsHistPage d
+				. // Log 58796 YC - Replace code according to TN's changes
+				. ; Log 59791 YC - Both links now goto epr.chart.csp which decides whether or not to redirect to epr.clinicalhistory.csp
+				. w " chLINK='epr.chart.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&EpisodeIDs=",EpisodeIDs,"&mradm=",mradm,"&ChartID=",ChartID,"&apptID=",apptID,"&ConsultID=",ConsultID,"&ConsultEpisodeID=' >"
+				e  d
+				. // Log 58796 YC - Replace code according to TN's changes
+				. w " chLINK='epr.chart.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&EpisodeIDs=",EpisodeIDs,"&mradm=",mradm,"&ChartID=",ChartID,"&PAAdmTransactionID=",PAAdmTransactionID,"&OperRoomID=",OperRoomID,"&DischID=",DischID,"&CurrDischID=",CurrDischID,"&DischEpisodes=",DischEpisodes,"&doctype=",$zcvt(%request.Get("doctype"),"O","HTML"),"&TWKFL=",%request.Get("TWKFL"),"&TWKFLI=",%request.Get("TWKFLI"),"&TimeLine=",TimeLine,"&ConsultID=",ConsultID,"&ConsultEpisodeID='>"
+				s unreadresults=0
+				i unreadexists s unreadresults=##class(epr.Chart).UnreadResultsInChart(ChartID,.unread)
+				i unreadresults w "<b>"_ChartName_"</b>"
+				i 'unreadresults w ChartName
+				w "</a>"
+				w "</div>",$c(13,10)
+			  }
+			}
+		}
+		*/
+		//w chartJSONStr
+		d obj.%Close()
+	}
+			
+
+</SERVER>
+	<!--
+	</div>
+	<DIV id="data">
+		<IFRAME id="dataframe" name="dataframe" width="1024px" height="768px" src="websys.csp" frameborder=0></iframe>
+	</div>
+	</div>
+	-->
+
+
+<script language=javascript>
+var count=#(count)#;
+var chartJSONStr='#(chartJSONStr)#';
+function GetCurrentChartLink() {
+	var obj=Ext.getCmp('EPRChartBook');
+	//alert(obj.getActiveTab().initialConfig.cls);
+	return obj.getActiveTab().initialConfig.cls
+}
+/*
+var obj=document.getElementById("charttabs");
+var arrDiv = obj.getElementsByTagName("DIV");
+var SelectedChart=#(SelectedChart)#;
+var Chart = "";
+
+if (arrDiv.length) Chart=arrDiv[0];
+if (SelectedChart!="") Chart = document.getElementById(SelectedChart);
+if (Chart !="" ) SelectChart(Chart);
+var offsetWdt = document.body.offsetWidth - document.body.clientWidth;
+var offsetHgt = document.body.offsetHeight - document.body.clientHeight;
+var remainHgt;
+var remainWdt;
+*/
+function setDataFrameSize() {
+	if (websys_isIE) {
+
+		remainHgt = document.body.offsetHeight -3 -offsetHgt;
+		remainWdt = document.body.offsetWidth -3 -offsetWdt;
+		//set data frame to length and width of remaining page, and widen to fit charttabs
+		var obj=document.getElementById("charttabs");
+		var posLeft = obj.offsetWidth;
+		obj.style.width = posLeft;
+
+		var obj=document.getElementById("chartbook");
+		remainHgt -= obj.offsetTop;
+		remainWdt -= obj.offsetLeft;
+
+		posLeft += obj.offsetWidth;
+		var obj=document.getElementById("data");
+		obj.style.left = posLeft;
+		remainWdt -= posLeft;
+
+		// Log 49356 YC - Stops "Access is Denied" error when resizing
+		setTimeout("resizeframe(remainWdt,remainHgt)", 1);
+		//document.frames["dataframe"].window.resizeTo(remainWdt,remainHgt);
+
+	} else {  //hack for NS
+		document.frames["dataframe"].window.resizeTo(screen.width,screen.height);
+	}
+}
+function resizeframe(remainWdt,remainHgt)
+{
+	// Log 50304 YC - When resizing slowly by dragging the window or frame corners/sides then
+	// "Access is Denied" error comes up. This will catch the error and continue to call
+	// setDataFrameSize() until the error stops occuring i.e. when user stops resizing the window.
+	try {
+		document.frames["dataframe"].window.resizeTo(remainWdt,remainHgt);
+	}
+	catch (e) {
+		setDataFrameSize();
+	}
+}
+
+//window.onresize = setDataFrameSize;
+// TRC 6503
+//setDataFrameSize();
+</script>
+</body>
+</html>
+

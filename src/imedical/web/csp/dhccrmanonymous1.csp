@@ -1,0 +1,42 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+</csp:method>
+
+<script language="cache" runat="server">
+ s action = $Get(%request.Data("action",1))
+ s start = $Get(%request.Data("start",1))
+ s limit = $Get(%request.Data("limit",1))
+ 
+ s fusrowid = $Get(%request.Data("FUSRowId",1))
+ s sdrowid = $Get(%request.Data("SDRowId",1))
+ s paadm = $Get(%request.Data("PAADM",1))
+ s furrowid = $Get(%request.Data("FURRowId",1))
+ s fuprowid = $Get(%request.Data("FUPRowId",1))
+ s furresult = $Get(%request.Data("FURResult",1))
+ s subjects = $Get(%request.Data("Subjects",1))
+ s qrrowid = $Get(%request.Data("QRRowId",1))
+ s patname = $Get(%request.Data("PatName",1))
+ s papmino = $Get(%request.Data("PAPMINo",1))
+ s disdiag = $Get(%request.Data("DisDiag",1))
+ s startdate = $Get(%request.Data("StartDate",1))
+ s enddate = $Get(%request.Data("EndDate",1))
+ s FollowFlag = $Get(%request.Data("FollowFlag",1))
+ s Loc=$Get(%request.Data("Loc",1))
+ s Condition=$Get(%request.Data("Condition",1))
+ s TelNo=$Get(%request.Data("TelNo",1))
+ s ZSCondition=$Get(%request.Data("ZSCondition",1))
+ i action = "list" d
+ .w ##class(web.DHCCRM.PatInfo).GetPatInfo(papmino,patname,disdiag,startdate,enddate,FollowFlag,start,limit,Loc,Condition,TelNo,ZSCondition)
+ i action = "fusdlist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSDetail(fusrowid,start,limit)
+ i action = "fusblist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSubject(subjects,start,limit)
+ i action = "sdslist" d
+ .w ##class(web.DHCCRM.CRMBaseSet).SetFUSDSelect(sdrowid,start,limit)
+ i action = "fursave" d
+ .w ##class(web.DHCCRM.PatInfo).SaveFURecord(paadm,fuprowid,qrrowid,furresult)
+ i action = "furlist" d
+ .w ##class(web.DHCCRM.PatInfo).GetFURecord(fusrowid)
+</script>
+

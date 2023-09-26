@@ -1,0 +1,190 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+	.banner{
+		width: 100%;
+		background-color: #E0EFDA;
+		}
+	.banner span{
+		color: #688B63;
+		}
+	.left{
+		float: left;
+		width: 100%;
+		height: 100%;
+		overflow-y:auto;
+		}
+	.eq_echarts{
+		width: 100%;
+		height: 100%;
+		}
+	.eq_wait{
+		border:solid 1px #cccccc;
+		margin: 5px;
+		border-radius: 4px;
+		}
+	.eq_wait p{
+		font-weight: bold;
+		font-size: 16px;
+		text-align: center;
+		color: #ffffff;
+		padding:10px 0px;
+		margin:0px 0px 5px 0px;
+		background: #008ff0;
+		}
+	.eq_wait ul{
+		margin:0px;
+		padding:0px 3px 5px 3px;
+		color: #FFFFFF;
+		}
+	.eq_wait ul li{
+		height: 40px;
+		list-style-type: none;
+		border:solid 1px #ffffff;
+		background: #f9f9f9;
+	}
+	.eq_wait ul li a{
+		display:block;
+		margin-top:10px;
+		margin-left: 10%;
+		font-size: 16px;
+		font-weight: bold;
+	}
+	.eq_wait li:hover {
+		background: #d5d3d1;
+		}
+	.eq_radius{
+		margin: 5px 10px 0px 0px;
+		float: right;
+		padding-top:5px;
+		height:25px;
+		width:30px;
+		text-align:center;
+		-moz-border-radius: 50%; /* Firefox */
+  		-webkit-border-radius: 50%; /* Safari 和 Chrome */
+  		border-radius: 50%; /* Opera 10.5+, 以及使用了IE-CSS3的IE浏览器 */
+		background:#76c3f7;
+		color: #ffffff;
+		}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s QXType=0
+	s ReadOnly=0
+	s vData="^Type=2"
+</SCRIPT>
+<!--Modify by zx 2020-03-13-->
+<body class="hisui-layout" id="mainview">
+	<div data-options="region:'north',border:false">
+		<div class="banner">
+			<!--marquee scrollamount="5" scrolldelay="0" direction="left"> 
+				<span>向左循环滚动</span>
+			</marquee-->
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'west'" style='width:280px;'>
+				<div class="left">
+					<div class="eq_wait" id="BussWait">
+						<p>待办业务</p>
+						<ul id="Buss"></ul>
+					</div>
+					<div class="eq_wait" id="WarningWait">
+						<p>预警</p>
+						<ul id="Warning"></ul>
+					</div>
+				</div>
+			</div>
+			<!--add by zx 2019-06-14 工作台修复分辨率改变时边线被覆盖问题及面板样式改变 Bug ZX0067-->
+			<div class="hisui-tabs" id="TabsData" data-options="region:'center',split:true">
+				<div data-options="title:'首页',selected:true,iconCls:'icon-add-note'"> 
+					<div style='height:96%;width:98%;padding:1%;'>
+						<div style='height:50%;width:100%;'>
+							<div style='float:left;height:100%;width:50%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="维修监控">
+									<div id="MaintControl" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:49%;margin-left:1%;'>
+								<table class="hisui-datagrid" id="tMaintWaitList" data-options="headerCls:'panel-header-card-gray',singleSelect:true" title="维修待办列表">
+								</table>
+							</div>
+						</div>
+						<div style='height:49%;width:100%;margin-top:1%;'>
+							<div style='float:left;height:100%;width:50%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="六个月内新购资产及期末汇总">
+									<div id="EmergencyControl" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:49%;margin-left:1%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="资产构成比">
+									<div id="CompositionOfAssets" class="eq_echarts"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--add by QW20200604 BUG:QW0066 webui-popover Begin-->
+	<div id="DateItem"  class="webui-popover-content"  style="display: none;">
+		<div class="eq-table-tr" id="DateItemDetail"></div>
+		<div class="eq-table-tr" style='float:left;height:100%;width:43%;' >
+			<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate"  data-options="disabled:true"></div>
+			<div class="eq-table-td eq-table-label"><lable  for="StartDate">至</lable></div>
+			<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate"  data-options="disabled:true"></div>
+			<div  style='float:right;' class="eq-table-td eq-table-label"><a id="BDateSure" iconCls="icon-w-ok" href="#" class="hisui-linkbutton">确定</a></div>
+		</div>
+	</div>
+	<div id="LocItem"  class="webui-popover-content"  style="display: none;">
+		<div class="eq-table-tr" id="LocItemDetail"></div>
+		<div class="eq-table-tr" style='float:left;height:100%;width:43%;' >
+			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="UseLoc" data-options="'component':'PLAT.L.Loc',disabled:true" ></div>
+			<div  style='float:left;' class="eq-table-td eq-table-label"><a id="BLocSure" iconCls="icon-w-ok" href="#" class="hisui-linkbutton">确定</a></div>
+		</div>
+	</div>
+	<div id="MainterItem"  class="webui-popover-content"  style="display: none;">
+		<div class="eq-table-tr" id="MainterItemDetail"></div>
+		<div class="eq-table-tr" style='float:left;height:100%;width:50%;' >
+			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser',disabled:true" id="MaintUser"></div>
+			<div  style='float:left;' class="eq-table-td eq-table-label"><a id="BMainterSure" iconCls="icon-w-ok" href="#" class="hisui-linkbutton">确定</a></div>
+		</div>
+	</div>
+	<!--add by QW20200604 BUG:QW0066 webui-popover end-->
+	<!--add By QW20200707 BUG:QW0069 webui-popover begin-->
+	<div id="ActionItem"  class="webui-popover-content"  style="display: none;">
+		<div class="eq-table-tr" id="ActionItemDetail"></div>
+		<div class="eq-table-tr" style='float:left;height:100%;width:50%;' >
+			<div  style='float:left;' class="eq-table-td eq-table-label"><a id="BActionSure" iconCls="icon-w-ok" href="#" class="hisui-linkbutton">确定</a></div>
+		</div>
+	</div>
+	<!--add By QW20200707 BUG:QW0069 webui-popover end-->
+	<input type="hidden" id="QXType" value=#(QXType)#>
+	<input type="hidden" id="ReadOnly" value=#(ReadOnly)#>
+	<input type="hidden" id="vData" value=#(vData)#>
+	<!--add by QW20200604 BUG:QW0066 begin-->
+	<input type="hidden" id="UseLocDR" value="">
+	<input type="hidden" id="MaintUserDR" value="">
+	<input type="hidden" id="DatePattern" value="1">
+	<input type="hidden" id="LocPattern" value="1">
+	<input type="hidden" id="UserPattern" value="1">
+	<!--add by QW20200604 BUG:QW0066 End-->
+	<input type="hidden" id="ActionID" value="0"><!--Add By QW20200707 BUG:QW0069-->
+	<script type="text/javascript" src="../scripts_lib/echarts3.6.2/echarts.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/common/echarts.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/plat/main.js"></script>
+</body>
+</HTML>

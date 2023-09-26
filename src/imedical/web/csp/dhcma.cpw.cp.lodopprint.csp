@@ -1,0 +1,251 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<TRAK:HEAD></TRAK:HEAD>
+		<script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/ToolToPrint.js"></script> 
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set PixelsPerInch=144
+			Set tableWidth    = PixelsPerInch*(120-10)\25.4
+			Set tableHeight   = PixelsPerInch*(150-10)\25.4
+		</script>
+		<STYLE type="text/css">
+		#Form{
+			widht: #(tableWidth)#px;
+			height: #(tableHeight)#px;
+			margin:0;
+			font-family:"宋体";
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<div id="Form">
+		<table border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<script language="Cache" RUNAT="SERVER">
+				set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			    Set EpisodeID=$g(%request.Data("EpisodeID",1))
+			    
+			    Set HeadInfo=##Class(DHCMA.CPW.CPS.LodopSrv).GetHeadInfo(EpisodeID)
+			    Set CPWDesc=$Lg(HeadInfo,1)
+			    Set CPWAdmit=$Lg(HeadInfo,2)
+			    Set PatInfo=$Lg(HeadInfo,3)
+			    Set DaysInfo=$Lg(HeadInfo,4)
+			    
+			    Set ImplInfo=##Class(DHCMA.CPW.CPS.LodopSrv).GetImplInfo(EpisodeID)
+			    Set EpisCount=$Lg(ImplInfo,1)	//阶段个数
+			    Set EpisDescList=$Lg(ImplInfo,2)
+			    Set TimeList=$Lg(ImplInfo,3)
+			    Set DocSignList=$Lg(ImplInfo,4)
+			    Set NurSignList=$Lg(ImplInfo,5)
+			    Set ItemZLList=$Lg(ImplInfo,6)
+			    Set ItemYZList=$Lg(ImplInfo,7)
+			    Set ItemHLList=$Lg(ImplInfo,8)
+			    Set VarList=$Lg(ImplInfo,9)
+			    
+			    Set ColCount=3					//每页纸打印列数
+ 				Set LoopCount=(EpisCount\ColCount)	//循环次数、纸张页数(-1)
+ 				Set:(EpisCount#ColCount)>0 LoopCount=LoopCount+1
+			</script>
+			<caption><b>#(CPWDesc)#</b></caption>
+			<thead>
+				<tr>
+					<th width="100%" colspan="4" style="text-align:left;">#(CPWAdmit)#</th>
+				</tr>
+				<tr>
+					<th width="100%" colspan="4" style="text-align:left;">#(PatInfo)#</th>
+				</tr>
+				<tr>
+					<th width="100%" colspan="4" style="text-align:left;">#(DaysInfo)#</th>
+				</tr>
+			</thead>
+			<CSP:LOOP COUNTER="LoopInd" FROM="1" TO=#(LoopCount)#>
+				<tr>
+					<td width="10%" style="text-align:center;">步骤</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set EpisDesc=$Lg(EpisDescList,EpisNo)
+						</script>
+			    		<td width="30%" style="text-align:center;">
+						   #(EpisDesc)#
+						</td>
+				    </CSP:LOOP>
+				</tr>
+				<tr>
+					<td width="10%" style="text-align:center;">时间</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set TimeInfo=$Lg(TimeList,EpisNo)
+						</script>
+			    		<td width="30%" style="text-align:center;">
+						   #(TimeInfo)#
+						</td>
+				    </CSP:LOOP>
+				</tr>
+				<tr>
+					<td width="10%" style="text-align:center;vertical-align:middle;">主要<br />诊疗<br />工作</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set ItemZL=$Lg(ItemZLList,EpisNo)
+						</script>
+			    		<td width="30%" style="vertical-align: top;">
+							<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="2" TO=#($Ll(ItemZL))#>
+								<CSP:IF CONDITION="+$Lg(ItemZL,ZLInd)=1">
+									<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;left:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemZL,ZLInd+1))#
+								<br />
+							</CSP:LOOP>
+						</td>
+				    </CSP:LOOP>
+				</tr>
+				<tr>
+					<td width="10%" style="text-align:center;vertical-align:middle;">重点<br />医嘱</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set ItemYZ=$Lg(ItemYZList,EpisNo)
+						</script>
+			    		<td width="30%" style="vertical-align: top;">
+							<CSP:LOOP COUNTER="YZInd" FROM="1" STEP="2" TO=#($Ll(ItemYZ))#>
+								<CSP:IF CONDITION="+$Lg(ItemYZ,YZInd)=1">
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;left:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemYZ,YZInd+1))#
+								<br />
+							</CSP:LOOP>
+						</td>
+				    </CSP:LOOP>
+				</tr>
+				<tr>
+					<td width="10%" style="text-align:center;vertical-align:middle;">主要<br />护理<br />工作</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set ItemHL=$Lg(ItemHLList,EpisNo)
+						</script>
+			    		<td width="30%" style="vertical-align: top;">
+							<CSP:LOOP COUNTER="HLInd" FROM="1" STEP="2" TO=#($Ll(ItemHL))#>
+								<CSP:IF CONDITION="+$Lg(ItemHL,HLInd)=1">
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;left:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemHL,HLInd+1))#
+								<br />
+							</CSP:LOOP>
+						</td>
+				    </CSP:LOOP>
+				</tr>
+				<tr>
+					<td width="10%" style="text-align:center;vertical-align:middle;">变异<br />情况</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set xVarList=$Lg(VarList,EpisNo)
+						</script>
+			    		<td width="30%" style="vertical-align: top;">
+							<CSP:LOOP COUNTER="VarInd" FROM="1" TO=#($Ll(xVarList))#>
+								#(VarInd)#、#($Lg(xVarList,VarInd))#
+								<br />
+							</CSP:LOOP>
+						</td>
+				    </CSP:LOOP>
+				</tr>
+				<tr>
+					<td width="10%" style="text-align:center;">护士<br />签名</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set NurSign=$Lg(NurSignList,EpisNo)
+			    			Set UserID=$Lg(NurSign,1)
+			    			Set ImgBase64=##class(DHCMA.CPW.CPS.LodopSrv).GetUserImg(UserID)
+						</script>
+			    		<td width="30%" style="vertical-align:middle;">
+							#($Lg(NurSign,2))# <img src="" name="TDSign" UserID=#(UserID)# ImgBase64=#(ImgBase64)#>
+						</td>
+				    </CSP:LOOP>
+				</tr>
+				<tr>
+					<td width="10%" style="text-align:center;">医师<br />签名</td>
+				    <CSP:LOOP COUNTER="EpisInd" FROM="1" TO=#(ColCount)#>
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=EpisInd+((LoopInd-1)*ColCount)
+			    			Set DocSign=$Lg(DocSignList,EpisNo)
+			    			Set UserID=$Lg(DocSign,1)
+			    			Set ImgBase64=##class(DHCMA.CPW.CPS.LodopSrv).GetUserImg(UserID)
+						</script>
+			    		<td width="30%" style="vertical-align:middle;">
+							#($Lg(DocSign,2))# <img src="" name="TDSign" UserID=#(UserID)# ImgBase64=#(ImgBase64)#>
+						</td>
+				    </CSP:LOOP>
+				</tr>
+			</CSP:LOOP>
+		</table>
+	</div>
+	<!--
+	<div style="position: fixed;top: 200px;right: 100px;">
+		<button type="button" onclick="javascript:PREVIEWForm();"><b>预览打印</b></button>
+	</div>
+	<div style="position: fixed;top: 240px;right: 100px;">
+		<button type="button" onclick="javascript:PrintForm();"><b>直接打印</b></button>
+	</div>
+	-->
+    <script language="javascript" type="text/javascript">
+        var IsCASign=true;
+        
+        if(IsCASign){
+	        var TDSignArr=document.getElementsByName("TDSign");
+	        for(ind=0,len=TDSignArr.length;ind<len;ind++){
+	        	var theTD=TDSignArr[ind];
+	        	var UserID=theTD.getAttribute("UserID");
+	        	var ImgBase64=theTD.getAttribute("ImgBase64");
+	        	//console.log(UserID)
+	        	//console.log(ImgBase64)
+	        	if(ImgBase64){
+	        		var BaseImg= new ActiveXObject("Base64IMGSave.ClsSaveBase64IMG");
+					var sReigstNo = UserID;
+					var sFiletype= "jpg"
+			       var rtn=BaseImg.WriteFile(sReigstNo,ImgBase64,sFiletype);
+			       if(rtn){
+			           var imgUrl="c:\\"+UserID+".jpg"
+    					theTD.setAttribute("src",imgUrl)
+			       } 
+	        	}
+	        }
+        }
+        
+        /*
+		var LODOP; //声明为全局变量
+		function PREVIEWForm(){
+			LODOP=getLodop();  
+			LODOP.PRINT_INIT("打印控件功能演示_Lodop功能_打印表格");
+			//LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);    //宽度溢出缩放
+			LODOP.ADD_PRINT_HTM("1mm","1mm","100%","100%",document.getElementById("Form").innerHTML);
+			LODOP.PREVIEW();			
+		};
+		function PrintForm(){
+			LODOP=getLodop();  
+			LODOP.PRINT_INIT("打印控件功能演示_Lodop功能_打印表格");
+			//LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);    //宽度溢出缩放
+			LODOP.ADD_PRINT_HTM("1mm","1mm","100%","100%",document.getElementById("Form").innerHTML);
+			LODOP.PRINT();			
+		};
+		*/
+	</script>
+	
+	<OBJECT ID='ClsSaveBase64IMG' CLASSID='CLSID:F6E5F767-D0E0-4311-AAFF-5EB0385F68A8' CODEBASE='../addins/client/ClsSaveBase64IMG.CAB#version=1,0,0,5'></OBJECT>
+	</body>
+</html>

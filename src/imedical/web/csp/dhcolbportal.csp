@@ -1,0 +1,231 @@
+<HTML>
+<HEAD>
+
+<!-- Put your page Title here -->
+<TITLE>	DHC OLB Portal </TITLE>
+<!--SCRIPT type="text/javascript" src="../scripts/websys.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/websys.listrows.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/websys.List.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/websys.List.Tools.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="/csp/broker/cspbroker.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="/csp/broker/cspxmlhttp.js"></SCRIPT-->
+<STYLE type='text/css'>
+td{
+    font-size: 16px
+}
+.fixedHeaderTr    
+{
+	position:relative;    
+	top:expression(this.offsetParent.scrollTop); 
+	backgroup:blue;
+}
+.mainDiv    
+{    
+	overflow:auto;  
+	height:expression((document.body.clientHeight-this.offsetTop-20>this.children[0].offsetHeight)?(this.children[0].offsetHeight+20)   :   (document.body.clientHeight-this.offsetTop-20));
+}
+.maintitle{
+	font-size:10pt;
+	color:#000000;
+	padding-left: 70px;
+	width: 100%;
+	height:49px;
+	background-image: url(../images/maintitle.gif);
+	background-repeat: no-repeat;
+	font-weight: bold;
+	vertical-align: middle;
+	text-align: left;
+}
+.clsLookUpDateDayTitle
+{
+	BACKGROUND-COLOR: #54a7ff;
+	TEXT-ALIGN: center;
+	FONT-SIZE: 10pt;
+	color:#ffffff;
+	FONT-WEIGHT: bold;
+	BORDER: 1px solid #317dcd;
+}
+</STYLE>
+
+</HEAD>
+
+<BODY>
+<DIV>
+<SCRIPT language=cache RUNAT=SERVER>
+ 	n (%request)
+ 	s ServerIP=$G(%request.Data("ServerIP",1))
+ 	s ComputerIP=$G(%request.Data("ComputerIP",1))
+ 	
+ 	//w !," <APPLET NAME='CacheCSPBroker' ARCHIVE='cspbroker.jar' CODEBASE='/csp/broker' CODE='cspbroker.class' WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>"
+ 	w !,"<table cellspacing=0 border=0 valign=top style='margin-left:0px; margin-top:0px;top:0;left:0;width:100%;height:100%'>"
+ 	w !," <tr>"
+ 	w !," <table  cellspacing=3 cellpadding=3 border=1 width=100% style='margin-left:0px; margin-top:0px;top:0;'>"
+ 	w !," <td class=maintitle >DHC OLB Portal</td>"
+ 	w !," </table>"
+ 	w !," <table  cellspacing=3 cellpadding=3 border=1 width=100% style='margin-left:0px; margin-top:0px;top:0;'>"
+ 	w !," <tr>"
+	w !," <td><label id='cServerIP' noWrap>服务器IP:</label><input id='ServerIP' name='ServerIP'></td>"
+	w !," <td><label id='cClientIP' noWrap>客户端IP:</label><input id='ClientIP' name='ClientIP'></td>"
+	w !," <td class='' noWrap><a href='#' id='Search' name='Search'>查询</A></td>"
+	w !," <td><label id='cTimes'>时间间隔:</label><input id='Times' name='Times' value='30'></td>"
+	w !," <td><input id='AutoRefresh' name='AutoRefresh' type='checkbox'><label>自动刷新</label></td>"
+	w !," </tr>"
+  	w !," </table>"
+	w !," <tr><td> </td></tr>"
+	w !," </table>"
+	////w !," <td><label id='cTimes'>时间间隔:</label><input id='Times' name='Times' style='WIDTH: 50px;' value='30'></td>"
+	
+ 	s tableWidth=1000
+ 	s cellWidth=60
+ 	/////////cellWidth!^name^desc
+    s varStr="100!ServerIP!服务器IP^100!ComputerIP!客户端IP^100!ComputerMac!客户端Mac^100!ComputerName!客户端名字^100!ConnUpdateUser!登录用户^100!ConnDateTime!时间^100!Note!备注说明"
+    s varCount=$l(varStr,"^")
+    i varStr="" s varCount=0
+    s tableWidth=1024
+    i varCount*100>tableWidth s tableWidth=varCount*100
+	
+	w !,"<div class='mainDiv'>"
+	w !,"  <table class='tblList' id='tDHCOLB' Name='tDHCOLB' cellspacing=0 cellpadding=1 border=1 width='"_tableWidth_"px' style='padding-top:2px'>"
+	w !,"  <thead>"
+	w !,"   <tr class='fixedHeaderTr'>"
+	w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'><label id='seleitem' >选择</label></td>"
+	f i=1:1:varCount d
+	.s varParm=$p(varStr,"^",i)
+	.s varCellWidth=$p(varParm,"!",1)
+	.s varName=$p(varParm,"!",2)
+	.s varDesc=$p(varParm,"!",3)
+	.w !,"<td align='center' width="_(varCellWidth)_" class='clsLookUpDateDayTitle'>"_varDesc_"</td>"
+	q
+
+ 	if vartyp'="" {
+        w !,"<div class='mainDiv'>"
+        w !,"  <table class='tblList' id='tDHCOLB' Name='tDHCOLB' cellspacing=0 cellpadding=1 border=1 width='"_tableWidth_"px' style='padding-top:2px'>"
+        w !,"  <thead>"
+        
+        w !,"   <tr class='fixedHeaderTr'>"
+        w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'><label id='seleitem' >选择</label></td>"
+        f i=1:1:varCount d
+        .s varId=$p(varStr,"^",i)
+        .s varName=$p(^DHCCLNurseExec("Var",varId),"^",2)
+        .s codeList(i)=varName
+        .s data(varName)=""
+        .s varDesc=$p(^DHCCLNurseExec("Var",varId),"^")
+        .i varName'="arcimDesc" w !,"<td align='center' width="_(1.5*cellWidth)_" class='clsLookUpDateDayTitle'>"_varDesc_"</td>"
+        .e  w !,"<td align='center' width="_(2*cellWidth)_" class='clsLookUpDateDayTitle'>"_varDesc_"</td>"
+        //w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'>"_"admId"_"</td>"
+        w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'>"_"oeoriId"_"</td>"
+        w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'>"_"placerCode"_"</td>"
+        w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'>"_"disposeStatCode"_"</td>"
+        w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'>"_"tmpPrtFlag"_"</td>"
+
+        w !,"</tr>"
+        w !,"  </thead>"
+ 
+        ; print table
+        w !,"  <tbody>"
+        i (userId'="")
+        {
+         	i $d(^TMP("NurQuery",userId,$i))
+	 	    {
+	 	 	    k ^TMP("NurQuery",userId,$i)
+	 	    }
+ 	    }
+	 	if userId="" q
+	    s tmpRes=##Class(web.DHCNurCom).FindPatient(wardid,RegNo,userId,"I","","",wardProGroupId) 
+	    s patstr=##Class(web.DHCLCNUREXCUTE).GetAllPatient("","",userId)
+	    s num=$l(patstr,"^")
+	    i patstr="" s num=0 //ypz 070108
+	    s ^DHCCLNurseExec("gapordnum",userId)=0  //$ZTH("18:30") //
+	    k ^DHCCLNurExec("gapname",userId)
+	    s varId=0 ;初始化变量
+	    f  s varId=$o(^DHCCLNurseExec("Var",varId)) q:varId=""  d
+	        .s varName=$p(^DHCCLNurseExec("Var",varId),"^",2)
+	        .s data(varName)=""
+	    
+	    s preTime=$p($h,",",2)
+	    s rowIndex=0
+	    k ^TMP("NurPrint",userId)
+	    s ^TMP("NurPrint",userId,"j")=$i
+	    f i=1:1:num
+	    {
+	     	s pat=$p(patstr,"^",i)
+	     	s admId=$p(pat,"!",1)
+	     	
+	     	s curWardId=$p($g(^PAADM(admId)),"^",70)
+	     	s patTempLoc=$P($g(^PAADM(admId)),"^",74)
+	     	s locType="" //ypz 070723
+	     	i Loc'="" s locType=$p(^CTLOC(Loc),"^",13) //ypz 070723
+	     	i ((curWardId'="")&(curWardId=wardid))!(locType="OP")!(patTempLoc'="") //ypz 070723
+	     	{
+	     		//s lisnum=##Class(web.DHCLCNUREXCUTE).GetOrderItem("","",admId,StartDate,EndDate,userId,wardid,vartyp,gap,Loc,doctyp,longNewOrdAdd,RollOrd)
+            	s lisnum=##Class(web.DHCLCNUREXCUTE).GetOrderItem("","",admId,StartDate,EndDate,userId,wardid,vartyp,gap,Loc,doctyp,longNewOrdAdd,onlyNewOrd,ArcimDR,pdaExec)
+            	s curTmpId=$p(lisnum,"^",2),lisnum=+lisnum
+	     		f j=1:1:lisnum
+	     		{  
+		            s rowIndex=rowIndex+1
+		    		s ordstr=##Class(web.DHCLCNUREXCUTE).GetData("","",j,userId,curTmpId)
+		    		s ordnum=$I(^TMP("NurPrint",userId,$i))
+	
+		    		s ^TMP("NurPrint",userId,$i,ordnum)=ordstr
+	          		s data("admId")=admId
+	          		s oeoriId=$p(ordstr,"!",varCount+1)
+	          		s placerCode=$p(ordstr,"!",varCount+2)
+	          		i placerCode="" s placerCode="&nbsp"
+	                s cellclass=""
+	                //s placerCode="B"
+	                i placerCode="A" s cellclass="Purple"
+	                i placerCode="C" s cellclass="Gray"
+	                i placerCode="R" s cellclass="Red"
+	                i placerCode="P" s cellclass="Fuchsia"
+	                i placerCode="Y" s cellclass="Yellow"
+	                i placerCode="G" s cellclass="Green"
+	                i placerCode="H" s cellclass="Black"
+	                i placerCode="B" s cellclass="Blue"
+	                i placerCode="W" s cellclass="White"
+	                i placerCode="O" s cellclass="Brown"
+	                i placerCode="Q" s cellclass="Orange"
+	          		s disposeStatCode=$p(ordstr,"!",varCount+3)
+	          		s tmpPrtFlag=$p(ordstr,"!",varCount+4)
+	          		i tmpPrtFlag="" s tmpPrtFlag="&nbsp" 
+			        w !,"<tr class="_disposeStatCode_">"
+			        w !,"<td width="_cellWidth_" ><input id='seleitemz"_rowIndex_"' name='seleitemz"_rowIndex_"' type='checkbox' onclick='SelectRow("_rowIndex_");'></td>"
+		      		f ivar=1:1:varCount 
+		      		{
+			   			s varName=$p(^DHCCLNurseExec("Var",$p(varStr,"^",ivar)),"^",2)
+	           			s data(varName)=$p(ordstr,"!",ivar)
+			            //w !,"<td rowspan='"_ivar_"' width="_cellWidth_" style='text-align:center;'><div style=' width:12px'>"_data(varName)_"<div></td>"
+			            //w !,"<td rowspan='"_1_"' width="_cellWidth_" style='text-align:center;'><div style=' width:60px'>"_data(varName)_"<div></td>"
+	                    //w !,"<td  class='"_cellclass_"'><label title='"_celltip_"'>"_data(varName)_"</label></td>"
+	                    s disVal=data(varName)
+	                    i codeList(ivar)="placerNo" w !,"<td><input id='"_codeList(ivar)_"z"_rowIndex_" name='Copies' style='WIDTH:"_(1.5*cellWidth)_"; HEIGHT: 22px' value='"_disVal_"'></td>"
+	                    e  d
+	                    .i (disVal="")!(disVal=" ") s disVal="&nbsp"
+	                    .i codeList(ivar)'="arcimDesc" w !,"<td id='"_codeList(ivar)_"z"_rowIndex_"' width="_(1.5*cellWidth)_" >"_disVal_"</label></td>"
+	                    .e  w !,"<td id='"_codeList(ivar)_"z"_rowIndex_"' class='"_cellclass_"' width="_(2*cellWidth)_" >"_disVal_"</label></td>"
+	          		}
+	          		w !,"<td style='display:none;'><input id='EpisodeIDz"_rowIndex_"' name='EpisodeIDz"_rowIndex_"' type='hidden' value="_admId_"> "
+	          		w !,"<td id='oeoriIdz"_rowIndex_"' width="_cellWidth_" >"_oeoriId_"</label></td>"
+	          		w !,"<td id='placerCodez"_rowIndex_"' width="_cellWidth_" >"_placerCode_"</label></td>"
+	          		w !,"<td id='disposeStatCodez"_rowIndex_"' width="_cellWidth_" >"_disposeStatCode_"</label></td>"
+	          		w !,"<td id='tmpPrtFlagz"_rowIndex_"' width="_cellWidth_" >"_tmpPrtFlag_"</label></td>"
+	          		w !,"</tr>"
+		    	}
+	     	}
+		}
+	    s ^DHCCLNurseExec("gapTime",userId)= $p($H,",",2) ///$p($h,",",2)
+	    k ^TMP("NurQuery",userId,$i) //070717
+	    s ^ypzTmp("totalCount")=rowIndex_"/"_$p($h,",",2)_"/"_($p($h,",",2)-preTime)
+	
+	 	w !,"  </tbody>"
+		w !,"  </table>"
+ 	}
+	w !,"  </div>"
+</SCRIPT>
+</DIV>
+
+<SCRIPT language=javascript>
+	t['OrdExcute']='执行';
+	//document.body.onload=BodyLoadHandler;
+</SCRIPT>
+</BODY>
+</HTML>

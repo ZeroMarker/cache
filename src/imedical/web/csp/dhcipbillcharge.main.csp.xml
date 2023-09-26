@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 736U)" ts="2017-03-01 15:59:40">
+<CSP name="csp/dhcipbillcharge.main.csp" application="/dthealth/web/" default="1"><![CDATA[
+<!-- 
+ * FileName:dhcipbillcharge.main.csp
+ * Anchor: Lid
+ * Date: 2014-03-06
+ * Function: 新版住院收费主界面--jQuery easyUI
+ * Description: 定义主体框架
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<HTML>
+<!--DOCTYPE HTML-->
+<HEAD>
+<!--meta http-equiv="x-ua-compatible" content="IE=edge"-->
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<style type="text/css">
+
+</style>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s Guser=$g(%request.Data("guser",1))   ;用户Dr
+ s Group = $g(%request.Data("group",1)) ;安全组Dr
+ s GuserName=$g(%request.Data("guserName",1))   ;用户Dr
+ s GuserCode=$g(%request.Data("guserCode",1))   ;用户Dr
+ s GroupDesc = $g(%request.Data("groupDesc",1)) ;安全组Dr
+</Script>
+<script language="Cache" runat="server">
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction() //读卡
+</script>
+
+<!--导入jQuery 类库-->
+<JQUERY:EASYUI135></JQUERY:EASYUI135>
+<script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	}; 
+	
+	//$.cachedScript('../scripts/dhcipbill/dhcipbillcharge/DHCIPBillPatList.js').done(function(){ 
+		//...
+	//});
+</script>
+<script type="text/javascript">
+	//全局变量，链接时使用
+	var m_Adm = "", m_BillNo="";
+	var frm = parent.parent.document.forms['fEPRMENU'];
+	var frmEpisodeID = frm.EpisodeID;
+	var frmBillID = frm.BillRowIds;
+	var m_Adm = frmEpisodeID.value;
+	var m_BillNo = frmBillID.value;
+	frmEpisodeID.value = "";
+</script>
+<!--css 和js的调用在IPBILL.ChargeCommon.csr中-->
+<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/dhcjs/themes/default/dhc.css' />
+<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcipbillcharge.css' />
+<script type='text/javascript' src='../scripts/dhcbill/plugins/calendar-js/js/WdatePicker.js'></script>
+<script type='text/javascript' src='../scripts/dhcbill/dhcjs/dhc.js'></script>
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+<script type='text/javascript' src='../scripts/DHCInsuPort.js' charset='GB18030'></script>
+<script type='text/javascript' src='../scripts/UDHCJFIPInsu.js' charset='GB18030'></script>
+<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+<script type='text/javascript' src='../scripts/udhcjfdayprint.js' charset='GB18030'></script>
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.JS'></script>
+<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcjfconfig.js' charset='GB18030'></script>
+<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcipbillchargecheckfee.js' charset='GB18030'></script>
+<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcipbillchargecontrol.js' charset='GB18030'></script>
+<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcipbillchargesearch.js' charset='GB18030'></script>
+<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcipbillchargeview.js ' charset='GB18030'></script>
+<!--script type='text/javascript' src='../scripts/dhcbill/dhcjs/loader.js'></script-->
+
+</HEAD>
+<body class="easyui-layout">
+    <div data-options="region:'center',border:false">   
+    	<!--头部查询信息及基本信息/*#dee8f6*/-->
+		<div id="chargeTop" class="chargeTop" style='width:100%;height:9.9%;display:block;'>
+			<div id="chargeSearch">
+				<table id='tQueryPanel' class="chargeTable">
+					<tr class="chargeTr">
+						<td class="tdspace"></td>
+						<td>就诊列表:</td><td><input id="admList" type="text"></input></td><td class="tdspace"></td>
+						<td>登记号:</td><td><input id="patientNO" type="text"></input></td><td class="tdspace"></td>
+				
+						<td>卡类型:</td><td><input id="cardTypeDR" type="text"></input></td><td class="tdspace"></td>
+						<td>姓名:</td><td class="patInfo" style="width:80px"><label id="patName"></label></td><td class="tdspace"></td>
+						<td>年龄:</td><td class="patInfo"><label id="patAge"></label></td><td class="tdspace"></td>
+						<td><a id="btnReadCard" href="#" class="easyui-linkbutton" >读卡</a></td><td class="tdspace"></td>
+					</tr>
+					<tr class="chargeTr">
+						<td class="tdspace"></td>
+						<td>结算状态:</td><td><input id="chargeStatus" type="text"></input></td><td class="tdspace"></td>
+						<td>病案号:</td><td><input id="medicareNO" type="text"></input></td><td class="tdspace"></td>
+						<td>卡&nbsp;&nbsp;号:</td><td><input id="cardNO" type="text"></input></td><td class="tdspace"></td>
+						<td>性别:</td><td class="patInfo"><label id="patSex"></label></td><td class="tdspace"></td>
+						<td><img id="patDetBtn" src='../images/webemr/regalert.gif' style="cursor:pointer" /></td><td class="patInfo"></td><td class="tdspace"></td>
+						<td><a id="clear" href="#" class="easyui-linkbutton">清屏</a></td><td class="tdspace"></td>
+					</tr>
+				</table>
+			</div>
+			<!--div id="patInfo">
+				<table id='tPatPanel'  class="chargeTable">
+					<tr class="chargeTr">
+						<td>姓名:</td><td><label id="patName"></label></td>
+						<td>年龄:</td><td><label id="patAge"></label></td>
+					</tr>
+					<tr class="chargeTr">
+						<td>性别:</td><td><label id="patSex"></label></td>
+						<td><img id="patDetBtn" src='../images/webemr/regalert.gif' style="cursor:pointer" /></td>				
+					</tr>
+				</table>
+			</div-->
+		</div>
+
+        <div style="width:100%;height:90%;">
+        	 <div id="chargeTabs" class="easyui-tabs" data-options="fit:true,border:true">
+				<div id="patListTab" title="病人列表">
+					<div class="easyui-layout" data-options="fit:true,border:false">   
+					    <div id="panelLedger" data-options="region:'east',collapsible:false,title:'分类信息',split:false,border:false" style="width:220px;padding:2px;">
+					    	<table id="tLedger"></table>
+					    </div>   
+					    <div data-options="region:'center',border:false" >
+					    	<div class="easyui-layout" data-options="fit:true,border:false">        
+							    <div id="panelPatList" data-options="region:'center',border:false">
+							    	<table id="tPatList"></table>
+							    </div>
+							    <div data-options="region:'south',border:false" style="height:280px;">
+							    	<div class="easyui-layout" data-options="fit:true,border:false">        
+									    <div id="layoutPaym" data-options="region:'center',border:false">
+									    	<div id="pmTool">
+									    		<span class='tipBalance'>平衡金额：</span><span id="tipBalance" class='tipBalance'>0</span>
+									    		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									    		<span class='tipAmt'>应填金额：</span><span id="tipAmt" class='tipAmt'></span>
+									    	</div>
+									    	<table id="tPaymList"></table>
+									    </div>
+									    <div id="layoutAmtBtn" data-options="region:'east',border:false" style="width:500px;"  >
+							    			<span id="chargeAmt">
+												<table id="tChargeAmt">
+													<tr class="chargeTr">
+														<td>可用发票&nbsp;:</td>
+														<td>
+															<input id="currentInv" type="text"></input>
+															<input id="currentInvId" type="hidden"></input>
+														</td>
+								
+													</tr>
+													<tr class="chargeTr">
+														<td>总&nbsp;&nbsp;金&nbsp;&nbsp;额:</td>
+														<td><input id="totleAmt" type="text"></input></td>
+													</tr>
+													<tr class="chargeTr">
+														<td>自付金额&nbsp;:</td>
+														<td>
+															<input id="patShareAmt" type="text"></input>
+															<input id="disCountAmt" type="hidden"></input>
+															<input id="patPayorAmt" type="hidden"></input>
+														</td>
+														
+													</tr>
+													<tr class="chargeTr">
+														<td>医保金额&nbsp;:</td>
+														<td>
+															<input id="patInsuAmt" type="text"></input>
+														</td>
+														
+													</tr>
+													<!--tr class="chargeTr">
+														<td>总&nbsp&nbsp;押&nbsp;&nbsp;金:</td><td><input id="totleDeposit" type="text"></input></td>
+													</tr-->
+													<tr class="chargeTr">
+														<td>结算押金&nbsp;:</td>
+														<td>
+															<input id="totleDeposit" type="hidden"></input>
+															<input id="selDepAmt" type="text"></input>
+															<img id="depDetailBtn" src='../images/webemr/addcharge.gif' /> <!--addcharge.gif、Cashier.gif-->
+														</td>
+													</tr>
+													<tr class="chargeTr">
+														<!--<td>应收/应退:</td><td><input id="patStAmt" type="hidden"></input></td>-->
+														<td><input id="patStAmt" type="hidden"></input></td>
+													</tr>
+													<tr class="chargeTr">
+														<td>应收:</td><td><input id="SAmt" type="text"></input></td>
+													</tr>
+													<tr class="chargeTr">
+														<td>应退:</td><td><input id="TAmt" type="text"></input></td>
+													</tr>
+													<tr class="chargeTr">
+														<td>实收现金&nbsp;:</td><td><input id="patPaidAmt" type="text"></input></td>
+													</tr>
+													<tr class="chargeTr">
+														<td>找&nbsp&nbsp;&nbsp&nbsp;零:</td><td><input id="recOrBackMoney" type="text"></input></td>
+													</tr>
+				
+												</table>
+											</span>
+											<span id="chargeBtn">
+												<table id="tChargeBtn">
+													<tr class="chargeTr">
+														<td><a id="billBtn" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-billBtn">账 单</a></td>
+													</tr>
+													<tr class="chargeTr">
+														<td><a id="insuChargeBtn" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-insuChargeBtn">医保结算</a></td>
+													</tr>
+													<tr class="chargeTr">
+														<td><a id="disChargeBtn" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-disChargeBtn">出院结算</a></td>
+													</tr>
+													<tr class="chargeTr">
+														<td><a id="cancelChargeBtn" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancelChargeBtn">取消结算</a></td>
+													</tr>
+													<tr class="chargeTr">
+														<td><a id="cancelInsuBtn" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancelInsuBtn">取消医保结算</a></td>
+													</tr>
+													<tr class="chargeTr">
+														<td><a id="insuPreChargeBtn" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-insuPreChargeBtn">医保预结算</a></td>
+													</tr>
+													
+												</table>
+											</span>
+									    </div> 
+									 </div>
+							    </div>   
+							</div>
+					    </div>  
+					</div>  
+	    		</div>
+	    		<div id="addDepositTab" title="交押金" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div>
+	    		<div id="refDepositTab" title="退押金" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div>
+	    		<div id="halfBillTab" title="中途结算" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div> 
+	    		<div id="halfBillByOrdTab" title="医嘱拆分账单" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div> 
+	    		<div id="billDetailTab" title="病人费用明细" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div>
+	    		<div id="searchDepDet" title="押金明细查询" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div> 
+	    		<div id="admOrderFee" title="医嘱费用查询" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div>
+	    		<div id="searchTarFee" title="收费项目查询" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div> 
+	    		<!--div id="searchOrdFee" title="医嘱费用查询" data-options="closable:false" style="overflow:auto;padding:0px;display:block;">   
+	    		</div--> 
+	    		
+        	</div>
+        </div>
+       
+    </div>   
+	
+	<!--押金列表-->
+	<div id="depositDetailPanel" style="width:0;height:0;">   
+		<table id="tDepositList"></table>
+	</div>
+	<!--多条件查询-->
+	<div id="chargeSearchPanel"  style="width:0;height:0;margin:auto;">
+		<div class="easyui-layout" data-options="fit:true,split:false">
+			<div class="defaultBgColor defFontSize" data-options="region:'north',split:true" style="height:148px;">
+				<table id='tQueryPanel' style="align:center;margin:auto;">
+					<tr>
+						<td>开始日期:</td><td><input id="searchStDate" type="text"></input></td>
+						<td>结束日期:</td><td><input id="searchEndDate" type="text"></input></td>
+						<td></td>
+						<td><input type="checkbox" id="checkMedical" class="labelForCheckBox"></input></td>
+						<td>
+							<label for="checkMedical" class="labelForCheckBox">医生确认</label>
+						</td>
+						<td><a id="searchBtnFind" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-searchBtnFindBtn">查询</a></td>
+				
+					</tr>
+					<tr>
+						<td>科室:</td><td><input id="searchPatLoc" type="text"></input></td>
+						<td>病区:</td><td><input id="searchPatWard" type="text"></input></td>
+						<td></td>
+						<td><input type="checkbox" id="checkFinal" class="labelForCheckBox"></input></td>
+						<td>
+							<label for="checkFinal" class="labelForCheckBox">护士确认</label>
+						</td>
+						<td><a id="searchBtnClear" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-searchBtnClearBtn">清屏</a></td>
+					</tr>
+					<tr>
+						<td>姓名:</td><td><input id="searchPatName" type="text"></input></td>
+						<td>费别:</td><td><input id="searchAdmReason" type="text"></input></td>
+						<td></td>
+						<td><input type="checkbox" id="checkPayflag" class="labelForCheckBox"></input></td>
+						<td>
+							<label for="checkPayflag" class="labelForCheckBox">财务结算</label>
+						</td>
+					</tr>
+			
+					<tr>
+						<td>发票号:</td><td><input id="searchInvoiceNO" type="text"></input></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><input type="checkbox" id="checkCurAdm" class="labelForCheckBox"></input></td>
+						<td>
+							<label for="checkCurAdm" class="labelForCheckBox">当前在院</label>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',split:true">
+				<table id="tpatAdmList"></table>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCIPBILL">
+			<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			<INPUT TYPE="hidden" name="GetPrintInfo" id="GetPrintInfo" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFPRINTINV.GetPrintInfo"))%>' />
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+			<INPUT TYPE="hidden" name="ReadAccEncrypt" id="ReadAccEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))%>' />
+			<INPUT TYPE="hidden" name="ReadAccExpEncrypt" id="ReadAccExpEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))%>' />
+		</form>
+	</div>
+
+</body> 
+
+</HTML>]]></CSP>
+</Export>

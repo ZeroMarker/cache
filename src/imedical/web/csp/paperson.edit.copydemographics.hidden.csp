@@ -1,0 +1,122 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<HTML XMLNS=TRAK>
+<HEAD>
+</HEAD>
+<BODY>
+
+<server> 
+	// cjb 26/09/2006 56820
+	
+	n PAPERName,PAPERTelH,INDSTDesc,ASSISDesc,CTNATDesc,PAPERNationalResident,PAPERStNameLine1,PAPERForeignAddress,PAPERAddress2,CTCITDesc,CTZIPCode,PROVDesc,CTZIPDesc,REFDDesc,REFDCITYDR,CLNAddress1,REFDForename,doctorCode,PAPERFamilyDoctorClinicDR,PAPMIMedicare,PAPMIMedicareCode,MEDSUFDesc,MedicareExpDate,MedicareExpDateT,MEDSUFDesc,MedicareExpDate,MedicareExpDateT,CTRLGDesc,CTCOUDesc,PREFLDesc,INSTDesc,AUXITDesc,PAPMIVIPFlag,PHospDesc
+	s (PAPERName,PAPERTelH,INDSTDesc,ASSISDesc,CTNATDesc,PAPERNationalResident,PAPERStNameLine1,PAPERForeignAddress,PAPERAddress2,CTCITDesc,CTZIPCode,PROVDesc,CTZIPDesc,REFDDesc,REFDCITYDR,CLNAddress1,REFDForename,doctorCode,PAPERFamilyDoctorClinicDR,PAPMIMedicare,PAPMIMedicareCode,MEDSUFDesc,MedicareExpDate,MedicareExpDateT,MEDSUFDesc,MedicareExpDate,MedicareExpDateT,CTRLGDesc,CTCOUDesc,PREFLDesc,INSTDesc,AUXITDesc,PAPMIVIPFlag,PHospDesc)=""
+	
+	s CopyID=$g(%request.Data("CopyID",1))
+	s Address=1,GP=1,Medicare=1
+	
+	i (CopyID) {
+		d ##Class(web.PAMergePatient).GetPatientDetails(CopyID) 
+		
+		s PAPERName=$g(LIST1(4))
+		s PAPERTelH=$g(LIST2(38))
+		
+		s INDSTDesc=$g(LIST2(141))
+		s ASSISDesc=$g(LIST2(180))
+		s CTNATDesc=$g(LIST2(22))
+		s PAPERNationalResident=##Class(websys.StandardTypeItem).GetDescription("YESNO",$g(LIST2(156)))
+		
+		s PAPERStNameLine1=$g(LIST2(88))
+		s PAPERForeignAddress=$g(LIST2(26))
+		s PAPERAddress2=$g(LIST2(195))
+		s CTCITDesc=$g(LIST2(33))
+		s CTZIPCode=$g(LIST2(35))
+		s PROVDesc=$g(LIST2(113))
+		s CTZIPDesc=$g(CTZIPDesc)
+		
+		s REFDDesc=$g(LIST2(67))
+		s REFDCITYDR=famdoccity
+		s CLNAddress1="" i $g(LIST2(148))'="" s CLNAddress1=##class(web.PACClinic).GetFullClinicAddress($g(LIST2(148)))
+		s REFDForename=$g(famdocforename)
+		s doctorCode=$g(FamilyDoctorDR)
+		s PAPERFamilyDoctorClinicDR=$g(FamilyDoctorClinicDR)
+		
+		s PAPMIMedicare=$g(LIST1(98))
+		s PAPMIMedicareCode=$g(LIST1(106))
+		s MEDSUFDesc=$g(LIST1(105))
+		s (MedicareExpDate,MedicareExpDateT)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(115)))
+		
+		
+		s CTRLGDesc=$g(LIST2(93))
+		s PREFLDesc=$g(LIST2(143))
+		s INSTDesc=$g(LIST2(31))
+		s AUXITDesc=$g(LIST2(142))
+		s PAPMIVIPFlag=##Class(websys.StandardTypeItem).GetDescription("YesNoAnonymous",$g(LIST1(138)))
+		s PHospDesc=$g(LIST2(187))
+		s CTCOUDesc=$g(LIST2(77))
+		
+		
+	}
+	
+	s appKey="FUNCTION",appSubKey="Copy.Demographics"
+	
+	s storedprefs=##Class(websys.Preferences).GetData("SITE",%session.Data("LOGON.SITECODE"),appKey,appSubKey)
+	
+	s allitems=##class(epr.FunctionPreferences).AllItem(appKey,appSubKey)
+	s itmlen=$ll(allitems)
+	
+	s ^zTRAK("cjb",$zn,"storedprefs")=storedprefs
+	s ^zTRAK("cjb",$zn,"allitems")=allitems
+	
+	f field="doctorCode","PAPERFamilyDoctorClinicDR" s fieldvalue=@field d
+	.w !,field,"=",fieldvalue
+	
+	
+	w !,"<SCRIPT language='Javascript'>"
+	
+	w !," var obj; var evt;"
+	w !," var win=window.top.frames['TRAK_main'];"
+	
+	;f i=1:1:itmlen s field=$p($p($lg(allitems,i),"^",1),",",1),nobroker=$s($p($lg(allitems,i),"^",2)="":0,1:1) s selected=+$lg(storedprefs,i) i selected=1 d
+	f i=1:1:itmlen s field=$p($p($lg(allitems,i),"^",1),":",1),nobroker=$p($p($lg(allitems,i),"^",1),":",2) s selected=+$lg(storedprefs,i) i selected=1 d
+	.s fieldvalue=@field d ..SetField(field,fieldvalue,nobroker)
+	.
+	.i field="PAPERStNameLine1" f j=2:1:$l($lg(allitems,i),"^") s field=$p($lg(allitems,i),"^",j) d
+	..s fieldvalue=@field d ..SetField(field,fieldvalue,nobroker)
+	.
+	.i field="REFDDesc" f j=2:1:$l($lg(allitems,i),"^") s field=$p($p($lg(allitems,i),"^",j),":",1) d
+	..s fieldvalue=@field d ..SetField(field,fieldvalue,nobroker)
+	.
+	.i field="PAPMIMedicare" f j=2:1:$l($lg(allitems,i),"^") s field=$p($p($lg(allitems,i),"^",j),":",1) d
+	..s fieldvalue=@field d ..SetField(field,fieldvalue,nobroker)
+	
+	
+	/*
+	f field="PAPERTelH","PAPERName","INDSTDesc","ASSISDesc","CTNATDesc","PAPERNationalResident" d
+	.s fieldvalue=@field d ..SetField(field,fieldvalue)
+	
+	i Address=1 f field="PAPERStNameLine1","PAPERForeignAddress","PAPERAddress2","CTCITDesc","CTZIPCode","PROVDesc","CTZIPDesc" d
+	.s fieldvalue=@field d ..SetField(field,fieldvalue)
+	
+	i Medicare=1 f field="PAPMIMedicare","PAPMIMedicareCode","MEDSUFDesc","MedicareExpDate","MedicareExpDateT" d
+	.s fieldvalue=@field d ..SetField(field,fieldvalue)
+	
+	i GP=1 f field="REFDDesc","REFDCITYDR","CLNAddress1","REFDForename","doctorCode","PAPERFamilyDoctorClinicDR" d
+	.s fieldvalue=@field d ..SetField(field,fieldvalue)
+	*/
+	
+	w !,"</SCRIPT>"
+	
+	
+
+</server>
+</body>
+
+
+<script language=cache method=SetField arguments="field:%String,fieldvalue:%String,nobroker:%String" returntype="">
+	w !!," evt = win.document.createEventObject();"
+	w !," obj=win.document.getElementById('"_field_"');"
+	w !," if ((obj)&&(obj.value=='')) {obj.value='"_fieldvalue_"'; "_$s(nobroker=0:"obj.fireEvent('onchange',evt);",1:"")_"}"
+</script>
+
+
+
+</html>

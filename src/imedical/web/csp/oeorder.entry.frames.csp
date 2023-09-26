@@ -1,0 +1,227 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css"></LINK>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ n PatientID,EpisodeID,mradmID,TWKFL,TWKFLI,TWKFLJ,XCONTEXT,ChartID,RepeatOrders,EPRChartName,params,ChartFrameSize,MultiEpisodeID,AllowUpdateWithNoOrders,SOAPordlist,OEORISttDat,OEORISttTim
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s TWKFLJ=$g(%request.Data("TWKFLJ",1))
+ s XCONTEXT=$s(TWKFL:"W"_TWKFL,1:"")
+ s ChartID=$g(%request.Data("ChartID",1))
+ s RepeatOrders=$g(%request.Data("RepeatOrders",1))
+ ;Log 61471 PeterC 01/11/06: Pass RepeatOrders by TMP global
+ i $g(RepeatOrders)'="",$d(^TMP("WEB","ORDER_ENTRY",%session.SessionId,"RepeatOrderGlb")) d
+ . s RepeatOrders=^TMP("WEB","ORDER_ENTRY",%session.SessionId,"RepeatOrderGlb")
+ . s RepeatOrders=##Class(%CSP.Page).UnescapeURL($g(RepeatOrders))
+ d KillTMP^COEOrdItem13(%session.SessionId)    ; 65489
+ s EPRChartName=$g(%request.Data("EPRChartName",1))
+ s MultiEpisodeID=$g(%request.Data("MultiEpisodeID",1))
+ s AllowUpdateWithNoOrders=$g(%request.Data("AllowUpdateWithNoOrders",1))
+ ;log 61195 TedT set episideid to multiepisodeID too
+ i MultiEpisodeID,$l(MultiEpisodeID,"^")=1 s PatientID=$p($g(^PAADM(%request.Data("MultiEpisodeID",1))),"^",1), EpisodeID=MultiEpisodeID
+ s EpisLoc=$g(%request.Data("EpisLoc",1))
+ ;Log 50088 PeterC 03/03/05
+ s AllowUpdateWithNoOrders=$ZCVT(AllowUpdateWithNoOrders,"O","JS")
+ s EpisLoc=$ZCVT(EpisLoc,"O","JS")
+ s RepeatOrders=$ZCVT(RepeatOrders,"O","JS")
+ s MultiEpisodeID=$ZCVT(MultiEpisodeID,"O","JS")
+ s RepeatOrders=##Class(%CSP.Page).EscapeURL($g(RepeatOrders))
+ s ApptID=%request.Get("apptID")
+ s SOAPordlist=%request.Get("SOAPordlist")
+ ;log60624 TedT
+ s PathwayDR=%request.Get("PathwayDR")
+ ;log60614 TedT
+ s SOAPReferral=%request.Get("SOAPReferral")
+ s ConsultID=%request.Get("ConsultID")
+ ;log60323 TedT
+ s MRDiagnos=%request.Get("MRDiagnos")
+ ;Log 61687 06/12/06 PeterC
+ s StepPathIds=%request.Get("StepPathIds")
+ s RepeatDetails=%request.Get("RepeatDetails")
+ i $g(RepeatDetails)'="" d ClinicalCycleRepeat^COEOrdItem17(RepeatDetails)
+ s BookManually=""
+ s BookManually=%request.Get("BookManually")
+ ; 
+ s OEORISttDat=$g(%request.Data("OEORISttDat",1))
+ s OEORISttTim=$g(%request.Data("OEORISttTim",1))
+ s ConsultID=%request.Get("ConsultID")
+ s ApptID=$g(%request.Data("ApptID",1))
+ s AppointmentFlag=$g(%request.Data("AppointmentFlag",1))
+ s TeethIDs=$g(%request.Data("TeethIDs",1))
+ s TeethUAreas=$g(%request.Data("TeethUAreas",1))
+ s TeethAreas=$g(%request.Data("TeethAreas",1))
+ s TeethPos=$g(%request.Data("TeethPos",1))
+ s TeethNum=$g(%request.Data("TeethNum",1))
+ ;Log 62095 PeterC 19/02/07
+ s ReceiveOrderID=""
+ s ReceiveOrderID=$g(%request.Data("ReceiveOrderID",1))
+ s SelTeethDesc=$g(%request.Data("SelTeethDesc",1))
+ ;
+ i RepeatOrders'="" s ChartID=""
+ i 'ChartID,EPRChartName'="" s ChartID=##Class(epr.Chart).GetIdFromCodeOrDescription(EPRChartName)
+ i 'ChartID d
+ . if EpisodeID &SQL(SELECT PAADM_DepCode_DR INTO :LocID FROM SQLUser.PA_Adm WHERE (PAADM_RowID = :EpisodeID))
+ . if 'EpisodeID s LocID=$g(%session.Data("LOGON.CTLOCID"))
+ . s params=##Class(websys.Preferences).GetDataExPlus($g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.GROUPID")),$g(%session.Data("LOGON.SITECODE")),LocID,XCONTEXT,.app,"ORDER","OEOrder.PrefTabs.EditList")
+ . s ChartID=$lg(params,1)
+ . s ChartFrameSize=$lg(params,2) s ChartFrameSize=$s(ChartFrameSize="":"300,*",1:ChartFrameSize_"%,*")
+ ;
+ n rows,cols
+ s rows="40,*",coldefault=$g(ChartFrameSize,"300,*"),urlEPRdefault="epr.chart.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TWKFLJ="_TWKFLJ_"&CONTEXT="_XCONTEXT
+ i $g(%session.Data("LOGON.ALLOWLAYOUTMANAGER"))="Y" s rows="55,*"
+ s showframe="border=''" s cls="frmborder"
+ s cols=coldefault,urlEPR=urlEPRdefault_"&ChartID="_ChartID
+ i 'ChartID s cols="0,*",showframe="border=0" s urlEPR=""
+ s showframe="border='0'"
+ ; log 54852
+ s showlist=0
+ s showlist=##Class(epr.GroupSettings).GetShowOrderListFrame($g(%session.Data("LOGON.GROUPID")))
+ i MultiEpisodeID,$l(MultiEpisodeID,"^")'=1 s showlist=0
+ ;Log 61687 06/12/06 PeterC 
+ i $g(StepPathIds)'="" s showlist=1
+ i $g(showlist)=1 s rows=rows_",200"
+ ;Log 61471 PeterC 01/11/06: Pass RepeatOrders by TMP global
+ i $g(RepeatOrders)'="" d
+ . s ^TMP("WEB","ORDER_ENTRY",%session.SessionId,"RepeatOrderGlb")=RepeatOrders
+ . s RepeatOrders="Y"
+ ;
+ ; extra details required to pass to order entry screen (OEOrder.Custom)
+ ; JD only pass in active paramaters. Getting a bit close to max URL length
+ n ordentrydetails
+ s ordentrydetails=""
+ s:$g(%request.Data("SUMMFlag",1))'="" ordentrydetails=ordentrydetails_"&SUMMFlag="_$g(%request.Data("SUMMFlag",1))
+ s:$g(PatientID)'="" ordentrydetails=ordentrydetails_"&PatientID="_PatientID
+ s:$g(EpisodeID)'="" ordentrydetails=ordentrydetails_"&EpisodeID="_EpisodeID
+ s:$g(mradm)'="" ordentrydetails=ordentrydetails_"&mradm="_mradm
+ s:$g(TWKFL)'="" ordentrydetails=ordentrydetails_"&TWKFL="_TWKFL
+ s:$g(TWKFLI)'="" ordentrydetails=ordentrydetails_"&TWKFLI="_TWKFLI
+ s:$g(TWKFLJ)'="" ordentrydetails=ordentrydetails_"&TWKFLJ="_TWKFLJ
+ s:$g(MultiEpisodeID)'="" ordentrydetails=ordentrydetails_"&MultiEpisodeID="_MultiEpisodeID
+ s:$g(EpisLoc)'="" ordentrydetails=ordentrydetails_"&EpisLoc="_EpisLoc
+ s:$g(XCONTEXT)'="" ordentrydetails=ordentrydetails_"&CONTEXT="_XCONTEXT
+ s:$g(RepeatOrders)'="" ordentrydetails=ordentrydetails_"&RepeatOrders="_RepeatOrders
+ s:$g(AllowUpdateWithNoOrders)'="" ordentrydetails=ordentrydetails_"&AllowUpdateWithNoOrders="_AllowUpdateWithNoOrders
+ s:$g(ApptID)'="" ordentrydetails=ordentrydetails_"&ApptID="_ApptID
+ s:$g(showlist)'="" ordentrydetails=ordentrydetails_"&showlist="_showlist
+ s:$g(SOAPordlist)'="" ordentrydetails=ordentrydetails_"&SOAPordlist="_SOAPordlist
+ ;
+ s:$g(AppointmentFlag)'="" ordentrydetails=ordentrydetails_"&AppointmentFlag="_AppointmentFlag
+ s:$g(TeethIDs)'="" ordentrydetails=ordentrydetails_"&TeethIDs="_TeethIDs
+ s:$g(TeethUAreas)'="" ordentrydetails=ordentrydetails_"&TeethUAreas="_TeethUAreas
+ s:$g(TeethAreas)'="" ordentrydetails=ordentrydetails_"&STeethAreas="_TeethAreas
+ s:$g(TeethPos)'="" ordentrydetails=ordentrydetails_"&TeethPos="_TeethPos
+ s:$g(TeethNum)'="" ordentrydetails=ordentrydetails_"&TeethNum="_TeethNum
+ s:$g(ReceiveOrderID)'="" ordentrydetails=ordentrydetails_"&ReceiveOrderID="_ReceiveOrderID
+ s:$g(SelTeethDesc)'="" ordentrydetails=ordentrydetails_"&SelTeethDesc="_SelTeethDesc
+ s:$g(OEORISttDat)'="" ordentrydetails=ordentrydetails_"&OEORISttDat="_OEORISttDat
+ s:$g(OEORISttTim)'="" ordentrydetails=ordentrydetails_"&OEORISttTim="_OEORISttTim
+ s:$g(ConsultID)'="" ordentrydetails=ordentrydetails_"&ConsultID="_ConsultID
+ ;Log 61687 06/12/06 PeterC
+ s:$g(StepPathIds)'="" ordentrydetails=ordentrydetails_"&StepPathIds="_StepPathIds
+ s:$g(BookManually)'="" ordentrydetails=ordentrydetails_"&BkMan="_BookManually
+ ;log60624 TedT
+ s:$g(PathwayDR)'="" ordentrydetails=ordentrydetails_"&PathwayDR="_PathwayDR
+ ;log60614 TedT
+ s:$g(SOAPReferral)'="" ordentrydetails=ordentrydetails_"&SOAPReferral="_SOAPReferral
+ s:$g(ConsultID)'="" ordentrydetails=ordentrydetails_"&ConsultID="_ConsultID
+ ;log60323 TedT
+ s:$g(MRDiagnos)'="" ordentrydetails=ordentrydetails_"&MRDiagnos="_MRDiagnos
+ ; 60317
+ s:$g(%request.Data("PhoneOrder",1))'="" ordentrydetails=ordentrydetails_"&PhoneOrder="_$g(%request.Data("PhoneOrder",1))
+ s:$g(%request.Data("RecallSchedID",1)) ordentrydetails=ordentrydetails_"&RecallSchedID="_$g(%request.Data("RecallSchedID",1)) ; JD
+ ;
+ ;<frame name="oeorder_entry" id="oeorder_entry" src="oeorder.custom.csp?PatientBannerExclude=1&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&mradm=#(mradm)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&MultiEpisodeID=#(MultiEpisodeID)#&EpisLoc=#(EpisLoc)#&CONTEXT=#(XCONTEXT)##(ordentrydetails)#&RepeatOrders=#(RepeatOrders)#&AllowUpdateWithNoOrders=#(AllowUpdateWithNoOrders)#&ApptID=#(ApptID)#&showlist=#(showlist)#&SOAPordlist=#(SOAPordlist)#" scrolling="auto" marginwidth="0" marginheight="0" framespacing="0"></frame>
+</SCRIPT>
+<SCRIPT language="Javascript">
+var colsDefault="#(coldefault)#";
+var urlEPRDefault="#(urlEPRdefault)#";
+var eprDefault="#(ChartID)#";
+var Multi="#(MultiEpisodeID)#";
+var AllowUpdateWithNoOrders="#(AllowUpdateWithNoOrders)#";
+var ApptID="#(ApptID)#";
+
+function RedrawEPRChart(chartid,framesize) {
+	var Arr = Multi.split("^");
+	var frmset = document.getElementById('eprframeset');
+	var eprfrm = document.getElementById('oeorder_eprchart');
+	if (chartid && (Arr.length<2)) {
+		frmset.className = "patbannertop";
+		eprfrm.className = "eprleftfrm";
+		if (frmset.cols=="0,*") {
+			//eprfrm.location=urlEPRDefault+"&ChartID="+chartid;
+			frames['oeorder_eprchart'].location=urlEPRDefault+"&ChartID="+chartid;
+		} else {
+			//if (eprfrm.ChartID!=chartid) eprfrm.location=urlEPRDefault+"&ChartID="+chartid;
+			if (frames['oeorder_eprchart'].ChartID!=chartid) frames['oeorder_eprchart'].location=urlEPRDefault+"&ChartID="+chartid;
+		}
+		if (framesize) {
+			colsDefault=""+framesize+"%,*";
+		} else {
+			colsDefault="300,*";
+		}
+		frmset.cols=colsDefault;
+	}
+}
+function NoEPRChart() {
+	var frmset = document.getElementById('eprframeset');
+	if (frmset) {frmset.cols="0,*"; frmset.className="";}
+	var eprfrm = document.getElementById('oeorder_eprchart');
+	if (eprfrm) {eprfrm.className="";}
+}
+
+function NoPABanner() {
+	//alert("NO Banner");
+	var eprfrm = document.getElementById("oeframeset");
+	if (eprfrm) {
+		eprfrm.rows="0,*"; 
+		eprfrm.className="";
+		if ("#(showlist)#"=="1") eprfrm.rows=eprfrm.rows+",200";
+	}
+}
+
+function ResizePABanner() {
+	var eprfrm = document.getElementById("oeframeset");
+	if ((eprfrm)&&((eprfrm.rows!="0,*")||(eprfrm.rows!="0,*,200"))) {
+		var pat=frames['patframe'];
+		if (pat.document.readyState!="complete") {
+			self.setTimeout(ResizePABanner,500);
+		} else { 
+			var patsize=pat.window.document.getElementById("PageContent").offsetHeight;
+			eprfrm.rows=patsize+',*';
+		}
+		if ("#(showlist)#"=="1") eprfrm.rows=eprfrm.rows+",200";
+	}
+}
+
+</SCRIPT>
+<FRAMESET rows="#(rows)#" name="oeframeset" id="oeframeset" #(showframe)# onload="ResizePABanner();">
+	<frame name="patframe" id="patframe" frameborder="no" framespacing="0" noresize
+		src="websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Banner&PatientID=#(PatientID)#&MultiEpisodeID=#(MultiEpisodeID)#&EpisodeID=#(EpisodeID)#&CONTEXT=#(XCONTEXT)#&AllowUpdateWithNoOrders=#(AllowUpdateWithNoOrders)#"></frame>
+	<FRAMESET cols="#(cols)#" scrolling="auto" name="eprframeset" id="eprframeset" #(showframe)#>
+		<frame name="oeorder_eprchart" id="oeorder_eprchart" src="#(urlEPR)#" scrolling="auto"></frame>
+		<frame name="oeorder_entry" id="oeorder_entry" src="oeorder.custom.csp?PatientBannerExclude=1#(ordentrydetails)#" scrolling="auto" marginwidth="0" marginheight="0" framespacing="0"></frame>
+	</FRAMESET>
+	<frame name="orderlist" id="orderlist" frameborder="no" framespacing="0" src="websys.default.csp?WEBSYS.TCOMPONENT=OEOrder.SessionList&EpisodeID=#(EpisodeID)#&PatientID=#(PatientID)#"></frame>
+	
+</FRAMESET>
+<noframes>
+    <body>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5.5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+</html>

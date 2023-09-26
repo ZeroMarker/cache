@@ -1,0 +1,179 @@
+﻿ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+   <head>
+   		<HISUI/>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.group.edit.css"/>
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+		<script type="text/javascript" src="../scripts/websys.js"></script>
+		<script language="cache" runat="server">
+			s episodeID = $Get(%request.Data("EpisodeID",1),"")
+			s userLocID = $Get(%request.Data("CTlocID",1),"")
+			s userID = $Get(%request.Data("UserID",1),"")
+			s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+			s episodeType = $p(^PAADM(episodeID),"^",2)
+			s mradm = $p($g(^PAADM(episodeID)),"^",61)
+			s cardNo = ""
+			s cardRowId = $o(^DHCCARDi("CF",0,"PAPMIDR",episodeID,""))
+			s:(cardRowId '= "") cardNo = $p(^DHCCARD("CF",cardRowId),"^",2)	
+			s userLocCode = $Case(%session.Get("LOGON.CTLOCID"),"":"",:$p(^CTLOC(%session.Get("LOGON.CTLOCID")),"^",1))
+			s messageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("MessageScheme")
+			s:(messageScheme="") messageScheme = "{'alert':'2000','warning':'5000','forbid':'7000','height':'30','fontsize':'14'}"
+	   		s autoSave = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("AutoSave")
+			s:(autoSave = "") autoSave = "{'switch':'off','interval':''}"
+			s requiredFlag = ##Class(EMRservice.SystemParameter).GetRequiredFlag()
+			//是否启用病历信息订阅与发布
+			s Observer = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("Observer")
+			s:(Observer = "") Observer = "N"
+			//是否启用病历加锁
+			s isLock = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EnableLock")
+			s:(isLock = "") isLock = "N"
+			s signLogic = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("SignLogic","")
+			s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
+			s qualityColor = ##Class(EMRservice.SystemParameter).QulaityColor()
+			s isDeleteVerification = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("isDeleteVerification")
+			s:(isDeleteVerification = "") isDeleteVerification = "N"
+			s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+            s setRecReferenceLayout = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetRecordReferenceLayout")
+            s:(setRecReferenceLayout = "") setRecReferenceLayout = "south"
+		    s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+            s CAServicvice = ""
+            s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
+            s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+            if ((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1") {
+                s CAServicvice = "1"
+                d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+            }
+            s IsSetToPortal = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToPortal")
+            s isSetCurrentRevisorIP = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("isSetCurrentRevisorIP")
+			s:(isSetCurrentRevisorIP = "") isSetCurrentRevisorIP = "Y"
+			s isModifyColorChangeColor = ##Class(EMRservice.SystemParameter).IsModifyRecordChangeColor()
+			s:(isModifyColorChangeColor = "") isModifyColorChangeColor = "N"
+			s createStatus = ##Class(EMRservice.SystemParameter).GetCreateStatus()
+            s isEnableEditMultiRecord = ##Class(EMRservice.SystemParameter).IsEnableEditMultiRecord()
+			s isEnableSelectUserLevel = ##Class(EMRservice.SystemParameter).IsEnableSelectUserLevel()
+			s escapeRevokeSignDocID = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EscapeRevokeSignDocID")
+			s CAVersion = ##Class(EMRservice.SystemParameter).CAVersion()
+			//病历打印时单页补空白开关 从SystemParameter获取
+			s FirstNeedChangePageFlag = ##Class(EMRservice.SystemParameter).IsFirstNeedChangePage()
+			s EditRecordDisplayType = ##Class(EMRservice.SystemParameter).GetEditRecordDisplayType()
+			s docID = $Get(%request.Data("DocID",1),"")
+			s recordShowType = $Get(%request.Data("RecordShowType",1),"")
+	   </script>
+		<script language = "javascript">
+		  var patientID = '#(patientID)#';
+		  var episodeID = '#(episodeID)#';
+		  var userCode = '#(%session.Get("LOGON.USERCODE"))#';
+		  var userID = '#(%session.Get("LOGON.USERID"))#';
+		  var userName = '#(%session.Get("LOGON.USERNAME"))#';
+		  var ssgroupID = '#(%session.Get("LOGON.GROUPID"))#';
+		  var userLocID = '#(%session.Get("LOGON.CTLOCID"))#';
+		  var episodeType = '#(episodeType)#';
+		  var ipAddress = getIpAddress();
+		  var sessionID = '#(%session.SessionId)#';
+		  var mradm = '#(mradm)#';
+		  var cardNo = '#(cardNo)#';
+		  var setDefaultFontStyle ="#(setDefaultFontStyle)#";
+		  var pluginUrl = "#(pluginUrl)#";
+		  var titleCode = "";
+		  var param = "";
+		  var pluginType = "";
+		  var iword = false;
+		  var igrid = false;
+		  var loadFalg = false;
+		  var lockinfo = "";
+		  var messageScheme = eval("(" +"#(messageScheme)#"+ ")");
+		  var CAServicvice = "#(CAServicvice)#";
+		  var autoSave = eval(#(autoSave)#);
+		  var requiredFlag = eval(#(requiredFlag)#);
+		  //是否启用病历信息订阅与发布
+		  var Observer = '#(Observer)#';
+		  //是否启用病历加锁
+		  var enableLock = '#(isLock)#';
+		  var setRecReferenceLayout = '#(setRecReferenceLayout)#';
+		  var signLogic = '#(signLogic)#';
+		  var isRevokeSign = '#(isRevokeSign)#';
+		  var qulaityColor = eval(#(qualityColor)#);
+		  var isDeleteVerification = '#(isDeleteVerification)#';
+		  var IsSetToPortal = '#(IsSetToPortal)#';
+		  var isSetCurrentRevisorIP = '#(isSetCurrentRevisorIP)#';
+		  var isModifyColorChangeColor = '#(isModifyColorChangeColor)#';
+		  var createStatus = eval(#(createStatus)#);
+		  var strServerRan = '';
+		  var strServerSignedData = '';
+		  var strServerCert = '';
+		  var strKey = '';
+		  var strUserSignedData = '';
+		  var strUserCert = '';
+		  var userLocCode = '#(userLocCode)#';		  		  
+          var isEnableEditMultiRecord = '#(isEnableEditMultiRecord)#';
+		  var isEnableSelectUserLevel = '#(isEnableSelectUserLevel)#';	
+		  var escapeRevokeSignDocID = '#(escapeRevokeSignDocID)#';
+		  var CAVersion = '#(CAVersion)#';
+		  var FirstNeedChangePageFlag = '#(FirstNeedChangePageFlag)#';
+		  var EditRecordDisplayType = '#(EditRecordDisplayType)#';
+		  var docID = '#(docID)#';
+		  var hospitalID = '#(%session.Get("LOGON.HOSPID"))#';
+		  var recordShowType ='#(recordShowType)#';
+		  var g_groupTempParam = new Array();
+		  var g_groupCode = "";
+		</script>
+	    <title>电子病历书写</title>	
+   </head>
+   <body>
+   		<div id="main" class="hisui-layout" data-options="fit:true">
+		   	<div id="west" data-options="region:'west',split:true,border:false" style="width:320px;">
+				<div id="navtab" class="hisui-tabs tabs-gray" data-options="fit:true">  
+			   	  	<div title="病历导航" style="padding:0;margin:0;overflow:hidden;" >
+				   	  	<div title="病历目录" class="easyui-layout" data-options="fit:true" style="height:100%;">
+                        	<div id="west" data-options="region:'west',border:false" style="width:100%;margin-top:5px;height:25px;">
+                        		<span style="float:left;margin-left:5px;">
+                        			<input class='hisui-checkbox' type="checkbox" label="全选" id="selectAll" data-options='onCheckChange:function(event,value){selectAll(this)}'>
+                        		</span>
+                        		<span style="float:right;margin-right:5px;">
+									<input class='hisui-radio' type="radio" label='奇数' id="even" name='PrintType' value='even'>
+            						<input class='hisui-radio' type="radio" label='偶数' id="odd" name='PrintType' value='odd'>
+								</span>
+                        	</div>
+                        	<div data-options="region:'center',border:false" style="height:96%;overflow-y:auto;">
+                        		<div id="recordlist" style="width:100%;height:100%;overflow-y:auto;">
+                        			<ul id="InstanceTree" class="instance-item"></ul>
+                        		</div>
+                        	</div>
+                     	</div>			
+				   	</div>
+			   	  	<div title="病历资源" style="padding:0;margin:0;overflow:hidden;">
+			   	  		<iframe id="framResource" src="" frameborder="0" style="width:100%; height:100%;margin:0;padding:0;overflow:hidden"></iframe>
+			   	  	</div>
+			   	</div>
+		   	</div>	
+		   	<div data-options="region:'center',border:false" style="overflow:hidden;">
+		   		<div id="editor" class="hisui-layout" data-options="fit:true">
+		   			<div data-options="region:'north',border:false" style="height:100px;padding:0;margin:0;overflow:hidden">
+		   				<iframe id="framRecordTool" src="" frameborder="0" style="width:100%; height:100%;margin:0;padding:0;overflow:hidden"></iframe>
+		   			</div>
+		   			<div data-options="region:'center',border:false">
+	    				<div id="lock"></div>
+						<div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+	   		    		<div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+		   			</div>
+	   		    </div>
+		   	</div>
+	   	</div>
+		<div id="dialog"></div> 
+
+		<script type="text/javascript" src="../scripts/emr/js/privilege.js"></script>
+  		<script type="text/javascript" src="../scripts/emr/js/record.lock.js"></script>
+  		<script type="text/javascript" src="../scripts/emr/js/ip.group.edit.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/ip.group.edit.west.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/ip.group.edit.center.js"></script>
+  		<script type="text/javascript" src="../scripts/emr/js/record.his_service.js"></script>
+    	<script type="text/javascript" src="../scripts/emr/js/record.hyperlink.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/ip.userconfig.js"></script>
+    	<script language="cache" runat="server">
+  			d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS()
+  	   </script>
+		<script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>
+	</body>
+</html>

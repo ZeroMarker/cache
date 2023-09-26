@@ -1,0 +1,33 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+ 
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1)) 	
+       s CheckType=$Get(%request.Data("CheckType",1)) 	
+ 
+    
+ 
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	s BeginDate=$Get(%request.Data("BeginDate",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+       	
+         s sectionid =$Get(%request.Data("sectionid",1))
+	 s Start=$Get(%request.Data("start",1))
+	 s Limit=$Get(%request.Data("limit",1))
+	 s Dir=$Get(%request.Data("dir",1))
+	 s Sort=$Get(%request.Data("sort",1))
+         s id =$Get(%request.Data("id",1)) 
+         s level=$Get(%request.Data("level",1))
+       i Action = "report" d
+	.w ##class(CHSSWeb.ReportPYCService).ReportList(CommunityCode,CheckType,BeginDate,EndDate) 
+       i Action="load" d
+       .w ##class(CHSSWeb.ReportPYCService).List(id,level,0,20)
+ 	i Action = "reportforlist" d
+	.w ##class(CHSSWeb.ReportPYCService).ReportAllList(sectionid,CheckType,BeginDate,EndDate)
+  	i Action = "reportforlistcity" d
+	.w ##class(CHSSWeb.ReportPYCService).ReportAllListCity(sectionid,CheckType,BeginDate,EndDate)
+</script>
+

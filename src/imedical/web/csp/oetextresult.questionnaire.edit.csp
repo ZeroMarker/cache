@@ -1,0 +1,93 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</HEAD>
+<script>
+</script>
+</BODY>
+<SERVER>
+ n txtid,quescomponent,quesID,ordid,quesID,arcim,subcat,ques,quescode,qdisable,ok,t
+ s quescomponent="",quesID="",qdisable="",ok=1
+ d ##Class(websys.Component).GetComponentMessages(.t,"SSUserDefWindow.List")
+ s OrderItemIDs=%request.Get("OEOrdItemID")
+ s ordid=$p(OrderItemIDs,"^",1)
+
+ s txtID=##Class(web.OETextResult).GetTextResultIDFromOrderID(ordid)
+ i txtID'="" s quesID=$p($g(^OETR(txtID)),"^",30)
+ i quesID'="" d
+ . s ques=$p(quesID,"||")
+ . d %request.Set("ID",$p(quesID,"||",2))
+ e  d
+ . s arcim=$p($g(^OEORD(+ordid,"I",$p(ordid,"||",2),1)),"^",2)
+ . s ques=$p($g(^ARCIM(+arcim,$p(arcim,"||",2),10)),"^",11)
+ . i ques="" d
+ . . s subcat=$p($g(^ARCIM(+arcim,$p(arcim,"||",2),1)),"^",10)
+ . . s ques=$p($g(^ARC("IC",subcat)),"^",28)
+
+ ; Need to check that if there are multiple orders, they don't already have results.
+ i ($l(OrderItemIDs,"^")>1) d
+ . f x=1:1:$l(OrderItemIDs,"^") q:ok=0  d
+ . . s prevtxt=##Class(web.OETextResult).GetTextResultIDFromOrderID(ordid)
+ . . i prevtxt i $p($g(^OETR(prevtxt)),"^",30)'="" s ok=0
+ i ok=0 w "<br><H1>"_t("PREVIOUS_EXISTS")_"</H1>" q
+
+ s %request.Data("TextResult",1)=1
+ s %request.Data("TextResultID",1)=txtID
+
+ // ab 17.11.06 61465
+ s CanEditResQues=""
+ s GroupID=##class(epr.GroupSettings).GetIdFromGroupId($g(%session.Data("LOGON.GROUPID")))
+ i GroupID s CanEditResQues=$lg(^ooGroupSettingsD(GroupID),104)
+
+ i ques'="" d
+ . s quesdesc=$p($g(^SSU("WIN",ques)),"^",2)
+ . s quescode=$p($g(^SSU("WIN",ques)),"^")
+ . s quescomponent="questionnaire.Q"_quescode_".Edit"
+ . s isgen=##Class(web.SSUserDefWindow).IsGeneratedQuestionnaire("questionnaire.Q"_quescode,ques)
+ . i isgen d
+ . . s cmp=##Class(websys.Component).OpenName(quescomponent)
+ . . i cmp d
+ . . . i %request.Get("ID")'="" d
+ . . . . ; Disable component if questionnaire status is authorised
+ . . . . q:quescode=""
+ . . . . s qstr="s qstatus=$lg(^questionnaire.Q"_quescode_"D("_%request.Get("ID")_"),13)"
+ . . . . x qstr
+ . . . . s qstatus=$p($g(^MRC("NNS",+qstatus)),"^",1)
+ . . . . i 'CanEditResQues,(" A C ")[(" "_qstatus_" ") s qdisable=1 s cmp.Disabled=1
+ . . . d cmp.Show(),cmp.%Close()
+ . i 'isgen w "<br><H1>"_t("NOT_GENERATED")_"</H1>"
+ i quescomponent="" w "<br><H1>"_t("NOT_FOUND")_"</H1>"
+
+</SERVER>
+
+<SCRIPT language='javascript'>
+
+// Disable update if questionnaire status is authorised
+var qdisable="#(qdisable)#";
+if (qdisable!="") {
+	var obj=document.getElementById("update1");
+	obj.disabled=true;
+	obj.onclick=LinkDisable;
+}
+
+function LinkDisable(evt) {
+	var el = websys_getSrcElement(evt);
+	if (el.disabled) {
+		return false;
+	}
+	return true;
+}
+
+</SCRIPT>
+
+</BODY>
+</HTML>

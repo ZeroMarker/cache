@@ -1,0 +1,60 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("action",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1)) 
+	s HospId=$Get(%request.Data("HospId",1))  
+    //查询已经维护业务审核等级配置
+    i Action = "QueryAuditLevel" d
+    .w ##class(web.DHCST.DHCStkAuditLevel).QueryAuditLevel(HospId)   
+    //保存业务审核等级配置
+	i Action = "SaveAuditLevel" d
+	.s ListDetail= $Get(%request.Data("ListDetail",1))
+	.s retvalue=##class(web.DHCST.DHCStkAuditLevel).SaveAuditLevel(ListDetail,HospId)
+	.s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	//删除业务审核等级配置
+	i Action = "DelAuditLevel" d
+	.s STALRowid= $Get(%request.Data("STALRowid",1))
+	.s retvalue=##class(web.DHCST.DHCStkAuditLevel).DelAuditLevel(STALRowid,HospId)
+	.s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+
+    //查询主任需审核的入库单
+    i Action = "Query" d
+	.s ListParam=$Get(%request.Data("ListParam",1))
+	.w ##class(web.DHCST.DHCInGdRecAudit).QueryAuditIngdrec(ListParam)
+	
+	i Action = "QueryDetail" d
+	.S Parref=$Get(%request.Data("Parref",1))
+	.w ##class(web.DHCST.DHCINGdRecItm).Query(Start,Limit,Sort,Dir,Parref)
+	.
+	
+	i Action = "StkAudit" d
+	.s Ingr=$Get(%request.Data("Rowid",1))
+	.s UserId=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.DHCInGdRecAudit).StkAudit(Ingr,UserId)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+	/*
+	//查询需要审核的药品
+	i Action = "QueryAuditInci" d
+	.s ParStr= $Get(%request.Data("ParStr",1))
+	.w ##class(web.DHCST.DHCInGdRecAudit).QueryAuditDrug(ParStr)
+	
+	*/
+	// 主任审核功能,取项目类型
+	i Action = "GetSTALType" d
+	.w ##class(web.DHCST.DHCStkAuditLevel).GetSTALType()
+
+</script>

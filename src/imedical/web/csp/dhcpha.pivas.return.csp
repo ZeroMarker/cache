@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--≈‰“∫ÕÀ“©
+	csp:dhcpha.pivas.return.csp
+	js:scripts/pharmacy/pivas/return.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <STYLE type="text/css">
+        .dhcpha-tmp-border{
+			border:1px solid #cccccc;
+			border-radius:4px;
+        }
+    </STYLE>
+</HEAD>
+
+<body style="overflow:hidden;">
+	<div class="dhcpha-win-mask">
+		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
+	</div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'north',title:'≈‰“∫ÕÀ“©',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-label-stop',collapsible:false" class="dhcpha-north-r1">
+                    <table class="dhcpha-north-tbl">
+                        <tr>
+                            <td>
+                                <label for="dateStart">”√“©»’∆⁄</label>
+                                <input id="dateStart" class="hisui-datebox" data-options="width:120" />
+                                <input id="dateEnd" class="hisui-datebox" data-options="width:120" />
+                            </td>
+                            <td>
+                                <input id="cmbWard" />
+                            </td>
+                            <td>
+                                <input id="txtPatNo" class="hisui-validatebox" placeholder="µ«º«∫≈..." />
+                            </td>
+                            <td>
+                                <input id="txtBarCode" class="hisui-validatebox" placeholder="Ãı¬Î..." />
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">≤È—Ø</a>
+                             </td>
+                            <td>                           
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-back" id="btnReturn">ÕÀ“©</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            	<div data-options="region:'center'" border="false" style="border-radius: 4px;" >
+            		<div id="tabsReturn" class="hisui-tabs tabs-gray" fit="true">    
+		                <div id="tabPatOeore" data-options="title:'¥˝ÕÀ√˜œ∏',selected:false" class="dhcpha-hisui-container">
+		                    <div class="hisui-layout" fit="true" border="false">                
+				                <div data-options="region:'west',border:false,split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-pat',width:490" class="dhcpha-hisui-border" style="border-radius:4px;">
+				                    <table id="gridPat"></table>
+				                </div>
+				                <div data-options="region:'center',border:false,headerCls:'panel-header-gray',iconCls:'icon-panel-common'" class="dhcpha-hisui-border" style="border-radius:4px;">
+				                    <table id="gridOrdExe"></table>
+				                </div>
+				             </div>
+				         </div>
+						<div data-options="title:'…®√ËÕÀ“©',selected:true" class="dhcpha-hisui-container">
+		                    <div class="hisui-layout" fit="true" border="false">
+		                        <div data-options="region:'west',width:400,split:true" class="dhcpha-hisui-border" style="border-radius:4px;">
+		  							<div class="hisui-layout" fit="true" border="false">
+				  						<div data-options="region:'north',height:37" border="false" style="border-bottom:1px solid #cccccc;padding-left:5px;padding-right:13px;padding-top:1px;overflow:hidden">
+	                                    	<table>
+	                                    		<tr>
+	                                    			<td>
+														<input id="txtScanCode" class="hisui-validatebox" type="text" placeholder="Ãı¬Î..." style="width:165px"/>
+													</td>
+													<td>
+					                            		<input id="cmbScanRetReason" type="text"  class="hisui-combobox"/>
+					                            	</td>
+					                            <tr>
+	                                    	</table>
+		                                </div>
+		  								<div data-options="region:'center'" border="false" class="newScroll" id="labelContent">
+		                                    <div id="labelContent" style="padding-right:10px;">
+		                                    	±Í«©ƒ⁄»›
+		                                    </div>
+		  								</div>
+		  							
+		  							</div>
+		                        </div>
+				                <div data-options="region:'center',border:false" class="dhcpha-hisui-border" style="border-radius:4px;">
+				                    <table id="gridWard"></table>
+				                </div>
+				                <div data-options="region:'east',width:405,border:false,split:true" class="dhcpha-hisui-border" style="border-radius:4px;">
+				                    <table id="gridArc"></table>
+				                </div>
+		                    </div>
+		                </div>
+				     </div>
+				 </div> 
+                
+            </div>
+        </div>
+    </div>
+    <div id="retReasonWin" class="hisui-dialog" title="—°‘ÒÕÀ“©‘≠“Ú" closed="true" style="width:285px;height:140px;" data-options="iconCls:'icon-w-list',modal:true,
+	buttons:[{
+		text:'»∑∂®',
+		handler:function(){
+			Return();
+		}
+	},{
+		text:'»°œ˚',
+		handler:function(){
+			$('#retReasonWin').window('close');
+		}
+	}]">
+	    <div class="hisui-layout" fit="true" border="false">
+	        <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
+		        <div class="hisui-layout" data-options="fit:true,border:false" >
+		            <div data-options="region:'center'" border="false">
+		                <table style="padding-left:5px;padding-top:5px;">
+		                    <tr style="height:40px;">
+		                        <td>
+		                            <input id="cmbRetReason" />
+		                        </td>
+		                    </tr>
+		                </table>
+		            </div>
+		        </div>
+	        </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mousewheel.min.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.min.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/print.js"></script>
+	<script type="text/javascript" src="../scripts/pharmacy/pivas/makelabel.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/return.js"></script>
+</body>
+
+
+</HTML>

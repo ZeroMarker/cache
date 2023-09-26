@@ -1,0 +1,53 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s userdr=$G(%session.Data("LOGON.USERID"))
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action    = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir   = $Get(%request.Data("dir",1))
+	s start     = $Get(%request.Data("start",1))
+	s str       = $Get(%request.Data("str",1))
+	s limit     = $Get(%request.Data("limit",1))	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s datad   = $Get(%request.Data("datad",1))
+	s mainID  = $Get(%request.Data("mainID",1))	
+	s rowid   = $Get(%request.Data("rowid",1))	
+	
+	i action = "bsmname" d 
+	.w ##class(herp.budg.udata.uBudgAdjustDeptyearAudit).ScenarioNameList(hospid,"",start, limit, str)
+
+		
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgAdjustDeptyearAudit).ListChild(hospid,mainID, searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgAdjustDeptyearAudit).childAdd(datad)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgAdjustDeptyearAudit).childEdit(datad)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgAdjustDeptyearAudit).childDelete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+</script>

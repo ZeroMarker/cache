@@ -1,0 +1,315 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1 
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+
+<EXTHEALTH:EXT200></EXTHEALTH:EXT200>
+<!--
+<link rel='stylesheet' type='text/css' href='../scripts/css/ExtCss/css/ext-all.css' />-->
+
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<BODY style="overflow:scroll;overflow-y:hidden">
+	<!--removed by wuqk 2010-04-08  not used jar unless p5
+	<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>  -->
+	<div id='MainPanel' style='visibility:hidden'/>
+	<div id='BasePanel' style='visibility:hidden'/>
+	<div id='OperationPanel' style='visibility:hidden'/>
+	<div id='InfectionPanel' style='visibility:hidden'/>
+	<div id='LabPanel' style='visibility:hidden'/>
+	<div id='DrugPanel' style='visibility:hidden'/>
+	
+	
+	<div id='SenPanel' style='visibility:hidden'/>
+	
+	<input type="hidden" id='MethodQueryDicItemByTypeFlag' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedDictionaryCtl.QueryByType"))%>'/>
+	<input type="hidden" id='MethodQueryInfectionPositionByFlag' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfPositionCtl.QueryInfectionPosition"))%>'/>
+	<input type="hidden" id='MethodGetPatientByID' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBaseCtl.GetPatInfo"))%>'/>
+	<input type="hidden" id='MethodGetPatientAdmitInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedWMRBasePaadm.GetAdmInfo"))%>'/>
+	<input type="hidden" id='MethodQueryAdmitDiagnose' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBasePaadmCtl.GetMrDiagnose"))%>'/>
+	<input type="hidden" id='MethodQueryAdmitOperation' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBaseArcimCtl.GetOrdsOper"))%>'/>
+	<input type="hidden" id='MethodQueryAdmitLabCheck' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBaseArcimCtl.GetOrdsLab"))%>'/>
+	<input type="hidden" id='MethodQueryAdmitArcim' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBaseArcimCtl.GetOrdsDrugArcim"))%>'/>
+	
+	<input type="hidden" id='MethodQueryInfectionDiseaseList' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDiagnoseCtl.QueryByAlias"))%>'/>
+	<input type="hidden" id='MethodQueryInfectionDiseaseListSub' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDiagnoseCtl.fetchByAlias"))%>'/>
+	<input type="hidden" id='MethodQueryInfDiaByPos' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDiagnoseCtl.QueryInfDia"))%>'/>
+	<input type="hidden" id='MethodQueryInfDiaByPosSub' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDiagnoseCtl.GetInfDia"))%>'/>
+	<input type="hidden" id='MethodQueryDoctor' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBase01.QueryDoctor"))%>'/>
+	<input type="hidden" id='MethodSaveInfectionRep' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.SaveInfectionRep"))%>'/>
+	
+	<input type="hidden" id='MethodQueryPathogenDic1' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDictionaryCtl.QueryPathogenDic"))%>'/>
+	<input type="hidden" id='MethodQueryPathogenDic2' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDictionaryCtl.GetPathogenDicList"))%>'/>
+	
+	<input type="hidden" id='MethodQueryAntiDic1' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDictionaryCtl.QueryAntiDic"))%>'/>
+	<input type="hidden" id='MethodQueryAntiDic2' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDictionaryCtl.GetAntiDicList"))%>'/>
+	<input type="hidden" id='MethodQueryAntiDicByPy' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDictionaryCtl.QueryAntiDicByPy"))%>'/>
+	<input type="hidden" id='MethodQueryAntiDicByPyList' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfDictionaryCtl.GetAntiDicByPyList"))%>'/>
+	
+	<input type="hidden" id='MethodGetInfRep' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRep"))%>'/>
+	<input type="hidden" id='MethodGetInfRepDia' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepDia"))%>'/>
+	<input type="hidden" id='MethodGetInfRepRea' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepRea"))%>'/>
+	<input type="hidden" id='MethodGetInfRepPos' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepPos"))%>'/>
+	<input type="hidden" id='MethodGetInfRepDrug' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepDrug"))%>'/>
+	<input type="hidden" id='MethodGetInfRepPathogeny' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepPathogeny"))%>'/>
+	<input type="hidden" id='MethodGetInfRepPyObj' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepPyObj"))%>'/>
+	<input type="hidden" id='MethodGetInfRepPyObjDrug' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepPyObjDrug"))%>'/>
+	<input type="hidden" id='MethodGetInfRepOPR' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.GetInfRepOPR"))%>'/>
+	
+	<input type="hidden" id='MethodCheckInfRep' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.CheckInfRep"))%>'/>
+	<input type="hidden" id='MethodUserFunction' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBaseCtl.UserFunction"))%>'/>
+	<input type="hidden" id='MethodGetBaseConfig' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfConfigCtl.GetBaseConfig"))%>'/>
+	<input type="hidden" id='MethodGetMic' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedBasePaadmCtl.GetMic"))%>'/>
+	<input type="hidden" id='MethodQueryInfectionOperationList' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedOrcDICCtl.GetORCOperByAlias"))%>'/>
+	<input type="hidden" id='MethodSaveInfectionRepDia' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.UpdateInfRepDia"))%>'/>
+	<input type="hidden" id='MethodSaveInfectionRepOpe' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.UpdateInfRepOPR"))%>'/>
+    <input type="hidden" id='MethodGetDrugSen' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedDrugSen.GetTestRest"))%>'/>
+    <input type="hidden" id='MethodDeleteInfRep' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedInfectionRepCtl.DeleteInfRep"))%>'/>
+	<!-----My update----->
+	<!--removed by wuqk 2010-04-08  not used jar unless p5
+	<SCRIPT SRC="/csp/broker/cspbroker.js"> </SCRIPT>  -->
+	<SCRIPT SRC="../scripts_gen/DHCMedInfRep.js"></SCRIPT>
+	<SCRIPT SRC="../custom/DHCJST/scripts/DHCMedInfRep.js"></SCRIPT>
+	<!-- removed by wuqk 2010-09-10 for new ext lib place
+	<SCRIPT SRC="../scripts/Ext/adapter/ext/ext-base.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/Ext/ext-core-debug.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/Ext/ext-all-Ext/adapter/ext/ext-base.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/Ext/ext-core-debug.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/Ext/ext-all-debug.js"></SCRIPT>
+	<script src="../scripts/Ext/edit-grid.js"></script>-->
+	<SCRIPT SRC="../scripts/DHC.WMR.CommonFunction.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Class.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Serialize.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.DataAccess.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.DataAccess.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.GUI.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.Control.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.SelectInfectionDisease.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.SelectInfectionOperation.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.SelectDoctor.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.SelectSen.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.InputICD.js"></SCRIPT>
+	<SCRIPT SRC="../scripts/DHC.Med.Infection.Rep.SelectAntiByPathogen.js"></SCRIPT>  
+	<SCRIPT LANGUAGE=JAVASCRIPT>
+	
+		//基本信息
+		var DiagnoseTime='诊断时间';
+		var DiagnoseDate='诊断日期';
+		var DoctorName='医师姓名';
+		var DoctorCode='医师代码';
+		var DiagnoseType='诊断类型';
+		var AdmitDiagnose='临床诊断';    //update by zf 2008-12-09 入院诊断-->临床诊断
+		var ICD='ICD';
+		var cboICU='入住ICU情况(必输)';
+		var cboRelation='与死亡关系(必输)';
+		var cboLapseTo='疾病转归(必输)';
+		var txtBed='床号';
+		var txtDisDate='出院日期';
+		var txtAdmitDate='住院日期';
+		var txtAge='年龄';
+		var txtSex='性别';
+		var txtName='病人姓名';
+		var txtMrNo='病案号';
+		var txtRegNo='登记号';
+		var txtNo='病人编码';
+		var WindowTitle='院内感染上报';
+		var Save='保存';
+		var SaveAA='上报';
+		var Del = '删除';
+		var Cancel='取消';
+		var BaseInfo='病人基本信息';
+		
+		var DangerousFactor = '易感因素';
+		var Code = '代码';
+		var Desc = '项目';
+		var Checked = '选择';
+		var strRepPlace='感染类型';
+		
+		//手术表格
+		var OperationName = '手术名称';
+		var EmergencyOperation = '急诊手术';
+		var OrderDate = '医嘱日期';
+		var OrderStatus = '医嘱状态';
+		var OpeStartDate = '开始日期';
+		var OpeStartTime = '开始时间';
+		var OpeEndDate = '结束日期';
+		var OpeEndTime = '结束时间';
+		var Operator = '术者';
+		var NarcosisType = '麻醉方式';
+		var CutType = '切口类型';
+		//var OpeCutType = '手术部位感染类型';  //update by zf 20090923  var OpeCutType = '手术切口类型';
+		var OpeCutType = '手术部位感染类型';   //20090916 手术切口类型
+		var CloseType = '切口愈合';
+		var CutInfected = '切口感染';
+		//var OperationCutType = '手术切口类型';
+		var OperationCutType = '手术部位感染类型';   //20090916 手术切口类型
+		var CauseInfection = '引起院内感染';
+		var OperationInfo = '手术信息';
+		
+		var NarcosisMethod = "麻醉方法";
+		var CutInfo = "切口信息";
+		var GeneralInfo = '一般信息';
+		var WoundInfection = '切口感染';
+		
+		//院内感染信息
+		var InfectionInfo = '院内感染信息';
+		var InfectionPosition = "感染部位";
+		var InfectionDate = "感染日期";
+		var InfectionDiagnose = "感染诊断";
+		var InfectionOperation = "侵害性操作";
+		var InfectionEndDate = "感染结束日期";
+		var InfectionDays = "感染天数";
+		
+		//辅助检查信息
+		var LabInfo = '辅助检查信息';
+		var Simple = "标本";
+		var LabInfPos = "感染部位";
+		var LabDate = "送检日期";
+		var CheckMethod = "检验方法";
+		//var SensitiveCheck = "病原菌抗菌药物敏感试验";  //改名称20090825
+		var SensitiveCheck = "细菌培养";  //20090916 cjb 病原菌抗菌药物敏感试验
+		var LabCheckName = '辅助检查名称';
+		var OrderDate = '医嘱日期';
+		var OrderStatus = '医嘱状态';
+		
+		
+		//抗生素情况
+		var UntowardReaction = "不良反应";
+		var DoubleInfection = "二重感染";
+		var DrugsRoute = '给药途径';
+		var AdministerDrugs = '用药方式';
+		var InfectionAdministerDrugsGoal = '目的';
+		var CureAdministerDrugsType = '治疗用药方式';
+		var DefendAdministerDrugsType = '预防用药方式';
+		var Indication = '预防用药指征';
+		var Effect = '预防用药效果';
+		var UnionDrug = '联合用药';
+		var AroundOpeDrug = '围术期用药';
+		var Rationality = '合理性';
+		var BeforeTime = '术前用药时间';
+		var Day = '术前用药(天)';
+		var Hour = '术前用药(小时)';
+		var Minute = '术前用药(分)';
+		var After = '术后用药天数';
+		var Irrationality = '不合理原因';
+		var CurativeEffect = '疗效';
+		var DrugName = '药名';
+		var FromDate = '起始时间';
+		var ToDate = '截止时间';
+		var UseDayCnt = '用药天数';
+		var AntiBioDrugInfo = '抗菌素应用情况';
+		var BeforeOpeDate = '术前用药时间';
+		var AfterOpeDate = '术后用药天数';
+		
+		var Notice = "提示";
+		var AllComboBoxIsRequired = "请选择一个选项?";
+		
+		//敏感性
+		var Position = "位置";
+		var GermName = "病原体";
+		var Sen = "敏感性";
+		var SensitivityInfo = "病原体敏感性信息";
+		
+		//查询院内感染疾病
+		var QueryDisease = "查询疾病"
+		var QueryCondition = "请输入查询条件";
+		var DiseaseName = "疾病名称";
+		var DiseaseType = "种类";
+		var ResumeText = "备注";
+		var strOK = "确定";
+		var PleaseChooseItem = "请选择一个项目?";
+		
+		//选择医师
+		var QueryDoctor = "查询医师";
+		var DoctorCode = "工号";
+		var DoctorName = "医师姓名";
+		var DoctorQueryTitle = "医师查询";
+		var Department = "科室";
+		
+		//病原体
+		var GermSenTitle = "病原体抗菌素敏感性信息";
+		var Germ = "病原体";
+		//var AntiDrug = "抗生素";
+		var AntiDrug = "抗菌药物";  //20090916 cjb 抗生素
+		var Sen = "敏感";
+		var strAdd = "添加";
+		var strDel = "删除";
+		
+		var PleaseSaveBefore = "请先保存院内感染报告!";
+		var PleaseSelectAdmitDiagnose = "请选择诊断信息!";
+		var PleaseSelectDangerousFactor = "请选择危险因素信息!";
+		var PleaseSelectOperation = "请输入手术信息!";
+		var PleaseSelectInfection = "请输入院内感染信息!";
+		var PleaseSelectLab = "请输入辅助检查信息!";
+		var PleaseSelectDrug = "请输入使用抗生素信息!";
+		
+		var PleaseSelectLapseTo = "请选择疾病转归信息!";
+		var PleaseSelectRelation = "请选择院内感染与死亡的信息!";
+		var PleaseSelectICU = "请选择入住ICU信息!";
+		var PleaseDoctor = "请选择医生信息!";
+		
+		var PleaseSelectGermDrug = '请选择病原体和抗生素!';
+		var SenInTheList = '您输入的项目已经在列表中了!';
+		
+		var Audit = "审核";
+		var Modify = "修订";
+		var ConfirmAudit = "您确定要审核么?";
+		var AuditSuccess = "审核成功!";
+		var AuditFail = "审核失败,代码:";
+		
+		var SendBack = "退回";
+		var SendBackReason = "退回原因";
+		var PleaseInputSendBackReason = "请输入退回原因";
+		var SendBackSuccess = "退回成功!";
+		var SendBackFail = "退回失败,代码:!";
+		
+		var PleaseInputDelReason = "请输入删除原因!";
+		var DelSuccess = "删除成功!";
+		var PleaseSelectGridItem = "请您选择表格里的一个条目!";
+		var SaveSuccess = "保存成功!";
+		var SaveFail = "保存失败,错误代码是";
+		var NeedWaitStatus = "只能审核处于待审状态的院内感染报告!";
+		var SendBackError = "只能退回处于待审状态的院内感染报告!";
+		var DelStatusError = "只能删除处于待审或退回状态的院内感染报告!";
+		var UpdateRepError = "处于删除或被订状态的院内感染报告不允许修改!";
+		
+		//var strSen = "细菌培养+敏感";    //update by zf 20090923  var strSen = "敏感";
+		var strSen = "敏感";  //20090916 敏感
+		var strSenAdd = "细菌培养+敏感";  //20090916 敏感
+		var strQueryICD = "查询ICD编码"; //Modified By LiYang 2008-12-31
+		
+		
+		//Add BY LiYang 2009-09-10
+		var strOprStart = "侵害操作开始";
+		var strOprEnd = "侵害操作结束";
+		var strOprStartDate = "侵害操作开始日期";
+		var strOprEndDate = "侵害操作结束日期";
+		var strOprStartTime = "侵害操作开始时间";
+		var strOprEndTime = "侵害操作结束时间";
+
+		
+		//Add By LiYang 2009-12-08
+		var strTreatmentInfo = "诊断依据及治疗过程";
+		var strAnalyse = "病程及原因分析";
+		var strTreatmentTitle = "病程及原因分析";
+
+		
+		var strCurrDate = '<%=$zd($p($h,",",1),3)%>';
+		var strCurrTime = '<%=$zt($p($h,",",2),1)%>';
+		
+		var HospCode='<%=$p($g(^DHCMedHosptial(0)),"/",4)%>';  //add by zf 20090923 ^DHCMedHosptial(0)=1/0/0/BeiJing_JST/Zebra
+	    //add
+	    var yf="预防";
+	    var SenResultOne="阳性";
+	    var SenResultTwo="阴性";
+	    var SenResultThr="无结果";
+	</SCRIPT>
+</BODY>
+</HTML>

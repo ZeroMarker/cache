@@ -1,0 +1,101 @@
+<csp:content charset="utf-8">
+<SERVER> 
+	s ClassName=$g(%request.Data("ClassName",1))
+	s QueryName=$g(%request.Data("QueryName",1))
+	s TreeFieldStr=$g(%request.Data("TreeFieldStr",1))
+	s idFieldStr=$g(%request.Data("idFieldStr",1))
+	s iconClsStr=$g(%request.Data("iconClsStr",1))
+	s Closed=$g(%request.Data("Closed",1))
+	s TreeGridFlag=$g(%request.Data("TreeGridFlag",1))
+	if (ClassName="")!(QueryName="")!(TreeFieldStr="")!(idFieldStr="") {
+		w "[]"
+		Q	
+	}
+	s QueryStr=ClassName_":"_QueryName
+	s rs=##class(%ResultSet).%New(QueryStr)
+	if 'rs{
+		w "[]"
+		Q	
+	}
+	if 'rs.QueryIsValid(){
+		w "[]"
+		Q	
+	}
+	s ColCounts=rs.GetColumnCount()
+	s CmdStr="d rs.Execute("
+	s ParamCount=rs.GetParamCount()
+	for i=1:1:ParamCount{
+		s ParamName=rs.GetParamName(i)
+		s ParamValue=$G(%request.Data(ParamName,1))
+		i i>1 s CmdStr=CmdStr_","
+		s CmdStr=CmdStr_""""_ParamValue_""""
+	}
+	s CmdStr=CmdStr_")"
+	x CmdStr
+	k ^TMPTreeList($J)
+	s idFieldLen=$L(idFieldStr,"^")
+	s FilterFieldStr="^"_idFieldStr_"^"_TreeFieldStr_"^"
+	while rs.Next(){
+		s NodeStr=""
+		f i=1:1:idFieldLen{
+			s idField=$P(idFieldStr,"^",i)
+			s id=""""_rs.GetDataByName(idField)_""""
+			i NodeStr="" s NodeStr=id
+			e  s NodeStr=NodeStr_","_id
+			s TreeField=$P(TreeFieldStr,"^",i)
+			s iconCls=$P(iconClsStr,"^",i)
+			s TreeFieldValue=rs.GetDataByName(TreeField)
+			s cmd="s ^TMPTreeList($J,"_NodeStr_")="""
+			s cmd=cmd_"""""id"""":"""_id_""""
+			s cmd=cmd_",""""text"""":"""""_TreeFieldValue_""""""
+			i iconCls'="" s cmd=cmd_",""""iconCls"""":"""""_iconCls_""""""
+			if i<idFieldLen{
+				i Closed=1 s cmd=cmd_",""""state"""":""""closed"""""
+				s cmd=cmd_""""
+				x cmd
+			}
+		}
+		if TreeGridFlag=1{
+			for i=1:1:ColCounts{
+				s field=rs.GetColumnName(i)
+				continue:FilterFieldStr[("^"_field_"^")
+				s Data=rs.GetData(i)
+				s cmd=cmd_","""""_field_""""":"""""_Data_""""""
+			}
+		}
+		s cmd=cmd_""""
+		x cmd
+	}
+	w "["
+	s SelfNod=$O(^TMPTreeList($J,""))
+	if SelfNod'=""{
+		m ParList=^TMPTreeList($J)
+		m ChildList=^TMPTreeList($J,SelfNod)
+		d ..RecurTreeJSON(.ChildList, SelfNod, .ParList)
+	}
+	w "]"
+	k ^TMPTreeList($J)
+	Q
+</SERVER>
+<csp:method name=RecurTreeJSON arguments="ChildList,SelfNod,ParList" ProcedureBlock=1> 
+ 	Q:SelfNod="" ""
+ 	s selfJson=$G(ParList(SelfNod))
+ 	w "{"
+ 	w selfJson
+ 	;子节点
+ 	s nod=$O(ChildList(""))	
+ 	i nod'="" d		
+ 	.m self=ChildList(nod)	;拷贝子节点数组 递归子节点 本节点数组作为父数组
+ 	.w ",""children"":["
+ 	.d ..RecurTreeJSON(.self,nod,.ChildList)
+ 	.w "]"
+ 	w "}"
+ 	k self
+ 	;兄弟节点
+ 	s nod=$O(ParList(SelfNod))	
+ 	i nod'="" d
+ 	.m self=ParList(nod)	;拷贝兄弟点数组 递归子节点 父节点数组作为父数组
+ 	.w ","
+ 	.d ..RecurTreeJSON(.self,nod,.ParList)
+ 	Q
+</csp:method>

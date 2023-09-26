@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</CSP:METHOD>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+
+<SERVER>
+	n context,patid,epid,qid
+	s (context,patid,epid,qid)=""
+	
+	s context=$g(%request.Data("CONTEXT",1))
+
+	s qid   = $g(%request.Data("QuoteID",1))
+	s patid = $g(%request.Data("PatientID",1))
+	s epid  = $g(%request.Data("EpisodeID",1))
+
+	;s ^zTRAK("aji",$zn,"BESTPLAN.PATSEL.CSP")=qid_"^"_patid_"^"_epid
+
+</SERVER>
+
+<SCRIPT>
+
+	var url="";
+	url= "arpatbill.bestplan.csp?QuoteID=#(qid)#&PatientID=#(patid)#&EpisodeID=#(epid)#&CONTEXT=#(context)#";
+
+	if (window.opener) window.opener.websys_createWindow(url,"TRAK_main");
+	window.close();
+
+</SCRIPT>
+
+</HEAD>
+<BODY>
+</BODY>
+
+</HTML>

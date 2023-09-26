@@ -1,0 +1,692 @@
+<!--医嘱项维护 
+	csp: dhcst.easyui.arcitm.modify.csp 
+	 js: scripts/dhcst/EasyUI/DrugInfo/ArcItmModify.js
+--> 
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<TRAK:HEAD>
+	</TRAK:HEAD>
+	<JQUERY:EASYUI136/>
+	<Server language="CACHE" runat="Server">
+    s urlActionType =$G(%request.Data("actionType",1))
+    s urlGenericId=$G(%request.Data("phcGenericId",1))
+    s urlArcItmId=$G(%request.Data("arcItmRowId",1))
+    s urlSaveAs=$G(%request.Data("saveAs",1))
+    s urlPhcFormId=""
+	i urlGenericId'="" d
+	.s urlPhcFormId=$p($g(^PHCGE("GE",urlGenericId,"DHC")),"^",5)
+    d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("dhcst.easyui.drugmaintain")
+   </Server>
+    <SCRIPT Language="Javascript">
+       	var urlActionType="",urlPhcGenericId="",urlArcItmId="",urlSaveAs="",urlPhcFormId="";
+       	urlActionType="#(urlActionType)#"; 
+    	urlPhcGenericId="#(urlGenericId)#";
+    	urlArcItmId="#(urlArcItmId)#";
+    	urlSaveAs="#(urlSaveAs)#";
+    	urlPhcFormId="#(urlPhcFormId)#"
+   </SCRIPT>
+    <style type="text/css">
+	.dhcst-require{
+		color:red;
+		font-weight:bold;
+	}
+	</style> 
+</HEAD>
+
+<body>
+<div class="easyui-layout" fit="true" title="医嘱项维护" >
+	<div data-options="region:'center'" border="false">
+	    <div class="easyui-tabs" fit="true" border="false" id="tabsArc">
+		    <div title="基本信息">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'center',border:false" >
+						<div class="dhcst-win-content">
+							<table>
+								<tr>
+									<td class="dhcst-td-align ">
+										<span class="dhcst-require">*</span>医嘱项代码
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtArcCode"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										生效日期
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="dtArcEffDate"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkOrderOnItsOwn"/>
+									</td>
+									<td>
+										<label for="chkOrderOnItsOwn">独立医嘱</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>医嘱项名称
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtArcDesc"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										截止日期
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="dtArcEffDateTo"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkWoStock"/>
+									</td>
+									<td>
+										<label for="chkWoStock">无库存医嘱</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>费用大类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbArcBillGrp"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										最大量
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtArcMaxQty" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkRestrictOP"/>
+									</td>
+									<td>
+										<label for="chkRestrictOP">门诊用药</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>费用子类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbArcBillSub"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										单次最大剂量
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtArcMaxCumDose" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkRestrictEM"/>
+									</td>
+									<td>
+										<label for="chkRestrictEM">急诊用药</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>医嘱大类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbOrdCategory" />
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										每天最大剂量
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtArcMaxQtyPerDay"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkRestrictIP"/>
+									</td>
+									<td>
+										<label for="chkRestrictIP">住院用药</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>医嘱子类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbArcCat"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										限制使用天数
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtArcNoOfCumDays" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkRestrictHP"/>
+									</td>
+									<td>
+										<label for="chkRestrictHP">体检用药</label>	
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										<span class="dhcst-require">*</span>医嘱优先级
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbOECPriority"/>
+									</td>
+									<td class="dhcst-td-align">
+										极限用量
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtWarningUseQty"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkFreeDrugFlag"/>
+									</td>
+									<td>
+										<label for="chkFreeDrugFlag">免费药</label>	
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										处方通用名
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbGeneric"/>
+									</td>
+									<td class="dhcst-td-align">
+										医嘱提示
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtOeMessage"/>
+									</td>
+									<td class="dhcst-td-align" style="display:none">
+										限制用量
+									</td>
+									<td  style="display:none">
+										<input class="dhcst-easyui-box-mid" type="text" id="txtLimitQty"/>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+		    </div>
+		   	<div title="药学相关信息">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'center',border:false" >
+						<div class="dhcst-win-content">
+							<table>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										<span class="dhcst-require">*</span>药学基本单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcBaseUom"/>
+									</td>
+									<td class="dhcst-td-align">
+										管制分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcPoison"/>
+									</td>
+									<td class="dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkPhcAnti"/>
+									</td>
+									<td>
+										<label for="chkPhcAnti">抗菌药标志</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkPhcTumble"/>
+									</td>
+									<td>
+										<label for="chkPhcTumble">跌倒风险</label>	
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										药品配液分类
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcPivaCat"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										生产企业
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcManf" />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkPhcCritical"/>
+									</td>
+									<td>
+										<label for="chkPhcCritical">危重药标志</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkDope"/>
+									</td>
+									<td>
+										<label for="chkDope">兴奋剂</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										剂型
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcForm" data-options="readonly:'true'" />
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										WHODDD值
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtWhoDDD" style="width:100px;vertical-align: middle;"/>
+										<input type="text" id="cmbWhoDDDUom" style="width:96px"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkProvinceComm"/>
+									</td>
+									<td>
+										<label for="chkProvinceComm">省属常用药物</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkAllergy"/>
+									</td>
+									<td>
+										<label for="chkAllergy">过敏</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										用法
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcInstruc"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										DDD值
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtDDD"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkOPSkin"/>
+									</td>
+									<td>
+										<label for="chkOPSkin">门诊皮试用原液</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkBaseDrug"/>
+									</td>
+									<td>
+										<label for="chkBaseDrug">国家基本药物</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										疗程
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcDuration"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										颗粒单位系数
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtGranulesFact"  />
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkIPSkin"/>
+									</td>
+									<td>
+										<label for="chkIPSkin">住院皮试用原液</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkProBaseDrug"/>
+									</td>
+									<td>
+										<label for="chkProBaseDrug">省基本药物</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										频次
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcFreq"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										滴速
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtIvgttSpeed"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkOPOneDay"/>
+									</td>
+									<td>
+										<label for="chkOPOneDay">门诊按一天量计算</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkCityBaseDrug"/>
+									</td>
+									<td>
+										<label for="chkCityBaseDrug">市基本药物</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										高警示级别
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbHighRisk"/>
+									</td>
+									<td class="dhcst-td-align">
+										草药备注
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcSpec"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkIPOneDay"/>
+									</td>
+									<td>
+										<label for="chkIPOneDay">住院按一天量计算</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkCouBaseDrug"/>
+									</td>
+									<td>
+										<label for="chkCouBaseDrug">区(县)基本药物</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+
+									<td class="dhcst-td-align dhcst-td-offset">
+										国际专利药名
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtPhcLabelName12"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										英文国际非专利药名
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtPhcLabelName11"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkPhcSingleUse"/>
+									</td>
+									<td>
+										<label for="chkPhcSingleUse">单味使用标识</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkCodeX"/>
+									</td>
+									<td>
+										<label for="chkCodeX">中国药典标志</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										非处方
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbPhcOTC"/>
+									</td>
+									<td class="dhcst-td-align">
+										WHONET码
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbWhoNetCode"/>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkDietTaboo"/>
+									</td>
+									<td>
+										<label for="chkDietTaboo">饮食禁忌</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkPhcTest"/>
+									</td>
+									<td>
+										<label for="chkPhcTest">临床验证用药</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td class="dhcst-td-align">
+										含量规格
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtPhcSpec"/>
+									</td>
+									<td></td>
+									<td></td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkMonitorFlag"/>
+									</td>
+									<td>
+										<label for="chkMonitorFlag">重点药品</label>
+									</td>  
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkTPN"/>
+									</td>
+									<td>
+										<label for="chkTPN">TPN标志</label>
+									</td>
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkCQZT"/>
+									</td>
+									<td>
+										<label for="chkCQZT">长期默认嘱托</label>
+									</td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkONE"/>
+									</td>
+									<td>
+										<label for="chkONE">临时默认取药</label>
+									</td>	
+								</tr>
+								<tr class="dhcst-tr-split"></tr>
+								<tr>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td class="dhcst-td-offset dhcst-td-checkbox dhcst-td-align">
+										<input type="checkbox"  id="chkOM"/>
+									</td>
+									<td>
+										<label for="chkOM">附加说明默认自备</label>
+									</td>
+									<td>
+									</td>
+									<td>
+									</td>	
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+		    </div>
+		   	<div title="等效单位">
+				<div class="easyui-layout" fit="true" border="false">
+					<div data-options="region:'north'" border="false" class="dhcst-win-content-row-1">
+						<div class="dhcst-win-content" >
+							<table>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										等效单位
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbEqualUom"  style="width:100px"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										等效数量
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtEqualQty" style="width:100px"/>
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										缺省数量
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtEqualDefQty" style="width:100px"/>
+									</td>
+									<td class="dhcst-td-offset">
+										<span><a class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btn-AddEqualUom" onclick="EqualUomEdit(this.id)">增加</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btn-ModifyEqualUom" onclick="EqualUomEdit(this.id)">修改</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btn-DeleteEqualUom" onclick="EqualUomEdit(this.id)">删除</a></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div data-options="region:'center'" border="false" style="border-top:1px solid #87B9E8;">
+				    	<table id="equalUomGrid">
+						</table>
+					</div>
+				</div>
+		    </div>
+		   	<div title="医嘱项别名">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'north'" border="false" class="dhcst-win-content-row-1">
+						<div class="dhcst-win-content" >
+							<table>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										别名
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="txtArcAlias"  />
+									</td>
+									<td class="dhcst-td-offset">
+										<span><a class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btn-AddArcAlias" onclick="ArcAliasEdit(this.id)">增加</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btn-ModifyArcAlias" onclick="ArcAliasEdit(this.id)">修改</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btn-DeleteArcAlias" onclick="ArcAliasEdit(this.id)">删除</a></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div data-options="region:'center'"  border="false" style="border-top:1px solid #87B9E8;">
+				    	<table id="arcAliasGrid">
+						</table>
+					</div>
+				</div>
+		    </div>
+		   	<div title="限制科室用药">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'north'" border="false" class="dhcst-win-content-row-1">
+						<div class="dhcst-win-content" >
+							<table>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										关系
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-xs" type="text" id="cmbResDocRelation"  />
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										类型
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-xs" type="text" id="cmbResDocType" />
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										操作
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-xs" type="text" id="cmbResDocOperate" />
+									</td>
+									<td class="dhcst-td-align dhcst-td-offset">
+										名称
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-mid" type="text" id="cmbResDocPointer" />
+									</td>
+									<td class="dhcst-td-offset">
+										<span><a class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btn-AddResDoc" onclick="ResDocEdit(this.id)">增加</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btn-ModifyResDoc" onclick="ResDocEdit(this.id)">修改</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btn-DeleteResDoc" onclick="ResDocEdit(this.id)">删除</a></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div data-options="region:'center'"  border="false" style="border-top:1px solid #87B9E8;">
+				    	<table id="arcResDocGrid">
+						</table>
+					</div>
+				</div>		   	
+		    </div>
+		   	<div title="皮试医嘱关联">
+				<div class="easyui-layout" fit="true">
+					<div data-options="region:'north'" border="false" class="dhcst-win-content-row-1">
+						<div class="dhcst-win-content" >
+							<table>
+								<tr>
+									<td class="dhcst-td-align dhcst-td-offset">
+										医嘱项
+									</td>
+									<td>
+										<input class="dhcst-easyui-box-lg" type="text" id="cmbArcItm"  />
+									</td>
+									<td class="dhcst-td-offset">
+										<span><a class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btn-AddArcSkin" onclick="ArcSkinEdit(this.id)">增加</a></span>
+										<span><a class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btn-DeleteArcSkin" onclick="ArcSkinEdit(this.id)">删除</a></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div data-options="region:'center'"  border="false" style="border-top:1px solid #87B9E8;">
+				    	<table id="arcSkinGrid">
+						</table>
+					</div>
+				</div>
+		    </div>
+	    </div>
+	</div>
+	<div data-options="region:'south'" class="dhcst-win-toolbar">
+		<div>
+			<span><a class="easyui-linkbutton" iconCls='icon-save' plain="true" id="btnSave">保存</a></span>
+			<span><a class="easyui-linkbutton" iconCls='icon-clear' plain="true" id="btnClear">清屏</a></span>
+			<span><a class="easyui-linkbutton" iconCls='icon-cancel' plain="true" id="btnClose">关闭</a></span>
+	  	</div>
+	</div>
+</div>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/dhcpha.easyui.css" ></script> 
+<link rel="stylesheet" type="text/css" href="../scripts/dhcst/EasyUI/Css/DrugInfo.css" ></script> 
+<script type="text/javascript" src="../scripts/dhcst/EasyUI/Plugins/dhcst.plugins.js"></script>  
+<script type="text/javascript" src="../scripts/dhcst/EasyUI/Common/Common.js"></script>  
+<script type="text/javascript" src="../scripts/dhcst/EasyUI/DrugInfo/ArcItmModify.js"></script> 
+</body> 
+</HTML>

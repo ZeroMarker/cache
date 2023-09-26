@@ -1,0 +1,107 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s AnnDate= $Get(%request.Data("AnnDate",1))
+	s Name = $Get(%request.Data("Name",1))
+	
+	s PatentType= $Get(%request.Data("PatentType",1))
+	s CertificateNo = $Get(%request.Data("CertificateNo",1))
+	s DeptDr = $Get(%request.Data("DeptDr",1))
+	s YearDr = $Get(%request.Data("YearDr",1))
+	s Patentee = $Get(%request.Data("Patentee",1))
+	s PatentNum = $Get(%request.Data("PatentNum",1))
+	s Inventors = $Get(%request.Data("Inventors",1))
+	s AppDate = $Get(%request.Data("AppDate",1))
+	s AnnUnit = $Get(%request.Data("AnnUnit",1))
+	s userdr =  $Get(%request.Data("userdr",1)) // 登陆用户ID
+	s InventorsIDs = $Get(%request.Data("InventorsIDs",1))
+	s CompleteUnit = $Get(%request.Data("CompleteUnit",1))
+	s IDs = $Get(%request.Data("IDs",1))
+	
+	s VCAmount = $Get(%request.Data("VCAmount",1))
+	s InvoiceCode = $Get(%request.Data("InvoiceCode",1))
+	s InvoiceNo = $Get(%request.Data("InvoiceNo",1))
+	s unitMoneys = $Get(%request.Data("unitMoneys",1))
+	
+	s startdate = $Get(%request.Data("startdate",1))
+	s enddate = $Get(%request.Data("enddate",1))
+ 
+    s PatentType = $Get(%request.Data("PatentType",1))
+  
+    s PrjDr =  $Get(%request.Data("PrjDr",1))
+ 
+  i action = "listinventorsInfo" d
+  .w ##Class(herp.srm.udata.uSRMCommon).ListParticipantsInfo(start,limit,IDs)
+  
+	i action = "InventorID" d
+	.w ##class(herp.srm.udata.uPatentRewardApply).InventorsList(start, limit, InventorsIDs)
+
+  i action = "GetInventorsInfo" d
+  .w ##Class(herp.srm.udata.uSRMCommon).ListParticipantsInfo(start,limit,IDs)
+  
+	i action = "GetDept" d
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+
+	i action = "GetYear" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetYear(start, limit, str)
+
+	i action = "GetPatentee" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetUintInfo(start, limit, str)
+
+	i action = "GetInventors" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "GetUint" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetUintInfo(start, limit, str)
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uPatentRewardApply).SelectPatentInfo(start, limit, startdate,enddate, DeptDr, Patentee, PatentNum,Name, Inventors,userdr,PatentType)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uPatentRewardApply).AddPatentInfo(Name,PatentType, DeptDr, YearDr, Patentee, Inventors, PatentNum, CertificateNo, AppDate, AnnDate, userdr,AnnUnit,CompleteUnit,VCAmount,InvoiceCode,InvoiceNo,unitMoneys,PrjDr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uPatentRewardApply).UpdatePatentInfo(rowid,Name,PatentType,DeptDr, YearDr, Patentee, Inventors, PatentNum, CertificateNo, AppDate, AnnDate,AnnUnit,CompleteUnit,VCAmount,InvoiceCode,InvoiceNo,unitMoneys,PrjDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uPatentRewardApply).DelPatentInfo(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "sub" d
+	.s result = ##class(herp.srm.udata.uPatentRewardApply).SubmitPatentInfo(rowid, userdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetPrjName" d ///libairu201160913北京丰台中西医
+	.w ##class(herp.srm.udata.uSRMCommon).GetPrjName(start, limit, str)		
+	
+</script>

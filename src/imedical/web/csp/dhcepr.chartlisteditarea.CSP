@@ -1,0 +1,124 @@
+<html>
+<head>
+<title>历次病程记录</title>
+   <script language="javascript">
+  	function buttonClick(methodName) {
+	  	var eprformObject = document.getElementById("eprlistedit");
+		if(methodName == 'btnsave'){eprformObject.SaveClick();}
+		else if(methodName == 'btnprint'){eprformObject.PrintClick();}
+		else if(methodName == 'btncommit'){eprformObject.CommitClick();}
+		else if(methodName == 'btnupdatedata'){eprformObject.RefreshClick();}
+		else if(methodName == 'btnslttemplate'){eprformObject.TemplateClick();}
+	}
+   </script>
+</head>	
+<body  leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<server>
+
+	set userid = %session.Get("LOGON.USERID")	
+	set username = %session.Get("LOGON.USERNAME")
+	set strBGColor = ##class(web.DHCEPRExt).GetBGColor()	 
+	set ctlocid=%session.Get("LOGON.CTLOCID")
+  	set categoryid=$Data(%request.Data("CategoryID",1))
+	
+	w "<object width=0 height=0 id='config' name='config' classid='" _ ##class(web.DHCEPRExt).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+	w "<param name='URL' value='" _ ##class(web.DHCEPRExt).GetServiceURL() _ "'>",!
+	w "</object>",!
+		
+	If ($Data(%request.Data("InstanceDataID"))) {
+		
+		set InstanceDataID = $Get(%request.Data("InstanceDataID",1))
+		If ($Data(%request.Data("ProfileID",1))) 
+		{	set ProfileID = $Get(%request.Data("ProfileID",1))}
+		else 
+		{	set ProfileID = ""	}
+		w "<object id='eprlistedit' name='eprlistedit'  classid='clsid:26AE0BDA-52C1-3C19-A174-49B53CDFF0B9' codebase='" _ ##class(web.DHCEPR).GetFormURL() _ "EPRCom.CAB#version=1,0,0,1' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<param name='BGColor' value='" _ strBGColor  _ "'>",!
+		w "<param name='UserID' value='" _ userid _ "'>",!
+		w "<param name='UserName' value='" _ username _ "'>",!
+		w "<param name='InstanceDataID' value='" _ InstanceDataID _ "'>",!		
+		w "<param name='EpisodeID' value='" _ $Get(%request.Data("EpisodeID",1)) _ "'>",!
+    	w "<param name='CTLocID' value='" _ ctlocid _ "'>",!
+    	w "<param name='CategoryID' value='" _ categoryid _ "'>",!
+		w "</object>"
+	}	
+	else	
+	{
+		If ($Data(%request.Data("PatientID"))) {
+			set PatientID = $Get(%request.Data("PatientID",1))		
+		}
+		else {
+			set PatientID = ""			
+		}
+			
+		If ($Data(%request.Data("EpisodeID"))) {
+			set EpisodeID = $Get(%request.Data("EpisodeID",1))		
+		}
+		else {
+			set EpisodeID = ""			
+		}
+			
+		If ($Data(%request.Data("TemplateID",1))) {
+			set TemplateID = $Get(%request.Data("TemplateID",1))	
+		}
+		else {
+			set TemplateID = ""			
+		}
+		
+		If ($Data(%request.Data("CategoryID",1))) {
+			set CategoryID = $Get(%request.Data("CategoryID",1))	
+		}
+		else {
+			set CategoryID = ""			
+		}
+		
+		If ($Data(%request.Data("CategoryType",1))) {
+			set CategoryType = $Get(%request.Data("CategoryType",1))	
+		}
+		else {
+			set CategoryType = ""			
+		}
+			
+		If ($Data(%request.Data("TemplateName",1))) {
+			set TemplateName = $Get(%request.Data("TemplateName",1))
+		}
+		else {
+			set TemplateName = ""			
+		}
+	
+		If ($Data(%request.Data("ChartItemID",1))) {
+			set ChartItemID = $Get(%request.Data("ChartItemID",1))
+		}
+		else {
+			set ChartItemID = ""			
+		}
+		
+		If ($Data(%request.Data("ProfileID",1))) {
+			set ProfileID = $Get(%request.Data("ProfileID",1))
+		}
+		else {
+			set ProfileID = ""			
+		}
+
+		//w "<object id='eprlistedit' name='eprlistedit'  classid='clsid:26AE0BDA-52C1-3C19-A174-49B53CDFF0B9' codebase='" _ ##class(web.DHCEPR).GetFormURL() _ "EPRCom.CAB#version=1,0,0,1' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<object id='eprlistedit' name='eprlistedit'  classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.EPRList' Width='100%' Height='100%' VIEWASTEXT >", !
+		w "<param name='BGColor' value='" _ strBGColor _ "'>",!
+		w "<param name='UserID' value='" _ userid _ "'>",!
+		w "<param name='UserName' value='" _ username _ "'>",!
+		w "<param name='PatientID' value='" _ PatientID _ "'>",!	
+		w "<param name='EpisodeID' value='" _ EpisodeID _ "'>",!	
+		w "<param name='TemplateName' value='" _ TemplateName _ "'>",!
+		w "<param name='TemplateID' value='" _ TemplateID _ "'>",!
+		w "<param name='CategoryID' value='" _ CategoryID _ "'>",!
+		w "<param name='CategoryType' value='" _ CategoryType _ "'>",!
+		w "<param name='ChartItemID' value='" _ ChartItemID _ "'>",!
+		w "<param name='ProfileID' value='" _ ProfileID _ "'>",!
+		w "<param name='ChartItemType' value='Multi'>",!
+		w "<param name='ChartListNo' value='-1'>",!
+		w "<param name='CTLocID' value='" _ ctlocid _ "'>",!
+		w "</object>"	
+	}
+</server>
+</body>
+</html>

@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',border:false">
+		<div class="hisui-panel" data-options="title:'转移单据',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="BorderLine" data-options="region:'north',border:false">
+					<table class="Condition" id="Conditions">
+						<input id="Inci" name="Inci" type="hidden">
+						<tr>
+							<td><label>出库科室</label><select id="FrLoc" name="FrLoc" class="hisui-combobox" style="width:160px;"></select></td>
+							<td style="text-align:left;"><input id="VirtualFlag" name="VirtualFlag" class="hisui-checkbox" type="checkbox" label="暂存库"></td>
+							<td><label>制单人</label><input id="CreateUser" name="CreateUser" class="hisui-combobox" style="width:120px"></td>
+							<td><label>类组</label><select id="ScgId" name="ScgId" class="hisui-stkscgcombotree" style="width:160px"></select></td>
+							<td>
+								<input class="hisui-radio" type="radio" label="全部" name="ConfirmFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="已确认" name="ConfirmFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="未确认" name="ConfirmFlag" value="N">
+							</td>
+						</tr>
+						<tr>
+							<td><label>接收科室</label><select id="ToLoc" name="ToLoc" class="hisui-combobox" style="width:160px;"></select></td>
+							<td style="text-align:left;">
+								<input class="hisui-radio" type="radio" label="制单日期" name="DateType" value="1" data-options="checked:true">
+							</td>
+							<td><label>起始日期</label><input id="StartDate" name="StartDate" class="hisui-datebox textbox" style="width:120px"></td>
+							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox" style="width:160px"></td>
+							<td>
+								<input class="hisui-radio" type="radio" label="全部" name="PrintFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="已打印" name="PrintFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="未打印" name="PrintFlag" value="N">
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>单据状态</label>
+								<select id="Status" name="Status" class="hisui-combobox" style="width:160px;">
+									<option value=""></option>
+									<option value="10">未完成</option>
+									<option value="11">已完成</option>
+									<option value="20">出库审核不通过</option>
+									<option value="21">出库审核通过</option>
+									<option value="30">拒绝接收</option>
+									<option value="31">已接收</option>
+								</select>
+							</td>
+							<td><input class="hisui-radio" type="radio" label="审核日期" name="DateType" value="2"></td>
+							<td><label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-datebox textbox" style="width:120px"></td>
+							<td colspan="2">
+								<a href="#" id="SearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+								<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+								<a href="#" id="ConfirmBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">确认</a>
+								<a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+								<a href="#" id="PrintHVColBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印汇总</a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>是否高值</label>
+								<select id="Status" name="HVFlag" class="hisui-combobox" style="width:160px;">
+									<option value="">全部</option>
+									<option value="Y">高值</option>
+									<option value="N">非高值</option>
+								</select>
+							</td>	
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="MasterGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div data-options="region:'south',border:false" class="GridPadding" style="padding-top:0;height:220px;">
+		<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" >
+			<table id="DetailGrid"></table>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfQuery.js"></script>
+</body>
+</html>

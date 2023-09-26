@@ -1,0 +1,447 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+<BODY>
+<center>
+<SERVER>
+ //s TestSetRow=%request.Get("TestSetRow")
+ s OrdItemDate=%request.Get("OrdItemDate")
+ s OrdItemTime=%request.Get("OrdItemTime")
+ s SpecDate=%request.Get("SpecDate")
+ s SpecTime=%request.Get("SpecTime")
+ s OrderID=%request.Get("OrderID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+ s portal=%request.Get("portal")
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s TestSetRow=$p(^OEORD(+OrderID,"I",$p($p(OrderID,",",1),"||",2),3),"^",35)
+ s LabEpisodeID=$p(TestSetRow,"||",1)
+ s IP=$ZUTIL(67,15,$J)
+ s EXEC=$ZUTIL(67,13,$J)
+ s CACHEUSER=$ZUTIL(67,11,$J)
+ s GraphCnt="1"
+ Set Config=##Class(websys.Configuration).%OpenId(1)
+ Set LABDATA=Config.LabDataNamespace
+ If '$Length(LABDATA) Set LABDATA="LABDATA"
+ //s LABDATA="LABDATA"
+ s LabNo=$p(TestSetRow,"||",1),TS=$p(TestSetRow,"||",2),TSCNT=$p(TestSetRow,"||",3)
+ s ReportStatus="0"
+ i $l(LabNo),$l(TS),$l(TSCNT),$d(^TEPI(LabNo,1,TS,TSCNT)){
+   s Machine=$p(^TEPI(LabNo,1,TS,TSCNT),"\",27)
+   i $p(^TEPI(LabNo,1,TS,TSCNT),"\",31)="A" s ReportStatus="1"
+   i $l(Machine),$d(^[LABDATA]DHCMachinePara(Machine)),$d(^[LABDATA]DHCMachinePara(Machine,1)){
+   		s GraphCnt=$p(^[LABDATA]DHCMachinePara(Machine,1),"\",4)
+   }
+ }
+ i ReportStatus="0" w "<br><br><h2>报告未审核!请稍候...</h2>" q
+ //阅读记录
+ //i ##Class(web.DHCLabReportControl).AddViewLog(USERID,EpisodeID,PatientID,OrderID)
+ //历次结果
+ i '$l(GraphCnt) s GraphCnt="1"
+ s OldResultUrl="dhclabviewoldresult.csp?PatientBanner=1&OrderID="_OrderID_"&StartDate="
+ //就诊信息
+ s PatAdmInfo=##Class(web.DHCLabOrder).GetAdmInfoByLabno(LabNo)
+ //获取上下(就诊)报告信息
+ s ReportList=##Class(web.DHCLabOrder).GetRptListByOrdID(OrderID,PatientID)
+ s nextReportID=$p(ReportList,"^",1)
+ s preReportID=$p(ReportList,"^",2)
+ s nextAdmID=$p(ReportList,"^",3)
+ s preAdmID=$p(ReportList,"^",4)
+ s (nextRptFlag,preRptFlag,nextAdmFlag,preAdmFlag)="disabled=disabled"
+ i $l(nextReportID) s nextRptFlag=""
+ i $l(preReportID) s preRptFlag=""
+ i $l(nextAdmID) s nextAdmFlag=""
+ i $l(preAdmID) s preAdmFlag=""
+ //s WinCloseUrl="websys.reload.csp"
+ i portal="1" s (nextRptFlag,preRptFlag)="style=display:none"
+ S viewLog=##Class(%CSP.Page).Encrypt($lb("web.DHCLabReportControl.AddViewLog"))
+</SERVER>
+
+<br>
+<!--函数-->
+<SCRIPT Language="Javascript">
+///下一个报告
+function NextReport(n){ 
+	url="dhclabdoctorreport.csp?PatientID="+"#((PatientID))#"+"&OrderID="+"#($g(nextReportID))#"
+	document.URL=url 
+	//n.style.background='url(bgbutton/bg_button_pressed.png)'; 
+}
+///前一个报告
+function PreviousReport(n){ 
+	document.URL="dhclabdoctorreport.csp?PatientID="+"#((PatientID))#"+"&OrderID="+"#((preReportID))#"
+	//n.style.background='url(bgbutton/bg_button_pressed.png)'; 
+}
+///下次就诊报告
+function NextAdm(n){ 
+	document.URL="dhclabdoctorreport.csp?OrderID="+"#((nextAdmID))#"
+	//n.style.background='url(bgbutton/bg_button_pressed.png)'; 
+}
+///前次就诊报告
+function PreviousAdm(n){ 
+	//alert(location.href);
+	document.URL="dhclabdoctorreport.csp?OrderID="+"#((preAdmID))#"
+	//n.style.background='url(bgbutton/bg_button_pressed.png)'; 
+}
+var ReadingLog=function(){
+	 var ret=cspRunServerMethod("#($G(viewLog))#","#($G(USERID))#","#($G(EpisodeID))#","#($G(PatientID))#","#($G(OrderID))#");
+	 window.close();
+}
+</script>
+<!--<H2>检验报告</H2>-->
+<p align=center><FONT size=4><Strong>检验报告</Strong></p>
+
+<table left=0 width=950 BORDER='1'>
+<TD colspan=6 height=6 align=left>
+ <form>
+  <font size=3><H1>#((PatAdmInfo))#</H1>
+  <!--
+  <input type="button" id="btnPreviousAdm" class="bgbutton" value="上次就诊" #((preAdmFlag))# onclick="PreviousAdm(this);"/>
+  <input type="button" id="btnNextAdm" class="bgbutton" value="下次就诊" #((nextAdmFlag))# onclick="NextAdm(this);"/>
+  -->
+ </form>
+</TD>
+
+<csp:QUERY CLASSNAME='web.DHCLabDoctorReport' NAME='QReportInfo' QUERYNAME='QueryReportInfo' P1=#(OrderID)#>
+<csp:WHILE CONDITION=QReportInfo.Next() COUNTER=row >
+	<tr align=left>#(QReportInfo.Get("LineStr"))#</tr>
+</csp:WHILE>
+<TD colspan=6 height=30 align=center><form>
+	<input type="button" id="btnPrevious" class="bgbutton" value="上一报告" #((preRptFlag))# onclick="PreviousReport(this);"/>
+    <input type="button" id="btnNext" class="bgbutton" value="下一报告" #((nextRptFlag))# onclick="NextReport(this);"/>
+	<input type="button" value="确定阅读" onclick="ReadingLog();"> 
+	<font size=3><H1><a href=#((OldResultUrl))#>历次结果及曲线图</a>
+	</form>
+</TD>
+</table>
+<!--
+<br>
+<form align=middle><font size=3><a href=#((OldResultUrl))#>历次结果</a>   <a href=#((WinCloseUrl))# >返回</a></form>
+<br>
+-->
+<SCRIPT Language="Javascript"> var tsname="0"</script>
+<!--检验结果-->
+<csp:QUERY CLASSNAME='web.DHCLabDoctorReport' NAME='query' QUERYNAME='QueryOrderResult' P1=#(OrderID)#>
+<table left=0 width=950 BORDER='1'>
+<ul>
+<csp:WHILE CONDITION=query.Next() COUNTER=row >
+	<csp:IF CONDITION='row="1"'>
+		<tr height=30 valign=middle>
+		<!--<TH>#(query.Get("TCCode"))#</TH>-->
+		<TH WIDTH="25%" valign=middle>#(query.Get("TCName"))#</TH>
+		<TH WIDTH="10%">#(query.Get("TCSyn"))#</TH>
+		<TH WIDTH="14%">#(query.Get("Result"))#</TH>
+		<TH WIDTH="10%">#(query.Get("TCUnit"))#</TH>
+		<TH WIDTH="4%" >#(query.Get("ResultFlag"))#</TH>
+		<TH WIDTH="20%">#(query.Get("RefRanges"))#</TH>
+		<TH width="6%" >#(query.Get("Sensitive"))#</TH>
+		<TH width="6%" >#(query.Get("WarnFlag"))#</TH>
+	<csp:ELSE>
+		<tr>
+		<!--行背景色-->
+		<csp:if CONDITION='row#2=0'>
+			<csp:if CONDITION='query.Get("WarnFlag")="N"'>
+				<!--<TD hi>#(query.Get("TCCode"))#</TD>-->
+				<TD bgcolor=#cfcfff><font color=#000000>#(query.Get("TCName"))#</TD>
+				<TD bgcolor=#cfcfff><font color=#000000>#(query.Get("TCSyn"))#</TD>
+				<TD bgcolor=#cfcfff><font color=#000000>#(query.Get("Result"))#</TD>
+				<TD bgcolor=#cfcfff><font color=#000000>#(query.Get("TCUnit"))#</TD>
+				<TD bgcolor=#cfcfff><font color=#000000>#(query.Get("ResultFlag"))#</TD>
+				<TD bgcolor=#cfcfff><font color=#000000>#(query.Get("RefRanges"))#</TD>
+				<csp:if CONDITION='query.Get("Sensitive")="Y"'>
+					<TD bgcolor=#cfcfff> <a HREF=#((query.Get("SenResult")))#>药敏结果</a></TD>
+				<csp:else>
+					<td bgcolor=#cfcfff>&nbsp;</td>	
+				</csp:if>
+				<!--危急标示-->
+				<csp:if CONDITION='query.Get("WarnFlag")="M"'>
+					<TD  bgcolor=#cfcfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" >< img src="../images/webemr/Warning.gif" BORDER="0"></a></TD>
+				<csp:elseif CONDITION='query.Get("WarnFlag")="U"'>
+					<TD  bgcolor=#cfcfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" ><img src="../images/webemr/Unacceptl.gif" BORDER="0"></a></TD>
+				<csp:else>
+					<TD  bgcolor=#cfcfff>&nbsp;</TD>
+				</csp:if>
+				<!--<TD bgcolor=white>#(query.Get("WarnFlag"))#</TD>-->
+			<csp:else>
+				<!--<TD >#(query.Get("TCCode"))#</TD>-->
+				<csp:if CONDITION='query.Get("WarnFlag")="L"'>
+					<TD bgcolor=#cfcfff><font color=#0000ff>#(query.Get("TCName"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#0000ff>#(query.Get("TCSyn"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#0000ff>#(query.Get("Result"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#0000ff>#(query.Get("TCUnit"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#0000ff>#(query.Get("ResultFlag"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#0000ff>#(query.Get("RefRanges"))#</TD>
+				<csp:else>
+					<TD bgcolor=#cfcfff><font color=#ff0000>#(query.Get("TCName"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#ff0000>#(query.Get("TCSyn"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#ff0000>#(query.Get("Result"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#ff0000>#(query.Get("TCUnit"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#ff0000>#(query.Get("ResultFlag"))#</TD>
+					<TD bgcolor=#cfcfff><font color=#ff0000>#(query.Get("RefRanges"))#</TD>
+				</csp:if>
+				<csp:if CONDITION='query.Get("Sensitive")="Y"'>
+					<TD bgcolor=#cfcfff> <a HREF=#((query.Get("SenResult")))# >药敏结果</a></TD>
+				<csp:else>
+					<td  bgcolor=#cfcfff>&nbsp;</td>	
+				</csp:if>
+				<!--危急标示-->
+				<csp:if CONDITION='query.Get("WarnFlag")="M"'>
+					<TD bgcolor=#cfcfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" >< img src="../images/webemr/Warning.gif" BORDER="0"></a></TD>
+				<csp:elseif CONDITION='query.Get("WarnFlag")="U"'>
+					<TD bgcolor=#cfcfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" ><img src="../images/webemr/Unacceptl.gif" BORDER="0"></a></TD>
+				<csp:else>
+					<TD bgcolor=#cfcfff>&nbsp;</TD>
+				</csp:if>
+				<!--<TD bgcolor=white>#(query.Get("WarnFlag"))#</TD>-->
+			</csp:if>
+		<csp:else>
+			<csp:if CONDITION='query.Get("WarnFlag")="N"'>
+				<!--<TD >#(query.Get("TCCode"))#</TD>-->
+				<TD bgcolor=#dfdfff><font color=#000000>#(query.Get("TCName"))#</TD>
+				<TD bgcolor=#dfdfff><font color=#000000>#(query.Get("TCSyn"))#</TD>
+				<TD bgcolor=#dfdfff><font color=#000000>#(query.Get("Result"))#</TD>
+				<TD bgcolor=#dfdfff><font color=#000000>#(query.Get("TCUnit"))#</TD>
+				<TD bgcolor=#dfdfff><font color=#000000>#(query.Get("ResultFlag"))#</TD>
+				<TD bgcolor=#dfdfff><font color=#000000>#(query.Get("RefRanges"))#</TD>
+				<csp:if CONDITION='query.Get("Sensitive")="Y"'>
+					<TD bgcolor=#dfdfff> <a HREF=#((query.Get("SenResult")))# >药敏结果</a></TD>
+				<csp:else>
+					<td  bgcolor=#dfdfff>&nbsp;</td>	
+				</csp:if>
+				<!--危急标示-->
+				<csp:if CONDITION='query.Get("WarnFlag")="M"'>
+					<TD bgcolor=#dfdfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" >< img src="../images/webemr/Warning.gif" BORDER="0"></a></TD>
+				<csp:elseif CONDITION='query.Get("WarnFlag")="U"'>
+					<TD bgcolor=#dfdfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" ><img src="../images/webemr/Unacceptl.gif" BORDER="0"></a></TD>
+				<csp:else>
+					<TD bgcolor=#dfdfff>&nbsp;</TD>
+				</csp:if>
+				<!--<TD bgcolor=white>#(query.Get("WarnFlag"))#</TD>-->
+			<csp:else>
+				<!--<TD >#(query.Get("TCCode"))#</TD>-->
+				<csp:if CONDITION='query.Get("WarnFlag")="L"'>
+					<TD bgcolor=#dfdfff><font color=#0000ff>#(query.Get("TCName"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#0000ff>#(query.Get("TCSyn"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#0000ff>#(query.Get("Result"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#0000ff>#(query.Get("TCUnit"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#0000ff>#(query.Get("ResultFlag"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#0000ff>#(query.Get("RefRanges"))#</TD>
+				<csp:else>
+					<TD bgcolor=#dfdfff><font color=#ff0000>#(query.Get("TCName"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#ff0000>#(query.Get("TCSyn"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#ff0000>#(query.Get("Result"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#ff0000>#(query.Get("TCUnit"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#ff0000>#(query.Get("ResultFlag"))#</TD>
+					<TD bgcolor=#dfdfff><font color=#ff0000>#(query.Get("RefRanges"))#</TD>
+				</csp:if>
+				<csp:if CONDITION='query.Get("Sensitive")="Y"'>
+					<TD bgcolor=#dfdfff> <a HREF=#((query.Get("SenResult")))# >药敏结果</a></TD>
+				<csp:else>
+					<td  bgcolor=#dfdfff>&nbsp;</td>	
+				</csp:if>
+				<!--危急标示-->
+				<csp:if CONDITION='query.Get("WarnFlag")="M"'>
+					<TD bgcolor=#dfdfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" >< img src="../images/webemr/Warning.gif" BORDER="0"></a></TD>
+				<csp:elseif CONDITION='query.Get("WarnFlag")="U"'>
+					<TD bgcolor=#dfdfff><a HREF="dhclabtestcode.csp?&#((query.Get("tcDetails")))#" ><img src="../images/webemr/Unacceptl.gif" BORDER="0"></a></TD>
+				<csp:else>
+					<TD bgcolor=#dfdfff>&nbsp;</TD>
+				</csp:if>
+				<!--<TD bgcolor=white>#(query.Get("WarnFlag"))#</TD>-->
+			</csp:if>	
+		</csp:if>
+		</tr>
+    </csp:IF>
+</csp:WHILE>
+</ul>
+</table>
+<!--配血结果-->
+<SERVER>s PackFlag=0</SERVER>
+<csp:QUERY CLASSNAME='web.DHCLabDoctorReport' NAME='QBBP' QUERYNAME='QueryResultBBP' P1=#(OrderID)#>
+<csp:WHILE CONDITION=QBBP.Next() COUNTER=row >
+	<csp:IF CONDITION='row="1"'>
+		<!--<h2>配血结果</h2>-->
+		<p align=center><FONT size=3><Strong>配血结果</Strong></p>
+		<table left=0 width=950 BORDER='1'>
+		<ul>
+		<tr height=30 valign=middle>
+		<th>血袋编号</th><th>次编号</th><th>血制品</th><th>血型</th><th>血量</th><th>单位</th><th>主交叉</th><th>次交叉</th><th>配血结果</th><th>血袋状态</th><th>处理事件</th>
+		</tr>
+		<SERVER>s PackFlag=1</SERVER>
+	</csp:if>
+	<!--行背景色-->
+	<csp:if CONDITION='row#2=0'>
+		<tr>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("PackId"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("SubId"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("PackBP"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("PackBG"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("Volumn"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("Unit"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("XMRes1"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("XMRes2"))#</TD> 
+		<TD bgcolor=#dfdfff>#(QBBP.Get("XMStatus"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("TransStatus"))#</TD>
+		<TD bgcolor=#dfdfff>#(QBBP.Get("Transaction"))#</TD>
+		</tr>
+	<csp:else>
+		<tr>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("PackId"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("SubId"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("PackBP"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("PackBG"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("Volumn"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("Unit"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("XMRes1"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("XMRes2"))#</TD> 
+		<TD bgcolor=#cfcfff>#(QBBP.Get("XMStatus"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("TransStatus"))#</TD>
+		<TD bgcolor=#cfcfff>#(QBBP.Get("Transaction"))#</TD>
+		</tr>
+	</csp:if>
+</csp:WHILE>
+<csp:if CONDITION='PackFlag="1"'>	
+	</ul>
+	</table>
+</csp:if>
+<!--药敏结果-->
+<br>
+<SERVER>s BugSum=0</SERVER>
+<csp:QUERY CLASSNAME='web.DHCLabDoctorReport' NAME='QBugs' QUERYNAME='QueryResultBugs' P1=#(OrderID)#>
+<csp:WHILE CONDITION=QBugs.Next() COUNTER=BugCnt >
+	<SERVER>
+		s BugSum=BugSum+1
+		//i BugSum=1 w "<h2>药敏结果</h2>"
+		i BugSum=1 w "<p align=center><FONT size=3><Strong>药敏结果</Strong></p>"
+	</SERVER>
+	<csp:QUERY CLASSNAME='web.DHCLabDoctorReport' NAME='QSenResult' QUERYNAME='QueryResultSen' P1=#(OrderID)# P2=#(QBugs.Get("TestCode"))#>
+	<table left=0 width=950 BORDER='1'>
+	<ul>
+	<tr><td colspan=8 align=center height=30>#(QBugs.Get("BugName"))# #(QBugs.Get("BugEng"))#</td>
+	<tr>
+	<th>代码</th><th>抗生素</th><th>英文名</th><th>结果</th><th>MIC</th><th>mm</th><th>用法</th><th>尿液</th>
+	</tr>
+	<csp:WHILE CONDITION=QSenResult.Next() COUNTER=row >
+		<tr>
+		<!--行背景色-->
+		<csp:if CONDITION='row#2=0'>
+			<TD width=100>#(QSenResult.Get("AntiCode"))#</TD>
+			<TD bgcolor=#cfcfff width=200>#(QSenResult.Get("AntiName"))#</TD>
+			<TD bgcolor=#cfcfff width=100>#(QSenResult.Get("AntiSyn"))#</TD>
+			<TD bgcolor=#cfcfff width=100>#(QSenResult.Get("Result"))#</TD>
+			<TD bgcolor=#cfcfff>#(QSenResult.Get("MIC"))#</TD>
+			<TD bgcolor=#cfcfff>#(QSenResult.Get("mm"))#</TD>
+			<TD bgcolor=#cfcfff>#(QSenResult.Get("Dosage"))#</TD>
+			<TD bgcolor=#cfcfff>#(QSenResult.Get("Surem"))#</TD>
+		<csp:else>
+			<TD width=100>#(QSenResult.Get("AntiCode"))#</TD>
+			<TD bgcolor=#dfdfff width=200>#(QSenResult.Get("AntiName"))#</TD>
+			<TD bgcolor=#dfdfff width=100>#(QSenResult.Get("AntiSyn"))#</TD>
+			<TD bgcolor=#dfdfff width=100>#(QSenResult.Get("Result"))#</TD>
+			<TD bgcolor=#dfdfff>#(QSenResult.Get("MIC"))#</TD>
+			<TD bgcolor=#dfdfff>#(QSenResult.Get("mm"))#</TD>
+			<TD bgcolor=#dfdfff>#(QSenResult.Get("Dosage"))#</TD>
+			<TD bgcolor=#dfdfff>#(QSenResult.Get("Surem"))#</TD>
+		</csp:if>
+		</tr>	
+	</csp:WHILE>
+	</ul>
+	</table>
+</csp:WHILE>
+<!--检验图形结果-->
+<SERVER>
+	k GraphTitle
+	s GraphNum=0
+</SERVER>
+<csp:QUERY CLASSNAME='web.DHCLabDoctorReport' NAME='QResultGraph' QUERYNAME='QueryResultGraph' P1=#(OrderID)#>
+		<p align=center><FONT size=3><Strong>#(QResultGraph.Get("GraphId"))#</Strong></p>
+<csp:WHILE CONDITION=QResultGraph.Next() COUNTER=row >
+	<CSP:OBJECT NAME="Graph" CLASSNAME="DHCLAB.DHCLabResultGraph" OBJID=#(QResultGraph.Get("GraphId"))#>
+	<csp:if CONDITION='row="1"'>
+		<!--<h2>检验图形</h2>-->
+		<p align=center><FONT size=3><Strong>检验图形</Strong></p>
+		<table BORDER='1'> 
+		<tr>
+	</csp:IF>
+	<td>
+	<form NAME="MyForm" cspbind="Graph">
+		<img name="DMRPPICDATA" cspbind="DLRGPICDATA" width=#(QResultGraph.Get("GraphWidth"))# height=#(QResultGraph.Get("GraphHeight"))#></td>
+	</form>
+	</td>
+	<!--图形标题-->
+	<csp:if CONDITION='row#GraphCnt=0'>
+		</tr>
+		<tr>
+			<server>
+				m ^TMPSERVER1=GraphTitle
+				s ^TMPSERVER=GraphNum
+				s GraphTitle(GraphNum#GraphCnt)=Graph.DLRGType
+				s LnStr=""
+				for i=0:1:GraphCnt-1 {
+					s LnStr=LnStr_"<td align=center bgcolor=white>"_GraphTitle(i)_"</td>"
+				}
+				k GraphTitle
+				s GraphNum=0
+			</server>
+			#(LnStr)#
+		</tr>
+		<tr>
+	<csp:else>
+		<SERVER>
+			if '$l(Graph.DLRGType){
+				s GraphTitle(GraphNum#GraphCnt)="&nbsp;" ;Graph.DLRGGraphTitle
+			}
+			else {
+				s GraphTitle(GraphNum#GraphCnt)=Graph.DLRGType ;Graph.DLRGGraphTitle
+			}
+			s GraphNum=GraphNum+1
+		</SERVER>
+	</csp:if>
+</csp:WHILE>
+</tr>
+<tr>
+<SERVER>
+	s LnStr=""
+	for i=0:1:GraphNum-1 {
+		s LnStr=LnStr_"<td align=center bgcolor=white>"_GraphTitle(i)_"</td>"
+	}
+	s ^TMPSERVER=LnStr
+</SERVER>
+#(LnStr)#
+</tr>
+</table>
+<!--<script Language="Javascript">alert(tsname);</script>-->
+<center/>
+</BODY>
+
+
+<!--显示图片-->
+<!--
+<CSP:OBJECT NAME="person" CLASSNAME="DHCLAB.DHCLabResultGraph" OBJID="A61021A011||A901||1||TEG||1">
+<form NAME="MyForm" cspbind="person">
+<br>Name:
+<input type="TEXT" name="Name" cspbind="DLRGLABNO" csprequired>
+<br>SSN:
+<input type="TEXT" name="SSN" cspbind="DLRGScale">
+<br>City:
+<input type="TEXT" name="City" cspbind="DLRGGraphMemo">
+<br>image:
+<br>
+<img name="DMRPPICDATA" cspbind="DLRGPICDATA" height="460" width="800"></td>
+<br>
+</form>
+-->
+<!--
+<script arguments="TSID:%String" language=Cache method=GrapnCnt returntype=%String>
+    QUIT "2"
+</script>
+-->
+
+</HTML>

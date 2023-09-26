@@ -1,0 +1,76 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+<SERVER>
+	n EpisodeID,SessionID,SessDate,htmldate,session,resource,starttime,ResDesc,LocDesc,seqNo,EstTime,VFTime,VTTime,defaultstr
+	s (EpisodeID,SessionID,SessDate,htmldate,session,resource,starttime,ResDesc,LocDesc,seqNo,EstTime,VFTime,VTTime,defaultstr)=""
+	s TWKFL=%request.Get("TWKFL")
+ 	s TWKFLI=%request.Get("TWKFLI")
+ 	s PatientID=%request.Get("PatientID")
+ 	s VNAID=%request.Get("VNAID")
+ 	;s ^zmeto("VNAID",1)=$g(VNAID)
+	s SchedID=%request.Get("SchedID")
+	i SchedID d
+	.s SessDate=$p(^RBAS(+SchedID,$p(SchedID,"||",2)),"^",1)
+	.s htmldate=##Class(websys.Conversions).DateLogicalToHtml(SessDate)
+	.s resource=$g(^RB("RES",+SchedID))
+	.s ResDesc=$p(resource,"^",17)
+	.s LocDesc=$p($g(^CTLOC($p(resource,"^"))),"^",2)
+	.s SurgAnaest=##Class(web.RBApptScheduleCP).GetDiarySurgeonAnaesthetist(SchedID)
+	.s SessionID=$p(^RBAS(+SchedID,$p(SchedID,"||",2)),"^",12)
+	.;i SessionID d
+	.;.s session=$g(^RB("RES",+SessionID,"DATE",$p(SessionID,"||",2),"SESS",$p(SessionID,"||",3)))
+ 	.;.s starttime=##Class(websys.Conversions).TimeLogicalToHtml($p($g(^RBAS(+SchedID,$p(SchedID,"||",2))),"^",4) )
+	.;.s seqNo=##Class(web.RBOperatingRoom).GetSequenceNo(+SessionID,SessDate,SessionID)
+	.;.s EstTime=##Class(web.RBOperatingRoom).GetEstTime($p($g(^RBAS(+SchedID,$p(SchedID,"||",2))),"^",4) ,SessDate,seqNo,+SessionID)
+	.;.s EstTime=##Class(websys.Conversions).TimeLogicalToHtml(EstTime)
+	.;i 'SessionID d
+	.s apptsched=$g(^RBAS(+SchedID,$p(SchedID,"||",2)))
+	.s starttime=##Class(websys.Conversions).TimeLogicalToHtml($p(apptsched,"^",4))
+	.s seqNo=##Class(web.RBOperatingRoom).GetSequenceNoFromSched(+SchedID,SessDate,SchedID)
+	.s EstTime=##Class(web.RBOperatingRoom).GetEstTime($p(apptsched,"^",4),SessDate,seqNo,+SchedID)
+ 	.s EstTime=##Class(websys.Conversions).TimeLogicalToHtml(EstTime)
+	.i VNAID'="" d
+	..s VNArow=^RB("NA",VNAID)
+	..s EstTime=""
+	..s starttime=""
+	..s VFTime=##Class(websys.Conversions).TimeLogicalToHtml($p($p($g(VNArow),"^",2),"Z",2))
+	..s VTTime=##Class(websys.Conversions).TimeLogicalToHtml($p($p($g(VNArow),"^",3),"Z",2))
+	..;s seqNo=""
+	.;s defaultstr=htmldate_"^"_starttime_"^"_ResDesc_"^"_LocDesc_"^^^"_SessionID_"^"_SessDate_"^"_+SessionID_"^"_$p(resource,"^")_"^^Y^^"_EstTime_"^"_seqNo_"^"_$p(SurgAnaest,"^",5)_"^"_$p(SurgAnaest,"^",4)_"^"
+	.s defaultstr=htmldate_"^"_starttime_"^"_ResDesc_"^"_LocDesc_"^^^"_SessionID_"^"_SessDate_"^"_+SchedID_"^"_$p(resource,"^")_"^^Y^^"_EstTime_"^"_seqNo_"^"_$p(SurgAnaest,"^",5)_"^"_$p(SurgAnaest,"^",6)_"^"_SchedID_"^"_VFTime_"^"_VTTime_"^"_VNAID
+	.s %request.Data("PatientID",1)=PatientID
+	.s %request.Data("defaultstr",1)=defaultstr
+	.s %request.Data("RescID",1)=+SchedID
+	.s %request.Data("PatientBanner",1)=%request.Get("PatientBanner")
+	e  d
+	. s RescID=$p(%request.Get("obData"),"^")
+	. s Date=$p(%request.Get("obData"),"^",2)
+	. s Loc=$p(%request.Get("obData"),"^",3)
+	. i RescID'="",Loc'="",Date'="" d
+	. . s defaultstr=##Class(websys.Conversions).DateLogicalToHtml(Date)_"^^"_$p($g(^RB("RES",RescID)),"^",17)_"^"_$p($g(^CTLOC(Loc)),"^",2)_"^^^^^^"_Loc_"^^Y^^^^^^^^^"
+	. s %request.Data("PatientID",1)=PatientID
+	. s %request.Data("RescID",1)=RescID
+	. s %request.Data("defaultstr",1)=defaultstr
+	
+</SERVER>
+</HEAD>
+<BODY>
+<CSP:IF condition='+$g(%request.Data("PatientID",1))'>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1></TRAK:COMPONENT>
+</CSP:IF>
+<TRAK:COMPONENT id="RBOperatingRoom.Edit" hidemenus=1></TRAK:COMPONENT>
+<SCRIPT>
+</SCRIPT>
+</BODY>
+
+</HTML>

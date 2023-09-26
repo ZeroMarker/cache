@@ -1,0 +1,64 @@
+<!-- Copyright (c) 2004 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<frameset rows="20%,*">
+
+<server>
+	;border="0" scrolling="auto" reSize
+	; SA 26.8.02 - log 27589: Two list components on this page have separate page counts.
+	; The ListTotals will only ever be one page. Manually set this to the first page, ragarless
+	; of the page count, and reset the page count to the correct for the ListAll.
+	i $g(%request.Data("TPAGCNT",1))'="" d %request.Set("CURRTPAGCNT",%request.Data("TPAGCNT",1))
+	d %request.Set("TPAGCNT","0")
+
+	n context,sundryid,pagetype,action,showunpaidbillsonly,twkfl,twkfli,grouptype,LINK,hospital
+	s (context,sundryid,pagetype,action,showunpaidbillsonly,twkfl,twkfli,grouptype,LINK,hospital)=""
+
+	s context             =$g(%request.Data("CONTEXT",1))
+	s sundryid            =%request.Get("SundryID")
+	s pagetype            =%request.Get("PageType")
+	s action              =%request.Get("Action")
+	s grouptype           =%request.Get("GroupType")
+	s showunpaidbillsonly =%request.Get("ShowUnpaidBillsOnly")
+	s twkfl               =%request.Get("TWKFL")
+	s twkfli              =%request.Get("TWKFLI")
+	s hospital            =%request.Get("Hospital")
+	
+	i hospital="" s hospital=%request.Get("HospDesc")
+	i twkfl=""    s twkfl=context
+	i twkfli=""   s twkfli=3
+
+	s LINK="websys.default.csp?WEBSYS.TCOMPONENT=ARCSundryDebtor.ListBills&SundryID="_sundryid_"&PageType="_pagetype_"&Action="_action_"&ShowUnpaidBillsOnly="_showunpaidbillsonly
+	s LINK=LINK_"&TWKFL="_twkfl_"&TWKFLI="_twkfli_"&CONTEXT="_context_"&Hospital="_hospital_"&GroupType="_grouptype
+</server>
+
+<frame src="websys.default.csp?WEBSYS.TCOMPONENT=ARCSundryDebtor.ListTotal&SundryID=#(sundryid)#&CONTEXT=#(context)#" name="SundryDetails" frameBorder=0 resizeable=no>
+
+<server>
+	; SA 26.8.02 - log 27589: See above, resetting the page count to the correct count for the ListAll.
+	;scrolling="auto" reSize
+	i $g(%request.Data("CURRTPAGCNT",1))'="" d %request.Set("TPAGCNT",%request.Data("CURRTPAGCNT",1))
+</server>
+
+<frame src="#(LINK)#" name="ListBills" frameBorder=0 resizeable=no scrolling="auto">
+
+</frameset>
+<BODY>
+</BODY>
+</HTML>
+
+
+
+

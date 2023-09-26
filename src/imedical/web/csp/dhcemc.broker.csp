@@ -1,0 +1,41 @@
+<script language="Cache" runat="server">
+	Set ClassName = $g(%request.Data("ClassName",1))
+	Set MethodName = $g(%request.Data("MethodName",1))
+	Set NeedReturn = +$g(%request.Data("NeedReturn",1),1)	;控制是不是有返回值
+	Set IsQuery = $g(%request.Data("IsQuery",1),1)
+	Q:ClassName="" "{err:'参数ClassName不能为空'}"
+	Q:MethodName="" "{err:'参数MethodName不能为空'}"
+	
+	i IsQuery="Y" d
+	.s limit=$g(%request.Data("limit",1))
+	.s offset=$g(%request.Data("offset",1))
+	.Write "{""rows"":"
+	.Write ##class(websys.Query).ToJson(ClassName,MethodName,offset,limit)
+	.Write ",""total"":",total,"}"
+	q:IsQuery="Y" ""
+	
+	
+	Q:'##class(websys.Conversions).IsValidClassName(ClassName) "{err:'Not Find Class: "_ClassName_"'}"
+	Q:'##class(websys.Conversions).IsValidMethodName(ClassName,MethodName) "{err:'Not Find Method: "_ClassName_":"_MethodName_"'}"
+	set myobj=##class(%Dictionary.CompiledMethod).%OpenId(ClassName_"||"_MethodName,0)
+	if '$IsObject(myobj) quit "{err:'Not Open "_ClassName_":"_MethodName_" Object'}"
+	set FormalSpecParsed = myobj.FormalSpecParsed
+	set paramStr = ""
+	for tmp=1:1:$ll(FormalSpecParsed) d
+	.set paramName = $lg($lg(FormalSpecParsed,tmp),1)
+	.set paramStr = paramStr_$case(paramStr,"":"",:",")_"$g(%request.Data("""_paramName_""",1))"
+	if (NeedReturn=1){
+		Set code="Set rs=##class("_ClassName_")."_MethodName_"("_paramStr_")"
+		XECUTE code
+		write rs
+	} Else {
+		Set code="Do ##class("_ClassName_")."_MethodName_"("_paramStr_")"
+		XECUTE code
+		
+	}
+</script>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+<csp:content charset="utf-8">

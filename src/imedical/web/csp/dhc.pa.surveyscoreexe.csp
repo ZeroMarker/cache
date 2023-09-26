@@ -1,0 +1,76 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s active= $Get(%request.Data("active",1))
+	s cycleDr = $Get(%request.Data("cycleDr",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s data = $Get(%request.Data("data",1))
+	s acceptUnitDr = $Get(%request.Data("acceptUnitDr",1))
+	s scoreUnitDr = $Get(%request.Data("scoreUnitDr",1))
+	s unitDr = $Get(%request.Data("unitDr",1))
+	s period = $Get(%request.Data("period",1))
+	s schemDr = $Get(%request.Data("schemDr",1))
+    s periodType = $Get(%request.Data("periodType",1))
+	s scoreUserDr = $Get(%request.Data("scoreUserDr",1))
+	s unitType = $Get(%request.Data("unitType",1))
+	s acceptUnitType = $Get(%request.Data("acceptUnitType",1))
+    s patDr = $Get(%request.Data("patDr",1))
+	
+	i action = "getTitleInfo" d
+	.w ##class(dhc.pa.udata.uSurveyScore).GetGridTitle()
+    
+	i action = "getSchem" d
+	.w ##class(dhc.pa.udata.uSchem).ListRec("Y","flag","Y","","",0,1000)
+	
+	i action="getData"  d
+	.;w schemDr,cycleDr,period,periodType,scoreUserDr,acceptUnitDr,!
+	.;w ##class(dhc.pa.udata.uSurveyScore).List(schemDr,cycleDr,period,periodType,scoreUserDr,acceptUnitDr)
+	.w ##class(dhc.pa.udata.uSurveyTotalScore).detailList(period,periodType,acceptUnitDr,schemDr,scoreUserDr,patDr)
+	
+		
+	i action="getDataList"  d
+	.;w schemDr,cycleDr,period,periodType,scoreUserDr,acceptUnitDr,!
+	.w ##class(dhc.pa.udata.uSurveyScore).List(schemDr,cycleDr,period,periodType,scoreUserDr,acceptUnitDr)
+
+	
+	i action="getlist"  d
+	.w ##class(dhc.pa.udata.uSurveyTotalScore).List(searchField, searchValue, sortField, sortDir, start,limit,period,periodType,cycleDr)
+	
+	i action="getTotallist"  d
+	.w ##class(dhc.pa.udata.uSurveyTotalScore).TotalList(period,periodType,unitDr,cycleDr,schemDr)
+	
+	i action = "save" d
+	.s result =##class(dhc.pa.udata.uSurveyScore).Save(cycleDr,periodType,period,scoreUserDr,scoreUnitDr,unitType,acceptUnitDr,acceptUnitType,schemDr,data,patDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "total" d
+	.;s result =##class(dhc.pa.udata.uSurveyScore).CalAuditScoreMain(schemDr,acceptUnitDr,period,periodType,scoreUnitDr,scoreUserDr,cycleDr)
+	.s result =##class(dhc.pa.udata.uSurveyScore).CalDetailScoreMain(schemDr,period,periodType,cycleDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "cal" d
+	.s result = ##class(dhc.pa.udata.uSurveyTotalScore).getScorce(schemDr,period,periodType,cycleDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

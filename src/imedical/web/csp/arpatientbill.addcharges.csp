@@ -1,0 +1,78 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+
+<SERVER>	
+	
+	n comp
+	s context=%request.Get("CONTEXT")
+	s EpisodeID=%request.Get("EpisodeID")
+	s PatientID=%request.Get("PatientID")
+	s SundryID=%request.Get("SundryID")
+	s OrderID=%request.Get("OrderID")
+
+	i $g(%request.Data("EpisodeID",1))'="" {
+
+ 		s compstr="ARPatientBill.ListCharges"
+		s link="&EpisodeID="_EpisodeID_"&PatientID="_PatientID
+	}
+	//AJI 36748
+	i $g(%request.Data("SundryID",1))'="" {
+
+ 		s compstr="ARCSundryDebtor.ListCharges"
+		s link="&SundryID="_SundryID_"&OrderID="_OrderID
+	}
+
+</SERVER>
+
+<frameset rows="40%,*">
+	<frame name="Charges_edit" src="websys.default.csp?WEBSYS.TCOMPONENT=ARPatientBill.EditCharges#(link)#&PatientBanner=1&CONTEXT=#(context)#">
+	<frame name="Charges_list" src="websys.default.csp?WEBSYS.TCOMPONENT=#(compstr)##(link)#&CONTEXT=#(context)#">
+</frameset>
+<BODY>
+<SCRIPT>
+
+function SelectRowHandler(evt) {
+	//only if within workflow.
+	var frm=document.forms["fARPatientBill_ListCharges"];
+	if (frm.TWKFL.value=="") return;
+	var eSrc=websys_getSrcElement(evt);
+	var rowObj=getRow(eSrc);
+	if (rowObj.tagName != "TH") {
+		//setRowClass(rowObj);
+		if (eSrc.tagName != "A") eSrc=websys_getParentElement(eSrc);
+		if (eSrc.tagName != "A") return;
+		if (eSrc.id.indexOf("fdatez")!=0) return;
+	
+		// SA/CJB 2.9.03 log 38689: use rowObj.TRAKListIndex instead of rowObj.rowIndex
+		var rowsel=rowObj.TRAKListIndex;
+		//var rowsel=rowObj.rowIndex;
+		
+		var arrlnk=eSrc.href.split("&TWKFLI=");
+		var lnk = arrlnk[0] + "&TWKFLI=";
+		if (arrlnk[1]) {
+			arrIndx = arrlnk[1].split("&");
+			//send workflow item back one to 
+			if (arrIndx[0]!="") arrIndx[0] -= 1;
+			lnk += arrIndx.join("&");
+		}
+		eSrc.href = lnk;
+	}
+}
+</SCRIPT>
+
+</BODY>
+</HTML>
+
+
+

@@ -1,0 +1,150 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	<style>
+		
+	</style>
+</HEAD>
+<BODY class="hisui-layout">
+	<div class="border-none" data-options="region:'center'">
+        <div id="tb">
+            <div id="tbfm" class="padding-10 x-separator">
+                <table class="text-right">
+                    <tr>
+                        <td>预算年度</td>
+                        <td class="padding-both-10">
+                            <input id="Yearbox" class="hisui-combobox combobox-width-177"/>
+                        </td>
+                        <td>预算方案</td>
+                        <td class="padding-both-10">
+                            <input id="Schembox" class="hisui-combobox combobox-width-177"/>    
+                        </td>
+                        <td>预算项大类</td>
+                        <td class="padding-left-10">
+                            <input id="IBigType" class="hisui-combobox combobox-width-177"/>    
+                        </td>
+                        
+                    </tr>
+                    <tr>
+                        <td class="padding-top-10">预算项类别</td>
+                        <td class="padding-10-bottom-none">
+                            <input id="ITypebox" class="hisui-combobox combobox-width-177"/>
+                        </td>
+                        <td class="padding-top-10">预算项</td>
+                        <td class="padding-10-bottom-none">
+                            <input id="Itembox" class="text combobox-width-177"/>   
+                        </td>
+                        <td class="padding-left-10 padding-top-10 text-right">
+                            <a id="FindBn" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+                        </td> 
+                    </tr>           
+                </table>
+            </div>
+            <div class="line-36-y">
+                <a id="BtchBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true">批量设置</a>
+                <a id="SaveBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>   
+            </div>
+        </div>
+        <table id="MainGrid" >
+        </table>
+    </div>       
+	<!--批量分解方法+调节比例-->
+	<div id="BatchWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div id="batchcenter" class="padding-10-bottom-none" data-options="region:'center'">	
+				<form id="ff" class="flex-x-center">	   
+					<table>
+						<tr>
+							<td class="r-label">预算年度</td>
+							<td class="padding-both-10">
+								<input id="BYbox" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label padding-top-10">预算方案</td>
+							<td class="padding-both-10 padding-top-10">
+								<input id="BSchembox" class="hisui-combobox combobox-width-177"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label padding-top-10">预算项类别</td>
+							<td class="padding-both-10 padding-top-10">
+								<input id="BIType" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label padding-top-10">分解方法</td>
+							<td class="padding-both-10 padding-top-10">
+								<input id="BSplitMeth" class="hisui-combobox combobox-width-177" />
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label padding-top-10">调节比例(%)</td>
+							<td class="padding-both-10 padding-top-10">
+								<input id="BRatio" class="hisui-numberbox " style="width:178px;" data-options="min:1,max:100,precision:2"/>
+							</td>
+						</tr>
+					</table>
+				</form>	
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="BSave" class="hisui-linkbutton width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="BClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div>
+	<!--维护数据明细-->
+	<div id="DetailWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="padding-10" data-options="region:'center',border:false">
+				<div id="Detailtb">
+            		<div class="line-36-y">
+                		<a id="DetailBtchBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true">批量设置</a>
+                		<a id="DetailSaveBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>   
+            		</div>
+        		</div>
+				<table id="DetailGrid">
+				</table>	
+			</div>
+		</div>
+	</div>
+	<!--维护数据明细的批量处理-->
+	<div id="DetailBatWin" class="hisui-window" data-options="closed:true">   
+		<div class="hisui-layout" data-options="fit:true">
+			<div id="Detailbatch" class="padding-10-bottom-none" data-options="region:'center'">	
+				<form id="Detailff" class="flex-x-center">	   
+					<table>
+						<tr>
+							<td class="r-label">调节比例</td>
+							<td class="padding-both-10">
+								<input id="DetailBRatio" class="hisui-validatebox textbox combobox-width-177" data-options="required:true,validType:'OneToHundredNum'">
+							</td>
+						</tr>
+					</table>
+				</form>	
+			</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="DetailBSave" class="hisui-linkbutton width-70" href="#">保存</a>
+				<span class="padding-right-10"></span>
+				<a id="DetailBClose" class="hisui-linkbutton width-70" href="#">关闭</a>
+			</div>
+		</div>
+	</div>		
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchSplitYM/BudgSchSplitYMmain.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchSplitYM/batchEditFun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchSplitYM/BudgSchSplitYMdetail.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+</BODY>
+</HTML>

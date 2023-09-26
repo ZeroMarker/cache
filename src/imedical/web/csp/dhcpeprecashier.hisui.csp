@@ -1,0 +1,441 @@
+
+<!-- 
+ * FileName: dhcpeprecashier.hisui.csp
+ * Anchor: yupeng
+ * Date: 
+ * Description: HISUI 体检费用管理界面
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+<style>
+   
+</style>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+set CashierMin=$g(^DHCPESetting("DHCPE","CashierMin"))
+set SpecialPayModes=$g(^DHCPESetting("DHCPE","SpecialPayModes"))
+set PayModeDR=$g(^DHCPESetting("DHCPE","InvDefaultPayMode"))
+set ListFlag=$g(^DHCPESetting("DHCPE","InvListFlag"))
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+set roundingitem=$g(^DHCPESetting("DHCPE","RoundingFee"))
+set minroundingfee=$g(^DHCPESetting("DHCPE","RoundingFeeLimitMin"))
+s ADMType=%request.Get("ADMType")
+s GIADM=%request.Get("GIADM")
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+
+</SCRIPT> 
+<script type="text/javascript">
+	var TransADMType="#(ADMType)#"
+	var TransGIADM="#(GIADM)#"
+	
+	var CashierMin="#(CashierMin)#"
+	var specialpaymodes=","+"#(SpecialPayModes)#"+","
+	var defaultpaymode="#(PayModeDR)#"
+	var ListFlag="#(ListFlag)#"
+	var minroundingfee="#(minroundingfee)#"
+	var roundingitem="#(roundingitem)#"
+	var PreCashier=1
+	
+</script>
+
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false" id="cashierpanel">
+ <input type="hidden" id="Counter"/>
+ <input type="hidden" id="RegNo"/>
+ <input type="hidden" id="CashierTable"/>
+ 
+ <!--div data-options="region:'north',border:false" style="height:300px;padding:10px 10px 0px 10px;">
+ <div class="hisui-panel" data-options="title:'费用管理',headerCls:'panel-header-gray',iconCls:'icon-mnypaper-cfg'">
+	
+	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:250px;">
+
+    <div data-options="region:'west',split:false,collapsible:false,headerCls:'panel-header-gray',border:false" style="width:420px;">
+        
+        <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+        <input type="hidden" id="Counter"/>
+        
+        <tr>
+          <td align="right" style="width:60px;">
+            <label for="CardNo">卡号</label>
+          </td>
+          <td style="width:110px;">
+            <div>
+              <input class="hisui-validatebox textbox" Id="CardNo" style="width:110px;" /></div>
+          </td>
+          <td colspan="2" align="left">
+            <div>
+              <select class="hisui-combobox" type="text" Id="CardType" name="CardType" style="width:110px;" editable="false"></select>
+              <a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></div>
+          </td>
+        </tr>  
+        <tr>
+          <td align="right">
+           <label for="RegNo">登记号</label>
+          </td>
+         <td> 
+         <input class="hisui-validatebox textbox" type="text" Id="RegNo" style="width:110px;"/></div>
+         </td>
+          <td align="right" style="width:75px;">
+           <label for="Name">姓名</label>
+          </td>
+         <td> 
+         <input class="hisui-validatebox textbox" type="text" Id="Name" style="width:110px;"/></div>
+         </td>
+          </tr>
+         
+          <tr>
+          <td align="right">
+           <label for="StartDate">开始日期</label>
+          </td>
+         <td> 
+          <div>
+              <input class="hisui-datebox" type="text" Id="StartDate" style="width:117px;"/></div>
+         </td>
+          <td align="right">
+           <label for="EndDate">结束日期</label>
+          </td>
+         <td> 
+          <div>
+              <input class="hisui-datebox" type="text" Id="EndDate" style="width:117px;"/></div>
+         </td>
+          </tr>
+         
+         
+          
+         
+        </table>
+        <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+        <tr align="center">
+          <td align="center">
+           <a id="Find" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+          </td>
+        
+          </tr>
+         </table>
+        
+	   
+	  </div>  
+	 <div data-options="region:'center',border:false">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-bottom:0;border-right:0;border-radius:0;">
+		<table class="hisui-datagrid" id="CashierTable" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>
+			
+		</div>
+     
+      </div>
+	  
+	</div>   
+	</div>  
+ </div-->
+ <div data-options="region:'center',border:false" style="padding:5px 10px 10px 10px;">
+  <div class="hisui-panel" data-options="title:'结算费用',headerCls:'panel-header-gray',iconCls:'icon-fee',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+	
+	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:600px;">
+
+    <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false" style="height:360px;">
+     <table class="hisui-datagrid" id="PreAuditPayTable" data-options="bodyCls:'panel-header-gray',border:false"></table>
+  	</div>
+  	
+  	<div data-options="region:'east',headerCls:'panel-header-gray',border:false" style="width:450px;padding:10px;border:1px dashed #ccc;border-top:0;border-bottom:0;border-right:0;">
+  
+   	<table style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+  	
+  		<tr>
+          <td align="left">
+           <label>应付金额</label>
+          </td>
+         
+          <td align="left">
+           <label><font color="red">*</font>找零</label>
+          </td>
+        
+         
+        </tr>
+  		<tr>
+  		 <td>
+            <div><input class="hisui-numberbox textbox" Id="Amount" data-options="precision:2" style="width:150px;"/></div>
+          </td>
+          
+          <td>
+            <div><input class="hisui-numberbox textbox" Id="Change" data-options="precision:2" style="width:150px;"/></div>
+          </td>
+          <td>
+           <div><a id="BDeleteRoundItem" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="width:100px;">删除凑整费</a></div>
+          </td>
+         
+  		</tr>
+  		
+     </table>
+     
+     	<table style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+  	
+  		<tr>
+  		 <td align="left">
+           <label>凑整费</label>
+          </td>
+          <td align="left">
+           <label>凑整类型</label>
+          </td>
+         
+          <td align="left">
+           <label>凑整备注</label>
+          </td>
+          <td align="left">
+           
+          </td>
+          <td align="left">
+           
+          </td>
+         
+        </tr>
+  		<tr>
+  		 <td>
+            <div><input class="hisui-numberbox textbox" data-options="precision:2" Id="Rounding" style="width:100px;"/></div>
+          </td>
+  		 <td>
+  		 <div>
+            <select class="hisui-combobox" type="text" Id="RoundType" name="RoundType" style="width:110px;"></select>
+          </div>
+          </td> 
+          <td>
+           <div><input class="hisui-validatebox textbox" type="text" Id="RoundRemark" style="width:90px;"/></div>
+          </td>
+          <td>
+           <a id="BAddRound" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="width:100px;">新增凑整费</a></div>
+          </td>
+         
+  		</tr>
+  		
+     </table>
+     
+     
+     
+     
+     <table style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+  	
+  		<tr>
+          <td align="left">
+           <label>费别</label>
+          </td>
+          <td align="left">
+           <label>医疗类别</label>
+          </td>
+          <td align="left">
+          </td>
+          <td align="left">
+          </td>
+         </tr> 
+          
+         <tr> 
+         <td align="left">
+  		 	<div>
+            <select class="hisui-combobox" type="text" Id="AdmReason" name="AdmReason" style="width:100px;" data-options="editable:false,panelHeight:'auto'"></select>
+          </div>
+          </td> 
+           <td align="left">
+  		 	<div>
+            <select class="hisui-combobox" type="text" Id="YLLB" name="YLLB" style="width:100px;" data-options="editable:false,panelHeight:'auto'"></select>
+          </div>
+          </td> 
+          
+           <td>
+           <div><a id="BBilled" href="#" class="hisui-linkbutton" style="width:100px;">结算</a></div>
+          </td>
+          <td>
+           <div><a id="BPrintDetail" href="#" class="hisui-linkbutton" style="width:100px;">明细打印</a></div>
+          </td>
+           
+          
+  		</tr>
+  		
+     </table>
+     
+     
+     
+  	</div>
+  	
+  	
+  	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px;">
+   
+  	<table id="PayModeTable" style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+  		<input type="hidden" id="InvID"/>
+  		<input type="hidden" id="ADMType"/>
+  		<input type="hidden" id="GIADM"/>
+  		<input type="hidden" id="CurRegNo"/>
+  		<input type="hidden" id="CardID"/>
+  		
+  		
+  		<tr>
+          <td colspan="2" align="left">
+            <div>
+            <label for="CardNo">卡号</label>
+          	<label style="width:10px;"> </label>
+            
+            <input class="hisui-validatebox textbox" Id="CardNo" style="width:180px;" /></div>
+          </td>
+          <td colspan="2" align="left">
+            <div>
+              <select class="hisui-combobox" type="text" Id="CardType" name="CardType" style="width:110px;" editable="false"></select>
+              <a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></div>
+          </td>
+        </tr>  
+  		
+  		<tr>
+          <td align="left">
+           <label><font color="red">*</font>支付方式</label>
+          </td>
+         
+          <td align="left">
+           <label><font color="red">*</font>付款金额</label>
+          </td>
+         
+          <td align="left">
+           <label>号码</label>
+          </td>
+          
+          <td align="left">
+           <label>备注</label>
+          </td>
+          <td align="left">
+          </td>
+        </tr>
+  	
+        <tr>
+          <td>
+            <div>
+              <select class="hisui-combogrid" type="text" Id="PayMode" name="PayMode" style="width:110px;" editable="false"></select>
+            </div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-numberbox textbox" Id="AmountToPay" data-options="precision:2" style="width:100px;"/></div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-validatebox textbox" Id="No" style="width:100px;"/></div>
+          </td>
+          
+          <td>
+            <div><input class="hisui-validatebox textbox" Id="Remark" style="width:100px;"/></div>
+          </td>
+          
+          <td>
+          	<a href="#" onclick='AddPayMode()'><img src='../scripts_lib/hisui-0.1.0/dist/css/icons/add.png' border=0 /></a>
+           </td>
+        </tr>
+         
+         
+          
+         
+        </table>
+   		<table style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+  	
+  		<tr>
+          <td align="left">
+           <label>发票名称</label>
+          </td>
+         
+          <td align="left">
+           <label>纳税人识别号</label>
+          </td>
+         
+          <td align="left">
+           <label>当前发票号</label>
+          </td>
+          
+         
+          <td align="right">
+          <div><input class='hisui-checkbox' type="checkbox" label="不打发票" Id="NoPrintInv" /></div>
+          </td>
+        </tr>
+  	
+        <tr>
+          <td>
+            <div><input class="hisui-validatebox textbox" type="text" Id="InvName" style="width:102px;"/></div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-validatebox textbox" type="text" Id="TaxpayerNum" style="width:94px;"/></div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-validatebox textbox" type="text" Id="CurNo" style="width:100px;" disabled="true"/></div>
+          </td>
+          
+          <td align="right">
+          	<div><input class='hisui-checkbox' type="checkbox" label="医保结算" Id="InsuPay" /></div>
+          </td>
+          
+         
+        </tr>
+         
+        </table>
+   	
+  	</div>
+  	
+  
+  	</div>
+  </div>			
+ </div>	
+ 
+ <div data-options="region:'east',border:false" style="width:400px;padding:5px 10px 10px 0px;">
+ <div class="hisui-panel" data-options="title:'结算费用明细',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+ 	<table class="hisui-datagrid" id="FeeListTable" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
+ </div>	
+ </div>	
+</div>
+
+
+  <script type="text/javascript" src="../scripts/dhcpecashier.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPayService.js"></script>
+  <script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+  <script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  
+  <script type="text/javascript" src="../scripts/websys.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPE.Toolets.Ctls.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPE.Toolets.Common.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  
+  
+   <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+    <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+     <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
+      <script type="text/javascript" src="../scripts/DHCPECashierEx.js"></script>
+       <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+        <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+         <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	  <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="UIF-8"></script>
+  
+</body>		
+</html>

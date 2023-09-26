@@ -1,0 +1,173 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+</HEAD>
+<SCRIPT language="javascript">
+	function showDiv(el){
+		var objEL=document.getElementById(el);
+		if (objEL){
+			if (!objEL.style.display||(objEL.style.display=="inline")){
+				objEL.style.display="none";
+			}else{
+				objEL.style.display="inline";
+			}
+		}
+	}
+</SCRIPT>
+<SCRIPT LANGUAGE="cache" RUNAT="server">
+	s VolId=$g(%request.Data("VolId",1))
+	s FrontPage=$P(##Class(web.DHCWMRFrontPageQry).GetFrontPageInfo(+VolId),$C(1),1)
+	s FrontPageID=$p(FrontPage,"^",1)
+	s Resume=$p(FrontPage,"^",3)
+	S RepUser=##class(web.DHCWMRMedBaseCtl).GetUsrStr($p(FrontPage,"^",4))
+	s RepUserDesc=$p(RepUser,"/",3)
+	s RepDate=$p(FrontPage,"^",5)
+	s RepTime=$p(FrontPage,"^",6)
+</SCRIPT>
+<BODY>
+	<TABLE width="100%"><TBODY><TR><TD class=maintitle noWrap>病案首页</TD></TR></TBODY></TABLE>
+	<TABLE width="100%" onclick="showDiv('Demo1');"><TBODY><TR><TD class=2title noWrap>基本信息</TD></TR></TBODY></TABLE>
+	<DIV id="Demo">
+		<TABLE class=tblList id="tFrontPageInfo" Name="tFrontPageInfo" CELLSPACING=1  width="100%"><TBODY>
+			<TR class="RowOdd" NOWRAP><TD style='display:none;'></TD>
+			<TD><label ALIGN="center">编目人</label></TD><TD><label>#(RepUserDesc)#</label></TD>
+			<TD><label ALIGN="center">编目日期</label></TD><TD><label>#(RepDate)#</label></TD>
+			<TD><label ALIGN="center">编目时间</label></TD><TD><label>#(RepTime)#</label></TD>
+			</TR>
+		</TBODY></TABLE>
+	</DIV>
+	<TABLE width="100%" onclick="showDiv('Demo2');"><TBODY><TR><TD class=2title noWrap>疾病诊断</TD></TR>
+	<TR><TD>
+	<DIV id="Demo">
+		<TABLE class=tblList id="tQueryFPICDY" Name="tQueryFPICDY" CELLSPACING=1 width="100%">
+			<THEAD>
+				<TH  width="5px" style='display:none;'></TH>
+				<TH id=1  NOWRAP>ID</TH>
+				<TH id=2  NOWRAP>ICD编码</TH>
+				<TH id=3  NOWRAP>疾病诊断</TH>
+				<TH id=4  NOWRAP>愈合情况</TH>
+				<TH id=5  NOWRAP>显示位置</TH>
+				<TH  width="5px" style='display:none;'></TH>
+				<TH id=6  NOWRAP>ID</TH>
+				<TH id=7  NOWRAP>ICD编码</TH>
+				<TH id=8  NOWRAP>疾病诊断</TH>
+				<TH id=9  NOWRAP>愈合情况</TH>
+				<TH id=10  NOWRAP>显示位置</TH>
+			</THEAD>
+			<CSP:QUERY NAME="QueryFPICD" CLASSNAME="web.DHCWMRFrontPageQry" QUERYNAME="QueryFPICD" P1=#(FrontPageID)# P2="D">	
+			<SCRIPT LANGUAGE="cache" RUNAT="server">
+				s index=0
+				while (QueryFPICD.Next()){
+					s index=index+1
+					i $p(index/2,".",2)'="" d
+					.w "<TR class=""RowOdd"" NOWRAP><TD style='display:none;'></TD>"
+					.w "<TD align='center'><label>"_QueryFPICD.Get("ID")_"<label></TD>",!
+					.w "<TD><label>"_$p(QueryFPICD.Get("ICDDx"),"/",2)_"<label></TD>",!
+					.w "<TD><label>"_$p(QueryFPICD.Get("ICDDx"),"/",4)_"<label></TD>",!
+					.w "<TD><label>"_$p(QueryFPICD.Get("Result"),"/",3)_"<label></TD>",!
+					.w "<TD><label>"_QueryFPICD.Get("Pos")_"</TD>",!
+					e  d
+					.w "<TD style='display:none;'></TD>"
+					.w "<TD align='center'><label>"_QueryFPICD.Get("ID")_"<label></TD>",!
+					.w "<TD><label>"_$p(QueryFPICD.Get("ICDDx"),"/",2)_"<label></TD>",!
+					.w "<TD><label>"_$p(QueryFPICD.Get("ICDDx"),"/",4)_"<label></TD>",!
+					.w "<TD><label>"_$p(QueryFPICD.Get("Result"),"/",3)_"<label></TD>",!
+					.w "<TD><label>"_QueryFPICD.Get("Pos")_"</TD>",!
+					.w "<TR>",!
+				}
+				w:$p(index/2,".",2)'="" "<TD style='display:none;'></TD><TD><label></label></TD><TD><label></label></TD><TD><label></label></TD><TD><label></label></TD><TD><label></label></TD></TR>"
+			</SCRIPT>
+		</TABLE>
+	</DIV>
+	</TD></TR>
+	</TBODY></TABLE>
+
+	<TABLE width="100%" onclick="showDiv('Demo3');"><TBODY><TR><TD class=2title noWrap>手术信息</TD></TR></TBODY></TABLE>
+	<DIV id="Demo">
+		<TABLE class=tblList id="tQueryFPICDX" Name="tQueryFPICDX" CELLSPACING=1 width="100%">
+			<THEAD>
+				<TH width="5px" style='display:none;'></TH>
+				<TH id=1  NOWRAP>ID</TH>
+				<TH id=2  NOWRAP>手术编码</TH>
+				<TH id=3  NOWRAP>手术诊断</TH>
+				<TH id=4  NOWRAP>手术日期</TH>
+				<TH id=5  NOWRAP>术者</TH>
+				<TH id=6  NOWRAP>一助</TH>
+				<TH id=7  NOWRAP>二助</TH>
+				<TH id=8  NOWRAP>麻醉方式</TH>
+				<TH id=9  NOWRAP>麻醉师</TH>
+				<TH id=10  NOWRAP>愈合情况</TH>
+				<TH id=11  NOWRAP>显示位置</TH>
+				<TH id=12  NOWRAP>备注</TH>
+			</THEAD>
+			<CSP:QUERY NAME="QueryFPICD" CLASSNAME="web.DHCWMRFrontPageQry" QUERYNAME="QueryFPICD" P1=#(FrontPageID)# P2="O">
+			<CSP:WHILE CONDITION="QueryFPICD.Next()">	
+			<SCRIPT LANGUAGE="cache" RUNAT="server">
+				w "<TR class=""RowOdd"" NOWRAP><TD style='display:none;'></TD>"
+				w "<TD align='center'><label>"_QueryFPICD.Get("ID")_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("ICDDx"),"/",2)_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("ICDDx"),"/",4)_"</label></TD>",!
+				w "<TD><label>"_QueryFPICD.Get("OperDate")_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("OperDoc"),"/",3)_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("Assistant1"),"/",3)_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("Assistant2"),"/",3)_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("NarcosisType"),"/",3)_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("NarcosisDoc"),"/",3)_"</label></TD>",!
+				w "<TD><label>"_$p(QueryFPICD.Get("CloseUp"),"/",3)_"</label></TD>",!
+				w "<TD><label>"_QueryFPICD.Get("Pos")_"</TD>",!
+				w "<TD><label>"_QueryFPICD.Get("Resume")_"</label></TD>"
+				w "</TR>"
+			</SCRIPT>
+			</CSP:WHILE>
+		</TABLE>
+	</DIV>
+	<TABLE width="100%" onclick="showDiv('Demo4');"><TBODY><TR><TD class=2title noWrap>附加项目</TD></TR></TBODY></TABLE>
+	<DIV id="Demo">
+		<TABLE class=tblList id="tQueryFPExtra" Name="tQueryFPExtra" CELLSPACING=1 width="100%">
+			<THEAD>
+				<TH width="5px" style='display:none;'></TH>
+				<TH id=1  NOWRAP>ID</TH>
+				<TH id=2  NOWRAP>项目名称</TH>
+				<TH id=3  NOWRAP>项目值</TH>
+				<TH id=4  NOWRAP>位置</TH>
+				<TH width="5px" style='display:none;'></TH>
+				<TH id=5  NOWRAP>ID</TH>
+				<TH id=6  NOWRAP>项目名称</TH>
+				<TH id=7  NOWRAP>项目值</TH>
+				<TH id=8  NOWRAP>位置</TH>
+			</THEAD>
+			<CSP:QUERY NAME="QueryFPExtra" CLASSNAME="web.DHCWMRFrontPageQry" QUERYNAME="QueryFPExtra" P1=#(FrontPageID)#>
+			<SCRIPT LANGUAGE="cache" RUNAT="server">
+				s index=0
+				while (QueryFPExtra.Next()){
+					s index=index+1
+					i $p(index/2,".",2)'="" d
+					.w "<TR class='RowOdd' NOWRAP><TD style='display:none;'></TD>"
+					.w "<TD align='center'><label>"_QueryFPExtra.Get("ID")_"</label></TD>"
+					.w "<TD><label>"_$p(QueryFPExtra.Get("FPItem"),"/",2)_"</label></TD>"
+					.w "<TD><label>"_QueryFPExtra.Get("ItemValue")_"</label></TD>"
+					.w "<TD><label>"_QueryFPExtra.Get("Pos")_"</label></TD>"
+					e  d
+					.w "<TD style='display:none;'></TD>"
+					.w "<TD align='center'><label>"_QueryFPExtra.Get("ID")_"</label></TD>"
+					.w "<TD><label>"_$p(QueryFPExtra.Get("FPItem"),"/",2)_"</label></TD>"
+					.w "<TD><label>"_QueryFPExtra.Get("ItemValue")_"</label></TD>"
+					.w "<TD><label>"_QueryFPExtra.Get("Pos")_"</label></TD>"
+					.w "</TR>"
+				}
+				w:$p(index/2,".",2)'="" "<TD style='display:none;'></TD><TD><label></label></TD><TD><label></label></TD><TD><label></label></TD><TD><label></label></TD></TR>"
+			</SCRIPT>
+			
+		</TABLE>
+	</DIV>
+</BODY>
+</HTML>

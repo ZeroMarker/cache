@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<HTML XMLNS=TRAK>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<script language="cache" runat="server">
+	s SourceType = $Get(%request.Data("SourceType",1))
+	s SourceID = $Get(%request.Data("SourceID",1))
+	s ReadOnly = $Get(%request.Data("ReadOnly",1))
+	s (Status,ElementID,TemplateID)=""
+	if SourceType=1 
+	{
+		s ElementID = $Get(%request.Data("ElementID",1))
+		s TemplateID = $Get(%request.Data("TemplateID",1))
+		s Status=$Piece($G(^DHCEQBuyRequest(SourceID)),"^",16)
+	}
+	elseif(SourceType=2){
+		s Status=$Piece($G(^DHCEQBuyPlan(SourceID)),"^",6)	//add by CSJ 2020-03-17 来源为采购计划
+	}
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025") //add by zx 2019-09-11 用于明细数据分割
+</script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'推荐产品信息'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',border:false">
+					<table id="tDHCEQIFBList"  data-options="border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="SourceType" id="SourceType" value=#(SourceType)#>
+			<INPUT TYPE="hidden" name="SourceID" id="SourceID" value=#(SourceID)#>
+			<INPUT TYPE="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>
+			<INPUT TYPE="hidden" name="Status" id="Status" value=#(Status)#>
+			<INPUT TYPE="hidden" name="ElementID" id="ElementID" value=#(ElementID)#>	
+			<INPUT TYPE="hidden" name="TemplateID" id="TemplateID" value=#(TemplateID)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#> <!--add by zx 2019-09-11 用于明细数据分割-->			
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/em/ifblistforloc.js"></script>
+</body>
+
+</html>

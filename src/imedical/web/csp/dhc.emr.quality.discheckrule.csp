@@ -1,0 +1,49 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+    <HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+	<TITLE>终末质控评价界面</TITLE>
+</HEAD>
+ <script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1))
+		//s patientID = $Get(%request.Data("patientID",1))
+		s patientID = ##class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s CTLocatID=$g(%session.Data("LOGON.CTLOCID"))
+		s SSUserID=$g(%session.Data("LOGON.USERID"))
+		s action = $Get(%request.Data("action",1))
+</script>
+ <script language="javascript">
+			
+		var patientID = '#(patientID)#';
+        var episodeID = '#(episodeID)#';
+        var SSGroupID = '#(SSGroupID)#';
+        var CTLocatID ='#(CTLocatID)#';
+        var SSUserID ='#(SSUserID)#';
+		var action ='#(action)#';
+</script>
+</HEAD>
+<body class="hisui-layout" id = "checkRuleLayout" data-options="border:false">
+	<div data-options="region:'center',border:false" style="padding:2px;">
+		<object id="recordQuality" data="" width="100%" height="99%"></object>
+		
+	</div> 
+	
+	<div data-options="region:'east',border:false,split:true" style="width:600px;padding:2 2 2 0px;">
+		<object  id="qualityEntrygrid" data="" width="100%" height="100%"></object>
+	</div>
+	
+    <div id="browselogdialog" class="hisui-dialog" title="操作记录明细" style="width:950px;height:500px;padding:0;margin:0;" data-options="iconCls:'icon-w-list',modal:true,isTopZindex:true,closed:true">
+        <iframe id="browselogiframe" frameborder="0" src="" style="width:100%;height:99%;padding:0;margin:0;"></iframe>
+    </div>	
+
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.DisCheckRule.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+</body>
+</html>
+

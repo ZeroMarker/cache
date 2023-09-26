@@ -1,0 +1,95 @@
+﻿﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" id="selectcss" href="../scripts/emr/css/templaterecord.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/category.css">	
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+
+	<script language="cache" runat="server">
+		s patientID = $Get(%request.Data("PatientID",1),"") 
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s categoryID = $Get(%request.Data("CategoryID",1),"")
+		//模板跨科检索
+		s searchAcrossDepartment = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SearchAcrossDepartment")
+		s recordSequence = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("RecordSequence")
+		s:(recordSequence="") recordSequence = "{""NavRecord"":""DESC"",""TimeLineRecord"":""DESC""}"
+		s isShowToBeSignedSymbol = ##Class(EMRservice.SystemParameter).IsShowToBeSignedSymbol()
+        </script>
+	<script language="javascript">
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var categoryID = '#(categoryID)#';
+		var userID = parent.userID;
+		var ssgroupID = parent.ssgroupID;
+		var userLocID = parent.userLocID;
+		var userCode = parent.userCode;	
+		var userName = parent.userName;
+		var HasPatEncryptLevel = parent.HasPatEncryptLevel;
+		var IsSetToLog = parent.IsSetToLog;
+		var SecCode = parent.SecCode;  //病人密级代码
+		var searchAcrossDepartment = '#(searchAcrossDepartment)#';
+		var cardClassificationDisplay = parent.cardClassificationDisplay;
+		var layoutHeight = window.parent.$("#templateCategory").layout("panel","center").panel('options').height/2;
+		var recordSequence = eval("("+'#(recordSequence)#'+")");
+		var recordLength = "";
+		var templateLength = "";
+		var libratyType = "classification";
+		var isShowToBeSignedSymbol = '#(isShowToBeSignedSymbol)#';
+        </script>
+	<title>病历模板及文档</title>
+</head>
+<body style="overflow:hidden;">
+        <div id="listdisplay" class="easyui-layout" data-options="border:false,fit:true">
+            <div data-options="region:'north',border:false,collapsed:true,title:'新建模板列表',closedTitle:'新建模板列表'" style="height:135px;">
+                <table id="listtemplate"></table>
+            </div>
+            <div data-options="region:'center',border:false">
+                <table id="gridshow" title="表格病历列表"></table>
+            </div>
+        </div>
+        <div id="corddisplay" style="width:100%;height:100%;">
+            <div id="createCord" class="top" style="width: 100%;overflow-y:auto;">
+				<ul id="templatecontent" class="display"></ul>
+			</div>
+			<div class="middle" style="width:100%;background:#E6EFFF;">
+				<table style="width: 100%;" >
+					<tr id="middlefirst" style="width: 100%;display:none;"> 	
+						<td style="width: 50%;text-align:center;cursor: pointer;border-right: 1px solid #515151" onclick="firstShowBoth()">
+							<img id="firstboth" src="../scripts/emr/image/icon/down.png" style="margin-right:10px;">
+						</td>
+						<td style="width: 50%;text-align:center;cursor: pointer;" onclick="firstShowOnlyCreate()">
+							<img id="firstonlycreate" src="../scripts/emr/image/icon/bottom.png" style="margin-right:10px;">
+						</td>
+					</tr>
+					<tr id="middlesecond" style="width: 100%;display:none;"> 	
+						<td style="width: 50%;text-align:center;cursor: pointer;border-right: 1px solid #515151" onclick="hideCreateCord()">
+							<img id="secondup" src="../scripts/emr/image/icon/up.png" style="margin-right:10px;">
+						</td>
+						<td style="width: 50%;text-align:center;cursor: pointer;" onclick="hideTemplateCord()">
+							<img id="seconddown" src="../scripts/emr/image/icon/down.png" style="margin-right:10px;">
+						</td>
+					</tr>
+					<tr id="middlethird" style="width: 100%;display:none;"> 	
+						<td style="width: 50%;text-align:center;cursor: pointer;border-right: 1px solid #515151" onclick="thirdShowBoth()">
+							<img id="thirdboth" src="../scripts/emr/image/icon/up.png" style="margin-right:10px;">
+						</td>
+						<td style="width: 50%;text-align:center;cursor: pointer;" onclick="thirdShowOnlyTemplate()">
+							<img id="thirdonlytemplate" src="../scripts/emr/image/icon/top.png" style="margin-right:10px;">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="templateCord" class="bottom" style="width: 100%;overflow-y:auto;">
+				<ul id="recordcontent" class="display"></ul>
+			</div>
+        </div>	
+        <div id="messagetip" class="tip" style="position:absolute;display:none;" onmouseover="tip.show();" onmouseout="this.style.display='none';"></div>
+    <script type="text/javascript" src="../scripts/emr/js/record.library.templaterecord.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script> 
+    <script type="text/javascript" src="../scripts/emr/js/record.library.templaterecord.layout.js"></script>  
+</body>
+</html>﻿

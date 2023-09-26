@@ -1,0 +1,116 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s SourceType = $Get(%request.Data("SourceType",1))
+	s SourceID = $Get(%request.Data("SourceID",1))
+	s ReadOnly = $Get(%request.Data("ReadOnly",1))
+	s CurRole = $Get(%request.Data("CurRole",1))
+	s ElementID = $Get(%request.Data("ElementID",1))
+	s TemplateID = $Get(%request.Data("TemplateID",1))
+	s (title,Status)=""
+	i SourceType=1 
+	{
+		s title="采购申请论证-耗材列表"
+		s Status=$Piece($G(^DHCEQBuyRequest(SourceID)),"^",16)
+	}
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel"  title='#(title)#' data-options="fit:true,eqtitle:'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:150px;">
+				<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id=cSICSourceType for="SICSourceType">来源类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="SICSourceType"></div>
+						<div class="eq-table-td eq-table-label"><label id="cSICServiceItem" for="SICServiceItem">服务项目</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.ServiceItem'" id="SICServiceItem"></div>
+						<div class="eq-table-td eq-table-label"><label id=cSICUom for="SICUom">单位</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.UOM'" id="SICUom"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BAdd" href="#" class="hisui-linkbutton" iconCls="icon-w-add">新增</a></div>
+						<div class="eq-table-td eq-table-label15"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save">保存</a></div>
+						
+					</div>
+				<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cSICQuantity" for="SICQuantity">消�?�数�?/label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="SICQuantity"></div>
+						<div class="eq-table-td eq-table-label"><label id="cSICQuantityType" for="SICQuantityType">数量类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="SICQuantityType"></div>
+						<div class="eq-table-td eq-table-label"><label id=cSICServDetItem for="SICServDetItem">细项</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.ServDetItem'" id="SICServDetItem"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close">删除</a></div>
+					</div>
+				<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cSICConsumableItem" for="SICConsumableItem">消�?�项�?/label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.ConsumableItem'" id="SICConsumableItem"></div>
+						<div class="eq-table-td eq-table-label"><label id="cSICModel" for="SICModel">机型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Model'" id="SICModel"></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+					<table id="tDHCEQConsumableItem" data-options="border:false,fit:true"></table>
+				
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type='text/javascript'>
+		initSICSourceType();
+		function initSICSourceType(){
+			var BussType = $HUI.combobox("#SICSourceType",{
+				valueField:'id', textField:'text',panelHeight:"auto",
+				data:[
+					{id:'1',text:'设备',}
+					,{id:'2',text:'设备�?}
+					
+				],
+			});
+		}
+		
+	</script>
+	<script type='text/javascript'>
+	initSICQuantityType();
+		function initSICQuantityType(){
+			var BussType = $HUI.combobox("#SICQuantityType",{
+				valueField:'id', textField:'text',panelHeight:"auto",
+				data:[
+					{id:'1',text:'绝对�?,}
+					,{id:'2',text:'相对�?}
+					
+				],
+			});
+		}
+	</script>
+	
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="SICRowID">
+			<INPUT TYPE="hidden" id="SourceType" value='#(SourceType)#'>
+			<INPUT TYPE="hidden" id="SICSourceID" value='#(SourceID)#'>
+			<INPUT TYPE="hidden" id="ReadOnly" value='#(ReadOnly)#'>
+			<INPUT TYPE="hidden" id="CurRole" value='#(CurRole)#'>
+			<INPUT TYPE="hidden" id="Status" value='#(Status)#'>
+			<INPUT TYPE="hidden" id="ElementID" value='#(ElementID)#'>
+			<INPUT TYPE="hidden" id="TemplateID" value='#(TemplateID)#'>
+			<INPUT type="hidden" id="SICServiceItemDR">
+			<INPUT type="hidden" id="SICConsumableItemDR">
+			<INPUT type="hidden" id="SICUomDR">
+			<INPUT type="hidden" id="SICServDetItemDR">	
+			<INPUT type="hidden" id="SICModelDR">	
+						
+		</form>
+	</div>
+	
+<script type="text/javascript" src="../scripts/dhceq/em/consumableiteminfo.js"></script>
+</body>
+
+</html>

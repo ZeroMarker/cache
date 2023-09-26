@@ -1,0 +1,322 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+    @CSP:dhc.bdp.ct.mrcicddx.csp
+    @JS:MRC_ICDDx.js/MRC_ICDAlias.js
+    @Creator:谢海睿
+    @Description:电子病历-ICD诊断代码页面
+    @CreateDate:2019-06-26
+*/
+</csp:method>
+<!DOCTYPE html>
+<html lang='en' >
+
+<head>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/Electronic/MRC_ICDDx.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/Electronic/MRC_ICDAlias.js"></script>
+
+<style>
+</style>
+</head>
+
+<body>
+<div class="hisui-layout" data-options="fit:true" border="true" id="layout" style="">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;" title="" border="false">
+	    	 <table style="padding-top:10px;padding-bottom:10px" >
+			    <tr>
+			   	 	<td class="tdlabel">代码</td>
+		    		<td><input id="TextCode" type="text" class="hisui-validatebox"  style="width:165px" ></td>
+		    		<td class="tdlabel" >描述</td>
+		    		<td><input id="TextDesc" type="text" class="hisui-validatebox"  style="width:165px"  ></td>
+		    		<td class="tdlabel">ICD10代码</td>
+		    		<td><input id="Texticd10" type="text" class="hisui-validatebox" style="width:165px" ></td>
+		    		<td class="tdlabel-b">
+						<a href="#" id="btnconfig" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" class="hisui-linkbutton">检索配置</a>
+					</td>
+		    		<td class="tdlabel-b">
+						<a href="#" id="btnSearch" data-options="iconCls:'icon-w-find ',stopAllEventOnDisabled:true" class="hisui-linkbutton">搜索</a>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnRefresh" data-options="iconCls:'icon-reset',stopAllEventOnDisabled:true" class="hisui-linkbutton">重置</a>
+					</td>
+				</tr> 
+			 </table >
+		 </div>
+		 <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+			<table data-options="fit:true" id="mygrid" border="false" toolbar="#allbar" style="border-radius:4px;"></table>
+		 </div>           
+     </div>
+    <!-- 检索弹窗-->
+    <div id="lookupwin" style="width:550px;height:450px;padding:10px;display:none;">
+	         <input id= "LookUpA" class='hisui-radio' type="radio"  label='精确检索' name='checkuptype' />
+             <input id= "LookUpF" class='hisui-radio' type="radio" label='模糊检索' name='checkuptype'  />
+             <input id= "LookUpL"class='hisui-radio' type="radio" label='左匹配检索' name='checkuptype'  />
+	</div>
+	
+	<!--合并弹窗collapsible:false-->
+	<div id="myWin2" style="width:900px;height:720px;padding:10px;">
+	  <div class="hisui-layout"  style="width:850px;height:600px;">
+	   <div title="删除项" class="hisui-layout" data-options="region:'west',split:true,collapsible:false" style="width:400px;">
+	      <form id="DelForm" method="post" data-options="fit:true,border:false,plain:true"> 
+			      <table id="addtable" align="center">
+					 <tr>
+					   <td class="tdlabel"><font color=red>*</font>代码</td>
+					   <td><input id="MRCIDCodeDel" name="MRCIDCode" type="text" readonly="true" class="textbox hisui-validatebox"  style="width:250px"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi"><font color=red>*</font>描述</td>
+					   <td><input id="MRCIDDescDel" name="MRCIDDesc" type="text" readonly="true" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi"><font color=red>*</font>ICD10代码</td>
+					   <td><input id="MRCIDICD9CMCodeDel" name="MRCIDICD9CMCode" type="text" readonly="true" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">副编码</td>
+					   <td><input id="MRCID2ndCodeInPairDel" name="MRCID2ndCodeInPair" type="text" readonly="true" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">ICD9代码</td>
+					   <td><input id="MRCIDICD9MapDel" name="MRCIDICD9Map" type="text" readonly="true" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					 	<td class="tdlabel"><font color=red>*</font>开始日期</td>
+					 	<td><input id="MRCIDDateActiveFromDel" name="MRCIDDateActiveFrom" readonly="true" style="width:256px" class="hisui-datebox textbox" data-options=""></input></td>
+					 </tr>
+		    		 <tr>
+		    		   <td class="tdlabel">结束日期</td>
+					   <td><input id="MRCIDDateActiveToDel" name="MRCIDDateActiveTo" style="width:256px" readonly="true" class="hisui-datebox textbox" data-options=""></input></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">从年龄</td>
+					   <td><input id="MRCIDAgeFromDel" name="MRCIDAgeFrom" type="text" class="textbox hisui-textbox" readonly="true" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">到年龄</td>
+					   <td><input id="MRCIDAgeToDel" name="MRCIDAgeTo" type="text" class="textbox hisui-textbox" readonly="true" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">限制性别</td>
+					   <td><input id="MRCIDSexDRDel" name="MRCIDSexDR" type="text" class="textbox hisui-textbox" readonly="true" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">注释</td>
+					   <td><input id="MRCIDLongDescriptionDel" name="MRCIDLongDescription" type="text" class="textbox hisui-textbox" readonly="true" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel"></td>
+					   <td><input id="MRCIDMetastaticSiteDel" name="MRCIDMetastaticSite" type="checkbox"  label="肿瘤形态学编码" disabled="disabled" class="hisui-checkbox" style="width:250px"  ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel"></td>
+					   <td><input id="MRCIDInjuryPoisoningCodeDel" name="MRCIDInjuryPoisoningCode" label="损伤中毒外部原因" disabled="disabled" type="checkbox" class="hisui-checkbox" style="width:250px" ></td>
+					 </tr>
+					 <tr>
+					  <td class="tdlabel"></td>
+					   <td><input id="MRCIDBillFlag1Del" name="MRCIDBillFlag1" type="checkbox" label="中医证型" disabled="disabled" class="hisui-checkbox" style="width:250px"  ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel"></td>
+					   <td><input id="MRCIDBillFlag3Del" name="MRCIDBillFlag3" type="checkbox" label="中医诊断" disabled="disabled" class="hisui-checkbox" style="width:250px" ></td>
+					 </tr>
+				 </table>
+				 </form>  
+	       </div>
+	     <div title="保留项" class="hisui-layout" data-options="region:'center'" style="width:100px;">
+             <form id="KeepForm" method="post" data-options="fit:true,border:false,plain:true"> 
+			      <table id="addtable" align="center">
+			         <tr>
+					   <td class="tdlabel"></td>
+					   <td><input  id="DelFormId" name="DelFormId" type="text" class="textbox hisui-validatebox" style="width:250px;display:none;"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel"><font color=red>*</font>代码</td>
+					   <td><input id="MRCIDCodekeep" name="MRCIDCode" type="text" class="textbox hisui-validatebox" style="width:250px"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi"><font color=red>*</font>描述</td>
+					   <td><input id="MRCIDDesckeep" name="MRCIDDesc" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi"><font color=red>*</font>ICD10代码</td>
+					   <td><input id="MRCIDICD9CMCodekeep" name="MRCIDICD9CMCode" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">副编码</td>
+					   <td><input id="MRCID2ndCodeInPairkeep" name="MRCID2ndCodeInPair" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">ICD9代码</td>
+					   <td><input id="MRCIDICD9Mapkeep" name="MRCIDICD9Map" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					 	<td class="tdlabel"><font color=red>*</font>开始日期</td>
+					 	<td><input id="MRCIDDateActiveFromkeep" name="MRCIDDateActiveFrom" style="width:256px" class="hisui-datebox textbox" data-options=""></input></td>
+					 </tr>
+		    		 <tr>
+		    		   <td class="tdlabel">结束日期</td>
+					   <td><input id="MRCIDDateActiveTokeep" name="MRCIDDateActiveTo" style="width:256px" class="hisui-datebox textbox" data-options=""></input></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">从年龄</td>
+					   <td><input id="MRCIDAgeFromkeep" name="MRCIDAgeFrom" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">到年龄</td>
+					   <td><input id="MRCIDAgeTokeep" name="MRCIDAgeTo" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">限制性别</td>
+					   <td><input id="MRCIDSexDRkeep" name="MRCIDSexDR" type="text" class="textbox hisui-textbox" style="width:255px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">注释</td>
+					   <td><input id="MRCIDLongDescriptionkeep" name="MRCIDLongDescription" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" ></td>
+					   <td><input id="MRCIDMetastaticSitekeep" name="MRCIDMetastaticSite" type="checkbox" label="肿瘤形态学编码" class="hisui-checkbox" style="width:250px"  ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" ></td>
+					   <td><input id="MRCIDInjuryPoisoningCodekeep" name="MRCIDInjuryPoisoningCode" type="checkbox" label="损伤中毒外部原因" class="hisui-checkbox" style="width:250px" ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel"></td>
+					   <td><input id="MRCIDBillFlag1keep" name="MRCIDBillFlag1" type="checkbox" label="中医证型" class="hisui-checkbox" style="width:250px"  ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel"></td>
+					   <td><input id="MRCIDBillFlag3keep" name="MRCIDBillFlag3" type="checkbox" label="中医诊断" class="hisui-checkbox" style="width:250px" ></td>
+					 </tr>
+				 </table>
+			</form>  
+	     </div>
+	   </div>      
+	</div>
+     <!--增改弹窗-->
+     <div id="myWin" style="width:550px;height:670px;padding:10px;display:none;">
+         <div id="tt" class="hisui-tabs tabs-gray" style="width:500px;height:560px;">   
+	         <div title="基本信息" style="width:200px;height:300px;">
+		        <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			      <table id="addtable" align="center">
+					 <tr>
+					   <td class="tdlabel"><font color=red>*</font>代码</td>
+					   <td><input id="MRCIDCode" name="MRCIDCode" type="text" class="textbox hisui-validatebox" style="width:250px"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi"><font color=red>*</font>描述</td>
+					   <td><input id="MRCIDDesc" name="MRCIDDesc" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi"><font color=red>*</font>ICD10代码</td>
+					   <td><input id="MRCIDICD9CMCodeF" name="MRCIDICD9CMCode" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">副编码</td>
+					   <td><input id="MRCID2ndCodeInPairF" name="MRCID2ndCodeInPairF" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">ICD9代码</td>
+					   <td><input id="MRCIDICD9MapF" name="MRCIDICD9Map" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					 	<td class="tdlabel"><font color=red>*</font>开始日期</td>
+					 	<td><input id="MRCIDDateActiveFromF" name="MRCIDDateActiveFrom" style="width:256px" class="hisui-datebox textbox" data-options=""></input></td>
+					 </tr>
+		    		 <tr>
+		    		   <td class="tdlabel">结束日期</td>
+					   <td><input id="MRCIDDateActiveToF" name="MRCIDDateActiveTo" style="width:256px" class="hisui-datebox textbox" data-options=""></input></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">从年龄</td>
+					   <td><input id="MRCIDAgeFromF" name="MRCIDAgeFrom" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">到年龄</td>
+					   <td><input id="MRCIDAgeToF" name="MRCIDAgeTo" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">限制性别</td>
+					   <td><input id="MRCIDSexDRF" name="MRCIDSexDR" type="text" class="textbox hisui-textbox" style="width:255px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" prompt="ceshi">注释</td>
+					   <td><input id="MRCIDLongDescriptionF" name="MRCIDLongDescription" type="text" class="textbox hisui-textbox" style="width:250px" prompt="csac"></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" >肿瘤形态学编码</td>
+					   <td><input id="MRCIDMetastaticSiteF" name="MRCIDMetastaticSite" type="checkbox" class="hisui-checkbox"  ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel" >损伤中毒外部原因</td>
+					   <td><input id="MRCIDInjuryPoisoningCodeF" name="MRCIDInjuryPoisoningCode" type="checkbox" class="hisui-checkbox" ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel">中医证型</td>
+					   <td><input id="MRCIDBillFlag1F" name="MRCIDBillFlag1" type="checkbox" class="hisui-checkbox"   ></td>
+					 </tr>
+					 <tr>
+					   <td class="tdlabel">中医诊断</td>
+					   <td><input id="MRCIDBillFlag3F" name="MRCIDBillFlag3" type="checkbox" class="hisui-checkbox"  ></td>
+					 </tr>
+				 </table>
+				 </form>  
+	         </div>
+	            <div id='AliasGrid1' class="hisui-layout" data-options="fit:true" title="别名" border="true" style="">   
+		            <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+			            <table data-options="fit:true" id="AliasGrid" border="false" toolbar="#Aliasbar" style="border-radius:4px;"></table>
+		            </div>  
+	            </div>  
+         </div>
+	</div>
+	<!--配置弹窗-->
+	<div id="myWin1" style="width:650px;height:300px;padding:10px;display:none;">
+	<form id="form-save1" method="post" data-options="fit:true,border:false,plain:true">
+		<table>
+				<tr>
+					<td class="tdlabel">校验代码是否重复</td>
+					<td><input class='hisui-checkbox' type="checkbox" id="ValidCode" name="ValidCode" ></td>
+				</tr>
+				<tr>
+					<td class="tdlabel">校验描述是否重复</td>
+					<td><input class='hisui-checkbox' type="checkbox" id="ValidDesc" name="ValidDesc" ></td>
+				</tr>
+				<tr>
+					<td class="tdlabel">自动生成代码(字母+数字或者纯数字编码)</td>
+					<td><input class='hisui-checkbox' type="checkbox" id="AutoCode" name="AutoCode"  ></td>
+				</tr>
+				<tr>
+					<td class="tdlabel"><font color=red>*</font>代码起始字符</td>
+					<td><input id="OriginCode" name="OriginCode" style="width:250px" class="hisui-validatebox" type="text"></td>
+				</tr>
+				<tr>
+					<td class="tdlabel"><font color=red>*</font>代码总长度</td>
+					<td><input id="TotalLength" name="TotalLength" style="width:250px" class="hisui-validatebox" type="text"></td>
+				</tr>
+			</table>
+	</form>
+		
+	</div>
+	<!--别名面板工具栏-->
+	<div id="Aliasbar">
+	     <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn1">添加</a>
+    	 <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn1">删除</a>  
+	</div>
+	 <!--数据面板工具栏-->
+    <div id="allbar">
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true,stopAllEventOnDisabled:true" id="copy_btn">快速复制</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true,stopAllEventOnDisabled:true" id="btnMerge_btn">合并</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true,stopAllEventOnDisabled:true" id="btn_Config">配置</a>      	
+    </div>  
+</body>
+</html>

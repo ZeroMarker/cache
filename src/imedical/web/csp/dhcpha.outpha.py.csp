@@ -1,0 +1,140 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD>
+
+</TRAK:HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s ReqStr=$g(%request.Data("ReqStr",1))
+ s phl=$p(ReqStr,"^",1)
+ s pydr=$p(ReqStr,"^",2)
+ s fydr=$p(ReqStr,"^",3)
+ s phw=$p(ReqStr,"^",4)
+ s pos=$p(ReqStr,"^",5)
+ s steptime=$p(ReqStr,"^",6)
+ s CardTypeArray=##class(web.UDHCOPOtherLB).ReadCardTypeDefineListBroker("GetCardTypeToJson","")
+ s ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+ s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+
+</Script>
+<script type="text/javascript">
+ var gphl="#(phl)#";
+ var gpydr="#(pydr)#";
+ var gfydr="#(fydr)#";
+ var gphw="#(phw)#";
+ var gpos="#(pos)#";
+ var gsteptime="#(steptime)#";
+ var CardTypeArray="#(CardTypeArray)#";
+</script>  
+<!-- Put your page Title here -->
+
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/jquery-ext.css" ></script> 
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/gridkey.js"></script>
+	<script language='javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script language='javascript' src='../scripts/DHCSTXMLPrint.js'></script>
+	<script language='javascript' src='../scripts/dhcpha/outpha/dhcpha.outpha.printcom.js'></script>
+	<script type="text/javascript" src="../scripts/dhcpha/outpha/dhcpha.outpha.py.js"></script>
+<style type="text/css"  >  
+   .datagrid-btable tr{
+	height:27px;   
+	}
+</style>	
+ </HEAD>
+     
+
+
+
+<body>
+<div id="title" class="easyui-layout" fit="true" border="false"> 
+	<div data-options="region:'center',title:'门诊药房配药',split:true" style="width:270px;">
+		<div id="condition" class="easyui-layout" fit="true" border="false">       
+			<div data-options="region:'north'" border="false" style="background-color:#E6F1FA;"> 
+				<table>
+					<tr style="height:3px;"></tr>
+					<tr>
+						<td class="tableLabel" style="width:80px;font-size:13">当前药房:</td>
+						<td class="tableLabel" id="currentLoc" style="width:100px;font-size:13;text-align:left"></td>
+						<td class="tableLabel" style="width:80px;font-size:13;">配药窗口:</td>
+						<td class="tableLabel" id="currentWin" style="width:100px;font-size:13;text-align:left"></td>
+						<td class="tableLabel" style="width:80px;font-size:13;">配药人:</td>
+						<td class="tableLabel" id="pyUser" style="width:80px;font-size:13;;text-align:left"></td>
+						<td class="tableLabel" style="width:80px;font-size:13;">间隔时间:</td>
+						<td class="tableLabel" id="stepTime" style="width:80px;font-size:13;;text-align:left"></td>
+						<td><a class="easyui-linkbutton" iconCls='icon-start' plain="true" id="btnTime" style="width:75px">开始</a>
+						</td>
+					<tr style="height:3px;"></tr>
+					</tr>
+				</table>
+				<table>
+
+				</table>
+			</div> 
+			<div data-options="region:'center',title:'配药列表'" style="border: 0px none;">
+				<div id="pygrid" data-options="fit:true" border="false" style="height:100px"> 
+			  	</div>    
+		    </div>
+		 </div> 
+	</div> 
+	<div data-options="region:'south',title:'',split:true" style="height:300px;">
+		<div class="easyui-layout" data-options="fit:true" border="false" >
+				<div data-options="region:'center',title:''" style="border: 0px none;">
+					<div id="pydetailgrid" data-options="fit:true" border="false"> 
+				  	</div> 
+			  	</div>   
+		    </div> 
+		</div>    
+
+	</div>
+</div>
+<div id="conditiondiv" data-options="region:'north',title:''">
+	<table style="padding:4px">
+		<tr>
+			<td>开始日期:</td>
+			<td><input id="startDate" class="easyui-datebox"  style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>截至日期:</td>
+			<td><input id="endDate" class="easyui-datebox" style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>登记号:</td>
+			<td><input id="patNo" style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>卡号:</td>
+			<td><input id="cardNo"  style="width:100px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td>卡类型:</td>
+			<td><input id="cardType" style="width:50px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+			<td><input id="checkedPY" class="ui-checkbox" style="solid #95B8E7;" type="checkbox" name="checkedPY"></input></td>
+			<td>已配药</td>
+			<td style="width:10px">
+			</td>
+			<td><a class="easyui-linkbutton" iconCls="icon-readcard" plain="true" id="btnReadCard" style="width:80px">读卡[F4]</a>
+			</td>
+			<td><a class="easyui-linkbutton" iconCls='icon-search' plain="true" id="btnFind" style="width:80px">查找[F7]</a>
+			</td>
+			<td><a class="easyui-linkbutton" iconCls='icon-ok' plain="true" id="btnPYSure" style="width:80px">配药[F8]</a>
+			</td>
+			<td><a class="easyui-linkbutton" iconCls='icon-print' plain="true" id="btnRePrint" style="width:80px">重打[F9]</a>
+			</td>
+			<td><a class="easyui-linkbutton" iconCls='icon-reload' plain="true" id="btnClear" style="width:90px">清空[F10]</a>
+			</td>
+		</tr>
+	</table>
+	<div style ="border-bottom: 1px solid #95B8E7;border-top: 1px solid #95B8E7">
+		<div style ="border-bottom: 5px solid #E6EEF8">
+		</div>
+	</div>
+</div>	    
+ 
+ 
+</body>
+
+
+</HTML>

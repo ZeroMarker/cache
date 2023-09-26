@@ -1,0 +1,62 @@
+<script language="cache" method="OnPreHTTP" arguments="" returntype="%Boolean">
+	
+	s Action=$Get(%request.Data("actiontype",1))
+	s PersonRowId = $Get(%request.Data("PersonRowId",1))
+	set url="chss.personphoto.csp?PersonRowId="_PersonRowId	
+	if PersonRowId = ""
+	{
+		set %response.Redirect = url
+		Q $$$OK
+	}
+	if Action = "add"
+	{
+		if $data(%request.MimeData("Picture",1)) 
+		{	
+			
+			s PhotoRowId = ""
+    		&SQL(select PhotoRowId into :PhotoRowId from CHSS.PersonPhoto where bCurrentPhoto = 'true' and PersonRowId = :PersonRowId )
+			set attachement = ""
+			if PhotoRowId '= ""
+			{
+				set attachement = ##Class(CHSS.PersonPhoto).%OpenId(PhotoRowId)	
+			}
+			else
+			{
+				set attachement = ##Class(CHSS.PersonPhoto).%New()
+			}
+			set filename = %request.MimeData("Picture",1).FileName
+			set stream = %request.GetMimeData("Picture",1)
+			
+			set file = ##class(%GlobalBinaryStream).%New()
+			do file.CopyFromAndSave(stream)
+			s attachement.PhotoName = filename
+			s attachement.Photo=file
+			s attachement.bCurrentPhoto = "true"
+			
+			s attachement.PersonRowId = ##Class(CHSS.PersonHealthRecordMain).%OpenId(PersonRowId)
+			do attachement.%Save()
+			
+			;w "{""success"":""true"",""info"":""}"
+			;q ""
+			set %response.Redirect = url
+			Q $$$OK
+		}
+		else
+		{
+			set %response.Redirect = url
+			Q $$$OK
+		}
+	}
+	elseif Action = "personphoto" 
+	{
+		w Action
+    	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	    q:(PersonRowId="") ""
+	    ;w PersonRowId,!
+	    set article = ##Class(CHSS.PersonPhoto).%OpenId(1)
+    	q:(article="") ""
+    	Set oid=article.Photo.%Oid()
+    	s aa = "%25CSP.StreamServer.cls?STREAMOID="_(..Encrypt(oid))
+    	w aa
+	}
+</script>

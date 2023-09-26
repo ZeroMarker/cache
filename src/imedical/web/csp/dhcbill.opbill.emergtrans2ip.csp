@@ -1,0 +1,144 @@
+<!-- 
+ * FileName: dhcbill.opbill.emergtrans2ip.csp
+ * Anchor: ZhYW
+ * Date: 2019-07-16
+ * Description: 急诊费用转住院
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.emergtrans2ip.css'/>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<server>
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$c(13,10)
+		w "<input id='papmi' name='papmi' type='hidden'>",$c(13,10)
+		w "<input id='episodeId' name='episodeId' type='hidden'>",$c(13,10)
+	</server>
+</head>
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',border:false" style="width:719px;">
+	        <div class="hisui-layout" data-options="fit:true,border:false">
+	        	<div data-options="region:'center',border:false">
+	        		<div class="hisui-layout" data-options="fit:true,border:false">
+	        			<div data-options="region:'north',border:false" style="height:84px;">
+			                <div class="hisui-panel" data-options="title:'门诊数据',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
+	                            <table class="search-table" style="width:100%;">
+									<tr>
+										<td class="r-label td-first-col"><label>发票号</label></td>
+										<td><input id="receiptNo" type="text" class="textbox"/></td>
+										<td style="float:right;padding-right:10px;">
+											<a href="javascript:;" class="hisui-linkbutton" id="btn-findRcpts" style="margin-right:10px;">收据查询</a><a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'">清屏</a>
+										</td>
+									</tr>
+								</table>
+	                        </div>
+			            </div>
+			            <div data-options="region:'center',border:false">
+			            	<div class="hisui-panel panel-header-gray" data-options="fit:true" style="border-radius:0 0 4px 4px;">
+								<table id="ordItmList"></table>
+							</div>
+			            </div>
+	        		</div>
+	        	</div>
+	            <div data-options="region:'east',border:false" class="east-content">
+	            	<table>
+	            		<tr>
+	            			<td style="height: 100px;">
+	            				<a href="javascript:;" class="hisui-linkbutton" id="btn-trans" data-options="iconCls:'icon-w-arrow-right'">转入</a>
+	            			</td>
+	            		</tr>
+	            		<tr>
+	            			<td style="height: 100px;">
+	            				<a href="javascript:;" class="hisui-linkbutton" id="btn-return" data-options="iconCls:'icon-w-arrow-left'">撤回</a>
+	            			</td>
+	            		</tr>
+	            	</table>
+	         	</div>
+	        </div>
+	    </div>
+	    <div data-options="region:'center',border:false">
+	        <div class="hisui-layout" data-options="fit:true,border:false">
+	            <div data-options="region:'north',border:false" style="height:124px;">
+	                <div class="hisui-panel" data-options="title:'住院数据',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
+	                    <table class="search-table">
+							<tr>
+								<td class="r-label td-first-col"><label>病案号</label></td>
+								<td><input id="medicareNo" class="textbox tb135"/></td>
+								<td class="r-label r-label-2"><label>就诊号</label></td>
+								<td><input id="admList" class="textbox tb135"/></td>
+								<td class="r-label r-label-2"><label>入院日期</label></td>
+								<td><input id="admDate" class="textbox tb135" disabled/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>姓名</label></td>
+								<td><input id="patName" class="textbox tb135" disabled/></td>
+								<td class="r-label r-label-2"><label>性别</label></td>
+								<td><input id="sex" class="textbox" style="width:35px;margin-right:10px;" disabled/><label>年龄</label><input id="age" class="textbox" style="width:45px;margin-left:10px;" disabled/></td>
+								<td class="r-label r-label-2"><label>就诊费别</label></td>
+								<td><input id="admReason" class="textbox tb135" disabled/></td>
+							</tr>
+						</table>
+	                </div>
+	            </div>
+	            <div data-options="region:'center',border:false">
+	            	<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+						<table id="ociItmList"></table>
+					</div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+	<div id="rcptsDlg" style="width:950px;height:600px;display:none;padding:10px;">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',border:false" style="height:91px;">
+                <div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius: 4px 4px 0 0;">
+                    <table class="search-table" style="width:100%;">
+                    	<tr>
+							<td class="r-label win-td-first-col"><label>卡类型</label></td>
+							<td><input id="cardType" class="textbox"/></td>
+							<td class="r-label r-label-1"><label>卡号</label></td>
+							<td><input id="cardNo" type="text" class="textbox" placeholder="刷卡/请输入卡号"/></td>
+							<td class="r-label"><label>登记号</label></td>
+							<td><input id="patientNo" class="textbox"/></td>
+							<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡(F4)</a></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>开始日期</label></td>
+							<td><input id="stDate" class="hisui-datebox textbox"/></td>
+							<td class="r-label"><label>结束日期</label></td>
+							<td><input id="endDate" class="hisui-datebox textbox"/></td>
+							<td></td>
+							<td></td>
+							<td class="r-label">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询(F8)</a>
+							</td>
+						</tr>
+					</table>
+                </div>
+            </div>
+            <div data-options="region:'center',border:false">
+            	<div class="hisui-panel panel-header-gray" data-options="fit:true" style="border-radius:0 0 4px 4px;">
+					<table id="invList"></table>
+				</div>
+            </div>
+            <div data-options="region:'south',border:false" style="height:45px;padding-top:10px;">
+            	<div style="text-align:center;">
+            		<a href="javascript:;" class="hisui-linkbutton" id="btn-ok" data-options="iconCls:'icon-w-ok'">确认</a>
+				</div>
+            </div>
+		</div>
+	</div>
+    <script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.emergtrans2ip.js"></script>
+</body>
+</html>

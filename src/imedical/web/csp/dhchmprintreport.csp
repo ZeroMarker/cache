@@ -1,0 +1,35 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+ dhchmprintreport.csp?qID=1||1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+s qID=$g(%request.Data("qID",1))
+s obj=##class(User.DHCHMOQEQuestion).GetObj(qID)
+w:'$isobject(obj) "<P>未找到相关问卷信息</P>"
+q:'$isobject(obj)
+s flag=obj.QEQStatus
+//s tsub=$O(^User.DHCHMOQEQuestionD(+qID,$P(qID,"||",2),"DHCHMOQMedicalTips",0))
+//w:(flag="P") "<P>已打印过报告</P>"
+w:(flag'="TS")&&(flag'="P") "<P>问卷状态不允许打印</P>"
+q:(flag'="TS")&&(flag'="P")
+s qCode=obj.QEQCQuestionnaireDR.QCode
+i qCode="001" s cspName="dhchmreportprint.csp?qID="_qID
+if qCode="002"  s cspName="dhchmcdcreport.csp?QUEID="_qID
+</Script>
+<frameset rows="100%,*">
+	<frame name="DHCHMPrint" src="#(cspName)#" framespacing="0" frameBorder="no" noresize>
+	
+	<!--frame name="DHCEQBuyPlanItem" src="websys.default.csp?WEBSYS.TCOMPONENT=#(Component)#&BuyPlanDR=#(RowID)#" framespacing="0" frameBorder="no" noresize-->
+</frameset>
+
+
+</HTML>

@@ -1,0 +1,235 @@
+<!--herp.budg.hisui.budgschemowndept-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+	
+	<style>
+		#main{
+			height:240px;
+		}
+		
+		.height-36{
+			height: 36px;
+		}
+		
+		.textarea{
+			width:300px;
+			height:100px;	
+		}
+		
+		.hidden {
+			display:none;
+		}
+		
+		.panel-body{
+			border-top-width:1px;
+			border-left-width:1px;
+			border-right-width:1px;
+		}
+		
+		.panel-header{
+			border-bottom-width:0px;
+		}
+			
+	</style>
+	<!--display:none; 隐藏不占内存-->
+	<!--visibility:hidden; 隐藏占内存-->	
+</HEAD>
+
+<BODY class="padding-0" >
+	<div class="hisui-layout"data-options="fit:true">
+		<div id ="main" class="border-none padding-10" data-options="region:'north'" >
+			<div id="tb" class="padding-10"> 
+				<label class='padding-right-10'>年度</label><input id="yearcb" class="hisui-combobox combobox-width-120" 
+							data-options=" 
+								required:true,
+								url:$URL + '?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=YearOrYearMon&ResultSetType=array',
+								mode:'remote',
+								valueField: 'year',
+								textField: 'year',
+								onBeforeLoad:YearBefLoad,
+								onSelect:YearSelect"
+				 />
+				<label class="padding-both-10">方案名称</label><select id="schemcb" class="hisui-combobox combobox-width-177"
+							data-options="
+								mode:'remote',
+								valueField: 'rowid',
+								textField: 'name',
+								onBeforeLoad:schemBefLoad,
+								onSelect:Search">
+					</select>
+					<label class='padding-both-10'>科室名称</label><select id="deptcb" class="hisui-combobox combobox-width-177"
+							data-options="url: $URL +'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=Dept&ResultSetType=array',
+								mode:'remote',
+								valueField: 'rowid',
+								textField: 'name',
+								onBeforeLoad:deptBefLoad,
+								onSelect:Search">
+				</select>
+				<label class='padding-both-10'>基层/归口</label><select id="deptIsBudg" class="hisui-combobox combobox-width-177"
+							data-options="
+								mode:'remote',
+								valueField: 'rowid',
+								textField: 'name',
+								data: [{
+										rowid: '0',
+										name: '基层科室'
+									}, {
+										rowid: '1',
+										name: '归口科室'
+									}
+								],
+								onSelect:Search">
+				</select>
+				<a id="FindBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+			</div>
+			<table id="schemGrid" data-options="iconCls:'icon-paper'">
+			</table>
+		</div>
+		<!--下半界面-->
+		<div id ="LowerPart" class="border-none padding-10-top-none" data-options="region:'center'">
+			<div id="ltb">
+				<form id="LowerPartfm">
+					<div id="itemtb" class="padding-10">
+						<label class="padding-right-10">项目类别</label><select id="typecb" class="hisui-combobox combobox-width-177" 
+								data-options="url:$URL +'?ClassName=herp.budg.hisui.common.ComboMethod&MethodName=ItemType&flag=1&ResultSetType=array',
+									mode:'remote',
+									valueField: 'code',
+									textField: 'name',
+									onSelect:typecbSelectFn
+									">
+						</select>
+						<label class="padding-both-10">项目名称</label><select id="itemcb" class="hisui-combobox combobox-width-177" 
+								data-options=" 
+									valueField: 'code',
+									textField: 'name',
+									onBeforeLoad:itemBefLoad,
+									onSelect:itemcbSelectFn">
+						</select>
+						<label class="padding-right-10"></label><input type="checkbox" id="isLastckb" class='hisui-checkbox'  
+							data-options="
+								checked:true,
+								onCheckChange:checkChangeFn">
+						<label class="padding-right-10">末级</label>
+						<a id="lFindBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+						</div>
+				</form>
+			</div>
+			<table title="归口科室预算" id="LowerPartGrid" data-options="iconCls:'icon-paper'">
+			</table>
+		</div>
+	</div>
+	
+	<!--科室归口预算明细-->
+	<div id="DetailWin" class="hisui-window padding-10" data-options="closed:true ,iconCls:'icon-w-paper'"> 
+		<div class="hisui-layout " data-options="split:true,fit:true">
+			<div id="dtb" >
+				<div id="Detailnorth" class="x-separator padding-10" data-options="region:'north',border:false">
+					<label class="padding-right-10">业务科室</label><input id="DeptBox" class="hisui-combobox combobox-width-177" />
+					<label class="padding-both-10">项目状态</label><select id="itemStatecb" class="hisui-combobox combobox-width-177" 
+							data-options=" 
+								valueField: 'rowid',
+								textField: 'name',
+								data:[
+									{rowid:'2',name:'提交'},
+									{rowid:'3',name:'通过'},
+									{rowid:'4',name:'完成'},
+									{rowid:'5',name:'下放'},
+									{rowid:'6',name:'下放完成'},
+									{rowid:'7',name:'下放完,待重提'}
+								]">
+					</select>
+					<label class="padding-right-10"></label>
+					<a id="DFindBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+				</div>
+				<div class="line-36-y">
+                	<a id="saveItemBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+                	<a id="checkItemBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-stamp',plain:true">审核</a>  
+                	<a id="downItemBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-money-down',plain:true">下放</a>  
+            	</div>
+            </div>
+			<table id="schemDetailGrid">		
+			</table>
+		</div>
+	</div>	
+	
+	<!--预算项目状态链接审批记录,style="height:430px;"这个配置很关键，否则显示window打开后一片空白-->
+	<div id="StateWin" class="hidden"> 
+		<div class="hisui-layout" style="height:430px;" data-options="fit:true">
+			<div data-options="region:'center',border:false,split:true,headerCls:'panel-header-gray'">
+				<table class="hisui-datagrid" id="StateGrid" >
+				</table>	
+			</div>
+			<div class="text-center bottom-style"  data-options="region:'south',border:false">
+				<a id="StateClose" class="hisui-linkbutton" href="#">关闭</a>
+			</div>
+		</div>
+	</div>	
+	
+	
+   <!--审核界面-->
+   <div id='FYCheckWin' class="hidden" title="审核/下放" data-options="closed:true">
+      <div class="hisui-layout" style="height:430px;" data-options="fit:true">
+        <div id="FYCheckWinCenter" calss="padding-10-bottom-none" data-options="region:&#39;center&#39;,border:false">
+          <form id='FYCheckWinForm' class="flex-x-center">
+            <table id='FYCheckWinTable'>
+              <tr>
+                <td class='text-right padding-bottom-10'>
+                  <label id="CheckResultLa">审核结果</label>
+                </td>
+                <td class="padding-bottom-10">
+                  <select class="hisui-combobox combobox-width-177" id="CheckResultCb">
+                    <option value="1">通过</option>
+                    <option value="0">不通过</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td class='text-right'>
+                  <label id="CheckDescLa">审核意见</label>
+                </td>
+                <td>
+                  <textarea class="textarea" id="CheckDesTxa"></textarea>
+                </td>
+              </tr>
+            </table>
+          </form>
+        </div>
+        <div class="bottom-style" data-options="region:&#39;south&#39;,border:false">
+        <a id="BtnOk" class="hisui-linkbutton width-70" href="#">确定</a> 
+        <a id="BtnCancel" class="hisui-linkbutton width-70" href="#">关闭</a></div>
+      </div>
+    </div>
+    <!--经济科目预算明细界面-->
+    <div id='FYDetailWin' class="hidden padding-10" data-options="closed:true,iconCls:'icon-w-paper'">
+      <table id='FYDetailGrid'></table>
+    </div>
+    <!--经济科目预算明细附件表界面-->
+    <div id='FYDAppendixWin' class="hidden padding-10" data-options="closed:true,iconCls:'icon-w-paper'">
+      <table id='FYDAppendixGrid'></table>
+    </div>
+    	
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/SessionAndUrl.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/comboboxInitEvents.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/establishcheckstate.js"></script>
+	
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemOwnDept/budgschemowndept.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemOwnDept/budgschemowndeptdetail.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemOwnDept/FactYear.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemOwnDept/FactYearCheckWin.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemOwnDept/FactYearDetail.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgSchemOwnDept/FactYearDetailAppendix.js"></script>
+</BODY>
+</HTML>

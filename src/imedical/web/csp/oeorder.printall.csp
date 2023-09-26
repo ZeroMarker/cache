@@ -1,0 +1,134 @@
+<!--oeorder.printall.csp HUI一键打印-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="LODOP"/>
+<STYLE type='text/css'>
+input[type="checkbox"]{	 
+    vertical-align:middle;
+}
+.datagrid-header .datagrid-cell span,
+.datagrid-cell, .datagrid-cell-group, .datagrid-header-rownumber, .datagrid-cell-rownumber{
+	font-size: 14px;
+}
+object{
+	display:none;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header{
+	border-bottom: 0;
+}
+</STYLE>
+
+ </head>
+<body class="hisui-layout" data-options="fit:true,border:false">
+<Server>
+s XMLObject=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+w "<input id='XMLObject' name='XMLObject' type='hidden' value='"_XMLObject_"'>",$C(13,10)
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+w "<object ID='ClsSaveBase64IMG' CLASSID='CLSID:F6E5F767-D0E0-4311-AAFF-5EB0385F68A8' CODEBASE='../addins/client/ClsSaveBase64IMG.CAB#version=1,0,0,5' VIEWASTEXT>"
+w "</object>",$C(13,10)
+</Server>
+
+<Server>
+
+s EpisodeID=%request.Get("EpisodeID")
+if (EpisodeID=""){
+	w "请选中患者!"
+	Q
+}
+s DisPlayType=%request.Get("DisPlayType")
+s PAAdmType="",mradm="",PatientID=""
+s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+s PatAddressDr=$O(^PAPER(PatientID,"PER","ADD",""),-1)
+s PatAddress=""
+if (PatAddressDr'=""){
+	s PatAddress=$g(^PAPER(PatientID,"PER","ADD",PatAddressDr))
+}
+
+s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+s Weight=$p($g(^MR(mradm,"PRO",1)),"^",27)
+s PatSupplyInfo=##class(web.DHCDocCheckPoison).GetSupplyMethod(EpisodeID) //##class(web.UDHCPrescript).GetSupplyMethod(PatientID)
+;s CredNoCheck=##Class(%CSP.Page).Encrypt($lb("web.DHCDocCheckPoison.UpdateAgencyInfo")) //##Class(%CSP.Page).Encrypt($lb("web.UDHCPrescript.CredNoCheck"))
+;s GetSelfPrintMethod=##Class(%CSP.Page).Encrypt($lb("web.UDHCPrescript.GetSelfPrintParam"))
+;s InsertSelfPrintLogMethod=##Class(%CSP.Page).Encrypt($lb("web.UDHCPrescript.InsertSelfPrintLog"))
+;s SavePatAddress=##Class(%CSP.Page).Encrypt($lb("web.UDHCPrescript.SavePatAddress"))
+s mySOPRowID=$o(^DHCSOPFCON(0)) 
+s PrtGuideFlag=$p(^DHCSOPFCON(mySOPRowID),"^",43)
+
+s GROUPID=%session.Get("LOGON.GROUPID")
+s GROUPDESC=%session.Get("LOGON.GROUPDESC")
+s MTREnble=0	;是否启用三合一门诊医生站界面-医生站安全组功能授权
+s AInstanceIDList=""
+s AllEMRData=""
+s EMRPrintAll=0
+if (PAAdmType'="I"){
+	if ##Class(web.DHCDocConfig).GetConfigNode1("OutDocEntryMTR",GROUPID)="1"{ //$g(^DHCDocConfig("OutDocEntryMTR",GROUPID))
+		s MTREnble=1
+	}
+	;调用电子病历打印程序
+	s AInstanceIDList=##Class(web.UDHCPrescript).GetAdmPrintList(EpisodeID,%session.Get("LOGON.USERID"),MTREnble)
+	;用于打印病人所有的病历信息
+	;根据项目要求填写条件,可能是安全组也可能是工号
+	if (0){
+		s EMRPrintAll=1
+		s AllEMRData=##Class(web.UDHCPrescript).GetAllEMRData(EpisodeID,"")
+	}
+}
+s NowDate=##class(websys.Conversions).DateLogicalToHtml(+$h) 
+s sysDateFormat=##class(websys.Conversions).DateFormat()
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+/*
+<!-->
+var GetSelfPrintMethod="#(GetSelfPrintMethod)#";
+var InsertSelfPrintLogMethod="#(InsertSelfPrintLogMethod)#";
+var SavePatAddress="#(SavePatAddress)#";
+var CredNoCheck="#(CredNoCheck)#";
+<-->
+*/
+s PatDobDate=##class(web.DHCDoc.OP.AjaxInterface).GetPatDob($g(PatientID))
+s PatSex=##class(DHCDoc.OPDoc.AjaxInterface).GetPatSex($g(PatientID))
+</Server>
+<csp:Include Page="oeorder.printall.layout.csp">
+
+<SCRIPT language = 'javascript' >
+	var EpisodeID="#(EpisodeID)#";
+	var mradm="#(mradm)#";
+	var PatientID="#(PatientID)#";
+	var PAAdmType="#(PAAdmType)#";
+	var PatSupplyInfo="#(PatSupplyInfo)#";
+	var PatAddress="#(PatAddress)#";
+	var Weight="#(Weight)#";
+	var PrtGuideFlag="#(PrtGuideFlag)#";
+	var EMRPrintAll="#(EMRPrintAll)#";
+	var AllEMRData="#(AllEMRData)#";
+	var AInstanceIDList="#(AInstanceIDList)#";
+	var DisPlayType="#(DisPlayType)#";
+	var NowDate="#(NowDate)#";
+	var sysDateFormat="#(sysDateFormat)#";
+	var PatDobDate="#(PatDobDate)#";
+	var PatSex="#(PatSex)#";
+</SCRIPT>
+</body>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.JS"></script>
+<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+<script type="text/javascript" src="../scripts/DHCOPPrtCommon.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/printcommon.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/oeorder.printall.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+</html>

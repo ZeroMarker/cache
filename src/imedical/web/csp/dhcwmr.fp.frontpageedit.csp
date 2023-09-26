@@ -1,0 +1,121 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<!--DHCMED:HEAD></DHCMED:HEAD-->
+		<script language='Cache' runat='SERVER'>
+           set menuCode="DHCWMRIMFrontPageQry"
+           set menuId=$o(^DHCWMR.Main.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+           set groupId=$g(%session.Data("LOGON.GROUPID"))
+           set operaJson=##class(DHCWMR.MainService.MainSrv).GetMenuOperSecurity(menuId,groupId)
+       </script>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcwmr/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcwmr/css/FrontPage.css" />
+		<script type="text/javascript" src="../scripts/dhcwmr/ext.ux/ext-basex.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.Setting.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/DHCWMR.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcwmr/ss/common/CustomFormItem.js'></script>
+		<script type="text/javascript" src='../scripts/dhcwmr/fp/frontpageedit/FPForm_Common.js'></script>
+		<script type="text/javascript" src='../scripts/dhcwmr/fp/frontpageedit/FPForm_ICDSelect.js'></script>
+		<script type="text/javascript" src='../scripts/dhcwmr/fp/frontpageedit/FPForm_SSUserSelect.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			set LogonUserID=$g(%session.Data("LOGON.USERID"))
+			Set LogonHospID=##class(DHCWMR.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+			Set SSHospCode=##class(DHCWMR.SSService.HospitalSrv).GetSSHospCode(LogonHospID)
+			Set IsSecret=##class(DHCWMR.IO.FromSecSrv).CheckIsSecret(LogonHospID)
+			
+			//¶¯Ì¬¼ÓÔØJS
+			Set flg=##Class(DHCWMR.FPService.FrontPageEdit).AutoLoadFPEditPageJS(LogonHospID)
+			
+			Set LogonLocID=""""_LogonLocID_""""
+			Set LogonHospID=""""_LogonHospID_""""
+			Set SSHospCode=""""_SSHospCode_""""
+			Set IsSecret=""""_IsSecret_""""
+			
+			Set MrTypeID="",FPItemID="",WFItemID="",ICDVerID="",OprVerID="",IsFinish=0
+			Set FrontPageID=$g(%request.Data("FrontPageID",1))
+			Set VolumeID=$g(%request.Data("VolumeID",1))
+			Set FPType=$g(%request.Data("FPType",1))
+			Set IsPathologEdit = $g(%request.Data("IsPathologEdit",1))
+			Set PathRepID = $g(%request.Data("PathRepID",1))
+			Set:FPType="" FPType="F"
+			Set objFrontPage=##class(DHCWMR.FP.FrontPage).GetObjById(FrontPageID)
+			Set:objFrontPage="" objFrontPage=##class(DHCWMR.FP.FrontPage).GetObjByVolId(VolumeID,FPType)
+			If $IsObject(objFrontPage){
+				Set FrontPageID=objFrontPage.%Id()
+				Set VolumeID=objFrontPage.FPVolumeDr.%Id()
+				Set FPType=objFrontPage.FPType
+				Set IsFinish=objFrontPage.FPIsFinish
+				Set objVolume=objFrontPage.FPVolumeDr
+				If $IsObject(objVolume){
+					Set MrTypeID=objVolume.SVMainDr.SMMrType.%Id()
+				}
+			} Else {
+				Set FrontPageID=""
+				Set IsFinish=0
+				Set objVolume=##Class(DHCWMR.SS.Volume).GetObjById(VolumeID)
+				If $IsObject(objVolume){
+					Set MrTypeID=objVolume.SVMainDr.SMMrType.%Id()
+				}
+			}
+			Set objFPItem=##class(DHCWMR.FP.WorkFItem).GetObjByMrType(MrTypeID,FPType)
+		 	If $IsObject(objFPItem){
+			 	Set FPItemID=objFPItem.%Id()
+			 	Set WFItemID=objFPItem.WIItemDr.%Id()
+		 	}
+			
+			Set VolPaadm=##Class(DHCWMR.SS.Volume).GetEpisodeID(VolumeID)
+			Set AdmitDate=##Class(DHCWMR.SSService.CommonSrv).GetAdmitDate(VolPaadm)
+			Set AdmitDate=$p(AdmitDate," ",1)
+			Set DischDate=##Class(DHCWMR.SSService.CommonSrv).GetDischDate(VolPaadm)
+			Set DischDate=$p(DischDate," ",1)
+			Set PatientID=$p($g(^PAADM(+VolPaadm)),"^",1)
+		</SCRIPT>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			
+			var LogonLocID='#(LogonLocID)#';
+			var LogonUserID='#(LogonUserID)#';
+			var LogonHospID='#(LogonHospID)#';
+			var SSHospCode='#(SSHospCode)#';
+			var FrontPageID='#(FrontPageID)#';
+			var VolumeID='#(VolumeID)#';
+			var FPType='#(FPType)#';
+			var IsFinish='#(IsFinish)#';
+			var MrTypeID='#(MrTypeID)#';
+			var WFItemID='#(WFItemID)#';
+			var FPItemID='#(FPItemID)#';
+			var VolPaadm='#(VolPaadm)#';
+			var AdmitDate='#(AdmitDate)#';
+			var DischDate='#(DischDate)#';
+			var IsSecret='#(IsSecret)#';
+			var IsPathologEdit='#(IsPathologEdit)#';
+			var PathRepID = '#(PathRepID)#';
+			var PatientID = '#(PatientID)#';
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body>
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

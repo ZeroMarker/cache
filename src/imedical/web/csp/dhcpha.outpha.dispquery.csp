@@ -1,0 +1,133 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD>
+</TRAK:HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s CardTypeArray=##class(web.UDHCOPOtherLB).ReadCardTypeDefineListBroker("GetCardTypeToJson","")
+ s ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+ s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+
+</Script>
+<!-- Put your page Title here -->
+<title> </title>
+        <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+	    <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+	    <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/jquery-ext.css" ></script> 
+	    <script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+	    <script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+ 	    <script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+	    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/component.js"></script>
+	    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/gridkey.js"></script>
+	   	<script language='javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	   	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/incitmwindow.js"></script>
+	   	<script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/export.js"></script>
+		<script type="text/javascript" src="../scripts/dhcpha/outpha/dhcpha.outpha.selectinv.js"></script>
+		<script type="text/javascript" src="../scripts/dhcpha/outpha/dhcpha.outpha.dispquery.js"></script>
+</head>
+
+<body>
+
+	<div id="cc" class="easyui-layout" fit="true" border="false">
+		
+		   <div data-options="region:'center'" >
+   
+		       <div id="cc1" class="easyui-layout" fit="true"> 
+		      
+					 <div data-options="region:'north',title:'门诊发药查询'" style="border-bottom: 1px solid #95B8E7;height:135px;">
+			              
+			               <table  style="margin-left:10px;margin-top:10px;">
+					             <tr>
+								      <td>起始时间:</td>
+								      <td><input id="startDate" name="startDate" class="easyui-datebox" style="width:125px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								      <td style="width:100px;"><input id="startTime" class="easyui-timespinner" style="width:95px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+								      <td>登记号:</td>
+								      <td><input id="patNo" name="patNo"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								      
+								      <td>姓名:</td>
+								      <td><input id="patName" name="patName"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								      
+								      <td>收据号:</td>
+								      <td><input id="invNo" name="invNo"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								      <td>卡类型:</td>
+								      <td><input id="cardType" name="cardType"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+					                  <td colspan=2><a class="easyui-linkbutton" iconCls='icon-ok' plain="true" id="CReadCard">读卡(F4)</a></td>
+
+								 </tr>
+								 
+								 <tr>   
+								      <td >截止时间:</td>
+								      <td><input id="endDate" name="endDate" class="easyui-datebox" style="width:125px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								      <td style="width:100px;"><input id="endTime" class="easyui-timespinner" style="width:95px;border:1px solid #95B8E7;" data-options="valueField:'val',textField:'text'"></input></td>
+								      <td >药品:</td>
+								      <td><input id="inciDesc" name="inciDesc"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								      
+								      <td>配药人:</td>
+								      <td><input id="pyUser" name="pyUser"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								      
+								      <td>发药人:</td>
+								      <td><input id="fyUser" name="fyUser"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"value=""></input></td>
+								 	  <td>发药状态:</td>
+								      <td><input id="dispStat" name="dispStat"  style="width:150px;HEIGHT: 22px;border:1px solid #95B8E7;"class="easyui-combobox" data-options="
+											valueField: 'label',
+											textField: 'value',
+											panelHeight:'true',
+											data: [{
+												label: '1',
+												value: '已发药'
+											},{
+												label: '0',
+												value: '已配药'
+											},{
+												label: '2',
+												value: '未发药'
+											}]">
+											</input>
+										</td>
+						    	      <td><input id="checkedMan" class="ui-checkbox" name="checkedMan" type="checkbox" ></input></td>	    
+									  <td>管理药</td>
+								 </tr> 
+								 
+						   <table  style="margin-left:50px;" >
+					             <tr> 					                        
+						    	      <td><a  style="margin-left:30px;" class="easyui-linkbutton" iconCls='icon-search' plain="true" id="btnRetrieve">检索</a></td>
+						    	      <td><a  style="margin-left:30px;" class="easyui-linkbutton" iconCls='icon-save' plain="true" id="btnExport">导出</a></td>
+						    	      <td><a  style="margin-left:30px;" class="easyui-linkbutton" iconCls='icon-reload' plain="true" id="btnClear">清空</a></td>
+					             </tr>
+					        </table >
+											              
+					 </div>
+					 
+					 <div data-options="region:'center',split:true,title:'发药列表'" style="border: 0px none;">
+			            
+			            <div id="p" class="easyui-panel"  fit="true" style="border: 0px none;"> 
+			            
+			                <table id="DispMain" ></table>
+			                
+			            </div>
+			            
+			         </div> 
+					 
+					 <div data-options="region:'south',split:true" style="border: 0px none;height:240px">
+			            
+			            <div id="p" class="easyui-panel"  fit="true" style="border: 0px none;">
+			             
+			                <table id="DispDetail" ></table>
+			                
+			            </div>
+			            
+					 </div> 					 
+		             
+		        </div>
+		      
+           </div>
+       
+   </div>
+</body>
+</html>

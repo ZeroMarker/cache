@@ -1,0 +1,58 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<script language="cache" runat="server">
+/*
+parameter: 
+	action: (list|add|edit|del)
+	sort  : name sort by
+	dir   : direction (DESC|ASC)
+	start : record number to start with
+	limit : limit for one page to display		
+DataBase:
+	monthDr     :
+	code        :
+	name        :
+	startDate   :
+	endDate     :
+*/
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s code = $Get(%request.Data("code",1))
+	s name = $Get(%request.Data("name",1))
+	
+	s costTypeSetDr = $Get(%request.Data("costTypeSetDr",1))
+	s costTypeDr = $Get(%request.Data("costTypeDr",1))
+	
+	i action = "list" d
+	.w ##class(costApp.costType).costTypeList(searchField,searchValue,sortField,sortDir,costTypeSetDr)
+	i action = "add" d
+	.s result = ##class(costApp.costType).insertCostType(code, name,costTypeSetDr)
+	.i result = 0 d
+	..s resultStr = "{success:'true',info:''}"
+	. e  d
+	..s resultStr = "{success:'false',info:'"_result_"'}"
+	.w resultStr
+	i action = "del" d
+	.w costTypeSetDr_"^"_costTypeDr	
+	/*.s result = ##class(costApp.costType).deleteCostType(costTypeSetDr,costTypeDr)
+	.i result = 0 d
+	..s resultStr = "{success:'true',info:''}"
+	. e  d
+	..s resultStr = "{success:'false',info:'"_result_"'}"
+	.w resultStr
+	i action = "edit" d
+	.s result = ##class(costApp.costType).updateCostType(costTypeSetDr,code,name)
+	.i result = 0 d
+	..s resultStr = "{success:'true',info:''}"
+	. e  d
+	..s resultStr = "{success:'false',info:'"_result_"'}"
+	.w resultStr*/
+</script>

@@ -1,0 +1,63 @@
+<!-- 
+ * FileName: dhcbill.opbill.outpatlist.csp
+ * Anchor: ZhYW
+ * Date: 2019-06-13
+ * Description: 门诊患者查询
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.outpatlist.css'/>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<server>
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",!
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:90px;">
+			<table class="search-table" style="width:100%;">
+				<tr>
+					<td class="r-label td-first-col"><label>开始日期</label></td>
+					<td><input id="stDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label"><label>结束日期</label></td>
+					<td><input id="endDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label"><label>卡类型</label></td>
+					<td><input id="cardType" class="hisui-combobox textbox"/></td>
+					<td class="r-label"><label>卡号</label></td>
+					<td><input id="cardNo" class="textbox"/></td>
+					<td class="r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡</a></td>
+					<td style="padding-right:10px;float:right;"><a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'" style="margin-left:6px;">查询</a></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>登记号</label></td>
+					<td><input id="patientNo" class="textbox"/></td>
+					<td class="r-label"><label>患者姓名</label></td>
+					<td><input id="patName" class="textbox"/></td>
+					<td class="r-label"><label>科室</label></td>
+					<td><input id="admDept" class="hisui-combobox textbox"/></td>
+					<td></td>
+					<td></td>
+					<td class="r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					<td></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false" style="border-top:1px solid #cccccc;">
+			<table id="patList"></table>
+	  	</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.outpatlist.js"></script>
+</body>
+</html>

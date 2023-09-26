@@ -1,0 +1,109 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n list,comp,wlstatus,tcistatus,newwlids,objWL,waitinglistid,wlids
+	s (list,comp,wlstatus,tcistatus,newwlids,objWL,waitinglistids,wlids)=""
+ 	;
+	;RQG 17.01.03 Log 31755 - For multiple waitinglists selected, filter only those that are not removed and admitted
+ 	s wlids=%request.Get("WaitingListID")
+	i wlids["^" {
+	  for i=1:1 {
+	    s tcistatus=""
+		s waitinglistid = $p(wlids,"^",i)
+		q:waitinglistid=""
+		;s tcistatus=##Class(web.PAWaitingListAdm).GetTCIStatus(waitinglistid)
+		s objWL=##Class(User.PAWaitingList).%OpenId(waitinglistid,0)
+		i objWL {
+			i objWL.WLWaitListStatusDR {
+				i '(objWL.WLWaitListStatusDR.WLSCode="R"),'(objWL.WLWaitListStatusDR.WLSCode="D") {
+					i newwlids'="" s newwlids=newwlids_"^"_waitinglistid
+					i newwlids="" s newwlids=waitinglistid
+				}
+			}
+			d objWL.%Close()
+		}
+	  }
+	  i newwlids'="" { 
+	  	d %request.Set("PARREF",newwlids)
+	  } else {
+	    d %request.Set("PARREF",wlids)
+	    ;user selected a multiple wl with statuses of Removed and Admitted, so set wlstatus to "Done" as this will only
+	    ;disable the form "PAWaitingListReview.Edit" 
+	    d %request.Set("WLStatus","D")
+	  }
+	} else {
+		;
+ 		d %request.Set("PARREF",%request.Get("WaitingListID"))
+		s list=##Class(User.PAWaitingList).%OpenId(%request.Get("WaitingListID"),0)
+		i list {
+		  if list.WLWaitListStatusDR,list.WLWaitListStatusDR.WLSCode="R" {
+			d %request.Set("remove","on")
+			; RQG 15.01.03 Log31755
+		  }
+		  d %request.Set("WLStatus",list.WLWaitListStatusDR.WLSCode)
+		  d list.%Close()
+		}
+		s tcistatus=##Class(web.PAWaitingListAdm).GetTCIStatus(%request.Get("WaitingListID"))
+		i tcistatus'="" d %request.Set("TCIStatus",tcistatus)
+	}
+ ; log 62656 remove patient banner if multiple select
+ s BannerFlag=1
+ i (($l(wlids,"^")>2)||($l(wlids,"^")=2)) s BannerFlag=0
+ i BannerFlag=0 d %request.Set("BulkReview","Y")
+ i %request.Get("PatientID"),BannerFlag {
+ 		s comp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ 		i comp d comp.Show(),comp.%Close()
+ 	}
+</SERVER>
+
+<TRAK:COMPONENT id="PAWaitingListReview.Edit" hidemenus=1>
+</TRAK:COMPONENT>
+
+<TRAK:COMPONENT id="PAWaitingListReview.List" hidemenus=1>
+</TRAK:COMPONENT>
+
+</TRAK:APPLET>
+
+<SCRIPT>
+function SelectRowHandler(evt) {
+	//only if within workflow.
+	var frm=document.forms["fPAWaitingListReview_List"];
+	if (frm.TWKFL.value=="") return;
+	var eSrc=websys_getSrcElement(evt);
+	var rowObj=getRow(eSrc);
+	if (rowObj.tagName != "TH") {
+		//setRowClass(rowObj);
+		if (eSrc.tagName != "A") eSrc=websys_getParentElement(eSrc);
+		if (eSrc.tagName != "A") return;
+		//if (eSrc.id.indexOf("fdatez")!=0) return;
+
+		// SA/CJB 2.9.03 log 38689: use rowObj.TRAKListIndex instead of rowObj.rowIndex
+		var rowsel=rowObj.TRAKListIndex;
+		//var rowsel=rowObj.rowIndex;
+
+		var arrlnk=eSrc.href.split("&TWKFLI=");
+		var lnk = arrlnk[0] + "&TWKFLI=";
+		if (arrlnk[1]) {
+			arrIndx = arrlnk[1].split("&");
+			//send workflow item back one to 
+			if (arrIndx[0]!="") arrIndx[0] -= 1;
+			lnk += arrIndx.join("&");
+		}
+		eSrc.href = lnk;
+	}
+}
+</SCRIPT>
+</BODY>
+</HTML>
+

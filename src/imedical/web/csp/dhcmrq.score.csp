@@ -1,0 +1,380 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(DHCMRQ.Base.Util.Verification).SessionVerifi() q 1
+	q 1
+</csp:method>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>病案首页数据质量督导系统</title>
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/font-awesome-4.6.3/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/datatable-1.10.12/datatables.min.css">
+		<link rel="stylesheet" href="../scripts/dhcmrq/css/main.css">
+		<!--[if lte IE 6]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/bootstrap-ie6.css">
+	  <![endif]-->
+	  <!--[if lte IE 8]>
+	  	<link rel="stylesheet" type="text/css" href="../scripts/dhcmrq/bootstrap-3.3.5-dist/css/ie.css">
+			<style media="screen">
+				.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9{
+					padding-left: 0;
+					padding-right: 0;
+				}
+			</style>
+	  <![endif]-->
+    	<style media="screen">
+			#depRankTable {
+				margin: 0;
+			}
+			#depRankTable td {
+				position: relative;
+				border: none;
+				text-align: center;
+				font-size: 18px;
+				vertical-align: middle;
+			}
+			#depRankTable .mark{
+				position: absolute;
+				display: inline-block;
+				font-size: 14px;
+				top: 0;
+				left: 0;
+				width: 40px;
+				height: 20px;
+				background-color: #16c79e;
+				color: #fff;
+			}
+			#depRankTable .value{
+				font-size: 18px;
+				color: #337ab7;
+				
+				display:inline-block;
+			}
+			.table{
+				font-size:14px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="navbar navbar-static-top" style="background-color:#fff;">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a href="#" class="navbar-brand">病案首页数据质量督导系统</a>
+				</div>
+				<nav id="bs-navbar" class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<!--
+						<li class="active">
+							<a href="../getting-started/">Getting started</a>
+						</li>
+						 -->
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li id="searchLi">
+							<!-- 查询条件 -->
+							<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true">
+								<i class="glyphicon glyphicon-search"></i>
+								查询条件<span class="caret"></span>&nbsp;&nbsp;
+								<span class="time_id"></span>
+							</a>
+              <div class="dropdown-menu" id="searchBox">
+								<table>
+									<tr>
+										<td>
+											<i class="fa fa-users"></i>&nbsp;&nbsp;病案版本：
+										</td>
+										<td>
+											<select class="form-control input-sm" id="mrVersionSelect">
+                      							<option value="CLINIC">临床版</option>
+												<option value="CODING">编目版</option>
+												<!--
+												<option value="DRGS">DRGs版</option>
+												<option value="HQMS">HQMS版</option>
+												<option value="WT4">卫统4版</option>
+												-->
+                      						</select>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<i class="fa fa-calendar"></i>&nbsp;&nbsp;监测时间：
+										</td>
+										<td>
+											<input id="startDate" class="form-control input-sm" readonly>
+											~
+											<input id="endDate" class="form-control input-sm" readonly>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="2">
+											<button class="btn btn-success btn-block" onclick="searchByCondition()"><i class="glyphicon glyphicon-search"></i>查询</button>
+										</td>
+									</tr>
+								</table>
+              </div>
+							<!-- 查询条件 end -->
+						</li>
+						<li>
+							<a href="#"><span class="mrVersion"></span>出院病案首页</a>
+						</li>
+					</ul>
+
+				</nav>
+			</div>
+		</div>
+		
+		<div class="container-fluid">
+			<!-- 顶部概览卡片 -->
+			<div class="row">
+				<div class="boxcq" id="one">
+					<div class="ti">
+						<i class="fa fa-star-o fa-lg"></i>各科室病例平均分排名情况
+					</div>
+					<ul class="nav nav-tabs boxnavcq" role="tablist">
+						<li></li>
+					</ul>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-sm-12">
+									<table id="depRankTable" class="table">
+										<tr style="border-bottom:1px solid #ddd;">
+											<td>
+												<i class="fa fa-thumbs-o-up fa-lg text-success"></i>
+												得分最高前三名科室
+											</td>
+											<td>
+												<span class="fa-stack fa-lg">
+												  <i class="fa fa-star fa-stack-2x text-success"></i>
+												  <i class="fa fa-stack-1x fa-inverse">1</i>
+												</span>
+												<span class="name top1Name"></span>
+												<span class="value top1Value"></span>
+											</td>
+											<td>
+												<span class="fa-stack fa-lg">
+												  <i class="fa fa-star fa-stack-2x text-success"></i>
+												  <i class="fa fa-stack-1x fa-inverse">2</i>
+												</span>
+												<span class="name top2Name"></span>
+												<span class="value top2Value"></span>
+											</td>
+											<td>
+												<span class="fa-stack fa-lg">
+												  <i class="fa fa-star fa-stack-2x text-success"></i>
+												  <i class="fa fa-stack-1x fa-inverse">3</i>
+												</span>
+												<span class="name top3Name"></span>
+												<span class="value top3Value"></span>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<i class="fa fa-thumbs-o-down fa-lg text-danger"></i>
+												得分最低前三名科室
+											</td>
+											<td>
+												<span class="fa-stack fa-lg">
+												  <i class="fa fa-bell fa-stack-2x text-danger"></i>
+												  <i class="fa fa-stack-1x fa-inverse">1</i>
+												</span>
+												<span class="name last1Name"></span>
+												<span class="value last1Value"></span>
+											</td>
+											<td>
+												<span class="fa-stack fa-lg">
+												  <i class="fa fa-bell fa-stack-2x text-danger"></i>
+												  <i class="fa fa-stack-1x fa-inverse">2</i>
+												</span>
+												<span class="name last2Name"></span>
+												<span class="value last2Value"></span>
+											</td>
+											<td>
+												<span class="fa-stack fa-lg">
+												  <i class="fa fa-bell fa-stack-2x text-danger"></i>
+												  <i class="fa fa-stack-1x fa-inverse">3</i>
+												</span>
+												<span class="name last3Name"></span>
+												<span class="value last3Value"></span>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 中部表格图表 -->
+			<div class="row">
+				<div class="boxcq" id="one">
+					<div class="ti">
+						<i class="fa fa-wpforms fa-lg"></i>责任科室评分
+					</div>
+					<ul class="nav nav-tabs boxnavcq" role="tablist">
+						<li class="active"><a href="#mrDep" role="tab" data-toggle="tab">病案室</a></li>
+						<li><a href="#feeDep" role="tab" data-toggle="tab">财务科</a></li>
+					</ul>
+					<div class="tab-content">
+						<div id="mrDep" role="tabpanel" class="tab-pane fade in active">
+							<div class="row">
+								<div class="col-sm-5">
+									<div id="mrDepChart" style="width:100%;height:350px;">
+
+									</div>
+								</div>
+								<div class="col-sm-7">
+									<table id="mrDepTable" class="table table-striped" width="100%">
+										<thead><tr><th></th><th>科室</th><th>综合得分</th><th>基本信息</th><th>诊疗信息</th></tr></thead>
+										<tbody></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						
+						<div id="feeDep" role="tabpanel" class="tab-pane fade in">
+							<div class="row">
+								<div class="col-sm-5">
+									<div id="feeDepChart" style="width:100%;height:350px;">
+
+									</div>
+								</div>
+								<div class="col-sm-7">
+									<table id="feeDepTable" class="table table-striped" width="100%">
+										<thead><tr><th></th><th>科室</th><th>综合得分</th><th>费用信息</tr></thead>
+										<tbody></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			
+			<div class="row">
+				<div class="boxcq" id="one">
+					<div class="ti">
+						<i class="fa fa-wpforms fa-lg"></i>临床科室首页质量评价得分
+					</div>
+					<ul class="nav nav-tabs boxnavcq" role="tablist">
+						<li></li>
+					</ul>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-sm-5">
+									<div id="chart1" style="width:100%;height:400px;">
+
+									</div>
+								</div>
+								<div class="col-sm-7">
+									<table id="table1" class="table table-striped" width="100%">
+										<thead><tr><th></th><th>科室</th><th>出院病例数</th><th>综合得分</th><th>基本信息得分</th><th>住院过程信息得分</th><th>诊疗信息得分</th><th>费用信息得分</th></tr></thead>
+										<tbody></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row" style="display:none;">
+				<div class="boxcq" id="two">
+					<div class="ti">
+						<i class="fa fa-pie-chart fa-lg"></i>患者基本信息质量评价得分
+					</div>
+					<ul class="nav nav-tabs boxnavcq" role="tablist">
+						<li></li>
+					</ul>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-sm-5">
+									<div id="chart2" style="width:100%;height:400px;">
+
+									</div>
+								</div>
+								<div class="col-sm-7">
+									<table id="table2" class="table table-striped" width="100%">
+										<thead><tr><th></th><th>满分</th><th>实际得分</th><th>备注</th></tr></thead>
+										<tbody>
+											<tr><td>新生儿入院体重</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>新生儿出生体重</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>病案号</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>性别</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>出生日期</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>年龄</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>医疗付费方式</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>主要诊断编码</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>主要诊断描述</td><td>4</td><td>3.5</td><td></td></tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row" style="display:none;">
+				<div class="boxcq" id="two">
+					<div class="ti">
+						<i class="fa fa-money"></i>费用信息质量评价得分
+					</div>
+					<ul class="nav nav-tabs boxnavcq" role="tablist">
+						<li></li>
+					</ul>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active">
+							<div class="row">
+								<div class="col-sm-5">
+									<div id="chart3" style="width:100%;height:400px;">
+
+									</div>
+								</div>
+								<div class="col-sm-7">
+									<table id="table3" class="table table-striped" width="100%">
+										<thead><tr><th></th><th>满分</th><th>实际得分</th><th>备注</th></tr></thead>
+										<tbody>
+											<tr><td>总费用</td><td>4</td><td>3.5</td><td></td></tr>
+											<tr><td>其他费用</td><td>4</td><td>3.5</td><td></td></tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		
+		<!--
+		<footer id="footer">
+			<div class="container">
+        <p class="text-muted">copyright <i class="fa fa-heartbeat fa-lg"></i> DHCC</p>
+      </div>
+		</footer>
+		 -->
+		<div id="loading">
+		 	<img src="../scripts/dhcmrq/images/loading.gif"/>
+		 	<h3 class="info">正在加载<br>...</h3>
+		 </div>
+		 
+		<DHCMRQ:HEAD></DHCMRQ:HEAD>
+		<script type="text/javascript" src="../scripts/dhcmrq/page/mrScore.js" charset="gbk"></script>
+	</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!--治疗站申请单 树形界面左右结构 doccure.applytree.hui.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<STYLE type='text/css'>
+.form-table{
+	border-collapse:separate;
+	border-spacing:0px 10px;
+}
+
+.form-table td{
+ 	white-space: nowrap;	
+}
+
+.r-label,.ifhidden{
+	text-align:right;
+}
+
+.minitext{
+	width:80px!important;
+}
+.midtext{
+	width:120px!important;
+}
+.maxtext{
+	width:130px!important;
+}
+.line{
+	padding:0px 5px;
+	color:#DCDCDC;	
+}
+.ach-div{
+	width:120px;
+	margin:0px auto;
+}
+textarea{
+	width:688px;
+	border-color:#40a2de	
+}
+#patient-label label{
+	width:100px;	
+}
+
+#tree_panel ul,#patient-label ul,.form-table tr td ul{
+	list-style-type: none;
+	display: flex; 
+	flex-wrap: wrap
+	justify-content: flex-start;
+	align-items: center;
+}
+#btnAddItem,#btnUpdateItem {
+	display:inline-block;
+}
+#btnClose,#btnUpdateItem {
+	margin-left:20px;
+}
+</STYLE>
+<Server>
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+s PrintEncrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+s ParaType=$g(%request.Data("ParaType",1)) ;若为OEOrdEntry则表示医嘱录入弹出,若为Y，则表示独立菜单，需走不同分支
+s EpisodeID=$g(%request.Data("EpisodeID",1))
+s DCARowId=$g(%request.Data("DCARowId",1))
+s ARCIMStr=$g(%request.Data("ARCIMStr",1))
+s PracticeCureCount=$g(%request.Data("PracticeCureCount",1))
+if (PracticeCureCount="") s PracticeCureCount=0
+s CureARCIMStr=""
+if ARCIMStr'=""{
+	s CureARCIMStr=##class(DHCDoc.DHCDocCure.ApplyTree).GetCureItemARCIMInfo(ARCIMStr,%session.Get("LOGON.HOSPID"))
+}
+s mradm="",PatientID="",GetStayStatusFlag="",PAAdmType="",PAADMMotherAdmId=""
+s Status="",ExaNoCheckinDocCanRecAdm="",InsurBillStr=""
+if EpisodeID'=""{
+	s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+	s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+	s GetStayStatusFlag=##class(web.DHCADMVisitStat).GetStayStatus(EpisodeID)
+	s PAADMMotherAdmId=$p($g(^PAADM(EpisodeID)),"^",75)
+	s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(%request.Get("EpisodeID"))
+	if (PAAdmType'="I"){
+		s Status=##class(web.DHCDocTransfer).GetQueStatusByAdm(%request.Get("EpisodeID"))
+	}
+	set flag=##class(%Dictionary.MethodDefinition).%ExistsId("web.DHCDocTransfer"_"||"_"GetExaNoCheckinDocCanRecAdm")
+	if flag=1{
+		s ExaNoCheckinDocCanRecAdm=##class(web.DHCDocTransfer).GetExaNoCheckinDocCanRecAdm(EpisodeID)
+	}
+	s InsurBillStr=##Class(web.DHCDocOrderCommon).GetInsurBillStr(PAAdmType)
+	if (InsurBillStr'="") s InsurBillStr="^"_InsurBillStr_"^"
+ }
+ s Hospital=##Class(web.DHCDocConfig).GetConfigNode("CurrentHospital")
+ i Hospital'="" s HospitalCode=$P(Hospital,"^",1)
+ e  s HospitalCode=""
+ ;是否进行欠费控制及科室是否进行欠费控制
+ s CheckIPDepositMethod=""
+ s CheckDepositOrderMethod=""
+ s CheckIPDeposit=##Class(web.DHCDocConfig).GetConfigNode("CheckIPDeposit")
+ i CheckIPDeposit="1" d
+ .s CheckIPLocDeposit=##Class(web.UDHCJFARREARSMANAGE).CheckLoc(%session.Get("LOGON.CTLOCID"))
+ .i CheckIPLocDeposit=0 d
+ ..s CheckIPDepositMethod=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFARREARSMANAGE.CheckArrears")) 
+ ..s CheckDepositOrderMethod=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFARREARSMANAGE.CheckOrderE")) 
+ s OrderLimit=##Class(web.DHCDocConfig).GetConfigNode1("OrderLimit",%session.Get("LOGON.GROUPID"))
+ ;登陆用户身份类型
+ s CareProvType=##class(web.DHCDocOrderCommon).GetCareProvType(%session.Get("LOGON.USERID"))
+ s CareProvType=$zcvt(CareProvType,"U")
+ s SupplementMode=##Class(web.DHCDocConfig).GetConfigNode1("SupplementMode",%session.Get("LOGON.GROUPID"))
+ s NotDoCheckDeposit=+##class(DHCDoc.DHCDocConfig.CommonFunction).GetConfigNode1("NotDoCheckDeposit",%session.Get("LOGON.GROUPID"))
+ s GetPriceMethod=##Class(%CSP.Page).Encrypt($lb("DHCDoc.DHCDocCure.Apply.GetPrice")) 
+ s OrderPriorStr=##Class(web.DHCDocOrderCommon).GetOrderPrior(EpisodeID,"",%session.Get("LOGON.CTLOCID"))
+ s IPDefaultDurRowId=##Class(web.DHCDocConfig).GetConfigNode("IPDefaultDuration")
+ s IPDefaultDur="",IPDefaultDurFactor=0
+ if IPDefaultDurRowId'="" {
+	s IPDefaultDur=$P($g(^PHCDU(IPDefaultDurRowId)),"^",3)
+	s IPDefaultDurFactor=$P($g(^PHCDU(IPDefaultDurRowId)),"^",2)
+ }
+ i (PAAdmType'="I") {
+	  s DefaultOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+ }else{
+	  s IPDefaultPriorShort=##Class(web.DHCDocConfig).GetConfigNode("IPDefaultPriorShort")
+	  i IPDefaultPriorShort=1 s DefaultOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+	  e  s DefaultOrderPriorRowid=$O(^OECPR(0,"Code","S",0))
+	  //登录非就诊科室默认为临时医嘱
+	  s AdmLocRowId=$O(^PAC("ADMLOC",0,"AdmType","I",%session.Get("LOGON.CTLOCID"),0))
+	  i AdmLocRowId=""  s DefaultOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+ }  
+ ;长期医嘱
+ s LongOrderPriorRowid=$O(^OECPR(0,"Code","S",0))
+ ;临时医嘱
+ s ShortOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+ s ONCEFreq=""
+ s ONCEFreqRowid=$O(^PHCFR(0,"Code","ONCE",0))
+ i ONCEFreqRowid'="" s ONCEFreq=$P(^PHCFR(ONCEFreqRowid),"^",3)
+ s STFreq=""
+ s STFreqRowid=$O(^PHCFR(0,"Desc1","ST",0))
+ i HospitalCode="ZGYKDFSYY" s STFreqRowid=$O(^PHCFR(0,"Code","ST",0))
+ i HospitalCode="SDWFYY"    s STFreqRowid=$O(^PHCFR(0,"Code","ST",0))
+ i STFreqRowid'="" s STFreq=$P(^PHCFR(STFreqRowid),"^",3)
+ s ControlWarning=##class(DHCDoc.DHCDocCure.Apply).CheckAfterInit(EpisodeID,%session.Get("LOGON.USERID")_"^"_%session.Data("LOGON.CTLOCID")_"^"_%session.Get("LOGON.GROUPID"),"")
+ s CurrentDischargeStatus=##class(web.DHCDischargeHistory).GetCurrentDischargeStatus(EpisodeID)
+ ;本科室修改医嘱开始日期时间权限
+ s ModifySttDateTimeAuthority=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Data("LOGON.CTLOCID"),9)
+ ;开医嘱日期修改权限
+ s ModifyDateTimeAuthority=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Data("LOGON.CTLOCID"),25) 
+ ;本科室不允许录入整包装数量
+ s LocNotPackQty=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Data("LOGON.CTLOCID"),4)
+ ;住院临时药品医嘱不允许录入整数量
+ s ShortDrugOrdNotAllowPackQty=##Class(web.DHCDocConfig).GetConfigNode("ShortDrugOrdNotAllowPackQty")
+ s GetCurrendDateTimeMethod=##Class(%CSP.Page).Encrypt($lb("DHCDoc.DHCDocCure.Common.GetCurrendDateTime"))
+ s GetOrderFirstDayTimesMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItemView.GetOrderFirstDayTimes"))
+ s CalPackQtyMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItemView.CalPackQty"))
+ s GetOrderPriceConUomMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderCommon.GetOrderPriceConUom"))
+ s GetCountByFreqDispTimeMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItemView.GetCountByFreqDispTime"))
+ w "<input id='PrintEncrypt' name='PrintEncrypt' type='hidden' value='"_PrintEncrypt_"'>",$C(13,10)
+ s CFPilotPatAdmReason=##class(web.PilotProject.DHCDocPPGroupSeting).GetConfigNode("PilotPatAdmReason")
+ s CFIPPilotPatAdmReason=##class(web.PilotProject.DHCDocPPGroupSeting).GetConfigNode("IPPilotPatAdmReason")
+ s CurrDateTime=##class(DHCDoc.DHCDocCure.Common).GetCurrendDateTime(EpisodeID)
+ s PPRowId=$g(%request.Data("PPRowId",1))
+ s PracticeFlag=##class(web.DHCDocCommon).IsPracticeDoctor(%session.Get("LOGON.USERID"))
+ //登录时以此取接收科室 
+ s RecLocByLogonLocFlag=$P($g(^CTLOC(%session.Get("LOGON.CTLOCID"),"DHC")),"^",1)
+</Server>
+</head> 
+<body>
+	<csp:Include Page="doccure.applytree.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			ParaType:"#(ParaType)#",
+			EpisodeID:"#(EpisodeID)#",
+			DCARowId:"#(DCARowId)#",
+			CareProvType:"#(CareProvType)#",
+			mradm:"#(mradm)#",
+			PatientID:"#(PatientID)#",
+			ControlWarning:"#(ControlWarning)#",
+			CurrDateTime:"#(CurrDateTime)#",
+			CurrentDischargeStatus:"#(CurrentDischargeStatus)#",
+			ModifySttDateTimeAuthority:"#(ModifySttDateTimeAuthority)#",
+			ModifyDateTimeAuthority:"#(ModifyDateTimeAuthority)#",
+			CheckIPDepositMethod:"#(CheckIPDepositMethod)#",
+			CheckDepositOrderMethod:"#(CheckDepositOrderMethod)#",
+			GetStayStatusFlag:"#(GetStayStatusFlag)#",
+			GetCountByFreqDispTimeMethod:"#(GetCountByFreqDispTimeMethod)#",
+			SupplementMode:"#(SupplementMode)#",
+			NotDoCheckDeposit:"#(NotDoCheckDeposit)#",
+			GetPriceMethod:"#(GetPriceMethod)#",
+			PAAdmType:"#(PAAdmType)#",
+			PAADMMotherAdmId:"#(PAADMMotherAdmId)#",
+			OrderLimit:"#(OrderLimit)#",
+			Status:"#(Status)#",
+			ExaNoCheckinDocCanRecAdm:"#(ExaNoCheckinDocCanRecAdm)#",
+			STFreq:"#(STFreq)#",
+			STFreqRowid:"#(STFreqRowid)#",
+			ONCEFreq:"#(ONCEFreq)#",
+			ONCEFreqRowid:"#(ONCEFreqRowid)#",
+			LongOrderPriorRowid:"#(LongOrderPriorRowid)#",
+			ShortOrderPriorRowid:"#(ShortOrderPriorRowid)#",
+			IPDefaultDurRowId:"#(IPDefaultDurRowId)#",
+			IPDefaultDur:"#(IPDefaultDur)#",
+			IPDefaultDurFactor:"#(IPDefaultDurFactor)#",
+			DefaultOrderPriorRowid:"#(DefaultOrderPriorRowid)#",
+			LocNotPackQty:"#(LocNotPackQty)#",
+			ShortDrugOrdNotAllowPackQty:"#(ShortDrugOrdNotAllowPackQty)#",
+			OrderPriorStr:"#(OrderPriorStr)#",
+			GetOrderFirstDayTimesMethod:"#(GetOrderFirstDayTimesMethod)#",
+			GetCurrendDateTimeMethod:"#(GetCurrendDateTimeMethod)#",
+			CalPackQtyMethod:"#(CalPackQtyMethod)#",
+			GetOrderPriceConUomMethod:"#(GetOrderPriceConUomMethod)#",
+			ARCIMStr:"#(CureARCIMStr)#",
+			CFPilotPatAdmReason:"#(CFPilotPatAdmReason)#",
+		    CFIPPilotPatAdmReason:"#(CFIPPilotPatAdmReason)#",
+		    PPRowId:"#(PPRowId)#",
+		    PracticeFlag:"#(PracticeFlag)#",
+		    PracticeCureCount:"#(PracticeCureCount)#",
+		    RecLocByLogonLocFlag:"#(RecLocByLogonLocFlag)#",
+		    InsurBillStr:"#(InsurBillStr)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" SRC="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" SRC="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.applytree.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+</body>
+</html>

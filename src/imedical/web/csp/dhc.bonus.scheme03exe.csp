@@ -1,0 +1,68 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s action=$Get(%request.Data("action",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s data=$Get(%request.Data("data",1))
+	s type=$Get(%request.Data("type",1))
+	s state=$Get(%request.Data("state",1))
+	s scheme=$Get(%request.Data("scheme",1))
+	s person=$Get(%request.Data("person",1))
+	s date=$Get(%request.Data("date",1))	
+		
+	i action="audit" d
+	.s result = ##class(dhc.bonus.udata.uBonusScheme).Audit(scheme,person,date)	
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="cancelAudit" d
+	.s result = ##class(dhc.bonus.udata.uBonusScheme).cancelAudit(scheme,person,date)	
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="itemlist" d
+	.w ##class(dhc.bonus.udata.uBonusSchemeItem).List("","",sortField,sortDir,start,limit,scheme)	
+	
+	i action="schemelist" d
+	.w ##class(dhc.bonus.udata.uBonusScheme).List("","",sortField,sortDir,start,limit,type,state)	
+	
+	i action="schemeunitlist" d
+	.w ##class(dhc.bonus.udata.uBonusSchemeUnit).List("","",sortField,sortDir,start,limit,scheme)	
+	
+	i action = "schemeunitadd" d
+	.s result = ##class(dhc.bonus.udata.uBonusSchemeUnit).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "schemeunitedit" d
+	.s result = ##class(dhc.bonus.udata.uBonusSchemeUnit).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "schemeunitdel" d
+	.s result = ##class(dhc.bonus.udata.uBonusSchemeUnit).Del(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+</script>

@@ -1,0 +1,55 @@
+<!-- 
+	creator: Huxiaotian 2019-12-12
+	desc: 药房药库xml打印预览公共csp
+	csp: csp/pha.com.xmlprintpreview.csp
+	js: scripts/pharmacy/common/js/xmlprintpreview.js
+-->
+<csp:content charset="utf-8">
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	
+	<Server language="CACHE" runat="Server">
+		s Application = %request.Application
+		s pid = $g(%request.Data("pid",1))
+		s optionsStr = ##class(PHA.COM.Print).GetPreviewParams(pid)
+		i optionsStr="" d
+		.s optionsStr = %session.Get("PHAXMLPreviewPid")
+		e  d
+		.s %session.Data("PHAXMLPreviewPid") = optionsStr
+   </Server>
+    <script type='text/javascript' language='javascript'>
+   		var optionsStr = "#(optionsStr)#";
+   		var optionsObject = null;
+   		if(optionsStr != ""){
+	   		var optionsObject = eval("(" + optionsStr + ")");
+	   	}
+	   	var btnPageUp = "上一页";
+	   	var btnpageDown = "下一页";
+	   	var btnPrintByInv = "打印";
+	   	var btnExportPDF = "导出PDF";
+   </script>
+	
+</head>
+<body>
+	<div id="bodyLayout">
+	</div>
+</body>
+
+<!-- plugins -->
+<link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/plugins/Font-Awesome-4.6.3/css/font-awesome.min.css" />
+<script type="text/javascript" src="#(Application)#scripts_lib/bootstrap-3.3.5/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/qrcode/jquery-qrcode.js"></script>
+<!-- pdf plugins -->
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/jspdf/html2canvas.js"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/jspdf/jspdf.debug.js"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/jspdf/bluebird.min.js"></script>
+<!-- print js -->
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/xmlprintpreview.js" charset="gb2312"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/printcom.js" charset="gb2312"></script>
+
+</html>

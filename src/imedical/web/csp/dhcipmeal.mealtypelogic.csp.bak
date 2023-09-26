@@ -1,0 +1,44 @@
+/* 
+ * FileName:dhcipmeal.mealtypelogic.csp
+ * User: Lid
+ * Date: 2010-4-28
+ * Function: 餐别定义
+ * Description: 
+*/
+
+<script language="Cache" runat="SERVER">
+    //s %request.ContentType="text/html; charset=utf-8"
+    //s %request.CharSet="utf-8"
+	s act=$g(%request.Data("act",1))  
+	s start=+$g(%request.Data("start",1))  ;开始行
+	s limit=+$g(%request.Data("limit",1))  ;限制行
+	
+	
+	i act="insert" d
+	.s code = $g(%request.Data("code",1))
+	.s Desc = $g(%request.Data("desc",1))
+	.s PYM = $g(%request.Data("pym",1))
+	.s Remark = $g(%request.Data("remark",1))
+	.s tmp = code_"^"_Desc_"^"_Remark_"^"_PYM_"^"_""_"^"_""
+	.s ^lidong("tmp")=tmp
+	.s rtn = ##class(DHCBILL.DHCIPMealType).Insert(tmp)
+	.i rtn=0 w "{success:true,msg:'保存成功'}"
+	.;e  w "{failure:true,msg:'保存失败'}"
+	
+	i act="update" d
+	.s rowid = $g(%request.Data("rowid",1))
+	.s code = $g(%request.Data("code",1))
+	.s Desc = $g(%request.Data("desc",1))
+	.s PYM = $g(%request.Data("pym",1))
+	.s Remark = $g(%request.Data("remark",1))
+	.s tmp = rowid_"^"_code_"^"_Desc_"^"_Remark_"^"_PYM_"^"_""_"^"_""
+	.s rtn = ##class(DHCBILL.DHCIPMealType).Update(tmp)
+	.i rtn=0 w "{success:true,msg:'修改成功'}"
+	.;e  w "{failure:true,msg:'修改失败'}"
+	
+	i act="query" d
+	.;w "{totalCount:'5',results:[{'Code':'0002','Desc':'desc','Remark':'sssssss','PYM':'desc','Comment1':'','Comment2':'','RowID':'2'},{'Code':'00002','Desc':'早餐','Remark':'sssss','PYM':'zc','Comment1':'','Comment2':'','RowID':'3'}]}"
+	.;s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSON2(result)
+	.s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealType","FindMealType",start,limit)
+	.w jsonStr
+</script>

@@ -1,0 +1,124 @@
+<!-- 
+ * FileName: insu.taritemdl.csp
+ * Anchor: ZhaoZW
+ * Date: 2020-02-24
+ * Description: 医保目录管理界面
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<!-- js -->
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/insu.taritemdl.js"></script>
+	<script type="text/javascript" src="../scripts/insu.imporexpport.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<!--css -->
+	<style type="text/css">
+		.rowField{float:right}
+		.panel-icon, .panel-tool
+		{
+			position: absolute;
+			top:30%;
+			margin-top:-8px;
+			height:30px;
+		}
+	</style>
+</head>
+	
+<body>
+	<div class="hisui-layout" data-options="fit:true">   
+		<div data-options="region:'north',title:'',collapsible:false,bodyCls:'panel-header-gray',border:true" style="height:100px;padding:0px 10px 0px 10px;">
+			<div class="hisui-panel" title="下载/导入" style="padding:20px 0px 0px 10px;border-radius:5px;" data-options="headerCls:'panel-header-card-gray',fit:true">
+				<table>
+					<tr>
+						<td class="r-label">医保类型</td>
+						<td>
+							<select id="INTIMsfxmbm" class="hisui-combobox" style="width:120px;"></select>
+						</td>
+						<td>&nbsp;&nbsp;</td>
+						<td class="r-label">目录类型</td>
+						<td>
+							<select id="INTIMDicType1" class="hisui-combobox" style="width:120px;"></select>
+						</td>
+						<td>&nbsp;&nbsp;</td>
+						<td class="r-label">开始日期</td>
+						<td>
+							<input id="StDate" class="hisui-datebox textbox" style="width:115px;">
+						</td>
+						<td>&nbsp;&nbsp;</td>
+						<td class="r-label">结束日期</td>
+						<td>
+							<input id="EdDate" class="hisui-datebox textbox" style="width:115px;">
+						</td>
+						<td>&nbsp;&nbsp;</td>
+						<td>
+							<a href="javascript:void(0);" id="downloadBtn" class="hisui-linkbutton" data-options="iconCls:'icon-download'" style="width:120px">目录下载</a>
+						</td>
+						<td>&nbsp;&nbsp;</td>
+						<td>
+							<a href="javascript:void(0);" id="importBtn" class="hisui-linkbutton" data-options="iconCls:'icon-import'" style="width:120px">目录导入</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div> 
+		<div data-options="region:'center',title:'',collapsible:false,bodyCls:'panel-header-gray',border:true" style="height:100px;padding:0px 10px 0px 10px;">
+			<div class="hisui-panel" title="查询/审核" style="padding:0px;border-radius:5px;" data-options="headerCls:'panel-header-card-gray',fit:true">
+				<div class="hisui-layout" data-options="fit:true">   
+					<div data-options="region:'north',title:'',collapsible:false,bodyCls:'panel-header-gray',border:false" style="height:60px;padding:20px 0px 0px 10px;">
+						<table>
+							<tr>
+								<td class="r-label">目录类型</td>
+								<td>
+									<select id="INTIMDicType2" class="hisui-combobox" style="width:120px;"></select>
+								</td>
+								<td>&nbsp;&nbsp;</td>
+								<td class="r-label">数据批次</td>
+								<td>
+									<select id="DataVersion" class="hisui-combobox" style="width:156px;"></select>
+								</td>
+								<td>&nbsp;&nbsp;</td>
+								<td class="r-label">差异类型</td>
+								<td>
+									<select id="DifferenceCate" class="hisui-combobox" style="width:120px;"></select>
+								</td>
+								<td>&nbsp;&nbsp;</td>
+								<td class="r-label">审核标志</td>
+								<td>
+									<select id="AuditImportFlag" class="hisui-combobox" style="width:120px;"></select>
+								</td>
+								<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+								<td>
+									<a href="javascript:void(0);" id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-search'" style="width:100px">查询</a>
+								</td>
+							</tr>
+						</table>
+					</div>  
+					<div data-options="region:'center',title:'',bodyCls:'panel-header-gray',border:false" style="padding:10px;">
+						<div class="hisui-panel" title="目录一览" data-options="headerCls:'panel-header-big panel-header-gray',iconCls:'icon-paper',fit:true,tools:'#panel-tool'">
+							<table id="DataList"></table>
+						</div>
+						<div id="panel-tool" class="panel-tool">
+							<div class="rowField" style="width:150;padding-top:4px;padding-right:10px;">
+								<a href="javascript:void(0);" id="aduitBtn" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-stamp-pass'">审核通过</a>
+							</div>
+							<div class="rowField" style="width:150;padding-top:4px;padding-right:10px;">
+								<a href="javascript:void(0);" id="compareBtn" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-pat-info'">比较目录</a>
+							</div>
+							<!--div class="rowField" style="width:150;padding-top:4px;padding-right:10px;">
+								<a href="javascript:void(0);" id="compareAllBtn" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-pat-info'">审核全部目录</a>
+							</div-->
+						</div>
+					</div>   
+				</div>  
+			</div>
+		</div>   
+	</div>
+</body>
+</html>

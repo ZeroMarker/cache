@@ -1,0 +1,73 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	DHC重症监护信息系统 </title>
+
+</head>
+<body>
+<script language="cache" runat="server">
+	Set curUrl=%request.URL
+	Set EpisodeID=%request.Get("EpisodeID")
+	Set userId=%session.Get("LOGON.USERID")
+	Set userType=##class(web.DHCClinicCom).GetCtcptType(userId)
+	Set userCtlocId=%session.Get("LOGON.CTLOCID")
+	Set connString=%session.Get("LOGON.LAYOUTMANAGER")
+	//Set monId="1"
+	Set monId=##class(web.DHCICUCom).GetIcuaId(EpisodeID,"",userId)
+	Set Total="AutoTotalTemplateView"	
+	Set groupId=%session.Get("LOGON.GROUPID")
+	s dptId=""
+	Set ctLocId= +userCtlocId //+##class(web.DHCClinicCom).GetLinkLocId(+userCtlocId)
+	Set urlStr="../service/dhcclinic/app/icu/Main.application"+"&connString="_connString+"&ctLocId="_ctLocId
+	Set ^TMPCCQ("Last")=urlStr
+	//w "<p>connString:",userCtlocId," ",##class(web.DHCClinicCom).GetLinkLocId(+userCtlocId),"</p>"
+</script>
+<!--<button id="btnStart" onclick="StartMonitoring()">打开重症统计</button>-->
+<script language="javascript">
+	var userId="#(..EscapeHTML(userId))#";
+	var monId="#(..EscapeHTML(monId))#";
+	var groupId="#(..EscapeHTML(groupId))#";
+	var ctLocId="#(..EscapeHTML(ctLocId))#";
+	var connString="#(..EscapeHTML(connString))#";
+	var Total="#(..EscapeHTML(Total))#";
+	var curLocation=unescape(window.location);
+	curLocation=curLocation.toLowerCase();
+	
+	var filePath=curLocation.substr(0,curLocation.indexOf('/csp/'))+"/service/DHCClinic/";
+	//var paras=monId+"#"+userId+"#"+groupId+"#"+ctLocId+"#"+filePath+"#"+connString+"#"+Total;
+	//var paraFso=new ActiveXObject("Scripting.FileSystemObject");
+	//var paraFile=paraFso.OpenTextFile("C:\\DHCClinic\\ParaFile.txt",2,true);
+	//paraFile.WriteLine(paras);
+	//paraFile.Close();
+	//var shell = new ActiveXObject("WSCRIPT.Shell");
+	//shell.Run("C:\\DHCClinic\\TestLink.exe");
+
+	var left=5;
+	function Show()
+	{
+		left--;
+		if(left==0)
+		{
+			window.opener=null;
+			window.close();
+				
+		}
+		else
+		{
+			setTimeout("Show()",1000);	
+		}	
+	}
+	Show();
+	/*
+	function StartMonitoring()
+	{
+		var lnk="../service/dhcclinic/app/icu/Main.application?icuaId="+monId+"&userId="+userId+"&groupId="+groupId+"&locId="+ctLocId+"&connString="+connString+"&filePath="+filePath+"&total=AutoTotalTemplateView";
+		//window.location.href=lnk;
+		window.open(lnk);
+	}
+	*/
+</script>
+
+</body>
+</html>

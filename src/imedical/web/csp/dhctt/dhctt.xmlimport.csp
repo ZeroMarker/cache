@@ -1,0 +1,65 @@
+<html>
+<head>
+	<DHCTT:HEAD/>
+</head>	
+<body>
+	<DHCTT:MENU/>
+	<table>
+		<tr>
+			<td><label class='greentitle'>待导入组件列表</label></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td><td>				
+				<form enctype="multipart/form-data" method="post" action="dhctt.xmlimport.csp">
+					XML路径名:					
+					<input type=file size=30 name=FileStream  accept="text/xml" multiple>
+					<input type="submit" value="上传">					
+				</form>
+			</td>
+		</tr>
+	</table>	
+	<div class='line' id='ImportXmlInfo'>		
+		<pre id="ImportXmlInfoPre">
+		<csp:if condition='($data(%request.MimeData("FileStream",1)))'>			
+			<hr><br>
+			<b>上传成功!</b><br>
+			文件名: <b>#(..EscapeHTML(%request.MimeData("FileStream",1).FileName))#</b><br>
+			文件大小: <b>#(..EscapeHTML(%request.MimeData("FileStream",1).Size))#</b><br>
+			文档类型: <b>#(..EscapeHTML(%request.MimeData("FileStream",1).ContentType))#</b><br>
+			<br>
+			<script language="Cache" runat="server">
+				New fileStream,bytes,file
+				Set componentxml = "\temp\componentxml\"
+				s dirname = ##class(web.Util.DHCJFXMLOperate).GetPhysicalPath(componentxml)
+				Set fileStream = %request.MimeData("FileStream",1)
+				set fileStream.FileName = ##class(%File).GetFilename(fileStream.FileName)
+				w "<a href='dhctt.xmlimport.csp?importXml="_fileStream.FileName_"'>导入XML到组件</a>"
+				Set file = ##class(%FileBinaryStream).%New()
+				Set file.Filename=dirname_fileStream.FileName
+				Do fileStream.Rewind()
+				While('fileStream.AtEnd){
+					Set bytes = fileStream.Read(1024)
+					Do file.Write(bytes)
+				}
+				Do file.Flush()
+				Do file.%Save()
+				Do file.%Close()
+				Set file=""
+			</script>			 
+		</csp:if>
+		<csp:if condition='($data(%request.Data("importXml",1)))'>
+			<script language="Cache" runat="server">
+				s filename = $g(%request.Data("importXml",1))
+				s filename = ##class(%File).GetFilename(filename)
+				if (filename'=""){
+					Set componentxml = "\temp\componentxml\"
+					s dirname = ##class(web.Util.DHCJFXMLOperate).GetPhysicalPath(componentxml)
+					d ##class(web.Util.UtilService).PutComponent(dirname_filename)
+				}
+			</script>
+		</csp:if>
+		</pre>		
+	</div>
+</body>
+</html>

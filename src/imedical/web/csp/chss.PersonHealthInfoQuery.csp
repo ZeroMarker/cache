@@ -1,0 +1,78 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	
+	s DiagnoseRowId=$Get(%request.Data("DiagnoseRowId",1))
+	s DetailRowId=$Get(%request.Data("DetailRowId",1))
+	s PersonRowIdParref=$Get(%request.Data("PersonRowIdParref",1))
+	s ItemName=$Get(%request.Data("ItemName",1))
+	s ItemdCode=$Get(%request.Data("ItemdCode",1))
+	s ItemAssortCode=$Get(%request.Data("ItemAssortCode",1))
+	s ItemAssortName=$Get(%request.Data("ItemAssortName",1))
+	
+	s DiagnoseResult=$Get(%request.Data("DiagnoseResult",1))
+	s ICDCode=$Get(%request.Data("ICDCode",1))
+	s DateOfStart=$Get(%request.Data("DateOfStart",1))
+	s DateOfEnd=$Get(%request.Data("DateOfEnd",1))
+	s MainPart=$Get(%request.Data("MainPart",1))
+	s MainReason=$Get(%request.Data("MainReason",1))
+	s MainDiagnose=$Get(%request.Data("MainDiagnose",1))
+	s SequenceCode=$Get(%request.Data("SequenceCode",1))
+	
+	s PersonRowId=$Get(%request.Data("PersonRowId",1))
+	s HaveDeformityCertificate=$Get(%request.Data("HaveDeformityCertificate",1))
+	s DeformityCode=$Get(%request.Data("DeformityCode",1))
+	s TableType=$Get(%request.Data("TableType",1))
+	s RecordRowIdDR=$Get(%request.Data("RecordId",1))
+	
+	s limit = 100
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.PersonHealthDiagnoseService).update(DiagnoseRowId,DetailRowId, PersonRowIdParref, ItemName, ItemdCode, ItemAssortCode, ItemAssortName, DiagnoseResult, ICDCode, DateOfStart, DateOfEnd, MainPart, MainReason, MainDiagnose, SequenceCode)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.PersonHealthDiagnoseService).ListPage(Start, Limit, PersonRowIdParref, ItemdCode)
+	
+	//add by haiwenbo 2011-07-04
+	i Action = "Pagelist" d
+	.w ##class(CHSSWeb.PersonHealthDiagnoseService).PageList(Start, Limit, PersonRowIdParref, ItemdCode, RecordRowIdDR)
+	i Action = "Showinfo" d
+	.w ##class(CHSSWeb.PersonHealthDiagnoseService).ShowInfoList(Start, Limit, PersonRowIdParref, ItemdCode, RecordRowIdDR)
+	i Action = "addInfo" d
+	.s result = ##class(CHSSWeb.PersonHealthDiagnoseService).insertList(DetailRowId, PersonRowIdParref, ItemName, ItemdCode, ItemAssortCode, ItemAssortName, DiagnoseResult, ICDCode, DateOfStart, DateOfEnd, MainPart, MainReason, MainDiagnose, SequenceCode, TableType, RecordRowIdDR)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "info" d
+	.w ##class(CHSSWeb.PersonHealthDiagnoseService).ShowInfo(Start, Limit, PersonRowIdParref, ItemdCode)
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.PersonHealthDiagnoseService).delete(DiagnoseRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.PersonHealthDiagnoseService).insert(DetailRowId, PersonRowIdParref, ItemName, ItemdCode, ItemAssortCode, ItemAssortName, DiagnoseResult, ICDCode, DateOfStart, DateOfEnd, MainPart, MainReason, MainDiagnose, SequenceCode, TableType)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "savepersoninfo" d
+	.w ##class(CHSSWeb.PersonHealthDiagnoseService).UpdatePersonHealthInfo(PersonRowId, HaveDeformityCertificate, DeformityCode)
+</script>
+

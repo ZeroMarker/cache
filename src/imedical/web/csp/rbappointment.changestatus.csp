@@ -1,0 +1,42 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+    n resrow,currsess,RescID,sceddate,apptid,Schedule
+	s msg=##Class(websys.Message).%New()
+	d ##Class(web.RBAppointment).websysSaveApptStatus(%request.Get("TEVENT"),%request.Get("ApptID"))
+	;i $g(%request.Data("ApptID",1))="",$g(%request.Data("OEOrdItemID",1))'="" d ##Class(web.OEOrdItem).ArriveOrder(%request.Data("OEOrdItemID",1))
+ 	d ##Class(websys.Conversions).SaveRequest()  //Save %response info as it will disappear due to redirect
+ 	s resrow=%request.Get("resrow")
+    s currsess=%request.Get("currsess")
+    //LOG 33257 BC24-2-2003 ensure that the popup schedule remains open
+    s RescID=%request.Data("RescID",1)
+    s apptid=%request.Data("ApptID",1)
+    s %request.Data("resrow",1)=resrow
+    s %request.Data("currsess",1)=currsess
+    s %request.Data("RescID",1)=RescID
+    s %request.Data("ApptID",1)=apptid
+
+
+    
+	s %response.ServerSideRedirect="rbappointment.changestatusafterupdate.csp"
+	//SB 20/09/02 (28588): Seems that ServerSideRedirect doesn't like passing params (causes probs on liz's local) 
+	//s %response.ServerSideRedirect="rbappointment.changestatusafterupdate.csp"?resrow="_resrow_"&currsess="_currsess
+
+	q
+</SERVER>
+<SCRIPT>alert("rbappointment.changestatus.csp no longer used")</script>
+...
+</BODY>
+</HTML>

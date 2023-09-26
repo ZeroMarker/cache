@@ -1,0 +1,54 @@
+<!doctype html>
+<!--dhc.orderdetailview.csp 医嘱明细查看-->
+<html>
+<head>
+<title>	医嘱查看 </title>
+<HISUI />
+<style>
+	html,body{
+		margin:0;
+		padding:0;	
+		height:100%;
+	}
+</style>
+</head>
+<body>
+	<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+		<table id='tabOrdDetailInfo' style='margin:5px;border:none;width:300px;'></table>
+	</div>
+	<script type="text/javascript">
+		var GV={ord:'#(%request.Get("ord"))#'};
+		$(function(){
+			var OrdDetailColumns=[[
+				{field:'Group',hidden:true},
+				{field:'PropertyCode',hidden:true},
+				{field:'PropertyName',title:'属性'},
+				{field:'PropertyValue',title:'值'}
+			]]
+			OrdDetailInfoDataGrid=$("#tabOrdDetailInfo").propertygrid({  
+				fit : true,
+				border : false,
+				striped : true,
+				singleSelect : false,
+				fitColumns : false,
+				autoRowHeight : false,
+				rownumbers:false,
+				pagination : false, 
+				showGroup: true,
+				pageSize: 9999, 
+				idField:'PropertyName',
+				groupField:'Group',
+				columns :OrdDetailColumns
+			});
+			$.q({
+			    ClassName : "web.DHCDocInPatPortalCommon",
+			    QueryName : "FindOrdDetailInfo",
+			    OrdRowID : GV.ord,
+			    Pagerows:OrdDetailInfoDataGrid.datagrid("options").pageSize,rows:99999
+			},function(GridData){
+				OrdDetailInfoDataGrid.propertygrid('loadData',GridData);
+			});	
+		})
+	</script>
+</body>
+</html>

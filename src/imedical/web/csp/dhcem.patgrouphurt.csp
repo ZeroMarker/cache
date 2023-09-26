@@ -1,0 +1,160 @@
+﻿<html>
+<head>
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-25-->
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.hisui.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patgrouphurt.js" charset="utf-8"></script>
+<script Language="Javascript">
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--hxy 2020-05-21 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+</script>
+
+<style>
+.validatebox-invalid{
+	border:#95B8E7 1px solid	
+}
+#formMes tr{
+	height:40px	
+}
+.panel-tool{
+	display:none	
+}
+</style>
+</head>
+<body class="hisui-layout" fit="true" style="">   
+
+   <div data-options="region:'north',title:'',split:false,headerCls:'panel-header-gray',border:false" style="height:40px;padding:10px 5px 3px 10px;overflow:hidden"> <!--hxy 2020-05-25 st-->
+      <label id="_HospListLabel" style="padding-right:10px">医院</label><input id="_HospList">
+   </div><!--ed-->
+   <div data-options="region:'west',title:'',split:true,headerCls:'panel-header-gray',border:false" style="width:310px;padding:10px 5px 3px 10px">
+  		<div class="hisui-panel" title="事件维护" style="width:400px;padding:20px" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:true,collapsible:true,minimizable:true,maximizable:true,fit:true">
+  			<div style="padding-left:0px">
+				<form id="formMes" method="post">
+					<table cellpadding="0" cellspacing="0">
+						<tr>
+							<td class="r-label">事件代码</td>
+							<td><input class="hisui-validatebox" id="code" style="width:160px;border:#95B8E7 1px solid" data-options="required:true"></input></td>
+						</tr>
+						<tr>
+							<td class="r-label">事件描述</td>
+							<td><input class="hisui-validatebox" id="desc" style="width:160px;border:#95B8E7 1px solid" type="text" name="desc" data-options="required:true"></input></td>
+						</tr>
+						<tr style="display:none">
+							<td class="r-label">事件日期</td>
+							<td><input style="width:167px" class="hisui-datetimebox" id="date" type="text" name="date" data-options=""></input></td>
+						</tr>
+						<tr>
+							<td class="r-label">概要说明</td>
+							<td><input class="hisui-textbox textbox" id="Aboutspec" style="width:160px;border:#95B8E7 1px solid" name="GHUGeneralSpec" ></input></td>
+						</tr>
+						<tr>
+							<td class="r-label">详细说明</td>
+							<td><textarea id="detailspec" style="border:#95B8E7 1px solid;width:167px;height:60px;overflow-y:hidden"></textarea></td>
+						</tr>
+						<tr>
+							<td class="r-label">是否启用</td>
+							<td><input id="Active" class="hisui-combobox" style="width:167px;" ></input></td>
+						</tr>
+						<!--tr>
+							<td class="r-label">医院</td>
+							<td><input id="hospital" class="hisui-combobox" style="width:167px;"></input></td>
+						</tr hxy 2020-05-25 注释-->
+						<tr style="display:none;">
+							<td>RowId</td>
+							<td><input type="text" id="RowId"></input></td>
+						</tr>
+					</table>
+				</form>
+				<div style="padding:5px 0 5px 35px">
+					<a href="#" data-options="iconCls:'icon-w-save'" class="hisui-linkbutton" onclick="submitForm()">保存</a>&nbsp;&nbsp;&nbsp;
+					<a href="#" data-options="iconCls:'icon-w-clean'" class="hisui-linkbutton" onclick="clearForm()">清屏</a>
+				</div>
+			</div>
+  		</div>
+   </div>   <!--west end--> 
+   <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false" style="padding:10px 10px 3px 0">
+   		<div class="hisui-panel" title="事件查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:true,collapsible:true,minimizable:true,maximizable:true,fit:true">
+   			<!-- toolbar -->
+		<div id="toolbar" class="toolbar">
+			<form id="queryForm" style="padding-top:10px">
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+					<td style="padding-left: 10px;padding-right: 10px;">事件代码</td>
+					<td><input type="text" id="GHUCode" name="GHUCode" class="textbox" style="width:120px"></input> </td>	
+					<td style="padding-left: 10px;padding-right: 10px;">事件描述</td>
+					<td><input type="text" id="GHUDesc" name="GHUDesc" class="textbox" style="width:120px"></input> </td>
+					<td><input id="GHUHospDrID" name="GHUHospDrID" type="hidden"></input></td><!--hxy 2020-05-25-->
+					<!--td style="padding-left: 10px;padding-right: 10px;">医院</td>
+					<td><input id="GHUHospDrID" name="GHUHospDrID" class="hisui-combobox" style="width:125px"></input></td><!--hxy 2019-07-17 hxy 2020-05-25 注释-->
+					<td style="padding-left:10px"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="query()">查询</a> </td><!--javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'}) hxy 2020-05-25-->
+					<td style="padding-left:10px"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="queryReset()">重置</a> </td><!--javascript:commonReload({'datagrid':'#datagrid','formid':'#queryForm'}) hxy 2020-05-25-->
+					<td style="padding-left:10px"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="javascript:commonRemove('web.DHCEMPatGroupHurt','RemoveGroupHurt','#datagrid');">删除</a> </td>
+				</tr>
+				<tr>
+			</table>
+			</form>
+			<div class="tool-bar-line">	</div>	
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    border:false,
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onClickRow:onClickRow,
+		    url:'dhcapp.broker.csp?ClassName=web.DHCEMPatGroupHurt&MethodName=ListGroupHurt'
+			">
+			<thead>
+				<tr>
+					<th data-options="field:'GHUCode',width:100,editor:{type:'validatebox',options:{required:true}}">事件代码</th>
+					<th data-options="field:'GHUDesc',width:100,editor:{type:'validatebox',options:{required:true}}">事件描述</th>
+					<th data-options="field:'GHUDateAndTime',hidden:true,width:100,editor:{type:'datetimebox',options:{editable:false}}">事件日期</th>
+					<th data-options="field:'GHUGeneralSpec',width:200,editor:{type:'text',options:{required:true}}">概要说明</th>
+					<th data-options="field:'GHUDetailSpec',width:200,editor:{type:'textarea',options:{required:true}}">详细说明</th>
+					<th data-options="field:'GHUActiveFlag',align:'center',width:80,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMPatGroupHurt&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th data-options="field:'GHUHospDr',width:180,align:'center',hidden:true,
+					                        
+
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false
+												}
+											}">医院</th>
+					<th data-options="field:'GHUHospDrID',hidden:true">GHUHospDrID</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+   		</div>
+   </div>  <!--center end-->  
+</body>  
+
+
+</html>

@@ -1,0 +1,92 @@
+<!-- 
+ * FileName: dhcinsuoutofhospitpay.csp
+ * Modify: tangzf 
+ * Date: 2019-12-6
+ * Description: 院外报销垫付录入
+-->
+<!DOCTYPE html>
+<TRAK:HEAD></TRAK:HEAD>
+<HISUI></HISUI>
+<DHCBILL/>
+<script type="text/javascript" src="../scripts/jsonfun.js"></script>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+</head>
+
+<body style="padding:10px;">
+    <div class="hisui-layout" data-options="fit:true">
+    	<div data-options="region:'north',border:false,collapsible:false" style='height:164px'>
+			<div class="hisui-panel" data-options="title:'院外报销垫付录入',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;" >
+				<table class='search-table' id='addInfo' >
+					<tr>
+						<td class='r-label td-first-col' >开始日期</td>
+						<td><input id="StartDate" class="hisui-datebox textbox"  name="StartDate" /> </td>
+						<td class='r-label'>结束日期</td>
+						<td><input id="EndDate" class="hisui-datebox textbox"  name="EndDate" /> </td>
+						<td class='r-label' id="LabelINPAYzylsh0">流水号</td>
+						<td><input id="INPAYzylsh0" class="hisui-textbox textbox"  name="INPAYzylsh0" required /> </td>
+						<td class='r-label' id="LabelINPAYxming0">姓名</td>
+						<td><input id="INPAYxming0" class="hisui-textbox textbox"  name="INPAYxming0"  required></input></td>
+						<td class='r-label'>总费用</td>
+						<td><input id="INPAYbcbxf0" style='color:red;font-weight:bold' class="hisui-numberbox textbox" required name="INPAYbcbxf0" /> </td>
+						<td class='r-label' id="LabelINPAYZstr10">待遇类别</td>
+						<td><input id="INPAYZstr10" class="hisui-combobox textbox"  name="INPAYZstr10" required /> </td>
+
+					</tr>
+					<tr>
+						<td class='r-label td-first-col' id="LabelINPAYZstr04">医保类型</td>
+						<td><input id="INPAYZstr04" class="hisui-textbox textbox"  name="INPAYZstr04" required ></input></td>
+						<td class='r-label' id="LabelINPAYsftsbz">医疗类别</td>
+						<td><input id="INPAYsftsbz" class="hisui-combobox textbox" name="INPAYsftsbz"  required/> </td>
+						<td class='r-label' id="LabelINPAYZstr12">就诊类型</td>
+						<td><input id="INPAYZstr12" class="hisui-textbox textbox"  name="INPAYZstr12"  required/> </td>
+						<td class='r-label' id="LabelINPAYZstr16">转诊医院</td>
+						<td><input id="INPAYZstr16" class="hisui-textbox textbox" name="INPAYZstr16" required /> </td>
+						<td class='r-label' id="LabelINPAYjjzfe0">垫付金额</td>
+						<td><input id="INPAYjjzfe0" style='color:red;font-weight:bold' class="hisui-numberbox textbox"  required name="INPAYjjzfe0" /> </td>
+						<td class='r-label' id="LabelINPAYZstr24">备注</td>
+						<td><input id="INPAYZstr24" class="hisui-textbox textbox"  name="INPAYZstr24" required/> </td>
+					</tr>
+					<tr>
+						<td class='r-label td-first-col' id="LabelINPAYZstr13">地区</td>
+						<td><input id="INPAYZstr13" class="hisui-combobox textbox"  name="INPAYZstr13" required></input></td>
+						<td class='r-label' id="LabelINPAYxbie00">性别</td>
+						<td><input id="INPAYxbie00" class="hisui-textbox textbox"  name="INPAYxbie00" required/> </td>
+						<td class='r-label' id="LabelINPAYid0000">身份证</td>
+						<td ><input id="INPAYid0000" class="hisui-textbox textbox"  name="INPAYid0000" required/> </td>
+						<td class='r-label' id="LabelINPAYdjlsh0">单据号</td>
+						<td><input id="INPAYdjlsh0" class="hisui-textbox textbox" name="INPAYdjlsh0" required/> </td>
+						<td class='r-label' id="LabelINPAYgrzfe0">个人自负</td>
+						<td><input id="INPAYgrzfe0" style='color:red;font-weight:bold' required class="hisui-numberbox textbox" disabled name="INPAYgrzfe0" /> </td>
+						<td class='r-label' id="LabelINPAYFlag">结算状态</td>
+						<td><input id="INPAYFlag" class="hisui-textbox textbox" disabled  name="INPAYFlag" required/> </td>
+					
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'center'" style="border-top:1px dashed #cccccc;border-left:1px solid #cccccc;border-bottom:1px solid #cccccc;border-right:1px solid #cccccc;overflow:hidden;border-radius:0 0 px 4px;" >
+			<div id="dg" class="hisui-datagrid"></div>
+		</div>
+		<!--toolbar-->
+		<div id="toolBar" class="hisui-toolbar" >  
+			<table cellspacing="0" cellpadding="0">
+				<tbody>
+					<tr>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-search" id="btnAdd" plain="true" onClick='Query()' >查询</a></td>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-add" id="btnAdd" plain="true" onClick='Add()' >垫付</a></td>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-remove" id="btnAdd" plain="true" onClick='Abort()' >作废</a></td>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-clear" id="btn-Delete" plain="true" onClick='Clear()'>清屏</a></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcinsuoutofhospitpay.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	//s str=$Get(%request.Data("query",1))
+	
+	
+	//rowid CompDR  Year AdjustNo AdjustDate AdjustFile Memo IsApprove IsElast ElastMonth
+    s rowid=$Get(%request.Data("rowid",1))
+	s IncItemCode=$Get(%request.Data("incitemcode",1))
+	s SickType=$Get(%request.Data("sicktype",1))
+	s MakeBillDeptRate=$Get(%request.Data("makebilldeptrate",1))
+	s ExecuteDeptRate=$Get(%request.Data("executedeptrate",1))
+	s SickDeptRate=$Get(%request.Data("sickdeptrate",1))
+	s CheckMan=$Get(%request.Data("CheckMan",1))
+	s checker=$Get(%request.Data("checker",1))
+	s CheckDate=$Get(%request.Data("checkdate",1))
+	s UpdateDate=$Get(%request.Data("updatedate",1))
+	s State=$Get(%request.Data("state",1))
+	s tartype=$Get(%request.Data("tartype",1))
+	s sicktype=$Get(%request.Data("sicktype",1))	
+
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.umodule.uBonusIncomeRate).List(sortField, sortDir, start, limit,tartype,sicktype)
+	
+	i action = "add" d
+	.s result = ##class(dhc.bonus.umodule.uBonusIncomeRate).InsertRec(IncItemCode, SickType, MakeBillDeptRate, ExecuteDeptRate, SickDeptRate, CheckMan, CheckDate, UpdateDate, State)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.umodule.uBonusIncomeRate).UpdateRec(rowid,IncItemCode, SickType, MakeBillDeptRate, ExecuteDeptRate, SickDeptRate, CheckMan, CheckDate, UpdateDate, State)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.bonus.umodule.uBonusIncomeRate).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "audit" d
+	.s result = ##class(dhc.bonus.umodule.uBonusIncomeRate).Audit(rowid,checker)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "unaudit" d
+	.s result =  ##class(dhc.bonus.umodule.uBonusIncomeRate).unAudit(rowid,checker)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

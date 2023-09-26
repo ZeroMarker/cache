@@ -1,0 +1,80 @@
+<html>
+<head>
+<title>信 手 书</title>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script> 
+	<script type="text/javascript" src="../scripts/epr/JQuery/jquery-1.4.2.js"></script>
+	<script type="text/javascript" src="../scripts/epr/JQuery/jquery.json-2.3.js"></script>
+	<script type="text/javascript" src="../scripts/epr/JQuery/base64.js"></script>
+	<script type="text/javascript" src="../scripts/epr/JQuery/json2.js"></script>
+	<script type="text/javascript">
+	var parWindow = window.dialogArguments;
+	
+    var episodeID = parWindow.signArgs["episodeID"];
+    var printDocID = parWindow.signArgs["printDocID"];
+    var eprNum = parWindow.signArgs["eprNum"];
+    var insIDs = parWindow.signArgs["instanceIDs"];
+    var userID = parWindow.signArgs["userID"];
+    var action = parWindow.signArgs["action"];
+    
+    var content = getContent();
+    
+    function getContent()
+    {	// 取病历信息，包括验证；成功：返回对病历的Hash；失败：返回空
+	    var ret = "tst";
+	    var params = new Object;
+	    
+	    params = parWindow.signArgs;
+	    params["method"] = "GetContent";
+	    params["needLogin"] = 0;
+	    
+	    jQuery.ajax(
+	    {
+				type : "POST",
+				dataType : "text",
+				url : "../web.eprajax.logs.DigitalSignatureService.cls",
+				async : false,
+				data : params,
+				success : function(d)
+				{
+					if ("0" == d.split('^')[0])
+					{
+						alert(d.split('^')[1]);
+					}
+					else if ("" != d)
+					{
+						//ret = HashData(d);
+						ret = d;
+						if ("" == ret)
+						{
+							alert("生成病历摘要失败！" + d);
+						}
+						//content = ret;
+					}
+					else
+					{
+						alert("取病历内容失败！");
+					}
+				},
+				error : function(d)
+				{
+					alert("error 取病历内容方法调用失败！");
+				}
+			});
+		params["method"] = null;
+		
+		return ret;
+	}
+	</script>
+</head>
+
+<body style="font-family:Tahoma,Verdana,Helvetica; background-color: #DFE8F7;font-size: 14px;">
+	<object id="anysign" width="0" height="0" classid="clsid:D3C5BDC4-CE65-48D8-8DE0-C3DB1DF84962"></object>
+	<div id = "panel"></div>
+	<script type="text/javascript" src="../scripts/epr/js/anysign.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/anysignapi.js"></script>
+</body>
+</html>

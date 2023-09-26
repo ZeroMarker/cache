@@ -1,0 +1,62 @@
+<html>
+<head>
+<title>请选择摸板</title>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+
+</head>	
+<body>
+<form>
+<server>
+
+If ($Data(%request.Data("categoryid",1))) {
+	set CategoryID = $Get(%request.Data("categoryid",1))
+}
+else {	
+	set CategoryID = ""	
+}
+
+If ($Data(%request.Data("EpisodeID"))) {
+	set EpisodeID = $Get(%request.Data("EpisodeID",1))
+}
+else {
+	set EpisodeID = ""
+}
+
+w "<object width=0 height=0 id='config' name='config' classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.UCConfig'>",!
+w "<param name='URL' value='" _ ##class(web.DHCEPR).GetServiceURL() _ "'>",!
+w "<param name='DBUserPassword' value='" _ ##class(web.DHCEPR).GetUserPassword() _ "'>",!
+w "</object>",! 
+       
+w "<object id='templatelist' name='templatelist' classid='" _ ##class(web.DHCEPR).GetFormURL() _ "WebClient.dll#dhcc.epr.webclient.UCTemplateList' Width='290' Height='300' VIEWASTEXT >",!
+w "<param name='CategoryID' value='" _ CategoryID _ "'>",!
+w "<param name='EpisodeID' value='" _ EpisodeID _ "'>",!
+w "</object>",! 
+</server>
+
+<br>
+<script language='javascript'>
+ function btnConfirmClick()
+ {
+ 	var obj=document.getElementById('templatelist');
+ 	if (obj.TemplateID != "")
+ 	{
+  	window.returnValue = obj.CategoryID + "," + obj.TemplateName + "," + obj.TemplateID;
+  }	
+  else
+  {
+  	window.returnValue = "";  	
+  }	
+  window.close();  
+ }
+ function btnCancelClick()
+ {
+ 	window.returnValue = "";
+ 	window.close();  
+ }
+</script>
+<a href="#" id='btnConfirm' name='btnConfirm' onclick='btnConfirmClick()'><img SRC="../images/websys/update.gif" BORDER="0">确定</A>
+<a href="#" id='btnCancel' name='btnCancel' onclick='btnCancelClick()'><img SRC="../images/websys/delete.gif" BORDER="0">取消</A>
+</form>
+
+</body>
+</html>

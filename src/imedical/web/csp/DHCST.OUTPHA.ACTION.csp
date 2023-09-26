@@ -1,0 +1,161 @@
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	/*
+	门诊药房公用csp用于action
+	createdate:2016-04-25
+	creator:yunhaibao
+	DHCST.OUTPHA.ACTION.csp
+	*/
+	
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+   	s page=$Get(%request.Data("page",1))
+   	s rows=$Get(%request.Data("rows",1))
+   	s groupId= $Get(%request.Data("groupId",1))
+   	s gLocId=$Get(%request.Data("gLocId",1))
+   	s gUserId=$Get(%request.Data("gUserId",1))
+   	s HospId=$Get(%request.Data("HospId",1))
+   	s combotext=$Get(%request.Data("q",1)) // easyui combox 默认检索参数
+   	i combotext="" s combotext=$Get(%request.Data("combotext",1))
+   	s style=$Get(%request.Data("style",1))
+   	s flag=$Get(%request.Data("flag",1))
+   	s chkrelflag=$Get(%request.Data("ChkRelFlag",1))
+   	//验证登录人员权限
+   	i action="CheckPermission" d
+   	.s ret= ##class(web.DHCOUTPHA.InfoCommon).CheckPermission(gLocId,gUserId,groupId)
+   	.w ret
+   	//卡类型
+	i action="GetCardType" d
+	.w ##CLASS(web.DHCSTPharmacyCommon).ReadCardTypeDefineListBroker("GetCardTypeToJson")
+	//根据窗口等id获取描述
+	i action="GetDescFromId" d
+	.s gphl=$Get(%request.Data("gphl",1))
+	.s gpyphw=$Get(%request.Data("gpyphw",1))
+	.s gpydr=$Get(%request.Data("gpydr",1))
+	.s gfydr=$Get(%request.Data("gfydr",1))
+	.s gpos=$Get(%request.Data("gpos",1))
+	.s gfyphw=$Get(%request.Data("gfyphw",1))
+	.s ret= ##class(web.DHCOUTPHA.InfoCommon).GetDescFromId(gphl,gpyphw,gpydr,gfydr,gpos,gfyphw)
+	.w ret
+	//获取登记号长度
+	i action="GetPminoLen" d
+	.w ##class(web.DHCOutPhAdd).GetPminoLen()
+	//获取配药人下拉
+	i action="GetPYUserList" d
+	.w ##CLASS(web.DHCOUTPHA.InfoCommon).jsGetPYUserList(gLocId,gUserId,style,combotext,flag)
+	//获取门诊药房配置
+	i action="GetPhLocConfig" d
+	.w ##class(web.DHCOutPhCode).GetPhLocConfig(gLocId)
+	//获取基数药科室列表
+	i action="GetBasicLocList" d
+	.w ##class(web.DHCOUTPHA.InfoCommon).jsGetBasicLocList(style,combotext,HospId)
+	//获取急诊留观科室列表
+	i action="GetEMLocList" d
+	.w ##class(web.DHCOUTPHA.InfoCommon).jsGetEMLocList(style,HospId)
+	//获取科室集合
+	i action = "GetCtLocDs" d
+	.s custtype=$Get(%request.Data("custtype",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetCtLocDs(combotext,style,"",custtype,HospId)
+	//根据人员获取默认登录科室以及其他登陆科室的集合
+	i action="GetUserAllLocDs" d
+	.w ##CLASS(PHA.OP.COM.Store).GetUserAllLocDs(gUserId,combotext,style,HospId)
+	//根据科室id获取有此登陆科室的人员集合
+	i action="GetLocAllUserDs" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetLocAllUserDs(params)
+	//获取用法集合
+	i action="GetInstuDs" d 
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetInstuDs(combotext)
+    //获取库存分类集合
+	i action="GetStkCatDs" d
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetStkCatDs()
+	//获取管理组集合
+	i action="GetManaGroupDs" d 
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetManaGroupDs(gLocId)
+	//获取管制分类集合
+	i action="GetPoisonCatDs" d 
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetPoisonCatDs()
+	//获取窗口类型
+	i action="GetWinType" d
+	.w ##CLASS(PHA.OP.COM.Store).jsGetWinType()
+	/******************上方公用,下方对应业务查询*********************/
+	//获取配药窗口下拉集合
+	i action = "GetPYWinList" d
+	.s chkfywflag=$Get(%request.Data("chkFyWFlag",1))
+	.w ##CLASS(PHA.OP.COM.Store).jsGetPYWinList(gLocId,chkfywflag,style)
+	//获取发药窗口列表集合
+	i action = "QueryDispWinList" d
+	.w ##CLASS(PHA.OP.COM.Store).jsQueryDispWinList(gLocId,chkrelflag)
+	//获取配药处方列表
+	i action = "QueryPYList" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.PyAdv.Display).jsQueryPYList(page,rows,params,style)
+	//获取发药配药明细列表
+	i action = "QueryDispListDetail" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.PyAdv.Display).jsQueryDispListDetail(page,rows,params,style)
+	//获取处方类型
+	i action="GetPrescType" d 
+	.w ##CLASS(web.DHCOUTPHA.InfoCommon).GetPrescType(style)
+	//获取处方统计的处方类型
+	i action="GetOutPrescType" d 
+	.w ##CLASS(web.DHCOUTPHA.InfoCommon).GetOutPrescType(style)
+	//获取发药窗口下拉集合
+	i action = "GetFYWinList" d
+	.w ##CLASS(PHA.OP.COM.Store).jsGetFYWinList(gLocId,chkrelflag,style)
+	//获取发药界面待发药列表集合
+	i action = "QueryNeedFYList" d
+	.s params=$Get(%request.Data("params",1))
+	.i style="jqGrid" s page=1,rows=999
+	.w ##CLASS(PHA.OP.PyDisp.Display).jsQueryNeedFYList(page,rows,params,style)
+	//获取直接发药列表
+	i action = "QueryDispList" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.DirDisp.Display).jsQueryDispList(page,rows,params)
+	//获取配发模式发药列表
+	i action = "jsQueryFYList" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.PyDisp.Display).jsQueryFYList(page,rows,params,style)
+	/*******************************************************************/
+	//退药原因
+	i action="GetRetReason" d
+	.w ##CLASS(PHA.OP.COM.Util).jsGetReturnReason(style,HospId)
+	//拒绝退药原因
+	i action="GetRetRefuseReason" d
+	.w ##CLASS(PHA.OP.COM.Util).jsGetReturnRefuseReason(style,HospId)
+	//退药界面获取退药申请列表
+	i action="GetReqListByReqNo" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.Return.Display).jsGetReqListByRegNo(params)
+	//退药界面根据退药申请获取退药列表
+	i action="GetReturnListByReq" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.Return.Display).jsGetReturnListByReq(params)
+	//退药获取处方信息列表,select2
+	i action="GetPrescForRet" d
+	.s inputStr=$Get(%request.Data("inputStr",1))
+	.w ##CLASS(PHA.OP.Return.Display).jsGetPrescForRet(inputStr,combotext)
+	//退药界面根据处方获取退药列表
+	i action="GetNeedReturnList" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.Return.Display).jsGetNeedReturnList(params)
+	//退药获取发票信息列表
+	i action="GetInvListForReturn" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(web.DHCOUTPHA.Return).jsGetInvListForReturn(params)
+	//欠药单管理查询主信息列表
+	i action="QueryOweList" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.Owe.Display).jsQueryOweList(page,rows,params,style)
+	//欠药单管理查询明细信息列表
+	i action="QueryOweListDetail" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.Owe.Display).jsQueryOweListDetail(1,999,params)
+	
+	i action="GetPhPerList" d
+	.s locId=$Get(%request.Data("locId",1))
+	.s perFlag=$Get(%request.Data("perFlag",1))
+	.w ##CLASS(PHA.OP.COM.Store).jsGetPhPerList(locId,perFlag)
+
+</script>

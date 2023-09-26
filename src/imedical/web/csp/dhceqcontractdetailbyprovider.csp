@@ -1,0 +1,106 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<style type="text/css"></style>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s GUserDR=$g(%request.Data("GUSERID",1))   ;用户DR
+ s GUserCode=$g(%request.Data("GUSERCODE",1))   ;工号
+ s GUserName=$g(%request.Data("GUSERNAME",1))   ;用户名
+ s GGroupDR = $g(%request.Data("GGROURPID",1)) ;安全组DR
+ s GGroupDesc = $g(%request.Data("GGROURPDESC",1)) ;安全组
+ s GLocDR = $g(%request.Data("GLOCID",1)) ;登录科室
+ s GHospDR = $g(%request.Data("GHOSPID",1)) ;登录医院
+ s QXType = $g(%request.Data("QXType",1)) ;QXType
+ s ReportFileName=$Get(%request.Data("ReportFileName",1))	;润乾报表名
+ s CurDate=$ZD(+$H,3)
+</Script>
+<!--依赖的jquery-->
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/jquery-1.8.0.min.js"></script>
+<!--easyui全部-->
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/jquery.easyui.min.js"></script>
+<!-- easyui需要的全局css -->
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.5/themes/default/easyui.css">
+<!-- easyui的小图标css -->
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.5/themes/icon.css">
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+
+<script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	}; 
+	
+</script>
+<!--script type='text/javascript' src='../scripts/dhceq/js/dhceqmaintstatisticsanaly.js'></script-->
+<script type='text/javascript' src='../scripts/dhceq/js/dhceqcontractdetail.js'></script>
+</HEAD>
+
+<body>
+	<div style="margin:5px 0;" ></div>
+	<div class="easyui-layout" data-options="fit:true,border:true" style='width:100%;height:9.9%;display:block;'>
+		<div data-options="region:'north'" style="height:80%" title="买保合同设备查询">
+			<table id='tQueryPanel' class="chargeTable">
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>供应商</td><td id="TDProvider"><input id="Provider" type="text"></input></td><td class="tdspace"></td>
+					<td>日期</td><td><input id="StartDate" class="easyui-datebox"></input></td><td></td>
+					<td>到</td><td><input id="EndDate" class="easyui-datebox"></input></td><td></td>
+					<td></td><td></td><td></td>
+					<td></td><td><a id="BFind" href="#" class="easyui-linkbutton" >查询</a></td><td class="tdspace"></td>
+				</tr>
+				<tr class="chargeTr" style="display: none">
+					<td class="tdspace"></td>
+					<td>签订部门</td><td id="TDUseLoc"><input id="UseLoc" type="hidden"></input></td><td class="tdspace"></td><td></td><td></td><td></td>
+				</tr>
+			</table>
+		</div>
+		<!--润乾报表显示位置-->
+		<div data-options="region:'center'" style="margin:2px 0px 0px 0px;">
+			<iframe id="ReportFile" name="ReportFile" src="dhccpmrunqianreport.csp?reportName=#(ReportFileName)#" width=100% height=85%></iframe>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<INPUT TYPE="hidden" name="CurDate" id="CurDate" value=#(CurDate)#>
+			<!--调用后台方法隐藏元素
+			<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			-->
+		</form>
+	</div>
+</body>
+</HTML>

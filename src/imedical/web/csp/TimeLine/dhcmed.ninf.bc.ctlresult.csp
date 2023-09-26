@@ -1,0 +1,108 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!-- <meta http-equiv="Content-Type" content="text/html;" /> -->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+        <DHCMED:HEAD></DHCMED:HEAD>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Base.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_Const.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/export/Excel_App.js'></script>
+		
+		<script type="text/javascript" src='../scripts/dhcmed/ninf/Srv/PublicFunction/CustomFormItem.js'></script>
+		<script type="text/javascript" src="../Scripts/dhcmed/ss/PublicFunction/CustomFormItem.js"></script>
+        <script language='javascript' src='../scripts/dhcmed/ninf/BC/CtlResult/CtlResult_Gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/BC/CtlResult/CtlResult_Event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/BC/CtlResult/RowExpander.js'></script>	
+		<script type="text/javascript" src='../scripts/dhcmed/ninf/BC/PatientDtl/PatientDtl_Gui.js'></script>
+		<script type="text/javascript" src='../scripts/dhcmed/ninf/BC/PatientDtl/PatientDtl_Event.js'></script>
+		
+		<SCRIPT language=JScript event="OnCompleted(hResult,pErrorObject,pAsyncContext)" for=foo>  
+			//alert(MACAddr);
+		</SCRIPT>
+		<SCRIPT language=JScript event=OnObjectReady(objObject,objAsyncContext) for=foo>  
+			if ((objObject.IPEnabled != null)&&(objObject.IPEnabled != "undefined")&&(objObject.IPEnabled == true))
+			{
+				if ((objObject.MACAddress != null)&&(objObject.MACAddress != "undefined"))
+				{
+					MACAddr = objObject.MACAddress;
+				}
+				if ((objObject.IPAddress(0) != null)&&(objObject.IPAddress(0) != "undefined"))
+				{
+					IPAddr = objObject.IPAddress(0);
+				}
+				if ((objObject.DNSHostName != null)&&(objObject.DNSHostName != "undefined"))
+				{
+					sDNSName = objObject.DNSHostName;
+				}
+			}
+		</SCRIPT>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"NINF")
+			Set LogonLocID=""""_LogonLocID_""""
+			Set LogonHospID=""""_LogonHospID_""""
+			Set SSHospCode=""""_SSHospCode_""""
+			
+			Set SubjectCode=$g(%request.Data("SubjectCode",1))    //主题配置Code
+			Set:SubjectCode="" SubjectCode="INTCCS"               //默认为"INTCCS"
+			Set SubjectCode=""""_SubjectCode_""""
+		</SCRIPT>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			
+			var MACAddr;
+			var IPAddr;
+			var DomainAddr;
+			var sDNSName;
+			
+			var LogonLocID=#(LogonLocID)#;
+			var LogonHospID=#(LogonHospID)#;
+			var SSHospCode=#(SSHospCode)#;
+			var SubjectCode=#(SubjectCode)#;
+			
+			var objControlArry = new Array();
+			
+			
+			 //Modified By LiYang 2014-07-04
+			var service = null;
+            function window_onload() {
+	            //Modified By LiYang 2014-07-04
+	            service = locator.ConnectServer();
+	            service.Security_.ImpersonationLevel=3;
+				service.InstancesOfAsync(foo,'Win32_NetworkAdapterConfiguration');
+	            
+	            
+	            
+            	var objWinControl = new InitWinControl();
+            	objControlArry['WinControl'] = objWinControl;
+            }
+        </script>
+        <!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body onload="return window_onload()">
+		<!--<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET> -->
+		<OBJECT id=locator classid=CLSID:76A64158-CB41-11D1-8B02-00600806D9B6   VIEWASTEXT></OBJECT>
+		<OBJECT id=foo classid=CLSID:75718C9A-F029-11d1-A1AC-00C04FB6C223></OBJECT>
+	</body>
+</html>

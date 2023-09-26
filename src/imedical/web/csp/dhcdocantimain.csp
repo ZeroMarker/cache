@@ -1,0 +1,57 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<head>
+		<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+		<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/css/dhcant.kss.ui.css"></LINK>
+		<script language='javascript' src='../scripts/dhcdocant/AntMain.js'></script>
+		<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcclinic/Ext.ux.form.LovCombo.js"></script>		
+		<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.ext.3.2.1.css "></LINK>
+		<server>
+			set ShowTabStr = %request.Get("ShowTabStr")
+			set PAADMRowid = %request.Get("EpisodeID")
+			set ArcimRowid = %request.Get("ArcimRowid")
+			set OrderPoisonCode = %request.Get("OrderPoisonCode")
+			set OrderAntibApplyRowid = %request.Get("OrderAntibApplyRowid")
+			set UserReasonId = %request.Get("UserReasonId")
+			m ^tempWQK = %request.Data
+		</server>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			var objControlArry = new Array();
+			var ShowTabStr = "#(ShowTabStr)#";
+			var PAADMRowid = "#(PAADMRowid)#";
+			var ArcimRowid = "#(ArcimRowid)#";
+			var OrderPoisonCode = "#(OrderPoisonCode)#";
+			var OrderAntibApplyRowid = "#(OrderAntibApplyRowid)#";
+			var UserReasonId = "#(UserReasonId)#";
+			
+            function window_onload() {
+	           	wantAudit= false;
+	           	wantConsultation=false;
+	            SaveFlag = false;
+				var MainAnt=new AntMain(ShowTabStr,PAADMRowid,ArcimRowid,OrderAntibApplyRowid,UserReasonId,OrderPoisonCode)
+	 			//MainAnt.show()
+	 			
+				window.document.body.onbeforeunload = MainAnt.CloseWin;					 			
+		 		new Ext.Viewport({
+			    	layout: 'border',
+			    	items: [MainAnt]
+				});		
+
+            }
+        </script>
+       <TRAK:HEAD></TRAK:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+	</body>
+</html>

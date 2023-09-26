@@ -1,0 +1,77 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+ n str,x,url,j,Validated,tempOrdItm,variReason,saved,msg
+ s %response.ServerSideRedirect=""
+ s msg=##Class(websys.Message).%New()
+ ;
+ ;will need to be translateable!!!!
+ ;
+ ;Validates the User and PIN
+ s Validated=0
+ s Validated=##Class(web.SSUser).ValidatePIN(%request.Get("UserCode"),%request.Get("PIN"))
+ ;i Validated=0 d msg.AddItem("E","PIN"," is invalid")
+ s variReason=%request.Get("newVarReason")
+ i variReason'="" {
+ 	s variReason=##Class(web.MRCVarianceReason).GetIdFromCodeOrDescription(variReason)
+ 	i variReason="" s Validated=0 d msg.AddItem("E","Variance Reason"," is invalid")
+ }
+ ;
+ if Validated,%request.Get("OEItemIDs")'="" {
+ 	s OEItemIDs=%request.Get("OEItemIDs")
+ 	f j=1:1:$l(OEItemIDs,",") {
+		d ChangeStatus^COEOrdItem($p(OEItemIDs,",",j),%request.Get("newOEItemStatus"),%session.Get("LOGON.USERID"))
+		s tempOrdItem=##Class(User.OEOrdItem).%OpenId($p(OEItemIDs,",",j),0)
+		i tempOrdItem {
+			d tempOrdItem.OEORIVarianceReasonDRSetObjectId(variReason)
+			s saved=tempOrdItem.%Save(0)
+			d tempOrdItem.%Close()
+		}
+ 	}
+ 	//SA 17-Oct-2001. Call to Indian UDF.
+ 	i ##Class(websys.UserDefinedFunctions).Evaluate("OEOrder","OnAfterSave") 
+ 	//s ^zsyd($zn,"oeitemids",$h)=OEItemIDs 	
+ 	//s %response.TraceDump=1
+ }
+ ;
+ ; If there were no errors unlock anything that may be locked
+ i msg.Items.Count()=0 d
+ . d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ i msg.Items.Count()>0 d
+ . s %session.Data("WEBSYS.MSGID")=msg.%Id()
+ . s %response.ServerSideRedirect="websys.msgcontrol.csp"
+ ;
+ d msg.%Close()
+</SERVER>
+</HEAD>
+<BODY>
+<SERVER>
+ n str,x,url,j,Validated,tempOrdItm,variReason,saved,msg
+ ;
+ s str="?chart=yes",x=""  f  s x=%request.Next(x) q:x=""  s str=str_"&"_x_"="_%request.Get(x)
+ i '$d(%request.Data("ChartID")) s url="websys.default.csp?WEBSYS.TCOMPONENT=OEOrdItem.ListEMR"_$g(str)
+ i $d(%request.Data("ChartID")) s url="epr.chart.csp"_$g(str)
+ ;
+</SERVER>
+<script Language="JavaScript">
+		var url="#(url)#"
+		var winName="#(%request.Get("winName"))#"
+		if (winName=="") {
+			winName=window.name;
+			if (window.opener) winName=window.opener.name;
+		}
+		//document.write("*"+winName+"*");
+		websys_createWindow(url,winName,"");
+		//window.open(url,winName);
+</script>
+</BODY>
+</HTML>

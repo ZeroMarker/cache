@@ -1,0 +1,174 @@
+/// Modified By HZY 2012-04-27.HZY0029.
+/// 修改函数:FillEquipType
+/// ------------------------------------------------------
+/// Created By HZY 2011-11-10 HZY0020
+
+var SelectedRow = 0;
+var rowid=0;
+function BodyLoadHandler() 
+{
+	/// 20150918  Mozy0166
+	InitPage();  // //262464 Modify BY  BRB 2016-10-11
+	//Muilt_LookUp("Vendor^StatCat");	
+	//FillEquipType()
+}
+
+function InitPage()
+{
+	//KeyUp("Vendor^EquipCat^StatCat");   //262464 Modify BY  BRB 2016-10-11
+	var obj=document.getElementById(GetLookupName("EquipCat"));
+	if (obj) obj.onclick=EquipCat_Click;
+	var obj=document.getElementById("BPrint");
+	if (obj) obj.onclick=BPrint_Click;
+	var obj=document.getElementById("BFind");
+	if (obj) obj.onclick=BFind_Click;
+	var obj=document.getElementById("EquipType");
+	if (obj) obj.onchange=EquipType_Change;
+}
+
+function EquipType_Change()
+{
+	SetElement("ValEquipTypes",GetSelectedEquipType(1));
+}
+
+function BFind_Click()
+{
+	var lnk='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQVerdorStatB';
+	lnk=lnk+'&ValEquipTypes='+GetSelectedEquipType(1);
+	lnk=lnk+'&StartDate='+GetElementValue("StartDate");
+	lnk=lnk+'&EndDate='+GetElementValue("EndDate");	
+	lnk=lnk+'&Vendor='+GetElementValue("Vendor");
+	lnk=lnk+'&VendorDR='+GetElementValue("VendorDR");
+	lnk=lnk+'&EquipCatDR='+GetElementValue("EquipCatDR");  
+	lnk=lnk+'&EquipCat='+GetElementValue("EquipCat");
+	lnk=lnk+'&StatCatDR='+GetElementValue("StatCatDR");
+	lnk=lnk+'&StatCat='+GetElementValue("StatCat");
+	lnk=lnk+'&EquipName='+GetElementValue("EquipName");
+	lnk=lnk+'&QXType='+GetElementValue("QXType");
+	///alertShow(lnk);
+	location.href=lnk;
+}
+
+function BPrint_Click()
+{
+	var templateName="DHCEQVendorReportB.xls";
+	var isSave=1;	//1为导出保存,其他为直接打印出来.
+	var savefilename=GetFileName();
+	if (savefilename=="") return;
+	//var colset="1:1^2:2^3:0^4:3";///列x1:输出结果第y1位^列x2:输出结果第y2位.....
+	var colset="1:0^2:1^3:2^4:3^5:4^6:5^7:6^8:7^9:8^10:9^11:10^12:11^13:12^14:13^15:14^16:15^17:16^18:17^19:18^20:19";
+	
+	var TemplatePath=GetElementValue("GetRepPath");
+	var encmeth=GetElementValue("GetVendorReport");
+	try {
+        var xlApp,xlsheet,xlBook;
+	    var Template=TemplatePath+templateName; 
+	    xlApp = new ActiveXObject("Excel.Application");
+	    xlBook = xlApp.Workbooks.Add(Template);
+		xlsheet = xlBook.ActiveSheet;
+ 
+	    var HadData=true;		
+		var num=1;
+		var row=2;
+		while (HadData)
+		{
+			var rtn=cspRunServerMethod(encmeth,num);
+			if (rtn=="")
+			{
+				HadData=false;
+			}
+			else
+			{
+				row=row+1;
+				fillRowData(xlsheet,row,rtn,colset);
+				num=num+1;
+			}
+		}    
+
+	    if (isSave==1)
+	    {	
+	    	xlBook.SaveAs(savefilename);
+	    	alertShow('保存成功,保存路径:'+savefilename);
+	    }
+	    else
+	    {	
+	    	xlsheet.printout;	
+	    }	// 打印输出
+	    
+	    xlBook.Close(savechanges=false);
+	    xlApp=null;
+	    xlsheet.Quit;
+	    xlsheet=null;
+	} 
+	catch(e)
+	{
+		alertShow(e.message);
+	}
+}
+
+/// Modified By HZY 2012-04-27.HZY0029.
+function FillEquipType()
+{
+	var equiptypeinfos=GetElementValue("EquipTypeInfos");
+	var obj=document.getElementById("EquipType");
+	var equiptypelist=equiptypeinfos.split("&");
+	var typeids=GetElementValue("ValEquipTypes");
+	if (typeids!="") typeids="^"+typeids+"^";
+	
+	for (var i=0;i<equiptypelist.length;i++)
+	{
+		var list=equiptypelist[i].split("^");
+		obj.options.add(new Option(list[1],list[13],true,true));	//Modified By HZY 2012-04-27.HZY0029.因DHC_EQCEquipType表结构变化,这里将原来的'4'改为现在的'13'.	
+		if (typeids.indexOf("^"+list[13]+"^")>-1)
+		{	obj.options[i].selected=true;	}
+		else
+		{	obj.options[i].selected=false;	}
+	}
+}
+
+///type: 1 ids  2 names
+function GetSelectedEquipType(type)
+{
+	var typeids="";
+	var obj=document.getElementById("EquipType");
+	for (var i=0;i<obj.options.length;i++)
+	{
+		if (obj.options[i].selected!=true) continue;
+		if (typeids!="") typeids=typeids+"^";
+		if (type==1)
+		{	typeids=typeids+obj.options[i].value;}
+		else
+		{	typeids=typeids+obj.options[i].text;}
+	}
+	return typeids;
+}
+
+function GetVendor (value)
+{
+    GetLookUpID("VendorDR",value);
+}
+
+function GetEquipCat(value)
+{
+	GetLookUpID("EquipCatDR",value);
+}
+
+function GetStatCat(value)
+{
+	GetLookUpID("StatCatDR",value);
+}
+
+function EquipCat_Click()
+{
+	var CatName=GetElementValue("EquipCat")
+	var str="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQCEquipCatTree&Type=SelectTree&CatName="+CatName;
+    window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=360,height=460,left=150,top=150')
+}
+
+function SetEquipCat(id,text)	//接受从树状结构选择后返回的值 .
+{
+	SetElement("EquipCat",text);
+	SetElement("EquipCatDR",id);
+}
+
+document.body.onload = BodyLoadHandler;

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术清点</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+</head>
+<body class="hisui-layout">
+<div style="display:none">
+		<div class="form-row">
+			<div class="form-title">姓名</div>
+			<div class="form-item" id="PatName"></div>
+			<div class="form-title">性别</div>
+			<div class="form-item" id="PatGender"></div>
+			<div class="form-title">年龄</div>
+			<div class="form-item" id="PatAge"></div>
+			<div class="form-title">血型</div>
+			<div class="form-item" id="ABO"></div>
+			<span class="form-title">Rh(D)</span>
+			<span class="form-item" id="RH"></span>
+			<div class="form-title">手术日期</div>
+			<div class="form-item" id="OperDate"></div>
+		</div>
+		<div class="form-row">
+			<div class="form-title">科别</div>
+			<div class="form-item" id="PatDept"></div>
+			<div class="form-title">床号</div>
+			<div class="form-item" id="PatWardBed"></div>
+			<div class="form-title">住院号</div>
+			<div class="form-item" id="PatMedCareNo"></div>
+			<div class="form-title">手术间</div>
+			<div class="form-item" id="OperRoom"></div>
+			<div class="form-title">入室时间</div>
+			<div id="AreaInTime"></div>
+		</div>
+		<div class="form-row">
+			<div class="form-title">手术名称</div>
+			<div class="form-item" id="OperationDesc"></div>
+			<div class="form-title">手术医师</div>
+			<div class="form-item" id="SurgeonDesc"></div>
+			<div class="form-title">麻醉医师</div>
+			<div class="form-item" id="AnesthetistDesc"></div>
+		</div>
+	</div>
+    <div data-options="region:'center',border:false" style="padding:10px 5px 5px 10px;">
+        <table id="instrumentsBox"></table>
+    </div>
+    <div data-options="region:'east',border:false" style="width:625px;padding:10px 10px 5px 5px;">
+    	<table id="dressingsBox"></table>
+    </div>
+	<div data-options="region:'south',border:false" style="height:45px;padding:0 10px 5px 10px;">
+        <!--div class="button-list">
+        	<a>巡回护士签名</a>
+        	<a type="text" id="ICircualNurseSign" class="hisui-triggerbox signature" style="width:125px;" data-options="icon:'icon-w-edit',prompt:'巡回护士签字',CareProvType:'NURSE'" /></a>
+        	<a>器械护士签名</a>
+        	<a type="text" id="DCircualNurseSign" class="hisui-triggerbox signature" style="width:125px;" data-options="icon:'icon-w-edit',prompt:'器械护士签字',CareProvType:'NURSE'" /></a>
+            <a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+            <a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">刷新</a>
+            <a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+        </div-->
+        <div class="form-row">
+        	<div class="form-title-right6">巡回护士签名</div>
+	     	<div class="form-item-textshort">
+	     	<input type="text" id="ICircualNurseSign" class="hisui-triggerbox signature" style="width:125px" data-options="icon:'icon-w-edit',prompt:'巡回护士签字',CareProvType:'NURSE'">
+	     	</div>
+	     	<div class="form-title-normal">器械护士签名</div>
+	     	<div class="form-item-textshort">
+	     	<input type="text" id="DCircualNurseSign" class="hisui-triggerbox signature" style="width:125px" data-options="icon:'icon-w-edit',prompt:'器械护士签字',CareProvType:'NURSE'">
+	     	</div>
+	     	<div class="button-list">
+        	<a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+            <a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">刷新</a>
+            <a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+        </div>
+	     </div>
+    </div>  
+    <div id="instrumentsTool">
+    	<form id="instrumentsForm">
+    	<div class="form-row-group">
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right3">无菌包</div>
+    				<div class="form-item-normal">
+    					<input type="text" id="ISterilityPackBarCode" class="textbox" placeholder="请输入无菌包条码号，并按回车键添加。" style="width:250px;">
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+    	<div class="form-row-group">
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right3">手术包</div>
+    				<div class="form-item-normal">
+    					<select id="ISurgicalKit" class="hisui-combobox" style="width:110px;"></select>
+    				</div>
+    				<div class="form-title-right4">手术物品</div>
+    				<div class="form-item-normal">
+    					<select id="ISurgicalItem" class="hisui-combobox" style="width:110px;"></select>
+    				</div>
+    				<!--span class="form-btn">
+    					<a href="#" id="btnAddISurgicalItem" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+    				</span-->
+    				<span class="form-btn">
+    					<a href="#" id="btnDelISurgicalItem" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+    				</span>
+    			</div>
+    		</div>
+    	</div>
+    	</form>
+    </div>
+    <div id="dressingsTool">
+    	<form id="dressingsForm">
+    	<div class="form-row-group">
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right3">无菌包</div>
+    				<div class="form-item-normal">
+    					<input type="text" id="DSterilityPackBarCode" class="textbox" placeholder="请输入无菌包条码号，并按回车键添加。" style="width:250px;">
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+    	<div class="form-row-group">
+    		<div>
+    			<div class="form-row">
+    				<div class="form-title-right3">手术包</div>
+    				<div class="form-item-normal">
+    					<select id="DSurgicalKit" class="hisui-combobox" style="width:110px;"></select>
+    				</div>
+    				<div class="form-title-right4">手术物品</div>
+    				<div class="form-item-normal">
+    					<select id="DSurgicalItem" class="hisui-combobox" style="width:110px;"></select>
+    				</div>
+    				<!--span class="form-btn">
+    					<a href="#" id="btnAddDSurgicalItem" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+    				</span-->
+    				<span class="form-btn">
+    					<a href="#" id="btnDelDSurgicalItem" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+    				</span>
+    			</div>
+    		</div>
+    	</div>
+    	</form>
+    </div>
+    <div id="surKitDialog" class="hisui-dialog" data-options="closed:true,title:'器械套餐',width:540,height:500,modal:true,buttons:'#surKitBtns',iconCls:'icon-w-list'" style="padding:10px 10px 0 10px;">		
+        <table id="SurgicalKitBox"></table>
+        <div id="surKitBtns">
+            <a href="#" id="btnConfirmKit" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确认</a> 
+            <a href="#" id="btnExitKit" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">退出</a> 
+        </div>
+    </div>
+    <div id="CSSPackDialog" class="hisui-dialog" data-options="closed:true,title:'消毒包信息',width:540,height:500,modal:true,buttons:'#CSSPackBtns',iconCls:'icon-w-list'" style="padding:10px 10px 0 10px;">		
+        <table id="CSSPackBox"></table>
+        <div id="CSSPackBtns">
+            <a href="#" id="btnConfirmCSSPack" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确认</a> 
+            <a href="#" id="btnExitKit1" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">退出</a> 
+        </div>
+    </div>
+    <div id="signContainer"></div>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DataForm.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/datagrid-cellediting.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperCount.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
+	<!--script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CA.js"></script--> 
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CASignature.js"></script> 
+</body>
+</html>

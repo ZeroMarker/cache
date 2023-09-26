@@ -1,0 +1,120 @@
+<!-- 
+ * FileName: dhcbill.pkg.charge.main.csp
+ * Anchor: ZhYW
+ * Date: 2019-01-04
+ * Description: 套餐支付
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.pkg.css'/>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<server>
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$c(13,10)
+		w "<input id='patientId' name='patientId' type='hidden'/>",$c(13,10)
+	</server>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:36px;padding: 10px 10px 1px;overflow:hidden;">
+	 	<csp:Include Page="dhcbill.pkg.patient.banner.csp">
+	</div>
+	<div data-options="region:'center',border:false" style="padding: 0 10px 10px 10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:85px;">
+				<div class="hisui-panel" data-options="title:'患者信息查询',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+					<table class="search-table" style="width:80%">
+						<tr>
+							<td class="r-label td-first-col"><label>卡类型</label></td>
+							<td><input id="cardType" class="textbox"/></td>
+							<td class="r-label"><label>卡号</label></td>
+							<td><input id="cardNo" class="textbox"/></td>
+							<td class="r-label"><label>登记号</label></td>
+							<td><input id="patientNo" class="textbox"/></td>
+							<td class="r-label"><label>订单号</label></td>
+							<td><input id="orderNo" class="textbox"/></td>
+							<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡</a></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-top:10px;">
+				<div class="hisui-tabs tabs-gray" data-options="fit:true">
+					<div title="支付" style="padding:10px;" selected>
+						<div class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'center',border:false">
+								<table class="hisui-datagrid" title="订单列表" id="orderList"></table>
+							</div>
+							<div data-options="region:'east',border:false" style="width:350px;padding-left:10px;">
+		  						<div class="hisui-panel" data-options="title:'结算',fit:true,headerCls:'panel-header-gray',iconCls:'icon-fee'">
+		  							<table class="search-table" style="width:100%">
+										<tr>
+											<td class="r-label"><label class="text-bold">费用总额</label></td>
+											<td><input id="totalamount" class="hisui-numberbox textbox text-bold" style="color: #ff0000;" data-options="min:0,precision:2" disabled/></td>
+										</tr>
+										<tr>
+											<td class="r-label"><label class="text-bold">优惠总额</label></td>
+											<td><input id="discountamount" class="hisui-numberbox textbox text-bold" style="color: #ff0000;" data-options="min:0,precision:2" disabled/></td>
+										</tr>
+										<tr>
+											<td class="r-label"><label class="text-bold">应付总额</label></td>
+											<td><input id="payableamount" class="hisui-numberbox textbox text-bold" style="color: #ff0000;" data-options="min:0,precision:2" disabled/></td>
+										</tr>
+										<tr>
+											<td class="r-label"><label class="text-bold">定金总额</label></td>
+											<td><input id="depositamount" class="hisui-numberbox textbox text-bold" style="color: #ff0000;" data-options="min:0,precision:2" disabled/></td>
+										</tr>
+										<tr>
+											<td colspan="2" style="text-align: center;"><a href="javascript:;" class="hisui-linkbutton btn-115" id="btn-charge">结算</a></td>
+										</tr>
+									</table>
+		  						</div>
+		  					</div>
+						</div>
+						<div id="orderListTb">
+							<table>
+								<tr>
+									<td class="r-label r-label-1"><label>预售模式</label></td>
+									<td><input id="sellMode" class="hisui-combobox textbox"/></td>
+								</tr>
+							</table>
+						</div>
+						<div id="paymWin" style="width:1000px;height:500px;display:none;">
+							<csp:Include Page="dhcbill.pkg.charge.paym.csp">
+						</div>
+					</div>
+					<div title="补差额" style="padding:10px;">
+						<div class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'center',border:false">
+								<table class="hisui-datagrid" title="定金列表" id="depositList"></table>
+							</div>
+							<div id="balPaymWin" style="width:1000px;height:500px;display:none;">
+								<csp:Include Page="dhcbill.pkg.balance.paym.csp">
+							</div>
+						</div>
+					</div>
+					<div title="作废票据" style="padding:10px;">
+						<div class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'center',border:false">
+								<table class="hisui-datagrid" title="票据列表" id="invPrtList"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+		  	</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.charge.main.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.charge.paym.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.balance.paym.js"></script>
+</body>
+</html>

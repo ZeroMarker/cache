@@ -1,0 +1,105 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s data=$Get(%request.Data("data",1))
+	s userid=$Get(%request.Data("userid",1))
+	
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctVouchBefore2).List(data,start,limit,userid)
+	
+	i action = "submit" d
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).Sumbit(rowid, userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "cacel" d
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).Cacel(rowid, userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "copy" d
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).Copy(rowid, userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "destroy" d
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).Destroy(rowid, userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	i action = "listd" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetVouchProgress(start, limit,rowid)
+	
+	
+	
+	i action = "getTitleInfo" d
+	.w ##class(herp.acct.udata.uAcctVouchBefore2).GetTitle(SubjID)
+	
+	i action = "getdata" d
+	.w ##class(herp.acct.udata.uAcctVouchBefore2).DDetailList(SubjID,vouchdetail,start, limit)
+	
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).InsertRec(datad, datam, datadd)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "getvcode" d
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).Getvcode(vouchtypeid)
+	.i result '="" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetVouchType" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetVouchType(start,limit,str)
+	
+	i action = "getsubjname" d
+	.w ##class(herp.acct.udata.uAcctVouch).GetSubjName(start,limit,str)
+	
+	i action = "getcheckname" d
+	.w ##class(herp.acct.udata.uAcctVouch).GetCheckItem(start, limit, str)
+	
+	i action = "getvouchno" d
+	.w ##class(herp.acct.udata.uAcctVouch).GetVouchNo(start, limit, str)
+	
+	i action = "edit" d	
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).UpdateRec(rowidm, rowidd, datad, datam,datadd)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctVouchBefore2).Delete(rowid,rowidm)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

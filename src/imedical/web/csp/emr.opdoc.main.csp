@@ -1,0 +1,258 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<html>
+    <head>
+        <title> 门诊电子病历 </title>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/opdoc.main.css"/>
+        <script type="text/javascript" src="../scripts/websys.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
+    </head>
+    <script language="cache" runat="server">
+        s CAServicvice=""
+        s IsCAON=##Class(CA.DigitalSignatureService).IsCAON()
+        s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        s HospitalName=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HospitalName")
+        s pageType="HISUI"
+
+        if ((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1") {
+            s CAServicvice="1"
+            if ("BJXHYY"=HospitalName) {
+                d ##Class(EMRservice.OutputHtml).OnUsbChangedReadonly()
+            } else {
+                d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+            }
+            d ##Class(EMRservice.OutputHtml).OutPutopkeysign(HospitalName, pageType)
+        }
+
+        s patientID = $Get(%request.Data("PatientID",1),"")
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s mradm = ""
+        s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+        s:((episodeID'="")&&(patientID="")) patientID=$p($g(^PAADM(episodeID)),"^",1)
+        
+        s id = $Get(%request.Data("id",1),"")
+        s chartItemType = $Get(%request.Data("chartItemType",1),"")
+        s pluginType = $Get(%request.Data("pluginType",1),"")
+        s emrDocId = $Get(%request.Data("emrDocId",1),"")
+        s url = $Get(%request.Data("url",1),"")
+        
+        s sessionID = %session.SessionId
+        s userCode = %session.Get("LOGON.USERCODE")
+        s userName = %session.Get("LOGON.USERNAME")
+        s userID = %session.Get("LOGON.USERID")
+        s ssgroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+        s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+        
+        s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("NET_CONNECT","")
+        s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")
+        s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+        s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+        s useResWindowHotkey=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("useResWindowHotkey","N")
+        s OPAutoSave=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPAutoSave","openUnitlink,updateInsByEmr")
+        s isAutoSelectTemplate=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isAutoSelectTemplate","N")
+        s requiredFlag = ##Class(EMRservice.SystemParameter).GetOPRequiredFlag()
+        s ReturnTemplateIDs = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ReturnTemplateIDs")
+        s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
+
+        s firstTmpl = ##Class(EMRservice.Ajax.opInterface).GetFirstTmpl(userLocID, ssgroupID, episodeID, userID)
+        s:(firstTmpl="") firstTmpl = "null"
+        s savedRecords = ##Class(EMRservice.Ajax.opInterface).getSavedRecords(episodeID, userLocID, ssgroupID)
+        s OPEmrButtons=##Class(EMRservice.BL.opInterface).getOPEmrButtons(userLocID)
+        s OPResource=##Class(EMRservice.BL.opInterface).GetOPResource("Panel", "main")
+        s OPDisplay=##Class(EMRservice.BL.BLUserPageConfig).GetOPDisplay(userID, userLocID)
+            
+        s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLogOP")
+		s escapeRevokeSignDocID = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EscapeRevokeSignDocID")
+        s isDirectSignOP = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isDirectSignOP","Y")
+        d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS()
+        //病历打印时单页补空白开关 从SystemParameter获取
+		s FirstNeedChangePageFlag = ##Class(EMRservice.SystemParameter).IsFirstNeedChangePage()
+        //门诊病历-病历浏览按钮-引用按钮-病历引用数据
+        s copyOeoris = $Get(%request.Data("copyOeoris",1),"")
+		s SwitchCheckDoingSth = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SwitchCheckDoingSth")
+		s hospitalID = %session.Get("LOGON.HOSPID")
+        s isDefaultShowTextEdit = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isDefaultShowTextEdit","N")
+		s escapeRevokeSignDocID = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EscapeRevokeSignDocID")
+    </script>
+
+    <script language="javascript">
+        var TAG = "main";
+        var argConnect = "#(argConnect)#"&&{"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"};
+
+        var patInfo = {
+            SessionID: "#(sessionID)#",
+            PatientID: "#(patientID)#",
+            EpisodeID: "#(episodeID)#",
+            MRadm: "#(mradm)#",
+            UserID: "#(userID)#",
+            UserCode: "#(userCode)#",
+            UserName: "#(userName)#",
+            SsgroupID: "#(ssgroupID)#",
+            UserLocID: "#(userLocID)#",
+            UserLocCode: "#(userLocCode)#",
+            UserLocName: "#(userLocName)#",
+            IPAddress: "",
+            SecCode: "",
+            HospitalID: "#(hospitalID)#"
+        };
+
+        var sysOption = {
+            pluginUrl : "#(pluginUrl)#",
+            setDefaultFontStyle : "#(setDefaultFontStyle)#",
+            pluginType : "#(pluginType)#",
+            argConnect : "#(argConnect)#"&&{"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"},
+            CAServicvice : '#(CAServicvice)#',
+            useResWindowHotkey : '#(useResWindowHotkey)#',
+            OPAutoSave : '#(OPAutoSave)#',
+            requiredFlag : $.parseJSON("#(requiredFlag)#".replace(/\'/g, "\"")),
+            isAutoSelectTemplate : '#(isAutoSelectTemplate)#',
+            ReturnTemplateIDs : '#(ReturnTemplateIDs)#',
+            isRevokeSign : '#(isRevokeSign)#',
+            IsSetToLog : '#(IsSetToLog)#',
+			escapeRevokeSignDocID : '#(escapeRevokeSignDocID)#',
+            isDirectSignOP : '#(isDirectSignOP)#',
+            isDefaultShowTextEdit : '#(isDefaultShowTextEdit)#',
+			SwitchCheckDoingSth : '#(SwitchCheckDoingSth)#',
+			escapeRevokeSignDocID : '#(escapeRevokeSignDocID)#'
+        };
+
+        var envVar = {
+            readonly : '',
+            firstTmpl : $.parseJSON('#(firstTmpl)#'),
+            savedRecords : $.parseJSON('#(savedRecords)#'),
+            opEmrButtons : '#(OPEmrButtons)#',
+            opResource : $.parseJSON("#(OPResource)#".replace(/\'/g, "\"")),
+            docContext : null,
+            OPDisplay : parseFloat('#(OPDisplay)#')
+        };
+	    
+	    // 锁定页面右键
+	  	document.oncontextmenu = function(e){
+         	return false;
+		}
+		var param="";
+        var FirstNeedChangePageFlag = '#(FirstNeedChangePageFlag)#';
+        var CopyOeoris = "#(copyOeoris)#";
+    </script>
+    <body ondragstart="return false" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div id="main" class="hisui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;">
+            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <!--资源区-->
+                <div id="resRegion" data-options="region:'west',border:true,split:true" style="overflow:hidden;">
+                    <div id="dataTabs" class="hisui-tabs" data-options="fit:true,border:false"></div>
+                </div>
+                <!--病历编辑区-->
+                <div id="emrEditor" class="hisui-panel" data-options="region:'center',border:true,split:true" style="overflow:hidden;">
+                    <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                        <!--工具栏按钮-->
+                        <div id="toolbar" class="hisui-panel" data-options="region:'north',border:false">
+                            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                                <div id="pnlResScale" data-options="region:'east',border:false">
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale1" rate="0.1" title="1:9" iconCls="icon-big-lt-rt-19"></a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale3" rate="0.3" title="3:7" iconCls="icon-big-lt-rt-37"></a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale5" rate="0.5" title="5:5" iconCls="icon-big-lt-rt-55"></a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale7" rate="0.7" title="7:3" iconCls="icon-big-lt-rt-73"></a>
+                                    </span>
+                                </div>
+                                <div id="pnlButton" data-options="region:'center',border:false">
+                                    <span id="hiddenSpan" style="height:1px;width:1px;border:0px">
+                                        <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px"/>
+                                    </span>
+                                    <span id="toolbarTemplate" style="display:none">
+                                        <a class="hisui-linkbutton" data-options="plain:true" iconCls="icon-save">test</a>
+                                    </span>
+                                </div>
+                                <!--修改文字按钮-->
+                                <div id="textedit" data-options="region:'south',border:false" style="display:none;">
+									<div data-options="region:'north'">
+										<span>
+											<a title="字号" href="#" class="hisui-linkbutton" data-options="plain:true" style="display:none;">
+												<select id="fontSize" name="fontSize" style="width:160px;" onchange="changeFontSize();"></select>
+							            	</a>
+								            <a id='cut' title="剪切" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cut-blue',plain:true"></a>
+								            <a id='copy' title="拷贝" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true"></a>
+								            <a id='paste' title="粘贴" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paste',plain:true"></a>
+								            <a id='undo' title="撤销" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" ></a>
+								            <a id='redo' title="重做" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true"></a>
+											<a id='fontcolor' title="字体颜色" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-font',plain:true"></a>
+								            <a id='bold' href="#" title="粗体" class="hisui-linkbutton" data-options="iconCls:'icon-bold',plain:true"></a>
+								            <a id='italic' href="#" title="斜体" class="hisui-linkbutton" data-options="iconCls:'icon-incline',plain:true"></a>
+								            <a id='underline' href="#" title="下划线" class="hisui-linkbutton" data-options="iconCls:'icon-underline',plain:true"></a>
+								            <a id='strike' href="#" title="删除线" class="hisui-linkbutton" data-options="iconCls:'icon-strikethrough',plain:true"></a>
+								            <a id='super' href="#" title="上标"  class="hisui-linkbutton" data-options="iconCls:'icon-superscript',plain:true"></a>
+								            <a id='sub' href="#" title="下标" class="hisui-linkbutton" data-options="iconCls:'icon-subscript',plain:true"></a>
+								            <a id='alignjustify' href="#" title="两端对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-justify',plain:true"></a>
+								            <a id='alignleft' href="#" title="左对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-left',plain:true"></a>
+								            <a id='aligncenter' href="#" title="居中对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-center',plain:true" ></a>
+								            <a id='alignright' href="#" title="右对齐"  class="hisui-linkbutton" data-options="iconCls:'icon-align-right',plain:true"></a>
+								            <a id='indent' title="增加缩进量" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-indentation',plain:true" ></a>
+								            <a id='unindent' title="减少缩进量" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-unindent',plain:true"></a>
+	                                	</span>
+                                	</div>
+                                	<div id="fontColorDiv" data-options="region:'center',border:false" style="display:none">
+                            			<iframe id="fontColorFrame" src="emr.opdoc.colorpicker.csp" style="width:100%;height:30px;" frameborder="0" scrolling="no"></iframe>
+                        			</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--编辑器emr.opdoc.editor.csp-->
+                        <div id="editor" data-options="region:'center',border:false" style="overflow:hidden;">
+                            <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
+                        </div>
+                        <!--病历实例-->
+                        <div id="insRecords" class="hisui-panel" data-options="region:'south',border:false">
+                            <div id="tmplsTabs" class="hisui-tabs" data-options="fit:true,border:false,tabPosition:'bottom'" tabHeight="26px"></div>
+                        </div>
+                        <!--门诊HisUI页面风格改造-特殊字符页面 add by niucaicai 2018-06-19-->
+                        <div id="HisUISpecharsWin" class="hisui-dialog" title="特殊字符" data-options="resizable:false,modal:true,isTopZindex:true" style="width:494px;height:450px;padding:0px;">
+                            <iframe id="SpecharsWin" frameborder="0" src="" style="width:100%;height:99%;scrolling:no;"></iframe>
+                        </div>
+                        <!--门诊HisUI页面风格改造-模板选择页面 add by niucaicai 2018-06-20-->
+                        <div id="HisUITempClassifyWin" class="hisui-dialog" title="选择模板" data-options="resizable:false,modal:true,isTopZindex:true" style="width:300px;height:500px;padding:0px;">
+                            <!-- <iframe id="TempClassifyWin" frameborder="0" src="" style="width:100%;height:99%;scrolling:no;"></iframe> -->
+                        </div>
+                        <!--门诊HisUI页面风格改造-操作日志页面 add by niucaicai 2018-06-20-->
+                        <div id="HisUILogdetailWin" class="hisui-dialog" title="操作日志" data-options="resizable:false,modal:true,isTopZindex:true" style="width:800px;height:450px;padding:0px;">
+                            <!-- <iframe id="LogdetailWin" frameborder="0" src="" style="width:100%;height:99%;"></iframe> -->
+                        </div>
+                        <!--门诊HisUI管理个人模板页面-->
+                        <div id="HisUIManagePersonalWin" class="hisui-dialog" title="管理个人模版" data-options="resizable:false,modal:true,isTopZindex:true" style="width:350px;height:500px;padding:0px;">
+                            <!-- <iframe id="ManagePersonalWin" frameborder="0" src="" style="width:100%;height:99%;"></iframe> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.common.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.toolbar.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.histools.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.quality.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.privilege.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.iEmrPluginEx.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.template.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.editor.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.hislog.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.externImage.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.main.js"></script>
+		<script language="cache" runat="server">
+			d ##class(EMRservice.BL.BLCDSSService).getCDSSUrl()
+		</script>
+    </body>
+</html>

@@ -1,0 +1,113 @@
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+  <script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>  
+  <script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+  
+  <!--add by loo on 2010-4-26-->
+  <script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+  
+  <script language="cache" runat="server">
+  	if (%session.Get("LOGON.USERID") = "")
+  	{
+		s %response.ServerSideRedirect = "epr.newfw.sessiontimedout.csp"
+	}
+  	
+  	s objTAndCNotes = ##class(EPRservice.BOInstanceData).GetTAndCFromEPRTemplate($Get(%request.Data("episodeID",1),"-1"), $Get(%request.Data("templateDocId",1),"-1"), "2")
+  		
+  	
+  	s userid = %session.Get("LOGON.USERID")
+  	s EpisodeID = $Get(%request.Data("episodeID",1),"-1")
+  	s PatientID = $Get(%request.Data("patientID",1),"-1")
+  	s ctlocid=%session.Get("LOGON.CTLOCID")
+  	s docID = $Get(%request.Data("printTemplateDocId",1),"-1")
+  	s ssgroupid = %session.Get("LOGON.GROUPID")
+  	
+  	s templateDocID = $Get(%request.Data("templateDocId",1),"-1")
+  	s category = ##class(EPRmeta.EPRTemplate).%OpenId(templateDocID)	
+	s bindTemplateCategoryID = category.BindTemplateCategoryID	
+	s bindTemplateID = category.BindTemplateID
+	d category.%Close()
+	s category = ""
+	
+	s eprNum = $Get(%request.Data("eprNum",1),"-1")
+	
+	//权限
+	//s arr = ##class(web.eprajax.ajaxGetPower).GetPowerArray(userid, EpisodeID, PatientID, ctlocid, bindTemplateID, ssgroupid, bindTemplateCategoryID, docID, eprNum)
+
+	//隐私级别
+	s privacyLevel = ##class(EPRservice.Privilege.BOPrivRule).GetPrivacyLevel2(userid, EpisodeID, PatientID, ctlocid, bindTemplateID, ssgroupid, bindTemplateCategoryID, docID, eprNum)
+	
+	//加载dll,用来打印
+	d ##class(web.DHCEPRExt).CLBar()
+	
+	//日常病程分页默认分页大小
+	s defaultPageSize = ##class(EPRmeta.SysOption).GetOptionValueByName("CenterTabListPageSize")
+	if (defaultPageSize = "") s defaultPageSize = 300
+	
+	//实现疗程内所有病历打印和预览
+	s ShowSubsequentFlag = ##class(EPRmeta.SysOption).GetOptionValueByName("ShowSubsequentFlag")
+	if (ShowSubsequentFlag '= "1")&&(ShowSubsequentFlag '= "2") {s ShowSubsequentFlag = "0"}
+  </script>
+  <script type="text/javascript">
+  	//权限
+  	var canView = '1';
+  	var canSave = '1';
+  	var canPrint = '1';
+  	var canCommit = '1';
+  	var canSwitch = '1';  	
+  	var canSwitchTemplate = '1';
+  	var canChiefCheck = '1';
+  	var canAttendingCheck = '1';
+  	var printAfterCommit = '1';
+  	var canExport = "0";
+  	var canNew = '1';
+
+	var privacyLevel='#(privacyLevel)#';
+	
+  	//界面相关参数
+  	var funurl = '../web.eprajax.chartlistgrid.cls';  	
+  	var _PatientID = "#($Get(%request.Data("patientID",1),"-1"))#";
+  	var _EpisodeID = "#($Get(%request.Data("episodeID",1),"-1"))#";
+  	var _ProfileID = "#(objTAndCNotes.ChartItemID)#";
+  	var _CategoryID = "#(objTAndCNotes.CategoryID)#";
+  	
+  	var _PrtTemplateDocID = "#($Get(%request.Data("printTemplateDocId",1),"-1"))#";
+  	
+  	var _UserID = "#(%session.Get("LOGON.USERID"))#";
+  	var _IsShowAll = "";
+  	var _PageTitle = "#(objTAndCNotes.EPRCategoryName)#";
+  	var _TemplateDocID = '#($Get(%request.Data("templateDocId",1),"-1"))#';  	
+  	
+  	var _CategoryType = "#(objTAndCNotes.CategoryType)#";
+  	var _TemplateID = "#(objTAndCNotes.TemplateID)#";
+  	var _TemplateName = "#(objTAndCNotes.TemplateName)#";
+
+	var lastSelectTr = '';
+	var defaultPageSize = "#(defaultPageSize)#";
+	
+	var _ShowSubsequentFlag = "#(ShowSubsequentFlag)#";
+  	var _IsShowSubsequent = "N";
+  	if (_ShowSubsequentFlag == "2") {_IsShowSubsequent = "Y";}
+  </script>
+ 
+ 
+</HEAD>
+<BODY>	
+	<script type="text/javascript" src="../scripts/epr/js/dataupdate.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/centerTabListMethod.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/dgrid.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/centerTabList.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/auditList.js"></script>
+	<script type="text/javascript">	
+		//setPower();		//设置权限
+		//ajaxAction();	//异步加载列表 dataupdate.js
+		//setBtnPrintEnabled();	//根据权限来设置打印按钮是否可用	add by zhuj on 2009-11-13
+		var syncLoadEnd = true;		//判断页面是加载完毕
+		
+	</script>
+</BODY>
+</HTML>

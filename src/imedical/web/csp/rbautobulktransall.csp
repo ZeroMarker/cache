@@ -1,0 +1,66 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server> 
+	n LocId,ResId,sdate,edate,SearchApptStatus,stime,etime,RESDesc,LOCDesc,apptlist
+	s LocId=$g(%request.Data("LocId",1))
+	s ResId=$g(%request.Data("ResId",1))
+	s Serv=$g(%request.Data("ServId",1))
+	s SSServId=$g(%request.Data("SSServId",1))
+	s sdate=$g(%request.Data("sdate",1))
+	s edate=$g(%request.Data("edate",1))
+	s SearchApptStatus=$g(%request.Data("status",1))
+	s stime=$g(%request.Data("stime",1))
+	s etime=$g(%request.Data("etime",1))
+	s PatId=$g(%request.Data("PatientID",1))
+	s RESDesc=$g(%request.Data("RESDesc",1))
+	s LOCDesc=$g(%request.Data("LOCDesc",1))
+	s HospID=$g(%request.Data("HOSPId",1))   //65004
+	s SessionID=$g(%request.Data("SessionId",1)) //65004
+	; Log 37179 BC 27-8-2003 three new fields on Auto Bulk Tansfer
+	s APPTReasonForTransferDR=$g(%request.Data("APPTReasonForTransferDR",1))
+	s PrintPatientLetter=%request.Get("PrintPatientLetter")
+ 	s PrintGPLetter=%request.Get("PrintGPLetter")
+	s obj=##Class(websys.Component).OpenName("RBMessages")
+	i obj d obj.LoadTrans(),obj.%Close()
+	;
+	i sdate'="" s sdate=##Class(websys.Conversions).DateHtmlToLogical(sdate)
+	i edate'="" s edate=##Class(websys.Conversions).DateHtmlToLogical(edate)
+	i stime'="" s stime=##Class(websys.Conversions).TimeHtmlToLogical(stime)
+	i etime'="" s etime=##Class(websys.Conversions).TimeHtmlToLogical(etime)
+	;
+	s apptlist=##Class(web.RBAppointment).GetApptIDList(LocId,ResId,sdate,edate,SearchApptStatus,stime,etime,Serv,SSServId,PatId,HospID,SessionID)
+	s apptnum=%request.Get("NumCount")
+	s message=""
+	i apptnum s message=apptnum_t("DYWContinue")
+	;s ^zbrad("RESDesc")=RESDesc
+	;Log 39827 BC 8-12-2003 warn user if no appointments found
+	s obj=##Class(websys.Component).OpenName("RBAppointment.BulkTransfer.Edit")
+	i obj d obj.LoadTrans(),obj.%Close()
+	s RBNoApptFound=t("RBNoApptFound")
+</server>
+<script language=javascript>
+//Log 39827 BC 8-12-2003 warn user if no appointments found
+if ('#(apptlist)#'=="") alert('#(RBNoApptFound)#')
+if (('#(message)#'!="")&&(confirm('#(message)#'))) {
+		var lnk="rbappointment.automaticbulktransfer.csp?ApptList="+"#(apptlist)#"+"&Res="+"#(ResId)#"+"&Loc="+"#(LocId)#"+"&APPTReasonForTransferDR="+"#(APPTReasonForTransferDR)#"+"&PrintPatientLetter="+"#(PrintPatientLetter)#"+"&PrintGPLetter="+"#(PrintGPLetter)#";
+		//Log: 59598, 03-07-2006 BC: add "status=yes"
+		window.open(lnk,"frmAutoBulkTransEdit","top=50,left=50,width=400,height=350,resizable,scrollbars=yes,status=yes");
+	}
+</script>
+</body>
+</html>
+
+
+
+

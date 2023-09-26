@@ -1,0 +1,31 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<SERVER>
+	w !,%request.Get("id")
+	w !,$zdt($h)
+	//s %response.ServerSideRedirect="websys.home.csp"
+	set portletId=+$p(%request.Get("id"),"_",2)
+	set ErrorMessage="Not found portlet Id="_portletId
+	w:portletId=0 !,ErrorMessage
+	quit:portletId=0
+	w:'$d(^DHCMed.SS.PortletsD(portletId)) !,ErrorMessage
+	quit:'$d(^DHCMed.SS.PortletsD(portletId))
+	set objPortlet= ##class(DHCMed.SS.Portlets).GetObjById(portletId)
+
+	set Message=objPortlet.Message
+	if Message'="" {
+		set %response.ServerSideRedirect="dhcmed.portlet.message.csp"
+	}
+	else{
+		set DtlShowType=objPortlet.DtlShowType   //grid chart  mschart
+		if DtlShowType="grid" {set %response.ServerSideRedirect="dhcmed.portlet.grid.csp"}
+		elseif DtlShowType="chart" {set %response.ServerSideRedirect="dhcmed.portlet.chart.csp"}
+		elseif DtlShowType="mschart" {set %response.ServerSideRedirect="dhcmed.portlet.chart.csp"}
+	}
+	quit
+</SERVER>

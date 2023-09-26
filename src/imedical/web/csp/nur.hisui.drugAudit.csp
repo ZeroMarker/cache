@@ -1,0 +1,360 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+            s HospID=%session.Get("LOGON.HOSPID")
+            s patWardID=$p($g(^PAADM(+EpisodeID)),"^",70)
+			s patRegNo=##class(Nur.Utility).getPatRegs(EpisodeID)
+			s className="web.DrugAuditNew" 
+			d ##class(web.NurseSetNew).initConfig("durgauditnew")
+			s config=##class(web.NurseSetNew).findsimple("durgauditnew","period","0",HospID)
+			s periodString=$p(config,"^",4,7) // 查询时间段
+			s config=##class(web.NurseSetNew).findsimple("durgauditnew","other","2",HospID)
+			s ifCollapse=$replace($p(config,"^",4),"Y","true") // 面板是否滚动
+			s endtime=##class(web.DrugAuditNew).GetFYTimeSet()
+			i (endtime'="") d
+	        .s endtime=$zt(endtime,2)
+	        .s $p(periodString,"^",4)=endtime  ///按病区设置了截止时间优先走病区的
+			d ##class(web.NurseSetNew).getset("durgauditnew","west",HospID,.arr) // 左侧查询条件
+			s checkBoxLableString=$g(arr("field1")) // 标签
+			s checkBoxKeyString=$g(arr("index3")) // 字段
+			s checkBoxCheckStatusString=$replace($g(arr("field3")),"Y","checked") // 选中
+			s checkBoxHiddenStatusString=$replace($g(arr("field4")),"Y","hidden") // 隐藏
+			d ##class(web.NurseSetNew).getset("durgauditnew","north",HospID,.arr) // 上面板
+			s summaryTableColumnTitleString=$g(arr("field1")) // 标签
+			s summaryTableColumnKeyString=$g(arr("index3")) // 字段
+			s summaryTableColumnWidthString=$g(arr("field3")) // 宽度
+			s summaryTableColumnHiddenStatusString=$replace($g(arr("field4")),"Y","hidden") // 隐藏
+			d ##class(web.NurseSetNew).getset("durgauditnew","south",HospID,.arr) // 下面板
+			s detailsTableColumnTitleString=$g(arr("field1")) // 标签
+			s detailsTableColumnKeyString=$g(arr("index3")) // 字段
+			s detailsTableColumnWidthString=$g(arr("field3")) // 宽度
+			s detailsTableColumnHiddenStatusString=$replace($g(arr("field4")),"Y","hidden") // 隐藏
+			d ##class(web.NurseSetNew).getset("durgauditnew","error",HospID,.arr) // 特殊状态
+			s controlItemLableString=$g(arr("field1")) // 标签
+			s controlItemKeyString=$g(arr("index3")) // 字段
+			s controlItemColorString=$g(arr("field3")) // 颜色
+			s controlItemStatusString=$replace($g(arr("field4")),"Y","error") // 控制
+        </script>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI translate=1/>
+    <script type="text/javascript"
+            src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" 
+    		src="../scripts_lib/lodop/LodopFuncs.js" ></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/drugAudit.js"></script>
+    <STYLE type='text/css'>
+        body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .drugAudit {
+	      
+        }
+
+        .appInfoText {
+            width: 150px
+        }
+        .datagrid-wrap.panel-body.panel-body-noheader{
+	        border-color:#ccc;
+	        border-top-right-radius:0;
+	        border-top-left-radius:0;
+	        border-right:0;
+	        border-left:0;
+	        border-bottom:0;
+        }
+        .datagrid-toolbar{
+        	height:24px;
+        	padding:5px
+        }
+        .orderDisposeStatInfo__disposeStat {
+		    display: block;
+		    font-weight: 400;
+		    font-size: 14px;
+		    height: 16px;
+		    position: relative;
+		    color: #fff;
+		}
+        .orderDisposeStatInfo__disposeStat.is-label {
+		    text-align: left;
+		    padding: 1px;
+		    color: #000;
+		    width: 90px;
+		    font-size: 12px;
+		    margin-bottom: 2px;
+		    margin-left: 20px;
+		}
+		.orderDisposeStatInfo__triangle {
+		    display: block;
+		    width: 0;
+		    height: 0;
+		    position: absolute;
+		    border-width: 9px;
+		    border-style: solid;
+		    border-top-color: transparent;
+		    border-left-color: transparent;
+		    border-bottom-color: transparent;
+		    left: -18px;
+		    top: 0;
+		}
+		.orderDisposeStatInfo__circle {
+		    position: absolute;
+		    top: -4px;
+		    left: 10px;
+		    background-color: #fff;
+		    content: "";
+		    display: block;
+		    width: 8px;
+		    height: 8px;
+		    border-radius: 5px;
+		}
+		.orderDisposeStatInfo__disposeStat.is-SkinTest {
+		    background-color: red;
+		 
+		}
+		.orderDisposeStatInfo__triangle.is-SkinTest {
+		    border-right-color: red;
+		}
+		.orderDisposeStatInfo__disposeStat.is-OrderExpire {
+		    background-color: #8df38d;
+		  
+		}
+		.orderDisposeStatInfo__triangle.is-OrderExpire {
+		    border-right-color: #8df38d;
+		}
+		.orderDisposeStatInfo__disposeStat.is-OrderSingle {
+		    background-color: #3494d4;
+		  
+		}
+		.orderDisposeStatInfo__triangle.is-OrderSingle {
+		    border-right-color: #3494d4;
+		}
+		.orderDisposeStatInfo__disposeStat.is-Lock {
+		    background-color: #ee0;
+		   
+		}
+		.orderDisposeStatInfo__triangle.is-Lock {
+		    border-right-color: #ee0;
+		}
+		.datagrid-toolbar .l-btn-plain{
+			margin-top:1px!important;
+		}
+		.datagrid-toolbar .hischeckbox_square-blue{
+			margin-top:1px!important;
+		}
+		.hisui-timespinner.timespinner-f.spinner-text.spinner-f.validatebox-text{
+		  width:72px!important;
+		}
+		.datebox .combo-arrow{
+			position:relative;
+			left:-4px!important;
+		}
+		.datagrid-wrap.panel-body.panel-body-noheader{
+			border-top-style:dotted;
+		}
+		.datagrid-mask-msg {
+		    background: url(images/blue/loading.gif) 5px center no-repeat #fff;
+		    border-color: #95B8E7;
+		    width: fit-content;
+		    margin-left: auto;
+		}
+
+    </STYLE>
+</head>
+
+<body>
+  <div class="hisui-layout drugAudit"
+     data-options="fit:true">
+    <div data-options="region:'west',split:true"
+         style="width:250px;border:none">
+        <div class="hisui-panel"
+             data-options="title:'病人列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-patient'"
+             style="overflow-y:auto;padding-left:10px;">
+            <ul class="patientTree">
+            </ul>
+        </div>
+    </div>
+    <div data-options="region:'center',border:false,split:true,headerCls:'panel-header-gray'"
+         style="border:none">
+        <div id="cc2" class="hisui-layout" data-options="fit:true" style="border:none">   	
+			<div data-options="region:'center',title:'药品查询',split:true,headerCls:'panel-header-gray',iconCls:'icon-search'">
+				<div id="cc21" data-options="fit:true" class="hisui-layout" style="border:none"> 
+					<div data-options="region:'north',title:'',bodyCls:'panel-header-gray'" style="height:86px;border:none">
+						<form id="searchForm"
+							method="post"
+							style="margin:5px 0 5px 0;">
+							<table cellpadding="5"
+								id="searhFormTable"
+								style="margin-left:10px;display:inline">
+								<tr>
+									<td class="r-label">
+										#(..Get("开始时间"))#
+									</td>
+									<td style="padding:0 5px 0 0;">
+										<input id="startDate"
+											class="hisui-datebox textbox"
+											style="width:140px;">
+										</input>
+									</td>
+									<td>
+										<input id="startTime"
+											class="hisui-timespinner"
+											style="width:100px;">
+										</input>
+									</td>
+									<td class="r-label"
+										style="padding:0 5px 0 20px;">
+										#(..Get("药房"))#
+									</td>
+									<td>
+										<select id="pharmacy"
+												class="hisui-combobox"
+												style="width:180px;">
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										#(..Get("结束时间"))#
+									</td>
+									<td style="padding:0 5px 0 0;">
+										<input id="endDate"
+											class="hisui-datebox textbox"
+											style="width:140px;">
+										</input>
+									</td>
+									<td>
+										<input id="endTime"
+											class="hisui-timespinner"
+											style="width:100px;">
+										</input>
+									</td>
+									<td class="r-label"
+										style="padding:0 5px 0 10px;">
+										#(..Get("药品"))#
+									</td>
+									<td>
+										<select id="arcimDR"
+												class="hisui-combobox"
+												style="width:180px;">
+										</select>
+									</td>
+								</tr>
+							</table>
+							<table style="display:inline;position:relative;top:-5px;left:10px;">
+								<tr>
+									<td>
+										<a href="#"
+										id="searchBtn"
+										class="hisui-linkbutton hover-dark"
+										data-options="iconCls:'icon-w-find'"
+										style="position:relative;top:5px;">
+											#(..Get("查询"))#
+										</a>
+									</td>
+									<td>
+										<a href="#"
+										id="printBtn"
+										class="hisui-linkbutton hover-dark"
+										data-options="iconCls:'icon-w-print'"
+										style="position:relative;top:5px;">
+											#(..Get("打印"))#
+										</a>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<a href="#"
+										id="ReadyDrugBtn"
+										class="hisui-linkbutton hover-dark"
+										data-options="iconCls:'icon-w-predrug'"
+										style="position:relative;top:5px;">
+											#(..Get("备药"))#
+										</a>
+									</td>
+								</tr>
+							</table>
+							&nbsp
+						</form>
+					</div>
+						<div data-options="region:'center',headerCls:'panel-header-gray',iconCls:'icon-search'" style="border-left:none;border-right:none;border-bottom:none">           
+							<table id="summaryDrugGrid"
+									class="hisui-datagrid"
+									style="border:none"
+									data-options="toolbar:'#summaryDrugGridTB'">
+							</table>
+							<div id="summaryDrugGridTB" >
+								<table><tr>
+								<td><a id="drugSummaryAuditBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true">#(..Get("药品审核"))#</a></td>
+								<td><a id="drugSummaryAuditCancelBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel-order',plain:true">#(..Get("撤销审核"))#</a></td>
+								<td><input id='summaryPack' class='hisui-checkbox' type="checkbox" label="#(..Get("打包标志"))#"></td>
+								<!--td><a href="#" class="orderDisposeStatInfo__disposeStat is-label is-SkinTest">&nbsp;&nbsp;&nbsp;&nbsp;#(..Get("皮试非阴性"))#<span class='orderDisposeStatInfo__triangle is-SkinTest'><span class='orderDisposeStatInfo__circle'></span></span></a></TD>
+								<td><a href="#" class="orderDisposeStatInfo__disposeStat is-label is-OrderExpire">&nbsp;&nbsp;&nbsp;&nbsp;#(..Get("医嘱项停止"))#<span class='orderDisposeStatInfo__triangle is-OrderExpire'><span class='orderDisposeStatInfo__circle'></span></span></a></TD>
+								<td><a href="#" class="orderDisposeStatInfo__disposeStat is-label is-OrderSingle">&nbsp;&nbsp;&nbsp;&nbsp;#(..Get("非独立医嘱"))#<span class='orderDisposeStatInfo__triangle is-OrderSingle'><span class='orderDisposeStatInfo__circle'></span></span></a></TD>
+								<td><a href="#" class="orderDisposeStatInfo__disposeStat is-label is-Lock">&nbsp;&nbsp;&nbsp;&nbsp;#(..Get("药库加锁"))#<span class='orderDisposeStatInfo__triangle is-Lock'><span class='orderDisposeStatInfo__circle'></span></span></a></TD-->
+								</tr></table>
+							</div>
+						</div>
+					</div>
+			</div>   
+			<div data-options="region:'south',title:'',split:true,bodyCls:'panel-header-gray'" style="height:330px;">
+				    <table id="detailDrugGrid"
+		                   class="hisui-datagrid"
+		                   title="明细查询"
+		                   data-options="fit:true,border:false,iconCls:'icon-apply-check'">
+		            </table>
+		        <div id="drugTypDlg"
+		             class="hisui-dialog"
+		             title="#(..Get("药品类型选择"))#"
+		             style="width:250px;height:150px;padding:10px;"
+		             data-options="iconCls:'icon-w-save',modal:true,closed:true,buttons:[{id:'takeMedicineBtn',text:'#(..Get("送药"))#'},{id:'giveMedicineBtn',text:'#(..Get("取药"))#'}]">
+		        	#(..Get("请选择药品类型"))#
+		        </div>
+			</div>	
+		</div>  
+    </div>
+</div>
+    <script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var patWardID='#(patWardID)#';
+		var patRegNo='#(patRegNo)#';
+		var className='#(className)#';
+		var periodString='#(periodString)#';
+		var ifCollapse='#(ifCollapse)#';
+		var checkBoxLableString='#(checkBoxLableString)#';
+		var checkBoxKeyString='#(checkBoxKeyString)#';
+		var checkBoxCheckStatusString='#(checkBoxCheckStatusString)#';
+		var checkBoxHiddenStatusString='#(checkBoxHiddenStatusString)#';
+		var summaryTableColumnTitleString='#(summaryTableColumnTitleString)#';
+		var summaryTableColumnKeyString='#(summaryTableColumnKeyString)#';
+		var summaryTableColumnWidthString='#(summaryTableColumnWidthString)#';
+		var summaryTableColumnHiddenStatusString='#(summaryTableColumnHiddenStatusString)#';
+		var detailsTableColumnTitleString='#(detailsTableColumnTitleString)#';
+		var detailsTableColumnKeyString='#(detailsTableColumnKeyString)#';
+		var detailsTableColumnWidthString='#(detailsTableColumnWidthString)#';
+		var detailsTableColumnHiddenStatusString='#(detailsTableColumnHiddenStatusString)#';
+		var controlItemLableString='#(controlItemLableString)#';
+		var controlItemKeyString='#(controlItemKeyString)#';
+		var controlItemColorString='#(controlItemColorString)#';
+		var controlItemStatusString='#(controlItemStatusString)#';
+		
+    </script>
+</body>
+
+</html>

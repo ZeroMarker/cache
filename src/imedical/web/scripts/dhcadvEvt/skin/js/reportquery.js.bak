@@ -1,0 +1,392 @@
+
+/// Creator: congyue
+/// CreateDate: 2017-07-28
+/// Descript: 不良事件升级 查询界面
+var url = "dhcadv.repaction.csp";
+var statShare = [{ "val": "未分享", "text": "未分享" },{ "val": "分享", "text": "分享" }];
+var statArray = [{ "val": "Y", "text": "已提交" },{ "val": "N", "text": "未提交" }];
+var statReceive = [{ "val": "未接收", "text": "未接收" },{ "val": "1", "text": "接收" },{ "val": "2", "text": "驳回" }];
+
+var StrParam="";
+var StDate=formatDate(-7);  //一周前的日期
+var EndDate=formatDate(0); //系统的当前日期
+var querytitle="" ;
+$(function(){ 
+	/*document.onkeydown = function(e){ 
+    var ev = document.all ? window.event : e;
+    	if(ev.keyCode==13) {
+			commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+     	}
+	}*/
+	
+/* 	//科室
+	$('#dept').combobox({
+		//panelHeight:"auto",  //设置容器高度自动增长
+		url:url+'?action=SelAllLoc'
+		
+	}); */
+   $('#dept').combobox({ //  yangyongtao   2017-11-17
+		mode:'remote',  //必须设置这个属性
+		onShowPanel:function(){ 
+			$('#dept').combobox('reload',url+'?action=GetAllLocNewVersion&hospId='+LgHospID+'')
+		}
+	});
+	$("#dept").combobox('setValue',LgCtLocID);
+	$("#dept").combobox('setText',LgCtLocDesc);
+	
+	
+	//状态
+	$('#status').combobox({
+		panelHeight:"auto",  //设置容器高度自动增长
+		data:statArray
+	});
+	//报告类型
+	$('#typeevent').combobox({
+		//panelHeight:"auto",  //设置容器高度自动增长
+		url:url+'?action=SelEventbyNew'
+		
+	});
+	//分享状态
+	$('#Share').combobox({
+		panelHeight:"auto",  //设置容器高度自动增长
+		data:statShare
+	});
+	//接收状态
+	$('#receive').combobox({
+		panelHeight:"auto",  //设置容器高度自动增长
+		data:statReceive
+	});
+	
+	//首页 报告管理联动
+	StrParam=getParam("StrParam");
+	querytitle=getParam("querytitle");
+	if(StrParam!=""){
+		var tmp=StrParam.split("^");
+		$("#stdate").datebox("setValue", tmp[0]);  //Init起始日期
+		$("#enddate").datebox("setValue", tmp[1]);  //Init结束日期
+		$('#dept').combobox("setValue",tmp[2]);     //科室ID
+		$("#dept").combobox('setText',LgCtLocDesc);
+		$('#status').combobox("setValue",tmp[7]);  //状态
+		$('#typeevent').combobox("setValue",tmp[8]);  //报告类型
+		$('#Share').combobox("setValue",tmp[9]);  //分享状态 
+	}else{
+		$("#stdate").datebox("setValue", StDate);  //Init起始日期
+		$("#enddate").datebox("setValue", EndDate);  //Init结束日期
+	}
+	$('#querytitle').html("报告综合查询"+querytitle);
+	$('#Refresh').bind("click",Query);  //刷新
+	$('#Find').bind("click",Query);  //点击查询 
+	$('#Print').bind("click",Print);  //点击打印
+	$('#Export').bind("click",Export);  //点击导出(动态导出)
+	$('#ExportWord').bind("click",ExportWord);  //点击导出(卫计委wprd数据)	
+	$('#ExportExcel').bind("click",ExportExcel);  //点击导出(卫计委excel数据)
+	$('#ExportExcelAll').bind("click",ExportExcelAll);  //点击导出(医管局excel数据)
+	
+	InitPatList();
+	
+	$("#reqList").height($(window).height()-298)//hxy 08-28 st
+	$("#maindg").datagrid('resize', {           
+            height : $(window).height()-298
+    }); 
+    window.onresize=resizeH;                    //hxy 08-28 ed
+	
+});
+//自适应 hxy 2017-08-28
+function resizeH(){
+	$("#reqList").height($(window).height()-298)
+	$("#maindg").datagrid('resize', { 
+            height : $(window).height()-298
+    }); 
+}
+//初始化报告列表
+function InitPatList()
+{
+	//定义columns
+	var columns=[[
+		{field:"ck",checkbox:true,width:20},
+		{field:'LkDetial',title:'操作',width:100,align:'center',formatter:SetCellOpUrl,hidden:true},
+		{field:"RepID",title:'RepID',width:80,hidden:true},
+		{field:"recordID",title:'recordID',width:80,hidden:true},
+		{field:'RepShareStatus',title:'分享状态',width:80,align:'center',hidden:true},
+		{field:'Edit',title:'修改',width:50,align:'center',formatter:setCellEditSymbol,hidden:false},
+		{field:'StatusLast',title:'上一状态',width:100,hidden:true},
+		{field:'StatusLastID',title:'上一状态ID',width:100,hidden:true},
+		{field:"RepStaus",title:'报告状态',width:100,hidden:false},
+		{field:'Medadrreceive',title:'接收状态',width:100,hidden:true},
+		{field:'Medadrreceivedr',title:'接收状态dr',width:80,hidden:true},
+		{field:'RepDate',title:'报告日期',width:120},
+		{field:'PatID',title:'登记号',width:120,hidden:true},
+		{field:'AdmNo',title:'病案号',width:120},
+		{field:'PatName',title:'姓名',width:120},
+		{field:'RepType',title:'报告类型',width:280},
+		{field:'OccurDate',title:'发生日期',width:120},
+		{field:'OccurLoc',title:'发生科室',width:150},
+		{field:'RepLoc',title:'报告科室',width:150},	
+		{field:'RepUser',title:'报告人',width:120},
+		{field:'RepTypeCode',title:'报告类型代码',width:120,hidden:true},
+		{field:'RepImpFlag',title:'重点关注',width:120,hidden:true},
+		{field:'RepSubType',title:'报告子类型',width:120,hidden:true},
+		{field:'RepLevel',title:'不良事件级别',width:120,hidden:true},
+		{field:'RepInjSev',title:'伤害严重度',width:120,hidden:true},
+		{field:'RepTypeDr',title:'报告类型Dr',width:120,hidden:true}
+		
+	]];
+
+	//定义datagrid
+	$('#maindg').datagrid({
+		toolbar: '#toolbar',//hxy add 08-28
+		title:'', //hxy 报告列表
+		method:'get',
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QueryRepList'+'&StrParam='+StrParam,
+		fit:true,
+		rownumbers:true,
+		columns:columns,
+		pageSize:40,  // 每页显示的记录条数
+		pageList:[40,80],   // 可以设置每页记录条数的列表
+	    singleSelect:false,
+		loadMsg: '正在加载信息...',
+		pagination:true,
+		height:300,
+		nowrap:false,
+		rowStyler:function(index,row){    // yangyongtao 2017-11-22
+	        if ((row.RepStaus).indexOf("驳回") >= 0){  
+	            return 'background-color:red;';  
+	        }  
+    	}
+	});
+	
+}
+function Query()
+{
+	//1、清空datagrid 
+	$('#maindg').datagrid('loadData', {total:0,rows:[]}); 
+	//2、查询
+	var StDate=$('#stdate').datebox('getValue');   //起始日期
+	var EndDate=$('#enddate').datebox('getValue'); //截止日期
+	var LocID=$('#dept').combobox('getValue');     //科室ID
+	var status=$('#status').combobox('getValue');  //状态
+	var typeevent=$('#typeevent').combobox('getValue');  //报告类型
+	var statShare=$('#Share').combobox('getValue');  //分享状态 
+	var receive="";  //$('#receive').combobox('getText');  //接收状态 
+	if (status==undefined){status="";} 
+	if (typeevent==undefined){typeevent="";}
+	if (statShare==undefined){statShare="";}
+	var PatNo=$.trim($("#patno").val());
+	var StrParam=StDate+"^"+EndDate+"^"+LocID+"^"+PatNo+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^"+status+"^"+typeevent+"^"+statShare+"^"+receive;
+	//var StrParam=StDate+"^"+EndDate+"^"+LocID+"^"+PatNo+"^"+134+"^"+6+"^"+359+"^"+status+"^"+typeevent+"^"+statShare;
+	//alert(StrParam);
+	$('#maindg').datagrid({
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QueryRepList',	
+		queryParams:{
+			StrParam:StrParam}
+	});
+	querytitle="";
+	$('#querytitle').html("报告综合查询"+querytitle);	
+	//var Rel='dhcadv.reportquery.csp?StrParam='+StrParam+'&querytitle='+"";
+	//location.href=Rel;
+}
+
+function showDetail(){
+	var rowsData = $("#datagrid").datagrid('getSelected')
+	if (rowsData == null) {
+		$.messager.alert("提示","请选择表单!");
+		return;
+	}
+	window.open("formrecorditm.csp?recordId="+rowsData.recordID)
+}
+
+
+///设置编辑连接
+function setCellEditSymbol(value, rowData, rowIndex)
+{
+		var recordID=rowData.recordID;         //表单填写记录ID
+		var RepID=rowData.RepID                //报告ID   yangyongtao 2017-11-24
+		var RepStaus=rowData.RepStaus;         //表单状态
+		if (RepStaus=="未提交"){
+			RepStaus=""; //报告为未提交，传参为空
+		}
+		var RepTypeDr=rowData.RepTypeDr;         //报告类型Dr
+		var RepTypeCode=rowData.RepTypeCode; //报告类型代码
+		var RepType=rowData.RepType; //报告类型
+		var StatusLast=rowData.StatusLast; //报告上一状态
+		var editFlag=1;  //修改标志  1可以修改 -1不可以修改   如果上一状态为空并且接收状态是驳回（接收状态dr为2）则可以修改
+		if((StatusLast!="")&&(RepStaus.indexOf("驳回") < 0)){
+			editFlag=-1;
+		}
+		var adrReceive=rowData.Medadrreceivedr; //接收状态dr
+		
+		return "<a href='#' onclick=\"showEditWin('"+recordID+"','"+RepStaus+"','"+RepTypeDr+"','"+RepTypeCode+"','"+RepType+"','"+editFlag+"','"+RepID+"','"+adrReceive+"')\"><img src='../scripts/dhcnewpro/images/adv_sel_8.png' border=0/></a>";
+}
+
+//编辑窗体
+function showEditWin(recordID,RepStaus,RepTypeDr,RepTypeCode,RepType,editFlag,RepID,adrReceive)
+{
+	if($('#win').is(":visible")){return;}  //窗体处在打开状态,退出
+
+	$('body').append('<div id="win"></div>');
+	$('#win').window({
+		title:'报告编辑',
+		collapsible:true,
+		border:false,
+		closed:"true",
+		width:1350,    ///2017-11-23  cy  修改弹出窗体大小 1250
+		height:600
+	});
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="layoutform.csp?recordId='+recordID+'&RepStaus='+RepStaus+'&RepTypeDr='+RepTypeDr+'&code='+RepTypeCode+'&desc='+RepType+'&editFlag='+editFlag+'&RepID='+RepID+'&adrReceive='+adrReceive+'"></iframe>';
+	$('#win').html(iframe);
+	$('#win').window('open');
+	//window.open("formrecorditmedit.csp?recordId="+rowsData.ID)
+}
+
+//操作  评论
+function SetCellOpUrl(value, rowData, rowIndex)
+{   var RepID=rowData.RepID;         //报表ID
+	var RepTypeCode=rowData.RepTypeCode; //报告类型代码
+	var RepShareStatus=rowData.RepShareStatus  //分享状态
+	var html = "";
+	if (RepShareStatus == "分享"){
+		html = "<a href='#' onclick=\"newCreateConsultWin('"+RepID+"','"+RepTypeCode+"')\" style='margin:0px 5px;font-weight:bold;color:red;text-decoration:none;'>查看回复列表</a>";
+	}else{
+		  html = "<a href='#' onclick=\"newCreateConsultWin('"+RepID+"','"+RepTypeCode+"')\">查看回复列表</a>";
+		}
+    return html;
+}
+
+/**
+  * 新建评论窗口
+  */
+function newCreateConsultWin(RepID,RepTypeCode){
+	if($('#winonline').is(":visible")){return;}  //窗体处在打开状态,退出
+
+	$('body').append('<div id="winonline"></div>');
+	$('#winonline').window({
+		title:'列表',
+		collapsible:true,
+		border:false,
+		closed:"true",
+		width:1110,
+		height:500
+	});
+	
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcadv.onlinereview.csp?ID='+RepID+'&TypeCode='+RepTypeCode+'"></iframe>';
+		$('#winonline').html(iframe);
+		$('#winonline').window('open');
+	
+}
+//打印
+function Print(){
+	var rowsData = $("#maindg").datagrid('getSelections')
+	/*if (rowsData.length!="1") {
+		$.messager.alert("提示","请只选择一条记录!");
+		return;	
+	}*/
+	
+	for(i=0;i<rowsData.length;i++){
+		var recordId = rowsData[i].recordID;
+		var RepID = rowsData[i].RepID;
+		var RepTypeCode= rowsData[i].RepTypeCode;
+		printRepForm(RepID,RepTypeCode);
+		
+	}	
+	//window.open("formprint.csp?recordId="+rowsData[0].recordID);
+}
+//congyue 2017-09-06 点击首页图标，返回首页
+function Gologin(){
+	location.href='dhcadv.homepage.csp';
+}
+//2016-10-10
+function CloseWinUpdate(){
+	$('#win').window('close');
+}
+function cleanInput(){
+	
+	var StDate=formatDate(-7);  //一周前的日期
+	var EndDate=formatDate(0); //系统的当前日期
+	$("#stdate").datebox("setValue", StDate);  //Init起始日期
+	$("#enddate").datebox("setValue", EndDate);  //Init结束日期
+	$('#dept').combobox('setValue',"");     //科室ID
+	$("#status").combobox('setValue',"");
+	$('#typeevent').combobox('setValue',"");;  //报告类型
+	$('#receive').combobox('setValue',"");;  //接收状态
+	$('#Share').combobox('setValue',"");;  //分享状态
+ 	$("#ImpFlag").val("");             //关注状态
+	$("#patno").val("");
+}
+// 导出word 卫计委
+function ExportWord()
+{
+	var selItems = $('#maindg').datagrid('getSelections');
+	if (!selItems.length){
+		$.messager.alert('提示',"<font style='color:red;font-weight:bold;font-size:20px;'>请先选择一行记录!</font>","error");
+		return;
+	}
+	//$.messager.confirm("提示", "是否进行导出操作", function (res) {//提示是否删除
+		//if (res) {
+			var filePath=browseFolder();
+			if (typeof filePath=="undefined"){
+				$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择路径后,重试！</font>","error");
+				return;
+			}
+       var re=/[a-zA-Z]:\\/;     //wangxuejian 2016-10-10
+	     if ((filePath.match(re)=="")||(filePath.match(re)==null)){
+		 	$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择有效路径后,重试！</font>","error");
+		 	return;
+	     }
+	     v
+	    for(i=0;i<selItems.length;i++){
+				var recordId = selItems[i].recordID;
+				var RepID = selItems[i].RepID;
+				var RepTypeCode= selItems[i].RepTypeCode;
+				var RepType= selItems[i].RepType;
+				ExportWordData(RepID,RepTypeCode,RepType,filePath);
+		
+			}	
+	    
+			$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出完成！导出目录为:"+filePath+"</font>","info");
+		//}
+	//})
+}
+// 导出Excel 卫计委
+function ExportExcel()
+{
+	var StDate=$('#stdate').datebox('getValue');   //起始日期
+	var EndDate=$('#enddate').datebox('getValue'); //截止日期
+	var filePath=browseFolder();
+	if (typeof filePath=="undefined"){
+		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择路径后,重试！</font>","error");
+		return;
+	}
+  var re=/[a-zA-Z]:\\/;     //wangxuejian 2016-10-10
+	if ((filePath.match(re)=="")||(filePath.match(re)==null)){
+		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择有效路径后,重试！</font>","error");
+		return;
+	}
+	var Staticflag=ExportExcelStatic(StDate,EndDate,filePath);
+	if(Staticflag==true){
+	$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出完成！导出目录为:"+filePath+"</font>","info");
+	}else{
+		$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出失败！</font>","info");
+	}
+}
+// 导出Excel 医管局
+function ExportExcelALL()
+{
+	var StDate=$('#stdate').datebox('getValue');   //起始日期
+	var EndDate=$('#enddate').datebox('getValue'); //截止日期
+	var filePath=browseFolder();
+	if (typeof filePath=="undefined"){
+		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择路径后,重试！</font>","error");
+		return;
+	}
+  var re=/[a-zA-Z]:\\/;     //wangxuejian 2016-10-10
+	if ((filePath.match(re)=="")||(filePath.match(re)==null)){
+		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择有效路径后,重试！</font>","error");
+		return;
+	}
+	var Allflag=ExportExcelAllData(StDate,EndDate,filePath);
+	if(Allflag==true){
+	$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出完成！导出目录为:"+filePath+"</font>","info");
+	}else{
+		$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出失败！</font>","info");
+	}
+}

@@ -1,0 +1,148 @@
+<div id="Ordlayout_main"class="hisui-layout" data-options="fit:true,border:false">
+	<!--信息总览界面布局-->
+	<csp:if condition='PageShowFromWay="ShowFromEmr"'>
+		<div data-options="region:'center'">
+			<div id="OrdSearch-div" class="hisui-layout" data-options="fit:true,border:false">
+				<div id="OrdSearch" data-options="region:'north',border:false" style="height:80px;">
+					<div class="hisui-tabs tabs-gray" id="OrdReSubCatList" data-options="isBrandTabs:true">
+			    		<div title="医嘱浏览" data-options="iconCls:'icon-add-note'">   
+						</div>
+			    	</div>
+			    	<div class="fixedh3-div" style="padding-left:5px;">
+			    		<input id="OrderTypeAll" value="ALL" class='hisui-radio' type="radio" data-options="label:'全部',name:'PriorType_Radio',disable:false,checked:true">
+				        <input id="OrderTypeS" value="S" class='hisui-radio' type="radio" data-options="label:'长嘱',name:'PriorType_Radio',disable:false">
+				        <input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'临嘱',name:'PriorType_Radio',disable:false">        
+			    	    <span class="fixedmargin-span">医嘱</span><span style="margin-left:5px;"><input id="orderDesc" class="textbox" style="width:140px"></span>
+			    	    <span class="fixedmargin-span">排序</span>
+			    	    <span>
+				    	    <select id="OrderSortId" class="hisui-combobox" style="width:100px;"></select>
+			    	    </span>
+			    	    <!--a id="moreBtn" class="hisui-linkbutton fixedmargin-span" href="#">更多</a-->
+			    	    <span style="margin-left:10px;"><span id="moreBtn" onclick="ipdoc.patord.view.toggleExecInfo(this);" class='toggle-btn'>更多</span></span>
+			    	</div>
+			    	<div class="dashline-div" id="dashline" style="display:none;"></div>
+			    	<div id="more" class="fixedh2-div" style="padding-left:11px;display:none;"> <!--underline-div-->
+				        <span>开医嘱人</span><span>
+				        	<select id="doctorList" style="width:100px;"></select>
+				        </span>
+				        <span class="fixedmargin-span">开出科室</span>
+				        <span>
+				        	<select id="locDesc" class="hisui-combobox" name="state" style="width:125px;"></select>
+				        </span>
+				        <span class="fixedmargin-span">范围</span>
+				        <span>
+				        	<select id="scopeDesc" class="hisui-combobox" name="state" style="width:95px;"></select>
+				        </span>
+				        
+				        <span class="fixedmargin-span">医嘱单型</span>
+				        <span>
+				        	<select id="nursebillDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
+				        </span>
+				        <span class="fixedmargin-span">用法</span>
+				        <span>
+				        	<select id="InstrDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
+				        </span>
+			    	</div>
+				</div>
+				<div  data-options="region:'center'" style="border:0px;">
+					<table id="tabInPatOrd"></table>
+				</div>
+			</div>
+		</div>
+		<!--csp:if condition='isNurseLogin="1"'-->
+			<div data-options="region:'east',title:'执行医嘱',headerCls:'panel-header-gray',split:true,collapsed:true,collapsible:true" style="width:440px;">
+				<div class="hisui-layout" data-options="fit:true,border:false,split:true">
+    				<div data-options="region:'north',border:false" style="height:41px;">
+    					<div style="height:30px;padding:5px 0;border-bottom:1px solid #ccc;"><span style="margin-left:5px;">执行日期&nbsp;从&nbsp;</span><input id="execBarExecStDate" class="hisui-datebox textbox"><span>&nbsp;到&nbsp;</span><input id="execBarExecEndDate" class="hisui-datebox textbox"></div>
+    				</div>
+    				<div data-options="region:'center',border:false">
+    					<table id="tabInPatOrdExec"></table>
+    				</div>
+    			</div>
+			</div>
+		<!--/csp:if-->
+	<csp:else>
+		<!--联动医嘱录入布局-->
+		<div data-options="region:'center',border:false" style="border:1px solid #ccc;border-radius:4px;">
+			<div id="OrdSearch-div" class="hisui-layout" data-options="fit:true,border:false">
+				<div id="OrdSearch" data-options="region:'north',border:false" style="height:44px;">
+					<div class="fixedh3-div" style="paadin-left:5px;">
+			    		<input id="OrderTypeAll" value="ALL" class='hisui-radio' type="radio" data-options="label:'全部',name:'PriorType_Radio',disable:false">
+				        <csp:if condition='DefaultOrderPriorType="S"'>
+				        	<input id="OrderTypeS" value="S" class='hisui-radio' type="radio" data-options="label:'长嘱',name:'PriorType_Radio',disable:false,checked:true">
+				        	<input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'临嘱',name:'PriorType_Radio',disable:false">        
+			    	    <csp:else>
+			    	    	<input id="OrderTypeS" value="S" class='hisui-radio' type="radio" data-options="label:'长嘱',name:'PriorType_Radio',disable:false">
+				        	<input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'临嘱',name:'PriorType_Radio',disable:false,checked:true">        
+			    	    </csp:if>
+			    	    <span class="fixedmargin-span">范围</span>
+				        <span>
+				        	<select id="scopeDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
+				        </span>
+				        <csp:if condition='PageShowFromWay="ShowFromOrdEntry"'> 
+					        <span>分类</span>
+					        <span>
+					        	<select id="OrderCatTypeId" style="width:100px;"></select>
+					        </span>
+				        </csp:if>
+				        
+				        <csp:if condition='PageShowFromWay="ShowFromOrdEntry"'> 
+					        <div id="SupplementModeSwitch"  style="margin-left:5px;"></div>
+				        </csp:if>
+			    	    <span style="margin-left:5px;"><span id="moreBtn" onclick="ipdoc.patord.view.toggleExecInfo(this);" class='toggle-btn'>更多</span></span>
+			    	    <csp:if condition='PageShowFromWay="ShowFromOrdCopy"'> 
+			    	    <csp:else>
+			    	    	<span style="margin-left:5px;"><span id="changeBigBtn" onclick="ipdoc.patord.view.changeBigOrder(this);" class='toggle-btn'>放大</span></span>
+			    	    </csp:if>
+						#(OrderColorHTML)#
+			    	    
+			    	</div>
+			    	<div id="more" class="fixedh2-div" style="padding-left:10px;height:65px;display:none;">
+			    		<div>
+			    			<span class="">医嘱单型</span> <!--fixedmargin-span-->
+					        <span>
+					        	<select id="nursebillDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
+					        </span>
+				    		<span class="fixedmargin-span">医嘱</span><span style="margin-left:5px;"><input id="orderDesc" class="textbox" style="width:110px"></span>
+					        <span>开医嘱人</span><span>
+					        	<select id="doctorList" style="width:100px;"></select>
+					        </span>
+					        <span class="fixedmargin-span">开出科室</span>
+					        <span>
+					        	<select id="locDesc" class="hisui-combobox" name="state" style="width:125px;"></select>
+					        </span>
+			    		</div>
+			    		<div style="margin-top:5px;">
+			    			<span class="">排序</span> <!--fixedmargin-span-->
+					        <span>
+					    	    <select id="OrderSortId" class="hisui-combobox" name="state" style="width:100px;"></select>
+				    	    </span>
+				    	    <span class="fixedmargin-span">用法</span>
+					        <span>
+					        	<select id="InstrDesc" class="hisui-combobox" name="state" style="width:118px;"></select>
+					        </span>
+			    		</div>
+				        
+			    	</div>
+				</div>
+				<div  data-options="region:'center'" style="border:0px;">
+					<table  id="tabInPatOrd"></table>
+				</div>
+			</div>
+		</div>
+		<!--csp:if condition='isNurseLogin="1"'-->
+			<div data-options="region:'east',title:'执行医嘱',headerCls:'panel-header-gray',split:true,collapsed:true,collapsible:true" style="width:360px;border-radius:0 0 4px 4px;">
+				<div class="hisui-layout" data-options="fit:true,border:false,split:true">
+    				<div data-options="region:'north',border:false" style="height:41px;">
+    					<div style="height:30px;padding:5px 0;border-bottom:1px solid #ccc;"><span style="margin-left:5px;">执行日期&nbsp;从&nbsp;</span><input id="execBarExecStDate" class="hisui-datebox textbox" style="width:120px;"><span>&nbsp;到&nbsp;</span><input id="execBarExecEndDate" class="hisui-datebox textbox" style="width:120px;"></div>
+    				</div>
+    				<div data-options="region:'center',border:false">
+    					<table id="tabInPatOrdExec"></table>
+    				</div>
+    			</div>
+			</div>
+		<!--/csp:if-->
+	</csp:if>
+</div>
+<!--右键菜单div-->
+<div id='RightKeyMenu' class='hisui-menu' style='display:none;'></div>

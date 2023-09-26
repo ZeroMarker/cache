@@ -1,0 +1,240 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<ADDINS require="RWCard"/>
+	<script language="Cache" runat="server">
+		d ##class(web.DHCXMLPConfig).LODOPInit()
+	</script>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+    <HISUI/>
+    <meta charset="UTF-8"> 
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	</script>
+    <SERVER>
+	    s planPatModel=%request.Get("planPatModel")
+		w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+		w "var PlanPatModel="""_planPatModel_""";"_$c(13,10)
+		w ";"_$c(13,10)
+ 		w "</SCRIPT>"
+   </SERVER>
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patientseatnew.css" />
+    <script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+    <script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+    <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patientseatnew.js" charset="gb2312"></script>
+    <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patdragcomm.js" charset="gb2312"></script>
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<SERVER>
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+    d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+    s ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+    s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+</SERVER>
+    <title></title>
+</head>
+<body>
+
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="padding:10px;border:none;">
+			
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:110px;overflow:hidden;border:none;">
+				<a id="plantBtn" class="hisui-linkbutton big" data-options="iconCls:'icon-big-plantBtn',plain:true">安排</a>
+				
+				<div style="float:right;margin-right:800px;font-size:15px;font-weight:bold;">
+					<div><span>总人数:</span><span id="top_btn_all"></span></div>
+					<div><span>人数明细:</span>
+						<span id="top_btn_man"></span>
+						<span id="top_btn_woman"></span>
+						<span id="top_btn_unman"></span>
+					</div>
+					<div><span>当前空余座位:</span>
+						<span id="top_btn_no"></span>
+					</div>
+
+				</div>
+				<div class="tool-bar-line" style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+				<div style="height:35px;padding-top:8px;">
+					<!--<span style="margin-right:10px;">科室:</span><input id="locListCombo" class="hisui-combobox"/>-->
+					<span style="margin-right:10px;">登记号</span><input id="patRegNo" class="hisui-validatebox textbox"/>
+					<span style="display:inline-block;width:20px"></span>
+				</div>
+				<div class="tool-bar-line" style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+				
+			</div>
+		
+			<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="padding:10px;border:none;">	
+				<!-- 座位图区域 -->
+				<div class="vc">
+					<div class="center" style="border:none;">
+						<div id="lef-bottom"></div>
+					</div>
+					<div class="left-side">
+						<div class="hisui-accordion accordion-green" id="obsRoomAccordion"  border=false fit=true>
+							<div id="waitArea" title="等待区<span id='waitNumber'>0</span>" data-options="iconCls:'icon-w-clock',collapsible:false" style=""> 
+								<div class="dg-waitarea">
+									<table id="obsPatTable" border=false></table>
+								</div>
+							</div>   
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+		
+	</div>
+</div>
+
+
+<div id="wind" class="hisui-window" title="输液室座位安排" data-options="iconCls:'icon-save',closed:'true',collapsible:false,minimizable:false,maximizable:false" style="width:680px;height:380px;padding:5px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center'" style="border:0px;" border=false>
+			<table class="planPatTable" style="padding-right: 25px;padding-top:10px;">
+				<tr height=42>
+					<td class="input-label">卡类型</td>
+					<td> 
+						<input id="EmCardType" class="data-input textbox"></input>
+					</td>
+					<td class="input-label">卡号</td>
+					<td> 
+						<input id="CardNum" class="data-input textbox"></input>
+					</td>
+					<td>
+						<a href="#" id="readCardBtn" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-card">读卡</a>
+					</td>
+				</tr>
+				<tr height=42>
+					<td class="input-label">登记号</td>
+					<td> 
+						<input id="RegiNum" class="data-input textbox"></input>
+					</td>
+					<td class="input-label">姓名</td>
+					<td> 
+						<input id="UserName" class="data-input textbox"></input>
+					</td>
+				</tr>
+				<tr height=42 style="display:none;">
+					<td class="input-label">病人密级</td>
+					<td> 
+						<input id="UserSecRank" class="data-input textbox"></input>
+					</td>
+					<td class="input-label">病人级别</td>
+					<td> 
+						<input id="UserRank" class="data-input textbox"></input>
+					</td>
+				</tr>
+				<tr height=42>
+					<td class="input-label">性别</td>
+					<td> 
+						<input id="PatSex" class="data-input textbox" disabled="disabled"></input>
+					</td>
+					<td class="input-label">年龄</td>
+					<td> 
+						<input id="PatAge" class="data-input textbox" disabled="disabled"></input>
+					</td>
+				</tr>
+				<tr height=42>
+					<td class="input-label">就诊科室</td>
+					<td> 
+						<input id="PatLoc" class="data-input textbox" disabled="disabled"></input>
+					</td>
+					<td class="input-label">就诊时间</td>
+					<td> 
+						<input id="PaAdmTime" class="data-input textbox" disabled="disabled"></input>
+					</td>
+				</tr>
+				<tr height=42>
+					<td class="input-label">当前座位</td>
+					<td> 
+						<input id="PatSeatNo" class="data-input textbox"></input>
+					</td>
+					<td class="input-label">安排座位</td>
+					<td> 
+						<input id="UserTradeSeatBt" class="data-input textbox"></input>
+					</td>
+				</tr>
+				<tr height=42>
+					<td class="input-label">主管医生</td>
+					<td> 
+						<input id="PrvDoc" class="data-input textbox" disabled="disabled"></input>
+					</td>
+				</tr>
+				
+				<tr style="display:none">
+					<td class="input-label">床位Id</td>
+					<td> 
+						<input id="SeatRowId" class="data-input textbox"></input>
+					</td>
+					<td class="input-label">病人Id</td>
+					<td> 
+						<input id="PatId" class="data-input textbox"></input>
+					</td>
+				</tr>
+				<tr style="display:none">
+					<td class="input-label">就诊Id</td>
+					<td>
+						<input type="text" class="data-input textbox" name="PaAdm" id="PaAdm" />
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'south',border:false" style="text-align:center;padding:10px 0 0;height:50px;" border=false>
+			<a href="#" id="wriArea" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-edit" data-options="stopAllEventOnDisabled:true">等候</a>
+			<a href="#" id="winArrBtn" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-stamp">安排</a>
+			<a href="#" id="ClearArrBtn" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-export">离开</a>
+			<a href="#" id="CloseWin" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-cancel" onclick="javascript:$('#wind').window('close')">关闭</a>
+		</div>
+	</div>
+</div>
+
+<!-- 主管医生窗体 -->
+<div id="DocWin" class="hisui-window" title="指定主管医生" data-options="iconCls:'icon-save',closed:'true',collapsible:false,minimizable:false,maximizable:false" style="width:380px;height:200px;padding:5px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div id="docbody" style="margin:30px 0px 0px 45px;">
+			主管医生：<input id="ChargDoc" style="width:150px;"/>
+		</div>
+		<div id="doctool" style="margin:30px 0px 0px 80px;">
+		    <button id="docsure" class="hisui-linkbutton planPat-Btn" style="margin-left:15px">确认</button>
+			<button id="doccancel" class="hisui-linkbutton planPat-Btn" style="margin-left:30px">取消</button>
+		</div>
+	</div>
+</div>
+
+<!--------------右键菜单------------------>
+<div id="menu" class="hisui-menu" style="width:140px; display: none;">  
+	<!--放置一个隐藏的菜单Div-->
+	<div id="btn_NurExec" data-options="iconCls:'icon-check-reg'" onclick="ArrPatSeat()">安排</div>
+	<div id="btn_PrintWrs" data-options="iconCls:'icon-print'" onclick="NurExec()">护士执行</div>
+	<div style="display:none" id="btn_TempMeaSin" data-options="iconCls:'icon-end-adm'" onclick="TempMeaSin()">生命体征</div>
+	<div class="menu-sep"></div>
+	<div id="btn_PrintBed" data-options="iconCls:'icon-mnypaper-ok'" onclick="ClrPatSeat()">离开座位</div>
+	<div id="btn_ChargeDoc" data-options="iconCls:'icon-print'" onclick="ChargeDoc()">主管医生</div>
+	<div class="menu-sep"></div>
+	<div id="btn_PrintBedCard" data-options="iconCls:'icon-print'" onclick="newPrintXmlMode()">座位卡</div>
+ </div>
+<!--------------右键菜单------------------>
+</body>
+
+<!--打印-->
+<div id="hiddenEncrypt" style="width:0;height:0;">
+	<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+	</form>
+</div>
+</html>

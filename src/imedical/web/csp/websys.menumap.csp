@@ -1,0 +1,136 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/tb.css"></LINK>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<style>
+TD
+{
+	white-space:nowrap;
+	PADDING: 2px;
+    BORDER-RIGHT: #777777 thin solid;
+    BORDER-TOP: #777777 thin solid;
+    BORDER-LEFT: #777777 thin solid;
+    BORDER-BOTTOM: #777777 thin solid;
+    
+}
+.disabled 
+{
+	    BACKGROUND-COLOR:#cccccc
+}
+</style>
+
+</head>
+
+<body >
+
+<server>
+d ..Group($g(%request.Data("GroupID",1)))
+//d ..Group(1)
+</server>
+</body>
+</html>
+<csp:method name=Group arguments="id" returntype="">
+	//SS_GROUP_ID !
+
+	n gid,g,security
+	
+	w "<H1>",$p($g(^SSU("SSGRP",id)),"^",1),"</H1><BR>"
+	
+	s gid=##Class(epr.GroupSettings).GetIdFromGroupId(id)
+	i 'gid q
+	s g=##Class(epr.GroupSettings).%OpenId(gid)
+	s security=g.MenuSecurity
+	
+	if (g) {
+		i (g.MainMenuDR) {
+			w "<TABLE><TR>"
+			d ..Menus(g.MainMenuDR.%Id())
+			w "</TR></TABLE>",!
+		}
+	}
+	q
+</csp:method>
+
+<csp:method name=Menus arguments="mnuid" returntype="">
+	n rs,menu,wfi,j
+	
+	s rs=##Class(%ResultSet).%New("websys.Menu:Items")
+	d rs.Execute(mnuid)
+	while rs.Next() {
+		s menu=##Class(websys.Menu).%OpenId(rs.Data("ID"))
+
+		w "<TD valign=""top""><TABLE" w:'..IsEnabled(rs.Data("ID")) " class=""disabled""" w ">"
+		w "<TR><TD class=""tb"">"
+		w "<img SRC=""../images/",$s(menu.Image'="":menu.ImageEx(),1:"websys/blank.gif"),"""  BORDER=""0"" >"
+		W rs.Data("Caption")
+		W "</TD></TR>",!
+		
+		//is it a report
+		if menu.LinkReport {
+			w "<TR><TD>"
+			w menu.LinkReport.Description
+			W "</TD></TR>",!
+		}
+		//is it a chart
+		elseif menu.Chart {
+			w "<TR><TD>"
+			w menu.Chart.Name
+			W "</TD></TR>",!
+		} 
+		//is it a chart book
+		elseif menu.ChartBook {
+			w "<TR><TD>"
+			w menu.ChartBook.Description
+			W "</TD></TR>",!
+		} 
+		//is it a workflow
+		elseif menu.WorkFlow {
+			w "<TR><TD>"
+			w menu.WorkFlow.Name
+			W "</TD></TR>",!
+			f j=1:1:menu.WorkFlow.WorkFlowItems.Count() {
+				s wfi=menu.WorkFlow.WorkFlowItems.GetAt(j)
+				w "<TR><TD>"
+				w j,". ",wfi.Item.Description //w:wfi.ConditionalExpression'="" " (?)"
+				W "</TD></TR>",!
+			}
+		} 
+		//is it a worklist
+		elseif menu.Worklist {
+			w "<TR><TD>"
+			w menu.Worklist.Name
+			W "</TD></TR>",!
+		} 
+		//is it a component
+		elseif menu.LinkComponent {
+			w "<TR><TD>"
+			w menu.LinkComponent.Name
+			W "</TD></TR>",!
+		}
+		else {
+			//a url (only for intersting ones ?)
+			if menu.LinkUrl="epr.floorplan.csp" {
+				w "<TR><TD>"
+				w "Floor Plan"
+				W "</TD></TR>",!
+			}
+		}
+		w "</TD</TR></TABLE></TD>",!
+	}
+	d rs.Close()
+	q
+</csp:method>
+<csp:method name=IsEnabled arguments="mnuid" returntype="%Boolean">
+	s:security="" security=$zbitstr(20,0)
+	i +mnuid>$zbitlen(security) q 0
+ 	q $zbitget(security,+mnuid)
+</csp:method>

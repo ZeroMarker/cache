@@ -1,0 +1,312 @@
+<html>
+<head>
+<HISUI/>
+
+<title>	分级数据统计 </title>
+<style>
+	.textLabel{
+		background-color:#FFF;	
+		font-size:14px;
+	}
+	
+	.icon-search-white {
+		background: url('../scripts/dhcnewpro/images/adv_search.png');
+	}
+	
+	form td{
+		padding-left:10px;	
+		font-size:14px;
+	}
+
+	.panel-header, .panel-body{
+		border:none !important;	
+	}
+	.floatLeft{
+		float:left;	
+	}
+	.tdDiv{
+		width:320px;/*hxy 2018-04-27 300px*/
+		height:67px;/*hxy 2018-04-25 70px*/
+		border: 1px solid #CCC;/*hxy 2018-04-25 #EEE*/
+		box-sizing:border-box;
+		padding-left:40px; /*hxy 2018-04-27 30px*/
+		display: inline-block;
+		border-radius:4px;/*hxy 2018-04-25*/
+		margin-left:5px;/*hxy 2018-04-27*/
+	}
+	
+	.tdDiv:hover{
+		
+	}
+	
+	.tdLeftDiv{
+		width:55px;
+		height:70px;
+		text-align: center;
+	}
+	.tdLeftDiv img{
+		margin-top:5px	
+	}
+	
+	.tdRightDiv{
+		width:130px;
+		height:70px;
+	}
+	
+	.tdRightDivTop{
+		height:30px;
+		width: 130px;
+    	text-align: right;
+		display: table-cell;
+    	vertical-align: bottom;	
+	}
+	
+	.tdRightDivTopSpan{
+		font-size:14px;
+	}
+	
+	.tdRightDivBottom{
+		height:30px;
+		width: 60px;
+    	text-align: left;
+    	margin-left:45px;
+	}
+	
+	.tdRightDivBottomSpan{
+		font-size:27px;	
+	}
+	.selTdDiv{
+		background:url(../scripts/dhcnewpro/images/sel.png) !important;
+	}
+	
+	.bottomDiv{
+		width:100%;
+		height:345px;	
+		/*border:1px solid #ccc;
+		box-sizing:border-box;*/
+	}
+	
+	.bottomDivLefBorder{
+		float:left;
+		width:50%;
+		height:100%;
+		border-right:4px solid #FFF;
+		border-bottom: 4px solid #FFF;
+		box-sizing:border-box;
+	}
+	
+	.bottomDivRigBorder{
+		float:right;
+		width:50%;
+		height:100%;
+		border-left:4px solid #FFF;
+		border-bottom: 4px solid #FFF;
+		box-sizing:border-box;
+	}
+	
+	.bottomDivLef,.bottomDivRig{
+		border:1px solid #CCCCCC;/*hxy 2018-04-25 #EEE*/
+		box-sizing:border-box;	
+		width:100%;
+		height:100%;
+		border-radius: 4px;/*5->4*/
+	}
+	
+	.heading{
+		height:30px;
+		width:100%;	
+		background:#F7F7F7;/*#EEE hxy*/
+		border-bottom:1px solid #ccc;/*hxy 2018-04-25*/
+		border-top-left-radius:4px;/*hxy 2018-04-25*/
+        border-top-right-radius:4px;/*hxy 2018-04-25*/
+	}	
+	.heading span{
+		line-height:30px;	
+	}
+	.typeTable td{
+		/*text-align:center; hxy 2018-04-27*/
+	}
+	.heading >span{padding-left:10px}/*hxy*/
+	
+</style>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<!-- ECharts单文件引入 -->
+<script type="text/javascript" src="../scripts/dhcadvEvt/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/echarts/Echarts.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/checklevdataanalysess.js"  ></script>
+<script Language="Javascript">
+	var HospID="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+</script>
+</head>
+	
+<body>
+	<div class="hisui-layout" style="" data-options="fit:true">
+		<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:125px;overflow:hidden;"><!--hxy 2020-02-21 115->125-->
+			<div style="margin:10px 10px 10px 10px;">
+				<span style="margin-right:5px">开始日期</span><!--hxy-->
+				<input id="stDate" style="width:160px" class="hisui-datebox textbox"></input>
+				
+				<span style="margin-right:5px;margin-left:15px">结束日期</span>
+				<input id="endDate" style="width:160px" class="hisui-datebox textbox"></input>
+				<td><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-search-white" style="margin-left:10px">查询</a></td>
+			</div>
+			
+			<div style="height:75px">
+				<table id="typeTable" class="typeTable" style="width:100%" cellspacing="0" >
+					<tr>
+						<td>
+							<div class="tdDiv" data-type="ZSDO" style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+								<div class="floatLeft tdLeftDiv">
+									<img src="../scripts/dhcnewpro/images/checkAllNum.png"/>
+								</div>
+								
+								<div class="floatLeft tdRightDiv">
+									<div class="tdRightDivTop">
+										<span class="tdRightDivTopSpan">分诊总计人数</span>
+									</div>
+									
+									<div class="tdRightDivBottom">
+										<span id="AllNumber" class="tdRightDivBottomSpan">0</span>
+									</div>
+								</div>
+							</div>
+						<!--</td>
+						
+						<td>hxy-->
+							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+								<div class="floatLeft tdLeftDiv">
+									<img src="../scripts/dhcnewpro/images/checkRedAreaNum.png"/>
+								</div>
+								
+								<div class="floatLeft tdRightDiv">
+									<div class="tdRightDivTop">
+										<span class="tdRightDivTopSpan">红区分诊人数</span>
+									</div>
+									
+									<div class="tdRightDivBottom">
+										<span id="redNumber" class="tdRightDivBottomSpan">0</span>
+									</div>
+								</div>
+							</div>
+							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)"><!--hxy 2020-02-21-->
+								<div class="floatLeft tdLeftDiv">
+									<img src="../scripts/dhcnewpro/images/checkOrangeAreaNum.png"/>
+								</div>
+								
+								<div class="floatLeft tdRightDiv">
+									<div class="tdRightDivTop">
+										<span class="tdRightDivTopSpan">橙区分诊人数</span>
+									</div>
+									
+									<div class="tdRightDivBottom">
+										<span id="orangeNumber" class="tdRightDivBottomSpan">0</span>
+									</div>
+								</div>
+							</div>
+						<!--</td>
+						
+						<td>hxy-->
+							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+								<div class="floatLeft tdLeftDiv">
+									<img src="../scripts/dhcnewpro/images/checkYellowAreaNum.png"/>
+								</div>
+								
+								<div class="floatLeft tdRightDiv">
+									<div class="tdRightDivTop">
+										<span class="tdRightDivTopSpan">黄区分诊人数</span>
+									</div>
+									
+									<div class="tdRightDivBottom">
+										<span id="yellowNumber" class="tdRightDivBottomSpan">0</span>
+									</div>
+								</div>
+							</div>
+						<!--</td>
+						
+						<td>hxy-->
+							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+								<div class="floatLeft tdLeftDiv">
+									<img src="../scripts/dhcnewpro/images/checkGreenAreaNum.png"/>
+								</div>
+								
+								<div class="floatLeft tdRightDiv">
+									<div class="tdRightDivTop">
+										<span class="tdRightDivTopSpan">绿区分诊人数</span>
+									</div>
+									
+									<div class="tdRightDivBottom">
+										<span id="greenNumber" class="tdRightDivBottomSpan">0</span>
+									</div>
+								</div>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			
+			
+		</div> 
+		  
+		
+		<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:5px;">
+			<div class="bottomDiv">
+				<div class="bottomDivLefBorder" id="getHeightDiv" style="">
+					<div class="bottomDivLef">
+						<div class="heading"><span>绿色通道</span></div>
+						<div id="lstdEcharts" class="echartBody">
+						
+						</div>
+					</div>
+				</div>
+				<div class="bottomDivRigBorder" style="">
+					<div class="bottomDivRig">
+						<div class="heading"><span>三无人员统计</span></div>
+						<div id="swryEcharts" class="echartBody">
+						
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="bottomDiv" style="padding-top:6px">
+				<div class="bottomDivLefBorder" style="">
+					<div class="bottomDivLef">
+						<div class="heading"><span>病人来源人数统计</span></div>
+						<div id="brlyrsEcharts" class="echartBody">
+						
+						</div>
+					</div>
+				</div>
+				<div class="bottomDivRigBorder" style="">
+					<div class="bottomDivRig">
+						<div class="heading"><span>病人来源统计</span></div>
+						<div id="brlyEcharts" class="echartBody">
+						
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="bottomDiv" style="padding-top:6px">
+				<div class="bottomDivLefBorder" style="">
+					<div class="bottomDivLef">
+						<div class="heading"><span>分诊年龄分布统计</span></div>
+						<div id="fznlEcharts" class="echartBody">
+						
+						</div>
+					</div>
+				</div>
+				<div class="bottomDivRigBorder" style="">
+					<div class="bottomDivRig">
+						<div class="heading"><span>分诊科室分布统计</span></div>
+						<div id="fzksEcharts" class="echartBody">
+						
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>   
+	</div>
+</body>
+</html>

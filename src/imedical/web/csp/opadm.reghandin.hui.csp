@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--opadm.reghandin.hui.csp HISUI挂号员日结--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body {
+	background:#fff;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	margin: 0 auto;
+}
+.r-label{
+	padding-left: 10px;
+}
+</style>
+<Server>
+s RepID=%request.Get("RepID")
+s CurDay=##class(websys.Conversions).DateLogicalToHtml(+$h)
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+</Server>
+</head>
+<body>
+	<csp:Include Page="opadm.reghandin.show.hui.csp">
+	<SCRIPT language = 'javascript'>
+		//全局请求后台服务对象
+		var ServerObj={
+			RepID:"#(RepID)#",
+			CurDay:"#(CurDay)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/OPAdm/RegHandin.hui.js"></script>
+</body>
+</HTML>

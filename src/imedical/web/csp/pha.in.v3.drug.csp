@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<!--药库 - 药 品信息维护
+    csp: csp/pha.in.v3.drug.csp
+	js:  scripts/pha/in/v3/drug/drug.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    	.checkbox{
+	    	margin-top:-3px;
+	    }
+        .pha-drug-phccat-label {
+            width: 100px;
+            text-align: right;
+        }
+
+        .pha-drug-phccat-text {
+            width: 530px;
+        }
+
+        .pha-drug-phccat-text input {
+            width: 100%;
+        }
+
+        .pha-drug-chem-label {
+            width: 100px;
+            text-align: right;
+        }
+
+        .pha-drug-chem-text {
+            width: 530px;
+        }
+
+        .pha-drug-chem-text input {
+            width: 100%;
+        }
+
+        .pha-drug-gene-label {
+            width: 100px;
+            text-align: right;
+        }
+
+        .pha-drug-gene-text {
+            width: 530px;
+        }
+
+        .pha-drug-gene-text input {
+            width: 100%;
+        }
+
+        .pha-drug-arc-label {
+            width: 100px;
+            text-align: right;
+        }
+
+        .pha-drug-arc-text {
+            width: 230px;
+        }
+
+        .pha-drug-arc-text input {
+            width: 100%;
+        }
+
+        .pha-drug-arc-text-all {
+            widows: 500px;
+        }
+
+        .pha-drug-arc-combo {
+            width: 236px;
+        }
+
+        .pha-drug-arc-chk-label {
+            width: 125px;
+        }
+
+        .pha-drug-arc-row {
+            padding-left: 20px;
+        }
+
+
+        .pha-drug-inc-label {
+            width: 100px;
+            text-align: right;
+        }
+
+        .pha-drug-inc-text {
+            width: 230px;
+        }
+
+        .pha-drug-inc-text input {
+            width: 100%;
+        }
+
+        .pha-drug-inc-text-all {
+            widows: 500px;
+        }
+
+        .pha-drug-inc-combo {
+            width: 236px;
+        }
+
+        .pha-drug-inc-chk-label {
+            width: 125px;
+        }
+
+        .pha-drug-inc-row {
+            padding-left: 20px;
+        }
+
+        .pha-drug-isc-chk-label {
+            width: 50px;
+        }
+
+        .webuploader-container {
+            position: relative;
+        }
+
+        .webuploader-element-invisible {
+            position: absolute !important;
+            clip: rect(1px 1px 1px 1px);
+
+            clip: rect(1px, 1px, 1px, 1px);
+        }
+
+        .webuploader-pick {
+            position: relative;
+            display: block;
+            cursor: pointer;
+            background: rgb(64, 162, 222);
+            padding: 0px 15px;
+            color: #fff;
+            text-align: center;
+            border-radius: 0px;
+            overflow: hidden;
+            top: 0px;
+            background: white;
+            width: auto;
+            height:auto;
+            padding-right: 0px;
+        }
+        .webuploader-pick-hover {
+            background: white;
+        }
+        .webuploader-pick-disable {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .pha-uploader {}
+
+        .pha-uploader ul {
+            padding: 0px 10px;
+        }
+
+        .pha-uploader ul li {
+            float: left;
+            width: 33%;
+            height: 200px;
+            padding-top: 10px;
+
+        }
+
+        .pha-uploader-body {
+            padding-top: 10px;
+        }
+
+        .pha-uploader-body-img {
+            width: 240px;
+            height: 130px;
+            border: 1px solid #cccccc;
+        }
+
+        .pha-uploader-body-img img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .pha-uploader-body-unimg {
+            width: 240px;
+            height: 130px;
+            border: 1px solid #cccccc;
+            text-align: center
+        }
+
+        .pha-uploader-body-unimg div {
+            padding-top: 20px;
+            color: #cccccc;
+        }
+
+        .pha-uploader-body-footer {
+            height: 10px;
+            border-bottom: 1px dashed #cccccc;
+        }
+
+        .pha-uploader-body-header {
+            overflow: hidden;
+            height: 20px;
+            width: 240px;
+            color: gray;
+        }
+
+        .pha-uploader .hisui-validatebox {
+            width: 200px;
+        }
+        .tabs-disabled {
+		    opacity: 1;
+		}
+		.pha-ly-hosp{overflow:hidden}
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+    	<!--div id='_HospSel' data-options='region:"north",split:true,border:false' style='padding-left:5px;overflow:hidden;border-bottom:1px solid #cccccc;'>
+		    <div class="pha-row">
+	            <div class="pha-col">
+	            	<label id='_HospListLabel' style='color:red;' class='r-label'>医院</label>
+	            </div>
+	            <div class="pha-col">
+	            	<input id='_HospList' class='textbox'/>
+	            </div>
+	        </div>	    	
+    	</div-->
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <!-- <div data-options="region:'west',title:'药学分类',showCollapsedTitle:true,border:true,headerCls:'panel-header-gray',split:true,width:300">
+                        <div id="treePHCCat"></div>
+                </div> -->
+                <div data-options="region:'center',border:false">
+                    <div id="tabsDrug" class="hisui-tabs tabs-gray"
+                        data-options="fit:true,border:true,isBrandTabs:false">
+                        <div title="药品信息" data-options="iconCls:'icon-drug'"></div>
+                        <div id="tabPhcCat" title="药学分类" data-options="selected:false">
+                            <div id="treegridDHCPHCCat"></div>
+                        </div>
+                        <div id="tabChem" title="品种通用名" data-options="selected:false">
+                            <div id="gridDHCPHChemical"></div>
+                        </div>
+                        <div id="tabGene" title="处方通用名" data-options="selected:false">
+                            <div id="gridPHCGeneric"></div>
+                        </div>
+                        <div id="tabArcim" title="医嘱项" data-options="selected:false">
+                            <div class="hisui-layout" fit="true">
+                                <div data-options="region:'center',border:false">
+                                    <div id="gridARCItmMast"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tabInci" title="库存项" data-options="selected:false">
+                            <div id="gridINCItm"></div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'east',border:false,split:true,width:750">
+                    <div class="hisui-panel" title="详细信息" id="panelDetail"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">
+                        <div id="divARCItmMast" name="divDrug" style="width:100%;height:100%;"></div>
+                        <div id="divINCItm" name="divDrug" style="width:100%;height:100%;"></div>
+                        <div id="divPHCGeneric" name="divDrug" style="width:100%;height:100%;"></div>
+                        <div id="divDHCPHCCat" name="divDrug" style="width:100%;height:100%;"></div>
+                        <div id="divDHCPHChemical" name="divDrug" style="width:100%;height:100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <!-- 药学分类 -->
+    <div id="treegridDHCPHCCatBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <input id="conPHCCatAlias" data-pha='class:"hisui-searchbox"'>
+            </div>
+        </div>
+    </div>
+    <!-- 品种通用名 -->
+    <div id="gridDHCPHChemicalBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <input id="conChemAlias" placeholder="请输入检拼或名称回车查询" data-pha='class:"hisui-searchbox"'>
+            </div>
+        </div>
+    </div>
+    <!-- 处方通用名 -->
+    <div id="gridPHCGenericBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label><span style="visibility: hidden;">占</span>药学分类</label>
+            </div>
+            <div class="pha-col">
+                <input id="conGenePHCCat" data-pha='class:"hisui-triggerbox",query:0,clear:true'>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFindGene">查询</a>
+            </div>
+        </div>
+        <div class="pha-row">
+            <div class="pha-col">
+                品种通用名
+            </div>
+            <div class="pha-col">
+                <input id="conGeneChem" data-pha='class:"hisui-lookup",query:1,clear:true'>
+            </div>
+            <div class="pha-col">
+                <input id="conGeneAlias" placeholder="别名..." class="hisui-validatebox"
+                    data-pha='class:"hisui-validatebox",query:2,clear:true' style="width:153px">
+            </div>
+
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-clean" id="btnCleanGene">清屏</a>
+            </div>
+        </div>
+
+    </div>
+    <!-- 医嘱项 -->
+    <div id="gridARCItmMastBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="conPhcGene"><span style="visibility: hidden"></span>处方通用名</label>
+            </div>
+            <div class="pha-col">
+                <input id="conPhcGene" data-pha='class:"hisui-lookup",clear:true,query:0'>
+            </div>
+
+
+        </div>
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="conArcimOrdCat"><span style="visibility: hidden">占</span>医嘱大类</label>
+            </div>
+            <div class="pha-col">
+                <input id="conArcimOrdCat" data-pha='class:"hisui-combobox",clear:true,query:3'>
+            </div>
+            <div class="pha-col">
+                <label for="conArcimItemCat">医嘱子类</label>
+            </div>
+            <div class="pha-col">
+                <input id="conArcimItemCat" data-pha='class:"hisui-combobox",clear:true,query:4'>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFindArcim">查询</a>
+            </div>
+        </div>
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="conArcimAlias"><span style="visibility: hidden">占占占</span>别名</label>
+            </div>
+            <div class="pha-col">
+                <input id="conArcimAlias" class="hisui-validatebox"
+                    data-pha='class:"hisui-validatebox",clear:true,query:2' style="width:153px">
+            </div>
+            <div class="pha-col">
+                <label for="conArcimStat"><span style="visibility: hidden">占占</span>状态</label>
+            </div>
+            <div class="pha-col">
+                <input id="conArcimStat" data-pha='class:"hisui-combobox",clear:true,query:1'>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-clean" id="btnCleanArcim">清屏</a>
+            </div>
+        </div>
+
+    </div>
+    <!-- 库存项 -->
+    <div id="gridINCItmBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="conInciArcim"><span style="visibility: hidden"></span>医嘱项</label>
+            </div>
+            <div class="pha-col">
+                <input id="conInciArcim" data-pha='class:"hisui-lookup",clear:true,query:0'>
+            </div>
+
+        </div>
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="conInciCatGrp"><span style="visibility: hidden">占</span>类组</label>
+            </div>
+            <div class="pha-col">
+                <input id="conInciCatGrp" data-pha='class:"hisui-combobox",clear:true,query:1'>
+            </div>
+            <div class="pha-col">
+                <label for="conInciStkCat">库存分类</label>
+            </div>
+            <div class="pha-col">
+                <input id="conInciStkCat" data-pha='class:"hisui-combobox",clear:true,query:2'>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFindInci">查询</a>
+
+            </div>
+        </div>
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="conInciAlias"> <span style="visibility: hidden">占</span>别名</label>
+            </div>
+            <div class="pha-col">
+                <input id="conInciAlias" class="hisui-validatebox"
+                    data-pha='class:"hisui-validatebox",clear:true,query:3' style="width:153px">
+            </div>
+            <div class="pha-col">
+                <label for="conInciStat"> <span style="visibility: hidden">占占</span>状态</label>
+            </div>
+            <div class="pha-col">
+                <input id="conInciStat" data-pha='class:"hisui-combobox",clear:true,query:4'>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-clean" id="btnCleanInci">清屏</a>
+            </div>
+        </div>
+
+    </div>
+    <!-- window dialog -->
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/upload.js"  ></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/webuploader/dist/webuploader.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/drug/drug.js"></script>
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/ux.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/drug/dhcphccat.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/drug/dhcphchemical.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/drug/arcitmmast.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/drug/phcgeneric.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/drug/incitm.js"></script>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <csp:Include Page="pha.in.v3.drug.dhcphccat.csp"></csp:Include>
+    <csp:Include Page="pha.in.v3.drug.dhcphchemical.csp"></csp:Include>
+    <csp:Include Page="pha.in.v3.drug.arcitmmast.csp"></csp:Include>
+    <csp:Include Page="pha.in.v3.drug.phcgeneric.csp"></csp:Include>
+    <csp:Include Page="pha.in.v3.drug.incitm.csp"></csp:Include>
+
+</body>
+
+</html>

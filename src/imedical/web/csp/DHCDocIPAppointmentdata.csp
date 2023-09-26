@@ -1,0 +1,249 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+s action=$Get(%request.Data("action",1))
+if action="GetPatInfo" {
+	s IPBookNo=$Get(%request.Data("IPBookNo",1))
+	s PatInfo=##class(web.DHCDocIPAppointment).GetPatInfoByIPBookingNo(IPBookNo)
+	w "{PatInfo:'"_PatInfo_"'}"
+}
+if action="GetPatInfoByPAPMINo" {
+	s PAPMINo=$Get(%request.Data("PAPMINo",1))
+	s PatInfo=##class(web.DHCDocIPAppointment).GetPatInfoByPAPMINo(PAPMINo)
+	w "{PatInfo:'"_PatInfo_"'}"
+}
+if action="GetPatInfoByPAPERID" {
+	s PAPERID=$Get(%request.Data("PAPERID",1))
+	;s PatientID=$o(^PAPERi("DVA",PAPERID,""))
+	if PAPERID="" {
+		w "{PatInfo:''}"
+	} else {
+		s PatientId=$o(^PAPERi("DVA",PAPERID,""))
+		if PatientId="" {
+			w "{PatInfo:''}"
+		} else {
+			
+			If (+$p($g(^PAPER(PatientId,"PAT",1)),"^",1) '=0) {
+				Set PAPMINo = $p($g(^PAPER(PatientId,"PAT",1)),"^",1)
+			}
+			else {
+				Set PAPMINo = $p($g(^PAPER(PatientId,"PAT",2)),"^",1)
+			}
+			s PatInfo=##class(web.DHCDocIPAppointment).GetPatInfoByPAPMINo(PAPMINo)
+			w "{PatInfo:'"_PatInfo_"'}"
+		}
+	}
+}
+if action="GetPatInfoByMedicalNo" {
+	s MedicalNo=$Get(%request.Data("MedicalNo",1))
+	if MedicalNo="" {
+		w "{PatInfo:''}"
+	} else {
+		s PatientId=##class(web.DHCWMRService).IGetPatientIDByMrNo(MedicalNo,"")
+		if PatientId="" s PatientId=$o(^PAPERi("Medicare1",MedicalNo,""))
+		if PatientId="" {
+			w "{PatInfo:''}"
+		} else {
+			
+			If (+$p($g(^PAPER(PatientId,"PAT",1)),"^",1) '=0) {
+				Set PAPMINo = $p($g(^PAPER(PatientId,"PAT",1)),"^",1)
+			}
+			else {
+				Set PAPMINo = $p($g(^PAPER(PatientId,"PAT",2)),"^",1)
+			}
+			s PatInfo=##class(web.DHCDocIPAppointment).GetPatInfoByPAPMINo(PAPMINo)
+			w "{PatInfo:'"_PatInfo_"'}"
+		}
+	}
+}
+if action="SavaIPInfo" {
+	s IPInfoStr=$Get(%request.Data("IPInfoStr",1))
+	s PatientInfo=$Get(%request.Data("PatientInfo",1))
+	s result=##class(web.DHCDocIPAppointment).SavaIPAppoinetmentInfo(IPInfoStr,PatientInfo)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="GetIPAppPatientList" {
+	s IPBookNo=$Get(%request.Data("IPBookNo",1))
+	s PAPMINO=$Get(%request.Data("PAPMINO",1))
+	s PatName=$Get(%request.Data("PatName",1))
+	s BookStartDate=$Get(%request.Data("BookStartDate",1))
+	s BookEndDate=$Get(%request.Data("BookEndDate",1))
+	s AppDate=$Get(%request.Data("AppDate",1))
+	s AppWard=$Get(%request.Data("AppWard",1))
+	s AppLoc=$Get(%request.Data("AppLoc",1))
+	s AppDoc=$Get(%request.Data("AppDoc",1))
+	s IfAllocate=$Get(%request.Data("IfAllocate",1))
+	s SortMethod=$Get(%request.Data("SortMethod",1))
+	s DateCondition=$Get(%request.Data("DateCondition",1))
+	s AccompanySex=$Get(%request.Data("AccompanySex",1))
+	s PageFlag=$Get(%request.Data("PageFlag",1))
+	s result=##class(web.DHCDocIPAppointment).GetIPAppPatientListBroker(IPBookNo, PAPMINO, PatName, BookStartDate, BookEndDate, AppDate, AppWard, AppLoc, AppDoc, IfAllocate, SortMethod,DateCondition, AccompanySex,PageFlag)
+	w "{PatientList:'"_result_"'}"
+}
+if action="Cancle" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s CancleID=$Get(%request.Data("CancleID",1))
+	s CancleDesc=$Get(%request.Data("CancleDesc",1))
+	if CancleID="" {
+		s result=##class(web.DHCDocIPAppointment).AddCancleReason("", CancleDesc,"N")
+		if +result=0 {
+			s CancleID=$p(result,"^",2)
+		}
+	}
+	s result=##class(web.DHCDocIPAppointment).CancleIPAppointment(IPAppID,CancleID)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="Allocate" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s BedID=$Get(%request.Data("BedID",1))
+	s AppDate=$Get(%request.Data("AppDate",1))
+	s OneDayFlag=$Get(%request.Data("OneDayFlag",1))
+	s result=##class(web.DHCDocIPAppointment).AllocateIPAppoitment(IPAppID,BedID,AppDate,OneDayFlag)
+	i +result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action ="CancleAllocate" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s result=##class(web.DHCDocIPAppointment).CancleAllocateIPAppoitment(IPAppID)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="GetBedList" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s BedNoDr=$Get(%request.Data("BedNoDr",1))
+	s ConDate=$Get(%request.Data("ConDate",1))
+	s WardId=$Get(%request.Data("WardId",1))
+	//空床列表
+	s result=##class(web.DHCDocIPAppointment).GetEmptyBedList(IPAppID,BedNoDr,ConDate,WardId)
+	w "{BedList:'"_result_"'}"
+}
+if action="GetPatientInfo" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	//病人详细信息
+	s result=##class(web.DHCDocIPAppointment).GetPatientInfoByIPAppID(IPAppID)
+	w "{PatientList:'"_result_"'}"
+}
+if action="FindCancleReason" {
+	s Code=$Get(%request.Data("Code",1))
+	s Desc=$Get(%request.Data("Desc",1))
+	s HospID=$Get(%request.Data("HospID",1))
+	s result=##class(web.DHCDocIPAppointment).FindCancleReasonBroker(Code, Desc,HospID)
+	w "{CancleReasonList:'"_result_"'}"
+}
+if action="AddCancleReason" {
+	s Code=$Get(%request.Data("Code",1))
+	s Desc=$Get(%request.Data("Desc",1))	
+	s HospID=$Get(%request.Data("HospID",1))
+	s result=##class(web.DHCDocIPAppointment).AddCancleReason(Code, Desc,"Y",HospID)
+	i +result=0 d
+ 	.w "{success:'true',info:'"_+result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_$p(result,"^",2)_"'}"
+}
+if action="DeleteCancleReason" {
+	s RowId=$Get(%request.Data("RowId",1))
+	s result=##class(web.DHCDocIPAppointment).DeleteCancleReason(RowId)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="UpdateCancleReason" {
+	s RowId=$Get(%request.Data("RowId",1))
+	s Code=$Get(%request.Data("Code",1))
+	s Desc=$Get(%request.Data("Desc",1))
+	s result=##class(web.DHCDocIPAppointment).UpdateCancleReason(RowId,Code,Desc)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="ReCancle" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s result=##class(web.DHCDocIPAppointment).ReCancleIPAppointment(IPAppID)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="DeleteConfig" {
+	s DeleteStr=$Get(%request.Data("DeleteStr",1))
+	s ConfigStr=$g(^DHCDocConfig("IPAppLoc"))
+	s ConfigNum=$l(ConfigStr,"^")
+	s newConfigStr=""
+	f i=1:1:ConfigNum  {
+		s LocId=$p(ConfigStr,"^",i)
+		if (("^"_DeleteStr_"^")'[("^"_LocId_"^")) {
+			if newConfigStr="" s newConfigStr=LocId
+			else  s newConfigStr=newConfigStr_"^"_LocId
+		}
+	}
+	s ^DHCDocConfig("IPAppLoc")=newConfigStr
+	w "{success:'true'}"
+}
+if action="SetConfig" {
+	s ConfigStr=$Get(%request.Data("ConfigStr",1))
+	if $g(^DHCDocConfig("IPAppLoc"))[ConfigStr w "{success:'false',info:'该科室已添加，无需再次添加'}" q	
+	if $g(^DHCDocConfig("IPAppLoc"))="" s ^DHCDocConfig("IPAppLoc")=ConfigStr
+	else  s ^DHCDocConfig("IPAppLoc")=^DHCDocConfig("IPAppLoc")_"^"_ConfigStr
+	w "{success:'true'}"
+}
+if action="DeleteForbiddenConfig" {
+	s DeleteStr=$Get(%request.Data("DeleteStr",1))
+	s ConfigStr=$g(^DHCDocConfig("IPAppForbiddenLoc"))
+	s ConfigNum=$l(ConfigStr,"^")
+	s newConfigStr=""
+	f i=1:1:ConfigNum  {
+		s LocId=$p(ConfigStr,"^",i)
+		if (("^"_DeleteStr_"^")'[("^"_LocId_"^")) {
+			if newConfigStr="" s newConfigStr=LocId
+			else  s newConfigStr=newConfigStr_"^"_LocId
+		}
+	}
+	s ^DHCDocConfig("IPAppForbiddenLoc")=newConfigStr
+	w "{success:'true'}"
+}
+if action="SetForbiddenConfig" {
+	s ConfigStr=$Get(%request.Data("ConfigStr",1))
+	if $g(^DHCDocConfig("IPAppForbiddenLoc"))="" s ^DHCDocConfig("IPAppForbiddenLoc")=ConfigStr
+	else  s ^DHCDocConfig("IPAppForbiddenLoc")=^DHCDocConfig("IPAppForbiddenLoc")_"^"_ConfigStr
+	w "{success:'true'}"
+}
+if action="Hang" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s result=##class(web.DHCDocIPAppointment).HangIPAppoitment(IPAppID)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="CancleHang" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s result=##class(web.DHCDocIPAppointment).CancleHangIPAppoitment(IPAppID)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+if action="ChangeAppInfo" {
+	s IPAppID=$Get(%request.Data("IPAppID",1))
+	s LocId=$Get(%request.Data("LocId",1))
+	s WardId=$Get(%request.Data("WardId",1))
+	s DocId=$Get(%request.Data("DocId",1))
+	s result=##class(web.DHCDocIPAppointment).ChangePatAppInfo(IPAppID,LocId,WardId,DocId)
+	i result=0 d
+ 	.w "{success:'true',info:'"_result_"'}"
+ 	e  d
+ 	.w "{success:'false',info:'"_result_"'}"
+}
+q
+</SERVER>

@@ -1,0 +1,67 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+
+
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str = $Get(%request.Data("query",1))
+	s Bcode = $Get(%request.Data("Bcode",1))
+	s year = $Get(%request.Data("year",1))
+	s DeptType = $Get(%request.Data("DeptType",1))
+	s DeptName = $Get(%request.Data("DeptName",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s SpltMainDR = $Get(%request.Data("rowid",1))
+	s m1 = $Get(%request.Data("m1",1))
+	s m2 = $Get(%request.Data("m2",1))
+	s m3 = $Get(%request.Data("m3",1))
+	s m4 = $Get(%request.Data("m4",1))
+	s m5 = $Get(%request.Data("m5",1))
+	s m6 = $Get(%request.Data("m6",1))
+	s m7 = $Get(%request.Data("m7",1))
+	s m8 = $Get(%request.Data("m8",1))
+	s m9 = $Get(%request.Data("m9",1))
+	s m10 = $Get(%request.Data("m10",1))
+	s m11 = $Get(%request.Data("m11",1))
+	s m12 = $Get(%request.Data("m12",1))
+	s strr= m1_"^"_m2_"^"_m3_"^"_m4_"^"_m5_"^"_m6_"^"_m7_"^"_m8_"^"_m9_"^"_m10_"^"_m11_"^"_m12
+
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgSchSplitYM).ListRatio(hospid,Bcode,year, DeptType, DeptName, sortField, sortDir, start, limit)
+	
+	i action = "deptTypeist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitYM).deptType(start, limit, str)
+	
+	i action = "descNameist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitYM).descName(start, limit, str)
+	
+	i action = "Yaerlist" d
+	.w ##class(herp.budg.udata.uBudgSchSplitYM).year(start, limit, str)
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgSchSplitYM).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="edit" d
+	.s ^hss=strr
+	.s result = ##class(herp.budg.udata.uBudgSchSplitYM).InsertRatio(hospid,SpltMainDR,strr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	
+		
+	</script>

@@ -1,0 +1,227 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- W650 -->
+<html XMLNS=TRAK>
+<head>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<STYLE>
+</STYLE>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ s ittt=$i(^TempLogon($j))
+ s ^TMPAuthentication($j)="调用"
+ //s ^TempLogon($j,ittt,1)=$zdt($h,3)
+ s returnval=##Class(websys.SessionLogon).Logon()
+ //s ^TempLogon($j,ittt,2)=$zdt($h,3)
+ ; ab 18.04.07 63052 - override timeout to 60 secs to free license
+ 	;w "<br>"_$g(lic)_"<br>",!
+ s %session.AppTimeout=60*5
+ q returnval
+</csp:method>
+<csp:method name=OnPostHTTP arguments="">
+	k STATUS,username,password,department,ValidUser,welcometitle,copyright,traktooltip1
+	;w !,%session.NewSession_"  新的",!
+</csp:method>
+<title><EXTHEALTH:TITLE></EXTHEALTH:TITLE></title>
+<link rel="stylesheet" href="../skin/default/css/styles.css" type="text/css">
+<SCRIPT language='javascript'>
+
+function ChangePassword(obj) {
+	var doc="websys.default.csp?WEBSYS.TCOMPONENT=SSUser.EditPassword&ID="+session['LOGON.USERID'];
+	window.open(doc,'new','scrollbars=no,toolbar=no,width=300,height=200');
+}
+function resetSize()  {
+  var posX=screen.availWidth;
+  var posY=screen.availHeight;
+  var winWidth=600;
+  var winHeight=500;   ///420;
+  
+  posX=posX-winWidth; if(posX<0) posX=0; else posX=posX/2;
+  posY=posY-winHeight; if (posY<0) posY=0; else posY=posY/2;
+  
+  
+  window.resizeTo(winWidth,winHeight);
+  window.moveTo(posX,posY);
+}
+function unlockonunload() {
+	websys_onunload();
+	if (window.event) {
+		if ((!islogon)&&(window.event.clientY < 0)) {
+		   window.location.href="websys.closesession.csp";
+		}
+	}
+	return true;
+}
+window.onunload=unlockonunload;
+var islogon=0;
+
+</SCRIPT>
+</head>
+
+<body text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" oncontextmenu="return false;" >
+<EXTHEALTH:LOGOHEADER></EXTHEALTH:LOGOHEADER>
+<br>
+<TABLE border=0 cellPadding=1 cellSpacing=1 width="100%">
+  <TR>
+    <TD align="middle">
+	  <P align=center>
+        </br>#($g(welcometitle))#<STRONG> #($g(%session.Data("TITLE")))#</STRONG>
+        </br><STRONG><FONT Color=red>#(STATUS)#</FONT></STRONG>
+        
+      </P>
+    </TD>
+  </TR>
+</TABLE>
+
+<CSP:IF condition="$g(lic)=1">
+<!-- <TRAK:COMPONENT id="SSUserLogon" hidemenus=1></TRAK:COMPONENT> -->
+<EXTHEALTH:COMPONENT id="SSUserLogon" hidemenus=1></EXTHEALTH:COMPONENT>
+<!--<P align=center>#(LICENSE)# <STRONG>#($g(%session.Data("LICSITE")))#</STRONG></P>-->
+
+<SCRIPT Language="JavaScript">
+if (#(forcePasswordChange)#) ChangePassword();
+
+var frm=document.forms['fSSUserLogon'];
+frm.action="logon.csp";
+var objUser=document.getElementById('USERNAME'); //frm.elements['USERNAME'];
+//if (objUser) objUser.focus(); //set focus first to start
+if (objUser) objUser.onkeydown=UserName_KeyDown;
+var objPswd=document.getElementById('PASSWORD'); //frm.elements['PASSWORD'];
+var objDept=document.getElementById('DEPARTMENT'); //frm.elements['DEPARTMENT'];
+var objRound=document.getElementById('ROUND'); //frm.elements['ROUND'];
+var objListFlag=document.getElementById('LocationListFlag'); //frm.elements['LocationListFlag'];
+var btnLogon=document.getElementById('Logon');
+
+if (btnLogon) btnLogon.onclick=SetLogonClick;
+////if (tsc['Logon']) websys_sckeys[tsc['Logon']]=SetLogonClick;
+function SetLogonClick(evt) {
+	islogon=1;
+	var myflag=Logon_click();
+	
+	return myflag;
+}
+
+function UserName_KeyDown()
+{
+	if (window.event.keyCode==13){
+	  var objUser=document.getElementById('USERNAME');
+	  var objPswd=document.getElementById('PASSWORD');
+	  if ((objUser.value!="")&&(objPswd)) objPswd.focus()
+	}
+
+}
+
+
+// SA 25.11.02 - log 30759: Changed from onblur, as this was automatically triggered incorrectly.
+// Keydown will capture only the TAB event - assume moving away using mouse isn't used.
+function EnterPassword(evt) {
+  //if ((objUser)&&(objUser.value!="")&&(objPswd)&&(objPswd.value!="") btnLogon.onclick(); //Logon_click();
+  // keycode 9 is "TAB"
+  if (websys_isIE) {var tabkeypressed=((window.event.keyCode==9)||(window.event.keyCode==13))}
+  else {var tabkeypressed=(evt.which==9)}
+  if ((tabkeypressed)&&(objUser)&&(objUser.value!="")&&(objPswd)&&(objPswd.value!="")) {
+	//may want to change department field
+	if ((objDept)&&((objDept.disabled)||(objDept.readOnly))) btnLogon.onclick(); //Logon_click();
+  }
+}
+if (objPswd) objPswd.onkeydown=EnterPassword;
+
+
+if ('#(readonly)#'=='READONLY') {
+	if (objUser) {
+		objUser.readOnly=true;
+		objUser.className='disabledField';
+	}
+	if (objPswd) {
+		objPswd.readOnly=true;
+		objPswd.className='disabledField';
+	}
+}
+
+if ((objListFlag)&&(objListFlag.value!=1)) {
+	if (objDept) {
+		objDept.readOnly=true;
+		objDept.className='disabledField';
+	}
+	var obj=document.getElementById('ld1473iDEPARTMENT');
+	if (obj) obj.style.visibility='hidden';
+} else {
+	var obj=document.getElementById('ld1473iDEPARTMENT');
+	if (obj) obj.style.visibility='';
+}
+
+
+if (#(locIsDisabled)#) {
+	if (objDept) {
+		objDept.readOnly=true;
+		objDept.className='disabledField';
+	}
+	var obj=document.getElementById('ld1473iDEPARTMENT');
+	if (obj) obj.style.visibility='hidden';
+} else {
+	if (objDept) {
+		objDept.readOnly=false;
+		objDept.disabled=false;
+		objDept.className='';
+		var obj=document.getElementById('ld1473iDEPARTMENT');
+		if (obj.style.visibility=='hidden') objDept.onkeydown='';
+		//if (objDept.value=="") objDept.onkeydown='';
+	}
+}
+if (!#(ValidUser)#) {
+	//disable department and changepassword link
+	if (objDept) {
+		objDept.disabled=true;
+		objDept.className='disabledField';
+	}
+	var obj=document.getElementById('ld1473iDEPARTMENT');
+	if (obj) obj.style.visibility='hidden';
+	var obj=document.getElementById('CHANGEPASSWORD');
+	if (obj) {
+		obj.disabled=true;
+		obj.className='disabledField';
+		obj.onclick='';
+	}
+	if (objPswd) objPswd.value='';
+}
+
+if (!#(logonround)#) {
+	if (objRound) {
+		objRound.readOnly=true;
+		objRound.className='disabledField';
+		var roundobj=document.getElementById('ld1473iROUND');
+		if (roundobj) { roundobj.style.visibility='hidden' }
+	}
+}
+
+
+
+//SA: note that the following code is duplicated (slightly modified) in the standard SSUserLogon.js file
+
+if ((objUser)&&(objUser.value=='')) {
+	objUser.focus();
+} else if ((objPswd)&&(objPswd.value=='')) {
+	objPswd.focus();
+} else if ((objDept)&&(objDept.value=='')&&(#(ValidUser)#)&&(!#(locIsDisabled)#)) {
+	objDept.focus();
+} else if ((objRound)&&(objRound.value=='')&&(#(ValidUser)#)&&(#(logonround)#)) {
+	objRound.focus();
+} else if (btnLogon) {
+	btnLogon.focus();
+}
+
+</SCRIPT>
+</CSP:IF> <!-- license check -->
+<script language=javascript>
+resetSize();
+window.status='#(LICENSE)# #($g(%session.Data("LICSITE")))#'
+</script>
+
+<br><br>
+<EXTHEALTH:LOGOFOOTER></EXTHEALTH:LOGOFOOTER>
+
+<CSP:COMMENT>
+Install layout editor (if the user has access)
+Not anymore, this will be called with SSUser.Logon component.show
+</CSP:COMMENT>
+
+</body>
+</html>

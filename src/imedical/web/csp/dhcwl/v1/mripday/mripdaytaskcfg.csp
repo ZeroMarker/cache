@@ -1,0 +1,186 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!--本组css文件-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<style>
+	.my-interface>div>div.panel-body{
+		background-color:#fff !important;
+	}
+	/*#errShowTextbox {
+		height:99%;
+		width:99%; 
+	}*/
+	.my-interface #forPanelLine div.datagrid-wrap {
+		border-top:none;
+	}
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface">
+	
+	<!--版本管理主界面表格展示(由于主界面只有一个表格，所以将vermanageGrid放到center区域即可)-->
+	<div data-options="region:'center'" style="background:#eee;padding:10px 10px 6px 10px;border:none">
+		<div id="tt4" class="hisui-tabs tabs-gray" data-options="tabPosition:'left',headerWidth:140">    
+			<div title="出入转任务设置" data-options="closable:false" style="padding:20px;border:none">   
+				<p><strong>停出入转任务的条件:</strong></p>
+				<br/>
+				<br/>
+				<div style="padding-left:20px">
+					<input class='hisui-checkbox' type="checkbox" label="科室停任务" id="CTLOCStopTask">
+					<input class='hisui-checkbox' type="checkbox" label="病区停任务" id="WardStopTask">
+				</div>
+				<br/>
+				<br/>
+				<p><strong>出院时间选择:</strong></p>
+				<br/>
+				<br/>
+				<td id="outHOSTime" >
+					<span style="padding-right:20px"></span>
+					<input class='hisui-radio' type="radio" label='医生医疗结算' name='hosTime' value='doctor' id="DOC">
+					<input class='hisui-radio' type="radio" label='护士最终结算' name='hosTime' value='nurse' id="NURSE">
+				</td>
+				<br/>
+				<br/>
+				<div style="padding-left:100px">
+					<a href="javascript:void(0)" id="taskConfigButton" class="hisui-linkbutton">保存</a>
+				</div>
+			</div> 
+			<div title="出院对应设置" style="padding:10px;">   
+				<table id="outHosContract" data-options="fit:true,singleSelect:true">
+					<thead>
+						<tr>
+							<th data-options="field:'ID',width:25">ID</th>
+							<th data-options="field:'desc',width:50">出院情况明细</th>
+							<th data-options="field:'descSet',width:50">出院情况归组选择</th>
+						</tr>
+					</thead>
+				</table>
+			</div>   
+			<div title="医嘱对应设置" id="forPanelLine" data-options="closable:false" style="overflow:auto;padding:10px;">   
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'center'" style="fit:true;padding:0px 5px 0px 0px;border:none;">
+						<table id="codecfgGrid" data-options="fit:true,singleSelect:true,iconCls:'icon-paper',title:'统计项维护',headerCls:'panel-header-gray'">
+							<thead>
+								<tr>
+									<th data-options="field:'ID',width:50,hidden:true">ID</th>
+									<th data-options="field:'code',width:100">编码</th>
+									<th data-options="field:'desc',width:100">描述</th>
+									<th data-options="field:'invalidTime',width:100">作废时间</th>
+								</tr>
+							</thead>
+						</table>
+					</div>	
+					<div data-options="region:'east'" style="width:450px;padding:0px 0px 0px 5px;border:none;">
+						<table id="ARCIMDetailGrid" data-options="fit:true,iconCls:'icon-paper',title:'已维护明细',headerCls:'panel-header-gray'">
+							<thead>
+								<tr>
+									<th data-options="field:'ID',width:50,hidden:true">ID</th>
+									<th data-options="field:'rowID',width:50">rowID</th>
+									<th data-options="field:'code',width:100">代码</th>
+									<th data-options="field:'desc',width:100,formatter:formatCellTooltip">描述</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>  			
+		</div> 
+	</div><!--center region end //-->
+	
+	
+	<!--出院对应设置修改-->
+  	<div id="outHosModifyDialog" style="width:330px;display:none;padding-left:5px;" title="对应项修改">
+  		<form id="outHosModifyForm" class="myFormShow" style="fit:true">
+			<div>
+				<label for="outHosDesc">出院明细</label>
+				<input class="hisui-validatebox" type="text" id="outHosDesc" data-options="required:true" disabled="true" style="width:200px"/>
+			</div>
+			<div>
+				<label for="outHosGroup">出院归组</label>
+				<select id="outHosGroup" class="hisui-combobox" style="width:206" data-options="required:true,panelHeight:152">
+					<option value="治愈人数">治愈人数</option>
+					<option value="好转人数">好转人数</option>
+					<option value="未愈人数">未愈人数</option>
+					<option value="死亡人数">死亡人数</option>
+					<option value="其他人数">其他人数</option>
+				</select>
+			</div>
+		</form><!--配置报表项信息表单结束-->
+  	</div>
+	
+	<!--统计项新增-->
+	<div id="codecfgAddDialog" style="width:357px;display:none" title="统计项新增">
+		<form class="myFormShow" id="codecfgFormShow">
+			<div>
+				<label for="codeCfgCode">编码</label>
+				<input class="hisui-validatebox" type="text" data-options="required:true,validType:'isCode'" id="codeCfgCode" style="width:220px"/>
+			</div>
+			
+			<div>
+				<label for="codeCfgDesc">描述</label>
+				<input class="hisui-validatebox" type="text" data-options="required:true,validType:'isForm'" id="codeCfgDesc" style="width:220px"/>
+			</div>
+			
+			<div>
+				<label for="codeCfgCreator">创建人</label>
+				<input class="hisui-validatebox" type="text" data-options="required:true,validType:'isForm'" id="codeCfgCreator" style="width:220px"/>
+			</div>
+		</form>
+	</div>
+	<!---统计项新增结束->
+	
+	<!--统计项toolbar--->
+  	<div id="codecfgToobar" class="searchboxRight toolbarsearchbox myToolBar" style="display:none">	
+    	<input id="searchText" class="hisui-searchbox" data-options="prompt:'检索'" style="width:180px">
+    
+    	<a href="javascript:void(0)" id="addButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		<a href="javascript:void(0)" id="deleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-remove'" plain="true">作废</a>
+  	</div>
+	
+	<!--医嘱明细toolbar--->
+  	<div id="ARCIMDetailToobar" class="searchboxRight toolbarsearchbox myToolBar" style="display:none">	
+    	<a href="javascript:void(0)" id="addDetailButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		<a href="javascript:void(0)" id="saveDetailButton" class="hisui-linkbutton" data-options="iconCls:'icon-save'" plain="true">保存</a>
+		<a href="javascript:void(0)" id="deleteDetailButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+  	</div>
+	
+	<!--医嘱明细新增-->
+	<div id="ARCIMDetailAddDialog" title="医嘱明细选择" style="width:600px;height:400px;padding:10px;display:none">
+		<table id="ARCIMDetailAddGrid" data-options="fit:true">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',width:50">ID</th>
+					<th data-options="field:'code',width:50">编码</th>
+					<th data-options="field:'desc',width:100">描述</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	
+	<!--医嘱明细新增界面的toolbar-->
+	<div id="ARCIMDetailAddtb" class="toolbarsearchbox tbPadding" style="padding-top:4px;padding-bottom:4px;display:none;">
+		<!--span class="toolbarText" style="padding-left:6px">查询</span-->
+		<label for="searchARCIMDetailText"  style="padding-left:1px"><label>
+		<input id="searchARCIMDetailText" class="hisui-searchbox" data-options="prompt:'检索明细'" style="width:180px">
+	</div>
+	
+	
+	
+	
+	
+	<!--引入js文件JSURL-->
+	<script type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/mripday/mripdaytaskcfg.js"></script>
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>

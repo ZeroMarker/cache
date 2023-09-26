@@ -1,0 +1,50 @@
+﻿﻿<html>
+<head>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	if $g(%session.Data("LOGON.USERID"))=""
+	{
+		s rtn=##class(websys.SessionLogon).Logon()
+		s %response.ServerSideRedirect="emr.interface.browse.browsform.editor.doc.csp"
+	}
+	q 1
+  </csp:method>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/emrviewcategory.css">
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script language="cache" runat="server">
+	    d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = ##Class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s action = $Get(%request.Data("Action",1),"")
+		s docID = $Get(%request.Data("DocID",1),"")
+		s tempParam = $ZSTRIP(##Class(EMRservice.BL.BLClientCategory).DoInstanceJsonByDocID(docID,episodeID,"Save","LIST").Read(32000),"*C") 
+  </script>
+  	<script language="javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var action = '#(action)#';
+		var docID = '#(docID)#';
+		var tempParam = '[' + '#(tempParam)#' + ']';
+		var obj = jQuery.parseJSON(tempParam.replace(/\n/g,""));
+   </script>
+	<title>病历浏览</title>
+</head>
+<body id="layout" class="easyui-layout">
+	<div id="BrowseCategory" data-options="region:'center'"></div> 
+	<script language="javascript">
+		$(function(){
+			if (typeof(obj[0]) != "undefined")
+			{
+				var src = "emr.record.browse.browsform.editor.csp?id="+obj[0].id+"&text="+obj[0].text+"&chartItemType="+obj[0].chartItemType
+					+ "&pluginType="+obj[0].documentType+"&emrDocId="+obj[0].emrDocId+"&characteristic="+obj[0].characteristic
+					+ "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&Action=" + action;	
+				var content = "<iframe id='frameBrowseCategory' src='" + src + "' scrolling='no' width='100%' height='100%' frameborder='0'></iframe>";
+				$('#BrowseCategory').append(content);
+			}
+		});
+   </script>
+</body> 
+</html>

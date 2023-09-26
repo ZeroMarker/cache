@@ -1,0 +1,132 @@
+<!-- dhcpesendsms.csp --!>
+/// 创建时间		2007.04.12
+/// 创建人			xuwm 
+/// 主要功能		短信发送
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 
+-->
+
+<HTML>
+<HEAD>
+<!-- 强制网页不被存入Cache中 
+<meta http-equiv="pragma" content="no-cache">
+-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ 	s PatientID=$g(%request.Data("PatientID",1))
+ 	s EpisodeID=$g(%request.Data("EpisodeID",1))
+ 	s ReportID=$g(%request.Data("ReportID",1))
+ 	s SendType=$g(%request.Data("SendType",1))
+ 	
+ 	s encmeth=##Class(%CSP.Page).Encrypt($lb("web.DHCPE.Report.HadSendSMS"))
+		// 统计团体病患
+		d ##Class(web.DHCPE.ReportGetInfor).GetPatient(EpisodeID)
+		
+		s PatCompany=$G(^TMPReport("PatInfo","PatCompany"))
+		s RegNo=$G(^TMPReport("PatInfo","PatRegNo"))
+		s PatName=$G(^TMPReport("PatInfo","PatName"))
+		s PatSex=$G(^TMPReport("PatInfo","PatSex"))
+		s ParBirthday=$G(^TMPReport("PatInfo","PatBirthday"))
+		s PatTel=$G(^TMPReport("PatInfo","MobilePhone"))
+ 		s Message=##class(web.DHCPE.SMS).GetSMSMessage("ReportComplete")
+ 		
+</Script>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<!--
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"/>
+-->
+ <meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<TITLE>发送短信</TITLE>
+
+
+</HEAD>
+<BODY>
+
+<OBJECT ID="GSM"
+CLASSID="CLSID:EFF0F9F7-B10A-4A18-9737-0D0FD743D926"
+CODEBASE="../addins/client/DHCPEGSM.CAB#version=1,1,0,15">
+</OBJECT>
+
+<div style='display:block; left:30px; top:30px;  width:410px;'>
+
+<table width="400" border="0" cellspacing="0">
+  <tr>
+    <td>姓名</td>
+    <td><Label id=PatName>#(PatName)#</Label></td>
+    
+    
+    <td width="20"><input name=encmeth id=encmeth title="手机号" value='#(encmeth)#' style="display:none; "></td>
+    <td width="20"><input name=ReportID id=ReportID title="手机号" value='#(ReportID)#' style="display:none; "></td>
+  
+  </tr>
+  <tr>
+    <td width="70">手机号</td>
+    <td width="300"><input name=iTelNo id=iTelNo title="手机号" value='#(PatTel)#' style="width:250px; height:24px"></td>
+  </tr>
+  <tr>
+    <td>信息</td>
+    <td><textarea name=iMessage id=iMessage title="短信消息"style="width:250px; height:100px" >#(Message)#</textarea></td>
+  </tr>
+  <tr>
+    <td colspan=2>
+    <div align="center">
+      <input id=btnSendMessage name=btnSendMessage type=submit value="发送" onClick=""/>
+    </div></td>
+  </tr>
+  <tr>
+    <!--
+    <td colspan=2><Label id=LBStatus>未连接设备</Label></td>
+    <td><input name=webT id=webT title="" value=''><td> 
+    <input id=btnAlert name=btnAlert type=submit value="发送" onClick=""/>
+    
+    -->
+   
+    <td colspan=2><Label id=webT></Label></td>
+  </tr>
+  
+</table>
+</div>
+<script  type="text/javascript">
+  function SendMessage(){
+	  
+    var iTelNo="",iMessage="";
+	var obj;
+	obj=document.getElementById("iTelNo");
+	if (obj) { iTelNo=obj.value; }
+	obj=document.getElementById("iMessage");
+	if (obj) { iMessage=obj.value; }
+    var objGSM=new ActiveXObject("DHCPEGSM.GSM");
+	if (objGSM) { 
+	  var ret=objGSM.SendMessage(iTelNo,iMessage,"Send"); 
+	  if ('0'==ret) { alert('发送成功');
+	  obj=document.getElementById("encmeth");
+	  if (obj) var encmeth=obj.value;
+	  obj=document.getElementById("ReportID");
+	  if (obj) var ReportID=obj.value;
+	  #server(web.DHCPE.Report.HadSendSMS(ReportID,"Report"))#
+	  //cspRunServerMethod(encmeth,ReportID,"Report");
+	  }
+	  else{ alert('发送失败:'+ret); }
+	}
+	
+	
+  }
+  
+  var obj=document.getElementById("btnSendMessage")
+  if (obj) { obj.onclick=SendMessage; }
+  function btnAlert_click(){
+
+	  cMyWEB.WEBShowAlert(WebBrowser)
+
+  }
+  var obj=document.getElementById("btnAlert")
+  if (obj) { obj.onclick=btnAlert_click; }
+   
+  
+</script>
+</body>
+
+
+</HTML>

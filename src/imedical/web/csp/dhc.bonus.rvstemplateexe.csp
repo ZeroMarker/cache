@@ -1,0 +1,117 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+
+<script language="cache" runat="server">
+
+	s action               = $Get(%request.Data("action",1))
+	s start                = $Get(%request.Data("start",1))
+	s limit                = $Get(%request.Data("limit",1))
+	s rowid               =$Get(%request.Data("rowid",1))
+	s data                =$Get(%request.Data("data",1))
+	s template            =$Get(%request.Data("template",1))
+	
+	
+	
+	
+	s searchField          = $Get(%request.Data("searchField",1))
+	s searchValue          = $Get(%request.Data("searchValue",1))
+	s rvsTemplateMainID    =$Get(%request.Data("rvsTemplateMainID",1))
+	s templateCode         =$Get(%request.Data("templateCode",1))
+	s templateName         =$Get(%request.Data("templateName",1))
+	s useMinuteRate        =$Get(%request.Data("useMinuteRate",1))
+	s workRiskRate         =$Get(%request.Data("workRiskRate",1))
+	s techDifficultyRate   =$Get(%request.Data("techDifficultyRate",1))
+	s workCostRate         =$Get(%request.Data("workCostRate",1))
+	s tempDesc             =$Get(%request.Data("tempDesc",1))
+	s createUser           =$Get(%request.Data("createUser",1))
+	s createDate           =$Get(%request.Data("createDate",1))
+	
+	
+	i action = "templatelist" d
+	.w ##class(dhc.bonus.urbrvs.rvsTemplate).List(start,limit,template)
+	
+	
+	i action = "templateadd" d
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).Insert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "templateedit" d
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "templatedel" d
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).Del(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	i action = "detaillist" d
+	.w ##class(dhc.bonus.urbrvs.rvsTemplate).DetailList(start,limit,template)
+	
+	
+	
+	i action = "detailadd" d
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).DetailInsert(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "detailedit" d
+	.s ^ytmp=data
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).DetailUpdate(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+	i action = "detaildel" d
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).DetailDel(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "copy" d
+	.s ^ytmp=data
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).DetailCopy(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+	i action = "GetSubsItemName" d
+	.w ##class(dhc.bonus.urbrvs.rvsTemplate).GetSubsItemName(start,limit)
+	
+	
+	
+	i action = "batchadd" d
+	.s ^gjtmp=data
+	.s result = ##class(dhc.bonus.urbrvs.rvsTemplate).SeclectTemplateMainID(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+
+</script>

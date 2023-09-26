@@ -1,0 +1,255 @@
+<CSP:CONTENT TYPE='image/svg-xml'>
+<SCRIPT language="Cache" RUNAT="SERVER">
+    set Title="Draw Line svgGraphic"
+    set svgX=800 
+    set svgY=600
+    set svgXline=660
+    set svgYline=460
+    ;set svgYline=$g(%request.Data("Tsvg",1))
+    ;s url=%request.URL
+    set svgYLables=10
+    set svgXLables=0
+    set svgYLableWidth=10
+    set svgXLableWidth=20
+    
+    set colorBg="#000"
+    set BgLineWidth="0.5"
+    set svgLineWidth="1"
+    set svgFontSize="0"
+    
+    ;680,440
+    set svgX0=60
+    set svgY0=60
+    
+    set CHRUp="^"
+    set CHRTilted="/"
+    set FirstPoint=0
+    set iPoints=0
+</Script>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	set s=##class(web.DHCMedRMOPAdm).GetRMOPAdm(0,1)
+	quit:+s'>0
+	quit:$l(s,$c(1))<3
+	set iLines=+$p(s,$c(1),1)
+	set sTime=$p(s,$c(1),2)
+	set iPoints=$l(sTime,$c(3))
+	for i=1:1:iPoints d
+	.set Times(i)=$p(sTime,$c(3),i)
+	
+	;Get Max data
+	set MaxData=0
+	for i=3:1:$l(s,$c(1)) d
+	.for j=2:1:$l($p(s,$c(1),i),$c(3)) d
+	..set:+$p($p(s,$c(1),i),$c(3),j)>MaxData MaxData=+$p($p(s,$c(1),i),$c(3),j)
+	
+	;Get YMax
+	s YMax=0
+	i MaxData<10 d
+	.s:MaxData>4 YMax=10
+	.s:MaxData'>4 YMax=5
+	e  d
+	.s YMaxLen=$l(MaxData)
+	.s Max1=$e(MaxData,1,1)
+	.s Max2=$e(MaxData,2,2)
+	.i Max2>4 d
+	..s Max1=Max1+1
+	..s Max2=0
+	.e  d
+	..s Max2=5
+	.s YMax=Max1_Max2
+	.f i=3:1:YMaxLen d
+	..s YMax=YMax_"0"
+	s YMax=+YMax
+	
+	s LastTime=$zt($p($h,",",2))
+	s LastData=+$p($p(s,$c(1),$l(s,$c(1))),$c(3),$l($p(s,$c(1),$l(s,$c(1))),$c(3)))
+</Script>
+<svg onload="Init(evt)">
+ 
+  <script language="javascript">
+   
+   var sd,dy,temOBJ,shape;
+   var ns = "http://www.w3.org/2000/svg";
+   var tTipOn=0
+   function Init(evt) {
+       sd = evt.getTarget().getOwnerDocument();
+       dy  = sd.getElementById('ch');
+       tTp  = sd.getElementById('tTip');
+       tTpBg  = sd.getElementById('tTipBg');
+    }
+
+   function mP(evt,caption,value,percent) {
+       // Onmouseover display
+       //alert("1");
+       if (tTipOn==1) {
+           tTp.removeChild(temOBJ);
+           tTpBg.removeChild(shape);
+       }
+       //alert("2");
+       var ax = evt.clientX;
+       var ay = evt.clientY;
+       temOBJ = sd.createElementNS(ns, 'text');
+       temOBJ.setAttributeNS(null, 'x', ax);
+       temOBJ.setAttributeNS(null, 'y',  ay+20);
+       temOBJ.setAttributeNS(null, 'fill', '#000000');
+       temOBJ.setAttributeNS(null, 'font-family', 'mingliu');
+
+       //alert("3");
+       var data = sd.createTextNode(caption);
+       temOBJ2 = sd.createElementNS(ns, 'tspan');
+       temOBJ2.setAttribute('x',ax+3);
+       temOBJ2.setAttribute('dy',12);
+       temOBJ2.appendChild(data);
+       temOBJ.appendChild(temOBJ2);
+
+       //alert("4");
+       var data = sd.createTextNode(value);
+       temOBJ2 = sd.createElementNS(ns, 'tspan');
+       temOBJ2.setAttribute('x',ax+3);
+       temOBJ2.setAttribute('dy',12);
+       temOBJ2.appendChild(data);
+       temOBJ.appendChild(temOBJ2);
+
+       //alert("5");
+       var data = sd.createTextNode(percent);
+       temOBJ2 = sd.createElementNS(ns, 'tspan');
+       temOBJ2.setAttribute('x',ax+3);
+       temOBJ2.setAttribute('dy',12);
+       temOBJ2.appendChild(data);
+       temOBJ.appendChild(temOBJ2);
+
+       //alert("6");
+       tTp.appendChild(temOBJ);
+       contour=tTp.getBBox();
+       //tTp.setAttribute('transform','translate('+(ax+contour.width+10>parseInt(d1pv99a6.style.width+10)?parseInt(d1pv99a6.style.width)-ax-contour.width-10:0)+','+(ay+contour.height+25>parseInt(d1pv99a6.style.height)?-contour.height-30:0)+')');
+       shape = sd.createElementNS(ns, 'rect');
+       //shape.setAttributeNS(null, 'x', ax-(ax+contour.width+10>parseInt(d1pv99a6.style.width)?ax+contour.width+10-parseInt(d1pv99a6.style.width):0));
+       //shape.setAttributeNS(null, 'y', ay+(ay+contour.height+25>parseInt(d1pv99a6.style.height)?-contour.height-10:20));
+       shape.setAttributeNS(null, 'x', ax);
+       shape.setAttributeNS(null, 'y', ay+20);
+       shape.setAttributeNS(null, 'width',  contour.width+8);
+       shape.setAttributeNS(null, 'height', contour.height+6);
+       shape.setAttributeNS(null, 'fill', '#ffffcc');
+       shape.setAttributeNS(null, 'stroke', '#000000');
+       tTpBg.appendChild(shape);
+       tTipOn=1;
+       // End of display
+   }
+
+   function cP(evt) {
+      if (tTp.childNodes.length==2) {
+          tTp.removeChild(temOBJ);
+          tTpBg.removeChild(shape);
+          tTipOn=0;
+	      }
+   }
+   function xfocus()
+   {
+    alert("SVG get focus");
+   }
+   function xzoom()
+   {
+    alert("SVG zoom");
+   }
+   function changeColor(color)
+   {
+    SVGDocument.getElementById("background").getStyle().setProperty("fill",color);
+   }
+  </script>
+  <g>
+   <rect id="background" x="0" y="0"
+             width="2000" height="100%" 
+             fill='#f4f4f4' />
+             
+    <!-- Line Y -->
+	<line x1='#(svgX0)#' y1='#(svgY0)#' 
+	      x2='#(svgX0)#' y2='#(svgY0+svgYline)#'
+          stroke-width='#(BgLineWidth)#' stroke='#(colorBg)#'/>
+          
+    <!-- Line X -->
+	<line x1='#(svgX0)#' y1='#(svgY0+svgYline)#' 
+	      x2='#(svgX0+svgXline)#' y2='#(svgY0+svgYline)#'
+          stroke-width='#(BgLineWidth)#' stroke='#(colorBg)#'/>
+ 
+          
+    <!-- YLable -->
+	<CSP:LOOP COUNTER='y' FROM='1' TO='#(svgYLables+1)#'>
+			
+		<line x1='#(svgX0)#' y1='#(svgY0+((y-1)*(svgYline/svgYLables)))#' 
+	          x2='#(svgX0-svgYLableWidth)#' y2='#(svgY0+((y-1)*(svgYline/svgYLables)))#'
+              stroke-width='#(BgLineWidth)#' stroke='#(colorBg)#'/>
+		
+		<text x='#(svgX0-((svgYLableWidth)*4))#' y='#(svgY0+((y-1)*(svgYline/svgYLables)))#' 
+		      font-size='#(svgFontSize)#'>
+			  #(YMax-((YMax/svgYLables)*(y-1)))# 
+	    </text>
+	</CSP:LOOP>
+	
+	
+    <!-- XLable -->
+	<CSP:LOOP COUNTER='x' FROM='1' TO='#(iPoints)#'>
+		<CSP:IF CONDITION='$p(Times(x),":",2)="00"'>
+
+		   <line x1='#(svgX0+((x-1)*(svgXline/iPoints)))#' y1='#(svgY0+svgYline)#' 
+	             x2='#(svgX0+((x-1)*(svgXline/iPoints)))#' y2='#(svgY0+svgYline+10)#'
+                 stroke-width='#(BgLineWidth)#' stroke='#(colorBg)#'/>
+           
+		   <text x='#(svgX0+((x-1)*(svgXline/iPoints))-5)#' y='#(svgY0+svgYline+20)#' 
+		         font-size='#(svgFontSize)#'>
+			     #(Times(x))# 
+	       </text>
+		<CSP:ELSEIF CONDITION='$p(Times(x),":",2)="30"'>
+		   <line x1='#(svgX0+((x-1)*(svgXline/iPoints)))#' y1='#(svgY0+svgYline)#' 
+	             x2='#(svgX0+((x-1)*(svgXline/iPoints)))#' y2='#(svgY0+svgYline+5)#'
+                 stroke-width='#(BgLineWidth)#' stroke='#(colorBg)#'/>
+		</CSP:IF>
+	</CSP:LOOP>
+	    
+    <!-- Lines -->
+	<CSP:LOOP COUNTER='i' FROM='3' TO='#($l(s,$c(1)))#'>
+	   <CSP:LOOP COUNTER='j' FROM='2' TO='#(iPoints+1)#'>
+	      <rect x="#(svgX0+((j-2)*(svgXline/iPoints))-1)#" 
+	            y="#(svgY0+svgYline-(svgYline/YMax*$p($p(s,$c(1),i),$c(3),j))-1)#" 
+	            height="2" width="2" 
+	            fill="#($p($p($p(s,$c(1),i),$c(3),1),",",1))#" 
+	            onmousemove="mP(evt,'#(##class(web.DHCMedRMOPAdm).GetUnicode($p($p($p(s,$c(1),i),$c(3),1),",",5)))#','#(Times(j-1))#','#($p($p(s,$c(1),i),$c(3),j))#')" 
+	            onmouseout="cP(evt)"/>
+	      <CSP:IF CONDITION='j=2'>
+	         
+	      <CSP:ELSE>
+		      <line x1='#(svgX0+((j-3)*(svgXline/iPoints)))#' y1='#(svgY0+svgYline-(svgYline/YMax*$p($p(s,$c(1),i),$c(3),(j-1))))#' 
+	                x2='#(svgX0+((j-2)*(svgXline/iPoints)))#' y2='#(svgY0+svgYline-(svgYline/YMax*$p($p(s,$c(1),i),$c(3),j)))#'
+                    stroke-width='#(svgLineWidth)#' stroke='#($p($p($p(s,$c(1),i),$c(3),1),",",1))#'/>
+	      </CSP:IF>
+	   </CSP:LOOP>
+	          
+       <rect x='#(svgX0+svgXline+20)#' 
+             y='#(svgY0+((i-3)*20))#'
+             width="5" height="18" 
+             fill='#($p($p($p(s,$c(1),i),$c(3),1),",",1))#'
+             stroke-width='#(BgLineWidth)#' />
+        
+	   <text x='#(svgX0+svgXline+30)#' 
+	         y='#(svgY0+((i-3)*20)+15)#' 
+		     font-size='#(svgFontSize)#'>
+			 #(##class(web.DHCMedRMOPAdm).GetUnicode($p($p($p(s,$c(1),i),$c(3),1),",",5)))#
+	   </text>
+	    
+	   <text x='#(svgX0+svgXline+90)#' 
+	         y='#(svgY0+((i-3)*20)+15)#' 
+		     font-size='#(svgFontSize)#'>
+			 #($p($p(s,$c(1),i),$c(3),iPoints+1))#
+	   </text>
+	</CSP:LOOP>
+  </g>
+
+
+<g id="ch">
+</g>
+<g id="tTipBg">
+</g>
+<g id="tTip">
+</g>
+</svg>
+
+

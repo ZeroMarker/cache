@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入院</title>
+  <DHC:BOOTSTRAP/>
+  <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patchangestatus.js" charset="gb2312" ></script>
+  <script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+ </script>
+
+</head>
+<body>
+	<button class="btn btn-warning" data-toggle="modal" data-target="#CommonModel" type="button" id="Discharge" onclick="">离院</button>
+	<button class="btn btn-success" data-toggle="modal" data-target="#CommonModel" type="button" id="Inhospital">入本院</button>
+	<button class="btn btn-purple" data-toggle="modal" data-target="#CommonModel" type="button" id="Displace">转外院</button>
+	<button class="btn btn-danger" data-toggle="modal" data-target="#CommonModel" type="button" id="Death">死亡</button>
+	<button class="btn btn-info" data-toggle="modal" data-target="#CommonModel" type="button" id="cancel">撤销结算</button>
+	
+	
+	<div class="modal fade" id="CommonModel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" style='color:#fff'>四种状态</h4>
+            </div>
+            <div class="modal-body" id="statusmodel">
+                <from id="status-form" class="form-horizontal">
+ 
+                  	<div class="form-group" id="changedate">
+    					<label class="col-sm-3 control-label">改变状态日期:</label>
+    					<div class="input-group col-sm-3 date" id="Statusdate">
+      						<input type="text" class="form-control" >
+      						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+    					</div>
+  					</div>
+
+                   <div class="form-group" id="changetime">
+    					<label for="Inhospitaltime" class="col-sm-3 control-label">时间:</label>
+    					<div class="input-group col-sm-3 date" id="Statustime">
+      						<input type="text" id="tp-time" class="form-control" >
+      						<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+    					</div>
+  					</div>
+  					
+
+
+                    <!--<div class="form-group" id="patstatus">
+    					<label for="ruyuandate" class="col-sm-2 control-label">病人当前状态:</label>
+    					<div class="input-group col-sm-3">
+      						<input class="form-control" id="patstatus" name="patstatus" >
+    					</div>
+  					</div>-->
+            		
+                    <div class="form-group" id="patarea">
+    					<label for="Inhospitalarea" class="col-sm-3 control-label">入院病区:</label>
+    					<div class="input-group col-sm-4">
+      						<select type="text" class="form-control" id="Inhospitalarea" style="width:150px;"></select>
+      					</div>
+  					</div>
+  					
+  					<div class="form-group" id="backoutarea">
+    					<label for="Inhospitalarea" class="col-sm-3 control-label">撤销结算原因:</label>
+    					<div class="input-group col-sm-4">
+      						<select type="text" class="form-control" id="backoutpay" style="width:150px;"></select>
+      					</div>
+  					</div>
+  					
+  					<div class="form-group" id="Disinputdate">
+    					<label class="col-sm-3 control-label">离院日期:</label>
+    					<div class="input-group col-sm-3 date" id="DischargeState">
+      						<input type="text" class="form-control" >
+      						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+    					</div>
+  					</div>
+
+  					
+  					<div class="form-group" id="Disinputtime">
+    					<label class="col-sm-3 control-label">离院时间:</label>
+    					<div class="input-group col-sm-3 date" id="DischargeTime">
+      						<input type="text" id="bt-time" class="form-control" >
+      						<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+    					</div>
+  					</div>
+  					</form>
+  					
+            		<div style="padding-right:400px;" class="modal-footer">
+                		<div class="btn-group" >
+                    		<button class="btn btn-primary" type="button" id="update" data-dismiss="modal" data-type="">更新</button>
+                		</div>
+            		</div>
+            		
+            		
+            </div>
+           
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+	</div>
+	
+	<!---------留观start--------->
+	<!--<div class="modal fade" id="Stay">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-purple">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" style='color:#fff'>留观</h4>
+            </div>
+            <div class="modal-body">
+                <from id="status-form" class="form-horizontal">
+ 
+                  	<div class="form-group" id="StartDate">
+    					<label for="ruyuandate" class="col-sm-2 control-label">入院变更日期:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="ruyuandate" >
+      						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+    					</div>
+  					</div>
+
+                   <div class="form-group" id="StartTime">
+    					<label for="ruyuandate" class="col-sm-2 control-label">入院变更时间:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="ruyuandate" >
+      						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+    					</div>
+  					</div>
+
+                    <div class="form-group" id="StartDate">
+    					<label for="ruyuandate" class="col-sm-2 control-label">病人当前状态:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="ruyuandate" >
+    					</div>
+  					</div>
+            		
+                    <div class="form-group" id="StartDate">
+    					<label for="ruyuandate" class="col-sm-2 control-label">留观病区:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="ruyuandate" >
+    					</div>
+  					</div>
+  					</form>
+  					
+            		<div style="margin: 0 auto;" class="modal-footer">
+                		<div class="btn-group" >
+                    		<button class="btn btn-primary" type="button" id="update">更新</button>
+                		</div>
+            		</div>
+            </div>
+           
+        </div>
+    </div>
+	</div>-->
+	<!-------------留观end-------------->
+	
+	
+	<!-------------离院start--------->
+	<!--<div class="modal fade" id="Discharge">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" style='color:#fff'>离院</h4>
+            </div>
+            <div class="modal-body">
+                <from id="status-form" class="form-horizontal">
+ 
+                  	<div class="form-group" id="DischargeDate">
+    					<label for="ruyuandate" class="col-sm-2 control-label">离院日期:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="Dischargedate" >
+      						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+    					</div>
+  					</div>
+
+                   <div class="form-group" id="DischargeDate">
+    					<label for="ruyuandate" class="col-sm-2 control-label">离院时间:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="Dischargedate" >
+      						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+    					</div>
+  					</div>
+
+                    <div class="form-group" id="StartDate">
+    					<label for="ruyuandate" class="col-sm-2 control-label">病人当前状态:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="ruyuandate" >
+    					</div>
+  					</div>
+            		
+                    <div class="form-group" id="StartDate">
+    					<label for="ruyuandate" class="col-sm-2 control-label">离院病区:</label>
+    					<div class="input-group col-sm-3">
+      						<input type="text" class="form-control" id="ruyuandate" >
+    					</div>
+  					</div>
+  					</form>
+  					
+            		<div style="margin: 0 auto;" class="modal-footer">
+                		<div class="btn-group" >
+                    		<button class="btn btn-primary" type="button" id="update">更新</button>
+                		</div>
+            		</div>
+            </div>
+           
+        </div>
+    </div>
+	</div>-->
+	<!-------------离院end-------------->
+	
+
+
+
+</body>
+</html>

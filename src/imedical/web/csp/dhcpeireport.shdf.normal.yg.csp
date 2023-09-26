@@ -1,0 +1,43 @@
+<!-- 体检结果 
+dhcpeireport.normal.stationresult.csp
+-->
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 结果输出方式 SummarizeGather=将结果与小节一起输出
+	s HCode=HospitalCode
+	i HospitalCode'="" s HCode=HospitalCode_"."
+	s ReultOutType="SummarizeGather",num=1
+	s NoReportStation="^"_$G(^DHCPESetting("DHCPE","NoReportStation"))_"^"
+	s sStationSequence=""
+	f  s sStationSequence=$O(^TMPReport("Result","Station",sStationSequence)) q:sStationSequence=""  d
+	.s StationId=""
+	.f  s StationId=$O(^TMPReport("Result","Station",sStationSequence,StationId)) Q:(""=StationId)  d
+	..q:NoReportStation[("^"_StationId_"^")
+	..//w "<DIV class='Page StationResult'>"
+	..s sARCSequence=""
+	..f  s sARCSequence=$O(^TMPReport("Result","Station",sStationSequence,StationId,sARCSequence)) Q:(""=sARCSequence)  d
+	...s iiiLLoop=0
+	...f  s iiiLLoop=$O(^TMPReport("Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop)) Q:(""=iiiLLoop)  d
+	....s ARCIM=$G(^TMPReport("Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop))
+	....
+	....s sArcimIdTemp=$p($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+	....s bFlagTemp=$G(^DHCPEDataEx("DHCPEStationOrder","Sign",sArcimIdTemp))
+	....
+	....
+	....s CurData=$G(^TMPReport("Result", "ARCIM", ARCIM))
+	....s ARCIMDesc=$P(CurData,"^",1)
+	....s Checker=$P(CurData,"^",2)
+	....s CheckDate=$P(CurData,"^",3)
+	....s ReportFormat=$P(CurData,"^",4)
+	....s AuditUser=$P(CurData,"^",5)
+    ....s ARCIMDR=$P(CurData,"^",6)   //add by zl 20100830
+    ....s YGFlag="N"
+    ....S YGFlag=$g(^DHCPEDataEx("YGFlag",ARCIMDR))
+	....i $g(^DHCPEDataEx("YGFlag",ARCIMDR))="Y"    d  
+	.....s ^zl("ARCIMDR",ARCIMDR)=YGFlag                              
+	.....d $zobjclassmethod("csp.csp.dhcpeireport.shdf.noraml.result.yglis","OnPageCSPROOT")
+	.....//d:((ReportFormat["CAT")) $zobjclassmethod("csp.csp.dhcpeireport.shdf.noraml.result.ygcat","OnPageCSPROOT")
+    .....s num=num+1
+	
+</SCRIPT>
+		

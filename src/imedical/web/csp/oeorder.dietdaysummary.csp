@@ -1,0 +1,62 @@
+
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ ;created 23/06/05 JPD
+ ; LOG 52194
+
+ n cnt,cdate,SessionID,kj,Cal,Prot,TFat,SFat,Carb,Sugar,Sodium,Other,Fibre,list,Qty
+ s (cnt,cdate,SessionID,list,Qty)=""
+ s (kj,Cal,Prot,TFat,SFat,Carb,Sugar,Sodium,Other,Fibre)=0
+ s cdate=%request.Get("date") 
+ s SessionID=%request.Get("sessionID")
+ 
+ s ind1="" f  s ind1=$o(^TMP("WEB",SessionID,cdate,ind1)) q:ind1=""  d
+ . s ind2="" f  s ind2=$o(^TMP("WEB",SessionID,cdate,ind1,ind2)) q:ind2=""  d
+ .. s list=list_^TMP("WEB",SessionID,cdate,ind1,ind2)
+
+ f cnt=1:1:$l(list,"^") d
+ . s Item=$p(list,"^",cnt)
+ . s Qty=$p($g(Item),"*",2)
+ . i Qty="" s Qty=1
+ . s kj=kj+($p($g(^ARCIM(+Item,1,10)),"^",1)*Qty)
+ . s Cal=Cal+($p($g(^ARCIM(+Item,1,10)),"^",2)*Qty)
+ . s Prot=Prot+($p($g(^ARCIM(+Item,1,10)),"^",3)*Qty)
+ . s TFat=TFat+($p($g(^ARCIM(+Item,1,10)),"^",4)*Qty)
+ . s SFat=SFat+($p($g(^ARCIM(+Item,1,10)),"^",5)*Qty)
+ . s Carb=Carb+($p($g(^ARCIM(+Item,1,10)),"^",6)*Qty)
+ . s Sugar=Sugar+($p($g(^ARCIM(+Item,1,10)),"^",7)*Qty)
+ . s Sodium=Sodium+($p($g(^ARCIM(+Item,1,10)),"^",8)*Qty)
+ . s Fibre=Fibre+($p($g(^ARCIM(+Item,1,10)),"^",9)*Qty)
+ . s Other=Other+($p($g(^ARCIM(+Item,1,10)),"^",10)*Qty)
+
+
+ ;d %request.Set("",)
+
+ d ##Class(websys.Conversions).SaveRequest()
+ s %response.ServerSideRedirect="websys.default.csp?WEBSYS.TCOMPONENT=OEOrder.DietDaySummary&cdate="_cdate_"&Flagged=Y&kj="_kj_"&Cal="_Cal_"&Prot="_Prot_"&TFat="_TFat_"&SFat="_SFat_"&Carb="_Carb_"&Sugar="_Sugar_"&Sodium="_Sodium_"&Other="_Other_"&Fibre="_Fibre
+ ;
+ ;
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>
+
+
+
+http://gecko/w650/dev/web/csp/oeorder.dietmealcalendar.csp?DietID=66&DietType=Full%20Diet%201&StartDate=23/06/2005&EndDate=30/06/2005&MealType=Breakfast^Lunch^Dinner&PatientBanner=1&PatientID=29774&EpisodeID=27717&ALGRequireAssistanceMenu=&ALGRequireAssistanceMeal=&Boarder=&Reset=Y#

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+<title></title>
+<script type="text/javascript" src="../scripts/websys.js" ></script>
+<ADDINS require="CmdShell"/><!--hxy 2020-04-07-->
+<HISUI/>
+<!--<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/dhcem/css/dhcem.css">-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<link rel="stylesheet" href="../scripts_lib/jquery-easyui-1.3.2/themes/icon.css" />
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<script src="../scripts/dhcnewpro/dhcem/register.js" charset="gb2312"></script>
+<script Language="Javascript">
+	var EpisodeID="#(%request.Get("EpisodeID"))#" //医嘱ID 
+	var locId="#(%session.Data("LOGON.CTLOCID"))#"  //科室ID
+	var hosp="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+</script>
+ <server>
+    s LgHospID=%session.Get("LOGON.HOSPID")
+    s LgCtLocID=%session.Get("LOGON.CTLOCID")
+    s LgUserID=%session.Get("LOGON.USERID")
+    s LgGroupID=%session.Get("LOGON.GROUPID")
+    s SEECHKDATE=+##Class(web.DHCAppComPar).GetAppPropValue("DHCEMCHK","SEECHKDATE",LgHospID,LgCtLocID,LgUserID,LgGroupID)
+  
+	w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	w "var SEECHKDATE="""_SEECHKDATE_""";"_$c(13,10)
+ 	w "</SCRIPT>"
+  </server>
+  <style type="text/css">
+  .bootstrap-table{
+	  margin-top:-15px
+	  }
+  .tdstyle{text-align:right;padding-right:8px} /*hxy 2018-09-17*/
+  .spinner{margin-left:5px} /*hxy 2018-10-09*/
+  </style>
+</head>
+<body style="background-color:#fff;margin:10px">
+	<div id="" class="hisui-layout" data-options="fit:true" >   
+		<div id="toolbar" class="toolbar" style="padding-top:6px;padding-bottom:6px">	
+			<table style="width:100%">
+				<tr>
+					<td class="tdstyle">开始日期</td>
+					<td><input id="startDate" class="hisui-datebox" style=""/><input id="startTime" class="hisui-timespinner" style="width:80px;"/></td>
+					<td class="tdstyle">登记号</td>
+					<td><input id="regno" class="hisui-validatebox textbox"/></td>
+					<td class="tdstyle">症状</td>
+					<td><input id="symptom" class="hisui-combobox"/></td>
+					<td class="tdstyle">号别</td>
+					<td><input id="loc" class="hisui-combobox"/></td>
+					<td class="tdstyle">筛查</td>
+					<td><input id="screening" class="hisui-combobox"/></td>
+					<!--<td><a href="#" id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true">查询</a></td>hxy 2018-09-17-->
+					<td><a href="#" id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				</tr>
+				<tr height=3></tr>
+				<tr>
+					<td class="tdstyle">截止日期</td>
+					<td><input id="endDate" class="hisui-datebox" style=""/><input id="endTime" class="hisui-timespinner" style="width:80px"/></td>
+					<td class="tdstyle">来诊方式</td>
+					<td><input id="from" class="hisui-combobox"/></td>
+					<td class="tdstyle">级别</td>
+					<td><input id="level" class="hisui-combobox"/></td>
+					<td class="tdstyle">既往史</td>
+					<td><input id="pastHistory" class="hisui-combobox"/></td>
+					<td colspan="2">
+						<input id="isRegCheck" class='hisui-checkbox' name="regist" type="checkbox" label="已挂号" data-options="onChecked:function(event,val){$HUI.checkbox('#noRegCheck').uncheck();}">
+						<input id="noRegCheck" class='hisui-checkbox' name="regist" type="checkbox" label="未挂号" data-options="onChecked:function(event,val){$HUI.checkbox('#isRegCheck').uncheck();}">
+					</td>
+					<!--<td><a href="#" id="exportBtn" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true">导出</a></td>hxy 2018-09-17-->
+					<td><a href="#" id="exportBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'">导出</a></td>
+				</tr>
+				<tr height=3></tr>
+				<tr>
+					<td class="tdstyle">分诊科室</td>
+					<td><input id="levCareLoc" class="hisui-combobox"/></td>
+				</tr>
+			</table>
+		</div>
+
+		<div data-options="region:'center',title:'',border:false,headerCls:'panel-header-gray'" style="padding-bottom:10px;">
+			<table id="registerTable"></table>	
+		</div>   
+	</div> 
+</body>
+</html>

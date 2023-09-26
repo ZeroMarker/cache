@@ -1,0 +1,56 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+
+i Action = "CreatePayReport" d
+	.s params=$g(%request.Data("Params",1))
+	.s ret=##class(web.DHCSTM.DHCPayMon).CreatePayReports(params)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+i Action = "CheckPayMonCond" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.s ret=##class(web.DHCSTM.DHCPayMon).CheckPayMonCond(StrParam)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "Query" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s StartDate=$Get(%request.Data("StartDate",1))
+	.s EndDate=$Get(%request.Data("EndDate",1))
+	.d ##class(web.DHCSTM.DHCPayMon).jsDHCPayMon(LocId,StartDate,EndDate)
+	.
+i Action = "GrpLocForPayMon" d
+	.s GroupId=$Get(%request.Data("GroupId",1))
+	.d ##class(web.DHCSTM.DHCPayMon).jsGrpLocForPayMon(Start,Limit,GroupId)
+	.
+i Action = "Delete" d
+	.S PmId=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCSTM.DHCPayMon).Delete(PmId)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "CheckIfExistPayMon" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s CurMonth=$Get(%request.Data("CurMonth",1))
+	.s ret=##class(web.DHCSTM.DHCPayMon).CheckPayMonIfExist(LocId,CurMonth)
+	.i +ret>0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+//根据付款月报主表的Id查询付款月报主表信息
+i Action = "getPayMonMain" d
+	.s RowId=$Get(%request.Data("rowid",1))
+	.s result = ##class(web.DHCSTM.DHCPayMon).GetPayMonMain(RowId)
+	.i result'="" d
+	..w "{success:'true',info:'"_$tr(result,$c(13,10))_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</SERVER>

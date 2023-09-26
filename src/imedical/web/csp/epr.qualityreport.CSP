@@ -1,0 +1,59 @@
+<html>
+<head>
+  <title>病历质量报告</title>
+  
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+  
+  <script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+  <script type="text/javascript" src="../scripts/epr/js/dataupdate.js"></script>
+  <SCRIPT type="text/javascript" SRC="../scripts/epr/js/dgrid.js"></SCRIPT>
+ 
+  <server>
+  	 s examRuleRowID = 0
+     s examRuleRowIDSysOptionID = $o(^DHCEPRM.SysOptionI("NameIndex"," EPREXAMRULEDR",""))
+	 if examRuleRowIDSysOptionID'=""
+	 {
+		s examRuleRowID=$li(^DHCEPRM.SysOptionD(examRuleRowIDSysOptionID),4)	
+	 }
+  </server>
+  <script language="javascript">
+  	var funurl = '../web.eprajax.reportlistgrid.cls';
+  	var _EpisodeID = "#($Get(%request.Data("EpisodeID",1),"-1"))#";
+  	var _ExamRuleRowID = "#(examRuleRowID)#";
+  	
+	function onTBButtonClick(btn) {
+		 if(btn.id=='btnrefresh'){ajaxAction();}
+	}
+  
+	function getFunParams()
+	{
+		var funparams = {
+				EpisodeID:_EpisodeID,
+				ExamRuleRowID:_ExamRuleRowID
+				};			
+		return funparams;
+	}
+	
+	function afterFunOperate(issuc,functiontype, rtnmsg, rtndata)
+	{
+		if (issuc && functiontype=="html"){document.getElementById("ReportList").innerHTML = rtndata;}
+	}
+	
+	function ajaxAction()
+	{
+		document.getElementById("ReportList").innerHTML = "<img width=16 height=16 src='../scripts/epr/Pics/loading.gif'>载入数据,请稍候...</img>";
+		callfunction();
+	}
+	
+  </script>
+</head>
+<body body bgcolor="#F6FAFD" leftmargin="6" topmargin="2" marginwidth="0" marginheight="0">
+	<table width='100%' border='0' cellspacing='0' cellpadding='2'><tr><td class='x-toolbar' nowrap><span class='T2'>&nbsp病历质控提示</span></td><td width=100%><div id='pagetoolbar'></div></td></tr></table>
+	<script language='javascript'>new Ext.Toolbar({renderTo: 'pagetoolbar', items:[ '->','-',{id:'btnrefresh',text:'刷新',cls: 'x-btn-text-icon' ,icon:'../scripts/epr/Pics/upda.gif',pressed:false,handler: onTBButtonClick},'-']});</script>
+	<div id="ReportList"></div>
+</body>
+<script language="javascript">ajaxAction()</script>
+</html>

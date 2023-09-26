@@ -1,0 +1,108 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s StrParam=$Get(%request.Data("strParam",1))
+	s Adj=$Get(%request.Data("adj",1))
+	s listData=$Get(%request.Data("data",1))
+	s UserId=$Get(%request.Data("userId",1))
+	
+	//查询库存调整单
+	i Action = "query" d
+	.s result = ##class(web.DHCSTM.DHCINAdj).jsDHCINAdjM(Start,Limit,Sort,Dir,StrParam)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//查询库存调整单明细
+	i Action = "queryItem" d
+	.d ##class(web.DHCSTM.DHCINAdjItm).jsDHCINAdjD(Start,Limit,Adj)
+
+	//删除库存调整单明细
+	i Action = "delete" d
+	.s result = ##class(web.DHCSTM.DHCINAdj).Delete(Adj)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除库存调整单明细
+	i Action = "deleteItem" d
+	.s RowId=$Get(%request.Data("rowid",1))
+	.s result = ##class(web.DHCSTM.DHCINAdjItm).Delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//保存库存调整单主表记录
+	i Action = "save" d
+	.s result = ##class(web.DHCSTM.DHCINAdj).Update(Adj,listData)
+	.i result >0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//保存库存调整单明细记录
+	i Action = "saveDetail" d
+	.s result = ##class(web.DHCSTM.DHCINAdjItm).Save(Adj,listData)
+	.i result >0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//审核报损单
+	i Action = "audit" d
+	.s result = ##class(web.DHCSTM.DHCINAdj).Audit(Adj,UserId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i Action = "saveAdj" d
+	.s mainData=$g(%request.Data("mainData",1))
+	.s detailData=$g(%request.Data("detailData",1))
+	.s result = ##class(web.DHCSTM.DHCINAdj).SaveAdj(Adj,mainData,detailData)
+	.i result > 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:''}"
+
+
+	i Action = "setComplete" d
+	.s result = ##class(web.DHCSTM.DHCINAdj).SetComplete(Adj,"Y")
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i Action = "cancelComplete" d
+	.s result = ##class(web.DHCSTM.DHCINAdj).SetComplete(Adj,"N")
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+	i Action = "select" d
+	.s result = ##class(web.DHCSTM.DHCINAdj).jsSelect(Adj)
+	.w result
+	.
+	i Action = "PrintMBPL" d
+	.S IndjRowid=$Get(%request.Data("IndjRowid",1))
+	.s HospId=$Get(%request.Data("HospId",1))
+	.S User=$Get(%request.Data("user",1))
+	.s ret=##class(web.DHCSTM.DHCINAdj).InserMBPL(IndjRowid,HospId,User)	
+	.w "{success:'true',info:'"_ret_"'}"
+</script>

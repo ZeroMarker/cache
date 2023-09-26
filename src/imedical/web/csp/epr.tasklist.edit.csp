@@ -1,0 +1,71 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html XMLNS=TRAK>
+<head>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</head>
+
+<TRAK:COMPONENT id="EPR.TaskList.Edit" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<TRAK:COMPONENT id="EPR.TaskList.SessionList" hidemenus=1></TRAK:COMPONENT>
+
+<server>
+
+	//log 56840
+
+ n ID,AssignedUsers,AssignedTo,Patients,Patient,Ward,Wards
+ S (ID,AssignedUsers,AssignedTo,Patients,Patient,Ward,Wards)=""
+ s ID=%request.Get("ID")
+ w !,"<SCRIPT language='Javascript'>"
+ w !,"function SetItemList() {"
+	i ID'="" d
+	. s obj=##Class(epr.TaskList).%OpenId(ID)
+	. i obj d
+	. . ; AssignedUsers
+	. . s AssignedUsers=obj.AssignedToDetails
+	. . f i=1:1:$l(AssignedUsers,"^") d
+	. . . q:$p(AssignedUsers,"^",i)=""
+	. . . s AssignedTo=##class(web.CTCareProv).GetCareProvSSUserName($p(AssignedUsers,"^",i))
+	. . . i AssignedTo'="" w !,"AddItemToList('",$p(AssignedUsers,"^",i),"','",AssignedTo,"','AssignedTo');"
+	. . ; Patients
+	. . s Patients=obj.PatientDetails
+	. . f i=1:1:$l(Patients,"^") d
+	. . . q:$p(Patients,"^",i)=""
+	. . . s Patient=$p(Patients,"^",i)
+	. . . i Patient'="" w !,"AddItemToList('",Patient,"','",Patient,"','PatientList');"
+	. . ; Wards
+	. . s Wards=obj.WardDetails
+	. . f i=1:1:$l(Wards,"^") d
+	. . . q:$p(Wards,"^",i)=""
+	. . . s Ward=$p(^PAWARD($p(Wards,"^",i)),"^",2)
+	. . . i Ward'="" w !,"AddItemToList('",$p(Wards,"^",i),"','",Ward,"','WardList');"
+	. . d obj.%Close()
+ w !,"}"
+ w !,"</SCRIPT>"
+</server>
+
+<script>
+
+function BodyloadHandler() {
+	SetItemList();
+	var ID="";
+	var IDObj=document.getElementById("ID");
+	if (IDObj) ID=IDObj.value;
+	if (ID!="") {
+		var Duration=document.getElementById("PHCDUDesc1");
+		if (Duration) Duration.disabled=true;
+		var Frequency=document.getElementById("PHCFRDesc1");
+		if (Frequency) Frequency.disabled=true;
+	}
+}
+
+window.onload=BodyloadHandler;
+
+</script>
+
+</html>

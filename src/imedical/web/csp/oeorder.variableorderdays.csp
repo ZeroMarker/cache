@@ -1,0 +1,306 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<server>i %request.Get("sTWKFL") d %request.Set("TWKFL",%request.Get("sTWKFL"))</server>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<server>
+s (Frequency,Duration,OEORISttDat,OEORISttTime,Overflow,Quantity,Offset,ID,Interval,CTUOMDesc,INVALIDTIME,INVALIDQTY,EndDate,SttDate)=""
+s hasdefault="Y"
+s Frequency=%request.Get("Frequency")
+s Duration=%request.Get("Duration")
+s OEORISttDat=%request.Get("OEORISttDat")
+s Quantity=%request.Get("Quantity")
+s ID=%request.Get("ID")
+s CTUOMDesc=%request.Get("CTUOMDesc")
+s mobj=##Class(websys.Component).OpenName("OEOrder.Custom")
+i mobj d mobj.LoadTrans(),mobj.%Close()
+;s ^zpeterc($zn,"VOD")=Frequency_","_Duration_","_OEORISttDat_","_Quantity
+; Params passed in: StartDate; Duration; DispTimeId; Interval; Offset
+;s AryDay="Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday"
+s AryDay=t("MON")_";"_t("TUE")_";"_t("WED")_";"_t("THU")_";"_t("FRI")_";"_t("SAT")_";"_t("SUN")
+s INVALIDTIME=t("INVALID_TIME")
+s INVALIDQTY=t("INVALID_QTY")
+s VARORDUPD=t("VARORDUPD")
+s VARORDTIME=t("VARORDTIME")
+
+i OEORISttDat="" s StartDate=+$h
+i OEORISttDat'="" s StartDate=##Class(websys.Conversions).DateHtmlToLogical(OEORISttDat)
+i Duration'="" d
+. s Duration=##Class(web.PHCDuration).GetIdFromCodeOrDescription(Duration)
+. i Duration'="" s Duration=$p($g(^PHCDU(Duration)),"^",2)
+
+i Frequency'="" d
+. s DispTimeId=##Class(web.PHCFreq).GetIdFromCodeOrDescription(Frequency)
+. i DispTimeId'="" d
+. . s Interval=$p($g(^PHCFR(DispTimeId)),"^",5)
+. . ;s Offset=$p($g(^PHCFR(DispTimeId)),"^",5)
+
+s AryTime=""
+s AryTime1=""
+s item="0" f  s item=$o(^PHCFR(DispTimeId,"DT",item)) q:item=""  s stime=^(item)  d
+. s AryTime1(stime)=""
+s indary="" f  s indary=$o(AryTime1(indary)) q:indary=""  d
+. s AryTime=AryTime_indary_";"
+;-------------------------------------------------------------------------
+s OEORISttTime=##Class(websys.Conversions).TimeHtmlToLogical(%request.Get("OEORISttTim"))
+s FirstDispTime=$p($g(AryTime),";",1)
+i $g(OEORISttTime)'="",$g(OEORISttTime)>$g(FirstDispTime) d
+. s Overflow="Y"
+. s Duration=Duration+1
+. s EndDate=StartDate+Duration-1
+. s SttDate=StartDate
+;-------------------------------------------------------------------------
+
+i '$d(^TMP("WEB",%session.SessionId,"VariableOrderFreqDur",ID)) d
+. k ^TMP("WEB",%session.SessionId,"VariableOrder",ID)
+. k ^TMP("WEB",%session.SessionId,"VariableOrderFreqDur",ID)
+. s hasdefault=""
+
+i ($g(Interval)="")||($g(Interval)="0") s Interval=1
+i $g(Offset)="" s Offset=1
+s Weeks=Duration\7
+s ExtraDay=Duration#7
+i ExtraDay>0 s Weeks=Weeks+1
+s WeekCnt=0
+i Interval>1 s Offset=Offset-1
+
+s Frequency=$l(AryTime,";")-1
+s daystart=StartDate+3#7+1
+s dayend=daystart+Duration
+i dayend>7 s type="wrap"
+i dayend'>7 s type="norm"
+i dayend=7 s dayend=dayend-1
+e  i dayend'=7 s dayend=dayend#7-1
+
+w "<TABLE><TR >",!
+w "<TD valign='top'><SELECT NAME=selectDays SIZE=8 multiple=1>",!
+f i=1:1:7 d ; Creates multiselect box
+. i type="norm" d
+. . i i'<daystart,i'>dayend w "<OPTION VALUE="_i_" selected>"_$p(AryDay,";",i)_"</OPTION>",!
+. . e  w "<OPTION VALUE="_i_">"_$p(AryDay,";",i)_"</OPTION>",!
+. i type="wrap" d
+. . i (i'<daystart)||(i'>dayend) w "<OPTION VALUE="_i_" selected>"_$p(AryDay,";",i)_"</OPTION>",!
+. . e  w "<OPTION VALUE="_i_">"_$p(AryDay,";",i)_"</OPTION>",!
+w "</SELECT><TD>",!
+f i=1:1:Weeks d ; Creates a table for each week
+. w "<TABLE class=tblList id='tOEFreqTablez"_i_"' Name='tOEFreqTablez"_i_"' CELLSPACING=1 >",!
+. w "<THEAD><TH style='display:none;'></TH>",!
+. w "<TH id='TimeHeadz"_i_"' NOWRAP>"_VARORDTIME_"",!
+. w "</TH>",!
+. s colHeadMax=7 i WeekCnt+1=Weeks,ExtraDay'=0 s colHeadMax=ExtraDay
+. s wDate=StartDate
+. f j=1:1:colHeadMax d ; Creates header for each column
+. . s wDay=wDate+3#7+1
+. . w "<TH id='ColHeadt"_i_"z"_wDay_"' WRAP><center>"_$p(AryDay,";",wDay)_"<br>"_##Class(websys.Conversions).DateLogicalToHtml(wDate)_"</center>",!
+. . w "</TH>",!
+. . s wDate=StartDate+j
+. w "</THEAD>",!
+. f j=1:1:Frequency d ; Creates all columns
+. . s ClassType=$s(j#2:"RowOdd",1:"RowEven")
+. . w "<TR class="_ClassType_">",!
+. . w "<TD id='TimeTDt"_i_"z"_i_"y"_j_"'><label id='Timez"_j_"' name='Timez"_j_"'>"_##Class(websys.Conversions).TimeLogicalToHtml($p(AryTime,";",j))_"</label></TD>",!
+. . s wDate=StartDate
+. . f t=1:1:7 d ; Creates cells for each time and day
+. . . s (wValue,vValue,uomValue)=""
+. . . s wDay=wDate+3#7+1
+. . . i hasdefault="" s wValue=Quantity
+. . . i wDate=SttDate,$p(AryTime,";",j)<OEORISttTime,Overflow="Y" s wValue=0
+. . . i wDate=EndDate,$p(AryTime,";",j)'<OEORISttTime,Overflow="Y" s wValue=0
+. . . s uomValue=CTUOMDesc
+. . . i $d(^TMP("WEB",%session.SessionId,"VariableOrder",ID,wDate,$p(AryTime,";",j))) d
+. . . . s vals=^TMP("WEB",%session.SessionId,"VariableOrder",ID,wDate,$p(AryTime,";",j))
+. . . . i $g(vals)'="" d
+. . . . . s wValue=$p(vals,"|",1)
+. . . . . s vValue=$p(vals,"|",2)
+. . . i hasdefault="" s vValue=##Class(websys.Conversions).TimeLogicalToHtml($p(AryTime,";",j))
+. . . s wDisplay="" i (WeekCnt*7)+t-Offset#Interval'=1,Interval'=1 s wDisplay="display:none", wValue=0
+. . . i WeekCnt+1=Weeks,t>ExtraDay,ExtraDay'=0 s wDisplay="display:none", wValue=0,vValue="",uomValue=""
+. . . i Offset>t,i=1 s wDisplay="display:none", wValue=0
+. . . w "<TD id='ColTDt"_i_"z"_j_"y"_wDay_"'><center><input id='TextBoxt"_i_"z"_j_"y"_wDay_"' name="_wDate_"|"_$p(AryTime,";",j)_" tabIndex='1' value='"_wValue_"' style='width:25;"_wDisplay_"'>"_uomValue_"</input><input id='TimeBoxt"_i_"z"_j_"y"_wDay_"' name="_wDate_"|"_$p(AryTime,";",j)_" tabIndex='1' value='"_vValue_"' style='width:40;"_wDisplay_"'></input></center></TD>",!
+. . . s wDate=StartDate+t
+. . w "</TR>",!
+. s WeekCnt=WeekCnt+1
+. s StartDate=wDate
+. w "</TABLE><BR>",!
+w "</TD>",!
+w "</TR></TABLE>",!
+w "<form name='VariableOrder' id='VariableOrder' method='POST' action='oeorder.variableorders.csp'>"
+w "<input name='CreateOrderStr' type='hidden' value=''>"
+w "<input name='Frequency' type='hidden' value='"_DispTimeId_"'>"
+w "<input name='Duration' type='hidden' value='"_Duration_"'>"
+w "<input name='CTUOMDesc' type='hidden' value='"_CTUOMDesc_"'>"
+w "<input name='ID' type='hidden' value='"_ID_"'>"
+w "<A href='#' onclick='UpdateClickHandler();'>"_VARORDUPD_"</a>"
+w "</form>"
+</server>
+
+<SCRIPT SRC="../scripts_gen/webcommon.DateAndTime.js"> </SCRIPT>
+<SCRIPT SRC="../scripts/websys.DateTime.Tools.js"> </SCRIPT>
+<script language="JavaScript">
+var max="#(Frequency)#"
+var weeks="#(Weeks)#"
+var INVALIDTIME="#(INVALIDTIME)#"
+var INVALIDQTY="#(INVALIDQTY)#"
+var OkToUpdate="";
+var obj=document.getElementById('selectDays');
+if (obj) obj.onchange=SelectDaysChangeHandler;
+function SelectDaysChangeHandler(){
+	document.body.style.cursor = 'wait';
+	setTimeout("ColumnSelection()",1000);
+}
+
+function ColumnSelection(){
+  for (var t=1; t<weeks+1; t++) {
+	for (var i=0; i<obj.length; i++) {
+		var col=i+1
+		var cobj2=document.getElementById('ColHeadt'+t+'z'+col);
+		ShowHide(cobj2,1);
+		for (var j=1; j<max+1; j++) {
+			if (!obj.options[i].selected) {
+				var cobj=document.getElementById('TextBoxt'+t+'z'+j+'y'+col);
+				var dobj=document.getElementById('TimeBoxt'+t+'z'+j+'y'+col);
+				ShowHide(cobj,0);
+				ShowHide(dobj,0);
+				//var cobj2=document.getElementById('ColHeadt'+t+'z'+col);
+				//ShowHide(cobj2,0);
+			} else {
+				var cobj=document.getElementById('TextBoxt'+t+'z'+j+'y'+col);
+				var dobj=document.getElementById('TimeBoxt'+t+'z'+j+'y'+col);
+				ShowHide(cobj,1);
+				ShowHide(dobj,1);
+			}
+		}
+	}
+   }
+   document.body.style.cursor = 'default';
+}
+
+function ShowHide(xobj,visible) {
+  if (xobj) {
+	if (visible==1) {
+		xobj.disabled=false;
+		xobj.className="";
+		//xobj.style.display="inline"
+	} else {
+		xobj.disabled=true;
+		xobj.className="disabledField";
+		//xobj.style.display="none"
+	}
+  }
+}
+
+function BodyUnloadHandler() {
+	window.close();
+}
+
+
+function BodyloadHandler() {
+	var tblcount=1;
+	while (true) {
+		var Table=document.getElementById('tOEFreqTablez'+tblcount);
+		if(Table) {
+			for (var i=1; i<Table.rows.length; i++) {
+				for (var j=1; j<8; j++) {
+					var CurrObj=document.getElementById('TimeBoxt'+tblcount+"z"+i+"y"+j);
+					if(CurrObj) CurrObj.onchange=OEORISttTim_changehandler
+				}
+			}
+		}		
+		if (!Table) {
+			break;
+		}
+		tblcount++;
+	}
+}
+
+window.onunload=BodyUnloadHandler;
+window.onload=BodyloadHandler;
+
+function UpdateClickHandler() {
+	var tblcount=1;
+	while (true) {
+		var Table=document.getElementById('tOEFreqTablez'+tblcount);
+		if(Table) {
+			for (var i=1; i<Table.rows.length; i++) {
+				for (var j=1; j<8; j++) {
+					var VarTime="";
+					var CurrObj=document.getElementById('TextBoxt'+tblcount+"z"+i+"y"+j);
+					var VarTimeObj=document.getElementById('TimeBoxt'+tblcount+"z"+i+"y"+j);
+					if((VarTimeObj)&&(VarTimeObj.className=="clsInvalid")) {
+						alert(INVALIDTIME);
+						return false;
+					}
+					if((CurrObj)&&(isNaN(CurrObj.value))) {
+						alert(INVALIDQTY);
+						return false;
+					}
+				}
+			}
+		}
+		
+		if (!Table) {
+			break;
+		}
+		tblcount++;
+	}
+	
+	OkToUpdate="Y";
+
+	var str="";
+	var tblcount=1;
+
+	while (true) {
+		var Table=document.getElementById('tOEFreqTablez'+tblcount);
+		if(Table) {
+			for (var i=1; i<Table.rows.length; i++) {
+				for (var j=1; j<8; j++) {
+					var VarTime="";
+					var CurrObj=document.getElementById('TextBoxt'+tblcount+"z"+i+"y"+j);
+					var VarTimeObj=document.getElementById('TimeBoxt'+tblcount+"z"+i+"y"+j);
+					var VarTime=VarTimeObj.value;
+					if((CurrObj)&&(!CurrObj.disabled)&&(CurrObj.value>0)&&(CurrObj.value!="")) str=str+CurrObj.value+"|"+CurrObj.name+"|"+VarTime+","
+				}
+			}
+		}
+		
+		if (!Table) {
+			var COSObj=document.getElementById("CreateOrderStr");
+			if(COSObj) COSObj.value=str;
+			break;
+		}
+		tblcount++;
+	}
+
+	var frm=document.getElementById('VariableOrder');
+	if ((frm)&&(OkToUpdate=="Y")) frm.submit();
+	setTimeout("window.close();",2000); 
+}
+
+function OEORISttTim_changehandler(e) {
+	var eSrc=websys_getSrcElement(e);
+	//alert(eSrc.id);
+	if (!IsValidTime(eSrc)) {
+		eSrc.className='clsInvalid';
+		websys_setfocus(eSrc.id);
+		return websys_cancel();
+	} else {
+		eSrc.className='';
+	}
+}
+
+
+</script>
+
+</BODY>
+</HTML>

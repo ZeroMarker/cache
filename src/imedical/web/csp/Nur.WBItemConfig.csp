@@ -1,0 +1,885 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+	<title>	Cache Server Page </title>
+	<meta charset="utf-8"/>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+
+	<style type="text/css">
+		body{
+			background-color:white;	
+		}
+		.l-btn{
+			border-radius: 3px;
+		}
+		.l-btn-icon{
+			background-color: transparent;
+			color: white;
+		}
+		.wb-spline{
+			height: 0px;
+			border-bottom: dashed lightgray 1px ;
+		}
+		.item-body{
+			position: absolute;
+			top: 75px;
+			bottom: 10px;
+			width: calc(100% - 20px);
+		}
+		.wb-item-area{
+			position: absolute;
+			top: 0px;
+			bottom: 0px;
+			width: 180px;
+			height: 100%;
+			overflow: auto;
+			background: white;
+		}
+		.tree-file{
+			/*background: url(../css/icons/base_info.png) no-repeat -240px 0;*/
+		}
+		.wb-content-area{
+			position: absolute;
+			top: 0px;
+			bottom: 0px;
+			left:180px;
+			width: calc(100% - 190px);
+			height: 100%;
+			overflow:auto;
+			border-left:solid 1px gray;
+		}
+		.panel-header, .panel-body{
+			border-color: transparent;
+		}
+		.icon-paper-table{
+			background-image: url(../css/icons/cancel.png);
+		}
+		.actionTip{
+			width: 100%;
+			height: 30px;
+			padding-top: 8px;
+			background: #E5FAFF;
+			color: #3291F8;
+		}
+		.actionTip span.icon-tip{
+			color: transparent;
+		}
+
+		#itemEditDialog .tipText{
+			text-align:right;
+			width:80px;
+			height:28px;
+			line-height:28px;
+			padding-right:5px;
+		}
+		#itemEditDialog .oneline{
+			width:100%;
+			display:flex;
+			padding-bottom:5px;
+			flex-wrap: nowrap;
+		}
+		
+		.icon{
+			width: 20px;
+			height: 20px;
+			margin-right: 10px;
+			float: left;
+		}
+		#itemEditDialog .dialog-button{
+			padding-top:0px;
+		}	
+		</style>
+	</head>
+	<body>
+		<div style="display:flex;">
+			<div data-options="region:'north',border:false" style="height: 44px;padding:10px 10px 0 10px">
+		 		<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+		 	</div>
+		 	<div style="margin-top:10px;display:flex;">
+		 	<div style="height:32px;line-height:32px;margin-right:5px">项目</div>
+		 		<input id="searchText" href="#" class="textbox" style="height:32px;margin-right:5px"/>
+		 		<a id="searchItem" class="hisui-linkbutton" data-options="iconCls:'icon-search'" style="height:34px;">查询</a>
+		 	</div>
+		 	<!--<input class="hisui- textbox" id="GHUser" style="width:250px"/>-->
+		</div>
+		<div class="wb-spline"></div>
+		<div class="item-body">
+			<div id="item-area" class="wb-item-area">
+				<div class="actionTip">
+					<span class="icon icon-tip">123</span><span>点击鼠标右键操作</span>
+				</div>
+				<ul id="item-tree" class="hisui-tree" data-options="lines:false"></ul>  
+			</div>
+			<div class="wb-content-area">
+				<table class="hisui-treegrid" id="item-grid"
+				    data-options="method: 'get',
+					    idField: 'id',
+					   	treeField: 'name',
+					   	iconCls:'icon-paper',
+					   	headerCls:'panel-header-gray'">
+			    	<thead>
+					    <tr>
+					    	<th field="name" rowspan="2" width="150" align="left">项目名称</th>
+					    	<th field="way" rowspan="2" width="100" align="left">数据途径</th>
+					    	<th field="" colspan="2" width="180" align="left">关联获取</th>
+					    	<th field="detail" rowspan="2" width="280" align="left">获取方式</th>
+					    	<th field="code" rowspan="2" width="180" align="left">code</th>
+					   	</tr>
+				 		<tr>
+					    	<th field="type" width="90" align="left">类别</th>
+					   		<th field="show" width="90" align="left">内容</th>
+					    </tr>
+				   	</thead>
+				</table>
+	   		</div>
+	   	</div>
+	   	<div id="itemEditDialog" class="hisui-dialog" title="编辑" style="width:470px;height:600px;top:100px;left:500px;padding:10px;padding-bottom:0px"data-options="resizable:true,modal:true,closed:'true',buttons:[{text:'保存',handler:function(){itemEditDialogSave()}},{text:'取消',handler:function(){$HUI.dialog('#itemEditDialog').close();}}]">   
+	    	<div class="oneline">
+	    		<div class="tipText">项目名称</div>
+	    		<input id="itemEditName" disabled value="" style="width:350px;height:28px;"/>
+	    	</div>
+	    	<div class="oneline">
+	    		<div class="tipText">数据途径</div>
+	    		<select id="itemEditWay" class="hisui-combobox" name="dept" style="width:350px;" data-options="enterNullValueClear:false,onSelect:selectHandler,blurValidValue:true">
+				</select>
+	    	</div>
+	    	<div id="itemEditTypeTr" class="oneline">
+	    		<div class="tipText">类别</div>
+	    		<select id="itemEditType" class="hisui-combobox" name="dept" style="width:350px;" data-options="enterNullValueClear:false,onSelect:selectHandler,blurValidValue:true">
+				</select>
+	    	</div>
+	    	<div id="itemEditDetailTr" class="oneline" style="padding-bottom:0px">
+	    		<div class="tipText">内容</div>
+	    		<textarea id="itemEditDetail" style="width:350px;height:40px"></textarea>
+	    	</div>
+	    	<div id="itemEditDetailCTr">
+	    		<div>
+		    		<div style="padding-bottom:0px;width:450px;height:280px">
+						<table id="gridOrdMast" data-options="toolbar:'#ToolBar'"></table>
+						<div id="ToolBar" style="padding:2px" >			
+							<input class="hisui-searchbox" id="searchbox" style="width:435px;" data-options="prompt:'检索'" />				 
+						</div>
+					</div>
+					<div id="detailPage" class="hisui-pagination" style="background:#efefef;border:1px solid #ccc;"></div>
+				</div>
+	    	</div>
+	    	<div id="itemEditShowTr" class="oneline" style="padding-bottom:0px;">
+	    		<div class="tipText"></div>
+	    		<div id="itemEditShowList" style="width:350px;"></div>
+	    	</div>
+	    	<div id="itemEditFuncTr" class="oneline" >
+	    		<div class="tipText">方法</div>
+	    		<input id="itemEditFunc" value="" style="width:350px;height:28px"/>
+	    	</div>
+	    	<div class="oneline" style="padding-bottom:0px;">
+	    		<div class="tipText">code</div>
+	    		<input id="itemEditCode" value="" style="width:350px;height:28px"/>
+	    	</div>
+	    </div>
+	    <div id="itemTreeMenu" class="hisui-menu menu-top menu" style="left: 128px;top: 157px; width: 120px; height: 120px;">
+	    	<div id="new">新建</div>
+			<div id="newkid">新建子项</div>
+			<div id="delete">删除</div>
+	    </div>
+		<div id="newItemDiag" class="hisui-dialog" title="新建" style="width:200px;height:200px;top:250px;left:500px;padding:10px;"data-options="resizable:true,modal:true,closed:'true',buttons:[{text:'保存',handler:function(){newTreeNode()}},{text:'取消',handler:function(){$HUI.dialog('#newItemDiag').close();}}]">   
+	    	<div class="">请输入项目名称</div>
+			<input id="newItemInput" href="#" class="textbox"/>
+	    </div>
+		<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script>
+			var treegridObj
+			var contentGrid
+			var editDict = {};
+			//类别 医嘱 D / 护嘱 N / 常规任务T
+			//数据途径 关联获取 R / 手工输入 M / 获取方法 A
+			//显示内容 床号 B / 总数 N
+			
+			//配置弹框和dialog等
+			menuAndDialogSetup();
+	
+			//下拉框数据
+			getQueryTypeArr();//类别
+			getQueryGetWayArr();//数据途径
+			getQueryShowArr();//内容 床号,总数
+			refreshPage();
+	
+			function menuAndDialogSetup(){
+				//院区下拉框
+				var hospComp = GenHospComp("ARC_ItemCat"); 
+				$('#_HospList').combogrid({
+			   		onSelect:function(value){
+				   		document.getElementById('searchText').value = '';
+				   		refreshPage();
+			   		}	 
+		   		});
+				//搜索按钮点击
+				$("#searchItem").click(function (argument) {
+		            refreshPage();
+		        });
+				//左边树空白区的右键
+				var itemArea = document.getElementById('item-area');
+				itemArea.oncontextmenu = function(e){
+					event.preventDefault();
+					var itemTreeMenu = document.getElementById('itemTreeMenu');
+					itemTreeMenu.setAttribute('data-obj','')
+					$('#itemTreeMenu').menu('show',{
+						left:event.pageX,
+						top:event.pageY
+					});
+				}
+				//左边树的右键
+				$HUI.tree("#item-tree",{
+					onContextMenu:function(event,node){
+						event.preventDefault();
+						$(this).tree('select',node.target);
+						var nodeId = node.id
+						var nodePid = node._parentId;
+						if(!nodePid){
+							nodePid = '';
+						}
+						//console.log('node',node);
+						var itemTreeMenu = document.getElementById('itemTreeMenu');
+						itemTreeMenu.setAttribute('data-obj',nodeId);
+						itemTreeMenu.setAttribute('data-objp',nodePid);
+						$('#itemTreeMenu').menu('show',{
+							left:event.pageX,
+							top:event.pageY
+						});
+					}
+				});
+				//右键菜单的点击事件
+				$('#itemTreeMenu').menu({
+					onClick:function(item){
+						var itemId = item.target.id;
+						var newItemDiag = document.getElementById('newItemDiag');
+						newItemDiag.setAttribute('data-id',itemId);
+						if(itemId == 'new'){
+							$('#newItemDiag').dialog('open');
+						}else{//
+							var itemTreeMenu = document.getElementById('itemTreeMenu');
+							var nodeId = itemTreeMenu.getAttribute('data-obj');
+							
+							if(!nodeId || nodeId == '' || nodeId == 'item-area'){
+								$.messager.popover({msg: '请选择正确的节点！',type:'alert'});
+								return;
+							}else if (itemId == 'delete') {
+								deleteTreeNode();
+							}else {
+								$('#newItemDiag').dialog('open');
+							}
+							
+						}
+					}
+				});
+		
+				//右边表格双击编辑事件
+				treegridObj = $HUI.treegrid("#item-grid",{
+		    		onDblClickRow:function(rowId,data){
+						////console.log(rowId);
+						$cm({
+							ClassName:'CF.NUR.DWB.LogItem',
+							MethodName:"GetItemByID",
+							rowid:rowId
+						},function(jsonData){
+							//console.log('GetItemByID',jsonData);
+							if(jsonData.msg){
+								return;
+							}
+							$('#searchbox').searchbox('setValue','');
+							$('#itemEditDialog').dialog('open');
+							updateItemEditDialogUI(jsonData);
+						});
+					}
+				
+		    	});	
+		    	//关联获取时的多选	
+				contentGrid = $HUI.datagrid("#gridOrdMast",{
+					fit: true,
+					headerCls:'panel-header-gray',
+					iconCls:'icon-resort',
+					singleSelect: false,
+					autoRowHeight: false,
+					columns:[[
+						{field:'id',title:'ID',checkbox:true,width:50},
+						{field:'desc',title:'名称',width:410}
+					]],
+					onCheck:function(index,item){
+						var id = item.id;
+						if(id == undefined){
+							id = item.rowid;
+						}
+						var itemEditDetail = document.getElementById('itemEditDetail');
+						var arrStr = itemEditDetail.value;
+						if(arrStr == ''){
+							itemEditDetail.value += id;
+						}else if(!isArrStrContainStr(arrStr,id)){
+							itemEditDetail.value +=  ',' + id;
+						}
+					},
+					onSelectAll:function(rows){
+						var itemEditDetail = document.getElementById('itemEditDetail');
+						for(var i = 0; i < rows.length;i++){
+							var item = rows[i];
+							var id = item.id;
+							if(id == undefined){
+								id = item.rowid;
+							}
+							var arrStr = itemEditDetail.value;
+							if(arrStr == ''){
+								itemEditDetail.value += id;
+							}else if(!isArrStrContainStr(arrStr,id)){
+								itemEditDetail.value +=  ',' + id;
+							}
+						}
+						console.log('onSelectAll')
+					},
+					onUnselectAll:function(rows){
+						var itemEditDetail = document.getElementById('itemEditDetail');
+						for(var i = 0; i < rows.length;i++){
+							var item = rows[i];
+							var id = item.id;
+							if(id == undefined){
+								id = item.rowid;
+							}
+							var arrStr = itemEditDetail.value;
+							itemEditDetail.value = deleteStrFromArrStr(arrStr,id)
+						}
+						console.log('onUnselectAll')
+					},
+					onUncheck:function(index,item){
+						var id = item.id;
+						if(id == undefined){
+							id = item.rowid;
+						}
+						var itemEditDetail = document.getElementById('itemEditDetail');
+						var arrStr = itemEditDetail.value;
+						itemEditDetail.value = deleteStrFromArrStr(arrStr,id)
+					}
+				});
+				//dialog内的搜索
+				$('#searchbox').searchbox({ 
+					searcher:function(value,name){ 
+						$('#detailPage').pagination('select', 1);
+					}
+				});
+				
+				//页码器
+				$('#detailPage').pagination({
+					loading:false,
+					pageSize:50,
+					onSelectPage:function(pageNumber, pageSize){
+						contentGridLoadData(pageNumber, pageSize)	
+					}
+				});
+			}
+	//加载医嘱,护嘱,护理常规下拉数据
+	function contentGridLoadData(pageNumber,pageSize){
+		$('#gridOrdMast').datagrid({
+			data: []
+		});
+		var type = editDict['LIType'];
+		if(type == ''){
+			$.messager.popover({msg: '请选择正确的节点！',type:'alert'});
+			return;
+		}
+		var desc = $('#searchbox').searchbox('getValue');
+		$('#detailPage').pagination({
+			loading:true
+		});
+		
+		var hospid=$HUI.combogrid('#_HospList').getValue();
+		if(type == 'D'){//医嘱下拉
+			$('#gridOrdMast').datagrid({       
+			    columns:[[    
+			        {field:'id',title:'ID',checkbox:true,width:50},
+					{field:'desc',title:'名称',width:410} 
+			    ]]    
+			});
+			$cm({
+				ClassName:"Nur.DWB.Service.BedChartService",
+				MethodName:"GetDocAdvice",
+				ARCIMDesc:desc,
+				page: pageNumber,
+				rows: pageSize
+			},function(jsonData){
+				console.log('123',jsonData)
+				dealDetailDataLoaded(pageNumber,jsonData,pageSize);
+			});
+		}else if(type == 'N'){//护嘱下拉
+			//{textField:'taskname',valueField:'rowid'}
+			$('#gridOrdMast').datagrid({       
+			    columns:[[    
+			        {field:'rowid',title:'ID',checkbox:true,width:50},
+					{field:'taskname',title:'名称',width:410} 
+			    ]]    
+			});
+			$cm({
+				ClassName:"Nur.NIS.Service.NursingPlan.QuestionSetting",
+				QueryName:"QueryTask",
+				name:desc,
+				statusFlag:'1',
+				hospitalID:hospid,
+				page: pageNumber,
+				rows: pageSize
+			},function(jsonData){
+				dealDetailDataLoaded(pageNumber,jsonData,pageSize);
+			});
+		}else if(type == 'T'){//护理常规
+			//{textField:'taskDesc',valueField:'id'}
+			$('#gridOrdMast').datagrid({       
+			    columns:[[    
+			        {field:'id',title:'ID',checkbox:true,width:50},
+					{field:'taskDesc',title:'名称',width:410} 
+			    ]]    
+			});
+			$cm({
+				ClassName:'Nur.NIS.Service.TaskOverview.Normal',
+				QueryName:"GetTaskOverNormList",
+				keyword:desc, 
+				loc:'', 
+				hospDR:hospid,
+				page: pageNumber,
+				rows: pageSize
+			},function(jsonData){
+				dealDetailDataLoaded(pageNumber,jsonData,pageSize);
+			});		
+		}
+	}
+	//医嘱/护嘱/护理常规数据添加到下拉表中
+	function dealDetailDataLoaded(pageNumber,jsonData,pageSize){
+		$('#detailPage').pagination({
+			loading:false
+		});
+		if(pageNumber == 1){
+			$('#detailPage').pagination({
+				total:jsonData.total,
+			    pageSize:pageSize
+			});
+		}
+		$('#gridOrdMast').datagrid({
+			data: jsonData.rows
+		});
+		var itemEditDetail = document.getElementById('itemEditDetail');
+		var detailStr = itemEditDetail.value;
+		if(detailStr == ''){return}
+		var jsonArr = jsonData.rows
+		for(var i = 0; i < jsonArr.length;i++){
+			var id = jsonArr[i].id;
+			if(id == undefined){
+				id = jsonArr[i].rowid;
+			}
+			if(isArrStrContainStr(detailStr,id)){
+				$('#gridOrdMast').datagrid('checkRow',i);
+			}
+		}
+	}
+	
+	//项目编辑框show时的数据填充
+	function updateItemEditDialogUI(data){
+		var LIName = data.name;
+		var LIType = data.type;
+		var LIGetWay = data.way;
+		var LIWayDetail = data.detail;
+		var LIShow = data.show;
+		var LICode = data.code;
+		var LIParent = data._parentId;
+		var rowID = data.id;
+		if(!LIGetWay){
+			LIGetWay = '';
+		}
+		if(!LIType){
+			LIType = '';
+		}
+		
+		if(!LIWayDetail){
+			LIWayDetail = '';
+		}
+		if(!LIShow){
+			LIShow = '';
+		}else{
+			  $HUI.radio("#editShow"+LIShow).setValue(true);
+		}
+		if(!LICode){LICode = '';}
+		if(!LIParent){LIParent = '';}
+		
+		var itemEditName = document.getElementById('itemEditName');
+		itemEditName.value = LIName;
+		$('#itemEditWay').combobox('select', LIGetWay);
+		$('#itemEditType').combobox('select', LIType);
+		editDict = {'LIName':LIName,'LIType':LIType,'LIGetWay':LIGetWay,'LIWayDetail':LIWayDetail,'LIShow':LIShow,'LIParent':LIParent,'rowID':rowID};
+		var itemEditTypeTr = document.getElementById('itemEditTypeTr');
+		itemEditTypeTr.style.display = 'none';
+		var itemEditDetailTr = document.getElementById('itemEditDetailTr');
+		itemEditDetailTr.style.display = 'none';
+		var itemEditDetailCTr = document.getElementById('itemEditDetailCTr');
+		itemEditDetailCTr.style.display = 'none';
+		var itemEditFuncTr = document.getElementById('itemEditFuncTr');
+		itemEditFuncTr.style.display = 'none';
+		if(LIGetWay == "A"){//获取方法
+			itemEditFuncTr.style.display = 'flex';
+			var itemEditFunc = document.getElementById('itemEditFunc');
+			itemEditFunc.value = LIWayDetail;
+			
+		}else if(LIGetWay == "R" || LIGetWay == ""){//关联获取
+			itemEditTypeTr.style.display = 'flex';
+			itemEditDetailTr.style.display = 'flex';
+			itemEditDetailCTr.style.display = 'block';
+			var arr = [];
+			if(LIWayDetail != ''){
+				arr = LIWayDetail.split(',');
+			}
+			var itemEditDetail = document.getElementById('itemEditDetail');
+			itemEditDetail.value = arr.join();
+			$('#gridOrdMast').datagrid({
+				data: []
+			});
+			if(LIType != ''){
+				$('#detailPage').pagination('select', 1);
+			}
+		}else{
+			var itemEditShowTr = document.getElementById('itemEditShowTr');
+			itemEditShowTr.style.display = 'none';
+		}
+		var itemEditCode = document.getElementById('itemEditCode');
+		itemEditCode.value = LICode;
+	}
+	
+	//项目编辑保存按钮点击事件
+	function itemEditDialogSave(){
+		var checkedRadioJObj = $("input[name='editShow']:checked");
+		if(checkedRadioJObj){
+			editDict['LIShow'] = checkedRadioJObj.val();
+		}
+		if(editDict.LIGetWay == 'A'){//获取方法
+			var itemEditFunc = document.getElementById('itemEditFunc');
+			editDict['LIWayDetail'] = itemEditFunc.value;
+			editDict['LIType'] = '';
+		}else if(editDict.LIGetWay == 'R'){//关联获取
+			//获取内容selection的值
+			var itemEditDetail = document.getElementById('itemEditDetail');
+			editDict['LIWayDetail'] = itemEditDetail.value;
+		}else{//手工录入
+			editDict['LIType'] = '';
+			editDict['LIShow'] = '';
+			editDict['LIWayDetail'] = '';
+		}
+		var itemEditCode = document.getElementById('itemEditCode');
+		editDict['LICode'] = itemEditCode.value;
+		saveRightOneCell(editDict.LIName, editDict.LIType, editDict.LIGetWay, editDict.LIShow, editDict.LIWayDetail,editDict.LICode, editDict.LIParent, editDict.rowID,true)
+	}
+	
+	//选择数据途径 类别触发
+	function selectHandler(item){
+		if(!item){return}
+		if(this.id == 'itemEditWay'){
+			editDict['LIGetWay'] = item.value
+			$('#gridOrdMast').datagrid({
+				data: []
+			});
+			var itemEditTypeTr = document.getElementById('itemEditTypeTr');
+			var itemEditDetailTr = document.getElementById('itemEditDetailTr');
+			var itemEditDetailCTr = document.getElementById('itemEditDetailCTr');
+			var itemEditShowTr = document.getElementById('itemEditShowTr');
+			var itemEditFuncTr = document.getElementById('itemEditFuncTr');
+			if(editDict.LIGetWay == "A"){//获取方法
+				itemEditFuncTr.style.display = 'flex';
+				itemEditTypeTr.style.display = 'none';
+				itemEditDetailTr.style.display = 'none';
+				itemEditDetailCTr.style.display = 'none';
+				itemEditShowTr.style.display = 'flex';
+				var itemEditFunc = document.getElementById('itemEditFunc');
+				itemEditFunc.value = '';
+			}else if(editDict.LIGetWay == "R"){//关联获取
+				itemEditTypeTr.style.display = 'flex';
+				itemEditDetailTr.style.display = 'flex';
+				itemEditDetailCTr.style.display = 'block';
+				itemEditShowTr.style.display = 'flex';
+				itemEditFuncTr.style.display = 'none';
+				if(editDict['LIType'] != ''){
+					$('#detailPage').pagination('select', 1);
+				}
+			}else{//手工录入
+				itemEditFuncTr.style.display = 'none';
+				itemEditTypeTr.style.display = 'none';
+				itemEditDetailTr.style.display = 'none';
+				itemEditDetailCTr.style.display = 'none';
+				itemEditShowTr.style.display = 'none';
+			}
+			var itemEditDetail = document.getElementById('itemEditDetail');
+			itemEditDetail.value = '';
+			
+		}else if(this.id == 'itemEditType'){//切换类型 医嘱/护嘱/护理常规
+			editDict['LIType'] = item.value;
+			$('#gridOrdMast').datagrid({
+				data: []
+			});
+			var itemEditDetail = document.getElementById('itemEditDetail');
+			itemEditDetail.value = '';
+			$('#detailPage').pagination('select', 1);
+		}
+	}
+	
+	//数据保存
+	function saveRightOneCell(LIName, LIType, LIGetWay, LIShow, LIWayDetail, LICode, LIParent, rowID,isEdit){
+		console.log(LIName, LIType, LIGetWay, LIShow, LIWayDetail,LICode, LIParent, rowID);
+		var hospid=$HUI.combogrid('#_HospList').getValue();
+		$cm({
+			ClassName:'CF.NUR.DWB.LogItem',
+			MethodName:"Save",
+			LIName:LIName,
+			LIType:LIType,
+			LIGetWay:LIGetWay,
+			LIShow:LIShow,
+			LIWayDetail:LIWayDetail,
+			LIParent:LIParent, 
+			LICode:LICode,
+			rowID:rowID,
+			HospID:hospid
+		},function(jsonData){
+			console.log('saveOneCell',jsonData);
+			if(jsonData.flag == 'false'){
+				if(isEdit){
+					$.messager.popover({msg: '保存失败！',type:'error',timeout: 800});
+				}else{
+					refreshPage();
+				}
+				
+			}else{
+				refreshPage();
+				if(isEdit){
+					$HUI.dialog('#itemEditDialog').close();
+				}
+			}
+		});
+	}
+	
+	//左边树新建普通项目
+	function newTreeNode(){
+		//console.log('newTreeNode')
+		var newItemInput = document.getElementById('newItemInput');
+		var name = newItemInput.value;
+		if(name == ''){
+			$.messager.popover({msg: '输入项目名称！',type:'alert'});	
+			return ;
+		}
+		var newItemDiag = document.getElementById('newItemDiag');
+		var btnId =	newItemDiag.getAttribute('data-id');
+		var itemTreeMenu = document.getElementById('itemTreeMenu');
+		var nodeId = itemTreeMenu.getAttribute('data-obj');
+		var nodepId = itemTreeMenu.getAttribute('data-objp');
+			
+		if(btnId == 'new'){
+			saveRightOneCell(name,'','','','','',nodepId,'',false);
+		}else{
+			saveRightOneCell(name,'','','','','',nodeId,'',false);
+		}
+		newItemInput.value = '';
+		$('#newItemDiag').dialog('close');
+	}
+	
+	//左边树新建子项
+	function newTreeChildNode(){
+		var newItemInput = document.getElementById('newItemInput');
+		var name = newItemInput.value;
+		if(name == ''){	
+			return ;
+		}
+		saveRightOneCell(name,'','','','','','','',false);
+		$('#newItemDiag').dialog('close');
+	}
+	
+	//左边树删除节点
+	function deleteTreeNode(){
+		var itemTreeMenu = document.getElementById('itemTreeMenu');
+		var nodeId = itemTreeMenu.getAttribute('data-obj');
+		//console.log(nodeId);
+		$.messager.confirm("删除", "确定提交并保存?", function (r) {
+			if (r) {
+				$cm({
+					ClassName:'CF.NUR.DWB.LogItem',
+					MethodName:"Delete",
+					rowID:nodeId
+				},function(jsonData){
+					//console.log(jsonData);
+					if(jsonData.flag == 'false'){
+						//删除失败
+						$.messager.popover({msg: '删除失败！',type:'error',timeout: 800});
+						return;
+					}
+					refreshPage();
+				});
+			}
+		});
+	}
+	
+    //获取的左边树
+	function getLeftTreeData(){
+		var searchText = document.getElementById('searchText').value;
+        var hospid=$HUI.combogrid('#_HospList').getValue();
+		$cm({
+			ClassName:'CF.NUR.DWB.LogItem',
+			MethodName:"GetTreeStructure",
+			HospID:hospid,
+			Desc:searchText
+		},function(jsonData){
+			//console.log('GetTreeStructure',jsonData);
+			if(jsonData.msg){
+				return
+			}
+			$("#item-tree").tree({
+				data:jsonData,
+				formatter:function(node){
+					return node.name
+				}
+			});
+		});
+	}
+	//获取右边表
+	function getRightTableData(){
+		var searchText = document.getElementById('searchText').value;
+        var hospid=$HUI.combogrid('#_HospList').getValue();
+		$cm({
+			ClassName:'CF.NUR.DWB.LogItem',
+			MethodName:"GetTableStructure",
+			HospID:hospid,
+			Desc:searchText
+		},function(jsonData){
+			//console.log('GetTableStructure',jsonData)
+			if(jsonData.msg){
+				return		
+			}
+			treegridObj.loadData({"total":94,
+				"rows":jsonData
+			});
+		});
+	}
+	
+	//获取类别下拉框数据
+	function getQueryTypeArr(){
+		$cm({
+			ClassName:'CF.NUR.DWB.LogItem',
+			QueryName:"QueryType"
+		},function(jsonData){
+			console.log('getQueryType',jsonData)
+			if(!jsonData.rows){
+				return		
+			}
+			typeArr = jsonData.rows;
+			$('#itemEditType').combobox("loadData",typeArr);
+		});
+	}
+	
+	//获取数据途径下拉框数据
+	function getQueryGetWayArr(){
+		$cm({
+			ClassName:'CF.NUR.DWB.LogItem',
+			QueryName:"QueryGetWay"
+		},function(jsonData){
+			//console.log('getQueryGetWay',jsonData)
+			if(!jsonData.rows){
+				return		
+			}
+			getWayArr = jsonData.rows;
+			$('#itemEditWay').combobox("loadData",getWayArr);
+		});
+	}
+	//获取显示床号,患者总数数据
+	function getQueryShowArr(){
+		$cm({
+			ClassName:'CF.NUR.DWB.LogItem',
+			QueryName:"QueryShow"
+		},function(jsonData){
+			if(!jsonData.rows){
+				return		
+			}
+			showArr = jsonData.rows;
+			var itemEditShowList = document.getElementById('itemEditShowList');
+			
+			for(var i = 0; i < showArr.length;i++){
+				var label = '显示患者'+showArr[i].text;
+				var value = showArr[i].value;
+				
+				$("#itemEditShowList").append("<input class='hisui-radio' id='editShow"+value+"' type='radio' label='"+label+"' value='"+value+"' name='editShow'>");
+            	$HUI.radio("#itemEditShowList input.hisui-radio",{});
+			}
+		});
+	}
+	
+	function refreshPage(){
+		$("#item-tree").tree({
+			data:[]
+		});	
+		treegridObj.loadData({"total":0,
+			"rows":[]
+		});
+		getLeftTreeData();
+		getRightTableData();
+	}
+	
+	function isArrStrContainStr(arrStr,str){
+		if(arrStr == ''){
+			return false;
+		}
+		var arr = arrStr.split(',');
+		for(var i = 0; i < arr.length;i++){
+			var tempStr = arr[i];
+			if(tempStr == str){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	function deleteStrFromArrStr(arrStr,str){
+		var arr = arrStr.split(',');
+		for(var i = 0; i < arr.length;i++){
+			var tempStr = arr[i];
+			if(tempStr == str){
+				arr.splice(i,1);
+				console.log(arr);
+				break;
+			}
+		}
+		if(arr.length == 0){
+			return '';
+		}else{
+			return arr.join();
+		}
+	}
+	
+	
+	/*
+	$("#item-tree").tree({
+   		data:[{"id":1,"text":"住院人数"},
+    	{"id":2,"text":"转床"},
+    	{"id":9,"text":"血糖","children":[
+    		{"text":"早餐后"},{"text":"午餐后"},
+    		{"text":"晚餐后"},{"text":"空腹"}]},
+    	{"id":10,"text":"测心率","children":[
+    		{"text":"bid"},{"text":"tid"}]}],
+    	formatter:function(node){
+			return node.text;
+		}
+    });
+	treegridObj.loadData({"total":94,
+    	"rows":[
+    		{"id":1,"f1":"住院人数","f2":'1',"f3":'',"f4":'',"f5":''},
+    		{"id":9,"f1":"血糖"},
+    		{"id":91,"f1":"早餐后","f2":'9',"f3":'',"f4":'',"f5":'',"_parentId":9},
+    		{"id":92,"f1":"空腹","f2":'9',"f3":'',"f4":'',"f5":'',"_parentId":9},
+			{"id":93,"f1":"午餐后","f2":'9',"f3":'',"f4":'',"f5":'',"_parentId":9},
+    		{"id":94,"f1":"晚餐后","f2":'9',"f3":'',"f4":'',"f5":'',"_parentId":9},		
+		]
+    });
+	
+	*/
+	</script>
+</body>
+</html>

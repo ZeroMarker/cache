@@ -1,0 +1,83 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--dhcdoc.interface.outside..configexp.csp-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+    <meta http-equiv="Content-Type" content="text/html;"/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+    <script type="text/javascript" src="../scripts/DHCDoc.Interface.Outside.Config.js"></script>
+ <style type='text/css'>
+	.label{
+		font-size:13px;
+		font-weight:bold;
+	}
+	h2{
+		text-align: left	
+	}
+</style>     
+</head>
+<body class="easyui-layout" data-options="fit:true,border:false">
+  	<div data-options="region:'center',border:true,split:true,title:''"> 
+   		 <div id="dataTabs" class="easyui-panel" title="对外预约挂号配置说明"  data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+			<p style="color:red;font-size:18px">注：标明"全局"的为不区分安全组配置</p>
+			<p class="label">启用外部数据对照</p>
+				若需要与第三方对照数据，则勾选此配置。否则需第三方按照His代码进行传值，比如性别、支付方式代码等。
+				<hr>
+			<h2>自助建卡配置:</h2>
+			<p>
+				<hr>
+				<p class="label">1、是否由系统自动生成相应卡类型虚拟卡号</p>
+					若配置1不勾选，则根据接口传入的卡类型有系统生成相应的虚拟卡号，卡号开头字母为“X”，主要用于移动支付端，不便于发放实体就诊卡的第三方。后续流程需要走HIS的换卡功能换去实体卡。
+				<hr>
+				<p class="label">2、是否允许存在正常卡时关联另外一种卡类型卡</p>
+					当患者已存在一张有效卡时，是否允许关联另外一种卡类型不同的新卡。
+				<hr>
+				<p class="label">3、重复主索引获取规则</p>
+					当患者已在HIS中存在有效主索引信息时，查询患者信息接口在根据病人身份证+姓名获取信息的时候将会根据此配置，获取相应的主索引信息。
+				<hr>
+				<p class="label">4、条形码卡类型(全局)</p>
+					为全局配置，在勾选了配置1后，需同步维护条形码卡类型，以便系统获取。
+			</p>
+			
+			<hr>
+			<h2>预约挂号设置:</h2>
+			<p>
+				<hr>
+				<p class="label">1、挂号开始时间、结束时间</p>
+					一般用于移动支付端，防止对计费组的日结功能有影响。若不配置，系统自动默认23:30-00:30不允许产生挂号业务。
+				<hr>
+				<p class="label">2、是否关闭锁号功能</p>
+					关闭锁号功能，除了锁号接口可不用调取外，挂号支付接口OPRegister也将不会判断订单的有效性。
+				<hr>
+				<!--<p class="label">3、是否取消锁号时不释放资源并新增资源(全局)</p>
+					勾选后，取消锁号将不释放资源并新增资源一个号，否则将原来锁定的号序还原为可挂状态。-->
+				<p class="label">3、是否锁号接口启用分时段挂号</p>
+					若勾选，则存在分时段的排班在锁号接口LockOrder可在传入分时段开始时间结束时间时进行分时段锁号。
+				<hr>
+				<p class="label">4、是否启用提前挂号(预约时直接缴费取号)</p>
+					若勾选，则锁号接口LockOrder及挂号支付接口OPRegister可锁定、支付当天之后的排班，否则只能锁定支付当天的排班。
+				<hr>
+				<p class="label">5、是否启用医保挂号(自助机设备)</p>
+					对于自助机设备，可启用医保挂号，由于移动设备的限制性，无法应用该配置。启用医保挂号后，同时需要调用医保接口进行医保挂号费用实时分解，医保病人即按照正常费别挂号，配置-6失效。目前接口不支持医保挂号，需要实际调试过程中与医保组确定接口。
+				<hr>
+				<p class="label">6、未启用医保挂号是否支持医保病人自费挂号</p> 
+					若未有医保挂号实施分解功能，又想社会地位为医保的患者可挂号，则勾选该配置，并且只能挂自费号，否则系统不允许医保病人挂号。并同步配置自费费别。
+				<hr>
+				<p class="label">7、自费费别(全局)</p>
+					维护自费费别。
+				<hr>
+				<p class="label">7、锁号有效时间(单位秒,比如10分钟为600,默认为600)（全局）</p>
+				   10分钟=10*60=600秒，需维护600
+				<hr>
+				<p class="label">8、预约or提前挂号所走预约方式号段(默认窗口)</p>
+					如配置名称。
+			</p>
+  		</div>
+  </div>
+  
+</body>
+</html>

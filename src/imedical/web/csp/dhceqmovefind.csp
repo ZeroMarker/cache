@@ -1,0 +1,141 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<!--DOCTYPE HTML-->
+<HEAD>
+<!--meta http-equiv="x-ua-compatible" content="IE=edge"-->
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<DHCEQ:EASYUI></DHCEQ:EASYUI>
+<script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	}; 
+	
+</script>
+<script type="text/javascript" src="../scripts/dhceq/function/common.js"></script>
+<script type='text/javascript' src='../scripts/dhceq/js/dhceqmovefind.js'></script>
+</HEAD>
+
+<body>
+	<div style="margin:10px 0;" ></div>
+	<div class="easyui-layout" data-options="fit:true,border:true" style='width:100%;height:9.9%;display:block;'>
+		<div data-options="region:'north'" style="height:160px" title="设备配送管理查找">
+			<table id='tQueryPanel' class="chargeTable">
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>移动单号</td><td><input id="No" type="text"></input></td><td class="tdspace"></td>
+					<td>设备名称</td><td><input id="EquipName" type="text"></input></td><td class="tdspace"></td>
+					<td>设备编号</td><td><input id="EquipNo" type="text"></input></td><td class="tdspace"></td>
+					<td>移动缘由</td><td><input id="EventType" type="text"></input></td><td class="tdspace"></td>
+				</tr>
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>对应事件</td><td><input id="SourceType" type="text"></input></td><td class="tdspace"></td>
+					<td>初始单位类型</td><td><input id="FromDeptType" type="text"></input></td><td class="tdspace"></td>
+					<td>初始位置</td><td><input id="FromLocationDR" type="text"></input></td><td class="tdspace"></td>
+					<td>开始日期</td><td><input id="StartDate" class="easyui-datebox"></input></td><td class="tdspace"></td>
+			       <td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+				</tr>
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>目的单位类型</td><td><input id="ToDeptType" type="text"></input></td><td class="tdspace"></td>
+					<td>目的位置</td><td><input id="ToLocationDR" type="text"></input></td><td class="tdspace"></td>
+					<td>完成日期</td><td><input id="EndDate" class="easyui-datebox"></input></td><td class="tdspace"></td>
+			 		<td>状态</td><td><input id="Status" type="text"></input></td><td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+				</tr>
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp</td>
+					<td>送出负责人</td><td><input id="SendUserDR" type="text"></input></td><td class="tdspace"></td>
+					<td>接收负责人</td><td><input id="AcceptUserDR" type="text"></input></td><td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+					<td><a id="btnAdd" href="#" class="easyui-linkbutton" >新增</a></td><td class="tdspace"></td>
+					<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+					<td><a id="btnQuery" href="#" class="easyui-linkbutton" >查询</a></td><td class="tdspace"></td>			
+				</tr>			
+				</table>
+		</div>
+		<div data-options="region:'center'">
+			<table id="tMoveList"></table>
+		</div>
+	</div>
+ 	<!--<div id="AddMovePanel"  style="width:0;height:0;margin:auto;">
+		<div class="easyui-layout" data-options="fit:true,split:false">
+				<table id='tAddPanel'>
+					<tr>
+						<td>移动单号</td><td><input id="no" type="text"></input></td><td class="tdspace"></td>
+						<td>物体类型</td><td><input id="objtype" type="text"></input></td><td class="tdspace"></td>
+						<td>物体</td><td><input id="objid" type="text"></input></td><td class="tdspace"></td>
+					</tr>
+					<tr>
+						<td>业务类型</td><td><input id="sourcetype" type="text"></input></td><td class="tdspace"></td>
+						<td>业务</td><td><input id="sourceid" type="text"></input></td><td class="tdspace"></td>
+						<td>事件项目</td><td><input id="eventtype" type="text"></input></td><td class="tdspace"></td>
+					</tr>
+					<tr>
+						<td>原单位类型</td><td><input id="fromdepttype" type="text"></input></td><td class="tdspace"></td>
+						<td>原单位</td><td><input id="fromdeptid" type="text"></input></td><td class="tdspace"></td>
+						<td>原位置</td><td><input id="fromLocationdr" type="text"></input></td><td class="tdspace"></td>
+					</tr>
+					<tr>
+						<td>目的单位类型</td><td><input id="todepttype" type="text"></input></td><td class="tdspace"></td>
+						<td>目的单位</td><td><input id="todeptid" type="text"></input></td><td class="tdspace"></td>
+						<td>目的位置</td><td><input id="tolocationdr" type="text"></input></td><td class="tdspace"></td>
+					</tr>
+					<tr>
+						<td>移动开始日期</td><td><input id="startdate" class="easyui-datebox"></input></td><td class="tdspace"></td>
+						<td>移动原因</td><td><input id="movereason" type="text"></input></td><td class="tdspace"></td>
+						<td>送出负责人</td><td><input id="senduserdr" type="text"></input></td><td class="tdspace"></td>
+					</tr>
+					<tr>
+						<td>移动完成日期</td><td><input id="enddate" class="easyui-datebox"></input></td><td class="tdspace"></td>
+						<td>接收负责人</td><td><input id="acceptuserdr" type="text"></input></td><td class="tdspace"></td>
+						<td>备注</td><td><input id="remark" type="text"></input></td><td class="tdspace"></td>
+					</tr>
+					<tr>
+						<td>无效原因</td><td><input id="invalidreason" type="text"></input></td>
+						<td></td><td><input id="rowid" type="hidden"></input></td>
+						<td></td><td><input id="status" type="hidden"></input></td>
+					</tr>
+				</table>
+				
+		</div>
+	</div>-->
+</body>
+
+</HTML>

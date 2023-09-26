@@ -1,0 +1,248 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!--<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>-->
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<SCRIPT language="javascript" type="text/javascript" src="../scripts/websys.js"></SCRIPT>
+<SCRIPT language="javascript" type="text/javascript" src="../scripts/websys.list.js"></SCRIPT>
+<SCRIPT language="javascript" type="text/javascript" src="../scripts/websys.listrows.js"></SCRIPT>
+<SCRIPT language="javascript" type="text/javascript" src="../scripts/websys.List.Tools.js"></SCRIPT>
+<script language="javascript" type="text/javascript" src="../scripts/jQuery/jquery.js"></script>
+<SCRIPT language="javascript" type="text/javascript" src="../scripts/jQuery/jquery-1.3.2.min.js"></SCRIPT>
+<SCRIPT language="javascript" type="text/javascript" src="../scripts/jQuery/jquery-1.3.2.js"></SCRIPT>
+<script language="javascript" type="text/javascript" src="../scripts/jQuery/My97DatePicker/WdatePicker.js"></script>
+<script	type="text/javascript" language="javascript" src="../scripts/jQuery/FixedTableHead.js"></script>
+<SERVER>
+	Set GetAllAnOpInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPStatistics.GetAllAnOpInfo"))
+	Set GetReportDetails=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPStatistics.GetReportDetails"))
+	Set GetReturnStr=##Class(%CSP.Page).Encrypt($lb("web.DHCANOPStatistics.GetReturnStr"))
+	Set GetPath=##Class(%CSP.Page).Encrypt($lb("web.DHCLCNUREXCUTE.GetPath"))
+	Write "<input id='GetPath' name='GetPath' type='hidden' value='"_GetPath_"'>",$C(13,10)
+	Write "<input id='GetAllAnOpInfo' name='GetAllAnOpInfo' type='hidden' value='"_GetAllAnOpInfo_"'>",$C(13,10)
+	Write "<input id='GetReportDetails' name='GetReportDetails' type='hidden' value='"_GetReportDetails_"'>",$C(13,10)
+ 	Write "<input id='GetReturnStr' name='GetReturnStr' type='hidden' value='"_GetReturnStr_"'>",$C(13,10)
+</SERVER>
+<style type="text/css">
+.sDefault
+{
+	margin:0px;
+	padding:0px;
+	border:none;
+	font-family:Verdana, Arial, sans serif;
+	font-size:1em;
+}
+.sDefault th
+{
+	background-color:#3399FF;
+	border-color:#000000;
+	text-align:center;
+	white-space:nowrap;
+}
+.sDefault td
+{
+	border:1px solid #000000;
+	padding:3px 12px 3px 14px;
+	white-space:nowrap;
+	text-align:center;
+}
+tr.alt td {
+	background:#FFFFF0;
+}
+tr.over td {
+	background:#adff2f;
+}
+.DivClassTB
+{
+	text-align:center;
+}
+button{
+ background:#F0F0F0 repeat-x;
+ padding-top:3px;
+ border-top:1px solid #708090;
+ border-right:1px solid #708090;
+ border-bottom:1px solid #708090;
+ border-left:1px solid #708090; 
+ width:80px;
+ height:auto;
+ font-size:10pt;
+ cursor:hand;
+}
+#DivTop ul {list-style: none;margin: 0px;padding: 0px;}
+#DivTop ul li{display:inline;background-color:#3399FF;margin: 0px 20px 10px 0px;}
+#DivTop ui li label{color:#515050;font-size:14px;}
+</style>
+</HEAD>
+<Body class="patientinfo"> 
+<SCRIPT type=text/javascript charset=utf-8>
+	$(document).ready(function(){ 
+		//设置日期默认为当天
+		var d=new Date()
+		var vYear=d.getFullYear();vMon=d.getMonth()+1;vDay=d.getDate()
+		var today=vYear+"-"+(vMon<10 ? "0" + vMon : vMon)+"-"+(vDay<10 ? "0"+ vDay : vDay);
+		$("#StrDate").val(today);$("#EndDate").val(today);
+		//$("#StrDate").val("2011-09-21");$("#EndDate").val("2011-09-21");
+		//加载下拉框选项   默认第一个报表
+		var retRPDetails=cspRunServerMethod($("#GetReportDetails").val());
+		for(var rpCount=0;rpCount<retRPDetails.split(String.fromCharCode(3)).length;rpCount++)
+		{
+			var retRPStr=retRPDetails.split(String.fromCharCode(3))[rpCount];
+			var rpCode=retRPStr.split(String.fromCharCode(1))[0];
+			var rpDesc=retRPStr.split(String.fromCharCode(1))[1];
+			if(rpCount==0){
+				$("#SelDropDownList").append("<option value='"+rpCode+"' selected='selected'>"+rpDesc+"</option>");
+			}else{
+				$("#SelDropDownList").append("<option value='"+rpCode+"'>"+rpDesc+"</option>");
+			}
+		}
+		//加载默认表格
+		editTable();
+		$("#BtnSch").click(function(){
+			editTable();  //加载表格内容
+		});
+		$("#Print").click(function(){
+			printTable();  //打印 导出
+		});
+		//$("#SelDropDownList").change(function(){   //为Select添加事件?当选择其中一项时触发
+		//var checkText=$("#select_table").find("option:selected").text();   //获取Select选择的Text
+		//var checkValue=$("#select_table").val();  //获取Select选择的Value
+		//var checkIndex=$("#select_table ").get(0).selectedIndex;  //获取Select选择的索引值
+		//var maxIndex=$("#select_table option:last").attr("index");  //获取Select最大的索引
+		//$("#select_table").append("<option value='Value'>Text</option>");  //为Select追加一个Option(下拉项)
+		//});
+
+		//FixTable("TBView",1,800,600); 
+		//jQuery.fn.CloneTableHeader("TBView","DivTB");
+		$(".flip").click(function(){
+			$("#DivTop").slideToggle("slow");
+		}); 
+	});
+	function editTable()
+	{
+		var columnName=cspRunServerMethod($("#GetReturnStr").val(),$("#SelDropDownList").val(),"Return","Desc");
+		var rowValue=cspRunServerMethod($("#GetAllAnOpInfo").val(),$("#StrDate").val(),$("#EndDate").val(),$("#SelDropDownList").val(),"")
+		$("#DivTB").empty();   //清除所有数据?包括自定义的div和table
+		$("#DivTB").append("<table id='TBView' class='sDefault'><thead></thead><tbody></tbody></table>");  //重新添加table
+		$("#TBView thead").append("<tr></tr>");   //在"thead"中增加第一个<tr></tr>
+		for(var count=0;count<columnName.split("^").length;count++)
+		{
+			$($("tr")[0]).append("<th>"+columnName.split("^")[count]+"</th>");   //自动增加列
+		}
+		for(var count=0;count<rowValue.split(String.fromCharCode(3)).length;count++){
+			var rowStr=rowValue.split(String.fromCharCode(3))[count];
+			$("#TBView tbody").append("<tr></tr>");   //在"tbody"中增加第一个<tr></tr>
+			for(var b=0;b<rowStr.split(String.fromCharCode(1)).length;b++){
+				if(rowStr.split(String.fromCharCode(1))[b]!="")
+				{
+					$($("tr")[count+1]).append("<td>"+rowStr.split(String.fromCharCode(1))[b]+"</td>");  //增加行数据
+				}
+				else
+				{
+					$($("tr")[count+1]).append("<td> </td>");
+				}
+			}
+
+		}
+		$("#TBView").FixedHead({
+			height:'570',   //列表高度
+			width:'1000',    //列表宽度
+			fixedHead:true, //是否固定表头?默认为true
+			fixedLeft:false, //是否固定左边列?默认为false  暂未实现
+			fixedLeftCount: 2, //当固定左边列?设置固定左边的列数?当fixedLeft: true时生效
+			fixedDiv: "DivTB"  //传入固定表格的div
+		});
+		
+		//设置表格格式
+		$("#TBView tr").mouseover(function(){
+			$(this).addClass("over");
+		}).mouseout(function(){        //也可以加上$("#TBView tr")?效果一样?因为对象相同所以可以省略
+			$(this).removeClass("over");
+		})
+		$("#TBView tr:even").addClass("alt");
+
+	}
+	function printTable()  //operation patient print,status:arranged
+	{
+		var fileName,path;
+		var xlsExcel,xlsBook,xlsSheet;
+		var row=1;
+		var titleRows,titleCols,LeftHeader,CenterHeader,RightHeader;
+		var LeftFooter,CenterFooter,RightFooter,frow,fCol,tRow,tCol;
+		var path=cspRunServerMethod($("#GetPath").val());
+		var columnNameStr=cspRunServerMethod($("#GetReturnStr").val(),$("#SelDropDownList").val(),"Return","Desc");
+		var rowValue=cspRunServerMethod($("#GetAllAnOpInfo").val(),$("#StrDate").val(),$("#EndDate").val(),$("#SelDropDownList").val(),"")
+		xlsExcel = new ActiveXObject("Excel.Application");
+		fileName=path+"RFD.xls";
+		xlsBook = xlsExcel.Workbooks.Add(fileName) ;
+		xlsSheet = xlsBook.ActiveSheet;
+		var columnName=columnNameStr.split("^")
+		for(var count=0;count<columnNameStr.split("^").length;count++)
+		{
+			xlsSheet.cells(1,count+1)=columnName[count];
+		} 
+		for(var count=0;count<rowValue.split(String.fromCharCode(3)).length;count++)
+		{
+			var rowStr=rowValue.split(String.fromCharCode(3))[count];
+			for(var b=0;b<rowStr.split(String.fromCharCode(1)).length;b++){
+				if(rowStr.split(String.fromCharCode(1))[b]!="")
+				{
+					xlsSheet.cells(count+2,b+1)=rowStr.split(String.fromCharCode(1))[b];
+				}
+			}
+		}
+		var row=rowValue.split(String.fromCharCode(3)).length+5;
+		var printLen=columnNameStr.split("^").length+2;
+		var d=new Date();
+		alert(1);
+		/*var savefileName="C:\\Documents and Settings\\mzk\\桌面\\"
+		var vYear=d.getFullYear();vMon=d.getMonth()+1;vDay=d.getDate()
+		var today=vYear+"-"+(vMon<10 ? "0" + vMon : vMon)+"-"+(vDay<10 ? "0"+ vDay : vDay);
+		savefileName=$("#SelDropDownList").find("option:selected").text()+" "+today;
+		savefileName+=" "+d.getHours()+"-"+d.getMinutes()+"-"+d.getSeconds();
+		savefileName+=".xls"*/
+		
+		//var savefileName="C:\\Documents and Settings\\xxk\\桌面\\";
+		var savefileName="C:\\Documents and Settings\\mzk\\桌面\\";
+		//savefileName+=rpStr[1];
+		savefileName+=$("#SelDropDownList").find("option:selected").text();
+		alert($("#SelDropDownList").find("option:selected").text());
+		savefileName+=d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+		savefileName+=" "+d.getHours()+"-"+d.getMinutes()+"-"+d.getSeconds();
+		savefileName+=".xls"
+		
+		alert(savefileName);
+		
+	    xlsSheet.SaveAs(savefileName);
+		//xlsSheet.PrintOut(); 
+		xlsSheet = null;
+	 	xlsBook.Close(savechanges=false)
+		xlsBook = null;
+		xlsExcel.Quit();
+		xlsExcel = null;
+	} 
+</SCRIPT>
+
+<!--<input id="d11" type="text" onClick="WdatePicker()"/>--><!--"日期控件?直接点击"-->
+<!--<p class="flip">隐藏</p>-->
+<div id='DivTop' style="text-align:center">
+	<hr width=80% size=3 color=#00ffff style="FILTER: alpha(opacity=100,finishopacity=0,style=3)"> 
+	<ul>
+	<li><label>开始日期:</label>
+	<input id="StrDate" type="text"/><img onclick="WdatePicker({el:'StrDate'})" src="../scripts/jQuery/My97DatePicker/skin/datePicker.gif" width="16" height="22" align="absmiddle"></li>
+	<li><label>结束日期:</label>
+	<input id="EndDate" type="text"/><img onclick="WdatePicker({el:'EndDate'})" src="../scripts/jQuery/My97DatePicker/skin/datePicker.gif" width="16" height="22" align="absmiddle"></li>
+	<li><label>报表名称:</label>
+	<select id="SelDropDownList"></select></li>
+	<li><button id="BtnSch">查询</button></li>
+	<li><button id="Print">打印</button></li>
+	</ul>
+	<hr width=80% size=3 color=#00ffff style="FILTER: alpha(opacity=100,finishopacity=0,style=3)"> 
+</div>
+<div id="DivTB" class="DivClassTB"></div>  <!--显示table所用div-->
+</body>
+</html>

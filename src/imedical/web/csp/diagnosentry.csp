@@ -1,0 +1,304 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.-->
+<!--diagnosentry.csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.easyui.1.3.5.css"></LINK>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css"/>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/easyuicom.1.3.5.css">
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.Diagnos.Entry.js"></script>
+<!--//add by zf 20150330 引用医政组接口-->
+<SCRIPT SRC='../scripts/dhcmed/ss/interface/MRDiagnos.js'></SCRIPT>
+<Server>
+    s EpisodeID=%request.Get("EpisodeID")
+    s PAAdmType="",mradm="",PatientID=""
+    if EpisodeID'="" {
+        s EpisodeType=$p(^PAADM(EpisodeID),"^",2)
+        s PAAdmType=EpisodeType
+        s mradm=$p(^PAADM(EpisodeID),"^",61)
+        s PatientID=$p(^PAADM(EpisodeID),"^",1)
+        s FirstAdm=0,ReAdmis=0,OutReAdm=0,TransAdm=0,ILIFlag=0,AdmWay=""
+        s FirstOrReadmis=$p(^PAADM(EpisodeID),"^",72)
+        s AdmReadm=$p(^PAADM(EpisodeID),"^",56)
+        s TransFlag=$p($g(^PAADM(EpisodeID,"DHC")),"^",5)
+        s ILIFlag=$p($g(^PAADM(EpisodeID,"DHC")),"^",13)
+        s QueStateDesc=""
+        s QueRowId=$o(^User.DHCQueueI("QuePaadmDrIndex",EpisodeID,""))
+        if (QueRowId'=""){
+            s QueStateDr=$list(^User.DHCQueueD(QueRowId),14)
+            if (QueStateDr'=""){
+                s QueStateDesc=$list(^User.DHCPerStateD(QueStateDr),4)
+            }
+        }
+        ;默认初诊
+        s FirstAdm=1
+        s AdmWayID=$p($g(^PAADM(EpisodeID,2)),"^",47)
+        I AdmWayID'="" S AdmWay=$P(^PAC("RTR",AdmWayID),"^",1)
+        if (FirstOrReadmis="R")&&(AdmWay="CYFZ") s OutReAdm=1,FirstAdm=0
+        if (FirstOrReadmis="F") s FirstAdm=1
+        if ((AdmReadm="R")&&(AdmWay="MZFZ"))||(QueStateDesc="复诊") s ReAdmis=1,FirstAdm=0
+        if (TransFlag="Y")&&(AdmWay="ZZ") s TransAdm=1,FirstAdm=0
+        ;流感样
+        if ILIFlag="Y" s ILIFlag=1
+        //血压
+        s BPSystolic=$p($g(^MR(mradm,"PRO",1)),"^",4)
+        s BPDiastolic=$p($g(^MR(mradm,"PRO",1)),"^",5)
+        s DiagnosStatus=$o(^MRC("DSTAT",0,"Desc","确诊",""))
+        //诊断状态
+        s DiaW=$O(^MRC("DSTAT",0,"Desc","待诊",0))
+        s DiaH=$O(^MRC("DSTAT",0,"Desc","疑诊",0))
+        s DiaD=$O(^MRC("DSTAT",0,"Desc","确诊",0))
+        //体重
+        s Weight=$p($g(^MR(mradm,"PRO",1)),"^",27)
+        //
+        //特殊人群
+       s SpecialistStr=$p($G(^MR(mradm,"DHC")),"^",8) 
+       s SpecialStrCreat=""
+       if (SpecialistStr'=""){
+         s LengSpec=$L(SpecialistStr,"!")
+         for Sub=1:1:LengSpec
+         {
+          s SubStr=$P(SpecialistStr,"!",Sub)
+          s Va=$P(SubStr,$C(1),1)
+          continue:Va=""
+          i SpecialStrCreat="" s SpecialStrCreat=Va
+         e  s SpecialStrCreat=SpecialStrCreat_"^"_Va
+         }
+       }
+        s DocID=$P(^SSU("SSUSR",%session.Get("LOGON.USERID")),"^",14)
+        s DiagnosStatus=DiaD
+        //住院患者的入院诊断
+        s INDiag=##class(web.DHCDocDiagnosNew).GetMRDiagnosByEpisodeID(EpisodeID)
+        //必须录入血压(科室扩展第12位)
+        s NeedStolicMast=+(##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),12))
+        //传染病上报诊断提示
+        s GetSeriousDiseaseByICDMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.GetSeriousDiseaseByICD"))
+        
+        s FindMRDIAICDCodeDR =##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.GetOneICD"))
+        s GetMRDiagnoseList=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.GetMRDiagnoseList"))
+        s UpdateMRDiagnosNote=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.UpdateMRDiagnosNoteBroker"))
+        s InsertMRDiagnosMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.InsertMRDiagnos"))
+        s SetArrivedStatus=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderEntry.SetArrivedStatus"))
+        //更新发病日期
+        s UpdateOnsetDateMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.UpdateOnsetDate"))
+        s FindClinicPathWayByICDMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCMRClinicalPathWays.FindClinicPathWayByICD"))
+        s UpdatePAADM=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.UpdatePAADM"))
+        s DeleteMRDiagnosMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.DeleteMRDiagnos"))
+        s InsuPatTypeCheck=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.InsuPatTypeCheck"))
+        s FlagMarchDiagnose=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.FlagMarchDiagnose"))
+        s UpdateMRDiagnosMethod =##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.UpdateMRDiagnos"))
+        s AddPrivateTemplateMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.AddPrivate"))
+        s PrivateSaveMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.PrivateSaveNew"))
+        s CheckAdd=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.CheckAdd"))
+        ;获取审核的诊断是否是中医诊断
+        s GetZYMRDiagnosFlag =##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.GetZYMRDiagnosFlag"))
+        s SetPAADMSingleDisMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderCommonExpand.SetPAADMSingleDis"))
+         ;判断是否可以接诊
+        s CheckIsAdmissionsMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOutPatientList.CheckIsAdmissions"))
+        s CopyFromHistMRDiagMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.CopyFromHistMRDiag"))
+        s GetGroupICDInfoMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.GetGroupICDInfo"))
+    }
+    ;是否中医科室
+    s LogonLocID=%session.Get("LOGON.CTLOCID")
+    s ChinaMedFlag=+$p($g(^CTLOC(LogonLocID,"DHC")),"^",16)
+    //启用标准证型诊断
+    s UserICDSyndrome=##class(web.DHCDocConfig).GetConfigNode("UserICDSyndrome")
+    s WeekGestationDia=##class(web.DHCDocConfig).GetConfigNode("WeekGestationDia")
+    s GetWeekDiagnoseMethod=##Class(%CSP.Page).Encrypt($lb("DHCDoc.DHCDocConfig.ItmDiagnose.GetWeekDiagnose"))
+    //判断科室是否启用诊断知识库
+    s UseDKBFlag=+(##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),19)) //##class(web.DHCDocConfig).GetConfigNode("UseDDiagnosKB")
+	s UserOpenUseDKBFlag=##class("web.DHCDocConfig").GetConfigNode1("UserOpenDKB",%session.Get("LOGON.USERID"))
+	;根据诊断取诊断模板
+    s GetDiagTempData=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTremExtend.GetDoctorInfo"))
+    s GetChildTreeJson=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTremExtendDetail.GetDocTreeJson"))
+    s GetDiagListProperty=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTremExtendDetail.GetMyList"))
+    s GetDiagTXProperty=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTremExtendDetail.GetTextInfo"))
+    s GetSoursePropertyInfo=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTremExtendDetail.GetSourseInfo"))
+    s GetDocSourseList=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTrem.GetDocSourseList"))
+    s GetSourseTreeJson=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTrem.GetSourseTreeJson"))
+    s GetDocCatList=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBTremExtend.GetDocCatList"))
+    s GetDiagDisPlayNameJson=##Class(%CSP.Page).Encrypt($lb("web.DHCMRDiagnos.GetDiagDisPlayName"))
+    s TKBTremBaseId=##class(web.DHCBL.MKB.TKBTrem).GetBaseID("Diagnose") //诊断 术语注册表id TKB_TremBase
+    s GetDiagPLinkICDJson=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.TKBICDRelation.GetRecommend"))
+</Server>
+<style>
+.ipwest
+{
+	width: 47%;
+}
+.opwest
+{
+	width: 52%;
+}
+.ipeast,.opeast
+{
+	width: 27%;
+}
+/*.[id^='SyndromeSearch']{
+    width: 170px;
+}*/
+.panel-body,.tree-title,.combobox-item, .combobox-group{
+		font-size: 14px;
+	}
+	#FormWindow{
+		padding: 0px 10px 10px 10px;
+	}
+	#FormWindow>div{
+		margin-bottom: 5px;
+	}
+	input[type="radio"]{	 
+    	vertical-align:middle;
+    }
+    #FormWindow a{
+	    color: black;
+	}
+	#DiagForm
+	{
+		/*width: 460px;*/
+		/*  border-collapse 设置表格的边框是否被合并为一个单一的边框，还是象在标准的HTML中分开显示。 */
+		border-collapse: collapse;
+		border: 1px solid #bbbbbb;
+	}
+	#DiagForm1{
+		width: 100%;
+		border-collapse: collapse;
+		border: 1px solid #bbbbbb;
+	}
+	#DiagForm tr,#DiagForm1 tr{
+		height: 30px;
+	}
+	/* 单元格边框 */
+	#DiagForm td, th
+	{
+		border:1px solid #bbbbbb;
+	}
+    #DiagForm1 td, th
+	{
+		border:1px solid #bbbbbb;
+	}
+	.td_label{
+		text-align: right;
+		background-color: #CCE6FF;
+	    font-weight: bold;
+	}
+	#DiagForm td{
+		/*padding-left: 5px;*/
+		
+	}
+	#formbtn{
+		text-align: center;
+	}
+</style>
+ </head>
+  <body class="easyui-layout" data-options="fit:true,border:false">
+    <input id='EpisodeID' name='EpisodeID' type='hidden' value='#(EpisodeID)#'>
+    <input id='PatientID' name='PatientID' type='hidden' value='#(PatientID)#'>
+    <csp:if condition='PAAdmType="I"'>
+        <csp:Include Page="diagnosentry.ip.csp">
+    <csp:else>
+        <csp:Include Page="diagnosentry.op.csp">
+    </csp:if>
+    <csp:if condition='WeekGestationDia=""'>
+    <csp:else>
+        <div id="LMPDateWindow" class="toolpanel">
+            <div style="text-align:center;">
+                <div style="margin-top:20px;">
+                    <label for="LMPDate">末次月经时间</label>
+                    <!--<input id="LMPDate" type="text" class="easyui-datebox" data-options="formatter:myformatter,parser:myparser"></input>-->  
+                    <input id="LMPDate" type="text" ></input>
+                </div>
+                <div style="margin-top:40px;margin-left:80px;">
+                    <input id="LMPSlider" value="1" style="width:350px;" data-options="min:1,max:40,showTip:true,rule:[1,'|',10,'|',20,'|',30,'|',40]" />
+                </div>
+                <div style="margin-top:40px;height:50px;">
+                    <font id="LMPResult" style="color:red;font-size:30px;"></font>
+                </div>
+            </div>
+            <div style="margin-top:70px;">
+                <div style="float:left;margin-left:100px;">
+                    <a id="LMPBSave" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'">插入诊断</a>
+                </div>
+                <div style="float:left;margin-left:80px;">
+                    <a id="LMPBCancel" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">取消</a>
+                </div>
+            </div>
+            <input id='WeekNum' type='hidden'/>
+        </div>
+    </csp:if>
+    <csp:Include Page="diagnosentry.diagform.csp">
+    
+    
+    <SCRIPT language = 'javascript' >
+     var EpisodeID="#(EpisodeID)#";
+     var mradm="#(mradm)#";
+     var PatientID="#(PatientID)#";
+     var EpisodeType="#(EpisodeType)#";
+     var FirstAdm="#(FirstAdm)#"
+     var ReAdmis="#(ReAdmis)#"
+     var OutReAdm="#(OutReAdm)#"
+     var TransAdm="#(TransAdm)#"
+     var ILIFlag="#(ILIFlag)#"
+     var BPSystolic="#(BPSystolic)#"
+     var BPDiastolic="#(BPDiastolic)#"
+     var INDiag="#(INDiag)#"
+     var NeedStolicMast="#(NeedStolicMast)#"
+     var GetSeriousDiseaseByICDMethod="#(GetSeriousDiseaseByICDMethod)#"
+     var FindMRDIAICDCodeDR="#(FindMRDIAICDCodeDR)#"
+     var GetMRDiagnoseList="#(GetMRDiagnoseList)#"
+     var UpdateMRDiagnosNote="#(UpdateMRDiagnosNote)#"
+     var InsertMRDiagnosMethod="#(InsertMRDiagnosMethod)#"
+     var SetArrivedStatus="#(SetArrivedStatus)#"
+     var UpdateOnsetDateMethod="#(UpdateOnsetDateMethod)#"
+     var FindClinicPathWayByICDMethod="#(FindClinicPathWayByICDMethod)#"
+     var UpdatePAADM="#(UpdatePAADM)#"
+     var DiagnosStatus="#(DiagnosStatus)#"
+     var DeleteMRDiagnosMethod="#(DeleteMRDiagnosMethod)#"
+     var InsuPatTypeCheck="#(InsuPatTypeCheck)#"
+     var FlagMarchDiagnose="#(FlagMarchDiagnose)#"
+     var UpdateMRDiagnosMethod="#(UpdateMRDiagnosMethod)#"
+     var AddPrivateTemplateMethod="#(AddPrivateTemplateMethod)#"
+     var PrivateSaveMethod="#(PrivateSaveMethod)#"
+     var CheckAdd="#(CheckAdd)#"
+     var GetZYMRDiagnosFlag="#(GetZYMRDiagnosFlag)#"
+     var SetPAADMSingleDisMethod="#(SetPAADMSingleDisMethod)#"
+     var CheckIsAdmissionsMethod="#(CheckIsAdmissionsMethod)#"
+     var SpecialStrCreat="#(SpecialStrCreat)#"
+     var DiaW="#(DiaW)#"
+     var DiaH="#(DiaH)#"
+     var DiaD="#(DiaD)#"
+     var DocID="#(DocID)#"
+     var Weight="#(Weight)#"
+     var ChinaMedFlag="#(ChinaMedFlag)#"
+     var UserICDSyndrome="#(UserICDSyndrome)#"
+     var CopyFromHistMRDiagMethod="#(CopyFromHistMRDiagMethod)#"
+     var GetGroupICDInfoMethod="#(GetGroupICDInfoMethod)#"
+     var WeekGestationDia="#(WeekGestationDia)#"
+     var GetWeekDiagnoseMethod="#(GetWeekDiagnoseMethod)#"
+     var GetDiagTempData="#(GetDiagTempData)#"
+     var GetChildTreeJson="#(GetChildTreeJson)#"
+     var GetDiagListProperty="#(GetDiagListProperty)#"
+     var GetDiagTXProperty="#(GetDiagTXProperty)#"
+     var GetSoursePropertyInfo="#(GetSoursePropertyInfo)#"
+     var UseDKBFlag="#(UseDKBFlag)#"
+     var UserOpenUseDKBFlag="#(UserOpenUseDKBFlag)#"
+     var GetDocSourseList="#(GetDocSourseList)#"
+     var GetSourseTreeJson="#(GetSourseTreeJson)#"
+     var GetDocCatList="#(GetDocCatList)#"
+     var GetDiagDisPlayNameJson="#(GetDiagDisPlayNameJson)#"
+     var TKBTremBaseId="#(TKBTremBaseId)#"
+     var GetDiagPLinkICDJson="#(GetDiagPLinkICDJson)#"
+
+   </SCRIPT>
+  
+</body>
+
+
+</html>

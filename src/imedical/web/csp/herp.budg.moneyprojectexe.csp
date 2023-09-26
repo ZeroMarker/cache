@@ -1,0 +1,56 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s start 		= $Get(%request.Data("start",1))
+	s limit 		= $Get(%request.Data("limit",1))
+	s str			= $Get(%request.Data("query",1))
+	s rowid 		= $Get(%request.Data("rowid",1))
+	s Code 			= $Get(%request.Data("code",1))	
+	s Name 			= $Get(%request.Data("name",1))	
+	s Level 		= $Get(%request.Data("level",1))
+	s state 		= $Get(%request.Data("state",1))
+	s IsLast 		= $Get(%request.Data("isEnd",1))	
+	s data			= $Get(%request.Data("data",1))
+	s parent		= $Get(%request.Data("parent",1))
+	s sysid			= $Get(%request.Data("sysid",1))
+	s sysstr		= $Get(%request.Data("sysstr",1))
+	s userId	=%session.Data("LOGON.USERID")
+	s uname =$Get(%session.Data("LOGON.USERNAME"))
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgMoneyProject).List(parent,start,limit)
+	
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgMoneyProject).InsertRec(userId, uname,data)
+	.i result = 0 d
+	..w "{success:'true',info:'ok',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	
+	i action = "update" d
+	.s result = ##class(herp.budg.udata.uBudgMoneyProject).UpdateRec(userId, uname,rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:'ok',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgMoneyProject).Delete(rowid)
+	.i result =0 d
+	..w "{success:'true',info:'ok'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+</script>

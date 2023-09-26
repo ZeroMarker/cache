@@ -1,0 +1,116 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.kb.dhcpreoperlabcontr.csp
+	@JS:bdp/App/KB/NewBus/DHC_PPreoperLabContr.js
+	@Title:手术项目编辑器——术前检验质控
+	@Description:术前检验质控的增删改
+	@Creator:基础数据平台组 - 丁亚男
+	@CreateDate:2019-11-20
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+	
+<style type="text/css">
+/*多选框*/
+.panel-header-noborder {
+    border-width: 0 0 0px 0;
+}
+</style>
+<script type="text/javascript"  >
+    $(function(){
+              BodyLoadHandler();
+
+    });
+</script>
+</HEAD>
+
+<BODY>
+<server>
+	s GlPGenDr=%request.Get("GlPGenDr")
+    s GlPPointer=%request.Get("GlPPointer")
+    s GlPPointerType=%request.Get("GlPPointerType")
+</server>
+     <div class="hisui-layout" data-options="fit:true" border="false" >
+    	<!--上面选择-->
+    	<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',split:true"  style="height:148px;" border="false" title="术前检验质控"> 
+			<table data-options="fit:true,nowrap:false" id="mygrid" border="false"></table> 
+		</div>
+   		 <!--下面编辑面板-->
+       	<div data-options="headerCls:'panel-header-gray',region:'center'" border="false" > 
+       		<div class="hisui-layout" data-options="fit:true" border="false">
+       			<div id="mytbar" data-options="region:'north',split:false"  style="height:34px;text-align:left;border-top:1px solid #C0C0C0;border-bottom:1px dashed #C0C0C0;overflow:hidden" border="false">
+	 			   	 <a   class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAdd">新增</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-write-order' plain="true" id="btnUpd">修改</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-cancel' plain="true" id="btnDel">删除</a>
+	    	         <a   class="hisui-linkbutton" iconCls='icon-refresh' plain="true" id="btnRel">清屏</a>
+				</div>	
+				
+	       		<div data-options="region:'center',split:false" style="padding:4px 30px 20px 10px" border="false">
+			    	 <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    	 <table cellpadding="5">
+			    	  <!--级别框-->
+			    	 	<tr>
+				               <td class="tdleftlabel">级别</td>
+				               <td>
+				               		<table>
+						    		  <tr>
+				               				<td><input id="PHINSTModeF" name="PHINSTMode"  style="width:180px;"></td>
+				               				<td class="tdlabel" width="30px">年龄</td>
+				               				<td><input id="PDAAgeDrF" name="PDAAgeDr"  style="width:160px;"></td>
+					    		   			<td class="tdlabel" width="70px">年龄限制</td>
+					    		   			<td><input id="PDAMinValF" name="PDAMinVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+								            <td>-</td>
+								            <td><input id="PDAMaxValF" name="PDAMaxVal" type="text" class="hisui-validatebox" style="width:60px" ></td>
+								            <td><input id="PDAUomDrF" name="PDAUomDr"  style="width:80px;"></td>
+					    				</tr>
+					    			</table>
+					    		</td>
+					    </tr>
+					   
+			    	     <tr>
+				    		   <td class="tdleftlabel">检验质控项目</td>
+				    		   <td>
+				               		<table>
+						    		  <tr>
+				    		   			<td><input id="LABILabDrF" name="LABILabDr"  style="width:180px;"></td>
+					   				 	<td class="tdlabel" width="30px">逻辑</td>
+					    		  		<td><input id="LABIRelationF" name="LABIRelation"  style="width:160px;" disabled="true"></td>
+										<td class="tdlabel" width="70px">数值</td>
+										<td><input id="LABIMinValF" name="LABIMinVal" type="text" class="hisui-validatebox" style="width:60px" disabled="true" ></td>
+										<td><input id="LABIUomDrF" name="LABIUomDr"  style="width:160px;" disabled="true"></td>
+					   				 </tr>
+					   				</table>
+				              </td>
+					    </tr>
+					    <!--描述栏-->					    				
+					    <tr>
+				    		  <td class="tdleftlabel">描述</td>				            
+				              <td><textarea id="PHINSTTextF" name="PHINSTText" type="text" class="hisui-validatebox" style="width:720px;height:60px;overflow:hidden" data-options="required:true"></textarea></td>
+					    </tr> 
+					    	                    		                   		    
+					 </table >
+					 </form>
+				</div>
+	    	</div>
+		</div>		 
+    </div> 
+   
+	<script type="text/javascript">
+     var  GlPGenDr="#(GlPGenDr)#"
+     var  GlPPointer="#(GlPPointer)#"
+     var  GlPPointerType="#(GlPPointerType)#"
+   </script>
+	<script type="text/javascript" src="../scripts/bdp/App/KB/NewBus/DHC_PreoperLabContr.js"></script>
+</BODY>
+</HTML>

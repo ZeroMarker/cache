@@ -1,0 +1,334 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="SERVER">  
+	;oeorder.oplistcustom.new.request.csp
+		
+	s action=$g(%request.Data("action",1))
+	i action="GetRowId" {
+		s USERID=$g(%request.Data("USERID",1))
+		s ADMID=$g(%request.Data("ADMID",1))
+		s rowid=""
+		i ($d(^OrderGridRowId(USERID,ADMID))) d
+		.s rowid=+$g(^OrderGridRowId(USERID,ADMID))+1
+		.s ^OrderGridRowId(USERID,ADMID)=rowid
+		.w rowid
+		else  d
+		.s ^OrderGridRowId(USERID,ADMID)=1
+		.w 1
+	}elseif action="GetRowId"{
+		s USERID=$g(%request.Data("USERID",1))
+		s ADMID=$g(%request.Data("ADMID",1))	
+		s rowid=##class(web.DHCOEOrdItem).InitGridRowId("N",USERID,ADMID)
+		w rowid
+	}elseif action="ReBuidRowId"{
+		s USERID=$g(%request.Data("USERID",1))
+		s ADMID=$g(%request.Data("ADMID",1))
+		s ID=$g(%request.Data("id",1))
+		s ret=##class(web.DHCOEOrdItem).InitGridRowId("R",USERID,ADMID,ID)
+		w ret
+	}elseif action="GetDefaultPrescriptType"{
+		s EpisodeID=$g(%request.Data("EpisodeID",1))
+		s PreOrderBillTypeRowid=$g(%request.Data("PreOrderBillTypeRowid",1))
+		s PreOrderBillType=$g(%request.Data("PreOrderBillType",1))
+		s ret=##class(web.DHCDocOrderCommon).GetDefaultPrescriptType(EpisodeID,PreOrderBillTypeRowid,PreOrderBillType)
+		w ret
+	}
+	
+	;获取配置数据,已经改为前端执行$.m方法获取,此处未用
+	i action="Config_Get" {
+		;m ^tmpgry("Config_Get")=%request.Data
+		;s UserID=%request.Get("UserID")
+		;s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("UIConfigObj",UserID)
+		;i UIConfigObj="" s UIConfigObj="{}"
+		;w UIConfigObj
+	}
+	;保存配置数据
+	i action="Config_Set" {
+		s HospId=%request.Get("HospId")
+		s UserID=%request.Get("UserID")
+		s GroupID=%request.Get("GroupID")
+		s LoginGroupRowId=%request.Get("LoginGroupRowId")
+		s DefaultExpendList=%request.Get("DefaultExpendList")
+		s DefaultExpendTemplate=%request.Get("DefaultExpendTemplate")
+		//s BigFont=%request.Get("BigFont")
+		//s SmallFont=%request.Get("SmallFont")
+		s ShowGridFootBar=%request.Get("ShowGridFootBar")
+		s isEditCopyItem=%request.Get("isEditCopyItem")
+		s DefaultCloseList=%request.Get("DefaultCloseList")
+		s isSetTimeLog=%request.Get("isSetTimeLog")
+		s OrdListScale=%request.Get("OrdListScale")
+		if (OrdListScale="") s OrdListScale="57"
+		s UIConfigObj="{"
+		s UIConfigObj=UIConfigObj_"layoutConfig1:"_%request.Get("layoutConfig1")
+		s UIConfigObj=UIConfigObj_","_"layoutConfig2:"_%request.Get("layoutConfig2")
+		s UIConfigObj=UIConfigObj_","_"OrderPriorConfig1:"_%request.Get("OrderPriorConfig1")
+		s UIConfigObj=UIConfigObj_","_"OrderPriorConfig2:"_%request.Get("OrderPriorConfig2")
+		s UIConfigObj=UIConfigObj_","_"ShowList1:"_%request.Get("ShowList1")
+		s UIConfigObj=UIConfigObj_","_"ShowList2:"_%request.Get("ShowList2")		
+		s UIConfigObj=UIConfigObj_","_"DefaultExpendList:"_%request.Get("DefaultExpendList")
+		s UIConfigObj=UIConfigObj_","_"DefaultExpendTemplate:"_%request.Get("DefaultExpendTemplate")
+		//s UIConfigObj=UIConfigObj_","_"BigFont:"_%request.Get("BigFont")
+		//s UIConfigObj=UIConfigObj_","_"SmallFont:"_%request.Get("SmallFont")
+		s UIConfigObj=UIConfigObj_","_"ShowGridFootBar:"_%request.Get("ShowGridFootBar")
+		s UIConfigObj=UIConfigObj_","_"isEditCopyItem:"_%request.Get("isEditCopyItem")
+		s UIConfigObj=UIConfigObj_","_"DefaultCloseList:"_%request.Get("DefaultCloseList")
+		s UIConfigObj=UIConfigObj_","_"isSetTimeLog:"_%request.Get("isSetTimeLog")
+		s UIConfigObj=UIConfigObj_","_"DefaultPopTemplate:"_%request.Get("DefaultPopTemplate")
+		s UIConfigObj=UIConfigObj_","_"DefaultCMCloseTemplate:"_%request.Get("DefaultCMCloseTemplate")
+		s UIConfigObj=UIConfigObj_","_"DefaultCMExpendTemplate:"_%request.Get("DefaultCMExpendTemplate")
+		s UIConfigObj=UIConfigObj_","_"DefaultCurrentUser:"_%request.Get("DefaultCurrentUser")
+		s UIConfigObj=UIConfigObj_","_"DefaultCurrentLoc:"_%request.Get("DefaultCurrentLoc")
+		s UIConfigObj=UIConfigObj_","_"DefaultCurrentGourpe:"_%request.Get("DefaultCurrentGourpe")
+		s UIConfigObj=UIConfigObj_","_"OrdListScale:"_%request.Get("OrdListScale")
+		s UIConfigObj=UIConfigObj_","_"DefaultExpendTemplateOnPopTemplate:"_%request.Get("DefaultExpendTemplateOnPopTemplate")
+		s UIConfigObj=UIConfigObj_","_"DefaultLongOrderPrior:"_%request.Get("DefaultLongOrderPrior")
+		s UIConfigObj=UIConfigObj_","_"DefaultShortOrderPrior:"_%request.Get("DefaultShortOrderPrior")
+		s UIConfigObj=UIConfigObj_","_"DefaultOutOrderPrior:"_%request.Get("DefaultOutOrderPrior")
+		s UIConfigObj=UIConfigObj_"}"
+		
+		if (GroupID=""){
+			;用户配置需加上安全组
+			s UserIDGrp=UserID_"Z"_LoginGroupRowId
+			d ##class(web.DHCDocConfig).SaveConfig1("UIConfigObj",UserIDGrp,UIConfigObj,HospId)
+			//医嘱类型全局控制  显示方式
+			//下拉显示
+			s OrderPriorConfig1=%request.Get("OrderPriorConfig1")
+			i OrderPriorConfig1="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("OrderPriorConfig",UserIDGrp,"1",HospId)	
+			}
+			//横向显示
+			s OrderPriorConfig2=%request.Get("OrderPriorConfig2")
+			i OrderPriorConfig2="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("OrderPriorConfig",UserIDGrp,"2",HospId)	
+			}
+			//医嘱单 和 医嘱录入表格 布局控制
+			//表格在上 医嘱单在下
+			s layoutConfig1=%request.Get("layoutConfig1")
+			i layoutConfig1="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutConfig",UserIDGrp,"1",HospId)	
+			}
+			//表格在下  医嘱单在上
+			s layoutConfig2=%request.Get("layoutConfig2")
+			i layoutConfig2="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutConfig",UserIDGrp,"2",HospId)	
+			}
+			//住院患者默认查询条件[未用]
+			;s PatSearchDefCon=%request.Get("PatSearchDefCon")
+			;d ##class(web.DHCDocConfig).SaveConfig1("PatSearchDefCon",UserIDGrp,PatSearchDefCon)
+			
+			//保存中成药列数
+			s ViewGroupSumUserID=%request.Get("ViewGroupSum_UserID")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewGroupSum_UserID",UserIDGrp,ViewGroupSumUserID,HospId)
+			
+			//默认医嘱类型
+			//s ViewOrderType=%request.Get("ViewOrderType")
+			//d ##class(web.DHCDocConfig).SaveConfig1("ViewOrderType",UserIDGrp,ViewOrderType)
+			//默认排序方式
+			s ViewOrderSort=%request.Get("ViewOrderSort")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewOrderSort",UserIDGrp,ViewOrderSort,HospId)
+			//默认开出科室
+			s ViewLocDesc=%request.Get("ViewLocDesc")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewLocDesc",UserIDGrp,ViewLocDesc,HospId)
+			//默认查询范围
+			s ViewScopeDesc=%request.Get("ViewScopeDesc")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewScopeDesc",UserIDGrp,ViewScopeDesc,HospId)
+			//默认查询病区
+			s DefaultCurrentWard=%request.Get("DefaultCurrentWard")
+			d ##class(web.DHCDocConfig).SaveConfig1("DefaultCurrentWard",UserIDGrp,DefaultCurrentWard,HospId)
+			//默认医嘱单型
+			s ViewNurderBill=%request.Get("ViewNurderBill")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewNurderBill",UserIDGrp,ViewNurderBill,HospId)
+			//设置住院病人列表默认打开
+			s CurrentUser=%request.Get("DefaultCurrentUser")
+			i CurrentUser="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_User",UserIDGrp,"1",HospId)	
+			}
+			s CurrentLoc=%request.Get("DefaultCurrentLoc")
+			i CurrentLoc="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_User",UserIDGrp,"2",HospId)	
+			}
+			s CurrentGourpe=%request.Get("DefaultCurrentGourpe")
+			i CurrentGourpe="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_User",UserIDGrp,"3",HospId)	
+			}
+			///
+			s IPHiddenAutoOrd=%request.Get("IPHiddenAutoOrd")
+			d ##class(web.DHCDocConfig).SaveConfig1("IPHiddenAutoOrd_User",UserIDGrp,IPHiddenAutoOrd,HospId)
+			s execBarExecNum=%request.Get("execBarExecNum")
+			d ##class(web.DHCDocConfig).SaveConfig1("execBarExecNum_User",UserIDGrp,execBarExecNum,HospId)
+			//检查、检验项目按使用频率排序
+			s ExaSortByUseCount=%request.Get("ExaSortByUseCount")
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaSortByUseCount",UserIDGrp,ExaSortByUseCount,HospId)
+			//检查部位按使用频率排序
+			s ExaPartSortByUseCount=%request.Get("ExaPartSortByUseCount")
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaPartSortByUseCount",UserIDGrp,ExaPartSortByUseCount,HospId)
+			//门诊患者列表默认展开更多条件
+			s OPDefDisplayMoreContions=%request.Get("OPDefDisplayMoreContions")
+			d ##class(web.DHCDocConfig).SaveConfig1("OPDefDisplayMoreContions",UserIDGrp,OPDefDisplayMoreContions,HospId)
+		}else{
+			d ##class(web.DHCDocConfig).SaveConfig1("UIConfigObj_Group",GroupID,UIConfigObj,HospId)
+			//医嘱类型全局控制  显示方式
+			//下拉显示
+			s OrderPriorConfig1=%request.Get("OrderPriorConfig1")
+			i OrderPriorConfig1="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("OrderPriorConfig_Group",GroupID,"1",HospId)	
+			}
+			//横向显示
+			s OrderPriorConfig2=%request.Get("OrderPriorConfig2")
+			i OrderPriorConfig2="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("OrderPriorConfig_Group",GroupID,"2",HospId)	
+			}
+			//医嘱单 和 医嘱录入表格 布局控制
+			//表格在上 医嘱单在下
+			s layoutConfig1=%request.Get("layoutConfig1")
+			i layoutConfig1="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutConfig_Group",GroupID,"1",HospId)	
+			}
+			//表格在下  医嘱单在上
+			s layoutConfig2=%request.Get("layoutConfig2")
+			i layoutConfig2="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutConfig_Group",GroupID,"2",HospId)	
+			}
+			//住院患者默认查询条件[未用]
+			;s PatSearchDefCon=%request.Get("PatSearchDefCon")
+			;d ##class(web.DHCDocConfig).SaveConfig1("PatSearchDefCon_Group",GroupID,PatSearchDefCon)
+			
+			//保存中成药列数
+			s ViewGroupSumUserID=%request.Get("ViewGroupSum_UserID")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewGroupSum_Group",GroupID,ViewGroupSumUserID,HospId)
+			//默认医嘱类型
+			//s ViewOrderType=%request.Get("ViewOrderType")
+			//d ##class(web.DHCDocConfig).SaveConfig1("ViewOrderType",GroupID,ViewOrderType)
+			//默认排序方式
+			s ViewOrderSort=%request.Get("ViewOrderSort")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewOrderSort",GroupID,ViewOrderSort,HospId)
+			//默认开出科室
+			s ViewLocDesc=%request.Get("ViewLocDesc")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewLocDesc",GroupID,ViewLocDesc,HospId)
+			//默认查询范围
+			s ViewScopeDesc=%request.Get("ViewScopeDesc")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewScopeDesc",GroupID,ViewScopeDesc,HospId)
+			//默认医嘱单型
+			s ViewNurderBill=%request.Get("ViewNurderBill")
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewNurderBill",GroupID,ViewNurderBill,HospId)
+			//设置住院病人列表默认打开
+			s CurrentUser=%request.Get("DefaultCurrentUser")
+			i CurrentUser="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_Group",GroupID,"1",HospId)	
+			}
+			s CurrentLoc=%request.Get("DefaultCurrentLoc")
+			i CurrentLoc="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_Group",GroupID,"2",HospId)	
+			}
+			s CurrentGourpe=%request.Get("DefaultCurrentGourpe")
+			i CurrentGourpe="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_Group",GroupID,"3",HospId)	
+			}
+			s IPHiddenAutoOrd=%request.Get("IPHiddenAutoOrd")
+			d ##class(web.DHCDocConfig).SaveConfig1("IPHiddenAutoOrd_Group",GroupID,IPHiddenAutoOrd,HospId)
+			s execBarExecNum=%request.Get("execBarExecNum")
+			d ##class(web.DHCDocConfig).SaveConfig1("execBarExecNum_Group",GroupID,execBarExecNum,HospId)
+			//检查、检验项目按使用频率排序
+			s ExaSortByUseCount=%request.Get("ExaSortByUseCount")
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaSortByUseCount",GroupID,ExaSortByUseCount,HospId)
+			//检查部位按使用频率排序
+			s ExaPartSortByUseCount=%request.Get("ExaPartSortByUseCount")
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaPartSortByUseCount",GroupID,ExaPartSortByUseCount,HospId)
+			//门诊患者列表默认展开更多条件
+			s OPDefDisplayMoreContions=%request.Get("OPDefDisplayMoreContions")
+			d ##class(web.DHCDocConfig).SaveConfig1("OPDefDisplayMoreContions",GroupID,OPDefDisplayMoreContions,HospId)
+		}
+		
+		w "{'success': true,'message':'保存成功.'}"
+	}
+	
+	i action="test" {
+		s data=$g(%request.Data("data",1))
+		s oper=$g(%request.Data("oper",1))
+		s rows=$g(%request.Data("rows",1))
+		
+		s ^peng("oper")=oper_","_rows_","_data
+	}
+	
+	i action="GetOrderList" {
+		s USERID=$g(%request.Data("USERID",1))
+		s ADMID=$g(%request.Data("ADMID",1))
+		s MasterOrder=$g(%request.Data("MasterOrder",1))
+		s NotDisplayNoPayOrd=$g(%request.Data("NotDisplayNoPayOrd",1))
+		d ##class(web.DHCOEOrdItem).FindOrderItemsNew(USERID,ADMID,"",MasterOrder,NotDisplayNoPayOrd)
+	}
+	i action="GetDiagList"{
+		s USERID=$g(%request.Data("USERID",1))
+		s MRADM=$g(%request.Data("MRADM",1))
+		d ##class(web.DHCDocDiagnosEntryV8).FindDiagListItems(USERID,MRADM)
+	}
+	i action="RestoreDefault" {
+		s HospId=%request.Get("HospId")
+		s UserID=%request.Get("UserID")
+		s GroupID=%request.Get("GroupID")
+		s LoginGroupRowId=%request.Get("LoginGroupRowId")
+		if (GroupID=""){
+			;用户配置需加上安全组
+			s UserIDGrp=UserID_"Z"_LoginGroupRowId
+			d ##class(web.DHCDocConfig).SaveConfig1("UIConfigObj",UserIDGrp,"",HospId)
+			//医嘱类型全局控制
+			d ##class(web.DHCDocConfig).SaveConfig1("OrderPriorConfig",UserIDGrp,"",HospId)	
+			//医嘱单 和 医嘱录入表格 布局控制
+			d ##class(web.DHCDocConfig).SaveConfig1("layoutConfig",UserIDGrp,"",HospId)	
+			//保存中成药列数
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewGroupSum_UserID",UserIDGrp,"",HospId)
+			//默认排序方式
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewOrderSort",UserIDGrp,"",HospId)
+			//默认开出科室
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewLocDesc",UserIDGrp,"",HospId)
+			//默认查询范围
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewScopeDesc",UserIDGrp,"",HospId)
+			//默认医嘱单型
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewNurderBill",UserIDGrp,"",HospId)
+			//设置住院病人列表默认打开
+			d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_User",UserIDGrp,"",HospId)
+			//隐藏自动绑定的子医嘱(仅住院有效)	
+			d ##class(web.DHCDocConfig).SaveConfig1("IPHiddenAutoOrd_User",UserIDGrp,"false",HospId)
+			//执行日期查询范围(默认展示全部执行记录)
+			d ##class(web.DHCDocConfig).SaveConfig1("execBarExecNum_User",UserIDGrp,"",HospId)
+			//住院患者列表默认查询病区
+			d ##class(web.DHCDocConfig).SaveConfig1("DefaultCurrentWard",UserIDGrp,"",HospId)
+			//检查、检验项目按使用频率排序
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaSortByUseCount",UserIDGrp,0,HospId)
+			//检查部位按使用频率排序
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaPartSortByUseCount",UserIDGrp,0,HospId)
+			//门诊患者列表默认展开更多条件
+			d ##class(web.DHCDocConfig).SaveConfig1("OPDefDisplayMoreContions",UserIDGrp,0,HospId)
+		}else{
+			d ##class(web.DHCDocConfig).SaveConfig1("UIConfigObj_Group",GroupID,"",HospId)
+			//医嘱类型全局控制
+			d ##class(web.DHCDocConfig).SaveConfig1("OrderPriorConfig_Group",GroupID,"",HospId)	
+			//医嘱单 和 医嘱录入表格 布局控制
+			d ##class(web.DHCDocConfig).SaveConfig1("layoutConfig_Group",GroupID,"",HospId)	
+			//保存中成药列数
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewGroupSum_Group",GroupID,"",HospId)
+			//默认排序方式
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewOrderSort",GroupID,"",HospId)
+			//默认开出科室
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewLocDesc",GroupID,"",HospId)
+			//默认查询范围
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewScopeDesc",GroupID,"",HospId)
+			//默认医嘱单型
+			d ##class(web.DHCDocConfig).SaveConfig1("ViewNurderBill",GroupID,"",HospId)
+			//设置住院病人列表默认打开
+			d ##class(web.DHCDocConfig).SaveConfig1("layoutInPatList_Group",GroupID,"",HospId)	
+			//隐藏自动绑定的子医嘱(仅住院有效)	
+			d ##class(web.DHCDocConfig).SaveConfig1("IPHiddenAutoOrd_Group",GroupID,"false",HospId)
+			//执行日期查询范围(默认展示全部执行记录)
+			d ##class(web.DHCDocConfig).SaveConfig1("execBarExecNum_Group",GroupID,"",HospId)
+			//检查、检验项目按使用频率排序
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaSortByUseCount",GroupID,0,HospId)
+			//检查部位按使用频率排序
+			d ##class(web.DHCDocConfig).SaveConfig1("ExaPartSortByUseCount",GroupID,0,HospId)
+			//门诊患者列表默认展开更多条件
+			d ##class(web.DHCDocConfig).SaveConfig1("OPDefDisplayMoreContions",GroupID,0,HospId)
+		}
+		w "{'success': true,'message':'保存成功.'}"
+	}
+	
+
+</script>

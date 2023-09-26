@@ -1,0 +1,666 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	; LOG 25798 ANA 5/07/02
+	n userId,RescID,RescName,dayURL,monthURL,DeptURL,RescDayURL,ind,iSCId,ires,iSched
+	s (userId,RescID,RescName)=""
+	k ^TMP("WEB",$j)
+	d ##Class(websys.Component).GetComponentMessages(.t,"RBMessages")
+	n CurrentDate,dayofwk,sdateOfWeek,edateOfWeek,PatientID,EpisodeID,RescID,slotCount,CURRdate,HTMLDate,SlotTime,maxSlotTime,SlotOver,itemids,OrderItems,FOS,AppointmentID,bold,ASCP,ActSD,ActST,NoVIP,VIPID,VIPdata,VIPimage,VIPtitle,quitflag
+	s (CurrentDate,dayofwk,sdateOfWeek,edateOfWeek,PatientID,EpisodeID,RescID,HTMLDate,SlotTime,maxSlotTime,SlotOver,itemids,OrderItems,FOS,AppointmentID,ASCP,ActSD,ActST,NoVIP,VIPID,VIPdata,VIPimage,VIPtitle)=""
+	s (slotCount,bold,quitflag)=0
+	s TWKFL=%request.Get("TWKFL")
+ 	s TWKFLI=%request.Get("TWKFLI")
+ 	s Location=##Class(%CSP.Page).UnescapeURL(%request.Get("Location"))
+ 	s %request.Data("Location",1)=Location
+ 	s DiaryType=%request.Get("DiaryType")
+ 	s %request.Data("DiaryType",1)=DiaryType
+ 	s PatientID=%request.Get("PatientID")
+ 	s EpisodeID=%request.Get("EpisodeID")
+ 	; LOG 26750 ANA 19/07/02. Week displayed starting from current date.
+ 	i (%request.Get("CurrentDate")'="") s CurrentDate=%request.Get("CurrentDate")
+	i (%request.Get("CurrentDate")="") s CurrentDate=+$h	
+	s HTMLDate=" ("_##Class(websys.Conversions).DateLogicalToHtml(CurrentDate)_")"
+	s CURRdate=+$h
+	s dayofwk=CurrentDate+3#7+1
+ 	s userId=%session.Get("LOGON.USERID")
+ 	s groupID=%session.Get("LOGON.GROUPID")
+	s displayFlag=%request.Get("Flag")
+ 	s RescID=%request.Get("RescID")
+ 	s RescName=%request.Get("RescName")
+ 	i RescName="",RescID'="" s RescName=$p($g(^RB("RES",RescID)),"^",17)
+	; Log 43299 13/7/04 Added OTFullPageDiary flag
+	s OTFullPageDiary=%request.Get("OTFullPageDiary")
+	s AllowViewVIP=##Class(web.SSGroup).GetAllowViewVIP(%session.Get("LOGON.GROUPID"))		; cjb 24/01/2006 55848
+	s AnonymousName=##class(web.CFPatConf).GetConfiguration("PATCFAnonymousName") s:AnonymousName="" AnonymousName="Anonymous"
+ 	s VIPID=##Class(epr.CTIconAssociation).GetIdFromCodeOrDescription("VIP")
+	s VIPdata=^epr.CTIconAssociationD(VIPID),VIPimage=$li(VIPdata,2),VIPtitle=$li(VIPdata,4)
+	d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID"))
+	s (SessEditIcon,DayEditIcon)="../images/websys/blank.gif"
+	s (ssize,dsize)="width=1 height=1"
+	i %request.Get("DisplaySessEditIcon") s SessEditIcon="../images/websys/edit_green.gif", ssize=""
+ 	i %request.Get("DisplayDayEditIcon") s DayEditIcon="../images/websys/edit_orange.gif", dsize=""
+					
+	i RescID="" {
+ 	  w "<script>"
+ 	  w "alert(""No Resource Provided"");"
+ 	  w "</script>"
+ 	}
+	i RescID'="" {
+	  n dayLIST,newday
+	  ;s dayLIST(1)=$p(PLIST(1),$c(2),3),dayLIST(2)=$p(PLIST(2),$c(2),3),dayLIST(3)=$p(PLIST(3),$c(2),3),dayLIST(4)=$p(PLIST(4),$c(2),3),dayLIST(5)=$p(PLIST(5),$c(2),3),dayLIST(6)=$p(PLIST(6),$c(2),3),dayLIST(7)=$p(PLIST(7),$c(2),3)
+	  f jj=1:1:7 {
+	    &sql(select DOW_Name into :newday From SQLUser.CT_DayOfWeek where DOW_Day=:jj)
+	    s dayLIST(jj)=newday
+	  }
+	  s monthURL="rbcalendardiaryview.csp?RESCDesc="_$g(RescName)_"&RescID="_$g(RescID)_"&Location="_$g(Location)_"&DiaryType="_$g(DiaryType)_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&OTFullPageDiary="_$g(OTFullPageDiary)
+	  s dayURL="rbappointment.singlerescsched.csp?RESCDesc="_$g(RescName)_"&RescID="_$g(RescID)_"&Location="_$g(Location)_"&DiaryType="_$g(DiaryType)_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&OTFullPageDiary="_$g(OTFullPageDiary)
+	  i DiaryType="OT" s DeptURL="epr.worklist.csp?WorkName=OTWorkList&Location="_Location_"&DiaryType="_DiaryType
+	  i DiaryType="R" s DeptURL="epr.worklist.csp?WorkName=DiaryView&Location="_Location_"&DiaryType="_DiaryType
+	  i DiaryType="O" s DeptURL="epr.worklist.csp?WorkName=OPD Book&Location="_Location_"&DiaryType="_DiaryType
+	  s RescDayURL="rbappointment.findrescdaysched.diaryview.csp?RESCDesc="_$g(RescName)_"&RescID="_$g(RescID)_"&Location="_$g(Location)_"&DiaryType="_$g(DiaryType)_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&CurrentDate="_CurrentDate_"&date="_CurrentDate_"&OTFullPageDiary="_$g(OTFullPageDiary)
+	  i DiaryType="OT" s RescDayURL="rboperatingroom.list.topframe.diaryview.CSP?CurrentDate="_CurrentDate_"&RescID="_$g(RescID)_"&RESCDesc="_$g(RescName)_"&DiaryType="_$g(DiaryType)_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&Location="_$g(Location)_"&OTFullPageDiary="_$g(OTFullPageDiary)
+	  i (DiaryType="R")!(DiaryType="O") s rescpURL="websys.default.csp?WEBSYS.TCOMPONENT=RBResEffDateSessionCP.List&RescID="_$g(RescID)_"&Date="_$g(CurrentDate)
+	  i DiaryType="OT" s rescpURL="rbapptschedulecplist.csp?RescID="_$g(RescID)_"&Date="_$g(CurrentDate)_"&Location="_$g(Location)_"&OTMSG=1"
+	  i DiaryType="OT" s overbookURL="websys.csp?TWKFL=633&obData="_$g(RescID)_"^"_$g(CurrentDate)_"^"_##Class(web.CTLoc).GetIdFromCodeOrDescription($g(Location))
+ 	  w "<DIV>"
+	  w "<DIV>"
+	  w "<B></B>"
+	  w "<form name=""fRBAppointment_RescSch"" method=""post"" id=""fRBAppointment_RescSch"">",$c(13,10)
+	  w "<TABLE class=tblList id=""tRBAppointment_RescSch"" Name=""tRBAppointment_RescSch"" CellSpacing=1 border=0 cellpadding=4 width=""100%"">",$c(13,10)
+	  w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFL"" VALUE=""",TWKFL,""">",$c(13,10)
+	  w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFLI"" VALUE=""",TWKFLI,""">",$c(13,10)
+	  w "<INPUT TYPE=""HIDDEN"" NAME=""PatientID"" VALUE=""",PatientID,""">",$c(13,10)
+ 	  w "<INPUT TYPE=""HIDDEN"" NAME=""EpisodeID"" VALUE=""",EpisodeID,""">",$c(13,10)
+	  ;w "<INPUT TYPE=""HIDDEN"" NAME=""mradm"" VALUE=""",mradm,""">",$c(13,10)
+	  w "<INPUT TYPE=""HIDDEN"" NAME=""RescID"" VALUE=""",RescID,""">",$c(13,10)
+	  w "<INPUT TYPE=""HIDDEN"" NAME=""ItmSchedString"" VALUE="""">",$c(13,10)
+ 	  w "<INPUT TYPE=""HIDDEN"" NAME=""ConfSchedString"" VALUE="""">",$c(13,10)
+    	  i displayFlag="T" {
+	    w "<tr class=""HeaderHyperlink_",DiaryType,""">"
+	    i DiaryType="OT" {
+	      ; and ASCP_ParRef->AS_Res_ParRef->Res_CTLOC_DR=:Location
+	      &sql(select ASCP_CareProv_DR into :ASCP from SQLUser.RB_ApptScheduleCP where ASCP_ParRef->AS_Res_ParRef=:RescID and ASCP_ParRef->AS_Date=:CurrentDate)
+	      i ASCP'="" s bold=1
+	      i bold=0 {
+	        &sql(select AS_ActualDate,AS_ActualStartTime into :ActSD,:ActST from SQLUser.RB_ApptSchedule where AS_Res_ParRef=:RescID and AS_Date=:CurrentDate)
+	        i ActSD'="",ActST'="" s bold=1
+	      }
+	    }
+	    i bold=1 {
+	      w "<a href=""#"" onclick=""javascript:newWin2('",rescpURL,"')""><B>",RescName,"</B></a> "
+	    } else {
+	      w "<a href=""#"" onclick=""javascript:newWin2('",rescpURL,"')"">",RescName,"</a> "
+	    }
+	    s appschedURL="rboperatingroom.session.csp?SchedID=&Date="_CurrentDate_"&RescID="_RescID
+	    i DiaryType="OT",$p($$getORCTdefinition^CRBOper(),"^",5)'="Y" w "<a href=""#"" onclick=""javascript:newWin2('",overbookURL,"')""><IMG SRC=../images/websys/otobedit.gif BORDER=0> </a>"
+	    w " <A href=""#"" onclick=""javascript:newWin3('",appschedURL,"','","","')""><img SRC='"_DayEditIcon_"' "_dsize_" BORDER=0></A>"
+	    ;i DiaryType="OT" w "<a href=""#"" onclick=""javascript:newWin2('",overbookURL,"')""><IMG SRC=../images/websys/otobedit.gif BORDER=0></a>"
+	    w "<BR><a href=""#"" onclick=""javascript:LoadIntoTopFrame('",monthURL,"')""><IMG SRC=../images/webemr/monthdiary.gif BORDER=0></a>"
+	    w " <a href=""#"" onclick=""javascript:LoadIntoTopFrame('",dayURL,"')""><IMG SRC=../images/webemr/daydiary.gif BORDER=0></a>"
+	    s prevDate=CurrentDate-1
+	    s Prevz="Previous"
+	    i ##class(web.RBResource).CheckDatesAgainstResource(RescID,prevDate) {
+ 	      s PREVurl="rbappointment.rescsch.csp?TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&DiaryType="_DiaryType_"&RescID="_RescID_"&CurrentDate="_prevDate_"&CONTEXT="_%request.Get("CONTEXT")_"&Flag=T"_"&Location="_##Class(%CSP.Page).EscapeURL($g(Location))_"&OTFullPageDiary="_$g(OTFullPageDiary)
+ 	      w "<A id=""",Prevz,""" name=""",Prevz,""" href=",PREVurl," accesskey=""P""><IMG SRC=../images/websys/arrow_left.gif BORDER=0></A>"
+ 	    }
+ 	    i DiaryType="OT" w "<a href=""#"" onclick=""javascript:LoadIntoTopFrame('",RescDayURL,"')"">",dayLIST(dayofwk)," - ",HTMLDate,"</a> "
+ 	    i DiaryType="R" w "<a href=""#"" onclick=""javascript:ExpandResource('",RescName,"','",RescID,"','",CurrentDate,"')"">",dayLIST(dayofwk)," - ",HTMLDate,"</a> "
+ 	    i DiaryType="O" w dayLIST(dayofwk)," - ",HTMLDate
+	    s nextDate=CurrentDate+1
+	    s Nextz="Next"
+	    i ##class(web.RBResource).CheckDatesAgainstResource(RescID,nextDate) {
+ 	      s NEXTurl="rbappointment.rescsch.csp?TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&DiaryType="_DiaryType_"&RescID="_RescID_"&CurrentDate="_nextDate_"&CONTEXT="_%request.Get("CONTEXT")_"&Flag=T"_"&Location="_##Class(%CSP.Page).EscapeURL($g(Location))_"&OTFullPageDiary="_$g(OTFullPageDiary)
+	      w "<A id=""",Nextz,""" name=""",Nextz,""" href=",NEXTurl," accesskey=""N""><IMG SRC=../images/websys/arrow_right.gif BORDER=0></A>"
+	    }
+	    w "</th></tr>"
+	  }
+	  i displayFlag="" {
+	    w "<tr><th bordercolorlight=""silver"" colspan=3>",dayLIST(dayofwk)," "
+	    i DiaryType="OT" w "<a href=""#"" onclick=""javascript:LoadIntoTopFrame('",RescDayURL,"')"">",HTMLDate,"</a>  </th></tr>"
+	    i DiaryType="R" w "  <a href=""#"" onclick=""javascript:ExpandResource('",RescName,"','",RescID,"','",CurrentDate,"')"">",HTMLDate,"</a>   </th></tr>"
+	    i DiaryType="O" w HTMLDate
+	  }
+    	  w "<tr>"
+	  w "</tr>"
+	  n dayCount1,SchedID
+	  s (SchedID,prevSCID)=""
+	  s Date1=sdateOfWeek
+    	  s PrevDate=sdateOfWeek
+    	  k ^TMP("TTSchedID",%session.SessionId,RescID)
+    	  i $$open^CWEBRBRE6(RescID,CurrentDate,CurrentDate)
+	  f {
+	   q:$$fetch^CWEBRBRE6(RescID,CurrentDate,CurrentDate)
+	   ;i RescID=870 m ^zTRAK("RC","PLIST",$o(^zTRAK("RC","PLIST",""),-1)+1)=PLIST
+	   i ((DiaryType="R")!(DiaryType="O")),FOS'="" {
+	     i FOS=0 s FOS=""
+	     i FOS'=0,FOS'="" s FOS=FOS-1
+	   }
+	   s PatientName=""
+	   s slotCount=slotCount+1
+	   s SlotTime=$g(PLIST(1))
+	   i SlotTime>maxSlotTime s maxSlotTime=SlotTime
+	   s list2=$g(PLIST(2))
+	   s TimeSlot=##Class(websys.Conversions).TimeLogicalToHtml(SlotTime)
+	   s TimeSlotEnd=""
+	   s TimeRemain=""
+	   s dayDetails=$p(list2,$c(2),1)
+	   s date=$p(dayDetails,$c(1),1)
+	   s PatIDs=$p(dayDetails,$c(1),3)
+	   s SlotOver=$p(dayDetails,$c(1),4)
+	   s itemids=$p(dayDetails,$c(1),5)
+	   s (TTSchedID)=$p(dayDetails,$c(1),2)
+	   
+	   s ^TMP("TTSchedID",%session.SessionId,RescID,$o(^TMP("TTSchedID",%session.SessionId,RescID,""),-1)+1)=TTSchedID
+	   f iSCF=1:1 {
+	     s SchedID=$p(TTSchedID,$c(4),iSCF) s prevSCID=SchedID  q:SchedID=""
+	     s blocked=""
+	     s blocked=##Class(web.RBNotAvail).IsSlotBlocked(SchedID)
+	     continue:blocked="F"
+	     s MiSCFF=1
+	     i $p($g(^RBAS(+SchedID,$p(SchedID,"||",2))),"^",13)="S",$l(TTSchedID,$c(4))>1 s MiSCFF=0
+	     ;s ^zmeto("MiSCFF",SchedID)=$p($g(^RBAS(+SchedID,$p(SchedID,"||",2))),"^",13)_"^"_MiSCFF
+	     i SchedID'="" {
+	       s apptid=SchedID_"||"_$o(^RBAS(+SchedID,+$p(SchedID,"||",2),"APPT",""),-1)
+	       i $p($g(^RBAS(+SchedID,+$p(SchedID,"||",2))),"^",13)="S",$p($g(^RBAS(+apptid,+$p(apptid,"||",2),"APPT",+$p(apptid,"||",3))),"^",3)="P" {
+	         i $p($g(^RBOP(+$p($g(^RBAS(+apptid,+$p(apptid,"||",2),"APPT",+$p(apptid,"||",3))),"^",32))),"^",46)'="" s MiSCFF=0
+	       }
+	     }
+	     ;58308 RC If the booking was an overbooking and is cancelled, then don't show the overbooked schedule.
+	     ;(This log is at prospect, so if it ever gets set TBD, then just uncomment this code ;)
+	     ;s quitflag=0
+	     ;i SchedID'="" d
+	     ;. s apptid=SchedID_"||"_$o(^RBAS(+SchedID,+$p(SchedID,"||",2),"APPT",""),-1)
+	     ;. i $p($g(^RBAS(+SchedID,+$p(SchedID,"||",2))),"^",13)="S",$p($g(^RBAS(+apptid,+$p(apptid,"||",2),"APPT",+$p(apptid,"||",3))),"^",3)="X" s quitflag=1
+	     ;q:quitflag=1
+	     ;Log 50313 - Show end time of session and time remaining in session
+	     i SchedID'="",DiaryType="OT",MiSCFF=1 {
+	       s tmpresid=+SchedID, tmpasid=$p(SchedID,"||",2)
+	       i tmpresid'="",tmpasid'="" s TimeSlotEnd=$p($g(^RBAS(tmpresid,tmpasid)),"^",5)
+	       s TimeSlotEnd = ##Class(websys.Conversions).TimeLogicalToHtml(TimeSlotEnd)
+	       s TimeRemain=##Class(web.RBResEffDateSession).TimeLeftInOTSession("","",SchedID)
+	       ;i $p($g(^RBAS(tmpresid,tmpasid)),"^",13)'="" s IrregIsInSess=##Class(web.RBResEffDateSession).IsIrregInSess(SchedID)
+	     }
+	     i (DiaryType="R")!(DiaryType="O") s ^TMP("WEB",$j,SlotTime,"A")="<TR><td align=center valign=top>"_TimeSlot_"</td>"
+	     i DiaryType="OT",MiSCFF=1 {
+	       i MiSCFF=1  n Surgeon,SurgLink s Surgeon="",SurgLink=""
+	       ; LOG 52968 RC Surgeon Link on RBAppointment.UpdateSchedule
+	       i SchedID'="" {
+	         ;58309 RC 23/02/06 Use prev sched if follow on slot 
+	         i SlotTime=0 s SchedID=##Class(web.RBApptSchedule).GetMainSchedFromFO(SchedID)
+	         i MiSCFF=1   s Surgeon=$p(##Class(web.RBApptScheduleCP).GetDiarySurgeonAnaesthetist(SchedID),"^",2)
+	       }
+	       s TimeSlot=##Class(websys.Conversions).TimeLogicalToHtml(##Class(web.RBOperatingRoom).NACheckSTime(RescID,CurrentDate,##Class(websys.Conversions).TimeHtmlToLogical(TimeSlot)))
+	       s TimeSlotEnd=##Class(websys.Conversions).TimeLogicalToHtml(##Class(web.RBOperatingRoom).NACheckETime(RescID,CurrentDate,##Class(websys.Conversions).TimeHtmlToLogical(TimeSlotEnd)))
+	       s ^TMP("WEB",$j,SlotTime,"A")="<TR><td valign=top>"_TimeSlot_"-"_TimeSlotEnd
+	       s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_" ("_$normalize(TimeRemain,-1)_") <a href=""#"" onclick=""javascript:newWin2('"_rescpURL_"')"">"_Surgeon_"</a></td>"
+	     }
+	     ;w "<tr>"
+	     ;
+	     ;"<td valign=top><A id="""_SSelectz_""" name="""_SSelectz_""" href=""#"" onclick=""javascript:BookAppointment('"_SlotTime_"','"_CurrentDate_"','"_SchedID_"');"" accesskey=""B""><IMG SRC=../images/websys/edit.gif BORDER=0></A></td><td>&nbsp;</td>"
+	     ;
+	     ;w "<td align=center valign=top>",TimeSlot,"</td>"
+	     ;pat stuff here
+	     ;58309 RC 23/02/06 Use prev sched details if follow on slot
+	     i SchedID'=prevSCID,SlotTime=0 {
+	       s PatIDs=$$names^CWEBRBRE6(SchedID)
+	       s SlotOver=$$zeroser^CWEBRBRE6(+SchedID,$p($g(^RBAS(+SchedID,+$p(SchedID,"||",2))),"^"),$p($g(^RBAS(+SchedID,+$p(SchedID,"||",2))),"^",4))
+	       s itemids=$$orders^CWEBRBRE6(SchedID)
+	     }
+	     s PatIDs=$tr(PatIDs," ")
+	     i PatIDs'="",$l(PatIDs,"|")>0 {
+	       s PatientName="",prevPatID="",PatID=""
+	       f patCount=1:1:$l(PatIDs,"|") {
+   	         s PatID=$p(PatIDs,"|",patCount)
+	         i prevPatID'=PatID,PatID'=$c(4) {
+	           s pat=$g(^PAPER(+PatID,"ALL"))
+	           s PatientName=PatientName_$p(pat,"^",1)_" "_$p(pat,"^",2)_","
+	           s prevPatID=PatID
+	         }
+	       }
+	     }
+	     i itemids'="",$l(itemids,"|")>0,(DiaryType="R") {
+		   s OrderItems="",prevItemID="",ItemID="",itemlist=""
+	       f itemCount0=1:1:$l(itemids,$c(3)) {
+		     s itemlist=$p(itemids,$c(3),itemCount0)
+		     f itemCount=1:1:$l(itemlist,"^") {
+   	           s ItemID=$p(itemlist,"^",itemCount)
+   	           q:ItemID=""
+   	           i prevItemID'=ItemID,ItemID'=$c(4) {
+	             s EpisodeID=$p($g(^OEORD(+ItemID)),"^")
+	             s PatientID=$p($g(^PAADM(+EpisodeID)),"^")
+	             s AppointmentID=$p($g(^OEORD(+ItemID,"I",+$p(ItemID,"||",2),6)),"^",5)
+	             ;log 61183 TedT count all slots for this appointment
+	             s FOS=$$getFOS^CRBAppointment1(AppointmentID)
+	             ;s FOS=$p($g(^RBAS(+AppointmentID,+$p(AppointmentID,"||",2),"APPT",+$p(AppointmentID,"||",3),"SLOT",1)),"^")
+	             s pat=$g(^PAPER(+PatientID,"ALL"))
+	             s PatName=$p(pat,"^",1)_", "_$p(pat,"^",2)
+	             s VIPStatus=##class(web.PAPatMas).GetVIPStatus(+PatientID)		; cjb 13/01/2006 55848
+	             s NoVIP="" i VIPStatus="Y",AllowViewVIP'="Y" s NoVIP=1
+	             i PatName'="" s PatName=$s(NoVIP=1:" ",VIPStatus="A":AnonymousName,1:PatName)
+	             s ArcimID=$p($g(^OEORD(+ItemID,"I",+$p(ItemID,"||",2),1)),"^",2)
+	             s OrderItems=OrderItems_PatName_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'><br><font size=1>"_$p($g(^ARCIM(+ArcimID,+$p(ArcimID,"||",2),1)),"^",2)_"</font>",1:"<BR><a href=""#"" onclick=""javascript:newWin('oeorder.mainloop.csp?ID="_ItemID_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&OEORIItmMastDR="_ArcimID_"&PatientBanner=1&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','')""><font size=1>"_$p($g(^ARCIM(+ArcimID,+$p(ArcimID,"||",2),1)),"^",2)_"</font></a><BR>")
+	             ; RC (52992) this shouldn't need to be in the OrderItems above (it caused a lot of hassles) so I removed it, but if it's needed, put it back in.
+	             ;"&ARCIMDesc="_$zcvt($zcvt($p($g(^ARCIM(+ArcimID,+$p(ArcimID,"||",2),1)),"^",2),"O","URL"),"O","JS")_
+	             s itemPatID=ItemID
+	           }
+	         }
+	       }
+	     }
+	     i DiaryType="O" {
+		    s OrderItems=""
+	     	s iSCId=SchedID
+	       	;i SchedID'="" s ^zmeto("SchdiD",SchedID,4)=$p(SchedID,$c(4),1)_"V"_$p(SchedID,$c(4),2)
+	       	;f iSCF=1:1 s iSCId=$p(SchedID,$c(4),iSCF) q:iSCId=""  d
+	       	i iSCId'="" {
+	        	s ires=+iSCId,iSched=$p(iSCId,"||",2)
+	        	s xqnt=0 f {
+	        		s xqnt=$o(^RBAS(ires,iSched,"APPT",xqnt))  q:xqnt=""
+	           		s AppointmentID=ires_"||"_iSched_"||"_xqnt
+		     		s Appointment=$g(^RBAS(ires,iSched,"APPT",xqnt))
+		     		s ApptStatus=$p($g(Appointment),"^",3)
+		     		i "PANCSD" [ $g(ApptStatus) {
+			     		s ServID=$p($g(Appointment),"^",15),ServDesc=$p($g(^RBC("SER",ServID)),"^",6)
+			     		s patid=$p($g(Appointment),"^",2),epid=$p($g(Appointment),"^",4)
+			     		s ordid=$p($g(Appointment),"^",21),mradm=$p($g(^PAADM(epid)),"^",61)
+			     		s appdt=$p($g(^RBAS(ires,iSched)),"^",1),apptm=$p($g(^RBAS(ires,iSched)),"^",4)
+			     		s FOS=$$getFOS^CRBAppointment1(AppointmentID)
+			     		s pat=$g(^PAPER(patid,"ALL"))
+			     		s PatName=$p(pat,"^",1)_", "_$p(pat,"^",2)
+		             	s VIPStatus=##class(web.PAPatMas).GetVIPStatus(+PatientID)		; cjb 13/01/2006 55848
+		             	s NoVIP="" i VIPStatus="Y",AllowViewVIP'="Y" s NoVIP=1
+		             	i PatName'="" s PatName=$s(NoVIP=1:" ",VIPStatus="A":AnonymousName,1:PatName)
+		             	;"&ID="_AppointmentID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ORIRowIDs="_ordid_"&TimeLogical="_apptm_"&DateLogical="_appdt_"&mradm="_mradm_"&RescID="_ires_"&CONTEXT="_%request.Get("CONTEXT")
+		             	s OrderItems=OrderItems_PatName_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'><br><font size=1>"_ServDesc_"</font>",1:"<BR><a href=""#"" onclick=""javascript:newWin('websys.csp?&TWKFL=460&ID="_AppointmentID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ORIRowIDs="_ordid_"&TimeLogical="_apptm_"&DateLogical="_appdt_"&mradm="_mradm_"&RescID="_ires_"&CONTEXT="_%request.Get("CONTEXT")_"','')""><font size=1>"_ServDesc_"</font></a>,")
+		     		}
+	        	}
+	       	}
+	     }
+	     i DiaryType="OT" {
+	       k ^TMP("WEB",$j,"Order")
+	       n iSCId s iSCId=""
+	       s iSCId=SchedID
+	       ;i SchedID'="" s ^zmeto("SchdiD",SchedID,4)=$p(SchedID,$c(4),1)_"V"_$p(SchedID,$c(4),2)
+	       ;f iSCF=1:1 s iSCId=$p(SchedID,$c(4),iSCF) q:iSCId=""  d
+	       i iSCId'="" {
+	         s ires=+iSCId,iSched=$p(iSCId,"||",2)
+	         s xqnt=0 f {
+	           s xqnt=$o(^RBAS(ires,iSched,"APPT",xqnt))  q:xqnt=""
+	           s AppointmentID=ires_"||"_iSched_"||"_xqnt
+	           ;i +iSCId=870 s ^zTRAK("RC","apptid",$o(^zTRAK("RC","apptid",""),-1)+1)=AppointmentID
+	           s Appointment=$g(^RBAS(ires,iSched,"APPT",xqnt))
+	           s ApptStatus=$p($g(Appointment),"^",3)
+	           s operID=$p($g(Appointment),"^",32)
+	           ;i ires="869" s ^zTRAK("RC","Appt,Op",$o(^zTRAK("RC","Appt,Op",""),-1)+1)=AppointmentID_","_operID_","_ApptStatus
+	           ; LOG 58903 RC If Theatre Booking is postponed, don't display on Diary
+	           ; LOG 64060 RC Changed to only display Booked, Done and Arrived on Diary, all else won't display.
+	           i operID'="","B D A" '[ $p($g(^RBOP(operID)),"^",9) continue
+	           i "P N J H S N C I A" [ $g(ApptStatus) {
+	             s patid=$p($g(Appointment),"^",2),epid=$p($g(Appointment),"^",4)
+	             i patid'="" {
+	               s OPSur=""
+	               s pat=$g(^PAPER(patid,"ALL"))
+	               s VIPStatus=##class(web.PAPatMas).GetVIPStatus(+patid)		; cjb 13/01/2006 55848
+	               s NoVIP="" i VIPStatus="Y",AllowViewVIP'="Y" s NoVIP=1
+	               s name=$e($p($g(pat),"^",2),1,1)_" "_$p($g(pat),"^",1)
+	               i name'="" s name=$s(NoVIP=1:" ",VIPStatus="A":AnonymousName,1:name)
+	               i OrderItems'="" s OrderItems=OrderItems_",<BR>"
+	               s operdesc="*",operdesc2="*"
+	               s seq=""
+	               s procsttime=""
+	               i operID'="" {
+	                 s operobj=##Class(User.RBOperatingRoom).%OpenId(operID)
+	                 i (operobj) s seq=operobj.RBOPSequenceNo
+	                 i (operobj) {
+	                   i operobj.RBOPSurgeonDR {
+	                     s OPSur=##class(web.CTCareProv).GetCareProvSSUserName(operobj.RBOPSurgeonDR.%Id())
+	                   }
+	                   s DiaryDisplay=##Class(epr.GroupSettings).GetOTDiaryDisplay(groupID)
+	                   i DiaryDisplay'="" s DiaryDisplay=##Class(websys.StandardTypeItem).GetIdFromCodeOrDescription("OTDiaryDesc",DiaryDisplay)
+	                   ; Log 53079 RC 15/08/05 Modified to work as follows:
+	                   ; if 'Operation' selected in SecGrp and doesn't exist, display free text
+	                   ; if 'Procedure' selected in SecGrp and doesn't exist, display free text
+	                   ; if 'Free Text' selected in SecGrp and doesn't exist, display whichever of Operation or Procedure does exist, starting with Operation
+	                   i DiaryDisplay="O" {
+	                     i operobj.RBOPOperationDR s operdesc=operobj.RBOPOperationDR.OPERDesc
+	                     i (('operobj.RBOPOperationDR)&&(operobj.RBOPProcedure'="")) s operdesc=operobj.RBOPProcedure
+	                   }
+	                   i DiaryDisplay="P" {
+	                     i operobj.RBOPStatePPPDR s operdesc=operobj.RBOPStatePPPDR.SPPPDesc
+	                     i (('operobj.RBOPStatePPPDR)&&(operobj.RBOPProcedure'="")) s operdesc=operobj.RBOPProcedure
+	                   }
+	                   ; RC (53079) - done differently now ###Log 43302 CS 24/12/04 - If Operation or Procedure don't exist, if procedure free text exists, display that###
+	                   i DiaryDisplay="F" {
+	                     i operobj.RBOPProcedure'="" s operdesc=operobj.RBOPProcedure
+	                     i ((operobj.RBOPProcedure="")&&(operobj.RBOPOperationDR)) s operdesc=operobj.RBOPOperationDR.OPERDesc
+	                     i ((operobj.RBOPProcedure="")&&('operobj.RBOPOperationDR)&&(operobj.RBOPStatePPPDR)) s operdesc=operobj.RBOPStatePPPDR.SPPPDesc
+	                   }
+	                   i DiaryDisplay="" {
+	                     i operobj.RBOPOperationDR s operdesc=operobj.RBOPOperationDR.OPERDesc
+	                     i (('operobj.RBOPOperationDR)&&(operobj.RBOPStatePPPDR)) s operdesc=operobj.RBOPStatePPPDR.SPPPDesc
+	                   }
+	                   s procsttime=operobj.RBOPProcedureStartTime
+	                 }
+	               }
+	               ; Log 41690 BC 4-2-2004 Limitname and description on Diary
+	               d ##Class(web.RBOperatingRoom).TruncateNameProc(.name,.operdesc)
+	               s operdesc2=operdesc
+	               i NoVIP=1 s operdesc2=""
+	               i procsttime'="" s estSTime=procsttime
+	               i procsttime="" s estSTime=##Class(web.RBOperatingRoom).GetEstTime(SlotTime,CurrentDate,seq,RescID)
+	               s ESTTIME=+estSTime
+	               s estSTime=##Class(websys.Conversions).TimeLogicalToHtml(estSTime)
+	               i seq s ^TMP("WEB",$j,"Order",seq,name)=seq_" "_estSTime_" <a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Edit&ID="_patid_"&PatientID="_patid_"&PatientBanner=1&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_name_"</font></a> : <a href=""#"" onclick=""javascript:newWin('rboperatingroom.edit.csp?ID="_operID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ShowOrderList=Y&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_operdesc2_"</font></a>"_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'>",1:"")
+	               i 'seq s ^TMP("WEB",$j,"Order","B",name)="-  <a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Edit&ID="_patid_"&PatientID="_patid_"&PatientBanner=1&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_name_"</font></a> : <a href=""#"" onclick=""javascript:newWin('rboperatingroom.edit.csp?ID="_operID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ShowOrderList=Y&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_operdesc2_"</font></a>"_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'>",1:"")
+	               ;i ires="870" m ^zTRAK("RC","order",$o(^zTRAK("RC","order",""),-1)+1)=^TMP("WEB",$j,"Order")
+	               s diffoPS=0
+	               s SSurgeon=""
+	               i SchedID {
+	                 s PSSurgeon=##Class(web.RBApptSchedule).GetMainSchedFromFO(SchedID)
+	                 i PSSurgeon s SSurgeon=$p(##Class(web.RBApptScheduleCP).GetDiarySurgeonAnaesthetist(PSSurgeon),"^",2)
+	               }
+	               i OPSur'="",SSurgeon'="",SSurgeon'=OPSur s diffoPS=1
+	               ;i MiSCFF=0,OPSur'="",SSurgeon'="",SSurgeon=OPSur,Surgeon'=SSurgeon s diffoPS=1
+	               i diffoPS=1 s ^TMP("WEB",$j,ESTTIME,"B")="<TR><td class='AbnrmlResEven' colspan=3>"_OPSur_"</BR>"
+	               i diffoPS=0 s ^TMP("WEB",$j,ESTTIME,"B")="<TR><td class='RowOdd' colspan=3>"
+	               i seq,'procsttime s ^TMP("WEB",$j,ESTTIME,"B")=^TMP("WEB",$j,ESTTIME,"B")_seq_" "_estSTime_" <a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Edit&ID="_patid_"&PatientID="_patid_"&PatientBanner=1&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_name_"</font></a> : <a href=""#"" onclick=""javascript:newWin('rboperatingroom.edit.csp?ID="_operID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ShowOrderList=Y&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_operdesc2_"</font></a>"_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'>",1:"")_"</TD></TR>"
+	               i seq,estSTime,procsttime s ^TMP("WEB",$j,ESTTIME,"B")=^TMP("WEB",$j,ESTTIME,"B")_"<TR><td class='NotAvailableVacant' colspan=3>"_seq_" "_estSTime_" <a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Edit&ID="_patid_"&PatientID="_patid_"&PatientBanner=1&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_name_"</font></a> : <a href=""#"" onclick=""javascript:newWin('rboperatingroom.edit.csp?ID="_operID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ShowOrderList=Y&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_operdesc2_"</font></a>"_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'>",1:"")_"</TD></TR>"
+	               i 'seq,'estSTime s ^TMP("WEB",$j,ESTTIME,"B")=^TMP("WEB",$j,ESTTIME,"B")_"-  <a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Edit&ID="_patid_"&PatientID="_patid_"&PatientBanner=1&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_name_"</font></a> : <a href=""#"" onclick=""javascript:newWin('rboperatingroom.edit.csp?ID="_operID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ShowOrderList=Y&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_operdesc2_"</font></a>"_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'>",1:"")_"</TD></TR>"
+	               i 'seq,estSTime s ^TMP("WEB",$j,ESTTIME,"B")=^TMP("WEB",$j,ESTTIME,"B")_""_estSTime_"  <a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=PAPerson.Edit&ID="_patid_"&PatientID="_patid_"&PatientBanner=1&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_name_"</font></a> : <a href=""#"" onclick=""javascript:newWin('rboperatingroom.edit.csp?ID="_operID_"&PatientID="_patid_"&EpisodeID="_epid_"&ApptID="_AppointmentID_"&ShowOrderList=Y&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"','frmOperRoom')""><font size=1>"_operdesc2_"</font></a>"_$s(NoVIP=1:"<IMG align='top' SRC='../images/"_VIPimage_"' title='"_$zcvt(VIPtitle,"O","HTML")_"'>",1:"")_"</TD></TR>"
+	             }
+	           }
+	         }
+	       }
+	       k ^TMP("WEB",$j,"Order")
+	     }
+	     s clsName=""
+	     ; LOG 26750 ANA 16/07/02.Select Boxes Now changed to links.
+	     s SSelectz="SSelectz"_SlotTime_"^"_date
+	     ; SB 20/04/06 (58637) - New schedule edit screen.
+	     s appschedURL="rboperatingroom.session.csp?SchedID="_SchedID_"&Date="_CurrentDate_"&RescID="_RescID
+	     i SchedID'="",PatientName'="" {
+	       ;Chandana - don't know why this if statement is for! This creates a thin blue line just below the date arrows.
+	       w "<td align=center class='RowOdd'><font size=1>",$e(PatientName,1,$l(PatientName)-1),"</font></td>"
+	     }
+	     i SchedID'="",PatientName="",CURRdate>date {
+	       ;Log 50313 Chandana 1/4/05, for OT diarytype, don't centre edit.gif
+	       i DiaryType="OT" s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td><A id="""_SSelectz_""" name="""_SSelectz_""" disabled accesskey=""B""><IMG SRC=../images/websys/edit.gif BORDER=0></A><A href=""#"" onclick=""javascript:newWin3('"_appschedURL_"','"_""_"')""><img SRC='"_SessEditIcon_"' "_ssize_" BORDER=0></A></td><td>&nbsp;</td>"
+	       ;i DiaryType="R" w "<td align=center><A id=""",SSelectz,""" name=""",SSelectz,""" disabled accesskey=""B"">"_t("Book")_"</A>"
+	       i (DiaryType="R")!(DiaryType="O") s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td align=center><A id="""_SSelectz_""" name="""_SSelectz_""" disabled accesskey=""B"">"_t("Book")_"</A>"
+	     }
+	     ;Log 40981 need to show booking button if slot load not exceeded
+	     i SchedID'="",CURRdate'>date,SlotOver'="Y",MiSCFF=1 {
+	       ;i DiaryType="OT" w "<td align=center valign=top><A id=""",SSelectz,""" name=""",SSelectz,""" href=""#"" onclick=""javascript:BookAppointment('",SlotTime,"','",CurrentDate,"');"" accesskey=""B""><IMG SRC=../images/websys/edit.gif BORDER=0></A>"
+	       ;Log 43299 13/7/04 If OT diarytype and OTFullPageDiary=1, then disable the edit link, Log 50313 remove centre alignment for edit.gif for diary type OT
+	       ;58306 RC 16/02/06 Modified to use piece 13 of Schedule (irreg booking flag).
+	       i DiaryType="OT",OTFullPageDiary'=1,$p($g(^RBAS(+SchedID,+$p(SchedID,"||",2))),"^",13)'="S" s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td valign=top><A id="""_SSelectz_""" name="""_SSelectz_""" href=""#"" onclick=""javascript:BookAppointment('"_SlotTime_"','"_CurrentDate_"','"_SchedID_"');"" accesskey=""B""><IMG SRC=../images/websys/edit.gif BORDER=0></A><A href=""#"" onclick=""javascript:newWin3('"_appschedURL_"','"_""_"')""><img SRC='"_SessEditIcon_"' "_ssize_" BORDER=0></A></td><td>&nbsp;</td>"
+	       i DiaryType="OT",OTFullPageDiary=1 s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td valign=top><A id="""_SSelectz_""" name="""_SSelectz_""" href=""#"" disabled accesskey=""B""><IMG SRC=../images/websys/edit.gif BORDER=0></A></td><td>&nbsp;</td>"
+	       i (DiaryType="R")!(DiaryType="O") {
+	         i itemids="",FOS="" {
+	           s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td align=center><A id="""_SSelectz_""" name="""_SSelectz_""" href=""#"" onclick=""javascript:BookAppointment('"_SlotTime_"','"_CurrentDate_"','"_SchedID_"');"" accesskey=""B"">"_t("Book")_"</A>"
+	           ;w "<td align=center><A id=""",SSelectz,""" name=""",SSelectz,""" href=""#"" onclick=""javascript:BookAppointment('",SlotTime,"','",CurrentDate,"');"" accesskey=""B"">"_t("Book")_"</A>"
+	         }
+	       }
+	     }
+	     i (SchedID="")!(SlotOver="Y") {
+	       ;Log 50313 Chandana 1/4/05, for OT diarytype, don't centre edit.gif
+	       i DiaryType="OT" s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td><A id="""_SSelectz_""" name="""_SSelectz_""" disabled accesskey=""B""><IMG SRC=../images/websys/edit.gif BORDER=0></A></td><td>&nbsp;</td>"
+	       ;i DiaryType="R" w "<td align=center><A id=""",SSelectz,""" name=""",SSelectz,""" disabled accesskey=""B"">"_t("Book")_"</A>"
+	       i (DiaryType="R")!(DiaryType="O") s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td align=center><A id="""_SSelectz_""" name="""_SSelectz_""" disabled accesskey=""B"">"_t("Book")_"</A>"
+	     }
+	     ;if there is only one item then writeout a link of the item name to open order details, otherwise use link form rbappointment.find??
+	     i OrderItems'="",MiSCFF=1 {
+	       ;Log 50313 Chandana 1/4/05 - seperate Diary types, for OT, start the appointments on a new row
+	       i DiaryType="OT" s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<tr><td class='RowOdd' colspan=3>"_$e(OrderItems,1,$l(OrderItems)-1)_"</td>"
+	       i (DiaryType="R")!(DiaryType="O") s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td class='RowOdd'>"_$e(OrderItems,1,$l(OrderItems)-1)_"</td>"
+	     }
+	     i OrderItems="",MiSCFF=1 {
+	       ;w "<td align=center>",$e(OrderItems,1,$l(OrderItems)-1),"</td>"
+	       s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"<td >"_$e(OrderItems,1,$l(OrderItems)-1)_"</td>"
+	     }
+	     s PatientName=""
+	     s OrderItems=""
+	     ;w "</tr>"
+	     i MiSCFF=1 s ^TMP("WEB",$j,SlotTime,"A")=^TMP("WEB",$j,SlotTime,"A")_"</tr>"
+	   }
+	 }
+	 I $$close^CWEBRBRE6()
+	 ;w "<tr><td>&nbsp;</td><td>" 
+	 s dtm="" f {
+	   s dtm=$o(^RB("NA",0,"RES",RescID,dtm)) q:dtm=""
+	   ;s ^zmeto(dtm)=""
+ 	   s row="" f {
+ 	     s row=$o(^RB("NA",0,"RES",RescID,dtm,row)) q:row=""
+ 	     s notavail=^RB("NA",row), usdate=$p($g(notavail),"^",2),uedate=$p($g(notavail),"^",3),ustime=$p($g(notavail),"^",2),uetime=$p($g(notavail),"^",3)
+ 	     s usdate=+usdate,uedate=+uedate,ustime=$p($g(ustime),"Z",2),uetime=$p($g(uetime),"Z",2),reasonid=$p($g(notavail),"^",4),vflag=$p($g(notavail),"^",14)
+ 	     i (CurrentDate<usdate),(CurrentDate<uedate) q
+	     i (CurrentDate>usdate),(CurrentDate>uedate) q
+	     s (stime,etime,sdate,edate)=""
+ 	     s stime=##Class(websys.Conversions).TimeLogicalToHtml(ustime),etime=##Class(websys.Conversions).TimeLogicalToHtml(uetime)
+ 	     s sdate=##Class(websys.Conversions).DateLogicalToHtml(usdate),edate=##Class(websys.Conversions).DateLogicalToHtml(uedate)
+ 	     s reason="" i reasonid s reason=$p(^RBC("NA",reasonid),"^",2)
+ 	     i vflag="N" { ;EZ 01/06/07 changed for log 63756 was i vflag'="Y" 
+ 	       i CurrentDate'=usdate s ^TMP("WEB",$j,1,"B")="<TR class=NotAvailable><td align=center>-</td><td></td>"
+ 	       i CurrentDate=usdate s ^TMP("WEB",$j,ustime,"B")="<TR class=NotAvailable><td align=center>"_stime_"</td>"
+ 	       i CurrentDate'=usdate  s ^TMP("WEB",$j,1,"B")=^TMP("WEB",$j,1,"B")_"<TD align=center>"_sdate_" "_stime_" - "_edate_" "_etime_"<BR>"
+ 	       i CurrentDate=usdate s ^TMP("WEB",$j,ustime,"B")=^TMP("WEB",$j,ustime,"B")_"<TD align=center>"_sdate_" "_stime_" - "_edate_" "_etime_"<BR>"
+ 	       i CurrentDate'=usdate s ^TMP("WEB",$j,1,"B")=^TMP("WEB",$j,1,"B")_"<a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=RBNotAvail.Edit&ID="_row_"&ResID="_RescID_"&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"&OTMSG=1"_"','frmNotAvail')""><font size=1>"_reason_"</font></a></TD></TR>"
+ 	       i CurrentDate=usdate s ^TMP("WEB",$j,ustime,"B")=^TMP("WEB",$j,ustime,"B")_"<a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=RBNotAvail.Edit&ID="_row_"&ResID="_RescID_"&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"&OTMSG=1"_"','frmNotAvail')""><font size=1>"_reason_"</font></a></TD></TR>"
+ 	     }
+ 	     i vflag="Y" {
+ 	       s ffrses=0
+ 	       s (RSchedID,keepsh)=""
+ 	       s frses="" f {
+ 	         s frses=$o(^TMP("TTSchedID",%session.SessionId,RescID,frses)) q:frses=""  q:ffrses=1
+ 	         s TTSchedID=^TMP("TTSchedID",%session.SessionId,RescID,frses)
+ 	         f iFFR=1:1 {
+ 	           s RSchedID=$p(TTSchedID,$c(4),iFFR)  q:RSchedID=""  q:ffrses=1
+ 	           s rtmpresid=+RSchedID, rtmpasid=$p(RSchedID,"||",2)
+	           i rtmpresid'="",rtmpasid'="" {
+	             s RTimeSlotS=$p($g(^RBAS(rtmpresid,rtmpasid)),"^",4)
+	             s RTimeSlotE=$p($g(^RBAS(rtmpresid,rtmpasid)),"^",5)
+ 	             i RTimeSlotS'>ustime,RTimeSlotE'<ustime {
+ 	               s ffrses=1 
+ 	               s keepsh=RSchedID
+ 	             }
+ 	           }
+ 	         }
+ 	       }
+ 	       
+ 	       i CurrentDate'=usdate s ^TMP("WEB",$j,1,"B")="<TR class=NotAvailableVacant><td align=center>-</td><td></td>"
+ 	       i CurrentDate=usdate,CurrentDate'<+$h,keepsh'="" s ^TMP("WEB",$j,ustime,"B")="<TR class=NotAvailableVacant><td align=center><a href=""#"" onclick=""javascript:newWin('websys.csp?TWKFL=633&SchedID="_keepsh_"&VNAID="_row_"','BookTheatre')""><font size=1>"_stime_"</font></a><BR>"
+ 	       i CurrentDate=usdate,CurrentDate'<+$h,keepsh'="" s ^TMP("WEB",$j,ustime,"B")=^TMP("WEB",$j,ustime,"B")_"<a href=""#"" onclick=""javascript:newWin('websys.default.csp?WEBSYS.TCOMPONENT=RBNotAvail.Edit&ID="_row_"&ResID="_RescID_"&TWKFLI="_TWKFLI_"&TWKFL="_TWKFL_"&OTMSG=1"_"','frmNotAvail')""><font size=1>"_reason_"</font></a></td>"
+ 	       i CurrentDate=usdate,CurrentDate<+$h s ^TMP("WEB",$j,ustime,"B")="<TR class=NotAvailableVacant><td align=center><font size=1>"_stime_"</font><BR>"
+ 	       i CurrentDate=usdate,CurrentDate<+$h s ^TMP("WEB",$j,ustime,"B")=^TMP("WEB",$j,ustime,"B")_"<font size=1>"_reason_"</font></td>" 
+ 	       i CurrentDate'=usdate  s ^TMP("WEB",$j,1,"B")=^TMP("WEB",$j,1,"B")_"<TD align=center>"_sdate_" "_stime_" - "_edate_" "_etime_"<BR></TR>"
+ 	       i CurrentDate=usdate,keepsh'="" s ^TMP("WEB",$j,ustime,"B")=^TMP("WEB",$j,ustime,"B")_"<TD align=center>"_sdate_" "_stime_" - "_edate_" "_etime_"<BR></TR>"
+ 	       ;i CurrentDate=usdate s ^TMP("WEB",$j,ustime,"B")=^TMP("WEB",$j,ustime,"B")_"<TD align=center>"_sdate_" "_stime_" - "_edate_" "_etime_"<BR></TR>"
+ 	       
+ 	     }
+ 	   }
+ 	 }
+ 	 s st="" f  {
+ 	   s st=$o(^TMP("WEB",$j,st)) q:st=""
+	   s lt="" f {
+	     s lt=$o(^TMP("WEB",$j,st,lt)) q:lt=""
+	     w ^TMP("WEB",$j,st,lt)
+	   }
+	 }
+	 w "</td></tr>",$c(13,10)
+	 w "</table>"
+	 w "</form>"
+	 w "</DIV>"
+	 w "<SCRIPT>",$c(13,10)
+	 w "var resid=",RescID,";"
+	 w "</SCRIPT>",$c(13,10)
+	}
+	k ^TMP("WEB",$j)
+	k ^TMP("TTSchedID",%session.SessionId)
+	d ##Class(websys.Conversions).LoadRequest()
+
+</SERVER>
+<TRAK:COMPONENT id="RBAppointment.UpdateSchedule" hidemenus=1>
+</TRAK:COMPONENT>
+</TRAK:APPLET>
+</BODY>
+</HTML>
+<script Language="JavaScript">
+// ANA 20-08-02 
+//This must be at bottom of page so that all other javascript functions and event triggers have loaded.
+var UpdateForm=document.forms["fRBAppointment_UpdateSchedule"];
+//var Location="#(Location)#";
+
+function BookAppointment(appointTime,appointDate,SchedID)
+{
+	//alert("SchedID"+SchedID);
+	//alert("appointTime"+appointTime);
+	//alert("appointDate"+appointDate);
+	var diarytypeobj=UpdateForm.document.getElementById("DiaryType");
+	var idArr=top.frames['TRAK_main'].GetSelectedOrders(diarytypeobj.value);
+	//alert("len " + idArr.length);
+	if ((idArr.length<1)&&(diarytypeobj.value=="OT")) {
+		//alert(SchedID);
+		url="websys.csp?TWKFL=633&SchedID="+SchedID
+                // Log 59598 - BC - 29-06-2006 : Remove statusbar variable (status=) to display the status bar.
+		websys_createWindow(url,"BookTheatre","top=20,left=20,width=800,height=600,titlebar=no,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");
+		return
+	}
+	var dtobj=UpdateForm.document.getElementById("Date");
+	var tmobj=UpdateForm.document.getElementById("Time");
+	var robj=UpdateForm.document.getElementById("rescID");
+	var rnobj=UpdateForm.document.getElementById("rescName");
+	var qobj=UpdateForm.document.getElementById("QueryString");
+	if (dtobj) dtobj.value=appointDate;
+	if (tmobj) tmobj.value=appointTime;
+	var queryString="";
+	var otdetails="";
+	//alert("top: "+idArr.length)
+	for(var i=0; i<idArr.length; i++)
+	{
+		//alert("before: "+idArr[i])
+		queryString+=idArr[i]+"&"+appointDate+"&"+appointTime+"&"+SchedID+"&"+"^";
+		var stat=""
+		if (diarytypeobj.value=="OT") stat=top.frames['TRAK_main'].GetOTStatus(idArr[i])
+		//alert("end: "+stat)
+		if (stat=="B") {
+			alert(t['PatBooked'])
+			return false;
+		}
+		//otdetails+=top.frames['TRAK_main'].GetOTDetails(idArr[i])+"^";
+	}
+    //alert(queryString+"  "+diarytypeobj.value);
+	if (qobj) qobj.value=queryString;
+	if (diarytypeobj.value=="R") {
+		/*var obj=top.frames["TRAK_main"].frames["work_bottom"];
+		var table=obj.document.getElementById("tOEOrdItem_RadiologyWorkBench");
+		if(table) {var nRows = table.rows.length;}
+		for(var i=1; i<nRows; i++)
+		{
+			var selectObj=obj.document.getElementById("selectz"+i);
+			if ((selectObj)&&(selectObj.checked==true)) {
+				var itemIDobj=obj.document.getElementById("OEOrdItemIDz"+i);
+				if(itemIDobj) queryString+="&"+itemIDobj.value+"^";
+				alert(queryString);
+				if(qobj) qobj.value=queryString;
+			}
+		}*/
+		//alert("R");
+		Update_click();
+		top.frames["TRAK_main"].frames["work_bottom"].treload();
+	}	
+
+	if (diarytypeobj.value=="OT") {
+		//queryString+="^"
+		//alert("before");
+		//return false;
+		//setTimeout('OTUpdate_click();',200);
+		document.forms['fRBAppointment_UpdateSchedule'].refresh.value=1;
+		OTUpdate_click();
+		var url1=top.frames["TRAK_main"].frames["work_bottom"].document.location.href;
+		var url=new String
+		url=top.frames["TRAK_main"].frames["work_bottom"].frames["RBOperatingRoomList"].document.location.href;
+		var test=mPiece(url,"RBOperatingRoom.List",1);
+		//alert(url1+"&DontFind=0"+test+"\n\n"+url);
+		//document.location.reload();
+		LoadIntoBottomFrame(url1+"&DontFind=0"+test);
+	}
+	
+	if (diarytypeobj.value=="O") {
+		//alert(queryString+","+robj.value+","+SchedID+","+Location);
+		if (mPiece(queryString,"&",0)!="") {
+			//var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.UpdateBooking&PatientBanner=1&PatientID="+mPiece(queryString,"&",0)+"&EpisodeID="+mPiece(queryString,"&",1)+"&AttendID="+mPiece(queryString,"&",2)+"&locid=&resid="+robj.value+"&SchedID="+SchedID+"&date="+mPiece(queryString,"&",3)+"&WorkID="; //+workid.value;
+			// RC 02/05/07 62697 Changed to csp to accomodate a hidden frame for appointment checks
+			var lnk="rbappointment.updatebooking.popup.csp?PatientBanner=1&PatientID="+mPiece(queryString,"&",0)+"&EpisodeID="+mPiece(queryString,"&",1)+"&locid=&resid="+robj.value+"&SchedID="+SchedID+"&date="+mPiece(queryString,"&",3)+"&AttendID="+mPiece(queryString,"&",2);
+		} else {
+			alert(t['PatAttend'])
+			return false	
+		}
+		websys_createWindow(lnk,"frmUpdateBooking","width=300,height=300,top=150,left=300,resizable=yes,scrollbars=yes")
+	}
+}
+
+function mPiece(s1,sep,n) {
+    //Split the array with the passed delimeter
+    delimArray = s1.split(sep);
+    //If out of range, return a blank string
+    if ((n <= delimArray.length-1) && (n >= 0)) {
+        return delimArray[n];
+    }
+}
+
+function ExpandResource(rescName,RescID,currdate)
+{
+	//alert(currdate);
+	top.frames["TRAK_main"].document.location.href="epr.worklist.csp?WorkName=RadWorklist&RESCDesc="+rescName+"&RescID="+RescID+"&CurrDate="+currdate+"&DateTo="+currdate+"&DateFrom="+currdate;
+}
+
+function LoadIntoTopFrame(url) {
+	//Log 43299 - check if "work_top" frame exists, else load into "TRAK_main" frame
+	if(top.frames["TRAK_main"].frames["work_top"]){
+		top.frames["TRAK_main"].frames["work_top"].document.location.href=url
+	}
+	else {
+		top.frames["TRAK_main"].document.location.href=url
+	}
+}
+
+function LoadIntoMainFrame(url) {
+	top.frames["TRAK_main"].document.location.href=url
+}
+
+function LoadIntoBottomFrame(urla) {
+	top.frames["TRAK_main"].frames["work_bottom"].document.location.href=urla
+}
+
+/*function ResourceDiary(rescName,RescID)
+{
+	top.frames["TRAK_main"].document.location.href="epr.worklist.csp?WorkName=ResourceDiaryView&RESCDesc="+rescName+"&RescID="+RescID;
+
+}
+function ResourceCalander(rescName,RescID) 
+{
+	top.frames["TRAK_main"].frames["work_top"].document.location.href="RBCalendar.csp?RESCDesc="+rescName+"&RescID="+RescID;
+}*/
+function newWin(url,frmName) {
+if (frmName=="") frmName="frmOrderDetails"
+// Log 59598 - BC - 29-06-2006 : Remove statusbar variable (status=) to display the status bar.
+websys_createWindow(url, frmName,"toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes")
+} 
+function newWin2(url) {
+websys_createWindow(url, "RBResEffDateSessionCP","toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes,width=900,height=550")
+} 
+function newWin3(url,frmName) {
+websys_createWindow(url, frmName,"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=900,height=550,top=50,left=50")
+}
+</script>

@@ -1,0 +1,83 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ quit 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+	
+
+                s componentxml = "\scripts\nurse\new\"
+                s componentxmlbackup = "\scripts\nurse\backup\"  
+                s dirnamexml = ##class(NurMp.Template).getFilePath(componentxml,"")
+                s dirnamexmlbackup = ##class(NurMp.Template).getFilePath(componentxmlbackup,"")
+                s count=1
+                s count=%request.CountMimeData("FileStream")
+                try{
+	            f num=1:1:count
+	            {
+		        s fileStream = %request.MimeData("FileStream",num)
+                ; 获取文件名
+                s fileStream.FileName = ##class(%File).GetFilename(fileStream.FileName) 
+                s FileName=%request.MimeData("FileStream",num).FileName   
+                s FileSize=%request.MimeData("FileStream",num).Size
+                s FileContentType=%request.MimeData("FileStream",num).ContentType 
+                
+                s file = ##class(%FileBinaryStream).%New()
+               
+               
+                	s file.Filename=dirnamexml_fileStream.FileName
+                	s XmlFile=dirnamexml_fileStream.FileName
+                 	Do fileStream.Rewind()
+                	While('fileStream.AtEnd){
+	                
+                    	s bytes = fileStream.Read(1024)
+                    	Do file.Write(bytes)
+                	}
+                	Do file.Flush()
+                	s sc= file.%Save()
+                	s GetFilePath=dirnamexml_FileName
+                	s Indentity=%request.Data("Indentity",1)
+                	s TCIndentity=%request.Data("TCIndentity",1)
+       
+                Do file.%Close()
+                s file="" 
+	            }
+	            		s IsBackUp=%request.Data("IsBackUp",1)
+	                    if ($zcvt(IsBackUp,"U") = "TRUE")
+	                    {		
+		                	s backupre = ##class(NurMp.PrintTemplate).BackUp(dirnamexmlbackup,TCIndentity)
+		                	if (backupre'=0)
+		                	{
+			               		s backupBad = ##class(%Exception.General).%New("backupBad","-1",,"xml备份失败")
+	                    		throw backupBad
+		                    }
+	                    }
+	            
+	            		s d= ##class(NurMp.PrintTemplate).save(GetFilePath,Indentity, TCIndentity)
+	          
+	            		s newArray=##class(NurMp.NurCacheJSON).Decode(d)
+	            		s newMsg= newArray.GetAt("msg")
+	                    s newStatus= newArray.GetAt("status")
+	                    s msgData= newArray.GetAt("data")
+	                    s re=##class(%File).Delete(XmlFile)
+	                    i (newStatus="-1"){
+	                    w ##class(NurMp.ErrorMsg).ReturnMsgJson(newMsg,newStatus)
+	                    
+	                    Break
+	                    }
+ 
+                //保存模板的共享信息
+	           // d ##class(NurMp.Share).save(Indentity)
+                 s Msg="",status="0"
+		        w ##class(NurMp.ErrorMsg).ReturnMsgJson(Msg,status,msgData)
+		                  
+                
+		        }
+		        catch myerr{
+			    	s Msg=myerr.AsSystemError()
+                    w ##class(NurMp.ErrorMsg).ReturnMsgJson(Msg,"-1")
+			    }
+	                
+	             
+                
+</script>
+

@@ -1,0 +1,94 @@
+﻿<!--付款单管理-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',border:false,collapsible:false">
+		<div class="hisui-panel" title="付款单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false" style="border-bottom:1px dashed #ccc;">
+					<input id="Complate" name="Complate" value="Y" type="hidden">
+					<table id="MainConditions" class="Condition">
+						<tr>
+							<td><label>入库科室</label><input id="IngrLoc" name="IngrLoc" class="hisui-combobox" style="width:150px;"></td>
+							<td><label>起始日期</label><input id="StartDate" name="StartDate" class="hisui-datebox textbox" style="width:115px;"></td>
+							<td><label>支付方式</label><input id="PayMode" name="PayMode" class="hisui-combobox" style="width:150px;"></td>
+							<td><label>采购确认</label><select id="PurAckFlag" name="PurAckFlag" class='hisui-combobox' style="width:90px;">
+								<option value="" selected>全部</option>
+								<option value="Y">已采购确认</option>
+								<option value="N">未采购确认</option>
+							</select></td>
+							<td><label>财务确认</label><select id="FinAckFlag" name="FinAckFlag" class='hisui-combobox' style="width:90px;">
+								<option value="" selected>全部</option>
+								<option value="Y">已财务确认</option>
+								<option value="N">未财务确认</option>
+							</select></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</tr>
+						<tr>
+							<td><label>供应商</label><select id="Vendor" name="Vendor" class="hisui-combobox" style="width:150px;"></select></td>
+							<td><label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-datebox textbox" style="width:115px;"></td>
+							<td><label>业务单号</label><input id="GRNo" name="GRNo" class="textbox" style="width:143px;"></td>
+							<td><label>会计确认</label><select id="AccAckFlag" name="AccAckFlag" class='hisui-combobox' style="width:90px;">
+								<option value="" selected>全部</option>
+								<option value="Y">已会计确认</option>
+								<option value="N">未会计确认</option>
+							</select></td>
+							<td><label>日期类型</label><select id="DateFlag" name="DateFlag" class='hisui-combobox' style="width:90px;">
+								<option value="" selected>制单日期</option>
+								<option value="1">采购确认</option>
+								<option value="2">会计确认</option>
+								<option value="3">财务确认</option>
+							</select></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="PayMainGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="GridPadding" data-options="region:'south',border:false,collapsible:false" style="padding-top:0;height:250px;">
+		<div class="hisui-panel" title="付款单明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			<table id="PayDetailGrid"></table>
+		</div>
+	</div>
+	<div id="AccAckWin" class="hisui-dialog FindWin" data-options="modal:true,closed:'true'" title="会计确认信息"> 
+		<table id="FindConditions" class="Condition">
+			<tr>
+				<td><label>付款单号</label><input id="PayNo" name="PayNo" class="textbox" disabled="true" style="width:180px;"></td>
+				<td colspan="2"><label>供应商</label><input id="FVendor" name="FVendor" class="textbox" disabled="true" style="width:371px;"></td>
+				<td><label>付款金额</label><input id="PayAmt" name="PayAmt" class="textbox" disabled="true" style="width:143px;"></td>
+			</tr>
+			<tr>
+				<td><label>支付日期</label><input id="PayDate" name="PayDate" class="hisui-datebox textbox" style="width:187px;"></td>
+				<td><label>支付方式</label><select id="FPayMode" name="FPayMode" class="hisui-combobox" style="width:150px;"></select></td>
+				<td><label>支付单号</label><input id="CheckNo" name="CheckNo" class="textbox" style="width:143px;"></td>
+				<td><label>支付金额</label><input id="CheckAmt" name="CheckAmt" class="textbox" style="width:143px;"></td>
+			</tr>
+		</table>
+		<hr class="PartLine"/>
+		<table class="Condition" style="margin-left: 80%">
+			<tr>
+				<td><a href="#" id="ConfirmBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="CancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a></td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Pay/PayCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Pay/DHCPayPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Pay/PayQuery.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Pay/PayInfo.js"></script>
+</body>
+</html>

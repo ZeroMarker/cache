@@ -1,0 +1,302 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<DHCEQ:EASYUI></DHCEQ:EASYUI>
+<style type="text/css"></style>
+<!--script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	};
+</script-->
+<script type='text/javascript' src='../scripts/dhceq/js/dhceqmmaintrequest.js'></script>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	Set RowID=$Get(%request.Data("RowID",1))
+	Set ExObjDR=$Get(%request.Data("ExObjDR",1))
+	Set Status=$Get(%request.Data("Status",1))
+	Set CurRole=$Get(%request.Data("CurRole",1))
+	Set MenuApproveRole=$Get(%request.Data("MenuApproveRole",1))
+	Set EvaluateFlag=$Get(%request.Data("EvaluateFlag",1))
+	Set EvaluateGroup=$Get(%request.Data("EvaluateGroup",1))
+	Set ApproveRoleDR=$Get(%request.Data("ApproveRoleDR",1))
+	Set QXType=$Get(%request.Data("QXType",1))
+	Set Action=$Get(%request.Data("Action",1))
+	Set GetFaultCaseOperMethod=##class(web.DHCEQCommon).GetSysInfo("503004")
+	Set GetFaultReasonOperMethod=##class(web.DHCEQCommon).GetSysInfo("503002")
+	Set GetDealMethodOperMethod=##class(web.DHCEQCommon).GetSysInfo("503003")
+	Set GetFaultTypeOperMethod=""
+	Set GetStopEquipFlag=##class(web.DHCEQCommon).GetSysInfo("990037")
+	Set RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("25",RowID),CurRole,Action)
+	Set MaintItemDR=##class(web.DHCEQM.DHCEQMMaintRequest).GetOneMaintItemDR(RowID)
+	Set CheckEvaluate=##Class(web.DHCEQEvaluate).CheckEvaluateFlag("31",RowID,CurRole,"","","",Action)
+</Script>
+<body>
+	<div class="easyui-layout" data-options="fit:true,border:true" style='width:100%;height:100%;display:block;'>
+		<div data-options="region:'center'" style="height:60%;width:100%">
+			<div class="easyui-layout"  style='width:100%;height:100%;'>
+				<div data-options="region:'north'" style="height:52%;width:100%" title="申请信息">
+					<table id='tQueryPanel' class="chargeTable" fit="true" border=0 style="width:100%;margin-top:10px;">
+						<tr>
+							<td align="right" id="cRequestNo">申请单号</td>
+							<td><input class="easyui-textbox" name="RequestNo" id="RequestNo" disabled="true" type="text"></td>
+							<td align="right" id="cRequestDate">申请日期</td>
+							<td><input class="easyui-datebox" name="RequestDate" id="RequestDate" disabled="true" type="text" value=#(CurDate)#></td>
+						</tr>
+						<tr>
+							<td align="right" id="cSourceType">来源类型</td>
+							<td><input required="true" name="SourceType" id="SourceType" class="easyui-combobox" data-options="valueField: 'id',textField: 'text',data:[{id:'1',text:'设备'},{id:'2',text:'未在账'}]"></td>
+							<td align="right" id="cExObj">设备名称</td>
+							<td id="TDExObj"><input id="ExObj" type="text"></input></td>
+							<td><a id="BEquipInfo" href="#" class="easyui-linkbutton" style="margin-left:20%;">详细</a></td>
+						</tr>	
+						<tr>
+							<td align="right" id="cEQNo">设备编号</td>
+							<td><input class="easyui-textbox" name="EQNo" id="EQNo" disabled="true" type="text"></td>
+							<td align="right" id="cObjLoc">使用科室</td>
+							<td id="TDObjLoc"><input id="ObjLoc" type="text"></input></td>
+							<td align="right" id="cModel">规格型号</td>
+							<td><input class="easyui-textbox" name="Model" id="Model" disabled="true" type="text"></td>
+							<td align="right" id="cEQDate">启用日期</td>
+							<td><input class="easyui-datebox" name="EQDate" id="EQDate" disabled="true" type="text"></td>
+						</tr>
+						<tr>
+							<td align="right" id="cEquipStatus">设备状态</td>
+							<td id="TDEquipStatus"><input id="EquipStatus" type="text"></input></td>
+							<td align="right" id="cRequestUser">联系人</td>
+							<td id="TDRequestUser"><input id="RequestUser" type="text"></input></td>
+							<td align="right" id="cRequestTel">联系电话</td>
+							<td><input class="easyui-textbox" name="RequestTel" id="RequestTel" type="text" data-options="validType:'phoneRex'"></td>
+							<td align="right" id="cPlace">地点</td>
+							<td><input class="easyui-textbox" name="Place" id="Place" type="text"></td>
+						</tr>				
+						<tr>
+							<td align="right" id="cFaultCase">故障现象</td>
+							<td id="TDFaultCase"><input id="FaultCase" type="text"></input></td>
+							<td align="right" id="cFaultCaseRemark">现象备注</td>
+							<td><textarea name="FaultCaseRemark" id="FaultCaseRemark" style="width:63%;"></textarea></td>
+							<td align="right" id="cStartDate">故障日期</td>
+							<td><input class="easyui-datebox" name="StartDate" id="StartDate" type="text" value=#(CurDate)#></td>
+							<td align="right" id="cPackageState">外观情况</td>
+							<td><textarea name="PackageState" id="PackageState" style="width:63%;"></textarea></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center'" style="height:25%;width:100%" title="维修派单">
+		        	<table fit="true" border=0 style="width:100%;margin-top:10px;">
+		        		<tr>
+							<td align="right" id="cAssign">派单人</td>
+							<td><input class="easyui-textbox" name="Assign" id="Assign" disabled="true" type="text"></td>
+							<td align="right" id="cAssignDate">派单日期</td>
+							<td><input class="easyui-datebox" name="AssignDate" id="AssignDate" disabled="true" type="text" value=#(CurDate)#></td>
+							<td align="right" id="cEmergencyLevel">紧急级别</td>
+							<td id="TDEmergencyLevel"><input id="EmergencyLevel" type="text"></input></td>
+							<td align="right" id="cSeverityLevel">严重级别</td>
+							<td id="TDSeverityLevel"><input id="SeverityLevel" type="text"></input></td>
+						</tr>
+						<tr>
+							<td align="right" id="cMaintGroup">维修组</td>
+							<td id="TDMaintGroup"><input id="MaintGroup" type="text"></input></td>
+							<td align="right" id="cAcceptUser">维修负责人</td>
+							<td id="TDAcceptUser"><input id="AcceptUser" type="text"></input></td>
+							<td align="right" id="cInitials">工号</td>
+							<td><input class="easyui-textbox" name="Initials" id="Initials" disabled="true" type="text"></td>
+							<td align="right" id="cEstimateWorkHour">分配工时(天)</td>
+							<td><input class="easyui-textbox" name="EstimateWorkHour" id="EstimateWorkHour" type="text"></td>
+						</tr>
+		        	</table>
+				</div>
+				<div data-options="region:'south'" style="height:23%;width:100%" title="维修受理">
+		        	<table fit="true" border=0 style="width:22%;margin-top:10px;">
+			        	<tr>
+			        		<td align="right" id="cAcceptDate">受理日期</td>
+							<td><input class="easyui-datebox" name="AcceptDate" id="AcceptDate" disabled="true" type="text" value=#(CurDate)#></td>
+			        	</tr>
+		        	</table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'south'" style="height:40%;width:100%">
+			<div class="easyui-layout"  style='width:100%;height:75%;'>
+				<div id="MaintFinish" data-options="region:'west'" style="height:100%;width:100%" title="维修完成">
+		        	<table border=0 style="width:100%;margin-top:10px;">
+						<tr>
+							<td align="right" id="cMaintMode">维修方式</td>
+							<td id="TDMaintMode"><input id="MaintMode" type="text"></input></td>
+							<td align="right" id="cInsurFlag">是否保内</td>
+							<td><input name="InsurFlag" id="InsurFlag" type="checkbox"></td>
+							<td align="right" id="cOtherFee">配件费</td>
+							<td><input class="easyui-numberbox" data-options="precision:2,groupSeparator:',',decimalSeparator:'.'" name="OtherFee" id="OtherFee" disabled="true" type="text"></td>
+							<td colspan="2"><a id="MaintDetail" href="#" class="easyui-linkbutton" style="margin-left:20%;">维修配件</a><a id="BPicture" href="#" class="easyui-linkbutton" style="margin-left:20%;">图片信息</a></td>
+						</tr>
+						<tr>
+							<td align="right" id="cService">维修服务商</td>
+							<td id="TDService"><input id="Service" type="text"></input></td>
+							<td align="right" id="cSaveCostFee">节省费用</td>
+							<td><input class="easyui-numberbox" data-options="precision:2,groupSeparator:',',decimalSeparator:'.'" name="SaveCostFee" id="SaveCostFee" type="text"></td>
+							<td align="right" id="cMaintFee">人工费</td>
+							<td><input class="easyui-numberbox" data-options="precision:2,groupSeparator:',',decimalSeparator:'.'" name="MaintFee" id="MaintFee" type="text"></td>
+							<td align="right" id="cWorkHour">实际工时</td>
+							<td><input class="easyui-numberbox" data-options="precision:2,groupSeparator:',',decimalSeparator:'.'" name="WorkHour" id="WorkHour" type="text"></td>
+						</tr>
+						<tr>
+							<td align="right" id="cFaultType">故障类型</td>
+							<td id="TDFaultType"><input id="FaultType" type="text"></input></td>
+							<td align="right" id="cFaultReason">故障原因</td>
+							<td id="TDFaultReason"><input id="FaultReason" type="text"></input></td>
+							<td align="right" id="cFaultReasonRemark">原因备注</td>
+							<td><textarea name="FaultReasonRemark" id="FaultReasonRemark" style="width:63%;"></textarea></td>
+							<td align="right" id="cTotalFee">总费用</td>
+							<td><input class="easyui-numberbox" data-options="precision:2,groupSeparator:',',decimalSeparator:'.'" name="TotalFee" id="TotalFee" disabled="true" type="text"></td>
+						</tr>
+						<tr>
+							<td align="right" id="cEndDate">完成日期</td>
+							<td><input class="easyui-datebox" name="EndDate" id="EndDate" disabled="true" type="text" value=#(CurDate)#></td>
+							<td align="right" id="cDealMethod">解决方法</td>
+							<td id="TDDealMethod"><input id="DealMethod" type="text"></input></td>
+							<td align="right" id="cDealMethodRemark">方法备注</td>
+							<td><textarea name="DealMethodRemark" id="DealMethodRemark" style="width:63%;"></textarea></td>
+							<td align="right" id="cMaintResults">维修结果</td>
+							<td id="TDMaintResults"><input id="MaintResults" type="text"></input></td>
+						</tr>
+		        	</table>
+				</div>
+				<div id="tEvaluateWin" data-options="region:'center'" closed="true" style="height:100%;width:20%;" title="维修评价">
+				</div>
+			</div>
+		    <div style="height:20%;width:100%;">
+				<table style="width:100%;margin-top:10px;">
+					<td><a id="BUpdate" href="#" class="easyui-linkbutton" style="margin-left:20%;">更  新</a></td>
+					<td><a id="BSubmit" href="#" class="easyui-linkbutton" style="margin-left:20%;">提  交</a></td>
+					<td><a id="BCancelSubmit" href="#" class="easyui-linkbutton" style="margin-left:20%;">取消提交</a></td>
+					<td><a id="BDelete" href="#" class="easyui-linkbutton" style="margin-left:20%;">删  除</a></td>
+					<td><a id="BApprove1" href="#" class="easyui-linkbutton" style="margin-left:20%;">审  核1</a></td>
+					<td><a id="BApprove2" href="#" class="easyui-linkbutton" style="margin-left:20%;">审  核2</a></td>
+					<td><a id="BApprove6" href="#" class="easyui-linkbutton" style="margin-left:20%;">审  核6</a></td>
+					<td><a id="BApprove3" href="#" class="easyui-linkbutton" style="margin-left:20%;">审  核3</a></td>
+					<td><a id="BApprove4" href="#" class="easyui-linkbutton" style="margin-left:20%;">审  核4</a></td>
+					<td><a id="BApprove5" href="#" class="easyui-linkbutton" style="margin-left:20%;">审  核5</a></td>
+				</table>
+		    </div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<INPUT TYPE="hidden" name="RowID" id="RowID" value=#(RowID)#>
+			<INPUT TYPE="hidden" name="ExObjDR" id="ExObjDR" value=#(ExObjDR)#>
+			<INPUT TYPE="hidden" name="Status" id="Status" value=#(Status)#>
+			<INPUT TYPE="hidden" name="CurRole" id="CurRole" value=#(CurRole)#>
+			<INPUT TYPE="hidden" name="MenuApproveRole" id="MenuApproveRole" value=#(MenuApproveRole)#>
+			<INPUT TYPE="hidden" name="EvaluateFlag" id="EvaluateFlag" value=#(EvaluateFlag)#>
+			<INPUT TYPE="hidden" name="EvaluateGroup" id="EvaluateGroup" value=#(EvaluateGroup)#>
+			<INPUT TYPE="hidden" name="ApproveRoleDR" id="ApproveRoleDR" value=#(ApproveRoleDR)#>
+			<INPUT TYPE="hidden" name="Action" id="Action" value=#(Action)#>
+			<INPUT TYPE="hidden" id="OriginalFee">
+			<INPUT TYPE="hidden" id="Place">
+			<INPUT TYPE="hidden" id="FileNo">
+			<INPUT TYPE="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT TYPE="hidden" id="CurDate" value=#(CurDate)#>
+			<INPUT TYPE="hidden" id="NextFlowStep">
+			<INPUT TYPE="hidden" id="Status">
+			<INPUT TYPE="hidden" name="AutoSaveExObj" id="AutoSaveExObj" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMExObj.AutoSaveExObj"))%>' />
+			<INPUT TYPE="hidden" name="CheckMaintProcess" id="CheckMaintProcess" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.CheckMaintProcess"))%>' />
+			<INPUT TYPE="hidden" name="upd" id="upd" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.UpdateMaintRequest"))%>' />
+			<INPUT TYPE="hidden" name="GetFaultCaseOperMethod" id="GetFaultCaseOperMethod" value=#(GetFaultCaseOperMethod)#>
+			<INPUT TYPE="hidden" name="GetFaultReasonOperMethod" id="GetFaultReasonOperMethod" value=#(GetFaultReasonOperMethod)#>
+			<INPUT TYPE="hidden" name="GetDealMethodOperMethod" id="GetDealMethodOperMethod" value=#(GetDealMethodOperMethod)#>
+			<INPUT TYPE="hidden" name="GetFaultTypeOperMethod" id="GetFaultTypeOperMethod" value=#(GetFaultTypeOperMethod)#>
+			<INPUT TYPE="hidden" name="fillData" id="fillData" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.GetOneMaintRequest"))%>' />
+			<INPUT TYPE="hidden" name="StopFlag" id="StopFlag" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQChangeInfo.StopEquipBySource"))%>' />
+			<INPUT TYPE="hidden" name="submit" id="submit" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.SubmitMaintRequest"))%>' />
+			<INPUT TYPE="hidden" id="SimpleFlag" value="">
+			<INPUT TYPE="hidden" name="del" id="del" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.DeleteMaintRequest"))%>' />
+			<INPUT TYPE="hidden" id="ApproveSetDR">
+			<INPUT TYPE="hidden" id="NextRoleDR">
+			<INPUT TYPE="hidden" id="CancelFlag">
+			<INPUT TYPE="hidden" id="CancelToFlowDR">
+			<INPUT TYPE="hidden" id="ApproveStatu">
+			<INPUT TYPE="hidden" name="GetApproveFlow" id="GetApproveFlow" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQCApproveSet.GetApproveFlow"))%>' />
+			<INPUT TYPE="hidden" name="GetStopEquipFlag" id="GetStopEquipFlag" value=#(GetStopEquipFlag)#>
+			<INPUT TYPE="hidden" name="GetApproveAllowType" id="GetApproveAllowType" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQCApproveFlow.GetApproveFlowType"))%>' />
+			<INPUT TYPE="hidden" id="ApproveTypeCode" value=25>
+			<INPUT TYPE="hidden" id="Type">
+			<INPUT TYPE="hidden" name="CancelSubmitData" id="CancelSubmitData" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.CancelSubmitData"))%>' />
+			<INPUT TYPE="hidden" id="ObjLocDR">
+			<INPUT TYPE="hidden" id="EquipDR">
+			<INPUT TYPE="hidden" id="EquipTypeDR">
+			<INPUT TYPE="hidden" id="ObjTypeDR">
+			<INPUT TYPE="hidden" id="EquipStatusDR">
+			<INPUT TYPE="hidden" id="RequestUserDR">
+			<INPUT TYPE="hidden" id="RequestLocDR" value='<%=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))%>'>
+			<INPUT TYPE="hidden" id="FaultCaseDR">
+			<INPUT TYPE="hidden" id="EmergencyLevelDR">
+			<INPUT TYPE="hidden" id="SeverityLevelDR">
+			<INPUT TYPE="hidden" id="AcceptUserDR">
+			<INPUT TYPE="hidden" id="MaintGroupDR">
+			<INPUT TYPE="hidden" id="MaintModeDR">
+			<INPUT TYPE="hidden" id="ServiceDR">
+			<INPUT TYPE="hidden" id="FaultTypeDR">
+			<INPUT TYPE="hidden" id="FaultReasonDR">
+			<INPUT TYPE="hidden" id="DealMethodDR">
+			<INPUT TYPE="hidden" id="MaintResultsDR">
+			<INPUT TYPE="hidden" name="SetContract" id="SetContract" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.SetContrat"))%>' />
+			<INPUT TYPE="hidden" name="UpdFaultCase" id="UpdFaultCase" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMCFaultCase.UpdFaultCase"))%>' />
+			<INPUT TYPE="hidden" name="GetPYMethod" id="GetPYMethod" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQCHanZiEncoding.GetEncoding"))%>' />
+			<INPUT TYPE="hidden" name="UpdFaultReason" id="UpdFaultReason" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMCFaultReason.UpdFaultReason"))%>' />
+			<INPUT TYPE="hidden" name="UpdDealMethod" id="UpdDealMethod" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMCDealMethod.UpdDealMethod"))%>' />
+			<INPUT TYPE="hidden" name="AuditData" id="AuditData" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQM.DHCEQMMaintRequest.AuditData"))%>' />
+			<INPUT TYPE="hidden" id="MaintProcess">
+			<INPUT TYPE="hidden" name="GetReqFields" id="GetReqFields" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQApprove.GetRequiredFields"))%>' />
+			<INPUT TYPE="hidden" name="GetEquipIDByNo" id="GetEquipIDByNo" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQEquip.GetEquipIDByNo"))%>' />
+			<INPUT TYPE="hidden" id="MaintItemDR" value=#(MaintItemDR)#>
+			<INPUT TYPE="hidden" id="AssignDR" value=#(GUserDR)#>
+			<INPUT TYPE="hidden" id="CheckEvaluate" value=#(CheckEvaluate)#>
+			<INPUT TYPE="hidden" name="GetEvaluateInfo" id="GetEvaluateInfo" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQEvaluate.GetEvaluateInfo"))%>' />
+			<INPUT TYPE="hidden" name="GetUserEvaluateInfo" id="GetUserEvaluateInfo" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCEQEvaluate.GetUserEvaluateInfo"))%>' />
+			
+			<!--调用后台方法隐藏元素
+			<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			-->
+		</form>
+	</div>
+	<div id="ApproveFlowWin" class="easyui-window" closed="true" title="审批流向" style="width:200px;height:180px;">
+		<form class="easyui-datagrid eq_easyui-fluid" id="tApproveFlowGrid" style="width:100%;height:100%;" data-options="singleSelect:true">
+		</form>
+	</div>
+</body>
+</HTML>

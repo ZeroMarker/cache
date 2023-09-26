@@ -1,0 +1,84 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s StrParam=$Get(%request.Data("strParam",1))
+	
+	s UserId=$Get(%request.Data("userId",1))
+	s LocId=$Get(%request.Data("locId",1))
+	
+	
+	//生成凭证
+	i Action = "InsertVoucher" d
+	.s maininfo=$Get(%request.Data("maininfo",1))	
+	.s recdetailinfo=$Get(%request.Data("recdetailinfo",1))
+	.s retdetailinfo=$Get(%request.Data("retdetailinfo",1))
+	.s result =##class(web.DHCSTM.DHCPayVoucher).InsertVoucher(maininfo,recdetailinfo,retdetailinfo)
+	.i +result'<0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	//查询凭证信息
+	i Action = "queryvoucher" d
+	.s result = ##class(web.DHCSTM.DHCPayVoucher).jsVoucherList(Start,Limit,StrParam)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	
+	//查询入库/退货单
+	i Action = "querygdrecbyvoucher" d
+	.s result = ##class(web.DHCSTM.DHCPayVoucher).jsDHCINGdRecListByVoucher(Start,Limit,StrParam)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	
+	//删除凭证信息
+	i Action = "DeleteVoucher" d
+	.s svcrowid=$Get(%request.Data("svcrowid",1))
+	.s result = ##class(web.DHCSTM.DHCPayVoucher).DeleteVoucher(svcrowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	//查询凭证信息（单个）
+	i Action = "Select" d
+    .S svcId=$Get(%request.Data("Rowid",1))
+    .s ret=##class(web.DHCSTM.DHCPayVoucher).SelectVoucher(svcId)    
+    .w "{success:'true',info:'"_ret_"'}"
+	
+	//取明细
+	i Action = "queryItem" d
+	.s InGrId=$Get(%request.Data("InGrId",1))
+	.s type=$Get(%request.Data("type",1))
+	.s ^zhwh(123)=InGrId_"^"_type
+	.s result=##class(web.DHCSTM.DHCINGdRecPaymentApproval).jsRecRetItm(Start,Limit,InGrId,type)
+	.;i type="G"  d
+	.;.s result = ##class(web.DHCSTM.DHCINGdRecItm).Query(Start,Limit,Sort,Dir,InGrId)
+    .;e  d
+    .;.s result=##class(web.DHCSTM.DHCINGrtItm).jsDHCINGdRetItm(Start,Limit,Sort,Dir,InGrId)
+	.
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	
+	
+	
+	
+	
+</script>

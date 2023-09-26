@@ -1,0 +1,342 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ i ##Class(websys.SessionEvents).SessionExpired()
+ Set IEVersion = ##class(ext.util.String).GetIEVersion()
+ if (IEVersion="IE6")||(IEVersion="IE7")|| (IEVersion="IE8"){
+  Set %response.ServerSideRedirect="websys.frames70.csp"
+ }
+ q 1
+</csp:method>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<HEAD>
+	<meta http-equiv="Content-Type" content="text/html;charset=	GB18030" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<!-- bootstrap & fontawesome -->
+    <link rel="stylesheet" href="../scripts_lib/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../scripts_lib/assets/css/font-awesome.min.css" />
+    <!-- text fonts -->
+    <link rel="stylesheet" href="../scripts_lib/assets/css/ace-fonts.css" />
+    <!-- ace styles -->
+    <link rel="stylesheet" href="../scripts_lib/assets/css/ace.min.css" />
+    <script src="../scripts/websys.js" type="text/javascript" ></script>
+    <script src="../scripts_lib/assets/js/jquery.min.js" type="text/javascript" ></script>
+    <!-- ace settings handler -->
+    <script src="../scripts_lib/assets/js/ace-extra.min.js" type="text/javascript" ></script>
+	<style>
+	#sidebar{
+		background-color:#F1F7FF;	
+	}
+	/*侧菜单-一级*/
+	.no-skin .nav-list > li:hover > a,
+	.no-skin .nav-list > li > a:focus,
+	.no-skin .nav-list > li > a:hover,
+	.no-skin .nav-list > li.active > a,
+	.no-skin .nav-list > li.active > a:hover,
+	.no-skin .nav-list > li.active > a:focus,
+	.no-skin .nav-list > li.open > a,
+	.no-skin .nav-list > li.open > a:hover,
+	.no-skin .nav-list > li.open > a:focus { 
+    	background-color:#aed0fd;
+	}
+	.no-skin .nav-list > li > a { 
+		background-color:#bfdbff;
+		color: #14438A;
+    	font-weight: bold;
+	}
+	/*父菜单边框*/
+	.no-skin .nav-list>li {
+	    border-color: #9EC0EC;
+	}
+
+
+	/*导航条*/
+	.nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover { 
+		color:#000000;
+	}
+	.nav-tabs > li > a, .nav-tabs > li > a:focus { 
+		color:#000000;
+	}
+	/*字体*/   
+	body  {  
+		font-family:"Microsoft Yahei";
+		font-size:14px;
+	}
+	/*\f104-->\f107, left-->down*/
+	.nav-list li.open>a>.fa-angle-left:before{
+		content: "\f107"
+	}
+	/*一些样式重写，或自定义样式*/
+	.page-content{
+		padding:0;	
+	}
+	.tabbable{    /*当为多行时*/
+		padding-top:1px;
+		background: #E1ECFE;
+	    border-bottom: 5px solid #CFE5FF;
+	}
+	#myTab {
+	    background: #e1ecfe; /*#eeeeee;*/
+	    top: 0;
+	    border-bottom: 1px solid #95b9e7;
+	    min-height: 34px;
+    	line-height: 33px;
+	}
+	#myTab li.active{
+		/*border-bottom:1px solid #CFE5FF;*/ /*上左右边框是加在a上的,如果a有margin 连不上的感觉*/
+	}
+	#myTab li {
+		margin:0 0 -2px 0;
+	}
+	 /*#cee4ff !important;*/
+	#myTab li.active a{
+		/*border-bottom: 2px solid #4722dc;   */
+		background: -webkit-linear-gradient(#F5FAFE, #CFE5FF); /* Safari 5.1 - 6.0 */
+		background: -o-linear-gradient(#F5FAFE, #CFE5FF); /* Opera 11.1 - 12.0 */
+		background: -moz-linear-gradient(#F5FAFE, #CFE5FF); /* Firefox 3.6 - 15 */
+		background: linear-gradient(#F5FAFE, #CFE5FF); /* 标准的语法 */
+		border-radius: 5px 5px 0px 0px!important;
+    	border: 1px #95b9e7 solid;
+    	border-bottom: 1px #CFE5FF solid;
+    	/*padding-bottom:7px;*/
+    	font-weight:700;
+	}
+	#myTab > li > a {
+		height:30px;
+		display:inline-block;
+	    margin: 4px 2px 0px;
+	    padding: 4px 9px 5px;
+	    text-decoration: none;
+		background: -webkit-linear-gradient(#E8F3FF, #ECF5FF); /* Safari 5.1 - 6.0 */
+		background: -o-linear-gradient(#E8F3FF, #ECF5FF); /* Opera 11.1 - 12.0 */
+		background: -moz-linear-gradient(#E8F3FF, #ECF5FF); /* Firefox 3.6 - 15 */
+		background: linear-gradient(#E8F3FF, #ECF5FF); /* 标准的语法 */
+		border-radius: 5px 5px 0px 0px!important;
+    	border: 1px #95b9e7 solid;
+    	/*border-bottom: 0px #CFE5FF solid;*/
+    	color:#0E2D5F;
+    	font-size:14px;
+	}
+	#myTabContent .tab-pane{
+		height:100%;
+	}
+	#myTab > li > a > i.glyphicon-remove {
+	    margin: 2px 2px 0 4px;
+	    color:#999999;
+	    font-weight:100;
+	    font-weight: 900;
+	    display: inline-block;
+	    width: 14px;
+	    height: 14px;
+	    overflow: hidden;
+	}
+	/*x号用乘号*/
+	.glyphicon-remove:before {   
+	    content: "\00d7";
+	    display:inline-block;
+		font-size:18px;
+		margin-top: -4px;
+		
+	}
+	/*二级菜单下还有三级菜单,则显示左侧箭头*/
+	.nav-list>li>.submenu>li.hsub>a>.menu-icon {
+   		display: inline-block;
+	}
+	.no-skin .sidebar-toggle{
+		background-color:#e1ecfe;
+		border-bottom-color:#9EC0EC;
+	}
+	#sidebar > div:nth-child(2) {
+	    border-top-width:0px;
+	}
+	#sidebar:not(.sidebar-scroll) > div:nth-child(2) {
+	    border-bottom-width:0px;
+	}
+	#sidebar > div:nth-child(4){
+		border-top-color: #9EC0EC;
+	}
+	.no-skin .sidebar-toggle>.ace-icon {
+	    border-color: #a4c4ed;
+	    color: #74a1d8;
+	    background-color: #CFE5FF;
+	}
+	.sidebar .sidebar-toggle:before {
+	    border-top: 1px dashed;
+	    border-color: #9ABCE8;
+	}
+
+	.no-skin .nav-list>li .submenu>li>a{
+		background-color:#f1f7ff;
+		border-top-color: #f1f7ff; /*二级菜单边框改为和背景色一致*/
+	}
+	.no-skin .nav-list>li .submenu {
+	    background-color: #f1f7ff;
+	    border-top:0px;
+	}
+	.no-skin .nav-list>li .submenu>li>a { 
+		color:#000000;
+	}
+	.no-skin .nav-list>li .submenu>li>a:hover,
+	.no-skin .nav-list>li .submenu>li>a:focus,
+	.no-skin .nav-list>li .submenu>li.active>a,
+	.no-skin .nav-list>li .submenu>li.open>a{ 
+		border-top-color: #f1f7ff; 
+		color:#14438a!important;
+		background-color: #d8e9ff!important;
+	}
+	.nav-list>li>.submenu:before {
+		border-left: 1px dashed;
+	}
+	.nav-list>li>.submenu>li:before {
+		border-top: 1px dashed;
+	}
+	.nav-list li>a{
+		font-size:14px;
+	}
+	.nav-list>li>a>.menu-icon {
+		font-size:14px;
+		color:#669EF2;
+		vertical-align: middle;
+	}
+   </style>
+    <SERVER> 
+	n securitymsg
+	s securitymsg=##Class(web.SSUser).GetSystemSecurityMessage(%session.Get("LOGON.USERID"))
+	Set GroupId = %session.Data("LOGON.GROUPID")
+	Set HomePage="websys.csp"
+	s myeprRID=##class(epr.GroupSettings).GetIdFromGroupId(GroupId)
+	If myeprRID{
+		s myeprobj=##class(epr.GroupSettings).%OpenId(myeprRID)
+		i ($IsObject(myeprobj)){
+			if $IsObject(myeprobj.SideMenuGroupDR),##class(%Dictionary.PropertyDefinition).%OpenId("websys.MenuGroup||HomePage",0){
+				s HomePage = myeprobj.SideMenuGroupDR.HomePage
+			}
+			d myeprobj.%Close()
+			s myeprobj=""
+		}
+	}
+	</SERVER>
+
+<SCRIPT language="Javascript">
+var securitymsg="#(securitymsg)#";
+if (securitymsg!="") alert(securitymsg);
+self.moveTo(0,0);
+self.resizeTo(screen.availWidth,screen.availHeight);
+
+//This is a workaround to try and distinguish between reloading the frame and closing the window
+var keepopen=false;
+function unlockonunload() {
+	//call websys.close.csp to close open locks
+	/*if (!keepopen) {
+		window.location.href="websys.closesession.csp";
+		return false;
+	}*/
+	//wanghc 2014-10-28,进入侧菜单时点ie的红叉退出不能关闭session问题 window.event.clientX->window.event.clientY
+	if (window.event) {
+		if (window.event.clientY && window.event.clientY < 0){
+		   try {unloadHandler();} catch(e) {}
+		   window.location.href="websys.closesession.csp";
+			}else{
+		   //alert("The user is refreshing or navigating away...");
+		}
+	}
+	return true;
+}
+
+function unloadHandler() {
+
+	// SA 13.8.02 - log 26697: Function written in order to close Medicode 
+	// when Medtrak is closed. While this code is only relevant to RIE, because 
+	// there is no single component associated with this code, SP and I have agreed
+	// that this code needs to be here rather than in a custom javascript.
+	// This code also appears in epr.frames.csp
+	
+	// DDE object
+	var objDDE;
+
+	//alert("Syd Testing Medtrak Unload: websys.frames.csp");
+	
+	try {		
+
+		objDDE = new ActiveXObject("tkDDEInterface.clsConnect");
+		objDDE.DDELinkTopic = "OINSIGHT|MW_MAINFORM.TXT_HOST_ID";
+		objDDE.DDELinkMode = 2;
+		objDDE.DDELinkItem = "TEXT";
+		objDDE.DDEText = "MEDICODE_EXIT"
+		objDDE.DDEPoke();
+	
+	} catch(e) {}
+
+}
+</SCRIPT>
+</head>
+<body class="no-skin"  style="width:100%;height:100%;overflow:hidden"  > 
+    <div class="main-container " id="main-container">
+        <!-- #section:basics/sidebar -->
+        <div id="sidebar" class="sidebar responsive sidebar-fixed">
+            <script type="text/javascript">
+                try { ace.settings.check('sidebar', 'fixed') } catch (e) { }
+            </script>
+            <div class="sidebar-toggle sidebar-collapse">
+                <i class="ace-icon fa fa-angle-double-left" data-icon1="ace-icon fa fa-angle-double-left" data-icon2="ace-icon fa fa-angle-double-right"></i>
+            </div>             
+           <ul id="navmenu" class="nav nav-list">
+            #(##class(websys.Menu).BootstrapSideMenu(1,GroupId))#
+           </ul>
+            <div class="sidebar-toggle sidebar-collapse">
+                <i class="ace-icon fa fa-angle-double-left" data-icon1="ace-icon fa fa-angle-double-left" data-icon2="ace-icon fa fa-angle-double-right"></i>
+            </div>
+            <script type="text/javascript">
+                try { ace.settings.check('sidebar', 'collapsed') } catch (e) { alert(1) }
+            </script>
+        </div>
+        <div class="main-content">
+        <!--
+            <div class="tab-pane in active" id="content_home">
+				<iframe src="websys.csp" name="TRAK_main" id="TRAK_main" width="100%" min-height="600px" frameborder="0" scrolling="auto" onLoad="iFrameHeight('TRAK_main')"></iframe>
+		    	<iframe src="" name="TRAK_hidden" style="display:none;"></iframe>
+            </div>-->
+	        <div class="page-content">
+	            <div class="tabbable">	<!--导航条-->
+	                <ul id="myTab" class="no-border nav-tabs breadcrumbs">
+	                    <li class="active" id="li_home">
+	                    	<a href="#content_home" data-toggle="tab">
+	                    		<i class="ace-icon fa fa-home bigger-120 blue" style=""></i>
+	                    		工作台
+	                        </a>
+	                    </li>
+	                </ul>
+	                <div class="clearfix"></div>
+	            </div>
+	            <div class="tab-content no-border padding-0" id="myTabContent" style="height:560px"> <!--iframe内容区-->
+					<div id="content_home" class="tab-pane in active">
+						<iframe id="iframe_home" name="TRAK_main" src="#(HomePage)#" width="100%" min-height="500px" onload="iFrameHeight('iframe_home')" frameborder="0" height="100%">
+							系统使用了框架技术，但是您的浏览器不支持框架，请升级您的浏览器以便正常访问。
+						</iframe>
+					</div>
+	            </div>
+	        </div>
+	        <iframe src="" name="TRAK_hidden" style="display:none;"></iframe>
+	        <div id="mm" class="contextMenu" style="width: 150px;" title="多标签右键菜单">
+		        <ul>
+		            <li id="tabCloseOther"><i class="red icon-undo bigger-100"></i>关闭其它</li>
+		            <li id="tabCloseAll"><i class="red icon-adjust bigger-100"></i>关闭全部</li>
+		        </ul>
+		    </div>
+			<FORM name="fEPRMENU">
+				<INPUT TYPE="hidden" name="AcctBookID" id="AcctBookID" value="">
+				<INPUT TYPE="hidden" name="AcctBookName" id="AcctBookName" value="">
+			</FORM>
+       </div>
+    </div><!-- end . main-container -->
+
+	<script src="../scripts_lib/assets/js/bootstrap.min.js" type="text/javascript" ></script>
+    <script src="../scripts_lib/assets/js/ace-elements.min.js" type="text/javascript" ></script>
+    <script src="../scripts_lib/assets/js/jquery.contextmenu.js" type="text/javascript" ></script>
+    <script src="../scripts_lib/assets/js/ace.min.js" type="text/javascript" ></script>
+	<script src="../scripts_lib/jQuery/jquery.tmpl.min.js" type="text/javascript" ></script>
+	<script src="../scripts/websys.frames.js" type="text/javascript" ></script>
+</body>
+</html>

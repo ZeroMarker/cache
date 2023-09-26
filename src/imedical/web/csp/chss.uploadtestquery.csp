@@ -1,0 +1,22 @@
+<script language="cache" method="OnPreHTTP" arguments="" returntype="%Boolean">
+	
+	set url="chss.uploadtest.csp"	
+	if $data(%request.MimeData("Picture",1)) 
+	{
+		set attachement = ##Class(CHSS.HealthEducationSumDetail).%New()
+		set filename = %request.MimeData("Picture",1).FileName
+		set stream = %request.GetMimeData("Picture",1)
+		set ^LOG=filename
+		set file = ##class(%GlobalBinaryStream).%New()
+		do file.CopyFromAndSave(stream)
+		s attachement.FileTitle = filename
+		s attachement.Image=file
+		do attachement.%Save()
+		
+		;w "{""success"":""true"",""info"":""}"
+		;q ""
+		set %response.Redirect = ""
+		q 1
+	}
+
+</script>

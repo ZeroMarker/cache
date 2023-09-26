@@ -1,0 +1,145 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+    @CSP：dhc.bdp.kb.dhcphhosploc.csp
+    @JS:DHC_PHHospLoc.js
+    @Title：科室字典
+    @Creator:石萧伟
+    @Description:科室字典
+    @CreateDate：2018-08-01
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/App/KB/NewDic/DHC_PHHospLoc.js"></script>
+<style>   
+</style>
+
+</HEAD>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+		<!--诊断列表-->
+		<div id="layoutcenter" data-options="region:'center',split:true" border="false" style="padding:4px 4px 4px 0px" >
+			<!--<table data-options="fit:true" id="mkbgrid" border="false" toolbar="#mkbbar"></table>-->
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="diagrid" border="true" toolbar="#diabar" title="诊断列表"></table>
+		</div>
+		<div id="layoutwest" data-options="region:'west',split:true"  style="width:550px;padding:4px 0px 4px 4px;" border="false" >
+			<div class="hisui-layout" data-options="fit:true" id="layoutW" border="false">
+				<!--已关联-->
+				<div data-options="region:'center',split:true"   border="false">
+					<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="linkgrid" border="true" title="已关联诊断" ></table>
+				</div>
+				<!--科室列表-->
+				<div data-options="region:'north',split:true,collapsible:false"  style="height:300px" border="false">
+					<!--<table data-options="fit:true" id="ctgrid" border="false" toolbar="#hisbar"></table>-->
+					<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="locgrid" border="true" toolbar="#locbar" title="科室字典"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+     <!--增改弹窗-->
+     <div id="myWin" style="width:400px;height:300px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table id="addtable" align="center">			
+				 <tr>
+				   <td class="tdlabel"><font color=red>*</font>代码</td>
+				   <td><input id="HOSPLCode" name="HOSPLCode" style="width:250px" class="hisui-validatebox" type="text"></td>
+				 </tr>
+				 <tr>
+				   <td class="tdlabel"><font color=red>*</font>描述</td>
+				   <td><input id="HOSPLDesc" name="HOSPLDesc" style="width:250px" class="hisui-validatebox" type="text"></td>
+				 </tr>					 	
+	    		 <tr>
+	    		   <td class="tdlabel">是否可用</td>
+				   <td><input class='hisui-checkbox' type="checkbox" label="" id="HOSPLActiveFlag" name="HOSPLActiveFlag" data-options="checked:true" value="Y"></td>
+				 </tr>					 							
+			</table >
+		</form>
+	</div>
+	<div style="width:400px;height:300px;top:30px;padding:10px;display:none;">
+		<form id="link-save" method="post" data-options="fit:true,border:false,plain:true">
+		</form>
+	</div>	
+	<!--科室字典工具栏-->
+	<!--<div id="locbar" style='padding-top:4px'>
+ 		<span style="padding-left:10px;">描述<input style="width:165px;margin-left:10px;" class='hisui-validatebox' id="TextLoc"></span>
+ 		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="locSearch" style="margin-bottom:3px;margin-left:10px">查询</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="locRefresh" style="margin-bottom:3px;margin-left:10px">清屏</a>
+    	<div style='border-top: 1px dashed #C0C0C0;font-size: 14px;margin-top:2px'></div>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>    	
+    </div>-->
+    <div id="locbar">
+		 <table style="padding-top:5px;padding-bottom:5px;" >
+		    <tr>
+		    	<td class="tdlabel">描述</td>
+	    		<td><input style="width:165px;margin-left:10px;" class='hisui-validatebox' id="TextLoc"></td>
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="locSearch">查询</a>
+				</td>
+				<td class="tdlabel-b">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="locRefresh" >清屏</a>
+				</td>
+			</tr> 
+		 </table>
+		 <div style='border-top: 1px dashed #C0C0C0;'></div>  
+		 <table style="padding-top:1px;padding-bottom:1px;">
+			<tr>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a> 
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>
+				</td>
+			</tr>		 
+		 </table>  
+    </div>    
+	<!--诊断列表工具栏-->
+	<!--<div id="diabar" style='padding:4px 0px 2px 0px'>
+ 		<span style="padding-left:10px;">描述<input style="width:150px;margin-left:10px;" class='hisui-validatebox' id="Textdia"></span>
+ 		<span style="padding-left:10px;"><h style="padding-right:10px;">已关联</h><input style="width:80px" id="dialinkDesc"/></span>
+ 		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="diaSearch" style="margin-bottom:3px;margin-left:10px">查询</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="diaRefresh" style="margin-bottom:3px;margin-left:10px">清屏</a>
+    	<div style='border-top: 1px dashed #C0C0C0;font-size: 14px;margin-top:2px'></div>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true,stopAllEventOnDisabled:true" id="linkbtn">关联</a>
+    </div>-->
+	<div id="diabar">
+	 <table style="padding-top:5px;padding-bottom:5px;" >
+	    <tr>
+	    	<td class="tdlabel">描述</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="Textdia"></td>
+	    	<td class="tdlabel">已关联</td>
+			<td><input style="width:80px" id="dialinkDesc"/></td>			
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="diaSearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="diaRefresh">清屏</a>
+			</td>
+		</tr> 
+	 </table>
+	 <div style='border-top: 1px dashed #C0C0C0;'></div>  
+	 <table style="padding-top:1px;padding-bottom:1px;">
+		<tr>
+			<td>
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true,stopAllEventOnDisabled:true" id="linkbtn">关联</a>
+			</td>
+		</tr>		 
+	 </table>  
+	</div>    
+</BODY>
+</HTML>
+																						

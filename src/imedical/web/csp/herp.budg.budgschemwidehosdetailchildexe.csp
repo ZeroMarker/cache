@@ -1,0 +1,65 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+
+	
+	s Code=$Get(%request.Data("Code",1))
+	
+	s bfitemcode=$Get(%request.Data("bfitemcode",1))
+    s bidname=$Get(%request.Data("bidname",1))
+	s bfhisvalue=$Get(%request.Data("bfhisvalue",1))
+	s bfrealvaluelast=$Get(%request.Data("bfrealvaluelast",1))
+	s bfplanvalue=$Get(%request.Data("bfplanvalue",1))
+	s sf=$Get(%request.Data("sf",1))
+	s scf=$Get(%request.Data("scf",1))
+	s chkdesc=$Get(%request.Data("chkdesc",1))
+	s bideditmeth=$Get(%request.Data("bideditmeth",1))
+	s bideditmod=$Get(%request.Data("bideditmod",1))
+	s bsdcaldesc=$Get(%request.Data("bsdcaldesc",1))
+	s bsdschemdr=$Get(%request.Data("bsdschemdr",1))
+	
+
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgSchemWideHos).ListDetail(Code,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgFactYear).UpdateRec(rowid,bfincreaserate)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+//	i action = "add" d
+//	.s result = ##class(dhc.dura.udata.uWHouseState).InsertRec(YearMonth,HouseDr)
+//	.i result = 0 d
+//	..w "{success:'true',info:'',refresh:'true'}"
+//	.e  d
+//	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgFactYear).YearList(start,limit,str)
+	
+	i action = "bsmnamelist" d
+	.w ##class(herp.budg.udata.uBudgFactYear).BSMNameList(start,limit,str)
+
+
+</script>

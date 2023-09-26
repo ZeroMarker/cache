@@ -1,0 +1,142 @@
+<style>
+.patientInfo{
+	margin-left:50px;
+}
+.patientInfo div{
+	 padding-left:10px;
+	 padding-right:10px;
+	 float:left;
+ }
+ .patientInfo div a{
+     color: #000000;
+ }
+ .baseInfoName{
+	 margin-top: -2px;
+ }
+ div.baseInfoName a{
+	font-size:16px;
+ }
+ div.baseInfoDiag a{
+ 	color:#EBB806;
+ }
+ .woman{
+ 	background:url(../images/woman.png) no-repeat;
+ 	background-position:center center;
+ 	width:30px;
+ 	height:30px;
+ 	position: absolute;
+    top: 4px;
+    left:4px;
+ }
+ .man{
+ 	background:url(../images/man.png) no-repeat;
+ 	background-position:center center;
+ 	width:30px;
+ 	height:30px;
+ 	position: absolute;
+    top: 4px;
+    left:4px;
+ }
+ .i-btn-right{
+	 /*
+ 	width:200px;
+ 	float:right;
+ 	margin-top:-8px;*/
+ 	position: absolute;
+    right: 10px;
+    top: 3px;
+ }
+ 
+ div.i-sep {
+    height: 15px;
+    width: 0px;
+    border-right: 1px solid #c3c3c3;
+    transform: rotate(30deg);
+    margin-top:3px;
+    padding: 0;
+}
+</style>
+<!--dhcdoc.in.person.banner.v8.csp //-->
+<div class="patientbar">
+		<script id="patientInfoTpl" type="text/x-jquery-tmpl">
+		<div class="{{if baseInfoSex=='男'}}man{{else}}woman{{/if}}"></div>
+		<div class="baseInfoName"><a href="#">${baseInfoName}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoSex}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoAge}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem">(登记号)<a href="#">${baseInfoRegNo}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoBedno}床</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem">住院<a href="#">第${baseInfoIPDays}天</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoInsu}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoCharge}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoDiag"><a href="javascirpt:void(0)">${baseInfoDiag}</a></div>
+		<div>{{html baseIconProfile}}</div>
+   	  </script>
+		<div class="patientInfo">
+   	   </div>
+   	   <csp:if condition=PatientListPage'="">
+	   	   <div class="i-btn-right">
+		   	   <div id="InpatListDiv" style="display:inline;width:200px;float:left;">
+					<a id="InPatListBtn" href="#" class="hisui-linkbutton" style="background:#21BA45;float:right;">病人列表</a>
+					<div id="patlist" class="hisui-panel" title="" 
+						style="width:990px;height:660px;overflow:hidden;"  
+						data-options="resizable:true,modal:true,closed:true,closable:true,onOpen:onOpenPatListWin,onClose:onClosePatListWin,headerCls:'panel-header-gray'">  
+					    <iframe src="about:blank" width="100%" min-height="350px" height="100%" frameborder="0"></iframe>
+					</div>
+				</div>
+			</div>
+		</csp:if>
+  </div>
+<csp:if condition=PatientListPage'="">
+<script type="text/javascript">
+function showPatListWin(){
+	if ($("#InpatListDiv .panel").css('display')!=="none") return ;
+	if ($("#InpatListDiv").data("AutoOpen")==1){
+		$("#patlist").panel({closable:false});
+	}else{
+		$("#patlist").panel({closable:true});
+	}
+	$("#patlist").panel("open");
+}
+function hidePatListWin(){
+	if ($("#InpatListDiv").data("AutoOpen")==1){
+		// 未选病人时,不允许隐藏病人列表
+	}else{
+		$("#patlist").panel("close");
+	}
+}
+function onOpenPatListWin(){
+	if ($("#patlist").find("iframe").get(0).src=="about:blank") {
+		$("#patlist").find("iframe").get(0).src="undefined"==typeof patientListPage?"inpatientlist.csp":patientListPage;	
+	}
+	var opt = {'z-index':9085,'position':'fixed'};
+	var panelJObj = $("#InpatListDiv .panel");
+	var patListJObj = $("#patlist");
+	if ($("#InpatListDiv").data("AutoOpen")==1){
+		// 未选中病人时,全屏显示病人列表
+		//$('#InDiagTimeLineBtn,#InPatListBtn').hide();
+		panelJObj.css($.extend({},opt,{right:'0px',top:'0px'}));
+		patListJObj.panel('resize', { width:$(document.body).width(), height:$(document.body).height() } );
+	}else{
+		panelJObj.css($.extend({},opt,{right:'12px',top:'33px'}));
+		patListJObj.panel('resize', { width:1090, height:$(document.body).height()-60 });
+	}
+	$(".window-mask.alldom").show();
+}
+function onClosePatListWin(){
+	$(".window-mask.alldom").hide();
+}
+$(function(){
+	$("#InpatListDiv").mouseenter(showPatListWin);
+	$("#InpatListDiv").mouseleave(hidePatListWin);
+	//$("#InpatListDiv").hover(showPatListWin,hidePatListWin); //会有闪动现象
+});
+</script>
+</csp:if>

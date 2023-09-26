@@ -1,0 +1,71 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">	
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	//s searchField = $Get(%request.Data("searchField",1))
+	//s searchValue = $Get(%request.Data("searchValue",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	s str=$Get(%request.Data("query",1))
+	//s spell=$Get(%request.Data("query",1))
+
+
+    ///≤È—Ø
+	s startDate=$Get(%request.Data("startDate",1))
+	//s EndDate=$Get(%request.Data("EndDate",1))
+	s VouchTypeID=$Get(%request.Data("VouchTypeID",1))
+	s IsCheck = $Get(%request.Data("IsSign",1))
+	s rowid=$Get(%request.Data("rowid",1))	
+	s StartVouchNo = $Get(%request.Data("StartVouchNo",1))
+	s EndVouchNo = $Get(%request.Data("EndVouchNo",1))
+	s SubjID = $Get(%request.Data("SubjID",1))
+	
+	s ChkResult = $Get(%request.Data("ChkResult",1))
+	s view		= $Get(%request.Data("view",1))
+	s acctbookid=$Get(%request.Data("acctbookid",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	//s Curruser=$Get(%request.Data("Curruser",1))
+	
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctCashierSign).ListRec(sortField, sortDir, start, limit, startDate, VouchTypeID, IsCheck, StartVouchNo, EndVouchNo, SubjID,acctbookid,userdr)
+	
+	i action="listd" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetVouchProgress(start,limit,rowid)
+	.;w ##class(herp.acct.udata.uAcctCashierSign).GetVouchProgress(start,limit,rowid)
+
+	i action = "GetVouchTypeName" d
+	.w ##class(herp.acct.udata.uAcctCashierSign).GetVouchTypeName(start,limit,str)
+
+
+	i action = "GetCashSubjName" d
+	.w ##class(herp.acct.udata.uAcctCashierSign).GetCashSubjName(start,limit,str,acctbookid)
+	
+	
+	i action = "BatchSign" d 
+	.s result = ##class(herp.acct.udata.uAcctCashierSign).BatchSign(rowid,ChkResult,view,userdr,acctbookid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+	i action = "listnew" d
+	.w ##class(herp.acct.udata.uAcctCashierSign).ListCancelSign(start, limit,str,acctbookid)
+	
+	i action="CancelSign" d
+	.s result =##class(herp.acct.udata.uAcctCashierSign).CancelSign(rowid,view,userdr,acctbookid,ChkResult)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

@@ -1,0 +1,125 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+	s UserId=$Get(%request.Data("UserId",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	
+	s Rowid=$Get(%request.Data("RowId",1))
+	
+	s PersonCode=$Get(%request.Data("PersonCode",1))
+	s PersonName=$Get(%request.Data("PersonName",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	s DateRegister=$Get(%request.Data("DateRegister",1))
+	s DateInput=$Get(%request.Data("DateInput",1))
+	s RelationHourseHoldDR=$Get(%request.Data("RelationHourseHoldDR",1))
+	s SexDR=$Get(%request.Data("SexDR",1))
+	s Birth=$Get(%request.Data("Birth",1))
+	s Birth=$Get(%request.Data("Birth",1))
+
+	s SpellCode=$Get(%request.Data("SpellCode",1))
+	s IDCard=$Get(%request.Data("IDCard",1))
+	s CardNumber=$Get(%request.Data("CardNumber",1))
+	s WorkPlace=$Get(%request.Data("WorkPlace",1))
+	s CommitteeDR=$Get(%request.Data("CommitteeDR",1))
+	s PoliceRowIdDR=$Get(%request.Data("PoliceRowIdDR",1))
+	s NationalityDR=$Get(%request.Data("NationalityDR",1))
+	s NationDR=$Get(%request.Data("NationDR",1))
+	s BloodTypeDR=$Get(%request.Data("BloodTypeDR",1))
+	s BirthPlace=$Get(%request.Data("BirthPlace",1))
+	s EducationDR=$Get(%request.Data("EducationDR",1))
+	s ProfessionDR=$Get(%request.Data("ProfessionDR",1))
+	
+	s DateOfWork=$Get(%request.Data("DateOfWork",1))
+	s DateOFRetire=$Get(%request.Data("DateOFRetire",1))
+	
+	s DeformityCode=$Get(%request.Data("DeformityCode",1))
+	s HouseHoldTypeDR=$Get(%request.Data("HouseHoldTypeDR",1))
+	s DocimialTypeDR=$Get(%request.Data("DocimialTypeDR",1))
+	s MedicalInsuranceTypeDR=$Get(%request.Data("MedicalInsuranceTypeDR",1))
+	s PointHospitalRowIdDR=$Get(%request.Data("PointHospitalRowIdDR",1))
+	s StreetRowIdDR=$Get(%request.Data("StreetRowIdDR",1))
+	s DeformityType=$Get(%request.Data("DeformityType",1))
+	s StaffOfUpdate=$Get(%request.Data("StaffOfUpdate",1))
+	s DateOfUpdate=$Get(%request.Data("DateOfUpdate",1))
+	s MarriageDR=$Get(%request.Data("MarriageDR",1))
+	s FamilyRowId=$Get(%request.Data("FamilyRowId",1))
+	s OperatorInput=$Get(%request.Data("OperatorInput",1))
+	s NurseRegister=$Get(%request.Data("NurseRegister",1))
+	s DoctorRegister=$Get(%request.Data("DoctorRegister",1))
+
+	s IDCardTypeDR = $Get(%request.Data("IDCardTypeDR",1))
+	s DateOfIDStart = $Get(%request.Data("DateOfIDStart",1))
+	s DateOfIDEnd = $Get(%request.Data("DateOfIDEnd",1))
+	s IDCardProvider = $Get(%request.Data("IDCardProvider",1))
+	s MedicalInsuranceID = $Get(%request.Data("MedicalInsuranceID",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s Address = $Get(%request.Data("Address",1))
+	s AddressTypeDR = $Get(%request.Data("AddressTypeDR",1))
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	s PersonName = $Get(%request.Data("PersonName",1))
+	s SexDR = $Get(%request.Data("SexDR",1))
+	s PersonCode = $Get(%request.Data("PersonCode",1))
+	s LinkManName = $Get(%request.Data("LinkManName",1))
+	s LinkManPhone = $Get(%request.Data("LinkManPhone",1))
+	//s SqlStr = ""
+	
+	i PersonName '= "" d
+	.s SqlStr = " and PersonName like '%"_PersonName_"%'"
+	i SexDR '= "" d
+	.s SqlStr = SqlStr_" and SexDR = "_SexDR
+	i PersonCode '= "" d
+	.s SqlStr = " and PersonCode = '"_PersonCode_"'"
+	
+	i Action = "list" d
+	.i searchValue = "" d
+	..s Action = "list"
+	.i searchValue '= "" d
+	..s Action = "Search"
+	.i SqlStr '= "" d
+	..s Action = "SearchSql"
+	
+	i Action = "listhbv" d
+	.s SqlStr = " and PersonRowId in (select * from PersonHealthDiagnose where ItemdCode = '22' and ItemAssortCode = '5')"
+	
+	//i UserId '= "" d
+	//.s CommunityCode = ##class(CHSSWeb.CommunityService).GetCommunityCode(UserId)
+	//.//s %session.Data("LOGON.COMMUNITYCODE") = CommunityCode
+	//.//Write $Get(%session.Data("LOGON.COMMUNITYCODE"))
+
+	i Action = "communitycode" d
+	.w ##class(CHSSWeb.CommunityService).GetCommunityInfo(UserId)
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.PHRService).PersonList(CommunityCode,Start,Limit,Sort,searchField,searchValue)
+	i Action = "Search" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearch(CommunityCode,Start,Limit,Sort,searchField,searchValue)
+	i Action = "SearchSql" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.PHRService).Insert(PersonCode, CommunityCode, PersonName, SexDR, Birth, SpellCode, CardNumber, IDCard, BirthPlace, DateOfWork, WorkPlace, DateOFRetire, DeformityCode, RelationHourseHoldDR, DoctorRegister, NurseRegister, OperatorInput, NationalityDR, FamilyRowId, HouseHoldTypeDR,DocimialTypeDR, MedicalInsuranceTypeDR, PointHospitalRowIdDR, CommitteeDR, PoliceRowIdDR, StreetRowIdDR, DeformityType, StaffOfUpdate, DateOfUpdate, NationDR, BloodTypeDR, MarriageDR, EducationDR, ProfessionDR,DateRegister,DateInput,IDCardTypeDR,DateOfIDStart,DateOfIDEnd,IDCardProvider,MedicalInsuranceID,Address, AddressTypeDR, LinkManName ,LinkManPhone)
+	.w result
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.PHRService).Update(Rowid, PersonName, SexDR, Birth, SpellCode, CardNumber, IDCard, BirthPlace, DateOfWork, WorkPlace, DateOFRetire, DeformityCode, RelationHourseHoldDR, DoctorRegister, NurseRegister, OperatorInput, NationalityDR, FamilyRowId, HouseHoldTypeDR,DocimialTypeDR, MedicalInsuranceTypeDR, PointHospitalRowIdDR, CommitteeDR, PoliceRowIdDR, StreetRowIdDR, DeformityType, StaffOfUpdate, DateOfUpdate, NationDR, BloodTypeDR, MarriageDR, EducationDR, ProfessionDR,DateRegister,DateInput,IDCardTypeDR,DateOfIDStart,DateOfIDEnd,IDCardProvider,MedicalInsuranceID,Address, AddressTypeDR, LinkManName, LinkManPhone)
+	.w result
+	i Action = "familymembers" d
+	.w ##class(CHSSWeb.PHRService).GetFamilyMembers(CommunityCode,FamilyRowId,Start,Limit,Sort)
+	i Action = "systemid" d
+	.s result = ##class(CHSSWeb.SystemIdService).GetSystemId(CommunityCode,"PERSONHEALTHRECORDMAIN")
+	.w result
+	.//w "{success:'true',info:'10000020090701000001'}"
+	i Action = "listfromhis" d
+	.w ##class(CHSSWeb.HISInfoService).PersonListFromHIS(CardNumber)
+	i Action = "listhbv" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+</script>
+

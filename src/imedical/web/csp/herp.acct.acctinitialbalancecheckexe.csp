@@ -1,0 +1,36 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+    s AcctBookID=$Get(%request.Data("AcctBookID",1))
+	
+	s UserId=$Get(%request.Data("UserId",1))
+	
+    s SubjName=$Get(%request.Data("SubjName",1))
+	
+	i action = "Init" d
+	.s result = ##class(herp.acct.udata.uAcctInitialBalanceCheck).Init(UserId)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetCashSubj" d
+	.w ##Class(herp.acct.udata.uAcctCommon).GetCashSubj(start,limit,str,AcctBookID)
+	
+	i action="ifInit" d
+	.s result = ##class(herp.acct.udata.uAcctInitialBalanceCheck).ifInit(UserId)
+    .w "{success:'true',info:'"_result_"'}"
+</script>

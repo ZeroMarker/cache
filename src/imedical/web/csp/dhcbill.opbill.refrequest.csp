@@ -1,0 +1,106 @@
+<!-- 
+ * FileName: dhcbill.opbill.refrequest.csp
+ * Anchor: ZhYW
+ * Date: 2018-10-10
+ * Description: 门诊退费申请
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.refrequest.css'/>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<server>
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$c(13,10)
+	</server>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',border:false" style="width:515px;padding-right:10px;">
+			<div class="hisui-layout" id="head-menu" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="height:204px;">
+					<div class="hisui-panel" data-options="title:'#(..Get("收据查询"))#',fit:true,tools:'#search-panel-tools',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
+						<table class="search-table" style="width:100%">
+							<tr>
+								<td class="r-label"><label>#(..Get("卡号"))#</label></td>
+								<td colspan="4" class="box-td">
+									<input id="cardNo" class="textbox" placeholder="#(..Get("刷卡/请输入卡号..."))#" style="margin-right:8px;"/><input id="cardType" class="textbox tb143"/><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'" style="margin-left:8px;">#(..Get("读卡"))#</a>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+								<td><input id="stDate" class="hisui-datebox textbox"/></td>
+								<td class="r-label"><label>#(..Get("结束日期"))#</label></td>
+								<td><input id="endDate" class="hisui-datebox textbox"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("发票号"))#</label></td>
+								<td><input id="invNo" class="textbox"/></td>
+								<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+								<td><input id="patientNo" class="textbox"/></td>
+							</tr>
+							<tr class="display-more-tr">
+								<td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+								<td><input id="patName" class="textbox"/></td>
+								<td class="r-label"><label>#(..Get("收费员"))#</label></td>
+								<td><input id="userName" class="textbox"/></td>
+							</tr>
+						</table>
+						<div style="text-align:center;">
+							<!--a href="javascript:;" class="hisui-linkbutton" id="btn-readInsuCard">#(..Get("读医保卡"))#</a>
+	 						<div style="display:inline-block;margin:0 10px;"></div>
+							<a href="javascript:;" class="hisui-linkbutton" id="btn-IDCard">#(..Get("读身份证"))#</a>
+							<div style="display:inline-block;margin:0 10px;"></div-->
+	 						<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+	 						<div style="display:inline-block;margin:0 5px;"></div>
+							<a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+					<table class="hisui-datagrid" id="invList"></table>
+	        	</div>
+			</div>
+			<div id="search-panel-tools">
+				<span id="more-container" class="menu-container">
+					<span class="spread-b-down"></span>
+					<span class="arrows-b-text">#(..Get("更多"))#</span>
+				</span>
+			</div>
+		</div>
+		<div data-options="region:'center',border:false">
+			<div class="hisui-layout" data-options="fit:true">
+	    		<div data-options="region:'north',border:false" style="height:95px;padding-bottom:10px;">
+					<div class="hisui-panel" data-options="title:'#(..Get("退费申请"))#',fit:true,headerCls:'panel-header-gray',iconCls:'icon-fee'">
+						<table class="search-table" style="width:95%">
+							<tr>
+								<td class="r-label td-first-col"><label>#(..Get("退费金额"))#</label></td>
+								<td><input id="refAmt" class="textbox" style="color:#ff0000;" disabled/></td>
+								<td class="r-label"><label>#(..Get("退费原因"))#</label></td>
+								<td><input id="refReason" class="textbox"></td>
+								<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-request">#(..Get("申请退费"))#</a></td>	
+								<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-cancel">#(..Get("撤销申请"))#</a></td>
+								<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-print">#(..Get("打印退费单"))#</a></td>
+							</tr>
+						</table>
+					</div>
+	        	</div>
+	        	<div data-options="region:'center',border:false">
+					<table class="hisui-datagrid" title="#(..Get("医嘱明细"))#" id="ordItmList"></table>
+	        	</div>
+	    	</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.refrequest.js"></script>
+</body>
+</html>

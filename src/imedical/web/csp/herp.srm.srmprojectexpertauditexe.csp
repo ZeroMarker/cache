@@ -1,0 +1,96 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s AnnDate= $Get(%request.Data("AnnDate",1))
+	s Name = $Get(%request.Data("Name",1))
+	
+	s PatentType= $Get(%request.Data("PatentType",1))
+	s CertificateNo = $Get(%request.Data("CertificateNo",1))
+	s DeptDr = $Get(%request.Data("DeptDr",1))
+	s Title = $Get(%request.Data("Title",1))
+	s YearDr = $Get(%request.Data("YearDr",1))
+	s SubUser = $Get(%request.Data("SubUser",1))
+	s SubSource = $Get(%request.Data("SubSource",1))
+	s Patentee = $Get(%request.Data("Patentee",1))
+	s PatentNum = $Get(%request.Data("PatentNum",1))
+	s Inventors = $Get(%request.Data("Inventors",1))
+	s AppDate = $Get(%request.Data("AppDate",1))
+	s AnnUnit = $Get(%request.Data("AnnUnit",1))
+	s usercode =  $Get(%request.Data("usercode",1)) // µÇÂ½ÓÃ»§ID
+	s InventorsIDs = $Get(%request.Data("InventorsIDs",1))
+	s CompleteUnit = $Get(%request.Data("CompleteUnit",1))
+	s IDs = $Get(%request.Data("IDs",1))
+	
+	s VCAmount = $Get(%request.Data("VCAmount",1))
+	s InvoiceCode = $Get(%request.Data("InvoiceCode",1))
+	s InvoiceNo = $Get(%request.Data("InvoiceNo",1))
+	s unitMoneys = $Get(%request.Data("unitMoneys",1))
+	
+	s startdate = $Get(%request.Data("startdate",1))
+	s enddate = $Get(%request.Data("enddate",1))
+ 	s Index1score = $Get(%request.Data("Index1score",1))
+ 	s Index2score = $Get(%request.Data("Index2score",1))
+ 	s Index3score = $Get(%request.Data("Index3score",1))
+ 	s Index4score = $Get(%request.Data("Index4score",1))
+ 	s Index5score = $Get(%request.Data("Index5score",1))
+ 	s Index6score = $Get(%request.Data("Index6score",1))
+ 	s Index7score = $Get(%request.Data("Index7score",1))
+ 	s Index8score = $Get(%request.Data("Index8score",1))
+ 	s Index9score = $Get(%request.Data("Index9score",1))
+ 	s Index10score = $Get(%request.Data("Index10score",1))
+ 	s Index11score = $Get(%request.Data("Index11score",1))
+ 	s Index12score = $Get(%request.Data("Index12score",1))
+ 	
+  s PatentType = $Get(%request.Data("PatentType",1))
+ 
+  i action = "listinventorsInfo" d
+  .w ##Class(herp.srm.udata.uSRMCommon).ListParticipantsInfo(start,limit,IDs)
+  
+	
+	i action = "GetDept" d
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+
+	i action = "GetYear" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetYear(start, limit, str)
+
+	i action = "GetPatentee" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+
+	
+	i action = "GetUint" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetUintInfo(start, limit, str)
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMProjectExpertAudit).List(sortField, sortDir, start, limit, startdate, enddate, YearDr, Title, SubUser, SubSource, usercode)
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uSRMProjectExpertAudit).UpdateScore(rowid,Index1score,Index2score,Index3score,Index4score,Index5score,Index6score,Index7score,Index8score,Index9score,Index10score,Index11score,Index12score)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	i action = "sub" d
+	.s result = ##class(herp.srm.udata.uSRMProjectExpertAudit).SubmitPatentInfo(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

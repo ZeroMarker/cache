@@ -1,0 +1,72 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s Year= $Get(%request.Data("Year",1))
+	s Startdate= $Get(%request.Data("Startdate",1))
+	s Enddate= $Get(%request.Data("Enddate",1))
+	s Title= $Get(%request.Data("Title",1))
+	s SubSource= $Get(%request.Data("SubSource",1))
+	s SubUser= $Get(%request.Data("SubUser",1))
+	s IsEthic= $Get(%request.Data("IsEthic",1))
+	
+	i action = "yearList" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetYear(start, limit, str)
+	
+	i action = "sourceList" d
+	.w ##class(herp.srm.udata.uSRMCommon).CalSubSource(start, limit, str)
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uProjectSolicitationApply).SelectProSoliInfo(start, limit, Year, Startdate, Enddate, Title, SubSource, SubUser)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uProjectSolicitationApply).AddProSoliInfo(Year, Title, IsEthic, SubUser, SubSource)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uProjectSolicitationApply).UpdateProSoliInfo(rowid, Year, Title, IsEthic, SubSource)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uProjectSolicitationApply).DelProSoliInfo(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "sub" d
+	.s result = ##class(herp.srm.udata.uProjectSolicitationApply).Submit(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "presubmit" d
+	.s result = ##class(herp.srm.udata.uProjectSolicitationApply).PreSubmit(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

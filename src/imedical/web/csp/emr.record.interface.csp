@@ -1,0 +1,299 @@
+﻿<html>
+<head>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	if $g(%session.Data("LOGON.USERID"))=""
+	{
+		s rtn=##class(websys.SessionLogon).Logon()
+		s %response.ServerSideRedirect="emr.record.interface.csp"
+	}
+	q 1
+  </csp:method>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/tool/ribbon/ribbon.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/tool/ribbon/ribbon-icon.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/tool/ztree/css/zTreeStyle/zTreeStyle.css" />
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/EMRcolorpickerold.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/js/actionlog.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/ztree/js/jquery.ztree.all-3.5.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/ribbon/jquery.ribbon.js"></script>	
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s docID = $Get(%request.Data("DocID",1),"")
+		s pageType = $Get(%request.Data("PageType",1),"")
+		s instanceID = $Get(%request.Data("InstanceID",1),"") 
+		s fromType = $Get(%request.Data("FromType",1),"")
+		s fromCode = $Get(%request.Data("FromCode",1),"") 
+		s titleCode = $Get(%request.Data("TitleCode",1),"") 
+		if (titleCode '= "")
+		{
+			s tempParam = ##Class(EMRservice.BL.BLClientCategory).GetTempCateByTitle(docID,titleCode)
+		}
+		else
+		{
+			s tempParam = ##Class(EMRservice.BL.BLClientCategory).GetTempCateByDocID(docID,episodeID)	
+		}	
+		s isShowPatInfo = $Get(%request.Data("IsShowPatInfo",1),"Y")
+		s userCode = %session.Get("LOGON.USERCODE")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s sessionID = %session.SessionId
+		s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+		s mradm = $p($g(^PAADM(episodeID)),"^",61)
+		s regNo = ""
+		s medicare = ""
+		s cardNo = ""
+		s cardRowId = $o(^DHCCARDi("CF",0,"PAPMIDR",episodeID,""))
+		s:(cardRowId '= "") cardNo = $p(^DHCCARD("CF",cardRowId),"^",2)		
+		s resourceScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ResourceTabScheme")
+		s:(resourceScheme = "") resourceScheme = "<resource><item><id>Order</id><title>医嘱</title><source>emr.resource.medorder.csp</source><width>600</width></item><item><id>zorders</id><title>中草药</title><source>emr.resource.zorders.csp</source><width>600</width></item><item><id>Pacs</id><title>检查</title><source>emr.resource.pacsdata.csp</source><width>600</width></item><item><id>Lis</id><title>检验</title><source>emr.resource.lisdata.csp</source><width>700</width></item><item><id>vitalsigns</id><title>生命体征</title><source>emr.resource.vitalsigns.csp</source><width>700</width></item><item><id>diagnos</id><title>诊断</title><source>emr.resource.diagnos.csp</source><width>600</width></item><item><id>pathology</id><title>病理</title><source>emr.resource.pathology.csp</source><width>600</width></item></resource>"  
+		s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+		s key = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")
+		s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+		s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+		s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+		s patientNo = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiNo(patientID)
+		s pageAttribute = ##Class(EMRservice.SystemParameter).GetPageAttribute()
+		s:(pageAttribute = "") pageAttribute = "{'DefaultForm':'Edit','EditRecordDisplayType':'Tree'}"
+		s mainDoc = $p(##class(EMRservice.HISInterface.PatientInfoAssist).MainDoc(episodeID), "^", 2) 
+		s CAServicvice = ""
+		s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
+            s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+            if ((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1") {
+			s CAServicvice = "1"
+			d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+		}
+		s IsSetToPortal = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToPortal")
+		s disableFont = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DisableFont")
+		//病历参考布局设为左右对照或上下对照
+		s setRecReferenceLayout = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetRecordReferenceLayout")
+		s:(setRecReferenceLayout = "") setRecReferenceLayout = "south"
+		s episodeType = $p(^PAADM(episodeID),"^",2)
+		s isArchived = ##Class(EPRservice.Quality.BOQualityService).CheckArchived(episodeID)	//(0:Un-Archived 1:Archived)
+		s productName = ##Class(EMRservice.SystemParameter).GetASRProductName()
+		s defaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+		s isShowCompleteSymbol = ##Class(EMRservice.SystemParameter).IsShowCompleteSymbol()
+        //是否默认显示留痕
+        s isDefaultviewRevision = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("isDefaultviewRevision")
+	s isEnableRevokeComplete = ##Class(EMRservice.SystemParameter).IsEnableRevokeComplete()
+		s:(isEnableRevokeComplete = "") isEnableRevokeComplete = "N"
+		s isSubmitRemarks = ##Class(EMRservice.SystemParameter).IsSubmitRemarks()
+		s episodeType = $p(^PAADM(episodeID),"^",2)
+  </script>
+	<script language="javascript">
+	  var patientID = '#(patientID)#';
+	  var patientNo = '#(patientNo)#';
+	  var episodeID = '#(episodeID)#';
+	  var userCode = '#(userCode)#';
+	  var userName = '#(userName)#';
+	  var userID = '#(userID)#';
+	  var ssgroupID = '#(ssgroupID)#';
+	  var userLocID = '#(userLocID)#';
+	  var userLocCode = '#(userLocCode)#';
+	  var sessionID = '#(sessionID)#';
+	  var mradm = '#(mradm)#';
+	  var regNo = '#(regNo)#';
+	  var medicare = '#(medicare)#';
+	  var cardNo = '#(cardNo)#';
+	  var argConnect = "#(argConnect)#";
+	  var key = "#(key)#";
+	  argConnect = {"Params":eval("("+argConnect+")"),"Key":key}; 
+	  var resourceScheme = "#(resourceScheme)#"; 
+	  var recordParam = "";   
+	  var setDefaultFontStyle = "#(setDefaultFontStyle)#";   
+	  var pluginUrl = "#(pluginUrl)#";
+	  var PatientInfo = "";
+	  var instanceID ='#(instanceID)#';
+	  var fromType ='#(fromType)#';
+	  var fromCode ='#(fromCode)#';
+	  var recordParam = jQuery.parseJSON('#(tempParam)#');
+	  if (instanceID != "")
+	  {
+		 recordParam.id = instanceID;
+		 recordParam.actionType = "LOAD";
+	  }	  
+	  if (fromCode != "" && fromType != "")
+	  {
+		  recordParam.productSource={};		  
+		  recordParam.productSource.fromCode = fromCode;
+		  recordParam.productSource.fromType = fromType;
+	  } 
+	  var HasPatEncryptLevel = '#(HasPatEncryptLevel)#';
+	  var IsSetToLog = '#(IsSetToLog)#';
+	  var SecCode = "";  //病人密级代码
+	  var SetDisease = "0";  //病种是否已选中默认值的标志位，1：已选中；0：未选中；
+	  var colorpanelshow = "0";  
+	  var CAServicvice = '#(CAServicvice)#';
+	  var strServerRan = '';
+	  var strServerSignedData = '';
+	  var strServerCert = '';
+	  var strKey = '';
+	  var strUserSignedData = '';
+	  var strUserCert = '';
+	  var pageAttribute = eval(#(pageAttribute)#);
+	  var ipAddress = getIpAddress();
+	  
+	  var mainDoc = '#(mainDoc)#';
+
+	  var IsSetToPortal = '#(IsSetToPortal)#';
+	  var disableFont = '#(disableFont)#';
+	  var setRecReferenceLayout = '#(setRecReferenceLayout)#';
+	  var episodeType = '#(episodeType)#'; 
+	  var isArchived = '#(isArchived)#'; 
+	  var productName = '#(productName)#'; 
+	  var pageType = '#(pageType)#';
+	  var defaultFontStyle = '';      
+	  defaultFontStyle = "#(defaultFontStyle)#".replace(/\'/g, "\"");   
+	  defaultFontStyle = $.parseJSON(('{'+defaultFontStyle+'}'));
+	  var isShowCompleteSymbol = '#(isShowCompleteSymbol)#';
+      var isDefaultviewRevision = '#(isDefaultviewRevision)#';
+      var isShowPatInfo = '#(isShowPatInfo)#'
+      var isEnableRevokeComplete = '#(isEnableRevokeComplete)#';
+	  var isSubmitRemarks = '#(isSubmitRemarks)#';
+	  var episodeType = '#(episodeType)#';
+   </script>
+	<title>病历内容</title>
+</head>
+<body id="recordlayout" class="easyui-layout" data-options="border:false,fit:true" >
+    <div data-options="region:'north',border:false" style="height:95px;margin:0px;">
+		<div class="easyui-layout" data-options="border:false,fit:true" >
+			<div data-options="region:'north',border:false" style="height:20px;margin:0px;">
+				<div id="patientInfo"></div>
+			</div>
+			<div data-options="region:'west'" id="west">
+				<a id='save' title="保存" href="#" class="easyui-linkbutton" data-options="plain:true" >保存</a>
+				<a id='print' title="打印" href="#" class="easyui-linkbutton" data-options="plain:true">打印</a>
+				<a id='printView' title="开启打印预览" href="#" class="easyui-linkbutton" data-options="plain:true">预览</a>	
+			</div>	
+			<div data-options="region:'center',border:false">
+				<div class="easyui-ribbon" data-options="border:false,fit:true">
+					<div title="常用" style="overflow:hidden;">
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='modifysuper' title="设置患者三级医师" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">设置责任医师</a>
+							<a id='unLock' title="手工解锁" href="#" class="easyui-linkbutton" data-options="plain:true">手工解锁</a>
+						</div>					
+						<div class="ribbon-group-sep" style="height:100%"></div>
+							<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='spechars' title="特殊符号" href="#" class="easyui-linkbutton" data-options="plain:true">符号</a> 
+		 					<a id='silverLocation' title="定位到上次书写位置" href="#" class="easyui-linkbutton" data-options="plain:true">定位</a>   						
+						</div>
+						<div class="ribbon-group-sep" style="height:100%"></div>
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='binddatareload' title="刷新绑定数据" href="#" class="easyui-linkbutton" data-options="plain:true">刷新绑定</a>
+							<a id='reference' title="病历参考" href="#" class="easyui-linkbutton" data-options="plain:true">病历参考</a>							
+							<a id='image' title="图库" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">图库</a>							
+							<a id='plampoint' title="掌纹" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">掌纹</a>						
+							<a id='confirmRecordCompleted' title="确认病历全部完成" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none" onclick="changeRecordFinishedStatus()">送病案室</a>	
+						</div>	
+						<div class="ribbon-group-sep" style="height:100%"></div>
+						<div class="ribbon-group" style="height:100%;padding:0;margin:7px 0 0 0;">
+							<div id='disease' name='disease'></div>
+						</div>												
+					</div>
+						
+					<div title="编辑" style="overflow:hidden;">				
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0; ">
+							<div id="fontSpan" style="float:left;padding-top:6px;">
+								<select id="font" name="font" style="width:80px;height:23px;margin-right:5px;"></select>
+							</div>
+							<div id="fontSizeSpan" style="float:left;padding-top:6px;">
+								<select id="fontSize" name="fontSize" style="width:65px;height:23px;" onchange="changeFontSize();"></select> 
+                        		<input id="fontSizeText" type='text' name="fontSizeText" style="width:45px;position:absolute;margin-top:2px;left:86px;border:0;padding-top:2px;" onkeypress="changeFontSizeText();"/>
+							</div>
+							<a id='fontcolor' title="字体颜色" href="#" class="easyui-linkbutton" data-options="plain:true"></a>
+					       	<a id='bold' href="#" title="粗体" class="easyui-linkbutton" data-options="plain:true"></a>
+			        		<a id='italic' href="#" title="斜体" class="easyui-linkbutton" data-options="plain:true"></a>
+			        		<a id='underline' href="#" title="下划线" class="easyui-linkbutton" data-options="plain:true"></a>
+			        		<a id='strike' href="#" title="删除线" class="easyui-linkbutton" data-options="plain:true"></a>
+			        		<a id='super' href="#" title="上标"  class="easyui-linkbutton" data-options="plain:true"></a>
+			        		<a id='sub' href="#" title="下标" class="easyui-linkbutton" data-options="plain:true"></a>	
+						</div>
+						<div class="ribbon-group-sep" style="height:100%"></div>
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='alignjustify' href="#" title="两端对齐" class="easyui-linkbutton" data-options="plain:true"></a>
+							<a id='alignleft' href="#" title="左对齐" class="easyui-linkbutton" data-options="plain:true"></a>      							
+							<a id='aligncenter' href="#" title="居中对齐" class="easyui-linkbutton" data-options="plain:true" ></a>
+							<a id='alignright' href="#" title="右对齐"  class="easyui-linkbutton" data-options="plain:true"></a>	
+						</div>
+						<div class="ribbon-group-sep" style="height:100%"></div>
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='indent' title="增加缩进量" href="#" class="easyui-linkbutton" data-options="plain:true" ></a>
+							<a id='unindent' title="减少缩进量" href="#" class="easyui-linkbutton" data-options="plain:true"></a> 						
+						</div>
+						<div class="ribbon-group-sep" style="height:100%"></div>
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='cut' title="剪切" href="#" class="easyui-linkbutton" data-options="plain:true"></a>
+							<a id='copy' title="拷贝" href="#" class="easyui-linkbutton" data-options="plain:true"></a>
+							<a id='paste' title="粘贴" href="#" class="easyui-linkbutton" data-options="plain:true"></a>
+							<a id='clipboard' title="剪贴板" href="#" class="easyui-linkbutton" data-options="plain:true"></a> 		
+						</div>
+						<div class="ribbon-group-sep" style="height:100%"></div>										
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='undo' title="撤销" href="#" class="easyui-linkbutton" data-options="plain:true" ></a>
+							<a id='redo' title="重做" href="#" class="easyui-linkbutton" data-options="plain:true"></a> 
+						</div>	
+					</div>
+				
+					<div title="功能" style="overflow:hidden;">
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='viewRevision' title="显示留痕" href="#" class="easyui-linkbutton" data-options="plain:true"><input id="viewRevisionCheck" type="checkbox" style=" position:absolute;padding:0;margin:0;top:-1px; left:24px;width:12px;"/><span>查看留痕</span></a>			
+							<a id='recording' title="开启语音录入" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">语音</a>
+							<a id='recordtransfer' title="病历转移" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">病历转移</a>
+							<a id='export' title="病历导出" href="#" class="easyui-linkbutton" data-options="plain:true">病历导出</a>
+							<a id='delete' title="删除" href="#" class="easyui-linkbutton" data-options="plain:true">删除</a>
+							<a id='applyedit' title="申请编辑病历" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">申请编辑</a>
+							<a id='authRequest' title="申请权限" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">申请权限</a>
+							<a id='tooth' title="牙位图" href="#" class="easyui-linkbutton" data-options="plain:true" style="display:none">牙位</a> 
+						</div>
+					</div>
+				
+					<div title="收藏" style="overflow:hidden; display:none">
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='favoritesPlus' title="添加收藏" href="#" class="easyui-linkbutton" data-options="plain:true">添加收藏</a>
+							<a id='favorites' title="收藏夹" href="#" class="easyui-linkbutton" data-options="plain:true">收藏夹</a>		
+						</div>
+					</div>
+						
+					<div title="表格" style="overflow:hidden;">
+						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
+							<a id='insertTable' title="插入表格" href="#" class="easyui-linkbutton" data-options="plain:true">插入表格</a>
+							<a id='deleteTable' title="删除表格" href="#" class="easyui-linkbutton" data-options="plain:true">删除表格</a>
+							<a id='insertRow' title="插入行" href="#" class="easyui-linkbutton" data-options="plain:true">插入行</a>
+							<a id='insertCol' title="插入列" href="#" class="easyui-linkbutton" data-options="plain:true">插入列</a>
+							<a id='deleteRow' title="删除行" href="#" class="easyui-linkbutton" data-options="plain:true">删除行</a>
+							<a id='deleteCol' title="删除列" href="#" class="easyui-linkbutton" data-options="plain:true">删除列</a>
+							<a id='splitCells' title="拆分单元格" href="#" class="easyui-linkbutton" data-options="plain:true">拆分单元格</a>		
+						</div>
+					</div>				
+				</div>	
+			</div>
+		</div>
+    </div>
+    <div data-options="region:'east',split:true,title:'病历资源',collapsed:true,border:false" style="width:400px;">
+		<div id="resources" class="easyui-tabs" fit="true" border="false" tabPosition="right" headerWidth="60" iconCls="tabs-header-right"></div>
+	</div>
+    <div data-options="region:'center',border:false">
+		<div id='content' class="easyui-tabs" data-options="fit:true,border:false,tools:'#message'"></div>
+    </div>
+    <div id="message">
+    	<span id="printViewMessage" style="display:none;">当前病历为打印预览状态，若需编辑病历，请点击打印预览按钮退出预览模式</span>
+    	<span id="lock"></span>
+		<span id="complete"></span>
+    	<span id="event"></span>
+    </div>
+	<script type="text/javascript" src="../scripts/emr/js/record.lock.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.interface.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.disease.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/record.toolbar.js"></script>   
+</body>
+</html>

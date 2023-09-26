@@ -1,0 +1,410 @@
+/// Description: 压疮报告单
+/// Creator: congyue
+/// CreateDate: 2017-12-19
+var eventtype=""
+var RepDate=formatDate(0); //系统的当前日期
+$(document).ready(function(){
+	if ((recordId=="")){
+		var frm = dhcadvdhcsys_getmenuform();
+		if (frm) {
+			var papmi = frm.PatientID.value;		
+	        var adm = frm.EpisodeID.value;
+	        if ((papmi=="")||(papmi=="undefined")){
+		        papmi="" ;
+		    }
+	        $.ajax({
+			   	   type: "POST",
+			       url: url,
+			       async: false, //同步
+			       data: "action=getPatNo&patID="+papmi,
+			       success: function(val){
+				      	 papmi=val;
+			       }
+			    });	
+		    EpisodeID=adm;
+		    patientID=papmi;
+	        InitPatInfo(papmi,adm);//获取病人信息
+		}
+	}
+	$('#OccuLoc').combobox({ 
+		//url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QueryLocDescCombo',
+		mode:'remote'  //,  //必须设置这个属性
+	});
+	$("#SaveBut").on("click",function(){
+		SaveUlcerReport(0);
+	})
+	$("#SubmitBut").on("click",function(){
+		SaveUlcerReport(1);
+	})
+	//复选框按钮事件
+	$("input[type=checkbox]").each(function(){
+		$(this).click(function(){
+			$(this).is(':checked');
+			InitCheck(this.id);
+		});
+	});
+	//单选框按钮事件
+	$("input[type=radio]").each(function(){
+		$(this).click(function(){
+			$(this).is(':checked');
+			InitRadio(this.id);
+		});
+	});
+	CheckTimeornum();  //时间校验
+	InitCheckRadio();//加载界面checkboxradio在父元素没有勾选的情况下，子元素不可勾选，填写
+	InitUlcerReport(recordId);//加载页面信息
+});
+//加载报表信息
+function InitUlcerReport(recordId)
+{
+	if((recordId=="")||(recordId==undefined)){
+		
+		$('#OccuLoc').combobox('setValue',LgCtLocDesc);  //发生科室
+		$('#RepHospType').val(LgHospDesc); //报告单位
+		
+		$('#RepUserName').val(LgUserName); //填报人姓名为登录人
+		$('#ReportDate').datebox("setValue",RepDate);   //报告日期
+		$('#HospPhone').val("64456715");//联系电话		
+	
+	}else{
+		//病人信息	 
+		$('#DisMedThingPatName').attr("readonly","readonly");//病人姓名
+		$('#PatSexinput').attr("readonly","readonly"); //性别
+		$('#PatAge').attr("readonly","readonly"); //年龄
+		$('#PatMedicalNo').attr("readonly","readonly"); //病案号
+		$('#PatAdmDate').datebox({disabled:'true'});//就诊日期     
+		$('#PatDiag').attr("readonly","readonly");//诊断
+    $("#from").form('validate');	
+	} 
+}
+//报告保存
+function SaveUlcerReport(flag)
+{
+	///保存前,对页面必填项进行检查
+	if(!(checkRequired()&&checkother())){
+		return;
+	}
+	SaveReport(flag);
+}
+//加载报表病人信息
+function InitPatInfo(patientID,EpisodeID)
+{
+	if((patientID=="")&&(EpisodeID=="")){return;}
+	$.ajax({
+		type: "POST",
+		url: url,
+		data: "action=getRepPatInfo&PatNo="+patientID+"&EpisodeID="+EpisodeID,
+		success: function(val){
+	    var tmp=val.split("^");
+	    //病人信息
+			$('#DisMedThingPatName').val(tmp[1]); //病人姓名
+			$('#DisMedThingPatName').attr("readonly","readonly");
+			$('#PatSexinput').val(tmp[3]);  //性别
+			$('#PatSexinput').attr("readonly","readonly");
+			$('#PatAge').val(tmp[4]);  //年龄
+			$('#PatAge').attr("readonly","readonly");
+			$('#PatMedicalNo').val(tmp[5]); //病案号
+			$('#PatMedicalNo').attr("readonly","readonly");
+			$('#PatAdmDate').datebox({disabled:'true'});
+			$('#PatAdmDate').datebox("setValue",tmp[8]);  //就诊日期
+      $('#PatDiag').val(tmp[10]);  //诊断
+			$('#PatDiag').attr("readonly","readonly");
+      $("#from").form('validate');
+			
+		}
+	})
+}
+//检查界面勾选其他，是否填写输入框
+function checkother(){
+	//患者来源
+	var PatOriginoth=0;
+	$("input[type=radio][id^='PatOrigin-label']").each(function(){
+		if($(this).is(':checked')){
+			if ((this.value=="title")&&($("input[name$='.94109']").val()=="")){
+				PatOriginoth=-1;
+			}
+		}
+	})
+	if(PatOriginoth==-1){
+		$.messager.alert("提示:","【患者来源】勾选'其他'，请填写内容！");	
+		return false;
+	}
+	//使用压疮风险评分表
+	var Riskpointtaboth=0;
+	$("input[type=radio][id^='UseUlcerRiskpointtab']").each(function(){
+		if($(this).is(':checked')){
+			if ((this.value=="title")&&($("input[name$='.93878']").val()=="")){
+				Riskpointtaboth=-1;
+			}
+		}
+	})
+	if(Riskpointtaboth==-1){
+		$.messager.alert("提示:","【使用压疮风险评分表】勾选'其它'，请填写内容！");	
+		return false;
+	}
+	
+	//压疮发生原因  患者因素
+	var PatReasonoth=0;
+	$("input[type=checkbox][id^='UlcerOccurReason-94948-']").each(function(){
+		if($(this).is(':checked')){
+			if ((this.value=="title")&&($("input[name$='.93950'][class='lable-input']").val()=="")){
+				PatReasonoth=-1;
+			}
+		}
+	})
+	if(PatReasonoth==-1){
+		$.messager.alert("提示:","【压疮发生原因】勾选'患者因素'，请填写内容！");	
+		return false;
+	}
+	//压疮发生原因  病情因素
+	var IllnessReasonoth=0;
+	$("input[type=checkbox][id^='UlcerOccurReason-94949-']").each(function(){
+		if($(this).is(':checked')){
+			if ((this.value=="title")&&($("input[name$='.93956'][class='lable-input']").val()=="")){
+				IllnessReasonoth=-1;
+			}
+		}
+	})
+	if(IllnessReasonoth==-1){
+		$.messager.alert("提示:","【压疮发生原因】勾选'病情因素'，请填写内容！");	
+		return false;
+	}
+	//压疮发生原因  护理人员因素
+	var NurReasonoth=0;
+	$("input[type=checkbox][id^='UlcerOccurReason-94950-']").each(function(){
+		if($(this).is(':checked')){
+			if ((this.value=="title")&&($("input[name$='.93966'][class='lable-input']").val()=="")){
+				NurReasonoth=-1;
+			}
+		}
+	})
+	if(NurReasonoth==-1){
+		$.messager.alert("提示:","【压疮发生原因】勾选'护理人员因素'，请填写内容！");	
+		return false;
+	}
+	//压疮发生原因  其他因素
+	var OthReasonoth=0;
+	$("input[type=checkbox][id^='UlcerOccurReason-94951-']").each(function(){
+		if($(this).is(':checked')){
+			if ((this.value=="title")&&($("input[name$='.93969'][class='lable-input']").val()=="")){
+				OthReasonoth=-1;
+			}
+		}
+	})
+	if(OthReasonoth==-1){
+		$.messager.alert("提示:","【压疮发生原因】勾选'其他因素'，请填写内容！");	
+		return false;
+	}
+	//已采取护理措施(可多选)
+	var AdoptNursMeasureoth=0;
+	$("input[type=checkbox][id^='AdoptNursMeasure']").each(function(){
+		if($(this).is(':checked')){
+			if ((this.value=="title")&&($("input[name$='.93979'][class='lable-input']").val()=="")){
+				AdoptNursMeasureoth=-1;
+			}
+		}
+	})
+	if(AdoptNursMeasureoth==-1){
+		$.messager.alert("提示:","【已采取护理措施(可多选)】勾选'其他'，请填写内容！");	
+		return false;
+	}
+	//压疮部位 部位   
+	var PatReason="",PartErr=0;
+	$("input[type=checkbox][id^='UlcerPart-95158-95166-']").each(function(){
+		if ($(this).is(':checked')){
+			if(this.id.split("-").length==4){
+				var PatReasonList="";
+				var radiorowid=this.id.split(".")[0];
+				var radiorownum=this.id.split(".")[1];
+				PatReason=this.value;
+				$("input[type=checkbox][id^='"+radiorowid+"-'][id$='."+radiorownum+"']").each(function(){
+					if (($(this).is(':checked'))&&(this.value!="")){
+						PatReasonList=this.value
+					}
+				});
+				if((PatReason=="title")&&($("input[name^='"+this.name+"'][class='lable-input']").val()=="")){ //UlcerPart-95158-95166-95182
+					$.messager.alert("提示:","【压疮部位】勾选其他，请填写相应内容！");	
+					PartErr=-1;
+					return false;
+				}		
+				if ((PatReason!="title")&&(PatReasonList=="")){
+					$.messager.alert("提示:","【压疮部位】勾选'"+PatReason+"'，请勾选相应内容！");	
+					PartErr=-1;
+					return false;
+				}
+			}
+		}
+	});
+	if(PatReason==""){
+		$.messager.alert("提示:","【压疮部位】未勾选内容，请勾选相应内容！");	
+		return false;
+	}
+	if(PartErr=="-1"){
+		return false;
+	}
+	
+	return true;
+}
+//页面初始加载checkbox,radio控制子元素不可以填写
+function InitCheckRadio(){
+	//压疮部位  来源
+	if($("input[type=radio][id^='UlcerPart-95158-95163-95171.']").is(':checked')){
+		$("input[type=radio][id^='UlcerPart-95158-95163-95171-']").attr("disabled",false);
+
+	}else{
+		$("input[type=radio][id^='UlcerPart-95158-95163-95171-']").attr("disabled",true);
+	}	
+	//耳廓
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95173.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95173-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95173-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95173-']").attr("disabled",true);
+	}
+	//肩胛部
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95174.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95174-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95174-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95174-']").attr("disabled",true);
+	}	
+	//肘部
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95175.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95175-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95175-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95175-']").attr("disabled",true);
+	}
+	 //髂前上棘
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95176.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95176-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95163-95176-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95176-']").attr("disabled",true);
+	}
+	//髋部
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95177.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95177-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95163-95177-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95177-']").attr("disabled",true);
+	}
+	//膝部
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95179.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95179-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95163-95179-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95179-']").attr("disabled",true);
+	}
+	//踝部
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95180.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95180-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95163-95180-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95180-']").attr("disabled",true);
+	}
+	//足跟部
+	if($("input[type=checkbox][id^='UlcerPart-95158-95166-95181.']").is(':checked')){
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95181-']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='UlcerPart-95158-95163-95181-']").removeAttr("checked");
+		$("input[type=checkbox][id^='UlcerPart-95158-95166-95181-']").attr("disabled",true);
+	}		
+}
+//勾选 radio 子元素可以勾选，取消勾选时，子元素取消勾选且不可以勾选
+function InitRadio(id){
+	//来源  院外带入 
+	var radiorowid=id.split(".")[0];
+	var radiorownum=id.split(".")[1];
+	if($("input[type=radio][id^='"+radiorowid+".'][id$='"+radiorownum+"']").is(':checked')){
+		$("input[type=radio][id^='"+radiorowid+"-'][id$='"+radiorownum+"']").attr("disabled",false);
+	}else{
+		$("input[type=radio][id^='"+radiorowid+"-'][id$='"+radiorownum+"']").removeAttr("checked");
+		$("input[type=radio][id^='"+radiorowid+"-'][id$='"+radiorownum+"']").attr("disabled",true);
+	}	
+}
+function InitCheck(id){
+	//部位 
+	var checkrowid=id.split(".")[0];
+	var checkrownum=id.split(".")[1];
+	// 耳廓
+	if($("input[type=checkbox][id^='"+checkrowid+".'][id$='"+checkrownum+"']").is(':checked')){
+		$("input[type=checkbox][id^='"+checkrowid+"-'][id$='"+checkrownum+"']").attr("disabled",false);
+	}else{
+		$("input[type=checkbox][id^='"+checkrowid+"-'][id$='"+checkrownum+"']").removeAttr("checked");
+		$("input[type=checkbox][id^='"+checkrowid+"-'][id$='"+checkrownum+"']").attr("disabled",true);
+	}	
+	
+}
+
+//时间 数字校验
+function CheckTimeornum(){
+	//时间输入校验
+	//脱管发现时间  UlcerPart-95158-95189-94247
+	var regu="^([0-9])[0-9]*(\\.\\w*)?$";
+	var re=new RegExp(regu);
+	$("input[id^='UlcerPart-95158-95189-94247']").live("keyup",function(){
+		if(re.test(this.value)){
+			this.value=this.value
+		}else{
+			this.value=""
+		}
+	})
+	$("input[id^='UlcerPart-95158-95189-94249']").live("keyup",function(){
+		if(re.test(this.value)){
+			this.value=this.value
+		}else{
+			this.value=""
+		}
+	})
+	$("input[id^='UlcerPart-95158-95189-94251']").live("keyup",function(){
+		if(re.test(this.value)){
+			this.value=this.value
+		}else{
+			this.value=""
+		}
+	})
+	//数字输入校验  
+	//填报人工作年限(年)
+	$('#RepUserWorkYears').live("keyup",function(){
+		this.value=this.value.replace(/\D/g,'');
+	})
+
+}
+
+function add_event(){
+	//单选框按钮事件
+	$("input[type=radio]").each(function(){
+		$(this).click(function(){
+			$(this).is(':checked');
+			InitRadio(this.id);
+		});
+	});
+	//复选框按钮事件
+	$("input[type=checkbox]").each(function(){
+		$(this).click(function(){
+			$(this).is(':checked');
+			InitCheck(this.id);
+		});
+	});
+	CheckTimeornum();  //时间校验
+	InitCheckRadio();//加载界面checkboxradio在父元素没有勾选的情况下，子元素不可勾选，填写
+	
+	//来源  院外带入 
+	//$("input[type=radio][id^='UlcerPart-95158-95163-95171.']").click()
+	var orign="";
+	$("input[type=radio][id^='UlcerPart-95158-95163-95171']").each(function(){
+		if(this.id.split("-").length==4){
+			var checkrowid=this.id.split(".")[0];
+			var checkrownum=this.id.split(".")[1];
+			if ($(this).is(':checked')){
+				orign=this.value;
+			}				
+			var list=$("input[type=radio][id^='UlcerPart-95158-95163-95170."+checkrownum+"']:checked").val();
+			if((list!="院内发生")&&(orign=="院外带入")){		
+				$("input[type=radio][id^='"+this.id+"']").click();				
+			}
+		}
+	})
+	
+}

@@ -1,0 +1,269 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SCRIPT language=cache RUNAT=SERVER>
+ s dateseparator=$lg(^websys.ConfigurationD(1),4) s:dateseparator="" dateseparator="/"
+ s dateformat=$lg(^websys.ConfigurationD(1),10)
+</SCRIPT>
+<SCRIPT language=javascript>
+this.focus();
+
+var base_colour="";
+var base_cell="";
+function changeImage() {
+	for (var i=0; i<changeImage.arguments.length; i+=2) {
+		document[changeImage.arguments[i]].src = changeImage.arguments[i+1];
+	}
+}
+	
+function cell_out(cell) {
+	cell.className = base_color;
+	base_cell="";
+}
+</SCRIPT>
+
+<CSP:IF condition=(dateformat="HIJRA")>
+<SCRIPT language=javascript>
+function cell_over(cell) {
+	if (base_cell) base_cell.className = base_colour;
+	base_cell = cell;
+	base_colour = cell.className;
+	cell.className = 'clsLookUpDateSelected';
+	changeHijraYear(cell);
+}
+function changeHijraYear(cell) {
+	var mn=document.getElementById('cellMonthDisplay');
+	var txt=mn.innerHTML;
+	if (txt.indexOf('[')) {
+		var arrtxt=txt.split('[');
+		var dt=cell.id.slice(cell.id.indexOf('[')+1,cell.id.indexOf(']'));
+		dt=dt.slice(dt.lastIndexOf('#(dateseparator)#')+1);
+		if (dt!="") mn.innerHTML=arrtxt[0]+"["+dt+"]";
+	}
+}
+</SCRIPT>
+<CSP:ELSE>
+<SCRIPT language=javascript>
+function cell_over(cell) {
+	if (base_cell) base_cell.className = base_colour;
+	base_cell = cell;
+	base_colour = cell.className;
+	cell.className = 'clsLookUpDateSelected';
+}
+</SCRIPT>
+</CSP:IF>
+</HEAD>
+<BODY bottomMargin=0 leftMargin=0 rightMargin=0 topMargin=0  CLASS="clsLookUpDate">
+<DIV>
+<script language=Cache method=daysinmonth arguments="year,month" returntype="%Library.Integer">
+	n days,calmonth,leapyear
+	s calmonth="31;28;31;30;31;30;31;31;30;31;30;31"
+	s days=+$p(calmonth,";",+month)
+	if (month=2)&(year#4=0)&((year#100'=0)!(year#400=0)) s days=29 
+	q days
+</script>
+<SCRIPT language=cache RUNAT=SERVER>
+ n (%request,%session,%response,msg)
+ s compSYS=##Class(websys.Component).OpenName("websys.SYSTEM")
+ i compSYS d compSYS.LoadTrans() d compSYS.%Close()
+ s dateformat=$lg(^websys.ConfigurationD(1),10)
+ s dowSYS=$g(t("XDAYS"),"Sun,Mon,Tue,Wed,Thu,Fri,Sat")
+ s dowSYS="日,一,二,三,四,五,六"
+ s monthSYS=$g(t("XMONTHS"),"January,February,March,April,May,June,July,August,September,October,November,December")
+ s monthSYS="一月,二月,三月,四月,五月,六月,七月,八 月,九月,月,一月,二月"
+ s startday=1,startseq=7,dowWKEND=""
+ ;;codetables setup Monday=1,Sunday=7 - sites can change sequence for start day in week, and which days are deemed weekend
+ f i=1:1:7 {
+ 	s s=$g(^CT("DOW",1,i))
+ 	s seq=$p(s,"^",2) i seq<startseq s startday=i,startseq=seq
+ 	i $p(s,"^",4)="Y" s dowWKEND=dowWKEND_(i#7)
+ }
+ s startday=startday#7
+ ;
+ s todayCache=+$h
+ s fld=$g(%request.Data("ID",1)) ;field name
+ s startCache=$g(%request.Data("STARTDATEVAL",1)) ;first date to highlight
+ s selval=$g(%request.Data("DATEVAL",1)) ;field selected value
+ s startCache=$zcvt(startCache,"I","URL"),selval=$zcvt(selval,"I","URL")
+ ;w "<p>*"_fld_"*"_startCache_"*"_selval_"*</p>"
+ s selCache=##Class(websys.Conversions).DateHtmlToLogical(selval)
+ s nowCache=startCache
+ i 'startCache,selCache s nowCache=selCache
+ i 'nowCache s nowCache=todayCache
+ s nowYMD=$zd(nowCache,3)
+ s $p(nowYMD,"-",3)=1 s nowCache=$zdh(nowYMD,3)
+ s prevyearYMD=nowYMD,$p(prevyearYMD,"-",1)=$p(prevyearYMD,"-",1)-1
+ s prevmonthYMD=nowYMD,$p(prevmonthYMD,"-",2)=$p(prevmonthYMD,"-",2)-1 i $p(prevmonthYMD,"-",2)<1 s $p(prevmonthYMD,"-",2)=12,$p(prevmonthYMD,"-",1)=$p(prevmonthYMD,"-",1)-1
+ s nextyearYMD=nowYMD,$p(nextyearYMD,"-",1)=$p(nextyearYMD,"-",1)+1
+ s nextmonthYMD=nowYMD,$p(nextmonthYMD,"-",2)=$p(nextmonthYMD,"-",2)+1 i $p(nextmonthYMD,"-",2)>12 s $p(nextmonthYMD,"-",2)=1,$p(nextmonthYMD,"-",1)=$p(nextmonthYMD,"-",1)+1
+ ;
+ s firstCache=$zdh(nowYMD,3)
+ s daysinmonth=..daysinmonth($p(nowYMD,"-",1),$p(nowYMD,"-",2))
+ s daysinprevmonth=..daysinmonth($p(prevmonthYMD,"-",1),$p(prevmonthYMD,"-",2))
+ s firstdayofmonth=firstCache+3#7+1	;1=mon..7=sun
+ s dtCache=firstCache-((7-startday+(firstdayofmonth#7))#7)
+ 
+ s nowYMD=$zd(nowCache,3)
+ s firstCache=todayCache
+ s firstdayofmonth=firstCache+3#7+1	;1=mon..7=sun
+ s dtCache=firstCache-((7-startday+(firstdayofmonth#7))#7)
+ ;
+ ; print calendar header
+ //w !,"<table cellspacing=0 border=0 width=315 style='margin-left:10px; margin-top:10px;'>"
+ w !,"<table cellspacing=0 border=0 valign=top style='margin-left:0px; margin-top:0px;top:0;left:0width:100%;height:100%'>"
+ w !," <tr><td class='clsLookUpDate'>"
+ w !,"  <table cellspacing=1 cellpadding=3 border=0 width='100%'>"
+ w !,"  <thead>"
+ w !,"   <tr class='clsLookUpDate'>"
+ ;w !,"    <td align='left'><a href='websys.lookupdate.csp?ID="_fld_"&STARTDATEVAL="_$zdh(prevyearYMD,3)_"&DATEVAL="_selval_"&DateLookupOpened=1' onclick='isSelected=1;'><img name='imgPrevYear' src='../images/websys/pageprevend.gif' border=0 alt='previous year'></a></td>"
+ ;w !,"    <td align='left'><a href='websys.lookupdate.csp?ID="_fld_"&STARTDATEVAL="_$zdh(prevmonthYMD,3)_"&DATEVAL="_selval_"&DateLookupOpened=1' onclick='isSelected=1;'><img name='imgPrevMonth' src='../images/websys/pageprev.gif' border=0 alt='previous month'></a></td>"
+ w !,"    <td colspan=3 id='cellMonthDisplay'>"_$p(monthSYS,",",$p(nowYMD,"-",2))_" "_$s(dateformat="THAI":$p(nowYMD,"-",1)+543_" ["_$p(nowYMD,"-",1)_"]",1:$p(nowYMD,"-",1))_$s(dateformat="HIJRA":" ["_$p(##Class(websys.Conversions).DateLogicalToHijra(firstCache),"/",3)_"]",1:"")_"</td>"
+ ;w !,"    <td align='right'><a href='websys.lookupdate.csp?ID="_fld_"&STARTDATEVAL="_$zdh(nextmonthYMD,3)_"&DATEVAL="_selval_"&DateLookupOpened=1' onclick='isSelected=1;'><img name='imgNextMonth' src='../images/websys/pagenext.gif' border=0 alt='next month'></a></td>"
+ ;w !,"    <td align='right'><a href='websys.lookupdate.csp?ID="_fld_"&STARTDATEVAL="_$zdh(nextyearYMD,3)_"&DATEVAL="_selval_"&DateLookupOpened=1' onclick='isSelected=1;'><img name='imgNextYear' src='../images/websys/pagenextend.gif' border=0 alt='next year'></a></td>"
+ w !,"   </tr>"
+ ; print weekdays titles
+ w !,"	<tr>"
+
+ for i=0:1:6 {
+ 	s dy=(startday+i)#7
+ 	w !,"    <td width="_$s(dateformat="HIJRA":"55",1:"45")_" class='clsLookUpDateDayTitle'>"_$p(dowSYS,",",dy+1)_"</td>"
+ }
+ w !,"   </tr>"
+ w !,"  </thead>"
+ ;
+ ; print calendar table
+ w !,"  <tbody>"
+ ;w $zd(dtCache,3)_","_$zd(nowCache,3)_","_startCache_","_selCache
+ ;w !,"<TR><TD colspan=7>"_dtCache_"*"_nowCache_"</TD></TR>"
+ ;while ( (+$p($zd(dtCache,3),"-",2)=+$p($zd(nowCache,3),"-",2)) ! (+$p($zd(dtCache,3),"-",2)=+($p($zd(nowCache,3),"-",2)-1)) ! ((+$p($zd(dtCache,3),"-",2)=12)&(+$p($zd(dtCache,3),"-",1)=+($p($zd(nowCache,3),"-",1)-1))) ) {
+ while (dtCache<(firstCache+60) ) {
+	w !,"   <tr>"
+ 	for i=0:1:6 {
+ 		s dt=+$p($zd(dtCache,3),"-",3)
+ 		;w !,"    <TD name='"_dtCache_"' id='"_##Class(websys.Conversions).DateLogicalToHtml(dtCache)_"' align=right onclick=""lookupSelectDate('"_##Class(websys.Conversions).DateLogicalToHtml(dtCache)_"');"" onmousedown='cell_over(this);' "
+ 		w !,"    <TD name='"_dtCache_"' id='"_dtCache_"' align=right onclick=""lookupSelectDate('"_##Class(websys.Conversions).DateLogicalToHtml(dtCache)_"');""'"
+ 		;if dtCache=todayCache { w " class='clsLookUpDateToday' " }  ;current date
+ 		if selval[dtCache { w " class='clsLookUpDateSelected' " }  ;current date
+ 		elseif dowWKEND[(dtCache+4#7) { w " class='clsLookUpDateWeekend' " }  ;weekends
+ 		else { w " class='clsLookUpDateWeekday' " }
+ 		if +$p($zd(dtCache,3),"-",2)'=+$p($zd(nowCache,3),"-",2) w " style='color:gray;' "  ;not current month
+ 		w " >"_dt_$s(dateformat="HIJRA":"<BR>["_$p(##Class(websys.Conversions).DateLogicalToHijra(dtCache),"/",1,2)_"]",1:"")_"</TD>"
+  		s dtCache=dtCache+1
+ 	}
+  	w !,"   </tr>"
+ }
+ 
+ w !,"  </tbody>"
+ ;
+ ; print calendar footer
+ w !,"  </table>"
+ w !," </td></tr>"
+ w !," <tr><td class='clsLookUpDate'>"
+ w !,"  <table cellspacing=1 cellpadding=3 border=0 width='100%'>"
+ w !,"  <tbody>"
+ w !," <tr><td class='clsLookUpDate'>"
+ w !,"<td><a href='#' id='Add' name='Add' style='FONT-WEIGHT: bold; WIDTH: 66px; HEIGHT: 24px'' onclick=AddClickHanler()>增加</A></td>"
+ w !,"   </tr>"
+ w !,"  </tbody>"
+ w !,"</table>"
+ w !," </td></tr>"
+ w !,"</table>"
+ 
+ ;
+ s isSelectedMonth=0
+ i selCache,$p($zd(startCache,3),"-",2)=$p($zd(selCache,3),"-",2) s isSelectedMonth=1
+ ;i 'isSelectedMonth,startCache s selCache=startCache
+ i startCache s selCache=startCache
+ i 'selCache s selCache=+$h
+ s newwin=+$g(%request.Data("DateLookupOpened",1))
+</SCRIPT>
+</DIV>
+<SCRIPT language=javascript>
+//if (#(isSelectedMonth)#) cell_over(document.getElementById('#(##Class(websys.Conversions).DateLogicalToHtml(selCache))#'));
+//else if (document.getElementById('#(##Class(websys.Conversions).DateLogicalToHtml(selCache))#')) cell_over(document.getElementById('#(##Class(websys.Conversions).DateLogicalToHtml(selCache))#'));
+//else cell_over(document.getElementById('#(##Class(websys.Conversions).DateLogicalToHtml(nowCache))#'));
+
+var isSelected=0;
+var dowWKEND="#(dowWKEND)#";
+var dtCache=#(dowWKEND)#;
+var nowYMD="#(nowYMD)#";
+var firstCache=#(firstCache)#;
+function GetOldClassName(dateval){
+	var classname="clsLookUpDateWeekday";
+	return classname;
+	//weekends
+	var week=(dtCache+4)/7;
+ 	if (dowWKEND.indexOf(week)>0) {	var classname="clsLookUpDateWeekend"}
+ 	
+	//if +$p($zd(dtCache,3),"-",2)'=+$p($zd(nowCache,3),"-",2) 
+	classname= " style='color:gray;' "  //not current month
+}
+
+function lookupSelectDate(dateval) {
+	//var obj=websys_getSrcElement(e);
+	var eSrc=websys_getSrcElement();
+	if (eSrc.className=='clsLookUpDateSelected'){
+		eSrc.className='clsLookUpDateWeekday';
+	}else{	
+		eSrc.className='clsLookUpDateSelected';
+	}
+}
+
+function AddClickHanler(){
+	var SelectedDateStr="";
+	for (var i=firstCache;i<(firstCache+60);i++) {
+		var obj=document.getElementById(i);
+		if (obj.className=='clsLookUpDateSelected'){
+			if (SelectedDateStr==""){
+				SelectedDateStr=i;
+			}else{
+				SelectedDateStr=SelectedDateStr+String.fromCharCode(2)+i;
+			}
+		}
+	}
+	var par_win=window.opener;
+	try {par_win.#(fld)#_lookupSelect(SelectedDateStr);} catch(err) {}
+	window.close();
+	return;
+	//NB: may not work with N6
+	var evt = par_win.document.createEventObject();
+	var obj=par_win.document.getElementById('#(fld)#')
+	if (obj) obj.fireEvent("onchange",evt);
+}
+
+function resetSize()  {
+  //var posX=screen.availWidth;
+  //var posY=screen.availHeight;
+  //var winWidth=370;
+  //var winHeight=230;
+  //posX=posX-winWidth; if(posX<0) posX=0; else posX=posX/2;
+  //posY=30;
+  //websys_move(posX,posY,winWidth,winHeight);
+  //match the open settings so it doesn't apper to jump !
+  websys_move(200,200,370,230);
+  
+}
+//if (!#(newwin)#) resetSize();
+document.focus();
+function RegainFocus() {
+	if (!isSelected) {
+		try {
+			var par_win=window.opener;
+			par_win.websys_setfocus('#($g(%request.Data("ID",1)))#');
+			if ('#($g(%request.Data("TBLI",1)))#'!='') par_win.websys_setfocus('#($g(%request.Data("TBLI",1)))#');
+		} catch(e) {};
+	}
+}
+document.body.onunload=RegainFocus;
+</SCRIPT>
+</BODY>
+</HTML>

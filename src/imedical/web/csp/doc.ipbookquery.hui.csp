@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--doc.ipbookquery.hui.csp HISUI住院证查询--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard,CmdShell"/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header{
+	border-bottom: 0;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.datagrid-row-selected .editcls{
+	color:#fff;
+}
+.editcls{
+	display: block;
+	width: 18px;
+	height: 18px;
+	text-align: center;
+	border-radius: 5px;
+	background-color: #F06D55;
+	color: #fff;
+}
+.editcls:hover{
+	cursor: pointer;
+}
+label[for='OrderOrCreateDate']{
+	line-height: 30px;
+}
+iframe{
+	vertical-align:top;
+	display:block;
+}
+</style>
+<Server>
+	s UDHCJFFlag=%request.Get("UDHCJFFlag")
+	s sysDateFormat=##class(websys.Conversions).DateFormat()
+	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+	w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+	w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+	
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	s CurDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	s PAPMINO=""
+	s PatientID=$g(%request.Data("PatientID",1))
+	s:PatientID'="" PAPMINO=$p(^PAPER(PatientID,"PAT",1),"^",2)
+	s CanChange="Y"
+    if PAPMINO'="" s CanChange="N"
+</Server>
+</head>
+<body>
+	<csp:Include Page="doc.ipbookquery.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			sysDateFormat:"#(sysDateFormat)#",
+			CurDate:"#(CurDate)#",
+			UDHCJFFlag:"#(UDHCJFFlag)#",
+			PAPMINO:"#(PAPMINO)#",
+			CanChange:"#(CanChange)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/Doc.IPBookQuery.hui.js"></script>
+</body>
+</html>

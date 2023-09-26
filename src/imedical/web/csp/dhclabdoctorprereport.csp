@@ -1,0 +1,88 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+<BODY>
+<SERVER>
+ //s TestSetRow=%request.Get("TestSetRow")
+ //s OrdItemDate=$g(%request.Get("OrdItemDate"))
+ //s OrdItemTime=$g(%request.Get("OrdItemTime"))
+ //s SpecDate=$g(%request.Get("SpecDate"))
+ //s SpecTime=$g(%request.Get("SpecTime"))
+ s OrderID=%request.Get("OrderID")
+ //s EpisodeID=$g(%request.Get("EpisodeID"))
+ //s PatientID=$g(%request.Get("PatientID"))
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s TestSetRow=$p(^OEORD(+OrderID,"I",$p(OrderID,"||",2),3),"^",35)
+ s LabEpisodeID=$p(TestSetRow,"||",1)
+ s IP=$ZUTIL(67,15,$J)
+ s EXEC=$ZUTIL(67,13,$J)
+ s CACHEUSER=$ZUTIL(67,11,$J)
+ s GraphCnt="1"
+ Set Config=##Class(websys.Configuration).%OpenId(1)
+ Set LABDATA=Config.LabDataNamespace
+ If '$Length(LABDATA) Set LABDATA="LABDATA"
+ //s LABDATA="LABDATA"
+ s LabNo=$p(TestSetRow,"||",1),TS=$p(TestSetRow,"||",2),TSCNT=$p(TestSetRow,"||",3)
+ //s ReportStatus="0"
+ //i ReportStatus="0" w "<br><br><h2>报告未审核!请稍候...</h2>" q
+ //阅读记录
+ i ##Class(web.DHCLabReportControl).AddPreViewLog(USERID,TestSetRow)
+</SERVER>
+<br>
+<p align=center><FONT size=5><Strong>检验预报告</Strong></p>
+<table left=0 width=950 BORDER='1'>
+<csp:QUERY CLASSNAME='web.DHCLabDoctorReport' NAME='QReportInfo' QUERYNAME='QueryReportInfo' P1=#(OrderID)#>
+<csp:WHILE CONDITION=QReportInfo.Next() COUNTER=row >
+	<tr>#(QReportInfo.Get("LineStr"))#</tr>
+</csp:WHILE>
+<!--检验结果-->
+<csp:QUERY CLASSNAME='web.DHCLabDoctorPreReport' NAME='QReport' QUERYNAME='GetReport' P1=#(TestSetRow)#>
+<csp:WHILE CONDITION=QReport.Next() COUNTER=row >
+	<table left=0 width=950 BORDER='1'>
+	<tr><td colspan=7 align=center height=30><font size=3>#(QReport.Get("ReportName"))#(#(QReport.Get("ReportDate"))# #(QReport.Get("ReportTime"))#)</td>
+	<tr height=30 valign=middle>
+	<!--<th>代码</th>-->
+	<th>名称</th><th>缩写</th><th>结果</th><th>单位</th><th>参考范围</th><th>药敏结果</th>
+	</tr>
+	<csp:QUERY CLASSNAME='web.DHCLabDoctorPreReport' NAME='QReportResult' QUERYNAME='GetReportResult' P1=#(QReport.Get("ReportId"))#>
+	<csp:WHILE CONDITION=QReportResult.Next() COUNTER=ResRow >
+		<tr>
+		<csp:if CONDITION='ResRow#2=0'>
+			<!--<TD width=100 >#(QReportResult.Get("TCCode"))#</TD>-->
+			<TD bgcolor=#cfcfff width=200>#(QReportResult.Get("TCName"))#</TD>
+			<TD bgcolor=#cfcfff width=200>#(QReportResult.Get("TCSyn"))#</TD>
+			<TD bgcolor=#cfcfff width=200>#(QReportResult.Get("Result"))#</TD>
+			<TD bgcolor=#cfcfff width=50>#(QReportResult.Get("Unit"))#</TD>
+			<TD bgcolor=#cfcfff width=200>#(QReportResult.Get("RefRanges"))#</TD>
+			<csp:if CONDITION='QReportResult.Get("SenResult")="Y"'>
+				<TD bgcolor=#cfcfff> <a HREF=#((QReportResult.Get("LnkSenRes")))#>药敏结果</a></TD>
+			<csp:else>
+				<td  bgcolor=#cfcfff>&nbsp;</td>	
+			</csp:if>
+		<csp:else>
+			<!--<TD width=100>#(QReportResult.Get("TCCode"))#</TD>-->
+			<TD bgcolor=#dfdfff width=200>#(QReportResult.Get("TCName"))#</TD>
+			<TD bgcolor=#dfdfff width=200>#(QReportResult.Get("TCSyn"))#</TD>
+			<TD bgcolor=#dfdfff width=200>#(QReportResult.Get("Result"))#</TD>
+			<TD bgcolor=#dfdfff width=50>#(QReportResult.Get("Unit"))#</TD>
+			<TD bgcolor=#dfdfff width=200>#(QReportResult.Get("RefRanges"))#</TD>
+				<csp:if CONDITION='QReportResult.Get("SenResult")="Y"'>
+					<TD bgcolor=#dfdfff> <a HREF=#((QReportResult.Get("LnkSenRes")))#>药敏结果</a></TD>
+				<csp:else>
+					<td  bgcolor=#dfdfff>&nbsp;</td>	
+				</csp:if>
+		</csp:if>
+		</tr>
+	</csp:WHILE>
+	</table>
+</csp:WHILE>
+</BODY>
+</HTML>

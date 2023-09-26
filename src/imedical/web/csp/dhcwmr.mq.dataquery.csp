@@ -1,0 +1,89 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcwmr/css/main.css" />
+		<script type="text/javascript" src="../scripts/dhcwmr/ext.ux/ext-basex.js"></script>
+		<script type="text/javascript" src="../scripts/dhcwmr/ext.ux/PagingMemoryProxy.js"></script>
+		<!--<script type="text/javascript" src="../scripts/dhcwmr/ext.ux/BufferView.js"></script>-->
+		<script type="text/javascript" src="../Scripts/dhcwmr/DHCWMR.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcwmr/DHCWMR.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcwmr/DHCWMR.ExtFramework.DesignerHelper.js"></script>
+		<script type="text/javascript" src="../Scripts/dhcwmr/export/Excel_Class.js"></script>
+		<script language='javascript' src='../scripts/dhcwmr/ss/common/CustomFormItem.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/mq/dataquery/gui.js'></script>	
+		<script language='javascript' src='../scripts/dhcwmr/mq/dataquery/event.js'></script>
+		<script language='javascript' src='../scripts/dhcwmr/mq/dataquery/dicqry_gui.js'></script>	
+		<script language='javascript' src='../scripts/dhcwmr/mq/dataquery/dicqry_event.js'></script>
+		<SCRIPT language=JScript event="OnCompleted(hResult,pErrorObject,pAsyncContext)" for=foo>
+		</SCRIPT>
+		<SCRIPT language=JScript event=OnObjectReady(objObject,objAsyncContext) for=foo>  
+			if ((objObject.IPEnabled != null)&&(objObject.IPEnabled != "undefined")&&(objObject.IPEnabled == true))
+			{
+				if ((objObject.MACAddress != null)&&(objObject.MACAddress != "undefined"))
+				{
+					MACAddr = objObject.MACAddress;
+				}
+				if ((objObject.IPAddress(0) != null)&&(objObject.IPAddress(0) != "undefined"))
+				{
+					IPAddr = objObject.IPAddress(0);
+				}
+				if ((objObject.DNSHostName != null)&&(objObject.DNSHostName != "undefined"))
+				{
+					sDNSName = objObject.DNSHostName;
+				}
+			}
+		</SCRIPT>
+		<script language="cache" runat="server">
+			Set MrClass=$Get(%request.Data("MrClass",1),"")
+			Set CTLocID=%session.Get("LOGON.CTLOCID","")
+	  		Set CTHospID=##class(DHCWMR.SSService.HospitalSrv).GetCTHospID(CTLocID)
+	  		Set:CTHospID'="" CTHospDesc=$p($g(^CT("HOSP",CTHospID)),"^",2)
+	  	</script>
+	  	
+		<script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			
+			var MACAddr;
+			var IPAddr;
+			var DomainAddr;
+			var sDNSName;
+			var MrClass = '#(MrClass)#';
+			var CTHospID = '#(CTHospID)#';
+			var CTHospDesc = '#(CTHospDesc)#';
+            var objControlArry = new Array();
+            function window_onload() {
+	            if (!!window.ActiveXObject || "ActiveXObject" in window){
+		            service = locator.ConnectServer();
+		            service.Security_.ImpersonationLevel=3;
+					service.InstancesOfAsync(foo,'Win32_NetworkAdapterConfiguration');
+	            }else{}
+	            
+				var objviewScreen = new InitviewScreen();
+				objControlArry['viewScreen'] = objviewScreen;
+            }
+        </script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+		<OBJECT id=locator classid=CLSID:76A64158-CB41-11D1-8B02-00600806D9B6   VIEWASTEXT></OBJECT>
+		<OBJECT id=foo classid=CLSID:75718C9A-F029-11d1-A1AC-00C04FB6C223></OBJECT>
+	</body>
+</html>

@@ -1,0 +1,157 @@
+<html>
+<head>
+<FORM:EASYUI/>
+<script type="text/javascript" src="../scripts/DtPortal/configure/locGroupEvent.js"></script>
+</head> 
+<body bgcolor="#ebf3ff" class="easyui-layout body">  
+	<div data-options="region:'west',title:'科室组维护',split:true" style="width:600px;overflow: hidden;background:#ebf3ff;"> 
+          	<form id="locGroupForm" method="post">
+				<table cellspacing="0" cellpadding="5">
+					<tr>
+						<td class="textLabel"><div style="width:115px;float:left">科室组Code:</div><input data-options="required:true" style="width:200px;border: 1px solid #95B8E7"  type="text" id="locGroupCode" name="locGroupCode" class="easyui-textbox"></input> </td>
+					</tr>
+					<tr>
+						<td class="textLabel"><div style="width:115px;float:left">科室组描述:</div><input style="width:200px;border: 1px solid #95B8E7" type="text" id="locGroupDesc" name="locGroupDesc" class="easyui-textbox"></input> </td>
+					</tr>	
+					<tr>
+						<td><div style="width:115px;float:left">大科主任：</div>
+					    	 <input id="bigDocHeadSelect" class="easyui-combobox" name="docHeadSelect" style="width:200px;"   
+			        			data-options="    
+						          	valueField:'id',
+	    							textField:'text',
+	    							mode:'remote', 
+						            url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.LocGroup&MethodName=qureyUser'    
+						         "/>				      
+					   
+				   		</td>
+				   		<td>
+				   			正<input name="DocFlag" type="radio" value="Y" checked="true"/>&nbsp;&nbsp;
+				   			副<input name="DocFlag" type="radio" value="N" />
+				   		</td>
+				   		<td>
+				   			<a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addDocHead()">增加</a>
+				   		</td>	
+				    </tr>		
+				</table>
+				<input id="locGroupID" name="locGroupID" type="text" style="display:none"></input><!--隐藏科室组id -->
+			<div>
+				<div style="width:120px;float:left">有权限的科主任：</div>
+				<div style="width:410px;float:left;">
+					<div class="add">
+						<div class="all" id="DocHeadHtml"></div>			
+						<div style="clear:both;"></div>
+					</div>
+				</div>	
+			</div>	
+			</form>				
+			<div class="toolbar" style="padding:0px;magin:0px;width:500px">
+				<table cellspacing="0" cellpadding="0"  style="padding:10px 0 0 0">
+				<tr>
+				  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="javascript:findLocGroup()">查询</a> </td>
+				  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveLocGroup()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteLocGroup()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-clearscreen',plain:true" onclick="javascript:formClearLocGroup()" >清空</a></td>			        	      
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			    </tr>
+				</table>
+			</div>
+			<table id="locGroupTable">
+		   </table>
+		</div><!--tab2 center-->
+    <div data-options="region:'center',title:'科室组子科室维护'" style="background:#ebf3ff;">
+          	<form id="locGroupSubForm" method="post" border="1px">
+				<table cellspacing="0" cellpadding="5" >
+					<tr>
+						<td class="textLabel">科室选择:
+							<input id="locSelect" class="easyui-combobox" name="locSelect"  style="width:200px;"
+    							data-options="
+    								valueField:'id',
+    								textField:'text',
+    								mode:'remote',
+    								url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.LocGroupSub&MethodName=qureyLoc'    
+    							" />  
+						</td>
+					</tr>
+					<tr>
+						<td class="textLabel">科室类型:
+							<select id="locTypeSelect" name="locTypeSelect" class="easyui-combobox" style="width:200px;">
+								 <option value="I">住院</option>
+                				 <option value="O">门诊</option>
+               					 <option value="E">急诊</option>
+               					 <option value="W">病区</option>
+							</select>
+						</td>
+						<td style="width:20px">
+						</td>				
+						<td id ="relationLocTd" class="textLabel">关联科室:
+							<input id="relationLoc" class="easyui-combobox" name="relationLoc"  style="width:200px;"
+    							data-options="
+    								valueField:'id',
+    								textField:'text',
+    								mode:'remote',
+    								url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.LocGroupSub&MethodName=qureyLocGroupSubI&locGroupID='    
+    						" /> 
+    						<a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addLinLoc()">增加</a>
+						</td>	
+					</tr>	
+					<tr id ="DocHeadHiddenTr">		
+						<td class="textLabel">病区主任:
+							<input id="docHeadSelect" class="easyui-combobox" name="docHeadSelect" style="width:200px;display:none"   
+			        			data-options="    
+						           	valueField:'id',
+	    							textField:'text',
+	    							mode:'remote',
+						            url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.LocGroup&MethodName=qureyUser'          
+						    "/>			    
+						</td>
+						<td style="width:20px">
+						</td>	
+						<td>
+				   			正<input name="subDocFlag" type="radio" value="Y" checked="true"/>&nbsp;&nbsp;
+				   			副<input name="subDocFlag" type="radio" value="N" />
+				   			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		   		
+				   			<a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addSubDocHead()">增加</a>
+				   		</td>
+					</tr>	
+				</table>
+				<input id="locGroupSubID" name="locGroupSubID" type="text" style="display:none"></input><!--隐藏科室组项目id -->
+			</form>
+			<div id ="linkLocShowDiv" style="display:none">
+				<div style="width:85px;float:left;">关联科室：</div>
+				<div style="width:410px;float:left;">
+					<div class="add">
+						<div class="all" id="linkLocHtml"></div>			
+						<div style="clear:both;"></div>
+					</div>
+				</div>	
+			</div>	
+			<div id ="DocHeadHiddenDIV">
+				<div style="width:85px;float:left;">有权限的病区主任：</div>
+				<div style="width:410px;float:left;">
+					<div class="add">
+						<div class="all" id="subDocHeadHtml"></div>			
+						<div style="clear:both;"></div>
+					</div>
+				</div>	
+			</div>	
+	    <!-- toolbar -->
+			<div class="toolbar" style="padding:0px;magin:0px;width:500px">
+				<table cellspacing="0" cellpadding="0"   style="padding:10px 0 0 0">
+				<tr>
+				  <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveLocGroupSub()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteLocGroupSub()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-clearscreen',plain:true" onclick="javascript:formClearLocGroupSub()" >清空</a></td>		      
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			    </tr>
+				</table>
+			</div>
+			<table id="locGroupSubTable">		
+		   </table>
+		</div><!--tab2 center-->
+
+</body>
+</html>

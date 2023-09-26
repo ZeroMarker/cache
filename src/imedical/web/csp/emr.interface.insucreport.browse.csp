@@ -1,0 +1,25 @@
+﻿<html>
+<head>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+		if $g(%session.Data("LOGON.USERID"))=""
+		{
+			s rtn=##class(websys.SessionLogon).Logon()
+			s %response.ServerSideRedirect="emr.interface.insucreport.browse.csp"
+		}
+		q 1
+	</csp:method>
+	<title>电子病历</title>
+</head>
+<body>
+	<script language="cache" runat="server">
+		s CaseNo = $Get(%request.Data("CaseNo",1),"")
+		s Rowid = $o(^DHCINSUCRepInfo(0,"CASENO",CaseNo,""))
+		q:(Rowid="")
+		s episodeID=$p(^DHCINSUCRepInfo(Rowid),"^",1)
+		q:(episodeID = "")
+		s patientID = $P($g(^PAADM(episodeID)),"^",1)
+		s %response.ServerSideRedirect = "emr.record.browse.csp?PatientID="_patientID_"&EpisodeID="_episodeID
+		q 1
+	</script>
+</body>
+</html>

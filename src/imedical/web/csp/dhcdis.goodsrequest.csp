@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<DHCAPP:EASYUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/plugins/font-awesome/font-awesome.min.css"/>
+	<script src="../scripts/dhcnewpro/dhcdis/goodsrequest.js" charset="gb2312"></script>
+  <style type="text/css">
+		  /*输入框START #6BB7E6*/
+	.input-mini{  
+		width:100px;
+		height:30px;
+		line-height: normal;
+		font-size:12px;
+		color:#555;
+		border-radius:2px;
+		backgroud-color:#FFFFFF;
+		border:1px solid #40a2de;
+		padding-left:5px;
+	}
+	/*输入框获得焦点边框样式 #40A2DE*/
+	.input-mini:focus{
+		box-shadow: 0 0 5px #40a2de;
+		border:1px solid #A4C6FD;
+	}
+		/*form 区域*/
+	.form-input{width:20%;float:left}
+	.form-row{margin-top:4px;width:100%;float:left}
+	.form-input-div{padding-left:20px}
+	/*功能按钮，例如：保存*/
+	.index-function-button:hover{
+		background:#dcebf9;
+	}
+	.index-function-button:active{
+		background:#c7ddf2;
+	}
+	.index-function-button-area{
+		height:60px;padding:4px 10px;display:in-line;
+	}
+	.index-function-button{
+		height:52px;min-width:48px;width:48px;padding:4px;text-align:center;cursor:pointer
+		display:inline;float:left
+		
+	}
+	 
+  </style>
+</head>
+<body class="easyui-layout">
+	<div data-options="region:'north',border:'none'" style="height:100px;border:none">
+		<div class="easyui-layout" fit="true">
+			<div data-options="region:'north'" style="height:22px">
+				<div class="panel" style="padding-top:4px;padding-left:15px;min-height:22px;color:#fff;background-color:#38AAFF;">
+					<i class="fa fa-table" ></i>&nbsp;&nbsp;配送申请
+				</div>
+			</div>
+			<div data-options="region:'center'" style="border:none" >
+				<form id="detail">
+					<div class="form-row" style="margin-top:15px;">
+						<div class="form-input">
+							<div class="form-input-div">	
+								<span>配送类型:</span>
+								<input style="max-width:130px;height:30px" class="easyui-combobox" type="text" data-options="required:true,panelHeight:'auto'"  id="disType">					
+							</div>
+						</div>
+						<div class="form-input">
+							<div class="form-input-div">	
+								<span>接收科室:</span>
+								<input style="max-width:130px;height:30px" class="easyui-combobox" data-options="required:true,multiple:true" type="text"  id="recLoc">					
+							</div>
+						</div>	
+						<div class="form-input">
+							<div class="form-input-div">	
+								<span>配送时间:</span>
+								<input style="max-width:130px;height:30px" class="easyui-datetimebox" type="text" data-options="required:true" id="exeDate">				
+							</div>
+						</div>
+						<div class="form-input" >
+							<div class="form-input-div" style="margin-top:0px;">
+								<span>备注:</span>
+								<input style="max-width:100px;height:30px"  id="remark" style="width:150px"  class="input-mini"  ></input>
+							</div>
+						</div>
+						<div class="form-input" style="margin-top:3px;">
+							<div class="form-input-div">
+								<span>是否加急:</span>
+								<input id="urgent" type="checkbox" name="urgentFlag" value="0"></input>
+							</div>
+						</div>				
+					</div>
+				</form>
+			</div>
+			<div data-options="region:'east'" style="width:180px;border:none">	
+      	   		<div onclick="javascript:save(1)" class="index-function-button" style="cursor:pointer" >
+					<img src="../scripts/dhcnewpro/images/dhcdis-m-save.png" alt="save"/>
+					<p style="color:#58C069;margin-top:6px;">保存</p>
+		   		</div>
+		   		<div onclick="javascript:clearForm();" class="index-function-button" style="cursor:pointer" >
+					<img src="../scripts/dhcnewpro/images/dhcdis-m-save.png" alt="save"/>
+					<p style="color:#58C069;margin-top:6px;">清空</p>
+		   		</div>
+		 	</div>			
+		</div>
+	</div>
+	<div data-options="region:'center'" style="border:none">
+		<!-- toolbar -->
+			<div id="toolbar" class="datagrid-toolbar">
+				<table cellspacing="0" cellpadding="0">
+				    <tr>
+				      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >增加</a> </td>
+				      <td><div class="datagrid-btn-separator"> </div> </td>
+				      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteRow()">删除</a> </td>
+				   	  <td><div class="datagrid-btn-separator"> </div> </td>
+				     </tr>
+				</table>
+			</div>
+			<table id="datagrid" class="easyui-datagrid" fit="true" title="配送项目"
+				data-options="
+				toolbar:'#toolbar',
+			    rownumbers:true,
+			    method:'get',
+			    fitColumns:true,
+			    onDblClickRow:onClickRow,
+			    singleSelect:true">
+				<thead>
+					<tr>
+						<th data-options="field:'itmid',hidden:true">项目id</th>
+						<th data-options="field:'locid',hidden:true">科室id</th>
+						<th data-options="field:'itm',width:100,align:'center',editor:{
+											type:'combogrid',
+											options:{
+													required : true,
+												    id:'itmid',
+												    fitColumns:true,
+												    fit: true,//自动大小  
+													pagination : true,
+													panelWidth:600,
+													textField:'desc',
+													mode:'remote',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISCommonDS&MethodName=DisLocItmComboGrid',
+													columns:[[
+															{field:'code',title:'代码',width:60},
+															{field:'desc',title:'名称',width:140}
+															]],
+														onSelect:function(rowIndex, rowData) {
+						                   					fillValue(rowIndex, rowData);
+						                				}		   
+													}
+											}">配送项目</th>
+						<th data-options="field:'qty',width:30,editor:{type:'validatebox',options:{required:true}}">数量</th>
+						<th data-options="hidden:true,field:'loc',width:100,align:'center',editor:{
+											type:'combogrid',
+											options:{
+												    id:'locid',
+												    fitColumns:true,
+												    fit: true,//自动大小  
+													pagination : true,
+													panelWidth:600,
+													textField:'text',
+													mode:'remote',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISCommonDS&MethodName=LocComboGrid',
+													columns:[[
+															{field:'id',hidden:true},
+															{field:'text',title:'名称',width:140}
+															]],
+														onSelect:function(rowIndex, rowData) {
+						                   					fillLocValue(rowIndex, rowData);
+						                				}		   
+													}
+											}">目的地</th>
+					</tr>
+				</thead>
+			</table>
+	</div>
+</body>
+</html>

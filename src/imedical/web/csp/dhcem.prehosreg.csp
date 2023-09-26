@@ -1,0 +1,130 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcem.prehosreg.csp 急诊院前登记信息表-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script language="Cache" runat="server">
+		d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+   </script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<!-------------------------------->
+	<link href="../scripts/dhcnewpro/dhcem/css/prehosreg.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>		
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/prehosreg.js"></script>
+	<script Language="Javascript">
+		var MaID="#(%request.Get("MaID"))#" 
+		var EpisodeID ="#(%request.Get("EpisodeID"))#" 
+		var PhvID="#(%request.Get("PhvID"))#" 
+		var RegID="#(%request.Get("RegID"))#" 
+   </script>
+</head>
+<body>
+
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'center',headerCls:'panel-header-gray',title:'急诊院前登记'">
+		<table border="1" cellspacing="0" cellpadding="1" class="report_table">
+			<tr class="tr" style="margin:10px 0px;">
+				<td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">登记信息：</td>
+			</tr>
+			<tr style="display:none">
+				<td align="right" class="tb_td_bk">RegID</td>
+				<td width="180px"><span id="RegID" class="td-span-m"/></td>
+				<td align="right" class="tb_td_bk">EpisodeID</td>
+				<td width="180px"><span id="EpisodeID" class="td-span-m"/></td>
+
+			</tr>
+			<tr style="display:none;">
+
+
+			</tr>			
+			 <tr class="tr">
+			 	<td align="right" class="tb_td_bk">登<label style="margin-left:6px;"></label>记<label style="margin-left:6px;"></label>号：</td>
+				<td width="180px">
+					<input id="PatNo" class="td-span-m hisui-validatebox" style="width:170px;">
+				</td>
+					<td align="right" class="tb_td_bk">姓<label style="margin-left:25px;"></label>名：</td>
+				<td width="180px">
+					<input id="PatName" class="td-span-m hisui-validatebox" style="width:170px;" disabled>
+				</td>
+				<td align="right"  class="tb_td_bk">年<label style="margin-left:25px;"></label>龄：</td>
+				<td width="180px">
+					<input id="PatAge" class="td-span-m hisui-validatebox" style="width:170px;" disabled>
+				</td>
+
+			</tr>
+			<tr class="tr">
+				<td align="right"  class="tb_td_bk">性<label style="margin-left:25px;"></label>别：</td>
+				<td width="180px">
+					<input id="PatSex" class="td-span-m hisui-validatebox" style="width:170px;" disabled>
+				</td>
+
+				<td align="right"  class="tb_td_bk">出诊日期：</td>
+				<td width="180px">
+					<input id="DepartDate" class="hisui-datebox" style="width:170px;">
+				</td>
+				<td align="right" class="tb_td_bk">出诊时间：</td>
+				<td width="180px">
+					<input id="DepartTime"  style="width:170px;" class="hisui-validatebox" onblur="this.value=CheckEmPcsTime(this.id)" onfocus="this.value=SetEmPcsTime(this.id)">
+				</td>
+			</tr>
+			
+			<tr class="tr">
+
+				<td align="right"  class="tb_td_bk">到达日期：</td>
+				<td width="180px">
+					<input id="ArrDate" class="hisui-datebox" style="width:170px;">
+				</td>
+				<td align="right" class="tb_td_bk">到达时间：</td>
+				<td width="180px">
+					<input id="ArrTime"  style="width:170px;" class="hisui-validatebox" onblur="this.value=CheckEmPcsTime(this.id)" onfocus="this.value=SetEmPcsTime(this.id)">
+				</td>
+				<td colspan="2"></td>
+			</tr>
+			<tr class="tr">
+
+				<td align="right"  class="tb_td_bk">返回日期：</td>
+				<td width="180px">
+					<input id="BackDate" class="hisui-datebox" style="width:170px;">
+				</td>
+				<td align="right" class="tb_td_bk">返回时间：</td>
+				<td width="180px">
+					<input id="BackTime"  style="width:170px;" class="hisui-validatebox" onblur="this.value=CheckEmPcsTime(this.id)" onfocus="this.value=SetEmPcsTime(this.id)">
+				</td>
+				<td colspan="2"></td>
+			</tr>
+			<tr class="tr" style="display:none;">
+				<td align="right"  class="tb_td_bk">登记日期：</td>
+				<td width="180px">
+					<input id="CrateDate" class="hisui-datebox" style="width:150px;" disabled>
+				</td>
+				<td align="right" class="tb_td_bk">登记时间：</td>
+				<td width="180px">
+					<input id="CrateTime" style="width:150px;" class="hisui-validatebox" onblur="this.value=CheckEmPcsTime(this.id)" onfocus="this.value=SetEmPcsTime(this.id)" disabled>
+				</td>
+				<td align="right" class="tb_td_bk" disabled>登记人：</td>
+				<td width="180px">
+					<input id="CrateUser" class="hisui-validatebox" style="width:170px;" disabled>
+				</td>
+			</tr>
+			
+		</table>
+		<!--底部按钮-->
+		<div id="footer" style="opacity:0.9;border:1px solid #E5E5E5;background-color:#F9F9F9;width:100%;height:35px;position:fixed;left:0px;bottom:0px;z-index:2;text-align:center;">
+			<a id="SaveBut" class="hisui-linkbutton" style='' data-options="iconCls:'icon-w-save'"onclick="SaveHosReg()" >保存</a> 
+	    	<a id="CanelBut" class="hisui-linkbutton" style='' data-options="iconCls:'icon-w-cancel'"onclick="CancelRelReg()" >取消关联</a> 
+	    	<a id="CanelBut" class="hisui-linkbutton" style='' data-options="iconCls:'icon-w-cancel'"onclick="CancelHosReg()" >取消</a> 
+	    </div>
+	</div>
+</div>
+</body>
+</html>

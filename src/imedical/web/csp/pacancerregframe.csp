@@ -1,0 +1,67 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n PatiendID,deceased
+ s deceased=""
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s ID=%request.Get("ID")
+ s CONTEXT=%request.Get("CONTEXT")
+ ; RQG 25.06.03 L35869
+ ;i ID="",PatientID'="" s ID=$o(^PACRi(0,"Person",PatientID,0))
+ i ID="",PatientID'="" s ID=$p(##Class(web.PACancerReg).PatientHasActiveCancer(PatientID),"^",1)
+ 
+ i PatientID s deceased=##Class(web.PAPerson).CheckDeceased(PatientID)
+ ; KK 6/4/2004 L:42924 - the most recent episode at the user's hospital(logon hospital)
+ ; If loaded from the Trak.Coding.CancerRegframes workflow, episodeid will be blank...
+ ; will have episodeid when loaded from the coding screen 
+ i EpisodeID="",PatientID'="" {
+	n epid,AdmData,userloc,episodehosp
+	s (epid,AdmData,userloc,episodehosp)=""
+	s userloc=%session.Get("LOGON.CTLOCID") 
+	i userloc'="" s userloc=$p(^CTLOC(userloc),"^",22)	;get hosp
+	f i=1:1 {
+		s epid=$o(^PAPERdr(PatientID,"ADM","I",epid)) 
+		q:epid="" 
+		s AdmData=$g(^PAADM(epid,2)),episodehosp=$p(AdmData,"^",85)
+		i episodehosp=userloc {
+			s EpisodeID=epid 
+		} else {
+			s EpisodeID=""
+		}
+	}
+ }
+ s PopUp=%request.Get("PopUp")
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s TWKFLL=%request.Get("TWKFLL")
+ s TWKFLJ=%request.Get("TWKFLJ")
+ 
+ ; cjb 06/01/2005 47347
+ s frameset=##Class(epr.FramePreference).GetData($g(%session.Data("LOGON.SITECODE")),$g(%session.Data("LOGON.GROUPID")),"pacancerregframe.csp")
+ s:$g(frameset)="" frameset="35%,20%,20%,*"
+
+ 
+</SERVER>
+<script>
+</script>
+<frameset rows="#(frameset)#">
+  var ServReady=0
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=PACancerReg.Edit&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&ID=#(ID)#&deceased=#(deceased)#&PatientBanner=1&PopUp=#(PopUp)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#" name="FRAMEPACancerRegEdit" frameBorder=0>
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=PACancerReg.List&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&PopUp=#(PopUp)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#" name="FRAMEPACancerRegList" frameBorder=0>
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=PACancerRegLinkAdm.List&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CancerReg=#(ID)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#" name="FRAMEPACancerRegLinkAdmList" frameBorder=0>
+  <frame src="websys.default.csp?WEBSYS.TCOMPONENT=PATumor.List&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&CancerReg=#(ID)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#&CONTEXT=#(CONTEXT)#&TEDITFRAME=1" name="FRAMEPATumorList" frameBorder=0>
+  </frameset>
+<BODY>
+</BODY>
+</HTML>

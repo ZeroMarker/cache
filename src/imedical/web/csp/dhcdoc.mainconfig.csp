@@ -1,0 +1,77 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<script runat=server language=cache>
+	;if $g(%request.Data("SaveConfigBtn",1))="SaveConfig"{
+	if $g(%request.Data("SaveConfigBtn",1))="保存设置"{
+		f item = "PatientListWidth","FeeListWidth","FeeListHeight","ExecAndFeeListCollapse","IsUseProgressBar","PatListCollapse","PatListType","UpdateHourOrderEndTime","GroupOrderOnePage" {
+			s ^DHCDocOrderBillConfig("Main",item) = $g(%request.Data(item,1))
+		}
+	}
+</script>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+	<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css"/>
+	<style type="text/css">
+     table {
+	     background-color:#F9FBFF;
+	     border:1px #95B8E7 solid;
+	 }
+	 input{
+		 height:28px;
+	 }
+	 .label-ringht{
+		 text-align: right;
+		 padding-right:10px;
+	 }
+	 .td-left{
+		 padding-left:10px;
+	 }
+	 .i-btn{
+		 height:30px;
+		 /*width:155px;*/
+	 }
+   </style>
+</head>
+<body>
+	<form action="dhcdoc.mainconfig.csp" method="post">
+		<table>		
+			<TR><TD class=maintitle colSpan=3>医嘱单界面设置</TD></TR>
+			<tr><td class="label-ringht">左病人列表宽度</td><td><input name="PatientListWidth" id="PatientListWidth" value="#($g(^DHCDocOrderBillConfig("Main","PatientListWidth"),210))#"></td><td class="td-left">默认210</td></tr>
+			<tr><td class="label-ringht">右费用列表宽度</td><td><input name="FeeListWidth" id="FeeListWidth" value="#($g(^DHCDocOrderBillConfig("Main","FeeListWidth"),380))#"></td><td class="td-left">默认380</td></tr>
+			<tr><td class="label-ringht">右费用列表高度</td><td><input name="FeeListHeight" id="FeeListHeight" value="#($g(^DHCDocOrderBillConfig("Main","FeeListHeight"),280))#"></td><td class="td-left">默认280</td></tr>
+			<tr><td class="label-ringht">医嘱单医生界面默认收起执行与收费列表</td><td><input type="checkbox" id="ExecAndFeeListCollapse" name="ExecAndFeeListCollapse" #($s($g(^DHCDocOrderBillConfig("Main","ExecAndFeeListCollapse"))="on":"checked",1:""))#></td><td class="td-left">默认不收起</td></tr>
+			<tr><td class="label-ringht">加载时要进度条</td><td><input type="checkbox" id="IsUseProgressBar" name="IsUseProgressBar" #($s($g(^DHCDocOrderBillConfig("Main","IsUseProgressBar"))="on":"checked",1:""))#></td><td class="td-left">默认有进度条</td></tr>
+			<tr><td class="label-ringht">左病人列表收起</td><td><input type="checkbox" id="PatListCollapse" name="PatListCollapse" #($s($g(^DHCDocOrderBillConfig("Main","PatListCollapse"))="on":"checked",1:""))#></td><td class="td-left">默认展开</td></tr>
+			<tr><td class="label-ringht">左病人列表范围</td>
+			<td>
+			<select id="PatListType" name="PatListType" style="width:140px;">
+				<option value=0>本人病人
+				<option value=1>本科室病人
+				<option value=2>本单元病人
+				<option value=3>在院转科病人
+			</select>
+			</td>
+			<td class="td-left">默认展开</td></tr>
+			<tr></tr>
+			
+			<tr><td class="label-ringht">停止小时医嘱(可跨天)</td><td><input name="UpdateHourOrderEndTime" id="UpdateHourOrderEndTime" value="#($g(^DHCDocOrderBillConfig("Main","UpdateHourOrderEndTime"),"N"))#"></td><td class="td-left">默认N.表示只能修改最后一条执行记录时间.</td></tr>
+			<tr><td class="label-ringht">医嘱列表中强制【成组医嘱】一页显示</td><td><input name="GroupOrderOnePage" id="GroupOrderOnePage" value="#($g(^DHCDocOrderBillConfig("Main","GroupOrderOnePage"),"N"))#"></td><td class="td-left">默认N.表示成组医嘱可以分多页显示.</td></tr>
+			<TR><TD></TD><TD></TD><TD></TD></TR>
+			<tr><td></td><td><input type="submit" name="SaveConfigBtn" class="i-btn icon-filesave-custom" value="保存设置"></td><td></td></tr>
+			<!--<a class="i-btn i-btn-primary" href="#" id="BtnAdd" name="BtnAdd"><img src="../images/websys/edit_add.png" border="0">新增</a>-->
+		</table>
+	</form>
+	<script type="text/javascript">
+		document.body.onload = function(){
+			var patListTypeValue = "#($g(^DHCDocOrderBillConfig("Main","PatListType")))#";
+			var patListTypeObj = document.getElementById("PatListType");
+			patListTypeObj.selectedIndex = patListTypeValue;
+		}
+	</script>
+</body>
+</html>

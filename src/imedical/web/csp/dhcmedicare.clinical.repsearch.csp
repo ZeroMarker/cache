@@ -1,0 +1,48 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK xml:lang="zh-cn">
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/DHCMedicare/EXT3/css/ExtCss/css/ext-all.css" />
+	<script type="text/javascript" src="../scripts/DHCMedicare/EXT3/Ext/ext-base-debug.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMedicare/EXT3/Ext/ext-all-debug.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMedicare/EXT3/ExtFramework.js"></script>
+	
+	<script language='javascript' src='../scripts/DHCMedicare/Clinical/RepSearch/GUI.js'></script>	
+	<script language='javascript' src='../scripts/DHCMedicare/Clinical/RepSearch/Event.js'></script>
+	<script language='javascript' src='../scripts/DHCMedicare/Clinical/RepSearch/Other.js'></script>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s PrjID=$g(%request.Data("PrjID",1))
+	s PrjInfo=##class(User.DHCMedClinicalReport.Project).GetById(PrjID)
+	s PrjDesc=""
+	s:PrjInfo'="" PrjDesc="'"_$p(PrjInfo,"^",3)_"'"
+    </Script>
+	<script language="javascript" type="text/javascript">
+	var tmes=new Array();
+	tmes['noSelected']="请在菜单中关联对应项目.";
+	tmes['SynchronousErr']="同步数据失败!";
+	tmes['failed']="查询失败";
+	tmes['PrjDesc']=#(PrjDesc)#;
+	var objControl = null;
+	function window_onload()
+	{
+		objControl = Init();
+	}
+	</script>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body onload="return window_onload()">
+    <APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>
+	<input type='hidden' id='MethodRepSynchronous' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedClinicalReport.ReportCtl.InitRepData"))%>'/>
+	<input type='hidden' id='MethodServerInfo' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedClinicalReport.CommonFun.GetSerInfo"))%>'/>
+	<input type='hidden' id='MethodRepExport' value='<%=##Class(%CSP.Page).Encrypt($LB("web.DHCMedClinicalReport.ReportCtl.QueryRepToPrint"))%>'/>
+	<input type='hidden' id='PrjIDVal' value="#(PrjID)#"/>
+	<input type='hidden' id='PrjDesc' value="#(PrjDesc)#"/>
+</body>
+</html>

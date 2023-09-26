@@ -1,0 +1,200 @@
+<!-- 
+ * FileName: dhcpeapacfind.hisui.csp
+ * Anchor: xy
+ * Date: 2019-04-10
+ * Description: HISUI 体检卡明细查询
+-->
+<!---->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 20px;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-header{
+	border-bottom: 0;
+}
+
+
+/*弹出框里标签右对齐 并且有10px内边距*/
+
+.tdlabel
+{
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align:right;
+}
+.addtable{
+	border-collapse:separate;
+	border-spacing:0 6px;
+	/*padding: 0 10px;*/
+}
+</style>
+<server>
+        d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+	</server>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:135px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'体检卡明细查询',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
+			<table class="search-table">
+				<tr>
+				   <td id="RegNoL" class="r-label">登记号</td>
+					<td>
+						<input class="textbox" id="RegNo">
+					</td>
+					
+					<td class="r-label r-label-1"><label for="BeginDate">开始日期</label></td>
+					<td>
+						<input id="BeginDate" class="hisui-datebox textbox">
+					</td>
+					<td class="r-label r-label-1"><label for="Type">类型</label></td>
+          			<td> 
+              			<input class="hisui-combobox" type="text" Id="Type">
+         			 </td>
+					
+					<td class="r-label r-label-1">
+						<a id="BRePRintInv" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">原号重打</a>
+					</td>
+					<td class="r-label r-label-1">
+						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+					
+					
+				</tr>
+				<tr>
+					<td class="r-label"><label for="Name">姓名</label></td>
+					<td>
+						<input class="textbox" id="Name">
+					</td>
+					<td class="r-label r-label-1" ><label for="EndDate">结束日期</label></td>
+					<td>
+						<input id="EndDate" class="hisui-datebox textbox">
+					</td>
+					<td class="r-label r-label-1"><label for="CardType">体检卡类型</label></td>
+          			<td> 
+              			<input class="hisui-combobox" type="text" Id="CardType">
+         			 </td>
+         			 <td class="r-label r-label-1">
+						<a id="BRePrintBalance" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">重打凭条</a>
+					</td>
+					<td>
+						 <input type="hidden" id="RowId"/>
+					</td>
+				</tr>
+				
+						
+			</table>
+		</div>
+	</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+					<table data-options="bodyCls:'panel-header-gray'" id="APACFindQueryTab"></table>
+				</div>
+        	</div>
+</div>
+<!--退费弹窗-->
+     <div id="myWin" style="width:550px;height:385px;padding:3px 10px 10px 10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+
+			<table class="addtable">
+				 <tr>
+				 	<td class="tdlabel"><label for="InvNo">发票号</label></td>
+					<td>
+						<input class="textbox"  type="text" id="InvNo" disabled/>
+					</td>
+					<td class="tdlabel"><label for="CurInvNo">当前发票号</label></td>
+					<td>
+						<input class="textbox" type="text" id="CurInvNo" disabled/>
+					</td>		
+				</tr>
+	
+				<tr>
+				 	<td class="tdlabel"><label for="RRegNo">登记号</label></td>
+					<td>
+						<input class="textbox"  type="text" id="RRegNo" disabled/>
+					</td>
+					<td class="tdlabel"><label for="RName">姓名</label></td>
+					<td>
+						<input class="textbox"  type="text" id="RName" disabled/>
+					</td>		
+				</tr>
+				<tr>
+				 	<td class="tdlabel"><label for="Amount">金额</label></td>
+					<td>
+						<input class="textbox"  id="Amount" disabled/>
+					</td>
+					<td class="tdlabel"><label for="PayMode">支付方式</label></td>
+					<td>
+						<input lass="hisui-combobox" type="text" id="PayMode" style="width:155px;"/>
+					</td>		
+				</tr>
+				
+				<tr>
+				 	<td class="tdlabel"><label for="RFee">退款金额</label></td>
+					<td>
+						<input class="textbox"  type="text" id="RFee"/>
+					</td>
+					<td class="tdlabel"><label for="RemainAmount">账户余额</label></td>
+					<td>
+						<input class="textbox" type="text" id="RemainAmount" disabled/>
+					</td>		
+				</tr>
+				
+				<tr>
+				 	<td class="tdlabel"><label for="RRemark">退费备注</label></td>
+					<td>
+						<input class="textbox" type="text" id="RRemark"/>
+					</td>
+					<td class="tdlabel"><label for="No">号码</label></td>
+					<td>
+						<input class="textbox" type="text" id="No"/>
+					</td>
+
+							
+				</tr>
+				<tr>
+					<td class="tdlabel"><label for="Remark">备注</label></td>
+					<td colspan='4'>
+						<textarea id="Remark" type="text" style="width:407px;height:60px;border:1px solid #40a2de;" disabled> </textarea>
+					</td>
+				</tr>
+	             								
+			</table >
+		</form>
+	</div>
+
+<script type="text/javascript" src="../scripts/DHCPEAPAC.Find.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+<script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>  
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="UIF-8"></script> 
+</body>		
+</html>
+			
+		

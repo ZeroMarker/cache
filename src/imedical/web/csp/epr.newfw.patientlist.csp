@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+	<!--此csp文件为病历书写和病历浏览共用,修改时请注意.-->
+	<TITLE>电子病历</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/form.css"/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script type="text/javascript" defer="defer" src="../scripts/epr/ExtJS/ext-lang-zh_CN.js"></script>
+	
+	<script language="cache" runat="server">
+		s EpisodeID = $Get(%request.Data("EpisodeID",1))
+		s count = ##Class(EPRinstance.ECRecord).GetOldRecCount(EpisodeID)
+		q:(count = -1) 0
+		
+		s userID = %session.Get("LOGON.USERID")
+  		s userLocID = %session.Get("LOGON.CTLOCID")
+  		s docID = ""
+ 		s:(userID '= "") docID = ##Class(web.SSUser).GetDefaultCareProvider(userID)
+		s HospitalName = ##Class(EPRservice.BOSysOption).GetValueByName("HospitalName")
+
+		//登记号自动补零功能，有的医院登记号8位，有的10位，做判断处理
+		s PatientNoLength = ##Class(EPRservice.BOSysOption).GetValueByName("PatientNoLength")
+		s PatientNoLength  = (+PatientNoLength)
+		if (PatientNoLength < 1) {	s PatientNoLength  = "10"}
+
+ 	</script>
+	<script language="javascript">
+		var docID = '#(docID)#';
+		var userID = '#(userID)#';
+		var userLocID = '#(userLocID)#';
+		var HospitalName = '#(HospitalName)#';
+		var PatientNoLength = '#(PatientNoLength)#';
+	</script>
+</HEAD>
+<BODY oncontextmenu="return false;">
+	<script type="text/javascript" src="../scripts/epr/js/patientList.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 	
+</BODY>
+</HTML>

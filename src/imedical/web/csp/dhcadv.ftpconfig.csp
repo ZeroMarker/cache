@@ -1,0 +1,97 @@
+<html >
+<head>
+<title></title>
+<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcadvEvt/ftpconfig.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var LgHospDesc="#(%session.Get("LOGON.HOSPDESC"))#"; //医院ID
+	</script>
+
+<style>
+
+</style>
+</head>
+<body>
+	<!-- toolbar -->
+	<div id="toolbar" class="datagrid-toolbar">
+		<div style="margin-top:10px;margin-bottom:10px;">
+			<tr>
+			<td><span style="margin-left:10px;"></span>代码<span style="margin-left:10px;"></span><input type="text" name="queryCode" id="code"class="textbox" /> </td>	
+			<td><span style="margin-left:10px;"></span>描述<span style="margin-left:10px;"></span><input type="text" name="queryName" id="desc" class="textbox" /> </td>        
+			<td><!--hxy 2019-07-20-->
+			<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospID" name="hospID" class="hisui-combobox"></input>				
+			</td>
+			<td ><span style="margin-left:10px;"></span><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onclick="javascript:findftplist()">查询</a> </td>					
+			</tr>								
+		</div>
+		<div class="tool-bar-line" style="border-bottom-color:#cccccc; border-bottom-width: 1px; border-bottom-style: dashed;">	</div>
+		<table cellspacing="0" cellpadding="0">
+		    <tr>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:remove()">删除</a> </td>	
+		     </tr>
+		</table>
+	</div>
+			<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+				data-options="
+				toolbar:'#toolbar',
+			    rownumbers:true,
+			    border:false,
+			    method:'get',
+			    url:'dhcapp.broker.csp?ClassName=web.DHCADVFTPConfig&MethodName=QueryFTPConfig',
+			    fitColumns:true,
+			    singleSelect:true,
+			    pagination:true,
+			    pageSize:20,
+			    pageList:[20,40,100],
+			    onDblClickRow: onClickRow">
+				<thead>
+					<tr>
+					    <th data-options="field:'FTPRowID',width:30,hidden:true">ID</th>
+						<th data-options="field:'FTPCode',width:100,editor:{type:'validatebox',options:{required:true}}">FTP代码</th>
+						<th data-options="field:'FTPDesc',width:100,editor:{type:'validatebox',options:{required:true}}">FTP描述</th>
+						<th data-options="field:'FTPAddressIP',width:150,editor:{type:'validatebox',options:{required:true}}">IP地址</th>
+						<th data-options="field:'FTPPort',width:150,editor:{type:'validatebox',options:{required:true}}">端口</th>
+						<th data-options="field:'FTPUserName',width:150,editor:{type:'validatebox',options:{required:true}}">用户名</th>
+						<th data-options="field:'FTPPassWord',width:150,editor:'password',		
+                        formatter: function(value,row,index){ return '***';}">密码</th>
+						<th data-options="field:'hospDr',width:180,align:'center',
+								editor:{
+									type:'combobox',
+									options:{
+										valueField:'value',
+										textField:'text',
+										url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMON&MethodName=GetHospDs',
+										required:true,
+										editable:false,
+										onSelect:function(option){
+											var ed=$('#datagrid').datagrid('getEditor',{index:dgrow,field:'hospDrID'});
+											$(ed.target).val(option.value);  //设置科室ID
+											var ed=$('#datagrid').datagrid('getEditor',{index:dgrow,field:'hospDr'});
+											$(ed.target).combobox('setValue', option.text);  //设置科室Desc
+			}
+									}
+						}">医院</th><!--hxy 2019-07-03-->
+						<th data-options="field:'hospDrID',editor:'text',hidden:true">hospDrID</th> <!--hxy 2019-07-03-->
+					</tr>
+				</thead>
+			</table> 
+	</div>  
+ </div>
+ 
+</body>
+
+</html>

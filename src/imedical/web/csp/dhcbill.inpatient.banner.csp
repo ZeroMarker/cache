@@ -1,0 +1,131 @@
+<style>
+.sline, .infoLabel {
+	color: #787878;
+}
+.patientInfo {
+	padding-bottom: 10px;
+	padding-left: 52px;
+	display: inline-block;
+	position: absolute;
+	top: 8px;
+}
+.patientInfo span {
+	padding-left: 5px;
+}
+.patName {
+	margin-right: 7px;
+}
+.unman {
+ 	background:url(../images/unman.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+ 	top: 3px;
+    left: 10px;
+}
+.man {
+ 	background:url(../images/man.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+ 	top: 3px;
+    left: 10px;
+}
+.woman {
+ 	background: url(../images/woman.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+ 	top: 3px;
+	left: 10px;
+}
+</style>
+
+<script type="text/javascript">
+/**
+ * 根据就诊号获取患者基本信息
+ * @method initPatInfoAdm
+ * @author ZhYW
+ */
+function getPatInfoByAdm(episodeId) {
+	$.m({
+		ClassName: 'web.DHCIPBillPatOrdFee',
+		MethodName: 'GetPatInfoByAdm',
+		episodeId: episodeId
+	}, function (rtn) {
+		var myAry = rtn.split('^');
+		var patName = myAry[1];
+		var sex = myAry[2];
+		var patientNo = myAry[3];
+		var medicareNo = myAry[4];
+		if (sex == '男') {
+			$('#sex').removeClass('unman man woman').addClass('man');
+		} else if (sex == '女') {
+			$('#sex').removeClass('unman man woman').addClass('woman');
+		}else {
+			$('#sex').removeClass('unman man woman').addClass('unman');
+		}
+		$('#patName').text(patName);
+		$('#patientNo').val(patientNo);
+		$('#medicareNo').val(medicareNo);
+		initPatPayInfo(episodeId);
+	});
+}
+
+/**
+ * 根据就诊号获取患者费用信息
+ * @method initPatPayInfo
+ * @author ZhYW
+ */
+function initPatPayInfo(episodeId) {
+	$.m({
+		ClassName: 'web.DHCIPBillPatOrdFee',
+		MethodName: 'GetPatPayInfoByAdm',
+		episodeId: episodeId
+	}, function (rtn) {
+		var myAry = rtn.split('^');
+		var deposit = myAry[0];
+		var totalAmt = myAry[1];
+		var balance = myAry[2];
+		var insuPayAmt = myAry[3];
+		var discAmt = myAry[4];
+		var payOrShareAmt = myAry[5];
+		var patShareAmt = myAry[6];
+		var warrantAmt = myAry[7];
+		$('#deposit').text(deposit);
+		$('#totalAmt').text(totalAmt);
+		$('#balance').text(balance);
+		$('#insuPayAmt').text(insuPayAmt);
+		$('#discAmt').text(discAmt);
+		$('#payOrShareAmt').text(payOrShareAmt);
+		$('#patShareAmt').text(patShareAmt);
+		$('#warrantAmt').text(warrantAmt);
+	});
+}
+</script>
+
+<!--dhcbill.inpatient.banner.csp-->
+<div>
+	<div id="sex"></div>
+	<div class="patientInfo">
+		<span class="patName" id="patName"></span>
+		<span class="infoLabel">预缴款:</span><span id="deposit"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">总费用:</span><span id="totalAmt"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">自付金额:</span><span id="patShareAmt"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">折扣金额:</span><span id="discAmt"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">记账金额:</span><span id="payOrShareAmt"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">担保金额:</span><span id="warrantAmt"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">医保费用:</span><span id="insuPayAmt"></span>
+		<span class="sline">/</span>
+		<span class="infoLabel">余额:</span><span id="balance"></span>
+	</div>
+</div>

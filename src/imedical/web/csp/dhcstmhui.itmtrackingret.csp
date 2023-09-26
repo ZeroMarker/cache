@@ -1,0 +1,106 @@
+﻿<!--未用高值退库退货-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'center',border:false" class="GridPadding">
+		<div class="hisui-panel" data-options="title:'未用高值',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false">
+					<table id="MainConditions" class="Condition">
+						<input id="Inci" name="Inci" type="hidden">
+						<tr>
+							<td><label class="required">*</label><label>库房</label><input id="PhaLoc" name="PhaLoc" class="textbox hisui-combobox"></td>
+							<td style="text-align:left;"><input id="VirtualFlag" class="hisui-checkbox" type="checkbox" label="暂存库"></td>
+							<td><label class="required">*</label><label>开始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
+							<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
+							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+						</tr>
+						<tr>
+							<td><label></label><label>科室</label><input id="CurrLoc" name="CurrLoc" class="textbox hisui-combobox"></td>
+							<td></td>
+							<td><label class="required">*</label><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
+							<td><label>类组</label><input id="StkScg" name="StkScg" class="textbox hisui-stkscgcombotree"></td>
+							<td><label>条码</label><input id="BarCode" name="BarCode" class="textbox"></td>
+							<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">生成</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="TrackGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" style="height:500px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:500px;padding-top:0; padding-right: 0px" class="NonPadGrid GridPadding">
+				<div class="hisui-panel" data-options="title:'本次退库',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false">
+							<table id="InitInfo" class="Condition">
+								<input id="Init" name="Init" type="hidden">
+								<tr>
+									<td><label>单号</label><input id="InitNo" name="InitNo" class="textbox"></td>
+									<td><label>类组</label><input id="InitStkScg" name="InitStkScg" class="textbox"></td>
+								</tr>
+								<tr>
+									<td><label>供应部门</label><input id="InitFrLoc" name="InitFrLoc" class="textbox"></td>
+									<td><label>请求部门</label><input id="InitToLoc" name="InitToLoc" class="textbox"></td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="InitDetailGrid"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="width:500px;padding-top: 0px" class="NonPadGrid GridPadding">
+				<div class="hisui-panel" data-options="title:'本次退货',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false">
+							<table id="RetInfo" class="Condition">
+								<input id="RetId" name="RetId" type="hidden">
+								<tr>
+									<td><label>单号</label><input id="RetNo" name="RetNo" class="textbox" style="width:140px;"></td>
+									<td><label>类组</label><input id="RetStkScg" name="RetStkScg" class="textbox" style="width:140px;"></td>
+									<td><label>供应商</label><input id="RetVendor" name="RetVendor" class="textbox" style="width:140px;"></td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="RetDetailGrid"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--查询窗口-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="跟踪信息" style="width:750px;height:400px">
+		<div class="hisui-layout" data-options="fit:true">
+		<div data-options="border:false,region:'center',collapsible:false,split:true">
+			<table id="TrackDetailGrid"></table>
+		</div>
+	</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackIngRet.js"></script>
+</body>
+</html>

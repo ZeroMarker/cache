@@ -1,0 +1,413 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Ext.ux.MessageWindow</title>
+
+    <!-- Ext Styles -->
+    <link rel="stylesheet" type="text/css" href="/ext21/resources/css/ext-all.css" />		
+
+    <!-- Common Styles for the examples -->
+<!--
+examples.css affects the padding for .x-notification
+    <link rel="stylesheet" type="text/css" href="../../examples/shared/examples.css" />
+-->
+
+    <!-- CSS Stylesheet -->
+    <style type="text/css">
+    	.x-icon-error{background-image:url(exclamation.gif) ! important;}
+    	.x-icon-information{background-image:url(information.gif) ! important;}
+    	.x-notification .x-window-body{margin: 0;padding:1em ! important; width: auto ! important;}
+        .msg-over{
+        	color:#913049 !important;
+        }
+    </style>
+    <!-- / CSS Stylesheet -->
+
+    <!-- Base Adapter -->
+ 	<script type="text/javascript" src="/ext21/adapter/ext/ext-base.js"></script>	
+
+ 	<!-- Ext -->
+    <script type="text/javascript" src="/ext21/ext-all-debug.js"></script>
+
+    <script type="text/javascript" src="MessageWindow.js"></script>
+
+    <!-- Page Specific -->
+
+<script type="text/javascript">
+
+
+	Ext.onReady(function()
+	{
+        //initialize QuickTips so the tool qtips work:
+        Ext.QuickTips.init();
+        
+        // ----------------------------------------------------------------------------------------- //
+        //example 1
+        var ex1 = function() {
+    		new Ext.ux.window.MessageWindow({
+    			title: 'Example 1',
+    			autoDestroy: true,//default = true
+                autoHeight: true,
+    			autoHide: true,//default = true
+                bodyStyle: 'text-align:center',
+                closable: false,
+                handleHelp: function(){
+                    console.info('help requested');
+                },
+                hideFx: {
+                    delay: 5000,
+                    //duration: 0.25,
+                    mode: 'standard',//null,'standard','custom',or default ghost
+                    useProxy: false //default is false to hide window instead
+                },
+    			html: 'This window will automatically hide itself.  <b>Standard</b> window hide mode.',
+    			iconCls: 'x-icon-error',
+                /* 
+                //optionally enable sound...see http://efattal.fr/extjs/examples/toastwindow/
+                //if you want to enable sound with this
+    			listeners: {
+    				'beforerender': function(){
+    					Sound.enable();
+    					Sound.play('notify.wav');
+    					Sound.disable();
+    				}
+    			}
+    			*/
+                showFx: {
+                    delay: 0,
+                    //duration: 0.5, //defaults to 1 second
+                    mode: 'standard',//null,'standard','custom',or default ghost
+                    useProxy: false //default is false to hide window instead
+                },
+                width: 250 //optional (can also set minWidth which = 200 by default)
+    		}).show(Ext.getDoc()); 
+    	};
+
+        // ----------------------------------------------------------------------------------------- //
+        //example 2
+        var ex2 = function() {
+    		new Ext.ux.window.MessageWindow({
+    			title: 'Example 2',
+    			autoDestroy: true,//default = true
+                autoHeight: true,
+    			autoHide: true,//default = true
+                bodyStyle: 'text-align:center',
+                closable: false,
+    			help: false,//no help tool
+    			html: 'This window is initially shown as pinned.  <b>Message</b> window hide mode. The height can be left to autosize itself, you can explicitly state a height, or just use the minimum default height.',
+    			//iconCls:	'x-icon-error',
+                pinState: 'pin',//render pinned
+                showFx: {
+                    duration: 0.25, //defaults to 1 second
+                    mode: 'standard',//null,'standard','custom',or default ghost
+                    useProxy: false //default is false to hide window instead
+                },
+                width: 250 //optional (can also set minWidth which = 200 by default)
+    		}).show(Ext.getDoc()); 
+    	};
+        
+        
+        // ----------------------------------------------------------------------------------------- //
+        //example 3
+        //configure the manager for this group:
+        var group3 = new Ext.ux.window.MessageWindowGroup({
+            //override any defaults or add to base class instance
+            groupId: 3, //groupId not implemented at this time
+            zseed: 8000 //change the zseed (default = 9000)
+        });
+
+        var ex3 = function() {
+    		new Ext.ux.window.MessageWindow({
+    			title: 'Example 3',
+                animateTarget: document,
+    			autoDestroy: true,//default = true
+                autoHeight: true,
+    			autoHide: true,//default = true
+                closable: false,
+                handleHelp: function(){
+                    console.info('help requested');
+                },
+                hideAction: 'hide',
+                hideFx: {
+                    delay: 7000,
+                    duration: 0.5,
+                    useProxy: true, //default is false to hide window instead
+                    mode: 'custom',//null,'standard','custom',or default ghost
+                    //use callback to control the hide Fx
+                    callback: function (obj, el, fx) {
+                        el.ghost("r", {
+                			duration: fx.duration || 1,
+                			remove: true,
+                            scope: obj,
+                            callback: obj.afterHide
+                		});
+                    }
+                },
+    			html: 'The width of this message is tied to the base window. This window belongs to a different group so additional windows do not affect Example 1 or 2. Click the body to pin the window. Hover over a window to prevent updating. When hiding uses a proxy instead of window...compare to example 2',
+    			//iconCls:	'x-icon-error',
+    			listeners: {
+    				show: {
+                        fn: function(){
+                            this.body.highlight("ffff9c", {
+                                attr: "background-color", //can be any valid CSS property (attribute) that supports a color value
+                                endColor: "DFE8F6",
+                                easing: 'easeOut',//'easeIn',
+                                duration: 1
+                            });
+                        }
+                    }                        
+    			},
+                manager: group3,//specify the MessageWindowGroup manager (instead of using default manager)
+                //configure a different origin than the default bottom right corner of the window:
+                origin: {
+                    //get window's Ext.element:
+                    el: Ext.get('myWin'), //element to align to (defaults to document)
+                    pos: "b-t",//position to align to (see {@link Ext.Element#alignTo} for more details defaults to "br-br").
+                    offX: 0.25*Ext.get('myWin').getWidth(), //amount to offset horizontally (-20 by default)
+                    offY: 0, //amount to offset vertically (-20 by default)
+                    spaY: 5    //vertical spacing between adjacent messages
+                         
+                },
+                showFx: {
+                    delay: 0,
+                    duration: 0.85, //defaults to 1 second
+                    //mode: 'standard',//null,'standard','custom',or default ghost
+                    useProxy: false //default is false to hide window instead
+                },
+                width: Ext.get('myWin').getWidth()//250 //optional (can also set minWidth which = 200 by default)
+    		}).show(Ext.getDoc()); 
+    	};
+        
+        // ----------------------------------------------------------------------------------------- //
+        //example 4
+        //configure the manager for this group:
+        var group4 = new Ext.ux.window.MessageWindowGroup({
+            //override any defaults or add to base class instance
+            groupId: 4, //groupId not implemented at this time
+            zseed: 2000 //change the zseed (default = 9000)
+        });
+
+        var ex4 = function() {
+    		new Ext.ux.window.MessageWindow({
+    			title: '<h2>Example 4</h2>',
+                animateTarget: document,
+    			autoDestroy: false,//default = true
+                autoHeight: true,
+    			autoHide: true,//default = true
+    			plain: true,
+                baseCls: 'x-box',//defaults to 'x-window'
+                clip: 'bottom',//clips the bottom edge of the window border
+                closable: false,
+                handleHelp: function(){
+                    console.info('help requested');
+                },
+    			html: 'You will not see me if msgs config is specified',
+    			iconCls: '',
+                interval:5000,
+                listeners: {
+                    click:{
+                        fn: function (window, msg) {
+                            console.info('inside click listener.');
+                            console.info('message text: ',msg.text);
+                            console.info('could redirect to:',msg.url);
+                            window.location = msg.url;
+                        }
+                    }
+                },
+                manager: group4,//specify the MessageWindowGroup manager (instead of using default manager)
+                minWidth: 100,
+            	msgs: [
+            		{text: 'Hover to disable update', url:'http://extjs.com/support/training/'},
+            		{
+                        text: 'You can drag me to new position &raquo;',
+                        url:'http://extjs.com/support/training/'
+                    },
+            		{text: 'Fixed anchor position even if content changes and increases height.', url:'http://extjs.com/products/gxt/'},
+            		{text: 'Supports standard window configs including Tools &raquo;', url:'http://extjs.com/products/extjs/download.php'}
+            	],
+                //configure a different origin than the default bottom right corner of the window:
+                origin: {
+                    //get window's Ext.element:
+                    el: Ext.get('northRegion'), //element to align to (defaults to document)
+                    increment: false, //whether to increment position of subsequent messages
+                    pos: "bl-bl",//position to align to (see {@link Ext.Element#alignTo} for more details defaults to "br-br").
+                    offX: 10, //amount to offset horizontally (-20 by default)
+                    offY: 0 //amount to offset vertically (-20 by default)
+                },
+                pinState: null,//don't show pin tools
+                shadow: false,
+                shiftHeader: true,//use when want the header to be moved to the body in the window's dom
+                showFx: {
+                    delay: 1000, //other than 0 will create automatic refreshes
+                    duration: 0.85, //defaults to 1 second
+                    //mode: 'standard',//null,'standard','custom',or default ghost
+                    useProxy: false //default is false to hide window instead
+                },
+                width: 250
+    		}).show(Ext.getDoc()); 
+    	};
+        
+        // ----------------------------------------------------------------------------------------- //
+        //example 5
+        var group5 = new Ext.ux.window.MessageWindowGroup({groupId:5});
+        var ex5 = function() {
+            console.log('hey, gimme some help');
+    	};
+        
+        // ----------------------------------------------------------------------------------------- //
+        //example 6
+        var group6 = new Ext.ux.window.MessageWindowGroup({groupId:6});
+        var ex6 = function() {
+    		w = new Ext.ux.window.MessageWindow({
+    			title: 'Example 6',
+    			autoDestroy: true,//default = true
+                autoHeight: true,
+    			autoHide: true,//default = true
+                bodyStyle: 'text-align:center',
+                closable: true,
+                handleHelp: function(){
+                    console.info('help requested');
+                },
+                hideFx: {
+                    delay: 3000,
+                    //duration: 0.25,
+                    mode: 'standard',//null,'standard','custom',or default ghost
+                    useProxy: false //default is false to hide window instead
+                },
+    			html: 'This window will automatically hide itself.  <b>Standard</b> window hide mode.',
+    			iconCls: 'x-icon-error',
+                /* 
+                //optionally enable sound...see http://efattal.fr/extjs/examples/toastwindow/
+                //if you want to enable sound with this
+    			listeners: {
+    				'beforerender': function(){
+    					Sound.enable();
+    					Sound.play('notify.wav');
+    					Sound.disable();
+    				}
+    			}
+    			*/
+                manager: group6,//specify the MessageWindowGroup manager (instead of using default manager)
+                origin: {
+                    pos: "t-t",//position to align to (see {@link Ext.Element#alignTo} for more details defaults to "br-br").
+                    offX: 0, //amount to offset horizontally (-20 by default)
+                    offY: 0, //amount to offset vertically (-20 by default)
+                    spaY: 5    //vertical spacing between adjacent messages
+                },
+                pinOnClick: false,
+                showFx: {
+                    align: 't',
+                    delay: 0,
+                    duration: 2, //defaults to 1 second
+                    mode: 'standard',//null,'standard','custom',or default ghost
+                    useProxy: false //default is false to hide window instead
+                },
+                width: 250 //optional (can also set minWidth which = 200 by default)
+    		});
+            
+            w.show(Ext.getDoc());
+    	};
+
+        // ----------------------------------------------------------------------------------------- //
+        // set up the GUI
+		var viewport = new Ext.Viewport({
+			layout: 'border',
+			items: [
+                {
+                    region: 'north',
+                    xtype: 'box',                   
+                    height: 100,                      
+                    id: 'northRegion',
+                    autoEl: {}
+                },{
+					title: 'Toast Windows',
+                    region: 'center',
+                    xtype: 'panel',                    
+                    html: 'Click on buttons above to see examples.',
+                    tbar:[{
+                        text:'Bottom Corner - unpinned',
+                        tooltip:'Launch Example <b>1</b> Message Window',
+                        handler: ex1
+                    },{
+                        text:'Bottom Corner - pinned',
+                        tooltip:'Launch Example <b>2</b> Message Window',
+                        handler: ex2
+                    }, '-', {
+                        text:'Top Middle - unpinned',
+                        tooltip:'Launch Example <b>6</b> Message Window',
+                        handler: ex6
+                    }, '-', {
+                        text:'Attach to Window',
+                        tooltip:'Launch Example <b>3</b> Message Window',
+                        handler: ex3
+                    }, '-', {
+                        text:'Repeating North Region',
+                        tooltip:'Launch Example <b>4</b> Message Window',
+                        handler: ex4
+                    }]
+				}
+			]
+		});
+
+        var form = new Ext.form.FormPanel({
+            baseCls: 'x-plain',
+            labelWidth: 55,
+            defaultType: 'textfield',
+            items: [{
+                fieldLabel: 'Send To',
+                name: 'to',
+                enableKeyEvents: true,
+                listeners: {
+                    keyup: {
+                        fn: function (obj, ev) {
+                            if ('toast' == obj.getValue()) {
+                                ex1();
+                            };
+                        },
+                        scope: form
+                    }
+                },
+                anchor:'100%'  // anchor width by percentage
+            },{
+                fieldLabel: 'Subject',
+                name: 'subject',
+                anchor: '100%'  // anchor width by percentage
+            }, {
+                xtype: 'textarea',
+                hideLabel: true,
+                name: 'msg',
+                value: 'Type "toast" in first field to launch message window',
+                anchor: '100% -53'  // anchor width by percentage and height by raw adjustment
+            }]
+        });
+    
+        var win = new Ext.Window({
+            title: 'Click my <i>Help</i> tool',
+            bodyStyle:'padding:5px;',
+            id       : 'myWin',
+            layout: 'fit',
+            minWidth: 300,
+            width: 500,
+            height: 250,
+            minHeight: 200,
+            plain:true,
+            tools    : [
+                {
+                    id: 'help',
+                    qtip: 'Launch Help MessageWindow',
+                    handler: ex5,
+                    scope: this
+                }
+            ],
+            items: form
+        });
+
+        win.show();
+        
+	});
+</script>
+</head>
+
+<body>
+</body>
+</html>

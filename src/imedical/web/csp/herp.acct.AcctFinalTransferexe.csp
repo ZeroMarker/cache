@@ -1,0 +1,72 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str = $Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s EndRate=$Get(%request.Data("EndRate",1))	
+	s bookID=$Get(%request.Data("bookID",1))
+	s Summary=$Get(%request.Data("Summary",1))
+	s AcctSubj=$Get(%request.Data("AcctSubj",1))
+	s mode=$Get(%request.Data("mode",1))
+	
+	s YearMonth=$Get(%request.Data("YearMonth",1))
+	s UserID=$Get(%request.Data("UserID",1))
+	s oplogstr=$Get(%request.Data("oplogstr",1))
+	
+	i action = "ListCurRate" d
+	.w ##class(herp.acct.udata.uAcctFinalTransfer).ListCurRate(sortField, sortDir, start, limit, bookID)
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctFinalTransfer).List(sortField, sortDir, start, limit, Summary, AcctSubj, mode, bookID)
+	
+	i action="GetYearMonth"  d
+	.s result = ##Class(herp.acct.udata.uAcctFinalTransfer).GetYearMonth(bookID)
+	.i result '= 0 d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"	
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctFinalTransfer).UpdateCurRate(rowid, EndRate)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetAcctSubj" d
+	.w ##Class(herp.acct.udata.uAcctFinalTransfer).GetAcctSubj(start, limit, str, bookID)
+
+	i action = "add" d
+	.s result = ##Class(herp.acct.udata.uAcctFinalTransfer).InsertVouch(YearMonth, UserID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="IfRepVouch"  d
+	.s result= ##Class(herp.acct.udata.uAcctFinalTransfer).IfRepVouch(UserID,oplogstr)
+	.w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	i action="GetPeriodStatus"  d
+	.s result = ##Class(herp.acct.udata.uAcctFinalTransfer).GetPeriodStatus(bookID)
+	.w "{success:'true',refresh:'true',info:'"_result_"'}"	
+	
+	i action="GetVouchState"  d
+	.s result= ##Class(herp.acct.udata.uAcctFinalTransfer).GetVouchState(bookID)
+	.w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	i action="GetNumF"  d
+	.s result= ##Class(herp.acct.udata.uAcctFinalTransfer).GetNumF(bookID)
+	.w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	
+</script>

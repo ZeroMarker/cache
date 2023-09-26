@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--住院患者医嘱信息总览护士csp,csp:ipdoc.patorderviewnurse.csp--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //CA:-------------------start初始化CA服务环境session--------
+ i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+ .d ##Class(CA.DigitalSignatureService).CASessionDataInit()
+ //-------------------end初始化CA服务环境session--------
+ q 1
+ </csp:method>
+<HTML lang="zh-CN">
+<HEAD>
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--DHCDOC:JSCOMMON></DHCDOC:JSCOMMON-->
+<HISUI></HISUI>
+<style>
+.datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-text {
+	padding:0 5px 0 26px
+}
+.datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-icon{
+	left:0;
+}
+</style>
+<link rel="stylesheet" href="../scripts_lib/popover1.2.17/jquery.webui-popover.min.css">
+<!--this page css control-->
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/ipdoc/css/inpatinfoview.css" />
+<Server>
+	s EpisodeID=%request.Get("EpisodeID")
+	s DefaultOrderPriorType=%request.Get("DefaultOrderPriorType")
+	s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	s PageShowFromWay=%request.Get("PageShowFromWay")
+	if (PageShowFromWay="") s PageShowFromWay="ShowFromEmr" //ShowFromEmr 病人信息展示 ShowFromOrdEntry  医嘱录入界面展示医嘱
+	if (PageShowFromWay="ShowFromOrdEntry"){
+		if ((DefaultOrderPriorType="ShortOrderPrior")||(DefaultOrderPriorType="OutOrderPrior")){
+			s DefaultOrderPriorType="OM"
+		}else{
+			s DefaultOrderPriorType="S"
+		}
+	}
+	//NurseOrdView
+	s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	s NextDate=##class(websys.Conversions).DateLogicalToHtml(+$h+1)
+	s group=%session.Get("LOGON.GROUPID")
+	#dim obj As websys.ExtMenu
+	s isNurseLogin =##class(web.DHCDocMain).isNurseLogin()
+	//if (isNurseLogin=1){
+		//长期医嘱右键
+		s menucode = "NURPRNOrder"
+		s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+		s orderMenuJson = obj.GetMenusJson(group,"EasyUI")
+		d obj.%Close()
+		s obj=""
+		i orderMenuJson="" s orderMenuJson="{}"
+		
+		//临时医嘱右键
+		s menucode = "NURSOSOrder"
+		s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+		s menujsonSOS = obj.GetMenusJson(group,"EasyUI")
+		d obj.%Close()
+		s obj=""
+		i menujsonSOS="" s menujsonSOS="{}"
+		
+		//护士执行记录 长期医嘱菜单
+		s menucode = "NURPRNExec"
+		s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+		s execMenuJson = obj.GetMenusJson(group,"EasyUI")
+		d obj.%Close()
+		s obj=""
+		i execMenuJson="" s execMenuJson="{}"
+		//护士执行记录 临时医嘱菜单
+		s menucode = "NURSOSExec"
+		s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+		s execSOSMenuJson = obj.GetMenusJson(group,"EasyUI")
+		d obj.%Close()
+		s obj=""
+		i execSOSMenuJson="" s execSOSMenuJson="{}"
+		
+	//}
+	/*else{
+		//长期医嘱右键
+		s menucode = "DOCPRNOrder"
+		s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+		s orderMenuJson = obj.GetMenusJson(group,"EasyUI")
+		d obj.%Close()
+		s obj=""
+		i orderMenuJson="" s orderMenuJson="{}"
+		
+		//临时医嘱右键
+		s menucode = "DOCSOSOrder"
+		s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+		s menujsonSOS = obj.GetMenusJson(group,"EasyUI")
+		d obj.%Close()
+		s obj=""
+		i menujsonSOS="" s menujsonSOS="{}"
+		s execMenuJson="{}"
+		s execSOSMenuJson="{}"
+	}*/
+	//获取系统日期格式
+	s DateFormat=##class(websys.Conversions).DateFormat()
+	
+	//获取医嘱重分类列表
+	s OrdReSubCatListJson=##class(web.DHCDocInPatUICommon).GetOrdReSubCatListJson()
+	//停止时间下拉框数据
+	s IntervalTimeListJson=##Class(web.DHCDocInPatUICommon).GetIntervalTimeList()
+	//获取撤销、停止执行记录原因json
+	s OECStatusChReasonJson=##Class(web.DHCDocInPatUICommon).GetOECStatusChReason()
+	//排序方式
+	s ViewOrderSortJson=##Class(web.DHCDocInPatUICommon).GetViewOrderSortJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
+	//开出科室
+	s ViewLocDescJson=##Class(web.DHCDocInPatUICommon).GetViewLocDescJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
+	//范围
+	s ViewScopeDescJson=##Class(web.DHCDocInPatUICommon).GetViewScopeDescJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
+	//医嘱单型
+	s ViewNurderBillJson=##Class(web.DHCDocInPatUICommon).GetViewNurderBillJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
+	//滚动加载
+	s OrderViewScrollView=##Class(web.DHCDocConfig).GetConfigNode("OrderViewScrollView")
+	s execBarExecNum=##class(DHCDoc.DHCDocConfig.CommonFunction).GetConfigNode1("execBarExecNum_User",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+	s:execBarExecNum="" execBarExecNum=##class(DHCDoc.DHCDocConfig.CommonFunction).GetConfigNode1("execBarExecNum_Group",%session.Get("LOGON.GROUPID"))
+	;CA:数字签名加载JS  ---START---
+	s CAInit=0
+	i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+	.s CAInit=1
+	.d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+	;得到CA认证的XML信息串
+	s GetOEORIItemXMLMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
+	;插入CA认证后的信息串
+	s InsertCASignInfoMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
+	;------END-----
+	
+	/*s isNurseLogin = ##class(web.DHCDocMain).isNurseLogin()
+	if (isNurseLogin=1){
+		s additional=1
+	}else{
+		s additional=0
+	}*/
+	s additional=1
+	;出院带药医嘱
+ 	s OutOrderPriorRowid=$O(^OECPR(0,"Code","OUT",0))
+ 	;长期医嘱
+	s LongOrderPriorRowid=$O(^OECPR(0,"Code","S",0))
+	;临时医嘱
+	s ShortOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+
+	s OrderColorHTML=##class(web.DHCDocInPatPortalCommon).GetOrderColorHTML()
+	
+	///与选中病人相关的变量集
+	s EpisPatInfo=##Class(web.DHCDocViewDataInit).InitPatOrderViewNurse(EpisodeID)
+	
+</Server>
+</head>
+ 
+<body>
+    <csp:Include Page="ipdoc.patorderviewnurse.show.csp">
+	<SCRIPT language = 'javascript' >
+		var EpisPatInfo=("(#(EpisPatInfo)#)");
+		//全局请求后台服务对象
+		var ServerObj={
+			PageShowFromWay:"#(PageShowFromWay)#",
+			CurrentDate:"#(CurrentDate)#",
+			NextDate:"#(NextDate)#",
+			DateFormat:"#(DateFormat)#",
+			orderRightMenuJson:"",
+			orderSOSRightMenuJson:"",
+			execMenuJson:"",
+			execSOSMenuJson:"",
+			OrdReSubCatListJson:"#(OrdReSubCatListJson)#",
+			IntervalTimeListJson:"#(IntervalTimeListJson)#",
+			OECStatusChReasonJson:"#(OECStatusChReasonJson)#",
+			par_win:"",
+			additional :"#(additional)#",
+			OutOrderPriorRowid:"#(OutOrderPriorRowid)#",
+			LongOrderPriorRowid:"#(LongOrderPriorRowid)#",
+			ShortOrderPriorRowid:"#(ShortOrderPriorRowid)#",
+			DefaultOrderPriorType:"#(DefaultOrderPriorType)#",
+			//CA:-------------------start 数字签名-----------------
+		   	CAInit:"#(CAInit)#",
+			GetOEORIItemXMLMethod:"#(GetOEORIItemXMLMethod)#",
+			InsertCASignInfoMethod:"#(InsertCASignInfoMethod)#",
+			strServerRan:"#($g(%session.Data("ServerRan")))#",
+			strServerCert:"#($g(%session.Data("ServerCert")))#",
+			strServerSignedData:"#($g(%session.Data("ServerSignedData")))#",
+			IsCAWin:"",
+			//-------------------------------
+			ViewOrderSortData:eval("(#(ViewOrderSortJson)#)"),
+			ViewLocDescData:eval("(#(ViewLocDescJson)#)"),
+			ViewScopeDescData:eval("(#(ViewScopeDescJson)#)"),
+			ViewNurderBillData:eval("(#(ViewNurderBillJson)#)"),
+			
+			OrderViewScrollView:"#(OrderViewScrollView)#",
+			execBarExecNum:"#(execBarExecNum)#"
+		};
+		
+		
+		function GetList_pnp(){
+		   var strTemp =GetUserList();
+		   if (strTemp!="") ServerObj.IsCAWin=strTemp;
+		   else ServerObj.IsCAWin="";
+		}
+		if(ServerObj.CAInit==1) GetList_pnp();
+		//页面加载完之后在复制，防止事件未定义导致报错
+		$(function(){
+		   ServerObj.orderRightMenuJson="#(orderMenuJson)#"
+		   ServerObj.orderSOSRightMenuJson="#(menujsonSOS)#"
+		   ServerObj.execMenuJson="#(execMenuJson)#"
+		   ServerObj.execSOSMenuJson="#(execSOSMenuJson)#"
+		   //初始化页面
+		   ipdoc.patord.view.InitInPatOrd();
+		   
+		});
+	</SCRIPT>
+	<script src="../scripts_lib/popover1.2.17/jquery.webui-popover.min.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<!-- this page js -->
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatOrderViewNurse.js"></script>
+</body>
+</html>

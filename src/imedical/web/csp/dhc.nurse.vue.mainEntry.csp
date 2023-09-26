@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>nurse-vue</title>
+        
+                <link rel="stylesheet" type="text/css" href="../scripts/nurse/nurse station/lib/element.css">
+                
+		
+			
+		
+			<script language="javascript">
+				var _WEBPACKTEST=false;
+			</script>
+		
+<link href="../scripts/nurse/nurse station/css/mainEntry.8fe015940148d6e8717aa273aa150ceb.css" rel="stylesheet"></head>
+
+
+<body>
+	
+		
+	
+		<script language="cache" runat="SERVER">
+			s ViewName = $G(%request.Data("ViewName", 1))
+			s EpisodeID = $G(%request.Data("EpisodeID", 1))
+			s ECPIP = ##class(ext.util.String).ServerIP() //Cache2010
+			s WebIP = ""
+			s flag = ##class(web.DHCDischargeHistory).ifNewBaby(EpisodeID)
+			s nurSetID = $O(^Nur.DHCMGNurseSetD(""))
+			;i nurSetID'="" s WebIP = $ListGet(^Nur.DHCMGNurseSetD(nurSetID), 3)
+			i nurSetID'="" d
+			.s WebIP = $ListGet(^Nur.DHCMGNurseSetD(nurSetID), 3)
+			.s printCommDllStr = "../service/dhcmg/NurseExcute/NurseExcutePrint.cab"
+			.s tempCommDllStr = "../service/dhcmg/Temperature/Temperature.cab" //WebIP_"/dhcmg/Temperature.dll#Temperature.patlistTemWindow"
+			.i (ViewName["Order")!(ViewName["Bed") d
+			..w "<OBJECT id=""DHCCNursePrintComm""  style=""display:none"" classid=""clsid:02491FBE-B39D-454F-8746-BE0E34FA0E53"" codebase="""_printCommDllStr_"""  VIEWASTEXT></OBJECT>"
+			.i ViewName["Temp" d
+			..w "<OBJECT id=""Temperature""  style=""display:none"" classid=""clsid:2A7D95E0-F749-4C91-8C9F-0CB7DF60B6E3"" codebase="""_tempCommDllStr_""" VIEWASTEXT></OBJECT>"
+			..;s flag = 0
+				</script>
+		<script language="javascript">
+				var session = new Object();
+				session['LOGON.TIMEOUT'] = "#($g(%session.Data("LOGON.TIMEOUT")))#";
+				session['LOGON.SITECODE'] = "#($g(%session.Data("LOGON.SITECODE")))#";
+				session['LOGON.REGION'] = "#($g(%session.Data("LOGON.REGION")))#";
+				session['LOGON.USERID'] = "#($g(%session.Data("LOGON.USERID")))#";
+				session['LOGON.USERCODE'] = "#($g(%session.Data("LOGON.USERCODE")))#";
+				session['LOGON.USERNAME'] = "#($g(%session.Data("LOGON.USERNAME")))#";
+				session['LOGON.GROUPID'] = "#($g(%session.Data("LOGON.GROUPID")))#";
+				session['LOGON.GROUPDESC'] = "#($g(%session.Data("LOGON.GROUPDESC")))#";
+				session['LOGON.LANGID'] = "#($g(%session.Data("LOGON.LANGID")))#";
+				session['LOGON.CTLOCID'] = "#($g(%session.Data("LOGON.CTLOCID")))#";
+				session['XMONTHSSHORT'] = "#($g(%session.Data("XMONTHSSHORT")))#";
+				session['CONTEXT'] = "#($g(%session.Data("CONTEXT",1)))#";
+				session['LOGON.WARDID'] = "#($g(%session.Data("LOGON.WARDID")))#";
+				session['LOGON.HOSPID'] = "#($g(%session.Data("LOGON.HOSPID")))#";
+				session['ContainerName'] = "#($g(%session.Data("ContainerName")))#";
+				session['LOGON.WEBIP'] = "#(WebIP)#";
+		</script>
+		<script language="cache" runat="SERVER">
+				w "<script language=""javascript"">"
+				w "  session['ViewName']="""_ViewName_""";", !
+				s url = $g(%request.CgiEnvs("QUERY_STRING"))
+				d ##class(Nur.Util.Tools).parseUrl(url,.parameter)
+				w "", !
+				s name = "" f  s name = $o(parameter(name)) q:name=""  d
+				.s value = parameter(name)
+				.w "  session['"_name_"']="""_value_""";", !
+				w "</"_"script>"
+				w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' style='display:none' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+				w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' style='display:none' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+				w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' style='display:none' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+	   			d ##class(web.DHCBillPrint).InvBillPrintCLSID()
+	   			d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	   			w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+				d ##class(Nur.Util.Tools).tkMakeServerCall()				
+	   </script>				
+ 		<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+		<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+		<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+		<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.print.js"></script>
+		<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="UTF-8"></script>
+		<script language="javascript">
+				function ReadCard(){
+					var obj=document.getElementById("ReadCardTypeEncrypt");
+					if (obj){var encmeth=obj.value;}
+					if (encmeth!=""){
+						var myrtn=cspRunServerMethod(encmeth,"GetCardTypeToHUIJson","","");
+						myrtn=eval('(' + myrtn + ')');
+						for (var k=0;k<myrtn.length;k++){
+							var myoptval=myrtn[k]["id"];
+							var myEquipDR=myoptval.split("^")[14];
+							if ((myoptval.split("^")[16]=="Handle")||(myEquipDR=="")) continue;
+							var CardTypeRowId=myoptval.split("^")[0];
+							var myrtn=DHCACC_GetAccInfo(CardTypeRowId,myoptval);
+							var myary=myrtn.split("^");
+							var rtn=myary[0];
+							if ((rtn=="0")||(rtn=="-201")){
+								return myrtn;
+							}else if(rtn=="-200"){					
+								return myrtn;
+							}else if(rtn=="-1"){
+								return myrtn;
+							}
+						}
+					}else{						
+						return false;
+					}
+				}
+				
+				//ClickOnce方式
+				function TempShowClickOnce(Adm) {
+						var ServerIP = ""
+						if ("#(WebIP)#" != "") {
+								ServerIP = "#(WebIP)#";
+						}
+						var EpisodeID = Adm;
+						var WardId = session['LOGON.WARDID'];
+						var LocId = session['LOGON.CTLOCID'];
+						var httpHead=ServerIP.split('://')[0];
+						var ECPIP = httpHead+"://" + "#(ECPIP)#";
+						if (ECPIP == "") {
+								ECPIP = ServerIP;
+						}
+						var webservice = ECPIP + "/imedical/web/Nur.TemperatureInterface.cls";
+						var FilePath = ECPIP + "/dhcmg/temperature/temperatureChart.xml";
+						var flag = "#(flag)#";
+						var link = ServerIP + "/dhcmg/temperature/Temperature.application?method=ShowWindow&EpisodeID=" + EpisodeID + "&WardId=" + WardId + "&LocId=" + LocId + "&webservice=" + webservice + "&FilePath=" + FilePath + "&flag=" + flag + ""
+						//var link="http://127.0.0.1/dhcmg/DoctorOrderSheet/DHCCDoctorOrderSheet.application?episodeId=179&wardId=10&locId=4&userId=69&webIp=http://127.0.0.1" 
+						window.location.href = link;
+				}
+				//dll 方式
+				function TempShow(Adm){
+					if(checkUpgrade()){
+						var webIP=window.location.href.split('/imedical')[0]
+						var WardId=session['LOGON.WARDID'];
+						var LocId=session['LOGON.CTLOCID'];
+						var webservice=webIP+"/imedical/web/Nur.TemperatureInterface.cls";
+						var filePath=webIP+"/dhcmg/temperature/temperatureChart.xml";
+						var flag="#(flag)#";
+						Temperature.ShowWindow(Adm, WardId,LocId, flag, filePath, webservice);
+					}
+				}
+				/**
+				 * @description 检查dll更新状态
+				 */
+				function checkUpgrade() {
+					var curUrl = window.location.href;
+					var webIP = curUrl.split("imedical")[0];
+					debugger;
+					var checkUpgradeRet = Temperature.CheckUpgrade(webIP);
+					if (checkUpgradeRet == 0) {
+						alert("插件升级成功,请重启浏览器!")
+						return false;
+					}
+					else if (checkUpgradeRet == -1) {
+						alert("插件升级失败,请联系工程师!")
+						return false;
+					}
+					else {
+						return true;
+					}
+				}
+		</script>
+		
+				<div id="app">
+				</div>
+				
+						<script type="text/javascript" src="../scripts/websys.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/lib/polyfill.min.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/lib/js.cookie.min.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/lib/axios.min.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/lib/vue.min.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/lib/vuex.min.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/lib/vue-router.min.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/lib/element-ui.min.js"></script>
+						<script type="text/javascript" src="../scripts/nurse/nurse station/OrderExcute.js"></script>	
+										
+						
+
+<script type="text/javascript" src="../scripts/nurse/nurse station/js/manifest.181baf5babedd40ed00d.js"></script><script type="text/javascript" src="../scripts/nurse/nurse station/js/vendor.c4f0c5d1d9386d6d59b6.js"></script><script type="text/javascript" src="../scripts/nurse/nurse station/js/mainEntry.bf42387f4ee4c13b1d1c.js"></script></body>
+
+</html>

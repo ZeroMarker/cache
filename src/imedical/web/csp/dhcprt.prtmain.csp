@@ -1,0 +1,313 @@
+<!--qqa 2018-08-29-->
+<!--dhcem.prtmain.csp-->
+<html>
+<title>托拉拽实现HT打印测试程序</title>
+<!--DHCC LODOP的调用-->
+<script type='text/javascript' src='../scripts/websys.js'></script>
+<HISUI/>
+<script language="Cache" runat="server">
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</script>
+<head>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/css/icon.css"/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcprt/css/main.css"/>
+	
+</head>
+<body>
+<div id="cc" class="hisui-layout" data-options="fit:true">
+    <div data-options="region:'north',title:'',split:true" style="height:108px;">
+        <div class="northContent" style="overflow: hidden;">
+            <a id="p-opitm-add" class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-add',plain:true" onclick="addPage()">新建</a>  
+            <a id="p-opitm-open" class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-open',plain:true" onclick="openPage()">打开</a>  
+            <a id="p-opitm-view" class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-view',plain:true" onclick="printView()">预览</a>  
+            <a id="p-opitm-print" class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-print',plain:true" onclick="print()">打印</a>  
+            <a style="display:none" id="p-opitm-saveBak" class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-save',plain:true" onclick="saveHtml()">保存</a>  
+            <a id="p-opitm-save" class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-save',plain:true" onclick="saveHtmlNew()">保存</a>
+            <a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-delH',plain:true" onclick="deletItm()">删一行</a>  
+            <a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-addH',plain:true" onclick="addTableTr()">加一行</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-insertH',plain:true" onclick="insertTableTr()">插一行</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-splitH',plain:true" onclick="splitTd()">左右拆分</a> 
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-delL',plain:true" onclick="deletTableLine()">删一列</a> 
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-addL',plain:true" onclick="addTableLine()">加一列</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-insertL',plain:true" onclick="insertTableLine()">插一列</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-splitL',plain:true" onclick="splitLineTd()">上下拆分</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-alignTop',plain:true" onclick="alignTop()">上对齐</a>
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-alignLeft',plain:true" onclick="alignLeft()">左对齐</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-alignCenter',plain:true" onclick="alignCenter()">居中</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-alignRight',plain:true" onclick="alignRight()">右对齐</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-strik',plain:true" onclick="overstriking()">加粗</a>  
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-extend',plain:true" onclick="downExtend()">列扩展</a>
+ 			<a class="p-opitm hisui-linkbutton big" data-options="iconCls:'icon-big-book-ref',plain:true" onclick="setTableTitle()">表头</a>
+       		<div class="limitLine"></div>
+            <a href="#" class="p-opitm hisui-linkbutton" onclick="addLable()" data-options="iconCls:'prt-lable',plain:true">文本</a>
+			<a href="#" class="p-opitm hisui-linkbutton" onclick="addTable()" data-options="iconCls:'prt-table',plain:true">表格</a>
+			<a href="#" class="p-opitm hisui-linkbutton" onclick="addImg()" data-options="iconCls:'prt-logo',plain:true">Logo</a>
+			<a href="#" class="p-opitm hisui-linkbutton" onclick="addHeardDiv()" data-options="iconCls:'prt-title',plain:true">表头区</a>
+			<a href="#" class="p-opitm hisui-linkbutton" onclick="addSpan()" data-options="iconCls:'prt-bottomLable',plain:true">表尾文本</a>
+			<a href="#" class="p-opitm hisui-linkbutton" onclick="pageSet()" data-options="iconCls:'prt-bottomLable',plain:true">页面设置</a>
+			<a href="#" class="p-opitm hisui-linkbutton" onclick="testPrint()" data-options="iconCls:'prt-bottomLable',plain:true">测试</a>
+            <!-- 显示当前打开模板是哪个 -->
+            <div class="p-opitm" style="padding-top: 1px;position: relative;left: 350px;top: 5px;">
+            	<input id="p-opitm-tempRowID" style="display:none"></input>
+                <span>当前模板：</span>
+                <span>
+                	<a id="p-opitm-temp" onclick="updTemp()"></a>
+                	<a id="p-opitm-tempLine" onclick="updTemp()"></a>
+                	<a id="p-opitm-tempWidth" onclick="updTempWidth()"></a>
+                	<input id="p-opitm-tempWidthVal" style="border:none;width:40px;display:none;" onkeyup="this.value=this.value.replace(/\D/g,'')" onblur="updQueTempWidth()"/>
+                </span>
+            </div>
+           
+
+        </div>
+    </div>
+    
+    <div data-options="region:'east',title:'属性',split:true,headerCls:'panel-header-gray'" style="width:250px;">
+        <table>
+            <tr>
+                <td>元素ID</td>
+                <td><input id="p-itma-id" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>元素默认值</td>
+                <td><input id="p-itma-text" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>元素宽度</td>
+                <td><input id="p-itma-width" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>元素高度</td>
+                <td><input id="p-itma-height" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>元素X坐标</td>
+                <td><input id="p-itma-posx" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>元素Y坐标</td>
+                <td><input id="p-itma-posy" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td title="非表头元素走IE解析，表头走LODOP解析单位为Pt">字体大小</td>
+                <td><input id="p-itma-fontsize" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr style="display:none">
+                <td>字体名</td>
+                <td><input class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>向右合并</td>
+                <td><input id="p-itma-colspan" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>向下合并</td>
+                <td><input id="p-itma-rowspan" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>列扩展标识</td>
+                <td><input id="p-itma-extend" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>Margin设置</td>
+                <td><input id="p-itma-margin" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>图片链接</td>
+                <td><input id="p-itma-imgurl" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>内容格式</td>
+                <td><input id="p-itma-txttype" class="data-input combobox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>表格下移</td>
+                <td><input id="p-itma-tabbledown" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>表格边框</td>
+                <td><input id="p-itma-tabbleBorder" class="data-input textbox p-itma"/></td>
+            </tr>
+            <tr>
+                <td>最小行高</td>
+                <td><input id="p-itma-trMinHeight" class="data-input textbox p-itma"/></td>
+            </tr>
+        </table>
+    </div>
+
+
+    <div data-options="region:'center',title:''" style="background:#ccc">
+        <div onselectstart="return false;" id="p-prtArea" class="p-prtArea">
+            <div id="p-panel" class="p-panel" onselectstart="return false;"
+                 style="position:relative;display: inline-block;width:197mm;">
+            </div>
+        </div>
+        <div id="p-demoArea" style="display:none;">
+        	<textarea id="p-demoArea-text" style="width:100%;height:100%;resize:none;"></textarea>
+        </div>
+    </div>
+</div>
+
+<!--保存-->
+<div id="p-window-add" class="hisui-window" title="" data-options="iconCls:'',closed:'true',minimizable:false,maximizable:false"
+     style="width:300px;height:315px;padding:10px;">
+    <div class="hisui-layout" data-options="fit:true">
+        <div data-options="region:'center'" style="border:0px;border-bottom:1px solid #8DB2E3">
+            <table>
+                <tr>
+                    <td class="input-label" style="width:135px">模板名称:</td>
+                    <td>
+                        <input id="tempCode" class="data-input textbox hisui-validatebox" data-options="required:true" type="text"> </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-label" style="width:135px">模板描述:</td>
+                    <td>
+                        <input id="tempDesc" class="data-input textbox hisui-validatebox" data-options="required:true" type="text"> </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-label" style="width:135px">模板宽度:</td>
+                    <td>
+                        <input id="tempWidth" class="data-input textbox" type="text"> </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-label" style="width:135px">模板高度:</td>
+                    <td>
+                        <input id="tempHeight" class="data-input textbox" type="text"> </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-label" style="width:135px">模板列数:</td>
+                    <td>
+                        <input id="tempLineNum" class="data-input textbox" type="text"></input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-label" style="width:135px">模板类型:</td>
+                    <td>
+                        <input id="tempType" class="data-input combobox" type="text"> </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-label" colspan="2" style="text-align: center;">
+                    	<span id="isHasTemp" style="color:red"></span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div data-options="region:'south',border:false" style="text-align:center;padding:5px 0 0;">
+            <a href="#" class="hisui-linkbutton" iconCls="icon-ok"  onclick="saveTemp()">保存</a>
+            <a href="#" class="hisui-linkbutton" iconCls="icon-cancel" onclick="closeWin('p-window-add')">取消</a>
+        </div>
+    </div>
+</div>
+
+
+<!--打开模板-->
+<div id="p-window-open" class="hisui-window" title="打开" data-options="iconCls:'',minimizable:false,maximizable:false,closed:'true'"
+     style="width:700px;height:500px;padding:10px;">
+    <div class="hisui-layout" data-options="fit:true">
+        <div data-options="region:'center'" style="border:1px solid #CCC">
+            <table id="prtTempTable"></table>
+        </div>
+    </div>
+</div>
+
+<!--打开模板-->
+<div id="p-window-page" class="hisui-window" title="页面设置" data-options="iconCls:'',minimizable:false,maximizable:false,closed:'true'" style="width:700px;height:520px;padding:10px;">
+    <div style="height:430px;width:100%">
+	    <div class="hisui-layout" data-options="fit:true" style=""> 
+			<div data-options="region:'west',title:'',split:true,showCollapsedTitle:true" style="width:400px;border:none">
+				<div class="hisui-panel" data-options="title:'打印设置',fit:true,headerCls:'panel-header-card',iconCls:''" style="">	
+					<div style="height:15px"></div>
+					<span style="padding-left:10px" class="r-label">打印机名:</span>
+					<input type="text" id="prtHead-printerName" name="prtHead-printerName" class="textbox"/>
+					<span class="tipSpan">为空走默认</span><br/>
+					<div style="height:10px"></div>
+					<span style="padding-left:10px" class="r-label" >打印方向:</span>
+					<input type="text" id="prtHead-prtDirection" name="prtHead-prtDirection" class="textbox"/>
+					<span class="tipSpan">1:纵,2横</span><br/>
+					<div style="height:10px"></div>
+					<span style="padding-left:10px" class="r-label">打印纸张:</span>
+					<input type="text" id="prtHead-prtPageName" name="prtHead-prtPageName" class="textbox"/>
+					<span class="tipSpan">A4,A5等纸张描述</span>
+					<div style="height:10px"></div>
+					<span style="padding-left:10px" class="r-label">分页粒度:</span>
+					<input type="text" id="prtHead-pagingGranularity" name="prtHead-pagingGranularity" class="textbox"/>
+					<span class="tipSpan" title="整数，分页粒度值，默认是30(px)。所谓分页粒度，是指自动分页时在分页线附近进行的前后定位分割线的范围。如果这个范围设置太小，那么分页位置恰巧遇到较大单元格时，则找不到其前后表格线，此时控件会把td单元格切开；相反如果这个范围设置太大，那么原本想切开的大单元格会被大块地搬到下页，造成每页内容差别很大而参差不齐。">单位Px</span>
+				</div>
+			</div>  
+			<div data-options="region:'center',title:'',split:true" style="border:none">
+				<div class="hisui-panel" data-options="title:'边距设置(mm)',fit:true,headerCls:'panel-header-card',iconCls:''" >	
+					<div style="height:15px"></div>
+					<span style="padding-left:10px" class="r-label">上:</span>
+					<input type="text" id="prtHead-marginTop" name="prtHead-marginTop" class="textbox"/><br/>
+					<div style="height:10px"></div>
+					<span style="padding-left:10px" class="r-label">下:</span>
+					<input type="text" id="prtHead-marginBottom" name="prtHead-marginBottom" class="textbox"/><br/>
+					<div style="height:10px"></div>
+					<span style="padding-left:10px" class="r-label">左:</span>
+					<input type="text" id="prtHead-marginLeft" name="prtHead-marginLeft" class="textbox"/>
+					<div style="height:10px"></div>
+					<span style="padding-left:10px" class="r-label">右:</span>
+					<input type="text" id="prtHead-marginRight" name="prtHead-marginRight" class="textbox"/>
+				</div>
+			</div>  
+			<div data-options="region:'south',title:'',split:true" style="height:200px;border:none">
+				<div class="hisui-panel" data-options="title:'页眉页脚',fit:true,headerCls:'panel-header-card',iconCls:''">	
+					<div style="height:15px"></div>
+					<table id="prtHeadTable" class="prtHeadTable" style="width:100%;table-layout: fixed;" border="1">
+						<tr class="prtHeadFixed">
+							<th>文本</th>
+							<th>X坐标(mm)</th>
+							<th>Y坐标(mm)</th>
+							<th>页码解析</th>
+							<th>操作</th>
+						</tr>
+						<tr class="prtHeadFixed">
+							<td><input class="prtHead-text" name="prtHead-text"/></td>
+							<td><input class="prtHead-x" name="prtHead-x"/></td>
+							<td><input class="prtHead-y" name="prtHead-y"/></td>
+							<td><input class="prtHead-pf" name="prtHead-pf"/></td>
+							<td style="text-align: center;">
+								<a href="#" onclick="prtHeadAdd()">增加</a>
+								<a href="#" onclick="prtHeadDel()">删除</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+	    </div>
+	</div>
+	<div style="height:20px;width:100%">
+		<a style="margin-left:250px;" class="hisui-linkbutton" data-options="iconCls:'icon-save'" onclick="javascript:prtHeadSave()">保存</a>
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:prtHeadCancel()">取消</a>
+	</div>
+</div>
+
+
+<div id="toolbar" class="toolbar" style="height:50px;line-height:50px;padding-left:10px">
+	<span>模板名称</span><input style="margin-left:10px" type="text" id="queryTempCode" class="textbox"></input>
+	<span>模板描述</span><input style="margin-left:10px" type="text" id="queryTempDesc" class="textbox"></input>
+	<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="queryPrtTempTable()">查询</a>
+</div>
+<div style="position: absolute;z-index: 20;bottom: 10;right:50px;">
+	<span style="margin-left:10px;"><a href="#" onclick="viewMode()">工具视图</a></span>
+	<span style="margin-left:10px;"><a href="#" onclick="demoMode()">源码视图</a></span>
+</div>
+<div style="display: block">
+    <input id="p-prtId" value=""/> <!-- 当前打开模板的ID -->
+    <input id="p-panel-width" value=""/> <!-- 当前打开模板的宽度 -->
+    <input id="p-panel-height" value=""/> <!-- 当前打开模板的高度 -->
+</div>
+<script src="../scripts/dhcnewpro/dhcprt/itmmove.js"></script>
+<script src="../scripts/dhcnewpro/dhcprt/transpx.js"></script>
+<script src="../scripts/dhcnewpro/dhcprt/params.js"></script>
+<script src="../scripts/dhcnewpro/dhcprt/comPrint.js"></script>
+<script src="../scripts/dhcnewpro/dhcprt/main.js"></script>
+</body>
+</html>

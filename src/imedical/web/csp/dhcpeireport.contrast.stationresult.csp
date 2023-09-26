@@ -1,0 +1,224 @@
+ <!--dhcpeireport.contrast.stationresult.csp--> 	
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s (RegDate1,RegDate2,RegDate3)=""
+	f i=1:1:$l(RealPatientID,"^")
+	{
+	s IADMPAADMDR=$p(RealPatientID,"^",i)
+	s IADMRowID=$o(^DHCPEIADM(0,"PAADM",IADMPAADMDR,0))
+	q:IADMRowID=""
+	
+	i i=1 s RegDate1=$p(^DHCPEIADM(IADMRowID),"^",5)
+	i i=2 s RegDate2=$p(^DHCPEIADM(IADMRowID),"^",5)
+	i i=3 s RegDate3=$p(^DHCPEIADM(IADMRowID),"^",5)
+	
+	
+	
+	}
+	i RegDate1'="" s RegDate1=$zd(RegDate1,3)
+	i RegDate2'="" s RegDate2=$zd(RegDate2,3)
+	i RegDate3'="" s RegDate3=$zd(RegDate3,3)
+	
+	s TLoopNum=##Class(web.DHCPE.ResultContrast).GetRegDateLoopNumSL(RealPatientID)    //得到日期循环次数的global
+	i TLoopNum=3 s width="width:30%;"
+	i TLoopNum=2 s width="width:40%;"
+	
+	</SCRIPT>
+			
+			<TABLE width=655 border=0 cellspacing=0>
+				<THEAD style="display:table-header-group">
+				<TR>
+					<TD width="22%" height="20" class="NORResultTtile NORResultTtileTestName">项目</TD>
+					
+					<CSP:IF CONDITION=(""'=RegDate1)>
+					<TD width="26%" class="NORResultTtile NORResultTtileTestValue">#(RegDate1)#</TD>
+					</CSP:IF>
+					<CSP:IF CONDITION=(""'=RegDate2)>
+					<TD width="26%" class="NORResultTtile NORResultTtileTestValue">#(RegDate2)#</TD>
+					</CSP:IF>
+					<CSP:IF CONDITION=(""'=RegDate3)>
+					<TD width="26%" class="NORResultTtile NORResultTtileTestValue">#(RegDate3)#</TD>
+					</CSP:IF>
+					
+					
+				</TR>
+				</THEAD>
+			
+			<TBODY>
+				
+	
+		<SCRIPT language="Cache" RUNAT="SERVER">
+	
+	
+	
+	s Station=0
+	f  s Station=$o(^TMPResultContrast(RealPatientID,"Result","ODData",Station)) q:Station=""  d
+	.s ArcimId=0
+	.f  s ArcimId=$o(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId)) q:ArcimId=""  d
+	..s ARCIMSubScript=$p(ArcimId,"||",1)	//ARCIM_Desc 医嘱名称 Arc_ItmMast
+	..s ARCIMVersion=$p(ArcimId,"||",2)
+	..s ARCIMCode=$p($g(^ARCIM(ARCIMSubScript,ARCIMVersion,1)),"^",1)
+	..s ARCIMDesc=$p($g(^ARCIM(ARCIMSubScript,ARCIMVersion,1)),"^",2)
+	..i $g(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId))'=1 d
+	...w "<tr><td height=20>"_" "_"</td></tr>",!
+	...w "<tr><td bgcolor='#97FFFF' colSpan=4><b><font size=3>"_ARCIMDesc_"<font></b></td></tr>",!
+	..s ODDr=0,iLoop=0
+	..f  s ODDr=$o(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr)) q:ODDr=""  d
+	
+	...s ADMRowId=0,NoPrintFlagnNewStr="",RealStr="",NoPrintFlagnNew=""
+	...f  s ADMRowId=$o(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr,ADMRowId)) q:ADMRowId=""  d
+	....s CurData=$g(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr,ADMRowId))
+	....s OEORDId=$P(CurData,"^",8)
+	....
+	....s NoPrintFlagnNew=$g(^TMPResultContrast(RealPatientID,"DHCPERIS","NotPrint",OEORDId))
+	
+	....s NoPrintFlagnNewStr=NoPrintFlagnNewStr_NoPrintFlagnNew
+	....s RealStr=RealStr_"Y"
+	
+	...q:RealStr=NoPrintFlagnNewStr
+	
+	...;s OEORDId=$p($g(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr)),"^",3)
+	...;s NoPrintFlagnNew=$g(^TMPResultContrast(RealPatientID,"DHCPERIS","NotPrint",OEORDId))
+	...;q:NoPrintFlagnNew="Y"
+	
+	...s ADMRowId=0,ResultFlag=0
+	...f  s ADMRowId=$o(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr,ADMRowId)) q:ADMRowId=""  d
+	....s CurData=$g(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr,ADMRowId))
+	....s Result=$P(CurData,"^",2)
+	....
+	....i Result'="" s ResultFlag=1
+	...q:ResultFlag=0
+	
+	...s RealOD=$p($g(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr)),"^",4)
+	...s STRowId=$p(RealOD,"||",1)			//站点编码
+	...s ODChildSub=$p(RealOD,"||",2)		//项目编码
+	...s ODDesc=$p($G(^DHCPEST(STRowId,"OD",ODChildSub)),"^",1)
+	...q:ODDesc=""
+	...s RealDesc=ODDesc
+	...i ODDesc["检查结果" d
+	....w "<tr><td height=20>"_" "_"</td></tr>",!
+	....s ODDesc=$p($g(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr)),"^",1)
+	....w "<tr><td bgcolor='#97FFFF' colSpan=4><b><font size=3>"_ODDesc_"<font></b></td></tr>",!
+	....s RealDesc="检查结果"
+	...i iLoop#2=1 w "<tr bgcolor='#FAFAD2'>",!
+	...e  w "<tr>",!
+	...s iLoop=iLoop+1
+	...w "<td class='NORResult NORResultTestName'><b>"_RealDesc_"</b></td>",!
+	
+	
+	...s ADMRowId=0,CurrenLoopNum=0
+	...f  s ADMRowId=$o(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr,ADMRowId)) q:ADMRowId=""  d
+	....s CurData=$g(^TMPResultContrast(RealPatientID,"Result","ODData",Station,ArcimId,ODDr,ADMRowId))
+	....s OEORDId=$P(CurData,"^",8)
+	....s NoPrintFlagnNew=$g(^TMPResultContrast(RealPatientID,"DHCPERIS","NotPrint",OEORDId))
+	....q:NoPrintFlagnNew="Y"
+	....s Result=$P(CurData,"^",2)
+	....i Result="" s Result=" "
+	....s Result=##class(web.DHCPE.Public.Setting).Replace(Result,"临床诊断:;","")
+	....s Result=##class(web.DHCPE.Public.Setting).Replace(Result,"检查所见","<br><b>检查所见</b>")
+	....s Result=##class(web.DHCPE.Public.Setting).Replace(Result,";诊断意见","<br><b>诊断意见</b>")
+	....s Standard=$P(CurData,"^",4)
+	....s Normal=$P(CurData,"^",5) 
+	....s ODUnit=$P(CurData,"^",6) 
+	....s TSInfo=$P(CurData,"^",7)
+	
+	
+	....s tmpNum=0,CurrentmpNum=0
+	....s LoopNum=0
+	....f  s LoopNum=$o(^TMPRegDateLoopNum(RealPatientID,LoopNum)) q:LoopNum=""  d
+	.....if ^TMPRegDateLoopNum(RealPatientID,LoopNum)=ADMRowId s CurrentmpNum=LoopNum
+	....s tmpNum=CurrentmpNum-CurrenLoopNum 
+	....f i=1:1:tmpNum  d
+	.....w "<td class='NORResult NORResultTestName'>"_" "_"</td>",!
+	.....s CurrenLoopNum=CurrenLoopNum+1
+	....s CurrenLoopNum=CurrenLoopNum+1
+	....
+	
+	
+	
+	....w "<td class='NORResult NORResultTestName'>"_Result_" "_TSInfo_"</td>",!
+	...f i=1:1:(TLoopNum-CurrenLoopNum)  d
+	....w "<td class='NORResult NORResultTestName'>"_" "_"</td>",!
+	
+	...w "</tr>",!
+	
+	
+	
+	
+	
+	
+	
+	s Station=0
+	f  s Station=$o(^TMPResultContrast(RealPatientID,"Result","LisData",Station)) q:Station=""  d
+	.w "<tr><td height=20>"_" "_"</td></tr>",!
+	.w "<tr><td bgcolor='#97FFFF' colSpan=4><b><font size=3>化验检查<font></b></td></tr>",!
+	.s ODDr=0
+	.f  s ODDr=$o(^TMPResultContrast(RealPatientID,"Result","LisData",Station,ODDr)) q:ODDr=""  d
+	..s OEORDId=$p($g(^TMPResultContrast(RealPatientID,"Result","LisData",Station,ODDr)),"^",3)
+	..s NoPrintFlagnNew=$g(^TMPResultContrast(RealPatientID,"DHCPERIS","NotPrint",OEORDId))
+	..q:NoPrintFlagnNew="Y"
+	
+	..s ADMRowId=0,ResultFlag=0
+	..f  s ADMRowId=$o(^TMPResultContrast(RealPatientID,"Result","LisData",Station,ODDr,ADMRowId)) q:ADMRowId=""  d
+	...s CurData=$g(^TMPResultContrast(RealPatientID,"Result","LisData",Station,ODDr,ADMRowId))
+	...s Result=$P(CurData,"^",2)
+	...
+	...i Result'="" s ResultFlag=1
+	..q:ResultFlag=0
+	
+	..
+	..s STRowId=$p(ODDr,"||",1)			//站点编码
+	..s ODChildSub=$p(ODDr,"||",2)		//项目编码
+	..s ODDesc=$p($G(^DHCPEST(STRowId,"OD",ODChildSub)),"^",1)
+	..q:ODDesc=""
+
+	..
+	..
+	..s ODDesc=ODDesc_" ["_$p($g(^TMPResultContrast(RealPatientID,"Result","LisData",Station,ODDr)),"^",2)_"]"
+	..
+	..w "<tr>",!
+	..w "<td class='NORResult NORResultTestName'><b>"_ODDesc_"</b></td>",!
+	
+	
+	..s ADMRowId=0,CurrenLoopNum=0
+	..f  s ADMRowId=$o(^TMPResultContrast(RealPatientID,"Result","LisData",Station,ODDr,ADMRowId)) q:ADMRowId=""  d
+	...s CurData=$g(^TMPResultContrast(RealPatientID,"Result","LisData",Station,ODDr,ADMRowId))
+	...s Result=$P(CurData,"^",2)
+	...i Result="" s Result=" "
+
+	
+	...s Standard=$P(CurData,"^",4)
+	...s Normal=$P(CurData,"^",5) 
+	...s ODUnit=$P(CurData,"^",6) 
+	...s TSInfo=$P(CurData,"^",7)
+	
+	
+	...s tmpNum=0,CurrentmpNum=0
+	...s LoopNum=0
+	...f  s LoopNum=$o(^TMPRegDateLoopNum(RealPatientID,LoopNum)) q:LoopNum=""  d
+	....if ^TMPRegDateLoopNum(RealPatientID,LoopNum)=ADMRowId s CurrentmpNum=LoopNum
+	...s tmpNum=CurrentmpNum-CurrenLoopNum 
+	...f i=1:1:tmpNum  d
+	....w "<td class='NORResult NORResultTestName'>"_" "_"</td>",!
+	....s CurrenLoopNum=CurrenLoopNum+1
+	...s CurrenLoopNum=CurrenLoopNum+1
+	...
+	
+	
+	
+	...w "<td class='NORResult NORResultTestName'>"_Result_" "_TSInfo_"</td>",!
+	..f i=1:1:(TLoopNum-CurrenLoopNum)  d
+	...w "<td class='NORResult NORResultTestName'>"_" "_"</td>",!
+	
+	..w "</tr>",!
+	
+	
+	
+	
+	
+		
+		</Script>
+	
+	
+         </TBODY>
+			
+		</TABLE>

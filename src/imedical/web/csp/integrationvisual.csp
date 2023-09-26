@@ -1,0 +1,112 @@
+<csp:content charset="utf-8">
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+ //如果未登陆或session失效则退出
+ i ##Class(ext.websys.SessionEvents).SessionExpired()
+ { 
+ 	q 1
+ }
+ //根据用户ID和时间线ID获取显示设置
+ set userId = $Get(%session.Data("LOGON.USERID",1))
+ s timeLineId = $g(%request.Data("timeLineId",1))
+ if (timeLineId ="")
+ {
+	 set timeLineId = "AdmView"
+ }
+ set configSettingName = userId_timeLineId
+ set searchCode = $g(%request.Data("queryCode",1))
+ if searchCode '= ""
+ {
+	 set ^userTimeLineConfig(configSettingName) = searchCode
+ }
+ else
+ {
+ 	set searchCode = $g(^userTimeLineConfig(configSettingName))
+	if searchCode = ""
+ 	{
+	 	set searchCode = $g(^userTimeLineConfig(userId_"queryCode"))
+		s ^userTimeLineConfig(configSettingName) = searchCode
+ 	}
+ }
+ set settingFlg = $g(%request.Data("SettingFlg",1))
+  //显示设置不存在则跳转到显示设置页面
+ if ((searchCode = "") || (settingFlg ="1"))
+ {
+	Set %session.Data("timeLineId",1)= timeLineId
+ 	s %response.ServerSideRedirect="TimeLine/viewconfig.csp"
+ }
+ quit 1
+</CSP:METHOD>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<title>集成视图</title>
+	<script src="../scripts/websys.js" type="text/javascript"></script>
+	<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+    <link rel="stylesheet" type="text/css" href="../skin/TimeLine/Visual.css"/>
+    <script src="../scripts/TimeLine/Visual.js" type="text/javascript"></script>
+    <script src="../scripts/TimeLine/CommonMethod.js" type="text/javascript"></script>
+    <script src="../scripts/framework/CommonChart.js" type="text/javascript"></script>
+    <script src="../scripts/framework/CommonLine.js" type="text/javascript"></script>
+	<script language="Cache" runat="server">
+		//获取查询参数
+		s searchCode=$g(%request.Data("queryCode",1))
+    	s episodeId = $g(%request.Data("EpisodeID",1))
+    	s timeLineId = $g(%request.Data("timeLineId",1))
+    	s patientID = $g(%request.Data("PatientID",1))
+    	if (timeLineId ="")
+    	{
+	    	set timeLineId = "AdmView"
+    	}
+    	if (episodeId = "")
+    	{
+	    	quit
+    	}
+    	//生成数据
+    	s sc=##class(icare.TimeLineView).GenerateData(episodeId)
+    	//获取查询code
+    	if (searchCode = "")
+    	{
+	    	 set userId = %session.Get("LOGON.USERID")
+ 			 set configSettingName = userId_timeLineId
+	    	 set searchCode = $g(^userTimeLineConfig(configSettingName))
+    	}
+    	if (searchCode = "")
+    	{
+	    	s searchCode = ##Class(icare.TimeLineView).GetTimeLineConfig(timeLineId,"")
+    	}
+    	else
+    	{
+	    	s searchCode = ##Class(icare.TimeLineView).GetTimeLineConfig(timeLineId,searchCode)
+    	}
+	    //输出查询数据
+    	Write "<script type='text/javascript' language='javascript'>",!
+    	write "var queryCode = '"_searchCode_"';",!
+    		
+    	write "var episodeId = '"_episodeId_"';",!
+    	write "var patientID = '"_patientID_"';",!
+    	s dateNow = $H
+    	write "var DateNowServer = '"_$ZDATE(dateNow,3)_"';",!
+    		
+    	if (searchCode '= "")
+    	{
+	    	write "var ClinicalData = "
+	    	s sc=##class(icare.TimeLineView).GetDisplayInfor(searchCode,episodeId,"")
+    		write ";",!
+    	}
+    	write "var queryDate = ClinicalData.searchDate;",!
+    		
+    	s sc=##class(icare.TimeLineView).GetSeeDocDateList(patientID)
+    	//为把检查与检验执行状态变化转成图形化 wanghc
+    	Write "var DataTypeActCfg = ['0401','0501','2001'];",!
+	    //Write !,"DataTypeActCfg['0401'] = "_##class(icare.DataTypeActConfig).GetRISAllActCode(83)_";",!
+    	Write "DataTypeActCfg['0501'] = "_##class(icare.DataTypeActConfig).GetDataTypeActJson("0501")_";",!
+    	Write "DataTypeActCfg['2001'] = "_##class(icare.DataTypeActConfig).GetDataTypeActJson("2001")_";",!
+		Write "DataTypeActCfg['2101'] = "_##class(icare.DataTypeActConfig).GetDataTypeActJson("2101")_";",!
+    	Write "<"_"/script>"
+   </script>
+</head>
+<body id="bdVisual" style="background-color:#DFE8F6;width:100%;" onclick="HiddenMenu();" >
+		<div id="divHeader" style="padding-left:0px;width:1270px;"></div>
+	    <div id="divMenu" class="csMenu" style="display:none;" onclick="GenerateData();">生成数据</div>
+</body>
+</html>

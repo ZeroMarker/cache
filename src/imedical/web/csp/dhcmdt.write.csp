@@ -1,0 +1,206 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcmdt.write  mdt会诊申请 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+	<script language="Cache" runat="server">
+		d ##class(web.DHCXMLPConfig).LODOPInit()
+	</script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<!-------------------------------->
+	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcmdt/css/write.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/readcardcom.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/log.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/plugins/easyui/validator.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/print.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/write.js"></script>
+	<!-- 会诊配置 -->
+	<server>
+	  d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+      d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+	  s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+	  s GetCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+	  s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+	  
+	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  /// 是否有疑难病会诊中心
+	  s HasCenter=##Class(web.DHCMDTCom).GetEmSysConfig("HASCENTER",LgHospID)
+	  /// 是否默认打印诊间预约单
+	  s LocAppPriFlag=##Class(web.DHCMDTCom).GetEmSysConfig("LOCAPPPRIFLAG",LgHospID)
+	  /// 是否默认打印知情同意书
+	  s TakArgPriFlag=##Class(web.DHCMDTCom).GetEmSysConfig("TAKARGPRIFLAG",LgHospID)
+	  /// 添加组内科室是否采用方式
+	  s TakGrpLocModel=##Class(web.DHCMDTCom).GetEmSysConfig("TAKLOCMODEL",LgHospID)
+	  /// 发送提示消息
+	  s sendTipMsg=##Class(web.DHCMDTCom).GetDicItem("SEND",LgHospID)
+	  /// 会诊专家控制
+	  s memControlFlag=##Class(web.DHCMDTCom).GetEmSysConfig("MENCONTROL",LgHospID)
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var HasCenter = """_$g(HasCenter)_""";"_$c(13,10)
+	  w "var LocAppPriFlag = """_$g(LocAppPriFlag)_""";"_$c(13,10)
+	  w "var TakArgPriFlag = """_$g(TakArgPriFlag)_""";"_$c(13,10)
+	  w "var sendTipMsg = """_$g(sendTipMsg)_""";"_$c(13,10)
+	  w "var TakGrpLocModel="""_$g(TakGrpLocModel)_""";"_$c(13,10)
+	  w "var memControlFlag="""_$g(memControlFlag)_""";"_$c(13,10)
+	  w "</script>"
+	</server>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',border:true,title:'',headerCls:'panel-header-gray',collapsible:false" style="overflow:hidden;border:0">
+			<!-- 申请单内容区 -->
+			<div class="container">
+				<!-- 申请单按钮区 -->
+				<div id="OpBtns" class="p-toolbar">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="mdtSave()" id="bt_save">保存</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="mdtSend()" id="bt_send">发送</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true" onclick="PatHisCst()">历次会诊</a>
+					<server>
+					   i HasCenter=0 d
+					   .w "<a href='#' class='hisui-linkbutton' data-options='iconCls:""icon-print"",plain:true' onclick='PrintZQTYS()' id='bt_print'>知情同意书</a>"
+					   .w "<a href='#' class='hisui-linkbutton' data-options='iconCls:""icon-print"",plain:true' onclick='PrintZJYYD()' id='bt_printM'>诊间预约单</a>"
+					</server>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-read-card',plain:true" onclick="readCard()" id="bt_read">读卡</a>
+				</div>
+				<!-- 申请单操作区 -->
+				<div class="p-content">
+					<div class="ph-title">
+						<span>#(..Get("多学科(MDT)会诊申请"))#</span><span class="tip"></span>
+					</div>
+					<div style="margin:10px 0px;">
+			            <label class="label-inline">#(..Get("疑难病种"))#</label>
+						<input id="mdtDisGrp" style="width:157px;"/>
+						<label class="label-inline">#(..Get("病种号别"))#</label>
+						<input id="mdtCarPrv" class="hisui-validatebox" style="width:78px;" disabled/>
+						<a href="#" id="app" class="hisui-linkbutton" data-options="iconCls:'icon-w-epr'" onclick="RsPrvWin()" style="width:88px;">#(..Get("预约"))#</a>
+						<label class="label-inline">#(..Get("预约时间"))#</label>
+						<input id="mdtPreDate" class="hisui-validatebox" style="width:100px;" disabled/>
+						<input id="mdtPreTime" class="hisui-validatebox" style="width:40px;display:none;" disabled/>
+						<input id="mdtPreTimeRange" class="hisui-validatebox" style="width:46px;" disabled/>
+						<input id="mdtMakResID" class="hisui-validatebox" style="width:100px;display:none;"/>
+		            </div>
+		            <div style="margin:15px 0px;">
+			            <label class="label-inline">#(..Get("患者姓名"))#</label>
+			            <input id="PatName" class="hisui-validatebox" style="width:150px;" disabled>
+						<label class="label-inline">#(..Get("患者性别"))#</label>
+						<input id="PatSex" class="hisui-validatebox" style="width:171px;" disabled>
+						<label class="label-inline">#(..Get("患者年龄"))#</label>
+						<input id="PatAge" class="hisui-validatebox" style="width:156px;" disabled/>
+		            </div>
+		            <div style="margin:15px 0px;">
+			            <label class="label-inline">#(..Get("病人ID"))#</label>
+			            <input id="PatNo" class="hisui-validatebox" style="width:150px;">
+						<label class="label-inline">#(..Get("患者费别"))#</label>
+						<input id="PatBill" class="hisui-validatebox" style="width:171px;" disabled/>
+		                <label class="label-inline">#(..Get("会诊地址"))#</label>
+						<input id="mdtAddr" class="hisui-validatebox" style="width:156px;" disabled>
+		            </div>
+		            <div style="margin:15px 0px;">
+			            <label class="label-inline">#(..Get("申请科室"))#</label>
+			            <input id="mdtRLoc" class="hisui-validatebox" style="width:150px;" disabled>
+						<label class="label-inline">#(..Get("申请人"))#</label>
+						<input id="mdtRUser" class="hisui-validatebox" style="width:171px" disabled>
+						<label class="label-inline" style="color:red;">#(..Get("已会诊次数"))#</label>
+						<input id="mdtTimes" class="hisui-validatebox" style="width:156px;"/>
+		            </div>
+		            <div style="margin:10px 0px;display:none">
+		            	<label class="label-inline">#(..Get("联系人"))#</label>
+						<input id="mdtUser" class="hisui-validatebox" style="width:150px;">
+						<label class="label-inline">#(..Get("联系电话"))#</label>
+						<input id="mdtTele" class="hisui-validatebox" data-options="validType:'mobile'" style="width:143px;">	
+					</div>
+					<div style="margin:10px 0px;">
+						<label class="label-inline">#(..Get("诊断"))#</label>
+						<input id="PatDiagDesc" class="hisui-validatebox" style="width:462px;" disabled>
+					</div>
+					<div style="margin:10px 0px;">
+						<label style="font-weight:bold;">#(..Get("组内科室"))#</label>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AddLocWin()" id="bt_grpaddloc">添加</a>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear',plain:true" onclick="Clear('G')" id="bt_grpcencel">清空</a>
+						<div style="min-height:90px;padding-top:5px;">
+							<table id="LocGrpList"></table>
+			            </div>
+			        </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;">#(..Get("院内科室"))#</label>
+			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="insRow()" id="bt_addloc">添加</a>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear',plain:true" onclick="Clear('I')" id="bt_cencel">清空</a>
+						<div style="min-height:90px;padding-top:5px;">
+							<table id="dgCstDetList"></table>
+			            </div>
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;color:red;"><sapn style="color:red">*</span>#(..Get("病情摘要"))#</label>
+			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="OpenEmr(1)" id="QueEmr">引用</a>
+						<div style="height:140px;padding-top:10px;">
+							<textarea id="mdtTrePro" class="textbox" style="width:100%;height:100%;resize:none;"></textarea>
+			            </div>
+		            </div>
+		            <div id="MarIndDiv" style="margin:10px 0px;display:none;">
+			            <label style="font-weight:bold;">#(..Get("会诊指征"))#</label>
+						<div style="height:140px;border:1px solid #ccc;margin:8px 0px;overflow-y:scroll">
+							<table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table"></table>
+			            </div>
+		            </div>
+		            <div style="margin:10px 0px;">
+			            <label style="font-weight:bold;color:red;"><sapn style="color:red">*</span>#(..Get("会诊目的"))#</label>
+			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="TakTemp()" id="TakTemp">选择模板</a>
+			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="SaveTemp()" id="SaveTemp">保存模板</a>
+						<div style="height:140px;padding-top:10px;">
+							<textarea id="mdtPurpose" class="textbox" style="width:100%;height:130px;resize:none;" required></textarea>
+			            </div>
+		            </div>
+		            <div id="mdtOpinion" style="margin:10px 0px;display:none">
+			            <label style="font-weight:bold;">#(..Get("会诊结论"))#</label>
+						<div style="height:260px;padding-top:10px;">
+							<textarea id="mdtOpinion" class="textbox" style="width:100%;height:100%;resize:none;"></textarea>
+			            </div>
+		            </div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- mdt会诊处理窗口 -->
+	<div id="mdtWin" style="overflow:hidden;">
+		<iframe id="mdtFrame" src="" width="100%" height="380" frameborder="0"></iframe>
+		<div id="mdtWinTools" style="text-align: right;padding-top:5px;text-align:center">
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="TakClsWin()" style="margin-left:15px">取消</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok'" onclick="TakPreTime()" style="margin-left:30px">确认</a>
+		</div>
+	</div>
+	<!--------------打印相关---------->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCIPBILL">
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		</form>
+	</div>
+	<!-------------------------------->
+	<!------------病历授权界面-------->
+	<div id="newConWin">
+		<iframe id="TabMain" scrolling="yes" width=100% height=99.5%  frameborder="0" src=""></iframe>
+	</div>
+	<!-------------------------------->
+	<input id='ReadAccExpEncrypt' type='hidden' value='#(ReadAccExpEncrypt)#'></input>
+	<input id='GetCardTypeEncrypt' type='hidden' value='#(GetCardTypeEncrypt)#'></input>
+	<input id='ReadCardTypeEncrypt' type='hidden' value='#(ReadCardTypeEncrypt)#'></input>
+</body>
+</html>
+
+
+

@@ -1,0 +1,93 @@
+<!--（移动药房）病区待摆药列表csp:dhcpha/dhcpha.inpha.mtseat.csp--> 
+<!--（移动药房）病区待摆药列表js:pharmacy/inpha/dhcpha.inpha.mtseat.js--> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<Server language="CACHE" runat="Server">
+   	s Application=%request.Application
+   </Server>
+	<TRAK:HEAD/>
+	<DHCPHARMACY:COMMONLIB/>
+	<DHCAPP:PHARBOOTSTRAP/>
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/css/seat.css" ></script>
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/skins/icheck/blues.css"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.mtseat.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.mtprintcom.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/DHCSTXMLPrint.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/dhcpha.tools.js"></script>
+    
+    <!--以下全部为触摸日期控件引用的东西-->    
+	<link href="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/css/mobiscroll.frame.css" rel="stylesheet" type="text/css"/>
+	<link href="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/css/mobiscroll.frame.android.css" rel="stylesheet" type="text/css"/>
+	<link href="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/css/mobiscroll.scroller.css" rel="stylesheet" type="text/css"/>
+	<link href="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/css/mobiscroll.scroller.android.css" rel="stylesheet" type="text/css"/> 
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/zepto.min.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.zepto.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.core.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.frame.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.frame.android.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.scroller.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.util.datetime.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.datetimebase.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.datetime.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/mobiscroll-master/js/mobiscroll.i18n.zh.js" charset="utf-8"></script>
+	<script type="text/javascript">
+		$(function(){
+			$('#startdate').mobiscroll().date({
+				theme: "android-holo-light",     
+				mode: "scroller",       
+				display: "bottom",
+				lang: "zh"        
+			});
+			
+			$('#enddate').mobiscroll().date({
+				theme: "android-holo-light",     
+				mode: "scroller",       
+				display: "bottom",
+				lang: "zh"        
+			});
+		});
+	</script>
+    
+</head>
+
+<body style="overflow-x:hidden;overflow-y:auto;">
+<div id="top" style="margin:0 0 ">
+     <div  style="height:45px;background-color:#017BCE;line-height:45px;"> 
+        <table>
+            <tr>
+                <td><span style="font-size:25px;color:#FFFFFF;font-family:Microsoft yahei;display:inline-block;width:250px;">&nbsp;&nbsp;&nbsp;住院移动药房系统</span></td>                               
+               	<td><!--<button style="background:none;border:none;text-align:center;margin-left:100px;font-size:15px;color:#FFFFFF;font-family:Microsoft yahei;" id="btn_set"><i class="glyphicon glyphicon-cog"></i>&nbsp;设置</button>--></td>
+                <td><button style="background:none;border:none;text-align:center;margin-left:100px;font-size:25px;color:#FFFFFF;font-family:Microsoft yahei;display:inline-block;width:100px;" id="btn_reset" onclick="javascript:RefreshWardSeat()"><i class="glyphicon glyphicon-refresh"></i>&nbsp;刷新</button></td> 
+
+                <td><span style="background-color:#F88C7C;margin-left:250px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+                <td><span style="margin-left:5px;font-size:25px;color:#FFFFFF;font-family:Microsoft yahei;display:inline-block;width:50px;">送药</span></td>
+                <td><span style="background-color:#64BF01;margin-left:20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+                <td><span style="margin-left:5px;font-size:25px;color:#FFFFFF;font-family:Microsoft yahei;display:inline-block;width:50px;">取药</span></td>
+                <td><span style="background-color:#582F78;margin-left:20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+                <td><span style="margin-left:5px;font-size:25px;color:#FFFFFF;font-family:Microsoft yahei;display:inline-block;width:50px;">毒麻</span></td>
+                <td><span style="background-color:#FFB400;margin-left:20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td>
+                <td><span style="margin-left:5px;font-size:25px;color:#FFFFFF;font-family:Microsoft yahei;display:inline-block;width:50px;">精神</span></td>
+                
+                <td><span style="background-color:#F36D6A;margin-left:100px;font-size:25px;color:#FFFFFF;font-family:Microsoft yahei;;display:inline-block;width:100px;height:44px;">通知备药</span></td>
+                <!--<td><span style="background-color:#F1B15F;margin-left:15px;font-size:15px;color:#FFFFFF;font-family:Microsoft yahei;">有请领单</span></td>
+                <td><span style="background-color:#AEAEAE;margin-left:30px;font-size:15px;color:#FFFFFF;font-family:Microsoft yahei;">无请领单</span></td>-->
+                <td><div id="showNowTime" style="width:550px;margin-left:100px;text-align:center;font-size:25px;color:#FFFFFF;"></div></td>               
+            </tr>    
+        </table>
+     </div>
+</div>
+<div id="lef" style="width:1920px;">
+    <!--后台从js中动态生成病区图表-->
+    <div id="lef-bottom"></div>
+</div>
+
+
+<csp:Include Page="dhcpha.inpha.mtseatset.csp">
+
+</body>
+</html>

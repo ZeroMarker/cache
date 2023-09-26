@@ -1,0 +1,334 @@
+<!-- dhcdis.request.csp -->
+<html>
+<head>
+<!--<meta http-equivmetahttp-equiv="x-ua-compatible"content="IE=7"/> -->
+<meta http-equiv="Content-Type" content="text/html;">
+<TRAK:HEAD></TRAK:HEAD>
+<script language="Cache" runat="server">
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+</script>
+<DHCAPP:EASYUI/>
+<title>配送申请</title>
+<script Language="Javascript">
+	var EpisodeID="#(%request.Get("EpisodeID"))#" //医嘱ID 
+	var locId="#(%session.Get("LOGON.CTLOCID"))#"  //科室ID
+	var LgHospID="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+	var wardId="#(%session.Get("LOGON.WARDID"))#"  //病区ID
+	var UserID="#(%session.Data("LOGON.USERID"))#"  //用户ID
+	var LocDesc="#(%session.Data("LOGON.CTLOCDESC"))#" //科室描述
+</script>
+<!--------------打印相关---------->
+<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcapp/dhcappprintcom.js"></script>
+<!--------------打印相关---------->
+<script src="../scripts/dhcnewpro/dhcdis/matdisrequest.js" charset="gb2312"></script>
+<link rel="stylesheet" href="../scripts/dhcnewpro/plugins/font-awesome/font-awesome.min.css"/>
+<style>
+/*#List > div{min-width:224px!important}*/
+#List .datagrid-row-selected{background-color:#D2EAFE}
+#List .panel-tool{right:25px}
+#List-test{
+	 SCROLLBAR-FACE-COLOR:#288BDB;
+	 SCROLLBAR-HIGHLIGHT-COLOR:#288BDB;
+	 SCROLLBAR-SHADOW-COLOR:#288BDB;
+	 SCROLLBAR-3DLIGHT-COLOR:#288BDB;
+	 SCROLLBAR-ARROW-COLOR:#288BDB;
+	 SCROLLBAR-TRACK-COLOR:#288BDB;
+	 SCROLLBAR-DARKSHADOW-COLOR:#288BDB;
+	 SCROLLBAR-BASE-COLOR:#288BDB;
+	}
+/* 病人卡片 */
+.celllabel{font-family: "微软雅黑";height:30px;color:#666;padding-left:5px;padding-top:3px;margin:0;line-height:25px;} 
+.celllabel h3{color:#000;font-size:14px;font-weight:normal;padding:0;margin:0;}
+.celllabel h3 span{font-size:14px; padding-right:5px;color:#666}
+.celllabel h4{color:#999;font-size:14px;font-weight:normal;padding:0,margin:0.3em;-webkit-margin-before:0.3em;-webkit-margin-after:0.3em;margin-bottom:2px;margin-top:2px;}
+.celllabel h4 span{font-size:14px;color:#000;padding-right:5px;margin:0;margin-bottom:2px;margin-top:2px;}
+/*列表宽度*/
+/*#List>td{width:196px!important}
+/*datagrid-header样式*/
+.datagrid-header td.datagrid-header-over {
+  background: #F4F6F5;
+  cursor: default;
+}
+.datagrid-header,.datagrid-htable{
+	 background-color:#F4F6F5!important;
+}
+/*输入框START #6BB7E6*/
+.input-mini{  
+	width:100px;
+	height:30px;
+	line-height: normal;
+	font-size:14px;
+	font-family: "微软雅黑";
+	color:#555;
+	border-radius:2px;
+	backgroud-color:#FFFFFF;
+	border:1px solid #40a2de;
+	padding-left:5px;
+}
+/*输入框获得焦点边框样式 #40A2DE*/
+.input-mini:focus{
+	box-shadow: 0 0 5px #40a2de;
+	border:1px solid #A4C6FD;
+}
+/*form 区域*/
+.form-input{width:50%;float:left}
+.form-row{margin-top:4px;width:100%;float:left}
+.form-input-div{padding-left:5px}
+/*功能按钮，例如：保存*/
+.index-function-button:hover{
+	background:#dcebf9;
+}
+.index-function-button:active{
+	background:#c7ddf2;
+}
+.index-function-button-area{
+	height:106px;padding:4px 10px;
+}
+.index-function-button{
+	height:96px;min-width:48px;width:48px;padding:4px;text-align:center;cursor:pointer
+}
+.btn{
+		height:30px;
+		background-color:#40A2DE;
+		color:#fff;
+		border: solid 1px #40A2DE;
+		cursor: pointer; 	 
+	 }
+	 
+	 .btn:hover{
+		background-color:#4169E1;	 
+	}
+.admname{  
+	width:130px;
+	height:30px;
+	line-height: normal;
+	font-size:14px;
+	font-family: "微软雅黑";
+	color:#555;
+	border-radius:2px;
+	backgroud-color:#FFFFFF;
+	border:1px solid #40a2de;
+	padding-left:2px;
+}
+.admsearch{
+		height:20px;
+		background-color:#40a2de;
+		color:#fff;
+		border: solid 1px #40a2de;
+		cursor: pointer; 	 
+	 }
+	 
+	 .btn:hover{
+		background-color:#4169E1;	 
+	}
+.save{
+		height:30px;
+		background-color:#40A2DE;
+		color:#fff;
+		border: solid 1px #40A2DE;
+		cursor: pointer;
+	}
+</style>
+</head>
+<body>
+<input type="hidden" id="EpisodeID">
+<input type="hidden" id="BedId">
+<div class="easyui-layout" fit="true">   
+    <div data-options="region:'north'" style="height:25px">
+		<div class="panel" style="padding-top:4px;padding-left:15px;min-height:22px;color:#fff;background-color:#38AAFF;">
+			<img src="../scripts/dhcnewpro/images/dhcdis-request.png" alt="request"/><span style="position:absolute;left:30px;top:5px;">&nbsp;&nbsp;配送申请</span>
+		</div>
+    </div>	
+	<div data-options="region:'center'" title="配送申请" >
+		<div class="easyui-layout" fit="true">
+			<div data-options="region:'north',title:''" style='height:100px;'>
+				<form id="detail">	
+					<table style="margin-top:8px">
+						<tr>
+							<td style="padding-left:15px"><span>配送类型</span> 	
+								<input style="max-width:110px;height:30px" class="easyui-combobox" type="text" data-options="required:true,panelHeight:'auto'"  id="disType">
+							</td>
+							<td style="padding-left:40px"><span>配送时间</span> 	
+								<input style="max-width:110px;height:30px;margin-left:10px;" class="easyui-datetimebox" type="text" data-options="required:true" id="exeDate">
+							</td>
+							<td>
+								<button onclick="javascript:save(1)" type="button"  class="btn" style="min-width:65px;margin-left:25px">保存</button>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding-left:15px"><span>备&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注</span> 	
+								<input style="width:110px;margin-left:4px;" id="remark" class="input-mini"></input>
+							</td>
+							<td style="padding-left:40px"><span>是否加急</span> 	
+								<input id="urgent" type="checkbox" name="urgentFlag" value="0"></input>
+							</td>
+							<td>
+								<button onclick="javascript:clearForm()" type="button"  class="btn" style="min-width:65px;margin-left:25px">清空</button>
+							</td>
+						</tr>
+					</table>
+				</form>	
+			</div>
+			<div data-options="region:'center'" title="" style="border:none;height:83%;width:100%;padding-top:0px">
+				<div id="toolbar" class="datagrid-toolbar">
+					<table cellspacing="0" cellpadding="0">
+				   		<tr>
+				     	 	<td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >增加</a> </td>
+				      		<td><div class="datagrid-btn-separator"> </div> </td>
+				      		<td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:deleteRow()">删除</a> </td>
+				   	  		<td><div class="datagrid-btn-separator"> </div> </td>
+				     	</tr>
+					</table>
+				</div>
+				<table id="datagrid" class="easyui-datagrid" fit="true" title=""
+					data-options="
+					toolbar:'#toolbar',
+			    	rownumbers:true,
+			    	method:'get',
+			   	 	fitColumns:true,
+			    	onDblClickRow:onClickRow,
+			    	singleSelect:true">
+					<thead>
+						<tr>
+							<th data-options="field:'itmid',width:100,align:'center',hidden:true,editor:{type:'validatebox'}">项目id</th>
+							<th data-options="field:'itm',width:100,align:'center',editor:{
+											type:'combogrid',
+											options:{
+													required : true,
+												    id:'itmid',
+												    fitColumns:true,
+												    fit: true,//自动大小  
+													pagination : true,
+													panelWidth:600,
+													textField:'desc',
+													mode:'remote',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISCommonDS&MethodName=DisLocItmComboGrid',
+													columns:[[
+															{field:'code',title:'代码',width:60},
+															{field:'desc',title:'名称',width:140}
+															]],
+														onSelect:function(rowIndex, rowData) {
+						                   					fillValue(rowIndex, rowData);
+						                				}		   
+													}
+											}">配送项目</th>
+							<th data-options="field:'qty',width:30,editor:{type:'validatebox',options:{required:true}}">数量</th>
+							<th data-options="field:'loc',width:100,align:'center',
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													mode:'remote',
+													url:'',
+													required:true,
+													onSelect:function(option) {
+						                   					fillLocValue(option);
+						                			}
+												}
+											}">接收科室</th>
+							<th data-options="field:'locid',width:100,hidden:true,editor:{type:'validatebox'}">科室id</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	<!-- 申请确认 -->
+	<div data-options="region:'east',title:'申请确认',split:true" style='width:820px;'>
+		<div class="easyui-layout" fit="true">
+			<div data-options="region:'north'" style="border-left:1px solid #42A5F5;height:100px;">
+				<table style="margin-top:7px">
+					<tr>
+						<td style="padding-left:20px"><span>开始日期</span> 	
+		        			<input id="StrDate" type="text" class="easyui-datebox" data-options="showSeconds:false,editable:false" style="max-width:110px;height:30px">
+		        		</td>
+						<td style="padding-left:20px"><span>申请科室</span> 	
+		        			<input id="ApplayLoc" class="easyui-combobox" style="max-width:110px;height:30px"></input >
+		        		</td>
+		        		<td style="padding-left:16px;"><span>验证码</span> 	
+		        			<input id="TaskID" type="text" class="input-mini" placeholder="请录入" style="width:110px;">
+		        		</td>
+		        		<td style="padding-left:15px;"><span>当前位置</span> 	
+							<input id="currLoca" class="easyui-combobox" style="width:110px;margin-left:5px;height:30px;"></input> 	
+						</td>
+					</tr>
+					<tr>
+						<td style="padding-left:20px"><span>截至日期</span> 	
+		       				 <input id="EndDate" type="text" class="easyui-datebox" data-options="showSeconds:false,editable:false" style="max-width:110px;height:30px">
+		       			</td>
+						<td style="padding-left:20px"><span>接收科室</span> 	
+		       				 <input id="RecLoc" class="easyui-combobox" style="max-width:110px;height:30px"></input > 
+		       			</td>
+						<td style="padding-left:15px;"><span>状&nbsp;&nbsp;&nbsp;&nbsp;态</span> 	
+							<input id="AffirmStatus" class="easyui-combobox" style="width:110px;margin-left:5px;height:30px;"></input> 	
+						</td>
+						<td>
+							<button type="button" class="btn" id="searchBtn" style="min-width:65px;margin-left:20px;">查找</button>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',title:''"  border="false">
+				<table id="cspAccompStatusTb" class="easyui-datagrid"
+	 				data-options="toolbar:'#contoolbar'"   style='height:350px;'>
+	 			</table> 
+			</div>
+			<div data-options="region:'south'"  border="false" style="height:150px;width:100%">
+	  			<table id="cspAccompStatusCarefulTb" class="easyui-datagrid"
+	 				data-options="toolbar:'#toolbardetail'" style='height:150px;'>
+	 			</table>
+			</div> 
+		</div>
+	</div>
+</div> 
+<div id="contoolbar" class="toolbar">
+	 <table cellspacing="0" cellpadding="0" >
+	 	<tr>
+		 	<td align="center"style="width:100px;color:#38AAFF">申请单列表</td>
+		 	<!-- <td><a id="verifiBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" >出科确认</a></td><td>
+		 	<td><div class="datagrid-btn-separator"> </div><td>
+		 	<td><a id="GetGoods" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" >接收</a><td>-->
+			<td><div class="datagrid-btn-separator"> </div><td>
+			<td><a id="complete" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" >完成</a><td>
+			<td><div class="datagrid-btn-separator"> </div><td> 
+		 	<td><a id="exeBtn" class="easyui-linkbutton" data-options="iconCls:'icon-ok',plain:true" >完成确认</a><td>
+			<td><div class="datagrid-btn-separator"> </div><td>
+			<!-- <td><a id="appraiseBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" >评价</a><td>
+			<td><div class="datagrid-btn-separator"> </div><td> -->
+			<td><a id="particulars" class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" >详情</a><td>
+			<td><div class="datagrid-btn-separator"> </div><td>
+			<td><a id="undoBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" >撤销申请</a><td>
+			<td><div class="datagrid-btn-separator"> </div><td>
+			<!-- <td><a id="unfiniBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" >未完成</a><td>
+			<td><div class="datagrid-btn-separator"> </div><td> -->
+			<td><a id="printbarcode" class="easyui-linkbutton" data-options="iconCls:'icon-print',plain:true" >打印条码</a><td>
+			<td><div class="datagrid-btn-separator"> </div><td>
+		</tr>
+	</table>
+</div>
+<div id="toolbardetail" class="toolbar">
+	<table cellspacing="0" cellpadding="0" >
+ 		<tr height="20px">
+ 			<td align="center"style="width:100px;color:#38AAFF">申请单明细列表</td>
+ 		</tr>
+	</table>
+</div>
+<!-- 出科确认弹窗 -->
+<div id="confirmwin">
+	<div style="margin:20px 0px 0px 95px;"><span>请输入您的工号：</span></div>
+	<div><input id="givenconfirm" style="width:50%;border:1px solid #95B8E7;margin:10px 0px 0px 75px;" placeholder='请输入用户名' /></div>
+	<div style="margin:20px 0px 0px 105px;"><a href="#" class="easyui-linkbutton" onclick="javascript:afterconfirm();">出科确认</a></div>
+</div>
+<!--------------打印相关---------->
+<div id="hiddenEncrypt" style="width:0;height:0;">
+	<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+	</form>
+</div>
+<!-------------------------------->
+</body>
+</html>
+

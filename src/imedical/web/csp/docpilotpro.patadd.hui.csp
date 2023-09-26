@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--docpilotpro.patadd.hui.csp HISUI临床试验入组--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header{
+	border-bottom:0;
+}
+</style>
+<Server>
+s EpisodeID=%request.Get("EpisodeID")
+s PatientID=%request.Get("PatientID")
+s sysDateFormat=##class("websys.Conversions").DateFormat()
+s InitProPatEntity=##class(web.PilotProject.DHCDocPilotProCommon).GetClassPropertyList("web.PilotProject.PPA.DHCDocPilotProPat")
+s HealthCareProviderDr="",HealthCareProvider=""
+s rtn=##class(web.PilotProject.DHCDocPilotProPat).GetHealthCareProviderByDoc()
+if (rtn'=""){
+	s HealthCareProviderDr=$p(rtn,"^",1)
+	s HealthCareProvider=$p(rtn,"^",2)
+}
+w "<input id='EpisodeID' name='EpisodeID' type='hidden' value='"_EpisodeID_"'>",$C(13,10)
+w "<input id='PatientID' name='PatientID' type='hidden' value='"_PatientID_"'>",$C(13,10)
+w "<input id='HealthCareProviderDr' name='HealthCareProviderDr' type='hidden' value='"_HealthCareProviderDr_"'>",$C(13,10)
+w "<input id='HealthCareProvider' name='HealthCareProvider' type='hidden' value='"_HealthCareProvider_"'>",$C(13,10)
+w "<input id='PPPCreateDepartmentDr' name='PPPCreateDepartmentDr' type='hidden' value='"_%session.Get("LOGON.CTLOCID")_"'>",$C(13,10)
+w "<input id='PPPCreateUserDr' name='PPPCreateUserDr' type='hidden' value='"_%session.Get("LOGON.USERID")_"'>",$C(13,10)
+
+w "<input id='PPPVisitStatus' name='PPPCreateUserDr' type='hidden' value='N'>",$C(13,10)
+w "<input id='PPPPatientLimit' name='PPPCreateUserDr' type='hidden' value=''>",$C(13,10)
+w "<input id='ExitDate' name='PPPCreateUserDr' type='hidden' value=''>",$C(13,10)
+w "<input id='AllFreeFlag' name='PPPCreateUserDr' type='hidden' value=''>",$C(13,10)
+
+</Server>
+</head>
+<body>
+	<csp:Include Page="docpilotpro.patadd.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			sysDateFormat:"#(sysDateFormat)#",
+			InitProPatEntity:"#(InitProPatEntity)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.JS"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/DocPilotPro/PatAdd.hui.js"></script>
+</body>
+</html>

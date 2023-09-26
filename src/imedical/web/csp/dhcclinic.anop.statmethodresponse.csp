@@ -1,0 +1,23 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+s ClassName=%request.Data("ClassName",1)
+s MethodName=%request.Data("MethodName",1)
+s ArgCnt=%request.Data("ArgCnt",1)
+s startRecordNo=$g(%request.Data("start",1))
+s limitRecordCnt=$g(%request.Data("limit",1))
+s sortField=$g(%request.Data("sort",1))
+s direction=$g(%request.Data("dir",1))
+s filter=$g(%request.Data("filter",1))
+
+ s execute=""
+ s i=""
+ s execute="s ret=$ZOBJCLASSMETHOD(ClassName,MethodName"
+ k PLIST
+ f i=1:1:ArgCnt  d 
+ .s strArgName="Arg"_i
+ .s PLIST(i)=%request.Data(strArgName,1)
+ .s execute=execute_",PLIST("_i_")"
+ s execute=execute_",startRecordNo,limitRecordCnt,sortField,direction,filter)"
+ x execute
+ q
+</SERVER>

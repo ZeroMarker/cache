@@ -1,0 +1,1102 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<script Language="JavaScript" SRC="../Scripts/OEOrder.Common.js"></script>
+
+<script language="JavaScript">
+
+var newOrder=1;
+var updated=0;
+var Gparam5="";
+var Gsdcheckval="Y";
+
+/*
+function LookUpPatOrderSelect(str) {
+	//alert("str: "+str);
+ 	var lu = str.split("^");
+	var obj=document.getElementById("PatientOrders")
+	if (obj) obj.value = lu[2];
+	var obj=document.getElementById("LinkedItmID")
+	if (obj) obj.value = lu[3];
+
+}
+*/
+
+function InvalidFields() {
+	var invalid=false;
+	//common fields
+	if(!isInvalid("PatientLoc")&&(!invalid)) {
+		alert(t['PatientLoc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+
+	if(!isInvalid("OECPRDesc")&&(!invalid)) {
+		alert(t['OECPRDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OSTATDesc")&&(!invalid)) {
+		alert(t['OSTATDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("CTLOCDesc")&&(!invalid)) {
+		alert(t['CTLOCDesc']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("Doctor")&&(!invalid)) {
+		alert(t['Doctor']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OEORIRefDocDR")&&(!invalid)) {
+		alert(t['OEORIRefDocDR']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("OEORIVarianceReasonDR")&&(!invalid)) {
+		alert(t['OEORIVarianceReasonDR']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+	//end of common fields
+
+	if(!isInvalid("ToothPosition")&&(!invalid)) {
+		alert(t['ToothPosition']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	if(!isInvalid("ToothNumber")&&(!invalid)) {
+		alert(t['ToothNumber']+":  "+t['XINVALID']);
+		invalid=true;
+	}
+
+	var Nobj=document.getElementById("NotifyClinician");
+	var Pobj=document.getElementById("PrefConMethod");
+
+	if((Nobj)&&(Nobj.checked)&&(Pobj)&&(Pobj.value=="")) {
+		alert(t['SELECT_CONMETHD']);
+		invalid=true;
+	}
+
+	return invalid;
+}
+
+function DisplaySelectedTeeth() {
+	var tblDentalOdontogram=document.getElementById("tPAPerson_Dental_Odontogram");
+	if (tblDentalOdontogram) {
+		//Log 60355 PeterC 23/08/06
+		if((window.opener)&&(window.opener.top)&&(window.opener.top.frames["oeorder_entry"])) {
+			var obj1=window.opener.top.frames["oeorder_entry"].document.getElementById("TeethIDs")
+			if((obj1)&&(obj1.value)!="") {
+				var CantModifyToothFlagobj=document.getElementById("CantModifyToothFlag");
+				if(CantModifyToothFlagobj) CantModifyToothFlagobj.value="Y";
+			}
+		}
+
+		var CantModifyToothFlagobj=document.getElementById("CantModifyToothFlag");
+		if ((CantModifyToothFlagobj)&&(CantModifyToothFlagobj.value=="Y")) {
+			tblDentalOdontogram.disabled=true;
+		}
+		
+		var strTooth="";
+		var objTooth="";
+		var indNumber="";
+		var indPos="";
+		var indPart="";
+		// added 2 new indexes to loop through when selected part is full tooth
+		// JPD 14/10/05 Log 56063
+		var indPart2="";
+		var objTooth2="";		
+		var strNumber="1|2|3|4|5|6|7|8|A|B|C|D|E";
+		var strPos="ALL|ALR|AUL|AUR|CLL|CLR|CUL|CUR";
+		var strPart="F1|F2|F3|F4|F5|R|T|A|C";
+		var arrNumber=strNumber.split("|");
+		var arrPos=strPos.split("|");
+		var arrPart=strPart.split("|");
+		for (indPos=0; indPos<arrPos.length; indPos++) {
+			for (indNumber=0; indNumber<arrNumber.length; indNumber++) {
+				for (indPart=0; indPart<arrPart.length; indPart++) {
+					objTooth=document.getElementById(arrPos[indPos]+arrNumber[indNumber]+arrPart[indPart]);
+					if (objTooth) {
+						strTooth=arrPos[indPos]+"|"+arrNumber[indNumber]+"|"+arrPart[indPart]+"^";
+						if (Teeth.indexOf(strTooth)>-1) {
+							// JPD 14/10/05 Log 56063
+							SelectToothPart(objTooth,true,false);
+							if (arrPart[indPart]=="A") {
+								for (indPart2=0; indPart2<arrPart.length; indPart2++) {
+									objTooth2=document.getElementById(arrPos[indPos]+arrNumber[indNumber]+arrPart[indPart2]);
+									if ((arrPart[indPart2]!="A")&&(arrPart[indPart2]!="C")&&(objTooth2)) SelectToothPart(objTooth2,true,false);
+								} 
+							}
+							//objTooth.className="DentalSel";
+							//objTooth.selected=true;
+						}
+					}
+				}
+			}
+		}
+	}
+	if (Teeth!="") {
+		var bmind="";
+		var strTooth="";
+		for (bmind=0;bmind<Teeth.split("^").length;bmind++) {	
+			if (mPiece(Teeth,"^",bmind)=="") break;
+			if (strTooth!="") strTooth=strTooth+"^";
+			strTooth=strTooth+mPiece(mPiece(Teeth,"^",bmind),"|",0)+mPiece(mPiece(Teeth,"^",bmind),"|",1)+mPiece(mPiece(Teeth,"^",bmind),"|",2);
+		}
+		//alert(strTooth);
+		Teeth=strTooth;
+	}
+}
+function UpdateSaveDefaultsClickHandler() {
+	//alert("savedef");
+	var SaveDefObj=document.getElementById("SaveDefaults");
+	if (SaveDefObj) SaveDefObj.value="Y";
+	//if (SaveDefObj) alert(SaveDefObj.value);
+	UpdateClickHandler();
+	//return Update_click();
+
+}
+function UpdateClickHandler() {
+	if (InvalidFields()==true) {
+		return false;
+	}
+	
+	var WarnMsg="";
+	WarnMsg=CheckForAllMendatoryFields();
+	if (WarnMsg!="") {
+		alert(WarnMsg); 
+		return false;
+	}
+
+	//Log 58325 BoC, check pregnant and breastfeeding, required functions are in OEOrder.Common.js
+	PregnBrFdCheck();
+
+	var Qobj=document.getElementById("OEORIQty");
+	if((Qobj)&&(Qobj.value!="")) {
+		var DQobj=document.getElementById("defQtyRange");
+		if (!CheckQtyRange(Qobj)) {
+			return false;
+		}
+	}
+
+/*	//JPD Log 48728
+	var MaxDayQty=document.getElementById("MaxDayQty");
+	MaxDayQty=MaxDayQty.value;
+	var MaxQty=document.getElementById("MaxQty");
+	MaxQty=MaxQty.value;
+	var Qobj=document.getElementById("OEORIQty");
+
+	if((Qobj)&&(Qobj.value!="")) {
+		if ((MaxDayQty!="")&&(Qobj.value>MaxDayQty)) {
+				var checkqty=confirm(t['MAXDAYEXCEED']+"\n"+t['CONTINUE']);
+				if (!checkqty) {
+					websys_setfocus(Qobj.name);
+					return false; }
+		}
+			
+		if ((MaxQty!="")&&(Qobj.value>MaxQty)) {
+				var checkqty=confirm(t['MAXQTYEXCEED']+"\n"+t['CONTINUE']);
+				if (!checkqty) {
+					websys_setfocus(Qobj.name);
+					return false; }	
+		}
+	}
+*/
+
+	if(!UpdateStatusCheck()) return false;
+	
+	var strTooth="";
+	var tblDentalOdontogram=document.getElementById("tPAPerson_Dental_Odontogram");
+	if (tblDentalOdontogram) {
+		var objHiddenSelected=document.getElementById("HiddenSelected");
+		if (objHiddenSelected) {
+			//alert(objHiddenSelected.value); 
+			strTooth=objHiddenSelected.value;
+		}
+		var indTeeth="";
+		var tempTooth="";
+		var tempToothArea="";
+		for (indTeeth=0;indTeeth<strTooth.split("^").length;indTeeth++) {
+			tempTooth=mPiece(strTooth,"^",indTeeth);
+			tempToothArea=tempTooth.substring(4,6);
+			//alert(indTeeth+","+tempTooth+","+tempToothArea);
+			if (tempToothArea=="R") {
+				if (mPiece(DentalToothArea,"^",0)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+			if (tempToothArea=="T") {
+				if (mPiece(DentalToothArea,"^",1)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+			if (tempToothArea=="A") {
+				if (mPiece(DentalToothArea,"^",2)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+			if (tempToothArea=="F1") {
+				if (mPiece(DentalToothArea,"^",3)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+			if (tempToothArea=="F2") {
+				if (mPiece(DentalToothArea,"^",4)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+			if (tempToothArea=="F3") {
+				if (mPiece(DentalToothArea,"^",5)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+			if (tempToothArea=="F4") {
+				if (mPiece(DentalToothArea,"^",6)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+			if (tempToothArea=="F5") {
+				if (mPiece(DentalToothArea,"^",7)!="Y") {alert(t['NOT_VALID_TOOTH_AREA']); return false; }
+			} 
+		}
+		var objTooth="";
+		for (indTeeth=0;indTeeth<Teeth.split("^").length;indTeeth++) {
+			tempTooth=mPiece(Teeth,"^",indTeeth);
+			objTooth=document.getElementById(tempTooth);
+			if ((objTooth)&&(objTooth.className=="DentalSel")) {
+				if (strTooth.indexOf(tempTooth)==-1) {
+					if (strTooth=="") strTooth=tempTooth;
+					else strTooth=strTooth+"^"+tempTooth;
+				}
+			}
+		}
+		var tObj=document.getElementById("teeth");
+	 	if (tObj) tObj.value=strTooth;
+		// 57019 
+		//if (strTooth=="") alert(t['NO_TOOTH_SELECTED']);
+		/*
+		var objTooth="";
+		var indNumber="";
+		var indPos="";
+		var indPart="";
+		var strNumber="1|2|3|4|5|6|7|8|A|B|C|D|E";
+		var strPos="ALL|ALR|AUL|AUR|CLL|CLR|CUL|CUR";
+		var strPart="F1|F2|F3|F4|F5|R|T|A";
+		var arrNumber=strNumber.split("|");
+		var arrPos=strPos.split("|");
+		var arrPart=strPart.split("|");
+		for (indPos=0; indPos<arrPos.length; indPos++) {
+			for (indNumber=0; indNumber<arrNumber.length; indNumber++) {
+				for (indPart=0; indPart<arrPart.length; indPart++) {
+					objTooth=document.getElementById(arrPos[indPos]+arrNumber[indNumber]+arrPart[indPart]);
+					if ((objTooth)&&(objTooth.className=="DentalSel")) {
+						strTooth=strTooth+arrPos[indPos]+arrNumber[indNumber]+arrPart[indPart]+"^";
+					}
+				}
+			}
+		}
+		var tObj=document.getElementById("teeth");
+	 	if (tObj) tObj.value=strTooth;
+		alert(strTooth);
+		if (strTooth=="") alert(t['NO_TOOTH_SELECTED']);
+		*/
+	}
+	
+	 /*
+	 var teeth="";
+	 var URs1Obj=document.getElementById("URs1");
+	 if (URs1Obj&&URs1Obj.checked) teeth=teeth+"A|1"+"^";
+	 var URs2Obj=document.getElementById("URs2");
+	 if (URs2Obj&&URs2Obj.checked) teeth=teeth+"B|1"+"^";
+	 var URs3Obj=document.getElementById("URs3");
+	 if (URs3Obj&&URs3Obj.checked) teeth=teeth+"C|1"+"^";
+	 var URs4Obj=document.getElementById("URs4");
+	 if	(URs4Obj&&URs4Obj.checked) teeth=teeth+"D|1"+"^";
+	 var URs5Obj=document.getElementById("URs5");
+	 if (URs5Obj&&URs5Obj.checked) teeth=teeth+"E|1"+"^";
+
+	 var UR1Obj=document.getElementById("UR1");
+	 if (UR1Obj&&UR1Obj.checked) teeth=teeth+"1|1"+"^";
+	 var UR2Obj=document.getElementById("UR2");
+	 if (UR2Obj&&UR2Obj.checked) teeth=teeth+"2|1"+"^";
+	 var UR3Obj=document.getElementById("UR3");
+	 if (UR3Obj&&UR3Obj.checked) teeth=teeth+"3|1"+"^";
+	 var UR4Obj=document.getElementById("UR4");
+	 if (UR4Obj&&UR4Obj.checked) teeth=teeth+"4|1"+"^";
+	 var UR5Obj=document.getElementById("UR5");
+	 if (UR5Obj&&UR5Obj.checked) teeth=teeth+"5|1"+"^";
+	 var UR6Obj=document.getElementById("UR6");
+	 if (UR6Obj&&UR5Obj.checked) teeth=teeth+"6|1"+"^";
+	 var UR7Obj=document.getElementById("UR7");
+	 if (UR7Obj&&UR7Obj.checked) teeth=teeth+"7|1"+"^";
+	 var UR8Obj=document.getElementById("UR8");
+	 if (UR8Obj&&UR8Obj.checked) teeth=teeth+"8|1"+"^";
+
+	 var ULs1Obj=document.getElementById("ULs1");
+	 if (ULs1Obj&&ULs1Obj.checked) teeth=teeth+"A|2"+"^";
+	 var ULs2Obj=document.getElementById("ULs2");
+	 if (ULs2Obj&&ULs2Obj.checked) teeth=teeth+"B|2"+"^";
+	 var ULs3Obj=document.getElementById("ULs3");
+	 if (ULs3Obj&&ULs3Obj.checked) teeth=teeth+"C|2"+"^";
+	 var ULs4Obj=document.getElementById("ULs4");
+	 if (ULs4Obj&&ULs4Obj.checked) teeth=teeth+"D|2"+"^";
+	 var ULs5Obj=document.getElementById("ULs5");
+	 if (ULs5Obj&&ULs5Obj.checked) teeth=teeth+"E|2"+"^";
+
+	 var UL1Obj=document.getElementById("UL1");
+	 if (UL1Obj&&UL1Obj.checked) teeth=teeth+"1|2"+"^";
+	 var UL2Obj=document.getElementById("UL2");
+	 if (UL2Obj&&UL2Obj.checked) teeth=teeth+"2|2"+"^";
+	 var UL3Obj=document.getElementById("UL3");
+	 if (UL3Obj&&UL3Obj.checked) teeth=teeth+"3|2"+"^";
+	 var UL4Obj=document.getElementById("UL4");
+	 if (UL4Obj&&UL4Obj.checked) teeth=teeth+"4|2"+"^";
+	 var UL5Obj=document.getElementById("UL5");
+	 if (UL5Obj&&UL5Obj.checked) teeth=teeth+"5|2"+"^";
+	 var UL6Obj=document.getElementById("UL6");
+	 if (UL6Obj&&UL6Obj.checked) teeth=teeth+"6|2"+"^";
+	 var UL7Obj=document.getElementById("UL7");
+	 if (UL7Obj&&UL7Obj.checked) teeth=teeth+"7|2"+"^";
+	 var UL8Obj=document.getElementById("UL8");
+	 if (UL8Obj&&UL8Obj.checked) teeth=teeth+"8|2"+"^";
+	 var LRs1Obj=document.getElementById("LRs1");
+
+	 if (LRs1Obj&&LRs1Obj.checked) teeth=teeth+"A|3"+"^";
+	 var LRs2Obj=document.getElementById("LRs2");
+	 if (LRs2Obj&&LRs2Obj.checked) teeth=teeth+"B|3"+"^";
+	 var LRs3Obj=document.getElementById("LRs3");
+	 if (LRs3Obj&&LRs3Obj.checked) teeth=teeth+"C|3"+"^";
+	 var LRs4Obj=document.getElementById("LRs4");
+	 if (LRs4Obj&&LRs4Obj.checked) teeth=teeth+"D|3"+"^";
+	 var LRs5Obj=document.getElementById("LRs5");
+	 if	(LRs5Obj&&LRs5Obj.checked) teeth=teeth+"E|3"+"^";
+
+	 var LR1Obj=document.getElementById("LR1");
+	 if (LR1Obj&&LR1Obj.checked) teeth=teeth+"1|3"+"^";
+	 var LR2Obj=document.getElementById("LR2");
+	 if (LR2Obj&&LR2Obj.checked) teeth=teeth+"2|3"+"^";
+	 var LR3Obj=document.getElementById("LR3");
+	 if	(LR3Obj&&LR3Obj.checked) teeth=teeth+"3|3"+"^";
+	 var LR4Obj=document.getElementById("LR4");
+	 if (LR4Obj&&LR4Obj.checked) teeth=teeth+"4|3"+"^";
+	 var LR5Obj=document.getElementById("LR5");
+	 if (LR5Obj&&LR5Obj.checked) teeth=teeth+"5|3"+"^";
+	 var LR6Obj=document.getElementById("LR6");
+	 if (LR6Obj&&LR6Obj.checked) teeth=teeth+"6|3"+"^";
+	 var LR7Obj=document.getElementById("LR7");
+	 if (LR7Obj&&LR7Obj.checked) teeth=teeth+"7|3"+"^";
+	 var LR8Obj=document.getElementById("LR8");
+	 if (LR8Obj&&LR8Obj.checked) teeth=teeth+"8|3"+"^";
+
+	 var LLs1Obj=document.getElementById("LLs1");
+	 if (LLs1Obj&&LLs1Obj.checked) teeth=teeth+"A|4"+"^";
+	 var LLs2Obj=document.getElementById("LLs2");
+	 if (LLs2Obj&&LLs2Obj.checked) teeth=teeth+"B|4"+"^";
+	 var LLs3Obj=document.getElementById("LLs3");
+	 if (LLs3Obj&&LLs3Obj.checked) teeth=teeth+"C|4"+"^";
+	 var LLs4Obj=document.getElementById("LLs4");
+	 if (LLs4Obj&&LLs4Obj.checked) teeth=teeth+"D|4"+"^";
+	 var LLs5Obj=document.getElementById("LLs5");
+	 if (LLs5Obj&&LLs5Obj.checked) teeth=teeth+"E|4"+"^";
+
+	 var LL1Obj=document.getElementById("LL1");
+	 if (LL1Obj&&LL1Obj.checked) teeth=teeth+"1|4"+"^";
+	 var LL2Obj=document.getElementById("LL2");
+	 if (LL2Obj&&LL2Obj.checked) teeth=teeth+"2|4"+"^";
+	 var LL3Obj=document.getElementById("LL3");
+	 if (LL3Obj&&LL3Obj.checked) teeth=teeth+"3|4"+"^";
+	 var LL4Obj=document.getElementById("LL4");
+	 if (LL4Obj&&LL4Obj.checked) teeth=teeth+"4|4"+"^";
+	 var LL5Obj=document.getElementById("LL5");
+	 if (LL5Obj&&LL5Obj.checked) teeth=teeth+"5|4"+"^";
+	 var LL6Obj=document.getElementById("LL6");
+	 if (LL6Obj&&LL6Obj.checked) teeth=teeth+"6|4"+"^";
+	 var LL7Obj=document.getElementById("LL7");
+	 if (LL7Obj&&LL7Obj.checked) teeth=teeth+"7|4"+"^";
+	 var LL8Obj=document.getElementById("LL8");
+	 if	(LL8Obj&&LL8Obj.checked) teeth=teeth+"8|4"+"^";
+	 var tObj=document.getElementById("teeth");
+	 if (tObj) tObj.value=teeth;
+	 */
+
+	 if (newOrder) {
+		var sobj=document.getElementById("OEORISttDat");
+ 		if (sobj && (sobj.value!="")) {
+			var dobj=document.getElementById("DischDate");
+			var aobj=document.getElementById("AdmDate");
+			if (dobj && (dobj.value!="") && aobj && (aobj.value!="")){
+                               var enteredDate = new Date();
+				var enteredDate1 = new Date();
+				var enteredDate2 = new Date();
+				var enteredDate = VerifyDateformat(dobj);
+				var enteredDate1 = VerifyDateformat(sobj);
+				var enteredDate2 = VerifyDateformat(aobj);
+
+				if (enteredDate1>enteredDate){
+					alert(t['STARTDATE_OUT']+" "+aobj.value+" to " + dobj.value);
+					sobj.value=""
+					return false;				
+				}
+				else if(enteredDate1<enteredDate2) {
+					alert(t['STARTDATE_OUT']+" "+aobj.value+" to " + dobj.value);
+					sobj.value=""
+					return false;
+				}
+				Updated=1;
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+			else{
+				var enteredDate1 = new Date();
+				var enteredDate2 = new Date();
+				var enteredDate1 = VerifyDateformat(sobj);
+				var enteredDate2 = VerifyDateformat(aobj);
+				if(enteredDate1<enteredDate2) {
+					alert(t['STARTDATE_EXCEED']+" "+aobj.value);
+					sobj.value=""
+					return false;
+				}
+				Updated=1;
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+			
+		}
+		else {
+			var dobj=document.getElementById("DischDate");
+			if (dobj && (dobj.value!="")) alert(t['STARTDATE_MAN']);
+			else{ 
+				Updated=1;
+				if (OrderWindow!="ORDERFAVPANEL") UpdateFromEPR(); //UpdateFromOrderEntry();
+			}
+		}
+	//UpdateFromOrderEntry();			
+	} else {	
+		Updated=1;		
+		//UpdateFromEPR();		//In OEOrder.Common.js	
+		checkDateForEPR();
+		refreshParent();
+		var CantModifyToothFlagobj=document.getElementById("CantModifyToothFlag");
+		if ((CantModifyToothFlagobj)&&(CantModifyToothFlagobj.value=="Y")) {
+			strTooth=Teeth;
+		}
+		if (strTooth.split("^").length>1) {
+			var par_win = window.opener;
+			if (par_win.name=="TRAK_hidden") par_win=window.opener.parent.frames['TRAK_main'].websys_windows['frmOSList'];
+			if (par_win.name=="oeorder_entry") {
+				var ID="";
+				var IDobj=document.getElementById("ID");
+				if (IDobj) ID=IDobj.value;
+				var OrderGroupNumber="";
+				var objOrderGroupNumber=document.getElementById("OEORIItemGroup");
+				if (objOrderGroupNumber) OrderGroupNumber=objOrderGroupNumber.value;
+				//alert("call AddNewDentalOrder "+ID+","+strTooth);
+				par_win.AddNewDentalOrder(ID,strTooth,OrderGroupNumber);
+			}	
+		}
+	}
+	//Log 46424 Add Order Group Number 
+	var ID="";
+	var objID=document.getElementById("ID");
+	if (objID) ID=objID.value;
+	var OrderGroupNumber="";
+	var objOrderGroupNumber=document.getElementById("OEORIItemGroup");
+	if (objOrderGroupNumber) {
+		OrderGroupNumber=ID+"^"+objOrderGroupNumber.value;
+		var par_win = window.opener;
+		if (par_win.name=="TRAK_hidden") par_win=window.opener.parent.frames['TRAK_main'].websys_windows['frmOSList'];
+		if (par_win.name=="oeorder_entry") {
+			try {
+				if (par_win) par_win.ChangeOrderGroupNumber(OrderGroupNumber);
+			}catch(e){}
+		}
+	}
+	 Updated=1;
+	if (OrderWindow=="ORDERFAVPANEL") {
+		//alert("orderfav");
+		UpdateFromEPR();
+
+	}
+	var win=window.opener.parent.frames[1];
+	if (win) {
+		var formICP=win.document.forms['fMRClinicalPathways_ItemList'];
+		var formICP2=win.document.forms['fMRClinicalPathways_CarePlanItemList'];
+		if (formICP||formICP2) {
+			UpdateFromOrderEntry();
+		}
+	}
+}
+
+
+function UpdateFromOrderEntry() { //New Order 
+	var obj=document.getElementById("ID");
+	if (obj) ID=obj.value;
+	var par_win = window.opener;
+	if (par_win.name=="TRAK_hidden") par_win=window.opener.parent.frames['TRAK_main'].websys_windows['frmOSList'];
+	var f = document.forms['fOEOrder_Dental'];
+	//var strData1 = par_win.TransferDataMain(f);
+	//var strData2 = par_win.TransferDataSub(f);
+	var strData1 = TransferDataMain(f);
+	var strData2 = TransferDataSub(f);
+	//strData2="%01"+strData2;
+	var strData=strData1 + strData2;
+	//alert (strData);
+	par_win.CollectedFields(escape(strData));
+	Update_click();
+	window.close();	
+	return false; //Update_click();
+}
+
+function refreshParent() {
+	var win=window.opener.parent.frames[1];
+	if (win) {
+		var formRad=win.document.forms['fOEOrdItem_RadiologyWorkBench'];
+		if (formRad) {
+			// ANA Using the URl looses workflow.
+			//win.treload('websys.csp');			//log 63299 refresh done in websys.close
+		}
+	} else if (window.opener) { //JPD changed 56447
+		//should be from epr chart csp page
+		var formCust=window.opener.document.forms['fOEOrder_Custom'];
+		var formOSL=window.opener.document.forms['fOEOrder_OSItemList'];
+		//if(!formCust && !formOSL) window.opener.history.go(0); //log 63299 refresh done in websys.close
+		if (formOSL) {
+			var FormArray=formOSL.RebuiltString.value.split("^");
+			for (var i=0; i<FormArray.length; i++) {
+				var FormStr=FormArray[i];
+				var SetOrdIDArr=FormStr.split("*");
+				var SetOrdID=SetOrdIDArr[1];
+				var OrdID=document.getElementById("ID").value;
+				if (OrdID==SetOrdID) {
+					var Qty1=document.getElementById("OEORIQty");
+					if (Qty1) {
+						if (Qty1.value=="") Qty1.value="1";
+						if (formOSL.document.getElementById("Quantityz"+(i+1))) formOSL.document.getElementById("Quantityz"+(i+1)).value=Qty1.value;
+					}
+				}
+			}
+		}
+	}
+}
+
+function DisableElement(el) {
+	//Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+	if (el.readOnly==false) el.disabled = true;
+	//el.className = "disabledField";
+}
+function BodyLoadHandler() {
+	//var par_win = window.opener;
+	//if (par_win.name=="TRAK_hidden") par_win=window.opener.parent.frames['TRAK_main'].websys_windows['frmOSList'];
+	var obj=document.forms['fOEOrder_Dental'].elements['ID'];
+	//if ((obj)&&(obj.value!="")&&(par_win.name!="oeorder_entry")) newOrder=0;  //not new order
+	if ((obj)&&(obj.value!="")) newOrder=0;  //not new order
+	
+	//AmiN Log 24827   on 02 May 2002; Resized now  done on Layout
+	
+	// ANA LOG 27959 If there is a default Status against the Layout,then do not use the default coming from Mainloop. 
+	// This change is made to all details screens.
+	var tempstOBJ=document.getElementById("tempOSTATDesc");	
+	var statOBJ=document.getElementById("OSTATDesc");	
+	if (statOBJ&&statOBJ.value==""&&tempstOBJ) statOBJ.value=tempstOBJ.value;
+	var sobj=document.getElementById("OSTATDesc");
+	var bfobj=document.getElementById("BilledFlag");
+	if (bfobj) {
+		if (bfobj.value=="TR"||bfobj.value=="R") {
+			if (sobj) sobj.disabled=true;
+		}
+	}
+	var scodeobj=document.getElementById("OrdStatCode");
+	if (scodeobj){
+		//alert(scodeobj.value);
+		if(scodeobj.value=="E") DisableElement(sobj);
+	}
+	
+	//LOG 35170 RC 13/06/03 Require 3 htm links on order details screens
+	var patOrdFile1=document.getElementById("patOrdFile1");
+	var patOrdFile2=document.getElementById("patOrdFile2");
+	var patOrdFile3=document.getElementById("patOrdFile3");
+	var PatientOrderFile1=document.getElementById("PatientOrderFile1");
+	var PatientOrderFile2=document.getElementById("PatientOrderFile2");
+	var PatientOrderFile3=document.getElementById("PatientOrderFile3");
+	
+	if ((patOrdFile1)&&(PatientOrderFile1)) {
+		if (patOrdFile1.value=="") {
+			PatientOrderFile1.disabled=true;
+			PatientOrderFile1.onclick=NoLink;
+		} else {
+			PatientOrderFile1.onclick=OpenWindow1;
+		}
+	} 
+	if ((patOrdFile2)&&(PatientOrderFile2)) {
+		if (patOrdFile2.value=="") {
+			PatientOrderFile2.disabled=true;
+			PatientOrderFile2.onclick=NoLink;
+		} else {
+			PatientOrderFile2.onclick=OpenWindow2;
+		}
+	}
+	if ((patOrdFile3)&&(PatientOrderFile3)) {
+		if (patOrdFile3.value=="") {
+			PatientOrderFile3.disabled=true;
+			PatientOrderFile3.onclick=NoLink;
+		} else {
+			PatientOrderFile3.onclick=OpenWindow3;
+		}
+	}
+
+	//document.getElementById("Update").onclick = TransferData;	//update link
+	//document.getElementById("Update").onclick = UpdateClickHandler;	//update link
+
+	var UpdateSaveObj=document.getElementById("UpdateSaveDefaults");
+	if (UpdateSaveObj) UpdateSaveObj.onclick = UpdateSaveDefaultsClickHandler;	//update link
+	if (tsc['UpdateSaveDefaults']) {
+		websys_sckeys[tsc['UpdateSaveDefaults']]=UpdateSaveDefaultsClickHandler;
+	}
+
+	var obj=document.getElementById("Update");
+	if (obj) obj.onclick = UpdateClickHandler;
+	if (tsc['Update']) {
+		websys_sckeys[tsc['Update']]=UpdateClickHandler;
+	}
+	
+	var obj=document.getElementById("OEORIRefDocDR");
+	//alert(obj);
+	//if (obj) obj.onkeydown=REFDDesc_lookuphandlerCustom;
+	//var obj=document.getElementById("ld401iOEORIRefDocDR");
+	//alert(obj);
+	//if (obj) obj.onkeydown=REFDDesc_lookuphandlerCustom;
+	
+	var pnobj=document.getElementById("OEORIDepProcNotes");
+	if (pnobj) pnobj.onkeydown=OEORIDepProcNotes_onkeydown;
+	
+	var remobj=document.getElementById("OEORIRemarks");
+	if (remobj) remobj.onkeydown=OEORIRemarks_onkeydown;
+
+	var obj=document.getElementById("Doctor");
+	//if ((obj)&&(obj.value!="")&&(obj.onchange)) obj.onchange();
+
+	//Log 46700
+	var SummaryFlag="";
+	var objSF=document.getElementById("SummaryFlag");
+	if ((objSF)&&(objSF.value!="")) SummaryFlag=objSF.value;
+	if (OrderWindow=="oeorder_entry") {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var hpsobj=document.getElementById("hiddenPendingStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			if ((hpsobj)&&(hpsobj.value!="")) {
+				sobj.value=hpsobj.value;
+				sobj.innerText=hpsobj.value;
+			}
+			else if ((sobj.value=="")&&(hosobj)&&(hosobj.value!="")) {
+				sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}else if (SummaryFlag!="") {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var hpsobj=document.getElementById("hiddenPendingStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			if ((hpsobj)&&(hpsobj.value!="")) {
+				sobj.value=hpsobj.value;
+				sobj.innerText=hpsobj.value;
+			}
+			else if ((hosobj)&&(hosobj.value!="")) {
+				sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}else {
+		var hosobj=document.getElementById("hiddenOrderStatus");
+		var sobj=document.getElementById("OSTATDesc");
+		if (sobj) {
+			 if ((hosobj)&&(hosobj.value!="")) {
+			 	sobj.value=hosobj.value;
+				sobj.innerText=hosobj.value;
+			}
+		}
+	}
+	
+	InitStatusCheck("ld401iOSTATDesc");
+	LoadRefDoctor();
+	var obj=document.getElementById("DeleteRef");
+	if (obj) obj.onclick=DeleteRefClickHandler;
+	
+	var frm=document.fOEOrder_Dental;
+	var modeobj=document.getElementById("Mode");
+	if ((modeobj)&&(modeobj.value=="READONLY"||modeobj.value=="PARTIALREAD")) 
+		DisableAllButTwo(frm,modeobj.value); //log61154 TedT
+
+	//Log 50948 PeterC 10/03/05
+	if (document.getElementById("RefDoctorList")) {document.getElementById("RefDoctorList").tkItemPopulate=1;}
+	
+	DisplaySelectedTeeth();
+	
+	var objboldlnk=document.getElementById("BoldLinks");
+	var objalertmess=document.getElementById("OEOrdAlertMessage");
+	if (objboldlnk && objalertmess && objboldlnk.value=="1") objalertmess.style.fontWeight="bold";
+
+	window.focus();  // 65197
+}
+
+function NoLink() {
+	return false;	
+}
+
+function DeleteRefClickHandler() {    
+	//Delete items from lstOrders listbox when a "Delete" button is clicked.
+	var obj=document.getElementById("RefDoctorList")
+	if (obj) RemoveFromList(document.fOEOrder_Normal,obj)
+}
+
+function ClearField() {
+	var obj=document.getElementById("CareProvider")
+	if (obj) obj.value="";
+	var obj=document.getElementById("OEORIRefDocDR")
+	if (obj) obj.value="";	
+}
+
+function OpenWindow1() {
+	var patOrdFile1=document.getElementById("patOrdFile1");
+	var PatientOrderFile1=document.getElementById("PatientOrderFile1");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+	
+	if ((patOrdFile1)&&(patOrdFile1.value!="")) {
+		var url=patOrdFile1.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile1', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');
+	}
+	return false;
+}
+
+function OpenWindow2() {
+	var patOrdFile2=document.getElementById("patOrdFile2");
+	var PatientOrderFile2=document.getElementById("PatientOrderFile2");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+		 
+	if ((patOrdFile2)&&(patOrdFile2.value!="")) {
+		var url=patOrdFile2.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile2', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');
+	} 
+	return false;
+}
+
+function OpenWindow3() {
+	var patOrdFile3=document.getElementById("patOrdFile3");
+	var PatientOrderFile3=document.getElementById("PatientOrderFile3");
+	var www=/www/gi; var http=/http/gi; var htm=/htm/gi; var dir=/\\/gi;
+	
+	if ((patOrdFile3)&&(patOrdFile3.value!="")) {
+		var url=patOrdFile3.value;
+		if ((url.search(http) == -1)&&(url.search(www) != -1)) url="http://"+url
+		if ((url.search(htm) != -1)&&(url.search(dir) == -1)) url="..\\Help\\"+url
+		websys_createWindow(url, 'PatientOrderFile3', 'top=50,left=100,width=600,height=550,scrollbars=yes,resizable=yes');		
+	}
+	return false;
+}
+
+function OEORIRemarks_onkeydown() {
+//required to call this function to override the generic script
+//DL : LOG 29062 : 02/Oct/02
+
+}
+
+
+function OEORIDepProcNotes_onkeydown() {
+//required to call this function to override the generic script
+//DL : LOG 29062 : 02/Oct/02
+
+}
+/*
+function BodyUnloadHandler(e) {
+	if ((self == top)&&(updated)) {
+		var win=window.opener;
+		if (win) {
+			win.treload('websys.csp');
+		}
+	}
+}
+*/
+
+function BodyUnLoadHandler() {
+	//If there is any mandatory field left unfilled, alert the user and delete the order item from the list.
+	var par_win = window.opener;
+	if (OrderWindow=="order_entry") par_win=window.open('',OrderWindow); //par_win=par_win.top.frames[1];	
+	var WarnMsg="";
+	WarnMsg=CheckForAllMendatoryFields();
+	//if (WarnMsg!="") {
+	if ((WarnMsg!="")&&(OrderWindow!="")&&(par_win)&&(par_win.document.fOEOrder_Custom)) {
+		alert(WarnMsg+"\n"+t['WillDeleteOrder']);
+		try{
+			var delID="";
+			var idobj=document.getElementById("ID");
+			if (idobj) {
+				delID=idobj.value;
+				if ((delID!="")&&(par_win)) {
+					par_win.DeleteOrderByID(delID);
+				}
+			}
+		}catch(e){}
+	}
+	if (OrderWindow!="") {
+		par_win=window.open('',OrderWindow); 
+		if ((OrderWindow=="order_entry")&&(par_win)) par_win.DisableUpdateButton(1);	// LOG 38509 RC 3/12/03 Disable Update Button on Order Entry Screen
+		// log 63386 BoC: close Questionnaire Window when closing order details window
+		if (par_win.QuestionnaireWin) {
+			try{
+				par_win.QuestionnaireWin.close();
+			}catch(e){}
+		}
+	}	
+
+	//Go to the details page of the next order item 
+	if ((OrderWindow!="")&&(par_win)&&(par_win.document.fOEOrder_Custom)) par_win.OrderDetailsShowing(par_win.document.fOEOrder_Custom);
+	
+	var tObj=document.getElementById("teeth");
+	if (tObj && tObj.value=="") {
+		alert(t['NO_TOOTH_SELECTED']);
+	} 
+
+	// JD refresh order list with new values 54852
+	if (OrderWindow=="oeorder_entry") {
+		try {
+			var detailFrame=window.open("","oeorder_entry");
+			if (detailFrame) detailFrame.RefreshSessionList();
+		} catch(e) {
+			//log58506 TedT kill blank window
+			detailFrame.close();
+		}
+	}
+	if (document.getElementById('ID')) {var ID=document.getElementById('ID').value;} else {var ID="";}
+	var serverupdate=tkMakeServerCall("web.OEOrdItem","LockClear",ID);
+}
+function CheckForAllMendatoryFields() {
+	var AllGetValue="";
+	for (var i=0;i<document.fOEOrder_Dental.elements.length;i++) {
+		if (document.fOEOrder_Dental.elements[i].id!="") {
+			var elemid="c"+document.fOEOrder_Dental.elements[i].id;
+			var elemc=document.getElementById(elemid);
+			var elem=document.getElementById(document.fOEOrder_Dental.elements[i].id);
+			if ((elemc) && (elemc.className=="clsRequired")) {
+				if ((elem)&&(elem.value=="")) AllGetValue=AllGetValue+elemc.innerText+":  "+t['XMISSING']+"\n";
+			}	
+		}
+	}
+	return AllGetValue;
+}
+</script>
+</head>
+
+<body>
+<server>
+ i %request.Get("LOCKMSG")'="" d
+ . w "<P><center><B><font color='red'>"_%request.Get("LOCKMSG")_"</font></B></center></P>"
+ ; seanl log 58161 Questionnaire link will turn bold if questionnaire has already been 
+ ; filled in
+ n oid,QuestRowID,QuestRowIDFinal
+ s (oid,QuestRowID,QuestRowIDFinal)=""
+ s oid=%request.Get("ID") 
+ i oid'="",$p(oid,"||",2)'="" s QuestRowID=$g(^OEORD(+oid,"I",$p(oid,"||",2),12)) 
+ i QuestRowID'="" s QuestRowID=$p(QuestRowID,"^",15) 
+ i QuestRowID'="" s QuestRowIDFinal=$p(QuestRowID,"||",2)
+ i QuestRowIDFinal'="" w "<B>"
+ i %request.Get("QuestionnaireDesc")'="" d
+ . w "<center>"
+ . ;w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ . w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q""><U>Q</U>uestionnaire-",%request.Get("QuestionnaireDesc"),"</A>"
+ . w "<br>"
+ . w "</center>"
+ i QuestRowIDFinal'="" w "</B>"  
+
+ ;i %request.Get("QuestionnaireDesc")'="" d
+ ;. w "<center>"
+ ;. w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q""><U>Q</U>uestionnaire-",%request.Get("QuestionnaireDesc"),"</A>"
+ ;. w "<br>"
+ ;. w "</center>"
+ ;. ;w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q""><U>Q</U>uestionnaire-</A>"
+ ;LOG 35167 RC 06/06/03 This has been commented out because Log 35170 added 3 new customizable links to 
+ ;replace this one.
+ ;i %request.Get("FileNotes")'="" d
+ ;. w "<center>" 
+ ;. w "<A href=""javascript:PatientOrderProfile();"" accesskey=""P""><U>P</U>atientOrderProfile-",%request.Get("FileNotes"),"</A>"
+ ;. w "</center>"
+ ;
+ ; Log 45208 Use new gram of teeth
+ ;;ANA 12.05.02 Setting the tooth checkboxes on the dental details page. Relies on tooth number/position system Code Tables.
+ ;s arr("A|1")="URs1",arr("B|1")="URs2",arr("C|1")="URs3",arr("D|1")="URs4",arr("E|1")="URs5"
+ ;s arr("1|1")="UR1",arr("2|1")="UR2",arr("3|1")="UR3",arr("4|1")="UR4",arr("5|1")="UR5",arr("6|1")="UR6",arr("7|1")="UR7",arr("8|1")="UR8"
+ ;s arr("A|2")="ULs1",arr("B|2")="ULs2",arr("C|2")="ULs3",arr("D|2")="ULs4",arr("E|2")="ULs5"
+ ;s arr("1|2")="UL1",arr("2|2")="UL2",arr("3|2")="UL3",arr("4|2")="UL4",arr("5|2")="UL5",arr("6|2")="UL6",arr("7|2")="UL7",arr("8|2")="UL8"
+ ;s arr("A|3")="LRs1",arr("B|3")="LRs2",arr("C|3")="LRs3",arr("D|3")="LRs4",arr("E|3")="LRs5"
+ ;s arr("1|3")="LR1",arr("2|3")="LR2",arr("3|3")="LR3",arr("4|3")="LR4",arr("5|3")="LR5",arr("6|3")="LR6",arr("7|3")="LR7",arr("8|3")="LR8"
+ ;s arr("A|4")="LLs1",arr("B|4")="LLs2",arr("C|4")="LLs3",arr("D|4")="LLs4",arr("E|4")="LLs5"
+ ;s arr("1|4")="LL1",arr("2|4")="LL2",arr("3|4")="LL3",arr("4|4")="LL4",arr("5|4")="LL5",arr("6|4")="LL6",arr("7|4")="LL7",arr("8|4")="LL8"
+ ;s teeth=%request.Get("teeth")
+ ;i teeth'="" d
+ ;. s len=$l(teeth,"^")-1
+ ;. f i=1:1:len d
+ ;. . s index=$p(teeth,"^",i)
+ ;. . d %request.Set(arr(index),"on")
+</server>
+<TRAK:COMPONENT id="OEOrder.Dental">
+</TRAK:COMPONENT>
+<TRAK:COMPONENT id="PAPerson.Dental.Odontogram">
+</TRAK:COMPONENT>
+<server>
+ n PatID,ToothNumber,ToothPosition,rs,OrderWindow,teeth,DentalToothArea
+ s (PatID,ToothNumber,ToothPosition,OrderWindow,teeth,DentalToothArea)=""
+ s CPList=%request.Get("CareProvList")
+ s RefDOcList=%request.Get("RefDoctorList")
+ s PatID=%request.Get("PatientID")
+ s ID=%request.Get("ID") 
+ s OrderWindow=%request.Get("OrderWindow")
+ s teeth=%request.Get("teeth")
+ s DentalToothArea=%request.Get("DentalToothArea")
+</server>
+
+<script language="Javascript">
+var CPList = "#(CPList)#";
+var RefDOcList="#(RefDOcList)#";
+var PatientID = "#(PatID)#";
+var OrderWindow="#(OrderWindow)#";
+var Teeth="#(teeth)#";
+var ID = "#(ID)#";
+var DentalToothArea="#(DentalToothArea)#";
+ var Updated=0;   //log 30710 AmiN Start Date must be within Episode Admin Date and Discharge date. 
+document.body.onload = BodyLoadHandler;
+document.body.onunload = BodyUnLoadHandler;  //log 30710
+function DisableElementsWhenInvoiced() {
+ 	var obj=document.getElementById("OEORISttDat");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORISttTim");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIEndDate");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIEndTime");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIQty");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("DrugForm");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OEORIDoseQty");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCFRDesc1");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCDUDesc1");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("OSTATDesc");
+	if (obj) obj.disabled=true;
+	var obj=document.getElementById("PHCINDesc1");
+	if (obj) obj.disabled=true;
+ }
+/*
+function OEORISttDat_onBlur(e) {
+	var obj=document.getElementById("OEORISttDat");
+	Gparam5=obj.value;
+	var objDate = DateStringToDateObj(Gparam5);
+	var objToday = new Date();
+	if (objDate < objToday) {
+		var hsdcobj=document.getElementById("HiddenStartDateCheck");
+		if (hsdcobj) hsdcobj.onchange();
+		//alert("Gsdcheckval="+Gsdcheckval);
+		if (Gsdcheckval=="Y") {
+			alert(t['InClosedAccPeriod']);
+		}
+	}
+}
+
+function HiddenStartDateCheck_changehandler(encmeth) {
+	//alert(" "+encmeth+" "+Gparam5);
+	Gsdcheckval=cspRunServerMethod(encmeth,Gparam5);
+}
+*/
+
+//Log 61186 PeterC 29/11/06
+var Gparam6="";
+var Gparam7="";
+var Gparam8="";
+var currDate="";
+function OEORISttDat_onBlur(e) {
+	var obj=document.getElementById("OEORISttDat");
+	Gparam5=obj.value;
+	var obj=document.getElementById("OEORIItmMastDR");
+	if((obj)&&(obj.value!="")) Gparam6=obj.value;
+	var obj=document.getElementById("EpisodeID");
+	if((obj)&&(obj.value!="")) Gparam7=obj.value;
+	var obj=document.getElementById("OECPRDesc");
+	if((obj)&&(obj.value!="")) Gparam8=obj.value;
+	var hsdcobj=document.getElementById("HiddenStartDateCheck");
+	if (hsdcobj) hsdcobj.onchange();
+	//alert("Gsdcheckval="+Gsdcheckval);
+	var ICAPAlert=mPiece(Gsdcheckval,"^",0);
+	var RecLoc=mPiece(Gsdcheckval,"^",1);
+	if ((ICAPAlert!="")&&(ICAPAlert=="Y")) {
+		alert(t['InClosedAccPeriod']);
+	}
+	var obj=document.getElementById("CTLOCDesc");
+	if((obj)&&(Gparam5!="")&&(Gparam5!=currDate)) obj.value=RecLoc;
+	if(currDate!=Gparam5) currDate=Gparam5;
+}
+
+function HiddenStartDateCheck_changehandler(encmeth) {
+	Gsdcheckval=cspRunServerMethod(encmeth,Gparam5,Gparam6,Gparam7,Gparam8);
+}
+
+var obj=document.getElementById("OEORISttDat");
+if (obj) {
+	obj.onblur=OEORISttDat_onBlur;
+	currDate=obj.value;
+}
+
+function DisableAllButTwo(eForm,mode){
+    var iNumElems = eForm.elements.length;     //for only form elements.
+    //log 61154 TedT
+	var enabledfldnames="";
+	var readonlyfldnames="";
+	if(mode=="PARTIALREAD"){
+		enabledfldnames = ",OEORIRemarks,OEORIDepProcNotes,OECPRDesc,UserCode,PIN,CareProvider,CareProvList,";
+		readonlyfldnames = ",OSTATDesc,";
+	}
+    for (var i=0; i<iNumElems; i++)  {
+        var eElem = eForm.elements[i];
+        //if ( (eElem.name != 'OEORIRemarks') && (eElem.name != 'OEORIDepProcNotes') && (eElem.name != 'OECPRDesc') && (eElem.name != 'UserCode') && (eElem.name != 'PIN')) {
+        //Log 60455 Bo 07-08-2006: if the field is "readOnly=true" already, don't set it to be "disabled=true" again.
+	if ((enabledfldnames.indexOf(","+eElem.name+",")==-1)&&(eElem.type!="hidden")&&(readonlyfldnames.indexOf(","+eElem.name+",")==-1)&&(eElem.readOnly==false)) {
+            if (("hidden" != eElem.type)&&("INPUT" == eElem.tagName) || ("TEXTAREA" == eElem.tagName)) {
+                eElem.disabled = true;
+                var img=document.getElementById("ld159i"+eElem.id); //to hid the images for the brokers.
+                //if (img) img.onclick="";
+                if (img) { img.style.visibility="hidden"; }
+            } else if ("SELECT" == eElem.tagName) {
+                var cOpts = eElem.options;
+                var iNumOpts = cOpts.length;
+                for (var j=0; j<iNumOpts; j++) {
+                    var eOpt = cOpts[j];
+                    eOpt.disabled = true;
+                }
+            }
+	}
+    }
+}
+</SCRIPT>
+<server>
+ i %request.Get("ID")'="" d
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="P" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="TR" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i ##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))="R" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+</server>
+
+</form>
+</body>
+</html>

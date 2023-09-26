@@ -1,0 +1,47 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ ; remove the temp packing global..
+ i $d(%session) k ^TMP("PharmacyPack",%session.SessionId)
+ s Action=$g(%request.Data("Action",1))
+ s PatientBanner=$g(%request.Data("PatientBanner",1))
+ s CONTEXT=$g(%request.Data("CONTEXT",1))
+ s AllScripts=$g(%request.Data("AllScripts",1))
+ ; the next counter...
+ s PatCounter=$g(%request.Data("PatCounter",1))
+ s ADMINDateFrom=$g(%request.Data("ADMINDateFrom",1))
+ s ADMINDateTo=$g(%request.Data("ADMINDateTo",1))
+ s ADMINTimeFrom=$g(%request.Data("ADMINTimeFrom",1))
+ s ADMINTimeTo=$g(%request.Data("ADMINTimeTo",1))
+ s DISOnly=$g(%request.Data("DISOnly",1))
+ ; Log 49198 YC - Get Current Date
+ s DateNow=+$h
+ s TimeNow=+$p($h,",",2)
+</SERVER>
+
+</HEAD>
+
+  <frameset cols="100%,0">
+	<frame name="PharmacyEdit" id="PharmacyEdit" src="pharmacy.presc.edit.csp?DISOnly=#(DISOnly)#&AllScripts=#(AllScripts)#&Action=#(Action)#&PatCounter=#(PatCounter)#&CONTEXT=#(CONTEXT)#&PatientBanner=#(PatientBanner)#&ADMINTimeTo=#(ADMINTimeTo)#&ADMINTimeFrom=#(ADMINTimeFrom)#&ADMINDateTo=#(ADMINDateTo)#&ADMINDateFrom=#(ADMINDateFrom)#&DateNow=#(DateNow)#&TimeNow=#(TimeNow)#" scrolling="auto" marginwidth="0" marginheight="0" frameborder="yes" framespacing="0"></frame>
+	<frame name="PharmacyHidden" id="PharmacyHidden" src="" scrolling="auto" marginwidth="0" marginheight="0" frameborder="no" framespacing="0"></frame>
+  </frameset>
+
+<noframes>
+    <body>
+    <p></p>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+</HTML>
+

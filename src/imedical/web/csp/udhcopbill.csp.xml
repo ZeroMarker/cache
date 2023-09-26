@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="24" zv="Cache for Windows (x86-64) 2010.2.8 (Build 1104U)" ts="2014-12-03 11:35:51">
+<CSP name="csp/udhcopbill.csp" application="/dthealth/web/"><![CDATA[
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ //udhcopbill.csp
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+
+<SCRIPT type='text/javascript' SRC="../scripts/jQuery/jquery.js"> </SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/jquery.bgiframe.min.js'></SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/jquery.ajaxQueue.js'></SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/thickbox-compressed.js'></SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/jquery.autocomplete.js'></SCRIPT>
+<link rel="stylesheet" type="text/css" href="../scripts/jQuery/jquery.autocomplete.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/jQuery/thickbox.css" />
+
+
+<SCRIPT Language="Javascript">	
+	function transINVStr(InvPrtValue)
+	{
+		alert(InvPrtValue);
+	}
+	function ifCashierHJ()      //
+	{
+		return false;
+		
+		}
+	////快捷键操作
+	function FrameShutCutKeyFrame(e)
+	{
+		////F9  120   结算
+		////F8	119   查询
+		////F7	118   清除
+		////F6	117   转挂号页面
+		////F12	123		录入医嘱
+		////Alt + 2  读卡
+		switch (e.keyCode){
+			case 117:
+				self.frames["udhcOPCharge"].GH_Click();	//zfb-add 2014.9.19 F6-
+				break;
+			case 118:
+				self.frames["udhcOPPatinfo"].PatClear_Click();
+				break;
+			case 119:
+				self.frames["udhcOPPatinfo"].SelectOneAdm();
+				break;
+			case 120:
+				self.frames["udhcOPCharge"].Bill_Click();
+				break;
+			case 123:
+				///self.frames["DHCOPOEOrdInput"].SetCurFocus();
+				self.frames["udhcOPPatinfo"].ReadHFMagCard_Click();
+				break;
+		}
+		
+		if (e.keyCode=120){
+			
+		}
+	}
+
+function document_OnKeyDown()
+{
+	var e=window.event;
+	///alert(e.keyCode);
+	FrameShutCutKeyFrame(e);
+	///DHCWeb_EStopSpaceKey();
+	
+}
+
+	
+</SCRIPT>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s FFF=$g(%request.Data("FFF",1))
+ s PAADMRowid=$p(FFF,"^")
+ s PatientID=$p(FFF,"^",3)
+	s myVer=##class(web.DHCOPConfig).GetVersion()
+	if ((+myVer=0)!(+myVer=1)){
+		s myTopRat="25%"
+		s mySecTat="25%"
+	}else{
+		s myTopRat="25%"
+		s mySecTat="15%"
+	}
+
+ ///udhcopbill.csp
+</Script>
+<SCRIPT language="Javascript">
+	document.onkeydown = document_OnKeyDown;
+	///transINVStr("DDD");
+	
+</SCRIPT>
+<!--
+<frameset rows="#(myTopRat)#,35%,#(mySecTat)#,*" framespacing="0" frameborder="no"  >
+	<frame name="udhcOPPatinfo" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPPatinfo&FFF=#(FFF)#" scrolling="no" noresize="noresize">	
+	<frame name="DHCOPOEList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEList&PAADMRowid=#(PAADMRowid)#"  >
+	<frame name="DHCOPOEOrdInput" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEOrdInput"  scrolling="no" noresize="noresize">	
+    <frame name="udhcOPCharge" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPCharge&PatientID=#(PatientID)#" scrolling="yes" noresize="noresize" >
+</frameset>
+-->
+<frameset cols="75%,*" framespacing="1" >
+	<frameset rows="#(myTopRat)#,*,#(mySecTat)#" framespacing="0" frameborder="no"  >
+		<frame name="udhcOPPatinfo" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPPatinfo&FFF=#(FFF)#" scrolling="no" noresize="noresize">		
+		<frame name="DHCOPOEList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEList&PAADMRowid=#(PAADMRowid)#" >
+	    <frame name="DHCOPOEOrdInput" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEOrdInput"  scrolling="no" noresize="noresize">
+	</frameset>
+	<frame name="udhcOPCharge" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPCharge&PatientID=#(PatientID)#" scrolling="yes" noresize="noresize" >
+</frameset>
+</HTML>
+]]></CSP>
+</Export>

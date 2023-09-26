@@ -1,0 +1,27 @@
+<CSP:CONTENT CHARSET ="utf-8">
+<csp:if condition='($data(%request.MimeData("FileStream",1)))'><script language="Cache" runat="server">
+		
+		New fileStream
+		Set FTPpath="ftploadimg"
+		Set fileStream = %request.MimeData("FileStream",1)
+		set fileStream.FileName = %request.Data("savename",1)			
+		Set ftp=##class(%Net.FtpSession).%New()
+		If 'ftp.Connect("172.19.19.58","ftpuser","1_ftp_2",1880) w "{success:false,msg:'链接失败'}" Quit
+		//Set extension = ##class(DHCMGNUR.NurFileManage).getFileExtension(fileStream.FileName)
+	    //Set newname = %session.Data("LOGON.USERID")_$zd($h,8)_$tr($zt($p($h,",",2)),":","")_extension
+	    Set sc = ftp.SetDirectory(FTPpath)
+	    Set sc=ftp.Store(fileStream.FileName,fileStream)
+	    ;s ftp.UsePASV=0   ;主动模式上传
+	    If $$$ISERR(sc) w "{success:false,msg:'上传失败:"_ftp.ReturnCode_","_ftp.ReturnMessage_"'}" quit $$$ERROR()
+	    ;If $$$ISERR(sc) w "{success:false}" quit $$$ERROR()
+	    If '$$$ISERR(sc) {
+			s obj = ##class(DHCMGNUR.MgPersons).%OpenId(%request.Data("Par",1))
+			s obj.PersonImage="ftp://ftpuser:1_ftp_2@172.19.19.58:1880/ftploadimg/"_fileStream.FileName	
+			d obj.%Save()
+			
+			if (obj.%Id()){
+				w "{success:true"
+				w ",msg:'上传成功'}"
+				
+			}	
+		}</script></csp:if>

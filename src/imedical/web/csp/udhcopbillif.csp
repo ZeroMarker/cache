@@ -1,0 +1,60 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+
+<SCRIPT type='text/javascript' SRC="../scripts/jQuery/jquery.js"> </SCRIPT>
+<script type='text/javascript' src='../scripts/jQuery/jquery.bgiframe.min.js'></script>
+<script type='text/javascript' src='../scripts/jQuery/jquery.ajaxQueue.js'></script>
+<script type='text/javascript' src='../scripts/jQuery/thickbox-compressed.js'></script>
+<script type='text/javascript' src='../scripts/jQuery/jquery.autocomplete.js'></script>
+<link rel="stylesheet" type="text/css" href="../scripts/jQuery/jquery.autocomplete.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/jQuery/thickbox.css" />
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	;udhcopbillif.csp
+ n myPatientIDNo, PAADMRowid, PatientID
+ 
+ s myPatientIDNo=$g(%request.Data("PatientIDNo",1))
+ s myCardNo=$g(%request.Data("CardNo",1))
+ ;s myReloadFlag=$g(%request.Data("ReloadFlag",1))
+ s SelectAdmRowId=""
+ 
+ s FFF=$g(%request.Data("FFF",1))
+ s PAADMRowid=$p(FFF,"^")
+ s mytmprowid=""
+ s PatientID=$p(FFF,"^",3)
+	s myVer=##class(web.DHCOPConfig).GetVersion()
+	if ((+myVer=0)){
+		s myTopRat="19%"
+	}else{
+		s myTopRat="15%"
+	}
+ 
+</Script>
+<!--frameset rows="#(myTopRat)#,45%,21%,*">
+	<frame name="udhcOPPatinfo" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPPatinfo&ReloadFlag=2&PatientIDNo=#(myPatientIDNo)#&CardNo=#(myCardNo)#" frameborder=0>
+	<frame name="DHCOPOEList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEList&PAADMRowid=#(mytmprowid)#" frameborder=0>
+	<frame name="DHCOPOEOrdInput" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEOrdInput" frameborder=0>
+	<frame name="udhcOPCharge" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPCharge&PatientID=#(PatientID)#&ReloadFlag=2&CardNo=#(myCardNo)#" frameborder=0>
+	
+</frameset-->
+
+<frameset cols="75%,*" framespacing="1" >
+	<frameset rows="#(myTopRat)#,*,15%" framespacing="0" frameborder="no"  >
+		<frame name="udhcOPPatinfo" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPPatinfo&ReloadFlag=2&PatientIDNo=#(myPatientIDNo)#&CardNo=#(myCardNo)#" frameborder=0>
+		<frame name="DHCOPOEList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEList&PAADMRowid=#(mytmprowid)#" frameborder=0>
+		<frame name="DHCOPOEOrdInput" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEOrdInput" frameborder=0>
+	</frameset>
+    <frame name="udhcOPCharge" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPCharge&PatientID=#(PatientID)#&ReloadFlag=2&CardNo=#(myCardNo)#" frameborder=0>
+</frameset>
+</HTML>

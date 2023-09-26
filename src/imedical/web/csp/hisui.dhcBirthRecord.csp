@@ -1,0 +1,1160 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	分娩记录 </title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<meta charset="utf-8"/>
+<HISUI/>
+<style>
+	body{
+		background:#ffffff;	
+		display:flex;
+		flex-direction:column;
+		flex-wrap:nowrap;
+		justify-content:flex-start;
+	}
+	.header{
+		padding:4px 0;
+		border-bottom:1px solid #cccccc;	
+		display:flex;
+		flex-direction:row;
+		justify-content:flex-start;
+		flex-wrap:nowrap;
+	}
+	.btn{
+		padding:2px 0;
+	}
+	.right{
+		display:flex;
+		flex-direction:column;
+		justify-content:flex-start;
+		flex-wrap:nowrap;
+		padding-left:15px;
+	}
+	.rup{
+		height:29px;
+		padding:5px 0;	
+	}
+	.patientInfo{
+		
+	}
+	.rup .special{
+		font-size:22px;	
+	}
+	.dilimiter{
+		padding:0 8px;	
+	}
+	.change{
+		padding:15px;	
+	}
+	#formTable tr td{
+		padding-bottom:10px;
+	}
+	.clk{
+		position:relative;	
+	}
+	.clk span{
+		content:"";
+		position:absolute;
+		width:155px;
+		height:30px;
+		cursor:pointer;
+		left:0;
+		top:0;
+	}
+	.clk2{
+		position:relative;	
+	}
+	.clk2 span{
+		content:"";
+		position:absolute;
+		width:47px;
+		height:30px;
+		cursor:pointer;
+		right:162;
+		top:0;
+	}
+	.radioTb tr td{
+		padding-bottom:5px;	
+	}
+	.setPadding{
+		padding:10px;	
+	}
+	td label{
+		cursor:pointer;	
+	}
+	.webui-popover-backdrop{
+		z-index:9001	
+	}
+</style>
+</head>
+<body>
+	<div id="header">
+		<div class="header">
+			<div class="left">
+				<a href="#">
+					<img src="../images/uiimages/bed/fmaleAvatar.png" style="height:56px;width:auto;" />
+				</a>
+			</div>
+			<div class="right">
+				<div class="rup">
+					<span id="bedh" class="patientInfo special">01床</span>
+					<span class="dilimiter">|</span>
+					<span id="nameh" class="patientInfo special">myh1502</span>
+					<span class="dilimiter">|</span>
+					<span id="ageh" class="patientInfo">1岁3月</span>
+					<span class="dilimiter">|</span>
+					<span id="numh" class="patientInfo">0000000188</span>
+					<span class="dilimiter">|</span>
+					<span id="chargeh" class="patientInfo">全自费</span>
+					<span class="dilimiter">|</span>
+					<span id="wardh" class="patientInfo">产科</span>
+					<span class="dilimiter">|</span>
+					<span id="wardcellh" class="patientInfo">产科护理单元</span>
+					<span class="dilimiter">|</span>
+				</div>
+				<div class="rdown">
+					<!-- <a href="#">
+						<img src="../images/webemr/分娩.png" />
+					</a> -->
+				</div>
+			</div>
+		</div>
+		<div class="btn">
+			<!--<a  href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>-->
+			<a href="javascript:void(0)" onclick="Add('add')" class="l-btn l-btn-small l-btn-plain" group="" id="">
+				<span class="l-btn-left l-btn-icon-left">
+					<span class="l-btn-text">新增</span>
+					<span class="l-btn-icon icon-add">&nbsp;</span>
+				</span>
+			</a>
+			
+		</div>
+	</div>
+	
+		<div id="dataTB" class="body"></div>
+
+	<div id="modelAdd" title="新生儿详情" style="width:480px;overflow-y:auto;height:350px;top:250px;left:500px;padding:10px;">
+		<table id="formTable" width="100%">
+			<tr >
+				<td class="r-label" width="35%">序号</td>
+				<td >
+					<input id="NO" disabled class="textbox" style="width:193px;">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">分娩方式</td>
+				<td>
+					<select id="birthType" class="hisui-validatebox" style="width:200px;"></select>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">结果</td>
+				<td>
+					<select id="outComeDesc" style="width:200px;"></select>
+				</td>
+			</tr>
+			<tr class="ishide">
+				<td class="r-label">姓名</td>
+				<td>
+					<input id="name" placeholder="姓名不能为空" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,">
+				</td>
+			</tr>
+			<tr class="ishide">
+				<td class="r-label">姓名简称</td>
+				<td>
+					<input id="name2" placeholder="姓名不能为空" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,">
+				</td>
+			</tr>
+			<tr class="ishide">
+				<td class="r-label">性别</td>
+				<td>
+					<select id="sex"  style="width:200px;"></select>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">出生日期</td>
+				<td>
+					<input id="birthDate" style="width:155px;" type="text" class="hisui-datebox" required="required"></input>  
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">出生时间</td>
+				<td>
+					<input id="birthTime" style="width:155px;" class="hisui-timespinner" required="required" >
+				</td>
+			</tr>
+			<tr class="ishide">
+				<td class="r-label">Apgar评分(1分钟)</td>
+				<td class="clk">
+					<span id="PoPOne"></span>
+					<input id="one" disabled class="textbox">
+				</td>
+			</tr>
+			<tr class="ishide">
+				<td class="r-label">Apgar评分(5分钟)</td>
+				<td class="clk">
+					<span id="PoPFive"></span>
+					<input  id="five" disabled class="textbox">
+				</td>
+			</tr>
+			<tr class="ishide">
+				<td class="r-label">Apgar评分</td>
+				<td class="clk2">
+					<span id="OtherOne"></span>
+					<input id="pfonel" class="hisui-numberbox textbox" style="width:40px">&nbsp;分钟&nbsp;<input  id="pfoner" disabled class="textbox" style="width:40px">
+				</td>
+			</tr>
+			<tr class="ishide">
+				<td class="r-label">Apgar评分</td>
+				<td class="clk2">
+					<span id="OtherTwo"></span>
+					<input id="pftwol" class="hisui-numberbox textbox" style="width:40px">&nbsp;分钟&nbsp;<input  id="pftwor" disabled class="textbox" style="width:40px">
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div style="display:none;">
+		<div id="radioGrop">
+			<table class="radioTb">
+			    <tr>
+			    	<td>肌张力<td>
+			        <td id="jzl" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='jzl' value='0' id="jzl0">
+			            <label for="jzl0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='jzl' value='1' id="jzl1">
+			            <label for="jzl1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='jzl' value='2' id="jzl2">
+			            <label for="jzl2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>呼吸<td>
+			        <td id="breath" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='breath' value='0' id="breath0">
+			            <label for="breath0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='breath' value='1' id="breath1">
+			            <label for="breath1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='breath' value='2' id="breath2">
+			            <label for="breath2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>脉搏<td>
+			        <td id="mb" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='mb' value='0' id="mb0">
+			            <label for="mb0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='mb' value='1' id="mb1">
+			            <label for="mb1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='mb' value='2' id="mb2">
+			            <label for="mb2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>反射<td>
+			        <td id="fs" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='fs' value='0' id="fs0">
+			            <label for="fs0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='fs' value='1' id="fs1">
+			            <label for="fs1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='fs' value='2' id="fs2">
+			            <label for="fs2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>肤色<td>
+			        <td id="fus" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='fus' value='0' id="fus0">
+			            <label  for="fus0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='fus' value='1' id="fus1">
+			            <label  for="fus1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='fus' value='2' id="fus2">
+			            <label for="fus2">2分</label>
+			        </td>
+			    </tr>
+			</table>
+		</div>
+		<div id="FiveradioGrop">
+			<table class="radioTb">
+			    <tr>
+			    	<td>肌张力<td>
+			        <td id="Fivejzl" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivejzl' value='0' id="Fivejzl0">
+			            <label for="Fivejzl0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivejzl' value='1' id="Fivejzl1">
+			            <label for="Fivejzl1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivejzl' value='2' id="Fivejzl2">
+			            <label for="Fivejzl2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>呼吸<td>
+			        <td id="Fivebreath" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivebreath' value='0' id="Fivebreath0">
+			            <label for="Fivebreath0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivebreath' value='1' id="Fivebreath1">
+			            <label for="Fivebreath1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivebreath' value='2' id="Fivebreath2">
+			            <label for="Fivebreath2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>脉搏<td>
+			        <td id="Fivemb" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivemb' value='0' id="Fivemb0">
+			            <label for="Fivemb0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivemb' value='1' id="Fivemb1">
+			            <label for="Fivemb1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivemb' value='2' id="Fivemb2">
+			            <label for="Fivemb2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>反射<td>
+			        <td id="Fivefs" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefs' value='0' id="Fivefs0">
+			            <label for="Fivefs0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefs' value='1' id="Fivefs1">
+			            <label for="Fivefs1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefs' value='2' id="Fivefs2">
+			            <label for="Fivefs2">2分</label>
+			        </td>
+			    </tr>
+			    <tr>
+			    	<td>肤色<td>
+			        <td id="Fivefus" >
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefus' value='0' id="Fivefus0">
+			            <label  for="Fivefus0">0分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefus' value='1' id="Fivefus1">
+			            <label  for="Fivefus1">1分</label>
+			            <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefus' value='2' id="Fivefus2">
+			            <label for="Fivefus2">2分</label>
+			        </td>
+			    </tr>
+			</table>
+		</div>
+	    <div id="OTOneradioGrop">
+	        <table class="radioTb">
+	            <tr>
+	                <td>肌张力<td>
+	                <td id="OTOnejzl" >
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnejzl' value='0' id="OTOnejzl0">
+	                    <label for="OTOnejzl0">0分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnejzl' value='1' id="OTOnejzl1">
+	                    <label for="OTOnejzl1">1分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnejzl' value='2' id="OTOnejzl2">
+	                    <label for="OTOnejzl2">2分</label>
+	                </td>
+	            </tr>
+	            <tr>
+	                <td>呼吸<td>
+	                <td id="OTOnebreath" >
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnebreath' value='0' id="OTOnebreath0">
+	                    <label for="OTOnebreath0">0分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnebreath' value='1' id="OTOnebreath1">
+	                    <label for="OTOnebreath1">1分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnebreath' value='2' id="OTOnebreath2">
+	                    <label for="OTOnebreath2">2分</label>
+	                </td>
+	            </tr>
+	            <tr>
+	                <td>脉搏<td>
+	                <td id="OTOnemb" >
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnemb' value='0' id="OTOnemb0">
+	                    <label for="OTOnemb0">0分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnemb' value='1' id="OTOnemb1">
+	                    <label for="OTOnemb1">1分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnemb' value='2' id="OTOnemb2">
+	                    <label for="OTOnemb2">2分</label>
+	                </td>
+	            </tr>
+	            <tr>
+	                <td>反射<td>
+	                <td id="OTOnefs" >
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefs' value='0' id="OTOnefs0">
+	                    <label for="OTOnefs0">0分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefs' value='1' id="OTOnefs1">
+	                    <label for="OTOnefs1">1分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefs' value='2' id="OTOnefs2">
+	                    <label for="OTOnefs2">2分</label>
+	                </td>
+	            </tr>
+	            <tr>
+	                <td>肤色<td>
+	                <td id="OTOnefus" >
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefus' value='0' id="OTOnefus0">
+	                    <label  for="OTOnefus0">0分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefus' value='1' id="OTOnefus1">
+	                    <label  for="OTOnefus1">1分</label>
+	                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefus' value='2' id="OTOnefus2">
+	                    <label for="OTOnefus2">2分</label>
+	                </td>
+	            </tr>
+	        </table>
+	    </div>
+	    <div id="OTTworadioGrop">
+		    <table class="radioTb">
+		        <tr>
+		            <td>肌张力<td>
+		            <td id="OTTwojzl" >
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwojzl' value='0' id="OTTwojzl0">
+		                <label for="OTTwojzl0">0分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwojzl' value='1' id="OTTwojzl1">
+		                <label for="OTTwojzl1">1分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwojzl' value='2' id="OTTwojzl2">
+		                <label for="OTTwojzl2">2分</label>
+		            </td>
+		        </tr>
+		        <tr>
+		            <td>呼吸<td>
+		            <td id="OTTwobreath" >
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwobreath' value='0' id="OTTwobreath0">
+		                <label for="OTTwobreath0">0分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwobreath' value='1' id="OTTwobreath1">
+		                <label for="OTTwobreath1">1分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwobreath' value='2' id="OTTwobreath2">
+		                <label for="OTTwobreath2">2分</label>
+		            </td>
+		        </tr>
+		        <tr>
+		            <td>脉搏<td>
+		            <td id="OTTwomb" >
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwomb' value='0' id="OTTwomb0">
+		                <label for="OTTwomb0">0分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwomb' value='1' id="OTTwomb1">
+		                <label for="OTTwomb1">1分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwomb' value='2' id="OTTwomb2">
+		                <label for="OTTwomb2">2分</label>
+		            </td>
+		        </tr>
+		        <tr>
+		            <td>反射<td>
+		            <td id="OTTwofs" >
+		                <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofs' value='0' id="OTTwofs0">
+		                <label for="OTTwofs0">0分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofs' value='1' id="OTTwofs1">
+		                <label for="OTTwofs1">1分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofs' value='2' id="OTTwofs2">
+		                <label for="OTTwofs2">2分</label>
+		            </td>
+		        </tr>
+		        <tr>
+		            <td>肤色<td>
+		            <td id="OTTwofus" >
+		                <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofus' value='0' id="OTTwofus0">
+		                <label  for="OTTwofus0">0分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofus' value='1' id="OTTwofus1">
+		                <label  for="OTTwofus1">1分</label>
+		                <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofus' value='2' id="OTTwofus2">
+		                <label for="OTTwofus2">2分</label>
+		            </td>
+		        </tr>
+		    </table>
+		</div>
+	</div>
+<Script type="text/javascript">
+function isIE(){
+	return navigator.appName.indexOf("Microsoft Internet Explorer")!=-1 && document.all;
+}
+// 获取路径的参数值
+function getParam(paramName) {
+    paramValue = "";
+    isFound = false;
+    if (this.location.search.indexOf("?") == 0 && this.location.search.indexOf("=") > 1) {
+        arrSource = unescape(this.location.search).substring(1, this.location.search.length).split("&");
+        var i = 0;
+        while (i < arrSource.length && !isFound) {
+            if (arrSource[i].indexOf("=") > 0) {
+                if (arrSource[i].split("=")[0].toLowerCase() == paramName.toLowerCase()) {
+                    paramValue = arrSource[i].split("=")[1];
+                    isFound = true;
+                }
+            }
+            i++;
+        }
+    }
+    return paramValue;
+}
+// 获取病人详细信息
+function getPatientInfo(){
+    $cm({
+        ClassName:"Nur.CommonInterface.Patient",
+        MethodName:"getPatient",
+        episodeID:EpisodeID
+    },function(res){
+        $("#bedh").html(res.bedCode);
+        $("#ageh").html(res.age);
+        $("#nameh").html(res.name);
+        $("#numh").html(res.regNo);
+        $("#chargeh").html(res.admReason);
+        $("#wardh").html(res.ctLocDesc);
+        $("#wardcellh").html(res.wardDesc);
+    })
+}
+// 获取病人床位图标
+function getPatientIcon(){
+    $cm({
+        ClassName:"Nur.NIS.Service.Base.Patient",
+        MethodName:"GetChunkIcons",
+        episodeIDString:EpisodeID
+    },function(res){
+        if(res.length>0){
+            var str="";
+            res[0].forEach(function(item){
+                if(item.src){
+                    //str+=`<a><img src="../images/${item.src}" title="${item.title}" /></a>&nbsp;`
+                    str+="<a><img src='../images/"+item.src+"' title='"+item.title+"' /></a>&nbsp;"
+                }
+            });
+            $(".rdown").html(str);
+        }
+    })
+
+}
+// 重新操作项目表格列内容
+function reWrite(value,row,index){
+    //return `<a href="#" onclick=confirmDelItem("${row.pregDelBabyID}")><img src="../images/uiimages/bed/cancel.png" /></a>`
+    // return <a href="#" onclick=confirmDelItem("${row.pregDelBabyID}")><img src="../images/uiimages/bed/cancel.png" /></a>
+    return "<a  href='#' onclick=confirmDelItem('"+row.pregDelBabyID+"')><img src='../images/uiimages/bed/cancel.png' /></a>"
+}
+// 删除操作
+function confirmDelItem(babayId){
+    $.messager.confirm("删除", "确定确认删除分娩结果?", function (r) {
+        if (r) {
+            //$.messager.popover({msg:"点击了确定",type:'info'});
+            delItem(babayId)
+        }
+    });
+}
+// 删除逻辑
+function delItem(Id){
+    $cm({
+        ClassName:"Nur.IP.Delivery",
+        MethodName:"delete",
+        ID:Id, 
+        userID:session['LOGON.USERID'], 
+        groupDesc:session['LOGON.GROUPDESC'],
+        dataType:"text"
+    },function(res){
+        if(res.indexOf("0") != -1){
+            // 删除成功
+            $.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+            initTable(); // 刷新表格数据
+        }else{
+            // 删除失败
+            $.messager.popover({msg: res,type:'alert'});
+        }
+    })
+}
+// 初始化表格数据
+function initTable(){
+    $cm({
+        ClassName:"Nur.IP.Delivery",
+        QueryName:"findBaby",
+        episodeID:EpisodeID
+    },function(res){
+        console.log(res)
+        $("#dataTB").datagrid({
+            fitColumns:true,
+            cls:"test",
+            toolbar:"",
+            fit:true,
+            toolbar:"#header",
+            title:"分娩记录",
+            iconCls:'icon-paper',
+            cls:"setPadding",
+            headerCls:'panel-header-gray',
+            //width:pw,
+            //height:ph,
+            onDblClickRow:function(rowIndex, rowData){
+                 // console.log(rowIndex, rowData)
+         
+                currentBabyId=rowData.pregDelBabyID
+                $("#modelAdd").show();
+                $("#modelAdd").dialog({
+                    buttons:[{
+                        text:'保存',
+                        handler:function(){
+                            save(rowData.pregDelBabyID)
+                        }
+                    },{
+                        text:'取消',
+                        handler:function(){$HUI.dialog('#modelAdd').close();}
+                    }],
+                    onClose:function(){
+	                    clearVar()
+                    }
+                })
+                if(rowData.regNo){
+                    $(".ishide").show();
+                    initForm(rowData.pregDelBabyID,true);
+                    isShowMore=true;
+                }else{
+                    $(".ishide").hide();
+                    initForm(rowData.pregDelBabyID,false);
+                    isShowMore=false;
+                }
+            },
+            data:res.rows,
+            columns:[[
+                {field:'NO',title:'序号',width:40},
+                {field:'name',title:'姓名',width:100},    
+                {field:'name2',title:'姓名简拼',width:100},    
+                {field:'sex',title:'性别',width:40},  
+                {field:'regNo',title:'登记号',width:100},    
+                {field:'birthDate',title:'出生日期',width:80},    
+                {field:'birthTime',title:'出生时间',width:60},    
+                {field:'outComeDesc',title:'分娩结果',width:100},    
+                {field:'op',title:'操作',width:50,formatter:reWrite}      
+            ]]    
+        })
+    })
+}
+// 计算尺寸
+function calcultBodyHandW(){
+     pw=$("#TableBody").width();
+     ph=$("#TableBody").height();
+}
+// 获取日期
+function getDate(){
+    var myDate=new Date();
+    var Y=myDate.getFullYear();
+    var M=myDate.getMonth()+1;
+    var D=myDate.getDate();
+    return Y+"-"+M+"-"+D	
+}
+// 添加婴儿
+function Add(arg){
+    console.log(arg)
+    $("#modelAdd").show();
+    $("#modelAdd").dialog({
+        buttons:[{
+            text:'保存',
+            handler:function(){
+                save("")
+            }
+        },{
+            text:'取消',
+            handler:function(){$HUI.dialog('#modelAdd').close();}
+        }]
+    })
+    $(".ishide").hide();
+    initForm("",false)
+}
+function initBabyInfo(arg){
+    name=arg.name;
+    name2=arg.name2;
+    birthTime=arg.birthTime;
+    birthDate=arg.birthDate;
+    deliverMethod=arg.deliverMethod;
+    outCome=arg.outCome;
+    sex=arg.sex;
+    apgarMiniuteOtherOne= arg.apgarMiniuteOtherOne ? arg.apgarMiniuteOtherOne : "";
+    apgarMiniuteOtherTwo=arg.apgarMiniuteOtherTwo ? arg.apgarMiniuteOtherTwo : ""
+    // 服务器获取评分修改本地数据
+    if (typeof Object.assign != 'function') {
+	    // 解决Object.assign函数，ie不支持的问题
+		  Object.assign = function(target) {
+		    'use strict';
+		    if (target == null) {
+		      throw new TypeError('Cannot convert undefined or null to object');
+		    }
+		 
+		    target = Object(target);
+		    for (var index = 1; index < arguments.length; index++) {
+		      var source = arguments[index];
+		      if (source != null) {
+		        for (var key in source) {
+		          if (Object.prototype.hasOwnProperty.call(source, key)) {
+		            target[key] = source[key];
+		          }
+		        }
+		      }
+		    }
+		    return target;
+		  };
+	}
+    Object.assign(apgarFive,arg.apgarFive)
+    Object.assign(apgarOne,arg.apgarOne)
+    Object.assign(apgarOtherOne,arg.apgarOtherOne)
+    Object.assign(apgarOtherTwo,arg.apgarOtherTwo)
+}
+function initMore(){
+    // 展开之后初始化
+    $cm({
+        ClassName:"Nur.CommonInterface.Patient",
+        QueryName:"findSex"
+    },function(res){
+        $HUI.combobox("#sex",{
+            valueField:'ID',
+            textField:'desc',
+            required:true,
+            multiple:false,
+            //rowStyle:'checkbox', //显示成勾选行形式
+            selectOnNavigation:false,
+            panelHeight:"120",
+            editable:false,
+            data:res.rows
+            // data:[
+            //     {id:'css',text:'男'},
+            //     {id:'html',text:'女'},
+            //     {id:'c',text:'未知性别'},
+            //     {id:'cplus',text:'未说明性别'}
+            // ]
+        });
+        $("#sex").combobox("setValue",sex)
+    })
+    // Apgar评分(1分钟)
+    $HUI.popover('#PoPOne',{
+        title:'',
+        content:"",
+        width:260,
+        height:160,
+        backdrop:true,
+        url:"#radioGrop",
+        onShow:function(){
+            // 初始化分数
+            $("#radioGrop").show();
+            $HUI.radio("#jzl"+apgarOne.activity).setValue(true);
+            $HUI.radio("#breath"+apgarOne.respiration).setValue(true);
+            $HUI.radio("#mb"+apgarOne.pulse).setValue(true);
+            $HUI.radio("#fs"+apgarOne.grimace).setValue(true);
+            $HUI.radio("#fus"+apgarOne.appearance).setValue(true);
+        },
+        onHide:function(){
+            // 收集分数
+            var activity=$("input[name='jzl']:checked").val()
+            var respiration=$("input[name='breath']:checked").val()
+            var pulse=$("input[name='mb']:checked").val()
+            var grimace=$("input[name='fs']:checked").val()
+            var appearance=$("input[name='fus']:checked").val()
+            // 计算总分
+            var total=parseInt(activity)+parseInt(respiration)+parseInt(pulse)+parseInt(grimace)+parseInt(appearance)
+            // Object.assign(apgarOne,{activity},{total},{respiration},{pulse},{grimace},{appearance})
+            apgarOne.activity=activity
+            apgarOne.total=total
+            apgarOne.respiration=respiration
+            apgarOne.pulse=pulse
+            apgarOne.grimace=grimace
+            apgarOne.appearance=appearance
+            $("#one").val(apgarOne.total);
+        }
+    });
+    // Apgar评分(5分钟)
+    $HUI.popover('#PoPFive',{
+        title:'',
+        content:"",
+        width:260,
+        backdrop:true,
+        height:160,
+        url:"#FiveradioGrop",
+        onShow:function(){
+            // 初始化分数
+            $("#radioGrop").show();
+            $HUI.radio("#Fivejzl"+apgarFive.activity).setValue(true);
+            $HUI.radio("#Fivebreath"+apgarFive.respiration).setValue(true);
+            $HUI.radio("#Fivemb"+apgarFive.pulse).setValue(true);
+            $HUI.radio("#Fivefs"+apgarFive.grimace).setValue(true);
+            $HUI.radio("#Fivefus"+apgarFive.appearance).setValue(true);
+        },
+        onHide:function(){
+            // 收集分数
+            $("#radioGrop").hide();
+            var activity=$("input[name='Fivejzl']:checked").val()
+            var respiration=$("input[name='Fivebreath']:checked").val()
+            var pulse=$("input[name='Fivemb']:checked").val()
+            var grimace=$("input[name='Fivefs']:checked").val()
+            var appearance=$("input[name='Fivefus']:checked").val()
+            // 计算总分
+            var total=parseInt(activity)+parseInt(respiration)+parseInt(pulse)+parseInt(grimace)+parseInt(appearance)
+            // Object.assign(apgarFive,{activity},{total},{respiration},{pulse},{grimace},{appearance})
+            apgarFive.activity=activity
+            apgarFive.total=total
+            apgarFive.respiration=respiration
+            apgarFive.pulse=pulse
+            apgarFive.grimace=grimace
+            apgarFive.appearance=appearance
+            $("#five").val(apgarFive.total);
+        }
+    });
+    // otherOne
+    $HUI.popover('#OtherOne',{
+        title:'',
+        content:"",
+        width:260,
+        backdrop:true,
+        height:160,
+        url:"#OTOneradioGrop",
+        onShow:function(){
+            // 初始化分数
+            $("#radioGrop").show();
+            $HUI.radio("#OTOnejzl"+apgarOtherOne.activity).setValue(true);
+            $HUI.radio("#OTOnebreath"+apgarOtherOne.respiration).setValue(true);
+            $HUI.radio("#OTOnemb"+apgarOtherOne.pulse).setValue(true);
+            $HUI.radio("#OTOnefs"+apgarOtherOne.grimace).setValue(true);
+            $HUI.radio("#OTOnefus"+apgarOtherOne.appearance).setValue(true);
+        },
+        onHide:function(){
+            // 收集分数
+            $("#radioGrop").hide();
+            var activity=$("input[name='OTOnejzl']:checked").val()
+            var respiration=$("input[name='OTOnebreath']:checked").val()
+            var pulse=$("input[name='OTOnemb']:checked").val()
+            var grimace=$("input[name='OTOnefs']:checked").val()
+            var appearance=$("input[name='OTOnefus']:checked").val()
+            // 计算总分
+            var total=parseInt(activity)+parseInt(respiration)+parseInt(pulse)+parseInt(grimace)+parseInt(appearance)
+            // Object.assign(apgarOtherOne,{activity},{total},{respiration},{pulse},{grimace},{appearance})
+            apgarOtherOne.activity=activity
+            apgarOtherOne.total=total
+            apgarOtherOne.respiration=respiration
+            apgarOtherOne.pulse=pulse
+            apgarOtherOne.grimace=grimace
+            apgarOtherOne.appearance=appearance
+            $("#pfoner").val(apgarOtherOne.total);
+        }
+    });
+    // otherTwo
+    $HUI.popover('#OtherTwo',{
+        title:'',
+        content:"",
+        width:260,
+        backdrop:true,
+        height:160,
+        url:"#OTTworadioGrop",
+        onShow:function(){
+            // 初始化分数
+            $("#radioGrop").show();
+            $HUI.radio("#OTTwojzl"+apgarOtherTwo.activity).setValue(true);
+            $HUI.radio("#OTTwobreath"+apgarOtherTwo.respiration).setValue(true);
+            $HUI.radio("#OTTwomb"+apgarOtherTwo.pulse).setValue(true);
+            $HUI.radio("#OTTwofs"+apgarOtherTwo.grimace).setValue(true);
+            $HUI.radio("#OTTwofus"+apgarOtherTwo.appearance).setValue(true);
+        },
+        onHide:function(){
+            // 收集分数
+            $("#radioGrop").hide();
+            var activity=$("input[name='OTTwojzl']:checked").val()
+            var respiration=$("input[name='OTTwobreath']:checked").val()
+            var pulse=$("input[name='OTTwomb']:checked").val()
+            var grimace=$("input[name='OTTwofs']:checked").val()
+            var appearance=$("input[name='OTTwofus']:checked").val()
+            // 计算总分
+            var total=parseInt(activity)+parseInt(respiration)+parseInt(pulse)+parseInt(grimace)+parseInt(appearance)
+            // Object.assign(apgarOtherTwo,{activity},{total},{respiration},{pulse},{grimace},{appearance})
+            apgarOtherTwo.activity=activity
+            apgarOtherTwo.total=total
+            apgarOtherTwo.respiration=respiration
+            apgarOtherTwo.pulse=pulse
+            apgarOtherTwo.grimace=grimace
+            apgarOtherTwo.appearance=appearance
+            $("#pftwor").val(apgarOtherTwo.total);
+            
+        }
+    });
+    $("#name").val(name).validatebox("validate");
+    $("#name2").val(name2).validatebox("validate");
+    $("#one").val(apgarOne.total);
+    $("#five").val(apgarFive.total);
+    $("#pfoner").val(apgarOtherOne.total);
+    $("#pftwor").val(apgarOtherTwo.total);
+    $("#pfonel").val(apgarMiniuteOtherOne);
+    $("#pftwol").val(apgarMiniuteOtherTwo);
+}
+function initForm(argId,showMore){
+    // 新增baby获取数据
+    // showMore:是否显示更多显示
+    $cm({
+        ClassName:"Nur.IP.Delivery",
+        MethodName:"getBabyDeliveryInfo",
+        motherEpisodeID:EpisodeID,
+        babyID:argId
+    },function(res){
+        $HUI.validatebox("#NO", {
+            required: true,
+            placeholder:"序号必填"
+        });
+        $("#NO").val(res.orderNumber) // 设置baby序号
+        $("#birthDate").datebox("setValue",res.birthDate);
+        $('#birthDate').datebox('isValid')
+        $('#birthTime').timespinner('setValue',res.birthTime); 
+        $('#birthTime').timespinner('isValid');
+        initBabyInfo(res) // 初始化baby信息
+        
+	    //获取分娩方式
+	    $cm({
+	        ClassName:"Nur.IP.Delivery",
+	        QueryName:"findDeliverMethod"
+	    },function(res){
+	        $HUI.combobox("#birthType",{
+	            valueField:'ID',
+	            textField:'desc',
+	            required:true,
+	            multiple:true,
+	            rowStyle:'checkbox', //显示成勾选行形式
+	            selectOnNavigation:false,
+	            panelHeight:"120",
+	            editable:false,
+	            data:res.rows
+	        });
+	        $("#birthType").combobox("setValues",deliverMethod)
+	    })
+	    
+	    // 获取分娩结果
+	    $cm({
+	        ClassName:"Nur.IP.Delivery",
+	        QueryName:"findOutCome"
+	    },function(res){
+	        $HUI.combobox("#outComeDesc",{
+	            valueField:'code',
+	            textField:'desc',
+	            required:true,
+	            multiple:false,
+	            selectOnNavigation:false,
+	            panelHeight:"auto",
+	            editable:false,
+	            onSelect:function(record){
+	                if(record.desc=="到达前生产" || record.desc=="活产"){
+	                    $(".ishide").show();
+	                    isShowMore=true;
+	                    initMore()
+	                }else{
+	                    $(".ishide").hide();
+	                    isShowMore=false;
+	                }
+	            },
+	            data:res.rows
+	        });
+	        $("#outComeDesc").combobox("setValue",outCome);
+	        if(currentBabyId){
+	            $("#outComeDesc").combobox("disable")
+	        }else{
+	            $("#outComeDesc").combobox("enable")
+		    }
+	        if(showMore){
+	            initMore()
+	        }
+	    })
+        
+    })
+    
+    // 设置时间
+    // var now=new Date()
+    // var hour=now.getHours()
+    // var min=now.getMinutes()
+    // var currentTime=`${hour}:${min}`
+    // $('#birthTime').timespinner('setValue',currentTime);  
+    // $('#birthTime').timespinner('isValid')
+}
+function save(babyId){
+    // 数据保存
+    // $HUI.dialog('#modelAdd').close()
+    // 1,校验表单
+    if(isShowMore){
+        // 验证全部
+        var br_status=$("#birthType").combobox("isValid");  //分娩类型验证结果
+        var rs_status=$("#outComeDesc").combobox("isValid");  //结果验证结果
+        var sex_status=$("#sex").combobox("isValid");  //性别验证
+        var name_status=$("#name").validatebox("isValid");
+        var name2_status=$("#name2").validatebox("isValid");
+        var date_status=$("#birthDate").datebox('isValid');
+        var timer_status=$('#birthTime').timespinner('isValid')
+       if(br_status && rs_status && sex_status && name_status && name2_status && date_status && timer_status){
+           // 服务器保存数据
+           var order=$("#NO").val(); // 序号
+           var birthtype=$("#birthType").combobox("getValues");  // 分娩方式
+           var res=$("#outComeDesc").combobox("getValue");  // 获取结果
+           var date=$("#birthDate").datebox("getValue"); // 出生日期
+           var timer=$("#birthTime").timespinner("getValue")
+           var sex=$("#sex").combobox("getValue"); // 获取性别
+           var name_tmp=$("#name").val();
+           var name2_tmp=$("#name2").val();
+           var MiniuteOtherOne=$("#pfonel").val();
+           var MiniuteOtherTwo=$("#pftwol").val();
+           var jsonObj = {
+               apgarOne: "",
+               apgarFive: "",
+               apgarOtherOne: "",
+               apgarOtherTwo:"",
+               apgarMiniuteOtherOne:MiniuteOtherOne,
+               apgarMiniuteOtherTwo:MiniuteOtherTwo
+           }
+           jsonObj.apgarOne=apgarOne
+           jsonObj.apgarFive=apgarFive
+           jsonObj.apgarOtherOne=apgarOtherOne
+           jsonObj.apgarOtherTwo=apgarOtherTwo
+           jsonStr=JSON.stringify(jsonObj)
+           // jsonStr=JSON.stringify(Object.assign(jsonObj,{apgarOne},{apgarFive},{apgarOtherOne},{apgarOtherTwo}));
+           $cm({
+               ClassName:"Nur.IP.Delivery",
+               MethodName:"saveBabyDeliveryInfo",
+               motherEpisodeID:EpisodeID,
+               babyID:babyId,
+               orderNumber:order,
+               name:name_tmp,
+               name2:name2_tmp,
+               sex:sex,
+               birthDate:date,
+               birthTime:timer,
+               userID:session['LOGON.USERID'],
+               outComeCode:res,
+               deliverMethodString:birthtype.join("^"),
+               apgarJsonString:jsonStr
+           },function(res){
+               if(!res){
+                   $HUI.dialog('#modelAdd').close()
+                   $.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+                   clearVar(); // 清除变量的值
+                   initTable(); // 刷新表格
+               }
+           })
+
+       }else{
+            $.messager.popover({msg: '有未填项！',type:'alert'});
+       }
+
+    }else{
+        // 验证两个
+        var br_status=$("#birthType").combobox("isValid");  //分娩类型验证结果
+        var rs_status=$("#outComeDesc").combobox("isValid");  //结果验证结果
+        if(br_status && rs_status){
+            // 保存数据(保存死胎跟流产)
+            // 数据收集
+            var order=$("#NO").val(); // 序号
+            var birthtype=$("#birthType").combobox("getValues");  // 分娩方式
+            var res=$("#outComeDesc").combobox("getValue");  // 获取结果
+            var date=$("#birthDate").datebox("getValue"); // 出生日期
+            var timer=$("#birthTime").timespinner("getValue")
+            var jsonObj = {
+                apgarOne: "",
+                apgarFive: "",
+                apgarOtherOne: "",
+                apgarOtherTwo:"",
+                apgarMiniuteOtherOne:"",
+                apgarMiniuteOtherTwo:""
+            }
+            // jsonStr=JSON.stringify(Object.assign(jsonObj,{apgarOne},{apgarFive},{apgarOtherOne},{apgarOtherTwo}));
+            
+	           jsonObj.apgarOne=apgarOne
+	           jsonObj.apgarFive=apgarFive
+	           jsonObj.apgarOtherOne=apgarOtherOne
+	           jsonObj.apgarOtherTwo=apgarOtherTwo
+	           jsonStr=JSON.stringify(jsonObj)
+            $cm({
+                ClassName:"Nur.IP.Delivery",
+                MethodName:"saveBabyDeliveryInfo",
+                motherEpisodeID:EpisodeID,
+                babyID:babyId,
+                orderNumber:order,
+                name:name,
+                name2:name2,
+                sex:"",
+                birthDate:date,
+                birthTime:timer,
+                userID:session['LOGON.USERID'],
+                outComeCode:res,
+                deliverMethodString:birthtype.join("^"),
+                apgarJsonString:jsonStr
+            },function(res){
+                if(!res){
+                    $HUI.dialog('#modelAdd').close()
+                    $.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+                    clearVar(); // 清除变量的值
+                    initTable()
+                }
+            })
+        }else{
+            // 提示有未填项目
+            $.messager.popover({msg: '有未填项！',type:'alert'});
+        }
+    }
+}
+function clearVar(){
+    name="";
+    name2="";
+    birthTime="";
+    birthDate="";
+    deliverMethod=[];
+    outCome="";
+    sex="";
+    isShowMore=false; // 默认表单不展示全部
+    currentBabyId="";
+    apgarMiniuteOtherOne="";
+    apgarMiniuteOtherTwo=""; 
+}
+var PatientID=getParam("PatientID");
+var EpisodeID=getParam("EpisodeID"); // 就诊id
+var WardID=getParam("WardID"); // 病区id
+var pw=""; // 表格宽度
+var ph=""; // 表格高度
+var date=getDate(); // 获取当前日期
+var name="";
+var name2="";
+var birthTime="";
+var birthDate="";
+var deliverMethod=[];
+var outCome="";
+var sex="";
+var isShowMore=false; // 默认表单不展示全部
+var currentBabyId="";
+var apgarMiniuteOtherOne="";
+var apgarMiniuteOtherTwo="";
+var apgarOne={
+    activity: "2",   // 肌张力
+    appearance: "2", // 肤色
+    grimace: "2",    // 反射
+    pulse: "2",      // 脉搏
+    respiration: "2", // 呼吸
+    total: "10"
+}
+var apgarFive={
+    activity: "2",
+    appearance: "2",
+    grimace: "2",
+    pulse: "2",
+    respiration: "2",
+    total: "10"
+}
+var apgarOtherOne={
+    activity: "2",
+    appearance: "2",
+    grimace: "2",
+    pulse: "2",
+    respiration: "2",
+    total: "10"
+}
+var apgarOtherTwo={
+    activity: "2",
+    appearance: "2",
+    grimace: "2",
+    pulse: "2",
+    respiration: "2",
+    total: "10"
+}
+$(function(){
+    $("#modelAdd").hide(); // 模态框隐藏
+    $("#modelInModel").hide();
+    $("#radioGrop").hide();    
+    getPatientInfo(); // 加载病人详情
+    getPatientIcon(); // 加载病人床位图标
+    calcultBodyHandW(); // 计算表格尺寸
+    initTable(); // 初始化表格数据
+    $(window).resize(function(){   // 视窗发生变化时
+        setTimeout(function(){
+            calcultBodyHandW()
+            $("#dataTB").datagrid("resize",{
+                width:pw,
+                height:ph
+            })
+        },500)
+    })
+    console.log(isIE(),"ceshi");
+})
+</script>
+</body>
+</html>

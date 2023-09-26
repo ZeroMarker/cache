@@ -1,0 +1,22 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ ;
+ n XTRELOADID
+ ; We should always be redirected here, never called directly
+ ; for reloading a list screen where a link/button was clicked that ran a class method and page needs to refresh list
+ d ##Class(websys.Conversions).LoadRequest()
+ s XTRELOADID=$g(%request.Data("XTRELOADID",1))
+ k %request.Data
+ s %request.Data("TRELOADID",1)=XTRELOADID
+ s %request.Data("TRELOAD",1)=1
+ s %response.ServerSideRedirect=$g(^TMP("reload",%session.SessionId,+$g(XTRELOADID),"RequestPageName"),"websys.csp")
+ s %request.Data("TRELOADPLUS",1)=1
+ ;
+ k GOTRELOAD
+ d ##Class(websys.Conversions).SaveRequest()
+ ;
+ q 1
+ quit 1
+</csp:method>

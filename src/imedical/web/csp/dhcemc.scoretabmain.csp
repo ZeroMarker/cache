@@ -1,0 +1,112 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcemc.scoretabmain.csp  评分表维护 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcemc/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcemc/css/scoretabmain.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcemc/scoretabmain.js"></script>
+	<style>
+	.datagrid {
+	    border-radius: 4px 4px 4px 4px;
+	    border-top: 0px solid #ccc;
+	}
+	.datagrid-header, .datagrid-toolbar {
+	    border-color: #ccc;
+	    border: 0;
+	}
+	.panel-header{
+		border-radius: 4px 4px 0px 0px !important;
+	}
+	.panel-body{
+		border-radius: 0px 0px 4px 4px !important;
+	}
+	</style>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',title:'',collapsible:false,headerCls:'panel-header-gray'" style="padding:10px 10px 10px 10px;">
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',title:'评分量表维护',collapsible:false,headerCls:'panel-header-gray',split:true,iconCls:'icon-paper'" style="padding:0px 10px 10px 10px;height:140px;">
+					<div class="tools" style="margin:5px 0px 0px 0px;">
+						<div style="height:70px;">
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-arrow',plain:true" onclick="newScore()">新建</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-save',plain:true" onclick="InsScoreTabHtml()">保存</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-eye',plain:true" onclick="review()">预览</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-pen',plain:true" onclick="add()">面板</a>
+							<!--
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-stamp',plain:true" onclick="label()">标签</a>
+							-->
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-gray',plain:true" onclick="radio()">单选</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-gray',plain:true" onclick="check()">复选</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-gray',plain:true" onclick="ins_p()">段落</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-skip-no',plain:true" onclick="sort()">排序</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-insert-table',plain:true" onclick="table()">表格</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-del',plain:true" onclick="del()">删元素</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-delete-row',plain:true" onclick="merge2()">合并行</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-delete-col',plain:true" onclick="merge3()">合并列</a>
+							<a class="hisui-linkbutton big" data-options="iconCls:'icon-big-split-cells',plain:true" onclick="split()">拆分行/列</a>
+						</div>
+					</div>
+					<div>
+						<label>当前编辑表单：</label>
+						<span id="EditForm" class="label-edit" style="color:#008B8B;" data-id=""></span>
+					</div>
+				</div>
+				<div data-options="region:'center',title:'评分表单',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="background:#F5F5F5;">
+					<div class="container">
+						<div id="FormTitle" class="title"><label></label></div>
+						<div class="form">
+							<!--
+							<div class="list-panel">
+								<div class="list-title"><label class="grp-title">组标题</label></div>
+								<div class="list-item">
+									<ul class="list-ul">
+										<li class="list-ul-item"><input name="grpname" type="checkbox" value="" /><label>待选项</label></li>
+										<li class="list-ul-item"><input name="grpname" type="checkbox" value="" /><label>待选项</label></li>
+										<li class="list-ul-item"><input name="grpname" type="checkbox" value="" /><label>待选项</label></li>
+									</ul>
+								</div>
+							</div>
+							-->
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'west',title:'评分表',split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:213px;">
+					<div id="ScoreList"></div>
+				</div>
+				<div data-options="region:'east',title:'属性',split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding-top:10px;width:200px;">
+					<div class="propdiv"><label style="margin:5px 10px;">标题</label><input id="GrpTitle" class="hisui-validatebox" style="width:126px;vertical-align:bottom;"></div>
+					<div class="propdiv"><label style="margin:5px 10px;">高度</label><input id="GrpHeight" class="hisui-validatebox" style="width:126px;vertical-align:bottom;"></div>
+					<div class="propdiv"><label style="margin:5px 10px;">选项</label><input id="Question" class="hisui-validatebox" style="width:126px;vertical-align:bottom;"></div>
+					<div class="propdiv"><label style="margin:5px 10px;">分值</label><input id="Score" class="hisui-validatebox" style="width:126px;vertical-align:bottom;"></div>
+					<div class="propdiv"><label style="margin:5px 10px;">行数</label><input id="rows" class="hisui-validatebox" style="width:126px;vertical-align:bottom;"></div>
+					<div class="propdiv"><label style="margin:5px 10px;">列数</label><input id="cols" class="hisui-validatebox" style="width:126px;vertical-align:bottom;"></div>
+					<div class="propdiv"><label style="margin:5px 10px;">关联</label><input id="RelType" class="hisui-validatebox" style="width:133px;vertical-align:bottom;"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 新建窗口 -->
+	<div id="newWin" style="padding:10px 15px">
+        <div style="margin:20px 30px;">
+            <label>表单代码</label>
+            <input id="ScoreCode" class="hisui-validatebox" style="width:180px;">
+        </div>
+        <div style="margin:20px 30px;">
+            <label>表单名称</label>
+            <input id="ScoreDesc" class="hisui-validatebox" style="width:180px;">
+        </div>
+		<div class="tabtools">
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="CloseWin()" style="margin-left:85px">取消</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok'" onclick="TakScore()" style="margin-left:30px">确认</a>
+		</div>
+	</div>
+</body>
+</html>

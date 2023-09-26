@@ -1,0 +1,267 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	;w !,"aaa"
+	set action=$g(%request.Data("action",1))
+	set kpiCode=$g(%request.Data("kpiCode",1))
+	set array("MKPIDr")=##class(DHCWL.MKPIService.ConfigService).GetKPIIdStrByCode(kpiCode)  
+	;set array("MKPIDr")=##class(DHCWL.MKPILogin.LoginService).GetKPIIdStrByCodeWithLike(kpiCode)
+	set sessionUserName=""
+	if $d(%session.Data("LOGON.USERNAME")) set sessionUserName=$g(%session.Data("LOGON.USERNAME"))
+	if ("" = sessionUserName){
+		s action="error"
+		w "{success:true,tip:'"_"会话已过期,请移步重新登录！"_"'}"
+		q
+	}
+	
+	if ("add" = action) {
+		///	当所选择的指标Id不为空，且该指标不存在日志配置才插入一条新的日志配置
+		if (""'=array("MKPIDr")) set isCfgExist=$d(^DHCWL.MKPI.MKPILoginI("MKPIDr",array("MKPIDr")))
+		else  set isCfgExist=1
+		set type("KpiLogDefinition")=$g(%request.Data("KpiLogDefinition",1))
+		set type("KpiLogDataProcess")=$g(%request.Data("KpiLogDataProcess",1))
+		set type("KpiLogDataQuery")=$g(%request.Data("KpiLogDataQuery",1))
+		set type("KpiLogTaskErr")=$g(%request.Data("KpiLogTaskErr",1))
+		
+		set nod="", nod=$o(type(nod)), tip=0
+		while(""'=nod)&&(0=isCfgExist){
+			set array("LoginTypeDr")=##class(DHCWL.MKPI.APPLibrary).GetIdByCode("LoginType||"_nod)
+			if (array("LoginTypeDr")="") {
+				set nod=$o(type(nod))
+				continue	
+			}
+			set array("ActiveFlag")=type(nod)
+			set status=##class(DHCWL.MKPILogin.MKPILoginService).MKPILoginAdd(.array)
+			set nod=$o(type(nod))
+			if status'=0 set tip=status
+		}
+		if (0'=isCfgExist){
+			w "{success:true,tip:'"_"您指定的指标不存在或已有日志配置，您不能再为其增加日志配置项！"_"'}"
+		}elseif (0=tip){
+			set tip="ok"
+			w "{success:true,tip:'"_tip_"'}"
+		}else{
+			w "{success:false,tip:新增指标日志配置时发生错误，错误代码为：'"_tip_"'}"	
+		}
+		
+		//	日志记录模块
+		s loginOperator=%session.Data("LOGON.USERNAME")
+		s loginLoginTypeDr=##class(DHCWL.MKPI.APPLibrary).GetIdByCode("LoginType||KpiLogDefinition")
+		s loginMKPIIdList=array("MKPIDr")
+		
+		//	日志记录模块
+		s loginPrePropertyList="指标已激活的日志配置项："
+		i type("KpiLogDefinition")="true" s loginPrePropertyList=loginPrePropertyList_"指标定义日志,"
+		i type("KpiLogDataProcess")="true" s loginPrePropertyList=loginPrePropertyList_"数据处理日志,"
+		i type("KpiLogDataQuery")="true" s loginPrePropertyList=loginPrePropertyList_"数据查询日志,"
+		i type("KpiLogTaskErr")="true" s loginPrePropertyList=loginPrePropertyList_"任务错误日志,"
+		
+		s jsonStr="{Operator:'"_loginOperator_"',MKPIIdList:'"_loginMKPIIdList_"',LoginTypeDr:'"_loginLoginTypeDr_"',PrePropertyList:'"_loginPrePropertyList_"'}"
+		
+		s shouldBeLogged=##class(DHCWL.MKPILogin.MKPILoginService).ShouldBeLogged("KpiLogDefinition", array("MKPIDr"))
+		i (("ok"=tip)&&(1=shouldBeLogged)) {
+			s loginService=##class(DHCWL.MKPILogin.LoginService).%New()
+			s status=loginService.LoginStart("KpiLogDefinition","",0)	;这里给个初值，最终取值根据LoginContent()方法确定
+			s status=loginService.LoginContent(jsonStr)
+			s status=loginService.LoginEnd()
+		}
+	}elseif ("update" = action) {
+		//	日志记录模块
+		s loginOperator=%session.Data("LOGON.USERNAME")
+		s loginLoginTypeDr=##class(DHCWL.MKPI.APPLibrary).GetIdByCode("LoginType||KpiLogDefinition")
+		s loginMKPIIdList=array("MKPIDr")
+		
+		s loginPrePropertyList="指标已激活的日志配置项："
+		s appLibLoginType="" f  s appLibLoginType=$o(^DHCWL.MKPI.APPLibraryI("AppForCodeI","LOGINTYPE",appLibLoginType)) q:appLibLoginType=""  d
+		.s loginTypeDr=$o(^DHCWL.MKPI.APPLibraryI("AppForCodeI","LOGINTYPE",appLibLoginType,""))
+		.s loginText=$li(^DHCWL.MKPI.APPLibraryD(loginTypeDr),4)
+		.q:'$d(^DHCWL.MKPI.MKPILoginI("LoginTypeMKPIDr",loginTypeDr,loginMKPIIdList))
+		.s mkpiLoginRowId=$o(^DHCWL.MKPI.MKPILoginI("LoginTypeMKPIDr",loginTypeDr,loginMKPIIdList,""))
+		.q:mkpiLoginRowId=""
+		.s activeFlag=$li(^DHCWL.MKPI.MKPILoginD(mkpiLoginRowId),4)
+		.i activeFlag="true" s loginPrePropertyList=loginPrePropertyList_loginText_","
+		//	日志记录模块
+		
+		set type("KpiLogDefinition")=$g(%request.Data("KpiLogDefinition",1))
+		set type("KpiLogDataProcess")=$g(%request.Data("KpiLogDataProcess",1))
+		set type("KpiLogDataQuery")=$g(%request.Data("KpiLogDataQuery",1))
+		set type("KpiLogTaskErr")=$g(%request.Data("KpiLogTaskErr",1))
+		
+		set nod="", nod=$o(type(nod)), tip=0
+		while(""'=nod){
+			set array("LoginTypeDr")=##class(DHCWL.MKPI.APPLibrary).GetIdByCode("LoginType||"_nod)
+			set array("ActiveFlag")=type(nod)
+			set status=##class(DHCWL.MKPILogin.MKPILoginService).MKPILoginUpdate(.array)
+			set nod=$o(type(nod))
+			if status'=0 set tip=status
+		}
+		
+		if tip=0 set tip="ok"
+		w "{success:true,tip:'"_tip_"'}"
+		
+		//	日志记录模块
+		s loginPostPropertyList="指标已激活的日志配置项："
+		i type("KpiLogDefinition")="true" s loginPostPropertyList=loginPostPropertyList_"指标定义日志,"
+		i type("KpiLogDataProcess")="true" s loginPostPropertyList=loginPostPropertyList_"数据处理日志,"
+		i type("KpiLogDataQuery")="true" s loginPostPropertyList=loginPostPropertyList_"数据查询日志,"
+		i type("KpiLogTaskErr")="true" s loginPostPropertyList=loginPostPropertyList_"任务错误日志,"
+		
+		s jsonStr="{Operator:'"_loginOperator_"',MKPIIdList:'"_loginMKPIIdList_"',LoginTypeDr:'"_loginLoginTypeDr_"',PrePropertyList:'"_loginPrePropertyList_"',PostPropertyList:'"_loginPostPropertyList_"'}"
+		
+		s shouldBeLogged=##class(DHCWL.MKPILogin.MKPILoginService).ShouldBeLogged("KpiLogDefinition", array("MKPIDr"))
+		
+		i (("ok"=tip)&&(1=shouldBeLogged)&&(loginPrePropertyList'=loginPostPropertyList)) {
+			s loginService=##class(DHCWL.MKPILogin.LoginService).%New()
+			s status=loginService.LoginStart("KpiLogDefinition","")	;这里给个初值，最终取值根据LoginContent()方法确定
+			s status=loginService.LoginContent(jsonStr)
+			s status=loginService.LoginEnd()
+		}
+	}elseif ("delete" = action) {
+		//	日志记录模块
+		s loginOperator=%session.Data("LOGON.USERNAME")
+		s loginLoginTypeDr=##class(DHCWL.MKPI.APPLibrary).GetIdByCode("LoginType||KpiLogDefinition")
+		//	日志记录模块
+		
+		// 删除时可删除多条数据
+		set kpisCodeStr=$g(%request.Data("kpiCode",1))
+		set length=$l(kpisCodeStr,";")-1
+		set errorInfo="删除失败的指标代码："
+		for nod=1:1:length {
+			set tip="ok"
+			set kpiCode=$p(kpisCodeStr,";",nod)
+			set kpiId=##class(DHCWL.MKPIService.ConfigService).GetKPIIdStrByCode(kpiCode)
+			
+			//	日志记录模块
+			s loginPrePropertyList="指标已激活的日志配置项："
+			s appLibLoginType="" f  s appLibLoginType=$o(^DHCWL.MKPI.APPLibraryI("AppForCodeI","LOGINTYPE",appLibLoginType)) q:appLibLoginType=""  d
+			.s loginTypeDr=$o(^DHCWL.MKPI.APPLibraryI("AppForCodeI","LOGINTYPE",appLibLoginType,""))
+			.s loginText=$li(^DHCWL.MKPI.APPLibraryD(loginTypeDr),4)
+			.q:'$d(^DHCWL.MKPI.MKPILoginI("LoginTypeMKPIDr",loginTypeDr,kpiId))
+			.s mkpiLoginRowId=$o(^DHCWL.MKPI.MKPILoginI("LoginTypeMKPIDr",loginTypeDr,kpiId,""))
+			.q:mkpiLoginRowId=""
+			.s activeFlag=$li(^DHCWL.MKPI.MKPILoginD(mkpiLoginRowId),4)
+			.i activeFlag="true" s loginPrePropertyList=loginPrePropertyList_loginText_","
+			//	日志记录模块
+			
+			set status=##class(DHCWL.MKPILogin.MKPILoginService).MKPILoginDelete(kpiId)
+			if status'=0 {
+				set errorInfo=errorInfo_kpiCode_","
+				set tip="error"
+			}
+			
+			//	日志记录模块
+			s loginMKPIIdList=kpiId
+			s loginPostPropertyList="指标日志配置项已删除"
+			s jsonStr="{Operator:'"_loginOperator_"',MKPIIdList:'"_loginMKPIIdList_"',LoginTypeDr:'"_loginLoginTypeDr_"',PrePropertyList:'"_loginPrePropertyList_"',PostPropertyList:'"_loginPostPropertyList_"'}"
+			s shouldBeLogged=##class(DHCWL.MKPILogin.MKPILoginService).ShouldBeLogged("KpiLogDefinition", array("MKPIDr"))
+			i (("ok"=tip)&&(1=shouldBeLogged)) {
+				s loginService=##class(DHCWL.MKPILogin.LoginService).%New()
+				s status=loginService.LoginStart("KpiLogDefinition","")	;这里给个初值，最终取值根据LoginContent()方法确定
+				s status=loginService.LoginContent(jsonStr)
+				s status=loginService.LoginEnd()
+			}
+			//	日志记录模块
+		}
+		i ("删除失败的指标代码："'=errorInfo) {
+			s tip=errorInfo
+			w "{success:false,tip:删除过程中出错的指标代码：'"_tip_"'}"
+		}
+		elseif ("删除失败的指标代码："=errorInfo){
+			s tip="ok"
+			w "{success:true,tip:'"_tip_"'}"
+		}
+		
+	}elseif ("lookup" = action) {
+		set logType=$g(%request.Data("type",1))
+		set pageSize=""
+		;add by wz.2014-3-20
+		s kpiIds=##class(DHCWL.MKPILogin.LoginService).GetKPIIdStrByCodeWithLike(kpiCode)
+		i (($g(kpiIds)="") && (kpiCode'="")) s kpiIds=-1		
+		s array("MKPIDr")=kpiIds
+		;w !,"MKPIDr:"_array("MKPIDr")
+		;q
+		;w !,"kpiCode:"_kpiCode
+		set kpiId=array("MKPIDr")
+		set pageType = $g(%request.Data("pageType",1))
+		if "nextPage"'=$g(pageType) set json=""
+		set logininfoJson=##class(DHCWL.MKPILogin.MKPILoginService).MKPILoginQuery2(kpiId,logType,pageSize)
+		;d logininfoJson.SetTotalNum(logininfoJson.GetCount())
+		set start=$g(%request.Data("start",1))
+		set pageSize=$g(%request.Data("pageSize",1))
+		set limit=$g(%request.Data("limit",1))
+		if ""=pageSize set pageSize=limit
+		s end=start+pageSize
+		;set pageSize=limit
+		//set maxRecordNum=start+pageSize-1
+		;w "pageSize="_pageSize,!,"start="_start,!
+		if start=1 s end=end-1
+		if +start=0 s start=1
+		if ((1=start)||(0=start)) set maxRecordNum=start+pageSize
+		else  set maxRecordNum=start+pageSize
+		;w "logininfoJson.GetCount()="_logininfoJson.GetCount(),!
+		;if start>0 s start=start-1
+		if start>1 s start=start+1
+		;if ((start+pageSize)<logininfoJson.GetCount()) s logininfoJson.count=pageSize
+		;else  s logininfoJson.count=logininfoJson.totalNum-start ;(##class(DHCWL.util.DateUtil).IntegerDiv(logininfoJson.GetCount(),pageSize)*pageSize)
+		;w "start="_start_",end="_end,!
+		s count=0
+		;q:'$ISOBJECT(a) 
+		;if (0'=logininfoJson) {
+		if ($ISOBJECT(logininfoJson)) {	
+			;write logininfoJson.GetHead()
+			;if (logininfoJson.count<pageSize) set start=start-1
+			;if start>0 s start=start-1
+			set logininfoJson.privor=start-1
+			w "{"_logininfoJson.root_":["
+			while((logininfoJson.privor<(logininfoJson.count-1))){
+				set obj=logininfoJson.Next()
+				write obj
+				s count=count+1
+				q:(logininfoJson.privor>=(end-1))
+			} //&&(logininfoJson.privor<(maxRecordNum))
+			s last=logininfoJson.Next()
+			;w "logininfoJson.privor="_logininfoJson.privor_"  logininfoJson.totalNum="_logininfoJson.totalNum,!
+			if (logininfoJson.privor=(logininfoJson.totalNum)){
+				s last=$e(last,1,$l(last)-2)
+			}else{
+				s last=$e(last,1,$l(last)-1)
+			}
+			w last
+			s:last'="" count=count+1
+			w "],"_logininfoJson.result_":"_count_",totalNum:"_logininfoJson.totalNum
+			w "}"
+			
+			if (logininfoJson.GetCount()=0) w "]}"		;add by wz.2014-3-21
+		}else{
+			w "{root:[],result:0,totalNum:0}"
+		}
+		
+		//i ((logininfoJson'="")&&(logininfoJson.GetCount()=0)) w "]}"
+	}elseif("getKpiNotLogCfged"=action){
+		//set json = ##class(DHCWL.MKPILogin.MKPILoginService).IsNotCfgKpi(kpiCode) //--modify by wz .2014-4-1
+		//++add by wz.2014-4-1
+		s kpiIds=##class(DHCWL.MKPILogin.LoginService).GetKPIIdStrByCodeWithLike(kpiCode)
+		i (($g(kpiIds)="") && (kpiCode'="")) s kpiIds=-1		
+		set json = ##class(DHCWL.MKPILogin.MKPILoginService).IsNotCfgKpi2(kpiIds)
+		
+		set start = $g(%request.Data("start",1))
+		set maxRecordNum = $g(%request.Data("pageSize",1))
+		set limit=$g(%request.Data("limit",1))
+		if (""'=limit) set maxRecordNum=limit
+		if (""'=json){
+			write json.GetHead()
+			set json.privor=start
+			do{
+				set obj=json.Next()
+				if ((json.privor)=(start+maxRecordNum)){
+					set obj=$p(obj,"}",1)
+				 	set obj=obj_"}]}"
+				}
+				write obj
+			}while((obj'="")&&(json.privor<(start+maxRecordNum))&&(json.privor<json.count))
+		}else {
+			w "{result:0,totalNum:0,root:[]}"
+		}	
+	}
+	</script>

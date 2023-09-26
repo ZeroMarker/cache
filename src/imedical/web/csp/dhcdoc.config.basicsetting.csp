@@ -1,0 +1,268 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 dhcdoc.config.basicsetting.csp HUI医生站设置框架csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI> 
+<style type="text/css">
+.cs-navi-tab{
+	display: block;
+	color:black;
+	text-decoration: none;
+	height:36px;
+	line-height:36px;
+	padding-left:20px;
+}
+.cs-navi-tab:hover {
+  background-color: #E3E3E3;
+}
+.cs-tab-menu {
+	width:120px;
+}
+.cs-home-remark {
+	padding: 10px;
+}
+.accordion .accordion-header{
+	border-top-width:0;
+}
+.accordion .accordion-header:hover{
+	background:#3EA2E4;
+}
+.accordion .accordion-header-selected{
+	background:#0E8BDD;
+}
+</style>
+<script type="text/javascript">
+function addTab(title, url){
+	if ($('#tabs').tabs('exists', title)){
+		$('#tabs').tabs('select', title);//选中并刷新
+		var currTab = $('#tabs').tabs('getSelected');
+		var url = $(currTab.panel('options').content).attr('src');
+		if(url != undefined && currTab.panel('options').title != 'Home') {
+			$('#tabs').tabs('update',{
+				tab:currTab,
+				options:{
+					content:createFrame(url)
+				}
+			})
+		}
+	} else {
+		var content = createFrame(url);
+		$('#tabs').tabs('add',{
+			title:title,
+			content:content,
+			closable:true
+		});
+	}
+	tabClose();
+}
+function createFrame(url) {
+	var s = '<iframe scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	return s;
+}
+function tabClose() {
+	/*双击关闭TAB选项卡*/
+	$(".tabs-inner").dblclick(function(){
+		var subtitle = $(this).children(".tabs-closable").text();
+		$('#tabs').tabs('close',subtitle);
+	})
+	/*为选项卡绑定右键*/
+	$(".tabs-inner").bind('contextmenu',function(e){
+		$('#mm').menu('show', {
+			left: e.pageX,
+			top: e.pageY
+		});
+		var subtitle =$(this).children(".tabs-closable").text();
+		$('#mm').data("currtab",subtitle);
+		$('#tabs').tabs('select',subtitle);
+		return false;
+	});
+}		
+//绑定右键菜单事件
+function tabCloseEven() {
+	//刷新
+	$('#mm-tabupdate').click(function(){
+		var currTab = $('#tabs').tabs('getSelected');
+		var url = $(currTab.panel('options').content).attr('src');
+		if(url != undefined && currTab.panel('options').title != 'Home') {
+			$('#tabs').tabs('update',{
+				tab:currTab,
+				options:{
+					content:createFrame(url)
+				}
+			})
+		}
+	})
+	//关闭当前
+	$('#mm-tabclose').click(function(){
+		var currtab_title = $('#mm').data("currtab");
+		$('#tabs').tabs('close',currtab_title);
+	})
+	//全部关闭
+	$('#mm-tabcloseall').click(function(){
+		$('.tabs-inner span').each(function(i,n){
+			var t = $(n).text();
+			if(t != 'Home') {
+				$('#tabs').tabs('close',t);
+			}
+		});
+	});
+	//关闭除当前之外的TAB
+	$('#mm-tabcloseother').click(function(){
+		var prevall = $('.tabs-selected').prevAll();
+		var nextall = $('.tabs-selected').nextAll();		
+		if(prevall.length>0){
+			prevall.each(function(i,n){
+				var t=$('a:eq(0) span',$(n)).text();
+				if(t != 'Home') {
+					$('#tabs').tabs('close',t);
+				}
+			});
+		}
+		if(nextall.length>0) {
+			nextall.each(function(i,n){
+				var t=$('a:eq(0) span',$(n)).text();
+				if(t != 'Home') {
+					$('#tabs').tabs('close',t);
+				}
+			});
+		}
+		return false;
+	});
+	//关闭当前右侧的TAB
+	$('#mm-tabcloseright').click(function(){
+		var nextall = $('.tabs-selected').nextAll();
+		if(nextall.length==0){
+			return false;
+		}
+		nextall.each(function(i,n){
+			var t=$('a:eq(0) span',$(n)).text();
+			$('#tabs').tabs('close',t);
+		});
+		return false;
+	});
+	//关闭当前左侧的TAB
+	$('#mm-tabcloseleft').click(function(){
+		var prevall = $('.tabs-selected').prevAll();
+		if(prevall.length==0){
+			return false;
+		}
+		prevall.each(function(i,n){
+			var t=$('a:eq(0) span',$(n)).text();
+			$('#tabs').tabs('close',t);
+		});
+		return false;
+	});
+	//退出
+	$("#mm-exit").click(function(){
+		$('#mm').menu('hide');
+	})
+}
+
+$(function() {
+	tabCloseEven();
+	$('.cs-navi-tab').click(function() {
+		var $this = $(this);
+		var href = $this.attr('src');
+		var title = $this.text();
+		addTab(title, href);
+	});
+});
+</script>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'west',border:false,split:false" style="width:230px;padding:10px;">
+		<div class="hisui-accordion" fit="true" style="border:1px solid #509DE1;">
+				<div title="基本设置"  data-options="selected:true">
+					<a href="javascript:void(0);" src="dhcdoc.config.cnmedcode.csp" class="cs-navi-tab" >常规设置</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.subcatcontral.csp" class="cs-navi-tab">子类控制设置</a>
+					<!--a href="javascript:void(0);" src="dhcdoc.config.docconfig.csp" class="cs-navi-tab">草药录入设置</a></p-->
+					<a href="javascript:void(0);" src="dhcdoc.config.cmdocconfig.csp" class="cs-navi-tab">草药录入设置</a>
+					<!--a href="javascript:void(0);" src="dhcdoc.config.opdispensingtime.csp" class="cs-navi-tab">门诊频率分发时间设定</a></p-->
+					<a href="javascript:void(0);" src="dhcdoc.config.dosing.csp" class="cs-navi-tab">配液中心设置</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.hospital.csp" class="cs-navi-tab">医院设置</a>
+					<!--a href="javascript:void(0);" src="dhcdoc.config.labconfig.csp" class="cs-navi-tab">检验设置</a-->
+					<a href="javascript:void(0);" src="dhcdoc.config.labbindrulesetting.csp" class="cs-navi-tab">检验绑定规则设置</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.arcitemconfig.csp" class="cs-navi-tab">批量补录医嘱设置(项目用)</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.hlyy.csp" class="cs-navi-tab">合理用药接口设置</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.skintestconfig.csp" class="cs-navi-tab">皮试设置</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.stopconfig.csp" class="cs-navi-tab">停医嘱设置</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.cookmodecharge.csp" class="cs-navi-tab">草药加工方式收费设置</a>
+					<!--<a href="javascript:void(0);" src="dhcdoc.config.localconfig.hui.csp" class="cs-navi-tab">本地化参数设置</a>-->
+					<!--a href="javascript:void(0);" src="" class="cs-navi-tab">自动停止医嘱设置</a></p-->
+					<!--a href="javascript:void(0);" src="dhcdoc.config.emvirtualtlong.csp" class="cs-navi-tab">急诊虚拟长期医嘱设置</a-->
+				</div>
+				<div title="接收科室相关设置">
+				    <a href="javascript:void(0);" src="dhcdoc.config.oneandoutorderrecloc.csp" class="cs-navi-tab">取药/出院带药接收科室定义</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.holidaysrecloc.csp" class="cs-navi-tab">节假日接收科室定义</a>
+					<!--a href="javascript:void(0);" src="dhcdoc.config.ordreasonrecloc.csp" class="cs-navi-tab">医嘱费别接收科室定义</a></p-->
+					<a href="javascript:void(0);" src="dhcdoc.config.instrrecloc.csp" class="cs-navi-tab" >用法关联接收科室设置</a>
+				</div>
+				<div title="科室功能设置">
+				    <a href="javascript:void(0);" src="dhcdoc.config.locext.csp" class="cs-navi-tab" >科室扩展设定</a>
+					<!--a href="javascript:void(0);" src="" class="cs-navi-tab">科室医嘱套设置</a></p-->
+					<a href="javascript:void(0);" src="dhcdoc.config.palocamount.csp" class="cs-navi-tab">科室费用限制(项目用)</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.ipreclocsubcatneedpackqty.csp" class="cs-navi-tab">住院药房须按整包装发子类</a>
+					<!--a href="javascript:void(0);" src="dhcdoc.config.dsipesing.csp" class="cs-navi-tab">摆药室设置</a-->
+					<a href="javascript:void(0);" src="dhcdoc.config.phreclocabout.csp" class="cs-navi-tab">接收科室药房设置</a>
+				</div>
+				<div title="处方设置">
+				    <a href="javascript:void(0);" src="dhcdoc.config.prescripttype.csp" class="cs-navi-tab" >处方类型维护</a>
+					<!--a href="javascript:void(0);" src="dhcdoc.config.paorderitemqty.csp" class="cs-navi-tab">处方数量限定</a></p-->
+					<a href="javascript:void(0);" src="dhcdoc.config.pacadm.csp" class="cs-navi-tab">病人类别与费别的对照</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.orderitemqtylimit.csp" class="cs-navi-tab">费别与处方的对照</a>
+					<a href="javascript:void(0);" src="dhcdoc.config.splitprescriptsetting.csp" class="cs-navi-tab">分处方设置</a>
+					<!--a href="javascript:void(0);" src="" class="cs-navi-tab">大处方控制</a></p-->
+				</div>
+				<div title="医嘱/药学项设置">
+					 <!--a href="javascript:void(0);" src="" class="cs-navi-tab">医嘱套设置</a>
+					 <a href="javascript:void(0);" src="" class="cs-navi-tab">药学项扩展设定</a>
+					 <a href="javascript:void(0);" src="" class="cs-navi-tab" >药品管制分类设置</a></p-->
+					 <a href="javascript:void(0);" src="dhcdoc.config.arcimext.csp" class="cs-navi-tab">医嘱项扩展设定(自动停医嘱)</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.itemorderqtylimit.csp" class="cs-navi-tab">医嘱项扩展设定</a>
+					 <!--a href="javascript:void(0);" src="dhcdoc.config.itemcat.csp" class="cs-navi-tab">医嘱子类扩展</a></p-->
+					 <a href="javascript:void(0);" src="dhcdoc.config.itemprior.csp" class="cs-navi-tab">出院带药医嘱扩展设定</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.rollorder.csp" class="cs-navi-tab">滚医嘱设置</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.ordpriorlimit.csp" class="cs-navi-tab">仅可开临嘱医嘱设置</a>
+				</div>
+				<div title="绑定医嘱设置">
+					 <!--a href="javascript:void(0);" src="dhcdoc.config.specimen.csp" class="cs-navi-tab">检验标本关联医嘱设置</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.container.csp" class="cs-navi-tab">检验容器关联医嘱设置</a-->
+					 
+					 <a href="javascript:void(0);" src="dhcdoc.config.items.csp" class="cs-navi-tab" >附加医嘱设定(按医嘱)</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.appenditeminitemcat.csp" class="cs-navi-tab">附加医嘱设定(按子类)</a>
+					 <!--a href="javascript:void(0);" src="dhcdoc.arcimwardappend.csp" class="cs-navi-tab">病区绑定医嘱设置-护士工作站用</a></p-->
+				</div>
+				<div title="用法设置">
+					 <a href="javascript:void(0);" src="dhcdoc.config.instrarcim.csp" class="cs-navi-tab">用法扩展设置</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.instrconfig.csp" class="cs-navi-tab">特殊用法设置</a>
+				</div>
+				<div title="诊断设置">
+				     <a href="javascript:void(0);" src="dhcdoc.config.diagnoscat.csp" class="cs-navi-tab" >特殊诊断分类</a>
+					 <!--a href="javascript:void(0);" src="dhcdoc.config.diagnos.csp" class="cs-navi-tab">诊断代码维护</a></p-->
+					 <a href="javascript:void(0);" src="dhcdoc.config.itmdiagnose.csp" class="cs-navi-tab">药品适应症维护</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.padiagnoseduration.csp" class="cs-navi-tab">诊断疗程限制</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.diagnosweekgestation.csp" class="cs-navi-tab">孕周诊断维护</a>
+					 <a href="javascript:void(0);" src="dhcdoc.config.mrcicdtype.csp" class="cs-navi-tab">诊断分类控制</a>
+				</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false,split:false" id="mainPanle" style="padding:10px 10px 10px 0;">
+		 <div id="tabs" class="hisui-tabs"  data-options="fit:true,border:false" style="border:1px solid #509DE1;">
+            <div title="Home">
+			</div>
+        </div>
+	</div>
+	<div id="mm" class="hisui-menu cs-tab-menu">
+		<div id="mm-tabupdate">刷新</div>
+		<div class="menu-sep"></div>
+		<div id="mm-tabclose">关闭</div>
+		<div id="mm-tabcloseother">关闭其他</div>
+		<div id="mm-tabcloseall">关闭全部</div>
+	</div>
+</body>
+</html>

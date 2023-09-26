@@ -1,0 +1,54 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+    	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s Year=$Get(%request.Data("Year",1))
+	s Code=$Get(%request.Data("Code",1))
+	s BSMName=$Get(%request.Data("BSMName",1))
+	s BITName=$Get(%request.Data("BITName",1))
+	s BIDTypeFirstName=$Get(%request.Data("BIDTypeFirstName",1))
+		
+	s bidcode=$Get(%request.Data("bidcode",1))
+	s bidyear=$Get(%request.Data("bidyear",1))
+	s bssmsplitmeth=$Get(%request.Data("bssmsplitmeth",1))
+	s bidislast=$Get(%request.Data("bidislast",1))	
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgSchemSplitYearMonth).List(hospid,Year, BSMName, Code, BITName,BIDTypeFirstName,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgSchemSplitYearMonth).UpdateRec(hospid,rowid,bidyear,bidcode,bssmsplitmeth,bidislast)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgSchemSplitYearMonth).YearList(start,limit,str)
+	
+	i action = "bsmnamelist" d
+	.w ##class(herp.budg.udata.uBudgSchemSplitYearMonth).BSMNameList(start,limit,str)
+	
+	i action = "bitnamelist" d
+	.w ##class(herp.budg.udata.uBudgSchemSplitYearMonth).BITNameList(start,limit,str)
+	
+	i action = "bidtypefirstlist" d
+	.w ##class(herp.budg.udata.uBudgSchemSplitYearMonth).BIDTypeFirstList(start,limit,str)
+
+
+</script>

@@ -1,0 +1,52 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s Code=$Get(%request.Data("Code",1))
+	s Name=$Get(%request.Data("Name",1))
+	s StrDate=$Get(%request.Data("StrDate",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+	s IsValid=$Get(%request.Data("IsValid",1))
+	
+	s RewardAmount=$Get(%request.Data("RewardAmount",1))
+	s Reimbursement=$Get(%request.Data("Reimbursement",1))
+		
+	i action = "list" d
+	.w ##class(herp.srm.udata.uJournalLevel).List(sortField, sortDir, start, limit)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uJournalLevel).Add(Code,Name,IsValid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uJournalLevel).Update(rowid, Code, Name,IsValid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uJournalLevel).UpdateDelete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

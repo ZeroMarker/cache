@@ -1,0 +1,93 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">	
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="LISReport"
+		e  d
+		.s DIVClass="Page LISReport"
+		//增加审核者 2008-06-04
+		i ($G(AuditUser)'="")&&(Checker'="") d
+		.s Checker=Checker_"&nbsp;&nbsp;&nbsp;&nbsp审核:"_AuditUser
+	</SCRIPT>
+	<!--DIV class='#(DIVClass)#'-->
+		<TABLE width=680 border=0 cellspacing=0>
+			<THEAD>
+				<!--TR>
+					<TD class='LisReportTitle' colSpan=6><BIG><H2>首都医科大学附属安贞医院检验单</H2></BIG></TD>
+				</TR-->
+				<TR>
+					<TD class='LISHead LISHeadARCIMDesc' colSpan=6>#(ARCIMDesc)#</TD>
+				</TR>
+			</THEAD>
+			<TBODY>
+				<TR>
+					<TD width="219" height="42" class="LISResultTtile">项目名称</TH>
+					<TD width="105" class="LISResultTtile">英文缩写</TH>
+					<TD class="LISResultTtile" colspan=2>检查结果</TH>
+					<TD width="100" class="LISResultTtile">单位</TH>
+					<TD width="136" class="LISResultTtile">参考范围</TH>
+				</TR>
+					<!--  输出病患信息  -->
+	<csp:WHILE COUNTER=ODID CONDITION=(""'=CurData)>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s CurData=$g(^TMPReport("Result", "Content",ARCIM,ODID))
+		s DoctorName="检验:"
+		s ARCIMID=$P($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+				
+		i (""'=CurData) d
+		.s TestDesc=$P(CurData,"^",1)
+		.s TestResult=$P(CurData,"^",2)
+		.
+		.s Normal=$P(CurData,"^",3)
+		.s:Normal="0" TestResult="<font color=#FF0000>"_TestResult_"</font>"
+		.s TestNormal=""
+		.//s:("H"=Normal) TestNormal="?"
+		.//s:("H"=Normal) TestNormal="?"
+		.s TestUnit=$P(CurData,"^",4)
+		.s l=$L(TestUnit,"~")
+		.i l>1 d
+		..s SZ= $P($G(TestUnit),"~",1)
+		..s Str=SZ_"<sup>"
+		..s SB=$P($G(TestUnit),"~",2,l)
+		..s j=$L(SB,"/L")
+		..i j>1 d
+		...s OT=$P($G(SB),"/L",2,j)
+		...s SB=$P($G(SB),"/L",1)
+		...s SB=SB_"</sup>/L"_OT
+		...s Str=Str_SB
+		...s TestUnit=Str
+		.s TestStandard=$P(CurData,"^",5)
+		.s Arrow=$P(CurData,"^",6)
+		.s CTTCSynonym=$P(CurData,"^",8)
+		.s ArrowName=""
+		.i Arrow="1" s ArrowName="../images/dhcpe/NoArrow.gif"
+		.i Arrow="0" s ArrowName="../images/dhcpe/DownArrow.gif"
+		.i Arrow="2" s ArrowName="../images/dhcpe/UpArrow.gif"
+		.i Arrow="3" s ArrowName="../images/dhcpe/Star.gif"
+		</Script>
+		<CSP:IF CONDITION=(""'=CurData)>
+				<TR>
+					<TD class=LISResultName>#(TestDesc)#</TD>
+					<TD class=LISResultValue >#(CTTCSynonym)#</TD>
+					<TD class=LISResultValue width="90">#(TestResult)#</TD>
+					<TD class=LISResultNormal width="31"><IMG id="Arrow" name="Arrow" src=#(ArrowName)#></TD>
+					<!--TD class=LISResultNormal width="20">#(TestNormal)#</TD-->
+					<TD class=LISResultTestUnit>#(TestUnit)#</TD>
+					<TD class=LISResultStandard>#(TestStandard)#</TD>
+				</TR>
+		</CSP:IF>
+	</csp:WHILE>
+			</TBODY>
+			<TFOOT>
+				<TR>
+					<!--TD class='LISFooter LISFooterChecker' colspan=6></TD>
+					<TD class='LISFooter LISFooterCheckDate' colspan=6>#(DoctorName)##(Checker)#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD-->
+					<TD class='LISFooter LISFooterChecker' colspan=4>#(DoctorName)##(Checker)#</TD>
+					<TD class="LISFooter LISFooterCheckDate" colSpan=2>日期:<LABEL class=CheckDate>#(CheckDate)#</LABEL></TD>
+					
+				</TR>
+				<TR>
+					<TD height=25 colSpan=6>&nbsp;</TD>
+				</TR>
+			</TFOOT>
+		</TABLE>
+	<!--/DIV-->
+	

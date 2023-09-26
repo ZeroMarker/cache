@@ -1,0 +1,33 @@
+﻿﻿<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s userID = %session.Get("LOGON.USERID")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s resourceScheme = ##Class(EMRservice.BL.IPResource).GetIPResource(episodeID)
+		s:(resourceScheme = "") resourceScheme = "[{'id':'KBTree','title':'知识库','source':'emr.resource.kbtree.csp','width':300},{'id':'Order','title':'医嘱','source':'emr.resource.medorder.csp','width':600},{'id':'zorders','title':'中草药','source':'emr.resource.zorders.csp','width':600},{'id':'Pacs','title':'检查','source':'emr.resource.pacsdata.csp','width':600},{'id':'Lis','title':'检验','source':'emr.resource.lisdata.csp','width':700},{'id':'vitalsigns','title':'生命体征','source':'emr.resource.vitalsigns.csp','width':700},{'id':'diagnos','title':'诊断','source':'emr.resource.diagnos.csp','width':600},{'id':'pathology','title':'病理','source':'emr.resource.pathology.csp','width':600},{'id':'consult','title':'会诊','source':'emr.resource.consult.csp','width':600},{'id':'bloodsugar','title':'血糖','source':'emr.resource.bloodsugar.csp','width':600}]"
+		s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+		s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")
+  </script>
+	<script language="javascript">
+	  var patientID = '#(patientID)#';
+	  var episodeID = '#(episodeID)#';
+	  var userID = '#(userID)#';
+	  var ssgroupID = '#(ssgroupID)#';
+	  var userLocID = '#(userLocID)#';
+	  var resourceScheme = eval("#(resourceScheme)#".replace(/\'/g, "\""));
+	  var argConnect = {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"};
+	  
+   </script>
+	<title>病历内容</title>
+</head>
+<body style="padding:0;margin:5px 0 0 5px;">
+	<div id="resources" class="hisui-tabs tabs-keywords" style="width:600px;height:800px"></div> 
+	<script type="text/javascript" src="../scripts/emr/js/ip.resource.js"></script>
+</body>	
+</html>

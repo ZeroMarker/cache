@@ -1,0 +1,54 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	   i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="NORReport"
+		e  d
+		.s DIVClass="Page NORReport"
+	</SCRIPT>
+		<TABLE width=680 border=0 cellspacing=0>
+			<THEAD>
+				<TR>
+					<TD class='NORHead NORHeadARCIMDesc' colSpan=2>#(ARCIMDesc)#</TD>
+				</TR>
+			</THEAD>
+			<TBODY>
+				<!--TR>
+					<TD width="300" height="42" class="NORResultTtile NORResultTtileTestName">项目名称</TH>
+					<TD width="380" class="NORResultTtile NORResultTtileTestValue">检查结果</TH>
+				</TR-->
+					<!--  输出病患信息  -->
+	<!--csp:WHILE COUNTER=ODID CONDITION=(""'=ODID)-->
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s ODID=$O(^TMPReport("Result", "Content",ARCIM,0))
+		q:ODID=""
+		s CurData=$G(^TMPReport("Result", "Content",ARCIM,ODID))
+		s TestDesc=$P(CurData,"^",1)
+		s TestResult=$P(CurData,"^",2)
+		s ZDYJ=$p(TestResult,";诊断意见:",2)
+		s Other=$p(TestResult,";诊断意见:",1)
+		i ZDYJ'="" s ZDYJ="诊断意见:"_ZDYJ
+		s JCSJ=$p(Other,";检查所见:",2)
+		i JCSJ'="" s JCSJ="检查所见:"_JCSJ
+		s Other=$p(Other,";检查所见:",1)
+		s LCZD=$p(Other,"临床诊断:",2)
+		i LCZD'="" s LCZD="临床诊断:"_LCZD
+		s JCJG=""
+		i LCZD'="" s JCJG=LCZD_"<br>"
+		i JCSJ'="" s JCJG=JCJG_JCSJ_"<br>"
+		i ZDYJ'="" s JCJG=JCJG_ZDYJ
+		</Script>
+		<CSP:IF CONDITION=(""'=JCJG)>
+				<TR>
+					<TD width="680" height="2" class='NORResult NORResultTestName'>#(JCJG)#</TD>
+				</TR>
+		</CSP:IF>
+		
+	<!--/csp:WHILE-->
+			</TBODY>
+			<TFOOT>
+				<TR>
+					<!--TD class="NORFooter NORFooterChecker" colSpan=2>医生:<LABEL class=Checker>#(Checker)#</LABEL></TD-->
+					<TD class="NORFooter NORFooterCheckDate" colSpan=2>医生签名:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+				</TR>
+			</TFOOT>
+		</TABLE>
+

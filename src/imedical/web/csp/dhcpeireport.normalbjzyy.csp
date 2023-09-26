@@ -1,0 +1,181 @@
+<!-- dhcpeireport.normal.csp -->
+<!-- 
+/// 创建时间		2007.04.01
+/// 创建人			xuwm 
+/// 主要功能		个人体检报告
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 体检汇总报告
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<TITLE></TITLE>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s HosCode=$G(^DHCPESetting("DHCPE","HospitalCode"))
+	s HosCode=$zcvt(HosCode,"L")
+	//s HosCode=""
+	i HosCode'="" s HosCode=HosCode_"."
+	s normalcss="../scripts/dhcpeireport."_HosCode_"normal.css"
+	s covercss="../scripts/dhcpeireport."_HosCode_"normal.cover.css"
+	s titlecss="../scripts/dhcpeireport."_HosCode_"normal.head.title.css"
+	s patinfocss="../scripts/dhcpeireport."_HosCode_"normal.head.patinfo.css"
+	s summarizecss="../scripts/dhcpeireport."_HosCode_"noraml.summarize.css"
+	s generaladvicecss="../scripts/dhcpeireport."_HosCode_"noraml.generaladvice.css"
+	s norcss="../scripts/dhcpeireport."_HosCode_"noraml.result.nor.css"
+	s liscss="../scripts/dhcpeireport."_HosCode_"noraml.result.lis.css"
+	s stationresultcss="../scripts/dhcpeireport."_HosCode_"noraml.stationresult.css"
+	s summarizegathercss="../scripts/dhcpeireport."_HosCode_"noraml.summarizegather.css"
+	s footercss="../scripts/dhcpeireport."_HosCode_"normal.footer.css"
+</SCRIPT>
+<!-- 通用  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(normalcss)#></LINK>
+
+
+<!-- 封面  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(covercss)#></LINK>
+<!-- 报告头 报告标题 -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(titlecss)#></LINK>
+<!-- 报告头 报告标题 -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(patinfocss)#></LINK>
+
+<!-- 科室小节  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizecss)#></LINK>
+<!-- 总检建议  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(generaladvicecss)#></LINK>
+
+<!-- 结果  
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.result.css"></LINK>
+-->
+<!-- 通用格式  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(norcss)#></LINK>
+<!-- 检验结果  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(liscss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(stationresultcss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizegathercss)#></LINK>
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(footercss)#></LINK>
+</head>
+<BODY>
+
+<OBJECT id="PrintActiveX"  style="DISPLAY: none" classid='clsid:3EDE745C-4ADB-42A6-AB25-5621EDBDFD6B' codebase="../addins/client/QWPrint.cab#version=1,0,1,1" > </OBJECT>
+ 
+<input type=button id=SaveAs value=另存为 onclick="saveAs()" class="NOPRINT">
+
+<input type=button value="打印" onclick="PrintReport()" class="NOPRINT">   
+<!--input type=button value="页面设置" onclick="factory.printing.PageSetup()" class="NOPRINT"-->   
+<input type=button value="打印预览" onclick="PrintActiveX.PrintView()" class="NOPRINT">             
+<input type="button" value="关闭" onclick="window.close();" class="NOPRINT"> 
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s PatientID=$g(%request.Data("PatientID",1))
+		s ReportID=$g(%request.Data("ReportID",1))
+		// 获取报告信息
+		w:(""=PatientID) "<P>非法客户ID,无报告</P>"
+		Q:(""=PatientID) 
+		s Flag=##Class(web.DHCPE.ReportOutToWeb).GetReportInfor(PatientID)
+		// 输出报告
+		w:("1"'=Flag) "<P>未找到相关客户信息</P>"
+		Q:("1"'=Flag)
+		d ##Class(web.DHCPE.ReportOutToWeb).OutReportToWeb()
+	</SCRIPT>
+
+<TABLE>
+<TR>
+          <TD  id="ReportID" width="0" height="0" style="display:none;">#(ReportID)#</TD>
+</TR>
+</TABLE>
+<SCRIPT language="javascript">
+	PrintActiveX.paddingTop=400;
+	PrintActiveX.paddingRight=100;
+	PrintActiveX.paddingBottom=80;
+	PrintActiveX.paddingLeft=200;
+	PrintActiveX.isHtmlHeadFoot=true;
+	var vName="",vSex="",vAge="",vIDCard="",vTel="",vMail="",vDate="",vCompany="",vRegno="";
+	var obj=document.getElementById("PatName");
+	if (obj) vName=obj.innerText;
+	var obj=document.getElementById("PatSex");
+	if (obj) vSex=obj.innerText;
+	var obj=document.getElementById("PatAge");
+	if (obj) vAge=obj.innerText;
+	var obj=document.getElementById("PatID");
+	if (obj) vIDCard=obj.innerText;
+	var obj=document.getElementById("PatTel");
+	if (obj) vTel=obj.innerText;
+	var obj=document.getElementById("Mail");
+	if (obj) vMail=obj.innerText;
+	var obj=document.getElementById("AdmDate");
+	if (obj) vDate=obj.innerText;
+	var obj=document.getElementById("PatCompany");
+	if (obj) vCompany=obj.innerText;
+	var obj=document.getElementById("RegNo");
+	if (obj) vRegno=obj.innerText;
+	var str="姓名:"+vName+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />性别:"+vSex+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />年龄:"+vAge+"<img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/NoArrow.GIF\" width=\"41\" height=\"1\" />身份证号:"+vIDCard
+	//上面图片
+	var header="<div style=\"float:center;border-bottom:0px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\"><img src=\"http://172.16.2.20/trakcare/web/images/dhcpe/tb.GIF\" height=\"83\" align=\"absmiddle\"><FONT SIZE=+3>体检报告</FONT></span></div><br>"
+	//下面病人信息
+	+"<div style=\"float:center;border-bottom:3px solid;padding:0px;\"><span style=\"padding-right:120px;float:center\">"+str+"</span></div>"
+	PrintActiveX.header=header;
+	//PrintActiveX.pageWidth=2000; #eeeeee #eeeeee
+	//PrintActiveX.pageHeight=800; #eeeeee
+	var footer="&b<div style=\"float:center;border-top:3px solid;padding:0px;\">第&p页 (共&P页)</div>&b";
+	PrintActiveX.footer=footer;
+	PrintActiveX.orientation=1;
+	PrintActiveX.pageName="A4"
+	function PrintReport()
+	{
+		
+		var ReportID=""
+		var obj=document.getElementById("ReportID")
+		if (obj) ReportID=obj.innerText;
+		var InString=ReportID+"^P^^";
+		var ret=#server(web.DHCPE.Report.SetReportStatus("","",InString))#
+		printCover()
+		PrintActiveX.Print(false);
+		window.close();
+		//document.all.WebBrowser.ExecWB(6,1)
+		
+	}
+function   saveAs(){
+	var FileName=#server(web.DHCPE.ReportGetInfor.GetPatInfo("PatName"))#+"的体检报告.htm"	
+	document.execCommand   ( "saveAs",true, FileName); 
+} 
+function printCover()
+{
+	 
+	var Templatefilepath=#server(web.DHCPE.Report.MonthStatistic.getpath())#+'DHCPEReportCover.xls';
+	try
+	{
+		xlApp = new ActiveXObject("Excel.Application");  //固定
+		xlBook = xlApp.Workbooks.Add(Templatefilepath);  //固定
+		xlsheet = xlBook.WorkSheets("Sheet1");     //Excel下标的名称
+		xlsheet.cells(23,4)=vName;
+		xlsheet.cells(23,7)=vSex;
+		xlsheet.cells(24,4)=vAge;
+		xlsheet.cells(24,7)=vTel;
+		xlsheet.cells(25,4)=vRegno;
+		xlsheet.cells(25,7)=vDate;
+		//xlsheet.cells(27,4)=vMail;
+		//xlsheet.cells(27,7)=vIDCard;
+		xlsheet.cells(26,4)=vCompany;
+		xlsheet.printout;
+		xlBook.Close (savechanges=false);
+		xlApp.Quit();     
+        xlApp   =   null;   
+        idTmr   =   window.setInterval("Cleanup();",1); 
+	}
+	catch(e)
+	{
+		alert(e+"^"+e.message);
+	}
+}
+
+function   Cleanup()   {   
+	window.clearInterval(idTmr);   
+	CollectGarbage();   
+} 
+</SCRIPT>
+</BODY>
+</HTML>

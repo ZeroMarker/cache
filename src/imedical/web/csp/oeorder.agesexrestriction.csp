@@ -1,0 +1,333 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ n returncode,Restriction,PatID,agefrom,ageto,sex,itmDesc,itmDescRestrict,returncover,CheckOrderCovered
+ n mes,RangeFrom,RangeTo,UOM,qty,OutOfRange,QtyByDef,type,Allergy
+ s (returncode,Restriction,PatID,agefrom,ageto,sex,itmDesc,mes,RangeFrom,RangeTo,UOM,qty,QtyByDef,itmDescRestrict,returncover,type,CheckOrderCovered,Allergy)=""
+ s OutOfRange="false"
+ s PatID=%request.Get("PatID")
+ s itmMast=%request.Get("OEORIItmMastDR")
+ s itmDesc=%request.Get("ARCIMDesc")
+ s itmDesc=##Class(%CSP.Page).QuoteJS(itmDesc)
+ s itmDesc=$e(itmDesc,2,$l(itmDesc)-1)
+ s QtyByDef=$$defqty^COEOrdItem(itmMast)
+ s mes=##Class(web.ARCItmMast).GetOEMessage(itmMast)
+ s RangeFrom=%request.Get("RangeFrom")
+ s RangeTo=%request.Get("RangeTo")
+ s UOM=%request.Get("UOM")
+ s qty=%request.Get("qty") 
+ s type=%request.Get("type")
+ s OEORIItmMastDR=%request.Get("OEORIItmMastDR")
+ s OrderSetRowid=##Class(%CSP.Page).UnescapeURL(%request.Get("OrderSetRowid"))
+ s DateVal=%request.Get("DateVal")
+ s EpisID=%request.Get("EpisID")
+ s epislen=$l(EpisID,"^")
+ s CoverAlert=""
+ s RangeAlert="" 
+ s message=""
+ s AllergyAlert=""
+ s AgeSexAlert=""
+ n cancelledOrders
+
+s cancelledOrders=""
+ for i=1:1:epislen {
+ s CurEpisID=$p(EpisID,"^",i)
+ ;s ^zpeterc($zn,"CurEpisID"_i)=CurEpisID
+ i CurEpisID="" q
+ s PatID=##Class(web.PAAdm).GetPatientId(CurEpisID)
+ s PatNameTemp=##Class(web.PAPatMas).GetPatientTitle(PatID)
+ s PatName=$p(PatNameTemp," ",2)_" "_$p(PatNameTemp," ",1)
+ 
+ ;AmiN  log25880 adding message for items not covered by insurance
+ ;s EpisIDs=CurEpisID
+ s PayorPlanOverRide=""
+ s OrderStatusCode="V" 
+ i type'="",type="ARCIM" s OrderSetRowid=""
+ i type'="",type="ARCOS" s OEORIItmMastDR=""
+
+
+
+ ///// need for pulling information from the component manager. 
+
+    s mobj=##Class(websys.Component).OpenName("OEOrder.Custom")
+	i mobj d mobj.LoadTrans(),mobj.%Close()	
+	
+    w "<SCRIPT>",$c(13,10)
+    s code=$o(t(""))
+    while (code'="") {
+	   w "t['"_code_"']="_##Class(%CSP.Page).QuoteJS($p(t(code),"^"))_";"_$c(13,10)
+	   s code=$o(t(code))
+    }
+    w "</SCRIPT>",$c(13,10),!
+	
+ ///// for CheckOrderCovered in VB Tables System Management .. System Parameters ... Order and Results make sure you check "Check Order is Covered - Contract billing
+	s CheckOrderCovered=$p($g(^CF("OE",1)),"^",32)  
+	w "<script>"			
+	w "var yescontinue=true;"
+	w "</script>"
+	if CheckOrderCovered="Y" {
+		s returncover=$$covered1^MVBARPB3(CurEpisID,OEORIItmMastDR,OrderSetRowid,DateVal,PayorPlanOverRide,OrderStatusCode)
+		if PLIST'="" {
+			if $g(PLIST(1))'="" {
+				if (OrderSetRowid ="") {  //for OrderRowid = ARCIM	
+		   			s plistvar=PLIST(1)
+					s CoverAlert=CoverAlert_"For "_PatName_" Payor(s) do not cover item(s)"_"\n"_plistvar_"\n"_""
+					s cancelledOrders=cancelledOrders_CurEpisID_"&"_OrderSetRowid_"^"
+				}	
+			
+				if (OEORIItmMastDR ="") {  //for OrderSetRowid = ARCOS	  
+				 	s plistvar=PLIST(1)
+					s CoverAlert=CoverAlert_"For "_PatName_" Payor(s) do not cover item(s)"_"\n"_plistvar_"\n"_""
+					s cancelledOrders=cancelledOrders_CurEpisID_"&"_OEORIItmMastDR_"^"
+				}	
+			}
+	 	}
+	}
+	; AmiN end
+ }
+ i CoverAlert'="" {
+ s CoverAlert=CoverAlert_"\n"_"Do you wish to continue?"
+ w "<script>"
+ w "var choice1=confirm('"_CoverAlert_"');"
+ i epislen=1 d	
+ . w "if(choice1==false)"
+ . w "{"
+ . w "var f = top.frames['TRAK_main'];"
+ . w "f.DeleteClickHandler();" 
+ . w "}"
+ i epislen>1 d
+ . w "var customFrame=parent.parent.frames['TRAK_main'];"
+ . w "var cobj=customFrame.document.getElementById(""CancelledItems"");"
+ . w "if(cobj){"
+ . w "	cobj.value=cobj.value+"""_cancelledOrders_""";"
+ . w "}"
+ w "</script>"
+ }
+ ;w "<SCRIPT>"
+ ;w "var yescontinue=false;" 	 
+ ;w "yescontinue = confirm('"_CoverAlert_"');"	
+ ;w "var f = top.frames['TRAK_main'];"
+ ;w "if (yescontinue==false) f.DeleteClickHandler();"
+ ;w "</SCRIPT>"
+
+ ;vvv
+ i RangeFrom=""  s RangeFrom=0
+ i RangeTo=""  s RangeTo=0
+ i RangeFrom>QtyByDef!RangeTo<QtyByDef  s OutOfRange="true"
+ i mes'="",OEORIItmMastDR'="" {  //mes = itmMast
+ 	w "<script>"	
+	  w "if (yescontinue==true) { "
+ 	    w "var mes=",##Class(%CSP.Page).QuoteJS(mes),";"
+ 	    w "var smes=mes.split(""|"");"
+ 	    w "mes=smes.join(""\n"");" 
+		 //w "alert(""ami test"");"
+ 	    w "alert(""ORDER ENTRY MESSAGE: ",itmDesc,"\n\n""+mes);"
+	  w "}"
+ 	w "</script>" 
+ }
+ i RangeFrom'=0!RangeTo'=0 {
+ 	w "<script>"
+ 	w "if (",OutOfRange,") {"
+ 	w "var f=top.frames['TRAK_main'];"
+ 	w "var saobj=f.document.getElementById(""AlertDosageRange"");"
+ 	w "if (saobj) saobj.value=""WARNING:  The quantity for this order item is out of range.  The set quantity range is between ",RangeFrom," to ",RangeTo," ",UOM,".",""";"
+ 	;w "alert('WARNING:  The quantity for this order item is out of range.  The set quantity range is between ",RangeFrom," to ",RangeTo," ",UOM,".","');" 	
+ 	w "}"
+ 	w "</script>"
+ }
+
+s cancelledOrders=""
+ for i=1:1:epislen {
+ s CurEpisID=$p(EpisID,"^",i)
+ i CurEpisID="" q
+ s PatID=##Class(web.PAAdm).GetPatientId(CurEpisID)
+ s PatNameTemp=##Class(web.PAPatMas).GetPatientTitle(PatID)
+ s PatName=$p(PatNameTemp," ",2)_" "_$p(PatNameTemp," ",1)
+ s Allergy=$$allergy^COEOrdItem1(EpisID,itmMast,"")
+ 
+ i Allergy="1"{
+	s cancelledOrders=cancelledOrders_CurEpisID_"&"_itmMast_"^"
+ 	s AllergyAlert=AllergyAlert_PatName_" Allergy: "_itmDesc_" "_"\n"
+	 
+ }
+ }
+ i AllergyAlert'="" {
+ w "<script>"
+ w "var choice2=confirm('"_AllergyAlert_"');"	
+ i epislen=1 d	
+ . w "if(choice2==false)"
+ . w "{"
+ . w "var f = top.frames['TRAK_main'];"
+ . w "f.DeleteClickHandler();" 
+ . w "}"
+ i epislen>1 d
+ . w "var customFrame=parent.parent.frames['TRAK_main'];"
+ . w "var cobj=customFrame.document.getElementById(""CancelledItems"");"
+ . w "if(cobj){"
+ . w "	cobj.value=cobj.value+"""_cancelledOrders_""";"
+ . w "}"
+ w "</script>"
+ }
+ s cancelledOrders=""
+ 
+ for i=1:1:epislen {
+ s CurEpisID=$p(EpisID,"^",i)
+ i CurEpisID="" q
+ s PatID=##Class(web.PAAdm).GetPatientId(CurEpisID)
+ s PatNameTemp=##Class(web.PAPatMas).GetPatientTitle(PatID)
+ s PatName=$p(PatNameTemp," ",2)_" "_$p(PatNameTemp," ",1)
+ s returncode=$$valord^COEOrdItem(PatID,itmMast) ;OEORIItmMastDR 
+ s Restriction=$p(returncode,"^",1)
+ s agefrom=$p(returncode,"^",2)
+ s ageto=$p(returncode,"^",3)
+ s sex=$p(returncode,"^",4)
+ 
+;vvv
+ i Restriction="Y",OEORIItmMastDR'="" {
+	 s cancelledOrders=cancelledOrders_CurEpisID_"&"_OEORIItmMastDR_"^"
+	 i sex'="" {
+	 	i agefrom'="",ageto'="" {
+			s AgeSexAlert=AgeSexAlert_"Patient " _PatName_" "_itmDesc_" is invalid for "_sex_" between "_agefrom_" to "_ageto_" years of age.\n"
+		}
+		i agefrom'="",ageto="" {
+		 	s AgeSexAlert=AgeSexAlert_"Patient " _PatName_" "_itmDesc_" is invalid for "_sex_" from "_agefrom_" years of age.\n"
+		}
+		i agefrom="",ageto'="" {
+		 	s AgeSexAlert=AgeSexAlert_"Patient " _PatName_" "_itmDesc_" is invalid for "_sex_" to age of "_ageto_".\n"  
+		}
+		i agefrom="",ageto="" {
+			s AgeSexAlert=AgeSexAlert_"Patient " _PatName_" "_itmDesc_" is invalid for "_sex_".\n"   
+		}
+	 }
+	 i sex="" {
+	 	i agefrom'="",ageto'="" {
+	 		s AgeSexAlert=AgeSexAlert_"Patient " _PatName_" "_itmDesc_" is invalid for age between "_agefrom_" and "_ageto_".\n"
+		}
+	 	i agefrom'="",ageto="" {
+	 		s AgeSexAlert=AgeSexAlert_"Patient " _PatName_" "_itmDesc_" is invalid from "_agefrom_" years of age.\n"
+		}
+	 	i agefrom="",ageto'="" {
+	 		s AgeSexAlert=AgeSexAlert_"Patient " _PatName_" "_itmDesc_" is invalid to age of "_ageto_".\n"  
+		}
+	 }
+	 
+	 
+ }
+ }
+ i AgeSexAlert'="" {
+ w "<script>"
+ ;BM Log 35782
+ w "var f=top.frames['TRAK_main'];"
+ w "var saobj=f.document.getElementById(""AlertSexAgeRestriction"");"
+ w "if (saobj) saobj.value="""_AgeSexAlert_""";"
+ ;w "alert('"_AgeSexAlert_"');"
+ i epislen=1 d	
+ . w "var f = top.frames['TRAK_main'];"
+ . w "f.DeleteClickHandler();" 
+ i epislen>1 d
+ . w "var customFrame=parent.parent.frames['TRAK_main'];"
+ . w "var cobj=customFrame.document.getElementById(""CancelledItems"");"
+ . w "if(cobj){"
+ . w "	cobj.value=cobj.value+"""_cancelledOrders_""";"
+ . w "}"
+ w "</script>"
+ }
+ i AgeSexAlert="" {
+ w "<script>"
+ w "var f=top.frames['TRAK_main'];"
+ w "var saobj=f.document.getElementById(""AlertSexAgeRestriction"");"
+ w "if (saobj) saobj.value="""";"
+ w "</script>"
+ }
+ 
+ i Restriction="N",OEORIItmMastDR'="" {
+	n DrugAlert,drugs,startdate,itmMast,durid,selord,returncode,itemdesc,interact
+	s (DrugAlert,drugs,startdate,itmMast,durid,selord,returncode,itemdesc,interact)=""
+	s DrugAlert="N",startdate=+$h,drugs=##Class(%CSP.Page).UnescapeURL(%request.Get("drugs")),selord=""
+	s $p(drugs,$C(2),2)=startdate 
+	
+	s selord=%request.Get("OEORIItmMastDR")_$C(2)_startdate_$C(2)_%request.Get("durid")
+	k PLIST
+	f i=1:1 {
+		s PLIST(i)=$p(drugs,$C(5),i)
+		i $p(drugs,$C(5),i)="" Q
+	}
+
+	; get all episodes for this patient and loop though checking interactions in each
+ 	n CurrEpID,rs,j
+ 	s (CurrEpID,rs,j)=""
+
+ 	s rs=##Class(%Library.ResultSet).%New("web.PAAdm:FindAllEpisodes")
+	i rs {
+	 	d rs.Execute(PatID)
+ 		f  {	      	
+			i 'rs.Next() d rs.%Close() q
+			s j=j+1
+ 			s CurrEpID=rs.GetDataByName("ID")
+			s returncode=$$drugint^MVBOEORD(CurrEpID,selord)
+			s DrugAlert=$p(returncode,"^",1)
+			s itemdesc=$p(returncode,"^",2)
+			s interact=""
+			if $g(PLIST)'="" {
+				f k=1:1:PLIST  {
+					i PLIST(k)'="" s interact=interact_$p(PLIST(k),$c(1),1)_" ("_$p(PLIST(k),$c(1),2)_")"_","
+				}
+			}
+			i interact'=""  s interact=$e(interact,1,$l(interact)-1)
+			;i DrugAlert="N",%request.Get("CatMatch")="found",interact="" {
+				;s ^zpeterc($zn,"CurrEpID"_j)=CurrEpID
+				;w "<script>"
+				;w "var f = top.frames['TRAK_main'];"
+				;w "f.OrderDetailsPage(f);"
+				;w "</script>"
+			;}	
+ 		}
+		i DrugAlert="N",%request.Get("CatMatch")="found",interact="" {
+			;s ^zpeterc($zn,"CurrEpID"_j)=CurrEpID
+			;w "<script>"
+			;w "var f = top.frames['TRAK_main'];"
+			;w "f.OrderDetailsPage(f);"
+			;w "</script>"
+			w "<script>"
+			w "var f=top.frames['TRAK_main'];"
+ 			w "var ddiobj=f.document.getElementById(""AlertDrugDrugInteraction"");"
+ 			w "if (ddiobj) ddiobj.value=""Drug Drug Interaction"";"
+ 			w "</script>"
+		}
+		i interact'="" {
+			w "<script>"
+			w "var f=top.frames['TRAK_main'];"
+ 			w "var ddiobj=f.document.getElementById(""AlertDrugDrugInteraction"");"
+ 			w "if (ddiobj) ddiobj.value="""_interact_""";"
+ 			;w "var DrugAlert=""Y"";" 
+			;i epislen>1  s PatID=""
+                        ;Log 59598 - BC - 29-06-2006 : remove statusbar variable (status=) to display the status bar.
+			;w "websys_createWindow(""oeorder.mainloop.csp?itmdesc="_interact_"&OEORIItmMastDR="_%request.Get("OEORIItmMastDR")_"&EpisodeID="_EpisID_"&ordDesc="_%request.Get("ARCIMDesc")_"&PatientID="_PatID_""","""",""toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes"");"
+			w "</script>"
+		}
+	}
+ }
+ q
+ ;
+</server>
+<script language=Javascript>
+function DeleteClickHandler()
+{
+ var f = top.frames['TRAK_main'];
+ f.DeleteClickHandler(); 
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s id=$Get(%request.Data("id",1))
+	s password=$Get(%request.Data("password",1))
+	s name=$Get(%request.Data("name",1))
+	s order=$Get(%request.Data("order",1))
+	s person=$Get(%request.Data("person",1))
+	s remark=$Get(%request.Data("remark",1))
+	s active=$Get(%request.Data("active",1))
+	
+	s roleDr = $Get(%request.Data("roleDr",1))
+	s userDr = $Get(%request.Data("userDr",1))
+
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uUsers).ListRec(searchField,searchValue,sortField,sortDir,start,limit,active)
+	
+	i action = "persons" d
+	.w ##class(dhc.ca.cache.udata.uUnitPersons).ListRec(searchField, searchValue, sortField, sortDir, start, limit, id, "Y", "", "")
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uUsers).InsertRec(order, name, password, person, remark)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.ca.cache.udata.uUsers).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uUsers).UpdateRec(id, order, name, password, person, remark, active)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "uRoleList" d
+	.w ##class(dhc.ca.cache.udata.uURoles).ListRec(searchField,searchValue,sortField,sortDir,start,limit,userDr)
+	
+	i action = "roleList" d
+	.w ##class(dhc.ca.cache.udata.uRoles).ListRec("Y","shortcut",searchValue,sortField,sortDir,start,limit)
+	
+	i action = "roleAdd" d
+	.s result = ##class(dhc.ca.cache.udata.uURoles).InsertRec(userDr, order, roleDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "roleEdit" d
+	.s result = ##class(dhc.ca.cache.udata.uURoles).UpdateRec(id,userDr, order, roleDr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "roleDel" d
+	.s result = ##class(dhc.ca.cache.udata.uURoles).DelRec(id)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

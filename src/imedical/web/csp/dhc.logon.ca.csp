@@ -1,0 +1,248 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. oeorder.oplistcustom.caaudit.csp --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;i ##Class(websys.SessionEvents).SessionExpired() q 1
+ Q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+	<base target = "_self">
+	<title>数据签名</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	   <SCRIPT language="Cache" RUNAT="SERVER">
+	   Set CAServiceError=0
+	   s CAPowerFlag=##Class(CA.DigitalSignatureService).IsCAON()	
+	   i CAPowerFlag="Y" {
+		   try{
+		      Do ##Class(CA.DigitalSignatureService).CASessionDataInit()	 	
+		   }catch(e){
+		   	  Set CAServiceError=1
+		   }
+	   }
+	   d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+	   s %session.Data("ContainerName")=""
+	   d ##Class(CA.DigitalSignatureService).OnUsbChanged()
+	   Set SignUserCode = $G(%request.Data("SignUserCode",1))
+	   Set SignUserId = ##class(web.SSUser).GetIdFromCodeOrDescription(SignUserCode)
+
+	  </script>
+
+	   <script language="javascript">
+		//CA数字签名-------------
+		var strServerRan = "#($g(%session.Data("ServerRan")))#";
+		var strServerCert = "#($g(%session.Data("ServerCert")))#";  //$G(^CF("CA","ServerCert"))
+		var strServerSignedData = "#($g(%session.Data("ServerSignedData")))#"; 
+		var session = [];
+		session['LOGON.USERID'] = "#($g(%session.Data("LOGON.USERID")))#";
+		session['LOGON.USERCODE'] = "#($g(%session.Data("LOGON.USERCODE")))#";
+		var caServerErrorAlert = "CA服务器异常，请检查网络或CA服务器！";  
+		var CAServiceError = #(CAServiceError)#;
+		var SignUserCode="#(SignUserCode)#";
+		var SignUserId = "#(SignUserId)#";
+	  </script>
+</head>
+<body>
+
+<DIV id="PageContent">
+<TABLE width="100%" id="mDHCDocCAVerify" name="mDHCDocCAVerify">
+</TABLE>
+</div>
+<FORM ACTION="#" method=post name="fDHCDocCAVerify" id="fDHCDocCAVerify">
+	<input type="hidden" id="UserSignedData" name="UserSignedData" value="">
+	<input type="hidden" id="UserCert" name="UserCert" value="">
+	<input type="hidden" id="ContainerName" name="ContainerName" value="">	
+	<TABLE style="WIDTH: 281px; HEIGHT: 146px">
+		<TBODY>
+			<TR><TD class=maintitle noWrap>证书登录</TD></TR>
+			<TR>
+				<TD class="i-tableborder">
+					<TABLE style="WIDTH: 271px; HEIGHT: 100px">
+						<TBODY><TR><TD>
+							<label Style="WIDTH: 66px; HEIGHT: 22px">证书</label>
+							</TD><TD>
+							<select id="Certificate" name="Certificate" multiple size=4 style="WIDTH: 156px; HEIGHT: 34px">
+							</select>
+							</TD></TR><TR><TD>
+							<label>证书口令</label>
+							</TD><TD>
+							<input type="password" id="CertificatePwd" name="CertificatePwd" style="WIDTH: 156px; HEIGHT: 22px" value="">
+							<input type="text" style="display:none" id="testInput"> 
+							</TD></TR><TR><TD class="" align=right>
+							<a href="#" id="Commit" name="Commit">确认</A>
+							</TD><TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+							<a href="#" id="Exit" name="Exit">退出</A>
+							</TD></TR>
+						</TBODY>
+					</TABLE>
+				</TD>
+			</TR>
+			<tr><td></td><tr>
+		</TBODY>
+	</TABLE>				
+	<div id="CAInfoDiv" style="color:red;font-size:15pt;align:center;"></div>
+</FORM>
+</DIV>
+</DIV>
+</body>
+<script type="text/javascript">
+/// CALogonUserName-ca登录后的用户名，currUserName为会话中的用户或登录界面用户框中的用户名
+var CALogonUserName="",CALogonUserId="",currUserName="",faceSureTime=5;
+var qrcodeMaker;rollMax=100,rollCount = 100; //60*1000
+function GetUserNameByCA(UsrCertCode){
+	var str = tkMakeServerCall("websys.CAInterface","GetUserIdByCert",UsrCertCode)
+	CALogonUserName = str.split("^")[1];
+	CALogonUserId = str.split("^")[0];
+	return str;
+}
+function ValidUser(UsrCertCode){
+	//一定要拿一次用户
+	GetUserNameByCA(UsrCertCode);
+	if(session['LOGON.USERCODE']!="") currUserName = session['LOGON.USERCODE'];
+	if ("undefined"!=typeof dialogArguments){
+		if (dialogArguments && dialogArguments.window){
+		    var obj = dialogArguments.window.document.getElementById("USERNAME");
+		    if (obj && obj.value!=""){
+				currUserName = obj.value;	
+		    }
+		}
+    }
+    if (currUserName!="" && CALogonUserName!=currUserName){
+		alert("用户与Key不匹配!");
+		return false;
+    }
+    return true;
+}
+function DocumentloadHandler(){
+	if (1==CAServiceError){
+		displayError(caServerErrorAlert);
+		return ;
+	}   
+	GetList();
+	var Obj = document.getElementById('Certificate')
+	if(Obj){
+		Obj.multiple=false;
+		Obj.size=1;
+	}
+	Obj = document.getElementById('Commit')
+	if (Obj){  
+		 Obj.onclick = Commit_Click;
+	}
+	Obj = document.getElementById('Exit')
+	if (Obj){
+		Obj.onclick = Exit_Click;
+	}
+	Obj = document.getElementById('CertificatePwd');
+	if(Obj){
+		Obj.onkeyup = function(){
+			var keycode;
+			try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+			if(keycode==13){
+				Commit_Click();
+			}
+		}
+		Obj.focus();
+	}
+}
+//usb change
+function GetList_pnp() {
+	GetList();
+}
+function GetList(){	
+	var strOption;
+	var strName;
+	var strUniqueID;
+	var objListID =document.getElementById('Certificate');
+	if (!objListID) return;
+	objListID.options.length = 0;
+	var strTemp = GetUserList();
+	var strTempArr = strTemp.split("&&&");
+	var strItemTempArr;
+	for (i=0; i<strTempArr.length;i++){
+		if(strTempArr[i]!=""){
+			strItemTempArr = strTempArr[i].split("||");
+			objListID.options[objListID.options.length] = new Option(strItemTempArr[0],strItemTempArr[1]);
+		}
+	}
+	if(objListID.options.length>0)	{
+		objListID.options[0].selected=true;
+		CAServiceError = 0;
+	}else {
+		displayError("请插入证书!");
+	}
+}		
+function Commit_Click()
+{   
+	var strContainerName ="";
+	var strPin ="";
+	var ret =null;
+	var Obj = document.getElementById('Certificate')
+	if(Obj){
+		if (Obj.selectedIndex==-1){
+			displayError("请选择有效证书")
+			return;
+		}else{
+			strContainerName=Obj.options[Obj.selectedIndex].value;
+		}
+	}
+    //取证书签名图片
+	var strPicData="" //window.parent.dialogArguments.GetPicBase64Data(strContainerName);
+	Obj = document.getElementById('CertificatePwd');
+	if(Obj){   
+		strPin=Obj.value;
+		Obj.value = "";
+		if (strPin==""){
+			displayError("请输入证书口令");
+			return;
+		}else if((strPin.length<4)||(strPin.length>16)){
+			displayError("证书口令最少4位,最多16位")
+			return;
+		}
+	}
+	Obj = document.getElementById('fDHCDocCAVerify')
+	if(Obj)
+	{
+	    ret = Login("fDHCDocCAVerify",strContainerName,strPin);
+	}
+	if (!ret){ 
+		displayError("用户或密码不正确!");
+		return;
+	}
+	var pass = false;
+	var strClientSignedData = SignedData(strServerRan, strContainerName);
+    //alert(strClientSignedData);
+    //客户端对随机数的签名
+    var Obj = document.getElementById('UserSignedData')
+    if(Obj)Obj.value=strClientSignedData;
+    //获取客户端证书
+    var varCert = GetSignCert(strContainerName);
+    var Obj = document.getElementById('UserCert')
+    if(Obj)Obj.value=varCert;
+    var varCertCode=GetUniqueID(varCert);
+    // 判断CA用户与dhc.logon.csp界面的用户是不是同一用户
+    if (!ValidUser(varCertCode)){return false;}
+    var Obj = document.getElementById('Certificate')
+    if(Obj) Obj.value=strContainerName;
+    var certificateNo=GetCertNo(strContainerName);
+    /*
+    alert(strContainerName+","+strServerRan+","+varCert);
+    */
+    var UserID=session['LOGON.USERID'];
+	if (SignUserId!="") UserID = SignUserId;
+
+    var ret = tkMakeServerCall("CA.DigitalSignatureService","Login",UserID,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert);
+    //var ret=cspRunServerMethod(LoginSignMethod,UserID,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert);
+	if (ret!=""){displayError("CA认证失败.\n错误代码:"+ret);return;}
+	tkMakeServerCall("websys.SessionLogon","LoginAfter",strContainerName,strPin);
+	window.returnValue=strContainerName;
+	window.close();
+}
+function Exit_Click()
+{
+	window.returnValue= "";
+	window.close();
+}
+function displayError(info){
+	document.getElementById("CAInfoDiv").innerText = info;
+}
+document.body.onload = DocumentloadHandler;
+</script>
+</html>

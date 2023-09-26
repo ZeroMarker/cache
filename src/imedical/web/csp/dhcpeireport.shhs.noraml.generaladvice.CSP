@@ -1,0 +1,67 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.noraml.generaladvice.csp
+		
+		s GeneralAdviceTitle="总检结论及建议:"
+		s GeneralAdvice=$G(^TMPReport("GeneralAdvice", "Advice"))
+		s j=$L(GeneralAdvice,$C(13,10))
+		s AduitUser=$G(^TMPReport("GeneralAdvice","AduitUser"))
+		s MainDoctor=$G(^TMPReport("GeneralAdvice","MainDoctor"))
+        i MainDoctor'="" s MainDoctor="总检医生:"_MainDoctor
+		
+		/*
+		//s GeneralAdviceData=..EscapeHTML(GeneralAdvice)
+		
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(13,10)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(13,10),iLLoop)_"<br>"
+		.
+		
+		s GeneralAdvice=GeneralAdviceData
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(32)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(32),iLLoop)_"&nbsp;"
+		.
+		
+		s AduitDate=$G(^TMPReport("GeneralAdvice", "AduitDate"))
+		s AduitUser="" //$G(^TMPReport("GeneralAdvice","AduitUser"))*/
+
+	</Script>
+		
+<DIV class='Page GeneralAdvice'>
+	<TABLE  border=0 class="GeneralAdviceTable" width="664">
+		<THEAD>
+			<TR>
+				<TD width="663" class="GeneralAdviceTitle">#(GeneralAdviceTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+		<csp:LOOP COUNTER="I" FROM="1" TO="100">
+
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		//s GeneralAdvice=$G(^TMPReport("GeneralAdvice", "Advice"))
+		q:I>$L(GeneralAdvice,$C(13,10))
+		s GeneralAdviceData=$P(GeneralAdvice,$C(13,10),I)
+		
+		</Script>
+		<CSP:IF CONDITION=(""'=GeneralAdviceData)>
+				<TR>
+				<TD width="663" class="GeneralAdviceData">
+					#(GeneralAdviceData)#
+				</TD>		
+			</TR>
+		</CSP:IF>
+	</csp:LOOP>
+	<TABLE width="700">
+		<TR>	
+			<TD  width="600" ></TD>
+			<TD class="GeneralDoctor">主检医生:#(AduitUser)#</TD>
+		</TR>
+		<TR>
+			<TD width="600"></TD>
+		  	<TD  class="GeneralDoctor">#(MainDoctor)#</TD>
+		</TR>
+	</TABLE>	 
+			
+		</TBODY>
+	</TABLE>
+</DIV>

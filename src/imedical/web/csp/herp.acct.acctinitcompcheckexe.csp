@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sortField",1))
+	s sortDir = $Get(%request.Data("sortDir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	
+	s userid=$Get(%request.Data("UserId",1))	//取当前用户ID
+	s AcctBookID=$Get(%request.Data("AcctBookID",1))
+	s dataTypeDr=$Get(%request.Data("dataTypedr",1))
+	s orgDr=$Get(%request.Data("orgdr",1))
+	s year=$Get(%request.Data("StartYear",1))  //传开启年
+	s orgName=$Get(%request.Data("OrgName",1))
+	    
+	//s rowid=$Get(%request.Data("rowid",1))
+	s AcctCheckTypeID=$Get(%request.Data("AcctCheckTypeID",1))
+	
+	//k ^uesruser
+	//s ^uesruser=AcctCheckTypeID	
+	
+	
+	i action = "AcctCheckInit" d
+	.s result = ##class(herp.acct.udata.uAcctInitCompCheck).AcctCheckInit(AcctCheckTypeID,AcctBookID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "listType" d
+	.w ##class(herp.acct.udata.uAcctInitCompCheck).AcctTypeList(start, limit, AcctBookID)
+	
+	i action = "GetGridTitle" d
+	.w ##class(herp.acct.udata.uAcctInitCompCheck).GetGridTitle(AcctBookID,AcctCheckTypeID)
+	
+	i action = "listCheck" d
+	.w ##class(herp.acct.udata.uAcctInitCompCheck).AcctCheckList(start,limit,AcctCheckTypeID,AcctBookID)
+		
+</script>

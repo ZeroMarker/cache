@@ -1,0 +1,159 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+
+ //单号
+ s ReportID=%request.Get("ReportID")
+ //Type:查询类型 AGF知情同意书 REQ申请单 ADV不良反应  XMP配血信息  ISS发血信息 BDT取血单信息
+ s Type=%request.Get("Type")
+ s ReportID=##class(DHCLIS.BLD.DHCBDReqForm).GetReportDRMTHD(ReportID,Type,"","","","","","","","","","","","","")
+
+</SERVER>
+<!-- Put your page Title here -->
+<title></title>
+	
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/hisuisource.js" ></script>
+	<link   type="text/css" href="../scripts_lib/plug/font-awesome-4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+	<script src="../scripts/websys.jquery.js" type="text/javascript"></script>
+	<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+	
+   
+</head>
+<body>
+    <div id="winPrintPreview"></div>
+
+    <script type="text/javascript">
+    
+		var Type = "#((Type))#" ;
+		var ReportID = "#((ReportID))#" ;
+		
+		$(function () {
+            if (ReportID.indexOf("-1^") >-1) {
+			     var err=ReportID.split("^")[1];
+				 alert(err);
+				 window.close();
+			}
+			else if (ReportID.length == 0) {
+				 alert("传入单据唯一ID错误！");
+				 window.close();
+			}
+			else if (Type.length == 0) {
+				 alert("传入单据类型不明，请确认参数是否有误！");
+				 window.close();
+			}else{
+			
+			    ShowInfoDetil();  
+			
+			}
+
+			
+			
+			
+			
+			
+		
+
+	    });
+		
+	    function ShowInfoDetil() {
+		
+		    if(Type=="XMP"){
+			
+			    
+			
+				 showwin("#winPrintPreview", "配血单详情", "../../../iMedicalLIS/facade/ui/frmCtsReportPrintView.aspx?ReportDR=" + ReportID + "&PrintClassName=HIS.DHCBDPrintCentr&RunHIS=1&PrintFuncName=QueryXMPrintData", 900, $(document).height() - 50, true);
+			}else if(Type=="AGF"){
+			     
+				  
+				 showwin("#winPrintPreview", "知情同意书详情", "../../../iMedicalLIS/facade/ui/frmCtsReportPrintView.aspx?ReportDR=" + ReportID + "&PrintClassName=HIS.DHCBDPrintCentr&RunHIS=1&PrintFuncName=QueryAGRPrintData", 900, $(document).height() - 50, true);
+			}
+			else if(Type=="REQ"){
+			     
+			    
+				 showwin("#winPrintPreview", "申请单详情", "../../../iMedicalLIS/facade/ui/frmCtsReportPrintView.aspx?ReportDR=" + ReportID + "&PrintClassName=HIS.DHCReportPrintReqForm&RunHIS=1", 900, $(document).height() - 50, true);
+			}
+			else if(Type=="ADV"){
+			    
+			    
+				showwin("#winPrintPreview", "不良反应详情", "../../../iMedicalLIS/facade/ui/frmCtsReportPrintView.aspx?ReportDR=" + ReportID + "&PrintClassName=HIS.DHCBDPrintCentr&RunHIS=1&PrintFuncName=QueryADVrintData", 900, $(document).height() - 50, true);
+			}
+			else if(Type=="ISS"){
+			    
+			    
+				 showwin("#winPrintPreview", "发血单详情", "../../../iMedicalLIS/facade/ui/frmCtsReportPrintView.aspx?ReportDR=" + ReportID + "&PrintClassName=HIS.DHCBDPrintCentr&RunHIS=1&PrintFuncName=QueryISSPrintData", 900, $(document).height() - 50, true);
+			}
+			else if(Type=="BDT"){
+			    
+			     //var url ='http://'+ host +'/imedicallis/facade/ui/frmCtsReportPrintView.aspx?ReportDR=' + ReportID + '&PrintClassName=HIS.DHCReportPrintXMMethodReport';
+				 showwin("#winPrintPreview", "取血单详情", "../../../iMedicalLIS/facade/ui/frmCtsReportPrintView.aspx?ReportDR=" + ReportID + "&PrintClassName=HIS.DHCBDPrintCentr&RunHIS=1&PrintFuncName=QueryBDTPrintData", 900, $(document).height() - 50, true);
+			}
+			
+
+		
+		}
+		
+		
+		function GetReportDR(ReportID,Type){
+		       $.ajax({
+					url:'jquery.easyui.dhclabclassjson.csp',
+					data: { 
+						 ClassName:"DHCLIS.BLD.DHCBDReqForm",
+						 QueryName:"GetReportDRMTHD",
+						 FunModul:"MTHD",
+						 P0:ReportID,
+						 P1:Type
+					 },
+					success: function (data) {
+						   if(data.indexOf("^")>-1){
+							  alert("传入单据类型不明，请确认参数是否有误！");
+						   }else{
+							 ReportID=data;
+							}
+					}
+				})
+		
+		}
+		
+		
+		function isIE11() {
+			var re = /rv:11.0/g
+			return re.test(navigator.userAgent.toLowerCase());
+		}
+		
+		//窗口id ，标题，请求页面，宽 ，高
+		function showwin(winid, title, url, mywidth, myheight, draggable) {//修改和添加的弹出框
+			
+			var _content = '<iframe id="FRMdetail"  frameborder="0"  src=' + url + ' style="width:100%;height:100%;" ></iframe>';
+			$(winid).dialog({
+				width: mywidth,
+				height: myheight,
+				modal: true,
+				content: _content,
+				title: title,
+				draggable: draggable,
+				resizable: true,
+				shadow: true,
+				minimizable: false,
+				onClose: function () { winClose(winid); }  ///liuzf 用于回调主窗体函数处理功能
+			});
+		} 
+		 
+		//可以重新
+		function winClose(winid) {
+		}
+	    
+    </script>
+</body>
+
+</html>
+

@@ -1,0 +1,101 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("str",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))	
+	s type=$Get(%request.Data("type",1))
+	s sex=$Get(%request.Data("sex",1))
+	s birthday=$Get(%request.Data("birthday",1))
+	s idnum=$Get(%request.Data("idnum",1))
+	s titledr=$Get(%request.Data("titledr",1))
+	s phone=$Get(%request.Data("phone",1))
+	s email=$Get(%request.Data("email",1))
+	s degree=$Get(%request.Data("degree",1)) 
+	s compdr=$Get(%request.Data("compdr",1))
+	s monographnum=$Get(%request.Data("monographnum",1))
+	s papernum=$Get(%request.Data("papernum",1))
+	s patentnum=$Get(%request.Data("patentnum",1))
+	s invincustomstanNum=$Get(%request.Data("invincustomstanNum",1))
+	s trainnum=$Get(%request.Data("trainnum",1))
+	s holdtrainnum=$Get(%request.Data("holdtrainnum",1))
+	s intrainingnum=$Get(%request.Data("intrainingnum",1))
+	
+	s jobtype=$Get(%request.Data("jobtype",1))
+	
+	s mngdr=$Get(%request.Data("mngdr",1))
+	s IsValid=$Get(%request.Data("IsValid",1))
+	s IsSecretary=$Get(%request.Data("IsSecretary",1))
+	s itmjs = $Get(%request.Data("itmjs",1))
+	
+	s isteacher = $Get(%request.Data("isteacher",1)) 
+	s isexpert = $Get(%request.Data("isexpert",1)) 
+	s ethicalexperts = $Get(%request.Data("ethicalexperts",1)) 
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMuser).List(sortField, sortDir, start, limit,code,name,type)
+	
+	i action = "caltypename" d
+	.w ##class(herp.srm.udata.uSRMuser).Calusertype(start, limit, str)
+	
+	i action = "Caltitleinfo" d
+	.w ##class(herp.srm.udata.uSRMuser).Caltitleinfo(start, limit, str)
+	i action = "GetPerion"   d
+	.w ##class(herp.srm.udata.uSRMuser).GetPerion(start, limit, str)
+	
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uSRMuser).InsertRec(code, name, type, sex, birthday, idnum, titledr, phone, email, degree, compdr, monographnum, papernum, patentnum, invincustomstanNum, trainnum, holdtrainnum, intrainingnum,IsValid,jobtype,isteacher,isexpert,ethicalexperts)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uSRMuser).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uSRMuser).UpdateRec(rowid, code, name, type, sex, birthday, idnum, titledr, phone, email, degree, compdr, monographnum, papernum, patentnum, invincustomstanNum, trainnum, holdtrainnum, intrainingnum,IsValid,jobtype,isteacher,isexpert,ethicalexperts)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "caldept" d
+	.w ##class(herp.srm.udata.uSRMuser).CalDeptname(start,limit,str)
+				
+	i action = "caluser" d
+	.w ##class(herp.srm.udata.uSRMuser).CalUsername(start,limit,str)
+	
+	i action = "caljobtype" d
+	.w ##class(herp.srm.udata.uSRMuser).GetJobType(start,limit,str)
+	
+	i action = "export" d
+	.w ##class(herp.srm.udata.uSRMuser).ExportToExcel(itmjs)
+	
+	i action = "getWebConfig" d
+	.s result = ##class(herp.srm.udata.uSRMuser).GetServerInfo()
+	.i result '="" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:''}"
+</script>

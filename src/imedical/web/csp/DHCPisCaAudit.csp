@@ -1,0 +1,192 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //初始化CA服务环境session
+ s CAInit=##Class(web.DHCPisCASignVerify).CASessionDataInit()
+ Q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+	<Server>
+    s CAServiceVerifyMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCPisCASignVerify.CAServiceVerify"))
+   </Server>
+     <SCRIPT type="text/javascript" src="../SCRIPTS/dhcPisApp/js/SecX_Common.js"></SCRIPT>
+	 <script language="javascript">
+	//CA数字签名-------------
+	var CAServiceVerifyMethod ="#(CAServiceVerifyMethod)#";
+	/*
+	var SubstrServerRan =window.parent.dialogArguments.strServerRan
+	var SubstrServerCert =window.parent.dialogArguments.strServerCert;
+	var SubstrServerSignedData = window.parent.dialogArguments.strServerSignedData;
+	*/
+	var strServerRan = "#($g(%session.Data("ServerRan")))#";
+	var strServerCert = "#($g(%session.Data("ServerCert")))#";
+	var strServerSignedData = "#($g(%session.Data("ServerSignedData")))#";
+	//alert(SubstrServerRan);
+	//alert(SubstrServerCert);
+	//alert(SubstrServerSignedData);
+	//-----------------	 	  
+	</script>
+<script Language="javascript">
+       function DocumentloadHandler()
+       {
+	       GetList();
+	       var Obj = document.getElementById('Certificate')
+			if(Obj){
+			Obj.multiple=false;
+			Obj.size=1;
+			}
+     		var Obj = document.getElementById('Commit')
+  	 		if (Obj) 
+  	 		{  
+  	   		 Obj.onclick = Commit_Click;
+  	 		}
+  	 		var Obj = document.getElementById('Exit')
+  	 		if (Obj) 
+  	 		{
+	  			Obj.onclick = Exit_Click;
+  	 		}
+	   }
+		function GetList() 
+	 {	
+	   var i;
+	   var strOption;
+	   var strName;
+	   var strUniqueID;
+	   var objListID =document.getElementById('Certificate');
+	   if (!objListID) return;
+	   for (var i=0; i<objListID.options.length; i++) {
+			 objListID.options[i] = null;
+	    }
+	   var strTemp =GetUserList();//window.parent.dialogArguments.
+	   //alert(strTemp)
+	   while (1) 
+	  {
+		  i=strTemp.indexOf("&&&");
+		  if (i <= 0) 
+		 {
+			break;
+		 }
+		strOption = strTemp.substring(0,i);
+		strName = strOption.substring(0, strOption.indexOf("||"));
+		strUniqueID = strOption.substring(strOption.indexOf("||") + 2, strOption.length);
+		objListID.options[objListID.options.length] = new Option(strName,strUniqueID);
+		len = strTemp.length;
+        strTemp = strTemp.substring(i+3,len);
+	  }
+	 if(objListID.options.length>0)objListID.options[0].selected=true;
+	}
+function Commit_Click()
+{   
+	var strContainerName ="";
+	var strPin ="";
+	var ret =null;
+	var Obj = document.getElementById('Certificate')
+	if(Obj)
+	{
+		if (Obj.selectedIndex==-1)
+		{
+			alert("请选择有效证书")
+			return;
+		}else{
+			strContainerName=Obj.options[Obj.selectedIndex].value;
+		}
+	}
+    //取证书签名图片
+	var strPicData=GetPicBase64Data(strContainerName);
+	//alert(strPicData);
+	var Obj = document.getElementById('CertificatePwd')
+	if(Obj)
+	{   strPin=Obj.value;
+		if (strPin=="")
+		{
+			alert("请输入证书口令");
+			return;
+		}else if((strPin.length<4)||(strPin.length>16))
+		{
+			alert("证书口令最少4位,最多16位")
+			return;
+		}
+	}
+	var Obj = document.getElementById('fDHCDocCAVerify')
+	if(Obj)
+	{
+	    ret = Login(Obj,strContainerName,strPin);
+	}
+	//alert(ret);
+	var Obj = document.getElementById('CertificatePwd')
+	if(Obj)Obj.value="";
+	if (!ret) return;
+	var pass = false;
+	var strClientSignedData = SignedData(strServerRan, strContainerName);
+    //alert(strClientSignedData);
+    //客户端对随机数的签名
+    var Obj = document.getElementById('UserSignedData')
+    if(Obj)Obj.value=strClientSignedData;
+    //获取客户端证书
+    var varCert = GetSignCert(strContainerName);
+    var Obj = document.getElementById('UserCert')
+    if(Obj)Obj.value=varCert;
+    var Obj = document.getElementById('Certificate')
+    if(Obj) Obj.value=strContainerName;
+    if (alertValidDay(varCert))
+    {
+            pass = true;
+    }
+    if (!pass) return;
+    /*
+    alert(CAServiceVerifyMethod);
+    alert(strContainerName);
+    alert(SubstrServerRan);
+     alert(varCert);
+    alert(strPicData);
+    */
+    //var aa=window.opener.GetUniqueID(strContainerName);
+    var aa=GetUniqueID(strContainerName);
+    var ret=cspRunServerMethod(CAServiceVerifyMethod,aa,varCert,strServerRan,strClientSignedData,strPicData);
+	if (ret!=""){alert(ret);return;}
+	//alert("OK");
+	window.returnValue=strContainerName;
+	Exit_Click();
+}
+function Exit_Click()
+{
+	window.close();
+}
+</script>
+
+
+</head>
+<body onload="DocumentloadHandler();">
+
+<input type=hidden id="UserSignedData" name="UserSignedData" value="">
+<input type=hidden id="UserCert" name="UserCert" value="">	
+<DIV id="PageContent">
+<TABLE width="100%" id="mDHCDocCAVerify" name="mDHCDocCAVerify">
+<TR>
+<TD valign=middle width=1><IMG SRC="../images/websys/tbseparator.gif"></TD>
+</TR>
+</TABLE>
+</div>
+<FORM ACTION="websys.csp" method=post name="fDHCDocCAVerify" id="fDHCDocCAVerify">
+<TABLE style="WIDTH: 281px; HEIGHT: 146px" width=281><TBODY><TR><TD class=maintitle noWrap>证书登录</TD></TR><TR><TD><TABLE style="WIDTH: 271px; HEIGHT: 100px" width=271><TBODY><TR><TD>
+<label id="cCertificate"  Style="WIDTH: 66px; HEIGHT: 22px">证书</label>
+</TD><TD>
+<select id="Certificate" name="Certificate" multiple size=4 style="WIDTH: 156px; HEIGHT: 34px">
+</select>
+</TD></TR><TR><TD>
+<label id="cCertificatePwd" >证书口令</label>
+</TD><TD>
+<input type="password" id="CertificatePwd" name="CertificatePwd" style="WIDTH: 156px; HEIGHT: 22px" value="">
+</TD></TR><TR><TD class="" align=right>
+<a href="#" id="Commit" name="Commit">确认</A>
+</TD><TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<a href="#" id="Exit" name="Exit">退出</A>
+</TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE>
+</FORM>
+</DIV>
+</DIV>
+</body>
+</html>

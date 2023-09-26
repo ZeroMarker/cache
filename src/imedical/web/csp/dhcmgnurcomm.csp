@@ -1,0 +1,165 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s CacheDB=$P(setstr,"^")
+ s webIP=$P(setstr,"^",2)
+ s dllstr=webIP_"/dhcmg/PrintComm.dll#PrintComm.PrintCom"
+ s dllstr1=webIP_"/dhcmg/Temperature.dll#Temperature.ClsTemp"
+ s dllstr2=webIP_"/dhcmg/TemperatureER.dll#TemperatureER.ClsTemp"
+ s dllloadimg=webIP_"/dhcmg/FtpUpload.dll#FtpUpload.uploadimg"
+ 
+ s ComponentName=%request.Get("EmrCode")
+ s GetLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getloc"))
+ s GetLocNew=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getlocNew"))
+ s pdata1=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.getPagData"))
+ s pdata=##Class(%CSP.Page).Encrypt($lb("web.DHCMGPageData.GetPagData1"))
+ s GetEmrCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.ParseNurEmrCode"))
+ s EmrCode=%request.Get("EmrCode")
+ s ^TEMP("g20151120")=EmrCode
+ S EpisodeID=%request.Get("EpisodeID")
+ s GenerateComBoxMeta=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.GenerateComBoxMeta")) //新护管
+ s GetEmrCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.ParseNurEmrCode"))
+ s menucode=%request.Get("menucode")
+ s headcode=%request.Get("headcode") //表头变更
+ s getjsjson=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMRHead.getjsjson"))  //表头变更
+ ;s file=##class(web.DHCNUREMRHead).getcomflag(%request.Get("EmrCode"),EpisodeID,"",%request.Get("headcode")) //表头变更
+ s getadmhead=##Class(%CSP.Page).Encrypt($lb("Nur.DHCNurRecHeadChangeRec.getadmhead")) //表头变更
+ s Savecurhead=##Class(%CSP.Page).Encrypt($lb("Nur.DHCNurRecHeadChangeRec.Savecurhead")) //表头变更
+ //w !,file
+ s refresh=##Class(%CSP.Page).Encrypt($lb("Nur.DHCTEMQC.refresh")) //体温单质控 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+ s itm="" f  s itm=$O(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm)) q:itm=""  d
+ .s link=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":"),id=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":",2)
+ .s val=##Class(%CSP.Page).Encrypt($lb(link))
+ . w "<input id="""_id_""" name="""_id_""" type=""hidden"" value="""_val_""">",!
+  </SERVER>
+  <Server>
+ w "<OBJECT id=""PrintComm"" width=0 height=0 classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""Temperature"" width=0 height=0 classid="""_dllstr1_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""TemperatureER"" width=0 height=0 classid="""_dllstr2_""" IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""FtpUpload"" width=0 height=0 classid="""_dllloadimg_""" IEWASTEXT></OBJECT>"
+</Server>
+ </HEAD>
+
+<BODY>
+</DIV>
+
+<TRAK:APPLET>
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+</DIV>
+<SCRIPT Language="Javascript">
+var CacheDB="#(CacheDB)#";
+var WebIp="#(webIP)#";
+var webIP="#(webIP)#";
+var getjsjson="#(getjsjson)#";  //表头变更
+var Savecurhead="#(Savecurhead)#"; //表头变更
+var headcode="#(%request.Get("headcode"))#"  //表头变更
+var getadmhead="#(getadmhead)#"; //表头变更
+var EmrCode="#(%request.Get("EmrCode"))#";
+var GetEmrCode="#(GetEmrCode)#";
+var pdata1="#(pdata1)#";
+var pdata="#(pdata)#";
+var NurRecId="#(%request.Get("NurRecId"))#"
+var Status="#(%request.Get("Status"))#"
+var DHCMoudDataRowId="#(%request.Get("DHCMoudDataRowId"))#"
+var GenerateComBoxMeta="#(GenerateComBoxMeta)#"; //新护管
+var RowId="#(%request.Get("RowId"))#" //新护管
+var PerID="#(%request.Get("PerID"))#" //新护管
+var CheckRoomId="#(%request.Get("CheckRoomId"))#" // 新护管
+var CheckTyp="#(%request.Get("CheckTyp"))#" //新护管
+var CheckCode="#(%request.Get("CheckCode"))#"; //新护管
+var menucode="#(%request.Get("menucode"))#"
+//护士定期考核参数
+var rowId="#(%request.Get("rowId"))#"
+var nurId="#(%request.Get("nurId"))#"
+var yearValue="#(%request.Get("yearValue"))#"
+var gridtype="#(%request.Get("gridtype"))#"
+
+// 质控参数
+var qtype="#(%request.Get("qtype"))#"
+function TempShow(Adm)
+{
+    Temperature.Adm=Adm;
+  //  debugger;
+    Temperature.ConnectStr="#(CacheDB)#";
+   // alert("#(webIP)#");
+    Temperature.FilePath="#(webIP)#"+"/dhcmg/temperatureChart.xml";
+    Temperature.ShowWindow();
+}
+function TempShowER(Adm)
+{
+    TemperatureER.Adm=Adm;
+    TemperatureER.ConnectStr="#(CacheDB)#";
+    TemperatureER.FilePath="#(webIP)#"+"/dhcmg/temperatureChartER.xml";
+    TemperatureER.ShowWindow();
+}
+function FtpLoadimg(filename,ftpServerIP,savename,loginname,loginpassword)
+{
+	var mm=FtpUpload.loadimg(filename,ftpServerIP,savename,loginname,loginpassword);
+	return mm;
+}
+
+Ext.grid.ColumnModel.override({  
+        getTotalWidth: function(includeHidden) {  
+            var off = 2;  
+
+            if (Ext.isChrome){  
+                off = 2;  
+            };  
+            if (!this.totalWidth) {  
+                this.totalWidth = 0;  
+                for (var i = 0, len = this.config.length; i < len; i++) {  
+                    if (includeHidden || !this.isHidden(i)) {  
+                        this.totalWidth += this.getColumnWidth(i)+off;  
+                    };  
+                };  
+            };  
+            return this.totalWidth;  
+            }  
+        });  
+
+</SCRIPT>
+</div><select name="light" id="light" style="display: none;">
+	<option value="Shade">Shade</option>
+	<option value="Mostly Shady">Mostly Shady</option>
+	<option value="Sun or Shade">Sun or Shade</option>
+	<option value="Mostly Sunny">Mostly Sunny</option>
+	<option value="Sunny">Sunny</option>
+</select>
+<div id='lovcomboct'></div>
+<div id='textct'></div>
+<!--link rel="stylesheet" type="text/css" href="../scripts/nurse/ext-3.1.1/resources/css/ext-all.css" /-->
+<link rel="stylesheet" type="text/css" href="../scripts/nurse/css/LockingGridView.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/nurse/css/custommytbarstyle.css" />
+<script type="text/javascript" src="../scripts/nurse/comm/dhcmgcomm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHCNURComm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/zkinterface.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHC.NURSE.IP.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHCMGNurGrpComm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/LockingGridView.js"></script>
+<!--link href="../scripts/nurse/css/DHC.NurMg.css" rel="stylesheet" type="text/css" / -->
+<Server>
+ //w "<script type=""text/javascript"" src=""../scripts/nurse/DHCMG/"_ComponentName_".js""></script>"
+ //w "<script type=""text/javascript"" src=""http://10.160.16.91/dthealth/web/scripts_gen/dhcmg/"_ComponentName_".js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts_gen/dhcmg/"_ComponentName_".js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/"_ComponentName_".js""></script>"
+ ;w "<script type=""text/javascript"" src=""../scripts/nurse/comm/DHCNUREMRZSK.js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts/DHC.WMR.PinYinHead.js""></script>"
+</Server>
+</BODY>
+</HTML>

@@ -1,0 +1,236 @@
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+<title></title>
+<DHCAPP:EASYUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/css/base.css"/>
+
+  <style>
+
+
+
+.btn{
+	padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 3px;
+    padding-top: 3px;
+}
+
+.form-li div,fieldset{
+	float:left	
+}
+.search-btn button{
+	line-height:1;
+	margin-right: 10px;
+}
+</style>
+<script src="../scripts/dhcnewpro/dhcem/nuropexec.js"></script> 
+</head>
+
+<body class="easyui-layout">	  
+		<!--top--> 
+		<div data-options="region:'north',border:'false'" style="height:95px;BACKGROUND-COLOR: #E3F2FD">
+		<div id="queryType">
+			 <SERVER>
+			s grp=%session.Data("LOGON.GROUPID")
+			//s grp=125 
+	 		i $d(^DHCCLNurseExec("NewSheet","UserGroupAccess","Type",grp)){
+	 			s type=$g(^DHCCLNurseExec("NewSheet","UserGroupAccess","Type",grp))	
+				s defaultType=$g(^DHCCLNurseExec("NewSheet","UserGroupAccess","DefaultType",grp))
+				s len=$L(type,"^")
+				w "<div class='btn-toolbar' style='margin-left: 0px;'>"
+			    w "<div class='btn-group'>" 
+				for i=1:1:len
+		   		{
+					s tmpType=$p(type,"^",i)
+					s hosp=$p(tmpType,"@",1)
+					s sheetCode=$p(tmpType,"@",2)
+					s hosp=$zcvt(hosp,"u")
+					s sheetCode=$zcvt(sheetCode,"u")
+					s sheetID=$O(^Nur.NurseSheetSetI("CODE"," "_hosp," "_sheetCode,""))
+					q:sheetID=""
+					s recore = ^Nur.NurseSheetSetD(sheetID)
+					q:recore=""
+					s sheetDesc = $lg(recore,3)		
+		  			w "<button type='button' class='btn "
+		  			i $zcvt($p(defaultType,"@",2),"u")=sheetCode d
+		  			.w "btn-success"
+		  			w "' id='"_$p(tmpType,"@",2)_"' hop_id="_hosp_">"_sheetDesc_"</button>"
+		  			i i=1 d
+		  			.w "<input type='hidden' id='hospId'  value='"_hosp_"'   />"
+		    	}
+		    	w "</div>"
+	        	w "</div>"
+	 		}	
+   			</SERVER>
+        </div>
+	    
+	    <input type="hidden" id="EpisodeID" value=#(%request.Get("EpisodeID"))# >
+	    <input type="hidden" id="RegNo" value=#(%request.Get("RegNo"))#  >
+	    <input type="hidden" id="HospitalRowId" value=#(%session.Data("LOGON.HOSPID"))# >
+	    <input type="hidden" id="UserId" value=#(%session.Data("LOGON.USERID"))#  >
+	    <input type="hidden" id="QueryTypeCode" />
+	    <input type="hidden" id="ReportList" />
+	    <!--search panel-->
+		<DIV id="search-panel" >
+		<ul>
+      		<li class="form-li">
+      				<fieldset>
+				     <div class="form-label" >
+		         		<label>开始日期</label>
+		         		 <!--
+		         		 <input id="startDate" onclick="laydate({ choose: function(dates){
+														parent.startDate=dates				
+        			     }})" class="laydate-icon" style="height: 20px;width:100px" value=#(%request.Get("startDate"))# >
+		        		-->
+		        		<input data-options="onSelect:onSelectStart" id="startDate" class="easyui-datebox" type="text" style="width:100px" value=#(%request.Get("startDate"))# ></input>
+		        	</div>
+		        	
+		        	<div class="form-label" style="display:none">
+		          		<label>结束日期</label>
+		          		<!-- 
+		          		<input id="endDate" onclick="laydate({ choose: function(dates){
+														parent.endDate=dates				
+        			     }})" class="laydate-icon" style="height: 20px;width:100px" value=#(%request.Get("endDate"))# >
+		        		-->
+		        		<input data-options="onSelect:onSelectEnd" id="endDate" class="easyui-datebox" type="text" style="width:100px" value=#(%request.Get("endDate"))# ></input>
+		        	</div>
+		        	
+		        	<div class="form-label search-btn" >
+		        		<a id="searcBTN" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a> 
+		        		<!--
+            			<button id="searcBTN" class='btn btn-info'>查询</button>
+            			<button id="showDetailBTN" class='btn btn-info'>隐藏收费明细</button>
+            			-->
+         			 </div>
+					</fieldset>
+      				<fieldset>	
+      				<div class="form-label">
+      					<label style='background-color:#d0ffff'>未收费</label>
+      					<label style='background-color:rgb(255, 255, 192);width:70px'>需处理临嘱</label>
+      					<label style='background-color:rgb(223, 223, 255)'>已处理</label>
+      					<label style='background-color:#d91e18'>皮试</label>
+      				</div>
+      				</fieldset>
+
+        	</li>
+        </ul>
+        </DIV>
+      </div>
+      <div data-options="region:'center',border:'false'" >
+	      <script type="text/javascript">
+	        var toolbar = [{
+	            text:'执行并打印',
+	            iconCls:'icon-sum',
+	            handler:function(){exeAndPrint("F",1);}
+	        },{
+	            text:'执行',
+	            iconCls:'icon-ok',
+	            handler:function(){exeAndPrint("F",0);}
+	        },'-',{
+	            text:'打印',
+	            iconCls:'icon-print',
+	            handler:function(){alert('save')}
+	        },'-',{
+	            text:'撤销执行',
+	            iconCls:'icon-undo',
+	            handler:function(){exeAndPrint("C",0);}
+	        },'-',{
+	            text:'皮试阴性',
+	            iconCls:'icon-user_green',
+	            handler:function(){SetSkinTestResult("Y")}
+	        },'-',{
+	            text:'皮试阳性',
+	            iconCls:'icon-user_red',
+	            handler:function(){SetSkinTestResult("N")}
+	        }];
+	    </script>
+        <table class="easyui-datagrid" fit="true" title="执行明细" border="false"
+            data-options="rownumbers:true,
+            			  singleSelect:false,
+            			  method:'get',
+            			  nowrap:'false',
+            			  checkbox:'true',
+            			  onClickRow:OnSelect,
+            			  rowStyler: function(index,row){
+								switch(row.disposeStatDesc)
+								{
+								case '需处理临嘱':
+								  return 'background-color:rgb(255, 255, 192);';
+								  break;
+								case '已处理':
+								  return 'background-color:rgb(223, 223, 255);';
+								  break;
+								case '未收费':								
+								  return 'background-color:#d0ffff;';
+								  break;
+								case '皮试':								
+								  return 'background-color:#d91e18;';
+								  break;    
+								}
+						  },
+            			  toolbar:toolbar" id='execgrid'>
+        	<thead>
+            <tr>
+                <th data-options="field:'prtFlag',width:20,align:'center'">打印标记</th>
+                <th data-options="field:'regNo',width:60,align:'center'">登记号</th>
+                <th data-options="field:'bedCode',width:60,align:'center'">床位号</th>
+                <th data-options="field:'patName',width:60,align:'center'">病人姓名</th>
+                <th data-options="field:'patIdentity',width:60,align:'center'">病人身份</th>
+                <th data-options="field:'age',width:60,align:'center'">年龄</th>
+                <th data-options="field:'orcatDesc',width:60,align:'center'">医嘱大类</th>
+                <th data-options="field:'seqNo',width:60,align:'center'">序号</th>
+                <th data-options="field:'arcimDesc',width:200,align:'center'">医嘱名称</th>
+                <th data-options="field:'oecprDesc',width:60,align:'center'">优先级</th>
+                <th data-options="field:'ordStatDesc',width:60,align:'center'">医嘱状态</th>
+                <th data-options="field:'labNo',width:60,align:'center'">标本号</th>
+                <th data-options="field:'doseQtyUnit',width:60,align:'center'">剂量</th>
+                <th data-options="field:'phcfrCode',width:60,align:'center'">频率</th>
+                <th data-options="field:'phOrdQtyUnit',width:60,align:'center'">总量</th>
+                <th data-options="field:'phcinDesc',width:60,align:'center'">用药途径</th>
+                <th data-options="field:'notes',width:60,align:'center'">备注</th>
+                <th data-options="field:'execStat',width:60,align:'center'">执行状态</th>
+                <th data-options="field:'execDateTime',width:60,align:'center'">执行时间</th>
+                <th data-options="field:'execCtcpDesc',width:60,align:'center'">执行人</th>
+                <th data-options="field:'ctcpDesc',width:60,align:'center'">医生</th>
+                <th data-options="field:'disposeStatDesc',width:60,align:'center'">处置状态</th>
+                <th data-options="field:'reclocDesc',width:60,align:'center'">接收科室</th>
+                <th data-options="field:'createDateTime',width:60,align:'center'">开医嘱时间</th>
+                <th data-options="field:'sttDateTime',width:60,align:'center'">要求执行时间</th>
+                <th data-options="field:'xDateTime',width:60,align:'center'">停医嘱时间</th>
+                <th data-options="field:'xCtcpDesc',width:60,align:'center'">停医嘱人</th>
+                <th data-options="field:'execXDateTime',width:60,align:'center'">处理停医嘱时间</th>
+                <th data-options="field:'execXUserDesc',width:60,align:'center'">处理停医嘱人</th>
+                <th data-options="field:'prescNo',width:60,align:'center'">处方号</th>
+                <th data-options="field:'price',width:60,align:'center'">单价</th>
+                <th data-options="field:'totalAmount',width:60,align:'center'">总价</th>
+                <th data-options="field:'Durat',width:60,align:'center'">疗程</th>
+                <th data-options="field:'placerNo',width:60,align:'center'">条码号</th>
+                <th data-options="field:'skinTestDateTime',width:60,align:'center'">皮试时间</th>
+                <th data-options="field:'DspStat',width:60,align:'center'">发药状态</th>
+                <th data-options="field:'PreDisDateTime',width:60,align:'center'">预停时间</th>
+                <th data-options="field:'specCollDateTime',width:60,align:'center'">采血时间</th>
+                <th data-options="field:'specDesc',width:60,align:'center'">标本名称</th>
+                <th data-options="field:'pdaNurExec',width:60,align:'center'">PDA执行次数</th>
+                <th data-options="field:'LockStatus',width:60,align:'center'">加锁状态</th>
+                <th data-options="field:'EncryptLevel',width:60,align:'center'">病人密级</th>
+                <th data-options="field:'PatLevel',width:60,align:'center'">病人级别</th>
+            </tr>
+        	</thead>
+    	</table>
+    	</div>
+    	<!--
+        <div id="OrdListDiv">
+
+		</div>
+		<div  id="OrdAttachDiv">
+			<iframe id="OrdList"  width="100%" height="100%" ></iframe>	
+			<iframe id="OrdAttach"  width="100%" height="100%" ></iframe>	
+		</div>
+		-->
+</body>
+</html>

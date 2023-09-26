@@ -1,0 +1,107 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+   i ##Class(websys.SessionEvents).SessionExpired() q 1
+   q 1
+</csp:method>
+	
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<TRAK:HEAD></TRAK:HEAD>
+		<HISUI/>
+		<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+		<style>
+			.combobox-width-100{
+				width:100px;	
+			}
+			.combobox-width-200{
+				width:200px;	
+			}
+		</style>
+	</head>
+	
+	<!--,split:true-->
+	<body class="hisui-layout">
+	    <div class="x-separator line-50-y"
+	    data-options="region:&#39;north&#39;">
+		      <label class="padding-both-10">年度</label> 
+		      <select id="yearcb" class="combobox-width-100"></select> 
+		      
+		      <label class="padding-both-10">项目类别</label> 
+		      <select id="typecb" class="combobox-width-100"></select> 
+		      
+		      <label class="padding-both-10">项目级次</label> 
+		      <select id="levelcb" class="combobox-width-100"></select> 
+		      
+		      <label class="padding-both-10">预算项目</label> 
+		      <select id="itemcb" class="combobox-width-200"></select> 
+		      
+		      <label></label> 
+	          <input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkChangeFn" id="isLastckb"/>
+		      <label style="padding-bottom:3px">末级</label> 
+		      
+		      <label class="padding-both-10"></label> 
+	          <a class="hisui-linkbutton" id="findBtn" href="#" data-options="iconCls:&#39;icon-w-find&#39;">查询</a>
+	    </div>
+	    <div class="border-none" data-options="region:&#39;center&#39;">
+	      <table id="mainGrid"></table>
+	    </div>
+	    <!--归口科室年预算-->
+	    <div id='AuditDeptBgWin' title="归口科室年预算" class="hidden">
+	      <div class="hisui-layout" style="height:430px;" data-options="fit:true">
+	        <div id="WinCenter" calss="padding-10-bottom-none" data-options="region:&#39;center&#39;,border:false">
+	          <table id='AuditDeptBgGrid'></table>
+	        </div>
+	        <div class="bottom-style" data-options="region:&#39;south&#39;,border:false">
+	          <a id="BtnCancel" class="hisui-linkbutton width-70" href="#">关闭</a>
+	        </div>
+	      </div>
+	    </div>
+	    <!--业务科室年预算-->
+	    <div id='BudgDeptBgWin' title="业务科室年预算" class="hidden">
+	      <div class="hisui-layout" style="height:430px;" data-options="fit:true">
+	        <div id="BDBWinCenter" calss="padding-10-bottom-none" data-options="region:&#39;center&#39;,border:false">
+	          <table id='BudgDeptBgGrid'></table>
+	        </div>
+	        <div class="bottom-style" data-options="region:&#39;south&#39;,border:false">
+	          <a id="BDBBtnCancel" class="hisui-linkbutton width-70" href="#">关闭</a>
+	        </div>
+	      </div>
+	    </div>
+	    <!--业务科室年预算明细-->
+	    <div id='BudgDeptBgDetailWin' title="业务科室年预算明细" class="hidden">
+	      <div class="hisui-layout" style="height:430px;" data-options="fit:true">
+	        <div id="BDBDWinCenter" calss="padding-10-bottom-none" data-options="region:&#39;center&#39;,border:false">
+	          <table id='BudgDeptBgDetailGrid'></table>
+	        </div>
+	        <div class="bottom-style" data-options="region:&#39;south&#39;,border:false">
+	          <a id="BDBDBtnCancel" class="hisui-linkbutton width-70" href="#">关闭</a>
+	        </div>
+	      </div>
+	    </div>
+	    <!--业务科室年预算明细政府采购信息-->
+	    <div id='DetailAppendixWin' title="业务科室年预算明细政府采购信息" class="hidden">
+	      <div class="hisui-layout" style="height:430px;" data-options="fit:true">
+	        <div id="DetailAppendixWinCenter" calss="padding-10-bottom-none" data-options="region:&#39;center&#39;,border:false">
+	          <table id='DetailAppendixGrid'></table>
+	        </div>
+	        <div class="bottom-style" data-options="region:&#39;south&#39;,border:false">
+	          <a id="DAppendixBtnCancel" class="hisui-linkbutton width-70" href="#">关闭</a>
+	        </div>
+	      </div>
+	    </div>
+			
+		
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/SessionAndUrl.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/comboboxInitEvents.js"></script>
+
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgInOutBalance/BudgInOutBalance.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgInOutBalance/AuditDept.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgInOutBalance/BudgDept.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgInOutBalance/BudgDeptDetail.js"></script>
+		<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/BudgInOutBalance/BudgDeptDetailAppendix.js"></script>
+	</body>
+</html>

@@ -1,0 +1,90 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<!-- DHCPECallRpt.csp -->
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<TRAK:HEAD></TRAK:HEAD>
+<SERVER>
+	Set EpisodeID=%request.Get("EpisodeID")
+	Set PageTitile="体检系统个人报告打印"
+	//Set PageTitile="体检系统团体报告打印"
+	s SetADMReportStatus=##Class(%CSP.Page).Encrypt($lb("web.DHCPEReportCom.SetADMReportStatus"))
+</SERVER>
+<SCRIPT language=javascript>
+
+	function PrintReport() {
+		
+		var IsPrintView=false;
+		var ISPrintTitle=false;
+	 	
+	 	var obj=document.getElementById("cbIsPrintView");
+		
+		if (obj.checked){ IsPrintView=true; }
+		else{ IsPrintView=false; }
+	 	
+	 	var obj=document.getElementById("cbPrintTitle");
+		if (obj.checked){ ISPrintTitle=true; }
+		else{ ISPrintTitle=false; }  
+
+		var ReportDll = new ActiveXObject("DHCPEReportPrintDll.CPrint");
+		ReportDll.printreport(#(EpisodeID)#,IsPrintView,1,ISPrintTitle);
+		window.close()
+	}
+
+	function Close() {
+		window.close()
+	}
+	
+	function SetReportStatus() {
+		window.close()
+	}
+	
+		
+</SCRIPT>
+
+</HEAD>
+<body>
+<p align="center">&nbsp;</P>
+<p align="center">#(PageTitile)#</p>
+<table width="60%" border="0" align="center" >
+  <tr>
+    <td><input name="cbIsPrintView" type="checkbox" value="IsPrintView" id="cbIsPrintView">
+      打印前预览 </td>
+  </tr>
+  <tr>
+    <td><input name="cbPrintTitle" type="checkbox" value="IsPrintTitle" id="cbPrintTitle2">
+      是否打印标题 </td>
+  </tr>
+</table>
+<p align="center">&nbsp;</p>
+<table width="100%" height="50%" border="0" align="center">
+  <tr>
+
+    <td width="50%" height="30%"><p>        <Br>
+    </p>
+    </td>
+    <td width="50%" height="30%"></td>
+
+
+  </tr>
+  <tr>
+
+    <td width="50%" height="30%" align="center"><input name="BStarPrint" type="button" value="开始打印" id="BStarPrint" onclick="PrintReport()"></td>
+    <td width="50%" height="30%" align="center"><input name="BClose" type="button" value="关闭窗口" id="BClose" onclick="Close()"></td>
+
+  </tr>
+  <tr>
+
+    <td width="50%" height="30%"></td>
+    <td width="50%" height="30%"></td>
+
+  </tr>
+</table>
+</body>
+
+</HTML>

@@ -1,0 +1,104 @@
+<HTML>
+<!--屏蔽掉IE6.0页面上加载的图片上面自动出现的保存图标-->
+<META HTTP-EQUIV="imagetoolbar" CONTENT="no"/>
+<HEAD>
+	<TITLE></TITLE>
+	<script language="cache" runat="server">
+  		s episodeID = $g(%request.Data("EpisodeID",1),"")
+  		s patientID = $g(%request.Data("PatientID",1),"")
+  		s imageList = $g(%request.Data("ImageList",1),"")
+	</script>
+</HEAD>
+<!--屏蔽掉页面上的鼠标右键功能-->
+<BODY onload="load();"  oncontextmenu="return false;" >
+	<div id="browserPhoto" style="width:100%; height:100%?overflow-x:scroll"></div>
+	<script  type="text/javascript">
+  		var episodeID = '#(episodeID)#';
+  		var patientID = '#(patientID)#';
+  		var imageList = '#(imageList)#';	//图片列表
+  		var arrTmp = new Array();			//存临时图片的路径
+	</script>
+	<script type="text/javascript">
+		function load()
+		{
+			//历次模板返回的图片类型为M, 唯一模板返回的图片类型为S, 全部的有M及S
+			//判断imageList中是否存在S, 如果不存在着证明其为历次模板生成的图片
+			//用<锚点>来定位滚动条的位置
+			if(imageList.indexOf('S') == -1)
+				location.hash = 'controlSroll';	
+		}
+		function getList()
+		{
+	  		if( imageList.split(',')[0] == 'NoPower'&&imageList.indexOf('@') == -1)
+			{
+				document.getElementById('browserPhoto').innerHTML = "对不起,您没有权限浏览["+ imageList.split(',')[1] +"]!";
+				return;				
+			}
+			if( imageList.split(',')[0] == 'docIdListnull'&&imageList.indexOf('@') == -1)
+			{
+				//alert('没有找到相关图片!错误代码:docIdList null');
+				document.getElementById('browserPhoto').innerHTML = "没有找到["+ imageList.split(',')[1] +"]相关病历!";
+				return;				
+			}
+			if( imageList.split(',')[0] == 'logIdListnull'&&imageList.indexOf('@') == -1)
+			{
+				//alert('没有找到相关图片!错误代码:logIdList null');
+				document.getElementById('browserPhoto').innerHTML = "没有找到["+ imageList.split(',')[1] +"]相关病历!";
+				return;
+			}
+			
+			if (imageList.split(',')[0] == ""&&imageList.indexOf('@') == -1)
+			{
+				//alert("获取图片集合失败!错误代码:imageList null");
+				document.getElementById('browserPhoto').innerHTML = "没有找到["+ imageList.split(',')[1] +"]相关病历!";
+				return;
+			}
+			else
+			{
+				//debugger;
+				queryPhoto(imageList);
+			}
+		}
+		
+		//调用dll下载图片
+		function queryPhoto(imageList)
+		{
+			var list = imageList.split('@');
+			var table = '<table cellpadding="0" cellspacing="0">';
+			for(var i=0;i<list.length;i++)
+			{
+			    if(list[i].split(',')[0]=="NoPower")
+			    {
+			         table +='<tr><td>对不起,您没有权限浏览'+ list[i].split(',')[1] +'?</td></tr>';
+			    }
+			    else if(list[i].split(',')[0]=="docIdListnull"||list[i].split(',')[0]=="logIdListnull"||list[i].split(',')[0]=="")
+			    {
+			        table +='<tr><td>没有找到'+ list[i].split(',')[1] +'相关图片?</td></tr>';
+			    }
+			    else
+			    {
+			        var path = "";
+			        var startIndex = 1;
+			        var endIndex = parseInt(list[i].split('$')[0], 10);
+			        path = parent.document.getElementById('refimageloader').GetPreviewImage(patientID, episodeID, list[i], startIndex, endIndex);
+			        if(path != "")
+			        {
+				        var arr = path.split('^');
+				        var picLength = arr.length;
+				        for(var j = 0; j < picLength; j++)				
+				        {
+					        table +='<tr><td><img src="' + arr[j] + '"/></td></tr>'
+					        arrTmp = arrTmp.concat(arr[j]);
+				        }
+			        }
+			    }
+			}
+			
+			table += '<tr><td><a name="controlSroll"></a></td></tr></table>'
+			document.getElementById('browserPhoto').innerHTML = table;
+		}
+		
+		getList();
+	</script>
+</BODY>
+</HTML>

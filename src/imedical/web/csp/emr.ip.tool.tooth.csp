@@ -1,0 +1,599 @@
+<html>
+<head>
+	<HISUI/>
+    <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.tool.tooth.css"/>
+	<script language="cache" runat="server">
+		s selectedToothObjStr = $Get(%request.Data("selectedToothObjStr",1),"")
+		s dialogId = $Get(%request.Data("dialogId",1),"")
+   </script>
+	<script language="javascript">
+
+		var UpLeftFirst = new Array();
+		var UpLeftFirstStr = "";
+		var UpLeftSecond = new Array();
+		var UpLeftSecondStr = "";
+		var UpRightFirst = new Array();
+		var UpRightFirstStr = "";
+		var UpRightSecond = new Array();
+		var UpRightSecondStr = "";
+		var DownLeftFirst = new Array();
+		var DownLeftFirstStr = "";
+		var DownLeftSecond = new Array();
+		var DownLeftSecondStr = "";
+		var DownRightFisrt = new Array();
+		var DownRightFisrtStr = "";
+		var DownRightSecond = new Array();
+		var DownRightSecondStr = "";
+
+		var AULArray = new Array();
+		var AURArray = new Array();
+		var ALLArray = new Array();
+		var ALRArray = new Array();
+		var CULArray = new Array();
+		var CURArray = new Array();
+		var CLLArray = new Array();
+		var CLRArray = new Array();
+
+		//var currentToothCode = "";
+		//var currentPositionFlag = "";
+		var currentToothID = "";
+		var currSelectSurfaceArray = new Array();
+		var currSelectSurfaceIDArray = new Array();
+		var currSelectSurfaceStr = "";
+		var currSelectSurfaceIDStr = ""; 
+		var SurfaceItemStr = "P,L,B,D,O,M,I,R,T";
+        
+        var SurfaceItemObj = {
+			'Surface-P':'ëñ²à',
+			'Surface-L':'Éà²à',
+			'Surface-B':'¼Õ²à',
+			'Surface-D':'Ô¶ÖÐÃæ',
+			'Surface-O':'ÑÀºÏÃæ',
+			'Surface-M':'½üÖÐÃæ',
+			'Surface-I':'ÇÐÔµ',
+			'Surface-R':'¸ù',
+			'Surface-T':'¹Ú'
+		};
+        
+		var selectedToothObjStr = '#(selectedToothObjStr)#';
+		var dialogId = '#(dialogId)#';
+		returnValue = "";
+	</script> 
+	<title>ÑÀÎ»Í¼</title>
+</head>
+<body>
+
+<div class="hisui-layout" style="height:450px;width:1150px;">
+	
+	<div data-options="region:'center',border:false">
+	    <div style="padding:3px 10px 0px 10px">
+	    <table cellpadding="3">
+		    <tr>
+		        <td style="display: inline-block;">#(..Get("ÀàÐÍ"))#&nbsp;</td >
+		        <td style="display: inline-block;">
+                    <input class='hisui-radio' type="radio" label="ºãÑÀ" name="Radio" id="ToothPermanent" value="ToothPermanent">
+		        	<input class='hisui-radio' type="radio" label="ÈéÑÀ" name="Radio" id="ToothDeciduous" value="ToothDeciduous">
+                    <!--»ìºÏÑÀÇ°¶ËÒ³ÃæÒÑÍê³É£¬µ«²å¼þÔÝ²»Ö§³Ö£¬ËùÒÔÏÈ½«»ìºÏÑÀÑ¡ÏîÒþ²Ø£¬´ý²å¼þÖ§³ÖºóÔÙ·Å¿ª-->
+		        	<!--input class='hisui-radio' type="radio" label="»ìºÏÑÀ" name="Radio" id="ToothAll" value="ToothAll"-->
+		        </td>
+		    </tr>
+		    <tr>
+		        <td style="display: inline-block;">#(..Get("ÑÀÃæ"))#&nbsp;</td >
+		        <td class="btngroup"  style="display: inline-block;">
+					<a href="#" id="Surface-P" name="unchecked" text="ëñ²à" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">P</a>
+					<a href="#" id="Surface-L" name="unchecked" text="Éà²à" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">L</a>
+					<a href="#" id="Surface-B" name="unchecked" text="¼Õ²à" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">B</a>
+					<a href="#" id="Surface-D" name="unchecked" text="Ô¶ÖÐÃæ" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">D</a>
+					<a href="#" id="Surface-O" name="unchecked" text="ÑÀºÏÃæ" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">O</a>
+					<a href="#" id="Surface-M" name="unchecked" text="½üÖÐÃæ" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">M</a>
+					<a href="#" id="Surface-I" name="unchecked" text="ÇÐÔµ" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">I</a>
+					<a href="#" id="Surface-R" name="unchecked" text="¸ù" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">R</a>
+					<a href="#" id="Surface-T" name="unchecked" text="¹Ú" onclick="beforeSelectSurface(this.id)" class="hisui-linkbutton toolthbtn">T</a>
+		        </td>
+		    </tr>
+		</table>
+		</div>
+		<div id="toothDIV" style="position:relative;display:flex;padding-top:5px;height:220px;">
+			<div id="FlagRight" style="width:30px;text-align:center;padding-top:100px;">#(..Get("ÓÒ"))#</div>
+			<div>
+			<table>
+				<!--ÈéÑÀ ÉÏ start-->
+				<tr class="Deciduous">
+				
+					<!--ÈéÑÀ ÉÏÓÒ start-->
+					<td  class="tdleftDeciduous">
+						<div class = "box" id="CUR-5" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àµÚ¶þÇ°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUR-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUR-5" style="width:100%;text-align:center;">E</div>
+							</div>
+						</div>
+						<div class = "box" id="CUR-4" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àµÚÒ»Ç°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUR-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUR-4" style="width:100%;text-align:center;">D</div>
+							</div>
+						</div>	
+						<div class = "box" id="CUR-3" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àÈé¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUR-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUR-3" style="width:100%;text-align:center;">C</div>
+							</div>
+						</div>	
+						<div class = "box" id="CUR-2" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àÈé²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUR-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUR-2" style="width:100%;text-align:center;">B</div>
+							</div>
+						</div>																					
+						<div class = "box" id="CUR-1" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àÈéÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUR-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUR-1" style="width:100%;text-align:center;">A</div>
+							</div>
+						</div>
+					</td>
+					<!--ÈéÑÀ ÉÏÓÒ end-->				
+				    <!--ÈéÑÀ ÉÏ×ó start-->
+					<td  class="tdright">
+						<div class = "box" id="CUL-1" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àÈéÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUL-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUL-1" style="width:100%;text-align:center;">A</div>
+							</div>
+						</div>	
+						<div class = "box" id="CUL-2" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àÈé²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUL-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUL-2" style="width:100%;text-align:center;">B</div>
+							</div>
+						</div>
+						<div class = "box" id="CUL-3" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àÈé¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUL-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUL-3" style="width:100%;text-align:center;">C</div>
+							</div>
+						</div>
+						<div class = "box" id="CUL-4" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àµÚÒ»Ç°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUL-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUL-4" style="width:100%;text-align:center;">D</div>
+							</div>
+						</div>																						
+						<div class = "box" id="CUL-5" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àµÚ¶þÇ°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CUL-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CUL-5" style="width:100%;text-align:center;">E</div>
+							</div>
+						</div>
+					</td>
+					<!--ÈéÑÀ ÉÏ×ó end-->
+				</tr>
+				<!--ÈéÑÀÉÏÏÂ·Ö¸îÏß-->
+				<!--tr class="Deciduous"> 
+					<td class="tdleft tdbar"> 
+					</td>
+					<td class="tdright tdbar">
+					</td>
+				</tr-->
+				<!--ÈéÑÀ ÉÏ end-->
+				<!--ºãÑÀ ÉÏ start-->
+				<tr class="Permanent">
+					<!--ºãÑÀ ÉÏÓÒ start-->
+					<td  class="tdleft" style="display: inline-block;">
+						<div class = "box" id="AUR-8" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àµÚÈýÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-8" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-8" style="width:100%;text-align:center;">8</div>
+							</div>
+						</div>
+						<div class = "box" id="AUR-7" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àµÚ¶þÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-7" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-7" style="width:100%;text-align:center;">7</div>
+							</div>
+						</div>
+						<div class = "box" id="AUR-6" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àµÚÒ»Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-6" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-6" style="width:100%;text-align:center;">6</div>
+							</div>
+						</div>
+						<div class = "box" id="AUR-5" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àµÚ¶þÇ°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-5" style="width:100%;text-align:center;">5</div>
+							</div>
+						</div>
+						<div class = "box" id="AUR-4" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àµÚÒ»Ç°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-4" style="width:100%;text-align:center;">4</div>
+							</div>
+						</div>
+						<div class = "box" id="AUR-3" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²à¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-3" style="width:100%;text-align:center;">3</div>
+							</div>
+						</div>	
+						<div class = "box" id="AUR-2" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²à²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-2" style="width:100%;text-align:center;">2</div>
+							</div>
+						</div>																																								
+						<div class = "box" id="AUR-1" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢ÓÒ²àÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUR-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUR-1" style="width:100%;text-align:center;">1</div>
+							</div>
+						</div>
+					</td>
+					<!--ºãÑÀ ÉÏÓÒ end-->				
+				    <!--ºãÑÀ ÉÏ×ó start-->
+					<td  class="tdright" style="display: inline-block;">
+						<div class = "box" id="AUL-1" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-1" style="width:100%;text-align:center;">1</div>
+							</div>
+						</div>
+						<div class = "box" id="AUL-2" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²à²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-2" style="width:100%;text-align:center;">2</div>
+							</div>
+						</div>
+						<div class = "box" id="AUL-3" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²à¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-3" style="width:100%;text-align:center;">3</div>
+							</div>
+						</div>
+						<div class = "box" id="AUL-4" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àµÚÒ»Ç°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-4" style="width:100%;text-align:center;">4</div>
+							</div>
+						</div>
+						<div class = "box" id="AUL-5" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àµÚ¶þÇ°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-5" style="width:100%;text-align:center;">5</div>
+							</div>
+						</div>
+						<div class = "box" id="AUL-6" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àµÚÒ»Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-6" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-6" style="width:100%;text-align:center;">6</div>
+							</div>
+						</div>	
+						<div class = "box" id="AUL-7" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àµÚ¶þÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-7" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-7" style="width:100%;text-align:center;">7</div>
+							</div>
+						</div>																																								
+						<div class = "box" id="AUL-8" onclick="selectTooth(this.id)" name="unchecked" text="ÉÏò¢×ó²àµÚÈýÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-AUL-8" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-AUL-8" style="width:100%;text-align:center;">8</div>
+							</div>
+						</div>
+					</td>
+					<!--ºãÑÀ ÉÏ×ó end-->
+				</tr>
+				<!--ºãÑÀ ÉÏ end-->
+				<!--ºãÑÀ¡¢ÈéÑÀÉÏÏÂ·Ö¸ôÏß-->
+				<!--tr class="Permanent"-->
+				<tr>   
+					<td  class="tdleft tdbar">		
+					</td>
+					<td  class="tdright tdbar">			
+					</td>
+				</tr>
+				<!--ºãÑÀ ÏÂ start-->
+				<tr class="Permanent">
+				
+					<!--ºãÑÀ ÏÂÓÒ start-->
+					<td  class="tdleft" style="display: inline-block;">
+						<div class = "box" id="ALR-8" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àµÚÈýÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-8" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-8" style="width:100%;text-align:center;">8</div>
+							</div>
+						</div>
+						<div class = "box" id="ALR-7" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àµÚ¶þÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-7" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-7" style="width:100%;text-align:center;">7</div>
+							</div>
+						</div>
+						<div class = "box" id="ALR-6" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àµÚÒ»Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-6" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-6" style="width:100%;text-align:center;">6</div>
+							</div>
+						</div>
+						<div class = "box" id="ALR-5" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àµÚ¶þÇ°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-5" style="width:100%;text-align:center;">5</div>
+							</div>
+						</div>
+						<div class = "box" id="ALR-4" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àµÚÒ»Ç°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-4" style="width:100%;text-align:center;">4</div>
+							</div>
+						</div>
+						<div class = "box" id="ALR-3" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²à¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-3" style="width:100%;text-align:center;">3</div>
+							</div>
+						</div>
+						<div class = "box" id="ALR-2" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²à²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-2" style="width:100%;text-align:center;">2</div>
+							</div>
+						</div>																																									
+						<div class = "box" id="ALR-1" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALR-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALR-1" style="width:100%;text-align:center;">1</div>
+							</div>
+						</div>
+					</td>
+					<!--ºãÑÀ ÏÂÓÒ start-->				
+					<!--ºãÑÀ ÏÂ×ó start-->
+					<td  class="tdright" style="display: inline-block;">
+						<div class = "box" id="ALL-1" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-1" style="width:100%;text-align:center;">1</div>
+							</div>
+						</div>
+						<div class = "box" id="ALL-2" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²à²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-2" style="width:100%;text-align:center;">2</div>
+							</div>
+						</div>
+						<div class = "box" id="ALL-3" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²à¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-3" style="width:100%;text-align:center;">3</div>
+							</div>
+						</div>
+						<div class = "box" id="ALL-4" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àµÚÒ»Ç°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-4" style="width:100%;text-align:center;">4</div>
+							</div>
+						</div>
+						<div class = "box" id="ALL-5" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àµÚ¶þÇ°Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-5" style="width:100%;text-align:center;">5</div>
+							</div>
+						</div>
+						<div class = "box" id="ALL-6" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àµÚÒ»Ä¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-6" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-6" style="width:100%;text-align:center;">6</div>
+							</div>
+						</div>
+						<div class = "box" id="ALL-7" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àµÚ¶þÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-7" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-7" style="width:100%;text-align:center;">7</div>
+							</div>
+						</div>																																									
+						<div class = "box" id="ALL-8" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àµÚÈýÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-ALL-8" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-ALL-8" style="width:100%;text-align:center;">8</div>
+							</div>
+						</div>
+					</td>
+					<!--ºãÑÀ ÏÂ×ó end-->
+				</tr>
+				<!--ºãÑÀ ÏÂ end-->
+				<!--ÈéÑÀ ÏÂ start-->
+				<tr class="Deciduous">
+					<!--ÈéÑÀ ÏÂÓÒ start-->
+					<td  class="tdleftDeciduous">
+						<div class = "box" id="CLR-5" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àµÚ¶þÇ°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLR-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLR-5" style="width:100%;text-align:center;">E</div>
+							</div>
+						</div>
+						<div class = "box" id="CLR-4" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àµÚÒ»Ç°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLR-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLR-4" style="width:100%;text-align:center;">D</div>
+							</div>
+						</div>
+						<div class = "box" id="CLR-3" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àÈé¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLR-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLR-3" style="width:100%;text-align:center;">C</div>
+							</div>
+						</div>
+						<div class = "box" id="CLR-2" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àÈé²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLR-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLR-2" style="width:100%;text-align:center;">B</div>
+							</div>
+						</div>																							
+						<div class = "box" id="CLR-1" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢ÓÒ²àÈéÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLR-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLR-1" style="width:100%;text-align:center;">A</div>
+							</div>
+						</div>
+					</td>
+					<!--ÈéÑÀ ÏÂÓÒ end-->				
+				    <!--ÈéÑÀ ÏÂ×ó start-->
+					<td  class="tdright">
+						<div class = "box" id="CLL-1" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àÈéÖÐÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLL-1" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLL-1" style="width:100%;text-align:center;">A</div>
+							</div>
+						</div>
+						<div class = "box" id="CLL-2" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àÈé²àÇÐÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLL-2" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLL-2" style="width:100%;text-align:center;">B</div>
+							</div>
+						</div>
+						<div class = "box" id="CLL-3" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àÈé¼âÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLL-3" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLL-3" style="width:100%;text-align:center;">C</div>
+							</div>
+						</div>
+						<div class = "box" id="CLL-4" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àµÚÒ»Ç°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLL-4" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLL-4" style="width:100%;text-align:center;">D</div>
+							</div>
+						</div>																							
+						<div class = "box" id="CLL-5" onclick="selectTooth(this.id)" name="unchecked" text="ÏÂò¢×ó²àµÚ¶þÇ°ÈéÄ¥ÑÀ">
+							<div class="textSurface" data-options="region:'center',border:false,split:true" style="overflow:hidden;">
+								<div id="text-Surface-CLL-5" text="" readonly="readonly" style="width:100%;height:100%;overflow:hidden;word-break:break-all;text-align:left;padding:2px"></div>
+							</div>
+							<div class="textTP" data-options="region:'center',border:false" style="overflow:auto;">
+								<div id="tp-CLL-5" style="width:100%;text-align:center;">E</div>
+							</div>
+						</div>	
+					</td>
+					<!--ÈéÑÀ ÏÂ×ó end-->
+
+				</tr>
+				<!--ÈéÑÀ ÏÂ end-->
+				
+			</table>
+			</div>
+			<div id="FlagLeft" style="width:30px;text-align:center;padding-top:100px;">#(..Get("×ó"))#</div>
+		</div>
+		<div>
+			<div style="margin:10px 20px 5px 70px;">
+				<a href="#" id="addToRecord" onclick="addToRecord" class="hisui-linkbutton" style="margin-left:400px;margin-top:25px;background:#40A2DE;color:#feffff;">&nbsp;&nbsp;#(..Get("±£´æ"))#&nbsp;&nbsp;</a> 
+			</div>
+		</div>
+	</div> 
+ </div>
+ <script type="text/javascript" src="../scripts/emr/js/ip.tool.tooth.js"></script>  
+ <script type="text/javascript" src="../scripts/emr/js/ip.tool.toothsurface.js"></script>  
+</body>
+</html>

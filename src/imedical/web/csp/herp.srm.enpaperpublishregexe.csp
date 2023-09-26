@@ -1,0 +1,125 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("str",1))
+	
+	s Titles=$Get(%request.Data("Titles",1))
+	s rowid=$Get(%request.Data("rowid",1))	
+	s DeptDrs=$Get(%request.Data("DeptDrs",1))
+	s RecordTypes=$Get(%request.Data("RecordTypes",1))
+	
+	s JNames=$Get(%request.Data("JNames",1))
+	s PTypes=$Get(%request.Data("PTypes",1))
+	s FristAuthors=$Get(%request.Data("FristAuthors",1))
+	s FAuthorDepts=$Get(%request.Data("FAuthorDepts",1))
+	s TFAuthors=$Get(%request.Data("TFAuthors",1))
+	
+	s TFAuthorDepts=$Get(%request.Data("TFAuthorDepts",1))
+	s IsGraduates=$Get(%request.Data("IsGraduates",1))
+	s Mentor1s=$Get(%request.Data("Mentor1s",1))
+	s IsInTwoYears=$Get(%request.Data("IsInTwoYears",1))
+	s Mentor2s=$Get(%request.Data("Mentor2s",1))
+	
+	s CorrAuthors=$Get(%request.Data("CorrAuthors",1))
+	s CorrAuthorDepts=$Get(%request.Data("CorrAuthorDepts",1))
+	s TCAuthor=$Get(%request.Data("TCAuthor",1))
+	s TCAuthorDept=$Get(%request.Data("TCAuthorDept",1))
+
+	s PubYear=$Get(%request.Data("PubYear",1))
+	s Rolls=$Get(%request.Data("Rolls",1))
+	s Periods=$Get(%request.Data("Periods",1))
+	
+	s StartPages=$Get(%request.Data("StartPages",1))
+	s EndPages=$Get(%request.Data("EndPages",1))
+	s SNs=$Get(%request.Data("SNs",1))
+	s WOSs=$Get(%request.Data("WOSs",1))	
+	s DocTypes=$Get(%request.Data("DocTypes",1))
+	
+	s IFs=$Get(%request.Data("IFs",1))
+	
+    s date = $Get(%request.Data("date",1))
+    s data = $Get(%request.Data("data",1))
+    
+	s RecType = $Get(%request.Data("RecType",1))
+	s Author  = $Get(%request.Data("Author",1))
+	s userid  = $Get(%request.Data("userid",1))
+	s JTypeDr  = $Get(%request.Data("JTypeDr",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	
+	s JNameDr = $Get(%request.Data("JNameDr",1))
+	s FristAuthorsRange = $Get(%request.Data("FristAuthorsRange",1))
+	s CorrAuthorsRange = $Get(%request.Data("CorrAuthorsRange",1))
+	s PageCharge = $Get(%request.Data("PageCharge",1))
+	
+	i action = "list" d
+	.w ##class(herp.srm.udata.ENPaperPublishReg).List(date,sortField, sortDir, start, limit)
+	
+
+	i action = "GetDate" d
+	.w ##class(herp.srm.udata.ENPaperPublishReg).GetDate(start, limit, str)
+
+
+	i action = "GetDept" d
+	.w ##class(herp.srm.udata.ENPaperPublishReg).GetDept(start, limit, str)
+
+	i action = "GetJName" d
+	.w ##class(herp.srm.udata.ENPaperPublishReg).GetJName1(start,limit,str,JTypeDr)
+  
+  i action = "GetYear" d
+	.w ##class(herp.srm.udata.ENPaperPublishReg).GetYear(start,limit,str)
+
+	i action = "GetAuthor" d
+	.w ##class(herp.srm.udata.ENPaperPublishReg).GetAuthor(start, limit, str)
+
+  i action = "GetAuthorDept" d
+	.s result = ##class(herp.srm.udata.ENPaperPublishReg).GetAuthorDept(Author)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.ENPaperPublishReg).InsertRec(userid,data)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "update" d
+	.s result = ##class(herp.srm.udata.ENPaperPublishReg).UpdateRec(rowid,RecordTypes,Titles,FristAuthors,FristAuthorsRange,CorrAuthors,CorrAuthorsRange,PubYear,Rolls,Periods,StartPages,EndPages,IFs,JNameDr,PageCharge)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.ENPaperPublishReg).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+  i action = "submit" d
+	.s result = ##class(herp.srm.udata.ENPaperPublishReg).Submit(rowid,userid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+  i action="GetJournalTypes" d
+  .w ##class(herp.srm.udata.uSRMCommon).GetJournalType(start, limit, str)
+  
+  i action = "GetJournalDict" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetJournalDict(start,limit,str)
+</script>

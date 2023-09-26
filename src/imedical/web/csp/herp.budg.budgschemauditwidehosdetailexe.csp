@@ -1,0 +1,69 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+    s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s SchemDr=$Get(%request.Data("SchemDr",1))
+	s planvalue=$Get(%request.Data("planvalue",1))
+	
+	s BSDCode=$Get(%request.Data("BSDCode",1))
+	s BITName=$Get(%request.Data("BITName",1))
+	s BIDLevel=$Get(%request.Data("BIDLevel",1))
+	s bsarchkresult=$Get(%request.Data("bsarchkresult",1))
+	s bsardesc=$Get(%request.Data("bsardesc",1))
+
+	s UserID=$Get(%request.Data("UserID",1))
+	s Code=$Get(%request.Data("Code",1))
+	s Year=$Get(%request.Data("Year",1))
+	s schemAuditDR=$Get(%request.Data("schemAuditDR",1))
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditWideHos).ListDetail(hospid,Year, Code, BITName, BIDLevel, BSDCode, searchField, searchValue, sortField, sortDir, start, limit)
+	
+	i action = "submit1" d  
+	.s result1 = ##class(herp.budg.udata.uBudgSchemAuditWideHos).SubmitUpdate(SchemDr,bsarchkresult,bsardesc,UserID)
+	.i result1 = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "check" d
+	.s result1 = ##class(herp.budg.udata.uBudgSchemAuditWideHos).UpdChkRec(schemAuditDR,bsarchkresult,bsardesc,UserID)
+	.i result1 = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "save" d
+	.s result1 = ##class(herp.budg.udata.uBudgSchemAuditWideHos).SubmitSave(rowid, planvalue)
+	.i result1 = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+	i action = "bitnamelist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditWideHos).BITNameList(start,limit,str)
+	
+	i action = "bsmnamelist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditWideHos).BSMNameList(start,limit,str)
+	
+	i action = "bidlevellist" d
+	.w ##class(herp.budg.udata.uBudgSchemAuditWideHos).BIDLevelList(start,limit,str)
+	
+	i action = "liststate" d 
+	.w ##class(herp.budg.udata.uBudgSchemAuditWideHos).Liststate(schemAuditDR, UserID, SchemDr, start, limit)
+	
+</script>

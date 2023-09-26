@@ -1,0 +1,193 @@
+<!-- 
+ * FileName:	dhcbill.pkg.prodconarcitms.csp
+ * User:		DingSH 
+ * Date:		2019-09-25
+ * Function:	套餐产品关联医嘱维护
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    if ##class(websys.SessionEvents).SessionExpired() quit 1
+    quit 1
+</csp:method>
+<html>
+
+<head>
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI />
+    <DHCBILL />
+    <script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+    <style>
+        .td-first-col {
+            width: 75px;
+        }
+
+        .east-content {
+            width: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sproInfo {
+            padding-bottom: 10px;
+            padding-left: 40px;
+            display: inline-block;
+            position: absolute;
+            top: 10px;
+        }
+
+        .sprod {
+            background: url(../images/eq-contract.png) no-repeat;
+            width: 30px;
+            height: 30px;
+            display: inline-block;
+            position: absolute;
+            padding-bottom: 10px;
+            padding-left: 10px;
+            top: 10px;
+
+
+        }
+
+        .sline {
+            color: #CFCDCB;
+        }
+
+        .infoLabel {
+            color: #CFCDCB;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" data-options="fit:true">
+        <div data-options="region:'north',border:false"
+            style="height:60px;border-bottom:1px solid #ccc;padding:0 10px;overflow:hidden;">
+
+            <table>
+                <tr>
+
+                    <td>
+                        <div class="sprod"></div>
+                    </td>
+                    <td>
+                        <div class="sproInfo">
+                            <span id="cpProDesc" style='font-size:22px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">套餐编码:</span><span id="cpProCode" style='font-size:16px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel" style=''>标价:</span><span id="cpPrice" style='font-size:16px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">售价:</span><span id="cpSalesPrice"
+                                style='font-weight:bold;font-size:16px;color:#DC143C'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">最低售价:</span><span id="cpMimuamout" style='font-size:16px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">状态:</span><span id="cpStatusDesc" style='font-size:14px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">共享:</span><span id="cpIsshareDesc" style='font-size:14x'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">自主定价:</span><span id="cpIndepDesc" style='font-size:14px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">独立售卖:</span><span id="cpIssellspDesc" style='font-size:14px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">套餐类型:</span><span id="cpTypeDesc" style='font-size:14px'></span>
+                            <span class="sline">/</span>
+                            <span class="infoLabel">使用类型:</span><span id="cpProdTypeDesc" style='font-size:14px'></span>
+                            <!--<span class="sline">/</span>
+                            <span class="infoLabel">套餐等级:</span><span id="cpLevelDesc" style='font-size:14px'></span>
+                             -->
+                        </div>
+                    </td>
+
+
+
+                </tr>
+            </table>
+        </div>
+        <div data-options="region:'west',border:false" style="width:580px;padding:10px">
+            <div class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" data-options="fit:true,border:false">
+                        <div data-options="region:'north',border:false" style="height:86px;">
+                            <div class="hisui-panel"
+                                data-options="title:'医嘱列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+                                style="border-bottom-style:none;border-radius:0;">
+                                <table class="search-table" style="width:100%;">
+                                    <tr>
+                                        <td class="r-label"><label>关键字</label></td>
+                                        <td><input id="ArcKeyWords" class="textbox" placeholder="医嘱代码、简拼、描述..."
+                                                style='width:160px' /></td>
+                                        <td class="r-label"><label>医嘱大类</label></td>
+                                        <td><input id="OrdCat" class="textbox" style='width:90px' /></td>
+                                        <td class="r-label"><label>医嘱子类</label></td>
+                                        <td><input id="OrdSubCat" class="textbox" style='width:80px' /></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div class="hisui-panel panel-header-gray" data-options="fit:true"
+                                style="border-radius:0 0 4px 4px;">
+                                <table id="dgWest"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'center',border:false" style='padding:10px 10px 10px 0px'>
+            <div class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',border:false" style="height:124px;">
+                    <div class="hisui-panel"
+                        data-options="title:'已选医嘱',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+                        style="border-bottom-style:none;border-radius:0;">
+                        <table class="search-table" style="width:100%" >
+                            <tr>
+                                <td class="r-label">总金额</td>
+                                <td><input id="ProTotalAmt" class="hisui-numberbox textbox" data-options="precision:2,min:0,disabled:true" style='color:red;font-weight:bold;width:90px'  /></td>
+                                <td class="r-label">总售价</td>
+                                <td><input id="ProSalesAmt" class="hisui-numberbox textbox" data-options="precision:2,min:0,delay:500,validType:['checkMinAmount', 'checkMaxAmount']" style='color:red;font-weight:bold;width:90px' />
+                                </td>
+                                <td class="r-label">最底售价</td>
+                                <td><input id="ProMinSalesAmt" class="hisui-numberbox textbox" data-options="precision:2,min:0,validType:['checkMinSalesMinAmount', 'checkMinSalesMaxAmount']" style='color:red;font-weight:bold;width:90px' />
+                                </td>
+                                <td class="r-label">
+                                    <a href="javascript:;" class="hisui-linkbutton big" id="btn-Save"
+                                        data-options="iconCls:'icon-big-save',plain:true">保存</a>
+                                    
+                                <td>
+                                
+                                <td class="r-label">
+                                    <a href="javascript:;" class="hisui-linkbutton big" id="btn-trans"
+                                        data-options="iconCls:'icon-big-slide-send',plain:true">新增</a>
+                  
+                                </td>
+                                
+                                <td class="r-label">
+                                    <a href="javascript:;" class="hisui-linkbutton big" id="btn-return"
+                                        data-options="iconCls:'icon-big-slide-filed',plain:true">移除</a>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'"
+                        style="border-radius:0 0 4px 4px;">
+                        <table id="dgEast"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.prodconarcitms.js"></script>
+</body>
+
+</html>

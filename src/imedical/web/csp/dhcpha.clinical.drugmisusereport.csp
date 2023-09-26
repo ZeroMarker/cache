@@ -1,0 +1,378 @@
+<HTML>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; ">
+
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgCtLocDesc="#(%session.Get("LOGON.CTLOCDESC"))#";  //科室描述
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<EASYUI:CLINICAL/>   
+<!-- Put your page Title here -->
+	<script type="text/javascript" src="../scripts/dhcapp/common.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/clinical/drugmisusereport.js"></script>
+	<style type="text/css">	
+	 div{
+		 display: block;
+     }
+     .ui-div-m-l5-r0{
+	     margin:15px 2px;
+	 }
+	 .ui-span-m-l6{
+		 margin-left:6px;
+	 }
+	 .ui-span-m-l20{
+		 margin-left:20px;
+	 }
+	 .ui-span-m-l30{
+		 margin-left:30px;
+	 }
+	 .ui-div-title-lv2{
+	 	border:1px solid #95B8E7;
+	 	width:200px;
+	 	height:188px;
+	 	float:left;
+	 	text-align:center;
+	 	line-height:150px;
+	 	font-weight:bold;
+	 }
+	 .ui-div-m-tb5-lr2{
+		  margin:10px 2px ;
+	 }
+	 .ui-span-title-lv2{
+	 	font-weight:bold;
+	 	margin-left:10px;
+	 }
+	 .clearfix:after{content: "."; display:block; height:0; clear:both; visibility:hidden;}
+	 .ui-div-title-lv3{
+	 	font-weight:bold;
+	 }
+	 input{vertical-align:middle;}
+   	.datagrid-row-selected {
+		background: #ADFAFC;
+	}
+	/*页面input样式*/
+	input{
+		padding:3px 0;
+		vertical-align: text-bottom;
+	}
+	input:focus{background-color:#c1e7ff}
+	.datagrid-row {
+		height: 33px;
+	}
+  </style> 
+</head>
+<body>
+	<div id="mainpanel" class="easyui-layout" fit="true">
+		<div data-options="region:'center'" title="用药错误报告表<span style='color:red;'>[红色*号标注的为必填项]</span>" style="background:#F8F8FF;">
+			<div style="border:2px solid #95B8E7;margin-left:150px;margin-right:auto;margin-top:5px;width:1000px;background:#F8F8FF;">
+				<div style="font-size:30px;font-weight:bold;text-align:center;">
+					<span>用 药 差 错 报 告 表</span>
+					<input id="dmErrRepID" style="display:none;width:100px;border:1px solid #95B8E7;"></input>
+				</div>
+				<div class="ui-div-m-l5-r0">
+					<span class=" ui-span-m-l6"><span style="color:red;">*</span>发生日期：</span><input id="mrErrOccDate" type="text" class="easyui-datebox" style="width:120px;margin-left:2px;"></input>
+					<span class=" ui-span-m-l20"><span style="color:red;">*</span>发现日期：</span><input id="mrDisErrDate" type="text" class="easyui-datebox" style="width:120px;margin-left:2px;"></input>
+					<span class=" ui-span-m-l30"><span style="color:red;">*</span>报告日期：</span><input id="mrRepDate" type="text" class="easyui-datebox" style="width:120px;margin-left:2px;" readonly></input>
+					<span class="ui-span-m-l30">编码：</span><input id="mrRepCode" style="border: 0px none;width:160px;border-bottom:1px solid #95B8E7;" readonly></input>
+				</div>
+				<!--患者信息：-->
+				<div class="ui-div-m-l5-r0">
+					<input id="PatientID" style="display:none;width:100px;border:1px solid #95B8E7;"></input>
+					<span class=" ui-span-m-l6"><span style="color:red;">*</span>患者姓名：</span><input id="mrPatName" style="width:120px;border:1px solid #95B8E7;" readonly ></input>
+					<span class="ui-span-m-l20"><span style="color:red;">*</span>出生日期：</span><input id="mrPatDOB" type="text" class="easyui-datebox" style="width:120px;border:1px solid #95B8E7;" readonly ></input>
+					<span style="margin-left:10px" ><span style="color:red;">*</span>年龄：</span><input id="mrPatAge"  style="width:80px;border:1px solid #95B8E7;" readonly></input><!-- <span style="margin:0px 3px">岁</span> -->
+					<span style="margin-left:10px"><span style="color:red;">*</span>性别：</span><input id="mrPatSex" class="easyui-combobox" style="width:70px;border:1px solid #95B8E7;" data-options="valueField:'value',textField:'text'" readonly ></input>
+					<span style="margin-left:10px">体重：<input id="mrPatWeight" style="width:30px;border:1px solid #95B8E7;" readonly ></input>&nbspKg</span>
+					<span style="margin-left:10px"><span style="color:red;">*</span>联系方式：</span><input id="mrPatContact" style="width:90px;border:1px solid #95B8E7;" readonly ></input>
+				</div>
+				<div class="ui-div-m-l5-r0">
+					<span class=" ui-span-m-l6"><span style="color:red;">*</span>登&nbsp;记&nbsp;号：</span><input id="mrPatNo" style="width:120px;border:1px solid #95B8E7;" readonly></input>
+					<span class=" ui-span-m-l6">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red;">*</span>诊断：</span><input id="mrPatDiag" style="width:500px;border:1px solid #95B8E7;" readonly ></input>
+				</div>
+				<!--事件相关药品信息-->
+                <div class="ui-div-m-l5-r0">
+                	<table id="mrPatOrdItmList"></table>
+                </div>
+				<div class="ui-div-m-l5-r0">
+					<span class="ui-span-m-l6">有无药品标签、处方复印件等资料：</span>
+					<span><input  name="mrProDrgRelInfo" type="checkbox" value="10"></input>是</span>
+					<span class="ui-span-m-l20"><input  name="mrProDrgRelInfo" type="checkbox" value="11"></input>否</span>
+					<span class="ui-span-m-l20"><input  id="ER99" name="mrProDrgRelInfo" type="checkbox" value="99"></input>其他<input id="mrDrgRelInfoDesc" style="border:0px;width:500px;border:1px solid #95B8E7;margin-left:5px;"disabled="true"></input></span> <!--wangxuejian 2016-08-29-->
+				</div>
+				<!--差错内容-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div class="ui-div-title-lv2"><span style="color:red;">*</span>差错内容</div>
+						<div style="border:1px solid #95B8E7;float:left;width:791px;">
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">1、品种&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="10"></input>适应症&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="11"></input>品种&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="12"></input>禁忌症&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="13"></input>剂型&nbsp;&nbsp;&nbsp;&nbsp;</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2" style="text-align:left">
+								<span class="ui-span-title-lv2">2、用法&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="14"></input>给药途径</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" style="margin-left:-2px" type="checkbox" value="15"></input>给药顺序</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" style="margin-left:-9px" type="checkbox" value="16"></input>漏给药&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="17"></input>给药技术</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="18"></input>重复给药</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2" style="text-align:left">
+								<span class="ui-span-title-lv2">3、用量&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="19"></input>数量&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" style="margin-left:2px" type="checkbox" value="20"></input>规格&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="21"></input>用量&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="22"></input>给药频次</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="23"></input>给药时间</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="24"></input>疗程</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2" style="text-align:left">
+								<span class="ui-span-title-lv2">4、相互作用</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" style="margin-left:-9px" type="checkbox" value="25"></input>溶媒&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="26"></input>配伍&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" type="checkbox" value="27"></input>相互作用</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">5、患者身份</span>
+								<span class="ui-span-m-l30"><input name="mrErrContent" style="margin-left:-9px" type="checkbox" value="28"></input>患者身份</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">6、其他&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input id="mrErrContentDesc" style="width:500px;border:1px solid #95B8E7;"></input></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--错误药品是否发给患者-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div  class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:200px;height:35px;float:left;text-align:center;line-height:35px;padding-top:5px;"><span style="color:red;">*</span>错误药品是否发给患者</div>
+						<div style="border:1px solid #95B8E7;width:293px;float:left;height:30px;padding-top:10px;">
+							<span class="ui-span-m-l30"><input name="mrDspToPat" type="checkbox" value="10"></input>是</span>
+							<span class="ui-span-m-l30"><input name="mrDspToPat" type="checkbox" value="11"></input>否</span>
+							<span class="ui-span-m-l30"><input name="mrDspToPat" type="checkbox" value="99"></input>不详</span>
+						</div>
+						<div  class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:200px;height:35px;float:left;text-align:center;line-height:35px;padding-top:5px;">患者是否使用错误药品</div>
+						<div style="border:1px solid #95B8E7;width:293px;height:30px;padding-top:10px;float:left;">
+							<span class="ui-span-m-l30"><input name="mrPatTaked" type="checkbox" value="10"></input>是</span>
+							<span class="ui-span-m-l30"><input name="mrPatTaked" type="checkbox" value="11"></input>否</span>
+							<span class="ui-span-m-l30"><input name="mrPatTaked" type="checkbox" value="99"></input>不详</span>
+						</div>
+					</div>
+				</div>
+
+				<!--错误分级-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:20%;height:375px;float:left;text-align:center;line-height:375px;"><span style="color:red;">*</span>错误分级</div>
+						<div style="border:1px solid #95B8E7;width:791px;float:left;">
+							<span class="ui-div-title-lv3" style="display:block;margin:10px;">第一层级：无差错</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="10"></input>&nbsp;&nbsp;<b>A</b>&nbsp;&nbsp;级：客观环境或条件可能引发错误（错误隐患）;</span>
+							<span class="ui-div-title-lv3" style="display:block;margin:10px;">第二层级：有差错 无伤害</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="11"></input>&nbsp;&nbsp;<b>B</b>&nbsp;&nbsp;级：发生错误但未发给患者, 或已发给患者但患者未使用;</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="12"></input>&nbsp;&nbsp;<b>C</b>&nbsp;&nbsp;级：患者已使用，但未造成伤害;</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="13"></input>&nbsp;&nbsp;<b>D</b>&nbsp;&nbsp;级：患者已使用，需要监测错误对患者的后果，并根据后果判断是否需要采取措施预防和减少伤害;</span>
+							<span class="ui-div-title-lv3" style="display:block;margin:10px;">第二层级：有差错 有伤害</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="14"></input>&nbsp;&nbsp;<b>E</b>&nbsp;&nbsp;级：错误造成患者暂时性伤害，需要采取预防措施;</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="15"></input>&nbsp;&nbsp;<b>F</b>&nbsp;&nbsp;级：错误对患者的伤害可导致住院或延长住院时间;</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="16"></input>&nbsp;&nbsp;<b>G</b>&nbsp;&nbsp;级：错误导致患者永久性伤害;</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox" value="17"></input>&nbsp;&nbsp;<b>H</b>&nbsp;&nbsp;级：错误导致患者生命垂危;</span>
+							<span class="ui-div-title-lv3" style="display:block;margin:10px;">第二层级：有差错 死亡</span>
+							<span style="display:block;margin:10px;"><input name="mrErrorLevel" type="checkbox"  value="18"></input>&nbsp;&nbsp;<b>I</b>&nbsp;&nbsp;级：错误导致患者死亡;</span>
+						</div>
+					</div>
+				</div>
+				
+				<!--患者伤害情况-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div  class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:20%;height:209px;float:left;text-align:center;line-height:209px;"><span style="color:red;">*</span>患者伤害情况</div>
+						<div style="border:1px solid #95B8E7;width:791px;float:left;">
+							<span style="display:block;margin:10px;width:700px;"><input id="death" name="HarmRet" type="checkbox" value="13"></input>&nbsp;&nbsp;死亡(直接死因)：<input id="HarmRetDesc13" style="width:300px;border:1px solid #95B8E7;"disabled="true"></input><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;死亡时间：<input id="DeathTime" type="text" class="easyui-datetimebox" data-options="showSeconds:false" style="width:140px;margin-left:2px;" disabled="true"></input></span></span>
+							<span style="display:block;margin:10px;"><input id="CriticallyIll" name="HarmRet" type="checkbox" value="Y"></input>&nbsp;&nbsp;抢救(措施)&nbsp;&nbsp;&nbsp;&nbsp;：<input id="mrResMeasDesc" style="width:500px;border:1px solid #95B8E7;"disabled="true"></input></span>
+							<span style="display:block;margin:10px;"><input name="HarmRet" type="checkbox" value="10"></input>&nbsp;&nbsp;无明显伤害</span>
+							<span style="display:block;margin:10px;"><input id="HL11" name="HarmRet" type="checkbox" value="11"></input>&nbsp;&nbsp;暂时伤害(部位、程度)：<input id="HarmRetDesc11" style="width:500px;border:1px solid #95B8E7;"disabled="true"></input></span>
+							<span style="display:block;margin:10px;"><input id="HL12" name="HarmRet" type="checkbox" value="12"></input>&nbsp;&nbsp;残疾(部位、程度)&nbsp;&nbsp;&nbsp;&nbsp;：<input id="HarmRetDesc12" style="width:500px;border:1px solid #95B8E7;"disabled="true"></input></span>
+							<span style="display:block;margin:10px;">恢复过程：<span><input name="mrRecProc" type="checkbox" value="10"></input>住院治疗</span>&nbsp;&nbsp;<span><input name="mrRecProc" type="checkbox" value="11"></input>门诊随访治疗</span>
+							<span><input name="mrRecProc" type="checkbox" value="12"></input>自行恢复</span></span>
+						</div>
+					</div>
+				</div>
+				<!--引发差错的因素-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div  class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:20%;height:160px;float:left;text-align:center;line-height:160px;"><span style="color:red;">*</span>引发错误的因素</div>
+						<div style="border:1px solid #95B8E7;width:791px;float:left;">
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">1、处方因素</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="10"></input>适应症&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="11"></input>品种&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="12"></input>禁忌症&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="13"></input>剂型&nbsp;&nbsp;&nbsp;&nbsp;</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">2、药品因素</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="14"></input>给药途径</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" style="margin-left:-3px" type="checkbox" value="15"></input>给药顺序</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" style="margin-left:-7px" type="checkbox" value="16"></input>漏给药&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="17"></input>给药技术</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="18"></input>重复给药</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">3、环境因素</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="19"></input>数量&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="20"></input>规格&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="21"></input>用量&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="22"></input>给药频次</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="23"></input>给药时间</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="24"></input>疗程&nbsp;&nbsp;&nbsp;&nbsp;</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">4、人员因素</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="25"></input>溶媒&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="26"></input>配伍&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="ErrTriFac" type="checkbox" value="27"></input>相互作用</span>
+							</div>
+							<div class="ui-div-m-tb5-lr2">
+								<span class="ui-span-title-lv2">5、其他&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input id="ErrTriFacDesc" style="width:200px;border:1px solid #95B8E7;"></input></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--发生错误的场所-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div  class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:20%;height:45px;float:left;text-align:center;line-height:45px;"><span style="color:red;">*</span>发生错误的场所</div>
+						<div style="border:1px solid #95B8E7;width:791px;float:left;">
+							<div style="margin:10px;">
+								<span><input name="ErrHappSite" type="checkbox" value="10"></input>门诊诊室</span>
+								<span><input name="ErrHappSite" type="checkbox" value="11"></input>病房医生办公室</span>
+								<span><input name="ErrHappSite" type="checkbox" value="12"></input>门诊药房</span>
+								<span><input name="ErrHappSite" type="checkbox" value="13"></input>病房药房</span>
+								<span><input name="ErrHappSite" type="checkbox" value="14"></input>急诊药房</span>
+								<span><input name="ErrHappSite" type="checkbox" value="15"></input>社区卫生站</span>
+								<span><input id="ErrHappSite" name="ErrHappSite" type="checkbox" value="99"></input>其他&nbsp;&nbsp;<input id="ErrHappSiteDesc" style="width:150px;border:1px solid #95B8E7;"disabled="true"></input></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--引起错误的人员-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div  class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:20%;height:130px;float:left;text-align:center;line-height:130px;"><span style="color:red;">*</span>引起差错的人员</div>
+						<div style="border:1px solid #95B8E7;width:791px;float:left;">
+							<div style="margin:10px;">
+								<span class="ui-span-title-lv2">医生&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="10"></input>住院医师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="11"></input>主治医师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="12"></input>副(正)主任医师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="13"></input>实习医师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="14"></input>进修医师</span>
+							</div>
+							<div style="margin:10px;">
+								<span class="ui-span-title-lv2">药师&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="15"></input>初级药师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="16"></input>主管药师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="17"></input>副(正)主任药师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="18"></input>实习药师</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="19"></input>进修药师</span>
+							</div>
+							<div style="margin:10px;">
+								<span class="ui-span-title-lv2">护士&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="20"></input>初级护士</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="21"></input>主管护士</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="22"></input>副(正)主任护士</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="23"></input>实习护士</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="24"></input>进修护士</span>
+							</div>
+							<div style="margin:10px;">
+								<span class="ui-span-title-lv2">患者及家属</span>
+								<span class="ui-span-m-l30"><input name="TriErrUser" type="checkbox" value="25"></input>患者或家属</span>
+								<span class="ui-span-m-l30"><input id="TriErrUser" name="TriErrUser" type="checkbox" value="99"></input>其他&nbsp;&nbsp;<input id="TriErrUserDesc" style="width:200px;border:1px solid #95B8E7;"disabled="true"></input></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--其他与错误相关的人员-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:20%;height:43px;float:left;text-align:center;line-height:43px;">其他与错误相关的人员</div>
+						<div style="border:1px solid #95B8E7;width:791px;float:left;">
+							<div style="margin:10px;">
+								<span class="ui-span-m-l30"><input name="ErrRelUser" type="checkbox" value="10"></input>医生</span>
+								<span class="ui-span-m-l30"><input name="ErrRelUser" type="checkbox" value="11"></input>药师</span>
+								<span class="ui-span-m-l30"><input name="ErrRelUser" type="checkbox" value="12"></input>护士</span>
+								<span class="ui-span-m-l30"><input name="ErrRelUser" type="checkbox" value="13"></input>患者及家属</span>
+								<span class="ui-span-m-l30"><input id="ErrRelUser"   name="ErrRelUser" type="checkbox" value="99"></input>其他&nbsp;&nbsp;<input id="ErrRelUserDesc" style="width:200px;border:1px solid #95B8E7;"disabled="true"></input></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--发现错误的人员-->
+				<div class="ui-div-m-l5-r0">
+					<div class="clearfix">
+						<div class="ui-div-title-lv3" style="border:1px solid #95B8E7;width:20%;height:43px;float:left;text-align:center;line-height:43px;">发现差错的人员</div>
+						<div style="border:1px solid #95B8E7;width:791px;float:left;">
+							<div style="margin:10px;">
+								<span class="ui-span-m-l30"><input name="DisErrUser" type="checkbox" value="10"></input>医生</span>
+								<span class="ui-span-m-l30"><input name="DisErrUser" type="checkbox" value="11"></input>药师</span>
+								<span class="ui-span-m-l30"><input name="DisErrUser" type="checkbox" value="12"></input>护士</span>
+								<span class="ui-span-m-l30"><input name="DisErrUser" type="checkbox" value="13"></input>患者及家属</span>
+								<span class="ui-span-m-l30"><input id=DisErrUser name="DisErrUser" type="checkbox" value="99"></input>其他&nbsp;&nbsp;<input id="DisErrUserDesc" style="width:200px;border:1px solid #95B8E7;"disabled="true"></input></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--错误是如何发现或避免的：-->
+				<div class="ui-div-m-l5-r0">
+					<div class="ui-div-title-lv3" style="margin:3px;">差错发生的经过：请简述事件发生、发现、后果及防范措施：</div>
+					<div>
+						<textarea id="mrDisAndHandMea" style="padding:5px 3px;width:100%;height:85px;border: 1px solid #95B8E7;color:#999999" onfocus="if(value=='请简述事件发生、发现、后果及防范措施！'){value='';this.style.color='#000'}" onblur="if (value ==''){value='请简述事件发生、发现、后果及防范措施！';this.style.color='#999'}">请简述事件发生、发现、后果及防范措施！</textarea>
+					</div>
+				</div>
+				<!--报告人信息：-->
+				<div style="border-bottom:1px solid #95B8E7;padding:6px 0;margin-left:2px;margin-right:2px;">
+					<input id="RepUserID" style="width:80px;display:none;"></input>
+					<span class=" ui-span-m-l6">报告人：<input id="mrRepUser" style="width:160px;border:1px solid #95B8E7;"></input></span>
+					<input id="RepDeptID" style="width:80px;display:none;"></input>
+					<span class=" ui-span-m-l30">科室：<input id="mrRepDept" style="width:160px;border:1px solid #95B8E7;"></input></span>
+					<span class=" ui-span-m-l30">职称：<input id="mrProTit" class="easyui-combobox" style="width:160px;border:1px solid #95B8E7;" data-options="valueField:'value',textField:'text'"></input></span>
+					<span class=" ui-span-m-l30">电话：<input id="mrRepTel" style="width:160px;border:1px solid #95B8E7;"></input></span>
+				</div>
+				<div style="border-bottom:1px solid #95B8E7;padding:6px 0;margin-left:2px;margin-right:2px;">
+					<span class=" ui-span-m-l6">E-mail：<input id="mrEmail" style="width:160px;border:1px solid #95B8E7;"></input></span>
+					<span class=" ui-span-m-l30">邮编：<input id="mrPostCode" style="width:160px;border:1px solid #95B8E7;"></input></span>
+				</div>
+				<div style="margin:5px;text-align:center;">
+					<a href="#" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveMisRep(0)">保存</a>
+					<a href="#" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-save" onclick="saveMisRep(1)">提交</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--病人用药信息窗口-->
+	<div id="mrPatWin">
+		<div class="easyui-layout" fit="true">
+			<!--用药信息-->
+			<div data-options="region:'center'" border=false>
+				<div id="medInfo" toolbar="#tb"></div>
+			</div>
+		</div>
+		<div id="tb" style="padding:5px;height:auto">
+			<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true">添加</a>
+			<a href="#" class="easyui-linkbutton" iconCls="icon-cancel" plain="true">取消</a>
+		</div>
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server> 
+	n patType,TOPatientID,FROMPatientID,LIST1,LIST2,Odontogram
+	s TOPatientID=%request.Get("TOPatientID")
+	s FROMPatientID=%request.Get("FROMPatientID")
+	s FROMMRN=%request.Get("FROMMRN"),TOMRN=%request.Get("TOMRN")
+	
+	; CJB 19/09/2002 - 28654: In W642 & W642R Help is not being displayed on Merge scrn
+	; the context of the page was lost.
+	s TFORM=%request.Get("TFORM")
+	s TPAGID=%request.Get("TPAGID")
+	s TEVENT=%request.Get("TEVENT")
+	s TOVERRIDE=%request.Get("TOVERRIDE")
+	s TDIRTY=%request.Get("TDIRTY")
+	s TWKFL=%request.Get("TWKFL")
+	s TWKFLI=%request.Get("TWKFLI")
+	s TWKFLL=%request.Get("TWKFLL")
+	s TWKFLJ=%request.Get("TWKFLJ")
+	s TREPORT=%request.Get("TREPORT")
+	s TRELOADID=%request.Get("TRELOADID")
+	s CONTEXT=%request.Get("CONTEXT")
+	s CSPNSID=%request.Get("CSPNSID")
+	s ServerSideRedirect=%request.Get("ServerSideRedirect")
+	s TMENU=%request.Get("TMENU")
+	s zchrisa=%request.Get("a")
+	
+	; LOG 26947 BC 26-7-2002 Locking patient records while merging
+	d ##Class(websys.Lock).LockClearSession(%session.SessionId) 
+	d ##Class(websys.Component).GetComponentMessages(.t,"PAMergePatient.Edit")
+	n warning
+	s warning=""
+	i TOPatientID'="",'##Class(websys.Lock).Lock($lb(TOPatientID,"User.PAPerson"),%session.SessionId,%session.Get("LOGON.USERID"),.status) d
+	. s warning=t("Patient1")
+	i FROMPatientID'="",'##Class(websys.Lock).Lock($lb(FROMPatientID,"User.PAPerson"),%session.SessionId,%session.Get("LOGON.USERID"),.status) d
+	. s warning=t("Patient2")
+	i warning'="" w "<DIV><STRONG><FONT COLOR=RED>",warning,"</FONT></STRONG></DIV>",$c(13,10)
+	; End Log 26947
+	
+	if (TOPatientID) {
+		
+		; cjb 28/04/2004 43512 - the GetPatientDetails method now runs the SQL query
+		d ##Class(web.PAMergePatient).GetPatientDetails(TOPatientID) 
+		;k LIST1,LIST2
+		;&SQL(SELECT * INTO :LIST1() FROM SQLUser.PA_PatMas WHERE PAPMI_RowID=:TOPatientID)
+		;&SQL(SELECT PAPMI_MedicareSuffix_DR->MEDSUF_Desc,PAPMI_Sex_DR->CTSEX_Desc,PAPMI_Dentist_DR->REFD_Desc,PAPMI_DentistClinic_DR->CLN_Address1,PAPMI_Dentist_DR->REFD_CITY_DR->CTCIT_Desc,PAPMI_CardType_DR->CARD_Desc,PAPMI_PensionType_DR->PENSTYPE_Desc INTO :LIST1(105),:LIST1(15),LIST1(135),LIST1(136),DentCITY,:LIST1(114),:LIST1(144) FROM PA_PatMas WHERE PAPMI_RowID=:TOPatientID)
+		;&SQL(SELECT * INTO :LIST2() FROM SQLUser.PA_Person WHERE PAPER_RowID=:TOPatientID)
+		;&SQL(SELECT PAPER_CityCode_DR->CTCIT_Desc,PAPER_Religion_DR->CTRLG_Desc,PAPER_Zip_DR->CTZIP_Code,PAPER_NokCity_DR->CTCIT_Desc,PAPER_NokCTRLT_DR->CTRLT_Desc,PAPER_NokZip_DR->CTZIP_Code,PAPER_CT_Province_DR->PROV_Desc,PAPER_FamilyDoctor_DR->REFD_Desc,PAPER_FamilyDoctor_DR->REFD_CITY_DR->CTCIT_Desc,PAPER_FamilyDoctorClinic_DR->CLN_Clinic_DR->CLN_Code,PAPER_Title_DR->TTL_Desc,PAPER_Marital_DR->CTMAR_Desc,PAPER_Country_Birth_DR->CTCOU_Desc,PAPER_Occupation_DR->CTOCC_Desc,PAPER_IndigStat_DR->INDST_Desc,PAPER_AusSouthSeaIslander_DR->ASSIS_Desc,PAPER_LastUpdateHospital_DR->HOSP_Desc,PAPER_UserUpdate->SSUSR_Name,PAPER_PrefLanguage_DR->PREFL_Desc,PAPER_InsType_DR->INST_Desc,PAPER_AuxInsType_DR->AUXIT_Desc,PAPER_FamilyDoctor_DR->REFD_Forename
+		;	INTO :LIST2(33),:LIST2(93),:LIST2(35),:LIST2(135),:LIST2(111),:LIST2(136),:LIST2(113),:LIST2(67),:famdoccity,:LIST2(148),:LIST2(139),:LIST2(20),:LIST2(77),:LIST2(57),:LIST2(141),:LIST2(180),:LIST2(164),:LIST2(123),:LIST2(143),:LIST2(31),:LIST2(142),:famdocforename
+		;	FROM SQLUser.PA_Person WHERE PAPER_RowID=:TOPatientID
+		;)
+		s %request.Data("TOPAPMIName",1)=$g(LIST1(4))
+		s %request.Data("TOPAPMIName2",1)=$g(LIST1(5))
+		s %request.Data("TOPAPMIName3",1)=$g(LIST1(99))
+		s %request.Data("TOPAPMIName4",1)=$g(LIST1(147))
+		s %request.Data("TOPAPMIDOB",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(11)))
+		s %request.Data("TOPAPMIMedicare",1)=$g(LIST1(98))
+		s %request.Data("TOPAPMIMedicareCode",1)=$g(LIST1(106))
+		s %request.Data("TOPAPMIRegNo",1)=$g(LIST1(2))
+		s %request.Data("TOPAPMIMedicareSuffixDR",1)=$g(LIST1(105))
+		s %request.Data("TOCTSEXDesc",1)=$g(LIST1(15))
+		s %request.Data("TOMRNNo",1)=##Class(web.RTMaster).GetMRNNumber(TOPatientID)
+		s %request.Data("TOPAPERID",1)=$g(LIST2(3))
+		s %request.Data("TOPAPERMobPhone",1)=$g(LIST2(140))
+		s %request.Data("TOPAPERSecondPhone",1)=$g(LIST2(133))
+		s %request.Data("TOPAPERTelH",1)=$g(LIST2(38))
+		s %request.Data("TOPAPERTelO",1)=$g(LIST2(36))
+		s %request.Data("TOPAPERNokAddress1",1)=$g(LIST2(134))
+		s %request.Data("TOPAPERNokAddress2",1)=$g(LIST2(137))
+		s %request.Data("TOPAPERForeignAddress",1)=$g(LIST2(26))
+		s %request.Data("TOPAPERNokName",1)=$g(LIST(108))
+		s %request.Data("TOPAPERNokPhone",1)=$g(LIST2(109))
+		s %request.Data("TOPAPERStNameLine1",1)=$g(LIST2(88))
+		s %request.Data("TOCTCITDesc",1)=$g(LIST2(33))
+		s %request.Data("TOCTRLGDesc",1)=$g(LIST2(93))
+		s %request.Data("TOCTZIPCode",1)=$g(LIST2(35))
+		s %request.Data("TOPAPERNokCityDR",1)=$g(LIST2(135))
+		s %request.Data("TOPAPERNokCTRLTDR",1)=$g(LIST2(111))
+		s %request.Data("TOPAPERNokZipDR",1)=$g(LIST2(136))
+		s %request.Data("TOPROVDesc",1)=$g(LIST2(113))
+		s %request.Data("TOREFDDesc",1)=$g(LIST2(67))
+		s %request.Data("TOREFDCITYDR",1)=famdoccity
+		; cjb 27/02/2004 42549
+		;s %request.Data("TOCLNAddress1",1)=$g(LIST2(148))
+		i $g(LIST2(148))'="" s %request.Data("TOCLNAddress1",1)=##class(web.PACClinic).GetFullClinicAddress($g(LIST2(148)))
+		s %request.Data("TOTTLDesc",1)=$g(LIST2(139))
+		; LOG 25133 Dentist
+		s %request.Data("TODentREFDDesc",1)=$g(LIST1(135))
+		s %request.Data("TODentREFDCITYDR",1)=$g(DentCITY)
+		s %request.Data("TODentCLNAddress1",1)=$g(LIST1(136))
+		
+		; CJB 06/06/2003 - 32273: Record Merging - changes required by QH
+		s %request.Data("TOPAPEREmail",1)=$g(LIST2(138))
+		s %request.Data("TODVANum",1)=$g(LIST1(113))
+		s %request.Data("TODVACard",1)=$g(LIST1(114))
+		s %request.Data("TOCTMARDesc",1)=$g(LIST2(20))
+		s %request.Data("TOBirth",1)=$g(LIST2(77))
+		s %request.Data("TOCTOCCDesc",1)=$g(LIST2(57))
+		s %request.Data("TOMEDSUFDesc",1)=$g(LIST1(105))
+		s %request.Data("TOINDSTDesc",1)=$g(LIST2(141))
+		s %request.Data("TOMedicareCode",1)=$g(LIST1(106))
+		s %request.Data("TOASSISDesc",1)=$g(LIST2(180))
+		s %request.Data("TOEstDOB",1)=##Class(websys.StandardTypeItem).GetDescription("YESNO",$g(LIST2(152)))
+		s %request.Data("TODOD",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(74)))
+		s %request.Data("TOTOD",1)=##Class(websys.Conversions).TimeLogicalToHtml($g(LIST2(82)))
+		s %request.Data("TOEstDOD",1)=##Class(websys.StandardTypeItem).GetDescription("YESNO",$g(LIST1(117)))
+		s %request.Data("TOLocationOfDeath",1)=$g(LIST2(151))
+		s %request.Data("TOWhoNotified",1)=$g(LIST2(150))
+		s %request.Data("TOUpdateDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(145)))
+		s %request.Data("TOUpdateTime",1)=##Class(websys.Conversions).TimeLogicalToHtml($g(LIST2(146)))
+		s %request.Data("TOUserUpdate",1)=$g(LIST2(123))
+		s %request.Data("TOUpdateHosp",1)=$g(LIST2(164))
+		s %request.Data("TOPrefLang",1)=$g(LIST2(143))
+		s %request.Data("TOVIP",1)=##Class(websys.StandardTypeItem).GetDescription("YesNoAnonymous",$g(LIST1(138)))
+		s %request.Data("TOPensionNumber",1)=$g(LIST2(119))
+		s %request.Data("TOPensionType",1)=$g(LIST1(144))
+		s %request.Data("TOPayor",1)=$g(LIST2(31))
+		s %request.Data("TOPlan",1)=$g(LIST2(142))
+		s %request.Data("TOHealthCardNo",1)=$g(LIST1(119))
+		; CJB 06/06/2003 - end 32273
+		
+		s %request.Data("TOMRN",1)=$g(TOMRN)
+		
+		; cjb 24/02/2004 42381
+		s %request.Data("TOMedicareExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(115)))
+		s %request.Data("TOPensionCardExpiryDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(185)))
+		s %request.Data("TOHealthCardExpiryDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(146)))
+		s %request.Data("TOSafetyCardNo",1)=$g(LIST1(111))
+		s %request.Data("TOSafetyCardExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(112)))
+		s %request.Data("TOREFDForename",1)=$g(famdocforename)
+		s %request.Data("TOInterpreterRequired",1)=##Class(websys.StandardTypeItem).GetDescription("YesNoNotStated",$g(LIST2(168)))
+		s %request.Data("TODVAExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(184)))
+		s %request.Data("TOConcessionCardNo",1)=$g(LIST1(109))
+		s %request.Data("TOConcessionExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(110)))
+		; cjb end 42381
+		
+		s %request.Data("TOFeedBackConsent",1)=##Class(websys.StandardTypeItem).GetDescription("Consent",$g(LIST2(179)))
+		s %request.Data("TORemark",1)=$g(LIST2(73))
+		
+		; cjb 27/01/2005 49285
+		s %request.Data("TOPAPEROccupation",1)=$g(LIST2(181))
+		
+		; cjb 30/03/2006 58189
+		s Odontogram=$s(##Class(web.PAPersonTooth).ActiveTeethExist(TOPatientID):"Y",1:"N")
+		s %request.Data("TOOdontogram",1)=##Class(websys.StandardTypeItem).GetDescription("YESNO",Odontogram)
+		
+		
+	}
+	if (FROMPatientID) {
+		
+		; cjb 28/04/2004 43512 - the GetPatientDetails method now runs the SQL query
+		d ##Class(web.PAMergePatient).GetPatientDetails(FROMPatientID) 
+		;k LIST1,LIST2
+		;&SQL(SELECT * INTO :LIST1() FROM SQLUser.PA_PatMas WHERE PAPMI_RowID=:FROMPatientID)
+		;&SQL(SELECT PAPMI_MedicareSuffix_DR->MEDSUF_Desc,PAPMI_Sex_DR->CTSEX_Desc,PAPMI_Dentist_DR->REFD_Desc,PAPMI_DentistClinic_DR->CLN_Address1,PAPMI_Dentist_DR->REFD_CITY_DR->CTCIT_Desc,PAPMI_CardType_DR->CARD_Desc,PAPMI_PensionType_DR->PENSTYPE_Desc INTO :LIST1(105),:LIST1(15),LIST1(135),LIST1(136),DentCITY,:LIST1(114),:LIST1(144) FROM PA_PatMas WHERE PAPMI_RowID=:FROMPatientID)
+		;&SQL(SELECT * INTO :LIST2() FROM SQLUser.PA_Person WHERE PAPER_RowID=:FROMPatientID)
+		;&SQL(SELECT PAPER_CityCode_DR->CTCIT_Desc,PAPER_Religion_DR->CTRLG_Desc,PAPER_Zip_DR->CTZIP_Code,PAPER_NokCity_DR->CTCIT_Desc,PAPER_NokCTRLT_DR->CTRLT_Desc,PAPER_NokZip_DR->CTZIP_Code,PAPER_CT_Province_DR->PROV_Desc,PAPER_FamilyDoctor_DR->REFD_Desc,PAPER_FamilyDoctor_DR->REFD_CITY_DR->CTCIT_Desc,PAPER_FamilyDoctorClinic_DR->CLN_Clinic_DR->CLN_Code,PAPER_Title_DR->TTL_Desc,PAPER_Marital_DR->CTMAR_Desc,PAPER_Country_Birth_DR->CTCOU_Desc,PAPER_Occupation_DR->CTOCC_Desc,PAPER_IndigStat_DR->INDST_Desc,PAPER_AusSouthSeaIslander_DR->ASSIS_Desc,PAPER_LastUpdateHospital_DR->HOSP_Desc,PAPER_UserUpdate->SSUSR_Name,PAPER_PrefLanguage_DR->PREFL_Desc,PAPER_InsType_DR->INST_Desc,PAPER_AuxInsType_DR->AUXIT_Desc,PAPER_FamilyDoctor_DR->REFD_Forename
+		;	INTO :LIST2(33),:LIST2(93),:LIST2(35),:LIST2(135),:LIST2(111),:LIST2(136),:LIST2(113),:LIST2(67),:famdoccity,:LIST2(148),:LIST2(139),:LIST2(20),:LIST2(77),:LIST2(57),:LIST2(141),:LIST2(180),:LIST2(164),:LIST2(123),:LIST2(143),:LIST2(31),:LIST2(142),:famdocforename
+		;	FROM SQLUser.PA_Person WHERE PAPER_RowID=:FROMPatientID
+		;)
+		s %request.Data("FROMPAPMIName",1)=$g(LIST1(4))
+		s %request.Data("FROMPAPMIName2",1)=$g(LIST1(5))
+		s %request.Data("FROMPAPMIName3",1)=$g(LIST1(99))
+		s %request.Data("FROMPAPMIName4",1)=$g(LIST1(147))
+		s %request.Data("FROMPAPMIDOB",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(11)))
+		s %request.Data("FROMPAPMIMedicare",1)=$g(LIST1(98))
+		s %request.Data("FROMPAPMIMedicareCode",1)=$g(LIST1(106))
+		s %request.Data("FROMPAPMIRegNo",1)=$g(LIST1(2))
+		s %request.Data("FROMPAPMIMedicareSuffixDR",1)=$g(LIST1(105))
+		s %request.Data("FROMCTSEXDesc",1)=$g(LIST1(15))
+		s %request.Data("FROMMRNNo",1)=##Class(web.RTMaster).GetMRNNumber(FROMPatientID)
+		s %request.Data("FROMPAPERID",1)=$g(LIST2(3))
+		s %request.Data("FROMPAPERMobPhone",1)=$g(LIST2(140))
+		s %request.Data("FROMPAPERSecondPhone",1)=$g(LIST2(133))
+		s %request.Data("FROMPAPERTelH",1)=$g(LIST2(38))
+		s %request.Data("FROMPAPERTelO",1)=$g(LIST2(36))
+		s %request.Data("FROMPAPERNokAddress1",1)=$g(LIST2(134))
+		s %request.Data("FROMPAPERNokAddress2",1)=$g(LIST2(137))
+		s %request.Data("FROMPAPERForeignAddress",1)=$g(LIST2(26))
+		s %request.Data("FROMPAPERNokName",1)=$g(LIST2(108))
+		s %request.Data("FROMPAPERNokPhone",1)=$g(LIST2(109))
+		s %request.Data("FROMPAPERStNameLine1",1)=$g(LIST2(88))
+		s %request.Data("FROMCTCITDesc",1)=$g(LIST2(33))
+		s %request.Data("FROMCTRLGDesc",1)=$g(LIST2(93))
+		s %request.Data("FROMCTZIPCode",1)=$g(LIST2(35))
+		s %request.Data("FROMPAPERNokCityDR",1)=$g(LIST2(135))
+		s %request.Data("FROMPAPERNokCTRLTDR",1)=$g(LIST2(111))
+		s %request.Data("FROMPAPERNokZipDR",1)=$g(LIST2(136))
+		s %request.Data("FROMPROVDesc",1)=$g(LIST2(113))
+		s %request.Data("FROMREFDDesc",1)=$g(LIST2(67))
+		s %request.Data("FROMREFDCITYDR",1)=famdoccity
+		; cjb 27/02/2004 42549
+		;s %request.Data("FROMCLNAddress1",1)=$g(LIST2(148))
+		i $g(LIST2(148))'="" s %request.Data("FROMCLNAddress1",1)=##class(web.PACClinic).GetFullClinicAddress($g(LIST2(148)))
+		s %request.Data("FROMTTLDesc",1)=$g(LIST2(139))
+		; LOG 25133 Dentist
+		s %request.Data("FROMDentREFDDesc",1)=$g(LIST1(135))
+		s %request.Data("FROMDentREFDCITYDR",1)=$g(DentCITY)
+		s %request.Data("FROMDentCLNAddress1",1)=$g(LIST1(136))
+		
+		; CJB 06/06/2003 - 32273: Record Merging - changes required by QH
+		s %request.Data("FROMPAPEREmail",1)=$g(LIST2(138))
+		s %request.Data("FROMDVANum",1)=$g(LIST1(113))
+		s %request.Data("FROMDVACard",1)=$g(LIST1(114))
+		s %request.Data("FROMCTMARDesc",1)=$g(LIST2(20))
+		s %request.Data("FROMBirth",1)=$g(LIST2(77))
+		s %request.Data("FROMCTOCCDesc",1)=$g(LIST2(57))
+		s %request.Data("FROMMEDSUFDesc",1)=$g(LIST1(105))
+		s %request.Data("FROMINDSTDesc",1)=$g(LIST2(141))
+		s %request.Data("FROMMedicareCode",1)=$g(LIST1(106))
+		s %request.Data("FROMASSISDesc",1)=$g(LIST2(180))
+		s %request.Data("FROMEstDOB",1)=##Class(websys.StandardTypeItem).GetDescription("YESNO",$g(LIST2(152)))
+		s %request.Data("FROMDOD",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(74)))
+		s %request.Data("FROMTOD",1)=##Class(websys.Conversions).TimeLogicalToHtml($g(LIST2(82)))
+		s %request.Data("FROMEstDOD",1)=##Class(websys.StandardTypeItem).GetDescription("YESNO",$g(LIST1(117)))
+		s %request.Data("FROMLocationOfDeath",1)=$g(LIST2(151))
+		s %request.Data("FROMWhoNotified",1)=$g(LIST2(150))
+		s %request.Data("FROMUpdateDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(145)))
+		s %request.Data("FROMUpdateTime",1)=##Class(websys.Conversions).TimeLogicalToHtml($g(LIST2(146)))
+		s %request.Data("FROMUserUpdate",1)=$g(LIST2(123))
+		s %request.Data("FROMUpdateHosp",1)=$g(LIST2(164))
+		s %request.Data("FROMPrefLang",1)=$g(LIST2(143))
+		s %request.Data("FROMVIP",1)=##Class(websys.StandardTypeItem).GetDescription("YesNoAnonymous",$g(LIST1(138)))
+		s %request.Data("FROMPensionNumber",1)=$g(LIST2(119))
+		s %request.Data("FROMPensionType",1)=$g(LIST1(144))
+		s %request.Data("FROMPayor",1)=$g(LIST2(31))
+		s %request.Data("FROMPlan",1)=$g(LIST2(142))
+		s %request.Data("FROMHealthCardNo",1)=$g(LIST1(119))
+		; CJB 06/06/2003 - end 32273
+		
+		s %request.Data("FROMMRN",1)=$g(FROMMRN)
+		
+		; cjb 24/02/2004 42381
+		s %request.Data("FROMMedicareExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(115)))
+		s %request.Data("FROMPensionCardExpiryDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(185)))
+		s %request.Data("FROMHealthCardExpiryDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(146)))
+		s %request.Data("FROMSafetyCardNo",1)=$g(LIST1(111))
+		s %request.Data("FROMSafetyCardExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(112)))
+		s %request.Data("FROMREFDForename",1)=$g(famdocforename)
+		s %request.Data("FROMInterpreterRequired",1)=##Class(websys.StandardTypeItem).GetDescription("YesNoNotStated",$g(LIST2(168)))
+		s %request.Data("FROMDVAExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST2(184)))
+		s %request.Data("FROMConcessionCardNo",1)=$g(LIST1(109))
+		s %request.Data("FROMConcessionExpDate",1)=##Class(websys.Conversions).DateLogicalToHtml($g(LIST1(110)))
+		; cjb end 42381
+		
+		s %request.Data("FROMFeedBackConsent",1)=##Class(websys.StandardTypeItem).GetDescription("Consent",$g(LIST2(179)))
+		s %request.Data("FROMRemark",1)=$g(LIST2(73))
+		
+		; cjb 27/01/2005 49285
+		s %request.Data("FROMPAPEROccupation",1)=$g(LIST2(181))
+		
+		
+		; cjb 17/08/2004 44284 - If the from patient has a nok, set up the UpdateMessage hidden field.  This is checked on update (custom script)
+		s nok=0
+		i $o(^PAPER(FROMPatientID,"NOK",nok)) s nok=1
+		
+		; this will be checked in the custom script update.  add other messages if needed
+		s %request.Data("UpdateMessage",1)=nok_"^"
+
+		; cjb 30/03/2006 58189
+		s Odontogram=$s(##Class(web.PAPersonTooth).ActiveTeethExist(FROMPatientID):"Y",1:"N")
+		s %request.Data("FROMOdontogram",1)=##Class(websys.StandardTypeItem).GetDescription("YESNO",Odontogram)
+		
+		
+	}
+	; LOG 23871 BC 13-5-2002 Patient Merging alerts for overlapping address or GPs (and later Dentists)
+	i (TOPatientID),(FROMPatientID) {
+	 	s %request.Data("AddrOverlap",1)= ##Class(web.PATempAddress).CheckAddrOverlap(%request.Get("TEVENT"),TOPatientID,FROMPatientID)
+		s %request.Data("GPOverlap",1)= ##Class(web.PAFamilyDoctor).CheckGPOverlap(%request.Get("TEVENT"),TOPatientID,FROMPatientID)
+		s %request.Data("DentOverlap",1)= ##Class(web.PADentist).CheckDentOverlap(%request.Get("TEVENT"),TOPatientID,FROMPatientID)
+		s %request.Data("IPAdmOverlap",1)= ##Class(web.PAMergePatient).CheckIPADMOverLap(%request.Get("TEVENT"),TOPatientID,FROMPatientID)
+		s %request.Data("NOKOverlap",1)= ##Class(web.PANok).CheckNokOverlap(TOPatientID,FROMPatientID)
+	}
+	; LOG 26038 BC 1-7-2002 Give the option to cancel the merge and hence clear the form
+	if '(TOPatientID),'(FROMPatientID) {
+		k %request.Data
+	}
+	
+	; CJB 19/09/2002 - 28654: In W642 & W642R Help is not being displayed on Merge scrn
+	; the context of the page was lost.
+	s %request.Data("TFORM",1)=TFORM
+	s %request.Data("TPAGID",1)=TPAGID
+	s %request.Data("TEVENTL",1)=TEVENT
+	s %request.Data("TOVERRIDE",1)=TOVERRIDE
+	s %request.Data("TDIRTY",1)=TDIRTY
+	s %request.Data("TWKFL",1)=TWKFL
+	s %request.Data("TWKFLI",1)=TWKFLI
+	s %request.Data("TWKFLL",1)=TWKFLL
+	s %request.Data("TWKFLJ",1)=TWKFLJ
+	s %request.Data("TREPORT",1)=TREPORT
+	s %request.Data("TRELOADID",1)=TRELOADID
+	s %request.Data("CONTEXT",1)=CONTEXT
+	s %request.Data("CSPNSID",1)=CSPNSID
+	s %request.Data("ServerSideRedirect",1)=ServerSideRedirect
+	s %request.Data("TMENU",1)=TMENU
+	s %request.Data("a",1)=zchrisa
+	
+	s cmp=##Class(websys.Component).OpenName("PAMergePatient.Edit")
+	i cmp d cmp.Show(),cmp.%Close()
+	;
+	; for defaulting the checkboxes to ticked, or what they original chose when an invalid pin is entered
+	w !,"<SCRIPT language='Javascript'>",$c(13,10)
+	w !,"function DefaultingCheckboxes() {"
+	;w "alert("""_$g(msg.Count)_""");"
+	i $g(msg.Count) d
+	. w "var obj=document.getElementById(""updated"");",$c(13,10)
+	. w "if (obj) obj.value=1;",$c(13,10)
+	f a="XPOSTCODE","XRELIGION","XSECONDPHONE","XSEX","XTITLE","XWORKPHONE","XADDRESS","XDENTIST","XDOBIRTH","XGPCITY","XGPNAME","XHOMEPHONE","XMEDICALRECORD","XMEDICARE","XMOBILEPHONE","XNAME","XNAME2","XNAME3","XPAPERNokAddress1","XPAPERNokAddress2","XPAPERNokCityDR","XPAPERNokCTRLTDR","XPAPERNokName","XPAPERNokPhone","XPAPERNokZipDR","XEMAIL","XDVANUM","XDVACARD","XMARITAL","XBIRTH","XOCC","XMEDSUF","XINDIGE","XMEDCODE","XISLAND","XESTDOB","XDOD","XLANG","XVIP","XPENNUM","XPENTYPE","XPAYOR","XPLAN","XFUND","XMRN","XSAFETY","XINTERPRETER","XCONCESSION","XFEEDBACK","XREMARK","XFTOCC","XPAPERID","XODONTOGRAM","XNAME4" d
+	. s checked=1
+	. if $g(msg.Count) d
+	. . i '$d(msg.Data(a)) s checked=0
+	. i checked d
+	. . w "var obj=document.getElementById('"_a_"');",$c(13,10)
+	. . w "if (obj) obj.checked=true;",$c(13,10)
+	w !,"}"
+	w "</SCRIPT>",$c(13,10)
+</server>
+</body>
+</html>

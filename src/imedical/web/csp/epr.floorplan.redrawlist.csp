@@ -1,0 +1,157 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.floorplan.css"></LINK>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</head>
+
+<body>
+<SERVER>
+  /*	Should only get called in hidden frame.
+ 	Redraws the waiting or booked room list with the next or previous set of episodes. */
+ n (msg,%request,%session,%response)
+ ;
+ s (WardID,LocID,PACRoomID,lastind,ind)=""
+ s WardID=%request.Get("WardID")
+ s LocID=%request.Get("LocID")
+ s rmQueryType=%request.Get("QueryType")
+ s WardRoomID=%request.Get("WardRoomID")
+ i WardRoomID s PACRoomID=$p($g(^PAWARD(WardID,"ROOM",$p(WardRoomID,"||",2))),"^",1)
+ s MaxRec=%request.Get("MaxRec")
+ s RowCnt=%request.Get("RowCnt")
+ s FPLayout=%request.Get("FPLayout")
+ s DeptType=%request.Get("DeptType")
+ s ProfileID=%request.Get("ProfileID")
+ s ViewID=%request.Get("ViewID")
+ s MostUrgent=%request.Get("MostUrgent")
+ s ind=%request.Get("ind")
+ s SessionID=%session.%Id()
+ ;s isEMLoc=%request.Get("isEMLoc")
+ ;
+ ;lg 29326
+ s standalone=$p($g(^CF("PATCF",1,10)),"^",15)
+ ;
+ d ##Class(web.CTAcuity).GetEmergencyColours(.pColorArray)
+ s isEMLoc=##Class(web.PACWard).GetPropertyValue(WardID,"WARDLocationDR","CTLOCType")="EM"
+ // Details of departments allocated to ward are required for checking if patient is a boarder or not.
+ s depsAllcToWard=##Class(web.PACWard).GetBedDepartmentRevised(WardID)
+ s ShowUrgent=##class(epr.FPView).ShowNextMostUrgent(WardID,ViewID)
+ 
+ // ab 3.11.05 - moved to stylesheets
+ //Hard code colors as taken from websys.css; classes with the same name (as used by components also)
+ //s COL("clsRowDisabled")="LightGrey"
+ //s COL("clsRowTempLoc")="LightSeaGreen"
+ //s COL("clsRowAlert")="fuchsia"
+
+s newlist="",pagemore=0
+// ab 31390 - display booking area in sorted order, waiting area will still be displayed in 'k' order from above (faster)
+i ((rmQueryType="BA")||(('isEMLoc)&&(rmQueryType="MPR"))) {
+	// get the index to start with when paging backwards
+	s lastind=ind f k=1:1:MaxRec s lastind=$o(^TMP("FP",SessionID,WardRoomID,lastind),-1)
+	s k=0 f  {
+		i $o(^TMP("FP",SessionID,WardRoomID,ind))'="",(k+1)>MaxRec s pagemore=1 q
+		s ind=$o(^TMP("FP",SessionID,WardRoomID,ind))
+		q:ind=""
+		k ARY,EpisodeID,PARAMS
+		s k=k+1
+		s EpisodeID=$p($g(^TMP("FP",SessionID,WardRoomID,ind)),"$$",1),PARAMS=$p($g(^TMP("FP",SessionID,WardRoomID,ind)),"$$",2,999)
+		s $p(PARAMS,"$",1)=k
+		i $p(PARAMS,"$",3)'="" s PATIENTS($p(PARAMS,"$",3))=""
+		m ARY=^TMP("FP",SessionID,WardRoomID,ind,"ARY")
+		i '(($g(ARY("PAADMType"))="E")&(($g(ARY("BookedStatusCode"))="A")||(standalone="Y"))) s newlist(k)=##Class(epr.CTIconAssociation).FPBookingRoomShow(EpisodeID,PARAMS,.ARY,.COL)				
+	}
+} else {
+	 //For waiting rooms and booking areas:  Must use the same query as the wardroom list (PACWardRoom.FindPatientsInRoom
+	i " WA WE "[(" "_rmQueryType_" ") {
+		s rsPat=##Class(%Library.ResultSet).%New("web.PAAdmTransaction:FindEpisodesInRoom")
+	} elseif rmQueryType="BA" {
+		s rsPat=##Class(%Library.ResultSet).%New("web.PAAdmTransaction:FindEpisodesInBA")
+	} elseif rmQueryType="MPR" {
+		s rsPat=##Class(%Library.ResultSet).%New("web.PAAdmTransaction:FindEpisodesInMPR")
+	}
+	
+	i rsPat {
+		i rmQueryType="BA" {
+			d rsPat.Execute(WardID)
+		} elseif rmQueryType="MPR" {
+			d rsPat.Execute(WardID,PACRoomID)
+		} else {
+			d rsPat.Execute(LocID,rmQueryType)
+		}
+		f k=1:1:RowCnt q:'rsPat.Next()		 ;paging
+		
+		// SB 12/11/02 (30217): Only increment k if newlist(k) is not empty, so that we don't get blank rows in waitroom.
+		// (original code) f k=1:1 {
+		s k=1 f cnt=1:1 {
+			q:'rsPat.Next()
+			k ARY
+			s (EpisodeID,PatientID,mradm,imgDONE,imgLIST,OutlierFlag)=""
+			s newlist(k)=""
+			s EpisodeID=rsPat.GetDataByName("ID")
+			s BedBookStatus=rsPat.GetDataByName("Status")
+			s OutlierFlag=rsPat.GetDataByName("outlier")
+			s FromTempLoc=rsPat.GetDataByName("TempLoc")
+			q:'EpisodeID
+			i '$d(EpArray(EpisodeID)) {
+				s EpArray(EpisodeID)=""
+				i k>MaxRec s pagemore=1 q
+				s PARAMS1=$g(isEMLoc)_"^"_$g(WardID)_"^"_$g(depsAllcToWard)_"^^^"_$g(BedBookStatus)
+				s PARAMS2=$g(FPLayout)_"^"_$g(rmQueryType)
+				d ##Class(epr.CTIconAssociation).FPGatheringData(EpisodeID,PARAMS1,.ARY,.pColorArray)
+				d ##Class(epr.CTIconAssociation).FPData(EpisodeID,PARAMS2,.ARY,.imgLIST,.imgDONE)
+				
+				s ParamQueryType=$g(rmQueryType)
+				i isEMLoc,rmQueryType="MPR" s ParamQueryType=$s(FPLayout="R":"WE",1:"WA")
+				s PARAMS=k_"$"_$g(ParamQueryType)_"$"_$g(TableID)_"$"_$g(ProfileID)_"$"_$g(PatientID)_"$"_$g(FPLayout)_"$"_$g(TableTitle)_"$"_$g(OutlierFlag)_"$"_$g(BedBookStatus)_"$"_$g(FromTempLoc)
+				i $p(PARAMS,"$",3)'="" s PATIENTS($p(PARAMS,"$",3))=""
+				s newlist(k)=##Class(epr.CTIconAssociation).FPWaitingRoomShow(EpisodeID,PARAMS,.ARY,.COL)
+				// SB 12/11/02 (30217): Only increment k if newlist(k) is not empty, so that we don't get blank rows in waitroom. 
+				// To reverse, remove following line and restore original code above.
+				i newlist(k)'="" s k=k+1
+			}
+		}
+		d rsPat.Close()
+	}
+}
+ 
+ s thislistcnt=MaxRec+1
+ w "<SCRIPT>"_$c(13,10)
+ w "var mainfloorplan=parent.frames['TRAK_main'].document;"_$c(13,10)
+ w "var found=0;"_$c(13,10)
+ ; ab 28.03.03 - because it is possible to have a linked location to itself with a link to the waiting room, need to find the correct waiting room DIV
+ w "var objDIVs=mainfloorplan.getElementsByName('"_$s(rmQueryType="MPR":"mr",1:"rm")_WardRoomID_"');"_$c(13,10)
+ w "if (objDIVs) {"_$c(13,10)
+ w "for(var i=0;((i<objDIVs.length)&&(!found));i++) if ((objDIVs[i])&&(objDIVs[i].className==""room"")) found=1,obj=objDIVs[i];"_$c(13,10)
+ w "}"
+ w "//var obj=mainfloorplan.getElementById('"_$s(rmQueryType="MPR":"mr",1:"rm")_WardRoomID_"');"_$c(13,10) 
+ w "if (obj) {"_$c(13,10)
+ w " var arrDIVs=obj.getElementsByTagName('DIV');"_$c(13,10)
+ w " var newlist=arrDIVs[0].outerHTML;"_$c(13,10)
+ s k="" f  s k=$o(newlist(k))  q:k=""  d
+ . w " newlist+="_##Class(%CSP.Page).QuoteJS(newlist(k))_";"_$c(13,10)
+ i RowCnt w " newlist+='<DIV style=""position:absolute;PADDING-LEFT:10px; top:"_(thislistcnt*1.5)_"em;""><a href=""#"" onclick=""javascript:websys_createWindow(\'epr.floorplan.redrawlist.csp?LocID="_LocID_"&WardID="_WardID_"&WardRoomID="_WardRoomID_"&QueryType="_rmQueryType_"&MaxRec="_MaxRec_"&RowCnt="_(RowCnt-MaxRec)_"&FPLayout="_FPLayout_"&DeptType="_DeptType_"&ProfileID="_ProfileID_"&ind="_lastind_"&ViewID="_ViewID_"&MostUrgent="_MostUrgent_"\',\'TRAK_hidden\');return false;""><img src=""../images/websys/pageprev.gif"" border=0></a></div>';"_$c(13,10)
+ i pagemore w " newlist+='<DIV style=""position:absolute;PADDING-LEFT:40px; top:"_(thislistcnt*1.5)_"em;""><a href=""#"" onclick=""javascript:websys_createWindow(\'epr.floorplan.redrawlist.csp?LocID="_LocID_"&WardID="_WardID_"&WardRoomID="_WardRoomID_"&QueryType="_rmQueryType_"&MaxRec="_MaxRec_"&RowCnt="_(RowCnt+MaxRec)_"&FPLayout="_FPLayout_"&DeptType="_DeptType_"&ProfileID="_ProfileID_"&ind="_ind_"&ViewID="_ViewID_"&MostUrgent="_MostUrgent_"\',\'TRAK_hidden\');return false;""><img src=""../images/websys/pagenext.gif"" border=0></a></div>';"_$c(13,10)
+ w " obj.innerHTML=newlist;"_$c(13,10)
+ w "}"_$c(13,10)
+ 
+  // ab 10.09.03 place the most urgent patient icon
+  i ShowUrgent d
+  . s IconTitle=$o(^epr.CTIconAssociationI("UniqueCodeIndex","NEXTMOSTURGENT",""))
+  . i IconTitle,$ld(^epr.CTIconAssociationD(IconTitle)) s IconTitle=$li(^epr.CTIconAssociationD(IconTitle),4)
+  . s j="" f  s j=$o(PATIENTS(j)) q:j=""  d
+  . . i $p(j,"^",1)=MostUrgent d
+  . . . w "var objBody=mainfloorplan.getElementById(""",$p(j,"^",1),"""); ",$c(13,10)	; cjb 25/08/2005 54527 - convert " to \"
+  . . . ; inserts the icon into the TD of the patients TABLE
+  . . . w "if (objBody) objBody.insertAdjacentHTML(""afterBegin"",""<img align='top' src='../images/"_##class(epr.CTIconAssociation).GetImageFromCode("NextMostUrgent")_"' title='"_IconTitle_"'>"");",$c(13,10)
+ 
+ w "</SCRIPT>"_$c(13,10)
+</SERVER>
+</body>
+</html>

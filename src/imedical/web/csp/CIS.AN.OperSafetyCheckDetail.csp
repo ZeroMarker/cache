@@ -1,0 +1,423 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术安全核查</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<style>
+	/*.hisui-linkbutton {box-shadow:1px 1px 1px 1px rgba(0,0,0,0.1)}*/
+	label.checkbox {margin-bottom:3px;}
+</style>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/opersafetycheck.css" />
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/opersafetycheckprint.css" />
+</head>
+<body class="hisui-layout">
+    <!--<div data-options="region:'north',border:false" style="padding:10px 10px 5px 10px;height:120px;">
+	<div class="hisui-panel" data-options="fit:true,title:'手术患者信息',headerCls:'panel-header-gray'">
+		<div class="form-row">
+			<span class="form-title">姓名</span>
+			<span class="form-item" id="PatName"></span>
+			<span class="form-title">性别</span>
+			<span class="form-item" id="PatGender"></span>
+			<span class="form-title">年龄</span>
+			<span class="form-item" id="PatAge"></span>
+			<span class="form-title">科别</span>
+			<span class="form-item" id="PatDept"></span>
+			<span class="form-title">住院号</span>
+			<span class="form-item" id="PatMedCareNo"></span>
+		</div>
+		<div class="form-row">
+			<span class="form-title">手术名称</span>
+			<span class="form-item" id="OperationDesc"></span>
+			<span class="form-title">手术医师</span>
+			<span class="form-item" id="SurgeonDesc"></span>
+			<span class="form-title">手术日期</span>
+			<span class="form-item" id="OperDate"></span>
+			<span class="form-title">麻醉方法</span>
+			<span class="form-item" id="AnaMethodDesc"></span>
+		</div>
+	</div>
+	</div>-->
+	<div data-options="region:'center',border:false" style="padding:10px 10px 5px 10px;">
+    	<form id="dataForm" method="post">
+				<table class="condition-table" style="width:100%;">
+					<thead>
+						<tr>
+							<th style="background-color:#f5f6f5">麻醉实施前</th>
+							<th style="background-color:#f5f6f5">手术开始前</th>
+							<th style="background-color:#f5f6f5">患者离室前</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td id="PreANSafetyCheck">
+								<p style="line-height:22px">
+									患者姓名、性别、年龄正确：
+									<span class="checkbox-list" >
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreanPatInfoChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreanPatInfoCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreanPatInfoChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreanPatInfoCheckingCHK2"></span>
+										<input type="hidden" id="PreanPatInfoChecking" data-title="麻醉前患者姓名、性别、年龄正确" name="PreanPatInfoChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术方式确认：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreanOperChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreanOperCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreanOperChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreanOperCheckingCHK2"></span>
+										<input type="hidden" id="PreanOperChecking" data-title="手术方式确认" name="PreanOperChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术部位与标识正确：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreanBodySiteAndMarkChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreanBodySiteAndMarkCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreanBodySiteAndMarkChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreanBodySiteAndMarkCheckingCHK2"></span>
+										<input type="hidden" id="PreanBodySiteAndMarkChecking" data-title="手术部位与标识正确" name="PreanBodySiteAndMarkChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术知情同意：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="SurgicalConsentChecking" data-permission="ANDoc" type="checkbox" value="是" id="SurgicalConsentCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="SurgicalConsentChecking" data-permission="ANDoc" type="checkbox" value="否" id="SurgicalConsentCheckingCHK2"></span>
+										<input type="hidden" id="SurgicalConsentChecking" data-title="手术知情同意" name="SurgicalConsentChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									麻醉知情同意：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="AnaestConsentChecking" data-permission="ANDoc" type="checkbox" value="是" id="AnaestConsentCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="AnaestConsentChecking" data-permission="ANDoc" type="checkbox" value="否" id="AnaestConsentCheckingCHK2"></span>
+										<input type="hidden" id="AnaestConsentChecking" data-title="麻醉知情同意" name="AnaestConsentChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									麻醉设备安全检查完成：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="AnaDeviceSafetyChecking" data-permission="ANDoc" type="checkbox" value="是" id="AnaDeviceSafetyCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="AnaDeviceSafetyChecking" data-permission="ANDoc" type="checkbox" value="否" id="AnaDeviceSafetyCheckingCHK2"></span>
+										<input type="hidden" id="AnaDeviceSafetyChecking" data-title="麻醉设备安全检查完成" name="AnaDeviceSafetyChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									皮肤是否完整：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreanIntackSkinChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreanIntackSkinCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreanIntackSkinChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreanIntackSkinCheckingCHK2"></span>
+										<input type="hidden" id="PreanIntackSkinChecking" data-title="皮肤是否完整" name="PreanIntackSkinChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									术前皮肤准备确认：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PrepareSkinChecking" data-permission="ANDoc" type="checkbox" value="是" id="PrepareSkinCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PrepareSkinChecking" data-permission="ANDoc" type="checkbox" value="否" id="PrepareSkinCheckingCHK2"></span>
+										<input type="hidden" id="PrepareSkinChecking" data-title="术前皮肤准备确认" name="PrepareSkinChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									静脉通道建立完成：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="IntravenousAccessChecking" data-permission="ANDoc" type="checkbox" value="是" id="IntravenousAccessCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="IntravenousAccessChecking" data-permission="ANDoc" type="checkbox" value="否" id="IntravenousAccessCheckingCHK2"></span>
+										<input type="hidden" id="IntravenousAccessChecking" data-title="静脉通道建立完成" name="IntravenousAccessChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									患者是否有过敏史：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="AllergicHistoryChecking" data-permission="ANDoc" type="checkbox" value="是" id="AllergicHistoryCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="AllergicHistoryChecking" data-permission="ANDoc" type="checkbox" value="否" id="AllergicHistoryCheckingCHK2"></span>
+										<input type="hidden" id="AllergicHistoryChecking" data-title="患者是否有过敏史" name="AllergicHistoryChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									抗菌药物皮试结果：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="AntibioticsSkinTestResult" data-permission="ANDoc" type="checkbox" value="是" id="AntibioticsSkinTestResultCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="AntibioticsSkinTestResult" data-permission="ANDoc" type="checkbox" value="否" id="AntibioticsSkinTestResultCHK2"></span>
+										<input type="hidden" id="AntibioticsSkinTestResult" data-title="抗菌药物皮试结果" name="AntibioticsSkinTestResult" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									术前备血：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PrepareBloodChecking" data-permission="ANDoc" type="checkbox" value="是" id="PrepareBloodCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PrepareBloodChecking" data-permission="ANDoc" type="checkbox" value="否" id="PrepareBloodCheckingCHK2"></span>
+										<input type="hidden" id="PrepareBloodChecking" data-title="术前备血" name="PrepareBloodChecking" class="operdata" data-multiple="N" data-required="Y">
+									 </span>
+								</p>
+								<p>
+								    假体<input class='hisui-checkbox operdata' data-title="假体" type="checkbox" value="假体" id="Prosthesis" data-permission="ANDoc">
+								    体内植入物<input class='hisui-checkbox operdata' data-title="体内植入物" type="checkbox" value="体内植入物" id="ImplantationMaterials" data-permission="ANDoc">
+								    影像学资料<input class='hisui-checkbox operdata' data-title="影像学资料" type="checkbox" value="影像学资料" id="ImagingData" data-permission="ANDoc">
+								</p>
+								
+							</td>
+							<td id="PreOPSafetyCheck">
+								<p>
+									患者姓名、性别、年龄正确：
+									<span class="checkbox-list">
+									    <span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreopPatInfoChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreopPatInfoCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreopPatInfoChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreopPatInfoCheckingCHK2"></span>
+										<input type="hidden" id="PreopPatInfoChecking" data-title="手术开始前患者姓名、性别、年龄正确" name="PreopPatInfoChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术方式确认：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreopOperChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreopOperCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreopOperChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreopOperCheckingCHK2"></span>
+										<input type="hidden" id="PreopOperChecking" data-title="手术方式确认" name="PreopOperChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术部位与标识正确：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreopBodySiteAndMarkChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreopBodySiteAndMarkCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreopBodySiteAndMarkChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreopBodySiteAndMarkCheckingCHK2"></span>
+										<input type="hidden" id="PreopBodySiteAndMarkChecking" data-title="手术部位与标识正确" name="PreopBodySiteAndMarkChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<h4>
+									手术、麻醉风险预警：
+								</h4>
+								
+								<p>
+									<div>手术医师陈述：</div>
+									<div class="checkbox-list">
+										<div class="checkbox-item">预计手术时间<input class='hisui-checkbox' data-title="预计手术时间" data-formitem="SurgeonPresentation" data-permission="ANDoc" type="checkbox" value="预计手术时间" id="EstimateOperationTime"></div>
+										<div class="checkbox-item">预计失血量<input class='hisui-checkbox' data-title="预计失血量" data-formitem="SurgeonPresentation" data-permission="ANDoc" type="checkbox" value="预计失血量" id="EstimateBloodLoss"></div>
+										<div class="checkbox-item">手术关注点<input class='hisui-checkbox' data-title="手术关注点" data-formitem="SurgeonPresentation" data-permission="ANDoc" type="checkbox" value="手术关注点" id="SurgicalAttention"></div>
+										<div class="checkbox-item">其他<input class='hisui-checkbox' data-title="其他" data-formitem="SurgeonPresentation" data-permission="ANDoc" type="checkbox" value="其他" id="SurgeonPresentationCHK4"></div>
+										<input type="hidden" id="SurgeonPresentation" data-title="手术医师陈述" name="SurgeonPresentation" class="operdata" data-multiple="Y" data-required="Y">
+									</div>
+								</p>
+								<p class="presentation">
+									<div>麻醉医师陈述：</div>
+									<div>
+									<div class="checkbox-list">
+										<div class="checkbox-item">麻醉关注点<input class='hisui-checkbox' data-title="麻醉关注点" data-formitem="AnaestPresentation" data-permission="ANDoc" type="checkbox" value="麻醉关注点" id="AnestheticAttention"></div>
+										<div class="checkbox-item">其他<input class='hisui-checkbox' data-title="其他" data-formitem="AnaestPresentation" data-permission="ANDoc" type="checkbox" value="其他" id="AnesthetistPresentation"></div>
+										<input type="hidden" id="AnaestPresentation" data-title="麻醉医师陈述" name="AnaestPresentation" class="operdata" data-multiple="Y" data-required="Y">
+									</div>
+									</div>
+								</p>
+								<p class="presentation">
+									<div>手术护士陈述：</div>
+									<div>
+									<div class="checkbox-list">
+										<div class="checkbox-item">物品灭菌合格<input class='hisui-checkbox' data-title="物品灭菌合格" data-formitem="OperNursePresentation" data-permission="ANDoc" type="checkbox" value="物品灭菌合格" id="SterilizationGoods"></div>
+										<div class="checkbox-item">仪器设备<input class='hisui-checkbox' data-title="仪器设备" data-formitem="OperNursePresentation" data-permission="ANDoc" type="checkbox" value="仪器设备" id="Instrumenttation"></div>
+										<div class="checkbox-item">术前术中特殊用药情况<input class='hisui-checkbox' data-title="术前术中特殊用药情况" data-formitem="OperNursePresentation" data-permission="ANDoc" type="checkbox" value="术前术中特殊用药情况" id="SpecialDrugUse"></div>
+										<div class="checkbox-item">其它<input class='hisui-checkbox' data-title="其他" data-formitem="OperNursePresentation" data-permission="ANDoc" type="checkbox" value="其它" id="OperNursePresentationCHK4"></div>
+										<input type="hidden" id="OperNursePresentation" data-title="手术护士陈述" name="OperNursePresentation" class="operdata" data-multiple="Y" data-required="Y">
+									</div>
+									</div>
+								</p>
+								<p class="presentation"></p>
+								<p>
+									是否需要相关的影像资料：
+									<span class="checkbox-list">
+									    <span>是<input class='hisui-checkbox' data-title="是" data-formitem="NeedImagingData" data-permission="ANDoc" type="checkbox" value="是" id="NeedImagingDataCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="NeedImagingData" data-permission="ANDoc" type="checkbox" value="否" id="NeedImagingDataCHK2"></span>
+										<input type="hidden" id="NeedImagingData" data-title="是否需要相关的影像资料" name="NeedImagingData" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								
+								
+								
+							</td>
+							<td id="PreOutSafetyCheck">
+								<p>
+									患者姓名、性别、年龄正确：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreoutPatInfoChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreoutPatInfoCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreoutPatInfoChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreoutPatInfoCheckingCHK2"></span>
+										<input type="hidden" id="PreoutPatInfoChecking" data-title="患者离室前患者姓名、性别、年龄正确" name="PreoutPatInfoChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									实际手术方式确认：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreoutOperChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreoutOperCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreoutOperChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreoutOperCheckingCHK2"></span>
+										<input type="hidden" id="PreoutOperChecking" data-title="实际手术方式确认" name="PreoutOperChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术用药、输血的核查：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="OperDrugAndBloodChecking" data-permission="ANDoc" type="checkbox" value="是" id="OperDrugAndBloodCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="OperDrugAndBloodChecking" data-permission="ANDoc" type="checkbox" value="否" id="OperDrugAndBloodCheckingCHK2"></span>
+										<input type="hidden" id="OperDrugAndBloodChecking" data-title="手术用药、输血的核查" name="OperDrugAndBloodChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术用物清点正确：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="SurgicalInstrumentChecking" data-permission="ANDoc" type="checkbox" value="是" id="SurgicalInstrumentCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="SurgicalInstrumentChecking" data-permission="ANDoc" type="checkbox" value="否" id="SurgicalInstrumentCheckingCHK2"></span>
+										<input type="hidden" id="SurgicalInstrumentChecking" data-title="手术用物清点正确" name="SurgicalInstrumentChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									手术标本确认：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="SurgicalSpecimenChecking" data-permission="ANDoc" type="checkbox" value="是" id="SurgicalSpecimenCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="SurgicalSpecimenChecking" data-permission="ANDoc" type="checkbox" value="否" id="SurgicalSpecimenCheckingCHK2"></span>
+										<input type="hidden" id="SurgicalSpecimenChecking" data-title="手术标本确认" name="SurgicalSpecimenChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									皮肤是否完整：
+									<span class="checkbox-list">
+										<span>是<input class='hisui-checkbox' data-title="是" data-formitem="PreoutIntackSkinChecking" data-permission="ANDoc" type="checkbox" value="是" id="PreoutIntackSkinCheckingCHK1"></span>
+										<span>否<input class='hisui-checkbox' data-title="否" data-formitem="PreoutIntackSkinChecking" data-permission="ANDoc" type="checkbox" value="否" id="PreoutIntackSkinCheckingCHK2"></span>
+										<input type="hidden" id="PreoutIntackSkinChecking" data-title="皮肤是否完整" name="PreoutIntackSkinChecking" class="operdata" data-multiple="N" data-required="Y">
+									</span>
+								</p>
+								<p>
+									<h4>各种管路：</h4>
+									<div>
+									<div class="checkbox-list">
+										<div class="checkbox-item">中心静脉通路<input class='hisui-checkbox' data-title="中心静脉通路" data-formitem="Intubation" data-permission="ANDoc" type="checkbox" value="中心静脉通路" id="IntubationCHK1"></div>
+										<div class="checkbox-item">动脉通路<input class='hisui-checkbox' data-title="动脉通路" data-formitem="Intubation" data-permission="ANDoc" type="checkbox" value="动脉通路" id="IntubationCHK2"></div>
+										<div class="checkbox-item">气管插管<input class='hisui-checkbox' data-title="气管插管" data-formitem="Intubation" data-permission="ANDoc" type="checkbox" value="气管插管" id="IntubationCHK3"></div>
+										<div class="checkbox-item">伤口引流<input class='hisui-checkbox' data-title="伤口引流" data-formitem="Intubation" data-permission="ANDoc" type="checkbox" value="伤口引流" id="IntubationCHK4"></div>
+										<div class="checkbox-item">胃管<input class='hisui-checkbox' data-title="胃管" data-formitem="Intubation" data-permission="ANDoc" type="checkbox" value="胃管" id="IntubationCHK5"></div>
+										<div class="checkbox-item">尿管<input class='hisui-checkbox' data-title="尿管" data-formitem="Intubation" data-permission="ANDoc" type="checkbox" value="尿管" id="IntubationCHK6"></div>
+										<div class="checkbox-item">
+											其他
+											<input type="text" class="textbox operdata" id="AddlIntubation" data-title="其他" name="AddlIntubation" style="width:60px" data-permission="ANDoc">
+											<input class='hisui-checkbox' data-title="其他" data-formitem="Intubation" type="checkbox" value="其他" id="IntubationCHK7" data-permission="ANDoc">
+										</div>
+										<input type="hidden" id="Intubation" data-title="各种管路" name="Intubation" class="operdata">
+									</div>
+									</div>
+								</p>
+								<p class="presentation">
+									<h4>患者去向：</h4>
+									<div>
+									<div class="checkbox-list">
+										<div class="checkbox-item">恢复室<input class='hisui-checkbox' data-title="恢复室" data-formitem="PatientWhereabouts" data-permission="ANDoc" type="checkbox" value="恢复室" id="PatientWhereaboutsCHK1"></div>
+										<div class="checkbox-item">病房<input class='hisui-checkbox' data-title="病房" data-formitem="PatientWhereabouts" data-permission="ANDoc" type="checkbox" value="病房" id="PatientWhereaboutsCHK2"></div>
+										<div class="checkbox-item">ICU病房<input class='hisui-checkbox' data-title="ICU病房" data-formitem="PatientWhereabouts" data-permission="ANDoc" type="checkbox" value="ICU病房" id="PatientWhereaboutsCHK3"></div>
+										<div class="checkbox-item">急诊<input class='hisui-checkbox' data-title="急诊" data-formitem="PatientWhereabouts" data-permission="ANDoc" type="checkbox" value="急诊" id="PatientWhereaboutsCHK4"></div>
+										<div class="checkbox-item">离院<input class='hisui-checkbox' data-title="离院" data-formitem="PatientWhereabouts" data-permission="ANDoc" type="checkbox" value="离院" id="PatientWhereaboutsCHK5"></div>
+										<div class="checkbox-item">未离室<input class='hisui-checkbox' data-title="未离室" data-formitem="PatientWhereabouts" data-permission="ANDoc" type="checkbox" value="离院" id="PatientWhereaboutsCHK6"></div>
+										<input type="hidden" id="PatientWhereabouts" data-title="患者去向" name="PatientWhereabouts" class="operdata" data-multiple="N" data-required="Y">
+									</div>
+									</div>
+								</p>
+								<p class="presentation"></p>
+								
+							</td>
+						</tr>
+						<tr>
+							<td id="PreANSafetyCheckOther">
+								<p>
+									<span class="form-title-right4">其他</span>
+									<span class="form-item-normal">
+										<input type="text" data-title="麻醉前其他" class="textbox operdata" id="PreanOtherInfo" name="PreanOtherInfo" data-permission="ANDoc" style="width:173px;">
+									</span>
+									<input type="hidden" id="PreANSurgeonChecked" name="PreANSurgeonChecked" class="operdata" data-control="N">
+									<input type="hidden" id="PreANAnaestChecked" name="PreANAnaestChecked" class="operdata" data-control="N">
+									<input type="hidden" id="PreANNurseChecked" name="PreANNurseChecked" class="operdata" data-control="N">
+								</p>
+								
+							</td>
+							<td id="PreOPSafetyCheckOther">
+								<p>
+									<span class="form-title-right4">其他</span>
+									<span class="form-item-normal">
+										<input type="text" data-title="手术前其他" class="textbox operdata" id="PreopOtherInfo" name="PreopOtherInfo" data-permission="ANDoc">
+									</span>
+									
+									<input type="hidden" id="PreOPSurgeonChecked" name="PreOPSurgeonChecked" class="operdata" data-control="N">
+									<input type="hidden" id="PreOPAnaestChecked" name="PreOPAnaestChecked" class="operdata" data-control="N">
+									<input type="hidden" id="PreOPNurseChecked" name="PreOPNurseChecked" class="operdata" data-control="N">
+								</p>
+								
+							</td>
+							<td id="PreOutSafetyCheckOther">
+								<p>
+									<span class="form-title-right4">其他</span>
+									<span class="form-item-normal">
+										<input type="text" data-title="离室前其他" class="textbox operdata" id="PreoutOtherInfo" name="PreoutOtherInfo" data-permission="ANDoc">
+									</span>
+									<input type="hidden" id="PreOutSurgeonChecked" name="PreOutSurgeonChecked" class="operdata" data-control="N">
+									<input type="hidden" id="PreOutAnaestChecked" name="PreOutAnaestChecked" class="operdata" data-control="N">
+									<input type="hidden" id="PreOutNurseChecked" name="PreOutNurseChecked" class="operdata" data-control="N">
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td id="PreANSafetySign">
+								<p>
+									<span class="form-title-right4">核查时间</span>
+									<input type="text" data-title="麻醉前核查时间" class="hisui-datetimebox operdata" id="PreANCheckDT" data-permission="ANDoc" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">手术医生</span>
+									<input class="hisui-triggerbox operdata" data-title="手术医生" id="PreANSurgeonSign" data-options="icon:'icon-w-edit',prompt:'手术医生签名'" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">麻醉医生</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="麻醉医生" id="PreANAnaestSign" data-options="icon:'icon-w-edit',prompt:'麻醉医生签名'" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">手术护士</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="手术护士" id="PreANOperNurseSign" data-options="icon:'icon-w-edit',prompt:'手术护士签名'" style="width:180px;">
+								</p>
+							</td>
+							<td id="PreOPSafetySign">
+								<p>
+									<span class="form-title-right4">核查时间</span>
+									<input type="text" class="hisui-datetimebox operdata" data-title="手术前核查时间" id="PreOPCheckDT" data-permission="ANDoc" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">手术医生</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="手术医生" id="PreOPSurgeonSign" data-options="icon:'icon-w-edit',prompt:'手术医生签名'" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">麻醉医生</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="麻醉医生" id="PreOPAnaestSign" data-options="icon:'icon-w-edit',prompt:'麻醉医生签名'" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">手术护士</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="手术护士" id="PreOPOperNurseSign" data-options="icon:'icon-w-edit',prompt:'手术护士签名'" style="width:180px;">
+								</p>
+							</td>
+							<td id="PreOutSafetySign">
+								
+								<p>
+									<span class="form-title-right4">核查时间</span>
+									<input type="text" class="hisui-datetimebox operdata" data-title="离室前核查时间" id="PreOutCheckDT" data-permission="ANDoc" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">手术医生</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="手术医生" id="PreOutSurgeonSign" data-options="icon:'icon-w-edit',prompt:'手术医生签名'" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">麻醉医生</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="麻醉医生" id="PreOutAnaestSign" data-options="icon:'icon-w-edit',prompt:'麻醉医生签名'" style="width:180px;">
+								</p>
+								<p>
+									<span class="form-title-right4">手术护士</span>
+									<input type="text" class="hisui-triggerbox operdata" data-title="手术护士" id="PreOutOperNurseSign" data-options="icon:'icon-w-edit',prompt:'手术护士签名'" style="width:180px;">
+								</p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+		</form>
+	</div>
+	<div id="signContainer"></div>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CA.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.Signature.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperSafetyCheckDetail.js"></script>
+</body>
+</html>

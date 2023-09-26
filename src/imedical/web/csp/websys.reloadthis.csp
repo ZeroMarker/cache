@@ -1,0 +1,23 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ ;
+ n XTRELOADID
+ ; We should always be redirected here, never called directly
+ ; either closes window and refreshes parent (websys.reload.csp)
+ ; or if "XTRELOADID" is passed then refresh current window
+ ; or if "refresh" is passed, value is that equivalent to "XTRELOADID" so refresh current window
+ d ##Class(websys.Conversions).LoadRequest()
+ if $g(%request.Data("XTRELOADID",1)) {
+	 s %response.ServerSideRedirect="websys.reloadplus.csp"
+ } elseif (+$g(%request.Data("refresh",1))) {
+	 s %request.Data("XTRELOADID",1)=$g(%request.Data("TRELOADID",1))
+	 s %response.ServerSideRedirect="websys.reloadplus.csp"
+ } else {
+	 s %response.ServerSideRedirect="websys.reload.csp"
+ }
+ ;
+ q 1
+ quit 1
+</csp:method>

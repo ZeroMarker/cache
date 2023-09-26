@@ -1,0 +1,151 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</head>
+
+<body>
+<SERVER>
+ n QuestionnaireID,code,cmp,ansLIST,ctlLIST,ctlname,ctlCTLIST,isgen,t,qdisable,UDWG,OperRoomID,xstr
+ s qdisable=""
+ s mradm=%request.Get("mradm")
+ i mradm="" s (mradm,%request.Data("mradm",1))=##Class(web.PAAdm).GetMRAdm(%request.Get("EpisodeID"))
+
+ s QuestionnaireID=%request.Get("QuestionnaireID")
+ s wingrp=$p(^SSU("WIN",QuestionnaireID),"^",6)
+ s code=##Class(web.SSUserDefWindow).GetClassNameFromId(QuestionnaireID)
+ ;
+ ; ab 27.10.06 59309 - get answer linked to operating room if one exists
+ s OperRoomID=$g(%request.Data("OperRoomID",1))
+ i code'="",$g(%request.Data("ID",1))="",OperRoomID'="" d
+ . s xstr="s ID=$o(^"_code_"I(""IndexOperRoomDR"","_+OperRoomID_",""""))"
+ . x xstr
+ . s %request.Data("ID",1)=ID
+ ;
+ i code'="" d
+ . i %request.Get("PatientID") d
+ . . s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . . i cmp d cmp.Show(),cmp.%Close()
+ . s isgen=##Class(web.SSUserDefWindow).IsGeneratedQuestionnaire(code,QuestionnaireID)
+ . i isgen d
+ . . s cmp=##Class(websys.Component).OpenName(code_".Edit")
+ . . i cmp d
+ . . . i %request.Get("ID")'="" d
+ . . . . ; 51184 - should this ALWAYS be read-only for this user group?
+ . . . . s GroupID=$g(%session.Data("LOGON.GROUPID"))
+ . . . . n READONLY s READONLY=0
+ . . . . s UDWG=0 f  s UDWG=$o(^SSU("SSGRP",+GroupID,"UDWG",UDWG)) q:UDWG=""  d
+ . . . . . s strUDWG=$g(^SSU("SSGRP",+GroupID,"UDWG",UDWG))
+ . . . . . i $p(strUDWG,"^")=wingrp,$p(strUDWG,"^",2)="Y" s READONLY=1
+ . . . . i READONLY s qdisable=1 s cmp.Disabled=1 q
+ . . . . ; NOTE - these lines beneath will ONLY be done if UDWG above has not already disabled the component
+ . . . . ; Log 51367 YC - Disable component if questionnaire status is authorised
+ . . . . s qstr="s qstatus=$lg(^"_code_"D("_%request.Get("ID")_"),13)"
+ . . . . x qstr
+ . . . . s qstatus=$p($g(^MRC("NNS",+qstatus)),"^",1)
+ . . . . i (" A C ")[(" "_qstatus_" ") d
+ . . . . . s qdisable=1 s cmp.Disabled=1
+ . . . . . ; Log 57855 YC - If CanEditClosedAss param in group settings is 1, then user can edit authorised questionnaire
+ . . . . . s groupid=%session.Get("LOGON.GROUPID") q:groupid=""
+ . . . . . s groupsettingsid=$o(^ooGroupSettingsI("GroupDRIndex",groupid,"")) q:groupsettingsid=""
+ . . . . . i $lg(^ooGroupSettingsD(groupsettingsid),92)=1 d
+ . . . . . . s qdisable="" s cmp.Disabled=0
+ . . . d cmp.Show(),cmp.%Close()
+ . . ;log 23617: for new questionnaires default patient's last answers for certain fields
+ . . i %request.Get("ID")="",##Class(websys.Conversions).IsValidMethodName(code,"GetDefaultPatientLastAnswers") d
+ . . . d InvokeMethod^%apiOBJ(code,,"GetDefaultPatientLastAnswers",.ansLIST,%request.Get("PatientID"))
+ . . . w !,"<SCRIPT>",$c(13,10)
+ . . . w "var frm=document.forms['f"_$tr(code,".","_")_"_Edit'];",$c(13,10)
+ . . . s ctlname=""  f  s ctlname=$o(ansLIST(ctlname))  q:ctlname=""  d
+ . . . . w "var obj=frm.elements['"_$p(ctlname,"^",1)_"'];",$c(13,10)
+ . . . . w "if (obj) {",!
+ . . . . i $p(ctlname,"^",2)="CHECKBOX" d
+ . . . . . i $g(ansLIST(ctlname))="1" w " obj.checked=true;"
+ . . . . e  i $p(ctlname,"^",2)="DATE" d
+ . . . . . w " obj.value='",##Class(websys.Conversions).DateLogicalToHtml($g(ansLIST(ctlname))),"';"
+ . . . . e  i $p(ctlname,"^",2)="TIME" d
+ . . . . . w " obj.value='",##Class(websys.Conversions).TimeLogicalToHtml($g(ansLIST(ctlname))),"';"
+ . . . . e  i (",LISTBOX,EXTENDED_LISTBOX,")[(","_$p(ctlname,"^",2)_",") d
+ . . . . . w " var selected='"_","_$zcvt($g(ansLIST(ctlname)),"O","JS")_",","';"
+ . . . . . w " for (var i=0;i<obj.length;i++) {",$c(13,10)
+ . . . . . w " 	if (selected.indexOf(obj.options[i].value) != -1) { ",$c(13,10)
+ . . . . . w " 	  obj.options[i].selected= true;",$c(13,10)
+ . . . . . w " 	}",$c(13,10)
+ . . . . . w " }",$c(13,10)
+ . . . . e  i $p(ctlname,"^",2)="TEXT AREA" d
+ . . . . . n longtext,str
+ . . . . . s longtext=$g(ansLIST(ctlname))
+ . . . . . w " obj.value="""";"
+ . . . . . f j=1:1:longtext.Count() d
+ . . . . . . s str=longtext.GetAt(j)
+ . . . . . . ; Log 62781 - Remove the new line here
+ . . . . . . ;w " obj.value +='",$zcvt(str,"O","JS"),"' + String.fromCharCode(13,10);"
+ . . . . . . w " obj.value +='",$zcvt(str,"O","JS"),"';"
+ . . . . e  d
+ . . . . . w " obj.value='",$zcvt($g(ansLIST(ctlname)),"O","JS"),"';",!
+ . . . . i $p(ctlname,"^",2)="EXTENDED_COMBO" d
+ . . . . . w " try {",!
+ . . . . . ; don't call lookuptoggle - call the change handler - obj.value is now a CODE
+ . . . . . ;w "    "_$p(ctlname,"^")_"_lookuptoggle(obj.value);",!
+ . . . . . w "    obj.onchange();",!
+ . . . . . w " }",!
+ . . . . . w " catch (e) {};"
+ . . . . w "}",$c(13,10)
+ . . . w "</SCRIPT>",$c(13,10)
+ s obj=##Class(websys.Component).OpenName("SSUserDefWindow.Find")
+ i obj d obj.LoadTrans(),obj.%Close()
+ i code'="",'$g(isgen) w $g(t("QUE_Ungenerated"),"Questionnaire selected has not been generated")
+ i code="" w $g(t("QID_INVALID"),"Invalid Questionnaire selected")
+</SERVER>
+<SCRIPT language='javascript'>
+function BodyLoadHandler() {
+	if (self == top) websys_reSizeT();
+}
+
+// Log 51367 YC - Disable update if questionnaire status is authorised
+var qdisable="#(qdisable)#";
+if (qdisable!="") {
+	var obj=document.getElementById("update1");
+	obj.disabled=true;
+	obj.onclick=LinkDisable;
+}
+
+// make Annotation' link bold if it has data
+var arrAREF=document.getElementsByTagName("A");
+for (var curr_fld=0; curr_fld<arrAREF.length; curr_fld++) {
+	var objAREF=arrAREF[curr_fld];
+	if (objAREF) {
+		var arrName = objAREF.id.split("_HREF");
+		if (arrName.length>1) {
+			var objHIDDENIMAGE = document.getElementById(arrName[0]);
+			if (objHIDDENIMAGE) {
+				if (objHIDDENIMAGE.value!="") {
+					objAREF.style.fontWeight="bold";
+				}
+			}
+		}
+	}
+}
+
+
+function LinkDisable(evt) {
+	var el = websys_getSrcElement(evt);
+	if (el.disabled) {
+		return false;
+	}
+	return true;
+}
+
+//document.body.onload=BodyLoadHandler;
+</SCRIPT>
+</body>
+</html>
+
+

@@ -1,0 +1,98 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- meta http-equiv="Content-Type" content="text/html;" /-->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+		<SCRIPT SRC="../scripts/framework/ext.websys.js"></SCRIPT>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/msglist.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/cc.integratedcontrol.css" />
+		
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		<script type="text/javascript" src='../Scripts/dhcmed/DHC.Med.FusionChart.js'></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/common.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/ClinRepView/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/ClinRepView/event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/viewbaseinfo/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/viewbaseinfo/event.js'></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/sendfeedback/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/sendfeedback/event.js'></script>
+		
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/sendmsg/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/sendmsg/event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/sendreceivefeedback/gui.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/sendreceivefeedback/event.js'></script>
+		<script language='javascript' src='../scripts/dhcmed/cc/integratedcontrol/showtest/gui.js'></script>
+		
+		
+		<!--Add By LiYang 2013-05-18 增加医院感染结束日期编辑界面-->
+		<script language='javascript' src='../scripts/dhcmed/ninf/Rep/InfReport/Module_INFPos_EndDate.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))	    //就诊ID
+			//Set LogonLoc=%session.Data("LOGON.CTLOCID")         //登录科室
+			//Set LogonLocType=$p($g(^CTLOC(+LogonLoc)),"^",13)   //科室类型(E/W)
+			Set AdminPower=+$g(%request.Data("AdminPower",1))	//权限
+			Set ExtWinOpen=+$g(%request.Data("ExtWinOpen",1))   //报告页面是否打开Ext Window
+			
+			Set TransLoc=+$p($g(^PAADM(+EpisodeID)),"^",4)
+			Set TransWard=+$p($g(^PAADM(+EpisodeID)),"^",70)
+			Set TransWard=$p($g(^PAWARD(+TransWard)),"^",5)
+			
+			Set EpisodeID=""""_$g(EpisodeID)_""""
+			Set TransLoc=""""_$g(TransLoc)_""""
+			Set TransWard=""""_$g(TransWard)_""""
+			Set AdminPower=""""_$g(AdminPower)_""""
+			
+			Set ConfigCode=$g(%request.Data("ConfigCode",1))
+			Set:ConfigCode="" ConfigCode="INTCCS"
+			Set SubjectID=##class(DHCMed.CCService.Sys.SubjectConfig).GetSubjectIDByConfigCode(ConfigCode)
+			Set ConfigCode=""""_ConfigCode_""""
+			Set SubjectID=""""_SubjectID_""""
+		</SCRIPT>
+		
+        <script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			
+			var EpisodeID=#(EpisodeID)#;
+			var TransLoc=#(TransLoc)#;
+			var TransWard=#(TransWard)#;
+			var AdminPower=#(AdminPower)#;
+			var ExtWinOpen = #(ExtWinOpen)#;
+			
+			var SubjectID      = #(SubjectID)#;
+			var ViewConfigCode = #(ConfigCode)#;
+			
+			var objControlArry = new Array();
+			function window_onload() {
+				objScreen.init();
+			}
+        </script>
+        
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!--APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+	</body>
+</html>

@@ -1,0 +1,186 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<!--move to style sheet - perhaps datetime.js -->
+<STYLE>
+.clsDateSelected { BACKGROUND-COLOR: red }
+</STYLE>
+<SCRIPT language=javascript>
+this.focus();
+var selectedcell='';
+function TD_OnMouseDown(cell) {
+	if (selectedcell!='') {
+		CellUnHighlight(selectedcell);
+	}
+	selectedcell=cell;
+	CellHighlight(cell);
+}
+
+function OnKeyDownHandler(e) {
+	if (maxrows>-1) {
+		var eKey=websys_getKey(e);
+		switch (eKey) {
+		case 9: //Don't allow to tab off lookup table - therefore select
+			CellSelect(selectedcell);
+			break;
+		case 13: //Enter select
+			CellSelect(selectedcell);
+			break;
+		case 33: //Page Up
+			PrevPage();
+			break;
+		case 34: //Page Down
+			NextPage();
+			break;
+		case 35: //End
+			CellUnHighlight(selectedcell);
+			selectedrow=maxrows;
+			CellHighlight(selectedcell);
+			break;
+		case 36: //Home
+			CellUnHighlight(selectedcell);
+			selectedcell=0;
+			CellHighlight(selectedcell);
+			break;
+		case 38: //Cursor up
+			if (selectedcell!=null) {
+				CellUnHighlight(selectedcell);
+				selectedcell-=1;
+				CellHighlight(selectedcell);
+			}
+			break;
+		case 40: //Cursor down
+			if (selectedrow!=null) {
+				CellUnHighlight(selectedcell);
+				selectedcell+=1;
+				CellHighlight(selectedcell);
+			}
+			break;
+		} //switch
+		//event.cancelBubble;
+	} //maxrow>0
+}
+
+function CellHighlight(cell) {
+	cell.className='clsLookUpSelected';
+	selectedcell=cell;
+}
+function CellUnHighlight(cell) {
+	alert(cell.className);
+	cell.className='';
+}
+
+</SCRIPT>
+
+</HEAD>
+<BODY bottomMargin=0 leftMargin=0 rightMargin=0 topMargin=0 CLASS="clsLookUp">
+<csp:method name=FormatDate arguments="h" returntype=%String>
+	// yyyymmdd
+	n m,dt,html,bgcolor
+	s m=$e($zd(h,8),5,6)
+	s dt=##Class(websys.Conversions).DateLogicalToHtml(h)
+	;
+	s html=$e($zd(h,8),7,8)
+	i m=calMonth s html="<b>"_html_"</b>"
+	;
+	; High liight the previosuly selected date
+	s class="" i h=calDateH s class=" CLASS=""clsDateSelected"""
+	s html="<TD"_class_" align=center onclick=""alert('"_dt_"');"" onmousedown=""TD_OnMouseDown(this);"">"_html_"</TD>"
+	q html
+</csp:method>
+<csp:method name=MonthNext arguments="" returntype=%String>
+	n m,y
+	s m=calMonth,y=calYear
+	i +m=12 {
+		s m=1,y=y+1
+	} else {
+		s m=m+1
+	}
+	q "websys.calendar.csp?calDate="_calDate_"&calMonth="_m_"&calYear="_y
+</csp:method>
+<csp:method name=MonthPrev arguments="" returntype=%String>
+	n m,y
+	s m=calMonth,y=calYear
+	i +m=1 {
+		s m=12,y=y-1
+	} else {
+		s m=m-1
+	}
+	q "websys.calendar.csp?calDate="_calDate_"&calMonth="_m_"&calYear="_y
+</csp:method>
+<server>
+	n mths,days,calDate,calMonth,calYear,ymd,hDate
+	s mths="Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
+	s days="M,T,W,T,F,S,S"
+	
+	// Interface
+	s calDate=%request.Get("calDate") ; Start Date in html format
+	s calDateH=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("calDate")) ; Start Date in $H format
+	s calMonth=%request.Get("calMonth") ; Month to display, if not available it is derived from calDate
+	i $l(calMonth)=1 s calMonth="0"_calMonth
+	s calYear=%request.Get("calYear") ; Year to display, if not available it is derived from calDate
+	//s calDate="12/1/2001"
+	
+	// Default to today
+	i calDate'="" {
+		s hDate=##Class(websys.Conversions).DateHtmlToLogical(calDate)
+	} else {
+		s hDate=+$h
+	}
+	
+	// Get the year and month if not specified explicitly
+	i calYear=""!(calMonth="") {
+		// yyyymmdd
+		s ymd=$zd(hDate,8)
+		s calYear=$e(ymd,1,4),calMonth=$e(ymd,5,6),d=$e(ymd,7,8)
+	} else {
+		// yyyymmdd
+		s hDate=$zdateh(calYear_calMonth_"01",8),d="01"
+	}
+	
+	// Get the first day of the month 
+	s first=hDate-d+1
+	// what day of the week is it
+	s dow=$zd(first,10)
+	// First day to start the calendar on
+	s starton=first-dow
+</server>
+
+<TABLE>
+	<TR><CSP:COMMENT>Year and Month</CSP:COMMENT>
+		<TD align=center><A HREF="#(..MonthPrev())#"><img SRC="../images/websys/pageprev.gif" BORDER="0"></A>
+		</TD>
+		<TD colSpan=5 align=center>
+		#($p(mths,",",calMonth))# #(calYear)#
+		</TD>
+		<TD align=center><A HREF="#(..MonthNext())#"><img SRC="../images/websys/pagenext.gif" BORDER="0"></A>
+		</TD>
+	</TR>	
+	<TR><CSP:COMMENT>Days of week</CSP:COMMENT>	
+		<csp:LOOP COUNTER="col" FROM="1" STEP="1" TO="7">
+		<TD align=center>
+		#($p(days,",",col))#
+		</TD>
+		</csp:LOOP>
+	</TR>
+	<CSP:COMMENT>Calendar dates</CSP:COMMENT>	
+	<csp:LOOP COUNTER="row" FROM="0" STEP="1" TO="4">
+		<TR>
+			<csp:LOOP COUNTER="col" FROM="1" STEP="1" TO="7">
+			#(..FormatDate(starton+(row*7)+col))#
+			</csp:LOOP>
+		</TR>
+	</csp:LOOP>
+</TABLE>
+
+</BODY>
+</HTML>

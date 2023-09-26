@@ -1,0 +1,83 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s (ShareItemDR,ShareItemDRDesc)=""
+	s PutOnSetDR=$Get(%request.Data("PutOnSetDR",1))
+	i PutOnSetDR'="" d
+	.s ShareItemDR=$p($g(^DHCEQSPutOnSet(PutOnSetDR)),"^",22)
+	.i ShareItemDR'="" d
+	..s ShareItemDRDesc=$p($g(^DHCEQSCShareItem(ShareItemDR)),"^",3)
+	
+	s ShareItemDR=$Get(%request.Data("ShareItemDR",1))
+	i ShareItemDR'="" d
+	.s ShareItemDRDesc=$p($g(^DHCEQSCShareItem(ShareItemDR)),"^",3)
+
+</Script>
+<Style>
+.eq-table
+{
+	width:100%;
+}
+.eq-table-label
+{
+	width:auto;
+	text-align:right;
+	padding:0 15px;
+}
+</Style>
+<body class="hisui-layout">
+    <div data-options="region:'center',border:false" style="padding:10px;">
+        <div class="hisui-panel" data-options="eqtitle:'defaulttitle',fit:true,title:'资源项目可用附件'">
+        	<div class="hisui-layout" data-options="fit:true,border:false" >
+	            <div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:5px 0 10px 0;"> 
+	                <div class="eq-table">
+	                    <div class="eq-table-tr">
+	                        <div class="eq-table-td eq-table-label"><label id="cIAShareItemDR_Desc" for="IAShareItemDR_Desc">资源项目</label></div>
+	                        <div class="eq-table-td"><input class="hisui-validatebox" id="IAShareItemDR_Desc" data-options="'component':'RM.L.ShareItem',paras:[{name:'Desc',type:1,value:'IAShareItemDR_Desc'}]" value=#(ShareItemDRDesc)#></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cIAAffixDR_Desc" for="IAAffixDR_Desc">附件</label></div>
+	                        <div class="eq-table-td"><input class="hisui-validatebox" id="IAAffixDR_Desc" data-options="'component':'EM.L.Affix',paras:[{name:'ADesc',type:1,value:'IAAffixDR_Desc'}]"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cIAModel" for="IAModel">附件型号</label></div>
+	                        <div class="eq-table-td"><input class="textbox" id="IAModel"></div>
+	                        <div class="eq-table-td"><a id="BAdd" href="#" class="hisui-linkbutton" iconCls="icon-w-add" data-options="stopAllEventOnDisabled:true">新增</a></div>
+	                    	<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                        <div class="eq-table-td eq-table-label"><label id="cIAQuantity" for="IAQuantity">附件数量</label></div>
+	                        <div class="eq-table-td"><input class="hisui-validatebox" id="IAQuantity" style="text-align: right"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cIAPrice" for="IAPrice">附件单价</label></div>
+	                        <div class="eq-table-td"><input class="hisui-validatebox" id="IAPrice" style="text-align: right"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cIARemark" for="IARemark">备注</label></div>
+	                        <div class="eq-table-td"><input class="hisui-validatebox" id="IARemark"></div>
+	                        <div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">修改</a></div>
+	                        <div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+	                    </div>
+	                </div>
+	            </div>
+	            <div data-options="region:'center',border:false">
+	                <table id="itemaffixdatagrid" class="hisui-datagrid"></table>
+				</div>
+            </div>
+        </div>
+    </div>
+    <!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="PutOnSetDR" value=#(PutOnSetDR)#>
+			<INPUT type="hidden" id="IARowID">
+			<INPUT type="hidden" id="IAShareItemDR" value=#(ShareItemDR)#>
+			<INPUT type="hidden" id="IAAffixDR">
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/rm/scitemaffix.js"></script>
+</body>
+</html>

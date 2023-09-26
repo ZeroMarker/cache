@@ -1,0 +1,53 @@
+﻿﻿<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>	
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s episodeLocID = $Get(%request.Data("EpisodeLocID",1),"")
+		s admType = $Get(%request.Data("AdmType",1),"")
+		s action = $Get(%request.Data("Action",1),"")
+		s mradm = $p($g(^PAADM(episodeID)),"^",61) 
+		s regNo = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiNo(patientID)
+		s hospital = ##class(EMRservice.HISInterface.PatientInfoAssist).HospitalName(episodeID)
+		s medicare = ##class(EMRservice.HISInterface.PatientInfoAssist).IPRecordNoInfo(episodeID, hospital)
+		s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+  </script>
+	<script language="javascript">
+	  var episodeLocID = '#(episodeLocID)#';
+	  var patientID = '#(patientID)#';
+	  var episodeID = '#(episodeID)#';
+	  var admType = '#(admType)#';
+	  var action = '#(action)#';
+	  var mradm = '#(mradm)#';
+	  var regNo = '#(regNo)#';
+	  var medicare = '#(medicare)#'; 
+	  var userCode = parent.userCode;
+	  var userID = parent.userID;
+	  var userLocCode = parent.userLocCode;
+	  var ssgroupID =  parent.ssgroupID;
+	  var userLocID =  parent.userLocID;
+	  var HasPatEncryptLevel = '#(HasPatEncryptLevel)#';
+	  var IsSetToLog = '#(IsSetToLog)#';
+   </script>
+</head>
+<body class="easyui-layout">
+	<div id="patientInfo" class="patientInfo" data-options="region:'north'" style="height:25px;"></div>
+	<div data-options="region:'center'">
+		<div id='tabBrowse' class="easyui-tabs" data-options="fit:true,border:false,tools:'#tab-tools'"></div>
+	</div>
+	<div id="tab-tools">
+		<span class="tab_search">
+			<input type="text" class="searchinput" id="searchInput" value="输入病历名称搜索!" onclick="my_click(this,'searchInput');" onBlur="my_blur(this,'searchInput');" onkeydown="my_keyDown()"/>	
+		</span>
+		<input type="image" src="../scripts/emr/image/icon/searchRecord.png" id="searchRecord"/>
+	</div>
+    <script type="text/javascript" src="../scripts/emr/js/record.browse.browseform.js"></script>
+</body> 
+</html>

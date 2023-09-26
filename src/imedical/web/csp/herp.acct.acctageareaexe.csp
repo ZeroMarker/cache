@@ -1,0 +1,49 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+    s userid= $Get(%request.Data("userid",1))
+    s bookID= $Get(%request.Data("bookID",1))
+	s rowid      = $Get(%request.Data("rowid",1))
+	s code      = $Get(%request.Data("code",1))
+	s describe    = $Get(%request.Data("describe",1))	
+	s beginDays = $Get(%request.Data("beginDays",1))
+	s endDays = $Get(%request.Data("endDays",1))
+	;s data = code_"^"_describe_"^"_beginDays_"^"_endDays
+	
+
+	i action="list"  d
+	.w ##class(herp.acct.udata.uAcctAgeArea).List(sortField, sortDir, start, limit,bookID)
+	
+	i action = "add" d
+	.s result =  ##class(herp.acct.udata.uAcctAgeArea).InsertRec(code,describe,beginDays,endDays,bookID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctAgeArea).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctAgeArea).UpdateRec(rowid,code,describe,beginDays,endDays,bookID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+</script>

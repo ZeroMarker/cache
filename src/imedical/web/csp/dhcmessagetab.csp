@@ -1,0 +1,98 @@
+<HTML XMLNS=TRAK>
+<HEAD>
+	<!--SCRIPT type="text/javascript" src="/csp/broker/cspbroker.js"></SCRIPT>
+	<SCRIPT type="text/javascript" src="/csp/broker/cspxmlhttp.js"></SCRIPT>
+    <APPLET NAME='CacheCSPBroker' ARCHIVE='cspbroker.jar' CODEBASE='/csp/broker' CODE='cspbroker.class' WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET-->
+    
+    <link rel="stylesheet" type="text/css" href="../scripts/ext-all.css" />
+    <!-- GC -->
+ 	<!-- LIBS -->
+ 	<script type="text/javascript" src="../scripts/ext-base.js"></script>
+ 	<!-- ENDLIBS -->
+    <script type="text/javascript" src="../scripts/ext-all.js"></script>
+    <script type="text/javascript" src="../scripts/RowExpander.js"></script>
+    <script type="text/javascript" src="../scripts/grid3.js"></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/DHCMessage.css" />
+    <meta http-equiv="refresh" content="10">
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+
+<BODY>
+    <input id="tabId" name="tabId"  type="hidden" value=#(%request.Get("tabId"))#>
+    <input id="userId" name="userId"  type="hidden" value=#(%request.Get("userId"))#>
+    <input id="groupId" name="groupId" type="hidden" value=#(%request.Get("groupId"))#>
+    <input id="ctlocId" name="ctlocId" type="hidden" value=#(%request.Get("ctlocId"))#>
+    <input id="DHCRunClassMethod" name="DHCRunClassMethod" type="hidden" value=#(%request.Get("DHCRunClassMethod"))#>
+	<!--h1>GridView3 Example</h1>
+	<p>Note that the js is not minified so it is readable. See <a href="dhcnuripexec.csp?EpisodeID=375922" target="_blank">grid3.js</a>.</p>
+	<div id="tabItem" style="margin:15px 0;"></div-->
+	
+	<SCRIPT language=cache RUNAT=SERVER>
+		// _parent  _blank _self  _top
+	 	s tabId=$G(%request.Data("tabId",1))
+	 	s userId=$G(%request.Data("userId",1))
+	 	s groupId=$G(%request.Data("groupId",1))
+	 	s ctlocId=$G(%request.Data("ctlocId",1))
+	 	s parma=userId_"^"_groupId_"^"_ctlocId_"^"_tabId
+		s retStr=##Class(web.DHCMessage).GetNewMessByCat(parma)
+		w "<DIV>"
+		s messLen=$L(retStr,$C(2))
+		f i=1:1:messLen d
+		.s messStr=$P(retStr,$C(2),i)
+		.q:messStr=""
+		.s messHead=$P(messStr,$C(1),1)
+		.s messContent=$P(messStr,$C(1),2)
+		.s messContent=$ZCVT(messContent,"I","HTML")
+		.w "<table><tr><td>"_messHead_"</td></tr></table>"
+		.w "<DIV class='content'>"_messContent_"</DIV>"
+
+		i (tabId'="")&&(ctlocId'="") d
+		.s wardId=$O(^PAWARD(0,"WARD_LocationDR",ctlocId,""))
+		.s messCatCode=$P($G(^DHCMESS("MESSCAT",tabId)),"^",1)
+		.i (wardId'="")&&(messCatCode="O") d
+		..s retStr=##Class(web.DHCMessage).GetAllNewOrdPat(wardId)
+		..i retStr'="" w retStr
+		..
+		
+		.i messCatCode="C" d
+		..s retStr=##class(web.DHCMessage).GetCriticalNewMess(ctlocId)
+
+		i retStr="" w "<DIV class='content'>无新消息</DIV>"
+		w "</DIV>"
+		
+		
+	</SCRIPT>
+	
+<style type="text/css">
+.content{
+	width: 100%;
+	margin: 0px auto;
+	font-size:12px;
+	margin-bottom:20px;
+	border:1px solid #96C2F1;
+	background-color: #EFF7FF
+}
+tb{
+	width: 100%;
+	margin: 0px auto;
+	font-size:10px;
+	margin-bottom:20px;
+	border:1px solid #96C2F1;
+	background-color: #EFF7FF
+}
+</style>
+<SCRIPT language=javascript>
+Ext.onReady(function(){
+    var p = new Ext.Panel({
+        title: 'My Panel',
+        collapsible:true,
+        renderTo: 'tabItem',
+        width:400,
+        html: Ext.example.bogusMarkup
+    });
+});
+</script>
+</BODY>
+</HTML>
+

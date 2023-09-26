@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="utf-8">
+
+
+<script language="cache" runat="server">
+	
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+
+    s syear= $Get(%request.Data("byear",1))
+    s orderidx= $Get(%request.Data("orderidx",1))
+    
+	s SchemDR = $Get(%request.Data("SchemDR",1))
+	s UpSchemDR = $Get(%request.Data("UpSchemDR",1))
+	
+    s rowid=$Get(%request.Data("rowid",1))
+ 
+	i action = "budgscheme" d
+	.w ##class(herp.budg.udata.uBudgSchemeMain).GetbScheme( syear,orderidx,start, limit,hospid)
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgSchemeMain).supSchemeList(SchemDR, start, limit,hospid)
+	
+		
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgSchemeMain).InsertSupScheme(SchemDR,UpSchemDR)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgSchemeMain).DeleteSupScheme(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+		
+	</script>

@@ -1,0 +1,68 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ($g(%request.Data("lookupName",1))="DEPARTMENT")&&($g(%request.Data("lookupPage",1))="logon") q 1
+	e  d ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<csp:content charset="utf-8">
+
+<script language="Cache" runat="server">
+	;ext.websys.querydatatrans.csp
+	;s ^TMPP1=##class(web.DHCDocOrderCommon).UnEscape($g(%request.Data("P1",1)))
+	/// trak lookup的特殊约定
+	
+	d ..TestRequest()
+	s myreqstr=""
+	s pClassName="pClassName"
+	s pClassQuery="pClassQuery"
+	s myClassName=$g(%request.Data(pClassName,1))
+	s myClassQuery=$g(%request.Data(pClassQuery,1))
+	s myreqstr=""
+	k myparaArray
+	s myparaArray=""
+	s cnt=0
+	s displayRows=0
+	s rs=##class(%Library.ResultSet).%New(myClassName_":"_myClassQuery)
+	d rs.Execute()
+	w "{record:[",!
+	s columns=rs.GetColumnCount()
+	;xecute objOpen
+	
+	f  q:rs.Next()=0  d
+	.s cnt=cnt+1
+	.;i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt=0)  d
+	.w:displayRows>0 ","
+	.w "{"
+	.s rowData=""
+	.f i=1:1:columns  d
+	..s:i>1 rowData=rowData_","
+	..s myColName=rs.GetColumnName(i)
+	..s:($ZCVT(myColName,"U")="HIDDEN") myColName="HIDDEN"_i
+	..s rowData=rowData_"'"_myColName_"':"		;;rs.GetColumnName(i)
+	..s tmpData=rs.GetData(i)
+	..s tmpData=##class(ext.util.String).EvalJSON(tmpData)
+	..;s tmpData=##class(web.DHCMedBaseCtl).ReplaceString(tmpData,"'","\'")
+	
+	..s rowData=rowData_"'"_tmpData_"'"
+	
+	.w rowData
+	.w "}",!
+	.s displayRows=displayRows+1
+	w "],total : "_cnt_"}"
+	k myparaArray
+	q
+</script>
+
+<script language="Cache" Method="TestRequest" runat="server">
+	s myreqstr=""
+	s mystr=""
+	f {
+		s myreqstr=$o(%request.Data(myreqstr))
+		q:(myreqstr="")
+		s:(mystr'="") mystr=mystr_"&"
+		s mystr=mystr_""_myreqstr_"="_%request.Data(myreqstr,1)
+	}
+	;"ext.websys.querydatatrans.csp?"_
+	s ^TMPExtRequest("querydatatrans")="ext.websys.querydatatrans.csp?"_mystr
+	;s myClassName=$g(%request.Data(pClassName))
+	
+</script>

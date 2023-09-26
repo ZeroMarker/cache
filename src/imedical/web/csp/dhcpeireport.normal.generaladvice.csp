@@ -1,0 +1,78 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.normal.generaladvice.csp
+		;Set UserID=%session.Get("LOGON.USERID")
+		;s:UserID="" UserID=PatientID
+		s GeneralAdviceTitle="在本次体检的项目中，您有以下几方面的情况敬请注意:"
+		s GeneralAdvice=$G(^TMPReport(UserID,"GeneralAdvice", "Advice"))
+		;s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"、[",".[")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice," ","&nbsp;")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,$C(13),$C(13,10))
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,$C(10),$C(13,10))
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,$C(13,10),"<br>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S3","10<sup>3</sup>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S6","10<sup>6</sup>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S9","10<sup>9</sup>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10S12","10<sup>12</sup>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10^9","10<sup>9</sup>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10^12","10<sup>12</sup>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10??9","10<sup>9</sup>")
+		s GeneralAdvice=##class(web.DHCPE.Public.Setting).Replace(GeneralAdvice,"10??12","10<sup>12</sup>")
+		s AduitUser=$G(^TMPReport(UserID,"GeneralAdvice","AduitUser"))
+		s AduitUserDate=$G(^TMPReport(UserID,"GeneralAdvice","AduitUserDate"))
+		s MainDoctor=$G(^TMPReport(UserID,"GeneralAdvice","MainDoctor"))
+		s MainDoctorDate=$G(^TMPReport(UserID,"GeneralAdvice","MainDoctorDate"))
+     
+
+	</Script>
+		
+<DIV class='Page GeneralAdvice'>
+	<TABLE id='GeneralAdviceTable' border="0" class="GeneralAdviceTable" width="655">
+		<THEAD>
+		<tr>
+		   <td colspan="3" height="80" align="center"><B><font face="宋体" size="5">总检结论与建议</font></B></td>
+		</tr>
+			<TR>
+				<TD colspan="3" width="655" class="GeneralAdviceTitle">#(GeneralAdviceTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+		
+		<TR>
+				<TD colspan="3" width="655" class="GeneralAdviceData">
+					#(GeneralAdvice)#<br><br>
+				</TD>
+						
+			</TR>
+			<TR >
+			<TD width="350"></TD>
+			<SCRIPT language="Cache" RUNAT="SERVER">
+			
+			s AuditSignName=##class(web.DHCPE.CA.Main).GetSignName(2,PatientID)
+			i AuditSignName="" d
+			.w "<TD height=5 width='150'><font face='宋体' size='2'>总检医生:"_AduitUser_"</font></TD>"
+			e  d
+			.w "<TD height=5 width='150'><font face='宋体' size='2'>总检医生:</font><img src='data:image/png;base64,"_AuditSignName_"'/></TD>"
+			
+			</SCRIPT>
+			
+			<!--TD height=5 width="150"><font face="宋体" size="2">总检医生:#(AduitUser)#</font></TD-->
+			<TD height=5  width="150"><font face="宋体" size="2">总检日期:#(AduitUserDate)#</font></TD> 
+			</TR>
+			<TR>
+			<TD width="350"></TD>
+			<SCRIPT language="Cache" RUNAT="SERVER">
+			
+			s AuditSignName=##class(web.DHCPE.CA.Main).GetSignName(3,PatientID)
+			i AuditSignName="" d
+			.w "<TD height=5 width='150'><font face='宋体' size='2'>审核医生:"_MainDoctor_"</font></TD>"
+			e  d
+			.w "<TD height=5 width='150'><font face='宋体' size='2'>审核医生:</font><img src='data:image/png;base64,"_AuditSignName_"'/></TD>"
+			
+			</SCRIPT>
+			<!--TD height=5 width="150"><font face="宋体" size="2">审核医生:#(MainDoctor)#</font></TD-->
+			<TD height=5 width="150"><font face="宋体" size="2">审核日期:#(MainDoctorDate)#</font></TD> 
+			</TR>
+
+		</TBODY>
+	</TABLE>
+</DIV>

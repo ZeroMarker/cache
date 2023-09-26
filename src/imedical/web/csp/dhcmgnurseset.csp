@@ -1,0 +1,112 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<OBJECT id="PrintComm" width=0 height=0 classid="http://127.0.0.1/dhcmg/PrintComm.dll#PrintComm.PrintCom" IEWASTEXT>
+</OBJECT> 
+</HEAD>
+<BODY>
+</DIV>
+<SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s ComponentName="DHCMGNurseSet"
+ s EmrCode="DHCMGNurseSet"
+ s SaveCon=##Class(%CSP.Page).Encrypt($lb("User.DHCConsultation.Save"))
+ s GetLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCNurSyComm.getloc"))
+ s pdata1=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.getPagData"))
+ s pdata=##Class(%CSP.Page).Encrypt($lb("web.DHCMGPageData.GetPagData1"))
+ s GetSortDep=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.GetSortDep"))
+ s GetMainPat=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakePernum"))
+ s MakeAdmData=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakeAdmData"))
+ s GetEmrCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.ParseNurEmrCode"))
+ s SavePerson=##Class(%CSP.Page).Encrypt($lb("User.DHCPregPerson.save"))
+ //s PregRowId=##class(web.DHCPregComm).GetPRegId(EpisodeID,%session.Data("LOGON.USERID"))
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ ///s file=##class(web.DHCNUREMR).getcomflag(EmrCode,"","")
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+ s comret=##class(web.DHCNUREMR).getPagData("","DHCMGNurseSet","","")
+ // s a=##class(web.DHCMGPageData).GetPagData()
+ s itm="" f  s itm=$O(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm)) q:itm=""  d
+ .s link=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":"),id=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":",2)
+ .s val=##Class(%CSP.Page).Encrypt($lb(link))
+ . w "<input id="""_id_""" name="""_id_""" type=""hidden"" value="""_val_""">",!
+</SERVER>
+<script Language="Javascript">
+Ext.grid.ColumnModel.override({  
+        getTotalWidth: function(includeHidden) {  
+            var off = 2;  
+
+            if (Ext.isChrome){  
+                off = 2;  
+            };  
+            if (!this.totalWidth) {  
+                this.totalWidth = 0;  
+                for (var i = 0, len = this.config.length; i < len; i++) {  
+                    if (includeHidden || !this.isHidden(i)) {  
+                        this.totalWidth += this.getColumnWidth(i)+off;  
+                    };  
+                };  
+            };  
+            return this.totalWidth;  
+            }  
+        });  
+</script>
+<TRAK:APPLET>
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+</SERVER>
+
+</DIV>
+
+<SCRIPT Language="Javascript">
+var EmrCode="#(EmrCode)#";
+var SaveCon="#(SaveCon)#";
+var getloc="#(GetLoc)#";
+var GetSortDep="#(GetSortDep)#";
+var GetMainPat="#(GetMainPat)#";
+var GetEmrCode="#(GetEmrCode)#";
+var pdata1="#(pdata1)#";
+var pdata="#(pdata)#";
+var SavePerson="#(SavePerson)#";
+var comlayout="#(comret)#"
+var ComponentName="#(ComponentName)#";
+//
+//(PregRowId);
+//alert(comlayout)
+</SCRIPT>
+</div><select name="light" id="light" style="display: none;">
+	<option value="Shade">Shade</option>
+	<option value="Mostly Shady">Mostly Shady</option>
+	<option value="Sun or Shade">Sun or Shade</option>
+	<option value="Mostly Sunny">Mostly Sunny</option>
+	<option value="Sunny">Sunny</option>
+</select>
+<div id='hello'></div>
+<script type="text/javascript" src="../scripts/nurse/comm/DHCNURComm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/dhcmgcomm.js"></script><!-- Put your page Title here -->
+<Server>
+ w "<script type=""text/javascript"" src=""../scripts_gen/dhcmg/"_ComponentName_".js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/"_ComponentName_".js""></script>"
+</Server>
+</BODY>
+</HTML>

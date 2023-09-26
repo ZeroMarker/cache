@@ -1,0 +1,152 @@
+<!--oeorder.labreport.csp-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.easyui.1.3.5.css"></LINK>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.5/locale/easyui-lang-zh_CN.js"></script>
+
+<STYLE type='text/css'>
+input[type="checkbox"]{	 
+    vertical-align:middle;
+}
+.datagrid-header .datagrid-cell span,
+.datagrid-cell, .datagrid-cell-group, .datagrid-header-rownumber, .datagrid-cell-rownumber{
+	font-size: 14px;
+}
+</STYLE>
+
+
+<Server>
+
+s Param=%request.Get("Param")
+
+</Server>
+ </head>
+<body class="easyui-layout" data-options="fit:true,border:false">
+<div id="outer_container" class="easyui-panel" data-options="fit:true">
+	<div id="layout_main" class="easyui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'center',border:false" style="width:1200px;height:100%" >
+				<table id="tabLabReport"></table>
+		</div>
+	</div>
+</div>
+<SCRIPT language = 'javascript' >
+	var Param="#(Param)#";
+	var LabReportDataGrid;
+	$(function(){
+		InitLabReport();
+	});
+	function InitLabReport() {
+		var LabReportColumns=[[
+			{ field: 'TestCodeDR', title: '项目id', width: 150,  hidden:true, align: 'left' },
+			{ field: 'Synonym', title: '缩写', width: 50, sortable: false, align: 'center' },
+			{ field: 'TestCodeName', title: '项目名称', width: 140,  align: 'left' },
+			{ field: 'Result', title: '结果', width: 130, align: 'center'
+				,styler: function (value, rowData, rowIndex) {
+					var colStyle = "color:#000000";
+					if (value != "") {
+						if (!isNaN(value)) {   ///数字类型
+							if (rowData.AbFlag == "L") { colStyle = 'color:blue;' };
+							if (rowData.AbFlag == "H") { colStyle = 'color:red;' };
+							if (rowData.AbFlag == "PL") { colStyle = 'background-color:red;color:blue;' };
+							if (rowData.AbFlag == "PH") { colStyle = 'background-color:red;color:#ffee00;' };
+							if (rowData.AbFlag == "UL") { colStyle = 'background-color:red;color:blue;' };
+							if (rowData.AbFlag == "UH") { colStyle = 'background-color:red;color:#ffee00;' };
+						}
+						return colStyle;
+					}
+				}
+			},
+			{ field: 'ExtraRes', title: '结果提示', width: 60, align:'left' },
+			{ field: 'AbFlag', title: '异常提示', width: 50, sortable: false, align: 'center',
+				styler: function(value, rowData, rowIndex) {
+					var colStyle = "color:#000000";
+					if (value != "") {
+						///数字类型
+						if (value == "L") { colStyle = 'color:blue;' };
+						if (value == "H") { colStyle = 'color:red;' };
+						if (value == "PL") { colStyle = 'background-color:red;color:blue;' };
+						if (value == "PH") { colStyle = 'background-color:red;color:#ffee00;' };
+						if (value == "UL") { colStyle = 'background-color:red;color:blue;' };
+						if (value == "UH") { colStyle = 'background-color:red;color:#ffee00;' };
+						return colStyle;
+					}
+				},
+				formatter: function(value, rowData, rowIndex){
+					if (rowData.MultipleResistant=="1")
+					{
+					return '<span style="font-weight:bold;color:red;font-size:14px;">【多耐】</span>';
+					}  	
+					return value;
+				} 
+			},
+			{ field: 'Units', title: '单位', width: 90, sortable: false, align: 'left' },
+			{ field: 'RefRanges', title: '参考范围', width: 100, sortable: false, align: 'center' },
+			{ field: 'PreResult', title: '前次结果', hidden:true,formatter:HistoryIconPrompt,
+				styler: function (value, rowData, rowIndex) {
+					var colStyle = "color:#000000";
+					if (value != "") {
+						if (!isNaN(value)) {   ///数字类型
+						if (rowData.PreAbFlag == "L") { colStyle = 'color:blue;' };
+						if (rowData.PreAbFlag == "H") { colStyle = 'color:red;' };
+						if (rowData.PreAbFlag == "PL") { colStyle = 'background-color:red;color:blue;' };
+						if (rowData.PreAbFlag == "PH") { colStyle = 'background-color:red;color:#ffee00;' };
+						if (rowData.PreAbFlag == "UL") { colStyle = 'background-color:red;color:blue;' };
+						if (rowData.PreAbFlag == "UH") { colStyle = 'background-color:red;color:#ffee00;' };
+					}
+					return colStyle;
+				}
+			}
+			},
+			{ field: 'PreAbFlag', title: '前次异常提示', width: 90, sortable: false,hidden: true, align: 'center'},
+			{ field: 'ResClass', title: '危急提示', width: 90, hidden:true,sortable: false, align: 'center',},
+			{ field: 'MachineParameterDesc', title: '检验仪器', width: 90, align: 'center' },
+			{ field: 'TestMethodName', title: '检测方法', width: 80, align: 'center' },
+			{ field: 'ClinicalSignifyS', title: '临床意义', width: 150, sortable: false, align: 'center'}
+			]];
+		
+		LabReportDataGrid=$('#tabLabReport').datagrid({
+			fit : true,
+			width : 'auto',
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false, //为true时 不显示横向滚动条
+			autoRowHeight : false,
+			url : PUBLIC_CONSTANT.URL.QUERY_GRID_URL,
+			loadMsg : '加载中..',  
+			pagination : false,  //是否分页
+			rownumbers : true,  //
+			pageList : [15,50,100,200],
+			columns :LabReportColumns,
+			onBeforeLoad:function(param){
+				param.ClassName ='LIS.WS.BLL.DHCRPVisitNumberReportResult';
+				param.QueryName ='QryTSInfo';
+				param.Arg1 =Param;
+				param.ArgCnt =1;
+			}
+		});
+	}
+	///用说明 类：LabService.TSResult 方法：GetResultByOrderId
+	///这个不好用
+	//scripts/dhclab.orderlists.js
+	function HistoryIconPrompt(value, rowData, rowIndex) {
+	    var a = [];
+	    if (value != "" && rowData.TestCodeName != "备注") {
+		    if (rowData["ResultFormat"] == "N")
+	       		a.push(value + "&nbsp;<a style='text-decoration:none;' href=\"javascript:void(ShowHistoryResult('"+rowData.ReportDR +"','"+rowData.TestCodeDR+ "'));\"><span class='icon-chart_curve' title='结果曲线图'>&nbsp;&nbsp;&nbsp;&nbsp;</span></a>&nbsp;");
+	       	else 
+	       		a.push(value);
+	    }
+	    return a.join("");
+	}
+	
+	
+</SCRIPT>
+</body>
+</html>

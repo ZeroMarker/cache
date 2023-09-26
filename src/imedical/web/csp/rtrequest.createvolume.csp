@@ -1,0 +1,41 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<BODY>
+
+<server>
+ if %request.Get("RequestVolIds")'="" {
+	d reqvolnum^CPAAdm1(%request.Get("RequestVolIds"),$p($h,",",1),$p($h,",",2),%session.Get("LOGON.USERID"))
+ 	;d reqvolnum^CPAAdm1(%request.Get("RequestVolIds"))
+ 
+ }
+ ;s ^zanju("create volume before")
+ w "<script>"
+ ;w "var f = top.frames['TRAK_main'];"
+ w "var f = top.frames[1];"
+ w "if (f) f.refreshing(f);"
+ ;w "if (f) f.FindClickHandler(f);"
+ w "</script>"
+ ;s ^zanju("create volume")=""
+ ;s %response.ServerSideRedirect="websys.csp"
+ ;d ##Class(websys.Conversions).SaveRequest()
+ q
+</server>
+<script language="JavaScript">
+</script>
+
+</BODY>
+</HTML>
+
+

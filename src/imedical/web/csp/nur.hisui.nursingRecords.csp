@@ -1,0 +1,184 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+			s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+			s PatientListPage=""
+			s DefaultCode = $G(%request.Data("DefaultCode", 1))
+        </script>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript"
+			src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript"
+			src="../scripts/nurse/hisui/utils.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	<script type="text/javascript"
+			src="../scripts/nurse/hisui-0.1.0/dist/js/nursingRecords.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding: 5px!important;
+        }
+		.west_patients {
+			width: 225px;
+			border: none;
+		}
+		.west_north_search {
+			padding: 5px;
+			height: 95px;
+			border: 1px solid #ccc;
+		}
+		#wardPatientCondition {
+			margin-top: 5px;
+			width: 208px;
+		}
+		.west_center_list {
+			padding: 0 10px;
+		}
+		.center_templates {
+			border: none;
+		}
+		.center_north_patinfo {
+			height:38px;
+			border:none
+		}
+		.center_center_list {
+			border: none;
+			border-radius: 4px;
+		}
+		.center_center_tree {
+			border: none;
+			border-top: 1px solid #509de1;
+			padding: 10px;
+		}
+		.PatInfoItem{
+	        top:0 !important;
+	        left:0 !important;
+	        margin-left:0 !important;
+        }
+		.searchbox .searchbox-prompt {
+			padding-left: 5px !important;
+		}
+	</STYLE>
+	<script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var AuthorityFlag = "#(AuthorityFlag)#";
+        var DefaultCode = "#(DefaultCode)#";
+    </script>
+</head>
+<body>
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true">   
+		<div data-options="region:'west',split:true,headerCls:'panel-header-gray'"
+			 class="west_patients">
+			<div class="hisui-layout"
+				 data-options="fit:true">
+				<div data-options="region:'north',split:true" 
+					 class="west_north_search">
+					<input id="wardPatientSearchBox"
+						   class="hisui-searchbox"
+						   data-options="prompt:'#(..Get("姓名、登记号、床号"))#'"
+						   style="width:208px;"/>
+					<div id="wardPatientCondition" 
+						 class="hisui-switchbox" 
+						 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+					</div>
+					<div style="padding-top:5px;">
+						<input class='hisui-radio' 
+							   id="radioTodayOper"
+							   type="radio" 
+							   label='今日手术' 
+							   name='highestDegree' 
+							   value="bachelor" 
+							   data-options="radioClass:'hischeckbox_square-blue'">
+					</div>
+				</div> 
+				<div data-options="region:'center',title:'患者列表',split:true,iconCls:'icon-patient'"
+					 class="west_center_list">
+					<ul id="patientTree" 
+						data-options="animate:true">
+					</ul>
+				</div> 
+			</div> 
+		</div>  
+		<div class="center_templates"
+			 data-options="region:'center',split:true">
+			<div class="hisui-layout" 
+				 data-options="fit:true,split:true"
+				 style="border:none;">
+				<div class="center_north_patinfo"
+					 data-options="region:'north',split:false">
+					<csp:Include Page="dhcdoc.in.patient.banner.csp">
+				</div>
+				<div class="center_center_list" 
+				     data-options="region:'center',split:true"
+					 style="border:none;">
+					<div class="hisui-layout" 
+						 data-options="fit:true,split:true"
+						 style="border:none;">
+						<div data-options="region:'west',title:'模板列表',headerCls:'panel-header-gray',showCollapsedTitle:false,split:true,iconCls:'icon-apply-check'" 
+							 style="width:232px;">
+							<div class="hisui-layout" 
+							     data-options="fit:true,split:true">
+								<div data-options="region:'north',split:true" 
+									 style="height:45px;border:none;padding:5px;">
+									<input id="savedSearchBox" 
+									       class="hisui-searchbox" 
+									       data-options="prompt:'#(..Get("汉语名称、简拼"))#'"
+										   style="width:150px"/>
+									<a id="btnMore" 
+									   class="hisui-linkbutton" href="#" 
+									   style="width:58px">更多</a>
+								</div> 
+								<div class="center_center_tree"
+									 data-options="region:'center',tools:'#tab-tools',split:true,iconCls:'icon-template'" >
+									<ul id="savedTemplateTree" 
+										data-options="animate:true">
+									</ul>
+								</div> 
+							</div>
+						</div> 
+						<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" style="width:230px;border:none;">
+							<div id="recordTabs" class="hisui-tabs tabs-gray" data-options="fit:true">
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+	</div>
+	<div id="windowMore" class="hisui-window" title="更多模板" 
+		 style="width:300px;height:680px;top:10px;left:400px;padding:5px" 
+		 data-options="iconCls:'icon-w-list',closed:true,collapsible:false,minimizable:false,maximizable:false,resizable:false,modal:false,isTopZindex:true">
+		<div class="hisui-layout" data-options="fit:true,split:true"
+			 style="border:none;">
+			<div data-options="region:'north'" 
+				 style="height:35px;border:none;">
+				<input id="moreSearchBox" 
+					   class="hisui-searchbox" 
+					   data-options="prompt:'#(..Get("汉语名称、简拼"))#'"
+					   style="width:290px"/>
+			</div>
+			<div data-options="region:'center'"
+				 style="border:none;">
+				<div id="templateTabs" 
+					 class="hisui-tabs tabs-gray" 
+					 data-options="region:'center',fit:true">
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

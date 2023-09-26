@@ -1,0 +1,120 @@
+<SERVER>
+	s ClassName=%request.Data("ClassName",1)
+	s QueryName=%request.Data("QueryName",1)
+	s ArgCnt=%request.Data("ArgCnt",1)
+	s rs=##class(%ResultSet).%New(ClassName_":"_QueryName)
+	
+	//服务器端分页参数列表：
+	//名称 类型 描述
+	//draw integerJS 请求次数计数器，每次发送给服务器后又原封返回
+	//start integerJS 第一条数据的起始位置，比如0代表第一条数据
+	//length integerJS 每页显示的条数
+	//search[value] stringJS 全局的搜索条件，针对于每一列（ searchable需要设置为 true ）
+	//search[regex] booleanJS 如果为 true代表全局搜索的值是作为正则表达式处理，为 false则不是
+	//order[i][column] integerJS i是一个数组索引，对应的是 columns，从0开始，次参数表示那一列需要排序
+	//order[i][dir] stringJS 上面确定了是那一列，这个确定对应的列是什么样的排序方式 desc 是降序 asc升序
+	//columns[i][data] stringJS columns 绑定的数据源，由 columns.data 定义
+	//columns[i][name] stringJS columns.name 里定义的名称
+	//columns[i][searchable] booleanJS 标记列是否能被搜索 为 true代表可以，否则不可以，这个是由 columns.searchable 控制
+	//columns[i][orderable] booleanJS 标记列是否能排序 为 true代表可以，否则不可以，这个是由 columns.orderabl 控制
+	//columns[i][search][value] stringJS 特定列的搜索条件
+	//columns[i][search][regex] booleanJS 特定列的搜索条件是否视为正则表达式
+	
+	//名称 类型 描述
+	//draw integerJS 请求次数计数器，每次发送给服务器后又原封返回
+	//recordsTotal integerJS 即没有过滤的记录数（数据库里总共记录数）
+	//recordsFiltered integerJS 过滤后的记录数
+	//data arrayJS 表中中需要显示的数据
+	//error stringJS 可选。你可以定义一个错误来描述服务器出了问题后的友好提示
+	
+	s draw   = $g(%request.Data("draw",1))
+	s start  = $g(%request.Data("start",1))
+	s length = $g(%request.Data("length",1))
+	s search = $g(%request.Data("search[value]",1))
+	s order  = $g(%request.Data("order[0][dir]",1))
+	
+	s ReturnType=..GetReturnType(ClassName,QueryName)
+	n execute,i
+	k PLIST
+	s execute="set %sc=$zobjmethod(rs,""Execute"""
+	if ArgCnt>0 {
+		f i=1:1:ArgCnt  d
+		.s ArgName="Arg"_i
+		.s PLIST(i)=%request.Data(ArgName,1)
+		.s execute=execute_",PLIST("_i_")"
+	}
+	s execute=execute_")"
+	x execute
+	
+	s total=0
+	s displayRows=0
+	s rowData=""
+	w "{""data"":["
+	s columns=rs.GetColumnCount()
+	f  q:rs.Next()=0  d
+	.s rowData="",rowSearch=0
+	.f i=1:1:columns  d
+	..s:i>1 rowData=rowData_","
+	..s fieldInfo=$p(ReturnType,",",i)
+	..s fieldType=$p(fieldInfo,":",2)
+	..s rowData=rowData_""""_rs.GetColumnName(i)_""" : "
+	..s tmpData=rs.GetData(i)
+	..s tmpData=..QuoteJS(tmpData)
+	...s tmpData=..ReplaceString(tmpData,"\x2F","\/")   //解决json中/报错
+	...s tmpData=..ReplaceString(tmpData,"\x00","")     //解决json中不可见空白报错
+	...s tmpData=..ReplaceString(tmpData,"\\","")       //解决json中\报错
+	..s:(search'="")&(tmpData[search) rowSearch=1
+	..i (($e(tmpData,1,1)="'"))  d
+	...s tmpData=..ReplaceString(tmpData,"\'","'")
+	...s rowData=rowData_""""_$e(tmpData,2,$l(tmpData)-1)_""""  //用"替换' s rowData=rowData_tmpData
+	..e  d
+	...s:fieldType="" fieldType="%String"
+	...i fieldType="%String"  d //根据返回数据类别增加引号，方便前台数据排序
+	....s rowData=rowData_""""_tmpData_""""    //
+	...e  d
+	....s:((tmpData="")&&(fieldType="%Integer")) rowData=rowData_"0"
+	....s:((tmpData="")&&(fieldType="%Float")) rowData=rowData_"0"
+	....s:tmpData'="" rowData=rowData_tmpData
+	.q:(search'="")&(rowSearch<1)
+	.s total=total+1
+	.q:(start'="")&(total<=start)
+	.s displayRows=displayRows+1
+	.q:(length'="")&(displayRows>length)
+	.w:displayRows>1 ","
+	.w "{"_rowData_"}"
+	w "],""recordsTotal"":"""_total_""",""recordsFiltered"":"""_total_""",""draw"":"""_draw_"""}"
+	d rs.%Close()
+	q
+</SERVER>
+
+<csp:method name=ReplaceString arguments="Str, OldStr, NewStr" returntype=%String>
+	set intCounter = 1
+	while (1)
+	{
+		set tmp =$e(Str, intCounter, intCounter + $l(OldStr) - 1) 
+		if (tmp = OldStr)
+		{
+			 set $e(Str, intCounter, intCounter + $l(OldStr) - 1) = NewStr
+			 set intCounter = intCounter + $l(NewStr) - $l(OldStr)
+		}
+		quit:intCounter>=$l(Str)
+		set intCounter = intCounter + 1
+	}
+	quit Str
+</csp:method>
+
+<csp:method name=GetReturnType arguments="ClassName, QueryName" returntype=%String>
+	Set ret=""
+	Set cdef = ##class(%Dictionary.CompiledClass).%OpenId(ClassName)
+	set count = cdef.Queries.Count() 
+	For i = 1:1:count {
+		if (cdef.Queries.GetAt(i).Name=QueryName)
+	 	{		 	
+	 		Set ret=cdef.Queries.GetAt(i).Parameters.GetAt("ROWSPEC")
+		}	 
+	}
+	k cdef
+	Quit ret
+</csp:method>
+
+<csp:content charset="utf-8">

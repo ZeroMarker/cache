@@ -1,0 +1,37 @@
+<script language="Cache" runat="server">
+	Set pid = $g(%request.Data("pid",1))
+	Set desc=$g(%request.Data("desc",1))
+	Set action=$g(%request.Data("action",1))
+	Set userid=$g(%request.Data("userid",1))
+	Set groupid=$g(%request.Data("groupid",1))
+	Set docdesc=$g(%request.Data("docdesc",1))
+	Set HospId=$g(%request.Data("HospId",1))
+	if action="appt"{
+		if pid=0{
+		do ##class(web.DHCBatchStopNew).GetLocData(desc,userid,groupid,"",HospId)	
+		}
+		if $p(pid,"^",1)="Loc"{
+			s LocRowid=$p(pid,"^",2)
+			if LocRowid>0{
+				do ##class(web.DHCBatchStopNew).GetDocData(LocRowid,docdesc,userid,HospId)	
+			}
+		}
+		Q 
+	}
+	if pid=0{
+		do ##class(web.DHCBatchStopNew).GetLocData(desc,userid,groupid,docdesc,HospId)
+	}
+	if $p(pid,"^",1)="Loc"{
+		s LocRowid=$p(pid,"^",2)
+		if LocRowid>0{
+			do ##class(web.DHCBatchStopNew).GetDocData(LocRowid,docdesc,userid,HospId)	
+		}
+	}
+	q 
+	
+</script>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+<csp:content charset="utf-8">

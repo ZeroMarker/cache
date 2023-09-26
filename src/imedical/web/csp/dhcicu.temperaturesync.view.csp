@@ -1,0 +1,475 @@
+<html>
+<head>
+
+<title>体温单同步配置</title>
+<HISUI/>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',headerCls:'panel-header-gray'" style="padding:10px;">
+    	<table id="tempersync_datagrid"></table>
+    </div>
+	<div id="tempersync_dialog_tool">
+		<a id="dialog_okay" class="hisui-linkbutton" data-options="iconCls:'icon-add'">新增</a>
+		<a id="dialog_cancel" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a>
+	</div>
+	<div id="tempersync_dialog" class="hisui-dialog" title="新增体温单同步项" data-options="width:600,height:360,modal:true,iconCls:'icon-add',buttons:'#tempersync_dialog_tool',closed:true">
+		<form>
+			<table>
+				<tr>
+					<td style="text-align:right;padding-left:20px;"><label>常用医嘱</label></td>
+					<td><input type="text" name="RecordItemId" data-options="width:184,required:true"></td>
+					<td style="text-align:right;padding-left:20px;"><label>观察项</label></td>
+					<td><input type="text" name="ObserveItemId" data-options="width:184,required:true"></td>
+				</tr>
+				<tr>
+					<td style="text-align:right;padding-left:20px;"><label>时间点个数</label></td>
+					<td><input type="text" class="hisui-numberbox" name="DayFactor" data-options="required:true" style="width:177px;"></td>
+					<td style="text-align:right;padding-left:20px;"><label>开始时间</label></td>
+					<td><input type="text" class="hisui-timespinner" name="StartTime" data-options="required:true" style="width:184px;"></td>
+				</tr>
+				<tr>
+					<td style="text-align:right;padding-left:20px;"><label>时间间隔</label></td>
+					<td><input type="text" class="hisui-timespinner" name="ValidSpan" data-options="" style="width:184px;"></td>
+					<td style="text-align:right;padding-left:20px;"><label>类型</label></td>
+					<td><input type="text" name="Type" data-options="width:184"></td>
+				</tr>
+				<tr>
+					<td style="text-align:right;padding-left:20px;"><label>异常值</label></td>
+					<td><input type="text" class="hisui-validatebox textbox" name="UpperThreshold" data-options="" style="width:177px;"></td>
+					<td style="text-align:right;padding-left:20px;"><label>异常处理时间间隔</label></td>
+					<td><input type="text" class="hisui-validatebox textbox" name="Interval" data-options="" style="width:177px;"></td>
+				</tr>
+				<tr>
+					<td style="text-align:right;padding-left:20px;"><label>汇总值插入时间</label></td>
+					<td><input type="text" class="hisui-timespinner" name="SummaryInsertTime" data-options="" style="width:177px;"></td>
+					<td style="text-align:right;padding-left:20px;"><label>科室ID</label></td>
+					<td><input type="text" class="hisui-validatebox textbox" name="CtlocId" data-options="" style="width:177px;"></td>
+				</tr>
+				<tr>
+					<td style="text-align:right;padding-left:20px;"><label>策略</label></td>
+					<td><input type="text" class="hisui-validatebox textbox" name="Strategy" data-options="" style="width:177px;"></td>
+					<td style="text-align:right;padding-left:20px;"><label>备用常用医嘱</label></td>
+					<td><input type="text" name="SpareIcucriCode" data-options="width:184"></td>
+				</tr>
+			</table>
+			<input type="hidden" name="RowId">
+		</form>
+	</div>
+	<script type="text/javascript">
+	var tempersyncEditing = {}
+	
+	$(document).ready(function(){
+		initDatagrid();
+		initDialog();
+	});
+	
+	function initDatagrid(){
+		tempersyncEditing.datagrid = $("#tempersync_datagrid");
+		tempersyncEditing.datagrid.datagrid({
+			fit: true,
+        	singleSelect: true,
+        	rownumber: true,
+        	pagination: true,
+        	title:"体温单同步项目配置",
+        	headerCls:"panel-header-gray",
+        	pageSize: 100,
+        	pageList: [10, 20, 50, 100, 200, 500],
+        	bodyCls: "panel-body-gray",
+        	toolbar: [{
+            	id: 'tempersync_add',
+            	iconCls: 'icon-add',
+            	text: '添加',
+            	handler: function() {
+                	tempersyncEditing.dialog.dialog({
+                  		title: "添加体温单同步项",
+                   		iconCls: "icon-add"
+                	});
+                	tempersyncEditing.dialog.buttons.ok.linkbutton({
+                    	text: "添加",
+                    	iconCls: "icon-add"
+                	});
+                	tempersyncEditing.dialog.dialog("open");
+            	}
+        	}, {
+            	id: 'tempersync_edit',
+            	iconCls: 'icon-edit',
+            	disabled: true,
+            	text: '编辑',
+            	handler: function() {
+                	tempersyncEditing.dialog.dialog({
+                    	title: "修改体温单同步项",
+                    	iconCls: "icon-edit"
+                	});
+                	tempersyncEditing.dialog.buttons.ok.linkbutton({
+                   		text: "修改",
+                    	iconCls: "icon-edit"
+                	});
+                	tempersyncEditing.dialog.dialog("open");
+                	var selectedRecord = tempersyncEditing.datagrid.datagrid("getSelected");
+                	tempersyncEditing.dialogForm.form("load", selectedRecord);
+            	}
+        	}, {
+            	id: 'tempersync_remove',
+            	iconCls: 'icon-remove',
+            	disabled: true,
+            	text: '删除',
+            	handler: function() {
+                	$.messager.confirm("删除确认", "当前操作为：删除当前选中的ICU速度单位\n风险：删除后应用程序可能报错\n是否继续？", function(confirmed) {
+                    	if(confirmed){
+	                    	var selectedRecord = tempersyncEditing.datagrid.datagrid("getSelected");
+                    		if (Number(selectedRecord.RowId)) {
+                        		$.m({
+                                	ClassName: "web.DHCICUCTemperature",
+                                	MethodName: "RemoveICUCTemper",
+                                	rowId: selectedRecord.RowId
+                            	},
+                            	function(response) {
+                                	if ($.trim(response) === "0") {
+                                 	   $.messager.alert("提示","删除成功！","info");
+                                	    tempersyncEditing.datagrid.datagrid("reload");
+                                	} else {
+                                	    $.messager.alert("提示","删除错误!", response);
+                                	}
+                            	});
+                    		}
+                    	}
+                	});
+                }
+        	}],
+        	url: "dhcclinic.jquery.csp",
+        	idField: "RowId",
+        	queryParams: {
+            	ClassName: "web.DHCICUCTemperature",
+            	QueryName: "FindICUCTemper",
+            	ArgCnt: 0
+        	},
+        	frozenColumns: [
+            	[
+
+            	]
+        	],
+        	columns: [
+            	[
+            	{ field: "RowId", title: "ID", width: 60, sortable: true },
+            	{ field: "RecordItemId", title: "常用医嘱代码", width: 120, sortable: true },
+            	{ field: "ObserveItemId", title: "观察项Id", width: 60, sortable: true },
+            	{ field: "ObserveItem", title: "观察项", width: 100, sortable: true },
+            	{ field: "DayFactor", title: "时间点个数", width: 60, sortable: true},
+            	{ field: "StartTime", title: "开始时间", width: 80, sortable: true },
+            	{ field: "ValidSpan", title: "时间间隔", width: 80, sortable: true },
+            	{ field: "Type", title: "类型", width: 80, sortable: true, formatter:function(value,index,row){
+	            	if (value==='R') return '监护数据';
+	            	if (value==='A') return '重症安排';
+	            	return '';
+	            	}
+	            },
+           		{ field: "UpperThreshold", title: "异常值", width: 60, sortable: true },
+            	{ field: "Interval", title: "异常处理时间间隔", width: 120, sortable: true },
+            	{ field: "SummaryInsertTime", title: "汇总插入时间", width: 100, sortable: true },
+            	{ field: "CtlocId", title: "科室ID", width: 60, sortable: true },
+            	{ field: "Strategy", title: "策略", width: 60, sortable: true },
+            	{ field: "SpareIcucriCode", title: "备用常用医嘱代码", width: 100, sortable: true }
+           		]
+        	],
+        	onSelect: function(record) {
+            	$("#tempersync_edit,#tempersync_remove").linkbutton("enable");
+        	}
+		});
+	}
+	
+	function initDialog(){
+		tempersyncEditing.dialog = $("#tempersync_dialog");
+    	tempersyncEditing.dialog.dialog({
+        	onBeforeOpen: function() {},
+        	onOpen: function() {},
+        	onBeforeClose: function() {},
+        	onClose: function() {
+            	tempersyncEditing.dialogForm.form("clear");
+        	}
+    	});
+    	
+    	initiateDialogForm();
+    	initiateDialogTool();
+	}
+	
+	/**
+ 	* @description 初始化对话框表单
+ 	*/
+	function initiateDialogForm() {
+    	var form = $(tempersyncEditing.dialog).find("form");
+    	tempersyncEditing.dialogForm = form;
+    	tempersyncEditing.dialogForm.form({
+        	onValidate: function() {},
+        	onSubmit: function() {},
+        	onLoadSuccess: function(data) {}
+    	});
+    	
+    	form.items = {};
+    	form.items.RecordItemId = $(form).find('input[name="RecordItemId"]');
+    	form.items.ObserveItemId = $(form).find('input[name="ObserveItemId"]');
+    	form.items.SpareIcucriCode = $(form).find('input[name="SpareIcucriCode"]');
+    	form.items.Type = $(form).find('input[name="Type"]');
+    	
+    	form.items.RecordItemId.combogrid({
+	    	textField: "tICUCRIDesc",
+        	idField: "tICUCRICode",
+        	loadMsg: "正在加载中...",
+        	panelWidth: 360,
+        	pageSize: 2000,
+        	pageList: [50, 100, 200, 500,1000,2000,5000],
+        	required:true,
+            rownumbers: true,
+       		columns: [
+            	[
+              	  	{ field: "tRowId", title: "ID", width: 60 },
+            		{ field: "tICUCRICode", title: "代码", width: 120 },
+            		{ field: "tICUCRIDesc", title: "描述", width: 100 }
+            	]
+        	],
+        	onHidePanel: function () {
+	      //20190110 YuanLin 下拉框只能选择不允许手写
+	      var SelectRow = $(this).combogrid("grid").datagrid('getSelected');
+	      var Val = $(this).combogrid('getValue');
+	      if(SelectRow)
+	      {
+		      if (Val != SelectRow.tICUCRICode)
+		      {
+			      $(this).combogrid("clear");
+			      $.messager.alert("提示","请从下拉框选择","info");
+			      $(this).combogrid('grid').datagrid('load')
+			      return;
+			  }
+		  }
+		  else
+		  {
+			  if(Val!=undefined)
+			  {
+				if(Val!="")
+				{
+				  $(this).combogrid("clear");
+				  $.messager.alert("提示","请从下拉框选择","info");
+				  $(this).combogrid('grid').datagrid('load')
+				  return;
+				}
+			  }
+		  }
+        }
+	    });
+	    
+	    form.items.SpareIcucriCode.combogrid({
+	    	textField: "tICUCRIDesc",
+        	idField: "tICUCRICode",
+        	loadMsg: "正在加载中...",
+        	panelWidth: 360,
+        	pageSize: 2000,
+        	pageList: [50, 100, 200, 500,1000,2000,5000],
+            rownumbers: true,
+       		columns: [
+            	[
+              	  	{ field: "tRowId", title: "ID", width: 60 },
+            		{ field: "tICUCRICode", title: "代码", width: 120 },
+            		{ field: "tICUCRIDesc", title: "描述", width: 100 }
+            	]
+        	],
+        	onHidePanel: function () {
+	      //20190110 YuanLin 下拉框只能选择不允许手写
+	      var SelectRow = $(this).combogrid("grid").datagrid('getSelected');
+	      var Val = $(this).combogrid('getValue');
+	      if(SelectRow)
+	      {
+		      if (Val != SelectRow.tICUCRICode)
+		      {
+			      $(this).combogrid("clear");
+			      $.messager.alert("提示","请从下拉框选择","info");
+			      $(this).combogrid('grid').datagrid('load')
+			      return;
+			  }
+		  }
+		  else
+		  {
+			  if(Val!=undefined)
+			  {
+				if(Val!="")
+				{
+				  $(this).combogrid("clear");
+				  $.messager.alert("提示","请从下拉框选择","info");
+				  $(this).combogrid('grid').datagrid('load')
+				  return;
+				}
+			  }
+		  }
+        }
+	    });
+	    
+	    $.cm({
+		    	ClassName: "web.DHCICUCRecordItem",
+            	QueryName: "FindICUCRecordItem",
+            	ICUCRIDesc:"",
+            	ICUCRIViewCat:"",
+            	ICUCRICat:"",
+            	AnApply:"",
+            	AllApply:"",
+            	page:1,
+            	rows:3000
+		    },function(data){
+				var grid = form.items.RecordItemId.combogrid("grid");
+				grid.datagrid("loadData",data);
+				var grid = form.items.SpareIcucriCode.combogrid("grid");
+				grid.datagrid("loadData",data);
+			});
+	    
+	    form.items.ObserveItemId.combogrid({
+	    	textField: "Desc",
+        	idField: "RowId",
+        	url: "dhcclinic.jquery.csp",
+            panelWidth: 360,
+            required:true,
+            rownumbers: true,
+            loadMsg: "正在加载中...",
+            method:"POST",
+            queryParams: {
+       			ClassName: "web.DHCICUCTemperature",
+            	QueryName: "FindObserveItem",
+            	ArgCnt: 0
+        	},
+        	columns: [[
+            	{ field: "RowId", title: "ID", width: 60 },
+            	{ field: "Desc", title: "描述", width: 220 }
+        	]],
+        	onHidePanel: function () {
+	      //20190110 YuanLin 下拉框只能选择不允许手写
+	      var SelectRow = $(this).combogrid("grid").datagrid('getSelected');
+	      var Val = $(this).combogrid('getValue');
+	      if(SelectRow)
+	      {
+		      if (Val != SelectRow.RowId)
+		      {
+			      $(this).combogrid("clear");
+			      $.messager.alert("提示","请从下拉框选择","info");
+			      $(this).combogrid('grid').datagrid('load')
+			      return;
+			  }
+		  }
+		  else
+		  {
+			  if(Val!=undefined)
+			  {
+			    if(Val!="")
+				{
+				  $(this).combogrid("clear");
+				  $.messager.alert("提示","请从下拉框选择","info");
+				  $(this).combogrid('grid').datagrid('load')
+				  return;
+				}
+			  }
+		  }
+        }
+	    });
+	    
+	    form.items.Type.combobox({
+		    textField: "text",
+        	valueField: "value",
+        	required:true,
+        	data:[{
+	        	text:'监护数据',
+	        	value:'R'
+	       	},{
+	        	text:'重症安排',
+	        	value:'A'
+	       	}]
+	       	,onHidePanel: function () {
+	      //20190110 YuanLin 下拉框只能选择不允许手写
+		  var valueField = $(this).combobox("options").valueField;
+		  var val = $(this).combobox("getValue");
+		  var allData = $(this).combobox("getData");
+		  var result = true;
+		  if (val=="") result=false;
+		  for (var i = 0; i < allData.length; i++) {
+			  if (val == allData[i][valueField]) {
+				  result = false;
+				  break;
+			  }
+		  }
+		  if (result){
+			  $(this).combobox("clear");
+			  $(this).combobox("setValue","");
+			  $.messager.alert("提示","请从下拉框选择","info");
+			  $(this).combobox("reload");
+			  return;
+		  }
+        }
+		});
+	}
+	
+	/**
+ 	* @description 初始化对话框按钮
+ 	*/
+	function initiateDialogTool() {
+    	tempersyncEditing.dialog.buttons = {};
+    	var buttons = tempersyncEditing.dialog.buttons;
+    	buttons.ok = $("#dialog_okay");
+    	buttons.cancel = $("#dialog_cancel");
+    	buttons.ok.linkbutton({
+        	onClick: function() {
+            	var data = tempersyncEditing.dialogForm.serializeJson();
+            	data.ObserveItem = tempersyncEditing.dialogForm.items.ObserveItemId.combogrid("getText");
+            	//ajax post: saving data
+            	$.m({
+                	ClassName: "web.DHCICUCTemperature",
+                	MethodName: "SaveICUCTemper",
+                	rowId: data.RowId || "",
+                	recordItemId: data.RecordItemId,
+                	observeItemId: data.ObserveItemId,
+                	dayFactor: data.DayFactor,
+                	startTime: data.StartTime,
+                	validSpan: data.ValidSpan,
+                	upperThreshold: data.UpperThreshold,
+                	interval:data.Interval,
+					type:data.Type,
+					summaryInsertTime:data.SummaryInsertTime,
+					ctlocId:data.CtlocId,
+					strategy:data.Strategy,
+                    spareIcucriCode:data.SpareIcucriCode
+            	}, function(response) {
+                	response = $.trim(response);
+                	if (Number(response) > 0) {
+                    	if (data.RowId) {
+                        	var rowIndex = tempersyncEditing.datagrid.datagrid("getRowIndex", data.RowId);
+                        	tempersyncEditing.datagrid.datagrid("updateRow", {
+                            	index: rowIndex,
+                            	row: data
+                        	});
+                    	} else {
+                        	data.RowId = Number(response);
+                        	tempersyncEditing.datagrid.datagrid("appendRow", data);
+                    	}
+                    	tempersyncEditing.dialog.dialog("close");
+                	} else {
+                    	//$.messager.show("Error!", response);
+                    	$.messager.alert("提示",response,"info");
+                	}
+            	});
+        	}
+    	});
+
+    	buttons.cancel.linkbutton({
+        	onClick: function() {
+            	tempersyncEditing.dialog.dialog("close");
+        	}
+    	});
+	}
+	
+	/// jQuery扩展函数
+	(function($) {
+    	$.fn.serializeJson = function() {
+        	var serializeObj = {};
+        	$(this.serializeArray()).each(function() {
+            	serializeObj[this.name] = $.trim(this.value);
+        	});
+        	return serializeObj;
+    	};
+	})(jQuery);
+	</script>
+</body>
+</html>

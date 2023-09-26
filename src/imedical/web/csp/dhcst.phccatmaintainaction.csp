@@ -1,0 +1,71 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="server">
+    //执行动作
+   	s action = $Get(%request.Data("action",1))    
+    //显示树型数据
+	i action = "ListTreeData" d
+	.s id= $Get(%request.Data("id",1))
+	.s level= $Get(%request.Data("level",1))
+	.//s waycode= $Get(%request.Data("waycode",1))
+	.w ##class(web.DHCST.DHCSTPHCCATMAINTAIN).GetCatTreeData(id,level)
+	i action = "ListTreeDataById" d
+	.s id= $Get(%request.Data("id",1))
+	.s level= $Get(%request.Data("level",1))
+	.s checkednode=$Get(%request.Data("checkednode",1))
+	.s querydesc=$Get(%request.Data("querydesc",1))
+	.//s waycode= $Get(%request.Data("waycode",1))
+	.i querydesc="" d
+	..w ##class(web.DHCST.DHCSTPHCCATMAINTAIN).GetCatTreeDataById(id,level,checkednode)
+	.e  d
+	..w ##class(web.DHCST.DHCSTPHCCATMAINTAIN).GetTreeDataByDesc(id,querydesc)
+	i action = "Save" d
+	.s ParCat= $Get(%request.Data("ParCat",1))
+	.s CatCode= $Get(%request.Data("CatCode",1))
+	.s CatDesc= $Get(%request.Data("CatDesc",1))
+	.s ret=##class(web.DHCST.DHCSTPHCCATMAINTAIN).SaveCat(ParCat,CatCode,CatDesc)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	i action = "Update" d
+	.s CatId= $Get(%request.Data("CatId",1))
+	.s CatCode= $Get(%request.Data("CatCode",1))
+	.s CatDesc= $Get(%request.Data("CatDesc",1))
+	.s ret=##class(web.DHCST.DHCSTPHCCATMAINTAIN).UpdCat(CatId,CatCode,CatDesc)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	i action = "GetAllCat" d
+	.s CatId= $Get(%request.Data("CatId",1))
+	.w ##class(web.DHCST.DHCSTPHCCATMAINTAIN).GetAllPhcCat(CatId,"")
+	i action = "GetCatCode" d
+	.s CatId= $Get(%request.Data("CatId",1))
+	.w ##class(web.DHCST.DHCSTPHCCATMAINTAIN).GetCatCode(CatId)
+	i action="GetChild" d
+	.s parentId=$Get(%request.Data("parentId",1))
+	.s result=##class(web.DHCST.DHCSTPHCCATMAINTAIN).GetChild(parentId)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	i action = "SaveChildCat" d
+	.s ParCat= $Get(%request.Data("ParCat",1))
+	.s CatId= $Get(%request.Data("CatId",1))
+	.s CatCode= $Get(%request.Data("CatCode",1))
+	.s CatDesc= $Get(%request.Data("CatDesc",1))
+	.s ret=##class(web.DHCST.DHCSTPHCCATMAINTAIN).SaveChildCat(ParCat,CatId,CatCode,CatDesc)	
+	.i ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	i action = "GetCurCode" d
+	.s CatId= $Get(%request.Data("CatId",1))
+	.s hospital= $Get(%request.Data("Hospital",1))
+	.w ##class(web.DHCST.DHCSTPHCCATMAINTAIN).GetCurCode(CatId,hospital)
+
+	
+</script>

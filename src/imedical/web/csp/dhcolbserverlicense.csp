@@ -1,0 +1,197 @@
+<HTML>
+<HEAD>
+
+<!-- Put your page Title here -->
+<TITLE>	License Usage by User </TITLE>
+<!--SCRIPT type="text/javascript" src="../scripts/websys.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/websys.listrows.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/websys.List.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="../scripts/websys.List.Tools.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="/csp/broker/cspbroker.js"></SCRIPT>
+<SCRIPT type="text/javascript" src="/csp/broker/cspxmlhttp.js"></SCRIPT-->
+<STYLE type='text/css'>
+td{
+    font-size: 16px
+}
+.fixedHeaderTr    
+{
+	position:relative;    
+	top:expression(this.offsetParent.scrollTop); 
+	backgroup:blue;
+}
+.mainDiv    
+{    
+	overflow:auto;  
+	height:expression((document.body.clientHeight-this.offsetTop-20>this.children[0].offsetHeight)?(this.children[0].offsetHeight+20)   :   (document.body.clientHeight-this.offsetTop-20));
+}
+.maintitle{
+	font-size:10pt;
+	color:#000000;
+	padding-left: 70px;
+	width: 100%;
+	height:49px;
+	background-image: url(../images/maintitle.gif);
+	background-repeat: no-repeat;
+	font-weight: bold;
+	vertical-align: middle;
+	text-align: middle;
+}
+.clsLookUpDateDayTitle
+{
+	BACKGROUND-COLOR: #54a7ff;
+	TEXT-ALIGN: center;
+	FONT-SIZE: 10pt;
+	color:#ffffff;
+	FONT-WEIGHT: bold;
+	BORDER: 1px solid #317dcd;
+}
+</STYLE>
+
+</HEAD>
+
+<BODY>
+<DIV>
+<SCRIPT language=cache RUNAT=SERVER>
+ 	n (%request)
+ 	s ServerIP=$G(%request.Data("ServerIP",1))
+ 	s ComputerIP=$G(%request.Data("ComputerIP",1))
+ 	s Times=$G(%request.Data("Times",1))
+ 	i +Times=0 s Times=30
+ 	s AutoFlag=$G(%request.Data("AutoRefresh",1))
+ 	i AutoFlag="" s AutoFlag="on"
+ 	s CurrConsumed=$system.License.LUConsumed()
+ 	s CurrAvailable=$system.License.LUAvailable()
+ 	//w !," <APPLET NAME='CacheCSPBroker' ARCHIVE='cspbroker.jar' CODEBASE='/csp/broker' CODE='cspbroker.class' WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>"
+ 	w !,"<table cellspacing=0 border=0 valign=top style='margin-left:0px; margin-top:0px;top:0;left:0;width:100%;height:100%'>"
+ 	w !," <tr>"
+ 	w !," <table border=1 width=100% style='margin-left:0px; margin-top:0px;top:0;'>"
+ 	w !," <td class=maintitle >License Usage by User</td>"
+ 	w !," </table>"
+ 	w !," <table  cellspacing=3 cellpadding=3 border=1 width=100% style='margin-left:0px; margin-top:0px;top:0;'>"
+ 	w !," <tr>"
+	w !," <td><label id='cServerIP' noWrap>ServerIP</label><label id='ServerIP' name='ServerIP'>"_ServerIP_"</td>"
+	w !," <td><label id='cClientIP' noWrap>ComputerIP:</label><label id='ClientIP' name='ClientIP'>"_ComputerIP_"</td>"
+	w !," <td><label id='cCurrConsumed' noWrap>CurrConsumed:</label><label id='CurrConsumed' name='CurrConsumed'>"_CurrConsumed_"</td>"
+	w !," <td><label id='cCurrAvailable' noWrap>CurrAvailable:</label><label id='CurrAvailable' name='CurrAvailable'>"_CurrAvailable_"</td>"
+	//w !," <td class='' noWrap><a href='#' id='Search' name='Search'>≤È—Ø</A></td>"
+	w !," <td><label id='cTimes'>TimeOut:</label><input id='Times' name='Times' value='"_Times_"'></td>"
+	w !," <td><input id='AutoRefresh' name='AutoRefresh' type='checkbox' checked='"_AutoFlag_"'><label>Auto</label></td>"
+	w !," </tr>"
+  	w !," </table>"
+	w !," <tr><td> </td></tr>"
+	w !," </table>"
+	
+ 	s tableWidth=1000
+ 	s cellWidth=50
+ 	s rowclass=""
+ 	s cellclass=""
+ 	w "<label id='PrintInfo' value='"
+ 	s LicenseUsed=##Class(DHCOLB.LicenseManage).GetLicenseUsage()
+ 	w "'></label>"
+ 	q:LicenseUsed=""
+ 	s TabTitle=$P(LicenseUsed,"^",1)
+ 	s TabContent=$P(LicenseUsed,TabTitle_"^",2)
+    s TitleCount=$l(TabTitle,"|")
+    i TabTitle="" s TitleCount=0
+    s tableWidth=1024
+    i TitleCount*100>tableWidth s tableWidth=TitleCount*100
+	
+	w !,"<div class='mainDiv'>"
+	w !,"  <table class='tblList' id='tDHCOLB' Name='tDHCOLB' cellspacing=0 cellpadding=1 border=1 width='"_tableWidth_"px' style='padding-top:2px'>"
+	w !,"  <thead>"
+	w !,"   <tr class='fixedHeaderTr'>"
+	//w !,"<td align='center' width="_cellWidth_" class='clsLookUpDateDayTitle'><label id='seleitem' >—°‘Ò</label></td>"
+	f i=1:1:TitleCount d
+	.s varParm=$p(TabTitle,"|",i)
+	.s varDesc=$p(varParm,"!",1)
+	.s codeList(i)=varDesc
+	.s varName=$p(varParm,"!",2)
+	.s varCellWidth=$p(varParm,"!",3)
+	.i +varCellWidth=0 s varCellWidth=cellWidth
+	.w !,"<td align='center' width="_$G(varCellWidth)_" class='clsLookUpDateDayTitle'>"_varDesc_"</td>"
+	w !,"</tr>"
+	w !,"  </thead>"
+	w !,"  <tbody>"
+	s rows=$L(TabContent,"^")
+	f rowIndex=1:1:rows d
+	.w !,"<tr class="_rowclass_">"
+	.s rowContent=$P(TabContent,"^",rowIndex)
+	.s cols=$L(rowContent,"|")
+	.f colIndex=1:1:cols d
+	..s cellContent=$P(rowContent,"|",colIndex)
+	..w !,"<td id='"_$G(codeList(colIndex))_"z"_rowIndex_"' class='"_cellclass_"' width="_$G(cellWidth)_" >"_$G(cellContent)_"</label></td>"
+	.w !,"</tr>"
+	w !," </tbody>"
+	w !," </table>"
+	w !," </div>"
+</SCRIPT>
+</DIV>
+
+<SCRIPT language=javascript>
+	document.body.onload=BodyLoadHandler;
+	var AutoRefreshFlag=false;
+	var TimerRefresh;
+	//alert(self.location)
+	function BodyLoadHandler()
+	{
+		var PrintInfo=document.getElementById("PrintInfo");
+		PrintInfo.value=""
+		self.moveTo(0,0)
+		self.resizeTo(screen.availWidth,screen.availHeight)
+		var obj=document.getElementById("AutoRefresh");
+		if (obj)
+		{
+			obj.onclick=AutoRefreshClick;
+			if(obj.checked==true) AutoRefreshFlag=true;
+		}
+		
+		var Times=document.getElementById("Times").value;
+		//setTimeout('AutoRefresh();',Times);
+		Times=Times*1000
+		if(AutoRefreshFlag) TimerRefresh=window.setInterval(AutoRefresh,Times);
+	}
+	function AutoRefreshClick()
+	{
+		var obj=document.getElementById("AutoRefresh");
+		if(obj)
+		{
+			if(obj.checked==true)
+			{
+				AutoRefreshFlag=true;
+				//AutoRefresh();
+				var Times=document.getElementById("Times").value;
+				Times=Times*1000
+				TimerRefresh=window.setInterval(AutoRefresh,Times);
+			}
+			else
+			{
+				AutoRefreshFlag=false;
+				window.clearInterval(TimerRefresh);
+			}
+			
+		}
+	}
+	function AutoRefresh()
+	{
+		if(AutoRefreshFlag)
+		{
+			var Times=document.getElementById("Times").value;
+			//setTimeout('AutoRefresh();',Times);
+			//self.location.reload();
+			var obj=document.getElementById("AutoRefresh");
+			var LocationNew=self.location+"&Test=1";
+			LocationNew=LocationNew.split("&Times=")[0]
+			//if(LocationNew.indexOf("&Times")>-1)
+			LocationNew=LocationNew+"&Times="+Times+"&AutoRefresh="+obj.value
+			location.replace(LocationNew)
+			//alert(self.location)
+		}
+		else
+		{
+			//window.clearInterval(TimerRefresh);
+		}
+		
+	}
+</SCRIPT>
+</BODY>
+</HTML>

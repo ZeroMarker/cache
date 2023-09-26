@@ -1,0 +1,162 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action 	= $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir 	= $Get(%request.Data("dir",1))
+	s start 	= $Get(%request.Data("start",1))
+	s limit 	= $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+    s str   	= $Get(%request.Data("query",1))
+    
+	s YearMonth = $Get(%request.Data("YearMonth",1))
+	s VouchNoFr = $Get(%request.Data("VouchNoFr",1))
+	s VouchNoTo = $Get(%request.Data("VouchNoTo",1))
+	s BookID 	= $Get(%request.Data("BookID",1))
+	s OpeatorID = $Get(%request.Data("OpeatorID",1))
+	s Task		= $Get(%request.Data("Task",1))
+	
+	i action="list" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).ListRec(start,limit,YearMonth,VouchNoFr,VouchNoTo,OpeatorID,Task,BookID) 
+	
+	i action="getopeator" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).GetOpeator(start,limit,BookID,str)
+	
+	i action="getTask" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).GetTask(start,limit,str)
+	
+	i action = "GetCurYearMonth" d
+	.s result = ##Class(herp.acct.udata.uAcctVouchOplog).GetYearMonth(BookID)
+	.i result '= 0 d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	/*
+	i action="listcheck" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).SjCheckTypeMapList(start,limit,str,rowid)
+	
+	i action="add" d
+	.s result = ##class(herp.acct.udata.uAcctVouchOplog).InsertCheckMap(MainRowid,checktypeid,checkstartyear,checkstartmonth,checkisstop,checkendyear,checkendmonth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctVouchOplog).UpDateCheckMap(CheckMaprowid, checktypeid, checkstartyear, checkstartmonth, checkisstop, checkendyear, checkendmonth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctVouchOplog).DeleteCheckMap(MainRowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="reload" d
+	.s result= ##class(herp.acct.udata.uAcctVouchOplog).ReLoadRec(acctbookid,start, limit) 
+	.w "{success:'true',refresh:'true',info:''}"
+	
+	
+	
+	
+	
+	i action = "delsj" d
+	.s result = ##class(herp.acct.udata.uAcctVouchOplog).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+	i action = "addsj" d
+	.s result = ##class(herp.acct.udata.uAcctVouchOplog).InsertRec(acctbookid,data)
+	.i result =0 d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "lastrec" d
+	.s result=##class(herp.acct.udata.uAcctVouchOplog).GetLastRec(acctbookid)
+	.i result '=0 d
+	..w "{success:'true',info:'"_result_"'}"
+	
+
+	i action = "updatesj" d
+	.s result= ##class(herp.acct.udata.uAcctVouchOplog).UpdateRec(rowid,acctbookid,edata)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+    i action = "GetLength" d
+	.s ^aa=acctbookid_"^"_usjlevel
+	.s result= ##class(herp.acct.udata.uAcctCommon).GetLevelLength(acctbookid,usjlevel)
+	.i result'="" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+   i action = "editLength" d
+	.s ^aa=acctbookid_"^"_esjlevel
+	.s result= ##class(herp.acct.udata.uAcctCommon).GetLevelLength(acctbookid,esjlevel)
+	.i result'="" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+   
+   	i action = "isfathercode" d
+	.s result = ##class(herp.acct.udata.uAcctVouchOplog).IsFatherCode(rowid)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	//.e  d
+	//..w "{success:'false',info:'"_result_"'}"
+	
+	*/
+   
+   
+	/*
+	i action="sjtypelist" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).SjTypeList(start, limit,str)
+	
+	i action="sjnaturelist" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).SjNatureList(start, limit,str)
+	
+	i action="sjlevellist" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).SjlevelList(start, limit,str)
+	
+	i action="sjchecktypelist" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).SjCheckTypeList(start, limit,str)
+	
+	i action="cashflowlist" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).CashFlowList(start, limit,str)
+	
+	i action="numunitlist" d
+	.w ##class(herp.acct.udata.uAcctVouchOplog).NumUnitList(start, limit,str)
+	
+	i action = "getcoderule" d
+	.s result = ##class(herp.acct.udata.uAcctVouchOplog).GetCodeRule(acctbookid)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="GetURL" d
+	.s result=##class(herp.acct.udata.uAcctCommon).GetURL(acctbookid)
+    .i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+	
+	*/
+	
+	
+	
+	
+	
+</script>

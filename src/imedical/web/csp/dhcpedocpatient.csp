@@ -1,0 +1,94 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+</STYLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<link rel="stylesheet" href="../scripts/styles.css" type="text/css">
+<script type="text/javascript"  src="../SCRIPTS/DHCPEDocPatient.Tree.js" ></script>
+
+<SERVER>
+
+	//s BottomHeight=
+</SERVER>
+</head>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s MainDoctor=$g(%request.Data("MainDoctor",1))
+</Script>
+
+<body>
+
+<!-- س±ݠͥ¼쵥λºΏ±닊?WEBSYS.TCOMPONENT=DHCPEGeneralResult
+?WEBSYS.TCOMPONENT=DHCPEGeneralDiagnosis
+ -->
+<Table id=Panel  border="0" width="100%" >
+<tr>
+	<td valign="left"  width = "15%">		
+	<table width=100% border="0" cellspacing="0" cellpadding="0">
+		<tr width = 100% >
+			<td  valign="top" height=450>
+				<iframe  width = "100%" height="100%" id="query" name="query" scrolling="no" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEDocPatient.Find&MainDoctor=#(MainDoctor)#"></iframe>
+			</td>
+		</tr>
+		<tr width = 100%>
+			<td  valign="top"  width=100% height=100>
+				<div id='tree'></div>		
+			</td>
+		</tr>
+	</table>
+	</td>
+	<td valign="left" width="87%">
+		<!--table width=100% border="0" cellspacing="0" cellpadding="0">
+		<tr width = 100%-->
+				<iframe onload="SetWinHeight(this)" width=100% id="result" name="result" scrolling="auto" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPENewResult" border=0></iframe>
+		<!--/tr>
+		</table-->
+	</td>
+</tr>
+</table>
+<SCRIPT language="Javascript">
+ 
+ function SetCwinHeight(iframeObj){ 
+ 
+  if (document.getElementById){ 
+   if (iframeObj && !window.opera){ 
+    if (iframeObj.contentDocument && iframeObj.contentDocument.body.offsetHeight){ 
+     iframeObj.height = iframeObj.contentDocument.body.offsetHeight; 
+    }else if(document.frames[iframeObj.name].document && document.frames[iframeObj.name].document.body.scrollHeight){ 
+     iframeObj.height = document.frames[iframeObj.name].document.body.scrollHeight; 
+    } 
+   } 
+  } 
+ } 
+
+
+
+// onload="Javascript:SetWinHeight(this)"
+function SetWinHeight(obj) 
+{
+	BottomHeight=125;
+	parentHeight=parent.window.screen.height
+	var win=obj; 
+	if (document.getElementById) 
+	{ 
+		if (win && !window.opera) 
+		{
+			if (win.contentDocument && win.contentDocument.body.offsetHeight){
+				win.height = win.contentDocument.body.offsetHeight;
+				TreeHeight = win.height - 355;
+			}else if(win.Document && win.Document.body.scrollHeight){
+				win.height = parentHeight-BottomHeight //win.Document.body.scrollHeight; 
+				TreeHeight = win.height - 355;
+			}
+		} 
+	} 
+} 
+</SCRIPT>
+</body>
+</html>

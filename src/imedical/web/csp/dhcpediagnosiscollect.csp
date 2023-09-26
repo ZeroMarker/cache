@@ -1,0 +1,277 @@
+<!-- DHCPEDiagnosisCollect.csp -->
+<!-- 
+/// 创建时间		2006.11.15
+/// 创建人		xuwm 
+/// 主要功能		
+/// 关联文件		DHCPEPosStandard.js
+/// 主要功能		多团体?分年龄段?性别 查询阳性特征
+/// 最后修改时间	
+/// 最后修改人	 
+/// -->
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<TITLE>病患汇总</TITLE>
+<!-- TrakCare系统文件 -->
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<SCRIPT SRC="/csp/broker/cspbroker.js"> </SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+
+<!-- 与树型结构相关文件 -->
+<LINK REL="stylesheet" type="text/css" href="../scripts/tree.css"/>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/tree.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.xml.js"></SCRIPT>
+<!-- 本模块文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPECommon.Date.js"></SCRIPT> 
+<style type="text/css">
+/* 团体列表 */
+#DGroupList{
+	display:block;
+	position: relative;
+	height:6cm;
+	width:7cm; 
+	border-style:none;	
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+	overflow:none;
+}
+#GroupList{
+	display:block;
+	position: relative;
+	height:100%;
+	width:100%;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+}	
+/* 疾病列表 */
+#DExpertDiagnosisList{
+	display:block;
+	position: relative;
+	height:12cm;
+	width:7cm;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+
+}
+#ExpertDiagnosisList{
+	display:block;
+	position: relative;
+	height:100%;
+	width:100%;
+	margin:0.0cm 0.0cm 0.0cm 0.0cm;
+	padding:0.0cm 0.0cm 0.0cm 0.0cm;
+
+}
+
+DIV.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	/* border-style: groove;  */
+}
+
+DIV.Ridge{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: inset ;
+
+}
+
+TABLE.Ridge caption{
+	display:block;
+	text-align:left;
+}
+
+TABLE.Groove{
+	display:block;
+	position: relative;
+	height:0cm;
+	width:0cm;
+	margin:0.05cm 0.05cm 0.05cm 0.05cm;
+	padding:0.05cm 0.05cm 0.05cm 0.05cm;
+	border-style: groove; 
+}
+
+TABLE.Groove caption{
+	display:block;
+	text-align:left;
+}
+
+#Panel{
+	display:block;
+	position: relative;
+	width:100%;
+}
+
+#Panel table tr td{
+	display:block;
+	position: relative;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;	
+	text-align: left;
+	
+}
+
+DIV.PanelRTop{
+	display:block;
+	position: relative;
+	width:18.7cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;
+	text-align: left;
+}
+
+DIV.PanelRTop table tr td{
+	text-align: right;
+}
+
+DIV.PanelShow{
+	display:block;
+	position: relative;
+	width:18.7cm;
+	height:18.19cm;
+	margin:0.1cm 0.1cm 0.1cm 0.1cm;
+	padding:0.1cm 0.05cm 0.1cm 0.1cm;	
+	border-style:none;
+	text-align: left;
+}
+	
+/* 查询结果 */
+#dataframe{
+	display:block;
+	width:100%;
+	height:100%;
+	margin:0cm 0cm 0cm 0cm;
+	padding:0cm 0cm 0cm 0cm;
+	border-style:none;	
+}
+
+
+</style>
+</HEAD>
+
+<BODY>
+<APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET>
+
+
+<input type='hidden' id='GList' name='GList' value=''>
+<input type='hidden' id='EDList' name='EDList' value=''>
+<input type='hidden' id='QueryType' name='QueryType' value=''>
+
+
+<!-- 左边 体检单位和项目列表 -->
+<Table id=Panel>
+<tr>
+<td valign="top">
+	<DIV class=Groove>
+		<table>
+			<tr>
+				<td>
+					单位查找:
+				</td>
+				<td>
+					<input type="text" id="GName" name="GName" value="请输入单位名称" size="27"/>	
+				</td>
+			</tr>
+		</table>
+		<DIV id=DGroupList>
+			<IFRAME id="GroupList" name="GroupList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.GList"></iframe>
+		</DIV>
+	</DIV>
+
+	<DIV class="Groove">
+		<table>
+			<tr>
+				<td>疾病查找:</td>
+				<td><input type="text" id="IName" name="IName" value="请输入疾病名称" size="27"/></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><input id="ExpertDiagnosisType" name="ExpertDiagnosisType" type="checkbox"><Label id=lExpertDiagnosisType>疾病</Label></td>
+			</tr>
+		</table>
+		<!-- 显示疾病列表 -->
+		<DIV class="DExpertDiagnosisList" id=DExpertDiagnosisList>
+			<IFRAME id="ExpertDiagnosisList" name="ExpertDiagnosisList" scrolling="auto" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.ExpertDiagnosisList"></iframe>
+		</DIV>
+	</DIV>
+</DIV> 
+</td>
+<td valign="top">
+	<DIV class="Groove">
+		<DIV class="PanelRTop">
+			<fieldset>
+			<legend>查询条件</legend>
+
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr>
+                <td width="12%"><div align="right">体检日期从</div></td>
+                <td width="16%">
+                	<input name="DateFrom" type="text" id="DateFrom" value="" size="10"/>
+                	<IMG id="ldDateFrom" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                <td width="2%">到</td>
+                <td width="18%">
+                	<input name="DateTo" type="text" id="DateTo" value="" size="10"/>
+                	<IMG id="ldDateTo" name="ldDateFrom" src="../images/websys/lookupdate.gif"/>
+                </td>
+                <td width="8%">性别</td>
+                <td width="16%">
+					<SCRIPT language="Cache" RUNAT="SERVER">
+						d ##class(web.DHCPE.PosQuery).OutSexListToHTML()
+					</SCRIPT>                
+                </td>
+                <td width="2%" ></td>
+                <td width="11%"></td>
+                <td width="5%"></td>
+                <td width="11%">
+
+                </td>
+              </tr>
+              <tr>
+                <td><div align="right">年龄范围从</div></td>
+                <td><input name="AgeFrom" type="text" id="AgeFrom" value="" size="10"/></td>
+                <td>到</td>
+                <td><input name="AgeTo" type="text" id="AgeTo" value="" size="10"/></td>
+                <td></td>
+                <td></td>
+                <td colspan="6">
+                <a href="#" id="BQuery" name="BQuery">
+                <img src="../images/websys/find.gif" border="0">查询(<u>C</u>)</a>
+                </td>
+              </tr>
+            </table>
+            </fieldset>
+		</DIV>
+	</DIV>
+	<!-- 显示查询地结果 -->
+	<DIV class="PanelShow" id=PanelShow>
+		<IFRAME id="dataframe" name="dataframe" scrolling="auto" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCPEIllnessStatistic.DiagnosisList"></iframe>
+	</DIV>
+</td>
+</tr>
+</table>
+<!-- 本页面JavaScript文件 -->
+<SCRIPT LANGUAGE="Javascript" SRC="../scripts/DHCPEDiagnosisStatistic.js"></SCRIPT>
+
+<script language=javascript>
+
+function SetExpertDiagnosisList(EDList){
+	var obj=document.getElementById('EDList');
+	if (obj) { obj.value=EDList; }	
+}
+function SetGroupList(GroupList){
+	var obj=document.getElementById('GList');
+	if (obj){ obj.value=GroupList; }
+}
+</script>
+</BODY>
+</HTML>

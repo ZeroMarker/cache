@@ -1,0 +1,82 @@
+// Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. 
+
+function Init() {
+	var obj;
+
+	obj=document.getElementById('DeleteItem');
+	if (obj) obj.onclick=DeleteItemClickHandler;
+
+	obj=document.getElementById('update1');
+	if (obj) obj.onclick=UpdateLabItems;
+
+}
+
+function RemoveFromList(obj) {
+	for (var i=(obj.length-1); i>=0; i--) {
+		if (obj.options[i].selected)
+			obj.options[i]=null;
+	}
+}
+
+function UpdateLabItems() {
+	var arrItems = new Array();
+	var lst = document.getElementById("LabItemsList");
+	if (lst) {
+		for (var j=0; j<lst.options.length; j++) {
+			arrItems[j] = lst.options[j].value + String.fromCharCode(2) + lst.options[j].text;
+		}
+		var el = document.getElementById("LabItemsString");
+		if (el) el.value = arrItems.join(String.fromCharCode(1));
+		//alert(el.value);
+	}
+	return update1_click();
+}
+
+
+function DeleteItemClickHandler() {    
+	//Delete items from LabItemsList listbox when a "DeleteItem" button is clicked.
+	var obj=document.getElementById("LabItemsList")
+	if (obj)
+		RemoveFromList(obj);
+	return false;
+}
+
+function LabResultItemLookUpSelect(txt) {
+	//Add an item to LabItemsList when an item is selected from
+	//the Lookup, then clears the Item text field.	
+	var adata=txt.split("^");
+	//alert("adata="+adata);
+	var obj=document.getElementById("LabItemsList")
+
+	if (obj) {
+		//Need to check if Item already exists in the List and alert the user
+		for (var i=0; i<obj.options.length; i++) {
+			if (obj.options[i].value == String.fromCharCode(2)+adata[1]) {
+				alert("Lab Result Item has already been selected");
+				var obj=document.getElementById("LabItem")
+				if (obj) obj.value="";
+				return;
+			}
+			if  ((adata[1] != "") && (obj.options[i].text == adata[0])) {
+			alert("Lab Result Item has already been selected");
+				var obj=document.getElementById("LabItem")
+				if (obj) obj.value="";
+				return;
+			}
+			//alert(obj.options[i].value+"****"+adata[1])
+		}
+	}
+	AddItemToList(obj,adata[1],adata[0]);
+
+	var obj=document.getElementById("LabItem")
+	if (obj) obj.value="";
+	//alert("adata="+adata);
+}
+
+function AddItemToList(list,code,desc) {
+	//Add an item to a listbox
+	//code=String.fromCharCode(2)+code
+	list.options[list.options.length] = new Option(desc,code);
+}
+
+document.body.onload=Init

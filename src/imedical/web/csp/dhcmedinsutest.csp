@@ -1,0 +1,430 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<head>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/QHwebsys.css"></LINK>
+
+<link rel="stylesheet" href="/trakcare/Web/scripts/websys.css" type="text/css">
+<META NAME="GENERATOR" Content="Microsoft Visual Studio 6.0">
+
+<title>韶关医保收费项目对照</title>
+ 
+<link href="ActiveWidgets/runtime/styles/classic/grid.css" rel="stylesheet" type="text/css" ></link>
+<script src="ActiveWidgets/runtime/lib/grid.js"></script>
+<!-- ActiveWidgets stylesheet and script-->
+<link href="ActiveWidgets/template/mytemplate.css" rel="stylesheet" type="text/css" ></link>
+<script src="ActiveWidgets/template/mytemplate.js"></script>
+
+<style type="text/css">
+	 #grid1{height: 120px;}
+	 	 
+	 .active-column-0 {width:  120px;}
+	 //hide the column
+	 // .active-column-0 {width: 80px; visibility:hidden}
+	 //.active-column-1 {width: 200px; background-color: threedlightshadow;}
+	 .active-controls-grid {height: 248px; font: menu; border: 1px inset; }
+     .active-column-1 {width: 180px; }
+	 .active-column-2 {width:  50px;text-align: right;}
+	 .active-column-3 {width:  80px;text-align: right;}
+	 .active-column-4 {width:  80px;text-align: right;}
+	 .active-column-5 {width:  60px;text-align: right;}
+	 .active-column-6 {width:  60px;text-align: right;}
+	 .active-column-7 { visibility:hidden}
+	
+     .active-grid-column {border-right: 1px solid threedshadow;}
+	 .active-grid-row {border-bottom: 1px solid threedlightshadow;}
+     .active-box-item {background: #336699; border-color: #FFFFFF; color:#FFFFFF}
+     
+     .active-grid-column {vertical-align: middle;}
+<!--
+.button {border-color: #006600;  background-color: #CCCCFF; color: #336699; CURSOR: hand;border-style: solid; border-width: 1px}
+.txt {border-color: #006600; border-style: solid; border-width: 1px}
+
+-->
+</style>
+
+<script language="javascript">
+    var Type="DT"              ///医保类别
+    var myData = new Array()
+	var myColumns = ["医保项目代码", "医保项目名称", "数量", "规格" ,"单位","自付比例", "分类","RowId"];	
+	var HISID="",DESC=""
+	DESC=#($Get(%request.Data("rDESC",1)))#;
+	HISID=#($Get(%request.Data("rHISID",1)))#;
+    function init(){
+	    if ((DESC!="")&&(HISID!="")){
+		    form1.HisList.options[form1.HisList.options.length]=new Option(DESC,HISID);
+		    form1.HisList.options[form1.HisList.options.length-1].selected=true;
+            SetHis();
+		    }
+	    }	
+///HIS收费项目查询
+function QueryHis(InStr)
+{
+  var sKeyWord=InStr;
+  var Class
+  var conType="A"
+  var xCode="",outString=""
+  var aData
+    
+  myData.length=0;
+  FreashGrid();
+  if (sKeyWord=="") {
+	  return false;
+  }
+  if (form1.HisRadio1.checked==true){
+	  Class="1";
+	  }
+  if (form1.HisRadio2.checked==true){
+	  Class="2";
+	  }
+  if (form1.HisRadio3.checked==true){
+	  Class="3";
+	  }
+	  
+  ClearForm();
+  flag=#server(web.INSUTarContrastCtl.QueryAll(sKeyWord,Class,Type,conType,""))#
+  //alert(flag);
+  form1.HisList.options.length=0;
+  if (flag>=0){	  
+	  do {		  
+		  outString=#server(web.INSUTarContrastCtl.GetTar(xCode,flag))#;		 
+		  if (outString!=""){
+		      aData=outString.split("^");
+		      TarId=aData[0];
+		      xCode=aData[1];
+		      xDesc=aData[2];
+		      ConId=aData[3];
+		      form1.HisList.options[form1.HisList.options.length]=new Option(xCode+" -> "+xDesc,TarId+"^"+ConId) ;
+		      }
+		  else{
+			  xCode=""
+			  }
+		  }	  while (xCode!="")
+	  }
+  }
+  
+///医保收费项目查询
+function QueryInsu(InStr)
+{
+  var sKeyWord=InStr;
+  var Class
+  var xCode="",outString=""
+  var aData
+  
+  if (form2.InsuRadio1.checked==true){
+	  Class="1";
+	  }
+  if (form2.InsuRadio2.checked==true){
+	  Class="2";
+	  }
+  ClearInsu();
+  ///alert(Type);
+  flag=#server(web.INSUTarItemsCtl.QueryAll(sKeyWord,Class,Type))#
+  form2.InsuList.options.length=0;
+  if (flag>=0){	  
+	  do {
+		  
+		  outString=#server(web.INSUTarItemsCtl.GetTar(xCode,flag))#;		  
+		  if (outString!=""){
+		      aData=outString.split("^");
+		      TarId=aData[0];
+		      xCode=aData[3];
+		      xDesc=aData[4];
+		      form2.InsuList.options[form2.InsuList.options.length]=new Option(xCode+" -> "+xDesc,TarId) ;
+		      }
+		  else{
+			  xCode=""
+			  }
+		  }	  while (xCode!="")
+	  }
+  }  
+
+function ShowLen(){
+	//alert(form1.HisList.options.length);	
+	//alert(form5.txtHisDetail.value);
+	//form5.txtHisDetail.value="2312" +"\n"+"234";
+	//form5.txtHisDetail.rows=6;
+	}
+	
+///his收费项目明细查询与显示
+function SetHis(){
+    //alert(form1.HisList.options[form1.HisList.options.selectedindex].value);
+    //alert(form1.HisList[form1.HisList.selectedIndex].value);
+    var IdString=form1.HisList[form1.HisList.selectedIndex].value
+    var TarId,ContIdStr,ContId,insuTarId
+    var TempData,TempList,TempList1,TempList2,TempList3
+    //alert(IdString);
+    TempData=IdString.split("^");
+    TarId=TempData[0];
+    //ContIdStr=TempData[1];
+    //CheckCon
+    ContIdStr=#server(web.INSUTarContrastCtl.CheckCon(TarId,Type))#
+    form5.HisId.value=TarId;
+    form6.contId.value="";
+    //alert(form5.HisId.value+" - "+form6.contId.value);
+    var ContString=#server(web.INSUTarContrastCtl.GetTarDetail(TarId))#
+    //alert(ContString);
+    TempList=ContString.split("^")
+    form5.txtHisDetail.value="项目代码:"+TempList[1]+"\n"
+                            +"项目名称:"+TempList[2]+"\n"
+                            +"单位:"+TempList[3]+"\n"
+                            +"帐单类:"+TempList[4]+"\n"
+                            +"帐单子类:"+TempList[5]+"\n"
+                            +"单价:"+TempList[6];
+	ShowForms();
+    TempList1=ContIdStr.split("!");
+    
+    ///查询显示对照信息
+    myData.length=0;
+    FreashGrid();
+    //alert(ContIdStr+"  "+TempList1.length+"  "+myData.length)
+    for (i=1;i<TempList1.length;i++){
+	    //alert(i+"-----");
+	    ContId=TempList1[i];
+	    //alert("ContId="+ContId);
+	    //取对照关系
+	    TempString=#server(web.INSUTarContrastCtl.GetContDetail(ContId))#
+	    //alert(TempString);
+	    TempList2=TempString.split("^");
+	    insuTarId=TempList2[1];
+	    
+	    //取医保项目
+	    //alert("insuTarId="+insuTarId);
+	    TempString=#server(web.INSUTarItemsCtl.GetInsuDetail(insuTarId))#
+	    //alert(TempString);
+	    TempList3=TempString.split("^");
+        TempString=TempList3[2]+"^"+
+                   TempList3[3]+"^"+
+                   TempList2[5]+"^"+
+                   TempList3[8]+"^"+
+                   TempList3[9]+"^"+
+                   TempList3[17]+"^"+
+                   TempList3[0]+"^"+
+                   ContId;
+        myData[i-1]=TempString.split("^");
+        //alert(TempString);
+	    //myData[i-1][0]=TempList3[2];  //"医保项目代码", 
+	    //myData[i-1][1]=TempList3[3];  //"医保项目名称", 
+	    //myData[i-1][2]=TempList2[5];  //"数量", 
+	    //myData[i-1][3]=TempList3[8];  //"规格" 
+	    //myData[i-1][4]=TempList3[9];  //,"单位",
+	    //myData[i-1][5]=TempList3[17];  //"自付比例", 
+	    //myData[i-1][6]=TempList3[0];  //"分类",
+	    //myData[i-1][7]=ContId;    //"RowId"];	    
+	    //alert(myData[i-1][1]);
+	    }
+	    
+		//if (myData.length>0){
+            FreashGrid();
+		//	}
+    }
+ function SetInsu(){
+	 var InsuId=form2.InsuList[form2.InsuList.selectedIndex].value
+	 var InsuString
+	 var TempList
+	 if (InsuId=="") return false;
+	 InsuString=#server(web.INSUTarItemsCtl.GetInsuDetail(InsuId))#
+	 //alert(InsuString);
+     TempList=InsuString.split("^")
+     form7.txtInsuDetail.value="项目代码:"+TempList[2]+"\n"
+                             +"项目名称:"+TempList[3]+"\n"
+                             +"单位:"+TempList[9]+"\n"
+                             +"规格:"+TempList[8]+"\n"
+                             +"分类名称:"+TempList[0]+"\n"
+                             +"自付比例:"+TempList[17];	 
+	 form7.InsuId.value=InsuId; 
+	 ShowForms();
+	 }
+	 
+function SaveCont(){
+	//	n (ContId, HisId, InsuId, Qty, Type,ElsString)
+    var ContId, HisId, InsuId, Qty, ElsString
+    ContId=form6.contId.value; 
+    HisId=form5.HisId.value; 
+    InsuId=form7.InsuId.value; 
+    Qty=1;
+    ElsString="";
+    if ((HisId=="")||(InsuId=="")){
+	    alert("请选择需要对应的HIS收费项目和医保收费项目!");
+	    return false
+	    }
+	else{
+		//alert(Type);
+		//alert(ContId+"  "+HisId+"  "+InsuId+"  "+Qty+"  "+Type+"  "+ElsString);
+		flag=#server(web.INSUTarContrastCtl.SaveCont(ContId, HisId, InsuId, Qty, Type,ElsString))#
+		//alert(flag);
+		if (flag=="0"){
+		//if ("0"=="0"){
+			alert("对照成功!");
+            ClearInsu();
+	        form6.contId.value="";
+	        SetHis();
+			}		
+		}
+    
+	}
+	
+function DeleteCont(){
+	gridclick();
+	var conId=form6.contId.value
+	//alert(conId);
+	if (conId==""){
+		alert("您没有选择需要删除的记录!");
+		return false;
+		}
+	if (confirm("您确定要删除所选择的对照关系吗?")){
+		flag=#server(web.INSUTarContrastCtl.DeleteCont(conId))#
+		if (flag=="0"){
+		    //alert("Yes");
+		    ClearInsu();
+	        form6.contId.value="";
+	        SetHis();
+		    }
+		}
+	}
+function gridclick(){
+	   var index=obj.getSelectionProperty("index");
+	   //alert("index="+index);
+	   if (index>=0){
+		   //alert("!!!");
+		   rowvalues=obj.getSelectionProperty("values")
+		   //gusername=myData[index][0]
+	       //jkrowid=myData[index][7]
+	       form6.contId.value=myData[index][7];
+	       //window.status=obj.getRowTemplate(index).getItemTemplate(2)
+	   }
+}
+function ShowForms(){	
+	 form5.txtHisDetail.rows=7;
+     form7.txtInsuDetail.rows=7;
+     form5.style.visibility="visible"; 
+     form6.style.visibility="visible"; 
+     form7.style.visibility="visible"; 	
+	}
+function ClearForm(){	
+     ClearHis();
+     ClearInsu();
+	 form6.contId.value="";
+	}
+function ClearHis(){
+	 form5.txtHisDetail.value="";
+	 form5.HisId.value="";	
+	}
+function ClearInsu(){
+     form7.txtInsuDetail.value="";
+	 form7.InsuId.value="";
+	}
+function FreashGrid(){
+	obj.setRowProperty("count", myData.length);  
+    obj.getDataText = function(i, j){return myData[i][j]};
+    obj.setDataText = function(value, i, j){myData[i][j] = value};
+	obj.refresh();
+    }
+
+</script>
+
+</head>
+
+<body>
+<center>
+<table>
+  <tr>
+    <td width="40">&nbsp;</td>
+    <td width="250">
+	<form name="form1" method="post" action="">
+      <p><strong>HIS 收费项目</strong></p>
+      <p>            
+	  <label><input type="radio" name="HisRadio"  id="HisRadio1"  checked>拼音码</label>
+      <label><input type="radio" name="HisRadio"  id="HisRadio2" >项目代码</label>
+      <label><input type="radio" name="HisRadio"  id="HisRadio3" >项目名称</label>
+            <br>
+     <input type="text" class="txt"  name="HisTxt">&nbsp;&nbsp;&nbsp;&nbsp;
+	 <input type="button" class="button"  name="HisQuery" value="查询" onClick="QueryHis(HisTxt.value)">
+      </p>
+      <p>        <select class="txt"  name="HisList" size="12"  style="WIDTH: 250px" onChange="SetHis()">
+             </select>
+      </p>
+	</form></td>
+    <td width="100">&nbsp;</td>
+    <td width="300">
+	<form name="form2" method="post" action="">
+      <p><strong>医保收费项目</strong></p>
+      <p>
+        <label><input type="radio" name="InsuRadio" id="InsuRadio1"  value="单选" checked>拼音码</label>
+        <label><input type="radio" name="InsuRadio" id="InsuRadio2"  value="单选">项目代码</label>
+        <br>
+        <input type="text" class="txt"  name="InsuTxt">&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="button" class="button"  name="InsuQuery" value="查询" onclick="QueryInsu(InsuTxt.value)">
+        </p>
+      <p>
+        <select class="txt"  name="InsuList" size="12" style="WIDTH: 250px" onChange="SetInsu()">
+            </select>
+      </p>
+	</form></td>
+    <td width="40">&nbsp;</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td><form name="form5" method="post" action="">项目明细信息<br>
+        <textarea class="txt"  name="txtHisDetail" rows="7" style="width:250px" readonly></textarea> 
+        <input name="HisId" type="hidden" id="HisId">   
+        </form></td>
+    <td><form name="form6" method="post" action="" >
+        <center> 
+          <table width="100%" border="0">
+            <tr>
+              <td align="center"><input type="button" class="button"  name="conSave" value="保存对照"  onClick="SaveCont()"></td>
+            </tr>
+            <tr>
+              <td><input name="contId" type="hidden" id="contId"></td>
+            </tr>
+            <tr>
+              <td align="center"><input type="button" class="button"  name="conDelete" value="删除对照"  onclick="DeleteCont()"></td>
+            </tr>
+          </table>
+        </center>
+		</form></td>
+    <td><form name="form7" method="post" action="" >项目明细信息<br>
+      <textarea class="txt"  name="txtInsuDetail" rows="7" style="width:250px" readonly></textarea>
+      <input name="InsuId" type="hidden" id="InsuId">
+    </form></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+
+<script language="javascript">
+	var obj = new Active.Controls.Grid;
+	obj.setId("grid1");
+    obj.setColumnProperty("count", 8);
+	obj.setColumnProperty("text", function(i){return myColumns[i]});
+	obj.setRowHeaderWidth("20px");
+	obj.setColumnHeaderHeight("30px");
+	document.write(obj);
+	//alert(DESC+"  ----  "+HISID)
+	init();
+///////////////////////////////////////////////////
+</script>
+ 
+</center>
+</body>
+</HTML>

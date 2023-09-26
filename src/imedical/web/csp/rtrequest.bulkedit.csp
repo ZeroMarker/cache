@@ -1,0 +1,40 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+
+ s (RequiredDate,PidMasVolid)=""
+ s PidMasVolid=%request.Get("PidMasVolid")
+ s cnt=0,numofdays=0
+ i $p(^CF("RT",2),"^",30)="Y" d
+ . i $l(PidMasVolid,"^")>0  d
+ . . i $l(PidMasVolid,"^")=1 s cnt=1
+ . . i $l(PidMasVolid,"^")>1  d
+ . . . f k=1:1:$l(PidMasVolid,"^")-1 d
+ . . . . i $p($p(PidMasVolid,"^",k),$c(2),1)'=$p($p(PidMasVolid,"^",k-1),$c(2),1)  s cnt=cnt+1
+ . i cnt>0,cnt<11  s numofdays=2
+ . i cnt>11,cnt<100  s numofdays=5
+ . i cnt>101  s numofdays=10
+ . i numofdays'=0  d
+ . . s RequiredDate=##Class(web.RTRequest).GetWorkingDay(+$h,numofdays,%session.Data("LOGON.CTLOCID"))
+ . . d %request.Set("ResearchRequiredDate",RequiredDate)
+ ;d %request.Set("PidMasVolid",%request.Get("PidMasVolid"))
+ d %request.Set("RTREQBatchID",$$batchid^CPAWaitingList())
+
+
+</server>
+<TRAK:COMPONENT id="RTRequest.BulkEdit">
+</TRAK:COMPONENT>
+
+</body>
+</html>

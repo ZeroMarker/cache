@@ -1,0 +1,55 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+
+	s topCount = $Get(%request.Data("topCount",1))
+	s orderby = $Get(%request.Data("orderby",1))
+	
+	s bonusYear = $Get(%request.Data("bonusYear",1))
+	s bonusPeriod = $Get(%request.Data("bonusPeriod",1))
+	s schemeType= $Get(%request.Data("schemeType",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s rowid = $Get(%request.Data("rowid",1))
+	s IsAuditing = $Get(%request.Data("IsAuditing",1))	
+	s IsPay = $Get(%request.Data("IsPay",1))	
+	
+	s BonusSchemeCode = $Get(%request.Data("BonusSchemeCode",1))
+	s sBonusPeriod = $Get(%request.Data("sBonusPeriod",1))
+	
+	s sMainSchemeCode = $Get(%request.Data("sMainSchemeCode",1))
+	
+	i action = "yearlist" d
+	.w ##class(dhc.bonus.comm.SchemePeriod).GetBonusYears(topCount,orderby)
+ 
+	i action = "schemlist" d
+	.w ##class(dhc.bonus.udata.uUnitBonusMain).BonusSchemeCalc(bonusYear,bonusPeriod,schemeType,start,limit)
+
+	i action = "auditing" d
+	.w ##class(dhc.bonus.udata.uUnitBonusMain).UnitBonusMainAuditing(rowid,IsAuditing)
+	
+	i action = "bonuspay" d
+	.w ##class(dhc.bonus.udata.uBonusSchemeCalcManager).UnitBonusPay(rowid,IsPay)
+	
+	i action = "bonuscalc" d
+	.s result = ##class(dhc.bonus.udata.uBonusSchemeCalculate).BonusSchemeCalculate(BonusSchemeCode,sBonusPeriod)
+	.i result = 0 d
+	..w "{success:'true',info:'ok'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "getTitleInfo" d
+	.w ##class(dhc.bonus.udata.uBonusSchemeCalcManager).GetGridTitle(sMainSchemeCode)
+	
+	i action = "getBonusDetail" d
+	.w ##class(dhc.bonus.udata.uBonusSchemeCalcManager).GetUnitBonusDetail(sMainSchemeCode,bonusYear,bonusPeriod)
+
+
+</script>

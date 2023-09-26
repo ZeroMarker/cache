@@ -1,0 +1,400 @@
+
+<!-- 
+ * FileName: dhcperefund.hisui.csp
+ * Anchor: yupeng
+ * Date: 2019-04-26
+ * Description: HISUI退费
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+	
+<style>
+
+</style>
+
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+		w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+        d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+        set ListFlag=$g(^DHCPESetting("DHCPE","InvListFlag"))
+		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+        set CanChangePayModes=$g(^DHCPESetting("DHCPE","CanChangePayModes"))
+        s isApply=%request.Get("isapply")
+        i isApply="" s isApply=1
+</SCRIPT> 
+<script type="text/javascript">
+	var CanChangePayModes="#(CanChangePayModes)#"
+	var ListFlag="#(ListFlag)#"
+	var isApply="#(isApply)#"
+	var title="收费收据查询"
+	if(isApply=="1") var title="退费收据查询"
+	if(isApply=="2") var title="收费收据查询"
+</script>
+
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false">
+
+
+ <div data-options="region:'north',border:false" style="height:446px;padding:10px 10px 0px 10px;">
+ <div class="hisui-panel" data-options="title:title,headerCls:'panel-header-gray',iconCls:'icon-find-ord-det'">
+	
+	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:400px;">
+
+    <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false">
+        
+        <table style="width:1350px;border-collapse:separate; border-spacing:10px 10px;">
+       
+        <tr>
+           <td align="right"><label for="InvNo">发票号</label></td>
+			<td>
+				<input class="textbox" id="InvNo" style="width:110px;">
+			</td>
+			<td align="right"><label for="CardNo">卡号</label></td>
+			 <td>
+				<input class="textbox" id="CardNo" style="width:110px;"/>
+			</td>
+			<td>
+				<input class="textbox" disabled id="CardTypeNew" style="width:117px;"/> 
+			</td>
+			<td>
+				<a id="BReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
+			</td>
+			<td align="right"><label for="PatName">姓名</label></td>
+			<td>
+				<input class="textbox" id="PatName">
+			</td>
+			<td align="right"><label for="BeginDate">开始日期</label></td>
+			<td>
+				<input id="BeginDate" class="hisui-datebox textbox">
+			</td>
+			<td>
+				<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+			</td>
+			
+			<td>
+				<a id="BPrintList" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印清单</a>
+			</td>
+			
+        </tr> 
+        <tr>
+        <td align="right"><label for="RegNo">登记号</label></td>
+		<td>
+			<input class="textbox" id="RegNo" style="width:110px;">
+		</td>
+			
+		<td align="right"><label for="User">收费员</label></td>
+		<td colspan="2">
+			<input class="textbox" id="User" style="width:244px;">
+		 </td>	
+         <td>
+		</td>
+        <td align="right"><label for="RPFlag">日结标志</label></td>
+		<td>
+		<input class="hisui-combogrid" id="RPFlag" style="width:155px" data-options="editable:false,panelHeight:'auto'">
+		</td>
+		
+		<td align="right"><label for="EndDate">结束日期</label></td>
+		<td>
+			<input id="EndDate" class="hisui-datebox textbox">
+		</td>
+		
+		<td>
+			<a id="BPrintProve" href="#" class="hisui-linkbutton">收据证明</a>
+		</td>
+		<td>
+			<a id="BGREPrint" href="#" class="hisui-linkbutton">原号补打发票</a>
+		</td>
+			<td><input type="hidden" id="RPFRowId"/></td>
+			<td><input type="hidden" id="RPFInvNo"/></td>
+			<td><input type="hidden" id="SelectIds"/></td>
+			<input type="hidden" id="InvID"/>
+			<input type="hidden" id="ADMType"/>
+			<input type="hidden" id="GIADM"/>
+			<input type="hidden" id="CurRegNo"/>
+			
+         </tr> 
+         	
+        </table>
+        
+        
+	   
+	  </div>  
+	 <div data-options="region:'center',border:false">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border:0;border-top:1px solid #ccc;border-radius:0;">
+		<table class="hisui-datagrid" id="InvListQueryTab" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>	
+		</div>
+     
+      </div>
+	  
+	</div>   
+	</div>  
+ </div>
+ <div data-options="region:'center',border:false" style="padding:10px;">
+  <div class="hisui-panel" data-options="title:'退费',headerCls:'panel-header-gray',iconCls:'icon-fee-arrow',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+	
+	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+
+  	<div data-options="region:'east',headerCls:'panel-header-gray'" style="width:200px;padding:10px 10px 10px 30px;border:0;">
+  
+    <table style="border-collapse:separate; border-spacing:4px 4px;border:1px dashed #ccc;border-top:0;border-bottom:0;border-right:0;">
+  	
+  		<tr>
+  		<td align="left" style="width:20px;"></td>
+  		<td align="left">
+           <label><font color="red">*</font>应退合计</label>
+         </td>
+        </tr> 
+         <tr>
+         <td align="left"></td>
+  		 <td align="left">
+            <div align="right"><input class="hisui-numberbox textbox" Id="BackAmount" data-options="precision:2" style="width:100px;" disabled="true"/></div>
+          </td>
+        </tr> 
+        
+        <tr>
+        <td align="left"></td>
+  		<td align="left">
+           <label>新收据金额</label>
+         </td>
+        </tr> 
+         <tr>
+         <td align="left"></td>
+  		 <td align="left">
+            <div><input class="hisui-numberbox textbox" Id="NewAmount" data-options="precision:2" style="width:100px;" disabled="true"/></div>
+          </td>
+        </tr> 
+        
+      </table>
+       <table style="border-collapse:separate; border-spacing:4px 4px;height:49px;">
+        
+        </table>
+      <table style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+      <tr>
+      <td align="left" style="width:20px;"></td>
+         <td align="left">
+           <div><a id="BPrintDanZ" href="#" class="hisui-linkbutton" style="width:100px;">退费单打印</a></div>
+          </td>
+         </tr>
+      </table>
+  	</div>
+  	
+  	
+  	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px;">
+   
+  	<table id="PayModeTable" style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+  		<tr>
+          <td align="left">
+           <label><font color="red">*</font>支付方式</label>
+          </td>
+          <td align="left">
+           <label><font color="red">*</font>已付金额</label>
+          </td>
+          <td align="left">
+           <label><font color="red">*</font>退款金额</label>
+          </td>
+          <td align="left">
+           <label>号码</label>
+          </td>
+          <td align="left">
+           <label>退款方式</label>
+          </td>
+          <td align="left">
+          <label>备注</label>
+          </td>
+        </tr>
+  	
+        <tr>
+          <td>
+            <div>
+              <select class="hisui-combogrid" Id="PayMode0" name="PayMode0" style="width:110px;" editable="false" disabled="true"></select>
+            </div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-numberbox textbox" Id="PayedAmount0" data-options="precision:2" style="width:100px;" disabled="true"/></div>
+          </td>
+         
+         
+          <td>
+            <div><input class="hisui-numberbox textbox" Id="RefundAmount0" data-options="precision:2" style="width:100px;"/></div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-validatebox textbox" Id="No0" style="width:100px;"/></div>
+          </td>
+          
+          <td>
+            <div>
+              <select class="hisui-combobox" Id="NewPayMode0" name="NewPayMode0" style="width:110px;" data-options="editable:false,panelHeight:'auto'"></select>
+            </div>
+          </td>
+         <td>
+            <div><input class="hisui-validatebox textbox" Id="Balance" style="width:100px;"/></div>
+          </td> 
+         
+        </tr>
+         
+         <tr>
+          <td>
+            <div>
+              <select class="hisui-combogrid" Id="PayMode1" name="PayMode1" style="width:110px;" editable="false" disabled="true"></select>
+            </div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-numberbox textbox" Id="PayedAmount1" data-options="precision:2" style="width:100px;" disabled="true"/></div>
+          </td>
+         
+         
+          <td>
+            <div><input class="hisui-numberbox textbox" Id="RefundAmount1" data-options="precision:2" style="width:100px;"/></div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-validatebox textbox" Id="No1" style="width:100px;"/></div>
+          </td>
+          
+          <td>
+            <div>
+              <select class="hisui-combobox" Id="NewPayMode1" name="NewPayMode1" style="width:110px;" data-options="editable:false,panelHeight:'auto'"></select>
+            </div>
+          </td>
+        
+         
+        </tr>
+          
+         
+        </table>
+        
+        <table style="border-collapse:separate; border-spacing:4px 4px;height:50px;">
+        
+        </table>
+   		<table style="border-collapse:separate; border-spacing:4px 4px;">
+  	
+  		
+  		<tr>
+          <td align="left">
+           <label>发票名称</label>
+          </td>
+         
+          <td align="left">
+           <label>纳税人识别号</label>
+          </td>
+         
+          <td align="left">
+           <label>当前发票号</label>
+          </td>
+          
+           <td align="left">
+           <label>费别</label>
+          </td>
+           <td align="left">
+          <label>医疗类别</label>
+          </td>
+          <td  style="width:108px;">
+          	<div align="center"><input class='hisui-checkbox' type="checkbox" label="没打发票" Id="NoPrintInv" style="width:100px;" disabled="true"/></div>
+          </td>
+         
+          <td align="right">
+           </td>
+        </tr>
+  	
+        <tr>
+          <td>
+            <div><input class="hisui-validatebox" type="text" Id="InvName" style="width:102px;"/></div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-validatebox" type="text" Id="TaxpayerNum" style="width:94px;"/></div>
+          </td>
+         
+         <td>
+            <div><input class="hisui-validatebox" type="text" Id="CurNo" style="width:100px;" disabled="true"/></div>
+          </td>
+          <td align="left">
+  		 	<div>
+            <select class="hisui-combobox" type="text" Id="AdmReason" name="AdmReason" style="width:100px;" data-options="editable:false,panelHeight:'auto'"></select>
+          </div>
+          </td> 
+          <td align="left">
+  		 	<div>
+            <select class="hisui-combobox" type="text" Id="YLLB" name="YLLB" style="width:100px;" data-options="editable:false,panelHeight:'auto'"></select>
+          </div>
+          </td> 
+          
+           <td align="right">
+           <div><a id="BRefund" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">退费</a></div>
+           <div><a id="BAllRefund" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">全退</a></div>
+           <div><a id="RepeatPrint" href="#" class="hisui-linkbutton" style="width:100px;">过号重打</a></div>
+       
+          </td>
+         
+        </tr>
+         
+        </table>
+   	
+  	</div>
+  	
+  
+  	</div>
+  </div>			
+ </div>	
+ 
+ <div data-options="region:'east',border:false" style="width:530px;padding:10px 10px 10px 0px;">
+ <div class="hisui-panel" data-options="title:'收据明细',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+ 	<table class="hisui-datagrid" id="ordItmList" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
+ </div>	
+ </div>	
+</div>
+
+
+  <script type="text/javascript" src="../scripts/dhcperefund.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPayService.js"></script>
+  <script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+  <script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
+  
+  <script type="text/javascript" src="../scripts/websys.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.js"></script>
+  <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
+  <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPE.Toolets.Ctls.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPE.Toolets.Common.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  
+  
+   <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+    <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+     <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
+      <script type="text/javascript" src="../scripts/DHCPECashierEx.js"></script>
+       <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+        <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+         <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+</body>		
+</html>
+			
+		

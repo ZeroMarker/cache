@@ -1,0 +1,214 @@
+﻿<html>
+    <head>
+        <title> 门诊病历补打查询页面 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.gh-buttons.css"/>
+
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        
+        <!-- 读卡 -->
+        <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+        <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+        <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+        <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+        
+        <style type="text/css">
+        * 
+        .datagrid-cell{
+            font-size:16px;
+            line-height:35px;
+            height:30px;
+            font-weight:500;
+                }
+            .searchbox .searchbox-text{
+            font-size:16px;
+            height: 16px;
+        }
+        .right {
+		    display: block; 
+		    float: right;
+		    position: absolute;
+		    right: 0
+		}
+        </style>
+        
+        <script language="cache" runat="server">
+            s myCode($i(myCode))="<script type='text/javascript'>"
+            s event=##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
+            s myCode($i(myCode))="function tkMakeServerCall(tkclass,tkmethod) {"
+            s myCode($i(myCode))=" if ((tkclass=='')||(tkmethod=='')) return '';"
+            s myCode($i(myCode))=" var args=new Array('"_event_"',tkclass,tkmethod);"
+            s myCode($i(myCode))=" for (var i=2; i<tkMakeServerCall.arguments.length; i++) {"
+            s myCode($i(myCode))=" args[i+1]=tkMakeServerCall.arguments[i];"
+            s myCode($i(myCode))=" }"
+            s myCode($i(myCode))=" var retval=cspHttpServerMethod.apply(this,args);"
+            s myCode($i(myCode))=" return retval;"
+            s myCode($i(myCode))="}"
+            s myCode($i(myCode))="<"_"/script>"
+            f myIdx=1:1:myCode {
+                w myCode(myIdx),!
+            }
+            s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+            w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_ReadCardTypeEncrypt_"'>",$C(13,10)
+            d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+            
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s mradm = ""
+            s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+            
+            s id = $Get(%request.Data("id",1),"")
+            s chartItemType = $Get(%request.Data("chartItemType",1),"")
+            s pluginType = $Get(%request.Data("pluginType",1),"")
+            s emrDocId = $Get(%request.Data("emrDocId",1),"")
+            s url = $Get(%request.Data("url",1),"")
+            
+            s sessionID = %session.SessionId
+            s userCode = %session.Get("LOGON.USERCODE")
+            s userName = %session.Get("LOGON.USERNAME")
+            s userID = %session.Get("LOGON.USERID")
+            s ssgroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+            s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+            
+            s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("NET_CONNECT")
+            s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")
+            s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+            s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+            s OPAutoSaveInterval = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPAutoSaveInterval","")
+            s MessageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("MessageScheme","")
+            s isShowPatInfo=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isShowPatInfo","N")
+            s useResWindowHotkey=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("useResWindowHotkey","Y")
+            s OPAutoSave=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPAutoSave","Y")
+            s isAutoSelectTemplate=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isAutoSelectTemplate","N")
+            s requiredFlag = ##Class(EMRservice.SystemParameter).GetRequiredFlag()
+
+            s firstTmpl = ""
+            s savedRecords = ""
+            s OPEmrButtons="btnPrintAndLog:打  印"
+            s OPHisTools=""
+            s OPResource=""
+            s patInfoBar = ""
+            s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+        </script>
+        <script language="javascript">
+            var argConnect = {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"};
+            
+            var patInfo = {
+                SessionID: "#(sessionID)#",
+                PatientID: "#(patientID)#",
+                EpisodeID: "",
+                MRadm: "#(mradm)#",
+                UserID: "#(userID)#",
+                UserCode: "#(userCode)#",
+                UserName: "#(userName)#",
+                SsgroupID: "#(ssgroupID)#",
+                UserLocID: "#(userLocID)#",
+                UserLocCode: "#(userLocCode)#",
+                UserLocName: "#(userLocName)#",
+                DiseaseID: "",
+                IPAddress: "",
+                SecCode: ""
+            };
+                        
+            var sysOption = {
+                pluginUrl : "#(pluginUrl)#",
+                setDefaultFontStyle : "#(setDefaultFontStyle)#",
+                pluginType : "#(pluginType)#",
+                argConnect : {"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"},
+                CAServicvice : '',
+                OPAutoSaveInterval : '#(OPAutoSaveInterval)#',
+                messageScheme : $.parseJSON("#(MessageScheme)#".replace(/\'/g, "\"")),
+                isShowPatInfo : '#(isShowPatInfo)#',
+                useResWindowHotkey : '#(useResWindowHotkey)#',
+                OPAutoSave : '#(OPAutoSave)#',
+                requiredFlag : $.parseJSON("#(requiredFlag)#".replace(/\'/g, "\"")),
+                isAutoSelectTemplate : '#(isAutoSelectTemplate)#',
+                IsSetToLog : '#(IsSetToLog)#'
+            };
+            
+            var envVar = {
+                isOfficeAudit : false,
+                readonly : true,
+                firstTmpl : null,
+                savedRecords : "",
+                opEmrButtons : '#(OPEmrButtons)#',
+                opHisTools : $.parseJSON("#(OPHisTools)#".replace(/\'/g, "\"")),
+                opResource : $.parseJSON("#(OPResource)#".replace(/\'/g, "\"")),
+                patInfoBar : '#(patInfoBar)#',
+                docContext : null 
+            };
+        </script>
+    </head>
+    <body class="easyui-layout">
+        <div id="patLst" class="easyui-panel" data-options="region:'west',border:true,noheader:true,collapsible:false" style="width:300px;">
+            <div id="seekform" class="easyui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',border:false">
+                    <table id="qryTable" style="width:100%;table-layout:fixed;border:0;cellspacing:1;cellpadding:0">
+                        <tr><td>
+                            <label style="font-weight:bold;">就诊日期范围:</label>
+                            <div style="padding-top:3px;">从&nbsp;&nbsp;<input class="easyui-datebox" id="startDate" data-options="required:false,editable:false"/>&nbsp;&nbsp;至&nbsp;&nbsp;<input class="easyui-datebox" id="endDate" data-options="required:false,editable:false"/></div>
+                        </td></tr>
+                        <tr><td>
+                            <label style="font-weight:bold;">患者信息:</label>
+                            <div style="padding-top:3px;"><span>登&nbsp&nbsp记&nbsp&nbsp号：</span>
+                            <!--div style="padding-top:3px;"><span>病人ID&nbsp&nbsp&nbsp&nbsp：</span-->
+                                <input id="regNoSearch" class="easyui-searchbox" data-options="fit:true,border:false"></input></div>
+                            <div style="padding-top:3px;"><span>患者姓名：</span>
+                                <input id="nameSearch" class="easyui-searchbox" data-options="fit:true,border:false"></input></div>
+                            <div style="padding-top:3px;"><span>就诊卡号：</span>
+                                <input id="cardNoSearch" class="easyui-searchbox" data-options="fit:true,border:false"></input>
+                                <!--a id="readCard" href="#" class="easyui-linkbutton" style="padding-left:15px;">读卡</a-->
+                                <!--a id="reset" href="#" class="easyui-linkbutton" style="padding-left:15px;">清空</a-->
+                            </div>
+                        </td></tr>
+                    </table>
+                </div>
+                <div data-options="region:'center',title:'病历打印情况列表'" style="top:0px;">
+                    <table id="patientPrintListData" style="width:100%;"></table>
+                </div>
+            </div>
+        </div>
+        <div id="emrEditor" class="easyui-panel" data-options="region:'center',border:false,noheader:true,collapsible:false" style="overflow:hidden;">
+            <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <div id="editor" data-options="region:'center',border:false" style="overflow:hidden;">
+                    <!--编辑器emr.op.editor.csp-->
+                    <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
+                </div>
+                <!--按钮-->
+                <div id="pnlButton" data-options="region:'north',border:false" style="width:100%;height:38px;padding-left:6px;padding-right:5px;">
+                    <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px"/>
+                </div>
+                <!---->
+                <div class="easyui-layout" data-options="region:'south',border:false" style="width:100%;height:30px">
+                    <div class="easyui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;">
+                        <div id="tmplsTabs" class="easyui-tabs" data-options="fit:true,border:false,plain:true,tabPosition:'bottom',justified:true,narrow:true,pill:true" style="">
+                        </div>
+                    </div>
+                    <table id="msgTable" class="right" style="width:300px;height:100%;table-layout:fixed;display:none;" border=0 cellspacing=0 cellpadding=1>
+                        <tr>
+                            <td id="msgtd" style="vertical-align:middle;background-color:red;text-align:center;font-family:MicrosoftYaHei;font-size:120%;color:black;display:inline-block"></td> 
+                        </tr> 
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/iEmrPluginEx.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.toolbar.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.quality.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.privilege.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.template.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.editor.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.hisLog.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.printSearch.js"></script>
+    </body>
+</html>

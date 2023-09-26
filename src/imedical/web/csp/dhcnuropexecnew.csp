@@ -1,0 +1,44 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SCRIPT language=cache RUNAT=SERVER>
+	s seatFlag=$G(%request.Data("seatFlag",1))
+	s EpisodeID=$G(%request.Data("EpisodeID",1))
+	s flowFlag=$G(%request.Data("flowFlag",1))
+	s admType=$G(%request.Data("admType",1))
+	;s seatFlag=1
+	;s flowFlag=1
+	;s admType="OE"
+
+	i seatFlag=1 d   //◊˘Œª
+	.s ifSYCall=1
+	.s componet="DHCNurOPSySeat"
+	e  i seatFlag=2 d   //÷Œ¡∆≈≈∂”    
+	.s ifSYCall=0
+	.s componet="DHCNurTreatQueue"
+	e  i seatFlag=3 d   // ‰“∫
+	.s ifSYCall=1
+	.s componet="DHCNurTreatQueue"
+	e  i seatFlag=4 d   //¥≤ŒªÕº
+	.s ifSYCall=0
+	.s componet="DHCNurOPJZLG"
+	i +seatFlag'=0 d
+	.w "<frameset cols='20%,*'>"
+	.w "<frame name='TreatLeft'  frameborder='0' src='websys.default.csp?WEBSYS.TCOMPONENT="_componet_"&admType="_admType_"&ifSYCall="_ifSYCall_"&flowFlag="_flowFlag_"&seatFlag="_seatFlag_"'>"
+	.;w "<frame name='NurseRight'  frameborder='0' src='dhcnuropexec.csp?EpisodeID="_EpisodeID_"&admType="_admType_"&flowFlag="_flowFlag_"'>"
+	e  d
+	.w "<frameset cols='*'>"
+	.;w "<frame name='NurseRight'  frameborder='0' src='dhcnuropexec.csp?EpisodeID="_EpisodeID_"&admType="_admType_"&flowFlag="_flowFlag_"&ifPrintAll"_ifPrintAll_"'>"
+</SCRIPT>
+<frame name="NurseRight"  frameborder="0" src="dhcnuropexec.csp?EpisodeID=#(EpisodeID)#&admType=#(admType)#&flowFlag=#(flowFlag)#">
+</frameset>
+</HTML>

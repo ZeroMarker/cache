@@ -1,0 +1,36 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+		s searchCode=$g(%request.Data("queryCode",1))
+    	s patientID = $g(%request.Data("patientID",1))
+    	s startDate = $g(%request.Data("startDate",1))
+    	s actionCode =  $g(%request.Data("actionCode",1))
+    	if (actionCode ="GetDiagnoseData")
+    	{
+	    	s startIndex = $g(%request.Data("startIndex",1))
+	    	s pageCount = $g(%request.Data("pageCount",1))
+	    	write "("
+	    	s sc = ##Class(icare.TimeLineBirthCheckView).GetDiagnoseInfor(patientID,startIndex,pageCount)
+	    	write ")"
+	    	quit
+    	}
+    	if (actionCode ="GenerateData")
+    	{
+	    	//s sc=##class(icare.TimeLineView).GenerateData(episodeId)
+	    	s sc = ##Class(icare.TimeLineService.BOPregnanceView).ExtractData(patientID,"63")
+	    	write "({success:true})"
+	    	quit
+    	}
+    	if (searchCode '= "")
+    	{
+			write "("
+	    	s sc=##class(icare.TimeLineBirthCheckView).GetBirthCheckDisplayInfor(searchCode,patientID,startDate)
+	    	write ")"
+    	}
+    	s dataTypeCode = $g(%request.Data("dataTypeCode",1))
+    	if (dataTypeCode '= "")
+    	{
+	    	write "("
+	    	s sc = ##Class(icare.TimeLineBirthCheckView).GetDataTypeData(dataTypeCode,patientID,startDate)
+	    	write ")"
+    	}
+</script>

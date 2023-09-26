@@ -1,0 +1,82 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method-->
+
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+</HEAD>
+<BODY>
+
+ 	
+ 	
+	<server>
+		d ##class(web.DHCMGNurData).PrintLinkFile()
+ 		s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ 		s CacheDB=$P(setstr,"^")
+		s webIP=$P(setstr,"^",2)
+ 		s dllstr=webIP_"/dhcmg/DHCCDoctorOrderSheet.dll#DHCCDoctorOrderSheet.WebInterface"
+ 		w "<OBJECT id=""DHCCDoctorOrderSheet""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+ 		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s categoryDetail = $Get(%request.Data("CategoryDetail",1),"")
+  		s pageInfoID = $Get(%request.Data("PageInfoID",1),"")
+ 		
+ 		s GetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.GetPageNumber"))
+        s SetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.SetPageNumber"))
+	    s userID = $Get(%request.Data("userID",1),"")
+	     
+	</server>
+	<SCRIPT Language="Javascript">
+        var userID = "#(userID)#";
+        var webIp="#(webIP)#";
+        var GetPageNumMethod="#(GetPageNumMethod)#";
+	    var SetPageNumMethod="#(SetPageNumMethod)#";
+	    var EpisodeID = '#(EpisodeID)#';
+		var pageInfoID = '#(pageInfoID)#';
+	
+        var startPageNumTmp=cspRunServerMethod(GetPageNumMethod,pageInfoID);
+        var startPageNumTmp2="";
+
+		if(startPageNumTmp!=0)
+		{
+			startPageNumTmp2=startPageNumTmp;
+			startPageNumTmp=startPageNumTmp-1;
+		}
+		//debugger;
+        DHCCDoctorOrderSheet.printOut(EpisodeID,webIp,"Long")
+	    
+
+     
+        var curPageNumTemp=DHCCDoctorOrderSheet.pageNo;
+
+     
+        var curendpage="";
+        if (curPageNumTemp!=0)
+        {
+	        curendpage=curPageNumTemp;
+        }
+        else
+        {
+	        curendpage=startPageNumTmp2
+        }
+     	if ((curendpage!=0)&&(curendpage>=startPageNumTmp2))
+		{
+			curendpage=parseInt(curendpage)
+		
+		    var RetVal=cspRunServerMethod(SetPageNumMethod,curendpage,pageInfoID);	
+	
+		}
+        
+
+		setTimeout("parent.printNext();", 3000 );	
+		
+	</SCRIPT>
+</BODY>
+</HTML>

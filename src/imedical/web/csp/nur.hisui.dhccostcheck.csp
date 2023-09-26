@@ -1,0 +1,2015 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+<title>	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE> </title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<meta charset="utf-8"/>
+<HISUI/>
+</head>
+<style>
+.title_R{
+	height:30px;
+	padding:5px;
+	border-bottom:1px solid #cccccc;
+	background:#f9f9fa;	
+	display:flex;
+	flex-direction:row;
+	flex-warp:nowarp;
+	justify-content:flex-start;
+	line-height:30px;
+}
+.left{
+	width:90%;	
+}
+.right{
+	width:10%;	
+}
+.title_RD{
+	line-height:30px;
+	height:36px;
+	padding:5px;
+	border-bottom:1px solid #ccc;
+}
+.title_L{
+	height:30px;
+	padding:5px 0;
+	border-bottom:1px solid #cccccc;
+	background:#f9f9fa;	
+	display:flex;
+	flex-direction:row;
+	flex-warp:nowarp;
+	justify-content:flex-start;
+	line-height:30px;
+}
+td[field="TOrderName"] div.datagrid-cell, .datagrid-cell-group{
+	text-overflow: ellipsis; /*2018-12-4 showTip 列数据太多显示...*/
+	padding: 0 8px;
+}
+.radio_box{
+	display:flex;
+	flex-direction:row;
+	flex-wrap: nowrap;
+	justify-content:flex-start;
+	margin-left:-5px;
+}
+label.checkbox, label.radio{
+	padding-left:22px!important;	
+}
+#model{
+	position:fixed;
+	width:100%;
+	height:100%;
+	/*background:pink;*/
+	z-index:100000;
+}
+</style>
+<body style="background-color:#fff;">
+	<div id="model"></div>
+	<div id="content" style="width:100%;height:100%">
+		<div id="cc2" class="hisui-layout" data-options="clickExpand:false,fit:true">
+			<div id="rightDiv" data-options="region:'east',title:'',tools:'#leftTools',clickExpand:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',onCollapse:resizeLeftTable,onResize:resizeRightTabel" 
+				style="width:480px;">
+				<div class="title_R">
+					<div class="left" id="tools_bar">
+						<div id="radio_r">
+							<input id="total" class='hisui-radio' type="radio" label='汇总' name='wantEat' value='total'>
+				            <input id="doc" class='hisui-radio' type="radio" label='医嘱' name='wantEat' value='doc'>
+				            <input id="record" class='hisui-radio' type="radio" label='明细记录' name='wantEat' value='record'>
+						</div>
+					</div>
+					<div class="right" style="padding-top:7px;">
+						<a style="float:right;width:16px;height:16px;display:inline-block;background: url(../scripts_lib/hisui-0.1.0/dist/css/images/layout_arrows_black.png) 0 -16px no-repeat;" id="cliHid" href="javascript:void(0)" ></a>
+					</div>
+				</diV>
+				<div class="title_RD">
+					<table style="width:457px">
+						<tbody>
+							<tr>
+								<!-- <td class="r-label" style="padding-right:5px;">日期</td> -->
+								<td class="r-label" style="padding-right:0px;">
+									<input id="startTime" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17" data-options="required:true,width:110" style="display: none;">
+								</td>
+								<td class="r-label" style="padding-right:0px;">#(..Get("到"))#</td>
+								<td class="r-label" style="padding-right:0px;">
+									<input id="endTime" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17" data-options="required:true,width:110" style="display: none;">
+								</td>
+								<td class="r-label" style="padding-right:0px;">
+									<input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:changeBind" label="显示自动插入" id="checkbox1">
+								</td>
+								<td style="width:52px;">
+									<span id="stopTd" href="javascript:;" style="cursor:pointer;">
+										<span class="icon icon-stop-order">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+										<span>#(..Get("停止"))#</span>
+									</span>
+								</td>
+								<td class="r-label" style="padding-right:0px;padding-left:22px">
+									<span id="lock" style="cursor:pointer;width:16px;height:16px;display:inline-block" class="icon icon-lock" onclick="changeLock(!lockStatus)"></span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="tableRDiv" style="padding:4px;">
+					<table id="table_r"  class="hisui-datagrid"></table>
+				</div>
+			</div>   
+			<div id="leftDiv" style="overflow-x:auto;" data-options="region:'center',title:'',split:true,bodyCls:'panel-header-gray',onResize:resizeLeftTable">
+				<div class="title_L"  style="margin-bottom:5px;min-width:810px;">
+					<table>
+						<tbody>
+							<tr>
+								<td class="r-label" style="padding-right:2px;">
+									<div class="radio_box">
+							            <input id="all" class='hisui-radio' type="radio" label='全部' name='doctor' value='ALL'>
+							            <input id="longorder" class='hisui-radio' type="radio" label='长嘱' name='doctor' value='S'>
+							            <input id="snaporder" class='hisui-radio' type="radio" label='临嘱' name='doctor' value='OM'>
+									</div>
+								</td>
+								<td class="r-label" style="padding-right:0px;">#(..Get("范围"))#</td>
+								<td class="r-label" style="padding-right:2px;">
+									<select id="area"></select>
+								</td>
+								<td class="r-label" style="padding-right:0px;">#(..Get("医嘱单型"))#</td>
+								<td class="r-label" style="padding-right:2px;">
+									<select id="Docorder" ></select>
+								</td>
+								<td class="r-label" style="padding-right:0px;">#(..Get("分类"))#</td>
+								<td class="r-label" style="padding-right:2px;">
+									<select id="diff" ></select>
+								</td>
+								<td class="r-label" style="padding-right:0px;">#(..Get("排序"))#</td>
+								<td class="r-label" style="padding-right:2px;">
+									<select id="SortTime" ></select>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<table id="table_L"  class="hisui-datagrid"></table>
+			</div>   
+		</div>  
+	</div>
+	<div id="modal" >
+		<table id="detailsTab"></table>
+	</div>
+	<div id="stopModal" style="padding:10px;">
+		<table>
+			<tr>
+				<td style="padding-left:30px;padding-right:5px;">#(..Get("选择原因"))#</td>
+				<td><div id="selectBox"></div></td>
+			</tr>
+		</table>
+	</div>
+	<div id="cxModal" style="padding:10px;">
+		<table>
+			<tr>
+				<td style="padding-left:30px;padding-right:5px;">#(..Get("签名密码"))#</td>
+				<td><input id="pdCX" class="hisui-validatebox textbox" type="password" data-options="required:true"></td>
+			</tr>
+		</table>
+	</div>
+<script type="text/javascript">
+function getParam(paramName) {
+	paramValue = "";
+	isFound = false;
+	if (this.location.search.indexOf("?") == 0 && this.location.search.indexOf("=") > 1) {
+		arrSource = unescape(this.location.search).substring(1, this.location.search.length).split("&");
+		var i = 0;
+		while (i < arrSource.length && !isFound) {
+			if (arrSource[i].indexOf("=") > 0) {
+				if (arrSource[i].split("=")[0].toLowerCase() == paramName.toLowerCase()) {
+					paramValue = arrSource[i].split("=")[1];
+					isFound = true;
+				}
+			}
+			i++;
+		}
+	}
+	return paramValue;
+}
+PriorType='ALL';// 左侧表格医嘱类型；默认为全部
+scope="1";// 
+nursebill="ALL";
+SortType="DT"
+CatType="ALL"; // 左侧表格默认分类为全部
+var initArgs="";
+var papmi="";
+var adm="";
+var startDate="" // getDate()获取当前时间
+var endDate=""
+var ifBind=false;
+function changeBind(e,value){
+	if(value){
+		ifBind='Y';
+	}else{
+		ifBind='N';	
+	}
+	
+	//$("#table_r").datagrid('load');
+	FnRight();
+}
+function xhrRefresh(p,a,c){
+	// 点击左侧病人列表执行的函数
+	//console.log(p,a,c);
+	//return;
+	initArgs=p;
+	//console.log(p,'patient')
+	 papmi=p.papmi;
+	 adm=p.adm;
+	 mradm:p.mradm;
+	 //console.log('init',p);
+	 leftTable();
+	 FnRight();
+}
+function switchPatient(patientId,episodeId,mradm,age){
+	$("#InpatListDiv").data("AutoOpen",0);
+	setEprMenuForm(episodeId,patientId,mradm,"");
+	console.log(episodeId,patientId,mradm,"ceshishuju");
+	// updatePatientInfo(episodeId,age);
+}
+function setEprMenuForm(adm,papmi,mradm,canGiveBirth){
+	var frm = dhcsys_getmenuform();
+	if((frm) &&(frm.EpisodeID.value != adm)){
+		frm.EpisodeID.value = adm;
+		frm.PatientID.value = papmi;
+		frm.mradm.value = mradm;
+	}
+}
+var currentDate=getDate();// 获取当前的日期
+// 查询本地存储的锁的状态
+var lockStatus=""; // false是锁定状态，true是未锁定状态
+var currentRadio="total";
+/*
+if(localStorage.getItem("LockStatus")){
+	var obj=JSON.parse(localStorage.getItem("LockStatus"));
+	lockStatus=obj.lock
+	currentRadio=obj.statusKey
+}else{
+	lockStatus=true
+}
+*/
+	
+function changeLock(val){
+	// 关于锁的逻辑
+	// val:true  为开
+	// val:false 为锁
+	lockStatus=val
+	console.log(val);
+	if(val){
+		$("#lock").removeClass("icon-lock").addClass("icon-unlock");
+		$cm({
+			ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
+			MethodName:'SetBindConfig',
+			summaryStatus:'N',// 汇总
+			detailStatus:'N', // 医嘱
+			recordStatus:'N', // 记录明细
+			userId:session['LOGON.USERID']
+		},function(res){
+			FnClearLocalStorage();	
+		})
+	}else{
+		$("#lock").removeClass("icon-unlock").addClass("icon-lock");
+		// 存储数据
+		var currentVal=selectObjR.currentVal;
+		var localObj={
+			lock:val,
+			statusKey:currentVal	
+		}
+		FnLocalStorage(localObj)
+	}
+}
+function FnLocalStorage(val){
+	// 本地数据存储
+	var summary='N';
+	var detail='N';
+	var record='N';
+	console.log('songzmin','suji');
+	if(!val.lock){
+		if(val.statusKey=='total'){
+			// 汇总
+			summary='Y';	
+		}else if(val.statusKey=='doc'){
+			// 医嘱
+			detail='Y';
+		}else if(val.statusKey=='record'){
+			// 明细记录
+			record='Y';
+		}
+		$cm({
+			ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
+			MethodName:'SetBindConfig',
+			summaryStatus:summary,// 汇总
+			detailStatus:detail, // 医嘱
+			recordStatus:record, // 记录明细
+			userId:session['LOGON.USERID']
+		},function(res){
+			// var tmpVal=JSON.stringify(val)
+			// localStorage.setItem("LockStatus",tmpVal)
+		})
+	}
+}
+function FnClearLocalStorage(){
+	// 清楚本地存储的数据
+	localStorage.removeItem("LockStatus")
+}
+var selectObjR={}
+Object.defineProperty(selectObjR,"currentVal",{
+	get:function(){
+		return currentVal;
+	},
+	set:function(newVal){
+		var columns=""
+		currentVal=newVal;
+		// 这里是医嘱，汇总切换的时候出发的业务逻辑
+		// console.log(newVal,'right');
+		if(!lockStatus){
+			var localObj={
+				lock:lockStatus,
+				statusKey:newVal	
+			}
+			//currentRadio="total";
+			currentRadio=newVal
+			FnLocalStorage(localObj)
+		}
+		if(newVal=="record"){
+			$("#stopTd").show();
+		}else{
+			$("#stopTd").hide();
+		}
+	}
+})
+var selectObjL={};
+Object.defineProperty(selectObjL,"currentVal",{
+	get:function(){
+		return currentVal;
+	},
+	set:function(newVal){
+		currentVal=newVal;
+		// 这里是全部，长医嘱切换的时候出发的业务逻辑
+		console.log(newVal,'left');
+		PriorType=currentVal;
+		leftTable();
+	}
+})
+function rightStopOrder(){
+	
+}
+function unique (arr) {
+	// 数组去重
+  return Array.from(new Set(arr))
+}
+function stopOrder(){
+	$("#stopTd").click(function(){
+		var res=$("#table_r").datagrid('getChecked');
+		if(res.length==0){
+			$.messager.alert("简单提示", "没有勾选明细记录!", "info");	
+			return;
+		}
+		var longDataArr=[]; // 长医嘱数据
+		var lsDataArr=[]; // 临时医嘱数据
+		var hadExedData=[]; // 获取已执行的数据
+		var uniquelsDataID=""; // 临时医嘱去重之后的医嘱id
+		res.forEach(function(item){
+			if(item.OrderStatus=='已执行'){
+				hadExedData.push(item);	
+			}
+			if(item.PriorityDesc=='长期医嘱'){
+				longDataArr.push(item)
+			}else if(item.PriorityDesc=='临时医嘱'){
+				lsDataArr.push(item);
+			}
+		})
+		if(lsDataArr.length>0){
+			var TmplsDataArrID=lsDataArr.map(function(item){
+				return 	item.TOEORI;
+			})
+			uniquelsDataID=unique(TmplsDataArrID);
+		}
+		 // console.log(longDataArr,lsDataArr,hadExedData,uniquelsDataID);
+		 // return;
+		$("#stopModal").show();
+		$("#stopModal").dialog({
+			title:$g('停止执行'),
+			resizable:true,
+			width:340,
+			height:160,
+			iconCls:'icon-paper-table',
+			modal:true,
+			buttons:[
+				{
+					text:$g('停止执行'),
+					handler:function(){
+						var reason=''; // 原因
+						var inputVal=$('#selectBox').combobox('getText');
+						var selectVal=$('#selectBox').combobox('getValue');
+						if(!inputVal && !selectVal){
+							$.messager.popover({msg: $g('原因不能为空！'),type:'alert'});
+							return;	
+						}
+						if(selectVal){
+							reason=	selectVal;
+						}else{
+							reason=	inputVal;
+						}
+						if(hadExedData.length>0){
+							// 1,如果有已执行记录则先撤销已执行
+							var tmpExeRowID=hadExedData.map(function(item){
+								return item.TOrdExcRowID;	
+							})
+							var tmpExeRowIDStr=tmpExeRowID.join('^');
+							console.log(tmpExeRowIDStr);
+							$.messager.confirm("撤销执行", "有已执行的执行记录，是否撤销执行记录？", function (r) {
+								if (r) {
+									$cm({
+										ClassName:'web.DHCDocInPatPortalCommon',
+										MethodName:'MulOrdExecDealWithCom',
+										OrderExecStr:tmpExeRowIDStr,
+										date:'',
+										time:'',
+										type:'C',
+										ReasonId:reason,
+										ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+										dataType:'text'
+									},function(res){
+										if(res.indexOf('0')==0){
+											// 2，医嘱执行记录撤销成功
+											// $.messager.popover({msg: res,type:'success',timeout: 1000});
+											if(longDataArr.length>0 && lsDataArr.length>0){
+												// 情况1，临时与长期同时拥有
+												// 3，如果有长期医嘱则执行停止长期医嘱执行记录
+												var tmpExeLonID=[];
+												longDataArr.forEach(function(item){
+													tmpExeLonID.push(item.TOrdExcRowID)
+												})
+												var tmpExeLonIDStr=tmpExeLonID.join('^');
+												$cm({
+													ClassName:'web.DHCDocInPatPortalCommon',
+													MethodName:'MulOrdExecDealWithCom',
+													OrderExecStr:tmpExeLonIDStr,
+													date:'',
+													time:'',
+													type:'D',
+													ReasonId:reason,
+													ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+													dataType:'text'
+												},function(res){
+													if(res.indexOf('0')==0){
+														// 4，长期医嘱执行记录停止成功
+														// 5，撤销临时医嘱
+															var lsDataArrUnique=[]; // 最终的临时医嘱记录
+															// uniquelsDataID
+															lsDataArr.forEach(function(item){
+																uniquelsDataID.forEach(function(iner){
+																	if(item.TOEORI==iner){
+																		lsDataArrUnique.push(item);
+																	}
+																})
+															})
+															var tmpCode=String.fromCharCode(1);
+															var tmpMergeDateID=lsDataArrUnique.map(function(item){
+																return item.TOEORI+tmpCode+item.SttDate;
+															})
+															var tmpMergeDateIDStr=tmpMergeDateID.join('^');
+														 // 弹出密码框
+															$("#cxModal").show();
+															$("#cxModal").dialog({
+																title:"撤销临时医嘱",
+																resizable:true,
+																width:340,
+																height:160,
+																iconCls:'icon-paper-table',
+																modal:true,
+																buttons:[
+																	{
+																		text:'确定',
+																		iconCls:'icon-save',
+																		handler:function(){
+																			var pwd=$("#pdCX").val();
+																			if(pwd==""){
+																				$.messager.popover({msg: '密码不能为空！',type:'alert'});
+																				return;	
+																			}
+																			console.log(pwd,inputVal,selectVal);
+																			var TmpExpStr="";
+																			if(selectVal){
+																				TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
+																			}else if(inputVal){
+																				TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^'+inputVal															
+																			}
+																			// 撤销临时医嘱
+																			$cm({
+																				//53||541 strDateArr
+																				ClassName:'web.DHCDocInPatPortalCommon',
+																				MethodName:'MulOrdDealWithCom',
+																				OrderItemStr:tmpMergeDateIDStr,
+																				date:'',
+																				time:'',
+																				type:'C',
+																				pinNum:pwd,
+																				ExpStr:TmpExpStr,
+																				dataType:'text'		
+																			},function(res){
+																				if(res.indexOf('0')==0){
+																					$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+																				
+																					//执行完毕之后对表格进行刷新
+																					$("#cxModal").dialog('close'); // 密码模态框隐藏
+																					$("#stopModal").dialog('close');
+																					$("#table_r").datagrid('reload');
+																					// $("#modal").dialog('close');
+																				}else{
+																					$.messager.alert("撤销临时医嘱失败", res, "info");	
+																				}
+																			})
+																			
+																		}
+																	}
+																]
+															})
+													}else{
+														$.messager.alert("停止执行记录失败", res, "info");	
+													}
+												})
+											}else if(longDataArr.length>0 && lsDataArr.length==0){
+												// 情况2：只有长期医嘱
+												var tmpExeLonID=[];
+												longDataArr.forEach(function(item){
+													tmpExeLonID.push(item.TOrdExcRowID)
+												})
+												var tmpExeLonIDStr=tmpExeLonID.join('^');
+												$cm({
+													ClassName:'web.DHCDocInPatPortalCommon',
+													MethodName:'MulOrdExecDealWithCom',
+													OrderExecStr:tmpExeLonIDStr,
+													date:'',
+													time:'',
+													type:'D',
+													ReasonId:reason,
+													ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+													dataType:'text'
+												},function(res){
+													if(res.indexOf('0')==0){
+														$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+														$("#stopModal").dialog('close');
+														$("#table_r").datagrid('reload');
+													}	
+												})
+											}else if(longDataArr.length==0 && lsDataArr.length>0){
+												// 情况3 ：只有临时医嘱
+												var lsDataArrUnique=[]; // 最终的临时医嘱记录
+												// uniquelsDataID
+												lsDataArr.forEach(function(item){
+													uniquelsDataID.forEach(function(iner){
+														if(item.TOEORI==iner){
+															lsDataArrUnique.push(item);
+														}
+													})
+												})
+												var tmpCode=String.fromCharCode(1);
+												var tmpMergeDateID=lsDataArrUnique.map(function(item){
+													return item.TOEORI+tmpCode+item.SttDate;
+												})
+												var tmpMergeDateIDStr=tmpMergeDateID.join('^');
+											 // 弹出密码框
+												$("#cxModal").show();
+												$("#cxModal").dialog({
+													title:"撤销临时医嘱",
+													resizable:true,
+													width:340,
+													height:160,
+													iconCls:'icon-paper-table',
+													modal:true,
+													buttons:[
+														{
+															text:'确定',
+															iconCls:'icon-save',
+															handler:function(){
+																var pwd=$("#pdCX").val();
+																if(pwd==""){
+																	$.messager.popover({msg: '密码不能为空！',type:'alert'});
+																	return;	
+																}
+																console.log(pwd,inputVal,selectVal);
+																var TmpExpStr="";
+																if(selectVal){
+																	TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
+																}else if(inputVal){
+																	TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^'+inputVal															
+																}
+																// 撤销临时医嘱
+																$cm({
+																	//53||541 strDateArr
+																	ClassName:'web.DHCDocInPatPortalCommon',
+																	MethodName:'MulOrdDealWithCom',
+																	OrderItemStr:tmpMergeDateIDStr,
+																	date:'',
+																	time:'',
+																	type:'C',
+																	pinNum:pwd,
+																	ExpStr:TmpExpStr,
+																	dataType:'text'		
+																},function(res){
+																	if(res.indexOf('0')==0){
+																		$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+																	
+																		//执行完毕之后对表格进行刷新
+																		$("#cxModal").dialog('close'); // 密码模态框隐藏
+																		$("#stopModal").dialog('close');
+																		$("#table_r").datagrid('reload');
+																		// $("#modal").dialog('close');
+																	}else{
+																		$.messager.alert("撤销临时医嘱失败", res, "info");	
+																	}
+																})
+																
+															}
+														}
+													]
+												})
+											}
+											
+										}else{
+											$.messager.alert("撤销失败", res, "info");
+										}
+									})
+								} else {
+									$.messager.popover({msg:"点击了取消"});
+								}
+							});
+						}else {
+							// 没有已执行的执行记录情况
+							if(longDataArr.length>0 && lsDataArr.length>0){
+								// 情况4：长期跟临时都有
+								var tmpExeLonID=[];
+								longDataArr.forEach(function(item){
+									tmpExeLonID.push(item.TOrdExcRowID)
+								})
+								var tmpExeLonIDStr=tmpExeLonID.join('^');
+								$cm({
+									ClassName:'web.DHCDocInPatPortalCommon',
+									MethodName:'MulOrdExecDealWithCom',
+									OrderExecStr:tmpExeLonIDStr,
+									date:'',
+									time:'',
+									type:'D',
+									ReasonId:reason,
+									ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+									dataType:'text'
+								},function(res){
+									if(res.indexOf('0')==0){
+										// 4，长期医嘱执行记录停止成功
+										// 5，撤销临时医嘱
+											var lsDataArrUnique=[]; // 最终的临时医嘱记录
+											// uniquelsDataID
+											lsDataArr.forEach(function(item){
+												uniquelsDataID.forEach(function(iner){
+													if(item.TOEORI==iner){
+														lsDataArrUnique.push(item);
+													}
+												})
+											})
+											var tmpCode=String.fromCharCode(1);
+											var tmpMergeDateID=lsDataArrUnique.map(function(item){
+												return item.TOEORI+tmpCode+item.SttDate;
+											})
+											var tmpMergeDateIDStr=tmpMergeDateID.join('^');
+										 // 弹出密码框
+											$("#cxModal").show();
+											$("#cxModal").dialog({
+												title:"撤销临时医嘱",
+												resizable:true,
+												width:340,
+												height:160,
+												iconCls:'icon-paper-table',
+												modal:true,
+												buttons:[
+													{
+														text:'确定',
+														iconCls:'icon-save',
+														handler:function(){
+															var pwd=$("#pdCX").val();
+															if(pwd==""){
+																$.messager.popover({msg: '密码不能为空！',type:'alert'});
+																return;	
+															}
+															console.log(pwd,inputVal,selectVal);
+															var TmpExpStr="";
+															if(selectVal){
+																TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
+															}else if(inputVal){
+																TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^'+inputVal															
+															}
+															// 撤销临时医嘱
+															$cm({
+																//53||541 strDateArr
+																ClassName:'web.DHCDocInPatPortalCommon',
+																MethodName:'MulOrdDealWithCom',
+																OrderItemStr:tmpMergeDateIDStr,
+																date:'',
+																time:'',
+																type:'C',
+																pinNum:pwd,
+																ExpStr:TmpExpStr,
+																dataType:'text'		
+															},function(res){
+																if(res.indexOf('0')==0){
+																	$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+																
+																	//执行完毕之后对表格进行刷新
+																	$("#cxModal").dialog('close'); // 密码模态框隐藏
+																	$("#stopModal").dialog('close');
+																	
+																	$("#table_r").datagrid('reload');
+																	// $("#modal").dialog('close');
+																}else{
+																	$.messager.alert("撤销临时医嘱失败", res, "info");	
+																}
+															})
+															
+														}
+													}
+												]
+											})
+									}else{
+										$.messager.alert("停止执行记录失败", res, "info");	
+									}
+								})	
+							}else if(longDataArr.length>0 && lsDataArr.length==0){
+								// 情况5：只有长期医嘱
+								var tmpExeLonID=[];
+								longDataArr.forEach(function(item){
+									tmpExeLonID.push(item.TOrdExcRowID)
+								})
+								var tmpExeLonIDStr=tmpExeLonID.join('^');
+								$cm({
+									ClassName:'web.DHCDocInPatPortalCommon',
+									MethodName:'MulOrdExecDealWithCom',
+									OrderExecStr:tmpExeLonIDStr,
+									date:'',
+									time:'',
+									type:'D',
+									ReasonId:reason,
+									ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+									dataType:'text'
+								},function(res){
+									if(res.indexOf('0')==0){
+										$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+										$("#stopModal").dialog('close');
+										$("#table_r").datagrid('reload');
+									}	
+								})
+							}else if(longDataArr.length==0 && lsDataArr.length>0){
+								// 情况6：只有临时的医嘱
+								var lsDataArrUnique=[]; // 最终的临时医嘱记录
+								// uniquelsDataID
+								lsDataArr.forEach(function(item){
+									uniquelsDataID.forEach(function(iner){
+										if(item.TOEORI==iner){
+											lsDataArrUnique.push(item);
+										}
+									})
+								})
+								var tmpCode=String.fromCharCode(1);
+								var tmpMergeDateID=lsDataArrUnique.map(function(item){
+									return item.TOEORI+tmpCode+item.SttDate;
+								})
+								var tmpMergeDateIDStr=tmpMergeDateID.join('^');
+							 // 弹出密码框
+								$("#cxModal").show();
+								$("#cxModal").dialog({
+									title:"撤销临时医嘱",
+									resizable:true,
+									width:340,
+									height:160,
+									iconCls:'icon-paper-table',
+									modal:true,
+									buttons:[
+										{
+											text:'确定',
+											iconCls:'icon-save',
+											handler:function(){
+												var pwd=$("#pdCX").val();
+												if(pwd==""){
+													$.messager.popover({msg: '密码不能为空！',type:'alert'});
+													return;	
+												}
+												console.log(pwd,inputVal,selectVal);
+												var TmpExpStr="";
+												if(selectVal){
+													TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
+												}else if(inputVal){
+													TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^'+inputVal															
+												}
+												// 撤销临时医嘱
+												$cm({
+													//53||541 strDateArr
+													ClassName:'web.DHCDocInPatPortalCommon',
+													MethodName:'MulOrdDealWithCom',
+													OrderItemStr:tmpMergeDateIDStr,
+													date:'',
+													time:'',
+													type:'C',
+													pinNum:pwd,
+													ExpStr:TmpExpStr,
+													dataType:'text'		
+												},function(res){
+													if(res.indexOf('0')==0){
+														$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+													
+														//执行完毕之后对表格进行刷新
+														$("#cxModal").dialog('close'); // 密码模态框隐藏
+														$("#stopModal").dialog('close');
+														$("#table_r").datagrid('reload');
+														// $("#modal").dialog('close');
+													}else{
+														$.messager.alert("撤销临时医嘱失败", res, "info");	
+													}
+												})
+												
+											}
+										}
+									]
+								})
+							}
+							
+						}
+						
+					}	
+				}
+			]
+		});
+		// 初始化选择框
+		$HUI.combobox("#selectBox",{
+			valueField:'id', textField:'text',panelHeight:"auto",
+			width:140,
+			data:[
+				{id:'1',text:$g('药物过敏')}
+				,{id:'2',text:$g('重复用药')}
+				,{id:'11',text:$g('开错医嘱')}
+				,{id:'12',text:$g('病人要求')}
+			]
+		});
+		
+		
+		return;
+		/* 
+			NewStopModalShow(longDataArr,true,true)
+			args: longDataArr:选中的数据，
+				  第一个true：true：长医嘱，false：临时医嘱
+				  第二个true：true：数据来源于右侧表格的数据，false：数据来源于模态框的数据
+		
+		*/
+		
+		if(longDataArr.length>0){
+			// 1 停止长期医嘱执行记录
+			NewStopModalShow(longDataArr,true,true)
+			if(lsDataArr.length>0){
+				// 2 停止临时医嘱
+			NewStopModalShow(lsDataArr,false,true)
+				
+			}	
+		}else if(lsDataArr.length>0){
+			// 执行临时医嘱
+			NewStopModalShow(lsDataArr,false,true)
+		}
+		/*
+			return;
+			var str=[];
+			res.forEach(function(item){
+				str.push(item.TOrdExcRowID);
+			})
+			str=str.join("^");
+			var userId=session['LOGON.USERID'];
+			var localId=session['LOGON.CTLOCID'];
+			var wardId=session['LOGON.WARDID'];	
+			
+				停止的时候从服务器获取是否可以停止的医嘱。
+			$cm({
+				ClassName:"web.DHCDocInPatPortalCommon",
+				MethodName:"CheckMulOrdExecDealPermission",
+				OrderExecStr:str,
+				date:"",
+				time:"",
+				type:"D",
+				ExpStr:userId+'^'+localId+'^'+wardId+'^^'
+			},function(jsonData){
+				// 如果结果可以执行则返回：0
+				console.log(jsonData);  
+			});
+			
+			
+			// true 代表是右侧表格，false代表弹框中的表格
+			stopModalShow(str,userId,localId,wardId,true);
+		*/	
+	})	
+}
+function FnArea(){
+	// 范围的函数
+	$HUI.combobox("#Docorder",{
+		valueField:'id',
+		textField:'text',
+		multiple:false,
+		// rowStyle:'checkbox', //显示成勾选行形式
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		editable:false,
+		allowNull:true,
+		onSelect:function(record){
+			// console.log(record);
+			nursebill=record.id;
+			leftTable();
+		},
+		width:72,
+		data:[
+			{id:'ALL',text:$g('全部')},
+			{id:'N',text:$g('医嘱单')},
+			{id:'Nurse',text:$g('护嘱单')}
+		]
+	});
+	$("#Docorder").combobox('setValue','ALL')
+}
+function FnDocorder(){
+	// 医嘱单类型函数
+	$HUI.combobox("#area",{
+		valueField:'id',
+		textField:'text',
+		multiple:false,
+		// rowStyle:'checkbox', //显示成勾选行形式
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		editable:false,
+		allowNull:true,
+		onSelect:function(record){
+			// console.log(record);
+			scope=record.id;
+			leftTable();
+		},
+		width:70,
+		data:[
+			{id:'1',text:$g('全部')},
+			{id:'2',text:$g('作废')},
+			{id:'3',text:$g('当前')},
+			{id:'5',text:$g('已停止')},
+			{id:'8',text:$g('待处理')},
+			{id:'9',text:$g('已处理')},
+		]
+	});
+	$("#area").combobox('setValue','1')
+}
+function FnTimeSort(){
+	// 时间排序函数
+	$HUI.combobox("#SortTime",{
+		valueField:'id',
+		textField:'text',
+		multiple:false,
+		// rowStyle:'checkbox', //显示成勾选行形式
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		editable:false,
+		allowNull:true,
+		onSelect:function(record){
+			// console.log(record);
+			SortType=record.id;
+			leftTable();
+		},
+		width:88,
+		data:[
+			{id:'AT',text:$g('时间正序')},
+			{id:'DT',text:$g('时间倒序')},
+		]
+	});
+	$("#SortTime").combobox('setValue','DT')
+}
+function fnDiff(){
+	// 分类的函数	
+	$HUI.combobox("#diff",{
+		valueField:'id',
+		textField:'text',
+		multiple:false,
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		editable:false,
+		allowNull:true,
+		onSelect:function(record){
+			console.log(record);
+			CatType=record.id;
+			leftTable();
+		},
+		width:87,
+		data:[
+			{id:'ALL',text:$g('全部')},
+			{id:'29||1',text:$g('药品')},
+			{id:'29||2',text:$g('检验')},
+			{id:'29||3',text:$g('检查')},
+			{id:'29||4',text:$g('材料')},
+			{id:'29||5',text:$g('处置治疗')},
+			{id:'29||6',text:$g('其他')},
+		]
+		
+	})
+	$("#diff").combobox('setValue','ALL')
+}
+function FnRight(){
+	// 点击汇总触发的逻辑
+	$HUI.radio("#total",{
+		onCheckChange:function(e,value){
+			if(value){
+            	var SelectVal = $("input[name='wantEat']:checked").val();
+            	var columns=[[ 
+            		{field:"ck", checkbox:"true"},  
+			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:180},    
+			        //{field:'TUom',title:'单位',width:60,}, 
+			        {field:'TQty',title:'数量',width:80,}, 
+			        {field:'TPrice',title:'单价',width:80},
+			        {field:'TAmt',title:'金额',width:60,},
+			        {field:'total',title:'汇总',hidden:true}       
+			    ]]
+            	selectObjR.currentVal=SelectVal;
+            	if(lockStatus){
+	            	currentRadio=SelectVal
+	            }
+            	var QueryName='FindIPPatNurseOrderSummary';
+            	var ClassName='Nur.NIS.Service.Bill.BillCostCheck';
+				rightTable(columns,ClassName,QueryName)
+			}	
+		}
+	});
+	// 点击医嘱触发的逻辑
+	$HUI.radio("#doc",{
+		onCheckChange:function(e,value){
+			if(value){
+            	var SelectVal = $("input[name='wantEat']:checked").val();
+				var columns=[[    
+            		{field:"ck", checkbox:"true"},
+			        {field:'PriorityDesc',title:'医嘱类型',width:100},     
+			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:180},   
+			        {field:'TQty',title:'数量',width:100},
+			        {field:'SttDate',title:'医嘱开始时间',width:160,},
+			        {field:'XDate',title:'停止时间',width:160,},
+			        {field:'doc',title:'医嘱',hidden:true}       
+			    ]]
+            	selectObjR.currentVal=SelectVal;
+            	if(lockStatus){
+	            	currentRadio=SelectVal
+	            }
+            	var QueryName='FindIPPatNurseOrderDetail';
+            	var ClassName='Nur.NIS.Service.Bill.BillCostCheck';
+				rightTable(columns,ClassName,QueryName)
+			}	
+		}
+	});
+	// 点击明细记录触发的逻辑
+	$HUI.radio("#record",{
+		onCheckChange:function(e,value){
+			if(value){
+            	var SelectVal = $("input[name='wantEat']:checked").val();
+				var columns=[[    
+            		{field:"ck", checkbox:"true"},
+			        {field:'TExStDate',title:'要求执行时间',width:160,},    
+			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:180},   
+			        //{field:'TAmt',title:'数量',width:80}, 
+			        {field:'TQty',title:'数量',width:80},
+			        {field:'OrderStatus',title:'状态',width:80},
+			        {field:'PriorityDesc',title:'医嘱类型',width:110}, 
+			        {field:'SttDate',title:'医嘱开始时间',width:160,},
+			        {field:'record',title:'明细记录',hidden:true}    
+			    ]]
+            	selectObjR.currentVal=SelectVal;
+            	if(lockStatus){
+	            	currentRadio=SelectVal
+	            }
+            	var QueryName='FindIPPatNurseOrderRecord';
+            	var ClassName='Nur.NIS.Service.Bill.BillCostCheck';
+				rightTable(columns,ClassName,QueryName)
+			}	
+		}
+	});
+	console.log(currentRadio,"init");
+	// 设置选中汇总
+	if(currentRadio=="total"){
+		$HUI.radio("#total").setValue(true); // 初始选中汇总
+	}else if(currentRadio=="doc"){
+		$HUI.radio("#doc").setValue(true); // 初始选中医嘱
+	}else if(currentRadio=="record"){
+		$HUI.radio("#record").setValue(true); // 初始选中明细记录
+	}
+}
+function FnLeft(){
+	// 左侧表头初始化及执行逻辑
+	// 点击全部触发的逻辑
+	$HUI.radio("#all",{
+		onCheckChange:function(e,value){
+			if(value){
+            	var SelectVal = $("input[name='doctor']:checked").val();
+            	selectObjL.currentVal=SelectVal;
+            	PriorType=SelectVal;
+            	
+			}	
+		}
+	});
+	// 点击医嘱触发的逻辑
+	$HUI.radio("#longorder",{
+		onCheckChange:function(e,value){
+			if(value){
+            	var SelectVal = $("input[name='doctor']:checked").val();
+            	selectObjL.currentVal=SelectVal;
+			}	
+		}
+	});
+	// 点击明细记录触发的逻辑
+	$HUI.radio("#snaporder",{
+		onCheckChange:function(e,value){
+			if(value){
+            	var SelectVal = $("input[name='doctor']:checked").val();
+            	selectObjL.currentVal=SelectVal;
+			}	
+		}
+	});
+	$HUI.radio("#all").setValue(true);
+}
+function getDate(){
+	var myDate=new Date();
+	var Y=myDate.getFullYear();
+	var M=myDate.getMonth()+1;
+	var D=myDate.getDate();
+	return Y+"-"+M+"-"+D	
+}
+function setDate(){
+	// 设置当前的日历日期为今天
+	$("#startTime").datebox({
+		 width:115,
+		 onSelect: function(date){
+			        //alert(date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate());
+			        startDate=$("#startTime").datebox('getValue');// 开始日期
+			        endDate=$("#endTime").datebox('getValue'); // 结束日期
+			        FnRight();
+			       	// console.log(tmpEndDate,tmpStartDate)
+			    }
+	})
+	$("#endTime").datebox({
+		 width:115,
+		 onSelect: function(date){
+			        //alert(date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate());
+			        startDate=$("#startTime").datebox('getValue');// 开始日期
+			        endDate=$("#endTime").datebox('getValue');// 结束日期
+			        FnRight();
+			        // console.log(tmpStartDate,tmpEndDate)
+			    }
+	})
+	$("#startTime").datebox('setValue',currentDate);
+	$("#endTime").datebox('setValue',currentDate);
+}
+function leftTable(){
+	if(papmi=="" || adm=="" ){
+		papmi=getParam("PatientID");
+		adm=getParam("EpisodeID");
+	}
+	try{
+		var DIvH=$("#leftDiv").height();
+		var DIvW=$("#leftDiv").width();
+		// console.log(DIvH,DIvW,'lll')
+		// 左侧表格数据
+		$('#table_L').datagrid({
+			url:$URL,
+			queryParams:{
+				// 旧的className:'web.DHCDocInPatPortalCommon'
+				// 旧的QueryName:'FindInPatOrder'
+				ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
+				QueryName:'FindInPatUnauditedOrder',
+				papmi:papmi, //病人rowid
+				adm:adm, // 病人就诊表rowid
+				doctor:'0',
+				scope:scope,
+				stloc:'1',
+				nursebill:nursebill,
+				inputOrderDesc:'',
+				PriorType:PriorType,
+				CatType:CatType,
+				SortType:SortType,
+				OrderPriorType:'',
+				InstrID:'',
+				Pagerows:99999,
+				ScrollView:1,
+				rows:99999
+			},
+			fitColumns:true,
+			rownumbers:true,
+		    columns:[[    
+		        {field:'TStDate',title:'医嘱开始时间',width:100},    
+		        {field:'Priority',title:'医嘱类型',width:50},    
+		        {field:'TOrderName',title:'医嘱',width:220,showTip:true,tipWidth:320},
+		        {field:'TStopDate',title:'停止时间',width:85}    
+		    ]],
+		    height:DIvH-46-8,
+		    width:DIvW-8,
+		    style:{marginLeft:'4px'},			
+		    onLoadSuccess:function(){
+			    setTimeout(function(){
+				   $("#model").css("display","none") 
+				   },1000)
+		    },
+		    onBeforeLoad:function(){
+			    $("#model").css("display","block")
+		    }
+		})
+		}catch(err){
+			 
+			// console.log(tmpEpisodeID,tmpPatientID)	
+		}
+}
+function resizeRightTabel(){
+	// 重置右侧表格的尺寸
+	try{
+		var DIvW=$("#rightDiv").width();
+		var DIvH=$("#leftDiv").height();
+		var targetObj=$("#table_r").datagrid('options');
+		targetObj.width=DIvW-8;
+		targetObj.height=DIvH-46-47-8;
+		$("#table_r").datagrid('resize');
+	} catch(err) {
+		return true;
+	}
+}
+function resizeLeftTable(){
+	// 重置左侧表格的尺寸
+	try{
+		var DIvH=$("#leftDiv").height();
+		var DIvW=$("#leftDiv").width();
+		var targetObj=$("#table_L").datagrid('options');
+		
+		var tmpsdf=$("#cc2").layout("panel","east")[0].clientWidth
+		// console.log("testData",tmpsdf[0].clientWidth);
+		if(tmpsdf>0){
+			targetObj.width=805;
+			targetObj.height=DIvH-46-20;
+		}else{
+			targetObj.width=DIvW-8;
+			targetObj.height=DIvH-46-8;
+		}
+		$("#table_L").datagrid('resize')
+	}catch(err){
+		return true;	
+	}
+}
+function reloadRightTable(ColVal,DataVal){
+	// 重载右侧表格数据
+	//console.log(ColVal,'newFn')
+	try{
+		var targetObj=$("#table_r").datagrid('options');
+		targetObj.columns=ColVal;
+		$("#table_r").datagrid('refresh');
+		console.log(targetObj,'newFn')
+		resizeRightTabel()
+	}catch(err){
+		return true;	
+	}
+}
+function reloadLeftTable(){
+	// 重载左侧表格数据	
+}
+function rightTable(val,ClassName,QueryName){
+				//rightTable(columns,ClassName,QueryName)
+	/*$("#table_r").datagrid({
+		url:$URL,
+		queryParams:{
+			ClassName:'web.DHCDocInPatPortalCommon',
+			QueryName:'FindInPatOrder',
+			nursebill:"N"	
+		},
+    })
+    $cm({
+		ClassName:"web.DHCDocInPatPortalCommon",
+		QueryName:"FindInPatOrder"
+	},function(rs){
+		console.dir(rs);
+		console.log('jieguo');
+	});*/
+	if(papmi=="" || adm=="" ){
+		papmi=getParam("PatientID");
+		adm=getParam("EpisodeID");
+	}
+	var DIvW=$("#rightDiv").width();
+	var DIvH=$("#leftDiv").height();
+	try{
+		$("#table_r").datagrid({
+			url:$URL,
+			queryParams:{
+				// ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
+				// QueryName:'FindIPPatNurseOrderSummary',
+				ClassName:ClassName,
+				QueryName:QueryName,
+				stDate:startDate,
+				endDate:endDate,
+				//deptIdStr:1.95,
+				episodeId:adm,
+				ifBind:ifBind
+			},
+			fitColumns:false,
+			rownumbers:true,
+		    columns:val,
+		    onDblClickRow:function(rowIndex, rowData){
+			    var target=$("#table_r").datagrid('options');
+			    var titCode=target.columns[0][target.columns[0].length-1].field;
+			    if(titCode=='record'){
+				    return;
+				  }
+			    var tmpTOEORI=rowData.TOEORI;
+			    var tmpTARCIM=rowData.TARCIM;
+			    // console.log(rowData,tmpTARCIM);
+			    modal(tmpTOEORI,tmpTARCIM);
+			},			
+			onLoadSuccess:function(){
+			    setTimeout(function(){
+				   $("#model").css("display","none") 
+				   },1000)
+		    },
+		    onBeforeLoad:function(){
+			    $("#model").css("display","block")
+		    }
+		})
+	}catch(err){
+		return;	
+	}
+	// $("#table_r").datagrid('reload')
+	$("#table_r").datagrid('clearChecked')
+	resizeRightTabel();
+}
+function stopModalShowTemporary(){
+	$("#stopModal").show();
+	$("#stopModal").dialog({
+		title:"停止执行",
+		resizable:true,
+		width:340,
+		height:160,
+		iconCls:'icon-paper-table',
+		modal:true,
+	})
+}
+function stopModalShow(str,userId,localId,wardId,isRightTable){
+	$("#stopModal").show();
+	$("#stopModal").dialog({
+		title:"停止执行",
+		resizable:true,
+		width:340,
+		height:160,
+		iconCls:'icon-paper-table',
+		modal:true,
+		buttons:[
+			{
+				text:'停止执行',
+				handler:function(){
+						
+					var inputVal=$('#selectBox').combobox('getText');
+					var selectVal=$('#selectBox').combobox('getValue');
+					console.log(selectVal)
+					if(!inputVal && !selectVal){
+						$.messager.alert("简单提示", "原因不能为空！", "info");
+						return;
+					}
+					console.log(str,userId,localId,wardId);
+					if(selectVal){
+					// 
+						$cm({
+							ClassName:'web.DHCDocInPatPortalCommon',
+							MethodName:'MulOrdExecDealWithCom',
+							OrderExecStr:str,
+							date:'',
+							time:'',
+							type:'D',
+							ReasonId:selectVal,
+							ExpStr:userId+'^'+localId+'^'+wardId+'^',
+							dataType:'text'	
+						},function(res){
+							if(res=='0^'){
+								// 执行成功	
+								$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+								$("#stopModal").dialog('close');
+								if(isRightTable){
+									$("#table_r").datagrid('reload');
+								}else{
+									$("#detailsTab").datagrid('reload');
+								}
+							}else{
+								$.messager.alert("提示信息", res, "info");
+							}	
+						})
+					}else if(inputVal){
+						$cm({
+							ClassName:'web.DHCDocInPatPortalCommon',
+							MethodName:'MulOrdExecDealWithCom',
+							OrderExecStr:str,
+							date:'',
+							time:'',
+							type:'D',
+							ReasonId:'',
+							ExpStr:userId+'^'+localId+'^'+wardId+'^'+inputVal,
+							dataType:'text'	
+						},function(res){
+							if(res=='0^'){
+								// 执行成功	
+								$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+								$("#stopModal").dialog('close');
+								if(isRightTable){
+									$("#table_r").datagrid('reload');
+								}else{
+									$("#detailsTab").datagrid('reload');
+								}
+							}else{
+								$.messager.alert("提示信息", res, "info");
+							}	
+						})
+					}
+				}
+			}
+		]
+	})
+	
+	$HUI.combobox("#selectBox",{
+		valueField:'id', textField:'text',panelHeight:"auto",
+		width:140,
+		data:[
+			{id:'1',text:$g('药物过敏')}
+			,{id:'2',text:$g('重复用药')}
+			,{id:'11',text:$g('开错医嘱')}
+			,{id:'12',text:$g('病人要求')}
+		],
+		defaultFilter:4
+	});
+}
+function modal(tmpTOEORI,tmpTARCIM){
+	// 模态框内容 modal(tmpTOEORI,tmpTARCIM);
+	$("#modal").show();
+	$("#modal").dialog({
+		title:"查看明细",
+		resizable:true,
+		width:750,
+		height:420,
+		iconCls:'icon-paper-table',
+		modal:true,
+		onClose:function(){
+			if(initArgs==""){
+				window.location.reload(true);
+			}else{
+			  papmi=initArgs.papmi;
+			  adm=initArgs.adm;
+			  mradm=initArgs.mradm;
+			  leftTable();
+			  FnRight();
+			}
+		}
+	})
+	$("#detailsTab").datagrid({
+		url:$URL,
+		queryParams:{
+			ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
+			QueryName:'FindNurOrdExecInfo',
+			ordItmStr:tmpTOEORI,
+			arcimid:tmpTARCIM,
+			stDate:startDate,
+			endDate:endDate
+		},
+		columns:[[
+            {field:"ck", checkbox:"true"},
+			{field:'TordPrior',title:'医嘱类型',width:70},
+			{field:'TArcimDesc',title:'医嘱名称',width:220,showTip:true,tipWidth:180},
+			{field:'TExStDate',title:'要求执行时间',width:160},
+			{field:'OrderStatus',title:'状态',width:60},
+			{field:'SttDate',title:'医嘱开始时间',width:180},
+			{field:'TQty',title:'数量',width:60},
+			{field:'TUom',title:'单位',width:50,hidden:true},
+			{field:'TPrice',title:'单价',width:60},
+			{field:'TAmt',title:'金额',width:60},
+			{field:'XDate',title:'停止时间',width:180},
+			{field:'TOrdExcRowID',title:'执行记录ID',width:100},
+		]],
+		rownumbers:true,
+		pagination:true,
+		fit:true,
+		fitColumns:false,
+		style:{padding:'10 5 5 5'},
+	    onDblClickRow:function(rowIndex, rowData){
+		   	console.log(rowData,tmpTARCIM);
+		    //modal(tmpTOEORI,tmpTARCIM);
+		},
+		toolbar:[
+					{
+						iconCls:'icon-stop-order',
+						handler:function(){
+							var res=$("#detailsTab").datagrid('getChecked');
+							if(res.length==0){
+								$.messager.alert("简单提示", "没有勾选明细记录!", "info");	
+								return;
+							}
+							var str=[];
+							var orderTypeLong=true; // 是否为长期医嘱，true为长期，false为临时
+							res.forEach(function(item){
+								if(item.TordPrior=="临时医嘱"){
+									orderTypeLong=false;	
+								}
+								// str.push(item.TOrdExcRowID);
+								str.push(item);
+							})
+							// str=str.join("^");
+							// console.log(str,orderTypeLong);
+							
+							var userId=session['LOGON.USERID'];
+							var localId=session['LOGON.CTLOCID'];
+							var wardId=session['LOGON.WARDID'];
+							var groupId=session['LOGON.GROUPID']
+							// stopModalShow(str,userId,localId,wardId,false);
+							NewStopModalShow(str,orderTypeLong,false)
+						},
+						text:'停止'}
+				]
+	})	
+}
+function NewStopModalShow(recordArr,orderTypeLong,dataFrom){
+	// orderTypeLong:true //长期医嘱
+	// orderTypeLong:false // 临时医嘱
+	// console.log(recordArr,userId,localId,wardId,orderTypeLong);
+	$("#stopModal").show();
+	$("#stopModal").dialog({
+		title:$g('停止执行'),
+		resizable:true,
+		width:340,
+		height:160,
+		iconCls:'icon-paper-table',
+		modal:true,
+		buttons:[
+			{
+				text:$g('停止执行'),
+				handler:function(){
+					var resArr=[]; // 记录id拼接数组无日期
+					var resArrDate=[]; // 不同医嘱id的记录
+					recordArr.forEach(function(item){
+						var tmpCode=String.fromCharCode(1);
+						var tmp=item.TOEORI+tmpCode+item.SttDate;
+						resArr.push(item.TOrdExcRowID);
+						resArrDate.push(tmp);
+					})
+					var str=resArr.join('^'); // 执行记录医嘱串
+					var strDateArr=resArrDate.join('^');  // 医嘱id，日期串
+					var inputVal=$('#selectBox').combobox('getText');
+					var selectVal=$('#selectBox').combobox('getValue');
+					if(!inputVal && !selectVal){
+						$.messager.alert("简单提示", "原因不能为空！", "info");
+						return;
+					}
+					 // console.log(str,strDateArr,userId,localId,wardId);
+					// 检验是否有权限停止执行记录
+					$cm({
+						ClassName:'web.DHCDocInPatPortalCommon',
+						MethodName:'CheckMulOrdExecDealPermission',	
+						OrderExecStr:str,
+						date:'',
+						time:'',
+						type:'D',
+						ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^',
+						dataType: 'text'
+					},function(res){
+						if(res==0){
+							// 允许对执行记录操作
+								var reason=""
+								if(selectVal){
+									reason=selectVal;
+								}else{
+									reason=inputVal;
+								}
+								if(orderTypeLong){
+									// 长期医嘱逻辑	
+									$cm({
+										ClassName:'web.DHCDocInPatPortalCommon',
+										MethodName:'MulOrdExecDealWithCom',
+										OrderExecStr:str,
+										date:'',
+										time:'',
+										type:'D',
+										ReasonId:reason,
+										ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+										dataType:'text'
+									},function(res){
+											if(res.indexOf('0')==0){
+												$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+												// $("#cxModal").dialog('close'); 密码模态框隐藏
+												if(!dataFrom){
+													$("#stopModal").dialog('close');
+													$("#modal").dialog('close');
+												}else{
+													$("#stopModal").dialog('close');
+													// $("#modal").dialog('close');
+													$("#table_r").datagrid('reload');	
+												}
+											}else{
+												$.messager.alert("提示", res, "info");
+											}
+									})
+								}else{
+									// 临时医嘱逻辑	（1,撤销临时医嘱检验）
+									$cm({
+										ClassName:'web.DHCDocInPatPortalCommon',
+										MethodName:'CheckMulOrdDealPermission',
+										OrderItemStr:strDateArr,
+										date:'',
+										time:'',
+										type:'C',
+										ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^',
+										dataType:'text'
+									},function(resStr){
+										if(resStr.indexOf('0')==0){
+											// 允许你撤销cxModal
+											$("#cxModal").show();
+											$("#cxModal").dialog({
+												title:$g('撤销医嘱'),
+												resizable:true,
+												width:340,
+												height:160,
+												iconCls:'icon-paper-table',
+												modal:true,
+												buttons:[
+													{
+														text:$g('确定'),
+														iconCls:'icon-save',
+														handler:function(){
+															var pwd=$("#pdCX").val();
+															console.log(pwd,inputVal,selectVal);
+															var TmpExpStr="";
+															if(selectVal){
+																TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
+															}else if(inputVal){
+																TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^'+inputVal															
+															}
+															// 撤销临时医嘱
+															$cm({
+																//53||541 strDateArr
+																ClassName:'web.DHCDocInPatPortalCommon',
+																MethodName:'MulOrdDealWithCom',
+																OrderItemStr:strDateArr,
+																date:'',
+																time:'',
+																type:'C',
+																pinNum:pwd,
+																ExpStr:TmpExpStr,
+																dataType:'text'		
+															},function(res){
+																if(res.indexOf('0')==0){
+																	$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+																	if(!dataFrom){
+																		//执行完毕之后对表格进行刷新
+																		$("#cxModal").dialog('close'); // 密码模态框隐藏
+																		$("#stopModal").dialog('close');
+																		$("#modal").dialog('close');
+																	}else{
+																		//执行完毕之后对表格进行刷新
+																		$("#cxModal").dialog('close'); // 密码模态框隐藏
+																		$("#stopModal").dialog('close');
+																		//$("#modal").dialog('close');
+																		$("#table_r").datagrid('reload');
+																	}
+																	//$("#detailsTab").datagrid('reload');
+																}
+															})
+															
+														}
+													}
+												]
+											})
+											
+										}else{
+											$.messager.alert("撤销失败", resStr, "info");
+										}	
+									})
+								}
+						}else if(res){
+							// 不允许对执行记录进行操作
+							var status=res.indexOf("只有未执行/撤销执行") != -1;
+							if(status && !orderTypeLong){
+								$.messager.confirm("撤销医嘱", "临时医嘱已执行,是否撤销医嘱？", function (r) {
+									if (r) {
+										// 进行医嘱执行记录撤销
+											var TmpresonStr="";
+											if(selectVal){
+												TmpresonStr=selectVal;
+											}else if(inputVal){
+												TmpresonStr=inputVal;														
+											}
+											$cm({
+												ClassName:'web.DHCDocInPatPortalCommon',
+												MethodName:'MulOrdExecDealWithCom',
+												OrderExecStr:str,
+												date:'',
+												time:'',
+												type:'C',
+												ReasonId:TmpresonStr,
+												ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^',
+												dataType:'text'	
+											},function(res){
+													if(res.indexOf('0')==0){
+														// 执行记录撤销成功，之后进行医嘱撤销
+														// 1,撤销临时医嘱检验）
+														$cm({
+															ClassName:'web.DHCDocInPatPortalCommon',
+															MethodName:'CheckMulOrdDealPermission',
+															OrderItemStr:strDateArr,
+															date:'',
+															time:'',
+															type:'C',
+															ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^',
+															dataType:'text'
+														},function(resStr){
+															if(resStr.indexOf('0')==0){
+																// 允许你撤销cxModal
+																$("#cxModal").show();
+																$("#cxModal").dialog({
+																	title:$g('撤销医嘱'),
+																	resizable:true,
+																	width:340,
+																	height:160,
+																	iconCls:'icon-paper-table',
+																	modal:true,
+																	buttons:[
+																		{
+																			text:$g('确定'),
+																			iconCls:'icon-save',
+																			handler:function(){
+																				var pwd=$("#pdCX").val();
+																				console.log(pwd,inputVal,selectVal);
+																				var TmpExpStr="";
+																				if(selectVal){
+																					TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
+																				}else if(inputVal){
+																					TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^'+inputVal															
+																				}
+																				// 撤销临时医嘱
+																				$cm({
+																					//53||541 strDateArr
+																					ClassName:'web.DHCDocInPatPortalCommon',
+																					MethodName:'MulOrdDealWithCom',
+																					OrderItemStr:strDateArr,
+																					date:'',
+																					time:'',
+																					type:'C',
+																					pinNum:pwd,
+																					ExpStr:TmpExpStr,
+																					dataType:'text'		
+																				},function(res){
+																					if(res.indexOf('0')==0){
+																						$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+																						if(!dataFrom){
+																							//执行完毕之后对表格进行刷新
+																							$("#cxModal").dialog('close'); // 密码模态框隐藏
+																							$("#stopModal").dialog('close');
+																							$("#modal").dialog('close');
+																						}else{
+																							//执行完毕之后对表格进行刷新
+																							$("#cxModal").dialog('close'); // 密码模态框隐藏
+																							$("#stopModal").dialog('close');
+																							// $("#modal").dialog('close');
+																							$("#table_r").datagrid('reload');
+																						}
+																						//$("#detailsTab").datagrid('reload');
+																					}else{
+																						$.messager.alert("提示", res, "info");
+																					}
+																				})
+																				
+																			}
+																		}
+																	]
+																})
+																
+															}else{
+																$.messager.alert("提示", resStr, "info");
+															}	
+														})
+													}else{
+														$.messager.alert("提示", res, "info");
+													}
+											})
+									} else {
+										
+										$("#stopModal").dialog('close');
+										//$.messager.popover({msg:"点击了取消"});
+									}
+								});
+							}else if(status && orderTypeLong){
+								// 长期医嘱执行记录已执行，撤销执行记录
+								// $.messager.alert("提示", res, "info");
+								
+								// 获取已执行的记录数据
+								var ExedOrdArr=recordArr.filter(function(item){
+									var status=false;
+									if(item.OrderStatus=="已执行"){
+										status=true;
+									}
+									return status;
+								})
+								var ExedOrdId=ExedOrdArr.map(function(item){
+									return item.TOrdExcRowID
+								})
+								var ExedOrdStr=ExedOrdId.join("^");
+								var reason=""; // 获取原因
+								if(selectVal){
+									reason=selectVal
+								}else if(inputVal){
+									reason=inputVal;
+								}		
+								$.messager.confirm("提示", "存在已执行记录是否停止?", function (r) {
+									if (r) {						
+											$cm({
+												ClassName:'web.DHCDocInPatPortalCommon',
+												MethodName:'MulOrdExecDealWithCom',
+												OrderExecStr:ExedOrdStr,
+												date:'',
+												time:'',
+												type:'C',
+												ReasonId:reason,
+												ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+												dataType:'text'
+											},function(res){
+												if(res.indexOf('0')==0){
+													$cm({
+														ClassName:'web.DHCDocInPatPortalCommon',
+														MethodName:'MulOrdExecDealWithCom',
+														OrderExecStr:str,
+														date:'',
+														time:'',
+														type:'D',
+														ReasonId:reason,
+														ExpStr:session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^^',
+														dataType:'text'
+													},function(res){
+															if(res.indexOf('0')==0){
+																$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+																if(!dataFrom){
+																	//执行完毕之后对表格进行刷新
+																	// $("#cxModal").dialog('close'); // 密码模态框隐藏
+																	$("#stopModal").dialog('close');
+																	$("#modal").dialog('close');
+																}else{
+																	$("#stopModal").dialog('close');
+																	// $("#modal").dialog('close');
+																	$("#table_r").datagrid('reload');
+																}	
+															}else{
+																$.messager.alert("提示", res, "info");
+															}
+													})
+												}else{
+													$.messager.alert("提示", res, "info");
+												}
+											})
+									} else {
+										// $.messager.popover({msg:"点击了取消"});
+									}
+								});
+							}
+						//console.log(res,status);
+						}
+					})
+					
+					
+					
+					
+					
+					return;
+					if(selectVal){
+						$cm({
+							ClassName:'web.DHCDocInPatPortalCommon',
+							MethodName:'MulOrdExecDealWithCom', // 医嘱停止的接口
+							OrderExecStr:str,
+							date:'',
+							time:'',
+							type:'D',
+							ReasonId:selectVal,
+							ExpStr:userId+'^'+localId+'^'+wardId+'^',
+							dataType:'text'	
+						},function(res){
+							if(res==0){
+								// 执行成功	
+								$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+								$("#stopModal").dialog('close');
+								if(isRightTable){
+									$("#table_r").datagrid('reload');
+								}else{
+									$("#detailsTab").datagrid('reload');
+								}
+							}else{
+								$.messager.alert("提示信息", res, "info");
+							}	
+						})
+					}else if(inputVal){
+						$cm({
+							ClassName:'web.DHCDocInPatPortalCommon',
+							MethodName:'MulOrdExecDealWithCom',
+							OrderExecStr:str,
+							date:'',
+							time:'',
+							type:'D',
+							ReasonId:'',
+							ExpStr:userId+'^'+localId+'^'+wardId+'^'+inputVal,
+							dataType:'text'	
+						},function(res){
+							if(res==0){
+								// 执行成功	
+								$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+								$("#stopModal").dialog('close');
+								if(isRightTable){
+									$("#table_r").datagrid('reload');
+								}else{
+									$("#detailsTab").datagrid('reload');
+								}
+							}else{
+								$.messager.alert("提示信息", res, "info");
+							}	
+						})
+					}
+				}
+			}
+		]
+	})
+	
+	$HUI.combobox("#selectBox",{
+		valueField:'id', textField:'text',panelHeight:"auto",
+		width:140,
+		data:[
+			{id:'1',text:$g('药物过敏')}
+			,{id:'2',text:$g('重复用药')}
+			,{id:'11',text:$g('开错医嘱')}
+			,{id:'12',text:$g('病人要求')}
+		],
+		defaultFilter:4
+	});
+}
+$(function(){
+	// switchPatient()
+	$cm({
+		ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
+		MethodName:'GetBindConfig',
+		userId:session['LOGON.USERID']
+	},function(res){
+		// console.log(res);
+		lockStatus=true; // 锁默认是开的
+		currentRadio="total"; // 默认是汇总
+		for(item in res){
+			if(res[item]=='Y'){
+				lockStatus=false;
+				if(item=='summary'){
+					currentRadio='total'		
+				}else if(item=='detail'){
+					currentRadio='doc';
+				}else if(item=='record'){
+					currentRadio='record'
+				}
+			}	
+		}
+		// 程序逻辑入口
+		$("#modal").hide(); 
+		$("#stopModal").hide();
+		$("#cxModal").hide();
+		$("#cxModalLong").hide();
+		$(window).on("resize",function(){
+			var tmpH=$("#content").get(0).clientHeight;	
+			$("#cc2").layout('resize')
+			// rightTable();
+		})
+		$("#cliHid").click(function(){
+			$("#cc2").layout("collapse","east")
+			var DIvH=$("#leftDiv").width();
+			console.log(DIvH)
+		})
+		if(lockStatus){
+			$("#lock").removeClass("icon-lock").addClass("icon-unlock")
+			// selectObjR.currentVal=total;
+		}else{
+			$("#lock").removeClass("icon-unlock").addClass("icon-lock");
+			// selectObjR.currentVal=currentRadio;	
+		}
+		/* --------------------------右侧单选逻辑结束-----------------------------------*/
+		
+		FnArea()// 范围函数执行
+		FnDocorder()// 医嘱单类型
+		FnTimeSort()// 时间排序顺序函数
+		FnRight()// 右侧表头逻辑函数
+		FnLeft()// 左侧表头逻辑函数
+		fnDiff()// 分类函数执行
+		setDate();
+		leftTable();
+		stopOrder();	
+		
+		var DIvH=$("#leftDiv").height();
+		var DIvW=$("#leftDiv").width();
+		var targetObj=$("#table_L").datagrid('options');
+		//targetObj.width=DIvW-8;
+		//targetObj.height=DIvH-46-8;
+		targetObj.width=795;
+		targetObj.height=DIvH-46-18;
+		$("#table_L").datagrid('resize')
+		$("#table_L").datagrid('resize')
+	})
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s topCount = $Get(%request.Data("topCount",1))
+	s orderby = $Get(%request.Data("orderby",1))
+	s sYear= $Get(%request.Data("sYear",1))
+	s sPeriod= $Get(%request.Data("sPeriod",1))
+	s BonusScheme= $Get(%request.Data("BonusScheme",1))
+	s BonusUnit= $Get(%request.Data("BonusUnit",1))
+	s SchemeItem= $Get(%request.Data("SchemeItem",1))
+
+	s rowid= $Get(%request.Data("rowid",1))
+	s oldBonusValue= $Get(%request.Data("oldBonusValue",1))
+	s BonusValue= $Get(%request.Data("BonusValue",1))
+	s userCode= $Get(%request.Data("userCode",1))
+	s ItemCode= $Get(%request.Data("ItemCode",1))
+	s ItemName= $Get(%request.Data("ItemName",1))
+	
+	s year= $Get(%request.Data("year",1))
+	s Period= $Get(%request.Data("Period",1))
+	s code= $Get(%request.Data("code",1))
+
+	
+	i action = "yearlist" d
+	.w ##class(dhc.bonus.comm.SchemePeriod).GetBonusYears(topCount,orderby)
+
+	i action="list" d
+	.w ##class(dhc.bonus.udata.uUnitBonusDetailEdit).List(start,limit,sYear,sPeriod,BonusScheme,BonusUnit,SchemeItem)
+	
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uUnitBonusDetailEdit).UpdateBonusValue(rowid,oldBonusValue,BonusValue,userCode,ItemCode,ItemName)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action="formulaList" d
+	.w ##class(dhc.bonus.udata.uUnitBonusDetailEdit).FormulaList(start,limit,year,Period,code)
+
+</script>

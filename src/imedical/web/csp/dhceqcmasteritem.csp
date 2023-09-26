@@ -1,0 +1,38 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!-- Created By HZY 2011-07-27 HZY0003 . -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))	//Mozy	1066474	2019-10-26
+	s HospitalFlag=##class(web.DHCEQCommon).GetSysInfo("990019")
+	s MasterItemDR = $Get(%request.Data("MasterItemDR",1))	//add by csj 20190809
+	//add by lmm 2020-05-07
+	s EquipAttributeString = $Get(%request.Data("EquipAttributeString",1))	
+	s EquipAttributeFlag=$g(%request.Data("EquipAttributeFlag",1))
+	i +HospitalFlag=1
+	{
+		Set Cols="160,160,*"
+	}
+	else
+	{
+		Set Cols="271,*"
+	}
+</Script>
+<frameset cols=#(Cols)# border="0">
+	<CSP:IF CONDITION="+HospitalFlag=1">
+		<frame name="DHCEQCHospitalList" border="0" src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCHospitalList">	
+	</CSP:IF>
+  	<frame name="DHCEQCMasterItemList" border="0" src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCMasterItemList&FacilityFlag=2&ReadOnly=#(ReadOnly)#&EquipAttributeString=#(EquipAttributeString)#&EquipAttributeFlag=#(EquipAttributeFlag)#">	  <!--hisui¸ÄÔì modify by lmm 2018-08-22-->
+    <!--modify by lmm 2020-05-07-->
+    <frame name="DHCEQCMasterItem" border="0" src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCMasterItem&FacilityFlag=2&MasterItemDR=#(MasterItemDR)#&ReadOnly=#(ReadOnly)#&EquipAttributeString=#(EquipAttributeString)#&EquipAttributeFlag=#(EquipAttributeFlag)#">	  <!--modified by csj 20190809-->
+</frameset>
+</HTML>

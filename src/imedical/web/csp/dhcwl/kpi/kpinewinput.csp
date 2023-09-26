@@ -1,0 +1,57 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+		s %response.Timeout=1800
+		s action=$g(%request.Data("action",1))
+		s %request.CharSet="UTF-8"
+		i action="getFileContent" {
+			d %response.SetHeader("Pragma","No-cache")
+			d %response.SetHeader("Cache-Control","No-cache")
+			d %response.SetHeader("Expires",0)
+			s %response.ContentType="application/x-download"
+			d %response.SetHeader("Content-Disposition","attachment")
+		}
+		q 1
+   </script>
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+	if (("UploadFile"=action)){
+		s wrong=0,wrongMes=""
+		s deli=##class(DHCWL.util.DirectoryFile).SetPathOS()
+		s deli=$p(deli,"||",2)
+		s tmp=##class(DHCWL.util.DirectoryFile).GetTempDir()
+		i $e(tmp,$l(tmp))'=deli s tmp=tmp_deli
+		s index=$g(^DHCWL.MKPI.TEMPCONT("NODEINDEX")) 
+		s fileName="tempDHCWLXML"_index_".xml"
+		s tempFile=tmp_fileName
+		s index=+index+1
+		s ^DHCWL.MKPI.TEMPCONT("NODEINDEX")=index
+		i ##class(%File).Exists(tempFile) d ##class(%File).Delete(tempFile)
+		s file=##class(%File).%New(tempFile)
+		d file.Open("WN")
+		if ($data(%request.MimeData("inputKpiFile",1))){
+			do {
+				Set bytes=%request.MimeData("inputKpiFile",1).Read(200)
+				Set bytes=##class(%CSP.Utils).DecodeData(bytes)
+				d file.Write(bytes)
+			}while(bytes'="")
+		}
+		d:file'="" file.Close()
+		w tempFile
+		s ^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",+$h,index-1)=tempFile
+		if wrong=0{
+			w "{success:true,info:'ok',tips:'"_fileName_"'}"
+		}else {
+			w "{success:true,info:'wrong',tips:'文件上传失败！无法进行下面的操作'}"
+		}
+		//若历史上有没有删除掉的临时文件，则全部删除了。
+		s day=+$h f  s day=$o(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day),-1) q:day=""  d
+		.s indI="" f  s indI=$o(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day,indI)) q:indI=""  d
+		..s tf=$g(^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day,indI))
+		..i tf'="" d
+		...i ##class(%File).Exists(tf) d ##class(%File).Delete(tf)
+		.k ^DHCWL.MKPI.TEMPCONT("TEMPINPUTFILE",day)
+	}elseif ("CheckInputMKPI"=action){
+	}
+</script>
+

@@ -1,0 +1,56 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<title>集成视图</title>
+    <link rel="stylesheet" type="text/css" href="../skin/TimeLine/Visual.css"/>
+    <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+    <script src="../scripts/TimeLine/BirthCheckView.js" type="text/javascript"></script>
+    <script src="../scripts/framework/CommonChart.js" type="text/javascript"></script>
+    <script src="../scripts/framework/CommonLine.js" type="text/javascript"></script>
+	<script language="Cache" runat="server">
+		s searchCode=$g(%request.Data("queryCode",1))
+    	s episodeId = $g(%request.Data("EpisodeID",1))
+    	s startDate = $g(%request.Data("startDate",1))
+    	s timeLineId = $g(%request.Data("timeLineId",1))
+    	s patientID = $g(%request.Data("PatientID",1))
+    	if (timeLineId ="")
+    	{
+	    	set timeLineId = "BirthCheckView"
+    	}
+    	if (patientID = "")
+    	{
+	    	quit
+    	}
+    	if (searchCode = "")
+    	{
+	    	s searchCode = ##Class(icare.TimeLineView).GetTimeLineConfig(timeLineId)
+    		Write "<script type='text/javascript' language='javascript'>",!
+    		write "var queryCode = '"_searchCode_"';",!
+    		
+    		write "var patientID = '"_patientID_"';",!
+    		s dateNow = $H
+    		write "var DateNowServer = '"_$ZDATE(dateNow,3)_"';",!
+    		
+    		if (searchCode '= "")
+    		{
+	    		write "var ClinicalData = "
+	    		s sc=##class(icare.TimeLineBirthCheckView).GetBirthCheckDisplayInfor(searchCode,patientID,startDate)
+    			write ";",!
+    		}
+    		write "var queryDate = ClinicalData.StartDate;",!
+    		
+    		//s sc=##class(icare.TimeLineView).GetSeeDocDateList(patientID)
+    		Write "<"_"/script>"
+    	}
+   </script>
+</head>
+<body id="bdVisual" style="background-color:#DFE8F6;width:100%;" onclick="HiddenMenu();" oncontextmenu="showMenu();return false;" >
+		<div id="divHeader" style="padding-left:0px;margin-bottom:0px;height:128px;"></div>
+		<div id="divMenu" class="csMenu" style="display:none;" onclick="GenerateData();">生成数据</div>
+</body>
+</html>

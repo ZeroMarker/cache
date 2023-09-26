@@ -1,0 +1,155 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<TRAK:COMPONENT id="RBAppointment.AutoBulkTrans.Edit" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+<SERVER>
+ ;s Resource=$g(%request.Data("Resource",1))
+ ;s Location=$g(%request.Data("Location",1))
+ ;s DateFrom=$g(%request.Data("DateFrom",1))
+ ;s Overbook=$g(%request.Data("Overbook",1))
+ ;s sesstype=$g(%request.Data("sesstype",1))
+ ;s sessionid=$g(%request.Data("sessionid",1))
+ ;s NextAvail=$g(%request.Data("NextAvail",1))
+ s BulkApptList=$g(%request.Data("ApptList",1))
+ s (indy,mappt,apptid,sservID,linkedapptlist,totallist,tbal)=""
+ d ##Class(websys.Component).GetComponentMessages(.t,"RBAppointment.Edit")
+ s linkedmessage1=t("LinkedAppts1")
+ s linkedmessage2=t("LinkedAppts2")
+ s linkedmessage3=t("LinkedAppts3")
+ s delim1=$c(1),delim2=$c(2)
+ n linkssappt
+ s linkssappt=""
+ ;k ^zbrad
+ ;s ^zbrad("rbappointment.automaticbulktransfer.csp")="OK"
+ i $g(BulkApptList)'="" d
+ . ; Correct list
+ . f k=1:1:$l(BulkApptList,"^") d
+ . . s apptid="",apptid=$p(BulkApptList,"^",k)
+ . . i apptid'="",tbal'="" s tbal=tbal_"^"_apptid
+ . . i apptid'="",tbal="" s tbal=apptid
+ . s BulkApptList=tbal
+ . f k=1:1:$l(BulkApptList,"^") d
+ . . s (sservID,mappt,apptid)=""
+ . . s apptid=$p(BulkApptList,"^",k),appoint=$g(^RBAS(+apptid,$p(apptid,"||",2),"APPT",$p(apptid,"||",3))),sservID=$p($g(appoint),"^",60),mappt=$p($g(appoint),"^",24)
+ . . i sservID'="",mappt="" s mappt=apptid
+ . . ;s ^zbrad("SServID",k)=sservID_"   "_apptid
+ . . i sservID="" d
+ . . . i totallist'="" s totallist=totallist_delim1_"N"_delim2_delim2,linkedapptlist=linkedapptlist_delim1
+ . . . i totallist="" s totallist="N"_delim2_delim2 
+ . . . ;s ^zbrad("linkedapptlist",k)=linkedapptlist
+ . . i sservID'="" d
+ . . . s linkssappt=##Class(web.RBAppointment).ReturnBookedLinkAppts($g(apptid))
+ . . . ;s ^zbrad("linkssappt",k)=linkssappt
+ . . . i linkssappt=""
+ . . . . i totallist'="" s totallist=totallist_delim1_"N"_delim2_delim2,linkedapptlist=linkedapptlist_delim1_linkssappt
+ . . . . i totallist="" s totallist="N"_delim2_delim2,linkedapptlist=linkssappt
+ . . . . ;s ^zbrad("linkedapptlist",k)=linkedapptlist
+ . . . i linkssappt'="" d
+ . . . . s transapptdetail=##Class(web.RBAppointment).GetApptDetails($p(BulkApptList,"^",k))
+ . . . . s linkedapptsdetails=""
+ . . . . f j=1:1:$l(linkssappt,"^") d
+ . . . . . i linkedapptsdetails'="" s linkedapptsdetails=linkedapptsdetails_"|"_##Class(web.RBAppointment).GetApptDetails($p(linkssappt,"^",j))
+ . . . . . i linkedapptsdetails="" s linkedapptsdetails=##Class(web.RBAppointment).GetApptDetails($p(linkssappt,"^",j)) 
+ . . . . i totallist'="" s totallist=totallist_delim1_"Y"_delim2_transapptdetail_delim2_linkedapptsdetails,linkedapptlist=linkedapptlist_delim1_linkssappt
+ . . . . i totallist="" s totallist="Y"_delim2_transapptdetail_delim2_linkedapptsdetails,linkedapptlist=linkssappt
+ . . . . ;s ^zbrad("linkedapptlist",k)=linkedapptlist
+ ;s ^zbrad("totallist")=totallist
+ ;s ^zbrad("BulkApptList")=BulkApptList
+ ;s ^zbrad("linkedapptlist")=linkedapptlist
+
+</SERVER>
+
+<script language=javascript>
+	var apptlist="";
+	var ssmlist="";
+	var BulkApptList="#(BulkApptList)#";
+	var totallist="#(totallist)#";
+	var linkedapptlist="#(linkedapptlist)#";
+	var delim1="#(delim1)#";
+	var delim2="#(delim2)#";
+	var BLAarray=BulkApptList.split("^");
+	var TLarray=totallist.split(delim1);
+	var LALarray=linkedapptlist.split(delim1);
+	var linkmessage1="#(linkedmessage1)#"+"\n\n"
+	var linkmessage2="\n\n"+"#(linkedmessage2)#"+"\n";
+	var linkmessage3="\n\n"+"#(linkedmessage3)#";
+	for (i=0;i<BLAarray.length;i++) {
+		if (BLAarray[i]!="") {
+			//alert(i+":"+BLAarray[i]);
+			//alert(i+":"+TLarray[i]);
+			try { var presappt=TLarray[i].split(delim2);} catch(e) {presappt[0]="N";}
+			if (presappt[0]=="N") {
+				if (apptlist!="") {
+					apptlist=apptlist+"^"+BLAarray[i];
+					ssmlist=ssmlist+"^"+"N";
+				} else {
+					apptlist=BLAarray[i];
+					ssmlist="N";
+				}
+			}
+			if (presappt[0]=="Y") {
+				var linkmessage=linkmessage1+presappt[1]+linkmessage2;
+				var lapm=presappt[2].split("|");
+				for (j=0;j<lapm.length;j++){linkmessage=linkmessage+"\n"+lapm[j];}
+				linkmessage=linkmessage+linkmessage3;
+				var modify=confirm(linkmessage);
+				if (modify) {
+					if (apptlist!="") {
+						apptlist=apptlist+"^"+BLAarray[i];
+						ssmlist=ssmlist+"^"+"Y";
+					} else {
+						apptlist=BLAarray[i];
+						ssmlist="Y";
+					}
+					var lappts=LALarray[i].split("^")
+					for (k=0;k<lappts.length;k++) {
+						for (l=i+1;l<BLAarray.length;l++) {
+							if ((BLAarray[l])&&(BLAarray[l]==lappts[k])) {
+								BLAarray[l]="";
+								TLarray[l]="";
+								LALarray[l]="";
+							}
+						}
+					}
+				} else {
+					if (apptlist!="") {
+						apptlist=apptlist+"^"+BLAarray[i];
+						ssmlist=ssmlist+"^"+"N";
+					} else {
+						apptlist=BLAarray[i];
+						ssmlist="N";
+					}
+					//ensure that the linked appointments are now consider not linked if they are encountered
+					var lappts=LALarray[i].split("^")
+					for (k=0;k<lappts.length;k++) {
+						for (l=i+1;l<BLAarray.length;l++) {
+							if ((BLAarray[l])&&(BLAarray[l]==lappts[k])) {
+								TLarray[l]="N"+delim2+delim2;
+								LALarray[l]="";
+							}
+						}
+					}
+				}	
+			}
+		}
+	}
+	//alert(apptlist+"   "+ssmlist);
+	ApptListobj=document.getElementById('ApptList');
+	ApplyServiceSetListobj=document.getElementById('ApplyServiceSetList');
+	if (ApptListobj) ApptListobj.value=apptlist;
+	if (ApplyServiceSetListobj) ApplyServiceSetListobj.value=ssmlist;
+
+</script>
+</TRAK:APPLET>
+</BODY>
+</HTML>

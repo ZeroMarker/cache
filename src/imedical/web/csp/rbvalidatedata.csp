@@ -1,0 +1,364 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<server>
+	n doFind,oktoupdate
+	n LocID,ResID,ServID,msgLoc,msgRes,msgSer,SessDesc,AgeSexRest,ServDesc,CoverAlert,AgeSexStr,itmmas
+	s (doFind,msgLoc,msgRes,msgSer,ServID,ResID,ServSetStr,ApptMethod,ApptLanguage,AgeSexRest,CoverAlert,ServDesc,SessDesc,AgeSexStr,itmmas,ConsultCateg)=""
+	s CoverAlert=0
+	; Log 36469 BC 3/7/2003
+	; Log 37518 BC 9-9-2003
+	s (HCADesc,HCARowID,HospIDs,HOSPDesc)=""
+	s HCADesc=%request.Get("HCADesc")
+	s HCARowID=%request.Get("HCARowID")
+	s HOSPDesc=%request.Get("HOSPDesc")
+	s HospIDs=%request.Get("HospIDs")
+	i HospIDs'="" s HospIDs=$tr(HospIDs,"^","|")
+	i ((HCADesc'="")&&(HCARowID="")) s HCARowID=##Class(web.CTHealthCareArea).GetIDFromCodeOrDescription(HCADesc)
+	s ApptMethod=$g(%request.Data("ApptMethod",1))
+	s ApptLanguage=$g(%request.Data("ApptLanguage",1))
+	s ConsultCateg=$g(%request.Data("ConsultCateg",1))
+	s QLDOutChk=$g(%request.Data("QLDOutChk",1))
+	s oeoriID=$g(%request.Data("oeoriID",1))
+	; LOG 45543 RC 02/08/04 Do not blank out location and resource fields if this parameter is checked in the sys params
+	s LocResKeep=$p($g(^CF("RB",1)),"^",47)  ; 'Keep Location and Resource'
+	;
+	s oktoupdate=1,AgeSexRestAlert=0
+	i %request.Get("doFind") s doFind=%request.Get("doFind")
+	
+	n defaultServStr
+	s defaultServStr=""
+	; SB 15/04/02: There are two types of defaults coming through, first we see if there are any waiting list entries
+	;	       with appointments... if not then we add orders.
+	; SB 09/07/02 (25929): We are no longer defaulting from the waitinglist entry. We will always default the order details.
+	;i WaitListStr="" {
+	n i,oeid,OElocid,OElocdesc,arcimid,OEservid,OEservdesc,delim,SERlist,ordstatus,SerIDList
+	s delim="*"
+	k SERlist
+	s (SERlist,SerIDList)=""
+	; RQG 16.12.02 - Log30877: To display non-executed orders only in RBAppointment.ServiceList screen 
+	f i=1:1:$l(oeoriID,"^") d
+	. s oeid=$p(oeoriID,"^",i)
+	. &sql(SELECT OEORI_RecDep_DR,OEORI_RecDep_DR->CTLOC_Desc,OEORI_ItmMast_DR,OEORI_ItemStat_DR->OSTAT_Code INTO :OElocid,:OElocdesc,:arcimid,:ordstatus FROM SQLUser.OE_OrdItem WHERE OEORI_RowID=:oeid)
+	. i 'SQLCODE,'$d(SERlist(+OElocid,arcimid_"Z")),ordstatus'="E" d
+	. . &sql(SELECT SER_RowID,SER_Desc INTO :OEservid,:OEservdesc FROM SQLUser.RBC_Services WHERE SER_ARCIM_DR=:arcimid)
+	. . i LocResKeep'="Y" s OElocid="",OElocdesc=""
+	. . i %request.Get("CTLOCDesc")'="" s OElocid="",OElocdesc=""
+	. . i 'SQLCODE d 
+	. . . s defaultServStr=defaultServStr_delim_OEservdesc_delim_OElocdesc_delim_OEservid_delim_OElocid_delim_oeid_delim_"^"
+	. . . s SerIDList=SerIDList_OEservid_"^"
+	. . s SERlist(+OElocid,arcimid_"Z")=""
+	
+	; VALIDATE FIELDS
+	i SerIDList="" s SerIDList=%request.Get("SerID")
+	; ab 18.05.02 - 25126 - hack for locations with ampersand in the desc
+	s locDesc=%request.Get("CTLOCDesc")
+	i (locDesc["|||amp|||")	s locDesc=$p(locDesc,"|||amp|||",1)_"&"_$p(locDesc,"|||amp|||",2)
+	;
+	s LocID=##Class(web.CTLoc).GetIdFromCodeOrDescription(locDesc)
+	i locDesc="undefined" s locDesc=""
+	i LocID="",locDesc'="" s oktoupdate = 0  s msgLoc=locDesc_" is a invalid location."
+	;s ResID=##Class(%Library.ResultSet).%New("web.RBResource:LookUpByLocation("_%request.Get('RESDesc'),%request.Get("CTLOCDesc"))")
+	;s ResID=##Class(web.RBResource).LookUpByLocation(%request.Get("RESDesc"),%request.Get("CTLOCDesc"))
+	;i ResID="",%request.Get("RESDesc")'="" s oktoupdate = 0 s msgRes=%request.Get("RESDesc")
+	;s ServID=##Class(web.RBAppointment).GetServiceIdFromCodeOrDesc(LocId,ResId,%request.Get("SERDesc"))
+	;i ServID="",%request.Get("SERDesc")'="" s oktoupdate = 0 s msgSer=%request.Get("SERDesc")
+	
+	; LOG 51729 RC 03/05/05 Age/Sex Restriction.
+	s ServID=%request.Get("SerID") 
+	s EpisodeID=%request.Get("EpisodeID"),PatientID=%request.Get("PatientID")
+	f j=1:1:$l(SerIDList,"^") d
+	.s ServID=$p(SerIDList,"^",j)
+	.q:ServID=""
+	.s ItmMst=$p($g(^RBC("SER",+ServID)),"^",1)
+	.s AgeSexStr=AgeSexStr_ItmMst_"**V^"
+	i AgeSexStr'="" d
+	.;s ServDesc=$li(##Class(web.RBCServices).GetCodeDescriptionFromId(ServID),1)
+	.s AgeSexRest=##Class(web.OEOrdItem).CheckAgeSexAndDosageRange(AgeSexStr,"","",EpisodeID,PatientID)
+	.s AgeSexRest=$p(AgeSexRest,$c(2),1)
+	.i AgeSexRest'="" s oktoupdate=0,AgeSexRestAlert=1
+	
+	f j=1:1:$l(SerIDList,"^") d
+	.s ServID=$p(SerIDList,"^",j)
+	.q:ServID=""
+	.i ServID'="" d
+	..;gr log 52710 
+	..s svc=^RBC("SER",+ServID)
+	..s itmmas=$p(svc,"^",1),itmos=$p(svc,"^",2)
+	..i $p($g(^CF("OE",1)),"^",32)="Y"  d
+	...s pay=%request.Get("payId")
+	...;s pay=##Class(web.ARCInsuranceType).GetIdFromCodeOrDescription(pay)
+	...s plan=%request.Get("planId")
+	...;s plan=##Class(web.ARCAuxilInsurType).GetIdFromCodeOrDescription(plan)
+	...;s ^zgav("pp")=pay_"^"_plan
+	...s svc=^RBC("SER",+ServID)
+	...;s ^zgav("ser")=ServID
+	...s itmmas=$p(svc,"^",1),itmos=$p(svc,"^",2)
+	...s date1=%request.Get("Date")
+	...i date1="" s date1=(+$h)
+	...i (pay=""),(plan="")  d
+	....s PayorPlanOverRide=""
+	....;s ^zgav("abc")=itmmas_"^"_itmos_"^"_date1
+	....s tadm=EpisodeID
+	....i tadm="",##Class(web.CFPatConf).GetConfiguration("PATCFUsePayorFromPrevEpisode","")="Y" d
+	.....k MDATE
+	.....s type=""
+	.....f  s type=$o(^PAPERdr(+PatientID,"ADM",type)) q:type=""  d
+	......;s ^zmeto(type,$zn)=1
+	......s madm=0 f  s madm=$o(^PAPERdr(+PatientID,"ADM",type,madm)) q:madm=""  d
+	.......;s ^zmeto(type,adm,$zn)=2
+	.......s s=$g(^PAADM(madm))
+	.......i $p(s,"^",20)="C"	q	
+	.......i $p(s,"^",20)="P"	q	
+	.......i $p(s,"^",20)="N"	q	
+	.......i $p(s,"^",81)=""	q	
+	.......s tdate=$p(s,"^",6),ttime=$p(s,"^",7)
+	.......i madm,tdate,ttime s MDATE(tdate,ttime)=madm
+	.....s (date,time,tadm)=""
+	.....s date=$o(MDATE(""),-1)
+	.....i date s time=$o(MDATE(date,""),-1)
+	.....i time s tadm=MDATE(date,time)
+	.....i tadm'="",'##class(web.PAAdmInsurance).CopyPreviousDetails(PatientID) s tadm=""
+	....;s ^zmeto("tadm",$zn,2)=tadm
+	....s returncover=$$covered1^MVBARPB3(tadm,itmmas,itmos,date1,PayorPlanOverRide,"V")  
+	....;s returncover=$$covered1^MVBARPB3(EpisodeID,itmmas,itmos,date1,PayorPlanOverRide,"V")  
+	....i $g(PLIST(1))'=""  d
+	.....;s ^zgav("a")=$g(PLIST(1))_"^"_itmos_"^"_itmmas
+	.....i (itmos ="") s CoverAlert=61 //for OrderRowid = ARCIM	
+	.....i (itmmas ="") s CoverAlert=61  //for OrderSetRowid = ARCOS	  
+	...i (pay'=""),(plan'="")  d
+	....s CoverAlert=$$covered^MVBARPB3(pay,plan,itmmas,itmos,date1,"V",LocID,"")  
+	....;s ^zgav("b")=CoverAlert_"^"_pay_"^"_plan_"^"_itmmas_"^"_itmos_"^"_date1_"^"_LocID
+	s SSRowId=%request.Get("SS_ServId")
+	i SSRowId {
+	  &sql(DECLARE SER2 CURSOR FOR
+	        SELECT ITM_Service_DR,ITM_Service_DR->SER_Desc,ITM_Service_DR->SER_ARCIM_DR,ITM_Service_DR->SER_ARCOS_DR,ITM_Main,ITM_Days,ITM_Sequence
+	        FROM RBC_ServiceSet_Items
+	        WHERE ITM_ParRef = :SSRowId)
+	  ;
+	  &SQL(OPEN SER2)
+	  ;
+	  s SQLCODE=0
+	  f  d  q:SQLCODE
+	  . &SQL(FETCH SER2 INTO :ser,:des,:arcim,:arcos,:rank,:days,:seq)
+	  . q:SQLCODE
+	  . s ServSetStr=ServSetStr_ser_"|"_des_"|"_rank_"|"_days_"|"_seq_"|"_SSRowId_"^"
+	  ;
+	  &sql(CLOSE SER2)
+	}
+</server>
+
+
+<SCRIPT language=javascript>
+	var debug="N" ;
+	//"Y" = alerts and stuff, "N" = alert free
+	if (#(CoverAlert)#!=0) {
+		var Servdoc=top.frames["TRAK_main"].frames["RBApptFind"];
+		var message=Servdoc.t['PayorDoNotCoverItem']+"\n"+Servdoc.t['PayorDoNotCoverCont']
+		var choice1=confirm(message);
+		if(choice1!=false) {
+			if (#(oktoupdate)#==1) {
+				UpdateServiceList();
+			} else {
+				ShowError();
+			}
+		} 
+	} else if (#(oktoupdate)#==1) {
+		UpdateServiceList();
+	} else {
+		ShowError();
+	}
+
+function ShowError() {
+	if (#(AgeSexRestAlert)#==1) {
+		alert("#(AgeSexRest)#")
+	}
+	else {
+		alert("#(msgLoc)#"+"\n"+"#(msgRes)#"+"\n"+"#(msgSer)#");
+	}
+}
+
+function UpdateServiceList() {
+	var ServSetStr='#(ServSetStr)#'
+	var delim="*"; //"*"SB: Had problems with the following deliminators: %, #, & (can't use "|" as is used in schedrowid)
+    var char1=String.fromCharCode(1)
+	var char2=String.fromCharCode(4)
+	//alert(char2)
+	var Servdoc=top.frames["TRAK_main"].frames["RBServList"].document;
+	var Finddoc=top.frames["TRAK_main"].frames["RBApptFind"].document;
+
+	var ServList=Servdoc.getElementById("tRBAppointment_ServiceList");
+
+	var objSer=Finddoc.getElementById("SERDesc");
+	if (debug=="Y") alert("Service: "+objSer.value);
+	var objLoc=Finddoc.getElementById("CTLOCDesc");
+	var objRes=Finddoc.getElementById("ResDesc");
+	var objPay=Finddoc.getElementById("InsurPayor");
+	var objPlan=Finddoc.getElementById("InsurPlan");
+	var objSerId=Finddoc.getElementById("servId");
+	if (debug=="Y") alert("ServiceId: "+objSerId.value);
+	var objSS_SerId=Finddoc.getElementById("SS_servId");
+	var objLocId=Finddoc.getElementById("LocId");
+	if (debug=="Y") alert("LocationId: "+objLocId.value)
+	var objResId=Finddoc.getElementById("ResId");
+	if (debug=="Y") alert("ResId: "+objResId.value)
+	var objPayId=Finddoc.getElementById("PayId");
+	var objPlanId=Finddoc.getElementById("PlanId");
+	var objSchedIds=Finddoc.getElementById("ScheduleIDs");
+	var objTrans=Finddoc.getElementById("Transport");
+	var objInter=Finddoc.getElementById("Interpreter");	
+	var objTraR=Finddoc.getElementById("TransReq");
+	var objIntR=Finddoc.getElementById("IntReq");
+	var disint=Finddoc.getElementById("disInt");
+	var distrans=Finddoc.getElementById("disTrans");
+	var objAPPTRemarks=Finddoc.getElementById("APPTRemarks");
+	var objAPPTMethod=Finddoc.getElementById("RBCAppointMethod");
+	var objAPPTLanguage=Finddoc.getElementById("SSLanguage");
+	var objComments=Finddoc.getElementById("Comments");
+	var objQLDOutChk=Finddoc.getElementById("QLDOutChk");
+	var objORICred=Finddoc.getElementById("OEORIItemGroup");
+	// Log 37518 BC 9-9-2003
+	var HCADesc="#(HCADesc)#";
+	var HCARowID="#(HCARowID)#";
+	var HOSPDesc="#(HOSPDesc)#";
+	var HospIDs="#(HospIDs)#";
+	var ApptMethod="#(ApptMethod)#";
+	var ApptLanguage="#(ApptLanguage)#";
+	var ConsultCateg="#(ConsultCateg)#";
+	var LocResKeep="#(LocResKeep)#"
+	var defaultServStr="#(defaultServStr)#"
+	//alert(HospIDs);
+
+	//SB 15/08/05 (54661): On the Overbooking screen the screen was not defaulting in the Clinic. 
+	// Added following line back in.
+	objLocId.value="#(LocID)#";
+	//objResId.value="#(ResID)#";
+	//objSerId.value="#(ServID)#";
+	//alert('#(ResID)#')
+	if (objSerId.value=="") objSerId.value="#(ServID)#";
+	if (objSer.value=="") objSer.value="#(ServDesc)#";
+
+	var rowLen=ServList.rows.length;
+	var cellLen=ServList.rows[0].cells.length;
+	var str="";
+	var SSser="";
+	var transport=""; var interpreter=""; var trareq=""; var intreq=""; var disInt=""; var disTrans=""; var QLDOutChk=""; var oeoriID=""
+
+	var itmmas="#(itmmas)#";
+	var objitmmas=Finddoc.getElementById("itmmas");
+	if ((objitmmas)&&(itmmas!="")) objitmmas.value=itmmas;
+	//Validate all Fields
+	// Log 36469 BC 3/7/2003
+	//if (objSESSDesc) {var sessdesc=objSESSDesc.value} else {sessdesc=""}
+	if (objSer) {var ser=objSer.value} else {ser=""}
+	if (objSS_SerId) {var SSser=objSS_SerId.value} else {SSser=""}
+	if (objLoc) {var loc=objLoc.value} else {loc=""}
+	if (loc.indexOf("&")!=-1) loc=loc.replace("&","|||amp|||");
+	if (objRes) {var res=objRes.value} else {res=""}
+	if (objPay) {var pay=objPay.value} else {pay=""}
+	if (objPlan) {var plan=objPlan.value} else {plan=""}
+	if (objTrans) {transport=objTrans.value} else {transport=""}
+	if (objInter) {interpreter=objInter.value} else {interpreter=""}
+	if (objTraR) {trareq=objTraR.value} else {trareq=""}
+	if (objIntR) {intreq=objIntR.value} else {intreq=""}
+	if (disint) {disInt=disint.value} else {disint=""}
+	if (distrans) {disTrans=distrans.value} else {disTrans=""}
+	if (objAPPTRemarks) {APPTRemarks=objAPPTRemarks.value} else {APPTRemarks=""}
+	if (APPTRemarks=="") APPTRemarks=objComments.value
+	if (objQLDOutChk) {QLDOutChk=objQLDOutChk.value} else {QLDOutChk=""}
+	if (objORICred) {ORICred=objORICred.value} else {ORICred=""}
+	//defaultServStr_delim_OEservdesc_delim_OElocdesc_delim_delim_delim_delim_delim_delim_delim_OEservid_delim_OElocid_delim_delim_delim_delim_delim_"^"
+	
+	if (SSser=="") {
+		if (defaultServStr!="") {
+			for (var i=0;; i++) {
+				var partdefservstr=mPiece(defaultServStr,"^",i)
+				if (partdefservstr=="") break;
+				ser=mPiece(partdefservstr,delim,1);loc=mPiece(partdefservstr,delim,2);objSerId.value=mPiece(partdefservstr,delim,3);objLocId.value=mPiece(partdefservstr,delim,4);oeoriID=mPiece(partdefservstr,delim,5);
+				str=str + delim + websys_escape(ser) + delim + websys_escape(loc) + delim + websys_escape(res) + delim + delim + delim + delim + websys_escape(pay) + delim + websys_escape(plan) + delim + mPiece(mPiece(objSerId.value,char1,0),char2,0) +"||||" + delim + objLocId.value + delim + objResId.value + delim + objPayId.value + delim + objPlanId.value + delim + delim + websys_escape(APPTRemarks) + delim + delim + delim + delim + delim + delim + websys_escape(interpreter) + delim + websys_escape(transport) + delim + delim + intreq + delim + trareq + delim + disInt + delim + disTrans +  delim +  delim  + websys_escape(HCADesc) +  delim  + HCARowID +  delim  + websys_escape(HOSPDesc) +  delim  + HospIDs +  delim  + websys_escape(ApptMethod) + delim + websys_escape(ApptLanguage) + delim + delim + delim + QLDOutChk + delim + delim + websys_escape(ORICred) + delim + oeoriID + delim + delim + delim + delim + delim + websys_escape(ConsultCateg)+ "^";
+				//str=str + delim + objLocId.value + delim + objResId.value + delim + mPiece(mPiece(objSerId.value,char1,0),char2,0) +"||||" + delim + objPayId.value + delim + objPlanId.value + delim + delim + delim + delim + "^";
+			}
+		} else {
+			str=str + delim + websys_escape(ser) + delim + websys_escape(loc) + delim + websys_escape(res) + delim + delim + delim + delim + websys_escape(pay) + delim + websys_escape(plan) + delim + mPiece(mPiece(objSerId.value,char1,0),char2,0) +"||||" + delim + objLocId.value + delim + objResId.value + delim + objPayId.value + delim + objPlanId.value + delim + delim + websys_escape(APPTRemarks) + delim + delim + delim + delim + delim + delim + websys_escape(interpreter) + delim + websys_escape(transport) + delim + delim + intreq + delim + trareq + delim + disInt + delim + disTrans +  delim +  delim  + websys_escape(HCADesc) +  delim  + HCARowID +  delim  + websys_escape(HOSPDesc) +  delim  + HospIDs +  delim  + websys_escape(ApptMethod) + delim + websys_escape(ApptLanguage) + delim + delim + delim + QLDOutChk + delim + delim + websys_escape(ORICred) + delim + oeoriID + delim + delim + delim + delim + delim + websys_escape(ConsultCateg)+ "^";
+			//str=str + delim + objLocId.value + delim + objResId.value + delim + mPiece(mPiece(objSerId.value,char1,0),char2,0) +"||||" + delim + objPayId.value + delim + objPlanId.value + delim + delim + delim + delim + "^";
+		}
+	} else {
+		ServSetAry=ServSetStr.split("^");
+		for (var i=0; i<ServSetAry.length-1; i++) {
+			if (debug=="Y") alert(ServSetAry[i])
+			str=str + delim + websys_escape(mPiece(ServSetAry[i],"|",1)) + delim + websys_escape(loc) + delim + websys_escape(res) + delim + delim + delim + delim + websys_escape(pay) + delim + websys_escape(plan) + delim + mPiece(ServSetAry[i],"|",0)+"|"+mPiece(ServSetAry[i],"|",2)+"|"+mPiece(ServSetAry[i],"|",3)+"|"+mPiece(ServSetAry[i],"|",4)+"|"+mPiece(ServSetAry[i],"|",5) + delim + objLocId.value + delim + objResId.value + delim + objPayId.value + delim + objPlanId.value + delim + delim + websys_escape(APPTRemarks)+ delim + mPiece(ServSetAry[i],"|",2) + delim + mPiece(ServSetAry[i],"|",3) + delim + delim + delim + delim + websys_escape(interpreter) + delim + websys_escape(transport) + delim + delim + intreq + delim + trareq + delim + disInt + delim + disTrans +  delim +  delim  + websys_escape(HCADesc) +  delim  + HCARowID +  delim  + websys_escape(HOSPDesc) +  delim  + HospIDs +  delim  + websys_escape(ApptMethod) + delim + websys_escape(ApptLanguage) + delim + delim + delim + QLDOutChk + delim + delim + websys_escape(ORICred) + delim + oeoriID + delim + delim + delim + delim + delim + websys_escape(ConsultCateg)+ "^";
+			//str=str + delim + objLocId.value + delim + objResId.value + delim + websys_escape(mPiece(ServSetAry[i],"|",1)) + delim + objPayId.value + delim + objPlanId.value + delim + delim + delim + delim + "^";
+		}
+	}
+
+	//if (debug=="Y") 
+	//alert(str+"^"+'#(doFind)#');
+
+	//do not escape str
+	top.frames["TRAK_main"].frames["RBServList"].Refresh("Add","","",str,"#(doFind)#")
+	
+
+	if (objSer) objSer.value="";
+	//alert(LocResKeep);
+	// LOG 45543 RC 02/08/04 Do not blank out location and resource fields if this parameter is checked in the sys params
+	if (LocResKeep!="Y") {
+		//43376. Don't clear Location if it is readonly.
+		if ((objLoc)&&(objLoc.tagName!="LABEL")) {
+			objLoc.value="";
+			objLocId.value="";
+		}	
+		if (objRes) objRes.value="";
+		if (objResId) objResId.value="";
+	}
+	// Log 39806 BC 21-10-2003 QH doesn't want these fields to be cleared
+	//if (objPay) objPay.value="";
+	//if (objPlan) objPlan.value="";
+	//if (objAPPTMethod) objAPPTMethod.value="";
+	/*if (objTrans) {
+		objTrans.value=""; 
+		objTrans.className=""; 
+		objTrans.disabled=false;
+	}
+	if (objInter) {
+		objInter.value=""; 
+		objInter.className=""; 
+		objInter.disabled=false;
+	}
+	if (objTraR) {
+		objTraR.checked=false; 
+		objTraR.disabled=false;
+	}
+	if (objIntR) {
+		objIntR.checked=false; 
+		objIntR.disabled=false;
+	}*/
+	objSerId.value="";
+	// Log 39806 BC 21-10-2003 QH doesn't want these fields to be cleared
+	//objPayId.value="";
+	//objPlanId.value="";
+	objSS_SerId.value="";	
+	
+}
+
+function mPiece(s1,sep,n) {
+    //Split the array with the passed delimeter
+    delimArray = s1.split(sep);
+    //If out of range, return a blank string
+    if ((n <= delimArray.length-1) && (n >= 0)) {
+        return delimArray[n];		
+    }
+}
+
+</SCRIPT>
+</body>
+</html>

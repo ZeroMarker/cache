@@ -1,0 +1,414 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript"
+			src="../scripts/nurse/hisui-0.1.0/dist/js/config/nurseSwitchConfig.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+        }
+        .datagrid-wrap.panel-body.panel-body-noheader{
+	        border-color:#ccc;
+	        border-top-right-radius:0;
+	        border-top-left-radius:0;
+	        border-right:0;
+	        border-left:0;
+	        border-bottom:0;
+        }
+        .datagrid-wrap.panel-body.panel-body-noheader{
+			border-top-style:dotted;
+		}
+        .td_title {
+        	font-size:16px;
+        	font-weight:bold;
+        	padding-top:20px;
+        }
+        .td_label {
+        	text-align:right;
+        	height: 40px;
+        	padding:0 5px 0 35px;
+        }
+        .td_item {
+        	height: 40px;
+        }
+        .td_note {
+        	width:600px;
+        	padding-left:30px;
+        	color:red;
+        }
+        .nurseSwitch {
+        	width:110px;
+        }
+    	.nurseCombo {
+    		width:110px;
+    	}
+    	.nurseText{
+    		width:20px;
+    	}
+    	.nurse_blankrow {
+    		height:20px;
+    	}
+	</STYLE>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">   
+		<div id="tt3" class="hisui-tabs tabs-gray"  data-options="tabPosition:'left',fit:true,border:false,headerWidth:150">   
+			<div title="护理病历开关" style="overflow:auto;padding:20px;"> 
+				<table>
+					<tr>
+						<td class="td_label">
+							护理病历升级开关
+						</td>
+						<td class="td_item">
+							<div id="EditorUpdateFlag" 
+								 class="hisui-switchbox nurseSwitch"
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+						<td class="td_note">
+							<p>启用时HIS护理病历无法正常使用，并且会提示正在升级，建议项目升级时此开关必须打开</p>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							多语言开关
+						</td>
+						<td class="td_item">
+							<div id="ChromePrintFlag" 
+								 class="hisui-switchbox nurseSwitch"
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+						<td class="td_note">
+							<p></p>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							
+						</td>
+						<td class="td_item">
+							
+						</td>
+						<td class="td_note">
+							<p></p>
+						</td>
+					</tr>
+					<tr class="nurse_blankrow">
+					</tr>
+					<tr>
+						<td class="td_label">
+						</td>
+						<td>
+							<a id="btnSaveEditor" class="hisui-linkbutton hover-dark">保存</a>
+						</td>
+					</tr>   
+				</table>
+			</div>   
+			<div title="护理病历填写修改" style="padding:20px;">   
+				<table>
+					<tr>
+						<td class="td_label">
+							精简模式
+						</td>
+						<td>
+							<div id="SimpleListFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+						<td class="td_note">
+							<p>启用后护理病历主界面不再显示“更多”按钮，模板列表显示当前科室下所有模板</p>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							转科时间点严格控制
+						</td>
+						<td class="td_item">
+							<input class='hisui-radio' type="radio" label='无' name='RecTransaction' value="none" data-options="radioClass:'hischeckbox_square-blue',checked:true">
+							<input class='hisui-radio' type="radio" label='按转科时间' name='RecTransaction' value="transTime" data-options="radioClass:'hischeckbox_square-blue'">
+						</td>
+						<td class="td_note">
+							<p>编辑器中此模板配置了CareDate和CareTime之后才能生效，患者转科后前一科室只能维护转科时间点之前的记录</p>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							出院病历编辑严格控制
+						</td>
+						<td>
+							<div id="OutPatientEditFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+						<td class="td_note">
+							<p>启用后，出院病人的病历不可直接编辑，必须向护理部申请，才能编辑</p>
+						</td>
+					</tr>
+						<tr>
+						<td class="td_label">
+							护理病历质控
+						</td>
+						<td>
+							<div id="QualitySwitchFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+					</tr>
+					<tr class="nurse_blankrow">
+					</tr>
+					<tr>
+						<td class="td_label">
+						</td>
+						<td>
+							<a id="btnSaveWrite" class="hisui-linkbutton hover-dark">保存</a>
+						</td>
+					</tr>   
+				</table>
+			</div>
+			<div title="护理病历CA配置" style="padding:20px;">   
+				<table>
+					<tr>
+						<td class="td_label">
+							护理病历签名密码验证
+						</td>
+						<td>
+							<div id="SignPWDSwitchFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							护理病历签名密码验证(类*方法)
+						</td>
+						<td>
+							<input id="SignPWDClassFunc"
+								   class="textbox"
+								   style="width:200px;">
+							</input>
+						</td>
+					</tr>								
+					<tr>
+						<td class="td_label">
+							护理病历CA签名
+						</td>
+						<td>
+							<div id="CASwitchFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							HIS护理病历显示CA签名图片
+						</td>
+						<td>
+							<div id="CAPictureFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							患者手写板厂商
+						</td>
+						<td>
+							<select id="CATabletValue" class="hisui-combobox nurseCombo"></select>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							CA签名显示严格模式
+						</td>
+						<td>
+							<div id="CAValidateFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+						<td class="td_note">
+							<p>开启后必须严格匹配签名验证，否则显示文字，包含打印和HIS护理病历</p>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							强制CA验证
+						</td>
+						<td>
+							<div id="CAStrictFlag" 
+								 class="hisui-switchbox nurseSwitch"  
+								 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+						<td class="td_note">
+							<p>开启后护士每次操作都需要重复验证，即使Key一直插着</p>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							HIS护理病历护士签名图片（宽、高）
+						</td>
+						<td>
+							<input id="CANursePictureWidth"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+							<input id="CANursePictureHeight"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							HIS护理病历患者签名轨迹（宽、高）
+						</td>
+						<td>
+							<input id="CAPatWordPictureWidth"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+							<input id="CAPatWordPictureHeight"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							HIS护理病历患者签名头像（宽、高）
+						</td>
+						<td>
+							<input id="CAPatHeadPictureWidth"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+							<input id="CAPatHeadPictureHeight"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							HIS护理病历患者签名指纹（宽、高）
+						</td>
+						<td>
+							<input id="CAPatFingerPictureWidth"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+							<input id="CAPatFingerPictureHeight"
+								   class="textbox"
+								   style="width:80px;">
+							</input>
+						</td>
+					</tr>
+					<tr class="nurse_blankrow">
+					</tr>
+					<tr>
+						<td class="td_label">
+						</td>
+						<td>
+							<a id="btnSaveCA" class="hisui-linkbutton hover-dark">保存</a>
+						</td>
+					</tr>   
+				</table>
+			</div>
+			<div title="护理病历FTP" style="padding:20px;">   
+				<table cellpadding="20">
+					<tr>
+						<td class="td_label">
+							地址
+						</td>
+						<td class="td_item">
+							<input id="FtpAddress"
+								   class="textbox"
+								   style="width:200px;">
+							</input>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							用户名
+						</td>
+						<td class="td_item">
+							<input id="FtpUserName"
+								   class="textbox"
+								   style="width:200px;">
+							</input>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							密码
+						</td>
+						<td class="td_item">
+							<input id="FtpPassword"
+								   class="textbox"
+								   type="password"
+								   style="width:200px;">
+							</input>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							端口
+						</td>
+						<td class="td_item">
+							<input id="FtpPort"
+								   class="textbox"
+								   style="width:200px;">
+							</input>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_label">
+							延迟
+						</td>
+						<td class="td_item">
+							<input id="FtpDealyTime"
+								   class="textbox"
+								   style="width:200px;">
+							</input>
+						</td>
+						<td class="td_note">
+							<p>建议配置：20</p>
+						</td>
+					</tr>
+					<tr class="nurse_blankrow">
+					</tr>
+					<tr>
+						<td class="td_label">
+						</td>
+						<td>
+							<a id="btnSaveFtp" class="hisui-linkbutton hover-dark">保存</a>
+						</td>
+					</tr>
+				</table>
+			</div>   
+		</div> 
+	</div>
+</body>
+
+</html>

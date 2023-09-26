@@ -1,0 +1,192 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery-1.11.3.min.js"></script>
+</HEAD>
+<BODY>
+	<server>
+		d ##class(web.DHCMGNurData).PrintLinkFile()
+ 		s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ 		s CacheDB=$P(setstr,"^")		
+		
+ 		s GetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.GetPageNumber"))
+        s SetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.SetPageNumber"))
+        s GetPrintCodeStr=##Class(%CSP.Page).Encrypt($lb("NurMp.DHCNURTemPrintLInk.GetPrintCodeStr"))
+ 		
+ 		
+ 		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s categoryDetail = $Get(%request.Data("CategoryDetail",1),"")
+  		s pageInfoID = $Get(%request.Data("PageInfoID",1),"")
+  		s PatientID = $Get(%request.Data("PatientID",1),"")
+  		s categoryID = $Get(%request.Data("CategoryID",1),"")
+	</server>
+	<SCRIPT Language="Javascript">
+	    window.WebIp = window.location.href.split("/csp/")[0];
+	    var GetPerModel = "#(GetPrintCodeStr)#";
+	    var GetPageNumMethod="#(GetPageNumMethod)#";
+	    var SetPageNumMethod="#(SetPageNumMethod)#";
+	   
+		var EpisodeID = '#(EpisodeID)#';
+		
+		var pageInfoID = '#(pageInfoID)#';
+		var categoryDetail = '#(categoryDetail)#';
+		
+		var totelnum=0
+		document.body.onload = BodyLoadHandler;
+	function BodyLoadHandler() 
+	{   
+	    ///获取打印起始页码
+	    totelnum=0;
+	    var ret=""
+	   
+	    var ret=cspRunServerMethod(GetPerModel,EpisodeID);
+	   
+	    if (ret!="")
+	    {   var arr=ret.split("|")
+	   
+		    var totelnum=arr.length
+		    for (i=0;i<totelnum;i++)
+		    {
+			    var isPrint=0;
+	            isPrint = print(arr[i]); 
+			    if (isPrint == 1)
+		    	{
+		    	//归档组的接口方法	
+		    	if(typeof parent.finishOneItemJobAsyn=="function"){
+		  	  			parent.finishOneItemJobAsyn();
+		  	  			//alert("after finishOneItemJobAsyn" + i); 
+					} 		    	
+		    	}
+		    }	    
+	    }
+	    //归档组的接口方法	
+	    /*
+	     setTimeout(function(){
+		    //alert("start setTimeout"); 
+	  		if(typeof parent.printNext=="function")
+	  		{	//alert("before printNext"); 
+  				parent.printNext();
+	  		}
+  		}, 3000 )*/
+
+	}	
+	function print(Code) 
+	{  
+		var hasPrint = 0;
+	    
+	    ///获取打印起始页码
+	    
+	    var startPageNumber=cspRunServerMethod(GetPageNumMethod,pageInfoID);
+
+	    var curpage=startPageNumber-1
+		var PrintCode=Code; //打印模板
+	    
+	    var hisURI=window.WebIp;	    
+	    var episodeID = window.EpisodeID;
+	    var RowIDs="";
+	    var CAVerify=0;//大于0开启，否则关闭,  CA开关开启，科室CA开启，ret:1 
+        /// CA开关开启，科室CA开启； 图片开关开启,ret:2
+        /// 信手书开启，CA开关开启，科室CA开启；图片开关开启,ret:3
+	    var isShowPreView=0;//1，弹出预览，0，不弹出预览
+	    var  printerName = "DHCC PDF Creator";//打印机名称
+	    try {
+        var obj = document.PrintActiveX;
+        var msg = obj.PrintALLPDF(hisURI, PrintCode, episodeID, RowIDs,isShowPreView,CAVerify);
+        var reMsg = toJSON(msg);       
+        if (MsgIsOK(reMsg)) {
+            if (reMsg.msg) {
+              //  alert(reMsg.msg); 去掉弹框
+            } 
+           
+            hasPrint = 1;        
+        }
+        else {
+             if(reMsg.msg.indexOf("没有数据，不需要打印")>=0)//
+			 {
+			 
+			 }
+			 else{
+			  alert("" + reMsg.msg);
+			 }
+        }
+    } catch (ex) {
+       alert("打印插件PrintALLPDF无法使用" + ex.Description+",hisURI"+hisURI+",PrintCode="+PrintCode+",episodeID="+episodeID+",isShowPreView="+isShowPreView+",CAVerify="+CAVerify);
+    } 
+	
+	  	return hasPrint;	 
+
+	}
+		/**
+ * 服务返回的消息是否成功
+ * @method MsgIsOK
+ * @param { object } msg 服务端返回的消息
+ * @return { bool }
+ **/
+function MsgIsOK(msg) {
+	return msg.status == "0"
+}
+function toJSON(msg) {
+	 if (typeof(JSON) == 'undefined'){  
+			 var reMsg=eval('('+msg+')');  
+			  return reMsg;
+		}else{  
+			 var reMsg=JSON.parse(msg); 
+			 return reMsg;
+		}
+}
+
+function PrintActivexUpgrade() {
+    //console.time("activexUpgrade");   
+     var hisURI =window.WebIp;
+    try {
+        var obj = document.PrintActiveX;
+        var msg = obj.CheckUpgrade(hisURI);
+        if(msg != "ok")
+        {
+            var reMsg = toJSON(msg);
+            if (MsgIsOK(reMsg))//升级成功
+            {
+                alert("打印插件升级成功，请关闭浏览器，重新打开。");
+            }
+            else if (reMsg.status == "-1") {//升级失败
+                alert(reMsg.msg);
+            }
+        }
+
+    } catch (ex) {
+        alert("打印插件无法使用" + ex.Description);
+    }
+    //console.timeEnd("activexUpgrade");
+}
+PrintActivexUpgrade();
+	</SCRIPT>
+	<OBJECT name="PrintActiveX" id="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" 
+codebase="../service/DHCMG/NurMPPrint.cab" 
+style="height: 0px; float: left;"></OBJECT> 
+
+</BODY>
+<!--<SCRIPT language="javascript" for="PrintActiveX" event="CheckUpgradeEvent(msg)">
+
+function PrintActiveX::CheckUpgradeEvent(msg) {
+//console.log(msg);
+var reMsg = toJSON(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+alert(reMsg.msg);
+}
+else if (reMsg.status == "-1") {//升级失败
+alert(reMsg.msg);
+}
+}
+
+
+</SCRIPT>-->
+</HTML>

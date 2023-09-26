@@ -1,0 +1,187 @@
+﻿<html>
+    <head>
+        <title> 门诊病历查询补打页面 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/op.gh-buttons.css"/>
+
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        
+        <!-- 读卡 -->
+        <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+        <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+        <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+        <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+        
+        <style type="text/css">
+        * 
+        .datagrid-cell{
+            font-size:16px;
+            line-height:35px;
+            height:30px;
+            font-weight:500;
+        }
+        .searchbox .searchbox-text{
+            font-size:16px;
+            height: 16px;
+        }
+        .right {
+            display: block; 
+            float: right;
+            position: absolute;
+            right: 0
+        }
+        </style>
+        
+        <script language="cache" runat="server">
+            s myCode($i(myCode))="<script type='text/javascript'>"
+            s event=##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
+            s myCode($i(myCode))="function tkMakeServerCall(tkclass,tkmethod) {"
+            s myCode($i(myCode))=" if ((tkclass=='')||(tkmethod=='')) return '';"
+            s myCode($i(myCode))=" var args=new Array('"_event_"',tkclass,tkmethod);"
+            s myCode($i(myCode))=" for (var i=2; i<tkMakeServerCall.arguments.length; i++) {"
+            s myCode($i(myCode))=" args[i+1]=tkMakeServerCall.arguments[i];"
+            s myCode($i(myCode))=" }"
+            s myCode($i(myCode))=" var retval=cspHttpServerMethod.apply(this,args);"
+            s myCode($i(myCode))=" return retval;"
+            s myCode($i(myCode))="}"
+            s myCode($i(myCode))="<"_"/script>"
+            f myIdx=1:1:myCode {
+                w myCode(myIdx),!
+            }
+            s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+            w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_ReadCardTypeEncrypt_"'>",$C(13,10)
+            d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+            
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s mradm = ""
+            s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+            
+            s id = $Get(%request.Data("id",1),"")
+            s chartItemType = $Get(%request.Data("chartItemType",1),"")
+            s pluginType = $Get(%request.Data("pluginType",1),"")
+            s emrDocId = $Get(%request.Data("emrDocId",1),"")
+            s url = $Get(%request.Data("url",1),"")
+            
+            s sessionID = %session.SessionId
+            s userCode = %session.Get("LOGON.USERCODE")
+            s userName = %session.Get("LOGON.USERNAME")
+            s userID = %session.Get("LOGON.USERID")
+            s ssgroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+            s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+
+			s PatientNoLength = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("PatientNoLength","N")   
+			s cards = ##Class(EMRservice.SystemParameter).getCards()			
+        </script>
+        <script language="javascript">            
+            var patInfo = {
+                SessionID: "#(sessionID)#",
+                PatientID: "#(patientID)#",
+                EpisodeID: "",
+                MRadm: "#(mradm)#",
+                UserID: "#(userID)#",
+                UserCode: "#(userCode)#",
+                UserName: "#(userName)#",
+                SsgroupID: "#(ssgroupID)#",
+                UserLocID: "#(userLocID)#",
+                UserLocCode: "#(userLocCode)#",
+                UserLocName: "#(userLocName)#",
+                IPAddress: ""
+            };
+                        
+            var sysOption = {
+                PatientNoLength : '#(PatientNoLength)#'
+            };
+            
+            var envVar = {
+                InsIDCount : "",
+                PrintPageCount:""
+            };
+			var cards = "#(cards)#".split("^");
+        </script>
+    </head>
+    <body class="easyui-layout">
+        <div id="patLst" class="easyui-panel" data-options="region:'center',border:true,noheader:true,collapsible:false" style="overflow:hidden;">
+            <div id="seekform" class="easyui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',title:'门诊病历打印情况查询',closedTitle:'门诊病历打印情况查询'" style="height:130px;">
+                    <table id="qryTable" style="width:100%;table-layout:fixed;border:0;cellspacing:1;cellpadding:0">
+                        <tr>
+                            <td style="padding-top:5px;">
+                                <p align=right>
+                                    <label>登&nbsp&nbsp记&nbsp&nbsp号</label>
+                                    <!--span>病人ID&nbsp&nbsp&nbsp&nbsp：</span-->
+                                </p>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <input id="regNoSearch" class="easyui-searchbox" data-options="fit:true,border:false" style="width:200px;"></input>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <p align=right>
+                                    <label>就诊日期(起始)</label>
+                                </p>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <input class="easyui-datebox" id="startDate" data-options="required:false,editable:false" style="width:200px;"/>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top:5px;">
+                                <p align=right>
+                                    <label>患者姓名</label>
+                                </p>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <input id="nameSearch" class="easyui-searchbox" data-options="fit:true,border:false" style="width:200px;"></input>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <p align=right>
+                                    <label>就诊日期(终止)</label>
+                                </p>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <input class="easyui-datebox" id="endDate" data-options="required:false,editable:false" style="width:200px;"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding-top:5px;">
+                                <p align=right>
+                                    <label>就诊卡号</label>
+                                </p>
+                            </td>
+                            <td style="padding-top:5px;">
+                               <input id="cardNoSearch" class="easyui-searchbox" data-options="fit:true,border:false" style="width:200px;"></input>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <p align=right>
+                                    <a id="doquery" href="#" class="easyui-linkbutton" style="margin-right:45px;">查询</a>
+                                </p>
+                            </td>
+                            <td style="padding-top:5px;">
+                                <p align=left>
+                                    <!--a id="readCard" href="#" class="easyui-linkbutton" style="">读卡</a-->
+                                    <!--<a id="reset" href="#" class="easyui-linkbutton" style="padding-left:15px;">清空</a>-->
+                                    <a id="printSelect" href="#" class="easyui-linkbutton" style="margin-left:49px;">多选打印</a>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div data-options="region:'center',title:'门诊病历打印情况列表'" style="top:0px;">
+                    <table id="patientPrintListData" style="width:100%;"></table>
+                </div>
+            </div>
+        </div>
+        
+        <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.printAllSearch.js"></script>
+    </body>
+</html>

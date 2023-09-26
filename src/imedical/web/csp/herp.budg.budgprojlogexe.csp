@@ -1,0 +1,31 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s start 			= $Get(%request.Data("start",1))
+	s limit 			= $Get(%request.Data("limit",1))
+	s str				= $Get(%request.Data("query",1))
+	s ClassName			= $Get(%request.Data("ClassName",1))
+	s ObjectDesc		= $Get(%request.Data("ObjectDesc",1))
+	s UpdateUserName	= $Get(%request.Data("UpdateUserName",1))
+	s UpdateDate 		= $Get(%request.Data("UpdateDate",1))
+	s rowid 			= $Get(%request.Data("rowid",1))	
+	s name				= $Get(%request.Data("name",1))
+
+	
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjLog).List(ClassName, ObjectDesc, UpdateUserName, UpdateDate,name, start, limit,hospid)
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgProjLog).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'ok'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

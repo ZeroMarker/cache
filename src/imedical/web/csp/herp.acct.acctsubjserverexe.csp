@@ -1,0 +1,177 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action 	= $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir 	= $Get(%request.Data("dir",1))
+	s start 	= $Get(%request.Data("start",1))
+	s limit 	= $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent	= $Get(%request.Data("parent",1))
+    s str   	= $Get(%request.Data("query",1))
+	
+	s rowid   	= $Get(%request.Data("rowid",1))
+	s sjcode  	= $Get(%request.Data("sjcode",1))
+	s sjname  	= $Get(%request.Data("sjname",1))
+	s sjlevel 	= $Get(%request.Data("sjlevel",1))
+	s sjtype  	= $Get(%request.Data("sjtype",1))
+    s sjnature  = $Get(%request.Data("sjnature",1))
+	
+	s IsStop    = $Get(%request.Data("IsStop",1))
+    s IsCheck   = $Get(%request.Data("IsCheck",1))
+    s IsFc   	= $Get(%request.Data("IsFc",1))
+	s IsNum   	= $Get(%request.Data("IsNum",1))
+	s startTime	= $Get(%request.Data("startTime",1))
+	s startDate = $Get(%request.Data("startDate",1))
+	
+    s userid     = $Get(%request.Data("userid",1))
+	s acctbookid   = $Get(%request.Data("acctbookid",1))
+    s data         = $Get(%request.Data("data",1))
+	s checkdata	   = $Get(%request.Data("checkdata",1))
+	
+	s edata		= $Get(%request.Data("edata",1))
+	s fcheckdata= $Get(%request.Data("fcheckdata",1))
+     
+	s checktypeid		= $Get(%request.Data("CheckTypeName",1))
+	s checkstartyear	= $Get(%request.Data("CheckSYear",1))
+	s checkstartmonth	= $Get(%request.Data("CheckSMonth",1))
+	s checkisstop		= $Get(%request.Data("CheckIsStop",1))
+	s checkendyear		= $Get(%request.Data("CheckEYear",1))
+	s checkendmonth		= $Get(%request.Data("CheckEMonth",1))
+	s MainRowid			= $Get(%request.Data("MainRowid",1))
+	s CheckMaprowid		= $Get(%request.Data("CheckMaprowid",1))
+	
+	s usjlevel 	= $Get(%request.Data("usjlevel",1))
+	s esjlevel 	= $Get(%request.Data("esjlevel",1))
+
+	i action="list" d
+	.d ##class(herp.acct.udata.uAcctSubjServer).ListRec(sjcode, sjname, sjtype, sjnature, sjlevel, IsStop, startDate, IsCheck, IsFc, IsNum, acctbookid, searchField, searchValue, sortField, sortDir, start, limit) 
+	
+	i action="listcheck" d
+	.w ##class(herp.acct.udata.uAcctSubjServer).SjCheckTypeMapList(start,limit,str,rowid)
+	
+	i action="add" d
+	.s result = ##class(herp.acct.udata.uAcctSubjServer).InsertCheckMap(MainRowid,checktypeid,checkstartyear,checkstartmonth,checkisstop,checkendyear,checkendmonth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctSubjServer).UpDateCheckMap(MainRowid,CheckMaprowid, checktypeid, checkstartyear, checkstartmonth, checkisstop, checkendyear, checkendmonth)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctSubjServer).DeleteCheckMap(MainRowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="reload" d
+	.s result= ##class(herp.acct.udata.uAcctSubjServer).ReLoadRec(acctbookid,start, limit) 
+	.w "{success:'true',refresh:'true',info:''}"
+	
+	
+	
+	
+	
+	i action = "delsj" d
+	.s result = ##class(herp.acct.udata.uAcctSubjServer).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+	i action = "addsj" d
+	.s result = ##class(herp.acct.udata.uAcctSubjServer).InsertRec(acctbookid,data)
+	.i result =0 d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "lastrec" d
+	.s result=##class(herp.acct.udata.uAcctSubjServer).GetLastRec(acctbookid)
+	.i result '=0 d
+	..w "{success:'true',info:'"_result_"'}"
+	
+	
+	i action = "updatesj" d
+	.s result= ##class(herp.acct.udata.uAcctSubjServer).UpdateRec(rowid,acctbookid,edata)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+    i action = "GetLength" d
+	.s ^aa=acctbookid_"^"_usjlevel
+	.s result= ##class(herp.acct.udata.uAcctCommon).GetLevelLength(acctbookid,usjlevel)
+	.i result'="" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+   i action = "editLength" d
+	.s result= ##class(herp.acct.udata.uAcctCommon).GetLevelLength(acctbookid,esjlevel)
+	.i result'="" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+   
+   	i action = "isfathercode" d
+	.s result = ##class(herp.acct.udata.uAcctSubjServer).IsFatherCode(rowid)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	//.e  d
+	//..w "{success:'false',info:'"_result_"'}"
+	
+	
+   
+   
+	
+	i action="sjtypelist" d
+	.w ##class(herp.acct.udata.uAcctSubjServer).SjTypeList(start, limit,str)
+	
+	i action="sjnaturelist" d
+	.w ##class(herp.acct.udata.uAcctSubjServer).SjNatureList(start, limit,str)
+	
+	i action="sjlevellist" d
+	.w ##class(herp.acct.udata.uAcctSubjServer).SjlevelList(start, limit,str)
+	
+	i action="sjchecktypelist" d
+	.w ##class(herp.acct.udata.uAcctSubjServer).SjCheckTypeList(start, limit,str)
+	
+	i action="cashflowlist" d
+	.w ##class(herp.acct.udata.uAcctSubjServer).CashFlowList(start, limit,str,acctbookid)
+	
+	i action="numunitlist" d
+	.w ##class(herp.acct.udata.uAcctSubjServer).NumUnitList(start, limit,str)
+	
+	i action = "getcoderule" d
+	.s result = ##class(herp.acct.udata.uAcctSubjServer).GetCodeRule(acctbookid)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="GetURL" d
+	.s result=##class(herp.acct.udata.uAcctCommon).GetURL(acctbookid)
+    .i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+	
+	
+	
+	
+	
+	
+	
+</script>

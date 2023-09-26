@@ -1,0 +1,104 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK xmlns:v>
+
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<STYLE>v\:*{behavior:url(#default#VML);}</STYLE>
+
+</HEAD>
+<BODY>
+
+<FORM ACTION="websys.csp" method=post name="fDHCMedRMOPSVG" id="fDHCMedRMOPSVG">
+
+<script language="Cache" method="MyMethod" arguments="Arg1:%String" returntype="%String">
+ ;s ret=$g(%request.Data("Tsvg",1))
+ s ret=%request.URL
+ Quit ret
+</script>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ set svgYline=460
+</script>
+<SCRIPT language="javascript">
+var handle
+function x(){
+	//var s="#(..MyMethod("111"))#"
+	//alert(s);
+	//alert(#(svgYline)#);
+	var svgstring='<EMBED id="SVGEmbed" name="SVGEmbed" type="image/svg-xml" src="dhcmedsvgline.csp" height="560" width="840">';
+	var obj=document.getElementById("Draw");
+    obj.innerHTML=svgstring;
+    
+}
+function xstart(){
+	x();
+	handle = setInterval(x,3000);
+    document.getElementById("redhacker").style.visibility="hidden";
+  	document.getElementById("end").style.visibility="";
+  	//document.getElementById("end").style.disable=true;
+}
+function xend(){
+	//var s=#server(SVGEmbed.MyMethod("111"))#
+	//var obj=document.getElementById("SVGEmbed");
+	//var cspclass=obj.src;
+	
+	//var s=obj.window.MyMethod("white");
+	//s=obj.window.MyMethod("111")
+	//alert(s);
+	clearInterval(handle);
+  	document.getElementById("redhacker").style.visibility="";
+  	//visibility="hidden"
+  	document.getElementById("end").style.visibility="hidden";
+}
+</SCRIPT>
+<TABLE width="100%" id="T_Title"><TR><TD class=maintitle noWrap>门诊量运营SVG</TD></TR></TABLE>
+
+
+<input type="button" value="开始" id="redhacker" style="width:50" onclick="xstart();">
+<input type="button" value="停止" id="end" style="width:50;visibility:hidden" onclick="xend();">
+<input type="button" value="white" id="set" style="width:50" onClick="SVGEmbed.window.changeColor(this.value)">
+    
+<TABLE width="100%" border=0 id="T_Frame">
+  <TR>
+    <TD class="" vAlign=top width="80%">
+      <TABLE width="100%" border=0>
+        <TR>
+          <TD>
+            <DIV id="Draw"></DIV>
+          </TD>
+        </TR>
+        <TR>
+          <TD>
+          </TD>
+        </TR>
+      </TABLE>
+    </TD>
+    <TD class="">
+      <TABLE width="100%" border=0>
+        <TR>
+          <TD></TD>
+          <TD></TD>
+        </TR>
+        <TR>
+          <TD></TD>
+          <TD></TD>
+        </TR>
+        <TR>
+          <TD></TD>
+          <TD></TD>
+        </TR>      
+      </TABLE>
+    </TD>
+  </TR>
+</TABLE>
+
+</FORM>
+</BODY>
+</HTML>

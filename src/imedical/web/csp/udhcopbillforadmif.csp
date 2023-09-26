@@ -1,0 +1,68 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="IE=7">     
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+
+<SCRIPT type='text/javascript' SRC="../scripts/jQuery/jquery.js"> </SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/jquery.bgiframe.min.js'></SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/jquery.ajaxQueue.js'></SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/thickbox-compressed.js'></SCRIPT>
+<SCRIPT type='text/javascript' src='../scripts/jQuery/jquery.autocomplete.js'></SCRIPT>
+<link rel="stylesheet" type="text/css" href="../scripts/jQuery/jquery.autocomplete.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/jQuery/thickbox.css" />
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	;udhcopbillforadmif.csp
+	;对于传入Adm的接口?
+	;vReloadFlag   变为3   表示其他组传入ADMRowID, 调用接口同时患者就诊信息被显示出来
+	;
+	n myPatientIDNo, PAADMRowid, PatientID, SelectAdmRowId, SelectPatRowId, CardTypeRowId
+ 
+	s myPatientIDNo=$g(%request.Data("PatientIDNo",1))
+	s myCardNo=$g(%request.Data("CardNo",1))
+ 	;s myReloadFlag=$g(%request.Data("ReloadFlag",1))
+ 
+	s SelectAdmRowId=$g(%request.Data("SelectAdmRowId",1))
+ 	s SelectPatRowId=$g(%request.Data("SelectPatRowId",1))
+ 	
+ 	s CardTypeRowId=$g(%request.Data("CardTypeRowId",1))
+ 	
+ 	s PAADMRowid=SelectPatRowId
+	s PatientID=""
+	s mytmprowid=""
+	s myVer=##class(web.DHCOPConfig).GetVersion()
+	if (+myVer=0){
+		s myTopRat="25%"
+		s mySecTat="25%"
+	}else{
+		s myTopRat="25%"
+		s mySecTat="15%"
+	}
+ 
+</Script>
+<frameset cols="75%,*" framespacing="1">
+	<frameset rows="#(myTopRat)#,*,#(mySecTat)#" framespacing="0" frameborder="no"  >
+		<frame name="udhcOPPatinfo" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPPatinfo&ReloadFlag=3&PatientIDNo=#(myPatientIDNo)#&CardNo=#(myCardNo)#&CardTypeRowId=#(CardTypeRowId)#&SelectPatRowId=#(SelectPatRowId)#&SelectAdmRowId=#(SelectAdmRowId)#" frameborder=0>
+		<frame name="DHCOPOEList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEList&PAADMRowid=#(mytmprowid)#" frameborder=0>
+		<frame name="DHCOPOEOrdInput" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEOrdInput" frameborder=0>
+	</frameset>
+	<frame name="udhcOPCharge" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPCharge&PatientID=#(PatientID)#&ReloadFlag=3&CardNo=#(myCardNo)#" frameborder=0>
+	
+</frameset>
+
+<SCRIPT Language="Javascript">
+	//&SelectPatRowId=#(SelectPatRowId)#&SelectAdmRowId=#(SelectAdmRowId)#
+</SCRIPT>
+
+</HTML>

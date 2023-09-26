@@ -1,0 +1,25 @@
+
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s Type=$g(%request.Data("Type",1))
+ s ArcimID=$g(%request.Data("ArcimID",1))
+ s CheckType=##class(web.DHCPE.DHCPECommon).GetArcDesc(ArcimID)
+ s:Type="HadCheck" CheckType=CheckType_"已检名单"
+ s:Type="NoCheck" CheckType=CheckType_"未检名单"
+ s:Type="RefuseCheck" CheckType=CheckType_"谢绝检查名单"
+ s ArcimID=$g(%request.Data("ArcimID",1))
+ i (Type="")||(ArcimID="") q
+ w "<button class='i-btn' onclick='window.close()'>关闭</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"_CheckType,!
+ d ##class(web.DHCPE.ResultNew).OutCheckInfo(Type,ArcimID)
+</Script>
+
+</HTML>

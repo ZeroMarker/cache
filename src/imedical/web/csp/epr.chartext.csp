@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>病历书写</title>
+  
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+  <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+
+  <script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+  
+  <script language="javascript">
+  	function onTBButtonClick(btn) {
+		document.frames["eprarea"].buttonClick(btn.id);
+	}
+	
+	function setbtnEnabled(saveEnabled, printEnable, commitEnabled, templateEnabled) {
+		 if(btnsave.disabled == saveEnabled){btnsave.disabled = !saveEnabled;}
+		 if(btnprint.disabled == printEnable){btnprint.disabled = !printEnable;}
+		 if(btncommit.disabled == commitEnabled){btncommit.disabled = !commitEnabled;}
+		 if(btnslttemplate.disabled == templateEnabled){btnslttemplate.disabled = !templateEnabled;}
+	}
+  </script>
+  
+   <script language="cache" runat="server">
+  		s objTAndCNotes = ##class(EPRservice.BOInstanceData).GetTAndCFromEPRTemplate($Get(%request.Data("EpisodeID",1),"-1"), $Get(%request.Data("ChartItemID",1),"-1"), "2")
+  </script>
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+	<table width='100%' height='100%' border='0' cellspacing='0' cellpadding='0'>
+	<tr border='0' cellspacing='0' cellpadding='0' height='20'><td width='100%'>
+		<table width='100%' border='0' cellspacing='0' cellpadding='2'><tr><td class='x-toolbar' nowrap><span class='T2'>&nbsp#(objTAndCNotes.EPRCategoryName)#&nbsp;&gt;&nbsp#(objTAndCNotes.EPRTemplateName)#</span></td><td width=100%><div id='pagetoolbar'></div></td></tr></table>
+		<script language='javascript'>new Ext.Toolbar({renderTo: 'pagetoolbar', border: false, items:['->','-',{id:'btnsave',text:'保存',cls: 'x-btn-text-icon' ,icon:'../scripts/epr/Pics/save.gif',pressed:false,handler: onTBButtonClick},{id:'btnprint',text:'打印',cls: 'x-btn-text-icon' ,icon:'../scripts/epr/Pics/print.gif',pressed:false,handler: onTBButtonClick},'-',{id:'btncommit',text:'提交',cls: 'x-btn-text-icon' ,icon:'../scripts/epr/Pics/submission.gif',pressed:false,disabled:false,handler: onTBButtonClick},'-',{id:'btnupdatedata',text:'更新数据',cls: 'x-btn-text-icon' ,icon:'../scripts/epr/Pics/upda.gif',pressed:false,handler: onTBButtonClick},{id:'btnslttemplate',text:'选择模板',cls: 'x-btn-text-icon' ,icon:'../scripts/epr/Pics/template.gif',pressed:false,handler: onTBButtonClick},'-']});</script>	</tr></td>
+	<tr border='0' cellspacing='0' cellpadding='0' height='100%'><td width='100%'>
+		<server>
+
+		s pateintID = $Get(%request.Data("PatientID",1))
+		s episodeID = $Get(%request.Data("EpisodeID",1))
+		s chartItemID = $Get(%request.Data("ChartItemID",1))
+		w "<iframe id='eprarea' name='eprarea' scrolling='no' frameborder='0' src='dhcepr.chart.eprarea.csp?PatientID="_pateintID_"&EpisodeID="_episodeID_"&ChartItemID="_chartItemID_"' style='WIDTH:100%; HEIGHT:100%'></iframe>"
+		
+		</server>
+	</tr></td>
+	</table>
+</body>
+</html>

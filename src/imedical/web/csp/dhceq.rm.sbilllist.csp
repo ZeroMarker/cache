@@ -1,0 +1,79 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+    s CurMonth=##Class(web.DHCEQReport).GetReportMonthByDate(+$H)
+    s PreMonth=##Class(web.DHCEQReport).GetPreMonth(CurMonth)
+	s StartDate=##Class(web.DHCEQ.RM.BUSSBill).GetMonthDate(PreMonth,1)
+	s EndDate=##Class(web.DHCEQ.RM.BUSSBill).GetMonthDate(PreMonth,2)
+	s BillDR=$Get(%request.Data("BillDR",1)) 
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</Script>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'调配收入明细报表'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<!--Modify By zx 2020-05-27 BUG ZX0090 布局调整-->
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:5px 0 10px 0;">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cBBillNo" for="BBillNo">账单号</label></div>
+					<div class="eq-table-td"><input class="hisui-validatebox" id="BBillNo" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBStartDate" for="BStartDate">开始日期</label></div>
+					<div class="eq-table-td ">
+						<input class="hisui-datebox textbox" id="BStartDate" value=#(StartDate)#>
+						<input class="hisui-timespinner textbox" id="BStartTime" value="00:00">
+					</div>
+					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" data-options="stopAllEventOnDisabled:true">查询</a></div><!--Modified By QW20200518 灰化后不能响应-->
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBEndDate" for="BEndDate">结束日期</label></div>
+					<div class="eq-table-td ">
+						<input class="hisui-datebox textbox" id="BEndDate"  value=#(EndDate)#>
+						<input class="hisui-timespinner textbox" id="BEndTime" value="23:59">
+					</div>
+					<div class="eq-table-td eq-table-label"><a id="BExecute" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'" data-options="stopAllEventOnDisabled:true">执行</a></div><!--Modified By QW20200518 灰化后不能响应-->
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="position:relative">
+				<table id="tDHCEQSBillList" class="hisui-datagrid"></table>
+				<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>	
+			</div>
+    	</div>
+	</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+		<INPUT type="hidden" id="BillDR" value=#(BillDR)#>
+		<INPUT type="hidden" id="BFromHospitalDR" >
+		<INPUT type="hidden" id="BToHospitalDR" >
+		<INPUT type="hidden" id="BShareType" >
+		<INPUT type="hidden" id="BPayLocDR" >
+		<INPUT type="hidden" id="BChargeLocDR" >
+		<INPUT type="hidden" id="BTotalFee" >
+		<INPUT type="hidden" id="BCostFee" >
+		<INPUT type="hidden" id="BIsShare" value="N">
+		<INPUT type="hidden" id="BRemark" >
+		<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+		<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/rm/sbilllist.js'></script>
+</body>
+</HTML>
+

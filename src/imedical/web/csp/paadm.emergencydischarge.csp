@@ -1,0 +1,48 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT language="javascript">
+ var refreshTopRequired=0;
+</SCRIPT>
+</HEAD>
+
+
+<server>
+	n wkfl,wkfli,id,patientID,episodeID,mradm,chartID,PARREF,tohidden,context,secgrp,GrpSetCarPrv,grpid,EMCDescString
+	s (wkfl,wkfli,id,patientID,episodeID,mradm,chartID,PARREF,tohidden,context,secgrp,GrpSetCarPrv,grpid,EMCDescString)=""
+	s context=$g(%request.Data("CONTEXT",1))
+	s wkfl=$g(%request.Data("TWKFL",1))
+	s wkfli=$g(%request.Data("TWKFLI",1))
+	s id=$g(%request.Data("EpisodeID",1))
+	s episodeID=id
+	s patientID=$g(%request.Data("PatientID",1))
+	s PARREF=$g(%request.Data("PARREF",1))
+	s mradm=$g(%request.Data("mradm",1))
+	i mradm="",episodeID'="" s mradm=$p($g(^PAADM(episodeID)),"^",61)
+	s chartID=$g(%request.Data("ChartID",1))
+	s tohidden=$g(%request.Data("tohidden",1))
+	s EMCDescString=$g(%request.Data("EMCDescString",1))
+	s grpid=##Class(epr.GroupSettings).GetIdFromGroupId(%session.Get("LOGON.GROUPID"))
+	s secgrp=##Class(epr.GroupSettings).%OpenId(grpid)
+	i secgrp'="" s GrpSetCarPrv=secgrp.CarPrvTp d secgrp.%Close()
+ 	i $g(GrpSetCarPrv)'="" {s GrpSetCarPrv=","_GrpSetCarPrv_","} 
+  	;
+ 	s frameset=##Class(epr.FramePreference).GetData($g(%session.Data("LOGON.SITECODE")),$g(%session.Data("LOGON.GROUPID")),%request.PageName)
+ 	s:$g(frameset)="" frameset="75%,*"
+</server>
+<frameset rows="#(frameset)#">
+ <frame src="paadm.edit.csp?WEBSYS.TCOMPONENT=PAAdm.EditEmergency&TWKFL=#(wkfl)#&TWKFLI=#(wkfli)#&PatientID=#(patientID)#&EpisodeID=#(episodeID)#&ID=#(id)#&mradm=#(mradm)#&tohidden=#(tohidden)#&CONTEXT=#(context)#&PatientBanner=1&EMCDescString=#(EMCDescString)#&TEDITFRAME=1" name="discharge_top">
+ <frame src="websys.default.csp?WEBSYS.TCOMPONENT=MRDiagnos.ListEMR&TWKFL=#(wkfl)#&TWKFLI=#(wkfli)#&PatientID=#(patientID)#&EpisodeID=#(episodeID)#&PARREF=#(PARREF)#&mradm=#(mradm)#&CONTEXT=#(context)#&GrpSetCarPrv=#(GrpSetCarPrv)#" name="diagnos_list">
+</frameset>
+<BODY>
+
+</BODY>
+</HTML>

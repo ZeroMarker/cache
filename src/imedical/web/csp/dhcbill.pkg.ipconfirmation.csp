@@ -1,0 +1,99 @@
+<!-- 
+ * FileName:	dhcbill.pkg.ipconfirmation.csp
+ * User:		tangzf
+ * Date:		2019-09-23
+ * Function:	住院套餐确认
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<style>
+	#ProInfo .panel{
+		padding:10px	
+	}
+	.longtext{
+		width:624px !important	
+	}
+	.tb110{
+		width:120px !important	
+	}
+	</style>
+</head>
+<body style='padding:0 10px 10px 10px'>
+	<!--
+		1.主界面
+	-->
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="height:36px;padding: 10px 10px 1px;overflow:hidden;">
+	 		<csp:Include Page="dhcbill.pkg.patient.banner.csp">
+		</div>
+		<div data-options="region:'center',title:'住院套餐确认',headerCls:'panel-header-gray',iconCls:'icon-paper '" style="overflow:hidden;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="height:89px;overflow:hidden;">
+					<table class="search-table" id='searchTable'>
+						<tr>
+							<td class="r-label r-label-1"><label>住院号</label></td>
+							<td><input id="MedicalNo" class="textbox"/></td>
+							<td class="r-label r-label-1"><label>登记号</label></td>
+							<td><input id="RegNo" class="textbox tb110"/></td>
+							<td class="r-label r-label-1"><label>就诊记录</label></td>
+							<td><input id="admList" class="tb110 textbox"/></td>
+							<td class="r-label r-label-1"><label>开单科室</label></td>
+							<td><input id="CTLoc" class="textbox tb110" ></td>
+							<td class="r-label r-label-1"><label>审批单号</label></td>
+							<td><input id="DiscReason" class="textbox tb110"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>套餐金额</label></td>
+							<td><input id="PackageAmt" style='color:red;font-weight:bold' class="textbox" disabled /></td>
+							<td class="r-label r-label-1"><label>套餐外可打折金额</label></td>
+							<td><input id="OutPackageAmt" style='color:red;font-weight:bold' class="tb110 textbox" disabled/></td>
+							<td class="r-label r-label-1"><label>套餐内医嘱金额</label></td>
+							<td><input id="InPackageAmt" style='color:red;font-weight:bold' class="tb110 textbox" disabled/></td>
+							<td class="r-label"><label>套餐外优惠金额</label></td>
+							<td><input id="DiscAmt" style='color:red;font-weight:bold' class="textbox tb110"  /></td>
+							<td class="r-label"><label>预交金</label></td>
+							<td><input id="Deposit" style='color:red;font-weight:bold' class="textbox tb110" disabled /></td>
+						
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false" style="border-top:1px dashed #cccccc;">
+					<div class="hisui-panel panel-header-gray" data-options="fit:true,border:false">
+						<table id="dg"></table>
+					</div>
+				</div>
+			</div>	
+		</div>
+	</div>
+	<div id="tToolBar" class="hisui-toolbar" >  
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-search" id="BtnFind" plain="true">查询</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-write-order" id="BtnUpdate" plain="true">套餐修改</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="BtnSave" plain="true">保存折扣</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="FlexButton" plain="true">部分打折</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-delete" id="BtnDelete" plain="true">删除折扣</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-rebill" id="BtnBill" plain="true">账单</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-rebill" id="BtnReBill" plain="true">重新生成账单</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnCancel" plain="true">取消匹配</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-clear" id="BtnClear" plain="true">清屏</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/pkg/dhcbill.pkg.ipconfirmation.js"></script>
+</body>
+</html>

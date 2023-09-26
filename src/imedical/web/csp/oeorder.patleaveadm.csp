@@ -1,0 +1,60 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+</HEAD>
+<body>
+<server>
+ s (MinDate,MinTime,MaxDate,MaxTime)=""
+ s (OEOrdExecIDs,EpisodeID,Found,reload)=""
+ s OEOrdExecIDs=%request.Get("OEOrdExecIDs")
+ s EpisodeID=%request.Get("EpisodeID")
+ 
+ i OEOrdExecIDs'="",$l(OEOrdExecIDs,"||")=3 d
+ . s ExecData=$g(^OEORD(+OEOrdExecIDs,"I",$p(OEOrdExecIDs,"||",2),"X",$p(OEOrdExecIDs,"||",3)))
+ . i ExecData'="" d
+ . . i $p(ExecData,"^",19)="",$p(ExecData,"^",16)="" d
+ . . . s EstStDate=$p(ExecData,"^",1)
+ . . . s EstStTime=$p(ExecData,"^",2)
+ . . . s MinDate=EstStDate,MinTime=EstStTime
+ s seq="" f  s seq=$o(^PAADM(EpisodeID,"LEA",seq)) q:seq=""  q:Found="Y"  d
+ . s (LeaData,LeaveDate,LeaveTime,ReturnDate,ReturnTime,EstRetDate,EstRetTime)=""
+ . s LeaData=^(seq)
+ . s LeaveDate=$p($g(LeaData),"^",2)
+ . s LeaveTime=$p($g(LeaData),"^",3)
+ . s EstRetDate=$p($g(LeaData),"^",5)
+ . s EstRetTime=$p($g(LeaData),"^",4)
+ . s ReturnDate=$p($g(LeaData),"^",9)
+ . s ReturnTime=$p($g(LeaData),"^",10)
+ . i LeaveDate>+$h d
+ . . s Found="Y"
+ . . s MinDate=LeaveDate,MinTime=LeaveTime
+ . . i ReturnDate'="",ReturnTime'="" s MaxDate=ReturnDate,MaxTime=ReturnTime
+ . . e  i EstRetDate'="",EstRetTime'="" s MaxDate=EstRetDate,MaxTime=EstRetTime
+
+ i %request.Get("reload")=1 d
+ . s (MinDate,MinTime,MaxDate,MaxTime)=""
+ . s MinDate=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("LeaveDTFrom"))
+ . s MinTime=##Class(websys.Conversions).TimeHtmlToLogical(%request.Get("LeaveTIFrom"))
+ . s MaxDate=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("LeaveDTTo"))
+ . s MaxTime=##Class(websys.Conversions).TimeHtmlToLogical(%request.Get("LeaveTITo"))
+ 
+ i MinDate'="" d %request.Set("LeaveDTFrom",MinDate)
+ i MinTime'="" d %request.Set("LeaveTIFrom",MinTime)
+ i MaxDate'="" d %request.Set("LeaveDTTo",MaxDate)
+ i MaxTime'="" d %request.Set("LeaveTITO",MaxTime)
+</server>
+<TRAK:COMPONENT id="PAPerson.Banner">
+</TRAK:COMPONENT>
+<TRAK:COMPONENT id="OEOrder.PatientLeaveAdministration">
+</TRAK:COMPONENT>
+
+</body>
+</html>

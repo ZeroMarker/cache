@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	d %session.Unlock(0)
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+
+<script language="Cache" runat="server">
+	d %session.Unlock()
+	;jquery.easyui.querydatatrans.csp
+	;s ^TMPP1=##class(web.DHCDocOrderCommon).UnEscape($g(%request.Data("P1",1)))
+	Set ClassName = $g(%request.Data("ClassName",1))
+	Set QueryName = $g(%request.Data("QueryName",1))
+	Set ResultSetType = $g(%request.Data("ResultSetType",1),"json")
+	Set ComponentId = $g(%request.Data("ComponentID",1))
+	Set ComponentName = $g(%request.Data("ComponentName",1))
+	Set page = $g(%request.Data("page",1),1)
+	Set rows = $g(%request.Data("rows",1),50)
+	set start = page*rows - rows
+	set total=0
+	if ClassName'="",QueryName'=""{
+		if ($ZCVT(ResultSetType,"U")="ARRAY"){ // combo===[{},{}]
+			Set rows=9999
+			Write ##class(websys.Query).ToJson(ClassName,QueryName,start,rows)
+		}else{
+			Write "{""rows"":"
+			Write ##class(websys.Query).ToJson(ClassName,QueryName,start,rows)
+			Write ",""total"":",total,",""curPage"":"_page_"}"
+		}
+	}else{
+		if ComponentName'="",ComponentId=""{
+			Set ComponentId = $O(^websys.ComponentI("UniqueNameIndex",$zcvt(ComponentName,"U"),""))
+		}
+		if ComponentId=""{
+			Write "{""Error"":""ComponentID Is Null"",""total"":0}" 
+			Quit ""
+		}
+		if ($ZCVT(ResultSetType,"U")="ARRAY"){
+			do ##class(websys.ComponentUserInterface).ComponentTable2Json(ComponentId,start,rows)
+		}else{
+			w "{""rows"":"
+			do ##class(websys.ComponentUserInterface).ComponentTable2Json(ComponentId,start,rows,.total)
+			w ",""total"":",total,"}"
+		}
+	}
+	quit ""
+</script>
+

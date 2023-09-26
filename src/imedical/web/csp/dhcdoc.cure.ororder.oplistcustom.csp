@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. dhcdoc.cure.ororder.oplistcustom.csp --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if $g(%session.Data("LOGON.USERID"))=""
+ {
+ s rtn=##class(websys.SessionLogon).Logon()
+ s %response.ServerSideRedirect="oeorder.entrysinglelogon.csp"
+ }
+
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ Q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE>Ò½ÖöÂ¼Èë</TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ n PatientID,EpisodeID,mradmID,TWKFL,TWKFLI,XCONTEXT,ChartID,RepeatOrders,EPRChartName,params,ChartFrameSize,MultiEpisodeID,AllowUpdateWithNoOrders
+ n urlEPRdefaultWL
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=1 ;$g(%request.Data("TWKFLI",1))
+ s XCONTEXT=$s(TWKFL:"W"_TWKFL,1:"")
+ s RepeatOrders=$g(%request.Data("RepeatOrders",1))
+ s MultiEpisodeID=$g(%request.Data("MultiEpisodeID",1))
+ s AllowUpdateWithNoOrders=$g(%request.Data("AllowUpdateWithNoOrders",1))
+ i MultiEpisodeID,$l(MultiEpisodeID,"^")=1 s PatientID=$p($g(^PAADM(%request.Data("MultiEpisodeID",1))),"^",1)
+ s EpisLoc=$g(%request.Data("EpisLoc",1))
+ ;Log 50088 PeterC 03/03/05
+ s AllowUpdateWithNoOrders=$ZCVT(AllowUpdateWithNoOrders,"O","JS")
+ s EpisLoc=$ZCVT(EpisLoc,"O","JS")
+ s RepeatOrders=$ZCVT(RepeatOrders,"O","JS")
+ s MultiEpisodeID=$ZCVT(MultiEpisodeID,"O","JS")
+ s RepeatOrders=##Class(%CSP.Page).EscapeURL($g(RepeatOrders))
+ s ordentrydetails="&SUMMFlag="_$g(%request.Data("SUMMFlag",1))
+ 
+ s PAAdmTransactionID=""
+ s OperRoomID=%request.Get("OperRoomID")
+ s ConsultID=%request.Get("ConsultID")
+ s DischID=%request.Get("DischID")
+ ; the current ID when we're creating a new version
+ s CurrDischID=%request.Get("CurrDischID")
+ s DischEpisodes=%request.Get("DischEpisodes")
+ s doctype=%request.Get("doctype")
+ s DCAARowId=%request.Get("DCAARowId")
+ s chLINK="websys.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&EpisodeIDs=&mradm="_mradm_"&ChartID=21&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=50008&TWKFLI=&Random=2"_"&DCAARowId="_DCAARowId
+ 
+</SCRIPT>
+
+<FRAMESET rows="*,0" name="EntryMain" id="EntryMain">
+	<frame name="DCAAOrder" id="oeorder_entry" 
+		src="#(chLINK)#" scrolling="auto" marginwidth="0" marginheight="0" framespacing="0"></frame>
+	<frame name="TRAK_hidden"  src="" width="100%"  scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0></frame>
+</FRAMESET>
+
+<noframes>
+    <body>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5.5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    <iframe name="TRAK_hidden"  src="" width="100%"  scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+	</iframe>
+
+    </body>
+</noframes>
+</HTML>

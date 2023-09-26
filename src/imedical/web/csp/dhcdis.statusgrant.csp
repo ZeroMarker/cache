@@ -1,0 +1,127 @@
+<!-- dhcdis.statusgrant.csp -->
+
+<html>
+<head>
+<title></title>
+<DHCAPP:EASYUI/>
+
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcdis/statusgrant.js"></script>
+	<script Language="Javascript">
+		var hosp="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+		var dataArray = [{"value":"1","text":'安全组'}, {"value":"2","text":'科室'}, {"value":"3","text":'人员'}]; //, {"value":"4","text":'全院'}
+   </script>
+</head>
+<body>  
+<!--<div style="width:100%;height:25px;padding:5px 0 0 5px;background-color:#38AAFF;color:#FFFFFF">配送人员关联科室</div>-->
+<div  class="easyui-layout" fit="true" >
+ <div data-options="region:'center'" >
+	<!-- toolbar -->
+		<div id="toolbar" class="toolbar">
+			
+			<div class="tool-bar-line">	</div>	
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >增加</a></td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><div class="datagrid-btn-separator"> </div> </td>	
+			      <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			      <td><div class="datagrid-btn-separator"> </div> </td>
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="easyui-datagrid"  fit="true" title="陪送科室人员字典表"
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    pageSize:20,
+		    pageList: [20,40,80],
+		    nowrap: false,
+		    onDblClickRow:onClickRow, 
+		    
+			url:'dhcapp.broker.csp?ClassName=web.DHCDISStatusGrant&MethodName=ListStatusGrant'">
+			<thead>
+				<tr>
+					<th data-options="field:'SAParRefDr',width:200,id:'lulocdr',editor:{type:'validatebox',options:{required:true}},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISStatusGrant&MethodName=getDisStatus',
+													required:true,
+													editable:false
+													
+												},filter: function(q, row){  
+       											 var opts = $(this).combobox('options');  
+        										return row[opts.textField].indexOf(q) >= 0;//这里改成>=即可在任意地方匹配  
+  							  }
+					
+											}">配送状态</th>
+					<th data-options="field:'SAType',width:150,editor:{type:'validatebox',options:{required:true}},
+												editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													data:dataArray,
+													
+													required:true,
+													editable:false,
+													onSelect:function(option){
+													///设置类型值
+														var rowIndex=$('#datagrid').datagrid('getRowIndex',$('#datagrid').datagrid('getSelected'))
+	                    								rowIndex=rowIndex==-1?0:rowIndex
+	                    								
+														var varEditor = $('#datagrid').datagrid('getEditor', { index: rowIndex, field: 'SAPointer' });
+                   							 			
+                   										$(varEditor.target).combobox('clear');//清空类型值
+                   										var params=option.value+'^'+LgGroupID
+                    									$(varEditor.target).combobox( 'reload',
+															'dhcapp.broker.csp?ClassName=web.DHCDISStatusGrant&MethodName=GetSSPPoint&params='+params
+                    									);
+													
+													}
+												},
+												filter: function(q, row){  
+       												 var opts = $(this).combobox('options');  
+        											return row[opts.textField].indexOf(q) >= 0;//这里改成>=即可在任意地方匹配  
+  							  }
+					
+					
+					
+												}">类型</th>
+					<th data-options="field:'SAPointer',align:'center',width:200,
+											
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													
+													required:true,
+													editable:false
+												}
+											}">指向</th>
+					
+					<th data-options="field:'ID',hidden:true">id</th>
+					<th data-options="field:'SAParID',hidden:true">SAParID</th>
+					<th data-options="field:'TypeId',hidden:true">TypeId</th>
+					<th data-options="field:'PointID',hidden:true">PointID</th>
+				</tr>
+			</thead>
+		</table>
+		
+	</div>
+	
+	</div>
+	
+</div>
+
+</body>
+</html>
+

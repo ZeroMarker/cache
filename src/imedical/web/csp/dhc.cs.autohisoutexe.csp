@@ -1,0 +1,162 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s stDate = $Get(%request.Data("stDate",1))
+	s endDate = $Get(%request.Data("endDate",1))
+	s tmpDate = $Get(%request.Data("tmpDate",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))	
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))	
+	s yearPeriodId = $Get(%request.Data("yearPeriodId",1))	
+	s locDesc = $Get(%request.Data("locDesc",1))
+	s busiTypeId = $Get(%request.Data("busiTypeId",1))	
+	s trNo = $Get(%request.Data("trNo",1))
+	s vouchNo = $Get(%request.Data("vouchNo",1))
+	s strBusino = $Get(%request.Data("strBusino",1))
+	s operator = $Get(%request.Data("operator",1))
+	s ACCTVouchDetailUpdate = $Get(%request.Data("ACCTVouchDetailUpdate",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s subjDr = $Get(%request.Data("subjDr",1))
+	s VouchMaintain = $Get(%request.Data("VouchMaintain",1))
+	s docNoFrom = $Get(%request.Data("docNoFrom",1))
+	s docNoTo = $Get(%request.Data("docNoTo",1))
+	s managers = $Get(%request.Data("managers",1))
+	s query = $Get(%request.Data("query",1))	
+	s noFrom = $Get(%request.Data("noFrom",1))
+	s noTo = $Get(%request.Data("noTo",1))
+	s inOut = $Get(%request.Data("inOut",1))
+	
+	i action="IOVouch" d
+	.s ^TMP("Test",3)=stDate_"^"_endDate_"^"_operator_"^"_yearPeriodId
+	.s result=##class(web.AccCredManage).BuildCredA(inOut, stDate, endDate, "",operator, yearPeriodId)
+	.i result=0 d
+	..w "{success:'true',info:"_result_"}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="AutoHis" d
+	.w ##class(User.uAutoHis).List(vouchNo)
+	
+	///住院
+	i action="IPReportCatDetailByDateHead"  d
+	.w ##class(web.DHCOPBillActManageJson).IPReportCatDetailByDateH(stDate,endDate,inOut)
+
+	i action="IPReportCatDetailByDateJson"  d
+	.w ##class(web.DHCOPBillActManageJson).IPReportCatDetailByDateJ(stDate,endDate,inOut)
+
+	i action="IPReportCatDetailByUserHead"  d
+	.w ##class(web.DHCOPBillActManageJson).IPReportCatDetailByUserH(tmpDate)
+
+	i action="IPReportCatDetailByUserJson"  d
+	.w ##class(web.DHCOPBillActManageJson).IPReportCatDetailByUserJ(tmpDate)
+	
+	i action="IPReportCatDetailByLocHead"  d
+	.w ##class(web.DHCOPBillActManageJson).IPReportCatDetailByLocH(stDate,endDate)
+
+	i action="IPReportCatDetailByLocJson"  d
+	.w ##class(web.DHCOPBillActManageJson).IPReportCatDetailByLocJ(stDate,endDate)
+	
+	i action="IPIncomeHead"  d
+	.w ##class(web.DHCOPBillActManageJson).IPIncomeH(stDate,endDate,inOut)
+
+	i action="IPIncomeJson"  d
+	.w ##class(web.DHCOPBillActManageJson).IPIncomeJ(stDate,endDate,inOut)
+	
+	i action="IPIncomeByAdmreasonHead"  d
+	.w ##class(web.DHCOPBillActManageJson).IPIncomeByAdmreasonH(tmpDate,inOut)
+
+	i action="IPIncomeByAdmreasonJson"  d
+	.w ##class(web.DHCOPBillActManageJson).IPIncomeByAdmreasonJ(tmpDate,inOut)	
+	
+	
+	///门诊
+	i action="GetOPReportCatDetailByDateHead"  d
+	.w ##class(web.DHCOPBillActManageJson).GetOPReportCatDetailByDateH(stDate,endDate,inOut)
+
+	i action="GetOPReportCatDetailByDateJson"  d
+	.w ##class(web.DHCOPBillActManageJson).GetOPReportCatDetailByDateJ(stDate,endDate,inOut)
+
+	i action="OPReportCatDetailByUserHead"  d
+	.w ##class(web.DHCOPBillActManageJson).OPReportCatDetailByUserH(tmpDate)
+
+	i action="OPReportCatDetailByUserJson"  d
+	.w ##class(web.DHCOPBillActManageJson).OPReportCatDetailByUserJ(tmpDate)
+	
+	i action="OPReportCatDetailByLocHead"  d
+	.w ##class(web.DHCOPBillActManageJson).OPReportCatDetailByLocH(stDate,endDate)
+
+	i action="OPReportCatDetailByLocJson"  d
+	.w ##class(web.DHCOPBillActManageJson).OPReportCatDetailByLocJ(stDate,endDate)
+	
+	i action="OPIncomeHead"  d
+	.w ##class(web.DHCOPBillActManageJson).OPIncomeH(stDate,endDate,inOut)
+
+	i action="OPIncomeJson"  d
+	.w ##class(web.DHCOPBillActManageJson).OPIncomeJ(stDate,endDate,inOut)
+	
+	i action="OPIncomeByAdmreasonHead"  d
+	.w ##class(web.DHCOPBillActManageJson).OPIncomeByAdmreasonH(tmpDate,inOut)
+
+	i action="OPIncomeByAdmreasonJson"  d
+	.w ##class(web.DHCOPBillActManageJson).OPIncomeByAdmreasonJ(tmpDate,inOut)
+	
+	////////////////////////
+	i action="ACCTYearPeriodList" d
+	.w ##class(User.uACCTYearPeriod).List()	
+	
+	i action="ACCTSysBusiTypeList" d
+	.w ##class(web.uACCTSysBusiType).List("","","","","","")
+	
+	i action="CTLOCList" d
+	.w ##class(web.uCTLOC).List(searchField,searchValue,"","",start,limit)
+
+	i action="ACCTCreateVouch" d
+	.s result = ##class(web.ACCTCreateVouch).CreateVouch(yearPeriodId, busiTypeId, strBusino, operator)
+	.i result = "" d
+	..w "{success:'false',info:''}"
+	.e  d
+	..w "{success:'true',info:'"_result_"'}"
+	
+	//记账凭证
+	i action="ACCTVouchDetail" d
+	.w ##class(web.uACCTVouchDetail).List(vouchNo)
+	
+	i action="ACCTVouchDetailUpdate" d
+	.s result = ##class(web.uACCTVouchDetail).Update(rowid,subjDr)
+	.i result '= 1 d
+	..w "{success:'false',info:''}"
+	.e  d
+	..w "{success:'true',info:''}"
+	
+	//会计科目
+	i action="ACCTSubj" d
+	.w ##class(web.uACCTSubj).List(searchField,searchValue,"","",start,limit)
+	
+	i action="CreateDataJson" d
+	.;w "{results:2,rows:[{No:'GG20100706R001',ProviderId:'3',ProviderDesc:'AXWY-北京爱心伟业医药有限公司',ReceiverId:'171',ReceiverDesc:'XYK-西药库',Date:'2010-07-06',CreatUser:'Demo Group',AuditUser:'Demo Group',TempVouchNo:'4001201007   1'},{No:'GG20100706R002',ProviderId:'7',ProviderDesc:'GAYY-北京广安医药联合中心',ReceiverId:'171',ReceiverDesc:'XYK-西药库',Date:'2010-07-06',CreatUser:'Demo Group',AuditUser:'Demo Group',TempVouchNo:'4001201007   1'}]}"
+	.w ##class(web.ACCTQueryToJson).CreateDataJson(yearPeriodId,locDesc,busiTypeId)
+	
+	i action="GetDhcDataDetailJson" d
+	.;w "{results:3,rows:[{InvNo:'20100706',InvDate:'2010-07-06',ItmDesc:'(达菲)磷酸奥司他韦胶囊[75mg*10]',Spec:'75mg*10',TrUom:'盒(10粒)',TrQty:'20',Rp:'256',RpAmt:'5120.0000',Sp:'270',SpAmt:'5400.0000'},{InvNo:'20100706',InvDate:'2010-07-06',ItmDesc:'(阿莫仙)阿莫西林胶囊[0.5g*24]',Spec:'0.5g*24',TrUom:'盒(24粒)',TrQty:'30',Rp:'23',RpAmt:'690.0000',Sp:'26',SpAmt:'780.0000'},{InvNo:'20100706',InvDate:'2010-07-06',ItmDesc:'阿莫西林胶囊[0.25*30]b',Spec:'0.25g*30',TrUom:'瓶(30粒)',TrQty:'40',Rp:'3',RpAmt:'120.0000',Sp:'9.2',SpAmt:'368.0000'}]}"
+	.w ##class(web.ACCTQueryToJson).GetDhcDataDetailJson(trNo,busiTypeId)
+
+	i action="VouchMaintainList" d
+	.w ##class(User.uACCTVouch).List(yearPeriodId)
+	
+	i action="VouchMaintain" d
+	.w ##class(User.uACCTVouch).ListIII(yearPeriodId,noFrom,noTo)
+	.;overwrite
+	.;w "{results:2,rows:[{TempNo:'4001201007   1',CertiNo:'01-08001',CertiDate:'2008-01-01',CertiType:'记账凭证',Summary:'',DocNo:'200801001',CreatUser:'',AuditUser:'',Accounter:''},{TempNo:'2008-0002',CertiNo:'01-08002',CertiDate:'2008-01-01',CertiType:'记账凭证',Summary:'',DocNo:'汇总',CreatUser:'',AuditUser:'',Accounter:''}]}"
+	
+	//i action = "add" d
+	//.s result = ##class(dhc.nca.app.appADataItem).Insert(data)
+	//.i result = 0 d
+	//..w "{success:'true',info:''}"
+	//.e  d
+	//..w "{success:'false',info:'"_result_"'}"
+</script>

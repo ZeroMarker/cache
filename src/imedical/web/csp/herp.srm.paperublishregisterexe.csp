@@ -1,0 +1,93 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))	
+	s CompDR=$Get(%request.Data("CompDR",1))
+	s Year=$Get(%request.Data("Year",1))
+	s AdjustNo=$Get(%request.Data("AdjustNo",1))
+	s AdjustAate=$Get(%request.Data("AdjustAate",1))	
+	s AdjustFile=$Get(%request.Data("AdjustFile",1))
+	s Memo=$Get(%request.Data("Memo",1))
+	s IsApprove=$Get(%request.Data("IsApprove",1))
+	s IsElast=$Get(%request.Data("IsElast",1))
+	s ElastMonth=$Get(%request.Data("ElastMonth",1))
+	
+        s date = $Get(%request.Data("date",1))
+        s data = $Get(%request.Data("data",1))
+	s RecType = $Get(%request.Data("RecType",1))
+	s Author  = $Get(%request.Data("Author",1))
+	s userid  = $Get(%request.Data("userid",1))
+	s JTypeDr  = $Get(%request.Data("JTypeDr",1))
+	s userdr = $Get(%request.Data("userdr",1))
+	i action = "list" d
+	.w ##class(herp.srm.udata.PaperPublishRegister).List(date,sortField, sortDir, start, limit)
+	
+
+	i action = "GetDate" d
+	.w ##class(herp.srm.udata.PaperPublishRegister).GetDate(start, limit, str)
+
+
+	i action = "GetDept" d
+	.w ##class(herp.srm.udata.PaperPublishRegister).GetDept(start, limit, str)
+
+	i action = "GetJName" d
+	.w ##class(herp.srm.udata.PaperPublishRegister).GetJName(RecType,start,limit,str)
+
+
+	i action = "GetAuthor" d
+	.w ##class(herp.srm.udata.PaperPublishRegister).GetAuthor(start, limit, str)
+
+
+
+        i action = "GetAuthorDept" d
+	.s result = ##class(herp.srm.udata.PaperPublishRegister).GetAuthorDept(Author)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.PaperPublishRegister).InsertRec(userid,data)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgAdjust).UpdateRec(rowid,CompDR,Year,AdjustNo,AdjustAate,AdjustFile,Memo,IsApprove,IsElast,ElastMonth)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.PaperPublishRegister).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+        i action = "submit" d
+	.s result = ##class(herp.srm.udata.PaperPublishRegister).Submit(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

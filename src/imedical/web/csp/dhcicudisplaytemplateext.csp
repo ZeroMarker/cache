@@ -1,0 +1,138 @@
+<HTML XMLNS=TRAK>
+<head>
+<!--20180404+dyl-->
+<title>	科室模板维护 </title>
+<TRAK:HEAD></TRAK:HEAD>
+<csp:content charset="UTF-8">
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/dhccl/css/displaytemplate.css" />
+<script type="text/javascript" src="../scripts/dhccl/icu/displaytemplate.js"></script>
+<style type="text/css">
+.oper-table
+{
+	padding:4px;
+}
+.oper-table .oper-td{
+	padding:4px;
+	min-width:90px;
+	text-align:center;
+	white-space:nowrap;
+}
+#operListDiv .panel-body-noheader.panel-body
+{
+	border-radius:0 0 4px 4px;
+	border-left-width:1px;
+	border-right-width:1px;
+	border-bottom-width:1px;
+	border-top-width:0;
+	border-color: #ccc;
+}
+</style>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'west',border:false" style="width:450px;padding:4px 5px 4px 4px;">
+     	<table id="template_datagrid"></table>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:4px 5px 4px 4px;">
+	    <div id="dataTools">
+	        <div class="hisui-panel" data-options="title:'模板项目',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		         <table class="oper-table">
+	            	<tr class="oper-tr">
+	            	   <td class="showwindow-tdtype3">
+	            	       <span style="margin-left:3px;margin-right:5px;">显示分类</span>
+		                   <select id="param_viewcat" class="hisui-combobox" name="ViewCat" style="width:140px;"></select>
+		               </td>
+	            	   <td class="showwindow-tdtype3">
+	            	       <span style="margin-left:15px;margin-right:5px;">常用医嘱</span>
+		                   <select id="param_comord" class="hisui-combobox" name="ComOrd" style="width:140px;"></select>
+		               </td>
+	            	   <td class="showwindow-tdtype3">
+	            	       <span style="margin-left:15px;margin-right:5px;">名称</span>
+		                   <input id="param_desc" class="textbox" name="Desc" style="width:140px;">
+		               </td>
+		               <td class="showwindow-tdtype3">
+		                   <span style="margin-left:15px;margin-right:5px;"></span>
+		                   <a href="#" id="item_query" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+		               </td>
+		            </tr>
+			    </table>
+		    </div>
+		</div>
+		<div id="operListDiv" style="height:300px;">
+		    <table id="item_datagrid"></table>
+		</div>
+		<div class="hisui-panel" data-options="title:'模板项目属性',headerCls:'panel-header-gray',iconCls:'icon-paper',border:true" style="border-style:solid solid solid solid;border-radius:0 0 4px 4px;">
+			<div>
+			    <td><label style="margin-right:5px;">添加属性</label></td>
+				<td><input id="PropertyAdd" class="hisui-combobox" name="PropertyAdd" data-options="menu:'#property_split_menu',width:177,iconCls:'icon-add'" ></td>	
+				<td><a id="PropertyItemAdd" class="hisui-linkbutton" data-options="iconCls:'icon-add'">添加</a></td>						
+				<td><a href="javascript:void(0)" id="property_save" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,disabled:true">保存属性</a></td>
+			</div>
+			<div style="overflow-x:hidden;overflow-y:auto;">
+				<form id="property_form">
+				<table class="form-table">
+					<tbody>
+					</tbody>
+				</table>
+				</form>
+			</div>
+        </div>
+	</div>
+	<div id="template_dialog_tool">
+		<a id="template_dialog_okay" class="hisui-linkbutton">确定</a>
+		<a id="template_dialog_cancel" class="hisui-linkbutton">取消</a>
+	</div>
+	<div id="template_dialog" class="hisui-dialog" title="新增科室模板" data-options="width:300,height:180,modal:true,buttons:'#template_dialog_tool',closed:true">
+		<form>
+			<table>
+				<tr>
+					<td class="showwindow-tdtype4"><label>科室</label></td>
+				    <td class="showwindow-tdtype"><input id="LocId" type="text" name="LocId" data-options="width:184,required:true"></td>
+				</tr>
+				<tr>
+					<td class="showwindow-tdtype4"><label>描述</label></td>
+					<td class="showwindow-tdtype"><input class="hisui-validatebox textbox" type="text" name="TemplateName" data-options="required:true" style="width:177px;"></td>
+				</tr>
+			</table>
+			<input type="hidden" name="TemplateRowId">
+		</form>
+	</div>
+	
+	<div id="item_dialog_tool">
+		<a id="item_dialog_okay" class="hisui-linkbutton">确定</a>
+		<a id="item_dialog_cancel" class="hisui-linkbutton">取消</a>
+	</div>
+	<div id="item_dialog" class="hisui-dialog" title="新增科室模板项目" data-options="width:323,height:300,modal:true,buttons:'#item_dialog_tool',closed:true">
+		<form>
+			<table>
+				<tr>
+					<td class="showwindow-tdtype2">显示分类</td>
+					<td class="showwindow-tdtype"><input id="ViewCat" type="text" name="ViewCat" data-options="width:184"></td>
+				</tr>
+				<tr>	
+					<td class="showwindow-tdtype2">常用医嘱</td>
+					<td class="showwindow-tdtype"><input id="ComOrd" type="text" name="ComOrd" data-options="width:184"></td>
+				</tr>
+				<tr>
+					<td class="showwindow-tdtype2">代码</td>
+					<td class="showwindow-tdtype"><input id="item_code" class="hisui-validatebox textbox" type="text" name="Code" data-options="" style="width:177px;"></td>
+				</tr>
+				<tr>
+				    <td class="showwindow-tdtype2">描述</td>
+					<td class="showwindow-tdtype"><input id="item_desc" class="hisui-validatebox textbox" type="text" name="Desc" data-options="" style="width:177px;"></td>
+				</tr>
+				<tr>
+					<td class="showwindow-tdtype2">排序号</td>
+					<td class="showwindow-tdtype"><input id="item_seq_no" class="hisui-numberbox" type="text" name="SeqNo" data-options="width:170,precision:2" style="width:177px;"></td>
+				</tr>
+			</table>
+			<input type="hidden" name="ItemRowId">
+			<input type="hidden" name="TemplateRowId">
+		</form>
+	</div>
+</div>
+</body>
+</html>

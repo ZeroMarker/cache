@@ -1,0 +1,173 @@
+<html>
+<head>
+		<TRAK:HEAD></TRAK:HEAD>
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310> 
+		<DHCMED:HEAD></DHCMED:HEAD>  
+		
+		<link href="../Scripts/dhcwmr/css/bootstrap/css/bootstrap.css" rel="stylesheet">
+
+		<script type="text/javascript" src="../Scripts/dhcwmr/DHCWMR.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcwmr/DHCWMR.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcwmr/DHCWMR.ExtFramework.DesignerHelper.js"></script>
+		
+<style >
+     ul.timeline {
+         list-style-type: none;
+         background: url("../Scripts/dhcwmr/img/timeline/version_line.png") repeat-y scroll 200px 0 transparent;
+         margin: 50px 0;
+         padding: 0;
+     }
+  
+     ul.timeline li {
+         position: relative;
+         margin-bottom: 20px;
+     }
+     ul.timeline li .time {
+         position: absolute;
+         width: 90px;
+         text-align: right;
+         left: -200px;
+         top: 10px;
+         color: #999;
+         font:20px;
+     }
+     ul.timeline li .version {
+         position: absolute;
+         width: 290px;
+         text-align: right;
+         left: -380px;
+         top: 30px;
+         font-size: 30px;
+         line-height: 50px;
+         color: #3594cb;
+         overflow: hidden;
+     }
+     ul.timeline li .number {
+         position: absolute;
+         background: url("../Scripts/dhcwmr/img/timeline/version_dot.png") no-repeat scroll 0 0 transparent;
+         width: 56px;
+         height: 56px;
+         left: -100px;
+         line-height: 56px;
+         text-align: center;
+         color: #fff;
+         font-size: 18px;
+     }
+     ul.timeline li.alt .number {
+         background-image: url("../Scripts/dhcwmr/img/timeline/version_dot_alt.png");
+     }
+     ul.timeline li .content {
+         margin-left: 280px;
+         
+     }
+     ul.timeline li .content pre {
+         background-color: #3594cb;
+         padding: 20px;
+         color: #fff;
+         font-size: 13px;
+         line-height: 20px;
+     }
+     ul.timeline li.alt .content pre {
+         background-color: #43B1F1;
+     }
+    </style>		
+<!-- Put your page Title here -->
+
+<SERVER>
+	Set VolID=%request.Get("VolID","")
+</SERVER>
+
+<title>病案操作时间线</title>
+	<script type="text/javascript" >
+		function window_onload(){
+			var obj = new Object();
+			
+
+
+Ext.Ajax.request({
+			url : ExtToolSetting.RunQueryPageURL,
+			method : "POST",
+			params  : {
+				ClassName : 'DHCWMR.SSService.VolStatusQry',
+				QueryName : 'QryStatusList',
+				Arg1 : document.getElementById("VolID").value,
+				ArgCnt : 1
+			},
+			success: function(response, opts) {
+				var objData = Ext.decode(response.responseText);
+				var arryData = new Array();
+				var objItem = null;
+				for(var i = 0; i < objData.total; i ++)
+				{
+					objItem = objData.record[i];
+					arryData[arryData.length] = objItem;
+				}
+				
+			var strTemplate = 
+				'<ul class="timeline">' + 
+					'<tpl for=".">' +
+					'<LI>' +
+						'<div class="time">{ActTime}</div>' +
+						'<div class="version">{ActDate}</div>' +
+						'<div class="number">{[xindex ]}</div>' +
+						'<div class="content" style="width:400px;">' +
+							
+							'<pre>' + 
+								'<div style="font:20px;font-weight:bold;">{ItemDesc}</div>' +
+									'<TABLE style="font:15px;">' +
+									'<TR><TD width="100px">操作批号</TD><TD>{BatchNumber}</TD></TR>' +
+									'<TR><TD>操作人</TD><TD>{UserDesc}</TD></TR>' +
+									'<TR><TD>接收人</TD><TD>{ToUserDesc}</TD></TR>' +
+									'<TR><TD>撤销标记</TD><TD>{UpdoOperaDesc}</TD></TR>' +
+									'<TR><TD>撤销人</TD><TD>{UpdoUserDesc}</TD></TR>' +
+									'<TR><TD>撤销时间</TD><TD>{UpdoDate} {UpdoTime}</TD></TR>' +
+									'<TR><TD>撤销原因</TD><TD>{UpdoReason}</TD></TR>' +
+									'</TABLE>' +
+							'</pre>' +
+						'</div>' +
+					'</LI>' +
+					'</tpl>' +
+				'</ul>';
+								
+				var objTemp = new Ext.XTemplate(strTemplate);
+				var strResult = objTemp.apply(arryData);
+				//window.alert(strResult);
+				document.getElementById("graph").innerHTML = strResult;
+			},
+			failure: function(response, opts) {
+				var objTargetElement = document.getElementById("divStatusList-" + VolumeID);
+				if (objTargetElement) {
+					objTargetElement.innerHTML = response.responseText;
+				}
+			}
+		});
+	}			
+			
+		
+	</script>
+</head>
+
+<body onload="return window_onload();">
+<div class="container"  id='graph'>
+<!--
+<ul class="timeline">
+
+  <li>
+      <div class="time">2013-07-29</div>
+      <div class="version">v3.3.1</div>
+      <div class="number"></div>
+      <div class="content">
+          <pre>
+          -将工具YUICompressor替换为Microsoft Ajax Minifier（需要指定-evals:immediate）。
+          ...        
+          </pre>
+      </div>
+  </li>
+</ul>
+-->
+		<!--div id='graph' height='100%' width='100'></div-->
+		<input type='hidden' id='VolID' value='#(VolID)#'/>
+</div>
+</body>
+</html>
+

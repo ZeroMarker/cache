@@ -1,0 +1,351 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+	
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<script type="text/javascript" src="../scripts_lib/jQuery/jquery-1.9.0.min.js" charset="utf-8"></SCRIPT>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	 <style type="text/css"> 
+	v\:line {behavior: url(#default#VML);}
+  </style>
+	<server>
+		Set showPrintBtn = $g(%request.Data("showPrintBtn",1))
+		Set designerFlag = $g(%request.Data("xmldesigner",1))	
+	</server>
+	<csp:if condition="$g(designerFlag)=1">
+		<JQUERY:EASYUI132/>
+		<script type="text/javascript" src="../scripts/websys.jquery.js"></SCRIPT>
+	</csp:if>
+	<link rel="stylesheet" type="text/css" href="../skin/default/css/websys.css"/>
+<STYLE TYPE="text/css"> 
+<!-- 
+/* include the idautomation.com Code39 WOFF Font -- */  
+@font-face {
+	font-family: IDAutomationHC39M;  
+	src: url('../scripts/dhctt/xmldesigner/font/IDAutomationHC39M.woff');
+} 
+@font-face {
+	font-family: C39P36DmTt;  
+	src: url('../scripts/dhctt/xmldesigner/font/IDAutomationHC39M.woff');
+}
+@font-face {
+	font-family: "Code128";  
+	src: url('../scripts/dhctt/xmldesigner/font/code128.ttf');
+} 
+--> 
+</STYLE>
+</head>
+<body>
+	<SERVER>
+		Set XMLREQNAME = "xmlName"
+		Set reportName = $g(%request.Data(XMLREQNAME,1))
+		/*xml的类方法入参串*/
+		Set XMLPrintParams = ""
+		/*xml的元素名列表*/
+		Set XMLTxtData=$G(%request.Data("XMLTxtData",1))
+		// 如果前一界面是UTF8编码那就通过下面的参数传过来
+		Set InputCharSet = $g(%request.Data("InputCharSet",1))
+		if InputCharSet = "UTF8" set XMLTxtData=$zcvt($zcvt(XMLTxtData,"O","GB18030"),"I","UTF8")
+
+		Set txtData="",listData="",paraData="" ;$G(%request.Data("xmlListData",1))
+		Set XMLId = $O(^User.DHCXMLPConfigI("XPCFlagIndex"," "_$ZCVT(reportName,"U"),0))
+		If (XMLId>0){
+			Set RefRowId = $O(^web.print.DHCXMLPConfigRefI("XMLPConfigIndex",XMLId,""),-1)
+			If (RefRowId'>0) || (designerFlag=1){
+				Do ##class(web.print.DHCXMLPConfigRef).Save(XMLId,"","","N")
+				if (designerFlag=1){
+					//从设计测试表中拿预览数据
+					Set configRefObj = ##class(web.print.DHCXMLPConfigRef).%OpenId(RefRowId,0)
+					if (configRefObj){
+						Set txtData = configRefObj.XMLTxtData,listData=configRefObj.XMLListData,paraData=configRefObj.XMLClassMethodPara
+					}
+					Set configRefObj=""	
+				}
+			}
+
+		}
+		k txtDataPList,paraDataPList
+		
+		;从request内拿值
+		;Set rkey = $o(%request.Data(""))
+		;for{
+		;	quit:(rkey="")
+		;	if ((rkey'="xmldesigner")&&(rkey'=XMLREQNAME)){ Set txtDataPList(rkey)=$G(%request.Data(rkey,1))}
+		;	Set rkey = $o(%request.Data(rkey))
+		;}
+		;从Request中拿值
+		if (XMLTxtData'=""){
+			for i=1:1:$l(XMLTxtData,"^"){
+				Set itm = $p(XMLTxtData,"^",i)
+				Quit:itm=""
+				Set rkey = $p(itm,$c(2),1)
+				Set rval = $p(itm,$c(2),2)
+				;w:(rkey="TotalMoneyDesc") rkey,rval,"=",$G(txtDataPList(rkey)),$d(txtDataPList(rkey)),"<br>"
+				if ( $d(txtDataPList(rkey))=1 ){ //已出现一次
+					set txtDataPList(rkey,1)=txtDataPList(rkey)
+					Set txtDataPList(rkey,2)=rval
+					s txtDataPList(rkey)=""			
+				} elseif ( $d(txtDataPList(rkey))=11 ){
+					Set ind = $O(txtDataPList(rkey,""),-1)+1
+					set txtDataPList(rkey,ind)=rval
+				}else{
+					set txtDataPList(rkey) = rval
+				}
+			}
+		}	
+		;m ^Wanghc("mdata")=txtDataPList
+		;如果是设计则显示,从测试预览表的值	
+		if (1=designerFlag) {
+			for i=1:1:$l(txtData,"^"){
+				Set itm = $p(txtData,"^",i)
+				Quit:itm=""
+				Set rkey = $p(itm,$c(2),1)
+				Set rval = $p(itm,$c(2),2)
+				set txtDataPList(rkey)=rval
+			}
+			//classsmethod 与query的 request参数
+			for i=1:1:$l(paraData,"^"){
+				Set itm = $p(paraData,"^",i)
+				Quit:itm=""
+				Set rkey = $p(itm,$c(2),1)
+				Set rval = $p(itm,$c(2),2)
+				Set %request.Data(rkey,1)=rval   // 类方法,query入参赋值
+				Set XMLPrintParams=XMLPrintParams_"&"_rkey_"="_rval
+				set paraDataPList(rkey)=rval
+			}
+		}else{
+			Set rkey = ""
+			for{
+				Set rkey = $O(%request.Data(rkey))
+				quit:rkey=""
+				Set XMLPrintParams = XMLPrintParams_"&"_rkey_"="_$g(%request.Data(rkey,1)) 
+				if rkey'="XMLTxtData" set txtDataPList(rkey) = $g(%request.Data(rkey,1))
+
+			}
+		}
+		Set PrintObj = ##class(web.DHCPlatformPrint).%New(reportName)
+		if 1 { //(1=designerFlag){  //只有设计时才生成属性列表
+			Set JsonObj = ##class(ext.util.JsonObject).%New()
+			w "<script type=""text/javascript"">",!
+			w "// XMLTxtData="""_XMLTxtData_""";",!
+			w "var cfgJson={""rows"":["
+			Set rkey = $O(txtDataPList(""))
+		
+			Set count=0
+			for {
+				quit:(rkey="")
+				Set rval=txtDataPList(rkey)  ;从request内取值
+				Set count=count+1
+				if count'=1 write ","
+				write JsonObj.Put("name",rkey).Put("value",rval).Put("group","txtDataCfg").Put("editor","text").Json()
+				do JsonObj.Clear()
+				d PrintObj.Put(rkey,rval)
+				Set rkey = $o(txtDataPList(rkey))
+			}
+			w "],""total"":"_count_"}",!
+			Set JsonObj = ""
+			// -- 分析classMethod, classQuery的入参 request ----
+			Set XMLClassInfo = ##class(web.DHCXMLPConfig).GetXMLInfo(reportName)
+			Set CN=$lg(XMLClassInfo,1),CM=$lg(XMLClassInfo,2)
+			Set CQN=$lg(XMLClassInfo,3),CQQ=$lg(XMLClassInfo,4)
+			Set tempind=0 ,tempindq=0
+			w "var reqCfgJson = {""rows"":["
+			//classmethod
+			if ##class(websys.Conversions).IsValidClassName(CN), ##class(websys.Conversions).IsValidMethodName(CN,CM){
+				set myobj=##class(%Dictionary.CompiledMethod).%OpenId(CN_"||"_CM,0)
+				if $IsObject(myobj){
+					set FormalSpecParsed = myobj.FormalSpecParsed
+					Set paramsNames=""
+					for tempind=1:1:$ll(FormalSpecParsed) {
+						Set Spec = $lg(FormalSpecParsed,tempind)
+						; Spec = $lb(名字,类型,"",默认值)
+						if (tempind>1) w ","
+						w "{""editor"":""text"",""group"":""reqTxtDataCfg"",""name"":"""_$lg(Spec,1)_""",""value"":"""_$g(paraDataPList($lg(Spec,1)))_"""}"
+					}
+				}
+			}
+			//classquery
+			if ##class(websys.Conversions).IsValidClassName(CQN), ##class(websys.Conversions).IsValidQueryName(CQN,CQQ){
+				Set FormalSpecParsed = ##class(websys.Query).GetFormalSpecParsed(CQN,CQQ)
+				for tempindq=1:1:$ll(FormalSpecParsed) {
+					Set Spec = $lg(FormalSpecParsed,tempindq)
+					; Spec = $lb(名字,类型,"",默认值)
+					if (tempind>0 ||(tempindq>1)) w ","
+					w "{""editor"":""text"",""group"":""reqqTxtDataCfg"",""name"":"""_$lg(Spec,1)_""",""value"":"""_$g(paraDataPList($lg(Spec,1)))_"""}"
+				}
+			}
+			w "],""total"":"_(tempind+tempindq)_"}",!
+			//---
+			w "</script>"
+		}
+		;Set reportId = ##class(web.DHCXMLPConfig).GetIdByName(reportName)
+ 	</SERVER>
+	
+ 	<script type="text/javascript">
+ 	var XMLId="#(XMLId)#";
+ 	var DTGCOMXML="DTGCOMXML#(XMLId)#.mac";
+ 	var xmlTxtData = "#(txtData)#";
+ 	var xmlListData = "#(listData)#";
+ 	var lineData=[];
+ 	
+ 	var printOut = function(){
+	 	websys_printout("#(reportName)#","#(XMLPrintParams)#");
+	}
+	</script>
+ 	<Server>
+		Do PrintObj.PrintData()
+ 	</Server>
+    <script type="text/javascript">
+    	var mycanvas = document.getElementById("lineLayout");
+    	var item ="";
+    	if (mycanvas.getContext){
+			var mycontext = mycanvas.getContext("2d");
+			mycontext.clearRect(0,0,mycanvas.width,mycanvas.height);
+			for(var i=0; i<lineData.length; i++){
+				item = lineData[i];
+				mycontext.beginPath();
+				mycontext.moveTo(item.beginx,item.beginy);
+				mycontext.lineTo(item.endx,item.endy);
+				mycontext.stroke();
+			}
+    	}else{
+	    	// ie6 ie7 ie8 
+	    	var lineHtml="";
+		    for (var index = 0; index < lineData.length; index++) {
+		        item = lineData[index];
+		        lineHtml += '<v:line from="'+item.beginx+','+item.beginy+'" to="'+item.endx+','+item.endy+'" style="position:absolute;"/>'
+		    }
+		    //先画线再画文本,不然线条有偏差
+		    var oldHtml = document.getElementById("invbg#(XMLId)#").innerHTML;
+			document.getElementById("invbg#(XMLId)#").innerHTML = lineHtml;
+			document.getElementById("invbg#(XMLId)#").innerHTML +=oldHtml;
+			//$("#invbg#(XMLId)#").append(lineHtml);
+    	}
+    </script>
+    
+ 	<csp:if condition="$g(designerFlag)=1">
+	 	<script type="text/javascript">
+		var cfgPreviewData = function(){
+	 		$("#pg").propertygrid("loadData",cfgJson);
+	 		$('#pgwin').css("display","block");
+	 		$('#pgwin').dialog({  
+			    title: '打印默认键值',  
+			    width: 400,  
+			    height: 400,  
+			    closed: false, 
+			    modal: true,
+			    buttons:[{
+					text:'确定保存',
+					handler:function(){
+						var rs = $("#pg").datagrid("getData");
+						var XMLTxtData = "";
+						var c2 = String.fromCharCode(2);
+						var itm="";
+						for(var i=0; i<rs.rows.length; i++){
+							itm = rs.rows[i];
+							if(itm.value!="") XMLTxtData +=itm.name+c2+itm.value+"^"
+						}
+						$.ajaxRunServerMethod({ClassName:"web.print.DHCXMLPConfigRef",MethodName:"Save",
+							XMLPConfig:XMLId, 
+							XMLTxtData:XMLTxtData, 
+							XMLListData:"",
+							GenFlag:""
+						},function(rtn){
+							if(rtn>0){
+								//$.messager.alert("提示","保存成功!");
+								$('#pgwin').css("display","none");
+								$('#pgwin').dialog("close");
+								//window.location.href = window.location.href;
+								treload();
+							}else{
+								$.messager.alert("提示","保存失败!"+rtn);
+							}
+						});
+					}
+				},{
+					text:'取消关闭',
+					handler:function(){
+						$('#pgwin').css("display","none");
+						$('#pgwin').dialog("close");
+					}
+				}] 
+			});  
+	 	}
+		var reqCfgPreviewData = function(){
+		 	$("#pg").propertygrid("loadData",reqCfgJson);
+	 		$('#pgwin').css("display","block");
+	 		$('#pgwin').dialog({  
+			    title: '打印Request入参值',  
+			    width: 400,  
+			    height: 400,  
+			    closed: false, 
+			    modal: true,
+			    buttons:[{
+					text:'确定保存',
+					handler:function(){
+						var rs = $("#pg").datagrid("getData");
+						var XMLTxtData = "";
+						var c2 = String.fromCharCode(2);
+						var itm="";
+						for(var i=0; i<rs.rows.length; i++){
+							itm = rs.rows[i];
+							if(itm.value!="") XMLTxtData +=itm.name+c2+itm.value+"^"
+						}
+						$.ajaxRunServerMethod({ClassName:"web.print.DHCXMLPConfigRef",MethodName:"Save",
+							XMLPConfig:XMLId,
+							GenFlag:"",
+							XMLClassMethodPara:XMLTxtData
+						},function(rtn){
+							if(rtn>0){
+								//$.messager.alert("提示","保存成功!");
+								$('#pgwin').css("display","none");
+								$('#pgwin').dialog("close");
+								//window.location.href = window.location.href;
+								treload();
+							}else{
+								$.messager.alert("提示","保存失败!"+rtn);
+							} 
+						});
+					}
+				},{
+					text:'取消关闭',
+					handler:function(){
+						$('#pgwin').css("display","none");
+						$('#pgwin').dialog("close");
+					}
+				}] 
+			}); 
+		 }
+	 	</script>
+	 	 <div id="pgwin" data-options="closed:true" style="display:none;">
+		 	<table id="pg" class="easyui-propertygrid" style="width:300px" data-options="fit:true,scrollbarSize:0">
+		    </table>
+	    </div>
+    </csp:if>
+     <div>
+     	注：预览与打印的效果可能会偏差,单据以实际打印效果为准
+     </div>
+     <div>
+     	<div style="margin-right:10px; position: absolute; right:10px;bottom:10px;">
+	     	<csp:if condition="$g(showPrintBtn)=1">
+	     	<a href="#" class="i-btn" onclick="printOut();return false;">
+	     		<img src="../images/uiimages/print.png"/>打印单据
+	     	</a>
+	     	</csp:if>
+ 			<csp:if condition="$g(designerFlag)=1">
+	 			<a  href="#" class="i-btn" onclick="cfgPreviewData();return false;">
+	 				<img src="../images/uiimages/config.png"/>预览数据
+	 			</a>
+	 			<a  href="#" class="i-btn" onclick="reqCfgPreviewData();return false;" title="配置的类方法与query入参">
+	 				<img src="../images/uiimages/config.png"/>方法入参
+	 			</a>
+ 			</csp:if>
+ 		</div>
+ 	</div>
+</body>
+</html>
+
+

@@ -1,0 +1,387 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.css"></LINK>
+<TRAK:HEAD></TRAK:HEAD>
+<SERVER>
+	Set DHCePROEChart=$O(^ooChartI("NameIndex","DHCOE",""))
+	Set DHCePROECMChart=$O(^ooChartI("NameIndex","DHCOECM",""))
+	Set DHCePRReturn=$O(^ooChartI("NameIndex","RETURN",""))
+	Set DHCePROEWKFL=##Class(websys.WorkFlow).GetIdFromCodeOrDescription("DHC.Doc.OrderEntry")
+	Set DHCePROECMWKFL=##Class(websys.WorkFlow).GetIdFromCodeOrDescription("DHC.Doc.OP.OrderEntry.CM")
+	Set DHCEprMRDiagnosChart=$O(^ooChartI("NameIndex","DHCEPRMRDIAGNOS",""))
+	Set DHCEprMRDiagnosWKFL=##Class(websys.WorkFlow).GetIdFromCodeOrDescription("DHC.MRDiagnos.Edit")
+	Set DHCEprMRDiagnosCMChart=$O(^ooChartI("NameIndex","DHCEPRMRDIAGNOSCM",""))
+	Set DHCEprMRDiagnosCMWKFL=##Class(websys.WorkFlow).GetIdFromCodeOrDescription("DHC.MRDiagnos.CM.Edit")
+</SERVER>
+
+<SCRIPT language=javascript>
+var selected="";
+var DefChartItembgColor = ''; 
+var DefChartItembgColorSEL ='';
+var DefChartTextColor = ''; 
+var DefChartTextColorSEL ='';
+/*
+for (var i=0; i<document.styleSheets.length; i++) {
+	var cssRules=document.styleSheets[i].rules;
+	for (var j=0; j<cssRules.length; j++) {
+		if (cssRules[j].selectorText == '.defaultchartitemsel') {
+			DefChartItembgColorSEL =cssRules[j].style.backgroundColor;
+			if ((DefChartItembgColorSEL !='')&&(DefChartItembgColor !='') &&
+			  (DefChartTextColor !='')&&(DefChartTextColorSEL !='')) break;
+		}
+		if (cssRules[j].selectorText == '.defaultchartitem') {
+			DefChartItembgColor =cssRules[j].style.backgroundColor;
+			if ((DefChartItembgColorSEL !='')&&(DefChartItembgColor !='') &&
+			  (DefChartTextColor !='')&&(DefChartTextColorSEL !='')) break;
+		}
+		if (cssRules[j].selectorText == '.defaultcharttextsel') {
+			DefChartTextColorSEL =cssRules[j].style.color;
+			if ((DefChartItembgColorSEL !='')&&(DefChartItembgColor !='') &&
+			  (DefChartTextColor !='')&&(DefChartTextColorSEL !='')) break;
+		}
+		if (cssRules[j].selectorText == '.defaultcharttext') {
+			DefChartTextColor =cssRules[j].style.color;
+			if ((DefChartItembgColorSEL !='')&&(DefChartItembgColor !='') &&
+			  (DefChartTextColor !='')&&(DefChartTextColorSEL !='')) break;
+		}	
+	}
+}
+*/
+
+function ColourText(objsrc,textcol) {
+	var arrAncs = objsrc.getElementsByTagName("A");
+	if (arrAncs.length) {
+		// Log 58796 YC - Commented code from TN's changes
+		//arrAncs[0].style.textDecoration="none";
+		arrAncs[0].style.color=textcol; 
+	}
+}
+
+function ClearSelected() {
+	if (selected!="") {
+		var obj=document.getElementById(selected);
+		if (obj) {
+			obj.className="chartitem";
+			
+			// Log 58796 YC - Commented code from TN's changes
+			/*if (obj.ChartColour!="") {
+				obj.style.backgroundColor=obj.ChartColour;
+			} else {
+				obj.style.backgroundColor=DefChartItembgColor;
+			}
+			if (obj.TextColour!="") {
+				ColourText(obj,obj.TextColour);
+			} else {
+				ColourText(obj,DefChartTextColor);
+			}*/
+			
+			// Log 58796 YC - Added code from TN's changes
+			if (obj.getAttribute("ChartColour")!="") {
+				obj.style.backgroundColor=obj.getAttribute("ChartColour");
+			} 
+			else obj.style.backgroundColor="";
+			if (obj.getAttribute("TextColour")!="") {
+				obj.style.color=obj.getAttribute("TextColour");
+			} 
+			else obj.style.color="";
+		}
+	}
+	selected="";
+}
+function SelectChart(eSrc) {
+	//if (selected != eSrc.id) {
+		ClearSelected();
+		selected=eSrc.id;
+		eSrc.className="chartitemSel";
+		
+		// Log 58796 YC - Commented code from TN's changes
+		/*if (eSrc.SELChartColour!="") {
+			eSrc.style.backgroundColor=eSrc.SELChartColour;
+		} else {
+			eSrc.style.backgroundColor=DefChartItembgColorSEL ;
+		}
+		if (eSrc.SELTextColour!="") {
+			ColourText(eSrc,eSrc.SELTextColour);
+		} else {
+			ColourText(eSrc,DefChartTextColorSEL);
+		}
+		var arrLinks = eSrc.getElementsByTagName("A");
+		if (arrLinks[0]) {
+			//if (count == 1) arrLinks[0].target = "_self";
+			// xyz.click() doesn't work in NS so use this instead...
+			//arrLinks[0].click();
+			var div=document.getElementById("data");
+			div.height="1768px";
+			var df=document.getElementById("dataframe");
+			df.height="1768px";
+			df.src=arrLinks[0].href;
+		}*/
+		
+		var hrefstr=eSrc.getAttribute("chLINK");
+		if (eSrc.id=='chart'+#(DHCePROEChart)#)	{
+			var StartWKFL=hrefstr.indexOf('&TWKFL=');
+			var newwkfl='&TWKFL='+#(DHCePROEWKFL)#+'&TWKFLI=';
+			var newhrefstr=hrefstr.replace(hrefstr.substr(StartWKFL),newwkfl);
+			newhrefstr=newhrefstr.replace('epr.chart.csp','websys.csp');
+			eSrc.chLINK=newhrefstr;
+		}		
+		if (eSrc.id=='chart'+#(DHCePROECMChart)#)	{
+			var StartWKFL=hrefstr.indexOf('&TWKFL=');
+			var newwkfl='&TWKFL='+#(DHCePROECMWKFL)#+'&TWKFLI=';
+			var newhrefstr=hrefstr.replace(hrefstr.substr(StartWKFL),newwkfl);
+			newhrefstr=newhrefstr.replace('epr.chart.csp','websys.csp');
+			eSrc.chLINK=newhrefstr;
+		}		
+		if (eSrc.id=='chart'+#(DHCEprMRDiagnosChart)#)	{
+			var StartWKFL=hrefstr.indexOf('&TWKFL=');
+			var newwkfl='&TWKFL='+#(DHCEprMRDiagnosWKFL)#+'&TWKFLI=';
+			var newhrefstr=hrefstr.replace(hrefstr.substr(StartWKFL),newwkfl);
+			newhrefstr=newhrefstr.replace('epr.chart.csp','websys.csp');
+			eSrc.chLINK=newhrefstr;
+		}
+		if (eSrc.id=='chart'+#(DHCEprMRDiagnosCMChart)#)	{
+			var StartWKFL=hrefstr.indexOf('&TWKFL=');
+			var newwkfl='&TWKFL='+#(DHCEprMRDiagnosCMWKFL)#+'&TWKFLI=';
+			var newhrefstr=hrefstr.replace(hrefstr.substr(StartWKFL),newwkfl);
+			newhrefstr=newhrefstr.replace('epr.chart.csp','websys.csp');
+			eSrc.chLINK=newhrefstr;
+		}
+		if (eSrc.id=='chart'+#(DHCePRReturn)#)	{
+				if (session['LOGON.GROUPDESC']=="体检总检医生")
+				{
+					var EpisodeID=""
+					var obj=document.getElementById("EpisodeID")
+					if (obj) EpisodeID=obj.innerText; 
+					var ret=#server(web.DHCPE.DocPatientList.KillChecking(EpisodeID))#
+					
+				}
+				if(parent.name=='TRAK_main') {
+					parent.location.href="epr.default.csp";
+					return;
+				}
+		}		
+		
+		// Log 58796 YC - Added code from TN's changes
+		if (eSrc.getAttribute("SELChartColour")!="") {
+			eSrc.style.backgroundColor=eSrc.getAttribute("SELChartColour");
+		}
+		else eSrc.style.backgroundColor="";
+		if (eSrc.getAttribute("SELTextColour")!="") {
+			eSrc.style.color=eSrc.getAttribute("SELTextColour");
+		}
+		else eSrc.style.color=="";
+		var div=document.getElementById("data");
+		//div.height="1768px";
+		var df=document.getElementById("dataframe");
+		//df.height="1768px";
+		df.src=eSrc.getAttribute("chLINK");
+	//setDataFrameSize();
+	//window.parent.ResizeEPsPABanner();
+
+	//}
+}
+</script>
+</HEAD>
+<body>
+
+<SERVER>
+ n PatientID,EpisodeID,mradm,ChartBookID,PAAdmCodingID,objCoding,PAAdmTransactionID,NoPatientBanner,unreadexists
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s EpisodeIDs=%request.Get("EpisodeIDs")
+ s DischID=%request.Get("DischID")
+ ; the current ID when we're creating a new version
+ s CurrDischID=%request.Get("CurrDischID")
+ s DischEpisodes=%request.Get("DischEpisodes")
+ s doctype=%request.Get("doctype")
+ s mradm=%request.Get("mradm")
+ s ChartBookID=%request.Get("ChartBookID")
+ s ShowCharts=%request.Get("ShowCharts")
+ s PAAdmCodingID=%request.Get("PAAdmCodingID")
+ s NoPatientBanner=%request.Get("NoPatientBanner")
+ s OperRoomID=%request.Get("OperRoomID")
+ s ConsultID=%request.Get("ConsultID")
+ s objCoding=##Class(User.PAAdmCoding).%OpenId(PAAdmCodingID)
+ s PAAdmTransactionID=""
+ s SelectedChart=""""_%request.Get("SelectedChart")_""""
+ i objCoding {
+	i objCoding.CODTransactionDR s PAAdmTransactionID=objCoding.CODTransactionDR.%Id()
+	d objCoding.%Close()
+ }
+ ; 59250
+ s apptID=$g(%request.Data("apptID",1))
+
+</SERVER>
+<DIV id="chartbook">
+	
+	<TABLE width="0" height="0">
+       <TR>
+          <TD  id="EpisodeID" width="0" height="0" style="display:none;">#(EpisodeID)#</TD>
+       </TR>
+	</TABLE>
+	
+	<DIV id="charttabs">
+
+<SERVER>
+	;d ##Class(epr.ChartBook).ShowSideBar(ChartBookID,PatientID,EpisodeID,mradm,PAAdmTransactionID)
+	n ChartID,ChartName,count,obj,jh,lst,unread,cmp
+	s ChartID="",jh=0,count=0,unread="",cmp=""
+	s obj=##Class(websys.Component).OpenName("epr.ChartBook.List")
+	i (obj) d obj.LoadTrans(),obj.%Close()
+	;
+	s obj=##Class(epr.ChartBook).%OpenId(ChartBookID,0)
+	i 'obj w $p($g(t("NoChartBook"),"No ChartBook selected"),"^",1)
+	i obj {
+		if %request.Get("List")="L" {
+			s lst=obj.LeftChartList
+		} else {
+			s lst=obj.ChartList
+		}
+		s TimeLine=obj.ShowTimeline
+		s count=lst.Count()
+		i count=0 w $p($g(t("NoChartItems"),"No charts within ChartBook selected"),"^",1)
+		s unreadexists=##class(epr.Chart).UnreadResults(EpisodeID,mradm,.unread)
+		f jh=1:1:count {
+			i lst.GetAt(jh) {
+			  s ChartID=lst.GetAt(jh).%Id()
+			  continue:##class(web.DHCPE.Public.Setting).ShowChartPage(EpisodeID,ChartID)="0"
+			
+			  ; 59418
+			  i (ShowCharts="")!((","_ShowCharts_",")[(","_ChartID_",")) {
+				;s ChartName=lst.GetAt(jh).Name
+				n chrt
+				s chrt=##class(epr.Chart).%OpenId(ChartID),IsHistPage=0,(ChartColour,TextColour)=""
+				i chrt d
+				. s IsHistPage=chrt.IsHistoryPage
+				. ; 51477
+				. s ChartColour=chrt.ChartColour
+				. s TextColour=chrt.TextColour
+				. s SELChartColour=chrt.SELChartColour
+				. s SELTextColour=chrt.SELTextColour
+				. d chrt.%Close()
+				s ChartName=##Class(websys.TranslationEPR).GetTrans("epr.Chart","Name",$g(%session.Data("LOGON.LANGID")),lst.GetAt(jh).Name)
+				w "<DIV class='chartitem' id='chart",ChartID,"' onclick='SelectChart(this);' " 
+				w " ChartColour='"_ChartColour_"' TextColour='"_TextColour_"'"
+				w " SELChartColour='"_SELChartColour_"' SELTextColour='"_SELTextColour_"'"
+				// Log 58796 YC - New line according to TN's changes
+				w " style='" w:ChartColour'="" "BACKGROUND-COLOR:"_ChartColour_";" w:TextColour'="" "COLOR:"_TextColour_";" w "' "
+				i IsHistPage d
+				. // Log 58796 YC - Replace code according to TN's changes
+				. ;w " id='chart",ChartID,"' onclick='SelectChart(this);'><a id='chrtA",ChartID,"' href='epr.clinicalhistory.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&EpisodeIDs=",EpisodeIDs,"&mradm=",mradm,"&ChartID=",ChartID,"' target='dataframe'>"
+				. ;w " chLINK='epr.clinicalhistory.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&EpisodeIDs=",EpisodeIDs,"&mradm=",mradm,"&ChartID=",ChartID,"&apptID=",apptID,"' >"
+				. ; Log 59791 YC - Both links now goto epr.chart.csp which decides whether or not to redirect to epr.clinicalhistory.csp
+				. w " chLINK='epr.chart.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&EpisodeIDs=",EpisodeIDs,"&mradm=",mradm,"&ChartID=",ChartID,"&apptID=",apptID,"&ConsultID=",ConsultID,"'>"
+				e  d
+				. // Log 58796 YC - Replace code according to TN's changes
+				. ;w " id='chart",ChartID,"' onclick='SelectChart(this);'><a id='chrtA",ChartID,"' href='epr.chart.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&EpisodeIDs=",EpisodeIDs,"&mradm=",mradm,"&ChartID=",ChartID,"&PAAdmTransactionID=",PAAdmTransactionID,"&OperRoomID=",OperRoomID,"&DischID=",DischID,"&CurrDischID=",CurrDischID,"&DischEpisodes=",DischEpisodes,"&doctype=",%request.Get("doctype"),"&TWKFL=",%request.Get("TWKFL"),"&TWKFLI=",%request.Get("TWKFLI"),"&TimeLine=",TimeLine,"' target='dataframe'>"
+				. w " chLINK='epr.chart.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&EpisodeIDs=",EpisodeIDs,"&mradm=",mradm,"&ChartID=",ChartID,"&PAAdmTransactionID=",PAAdmTransactionID,"&OperRoomID=",OperRoomID,"&DischID=",DischID,"&CurrDischID=",CurrDischID,"&DischEpisodes=",DischEpisodes,"&doctype=",$zcvt(%request.Get("doctype"),"O","HTML"),"&TWKFL=",%request.Get("TWKFL"),"&TWKFLI=",%request.Get("TWKFLI"),"&TimeLine=",TimeLine,"&ConsultID=",ConsultID,"'>"
+				;w "<DIV class='chartitem' id='chart",ChartID,"' onclick='SelectChart(this);'><a href='epr.chart.csp?PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&mradm=",mradm,"&ChartID=",ChartID,"&PAAdmTransactionID=",PAAdmTransactionID,"&NoPatientBanner=",NoPatientBanner,"' target='dataframe'>"
+				s unreadresults=0
+				i unreadexists s unreadresults=##class(epr.Chart).UnreadResultsInChart(ChartID,.unread)
+				;w ##class(epr.Chart).UnreadResults(EpisodeID,mradm,.unread)_" "
+				;w ##Class(websys.Conversions).HtmlFriendly(ChartName)
+				; Log 59743 YC - Changed <b> tags to style so that they can be unbolded by javascript (in epr.clinicalhistory.csp)
+				i unreadresults w "<b>"_ChartName_"</b>"
+				i 'unreadresults w ChartName
+				w "</a>"
+				w "</div>",$c(13,10)
+			  }
+			}
+		}
+		d obj.%Close()
+	}
+</SERVER>
+	</div>
+	<DIV id="data">
+		<IFRAME id="dataframe" name="dataframe" width="1280px" height="1024px" src="websys.csp" frameborder=0></iframe>
+	</div>
+</div>
+
+<script language=javascript>
+var count=#(count)#;
+var obj=document.getElementById("charttabs");
+var arrDiv = obj.getElementsByTagName("DIV");
+var SelectedChart=#(SelectedChart)#;
+var Chart = "";
+
+// Log 58976 YC - Commented Code according to TN's Changes
+// 51477
+// Log 58796 YC - Commented Code according to TN's changes
+/*for (var chartIX=0; chartIX<arrDiv.length; chartIX++) {
+	var chrt = arrDiv[chartIX];
+	if (chrt) {
+		if (chrt.ChartColour!="") {
+			chrt.style.backgroundColor=chrt.ChartColour; 
+			//chrt.style.background ="url('../images/webemr/Chart"+chrt.tabcol+".gif')"; 
+		} else {
+			chrt.style.backgroundColor=DefChartItembgColor ; 
+		}
+		if (chrt.TextColour!="") {			
+			ColourText(chrt,chrt.TextColour);
+		} else {
+			ColourText(chrt,DefChartTextColor); 
+		}
+	}
+}*/
+
+if (arrDiv.length) Chart=arrDiv[0];
+if (SelectedChart!="") Chart = document.getElementById(SelectedChart);
+if (Chart !="" ) SelectChart(Chart);
+
+var offsetWdt = 0;  //document.body.offsetWidth - document.body.clientWidth;
+var offsetHgt = document.body.offsetHeight - document.body.clientHeight;
+var remainHgt;
+var remainWdt;
+
+function setDataFrameSize() {
+	if (websys_isIE) {
+
+		remainHgt = document.body.offsetHeight -3 -offsetHgt;
+		remainWdt = document.body.offsetWidth -3 -offsetWdt;
+		//set data frame to length and width of remaining page, and widen to fit charttabs
+		var obj=document.getElementById("charttabs");
+		var posLeft = obj.offsetWidth;
+		obj.style.width = posLeft;
+	
+		var obj=document.getElementById("chartbook");
+		remainHgt -= obj.offsetTop;
+		remainWdt -= obj.offsetLeft;
+	
+		posLeft += obj.offsetWidth;
+		var obj=document.getElementById("data");
+		obj.style.left = posLeft;
+		remainWdt -= posLeft;
+		
+		// Log 49356 YC - Stops "Access is Denied" error when resizing
+		setTimeout("resizeframe(remainWdt,remainHgt)", 1);
+
+	} else {  //hack for NS
+		document.frames["dataframe"].window.resizeTo(screen.width,screen.height);
+	}
+}
+function resizeframe(remainWdt,remainHgt)
+{
+	// Log 50304 YC - When resizing slowly by dragging the window or frame corners/sides then
+	// "Access is Denied" error comes up. This will catch the error and continue to call
+	// setDataFrameSize() until the error stops occuring i.e. when user stops resizing the window.
+	try {
+		document.frames["dataframe"].window.resizeTo(remainWdt,remainHgt);
+	}
+	catch (e) {
+		setDataFrameSize();
+	}
+}
+
+window.onresize = setDataFrameSize;
+// TRC 6503 
+setDataFrameSize();
+</script>
+</body>
+</html>
+

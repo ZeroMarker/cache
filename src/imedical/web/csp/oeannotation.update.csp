@@ -1,0 +1,42 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ s ^zpaul("Session ID")=$g(%request.Data("SESSIONID",1))
+ ;//i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<BODY>
+<SERVER>
+	n xmlData,xmlCount,xmlArray,mradm,MRPicRowId,FileName,OEOrdResId,sessionId,questionCode
+	s (xmlData,xmlArray,mradm,MRPicRowId,FileName,OEOrdResId,sessionId,questionCode)=""
+	s xmlCount=1
+	;ANA MRROWID passed from Java could be either of these 2 :- mradm,MRPicRowId
+	s FileName=%request.Data("FILENAME",1)
+	s MRROWID=%request.Data("MRROWID",1)
+	s OEOrdResId=%request.Data("OEORDRESID",1)
+	s sessionId=$g(%request.Data("SESSIONID",1))
+	s questionCode=$g(%request.Data("QUESTIONCODE",1))
+	s orderItemId=$g(%request.Data("ORDERITEMID",1))
+	s ind1="" f  s ind1=$o(%request.Data("XMLDATA",ind1)) q:ind1=""  d
+	. s xmlData=xmlData_%request.Data("XMLDATA",ind1)
+	i MRROWID'="",'(MRROWID["||"),##class(User.MRAdm).%OpenId(MRROWID) d
+	. s mradm=MRROWID
+	i MRROWID'="",(MRROWID["||"),##class(User.MRPictures).%OpenId(MRROWID) d
+	. s MRPicRowId=MRROWID
+	s ^zpaul($zn,"params ")=mradm_","_MRPicRowId_","_OEOrdResId_","_FileName_","_xmlData
+	S annoteId = ##Class(web.OEAnnotation).websysSaveAnnotation(mradm,MRPicRowId,OEOrdResId,FileName,xmlData,orderItemId)
+	i sessionId'="" s ^TMP("WEB","ANNOTATION",sessionId,questionCode)=annoteId
+
+	q 1
+</SERVER>
+</BODY>
+</HTML>
+

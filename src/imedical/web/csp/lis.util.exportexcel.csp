@@ -1,0 +1,19 @@
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+	D %response.SetHeader("CharSet", "UTF-8")
+	D %response.SetHeader("Pragma", "public")
+ 	D %response.SetHeader("Expires", "0")
+ 	D %response.SetHeader("Cache-Control", "must-revalidate, post-check=0, pre-check=0")
+ 	D %response.SetHeader("Content-Type","application/force-download")
+    D %response.SetHeader("Content-Type","application/vnd.ms-excel")
+    D %response.SetHeader("Content-Disposition","attachment;filename=export.xls")
+	Quit 1 
+</script>
+
+<Script language="Cache" RUNAT="SERVER">
+	S exportContent=##Class(%CSP.CharacterStream).%New()
+	S exportContent=$G(%request.Data("exportContent",1))
+	I $L(exportContent) {
+		D exportContent.OutputToDevice()
+	}
+ 
+</Script>

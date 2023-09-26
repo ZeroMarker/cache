@@ -1,0 +1,100 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<style type="text/css"></style>
+<DHCEQ:EASYUI></DHCEQ:EASYUI>
+<!--script type='text/javascript'>
+	jQuery.noConflict();	//释放 $ 给其他类库
+
+	//定义一个全局script的标记数组，用来标记是否某个script已经下载到本地 
+	var scriptsArray = new Array(); 
+	jQuery.cachedScript = function (url, options) { 
+		//循环script标记数组 
+		for (var s in scriptsArray) { 
+			//console.log(scriptsArray[s]); 
+			//如果某个数组已经下载到了本地 
+			if (scriptsArray[s]==url) { 
+				return { //则返回一个对象字面量，其中的done之所以叫做done是为了与下面$.ajax中的done相对应 
+					done: function (method) { 
+					if (typeof method == 'function'){ //如果传入参数为一个方法 
+					method(); 
+					} 
+					} 
+				}; 
+			} 
+		} 
+		//这里是jquery官方提供类似getScript实现的方法，也就是说getScript其实也就是对ajax方法的一个拓展 
+		options = jQuery.extend(options || {}, { 
+			dataType: "script", 
+			url: url, 
+			cache:true //其实现在这缓存加与不加没多大区别 
+		}); 
+		scriptsArray.push(url); //将url地址放入script标记数组中 
+		return jQuery.ajax(options); 
+	}; 
+	
+</script-->
+<script type='text/javascript' src='../scripts/dhceq/stat/monthdepre.js'></script>
+</HEAD>
+
+<body>
+	<div style="margin:5px 0;" ></div>
+	<div class="easyui-layout" data-options="fit:true,border:true" style='width:100%;height:9.9%;display:block;'>
+		<div data-options="region:'north'" style="height:11%" title="折旧统计">
+			<table id='tQueryPanel' class="chargeTable">
+				<tr class="chargeTr">
+					<td class="tdspace"></td>
+					<td>年月(YYYY-MM)</td><td id="TDMonthStr"><input id="MonthStr" type="text"></input></td><td class="tdspace"></td>
+					<td>科室</td><td id="TDUseLoc"><input id="UseLoc" type="text"></input></td><td class="tdspace"></td>
+					<td>设备编号</td><td id="TDEquipNo"><input id="EquipNo" type="text"></input></td><td class="tdspace"></td>
+					<td>类组</td><td id="TDEquipType"><input id="EquipType" type="text"></input></td><td class="tdspace"></td>
+					<td>资金来源</td><td id="TDFundsType"><input id="FundsType" type="text"></input></td><td class="tdspace"></td>
+					<td></td><td><a id="BFind" href="#" class="easyui-linkbutton" >查询</a></td><td class="tdspace"></td>
+				</tr>
+				<tr class="chargeTr" style="display: none">
+					<td>维修商</td><td id="TDService"><input id="Service" type="hidden"></input></td><td class="tdspace"></td>
+					<td>维修人</td><td id="TDMaintUser"><input id="MaintUser" type="hidden"></input></td><td class="tdspace"></td>
+					<td>原值</td><td><input id="FromOriginalFee" type="hidden"></input></td><td class="tdspace"></td>
+					<td>到</td><td><input id="ToOriginalFee" type="hidden"></input></td><td class="tdspace"></td>
+					<td>科室</td><td id="TDUseLoc"><input id="UseLoc" type="hidden"></input></td><td class="tdspace"></td>
+					<td>厂家</td><td id="TDManuFacturer"><input id="ManuFacturer" type="hidden"></input></td><td class="tdspace"></td>
+					<td>型号</td><td id="TDModel"><input id="Model" type="hidden"></input></td><td class="tdspace"></td>
+					<td>维修组</td><td id="TDMaintGroup"><input id="MaintGroup" type="hidden"></input></td><td class="tdspace"></td>
+					<td>设备项</td><td id="TDItem"><input id="Item" type="hidden"></input></td><td class="tdspace"></td>
+					<td>设备类型</td><td id="TDStatCat"><input id="StatCat" type="hidden"></input></td><td class="tdspace"></td>
+					<td>设备分类</td><td id="TDEquipCat"><input id="EquipCat" type="hidden"></input></td><td class="tdspace"></td>
+					<td>在保标志</td><td><input id="InsurFlag" type="hidden"></input></td><td></td>
+					<td>年份</td><td><input id="FromYear" type="hidden"></input></td><td class="tdspace"></td>
+					<td>到</td><td><input id="ToYear" type="hidden"></input></td><td class="tdspace"></td>
+					<td>设备</td><td id="TDEquip"><input id="Equip" type="hidden"></input></td><td class="tdspace"></td>
+					<td>供应商</td><td id="TDProvider"><input id="Provider" type="hidden"></input></td><td class="tdspace"></td>
+					<td>日期</td><td><input id="StartDate" class="easyui-datebox" type="hidden"></input></td><td></td>
+					<td>到</td><td><input id="EndDate" class="easyui-datebox" type="hidden"></input></td><td></td>
+				</tr>
+			</table>
+		</div>
+		<!--润乾报表显示位置-->
+		<div data-options="region:'center'" style="margin:2px 0px 0px 0px;">
+			<iframe id="ReportFile" name="ReportFile" src="dhccpmrunqianreport.csp?reportName=#(ReportFileName)#" width=100% height=100%></iframe>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<INPUT TYPE="hidden" name="CurDate" id="CurDate" value=#(CurDate)#>
+			<!--调用后台方法隐藏元素
+			<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			-->
+		</form>
+	</div>
+</body>
+</HTML>

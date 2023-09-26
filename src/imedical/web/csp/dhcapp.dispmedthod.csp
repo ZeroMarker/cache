@@ -1,0 +1,143 @@
+<!-- dhcapp.dispmedthod.csp -->
+<html>
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<title></title>
+<style>
+.panel-body-noheader.panel-body
+	{
+		border-radius:0px;
+		border:none;
+		border-top:0.5px solid #ccc;
+		
+	}
+.panel-body
+{
+	border-radius:0px;
+}
+</style>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/appdispmedthod.js"></script>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+</head>
+<body>
+<div class="hisui-layout"  fit="true">
+	<div data-options="region:'north',split:false,border:false,collapsible:false" style="height:51px;padding:10px 0 0 10px;">
+	  <table ALIGN="left" class="">
+	    <tr>
+	            <td class="r-label">
+	              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+	            </td>
+	            <td>
+	              <input id="_HospList"/>
+	            </td>
+	          </tr>
+	   </table>
+	</div>
+	<div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 10px 0px ;" > 
+		<div id="medthodlist" toolbar="#toolbar"></div>
+	</div>
+	<div data-options="region:'east',border:false,collapsible:false" style="padding:10px 10px 10px 0px;width:800px">
+		<div id="subtoolbar" class="toolbar">
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()">新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			    </tr>
+			</table>
+		</div>
+		<table id="tardatagrid" class="hisui-datagrid" fit="true" title="收费项目维护"
+			data-options="
+			headerCls:'panel-header-gray',
+			iconCls:'icon-paper',
+			toolbar:'#subtoolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowTar,
+			url:'dhcapp.broker.csp?ClassName=web.DHCAPPPosLinkTar&MethodName=QueryLinkTar'">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',hidden:true">id</th>
+					<th data-options="field:'APLTarDr',hidden:true"></th>
+					<th data-options="field:'Type',hidden:true"></th>
+					<th data-options="field:'Pointer',hidden:true"></th>
+					<th data-options="field:'TarCode',width:70">收费项代码</th>
+					<th data-options="field:'TarDesc',width:180,editor:{
+							type:'combogrid',
+							options:{
+								required : true,
+							    id:'AORowId',
+							    fitColumns:true,
+							    fit: true,//自动大小  
+								pagination : true,
+								panelWidth:600,
+								textField:'desc',
+								mode:'remote',
+								url:'dhcapp.broker.csp?ClassName=web.DHCAPPPosLinkTar&MethodName=QueryTar&HospID='+HospID,
+								columns:[[
+									{field:'tarId',hidden:true},
+									{field:'code',title:'代码',width:60},
+									{field:'desc',title:'名称',width:140},
+									{field:'price',title:'收费项价格',width:40}
+								]],
+								onSelect:function(rowIndex, rowData) {
+                   					fillValue(rowIndex, rowData);
+                				}		   
+							}
+					}">收费项名称</th>
+					<th data-options="field:'PartNum',width:30,editor:{type:'numberbox'}">数量</th>
+					<!--
+					<th data-options="field:'Discount',width:50,align:'center',editor:{type:'numberbox'}">打折数</th>
+					-->
+					<th data-options="field:'TarStart',width:70,editor:{type:'datebox',options:{required:true}}">开始日期</th>
+					<th data-options="field:'TarEnd',width:70,editor:{type:'datebox'}">结束日期</th>
+					<th data-options="field:'TarPrice',width:70">收费项价格</th>						
+					<th data-options="field:'UpdUser',width:50">更新人</th>
+					<th data-options="field:'UpdDate',width:70">更新日期</th>
+					<th data-options="field:'UpdTime',width:50">更新时间</th>
+					
+				</tr>
+			</thead>
+		</table>
+	</div>
+</div>
+<div id="toolbar" class="datagrid-toolbar" >
+	<div id="queryForm" style="margin:0 0 10 10;">
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+				<td class="textLabel">代码<input style="margin-left:10px;margin-right:10px;width:100px;" type="text" id="code" class="textbox"></input> </td>	
+				<td class="textLabel">描述<input style="margin-left:10px;width:100px;" type="text" id="desc" class="textbox"></input> </td>        
+				<td><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="find">查询</a> </td>					
+			</tr>								
+		</table>
+	</div>
+	<div  style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+	<table cellspacing="0" cellpadding="0">
+	    <tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" id="insert">新增</a> </td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" id="delete">删除</a></td>
+		  <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" id="save">保存</a></td>
+	      
+	    </tr>
+	</table>
+</div>
+</body>
+</html>

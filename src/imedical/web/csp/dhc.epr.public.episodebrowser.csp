@@ -1,0 +1,105 @@
+<html>
+<head>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+		if $g(%session.Data("LOGON.USERID"))=""
+		{
+			s rtn=##class(websys.SessionLogon).Logon()
+			s %response.ServerSideRedirect="dhc.epr.public.episodebrowser.csp"
+		}
+		q 1
+	</csp:method>
+	
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/ux_VerticalTabPanel.css" />
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+ 	
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1))
+		s defaultSelectChapterID = $Get(%request.Data("DefaultSelectChapterID",1))
+		s defaultSelectEPRLogsID = $Get(%request.Data("DefaultSelectEPRLogsID",1))
+		
+		if (defaultSelectChapterID = "")&&(defaultSelectEPRLogsID '= "")
+		{
+			s objEPRLogs = ##Class(EPRinstance.EPRLogs).%OpenId(defaultSelectEPRLogsID)
+			if (objEPRLogs '= "")
+			{
+				s objPrintDoc = ##Class(EPRmeta.EPRTemplateCategory).%OpenId(objEPRLogs.EPRDocID)
+				if (objPrintDoc '= "")
+				{
+					s defaultSelectChapterID = objPrintDoc.ParentCategoryID
+				}
+			}
+		}
+		
+		s patientID = ##Class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s admType = ""
+		s:(episodeID'="") admType = $p($g(^PAADM(episodeID)),"^",2)
+	  	
+		w "<object id='preconfig' name='preconfig' width=0 height=0 classid='"_##class(web.DHCEPR).GetFormURL()_"PreviewManage.DLL#dhcc.epr.eprlib.previewmanage.UCCfg"_"'>",!
+		w "<param name='DataServiceUrl' value='"_##class(web.DHCEPR).GetServiceURL()_"'>",!
+		w "<param name='FormServiceUrl' value='"_##class(web.DHCEPR).GetFormURL("1")_"'>",!
+		w "<param name='DBUserPassword' value='"_##class(web.DHCEPR).GetUserPassword()_"'>",!
+		w "</object>",!
+		
+		w "<object id='imageloader' name='imageloader' width=0 height=0 classid='"_##class(web.DHCEPR).GetFormURL("1")_"PreviewManage.DLL#dhcc.epr.eprlib.previewmanage.UCImageLoader"_"'>",!
+		w "</object>",!
+	</script>
+	
+</head>
+		
+<body oncontextmenu="return false" >
+	
+	<script type="text/javascript">
+	var episodeID = '#(episodeID)#';
+   	var patientID = '#(patientID)#';
+   	var admType = '#(admType)#';
+	var defaultSelectChapterID = '#(defaultSelectChapterID)#';
+
+   	function getTabPanel()
+	{
+		var tab = new Ext.TabPanel
+		({   
+	        id : "mainCenterPanel",
+	        activeTab:0,
+	        //minTabWidth: 100,
+	        //resizeTabs: true,
+	        border: false,
+	      	enableTabScroll: false,
+	      	tabPosition:'top',
+	      	//tabWidth:100,
+	        items:[{
+				border: false,
+				title: '≤°¿˙‰Ø¿¿',
+				id: 'tabeprbrowser',
+				layout: 'fit',
+				closable: false,
+				autoScroll: true,
+				//autoLoad : { url : "epr.newfw.episodelistuvpanel.csp?patientID=" + patientID + "&episodeID" + episodeID, callback : function() { }, scripts : true, scope : this }
+				html : '<iframe id="frmeprbrowser" name="frmeprbrowser" style="width:100%; height:100%" src="epr.newfw.episodelistuvpanel.csp?patientID=' + patientID + '&episodeID='+ episodeID + '&admType='+ admType + '&defaultSelectChapterID='+ defaultSelectChapterID + '"></frame>'
+	        }]
+	    });     
+	 	return tab;
+	}
+
+	var tab = getTabPanel();
+
+	var vPort = new Ext.Viewport({
+	id:'vPort',
+	layout:'border',
+	border:false,
+	items:[{
+			region:'center',
+			layout:'fit',
+			border:false,
+			items:tab
+		}]
+	});
+
+    </script>
+	
+</body>
+</html>

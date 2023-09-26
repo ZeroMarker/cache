@@ -1,0 +1,62 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">	
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="LISReport"
+		e  d
+		.s DIVClass="Page LISReport"
+	</SCRIPT>
+	<!--DIV class='#(DIVClass)#'-->
+		<TABLE border=0 cellspacing=0>
+			<THEAD>
+				<TR>
+					<TD class='LISHead LISHeadARCIMDesc' colSpan=5>#(ARCIMDesc)#</TD>
+				</TR>
+			</THEAD>
+			<TBODY>
+				<TR>
+					<TD width="179" height="42" class="LISResultTtile">项目名称</TH>
+					<TD class="LISResultTtile" colspan=2>检查结果</TH>
+					<TD width="124" class="LISResultTtile">单位</TH>
+					<TD width="156" class="LISResultTtile">参考范围</TH>
+				</TR>
+					<!--  输出病患信息  -->
+	<csp:WHILE COUNTER=ODID CONDITION=(""'=CurData)>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s CurData=$g(^TMPReport("Result", "Content",ARCIM,ODID))
+		s DoctorName="检验:"
+		i ARCIM="9901||1" s DoctorName="录入:"
+		i (""'=CurData) d
+		.s TestDesc=$P(CurData,"^",1)
+		.s TestResult=$P(CurData,"^",2)
+		.
+		.s Normal=$P(CurData,"^",3)
+		.s TestNormal=""
+		.//s:("H"=Normal) TestNormal="?"
+		.//s:("H"=Normal) TestNormal="?"
+		.s TestUnit=$P(CurData,"^",4)
+		.s TestStandard=$P(CurData,"^",5)
+		.s Arrow=$P(CurData,"^",6)
+		.i Arrow="1" s ArrowName="../images/dhcpe/NoArrow.gif"
+		.i Arrow="0" s ArrowName="../images/dhcpe/DownArrow.gif"
+		.i Arrow="2" s ArrowName="../images/dhcpe/UpArrow.gif"
+		</Script>
+		<CSP:IF CONDITION=(""'=CurData)>
+				<TR>
+					<TD class=LISResultName>#(TestDesc)#</TD>
+					<TD class=LISResultValue width="120">#(TestResult)#</TD>
+					<TD class=LISResultNormal width="51"><IMG id="Arrow" name="Arrow" src=#(ArrowName)#></TD>
+					<!--TD class=LISResultNormal width="20">#(TestNormal)#</TD-->
+					<TD class=LISResultTestUnit>#(TestUnit)#</TD>
+					<TD class=LISResultStandard>#(TestStandard)#</TD>
+				</TR>
+		</CSP:IF>
+	</csp:WHILE>
+			</TBODY>
+			<TFOOT>
+				<TR>
+					<TD class='LISFooter LISFooterChecker' colspan=3>#(DoctorName)#<LABEL class=Checker>#(Checker)#</LABEL></TD>
+					<TD class='LISFooter LISFooterCheckDate' colspan=2>日期:<LABEL class=CheckDate>#(CheckDate)#</LABEL></TD>
+				</TR>
+			</TFOOT>
+		</TABLE>
+	<!--/DIV-->
+	

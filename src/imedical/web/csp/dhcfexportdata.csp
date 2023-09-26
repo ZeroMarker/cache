@@ -1,0 +1,270 @@
+<HTML>
+
+<HEAD>
+
+<!-- Put your page Title here -->
+
+<TITLE>	Cache Server Page </TITLE>
+
+<SCRIPT SRC="../scripts/websys.DateTime.Tools.js"></SCRIPT>
+
+<SCRIPT SRC="/csp/broker/cspbroker.js"></SCRIPT>
+
+<SCRIPT SRC="/csp/broker/cspxmlhttp.js"></SCRIPT>
+
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+
+
+
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321/>
+</HEAD>
+
+<body>
+
+<table width="1150" height="329" border="1">
+
+  <tr>
+
+    <th width="1" height="26" scope="row">&nbsp;</th>
+
+    <td width="213">BDP数据导出</td>
+
+    <td width="900">
+
+	  <table width="900" border="1">
+
+     	 <tr>
+
+       		 <td><input name="UploadFile" type="button" style="width:200" id="UploadFile" onclick="javascript:ExportExcelData()" value="导出"></td>
+
+       	</tr>
+
+       </table></td>
+
+   
+
+  </tr>
+
+  <tr>
+
+    <th scope="row">&nbsp;</th>
+
+    <td rowspan="4" valign="top">
+
+      <select style="font-size:28px" name="TableList" id="TableList" size="33" style="width:300" style="height:720">
+		<SERVER>
+		  d ##class(web.DHCBL.BDP.BDPDataExport).WriteMenu("")    	  
+
+		</SERVER>
+
+        
+      </select>
+
+    </td>
+
+    <td rowspan="3" valign="top">
+
+      <div id="bbb" style="overflow:auto;width:900;height=300">
+
+	  <table id="TableData" border="1">
+	   <ui><li>备注说明：</li></ui> 
+		 <ui><li>&nbsp;需在IE下执行操作，请先确认本机有安装office软件。打开IE,在[internet选项]-[安全]-[受信任的站点]-[站点]中添加开始界面到可信任的站点，然后在[自定义级别]中对[没有标记为安全的ActiveX控件进行初始化和脚本运行]这一项设置为启用，确定后，重启浏览器。</li></ui>
+		<!--ui><li>&nbsp;导出某界面数据时，需先去导出配置表管理进行配置，如果没有导出配置则没法执行导出。</li></ui--> 
+		<ui><li>【药品通用名】和【药品】适用于HIS 8.3.0及以后发布的版本，如果为之前的项目请选择 【药品通用名[旧模式]】和【药品[旧模式]】。</li></ui>
+		<ui><li>【药理学分类】是DHC_PHCCat树形，如果项目使用的是PHC_Cat,PHC_SubCat,PHC_MinorSubCat表请选择 【药理学分类[PHC_Cat]】</li></ui>
+		
+	  </table>
+
+      </div>
+
+      </div>
+
+	</td>
+
+    
+
+  </tr>
+
+  <tr>
+
+    <th scope="row">&nbsp;</th>
+
+   
+   
+  </tr>
+
+  <tr>
+
+    <th scope="row">&nbsp;</th>
+    
+   
+
+  </tr>
+
+</table>
+
+<p>&nbsp; </p>
+
+
+<script language="javascript">
+
+	///2019-02-13
+	function isIE()
+	{
+		//navigator.userAgent.indexOf("compatible") > -1 && navigator.userAgent.indexOf("MSIE") > -1  //ie6,7,8,9,10
+		//navigator.userAgent.indexOf('Trident') > -1 &&  navigator.userAgent.indexOf("rv:11.0") > -1;  //ie11  //"ActiveXObject" in window
+		if((!!window.ActiveXObject)||(navigator.userAgent.indexOf('Trident')>-1&&navigator.userAgent.indexOf("rv:11.0")>-1))
+		{	return true;}
+		else
+		{  
+			return false;
+		}
+	}
+	
+ 	
+	var idTmr="";
+	function Cleanup(){   
+	 	window.clearInterval(idTmr);   
+	 	CollectGarbage();
+	}
+	///导出Excel文件 chenying 
+	ExportExcelData=function() {
+				
+				
+				var TableListObj=document.all.TableList;
+				
+				if (!TableListObj) {
+					alert("没有选中相应的数据");
+					window.status="完毕";
+					return
+				}
+				if (TableListObj.value=="") 
+				{
+					 alert("没有选中相应的数据");
+					 return;
+				}
+				if (!isIE())
+				{	
+					alert("请在IE下执行！"); 
+					return;
+				}
+				window.status="程序进行中";
+				var table=TableListObj.value
+				// f1的任务代码
+			 	try{
+			   	 	var xlApp = new ActiveXObject("Excel.Application");
+					var xlBook = xlApp.Workbooks.Add();///默认三个sheet
+				}catch(e){
+					alert("不能生成表格文件。请先确认本机有安装office软件。打开IE,在[internet选项]-[安全]-[受信任的站点]-[站点]中添加开始界面到可信任的站点，然后在[自定义级别]中对[没有标记为安全的ActiveX控件进行初始化和脚本运行]这一项设置为启用，确定后，重启浏览器。");
+					return;
+				}     
+					     
+			 	xlBook.worksheets(1).select(); 
+				var xlsheet = xlBook.ActiveSheet; 
+
+				var sheetname=tkMakeServerCall("web.DHCBL.BDP.BDPDataExport","GetTableDesc",table);
+				
+				if (sheetname!="") 
+				{
+					xlsheet.name=sheetname;
+				
+				
+					var count=tkMakeServerCall("web.DHCBL.BDP.BDPDataExport","GetDataCount",table);
+					var titlenameStr=tkMakeServerCall("web.DHCBL.BDP.BDPDataExport","GetFieldName",table);
+					//alert(sheetname+"^"+count+"^"+titleStr)
+					var titlenamearr=titlenameStr.split("&%");
+					for (var m = 0; m < titlenamearr.length; m++) {    				
+						//第一行	
+			    		xlsheet.cells(2,m+1)=titlenamearr[m];
+			    		xlsheet.cells(2,m+1).Font.Bold = true;  //设置为粗体 
+			    		xlsheet.cells(2,m+1).WrapText=true;  //设置为自动换行*
+					}	 
+		     
+				 	var titledescStr=tkMakeServerCall("web.DHCBL.BDP.BDPDataExport","GetFieldDesc",table);
+					//alert(sheetname+"^"+count+"^"+titleStr)
+					var titledescarr=titledescStr.split("&%");
+					for (var m = 0; m < titledescarr.length; m++) {    				
+						//第一行	
+			    		xlsheet.cells(1,m+1)=titledescarr[m];
+			    		xlsheet.cells(1,m+1).Font.Bold = true;  //设置为粗体
+						xlsheet.cells(1,m+1).WrapText=true;  //设置为自动换行*
+						
+					}	 
+					
+					
+			        if (count>0)
+			        {
+			        	
+			         	var row=0,taskcount=count;
+						var ProgressText='';
+						var winproBar = new Ext.Window({
+								closable:false,
+								modal:true,
+								width:314,
+								items:[
+									new Ext.ProgressBar({id:'proBar',text:'',width:300})
+								] 
+						});
+						var proBar=new Ext.getCmp('proBar');
+						Ext.TaskMgr.start({  
+						  run:function(){
+						  	row++;
+						  	if(row>taskcount) //当到达最后一行退出
+						  	{
+							  	window.status="完毕";
+						  		Ext.MessageBox.hide();
+								//alert(errorMsg)
+								//idTmr = window.setInterval("Cleanup();",1);
+								
+								Ext.TaskMgr.stop(this);
+								winproBar.close();
+								
+								xlApp.Visible=true;	
+								//xlBook.Close(savechanges=true);
+								CollectGarbage();
+								xlApp=null;
+								xlsheet=null;		
+								//alert("导出完成！");
+								
+						  	}
+						  	else
+						  	{
+								var DataDetailStr2=tkMakeServerCall("web.DHCBL.BDP.BDPDataExport","GetFieldValue",table,row);
+								var Detail2=DataDetailStr2.split("&%");		
+								for (var j=1;j<=Detail2.length;j++){
+									xlsheet.cells(2+row,j)="'"+Detail2[j-1];
+								}
+								progressText = "正在导出第"+row+"条记录,总共"+taskcount+"条记录!";  
+							    proBar.updateProgress(row/taskcount,progressText);
+							  }
+								 
+						  },  
+						  interval:100  
+						});
+						winproBar.show();
+			         	
+			        }
+			        else
+					{
+						
+						window.status="完毕";
+						alert("没有数据！");
+						return;
+					}
+				}
+				else
+				{
+					window.status="完毕";
+					alert("没有找到导出配置，请确认！");
+					return;
+				}
+				
+		}
+	
+</script>
+
+</body>
+
+</HTML>

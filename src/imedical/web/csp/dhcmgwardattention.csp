@@ -1,0 +1,66 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<DIV id="PageContent">
+<DIV id="hello">
+</DIV>
+<SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s getattentionData=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.getattentionData"))
+ s getAttenionDetail=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.getAttenionDetail"))
+ s GetHead=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.GetHead"))
+ s getMzDetail=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.getMzDetail"))
+ s GetMzData=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.GetMzData"))
+ w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+s Ward=%request.Get("Ward") 
+s AttTyp=%request.Get("AttTyp")
+s AttItem=%request.Get("AttItem")
+</SERVER>
+<TRAK:APPLET>
+
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+</SERVER>
+</DIV>
+<SCRIPT Language="Javascript">
+var getattentionData="#(getattentionData)#";
+var getAttenionDetail="#(getAttenionDetail)#";
+var GetHead="#(GetHead)#";
+var WardTree="#(Ward)#";
+var AttTyp="#(AttTyp)#";
+if (AttTyp=='MZ')
+{
+	getattentionData="#(GetMzData)#";
+ 	getAttenionDetail="#(getMzDetail)#";
+
+}
+var AttItem="#(AttItem)#";
+</SCRIPT>
+<script type="text/javascript" src="../scripts/nurse/DHCMGNur/DHCMGWardAttention.js"></script><!-- Put your page Title here -->
+</BODY>
+</HTML>

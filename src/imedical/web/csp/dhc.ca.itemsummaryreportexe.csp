@@ -1,0 +1,69 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">		
+
+	s action = $Get(%request.Data("action",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	s id=$Get(%request.Data("id",1))
+	s parRef=$Get(%request.Data("parRef",1))
+	s node=$Get(%request.Data("node",1))
+	s job=$Get(%request.Data("job",1))
+	s month=$Get(%request.Data("month",1))
+	s dept=$Get(%request.Data("dept",1))
+	s item=$Get(%request.Data("item",1))
+	s datalistsub=$Get(%request.Data("datalistsub",1))
+	s deptlistsub=$Get(%request.Data("deptlistsub",1))
+	s listCostDistSets=$Get(%request.Data("listCostDistSets",1))
+	s getUser=$Get(%request.Data("getUser",1))
+	s userCode=$Get(%request.Data("userCode",1))	
+	s listItemClass=$Get(%request.Data("ListItemClass",1))	
+	s calculation=$Get(%request.Data("calculation",1))	
+	
+	i action = "gen" d
+	.s job=##class(dhc.ca.cache.udata.uDeptsDirectCostsReport).genTmp(month,dept,item)
+	.w "{success:'true',info:'"_job_"'}"
+	
+	i action = "calculation" d
+	.d ##class(dhc.ca.cache.report.uItemSummary).ListCostResultExecute("",dept,item,month)
+	.w "{success:'true'}"
+	
+	i action = "listItemClass" d
+	.w ##class(dhc.ca.cache.report.uDeptRevenueCostEarningsDetailReport).ListItemClass(start,limit,0)
+	
+	i action = "listCostDistSets" d
+	.w ##class(dhc.ca.cache.udata.uCostDistSets).ListRec("","","","",start,limit,"Y")
+	
+	i action = "list" d
+	.w ##class(dhc.ca.cache.udata.uDeptsDirectCostsReport).listForTree(node,job)
+	
+	i action="datalistsub" d
+	.w ##class(dhc.ca.cache.udata.uDataLevelSets).RListRec("","","","",start,limit,id,"Y")	
+	
+	i action="deptlistsub" d
+	.w ##class(dhc.ca.cache.udata.uDeptLevelSets).RListRec("","","","",start,limit,id,"Y")	
+	
+	i action="getUser" d
+	.s result= ##class(dhc.ca.cache.report.comm.deptLevelSetTree).getUser(userCode)
+	.w "{success:'true',info:'"_result_"'}"
+	
+	i action = "add" d
+	.s result = ##class(dhc.ca.cache.udata.uDeptsDirectCostsReport).InsertRec(order, code, name, remark)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.ca.cache.udata.uDeptsDirectCostsReport).UpdateRec(id, order, code, name, remark, active)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+
+</script>

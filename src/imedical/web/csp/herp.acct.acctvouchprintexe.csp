@@ -1,0 +1,122 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s data=$Get(%request.Data("data",1))
+	s vouchtypeid=$Get(%request.Data("vouchtypeid",1))
+	s datam=$Get(%request.Data("datam",1))
+	s datad=$Get(%request.Data("datad",1))
+	s flag=$Get(%request.Data("flag",1))
+	s date=$Get(%request.Data("date",1))
+	s vouchno=$Get(%request.Data("vouchno",1))
+	s SubjID=$Get(%request.Data("SubjID",1))
+	s datadd=$Get(%request.Data("datadd",1))
+	s vouchdetail=$Get(%request.Data("vouchdetail",1))
+	s rowidm =$Get(%request.Data("rowidm",1))
+	s rowidd=$Get(%request.Data("rowidd",1))
+	s VouchID=$Get(%request.Data("VouchID",1))
+	s userid=$Get(%request.Data("userid",1))
+	s userCode=%session.Data("LOGON.USERID")
+	
+	/*  Æ¾Ö¤Ì×´ò*/
+	s TepName=$Get(%request.Data("TepName",1))
+	s TemCode=$Get(%request.Data("TemCode",1))
+	s RowNum=$Get(%request.Data("RowNum",1))
+	s columnNum=$Get(%request.Data("columnNum",1))
+	s ifPrintTitle=$Get(%request.Data("ifPrintTitle",1))
+	s ifLine=$Get(%request.Data("ifLine",1))
+	s title=$Get(%request.Data("title",1))
+	s ColumnData=$Get(%request.Data("ColumnData",1))
+	s PaperDir=$Get(%request.Data("PaperDir",1))
+	s paperSize=$Get(%request.Data("paperSize",1))
+	s ColumnWidth=$Get(%request.Data("ColumnWidth",1))
+	s Distence=$Get(%request.Data("Distence",1))
+	
+	k ^qq
+	s ^qq=VouchID
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctVouchPrint).Listprint(data,start,limit)
+	
+	//´òÓ¡
+	i action = "vouchPrint" d
+	.s result= ##class(herp.acct.udata.uAcctVouchPrint).vouchPrint(VouchID,userid)
+	.i result '= "" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'´òÓ¡Ê§°Ü£¡'}"
+
+	//Ì×´ò
+	i action = "print" d
+	.;s ^aa=userCode
+	.s result= ##class(herp.acct.udata.uAcctVouchPrint).GetVouchprint(VouchID,userid)
+	.i result '= "" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'´òÓ¡Ê§°Ü£¡'}"
+	
+	i action="saveTemp" d
+	.s result=##class(herp.acct.udata.uAcctVouchPrint).saveTemp(TepName,TemCode,RowNum,columnNum,ifPrintTitle,ifLine,title,ColumnData,PaperDir,paperSize,ColumnWidth,Distence)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="ListTemplete"  d
+	.w ##class(herp.acct.udata.uAcctVouchPrint).ListTemplete(start,limit)
+	
+	i action="del" d
+	.s result= ##class(herp.acct.udata.uAcctVouchPrint).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "editTemp" d
+	.s result = ##class(herp.acct.udata.uAcctVouchPrint).UpdateTemp(rowid,TepName,TemCode,RowNum,columnNum,ifPrintTitle,ifLine,title,ColumnData,PaperDir,paperSize,ColumnWidth,Distence)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action="editinfo"  d
+	.s result= ##class(herp.acct.udata.uAcctVouchPrint).editinfo(rowid)
+      .i result '= "" d
+  	  ..w "{success:'true',info:'"_result_"'}"
+	
+	i action = "GetDate" d
+	.s result = ##Class(herp.acct.udata.uAcctVouchBefore2).GetDate(userid)
+	.i result '= 0 d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	
+	
+	/*
+	
+	i action = "getvouchtype" d
+	.w ##class(herp.acct.udata.uAcctVouch).GetVouchType(start,limit,str)
+	
+	i action = "getsubjname" d
+	.w ##class(herp.acct.udata.uAcctVouch).GetSubjName(start,limit,str)
+	
+	i action = "getcheckname" d
+	.w ##class(herp.acct.udata.uAcctVouch).GetCheckItem(start, limit, str)
+	
+	i action = "getvouchno" d
+	.w ##class(herp.acct.udata.uAcctVouch).GetVouchNo(start, limit, str)
+	
+	*/
+
+</script>

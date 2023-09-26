@@ -1,0 +1,48 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	s userdr=$G(%session.Data("LOGON.USERID"))
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action    = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir   = $Get(%request.Data("dir",1))
+	s start     = $Get(%request.Data("start",1))
+	s str       = $Get(%request.Data("str",1))
+	s limit     = $Get(%request.Data("limit",1))	
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s SchemDr = $Get(%request.Data("SchemDr",1))
+	s objdeptdr = $Get(%request.Data("objdeptdr",1))
+	s bsmyear   = $Get(%request.Data("bsmyear",1))
+	
+	
+	s auditdr = $Get(%request.Data("auditdr",1))
+	//s userdr  = $Get(%request.Data("userdr",1))
+	s ChkResult = $Get(%request.Data("ChkResult",1))
+	s view    = $Get(%request.Data("view",1))
+	s adjustno = $Get(%request.Data("adjustno",1))
+	
+		
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgAdjustDeptyearAudit).ListDetail(SchemDr,objdeptdr, bsmyear,adjustno,sortField, sortDir, start, limit, hospid)
+	
+	i action = "audit" d
+	.s result=##class(herp.budg.udata.uBudgAdjustDeptyearAudit).SubmitModify(auditdr, SchemDr, ChkResult, view, userdr)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "cancleaudit" d
+	.s result=##class(herp.budg.udata.uBudgAdjustDeptyearAudit).CancleAudit(auditdr, SchemDr, userdr)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

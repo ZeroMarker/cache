@@ -1,0 +1,44 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+///查询计费项信息
+i Action="QueryTar" d
+	.s StrParam=$Get(%request.Data("StrParam",1))
+	.d ##class(web.DHCSTM.InciLinkTar).QueryTar(Start,Limit,Sort,Dir,StrParam)
+
+///获取计费项所关联的库存项明细信息
+i Action="GetLinkData" d
+	.s Tariff=$Get(%request.Data("Tariff",1))
+	.d ##class(web.DHCSTM.InciLinkTar).GetLinkData(Start,Limit,Sort,Dir,Tariff)
+
+///保存关联信息
+i Action="Save" d
+	.s Tariff=$Get(%request.Data("Tariff",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result=##class(web.DHCSTM.InciLinkTar).Save(Tariff,ListData)
+	.i result=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+///删除关联
+i Action="Delete" d
+	.s RowId=$Get(%request.Data("RowId",1))
+	.s result=##class(web.DHCSTM.InciLinkTar).Delete(RowId)
+	.i result=0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

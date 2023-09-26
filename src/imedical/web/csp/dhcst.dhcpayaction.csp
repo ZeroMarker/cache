@@ -1,0 +1,60 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s StrParam=$Get(%request.Data("strParam",1))
+
+//查询付款单
+	i Action = "query" d
+	.s result = ##class(web.DHCST.DHCPay).jsGdRItmToPay(Start,Limit,Sort,Dir,StrParam)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	
+//获取参数
+	i Action = "GetParam" d
+	.s SSACode=$Get(%request.Data("SSACode",1))
+	.s SSAPCode=$Get(%request.Data("SSAPCode",1))
+	.s PFType=$Get(%request.Data("PFType",1))
+	.s result = ##class(web.DHCST.StkSysAppParame).GetPropValue(SSACode, SSAPCode , PFType)	
+	.w result
+	
+//完成付款单
+	i Action = "SetComp" d
+	.s payid=$Get(%request.Data("payid",1))
+	.s result = ##class(web.DHCST.DHCPay).SetCompleted(payid)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+	
+//取消完成付款单
+	i Action = "CnlComp" d
+	.s payid=$Get(%request.Data("payid",1))
+	.s result = ##class(web.DHCST.DHCPay).CnclCompleted(payid)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result	
+	
+//生成新付款单
+	i Action = "save" d
+	.s PayNo=$Get(%request.Data("PayNo",1))
+	.s MainInfo=$Get(%request.Data("MainInfo",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result = ##class(web.DHCST.DHCPay).Pay(PayNo , MainInfo, ListData)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result		
+</script>

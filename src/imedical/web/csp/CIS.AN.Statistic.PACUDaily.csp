@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>恢复室日报</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',title:'查询条件',iconCls:'icon-search',headerCls:'panel-header-gray' " style="height:90px;padding-left:5px;padding-top:10px;">
+    	<form id="conditionForm">
+    		<label>开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="display:inline-block;width:120px;text-align:right;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<!--<label style="display:inline-block;width:80px;text-align:right;">麻醉医生</label>-->
+    		<!--<input type="text" id="AnaDoctor" name="AnaDoctor" class="hisui-combobox textbox" data-options="textField: 'Description',valueField: 'RowId'">-->
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-search'" style="margin-left:20px;">查询</a>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'查询结果：<span>共<span id=\'badge_opercount\' style=\'margin:0 5px;\'></span>台</span>',headerCls:'panel-header-gray' ">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		//nowrap: true,
+        		toolbar: "",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.AnaesthesiaStatistic",
+            		QueryName: "PACUDaily",
+            		ArgCnt: 3
+        		},
+        		columns: [[{
+                    field: "PACUBedDesc",
+                    title: "床号",
+                    width: 100
+                }, 
+                {
+                    field: "MedcareNo",
+                    title: "住院号",
+                    width: 100
+                },
+                {
+                    field: "PatName",
+                    title: "姓名",
+                    width: 100
+                },
+                {
+                    field: "PatGender",
+                    title: "性别",
+                    width: 50
+                },
+                {
+                    field: "PatAge",
+                    title: "年龄",
+                    width: 50
+                },
+                {
+                    field: "AppDeptDesc",
+                    title: "科室名称",
+                    width: 100
+                },
+                {
+                    field: "OperDesc",
+                    title: "手术名称",
+                    width: 240
+                },
+                {
+                    field: "AnaestMethod",
+                    title: "麻醉方式",
+                    width: 160
+                },
+                {
+                    field: "AnaCareProv",
+                    title: "麻醉医护",
+                    width: 130
+                },
+                {
+                    field: "OperDate",
+                    title: "手术日期",
+                    width: 100
+                }, 
+                {
+                    field: "PACUInDT",
+                    title: "入恢复室",
+                    width: 100,
+                    formatter: function(value, row, index) {
+                    	return "<span class='hisui-tooltip' title='" + value + "'>" + value.slice(11,16) + "</span>";
+                	}
+                },
+                {
+                    field: "PACUOutDT",
+                    title: "出恢复室",
+                    width: 100,
+                    formatter: function(value, row, index) {
+                    	return "<span class='hisui-tooltip' title='" + value + "'>" + value.slice(11,16) + "</span>";
+                	}
+                },
+                {
+                    field: "OutRoomException",
+                    title: "出室特殊情况",
+                    width: 80
+                },
+                {
+                    field: "PACUSignUserName",
+                    title: "恢复室麻醉签名",
+                    width: 80
+                }
+           	]],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = ""
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	onLoadSuccess: function(data) {
+	        	$("#badge_opercount").text(data.total);
+	        	$('.hisui-tooltip').tooltip({});
+	        },
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	/*dhccl.getDatas(ANCSP.DataQuery, {
+        	ClassName: CLCLS.BLL.Admission,
+        	QueryName: "FindCareProvByLoc",
+        	Arg1: "",
+        	Arg2: session.DeptID,
+        	Arg3: "Y",
+        	ArgCnt: 3
+    	}, 'json', true, function(data) {
+        	$("#AnaDoctor").combobox('loadData', data);
+    	});*/
+	});
+	</script>
+</body>
+</html>

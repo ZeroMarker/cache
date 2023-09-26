@@ -1,0 +1,102 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+; d ##class(web.NurMonData).writecss()
+ s EpisodeID=$G(%request.Data("EpisodeID",1))
+ s thispatward=$p($g(^PAADM(+EpisodeID)),"^",70)
+ s thispatregno=##class(Nur.Utility).getPatRegs(EpisodeID)
+ s classconfig="web.DrugAuditNew" // 类名
+ d ##class(web.NurseSetNew).initConfig("durgauditnew")
+ s config=##class(web.NurseSetNew).findsimple("durgauditnew","period","0")
+ s periodconfig1=$p(config,"^",4,7) // 查询时间段
+ s config=##class(web.NurseSetNew).findsimple("durgauditnew","other","2")
+ s collapseconfig1=$replace($p(config,"^",4),"Y","true") // 面板是否滚动
+ s endtime=##class(web.DrugAuditNew).GetFYTimeSet()
+ i (endtime'="") s $p(periodconfig1,"^",4)=endtime  ///按病区设置了截止时间优先走病区的
+ d ##class(web.NurseSetNew).getset("durgauditnew","west",.arr) // 左侧查询条件
+ s westconfig1=$g(arr("field1")) // 标签
+ s westconfig2=$g(arr("index3")) // 字段
+ s westconfig3=$replace($g(arr("field3")),"Y","checked") // 选中
+ s westconfig4=$replace($g(arr("field4")),"Y","hidden") // 隐藏
+ d ##class(web.NurseSetNew).getset("durgauditnew","north",.arr) // 上面板
+ s northconfig1=$g(arr("field1")) // 标签
+ s northconfig2=$g(arr("index3")) // 字段
+ s northconfig3=$g(arr("field3")) // 宽度
+ s northconfig4=$replace($g(arr("field4")),"Y","hidden") // 隐藏
+ d ##class(web.NurseSetNew).getset("durgauditnew","south",.arr) // 下面板
+ s southconfig1=$g(arr("field1")) // 标签
+ s southconfig2=$g(arr("index3")) // 字段
+ s southconfig3=$g(arr("field3")) // 宽度
+ s southconfig4=$replace($g(arr("field4")),"Y","hidden") // 隐藏
+ d ##class(web.NurseSetNew).getset("durgauditnew","error",.arr) // 特殊状态
+ s errorconfig1=$g(arr("field1")) // 标签
+ s errorconfig2=$g(arr("index3")) // 字段
+ s errorconfig3=$g(arr("field3")) // 颜色
+ s errorconfig4=$replace($g(arr("field4")),"Y","error") // 控制
+</SERVER>
+</head>
+<body>
+<SCRIPT language="Javascript">
+var selectqty=0;
+var thisward=""; // 可查询, 但只能审核本病区
+var searchward=""; // 考虑到 登录A5->选择A6->查询->选择A5
+var EpisodeID="#(EpisodeID)#";
+var thispatward="#(thispatward)#"; // 可查询, 但只能审核本病区
+var thispatregno="#(thispatregno)#";
+var searchpatregno="";
+var classconfig="#(classconfig)#";
+var periodconfig1="#(periodconfig1)#";
+var westconfig1="#(westconfig1)#";
+var westconfig2="#(westconfig2)#";
+var westconfig3="#(westconfig3)#";
+var westconfig4="#(westconfig4)#";
+var northconfig1="#(northconfig1)#";
+var northconfig2="#(northconfig2)#";
+var northconfig3="#(northconfig3)#";
+var northconfig4="#(northconfig4)#";
+var southconfig1="#(southconfig1)#";
+var southconfig2="#(southconfig2)#";
+var southconfig3="#(southconfig3)#";
+var southconfig4="#(southconfig4)#";
+var errorconfig1="#(errorconfig1)#";
+var errorconfig2="#(errorconfig2)#";
+var errorconfig3="#(errorconfig3)#";
+var errorconfig4="#(errorconfig4)#";
+var collapseconfig1="#(collapseconfig1)#";
+Ext.grid.ColumnModel.override({  
+        getTotalWidth: function(includeHidden) {  
+            var off = 2;  
+
+            if (Ext.isChrome){  
+                off = 2;  
+            };  
+            if (!this.totalWidth) {  
+                this.totalWidth = 0;  
+                for (var i = 0, len = this.config.length; i < len; i++) {  
+                    if (includeHidden || !this.isHidden(i)) {  
+                        this.totalWidth += this.getColumnWidth(i)+off;  
+                    };  
+                };  
+            };  
+            return this.totalWidth;  
+            }  
+        }); 
+</SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/nurse/css/DHC.Nur.IP.css"></LINK>
+<SERVER>
+ w !,"<script type=""text/javascript"" src=""../scripts/DHC.WMR.PinYinHead.js""></script>"
+ w !,"<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/utility.js""></script>"
+ w !,"<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/drugauditnew.js""></script>"
+ w !,"<script type=""text/javascript"" src=""../scripts/nurse/DHCNUR/drugauditnew_event.js""></script>"
+</SERVER>
+</body>
+</html>

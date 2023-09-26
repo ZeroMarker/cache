@@ -1,0 +1,295 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n frm s frm=""
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i frm d frm.Show(),frm.%Close()
+ }
+ n counter,resultid,resulttype,hl7resulttype,resultobj,resultfile,resultstatus,vdir,extn,objoe,actualdirectory,prevcounter,nextcounter,webservername,labname2,locationextension,labname2path,slash
+ s (frm,virtualdirectory,resultfile,orderdesc,UseWord,actualdirectory,prevcounter,nextcounter,webservername,labname2,locationextension,labname2path,slash)=""
+ s counter=$p(%request.Get("Counter"),"^",1)
+ ;w "counter="_counter_"<BR>"
+ s CONTEXT=%request.Get("CONTEXT")
+ ; Log 58881 YC - Replaced ResultList and OrderList with TMP Global (to avoid maxstring when there are too many results)
+ /*
+ s resultlist=%request.Get("ResultList")
+ s orderlist=%request.Get("OrderList")
+
+ ; First time entering the page from tabular
+ i resultlist="" d
+ . s resultid=%request.Get("ResultID")
+ . s orderid=%request.Get("OrderID")
+ . ;s orderid=rs.GetDataByName("orderid")
+ . s prevcounter=$p(%request.Get("Counter"),"^",2)
+ . s nextcounter=$p(%request.Get("Counter"),"^",3)
+ . ; start with a clean tmp global
+ . k ^TMP("WEB","OEOrdItemTabular",%session.SessionId)
+ ; Entering this page through previous and next buttons
+ i resultlist'="" d
+ . s resultid=$p(resultlist,"^",counter)
+ . s orderid=$p(orderlist,"^",counter)
+ . ; method to get next order
+ . d ##Class(web.EPVisitNumber).GetNextPrevCounter(resultlist,orderlist,counter,.prevcounter,.nextcounter)
+ */
+
+ ; Tabular
+ i counter'="" d
+ . s SessionId=%session.SessionId
+ . s resultid=$g(^TMP("WEB",SessionId,"TabResultsList",CONTEXT,counter))
+ . s orderid=$g(^TMP("WEB",SessionId,"TabOrdersList",CONTEXT,counter))
+ . d ##Class(web.EPVisitNumber).GetNextPrevCounter(SessionId,CONTEXT,counter,.prevcounter,.nextcounter)
+ ; Result Profile / Clinic Worklist
+ e  d
+ . s resultid=%request.Get("ResultID")
+ . s orderid=%request.Get("OrderID")
+ ; END Log 58881
+
+ s %request.Data("PrevCounterID",1)=prevcounter
+ s %request.Data("NextCounterID",1)=nextcounter
+ s %request.Data("ResultID",1)=resultid
+ s %request.Data("OrderID",1)=orderid
+ s %request.Data("Counter",1)=counter
+ ; output the context & column number so the tabularresultsupdate.js can pick it up
+ w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+ w "var ColumnID="""_%request.Get("ColumnID")_""";"_$c(13,10)
+ w "var Context="""_CONTEXT_""";"_$c(13,10)
+ w "</SCRIPT>"
+ s GroupID=##Class(epr.GroupSettings).GetIdFromGroupId(%session.Get("LOGON.GROUPID"))
+ s GroupSettings=##Class(epr.GroupSettings).%OpenId(GroupID)
+ s UseWord=0,qdisable=""
+ i GroupSettings d
+ . s UseWord=GroupSettings.DisplayWordFormat
+ . d GroupSettings.%Close()
+ ; required for audting(viewed by) and update
+ ; Log 5763 - PJC Add link to text results from Atomic Results
+ s resulttype=%request.Get("ResultType")
+ s hl7resulttype=%request.Get("HL7ResultType")
+ i resulttype'="T" d
+ . d ##class(web.EPVisitNumber).GetResultDetails(resultid,orderid,.resulttype,.hl7resulttype)
+ d ##Class(websys.Component).GetComponentMessages(.t,"epr.Chart.Messages")
+ i resulttype = "V" d
+ . s message=$g(t("VoiceResult"),"This is a voice result.")
+ . w "<br>"
+ . w "&nbsp;<font color=#0000FF size=2><b>"_message_"</b></font>"
+ e  i resulttype = "D" d
+ . s message=$g(t("DicomResult"),"This is a DICOM result.")
+ . w "<br>"
+ . w "&nbsp;<font color=#0000FF size=2><b>"_message_"</b></font>"
+ e  d
+ . i (resulttype="T")!((resulttype="L")&(hl7resulttype="IM")) d
+ . . ; in this case - 'resultid' is the OEOrdTextResult ID
+ . . ; the result and order ID must be calculated from this
+ . . s objoe=##Class(User.OEOrdTextResult).%OpenId(resultid)
+ . . i objoe,objoe.TRESOETRDR d
+ . . . ; Log 48208 YC - Show the questionnaire if questionnaire result.
+ . . . s Questionnaire=$p($g(^OETR(objoe.TRESOETRDR.%Id())),"^",30)
+ . . . i Questionnaire'="" d
+ . . . . s code=##Class(web.SSUserDefWindow).GetClassNameFromId($p(Questionnaire,"||"))
+ . . . . i code'="" d
+ . . . . . s isgen=##Class(web.SSUserDefWindow).IsGeneratedQuestionnaire(code,$p(Questionnaire,"||"))
+ . . . . . i isgen d
+ . . . . . . s cmp=##Class(websys.Component).OpenName(code_".Edit")
+ . . . . . . i cmp d
+ . . . . . . . s qdisable=1 s cmp.Disabled=1
+ . . . . . . . s %request.Data("ID",1)=$p(Questionnaire,"||",2)
+ . . . . . . . d cmp.Show(),cmp.%Close()
+ . . . ; we need to set the ID to Text ID or the view auditing will not work
+ . . . s %request.Data("ID",1)=objoe.TRESOETRDR.%Id()
+ . . . s %request.Data("RowID",1)=objoe.TRESOETRDR.%Id()
+ . . . s %request.Data("OrderID",1)=objoe.TRESParRef.%Id()
+ . . . d objoe.%Close()
+ . . . s frm=##Class(websys.Component).OpenName("OEOrdItem.TabularTextResultsEMR")
+ . . . d ##Class(web.EPVisitNumber).GetOrderItemDetails(%request.Get("OrderID"), %request.Get("ID") , "" )
+ . e  i (resulttype="WLAB")!(resulttype="RTFLAB") d
+ . . s visitno=$p($g(^OEORD(+orderid,"I",+$p(orderid,"||",2),3)),"^",35)
+ . . s LabEpisodeNo=$p(visitno,"||",1) q:LabEpisodeNo=""
+ . . s testset=$p(visitno,"||",2) q:testset=""
+ . . s labcounter=$p(visitno,"||",3) q:labcounter=""
+ . . ; Log 59596 - AI - 23-06-2006 : Get the entire lab path : webservername plus labname2 plus locationextension.
+ . . ;                - 12-07-2006 : Add logic for Unix servers, and debugging.
+ . . s webservername=$lg(^websys.ConfigurationD(1),19)
+ . . s labname2=$$GetLabName2^CLabLink()
+ . . i $d(^ZAGI("debug")) s ^ZAGI("tabularresultsemr","01")=$g(webservername)_" * "_$g(labname2)_" * "_$g(testset)_" * "_$g(LabEpisodeNo)_" * "_$g(labcounter)
+ . . s labresulttype=##class(web.EPVisitTestSet).GetLabResultType(testset,.labresultdirectory,LabEpisodeNo,labcounter,.locationextension,.slash)
+ . . i $d(^ZAGI("debug")) s ^ZAGI("tabularresultsemr","02")=$g(labresultdirectory)_" * "_$g(locationextension)_" * "_$g(slash)
+ . . i labresulttype="WLAB" s virtualdirectory=labresultdirectory s resultfile=LabEpisodeNo_"_"_testset_"_"_labcounter_".doc"
+ . . s virtualdirectory=$tr(virtualdirectory,"\","/")
+ . . s locationextension=$tr(locationextension,"\","/")
+ . . s labname2path=$zcvt("//"_webservername_"/"_labname2_"/"_locationextension,"O","JS")
+ . . ; end Log 59596
+ . . s %request.Data("ID",1)=resultid
+ . . s %request.Data("RowID",1)=resultid
+ . . s %request.Data("OrderID",1)=orderid
+ . . s frm=##Class(websys.Component).OpenName("OEOrdItem.TabularTextResultsEMR")
+ . . d ##Class(web.EPVisitNumber).GetOrderItemDetails(resultid,"","")
+ . e  i resulttype="L" d
+ . . ;huhm modify 20070828---------^OEORD(10768,"I",191,3)
+ . . s temflag=0
+ . . i $l(resultid) d
+ . . .s labrowid=$p(^OEORD(+resultid,"I",$p(resultid,"||",2),3),"^",35)
+ . . .;s ^aresulttype(4)=labrowid
+ . . .i $p(^TEPI(+labrowid,1,$p(labrowid,"||",2),$p(labrowid,"||",3)),"\",31)'="A" s temflag=1
+ . . i temflag w "<script>alert(""该标本结果未审核!请稍后..."")</script>" q
+ . . ;-----------------------------
+ . . s %request.Data("ID",1)=resultid
+ . . s %request.Data("RowID",1)=resultid
+ . . s %request.Data("OrderID",1)=orderid
+ . . s frm=##Class(websys.Component).OpenName("OEOrdItem.TabularResultsEMR")
+ . . d ##Class(web.EPVisitNumber).GetOrderItemDetails(resultid,"","",$g(%request.Data("ResultStatusList",1)))
+ . e  i resulttype="W" d
+ . . s arcim=$p($g(^OEORD(+orderid,"I",+$p(orderid,"||",2),1)),"^",2)
+ . . s orderdesc="" i arcim'="" s orderdesc=$ZCVT($p($g(^ARCIM(+arcim,1,1)),"^",2),"O","JS")
+ . . ; get virtual directory and word file
+ . . s resultobj=##class(User.OEOrdResult).%OpenId(resultid)
+ . . i resultobj d
+ . . . s resultfile=resultobj.RESFileName,resultfile=$tr(resultfile,"\","/")
+ . . . i resultfile'="" d
+ . . . . s resultstatus="" i resultobj.RESResStatDR s resultstatus=resultobj.RESResStatDR.RESSTCode
+ . . . . d ##Class(web.CFSystemFileDefinition).GetVirtualDirectories(.vdir)
+ . . . . i ((resultstatus="V")!(resultstatus="E")) d
+ . . . . . s extn=$p(resultfile,".",2)  s extn=##Class(%Collation).Upper(extn)
+ . . . . . s virtualdirectory="" i extn'="" s virtualdirectory=$p($g(vdir(extn)),"^",1) s actualdirectory=$zcvt($p($g(vdir(extn)),"^",2),"O","JS")
+ . . . . . ; only send 'FileName' if we are displaying non-word format,
+ . . . . . ; otherwise we will display the word document in a text box, too
+ . . . . . s GroupID=##Class(epr.GroupSettings).GetIdFromGroupId(%session.Get("LOGON.GROUPID"))
+ . . . . . s GroupSettings=##Class(epr.GroupSettings).%OpenId(GroupID)
+ . . . . . i GroupSettings d
+ . . . . . . i GroupSettings.DisplayWordFormat s %request.Data("FileName",1)=""
+ . . . . . . e  s %request.Data("FileName",1)=resultfile
+ . . . . . . d GroupSettings.%Close()
+ . . . . . s %request.Data("Type",1)=resulttype
+ . . . . . s %request.Data("ResultID",1)=resultid
+ . . . . s %request.Data("ID",1)=resultid
+ . . . . s %request.Data("RowID",1)=resultid
+ . . . . s (%request.Data("OrderID",1),%request.Data("OEOrdItemID",1))=resultobj.RESParRef.%Id()
+ . . . . s frm=##Class(websys.Component).OpenName("OEOrdItem.TabularWordResultsEMR")
+ . . . . d ##Class(web.EPVisitNumber).GetOrderItemDetails(%request.Data("OrderID",1),"",resultid)
+ . . . e  d
+ . . . . s %request.Data("ID",1)=resultid
+ . . . . s %request.Data("RowID",1)=resultid
+ . . . . s %request.Data("OrderID",1)=orderid
+ . . . . s frm=##Class(websys.Component).OpenName("OEOrdItem.TabularNSRTextResultsEMR")
+ . . . d resultobj.%Close()
+ . i frm d frm.Show(),frm.%Close()
+ . ; Has the result got sensitivities
+ . i resulttype="L" d
+ . . ; check if ANY order IDs (including resultdisplay group included ones have sensitivities
+ . . n OrderID, TestList, gotsens, tmplist, tstcnt, tst, oids, oix, oid,count, TestSet, LabTestSetRow, par, child
+ . . s OrderID=resultid
+ . . s par=$p(OrderID,"||",1) i par="" q
+ . . s child=$p(OrderID,"||",2) i child="" q
+ . . s LabTestSetRow=$p(^OEORD(par,"I",child,3),"^",35) i LabTestSetRow="" q
+ . . s LabEpisodeNo=$p(LabTestSetRow,"||")
+ . . s TestSet=$p(LabTestSetRow,"||",2)
+ . . s Count=+$p(LabTestSetRow,"||",3)
+ . . s gotsens=0
+ . . k AntiLIST d ##class(web.EPVisitTestSet).AntiBioSensGet(LabEpisodeNo,.AntiLIST,OrderID,"",$g(%request.Data("ResultStatusList",1))) i $d(AntiLIST) s gotsens=1
+ . . q:'gotsens
+ . . s frm=##Class(websys.Component).OpenName("EPVisitTestSet.AntibioticSensitivity")
+ . . i frm d frm.Show(),frm.%Close()
+</SERVER>
+<script>
+
+var ResultType='#(resulttype)#';
+var path='#(virtualdirectory)#';
+var actualdirectory='#(actualdirectory)#';
+var htmlFileName='#(resultfile)#';
+var orderdesc='#(orderdesc)#';
+var UseWord='#(UseWord)#';
+var orderID='#(orderid)#';
+// Log 59596 - AI - 23-06-2006 : Get the "Lab Word Results" Virtual Directory name (Lab Name 2 + "RESULTS") in ALPHAUP format.
+// Log 59596 - AI - 23-06-2006 : LocationExtension is any subdirectory(ies) under the "Lab Word Results" Virtual Directory.
+var labname2path='#(labname2path)#';
+
+
+/*
+alert("ResultType: "+ResultType);
+alert("htmlFileName: "+htmlFileName);
+
+alert("orderdesc: "+orderdesc);
+alert("UseWord: "+UseWord);
+alert("orderID: "+orderID);
+
+alert("path: "+path);
+alert("actualdirectory: "+actualdirectory);
+alert("labname2path: "+labname2path);
+*/
+
+
+if (((ResultType=="W")&&(UseWord==1))||(orderdesc=="Discharge Letter")) {
+  if (htmlFileName!="") {
+		if (window.UseCustomTabularResultsLinkHander) {
+			CustomTabularResultsLinkHander(actualdirectory,htmlFileName)
+		} else {
+			//if (aryWordDetails[1].substring(0,1)=="/") aryWordDetails[1]=aryWordDetails[1].substring(1,aryWordDetails[1].length);
+			var re =/(\/\/)/g;
+			var fileName=htmlFileName.replace(re,"/");
+			//alert('do not display in word\n' + path+fileName);
+			// Log 59598 - BC - 29-06-2006 : Change statusbar variable (status=) to display the status bar (=yes).
+			window.open(path+fileName,'new','scrollbars=yes,resizable=yes,toolbar=no,width=750,height=600,location=no,directories=no,status=yes,menubar=no,fullscreen=no');
+		}
+	}
+} else  if (ResultType=="WLAB") {
+	if (UseWord==1) {
+		if (window.UseCustomTabularResultsLinkHander) {
+			CustomTabularResultsLinkHander(path,htmlFileName)
+		} else {
+			// open in word
+			// Log 59596 - AI - 23-06-2006 : Use the virtual path and extension as found above.
+			// Log 59598 - BC - 29-06-2006 : Change statusbar variable (status=) to display the status bar (=yes).
+			//window.open(path + htmlFileName,'WordResults','scrollbars=yes,resizable=yes,toolbar=no,width=750,height=600,location=no,directories=no,status=yes,menubar=no,fullscreen=no');
+			window.open(labname2path + htmlFileName,'WordResults','scrollbars=yes,resizable=yes,toolbar=no,width=750,height=600,location=no,directories=no,status=yes,menubar=no,fullscreen=no');
+		}
+	} else {
+		url2="oeorditem.tabularlabwordresults.csp?OrderID=" + orderID;
+		var thewin = websys_createWindow(url2, 'RTFTextResults', 'top=50,left=80,width=800,height=600,scrollbars=yes,resizable=yes');
+		thewin.focus();
+	}
+} else  if (ResultType=="RTFLAB") {
+	url2="oeorditem.tabularlabwordresults.csp?OrderID=" + orderID;
+	var thewin = websys_createWindow(url2, 'RTFTextResults', 'top=50,left=80,width=800,height=600,scrollbars=yes,resizable=yes');
+	thewin.focus();
+}
+
+// Log 48208 YC - Disable update if questionnaire status is authorised
+var qdisable="#(qdisable)#";
+if (qdisable!="") {
+	var frm=document.getElementsByTagName("FORM");
+	for (i=0;i<frm.length;i++) {
+		if (frm[i].id.indexOf("fquestionnaire_")!=-1) {
+			var objs=frm[i].getElementsByTagName("A");
+			for (j=0;j<objs.length;j++) {
+				if (objs[j].id=="update1") {
+					objs[j].disabled=true;
+					objs[j].onclick=LinkDisable;
+				}
+			}
+		}
+	}
+}
+
+
+function LinkDisable(evt) {
+	var el = websys_getSrcElement(evt);
+	if (el.disabled) {
+		return false;
+	}
+	return true;
+}
+
+</script>
+</BODY>
+</HTML>

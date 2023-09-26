@@ -1,0 +1,53 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+
+<script language="cache" runat="server">
+    s action=$Get(%request.Data("action",1))
+    s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))	
+	s str = $Get(%request.Data("str",1))
+	s userid=$Get(%request.Data("userid",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s checkname=$Get(%request.Data("checkname",1))
+	s coefficient=$Get(%request.Data("coefficient",1))
+	s CheckDr = $GEt(%request.Data("checkDr",1))
+	s schemdr = $GEt(%request.Data("schemdr",1))
+	
+	s dataStr= $GEt(%request.Data("dataStr",1))
+	i action = "list" d
+	.w ##class(dhc.qm.udata.uCheckCoefficient).List(start,limit,schemdr,CheckDr)
+	
+	i action = "add" d
+	.s result = ##class(dhc.qm.udata.uCheckCoefficient).Insert(dataStr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(dhc.qm.udata.uCheckCoefficient).Update(dataStr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(dhc.qm.udata.uCheckCoefficient).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "listcheckname" d
+	.w ##class(dhc.qm.udata.uCheckCoefficient).CheckList(str,start,limit)
+	
+	i action="ListCheck"  d  //2016-8-23 add cyl
+	.w ##class(dhc.qm.udata.uCheckCoefficient).ListCheck(start, limit, str,schemdr)
+	
+	i action="ListschemDr"  d  //2016-8-25 add cyl
+	.w ##class(dhc.qm.udata.uCheckCoefficient).ListschemDr(start, limit, str,userid)
+	
+</script>

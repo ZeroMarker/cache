@@ -1,0 +1,105 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	
+	s action    = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir   = $Get(%request.Data("dir",1))
+	s start     = $Get(%request.Data("start",1))
+	s limit     = $Get(%request.Data("limit",1))	
+	s str       = $Get(%request.Data("query",1))
+	
+	s userdr = $Get(%request.Data("userdr",1))
+  //rowid, year, sysnodr, title, message, subuser, subdate, IsRead, IsAttachment
+  s rowid = $Get(%request.Data("rowid",1))
+  s year = $Get(%request.Data("year",1))
+  s sysnodr = $Get(%request.Data("sysnodr",1))
+  s title = $Get(%request.Data("title",1))
+  s message = $Get(%request.Data("message",1))
+  s subuser = $Get(%request.Data("subuser",1))
+  s subdate = $Get(%request.Data("subdate",1))
+  s IsRead = $Get(%request.Data("IsRead",1))
+  s IsAttachment = $Get(%request.Data("IsAttachment",1))
+  	i action = "GetJournalTypes" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetJournalType(start,limit,str)
+	i action = "listparticipantsInfo" d
+	.w ##class(herp.srm.udata.uSRMProjectsInfos).ListParticipantsInfo(sortField, sortDir, start, limit, participantsdrs)
+	
+	i action = "GetJournalDict" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetJournalDict(start,limit,str)
+	i action = "GetAuthor" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	i action = "applyerList" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	i action = "deptList" d 
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+	i action = "GetMySRMtotal" d
+	.w ##class(herp.srm.udata.uSRMProjectsIndex).GetMySRMtotal(sortField, sortDir, start, limit, userdr)
+	i action = "GetSRMtotal" d
+	.w ##class(herp.srm.udata.uSRMProjectsIndex).GetSRMtotal(sortField, sortDir, start, limit, userdr)
+	i action = "GetChartTotal" d
+	.w ##class(herp.srm.udata.uSRMProjectsIndex).GetChartTotal(userdr)
+	i action = "GetSystemMessage" d
+	.w ##class(herp.srm.udata.uSRMProjectsIndex).GetSystemMessage(sortField,sortDir,start,limit)
+	i action = "JournalList" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetJournalDict(start, limit, str)
+	i action = "sourceList" d 
+	.w ##class(herp.srm.udata.uSRMCommon).CalSubSource(start, limit, str)
+	i action = "GetIn ventorsInfo" d
+  	.w ##Class(herp.srm.udata.uSRMCommon).ListParticipantsInfo(start,limit,IDs)
+  
+	i action = "GetDept" d
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+
+	i action = "GetYear" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetYear(start, limit, str)
+
+	i action = "GetPatentee" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+
+	i action = "GetInventors" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "GetUint" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetUintInfo(start, limit, str)
+	
+	i action = "listparticipantsInfo" d
+  .w ##Class(herp.srm.udata.uSRMCommon).ListParticipantsInfo(start,limit,IDs)
+
+ 	i action = "GetparticipantsInfo" d
+ 	.w ##Class(herp.srm.udata.uSRMCommon).ListParticipantsInfo(start,limit,IDs)
+ 	
+	i action = "GetUser" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.uSRMProjectsIndex).InsertSystemMessage(year, sysnodr, title, message, subuser, subdate, IsRead, IsAttachment)
+	.i result = "0" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.uSRMProjectsIndex).UpdateSystemMessage(rowid, year, sysnodr, title, message, subuser, subdate, IsRead, IsAttachment)
+	.i result = "0" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.uSRMProjectsIndex).DeleteSystemMessage(rowid)
+	.i result = "0" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i action = "yearList" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetYear(start, limit, str)
+	i action = "rewardTypeList" d
+	.w ##Class(herp.srm.udata.uSRMCommon).GetRewardType(start, limit, str)
+   i action = "rewardDictList" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetRewardDict(start, limit, str)
+</script>

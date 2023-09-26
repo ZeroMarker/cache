@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--reg.cardpurchasemanage.hui.csp HISUI卡管理 卡购入--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{
+	background: #fff;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header{
+	border-bottom: 0;
+}
+label[for='cOutStatus'],label[for='cInStatus'],label[for='cDisInStatus']{
+	line-height: 30px;
+}
+.FindLabel{
+	padding:0px 10px 0 10px;	
+}
+</style>
+<Server>
+s ID=##Class(web.DHCCardPurchaseManage).GetDefCardTypeID()
+s CardNoLength=""
+if ID'=""{
+	s CardNoLength=$P(^DHCCARDTYPEDef(ID),"^",17)
+}
+if CardNoLength="" s CardNoLength=12
+w "<input id='SearchBuyerId' name='SearchBuyerId' type='hidden' value=''>",$C(13,10)
+w "<input id='BuyerId' name='BuyerId' type='hidden' value=''>"
+</Server>
+<SCRIPT language = 'javascript' >
+		function myformatter(date){
+	var y = date.getFullYear();
+	var m = date.getMonth()+1;
+	var d = date.getDate();
+	if (ServerObj.sysDateFormat=="3") return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+	else if (ServerObj.sysDateFormat=="4") return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y
+	else return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+function myparser(s){
+    if (!s) return new Date();
+    if(ServerObj.sysDateFormat=="4"){
+		var ss = s.split('/');
+		var y = parseInt(ss[2],10);
+		var m = parseInt(ss[1],10);
+		var d = parseInt(ss[0],10);
+	}else{
+		var ss = s.split('-');
+		var y = parseInt(ss[0],10);
+		var m = parseInt(ss[1],10);
+		var d = parseInt(ss[2],10);
+	}
+	if (!isNaN(y) && !isNaN(m) && !isNaN(d)){
+		return new Date(y,m-1,d);
+	} else {
+		return new Date();
+	}
+}
+	</SCRIPT>
+</head>
+<body>
+	<csp:Include Page="reg.cardpurchasemanage.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		
+		var ServerObj={
+			CardNoLength:"#(CardNoLength)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/Reg.CardPurchaseManage.hui.js"></script>
+	
+</body>
+</HTML> 

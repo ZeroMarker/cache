@@ -1,0 +1,65 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s Hosp=$Get(%request.Data("HospId",1))
+	s conditionCode=$Get(%request.Data("conditionCode",1))
+	s conditionName=$Get(%request.Data("conditionName",1))
+	s conditionState=$Get(%request.Data("conditionState",1))
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+
+	//查询供应商信息
+	i Action = "query" d
+	.s result = ##class(web.DHCST.APCVendor).Query(Start,Limit,Sort,Dir,conditionCode,conditionName,conditionState,Hosp)
+	.i result = "" d
+	..w "{results:0,rows:[]}"
+	.e  d
+	..w result
+
+	//新建厂商信息
+	//-1:名称重复
+	//-2:代码重复
+	//-3:名称重复
+	//"":保存失败
+	//返回rowid:保存成功
+	i Action = "insert" d
+	.s result = ##class(web.DHCST.APCVendor).Save(listData,Hosp)
+	.i result'="" d
+	..i result = -1 d
+	...w "{success:'false',info:'"_result_"'}"
+	..e  i result = -2 d
+	...w "{success:'false',info:'"_result_"'}"
+	..e  i result = -3 d
+	...w "{success:'false',info:'"_result_"'}"
+	..e  d
+	...w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//根据供应商的RowId查询厂商的明细信息
+	i Action = "queryByRowId" d
+	.w "{success:'true',info:'"_##class(web.DHCST.APCVendor).Select(RowId)_"'}"
+
+
+	//更新厂商信息
+	//-1:名称重复
+	//-2:代码重复
+	//-3:名称重复
+	//0:更新成功
+	i Action = "update" d
+	.s result = ##class(web.DHCST.APCVendor).Update(listData,Hosp)
+	.i result =0 d
+	..w "{success:'true',info:'"_result_"'}"
+	.i result '=0 d
+	..w "{success:'false',info:'"_result_"'}"
+
+</script>

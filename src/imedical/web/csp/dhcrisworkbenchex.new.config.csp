@@ -1,0 +1,32 @@
+
+<SERVER>
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1))
+    
+    i Action = "query" d
+	.S StrParam=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCRisCommFunctionNew).QueryExamItem(StrParam,Start,Limit)
+
+	i Action = "GetRecDep" d
+	.S UserRowID=$Get(%request.Data("UserRowID",1))
+	.w ##class(web.DHCRisCommFunctionNew).GetRecDep(UserRowID,Start,Limit)
+
+	i Action = "GetRisStatus" d
+	.S UserRowID=$Get(%request.Data("UserRowID",1))
+	.w ##class(web.DHCRisCommFunctionNew).GetRisStatus(UserRowID,Start,Limit)
+	
+	i Action = "GetCardType" d
+	.w ##class(web.DHCRisCommFunctionNew).ReadCardType()
+	
+	i Action = "GetDevice" d
+	.S LocDR=$Get(%request.Data("LocDR",1))
+	.S RoomDR=$Get(%request.Data("RoomDR",1))
+	.w ##class(web.DHCRisCommFunctionNew).GetDevice(LocDR,RoomDR)
+
+	i Action = "GetMainDoc" d
+	.S LocDR=$Get(%request.Data("LocDR",1))
+	.w ##class(web.DHCRisCommFunctionNew).GetCareProv(LocDR)
+	
+</SERVER>

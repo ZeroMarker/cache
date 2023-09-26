@@ -1,0 +1,298 @@
+
+<SERVER>
+;dhcdocorderlistset.request.csp
+ s action=$Get(%request.Data("action",1))
+ if action="colset" {
+	s DOGRowId=$Get(%request.Data("DOGRowId",1))
+	;s ^zzy("DOGRowId")=DOGRowId
+ 	s cnt=0
+	s displayRows=0
+	s myClassName="web.DHCDocOrderListCommon"
+	s myClassQuery="GetOrderListSet"
+	s rs=##class(%Library.ResultSet).%New(myClassName_":"_myClassQuery)
+	d rs.Execute(DOGRowId)
+	w "{""rows"":[",!
+	s columns=rs.GetColumnCount()
+	
+	s limitRecordCnt=+$g(%request.Data("rows",1))
+	s startRecordNo=(+$g(%request.Data("page",1))-1)*limitRecordCnt+1
+	;xecute objOpen
+	
+	f  q:rs.Next()=0  d
+	.s cnt=cnt+1
+	.i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt=0)  d
+	..w:displayRows>0 ","
+	..w "{"
+	..s rowData=""
+	..f i=1:1:columns  d
+	...s:i>1 rowData=rowData_","
+	...s myColName=rs.GetColumnName(i)
+	...;s:($ZCVT(myColName,"U")="HIDDEN") myColName="HIDDEN"_i
+	...s rowData=rowData_""""_myColName_""":"		;;rs.GetColumnName(i)
+	...s tmpData=rs.GetData(i)
+	...s tmpData=##class(ext.util.String).EvalJSON(tmpData)
+	...;s tmpData=##class(web.DHCMedBaseCtl).ReplaceString(tmpData,"'","\'")
+	...s rowData=rowData_""""_tmpData_""""
+	..w rowData
+	..w "}",!
+	..s displayRows=displayRows+1
+	w "],""total"": "_cnt_"}"
+	k myparaArray
+ }elseif action="ym"{
+	 s Code=$Get(%request.Data("Code",1))
+     s Desc=$Get(%request.Data("Desc",1))
+	 s cnt=0
+	s displayRows=0
+	s myClassName="web.DHCDocOrderListCommon"
+	s myClassQuery="GetOrderPage"
+	s rs=##class(%Library.ResultSet).%New(myClassName_":"_myClassQuery)
+	d rs.Execute(Code,Desc)
+	w "{""rows"":[",!
+	s columns=rs.GetColumnCount()
+	
+	s limitRecordCnt=+$g(%request.Data("rows",1))
+	s startRecordNo=(+$g(%request.Data("page",1))-1)*limitRecordCnt+1
+	;xecute objOpen
+	
+	f  q:rs.Next()=0  d
+	.s cnt=cnt+1
+	.i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt=0)  d
+	..w:displayRows>0 ","
+	..w "{"
+	..s rowData=""
+	..f i=1:1:columns  d
+	...s:i>1 rowData=rowData_","
+	...s myColName=rs.GetColumnName(i)
+	...;s:($ZCVT(myColName,"U")="HIDDEN") myColName="HIDDEN"_i
+	...s rowData=rowData_""""_myColName_""":"		;;rs.GetColumnName(i)
+	...s tmpData=rs.GetData(i)
+	...s tmpData=##class(ext.util.String).EvalJSON(tmpData)
+	...;s tmpData=##class(web.DHCMedBaseCtl).ReplaceString(tmpData,"'","\'")
+	...s rowData=rowData_""""_tmpData_""""
+	..w rowData
+	..w "}",!
+	..s displayRows=displayRows+1
+	w "],""total"": "_cnt_"}"
+	k myparaArray
+ } elseif action="add"{
+	 s DOGRowId=$Get(%request.Data("DOGRowId",1))
+	 s code=$Get(%request.Data("code",1))
+	 s desc=$Get(%request.Data("desc",1))
+	  s ^zzy("Desc11")=desc
+	 s colwidth=$Get(%request.Data("colwidth",1))
+	 s hidden=$Get(%request.Data("hidden",1))
+	 s expression=$Get(%request.Data("expression",1))
+     s result=##class(web.DHCDocOrderListCommon).Add(DOGRowId,code,desc,colwidth,hidden,expression)
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }elseif action="del"{
+	
+	 s IDs=$Get(%request.Data("IDs",1))
+	 s result=##class(web.DHCDocOrderListCommon).Del(IDs)
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }
+ elseif action="update"{
+	
+	 s rowid=$Get(%request.Data("rowid",1))
+	 s code=$Get(%request.Data("code",1))
+	 s desc=$Get(%request.Data("desc",1))
+	
+	 s colwidth=$Get(%request.Data("colwidth",1))
+	 s hidden=$Get(%request.Data("hidden",1))
+	 s expression=$Get(%request.Data("expression",1))
+	  s ^zzy("update")=code_"^"_desc
+	 s result=##class(web.DHCDocOrderListCommon).Update(rowid,code,desc,colwidth,hidden,expression)
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }
+ elseif action="updateym"{
+	 s id=$Get(%request.Data("id",1))
+	 s code=$Get(%request.Data("ymCode",1))
+	 s desc=$Get(%request.Data("ymDesc",1))
+	 s ^zzy("aa")=$Get(%request.Data("Desc",1))
+     s result=##class(web.DHCDocOrderListCommon).UpdatePage(id,code,desc)
+     
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }
+ elseif action="delym"{
+	 s IDs=$Get(%request.Data("IDs",1))
+     s result=##class(web.DHCDocOrderListCommon).DelPage(IDs)
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ } elseif action="getgrid"{
+	 s DOPRowId=$Get(%request.Data("DOPRowId",1))
+	 s ^zzy("DOPRowId")=DOPRowId
+ 	s cnt=0
+	s displayRows=0
+	s myClassName="web.DHCDocOrderListCommon"
+	s myClassQuery="GetOrderGrid"
+	s rs=##class(%Library.ResultSet).%New(myClassName_":"_myClassQuery)
+	d rs.Execute(DOPRowId)
+	w "[",!
+	s columns=rs.GetColumnCount()
+	
+	f  q:rs.Next()=0  d
+	.s cnt=cnt+1
+	.w:displayRows>0 ","
+	.w "{"
+	.s rowData=""
+	.f i=1:1:columns  d
+	..s:i>1 rowData=rowData_","
+	..s myColName=rs.GetColumnName(i)
+	..;s:($ZCVT(myColName,"U")="HIDDEN") myColName="HIDDEN"_i
+	..s rowData=rowData_""""_myColName_""":"		;;rs.GetColumnName(i)
+	..s tmpData=rs.GetData(i)
+	..s tmpData=##class(ext.util.String).EvalJSON(tmpData)
+	..;s tmpData=##class(web.DHCMedBaseCtl).ReplaceString(tmpData,"'","\'")
+	..s rowData=rowData_""""_tmpData_""""
+	.w rowData
+	.w "}",!
+	.s displayRows=displayRows+1
+	w "]"
+	k myparaArray
+ }elseif action="message"{
+	s DOPRowId=$Get(%request.Data("DOPRowId",1))
+    s cnt=0
+	s displayRows=0
+	s myClassName="web.DHCDocOrderListCommon"
+	s myClassQuery="GetOrderMessage"
+	s rs=##class(%Library.ResultSet).%New(myClassName_":"_myClassQuery)
+	d rs.Execute(DOPRowId)
+	w "{""rows"":[",!
+	s columns=rs.GetColumnCount()
+	
+	s limitRecordCnt=+$g(%request.Data("rows",1))
+	s startRecordNo=(+$g(%request.Data("page",1))-1)*limitRecordCnt+1
+	;xecute objOpen
+	
+	f  q:rs.Next()=0  d
+	.s cnt=cnt+1
+	.i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt=0)  d
+	..w:displayRows>0 ","
+	..w "{"
+	..s rowData=""
+	..f i=1:1:columns  d
+	...s:i>1 rowData=rowData_","
+	...s myColName=rs.GetColumnName(i)
+	...;s:($ZCVT(myColName,"U")="HIDDEN") myColName="HIDDEN"_i
+	...s rowData=rowData_""""_myColName_""":"		;;rs.GetColumnName(i)
+	...s tmpData=rs.GetData(i)
+	...s tmpData=##class(ext.util.String).EvalJSON(tmpData)
+	...;s tmpData=##class(web.DHCMedBaseCtl).ReplaceString(tmpData,"'","\'")
+	...s rowData=rowData_""""_tmpData_""""
+	..w rowData
+	..w "}",!
+	..s displayRows=displayRows+1
+	w "],""total"": "_cnt_"}"
+	k myparaArray
+ }elseif action="updatemessage"{
+	 s ID=$Get(%request.Data("id",1))
+	 s DOPRowId=$Get(%request.Data("DOPRowId",1))
+	 s Code=$Get(%request.Data("Code",1))
+	 s Desc=$Get(%request.Data("Desc",1))
+	 s OtherDesc=$Get(%request.Data("OtherDesc",1)) 
+     s result=##class(web.DHCDocOrderListCommon).UpdateMessage(ID,DOPRowId,Code,Desc,OtherDesc)
+     
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }elseif action="delelemessage"{
+	  s IDs=$Get(%request.Data("IDs",1))
+	 s result=##class(web.DHCDocOrderListCommon).DelMessage(IDs)
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ } elseif action="grid"{
+	
+	 s DOPRowId=$Get(%request.Data("DOPRowId",1))
+	  s cnt=0
+	s displayRows=0
+	s myClassName="web.DHCDocOrderListCommon"
+	s myClassQuery="GetOrderGrid"
+	s rs=##class(%Library.ResultSet).%New(myClassName_":"_myClassQuery)
+	d rs.Execute(DOPRowId)
+	w "{""rows"":[",!
+	s columns=rs.GetColumnCount()
+	
+	s limitRecordCnt=+$g(%request.Data("rows",1))
+	s startRecordNo=(+$g(%request.Data("page",1))-1)*limitRecordCnt+1
+	;xecute objOpen
+	
+	f  q:rs.Next()=0  d
+	.s cnt=cnt+1
+	.i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt=0)  d
+	..w:displayRows>0 ","
+	..w "{"
+	..s rowData=""
+	..f i=1:1:columns  d
+	...s:i>1 rowData=rowData_","
+	...s myColName=rs.GetColumnName(i)
+	...;s:($ZCVT(myColName,"U")="HIDDEN") myColName="HIDDEN"_i
+	...s rowData=rowData_""""_myColName_""":"		;;rs.GetColumnName(i)
+	...s tmpData=rs.GetData(i)
+	...s tmpData=##class(ext.util.String).EvalJSON(tmpData)
+	...;s tmpData=##class(web.DHCMedBaseCtl).ReplaceString(tmpData,"'","\'")
+	...s rowData=rowData_""""_tmpData_""""
+	..w rowData
+	..w "}",!
+	..s displayRows=displayRows+1
+	w "],""total"": "_cnt_"}"
+	k myparaArray
+ }elseif action="updategrid"{
+	 s ID=$Get(%request.Data("ID",1))
+	 s DOPRowId=$Get(%request.Data("DOPRowId",1))
+	 s Code=$Get(%request.Data("Code",1))
+	 s Desc=$Get(%request.Data("Desc",1))
+	 s Type=$Get(%request.Data("Type",1)) 
+     s result=##class(web.DHCDocOrderListCommon).UpdateGrid(ID,DOPRowId,Code,Desc,Type)
+     
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }elseif action="delelegrid"{
+	  s IDs=$Get(%request.Data("IDs",1))
+	 s result=##class(web.DHCDocOrderListCommon).DelGrid(IDs)
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }elseif action="shortcutkey"{
+	s DOPRowId=$Get(%request.Data("DOPRowId",1))
+    s cnt=0
+	s displayRows=0
+	s myClassName="web.DHCDocOrderListCommon"
+	s myClassQuery="GetShortcutKey"
+	s rs=##class(%Library.ResultSet).%New(myClassName_":"_myClassQuery)
+	d rs.Execute(DOPRowId)
+	w "{""rows"":[",!
+	s columns=rs.GetColumnCount()
+	
+	s limitRecordCnt=+$g(%request.Data("rows",1))
+	s startRecordNo=(+$g(%request.Data("page",1))-1)*limitRecordCnt+1
+	;xecute objOpen
+	
+	f  q:rs.Next()=0  d
+	.s cnt=cnt+1
+	.i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt=0)  d
+	..w:displayRows>0 ","
+	..w "{"
+	..s rowData=""
+	..f i=1:1:columns  d
+	...s:i>1 rowData=rowData_","
+	...s myColName=rs.GetColumnName(i)
+	...s rowData=rowData_""""_myColName_""":"		
+	...s tmpData=rs.GetData(i)
+	...s tmpData=##class(ext.util.String).EvalJSON(tmpData)
+	...s rowData=rowData_""""_tmpData_""""
+	..w rowData
+	..w "}",!
+	..s displayRows=displayRows+1
+	w "],""total"": "_cnt_"}"
+	k myparaArray
+ }elseif action="deleleShortcutKey"{
+	  s IDs=$Get(%request.Data("IDs",1))
+	 s result=##class(web.DHCDocOrderListCommon).DelShortcutKey(IDs)
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }elseif action="updateShortcutKey"{
+	 s ID=$Get(%request.Data("id",1))
+	 s DOPRowId=$Get(%request.Data("DOPRowId",1))
+	 s ItemID=$Get(%request.Data("ItemID",1))
+	 s ItemShortcutKey=$Get(%request.Data("ItemShortcutKey",1))
+	 s ShortcutKeyCallFun=$Get(%request.Data("ShortcutKeyCallFun",1))
+     s result=##class(web.DHCDocOrderListCommon).updateShortcutKey(ID,DOPRowId,ItemID,ItemShortcutKey,ShortcutKeyCallFun)
+     
+	 w "{ResultCode:'"_$p(result,"^",1)_"',ResultMsg:'"_$p(result,"^",2)_"'}"
+ }
+ 
+	
+
+ q 
+</SERVER>

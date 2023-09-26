@@ -1,0 +1,77 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<HEAD>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		 <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/default/easyui.css" />
+		 <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/icon.css" />
+		 <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/FormStyle.css" />
+		 <link rel="stylesheet" type="text/css" href="../scripts_lib/popover/jquery.webui-popover.min.css" />
+		 <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/jquery-1.8.0.min.js" charset="utf-8"></script>
+		 <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/jquery.easyui.min.js" charset="utf-8"></script>
+		 <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+		 <script src="../scripts_lib/echarts/echarts.js" type="text/javascript" charset="utf-8"></script>
+    	 <script src="../scripts_lib/echarts/myEcharts.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../scripts_lib/popover/jquery.webui-popover.min.js"></script>
+	</HEAD>
+	<body class="easyui-layout" id="ids" data-options='collapsible:false'>
+
+    <div id="div_PatientInfo" data-options="region:'north',title:'',split:false" style="height:35px;padding-left:10px;padding-right:10px;overflow:hidden">
+   
+    </div>   
+
+    <div data-options="region:'center',border:false" style="background-color: #EEF7FE"> 
+    	<div class="easyui-layout" data-options="fit:true">
+	    	 <div data-options="region:'north',title:'',split:false,border:false" style="height:25px;text-align:center">
+	    	 	<span id="sp_TestSetInfo" style="font-size:16px;font-weight: bold;font-family: KaiTi;"></span>
+	    	 </div>
+	    	<div data-options="region:'center',border:false" style="background-color: #EEF7FE"> 
+				<table id="ReportContent"></table>
+			</div>
+			<div data-options="region:'south',title:'',split:false,border:false" style="height:35px;text-align:center">
+	    	 	<a href="#" class="easyui-linkbutton" id="btn_confirmReaded" onclick="javascript:ConfirmReaded();" style="margin-top:3;font-weight:bold">确认阅读</a>
+	    	 </div>
+		</div>
+    </div>
+    
+<SERVER>
+ s VisitNumberReportDR=%request.Get("VisitNumberReportDR")
+ s ResultStatus=$lg($g(^dbo.RPVisitNumberReportD(VisitNumberReportDR)),22)   //(1登记，2初审，3审核，4复查，5取消审核，6作废，O其他)
+ s HospID=$G(%session.Data("LOGON.HOSPID"))
+ s UserId=$G(%session.Data("LOGON.USERID"))
+ s ReadFlag=0
+ i $l(UserId),(ResultStatus=3) s ReadFlag=##Class(DHCLIS.DHCReportControl).ReportViewLog(VisitNumberReportDR,UserId,HospID)
+
+ s OrdRowIDs=""
+ s VisitNumberDR=$lg($g(^dbo.RPVisitNumberReportD(VisitNumberReportDR)),2)
+ i $l(VisitNumberDR) d
+ .s WorkGroupMachineDR=$lg($g(^dbo.RPVisitNumberReportD(VisitNumberReportDR)),4)
+ .s TransmitDate=$lg($g(^dbo.RPVisitNumberReportD(VisitNumberReportDR)),3)
+ .s TestSetDR="" f  s TestSetDR=$o(^dbo.RPVisitNumberTestSetI("IndexWGMachineDR",VisitNumberDR,WorkGroupMachineDR,TestSetDR)) q:TestSetDR=""  d
+ ..s VisitNumberTestSetDR=$o(^dbo.RPVisitNumberTestSetI("IndexWGMachineDR",VisitNumberDR,WorkGroupMachineDR,TestSetDR,""))
+ ..s HISOrderID=$lg($g(^dbo.RPVisitNumberTestSetD(VisitNumberTestSetDR)),10)
+ ..s OrdRowIDs=OrdRowIDs_HISOrderID_","
+ .s OrdRowIDs=$e(OrdRowIDs,1,$l(OrdRowIDs)-1)
+
+</SERVER>
+<!--modal 结果曲线图 -->
+<div id="win_ResultCharts" class="easyui-window" title="结果曲线图" style="width:630px;height:400px;background:#FFFFFF" data-options="modal:true,closed:true">   
+   <div id="div_ResultCharts" style="width:600px;height:350px;background:#FFFFFF" ></div>
+</div>  
+	<script src="../scripts/websys.jquery.js" type="text/javascript"></script>
+	<script src="../scripts/dhclab.report.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		var VisitNumberReportDR = '#($g(VisitNumberReportDR))#';
+		var infoVisitNumberReportDR= VisitNumberReportDR;
+		if (VisitNumberReportDR.split(",").length >1) infoVisitNumberReportDR=VisitNumberReportDR.split(",")[0]
+		var HospID = '#($g(HospID))#';
+		var UserId = '#($g(UserId))#';
+		var OrderID = '#($g(OrdRowIDs))#';
+		var ReadFlag = '#($g(ReadFlag))#';
+	</script>		
+	</body>
+</HTML>

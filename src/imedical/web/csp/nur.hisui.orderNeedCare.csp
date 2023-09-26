@@ -1,0 +1,327 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+        s EpisodeID = $G(%request.Data("EpisodeID", 1))
+        s PatientListPage=""
+        s todayLogic=+$h
+        s todayHtml=$zd(todayLogic,4)
+        s TypeCode=$G(%request.Data("TypeCode",1))
+        s defaultTypeCode=$G(%request.Data("defaultTypeCode",1))
+        s:(TypeCode="")&(defaultTypeCode="") defaultTypeCode="A"
+        s:(TypeCode'="") defaultTypeCode=TypeCode
+</script>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI translate=1/>
+    <script type="text/javascript"
+            src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/orderNeedCare.js"></script>
+    <STYLE type='text/css'>
+        body {
+            background-color: #fff;
+            padding:0;
+            margin:0;
+        }
+        .body {
+            position: absolute;
+            top:0;
+            left:0;
+            bottom:0;
+            right:0;
+            margin:10px;
+        }
+        .patientTree {
+            position: absolute;
+            top:0;
+            left:0;
+            bottom:0;
+            width:220px;
+            height:100%;
+        }
+        .content {
+            position: absolute;
+            top:0;
+            right:0;
+            bottom:0;
+            left:225px;
+        }
+        .PatInfoItem{
+	        top:0 !important;
+	        left:0 !important;
+	        margin-left:0 !important;
+        }
+        .accordion-body{
+	        background-color:#fff;
+        }
+        .accordion .accordion-header{
+	        border-top:0;
+        }
+        .datagrid-wrap.panel-body.panel-body-noheader{
+	        border:none;
+	        border-radius:0;
+        }
+        .paientTree .datagrid-wrap.panel-body.panel-body-noheader{
+	        
+	        border-top:1px solid #ccc;
+        }
+        .datagrid-toolbar{
+	      height:32px;
+       }
+       .panel-header-gray{
+	       overflow:hidden;
+       }
+       label+.hischeckbox_square-blue, label+.hisradio_square-blue{
+	       margin-left:0;
+       }
+       .datagrid-toolbar {
+    		height:auto;
+	   }
+    </STYLE>
+    <Server>
+    //获取撤销、停止执行记录原因json
+	s OECStatusChReasonJson=##Class(web.DHCDocInPatUICommon).GetOECStatusChReason()
+	//获取系统日期格式
+	s DateFormat=##class(websys.Conversions).DateFormat()
+	s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	</Server>
+</head>
+<body>
+    <div class="body">
+        <div class="hisui-accordion patientTree"
+             data-options="border:false">
+            <div title="#(..Get("本病区病人"))#"
+                 class="wardPatientDiv"
+                 data-options="iconCls:'icon-w-update',selected:true"
+                 style="overflow:auto;">
+                <div style="border-left:1px solid #ccc;border-right:1px solid #ccc;">
+                    <div style="padding:5px">
+                        <input id="wardPatientSearchBox"
+                               class="hisui-searchbox"
+                               style="width:208px" />
+                    </div>
+                    <div style="padding:5px 0 5px 22px;">
+                        <input class='hisui-radio'
+                               type="radio"
+                               label='#(..Get("全部"))#'
+                               value=''
+                               name="wardPatientCondition"
+                               data-options="checked:true,radioClass:'hischeckbox_square-blue'">
+                        <input class='hisui-radio'
+                               type="radio"
+                               label='#(..Get("医疗结算"))#'
+                               value='E'
+                               name="wardPatientCondition"
+                               data-options="radioClass:'hischeckbox_square-blue'">
+                    </div>
+                    <table id="wardPatientTree"
+                           class="hisui-datagrid"
+                           style="border:none;position: absolute;bottom:0;left:0;right:0;">
+                    </table>
+                </div>
+
+            </div>
+            <div title="#(..Get("转出未出院病人"))#"
+                 class="transOutPatientDiv"
+                 data-options="iconCls:'icon-w-update'">
+                <div style="border-left:1px solid #ccc;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">
+                    <table id="transOutPatientTree"
+                           class="hisui-datagrid"
+                           style="border:none">
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="hisui-layout content">
+            <div data-options="region:'north',split:false"
+                 style="height:40px;border:none">
+                <csp:Include Page="dhcdoc.in.patient.banner.csp">
+            </div>
+            <div data-options="region:'center',split:false,headerCls:'panel-header-gray'"
+                 style="padding-top:5px;border:none">
+                <div class="hisui-layout"
+                     id="head-menu"
+                     data-options="fit:true,border:false">
+                    <div data-options="region:'north',border:false,collapsible:false"
+                         style="height:85px;">
+                        <div class="hisui-panel"
+                             data-options="title:'#(..Get("需关注医嘱"))#',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+                             style="border:1px solid #ccc;border-bottom:1px dotted #ccc;border-top:0;border-radius:0;padding:10px;">
+                            <table style="border-spacing:0">
+                                <tr>
+                                    <td class="r-label"
+                                    	style="padding-right:0;">
+                                        <input class='hisui-radio'
+                                               type="radio"
+                                               label='#(..Get("全部"))#'
+                                               value='A'
+                                               data-options="checked:true"
+                                               name="orderType">
+                                        <input class='hisui-radio'
+                                               type="radio"
+                                               label='#(..Get("长嘱"))#'
+                                               value='L'
+                                               name="orderType">
+                                        <input class='hisui-radio'
+                                               type="radio"
+                                               label='#(..Get("临嘱"))#'
+                                               value='T'
+                                               name="orderType">
+                                    </td>
+                                    <td class="r-label"
+                                        style="padding-left:10px;">
+                                        #(..Get("类型"))#
+                                    </td>
+                                    <td>
+                                        <select id="type"
+                                                class="hisui-combobox"
+                                                style="width:80px;">
+                                        </select>
+                                    </td>
+                                    <td class="r-label"
+                                        style="padding-left:10px;">
+                                        #(..Get("需处理"))#
+                                    </td>
+                                    <td>
+                                        <select id="orderNeedCareType"
+                                                class="hisui-combobox"
+                                                style="width:80px;">
+                                        </select>
+                                    </td>
+                                    <td class="r-label"
+                                        style="padding-left:10px;">
+                                        #(..Get("科室"))#
+                                    </td>
+                                    <td>
+                                        <select id="orderLoc"
+                                                class="hisui-combobox"
+                                                style="width:80px;">
+                                        </select>
+                                    </td>
+                                   <!-- <td style="padding-left:10px;">
+                                        <input id="ignored"
+                                               class='hisui-checkbox'
+                                               type="checkbox"
+                                               label="已忽略">
+                                    </td>-->
+                                    <td style="padding:0 0 0 20px">
+                                        <a href="#"
+                                           id="searchBtn"
+                                           class="hisui-linkbutton hover-dark"
+                                           data-options="iconCls:'icon-w-find'">
+                                            #(..Get("查询"))#
+                                        </a>
+                                    </td>
+                                </tr>
+
+                            </table>
+
+                        </div>
+                    </div>
+                    <div data-options="region:'center',border:false,collapsible:false"
+                         style="">
+                        <div class="hisui-panel"
+                             data-options="fit:true,headerCls:'panel-header-gray'"
+                             style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+                            <table id="orderGrid"
+                                   class="hisui-datagrid">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div data-options="region:'east',split:true,headerCls:'panel-header-gray',collapsible:true"
+                 style="padding-top:5px;width:420px;border:none">
+                <div class="hisui-layout"
+                     id="head-menu"
+                     data-options="fit:true,border:false">
+                    <div data-options="region:'north',border:false,collapsible:false"
+                         style="height:85px;">
+                        <div class="hisui-panel"
+                        	 id="execPanle"
+                             data-options="title:'#(..Get("执行记录"))#',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+                             style="border:1px solid #ccc;border-bottom:1px dotted #ccc;border-top:0;border-radius:0;">
+                            <table style="border-spacing:10">
+
+                                <tr>
+                                    <td>
+                                        #(..Get("需处理类型"))#
+                                    </td>
+                                    <td>
+                                        <select id="execType"
+                                                class="hisui-combobox"
+                                                style="width:120px;">
+                                        </select>
+                                    </td>
+                                    <td>
+                                    </td>
+                                    <td>
+                                        <a href="#"
+                                           id="execSearchBtn"
+                                           class="hisui-linkbutton hover-dark"
+                                           data-options="iconCls:'icon-w-find'">
+                                            #(..Get("查询"))#
+                                        </a>
+                                    </td>
+                                </tr>
+
+                            </table>
+
+                        </div>
+                    </div>
+                    <div data-options="region:'center',border:false,collapsible:false"
+                         style="">
+                        <div class="hisui-panel"
+                             data-options="fit:true,headerCls:'panel-header-gray'"
+                             style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+                            <table id="execGrid"
+                                   class="hisui-datagrid">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var todayLogic = "#(todayLogic)#";
+        var todayHtml = "#(todayHtml)#";
+        var defaultTypeCode="#(defaultTypeCode)#"
+        var ServerObj={
+	        DateFormat:"#(DateFormat)#",
+	        OECStatusChReasonJson:"#(OECStatusChReasonJson)#",
+	        CurrentDate:"#(CurrentDate)#"
+	    }
+    </script>
+</body>
+<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/util.js"></script>
+<!--script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatOrderViewNurse.js"></script-->
+<script language="cache"
+        runat="SERVER">
+        s userID=%session.Get("LOGON.USERID")
+        s loginCtcpType=##class(Nur.HISUI.NeedCareOrder).getCTCPType(userID)
+        i loginCtcpType="DOCTOR" d
+        .w "<script type='text/javascript' src='../scripts/dhcdoc/ipdoc/InPatOrderView.js'/></script"
+        .w ">"
+        i loginCtcpType="NURSE" d
+        .w "<script type='text/javascript' src='../scripts/dhcdoc/ipdoc/InPatOrderViewNurse.js'/></script"
+        .w ">"
+</script>
+</html>
+
+

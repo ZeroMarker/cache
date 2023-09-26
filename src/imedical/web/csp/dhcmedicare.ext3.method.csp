@@ -1,0 +1,32 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+
+ s strMethodData=%request.Data("MethodSignature",1)
+ s data=##Class(%CSP.Page).Decrypt(strMethodData)
+ s ClassName=$li(data,1)
+ 
+ 
+ s ArgCnt=%request.Data("ArgCnt",1)
+ ;s Args=%request.Data("Args",1)
+ 
+ s ret=""
+ s strClassName=""
+ f i=1:1:($l(ClassName,".")-1)  d
+ .s:strClassName'="" strClassName=strClassName_"."
+ .s strClassName=strClassName_$p(ClassName,".",i)
+ s strMethodName=$p(ClassName,".",$l(ClassName,"."))
+ 
+ s execute=""
+ s i=""
+ s execute="s ret=$ZOBJCLASSMETHOD(strClassName,strMethodName"
+ k PLIST
+ f i=1:1:ArgCnt  d 
+ .s strArgName="Arg"_i
+ .s PLIST(i)=%request.Data(strArgName,1)
+ .s execute=execute_",PLIST("_i_")"
+ s execute=execute_")"
+ x execute
+ s ret="<RESULT>OK</RESULT>"_ret
+ w ret
+ 
+</SERVER>

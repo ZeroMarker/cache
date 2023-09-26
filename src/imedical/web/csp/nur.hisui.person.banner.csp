@@ -1,0 +1,109 @@
+<style>
+.patientInfo{
+	margin-left:50px;
+	margin-top: 10px;
+}
+.patientInfo div{
+	 padding-left:10px;
+	 padding-right:10px;
+	 float:left;
+ }
+ .patientInfo div a{
+     color: #000000;
+ }
+ .baseInfoName{
+	 margin-top: -2px;
+ }
+ div.baseInfoName a{
+	font-size:16px;
+ }
+ div.baseInfoDiag a{
+ 	color:#EBB806;
+ }
+ .woman{
+ 	background:url(../images/woman.png) no-repeat;
+ 	background-position:center center;
+ 	width:30px;
+ 	height:30px;
+ 	position: absolute;
+    top: 5px;
+    left:15px;
+ }
+ .man{
+ 	background:url(../images/man.png) no-repeat;
+ 	background-position:center center;
+ 	width:30px;
+ 	height:30px;
+ 	position: absolute;
+    top: 5px;
+    left:15px;
+ }
+ .i-btn-right{
+ 	position: absolute;
+    right: 10px;
+    top: 3px;
+ }
+ 
+ div.i-sep {
+    height: 15px;
+    width: 0px;
+    border-right: 1px solid #c3c3c3;
+    transform: rotate(30deg);
+    margin-top:3px;
+    padding: 0;
+}
+</style>
+<!--nur.hisui.person.banner.csp //-->
+<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<div class="patientbar">
+		<script id="patientInfoTpl" type="text/x-jquery-tmpl">
+		<div class="{{if baseInfoSex=='男'}}man{{else}}woman{{/if}}"></div>
+		<div class="baseInfoName"><a href="#">${baseInfoName}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoSex}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoAge}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem">(登记号)<a href="#">${baseInfoRegNo}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoBedno}床</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem">住院<a href="#">${baseInfoIPDays}天</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoInsu}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoItem"><a href="#">${baseInfoCharge}</a></div>
+		<div class="i-sep"></div>
+		<div class="baseInfoDiag"><a href="javascirpt:void(0)">${baseInfoDiag}</a></div>
+		<div>{{html baseIconProfile}}</div>
+   	  </script>
+		<div class="patientInfo">
+   	   </div>
+</div>
+
+<script type="text/javascript">
+var refreshBar = function (){
+	var frm = true;//dhcsys_getmenuform(); //parent.document.forms['fEPRMENU'];
+	if (frm) {
+		var papmi = 52;//frm.PatientID.value;
+		var adm = 11;//frm.EpisodeID.value;
+		if (adm > 0 ){
+			$.m({ClassName:"web.DHCDocMain",MethodName:"GetPatientBaseInfo",papmi:papmi,adm:adm},function(html){
+				$(".patientInfo").html("");
+				var patJson = $.parseJSON(html);
+				patJson.baseIconProfile=reservedToHtml(patJson.baseIconProfile);
+				$("#patientInfoTpl").tmpl(patJson).appendTo(".patientInfo");
+			});
+		}
+	}
+};
+
+function reservedToHtml(str){	
+	var replacements = {"&lt;":"<", "&#60;":"<", "&gt;":">", "&#62;":">", "&quot;":"\"", "&#34;":"\"", "&apos;":"'",
+	"&#39;":"'", "&amp;":"&", "&#38;":"&"};
+	return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g,function(v){
+		return replacements[v];		
+	});
+}
+</script>

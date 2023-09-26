@@ -1,0 +1,217 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+	s UserId=$Get(%request.Data("UserId",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+	
+	s Rowid=$Get(%request.Data("RowId",1))
+	
+	s PersonCode=$Get(%request.Data("PersonCode",1))
+	s PersonName=$Get(%request.Data("PersonName",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	s DateRegister=$Get(%request.Data("DateRegister",1))
+	s DateInput=$Get(%request.Data("DateInput",1))
+	s RelationHourseHoldDR=$Get(%request.Data("RelationHourseHoldDR",1))
+	s SexDR=$Get(%request.Data("SexDR",1))
+	s Birth=$Get(%request.Data("Birth",1))
+	s Birth=$Get(%request.Data("Birth",1))
+
+	s SpellCode=$Get(%request.Data("SpellCode",1))
+	s IDCard=$Get(%request.Data("IDCard",1))
+	s CardNumber=$Get(%request.Data("CardNumber",1))
+	s WorkPlace=$Get(%request.Data("WorkPlace",1))
+	s CommitteeDR=$Get(%request.Data("CommitteeDR",1))
+	s PoliceRowIdDR=$Get(%request.Data("PoliceRowIdDR",1))
+	s NationalityDR=$Get(%request.Data("NationalityDR",1))
+	s NationDR=$Get(%request.Data("NationDR",1))
+	s BloodTypeDR=$Get(%request.Data("BloodTypeDR",1))
+	s BirthPlace=$Get(%request.Data("BirthPlace",1))
+	s EducationDR=$Get(%request.Data("EducationDR",1))
+	s ProfessionDR=$Get(%request.Data("ProfessionDR",1))
+	
+	s DateOfWork=$Get(%request.Data("DateOfWork",1))
+	s DateOFRetire=$Get(%request.Data("DateOFRetire",1))
+	
+	s DeformityCode=$Get(%request.Data("DeformityCode",1))
+	s HouseHoldTypeDR=$Get(%request.Data("HouseHoldTypeDR",1))
+	s DocimialTypeDR=$Get(%request.Data("DocimialTypeDR",1))
+	s MedicalInsuranceTypeDR=$Get(%request.Data("MedicalInsuranceTypeDR",1))
+	s PointHospitalRowIdDR=$Get(%request.Data("PointHospitalRowIdDR",1))
+	s StreetRowIdDR=$Get(%request.Data("StreetRowIdDR",1))
+	s DeformityType=$Get(%request.Data("DeformityType",1))
+	s StaffOfUpdate=$Get(%request.Data("StaffOfUpdate",1))
+	s DateOfUpdate=$Get(%request.Data("DateOfUpdate",1))
+	s MarriageDR=$Get(%request.Data("MarriageDR",1))
+	s FamilyRowId=$Get(%request.Data("FamilyRowId",1))
+	s OperatorInput=$Get(%request.Data("OperatorInput",1))
+	s NurseRegister=$Get(%request.Data("NurseRegister",1))
+	s DoctorRegister=$Get(%request.Data("DoctorRegister",1))
+
+	s IDCardTypeDR = $Get(%request.Data("IDCardTypeDR",1))
+	s DateOfIDStart = $Get(%request.Data("DateOfIDStart",1))
+	s DateOfIDEnd = $Get(%request.Data("DateOfIDEnd",1))
+	s IDCardProvider = $Get(%request.Data("IDCardProvider",1))
+	s MedicalInsuranceID = $Get(%request.Data("MedicalInsuranceID",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	
+	s Address = $Get(%request.Data("Address",1))
+	s AddressTypeDR = $Get(%request.Data("AddressTypeDR",1))
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	s PersonName = $Get(%request.Data("PersonName",1))
+	s SexDR = $Get(%request.Data("SexDR",1))
+	s PersonCode = $Get(%request.Data("PersonCode",1))
+	s LinkManName = $Get(%request.Data("LinkManName",1))
+	s LinkManPhone = $Get(%request.Data("LinkManPhone",1))
+	s HosDiagnoseId = $Get(%request.Data("HosDiagnoseId",1))
+	s bSaveCardInfo = $Get(%request.Data("bSaveCardInfo",1))
+	s PersonRowId = $Get(%request.Data("PersonRowId",1))
+	s PersonStatus = $Get(%request.Data("PersonStatus",1))
+	
+	s fromAge = $Get(%request.Data("fromAge",1))
+	s toAge = $Get(%request.Data("toAge",1))
+	
+	
+	s DateOfStart = $Get(%request.Data("DateOfStart",1))
+	s DateOfEnd = $Get(%request.Data("DateOfEnd",1))
+	s SelectAll = $Get(%request.Data("SelectAll",1))
+	s BookingType = $Get(%request.Data("BookingType",1))
+	s BookingRowId = $Get(%request.Data("BookingRowId",1))
+	s DateOfBooking = $Get(%request.Data("DateOfBooking",1))
+	
+	
+	//s SqlStr = ""
+	
+	i PersonName '= "" d
+	.s SqlStr = " and PersonName like '%"_PersonName_"%'"
+	i SexDR '= "" d
+	.s SqlStr = SqlStr_" and SexDR = "_SexDR
+	i PersonCode '= "" d
+	.s SqlStr = " and PersonCode = '"_PersonCode_"'"
+	i IDCard '= "" d
+	.s SqlStr = " and IDCard = '"_IDCard_"'"
+	
+	i Action = "list" d
+	.i searchValue = "" d
+	..s Action = "list"
+	.i searchValue '= "" d
+	..s Action = "Search"
+	.i SqlStr '= "" d
+	..s Action = "SearchSql"
+	
+	i Action = "listhbv" d
+	.s SqlStr = SqlStr_" and PersonRowId in (select PersonRowIdParref from CHSS.PersonHealthDiagnose where ItemdCode = '22' and ItemAssortName = 'ÒÒ¸Î')"
+	i Action = "listtb" d
+	.s SqlStr = SqlStr_" and PersonRowId in (select PersonRowIdParref from CHSS.PersonHealthDiagnose where ItemdCode = '22' and ItemAssortName = '½áºË²¡')"
+	
+	i Action = "listwoman" d
+	.s SqlStr = "and SexDR = 2 and DATEDIFF('dd',CHSS.PersonHealthRecordMain.Birth,{fn CURDATE()}) > "_fromAge_" and DATEDIFF('dd',CHSS.PersonHealthRecordMain.Birth,{fn CURDATE()}) < "_toAge 
+	.i MarriageDR '= "" d
+	..s SqlStr = SqlStr_" and MarriageDR = "_MarriageDR
+	
+	i Action = "listwomaninfo" d
+	.s SqlStr = "and SexDR = 2"
+	.i searchField '= "" d
+	..s SqlStr = SqlStr_" and "_searchField_" like '%"_searchValue_"%'"
+	
+	s SqlStr = ""
+	s ElderType = BookingType
+	
+	i Action = "listbooking" d
+	.i (BookingType = "31")||(BookingType = "32")||(BookingType = "33") d
+	..s BookingType = 3
+	..s Action = "listbookingelder"
+    
+	i (Action = "listbookingelder")&&(SelectAll '= "true") d
+	.s DateOfStart=$zdh(DateOfStart,1)
+	.s DateOfEnd=$zdh(DateOfEnd,1)
+	.s SqlStr = " and booking.DateOfBooking between '"_DateOfStart_"' and '"_DateOfEnd_"'" 
+	
+	i (Action = "listbooking")&&(SelectAll '= "true") d
+	.s DateOfStart=$zdh(DateOfStart,1)
+	.s DateOfEnd=$zdh(DateOfEnd,1)
+	.s SqlStr = " and booking.DateOfBooking between '"_DateOfStart_"' and '"_DateOfEnd_"'" 
+	.i BookingType '= "" d
+	..s SqlStr = SqlStr_" and BookingType = "_BookingType
+
+	
+	i Action = "listbookingcount" d
+	.s DateOfStart=$zdh(DateOfStart,1)
+	.s DateOfEnd=$zdh(DateOfEnd,1)
+	.s SqlStr = " and CHSS.PersonBookingCheck.DateOfBooking <= '"_DateOfEnd_"'" 
+	
+	i Action = "bookingnum" d
+	.s DateOfStart=$zdh(DateOfStart,1)
+	.s DateOfEnd=$zdh(DateOfEnd,1)
+	.s SqlStr = " and CHSS.PersonBookingCheck.DateOfBooking <= '"_DateOfEnd_"'" 
+	
+	///s SqlStr = "and SexDR = 2 and DATEDIFF('yy',CHSS.PersonHealthRecordMain.Birth,{fn CURDATE()}) > "_fromAge_" and DATEDIFF('yy',CHSS.PersonHealthRecordMain.Birth,{fn CURDATE()}) < "_toAge 
+	
+	
+	
+	///w SqlStr
+	//i UserId '= "" d
+	//.s CommunityCode = ##class(CHSSWeb.CommunityService).GetCommunityCode(UserId)
+	//.//s %session.Data("LOGON.COMMUNITYCODE") = CommunityCode
+	//.//Write $Get(%session.Data("LOGON.COMMUNITYCODE"))
+
+	i Action = "communitycode" d
+	.w ##class(CHSSWeb.CommunityService).GetCommunityInfo(UserId)
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.PHRService).PersonList(CommunityCode,Start,Limit,Sort,searchField,searchValue)
+	i Action = "Search" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearch(CommunityCode,Start,Limit,Sort,searchField,searchValue)
+	i Action = "SearchSql" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.PHRService).Insert(PersonCode, CommunityCode, PersonName, SexDR, Birth, SpellCode, CardNumber, IDCard, BirthPlace, DateOfWork, WorkPlace, DateOFRetire, DeformityCode, RelationHourseHoldDR, DoctorRegister, NurseRegister, OperatorInput, NationalityDR, FamilyRowId, HouseHoldTypeDR,DocimialTypeDR, MedicalInsuranceTypeDR, PointHospitalRowIdDR, CommitteeDR, PoliceRowIdDR, StreetRowIdDR, DeformityType, StaffOfUpdate, DateOfUpdate, NationDR, BloodTypeDR, MarriageDR, EducationDR, ProfessionDR,DateRegister,DateInput,IDCardTypeDR,DateOfIDStart,DateOfIDEnd,IDCardProvider,MedicalInsuranceID,Address, AddressTypeDR, LinkManName ,LinkManPhone,HosDiagnoseId,bSaveCardInfo,PersonStatus)
+	.w result
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.PHRService).Update(Rowid, PersonName, SexDR, Birth, SpellCode, CardNumber, IDCard, BirthPlace, DateOfWork, WorkPlace, DateOFRetire, DeformityCode, RelationHourseHoldDR, DoctorRegister, NurseRegister, OperatorInput, NationalityDR, FamilyRowId, HouseHoldTypeDR,DocimialTypeDR, MedicalInsuranceTypeDR, PointHospitalRowIdDR, CommitteeDR, PoliceRowIdDR, StreetRowIdDR, DeformityType, StaffOfUpdate, DateOfUpdate, NationDR, BloodTypeDR, MarriageDR, EducationDR, ProfessionDR,DateRegister,DateInput,IDCardTypeDR,DateOfIDStart,DateOfIDEnd,IDCardProvider,MedicalInsuranceID,Address, AddressTypeDR, LinkManName, LinkManPhone,HosDiagnoseId,bSaveCardInfo,PersonStatus)
+	.w result
+	i Action = "familymembers" d
+	.w ##class(CHSSWeb.PHRService).GetFamilyMembers(CommunityCode,FamilyRowId,Start,Limit,Sort)
+	i Action = "systemid" d
+	.s result = ##class(CHSSWeb.SystemIdService).GetSystemId(CommunityCode,"PERSONHEALTHRECORDMAIN")
+	.w result
+	.//w "{success:'true',info:'10000020090701000001'}"
+	i Action = "listfromhis" d
+	.w ##class(CHSSWeb.HISInfoService).PersonListFromHIS(CardNumber)
+	i Action = "getpersoninfo" d
+	.w ##class(CHSSWeb.PHRSearchService).GetPersonInfoWithRowId(PersonRowId)
+	i Action = "listhbv" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "listtb" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "listwoman" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "listwomaninfo" d
+	.w ##class(CHSSWeb.PHRSearchService).PersonSearchSql(CommunityCode,Start,Limit,Sort,SqlStr)
+	
+	i Action = "listbooking" d
+	.w ##class(CHSSWeb.PersonBookingCheckService).List(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "listbookingelder" d
+	.w ##class(CHSSWeb.PersonBookingCheckService).ListElder(CommunityCode,Start,Limit,Sort,SqlStr,ElderType)
+	i Action = "editbooking" d
+	.w ##class(CHSSWeb.PersonBookingCheckService).update(BookingRowId,DateOfBooking)
+	i Action = "deletebooking" d
+	.w ##class(CHSSWeb.PersonBookingCheckService).Delete(BookingRowId)
+	i Action = "listbookingcount" d
+	.w ##class(CHSSWeb.PersonBookingCheckService).GetBookingCount(CommunityCode,Start,Limit,Sort,SqlStr)
+	i Action = "bookingnum" d
+	.w ##class(CHSSWeb.PersonBookingCheckService).GetBookingCountList(CommunityCode,Start,Limit,Sort,SqlStr)
+</script>
+
+

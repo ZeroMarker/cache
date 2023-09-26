@@ -1,0 +1,61 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))	
+    s str=$Get(%request.Data("query",1))
+	
+	s subjcode = $Get(%request.Data("subjcode",1))
+	s subjType = $Get(%request.Data("AcctType",1))
+	s subjLevel = $Get(%request.Data("subjLevel",1))
+
+	
+	s rowid = $Get(%request.Data("rowid",1))
+	s SubjID = $Get(%request.Data("SubjID",1))
+	s SubjCode = $Get(%request.Data("SubjCode",1))
+	s LedgerID = $Get(%request.Data("LedgerID",1))
+	s BeginSum = $Get(%request.Data("BeginSum",1))
+	s BeginSumF = $Get(%request.Data("BeginSumF",1))
+	s TotalDebitSum =$Get(%request.Data("TotalDebitSum",1))
+	s TotalCreditSum = $Get(%request.Data("TotalCreditSum",1))
+	s TotalDebitSumF = $Get(%request.Data("TotalDebitSumF",1))
+	s TotalCreditSumF = $Get(%request.Data("TotalCreditSumF",1))
+	
+	s bookID = $Get(%request.Data("bookID",1))
+	s CurrCode = $Get(%request.Data("CurrName",1))
+	
+	s TypeID=$Get(%request.Data("TypeID",1))
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctSubjLedger).AcctLedgerListFc(start, limit, subjcode, subjType, subjLevel,bookID)
+	
+	i action = "edit" d
+	.;s ^qqa=LedgerID_"^"_rowid
+	.s result = ##class(herp.acct.udata.uAcctSubjLedger).UpdateRecFc(rowid,LedgerID,SubjID,SubjCode,CurrCode,BeginSum,BeginSumF,TotalDebitSum,TotalDebitSumF,TotalCreditSum,TotalCreditSumF, bookID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctSubjLedger).DeleteFc(rowid,LedgerID)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+	i action = "GetCurrNameFc" d
+	.w ##Class(herp.acct.udata.uAcctCommon).GetCurrNameFc(start, limit, str)
+
+
+
+</script>

@@ -1,0 +1,136 @@
+<!--发药类别维护 
+	csp: csp/dhcpha.inpha.disptype.csp
+	js:  scripts/dhcpha/inpha/dhcpha.inpha.disptype.js
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <JQUERY:EASYUI136 />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/Font-Awesome-4.6.3/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/dhcpha.easyui.css">
+    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/commonfun.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/component.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpha/inpha/dhcpha.inpha.disptype.js"></script>
+
+</HEAD>
+<style type="text/css">
+    .disptypediv {
+        float: left;
+        width: 125px;
+        padding-left: 25px;
+    }
+
+    #disptypewin .con-chk-span {
+        vertical-align: middle;
+    }
+
+    #disptypewin .con-span {
+        padding-top: 20px;
+    }
+</style>
+
+<body style="background:white">
+    <div class='easyui-layout' fit='true'>
+        <div data-options='region:"center",border:false'>
+            <div id="cc" class="easyui-layout" fit="true" border="false">
+                <div data-options="region:'north',title:'发药类别维护<提示:中草药代码需维护为:<b><font color=red>ZCY</font></b>> <打印其他为多个函数时以;分割>'" style="height:60px;border-top:1px solid #88B9E5;padding-top:3px">
+                    <a style="margin-left:3px;" class="easyui-linkbutton" iconCls='icon-add' plain="true" id="btnAdd">增加</a>
+                    <a style="margin-left:3px;" class="easyui-linkbutton" iconCls='icon-edit' plain="true" id="btnUpdate">修改</a>
+                    <a style="margin-left:3px;" class="easyui-linkbutton" iconCls='icon-remove' plain="true" id="btnDelete">删除</a>
+                    <span style="margin-left:25px;vertical-align:middle">
+                        <input id="chkArcItemCat" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkArcItemCat">仅查看维护后的子类</label></input>
+                    </span>
+                </div>
+                <div data-options="region:'center'">
+                    <table id="disptypegrid"></table>
+                </div>
+                <div data-options="region:'south',title:'医嘱子类<提示:双击单元格维护>',split:true" style="height:300px;">
+                    <table id="arcitemcatgird"></table>
+                </div>
+            </div>
+            <div id="disptypewin" class="easyui-window" title="发药类别维护" modal='true' closed="true" style="width:300px;height:355px;top:100px;left:130px;">
+                <div class="easyui-layout" data-options="fit:true" text-align="right">
+                    <p style="display:none"><input type="text" id="txtRowId" name="txtcondition"></input></p>
+                    <p style="display:none"><input type="text" id="txtRowIndex" name="txtcondition"></input></p>
+                    <div style="margin-top:10px"><span style="margin-left:20px"><b>参数设置</b></span></div>
+                    <div style="border:1px solid #95B8E7;margin:8px;">
+
+                    </div>
+                    <div style="margin-left:25px">
+                        <div style="padding-top:5px">代　　码　<input type="text" id="txtCode" name="txtcondition" style="text-transform:uppercase;"></input></div>
+                        <div style="padding-top:5px">名　　称　<input type="text" id="txtDesc" name="txtcondition"></input></div>
+                        <div style="padding-top:5px">打印其它　<input type="text" id="txtPrtOther" name="txtcondition"></input></div>
+                    </div>
+                    <div style="padding-top:10px">
+                        <div class="disptypediv">
+                            <span class="con-chk-span">
+                                <input id="chkPrtDetail" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkPrtDetail"> 打印明细</label></input>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="con-chk-span">
+                                <input id="chkPrtTotal" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkPrtTotal"> 打印汇总</label></input>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="padding-top:5px">
+                        <div class="disptypediv">
+                            <span class="con-chk-span">
+                                <input id="chkReserve" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkReserve"> 冲减退药</label></input>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="con-chk-span">
+                                <input id="chkIsPreView" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkIsPreView"> 预览打印</label></input>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="padding-top:5px">
+                        <div class="disptypediv">
+                            <span class="con-chk-span">
+                                <input id="chkIsPack" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkIsPack"> 分散包装发药</label></input>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="con-chk-span">
+                                <input id="chkReqFlag" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkReqFlag"> 自动建退药申请</label></input>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="padding-top:5px">
+                        <div class="disptypediv">
+                            <span class="con-chk-span">
+                                <input id="chkPrtNoStock" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkPrtNoStock"> 打印库存不足</label></input>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="con-chk-span">
+                                <input id="chkPrtResRet" class="ui-checkbox condition-chk" name="chkcondition" type="checkbox"><label for="chkPrtResRet"> 打印冲减退药单</label></input>
+                            </span>
+                        </div>
+                    </div>
+                    <div style="position:absolute;bottom: 5px;width:100%;">
+                        <div><span style="margin-left:20px"><b>操作</b></span></div>
+                        <div style="border:1px solid #95B8E7;margin:8px;"></div>
+                        <div style="margin-top:5px;margin-right:20px;text-align:right">
+                            <a class="easyui-linkbutton" icon="icon-save" plain="true" id="btnSaveCat">保存</a>
+                            <a class="easyui-linkbutton" icon="icon-cancel" plain="true" id="btnCancel">关闭</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</HTML>

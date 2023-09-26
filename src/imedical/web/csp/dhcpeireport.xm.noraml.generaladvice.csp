@@ -1,0 +1,72 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.noraml.generaladvice.csp
+		
+		s GeneralAdviceTitle="总检结论及建议: 在您本次体检的项目中,有以下几方面的问题敬请注意:"
+		s GeneralAdvice=$G(^TMPReport("GeneralAdvice", "Advice"))
+		s AduitUser=$G(^TMPReport("GeneralAdvice","AduitUser"))
+		/*
+		//s GeneralAdviceData=..EscapeHTML(GeneralAdvice)
+		
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(13,10)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(13,10),iLLoop)_"<br>"
+		.
+		
+		s GeneralAdvice=GeneralAdviceData
+		s GeneralAdviceData=""
+		f iLLoop=1:1:$L(GeneralAdvice,$C(32)) d
+		.s GeneralAdviceData=GeneralAdviceData_$P(GeneralAdvice,$C(32),iLLoop)_"&nbsp;"
+		.
+		
+		s AduitDate=$G(^TMPReport("GeneralAdvice", "AduitDate"))
+		s AduitUser="" //$G(^TMPReport("GeneralAdvice","AduitUser"))*/
+		s PatName=$G(^TMPReport("PatInfo","PatName"))
+		s PatSex=$G(^TMPReport("PatInfo","PatSex"))
+		s PatSexString=""
+		i PatSex="男" s PatSexString="先生"
+		i PatSex="女" s PatSexString="女士"
+		s HellTitle="尊敬的"
+		s HellTitle2=PatSexString_": 您好!<br>&nbsp;&nbsp;&nbsp;&nbsp;您于我院体检中心完成健康体检,根据您本次体检项目检查结果,各科医师对您的健康状况做了汇总分析和建议.经主检医师审核和认可,我们为您提交此份体检报告.希望您仔细阅读并妥善保存这份报告,认真对待医生提出的每一项建议.如有问题请与我们联系,咨询电话:0592-2656000<br><br>"
+		s HellFooter="<br><br>&nbsp;&nbsp;&nbsp;&nbsp;谢谢您对我们工作的支持和信任,目前的医疗技术对于疾病的筛查仍有其空窗期和检验的盲点,体检中未发现异常的部分,不代表完全没有潜在性疾病.希望您能听从我们的建议,并要坚持定期体检,如有异常症状出现,请您随时就诊,祝您身体健康."
+		s LocName="翔鹭健诊体检中心"
+	</Script>
+		
+<DIV class='Page GeneralAdvice'>
+	<TABLE  border=0 class="GeneralAdviceTable" width="664">
+		<THEAD>
+			<TR>
+				<TD width="663" class="GeneralTitle">#(HellTitle)#<strong>#(PatName)#</strong>#(HellTitle2)#</TD>
+			</TR>
+			<TR>
+				<TD width="663" class="GeneralAdviceTitle">#(GeneralAdviceTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+		<csp:LOOP COUNTER="I" FROM="1" TO="1000">
+
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		q:I>$L(GeneralAdvice,$C(13,10))
+		s GeneralAdviceData=$P(GeneralAdvice,$C(13,10),I)
+		//i ((I)#3)=0 s GeneralAdviceData="&nbsp;&nbsp;"_GeneralAdviceData
+		</Script>
+		<CSP:IF CONDITION=(""'=GeneralAdviceData)>
+				<TR>
+				<TD class="GeneralAdviceData">
+					#(GeneralAdviceData)#
+				</TD>		
+			</TR>
+		</CSP:IF>
+	</csp:LOOP>
+			<!--TR>
+				<TD class="GeneralDoctor">总检医生:#(AduitUser)#</TD>
+			</TR-->
+			<TR>
+				<TD class="GeneralFooter">#(HellFooter)#</TD>
+			</TR>
+			<!--TR>
+				<TD class="GeneralLocName">#(LocName)#</TD>
+			</TR-->
+		</TBODY>
+	</TABLE>
+</DIV>
+

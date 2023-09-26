@@ -1,0 +1,320 @@
+<table class="hisui-datagrid" id="cateList"></table>
+<script type="text/javascript">
+	GV.EditRowIndex = undefined;
+	
+	$(function() {
+		$(document).keydown(function (e) {
+			banBackSpace(e);
+		});
+		
+		var toolbar = [{
+				text: '新增',
+				iconCls: 'icon-add',
+				handler: function() {
+					addClick();
+				}
+			}, {
+				text: '修改',
+				iconCls: 'icon-write-order',
+				handler: function() {
+					updateClick();
+				}
+			}, {
+				text: '删除',
+				iconCls: 'icon-cancel',
+				handler: function() {
+					deleteClick();
+				}
+			}, {
+				text: '保存',
+				iconCls: 'icon-save',
+				handler: function() {
+					saveClick();
+				}
+			}, {
+				text: '取消编辑',
+				iconCls: 'icon-redo',
+				handler: function() {
+					rejectClick();
+				}
+			}
+		]
+		GV.CateList = $HUI.datagrid("#cateList", {
+			height: 350,
+			title: '规则维护',
+			headerCls: 'panel-header-gray',
+			iconCls: 'icon-write-order',
+			singleSelect: true,
+			rownumbers: true,
+			pagination: true,
+			pageSize: 5,
+			pageList: [5, 10, 20],
+			loadMsg: '',
+			toolbar: toolbar,
+			columns: [[{title: 'TCDRowID', field: 'TCDRowID', hidden: true},
+					   {title: 'TRulesCode', field: 'TRulesCode', hidden: true},
+			           {title: '规则分类', field: 'TRulesType', width: 150,
+			       		editor: {
+							type: 'combobox',
+							options: {
+								panelHeight: 'auto',
+								valueField: 'id',
+								textField: 'text',
+								editable: false,
+								required: true,
+								selectOnNavigation: false,
+								data: [{id: 'OECCAT', text: '医嘱大类'},
+									   {id: 'ARCIC', text: '医嘱子类'},
+									   {id: 'ARCIM', text: '医嘱项'}
+								],
+								onSelect: function(rec) {
+									var ed = GV.CateList.getEditor({index: GV.EditRowIndex, field: "TRulesDesc"});
+									if (ed) {
+										$(ed.target).combobox("clear").combobox("reload");
+									}
+									var row = GV.CateList.getRows()[GV.EditRowIndex];
+									if (row) {
+										row.TRulesCode = rec.id;
+									}
+								},
+								onChange: function(newValue, oldValue) {
+									if (!newValue) {
+										var ed = GV.CateList.getEditor({index: GV.EditRowIndex, field: "TRulesDesc"});
+										if (ed) {
+											$(ed.target).combobox("clear");
+										}
+										var row = GV.CateList.getRows()[GV.EditRowIndex];
+										if (row) {
+											row.TRulesCode = newValue || "";
+										}
+									}
+								}
+							}
+						}
+			           },
+			           {title: 'TRulesTypeDR', field: 'TRulesTypeDR', hidden: true},
+					   {title: '规则描述', field: 'TRulesDesc', width: 300,
+						editor: {
+							type: 'combobox',
+							options: {
+								panelHeight: 150,
+								method: 'get',
+								url: $URL,
+								required: true,
+								blurValidValue: true,
+								onBeforeLoad: function (param) {
+									$.extend($(this).combobox("options"), {
+										mode: 'local',
+										delay: 0,
+										defaultFilter: 4,
+										valueField: 'id',
+										textField: 'text',
+									});
+									var ed = GV.CateList.getEditor({index: GV.EditRowIndex, field: "TRulesType"});
+									if (ed) {
+										var type = $(ed.target).combobox("getValue");
+										if (!type) {
+											return false;
+										}
+										var cn = "";
+										var qn = "";
+										switch(type) {
+										case "OECCAT":
+											cn = "web.DHCIPBillCostMonitorConfig";
+											qn = "FindOECOrdCat";
+											break;
+										case "ARCIC":
+											cn = "web.DHCIPBillCostMonitorConfig";
+											qn = "FindItemCat";
+											break;
+										case "ARCIM":
+											$.extend($(this).combobox("options"), {
+												mode: 'remote',
+												delay: 500,
+												defaultFilter: 1,
+												valueField: 'ArcimRowID',
+												textField: 'ArcimDesc',
+											});
+											cn = "DHCDoc.DHCDocConfig.ArcItemConfig";
+											qn = "FindAllItem";
+											break;
+										}
+										param.ClassName = cn;
+										param.QueryName = qn;
+										param.ResultSetType = "array";
+										param.Alias = param.q;
+										param.HospId = GV.HospId;
+									}
+								},
+								onSelect: function(rec) {
+									var row = GV.CateList.getRows()[GV.EditRowIndex];
+									if (row) {
+										row.TRulesTypeDR = rec[$(this).combobox("options").valueField];
+									}
+								},
+								onChange: function(newValue, oldValue) {
+									if (!newValue) {
+										var row = GV.CateList.getRows()[GV.EditRowIndex];
+										if (row) {
+											row.TRulesTypeDR = "";
+										}
+									}
+								}
+							}
+						}
+					   },
+					   {title: 'TMaxQty', field: 'TMaxQty', hidden: true}
+				]],
+			url: $URL,
+			queryParams: {
+				ClassName: "web.DHCIPBillCostMonitorConfig",
+				QueryName: "FindTypeRulesList",
+				MPCRowID: GV.MoniId
+			},
+			onLoadSuccess: function(data) {
+				GV.EditRowIndex = undefined;
+			},
+			onBeginEdit: function(index, row) {
+				onBeginEditHandler(index, row);
+	    	},
+			onEndEdit: function(index, row, changes) {
+				onEndEditHandler(index, row);
+			}
+		});
+		
+		function onBeginEditHandler(index, row) {
+			var ed = GV.CateList.getEditor({index: index, field: "TRulesType"});
+			if (ed) {
+				$(ed.target).combobox("setValue", row.TRulesCode);
+			}
+			var ed = GV.CateList.getEditor({index: index, field: "TRulesDesc"});
+			if (ed) {
+				$(ed.target).combobox("reload");
+			}
+		}
+
+		function onEndEditHandler(index, row) {
+			var ed = GV.CateList.getEditor({index: index, field: "TRulesType"});
+			if (ed) {
+				row.TRulesType = $(ed.target).combogrid("getText");
+			}
+			var ed = GV.CateList.getEditor({index: index, field: "TRulesDesc"});
+			if (ed) {
+				row.TRulesDesc = $(ed.target).combobox("getText");
+			}
+		}
+
+		/**
+		* 保存
+		*/
+		function saveClick() {
+			var row = GV.CateList.getRows()[GV.EditRowIndex];
+			if (!row){
+				return;
+			}
+			if (!endEditing()) {
+				return;
+			}
+			var jsonObj = {
+				MoniId: GV.MoniId,
+				Id: row.TCDRowID,
+				Type: row.TRulesCode,
+				TypeDR: row.TRulesTypeDR,
+				MaxQty: row.TMaxQty
+			};
+			$.cm({
+				ClassName: "web.DHCIPBillCostMonitorConfig",
+				MethodName: "SaveRules",
+				jsonStr: JSON.stringify(jsonObj)
+			}, function (rtn) {
+				var type = (rtn.success == "0") ? "success" : "error";
+				$.messager.popover({msg: rtn.msg, type: type});
+				GV.CateList.reload();
+			});
+		}
+
+		/**
+		* 新增
+		*/
+		function addClick() {
+			if (GV.EditRowIndex != undefined) {
+				$.messager.popover({msg: "有正在编辑的行", type: "info"});
+				return;
+			}
+			var row = {};
+			$.each(GV.CateList.getColumnFields(), function (index, item) {
+				row[item] = "";
+			});
+			GV.CateList.appendRow(row);
+			GV.EditRowIndex = GV.CateList.getRows().length - 1;
+			GV.CateList.beginEdit(GV.EditRowIndex);
+			GV.CateList.selectRow(GV.EditRowIndex);
+		}
+
+		/**
+		* 删除
+		*/
+		function deleteClick() {
+			var row = GV.CateList.getSelected();
+			if (!row) {
+				$.messager.popover({msg: "请选择需要删除的行", type: "info"});
+				return;
+			}
+			$.messager.confirm("确认", "确认删除？", function(r) {
+				if (r) {
+					$.cm({
+						ClassName: "web.DHCIPBillCostMonitorConfig",
+						MethodName: "DeleteCD",
+						id: row.TCDRowID
+					}, function(rtn) {
+						if (rtn.success == "0") {
+							$.messager.popover({msg: rtn.msg, type: "success"});
+							GV.CateList.reload();
+						}else {
+							$.messager.popover({msg: rtn.msg, type: "error"});
+						}
+					});
+				}
+			});
+		}
+
+		/**
+		* 修改
+		*/
+		function updateClick() {
+			if (GV.EditRowIndex != undefined) {
+				$.messager.popover({msg: "有正在编辑的行", type: "info"});
+				return;
+			}
+			var row = GV.CateList.getSelected();
+			if (!row) {
+				$.messager.popover({msg: "请选择需要编辑的行", type: "info"});
+				return;
+			}
+			
+			GV.EditRowIndex = GV.CateList.getRowIndex(row);
+			GV.CateList.beginEdit(GV.EditRowIndex);
+		}
+
+		/**
+		* 取消编辑
+		*/
+		function rejectClick() {
+			GV.CateList.rejectChanges();
+			GV.EditRowIndex = undefined;
+		}
+
+		function endEditing() {
+			if (GV.EditRowIndex == undefined) {
+				return true;
+			}
+			if (GV.CateList.validateRow(GV.EditRowIndex)) {
+				GV.CateList.endEdit(GV.EditRowIndex);
+				GV.EditRowIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+	});
+</script>

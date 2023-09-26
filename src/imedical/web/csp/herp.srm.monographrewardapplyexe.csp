@@ -1,0 +1,117 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s name=$Get(%request.Data("name",1))
+	s typedr=$Get(%request.Data("typedr",1))	
+	s deptdr=$Get(%request.Data("deptdr",1))
+	s issigdept=$Get(%request.Data("issigdept",1))
+	s editor=$Get(%request.Data("editor",1))
+	s montra=$Get(%request.Data("montra",1))
+	s totalnum=$Get(%request.Data("totalnum",1))
+	s writewords=$Get(%request.Data("writewords",1))
+	s press=$Get(%request.Data("press",1))
+	s pubtime=$Get(%request.Data("pubtime",1))
+	s pritime=$Get(%request.Data("pritime",1))
+	s isbn=$Get(%request.Data("isbn",1))
+	s subuser=$Get(%request.Data("subuser",1))
+	s subdate=$Get(%request.Data("subdate",1))
+	s datastatus=$Get(%request.Data("datastatus",1))
+	s sysno=$Get(%request.Data("sysno",1))
+	s editor=$Get(%request.Data("editor",1))
+	s isbn=$Get(%request.Data("isbn",1))
+	s montra=$Get(%request.Data("montra",1))
+	s starttime=$Get(%request.Data("starttime",1))
+	s endtime=$Get(%request.Data("endtime",1))
+    s userdr=$Get(%request.Data("userdr",1))
+    s publishfreq=$Get(%request.Data("publishfreq",1))
+	s pressdr=$Get(%request.Data("pressdr",1))
+	s usercode=$Get(%request.Data("usercode",1))
+	
+	s EditorIDs=$Get(%request.Data("EditorIDs",1))
+	s completeunit=$Get(%request.Data("completeunit",1))
+	s IDs=$Get(%request.Data("IDs",1))
+	
+	s sType = $Get(%request.Data("sType",1))
+	s Year = $Get(%request.Data("Year",1))
+	
+	s PrjDr =  $Get(%request.Data("PrjDr",1))
+		
+	i action = "GetAuthorInfo" d
+	.w ##class(herp.srm.udata.umonographrewardapply).ListBookAuthor(IDs)
+	
+    i action = "TypeList" d
+	.w ##class(herp.srm.udata.uSRMCommon).TypeList(start, limit, str)
+	
+    i action = "deptList" d
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+	
+	i action = "userList" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+
+	i action = "pressList" d
+	.w ##class(herp.srm.udata.uSRMCommon).ListPressName(start, limit, str)
+	
+	i action = "PressLevelList" d
+	.s result = ##class(herp.srm.udata.uSRMCommon).PressLevelList(pressdr)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "InventorID" d
+	.w ##class(herp.srm.udata.umonographrewardapply).InventorsList(start, limit, EditorIDs)
+	i action = "list" d
+	.w ##class(herp.srm.udata.umonographrewardapply).List(sortField, sortDir, start, limit, editor, name,isbn, starttime, endtime,userdr,sType)
+	
+	i action = "listbookauthorInfo" d
+	.w ##class(herp.srm.udata.umonographrewardapply).ListBookAuthorInfo(start, limit, IDs)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.umonographrewardapply).InsertRec(name,typedr,deptdr,editor,totalnum,press,pubtime,isbn,publishfreq,completeunit,subuser,sType,Year,PrjDr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.umonographrewardapply).UpdateRec(rowid,name,typedr,deptdr,editor,totalnum,press,pubtime,isbn,publishfreq,completeunit,sType,Year,PrjDr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.umonographrewardapply).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "submit" d
+	.s result = ##class(herp.srm.udata.umonographrewardapply).Submit(rowid,usercode)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetPrjName" d ///libairu201160913北京丰台中西医
+	.w ##class(herp.srm.udata.uSRMCommon).GetPrjName(start, limit, str)
+	
+	
+</script>

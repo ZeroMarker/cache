@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<DHC:BOOTSTRAP/>
+	<script src="../scripts/dhcnewpro/dhcdis/requestB.js" charset="gb2312"></script>
+	<script Language="Javascript">
+		var EpisodeID="#(%request.Get("EpisodeID"))#" //医嘱ID 
+		var locId="#(%session.Data("LOGON.CTLOCID"))#"  //科室ID
+		var hosp="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+   </script>
+  <style type="text/css">
+    #left{
+	 SCROLLBAR-FACE-COLOR:#288BDB;
+	 SCROLLBAR-HIGHLIGHT-COLOR:#288BDB;
+	 SCROLLBAR-SHADOW-COLOR:#288BDB;
+	 SCROLLBAR-3DLIGHT-COLOR:#288BDB;
+	 SCROLLBAR-ARROW-COLOR:#288BDB;
+	 SCROLLBAR-TRACK-COLOR:#288BDB;
+	 SCROLLBAR-DARKSHADOW-COLOR:#288BDB;
+	 SCROLLBAR-BASE-COLOR:#288BDB;
+	}
+    /*tab start*/
+  	.nav-tabs a {
+	color:#fff;
+	}
+	.nav-tabs>li>a:hover{
+		border:none;
+		background-color:#42A5F5;
+	}
+	.nav-tabs>li>a {
+		margin-right:0px;
+		border:none;
+	}
+	.nav>li>a {
+        padding: 7px 21px;
+	}
+	.nav-tabs li.active {/*tab active*/
+		color:#000;
+		border-top:3px solid #4169E1;
+	}/*tab end*/
+	#tabOth > div.bootstrap-table > div.fixed-table-container{
+		padding-bottom: 40px!important;
+	}
+	#left > div > div > div{
+		margin-bottom: 0px!important;
+	}
+	/*.index-function-button:hover{
+		background:#dcebf9;
+	}
+	.index-function-button:active{
+		background:#c7ddf2;
+	}
+	.index-function-button-area{
+		height:70px;padding:4px 10px;
+	}
+	.index-function-button{
+		height:62px;min-width:58px;width:58px;padding:4px;text-align:center;cursor:pointer
+	}*/
+ </style>
+</head>
+<body>
+<!--title start-->
+<div class="panel-heading" style="padding-top:4px;padding-left:15px;height:28px;color:#fff;background-color:#38AAFF;">
+	<i class="fa fa-table" aria-hidden="true"></i>&nbsp;&nbsp;陪送申请 
+</div>
+<!--title end-->
+<div class="panel">
+    <!--main-top start-->
+    <div class="index-function-button-area" style="border:1px solid #E6F0FF;margin:4px">
+      <div>
+      	   <div onclick="javascript:save()" class="index-function-button" id="save">
+				<i class="fa fa-save fa-2x" style="color:#27BAA2;"></i>
+				<br>
+				<p style="color:#58C069;margin-top:6px;">保存</p>
+		   </div>
+		  <!--<div class="row">
+			<div class="col-sm-12">	
+				<button style="margin:8px 0 4px 10px" type="button" class="btn btn-primary" id="saveBtn">保存</button>
+	    	</div>
+		  </div>-->
+      </div> 
+	</div>
+	<!--main-top end-->
+	
+	<!--main-left start-->
+	<div id="left" style="border:1px solid #E6F0FF;width:220px;height:528px;overflow:hidden;padding-left:0px;float:left">
+	    <div class="nano" style="width:220px">
+	    	<div class="nano-content" style="min-width:216px;overflow-y:scroll">
+	    		<div class="panel-group accordion">
+	    			<div class='panel panel-primary'>
+	    				<!-- Accordion title -->
+		                <div class="panel-heading">
+		                	<!--<div class="panel-control">
+		                	    <div onclick="javascript:lefthide()">
+							        <a style="margin-top:-20px;float:right;color:#fff;width:10px;font-size:24px;" href="#">
+							            <i class="fa fa-angle-double-left"></i>
+							        </a>
+							    </div>
+		                	</div>勿删-->
+		                    <h4 class="panel-title" style="height:35px;">
+		                        <a data-toggle="collapse" href="#patPanel" style="margin-top:-3px;">患者列表</a>
+		                    </h4>
+		                </div>
+		                <!-- Accordion title end-->
+		                <!-- Accordion content -->
+		                <div class="panel-collapse collapse in" id="patPanel">
+		                    <div class="panel-body" style="padding:0px">
+	             				<table id="DisReqPatTable" style="height:250px;">
+								</table>
+		                    </div>
+		                </div>
+		                <!-- Accordion content end-->
+	    			</div>
+	    			
+	    			<div class='panel panel-primary'>
+	    				<div class="panel-heading">
+				   			<h4 class="panel-title" style="height:35px;">
+		                        <a data-toggle="collapse" href="#patReqedList">已申请列表</a>
+		                    </h4>
+				   		</div>
+				   		<div class="panel-collapse collapse in" id="patReqedList">
+		                    <div class="panel-body" style="padding:0px">
+		                    	<table id="patReqedTable" style="height:250px;">
+								</table>
+		                    </div>
+		                </div>
+	    			</div>
+	    			
+	    		</div><!--panel-group end-->
+	        </div><!--nano-content-->
+	    </div><!--nano end-->
+	</div>
+	<!--main-left end-->
+	
+	<!--main-left-hidden start-->
+	<div id="leftshow" onclick="javascript:leftshow()" style="display:none;width:27px;border-right:1px solid #42A5F5;height:100%;min-height:528px;float:left;background-color:#E0ECFF;"> 
+		<div class="tgl-menu-btn">
+	        <a class="mainnav-toggle" style="height:40px;font-size:24px;float:right;margin-right:5px;color:#6EBAF1;" href="#">
+	            <i class="fa fa-angle-double-right"></i><!--fa-angle-double-right-->
+	        </a>
+		</div>
+	</div>
+	<!--main-left-hidden end-->
+	<!--收缩箭头 goleft-->
+    <div class="left-right" onclick="javascript:lefthide()" id="goleft" style="folat:left;position:absolute;left:220px;margin-top:0px;width:9px;">
+    	<a class="mainnav-toggle" style="text-align:center;line-height:35px;" href="#">
+        	<i class="fa fa-angle-left"></i> 
+        </a>
+    </div>
+    <!--收缩箭头 goleft end-->
+    <!--收缩箭头 goright-->
+    <div class="left-right" onclick="javascript:leftshow()" id="goright" style="display:none;folat:left;position:absolute;top:81px;left:24px;margin-top:0px;width:9px;">
+    	<a class="mainnav-toggle" style="text-align:center;line-height:35px;" href="#">
+        	<i class="fa fa-angle-right"></i> 
+        </a>
+    </div>
+    <!--收缩箭头 goright end-->
+    
+	<!--main-right start-->
+	<div id="right" style="folat:left;position:absolute;left:228px;margin:0 4px;">
+	    <!--main-right-form start-->
+		<div style="border:1px solid #E6F0FF;padding:0 0 6px 8px;">
+	      <!--row-one-->
+		  <div class="row" style="margin-top:5px;">
+			<div class="col-sm-3">	
+				<div>
+					<span>登记号　：</span>
+			    	<input id="regNo" type="text" class="input-mini" placeholder="请录入" style="width:130px;" onclick="javascript:RegNoKeyDown()">
+				</div>
+	    	</div>
+	    	<div class="col-sm-3">	
+				<div>
+					<span>床　　号：</span>
+			    	<input id="bedNo" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+				</div>
+	    	</div>
+	    	<div class="col-sm-3">	
+				<div>
+					<span>所在病区：</span>
+			    	<input id="ward" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+				</div>
+	    	</div>
+	    	<div class="col-sm-3">	
+	    	</div>
+		  </div>
+		  <!--row-two-->
+		  <div class="row" style="margin-top:4px">
+			<div class="col-sm-3">	
+				<div>
+					<span>任务ID　：</span>
+			    	<input id="jobId" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+				</div>
+	    	</div>
+	    	<div class="col-sm-3">	
+				<div class="input-group">
+				<span>接收科室：</span> 
+			    <select id="RecLoc" class="form-control"style="width:130px;">
+			    </select> 
+			    <span id="clearRecLoc" style="position:absolute;right:34px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+			    </div>
+	    	</div>
+			<div class="col-sm-2">	
+	    		<div class="input-group date" id="StartDate" style="margin-left:-13px">
+	    			<span class="input-group-addon bord-no" style="font-size:13px">陪送时间：</span>
+	        		<input type="text" class="form-control" style="width:100px;height:30px;margin-left:-7px">
+	        		<span class="input-group-addon"><i class="fa fa-calendar" style="margin-left:-20px"></i></span>
+	    		</div>
+			</div>
+			<div class="col-sm-1">
+	        	<div class="input-group date form_time" style="max-width:60px!important" id="startTime" data-date="" data-date-format="hh:ii">
+	        		<!--<span class="input-group-addon bord-no">时间</span>-->
+	            	<input id="staTime" type="text" class="form-control" style="padding:1px;min-width:36px;max-width:36px;height:30px;" onkeyup="this.value=this.value.replace(/\D/g,'')" onblur="this.value=CheckDHCCTime(this.id)" onfocus="this.value=SetDHCCTime(this.id)">
+	            	<span class="input-group-addon"><i class="fa fa-clock-o" style="margin-left:0px"></i></span>
+	        	</div>
+			</div>
+			<script type="text/javascript">
+				$('.form_time').datetimepicker({
+			        language:  'zh-CN',
+			        weekStart: 1,
+			        todayBtn:  1,
+					autoclose: 1,
+					todayHighlight: 1,
+					startView: 1,
+					minView: 0,
+					maxView: 1,
+					forceParse: 0
+			    });
+		   </script>
+	    	<!--row-three-->
+	    	<div class="col-sm-3">	
+				
+	    	</div>
+		  </div>
+		  <div class="row" style="margin-top:4px">
+			<div class="col-sm-3">	
+			    <div class="input-group">
+				<span>陪送类型：</span> 
+			    <select id="ReqType" class="form-control"style="width:130px;">
+			    </select> 
+			    <span id="clearReqType" style="position:absolute;right:34px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+			    </div>
+	    	</div>
+	    	<div class="col-sm-3">
+	    		<div class="input-group">
+				<span>陪送方式：</span> 
+			    <select id="ReqWay" class="form-control"style="width:130px;">
+			    </select> 
+			    <span id="clearReqWay" style="position:absolute;right:34px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+			    </div>	
+	    	</div>
+	    	<div class="col-sm-3">	
+	    		<div class="input-group">
+				<span>陪送人数：</span> 
+			    <select id="ReqNum" class="form-control"style="width:130px;">
+			    </select> 
+			    <span id="clearReqNum" style="position:absolute;right:34px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+			    </div>
+	    	</div>
+	    	<div class="col-sm-3">	
+	    		<div>
+					<span>备注：</span>
+			    	<input id="note" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+				</div>
+	    	</div>
+		  </div>
+		</div>
+		<!--main-right-form end-->
+		<!--main-right-table start-->
+		<div style="margin-top:4px">
+			<div class="row">
+				<div class="col-sm-6">
+					<div style="border:1px solid #DDDDDD">
+						<div class="row">
+							<div class="col-sm-12">
+								<div style="height:28px;border:1px solid #95B9E7;background-color:#70BFF3;color:#000;padding:3px 0 0 4px">
+								已选项目
+								</div>
+							</div>
+						</div>
+						<div style="padding:6px 4px 4px">
+							<table id="DisReqSelectedProjectTb"></table>
+						</div>
+					</div>
+		    	</div>
+		    	<div class="col-sm-6">
+		    	  <div style="border:1px solid #DDDDDD">
+		    	 	<ul class="nav nav-tabs" style="background:#42A5F5;padding-top:2px;padding-left:3px">
+						<li role="presentation" class="active">
+							<a href="#tabOrd" aria-controls="tabOrd" role="tab" data-toggle="tab">医嘱</a>
+						</li>
+						<li role="presentation">
+							<a href="#tabOth" aria-controls="tabOth" role="tab" data-toggle="tab">其他</a>
+						</li>
+					</ul>
+					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane fade in active" id="tabOrd" style="padding:8px 4px 4px 4px">
+					    	<div class="col-sm-12" style="border:1px solid #E9E9E9;padding:5px 0 4px 4px">	
+								<div>
+									<span>医嘱名称：</span>
+							    	<input id="OrdName" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+								</div>
+					    	</div>
+					    	<table id="DisReqOrdTb"></table>
+						</div>
+						<div role="tabpanel" class="tab-pane fade" id="tabOth" style="padding:8px 4px 4px 4px">
+						    <div class="col-sm-12" style="border:1px solid #E9E9E9;padding:5px 0 4px 4px">	
+								<div>
+									<span>其他名称：</span>
+							    	<input id="OthName" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+								</div>
+					    	</div>
+							<table id="DisReqOthTb"></table>
+					    </div>
+					</div>
+				  </div>	
+		    	</div>
+			</div><!--row end-->
+		</div>
+		<!--main-right-table end-->
+	</div>
+	<!--main-right start-->
+	
+  	
+</div><!--panel end-->
+</body>
+</html>

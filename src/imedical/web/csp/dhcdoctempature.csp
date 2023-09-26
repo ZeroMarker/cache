@@ -1,0 +1,37 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<server>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s CacheDB=$P(setstr,"^")
+ s webIP=$P(setstr,"^",2)
+ //s dllstr=webIP_"/dhcmg/Temperature.dll#Temperature.ClsTemp"
+ s dllstr=webIP_"/dhcmg/Temperature.dll#Temperature.patlistTemWindow" //新增体温单预览左侧病人列表
+</SERVER>
+
+</HEAD>
+<body>
+<Server>
+ w "<OBJECT id=""Temperature""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
+</Server>
+
+<SCRIPT Language="JavaScript">
+    var EpisodeID="#(%request.Get("EpisodeID"))#"
+    Temperature.Adm=EpisodeID;
+    Temperature.WardId=session['LOGON.WARDID'];
+    Temperature.LocId=session['LOGON.CTLOCID'];
+    Temperature.webservice="#(webIP)#"+"/dthealth/web/Nur.TemperatureInterface.cls";
+    Temperature.FilePath="#(webIP)#"+"/dhcmg/temperatureChart.xml";
+    Temperature.flag="0";
+    Temperature.ShowWindow();
+    window.close();
+</script>
+	</body>
+</HTML>

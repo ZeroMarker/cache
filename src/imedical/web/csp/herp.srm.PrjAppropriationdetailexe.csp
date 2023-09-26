@@ -1,0 +1,67 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+
+	s RowID=$Get(%request.Data("RowID",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	s Detail=$Get(%request.Data("Detail",1))
+	s applydr=$Get(%request.Data("applydr",1))
+	s rowid2=$Get(%request.Data("rowid2",1))
+	
+	s arriveexpenditure=$Get(%request.Data("arriveexpenditure",1))
+	s recipient=$Get(%request.Data("recipient",1))
+	s ArriveDate=$Get(%request.Data("ArriveDate",1))
+	s FundSources=$Get(%request.Data("FundSources",1))
+	s FundForm=$Get(%request.Data("FundForm",1))
+	s desc=$Get(%request.Data("desc",1))
+    s applydr=$Get(%request.Data("applydr",1))
+    s userdr=$Get(%request.Data("userdr",1))
+
+	i action = "list" d
+	.w ##class(herp.srm.udata.PrjAppropriation).ListDetail(sortField, sortDir, start, limit, rowid)
+	
+	i action = "applyerList" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "add" d
+	.s result = ##class(herp.srm.udata.PrjAppropriation).InsertRec(rowid,applydr,arriveexpenditure,recipient,ArriveDate,FundSources,FundForm,desc)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "del" d
+	.s result = ##class(herp.srm.udata.PrjAppropriation).Delete(rowid2)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.srm.udata.PrjAppropriation).UpdateRec(RowID,arriveexpenditure,ArriveDate,FundSources,desc,FundForm,recipient)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "submit" d
+	.s result = ##class(herp.srm.udata.PrjAppropriation).Commit(rowid2,userdr)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

@@ -1,0 +1,87 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent= $Get(%request.Data("parent",1))
+    s str   = $Get(%request.Data("query",1))
+	
+	
+	s rowid       = $Get(%request.Data("rowid",1))
+	s acctcashitem= $Get(%request.Data("acctcashitem",1))
+	s ItemCode    = $Get(%request.Data("ItemCode",1))
+	s ItemName    = $Get(%request.Data("ItemName",1))
+	s supers      = $Get(%request.Data("supers",1))
+	s Cilevel     = $Get(%request.Data("Cilevel",1))
+	s isLast      = $Get(%request.Data("isLast",1))
+	s isStop      = $Get(%request.Data("isStop",1))
+	s cfdirection = $Get(%request.Data("cfdirection",1))
+	s spell       = $Get(%request.Data("spell",1))
+	s userid      = $Get(%request.Data("userid",1))
+    s data        = $Get(%request.Data("data",1))
+    s level       = $Get(%request.Data("level",1)) 
+    s acctbookid  = $Get(%request.Data("acctbookid",1))    
+    
+
+	i action="list" d
+	.w ##class(herp.acct.udata.uAcctCashFlowItem).ListRec(acctcashitem, searchField, acctbookid, searchValue, sortField, sortDir, start, limit)      
+
+    i action="GetSuper" d
+	.s result=##class(herp.acct.udata.uAcctCashFlowItem).GetSuper(start, limit, str, acctbookid)          
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+    i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctCashFlowItem).InsertRec(acctbookid, data)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+     .e  i result = "acctbookid"  d 
+	..w "{success:'false',info:'此用户没有当前帐套，请先选择当前帐套！'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+    i action ="edit" d
+	.s result = ##class(herp.acct.udata.uAcctCashFlowItem).UpdateRec(acctbookid, rowid, data)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctCashFlowItem).Delete(rowid,acctbookid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+   
+    i action = "getcoderule" d
+	.s result = ##class(herp.acct.udata.uAcctCashFlowItem).GetCodeRule(acctbookid)
+	.i result '= "" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "GetLength" d
+	.s result= ##class(herp.acct.udata.uAcctCommon).GetLevelLength(acctbookid,level)
+	.i result'="" d
+	..w "{success:'true',refresh:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action="GetURL" d
+	.s result=##class(herp.acct.udata.uAcctCommon).GetURL(acctbookid)
+    .i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+	
+</script>

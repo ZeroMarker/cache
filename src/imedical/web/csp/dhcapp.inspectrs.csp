@@ -1,0 +1,101 @@
+<!--dhcapp.inspectrs.csp -->
+<html>
+<head>
+
+<title>新检查/病理结果查看</title>
+<HISUI/>
+<script Language="Javascript">
+	var LgUserID = '#($g(%session.Data("LOGON.USERID")))#';	//用户ID
+    var HospID=  '#($g(%session.Data("LOGON.HOSPID")))#';		//医院ID
+    var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var PatientID= '#($g(%request.Data("PatientID",1)))#';  //这个应该是要传过来的参数
+	var RegNo = '#($g(%request.Data("RegNo",1)))#';
+    var EpisodeID = '#($g(%request.Data("EpisodeID",1)))#'; //界面提供选择就诊,这个参数暂时不用
+	var ReqNo = '#($g(%request.Data("ReqNo",1)))#';
+	var OEORIID = '#($g(%request.Data("OEORIID",1)))#';	
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js" ></script>
+<link rel="stylesheet" href="../scripts/dhcdoc/dhcapp/css/inspectrs.css" />
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/dhc.orderview.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/inspectrs.js" charset="gb2312"></script>
+
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.top-sel{
+	height:14%;	
+}
+/*.panel-body-noheader{
+	border:0;
+}*//*hxy 2018-10-22注释*/
+.combo-arrow{position:relative;left:-4}/*hxy 2018-10-19*/
+</style>
+</head>
+
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'north',border:false,headerCls:'panel-header-gray'" style="height:50px;padding-top:4px">
+	    	<div class="hisui-panel" data-options="border:false">
+		    	<table class="search-table" style="border-spacing:0 5px">
+					<tr>
+						<td class ="r-label">#(..Get("申请时间"))#</td>
+						<td>
+							<input id="sel-stDate" style="width:115px" class="hisui-datebox textbox"></input>
+						</td>
+						<td class ="r-label">#(..Get("至"))#</td>
+						<td>
+							<input id="sel-edDate" style="width:115px" class="hisui-datebox textbox"></input>
+						</td>
+						<td class ="r-label" style="display:none">#(..Get("登记号:"))#</td>
+						<td style="display:none"><input id="patRegNo" style="width:120px" class="textbox"></input></td>
+						<td style="display:none" class ="td-lable">#(..Get("就诊类型:"))#</td>
+						<td style="display:none"><input id="admType" style="width:120px;" class="textbox"></input></td>
+						<!--
+						<td class ="td-lable" style="">就诊科室:</td>
+						<td><input id="admLoc" style="width:120px;" class="textbox"></input></td>
+						-->
+						<td class ="r-label">#(..Get("医嘱分类"))#</span></td><!--hxy 2018-07-03 padding-->
+						<td><input id="ordType" style="width:120px" class="textbox"></input></td>
+						
+						<td colspan="7" style="padding:0 5 0 10px;">
+							<input id="radio1" class='hisui-radio' type="radio" data-options="label:'当天',disable:false,name:'wantEat',onCheckChange:function(event,value){upPacsDate(value,1)}">
+							<input id="radio2" checked='checked' class='hisui-radio' type="radio" data-options="label:'一个月',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,2)}">
+							<input id="radio3" class='hisui-radio' type="radio" data-options="label:'半年',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,3)}">
+							<input id="radio4" class='hisui-radio' type="radio" data-options="label:'更多',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,4)}">
+							<input id="thisAdm" class='hisui-checkbox' type="checkbox" data-options="label:'当前就诊',checked:true,onCheckChange:function(event,value){thisAdm=value==true?'Y':'N';}"></input>
+						</td>
+						<td class ="r-label"><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-w-find" >查询</a></td>
+						<td style="display:none"><a href="#" id="openPort" class="hisui-linkbutton cancel-Btn" iconCls="" >打开pacs</a></td>
+					</tr>
+					<!--<tr>
+						<td colspan="7" style="padding:0 5 0 10px;">
+							<input id="radio1" class='hisui-radio' type="radio" data-options="label:'当天',disable:false,name:'wantEat',onCheckChange:function(event,value){upPacsDate(value,1)}">
+							<input id="radio2" checked='checked' class='hisui-radio' type="radio" data-options="label:'一个月',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,2)}">
+							<input id="radio3" class='hisui-radio' type="radio" data-options="label:'半年',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,3)}">
+							<input id="radio4" class='hisui-radio' type="radio" data-options="label:'更多',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,4)}">
+							<input id="thisAdm" class='hisui-checkbox' type="checkbox" data-options="label:'当前就诊',checked:true,onCheckChange:function(event,value){thisAdm=value==true?'Y':'N';}"></input>
+						</td>
+					</tr>hxy 2018-11-01-->
+				</table>
+	    	</div>
+	    </div>   
+	    <div data-options="region:'center',border:true,bodyCls:'panel-header-gray'" style="border-left:0px;border-right:0px;border-bottom:0px">
+        	<table id="inspectDetail"></table>
+        </div>   
+	</div>
+	
+	<div id="readDetailWin" class="hisui-window" title="阅读明细" data-options="closed:'false',minimizable:false" style="width:400px;height:350px;top:100px">
+		<table id="readDetailTable"></table> 
+	</div>
+	<div id="readInter" class="hisui-window" title="说明书" data-options="closed:'false',minimizable:false" style="width:400px;height:550px;top:10px">
+		<table id="itro_content"></table> 
+	</div>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.-->
+<!--oeorder.orgfav.prefedit.csp--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /-->
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--DHCDOC:JSCOMMON></DHCDOC:JSCOMMON-->
+<HISUI></HISUI>
+<STYLE type='text/css'>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	overflow:hidden;
+}
+.r-label{
+	padding-left: 10px;
+}
+.messager-popover{
+	padding: 5px 10px;
+	top:1px;
+}
+.panel-header{
+	border-bottom:0;
+}
+</STYLE>
+<Server>
+s Type=%request.Get("Type")
+s OrderType=%request.Get("OrderType")
+s itemid=%request.Get("itemid")
+s itemid=$p(itemid,"*",1)
+s EpisodeID=%request.Get("EpisodeID")
+s ItemStr=%request.Get("ItemStr")
+
+if (itemid'="") {
+	if (OrderType="ARCIM") {
+		s ItemDesc=$P(^ARCIM(+itemid,$P(itemid,"||",2),1),"^",2)
+		s ItemDesc="医嘱项:"_ItemDesc
+	}
+	if (OrderType="ARCOS") {
+		s ItemDesc=$P(^ARCOS(+itemid),"^",2)
+		s ItemDesc="医嘱套:"_ItemDesc
+	}
+}
+if (Type="edit") {
+	s Msg="将 "_ItemDesc_" 修改为："
+}
+if (Type="add") {
+	s Msg="新增医嘱到模板:"
+}
+
+</Server>
+ </head>
+<body class="hisui-layout" data-options="fit:false,border:false">
+<div data-options="region:'center',split:true" style="padding:10px;"> 
+   <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-radius:4px;">
+	<form id="ff" method="post">
+		<table class="search-table" id ="frametable">
+		   <tr style="height:34px;">
+		     <!--td colspan=2>
+		     	<div id="OrgFavPrefEditInfo" style="height:20px;width:565px;"></div>
+		     </td-->
+		     <td colspan=2 class="r-label"  style="position:relative;">
+				<div id="" class="messager-popover error">
+					<span class="messager-popover-icon error"></span>
+					<span class="content" id="OrgFavPrefEditInfo"></span>
+				</div>
+			 </td>
+		   </tr>
+		   <tr>
+		   	<td class="r-label"><label for="OrdItemSearch">医嘱项</td>
+		     <td class="">
+		       	<input type="text" id="OrdItemSearch" name="OrdItemSearch" data-options="" style="width:553px;"></input >
+		     </td>
+		   </tr>
+		   <tr>
+		     <td colspan=2 style="text-align:center;">
+		     	<a id="Save" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+		     	<a id="Cancel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a>
+		     </td>
+		   </tr>
+		</table> 
+	</form> 
+   </div>
+</div>
+<SCRIPT language = 'javascript' >
+	var Type="#(Type)#";
+	var OrderType="#(OrderType)#";
+	var itemid="#(itemid)#";
+	var EpisodeID="#(EpisodeID)#";
+	var Msg="#(Msg)#";
+	var ItemStr="#(ItemStr)#";
+	var NewItemInfo="";
+	$(window).load(function(){
+		$("#OrgFavPrefEditInfo").html("<font COLOR=RED>提示信息:"+Msg+"</font>")
+		InitOrdItemSearchGrid();
+		$("#Save").click(SaveClickHandler);
+		$("#Cancel").click(CancelClickHandler);
+		$('#OrdItemSearch').next('span').find('input').focus()
+	});
+	function SaveClickHandler(){
+		///"维生素C片(0.1g*100片)-WSSCP^1692||1^tid^ARCIM^WSSCP ^R^11^^^
+		///^^片^63^^^^^口服药^3.5000^是(国)^瓶(100)^500000^0^维生素C片^0^^^^报表药房(北区)/住院西药房(北区)^19589^^"
+		var NewOrderType=NewItemInfo.split("^")[3];
+		var NewItemID=NewItemInfo.split("^")[1];
+		if ((NewItemID=="")||(NewItemID=="undefined")||(NewItemInfo=="")){
+			$.messager.alert("警告","请在下拉框中选择医嘱项目");
+			return false;
+		}
+		if (("^"+ItemStr+"^").indexOf(("^"+NewItemID+"^"))>=0){
+			$.messager.alert("警告",NewItemInfo.split("^")[0]+" 项目重复!","info",function(){
+				setTimeout($('#OrdItemSearch').next('span').find('input').focus(),50)
+			});
+			return false;
+		}
+		var obj={
+			Save:true,
+			NewOrderType:NewOrderType,
+			NewItemID:NewItemID
+		}
+		/*window.returnValue=obj;
+		window.close();*/
+		websys_showModal("hide");
+		websys_showModal('options').CallBackFunc(obj);
+		websys_showModal("close");
+	}
+	function CancelClickHandler(){
+		/*var obj={
+			Save:false,
+			NewOrderType:"",
+			NewItemID:""
+		}
+		window.returnValue=obj;
+		window.close();*/
+		websys_showModal("close");
+	}
+	function ReSetFocus(){
+		var CurrentPagNum=$(".pagination-num").val()
+		if (CurrentPagNum>1){
+			window.setTimeout(function (){
+				var CurrentOrdName=$('#OrdItemSearch').combo("getText");
+				if(CurrentOrdName!=""){
+					var CheckValue=/^\d+$/;
+					if (CheckValue.test(CurrentOrdName)){
+						$('#OrdItemSearch').combogrid("setValue","");
+						$('#OrdItemSearch').combo("setText", "")
+					}
+				}
+			},100)
+		}
+		setTimeout($('#OrdItemSearch').next('span').find('input').focus(),50)
+	}
+	function InitOrdItemSearchGrid(){
+		var fileview = $.extend({}, $.fn.datagrid.defaults.view, { 
+	       onAfterRender: function (target) { ReSetFocus(); }
+	       //,onBeforeRender:function (target, rows){ReSetSelect();} 
+	    }); 
+		$('#OrdItemSearch').combogrid({
+			panelWidth:500,
+			panelHeight:270,
+			enterNullValueClear:false,
+			view: fileview,
+			delay: 500,    
+			mode: 'remote',    
+			url:$URL+"?ClassName=web.DHCDocOrderEntry&QueryName=LookUpItem", //New
+			//fitColumns: true,   
+			striped: true,   
+			editable:true,   
+			pagination : true,//是否分页   
+			rownumbers:true,//序号   
+			collapsible:false,//是否可折叠的   
+			fit: true,//自动大小   
+			pageSize: 10,//每页显示的记录条数，默认为10   
+			pageList: [10,20,30,40],//可以设置每页记录条数的列表   
+			method:'post', 
+			idField: 'HIDDEN', //ArcimDr
+			textField: 'ARCIMDesc', //OrdDesc
+			columns: [[
+				/*{field:'ArcimDr',title:'ArcimDr',width:120,hidden:true},
+				{field:'OrdInfo',title:'OrdInfo',width:120,hidden:true},
+				{field:'OrdDesc',title:'医嘱名称',width:350,sortable:true},
+				{field:'子类',title:'子类',width:50,sortable:true},
+				{field:'价格',title:'价格',width:80,sortable:true},
+				{field:'计价单位',title:'计价单位',width:50,sortable:true},
+				{field:'医保类别',title:'医保类别',width:50,sortable:true},
+				{field:'自付比例',title:'自付比例',width:50,sortable:true},
+				{field:'接收科室',title:'接收科室',width:180,sortable:true},
+				{field:'支付限额',title:'支付限额',width:50,sortable:true},
+				{field:'控制类型',title:'控制类型',width:50,sortable:true}*/
+				{field:'ARCIMDesc',title:'医嘱名称',width:250,sortable:true},
+	            {field:'subcatdesc',title:'子类',width:100,sortable:true},
+	            {field:'ItemPrice',title:'价格',width:80,sortable:true},
+	            {field:'BasicDrugFlag',title:'基本药物',width:90,sortable:true},
+	            {field:'billuom',title:'计价单位',width:90,sortable:true},
+	            {field:'StockQty',title:'库存数',width:80,sortable:true},
+	            {field:'PackedQty',title:'打包数',width:80,sortable:true},
+	            {field:'GenericName',title:'通用名',width:120,sortable:true},
+	            {field:'ResQty',title:'在途数',width:80,sortable:true},
+	            {field:'DerFeeRules',title:'收费规定',width:90,sortable:true},
+	            {field:'InsurClass',title:'医保类别',width:90,sortable:true},
+	            {field:'InsurSelfPay',title:'自付比例',width:90,sortable:true},
+	            {field:'Recloc',title:'接收科室',width:100,sortable:true},
+	            {field:'arcimcode',title:'代码',width:90,sortable:true}
+			]],
+			/*keyHandler:{
+				up: function () {
+	                //取得选中行
+	                var selected = $('#OrdItemSearch').combogrid('grid').datagrid('getSelected');
+	                if (selected) {
+	                    //取得选中行的rowIndex
+	                    var index = $('#OrdItemSearch').combogrid('grid').datagrid('getRowIndex', selected);
+	                    //向上移动到第一行为止
+	                    if (index > 0) {
+	                        $('#OrdItemSearch').combogrid('grid').datagrid('selectRow', index - 1);
+	                    }
+	                } else {
+	                    var rows = $('#OrdItemSearch').combogrid('grid').datagrid('getRows');
+	                    $('#OrdItemSearch').combogrid('grid').datagrid('selectRow', rows.length - 1);
+	                }
+	             },
+	             down: function () {
+	              //取得选中行
+	                var selected = $('#OrdItemSearch').combogrid('grid').datagrid('getSelected');
+	                if (selected) {
+	                    //取得选中行的rowIndex
+	                    var index = $('#OrdItemSearch').combogrid('grid').datagrid('getRowIndex', selected);
+	                    //向下移动到当页最后一行为止
+	                    if (index < $('#OrdItemSearch').combogrid('grid').datagrid('getData').rows.length - 1) {
+	                        $('#OrdItemSearch').combogrid('grid').datagrid('selectRow', index + 1);
+	                    }
+	                } else {
+	                    $('#OrdItemSearch').combogrid('grid').datagrid('selectRow', 0);
+	                }
+					
+	            },
+				left: function () {
+					return false;
+	            },
+				right: function () {
+					return false;
+	            },            
+				enter: function () { 
+				    //文本框的内容为选中行的的字段内容
+	                var selected = $('#OrdItemSearch').combogrid('grid').datagrid('getSelected');  
+				    if (selected) { 
+				      $('#OrdItemSearch').combogrid("options").value=selected.ArcimDr;
+				      NewItemInfo=selected.OrdInfo;
+					  $('#OrdItemSearch').combo("setText", selected.OrdInfo.split("^")[0]);
+				    }
+	                //选中后让下拉表格消失
+	                $('#OrdItemSearch').combogrid('hidePanel');
+					$("#DiagnosNotes").focus();
+	            },
+
+				query:function(q){
+					if (q.length<=2) $('#OrdItemSearch').combogrid('grid').datagrid('loadData', { total: 0, rows: [] });
+					if (this.AutoSearchTimeOut) {
+						window.clearTimeout(this.AutoSearchTimeOut);
+						this.AutoSearchTimeOut=window.setTimeout("LoadOrdItemData('"+q+"')",400);
+					}else{
+						this.AutoSearchTimeOut=window.setTimeout("LoadOrdItemData('"+q+"')",400);
+					}
+					$('#OrdItemSearch').combogrid("setValue",q);
+	            }
+			},*/
+			onSelect: function (){
+				var selected = $('#OrdItemSearch').combogrid('grid').datagrid('getSelected');  
+				if (selected) { 
+				    $('#OrdItemSearch').combogrid("options").value=selected.HIDDEN; //ArcimDr;
+				    var ItemArr=new Array();
+				    $.each(selected, function(key, val) {
+						ItemArr.push(val);
+					});
+				    NewItemInfo=ItemArr.join("^"); //OrdInfo;
+					//$('#OrdItemSearch').combo("setText", selected.OrdInfo.split("^")[0]);
+				}
+			},
+			onClickRow: function (row){
+				var selected = $('#OrdItemSearch').combogrid('grid').datagrid('getSelected');  
+				if (selected) {
+					$('#OrdItemSearch').combogrid("options").value=selected.HIDDEN; //ArcimDr;
+					var ItemArr=new Array();
+				    $.each(selected, function(key, val) {
+						ItemArr.push(val);
+					});
+					NewItemInfo=ItemArr.join("^"); //OrdInfo;
+					//$('#OrdItemSearch').combo("setText", selected.OrdInfo.split("^")[0]);
+				}
+			},
+			onBeforeLoad:function(param){
+				if (param['q']) {
+					var desc=param['q'];
+				}else{
+					//return false;
+				}
+				param = $.extend(param,{Item:desc,GroupID:session['LOGON.GROUPID'],Category:"",
+										SubCategory:"",TYPE:"",OrderDepRowId:"",
+										OrderPriorRowId:"",EpisodeID:EpisodeID,BillingGrp:"",BillingSubGrp:"",
+										UserRowId:session["LOGON.USERID"],OrdCatGrp:"",NonFormulary:"",
+										Form:session['LOGON.CTLOCID'],Strength:"",Route:""
+								});
+			}			
+		});
+	}
+	/*function LoadOrdItemData(q){
+		var desc=q;
+		if (desc=="") return;
+		//if (desc.length<2){return false;}
+		var CurLogonDep=session['LOGON.CTLOCID']; 
+	    var GroupID=session['LOGON.GROUPID'];
+		var catID=""
+		var subCatID="";
+		var P5="";
+		var LogonDep=""
+		var OrderPriorRowid="";
+		var P9="",P10="";
+		var OrdCatGrp="";
+		var queryParams = new Object();
+		queryParams.ClassName ='web.DHCDocOrderEntry';
+		queryParams.QueryName ='LookUpItemNew';   
+		queryParams.Arg1 =desc;
+		queryParams.Arg2 =GroupID;
+		queryParams.Arg3 =catID;
+		queryParams.Arg4 =subCatID;
+		queryParams.Arg5 =P5;
+		queryParams.Arg6 =LogonDep;
+		queryParams.Arg7 =OrderPriorRowid;
+		queryParams.Arg8 =EpisodeID;
+		queryParams.Arg9 =P9;
+		queryParams.Arg10 =P10;
+		queryParams.Arg11 =session["LOGON.USERID"];
+		queryParams.Arg12 =OrdCatGrp;
+		queryParams.Arg13 ="";
+		queryParams.Arg14 =CurLogonDep;
+		queryParams.ArgCnt =14;
+		var opts = $('#OrdItemSearch').combogrid("grid").datagrid("options");
+		opts.url = $URL;
+		opts.queryParams = queryParams;
+		$('#OrdItemSearch').combogrid("grid").datagrid("reload");
+	}*/
+</SCRIPT>
+</body>
+</html>

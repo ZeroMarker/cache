@@ -1,0 +1,60 @@
+﻿﻿<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" id="selectcss" href="../scripts/emr/css/templaterecord.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/category.css">	
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s categoryID = $Get(%request.Data("CategoryID",1),"")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s sequence = $Get(%request.Data("Sequence",1),"")     		
+	</script>
+	<script language="javascript">
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var userID = '#(userID)#';
+		var userLocID = parent.userLocID;
+		var userName = parent.userName;
+		var gl = {
+			patientId:'#(patientID)#',
+			episodeId:'#(episodeID)#',
+			categoryId:'#(categoryID)#',
+			userId:'#(userID)#',
+			userName:'#(userName)#',
+			userLocId:'#(userLocID)#',
+			sequence:'#(sequence)#',
+            temparam: new Array()
+		}
+	</script>
+	<title>批量创建</title>
+</head>
+<body class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+    <div data-options="region:'north',border:false" style="height:30px; filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#F9F9F9', endColorstr='#F0F0EE', GradientType='0');">
+		<span style="vertical-align:middle;margin-left:5px;">
+        	<input id="templateRecord" class="hisui-combobox" name="templategroup" style=""/>
+        	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" onclick="createTemplateGroup();return false;">#(..Get("创建"))#</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" onclick="refresh();return false;">#(..Get("刷新"))#</a>
+		</span>
+	</div>  
+	<div id="corddisplay" data-options="region:'center',border:false" style="overflow:hidden;">
+    	<div id="listdisplay" class="hisui-layout" data-options="border:false,fit:true">
+	        <div data-options="region:'west',border:false" style="width:480px;padding:5px;">
+	            <table id="listtemplate"></table>
+	        </div>
+	        <div data-options="region:'center',border:false" style="padding:5px 5px 5px 0">
+	            <table id="gridshow" title="表格病历列表"></table>
+	        </div>
+	    </div>
+    </div>
+
+	<script type="text/javascript" src="../scripts/emr/js/ip.navigation.common.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/ip.navigation.templategroup.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>
+</body>
+</html>﻿

@@ -1,0 +1,193 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	    <!-- <meta http-equiv="Content-Type" content="text/html; charset=gb2312" /> -->
+		<!--
+        <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.1.0/resources/css/ext-all.css" />
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="../scripts_lib/ext3.1.0/ext-all.js"></script>
+        -->
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/ext.ux/css/RowEditor.css"/>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/RowEditor.js"></script>
+		<link rel="stylesheet" type="text/css" href="../scripts/dhccpw/ext.ux/css/Ext.ux.form.LovCombo.css"/>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/Ext.ux.util.js"></script>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/Ext.ux.form.LovCombo.js"></script>
+		<script type="text/javascript" src="../scripts/dhccpw/ext.ux/ext-basex.js"></script>
+
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhccpw/DHCCPW.ExtFramework.DesignerHelper.js"></script>
+		
+		<script language='javascript' src='../scripts/dhccpw/export/Excel_Base.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/export/Excel_Const.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/export/Excel_App.js'></script>
+		
+		<script language='javascript' src='../scripts/dhccpw/mr/form/epstep.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/form/form.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/form/errorpage.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/form/oeorder_gui.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/form/oeorder_event.js'></script>
+		
+		<script language='javascript' src='../scripts/dhccpw/mr/outpathway/gui.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/outpathway/event.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/pathwayeva/gui.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/pathwayeva/event.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/pathwaysynd/gui.js'></script>
+		<script language='javascript' src='../scripts/dhccpw/mr/pathwaysynd/event.js'></script>
+		
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))
+			Set PathWayID=$g(%request.Data("PathWayID",1))
+			Set PatientID="",MRAdm="",AdmType=""
+			If PathWayID'=""
+			{
+				Set objPathWay=##class(web.DHCCPW.MR.ClinicalPathWays).GetObjById(PathWayID)
+				If $IsObject(objPathWay){
+					Set MRAdm=objPathWay.CPWMRADMDR
+					Set EpisodeID=##class(web.DHCCPW.MR.PAADMSrv).GetEpisodeID(MRAdm)
+					Set AdmType=""""_$p($g(^PAADM(+EpisodeID)),"^",2)_""""
+					Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+				}
+			}
+			If EpisodeID'="" {
+				Set AdmType=""""_$p($g(^PAADM(+EpisodeID)),"^",2)_""""
+				Set MRAdm=+$p($g(^PAADM(+EpisodeID)),"^",61)
+				Set PatientID=+$p($g(^PAADM(+EpisodeID)),"^",1)
+				If PathWayID="" {
+					Set strPathWay=##class(web.DHCCPW.MR.ClinicalPathWays).GetActiveCPWByadm(MRAdm,$C(1))
+					Set PathWayID=$p(strPathWay,$C(1),1)  //当前有效的出入径记录ID
+				}
+				If PathWayID="" {
+					Set tmpPathWayID=""
+					For {
+						Set tmpPathWayID=$o(^DHCMRi("CPW",0,"IndexMRAdm"," "_MRAdm,tmpPathWayID))
+						Quit:(+tmpPathWayID=0)
+						Quit:PathWayID'=""
+						Set objTmpPathWay=##class(web.DHCCPW.MR.ClinicalPathWays).GetObjById(tmpPathWayID)
+						Continue:'$IsObject(objTmpPathWay)
+						Set PathWayID=tmpPathWayID
+					}
+				}
+			}
+			
+			Set FORMUserMode=0
+					
+			Set LogUser=%session.Data("LOGON.USERID")
+			Set LogUserType=##Class(web.DHCCPW.MR.PaPatmasSrv).getCPTInternalType(LogUser)
+			If LogUserType="DOCTOR" {
+				Set OEOrderFlag=+$g(%request.Data("OEOrderFlag",1))
+				Set NEOrderFlag=0
+				Set ConsultFlag=+$g(%request.Data("ConsultFlag",1))
+				Set NurseFlag=0
+				Set OEOutOrderFlag=+$g(%request.Data("OEOutOrderFlag",1))
+				Set NEOutOrderFlag=0
+				Set FORMUserMode=1
+			} ElseIf LogUserType="NURSE" {
+				Set OEOrderFlag=0
+				Set NEOrderFlag=+$g(%request.Data("NEOrderFlag",1))
+				Set ConsultFlag=0
+				Set NurseFlag=+$g(%request.Data("NurseFlag",1))
+				Set OEOutOrderFlag=0
+				Set NEOutOrderFlag=+$g(%request.Data("NEOutOrderFlag",1))
+				Set FORMUserMode=2
+			} Else {
+				If (%session.Data("LOGON.GROUPDESC")["超级")||(%session.Data("LOGON.GROUPDESC")["Demo") {
+					Set OEOrderFlag=+$g(%request.Data("OEOrderFlag",1))
+					Set NEOrderFlag=+$g(%request.Data("NEOrderFlag",1))
+					Set ConsultFlag=+$g(%request.Data("ConsultFlag",1))
+					Set NurseFlag=+$g(%request.Data("NurseFlag",1))
+					Set OEOutOrderFlag=+$g(%request.Data("OEOutOrderFlag",1))
+					Set NEOutOrderFlag=+$g(%request.Data("NEOutOrderFlag",1))
+					Set FORMUserMode=1
+				}Else{
+					Set OEOrderFlag=0
+					Set NEOrderFlag=0
+					Set ConsultFlag=0
+					Set NurseFlag=0
+					Set OEOutOrderFlag=0
+					Set NEOutOrderFlag=0
+				}
+			}
+			//****************************************
+			Set ShieldPowerOEOutOrderFlag=""
+			Set objConfig=##class(web.DHCCPW.MRC.BaseConfig).GetObjByCode("ShieldPowerOEOutOrderFlag")
+			If $IsObject(objConfig){
+				Set ShieldPowerOEOutOrderFlag=objConfig.BCValue
+			}
+			If ShieldPowerOEOutOrderFlag="Y" {
+				Set OEOutOrderFlag=0
+			}
+			Set ShieldDoctorSignCheck=""
+			Set objConfig=##class(web.DHCCPW.MRC.BaseConfig).GetObjByCode("ShieldDoctorSignCheck")
+			If $IsObject(objConfig){
+				Set ShieldDoctorSignCheck=objConfig.BCValue
+			}
+			Set ShieldNurseSignCheck=""
+			Set objConfig=##class(web.DHCCPW.MRC.BaseConfig).GetObjByCode("ShieldNurseSignCheck")
+			If $IsObject(objConfig){
+				Set ShieldNurseSignCheck=objConfig.BCValue
+			}
+			Set ShieldNurseSignCheck=""""_ShieldNurseSignCheck_""""
+			Set ShieldDoctorSignCheck=""""_ShieldDoctorSignCheck_""""
+			//****************************************
+			Set VarianceFlag=+$g(%request.Data("VarianceFlag",1))
+			Set NewPage=+$g(%request.Data("NewPage",1))
+			Set PortalFlg=+$g(%request.Data("PortalFlg",1))
+			Set FORMPageMode=+$g(%request.Data("FORMPageMode",1))  //add by wuqk 2012-05-10
+			Set:FORMPageMode=0 FORMPageMode=1                      //add by wuqk 2012-06-04
+			
+			Set ChartID=""
+			//&SQL(select id into :ChartID from epr.chart where Name ="医嘱录入")
+		</Script>
+		<script language="javascript" type="text/javascript">
+			var t = new Object();
+			Ext.QuickTips.init();
+			var objControlArry = new Array();
+			var PathWayID='#(PathWayID)#';
+			var EpisodeID='#(EpisodeID)#';
+			var PatientID='#(PatientID)#';
+			var MRAdm='#(MRAdm)#';
+			var AdmType='#(AdmType)#';
+			var CPWID="";
+			
+			var OEOrderFlag='#(OEOrderFlag)#'
+			var NEOrderFlag='#(NEOrderFlag)#'
+			var OEOutOrderFlag='#(OEOutOrderFlag)#'
+			var NEOutOrderFlag='#(NEOutOrderFlag)#'
+			var ConsultFlag='#(ConsultFlag)#'
+			var NurseFlag='#(NurseFlag)#'
+			var VarianceFlag='#(VarianceFlag)#'
+			var NewPage='#(NewPage)#'
+			var PortalFlg='#(PortalFlg)#'
+			
+			var FORM_UserMode='#(FORMUserMode)#'
+			var FORM_PageMode='#(FORMPageMode)#'; //add by wuqk 2012-05-10
+			var ChartID='#(ChartID)#';
+			
+			function window_onload() {
+				if (PathWayID!=="") {
+					var objFormNewWin = new InitFormNewWin();
+                	objControlArry['FormNewWin'] = objFormNewWin;
+				} else {
+					var objPageErrorWin = new InitPageErrorWin();
+                	objControlArry['PageErrorWin'] = objPageErrorWin;
+				}
+			}
+		</script>
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>	
+	<body onload="return window_onload()">
+		<!-- <APPLET NAME="CacheCSPBroker" ARCHIVE="cspbroker.jar" CODEBASE="/csp/broker" CODE="cspbroker.class" WIDTH=0 HEIGHT=0 ALIGN=RIGHT></APPLET> -->
+	</body>
+</html>

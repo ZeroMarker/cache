@@ -1,0 +1,31 @@
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s HospId=$Get(%request.Data("HospId",1))
+
+i Action = "StkCatGroup" d
+	.s type=$Get(%request.Data("type",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetStkCatGroup(0,999,type,HospId)
+	.
+i Action="GetLocStkCatGroup"  d
+	.s type=$g(%request.Data("type",1))
+	.s locid=$g(%request.Data("locId",1))
+	.s userid=$g(%request.Data("userId",1))
+	.w ##class(web.DHCST.Util.DrugUtil).GetLocStkCatGroup(type,locid,userid)
+	.
+i Action="RowDataDelim"  d
+	.w ##class(web.DHCST.Common.UtilCommon).RowDataDelim()
+	.
+i Action="GetGrantStkGrp" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.//s ret=##class(web.DHCST.Util.DrugUtil).GetGrantStkGrp(GroupId,LocId,UserId)
+	.s ret=##class(web.DHCST.Util.DrugUtil).GetUserCatGrpStrNew(UserId,"G")
+	.w "{success:'true',info:'"_ret_"'}"
+i Action="DecimalPresion" d
+	.s formatType=$g(%request.Data("formatType",1))
+	.s hospId=$g(%session.Data("LOGON.HOSPID"))
+	.w ##class(web.DHCST.Common.AppCommon).DecLenByFmtType(formatType,hospId)
+</SERVER>

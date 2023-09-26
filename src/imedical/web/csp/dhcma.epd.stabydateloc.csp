@@ -1,0 +1,46 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+	</head>
+	
+	<body>
+	  	 <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript"  src="../scripts/DHCMA/EPD/StabyDateLoc/Gui.js"></script>
+		<script type="text/javascript"  src="../scripts/DHCMA/EPD/StabyDateLoc/Event.js"></script>
+		<script language="Cache" RUNAT="SERVER">		
+            Set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+		    Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+		    Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"EPD")
+		    Set IsSecret=##class(DHCMed.SSIO.FromSecSrv).CheckIsSecret(LogonHospID)
+		     
+		    Set OperTpCode=$g(%request.Data("OperTpCode",1))  //²Ù×÷ÀàÐÍ
+		    Set:OperTpCode="" OperTpCode="2"
+	   </script>
+	    <script language="javascript" type="text/javascript">
+	    	var SSHospCode='#(SSHospCode)#'
+	        var OperTpCode='#(OperTpCode)#'
+	        var IsSecret='#(IsSecret)#'
+			$(document).ready(function(){
+				var url = "../scripts/DHCMA/EPD/StabyDateLoc/Layout.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					InitviewScreen();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+        </script>
+	</body>
+</html>

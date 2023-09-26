@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+    移动药房-护士核对
+     csp: csp/dhcpha/dhcpha.inpha.mtnurseinphcheck.csp
+     js:  scripts/pharmacy/inpha/dhcpha.inpha.mtnurseinphcheck.js
+-->
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+    </Server>
+    <TRAK:HEAD />
+    <DHCPHARMACY:COMMONLIB />
+    <DHCAPP:PHARBOOTSTRAP />
+    <!--dhcpha js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.mtnurseinphcheck.js">
+    </script>
+</head>
+<STYLE>
+
+</STYLE>
+
+<body>
+    <div class="container-fluid dhcpha-condition-container">
+        <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6">
+                <button class="btn btn-default btn_button btn_common" id="btn-clear"
+                    onclick="javascript:ClearConditions ()"><img src="../scripts/pharmacy/images/clear-default.png"
+                        class="dhcpha-btn-image"><br><strong>清屏</strong></button>
+                <button class="btn btn-default btn_button btn_important" id="btn-pass"
+                    onclick="javascript:PhacAuitPass()"><img src="../scripts/pharmacy/images/pass-default.png"
+                        class="dhcpha-btn-image"><br><strong>通过(F2)</strong></button>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6">
+                <div class="dhcpha-window-right">
+                    <span style="margin-left:15px;">核对护士：<lable id="currentnurse"></lable></span>
+                    <span style="margin-left:15px;">所属病区：<lable id="currentctloc"></lable></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row dhcpha-row-split-all"></div>
+    <div class="container-fluid dhcpha-condition-container">
+        <div class="row row_style">
+            <form class="form-inline">
+                <div class="input-group">
+                    <span class="input-group-addon dhcpha-input-group-addon-in"><strong>发药科室</strong></span>
+                    <select class="form-control in_select" id="sel-phaloc"></select>
+                </div>
+                <div class="input-group">
+                    <span for="date-start"
+                        class="input-group-addon dhcpha-input-group-addon-in"><strong>起止日期</strong></span>
+                    <input id="date-start" class="form-control input_style" type="text"
+                        style="border-right:none;width:86px" placeholder="请选择日期">
+                    <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                </div>
+                <span><strong>至</strong></span>
+                <div class="input-group">
+                    <input id="date-end" class="form-control input_style" type="text"
+                        style="border-right:none;width:86px" placeholder="请选择日期">
+                    <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                </div>
+                <input class="form-control input_style" type="text" id="txt-cardno" style="width:20em"
+                    autocomplete="off" placeholder="刷卡/请输入工号">
+                <div class="btn-group ">
+                    <span class="fa fa-credit-card dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                    <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
+                        id="btn-readcard">读卡</button>
+                </div>
+                <div class="input-group" style="padding-left:100px">
+                    <input type="checkbox" id="chk-audit" />
+                    <lable for="chk-audit"><strong>已核对</strong></lable>
+                </div>
+                <div class="btn-group dhcpha-btn-right">
+                    <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                    <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
+                        id="btn-find" onclick="javascript:QueryGridPre()">查询</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row dhcpha-row-split"></div>
+    <div class="container-fluid ">
+        <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-3 dhcpha-col dhcpha-col-border-left">
+                <div class="panel div_content">
+                    <div class="panel-heading"><span class="pal_style"><strong>发药单列表</strong></span><a id="a-refresh"
+                            class="dhcpha-btn-fa" style="position: absolute;right: 30px;cursor: pointer;"><i
+                                class="fa fa-refresh"></i></a></div>
+                    <table id="grid-preparelist" class="table table-bordered table_style">
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-9 col-md-9 col-sm-9" style="padding-right:0px;padding-left:0px">
+                <div class="panel div_content">
+                    <div class="panel-heading"><span class="pal_style"><strong>发药单药品汇总</strong></span></div>
+                    <!--div class="panel-body"-->
+                    <table id="grid-preinclist" class="table table-bordered table_style">
+                    </table>
+                    <div id="jqGridPager"></div>
+                    <!--/div-->
+                </div>
+
+                <div class="panel div_content">
+                    <div class="panel-heading"><span class="pal_style"><strong>发药单药品明细</strong></span></div>
+                    <table id="grid-preorderlist" class="table table-bordered table_style">
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

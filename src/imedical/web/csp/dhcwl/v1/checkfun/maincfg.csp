@@ -1,0 +1,299 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--websys.iconprofile.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!--本组css文件-->
+	<link rel="stylesheet" href="../scripts/dhcwl/v1/common.css" type="text/css" />
+	<style>
+		.my-interface>div>div.panel-body{
+			background-color:#fff !important;
+		}
+		/*--解决弹出框表头底线重叠问题--*/
+		.my-interface #standardValueDialog div.panel-header.panel-header-gray{
+			border-bottom:none;
+		}
+		.my-interface #grpDetailDialog div.panel-header.panel-header-gray{
+			border-bottom:none;
+		}
+		/*--只有一个面板的界面去掉边框--*/
+		/*.my-interface>div.layout-panel-center>div>div>div.datagrid-wrap.panel-body{
+			border-top:none;
+			border-right:none;
+			border-left:none;
+		}*/
+	</style>
+</head>
+<!--界面创建开始,hisui-layout是五方布局固定写法,my-interface是为了使本组css格式起效果//-->
+<body class="hisui-layout my-interface">
+	
+	<!--考核方案主界面表格展示-->
+	<div data-options="region:'center',headerCls:'panel-header-gray'" style="fit:true;border:none;padding:10px">
+		<table id="checkFunGrid" data-options="fit:true,singleSelect:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="考核方案维护">		
+			<thead>   
+				<tr>   
+					<th data-options="field:'ID',width:100,hidden:true">ID</th>   
+					<th data-options="field:'code',width:150">方案编码</th>   
+					<th data-options="field:'desc',width:150">方案描述</th>
+					<th data-options="field:'dim',width:140">对象类型</th>
+					<th data-options="field:'dimPro',width:140">对象属性</th>
+					<th data-options="field:'section',width:75">区间类型</th>
+					<th data-options="field:'kpiFlag',width:75,hidden:true">考核指标维护</th>
+					<th data-options="field:'date',width:140">更新日期</th>					
+				</tr>   
+			</thead>  
+		</table><!--datagrid end //-->
+	</div><!--center region end //-->
+	
+	
+	
+	
+	<!--考核方案toolbar-->
+    <!--头部功能菜单维护区-->
+  	<div id="checkFunToobar" class="searchboxRight toolbarsearchbox">	
+    	<!--检索框//-->
+    	<input id="searchText" class="hisui-searchbox" data-options="prompt:'检索方案'" style="width:180px">
+    
+    	<!--按钮//-->
+    	<a href="javascript:void(0)" id="addButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+    	<a href="javascript:void(0)" id="modifyButton" class="hisui-linkbutton" data-options="iconCls:'icon-write-order'" plain="true">修改</a>
+		<a href="javascript:void(0)" id="deleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+		<a href="javascript:void(0)" id="kpiCfgButton" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg'" plain="true">方案指标维护</a>
+		<a href="javascript:void(0)" id="standardValueButton" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg'" plain="true">标准值维护</a>
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	
+	<!--方案新增-->
+  	<div id="checkFunAddDialog" style="width:390px;display:none;padding:0px 4px" title="方案新增">
+  		<form id="checkFunAddInforForm" class="myFormShow">
+			<div>
+				<label for="checkFunCode">编码</label>
+				<input class="hisui-validatebox" type="text" id="checkFunCode" data-options="required:true,validType:'isCode'" style="width:260px"/>
+			</div>
+			<div>
+				<label for="checkFunDesc">描述</label>
+				<input class="hisui-validatebox" type="text" id="checkFunDesc" data-options="required:true,validType:'isForm'" style="width:260px"/>
+			</div>
+			<div>
+				<label for="checkFunDim">维度</label>
+				<select id="checkFunDim" style="width:267px" data-options="required:true">
+					
+				</select>
+			</div>
+			<div>
+				<label for="checkFunDimPro">维度属性</label>
+				<select id="checkFunDimPro" style="width:267px" data-options="required:true">
+					
+				</select>
+			</div>
+			<div>
+				<label for="checkFunSection">区间</label>
+				<select id="checkFunSection" style="width:267px" class="hisui-combobox" data-options="required:true,editable:false,panelHeight:123">
+					<option value="日">日</option>
+					<option value="月">月</option>
+					<option value="季">季</option>
+					<option value="年">年</option>
+				</select>
+			</div>
+		</form>
+  	</div>
+  	<!--方案新增结束-->
+	
+	<!--方案修改-->
+  	<div id="checkFunModDialog" style="width:380px;display:none;padding:0px 4px;" title="方案修改">
+  		<form id="checkFunModInforForm" class="myFormShow">
+			<div>
+				<label for="checkFunModCode">编码</label>
+				<input class="hisui-validatebox" type="text" id="checkFunModCode" disabled="true" style="width:230px"/>
+			</div>
+			<div>
+				<label for="checkFunModDesc">描述</label>
+				<input class="hisui-validatebox" type="text" id="checkFunModDesc" data-options="required:true,validType:'isForm'" style="width:230px"/>
+			</div>
+		</form>
+  	</div>
+  	<!--方案修改结束-->
+	
+	<!--方案指标维护-->
+	<div id="grpDetailDialog" style="width:1000px;height:450px;display:none;" title="方案指标选择">
+  		<div class="hisui-layout" fit="true">
+  			<div data-options="region:'center'" style="fit:true;padding:10px 5px 10px 10px;border:none;">
+		  		<table id="kpiSelectDetailGrid" data-options="fit:true,singleSelect:true,iconCls:'icon-paper',headerCls:'panel-header-gray'" title="已选指标">
+		  			<thead>
+		  				<tr>
+							<th data-options="field:'ID',width:50,hidden:true">ID</th>
+							<th data-options="field:'kpiID',width:50">ID</th>
+							<th data-options="field:'code',width:100">方案指标编码</th>
+							<th data-options="field:'desc',width:100">方案指标描述</th>
+		  				</tr>
+		  			</thead>
+		  		</table>
+		  	</div>	
+		  	<div data-options="region:'east'" style="width:450px;padding:10px 10px 10px 5px;border:none;">
+				<table id="kpiAllDetailGrid" data-options="fit:true,iconCls:'icon-paper',singleSelect:true,headerCls:'panel-header-gray'" title="待选指标">
+		  			<thead>
+		  				<tr>
+		  					<th data-options="field:'ID',width:50">ID</th>
+		  					<th data-options="field:'code',width:100">代码</th>
+		  					<th data-options="field:'desc',width:100">描述</th>
+		  				</tr>
+		  			</thead>
+		  		</table>
+		  	</div>
+  		</div>
+  	</div>
+	
+	<!--所有指标维护toolbar-->
+	<div id="kpiDetailToobar" class="searchboxRight toolbarsearchbox" style="display:none">	
+    	<!--检索框//-->
+    	<input id="searchKPI" class="hisui-searchbox" data-options="prompt:'检索'" style="width:130px">
+		
+		<a href="javascript:void(0)" id="kpiAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	<!--方案指标维护toolbar-->
+	<div id="kpiSelectDetailToobar" class="searchboxRight toolbarsearchbox" style="display:none">
+		
+		<a href="javascript:void(0)" id="kpiDeleteButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	<!--标准值维护-->
+	<div id="standardValueDialog" style="width:1000px;height:450px;display:none;" title="标准值维护">
+  		<div class="hisui-layout" fit="true">
+  			<div data-options="region:'center'" style="fit:true;padding:10px 5px 10px 10px;border:none;">
+		  		<table id="standardValueGrid" data-options="fit:true,singleSelect:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="标准值维护">
+		  			<thead>
+		  				<tr>
+							<th data-options="field:'ID',width:50,hidden:true">ID</th>
+							<th data-options="field:'code',width:100">指标编码</th>
+							<th data-options="field:'desc',width:100">指标名称</th>
+							<th data-options="field:'value',width:100">标准值</th>
+							<th data-options="field:'effDate',width:100">生效日期</th>
+		  				</tr>
+		  			</thead>
+		  		</table>
+		  	</div>	
+		  	<div data-options="region:'east'" style="width:450px;padding:10px 10px 10px 5px;border:none;">
+				<table id="exceptionValueGrid" data-options="fit:true,singleSelect:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="例外值维护">
+		  			<thead>
+		  				<tr>
+		  					<th data-options="field:'ID',width:50,hidden:true">ID</th>
+		  					<th data-options="field:'obj',width:100">考核对象</th>
+		  					<th data-options="field:'excepValue',width:100">例外值</th>
+		  				</tr>
+		  			</thead>
+		  		</table>
+		  	</div>
+  		</div>
+  	</div>
+	
+	<!--标准值toolbar-->
+	<div id="standToobar" class="searchboxRight toolbarsearchbox" style="display:none">	
+    	<!--检索框//-->
+    	<input id="searchStand" class="hisui-searchbox" data-options="prompt:'检索'" style="width:130px">
+		
+		<a href="javascript:void(0)" id="standAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		<a href="javascript:void(0)" id="standModButton" class="hisui-linkbutton" data-options="iconCls:'icon-write-order'" plain="true">修改</a>
+		<a href="javascript:void(0)" id="standRemoveButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	<!--例外值toolbar-->
+	<div id="exceptToobar" class="searchboxRight toolbarsearchbox" style="display:none">
+		<!--检索框//-->
+    	<input id="searchExcept" class="hisui-searchbox" data-options="prompt:'检索'" style="width:130px">
+		
+		<a href="javascript:void(0)" id="exceptAddButton" class="hisui-linkbutton" data-options="iconCls:'icon-add'" plain="true">新增</a>
+		<a href="javascript:void(0)" id="exceptModButton" class="hisui-linkbutton" data-options="iconCls:'icon-write-order'" plain="true">修改</a>
+		<a href="javascript:void(0)" id="exceptRemoveButton" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" plain="true">删除</a>
+
+  	</div><!--头部功能菜单维护区配置结束-->
+	
+	<!--标准值新增-->
+	<div id="standAddDialog" style="width:390px;display:none;padding:4px" title="标准值新增">
+  		<form id="standAddInforForm" class="myFormShow">
+			<div>
+				<label for="kpiCombo">方案指标</label>
+				<select id="kpiCombo" style="width:267px" data-options="required:true">
+					
+				</select>
+			</div>
+			<div>
+				<label for="standValue">标准值</label>
+				<input class="hisui-validatebox" type="text" id="standValue" data-options="required:true,validType:'isNum'" style="width:260px"/>
+			</div>
+			<div>
+				<label for="activeDate">生效日期</label>
+				<select id="activeDate" style="width:267px" data-options="required:true">
+					
+				</select>
+			</div>
+		</form>
+  	</div>
+	<!--标准值新增结束-->
+	
+	<!--标准值修改-->
+	<div id="standModDialog" style="width:330px;display:none;padding:4px;" title="标准值修改">
+  		<form id="standModInforForm" class="myFormShow">
+			<div>
+				<label for="kpiModCombo">方案指标</label>
+				<input class="hisui-validatebox" type="text" id="kpiModCombo" disabled="true" style="width:200px"/>
+			</div>
+			<div>
+				<label for="standModValue">标准值</label>
+				<input class="hisui-validatebox" type="text" id="standModValue" data-options="required:true,validType:'isNum'" style="width:200px"/>
+			</div>
+		</form>
+  	</div>
+	<!--标准值修改-->
+	
+	
+	
+	<!--例外值新增-->
+  	<div id="exceptAddDialog" style="width:345px;display:none;" title="例外值新增">
+  		<form id="exceptAddInforForm" class="myFormShow">
+			<div>
+				<label for="assessObj">考核对象</label>
+				<select id="assessObj" style="width:227px" data-options="required:true">
+					
+				</select>
+			</div>
+			<div>
+				<label for="exceptValue">例外值</label>
+				<input class="hisui-validatebox" type="text" id="exceptValue" data-options="required:true,validType:'isNum'" style="width:220px"/>
+			</div>
+		</form>
+  	</div>
+  	<!--例外值新增结束-->
+	
+	<!--例外值修改-->
+  	<div id="exceptModDialog" style="width:335px;display:none;" title="例外值修改">
+  		<form id="exceptModInforForm" class="myFormShow">
+			<div>
+				<label for="assessDesc">考核对象</label>
+				<input class="hisui-validatebox" type="text" id="assessDesc" disabled="true" style="width:210px"/>
+			</div>
+			<div>
+				<label for="exceptModValue">例外值</label>
+				<input class="hisui-validatebox" type="text" id="exceptModValue" data-options="required:true,validType:'isNum'" style="width:210px"/>
+			</div>
+		</form>
+  	</div>
+  	<!--例外值修改结束-->
+	
+	
+	<!--引入js文件JSURL-->
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/util.js"></script>
+	<script charset="utf-8" type="text/javascript" src="../scripts/dhcwl/v1/checkfun/maincfg.js"></script>
+	<!--当前csp文件路径CSPURL-->
+  	<span style="display:none;">#(%request.URL)#</span>
+</body>
+</html>

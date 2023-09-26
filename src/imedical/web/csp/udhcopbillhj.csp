@@ -1,0 +1,93 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+<SCRIPT Language="Javascript">	
+	function transINVStr(InvPrtValue)
+	{
+		alert(InvPrtValue);
+	}
+	function ifCashierHJ()      //
+	{
+		return true;
+		
+		}
+	////快捷键操作
+	function FrameShutCutKeyFrame(e)
+	{
+		////F9  120   结算
+		////F8	119   查询
+		////F7	118   清除
+		////F12	123		录入医嘱
+		////Alt + 2  读卡
+		switch (e.keyCode){
+			case 118:
+				self.frames["udhcOPPatinfo"].PatClear_Click();
+				break;
+			case 119:
+				self.frames["udhcOPPatinfo"].SelectOneAdm();
+				break;
+			case 120:
+				self.frames["udhcOPCharge"].Bill_Click();
+				break;
+			case 123:
+				///self.frames["DHCOPOEOrdInput"].SetCurFocus();
+				self.frames["udhcOPPatinfo"].ReadHFMagCard_Click();
+				break;
+		}
+		
+		if (e.keyCode=120){
+			
+		}
+	}
+
+function document_OnKeyDown()
+{
+	var e=window.event;
+	///alert(e.keyCode);
+	FrameShutCutKeyFrame(e);
+	///DHCWeb_EStopSpaceKey();
+	
+}
+
+	
+</SCRIPT>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s FFF=$g(%request.Data("FFF",1))
+ s PAADMRowid=$p(FFF,"^")
+ s PatientID=$p(FFF,"^",3)
+	s myVer=##class(web.DHCOPConfig).GetVersion()
+	if ((+myVer=0)!(+myVer=1)){
+		s myTopRat="19%"
+		s mySecTat="41%"
+	}else{
+		s myTopRat="20%"
+		s mySecTat="40%"
+	}
+
+ ///udhcopbill.csp
+</Script>
+<SCRIPT language="Javascript">
+	document.onkeydown = document_OnKeyDown;
+	///transINVStr("DDD");
+	
+</SCRIPT>
+<frameset rows="#(myTopRat)#,#(mySecTat)#,21%,*">
+	<frame name="udhcOPPatinfo" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPPatinfo&FFF=#(FFF)#" frameborder=0>
+	<frame name="DHCOPOEList" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEList&PAADMRowid=#(PAADMRowid)#" frameborder=0>
+	<frame name="DHCOPOEOrdInput" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPOEOrdInput" frameborder=0>
+	<frame name="udhcOPCharge" src="websys.default.csp?WEBSYS.TCOMPONENT=udhcOPCharge&PatientID=#(PatientID)#" frameborder=0>
+	
+</frameset>
+
+
+</HTML>

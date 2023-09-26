@@ -1,0 +1,399 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))	
+	s rowid = $Get(%request.Data("rowid",1))
+	s compCode = $Get(%request.Data("compCode",1))
+	s copyCode = $Get(%request.Data("copyCode",1))
+	s acctYear = $Get(%request.Data("acctYear",1))
+	s beginDate = $Get(%request.Data("beginDate",1))
+	s endDate = $Get(%request.Data("endDate",1))
+	s periodNum = $Get(%request.Data("periodNum",1))
+	s accFlag = $Get(%request.Data("accFlag",1))
+	s budgFlag = $Get(%request.Data("budgFlag",1))
+	s perfFlag = $Get(%request.Data("perfFlag",1))
+	s costFlag = $Get(%request.Data("costFlag",1))
+    s cashDate = $Get(%request.Data("cashDate",1))
+	
+	s code = $Get(%request.Data("code",1))
+	s name = $Get(%request.Data("name",1))
+    s isAutoVouch = $Get(%request.Data("isAutoVouch",1))
+
+	s note = $Get(%request.Data("note",1))
+	s subjTypeCode = $Get(%request.Data("subjTypeCode",1))
+    s subjTypeName = $Get(%request.Data("subjTypeName",1))
+	
+	s acctYearDr = $Get(%request.Data("acctYearDr",1))
+	s acctMonth = $Get(%request.Data("acctMonth",1))
+	s cashFlag = $Get(%request.Data("cashFlag",1))
+	s fixFlag = $Get(%request.Data("fixFlag",1))
+	s matFlag = $Get(%request.Data("matFlag",1))
+	s medFlag = $Get(%request.Data("medFlag",1))
+	s drugStoreFlag = $Get(%request.Data("drugStoreFlag",1))	
+	s wageFlag = $Get(%request.Data("wageFlag",1))
+	s matCheckDate = $Get(%request.Data("matCheckDate",1))
+	s fixCheckDate = $Get(%request.Data("fixCheckDate",1))
+	s isDepreciation = $Get(%request.Data("isDepreciation",1))
+	
+	s acctSysModeDr = $Get(%request.Data("acctSysModeDr",1))
+	s typeCode = $Get(%request.Data("typeCode",1))	
+	s typeName = $Get(%request.Data("typeName",1))
+	s whileSql = $Get(%request.Data("whileSql",1))
+	s isPhase = $Get(%request.Data("isPhase",1))
+	s isInstall = $Get(%request.Data("isInstall",1))
+	
+	s acctSubjTypeDr  = $Get(%request.Data("acctSubjTypeDr",1)) 
+	s acctSubjCode    = $Get(%request.Data("acctSubjCode",1))   
+	s aCCTSubjName    = $Get(%request.Data("aCCTSubjName",1))   
+	s aCCTSubjNameAll = $Get(%request.Data("aCCTSubjNameAll",1))
+	s superSubj       = $Get(%request.Data("superSubj",1))
+	s subjLevel       = $Get(%request.Data("subjLevel",1))      
+	s isLast          = $Get(%request.Data("isLast",1))         
+	s direction       = $Get(%request.Data("direction",1))      
+	s isCash          = $Get(%request.Data("isCash",1))         
+	s isNum           = $Get(%request.Data("isNum",1))          
+	s isFc            = $Get(%request.Data("isFc",1))           
+	s isCheck         = $Get(%request.Data("isCheck",1))        
+	s checkType1      = $Get(%request.Data("checkType1",1))     
+	s checkType2      = $Get(%request.Data("checkType2",1))     
+	s checkType3      = $Get(%request.Data("checkType3",1))     
+	s checkType4      = $Get(%request.Data("checkType4",1))     
+	s checkType5      = $Get(%request.Data("checkType5",1))     
+	s checkType6      = $Get(%request.Data("checkType6",1))     
+	s checkType7      = $Get(%request.Data("checkType7",1))     
+	s checkType8      = $Get(%request.Data("checkType8",1))    
+	s define          = $Get(%request.Data("define",1))         
+	s spell           = $Get(%request.Data("spell",1))          
+	s isStop          = $Get(%request.Data("isStop",1))         
+	s isCbcs          = $Get(%request.Data("isCbcs",1))         
+	s isZero          = $Get(%request.Data("isZero",1))         
+	s subjDefine      = $Get(%request.Data("subjDefine",1))     
+	s isBudge         = $Get(%request.Data("isBudge",1))        
+		
+	s acctSysBusiSectionDr	= $Get(%request.Data("acctSysBusiSectionDr",1))
+	s acctSysBusiPhaseDr 	= $Get(%request.Data("acctSysBusiPhaseDr",1))
+	s acctSysBusiTypeDr 	= $Get(%request.Data("acctSysBusiTypeDr",1))
+	s acctSubjDr			= $Get(%request.Data("acctSubjDr",1))
+	s summary 				= $Get(%request.Data("summary",1))
+	s caption 				= $Get(%request.Data("caption",1))
+	s isAutoCreate 			= $Get(%request.Data("isAutoCreate",1))
+	s relayType 			= $Get(%request.Data("relayType",1))
+	s isGroup 				= $Get(%request.Data("isGroup",1))
+	s moneyField 			= $Get(%request.Data("moneyField",1))
+	s isFund 				= $Get(%request.Data("isFund",1))
+	s isPay 				= $Get(%request.Data("isPay",1))
+
+	s acctModDr 	= $Get(%request.Data("acctModDr",1))
+	s locDr 		= $Get(%request.Data("locDr",1))
+	s docType 		= $Get(%request.Data("docType",1))
+
+	s creCode			= $Get(%request.Data("creCode",1))
+	s creDesc 			= $Get(%request.Data("creDesc",1))
+	s creDataSource 	= $Get(%request.Data("creDataSource",1))
+	s crePatType		= $Get(%request.Data("crePatType",1))
+	s creDate			= $Get(%request.Data("creDate",1))
+	s creTime			= $Get(%request.Data("creTime",1))
+	s creActiveFlag		= $Get(%request.Data("creActiveFlag",1))
+	s creStartDate		= $Get(%request.Data("creStartDate",1))
+	s creEndDate 		= $Get(%request.Data("creEndDate",1))
+	s crePrePrtFlag 	= $Get(%request.Data("crePrePrtFlag",1))
+	s creIncluAbort 	= $Get(%request.Data("creIncluAbort",1))
+	s creModeCode		= $Get(%request.Data("creModeCode",1))
+	s creBusiType 		= $Get(%request.Data("creBusiType",1))
+	s creNote1 			= $Get(%request.Data("creNote1",1))
+	s creNote2 			= $Get(%request.Data("creNote2",1))
+	s creNote3			= $Get(%request.Data("creNote3",1))
+
+	s creSubParRef = $Get(%request.Data("creSubParRef",1))	
+	s creSubDesc = $Get(%request.Data("creSubDesc",1))	
+	s creSubDataSource = $Get(%request.Data("creSubDataSource",1))	
+	s creSubPatType = $Get(%request.Data("creSubPatType",1))	
+	s creSubAccItem = $Get(%request.Data("creSubAccItem",1))	
+	s creSubadmreason = $Get(%request.Data("creSubadmreason",1))	
+	s creSubpaymode = $Get(%request.Data("creSubpaymode",1))	
+	s creSubcat = $Get(%request.Data("creSubcat",1))	
+	s creSubLoc = $Get(%request.Data("creSubLoc",1))	
+	s creSubFlag1 = $Get(%request.Data("creSubFlag1",1))	
+	s creSubFlag2 = $Get(%request.Data("creSubFlag2",1))	
+	s creSubFlag3 = $Get(%request.Data("creSubFlag3",1))	
+	s creSubFlag4 = $Get(%request.Data("creSubFlag4",1))	
+	s creSubFlag5 = $Get(%request.Data("creSubFlag5",1))	
+	s creSubPrePrtFlag = $Get(%request.Data("creSubPrePrtFlag",1))	
+	s creSubIncluAbort = $Get(%request.Data("creSubIncluAbort",1))	
+	s creSubDFContains = $Get(%request.Data("creSubDFContains",1))	
+	s creSubJFContains = $Get(%request.Data("creSubJFContains",1))	
+	
+	
+	i action = "listdhcacccresub" d
+	.w ##class(User.uDHCAccCreSub).List(creSubParRef)
+	
+	i action = "adddhcacccresub" d
+	.s result =  ##class(User.uDHCAccCreSub).Insert(creSubParRef, creSubDesc, creSubDataSource, creSubPatType, creSubAccItem, creSubadmreason, creSubpaymode, creSubcat, creSubLoc, creSubFlag1, creSubFlag2, creSubFlag3, creSubFlag4, creSubFlag5, creSubPrePrtFlag, creSubIncluAbort, creSubDFContains, creSubJFContains)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editdhcacccresub" d
+	.s result =  ##class(User.uDHCAccCreSub).Update(rowid, creSubDesc, creSubDataSource, creSubPatType, creSubAccItem, creSubadmreason, creSubpaymode, creSubcat, creSubLoc, creSubFlag1, creSubFlag2, creSubFlag3, creSubFlag4, creSubFlag5, creSubPrePrtFlag, creSubIncluAbort, creSubDFContains, creSubJFContains)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deldhcacccresub" d
+	.s result =  ##class(User.uDHCAccCreSub).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	
+	i action = "listdhcacccre" d
+	.w ##class(User.uDHCAccCre).List()
+	
+	i action = "adddhcacccre" d
+	.s result =  ##class(User.uDHCAccCre).Insert(creCode, creDesc, creDataSource, crePatType, creDate, creTime, creActiveFlag, creStartDate, creEndDate, crePrePrtFlag, creIncluAbort, creModeCode, creBusiType, creNote1, creNote2, creNote3)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editdhcacccre" d
+	.s result =  ##class(User.uDHCAccCre).Update(rowid,creCode, creDesc, creDataSource, crePatType, creDate, creTime, creActiveFlag, creStartDate, creEndDate, crePrePrtFlag, creIncluAbort, creModeCode, creBusiType, creNote1, creNote2, creNote3)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "deldhcacccre" d
+	.s result =  ##class(User.uDHCAccCre).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"		
+	
+	
+	i action = "listincsc" d
+	.w ##class(User.uACCTSubjMap).ListINCSC()
+	
+	i action = "listacctsubjmap" d
+	.w ##class(User.uACCTSubjMap).List()
+	
+	i action = "addacctsubjmap" d
+	.s result =  ##class(User.uACCTSubjMap).Insert(acctModDr, acctSubjDr, typeCode, locDr, docType)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editacctsubjmap" d
+	.s result =  ##class(User.uACCTSubjMap).Update(rowid,acctModDr, acctSubjDr, typeCode, locDr, docType)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctsubjmap" d
+	.s result =  ##class(User.uACCTSubjMap).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"		
+	
+
+	
+	
+	i action = "listacctbusidetail" d
+	.w ##class(User.uACCTBusiDetail).List()
+	
+	i action = "addacctbusidetail" d
+	.s result =  ##class(User.uACCTBusiDetail).Insert(acctSysBusiSectionDr, acctSysBusiPhaseDr, acctSysBusiTypeDr, acctYearDr, acctSubjDr, summary, caption, direction, isAutoCreate, relayType, isGroup, moneyField, whileSql, isFund, isPay)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editacctbusidetail" d
+	.s result =  ##class(User.uACCTBusiDetail).Update(rowid,acctSysBusiSectionDr, acctSysBusiPhaseDr, acctSysBusiTypeDr, acctYearDr, acctSubjDr, summary, caption, direction, isAutoCreate, relayType, isGroup, moneyField, whileSql, isFund, isPay)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctbusidetail" d
+	.s result =  ##class(User.uACCTBusiDetail).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	
+	i action = "listacctyear" d
+	.w ##class(User.uACCTYear).List()
+	
+	i action = "addacctyear" d
+	.s result =  ##class(User.uACCTYear).Insert(compCode,copyCode,acctYear,beginDate,endDate,periodNum,accFlag,budgFlag,perfFlag,costFlag,cashDate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "editacctyear" d
+	.s result =  ##class(User.uACCTYear).Update(rowid,compCode,copyCode,acctYear,beginDate,endDate,periodNum,accFlag,budgFlag,perfFlag,costFlag,cashDate)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctyear" d
+	.s result =  ##class(User.uACCTYear).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	
+	i action = "listacctsysmode" d
+	.w ##class(User.uACCTSysMode).List()
+	
+	i action = "addacctsysmode" d
+	.s result =  ##class(User.uACCTSysMode).Insert(code,name,isAutoVouch)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editacctsysmode" d
+	.s result =  ##class(User.uACCTSysMode).Update(rowid,code,name,isAutoVouch)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctsysmode" d
+	.s result =  ##class(User.uACCTSysMode).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	
+	i action = "listacctsubjtype" d
+	.w ##class(User.uACCTSubjType).List()
+	
+	i action = "addacctsubjtype" d
+	.s result =  ##class(User.uACCTSubjType).Insert(compCode, copyCode, note, subjTypeCode, subjTypeName)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editacctsubjtype" d
+	.s result =  ##class(User.uACCTSubjType).Update(rowid,compCode, copyCode, note, subjTypeCode, subjTypeName)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctsubjtype" d
+	.s result =  ##class(User.uACCTSubjType).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	
+	///temp	///temp	///temp	///temp	///temp	///temp	///temp	///temp
+	i action = "listacctyearperiod" d
+	.w ##class(User.uACCTYearPeriod).List()	
+	
+	i action = "addacctyearperiod" d
+	.s result =  ##class(User.uACCTYearPeriod).Insert(acctYearDr, acctMonth, beginDate, endDate, cashFlag, fixFlag, matFlag, medFlag, drugStoreFlag, wageFlag, accFlag, budgFlag, perfFlag, costFlag, matCheckDate, fixCheckDate, isDepreciation)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editacctyearperiod" d
+	.s result =  ##class(User.uACCTYearPeriod).Update(rowid,acctYearDr, acctMonth, beginDate, endDate, cashFlag, fixFlag, matFlag, medFlag, drugStoreFlag, wageFlag, accFlag, budgFlag, perfFlag, costFlag, matCheckDate, fixCheckDate, isDepreciation)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctyearperiod" d
+	.s result =  ##class(User.uACCTYearPeriod).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	
+	
+	i action = "listacctsysbusitype" d
+	.w ##class(User.uACCTSysBusiType).List("","","","","","")
+	
+	i action = "addacctsysbusitype" d
+	.s result =  ##class(User.uACCTSysBusiType).Insert(acctSysModeDr, typeCode, typeName, whileSql, isPhase, isInstall)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editacctsysbusitype" d
+	.s result =  ##class(User.uACCTSysBusiType).Update(rowid,acctSysModeDr, typeCode, typeName, whileSql, isPhase, isInstall)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctsysbusitype" d
+	.s result =  ##class(User.uACCTSysBusiType).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+
+
+
+	
+	i action = "listacctsubj" d
+	.w ##class(User.uACCTSubj).List("","","","","","")
+	
+	i action = "addacctsubj" d
+	.s result =  ##class(User.uACCTSubj).Insert(acctYearDr, acctSubjTypeDr, acctSubjCode, aCCTSubjName, aCCTSubjNameAll, superSubj, subjLevel, isLast, direction, isCash, isNum, isFc, isCheck, checkType1, checkType2, checkType3, checkType4, checkType5, checkType6, checkType7, checkType8, define, spell, isStop, isCbcs, isZero, subjDefine, isBudge)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"	
+	
+	i action = "editacctsubj" d
+	.s result =  ##class(User.uACCTSubj).Update(rowid,acctYearDr, acctSubjTypeDr, acctSubjCode, aCCTSubjName, aCCTSubjNameAll, superSubj, subjLevel, isLast, direction, isCash, isNum, isFc, isCheck, checkType1, checkType2, checkType3, checkType4, checkType5, checkType6, checkType7, checkType8, define, spell, isStop, isCbcs, isZero, subjDefine, isBudge)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "delacctsubj" d
+	.s result =  ##class(User.uACCTSubj).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"		
+
+</script>

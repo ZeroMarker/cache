@@ -1,0 +1,33 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<server>
+		Set %request.Data("ChartBookID",1)=54
+		w "<script type=""text/javascript"">",!
+		W "var req = {};",!
+		Set p="" for {
+			Set p = $O(%request.Data(p))
+			Quit:p=""
+			W "req["""_p_"""]="""_$g(%request.Data(p,1),"")_""";",!
+		}
+		w "</script>"
+	</server>
+</head>
+<body>
+<server>
+	If $d(%request.Data("JavascriptFileName",1)){
+		W "<script type=""text/javascript"" src=""../scripts/"_%request.Data("JavascriptFileName",1)_"""></script>"
+	}
+	if $d(%request.Data("MutilTabMenu",1),mtm),mtm=1{ //¶àÒ³Ç©´ò¿ª
+		W "<script type=""text/javascript"" src=""../scripts/hisui/websys.tabs.js""></script>"
+	}
+</server>
+</body>
+</html>

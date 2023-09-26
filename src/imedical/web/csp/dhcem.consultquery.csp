@@ -1,0 +1,151 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcem.consultquery.csp  会诊申请 //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcem/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcem/css/consultquery.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultquery.js"></script>
+	<!-- 会诊配置 -->
+	<server>
+	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  /// 会诊列表是否按职称级别过滤
+	  s IsFiltPrvTpFlag=##Class(web.DHCEMConsultCom).GetEmSysConfig("ISFILTPRVTP",LgHospID)
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var IsFiltPrvTpFlag="""_+$g(IsFiltPrvTpFlag)_""";"_$c(13,10)
+	  w "</script>"
+	</server>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'west',border:true,title:'#(..Get("申请单列表！"))#',split:true,tools: [{iconCls:'icon-w-list',handler:function(){btn_More_Click()}}]" style="width:235px;padding-top:0px;overflow:hidden;">
+			<div id="dgEmPatList"></div>
+		</div>
+		<div data-options="region:'center',headerCls:'panel-header-gray',title:''" style="border-left:1px solid #E3E3E3;overflow: hidden;border:0;">
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;">
+					<div class="item-tip">
+						<div class="messager-popover info" style="left: 1px; top: 2px;">
+							<span class="messager-popover-icon info"></span>
+							<span class="content">#(..Get("请选择一条会诊记录！"))#</span>
+						</div>
+					</div>
+					<div class="item-label">
+						<div class="pf-patimg">
+							<img id="PatPhoto" src="../scripts/dhcnewpro/images/girl.png">
+						</div>
+						<div class="pf-patbase">
+							<ul class="pf-nav">
+								<li class="pf-nav-item"><span class="pf-nav-title pf-patname"><span id="PatName" class="ui-span-m"></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatSex" class="ui-span-m"></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatAge" class="ui-span-m"></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatNo" class="ui-span-m"></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBed" class="ui-span-m"></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBill" class="ui-span-m"></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
+								<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatDiagDesc" class="ui-span-m"></span></span></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',headerCls:'panel-header-gray',title:'#(..Get("会诊申请单"))#',iconCls:'icon-paper'" style="border-left:1px solid #E3E3E3;overflow: hidden;">
+					<iframe id="TabMain1" scrolling="yes" width=100% height=100%  frameborder="0" src="dhcem.consultwrite.csp" ></iframe>
+					<iframe id="TabMain2" scrolling="yes" width=100% height=100%  frameborder="0" src="dhcem.consultmdt.csp" ></iframe>
+					<iframe id="TabMain3" scrolling="yes" width=100% height=100%  frameborder="0" src="dhcem.consultnur.csp" ></iframe>
+				</div>
+				<div data-options="region:'east',headerCls:'panel-header-gray',border:true,title:'#(..Get("状态"))#',collapsible:false,split:true,iconCls:'icon-paper'" style="width:200px;overflow:hidden;">
+					<div id="status-detail" style="font-size:1.2em;padding-top:15px;padding-left:20px;">
+						<ul class="status-list" id="statusUl">
+							<SERVER>
+								s LgHospID=%session.Get("LOGON.HOSPID")
+	 							s ConsUseStatusCode = ##Class(web.DHCEMConsultCom).GetConsUseStatusCode(LgHospID)
+		 						i ConsUseStatusCode["^20^" d
+		 						.w "<li id='20'>"
+								.w "<div class='circle'></div>"
+								.w "<div class='txt'>"_##class(websys.Translation).Get("dhcem.consultquery.csp","发送")_"<span style='margin-left:10px;'></span></div>"
+								.w "<div class='time'></div>"
+								.w "</li>"
+								
+								i ConsUseStatusCode["^21^" d //hxy 2020-03-10 st
+		 						.w "<li id='21'>"
+								.w "<div class='circle'></div>"
+								.w "<div class='txt'>"_##class(websys.Translation).Get("dhcem.consultquery.csp","审核")_"<span style='margin-left:10px;'></span></div>"
+								.w "<div class='time'></div>"
+								.w "</li>" //ed
+								
+								i ConsUseStatusCode["^30^" d
+		 						.w "<li id='30'>"
+								.w "<div class='circle'></div>"
+								.w "<div class='txt'>"_##class(websys.Translation).Get("dhcem.consultquery.csp","接收")_"<span style='margin-left:10px;'></span></div>"
+								.w "<div class='time'></div>"
+								.w "</li>"
+								
+								i ConsUseStatusCode["^50^" d
+		 						.w "<li id='50'>"
+								.w "<div class='circle'></div>"
+								.w "<div class='txt'>"_##class(websys.Translation).Get("dhcem.consultquery.csp","完成")_"<span style='margin-left:10px;'></span></div>"
+								.w "<div class='time'></div>"
+								.w "</li>"
+								
+								i ConsUseStatusCode["^60^" d
+		 						.w "<li id='60'>"
+								.w "<div class='circle'></div>"
+								.w "<div class='txt'>"_##class(websys.Translation).Get("dhcem.consultquery.csp","确认")_"<span style='margin-left:10px;'></span></div>"
+								.w "<div class='time'></div>"
+								.w "</li>"
+								
+								i ConsUseStatusCode["^70^" d
+		 						.w "<li id='70'>"
+								.w "<div class='circle'></div>"
+								.w "<div class='txt'>"_##class(websys.Translation).Get("dhcem.consultquery.csp","评价")_"<span style='margin-left:10px;'></span></div>"
+								.w "<div class='time'></div>"
+								.w "</li>"
+	 					   </SERVER>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	
+	<!--会诊处理界面左侧列表toolbar-->
+	<div id="btn-toolbar">
+		<div class="btn-group" style="height:34px;">
+			<button type="button" class="button btn-blue btn-blue-select" onclick="QryConsList('R')">#(..Get("申请列表"))#</button>
+			<button type="button" class="button btn-blue" onclick="QryConsList('C')">#(..Get("会诊列表"))#</button>
+		</div>
+		<div class="more-panel" style="height:180px;">
+			<div style="padding:3px 0px 3px 3px;">
+				<label style="width: 60px;display: inline-block;margin-right: 5px;text-align: right;white-space: nowrap;">#(..Get("开始日期"))#</label><input id="CstStartDate" class="hisui-datebox textbox" style="width:155px;">
+			</div>
+			<div style="padding:3px 0px 3px 3px;">
+				<label style="width: 60px;display: inline-block;margin-right: 5px;text-align: right;white-space: nowrap;">#(..Get("结束日期"))#</label><input id="CstEndDate" class="hisui-datebox textbox" style="width:155px;">
+			</div>
+			<div style="padding:3px 0px 3px 3px;">
+				<label style="width: 60px;display: inline-block;margin-right: 5px;text-align: right;white-space: nowrap;">#(..Get("会诊状态"))#</label><input id="CstType" class="hisui-combobox" style="width:155px;"/>
+			</div>
+			<div style="padding:3px 0px 3px 3px;">
+				<label style="width: 60px;display: inline-block;margin-right: 5px;text-align: right;white-space: nowrap;">#(..Get("登记号"))#</label><input id="EmPatNo" class="hisui-validatebox" style="width:148px;"/>
+			</div>
+			<div style="padding:3px 0px 3px 2px;">
+				<a href="#" style="border:1px solid #95B8E7;margin-left:60px;width:100px;" class="hisui-linkbutton" onclick="QryCons()">#(..Get("查询"))#</a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

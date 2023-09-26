@@ -1,0 +1,110 @@
+﻿<!--深圳南山--低值补录功能(依据台账)-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+ d ##class(web.DHCXMLPConfig).LODOPInit()
+</SERVER>
+<head>	
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" class="GridPadding" style="padding-top:0;padding-bottom:0;"> 
+		<table id="MainConditions" class="Condition">
+			<input id="InciId" name="InciId" type="hidden">
+			<tr>
+				<td>入库科室</td>
+				<td><input id="RecLocId" name="RecLocId" class="hisui-combobox" style="width:137px;"></td>
+			    <td>医嘱开始日期</td>
+			    <td><input id="StartDate" name="StartDate" class="hisui-datebox textbox" style="width:137px;"></td>
+				<td>资金来源</td>
+			    <td><input id="SourceOfFund" name="SourceOfFund" class="hisui-combobox" style="width:137px;"></td>
+			    <td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+			    <td align="left"><a href="#" id="CreateBT" class="hisui-linkbutton" data-options="iconCls:''">生成入库单</a></td>  
+			</tr>
+			<tr>
+				<td>出库接收科室</td>
+				<td><input id="ReqLocId" name="ReqLocId" class="hisui-combobox" style="width:137px;" disabled></td>
+                <td>医嘱截止日期</td>
+                <td><input id="EndDate" name="EndDate" class="hisui-datebox textbox" style="width:137px;"></td>
+			    <td>物资名称</td>
+			    <td><input id="inciDesc" name="inciDesc" class="textbox" style="width:137px;"></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td align="left"><a href="#" id="RecPrintBT" class="hisui-linkbutton" data-options="iconCls:''">打印入库单</a></td>
+			</tr>
+			<tr>
+				<td>医嘱接收科室</td>
+			    <td><input id="OeriRecLocId" name="OeriRecLocId" class="hisui-combobox" style="width:137px;"></td>
+				<td>供应商</td>
+				<td><select id="FVendorBox" name="FVendorBox" class="hisui-combobox" style="width:137px;"></select></td>
+				<td>入库状态</td>
+				<td>
+					<select id="RecStatusBox" name="RecStatusBox" class="hisui-combobox" style="width:137px;">
+						<option value="N">未入库</option>
+						<option value="">全部</option>
+						<option value="Y">已入库</option>
+					</select>
+				</td>
+				<td><a href="#" id="CancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'">撤销</a></td>
+				<td><a href="#" id="InisTrfPrintBT" class="hisui-linkbutton" data-options="iconCls:''">打印出库单</a></td>
+			</tr>
+			<tr>
+				<td align="right">类组</td>
+				<td align="left"><input id="ScgStk" name="ScgStk" class="hisui-stkscgcombotree" style="width:137px;"></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false" class="GridPadding" style="padding-top:0">
+		<div class="hisui-layout" data-options="fit:true">
+			<div id="MatOeriTab" class="hisui-tabs tabs-gray"  data-options="tools:'#tab-tools',fit:true">   
+				<div title="医嘱明细"  class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">   
+					<table id="MatOrdItmGrid"></table>
+				</div>
+				<div title="入库信息" data-options="headerCls:'panel-header-gray',fit:true">
+					<div class="hisui-layout" data-options="fit:true"> 
+						<div class="GridPadding" data-options="region:'west',border:false" style="width:450px;">
+								<div class="hisui-panel" title="入库单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+									<table id="IngrMainGrid"></table>
+								</div>
+						</div> 
+						<div class="GridPadding" data-options="region:'center',border:false" style="padding-left:0px;">
+								<div class="hisui-panel" title="入库明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+									<table id="IngrDetailGrid"></table>
+								</div>
+						</div>
+					</div>
+				</div> 
+				<div title="出库信息" data-options="headerCls:'panel-header-gray',fit:true">  
+					<div class="hisui-layout" data-options="fit:true"> 
+						<div class="GridPadding" data-options="region:'west',border:false" style="width:450px">
+				 				<div class="hisui-panel" title="出库单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+									<table id="InitMainGrid"></table>
+								</div>
+						</div> 
+						<div class="GridPadding" data-options="region:'center',border:false" style="padding-left:0px;">
+								<div class="hisui-panel" title="出库单明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+									<table id="InitDetailGrid"></table>
+								</div>
+						</div> 
+					</div>
+				</div>  
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/TableMatHandle/TableMatHandle.js"></script>	
+</body>
+</html>

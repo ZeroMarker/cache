@@ -1,0 +1,225 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<server>
+s SaveMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCVISWarning.ImportData"))
+</server>
+<!--dhcvisfindwarn.csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html;">
+	<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhccahs/deptlevelsets/detailReport.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhccahs/deptlevelsets/report.css">
+	<link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.2.1/plugins/MultiSelect.css">
+
+
+	<script type="text/javascript" src="../scripts_lib/ext3.2.1/plugins/MultiSelect.js"></script>
+	<script type="text/javascript" src="../scripts_lib/ext3.2.1/plugins/MultiSelectGrid.js"></script>
+	<script type='text/javascript' src="../scripts/websys.js"></script>
+	<script type='text/javascript' src="../scripts/framework/ext.icare.lookup.js"></script>
+	
+	<script type='text/javascript' src="../scripts/xlsx.core.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcmed/css/main.css" />
+	<script type="text/javascript" src="../scripts/wechat/DHC.Med.ExtFramework.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+	<!--
+	<script type='text/javascript' src="../scripts/jquery-2.0.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdocoeordercfg.js"></script>
+	-->
+
+	<SCRIPT Language="Javascript">
+	var SaveMethod="#(SaveMethod)#";
+   </SCRIPT>
+	<style>
+	html,body{
+			padding:0;
+			margin:0;
+			background-color:#fff;
+		}
+	body{
+		padding-top:5px;
+		padding-left:5px;
+		}
+	.TopPanel td{
+		width:130px;
+		height:40px;
+		}
+	.TopPanel td input{
+		width:130px;
+		}
+	.lab{
+		text-align:right;
+		padding-right:5px;
+		}
+	</style>
+</head>
+<body>
+<div style="width:1100px;height:620px">
+	<div id="panelTop" class="hisui-panel" title="报警基础数据导入" style="width:1150px;height:160px" data-options="iconCls:'icon-save',
+closable:false,collapsible:false,minimizable:false,maximizable:false">
+
+<table class="TopPanel" cellpadding="5" >
+		<tr>
+			<td>
+			</td>
+			<td>
+			</td>
+		</tr>
+		<tr>
+			<td class="lab">类型:</td>
+			<td style="width:200px;">
+			 	<select id='type' style="width:147px;">
+			 		<option value=""></option>
+			　　　　<option value="Floor">楼层</option>
+			　　　　<option value="Build">楼宇</option>
+			　　　　<option value="Clinical">诊区</option>
+			　　　　<option value="Room">房间</option>
+			　　　　<option value="Warn">预警信息</option>                                                                                                                                                          
+			　　</select>   
+			 </td>
+       		 <th scope="row"><input name="OpenFile" type="file" id="OpenFile" value="按钮" size="30"></th>
+       		 <td><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-import'" name="LoadFile" id="LoadFile" onclick="LoadFile()">装载文件</a></td>
+			<td><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-export'" id="Export" onclick="ExportFile()">导出模板</a>
+				<a id="DownLoad" href="#" style="display:none;">download</a>
+			</td>
+		</tr>
+	</table>
+</div>
+</div>
+</body>
+<script language="javascript">
+	var ExcelObj="";
+	var FetchRows=2000;
+	var sep="@";
+	function ExportFile()
+	{
+		var typeObj=document.getElementById("type");
+		var index=document.getElementById("type").selectedIndex;
+		var typeValue=typeObj.options[index].value;
+		//var typeValue=typeObj.options[index].text;
+		if(typeValue==""){
+			$.messager.alert("提示", "请选择需要导出的模板类型!", 'info');
+			return false;
+		}
+		var filename=typeValue+".xls";
+	    var path=tkMakeServerCall('web.DHCVISWarning','GetImportPath')
+	    if(path==""){
+		    $.messager.alert("提示", "暂未配置导出模板路径请先配置!", 'info');
+			return false;
+		}
+	    $("#DownLoad").attr("href","websys.file.utf8.csp?act=download&dirname="+path+"&filename="+filename+"&servertype=HTTP");
+	    $("#DownLoad")[0].click();
+	}
+	function LoadFile()
+	{
+		var typeObj=document.getElementById("type");
+		var index=document.getElementById("type").selectedIndex;
+		var typeValue=typeObj.options[index].value;
+		if(typeValue==""){
+			$.messager.alert("提示", "请选择类型!", 'info');
+			return false;
+		}
+		window.status="程序进行中"
+		var OpenFileObj=document.all.OpenFile;
+		if (!OpenFileObj || OpenFileObj.value=="") 
+		{
+			$.messager.alert("提示", "没有要装入的文件!", 'info');
+			OpenFileObj.focus();
+			window.status="完毕";
+			return false;
+		}
+		var retLen=OpenFileObj.value.split(typeValue).length;
+		if(retLen!=2)
+		{
+			$.messager.alert("提示", "导入数据类型与模板不匹配(切勿修改模板名称)!", 'info');
+			return false;
+		}
+		ImportExcell();
+	}
+	function ImportExcell(){
+	
+		$('#OpenFile').dblclick();
+ 	}
+ 	$('#OpenFile').dblclick(function(e){      
+	        try {
+	            new Uint8Array([1,2]).slice(0,2);
+	        } catch (e) {
+	            console.log("[Uint8Array"+e.description+"]");
+	            
+	            Uint8Array.prototype.slice = Array.prototype.slice;
+	        }
+	        var url=$('#OpenFile').val();
+	        if(!url){
+		        return;
+		    }
+		    var typeObj=document.getElementById("type");
+			var index=document.getElementById("type").selectedIndex;
+			var typeValue=typeObj.options[index].value;
+	        var suffix=url.substring(url.lastIndexOf(".")+1,url.length);
+	        if(!(suffix=="xls"||suffix=="xlsx")){
+	            return alert("文件类型不正确");
+	        }
+	        var files = e.target.files;	        
+	        var fileReader = new FileReader();
+	        fileReader.readAsArrayBuffer(files[0]);// 以二进制方式打开文件
+	        fileReader.onload = function(ev) {
+		        var retCode=0;
+	            $('#OpenFile').val('');
+	            try {	                
+	            	var data = ev.target.result;
+	            	var workbook = XLSX.read(data, { type: 'array'}),
+	                persons = [];
+	            } catch (e) {
+	            	console.error(e);
+	                return alert('文件类型不正确!');
+	            }
+	            for (var sheet in workbook.Sheets) {
+	                if (workbook.Sheets.hasOwnProperty(sheet)) {
+	                    persons = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets[sheet],{raw:true, header:1}));
+	                    
+	                    for ( var i = 1; i <persons.length; i++){
+	                        var data1=persons[i][0]?persons[i][0]:"";
+							var data2=persons[i][1]?persons[i][1]:"";
+							var data3=persons[i][2]?persons[i][2]:"";
+							var data4=persons[i][3]?persons[i][3]:"";
+							var data5=persons[i][4]?persons[i][4]:"";
+							var data6=persons[i][5]?persons[i][5]:"";
+							var data7=persons[i][6]?persons[i][6]:"";
+							var data8=persons[i][7]?persons[i][7]:"";
+							var data9=persons[i][8]?persons[i][8]:"";
+	                        var ret=0;
+							var ret=cspRunServerMethod(SaveMethod,typeValue,data1,data2,data3,data4,data5,data6,data7,data8,data9,i);
+							var retArr=ret.split("^");
+							var retCode=retArr[0];
+							if (retCode!="0"){	
+								var err="此行前数据已导入 "+ret.split("^")[1];
+								$.messager.alert("提示", err, 'info');
+								return false;
+								if (result=="")
+								{ 
+									result=err;
+								}
+								else 
+								{
+									result= result + "//n" +err;
+								}
+							}
+	                       }
+	                        
+	                    }
+	                    break;
+	                }
+	               $.messager.alert("提示", "导入完成!", 'info');
+	        };
+	        
+	   });
+	
+</script>
+</html>

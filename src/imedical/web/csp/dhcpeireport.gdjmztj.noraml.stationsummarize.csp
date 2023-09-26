@@ -1,0 +1,49 @@
+
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		Q:(0=$D(StationId))
+		Set UserID=%session.Get("LOGON.USERID")
+		s StationDesc=$G(^TMPReport(UserID,"Summarize", "Station", StationId))
+		Q:(""=StationDesc)
+		s StationTitle=StationDesc_"小结:"
+		s Summarize=$G(^TMPReport(UserID,"Summarize", "Content", StationDesc))
+
+		
+		s SummarizeData=""
+		f iLLoop=1:1:$L(Summarize,$C(13,10)) d
+		.s SummarizeData=SummarizeData_$P(Summarize,$C(13,10),iLLoop)_"<br>"
+		.
+		Q:(""=SummarizeData)
+		s Summarize=SummarizeData
+		s SummarizeData=""
+		f iLLoop=1:1:$L(Summarize,$C(32)) d
+		.s SummarizeData=SummarizeData_$P(Summarize,$C(32),iLLoop)_"&nbsp;"
+		.
+		
+		s SummarizeAduitUser=$G(^TMPReport(UserID,"Summarize", "Content", StationDesc, "AduitUser"))
+		s AduitDate=$G(^TMPReport(UserID,"Summarize", "Content", StationDesc, "AduitDate"))
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="Summarize"
+		e  d
+		.s DIVClass="Page Summarize"
+		//i SummarizeData="<br>&nbsp;" s SummarizeData="<br>未见异常&nbsp;"
+		i SummarizeData="<br>&nbsp;" s StationTitle=""
+		q:StationTitle=""
+	</Script>
+	
+<DIV class='#(DIVClass)#'>
+	<TABLE border=0 class="SummarizeTable">
+		<THEAD>
+			<TR>
+				<TD width="663" class="StationSummarizeTitle">#(StationTitle)#</TD>
+			</TR>
+		</THEAD>
+		<TBODY>
+			<TR>
+				<TD>
+					<P class="StationSummarizeData">#(SummarizeData)#</P>
+				</TD>		
+			</TR>
+		</TBODY>
+	</TABLE>
+</DIV>
+	

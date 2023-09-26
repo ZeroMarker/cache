@@ -1,0 +1,180 @@
+<!--dhcdis.statusadd.csp-->
+<html>
+<head>
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcapp/listcomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcdis/statusadd.js"></script>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	var hosp="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+</script>
+<style>
+	.panel-body-noheader.panel-body
+	{
+		border-radius:0px;
+	}
+	.datagrid-wrap
+	{
+		border:none;
+	}
+</style>
+</head>
+<body class="hisui-layout">   
+	<div data-options="region:'west'" border="false" >
+		<!-- toolbar -->
+		<div id="toolbar" class="toolbar">
+			<div id="queryForm" style="margin:10 0 10 10;">
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+						<td class="textLabel">代码<input style="margin-left:10px;margin-right:10px;" type="text" id="SACode" name="SACode" class="textbox"></input> </td>	
+						<td class="textLabel">描述<input style="margin-left:10px;" type="text" id="SADesc" name="SADesc" class="textbox"></input> </td>
+						<td><span style='margin-right:10px;margin-left:10px'>医院</span><input id="HospDrID" name="HospDrID" class="hisui-combobox"></input></td>	<!--hxy 2019-07-22-->
+						<td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
+						<td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:commonReload({'datagrid':'#datagrid','formid':'#queryForm'})">重置</a> </td>
+					</tr>
+				</table>			
+			</div>
+			<div  style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    nowrap:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    pageSize:20,
+		    pageList: [20,40,80],
+		    nowrap: false,
+		    onDblClickRow:onClickRow, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCDISStatusAdd&MethodName=ListSStatusAdd'">
+			<thead>
+				<tr>
+					<th data-options="field:'SACode',width:180,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'SADesc',width:180,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'SAActiveFlag',align:'center',width:80,
+											formatter:function(value,row,index){
+							
+													if (value=='Y'){return '是';} 
+													else {return '否';}
+												},
+											editor:{
+												type:'combobox',
+												options:{
+													
+													valueField:'value',
+													textField:'text',
+													panelHeight:80,
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISStatusAdd&MethodName=ListStatActive',
+													required:true
+												
+												}
+											}">激活标志</th>
+					<th data-options="field:'SAMustFlag',align:'center',width:80,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+												
+											},
+											editor:{
+												type:'combobox',
+												
+												options:{
+													valueField:'value',
+													textField:'text',
+													panelHeight:80,
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISStatusAdd&MethodName=ListMustActive',
+													required:true,
+													editable:false
+												}
+											}">必须流程</th>
+					<th data-options="field:'SALocDr',align:'center',width:180,hidden:true,
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISCommonDS&MethodName=NodeLocCombo&HospID='+hosp,
+													editable:false
+												},filter: function(q, row){  
+       											 var opts = $(this).combobox('options');  
+        										return row[opts.textField].indexOf(q) >= 0;//这里改成>=即可在任意地方匹配  
+  							  }
+											}">中转点</th>
+					<th data-options="field:'SAType',align:'center',width:80,
+											formatter:function(value,row,index){
+												//if (value=='1'){return '配送';} 
+												//else {return '陪送';}
+												return row.SATypeDesc; 
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'id',
+													textField:'text',
+													panelHeight:80,
+													url:'dhcapp.broker.csp?ClassName=web.DHCDISStatusAdd&MethodName=TypeAddLocCombo',
+													required:true,
+													editable:false,
+													onSelect: function () {
+                    									//获取选中的值 hxy 2019-09-19  加onSelect:
+                    									var varSelect = $(this).combobox('getValue');								                 									
+                   							   			//获取combobox所在的datagrid Editor
+                    									var rowIndex=$('#datagrid').datagrid('getRowIndex',$('#datagrid').datagrid('getSelected'))
+                    									rowIndex=rowIndex==-1?0:rowIndex
+                   							 			var varEditor = $('#datagrid').datagrid('getEditor', { index: rowIndex, field: 'SAHospDr' });
+                    									runClassMethod('web.DHCDISStatusAdd','GetHospByType',{'ID':varSelect},function(data){ 
+                    										$(varEditor.target).combobox('setValue',data);  
+                    									})													       
+                    								}
+												}
+											}">陪送类型</th>
+					
+					<th data-options="field:'LocDrId',hidden:true">LocDrId</th>
+					<th data-options="field:'ID',hidden:true">id</th>
+					<th data-options="field:'SAHospDr',width:200,align:'center',
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													disabled:true,
+													editable:false
+												}
+											}">医院</th><!--hxy 2019-07-01-->
+					<th data-options="field:'SAHospDrID',hidden:true">SAHospDrID</th><!--hxy 2019-07-01-->
+				</tr>
+			</thead>
+		</table>
+</div>
+
+<div data-options="region:'center'" style="background:#eee;">
+		
+
+		
+</div>   
+ 
+</body>
+</html>

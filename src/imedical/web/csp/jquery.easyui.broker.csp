@@ -1,0 +1,46 @@
+<script language="Cache" runat="server">
+	d %session.Unlock()
+	Set ItemName = $g(%request.Data("EncryItemName",1))	;组件item
+	Set ClassName = $g(%request.Data("ClassName",1))
+	Set MethodName = $g(%request.Data("MethodName",1))
+	Set wantreturnval = $g(%request.Data("wantreturnval",1),1)	;控制是不是有返回值
+	If (MethodName=""){
+		Set event=$listget(##class(%CSP.Page).Decrypt(ItemName))
+		Set ClassName=$Piece(event,".",1,$Length(event,".")-1),MethodName=$extract(event,$length(ClassName)+2,*)
+	}
+	if ClassName'="",MethodName'=""{
+		Quit:'##class(websys.Conversions).IsValidClassName(ClassName) "{err:'Not Find Class: "_ClassName_"'}"
+		Quit:'##class(websys.Conversions).IsValidMethodName(ClassName,MethodName) "{err:'Not Find Method: "_ClassName_":"_MethodName_"'}"
+		set myobj=##class(%Dictionary.CompiledMethod).%OpenId(ClassName_"||"_MethodName,0)
+		if '$IsObject(myobj) quit "{err:'Not Open "_ClassName_":"_MethodName_" Object'}"
+		
+		set FormalSpecParsed = myobj.FormalSpecParsed
+		Set paramsNames=""
+		for tempind=1:1:$ll(FormalSpecParsed) {
+		Set Spec = $lg(FormalSpecParsed,tempind)
+		If ('$D(%request.Data($lg(Spec,1),1))) { 	;没传req,走入参默认值
+			Set paramName = $lg(Spec,4)		;没传req,且没有默认值
+			if paramName="" Set paramName=""""""
+		}else{
+			Set paramName = "$g(%request.Data("""_$lg(Spec,1)_""",1))"
+		}
+		if (tempind=1) Set paramsNames=paramName
+		else  Set paramsNames=paramsNames_","_paramName
+	}
+		if (wantreturnval){
+			Set code="Set rs=##class("_ClassName_")."_MethodName_"("_paramsNames_")"
+			XECUTE code
+			write rs
+		} Else {
+			Set code="Do ##class("_ClassName_")."_MethodName_"("_paramsNames_")"
+			XECUTE code
+		}
+	}
+	;jquery.easyui.broker.csp
+</script>
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+

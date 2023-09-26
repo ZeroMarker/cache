@@ -1,0 +1,31 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<script language="cache" runat="server">
+ s actiontype = $Get(%request.Data("actiontype",1))
+ s start = $Get(%request.Data("start",1))
+ s limit = $Get(%request.Data("limit",1))
+ s ItemDesc= $Get(%request.Data("ItemDesc",1))
+s ARCIMDR= $Get(%request.Data("ARCIMDR",1))
+s AERowId= $Get(%request.Data("AERowId",1))
+s IllFlag= $Get(%request.Data("IllFlag",1))
+s AllFlag= $Get(%request.Data("AllFlag",1))
+//s ALLSendFlag=$Get(%request.Data("ALLSendFlag",1))
+ i actiontype = "GetItemMast" d
+ .w ##class(web.DHCCRM.ImportantIllSet).GetItemMast(start,limit,ItemDesc)
+ i actiontype = "Add" d
+ .w ##class(web.DHCCRM.ImportantIllSet).Save(ARCIMDR,IllFlag,AllFlag)
+ i actiontype = "Load" d
+ .w ##class(web.DHCCRM.ImportantIllSet).Load(start, limit,ARCIMDR,IllFlag,AllFlag)
+i actiontype = "Del" d
+ .w ##class(web.DHCCRM.ImportantIllSet).Delete(AERowId)
+
+i actiontype = "Modify" d
+ .w ##class(web.DHCCRM.ImportantIllSet).Modify(AERowId,IllFlag,AllFlag)
+i actiontype = "Find" d
+ .w ##class(web.DHCCRM.ImportantIllSet).Load(start, limit,ARCIMDR,IllFlag,AllFlag)
+
+</script>
+

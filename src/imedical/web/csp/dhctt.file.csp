@@ -1,0 +1,108 @@
+<script runat="server" language="cache">
+	set act = $g(%request.Data("act",1))
+	Set dirname = $g(%request.Data("dirname",1)) 
+	if (act="download"){
+		if (errorMsg'=""){
+			w errorMsg
+		}else{
+			s stream=##class(%FileBinaryStream).%New()
+			s stream.Filename=pathname
+			d stream.Rewind()
+			while('stream.AtEnd){ w stream.Read()}
+			;d stream.Clear() ;--下载后会删除文件
+			d stream.%Close()
+			s stream=""
+			d %response.Flush()	
+		}
+	} elseif(act="upload"){
+		;前台文件
+		If ($data(%request.MimeData("FileStream",1))){
+			New fileStream,bytes,file
+			Set fileStream = %request.MimeData("FileStream",1)
+			if $d(%request.Data("filename",1)){
+				Set filename = %request.Data("filename",1)
+			}else{
+				try{ 
+				    ;前台是file提交fileStream是File对象 
+				    ;用Uploadfiy提交fileStream是%CSP.BinaryStream对象 
+					Set filename = fileStream.FileName
+				}catch(e){
+					Set filename = "undefined.dat"
+				}
+			}
+			///后台控件存储路径
+			Set dirname = ##class(ext.util.String).GetPhysicalPath("",dirname)
+			Set pathname = ##class(%File).NormalizeFilename(dirname_"/"_filename)
+			if ('##class(%File).DirectoryExists(dirname)){
+				Do ##class(%File).CreateDirectoryChain(dirname)
+			}	
+			if (##class(%File).DirectoryExists(dirname)){
+				Set file = ##class(%FileBinaryStream).%New()
+				Set file.Filename=pathname
+				Do fileStream.Rewind()
+				While('fileStream.AtEnd){
+					Set bytes = fileStream.Read(1024)
+					Do file.Write(bytes)
+				}
+				Do file.Flush()
+				Do file.%Save()
+				Do file.%Close()
+				Set file=""
+				Set webUrl = ##class(ext.util.String).GetVirtualPath(pathname)
+				Write "{""fileFullName"":"""_##class(ext.util.String).EvalJSON(webUrl)_"""}"
+			}
+		}elseif ($data(%request.Data("FileStream",1))){
+			New fileStream,bytes,file
+			Set file = ##class(%FileBinaryStream).%New()
+			Set file.Filename=dirname_filename	
+			Set ind=""
+			do{
+				Set ind=$O(%request.Data("FileStream",ind))
+				Set bytes = %request.Data("FileStream",ind)
+				Do file.Write(bytes)
+			}While(ind>0)
+			Do file.Flush()
+			Do file.%Save()
+			Do file.%Close()
+			Set file=""
+		}
+	}
+	Quit "" 
+</script>
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+	if ##class(websys.SessionEvents).SessionExpired() q 1
+	set errorMsg=""
+	set IsUTF8=##class(ext.util.String).IsUTF8Request()
+	if IsUTF8 {
+		d ##class(ext.util.String).ParseUTF8QueryString(.params)
+		s filename=$g(params("filename")),%request.Data("filename",1)=filename
+		S dirname = $g(params("dirname")),%request.Data("dirname",1)=dirname
+	}
+	set filename = $g(%request.Data("filename",1))
+	Set dirname = $g(%request.Data("dirname",1))
+	s act = $g(%request.Data("act",1))
+	if (act="download"){
+		Set dfile = filename 
+		Set dirname = $g(%request.Data("dirname",1))
+		if dirname["http"{
+			Set tmpdir = $p(dirname,"/web/",2)
+			Set dirname = ##class(ext.util.String).GetPhysicalPath("",tmpdir)
+		}
+		s pathname = ##class(%File).NormalizeFilename(dirname_"/"_filename)
+		
+		s %response.CharSet="GB18030"
+		s %response.ContentType="text/html"  //默认还是text/html 在判断可下载后 再改
+		set ext=$zcvt($p(filename,".",$l(filename,".")),"U")
+		if ",DAT,CSP,PEM,"[(","_ext_",") {
+			s errorMsg="403 禁止下载此文件："_filename_""
+		}elseif ('##class(%File).Exists(pathname)){
+			s errorMsg="404 没找到此文件："_filename_""
+		}else{  //允许下载文件 修改ContentType
+			s %response.CharSet=""
+			s %response.ContentType="application/octet-stream"  //不处理编码 全以字节处理
+			Do %response.SetHeader("Content-Disposition", "attachment; filename="_##class(ext.util.String).EscapeURL(dfile,"UTF8"))
+		}
+	} elseif(act="upload"){
+	}
+	Quit 1 
+</script>

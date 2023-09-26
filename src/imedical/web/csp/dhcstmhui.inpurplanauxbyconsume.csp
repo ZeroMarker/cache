@@ -1,0 +1,70 @@
+﻿<!--依据消耗制采购单-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+		<table id="MainConditions" class="Condition">
+			<input id="RowId" name="RowId" type="hidden">
+			<tr>
+				<td><label class="required">*</label><label>采购科室</label><input id="PurLoc" name="PurLoc" class="textbox hisui-combobox"></td>
+				<td><label class="required">*</label><label>开始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+				<td><label>消耗科室</label><input id="ConsumeLoc" name="ConsumeLoc" class="textbox hisui-combobox"></td>
+				<td style="text-align:left" class="CkPadding"><input id="TFlag" name="TFlag" class='hisui-checkbox' type="checkbox" value="Y" label="转出"></td>
+				<td style="text-align:left" class="CkPadding"><input id="KFlag" name="KFlag" class='hisui-checkbox' type="checkbox" value="Y" label="转入"></td>
+				<td style="text-align:left" class="CkPadding"><input id="PYFHFlag" name="PYFHFlag" class='hisui-checkbox' type="checkbox" value="Y" label="医嘱消耗"></td>
+				<td></td>
+				
+			</tr>
+			<tr>
+				<td><label>类组</label><input id="StkScg" name="StkScg" class="textbox hisui-stkscgcombotree"></td>
+				<td><label class="required">*</label><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+				<td><label>参考天数</label><input id="UseDays" name="UseDays" class="textbox" style="text-align: right"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="TipBT" class="hisui-linkbutton">点我提示</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="border:false,region:'center',collapsible:false,split:true" class="NonPadGrid">
+		<table id="PurGrid"></table>
+	</div>
+	<!--提示窗口-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-tip'" title="提示信息">
+		<div data-options="region:'center'" class="GridPadding">
+			<label style="color:blue;">1. 以"消耗科室"作为统计单元,可以是库房也可以是临床科室.
+			</label>
+			</br>
+			<label style="color:blue;">
+			 仅勾选"转入"时按转入数量绝对值统计, 同时勾选其他选项时(比如勾选转出)则按代数和统计. 
+			</label>
+			</br>
+			<label style="color:blue;">
+			2. 医嘱消耗包含医嘱撤销部分.
+			</label>
+			</br>
+			<label style="color:blue;">
+			3. 参考天数为0或者空时, 采购量=消耗量, 否则 采购量=(消耗量 / 时间间隔) * 参考天数 - 科室库存.
+			</label>
+		</div>
+	</div>
+
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPurPlan/InPurPlanCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPurPlan/InPurPlanAuxByConsume.js"></script>
+
+</body>
+</html>

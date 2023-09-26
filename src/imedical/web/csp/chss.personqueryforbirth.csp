@@ -1,0 +1,71 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+	s UserId=$Get(%request.Data("UserId",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	s Sort=$Get(%request.Data("sort",1))
+
+
+	s PersonName=$Get(%request.Data("PersonName",1))
+	s SexDR=$Get(%request.Data("SexDR",1))
+	s PersonCode = $Get(%request.Data("PersonCode",1))
+	s IDCard=$Get(%request.Data("IDCard",1))
+	s CardNumber=$Get(%request.Data("CardNumber",1))
+ 
+    s FamilyAddSearch = $Get(%request.Data("FamilyAddSearch",1))
+	s Address = $Get(%request.Data("Address",1))	
+	s DoctorRegister=$Get(%request.Data("DoctorRegister",1))
+	s bPYC = $Get(%request.Data("bPYC",1))
+	s Barcode=$Get(%request.Data("Barcode",1))
+    s tablename = $Get(%request.Data("tablename",1))
+    s SqlStr=""
+
+	i PersonName '= "" d
+	.s SqlStr = " and PersonName like '%"_PersonName_"%'"
+	i SexDR '= "" d
+	.s SqlStr = SqlStr_" and SexDR = "_SexDR
+	i PersonCode '= "" d
+	.s SqlStr = " and PersonCode like  '%"_PersonCode_"%'"
+	i IDCard '= "" d
+	.s SqlStr = " and IDCard = '"_IDCard_"'"
+	i CardNumber '= "" d
+	.s SqlStr = " and CardNumber = '"_CardNumber_"'"
+	i DoctorRegister '= "" d
+	.s SqlStr = " and DoctorRegister = '"_DoctorRegister_"'"
+ 	i FamilyAddSearch '= "" d
+	.s SqlStr = SqlStr_" and FamilyRowId in (select FamilyRowId from CHSS.FamilyHealthRecord where VillageName like '%"_FamilyAddSearch_"%')"
+	i Address '= "" d
+	.s SqlStr = SqlStr_" and PersonRowId in (select PersonRowId from CHSS.PersonHealthRecordMain where Address like '%"_Address_"%')"
+       i Barcode '= "" d
+	.s SqlStr = SqlStr_"  and PersonRowId in (select distinct(PersonRowId)   from chss.CheckUpBarcodeRecord where Barcode='"_Barcode_"')"
+
+       i bPYC = "true" d
+        .s BeginDate = $zdh($Get(%request.Data("BeginDate",1)),3)
+ 	.s EndDate = $zdh($Get(%request.Data("EndDate",1)),3)
+   	.s SqlStr = SqlStr_"  and  Birth>='"_BeginDate_"' and  Birth<='"_EndDate_"'"
+	 i tablename '= "" d
+	  .s SqlStr = SqlStr_" and PersonRowId not in (select PersonRowId from CHSS."_tablename_")"
+ 
+	i Action = "list" d
+	.i SqlStr '= "" d
+	..s Action = "SearchSql"
+
+
+ 	i Action = "listforbirth" d
+	.w ##class(CHSSWeb.ChildBirthCertificateServices).PersonList(CommunityCode,Start,Limit)
+ 	i Action = "SearchSql" d
+	.w ##class(CHSSWeb.ChildBirthCertificateServices).PersonSearchBySql(CommunityCode,Start,Limit ,SqlStr)
+ 
+</script>
+

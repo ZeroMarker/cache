@@ -1,0 +1,59 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+	s listData=$Get(%request.Data("data",1))
+	s RowId=$Get(%request.Data("rowid",1))
+
+	s code=$Get(%request.Data("conditionCode",1))
+	s desc=$Get(%request.Data("conditionDesc",1))
+	
+
+	//查询科室组
+	i Action = "query" d
+	.d ##class(web.DHCSTM.StkLocGrp).Query(Start,Limit,Sort,Dir,desc,code)
+
+	//保存科室组
+	i Action = "save" d
+	.s result = ##class(web.DHCSTM.StkLocGrp).Save(listData)
+	.s result=+result
+	.i result =0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	//删除科室组
+	i Action = "delete" d
+	.s result = ##class(web.DHCSTM.StkLocGrp).Delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+    i Action = "SavePtMod" d
+	.s result = ##class(web.DHCSTM.StkLocGrp).SavePtMod(listData)
+	.s result=+result
+	.i result =0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "QueryPtMod" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s ^TMPUSSHSS("ss")=LocId
+	.d ##class(web.DHCSTM.StkLocGrp).QueryPtMod(Start,Limit,Sort,Dir,LocId)
+    i Action = "GetMode" d
+	.S Loc=$Get(%request.Data("LocId",1))
+	.S Scg=$Get(%request.Data("Scg",1))
+	.s ret=##class(web.DHCSTM.StkLocGrp).GetModByLocScg(Loc,Scg)	
+	.w "{success:'true',info:'"_ret_"'}"
+
+</script>

@@ -1,0 +1,152 @@
+<!-- 
+ * FileName:	dhcinsu.insudeclaration.csp
+ * User:		tangzf
+ * Date:		2020-02-27
+ * Function:	医保申报
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcinsuport.js"></script>
+	<style>
+		.r-label:not(.td-first-col){
+			padding-left:50px !important;	
+		}
+	</style>
+</head>
+<body style="padding:10px;">
+    <div class="hisui-layout" data-options="fit:true">
+    	<div data-options="region:'north',border:false,collapsible:false" style='height:84px'>
+			<div class="hisui-panel" data-options="title:'医保申报',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;" >
+				<table class='search-table'>
+					<tr>
+						<td class='r-label td-first-col'>医保类型</td>
+						<td><input id="INSUType" class="hisui-textbox textbox"  /> </td>
+						<td class='r-label'>审批类别</td>
+						<td><input id="Rptlb" class="hisui-textbox textbox"  /> </td>
+						<td class='r-label' >审核开始日期</td>
+						<td><input id="StartDate" class="hisui-datebox textbox"   /> </td>
+						<td class='r-label'>审核结束日期</td>
+						<td><input id="EndDate" class="hisui-datebox textbox"  /> </td>
+						<td class='r-label'><a href="#" class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind"  >查询</a></td>
+
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'center'" style="border-top:1px dashed #cccccc;border-left:1px solid #cccccc;border-bottom:1px solid #cccccc;border-right:1px solid #cccccc;overflow:hidden;border-radius:0 0 px 4px;" >
+			<div id="dg" class="hisui-datagrid"></div>
+		</div>
+		<!--toolbar-->
+		<div id="tToolBar" class="hisui-toolbar" >  
+			<table cellspacing="0" cellpadding="0">
+				<tbody>
+					<tr>
+						<td hidden><a href="#" hidden class="hisui-linkbutton" iconCls="icon-search" id="btnFindReport" plain="true" >查询审批信息(双击行)</a></td>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-add" id="btnAdd" plain="true"  >填写申报信息</a></td>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-back" id="btnDel" plain="true" >撤销审批</a></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<!--
+		2.新增模板信息弹窗
+	-->
+	<div id="LocalListInfoProWin">
+		<div id="LocalListInfoProPan" class="hisui-panel"  style="fit:true;border:0px" data-options="closable:true,collapsible:true,minimizable:true,maximizable:true,modal:true">
+			<table class="search-table" id='addInfo'>
+				<tr>
+					<td class="r-label td-first-col" ><label class="clsRequired">个人编号</label></td>
+					<td><input id="PatNo" required="required" missingMessage="该项不能为空" class="textbox hisui-validatebox"/></td>
+					<td class="r-label" ><label class="clsRequired">患者姓名</label></td>
+					<td><input id="name" required="required" missingMessage="该项不能为空" class="textbox hisui-validatebox"  /></td>
+				</tr>
+				<tr>
+					<td class="r-label td-first-col"><labe>人员类别</label></td>
+					<td><input id="rylb" class="textbox"/></td>
+					<td class="r-label" ><label class="clsRequired">社保卡号</label></td>
+					<td><input id="INSUCardNo" required="required" missingMessage="该项不能为空" class="textbox hisui-validatebox" /></td>
+				<tr>
+					<td class="r-label td-first-col"><label>审批类别</label></td>
+					<td><input id="RptType" class="textbox"/></td>
+					<td class="r-label"><label>性别</label></td>
+					<td><input id="Sex" class="textbox"/></td>
+				</tr>
+				<tr>
+					<td class="r-label td-first-col"><label>审批结束日期</label></td>
+					<td><input id="EDate" class="textbox hisui-datebox" ></td>
+					<td class="r-label"><label>审批开始日期</label></td>
+					<td><input id="SDate" class="textbox hisui-datebox"/></td>
+				</tr>
+				<tr>
+					<td class="r-label td-first-col"><label>医院意见</label></td>
+					<td><input id="HosYJ" class="textbox advise"/></td>
+					<td class="r-label"><label>医院项目名称</label></td>
+					<td><input id="xmbm" PlaceHolder="支持首拼查询" class="textbox"/></td>
+					
+				</tr>
+				<tr>
+					<td class="r-label td-first-col"><label>诊断</label></td>
+					<td><input id="DiagCode" PlaceHolder="支持首拼汉字查询" class="textbox"/></td>
+					<td class="r-label"><label>参保人所属地</label></td>
+					<td><input id="States" class="textbox"/></td>
+				 </tr>
+				<tr>
+					
+					<td class="r-label td-first-col"><label>审批数量</label></td>
+					<td><input id="sl" class="textbox"/></td>
+					<td class="r-label"><label>申请金额</label></td>
+					<td><input id="money" class="textbox" ></td>
+				</tr>
+				<tr>
+					
+					<td class="r-label td-first-col"><label>科主任</label></td>
+					<td><input id="KZR" class="textbox"/></td>
+					<td class="r-label"><label>患者家属意见</label></td>
+					<td><input id="JSYJ" class="textbox advise" /></td>
+				</tr>
+				<tr>
+					<td class="r-label td-first-col"><label>慢性病病种</label></td>
+					<td><input id="DiagCodeMXB" class="textbox" /></td>
+					<td class="r-label"><label>主治医师</label></td>
+					<td><input id="Doctor" class="textbox" />
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label td-first-col"><label>主要症状</label></td>
+					<td><input id="ZYZZ" class="textbox" /></td>
+					<td class="r-label"><label>目的</label></td>
+					<td><input id="MD" class="textbox" data-options="
+						validType:['Date']"/>
+					</td>
+					
+				</tr>
+				<tr>
+					<td class="r-label td-first-col"><label>科主任意见</label></td>
+					<td><input id="KZRYJ" class="textbox advise" /></td>
+					<td class="r-label"><label>医院审批日期</label></td>
+					<td><input id="RptDate" class="textbox hisui-datebox"  ></td>
+				</tr>
+				<tr>
+					<td style='text-align:center' colspan='6'>
+						<a id="btnReadCard" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-card'" >读卡</a>
+						<a id="btnReport" href="#" style="margin-left:10px" class="hisui-linkbutton"  data-options="iconCls:'icon-w-ok'" >申报</a>
+					</td>				
+				</tr>
+			</table>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insudeclaration.js"></script>
+</body>
+</html>

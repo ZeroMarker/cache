@@ -1,0 +1,69 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s userdr=$G(%session.Data("LOGON.USERID")) 
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s str=$Get(%request.Data("query",1))
+                s year=$Get(%request.Data("year",1))
+	
+                s userid=$Get(%request.Data("userid",1))
+	s rowid =$Get(%request.Data("rowid",1))	
+	s select=$Get(%request.Data("select",1))
+	s checkyearmonth=$Get(%request.Data("checkyearmonth",1))
+	s billcode=$Get(%request.Data("billcode",1))
+	s deprdr=$Get(%request.Data("deprdr",1))
+	
+	s applyer=$Get(%request.Data("applyer",1))
+	s reqpay=$Get(%request.Data("reqpay",1))
+	s actpay=$Get(%request.Data("actpay",1))
+	s applydate=$Get(%request.Data("applydate",1))
+	s billstate=$Get(%request.Data("billstate",1))
+	
+                s applydecl=$Get(%request.Data("applydecl",1))
+	s budgetsurplus=$Get(%request.Data("budgetsurplus",1))
+	s budgcotrol=$Get(%request.Data("budgcotrol",1))
+	s view         = $Get(%request.Data("view",1))
+	s ChkResult    = $Get(%request.Data("ChkResult",1))
+	
+	s billcodes=$Get(%request.Data("billcodes",1))
+        s filename=$Get(%request.Data("filename",1))
+        s fileconte=$Get(%request.Data("fileconte",1))
+	
+        s dept     = $Get(%request.Data("dept",1))
+        s AplyDate = $Get(%request.Data("AplyDate",1))
+        s AplyUser = $Get(%request.Data("AplyUser",1))
+        s EAplyDate= $Get(%request.Data("EAplyDate",1))
+        s Eedyear  = $Get(%request.Data("Eedyear",1))
+
+	i action = "list" d
+	.w ##class(herp.budg.udata.ubudgcostclaimseach).List(userdr,hospid,year,billcodes,dept,AplyUser,AplyDate,EAplyDate,Eedyear,sortField,sortDir, start, limit)
+
+     
+	
+        i action = "yearList" d
+	.w ##class(herp.budg.udata.ubudgcostclaimseach).yearList(start, limit, str)
+
+        i action = "deptList" d
+	.w ##class(herp.budg.udata.ubudgcostclaimseach).GetdDept(hospid,start, limit, str)
+        
+
+        i action = "ApplyDate" d
+	.w ##class(herp.budg.udata.ubudgcostclaimseach).GetApplyDate(start, limit,str)
+
+        i action = "appluser" d
+	.w ##class(herp.budg.udata.ubudgcostclaimseach).GetUser(hospid,start, limit, str)
+ 
+        i action = "GetBillCode" d
+	.w ##class(herp.budg.udata.ubudgcostclaimseach).GetBillCode(userdr,hospid,start,limit,str)
+
+</script>

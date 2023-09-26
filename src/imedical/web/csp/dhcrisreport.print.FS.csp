@@ -1,0 +1,66 @@
+<HTML>
+<HEAD>
+	<TITLE>RIS Report ¥Ú”°</TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+</HEAD>
+
+<BODY>
+	<script language="cache" runat="server">
+  		s EpisodeID = $Get(%request.Data("EpisodeID",1))
+		w "<OBJECT ID='ReportPrint' CLASSID='CLSID:C8336DD8-A958-42EC-A13E-120CFB541306' CODEBASE='../addins/client/ReportPrint.CAB#version=1,0,0,0',width='0' height='0'></object>"
+        w "<OBJECT ID='RptPrint' CLASSID='CLSID:225ABCE7-5EBD-405A-9273-271EB776E8E2' width='0' height='0' ></object>"
+	
+		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+  		s PageInfoID = $Get(%request.Data("PageInfoID",1),"")
+ 		
+  		s studyNoList = ""
+		s risSpace = "RIS"
+		s curNameSpace = $zu(5)
+		zn risSpace
+		
+		Set rset = ##class(%ResultSet).%New("web.DHCRisclinicQueryOEItemDo:QueryRptPathbyPaadm")
+		Set sc = rset.Execute(EpisodeID)
+		While (rset.Next()) {
+			if (studyNoList = "")
+			{
+				s studyNoList = rset.GetDataByName("StudyNo")
+			}
+			else
+			{	
+				s studyNoList = studyNoList_"^"_rset.GetDataByName("StudyNo")
+			}
+		}
+		do rset.%Close()
+		set rset = ""
+		zn curNameSpace
+
+	</script>
+
+	<SCRIPT Language="Javascript">
+		document.body.onload = BodyLoadHandler;
+		function BodyLoadHandler() {
+		    var PrintRisReportObj;
+			//var EpisodeID = window.dialogArguments.EpisodeID;
+			var EpisodeID = '#(EpisodeID)#';
+			var studyNoList = '#(studyNoList)#';
+			//alert(studyNoList);
+			PrintRisReportObj = document.getElementById("RptPrint"); 
+			if (PrintRisReportObj){
+				var arrStudyNo = studyNoList.split("^");
+				var count = arrStudyNo.length;
+				
+				for (i=0; i<count; i++){
+					var studyNo = arrStudyNo[i];
+					PrintRisReportObj.PrintReport(EpisodeID+"^"+studyNo);
+	                parent.finishOneItemJobAsyn();	
+	            }
+			}
+			setTimeout("parent.printNext();", 3000 );
+		}
+
+	</SCRIPT>
+</BODY>
+</HTML>

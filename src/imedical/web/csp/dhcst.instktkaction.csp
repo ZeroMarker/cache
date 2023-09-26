@@ -1,0 +1,268 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+;
+i Action = "Query" d
+	.S Params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTk).jsDHCSTINStkTk(Start,Limit,Sort,Dir,Params)
+	.
+i Action = "QueryDetail" d
+	.S InstId=$Get(%request.Data("Parref",1))
+	.s Others=$g(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTkItm).jsDHCSTInStkTkItm(Start,Limit,Sort,Dir,InstId,Others)
+	.
+i Action = "Create" d
+	.S Params=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.INStkTk).CreateInStktk(Params)
+	.i +ret>0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Select" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.INStkTk).Select(rowid)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+
+i Action = "CheckExist" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s phawindow=$Get(%request.Data("PhaWinow",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).CheckExist(rowid,phawindow)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action="GetStkManGrp"  d
+	.s rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.INStkTkGrp).GetStkTkGrp(rowid)
+	.w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "Complete" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s ret=##class(web.DHCST.INStkTk).SetComplete(rowid)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "Delete" d
+	.S rowid=$Get(%request.Data("Rowid",1))
+	.s allow=$Get(%request.Data("Allow",1))
+	.s ret=##class(web.DHCST.INStkTk).Delete(rowid,allow)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+//根据帐盘生成实盘列表
+i Action = "CreateTkItmWd" d
+	.S inst=$Get(%request.Data("Inst",1))
+	.s user=$Get(%request.Data("UserId",1))
+	.s window=$Get(%request.Data("InstwWin",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).CreateStkTkItmWd(inst,user,window)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+
+//根据帐盘生成实盘列表(按货位)
+i Action = "CreateTkItmStkBinWd" d
+	.S inst=$Get(%request.Data("Inst",1))
+	.s user=$Get(%request.Data("UserId",1))
+	.s window=$Get(%request.Data("InstwWin",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).CreateStkTkItmStkBinWd(inst,user,window)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "INStkTkItmWd" d
+	.S params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTkItmWd).jsINStkTkItmWd(Start,Limit,Sort,Dir,params)
+       .
+i Action = "INStkTkItmWdStkBin" d
+	.S params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTkItmWd).jsINStkTkItmWdStkBin(Start,Limit,Sort,Dir,params)
+       .
+
+i Action = "INStkTkItmWdPc" d
+	.S params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTkItmWd).jsINStkTkItmWdPc(Start,Limit,Sort,Dir,params)
+
+i Action = "INStkTkItmWdYp" d
+	.S params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTkItmWd).jsINStkTkItmWdYp(Start,Limit,Sort,Dir,params)
+
+i Action = "INStkTkItmWdNoImp" d
+	.S params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTkItmWd).jsINStkTkItmWdNoImp(Start,Limit,Sort,Dir,params)
+i Action = "SaveTkItmWd" d
+	.S params=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).Save(params)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "SaveTkItmWdByWay2" d //单独为方式2增加保存方式已兼容方式一及四的大单位和基本单位都能录入的模式
+	.S params=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).Save2(params)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+
+i Action = "ChangeInputStatus" d
+	.S Inst=$Get(%request.Data("Inst",1))
+	.S CompFlag=$Get(%request.Data("Complete",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).ChangeInputStatus(Inst,CompFlag)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "SetDefaultQty" d
+	.S Inst=$Get(%request.Data("Inst",1))
+	.s UserId=$Get(%request.Data("UserId",1))
+	.s Flag=$Get(%request.Data("Flag",1))
+	.s InstwWin=$Get(%request.Data("InstwWin",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).SetDefaultQty(Inst,UserId,Flag,InstwWin)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "GetItmFreezeBatch" d
+	.S Inst=$Get(%request.Data("Inst",1))
+	.s Inci=$Get(%request.Data("Inci",1))
+	.s ret=##class(web.DHCST.INStkTk).GetItmFreezeBatch(Inst,Inci)
+	.w ret
+i Action = "CreateStkTkInput" d
+	.S inst=$Get(%request.Data("Inst",1))
+	.s user=$Get(%request.Data("UserId",1))
+	.s win=$Get(%request.Data("InputWin",1))
+	.s ret=##class(web.DHCST.InStkTkInput).CreateStkTkInput(inst,user,win)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "SaveInput" d
+	.S listdata=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.InStkTkInput).Save(listdata)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.	
+i Action = "QueryInput" d
+	.S Params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.InStkTkInput).Query(Start,Limit,Sort,Dir,Params)
+	.
+i Action = "CompleteInput" d
+	.S Inst=$Get(%request.Data("Inst",1))
+	.s UserId=$Get(%request.Data("User",1))
+	.s ret=##class(web.DHCST.InStkTkInput).CompleteInput(Inst,UserId)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "StkTkCompletet" d
+	.s Inst=$Get(%request.Data("Inst",1))
+	.s UserId=$Get(%request.Data("UserId",1))
+	.s InputNullFlag=$Get(%request.Data("InputNullFlag",1))
+	.s InputType=$Get(%request.Data("InputType",1))
+	.i InputType=1 d	;实盘方式为"按批次"
+	..s ret=##class(web.DHCST.INStkTkItmWd).INStkTkWdSum(Inst,UserId,InputNullFlag)
+	.i InputType=2 d	;实盘方式为"按品种"
+	..s ret=##class(web.DHCST.InStkTkInput).CompleteInput(Inst,UserId,InputNullFlag)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "CollectItmCountQty" d
+	.S Params=$Get(%request.Data("Params",1))
+	.w ##class(web.DHCST.INStkTkItmWd).CollectItmCountQty(Start,Limit,Sort,Dir,Params)
+i Action = "QueryItmTkWd" d
+	.S Inst=$Get(%request.Data("Inst",1))
+	.S Inci=$Get(%request.Data("Inci",1))
+	.w ##class(web.DHCST.INStkTkItmWd).QueryItmTkWd(Inst,Inci)
+	.
+i Action = "QueryItmTkWdDetail" d
+	.S Inst=$Get(%request.Data("Inst",1))
+	.S Inci=$Get(%request.Data("Inci",1))
+	.w ##class(web.DHCST.INStkTkItmWd).QueryItmTkWdDetail(Inst,Inci)
+	.
+i Action = "StkTkAdj" d
+	.s Inst=$Get(%request.Data("Inst",1))
+	.s UserId=$Get(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.INStkTkAdj).StkTkAdj(Inst,UserId)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+i Action = "GetParamProp" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"		
+
+i Action = "GetParamPropFreeze" d
+	.s GroupId=$g(%request.Data("GroupId",1))
+	.s LocId=$g(%request.Data("LocId",1))
+	.s UserId=$g(%request.Data("UserId",1))
+	.
+	.s ret=##class(web.DHCST.INStkTk).GetParamProp(GroupId,LocId,UserId)
+	.w "{success:'true',info:'"_ret_"'}"		
+
+i Action = "InsStTkInput" d
+	.s IncLocBt=$Get(%request.Data("IncLocBt",1))
+	.s Qty=$Get(%request.Data("Qty",1))
+	.s InputUom=$Get(%request.Data("InputUom",1))
+	.s RowidM=$Get(%request.Data("RowidM",1))
+	.s user=$Get(%request.Data("UserId",1))
+	.s window=$Get(%request.Data("InstwWin",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).InsStTkInput(IncLocBt,Qty,InputUom,RowidM,user,window)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "StkCancelComplete" d
+	.s Inst=$Get(%request.Data("Inst",1))
+	.s ret=##class(web.DHCST.INStkTkItmWd).StkCancelComplete(Inst)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.
+i Action = "CheckIfCompleted" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s StartDate=$Get(%request.Data("StartDate",1))
+	.s EndDate=$Get(%request.Data("EndDate",1))
+	.s ret=##class(web.DHCST.DHCStkMon).CheckIfCompleted(LocId,StartDate,EndDate)
+	.i +ret>0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
+
+i Action = "SaveAdjInput" d
+	.S listdata=$Get(%request.Data("Params",1))
+	.s ret=##class(web.DHCST.INStkTkAdj).Save(listdata)
+	.i ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.	
+
+</SERVER>

@@ -1,0 +1,61 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s year=$Get(%request.Data("year",1))
+	s deptdr=$Get(%request.Data("deptdr",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	s goal=$Get(%request.Data("goal",1))
+	s property=$Get(%request.Data("property",1))
+	s isgovbuy=$Get(%request.Data("isgovbuy",1))
+	s state=$Get(%request.Data("state",1))
+	s realedate=$Get(%request.Data("realedate",1))
+	s budgDeptDR=$Get(%request.Data("budgDeptDR",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	s budgdept = $Get(%request.Data("budgdept",1))
+	
+	
+	i action = "list" d	
+	.w ##class(herp.budg.udata.uBudgProjectDict).List(hospid, sortField, sortDir, start, limit, year, deptdr, property, state, isgovbuy, budgdept, userdr)
+	
+	i action = "proj" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).ProjName(start,limit,str,year,userdr)
+			
+	i action = "updatedate" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).UpddateRec(rowid,realedate,deptdr,budgDeptDR)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "year" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).yearmonth(start,limit,str)
+		
+	i action = "getdept" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).CalDeptname(start,limit,str)
+	
+	i action = "getdept2" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).CalItemDeptname(hospid,start,limit,str)
+	
+	i action = "getproj" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).List(sortField,sortDir,start,limit, year, deptdr, property, state, isgovbuy,userdr)
+	
+	
+</script>

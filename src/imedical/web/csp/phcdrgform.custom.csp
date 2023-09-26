@@ -1,0 +1,79 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+<server>
+	d ##Class(web.PHCDrgForm).GetDrugDetails(%request.Get("OEORIItmMastDR"))
+</server>
+</head>
+
+<body>
+<TRAK:COMPONENT id="PHCDrgForm.Custom">
+</TRAK:COMPONENT>
+<server>
+ n ind,OrderItemID,tempStr,MessageCount
+ s tempStr=""
+ s MessageCount=1
+ s OrderItemID=%request.Get("OEORIItmMastDR")
+ i OrderItemID'="" d
+ . s ind=0 f  s ind=$o(^ARCIM(+OrderItemID,1,"OEM",ind)) q:ind=""  d
+ . . i ($l(tempStr)+$l($tr($g(^ARCIM(+OrderItemID,1,"OEM",ind)),"|",$c(13,10))_$c(13,10)))>20000 d 
+ . . . w "<INPUT TYPE=""HIDDEN"" NAME=""OEMessage"_MessageCount_""" VALUE="""_tempStr_""">",$C(13,10)
+ . . . s tempStr=$tr($g(^ARCIM(+OrderItemID,1,"OEM",ind)),"|",$c(13,10))_$c(13,10)
+ . . . s MessageCount=MessageCount+1
+ . . e  s tempStr=tempStr_$tr($g(^ARCIM(+OrderItemID,1,"OEM",ind)),"|",$c(13,10))_$c(13,10)
+ . i tempStr'="" w "<INPUT TYPE=""HIDDEN"" NAME=""OEMessage"_MessageCount_""" VALUE="""_tempStr_""">",$C(13,10)
+ . w "<INPUT TYPE=""HIDDEN"" NAME=""MessageCount"" VALUE="""_MessageCount_""">",$C(13,10)
+ . ; same for Monograph - this may NOT be uploaded to order entry message
+ . n PHCD s PHCD=$p($g(^ARCIM(+OrderItemID,1,1)),"^",12)
+ . i PHCD d
+ . . s tempStr="",MessageCount=1
+ . . s ind=0 f  s ind=$o(^PHCD(+PHCD,"DF",+$p(PHCD,"||",2),"MON",ind)) q:ind=""  d
+ . . . s line=$tr($g(^PHCD(+PHCD,"DF",+$p(PHCD,"||",2),"MON",ind)),"|",$c(13,10))_$c(13,10)
+ . . . i ($l(tempStr)+$l(line))>20000 d 
+ . . . . w "<INPUT TYPE=""HIDDEN"" NAME=""PHCDMessage"_MessageCount_""" VALUE="""_tempStr_""">",$C(13,10)
+ . . . . s tempStr=line
+ . . . . s MessageCount=MessageCount+1
+ . . . e  s tempStr=tempStr_line
+ . . i tempStr'="" w "<INPUT TYPE=""HIDDEN"" NAME=""PHCDMessage"_MessageCount_""" VALUE="""_tempStr_""">",$C(13,10)
+ . . w "<INPUT TYPE=""HIDDEN"" NAME=""PHCDMessageCount"" VALUE="""_MessageCount_""">",$C(13,10)
+
+</server>
+<SCRIPT Language="Javascript">	
+	var MessageCount=0;
+	var objMessageCount=document.getElementById("MessageCount");
+	if (objMessageCount) MessageCount=objMessageCount.value;
+	if (MessageCount!="") MessageCount=parseInt(MessageCount);
+	var objARCIMOEMessage=document.getElementById("ARCIMOEMessage");
+	if ((objARCIMOEMessage)&&(MessageCount!="")) {
+		for (var bm3=1; bm3<MessageCount+1; bm3++) {
+			var objHiddenOEMessage=document.getElementById("OEMessage"+bm3);
+			if (objHiddenOEMessage) {
+				objARCIMOEMessage.innerText=objARCIMOEMessage.innerText+objHiddenOEMessage.value+String.fromCharCode(13)+String.fromCharCode(10);
+			}
+		}
+	}
+	MessageCount=0;
+	var objMessageCount=document.getElementById("PHCDMessageCount");
+	if (objMessageCount) MessageCount=objMessageCount.value;
+	if (MessageCount!="") MessageCount=parseInt(MessageCount);
+	var objARCIMOEMessage=document.getElementById("PHCDFMonograph");
+	if ((objARCIMOEMessage)&&(MessageCount!="")) {
+		for (var bm3=1; bm3<MessageCount+1; bm3++) {
+			var objHiddenOEMessage=document.getElementById("PHCDMessage"+bm3);
+			if (objHiddenOEMessage) {
+				objARCIMOEMessage.innerText=objARCIMOEMessage.innerText+objHiddenOEMessage.value+String.fromCharCode(13)+String.fromCharCode(10);
+			}
+		}
+	}
+
+</SCRIPT>
+</body>
+</html>

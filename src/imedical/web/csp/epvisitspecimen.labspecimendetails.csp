@@ -1,0 +1,83 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n buffer,pos,frm,i
+ n cmp,order,orderlist,ordersbuffer
+ i +%request.Get("PatientBanner") {
+	s labepisodeno=$ZCVT(%request.Get("labepisodeno"),"I","URL")
+	s episodeno=$zcvt(%request.Get("episodeid"),"I","URL")
+	s patid="" i labepisodeno'="" s patid=##Class(web.OEOrdItem).GetPatientIdFromLabNo(labepisodeno)
+	i ((labepisodeno="")&(episodeno'="")) s patid=##Class(web.PAAdm).GetPatientId(episodeno)
+	d %request.Set("PatientID",patid)
+	if patid {
+		s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+		i cmp d cmp.Show(),cmp.%Close()
+	}
+ }
+ s pos=%request.Get("position")
+ s OrdersEnabled=(%request.Get("module")="C")
+ s extlab=$$extlab^COEOrdItem()
+ i OrdersEnabled s OrdersEnabled=((extlab'="Y")!(pos=0))
+ s orderids=%request.Get("orderids")
+ s oeidsaved=%request.Get("oeidsaved")
+ s allorders=%request.Get("allorders")
+ s allorderids=%request.Get("allorderids")
+ s allspecimenids=%request.Get("allspecimenids")
+ s alltestids=%request.Get("alltestids")
+ s orderlist="",i=1 f  s order=$p(allorderids,"^",i) q:order=""  d
+ . s orderlist(order)=order_$c(1)_$p(alltestids,"^",i)_$c(1)_$p(allorders,"^",i)
+ . s i=i+1
+ s ordersbuffer="",order="" f  s order=$o(orderlist(order)) q:order=""  d
+ . i ordersbuffer'="" s ordersbuffer=ordersbuffer_"^"_orderlist(order)
+ . i ordersbuffer="" s ordersbuffer=orderlist(order)
+ ; the following is all done within EPVisitSpecimen.LabSpecimenCollection.js - all items are sent, except
+ ; specsBuffer, which is got at the top of this csp page (via javascript) and stored, as it can be too long for a querystring
+ ; i pos'=0 d
+ ;. s buffer=$p(%request.Get("specimenbuffer"),"^",pos)
+ ;. d %request.Set("ID",$p($p(buffer,$c(28),1),$c(1),1))
+ ;. d %request.Set("specimen",$p($p(buffer,$c(28),1),$c(1),2))
+ ;. d %request.Set("orderid",$p(buffer,$c(28),2))
+ ;. d %request.Set("container",$p($p(buffer,$c(28),3),$c(1),2))
+ ;. d %request.Set("containerno",$p(buffer,$c(28),4))
+ ;. d %request.Set("volumecol",$p(buffer,$c(28),5))
+ ;. d %request.Set("volumecur",$p(buffer,$c(28),6))
+ ;. i ($p(buffer,$c(28),19)'="") d
+ ;. . s orderids=$p(buffer,$c(28),19)
+ ;. . d %request.Set("orderids",orderids)
+ ;. i ($p(buffer,$c(28),19)="")!($p(buffer,$c(28),10)'="") d
+ ;. . s orderids=$p(buffer,$c(28),10)
+ ;. . d %request.Set("orderids",orderids)
+ ;. . s oeidsaved="Y"
+ s frm=##Class(websys.Component).OpenName("EPVisitSpecimen.LabSpecimenDetails")
+ i frm d frm.Show() d frm.%Close()
+</SERVER>
+<script language="JavaScript">
+ var ordersbuffer="#(ordersbuffer)#";
+ var orderids="#(orderids)#";
+ var ordersdisabled=("#(OrdersEnabled)#"=="0");
+ var pos="#(pos)#";
+ var oeidsaved="#(oeidsaved)#";
+ var extlab="#(extlab)#";
+ var allorders="#(allorders)#";
+ var allorderids="#(allorderids)#";
+ var allspecimenids="#(allspecimenids)#";
+ var alltestids="#(alltestids)#";
+ //alert(ordersenabled);
+ //alert("orderids="+orderids);
+ //alert("orderbuffer="+ordersbuffer);
+ document.body.onload = BodyLoadHandler;
+</SCRIPT>
+</BODY>
+</HTML>

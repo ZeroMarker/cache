@@ -1,0 +1,92 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+	n id,frm
+	;s id=$g(%request.Data("ID",1))
+	s id=$g(%request.Data("EpisodeID",1))
+    ; ab 3.06.05 52257
+    i $g(%request.Data("PatientID",1))'="",$g(%request.Data("PatientBanner",1)) d
+    . s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+    . i frm d frm.Show() d frm.%Close()
+</SERVER>
+
+<TRAK:COMPONENT id="PAAdmPatPreAdmission" style="TOP:0; LEFT:0; HEIGHT:150; WIDTH:100%; OVERFLOW: auto; BORDER-BOTTOM: 2px inset; BORDER-LEFT: 2px inset; BORDER-RIGHT: 2px inset; BORDER-TOP: 2px inset;">
+</TRAK:COMPONENT>
+<SCRIPT>
+//Cache date of 1 = 1/1/1841; increments by one for each day
+//Javascript date of 1 = 1/1/1970,0:00:00:001 increment by one for each millisecond
+//Cache date of 47117 = 1/1/1970
+var msperday = 86400000; //milliseconds in one day
+var cachetojs=47117;
+var today=new Date();
+today.setHours(0);today.setMinutes(0);today.setSeconds(0);today.setMilliseconds(0);
+var todayms=today.getTime();
+
+var el;
+function SelectRowHandler(evt) {
+	var eSrc=websys_getSrcElement(evt);
+	var rowObj=getRow(eSrc);
+	if (rowObj.tagName != "TH") {
+		//setRowClass(rowObj);
+		if (eSrc.tagName != "A") eSrc=websys_getParentElement(eSrc);
+		if (eSrc.tagName != "A") return;
+		
+		// cjb 01/09/2003 38689 use rowObj.TRAKListIndex instead of rowObj.rowIndex
+		//var rowsel=rowObj.rowIndex;
+		var rowsel=rowObj.TRAKListIndex;
+		
+		var cachedate=document.getElementById("PAADMAdmDateCachez"+rowsel).value;
+		var apptms=(cachedate-cachetojs)*msperday;
+		var apptday=new Date(apptms);
+		apptday.setHours(0); //reset gmt hrs
+		apptday.setMinutes(0)
+		apptday.setSeconds(0)
+		apptms=apptday.getTime();
+		if (apptms>todayms) {alert(t['NoFutureArrival']);return false;}
+
+		var lnk="websys.csp?TWKFL="+document.getElementById("TWKFL").value+"&TWKFLI="+(document.getElementById("TWKFLI").value-1);
+		el=document.getElementById("IDz"+rowsel);
+		if (el) lnk+="&ID="+el.value+"&EpisodeID="+el.value;
+		el=document.getElementById("PatientID");
+		if (el) lnk+="&PatientID="+el.value;
+		window.location=lnk;
+		return false;
+	}
+}
+var selectedID='#(id)#';
+
+try {
+	if ((tbl)&&(selectedID!="")) {
+		var found=0;
+		for (var i=0; i<tbl.rows.length; i++) {
+			el=document.getElementById("IDz"+i);
+			if ((el)&&(el.value==selectedID)) {
+				tbl.rows[i].className='clsRowSelected';
+				selectedRowObj=tbl.rows[i];
+				found=1;
+			}
+			if (found) break;
+		}
+	}
+} catch(e) {}
+</SCRIPT>
+<SERVER>
+	s %request.Data("ID",1)=$g(%request.Data("EpisodeID",1))
+</SERVER>
+<TRAK:COMPONENT id="PAAdm.Edit" hidemenus=1>
+</TRAK:COMPONENT>
+
+</BODY>
+</HTML>
+

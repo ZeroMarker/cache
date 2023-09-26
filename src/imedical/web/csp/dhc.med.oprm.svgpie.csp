@@ -1,0 +1,262 @@
+<CSP:CONTENT TYPE='image/svg-xml'>
+<SCRIPT language="Cache" RUNAT="SERVER">
+    ///Get request setting
+    
+    set Title="饼图"  ;$g(%request.Data("Title",1))
+    set svgX=$g(%request.Data("svgX",1))   ;800 ;
+    set svgY=$g(%request.Data("svgY",1))   ;600 ;
+    set svgXWidth=660 ;$g(%request.Data("svgXWidth",1))
+    set svgYHeight=460 ;$g(%request.Data("svgYHeight",1))
+    set svgX0=60 ;$g(%request.Data("svgX0",1))
+    set svgY0=60 ;$g(%request.Data("svgY0",1))
+    set svgYLables=10 ;$g(%request.Data("svgYLables",1))
+    
+    set svgYLableWidth=10
+    set svgXLableWidth=10
+    set checkedLines=$g(%request.Data("checkedLines",1)) 	//获取要显示的曲线
+	set ctlocRowID=$g(%request.Data("ctlocRowID",1)) 		//获取科室代码   
+	set date=$g(%request.Data("date",1)) 					//获取查询日期
+    ///Get paraList
+    
+    ///Get SVGSetting
+    set svgSetting=##class(web.DHCSVGSetting).GetSVGSetting()
+    set tmpBackGround=$p(svgSetting,$c(1),1)
+    set tmpTitleFont=$p(svgSetting,$c(1),2)
+    set tmpElseFont=$p(svgSetting,$c(1),3)
+    set tmpLineColor=$p(svgSetting,$c(1),4)
+    set tmpLineWidth=$p(svgSetting,$c(1),5)
+    set tmpXLableType=$p(svgSetting,$c(1),6)
+    
+    set svgBGColor=$p(tmpBackGround,"^",1)
+    set svgXLabColor=$p(tmpBackGround,"^",2)
+    set svgYLabColor=$p(tmpBackGround,"^",3)
+    
+    set svgTitleFont=$p(tmpTitleFont,"^",1)
+    set svgTitleSize=$p(tmpTitleFont,"^",2)
+    set svgTitleColor=$p(tmpTitleFont,"^",3)
+    
+    set svgFont=$p(tmpElseFont,"^",1)
+    set svgSize=$p(tmpElseFont,"^",2)
+    set svgColor=$p(tmpElseFont,"^",3)
+    
+    for i=1:1:$l(tmpLineColor,"^") {
+	    set svgLineColor(i)=$p(tmpLineColor,"^",i)
+	    }
+    
+    set svgXLineWidth=$p(tmpLineWidth,"^",1)
+    set svgYLineWidth=$p(tmpLineWidth,"^",2)
+    set svgLineWidth=$p(tmpLineWidth,"^",3)
+    
+    set svgXMod=+$p(tmpXLableType,"^",1)
+    set:svgXMod=0 svgXMod=1
+    set svgXTurn=+$p(tmpXLableType,"^",2)
+    
+</Script>
+<SCRIPT language="Cache" RUNAT="SERVER">
+    /*
+	set sData=##class(web.DHCMedRMOPAdm).GetRMOPAdm(0,1)
+	set iLines=$p(sData,$c(1),1)
+	set sTitle=$p(sData,$c(1),2)
+	quit:iLines<1
+	set cLine=$p(sData,$c(1),3)      ;CaptionLine1_$c(3)_color1_$c(2)_CaptionLine1_$c(3)_color1
+	set XLable=$p(sData,$c(1),4)     ;$c(3)
+	set iPoints=$l(XLable,$c(3))
+	quit:iPoints<1
+	set dLine=$p(sData,$c(1),5)      ;Line1_$c(2)_Line2
+	*/
+	;set ret=iPies_$c(1)_sTitle_$c(1)_cPie_$c(1)_XLable_$c(1)_dPie
+	set sData=##class(web.DHCMedOPRMPie).GetSVGPie(checkedLines,ctlocRowID,date)
+	set iPies=$p(sData,$c(1),1)
+	set Title=$p(sData,$c(1),2)
+	quit:iPies<1
+	set cPie=$p(sData,$c(1),3)       ;$c(3)
+	set XLable=$p(sData,$c(1),4)     ;CaptionLine1_$c(3)_color1_$c(2)_CaptionLine1_$c(3)_color1
+	set iParts=$l(XLable,$c(2))
+	quit:iParts<1
+	set dPie=$p(sData,$c(1),5)      ;Line1_$c(2)_Line2
+	set chkLinesFinal=$p(sData,$c(1),6) 
+    
+    for i=1:1:iParts {
+	    set:$p($p(XLable,$c(2),i),$c(3),2)'="" svgLineColor(i)=$p($p(XLable,$c(2),i),$c(3),2)
+	    }
+    
+	set svgtmp=##class(web.DHCSVGSetting).GetPieSetting(iPies,svgX,svgY)
+	s Rows=$p(svgtmp,"^",1)
+	s Cols=$p(svgtmp,"^",2)
+	s Radii=$p(svgtmp,"^",3)
+	s pieXWidth=$p(svgtmp,"^",4)
+	s pieYHeigth=$p(svgtmp,"^",5)
+	
+	f pie=1:1:iPies d
+	.s PieTotle(pie)=0
+	.s PiePart(pie)="0"
+	.f part=1:1:iParts d
+	..s PieTotle(pie)=PieTotle(pie)+$p($p(dPie,$c(2),pie),$c(3),part)
+	..s PiePart(pie)=PiePart(pie)_$c(3)_PieTotle(pie)
+	
+	
+</Script>
+
+<svg onload="Init(evt)">
+ 
+<script language="javascript">
+   var sd,dy,temOBJ,shape;
+   var ns = "http://www.w3.org/2000/svg";
+   var tTipOn=0
+   function Init(evt) {
+       sd = evt.getTarget().getOwnerDocument();
+       dy  = sd.getElementById('ch');
+       tTp  = sd.getElementById('tTip');
+       tTpBg  = sd.getElementById('tTipBg');
+       gMain  = sd.getElementById('main');
+    }
+
+   function mP(evt,caption,value,percent) {
+       // Onmouseover display
+       if (tTipOn==1) {
+           tTp.removeChild(temOBJ);
+           tTpBg.removeChild(shape);
+       }
+       var ax = evt.clientX;
+       var ay = evt.clientY;
+       temOBJ = sd.createElementNS(ns, 'text');
+       temOBJ.setAttributeNS(null, 'x', ax);
+       temOBJ.setAttributeNS(null, 'y',  ay+20);
+       temOBJ.setAttributeNS(null, 'fill', '#000000');
+       temOBJ.setAttributeNS(null, 'font-family', 'mingliu');
+
+       var data = sd.createTextNode(caption);
+       temOBJ2 = sd.createElementNS(ns, 'tspan');
+       temOBJ2.setAttribute('x',ax+3);
+       temOBJ2.setAttribute('dy',12);
+       temOBJ2.appendChild(data);
+       temOBJ.appendChild(temOBJ2);
+
+       var data = sd.createTextNode(value);
+       temOBJ2 = sd.createElementNS(ns, 'tspan');
+       temOBJ2.setAttribute('x',ax+3);
+       temOBJ2.setAttribute('dy',12);
+       temOBJ2.appendChild(data);
+       temOBJ.appendChild(temOBJ2);
+
+       var data = sd.createTextNode(percent);
+       temOBJ2 = sd.createElementNS(ns, 'tspan');
+       temOBJ2.setAttribute('x',ax+3);
+       temOBJ2.setAttribute('dy',12);
+       temOBJ2.appendChild(data);
+       temOBJ.appendChild(temOBJ2);
+
+       tTp.appendChild(temOBJ);
+       contour=tTp.getBBox();
+       shape = sd.createElementNS(ns, 'rect');
+       shape.setAttributeNS(null, 'x', ax);
+       shape.setAttributeNS(null, 'y', ay+20);
+       shape.setAttributeNS(null, 'width',  contour.width+8);
+       shape.setAttributeNS(null, 'height', contour.height+6);
+       shape.setAttributeNS(null, 'fill', '#ffffcc');
+       shape.setAttributeNS(null, 'stroke', '#000000');
+       tTpBg.appendChild(shape);
+       tTipOn=1;
+   }
+
+   function cP(evt) {
+      if (tTp.childNodes.length==2) {
+          tTp.removeChild(temOBJ);
+          tTpBg.removeChild(shape);
+          tTipOn=0;
+	      }
+   }
+   function xfocus()
+   {
+   }
+   function xzoom()
+   {
+   }
+   function changeColor(color)
+   {
+   }
+   function AppendElement()
+   {
+       shape = sd.createElementNS(ns, 'rect');
+       shape.setAttributeNS(null, 'x', 100);
+       shape.setAttributeNS(null, 'y', 100);
+       shape.setAttributeNS(null, 'width',  40);
+       shape.setAttributeNS(null, 'height', 40);
+       shape.setAttributeNS(null, 'fill', '#ffffcc');
+       shape.setAttributeNS(null, 'stroke', '#000000');
+	   tTpBg.appendChild(shape);
+   }
+ function clickPie(xCode)
+   {
+	   //alert("svgpie="+xCode);
+	   parent.clickPIE(xCode);
+	}
+  </script>
+  <g id="main">
+    <!--background-->
+    <rect id="background" x="0" y="0"
+             width="100%" height="100%" 
+             fill='#(svgBGColor)#' />
+    <!--Title-->
+    <text x='#((svgX-($l(Title)*svgTitleSize))/2)#' 
+	         y='#(svgY/20)#' 
+		     font-size='#(svgTitleSize)#'
+		     font-family='#(svgTitleFont)#'
+		     fill='#(svgTitleColor)#'
+		     stroke='#(svgTitleColor)#'>
+			 #(##class(web.DHCSVGSetting).GetUnicode(Title))#
+    </text>
+    
+    
+    <CSP:LOOP COUNTER='iList' FROM='1' TO='#(iPies)#'>
+	   <CSP:LOOP COUNTER='idata' FROM='2' TO='#(iParts+1)#'>
+	    
+            <path d='M#(##class(web.DHCSVGSetting).GetPieX0(iList,iPies,svgX,svgY))#,
+                      #(##class(web.DHCSVGSetting).GetPieY0(iList,iPies,svgX,svgY))#,
+	               L#(($ZCOS($p(PiePart(iList),$c(3),(idata-1))/PieTotle(iList)*2*$ZPI))*Radii+##class(web.DHCSVGSetting).GetPieX0(iList,iPies,svgX,svgY))#,
+	                #(##class(web.DHCSVGSetting).GetPieY0(iList,iPies,svgX,svgY)-(($ZSIN($p(PiePart(iList),$c(3),(idata-1))/PieTotle(iList)*2*$ZPI))*Radii))# 
+	                A#(Radii)#,#(Radii)# 
+	                0 
+	                #($s(($p($p(dPie,$c(2),iList),$c(3),(idata-1))/PieTotle(iList))>0.5:1,1:0))#,
+	                0 
+	                #(($ZCOS($p(PiePart(iList),$c(3),idata)/PieTotle(iList)*2*$ZPI))*Radii+##class(web.DHCSVGSetting).GetPieX0(iList,iPies,svgX,svgY))#,
+	                #(##class(web.DHCSVGSetting).GetPieY0(iList,iPies,svgX,svgY)-(($ZSIN($p(PiePart(iList),$c(3),idata)/PieTotle(iList)*2*$ZPI))*Radii))#z'
+	           fill="#(svgLineColor((idata-1)))#" 
+               onmousemove='mP(evt,"#(##class(web.DHCSVGSetting).GetUnicode($p($p(XLable,$c(2),(idata-1)),$c(3),1)))#","#($p($p(dPie,$c(2),iList),$c(3),(idata-1)))#"+"/"+"#(PieTotle(iList))#","#($j($p($p(dPie,$c(2),iList),$c(3),(idata-1))/PieTotle(iList)*100,0,2)_"%")#")' 
+	           onmouseout="cP(evt)"
+	           onclick='clickPie("#($p(chkLinesFinal,"^",(idata-1)))#")'/>
+	      
+	   </CSP:LOOP>
+	  
+	   <text x='#(##class(web.DHCSVGSetting).GetX0(iList,iPies,svgX,svgY)+((pieXWidth-($l($p(cPie,$c(2),iList))*svgSize))/2))#'
+	         y='#(##class(web.DHCSVGSetting).GetPieY0(iList,iPies,svgX,svgY)+(Radii*1.1))#' 
+		     font-size='#(svgSize)#'
+		     font-family='#(svgFont)#'>
+			 #(##class(web.DHCSVGSetting).GetUnicode($p(cPie,$c(2),iList)))#
+	   </text>
+	      
+    </CSP:LOOP>
+    <CSP:LOOP COUNTER='part' FROM='1' TO='#(iParts)#'>
+    
+       <rect x='#(svgX*0.85)#' 
+             y='#(svgY*0.1+((part-1)*20))#'
+		     width="10" height="18" 
+             fill='#(svgLineColor(part))#'
+             stroke-width='#(svgLineWidth)#'/>
+       
+	   <text x='#(svgX*0.85+15)#' 
+	         y='#(svgY*0.1+((part-1)*20)+15)#' 
+		     font-size='#(svgSize)#'
+		     font-family='#(svgFont)#'>
+			 #(##class(web.DHCSVGSetting).GetUnicode($p($p(XLable,$c(2),part),$c(3),1)))#
+	   </text>
+    </CSP:LOOP>
+  </g>
+
+<g id="ch">
+</g>
+<g id="tTipBg">
+</g>
+<g id="tTip">
+</g>
+</svg>

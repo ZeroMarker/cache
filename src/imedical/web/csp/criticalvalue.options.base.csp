@@ -1,0 +1,430 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!doctype html>
+<html>
+<head>
+	<title>	危急值基础配置维护 </title>
+	<HISUI />
+	<style>
+		input.textbox{
+			width:200px;
+		}
+		textarea.textbox{
+			height:62px;
+		}
+		.opts-label,.opts-editor,.opts-notes,.opts-opration{
+			padding:5px 10px;
+			line-height:30px;
+			vertical-align:top;
+		}
+		.opts-editor{
+			padding:5px 0;
+		}
+		.opts-label{
+			text-align:right;
+			width:200px;
+		}
+		
+		.tip-row .opts-label,
+		.tip-row .opts-editor {
+			padding-top:0;
+			padding-bottom:13px;
+			
+		}
+		
+		
+		.datagrid-body .datagrid-editable .datagrid-editable-input:disabled{
+			background-color: #f7f7f7;
+		    border-color: #bbbbbb;
+		    color: #999;
+		}
+		#container{
+			width:1100px;
+			margin:10px auto;	
+		}
+		.opts-editor textarea.textbox{
+			padding:0 5px;
+			width:700px;
+			height:52px;
+			line-height:25px;
+			word-break: break-all;
+		}
+		textarea.textbox{
+			overflow:auto;	
+		}
+		.input-tip{
+			color:#5fa0d9;
+			padding-left:36px;
+			line-height:30px;
+			word-break: break-all;
+			font-size:14px;
+		}
+		.input-tip.textarea-tip{
+			color:#999999;
+			line-height:18px;
+			width:708px;
+			background:none;
+			padding-left:2px;
+		}
+		.input-tip.icon-tip{
+			background-position:10px center;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="hisui-panel" data-options="fit:true,border:false" style="padding:10px;">
+		<div id="container">
+			<table id="options-container" cellspacing="0" style="">
+				<tr class="input-row">
+					<td class="opts-label"><span class="emr-popover-trigger">病历填写链接</span></td>
+					<td class="opts-editor" colspan=2 title="填写电子病历的链接地址">
+						<textarea class="textbox" id="Base||EmrEditLinkO"  placeholder="填写门诊电子病历的链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【门诊】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"><span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="填写电子病历的链接地址">
+						<textarea class="textbox" id="Base||EmrEditLinkEO"  placeholder="填写急诊流水电子病历的链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊流水】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"><span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="填写电子病历的链接地址">
+						<textarea class="textbox" id="Base||EmrEditLinkEI"  placeholder="填写急诊留观电子病历的链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊留观】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"><span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="填写电子病历的链接地址">
+						<textarea class="textbox" id="Base||EmrEditLinkI"  placeholder="填写住院电子病历的链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【住院】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"><span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="填写电子病历的链接地址">
+						<textarea class="textbox" id="Base||EmrEditLinkH"  placeholder="填写体检电子病历的链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【体检】</div></td>
+				</tr>
+				<tr class="tip-row">
+					<td class="opts-label"></td>
+					<td class="opts-editor" colspan=2>
+						<div class="icon-tip input-tip textarea-tip">
+							链接支持{key}进行占位，打开链接是按key进行匹配变量,支持的key:EpisodeID,UserCode,UserID,GroupID,CTLocID,AntCVID,InstanceID,PatientID,mradm
+						</div>
+					</td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger">病历浏览链接</span></td>
+					<td class="opts-editor" colspan=2 title="电子病历浏览链接地址">
+						<textarea class="textbox" id="Base||EmrViewLink"  placeholder="电子病历浏览链接地址"></textarea>
+					</td>
+				</tr>
+				<tr class="tip-row">
+					<td class="opts-label"></td>
+					<td class="opts-editor" colspan=2>
+						<div class="icon-tip input-tip textarea-tip">
+							链接支持{key}进行占位，打开链接是按key进行匹配变量,支持的key:EpisodeID,UserCode,UserID,GroupID,CTLocID,AntCVID,InstanceID,PatientID,mradm
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label">病历在处理界面</td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditEmrO" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditEmrO" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditEmrO" label="提示">
+						<input type="checkbox" class="hisui-checkbox" id="Base||PopupEmrOnExecO" label="处理后弹出">
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【门诊】危急值处理界面与电子病历交互</div></td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditEmrEO" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditEmrEO" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditEmrEO" label="提示">
+						<input type="checkbox" class="hisui-checkbox" id="Base||PopupEmrOnExecEO" label="处理后弹出">
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊流水】</div></td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditEmrEI" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditEmrEI" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditEmrEI" label="提示">
+						<input type="checkbox" class="hisui-checkbox" id="Base||PopupEmrOnExecEI" label="处理后弹出">
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊留观】</div></td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditEmrI" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditEmrI" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditEmrI" label="提示">
+						<input type="checkbox" class="hisui-checkbox" id="Base||PopupEmrOnExecI" label="处理后弹出">
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【住院】</div></td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditEmrH" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditEmrH" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditEmrH" label="提示">
+						<input type="checkbox" class="hisui-checkbox" id="Base||PopupEmrOnExecH" label="处理后弹出">
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【体检】</div></td>
+				</tr>
+				<tr>
+					<td class="opts-label">是否可跨科写病历</td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||AllowEditEmrInOtherLoc">
+					</td>
+					<td class="opts-notes"></td>
+				</tr>
+				
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger">下医嘱链接</span></td>
+					<td class="opts-editor" colspan=2 title="下医嘱链接地址">
+						<textarea class="textbox" id="Base||OrderEditLink"  placeholder="下医嘱链接地址"></textarea>
+					</td>
+				</tr>
+				<!--
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger">下医嘱链接</span></td>
+					<td class="opts-editor" colspan=2 title="下医嘱链接地址">
+						<textarea class="textbox" id="Base||OrderEditLinkO"  placeholder="门诊下医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【门诊】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="下医嘱链接地址">
+						<textarea class="textbox" id="Base||OrderEditLinkEO"  placeholder="急诊流水下医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊流水】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="下医嘱链接地址">
+						<textarea class="textbox" id="Base||OrderEditLinkEI"  placeholder="急诊留观下医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊留观】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="下医嘱链接地址">
+						<textarea class="textbox" id="Base||OrderEditLinkI"  placeholder="住院下医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【住院】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="下医嘱链接地址">
+						<textarea class="textbox" id="Base||OrderEditLinkH"  placeholder="体检下医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【体检】</div></td>
+				</tr>
+				-->
+				<tr class="tip-row">
+					<td class="opts-label"></td>
+					<td class="opts-editor" colspan=2>
+						<div class="icon-tip input-tip textarea-tip">
+							链接支持{key}进行占位，打开链接是按key进行匹配变量,支持的key:EpisodeID,UserCode,UserID,GroupID,CTLocID,AntCVID,InstanceID,PatientID,mradm
+						</div>
+					</td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger">草药医嘱链接</span></td>
+					<td class="opts-editor" colspan=2 title="草药医嘱链接地址">
+						<textarea class="textbox" id="Base||CYOrderEditLink"  placeholder="草药医嘱链接地址"></textarea>
+					</td>
+				</tr>
+				<!--
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger">草药医嘱链接</span></td>
+					<td class="opts-editor" colspan=2 title="草药医嘱链接地址">
+						<textarea class="textbox" id="Base||CYOrderEditLinkO"  placeholder="门诊草药医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【门诊】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="草药医嘱链接地址">
+						<textarea class="textbox" id="Base||CYOrderEditLinkEO"  placeholder="急诊流水草药医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊流水】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="草药医嘱链接地址">
+						<textarea class="textbox" id="Base||CYOrderEditLinkEI"  placeholder="急诊留观草药医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【急诊留观】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="草药医嘱链接地址">
+						<textarea class="textbox" id="Base||CYOrderEditLinkI"  placeholder="住院草药医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【住院】</div></td>
+				</tr>
+				<tr class="input-row">
+					<td class="opts-label"> <span class="emr-popover-trigger"></span></td>
+					<td class="opts-editor" colspan=2 title="草药医嘱链接地址">
+						<textarea class="textbox" id="Base||CYOrderEditLinkH"  placeholder="体检草药医嘱链接地址"></textarea>
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">【体检】</div></td>
+				</tr>
+				-->
+				<tr class="tip-row">
+					<td class="opts-label"></td>
+					<td class="opts-editor" colspan=2>
+						<div class="icon-tip input-tip textarea-tip">
+							链接支持{key}进行占位，打开链接是按key进行匹配变量,支持的key:EpisodeID,UserCode,UserID,GroupID,CTLocID,AntCVID,InstanceID,PatientID,mradm
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label">医嘱在处理界面</td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditOrderO" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditOrderO" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditOrderO" label="提示">
+					</td>
+					<td class="opts-notes">
+						<div class="icon-tip input-tip">
+							【门诊】危急值处理界面与医嘱录入
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditOrderEO" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditOrderEO" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditOrderEO" label="提示">
+					</td>
+					<td class="opts-notes">
+						<div class="icon-tip input-tip">
+							【急诊流水】
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditOrderEI" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditOrderEI" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditOrderEI" label="提示">
+					</td>
+					<td class="opts-notes">
+						<div class="icon-tip input-tip">
+							【急诊留观】
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditOrderI" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditOrderI" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditOrderI" label="提示">
+					</td>
+					<td class="opts-notes">
+						<div class="icon-tip input-tip">
+							【住院】
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label"></td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowEditOrderH" label="显示按钮">
+						<input type="checkbox" class="hisui-checkbox" id="Base||RequireEditOrderH" label="必填">
+						<input type="checkbox" class="hisui-checkbox" id="Base||TipEditOrderH" label="提示">
+					</td>
+					<td class="opts-notes">
+						<div class="icon-tip input-tip">
+							【体检】
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label">是否可跨科开医嘱</td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||AllowEditOrderInOtherLoc">
+					</td>
+					<td class="opts-notes"></td>
+				</tr>
+				<!--
+				<tr>
+					<td class="opts-label"> <span class="emr-popover-trigger">护理病历路径</span></td>
+					<td class="opts-editor" colspan=2 title="护理病历路径">
+						<textarea class="textbox" id="Base||NurEmrLink"  placeholder="护理病历路径"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td class="opts-label">护理病历</td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowNurEmr" label="显示按钮">
+					</td>
+					<td class="opts-notes">危急值处理界面与护理病历交互</td>
+				</tr>-->
+				
+				<tr>
+					<td class="opts-label">显示处理意见</td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||ShowTransAdvice">
+					</td>
+					<td class="opts-notes"><div class="icon-tip input-tip">危急值处理界面是否显示处理意见、措施录入框</div></td>
+				</tr>
+
+				<tr>
+					<td class="opts-label">危急值接收</td>
+					<td class="opts-editor">
+						<input type="radio" class="hisui-radio" name="Base||ReceiveMode" id="Base||ShowReceive" value="1" label="显示按钮">
+						<!--<input type="radio" class="hisui-radio" name="Base||ReceiveMode" id="Base||ReadIsReceive" value="2" label="查看即接收">-->
+						<input type="radio" class="hisui-radio" name="Base||ReceiveMode" id="Base||NoReceive" value="0" label="无需接收">
+					</td>
+					<td class="opts-notes"></td>
+				</tr>
+				<tr>
+					<td class="opts-label">是否启用转发医生</td>
+					<td class="opts-editor">
+						<input type="checkbox" class="hisui-checkbox" id="Base||AllowFwDoc">
+					</td>
+					<td class="opts-notes"></td>
+				</tr>
+
+
+				<!--
+				<tr><td colspan=3><hr style="height:1px;border:none;margin-left:50px;border-top:1px dashed #ccc;" /></td></tr>
+				
+
+				-->
+
+			</table>
+			<div id="buttons" style="text-align:center;padding-top:20px;">
+				<a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-save',onClick:GV.confirm" id="save">保存</a>
+			</div>
+		</div> <!--end #container-->
+	</div> <!--end panel-->
+	<div id="win" class="hisui-dialog" data-options="title:'确认信息',iconCls:'icon-w-paper',width:1000,height:400,modal:true,closed:true" style="padding:10px 10px 0 10px;">
+		<table id="confirm-table"></table>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhccriticalvalue/common.js" charset="UTF-8"></script>
+	<script src="../scripts/dhccriticalvalue/CriticalValueOptions.Base.js" type="text/javascript" ></script>
+</body>
+</html>

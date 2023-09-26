@@ -1,0 +1,60 @@
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	/*
+	药房公用csp用于action
+	createdate:2016-08-10
+	creator:yunhaibao
+	descripton:获取通用配置或信息的csp
+	*/
+	
+    //执行动作
+    
+   	s action = $Get(%request.Data("action",1))
+   	s style=$Get(%request.Data("style",1))
+   	s combotext=$Get(%request.Data("q",1)) // easyui combo 默认匹配参数
+   	i combotext="" s combotext=$Get(%request.Data("combotext",1))
+   	s gLocId=$Get(%request.Data("gLocId",1))
+	s hosp=$Get(%request.Data("hosp",1))
+   	//获取科室集合
+	i action = "GetCtLocDs" d
+	.s loctype=$Get(%request.Data("loctype",1))
+	.s custtype=$Get(%request.Data("custtype",1))
+	.s HospId=$Get(%request.Data("HospId",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetCtLocDs(combotext,style,loctype,custtype,HospId)
+   	//获取his公共参数
+	i action="GetPhaHisCommonParmas" d
+	.w ##class(web.DHCSTPharmacyCommon).GetPhaHisCommonParmas()
+   	//卡类型
+	i action="GetCardType" d
+	.w ##CLASS(web.DHCSTPharmacyCommon).ReadCardTypeDefineListBroker("GetCardTypeToJson","","",style)
+	//获取用法集合
+	i action="GetInstuDs" d 
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetInstuDs()
+    //获取库存分类集合
+	i action="GetStkCatDs" d
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetStkCatDs("",combotext,style)
+	//获取管制分类
+	i action="GetPoisonCatDs" d 
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetPoisonCatDs(combotext,style)
+	//获取管理组集合
+	i action="GetManaGroupDs" d 
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetManaGroupDs(gLocId,style)
+	//获取剂型集合
+	i action="GetPhcFormDs" d
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetPhcFormDs(combotext,style)
+	//获取病人医嘱信息,根据医嘱id
+	i action="GetPatientOrdInfo" d
+	.s orditem=$Get(%request.Data("orditem",1))
+	.w ##class(web.DHCSTPharmacyCommon).GetPatientOrdInfo(orditem)
+	//别名获取药品下拉
+	i action="GetLocInciDsByAlias" d
+	.s locid=$Get(%request.Data("locId",1))
+	.s combotext=$Get(%request.Data("combotext",1))
+	.w ##class(web.DHCSTPharmacyCommon).GetLocInciDsByAlias(combotext,locid,style)
+	//获取科室类组
+	i action="GetLocStkGrpDs" d
+	.s locId=$Get(%request.Data("locId",1))
+	.w ##CLASS(web.DHCSTPharmacyCommon).GetLocStkGrpDs(locId,style)
+	
+</script>

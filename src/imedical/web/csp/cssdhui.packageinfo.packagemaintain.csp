@@ -1,0 +1,155 @@
+<!--消毒包信息维护-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+	<style>
+		.itm_table{
+			text-align: right;
+			border-spacing:0px 5px;
+		}
+		.itm_table>tbody>tr>td{
+			padding: 0px 0px 0px 8px;
+		}
+		.CkPadding{
+			text-align:left;
+			padding: 0px 0px 0px 1px
+		}
+		.tdwidth{
+			width:100px
+			}
+		.imgbox{
+		    position: relative;
+		    width: 120px;
+		    height: 120px;
+		    margin-top: 10px;
+		    background: #000000;
+		    
+		}
+		.imgbox img{
+		    position: absolute;
+		    top: 0;
+		    bottom: 0;
+		    left: 0;
+		    right: 0;
+		    margin: auto;
+		    max-width: 100%;
+		    max-height: 100%;
+		    outline: 1px solid #000;
+		}
+		.selectedpic { border:4px solid #378ec4; padding:0;position: relative;z-index:0}		
+		.largeImg img{
+			width:100%;
+			height:445px;
+		}
+	</style>
+
+ <link href="../scripts/cssd/Common/webuploader/webuploader.css" type="text/css" rel="stylesheet"/>
+ <link href="../scripts/cssd/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="hisui-panel GridPadding" data-options="region:'center',border:false">   
+		<div class="hisui-panel" data-options="iconCls:'icon-paper',title:'消毒包列表',headerCls:'panel-header-gray',split:true,collapsible:false,fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',collapsible:false,border:false" class="BorderLine"> 
+					<table class="itm_table" id="Conditions" >
+						<tr>
+							<td>消毒包名称</td>
+							<td><input id="packageDesc" name="packageDesc" class="textbox" style="width:120px"></td>
+							<td>包类型</td>
+							<td>
+								<select id="PackType" name="PackType" class="hisui-combobox" style="width:120px">
+									<option value="1" selected>循环包</option>
+									<option value="2">非循环包</option>
+									<option value="3">易损件</option>
+									<option value="4">包装容器</option>
+								</select>
+							</td>
+							<td>可用</td>
+							<td>
+								<select id="NotUse" name="NotUse" class="hisui-combobox" style="width:120px">
+									<option value="" selected>全部</option>
+									<option value="Y">可用</option>
+									<option value="N">不可用</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>消毒包别名</td>
+							<td><input id="Alias" name="Alias" class="textbox" style="width:120px"></td>
+							<td>包分类</td>
+							<td>
+								<select id="PackClassDr" name="PackClassDr" class="hisui-combobox" style="width:120px"></select>
+							</td>
+							<td>包属性</td>
+							<td>
+								<select id="PackTypeDetail" name="PackTypeDetail" class="hisui-combobox" style="width:120px">
+									<option Value="1" selected>手术器械包</option>
+									<option Value="2" >普通包</option>
+                                	<option Value="7" >敷料包</option>
+                                	<option Value="8" >一次性</option>
+                                	<option Value="9" >急救包</option>
+                                	<option Value="10">专科器械包</option>
+                                	<option Value="3" >清洗筐</option>
+                                	<option Value="4" >清洗车</option>
+									<option Value="5" >灭菌筐</option>
+                                	<option Value="6" >灭菌车</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3" style="">
+								<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px">查询</a>
+								<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px">清屏</a>
+								<a href="#" id="ViewPicBT"class="hisui-linkbutton" data-options="iconCls:'icon-w-eye'" style="width:120px">浏览图片</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="PackageList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:550px;padding-left:0px">
+		<div class="hisui-panel" data-options="title:'消毒包明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<table id="ItemList"></table>
+		</div>
+	</div>
+
+<div id="ViewPic" class="hisui-dialog" data-options="closed:'true',modal:true,iconCls:'icon-w-img'" style="width:950px;height:550px" title="图片浏览">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false">
+			<table class="Condition" id="Conditions" style="height:60px">
+				<tr>
+					<td><div id="AddViewPicBT">添加图片</div></td>
+					<td><div id="UpLoadViewPicBT" class="hisui-linkbutton">上传图片</div></td>
+					<td><a href="#" id="DeletePicBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除图片</a></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false,headerCls:'panel-header-gray'" style="border-bottom:1px #cccccc solid;border-top:1px #cccccc solid;">
+			<ul id="PicsList" class="uploader-list" style="padding:5px 35px 5px 35px;"></ul>
+		</div>
+		<div data-options="region:'east',border:false,headerCls:'panel-header-gray'" style="border:1px #cccccc solid;width:750px;padding-left:0px" Class="largeImg">
+			<img id="showimg"></img>
+		</div>
+	</div>
+</div>
+   	<script type="text/javascript" src="../scripts/cssd/Common/jquery.tmpl.js"></script>	
+   	<script type="text/javascript" src="../scripts/cssd/Common/Viewer/viewer.js"></script>	
+	<script type="text/javascript" src="../scripts/cssd/Common/webuploader/webuploader.js"></script>	
+	<script type="text/javascript" src="../scripts/cssd/Common/commonuploader.js"></script>	
+	<script type="text/javascript" src="../scripts/cssd/Package/Viewer.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Package/Pic.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Package/PackageList.js"></script>
+</body>
+</html>

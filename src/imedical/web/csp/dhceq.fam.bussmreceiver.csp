@@ -1,0 +1,105 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<DHCEQ:Report></DHCEQ:Report>
+<HISUI/>
+</HEAD>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="业务消息发送接收人清单" data-options="'eqtitle':'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="height:95px">
+					<div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
+					<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><lable id="cvBussTypeDR" for="vBussTypeDR">业务类型</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox"  id="vBussTypeDR"></div>
+					<div class="eq-table-td eq-table-label"><label for="vStartDate">开始日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="vStartDate" ></div>
+					<div class="eq-table-td eq-table-label"><label for="vEndDate">结束日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="vEndDate" ></div>
+					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+				</div>
+					<div class="eq-table-tr">					
+					<div class="eq-table-td eq-table-label"><lable for="vBussNo">业务单号</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="vBussNo"></div>
+					<div class="eq-table-td eq-table-label"><lable id="cNotSendMessFlag" for="vNotSendMessFlag">未接收标志</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox"  id="vNotSendMessFlag"></div>
+					<div class="eq-table-td eq-table-label"><lable id="cInvalidMsgFlag" for="InvalidMsgFlag">异常消息</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox"  id="InvalidMsgFlag"></div>
+					<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
+				</div>
+		</div>
+		</div>
+		<!--润乾报表显示位置-->
+			<div data-options="region:'center',border:false" style="overflow:hidden;">
+			<iframe id="ReportFile" name="ReportFile" src=#(ReportFileSrc)# width=100% height=100% scrolling="no"></iframe>
+			<iframe id="ReportFilePrint" name="ReportFilePrint" src=#(ReportFilePrintSrc)# width=100% height=0%></iframe>		
+		</div>
+		</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+			<INPUT TYPE="hidden" name="PrintFlag" id="PrintFlag" value=#(PrintFlag)#>
+			<INPUT TYPE="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)#>
+			<INPUT TYPE="hidden" name="ReportFilePrintSrc" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>		    
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<!--调用后台方法隐藏元素
+			<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			-->
+		</form>
+	</div>
+</body>
+<script type='text/javascript'>
+initSourceType();
+initNotSendMessFlag();
+initInvalidMsgFlag();
+function initSourceType(){
+			var SourceType = $HUI.combobox("#vBussTypeDR",{
+			valueField:'id', textField:'text',panelHeight:"auto",
+			data:[
+				{id:'',text:'所有业务'}				
+				,{id:'11',text:'开箱验收'}
+				,{id:'21',text:'入库'}
+				,{id:'22',text:'转移'}
+				,{id:'23',text:'减少、退货'}
+				,{id:'31',text:'维修'}
+				,{id:'34',text:'报废'}
+				,{id:'64',text:'租赁'}
+
+			],
+		});
+	}
+function initNotSendMessFlag(){
+			var NotSendMessFlag = $HUI.combobox("#vNotSendMessFlag",{
+			valueField:'id', textField:'text',panelHeight:"auto",
+			data:[
+				{id:'',text:'全部'}				
+				,{id:'0',text:'已接收消息'}
+				,{id:'1',text:'未接收消息'}
+			],
+		});
+	}
+function initInvalidMsgFlag(){
+			var InvalidMsgFlag = $HUI.combobox("#InvalidMsgFlag",{
+			valueField:'id', textField:'text',panelHeight:"auto",
+			data:[
+				{id:'',text:'All'}				
+				,{id:'Y',text:'Yes'}
+				,{id:'N',text:'No'}
+			],
+		});
+	}
+	</script>
+</HTML>

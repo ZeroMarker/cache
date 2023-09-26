@@ -1,0 +1,59 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	
+	
+	s PlanRowId=$Get(%request.Data("PlanRowId",1))
+	s PlanName=$Get(%request.Data("PlanName",1))
+	s PlanType=$Get(%request.Data("PlanType",1))
+	s PlanContent=$Get(%request.Data("PlanContent",1))
+	s PlanTarget=$Get(%request.Data("PlanTarget",1))
+	s ProgressInfo=$Get(%request.Data("ProgressInfo",1))
+	s Summarize=$Get(%request.Data("Summarize",1))
+	s DateOfCreate=$Get(%request.Data("DateOfCreate",1))
+	s DateOfStart=$Get(%request.Data("DateOfStart",1))
+	s DateOfEnd=$Get(%request.Data("DateOfEnd",1))
+	s StaffOfCreate=$Get(%request.Data("StaffOfCreate",1))
+	s CommunityCode=$Get(%request.Data("CommunityCode",1))
+	
+	s SqlStr = $Get(%request.Data("SqlStr",1))
+	
+	
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.HealthEducationPlanService).update(PlanRowId,PlanName,PlanType,PlanContent,PlanTarget,ProgressInfo, Summarize,DateOfCreate,DateOfStart,DateOfEnd,StaffOfCreate,CommunityCode)
+	.w result
+	
+	i Action = "list" d
+	.w ##class(CHSSWeb.HealthEducationPlanService).ListPage(CommunityCode,Start,Limit)
+	
+	i Action = "del" d
+	.s result = ##class(CHSSWeb.HealthEducationPlanService).delete(PlanRowId)
+	.i result = 0 d
+	..w "{success:'true',info:'É¾³ý³É¹¦'}"
+    .e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.HealthEducationPlanService).insert(PlanName,PlanType,PlanContent,PlanTarget,ProgressInfo, Summarize,DateOfCreate,DateOfStart,DateOfEnd,StaffOfCreate,CommunityCode)
+	.w result
+	
+	i PlanName '= "" d
+	.s SqlStr = " and PlanName like '%"_PlanName_"%'"
+	i PlanType '= "" d
+	.s SqlStr = " and PlanType = '"_PlanType_"'"
+	i PlanContent '= "" d
+	.s SqlStr = " and PlanContent = '"_PlanContent_"'"
+	i ProgressInfo '= "" d
+	.s SqlStr = " and ProgressInfo = '"_ProgressInfo_"'"
+	
+	i Action = "search" d
+	.w ##class(CHSSWeb.HealthEducationPlanService).Search(CommunityCode,Start,Limit,SqlStr)
+</script>
+

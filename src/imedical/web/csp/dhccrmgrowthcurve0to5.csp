@@ -1,0 +1,41 @@
+
+
+<script language="cache" runat="server">
+
+ s patientID = $Get(%request.Data("patientID",1))
+ s Info=##class(web.DHCCRM.CRMGrowthCurve).GetTInfoBy0to5(patientID)
+ s CurData=$p(Info,$c(1),1)
+ s Sex=$p(Info,$c(1),2)
+ s path="../images/dhcpe/HCboyscht0_5.png" 
+ i Sex="M" s path="../images/dhcpe/HCboyscht0_5.png"
+ i Sex="F" s path="../images/dhcpe/HCgirlscht0_5.png"
+ 
+</script>
+
+
+
+
+<div style="position:absolute; left:0; top:0; width:1300; height:910; visibility:visible"><img src=#(path)# width=100% height=100%></div>
+	<csp:WHILE COUNTER=Counter CONDITION=(""'=CurData)>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s CurData=$p(Info,"^",Counter)
+	q:CurData=""
+	s CurDataT=$p(CurData,"$",1)
+	s CurDataM=$p(CurData,"$",2)
+	s MTPointX=212,MTPointY=772.5,MTSpaceX=14,MTSpaceY=12.1,MTPoint=32,MTSpace=0.5
+	s FTPointX=211,FTPointY=770,FTSpaceX=14,FTSpaceY=12.2,FTPoint=31,FTSpace=0.5
+	
+	
+	
+	i Sex="M" d
+	.s TPointY=MTPointY-((CurDataT-MTPoint)/MTSpace*MTSpaceY)
+	.s TPointX=CurDataM*MTSpaceX+MTPointX
+	.s TStyle="position:absolute;left:"_TPointX_";top:"_TPointY_";color:balck; visibility:visible"
+	i Sex="F" d
+	.s TPointY=FTPointY-((CurDataT-FTPoint)/FTSpace*FTSpaceY)
+	.s TPointX=CurDataM*FTSpaceX+FTPointX
+	.s TStyle="position:absolute;left:"_TPointX_";top:"_TPointY_";color:balck; visibility:visible"
+	</SCRIPT>
+	<div style=#(TStyle)#><h2>*</div>
+	
+    </CSP:WHILE>

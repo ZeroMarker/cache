@@ -1,0 +1,68 @@
+<Server>
+	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' style='display:none' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>", $C(13, 10)
+	w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' style='display:none' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>", $C(13, 10)
+	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' style='display:none' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>", $C(13, 10)
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+</Server>
+<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+<ADDINS require="RWCard"/>
+<script type="text/javascript">
+/**
+ * @author SongChao
+ * @description ¶Á¿¨
+ * @return {boolean}
+ */
+function readCard() {
+    var obj = document.getElementById("ReadCardTypeEncrypt");
+    if (obj) { var encmeth = obj.value; }
+    if (encmeth != "") {
+        var myrtn = cspRunServerMethod(encmeth, "GetCardTypeToHUIJson", "", "");
+        myrtn = eval('(' + myrtn + ')');
+        for (var k = 0; k < myrtn.length; k++) {
+            var myoptval = myrtn[k]["id"];
+            var myEquipDR = myoptval.split("^")[14];
+            if ((myoptval.split("^")[16] == "Handle") || (myEquipDR == "")) continue;
+            var CardTypeRowId = myoptval.split("^")[0];
+            var myrtn = DHCACC_GetAccInfo(CardTypeRowId, myoptval);
+            if(myrtn){
+	            var myary = myrtn.split("^");
+	            var rtn = myary[0];
+	            if ((rtn == "0") || (rtn == "-201")) {
+	                return myrtn;
+	            } else if (rtn == "-200") {
+	                return myrtn;
+	            } else if (rtn == "-1") {
+	                return myrtn;
+	            }
+            }else{
+	            $.messager.popover({ msg: '¶Á¿¨Ê§°Ü!', type: 'error', timeout: 2000 });
+            }
+        }
+    } else {
+        return false;
+    }
+}
+var execReadCard = function (callback){
+    var cardInfo = readCard();
+    var myAry = cardInfo.toString().split("^");
+    var rtn = myAry[0];
+    var cardNo = "";
+    var papmiId = "";
+    var patientNo = "";
+    switch (rtn) {
+      case "0":
+        cardNo = myAry[1];
+        papmiId = myAry[4];
+        patientNo = myAry[5];
+        callback(cardNo, papmiId, patientNo);
+        break;
+      case "-200":
+        $.messager.popover({ msg: '¿¨ÎÞÐ§,ÇëºËÊµ¿¨ÐÅÏ¢!', type: 'alert', timeout: 2000 });
+        break;
+      case "-201":
+        $.messager.popover({ msg: '¶Á¿¨Ê§°Ü!', type: 'alert', timeout: 2000 });
+        break;
+    }
+  };
+</script>

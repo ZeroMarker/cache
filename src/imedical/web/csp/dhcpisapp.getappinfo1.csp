@@ -1,0 +1,466 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="SERVER">  
+	s act=$g(%request.Data("act",1))
+		 
+	i act="gepatinfoHIS" d   //首次申请单从HIS获取病人信息,保存之后就从PIS后台获取-------------OK
+	.s Locdr = $g(%request.Data("Locdr",1))
+	.s adm = $g(%request.Data("adm",1))
+	.s papmi = $g(%request.Data("papmi",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.;s TMrowid=""
+	.s rtn=##Class(web.DHCPisAppJson).getRowidByPadm(Locdr,adm,tclscode,TMrowid)
+	.w rtn
+
+	i act="DelCellSpecimens" d //细胞学删除标本
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.d ##class(Src.PIS3Register).DelSpecimensByTmrowid(TMrowid)
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace() 
+	.s rtn=""
+	.w rtn
+	
+	i act="getRsDr" d
+	.s data=""
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.d ##class(Src.PIS3Register).GetStatusByRowId(.data,TMrowid)
+	.s rtn=data
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace() 
+	.w rtn
+		
+	i act="GetINIID" d
+	.s OrderID=$g(%request.Data("OrderID",1))
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s rtn=##class(Src.PIS3LocInit).GetINIID(OrderID)
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace()  
+	.w rtn
+	
+	i act="GetOrderItemInfo" d
+	.s OrderNum=$g(%request.Data("OrderNum",1)) 
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s rtn=##class(Src.PIS3Interface).GetOeorditminfo(OrderNum)	
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace() 
+	.w rtn
+	/*
+	i act="GetOrder"  d
+	.s rtn=##class(web.DHCPisAppJson).GetOrder(10,"","")	
+	.w rtn
+	
+	i act="GetOrder1" d
+	.s rtn=##class(web.DHCPisAppJson).GetOrder(20,"","")	
+	.w rtn
+	
+	i act="GetOrder3" d	
+	.s rtn=##class(web.DHCPisAppJson).GetOrder(31,"","")	
+	.w rtn
+	*/
+	i act="GetOrder2" d
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s Ptype=$g(%request.Data("Ptype",1))	
+	.s rtn=##class(web.DHCPisAppJson).GetOrder(tclscode,"","",Ptype)	
+	.w rtn
+
+	
+	
+	i act="GetQuCaiLoc" d  
+	.s rtn=##class(web.DHCPisAppJson).GetQuCaiLoc()	
+	.w rtn
+	
+		
+	i act="GetReceiveLoc" d  
+	.s rtn=##class(web.DHCPisAppJson).GetReceiveLoc()	
+	.w rtn
+	
+	i act="GetQuCaiDoc" d  
+	.s LocDr=$g(%request.Data("id",1))	
+	.s rtn=##class(web.DHCPisAppJson).GetQuCaiDoc(LocDr)	
+	.w rtn
+	
+	
+	i act="ClinicalDiag" d   		 //获取诊断信息 -------------OK
+	.s Locdr=$g(%request.Data("Locdr",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.s rtn=##Class(web.DHCPisAppJson).GetClinicalDiag(Locdr,Paadmdr,tclscode,TMrowid)
+	.w rtn
+	
+	i act="SpeInfo" d		  		//获取标本信息
+	.s Locdr=$g(%request.Data("Locdr",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s start=$g(%request.Data("start",1))
+	.s limit=$g(%request.Data("limit",1))
+	.s ^tmp("3###")	=start_"#"_limit
+	.s rtn=##Class(web.DHCPisAppJson).SpeInfo2JSON(start,limit,Locdr,Paadmdr,tclscode,TMrowid)	
+	.w rtn
+	
+	i act="DelSpeInfo" d		  		//删除 标本信息
+	.s ids = $g(%request.Data("ids",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.s rtn=##Class(web.DHCPisAppJson).DelSpeInfo(ids,TMrowid)
+	.w rtn
+	
+	i act="GetSpeNum" d		  		//获取标本序号
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s rtn=##Class(web.DHCPisAppJson).GetSpeNum(TMrowid)
+	.w rtn
+	
+	
+	i act="GenTmrowid" d		   //生成申请单号----------------OK
+	.s Locdr = $g(%request.Data("Locdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s rtn=##Class(web.DHCPisAppJson).GenTmrowid(Locdr,tclscode,Paadmdr)
+	.w rtn
+	
+	i act="ShowTmrowid" d
+	.s Locdr = $g(%request.Data("Locdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))	
+	.s rtn=##class(web.DHCPisAppJson).ShowTmrowid(Locdr,tclscode,Paadmdr)
+	.w rtn
+	
+	i act="GetOEorditemID" d                //获取医嘱号
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s rtn=$p($g(^DHCPISTestMaster(TMrowid)),"^",32)
+	.w rtn
+
+	i act="SavePatInfo" d		   //保存病人基本信息
+	.s PatInfo = $g(%request.Data("PatInfo",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s rtn=##Class(web.DHCPisApplicationSheet).UpdatePatInfo(PatInfo,TMrowid)
+	.w rtn
+	
+	i act="SavePatInfo2" d		   //保存病人基本信息
+	.s PatInfo2 = $g(%request.Data("PatInfo2",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.s rtn=##Class(web.DHCPisApplicationSheet).UpdatePatInfo2(PatInfo2,TMrowid)
+	.w rtn
+	
+	i act="SaveAppInfo" d		   //保存  申请信息(包括诊断信息)
+	.s AppPatInfo = $g(%request.Data("AppPatInfo",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.s rtn=##Class(web.DHCPisApplicationSheet).UpdateAppInfo(AppPatInfo,TMrowid)
+	.w rtn
+	
+	i act="SaveAppInfo2" d  //保存  申请信息(包括诊断信息,病人的基本信息)
+	.s AppPatInfo2 = $g(%request.Data("AppPatInfo2",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1)) 	
+	.s rtn=##class(web.DHCPisApplicationSheet).UpdateAppInfo2(AppPatInfo2,TMrowid)
+	.w rtn
+	
+	i act="SaveHepatitis"  d  //活检保存传染病室
+	.s TMrowid = $g(%request.Data("TMrowid",1)) 
+	.s Hepatitis= $g(%request.Data("Hepatitis",1))	
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s data=""
+	.d ##class(Src.PIS3Register).UpdateHepatitis(.data,TMrowid,Hepatitis) 
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+	.s rtn=""
+	.w rtn
+	
+	i act="getDiagInfo" d		   //提取 申请信息(包括诊断信息) ///注意，这里申请单号要从后台提取了
+	.s Locdr = $g(%request.Data("Locdr",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.s rtn=##Class(web.DHCPisAppJson).getDiagInfo(Locdr,Paadmdr,tclscode,TMrowid)
+	.w rtn
+	
+	i act="SaveWomanInfo" d		   //保存妇科信息
+	.s WomanInfo = $g(%request.Data("WomanInfo",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s info=TMrowid_"^"_WomanInfo
+	.s rtn=##Class(web.DHCPisApplicationSheet).TestWomanAddAll(info)
+	.w rtn
+	
+	i act="GetWomanInfo" d		   //获取 妇科信息
+	.s Locdr = $g(%request.Data("Locdr",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.s rtn=##Class(web.DHCPisAppJson).getWomanInfo(Locdr,Paadmdr,tclscode,TMrowid)
+	.w rtn
+	
+	i act="SaveTumourInfo" d		   //保存肿瘤信息
+	.s TumourInfo = $g(%request.Data("TumourInfo",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s info=TMrowid_"^"_TumourInfo
+	.s rtn=##Class(web.DHCPisApplicationSheet).TestTumourAdd(info)
+	.w rtn
+	
+	i act="GetTumourInfo" d		   //获取 肿瘤信息
+	.s Locdr=$g(%request.Data("Locdr",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s rtn=##Class(web.DHCPisAppJson).GetTumourInfo(Locdr,Paadmdr,tclscode,TMrowid)
+	.w rtn
+
+	i act="SaveSpeTimeInfo" d		//保存标本时间 GetSpecimenOtherDate
+	.s SpeTimeInfo = $g(%request.Data("SpeTimeInfo",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+    .s Info=##class(Src.PIS3Register).UpdateSpecimenOtherDate(SpeTimeInfo,TMrowid) 
+    .d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+    .w Info
+	
+	i act="GetSpeTimeInfo" d		//获得标本时间 
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+    .s timeInfo=##class(web.DHCPisAppJson).GetSpecimenOtherDate(Paadmdr,tclscode,TMrowid)
+    .w timeInfo
+	
+	i act="GetAppItems" d		//获得已发送的申请历史信息	
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+    .s Info=##class(web.DHCPisAppJson).GetAppItems(tclscode,Paadmdr)   
+    .w Info
+	
+	
+	
+	
+	i act="SaveSpeInfo" d			//细胞学 保存标本信息1
+	.s SpeInfo = $g(%request.Data("SpeInfo",1))
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s data=""
+    .d ##class(Src.PIS3Register).TestSpeciAdd(.data,SpeInfo)
+    .s Info=data
+    .d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+	.s rtn=""
+	.w rtn
+	
+	i act="SaveSpeInfo2" d			//细胞学 保存标本信息2
+	.s SpeInfo1 = $g(%request.Data("SpeInfo1",1))
+	.s SpeInfo2 = $g(%request.Data("SpeInfo2",1))
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s data=""
+    .d ##class(Src.PIS3Register).TestSpeciAdd(.data,SpeInfo1)
+    .d ##class(Src.PIS3Register).TestSpeciAdd(.data,SpeInfo2)
+    .d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+	.s rtn=""
+	.w rtn
+
+	i act="UpdateSpeInfo" d
+	.s SpeInfo = $g(%request.Data("SpeInfo",1))
+	.s SpeId = $g(%request.Data("SpeId",1))	
+	.s Info=##class(web.DHCPisApplicationSheet).UpdateSpecimenInfo(SpeInfo,SpeId)
+	.w Info
+	
+	i act="HTZZSvSpInfo" d			//常规申请 活体组织病理诊断申请
+	.s SpeInfo = $g(%request.Data("SpeInfo",1))
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s data=""
+    .d ##class(Src.PIS3Register).TestSpeciAdd(.data,SpeInfo)
+    .s Info=data
+    .d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+	.s rtn=Info
+	.w rtn
+	
+	i act="GetSpeInfo" d		   //获取 细胞学 标本信息
+	.s Locdr= $g(%request.Data("Locdr",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+	.s rtn=##Class(web.DHCPisAppJson).GetSpeInfo(Locdr,Paadmdr,tclscode,TMrowid)
+	.w rtn
+	
+	i act="CancelApp" d		   //取消申请单
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s OEorditemID=$g(%request.Data("OEorditemID",1))
+	.s User=$g(%request.Data("User",1))
+	.s UserCode=$g(%request.Data("UserCode",1))
+	.s UserName=$g(%request.Data("UserName",1))
+	.s Locdr=$g(%request.Data("Locdr",1))
+	.s clDesc=$g(%request.Data("clDesc",1))
+	.s data=""
+	.s canInfo=##class(web.DHCPisApplicationSheet).GetCancelInfoByTmid(TMrowid)
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.d ##class(Src.PIS3Extending).CancelLogAdd(.data,"^^"_UserName_"^"_UserCode_"^"_clDesc_"^"_canInfo_"^"_TMrowid_"^"_Locdr)	
+    .d ##class(Src.PIS3Register).TestMasterDel(.data,TMrowid)
+    .;s rtn=##class(Src.PIS3Interface).UnUse(OEorditemID,User)  //作废医嘱
+    .;s rtn=##class(Src.PIS3Interface).Stop(OEorditemID,User) //停止医嘱
+    .s rtn=##class(Src.PIS3Interface).CancelMulti(OEorditemID,User)  
+    .s rtn=data
+    .d ##class(Src.PIS3Common).SetWebSourceNameSpace()    
+	.w rtn
+	
+	i act="SendApp" d		   //发送申请单 + 插入医嘱
+	.s adm = $g(%request.Data("adm",1))
+	.s OrdItemStr = $g(%request.Data("OrdItemStr",1))
+	.s TMrowid=$g(%request.Data("TMrowid",1))
+	.s User = $g(%request.Data("User",1))
+	.s Loc = $g(%request.Data("Loc",1))	
+	.s IniId= $g(%request.Data("IniId",1))
+    .s Info=##class(web.DHCPisAppJson).InsertOrderItem(adm,OrdItemStr,User,Loc,TMrowid,IniId)
+	.w Info
+	
+	i act="GetRecLoc"  d
+	.s adm = $g(%request.Data("adm",1))
+	.s INIid = $g(%request.Data("INIid",1))
+	.s rtn=$$GetRecloc^DHCDocOrderCommonNew(adm,INIid)
+	.w rtn
+
+	i act="SavesjSpeInfo" d		   // 保存院外送检标本信息
+	.s songjianinfo = $g(%request.Data("songjianinfo",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s rtn=##Class(web.DHCPisApplicationSheet).UpdateSjInfo(songjianinfo,TMrowid)
+	.w rtn
+	
+	i act="AddwyhzInfo" d		   //保存院外会诊信息
+	.s wyhzInfo = $g(%request.Data("wyhzInfo",1))
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s data=""	
+	.d ##class(Src.PIS3Register).ExConsultAdd(.data,wyhzInfo)
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace()   
+	.s rtn=data
+	.w rtn
+	
+	i act="GetSongjianInfo" d      //zcl添加获取外院送检信息
+	.s Locdr=$g(%request.Data("Locdr",1))
+	.s Paadmdr = $g(%request.Data("Paadmdr",1))
+	.s tclscode = $g(%request.Data("tclscode",1))
+	.s TMrowid = $g(%request.Data("TMrowid",1))	
+    .d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.s rtn=##Class(Src.PIS3Register).GetSongjianInfo(Locdr,Paadmdr,tclscode,TMrowid)
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace()   
+	.w rtn
+	/*
+	i act="AddHandSpe"  d //生成标本交接记录 手术室--->病理科
+	.s appHandDoc=$g(%request.Data("appHandDoc",1))
+	.s RecDoc=$g(%request.Data("RecDoc",1))
+	.s tmidStr=$g(%request.Data("tmidStr",1))
+	.s data="",data1=""
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.d ##class(Src.PIS3Cutting).VerRecAdd(.data,87_"^"_"01"_"^^^"_appHandDoc_"^"_RecDoc_"^"_"")
+	.d ##class(Src.PIS3Register).UpdateTSSeeingFirst(.data1,tmidStr_"^"_data)
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace()   
+	*/
+	
+	/*i act="AddHandSpe"  d //生成标本交接记录 手术室-->护工-->接收科室
+	.s appHandDoc=$g(%request.Data("appHandDoc",1))
+	.s RecDoc=$g(%request.Data("RecDoc",1))
+	.s tmidStr=$g(%request.Data("tmidStr",1))
+	.s appId=$g(%request.Data("appLocId",1))
+	.s data="",data1="",tmidStr1="",tmidStr2="",memo=""
+	.f i=1:1:$l(tmidStr,"#") d	
+	..s tmid=$p(tmidStr,"#",i)		
+	..q:'$d(^DHCPISTestMaster(tmid)) 
+	..s SpeRecLoc=$p(^DHCPISTestMaster(tmid),"^",22)    		
+	..q:SpeRecLoc=""
+    ..s child=0  s child=$o(^DHCPISTestMaster(tmid,"TS",child)) q:(child="") 	 	 	 
+    ..q:'$d(^DHCPISTestMaster(tmid,"TS",child))   
+    ..s VrId=$p(^DHCPISTestMaster(tmid,"TS",child),"^",12)    
+    ..i (VrId="") d  
+	...i (tmidStr1="") s tmidStr1=tmid  
+	...e  s tmidStr1=tmidStr1_"#"_tmid 		
+	..e  s memo=$p(^DHCPISVerifyRecord(VrId),"^",7)   i (memo="")&(appId'=SpeRecLoc)  d 	
+    ...s data=""  
+    ...d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+    ...d ##class(Src.PIS3Cutting).VerRecUpdateMemo(.data,RecDoc,VrId)
+    ...d ##class(Src.PIS3Common).SetWebSourceNameSpace()  
+	.d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	.i (tmidStr1'="") d	
+	..s data=""	
+	..d ##class(Src.PIS3Cutting).VerRecAdd(.data,87_"^"_"01"_"^^^"_appHandDoc_"^"_RecDoc_"^"_"")
+	..d ##class(Src.PIS3Register).UpdateTSSeeingFirst(.data1,tmidStr1_"^"_data)	
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace()  */ 
+	
+	i act="AddHandSpe"  d //生成标本交接记录 手术室-->护工-->接收科室
+	.s appHandDoc=$g(%request.Data("appHandDoc",1))
+	.s RecDoc=$g(%request.Data("RecDoc",1))
+	.s tmidStr=$g(%request.Data("tmidStr",1))
+	.s appId=$g(%request.Data("appLocId",1))
+	.s BLKID=$g(%request.Data("BLKID",1))
+	.s data="",data1="",tmidStr1="",tmidStr2="",memo="",VrIdStr=""
+	.f i=1:1:$l(tmidStr,"#") d	
+	..s tmid=$p(tmidStr,"#",i)		
+	..q:'$d(^DHCPISTestMaster(tmid)) 
+	..s SpeRecLoc=$p(^DHCPISTestMaster(tmid),"^",22)    		
+	..q:SpeRecLoc=""
+    ..s child=0  s child=$o(^DHCPISTestMaster(tmid,"TS",child)) q:(child="") 	 	 	 
+    ..q:'$d(^DHCPISTestMaster(tmid,"TS",child))   
+    ..s VrId1=$p(^DHCPISTestMaster(tmid,"TS",child),"^",12) 
+    ..s VrId2=$p(^DHCPISTestMaster(tmid,"TS",child),"^",13)   
+    ..i (VrId1="") d  
+	...i (tmidStr1="") s tmidStr1=tmid  
+	...e  s tmidStr1=tmidStr1_"#"_tmid
+	..i (VrId1'="")&(VrId2="") d
+	...i (tmidStr2="") s tmidStr2=tmid  
+	...e  s tmidStr2=tmidStr2_"#"_tmid	
+	.i (tmidStr1'="") d	
+	..s data=""
+	..d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()	
+	..d ##class(Src.PIS3Cutting).VerRecAdd(.data,BLKID_"^"_"01"_"^^^"_appHandDoc_"^"_RecDoc_"^"_"")
+	..d ##class(Src.PIS3Register).UpdateTSSeeingFirst(.data1,tmidStr1_"^"_data)
+	..d ##class(Src.PIS3Common).SetWebSourceNameSpace()	
+	.i (tmidStr2'="") d	
+	..s data=""		
+	..d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()
+	..d ##class(Src.PIS3Cutting).VerRecAdd(.data,BLKID_"^"_"01"_"^^^"_appHandDoc_"^"_RecDoc_"^"_"")
+	..d ##class(Src.PIS3Register).UpdateTSSeeingTwo(.data1,tmidStr2_"^"_data)	
+	.d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+	
+	/*i act="GetRecSpeR"  d //得到标本交接记录  手术室--->病理科
+	.s appHandDoc=$g(%request.Data("appHandDoc",1))
+	.s RecDoc=$g(%request.Data("RecDoc",1))
+	.s TMrowid=$g(%request.Data("TMrowid",1)) 
+	.s VrStDate=$g(%request.Data("VrStDate",1))
+	.s VrEnDate=$g(%request.Data("VrEnDate",1))
+	.s AppHandLoc=$g(%request.Data("AppHandLoc",1))
+	.s comboStatus=$g(%request.Data("comboStatus",1))
+	.s Info= ##class(web.DHCPisAppJson).GetRecSpeR("87"_"^"_VrStDate_"^"_VrEnDate_"^"_AppHandLoc_"^"_comboStatus)
+    .w Info
+    */
+    
+    i act="GetRecSpeR"  d //得到标本交接记录,手术室-->护工-->接收科室
+	.s appHandDoc=$g(%request.Data("appHandDoc",1))
+	.s RecDoc=$g(%request.Data("RecDoc",1))
+	.s TMrowid=$g(%request.Data("TMrowid",1))
+	.s VrStDate=$g(%request.Data("VrStDate",1))
+	.s VrEnDate=$g(%request.Data("VrEnDate",1))
+	.s AppHandLoc=$g(%request.Data("AppHandLoc",1))
+	.s comboStatus=$g(%request.Data("comboStatus",1))
+	.S appLocId=$g(%request.Data("appLocId",1))
+	.s BLKID=$g(%request.Data("BLKID",1))	
+	.s Info= ##class(web.DHCPisAppJson).GetRecSpeR(BLKID_"^"_VrStDate_"^"_VrEnDate_"^"_AppHandLoc_"^"_comboStatus_"^"_appLocId)
+    .w Info		
+
+	i act="CancelHandSpe"  d
+	.s tmid=$g(%request.Data("TMrowid",1))
+	.s VrId1="",vrId2=""
+	.q:'$d(^DHCPISTestMaster(tmid))
+	.s SpeRecLoc=$p(^DHCPISTestMaster(tmid),"^",22)    		
+	.q:SpeRecLoc="" 
+	.s VrId1=$p(^DHCPISTestMaster(tmid,"TS",child),"^",12)
+	.s VrId2=$p(^DHCPISTestMaster(tmid,"TS",child),"^",13) 
+	
+	i act="UpdateOeorder" d      
+	.s TMrowid = $g(%request.Data("TMrowid",1))
+	.s info = $g(%request.Data("OID",1))
+	.s data=""
+    .d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()   
+    .d ##Class(Src.PIS3Register).UpdateTmOrderDr(.data,info,TMrowid)
+    .d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+    .s rtn=data
+	.w rtn 
+	
+
+	i act="UpdateStatus" d      
+	.s TMrowid = $g(%request.Data("TMrowid",1)) 
+	.s data="" 
+    .d ##class(web.DHCPisApplicationSheet).SetPISNameSpace()   
+    .d ##Class(Src.PIS3Register).UpdateStatus(.data,1,TMrowid)
+    .d ##class(Src.PIS3Common).SetWebSourceNameSpace()
+    .s rtn=data
+	.w rtn	  
+	
+	i act="GetAppItemsByBtDateAndIpno" d      //批量打印查询
+  	.s serch= $g(%request.Data("serch",1))
+  	.w ##class(web.DHCPisAppJson).GetAppItemsByBtDateAndIpno(serch)
+  	
+</script>

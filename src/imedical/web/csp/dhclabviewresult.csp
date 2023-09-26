@@ -1,0 +1,114 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+<TRAK:APPLET>
+<BODY>
+<SERVER>
+ n frm s frm=""
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i frm d frm.Show(),frm.%Close()
+ }
+ //s TestSetRow=%request.Get("TestSetRow")
+ s OrdItemDate=%request.Get("OrdItemDate")
+ s OrdItemTime=%request.Get("OrdItemTime")
+ s SpecDate=%request.Get("SpecDate")
+ s SpecTime=%request.Get("SpecTime")
+ s OrderID=%request.Get("OrderID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s TestSetRow=$p(^OEORD(+OrderID,"I",$p(OrderID,"||",2),3),"^",35)
+ s LabEpisodeID=$p(TestSetRow,"||",1)
+ s IP=$ZUTIL(67,15,$J)
+ s EXEC=$ZUTIL(67,13,$J)
+ s CACHEUSER=$ZUTIL(67,11,$J)
+ k PLIST
+ i $l(TestSetRow) {
+	 i ##Class(web.DHCLabReportControl).AddViewLog(USERID,EpisodeID,PatientID,OrderID)
+	 s frm=##Class(websys.Component).OpenName("DHCLabOrderResult")
+	 i frm d frm.Show(),frm.%Close()
+	 //&sql(insert into websys.log values :PLIST())
+	 /*
+     s gotsens=0
+     k AntiLIST d ##class(web.EPVisitTestSet).AntiBioSensGet(LabEpisodeNo,.AntiLIST,OrderID) i $d(AntiLIST) s gotsens=1
+     q:'gotsens
+     m ^TMPSEN=AntiLIST
+     s frm=##Class(websys.Component).OpenName("EPVisitTestSet.AntibioticSensitivity")
+     i frm d frm.Show(),frm.%Close()
+	 */
+	 k AntiLIST
+	 //d ##Class(web.EPVisitTestSet).AntiBioSensGet(LabEpisodeID,.AntiLIST,OrderID)
+	 //m ^TMPANTI(1)=AntiLIST
+	 i '$d(AntiLIST) q
+	 s tc=""
+	 f {
+		 s tc=$o(AntiLIST("Antibodies",tc))
+		 q:tc=""
+		 s org=$g(AntiLIST("Antibodies",tc))
+		 i $l(org),$d(^TTAB("BUG",org)){
+			 s orgName=$p(^TTAB("BUG",org),"\",1)
+			 s $p(AntiLIST("Antibodies",tc),"^",2)=orgName
+		 }
+	 }
+	// m ^TMPANTI(2)=AntiLIST
+	 w !,"药敏结果"
+	 d ##Class(web.EPVisitTestSet).AntiBioSensShow(LabEpisodeID,.AntiLIST,OrderID)
+	 //
+	 //d ##Class(web.EPVisitNumber).GetOrderItemDetails("10609||265","","")
+	 //血袋信息
+ }
+ 
+ /*
+ s gotsens=0
+ k AntiLIST d ##class(web.DHCLabOrderResult).SenResult("",.AntiLIST) i $d(AntiLIST) s gotsens=1
+ q:'gotsens
+ m ^TMPSEN1=AntiLIST
+ s frm=##Class(websys.Component).OpenName("DHCLabOrderResultSen")
+ i frm d frm.Show(),frm.%Close()
+ s frm=##Class(websys.Component).OpenName("EPVisitTestSet.AntibioticSensitivity")
+ 
+ 
+ i frm d 
+ . d ##Class(web.EPVisitTestSet).AntiBioSensGet(LabEpisodeID,.AntiLIST,OrderID)
+ . d ##Class(web.EPVisitTestSet).AntiBioSensShow(LabEpisodeID,.AntiLIST,OrderID)
+ . d frm.Show()
+ . d frm.%Close()
+ */
+</SERVER>
+ 
+<!--
+<SCRIPT Language="Javascript">	
+  var TestSetRow="#($g(%request.Data("TestSetRow",1)))#";
+</SCRIPT>
+
+<frameset cols="70%,*">
+	<frame name="DHCBldRequest" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCBldRequest&admId=#(%request.Get("EpisodeID"))#" frameborder=0>
+	<frame name="DHCBldReqLabInfo" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCBldReqLabInfo&admId=#(%request.Get("EpisodeID"))#"> 
+</frameset>
+-->
+<!--显示图片-->
+<!--
+<CSP:OBJECT NAME="person" CLASSNAME="DHCLAB.DHCLabResultGraph" OBJID="A61021A011||A901||1||TEG||1">
+<form NAME="MyForm" cspbind="person">
+<br>Name:
+<input type="TEXT" name="Name" cspbind="DLRGLABNO" csprequired>
+<br>SSN:
+<input type="TEXT" name="SSN" cspbind="DLRGScale">
+<br>City:
+<input type="TEXT" name="City" cspbind="DLRGGraphMemo">
+<br>image:
+<br>
+<img name="DMRPPICDATA" cspbind="DLRGPICDATA" height="460" width="800"></td>
+<br>
+</form>
+-->
+</BODY>
+</HTML>

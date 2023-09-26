@@ -1,0 +1,118 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	set start = $g(%request.Data("start",1))
+	set pageSize = $g(%request.Data("limit",1))
+	i start="" s start=0
+	i pageSize="" s pageSize=20
+	s end=start+pageSize
+	s:start>1 start=start+1
+	set action=$g(%request.Data("action",1))
+	s onePage=$g(%request.Data("onePage",1))
+	if (action="mulSearch")
+	{	
+		i ($g(onePage)=1){
+			s PagePar=+$g(start)_"^"_+$g(end)  /// 显示从start到end的数据
+			s Date=$g(%request.Data("Date",1))
+			s IsActive=$g(%request.Data("IsActive",1))
+			s LocOrWardType=$g(%request.Data("LocOrWardType",1))
+			s LocCode=$g(%request.Data("LocCode",1))
+			s LocDesc=$g(%request.Data("LocDesc",1))
+			s %session.Data("Date")=Date
+			s %session.Data("IsActive")=IsActive
+			s %session.Data("LocOrWardType")=LocOrWardType
+			s %session.Data("LocCode")=LocCode
+			s %session.Data("LocDesc")=LocDesc
+			s %session.Data("start")=start
+			s %session.Data("end")=end
+		}
+		else {
+			s Date=$g(%session.Data("Date"))
+			s IsActive=$g(%session.Data("IsActive"))
+			s LocOrWardType=$g(%session.Data("LocOrWardType"))
+			s LocCode=$g(%session.Data("LocCode"))
+			s LocDesc=$g(%session.Data("LocDesc"))
+			s start=$g(%session.Data("start"))
+			s end=$g(%session.Data("end"))
+		}
+		s PagePar=+$g(start)_"^"_+$g(end)
+		s paraValues=Date_"&"_IsActive_"&"_LocOrWardType_"&"_LocCode_"&"_LocDesc
+		s ret=##Class(web.DHCMRTJService).GetMRBed(paraValues,PagePar) 
+		w ret
+	}elseif (action="GetLocWard")
+	{	///CT_Loc信息
+		s LocOrWard=$g(%request.Data("GetLocOrWard",1))
+		s ret=##Class(web.DHCMRTJService).GetLocOrWard(LocOrWard)
+		w ret	
+	}elseif (action="GetLocWardType")
+	{	///	查询科室类型Code
+		s LocWardType=$g(%request.Data("LocWardType",1))
+		s ret=##Class(web.DHCMRTJService).GetTypeByLoc(LocWardType)
+		w ret	
+	}elseif (action="GetLocWardTypebyID")
+	{	///	根据DHCMRBed返回科室病区
+		s MRBedId=$g(%request.Data("ID",1))
+		s ret=##Class(web.DHCMRTJService).GetTypeByLocbyId(MRBedId)
+		w ret	
+	}
+	elseif (action="add")
+	{	///更新添加床位信息
+		s Date=$g(%request.Data("Date",1))
+		s LocType=$g(%request.Data("LocOrWardType",1))
+		s LocCode=$g(%request.Data("LocCode",1))
+		s LocDesc=$g(%request.Data("LocDesc",1))
+		s GDNum=$g(%request.Data("GDNum",1))
+		s SYNum=$g(%request.Data("SYNum",1))
+		s BZNum=$g(%request.Data("BZNum",1))
+		s paraValues=Date_"&"_LocType_"&"_LocCode_"&"_LocDesc_"&"_GDNum_"&"_SYNum_"&"_BZNum
+		s ret=##Class(web.DHCMRTJService).addBed(paraValues)
+		w "{success:true,tip:'"_ret_"'}"
+	}
+	elseif (action="getMRICDCate")
+	{	///获取维护的ICD分类信息
+		s filterRule=$g(%request.Data("filterRule",1))
+		s ret=##Class(web.DHCMRTJService).getMRICDCateData(filterRule)
+		w ret	
+	}elseif (action="addMRICDCate")
+	{	///保存ICD分类信息
+		s ICDCInfo=$g(%request.Data("ICDCInfo",1))
+		s ICDCCode=$P(ICDCInfo,"^",1)
+		if ($D(^DHCMRICDCate(0,"Code",ICDCCode)))
+		{
+			set tip="编码已经存在!"
+			w "{success:true,tip:'"_tip_"'}"	
+			q 
+		}
+		s tip=##Class(web.DHCMRTJService).addMRICDCate(ICDCInfo)
+		w "{success:true,tip:'"_tip_"'}"	
+	}elseif (action="DelMRICDDate")
+	{	///删除ICD分类信息
+		s ICDCId=$g(%request.Data("ICDCId",1))
+		s ret=##Class(web.DHCMRTJService).DelICDCateData(ICDCId)
+		w "{success:true,tip:'"_ret_"'}"	
+	}elseif (action="GetICDCateDetails")
+	{	///获取ICD分类下的明细
+		s ICDCId=$g(%request.Data("ICDCId",1))
+		s ret=##Class(web.DHCMRTJService).GetMRICDCateDetails(ICDCId)
+		w ret	
+	}elseif (action="DelMRICDCDetails")
+	{	///删除DHCMRICDCateDetails
+		s ICDCId=$g(%request.Data("ICDCId",1))
+		s ICDCDId=$g(%request.Data("ICDCDId",1))
+		s ret=##Class(web.DHCMRTJService).DelMRICDCDetails(ICDCId,ICDCDId)
+		w "{success:true,tip:'"_ret_"'}"	
+	}
+	elseif (action="UpDateICDCateDetailsSort")
+	{	///更新DHCMRICDCateDetails顺序
+		s ICDCId=$g(%request.Data("ICDCId",1))
+		s IdStr=$g(%request.Data("idStr",1))
+		s ret=##Class(web.DHCMRTJService).MRICDCateDetailsSort(ICDCId,IdStr)
+		w "{success:true,tip:'"_ret_"'}"	
+	}elseif (action="editICDCateDetails")
+	{	///编辑配置ICD内容
+		s editStr=$g(%request.Data("editStr",1))
+		s ret=##Class(web.DHCMRTJService).editMRICDCateDetails(editStr)
+		w "{success:true,tip:'"_ret_"'}"
+	}
+</script>
+

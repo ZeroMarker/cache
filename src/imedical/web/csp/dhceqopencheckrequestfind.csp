@@ -1,0 +1,35 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() Quit 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+</Script>
+<server>
+	Set RowID=$Get(%request.Data("RowID",1))
+	Set CurRole=$Get(%request.Data("CurRole",1))
+	Set Type=$Get(%request.Data("Type",1))
+	Set ReadOnly=$Get(%request.Data("ReadOnly",1))
+	Set CheckTypeDR=$Get(%request.Data("CheckTypeDR",1))	//新设备验收；维修验收；改造验收
+	Set AssetType=$Get(%request.Data("AssetTypeList",1))
+	Set CancelOper=$Get(%request.Data("CancelOper",1))
+	;Set DHCEQMWindow=$Get(%request.Data("DHCEQMWindow",1))
+	i RowID=""  d
+	.Set Component=##class(web.DHCEQCommon).GetAssetTypeComponent(AssetType,0)
+	.set lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_Component_"&killcache=1&RowID="_RowID_"&CurRole="_CurRole_"&Type="_Type_"&ReadOnly="_ReadOnly_"&AssetType="_AssetType_"&CheckTypeDR="_CheckTypeDR_"&CancelOper="_CancelOper	  //hisui改造 modify by lmm 2018-08-22
+	e  d
+	.Set StatDR=$Piece($Get(^DHCEQOpenCheckRequest(RowID)),"^",4)		//Modfiy DJ 2015-07-28 DJ0151
+	.Set Component=##class(web.DHCEQCommon).GetAssetTypeComponentByStat(StatDR,0)
+	.set lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_Component_"&RowID="_RowID_"&CurRole="_CurRole_"&Type="_Type_"&ReadOnly="_ReadOnly_"&CancelOper="_CancelOper	  //hisui改造 modify by lmm 2018-08-22
+</server>
+<frameset rows="*">
+	<frame name=#(Component)# src=#(lnk)#  framespacing="0" frameBorder="no" noresize>
+</frameset>
+
+</HTML>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. dhcdoc.cure.order.csp --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if $g(%session.Data("LOGON.USERID"))=""
+ {
+ s rtn=##class(websys.SessionLogon).Logon()
+ s %response.ServerSideRedirect="oeorder.entrysinglelogon.csp"
+ }
+
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ Q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE>医嘱处理</TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCDOC:JSCOMMON></DHCDOC:JSCOMMON> 
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ n PatientID,EpisodeID,mradmID,DCAARowId
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s DCAARowId=%request.Get("DCAARowId")
+ s CtlocID=%session.Get("LOGON.CTLOCID")
+ s CTLocDesc=""
+ S:CtlocID'="" CTLocDesc=$P($G(^CTLOC(CtlocID)),"^",2)
+ 
+ s chLINK="oeorder.entrysinglelogon.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&EpisodeIDs=&mradm="_mradm_"&DCAARowId="_DCAARowId
+ //s StopOrder="websys.default.csp?WEBSYS.TCOMPONENT=UDHCStopOrder&&Lflag=1&Sflag=1&CurDataFlag=1&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&WardID="_"&lulocdes="_CTLocDesc
+ s StopOrder="dhcdoc.orderviewdoctor.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&EpisodeIDs=&mradm="_mradm_"&ChartID=&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID="_EpisodeID_"&copyOeoris=&copyTo=&DCAARowId="_DCAARowId
+</SCRIPT>
+
+ <div data-options="region:'center',title:'治疗科室医嘱处理模块'">
+    	<div id="tabs" class="easyui-tabs" style="padding:1px;height:700px"data-options="border:false">
+    	
+        <div id="OE_OrderItem" title="医嘱录入" style="padding:5px">
+       		<iframe scrolling="no" frameborder="0"  src="#(chLINK)#" style="width:100%;height:100%;"></iframe>
+       		
+        </div>
+        <div id="OE_StopOrder" title="停医嘱" style="padding:5px">			
+        	<iframe scrolling="no" frameborder="0"  src="#(StopOrder)#" style="width:100%;height:100%;"></iframe>
+        </div>  	
+     </div> 
+   </div> 
+   <SCRIPT language="Javascript"> 
+	$(function(){
+	   //lxz 定义医嘱处理table选中之后刷新一次界面
+	   $("#tabs").tabs({
+		   //选中面板之后进行一次刷新
+		   onSelect:function (title,index){
+			   var Url=""
+			   if (title=="医嘱录入"){
+			  		Url="#(chLINK)#"
+			   }
+			   if (title=="停医嘱"){
+			  		Url="#(StopOrder)#"
+			   }
+			   var cfg = {tabTitle:title,url:Url}
+			   if (Url!=""){
+				 	var tab=$("#tabs").tabs('getSelected')
+				 	if (tab.find('iframe').length>0){
+				  		var _refresh_ifram = tab.find('iframe')[0]  
+	    				var refresh_url = cfg.url?cfg.url:_refresh_ifram.src;   
+	    				_refresh_ifram.contentWindow.location.href=refresh_url;  
+				  	}
+			   }
+		   }
+	   
+		  })
+	   }
+  )
+   	
+   
+   
+   </SCRIPT>
+
+
+</HTML>

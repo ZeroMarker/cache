@@ -1,0 +1,107 @@
+﻿<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+		s locID = $g(%session.Data("LOGON.CTLOCID"))
+		s CTLOCType = $p($g(^CTLOC(locID)),"^",13)
+		s HospitalName = ##Class(EMRservice.BOSysOption).GetValueByName("HospitalName")
+		s:(HospitalName = "") HospitalName = "DtHealth"
+	</script>
+
+    <script language = "javascript">
+		function Dateformatter(date)
+		{
+			var y = date.getFullYear();
+			var m = date.getMonth()+1;
+			var d = date.getDate();
+			return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+		}
+		function Dateparser(s)
+		{
+			if (!s) return new Date();
+			var ss = s.split('-');
+			var y = parseInt(ss[0],10);
+			var m = parseInt(ss[1],10);
+			var d = parseInt(ss[2],10);
+			if (!isNaN(y) && !isNaN(m) && !isNaN(d))
+			{
+				return new Date(y,m-1,d);
+			} else {
+				return new Date();
+			}
+		}
+		var HasPatEncryptLevel = '#(HasPatEncryptLevel)#';
+		var IsSetToLog = '#(IsSetToLog)#';
+		var Title = '#($Get(%request.Data("Title",1),""))#';
+		var locID = '#(locID)#';
+		var CTLOCType = '#(CTLOCType)#';
+		var defaultRadio = "currentUser";
+		var HospitalName = '#(HospitalName)#';
+    </script>
+    <title>电子病历在院患者列表</title>
+</head>
+<body class="easyui-layout" data-options="fit:true,border:false">
+    <div data-options="region:'north'" style="height:38"> 
+	<table class="tableStyle01" style="width:100%; height:100%">
+		<tr>
+			<td>
+				<input type="radio" name="Radio" id="currentUserRadio" checked=true onclick="radioCheck()" value="currentUser" >本人病人</input>
+				<input type="radio" name="Radio" id="currentGroupRadio" onclick="radioCheck()" value="currentGroup" >本单元病人</input>
+				<input type="radio" name="Radio" id="currentLocRadio" onclick="radioCheck()" value="currentLoc" >本科室病人</input>
+			</td>
+			<td>病案号</td>
+			<td>
+				<input class="easyui-validatebox" id="medicareNo" style="width:90px"/>
+			</td>
+			<td>患者姓名</td>
+			<td>
+				<input class="easyui-validatebox" id="patientName" style="width:80px"/>
+			</td>
+			<td>病区</td>
+			<td>
+				<input id="wardcombo" name="ward"></input>
+			</td>
+			<td>诊断</td>
+			<td>
+				<input class="easyui-validatebox" id="diagnosis" style="width:100px"/>
+			</td>
+			<td>
+			<a id="PatientListQuery" href="#" data-options="iconCls:'icon-search'" class="easyui-linkbutton">查询</a>
+			</td>
+		</tr>
+	</table>
+
+
+
+		<!--table class="tableStyle01" style="width:100%; height:100%">
+	      <tr>
+	        <td><input class="easyui-validatebox" id="patientNo"></input></td>
+	        <td>患者姓名:</td>
+	        <td><input class="easyui-validatebox" id="patientName"></input></td>
+	        <td>开始时间:</td>
+	        <td><input class="easyui-datebox datebox-f combo-f" id="startDate" data-options="formatter:Dateformatter,parser:Dateparser,width:120"></input></td>
+	        <td>结束时间:</td>
+	        <td><input class="easyui-datebox datebox-f combo-f" id="endDate" data-options="formatter:Dateformatter,parser:Dateparser,width:120"></input></td>
+	        <td><input type="checkbox" name="checkbox" id="chkLoc" >本科病人</input></td>
+	        <td><a id="PatientListQuery" href="#" class="easyui-linkbutton">查询</a></td>
+	      </tr>
+	    </table-->	
+	    
+
+    </div>
+    <div data-options="region:'center',border:false">
+    	<table id="patientListData"></table>
+	</div>
+    <script type="text/javascript" src="../scripts/emr/js/patientList.inPat.js"></script>    
+</body>
+</html>

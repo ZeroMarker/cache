@@ -1,0 +1,92 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+	<HEAD>
+	    <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+		<DHCMED:HEAD></DHCMED:HEAD>
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		
+		<script type="text/javascript" src="../Scripts/dhcmed/DHC.Med.FusionChart.js"></script> 
+		<script type="text/javascript" src="../Scripts_lib/FusionChartsFree/JSClass/FusionCharts.js"></script>  
+	   <script language='javascript' type='text/javascript'>
+	   //debugger;
+	   function loadChart(){
+		   
+		   //fcf.innerHTML = "hhh";
+		   //alert(1);
+		   /*
+		   ChartTool.CreateChart(
+		   	{ChartType  :'Line',
+		   	caption :'teacher',
+		   	xAxisName :'name',
+		   	yAxisName :'count',
+		   	ChartID : 'portlet22',
+		   	Width : 160,
+		   	Height : 180 ,
+		   	Target : 'fcf'},
+		   	{ClassName : 'DHCMed.SS.Student',
+		   	QueryName : 'query',
+		   	ArgCnt :0,
+		   	NameField : 'proName',
+		   	ValueField :'menuCount'}
+		   	);
+		   	*/
+	   }
+	   </script>
+	</head>
+	<body onload="return loadChart()" style="overflow: hidden">
+	 	<server>
+	 	
+	 	//set portletId=+$p(%request.Get("id"),"_",2)
+		s objPortlet= ##class(DHCMed.SS.Portlets).GetObjById(portletId)
+		s type=objPortlet.DtlShowType
+		s strClass=objPortlet.QueryName
+ 		;w:strClass="" "show grid "_portletId_"no Query"
+ 		if strClass'="" {
+			s showConfig= objPortlet.DtlShowConfig
+			s showType=$li(showConfig,2)
+		 		s strClassName=$p(strClass,"||",1)
+				s strQueryName=$p(strClass,"||",2)
+				s argCount=$l(strClass,"||")-2
+		 		w "<script language='javascript' type='text/javascript'>"
+		 		w:type="chart" "ChartTool.CreateChart({"
+		 		w:type'="chart" "ChartTool.CreateMultiSeriesChart({"
+		 		w "ChartType  :'"_showType_"',"
+		 		;w "caption :'" _objPortlet.Description_"',"
+				w "xAxisName :'"_$li($li(showConfig,3),1)_"'," 
+				w "yAxisName :'"_$li($li(showConfig,4),1)_"',"
+				w "ChartID : 'portlet"_portletId_"',"
+				w "Width :document.body.clientWidth*0.99," //160,"  //portlet2.getInnerWidth()
+				w "Height : document.body.clientHeight*0.99 ,"   //portlet2.getInnerHeight()
+				w "Target : 'portlet"_portletId_"'"
+		 		w "},{"
+		 		w "ClassName : '"_strClassName_"',"
+				w "QueryName : '"_strQueryName_"',"
+				f i=1:1:argCount  d
+				.w "Arg"_i_" :'"_$p(strClass,"||",i+2)_"',"
+				w "ArgCnt :"_argCount_","
+				if type="chart" {
+					w "NameField : '"_$li($li(showConfig,3),2)_"',"
+					w "ValueField :'"_$li($li(showConfig,4),2)_"'"
+				}
+				else{
+					w "CategoryFieldName : '"_$li($li(showConfig,3),2)_"',"
+					w "SeriesFieldName : '"_$li($li(showConfig,4),2)_"',"
+					w "ValueField : '"_$li($li(showConfig,5),2)_"'"
+				}
+		 		w "});"
+		 		w "</script>"
+		 		//w "<div id='"_portletId_"'></div>"
+		 		s frequency=+(objPortlet.Frequency)*60 //×Ô¶¯Ë¢ÐÂ
+ 				w:(objPortlet.AutoRefreash=1)&(frequency'=0) "<head><meta http-equiv="""_"refresh"_""" content="""_frequency_"""></head>"	 		}
+	 		
+	   </server>
+	   <div id='portlet#(portletId)#' align='center' width="100%"></div>
+	   
+	</body>
+</html>

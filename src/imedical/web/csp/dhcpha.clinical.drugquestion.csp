@@ -1,0 +1,593 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+ <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+ <TRAK:HEAD></TRAK:HEAD> 
+<!-- 去掉meta标签中的 charset=utf-8 bianshuai 2014-07-02-->
+<meta http-equiv="Content-Type" content="text/html; ">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/icon.css">
+<style type="text/css">
+
+body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 1.4em;
+}
+
+ul {
+  list-style-type:none;
+  margin: 0;
+  padding-left: 0px;
+  width: 220px;
+}
+
+ul li {
+  margin-top: 1px;
+}
+
+ul li a {
+  background: #DDD;
+  color: #000; 
+  padding: 0.5em;
+  padding-left:20px;
+  text-decoration: none;
+}
+
+ul li a:hover {
+  background: #FFF;
+}
+
+
+ul#menu li ul li a:hover {
+  background: #aaa;
+  border-left: 5px #000 solid;
+  padding-left: 15px;
+}
+
+li a{
+	display:inline-block;
+}
+
+li a{
+	display:block;
+}
+
+
+#main h1{
+	font-size:32px;
+	color:#339999;
+	font-weight:bold;
+	position:absolute;
+	top:20%;
+	left:40%
+}
+
+#docAskDiv div h5{
+	padding:5px;
+	font-weight:bold;
+}
+
+#left{
+	float:left
+}
+
+#right{
+	float:left;
+}
+
+
+#doctor{
+	color:#339999;
+	font-size:25px;
+	height:250px;
+	position:absolute;
+	top:30%;
+	left:20%
+}
+
+#patient{
+	color:#339999;
+	font-size:25px;
+	height:250px;
+	position:absolute;
+	top:30%;
+	left:60%
+}
+
+</style>
+
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.js"></script>
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
+
+<script type="text/javascript" src="../scripts/dhcpha/clinical/drugquestion.js"></script>
+
+<script type="text/javascript">
+
+$(function(){
+    BodyLoadHandler();
+	
+ });
+
+</script> 
+
+</HEAD>
+
+<BODY>
+
+  <div class="easyui-layout" data-options="fit:true" border="false" > 
+	  <div  data-options="region:'west',split:true" style="width:230px" title="导航菜单" > 
+	  		<div id="aa" class="easyui-accordion" style="position: absolute; top: 1px; left: 0px; right: 0px; bottom: 0px;">
+				<div title="药物咨询维护"  selected="true" style="overflow: auto; padding: 0px;">
+					<ul>
+						<li><a href="#" id="queLi" onclick="LoadMainPage()">未使用标准回复问题</a></li>
+						<li><a href="#">添加咨询记录</a></li>
+						<li><a href="#">咨询记录管理</a></li>
+						
+					</ul>
+	  			</div>
+	  			<div title="标准回复维护"   style="padding: 0px;">
+	  				<ul>
+	  					<li><a href="#">添加标准回复</a></li>
+	  					<li><a href="#">查看标准回复</a></li>
+	  				</ul>
+
+            	</div>
+            	
+            </div>
+	  			
+	          
+	  </div>  
+	  
+	  <div id="mainPanel"  region="center" style="display: none" title="">
+	  
+	  	<!--咨询主记录 -->
+	  	<div id="main" region="center" style="overflow: hidden; display:none">
+			<h1>请选择咨询用户身份</h1>
+			<input id="doctor" type="button" onclick="doctorAskPage()" value="医生/护士咨询" />
+			<input id="patient" type="button" onclick="patientAskPage()" value="患者/家属咨询"/>
+		</div>
+	  	
+	  	<!--添加医生/护士咨询记录 -->
+  		<div id="docAskPanel" style="display: none">			
+  			<div id="docAskDiv" style="height:100px">
+  				<div>
+  					<h5>咨询人基本信息</h5>
+  				</div>
+  				<hr>
+  				<div style="background:#ffffee">		
+  					<div style="padding:10px">
+  						<span style="margin-left:20px;  font-size:19px">咨询人姓名：</span><input id="docName" class="easyui-combobox" data-options="valueField:'value',textField:'text',required:true"></input>
+  						<span style="margin-left:40px;  font-size:19px">联系方式：</span><input id="docContact" type="text" class="easyui-textbox"></input>
+  						<span style="margin-left:40px;  font-size:19px">所属科室：</span><input id="dept" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input>
+  					</div>
+  				</div>
+  				<hr>
+  				<div>
+  					<h5>详细记录</h5>
+  				</div>
+  				<hr>
+  				<div id="left" style="margin-left:20px;background:#ffffee; width:700px;">
+  					<table border="1" cellspacing="0" cellpadding="2">
+  						<tr>
+  							<td width="100px" align="center">咨询类别:</td>
+  							<td width="200px"><input id="docContype" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input></td>
+  							<td width="100px" align="center">录入时间:</td>
+  							<td width="300px"><input id="docAskDate" class="easyui-datebox"></input></td>
+  						</tr>
+  						<tr>
+  							<td width="100px" align="center">问题类型:</td>
+  							<td width="200px"><input id="docContQuetype" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input></td> 						
+  							<td colspan="2" style="padding-left:20px;"><button>相关预设回答</button></td>
+  							
+  						</tr>
+  						<tr>
+  							<td width="100px" align="center">关联药物:</td>
+  							<td colspan="3"><input style=" width:590px" id="drugs" class="easyui-textbox"></input></td>	
+  						</tr>
+  						<tr>
+  							<td width="100px" height="100px" align="center">问题描述:</td>
+  							<td colspan="3" height="100px" ><textarea style=" width:590px; height:80px" id="DocquestionDesp"></textarea></td>	
+  						</tr>
+  						<tr>
+  							<td width="100px" height="100px" align="center">问题回答:</td>
+  							<td colspan="3" height="100px" ><textarea style=" width:590px; height:80px" id="answer" disabled></textarea></td>	
+  						</tr>
+  						<tr>
+  							<td width="100px" align="center">回答依据:</td>
+  							<td colspan="3">
+        						<label><input type="checkbox" name="cb1" value="药品说明书" id="cb1" />药品说明书</label>
+        						<label><input type="checkbox" name="cb2" value="用药须知" id="cb2" />用药须知</label>
+        						<label><input type="checkbox" name="cb3" value="马丁代尔药物字典" id="cb3" />马丁代尔药物字典</label>
+  								<label><input type="checkbox" name="cb4" value="中国药典" id="cb4" />中国药典</label>
+  							</td>
+  						</tr>
+  					</table>
+  					<div style="margin-top:40px; background:#ffffff">
+  						<span style="margin-left:140px"></span><button>追加问题</button>
+  						<span style="margin-left:40px"></span><button>继续提问</button>
+  						<span style="margin-left:40px"></span><button onclick="saveDocQuetion()">提交保存</button>
+  						<span style="margin-left:40px"></span><button onclick="goBack()">返回</button>
+  					</div>
+  				</div>
+  				<div id="right" style="margin-top:'0px'">
+  					<button onclick="popDrugInfoWin()">增加药物</button>
+  				
+  					<div id="drugNotice" style="background:#BBB;width:20px; margin-top:10px; padding-left:4px; padding-top:20px">
+  						<p>药</p><br>
+  						<p style="margin-top:-30px">品</p><br>
+  						<p style="margin-top:-30px">提</p><br>
+  						<p style="margin-top:-30px">示</p>
+  					</div>
+  					<div style="background:#BBB;width:20px; margin-top:10px; padding-left:4px; padding-top:20px">
+  						<p>特</p><br>
+  						<p style="margin-top:-30px">殊</p><br>
+  						<p style="margin-top:-30px">指</p><br>
+  						<p style="margin-top:-30px">导</p>
+  					</div>
+  				</div>
+  			</div>
+  		</div>
+  		
+  		<!--添加患者/家属咨询记录 -->
+   		<div id="patAskPanel" style="display:none">			
+  			<div id="docAskDiv">
+  				<div>
+  					<h5>患者基本信息</h5>
+  				</div>
+  				<hr>
+  				<div style="background:#ffffee">		
+  					<div style="padding:10px">
+  						<table border="1" cellspacing="0" cellpadding="2">
+  							<tr>
+  								<td width="100px" align="center">登记号:</td>
+  								<td width="100px"><input style="width:100px" id="patId" type="text" class="easyui-textbox"></input></td>
+  								<td width="100px" align="center">患者姓名:</td>
+  								<td width="100px"><input id="patName" type="text" class="easyui-textbox"></input></td>
+  								<td width="100px" align="center">性别:</td>
+  								<td width="160px"><p>
+  									<label><input type="radio" name="rp" value="1" id="all"/>全部</label>
+  									<label><input type="radio" name="rp" value="2" id="male" />男</label>
+  									<label><input type="radio" name="rp" value="3" id="female" />女</label></p>
+  								</td>
+  								<td width="100px" align="center">年龄:</td>
+  								<td width="140px">
+  									<label><input style="width:40px" type="text" id="age"/></label>
+  									<label><input style="width:50px" id="ageUom" class="easyui-combobox" data-options="valueField:'val',textField:'text'"/></label>
+  								</td>
+  							</tr>
+  							<tr>
+  								<td width="100px" align="center">联系方式:</td>
+  								<td width="100px"><input style="width:100px" id="patContact" type="text" class="easyui-textbox"></input></td>
+  								<td width="100px" align="center">联系地址:</td>
+  								<td colspan="5"><input style="width:580px" id="patAddress" type="text" class="easyui-textbox"></input></td>							
+  							</tr>
+  						</table>
+  					</div>
+  				</div>
+  				<div>
+  					<h5>患者详细信息</h5>
+  				</div>
+  				<hr>
+  				<div style="background:#ffffee">		
+  					<div style="padding:10px">
+  						<table border="1" cellspacing="0" cellpadding="2">
+  							<tr>
+  								<td width="100px" align="center">特殊人群:</td>
+  								<td width="820px">
+  									<label><input type="checkbox" name="cb1" value="吸烟者" id="cb1" />吸烟者</label>
+        							<label><input type="checkbox" name="cb2" value="育龄" id="cb2" />育龄</label>
+        							<label><input type="checkbox" name="cb3" value="更年期" id="cb3" />更年期</label>
+  									<label><input type="checkbox" name="cb4" value="非吸烟者" id="cb4" />非吸烟者</label>
+  									<label><input type="checkbox" name="cb4" value="青春期" id="cb4" />青春期</label>
+  									<label><input type="checkbox" name="cb4" value="妊娠期" id="cb4" />妊娠期</label>
+  									<label><input type="checkbox" name="cb4" value="计划妊娠" id="cb4" />计划妊娠</label>
+  									<label><input type="checkbox" name="cb4" value="绝经期" id="cb4" />绝经期</label>
+  									<label><input type="checkbox" name="cb4" value="生长期" id="cb4" />生长期</label>
+  									<label><input type="checkbox" name="cb4" value="哺乳期" id="cb4" />哺乳期</label>
+  									<label><input type="checkbox" name="cb4" value="经期" id="cb4" />经期</label>
+  									<label><input type="checkbox" name="cb4" value="发育期" id="cb4" />发育期</label>
+  									<label><input type="checkbox" name="cb4" value="不宜饮酒者" id="cb4" />不宜饮酒者</label>
+  								</td>	
+  							</tr>
+  							<tr>
+  								<td width="100px" align="center">慢性病:</td>
+  								<td width="820px"><input style="width:600px" id="patAddress" type="text" class="easyui-textbox"></input></td>							
+  							</tr>
+  							<tr>
+  								<td width="100px" height="60px" align="center">备注:</td>
+  								<td width="820px"><textarea style="width:600px; height=50px" id="otherInfo" type="text"></textarea></td>							
+  							</tr>
+  						</table>
+  					
+  					</div>
+  				</div>
+  				<hr>
+  				<div>
+  					<h5>咨询记录</h5>
+  				</div>
+  				<hr>
+  				<div id="left" style="background:#ffffee; width:700px;">
+  					<table border="1" cellspacing="0" cellpadding="2">
+  						<tr>
+  							<td width="100px" align="center">咨询类别:</td>
+  							<td width="200px"><input id="patContype" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input></td>
+  							<td width="100px" align="center">录入时间:</td>
+  							<td width="300px"><input id="patAskDate" type="text" class="easyui-datebox"></input></td>
+  						</tr>
+  						<tr>
+  							<td width="100px" align="center">问题类型:</td>
+  							<td width="200px"><input id="patConQuetype" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input></td> 						
+  							<td colspan="2" style="padding-left:20px;"><button>相关预设回答</button></td>  						
+  						</tr>
+  						<tr>
+  							<td width="100px" align="center">关联药物:</td>
+  							<td colspan="3"><input style=" width:590px" id="patientDrugs" class="easyui-textbox"></input></td>	
+  						</tr>
+  						<tr>
+  							<td width="100px" height="100px" align="center">问题描述:</td>
+  							<td colspan="3" height="100px" ><textarea style=" width:590px; height:80px" id="questionDesp"></textarea></td>	
+  						</tr>
+  						<tr>
+  							<td width="100px" height="100px" align="center">问题回答:</td>
+  							<td colspan="3" height="100px" ><textarea style=" width:590px; height:80px" id="answer" disabled></textarea></td>	
+  						</tr>
+  						<tr>
+  							<td width="100px" align="center">回答依据:</td>
+  							<td colspan="3">
+        						<label><input type="checkbox" name="cb1" value="药品说明书" id="cb1" />药品说明书</label>
+        						<label><input type="checkbox" name="cb2" value="用药须知" id="cb2" />用药须知</label>
+        						<label><input type="checkbox" name="cb3" value="马丁代尔药物字典" id="cb3" />马丁代尔药物字典</label>
+  								<label><input type="checkbox" name="cb4" value="中国药典" id="cb4" />中国药典</label>
+  							</td>
+  						</tr>
+  					</table>
+  					<div style="margin-top:20px; background:#ffffff">
+  						<span style="margin-left:140px"></span><button>追加问题</button>
+  						<span style="margin-left:40px"></span><button>继续提问</button>
+  						<span style="margin-left:40px"></span><button>提交保存</button>
+  						<span style="margin-left:40px"></span><button onclick="goBack()">返回</button>
+  					</div>
+  				
+  					<div style="margin-top:60px">
+  					</div>
+  				</div>
+  				<div id="right">
+  					<button>增加药物</button>
+  				
+  					<div style="background:#BBB;width:20px; margin-top:10px; padding-left:4px; padding-top:20px">
+  						<p>药</p><br>
+  						<p style="margin-top:-30px">品</p><br>
+  						<p style="margin-top:-30px">提</p><br>
+  						<p style="margin-top:-30px">示</p>
+  					</div>
+  					<div style="background:#BBB;width:20px; margin-top:10px; padding-left:4px; padding-top:20px">
+  						<p>特</p><br>
+  						<p style="margin-top:-30px">殊</p><br>
+  						<p style="margin-top:-30px">指</p><br>
+  						<p style="margin-top:-30px">导</p>
+  					</div>
+  				</div>
+  			</div>
+  		</div>
+  		
+  		<!--咨询记录管理界面 -->
+  		<div id="manageQuestion"  style="overflow: auto; ">  	  
+  	  		<div style="height:90px; overflow: auto; padding: 10px;">
+  	  			<span>问题类型: </span><input id="MPQuestion" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input>
+  	  			<span style="padding-left:20px">咨询人身份: </span><input id="MPRoles" class="easyui-combobox" data-options="valueField:'val',textField:'text'"></input>
+  	  			<span style="padding-left:20px">咨询人姓名: </span><input id="MPAsker" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input>
+  	  			<span style="padding-left:20px">咨询科室: </span><input id="ctloc" class="easyui-combobox" data-options="valueField:'value',textField:'text'"></input><br>
+  	  			<br>
+  	  			<span>相关药物: </span><input id="relateDrug" class="easyui-textbox"></input>
+  	  			<span style="padding-left:20px">起止日期: </span><input id="startdate" type="text" class="easyui-datebox"></input>
+  	  			<span>-- </span><input id="enddate" type="text" class="easyui-datebox"></input>
+  	  			<span style="padding-left:60px"> </span><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-search" onclick="Query()">查询</a>
+  	  			<span style="padding-left:20px"> </span><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-add" onclick="Add()">添加</a>
+  	  		</div>  	  	
+  	  		<div style="overflow:ture;height:515px"> 
+	    		<table data-options="fit:true" id="questiongrid" border="false"></table> 
+	   		</div> 
+  		</div>
+  		
+  		<!--待回复的问题 -->
+  		<div id="Questioning"  style="overflow: auto; ">  	  
+  	  		 	  	 	  	
+  	  		<div style="margin-top:0px;overflow:ture;height:600px"> 
+	    		<table data-options="fit:true" id="questioningGrid" border="false"></table> 
+	   		</div> 
+  		</div>
+  		
+  	  </div>
+  	  
+  </div>
+    
+  
+  
+  <!--咨询记录管理界面，点击添加的弹出框界面 -->
+  <div id="addRecordWin" class="easyui-dialog" title="添加咨询记录"
+		data-options="modal:true,width:500,height:500,closed:true,buttons:'#btnDiv'"
+		style="vertical-align: middle;">
+		<div>
+			<h5>病人基本信息</h5>
+		</div>
+		<form id="ctlocdetail" method="post">
+			<label>登记号</label><input name="patId" class="easyui-validatebox" required="true" />
+			<label>患者姓名</label><input name="patName" class="easyui-validatebox" required="true" />						
+			
+			<div id="btnDiv" align="center">
+				<table cellpadding="0" cellspacing="0" style="width: 100%">
+					<tr>
+						<td style="text-align: center;"><a id="saveBtn" class="easyui-linkbutton"
+							iconCls="icon-save">提交</a> <a id="cancelBtn"
+							class="easyui-linkbutton" iconCls="icon-cancel"
+							onclick="javascript:cancelClick()">取消</a></td>
+					</tr>
+				</table>
+			</div>
+		</form>
+	</div>
+	
+	<!-- 弹出详细信息-->
+	<div id="popwindow" title="查看用户咨询详情" style="width:700px;height:500px; display:none">
+		<div>
+        	<table border="1">
+            	<th style="background-color:#CCC; text-align:left" colspan="6">医生/护士信息</th>
+                <tr>
+                	<td style="width:70px; text-align:right">姓名:</td>
+                    <td style="width:80px"><label id="DetailWinDocName">&nbsp</label></td>
+                    <td style="width:110px; text-align:right">联系电话:</td>
+                    <td style="width:140px"><label id="phoneNumber">&nbsp</label></td>
+                    <td style="width:100px; text-align:right">所属科室:</td>
+                    <td style="width:150px"><label id="DetailWinCtlocName">&nbsp</label></td>
+                </tr>
+            </table>
+		</div>
+        <div>
+        	<table border="1">
+            	<th style="background-color:#CCC; text-align:left" colspan="6">患者信息</th>
+                <tr>
+                	<td style="width:70px; text-align:right">姓名:</td>
+                    <td style="width:80px"><label id="patname">&nbsp</label></td>
+                    <td style="width:110px; text-align:right">联系电话:</td>
+                    <td style="width:140px"><label id="patphoneNumber">&nbsp</label></td>
+                    <td style="width:100px; text-align:right">性别:</td>
+                    <td style="width:150px"><label id="gender">&nbsp</label></td>
+                </tr>
+                <tr>
+                	<td style="text-align:right">年龄:</td>
+                    <td><label id="patage"></label>&nbsp</td>
+                    <td style="text-align:right">特殊人群:</td>
+                    <td><label id="specicalPop">&nbsp</label></td>
+                    <td style="text-align:right">慢性病:</td>
+                    <td><label id="chronicDiseases">&nbsp</label></td>
+                </tr>
+                <tr>
+                	<td style="text-align:right">联系地址:</td>
+                    <td><label id="pataddress">&nbsp</label></td>
+                    <td style="text-align:right">患者信息备注:</td>
+                    <td colspan="3"><label id="patremarks">&nbsp</label></td>
+                </tr>
+            </table>
+		</div>
+        <div>
+        	<table border="1">
+            	<th style="background-color:#CCC; text-align:left; width:700px">咨询部分</th>
+             </table>
+        </div>
+        <div style="padding:10px">
+        	<span>问题类型:</span><label style="margin-left:20px" id="DetailWinQuestion"></label>
+            <span style="margin-left:50px">关联药物:</span><label id="DetailWinRelativeDrugs" style="margin-left:20px"></label>
+        	
+        </div>
+        <div style="padding:10px">
+        	<span>问题描述:</span><label style="margin-left:20px" id="DetailWinQuestionDesc"></label> 	
+        </div>
+        <div style="padding:10px">
+        	<span>问题回答:</span>	
+        </div>
+        
+        <div id="allAnswer1" style="margin-left:10px; margin-right:10px; padding:10px; background-color: #EEE;overflow:auto">
+            
+        </div>
+        
+	</div>
+	
+	
+	<!-- 弹出回复信息信息-->
+	<div id="popResWindow" title="添加回复信息" style="width:700px;height:500px; display:none">
+		<div>
+        	<table border="1">
+            	<th style="background-color:#CCC; text-align:left" colspan="6">医生/护士信息</th>
+                <tr>
+                	<td style="width:70px; text-align:right">姓名:</td>
+                    <td style="width:80px"><label id="ResWinName">&nbsp</label></td>
+                    <td style="width:110px; text-align:right">联系电话:</td>
+                    <td style="width:140px"><label id="ResWinPhoneNumber">&nbsp</label></td>
+                    <td style="width:100px; text-align:right">所属科室:</td>
+                    <td style="width:150px"><label id="ResWinCtlocName">&nbsp</label></td>
+                </tr>
+            </table>
+		</div>
+        <div>
+        	<table border="1">
+            	<th style="background-color:#CCC; text-align:left" colspan="6">患者信息</th>
+                <tr>
+                	<td style="width:70px; text-align:right">姓名:</td>
+                    <td style="width:80px"><label id="resPatname">&nbsp</label></td>
+                    <td style="width:110px; text-align:right">联系电话:</td>
+                    <td style="width:140px"><label id="resPatphoneNumber">&nbsp</label></td>
+                    <td style="width:100px; text-align:right">性别:</td>
+                    <td style="width:150px"><label id="resGender">&nbsp</label></td>
+                </tr>
+                <tr>
+                	<td style="text-align:right">年龄:</td>
+                    <td><label id="resPatage"></label>&nbsp</td>
+                    <td style="text-align:right">特殊人群:</td>
+                    <td><label id="resSpecicalPop">&nbsp</label></td>
+                    <td style="text-align:right">慢性病:</td>
+                    <td><label id="resChronicDiseases">&nbsp</label></td>
+                </tr>
+                <tr>
+                	<td style="text-align:right">联系地址:</td>
+                    <td><label id="resPataddress">&nbsp</label></td>
+                    <td style="text-align:right">患者信息备注:</td>
+                    <td colspan="3"><label id="resPatremarks">&nbsp</label></td>
+                </tr>
+            </table>
+		</div>
+        <div>
+        	<table border="1">
+            	<th style="background-color:#CCC; text-align:left; width:700px">咨询部分</th>
+             </table>
+        </div>
+        <div style="padding:10px">
+        	<span>问题类型:</span><label style="margin-left:20px" id="ResWinQuestion"></label>
+            <span style="margin-left:50px">关联药物:</span><label id="ResWinResRelativeDrugs" style="margin-left:20px"></label>       	
+        </div>
+        <div style="padding:10px">
+        	<span>问题描述:</span><label style="margin-left:20px" id="ResWinQuestionDesc"></label> 	
+        </div>
+        <div style="padding:10px">
+        	<span>问题回答:</span>	
+        </div>
+        
+        <div id="allAnswer2" style="margin-left:10px; margin-right:10px; padding:10px; background-color: #EEE;overflow:auto">
+            
+        </div>
+        
+        <div style="padding:10px">
+        	<span>回复：</span>	
+        </div>
+        <div id="answerTheQue" style="margin-left:10px; margin-right:10px;overflow:auto">
+            <textarea id="ResWinAnswer" style="width:665px;height:50px"></textarea>
+        </div>
+        <div style="margin-top:10px; background:#ffffff">
+  			<span style="margin-left:580px"></span><button onclick="submitAnswer()">提交回复</button>
+  		</div>
+               
+	</div>
+	
+	
+	<!-- 弹出药品信息信息-->
+	<div id="popDrugWindow" title="药品信息" style="width:500px;height:500px; display:none">
+		
+		<div style="padding:10px">
+			<label>药品别名：</label><input id="drugalias"/>
+        	<a href="#" class="easyui-linkbutton" icon="icon-search" style="margin-left:40px; margin-top:-5px ;width:80px" onclick="searchDrugByAlias()">查询</a>
+		</div>
+        
+       	<div style="margin-top:0px;overflow:ture;height=420px"> 
+	    		<table data-options="fit:true" id="druggrid" border="false"></table> 
+	   	</div>
+               
+	</div>
+  
+  
+</BODY>
+</HTML>

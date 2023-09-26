@@ -1,0 +1,91 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<BODY>
+<!--
+	redraws the order favourites on the order entry screen (oeorder.custom.csp)
+-->
+<!--
+<SCRIPT language="Javascript" src="../scripts/websys.listboxes.js"></SCRIPT>
+-->
+<SCRIPT language="Javascript">
+</SCRIPT>
+<SCRIPT language="Cache" RUNAT=SERVER>
+	n orderentrywin,tabidx,preftab,tabgroups,i,rs,name,chartid,extraitms,itemdataDelim,groupitemDelim,tabgroupDelim,EpisodeID,FocusWindowName
+	m ^tmpRequest=%request.Data
+	;m ^tmpsession=%session.Data
+	s ctlocid=$g(%request.Data("ctlocid",1))
+	s userid=$g(%request.Data("userid",1))
+	
+	s objectReference=""
+	i ctlocid'="" s objectReference=ctlocid
+	i userid'=""  s objectReference=userid
+	s objectType=$g(%request.Data("ObjectType",1))
+	s orderentrywin=$g(%request.Data("OEWIN",1))
+	s FocusWindowName=$g(%request.Data("FocusWindowName",1))
+	s formulary=""
+	s formulary=$g(%request.Data("formulary",1))
+	s tabidx=$g(%request.Data("TABIDX",2)) ;organise one tab
+	s preftab=$g(%request.Data("PREFTAB",1)) ;organise all tabs
+	s AppKey=$g(%request.Data("AppKey",1))
+	w "<SCRIPT language='Javascript'>"_$c(13,10)
+	w "var mainwin=window.open('','"_orderentrywin_"');",$c(13,10),$c(13,10)
+	s ^tmpRequest("tabidx",2)=tabidx_","_preftab_","_orderentrywin
+	if tabidx'="" d
+	. s allTabs=##class(web.DHCDocPrefTabs).GetOETabItems(objectType,objectReference,$g(%request.Data("AppKey",1)))
+	. s allTabs=$p(allTabs,"!!")
+	. s tabgroups=$p($p(allTabs,",",tabidx+1),"@",2)
+	. s k=$l(tabgroups,$c(28))
+	. if (tabgroups'="") d
+	. . f i=1:1:k d
+	. . . s onegroup=$p(tabgroups,$c(28),i)
+	. . . s name=$p(onegroup,"::",1)
+	. . . s value=$p(onegroup,"::",2)
+	. . . ;w "alert('"_name_"');",$c(13,10)
+	. . . w "var obj=mainwin.jQuery('#ngroup"_(i-1)_"Z"_tabidx_"');",$c(13,10)
+	. . . w "if (obj) {"_$c(13,10)
+	. . . ;w "obj.remove('div');"_$c(13,10)
+	. . . w "obj.panel('setTitle','"_name_"')",$c(13,10)
+	. . . f j=1:1:$l(value,"^") d
+	. . . . s code=$zcvt($p($p(value,"^",j),$c(4),1),"O","JS")
+	. . . . s desc=$zcvt($p($p(value,"^",j),$c(4),2),"O","JS")
+	. . . . w " mainwin.PrefAddItemCustom('"_tabidx_"','"_(i-1)_"','"_code_"','"_desc_"');"
+	. . . w "}",$c(13,10),$c(13,10)
+
+	
+	;s ^tmpgry("tabidx")=tabidx_","_preftab_","_objectType_","_%request.Data("TABLIST",1)
+	if preftab d
+	. ;w "alert('"_AppKey_"');",$c(13,10)
+	. s rs=##Class(web.DHCDocPrefTabs).GetOETabItems(objectType,objectReference,$g(%request.Data("AppKey",1)))
+	. s rs=$p(rs,"!!")
+	. s tabNum=$l(rs,",")
+	. ;w "alert('"_rs_"');",$c(13,10)
+	. w "var obj=mainwin.jQuery('#Template_tabs');",$c(13,10) 
+	. w "if (obj) {",$c(13,10)
+	. ;清除所有标签
+	. w "var allTabs = obj.tabs('tabs');",$c(13,10)
+	. w "for(var tabLoop = 0, len = allTabs.length; tabLoop < len; tabLoop++) {obj.tabs('close',0);};",$c(13,10)
+	. f idx=1:1:tabNum  d
+	. . s desc=$p($p(rs,",",idx),"@",1)
+	. . if +tabidx=(idx-1) d
+	. . . w "obj.tabs('add',{id:'TabItem"_idx_"',title: '"_desc_"',selected:1});",$c(13,10)
+	. . e  d
+	. . . w "obj.tabs('add',{id:'TabItem"_idx_"',title: '"_desc_"',selected:0});",$c(13,10)
+	. w "}",$c(13,10)
+	w "if (self==top) window.close();",$c(13,10)
+	w "</SCR"_"IPT>",$c(13,10)
+</SCRIPT>
+</BODY>
+</HTML>
+
+

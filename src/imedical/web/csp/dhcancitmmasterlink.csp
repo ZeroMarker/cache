@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html XMLNS=TRAK>
+<head>
+	<TRAK:HEAD></TRAK:HEAD>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+    <script type="text/javascript" src="../Scripts/dhcclinic/easyui/jquery.min.js"></script>
+	<script type="text/javascript" src="../Scripts/dhcclinic/easyui/jquery.easyui.min.js"></script>
+	
+	<script type="text/javascript" src="../Scripts/dhcclinic/DHCClinic.JQueryFramework.js"></script>
+	<script type="text/javascript" src="../Scripts/dhcclinic/view/DHCANCItmMasterLink.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/easyui/themes/default/easyui.css" />
+	<link rel="stylesheet" type="text/css" href="../skin/default/css/websys.easyui.1.4.1.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/easyui/themes/icon.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/css/DHCANOPCountRecord.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/css/DHCANCItmMasterLink.css"  />
+<script language="cache" runat="server">
+	s formatnum2=##class(websys.Conversions).DateFormat()
+</script>
+<script type="text/javascript"> 
+          function datenewfomat(date){ 
+          var formatnum="#(..EscapeHTML(formatnum2))#";
+            var y = date.getFullYear();  
+            var m = date.getMonth()+1;  
+            var d = date.getDate();  
+            var h = date.getHours();  
+            var datestr=""
+            if(formatnum=="3") 
+            {
+	            datestr= y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+	            }
+			else if(formatnum=="4")
+			{
+				 datestr= (d<10?('0'+d):d)+'/'+(m<10?('0'+m):m)+'/'+y;
+			}
+            return datestr;  
+              
+        }  
+        function w4(s){  
+           if (!s) return new Date();  
+           var formatnum="#(..EscapeHTML(formatnum2))#";
+           if(formatnum=="4")
+           {
+            var d = s.substring(0,2);  
+            var m =s.substring(3,5);  
+            var y = s.substring(6,11);
+           }
+           else
+           {
+	           var y = s.substring(0,4);  
+            var m =s.substring(5,7);  
+            var d = s.substring(8,10);
+           }
+				 return new Date(y,m-1,d);
+        }  
+    </script>  
+</head>	
+<body class="easyui-layout">
+	<div data-options="region:'north'" style="height:100%">
+	<table id="itmMaster"></table>
+	</div>
+	<div id="itmMaster_add" class="easyui-dialog" data-options="closed:true">
+		
+		<form id="itmMasterForm">
+			<input type="hidden" id="id" />
+			<div class="formItem">
+				<label>医嘱项：</label>
+				<select id="arcim"></select>
+			</div>
+			<div class="formItem">
+				<label>医嘱套：</label>
+				<select id="arcos"></select>
+			</div>
+			<div class="formItem">
+				<label>常用医嘱：</label>
+				<select id="commonOrd"></select>
+			</div>
+			<div class="formItem">
+				<label>麻醉方法：</label>
+				<select id="anaestMethod"></select>
+			</div>
+			<div class="formItem">
+				<label>事件明细代码：</label>
+				<input id="eventDetailCode" type="text" class="linetextbox"></input>
+			</div>
+			<div class="formItem">
+				<label>关联值：</label>
+				<input id="eventDetailValue" type="text" class="linetextbox"></input>
+			</div>
+			<div class="formItem">
+				<label>可用状态：</label>
+				<select id="available">
+					<option>Y</option>
+                	<option>N</option>
+				</select>
+			</div>
+			<div class="formItem">
+				<label>开始日期：</label>
+				<select id="dateFrom"type="text" data-options="formatter:datenewfomat,parser:w4" class="easyui-datebox" style="width:160px;" ></select>
+			</div>
+			<div class="formItem">
+				<label>结束日期：</label>
+				<select id="dateTo" type="text" data-options="formatter:datenewfomat,parser:w4" class="easyui-datebox" style="width:160px;" ></select>
+			</div>
+		</form>
+	</div>
+	</body>
+</html>

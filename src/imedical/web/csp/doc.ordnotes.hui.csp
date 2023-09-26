@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!--doc.ordnotes.hui.csp HISUI填写医嘱备注--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	width:100%;
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+</style>
+<Server>
+s FocusRowIndex=%request.Get("FocusRowIndex")
+s OEOrderNotes=%request.Get("OEOrderNotes")
+</Server>
+</head>
+<body class="hisui-layout" fit="true">
+<div data-options="region:'center',border:false,collapsible:false" style="">
+   <table class="search-table">
+		<tr>
+			<td class="r-label"><label>备注内容</label></td>
+			<td>       
+				<textarea id="OEOrderNotes" name="OEOrderNotes" style="width:300px;height:150px;" autofocus></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+		   <td>
+		   	  <a id="BUpdate" name="update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" >确认</a>
+	 	   	  <a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="margin-left:15px;">清除</a>
+	 	   	  <a id="BExit" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="margin-left:15px;">退出</a>
+	 	   </td>
+		</tr>
+   </table>
+</div>
+	
+	<SCRIPT language = 'javascript' >
+		$("#OEOrderNotes").val("#(OEOrderNotes)#").focus();
+		$("#BUpdate").click(UpdateClickHandle);
+		$("#BClear").click(ClearClickHandle);
+		$("#BExit").click(ExitClickHandle);
+		function UpdateClickHandle(){
+			var FocusRow="#(FocusRowIndex)#"
+			if (FocusRow=="") {
+				$.messager.alert("提示","已丢失医嘱录入界面选择的行!");
+				return false;
+			}
+			var value=$("#OEOrderNotes").val();
+			var value=escape(value);
+			if (value==""){
+				$.messager.alert("提示","备注内容不能为空!");
+				return false;
+			}
+			if (websys_showModal('options').CallBackFunc) {
+				websys_showModal('options').CallBackFunc(value);
+			}else{
+				window.returnValue=value;
+				window.close();
+			}
+		}
+		function ClearClickHandle(){
+			$("#OEOrderNotes").val('').focus();
+		}
+		function ExitClickHandle(){
+			if (websys_showModal('options').CallBackFunc) {
+				websys_showModal('options').CallBackFunc("");
+			}else{
+				window.close();
+			}
+		}
+	</SCRIPT>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+	s StrParam=$Get(%request.Data("StrParam",1))
+	
+	i Action="Save" d
+	.s Arcitm=$Get(%request.Data("Arcitm",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result=##class(web.DHCSTM.RestrictDoc).Save(Arcitm,ListData)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i Action="Delete" d
+	.s autid=$Get(%request.Data("resDocId",1))
+	.s ret= ##class(web.DHCSTM.RestrictDoc).Delete(autid)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+
+	i Action="GetResDoc" d
+	.s ArcRowid=$Get(%request.Data("ArcRowid",1))
+	.d ##class(web.DHCSTM.RestrictDoc).GetResDoc(ArcRowid)
+
+	i Action = "GetResDocPointer" d
+	.s Type=$Get(%request.Data("resDocType",1))
+	.s PointerDesc=$Get(%request.Data("PointerDesc",1))
+	.w ##class(web.DHCSTM.RestrictDoc).GetResDocPointer(Type,PointerDesc)	
+
+</script>

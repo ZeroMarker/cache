@@ -1,0 +1,93 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csr:action>		<!--add by wl 2019-11-20 WL0010 begin-->		
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4()    
+    </SCRIPT>  
+</csr:action>		<!--add by wl 2019-11-20 WL0010 end-->
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</HEAD>
+
+<script language="cache"  runat="server">
+if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+s MaintDR=$g(%request.Data("MaintDR",1))
+s ReadOnly="'"_$g(%request.Data("ReadOnly",1))_"'"
+s EquipDR=$p(^DHCEQMaint(MaintDR),"^",1)
+s MTType="'"_$p(^DHCEQMaint(MaintDR),"^",2)_"'"
+s EquipInfo="'"_##Class(web.DHCEQEquip).GetEquipByID("","",EquipDR)_"'"
+s TemplatePath="'"_##Class(web.DHCEQStoreMoveSP).GetPath()_"'"
+s PMReportDR="'"_$o(^DHCEQPMReport(0,"MaintDR",MaintDR,""))_"'"
+s vMaintDate=##class(web.DHCEQCommon).TransValueToPage($p(^DHCEQMaint(MaintDR),"^",5),"date") //modified by csj 2020-03-13 需求号:1226139
+s title="PM报告"
+s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") //add by wl 2019-11-20 WL0010
+s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-20 WL0010 增加润乾打印预览标志
+s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+</script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true,border:false" style='width:100%;height:100%;display:block;'>
+			<div data-options="region:'north',border:false" style="padding:5px 0 10px 0;">
+		    	<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEquipName" for="EquipName">设备名称</label></div>
+						<div class="eq-table-td"><input class="hisui-validatebox " id="EquipName"></div>
+						<div class="eq-table-td eq-table-label"><label id="cNo" for="No">编号</label></div>
+						<div class="eq-table-td"><input class="hisui-validatebox" id="No"></div>
+						<div class="eq-table-td eq-table-label"><label id="cModel" for="Model">规格型号</label></div>
+						<div class="eq-table-td "><input class="hisui-validatebox" id="Model"></div>
+						<div class="eq-table-td eq-table-label"><label id="cMaintDate" for="MaintDate">PM日期</label></div>
+						<div class="eq-table-td "><input class="hisui-datebox textbox" id="MaintDate"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cCPMTemplate" for="CPMTemplate">PM模版</label></div>
+						<div class="eq-table-td"><input class="hisui-validatebox" id="CPMTemplate" data-options="'component':'EM.L.PMTemplate','paras':[{name:'Type',type:'4',value:'MTType'}]"></div>
+						<div class="eq-table-td eq-table-label"><label id="cRemark" for="Remark">备注</label></div>
+						<div class="eq-table-td"><input class="hisui-validatebox" id="Remark"></div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="position:relative;">
+				<table id="tPMReport" class="hisui-datagrid" data-options=""></table><!-- onClickRow:onClickRow -->
+			</div>
+			<!--modify by lmm 2020-06-06-->
+			<div data-options="region:'south',border:false" style="position:relative;">
+					<div style="text-align:center;padding-top:10px">
+						<a id="BUpdate" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a>
+						<a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a>
+						<a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">打印</a>
+					</div>
+			</div>
+		</div>
+		<!--隐藏元素-->
+		<div id="hiddenEncrypt" style="display:hidden">
+			<form name="DHCEQ">
+				<input id="MaintDR" value=#(MaintDR)# type="hidden">
+	           	<input id="ReadOnly" value=#(ReadOnly)# type="hidden">
+	            <input id="MTType" value=#(MTType)# type="hidden">
+	            <input id="EquipInfo" value=#(EquipInfo)# type="hidden">
+	            <input id="vMaintDate" value=#(vMaintDate)# type="hidden">
+	            <input id="TemplatePath" value=#(TemplatePath)# type="hidden">
+	            <input id="PMReportDR" value=#(PMReportDR)# type="hidden">
+	            <input id="Status" value="" type="hidden">
+	            <input id="CPMTemplateDR" value="" type="hidden">
+	            <input type="hidden" id="PrintFlag" value=#(PrintFlag)#> <!--add by wl 2019-11-20 WL0010-->
+				<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-20 WL0010  -->
+				<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>			
+			</form>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/em/pmreport.js"></script>	<!--modified by csj 20190524 js位置修改-->
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>  <!--add by wl 2019-11-20 WL0010  -->
+
+</body>
+
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<DHCAPP:EASYUI/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/bed.css" />
+<title></title>
+<script type="text/javascript">
+var person=0;//成人儿童
+var tab=null;
+function creatTable()
+	   {
+		   var m=$("#m").val();
+		   var n=$("#n").val();
+		   if(m==""||n==""){
+		   	   $.messager.alert("提示","请录入 行 和 列！"); 
+			   }
+		for (var i=1;i<=m;i++)
+		{
+	
+			var html=""
+			html+='<tr>';
+			//html+='<td class="time">'+i+'</td>';
+			for (var j=1;j<=n;j++){
+				html+='<td class="drop" id="td'+i+j+'"></td>';
+			    }
+	        html+='</tr>';
+			$("#bed").append(html);
+			droppable()
+
+		}
+	   }
+function droppable()
+{
+	$('.top .item').draggable({
+				revert:true,
+				proxy:'clone'
+			});
+			$('.right td.drop').droppable({
+				onDragEnter:function(){
+					$(this).addClass('over');
+				},
+				onDragLeave:function(){
+					$(this).removeClass('over');
+				},
+				onDrop:function(e,source){
+					window();
+					//alert($(this).attr("id"))
+					tab=$(this).attr("id");
+					$(source).clone().addClass('assigned');
+					
+					c.draggable({
+						revert:true
+					});
+					
+				}
+			});
+			$('.top').droppable({
+				accept:'.assigned',
+				onDragEnter:function(e,source){
+					$(source).addClass('trash');
+				},
+				onDragLeave:function(e,source){
+					$(source).removeClass('trash');
+				},
+				onDrop:function(e,source){
+					$(source).remove();
+				}
+			});
+	
+}	
+
+
+//弹出框
+function window() {
+$('#detail').dialog('open');
+$('#detail').dialog('move',{
+		left:10,
+		top:20
+	});
+
+ }
+function submit()
+{
+	var personDesc="成人";
+	if (person==1)
+	{
+		personDesc="儿童";
+	}
+	$(".person").html(personDesc);
+	if($("#bedname").val()==""){
+		 $.messager.alert("提示","请填写床号！"); 
+	}else
+	{
+	$(".bednum").html($("#bedname").val());
+	alert(tab)
+	$("#"+tab).empty().append($(".dragitem").html());
+	$('#detail').dialog('close');
+	}
+} 
+function radio(type){
+	person=type;
+	}
+$(function(){
+	droppable()	
+		});
+	</script>
+</head>
+<body>
+<div style="height:50px;">
+		<div class="top">
+			<table>
+				<tr>
+					<td><div class="item">急诊输液室座位</div></td>
+					<td style="font-size:14px;">表格:(行)<input type="text" id="m" name="PHCode" class="textParent" style="width:40px;"></input>X (列)<input type="text" id="n" name="PHCode" class="textParent" style="width:40px;"></input> </td>	
+			        <td><a class="easyui-linkbutton" data-options="iconCls:'icon-tip',plain:true" onclick="javascript:creatTable()" >生成表格</a></td>
+			        <td><div class="datagrid-btn-separator"> </div> </td>
+			        <td><a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:insert()" >插入</a></td>
+			        <td><div class="datagrid-btn-separator"> </div> </td>
+			        <td><a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			        <td><div class="datagrid-btn-separator"> </div> </td>
+			        <td><a class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			        <td><div class="datagrid-btn-separator"> </div> </td>	
+				</tr>	
+			</table>
+			
+		</div>
+</div>		
+		<div class="tool-bar-line">	</div>
+		<div class="right">
+			<table id="bed" class="datagrid">
+				<!--<tr>
+					<td class="time">1</td>
+					<td class="drop"></td>
+					<td class="drop"></td>
+					<td class="drop"></td>
+					<td class="drop"></td>
+					<td class="drop"></td>
+				</tr>-->
+			</table>
+		</div>
+		
+<!--隐藏域-->
+<div style="display:none">
+		<div class="dragitem" id="hidden">
+			  <div class="hiddenbedinfo">
+			   <span style="width:120px"><h5 class="person"></h5><h5 class="bednum"><b></b></h5></span>
+			   <!--<hr/> -->
+			   <span><h5 id="sex"></h5><h5 id="name"></h5><h5 id="num"></h5></span>
+	           <span><h5 id="age"></h5><h5 id="what"></h5><h5 id="why"></h5></span>
+		      </div>
+	    </div>		
+</div>
+<!--弹出框-->
+	    <div id="detail" class="easyui-window" title="请录入信息后点提交按钮" style="vertical-align: middle"
+		             data-options="iconCls:'icon-save',
+		             modal:true,
+		             width:360,
+		             height:180,
+		             closed:true,
+		             maximizable:true
+		             
+		             "> 
+		       <table id="detailgrid">
+		             <tr>
+		             <td style="font-size:14px;">类别:<input id="personbig" type="radio" name="radio" checked="true" onclick="javascript:radio(0)">成人</input><input id="personsmall" type="radio" name="radio" onclick="javascript:radio(1)">儿童</input> </td>	
+		             </tr>
+		             <tr>
+		              <td style="font-size:14px;">床名:<input type="text" id="bedname" class="textParent" style="width:250px;"></input> </td>
+		             </tr>
+		             <tr>
+		             <td><a id="btn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'" onclick="javascript:submit()">提交</a><td>
+  					 <tr>
+		       </table>
+	    </div>	
+</body>
+</html>

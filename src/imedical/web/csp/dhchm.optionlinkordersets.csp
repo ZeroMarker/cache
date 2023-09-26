@@ -1,0 +1,86 @@
+<!--
+Description: 选项套餐关联维护  dhchm.optionlinkordersets.csp
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER"> 
+		set OID=$g(%request.Data("OID",1))	
+   </SCRIPT> 
+   	<style>
+   		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			text-align:right;
+			padding:0 10px;
+		}
+   		.btn{
+	   		margin-left:30px;
+   		}	
+   </style>
+</head>
+<body style="background-color:#fff" fit="true" class="hisui-layout">
+	<div>
+		<table class="hisui-table">
+			<tr>
+				<td class="labelTd">体检套餐</td>	
+				<td><select id="OrdSetsDR" class="hisui-combogrid"  style="width:250px;" data-options="
+           			panelWidth: 350,
+            		idField: 'OrderSetId',
+            		textField: 'OrderSetDesc',
+            		method: 'get',
+            		url:$URL+'?ClassName=web.DHCPE.HandlerOrdSetsEx&QueryName=queryOrdSet',
+            		onBeforeLoad:function(param){
+	            		param.Type='ItemSet';
+						param.OrdSetSDesc = param.q;
+					},
+					mode:'remote',
+					delay:200,
+            		columns: [[           				            			
+						{field:'OrderSetDesc',title:'套餐名称',width:200},
+						{field:'OrderSetPrice',title:'金额',align:'right',width:70},
+						{field:'OrderSetId',title:'ID',width:80}
+					]],
+            		fitColumns: true,
+            		pagination:true,
+					pageSize:20,
+					displayMsg:''">
+            		</select>    
+				</td>
+				<td class="labelTd">关联度</td>	
+				<td ><input id="Relevance" class="hisui-numberbox" data-options="required:true,min:1" type="text" style="width:120px;"></td>						
+			</tr>
+			<tr>
+				<td class="labelTd">激活</td>
+				<td colspan="3"><input id="Active" class="hisui-checkbox" type="checkbox" checked></td>
+			</tr>
+			<tr>
+				<td colspan="4" style="text-align:center;padding-left:40px;">
+					<a id="DOSAddBtn" href="#"  onclick="dosAdd();" class="hisui-linkbutton btn" data-options="iconCls:'icon-w-add'">保存</a>
+					<a id="DOSDeltBtn" href="#"  onclick="dosDelt();"  class="hisui-linkbutton btn" data-options="iconCls:'icon-w-cancel'">删除</a>
+					<a id="DOSAddBtn" href="#"  onclick="dosSech();" class="hisui-linkbutton btn" data-options="iconCls:'icon-w-find'">查询</a>
+					<a id="DOSDeltBtn" href="#"  onclick="dosClear();"  class="hisui-linkbutton btn" data-options="iconCls:'icon-w-clean'">清屏</a>
+				</td>
+			</tr>			
+		</table>
+		<div id="DOSDiv" style="height:330px;padding:0 10px 10px 10px">
+			<table id="DOSLinkList" data-options="singleSelect:true,bodyCls:'panel-body-gray'"></table>			
+		</div>
+		<input type="hidden" id="OID" value="#(OID)#">
+		<input type="hidden" id="QDOLSID" value="">
+	</div>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  	<script type="text/javascript" src="../scripts/dhchm.optionlinkordsets.js"></script>
+</body>
+</html>

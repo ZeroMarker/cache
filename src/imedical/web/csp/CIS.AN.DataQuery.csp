@@ -1,0 +1,82 @@
+<csp:content charset="utf-8">
+<CSP:CLASS ERRORPAGE="CIS.AN.Error.csp">
+<server>
+	//If ##Class(websys.SessionEvents).SessionExpired() Quit $$$ERROR($$$CSPSessionTimeout)
+	set className=%request.Data("ClassName",1)
+	set queryName=%request.Data("QueryName",1)
+	set argCount=%request.Get("ArgCnt")
+	set pageNo=+%request.Get("page")
+	set rows=+%request.Get("rows")
+	set filterDesc=%request.Get("q")
+	
+	set rs=##class(%ResultSet).%New(className_":"_queryName)
+	set startRowNo=0
+	if (pageNo>0)&(rows>0)
+	{
+		set startRowNo=(pageNo-1)*rows	
+	}
+	
+	new execute,i
+	kill PLIST
+	set execute="set sc=$method(rs,""Execute"""
+	for i=1:1:argCount
+	{
+		set argName="Arg"_i
+		set PLIST(i)=%request.Data(argName,1)
+		if (PLIST(i)="QueryFilter")
+		{
+			set PLIST(i)=filterDesc	
+		}	
+		set execute=execute_",PLIST("_i_")"
+	}
+	set execute=execute_")"
+	x execute
+	
+	set colCount=rs.GetColumnCount()
+	set rowNo=0,displayRows=0
+	
+	if (rows>0)
+	{
+		write "{"_"""rows"":["	
+	}
+	else
+	{
+		write "["	
+	}
+	while(rs.%Next())
+	{
+		if ((rowNo>=startRowNo)&&(displayRows<rows))!(rows=0)
+		{
+			write:(displayRows>0) ","
+			write "{"
+			set rowData=""
+			for colIndex=1:1:colCount
+			{
+				set colName=rs.GetColumnName(colIndex)
+				set currentData=rs.GetData(colIndex)
+				continue:(colName="_parentId")&(currentData="")
+				set:(colIndex>1) rowData=rowData_","
+				set value=rs.GetData(colIndex)
+				set value=$replace(value,"\","\\")
+				set value=$replace(value,$c(10),"\n")
+				set value=$replace(value,$c(0),"")
+				set value=$replace(value,"""","\""")
+				set rowData=rowData_""""_rs.GetColumnName(colIndex)_""":"_""""_value_""""	
+			}	
+			write rowData
+			write "}",!
+			set displayRows=displayRows+1
+		}
+		set rowNo=rowNo+1	
+	}
+	if (rows>0)
+	{
+		write "]"_",""total"":"_rowNo_"}"	
+	}
+	else
+	{
+		write "]"	
+	}
+	do rs.%Close()
+	quit
+</server>

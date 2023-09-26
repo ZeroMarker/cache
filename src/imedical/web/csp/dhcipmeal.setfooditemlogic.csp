@@ -1,0 +1,114 @@
+/* 
+ * FileName:dhcipmeal.setfooditemlogic.csp
+ * User: Lid
+ * Date: 2010-05-04
+ * Function: 菜定义的服务器端业务逻辑
+ * Description: 
+*/
+<csp:content charset="utf-8">
+<script language="Cache" runat="SERVER">
+
+    s group=$g(%request.Data("group",1))
+    s guser=$g(%request.Data("guser",1))
+    s act=$g(%request.Data("act",1))
+	s start=+$g(%request.Data("start",1))  ;开始行
+	s limit=+$g(%request.Data("limit",1))  ;限制行
+
+    i act="insert" d
+	.s itmcode=$g(%request.Data("itmcode",1))  ;编码
+	.s itmcode=""
+	.s itmdesc=$g(%request.Data("itmdesc",1))  ;菜名
+	.;s comboMT=$g(%request.Data("comboMT",1))  ;餐别
+	.;s comboMM=$g(%request.Data("comboMM",1))  ;餐类型
+	.s comboMT="",comboMM=""  ;菜定义时不再维护"餐别"和"餐类型"
+	.s comboUOM=$g(%request.Data("comboUOM",1))  ;单位
+	.s itmprice=$g(%request.Data("itmprice",1))  ;单价
+	.;s itmloc=$g(%request.Data("itmloc",1))  ;科室
+	.s itmloc="" ;科室暂时不用
+	.s itmstartdate=$g(%request.Data("itmstartdate",1))  ;开始日期
+	.s itmstarttime=$g(%request.Data("itmstarttime",1))  ;开始时间
+	.s itmenddate=$g(%request.Data("itmenddate",1))  ;结束日期
+	.s itmendtime=$g(%request.Data("itmendtime",1))  ;结束时间
+	.s itmactiveflag=$g(%request.Data("itmactiveflag",1))  ;可用标志
+	.i itmactiveflag="on" s itmactiveflag="Y"
+	.e  s itmactiveflag="N"
+	.s itmremark=$g(%request.Data("itmremark",1))  ;备注
+	.s itmcomment1=$g(%request.Data("itmcomment1",1))  ;备用1
+	.s itmcomment2=$g(%request.Data("itmcomment2",1))  ;备用2
+	.s itmalias=$g(%request.Data("itmalias",1))  ;别名
+	.s itmInfo=itmcode_"^"_itmdesc_"^"_comboMT_"^"_comboMM_"^"_comboUOM_"^"_itmloc_"^"_itmactiveflag_"^"_itmstartdate_"^"_itmstarttime_"^"_itmenddate_"^"_itmendtime_"^"_itmremark_"^"_itmcomment1_"^"_itmcomment2_"^"_guser
+	.s itmPriceInfo=itmprice_"^"_itmstartdate_"^"_guser
+	.s itmAliasInfo=itmalias
+	.s rtn = ##class(DHCBILL.DHCIPMealItm).Insert(itmInfo,itmPriceInfo,itmAliasInfo)
+	.i rtn=0 w "{success:true,msg:'保存成功'}"
+	.e  i rtn="-1001" w "{failure:true,msg:'该记录已存在'}"
+	.e  w "{failure:true,msg:'保存失败'}"
+	
+	i act="update" d
+	.s mealitemrowid=$g(%request.Data("mealitemrowid",1))  ;编码
+	.;s itmcode=$g(%request.Data("itmcode",1))  ;编码
+	.s itmcode=""
+	.s itmdesc=$g(%request.Data("itmdesc",1))  ;菜名
+	.;s comboMT=$g(%request.Data("comboMT",1))  ;餐别
+	.;s comboMM=$g(%request.Data("comboMM",1))  ;餐类型
+	.s comboMT="",comboMM=""
+	.s comboUOM=$g(%request.Data("comboUOM",1))  ;单位
+	.s itmprice=$g(%request.Data("itmprice",1))  ;单价
+	.;s itmloc=$g(%request.Data("itmloc",1))  ;科室
+	.s itmloc=""
+	.s itmstartdate=$g(%request.Data("itmstartdate",1))  ;开始日期
+	.s itmstarttime=$g(%request.Data("itmstarttime",1))  ;开始时间
+	.s itmenddate=$g(%request.Data("itmenddate",1))  ;结束日期
+	.s itmendtime=$g(%request.Data("itmendtime",1))  ;结束时间
+	.s itmactiveflag=$g(%request.Data("itmactiveflag",1))  ;可用标志
+	.i itmactiveflag="on" s itmactiveflag="Y"
+	.e  s itmactiveflag="N"
+	.s itmremark=$g(%request.Data("itmremark",1))  ;备注
+	.s itmcomment1=$g(%request.Data("itmcomment1",1))  ;备用1
+	.s itmcomment2=$g(%request.Data("itmcomment2",1))  ;备用2
+	.s itmalias=$g(%request.Data("itmalias",1))  ;别名
+	.;注意itmInfo的顺序必须同表中的顺序一致
+	.s itmInfo=mealitemrowid_"^"_itmcode_"^"_itmdesc_"^"_comboMT_"^"_comboMM_"^"_comboUOM_"^"_itmloc_"^"_itmactiveflag_"^"_itmstartdate_"^"_itmstarttime_"^"_itmenddate_"^"_itmendtime_"^"_itmremark_"^"_itmcomment1_"^"_itmcomment2_"^"_guser
+	.s itmPriceInfo=itmprice_"^"_itmstartdate_"^"_guser
+	.s itmAliasInfo=itmalias
+	.s rtn = ##class(DHCBILL.DHCIPMealItm).Update(itmInfo)
+	.i rtn=0 w "{success:true,msg:'更新成功了'}"
+	.e  i rtn="-1001" w "{failure:true,msg:'该记录已存在'}"
+	.e  w "{failure:true,msg:'更新失败'}"
+	.
+	
+	
+	i act="query" d
+	.s Alias=$g(%request.Data("searchAlias",1))  
+	.s Status=$g(%request.Data("searchStatus",1)) 
+	.s Guser=$g(%request.Data("searchUser",1))
+	.s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealItm","FindMealItem",start,limit,Alias,Guser,Status)
+	.w jsonStr
+	
+	i act="combolist" d
+	.i $g(%request.Data("type",1))="mealtype" d
+	..s pym=$g(%request.Data("query",1))
+	..s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealType","FindMealType",0,0,"","",pym,"Y")
+	..w jsonStr
+	.e  i $g(%request.Data("type",1))="mealmodality"  d  
+	..s pym=$g(%request.Data("query",1))
+	..s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealModality","FindMealModality",0,0,"","",pym,"Y")
+	..w jsonStr
+	.e  i $g(%request.Data("type",1))="itmuom"  d
+	..s pym=$g(%request.Data("query",1))
+	..s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealUom","FindMealUom",0,0,pym,"","Y")
+	..w jsonStr
+	.e  i $g(%request.Data("type",1))="itmalias" d
+	..s ClassName=%request.Data("ClassName",1)
+    ..s QueryName=%request.Data("QueryName",1)
+	..s mealAlias=$g(%request.Data("itmAlias",1))  ;菜别名
+	..;s ^lidong("alias")=mealAlias_"^"_mealType_"^"_mealmodality_"^"_ClassName_"^"_QueryName
+	..s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery(ClassName,QueryName,0,0,mealAlias)
+	..w jsonStr
+	.e  i $g(%request.Data("type",1))="week" d
+	..s menuDate=$g(%request.Data("menuStDate",1))
+	..s ^lid("week")=menuDate
+	..s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealMenuLogic","GetWeekByMenuStDate",0,0,menuDate)
+	..s ^lid("week",1)=jsonStr
+	..w jsonStr
+</script>

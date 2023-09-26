@@ -1,0 +1,124 @@
+﻿<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+<title>	字典 </title>
+<script language="cache" runat="server">
+	d ##Class(EMRservice.SystemParameter).GetImportResource()
+</script>
+ <script language="javascript">
+var tmpurl =window.dialogArguments.url
+var condition = window.dialogArguments.condition;
+var url = tmpurl + escape(condition);
+$(function(){
+	window.returnValue = "";
+	$("#txtCondition").val(condition);
+	selectData();
+	
+	//查询事件
+	$("#btSelect").click(function(){
+		condition = $("#txtCondition").val();
+		url = tmpurl + escape(condition);
+		selectData();
+	});	
+	
+	//回车事件
+    $('#txtCondition').bind('keypress',function(event){
+        if(event.keyCode == "13")    
+        {
+            condition = $("#txtCondition").val();
+			url = tmpurl + escape(condition);
+			selectData();
+        }
+    });
+		
+});
+///查询数据
+function selectData()
+{
+	$.ajax({
+		type:"POST",
+	    dataType:'json',
+		url: url,
+		async: true,
+		success: function(d){
+			$('#dg').datagrid({ 
+			    loadMsg:'数据装载中......',
+			    autoRowHeight: true, 
+			    idField:"ID",
+			    fit:true,
+			    pageSize:10,
+			    pageList:[10,20,30],
+			    singleSelect:true,
+			    pagination:true,
+			    rownumbers:true,
+			    columns:[[  
+			        {field:'ID',title:'ID',hidden:true},  
+			        {field:'Code',title:'代码',width:200},
+			        {field:'Desc',title:'描述',width:260}
+			    ]],
+			    data:d,
+			    loadFilter: pagerFilter,
+			    onSelect: function(rowIndex,rowData){
+				    window.returnValue = JSON.stringify(rowData);
+				    windowClose();
+			    }
+		    });	 
+		},
+		error: function(d){alert("error");}
+	});		
+}
+//返回过滤数据显示
+function pagerFilter(data)
+{
+	var dg = $(this);
+	var opts = dg.datagrid('options');
+	var pager = dg.datagrid('getPager');
+	pager.pagination({
+		onSelectPage:function(pageNum, pageSize){
+			opts.pageNumber = pageNum;
+			opts.pageSize = pageSize;
+			pager.pagination('refresh',{
+				pageNumber:pageNum,
+				pageSize:pageSize
+			});
+			var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
+			var end = start + parseInt(opts.pageSize);
+			data.rows = data.originalRows.slice(start, end);
+			dg.datagrid('loadData',data);
+		}
+	});
+	if (!data.originalRows){
+		data.originalRows = data.rows;
+	}
+	var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
+	var end = start + parseInt(opts.pageSize);
+	data.rows = data.originalRows.slice(start, end);
+	return data;
+}
+//关闭
+function windowClose()
+{
+	window.opener=null;
+	window.open('','_self');
+	window.close();	
+}
+</script>
+
+</head>
+<body class="easyui-layout">
+	<div data-options="region:'north',border:false" style="height:30px;">
+		<span>检索条件</span>
+		<input id="txtCondition" type="text" style="width:300px"/>
+		<input id="btSelect" type="button" value="查询"/>
+	</div>
+	<div data-options="region:'center',border:false"> 	
+		<table id="dg"></table>
+	</div> 
+</body>
+</html>

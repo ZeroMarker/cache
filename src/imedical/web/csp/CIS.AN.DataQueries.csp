@@ -1,0 +1,80 @@
+<csp:content charset="utf-8">
+<CSP:CLASS ERRORPAGE="CIS.AN.Error.csp">
+<server>
+	//If ##Class(websys.SessionEvents).SessionExpired() Quit $$$ERROR($$$CSPSessionTimeout)
+	set execStr=""
+	try{
+	set jsonData=%request.Data("jsonData",1)
+	set status=##class(CIS.AN.COM.String).ToArray(jsonData,.array)
+	set objIndex=0,queryCount=0
+	write "{"
+	for
+	{
+		set objIndex=$order(array(objIndex))
+		quit:(objIndex="")
+		m queryObj=array(objIndex)
+		set listName=queryObj("ListName"),className=queryObj("ClassName"),queryName=queryObj("QueryName")
+		set rs=##class(%ResultSet).%New(className_":"_queryName)
+		set argCount=+queryObj("ArgCnt")
+		new execute,i
+		kill PLIST
+		set execute="set sc=$method(rs,""Execute"""
+		for i=1:1:argCount
+		{
+			set PLIST(i)=queryObj("Arg"_i)
+			set execute=execute_",PLIST("_i_")"
+		}
+		set execute=execute_")"
+		set execStr=className_":"_queryName
+		x execute
+		set colCount=rs.GetColumnCount(),rowCount=0
+		write:(queryCount>0) ",",!
+		write """"_listName_""":["
+		while(rs.%Next())
+		{
+			write:(rowCount>0) ",",!
+			write "{"
+			set rowData=""
+			for colIndex=1:1:colCount
+			{
+				set colName=rs.GetColumnName(colIndex)
+				set currentData=rs.GetData(colIndex)
+				continue:(colName="_parentId")&(currentData="")
+				set:(colIndex>1) rowData=rowData_","
+				set value=rs.GetData(colIndex)
+				set value=$replace(value,"\","\\")
+				set value=$replace(value,$c(10),"\n")
+				set value=$replace(value,$c(0),"")
+				set value=$replace(value,"""","\""")
+				set rowData=rowData_""""_rs.GetColumnName(colIndex)_""":"_""""_value_""""	
+			}	
+			write rowData
+			write "}"
+			set rowCount=rowCount+1	
+		}
+		write "]"
+		set queryCount=queryCount+1	
+		do rs.%Close()
+		
+	}
+	write "}"	
+	quit}
+	catch exp {
+		WRITE !,"This is the CATCH exception handler",!
+      IF 1=exp.%IsA("%Exception.SystemException") {
+         WRITE "System exception",!
+         WRITE "Name: ",$ZCVT(exp.Name,"O","HTML"),!
+         WRITE "Location: ",exp.Location,!
+         WRITE "Code: ",exp.Code,!
+         WRITE "Data: ",exp.Data,!
+         write "exec:",execStr,!!
+      }
+      ELSE { WRITE "not a system exception",!!}
+      WRITE "$ZERROR: ",$ZERROR,!
+      WRITE "$ECODE: ",$ECODE
+      quit
+      
+	}
+
+	
+</server>

@@ -1,0 +1,454 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<!--websys.menu.mgr.csp //-->
+<head>
+	<server>
+		set padding=%request.Get("padding")
+		if padding="" set padding=10
+		set padding=##class(ext.util.String).Replace(padding,"-","px ")_"px"
+	</server>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		html,body{
+			height:100%;
+			width:100%;
+			padding:0;
+			margin:0;
+			background-color:#fff;
+		}
+		span.label{
+			padding:0 10px 0 15px;
+			line-height:30px;	
+			display:inline-block;
+		}
+		span.label.first{
+			padding-left:5px;	
+		}
+		span.label.w42{
+			display:inline-block;
+			width:42px;	
+			text-align:right;
+		}
+		.i-searchbox td{
+			padding:5px 10px;
+		}
+		.i-searchbox td.i-label{
+			padding:5px 0px 5px 10px;
+			text-align:right;
+			width:150px;
+		}
+		span.d-label{
+			text-align:right;
+			padding:0 10px 0 0;
+			color:#666;
+		}
+		#menu-security-win .i-searchbox td.i-label{
+			width:80px;
+		}
+		.textbox.tb200{
+			width:193px;
+		}
+	    #edit-sep{
+			height:14px;
+			width:100%;   
+			position:relative;
+		}
+		#edit-sep-line{
+			border-bottom:1px dashed #f9efef;
+			height:6px;
+			width:100%; 
+			
+		}
+		#edit-sep-text{
+			height:14px;line-height:14px;color:#f9efef;
+			background:#fff;
+			position:absolute;top:0;left:230px;
+			cursor:pointer;
+		}
+		#edit-sep:hover #edit-sep-line,
+		#edit-sep.active #edit-sep-line{
+			border-bottom:1px solid #dad5d5;
+		}
+		#edit-sep:hover #edit-sep-text,
+		#edit-sep.active #edit-sep-text{
+			color:blue;
+		}
+		#auth-groups{
+			width:200px;
+		}
+		.authgroup{
+			border:1px solid #95B8E7;
+			border-radius:3px;
+			cursor:pointer;
+			width:auto;
+			margin-bottom:5px;
+			margin-right:5px;
+			float:left;
+		}
+	    .authgroup>span{padding:1px 3px;}
+		.authgroup>span.Delete{border-right:0;padding:1px 5px}
+		.authgroup>span.Delete:hover{color:red;}
+		.icon-security{
+			display:inline-block;
+			width:30px;
+			background:url(../images/uiimages/lock-new.png) center center no-repeat;
+			cursor:pointer;
+		}
+		.checkbox-label{
+			display:inline-block;
+			width:100%;
+			text-align:center;
+		}
+		#group-menu-tree-tools{
+			background-color:#fff;
+			border-bottom: 1px solid #ccc;
+			line-height:30px;
+			padding:1px 0 2px 10px;
+			margin-bottom:10px;
+			height:35px; /*自动填充ie下35.82*/
+		}
+		.dialog-button{
+			padding:10px;	
+		}
+		
+		
+
+		.kw-section-list > li {
+		    float: left;
+		    margin: 2px 5px;
+		}
+		.kw-section-list > li:first-child{
+		    margin-left:0;
+		}
+		.kw-section-list:after{
+			clear:both;
+			content: "";
+            display: block;
+            width: 0;
+            height: 0;	
+		}
+		.icon-paper{
+			background-position-y: -1px;
+		}
+
+		.panel-title.panel-with-icon {
+		    padding-left: 31px;
+		}
+	</style>
+</head>
+
+<script type="text/javascript" >
+
+</script>
+<body class="hisui-layout">
+   	<div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;filter:alpha(opacity=70);opacity: 0.70;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">加载中···</font></h1></div>
+	<div data-options="region:'north',border:false" style="padding:10px 10px 0 10px;height:41px;">
+     	<label id="_HospListLabel" for="_HospList" style="color:red;margin-right:10px;">医院</label>
+	    <input id="_HospList"/> 
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10px;"> <!--页签和界面保留10px间距-->
+		<div id="tabs" class="hisui-tabs tabs-gray" data-options="border:true,fit:true,isBrandTabs:false,selected:0">   
+			<!--<div title="菜单管理" data-options="iconCls:'icon-add-note'" style="display:none">   	
+			</div> -->  
+			<div title="按菜单维护" data-options="closable:false" style="" id="tab-menu">   
+				<div class="hisui-layout" fit="true" id="layout-tab-menu">
+					<div data-options="region:'north',border:false" style="height:50px;padding:10px">
+						<div >
+							<div style="height:30px;">
+							<span class="label first w42">描述</span><input id="menu-caption" class="textbox"/>
+							<span class="label w42">代码</span><input id="menu-name" class="textbox"/>
+							<span class="label">连接组件</span><input id="menu-component" class="textbox"/>
+							<span class="label w42">菜单组</span><input id="menu-submenuof" class="textbox"/>
+							<a href="javascript:void(0);" class="hisui-linkbutton" id="menu-search" iconCls="icon-w-find" style="margin-left:30px;">查询</a>
+							<a href="javascript:void(0);" class="hisui-linkbutton" id="menu-more-btn" style="margin-left:20px;">更多</a>
+							</div>
+							<div style="padding-top:10px;height:30px;display:none;" id="menu-more-div">
+								<span class="label first w42">工作流</span><input id="menu-workflow" class="textbox"/>
+								
+							</div>
+						</div>
+					</div><!--end layout tab-menu  region north-->
+					<div data-options="region:'center',border:false" style="border-top:1px dashed #ccc ">
+						<table id="menu-list"></table>
+						<div id="menu-list-tb" >
+							<a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="menu-list-tb-add">新增</a>
+							<a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true,disabled:true" id="menu-list-tb-edit">修改</a>
+							<a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true,disabled:true" id="menu-list-tb-remove">删除</a>
+							<a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true,disabled:true" id="menu-list-tb-copy">复制</a>
+							<a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-import',plain:true,disabled:false" id="menu-list-tb-import">导入</a>
+						</div>
+					</div><!--end layout tab-menu  region center-->
+				</div> <!--end layout tab-menu -->
+			</div>   <!--end tabs tab tab-menu -->
+			<div title="按安全组维护" data-options="closable:false" style="" id="tab-group" style="padding:10px;">   
+				<div id="group-layout" class="hisui-layout" data-options="fit:true" >
+					<div data-options="region:'west',title:'安全组',split:true,headerCls:'panel-header-gray',iconCls:'icon-select-grant'" style="width:300px;overflow:hidden">
+						
+						<table id="group-list"></table>
+						<div id="group-list-tb" style="padding:4px;">
+							<input id="group-search" />
+						</div>
+					</div>  <!--end layout group-layout  region west--> 
+					<div data-options="region:'center',title:'菜单树',split:false,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="overflow:hidden;">
+						<div id="group-menu-tree-tools" >
+							<table ><tr>
+							<td style="padding-right:5px;">
+								<div id="group-menu-tree-tools-type" ></div>
+							</td>
+							<td>
+								<input id="group-menu-tree-tools-auth" class='hisui-checkbox' type="checkbox" checked label="仅授权" />
+							</td>
+							<!--选中的一些操作也加上-->
+							<td style="padding-left:10px;padding-right:10px;"><div class="datagrid-btn-separator"></div></td>
+							<td>
+								<a href="javascript:void(0);" id="group-menu-tree-tools-append">新增子菜单</a>
+							</td>
+							<td>
+								<a href="javascript:void(0);" id="group-menu-tree-tools-insert">同级新增</a>
+							</td>
+							<td>
+								<a href="javascript:void(0);" id="group-menu-tree-tools-toggleAuth">授权</a>
+							</td>
+							<td>
+								<a href="javascript:void(0);" id="group-menu-tree-tools-edit">修改</a>
+							</td>
+							</tr></table>
+						</div>
+						<div id="group-menu-tree-container" style="overflow:auto;">
+							<div id="group-menu-tree"></div>
+						</div>
+						<div id="group-menu-tree-mm" class="hisui-menu" style="width:150px;">
+							<div id="appendTNode" iconCls="icon-add" onclick="GV.appendTNode()">新增子菜单</div>
+							<div id="insertTNode" iconCls="icon-add" onclick="GV.insertTNode()">同级新增</div>
+							<div id="toggleAuth" iconCls="icon-tip" onclick="GV.toggleAuth()">授权</div>
+						</div>
+					</div> <!--end layout group-layout  region center-->
+				</div> <!--end layout group-layout -->
+				
+			</div>  <!--end tabs tab tab-group -->
+			<div title="安全组菜单授权" data-options="closable:false" id="tab-security" style="padding:10px;">   
+				<div id="security-layout" class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'west',title:'安全组',split:true,headerCls:'panel-header-gray',iconCls:'icon-select-grant'" style="width:300px;overflow:hidden">
+						
+						<table id="security-group-list"></table>
+						<div id="security-group-list-tb" style="padding:4px;">
+							<input id="security-group-search" />
+						</div>
+					</div>   
+					<div data-options="region:'center',title:'菜单授权',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="overflow:hidden;background:#eee;">
+						<iframe id="security-iframe" width="100%" height="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0></iframe>
+					</div>
+				</div>
+			</div> 
+
+		</div> <!--end tabs-->
+	</div> <!--end level-1 layout region center-->
+	<!--把弹出层的先不解析 等后面append上去-->
+	<script id="my-html-wins" type="text/my-html">
+	<div id="edit-win" class="hisui-dialog" style="" data-options="modal:true,draggable:false,closed:true,iconCls:'icon-w-paper'">
+		<form style="padding:10px 0 0 0;">
+			<input id="ID" name="ID" class="textbox" hidden="true"/>
+			<!--
+			<input id="LinkComponentText" name="LinkComponentText" class="textbox" hidden="true"/>
+			<input id="SubMenuOfText" name="SubMenuOfText" class="textbox" hidden="true"/>
+			<input id="WorkFlowText" name="WorkFlowText" class="textbox" hidden="true"/>
+			<input id="WorklistText" name="WorklistText" class="textbox" hidden="true"/>
+			<input id="ChartText" name="ChartText" class="textbox" hidden="true"/>
+			<input id="ChartBookText" name="ChartBookText" class="textbox" hidden="true"/>-->
+			
+			<!--<div class="hisui-panel"  data-options="iconCls:'icon-save',headerCls:'panel-header-gray',title:'常用'">-->
+			<table class="i-searchbox">
+				<!--
+				<tr><td></td><td><a href="javascript:void(0);" id="edit-win-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">更新</a></td></tr>
+				-->
+				<tr>
+					<td class="i-label">描述</td>
+					<td><input id="Caption" name="Caption" autocomplete="off" class="textbox tb200" /></td>
+					<td>菜单显示名称. 如 诊断</td>
+				</tr>
+				<tr>
+					<td class="i-label">代码</td>
+					<td><input id="Name" name="Name" autocomplete="off" class="textbox tb200" /></td>
+					<td>	菜单代码.  如 SITECODE.Module.Caption  组件菜单名开始用System.  如System.ComponentName.Caption</td>
+				</tr>
+				<tr class="ele-toggle" data-toggle="other,comp">
+					<td class="i-label">连接组件</td>
+					<td><input id="LinkComponent" name="LinkComponent" autocomplete="off"/></td>
+					<td>组件名</td>
+				</tr>
+				<tr>
+					<td class="i-label">
+						<span class="ele-toggle" data-toggle="other">链接CSP或界面</span>
+						<span class="ele-toggle" data-toggle="csp,comp">链接CSP</span>
+						<span class="ele-toggle" data-toggle="clickonce">clickonce路径</span>
+						<span class="ele-toggle" data-toggle="url">url链接</span>
+						<span class="ele-toggle" data-toggle="exe">exe路径</span>
+					</td>
+					<td><input id="LinkUrl" name="LinkUrl" autocomplete="off" class="textbox tb200" /></td>
+					<td>
+						<span class="ele-toggle" data-toggle="other">如果是组件应填写websys.default.csp. 也可挂第三方界面.如https://www.baidu.com</span>
+						<span class="ele-toggle" data-toggle="csp">链接CSP</span>
+						<span class="ele-toggle" data-toggle="comp">websys.default.csp(传统组件)，websys.default.jquery.csp(easyui风格组件)，websys.default.hisui.csp(hisui风格组件)</span>
+						<span class="ele-toggle" data-toggle="clickonce">如：./csp/test.application</span>
+						<span class="ele-toggle" data-toggle="url">如：http://www.baidu.com</span>
+						<span class="ele-toggle" data-toggle="exe">如：chrome.exe或d:/test/test.exe</span>
+					</td>
+				</tr>
+				<tr>
+					<td class="i-label">菜单组</td>
+					<td><input id="SubMenuOf" name="SubMenuOf" autocomplete="off" /></td>
+					<td></td>
+				</tr>
+				<!--新增操作 允许直接选择安全组 授权-->
+				<tr id="authtr">
+					<td class="i-label">授权</td>
+					<td>
+						<div id="auth-groups"></div>
+						<input id="AuthGroup" name="AuthGroup" autocomplete="off" />
+					</td>
+					<td>增加菜单的同时授权给这些安全组</td>
+				</tr>
+				<tr>
+					<td class="i-label">菜单显示顺序</td>
+					<td><input id="Sequence" name="Sequence" autocomplete="off" class="textbox tb200" /></td>
+					<td>菜单显示顺序. 如 z1</td>
+				</tr>
+			</table>
+			<div id="edit-sep" class="ele-toggle" data-toggle="other,comp,csp">
+				<div id="edit-sep-line"></div>
+				<div id="edit-sep-text">隐藏更多</div>
+			</div>
+			<div id="edit-more">	
+				<table class="i-searchbox" >
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">图标</td>
+						<td><input id="Image" name="Image" autocomplete="off" class="textbox tb200" /></td>
+						<td></td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">M类方法</td>
+						<td><input id="Method" name="Method" autocomplete="off" class="textbox tb200" /></td>
+						<td>点击菜单时，先调用此方法再跳转</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">快捷键</td>
+						<td><input id="ShortcutKey" name="ShortcutKey" autocomplete="off" class="textbox tb200" /></td>
+						<td></td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp,clickonce,url">
+						<td class="i-label">在新的窗口打开</td>
+						<td><input id="ShowInNewWindow" name="ShowInNewWindow" autocomplete="off" class="textbox tb200" /></td>
+						<td>点菜单时打开位置。如 top=100,left=100,width=600,height=400 空则不开新窗口</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other">
+						<td class="i-label">工作流</td>
+						<td><input id="WorkFlow" name="WorkFlow" autocomplete="off" /></td>
+						<td></td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other">
+						<td class="i-label">工作列表</td>
+						<td><input id="Worklist" name="Worklist" autocomplete="off" /></td>
+						<td></td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other">
+						<td class="i-label">图表</td>
+						<td><input id="Chart" name="Chart" autocomplete="off" /></td>
+						<td></td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other">
+						<td class="i-label">图表组定义</td>
+						<td><input id="ChartBook" name="ChartBook" autocomplete="off" /></td>
+						<td></td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other">
+						<td class="i-label">侧菜单组</td>
+						<td><input id="MenuGroup" name="MenuGroup" autocomplete="off" /></td>
+						<td>界面左侧手风琴效果</td>
+					</tr>
+					<tr>
+						<td class="i-label">表达式</td>
+						<td><input id="ValueExpression" name="ValueExpression" autocomplete="off" class="textbox tb200" /></td>
+						<td>
+							<span class="ele-toggle" data-toggle="other,csp,comp">调用界面时的参数。如"&AdmType=I"</span>
+							<span class="ele-toggle" data-toggle="url,exe,clickonce">如："&admNo=${EpisodeId}&admTimes=${AdmTimes}</span>
+						</td>
+					</tr>
+					<tr>
+						<td class="i-label">条件表达式</td>
+						<td><input id="ConditionalExpression" name="ConditionalExpression" autocomplete="off" class="textbox tb200" /></td>
+						<td>如果要隐藏菜单则s val=0。 if (Sex=1) { Set val=0} else {Set val=1}</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">javascript函数</td>
+						<td><input id="JavascriptFunction" name="JavascriptFunction" autocomplete="off" class="textbox tb200" /></td>
+						<td>点击菜单时调用的Javascripts方法</td>
+					</tr>
+					<!--系统外链接 直接用与病人无关或有关 选则js函数-->
+					<tr class="ele-toggle" data-toggle="url,exe,clickonce">
+						<td class="i-label">是否与病人相关</td>
+						<td><input type="checkbox" class="hisui-checkbox" id="IfLinkAdm"/></td>
+						<td></td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">JS文件名</td>
+						<td><input id="JavascriptFileName" name="JavascriptFileName" autocomplete="off" class="textbox tb200" /></td>
+						<td>JS文件名。引用web/[SITECODE]/scripts/下JS文件</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">目标窗口或Frame</td>
+						<td><input id="Target" name="Target" autocomplete="off" class="textbox tb200" /></td>
+						<td>菜单打开位置。 如 TRAK_hidden</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">是否局部刷新</td>
+						<td><input id="IsXhrRefresh" name="IsXhrRefresh" type="checkbox" /></td>
+						<td>如果是局部刷新，请实现javascript方法xhrRefresh(obj)。obj包含papmi:papmi,adm:adm,mradm:mradm,"AdmType":"I"。附加把表达式转成json传入</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">帮助文件代码</td>
+						<td><input id="HelpCode" name="HelpCode" autocomplete="off" class="textbox tb200" /></td>
+						<td>定义帮助文件代码</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,comp,csp">
+						<td class="i-label">帮助提示层位置</td>
+						<td><input id="HelpStyle" name="HelpStyle" autocomplete="off" class="textbox tb200" value="bottom:10px;right:10px" /></td>
+						<td>帮助块显示位置。如 bottom:10px;right:10px</td>
+					</tr>
+				</table>
+			</div>
+		</form>
+
+	</div> <!-- end eait-win -->
+	
+	<div id="menu-security-win" class="" style="padding:0 10px;" data-options="modal:true,draggable:false,closed:true,iconCls:'icon-w-paper'">
+		<input type="text" hidden="true" id="menu-security-win-id"></input>
+		<div style="line-height:30px;padding-top:5px;">
+			<span class="d-label">菜单标题:</span><span id="menu-security-win-caption"></span>
+		</div>
+		<div style="line-height:30px;padding-bottom:5px;">
+			<span class="d-label">菜单名称:</span><span id="menu-security-win-name"></span>
+		</div>
+		<div id="menu-security-win-list-tb" style="padding:4px;">
+			<input id="menu-security-win-search"/>
+		</div>
+		<table id="menu-security-win-list"></table>
+	</div><!-- end eait-win -->
+	</script>
+    <script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+	<script language='javascript' src='../scripts/websys.jquery.js'></script>
+	
+	<script type="text/javascript" src="../scripts/websys.menu.dic.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/websys.menu.mgr.js"></script>
+	
+	
+	<!--
+	<script type="text/javascript" src="http://127.0.0.1/dthealth/web/scripts/websys.menu.mgr.js"></script>-->
+</body>
+</html>

@@ -1,0 +1,73 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+	s action=$g(%request.Data("action",1))
+	i action="GetBedList" {
+		s SearchByLoc=$Get(%request.Data("SearchByLoc",1))
+		s Searchbyward=$Get(%request.Data("Searchbyward",1))
+		s CTLoc=$Get(%request.Data("CTLoc",1))
+		s WardID=$Get(%request.Data("WardID",1))
+		s FindAll=$Get(%request.Data("FindAll",1))
+		s Findempty=$Get(%request.Data("Findempty",1))
+		s Findnotempty=$Get(%request.Data("Findnotempty",1))
+		s SearchToday=$Get(%request.Data("SearchToday",1))
+		s SearchTom=$Get(%request.Data("SearchTom",1))
+		
+		s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","Findbed",0,0,"",SearchByLoc,Searchbyward,CTLoc,WardID,FindAll,Findempty,Findnotempty,SearchToday,SearchTom)
+	    w "{GetBedList:'"_result.Read()_"'}"
+	}
+	if action="GetConfig" {
+	s ConfigStr=$g(^DHCBedManager("AppLoc"))
+	w "{Config:'"_ConfigStr_"'}"
+}
+	if action="SetConfig" {
+	s ConfigStr=$Get(%request.Data("ConfigStr",1))
+	s ^DHCBedManager("AppLoc")=ConfigStr
+	w "{success:'true'}"
+}
+i action="GetCurWardbed" {
+		s CTWardID=$Get(%request.Data("CTWardID",1))
+		s Onlybed=$Get(%request.Data("Onlybed",1))
+		s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","FindCurWardbed",0,0,CTWardID,"")
+	    
+	    w "{CurWardBedList:'"_result.Read()_"'}"
+}
+i action="GetHospital" {
+	s Hospitalid=$Get(%request.Data("Hospitalid",1))
+	s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","GetControlHos",0,0,Hospitalid)
+	w "{HospList:'"_result.Read()_"'}"
+}
+i action="GetWard" {
+	
+	s Hosid=$Get(%request.Data("Hosid",1))
+	if (Hosid="")
+	{
+	s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","GetControlWard",0,0,"")
+	}
+	else
+	{
+	s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","GetControlWard",0,0,Hosid)	
+		}
+	w "{WardList:'"_result.Read()_"'}"
+}
+//获取申请转科换床的患者
+i action="GetAppPat" {
+	s CTWardID=$Get(%request.Data("CTWardID",1))
+	s UnAudit=$Get(%request.Data("UnAudit",1))
+	s Searchdata=$Get(%request.Data("Searchdata",1))
+	if (CTWardID="")
+	{
+	s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","FindAppPat",0,0,Searchdata,"",UnAudit)
+	}
+	else
+	{
+	s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","FindAppPat",0,0,Searchdata,CTWardID,UnAudit)	
+		}
+	w "{PatList:'"_result.Read()_"'}"
+}
+//获取已经预约的床位
+i action="GetAppBed" {
+	s CTWardID=$Get(%request.Data("CTWardID",1))
+	s result=##class(Nur.DHCBedManager).WriteJSONDataByQuery("Nur.DHCBedManager","FindCurWardAppbed",0,0,CTWardID)
+	w "{AppBedList:'"_result.Read()_"'}"
+}
+</SERVER>

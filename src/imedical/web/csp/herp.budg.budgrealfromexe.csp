@@ -1,0 +1,84 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+	s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+	s bfyear=$Get(%request.Data("bfyear",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s year=$Get(%request.Data("year",1))
+	s Year=$Get(%request.Data("Year",1))
+	s Name=$Get(%request.Data("Name",1))
+	s Code=$Get(%request.Data("Code",1))
+	
+	s name=$Get(%request.Data("name",1))
+    s code=$Get(%request.Data("code",1))
+	s rfcode=$Get(%request.Data("rfcode",1))
+	s rfname=$Get(%request.Data("rfname",1))
+	s CompName=$Get(%request.Data("CompName",1))
+	i CompName="" s CompName=hospid
+	
+	i action="list" d
+	.w ##class(herp.budg.udata.uBudgRealFrom).List(hospid,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgRealFrom).UpdateRec(rowid,code,name,CompName)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgRealFrom).InsertRec(code,name,CompName)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgRealFrom).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+//	i action = "edit" d
+//	.s result = ##class(dhc.dura.udata.uWHouseState).UpdateRec(rowid,YearMonth,HouseDr)
+//	.i result = 0 d
+//	..w "{success:'true',info:''}"
+//	.e  d
+//	..w "{success:'false',info:'"_result_"'}"
+//
+//	i action = "cancel" d
+//	.s result = ##class(dhc.dura.udata.uWHouseState).CancelAccount(rowid)
+//	.i result = 0 d
+//	..w "{success:'true',info:''}"
+//	.e  d
+//	..w "{success:'false',info:'"_result_"'}"
+//
+//	i action = "account" d
+//	.s result = ##class(dhc.dura.udata.uWHouseState).Account(rowid)
+//	.i result = 0 d
+//	..w "{success:'true',info:''}"
+//	.e  d
+//	..w "{success:'false',info:'"_result_"'}"
+</script>

@@ -1,0 +1,82 @@
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+
+n PatientID,cmp,dtmLIST,chLIST,EpisodeID,EpisodesAll,ChartID,Context,frm,Start
+n Columns,mradm,itmparams,itm,ItemID,Type,resultslist
+
+s DischEpisodes=$g(%request.Data("DischEpisodes",1))
+s PatientID=$g(%request.Data("PatientID",1))
+s EpisodeID=$g(%request.Data("EpisodeID",1))
+s EpisodesAll=$g(%request.Data("EpisodesAll",1))
+s ChartID=$g(%request.Data("ChartID",1))
+s mradm=$g(%request.Data("mradm",1))
+s ItemID=$g(%request.Data("ItemID",1))
+s Type=$g(%request.Data("Type",1))
+s itm=$g(%request.Data("Tabularitm",1))
+s itmparams=$g(%request.Data("Tabularitmparams",1))
+s Context=$g(%request.Data("Context",1))
+s Start=$g(%request.Data("Start",1))
+s Columns=$g(%request.Data("Columns",1))
+i Columns="" s Columns=8
+s pageNum=$g(%request.Data("PageNumber",1))
+; indicate we are on the popup page (pap code, I know, it tells the component to show the 'previous' button or not..
+s %request.Data("ScrollingPopupPage",1)=1
+w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+w "var ChartID="""_$g(ChartID)_""";"_$c(13,10)
+w "var PatientID="""_$g(PatientID)_""";"_$c(13,10)
+w "var EpisodeID="""_$g(EpisodeID)_""";"_$c(13,10)
+w "var EpisodesAll="""_$g(EpisodesAll)_""";"_$c(13,10)
+w "</SCRIPT>"_$c(13,10)
+
+
+i +$g(%request.Data("PatientBanner",1))&(PatientID'="") d
+. s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+. i cmp d cmp.Show(),cmp.%Close()
+
+s frm=##Class(websys.Component).OpenName("OEOrdItem.ListTabularEMR")
+i frm d frm.Show()
+
+s %request.Data("catgsID",1)=","_$p(itmparams,"|",1)_",",%request.Data("EpisodesAll",1)=$p(itmparams,"|",2)
+;s %request.Data("markasread",1)=##Class(epr.Chart).CanMarkAsRead($g(EpisodeID),%session.Get("LOGON.USERID"))
+s %request.Data("userid",1)=%session.Get("LOGON.USERID")
+; Log 30556 - AI - 18-12-2002 : Add functionality for hospital list and the four new checkboxes.
+s %request.Data("categorylist",1)=","_$p(itmparams,"|",1)_","
+s %request.Data("EpisodesAll",1)=$p(itmparams,"|",2)
+s %request.Data("hospitallist",1)=","_$p(itmparams,"|",3)_","
+s %request.Data("DisplayUnverifiedResults",1)=$p(itmparams,"|",4)
+s %request.Data("TagResultsOnly",1)=$p(itmparams,"|",5)
+s %request.Data("OnlyUnreadResults",1)=$p(itmparams,"|",6)
+s %request.Data("ShowVIcon",1)=$p(itmparams,"|",7)
+; Log 30564 - AI - 06-02-2003 : Add functionality for "Hide Time in Link" checkbox.
+s %request.Data("HideTimeInLink",1)=$p(itmparams,"|",8)
+; Log 30558 - AI - 14-03-2003 : Add functionality for "Include 'r' Prefix in front of date" checkbox.
+s %request.Data("IncludeRPrefix",1)=$p(itmparams,"|",9)
+; Log 41352 - AI - 16-02-2004 : Add the new subcategories data. Only need IDs List - $p($p(itmparams,"|",10),"*",2).
+s %request.Data("OrderSubcategories",1)=$p($p(itmparams,"|",10),"*",2)
+; Log 60704 YC - no category checkbox
+;s %request.Data("noCats",1)=$s($p(itmparams,"|",12)=0:"N",1:"Y")
+s ResultStatusList=$p(itmparams,"|",13)
+; Log 64346 YC - If only display unverified results then ResultStatusList is only entered
+i $p(itmparams,"|",4)="Y" i (((","_ResultStatusList_",")[",E,")!(ResultStatusList="")) s ResultStatusList="E"
+
+; (PatientID,EpisodeID,mradm,catgsID,dateto,datefrom,EpisodesAll,markasread,userid,dtmLIST,testLIST,hospsID,DisplayUnverifiedResults,TagResultsOnly,OnlyUnreadResults,ShowVIcon)
+; Log 41352 - AI - 16-02-2004 : Add the new subcategories data. Only need IDs List - $p($p(itmparams,"|",10),"*",2).
+d ##Class(epr.LabGraphTestSets).TabularResultsGet(PatientID,EpisodeID,mradm,","_$p(itmparams,"|",1)_",","","",$p(itmparams,"|",2),0,%session.Get("LOGON.USERID"),.dtmLIST,","_$p(itmparams,"|",3)_",",$p(itmparams,"|",4),$p(itmparams,"|",5),$p(itmparams,"|",6),$p($p(itmparams,"|",10),"*",2),Context,$s($p(itmparams,"|",12)=0:"N",1:"Y"),ResultStatusList)
+; (dtmLIST,heading,ChartID,ItemID,Type,Context)
+s ^zPhil("tab")=ChartID_"^"_Start_"^"_ItemID_"^"_$p(itm,"^",2)_"^"_Context_"^"_$p(itmparams,"|",7)_"^"_$p(itmparams,"|",8)
+;m ^zPhil("tab")=dtmLIST
+; Log 39287 - AI - 03-10-2003 : Add ColumnWidth - $p 12 of itm - built in chartSettingsSelect as itmList(sequence).
+d ##Class(epr.LabGraphTestSets).TabularResultsShow(.dtmLIST,"",ChartID,ItemID,Type,Context,$p(itmparams,"|",7),$p(itmparams,"|",8),$p(itm,"^",7),Start,$p(itmparams,"|",9),$p(itm,"^",12),pageNum,ResultStatusList)
+; end Logs 30558, 30564, 39287
+i frm d frm.%Close()
+
+</SERVER>
+</BODY>
+</HTML>

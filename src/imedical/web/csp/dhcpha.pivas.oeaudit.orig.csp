@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!--配伍审核
+	csp:dhcpha.pivas.oeaudit.csp
+	js:scripts/pharmacy/pivas/oeaudit.js
+--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD>
+</TRAK:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="/dthealth/web/scripts/pharmacy/plugins/Font-Awesome-4.6.3/css/font-awesome.min.css" />
+   	<link rel="stylesheet" href="../scripts/dhcdoc/ipdoc/jquery.webui-popover.min.css">
+	<script src="../scripts/dhcdoc/ipdoc/jquery.webui-popover.min.js"></script> 
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/dhcpha.hisui.css" ></script> 
+    <script type="text/javascript" src="../scripts/dhcst/EasyUI/Plugins/dhcst.plugins.js"></script> 
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.dtpass.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.mkpass.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+	<script type="text/javascript" src="../scripts/pharmacy/pivas/oeaudit.js"></script>
+ </HEAD>
+ <style type="text/css"  >  
+	.webui-popover .webui-popover-content {
+	    padding: 1px;
+	    overflow: auto;
+	    display: block;
+	}
+	.webui-popover-title {
+	    font-size: 14px;
+	    font-weight: 700;
+	    line-height: 18px;
+	    background-color: white;
+	    padding: 0px 0px;
+	    margin: 0px;
+	    border-bottom: 1px solid rgb(242, 242, 242);
+	}
+	.dhcpha-i{
+		font-size:20px;
+		line-height:1.75;
+		color:#509DE1;
+	}
+	.dhcpha-i:hover{
+		color:black;
+		cursor:help;
+	}
+	#query-condition td{
+		text-align:right;	
+	}
+</style>
+<body>
+	<div class="hisui-layout" fit="true">
+	    <div data-options="region:'west',title:'配伍审核',split:true,headerCls:'panel-header-gray',collapsible:true" style="width:275px">
+			<div class="hisui-layout" data-options="fit:true" >
+				<div data-options="region:'north'"  border="false" > 
+					<table id="query-condition" class="dhcpha-height-12">
+						<tr>
+							<td>
+								<label for="dateStart">用药开始日期</label>
+								<input id="dateStart" class="hisui-datebox" type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="dateEnd">用药结束日期</label>
+								<input id="dateEnd" class="hisui-datebox" type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbLocGrp">科室组</label>
+								<input id="cmbLocGrp"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbWard">病区</label>
+								<input id="cmbWard"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbPivaCat">配液大类</label>
+								<input id="cmbPivaCat"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbWorkType">集中配制</label>
+								<input id="cmbWorkType"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbPriority">医嘱优先级</label>
+								<input id="cmbPriority"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbPassStat">审核状态</label>
+								<input id="cmbPassStat"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbPassResult">审核结果</label>
+								<input id="cmbPassResult"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmbNurAudit">护士审核</label>
+								<input id="cmbNurAudit"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label for="cmgIncItm">药品</label>
+								<input id="cmgIncItm"  type="text" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<a  class="hisui-linkbutton"  iconCls="icon-search" plain="false" id="btnFind">查询</a>	
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center'" border="false"> 
+					<div id="tabsone" class="hisui-tabs"  fit="true" > 
+						<div data-options="title:'病区列表'">
+							<table id="gridWard"></table>
+						</div>
+						<div data-options="title:'按登记号'">
+							<table id="gridAdm" ></table>
+						</div>
+						</div>
+					</div> 
+				</div>                    
+	    </div>   
+	    
+	    <div data-options="region:'center',title:'医嘱明细',split:false,headerCls:'panel-header-gray'">
+		      	<div id="gridOrdItem" ></div>
+	    </div> 
+	</div>
+</body>		  
+<div id="gridAdmBar">
+	<div>
+		<div><input id="txtPatNo" type="text" class="hisui-validatebox" placeholder="登记号..." /></div>
+	</div>
+</div>
+<div id="gridOrdItemBar">
+	<span><a class="hisui-linkbutton" iconCls='icon-search' plain="true" id="btnRefresh">查询明细</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-ok' plain="true" id="btnAuditOk">审核通过</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-no' plain="true" id="btnAuditNo">审核拒绝</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-ok' plain="true" id="btnPackNor">正常打包</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-no' plain="true" id="btnPackUnNor">非正常打包</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-undo' plain="true" id="btnCancelAudit">取消审核</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-tip' plain="true" id="btnAnalyPresc">合理分析</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-search' plain="true" id="btnPrBroswer">病历浏览</a></span>
+	<span><a class="hisui-linkbutton" iconCls='icon-resort' plain="true" id="btnAuditRecord">审核记录</a></span>
+	<span style="display:block;float:right"><a class="hisui-linkbutton" iconCls='icon-help' plain="true" id="btnHelp"></a></span>
+</div>
+<div id="helpWindowDiv" class="hisui-window" title=' 帮助信息' style="width:400px;height:200px;color:white" 
+	data-options="closable:true,modal:false,closed:true,collapsible:false,iconCls:'icon-help'">
+	<div style="color:black;font-family: Microsoft YaHei;font-weight: bolder;">
+		<div style="width:100%;text-align:center;">
+			<div style="width:20%;height:30px;line-height:30px;background:#F9E701;float:left">临时医嘱</div>
+			<div style="width:20%;height:30px;line-height:30px;background:#019BC1;float:left">审核通过</div>
+			<div style="width:20%;height:30px;line-height:30px;background:#C33A30;float:left">审核拒绝</div>
+			<div style="width:20%;height:30px;line-height:30px;background:#009B6B;float:left">正常打包</div>
+			<div style="width:20%;height:30px;line-height:30px;background:#E46022;float:left">非正常打包</div>
+		</div>
+		<div style="clear: both;">
+			<div style="padding:10px 0px 0px 10px">
+				用药日期条件:长期医嘱用药日期为首次用药日期
+			</div>
+			<div style="padding:5px 0px 0px 10px">
+			　非正常打包:只能按单组进行
+			</div>
+			<div style="padding:5px 0px 0px 10px">
+			　　审核拒绝:只能按单组进行
+			</div>
+			<div style="padding:5px 0px 0px 10px">
+			　　TPN指标:点击处方号显示指标明细
+			</div>
+		</div>
+	</div>
+</div>
+<div id="reasonSelectDiv" class="hisui-dialog" title='选择原因' style="width:1000px;height:500px;color:white" 
+	data-options="closable:true,modal:true,closed:true,collapsible:false,resizable:true,cache: false,
+	buttons:[{
+		text:'确认',
+		iconCls:'icon-save',
+		handler:function(){
+			AuditNo();
+		}
+	},{
+		text:'取消',
+		iconCls:'icon-cancel',
+		handler:function(){
+			$('#reasonSelectDiv').dialog('close');
+		}
+	}]">
+	<div class="hisui-layout" fit="true" border="false">
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'">
+			<table id="treeGridReason" ></table>
+		</div>
+		<div data-options="region:'east',split:true,headerCls:'panel-header-gray',width:400">
+			<div class="hisui-layout" fit="true" border="false">
+				<div data-options="region:'center',title:'备注模板列表',split:true,headerCls:'panel-header-gray'">
+					<table id="gridRemark" ></table>
+				</div>
+				<div data-options="region:'south',title:'备注',split:false,headerCls:'panel-header-gray',height:200">
+					<textarea id="txtReasonNotes" style="width:375px;height:150px"></textarea>
+				</div> 
+			</div>
+		</div> 
+	</div>
+</div>
+
+</HTML>

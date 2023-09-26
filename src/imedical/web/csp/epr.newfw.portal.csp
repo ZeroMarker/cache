@@ -1,0 +1,68 @@
+<HTML>
+<HEAD>
+
+<TITLE>	Portal </TITLE>
+  	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/1xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	
+ 	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/portal/cookie.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/js/portal/Portal.js"></script>
+    <script type="text/javascript" src="../scripts/epr/js/portal/PortalColumn.js"></script>
+    <script type="text/javascript" src="../scripts/epr/js/portal/Portlet.js"></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/js/portal/portal.css" />
+    <script type="text/javascript" src="../scripts/epr/js/portal/sample.js"></script>
+	
+	<!--add by loo on 2010-4-26-->
+ 	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("episodeID",1),"")
+		s isArchived = ##Class(EPRservice.Quality.BOQualityService).CheckArchived(episodeID)	//(0:Un-Archived 1:Archived)
+		s isQualityFinalReportActived = ##class(EPRmeta.SysOption).GetOptionValueByName("QualityFinalReportActived") //{Y,N}
+	</script>
+</HEAD>
+
+<BODY>
+	<script type="text/javascript">
+		var patientID = '#($Get(%request.Data("patientID",1),""))#';
+		var episodeID = '#(episodeID)#';
+		var isArchived = '#(isArchived)#';
+		var isQualityFinalReportActived = '#(isQualityFinalReportActived)#';
+		var configColName = 'configCol';
+		var configPenalPropertyName = 'configPenalProperty';
+		//读取cookie的配置属性
+    	var configCol = getCookie(configColName);
+		var configPenalProperty = getCookie(configPenalPropertyName);
+		if(configCol == null || configPenalProperty == null)
+		{
+			//edit by loo on 2010-8-24
+			//bug #1084,要求拆分常用模板?将常用病历和最近操作历史记录拆分成两个Portal
+			//如需要显示最近操作记录?屏蔽掉下两行代码?然后去掉下面第四行和第五行的屏蔽
+			
+			//edit by loo on 2010-9-8
+			//新增质控消息列表
+		    //configCol = 'col_1^panel_1^panel_5#col_2^panel_2^panel_4';
+			//configPenalProperty = 'panel_1^menu_1^true^403#panel_5^menu_5^true^120#panel_2^menu_2^true^403#panel_4^menu_4^true^120';
+			
+			//configCol = 'col_1^panel_5^panel_1#col_2^panel_2^panel_3^panel_4';
+			//configPenalProperty = 'panel_5^menu_5^true^120#panel_1^menu_1^true^403#panel_2^menu_2^true^203#panel_3^menu_3^true^200#panel_4^menu_4^true^120';
+		
+			//<2010-9-30><loo><出院病人,用终末质控评价列表替代质控提示列表>
+			if((isArchived == 1)&&(isQualityFinalReportActived == 'Y'))
+			{
+				//已经出院
+				configCol = 'col_1^panel_6^panel_5#col_2^panel_2^panel_4';
+				configPenalProperty = 'panel_6^menu_6^true^403#panel_5^menu_5^true^120#panel_2^menu_2^true^403#panel_4^menu_4^true^120';
+			}
+			else
+			{
+				configCol = 'col_1^panel_1^panel_5#col_2^panel_2^panel_4';
+				configPenalProperty = 'panel_1^menu_1^true^403#panel_5^menu_5^true^120#panel_2^menu_2^true^403#panel_4^menu_4^true^120';
+			}
+		}
+	</script>
+</BODY>
+</HTML>

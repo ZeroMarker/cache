@@ -1,0 +1,221 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	Cache Server Page </title><csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!doctype html>
+<html>
+<head>
+	<title>检验标本拒收处理</title>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<HISUI />
+	<style>
+		.r-label{
+			color:#666;	
+		}
+		#RepResult{
+			line-height:25px;
+			padding:10px;	
+		}
+		.container{
+			width:100%;
+			max-width:1300px;
+			margin:0 auto;	
+		}
+		#SendHistory{
+			overflow:hidden;	
+		}
+	</style>
+	<server>
+		s (UserId,CareProv,CarProvTpDR,Type,HospId)=""
+		set UserId=%session.Get("LOGON.USERID")
+		set HospId=%session.Get("LOGON.HOSPID")
+		set UserCode=%session.Get("LOGON.USERCODE")
+		set CareProv=$p(^SSU("SSUSR",UserId),"^",14)
+		i CareProv>0 Set CarProvTpDR = $p(^CTPCP(CareProv,1),"^",4) 
+		i CarProvTpDR>0 Set Type = $p(^CT("CPT",CarProvTpDR),"^",4)
+		
+		set EpisodeID = %request.Get("EpisodeId")
+		set VisitNumberRejectSpecDR = %request.Get("VisitNumberRejectSpecDR")
+		Set DetailsId = $g(%request.Data("MsgDetailsId",1))
+
+		set PatientID=$p(^PAADM(EpisodeID),"^",1)
+		set AdmType=$p(^PAADM(EpisodeID),"^",2)
+		set mradm=$P(^PAADM(EpisodeID),"^",61)
+		
+		s AdmTypeDet=AdmType
+		if AdmTypeDet="E"{
+			if ##class(web.DHCADMVisitStat).GetStayStatus(EpisodeID)>0 set AdmTypeDet="EI"
+			else  s AdmTypeDet="EO"
+		}
+		
+		s RequireEditEmr=##class(web.DHCAntCVOptions).GetBaseOpt("RequireEditEmr"_AdmTypeDet)
+		s TipEditEmr=##class(web.DHCAntCVOptions).GetBaseOpt("TipEditEmr"_AdmTypeDet)
+		s ShowEditEmr=##class(web.DHCAntCVOptions).GetBaseOpt("ShowEditEmr"_AdmTypeDet)
+		s EmrEditLink=##class(web.DHCAntCVOptions).GetBaseOpt("EmrEditLink"_AdmTypeDet)
+		s PopupEmrOnExec=##class(web.DHCAntCVOptions).GetBaseOpt("PopupEmrOnExec"_AdmTypeDet)
+		s EmrViewLink=##class(web.DHCAntCVOptions).GetBaseOpt("EmrViewLink")
+		s ShowTransAdvice=##class(web.DHCAntCVOptions).GetBaseOpt("ShowTransAdvice")
+
+		s RequireEditOrder=##class(web.DHCAntCVOptions).GetBaseOpt("RequireEditOrder"_AdmTypeDet)
+		s TipEditOrder=##class(web.DHCAntCVOptions).GetBaseOpt("TipEditOrder"_AdmTypeDet)
+		s ShowEditOrder=##class(web.DHCAntCVOptions).GetBaseOpt("ShowEditOrder"_AdmTypeDet)
+		s OrderEditLink=##class(web.DHCAntCVOptions).GetBaseOpt("OrderEditLink")
+		s CYOrderEditLink=##class(web.DHCAntCVOptions).GetBaseOpt("CYOrderEditLink")
+		s ReceiveMode=##class(web.DHCAntCVOptions).GetBaseOpt("ReceiveMode")
+		s AllowFwDoc=##class(web.DHCAntCVOptions).GetBaseOpt("AllowFwDoc")
+		
+		s AllowEditEmrInOtherLoc=##class(web.DHCAntCVOptions).GetBaseOpt("AllowEditEmrInOtherLoc")
+		s AllowEditOrderInOtherLoc=##class(web.DHCAntCVOptions).GetBaseOpt("AllowEditOrderInOtherLoc")
+		
+		s ShowProcess=%request.Get("ShowProcess")'="0"
+		
+	</server>
+    <script language="javascript" type="text/javascript">
+    	var GV={};
+		
+		//用户
+		GV.UserId="#(%session.Get("LOGON.USERID"))#";
+		GV.GroupId="#(%session.Get("LOGON.GROUPID"))#";
+		GV.HospId="#(%session.Get("LOGON.HOSPID"))#";
+		GV.LocId="#(%session.Get("LOGON.CTLOCID"))#";
+		GV.UserCode="#(%session.Get("LOGON.USERCODE"))#";
+		GV.CareProvType="#(Type)#";
+		
+		GV.VisitNumberRejectSpecDR="#(VisitNumberRejectSpecDR)#";
+		GV.DetailsId="#(DetailsId)#";
+
+		//就诊
+		GV.EpisodeID="#(EpisodeID)#";
+        GV.PatientID="#(PatientID)#";
+        GV.mradm="#(mradm)#";
+        GV.AdmType="#(AdmType)#";
+
+		GV.openMode="#(%request.Get("openMode"))#";
+		GV.openMode=GV.openMode||2;		//1直接内嵌iframe 2模态框iframe-消息 3window.open 4window.showModalDialog 5
+		
+		GV.RequireEditEmr="#(RequireEditEmr)#";
+		GV.TipEditEmr="#(TipEditEmr)#";
+		GV.ShowEditEmr="#(ShowEditEmr)#";
+		GV.PopupEmrOnExec="#(PopupEmrOnExec)#";
+		GV.ShowTransAdvice="#(ShowTransAdvice)#";
+		GV.EmrEditLink="#($zcvt(EmrEditLink,"O","JS"))#";
+		GV.EmrViewLink="#($zcvt(EmrViewLink,"O","JS"))#";
+		
+		GV.RequireEditOrder="#(RequireEditOrder)#";
+		GV.TipEditOrder="#(TipEditOrder)#";
+		GV.ShowEditOrder="#(ShowEditOrder)#";
+		GV.OrderEditLink="#($zcvt(OrderEditLink,"O","JS"))#";
+		GV.CYOrderEditLink="#($zcvt(CYOrderEditLink,"O","JS"))#";
+		
+		GV.ReceiveMode="#(ReceiveMode)#";
+		
+		GV.AllowFwDoc="#(AllowFwDoc)#";
+		
+		GV.AllowEditEmrInOtherLoc="#(AllowEditEmrInOtherLoc)#";
+		GV.AllowEditOrderInOtherLoc="#(AllowEditOrderInOtherLoc)#";
+		
+		GV.ShowProcess="#(ShowProcess)#";
+		
+	</script>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px 10px 0;">
+		<div class="container" style="height:140px">
+			<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,title:'基本信息',iconCls:'icon-paper'">
+				<table style="width:100%;line-height:30px;">
+					<tr>
+						<td class="r-label">登记号:</td><td class="l-value"><span id="IDValField" class="data-ele"  data-key="PAPMINO"></span></td>
+						<td class="r-label">姓名:</td><td class="l-value"><span id="PatNameValField" class="data-ele"  data-key="patName"></span></td>
+						<td class="r-label">性别:</td><td class="l-value"><span id="SexValField"  class="data-ele" data-key="gender"></span></td>
+						<td class="r-label">年龄:</td><td class="l-value"><span id="AgeValField"  class="data-ele" data-key="age"></span></td>
+					</tr>
+					<tr>
+						<td class="r-label"><span class="data-ele" data-key="repTypeDesc"></span>号:</td><td class="l-value"><span id="BBNoValField"  class="data-ele" data-key="repLabno"></span></td>
+						<td class="r-label">病案号:</td><td class="l-value"><span id="MedCareValField"  class="data-ele" data-key="patMrNo"></span></td>
+						<td class="r-label">申请科室:</td><td class="l-value"><span id="AppDepValField"  class="data-ele" data-key="ordLocDesc"></span></td>
+						<td class="r-label">申请医生:</td><td class="l-value"><span id="AppDocValField"  class="data-ele" data-key="ordDocName"></span></td>
+					</tr>
+					<tr>
+						<td class="r-label">联系电话:</td><td class="l-value"><span id="TelValField"  class="data-ele" data-key="patPhone"></span></td>
+						<td class="r-label">项目:</td><td colspan="5" class="l-value"><span id="ArcItemValField"  class="data-ele" data-key="ordDesc"></span></td>
+						
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="container" style="height:90px;margin-top:10px">
+			<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,title:'拒收原因',iconCls:'icon-paper'">
+				<div id="RepResult" class="data-ele" data-key="repResult" data-mth="html" ></div>
+			</div>
+		</div>
+		<csp:if Condition=%request.Get("SendTime")'="">
+			<div class="container" style="height:200px;margin-top:10px">
+				<div id="SendHistory-P" class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,title:'发送历史',iconCls:'icon-paper'">
+					<div id="SendHistory" style="padding:0 0 0 10px ;"></div>
+				</div>
+			</div>
+		</csp:if>
+		<div class="container" style="height:150px;margin-top:10px">
+			<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,title:'处理信息',iconCls:'icon-save'">
+				<table style="width:100%;">
+					<!--
+					<tr style="height:40px;">
+						<td class="r-label" style="white-space: nowrap;">联系人</td>
+						<td >
+							<input type="text" class="textbox" id="Contact" />
+						</td>
+						<td class="r-label" style="white-space: nowrap;">联系电话</td>
+						<td >
+							<input type="text" class="textbox" id="ContactTel" />
+						</td>
+						<td class="r-label" style="white-space: nowrap;">联系结果</td>
+						<td class="l-value">
+							<input type="text" class="textbox" id="ConResult" />
+						</td>
+
+					</tr>
+					 -->
+					<tr id="TransAdvice-TR">
+						<td class="r-label" style="padding-left:10px;white-space: nowrap;">处理说明</td>
+						<td style="height:100px;" colspan="5" ><textarea id="TransAdvice" class="textbox" style="line-height:25px;height:80px;overflow:auto;"></textarea></td>
+					</tr>
+				</table>
+			</div>
+			
+		</div>
+	</div><!--end center-->
+	<csp:if condition=ShowProcess=1>
+	<!--
+	<div data-options="region:'east',border:false" style="padding:10px 10px 0 0;width:300px;">
+		<div class="hisui-panel" data-options="fit:true,title:'状态变化',headerCls:'panel-header-gray',iconCls:'icon-clock-record'" style="padding:4px;overflow:hidden;">
+			<iframe src="criticalvalue.process.csp?VisitNumberRejectSpecDR=#(VisitNumberRejectSpecDR)#" id="CVProcessFrame" name="CVProcessFrame" style="width: 100%;height: 100%; margin:0; border: 0;" scroll="auto"></iframe>
+		</div>
+	</div><!--end east-->
+	-->
+	</csp:if>
+	
+	<div data-options="region:'south',border:false" style="padding:10px;height:50px;">
+		<div id="buttons" style="text-align:center;font-size:0;">
+			<a href="javascript:void(0);" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnSave" style="margin-right:10px;">处理</a>
+			<a href="javascript:void(0);" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnClose" >关闭</a>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/DHCLisTransReject.js"></script>
+</body>
+</html>
+
+
+</head>
+
+<body>
+
+		<!-- Put your page code here -->
+		My page body
+</body>
+</html>

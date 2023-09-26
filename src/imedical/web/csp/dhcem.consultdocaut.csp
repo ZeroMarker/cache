@@ -1,0 +1,51 @@
+<!-- 请会诊医生权限维护 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-27-->
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultdocaut.js"></script>
+	<style>
+	label{margin:0px 3px 0px 3px;}
+	#_HospList+span{max-width:154px} /*hxy 2020-05-27*/
+	#_HospList+span >input{max-width:120px}
+	</style>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" border="false">
+		<div id="main" toolbar="#main_tb" border="false"></div>
+	</div>
+</div>
+<div id="main_tb" style="padding:10px 0px 5px 0px;">
+	<label style="margin-left:15px">工号</label><input id="userCode" class="hisui-validatebox" style="width:130px;vertical-align:bottom;">
+	<label style="margin-left:10px">姓名</label><input id="userName" class="hisui-validatebox" style="width:130px;vertical-align:bottom;">
+	<label id="_HospListLabel" style='margin-right:10px;margin-left:10px'>医院</label><input id="_HospList"><!--hxy 2020-05-27-->
+	<a href="#" class="hisui-linkbutton" iconCls="icon-w-find" onclick="query()" style="margin-left:10px">查询</a>
+	<div style="margin:10px 0px 5px 0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+	<label style="margin-left:0px"></label>
+	<span id="ConType"><!--hxy 2020-05-27-->
+	<server>
+	/// 会诊类型
+	s HospID=%session.Get("LOGON.HOSPID")
+	s Types=##Class(web.DHCEMConsDicItem).GetConsItem("CYT",HospID)
+	F i=1:1:$L(Types,"||") D
+	.s mdata=$p(Types,"||",i) 
+	.Q:mdata=""
+	.s TID=$p(mdata,"^",1), TCode=$p(mdata,"^",2), TDesc=$p(mdata,"^",3)
+	.w "<input id='"_TID_"' class='hisui-checkbox' name='CstType' type='checkbox' data-index='"_TCode_"' label='"_TDesc_"'>"
+	</server>
+	</span>
+	<a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveRow()" style="margin-left:3px">保存</a>
+	<a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-clear-screen" onclick="clearPanel()">清空</a>
+</div>
+</body>
+</html>

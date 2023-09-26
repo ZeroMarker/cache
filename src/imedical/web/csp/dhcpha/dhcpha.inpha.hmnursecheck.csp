@@ -1,0 +1,122 @@
+<!--（草药揭药）护士核对 csp:dhcpha/dhcpha.inpha.hmnursecheck.csp--> 
+<!--（草药揭药）护士核对 js:pharmacy/inpha/dhcpha.inpha.hmnursecheck.js--> 
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<Server language="CACHE" runat="Server">
+   	s Application=%request.Application
+   </Server>
+	<TRAK:HEAD/>
+	<DHCPHARMACY:COMMONLIB/>
+	<DHCAPP:PHARBOOTSTRAP/>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmnursecheck.js"></script>
+<style type="text/css"  >  
+	.wardtitle th.ui-th-column div{
+        white-space:normal !important;
+        height:auto !important;
+        padding:0px;
+    }
+    .checkboxpadding{
+	 	padding-left:5px;
+	}
+    .RowGreen{
+        background-color: #80F0C0;
+    }
+    .RowBlue{
+	 	background-color: #00BFFF;
+	}
+</style> 
+</head>
+<body >
+	<div class="container-fluid dhcpha-condition-container">
+	    <div class="row">
+	    	<div class="col-lg-6 col-md-6 col-sm-6">
+			    <button class="btn btn-default btn_button btn_common" id="btn-clear" onclick="javascript:ClearConditions ()"><img src="../scripts/pharmacy/images/clear-default.png" class="dhcpha-btn-image"><br><strong>清屏</strong></button>
+			    <button class="btn btn-default btn_button btn_important" id="btn-pass" onclick="javascript:MedBroAuitPass()"><img src="../scripts/pharmacy/images/pass-default.png" class="dhcpha-btn-image"><br><strong>通过</strong></button>
+	    	</div>
+	    	<div class="col-lg-6 col-md-6 col-sm-6">
+				<div class="dhcpha-window-right">
+					<span style="margin-left:15px;">核对护士：<lable id="currentnurse"></lable></span>
+					<span style="margin-left:15px;">所属病区：<lable id="currentctloc"></lable></span>
+				</div>
+	    	</div>
+	    </div>
+	 </div>
+	 <div class="row dhcpha-row-split-all" ></div>
+	 <div class="container-fluid dhcpha-condition-container">
+	 	<div class="row row_style">
+	 		<form class="form-inline"> 
+	 			<!--              
+		        <div class="input-group">               
+                    <span for="date-daterange" class="input-group-addon dhcpha-input-group-addon-in"><strong>起止日期</strong></span>
+	                <input id="date-daterange" class="form-control input_style" type="text" style="border-right:none;width:13.5em" placeholder="请选择日期">
+                	<span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                          <i class="fa fa-calendar"></i>
+                    </span>                 
+                </div>
+                -->
+                <div class="input-group">
+					<span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>起止日期</strong></span>
+                    <input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:6.5em" placeholder="请选择日期">
+                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                          <i class="fa fa-calendar"></i>
+                    </span>  
+                </div>
+                <span><strong>至</strong></span>
+                <div class="input-group">
+                    <input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:6.5em" placeholder="请选择日期">
+                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                          <i class="fa fa-calendar"></i>
+                    </span>                       
+                </div>
+				<input class="form-control input_style" type="text" id="txt-phboxno" style="width:12em" autocomplete="off" placeholder="扫码/请输入揭药箱号">
+            	<div class="form-group dhcpha-col-split"></div>
+            	<div class="input-group">                                     
+					<input type="checkbox" id="chk-patadm">
+					<lable for="chk-patadm"><strong>按患者</strong></lable>	
+				</div>
+				<div class="input-group" style="padding-left:50px;">                                     
+					<input type="checkbox" id="chk-audit">
+					<lable for="chk-check"><strong>已核对</strong></lable>	
+				</div>
+				<div class="form-group dhcpha-col-split"></div>	
+            	<div class="btn-group dhcpha-btn-right">  
+                    <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+		            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-find" onclick="javascript:QueryGridMedBroth()">查询</button>
+                </div>
+			</form>
+	 	</div>			
+	 </div> 
+		<div class="row dhcpha-row-split" ></div>
+	</div>
+	 
+	<div class="container-fluid dhcpha-tab-content">
+		<div class="row">
+			<div class="col-lg-2 col-md-2 col-sm-2 dhcpha-col" style="padding-right:0px;padding-left:0px">
+				<div class="panel div_content ">
+					<div class="panel-heading"><span class="pal_style"><strong>患者列表</strong></span></div>
+						<table id="grid-patlist" class="table table-bordered table_style"></table> 
+						<div id="jqGridPager"></div> 
+				</div> 				
+			</div>
+			<div class="col-lg-10 col-md-10 col-sm-10 dhcpha-col dhcpha-col-border-left">
+				
+				<div class="panel div_content">
+				     <div class="panel-heading"><span class="pal_style"><strong>揭药明细列表</strong></span></div>				        
+                        <table id="grid-prescbrothdetail" class="table table-bordered table_style"></table> 
+						<div id="jqGridPager1"></div> 
+				</div>
+			</div>
+		</div>
+    </div>
+
+</body>
+</html>

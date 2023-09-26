@@ -1,0 +1,58 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))   
+	s str      = $Get(%request.Data("query",1))
+	s rowid    = $Get(%request.Data("rowid",1))
+	s repCode  = $Get(%request.Data("repCode",1))
+	s repName  = $Get(%request.Data("repName",1))
+	
+	s RepItemCode1= $Get(%request.Data("RepItemCode1",1))     ;报表项编码1
+	s RepItemName1= $Get(%request.Data("RepItemName1",1))     ;报表项名称1
+	s Formula1    = $Get(%request.Data("Formula1",1))         ;报表项公式1
+	s Sequence1   = $Get(%request.Data("Sequence1",1))        ;报表项1顺序
+	s RepItemCode2= $Get(%request.Data("RepItemCode2",1))     ;报表项编码2
+	s RepItemName2= $Get(%request.Data("RepItemName2",1))     ;报表项名称2
+	s Formula2    = $Get(%request.Data("Formula2",1))         ;报表项公式2
+	s Sequence2   = $Get(%request.Data("Sequence2",1))        ;报表项2顺序
+	s RowNumber   = $Get(%request.Data("RowNumber",1))        ;行号
+	s MainRowid   = $Get(%request.Data("MainRowid",1))        ;报表模板ID
+	
+	s data = RepItemCode1_"^"_RepItemName1_"^"_Formula1_"^"_Sequence1
+	    _"^"_RepItemCode2_"^"_RepItemName2_"^"_Formula2_"^"_Sequence2
+	    _"^"_RowNumber_"^"_MainRowid
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).ItemList(MainRowid,repCode_"^"_repName,sortField,sortDir,start,limit)
+	
+    i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).AddItemRec(data)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).UpdateItemRec(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).DeletItemRec(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

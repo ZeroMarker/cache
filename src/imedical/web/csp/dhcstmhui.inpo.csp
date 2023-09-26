@@ -1,0 +1,90 @@
+﻿<!--订单录入-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+		<table id="MainConditions" class="Condition">
+			<input id="RowId" name="RowId" type="hidden">
+			<tr>
+				<td><label class="required">*</label><label>订单科室</label><input id="PoLoc" name="PoLoc" class="textbox hisui-combobox"></td>
+				<td><label class="required">*</label><label>类组</label><input id="StkScg" name="StkScg" class="textbox hisui-stkscgcombotree"></td>
+				<td><label class="required">*</label><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
+				<td style="text-align:left" class="CkPadding"><input id="CompFlag" name="CompFlag" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="完成标志"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'">完成</a></td>
+			</tr>
+			<tr>
+				<td><label>到货日期</label><input id="NeedDate" name="NeedDate" class="textbox hisui-datebox" ></td>
+				<td><label>订单号</label><input id="PoNo" name="PoNo" class="textbox" disabled ></td>
+				<td><label>备注</label><input id="Remark" name="Remark" class="textbox" ></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton" style="width:87px">取消完成</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="border:false,region:'center',collapsible:false,split:true">
+		<table id="PoGrid"></table>
+	</div>
+	<!--查询窗口-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询订单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div  class="hisui-layout" data-options="region:'north',border:false,split:true">
+				<table id="FindConditions" class="Condition">
+					<input id="FRowId" name="RowId" type="hidden">
+					<input id="FInci" name="Inci" type="hidden">
+					<tr>
+						<td><label class="required">*</label><label>订单科室</label><input id="FPoLoc" name="PoLoc" class="textbox hisui-combobox"></td>
+						<td><label class="required">*</label><label>开始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+						<td><label>完成状态</label><input id="FCompFlag" name="CompFlag" class="textbox hisui-simpleCombobox"></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+					</tr>
+					<tr>
+						<td><label>供应商</label><input id="FVendor" name="Vendor" class="textbox hisui-combobox"></td>
+						<td><label class="required">*</label><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						<td><label>物资名称</label><input id="FInciDesc" name="InciDesc" class="textbox" ></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					</tr>
+					<tr>
+						<td><label>订单号</label><input id="FPoNo" name="PoNo" class="textbox"></td>
+						<td></td><td></td>
+						<td><a href="#" id="FSelectBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">选取</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'west',border:false" class="FindGridWest GridPadding">
+				<div class="hisui-panel" data-options="title:'订单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="PoMainGrid" ></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-left:0px;" class="NonPadGrid GridPadding">
+				<div class="hisui-panel" data-options="title:'订单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="PoDetailGrid" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPo/InPoCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPo/findWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPo/InPoPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InPo/InPo.js"></script>
+
+</body>
+</html>

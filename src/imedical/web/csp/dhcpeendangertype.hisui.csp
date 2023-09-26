@@ -1,0 +1,133 @@
+<!--
+ * FileName: dhcpeendangertype.hisui.csp
+ * Anchor: xy
+ * Date: 2019-06-13
+ * Description: HISUI 危害因素分类维护
+--><!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+</style>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'center',border:false,collapsible:false" style="padding:10px;">
+		<div class="hisui-panel" fit="true" data-options="title:'危害因素分类维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 	<div class="hisui-layout" fit="true">	
+		 		<div data-options="region:'north',border:false,collapsible:false" style="height:132px;border-bottom:1px solid #C0C0C0;">
+		 			<table style="border-spacing:10px;">
+		 				<tr>
+		 					<td align="right"><label for="Code"><font color=red>*</font>代码</label></td>
+							<td><input class="textbox" id="Code"/></td>
+						
+		 					<td align="right" style="padding-left:10px;"><label for="ExpInfo">扩展信息</label></td>
+							<td><input class="textbox" id="ExpInfo"/></td>
+							
+							<td style="padding-left:10px;"><a id="add_btn" href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a></td>	
+		 				</tr>
+		 				<tr>
+		 					<td align="right"><label for="Desc"><font color=red>*</font>描述</label></td>
+							<td><input class="textbox" id="Desc"/></td>
+							
+							<td align="right" style="padding-left:10px;"><label for="Remark">备注</label></td>
+							<td><input class="textbox" id="Remark"/></td>
+							
+							<td style="padding-left:10px;"><a id="update_btn" href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a></td>
+		 				</tr>
+		 		
+		 				<tr>
+		 					<td align="right"><label for="VIPLevel"><font color=red>*</font>VIP等级</label></td>
+							<td><input class="hisui-combobox" type="text" id="VIPLevel" style="width:155px;"/></td>
+							
+							<td align="right" style="padding-left:10px;"><label for="Active">激活</label></td>
+							<td><input class='hisui-checkbox' type="checkbox" Id="Active" data-options="checked:true" value="1"/></td>
+							
+             				<td style="padding-left:10px;">
+	             				<a id="BClear" href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+	             				<input type="hidden" id="ID"/>
+             				</td>
+		 				</tr>
+					</table>
+		 		</div>
+		 		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+		 			<table data-options="fit:true" border="false" id="EndangerTypeGrid"></table>
+		 		</div>
+			</div>				
+		</div>							
+	</div>
+
+	<div id="Endanger" data-options="region:'east',border:false" style="width:651px;padding:10px 10px 10px 0;border:0;">
+		<div class="hisui-panel" fit="true" data-options="title:'危害因素',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+			<div class="hisui-layout" fit="true">
+		 		<div data-options="region:'north',border:false,collapsible:false" style="height:132px;border-bottom:1px dashed #C0C0C0;">
+		 			<table style="border-spacing:10px;">
+		 				<tr>
+		 					<td align="right"><label for="ENCode"><font color=red>*</font>代码</label></td>
+							<td><input class="textbox" id="ENCode"/></td>
+							
+							<td align="right" style="padding-left:10px;"><label for="ENRemark">备注</label></td>
+							<td><input class="textbox" id="ENRemark"/></td>
+							
+							<td style="padding-left:10px;"><a id="ENadd_btn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a></td>	
+		 				</tr>
+		 				<tr>
+		 					<td align="right"><label for="ENDesc"><font color=red>*</font>描述</label></td>
+							<td><input class="textbox" id="ENDesc"/></td>
+							
+							<td align="right" style="padding-left:10px;"><label for="ENActive">激活</label></td>
+							<td><input class='hisui-checkbox' type="checkbox" Id="ENActive" data-options="checked:true" value="1"/></td>
+         						
+							<td style="padding-left:10px;">
+								<a id="ENupdate_btn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+								<input type="hidden" id="ENID"/>
+							</td>
+		 				</tr>
+		 				<tr>
+		 					<td align="right"><label for="ENExpInfo">扩展信息</label></td>
+							<td><input class="textbox" id="ENExpInfo"/></td>
+							
+							<td></td>
+							<td></td>
+
+							<td style="padding-left:10px;"><a id="BENClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>	
+		 				</tr>
+                   </table>
+		 		</div>
+		 		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+		 			<table data-options="fit:true" border="false" id="EndangerGrid" toolbar="#ENallbar"></table>
+		 		</div>
+			</div>		
+		</div>
+	</div>
+</div>
+			
+		
+<!--危害因素维护面板工具栏-->
+<div id="ENallbar" style='padding-top:4px'>
+	<!--a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="ENadd_btn">新增</a-->
+	<!--a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="ENupdate_btn">修改</a-->
+	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="ENIllness_btn">目标疾病</a>
+	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clock',plain:true,stopAllEventOnDisabled:true" id="ENCheckCycle_btn">检查周期</a>
+	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true,stopAllEventOnDisabled:true" id="ENCriteria_btn">诊断标准</a>
+	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-mtpaper-add',plain:true,stopAllEventOnDisabled:true" id="ENItem_btn">检查项目</a>
+</div>
+ <!--目标疾病弹窗-->
+  <!--div id="myWinIllness" style="width:900px;height:590px;display:none;"> 
+  </div-->
+   
+ <!--检查项目弹窗-->
+  <!--div id="myWinEDItem" style="width:1200px;height:600px;display:none;"> 
+  </div-->
+<script type="text/javascript" src="../scripts/DHCPEEndangerType.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+
+</body>		
+</html>

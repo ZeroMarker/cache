@@ -1,0 +1,124 @@
+﻿<!--高值医嘱提取-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',headerCls:'panel-header-gray',border:false"> 
+		<table id="MainConditions" class="Condition">
+			<input id="Inci" name="Inci" type="hidden">
+			<tr>
+				<td><label>库房</label><input id="Loc" name="Loc" class="textbox hisui-combobox"></td>
+				<td><label>类组</label><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree"></td>
+				<td><label>资金来源</label><input id="Source" name="Source" class="textbox hisui-combobox"></td>
+				<td> 
+					<input class='hisui-radio' type="radio" label='全部' name='INGRFlag' value='0' >
+					<input class='hisui-radio' type="radio" label='已入库' name='INGRFlag' value='1'>
+					<input class='hisui-radio' type="radio" label='未入库' name='INGRFlag' value='2' data-options="checked:'true'">
+				</td>
+				<td><a href="#" id="CopyInvBT" class="hisui-linkbutton">填充发票信息</a></td>
+			</tr>
+			<tr>
+				<td><label>登记号</label><input id="PaAdmNo" name="PaAdmNo" class="textbox"></td>
+				<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
+				<td><label>接收科室</label><input id="OrdLoc" name="OrdLoc" class="textbox hisui-combobox"></td>
+				<td>
+					<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					<a href="#" id="CreateBT" class="hisui-linkbutton" data-options="">生成入库单</a>
+				</td>
+			</tr>
+			<tr>
+				<td><label>开始日期</label><input id="FromDate" name="FromDate" class="hisui-datebox textbox"></td>
+				<td><label>截止日期</label><input id="ToDate" name="ToDate" class="hisui-datebox textbox"></td>
+				<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
+				<td>
+					<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					<a href="#" id="SendMessageBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-msg'">短信</a>
+					<a href="#" id="CancelBT" class="hisui-linkbutton" data-options="">撤销入库单</a>
+				</td>
+			</tr>
+			<tr>
+				<td><label>病人姓名</label><input id="PatName" name="PatName" class="textbox"></td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class="hisui-layout" data-options="region:'center',border:false">
+		<div class="hisui-panel GridPadding" style="padding-top:0;" data-options="region:'center',border:false,fit:true">
+			<div id="tt2" class="hisui-tabs tabs-gray" data-options="region:'center',border:true,fit:true">
+				<div title="医嘱信息">
+					<table id="MatOrdItmGrid"></table>
+				</div>
+				<div title="入库信息" class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">
+					<div class="hisui-layout" data-options='fit:true'>
+						<div class="GridPadding" data-options="region:'west',border:false" style="width:450px;">
+							<div class="hisui-panel" title="入库单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+								<table id="IngrMainGrid"></table>
+							</div>
+						</div>
+						<div class="GridPadding" style="padding-left:0px" data-options="region:'center',border:false" >
+							<div class="hisui-panel" title="入库明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+								<table id="IngrDetailGrid"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div title="出库信息" class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">
+					<div class="hisui-layout" data-options='fit:true'>
+						<div class="GridPadding" data-options="region:'west',border:false,collapsible:false" style="width:450px;">
+							<div class="hisui-panel" title="出库单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+								<table id="InitMainGrid"></table>
+							</div>
+						</div>
+						<div class="GridPadding" style="padding-left:0px" data-options="region:'center',border:false">
+							<div class="hisui-panel" title="出库单明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+								<table id="InitDetailGrid"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 填充发票信息dialog -->
+	<div id="InvWin" class="hisui-dialog" data-options="closed:'true'" title="发票信息" style="width:240px;">
+		<table class="Condition">
+			<tr>
+				<td>发票号</td>
+				<td><input id="InvNo" name="InvNo" class="textbox"></td>
+			</tr>
+			<tr>
+				<td>发票日期</td>
+				<td><input id="InvDate" name="InvDate" class="textbox hisui-datebox"></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input class="hisui-radio" type="radio" label="跳过已填" name="Fill" value="1" data-options="checked:true">
+					<input class="hisui-radio" type="radio" label="覆盖已填" name="Fill" value="2">
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2" style="text-align:center;">
+					<a href="#" id="InvSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/MatOrdStat/InvWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/MatOrdStat/MatOrdStat.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InIsTrf/DHCInIsTrfPrint.js"></script>
+</body>
+</html>

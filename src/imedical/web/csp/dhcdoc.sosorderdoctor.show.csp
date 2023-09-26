@@ -1,0 +1,117 @@
+<!--dhcdoc.sosorderdoctor.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+
+
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/dhcdocCustomExt.css" />
+<script type="text/javascript" src="../scripts/framework/dhcc.icare.MixGridPanel.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcc.doc.OrderCenter.js"></script>
+</head>
+<body>
+<script runat=server language=cache>
+	s orderMetaDataJson = ##class(ext.websys.QueryBroker).ReadRSNew("web.DHCDocSosOrder","FindSosOrder") 
+	s execMetaDataJson = ##class(ext.websys.QueryBroker).ReadRSNew("web.DHCDocMain","FindOrderExecDet")
+	s feeMetaDataJson = ##class(ext.websys.QueryBroker).ReadRSNew("web.DHCDocMain","FindOrderFee") 
+	s group=%session.Get("LOGON.GROUPID")
+	s menucode = "DOCSOSOrder"
+	#dim obj As websys.ExtMenu
+	s obj = ##class(websys.ExtMenu).EMCodeMenuOpen(menucode)
+	s menujson = obj.GetMenusJson(group)
+	d obj.%Close()
+	s obj=""
+	i menujson="" s menujson="{}"
+</script>
+</script>
+<script type="text/javascript">
+	var orderMetaDataJson = #(orderMetaDataJson)#;
+	var execMetaDataJson = #(execMetaDataJson)#;
+	var feeMetaDataJson = #(feeMetaDataJson)#;
+	var EstDischConfirmed = "N"; //医疗结算
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcc.doc.sosDoctorCenter.js"></script>
+
+<script type="text/javascript">	
+	function surgeryApplyShowHandler(){
+		this.qtip = ""
+		if(EstDischConfirmed=="Y") {
+			this.qtip = "最终结算后不能申请手术!";
+			return false;
+		}
+		return true;	
+	}	
+	function consultationShowHandler(){
+		this.qtip = "";
+		if(EstDischConfirmed=="Y") {
+			this.qtip = "最终结算后不能申请会诊!";
+			return false;
+		}
+		return true;
+	}
+	function bloodApplyShowHandler(){
+		this.qtip = "";
+		if(EstDischConfirmed=="Y") {
+			this.qtip = "最终结算后不能申请输血!";
+			return false;
+		}
+		return true;
+	}
+	function xhrRefresh(obj){	
+		dhcc.doc.orderGridPanel.refreshData(obj);
+		if(obj.adm){
+			EstDischConfirmed = "N";
+			var rtn = tkMakeServerCall("web.DHCDocMain", "isHiddenMenu", obj.adm, session['LOGON.CTLOCID']);		
+			if(rtn==2){
+				EstDischConfirmed = "Y";
+			}
+			if (rtn==1){
+				dhcc.doc.orderGridPanel.rightKeyMenuHidden = true;
+				dhcc.doc.execOrder.rightKeyMenuHidden = true;
+				dhcc.doc.feeOrder.rightKeyMenuHidden = true;
+			}else{
+				dhcc.doc.orderGridPanel.rightKeyMenuHidden = false;
+				dhcc.doc.execOrder.rightKeyMenuHidden = false;
+				dhcc.doc.feeOrder.rightKeyMenuHidden = false;
+			}		
+		}
+	}
+	Ext.onReady(function(){
+		var viewport = new Ext.Viewport({
+			layout:'fit',
+			items:[{
+				xtype:'panel',
+				layout:'border',
+				items:[dhcc.doc.orderGridPanel,{	
+					xtype:'panel',
+					width:380,
+					layout:'border',
+					region:"east",
+					split:true,
+					collapsible: true,
+					collapsed:true,
+					//collapseMode:'mini',
+					items:[
+						dhcc.doc.execOrder
+						//dhcc.doc.feeOrder
+					]	
+				}]
+			}]	
+		});
+		var orderRightMenuJson = #(menujson)#;
+		if (orderRightMenuJson && orderRightMenuJson.menu){
+			dhcc.doc.orderGridPanel.rightKeyMenu = new Ext.menu.Menu(orderRightMenuJson.menu);	
+		}		
+		var frm = dhcsys_getmenuform();
+		if (frm && frm.EpisodeID.value !== "0" ) {
+			xhrRefresh({papmi:frm.PatientID.value, adm: frm.EpisodeID.value});
+		}
+	});	
+</script>
+</body>
+</html>

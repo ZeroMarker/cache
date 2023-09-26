@@ -1,0 +1,77 @@
+	
+
+	<!-- dhcpeireport.syyd.normal.abnormityresult.csp -->
+	
+	
+	
+	
+	<SCRIPT language="Cache" RUNAT="SERVER">	
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="NORReport"
+		e  d
+		.s DIVClass="Page NORReport"
+	</SCRIPT>
+		<TABLE width=680 border=0 cellspacing=0>
+			<THEAD>
+				<TR>
+					<TD class='NORHead NORHeadARCIMDesc'>体检结果摘要</TD>
+				</TR>
+			</THEAD>
+			<TBODY>
+
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	; colSpan=2
+	s UnigueFlag="aaaaaaa"
+	s ReportSort=""
+	s i=0
+	f  s ReportSort=$O(^TMPReport(UnigueFlag,"Result","ReportType",ReportSort)) q:ReportSort=""  d
+	.s ReportSortDesc=$G(^TMPReport(UnigueFlag,"Result","ReportType",ReportSort))
+	.s i=i+1
+	.w "<TR><TD class='NORResultTestValue'><b>"
+	.w i_"."_ReportSortDesc
+	.w "</b></TD></TR>"
+	.s STSequence=""
+	.f  s STSequence=$O(^TMPReport(UnigueFlag,"Result","ReportType",ReportSort,STSequence)) q:STSequence=""  d
+	..s ARCSequence=""
+	..f  s ARCSequence=$O(^TMPReport(UnigueFlag,"Result","ReportType",ReportSort,STSequence,ARCSequence)) q:ARCSequence=""  d
+	...s OrderID=""
+	...f  s OrderID=$O(^TMPReport(UnigueFlag,"Result","ReportType",ReportSort,STSequence,ARCSequence,OrderID)) q:OrderID=""  d
+	....s OrderDesc=$P($G(^TMPReport(UnigueFlag,"Result", "ARCIM", OrderID)),"^",1)
+	....s Result=$G( ^TMPReport(UnigueFlag,"Result","ReportTypeResult",OrderID))
+	....s Result="&nbsp;&nbsp;"_OrderDesc_""_Result
+	....w "<TR><TD class='NORResultTestValue'>"
+	....w Result
+	....w "</TD></TR>"
+	
+	
+	
+</SCRIPT>
+		<TR>
+			<TD class='NORHead NORHeadARCIMDesc'>体检总结论</TD>
+		</TR>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s Flag=0			
+	s Code=""
+	f  s Code=$O(^TMPReport(UnigueFlag,"GeneralAdvice","MainGeneral",Code)) q:Code=""  d
+	.s Sort=""
+	.f  s Sort=$O(^TMPReport(UnigueFlag,"GeneralAdvice","MainGeneral",Code,Sort)) q:Sort=""  d
+	..s GeneralDesc=$G(^TMPReport(UnigueFlag,"GeneralAdvice","MainGeneral",Code,Sort))
+	..w "<TR><TD class='NORResultTestValue'>"
+	..w "&nbsp;&nbsp;"_GeneralDesc
+	..w "</TD></TR>"
+	..s Flag=1
+	i Flag=0
+	{
+		w "<TR><TD class='NORResultTestValue'>"
+		w "&nbsp;&nbsp;本次体检无明显异常"
+		w "</TD></TR>"
+	
+	}
+	s CurData="aaa"
+    
+    d:+$O(^TMPReport(UnigueFlag,"HistoryResult",""),-1)>1 $zobjclassmethod("csp.csp.dhcpeireport."_"syyd."_"noraml.result.history","OnPageCSPROOT")
+   			
+	</SCRIPT>		
+</TBODY>
+	
+</TABLE>

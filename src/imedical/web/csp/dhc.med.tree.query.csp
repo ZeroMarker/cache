@@ -1,0 +1,130 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+s ClassName=%request.Data("ClassName",1)
+s QueryName=%request.Data("QueryName",1)
+s ArgCnt=%request.Data("ArgCnt",1)
+s rs=##class(%ResultSet).%New(ClassName_":"_QueryName)
+s startRecordNo=$g(%request.Data("start",1))
+s limitRecordCnt=$g(%request.Data("limit",1))
+
+;s:limitRecordCnt=0 limitRecordCnt=25
+
+ n execute,i
+ k PLIST
+ s execute="set %sc=$zobjmethod(rs,""Execute"""
+ f i=1:1:ArgCnt  d 
+ .s ArgName="Arg"_i
+ .s PLIST(i)=%request.Data(ArgName,1)
+ .s execute=execute_",PLIST("_i_")"
+ s execute=execute_")"
+ x execute
+ 
+ /*
+ s cnt=0
+ s displayRows=0
+ s rowData=""
+ w "[",!
+ f  q:rs.Next()=0  d
+ .s cnt=cnt+1
+ .i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt="")  d
+ ..w:displayRows>0 ","
+ ..w "{"
+ ..s rowData=""
+ ..s id=rs.GetDataByName("id")
+ ..i (($e(id,1,1)'="'")&&($e(id,1,1)'=$c(34)))  d
+ ...s rowData=rowData_"id : '"_id_"',"
+ ..e  d
+ ...s rowData=rowData_"id : "_id_","
+ ..s txt=rs.GetDataByName("text")
+ ..i (($e(txt,1,1)'="'")&&($e(txt,1,1)'=$c(34)))  d
+ ...s rowData=rowData_"text : '"_txt_"',"
+ ..e  d
+ ...s rowData=rowData_"text : "_txt_","
+ ..s rowData=rowData_"leaf : "_rs.GetDataByName("leaf")_","
+ ..s rowData=rowData_"icon : '"_rs.GetDataByName("icon")_"',"
+ ..s rowData=rowData_"checked : "_$s(rs.GetDataByName("checked")="":"false",1:rs.GetDataByName("checked"))
+ ..w rowData
+ ..w "}",!
+ ..s displayRows=displayRows+1
+ w "]"
+ d rs.%Close()
+ q
+ */
+ 
+ s cnt=0
+ s displayRows=0
+ s rowData=""
+ w "[",!
+ s columns=rs.GetColumnCount()
+ f  q:rs.Next()=0  d
+ .s cnt=cnt+1
+ .i ((cnt'<startRecordNo)&&(displayRows<limitRecordCnt))!(startRecordNo="")!(limitRecordCnt="")  d
+ ..w:displayRows>0 ","
+ ..w "{"
+ ..s rowData=""
+ ..f i=1:1:columns  d
+ ...s:i>1 rowData=rowData_","
+ ...s rowData=rowData_rs.GetColumnName(i)_" : "
+ ...s tmpData=rs.GetData(i)
+ ...s tmpData=..ReplaceString(tmpData,"""","")
+ ...s tmpData=..ReplaceString(tmpData,"'","")
+ ...s tmpData=..ReplaceString(tmpData,$c(13),"\n")
+ ...s tmpData=..ReplaceString(tmpData,$c(10),"\r")
+ ...i (tmpData'="true")&&(tmpData'="false")&&(tmpData'="null") d
+ ....s tmpData=$s(+tmpData=tmpData:tmpData,1:"'"_tmpData_"'")
+ ...s rowData=rowData_tmpData
+ ..w rowData
+ ..w "}",!
+ ..s displayRows=displayRows+1
+ w "]"
+ d rs.%Close()
+ q
+ 
+ 
+/*
+
+ s columns=rs.GetColumnCount()
+ w "<?xml version="_$c(34)_"1.0"_$c(34)_" encoding="_$c(34)_"gb2312"_$c(34)_" ?>",!
+ w "<result>",!
+//w ! f i=1:1:columns w rs.GetColumnHeader(i),":"
+ 
+ f  q:rs.Next()=0  d
+ .w "	<row>",!  
+ .f i=1:1:columns  d
+ ..w "		<"_rs.GetColumnHeader(i)_">"
+ ..s tmp=rs.GetData(i)
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"&","&amp;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,">","&gt;") 
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"<","&lt;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp," ","&nbsp;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"'","&apos;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,$c(34),"&quot;")
+ ..s tmp=##class(web.DHCMedBaseCtl).ReplaceString(tmp,"#","&#35;")
+ ..w tmp
+ ..w "</"_rs.GetColumnHeader(i)_">",!
+ .w "	</row>",!
+ d rs.%Close()
+ w "</result>"
+ q
+
+*/
+
+
+
+</SERVER>
+
+<csp:method name=ReplaceString arguments="Str, OldStr, NewStr" returntype=%String>
+	set intCounter = 1
+	while (1)
+	{
+		set tmp =$e(Str, intCounter, intCounter + $l(OldStr) - 1) 
+		if (tmp = OldStr)
+		{
+			 set $e(Str, intCounter, intCounter + $l(OldStr) - 1) = NewStr
+			 set intCounter = intCounter + $l(NewStr) - $l(OldStr)
+		}
+		quit:intCounter>=$l(Str)
+		set intCounter = intCounter + 1
+	}
+	quit Str
+</csp:method>

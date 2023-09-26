@@ -1,0 +1,1148 @@
+﻿<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+    
+	//
+	//保存医疗报告
+	i action = "saveMedReport" d
+	.;s adrRepID= $Get(%request.Data("adrRepID",1))
+	.;s adrRepDataList= $Get(%request.Data("adrRepDataList",1))
+	.;s adrRepAuditList= $Get(%request.Data("adrRepAuditList",1))
+	.;s retvalue=##class(web.DHCADVMEDREPORT).SaveMedReport(adrRepID,adrRepDataList,adrRepAuditList)
+	.;s retinfo=""
+    .;s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_retinfo
+	.;w ##Class(web.DHCADVJSONCOMMON).JsonText(ret)
+	
+	//获取医疗报表信息
+	i action = "GetMedRepInfo" d
+	.;s adrRepID= $Get(%request.Data("adrRepID",1))
+	.;s data=##class(web.DHCADVMEDREPORT).GetMedRepInfo(adrRepID)
+	.;s data=##class(web.DHCADVJSONCOMMON).JsonCell("data",data)
+	.;w "{"_data_"}"
+	
+
+   //重点标记 
+	i action = "MedImpReport" d
+	.S adrRepID=$Get(%request.Data("ID",1))
+	.S adrRepImpFlag=$Get(%request.Data("RepImpFlag",1))
+	.w ##class(web.DHCADVMEDADRREPORT).InsImpReport(adrRepID,adrRepImpFlag)
+	
+	//获取页面默认信息
+	i action = "getMedInfo" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDADRREPORT).getMedInfo(params)
+	
+	//删除-医疗不良反应报告
+	i action = "DelMedReport" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDADRREPORT).DelMedReport(params)
+	
+	//保存医疗报告
+	i action = "saveMedReport" d
+	.s adrRepID= $Get(%request.Data("adrRepID",1))
+	.s adrRepDataList= $Get(%request.Data("adrRepDataList",1))
+	.s adrRepAuditList= $Get(%request.Data("adrRepAuditList",1))
+	.s flag= $Get(%request.Data("flag",1))
+	.s ret=##class(web.DHCADVMEDADRREPORT).SaveMedReport(adrRepID,adrRepDataList,adrRepAuditList,flag)
+	.w ret
+	
+	//医疗不良事件,报告类别 lp
+	i action="GetEventLev" d
+	.d ##class(web.DHCADVMEDADRREPORT).GetEventLev()
+	
+	//医疗不良事件，关联轻重程度联动 lp
+	i action="GetInjuryLevByType" d
+	.s eventID=$Get(%request.Data("eventID",1))
+	.d ##class(web.DHCADVMEDADRREPORT).GetInjuryLevByType(eventID)
+
+	
+	//获取医疗报表信息
+	i action = "GetMedRepInfo" d
+	.s adrRepID= $Get(%request.Data("adrRepID",1))
+	.S params=$Get(%request.Data("params",1))
+	.s ret=##class(web.DHCADVMEDADRREPORT).GetMedRepInfo(adrRepID,params)
+	.w ret
+	
+	
+	//获取病人基本信息
+	i action = "GetPatBaseInfo" d
+	.s PatNo= $Get(%request.Data("PatNo",1))
+	.s EpisodeID= $Get(%request.Data("EpisodeID",1))
+	.s data=##class(web.DHCADVMEDCOMMON).GetPatBaseInfo(PatNo, EpisodeID)
+	.s data=##class(web.DHCADVJSONCOMMON).JsonCell("data",data)
+	.w "{"_data_"}"
+	
+	//查询不良事件类别 2016-09-29 congyue
+	i action = "GetAdrRepTypeByID" d
+	.s rows="100" //$Get(%request.Data("rows",1))
+	.s page="1" //$Get(%request.Data("page",1))
+	.s adrRepID=$Get(%request.Data("adrRepID",1))
+	.s evtType=$Get(%request.Data("evtType",1))
+	.w ##class(web.DHCADVMEDREPORT).GetAdrRepTypeByID(rows,page,adrRepID,evtType)
+	
+	
+	//查询不良事件类别
+	i action = "QueryAdvTypeInfoList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCADVMEDCOMMON).QueryAdvTypeInfoList(rows,page)
+	
+
+	//加载部门
+	i action = "QueryCtCptList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCADVMEDCOMMON).QueryDocLocList(rows,page)
+	
+	//保存不良事件名称
+	i action = "SaveAdrEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).SaveMedAdrEvent(params)
+	
+	//删除不良事件名称
+	i action = "DelAdrEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).DelAdrEvent(params)
+	
+	///不良反应/事件名称查询
+	i action = "QueryAdrEvent" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).QueryAdrEvent(rows,page,params)
+	
+	//不良反应/事件名称
+	i action = "QueryAdrEventCombo" d 
+	.d ##class(web.DHCADVMEDEVENTADD).QueryAdrEventCombo()
+//============================不良事件权限查看=====================================
+	
+	///查询-权限查看按类别
+	i action = "GetQuerySec" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).GetQuerySec(params)
+	
+	//保存-权限查看按类别
+	i action = "SaveQuerySec" d
+	.s params=$Get(%request.Data("params",1))
+	.W ##class(web.DHCADVMEDEVENTADD).SaveQuerySec(params)
+	
+	//删除-权限查看按类别
+	i action = "DelQuerySec" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).DelQuerySec(params)	
+//============================公共查询方法=====================================
+	//获取病人登记号	
+	i action = "getPatNo" d
+	.S patID=$Get(%request.Data("patID",1))
+	.w ##class(web.DHCADVCOMMON).getPatNo(patID)
+
+	//病人基本信息
+	i action = "getRepPatInfo" d
+	.S PatNo=$Get(%request.Data("PatNo",1))
+	.S EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCADVCOMMON).getRepPatInfo(PatNo,EpisodeID)
+	
+	//获取病人就诊列表
+	i action = "GetAdmDs" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s Input=$Get(%request.Data("Input",1))
+	.s Type=$Get(%request.Data("Type",1))
+	.s LgHospID=$Get(%request.Data("LgHospID",1)) //hxy 2020-02-18
+	.;s Input="0000000001"
+	.w ##class(web.DHCADVCOMMON).GetAdmDs(rows,page,Input,Type,LgHospID)	
+
+	//性别信息
+	i action = "SelSex" d
+	.d ##class(web.DHCADVCOMMON).SelSex()
+
+//============================医疗器械不良反应报告表=====================================
+	
+	//重点标记 
+	i action = "MaterImpReport" d
+	.S matadrID=$Get(%request.Data("ID",1))
+	.S matadrRepImpFlag=$Get(%request.Data("RepImpFlag",1))
+	.S TMP("YYT")=matadrID_"^"_matadrRepImpFlag
+	.w ##class(web.DHCADVMEDREPORT).InsImpReport(matadrID,matadrRepImpFlag)
+	
+	//保存检查项目名称
+	i action = "SaveMaEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVMEDREPORT).SaveMaEvent(params)
+	
+	//删除检查项目名称
+	i action = "DelMaEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVMEDREPORT).DelMaEvent(params)
+	
+	///检查项目名称查询
+	i action = "QueryMataEvent" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPORT).QueryMataEvent(rows,page,params)
+	
+	//保存检查项目类型名称
+	i action = "SaveEventType" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVMEDREPORT).SaveEventType(params)
+	
+	//删除检查项目类型名称
+	i action = "DelEventType" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVMEDREPORT).DelEventType(params)
+	
+	///检查项目类型名称查询
+	i action = "QueryEventType" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPORT).QueryEventType(rows,page,params)
+	
+	///保存-医疗器械不良反应报告
+	i action = "saveMataReport" d
+	.s matadrID=$Get(%request.Data("matadrID",1))
+	.s matadrDataList=$Get(%request.Data("matadrDataList",1))
+	.S matadrRepAuditList=$Get(%request.Data("matadrRepAuditList",1))
+	.S flag=$Get(%request.Data("flag",1))
+	.S ret=##class(web.DHCADVMEDREPORT).saveMataReport(matadrID,matadrDataList,matadrRepAuditList,flag)
+	.W ret
+	//删除-医疗器械不良反应报告
+	i action = "DelMataReport" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPORT).DelMataReport(params)
+	
+	
+	//获取报告信息
+	i action = "getMataRepInfo" d
+	.s matadrID=$Get(%request.Data("matadrID",1))
+	.S params=$Get(%request.Data("params",1))
+	.S ret=##class(web.DHCADVMEDREPORT).getMataRepInfo(matadrID,params)
+	.w ret
+	
+
+
+
+	//获取页面默认信息
+	i action = "getMataInfo" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPORT).getMataInfo(params)
+	
+	//单位
+	i action = "selUom" d 
+	.d ##class(web.DHCADVMEDREPORT).SelUom()
+	
+	//类别
+	i action = "selType" d 
+	.d ##class(web.DHCADVMEDREPORT).SelType()
+	
+	//获得小界面表格信息信息
+	i action = "QueryMataEventType" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.S retval=##class(web.DHCADVMEDREPORT).QueryMataEventType(rows,page,params)
+	
+	//保存小界面表格信息
+	i action = "SaveEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVMEDREPORT).SaveEvent(params)
+	
+	//药品
+	i action = "QueryDrgList" d
+	.S Input=$Get(%request.Data("Input",1))
+	.w ##class(web.DHCADVJSONCOMMON).QueryDrgList(Input)
+	.
+	
+	//审批日志
+	i action = "QueryAuditLog" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPORT).QueryAuditLog(params)
+	.
+
+	//工作流项目类型
+	i action = "SelEvtWFItm" d 
+	.d ##class(web.DHCADVEVTWORKFLOW).SelEvtWFItm()
+	
+	 //保存-工作流项目定义
+	i action = "SaveAdrEvtworkFlow" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).SaveAdrEvtworkFlow(params)
+	
+	//删除-工作流项目定义
+	i action = "DelAdrEvtworkFlow" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).DelAdrEvtworkFlow(params)
+	
+	///查询-工作流项目定义
+	i action = "QueryAdrEvtworkFlow" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).QueryAdrEvtworkFlow(rows,page,params)
+	
+	//保存-工作流项目
+	i action = "SaveAdrEvtworkFlowItm" d
+	.s params=$Get(%request.Data("params",1))
+	.W ##class(web.DHCADVEVTWORKFLOW).SaveAdrEvtworkFlowItm(params)
+	
+	//删除-工作流项目
+	i action = "DelAdrEvtworkFlowItm" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).DelAdrEvtworkFlowItm(params)
+	
+	
+	///查询-工作流项目
+	i action = "QueryEventWorkFlowItm" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).QueryEventWorkFlowItm(rows,page,params)
+	
+	//更新工作流项目序号
+	i action="UpdEventWorkFlowItmNum" d
+	.s input=$Get(%request.Data("input",1))
+	.s retvalue=##class(web.DHCADVEVTWORKFLOW).UpdEventWorkFlowItmNum(input)
+	.s retinfo=retvalue
+	.s ret="retvalue"_"^"_retvalue_$c(2)_"retinfo"_"^"_retinfo
+	.w ##Class(web.DHCADVJSONCOMMON).JsonText(ret)
+	
+	//保存-状态授权
+	i action = "SaveAdrWorkFlowGrant" d
+	.s params=$Get(%request.Data("params",1))
+	.W ##class(web.DHCADVEVTWORKFLOW).SaveAdrWorkFlowGrant(params)
+	
+	//删除-状态授权
+	i action = "DelAdrWorkFlowGrant" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).DelAdrWorkFlowGrant(params)
+	
+	///查询-工作流项目授权
+	i action = "QueryEventWorkFlowGrant" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).QueryEventWorkFlowGrant(params)
+	
+	//权限指向ComboBox
+	i action = "GetSSPPoint" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.s input=$Get(%request.Data("q",1))
+	.d ##class(web.DHCADVEVTWORKFLOW).GetSSPPoint(rows,page,params,input)
+	
+	//检查报告编码是否存在
+	i action = "SeaMataRepNo" d
+	.s matadrNo=$Get(%request.Data("matadrNo",1))
+	.w ##class(web.DHCADVMEDREPORT).SearchRepNoRepet(matadrNo)
+	
+	//类型 2016-09-29 congyue
+	i action = "QueryEvtworkFlow" d
+	.w ##class(web.DHCADVSEARCHREPORT).QueryEvtworkFlow()
+	
+	//状态 2016-09-29 congyue
+	i action = "QueryFlowItm" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).QueryFlowItm(params)
+	
+//============================用药差错报告表=====================================
+
+    //重点标记 
+	i action = "DrugerImpReport" d
+	.S medsrID=$Get(%request.Data("ID",1))
+	.S medsrRepImpFlag=$Get(%request.Data("RepImpFlag",1))
+	.w ##class(web.DHCADVMEDSAREPORT).InsImpReport(medsrID,medsrRepImpFlag)
+	
+	 //用药差错查询统计明细
+	i action = "getMedLinkDetail" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSAFECOUNT).getMedLinkDetail(rows,page,params)
+	
+    //用药差错查询
+	i action = "getMedQuery" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSAFECOUNT).getMedQuery(rows,page,params)
+	
+	
+	//获取页面默认信息
+	i action = "getMedsrInfo" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).getMedsrInfo(params)
+
+	//保存-用药环节
+	i action = "SaveMedUseLink" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).SaveMedUseLink(params)
+	
+	//删除-用药环节
+	i action = "DelMedUseLink" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).DelMedUseLink(params)
+	
+	///查询-用药环节
+	i action = "QueryMedUseLink" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).QueryMedUseLink(rows,page,params)
+	
+	//保存-用药环节项目
+	i action = "SaveMedUseLinkItm" d
+	.s params=$Get(%request.Data("params",1))
+	.W ##class(web.DHCADVMEDSAREPORT).SaveMedUseLinkItm(params)
+	
+	//删除-用药环节项目
+	i action = "DelMedUseLinkItm" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).DelMedUseLinkItm(params)
+	
+	
+	///查询-用药环节项目
+	i action = "QueryMedUseLinkItm" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).QueryMedUseLinkItm(rows,page,params)
+
+	///查询-用药环节项目(差错报告界面查询)。。。
+	i action = "QueryMULinkItm" d
+	.s rows="50" ; $Get(%request.Data("rows",1))
+	.s page="1" ;$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).QueryMULinkItm(rows,page,params)
+	
+	///保存-用药差错报告
+
+	i action = "saveMedsafetyReport" d
+	.s medsrID=$Get(%request.Data("medsrID",1))
+	.s medsrDataList=$Get(%request.Data("medsrDataList",1))
+	.S medsrRepAuditList=$Get(%request.Data("medsrRepAuditList",1))
+	.S flag=$Get(%request.Data("flag",1))
+	.S ret=##class(web.DHCADVMEDSAREPORT).saveMedsafetyReport(medsrID,medsrDataList,medsrRepAuditList,flag)
+	.W ret
+	//删除-用药差错报告
+	i action = "DelMedsReport" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDSAREPORT).DelMedsReport(params)
+	//科室信息 2017-08-01 cy 修改 下拉框传递参数检索
+	i action = "SelLocDesc" d 
+	.s input=$Get(%request.Data("q",1))
+	.d ##class(web.DHCADVMEDSAREPORT).SelLocDesc(input)
+	
+	//药物信息
+	i action = "QueryDrugDesc" d
+	.S Input=$Get(%request.Data("Input",1))
+	.S MedUseCode=$Get(%request.Data("MedUseCode",1))
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCADVMEDSAREPORT).QueryDrugDesc(rows,page,Input,MedUseCode)
+	
+	//获取报告信息
+	i action = "getMedsRepInfo" d
+	.s medsrID=$Get(%request.Data("medsrID",1))
+	.S params=$Get(%request.Data("params",1))
+	.S ret=##class(web.DHCADVMEDSAREPORT).getMedsRepInfo(medsrID,params)
+	.w ret
+	
+	//获取病人医嘱信息
+	i action = "GetAdmOrdList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	.S ret=##class(web.DHCADVCOMMON).GetAdmOrdList(rows,page,EpisodeID)
+	.w ret
+	
+	//获取病人医嘱信息 
+	i action = "getRepOrdInfo" d
+	.s params=$Get(%request.Data("params",1))
+	.S ret=##class(web.DHCADVMEDSAREPORT).getRepOrdInfo(params)
+	.w ret
+	
+	//给药频率（用药频率）信息
+	i action = "QueryPhcFreqDesc" d
+	.S Input=$Get(%request.Data("Input",1))
+	.S MedUseCode=$Get(%request.Data("MedUseCode",1))
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCADVMEDSAREPORT).QueryPhcFreqDesc(rows,page,Input,MedUseCode)
+	
+	//给药途径（药品用法）信息
+	i action = "QueryPhcInDesc" d
+	.S Input=$Get(%request.Data("Input",1))
+	.S MedUseCode=$Get(%request.Data("MedUseCode",1))
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.w ##class(web.DHCADVMEDSAREPORT).QueryPhcInDesc(rows,page,Input,MedUseCode)
+	
+	//检查报告编码是否存在
+	i action = "SeaMedsrRepNo" d
+	.s medsrRepNo=$Get(%request.Data("medsrRepNo",1))
+	.w ##class(web.DHCADVMEDSAREPORT).SearchRepNoRepet(medsrRepNo)
+	
+	//防止页面错误
+	i action="JoeClearPage"  d
+	.w "["_"]"
+//============================输血不良反应报告=====================================
+
+    //重点标记 
+	i action = "BloodImpReport" d
+	.S bldrptID=$Get(%request.Data("ID",1))
+	.S bldrptRepImpFlag=$Get(%request.Data("RepImpFlag",1))
+	.w ##class(web.DHCADVBLDREPORT).InsImpReport(bldrptID,bldrptRepImpFlag)
+
+	//保存-输血患者体征
+	i action = "SaveBldBasic" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVBLDREPORT).SaveBldBasic(params)
+	
+	//删除-输血患者体征
+	i action = "DelBldBasic" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVBLDREPORT).DelBldBasic(params)
+	
+	///查询-输血患者体征
+	i action = "QueryBldBasic" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVBLDREPORT).QueryBldBasic(rows,page,params)
+	
+	
+	//获取页面默认信息
+	i action = "getBloodInfo" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVBLDREPORT).getBloodInfo(params)
+	
+	///查询-输血患者体征
+	i action = "QueryBldBasRpt" d
+	.s rows="40" ;$Get(%request.Data("rows",1))
+	.s page="1" ;$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVBLDREPORT).QueryBldBasRpt(rows,page,params)
+	
+	//病区信息 2017-08-01 cy 修改 下拉框传递参数检索
+	i action = "SelwardDesc" d
+	.s input=$Get(%request.Data("q",1))
+	.d ##class(web.DHCADVCOMMON).SelwardDesc(input)
+	
+	///保存-输血不良反应报告
+	i action = "saveBldrptReport" d
+	.s bldrptID=$Get(%request.Data("bldrptID",1))
+	.s bldrptDataList=$Get(%request.Data("bldrptDataList",1))
+	.S bldrptRepAuditList=$Get(%request.Data("bldrptRepAuditList",1))
+	.S flag=$Get(%request.Data("flag",1))
+	.S ret=##class(web.DHCADVBLDREPORT).saveBldrptReport(bldrptID,bldrptDataList,bldrptRepAuditList,flag)
+	.W ret
+	//删除-输血不良反应报告
+	i action = "DelBldrptReport" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVBLDREPORT).DelBldrptReport(params)
+
+	//获取-输血不良反应报告信息
+	i action = "getBldrptRepInfo" d
+	.s bldrptID=$Get(%request.Data("bldrptID",1))
+	.S params=$Get(%request.Data("params",1))
+	.S ret=##class(web.DHCADVBLDREPORT).getBldrptRepInfo(bldrptID,params)
+	.w ret
+	
+	//获取-血液类别信息
+	i action = "getBldTypeInfo" d
+	.s rows="50" ; $Get(%request.Data("rows",1))
+	.s page="1" ;$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.;s ^BIANSHUAI(1)=rows_"||"_page_"||"_params
+	.w ##class(web.DHCADVBLDREPORT).getBldTypeInfo(rows,page,params)
+	
+	//根据就诊号查询本次就诊的所有发血单信息
+	i action = "GetPatBldRecordNew" d
+	.s rows="50" ; $Get(%request.Data("rows",1))
+	.s page="1" ;$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("EpisodeID",1))
+	.w ##class(web.DHCADVINTERFACE).GetPatBldRecordNew(rows,page,params) ;congyue 2016-10-27
+	
+	
+	//根据发血单号查询血袋信息
+	i action = "GetPatBldRecordPacksNew" d
+	.s rows="50" ; $Get(%request.Data("rows",1))
+	.s page="1" ;$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVINTERFACE).GetPatBldRecordPacksNew(rows,page,params) //2016-10-28 congyue
+	
+	//检查报告编码是否存在
+	i action = "SeaBldRepNo" d
+	.s bldRepNo=$Get(%request.Data("bldRepNo",1))
+	.w ##class(web.DHCADVBLDREPORT).SearchRepNoRepet(bldRepNo)
+
+//============================查询不良反应报告=====================================
+	//科室信息 2016-09-29 congyue
+	i action = "GetQueryLoc" d
+	.S RepTypeCode=$Get(%request.Data("RepTypeCode",1))
+	.S input=$Get(%request.Data("q",1))
+	.w ##class(web.DHCADVMEDEVENTADD).GetQueryLoc(RepTypeCode,input)
+	.
+	//科室信息
+	i action = "SelAllLoc" d
+	.s input=$Get(%request.Data("q",1))
+	.d ##class(web.DHCADVSEARCHREPORT).SelAllLoc(input)
+
+	//事件类型
+	i action = "selEvent" d 
+	.d ##class(web.DHCADVSEARCHREPORT).SelEvent()
+	
+	
+	//查询不良反应报告（已提交）
+	i action = "QueryMataReport" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).QueryMataReport(rows,page,params)
+
+	//查询不良反应报告(所有)
+	i action = "GetMataReport" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).GetMataReport(rows,page,params)
+	
+	 //报告审批
+	i action = "AuditMataReport" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).AuditMataReport(params)
+	.
+	
+	//报告接收
+	i action = "REMataReport" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).REMataReport(params)
+	
+	//报告驳回
+	i action = "ReportBack" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).ReportBack(params)
+	
+	//查询审批明细
+	i action = "QueryAuditMess" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).QueryAuditMess(rows,page,params)
+	
+	//查询审批子表明细
+	i action = "QueryAudItmMess" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).QueryAudItmMess(params)
+
+	
+//============================不良事件报告数量统计图饼=====================================
+	
+	
+	//不良反应报告统计
+	i action = "StatisticReport" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSTATISTICS).StatisticReport(rows,page,params)
+
+	
+	//不良反应报告分析
+	i action = "AnalysisReport" d
+	.S params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVSTATISTICS).AnalysisReport(params)
+	
+	
+	
+	//============================医疗不良事件报告分类=====================================
+	//保存-医疗不良事件报告分类
+	i action = "SaveMedRepCat" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPCAT).SaveMedRepCat(params)
+	
+	//删除-医疗不良事件报告分类
+	i action = "DelMedRepCat" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPCAT).DelMedRepCat(params)
+	
+	///查询-医疗不良事件报告分类
+	i action = "QueryMedRepCat" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPCAT).QueryMedRepCat(rows,page,params)
+
+	///查询-医疗不良事件报告分类
+	i action = "QueryMrcInfo" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDREPCAT).QueryMrcInfo(rows,page,params)
+	
+	
+	//===================医疗不良事件处理办法================================
+	 //保存-不良事件处理办法
+	i action = "SaveAdvDeal" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).SaveAdvDeal(params)
+	
+	//删除-不良事件处理办法
+	i action = "DelAdvDeal" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).DelAdvDeal(params)
+	
+	///查询-不良事件处理办法
+	i action = "QueryAdvDeal" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).QueryAdvDeal(rows,page,params)
+	
+	//===================医疗不良事件改进办法================================
+	//保存-不良事件改进办法
+	i action = "SaveAdvImp" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).SaveAdvImp(params)
+	
+	//删除-不良事件改进办法
+	i action = "DelAdvImp" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).DelAdvImp(params)
+	
+	///查询-不良事件改进办法
+	i action = "QueryAdvImp" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).QueryAdvImp(rows,page,params)
+	
+	
+	//===================不良事件全部月统计================================
+	
+	//不良事件全部月统计
+	i action = "StatAllRepByMon" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSTATALLREPBYMON).StatAllRepByMon(rows,page,params)
+	
+	//不良事件全部月统计分析
+	i action = "AnalysisRepByMon" d
+	.S params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVSTATALLREPBYMON).AnalysisRepByMon(params)
+	
+	
+	
+		
+	//===================不良事件季度统计================================
+	
+	 //不良事件季度统计
+	i action = "StatAllRepByQau" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSTATALLREPBYQAU).StatAllRepByQau(rows,page,params)
+	
+	//不良事件季度统计分析
+	i action = "AnalysisRepByQau" d
+	.S params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVSTATALLREPBYQAU).AnalysisRepByQau(params)
+	
+	
+
+//============================不良事件后台管理=====================================
+
+	//保存-不良事件后台管理信息
+	i action = "SaveRepManage" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVREPMANAGE).SaveRepManage(params)
+	
+	//删除-不良事件后台管理信息
+	i action = "DelRepManage" d
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVREPMANAGE).DelRepManage(params)
+
+	//所发生不良事件类别
+	i action = "SelMainCat" d 
+	.d ##class(web.DHCADVREPMANAGE).SelMainCat()
+
+	//二级类别
+	i action = "SelSubCat" d 
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVREPMANAGE).SelSubCat(params)
+
+	//处理办法
+	i action = "SelDealMethod" d 
+	.s LgHospID=$Get(%request.Data("LgHospID",1)) //2019-07-04
+	.d ##class(web.DHCADVREPMANAGE).SelDealMethod(LgHospID) //hxy 2019-07-04 LgHospID
+ 
+ 	//改进办法
+	i action = "SelImpMethod" d 
+	.s LgHospID=$Get(%request.Data("LgHospID",1)) //2019-07-04
+	.d ##class(web.DHCADVREPMANAGE).SelImpMethod(LgHospID) //hxy 2019-07-04 LgHospID
+	
+	//获取不良事件后台管理信息
+	i action = "GetRepManageInfo" d
+	.s adrRepID= $Get(%request.Data("adrRepID",1))
+	.s RepType= $Get(%request.Data("RepType",1))
+	.s ret=##class(web.DHCADVREPMANAGE).GetRepManageInfo(adrRepID,RepType)
+	.w ret
+
+	//============================不良事件等级分析=====================================
+	
+	//不良反应报告统计
+	i action = "QueryLelStatic" d
+	.S params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVLELSTATIC).QueryLelStatic(params)
+	
+	//不良反应报告分析
+	i action = "QueryLelAnalysis" d
+	.S params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVLELSTATIC).QueryLelAnalysis(params)
+
+    //============================医疗药品不良反应报告表=====================================
+
+    //重点标记
+	i action = "REPImpReport" d
+	.S ID=$Get(%request.Data("ID",1))
+	.S RepImpFlag=$Get(%request.Data("RepImpFlag",1))
+	.w ##class(web.DHCADVMADRREPORT).InsImpReport(ID,RepImpFlag)
+    
+	///保存-医疗药品不良反应报告
+	i action = "SaveMadrReport" d
+	.s advdrID=$Get(%request.Data("advdrID",1))
+	.s advdrepDataList=$Get(%request.Data("advdrepDataList",1))
+	.S MRCICItms=$Get(%request.Data("MRCICItms",1))  
+	.S ItmStr=$Get(%request.Data("ItmStr",1))
+	.S advRepEvtItems=$Get(%request.Data("AdrEvtItems",1))
+	.S advdrRepAuditList=$Get(%request.Data("advdrRepAuditList",1))
+	.S flag=$Get(%request.Data("flag",1))
+	.S ret=##class(web.DHCADVMADRREPORT).SaveMadrReport(advdrID,advdrepDataList,MRCICItms,ItmStr,advRepEvtItems,advdrRepAuditList,flag)
+	.W ret
+	
+	//医院
+	i action = "SelCTHospital" d 
+	.d ##class(web.DHCADVDRUGCOMMON).SelCTHospital()
+	
+	//删除-医疗药品不良反应报告
+	i action = "DelMadrReport" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMADRREPORT).DelMadrReport(params)
+	
+	
+	//获取报告信息
+	i action = "GetMadrRepInfo" d
+	.s advdrID=$Get(%request.Data("advdrID",1))
+	.S params=$Get(%request.Data("params",1))
+	.S ret=##class(web.DHCADVMADRREPORT).GetMadrRepInfo(advdrID,params)
+	.w ret
+	
+	//获取不良反应报告药品信息
+	i action = "getAdvRepDrgItm" d
+	.S type=$Get(%request.Data("params",1))
+	.S advdrID=$Get(%request.Data("advdrID",1))
+	.w ##class(web.DHCADVMADRREPORT).getAdvRepDrgItm(type,advdrID)
+	
+	//获取页面默认信息
+	i action = "getMadrInfo" d  
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMADRREPORT).getMadrInfo(params)
+	
+	//民族
+	i action = "selNation" d 
+	.d ##class(web.DHCADVDRUGCOMMON).SelNation()
+	
+	
+	//病人医嘱信息
+	i action = "GetPatOEInfo" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S AdmDr=$Get(%request.Data("params",1))
+	.S InstruType=$Get(%request.Data("instrutype",1))
+	.S retval=##class(web.DHCADVDRUGCOMMON).GetPatOEInfo(rows,page,AdmDr,InstruType)
+	.i retval'="" w ##class(web.DHCADVJSONCOMMON).getJsonEmptySign(0)
+	
+	
+	//不良反应字典表(不良反应事件)
+	i action = "GetAdvEvent" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S alise=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDRUGCOMMON).GetAdvEvent(rows,page,alise)
+	
+	//检查报告编码是否存在
+	i action = "SeaAdvRepNo" d
+	.s advRepNo=$Get(%request.Data("advRepNo",1))
+	.w ##class(web.DHCADVMADRREPORT).SearchRepNoRepet(advRepNo)
+	
+//=================分享==============================================================
+
+   	//报告分享
+	i action = "InsRepShare" d
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVREPSHARE).InsRepShare(params)
+	
+	//报告分享
+	i action = "getRepShareList" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVREPSHARE).getRepShareList(rows,page,params)
+	
+	///保存评论明细
+	i action = "saveReviewDetail" d
+	.s ronID=$Get(%request.Data("ronID",1))
+	.s ronDataList=$Get(%request.Data("ronDataList",1))
+	.s retval=##Class(web.DHCADVREPONLINE).saveReviewDetail(ronID,ronDataList)
+	.w ##class(web.DHCADVJSONCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+	
+	//评论问题列表
+	i action = "QueryRepOnline" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##Class(web.DHCADVREPONLINE).QueryRepOnline(rows,page,params)
+	
+	///设置/取消评论意见状态
+	i action = "saveAdoptOnline" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##Class(web.DHCADVREPONLINE).saveAdoptOnline(params)
+	//.w ##class(web.DHCADVJSONCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+	
+
+	//点赞计数表添加  InsRepShareDate
+	i action = "InsRepOnlineAcc" d
+	.S ronID=$Get(%request.Data("ronID",1))
+	.S LgUserID=$Get(%request.Data("LgUserID",1))
+	.w ##class(web.DHCADVREPONLINE).InsRepOnlineAcc(ronID,LgUserID)
+	//.w ##class(web.DHCADVJSONCOMMON).getJsonData("ErrorCode^ErrorMessage",retval)
+	
+	//点赞详情
+	i action = "GetOkNumDetail" d  
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVREPONLINE).GetOkNumDetail(rows,page,params)
+	
+	//通过ID获取分享信息
+	i action = "getRepShareByID" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1)) 
+	.w ##class(web.DHCADVREPSHARE).getRepShareByID(rows,page,params)
+	
+//============================预警平台查询和统计分析=====================================
+	
+	//病区统计
+	i action = "StaticPreAlert" d
+	.S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVPREALERT).StaticPreAlert(rows,page,params)
+	
+	//病区分析
+	i action = "AnalyPreAlert" d
+	.S params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVPREALERT).AnalyPreAlert(params)
+
+	//待办报告分析
+	i action = "UntreatedList" d
+    .S rows=$Get(%request.Data("rows",1))
+	.S page=$Get(%request.Data("page",1))
+	.S param=$Get(%request.Data("param",1))
+	.d ##class(web.DHCADVPREALERT).UntreatedList(rows,page,param)
+
+//============================转抄操作=====================================
+	
+	///获取User信息
+	i action = "GetUserDr" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1)) ;New
+	.w ##class(web.DHCADVSEARCHREPORT).GetUserDr(rows,page,params)
+	
+	///查询-User信息
+	i action = "QueryUserMess" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("paramsuser",1)) //2016-10-13
+	.w ##class(web.DHCADVSEARCHREPORT).QueryUserMess(rows,page,params)
+	
+	///查询-转抄指向信息
+	i action = "QueryTranLocUser" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).QueryTranLocUser(rows,page,params)
+	
+	///查询-审批信息(人员)
+	i action = "SearchAuditMess" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).SearchAuditMess(params)
+	
+	///查询-审批子表信息(登录人是否有被指向信息)
+	i action = "SearchAuditIUser" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVSEARCHREPORT).SearchAuditIUser(params)
+	
+	//获取处理的日期时间 2016-10-13
+	i action = "GetDealDateTime" d 
+	.w ##class(web.DHCADVSEARCHREPORT).GetDealDateTime()
+	
+	///保存-转抄提交指向信息
+	i action = "SaveTranMess" d
+	.S medadrList=$Get(%request.Data("medadrList",1))
+	.S medadriList=$Get(%request.Data("medadriList",1))
+	.W ##class(web.DHCADVSEARCHREPORT).SaveTranMess(medadrList,medadriList)
+	
+	///保存-转抄回复信息
+	i action = "SaveReplyMess" d
+	.S medadrList=$Get(%request.Data("medadrList",1))
+	.S medadriList=$Get(%request.Data("medadriList",1))
+	.W ##class(web.DHCADVSEARCHREPORT).SaveReplyMess(medadrList,medadriList)
+
+//===================不良反应报告事件名称================================
+	//保存-不良反应报告事件名称
+	i action = "SaveAdvEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).SaveAdvEvent(params)
+	
+	//删除-不良反应报告事件名称
+	i action = "DelAdvEvent" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).DelAdvEvent(params)
+	
+	///查询-不良反应报告事件名称
+	i action = "QueryAdvEvent" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVDEALMETHOD).QueryAdvEvent(rows,page,params)
+	
+	//获取评估权限标志
+	i action = "GetAssessAuthority" d
+	.s ReportID=$Get(%request.Data("ReportID",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVCOMMON).GetAssessAuthority(ReportID,params)
+	
+	//获取审核权限
+	i action = "GetRepStatus" d
+	.s params=$Get(%request.Data("RepAuditList",1))
+	.w ##class(web.DHCADVCOMMONPART).GetRepStatus(params)
+	
+//===================新版不良事件 类型查询================================
+	//不良事件升级类型查询
+	i action = "GetRepTypeList" d
+	.s UserList=$Get(%request.Data("UserList",1))
+	.d ##class(web.DHCADVCOMMONPART).GetRepTypeList(UserList)
+	//事件类型 2017-11-28 审批界面 
+	i action = "SelEventbyNew" d 
+	.s param=$Get(%request.Data("param",1)) ;2018-12-26 传参登录信息，获取有查询权限的类型
+	.d ##class(web.DHCADVCOMMONPART).SelEventbyNew(param)
+	//事件状态 2017-11-28 审批界面
+	i action = "SelEvtStatusbyNew" d 
+	.s params=$Get(%request.Data("params",1))
+	.d ##class(web.DHCADVCOMMONPART).SelEvtStatusbyNew(params)
+	
+//===================新版不良事件 类型查询================================
+//科室信息(标库新版：科室描述的拼音码和描述分开) --兼容旧版 yangyongtao 2017-11-17
+	i action = "GetAllLocNewVersion" d
+   	.s input=$Get(%request.Data("q",1))			//combobox mode设置为remote时，会传递一个名称为q的参数，内容时输入框中内容
+   	.s hospId=$Get(%request.Data("hospId",1))
+	.d ##class(web.DHCADVCOMMONPART).GetAllLocNewVersion(input,hospId)		
+	
+	i action = "CheckAssess" d	//qunianpeng 2018/1/9 判断报告是否评估过  
+   	.s repID=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVREPMANAGE).CheckAssess(repID)	
+	
+	//删除-节假日数据
+	i action = "DelHoliday" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCAdvHoliday).DelHoliday(params)
+	
+	///查询-节假日数据
+	i action = "QueryHoliday" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCAdvHoliday).QueryHoliday(rows,page,params)
+
+	//通过病案号获取病人就诊列表 2018-05-03
+	i action = "GetAdmList" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s Input=$Get(%request.Data("Input",1))
+	.s Type=$Get(%request.Data("Type",1))
+	.s LgHospID=$Get(%request.Data("LgHospID",1)) //hxy 2020-02-26
+	.;s Input="0000000001"
+	.w ##class(web.DHCADVCOMMON).GetAdmList(rows,page,Input,Type,LgHospID)
+	
+	//===================新版不良事件 不良反应事件分类添加子类================================
+	//保存不良反应事件分类子类
+	i action = "SaveAdrEventItm" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).SaveMedAdrEventItm(params)
+	
+	//删除不良反应事件分类子类
+	i action = "DelAdrEventItm" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).DelAdrEventItm(params)
+	
+	///不良反应事件分类子类查询
+	i action = "QueryAdrEventItm" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).QueryAdrEventItm(rows,page,params)
+
+	//获取接收(审批)科室 2017-05-24 
+	i action = "QueryAuditLocList" d
+	.s RepID=$Get(%request.Data("RepID",1))
+	.s RepTypeCode=$Get(%request.Data("RepTypeCode",1))
+	.s CurStatusDR=$Get(%request.Data("CurStatusDR",1))
+	.w ##class(web.DHCADVCOMMON).QueryAuditLocList(RepID,RepTypeCode,CurStatusDR)
+
+	///获取指定科室的成员信息 2018-05-10 wxj
+	i action = "GetStaff" d
+   	.s rows=100 ;$Get(%request.Data("rows",1))
+	.s page=1 ;$Get(%request.Data("page",1))
+	.s Input=$Get(%request.Data("Input",1))
+	.w ##class(web.DHCADVCOMMON).GetStaff(rows,page,Input)	
+	///查询-不良事件子类树
+	i action = "QueryAdrItmTree" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVMEDEVENTADD).QueryAdrItmTree(rows,page,params)
+	
+	///查询-维护的类别树（绑定界面）
+	i action = "QueryTypeTree" d
+	.s rows=$Get(%request.Data("rows",1))
+	.s page=$Get(%request.Data("page",1))
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVFormDic).QueryTypeTree(rows,page,params)
+	
+	
+	////工作流 事件等级 相关配置维护
+	//保存- 工作流 事件等级
+	i action = "SaveEvtWorkFlowLink" d
+	.s params=$Get(%request.Data("params",1))
+	.W ##class(web.DHCADVEVTWORKFLOW).SaveEvtWorkFlowLink(params)
+	
+	//删除- 工作流 事件等级
+	i action = "DelEvtWorkFlowLink" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).DelEvtWorkFlowLink(params)
+	
+	///查询- 工作流 事件等级
+	i action = "QueryEvtWorkFlowLink" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).QueryEvtWorkFlowLink(params)
+	//通过科室ID获取人员列表
+	i action = "GetLocUserList" d
+   	.s input=$Get(%request.Data("q",1))			
+   	.s LocDr=$Get(%request.Data("LocDr",1))
+	.d ##class(web.DHCADVCOMMONPART).GetLocUserList(LocDr,input)		
+</script>

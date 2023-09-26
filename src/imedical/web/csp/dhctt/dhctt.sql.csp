@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>查询sql</title>
+	<DHCTT:HEAD/>
+</head>
+<body>
+<DHCTT:MENU/>
+<SCRIPT language="CACHE" RUNAT=SERVER>
+	
+	s myTmpQuery = $g(%request.Data("Query",1),"")
+	s myQuery=""
+	f i=1:1:$l(myTmpQuery,$c(13)) d
+	.s tmp=$p(myTmpQuery,$c(13),i)
+	.i tmp'["--" s myQuery = myQuery_tmp
+	
+	s tableName = $p($p($p(myQuery,"from",2),"where"),"--",1)
+	s tableName = $zstrip($tr($c(13,10)_tableName_$c(13,10),$C(9,13,10),"   "),"<>W")
+	s tableName = $p(tableName," ")
+	s tableName = ##class(web.Util.DHCJFClassGlobal).GetTableInfo(tableName)
+	s pojoPackageName = $p(tableName,"!",2)
+	s pojoClassName = $p(tableName,"!",3)
+	s masterIndex = $p(tableName,"!",4)
+	s tableName = $p(tableName,"!",1)
+	//转换大小写
+	s MaxRows = $g(%request.Data("MaxRows",1),100)
+	s PackageNameInput = $g(%request.Data("PackageNameInput",1),"User")
+	s RuntimeMode = $g(%request.Data("RuntimeMode",1),"")
+</script>
+<font class='greentitle'>DHC-APP下的表查询</font>
+
+<div style="margin:2px 5px 0px 20px">
+	<form action="dhctt.sql.csp" method="post">
+		<table class="AutoForm" style="width:100%;">
+			<tbody>
+				<tr><td class="AutoFormButton" style="text-align:left;"><nobr>
+						&nbsp;&nbsp;Display:&nbsp;
+						<select class="AutoForm" title="Display mode used for the results" name="RuntimeMode">
+						<option class="AutoForm" value="" #($s(RuntimeMode="":"selected",1:""))#>
+						</option><option class="AutoForm" value="0" #($s(RuntimeMode=0:"selected",1:""))#>Logical Mode
+						</option><option class="AutoForm" value="1" #($s(RuntimeMode=1:"selected",1:""))#>ODBC Mode
+						</option><option class="AutoForm" value="2" #($s(RuntimeMode=2:"selected",1:""))#>Display Mode
+						</option></select>
+						&nbsp;&nbsp;
+						Max Rows:&nbsp;
+						<input class="AutoForm" type="text" title="Maximum number of rows to display" name="MaxRows" size="8" value="#(MaxRows)#">
+						Class Package:
+						<input class="AutoForm" type="text" title="联想表名时,去遍历的包" id="PackageNameInput" name="PackageNameInput" value="#(PackageNameInput)#">
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;							
+						<input class="AutoFormButton" type="submit" name="$AUTOFORM_EXECUTE" value="Execute Query">&nbsp;
+				</nobr></td></tr>
+				<tr class="AutoForm" valign="middle">			
+					<td class="AutoFormControl" nowrap="">
+						<textarea spellcheck="false" name="Query" id="Query" style="height:100px;width:100%;">#(myTmpQuery)#</textarea>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</form>
+</div>
+	<script type="text/javascript" src="../../scripts/dhctt/DHCTable.js"></script>
+	<script type="text/javascript">
+		var tableName = "#(tableName)#";
+		var pojoPackageName ="#(pojoPackageName)#";
+		var pojoClassName = "#(pojoClassName)#";
+		var masterIndex = '#(masterIndex)#';				
+	</script>
+	<script type="text/javascript" src="../../scripts/dhctt/dhcttsql.js"></script>
+<SCRIPT language="CACHE" RUNAT=SERVER>
+	s query = ""
+	Quit:myQuery=""
+	Set query = ##class(%ResultSet).%New()
+	Set query.RuntimeMode=RuntimeMode
+	Set sqlStatement=$zstrip($tr($c(13,10)_myQuery_$c(13,10),$C(9,13,10),"   "),"<>W")
+	If $zcvt($extract(sqlStatement,1,6),"U")'="SELECT" {
+	Do ..ShowError($$$ERROR($$$CSPSQLOnlySelect,"28"))
+	Quit
+	}
+	// translate tab/cr/nl to spaces
+	Set %sc = query.Prepare(sqlStatement,0,"RUNTIME")
+	If (+%sc=0) {
+	Do ..ShowError(%sc)
+	Quit
+	}
+	Set %sc = query.Execute()
+	If (+%sc=0) {
+	Do ..ShowError(%sc)
+	Quit
+	}
+</SCRIPT>
+<table><tr><td><div id="selectedTables" style="margin:0px 0px 0px 20px;">
+<b>表名:</b>#(tableName)#,<b>实体类名:</b>#(pojoPackageName_"."_pojoClassName)#,<b>主索引:</b>#(masterIndex)#
+<a href="dhctt.findtablestructure.csp?packageName=#(pojoPackageName)#&tableName=#(pojoClassName)#" target='_blank'>表结构详情</a>
+</div></td></tr></table>
+<table border=1 bgcolor="" id="resultSetTable" style="margin:0px 0px 0px 20px; padding=1px 1px 1px 1px;">
+	<tr>
+		<th>#</th>
+		<csp:while counter=queryCol condition="(queryCol<query.GetColumnCount())">
+			<th align=left nowrap style="padding-left:2px;padding-right:8px;"><b><a href="#" onclick="propertyClickHandler(this);">#(query.GetColumnHeader(queryCol))#</a></b></th>
+		</csp:while>
+	</tr>
+	<csp:while counter=queryRow condition="(query.Next()&&(queryRow<MaxRows))">
+		<tr class='#($S(queryRow#2:"DarkRow",1:"LightRow"))#'>
+			<td><b>#(queryRow)#</b></td>
+			<csp:while counter=queryCol condition="(queryCol<query.GetColumnCount())">
+				<td nowrap>#(query.GetData(queryCol))#</td>
+			</csp:while>
+		</tr>
+	</csp:while>
+</table>
+</body>
+</html>

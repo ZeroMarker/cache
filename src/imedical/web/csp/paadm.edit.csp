@@ -1,0 +1,64 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<!-- JW:see me before making any alterations to this page.-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+
+<SERVER>
+ n currcontx,visstat,admtype
+ d ##Class(websys.Conversions).LoadRequest()
+ s currcontx=$g(%request.Data("CONTEXT",1)) ;any workflow stuff
+ s:$p(currcontx,"W",2)'="" currcontx="W"_+$p(currcontx,"W",2)
+ s admtype=$p($g(^PAADM(+$g(%request.Data("EpisodeID",1)))),"^",2)
+ i admtype="" s admtype=$g(%request.Data("admType",1)) s:admtype="" admtype="O"
+ s visstat=$p($g(^PAADM(+$g(%request.Data("EpisodeID",1)))),"^",20)
+ ;save context with "P"_admtype and if there is a visitstatus, give second option to save with visitstatus
+ ;s %request.Data("CONTEXT",1)=currcontx_"P"_admtype_$s(visstat'="":","_currcontx_"P"_admtype_visstat,1:"")
+ s %request.Data("CONTEXT",1)="P"_$s(admtype'="":admtype,1:O)_","_currcontx_"P"_admtype_$s(visstat'="":","_currcontx_"P"_admtype_visstat,1:"")
+ d ##Class(web.PAFamilyDoctor).GetCurrentWebDetails(%request.Get("PatientID"))
+ //d ##class(web.PAPerson).GetDetails(%request.Get("PatientID"))
+ d ##Class(websys.Conversions).SaveRequest()
+</SERVER>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<!--TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT-->
+<SERVER>
+ s EpisodeID=+$g(%request.Data("EpisodeID",1))
+ s PAADMType=%request.Get("admType")
+ ;log 62681 TedT use SNSFlag instead of paadmtype
+ s sns=%request.Get("SNSFlag")
+ i PAADMType'="SNS" d
+ . s PAADMType=$p($g(^PAADM(+EpisodeID)),"^",2)
+ . i PAADMType="" s PAADMType=$g(%request.Data("admType",1),"O")
+ ;log 61395 TedT SNS is outpatient type
+ i sns=1 d %request.Set("PAADMType","O")
+ i EpisodeID,$g(%request.Data("PatientID",1))="" s %request.Data("PatientID",1)=$p($g(^PAADM(+EpisodeID)),"^",1)
+ i $g(%request.Data("PatientID",1)) d
+ .s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+ .i frm s frm.HideMenus=1,HideHeadings=1 d frm.Show() d frm.%Close()
+ ;log 61395 TedT allow SNS adm type
+ i (PAADMType="E")||(sns=1) d
+ .i $g(%request.Data("PatientID",1))'="" d ##class(web.PAPerson).GetDetails($g(%request.Data("PatientID",1)))
+ .s frm=##Class(websys.Component).OpenName("PAAdm.EditEmergency")
+ .i frm d frm.Show() d frm.%Close()
+ set ^Temp("Upgrade","paadm.edit.csp","8")=""
+ i PAADMType'="E",sns'=1 d
+ .s frm=##Class(websys.Component).OpenName("PAAdm.Edit")
+ .i frm d frm.Show() d frm.%Close()
+ set ^Temp("Upgrade","paadm.edit.csp","9")=""
+</SERVER>
+<SERVER>
+ // display system info and current variable values	
+ //s %response.TraceDump=1
+</SERVER>
+</BODY>
+</HTML>

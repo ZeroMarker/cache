@@ -1,0 +1,103 @@
+<script language="cache" runat="server">
+
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+    
+
+	//查处方点评明细
+	i action = "FindCNTSData" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.s StartPage= $Get(%request.Data("start",1))
+	.s Limit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSQUERY).QueryCommontItm(QueryStr,StartPage,Limit)
+	
+	//获取医生科室集
+	i action = "GetDocLocDs" d
+	.w ##class(web.DHCSTCNTSMAIN).GetDocLocStore()
+	
+	//获取药品集
+	i action = "GetIncitmDs" d
+	.s input = $Get(%request.Data("searchItmValue",1))
+	.s inciStart= $Get(%request.Data("start",1))
+	.s inciLimit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSMAIN).GetDrugNameDs(input,inciStart,inciLimit)
+	
+   
+   //按原因汇总
+    i action = "FindCNTSDataByRea" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.w ##class(web.DHCSTCNTSQUERY).QueryCommontByRea(QueryStr)
+	
+	
+	//按处方汇总
+    i action = "FindCNTSDataByPresc" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.s StartPage= $Get(%request.Data("start",1))
+	.s Limit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSQUERY).QueryCommontPrescNo(QueryStr,StartPage,Limit)
+	
+	
+	i action = "KillQueryData" d
+	.s pid = $Get(%request.Data("pid",1))
+	.s ret = ##class(web.DHCSTCNTSQUERY).KillQueryData(pid)
+	
+	
+	//获抗菌药品集
+	i action = "FindAudltData" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.s StartPage= $Get(%request.Data("start",1))
+	.s Limit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSQUERY).QueryCommontTotalItm(QueryStr,StartPage,Limit)
+	
+	
+    //获取导出抗菌药条目
+	i action = "GetAudltImtCnt" d
+	.s pid = $Get(%request.Data("pid",1))
+	.s ret = ##class(web.DHCSTCNTSQUERY).GetAudltImtCnt(pid)
+	.w ret
+	
+	
+	//获取导出抗菌药数据
+	i action = "ListAudltImt" d
+	.s pid = $Get(%request.Data("pid",1))
+	.s ret = ##class(web.DHCSTCNTSQUERY).ListAudltImt(pid)
+	.w ret
+	
+	//获取医生排行
+	i action = "QueryOrderByDoc" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.s StartPage= $Get(%request.Data("start",1))
+	.s Limit= $Get(%request.Data("limit",1))
+	.s QueryFlag=1 //医生
+	.s ret = ##class(web.DHCSTCNTSQUERY).QueryOrderByDoc(QueryStr,StartPage,Limit,QueryFlag)
+	.w ret
+	
+	//获取科室排行
+	i action = "QueryOrderByLoc" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.s StartPage= $Get(%request.Data("start",1))
+	.s Limit= $Get(%request.Data("limit",1))
+	.s QueryFlag=2 //科室
+	.s ret = ##class(web.DHCSTCNTSQUERY).QueryOrderByDoc(QueryStr,StartPage,Limit,QueryFlag)
+	.w ret
+	
+	
+	
+	//住院点评单明细统计
+    i action = "FindCNTSIPDetail" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.s StartPage= $Get(%request.Data("start",1))
+	.s Limit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSQUERY).QueryCommontIPDetail(QueryStr,StartPage,Limit)
+	
+	
+	//住院合理用药统计
+    i action = "FindIPRationalUseData" d
+	.s QueryStr = $Get(%request.Data("QueryStr",1))
+	.s StartPage= $Get(%request.Data("start",1))
+	.s Limit= $Get(%request.Data("limit",1))
+	.w ##class(web.DHCSTCNTSQUERY).FindIPRationalUseData(QueryStr,StartPage,Limit)
+	
+	
+	
+</script>

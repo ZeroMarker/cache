@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!--
+	处方审核 
+	csp: csp/dhcpha/dhcpha.outpha.outmonitor.csp
+	js:	 scripts/pharmacy/outpha/dhcpha.outpha.outmonitor.js
+--> 
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD>
+	</TRAK:HEAD>
+	<DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
+	<ADDINS/>
+	<Server language="CACHE" runat="Server">
+    s Application=%request.Application
+    s gPatNo = $G(%request.Data("gPatNo",1))
+    s IEVersion=##class(web.DHCSTKUTIL).GetIEVersion()
+    s OutPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("OA")
+	s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+	s GetCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+	s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+   </Server>
+    <SCRIPT Language="Javascript">
+       	var OutPhaWay="#(OutPhaWay)#"; 
+    	var LoadPatNo="#(gPatNo)#"
+    	if((("#(IEVersion)#")<11)&&(LoadPatNo!="")){
+   			window.location.href ="#(Application)#csp/dhcpha.outpha.outmonitor.csp?gPatNo="+LoadPatNo;
+    	}
+   </SCRIPT>
+	<!--css-->
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts_lib/jquery.jqGrid-4.6.0/css/themes/ui.multiselect.css">
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts_lib/jquery.jqGrid-4.6.0/css/themes/redmond/jquery-ui-1.8.2.custom.css">
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts_lib/jquery.jqGrid-4.6.0/css/ui.jqgrid.css">
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.css" />
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/select2.min.css" >
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/skins/icheck/blue.css">
+	<!--js-->
+	<script type="text/javascript" src="#(Application)#scripts_lib/jquery.jqGrid-4.6.0/js/jquery.jqGrid.src.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts_lib/jquery.jqGrid-4.6.0/js/i18n/grid.locale-cn.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/icheck/icheck.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/moment.min.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.js"></script>
+ 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/bootstrap-bootbox/bootbox.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/select2.min.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/i18n/zh-CN.js"></script>
+	<!--dhcpha css-->
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/css/dhcpha.common.css" ></script>
+	<!--jqgrid样式与医生站统一-->
+	<link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/css/dhcpha.jqGrid.css" ></script>
+	<!--调用美康--因医生站为异步调用，药房只能同步调用，所以需要将美康的McConfig.js 另存为 McConfigPharmacy.js -->
+	<!--并修改 this.MC_Is_SyncCheck = false ; 为 this.MC_Is_SyncCheck = true; -->
+	<link rel="stylesheet" type="text/css" href="../CUSTOM/PassJs/McCssAll.css" /> 
+	<script type="text/javascript" src="../CUSTOM/PassJs/McConfigPharmacy.js"></script>
+ 	<script type="text/javascript" src="../CUSTOM/PassJs/McJsAll.js"></script>
+	<!--dhcpha common js-->
+	<script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.plugins.js" ></script>	
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.js" ></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.phcmpass.js" ></script>
+	<!--dhcpha js-->
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.outmonitor.js" ></script>
+	<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.monitorlog.js" ></script>
+</head>
+<body>
+	<div id="dhcpha-query-condition">
+		<div style="width:0px;height:0px">
+			<input id='ReadAccExpEncrypt' type='hidden' value='#(ReadAccExpEncrypt)#'></input>
+			<input id='GetCardTypeEncrypt' type='hidden' value='#(GetCardTypeEncrypt)#'></input>
+			<input id='ReadCardTypeEncrypt' type='hidden' value='#(ReadCardTypeEncrypt)#'></input>
+			<server>
+			 	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+			</server>
+		</div>
+		<div class="container-fluid dhcpha-condition-container">
+		    <div class="row" >
+		    	<div class="col-lg-6 col-md-6 col-sm-6" >
+		    		<button class="btn btn-default btn_button btn_important" id="btn-pass" ><img src="#(Application)#scripts/pharmacy/images/pass-default.png" class="dhcpha-btn-image"><br><strong>通过</strong></button>
+		    		<button class="btn btn-default btn_button btn_refuse" id="btn-refuse" ><img src="#(Application)#scripts/pharmacy/images/refuse-default.png" class="dhcpha-btn-image"><br><strong>拒绝</strong></button>
+				    <button class="btn btn-default btn_button btn_common" style="border-left:1px solid #bcbcbc;" id="btn-prepresc" ><img src="#(Application)#scripts/pharmacy/images/prescadd-default.png" class="dhcpha-btn-image"><br><strong>处方审核</strong></button>
+				    <button class="btn btn-default btn_button btn_common" id="btn-analysis"><img src="#(Application)#scripts/pharmacy/images/analysis-default.png" class="dhcpha-btn-image"><br><strong>处方分析</strong></button> 
+				    <button class="btn btn-default btn_button btn_common" style="border-left:1px solid #bcbcbc;" id="btn-viewlog" ><img src="#(Application)#scripts/pharmacy/images/log-default.png" class="dhcpha-btn-image"><br><strong>查看日志</strong></button>
+		    	</div>
+		    </div>
+		 </div>
+		 <div class="row dhcpha-row-split-all" ></div>
+		 <div class="container-fluid dhcpha-condition-container">
+		 	<div class="row row_style">
+		 		<form class="form-inline">
+	               <div class="input-group">
+	                    <span  class="input-group-addon dhcpha-input-group-addon-in"><strong>药房科室</strong></span>		                    
+	                	<select class="form-control in_select" id="sel-phaloc">				              
+			            </select>                   
+	               </div>
+					<div class="input-group">
+						<span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>起止日期</strong></span>
+						<input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:8em" placeholder="请选择日期">
+						<span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+							<i class="fa fa-calendar"></i>
+						</span>  
+					</div>
+					<span><strong>至</strong></span>
+					<div class="input-group">
+						<input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:8em" placeholder="请选择日期">
+						<span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+							<i class="fa fa-calendar"></i>
+						</span>                       
+					</div>
+					<!--div class="form-group dhcpha-col-split">
+				    </div-->               
+					<input class="form-control input_style" type="text" id="txt-patno" style="width:8em" placeholder="请输入登记号">
+					<input class="form-control input_style" type="text" id="txt-cardno" style="width:8em" placeholder="刷卡/请输入卡号">
+	               	
+		           	<div class="btn-group ">  
+	                    <span class="fa fa-credit-card dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+			            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-readcard">读卡</button>
+	                </div>
+	                <div class="input-group">                                     
+						<input type="checkbox" id="chk-audit">
+						<lable for="chk-audit"><strong>已审核</strong></lable>	
+					</div>
+		           <div class="btn-group dhcpha-btn-right">  
+	                    <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+			            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal"  type="button" id="btn-find">查询</button>
+	               </div> 
+  
+				</form>
+		 	</div>			
+		 </div> 
+		<div class="row dhcpha-row-split" ></div>
+	 </div>
+	  <div class="panel div_content">
+	       <div class="panel-heading"><span class="pal_style"><strong>处方列表</strong></span></div>
+		        <!--div class="panel-body"-->
+		        <table id="grid-presc" class="table table-bordered table_style">
+		        </table>
+		        <div id="jqGridPager"></div>
+		        <!--/div-->  
+	  </div>
+	  <div class="panel div_content">
+		  <div class="panel-heading"><span class="pal_style"><strong>药品详细列表</strong></span></div>
+			  <table id="grid-prescdetail" class="table table-bordered table_style">
+			  </table>
+	  </div>  
+<!--include 文件至于最后-->
+<csp:Include Page="dhcpha.outpha.outmonitor.addinfo.csp">
+<csp:Include Page="dhcpha.outpha.outmonitor.log.csp">
+<csp:Include Page="dhcpha.pha.permission.csp">
+</body>
+</html>

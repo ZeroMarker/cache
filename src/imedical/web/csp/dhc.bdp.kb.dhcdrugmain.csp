@@ -1,0 +1,210 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.kb.dhcdrugmain.csp
+	@JS:bdp/App/KB/NewBus/DHC_DrugMain.js
+	@Title:药品说明书编辑器
+	@Description:药品说明书浏览及各项内容维护入口
+	@Creator:基础数据平台组 - 丁亚男
+	@CreateDate:2018-08-30
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>		
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+<style type="text/css">
+#LeftTree .datagrid-cell,#LeftTree .datagrid-cell-group {
+    padding: 0 5px;
+}
+#LeftTreeDiv .datagrid-header {
+    border-width: 0px;
+}
+#mainGridDiv .datagrid-header td,#mainGridDiv .datagrid-body td,#mainGridDiv .datagrid-footer td {
+    border-width: 0 0px 0px 0;
+ }
+ #mainGridDiv .datagrid-btable tr{
+	height: 1px;
+	}
+
+/*小气泡显示条数*/
+.badgeDiv {
+   /* min-width: 20px;
+    height: 20px;
+    border-radius: 25px;
+    line-height: 20px;
+    color: #fff;
+    background: #999999;
+    text-align: center;
+    margin: 10px 0 0 0;
+    padding: 0 2px;*/
+    min-width: 20px;
+    line-height: 20px;
+    padding: 0px;
+    background-color: #dddddd;
+    border-radius: 4px;
+    margin: 0 1px 0 0;
+    float: right;
+    text-align: center;
+}
+
+/*@media screen*/
+#drugDesc{
+    text-align: center;
+    text-transform: uppercase;
+    display: inline;
+    font-style: bold;
+    font-size: 26px;
+    color: #000000;
+}
+#mainGridDiv .tree-title {
+	white-space: normal;
+	word-wrap: break-word;
+	overflow: visible;
+	padding: 0 25px 0 5px;
+	height: auto;
+	line-height: auto;
+}
+
+ 
+</style>
+<script type="text/javascript"  >
+    $(function(){
+              BodyLoadHandler();
+
+    });
+</script>
+
+</HEAD>
+<BODY >
+  <div class="hisui-layout" data-options="fit:true"  border="true"  >
+  	  <!--左侧列表区域--> 
+	  <div  class="hisui-panel" data-options="headerCls:'panel-header-gray',region:'west',split:true" style="width:320px;padding:4px 0 0 4px;border-bottom:1px solid #cccccc;" border="false" > 
+			<div class="hisui-accordion  accordion-green"  data-options="fit:true"  border="false" > 
+			  <div title="按药品通用名" data-options="tools:'#GenTools'" id="genGridlayout" border="false">
+			      <table data-options="fit:true,bodyCls:'panel-header-gray'" style="height:auto;border:true;" width="100%"  id="genGrid"  ></table>
+			  </div>
+			  <div title="按商品名" id="proGridlayout" border="false" >
+			      <table data-options="fit:true,bodyCls:'panel-header-gray'" style="height:auto;" width="100%"  id="proGrid" ></table>
+			  </div>
+			</div> 
+	   </div>
+	   <!--中间浏览区域--> 
+	  <div class="hisui-panel" data-options="bodyCls:'panel-header-gray',region:'center',split:true"  id="mainGridDiv" style="margin:4px 4px 0 0;"  border="true">
+			<!--div class="hisui-panel" data-options="fit:true,bodyCls:'panel-header-gray'" border="true" id="div-img" style="text-align:center;vertical-align: middle;overflow:hidden"-->
+			<div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;" border="true">	
+				<img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0" />
+			</div>
+			<table data-options="fit:true,bodyCls:'panel-header-gray'" id="mainGrid" border="false" ></table>
+		</div>
+   </div> 
+   
+ 
+ <!--浏览界面工具条-->  
+ <div id="mainbar" style="padding: 1px; height: auto ;  background:#fafafa"  >
+    <div style="margin-bottom:1px ;text-align:center;">
+       <table cellpadding=3>
+        <tr>
+           <td align="center" style="padding-right:5px" width="91%"><span id="drugDesc"><h2 style="color:black;text-align:center">通用名</h2></span></td>
+		   <td align="right" ><a class="hisui-linkbutton" iconCls="icon-write-order" plain="true" id="btnDrugEdit" data-options="stopAllEventOnDisabled:true" ><u style="color:blue;">编辑</u></a></td>
+        </tr>
+       </table>
+    </div>  
+  </div>
+  <!--编辑弹框-->
+<div id="myWin"  title="" data-options="iconCls:'icon-w-edit'" style="width:1100px;height:520px;padding:10px;display:none;" >
+	<div class="hisui-layout" data-options="fit:true" border="false">
+		<div data-options="headerCls:'panel-header-gray',region:'west',split:true"  style="width:160px;border-color:#cccccc" id ="LeftTreeDiv" >
+			<div  data-options="lines:true" style="width:160px;height:98%;" id="LeftTree" border="false"> </div> 
+		</div>
+		<div data-options="headerCls:'panel-header-gray',region:'center'"style="border-color:#cccccc">
+			<div id="righttabs"  data-options="fit:true,border:false,plain:true" style="height:100%;border-color:#cccccc">
+				<iframe id="myiframe" frameborder="0" src="" border="false" style="width:100%;height:99%;"></iframe>  
+			</div>		
+		</div>
+	</div>
+</div> 
+<!--左侧商品名列表区域工具条--> 
+ <div id="probar" style="padding: 1px; height: auto ;  background:#fafafa "  >
+    <div style="margin-bottom:1px">
+       <table cellpadding=3>
+        <tr>
+	           <!--<td align="right" >商品名</td>
+			   <td colspan="3" ><input id="textPro" type="text" class="hisui-validatebox"  style="width:100px;" ></td>
+			   <td align="right"><label>剂型</label></td>
+			   <td><input class="hisui-combobox"  id="proForm" style="width:100px;"></td>
+			   <td><a class="hisui-linkbutton" iconCls='icon-search' plain="true" id="btnProSearch">检索</a></td>
+			   <td><a class="hisui-linkbutton" iconCls='icon-reload' plain="true" id="btnProReset">重置</a></td>-->
+			   <!--<td colspan="3" ><input id="textPro" type="text" class="hisui-validatebox"  style="width:100px;margin-right:-8px;" placeholder="查询" ></td>
+			   <td><a id="btnProSearch" href="#" class="hisui-linkbutton head-btn" data-options="iconCls:'icon-search'"></a></td>-->
+			   <td> <input id="textPro" class="hisui-searchbox" data-options="prompt:'查询'" style="width:100px;margin-right:-8px;"/></td>
+			   <td> <input id="proForm" style="width:100px;" placeholder="剂型" ></td>
+			   <td><a class="hisui-linkbutton" iconCls='icon-refresh' plain="true" id="btnProReset"></a></td>			   
+
+        </tr>
+        </table>
+    </div>
+  </div>
+  <!--左侧通用名列表区域工具条-->
+   <div id="genbar" style="padding: 1px; height: auto ;  background:#fafafa "  >
+    <div style="margin-bottom:1px">
+       <table cellpadding=3>
+        <tr>
+	           <!--<td align="right" >通用名</td>
+			   <td colspan="3" ><input id="textDesc" type="text" class="hisui-validatebox"  style="width:100px;" ></td>
+			   <td align="right"><label>剂型</label></td>
+			   <td><input class="hisui-combobox"  id="GlPPointer" style="width:100px;"></td>
+			   <td><a class="hisui-linkbutton" iconCls='icon-search' plain="true" id="btnGenSearch">检索</a></td>
+			   <td><a class="hisui-linkbutton" iconCls='icon-reload' plain="true" id="btnGenReset">重置</a></td>-->
+			   
+			   <!--<td colspan="3" ><input id="textDesc" type="text" class="hisui-validatebox"  style="width:100px;margin-right:-8px;" placeholder="查询"></td>
+			   <td><a id="btnGenSearch" href="#" class="hisui-linkbutton head-btn" data-options="iconCls:'icon-search'"></a></td>-->
+			   <td> <input id="textDesc" class="hisui-searchbox" data-options="prompt:'查询'" style="width:85px;margin-right:-8px;"/></td>
+			   <td><input id="GlPPointer" style="width:85px;" placeholder="剂型" ></td>
+			   <td><input id="LibType" style="width:85px;" placeholder="类别" ></td>
+			   <td><a class="hisui-linkbutton" iconCls='icon-refresh' plain="true" id="btnGenReset"></a></td>
+			   <!--<td><a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnGenAdd"></a></td>-->
+        </tr>
+        </table>
+    </div>
+  </div>
+
+	
+	<!--左侧通用名列表区域添加弹窗-->
+	<div id="addGenWin"  title="" data-options="iconCls:'icon-w-add'" >
+    	 <form id="Genform" method="post" data-options="fit:true,border:false,plain:true"  style="padding:10px;"> 
+	    	 <table >
+	    	 	<tr>
+	               <td align="right" class="tdlabel" style="padding-right:10px;">药品通用名</td>
+	               <td><input id="GlPGenDrF" type="text" class="textbox hisui-combobox" name="GlPGenDr"  style="width:200px;"></td>
+			    </tr>
+			    <tr>
+	               <td align="right" class="tdlabel"  style="padding-right:10px;">剂型</td>
+	               <td><input id="GlPPointerF" type="text" class="textbox hisui-combobox" style="width:200px;"></td>
+			    </tr>
+			 </table >
+		 </form>
+	</div>
+	
+	<!-- accordion工具条 ispub属性设置为true用于标记改工具条可以被多个accordion使用 -->
+	<div id="accordion-tools" style="padding: 1px; height: auto " >
+		<a class="hisui-linkbutton" iconCls='icon-reload' plain="true"></a>
+	</div>
+	<!--左侧药品名添加按钮-->
+	<div id="GenTools">
+		<a href="#" class="icon-w-add" id="btnGenAdd"></a>
+	</div>
+<script type="text/javascript">
+     var  GenCode=""
+     var  PointerCode=""
+</script>
+<script type="text/javascript" src="../scripts/bdp/App/KB/NewBus/DHC_DrugMain.js"></script>
+</BODY>
+</HTML>

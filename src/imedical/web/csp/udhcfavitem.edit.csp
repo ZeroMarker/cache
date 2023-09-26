@@ -1,0 +1,92 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ Q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css"></LINK>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ n PatientID,EpisodeID,mradmID,TWKFL,TWKFLI,XCONTEXT,ChartID,RepeatOrders,EPRChartName,params,ChartFrameSize,MultiEpisodeID,AllowUpdateWithNoOrders
+ n urlEPRdefaultWL
+ s ARCOSRowid=""
+ s PatientID=$g(%request.Data("PatientID",1))
+ s EpisodeID=$g(%request.Data("EpisodeID",1))
+ s mradm=$g(%request.Data("mradm",1))
+ s UserID=%session.Data("LOGON.USERID")
+ n rows,cols
+ s rows="300,*",coldefault=$g(ChartFrameSize,"300,*")
+ s showframe="border=''" s cls="frmborder"
+ s cols="300,*"
+ s showframe="border='0'"
+</SCRIPT>
+
+<SCRIPT language="Javascript">
+var colsDefault="#(coldefault)#";
+function RedrawEPRChart(chartid,framesize) {
+	var Arr = Multi.split("^");
+	var frmset = document.getElementById('eprframeset');
+	var eprfrm = document.getElementById('oeorder_eprchart');
+    if (chartid && (Arr.length<2)) {
+		frmset.className = "patbannertop";
+		eprfrm.className = "eprleftfrm";
+		if (frmset.cols=="0,*") {
+			//eprfrm.location=urlEPRDefault+"&ChartID="+chartid;
+			frames['oeorder_eprchart'].location=urlEPRDefault+"&ChartID="+chartid;
+		} else {
+			//if (eprfrm.ChartID!=chartid) eprfrm.location=urlEPRDefault+"&ChartID="+chartid;
+			frames['oeorder_eprchart'].location=urlEPRDefault+"&ChartID="+chartid;
+		}
+		if (framesize) {
+			colsDefault=""+framesize+"%,*";
+		} else {
+			colsDefault="300,*";
+		}
+		frmset.cols=colsDefault;
+	}
+}
+function NoEPRChart() {
+	var frmset = document.getElementById('eprframeset');
+	if (frmset) {frmset.cols="0,*"; frmset.className="";}
+	var eprfrm = document.getElementById('oeorder_eprchart');
+	if (eprfrm) {eprfrm.className="";}
+}
+
+function NoPABanner() {
+	//alert("NO Banner");
+	var eprfrm = document.getElementById("oeframeset");
+	if (eprfrm) {eprfrm.rows="0,*"; eprfrm.className="";}
+}
+
+function ResizePABanner() {
+	var eprfrm = document.getElementById("oeframeset");
+	if ((eprfrm)&&(eprfrm.rows!="0,*")) {
+		var pat=frames['patframe'];
+		if (pat.document.readyState!="complete") {
+			self.setTimeout(ResizePABanner,500);
+		} else { 
+			var patsize=pat.window.document.getElementById("PageContent").offsetHeight;
+			eprfrm.rows=patsize+',*';
+		}
+	}
+}
+
+</SCRIPT>
+<FRAMESET rows="#(rows)#" scrolling="auto" name="favframeset" id="favframeset" #(showframe)# #(cls)#>
+	<frame name="mail" id="mail" frameborder="yes" framespacing="0" noresize
+		src="websys.default.csp?WEBSYS.TCOMPONENT=UDHCFavOrderSets.Edit&EpisodeID=#(EpisodeID)#&PatientID=#(PatientID)#&UserID="#(UserID)#></frame>
+	<frame name="detail" id="detail" src="websys.default.csp?WEBSYS.TCOMPONENT=UDHCARCOrderSetItem.Edit&OSID=#(ARCOSRowid)#" scrolling="auto" marginwidth="0" marginheight="0" framespacing="0" #(cls)#></frame>
+</FRAMESET>
+<noframes>
+    <body>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5.5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+</html>

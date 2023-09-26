@@ -1,0 +1,67 @@
+<csr:rule name="DHCEQ.HISUI" match="DHCEQ:HISUI">
+<csr:description>
+The <b>DHCEQ.HISUI</b> tag defines defines standard header info and initialisation for each page. For example javascript utilties, style sheet, theme and initialisation code
+</csr:description>
+
+<csr:action>
+	<script type='text/javascript'>
+	var SessionObj = {
+		GUSERID : session['LOGON.USERID'],
+		GUSERCODE : session['LOGON.USERCODE'],
+		GUSERNAME : session['LOGON.USERNAME'],
+		GGROURPID : session['LOGON.GROUPID'],
+		GGROURPDESC : session['LOGON.GROUPDESC'],
+		GLOCID : session['LOGON.CTLOCID'],
+		GHOSPID : session['LOGON.HOSPID'],
+		LANGID : session['LOGON.LANGID']
+	}
+	</script>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	 s GUserDR=$g(%request.Data("GUSERID",1))   ;用户DR
+	 s GUserCode=$g(%request.Data("GUSERCODE",1))   ;工号
+	 s GUserName=$g(%request.Data("GUSERNAME",1))   ;用户名
+	 s GGroupDR = $g(%request.Data("GGROURPID",1)) ;安全组DR
+	 s GGroupDesc = $g(%request.Data("GGROURPDESC",1)) ;安全组
+	 s GLocDR = $g(%request.Data("GLOCID",1)) ;登录科室
+	 s GHospDR = $g(%request.Data("GHOSPID",1)) ;登录医院
+	 s QXType = $g(%request.Data("QXType",1)) ;QXType
+	 s ReportFileName=$Get(%request.Data("ReportFileName",1))	;润乾报表名
+	 s CurDate=##Class(web.DHCEQCommon).TransValueToPage(+$H,"date")
+	 s CurMonth=$E($ZD(+$H,3),1,7)
+	</Script>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+
+	Set UserAgent=%request.UserAgent
+	Set isIE6=(UserAgent["MSIE")!(UserAgent["MSIE 7.0")!(UserAgent["MSIE 8.0")
+
+	Set pJQueryLibPath = "../scripts/dhceq/"
+	
+	Write "<link rel='stylesheet' type='text/css' href='"_pJQueryLibPath_"css/eq.hisui.css' >" 
+	Write "<"_"/link>"
+	Write !
+	
+	Write "<script type='text/javascript' src='"_pJQueryLibPath_"common/jquery.common.js'>" 
+	Write "<"_"/script>"
+	Write !	
+
+	Write "<script type='text/javascript' src='"_pJQueryLibPath_"common/hisui.common.js'>" 
+	Write "<"_"/script>"
+	Write !	
+	
+	Write "<script type='text/javascript' src='"_pJQueryLibPath_"common/common.js'>" 
+	Write "<"_"/script>"
+	Write !	
+	
+	Write "<script type='text/javascript' src='../scripts/hisui/websys.hisui.js'>" 
+	Write "<"_"/script>"
+	Write !	
+	
+	s ClsMethodFlag=##Class(websys.Conversions).IsValidMethodName("jquery.websys.EasyuiLib","WriteDateFormat")
+	i ClsMethodFlag=1 d
+	.d ##class(jquery.websys.EasyuiLib).WriteDateFormat()
+	e  d
+	.d ##class(web.DHCEQCommon).WriteDateFormat()
+	
+	</SCRIPT>
+</csr:action>
+</csr:rule>

@@ -1,0 +1,603 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SCRIPT language="Javascript">
+var itmidsForQuest="";
+var alertreason="";
+var strDefaultData="";
+
+function PricesClickHandler() {
+}
+
+//prompts if user wants to add item that has already been ordered
+function ShouldAddItem(ID,desc) {
+
+	var match=-1;
+	var additem=1;
+	var date="";
+	var careprov="";
+	var time="";
+	var testepisno="";
+	var DetailedMessage="N";
+	var ordertype="";
+
+	var currItemsArray=currItems.split("^");
+
+	for (var i=0;i<currItemsArray.length;i++) {
+		if (mPiece(currItemsArray[i],String.fromCharCode(1),0)==ID) {
+			match=1;
+			careprov=mPiece(currItemsArray[i],String.fromCharCode(1),1);
+			date=mPiece(currItemsArray[i],String.fromCharCode(1),2);
+			time=mPiece(currItemsArray[i],String.fromCharCode(1),3);
+			testepisno=mPiece(currItemsArray[i],String.fromCharCode(1),4);
+			ordertype=mPiece(currItemsArray[i],String.fromCharCode(1),5);
+			DetailedMessage="Y";
+			break;
+		}
+	}
+	
+	//now check for new orders already on list (items to be updated)
+	if (match < 0) {
+		for (var i=0; i<lstOrders.options.length; i++) {
+			if (lstOrders.options[i].value == ID) {
+				match=1;
+				break;
+			}
+		}
+	}
+	
+	if (match >= 0) {
+		if (DetailedMessage=="Y") {			
+			if ((ordertype=="L") || (ordertype=="N")) {
+				additem=confirm(t['MultipleOrder_Desc']+desc+"\n"+t['MultipleOrder_Date']+date+"\n"+t['MultipleOrder_Time']+time+"\n"+t['MultipleOrder_CareProv']+careprov+"\n"+t['MultipleOrder_TestEpisodeNo']+testepisno+"\n"+t['MultipleOrder_WantToAdd']);
+			} else {
+				additem=confirm(t['MultipleOrder_Desc']+desc+"\n"+t['MultipleOrder_Date']+date+"\n"+t['MultipleOrder_Time']+time+"\n"+t['MultipleOrder_CareProv']+careprov+"\n"+t['MultipleOrder_WantToAdd']);	
+			}
+		} else {
+			additem=confirm(t['MultipleOrder_Desc']+desc+"\n"+t['MultipleOrder_WantToAdd']);
+		}
+	}
+	return additem;
+}
+
+function AgeSexRestrictionCheck(selItmid,seldesc,selsubcatcode,seldur,selmatch,obj,seltype) {
+	var DrugString="";
+	var EpisObj=document.getElementById("EpisodeID");
+	if (EpisObj) EpisID=EpisObj.value;
+
+	var DDObj=document.getElementById("DischDate");
+	if(DDObj && (DDObj.value!="")) {
+		//alert("DDDATE"+DDObj.value);
+		selmatch="found"
+	}
+	
+	if (selsubcatcode=="R") {
+		DrugString=DrugInteractionCheck(selItmid,seldesc,seldur,"");		
+		//alert("DrugString "+DrugString)
+		var DIobj=document.getElementById("DrugString");
+		if ((DIobj)&&(DrugString!="")) DIobj.value=DrugString;
+	}
+	var PatObj=document.getElementById("PatientID");
+	if (PatObj) PatID=PatObj.value;
+	
+	var DateObj=document.getElementById("Date");
+	if (DateObj) DateVal=DateObj.value;	
+	
+	var OrderSetRowid=lstOrders.options[lstOrders.selectedIndex].value;  
+	
+	var f1=top.frames['TRAK_hidden'];	
+	//AmiN  log25880 adding message for items not covered by insurance    IT is an F ONE not F L
+	if (f1) {	
+		//alert("hello allergy ");
+		//alert("in oeorder.custom.csp"+"PatID="+PatID+" OEORIItmMastDR="+selItmid+"  ARCIMDesc="+seldesc+"  durid="+seldur)
+		//ANA LOG 25687 Checks system flag to decide wether to show message as a pop up or on the summary screen. 30-SEP-02
+		var alertOBJ=document.getElementById("SUMMFlag")
+		if ((alertOBJ)&&(alertOBJ.value!="Y")) {
+			//alert("Coming Here");
+			f1.location="oeorder.agesexrestriction.csp?PatID="+PatID+"&OEORIItmMastDR="+selItmid+"&ARCIMDesc="+seldesc+"&durid="+seldur+"&CatMatch="+selmatch+"&OrderSetRowid="+OrderSetRowid+"&DateVal="+DateVal+"&EpisID="+EpisID+"&type="+seltype+"&drugs="+DrugString;
+			//f1.location="oeorder.agesexrestriction1.csp?PatID="+PatID+"&OEORIItmMastDR="+selItmid+"&ARCIMDesc="+seldesc+"&durid="+seldur+"&CatMatch="+selmatch+"&OrderSetRowid="+OrderSetRowid+"&DateVal="+DateVal+"&EpisID="+EpisID+"&type="+seltype+"&drugs="+DrugString;
+		} else {
+			if (selmatch=="found") OrderDetailsOpen(seldesc,"",selItmid,OrderSetRowid,EpisID);
+		}
+	}
+}
+
+function DrugInteractionCheck(selItmid,selItmDesc,selItmDur,os) {
+	var EpisObj=document.getElementById("EpisodeID");
+	if (EpisObj) EpisID=EpisObj.value;
+
+	var selList = lstOrders;
+	var length = selList.length;
+	var drugs="";
+	for (var i=0; i<length; i++) {	
+		var subcatcode=mPiece(selList.options[i].id,String.fromCharCode(4),0);		
+		if (subcatcode=="R") {
+			var listItem = selList.options[i].text;		
+			var listValue = selList.options[i].value;
+			var dur = mPiece(selList.options[i].id,String.fromCharCode(4),1);		
+			//alert(dur+" duration ");
+			var drugParams=listValue+String.fromCharCode(2)+String.fromCharCode(2)+dur+String.fromCharCode(2);
+			drugs=drugs+drugParams+String.fromCharCode(5);
+		}
+	}
+	//alert("drugs= "+drugs);
+	//var f2=top.frames['TRAK_hidden'];	
+	//if ((os!="") && (f2)) top.frames['TRAK_hidden'].location="oeorder.druginteractions.csp?itmMast="+selItmid+"&durid="+selItmDur+"&drugs="+drugs+"&EpisodeID="+EpisID+"&ordDesc="+selItmDesc+"&forderset="+os;
+	return drugs;
+}
+function getAlertDesc(desc) {	
+	var listid = lstOrders.options[lstOrders.length-1].id;
+	lstOrders.options[lstOrders.length-1].id = listid + String.fromCharCode(4)+desc;	
+}
+
+function AddRepeatOrders() {
+	if (RepeatOrdersFromEPR!="") {
+		var repeat=RepeatOrdersFromEPR.split(String.fromCharCode(6));
+		for (i=0;i<repeat.length;i++) {
+			var icode=mPiece(repeat[i],String.fromCharCode(4),10)
+			var idesc=mPiece(repeat[i],String.fromCharCode(4),1)			
+			var isubcatcode=mPiece(repeat[i],String.fromCharCode(4),2)
+			var iordertype=mPiece(repeat[i],String.fromCharCode(4),3)
+			var iorderCatID=mPiece(repeat[i],String.fromCharCode(4),7)
+			var idur=mPiece(repeat[i],String.fromCharCode(4),8)
+			var imes=mPiece(repeat[i],String.fromCharCode(4),9)
+			AddItemToList(lstOrders,icode,idesc,isubcatcode,iordertype,"","","",iorderCatID,idur,"");		
+		}
+	}
+}
+function OrderDetailsPage(f) {
+		var txtobj=document.getElementById("itemtext"); //Enter item with free text area  
+		if (txtobj) {
+			itemtext=txtobj.value;
+			var str=StripAllSpaces(itemtext);
+		}
+		if ((lstOrders.selectedIndex == -1) && ((str==""))) {
+			alert("Please select an item");
+			return;
+		}	
+		var ItemDesc = lstOrders.options[lstOrders.selectedIndex].text;
+		var itemdata=lstOrders.options[lstOrders.selectedIndex].idata;
+		var itemvalue=lstOrders.options[lstOrders.selectedIndex].value;  // OrderSetRowid
+		var itype=lstOrders.options[lstOrders.selectedIndex].itype;
+	
+		var OSRowid=itemvalue;
+		var OSRowidFromitype = mPiece(itype,String.fromCharCode(4),2);
+		if (!OSRowidFromitype) {
+			OSRowidFromitype="";
+		}
+		if (mPiece(itype,String.fromCharCode(4),0)=="ARCOS") {
+			OSItemListOpen(OSRowid,ItemDesc,"YES","");
+		} else if (OSRowid.indexOf("||")<0) {
+			OSItemListOpen(OSRowid,ItemDesc,"YES","");
+		} else {
+			if (!itemdata) itemdata="";
+			if (OSRowidFromitype!="") OSRowid=OSRowidFromitype;
+
+			if (mPiece(itemdata,String.fromCharCode(1),4)=="NODETAILS") itemdata="";
+			var EpisObj=document.getElementById("EpisodeID");
+			if (EpisObj) EpisID=EpisObj.value;
+			//alert("ItemDesc/itemdata/itemvalue/OSRowid/EpisID="+ItemDesc+"/"+itemdata+"/"+itemvalue+"/"+OSRowid+"/"+EpisID);
+			OrderDetailsOpen(ItemDesc,itemdata,itemvalue,OSRowid,EpisID); // itemvalue from item selected in Selected Orders
+		}
+}
+
+function OrderDetailsOpen(sItemDesc,sitemdata,sitemvalue,sOSRowid,sEpisodeID) {
+		var PatObj=document.getElementById("PatientID");
+		if (PatObj) PatientID=PatObj.value;
+		
+		//Loads default values - if default carry to every item - log 22982
+		if (sitemdata=="") sitemdata=strDefaultData;	
+		var url = "oeorder.mainloop.csp?ARCIMDesc="+sItemDesc+"&EpisodeID="+sEpisodeID+"&itemdata="+sitemdata+"&OEORIItmMastDR="+sitemvalue+"&ORDERSETID="+sOSRowid+"&PatientID="+PatientID;		
+		//alert("url="+url);
+		websys_createWindow(url, "frmOrderDetails","toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes")
+
+}
+
+function CollectedFields(DataFields){
+	var selItem=lstOrders.options[lstOrders.selectedIndex];	
+	selItem.idata=DataFields;
+}
+
+function SetDefaultData(sDefaultData) {
+	var obj=document.getElementById("DefaultData");	
+	strDefaultData=sDefaultData;
+	if (obj) obj.value=sDefaultData
+}
+
+function KeepPriority() {
+	var obj=document.getElementById("OECFKeepPriorDateSession");
+	if (obj) {
+		if (obj.value=="Y") {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	return false
+}
+
+function CheckFreqBeforeUpdate() {
+	var length = lstOrders.length;	
+	for (var i=0; i<length; i++) {	
+		if (lstOrders.options[i].id="NO DEFAULT") {
+			//alert('item='+lstOrders.options[i].value+'-'+lstOrders.options[i].text);
+			Update=false;
+			break;
+		}		
+	}
+}
+function getDelim(val) {
+	var delim="";
+	if (val>0) {
+		for (i=1;i<val;i++) {
+			delim=delim+String.fromCharCode(1);
+		}
+		return delim;
+	}
+}
+// removes all spaces from a string
+function StripAllSpaces(str)  {
+	var re = /(\s)/g ;
+	return str.replace(re,"");
+}
+
+function OrderItemLookupSelect(txt) { //passed in from the component manager. 
+	//Add an item to lstOrders when an item is selected from
+	//the Lookup, then clears the Item text field.	
+	
+	var adata=txt.split("^");
+	var idesc=adata[0];
+	var icode=adata[1];	
+	var ifreq=adata[2];
+	var iordertype=adata[3];
+	var ialias=adata[4];
+	var isubcatcode=adata[5];
+	//alert("isubcatcode "+isubcatcode)
+	var iorderCatID=adata[6];
+	var iSetID=adata[7];
+	var mes=adata[8];
+	var irangefrom=adata[9];
+	var irangeto=adata[10]
+	var iuom=adata[11];
+	var idur=adata[12];
+	var igeneric=adata[13];
+	var match="notfound";
+	var SetRef=1;
+	window.focus();
+	
+	if (iordertype=="ARCIM") iSetID="";	
+	
+	if (ShouldAddItem(icode,idesc)) {		
+		AddItemToList(lstOrders,icode,idesc,isubcatcode,iordertype,ialias,"",iSetID,iorderCatID,idur,SetRef);
+
+		if (adata[3]=="ARCOS") {		
+			//alert(SetCat+" setcat in csp ")	
+			if (matchCategory(SetCat,iorderCatID)) OSItemListOpen(icode,idesc,"YES","");
+		}
+		else {
+			if (matchCategory(ItemCat,iorderCatID))	match="found";
+		}
+		AgeSexRestrictionCheck(icode,idesc,isubcatcode,idur,match,"",iordertype);
+	}	
+	document.fOEOrder_Custom.Item.value="";	
+}
+
+function GetFreeText() {
+	var freeText="";
+	var obj = document.getElementById("itemtext")
+	if (obj) {
+		freeText=obj.value;
+		//alert("free text"+freeText);
+		var str=StripAllSpaces(freeText);
+		if (str!="") {
+			var fields=UpdateFields("",freeText)
+			AddInputCust(String.fromCharCode(1)+String.fromCharCode(1)+String.fromCharCode(1)+fields);
+			//var delim=getDelim(63);
+			//freeText=delim+freeText;				
+		}
+	}
+}
+
+function UpdateFields(idata,text) {
+	var arrElem = new Array("ID","EpisodeID","OEORIItmMastDR","ORDERSETID","OECPRDesc","OSTATDesc","CTLOCDesc","OEORISttDat","OEORISttTim","OEORIItemGroup","OEORIQty","OEORIRemarks","OEORIDepProcNotes","OEORIDoseQty","CTUOMDesc","PHCFRDesc1","PHCINDesc1","PHCDUDesc1","OEORIMaxNumberOfRepeats","OEORILabEpisodeNo","OEORILab1","OEORILab2","TestSetCode","DeptDesc","CTPCPDesc","CONSDesc","OEORIWhoGoWhere","OEORIPrice","Doctor","RMFrequency","RMDuration","OEORIBillDesc","BillPrice","OrderTypeCode","MealType","RiceType","Volume","Energy","Protein","Fat","Carbohydrate","DelayMeal","SteriliseUtensils","PasteurisedFood","CoveredByMainInsur","PortableEquiptRequired","AdmAfterSkinTest","ContactCareProv","AlertReason","CareProvList","NeedleGauge","NeedleType","BodySite","QuantityUnit","FlowQuantity","FlowTimeUnit","FlowTime","FlowRateDescr","FlowRateUnit","Interval","teeth","ColDate","ColTime","freeText");
+	var arrData = new Array(arrElem.length);
+	var PNobj=document.getElementById("OEORIDepProcNotes");
+	var dobj=document.getElementById("Doctor");
+	var gobj=document.getElementById("OEORIItemGroup");
+	var ProcNotes="";
+	var Doctor="";
+	var Group=""
+	
+	if (PNobj) ProcNotes=PNobj.value;
+	if (dobj) Doctor=dobj.value;
+	if (gobj) Group=gobj.value;	
+
+	arrData=idata.split(String.fromCharCode(1));
+	//alert(ProcNotes+"-"+Doctor+"len="+arrData.length);	
+	for (var i=0; i<arrElem.length; i++) {
+		if (arrElem[i]=="OEORIDepProcNotes" && ProcNotes!="") {
+			if (arrData[i]!=null) {
+				arrData[i]=arrData[i]+String.fromCharCode(13)+String.fromCharCode(10)+String.fromCharCode(13)+String.fromCharCode(10)+ProcNotes;				
+			} else {
+				arrData[i]=ProcNotes;
+			}
+		}
+		if (arrElem[i]=="Doctor") {
+			 if ((arrData[i]=="") || (arrData[i]==null)) arrData[i]=Doctor;			 
+		}
+		if (text!=="" && arrElem[i]=="freeText") arrData[i]=String.fromCharCode(1)+text;
+		//alert("elem= "+arrElem[i]+" doc="+arrData[i]);
+	}
+	var str=arrData.join(String.fromCharCode(1));
+	return str;
+}
+
+
+function GetOrderData() {
+	var selList = lstOrders;
+	var length = selList.length;	
+	var freqItems="";
+	var DataFound=false;
+	var freqItems="";
+	var idData="";
+	var listData="";
+	
+	for (var i=0; i<length; i++) {	
+		
+		var listItem = selList.options[i].text;
+		//var freq = selList.options[i].id;
+		var listData = selList.options[i].idata;
+		var listValue = selList.options[i].value;
+		var idData = selList.options[i].id;
+		itmidsForQuest=itmidsForQuest+listValue+"^";
+		//alert("lstdata= "+listData+" length= "+listData.length);
+		var listIType=selList.options[i].itype;
+		if (mPiece(listIType,String.fromCharCode(4),0)=="ARCOS") {
+			listValue = String.fromCharCode(1) + listValue;
+		}
+		if (listData!="" && listData!=null) {
+			//Find if using default values - log 22982
+			var arrData=listData.split(String.fromCharCode(1));
+			var fields=UpdateFields(listData,"");
+			var hidItemValue=listItem+String.fromCharCode(1)+fields;
+			AddInputCust(hidItemValue);
+			//TN:21-Jun-2002: need to store extra details for reloading back into selected orders listbox
+			//this is due to page being refreshed upon error message (such as invalid pin) and clearing selected orders listbox
+			AddInputExtra("DATA"+String.fromCharCode(1)+idData+String.fromCharCode(1)+listValue+String.fromCharCode(1)+listIType);
+				DataFound=true;
+		}
+		if (DataFound==false) {
+					
+			var fields=UpdateFields(String.fromCharCode(1)+String.fromCharCode(1)+listValue,"");
+			//alert(listItem+String.fromCharCode(1)+fields);
+			//AddInput(listItem+String.fromCharCode(1)+String.fromCharCode(1)+String.fromCharCode(1)+listValue);
+			AddInputCust(listItem+String.fromCharCode(1)+fields);
+			//alert("details: "+listItem+String.fromCharCode(1)+fields);
+			//TN:21-Jun-2002: need to store extra details for reloading back into selected orders listbox
+			//this is due to page being refreshed upon error message (such as invalid pin) and clearing selected orders listbox
+			AddInputExtra("NON"+String.fromCharCode(1)+idData+String.fromCharCode(1)+listValue+String.fromCharCode(1)+listIType);
+			///*if (freq=="NO DEFAULT") {
+				//if (freqItems=="") freqItems=listItem;
+				//else freqItems+=","+listItem;				
+			//}
+			//else {
+				//AddInput(listItem);
+				//alert('listitem='+listItem);
+			//}*/
+		}
+		DataFound=false;
+	}
+	GetFreeText();
+	document.fOEOrder_Custom.kCounter.value = hidItemCnt;	
+}
+
+function EnterKey(e) {
+	//When an "Enter" key is press, the selected items will
+	//automatically added to lstOrders.
+	//ignore if a btn has current focus 
+
+	var obj=document.getElementById("ItemText");
+	//alert(obj.onBlur);
+	try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+	if ((websys_getAlt(e)&&keycode!=18)||(keycode==33)||(keycode==34)) {
+		try {	
+			var key=String.fromCharCode(keycode);
+				if (key=="D") DeleteClickHandler();
+				if (key=="U") UpdateClickHandler();
+				if (key=="A") AddClickHandler();
+				if (key=="F") AddToFavClickHandler();
+				if (key=="O") OrderDetailsClickHandler();				
+				//websys_sckeys[key]();
+				//websys_cancel();
+		}
+		//catch and ignore
+		catch(e) {}
+	}
+	
+	var eSrc = websys_getSrcElement(e);
+	if (eSrc.name!="itemtext") {
+		if	((window.event.keyCode == 13)&&(eSrc.id!="Update")&&(eSrc.id!="CheckPrices")
+		&&(eSrc.id!="Delete")&&(eSrc.id!="OrderDetails")&&(eSrc.id!="AddToFav")) {
+			AddClickHandler();
+		}	
+	}
+}
+
+function EnabledUpdateBtnHandler() {
+	var obj=document.getElementById("Update");
+	if (obj) obj.disabled=false;
+}
+
+</SCRIPT>
+</head>
+
+<body onKeyDown="EnterKey();">
+
+<server>
+ ;
+ n multiFlag
+ s multiFlag="false"
+ s EpisodeID=%request.Get("EpisodeID")
+
+ i $l(EpisodeID,"^")>1 d
+ . s multiFlag="true"
+ ;
+ n app,params,oeord,orderrow
+ s app=""
+ k %request.Data("OEPARAMS")
+ i multiFlag="false",%request.Get("PatientID")'="" d
+ . i $g(%request.Data("PatientBannerExclude",1))="" d
+ . . s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+ . . i cmp d
+ . . s cmp.HideMenus=1,cmp.HideHeadings=1
+ . . d cmp.Show(),cmp.%Close()
+ . s LocDesc=##Class(web.PAAdm).getPatEpisLoc(%request.Get("EpisodeID"))
+ . s LocID=##Class(web.CTLoc).GetIdFromCodeOrDescription(LocDesc)
+ . s params=##Class(websys.Preferences).GetDataExPlus(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),%session.Get("LOGON.SITECODE"),LocID,"",.app,"ORDER","OEOrder.Favourites")
+ . d %request.Set("OEPARAMS",params)
+ . d ##Class(web.OEOrder).webGetFavouriteGroupNames(LocID)
+ ;
+ ;If working with multiple episodes we need to identify which are locked, alert to this fact
+ ; and then remove them from string of episode id's so the order is not added for them
+ i multiFlag="true" d
+ . n lockedWarning
+ . s lockedWarning=""
+ . n count
+ . f count=1:1:$l(EpisodeID,"^") d
+ . . s EpID=$$curradm^COEOrdItem($p(EpisodeID,"^",count))
+ . . s orderrow=$o(^OEORD(0,"Adm",+EpisodeID,"")) d:'orderrow
+ . . . s oeord=##class(User.OEOrder).%New()
+ . . . d oeord.OEORDAdmDRSetObjectId(EpisodeID)
+ . . . s oeord.OEORDDate=+$h
+ . . . s oeord.OEORDTime=$p($h,",",2)
+ . . . s save=oeord.%Save(0)
+ . . . s orderrow=+oeord.%Id()
+ . . . d oeord.%Close()
+ . . . i '##Class(websys.Lock).Lock($lb(orderrow,"User.OEOrder"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) d
+ . . . . s PatientId=##Class(web.PAAdm).GetPatientId(EpID)
+ . . . . s lockedWarning=lockedWarning_##Class(web.PAPatMas).GetPatientTitle(PatientId,"")_$c(10)_$c(13)
+ . i lockedWarning'="" d
+ . . w "<SCRIPT Language=""Javascript"">"
+ . . w "alert('test');"
+ . . w "</script>"
+ . n cmp,warning
+ . s cmp=##Class(websys.Component).OpenName("OEOrder.Custom")
+ . i cmp d
+ . . i '##Class(websys.Lock).Lock($lb(orderrow,"User.OEOrder"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) s cmp.Disabled=1
+ . . s cmp.HideMenus=1
+ . . s cmp.Style="LEFT:0; WIDTH:100%; POSITION:relative;"
+ . . d cmp.Show(),cmp.%Close()
+
+ i multiFlag="false" d
+ . s EpisodeID=%request.Get("EpisodeID")
+ . s EpisodeID=$$curradm^COEOrdItem(EpisodeID)
+ . s orderrow=$o(^OEORD(0,"Adm",+EpisodeID,"")) d:'orderrow
+ . .s oeord=##class(User.OEOrder).%New()
+ . .d oeord.OEORDAdmDRSetObjectId(EpisodeID)
+ . .s oeord.OEORDDate=+$h
+ . .s oeord.OEORDTime=$p($h,",",2)
+ . .s save=oeord.%Save(0)
+ . .s orderrow=+oeord.%Id()
+ . .d oeord.%Close()
+ . n cmp,warning
+ . s cmp=##Class(websys.Component).OpenName("OEOrder.Custom")
+ . i cmp d
+ . . i '##Class(websys.Lock).Lock($lb(orderrow,"User.OEOrder"),%session.SessionId,%session.Get("LOGON.USERID"),.warning,%session.Get("LOGON.CTLOCID")) s cmp.Disabled=1
+ . . i warning'="" &html<<DIV><STRONG><FONT COLOR=RED><%=warning%></FONT></STRONG></DIV>>
+ . . s cmp.HideMenus=1
+ . . s cmp.Style="LEFT:0; WIDTH:100%; POSITION:relative;"
+ . . d cmp.Show(),cmp.%Close()
+</server>
+
+<server>
+ n RepeatOrdersFromEPR,itmMaster
+ s itmMaster=""
+ s RepeatOrdersFromEPR=%request.Get("RepeatOrders")
+ ;i RepeatOrdersFromEPR'=""  d
+ ;. f i=1:1:$l(RepeatOrdersFromEPR,$c(6))  d
+ ;. . s itmMaster=$p($p(RepeatOrdersFromEPR,$c(6)),$c(4),1)
+ ;. . s returncode=$$drugint^MVBOEORD(%request.Get("EpisodeID"),itmMaster)
+ ;. . s ^zdenise("itmas",i)=itmMaster_"^"_returncode
+ ;Get User Group Order Category for items and sets
+ n GroupItmCat,GroupSetCat,GrpObj
+ s (GroupItmCat,GroupSetCat)=""
+ 
+ //TN:user group is not id for epr.GroupSettings
+ d ##Class(epr.GroupSettings).GetDetails(%session.Get("LOGON.GROUPID"))
+ s GroupItmCat=%request.Get("OEItemDetails")
+ s GroupSetCat=%request.Get("OESetItems")
+ ;s ^zanju($zn,"grpitemCat ")=GroupItmCat
+ ;s ^zanju($zn,"grpSETCat ")=GroupSetCat
+ //
+ ;
+ ;Check if there's orders against episode, if so then it returns "Y"
+ n orders,SetIDFromDiagnos,obj,SetDesc
+ s (orders,SetIDFromDiagnos,SetDesc)=""
+ i multiFlag="false" d
+ . s orders=$$order^COEOrdItem(%request.Get("EpisodeID"))
+ . ; search for ordersetid if the patient has orderset against their diagnosis CT
+ . s SetIDFromDiagnos=##Class(web.OEOrdItem).GetOrderSetDefaultID(%request.Get("EpisodeID")) 
+ . i SetIDFromDiagnos d
+ . . s obj=##Class(User.ARCOrdSets).%OpenId(SetIDFromDiagnos)
+ . . i obj d
+ . . . s SetDesc=obj.ARCOSDesc
+ . . . i SetDesc'=""  s SetIDFromDiagnos=SetIDFromDiagnos_"^"_SetDesc
+ . . . d obj.%Close()
+
+ w "<SCRIPT Language=""Javascript"">",$C(13,10)
+  ;
+  ;;get list of orders already ordered
+ n currItem
+ s currItem=##Class(web.OEOrdItem).GetPatientOrderItems("",%request.Get("EpisodeID"))
+ w "var currItems='"_currItem_"';",$C(13,10)
+  ;
+ ;TN:21-Jun-2002: need to reload selected orders listbox with values from hidded fields.
+ ;this is due to page being refreshed upon error message (such as invalid pin)
+ n j
+ w "var arrReload=new Array();",$c(13,10)
+ w "var arrReloadExtra=new Array();",$c(13,10)
+ f j=1:1  q:'$d(msg.Data("hiddenitem"_j))  d
+ . w "arrReload["_j_"]='"_$g(msg.Data("hiddenitem"_j,1))_"';",$c(13,10)
+ . w "arrReloadExtra["_j_"]='"_$g(msg.Data("hiddenextra"_j,1))_"';",$c(13,10)
+ s j=j-1
+ w "var reloadingcnt="_j_";",$c(13,10)
+ i j>0 w "ReloadOrderSelectionListBox();",$c(13,10)
+ w "</SCRIPT>",$C(13,10)
+</server>
+<SCRIPT Language="Javascript">
+	var aobj=document.getElementById("AllergyIDs");
+	//alert("allergyids"+aobj.value);
+	lstOrders=document.getElementById("Orders");
+	lstGroup1=document.getElementById("group1");
+	lstGroup2=document.getElementById("group2");
+	lstGroup3=document.getElementById("group3");
+	lstGroup4=document.getElementById("group4");
+	lstGroup5=document.getElementById("group5");
+	//alert(document.forms['fOEOrder_Custom']);
+	docLoaded(document.forms['fOEOrder_Custom']);
+	Init();	
+	document.body.onfocus = EnabledUpdateBtnHandler;
+	var RepeatOrdersFromEPR="#(RepeatOrdersFromEPR)#"
+	//alert(RepeatOrdersFromEPR);
+	AddRepeatOrders();
+	var ItemCat="#(GroupItmCat)#";
+	var SetCat="#(GroupSetCat)#";
+	var ordersFoundFromEpisode="#(orders)#";
+	var DiagnosOSID="#(SetIDFromDiagnos)#";
+	if (DiagnosOSID!="") {
+		if (ordersFoundFromEpisode=="N") OSItemListOpen(mPiece(DiagnosOSID,"^",0),mPiece(DiagnosOSID,"^",1),"YES","");
+	}
+</SCRIPT>
+
+</body>
+</html>
+

@@ -1,0 +1,214 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    ;s %session.Data("LOGON.LANGID")="20" s %session.Data("LOGON.USERID")="4636" q 1 
+    i ##Class(ext.websys.SessionEvents).SessionExpired()  q 1
+    q 1
+</csp:method>
+<HTML lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <script language="cache" RUNAT="SERVER">
+      w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+      d ##class(web.DHCXMLPConfig).LODOPInit()
+    </script>
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <!-- <script type="text/javascript" src="../scripts/nurse/hisui/LodopFuncs.js"></script> -->
+    <script type="text/javascript" src="../scripts/nurse/hisui/sheet.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils2.js"></script>
+    <!-- <script type="text/javascript" src="../scripts/nurse/hisui/DHCPrtComm.js"></script> -->
+    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/DHCPrtComm.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/OrderExcute.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/NurseSheetPrint.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/appointPatOrderExcute.js" charset="gbk"></script>
+    <link rel="stylesheet" href="../scripts/nurse/hisui/css/appointPatOrderExcute.css">
+</head>
+<body>
+<div class="container">
+    <csp:Include Page="nur.hisui.commonreadcard.csp">
+    <div id="appointment" class="hisui-dialog" title="预约患者查询" style="padding:10px;top: 10px;left: 10px;" data-options="iconCls:'icon-w-find',resizable:true,modal:true,closed:true">  
+        <div class="searchContent queryPatientModal">
+            <!-- <div class="patSearch__title">预约患者查询</div> -->
+            <div class="form">
+                <label>开始日期</label>
+                <input id="appStartDate" class="hisui-datebox textbox"></input>
+                <label>住院证号</label>
+                <input id="bookNO" class="textbox">
+                <label>登记号</label>
+                <input id="regNO" class="textbox">
+                <label>姓名</label>
+                <input id="patName" class="textbox">
+                <a href="#" id="findAppPatListBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" style="">查询</a>
+                <br>
+                <label>结束日期</label>
+                <input id="appEndDate" class="hisui-datebox textbox"></input>
+                <label>预约科室</label>
+                <select id="appLocBox" class="hisui-combobox" style="width:150px;"></select>
+                <label>预约病区</label>
+                <select id="appWardBox" class="hisui-combobox" style="width:150px;"></select>
+                <label>预约医生</label>
+                <select id="bookDocBox" class="hisui-combobox" style="width:150px;"></select>
+            </div>
+            <table id="appPatGrid" fit=true class="hisui-datagrid" data-options="idField:'episodeIDTo',singleSelect:true,headerCls:'panel-header-gray',pagination:false" border="false">
+                <thead data-options="frozen:true">
+                    <tr>
+                        <th data-options="field:'bookNo'">住院证号</th>
+                        <th data-options="field:'bookStatus',width:60">状态</th>
+                        <th data-options="field:'name'">姓名</th>
+                        <th data-options="field:'patRegNo'">登记号</th>
+                    </tr>
+                </thead>
+                <thead>
+                    <tr>
+                        <th data-options="field:'sex'">性别</th>
+                        <th data-options="field:'age'">年龄</th>
+                        <th data-options="field:'tel'">电话</th>
+                        <th data-options="field:'bookLoc'">预约科室</th>
+                        <th data-options="field:'appWard'">预约病区</th>
+                        <th data-options="field:'appDate'">预约时间</th>
+                        <th data-options="field:'bookCreateUser'">开证医生</th>
+                        <th data-options="field:'operName'">日间手术</th>
+                        <th data-options="field:'operDate'">手术日期</th>
+                        <th data-options="field:'bookdoc'">预约医生</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <div class="hisui-panel" title="患者查询" style="width:250px;height: 100%;margin-right: 4px;border: 1px solid #CCC;border-top: 0;font-size: 0;overflow: hidden;"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+        <!-- <a href="#" class="hisui-linkbutton" onclick="$HUI.dialog('#appointment').open();">住院证信息查询</a>         -->
+        <a href="#" class="hisui-linkbutton" onclick="$('#appointment').dialog({width:window.innerWidth-20,height: window.innerHeight-20}).dialog('open');">住院证信息查询</a>        
+        <!--a href="#" class="hisui-linkbutton" onclick="readCard();">读卡</a-->
+        <a id="readCardBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
+        <input id="cardNoInput" class="textbox" style="display:none">       
+        <input id="searchInput" href="#" class="hisui-searchbox" prompt="请输入患者信息筛选" type="text" data-options="iconImg:'update.png'" />
+        <div id="patShowList">
+            <!-- <span data-episodeIDTo="32">000041 卫庄 男 32岁</span>
+            <span class="selected">0000000041 卫庄  男 32岁</span> -->
+        </div>
+    </div>
+    <div class="right">
+        <div id="opeTabs" class="hisui-tabs tabs-gray" style="height: 37px;" data-options="isBrandTabs:true"></div>
+        <div class="content">
+            <div class="operate">
+                <!-- <a class="hisui-linkbutton" data-options="iconCls:'icon-exe-order',plain:true">执行</a> -->
+                <div class="dynamic">
+                    <!-- <a class="hisui-linkbutton" data-options="plain:true">执行</a>
+                    <a class="hisui-linkbutton" data-options="plain:true">处理医嘱</a>
+                    <a class="hisui-linkbutton" data-options="plain:true">打印</a>
+
+                    <a class="hisui-linkbutton" data-options="plain:true">瓶签</a>
+                    <a class="hisui-linkbutton" data-options="plain:true">输液卡</a>
+                    <a class="hisui-linkbutton" data-options="plain:true">执行单打印(个人)</a>
+                    <span class="unPrintNum">2</span>
+                    <a class="hisui-linkbutton" data-options="plain:true">执行单打印(病区)</a>
+                    <span class="unPrintNum">2</span>
+                    <a class="hisui-linkbutton" data-options="plain:true">打印需处理</a>
+
+                    <a class="hisui-linkbutton" data-options="plain:true">打印条码</a>
+                    <span class="unPrintNum">2</span>
+                    <a class="hisui-linkbutton" data-options="plain:true">撤销条码关联</a> -->
+                </div>
+
+                <input id="fuzzyKeyword" class="hisui-searchbox" type="text" prompt="模糊搜索" style="width:120px;padding: 0 10px;" />
+
+                <span style="height: 30px;display: inline-block;border-left: 1px dashed #cccccc;margin: 0 7px;vertical-align: middle;"></span>
+                <!-- <input class='hisui-checkbox' type="checkbox" checked data-options="onCheckChange:function(event,value){console.log(value)}" label="模糊搜索" id="fuzzySearch"> -->
+
+                <select id="titleBox" class="hisui-combobox" name="state" style="width:120px;" data-options="enterNullValueClear:false,blurValidValue:true" placeholder="请选择搜索列">
+                </select>
+
+                <input id="keyword" class="hisui-searchbox" type="text" prompt="精确搜索" style="width:120px;padding: 0 10px;" />
+
+                <input class='hisui-checkbox' type="checkbox" data-options="onCheckChange:getSheetColumns" label="已执行" id="excuteCheck">
+                <input class='hisui-checkbox' type="checkbox" data-options="onCheckChange:getSheetColumns" label="已打印" id="printCheck">
+                <div class="helpInfo">
+                    <a href="javascript:void(0);" class="helpFlag">
+                        <span class="icon icon-help">&nbsp;</span>
+                        <span>帮助</span>
+                    </a>
+                    <div class="helpDetail">
+                        <p><span>P：</span><span>检验条码已打印</span></p>
+                        <p><span>S：</span><span>输液卡已打印</span></p>
+                        <p><span>T：</span><span>贴瓶签已打印</span></p>
+                        <p><span>W：</span><span>执行单（病区）已打印</span></p>
+                        <p><span>Y：</span><span>执行单（个人）已打印</span></p>
+                        <p><span>WH：</span><span>雾化单已打印</span></p>
+                        <p><span>ZS：</span><span>注射单已打印</span></p>
+                        <p><span>PS：</span><span>皮试单已打印</span></p>
+                        <p><span>X：</span><span>输液巡视卡已打印</span></p>
+                        <p><span>J：</span><span>检查导诊单已打印</span></p>
+                        <p><span>SX：</span><span>输血单已打印</span></p>
+                        <p><span>B：</span><span>病理条码已打印</span></p>
+                    </div>
+                </div>
+                    
+            </div>
+            <table class='hisui-treegrid' id="orderTable" style="height: 100%;"></table>
+        </div>
+    </div>
+    <div id="exeModal" class="hisui-dialog" title="执行医嘱" style="width:300px;max-height:300px;top:100px;left:500px;padding: 5px 10px 0;"
+        data-options="iconCls:'icon-w-run',resizable:true,modal:true,closed:true,buttons:[{
+                text:'保存',
+                handler:function(){eval(functionName+'(true)');}
+            },{
+                text:'关闭',
+                handler:function(){$HUI.dialog('#exeModal').close();}
+            }]">   
+        <table class="exeTable">
+            <tr>
+                <td>日期：</td>
+                <td>
+                    <input id="exeDate" class="hisui-datebox textbox" style="width: 210px;" data-options="onSelect:recordExeDateTime">
+                </td>
+            </tr>
+            <tr>
+                <td>时间：</td>
+                <td>
+                    <input id="exeTime" class="hisui-timespinner" style="width: 210px;" data-options="onChange:recordExeDateTime">
+                </td>
+            </tr>
+            <tr>
+                <td>备注：</td>
+                <td>
+                    <input id="remark" class="textbox" style="width: 210px;">
+                </td>
+            </tr>
+            <tr class="workNo">
+                <td>工号：</td>
+                <td>
+                    <input id="workNo" class="textbox" style="width: 210px;">
+                </td>
+            </tr>
+            <tr class="password">
+                <td>密码：</td>
+                <td>
+                    <input id="password" type="password" class="textbox" style="width: 210px;">
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+  
+<script type="text/javascript">
+
+$('#readCardBtn').bind('click', readCardBtnClick); 
+/**
+ * @description 读卡按钮监听
+ */
+function readCardBtnClick() {
+    function setCardNo(cardNo, papmiId, patientNo) {
+        $('#cardNoInput').val(cardNo);
+        getWardPatients("", papmiId);
+    }
+    execReadCard(setCardNo);
+}
+</script>   
+</body>
+
+</html>

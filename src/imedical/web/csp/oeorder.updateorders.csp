@@ -1,0 +1,371 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<body>
+<SERVER>
+ ;oeorder.updateorders.csp called directly into hidden frame so never went thru generic websys.csp so will need to handle 'msg'
+ i '$d(msg) s newmsg=1 s msg=##Class(websys.Message).%New(%session.SessionId)
+ ;
+ //Save Orders when added into the Orders List Box.
+ n kkcount,NewOrderStr,WorkFlowID,OrderItemsID,OrderSetID,AgeSexFlag,AgeSexString,AgeSexItem,DosageRange,SubCat,Cat,currItems,DupMsg,match,NewItmMastDR,NewItmMastDesc,NewOrdRowId,careprov,orderdate,ordertime,testepisno,ordertype,OneDupMsg,SelectedOrders,SelectedOrderDR,orderitem,ret,b1,b2,b3,b4,b5,mobj,InsertedItems,NewOrders1,NewOrdersStr,ordCount,ordID,tempordSetID,ordSetID,specFlag,extLabFlag,HasDSSMsg,gotOEMsg,WARNING,OrderType,IsDuplicate,MaxCumDoseFlag,CreateNewTeethFlag,PregnBrFdAlert,PregnBrFdItem
+ n CoverAlert,returncover,CurEpisID,PatID,PatNameTemp,PatName,cancelledOrders,rec,PRNfreqCheck,PRNAlert,PopFlag,defPriority,i
+ s (NewOrderStr,WorkFlowID,ReceivedDateTime,CollectDateTime,NewOrderString,EpisString,DisplayQuestionFlag,OEMessageFlag,AllergyFlag,AllergyItems,PathwayDR,OrderItemsID,itemmasterlist,NewOrders,ORIRowIDs,OEORIROWIDs,InteractFlag,DrugIntString,TherpDupStr,LabFlag,HasAction,AfterAction,BeforeAction,ActionItemString,NewLabEpisodeNumber,NewLabOrders,NewLabSpecs,NewLabColDate,NewLabColTime,NewLabRecDate,NewLabRecTime,SilentMode,OrderSetID,AgeSexFlag,AgeSexString,AgeSexItem,DosageRange,SubCat,Cat,currItems,DupMsg,NewItmMastDR,NewItmMastDesc,NewOrdRowId,SelectedOrders,mobj,NewOrders1,NewOrdersStr,InsertedItems,ordID,tempordSetID,ordSetID,specFlag,extLabFlag,HasDSSMsg,gotOEMsg,WARNING,OrderType,IsDuplicate,MaxCumDoseFlag,CreateNewTeethFlag,OrderWindow,ExceedQty,ExceedQtyAlert,itemdesc,PregnBrFdAlert,PregnBrFdItem)=""
+ s (CoverAlert,returncover,CurEpisID,PatID,PatNameTemp,PatName,cancelledOrders,rec,DelNoStock,DrgSubs,CurrStr,NonSubsItems,StDate1,PRNfreqCheck,PRNAlert,PopFlag,defPriority)=""
+ s obj=##Class(websys.Component).OpenName("OEOrder.Custom")
+ i obj d obj.LoadTrans(),obj.%Close()
+ ;
+ s ordCount=0
+ s OrderWindow=%request.Get("OrderWindow")
+ s kkcount=%request.Get("kCounter")
+ ;Log 48726 Check covered by insurance
+ s CurEpisID=%request.Get("EpisodeID")
+ ;s ^ztt($zn,"CurEpisID")=CurEpisID
+ i CurEpisID="" q
+ ; JPD LOG 54674, 10.8.05
+ ;update height weight on order insert instead of only on update of oeorder.custom (for BMI and BSA stuff)
+ ;i $l(CurEpisID,"^")=1 d UpdateMRObsFromCustom^COEOrdItem14(%request.Get("mradm"),%request.Get("MRObsHeight"),%request.Get("MRObsWeight"))
+ s PatID=##Class(web.PAAdm).GetPatientId(CurEpisID)
+ s PatNameTemp=##Class(web.PAPatMas).GetPatientTitle(PatID)
+ s PatName=$p(PatNameTemp," ",2)_" "_$p(PatNameTemp," ",1)
+ f b5=1:1:kkcount d
+ . s StDate1=%request.Get("OEORISttDat")
+ . s rec=##Class(%CSP.Page).UnescapeURL(%request.Get("hiddenitem"_b5))
+ . ;s ^ztt($zn,"rec")=$g(rec)
+ . i $g(rec)="" q
+ . n newItmMastDR2,OrdItmRowId
+ . s OrdItmRowId=$p(rec,$C(1),2)
+ . s newItmMastDR2=$p(rec,$C(1),4)
+ . i newItmMastDR2'="" d
+ . . s itemdesc=$p($g(^ARCIM(+newItmMastDR2,$p(newItmMastDR2,"||",2),1)),"^",2)
+ . . ;Log 49182 PeterC 20/04/05
+ . . i %request.Get("doNotShowDrgSubs")'=1,OrdItmRowId="" d
+ . . . s CurrStr=##Class(web.ARCItmMast).CheckDrgSubstitution(newItmMastDR2)
+ . . . i CurrStr'="" d
+ . . . . s DrgSubs=DrgSubs_##Class(web.ARCItmMast).CheckDrgSubstitution(newItmMastDR2)
+ . . . i CurrStr="" s NonSubsItems=NonSubsItems_newItmMastDR2_"^"
+ . i OrdItmRowId="" d
+ . . ;Log 59777 PeterC 15/08/06
+ . . s (Priority,PriorityID,PriorityCode)=""
+ . . s Priority=%request.Get("OECPRDesc")
+ . . i $g(Priority)="" s Priority=##Class(web.OECPriority).GetOrderDefPriority(newItmMastDR2)
+ . . i $g(Priority)'="" s PriorityID=##Class(web.OECPriority).GetIdFromCodeOrDescription(Priority)
+ . . i $g(PriorityID)'="" s PriorityCode=$p($g(^OECPR(PriorityID)),"^",1)
+ . . ;s ^zpeterc($zn,"Pri")=PriorityCode
+ . . i $p($g(^CF("OE",1)),"^",32)="Y",%request.Get("DoNotCheckInsuranceCover")'=1,$g(PriorityCode)'="OM",$g(PriorityCode)'="EP" d
+ . . . i StDate1'="" s StDate1=##Class(websys.Conversions).DateHtmlToLogical(StDate1)
+ . . . i StDate1="" s StDate1=+$h
+ . . . s returncover=$$covered1^MVBARPB3(CurEpisID,newItmMastDR2,"",StDate1,"","V")
+ . . . i PLIST'="",$g(PLIST(1))'="" d
+ . . . . s ^zdenise($zn,"cover")=t("FR")
+ . . . . s CoverAlert=CoverAlert_t("FR")_" "_$zcvt(PatName,"O","JS")_" "_t("PayorDoNotCoverItem")_"\n"_$zcvt($tr(PLIST(1),"'",""),"O","JS")_"\n"_""
+ . . ;log 58512 Ted May2006 build up PRN alert for both order item and order set
+ . . s PRNAlert=##Class(web.ARCItmMast).PRNAlertMsg(PRNAlert,newItmMastDR2,itemdesc)
+ . i OrdItmRowId="",newItmMastDR2="" d 
+ . . s err=$$getall^CWEBARCOI($p(rec,$C(1),5)_"^ALL")
+ . . s i=0 f  s i=$o(PLIST(i)) q:i=""  d
+ . . . s newItmMastDR2=$p(PLIST(i),$c(2),1)
+ . . . s itemdesc=$p($g(^ARCIM(+newItmMastDR2,$p(newItmMastDR2,"||",2),1)),"^",2)
+ . . . s PRNAlert=##Class(web.ARCItmMast).PRNAlertMsg(PRNAlert,newItmMastDR2,itemdesc)
+ ;s ^ztt($zn,"alerts")=CoverAlert_","_PRNAlert
+ ;log58512 Ted May2006, popup alert if the frequency is less than min PRN period
+ i ((CoverAlert'="")||(PRNAlert'="")) d
+ . w "<script>"
+ . w "var choice1=true;"
+ . i OrderWindow'="frmScanOrders" d
+ . . w "var ordwin = window.open("""",'"_%request.Get("OrderWindow")_"');"
+ . . w "if(ordwin) ordwin.focus();"
+ . . i PRNAlert'="" d
+ . . . s PRNAlert=PRNAlert_"\n"_t("PRNHrs")_"\n"_t("CONTINUE")
+ . . . w "choice1=ordwin.confirm("""_PRNAlert_""");"
+ . . i CoverAlert'="" d
+ . . . s CoverAlert=CoverAlert_"\n"_t("PayorDoNotCoverCont")
+ . . . w "if(choice1==true) {choice1=ordwin.confirm("""_CoverAlert_""");}" 
+ . . w "if(choice1==false)"
+ . . w "{"
+ . . w "ordwin.DeleteClickHandler();" 
+ . . w "ordwin.DeleteAllHiddenItems();"
+ . . w "ordwin.DisableAddButton('"_0_"');"
+ . . w "ordwin.DisableUpdateButton('"_0_"');"
+ . . w "ordwin.DisableOrderDetailsButton('"_0_"');"
+ . . w "ordwin.DisableCheckPricesButton('"_0_"');"
+ . . ;Log 58495 04/05/06 PeterC
+ . . w "ordwin.focus();"
+ . . w "}"
+ . . i %request.Get("doNotShowDrgSubs")'=1 w "else ordwin.UpdateOnAddClick(0,1,0);"
+ . . i %request.Get("doNotShowDrgSubs")=1 w "else ordwin.UpdateOnAddClick(0,1,1);"
+ . . ;w "ordwin.websys_setfocus('Item');" ; 62612
+ . . w "</script>"
+ i OrderWindow'="frmScanOrders",((CoverAlert'="")||(PRNAlert'="")) q
+ i OrderWindow'="frmScanOrders",DrgSubs'="" d
+ . w "<script>"
+ . w "var ordwin = window.open("""",'"_%request.Get("OrderWindow")_"');"
+ . w "ordwin.ShowDrgSubs('"_DrgSubs_"','"_NonSubsItems_"');"
+ . w "</script>"
+ 
+ i OrderWindow'="frmScanOrders",DrgSubs'="" q
+ ;Set ALL order details fields for insertion of new order. 
+ d %request.Set("OEORISttDat",%request.Get("OEORISttDat"))
+ d %request.Set("OEORISttTim",%request.Get("OEORISttTim"))
+ d %request.Set("ColDate",%request.Get("ColDate"))
+ d %request.Set("ColTime",%request.Get("ColTime"))
+ d %request.Set("ReceivedDate",%request.Get("ReceivedDate"))
+ d %request.Set("ReceivedTime",%request.Get("ReceivedTime"))
+ d %request.Set("PathwayDR",%request.Get("PathwayDR"))
+ d %request.Set("ReceiveLabOrderID",%request.Get("ReceiveLabOrderID"))
+ d %request.Set("OECPRDesc",%request.Get("OECPRDesc"))
+ d %request.Set("AuthDoctor",%request.Get("AuthDoctor"))
+ d %request.Set("AppointmentFlag",%request.Get("AppointmentFlag"))
+ d %request.Set("ApptID",%request.Get("ApptID"))
+ d %request.Set("TeethIDs",%request.Get("TeethIDs"))
+ d %request.Set("CareProv",%request.Get("CareProv"))
+ d %request.Set("AuthClinician",%request.Get("AuthClinician"))
+ d %request.Set("AuthDoctorID",%request.Get("AuthDoctorID"))
+ ;log60222 TedT
+ d %request.Set("GRPRowID",%request.Get("GRPRowID"))
+
+ d %request.Set("OEORIItemGroup",%request.Get("OEORIItemGroup"))
+ s procnotes=##Class(%CSP.Page).UnescapeURL(%request.Get("OEORIDepProcNotes"))
+ s procnotes=$tr(procnotes,$c(2),"+")
+ d %request.Set("OEORIDepProcNotes",procnotes)
+ d %request.Set("EligibilityStatus",%request.Get("EligibilityStatus"))
+
+ d %request.Set("OEORISpecialtyDR",%request.Get("OEORISpecialtyDR"))
+ d %request.Set("ClinCondDR",%request.Get("ClinCondDR"))
+ d %request.Set("CLNPhone",%request.Get("CLNPhone"))
+ d %request.Set("OEORIRefDocDR",%request.Get("OEORIRefDocDR"))
+ d %request.Set("Doctor",%request.Get("Doctor"))
+ d %request.Set("DoctorID",%request.Get("DoctorID"))
+ d %request.Set("EpisLoc",%request.Get("EpisLoc"))
+ d %request.Set("UseTmpPatLoc",%request.Get("UseTmpPatLoc"))
+ d %request.Set("ConsultID",%request.Get("ConsultID"))
+ d %request.Set("PhoneOrder",%request.Get("PhoneOrder"))  ; 60317
+ ;
+ ;s currItems=##Class(web.OEOrdItem).GetPatientOrderItems("",%request.Get("EpisodeID"))
+ ; BM Log 45069,46403
+ s currItems=##Class(%CSP.Page).UnescapeURL(%request.Get("currItems"))
+ s SelectedOrders=%request.Get("SelectedOrders")
+ s WorkFlowID=##Class(websys.WorkFlow).GetIdFromCodeOrDescription("Trak.QSA Order Entry")
+ s mobj=##Class(websys.Component).OpenName("OEOrder.Custom")
+ i mobj d mobj.LoadTrans(),mobj.%Close()
+ s specFlag=$p(^CF("OE",1),"^",62) s extLabFlag=$$extlab^COEOrdItem()
+ ;d ##Class(web.OEOrdItem).InsertItem(%request.Get("TEVENT"),%request.Get("ID"),b1)
+ d InsertItem^COEOrdItem7(%request.Get("TEVENT"),%request.Get("ID"),"")
+ s WARNING=%request.Get("WARNING")
+ s WARNING=##Class(%CSP.Page).EscapeURL(WARNING)
+ s CreateNewTeethFlag=%request.Get("CreateNewTeethFlag")
+ s NewOrderId=%request.Get("NewOrders")
+ i OrderWindow'="frmScanOrders" {
+ 	w "<script>"
+ 	w "var ordwin = window.open("""",'"_%request.Get("OrderWindow")_"');"
+ 	w "ordwin.AddRowIdToListItem('"_NewOrderId_"','"_specFlag_"','"_extLabFlag_"');"
+	;Log 58495 04/05/06 PeterC
+	w "ordwin.focus();"
+	;w "ordwin.websys_setfocus('Item');" ; 62612
+ 	w "</script>"
+ }
+ s ReceivedDateTime=%request.Get("ReceivedDateTime")
+ s CollectDateTime=%request.Get("CollectDateTime")
+ s NewOrderString=%request.Get("NewOrderString")
+ s EpisString=%request.Get("EpisString")
+ s DisplayQuestionFlag=%request.Get("DisplayQuestionFlag")
+ s OEMessageFlag=%request.Get("OEMessageFlag")
+ s AllergyFlag=%request.Get("AllergyFlag")
+ s AllergyItems=%request.Get("AllergyItems")
+ s PathwayDR=%request.Get("PathwayDR")
+ s OrderItemsID=$tr(%request.Get("OrderItemsID"),"&","*")
+ s NewOrdersStr=NewOrdersStr_%request.Get("NewOrders")
+ s NewOrders1=%request.Get("InsertedItems")_NewOrdersStr
+ d %request.Set("NewOrders1",NewOrders1)
+ s NewOrders=%request.Get("NewOrders")
+ ;s OrderType=%request.Get("OrderType")
+ f k=1:1:$l(%request.Get("NewOrders"),"^")-1 d
+ . n newItmMastDR,newOrdIdDR,newSubCat,newCat
+ . s newItmMastDR=$p($p(%request.Get("NewOrders"),"^",k),"*",1)
+ . s newOrdIdDR=$p($p(%request.Get("NewOrders"),"^",k),"*",2)
+ . ;log59864 TedT do not overwrite existing TMP global entry
+ . i newOrdIdDR'="",'$d(^TMP("WEB","ORDER_ENTRY",%session.SessionId,newOrdIdDR)) s ^TMP("WEB","ORDER_ENTRY",%session.SessionId,newOrdIdDR)=1
+ . i newItmMastDR'="",newOrdIdDR'="" d
+ . . s newSubCat=$p($g(^ARCIM(+newItmMastDR,$p(newItmMastDR,"||",2),1)),"^",10)
+ . . s newCat=$p($g(^ARC("IC",newSubCat)),"^",8)
+ . . ;Log 44538 28/07/04 PeterC: If an item came from OS, its cat & subcat needs to be that of the OS
+ . . s HasOrdSet=$p($g(^OEORD(+newOrdIdDR,"I",$p(newOrdIdDR,"||",2),3)),"^",10)
+ . . i HasOrdSet'="" d
+ . . . s newCat=$p($g(^ARCOS(HasOrdSet)),"^",8)
+ . . . s newSubCat=$p($g(^ARCOS(HasOrdSet)),"^",9)
+ . . s Cat=Cat_newCat_"*"_newSubCat_"^"
+ . . i $g(^OEORD(+newOrdIdDR,"I",$p(newOrdIdDR,"||",2),"X",0))'="" s SubCat=SubCat_newSubCat_"^"
+ . . i $g(^OEORD(+newOrdIdDR,"I",$p(newOrdIdDR,"||",2),"X",0))="" d 
+ . . . i $p($g(^OEORD(+newOrdIdDR,"I",$p(newOrdIdDR,"||",2),3)),"^",8)'="R",$p($g(^OEORD(+newOrdIdDR,"I",$p(newOrdIdDR,"||",2),8)),"^",21)="" d
+ . . . . s SubCat=SubCat_"*"_newSubCat_"^"
+ . . . i $p($g(^OEORD(+newOrdIdDR,"I",$p(newOrdIdDR,"||",2),3)),"^",8)="R"!$p($g(^OEORD(+newOrdIdDR,"I",$p(newOrdIdDR,"||",2),8)),"^",21)'="" d
+ . . . . s SubCat=SubCat_"^"
+ . i newItmMastDR=""!newOrdIdDR="" s SubCat=SubCat_"^"
+ s SubCat=SubCat
+ s Cat=Cat
+ s ORIRowIDs=%request.Get("ORIRowIDs")
+ s OEORIROWIDs=%request.Get("OEORIROWID")
+ s InteractFlag=%request.Get("InteractFlag")
+ s DrugIntString=%request.Get("DrugIntString")
+ s TherpDupStr=%request.Get("TherpDupStr")
+ s LabFlag=%request.Get("LabFlag")
+ s HasAction=%request.Get("HasAction")
+ s AfterAction=%request.Get("AfterAction")
+ s BeforeAction=%request.Get("BeforeAction")
+ s ActionItemString=%request.Get("ActionItemString")
+ s NewLabEpisodeNumber=%request.Get("NewLabEpisodeNumber")
+ s NewLabOrders=%request.Get("NewLabOrders")
+ s NewLabSpecs=%request.Get("NewLabSpecs")
+ s NewLabColDate=%request.Get("NewLabColDate")
+ s NewLabColTime=%request.Get("NewLabColTime")
+ s NewLabRecDate=%request.Get("NewLabRecDate")
+ s NewLabRecTime=%request.Get("NewLabRecTime")
+ s SilentMode=%request.Get("SilentMode")
+ s OrderSetID=##Class(%CSP.Page).EscapeURL(%request.Get("OrderSetID"))
+ s AgeSexFlag=%request.Get("AgeSexFlag")
+ s AgeSexString=%request.Get("AgeSexString")
+ s AgeSexItem=%request.Get("AgeSexItem")
+ s DosageRange=%request.Get("DosageRange")
+ s MaxCumDoseFlag=%request.Get("MaxCumDoseFlag")
+ ; Log 58325 BoC
+ s PregnBrFdItem=%request.Get("PregnBrFdItem")
+ s PregnBrFdFlag=%request.Get("PregnBrFdFlag")
+ s (OneDupMsg,dupDate,dupTime)=""
+ f b2=1:1:$l(%request.Get("NewOrders"),"^")-1 d
+ . s match=0
+ . s (NewItmMastDR,NewItmMastDesc)=""
+ . s foundoverride=0
+ . s NewItmMastDR=$p($p(%request.Get("NewOrders"),"^",b2),"*",1)
+ . q:NewItmMastDR=""
+ . s NewOrdRowId=$p($p(%request.Get("NewOrders"),"^",b2),"*",2)
+ . s NewItmMastDesc=$p(^ARCIM(+NewItmMastDR,$p(NewItmMastDR,"||",2),1),"^",2)
+ . s IsDuplicate="" 
+ . s foundoverride=0
+ . i $o(^ARCIM(+NewItmMastDR,1,"DOV",0))'="" s foundoverride=1
+ . i 'foundoverride,$p($g(^ARCIM(+NewItmMastDR,$p(NewItmMastDR,"||",2),9)),"^",8)>0 s foundoverride=1
+ . i foundoverride s IsDuplicate=##Class(web.ARCItmMast).CheckDepartOverride(NewItmMastDR,%request.Get("EpisodeID"),"","",NewOrdRowId)
+ . i $p(IsDuplicate,"^",1)=1 d 
+ . . s OneDupMsg=OneDupMsg_NewItmMastDR_"*"_NewOrdRowId
+ . . s dupDate=$p(IsDuplicate,"^",2)
+ . . s dupTime=$p(IsDuplicate,"^",3)
+ . . i dupDate'="" s dupDate=##Class(websys.Conversions).DateLogicalToHtml(dupDate)
+ . . i dupTime'="" s dupTime=##Class(websys.Conversions).TimeLogicalToHtml(dupTime)
+ . . s OneDupMsg=OneDupMsg_"*"_t("MultipleOrder_Date")_" "_$p(IsDuplicate,"^",2)_"  "_t("MultipleOrder_Time")_" "_$p(IsDuplicate,"^",3)
+ . . i $p(IsDuplicate,"^",4)'="" s OneDupMsg=OneDupMsg_"  "_t("MultipleOrder_CareProv")_" "_$p(IsDuplicate,"^",4)
+ . . i $p(IsDuplicate,"^",5)'="" s OneDupMsg=OneDupMsg_"  "_t("MultipleOrder_TestEpisodeNo")_" "_$p(IsDuplicate,"^",5)
+ . . i $p(IsDuplicate,"^",6)'="" s OneDupMsg=OneDupMsg_"  "_t("ORDSTAT")_" "_$p(IsDuplicate,"^",6)
+ . . s OneDupMsg=OneDupMsg_"^"
+ . . s match=match+1
+ . i $p(IsDuplicate,"^",1)=0 d
+ . . f b4=1:1:$l(SelectedOrders,"^")-1 d
+ . . . s (SelectedOrderDR)=""
+ . . . s SelectedOrderDR=$p(SelectedOrders,"^",b4)
+ . . . i match=0,SelectedOrderDR'="" d
+ . . . . i $p(SelectedOrderDR,"*",1)="ARCIM" d
+ . . . . . i $p(SelectedOrderDR,"*",2)=NewItmMastDR d 
+ . . . . . . s IsDuplicate=""
+ . . . . . . i foundoverride s IsDuplicate=##Class(web.ARCItmMast).CheckDepartOverride(NewItmMastDR,%request.Get("EpisodeID"),+$h,$p($h,",",2),NewOrdRowId)
+ . . . . . . i $p(IsDuplicate,"^",1)=1 d
+ . . . . . . . s OneDupMsg=OneDupMsg_NewItmMastDR_"*"_NewOrdRowId_"*^"
+ . . . . . . . s match=match+1
+ . . . . i $p(SelectedOrderDR,"*",1)="ARCOS" d
+ . . . . . k PLIST
+ . . . . . s ret=$$getall^CWEBARCOI($p(SelectedOrderDR,"*",2))
+ . . . . . s orderitem="" f  s orderitem=$o(PLIST(orderitem))  q:orderitem=""  d
+ . . . . . . i $p(PLIST(orderitem),$C(2),1)=NewItmMastDR d
+ . . . . . . . s IsDuplicate=""
+ . . . . . . . i foundoverride s IsDuplicate=##Class(web.ARCItmMast).CheckDepartOverride(NewItmMastDR,%request.Get("EpisodeID"),+$h,$p($h,",",2),NewOrdRowId)
+ . . . . . . . i $p(IsDuplicate,"^",1)=1 d
+ . . . . . . . . s OneDupMsg=OneDupMsg_NewItmMastDR_"*"_NewOrdRowId_"*^"
+ . . . . . . . . s match=match+1
+ s DupMsg=##Class(%CSP.Page).EscapeURL(OneDupMsg)
+ i $g(DupMsg)'="" d
+ . s ^TMP("WEB","ORDER_ENTRY","DupMsg",%session.SessionId)=DupMsg
+ . s DupMsg="Y"
+ s HasDSSMsg=##Class(web.OEOrder).IsContainDSSMessage(%request.Get("NewOrders"))
+ f b5=1:1:$l(NewOrders,"^")-1 d
+ . s (ordID,tempordSetID)=""
+ . s ordID=$p($p(NewOrders,"^",b5),"*",2)
+ . i ordID'=""  s tempordSetID=$p($g(^OEORD(+ordID,"I",$p(ordID,"||",2),3)),"^",10)
+ . s ordSetID=ordSetID_tempordSetID_"^"
+ f b5=1:1:$l(NewOrders,"^")-1 d
+ . n newItmMastDR2
+ . s newItmMastDR2=$p($p(NewOrders,"^",b5),"*",1)
+ . i $g(^ARCIM(+newItmMastDR2,$p(newItmMastDR2,"||",2),"OEM",1))'="" s gotOEMsg=1
+ ;------------------------------------------
+ s OrderItemsIDTemp=""
+ i $l(%request.Get("EpisodeID"),"^")>1 d
+ .s EpisLen=$l(%request.Get("EpisodeID"),"^")
+ .f bpec=1:1:(($l(OrderItemsID,"^")-1)/EpisLen) d
+ ..s OrderItemsIDTemp=OrderItemsIDTemp_$p(OrderItemsID,"^",bpec)_"^"
+ .s OrderItemsID=OrderItemsIDTemp
+ ;------------------------------------------
+ ;i $p(OrderType,"*",1)="ARCOS" d
+ ;. n OSDate,OSItm,s,orderstr
+ ;. s (OSDate,OSItm,s,orderstr)=""
+ ;. s tmpNewOrders=NewOrders s NewOrders=""
+ ;. f  s OSDate=$o(^ARCOS(+$p(OrderType,"*",2),"DATE",OSDate)) q:OSDate=""  d
+ ;. . f  s OSItm=$o(^ARCOS(+$p(OrderType,"*",2),"DATE",OSDate,"ITM",OSItm)) q:OSItm=""  s s=^(OSItm) d
+ ;. . . i $p(s,"^",5)'="Y" d 
+ ;. . . . ; here we are going to have to cycle through the NewOrders variable, find the invisible one, 
+ ;. . . . ; and delete it from the variable so questions for it don't get displayed.
+ ;. . . . f i=1:1:$l(tmpNewOrders,"^") d
+ ;. . . . . s orderstr=$p(tmpNewOrders,"^",i)
+ ;. . . . . q:orderstr=""
+ ;. . . . . i $p(orderstr,"*",1)'=$p(s,"^",1)  s NewOrders=NewOrders_$p(orderstr,"*",1)_"^"
+ ;------------------------------------------
+ ;i $d(^zTRAK($zn,"debug")) s ^zTRAK($zn,"flags")=DisplayQuestionFlag_","_AgeSexFlag_","_DosageRange_","_DupMsg_","_AllergyFlag_","_HasDSSMsg_","_InteractFlag
+ i OrderWindow'="frmScanOrders" d
+ . w "<script>"
+ . w "var ordwin = window.open("""",'"_%request.Get("OrderWindow")_"');"
+ . ;Log 58495 04/05/06 PeterC
+ . w "ordwin.focus();"
+ . w "ordwin.DisableAddButton('"_0_"','"_NewOrders_"');"
+ . w "ordwin.DisableOrderDetailsButton('"_0_"');"
+ . w "ordwin.DisableCheckPricesButton('"_0_"');"
+ . w "ordwin.RefreshSessionList();"    ; 54852
+ . w "ordwin.websys_setfocus('Item');" ; 62612
+ . w "</script>"
+ w "<script>"
+ w "var ordwin = window.open("""",'"_%request.Get("OrderWindow")_"');"
+ ;w "ordwin.PopUpQuesSumm('"_WorkFlowID_"','"_ReceivedDateTime_"','"_CollectDateTime_"','"_NewOrderString_"','"_EpisString_"','"_DisplayQuestionFlag_"','"_OEMessageFlag_"','"_AllergyFlag_"','"_AllergyItems_"','"_PathwayDR_"','"_OrderItemsID_"','"_NewOrders_"','"_ORIRowIDs_"','"_InteractFlag_"','"_DrugIntString_"','"_TherpDupStr_"','"_LabFlag_"','"_HasAction_"','"_AfterAction_"','"_BeforeAction_"','"_ActionItemString_"','"_NewLabEpisodeNumber_"','"_NewLabOrders_"','"_NewLabSpecs_"','"_NewLabColDate_"','"_NewLabColTime_"','"_NewLabRecDate_"','"_NewLabRecTime_"','"_SilentMode_"','"_OrderSetID_"','"_AgeSexFlag_"','"_AgeSexString_"','"_AgeSexItem_"','"_DosageRange_"','"_SubCat_"','"_Cat_"','"_DupMsg_"','"_HasDSSMsg_"','"_gotOEMsg_"','"_ordSetID_"','"_%request.Get("PatientID")_"');"
+ w "ordwin.PopUpQuesSumm("""_WorkFlowID_""","""_ReceivedDateTime_""","""_CollectDateTime_""","""_NewOrderString_""","""_EpisString_""","""_DisplayQuestionFlag_""","""_OEMessageFlag_""","""_AllergyFlag_""","""_AllergyItems_""","""_PathwayDR_""","""_OrderItemsID_""","""_NewOrders_""","""_ORIRowIDs_""","""_InteractFlag_""","""_DrugIntString_""","""_TherpDupStr_""","""_LabFlag_""","""_HasAction_""","""_AfterAction_""","""_BeforeAction_""","""_ActionItemString_""","""_NewLabEpisodeNumber_""","""_NewLabOrders_""","""_NewLabSpecs_""","""_NewLabColDate_""","""_NewLabColTime_""","""_NewLabRecDate_""","""_NewLabRecTime_""","""_SilentMode_""","""_OrderSetID_""","""_AgeSexFlag_""","""_AgeSexString_""","""_AgeSexItem_""","""_DosageRange_""","""_SubCat_""","""_Cat_""","""_DupMsg_""","""_HasDSSMsg_""","""_gotOEMsg_""","""_ordSetID_""","""_%request.Get("PatientID")_""","""_WARNING_""","""_MaxCumDoseFlag_""","""_CreateNewTeethFlag_""","""_""_""","""_PregnBrFdFlag_""","""_PregnBrFdItem_""");"
+ ;i OrderWindow'="frmScanOrders",$g(%request.Data("REFRESHFAV",1))=1 w "ordwin.RunInHiddenWindow(ordwin.lnkFav+'&PREFTAB=1');"
+ ;i $g(%request.Data("REFRESHFAV",1))=1 w "websys_createWindow(ordwin.lnkFav+'&PREFTAB=1','TRAK_hidden');"
+ i OrderWindow'="frmScanOrders",$g(%request.Data("REFRESHFAV",1))=1 w "ordwin.SelectAllItemList();"
+ w "</script>"
+ ;
+ i $d(msg),$g(msg.Count("E")) {
+ 	 s msgitm="",desc=""
+ 	 f   {
+ 		 s msgitm=$o(msg.Item(msgitm))
+ 		 q:msgitm=""
+ 		 s desc=desc_$zcvt($lg(msg.Item(msgitm),2),"O","JS")_": "_$zcvt($lg(msg.Item(msgitm),3),"O","JS")_" \n"
+ 	 }
+ 	 i desc'="" {
+ 		w "<SCRIPT>alert('"_desc_"');</SCRIPT>"
+ 	}
+ }
+ i +$g(newmsg),$d(msg) d msg.%Close()
+ q
+ ;
+</SERVER>
+<script language="javascript">
+	//document.onload=HiddenBodyOnLoadHandler;
+	//function HiddenBodyOnLoadHandler(){
+	//	var obj11=document.getElementById("hiddenitem1")
+	//	alert(obj11);
+	//	if (obj11) alert(obj11.value);	
+	//}	
+</script>
+</body>
+</html>

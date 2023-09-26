@@ -1,0 +1,66 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s year=$Get(%request.Data("year",1))
+	s deptdr=$Get(%request.Data("deptdr",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	s goal=$Get(%request.Data("goal",1))
+	s property=$Get(%request.Data("property",1))
+	s isgovbuy=$Get(%request.Data("isgovbuy",1))
+	s state=$Get(%request.Data("state",1))
+	s plansdate=$Get(%request.Data("plansdate",1))
+	s planedate=$Get(%request.Data("planedate",1))
+	s realsdate=$Get(%request.Data("realsdate",1))
+	s realedate=$Get(%request.Data("realedate",1))
+	s alert=$Get(%request.Data("alert",1))
+	s filedesc=$Get(%request.Data("filedesc",1))
+	i action = "list" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).List(sortField,sortDir,start,limit, year, deptdr, property, state, isgovbuy)
+	
+	i action = "add" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).InsertRec(code, name, year, deptdr, userdr, goal, property, isgovbuy, state, plansdate, planedate, realsdate, realedate, filedesc)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "edit" d
+	.s result = ##class(herp.budg.udata.uBudgProjectDict).UpdateRec(rowid, code, name, year, deptdr, userdr, goal, property, isgovbuy, state, plansdate, planedate, realsdate, realedate, filedesc)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+		
+	i action = "year" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).yearmonth(start,limit,str)
+		
+	i action = "caldept" d
+	.w ##class(herp.budg.udata.uBudgProjectDict).CalDeptname(start,limit,str)
+		
+
+	
+</script>

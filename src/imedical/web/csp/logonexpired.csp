@@ -1,0 +1,30 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This page is used a a standard redirect when a session has expired.
+     All CSP pages must check for expired session in the OnPreHttp meethod.
+     which will automatically redirect to here -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+  quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+	<CSP:COMMENT>
+	This session has expired. Please <A HREF="#" onclick="window.location.reload();">refresh</A>
+	#--(%session.SessionId)--#
+	... this needs to be translateable.
+	</CSP:COMMENT>
+	<SCRIPT language="cache" runat="SERVER">
+	s lang=%session.Get("LOGON.LANGID") s:'lang lang=$lg($g(^websys.ConfigurationD(1)),15) s:'lang lang=$o(^SS("LAN",0))
+ 	s msg=$p($g(^websys.TranslationD("COMP",+lang,1473,"SESSION_EXPIRED2")),"^",1)
+	if $g(msg)="" s msg="This session has expired. Please refresh"
+	w msg_" <A HREF='#' onclick='window.location.reload();'>"_%session.SessionId_"</a>"
+	</script>
+	<SCRIPT language='javascript'>
+	window.open("dhc.logon.csp?RELOGON=1","RELOGON","toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes");
+	</SCRIPT>
+</BODY>
+</HTML>

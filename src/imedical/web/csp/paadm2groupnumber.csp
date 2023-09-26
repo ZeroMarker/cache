@@ -1,0 +1,57 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<!-- Log 60222, Bo: 09-08-2006 -->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<server>
+ n PatientID,EpisodeID,LINK,CONTEXT,PARREF,ID,EpSave
+ s EpSave=0
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ i EpisodeID="" d
+ . s EpisodeID=$$ADMInsert^CPAAdm(PatientID,+$h,$p($h,",",2),"",%session.Get("LOGON.CTLOCID"),"","","","","","","","","O","","","","","","","")
+ . i EpisodeID'="" d 
+ . . d %request.Set("EpisodeID",EpisodeID) d %request.Set("PARREF",EpisodeID)
+ . . s obj=##Class(User.PAAdm2).%OpenId(EpisodeID)
+ . . i obj d
+ . . . s obj.PAADM2SystemSession=%session.SessionId
+ . . . d obj.%Save(0)
+ . . . d obj.%Close()
+ . . s EpSave=1
+ s CONTEXT=%request.Get("CONTEXT")
+ s PARREF=%request.Get("PARREF")
+ s ID=%request.Get("ID")
+ ; flg is a flag for "we want the ID after running something" (mainly "Edit" from the .List component).
+ s flg=%request.Get("flg")
+ ; flg is NOT set on Delete, nor on Update, so the ID will be blanked after doing these.
+ i 'flg s ID="" d %request.Set("ID","")
+</server>
+
+<script language=javascript>
+	var EpSave="#(EpSave)#"
+	if (EpSave==1) {
+		var EpisodeID="#(EpisodeID)#"
+		if (EpisodeID!="") {
+			var aptFindEpID=window.opener.top.frames["TRAK_main"].frames["RBApptFind"].document.getElementById("EpisodeID")
+			if ((aptFindEpID)&&(aptFindEpID.value=="")) {aptFindEpID.value=EpisodeID}
+		}	
+	}
+</script>
+
+<TRAK:APPLET>
+	<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+	<TRAK:COMPONENT id="PAAdm2GroupNumber.Edit" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+	<TRAK:COMPONENT id="PAAdm2GroupNumber.List" hidemenus=1 ></TRAK:COMPONENT>
+</TRAK:APPLET>
+
+</html>

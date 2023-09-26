@@ -1,0 +1,138 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		// dhcpeireport.normal.cover.csp
+		
+		//s PatientID="5748123"
+		//d ##Class(web.DHCPE.ReportGetInfor).GetPatient(PatientID)
+		//
+		
+		s RegNo=$G(^TMPReport("PatInfo","PatRegNo"))
+		s HPNo=""
+		i RegNo'="" s HPNo=$G(^DHCPETempHPNo(RegNo))
+		//s RegNo=RegNo_"&nbsp;"
+		//s PatName=$G(^TMPReport("PatInfo","PatName"))_"&nbsp;"
+		s PatName=$G(^TMPReport("PatInfo","PatName"))   // by zhouli 
+		s PatSex=$G(^TMPReport("PatInfo","PatSex"))_"&nbsp;"
+		s ParBirthday=$G(^TMPReport("PatInfo","PatBirthday"))_"&nbsp;"
+		s PatAge=$G(^TMPReport("PatInfo","PatAge"))_"&nbsp;"
+		s PatTel=$G(^TMPReport("PatInfo","PatTel"))_"&nbsp;"
+		s PatCompany=$G(^TMPReport("PatInfo","PatCompany"))_"&nbsp;"
+		s AdmDate=$G(^TMPReport("PatInfo","AdmDate"))_"&nbsp;"
+	</SCRIPT>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+
+		s Hosption=$G(^DHCPESetting("DHCPE","ReportTitle"))_"-"
+		s wHosption=""
+		f iLLoop=1:1:$L(Hosption,"-") d
+		.
+		.s wHosption=wHosption_"<p class='ReportPageHeadTitle'>"_$P(Hosption,"-",iLLoop)_"</P>"
+		s wHosption=##class(web.DHCPE.ReportGetInfor).Replace(wHosption,"医疗保健中心","医务部体检")
+	</SCRIPT>	
+	
+	
+<DIV class="page normalcover">
+
+
+	<TABLE width="736" height="900" align="center">
+			<TR>
+			  <TD width="735" height="144"><p>&nbsp;</p></TD>
+			</TR>
+			<TR>
+			  <TD height="113" align="center" class="Test">#(wHosption)#
+
+			  </TD>
+			</TR>
+			<TR>
+			  <TD width="735" height="3" align="center">&nbsp;</TD>
+			</TR>
+			<TR>
+			  <TD height="3" align="center"></TD>
+			</TR>
+			<TR>
+			  <TD height="335" align="center"><label class="Test">体格检查表</label></TD>
+			</TR>
+			<TR>
+			  <TD height="50" align="center"></TD>
+			</TR>
+			
+			<TR>
+			  <TD width="735" height="163">
+			  <table align="center" style="vertical-align:middle;" width="501" height="134" border=0 cellspacing=0>
+                <tr>
+                  <td width="88" height="33" id="lPatName" class="ReportPageHeadOutputLabel">姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名</td>
+                  <td width="138" id="PatName" class="ReportPageHeadOutputValue">#(PatName)#</td>
+				  <td width="30"></td>
+                  <td width="85" id="lPatSex" class="ReportPageHeadOutputLabel">性&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;别</td>
+                  <td width="120" id="PatSex" class="ReportPageHeadOutputValue">#(PatSex)#</td>
+                </tr>
+                <tr>
+                  <td height="33" id="lPatAge" class="ReportPageHeadOutputLabel">年&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;龄</td>
+                  <td id="PatAge" class="ReportPageHeadOutputValue">#(PatAge)#</td>
+				  <td></td>
+                  <td id="lAdmDate" class="ReportPageHeadOutputLabel">体检日期</td>
+                  <td id="AdmDate" class="ReportPageHeadOutputValue">#(AdmDate)#</td>
+                </tr>
+                <tr>
+                  <td height="33" id="lRegNo" class="ReportPageHeadOutputLabel">登&nbsp;&nbsp;记&nbsp;&nbsp;号</td>
+                  <td id="RegNo" class="ReportPageHeadOutputValue">#(RegNo)#</td>
+				  <td></td>
+                  <td  class="ReportPageHeadOutputLabel">单&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;位</td>
+                  <td class="ReportPageHeadOutputValue">#(PatCompany)#</td>
+                </tr>
+                <tr>
+                  <td height="33" id="lPatTel" class="ReportPageHeadOutputLabel">电&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;话</td>
+                  <td id="PatTel"colspan="1" class="ReportPageHeadOutputValue">#(PatTel)#</td>
+                  <td></td>
+                  <td height="33" id="lHPNo" class="ReportPageHeadOutputLabel"></td>
+                  <td id="HPNo"colspan="1" class="ReportPageHeadOutputValue">#(HPNo)#</td>
+                </tr>
+                
+              </table>
+		     </TD>
+			<TR>
+			  <TD height="50" align="center"></TD>
+			</TR>			 
+			</TR>
+  </TABLE>
+  
+  
+</DIV>
+
+	<SCRIPT language="javascript">
+     var PatName=("#(PatName)#")
+     var RegNo=("#(RegNo)#")
+     var HPNo=("#(HPNo)#")
+	function BodyLoadHandler()
+	
+	 {  
+	    pagesetup_default();
+	 
+	    }
+   
+	function pagesetup_default()
+	{   
+		try{   
+		hkey_root="HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\PageSetup\\"
+   		var   RegWsh   =   new   ActiveXObject("WScript.Shell");
+  		hkey_key="header";
+   		var HeaderStr="&b"
+   		//var obj=document.getElementById("PatName");
+   		//if (obj&&obj.innerText!="")
+   		
+   		var HeaderStr=HeaderStr+"姓名:"+"#(PatName)#";
+   		//var obj=document.getElementById("PatSex");
+   		//if (obj) HeaderStr=HeaderStr+"   "+obj.innerText;
+   		//var obj=document.getElementById("RegNo");
+   		//if (obj&&obj.innerText!="")
+   		HeaderStr=HeaderStr+"  "+"体检号:"+"#(HPNo)#";
+   		//var obj=document.getElementById("HPNo");
+   		//if (obj&&obj.innerText!="") HeaderStr=HeaderStr+"   体检号:"+obj.innerText;
+   		//var obj=document.getElementById("AdmDate");
+   		//if (obj&&obj.innerText!="") HeaderStr=HeaderStr+"   体检日期:"+obj.innerText;
+   		RegWsh.RegWrite(hkey_root+hkey_key,"");
+   		hkey_key="footer";
+   		RegWsh.RegWrite(hkey_root+hkey_key,HeaderStr+"  "+"  第&p页"); //共&P页
+   		}catch(e){alert(e.message)}
+	
+  	}
+  	document.body.onload = BodyLoadHandler;
+	</SCRIPT>

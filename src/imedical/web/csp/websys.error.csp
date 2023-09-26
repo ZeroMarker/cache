@@ -1,0 +1,75 @@
+<!-- PRIVATE:Demo of how to write an application error page .-->
+<!-- Copyright (c) 2000 InterSystems Inc. ALL RIGHTS RESERVED. -->
+
+<!-- All error pages MUST inherit from %CSP.Error -->
+<csp:CLASS super=%CSP.Error INCLUDES="%occErrors">
+
+<html>
+<head>
+ <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css">
+ </LINK>
+</head>
+<body>
+
+<!-- display standard sample template using a custom tag -->
+<HR color="#336699">
+<B><I>
+An application error has occurred:
+</I></B>
+
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+	Quit 1
+</script>
+
+<HR color="#336699">
+
+<!-- The HyperEventError method is called when an error occurs while running -->
+<!-- the hyperevent method. This should generate JavaScript back to the browser -->
+<script language=Cache method=HyperEventError arguments="" returntype="">
+	New ErrorInfo,ErrorNumber,message
+	;
+	; After a timeout all the broker encoded string will be out of date until the page is refreshed.
+	; In the circumstance just disable the feature - this is less intrusive than an error - and does allow the user to continue (with some loss of functionality)
+	Set ErrorNumber=%request.Get("Error:ErrorNumber")
+	If ErrorNumber=$$$CSPSessionTimeout!(ErrorNumber=$$$InvalidDecrypt) q
+	;
+	;
+	Do ..DecomposeError(%request.Get("Error:ErrorCode"),.ErrorInfo)
+	Set message="(websys.error.csp) Event Broker Error\n\n"
+	For i=1:1:ErrorInfo {
+		Set message=message_$ZCVT(ErrorInfo(i,"Desc"),"O","JS")_"\n"
+		Set message=message_$ZCVT("    Error: "_ErrorInfo(i,"Error"),"O","JS")_"\n"
+		If ErrorInfo(i,"ErrorNo")'=$$$CacheError,ErrorInfo(i,"ErrorNo")'=$$$FailedToCreateClass Set message=message_$ZCVT("    ErrorNo: "_ErrorInfo(i,"ErrorNo"),"O","JS")_"\n"
+		Set message=message_$ZCVT("    CSP Page: "_ErrorInfo(i,"URL"),"O","JS")_"\n"
+		Set message=message_$ZCVT("    Namespace: "_ErrorInfo(i,"Namespace"),"O","JS")_"\n"
+		Set message=message_$ZCVT("    Class: "_ErrorInfo(i,"Class"),"O","JS")_"\n"
+		If $G(ErrorInfo(i,"Routine"))'="" {
+			Set message=message_$ZCVT("    Routine: "_ErrorInfo(i,"Routine"),"O","JS")_"\n"
+			Set message=message_$ZCVT("    Location: "_ErrorInfo(i,"Location"),"O","JS")_"\n"
+			If $G(ErrorInfo(i,"Line"))'="" Set message=message_$ZCVT("    Line: "_ErrorInfo(i,"Line"),"O","JS")_"\n"
+		}
+		Set message=message_"\n"
+	}
+	Write "alert('",message,"');",!
+	
+</script>
+
+<server>
+	&html<<p><p>>
+	New ErrorInfo
+	Do ..DecomposeError(%request.Get("Error:ErrorCode"),.ErrorInfo)
+	Do ..DisplayError(.ErrorInfo)
+	&html<<p><br>>
+	; Call the inspector to display the objects assocaited with this request.
+	; Note this is done inside the <body></body> tags.
+	;Do ##class(%CSP.Utils).DisplayAllObjects()
+	;Quit
+</server>
+
+<HR color="#336699">
+websys.error.csp:
+<br>
+Please note that error trapping functionality in websys.error.csp has been superceeded by websys.error.cls.
+It is recommended that the CSP configuration is modified through Cache Configuration Manager so that Custom Error Page = websys.error.cls
+</body>
+</html>

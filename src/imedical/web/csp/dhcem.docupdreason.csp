@@ -1,0 +1,100 @@
+<html>
+<head>
+<title></title>
+
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-14-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/docupdreason.js"></script>
+<script Language="Javascript">
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--hxy 2020-05-14 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+</script>
+<style>
+.r-label{margin-right:0px!important} /*hxy 2020-05-14*/
+</style>
+</head>
+<body style="padding-top:10px"><!--hxy 2020-05-14 style="padding-top:10px"-->
+<div class="hisui-layout" data-options="fit:true"><!--hxy 2020-05-14 新加div--> 
+	<div data-options="region:'west',border:false,fit:true" style="padding-bottom:50px"><!--hxy 2020-05-14 add-->
+
+	    <div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div><!--hxy 2020-05-14 add-->
+		<!-- toolbar -->
+		<div id="toolbar" class="toolbar">	
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    border:false,
+		    onDblClickRow:onClickRow, 
+			url:''"><!--dhcapp.broker.csp?ClassName=web.DHCEMDocUpReason&MethodName=ListDocUpReason hxy 2020-05-14-->
+			<thead>
+				<tr>
+					<th data-options="field:'DurCode',width:120,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'DurDesc',width:120,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'DurActive',align:'center',width:70,
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevKey&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th data-options="field:'DurHospDesc',width:200,align:'center',hidden:true,
+												editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:false,
+													editable:false
+												}
+											}">医院</th>
+					<th data-options="field:'DurHospDr',hidden:true">DurHospDr</th>
+					<th data-options="field:'DurId',hidden:true">id</th>
+					<th data-options="field:'Type',align:'center',width:100,
+											formatter:function(value,row,index){
+												if (value=='Doc'){return 'Doc';} 
+												else {return 'Nur';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMDocUpReason&MethodName=JsonGetReaType',
+													required:true,
+													editable:false
+												}
+											}">类型</th>
+					<th data-options="field:'HospDr',hidden:true">HospDr</th><!--hxy 2020-05-14-->
+				</tr>
+			</thead>
+		</table>
+	</div>
+</div>
+</body>
+</html>

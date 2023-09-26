@@ -1,0 +1,21 @@
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "getRtpCfg"=action {
+		
+		s qryName="%DynamicQuery:SQL"  //¹Ì¶¨Ð´·¨
+		s sql="SELECT ID AS RptID, QryName,NameSpace, Routine,Fun,OtherParam,RptTitle FROM DHCWL_CommonDataQry.RptCfg"
+		s start=0,end=0
+		s jsonPro="RptID,QryName,NameSpace,Routine,Fun,OtherParam,RptTitle"
+		s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,"",sql,start,end,jsonPro)
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"			
+		
+	}
+	
+</script>

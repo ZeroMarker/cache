@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+	<meta http-equiv="x-ua-compatible" content="ie=7" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<DHCAPP:EASYUI/>
+    <!--<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/dhcem/css/dhcem.css">-->
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/plugins/font-awesome/font-awesome.min.css"/>
+	<script src="../scripts/dhcnewpro/dhcdis/affirmstatus.js" charset="gb2312"></script>
+	<script Language="Javascript">
+		var EpisodeID="#(%request.Get("EpisodeID"))#" //医嘱ID 
+		var locId="#(%session.Data("LOGON.CTLOCID"))#"  //科室ID
+		var hosp="#(%session.Data("LOGON.HOSPID"))#"  //医院ID
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var ReqType="affirmstatus"; //陪送 dws 2017-02-24
+   </script>
+  <style type="text/css">
+
+	  /*输入框START #6BB7E6*/
+	.input-mini{  
+		width:100px;
+		height:30px;
+		line-height: normal;
+		font-size:12px;
+		color:#555;
+		border-radius:2px;
+		backgroud-color:#FFFFFF;
+		border:1px solid #40a2de;
+		padding-left:5px;
+	}
+	/*输入框获得焦点边框样式 #40A2DE*/
+	.input-mini:focus{
+		box-shadow: 0 0 5px #40a2de;
+		border:1px solid #A4C6FD;
+	}
+	/*form 区域*/
+	.form-input{width:20%;float:left}
+	.form-row{margin-top:4px;width:100%;float:left}
+	.form-input-div{padding-left:20px}
+	
+	/*查找按钮*/
+	.iconbutton{
+	 	width: 30px;	
+	 	height: 30px;
+	 	background-color: #40A2DE;
+	 	border: 0px;
+	 	border-radius: 1px;
+	 	text-align: center;
+	 	line-height: 30px;
+	 	color: #fff;
+	 	float: left;
+	 } 
+	 .btn{
+		height:30px;
+		background-color:#40A2DE;
+		color:#fff;
+		border: solid 1px #40A2DE;
+		cursor: pointer; 	 
+	 }
+	 
+	 .btn:hover{
+		background-color:#4169E1;	 
+	}
+	 
+  </style>
+</head>
+
+<body >
+<div class="easyui-layout" fit="true">
+	<div data-options="region:'north'" style="height:110px"> 
+	<!--north-title start-->
+		<div class="panel" style="padding-top:4px;padding-left:15px;min-height:22px;color:#fff;background-color:#38AAFF;">
+			<img src="../scripts/dhcnewpro/images/dhcdis-request.png" alt="request"/><span style="position:absolute;left:30px;top:7px;">&nbsp;&nbsp;陪送申请查询确认</span>
+		</div>
+		<!--row-one start-->
+			  <div class="form-row" style="margin-top:5px;">
+				<div class="form-input">
+					<div class="form-input-div">	
+				    <span>开始日期</span> 	
+		        	<input id="StrDate" type="text" class="easyui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;height:30px">
+				    </div>
+				</div>
+		    	<div class="form-input">
+		    		<div class="form-input-div">	
+					<span>申请科室</span> 
+				    <input id="ApplayLoc" class="easyui-combobox" style="max-width:130px;height:30px"></input > 
+				    </div>
+		    	</div>
+		    	<div class="form-input">	
+					<div class="form-input-div">
+					<span>验证码</span>
+				    <input id="TaskID" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+					</div>
+		    	</div>
+		    	<div class="form-input">	
+					<div class="form-input-div">
+					<span>住院号</span>
+				    <input id="HosNo" type="text" class="input-mini" placeholder="请录入" style="width:130px;">
+					</div>
+		    	</div>
+		    	<div class="form-input">	
+					<div class="form-input-div">
+					<span class="fa fa-search iconbutton"></span>
+    				<button type="button" class="btn" id="searchBtn" style="min-width:65px;">
+					查找
+					</button>
+					</div>
+		    	</div>
+			  </div>
+			  <!--row-two start-->
+			  <div class="form-row">
+				<div class="form-input">
+					<div class="form-input-div">	
+				    <span>截至日期</span> 	
+		        	<input id="EndDate" type="text" class="easyui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;height:30px">
+				    </div>
+				</div>
+		    	
+				<div class="form-input" style="margin-left:13px">
+		    		<div class="form-input-div">	
+					<span>登记号</span> 
+					<input id="RegNo" type="text" class="input-mini" placeholder="请录入" style="width:125px;">
+				    </div>
+		    	</div>
+		    	<div class="form-input" style="margin-left:-13px">
+					<div class="form-input-div">	
+					<span>状&nbsp;&nbsp;&nbsp;&nbsp;态</span> 
+					<input id="AffirmStatus" class="easyui-combobox" style="max-width:135px;height:30px"></input> 	
+					</div>
+		    	</div>
+		    	
+			  </div>
+	</div><!--north end-->
+
+ <!--center start-->
+    <div data-options="region:'center',title:''" style="border:none">
+    	 <table id="cspAffirmStatusTb" class="easyui-datagrid"
+    	 	data-options="toolbar:'#toolbar'" style="height:350px">
+    	 </table> 
+    </div>
+ <!--center end-->
+ 
+ <!--south start-->
+ 	<div data-options="region:'south'" style="border:none">
+ 		  <table id="cspAffirmStatusCarefulTb" class="easyui-datagrid"
+    	 	data-options="toolbar:'#toolbardetail'" style="height:170px">
+    	 </table>
+	</div> 
+
+	<div id="toolbar" class="toolbar">
+		 <table cellspacing="0" cellpadding="0" >
+			 <tr>
+			 	<td align="center"style="width:100px;color:#38AAFF">申请单列表</td>
+			 	<!-- <td><a id="verifiBtn" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" >验证确认</a></td><td>
+			 	<td><div class="datagrid-btn-separator"> </div></td>
+			 	<td><a id="recieve" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" >接收</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td>
+				<td><a id="complete" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" >完成</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td> -->
+			 	<td><a id="exeBtn" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" >完成确认</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td>
+				<!-- <td><a id="appraiseBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" >评价</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td> -->
+				<td><a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="detailsbtn">详情</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td>
+				<td><a id="undoBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" >撤销申请</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td>
+				<!-- <td><a id="unfiniBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" >未完成</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td> -->
+				<!-- <td><a id="nullflagBtn" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" >空趟</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td> -->
+				<td><a id="requestCopy" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" >复制</a></td>
+				<td><div class="datagrid-btn-separator"> </div></td>
+
+		 </table>
+	</div>
+
+	<div id="toolbardetail" class="toolbar" style="padding:5px;height:auto">
+		 <table cellspacing="0" cellpadding="0" >
+			 <tr height="20px">
+			 	<td align="center" style="width:100px;color:#38AAFF">申请单明细列表</td>
+			 </tr>
+		 </table>
+	</div>
+	
+</div>
+<!-- 验证确认弹窗 -->
+<div id="confirmwin">
+	<div style="margin:20px 0px 0px 95px;"><span>请输入您的工号：</span></div>
+	<div><input id="confirm" style="width:50%;border:1px solid #95B8E7;margin:10px 0px 0px 75px;" placeholder='请输入用户名' /></div>
+	<div style="margin:20px 0px 0px 105px;"><a href="#" class="easyui-linkbutton" onclick="javascript:afterconfirm();">验证确认</a></div>
+</div>
+
+<!-- 空趟原因弹出 -->
+<div id="NullReason">
+	<!--数据列区域-->
+	<div data-options="region:'center'" style="border-left:1px solid #95B8E7;border-top:0px;border-right:0px;border-bottom:0px;" title="空趟原因">
+			<div style="font-size:10pt;margin-top:3px;">
+				<div style="margin-top:8px;height:30px;">
+					<span style="margin-left:10px;">原因：<span style="margin-left:10px"></span><input id="FailReason" class="easyui-combogrid" name="dept" style="width:150px;"/></span>
+						
+				</div>
+				
+				<div style="margin:20px 0px 0px 105px;"><a href="#" class="easyui-linkbutton" onclick="javascript:nullconfirm();">确认</a></div>
+		   </div>
+		</div>
+	</div>
+</div>
+<!-- 复制修改时间弹出 -->
+<div id="copyTime">
+	<!--数据列区域-->
+	<div style="width:480px;margin-top:5px;margin-left:5px;">
+		<table>
+			<tr>
+				<th style="font-weight:normal">接收科室：</th>
+				<th style="margin-left:2px;"><input id="CopyRecLoc" class="easyui-combobox" style="max-width:130px;height:30px"></input > </th>
+				<th style="font-weight:normal;padding-left:30px;">陪送日期：</th>
+				<th style="margin-left:2px;"><input id="CopyStartDate" type="text" class="easyui-datebox" data-options="showSeconds:false,editable:false" style="max-width:130px;height:30px"></th>
+			</tr>
+			<tr>
+				<th style="font-weight:normal">陪送方式：</th>
+				<th style="margin-left:2px;"><input id="CopyReqWay" class="form-control" style="max-width:130px;height:30px"></input></th>
+				<th style="font-weight:normal;padding-left:30px;">时&nbsp;&nbsp;间&nbsp;&nbsp;段：</th>
+				<th style="margin-left:2px;"><input id="CopyTimePart" class="easyui-combobox" style="max-width:130px;height:30px"></input ></th>
+			</tr>
+			<tr>
+				<th style="font-weight:normal">陪送类型：</th>
+				<th style="margin-left:2px;"><input id="CopyReqType" class="easyui-combobox" style="max-width:130px;height:30px"></input></th>
+				<th style="font-weight:normal;padding-left:30px;">陪送时间：</th>
+				<th style="margin-left:2px;"><input id="CopyTime" class="easyui-combobox" style="max-width:130px;height:30px"></input></th>
+			</tr>
+			<tr>
+				<th style="font-weight:normal">备&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注：</th>
+				<th style="margin-left:2px;"><input id="CopyNote" type="text" class="input-mini" placeholder="请录入" style="width:130px;"></th>
+			</tr>
+		</table>
+			<div style="margin:20px 0px 0px 120px;">
+				<button class="easyui-linkbutton" onclick="javascript:SureRequestCopy()">确认</button>
+				<span style="padding-left:130px"><button class="easyui-linkbutton" onclick="javascript:CancleRequestCopy()">取消</button></span>
+			</div>
+			<!-- <div style="margin:20px 0px 0px 120px;"><a href="#" class="easyui-linkbutton" onclick="javascript:SureRequestCopy();">确认</a></div> -->
+		    
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+//张枕平  
+//2015-04-01
+//获取工作记录数据
+var store=new Ext.data.Store({
+	  proxy: new Ext.data.HttpProxy({
+			 url:'PMP.Common.csp?actiontype=ObStore'
+			}),
+	  reader:new Ext.data.JsonReader({
+	    	 totalProperty : "results",
+			 root : 'rows',
+			  idProperty: 'threadid',
+              remoteSort: true,
+              fields: ['title', 'forumtitle', 'forumid', 'author',
+                       {name: 'ObRowid', type: 'int'},
+                       {name: 'ObDate'},  //, mapping: 'ObDate', type: 'date', dateFormat: 'timestamp'
+                       'lastposter', 'ObMenu','ObSolution']
+			 })
+    	});
+    store.setDefaultSort('ObDate', 'desc');
+
+//获取产品组下拉列表数据
+var ObUserstore=new Ext.data.Store({
+	  proxy: new Ext.data.HttpProxy({
+			url:'PMP.Common.csp?actiontype=ObUserstore'
+			}),
+	  reader:new Ext.data.JsonReader({
+	    	totalProperty : "results",
+			root : 'rows'
+			},['RowId','Description'])
+    }); 
+ //获取附件信息
+ var AdjunctObStore=new Ext.data.Store({
+	  			proxy: new Ext.data.HttpProxy({
+					url:'PMP.Common.csp?actiontype=AdjunctObStore'
+			}),
+	    reader:new Ext.data.JsonReader({
+	    				totalProperty : "results",
+							root : 'rows'
+							},['AdjunctObRowid','AdjunctObName','AdjunctObTime','AdjunctObUser','AdjunctObType'])
+    	});
+  //获取需求名称下拉列表数据
+var ObIpmlboxstore=new Ext.data.Store({
+	  proxy: new Ext.data.HttpProxy({
+			url:'PMP.Common.csp?actiontype=ObIpmlboxstore'
+			}),
+	  reader:new Ext.data.JsonReader({
+	    	totalProperty : "results",
+			root : 'rows'
+			},['RowId','Description'])
+    });
+//检索按钮 参照scripts/dhcpa/outkpidata/outkpidatamain.js
+var ObSearchField = 'MainTitle';
+var ObFilterItem = new Ext.SplitButton({
+		text: '过滤器',
+		tooltip: '关键字所属类别',
+		menu: {items: [
+				new Ext.menu.CheckItem({ text: '标题',value: 'MainTitle',checked: false,group: 'group',checkHandler: onOutObItemCheck }),
+				new Ext.menu.CheckItem({ text: '标签',value: 'Title',checked: false,group: 'group',checkHandler: onOutObItemCheck }),
+				new Ext.menu.CheckItem({ text: '创建日期',value: 'Date',checked: false,group: 'group',checkHandler: onOutObItemCheck }),
+				new Ext.menu.CheckItem({ text: '内容',value: 'Menu',checked: false,group: 'group',checkHandler: onOutObItemCheck }),
+				new Ext.menu.CheckItem({ text: '创建用户',value: 'User',checked: false,group: 'group',checkHandler: onOutObItemCheck }),
+				new Ext.menu.CheckItem({ text: '工作类型',value: 'WorkType',checked: false,group: 'group',checkHandler: onOutObItemCheck })
+		]}
+});
+function onOutObItemCheck(item, checked){
+		if(checked) {
+				ObSearchField = item.value;
+				ObFilterItem.setText(item.text + ':');
+		}
+};
+var ObSearchBox = new Ext.form.TwinTriggerField({//查找按钮
+		width: 260,
+		//autoWidth:true,  
+		trigger1Class: 'x-form-clear-trigger',
+		trigger2Class: 'x-form-search-trigger',
+		emptyText:'请输入搜索关键字...',
+		listeners: {
+			specialkey: {fn:function(field, e) {
+			var key = e.getKey();
+			if(e.ENTER === key) {this.onTrigger2Click();}}}
+		},
+		grid: this,
+		onTrigger1Click: function() {
+			//if(this.getValue()) {
+				this.setValue('');
+				store.removeAll();
+        store.load({params:{InPut:'',type:ObSearchField,menu:this.getValue()}});
+				//store.proxy = new Ext.data.HttpProxy({url: 'PMP.Common.csp?actiontype=ObStore'+'&type='+ObSearchField+'&menu='+this.getValue()});
+				//store.load();
+			//}
+		},
+		onTrigger2Click: function() {
+			//if(this.getValue()) {
+				//store.proxy = new Ext.data.HttpProxy({
+				store.removeAll();
+        store.load({params:{InPut:'',type:ObSearchField,menu:this.getValue()}});
+				//store.proxy = new Ext.data.HttpProxy({url: 'PMP.Common.csp?actiontype=ObStore'+'&type='+ObSearchField+'&menu='+this.getValue()});
+				//store.load();
+	    	//}
+		}
+});
+var NewButton = new Ext.Button({text:'新建记录',handler: function(){NewClear();}});
+var Obtbar=[ObFilterItem,ObSearchBox,{xtype:"tbseparator"},NewButton];
+function NewClear(){
+Ext.getCmp("Obtitle").setValue("");
+Ext.getCmp("ObMaintitle").setValue("");
+Ext.getCmp("ObDate").setValue(new Date().add(Date.DAY,0));
+Ext.getCmp("ObUpDate").setValue(new Date().add(Date.DAY,0));
+//Ext.getCmp("ObDate").setValue(data.ObDate);
+//alert(data.ObDate);
+Ext.getCmp("ObContenti").setValue("");
+//Solutioni
+Ext.getCmp("Solutioni").setValue("");
+AdjunctObStore.removeAll();
+AdjunctObStore.load({params:{InPut:'',type:'new'}});
+};
+

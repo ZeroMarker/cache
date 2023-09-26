@@ -1,0 +1,74 @@
+
+<server>
+	s episodeId = $g(%request.Data("EpisodeID",1))
+	s patientID = $g(%request.Data("PatientID",1))
+	s timeLineId=##class(icare.web.TimeLineData).GetTimeLineId(episodeId)
+	s SetDepart = $g(%request.Data("SetDepart",1))  //门诊的设置
+	s PageFrom = $g(%request.Data("PageFrom",1))  //门诊的设置
+	s OneItem=%request.Get("OneItem")
+	s dateNow = $H
+	Write "<script type='text/javascript' language='javascript'>",!
+	write "var episodeId = '"_episodeId_"';",!
+	write "var patientID = '"_patientID_"';",!
+	write "var timeLineId = '"_timeLineId_"';",!
+	write "var PageFrom = '"_PageFrom_"';",!
+	write "var DateNowServer = '"_$ZDATE(dateNow,3)_"';",!
+	Write "var OneItem = """_OneItem_""";",!
+	
+	if timeLineId="EmgView"{
+	    s sc=##class(icare.TimeLineEmergencyView).GetSeeDocDateList(patientID)
+    }elseif timeLineId="AdmView"{
+	    s sc=##class(icare.TimeLineView).GetSeeDocDateList(patientID)
+	}else{
+		w "var SeeDoctorInfor = [];"
+	}
+	write "var websys_dateformat="""_##class(websys.Conversions).DateFormat()_""";",!
+	Write "<"_"/script>",!
+
+	if OneItem="Diagnose"{ //单类型界面 诊断
+		set PageCount=7
+		w "<title>诊断视图</title>",!
+    	Write "<script type='text/javascript' language='javascript'>",!
+		Write "var PageCount = "_PageCount_";",!
+    	Write "var DiagnoseInfor = "
+		do ##Class(icare.web.TimeLineData).GetDiagnoseInfor(episodeId,0,PageCount)
+		do ##Class(icare.web.TimeLineData).GetDiagnoseType(timeLineId)
+		Write "</"_"script>",!
+		
+	}elseif OneItem="BloodPressure"{
+		w "<title>血压</title>",!
+		set StartDate=%request.Get("StartDate")
+		Write "<script type='text/javascript' language='javascript'>",!
+		write "var queryDate = '"_StartDate_"';",!
+		write "var BloodPressureInfor = "
+		s sc = ##Class(icare.web.TimeLineData).GetDataTypeData("0306",episodeId,StartDate)
+  		write ";",!
+  		Write "<"_"/script>"
+		
+	}elseif OneItem=""{ //整体界面
+		w "<title>集成视图</title>",!
+		if SetDepart'="1"{//门诊修改显示科室时不重新生成
+			d ##class(icare.web.TimeLineData).GenTimeLineData(timeLineId,patientID,episodeId)
+		}
+	    s searchCode = ##Class(icare.web.TimeLineData).GetTimeLineConfig(timeLineId,"")
+		Write "<script type='text/javascript' language='javascript'>",!
+		if SetDepart="1" write "var sessionShowDepart = '"_$Get(%session.Data(patientID_"ShowDeparts",1))_"';",!
+		write "var queryCode = '"_searchCode_"';",!
+		if (searchCode '= "")
+		{
+	    	write "var ClinicalData = "
+	    	s sc=##class(icare.web.TimeLineData).GetTimeLineData(timeLineId,searchCode,patientID,episodeId)
+			write ";",!
+		}
+
+		write "var queryDate = ClinicalData.searchDate;",!
+		Write "<"_"/script>"
+	}else{
+		Write "<script type='text/javascript' language='javascript'>",!
+		w "alert('错误的参数');"
+		Write "<"_"/script>"
+	}
+	
+
+
+</server>

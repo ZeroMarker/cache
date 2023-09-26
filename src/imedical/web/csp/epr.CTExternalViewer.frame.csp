@@ -1,0 +1,39 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<server>
+	n wkfl,wkfli,eId,strPACS,pacsSystem
+	s (eId,strPACS,pacsSystem)=""
+	s wkfl=%request.Get("TWKFL")
+	s wkfli=%request.Get("TWKFLI")
+	s eId=$g(%request.Data("ID",1))
+	i (eId'=""){
+		i eId s strPACS=$g(^epr.CTExternalViewerD(eId))
+		i strPACS'="" {
+			s pacsSystem=$lg(strPACS,4)
+			s %request.Data("StartingComponent",1)=$lg(strPACS,17)
+		}
+	}
+	s %request.Data("ID",1)=eId
+	s %request.Data("ParRef",1)=eId
+</server>
+<BODY>
+
+<TRAK:COMPONENT id="epr.CTExternalViewer.Edit" hidemenus=1 style="TOP:0; LEFT:0; WIDTH:100%; OVERFLOW: auto; BORDER-BOTTOM: 2px inset; BORDER-LEFT: 2px inset; BORDER-RIGHT: 2px inset; BORDER-TOP: 2px inset;">
+</TRAK:COMPONENT>
+
+<CSP:IF CONDITION='pacsSystem="USRD"'>
+	<TRAK:COMPONENT id="epr.CTExternalViewerParams.List" hidemenus=1>
+	</TRAK:COMPONENT>
+</CSP:IF>
+</BODY>
+</HTML>

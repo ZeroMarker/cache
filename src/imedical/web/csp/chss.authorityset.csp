@@ -1,0 +1,38 @@
+
+<script language="cache" runat="server">
+	s Action=$Get(%request.Data("actiontype",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+	s GroupRowId=$Get(%request.Data("GroupRowId",1))
+	s ResRowId=$G(%request.Data("ResRowId",1))
+	s ReVsGrRowId=$G(%request.Data("ReVsGrRowId",1))
+	s UserRowId=$G(%request.Data("UserRowId",1))
+	s UserVsGrRowId=$G(%request.Data("UserVsGrRowId",1))
+	s text=$G(%request.Data("text",1))
+	
+	i Action = "listresourcegroup" d
+	.w ##class(CHSSWeb.CHSSResourceGroupService).List(Start, Limit)
+	
+	i Action = "listResourceVsGroup" d
+	.w ##class(CHSSWeb.CHSSResourceVsGroup).List(Start,Limit,GroupRowId)
+	
+	i Action = "insert" d
+	.w ##class(CHSSWeb.CHSSResourceVsGroup).insert(Limit,GroupRowId,ResRowId,ReVsGrRowId)
+	
+	i Action = "resourcedeleteAll" d
+	.w ##class(CHSSWeb.CHSSResourceVsGroup).deleteAll(GroupRowId)
+	
+	i Action = "listUserVsGroup" d
+	.w ##class(CHSSWeb.CHSSUserVsResourceService).List(Start,Limit,GroupRowId)
+	
+	i Action = "userinsert" d
+	.w ##class(CHSSWeb.CHSSUserVsResourceService).insert(Limit,GroupRowId,UserRowId,UserVsGrRowId)
+	
+	i Action = "userdeleteAll" d
+	.w ##class(CHSSWeb.CHSSUserVsResourceService).deleteAll(GroupRowId)
+	
+	i Action = "find" d
+	.w ##class(CHSSWeb.CHSSUserVsResourceService).find(Start,Limit,text)
+</script>
+

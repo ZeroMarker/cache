@@ -1,0 +1,95 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+ n resrowid,id,dateCreate,timeCreate,userCreate,hospCreate
+ s (resrowid,id,dateCreate,timeCreate,userCreate,hospCreate)=""
+ s (EpisodeID,PatientID)=""
+ s result=""
+ s TWKFL=$g(%request.Data("TWKFL",1))
+ s TWKFLI=$g(%request.Data("TWKFLI",1))
+ s TWKFLL=$g(%request.Data("TWKFLL",1))
+ s TWKFLJ=$g(%request.Data("TWKFLJ",1))
+ s CONTEXT=$g(%request.Data("CONTEXT",1))
+ s multipatOEIDs=$g(%request.Data("allOEIDsToLoop",1))
+ i multipatOEIDs="" s multipatOEIDs=$g(%request.Data("multipatOEIDs",1))
+ i multipatOEIDs="" q
+
+ f cnt=1:1 {
+ 	; Get the current OrdItemID (ie. the Next one)
+ 	s OEOrdItemID=$p(multipatOEIDs,"^")
+ 	q:OEOrdItemID=""
+ 
+ 	; Update allOEIDsToLoop by removing the current ID from the list... so we can always pull the Next one from the begining of the list.
+ 	s len=$l(multipatOEIDs,"^"), multipatOEIDs=$p(multipatOEIDs,"^",2,len)
+ 
+ 	&sql(SELECT RES_ResStat_DR->RESST_Code INTO :result FROM SQLUser.OE_OrdResult WHERE (RES_ParRef = :OEOrdItemID) ORDER BY RES_Childsub DESC)
+ 	q:result'="V"
+ }
+ 
+ ; Get the episode/patientID from the order
+ i OEOrdItemID'="" {
+	&sql(Select RES_RowId INTO :resrowid FROM OE_OrdResult WHERE RES_ParRef=:OEOrdItemID AND RES_Type ='W' AND RES_NonSTDRepIssReason_DR IS NULL)
+ 	i SQLCODE=100 s (resrowid)=""
+ 	i resrowid'="" {
+ 		s dateCreate=$p($g(^OEORD(+resrowid,"I",+$p(resrowid,"||",2),"RES",+$p(resrowid,"||",3))),"^",37)
+ 		s timeCreate=$p($g(^OEORD(+resrowid,"I",+$p(resrowid,"||",2),"RES",+$p(resrowid,"||",3))),"^",38)
+ 		s userCreate=$p($g(^OEORD(+resrowid,"I",+$p(resrowid,"||",2),"RES",+$p(resrowid,"||",3))),"^",39)
+ 		s hospCreate=$p($g(^OEORD(+resrowid,"I",+$p(resrowid,"||",2),"RES",+$p(resrowid,"||",3))),"^",40)
+ 		
+ 		i dateCreate'="" s dateCreate=##Class(websys.Conversions).DateLogicalToHtml(dateCreate)
+ 		i timeCreate'="" s timeCreate=##Class(websys.Conversions).TimeLogicalToHtml(timeCreate)
+ 		i userCreate'="" s userCreate=$p($g(^SSU("SSUSR",userCreate)),"^")
+ 		i hospCreate'="" s hospCreate=##Class(web.CTHospital).GetDescFromRowId(hospCreate)
+ 	}
+	 
+ 	 n orditm,result,rs,resId,lockcmp,warning
+ 	 s lockcmp=0
+	 s EpisodeID=$p($g(^OEORD($p(OEOrdItemID,"||"))),"^")
+	 s PatientID=$p($g(^PAADM(EpisodeID)),"^")
+	 
+ 	 i '##Class(websys.Lock).Lock($lb(OEOrdItemID,"User.OEOrdItem"),%session.SessionId,%session.Get("LOGON.USERID"),.warning) {
+ 	 	s lockcmp=1 w "<DIV><STRONG><FONT COLOR=RED>",warning,"</FONT></STRONG></DIV>",$c(13,10)
+ 	 }
+ }
+ 	
+ i OEOrdItemID'="" {
+	 d %request.Set("OEOrdItemID",OEOrdItemID)
+	 d %request.Set("PatientID",PatientID)
+	 d %request.Set("multipatOEIDs",multipatOEIDs)
+ 	 i %request.Get("PatientBanner")=1 {
+	 	 s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+		 i cmp d cmp.Show(),cmp.%Close()
+	 }
+ 	 s cmp=##Class(websys.Component).OpenName("WordDocVerify.Link")
+	 i cmp {
+	 	s cmp.HideMenus=1
+	 	s:lockcmp cmp.Disabled=1 
+	 	d cmp.Show()
+	 	d cmp.%Close()
+	 }
+	 ;s FormStr="websys.default.csp?WEBSYS.TCOMPONENT=WordDocVerify.Link"
+	 ;s InitStr="&CONTEXT="_CONTEXT_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TWKFLL="_TWKFLL_"&TWKFLJ="_TWKFLJ
+ } else {
+	 s FormStr="websys.default.csp?WEBSYS.TCOMPONENT=OEOrdItem.RadiologyWorkBench"
+	 s InitStr="&CONTEXT="_CONTEXT_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TWKFLL="_TWKFLL_"&TWKFLJ="_TWKFLJ
+ }
+
+</SERVER>
+<SCRIPT language="Javascript">
+	var lnk="#(FormStr)#" + "#(InitStr)#" + "&OEOrdItemID=#(OEOrdItemID)#&PatientID=#(PatientID)#&PatientBanner=1&multipatOEIDs=#(multipatOEIDs)#&dateCreate=#(dateCreate)#&timeCreate=#(timeCreate)#&userCreate=#(userCreate)#&hospCreate=#(hospCreate)#&ResultID=#(resrowid)#"
+	document.location=lnk
+</SCRIPT>
+<BODY>
+</BODY>
+</HTML>

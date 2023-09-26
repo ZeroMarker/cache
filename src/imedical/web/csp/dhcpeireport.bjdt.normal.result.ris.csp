@@ -1,0 +1,139 @@
+<SCRIPT language="Cache" RUNAT="SERVER">
+   i "SummarizeGather"=$G(ReultOutType) d
+	.s DIVClass="NORReport"
+	e  d
+	.s DIVClass="Page NORReport"
+</SCRIPT>
+<TABLE width=680 border=0 cellspacing=0 class="ResultNorTable">
+	<THEAD>
+		<TR>
+			<TD class='NORHead NORHeadARCIMDesc' colSpan=3>#(ARCIMDesc)#</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s ODID=$O(^TMPReport("Result", "Content",ARCIM,0))
+	q:ODID=""
+	s CurData=$G(^TMPReport("Result", "Content",ARCIM,ODID))
+	s TestDesc=$P(CurData,"^",1)
+	s TestResult=$P(CurData,"^",2)
+	s ZDYJ=$p(TestResult,";诊断意见:",2)
+	s ZDYJ=##class(web.DHCPE.Public.Setting).Replace(ZDYJ,"_$c(13,10)_","  ")
+	s ZDYJ=##class(web.DHCPE.Public.Setting).Replace(ZDYJ,"_$c_","  ")
+	
+	s Other=$p(TestResult,";诊断意见:",1)
+	i ZDYJ'="" s ZDYJ="<b>诊断意见:</b>"_ZDYJ
+	s JCSJ=$p(Other,";检查所见:",2)
+	s JCSJ=##class(web.DHCPE.Public.Setting).Replace(JCSJ,"_$c(13,10)_","  ")
+	s JCSJ=##class(web.DHCPE.Public.Setting).Replace(JCSJ,"_$c_","  ")
+	
+	i JCSJ'="" s JCSJ="<b>检查所见:</b>"_JCSJ
+	s Other=$p(Other,";检查所见:",1)
+	s LCZD=$p(Other,"临床诊断:",2)
+	s LCZD=##class(web.DHCPE.Public.Setting).Replace(LCZD,"_$c(13,10)_","  ")
+	s LCZD=##class(web.DHCPE.Public.Setting).Replace(LCZD,"_$c_","  ")
+	
+	i LCZD'="" s LCZD="<b>临床诊断:</b>"_LCZD
+	s JCJG=""
+	i LCZD'="" s JCJG=LCZD_"<br>"
+	i JCJG'="" s JCJG=JCJG_"<br>"
+	i JCSJ'="" s JCJG=JCJG_JCSJ_"<br>"
+	i JCJG'="" s JCJG=JCJG_"<br>"
+	i ZDYJ'="" s JCJG=JCJG_ZDYJ_"<br>"
+	//得到检查项目图像信息
+	s ImageInfo=##class(web.DHCPE.ReportGetInfor).GetPhotoPath(ARCIM)
+	s ImageCount=$l(ImageInfo,$C(1))
+	
+	</Script>
+	<CSP:IF CONDITION=(""'=JCJG)>
+			<TR>
+				<TD width="680" height="2" colspan=3 class='NORResult NORResultTtile'>#(JCJG)#</TD>
+			</TR>
+	</CSP:IF>
+	<!--以下获得检查项目图片信息-->
+	<csp:WHILE COUNTER=ImageCounter CONDITION=(""'=CurData)>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	//得到图片2
+	s ImageInfo1=""
+	s Width1=""
+	s Height1=""
+	s Desc1=""
+	s CurData=$p(ImageInfo,$C(1),ImageCounter)
+	i (""'=CurData) d
+	.s ImageInfo1=$p(CurData,"^",1)
+	.s Width1=$p(CurData,"^",2)
+	.s Height1=$p(CurData,"^",3)
+	.s Desc1=$p(CurData,"^",4)
+	//按照比例改变图片显示大小
+	i +Width1>335 d
+	.s Height1=(+Height1)*(335/Width1)
+	.s Width1=335
+	//表格高度改变
+	s Height=+Height1
+	//得到图片2
+	s ImageCounter=ImageCounter+1
+	s ImageInfo2=""
+	s Width2=""
+	s Height2=""
+	s Desc2=""
+	;q:ImageCounter>ImageCount
+	s CurData=$p(ImageInfo,$C(1),ImageCounter)
+	i (""'=CurData) d
+	.s ImageInfo2=$p(CurData,"^",1)
+	.s Width2=$p(CurData,"^",2)
+	.s Height2=$p(CurData,"^",3)
+	.s Desc2=$p(CurData,"^",4)
+	//按照比例改变图片显示大小
+	i +Width2>335 d
+	.s Height2=(+Height2)*(335/Width2)
+	.s Width2=335
+	//表格高度改变
+	i +Height<+Height2 s Height=Height2
+	/*/得到图片3
+	s ImageCounter=ImageCounter+1
+	s ImageInfo3=""
+	s Width3=""
+	s Height3=""
+	s Desc3=""
+	s CurData=$p(ImageInfo,$C(1),ImageCounter)
+	i (""'=CurData) d
+	.s ImageInfo3=$p(CurData,"^",1)
+	.s Width3=$p(CurData,"^",2)
+	.s Height3=$p(CurData,"^",3)
+	.s Desc3=$p(CurData,"^",4)
+	//按照比例改变图片显示大小
+	i +Width3>220 d
+	.s Height3=(+Height3)*(220/Width3)
+	.s Width3=220
+	//表格高度改变Lock user in directory
+	i +Height<+Height3 s Height=Height3*/
+	s Height=Height+5
+	</SCRIPT>
+	<!--以下显示检查项目图片信息-->
+	<CSP:IF CONDITION=(""'=ImageInfo1)>
+	<TR>
+		<TD width=340 height=#(Height)# align="center" valign="bottom">
+    	<P><img src=#(ImageInfo1)# width=#(Width1)# height=#(Height1)#></P></TD>
+		<TD width=340 align="center" valign="bottom">
+    	<P><img src=#(ImageInfo2)# width=#(Width2)# height=#(Height2)#></P></TD>
+    	<!--TD width=224 align="center" valign="bottom">
+    	<P><img src=#(ImageInfo3)# width=#(Width3)# height=#(Height3)#></P></TD-->
+	</TR>
+	<TR>
+		<TD width=340 height=25 class='RisImageDesc'>#(Desc1)#</TD>
+		<TD width=340 class='RisImageDesc'>#(Desc2)#</TD>
+    	<!--TD width=224 class='RisImageDesc'>#(Desc3)#</TD-->
+	</TR>
+	</CSP:IF>
+	</CSP:WHILE>
+	</TBODY>
+	<TFOOT>
+		<TR>
+			<!--TD class="NORFooter NORFooterChecker" colSpan=2>医生:<LABEL class=Checker>#(Checker)#</LABEL></TD>
+			<TD class="NORFooter NORFooterCheckDate" colSpan=3>医生:#(Checker)#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+			<TD class="NORFooter NORFooterChecker" colSpan=2>医生:<LABEL class=Checker>#(Checker)#</LABEL></TD>
+			<TD class="NORFooter NORFooterCheckDate" colSpan=2>日期:<LABEL class=CheckDate>#(CheckDate)#</LABEL></TD-->
+		</TR>
+	</TFOOT>
+</TABLE>
+

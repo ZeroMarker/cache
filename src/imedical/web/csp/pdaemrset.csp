@@ -1,0 +1,59 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <SERVER>
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s EmrCode="PdaEmrSet"
+ s itm="" f  s itm=$O(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm)) q:itm=""  d
+ .s link=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":"),id=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":",2)
+ .s val=##Class(%CSP.Page).Encrypt($lb(link))
+ . w "<input id="""_id_""" name="""_id_""" type=""hidden"" height=0 value="""_val_""">",!
+</SERVER>
+<script Language="Javascript">
+Ext.grid.ColumnModel.override({  
+        getTotalWidth: function(includeHidden) {  
+            var off = 2;  
+
+            if (Ext.isChrome){  
+                off = 2;  
+            };  
+            if (!this.totalWidth) {  
+                this.totalWidth = 0;  
+                for (var i = 0, len = this.config.length; i < len; i++) {  
+                    if (includeHidden || !this.isHidden(i)) {  
+                        this.totalWidth += this.getColumnWidth(i)+off;  
+                    };  
+                };  
+            };  
+            return this.totalWidth;  
+            }  
+        });  
+</script>
+<style> *{margin:0;padding:0}</style>
+</HEAD>
+<BODY style="margin:0;padding:0;">
+<!-- <select name="light" id="light" style="display: none;">
+	<option value="Shade">Shade</option>
+	<option value="Mostly Shady">Mostly Shady</option>
+	<option value="Sun or Shade">Sun or Shade</option>
+	<option value="Mostly Sunny">Mostly Sunny</option>
+	<option value="Sunny">Sunny</option>
+</select>
+<div id='lovcomboct'></div>
+<div id='textct'></div> -->
+<script type="text/javascript" src="../scripts/nurse/comm/dhcmgcomm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHCNURComm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/DHCNUR/PdaEmrSet.js"></script>
+<script type="text/javascript" src="../scripts_gen/dhcmg/PdaEmrSet.js"></script>
+</BODY>
+</HTML>

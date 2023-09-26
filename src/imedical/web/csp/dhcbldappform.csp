@@ -1,0 +1,176 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ S patAdmID=$g(%request.Data("EpisodeID",1))
+ S userID=$g(%session.Data("LOGON.USERID"))
+ S userCode=$g(%session.Data("LOGON.USERCODE"))
+ S userName=$g(%session.Data("LOGON.USERNAME"))
+ S userGroupID=$g(%session.Data("LOGON.GROUPID"))
+ S userGroupDesc=$g(%session.Data("LOGON.GROUPDESC"))
+ S userLocID=$g(%session.Data("LOGON.CTLOCID"))
+ S viewFlag=$g(%request.Data("viewFlag",1))
+ S viewAppFormID=""
+ S viewFormType=""
+ I viewFlag="READOLNY" {
+	 S viewAppFormID=$g(%request.Data("viewAppFormID",1))
+	 S viewFormType=$g(%request.Data("viewFormType",1))
+ }
+ 
+ I '$L(userID) {
+	S userID=$g(%request.Data("LOGON.USERID",1))	 
+ }
+ I '$L(userCode) {
+	S userCode=$g(%request.Data("LOGON.USERCODE",1))	 
+ }
+ I '$L(userName) {
+	S userName=$g(%request.Data("LOGON.USERNAME",1))	 
+ }
+ I '$L(userGroupID) {
+	S userGroupID=$g(%request.Data("LOGON.GROUPID",1))	 
+ }
+ I '$L(userGroupDesc) {
+	S userGroupDesc=$g(%request.Data("LOGON.GROUPDESC",1))	 
+ }
+ I '$L(userLocID) {
+	S userLocID=$g(%request.Data("LOGON.CTLOCID",1))	 
+ }
+
+ 
+ //http-equiv="Content-Type"
+ S gFormFields=##class(web.DHCBldAppFormLayout).GetFormJsonReaderFields()
+ S formLayoutData=##class(web.DHCBldAppFormLayout).GetFormLayout(patAdmID) 
+ S transOrdersData=##class(web.DHCBldAppFormLayout).GetTransOrdersFormLayout(patAdmID)
+ S gGrpGrantData=##class(web.DHCBldAppFormLayout).GetUserGroupGrantJsonData(userGroupID)
+ s gUsrCPMaxVolume=##class(web.DHCBldAppFormLayout).GetUsrCPMaxVolume(userID)
+ 
+ S gPatInfo=$P(formLayoutData,$C(2),1)					//基本信息
+ S gAnamnesisInfo=$P(formLayoutData,$C(2),2)			//既往史
+ S gTransTypes=$P(formLayoutData,$C(2),3)				//输血类型
+ S gTransPurposes=$P(formLayoutData,$C(2),4)			//输血目的
+ S gTestItemsStData=$P(formLayoutData,$C(2),5)			//化验项目
+ S gBldOrdersStData=$P(formLayoutData,$C(2),6)			//备血医嘱
+ S gHistoryAppFormsStData=$P(formLayoutData,$C(2),7)	//历史申请单
+ S gOrdersSelf=$P(formLayoutData,$C(2),8)				//自体输血申请单医嘱
+ S gTestItemsSelfStData=$P(formLayoutData,$C(2),9)		//自体输血申请单化验项目
+ 
+ S gOtherPrintStData=$P(formLayoutData,$C(2),10)		//其他报告
+ S gPatBldTypeCode=$P(formLayoutData,$C(2),11)			//病人血型代码
+ S gSelOdersDataAPOS=$P(transOrdersData,$C(2),1)		//选择备血医嘱APOS
+ S gSelOdersDataANEG=$P(transOrdersData,$C(2),2)		//选择备血医嘱ANEG
+ S gSelOdersDataBPOS=$P(transOrdersData,$C(2),3)		//选择备血医嘱BPOS
+ S gSelOdersDataBNEG=$P(transOrdersData,$C(2),4)		//选择备血医嘱BNEG
+ S gSelOdersDataABPOS=$P(transOrdersData,$C(2),5)		//选择备血医嘱ABPOS
+ S gSelOdersDataABNEG=$P(transOrdersData,$C(2),6)		//选择备血医嘱ABNEG
+ S gSelOdersDataOPOS=$P(transOrdersData,$C(2),7)		//选择备血医嘱OPOS
+ S gSelOdersDataONEG=$P(transOrdersData,$C(2),8)		//选择备血医嘱ONEG
+ S gSelOdersDataX=$P(transOrdersData,$C(2),9)			//选择备血医嘱X
+ 
+ s gSelBloodGroup=##class(web.DHCBldAppFormLayout).GetBloodGroup()   //血型组
+ s gOldHisPatInfo=""
+ </Script>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta  content="text/html; charset=utf-8"> 
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+		<!-- ** CSS ** -->
+		<!-- base library -->
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="../scripts/lisjs/css/buttons.css"/>
+		<!-- ** Javascript ** -->
+		<!-- ExtJS library: base/adapter -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/adapter/ext/ext-base.js"></script>
+		<!-- ExtJS library: all widgets -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-all.js"></script>
+		<!--Ext3 同步线程补丁 2011-10-23 -->
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-basex.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ext-lang-zh_CN.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/validation.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/extjs/ux/ux-all.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/util/DHCLabUtil.js"></script>
+		<!-- overrides to base library -->
+		<!-- page specific -->
+		<SCRIPT language="Javascript">
+ 			var EpisodeID="#($g(EpisodeID))#";
+ 			//输血类型
+ 			var valTransType="#($g(valTransType))#";
+ 			//病人基本信息
+ 			var gPatAdmID="#($g(patAdmID))#";
+ 			var lgUserID="#($g(userID))#";
+ 			var lgUserCode="#($g(userCode))#";
+ 			var lgUserName="#($g(userName))#";
+ 			var lgUserGroupID="#($g(userGroupID))#";
+ 			var lgUserGroupDesc="#($g(userGroupDesc))#";
+ 			var lgUserLocID="#($g(userLocID))#";	
+ 			var gCurAppFormID="";	
+ 			var gNormalTestItems="";
+ 			var isSelectSelf=false;	
+ 			var gPatInfo=eval("#($g(gPatInfo))#");	     				
+ 			var gAnamnesisInfo=eval("#($g(gAnamnesisInfo))#");
+ 			var gTransTypes=eval("#($g(gTransTypes))#");		
+ 			var gTransPurposes=eval("#($g(gTransPurposes))#");
+ 			var gTestItemsStData="#($g(gTestItemsStData))#";
+ 			var gTestItemsSelfStData="#($g(gTestItemsSelfStData))#";	
+ 			var gBldOrdersStData="#($g(gBldOrdersStData))#";
+ 			var gHistoryAppFormsStData="#($g(gHistoryAppFormsStData))#";
+ 			var gFormFields=eval("#($g(gFormFields))#");
+ 			var gOtherPrintStData="#($g(gOtherPrintStData))#";
+ 			var gSelOdersDataAPOS="#($g(gSelOdersDataAPOS))#";
+ 			var gSelOdersDataBPOS="#($g(gSelOdersDataBPOS))#";
+ 			var gSelOdersDataABPOS="#($g(gSelOdersDataABPOS))#";
+ 			var gSelOdersDataOPOS="#($g(gSelOdersDataOPOS))#";
+ 			var gSelOdersDataANEG="#($g(gSelOdersDataANEG))#";
+ 			var gSelOdersDataBNEG="#($g(gSelOdersDataBNEG))#";
+ 			var gSelOdersDataABNEG="#($g(gSelOdersDataABNEG))#";
+ 			var gSelOdersDataONEG="#($g(gSelOdersDataONEG))#";
+ 			var gSelOdersDataX="#($g(gSelOdersDataX))#";
+ 			var gPatBldTypeCode="#($g(gPatBldTypeCode))#";
+ 			var gGrpGrantData="#($g(gGrpGrantData))#";
+ 			var gOrdersSelf="#($g(gOrdersSelf))#";
+ 			var gUsrCPMaxVolume="#($g(gUsrCPMaxVolume))#";
+ 			var gIsReqOrderSelf="未申请(请先申请自体输血医嘱,再提交自体输血申请单)"
+ 			if(gOrdersSelf!=""){
+				 //自体输血申请单医嘱描述
+ 				gIsReqOrderSelf=eval("#($g(gOrdersSelf))#");
+	 		}
+	 		//特殊治疗单报告格式
+	 		var gArcmIDRepFlag="#("30550||1")#";
+ 			var gSelBloodGroup="#($g(gSelBloodGroup))#";
+ 			
+ 			var gOldHisPatInfo="#($g(gOldHisPatInfo))#";
+ 			var gViewAppFormID="#($g(viewAppFormID))#";
+ 			var gViewFlag="#($g(viewFlag))#"; 
+ 			var gViewFormType="#($g(viewFormType))#"; 
+	   </script>
+		<script type="text/javascript" src="../scripts/lisjs/business/DHCBldAppFormCore.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/business/PrintAppForm.js"></script>
+		<script type="text/javascript" src="../scripts/lisjs/business/DHCBldAppFormLayout.js"></script>
+		
+		<script language="Javascript">
+			Ext.onReady(dhcBloodTransAppForm.app.init, dhcBloodTransAppForm.app);
+	   </script>
+</HEAD>
+ <body>
+    <!-- use class="x-hide-display" to prevent a brief flicker of the content -->
+    <div id="west" class="x-hide-display">
+        <p>JS加载错误</p>
+    </div>
+    <div id="divSelfAppForm" class="x-hide-display"></div>
+    <div id="divNormalAppForm" class="x-hide-display"></div>
+    
+    <div id="props-panel" class="x-hide-display" style="width:200px;height:200px;overflow:hidden;">
+    </div>
+    <div id="south" class="x-hide-display">
+    </div>
+    
+    <input type="hidden" value="" name="gPatAdmID" id="gPatAdmID" />
+    <input type="hidden" value="" name="gRegNo" id="gRegNo" />
+
+</div>
+
+</body>
+</HTML>

@@ -1,0 +1,90 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<script>
+alert("CSP");
+</script>
+
+<SERVER>
+ w !,"BulkTransfer"
+ n Location,Resource,LocationID,RescID,TransferDate,TransferTime,ApptList,OperList
+ n sessionid,ignoreCP,RBOPSurgeonDR,RBOPAnaesthetistDR,TotalDuration,APPTReasonForTransferDR,UserCode,PIN
+ ;
+ s (Location,Resource,LocationID,RescID,TransferDate,TransferTime,ApptList,OperList)=""
+ s (sessionid,ignoreCP,RBOPSurgeonDR,RBOPAnaesthetistDR,TotalDuration,APPTReasonForTransferDR,UserCode,PIN)=""
+ ;
+ i %request.Data("Location") s Location=%request.Date("Location",1)
+ i %request.Data("Resource") s Resource=%request.Date("Resource",1)
+ i %request.Data("LocationID") s LocationID=%request.Date("LocationID",1)
+ i %request.Data("RescID") s RescID=%request.Date("RescID",1)
+ i %request.Data("TransferDate") s TransferDate=%request.Date("TransferDate",1)
+ i %request.Data("TransferTime") s TransferTime=%request.Date("TransferTime",1)
+ i %request.Data("ApptList") s ApptList=%request.Date("ApptList",1)
+ i %request.Data("OperList") s OperList=%request.Date("OperList",1)
+ i %request.Data("sessionid") s sessionid=%request.Date("sessionid",1)
+ i %request.Data("ignoreCP") s ignoreCP=%request.Date("ignoreCP",1)
+ i %request.Data("RBOPSurgeonDR") s RBOPSurgeonDR=%request.Date("RBOPSurgeonDR",1)
+ i %request.Data("RBOPAnaesthetistDR") s RBOPAnaesthetistDR=%request.Date("RBOPAnaesthetistDR",1)
+ i %request.Data("TotalDuration") s TotalDuration=%request.Date("TotalDuration",1)
+ i %request.Data("APPTReasonForTransferDR") s APPTReasonForTransferDR=%request.Date("APPTReasonForTransferDR",1)
+ i %request.Data("UserCode") s UserCode=%request.Date("UserCode",1)
+ i %request.Data("PIN") s PIN=%request.Date("PIN",1)
+ ;
+ d ##Class(websys.Component).GetComponentMessages(.t,"RBOperatingRoom.Edit")
+ ;Get the information about Surgeon and Anaesthetist
+ s surgeonfail="N",anaethfail="N"
+ s surgid=""
+ i $d(%request.Data("RBOPSurgeonDR")) {
+ 	s htmlvalue=%request.Get("RBOPSurgeonDR"),surgid=##Class(web.CTCareProv).GetIdFromCodeOrDescription(htmlvalue)
+ 	i htmlvalue'="",surgid="" {
+		s surgeonfail="N"
+ 	} 
+ }
+ s anaethid=""
+ i $d(%request.Data("RBOPAnaesthetistDR")) {
+ 	s htmlvalue=%request.Get("RBOPAnaesthetistDR"),anaethid=##Class(web.CTCareProv).GetIdFromCodeOrDescription(htmlvalue)
+ 	i htmlvalue'="",anaethid="" {
+		s anaethfail="Y"
+ 	}
+ }
+ s IsIn="Y"
+ i sessionid'="" s sessa=sessionid
+ ; If no sessions then find the closest session
+ i sessionid="" d
+ . s nrdate=##Class(websys.Conversions).DateHtmlToLogical(%request.Data("TransferDate",1)), nrtime=##Class(websys.Conversions).TimeHtmlToLogical(%request.Data("TransferTime",1))
+ . s ndt=nrdate-1,ndt=$o(^RBAS(+res,0,"DateSTime",ndt))
+ . s ntm=nrtime+1 i ndt'="" s ntm=$o(^RBAS(+res,0,"DateSTime",ndt,ntm),-1)
+ . s as="" i ntm'="" s as=$o(^RBAS(+res,0,"DateSTime",ndt,ntm,as))
+ . i as d
+ . . s Schedule=$g(^RBAS(res,as)),sessa=$p($g(Schedule),"^",12),session=^RB("RES",res,"DATE",$p($g(sessa),"||",2),"SESS",$p($g(sessa),"||",2)),sessdate=ndt,sessstime=$p($g(session),"^",4),sessetime=$p($g(session),"^",5)
+ . . i nrdate'=ndt s sessa="",IsIn="O"
+ . . i ((nrdate=ndt)&&((nrtime<sessstime)||(nrtime>sessetime))) s sessa="",IsIn="O"
+ i sessa ="" s IsIn="O"
+ i sessa'="" d
+ . s anaethIsIn="Y",surgeonIsIn="Y"
+ . i anaethid s anaethIsIn=##Class(web.RBResEffDateSessionCP).IsCPInSession(sessa,anaethid)
+ . i surgid s surgeonIsIn=##Class(web.RBResEffDateSessionCP).IsCPInSession(sessa,surgid)
+ . i ((anaethIsIn="Y")&&(surgeonIsIn="Y")) s IsIn="Y"
+ . i ((anaethIsIn="N")||(surgeonIsIn="N")) s IsIn="N"
+ . i ((anaethIsIn="B")||(surgeonIsIn="B")) s IsIn="B"
+ ;
+ ;
+ s timeleft=0 
+ i sessa s timeleft=##Class(web.RBResEffDateSession).TimeLeftInOTSession(sessa,nrdate,"")
+ 
+</SERVER>
+<BODY>
+<script>
+
+</script>
+</BODY>
+</HTML>

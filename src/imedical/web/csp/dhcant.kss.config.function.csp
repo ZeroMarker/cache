@@ -1,0 +1,203 @@
+<!-- Copyright (c) 2017-03-09 QiuPeng. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<html>
+<head>
+<title>抗菌药功能配置维护</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1" />
+	<meta http-equiv="X-UA-Compatible" content="IE=9" />
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCANT:LIB></DHCANT:LIB>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/lib/iCheck/square/blue.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/css/dhcant.kss.config.function.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/lib/FontAwesome/css/font-awesome.min.css"/>
+    <script type="text/javascript" src="../scripts/dhcdocant/lib/iCheck/icheck.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/lib/layui/layer/layer.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/kssmain/dhcant.kss.eaysui-tool.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/lib/ant-1.0.0/ant-all.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/kssconfig/dhcant.kss.config.function.init.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdocant/kssconfig/dhcant.kss.config.function.app.js"></script>
+</head>
+<body>
+	<div id="i-tabs">
+		<div title="抗菌权限维护" data-options="iconCls:'fa fa-edit'" style="padding:5px">
+			<div class="container-fluid c-container">
+				<div class="row c-header">
+					<div class="col-xs-12">
+						<div class="c-auth-condition-header">
+							<div class="move">
+								<i class="fa  fa-circle-o-notch" ></i>
+								<span>条件</span>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+				<div class="row c-condition">
+					<div class="col-xs-8 c-condition-left">
+						<div class="row">
+							<div class="col-xs-5">
+								<span class="c-span">医护级别</span><input id="i-auth-condition-docLevel" type="text"/>
+							</div>
+							<div class="col-xs-5">
+								<span class="c-span">医生科室</span><input id="i-auth-condition-loc" type="text" />
+							</div>
+							<div class="col-xs-2">
+								<span class="c-span">权限类型</span><input type="checkbox" id="i-auth-condition-switch" />
+							</div>
+						</div>
+						
+						<div class="row" style="padding-top:5px;">
+							<div class="col-xs-5">
+								<span class="c-span">医生姓名</span><input type="text" id="i-auth-condition-docname" />
+							</div>
+							<div class="col-xs-5">
+								<span class="c-span">医生工号</span><input type="text" class="c-auth-condition-input" id="i-auth-condition-docnum"/>
+							</div>
+							<div class="col-xs-2" style="padding-top:0px;">
+								<span class="c-span">无处方权</span><input type="checkbox" id="i-auth-condition-prescAuth" />
+							</div>
+						</div>
+
+						<div class="row" style="padding-top:5px;">
+							<div class="col-xs-5">
+								<span class="c-span">就诊类型</span><input id="i-auth-condition-admType" type="text" />
+							</div>
+							<div class="col-xs-5">
+								<span class="c-span">抗菌级别</span><input id="i-auth-condition-kssLevel" type="text" />
+							</div>
+							<div class="col-xs-2">
+								<span class="c-span">审核权限</span><input type="checkbox" id="i-auth-condition-verifyAuth"/>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-4 c-condition-right">
+						<div class="row">
+							<div class="col-xs-6">
+								<a href="#" id="i-auth-find" class="btn btn-info c-condition-btn"><i class="fa fa-search " style="font-size:1.2em;"></i>&nbsp;查询</a>
+							</div>
+							<div class="col-xs-6">
+								<a href="#" id="i-auth-levelAuthUpdate" class="btn btn-warning c-condition-btn"><i class="fa fa-edit" style="color:#fff; font-size:1.2em;"></i>&nbsp;更改级别权限</a>
+							</div>
+							
+						</div>
+						<div class="row">
+							<div class="col-xs-6">
+								<a href="#" id="i-auth-docAuthUpdate" class="btn btn-primary c-condition-btn"><i class="fa fa-edit" style="color:#fff; font-size:1.2em;"></i>&nbsp;更改医生权限</a>
+							</div>
+							<div class="col-xs-6">
+								<a href="#" id="i-auth-docdelete" class="btn btn-danger c-condition-btn"><i class="fa fa-minus-circle" style="font-size:1.2em"></i>&nbsp;删除医生权限</a>
+							</div>
+							
+						</div>
+						<div class="row">
+							<div class="col-xs-6">
+								<a href="#" id="i-auth-docforbidden" class="btn c-condition-btn" style="background:#EE6363; color:#fff;"><i class="fa fa-edit" style="color:#fff; font-size:1.2em"></i>&nbsp;更改医生处方权</a>
+							</div>
+							<div class="col-xs-6">
+								<input id="i-file" type="file" name="fileInpt" style="display: none">
+								<a href="#" id="i-auth-import" class="btn btn-success c-condition-btn"><i class="fa fa-file-excel-o" style="font-size:1.2em"></i>&nbsp;Excel导入</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row c-header">
+					<div class="col-xs-12">
+						<div class="c-auth-grid-header">
+							<div class="move">
+								<i class="fa fa-list" ></i>
+								<span>医生权限配置列表</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row c-auth-grid" id="i-auth-container">
+					<div class="easyui-layout" data-options="fit: true">
+						<div id="i-auth-grid"></div>
+					</div>
+				</div>
+				<div id="i-progress" style="">
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var bodyHeight = document.documentElement.clientHeight,
+				authTop = $("#i-auth-container").offset().top,
+				authHeight = bodyHeight - authTop - 26,
+				browserType = ANT.getBrowserType();
+			if ( (browserType == "IE") || (browserType == "IE9") ) {
+				$("#i-auth-container").css("height", authHeight + 7);
+			} else if (browserType == "IE8") {
+				$("#i-auth-container").css("height", authHeight - 14);
+			} else {
+				$("#i-auth-container").css("height", '64%' );
+			}
+			
+		</script>
+		<div title="功能配置" class="c-tab-para" data-options="iconCls:'fa fa-magnet'">
+			<div id="i-para-layout" class="easyui-layout" data-options="fit: true" >
+				<div data-options="region:'west',split:true" style="width:200px">
+					<div id="l-panel">
+						<ul id="nav"></ul>
+					</div>
+				</div>
+				<div data-options="region:'center', border:false">
+					<div id="tabPanel" class="easyui-tabs" data-options="fit:true"></div>
+				</div>
+				
+				<div id="mm" class="easyui-menu" style="width:120px;">
+					<div id="item" data-options="iconCls:'icon-add'">添加分类</div>
+					<div id="item-a" data-options="iconCls:'icon-remove'">添加配置</div>
+				</div>
+				
+				<div id='i-config' class='c-config c-hidden'>
+					<span class="c-span">代码</span><input type="text" name="code" /><br/>
+					<span class="c-span">描述</span><input type="text" name="desc" /><br/>
+					<span class="c-span">数值</span><input type="text" name="value" /><br/>
+					<a id="i-config-btn" href="#" class="easyui-linkbutton c-btn" data-options="iconCls:'icon-save'">保存</a>
+				</div>
+				
+				<div id='i-catagory' class='c-catagory c-hidden'>
+					<span class="c-span">代码</span><input type="text" name="code" /><br/>
+					<span class="c-span">描述</span><input type="text" name="desc" /><br/>
+					<a id="i-catagory-btn" href="#" class="easyui-linkbutton c-btn" data-options="iconCls:'icon-save'">保存</a>
+				</div>
+			</div>
+		</div>
+		
+		<div title="顶级配置" data-options="iconCls:'fa fa-gear'" style="padding:5px;">
+			<div id="i-tab-sys" class="c-tab-sys"></div>
+		</div>
+		
+		<div title="流程配置" style="padding:5px" data-options="iconCls:'fa fa-paperclip'">
+			<div id="i-tab-process"></div>
+		</div>
+		
+		<div title="基础数据维护" data-options="iconCls:'fa fa-wrench'" style="padding:5px">
+			<div id="i-base-layout" class="easyui-layout" data-options="fit: true" >
+				<div data-options="region:'west',split:true" style="width:200px">
+					<div id="l-base-panel">
+						<ul id="nav-basedata"></ul>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<div id="tabPanel-basedata" class="easyui-tabs" data-options="fit:true"></div>
+				</div>
+			</div>
+		</div>
+		
+		<div title="配置说明手册" style="padding:5px 30px 10px 30px; " data-options="iconCls:'fa fa-book'">
+			<div class="c-book">
+				<div class="c-book-title"></div>
+				<img src="../scripts/dhcdocant/img/book.png" />
+			</div>
+			<!--<iframe src="../scripts/dhcdocant/dhc.pdf" width="100%" height="100%"></iframe>-->
+		</div>
+	</div>
+</body>
+</html>

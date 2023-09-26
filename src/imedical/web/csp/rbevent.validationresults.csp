@@ -1,0 +1,74 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ s EventID=%request.Get("ID")
+ s found=0
+
+ s obj=##Class(websys.Component).OpenName("RBEventValidation.Results") i obj d obj.LoadTrans(),obj.%Close()
+ w "<B><CENTER>"_t("RBEValHeader")_"</CENTER></B>"
+ w "<BR>"
+ i $g(^TMP("WEB","EVBOOK",$j,"RES",EventID))'="" {
+ 	w "<B>"_t("RBEVenue")_"</B>"
+ 	d %request.Set("type","RES")
+ 	s frm=##Class(websys.Component).OpenName("RBEventValidation.Results")
+	i frm d frm.Show() d frm.%Close()
+	s found=1
+ }
+ i $g(^TMP("WEB","EVBOOK",$j,"FAC",EventID))'="" {
+ 	w "<B>"_t("RBEFacilitator")_"</B>"
+ 	d %request.Set("type","FAC")
+ 	s frm=##Class(websys.Component).OpenName("RBEventValidation.Results")
+	i frm d frm.Show() d frm.%Close()
+	s found=1
+ }
+ i $g(^TMP("WEB","EVBOOK",$j,"CP",EventID))'="" {
+ 	w "<B>"_t("RBECareProv")_"</B>"
+ 	d %request.Set("type","CP")
+ 	s frm=##Class(websys.Component).OpenName("RBEventValidation.Results")
+ 	i frm d frm.Show() d frm.%Close()
+	s found=1
+ }
+ i $g(^TMP("WEB","EVBOOK",$j,"PAT",EventID))'="" {
+ 	w "<B>"_t("RBEPatient")_"</B>"
+ 	d %request.Set("type","PAT")
+ 	s frm=##Class(websys.Component).OpenName("RBEventValidation.Results")
+ 	i frm d frm.Show() d frm.%Close()
+	s found=1
+ }
+ i 'found w "<BR><CENTER>"_t("RBENoConflicts")_"</CENTER></A>"
+ w "<A id='Close' name='Close' HREF='#' tabIndex='0'>"
+ w "<BR><CENTER>"_t("RBEClose")_"</CENTER></A>"
+
+</SERVER>
+<SCRIPT>
+function DocumentLoadHandler() {
+	obj =document.getElementById("Close")
+	if (obj) obj.onclick=DocumentUnloadHandler;
+
+	//if ('#(found)#'==0) DocumentUnloadHandler();
+}
+
+function DocumentUnloadHandler() {
+	//alert(window.opener.location.href)
+	if (window.opener) {
+		window.location="websys.reload.csp"
+	} else {
+		window.location="websys.close.csp"
+	}
+}
+document.body.onload = DocumentLoadHandler;
+document.body.onunload = DocumentUnloadHandler;
+</SCRIPT>
+<BODY>
+</BODY>
+</HTML>

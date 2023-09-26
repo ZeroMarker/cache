@@ -1,0 +1,400 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+	<title>	Cache Server Page </title>
+	<meta charset="utf-8"/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/NurWB/css/font-awesome.4.6.0.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/NurWB/css/main.css">
+	<link rel="stylesheet" href="../scripts/nurse/NurWB/css/excel.css" type="text/css" />
+	<HISUI />
+	<style type="text/css">
+		
+
+		.item-body {
+			position: absolute;
+			top: 60px;
+			bottom: 10px;
+			width: calc(100% - 20px);
+		}
+
+		.wb-ward-area {
+			float: left;
+			width: 200px;
+			height: 100%;
+			overflow: auto;
+			background: ghostwhite;
+		}
+
+		.tree-file {
+			/*background: url(../css/icons/base_info.png) no-repeat -240px 0;*/
+		}
+
+		.wb-content-area {
+			float: left;
+			width: calc(100% - 200px);
+			height: 100%;
+		}
+
+		.panel-header,
+		.panel-body {
+			border-color: transparent;
+		}
+
+		
+		</style>
+	</head>
+	<body style="background-color:white">
+		<div style="display:flex;">
+			<div data-options="region:'north',border:false" style="height: 44px;padding:10px 10px 0 10px">
+		 		<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+		 	</div>
+		 	<div style="margin-top:10px;display:flex;">
+		 	<div style="height:32px;line-height:32px;margin-right:5px">病区</div>
+		 		<input id="searchText" href="#" class="textbox" style="height:32px;margin-right:5px"/>
+		 		<a id="searchItem" class="hisui-linkbutton" data-options="iconCls:'icon-search'" style="height:34px;">查询</a>
+		 	</div>
+		</div>
+		<div class="item-body">
+			<div class="wb-ward-area"><ul id="ward-tree" class="hisui-tree" data-options="lines:false"></ul></div>
+			<div class="wb-content-area">
+				<div class="toolbars">
+					<div class="group font">
+						<div class="body">
+							<div class="sub sub-top">
+								<select id="fontfamily" class="fontfamily">
+									<option value="微软雅黑" selected="selected">微软雅黑</option>
+									<option value="SimHei">黑体</option>
+									<option value="SimSun">宋体</option>
+									<option value="NSimSun">新宋体</option>
+									<option value="FangSong">仿宋</option>
+									<option value="KaiTi">楷体</option>
+								</select>
+								<select id="fontsize" class="fontsize">
+									<option value="12px" selected="selected">12</option>
+									<option value="14px">14</option>
+									<option value="15px">15</option>
+									<option value="16px">16</option>
+									<option value="18px">18</option>
+									<option value="20px">20</option>
+									<option value="22px">22</option>
+									<option value="24px">24</option>
+									<option value="26px">26</option>
+									<option value="28px">28</option>
+									<option value="36px">36</option>
+									<option value="48px">48</option>
+									<option value="72px">72</option>
+								</select>
+							</div>
+							<div class="sub sub-bottom">
+								<button type="button" class="tag-btn btn-bold">
+									<i class="tag bold"></i>
+								</button>
+								<button type="button" class="tag-btn btn-italic">
+									<i class="tag italic"></i>
+								</button>
+								<button type="button" class="tag-btn btn-underline">
+									<i class="tag underline"></i>
+								</button>
+								<button type="button" class="tag-btn btn-strike">
+									<i class="tag strike"></i>
+								</button>
+								<button type="button" class="tag-btn" id="bgColor">
+									<i class="tag bgColor"></i>
+								</button>
+								<input type="color" id="bgColorSelect" style="display: none">
+								<button type="button" class="tag-btn" id="fontColor">
+									<i class="tag fontColor"></i>
+								</button>
+								<input type="color" id="fontColorSelect" style="display: none">
+							</div>
+						</div>
+						<div class="foot">字体</div>
+					</div>
+					<div class="group alignment">
+						<div class="body">
+							<div class="sub sub-left">
+								<button type="button" class="tag-btn btn-htLeft btn-ah">
+									<i class="tag leftAlign"></i>
+								</button>
+								<button type="button" class="tag-btn btn-htCenter btn-ah">
+									<i class="tag levelAlign"></i>
+								</button>
+								<button type="button" class="tag-btn btn-htRight btn-ah">
+									<i class="tag rightAlign"></i>
+								</button>
+								<button type="button" class="tag-btn btn-htTop btn-av">
+									<i class="tag topAlign"></i>
+								</button>
+								<button type="button" class="tag-btn btn-htMiddle btn-av">
+									<i class="tag velAlign"></i>
+								</button>
+								<button type="button" class="tag-btn btn-htBottom btn-av">
+									<i class="tag bottomAlign"></i>
+								</button>
+							</div>
+							<div class="sub sub-right">
+								<button type="button" class="tag-btn merge-btn">
+									<i class="tag merge"></i> <span>合并单元格</span>
+								</button>
+								<button type="button" class="tag-btn split-btn">
+									<i class="tag split"></i> <span>拆分单元格</span>
+								</button>
+							</div>
+
+						</div>
+						<div class="foot">对齐方式</div>
+						<a class="corner_mark"></a>
+					</div>
+					<div class="group cells" style="padding: 0px 10px;">
+						<div class="body">
+							<div class="sub sub-right">
+								<ul class="border-btn select-ctrl-border">
+									<li class="borderTop"><i class="tag btn-borderTop"></i></li>
+									<li class="borderRight"><i class="tag btn-borderRight"></i></li>
+									<li class="borderBottom"><i class="tag btn-borderBottom"></i></li>
+									<li class="borderLeft"><i class="tag btn-borderLeft"></i></li>
+									<li class="borderAll"><i class="tag btn-borderAll"></i></li>
+									<li class="whiteSpace"><i class="tag wrap"></i></li>
+									<li class="borderColor"><i class="tag borderColor"></i></i></li>
+									<input type="color" id="borderColor" style="display: none" />
+									<li class="borderStyle" style="position: relative">
+										<i class="tag borderStyleIcon"></i>
+										<div class="selectBorderStyle">
+											<div class="borderSolid borderStyleOption">实线</div>
+											<div class="borderDashed borderStyleOption">虚线</div>
+											<div class="borderDouble borderStyleOption">双线</div>
+											<div class="borderNone borderStyleOption">无线</div>
+										</div>
+										<!--用来记录选择的样式-->
+										<select class="borderStyleOption" style="display: none">
+											<option value="solid" selected="selected">实线</option>
+											<option value="dashed">虚线</option>
+											<option value="double">双线</option>
+											<option value="none">无线</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+
+						</div>
+						<div class="foot">单元格</div>
+						<a class="corner_mark"></a>
+					</div>
+					<div class="group edit">
+						<div class="body">
+							<div class="sub sub-left" style="width: 100px;">
+								<div class="input-group">
+									<label>列宽</label> <input type="number" id="cell-width" class="cell-width" value="60">
+								</div>
+								<div class="input-group">
+									<label>行高</label> <input type="number" id="cell-height" class="cell-height" value="25">
+								</div>
+							</div>
+						</div>
+						<div class="foot">编辑</div>
+					</div>
+					<div class="group edit">
+						<div class="body">
+							<div class="sub sub-left" style="width: 300px;">
+								<!--设计后获取表格的代码-->
+								<textarea id="getHtml" style="width: 220px;margin-bottom:5px"></textarea>
+								<div>
+									<input type="button" value="保存为当前病区的模板" onClick="saveButtonClicked()">
+								</div>
+							</div>
+						</div>
+						<div class="foot">保存</div>
+					</div>
+				</div>
+				<!--输入框-->
+				<div style="width: 100%;display: flex;">
+					<input type="text" id="selectTdValue" style="width: 100%;outline:none;">
+				</div>
+				<div class="excel" onselectstart="return false">
+				</div>
+
+				
+			</div>
+		</div>
+		<script type="text/javascript" src="../scripts/nurse/NurWB/js/excel.js"></script>
+		<script type="text/javascript" src="../scripts/nurse/NurWB/js/windowFun.js"></script>
+		<script type="text/javascript">
+			var wardId;
+			baseSetup();
+			function baseSetup(){
+				//
+				var hospComp = GenHospComp("ARC_ItemCat");
+				$('#_HospList').combogrid({
+			   		onSelect:function(value){
+				   		$(".excel").Excel({
+							setting: {
+								row: 0,
+								col: 0
+							}
+						});
+						$('#getHtml').val('');
+						wardId = undefined;
+						document.getElementById('searchText').value = '';
+				   		getAllWard();
+			   		}	 
+		   		});	
+		   		//搜索按钮点击
+				$("#searchItem").click(function (argument) {
+		            getAllWard();
+		        });
+		   		$(".excel").Excel({
+					setting: {
+						row: 0,
+						col: 0
+					}
+				});
+				$HUI.tree("#ward-tree",{
+					onSelect:function(node){
+						$('#getHtml').val('');
+						wardId = node.wardid;
+						getWardTemplate();
+					}
+				});
+				getAllWard();
+				
+			}
+			
+			function saveButtonClicked(){
+				if(wardId == undefined){
+					$.messager.popover({msg: '请选择病区',type:'alert'});
+					return
+				}
+				getHospLogItems();
+			}
+			
+			function getHtml() {
+				var t = $(".excel").getExcelHtml();
+				var tempStr = '<table border="1">';
+				var html = t.replace(/<table>/, tempStr);
+				$('#getHtml').val(html);
+				return html;
+			}
+
+			function setHtml(str) {
+				var table = str;
+				$(".excel").setExcelHtml(table);
+				// $(".excel").setExcelHtml($('#getHtml').val());
+			}
+			
+			//获取病区模板
+			function getWardTemplate(){
+				var hospid=$HUI.combogrid('#_HospList').getValue();
+				$cm({
+					ClassName:'CF.NUR.DWB.TableLayout',
+					MethodName:"Get",
+					WardID:wardId,
+					HospDR:hospid
+				},function(jsonData){
+					//console.log('template',jsonData);
+					if(jsonData.msg){
+						return		
+					}
+					var html = jsonData.html
+					if(!html){
+						$(".excel").Excel({
+							setting: {
+								row: 21,
+								col: 20
+							}
+						});
+						
+					}else{
+						html = html.replace(/@yangshi@/g,' style=');
+						html = html.replace(/\\/g,'');
+						console.log(html);
+						setHtml(html);
+					}
+				});	
+				
+			}
+			//保存病区模板
+			function saveWardTemplate(itemCodeArr){
+				var htmls = getHtml();
+				console.log(htmls)
+				var codeArr = [];
+				console.log(itemCodeArr)
+				for(var i = 0; i < itemCodeArr.length;i++){
+					var dict = itemCodeArr[i];
+					var codeStr = 'data-id="'+dict['code']+'"';
+					if(htmls.indexOf(codeStr) != -1){
+						codeArr.push(dict['code']);
+					}
+				}
+				var codes = codeArr.join();
+				htmls = htmls.replace(/ style=/g,'@yangshi@');
+				htmls = htmls.replace(/\\/g,'');
+				var hospid=$HUI.combogrid('#_HospList').getValue();
+				
+				//获取列数
+				var colnum = $(".excel").getExcelColumNum();
+				//var rownum = $(".excel").getExcelRowNum();
+				$cm({
+					ClassName:'CF.NUR.DWB.TableLayout',
+					MethodName:"Save",
+					WardID:wardId,
+					HospDR:hospid,
+					TableHtml:htmls,
+					Codes:codes,
+					ColCount:colnum
+				},function(jsonData){
+					console.log('template',jsonData);
+					if(jsonData.flag == false || jsonData.flag == 'false' ){
+						$.messager.popover({msg: '保存失败！',type:'error',timeout: 800});
+						return		
+					}
+					$.messager.popover({msg: '保存成功！',type:'success',timeout: 800});
+				});
+			}
+			//获取所有病区
+			function getAllWard(){
+				var hospid=$HUI.combogrid('#_HospList').getValue();
+				var desc = document.getElementById('searchText').value;
+				$cm({
+					ClassName:'Nur.DWB.Service.BedChartService',
+					QueryName:"GetallWard",
+					desc:desc,
+					hospid:hospid
+				},function(jsonData){
+					console.log('allwards',jsonData);
+					if(jsonData.msg){
+						return		
+					}
+					$("#ward-tree").tree({
+						data:jsonData.rows,
+						formatter:function(node){
+							return node.warddesc;
+						}
+					});
+				});	
+			}
+			
+			//获取日志模板项目
+			function getHospLogItems(){
+				var hospid=$HUI.combogrid('#_HospList').getValue();
+				$cm({
+					ClassName:'CF.NUR.DWB.LogItem',
+					MethodName:"GetTableStructure",
+					HospID:hospid
+				},function(jsonData){
+					if(jsonData.msg){
+						return
+					}
+					saveWardTemplate(jsonData)
+				});
+			}
+			
+		</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<script language="cache" runat="server">
+	//CTOR: QP
+	//DATE: 2016-08-07
+	//DESC: KJ-V4.0 REQUEST PROCESS PAGE
+	
+    //EXECUTE ACTION
+   	s action = $Get(%request.Data("action",1))
+	
+	//STANDARD QUERY PROCESS CENTER
+	i action = "GetQueryData" d
+	.s ClassName=%request.Data("ClassName",1)
+	.s QueryName=%request.Data("QueryName",1)
+	.s ArgCnt=%request.Data("ArgCnt",1)
+	.s page=$g(%request.Data("page",1))
+	.s page2=$g(%request.Data("page2",1))
+	.s rows=$g(%request.Data("rows",1))
+	.s rows2=$g(%request.Data("rows2",1))
+	.i page2'="" s page=page2,rows=rows2
+	.s ModuleName=$g(%request.Data("ModuleName",1))
+	.s paraStr=""
+	.f i=1:1:ArgCnt  d
+ 	..s ArgName="Arg"_i
+ 	..i i="1" s paraStr=%request.Data(ArgName,1)
+ 	..e  s paraStr=paraStr_"^"_%request.Data(ArgName,1)
+ 	.s startRecordNo=(page-1)*rows
+ 	.s limitRecordCnt=rows
+	.d ##class(DHCAnt.Util.CacheServerBase).GetQueryData(ClassName,QueryName,ArgCnt,startRecordNo,limitRecordCnt,paraStr,ModuleName)
+	
+	//STANDARD METHOD PROCESS CENTER
+	i action = "GetMethodData" d
+	.s ClassName=%request.Data("ClassName",1)
+	.s MethodName=%request.Data("MethodName",1)
+	.s ArgCnt=%request.Data("ArgCnt",1)
+	.s ReqType=%request.Data("ReqType",1)
+	.s paraStr=""
+	.f i=1:1:ArgCnt  d
+ 	..s ArgName="Arg"_i
+ 	..i paraStr="" s paraStr=%request.Data(ArgName,1)
+ 	..e  s paraStr=paraStr_"^"_%request.Data(ArgName,1)
+	.d ##class(DHCAnt.Util.CacheServerBase).GetMethodData(ClassName,MethodName,ArgCnt,paraStr,ReqType)
+	
+
+</script>

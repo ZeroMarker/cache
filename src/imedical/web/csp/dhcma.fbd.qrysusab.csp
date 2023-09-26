@@ -1,0 +1,44 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+	</head>
+	<body> 
+		<csp:Include Page="dhcma.fbd.qrysusab.show.csp">   
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/FBD/qrysusab/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/FBD/qrysusab/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/Util/datagrid-export.js"></script>
+	
+		<script language="Cache" RUNAT="SERVER">
+			Set LocFlag=+$g(%request.Data("LocFlag",1))		//上报权限的标记
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"FBD")
+			Set IsSecret=##class(DHCMed.SSIO.FromSecSrv).CheckIsSecret(LogonHospID)
+
+			Set LogonLocID=""""_LogonLocID_""""
+			Set LogonHospID=""""_LogonHospID_""""
+			Set SSHospCode=""""_SSHospCode_""""
+			Set IsSecret=""""_IsSecret_""""
+	   </script>
+	  
+	    <script language="javascript" type="text/javascript">
+			var LocFlag=#(LocFlag)#;
+			var SSHospCode=#(SSHospCode)#;
+			var IsSecret=#(IsSecret)#
+			
+			$(window).load(function() {				
+				InitSusAbQueryWin();
+			});
+		</script>
+	</body>
+</html>

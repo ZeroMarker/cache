@@ -1,0 +1,86 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+Validating appointment statuses
+<server>
+	n warn,apptids,apptid,fapptids,napptids,appointment,status,t,outcomeid
+	s warn=0
+	s future=0
+	s tdate=+$h
+	s ttime=$p($h,",",2)
+	s (napptids,fapptids,outcomeid)=""
+	d ##Class(websys.Component).GetComponentMessages(.t,"RBMessages")
+	s warning=t("RBNotFTAOrBooked")
+	s futuremsg=t("RBFTAInFuture")
+	s TWKFL=##Class(websys.WorkFlow).GetIdFromCodeOrDescription("Trak.Outpatient.BulkTransferAppointment")
+
+	
+	;Filter the Appointment IDs so that only appointments with
+	;statuses of "Booked" or "Failed To Attend" are passed through.
+	;If there are any that do not have these status the user is warned
+	;and the ones that do have the correct statuses are rebooked.
+	s apptids=%request.Data("ApptIDs",1)
+	;first weed out the repeat values
+	k ^TMP("WEB",$j)
+	f j=1:1:$l(apptids,",") d
+	. s ^TMP("WEB",$j,$p($g(apptids),",",j))=""
+	s id="" f  s id=$o(^TMP("WEB",$j,id)) q:id=""  d
+	. i fapptids'="" s fapptids=fapptids_","_id
+	. i fapptids="" s fapptids=id
+	k ^TMP("WEB",$j)
+	f j=1:1:$l(fapptids,",") d
+	.  s apptid=$p($g(fapptids),",",j)
+	.  q:apptid=""
+	.  s res=$p($g(apptid),"||",1)
+	.  s sched=$p($g(apptid),"||",2)
+	.  s ind=$p($g(apptid),"||",3)
+	.  s appointment=^RBAS(res,sched,"APPT",ind)
+	.  s Schedule=$g(^RBAS(res,sched))
+	.  s ApptDate=$p($g(Schedule),"^",1)
+	.  s ApptTime=$p($g(Schedule),"^",4)
+	.  s status=$p($g(appointment),"^",3)
+	.  i ((ApptDate>tdate)||((ApptDate=tdate)&&(ApptTime>ttime))) d
+	.  . s future=1
+	.  i ((ApptDate<tdate)||((ApptDate=tdate)&&(ApptTime'>ttime))) d
+	. .  i "P N" '[ status s warn=warn+1 
+	. .  i "P N" [ status d
+	. . .  i napptids'="" s napptids=napptids_"^"_apptid
+	. . .  i napptids="" s napptids=apptid
+</server>
+
+
+<SCRIPT>
+	//alert("hidden csp");
+	var warning="";
+	if (#(warn)#!=0) {
+		warning="#(warn)# #(warning)#";
+	} 
+	//alert("#(napptids)#");
+	if (#(future)#!=0) {
+		warning=warning+" #(futuremsg)#";
+	} 
+	if (warning!="") {alert(warning);}
+	if ("#(napptids)#"!="") {
+		//lnk = "websys.csp?TWKFL=#(TWKFL)#&BulkApptList=#(napptids)#&BulkApptStatus=N"
+		lnk = "websys.csp?TWKFL=#(TWKFL)#&BulkApptList=#(napptids)#"
+		var swidth=screen.availWidth-60;
+		if (swidth>750) swidth=750
+		var sheight=screen.availHeight-60;
+		if (sheight>500) sheight=500
+		//Log: 59598, 03-07-2006 BC: add "status=yes"
+		window.open(lnk,"frmAppointmentFrame","top=10,left=10,width="+swidth+",height="+sheight+",resizable,status=yes");
+	}
+
+</SCRIPT>
+</body>
+</html>

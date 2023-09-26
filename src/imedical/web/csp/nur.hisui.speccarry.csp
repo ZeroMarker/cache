@@ -1,0 +1,204 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>标本运送</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI translate=1/>
+	<NURHISUI />
+	<SCRIPT Language="Javascript">
+		var SpecTeam = "#(%request.Get("SpecTeam"))#"  //当前页面标本组别配置
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.speccarry.js" charset='gbk'></script>
+	<STYLE type='text/css'>
+		.accordion>.panel>.panel-header, .layout>.panel>.panel-header, .panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, .panel.window>.panel-header, .tabs-panels>.panel>.panel-header {
+		    -moz-border-radius: 0;
+		    -webkit-border-radius: 0;
+		    border-radius: 5px 5px 0 0;
+		    padding: 5px;
+		}
+		.specInfo {
+			color: red !important;
+		}
+
+		.toolbar {
+			height:34px;
+		}
+		.formInput{
+			padding:10px;
+			border-bottom:1px dashed #cccccc;
+		}
+		.panel-header, .panel-body {
+		    border-color: #cccccc;
+		}
+	</STYLE>
+</head>
+
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px" >
+	<div class="hisui-layout" data-options="fit:true">
+	<div id="panelCarryTabSheet" data-options="region:'west',title:'#(..Get("运送单查询"))#',iconCls:'icon-search',headerCls:'panel-header-gray',collapsed:false,split:true"
+	 style="border-radius: 0 0 5px 5px;width:560px;">
+	 <div class="hisui-layout" data-options="fit:true,border:false">
+		<div id="panelCarrySheetDetailFormInput" data-options="region:'north',title:'',border:false">
+		 	<div class="formInput">
+				<input id="sheetStartDateBox" class="hisui-datebox textbox" style="width:110px"></input>
+				<input id="sheetEndtDateBox" class="hisui-datebox textbox" style="width:110px"></input>
+				<select id="sheetStateBox" class="hisui-combobox" name="state" style="width:90px;" data-options="enterNullValueClear:false">
+					<option value="C">#(..Get("建单"))#</option>
+					<option value="S">#(..Get("已交接"))#</option>
+					<option value="P">#(..Get("部分处理"))#</option>
+					<option value="R">#(..Get("全部接收"))#</option>
+				</select>
+				<input id="sheetFilter" class="textbox" placeholder="#(..Get("单号或建单人"))#" style="width:110px;" />
+				<a id="findCarrySheetBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+			</div>
+		</div>
+		<div id="panelCarrySheetDetailTable" data-options="region:'center',title:'',border:false">
+		<table id='gridCarrySheet' class="hisui-datagrid" fit=true rownumbers="true" data-options="border:false,singleSelect:true,headerCls:'panel-header-gray',pagination:false,toolbar:'#tableCarrySheetToolBar'">
+			<thead data-options="frozen:true">
+				<tr>
+					<th data-options="field:'CarryNo',align:'center'">运单号</th>
+					<th data-options="field:'TransCount',align:'center'">标本数</th>
+					<th data-options="field:'RecieveCount',align:'center'">已处理数量</th>
+				</tr>
+			</thead>
+			<thead>
+				<tr>
+					<th data-options="field:'RecLocDesc',align:'center'">接收科室</th>
+					<th data-options="field:'CarryUserName',align:'center'">建单人</th>
+					<th data-options="field:'CarryDate',align:'center'">建单日期</th>
+					<th data-options="field:'CarryTime',align:'center'">建单时间</th>
+					<th data-options="field:'StatusDesc',align:'center'">状态</th>
+					<th data-options="field:'TransDate',align:'center'">交接日期</th>
+					<th data-options="field:'TransTime',align:'center'">交接时间</th>
+					<th data-options="field:'TransUserName',align:'center'">接单人</th>
+				</tr>
+			</thead>
+		</table>
+		<div id="tableCarrySheetToolBar" class="toolbar">
+			<table cellpadding="5" >
+				<!--tr>
+					<td>
+						<input id="sheetStartDateBox" class="hisui-datebox textbox" style="width:110px"></input>
+						<input id="sheetEndtDateBox" class="hisui-datebox textbox" style="width:110px"></input>
+						<select id="sheetStateBox" class="hisui-combobox" name="state" style="width:90px;" data-options="enterNullValueClear:false">
+							<option value="C">建单</option>
+							<option value="S">已交接</option>
+							<option value="P">部分处理</option>
+							<option value="R">全部接收</option>
+						</select>
+						<input id="sheetFilter" class="textbox" placeholder="单号或建单人" style="width:110px;" />
+						<a id="findCarrySheetBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+				</tr-->
+				<tr>
+					<td>
+						<span id="lisRadioSpan">
+							<input class='hisui-radio' type="radio" label='#(..Get("检验"))#' name='specTeam' value='L' id="lisRadio">
+						</span>
+						<span id="pisRadioSpan">
+							<input class='hisui-radio' type="radio" label='#(..Get("病理"))#' name='specTeam' value='P' id="pisRadio">
+						</span>
+						<a id="creatCarrySheetBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+<!-- 						<a id="outLocCarrySheetBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-right-top',plain:true">交接</a>
+						<a id="printCarrySheetBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true">打印</a> -->
+						<a id="deleteCarrySheetBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		</div>
+		<div id="outLocDialog" class="hisui-dialog" title="#(..Get("标本交接"))#" style="width:300px;height:235px;padding:20px;" closed="true"
+		 data-options="iconCls:'icon-save',resizable:true,modal:true">
+			<form id="outLocDialogForm" method="post">
+				<table cellpadding="5">
+					<tr>
+						<td class="r-label">#(..Get("护工工号"))#</td>
+						<td>
+							<input id="transUserCode" class="hisui-validatebox textbox" data-options="required:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">#(..Get("护工密码"))#</td>
+						<td>
+							<input id="transUserPass" type="password" class="hisui-validatebox textbox" data-options="required:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">#(..Get("容器编号"))#</td>
+						<td>
+							<input id="containerNoInput" class="textbox">
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</div>
+	
+		</div>
+	<div id="panelCarrySheetDetail" data-options="region:'center',title:'#(..Get("运送单"))#',iconCls:'icon-paper',headerCls:'panel-header-gray'" style="border-radius: 0 0 5px 5px;border-color:#cccccc">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+		<div id="panelCarrySheetDetailFormInput" data-options="region:'north',title:'',border:false">
+			<div class="formInput">
+				<span>#(..Get("标本号"))#&nbsp;</span>
+				<input id="detailLabNOInput" class="textbox">
+				<a id="insertCarrySheetDetailBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-add',stopAllEventOnDisabled:true">新增</a>				
+			</div>
+		</div>	
+		<div id="panelCarrySheetDetailTable" data-options="region:'center',title:'',border:false">
+			<table id='gridCarrySheetDetail' class="hisui-datagrid" rownumbers="true" data-options="fit:true,border:false,headerCls:'panel-header-gray',pagination:false,toolbar:'#tableCarrySheetDetailToolBar'">
+				<thead data-options="frozen:true">
+					<tr>
+						<th data-options="field:'DetailOperate'">操作</th>
+						<th data-options="field:'LabNo'">标本号</th>
+						<th data-options="field:'SpecName'">标本名称</th>
+						<th data-options="field:'BedCode'">床号</th>
+						<th data-options="field:'PatName'">姓名</th>
+						<th data-options="field:'RegNo'">登记号</th>
+					</tr>
+				</thead>
+				<thead>
+					<tr>
+						<th data-options="field:'ArcimDesc'">医嘱名称</th>
+						<th data-options="field:'CollDateTime'">采血时间</th>
+						<th data-options="field:'TransStatusDesc'">接收状态</th>
+						<th data-options="field:'LisReceiveUserName'">接收人</th>
+						<th data-options="field:'LisReceiveDate'">接收日期</th>
+						<th data-options="field:'LisReceiveTime'">接收时间</th>
+					</tr>
+				</thead>
+			</table>
+			<div id="tableCarrySheetDetailToolBar" class="toolbar">
+				<table cellpadding="5">
+					<!--tr>
+						<td><span>标本号&nbsp;</span>
+							<input id="detailLabNOInput" class="textbox">
+							<a id="insertCarrySheetDetailBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-add',stopAllEventOnDisabled:true">增加</a>				
+							
+						</td>
+					</tr-->
+					<tr>
+						<td>
+							<a id="outLocCarrySheetDetailBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-right-top',plain:true,stopAllEventOnDisabled:true">交接</a>
+							<a id="outLocPrintSheetDetailBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true,stopAllEventOnDisabled:true">打印</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			</div>
+		</div>
+	</div>
+	</div>
+	</div>
+</body>
+
+</html>

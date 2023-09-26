@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--治疗站申请单信息浏览 doccure.apply.update.hui.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="LODOP"/>
+<STYLE type='text/css'>
+.form-table{
+	border-collapse:separate;
+	border-spacing:0px 10px;
+}
+
+.form-table td{
+ 	white-space: nowrap;	
+}
+
+.r-label,.ifhidden{
+	text-align:right;
+}
+
+.form-table td label{
+	padding: 0px 0px 0px 10px;
+	
+}
+.minitext{
+	width:80px!important;
+}
+.midtext{
+	width:120px!important;
+}
+.maxtext{
+	width:130px!important;
+}
+
+.line{
+	padding:0px 5px;
+	color:#DCDCDC;	
+}
+.ach-div a{
+	margin-left:45px;
+	width:87px;
+}
+textarea{
+	width:1088px;
+	border-color:#40a2de	
+}
+#patient-label label{
+	width:100px;	
+}
+
+#patient-label ul,.form-table tr td ul{
+	list-style-type: none;
+	display: flex; /*开启CSS3弹性盒子模型*/
+	flex-wrap: wrap;/*规定灵活的项目在必要的时候拆行或拆列。*/
+	justify-content: flex-start;/*内部元素主轴方向(x方向)默认排列方式:环绕*/
+	align-items: center;/*内部元素辅轴(y方向)方向默认排列方式:环绕*/
+}
+
+</STYLE>
+<Server>
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+s PrintEncrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+s EpisodeID=$g(%request.Data("EpisodeID",1))
+s DCARowId=$g(%request.Data("DCARowId",1))
+s ParaType=$g(%request.Data("ParaType",1))
+s mradm="",PatientID="",PAAdmType=""
+if EpisodeID'=""{
+	s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+	s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+}
+
+;登陆用户身份类型
+s CareProvType=##class(web.DHCDocOrderCommon).GetCareProvType(%session.Get("LOGON.USERID"))
+s CareProvType=$zcvt(CareProvType,"U")
+w "<input id='PrintEncrypt' name='PrintEncrypt' type='hidden' value='"_PrintEncrypt_"'>",$C(13,10)
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+</Server>
+</head> 
+<body class="hisui-layout" data-options="fit:true,border:false">
+	<div id="dregion" data-options="region:'center',border:false,split:true" style="padding:10px 10px 10px 10px">
+		<!--治疗申请与治疗申请信息浏览共用-->
+		<csp:Include Page="doccure.apply.curedetail.show.hui.csp">
+	</div>
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			DCARowId:"#(DCARowId)#",
+			ParaType:"#(ParaType)#",
+			CareProvType:"#(CareProvType)#",
+			mradm:"#(mradm)#",
+			PatientID:"#(PatientID)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" SRC="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.apply.update.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+</body>
+</html>

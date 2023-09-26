@@ -1,0 +1,140 @@
+<!-- DHCPENetOrdDetail.csp -->
+<!-- 
+/// 创建时间		2006.10.17
+/// 创建人		xuwm 
+/// 主要功能		网站接口----医嘱帐单明细
+/// 关联文件		DHCPEReport.js,DHCPEReport.css
+/// 最后修改时间	
+/// 最后修改人	 
+/// 
+-->
+<HTML>
+<HEAD>
+<!-- 强制网页不被存入Cache中 -->
+<meta http-equiv="pragma" content="no-cache">
+
+	<SCRIPT SRC="../scripts/websys.js"> </SCRIPT>
+	<SCRIPT SRC="/csp/broker/cspbroker.js"> </SCRIPT>
+	<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+ 
+	<TITLE>费用明细</TITLE>
+	<!-- 按A4纸定义大小 -->
+	<style type="text/css">
+	.DPrint{
+		display:block;
+		width:21.00cm; 
+		
+	}
+
+	body{
+		margin:3px 3px 0px 0px;
+		text-align:center;
+	}
+
+	</style>
+</HEAD>
+<!--
+<BODY oncontextmenu="self.event.returnValue=false" bgcolor="303880" leftmargin="0" marginwidth="0" topmargin="3" marginheight="3" style="text-align:center">
+-->
+
+<BODY
+	onmouseup=document.selection.empty()
+	oncontextmenu="return false" 
+	onselectstart="return false"
+	ondragstart="return false" 
+	onbeforecopy="return false"
+	oncopy=document.selection.empty()
+	onselect=document.selection.empty()
+	>
+<DIV class="DPrint">
+<TABLE class=tblList id="tOrdDetail" Name="tOrdDetail" CELLSPACING=1 width="100%">
+
+	<THEAD>
+		<TH style='display:none;'></TH>
+		<TH id=1  NOWRAP>日期</TH>
+		<!-- 
+		<TH id=2  NOWRAP>Tseqno</TH>
+		-->
+		<TH id=3  NOWRAP>费用项目</TH>
+		<TH id=4  NOWRAP>数量</TH>
+		<TH id=5  NOWRAP>单价</TH>
+		<!--
+		<TH id=6  NOWRAP>Tbillflag</TH>
+		-->
+		<TH id=7  NOWRAP>金额</TH>
+		<!--
+		<TH id=8  NOWRAP>Tdiscount</TH>
+		-->
+		<!--
+		<TH id=9  NOWRAP>Tpayorshare</TH>
+		-->
+		<!--	
+		<TH id=10  NOWRAP>Tpatshare</TH>
+		-->
+		<!--
+		<TH id=11  NOWRAP>ROWID</TH>
+		-->
+	</THEAD>
+	<script language=Cache runat=server>
+		s BillNo="112201"
+		s iLLoop=1
+		s RowType="RowOdd"
+	</script>
+	
+	<csp:query name=rs classname="web.UDHCJFITM" queryname="FindOrdDetail" P1=#(BillNo)#>
+	
+	<csp:while condition="rs.Next()">
+
+	<TR class=#(RowType)# NOWRAP>
+		<!-- 0 -->
+		<TD style='display:none;'></TD>
+		<!-- 1 日期 -->
+		<TD  ><label id="Tdatez#(iLLoop)#" name="Tdatez#(iLLoop)#">#(rs.GetDataByName("Tdate"))#</label></TD>
+		<!-- 2 Tseqno 
+		<TD  ><label id="Tseqnoz#(iLLoop)#" name="Tseqnoz#(iLLoop)#">#(rs.GetDataByName("Tseqno"))#</label></TD>
+		-->
+		<!-- 3 医嘱 -->
+		<TD  ><label id="Torderz#(iLLoop)#" name="Torderz#(iLLoop)#">#(rs.GetDataByName("Torder"))#</label></TD>
+		<!-- 4 数量 -->
+		<TD  ><label id="Tqtyz#(iLLoop)#" name="Tqtyz#(iLLoop)#">#(rs.GetDataByName("Tqty"))#</label></TD>
+		<!-- 5 单价 -->
+		<TD  ><label id="Tunitpricez#(iLLoop)#" name="Tunitpricez#(iLLoop)#">#(rs.GetDataByName("Tunitprice"))#</label></TD>
+		<!-- 6 Tbillflag 
+		<TD  ><label id="Tbillflagz#(iLLoop)#" name="Tbillflagz#(iLLoop)#">#(rs.GetDataByName("Tbillflag"))#</label></TD>
+		-->
+		<!-- 7 金额 -->
+		<TD  ><label id="Tpricez#(iLLoop)#" name="Tpricez#(iLLoop)#">#(rs.GetDataByName("Tprice"))#</label></TD>
+		<!-- 8 Tdiscount 
+		<TD  ><label id="Tdiscountz#(iLLoop)#" name="Tdiscountz#(iLLoop)#">#(rs.GetDataByName("Tdiscount"))#</label></TD>
+		-->
+		<!-- 9 Tpayorshare 
+		<TD  ><label id="Tpayorsharez#(iLLoop)#" name="Tpayorsharez#(iLLoop)#">#(rs.GetDataByName("Tpayorshare"))#</label></TD>
+		-->
+		<!-- 10 Tpatshare 
+		<TD  ><label id="Tpatsharez#(iLLoop)#" name="Tpatsharez#(iLLoop)#">#(rs.GetDataByName("Tpatshare"))#</label></TD>
+		-->
+		<!-- 11 ROWID 
+		<TD  ><label id="Trowidz#(iLLoop)#" name="Trowidz#(iLLoop)#">#(rs.GetDataByName("Trowid"))#</label></TD>
+		-->
+	</TR>
+	<script language=Cache runat=server>
+		s iLLoop=iLLoop+1
+		i "RowEven"=RowType d
+		.s RowType="RowOdd"
+		e  d
+		.s RowType="RowEven"
+	</script>
+	
+	</csp:while>
+
+</TABLE>
+</DIV>
+
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.listrows.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.List.Tools.js"></SCRIPT>
+<!-- 页面安全 -->
+<SCRIPT SRC="../scripts/DHCPECommon.encrypt.js"></SCRIPT>
+</BODY>
+</HTML>

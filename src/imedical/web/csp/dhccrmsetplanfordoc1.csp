@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+</csp:method>
+
+<script language="cache" runat="server">
+ s action = $Get(%request.Data("action",1))
+ s start = $Get(%request.Data("start",1))
+ s limit = $Get(%request.Data("limit",1))
+
+ i action = "mrbaselist" d
+ .s BeginDate=$Get(%request.Data("BeginDate",1))
+ .s EndDate=$Get(%request.Data("EndDate",1))
+ .s LocID=$Get(%request.Data("LocID",1))
+ .s ICD=$Get(%request.Data("ICD",1))
+ .s RegNo=$Get(%request.Data("RegNo",1))
+ .s PatName=$Get(%request.Data("PatName",1))
+ .s PatSexID=$Get(%request.Data("PatSexID",1))
+ .s PatAgeFrom=$Get(%request.Data("PatAgeFrom",1))
+ .s PatAgeTo=$Get(%request.Data("PatAgeTo",1))
+ .//s ^xh("action")=BeginDate_"^"_EndDate_"^"_LocID_"^"_ICD_"^"_RegNo_"^"_PatName_"^"_PatSexID_"^"_PatAgeFrom_"^"_PatAgeTo
+ .w ##class(web.DHCCRM.SetPlan).MRBaseList(BeginDate,EndDate,LocID,ICD,RegNo,PatName,PatSexID,PatAgeFrom,PatAgeTo,start,limit)
+
+ i action = "fuplist" d
+ .w ##class(web.DHCCRM.SetPlan).FUPlanList(start,limit)
+ i action="loclist" d
+ .s LocDesc=$Get(%request.Data("locDesc",1))
+ .s ^xh("action")=start_"^"_limit_"^"_LocDesc
+ .w ##class(web.DHCCRM.GetBaseInfo).GetLoc(start,limit,LocDesc)
+ .//w ##class(web.DHCCRM.LisResultSend).GetCTLocList(start,limit,LocDesc)
+ i action="fupersonlist" d
+ .s UserDesc=$Get(%request.Data("UserDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetUser(UserDesc)
+ i action="fuICDlist" d
+ .s ICDDesc=$Get(%request.Data("ICDDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetICD(ICDDesc)
+ i action="Sexlist" d
+ .s SexDesc=$Get(%request.Data("SexDesc",1))
+ .w ##class(web.DHCCRM.GetBaseInfo).GetSex(SexDesc)
+ i action="AddPlan" d
+ .s PAADMStr=$Get(%request.Data("PAADMStr",1))
+ .s FUSRowIdStr=$Get(%request.Data("FUSRowIdStr",1))
+ .s FUSUser=$Get(%request.Data("FUSUser",1))
+ .s FUSDate=$Get(%request.Data("FUSDate",1))
+ .w ##class(web.DHCCRM.SetPlan).SetPlan(PAADMStr,FUSRowIdStr,FUSUser,FUSDate)
+</script>
+

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+    退药单查询 
+    csp: csp/dhcpha/dhcpha.inpha.phareturnquery.csp
+    js:  scripts/pharmacy/inpha/dhcpha.inpha.phareturnquery.js
+-->
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+    </Server>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
+    <!--css-->
+    <link rel="stylesheet" type="text/css"
+        href="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.css" />
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/skins/icheck/blue.css">
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/dhcpha/jQuery/themes/default/easyui-new.css">
+
+    <!--js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/icheck/icheck.js"></script>
+    <script type="text/javascript"
+        src="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/moment.min.js"></script>
+    <script type="text/javascript"
+        src="#(Application)#scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/bootstrap-bootbox/bootbox.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/select2.min.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/plugins/select2-4.0.3/i18n/zh-CN.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8">
+    </script>
+    <script type="text/javascript" src="#(Application)#scripts/dhcpha/jqueryplugins/json2.js"></script>
+    <!--dhcpha css-->
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/css/dhcpha.common.css">
+    </script>
+    <!--dhcpha common js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.export.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.print.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pha/com/v1/js/export.js"></script>
+    <!--dhcpha js-->
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.printreturn.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.phareturnquery.js"></script>
+    <style type="text/css">
+        .dhcpha-btn-split {
+            margin-right: 10px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid dhcpha-condition-container">
+        <div class="row row_style">
+            <form class="form-inline">
+                <div class="input-group">
+                    <span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"
+                        style="padding-right: 10px;"><strong>退药日期</strong></span>
+                    <input id="date-start" class="form-control input_style" type="text"
+                        style="border-right:none;width:86px" placeholder="请选择日期">
+                    <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                </div>
+                <span><strong>至</strong></span>
+                <div class="input-group">
+                    <input id="date-end" class="form-control input_style" type="text"
+                        style="border-right:none;width:86px" placeholder="请选择日期">
+                    <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                </div>
+                <div class="input-group" style="padding-left:5px">
+                    <select class="form-control in_select" id="sel-phaloc">
+                    </select>
+                </div>
+                <div class="input-group" style="padding-left:5px">
+                    <select class="form-control in_select" id="sel-wardloc">
+                    </select>
+                </div>
+                <div class="input-group" style="padding-left:5px">
+                    <select class="form-control in_select" id="sel-locinci">
+                    </select>
+                </div>
+                <div class="input-group" style="padding-left:5px">
+                    <select class="form-control in_select" id="sel-rettype">
+                    </select>
+                </div>
+                <div class="btn-group" style="padding-left:5px">
+                    <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split"
+                        style="min-width:60px" type="button" id="btn-find">查询</button>
+                    <span class="fa fa-print dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split"
+                        style="min-width:60px" type="button" id="btn-print">打印</button>
+                    <span class="fa fa-eraser dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split"
+                        style="min-width:60px" type="button" id="btn-clear">清屏</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--div class="row dhcpha-row-split" ></div-->
+    <div class="container-fluid ">
+        <div class="row">
+            <div>
+                <div class="panel div_content" style="margin-top: 0px;">
+                    <div class="panel-heading"><span class="pal_style"><strong>退药单查询</strong></span></div>
+                    <div class="panel-body" style="border:none;">
+                        <table id="grid-returntotal">
+                        </table>
+                    </div>
+                </div>
+                <div class="panel div_content" style="margin-top: 0px;">
+                    <div class="panel-heading"><span class="pal_style"><strong>退药单详细信息</strong></span></div>
+                    <div class="panel-body" style="border:none;">
+                        <table id="grid-returndetail">
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+<csp:Include Page="dhcpha.pha.easyui.export.csp" />
+
+</html>

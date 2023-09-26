@@ -1,0 +1,201 @@
+<div id="main">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-4 col-sm-4 col-md-4">
+				<div class="panel panel-default">
+				    <div class="panel-heading">医嘱模板维护参数</div>
+				    <div class="panel-body">
+				        <div class="input-group">
+				            <span class="input-group-addon">新表</span>
+				            <input type="text" class="form-control" v-model="NameAddTab" placeholder="请输入新建表模板名..">
+				            <!--div class="input-group-btn">
+				            	<button v-on:click="AddTableName()" type="button" class="btn btn-primary"><span class="fa fa-plus"></span>增加</button>
+				            </div-->
+				        </div>
+				        <div class="input-group">
+				    		<!--div class="input-group-btn btn-group-vertical"-->
+				    			<button type="button" v-on:click="AddTableName()" class="btn btn-primary btn-table-custom"><span class="fa fa-plus"></span>增加</button>
+						    	<button type="button" v-on:click="TabNameDel()" class="btn btn-primary btn-table-custom"><i class="fa fa-trash-o"></i>删除</button>
+						    	<button type="button" v-on:click="TabNameMove('Up')" class="btn btn-primary btn-table-custom"><i class="fa fa-arrow-up"></i>上移</button>
+							    <button type="button" v-on:click="TabNameMove('Down')" class="btn btn-primary btn-table-custom"><i class="fa fa-arrow-down"></i>下移</button>
+							<!--/div-->
+				    	</div>
+						<div class="input-group col-xs-12 col-sm-12 col-md-12">
+							<select multiple="multiple"  name="TableNameList" v-on:change="TableNameListChange" style="width:100%;height:200px;">
+								<!--ie11不支持template写法-->
+								<!--template v-for = "option in TableNameList">
+							        <option v-if = "option.value.split('!!')[1] == TableNameSelectIndex" v-bind:value="option.value" selected>{{option.text}}</option>
+							        <option v-else v-bind:value="option.value">{{option.text}}</option>
+							    </template-->
+						        <option v-for="option in TableNameList" v-bind:value="option.value" v-bind:selected="option.value.split('!!')[1] == TableNameSelectIndex">{{option.text}}</option>
+						    </select>
+						    <span style="display:none;">{{websysPrefId}}</span>
+						</div>
+						<div class="input-group">
+						    <label>保存参数&nbsp</label>
+							<span>{{getSaveParam}}</span>
+						</div>
+						<div class="input-group">
+						    <csp:if condition='IsHaveMenuAuthOrderOrgFav="1"'>
+						        <csp:if condition='paraPreftabType=""'>
+						        	<input class="check-dhcdoc-custom" type="radio" style="vertical-align:middle;" v-on:click="PreftabTypeClick" checked="true" name="PreftabType" value="User.SSUser"><span style="vertical-align:middle;">个人模板</span>
+									<input class="check-dhcdoc-custom" type="radio" style="vertical-align:middle;" v-on:click="PreftabTypeClick" name="PreftabType" value="User.CTLoc"><span style="vertical-align:middle;">科室模板</span>
+						    		<input class="check-dhcdoc-custom" type="checkbox" style="vertical-align:middle;" v-on:click="CMFlagClick"><span style="vertical-align:middle;">草药模板</span>
+						    	</csp:if>
+						    	<csp:if condition='paraPreftabType="User.SSUser"'>
+						    		<input class="check-dhcdoc-custom" type="radio" style="vertical-align:middle;" v-on:click="PreftabTypeClick" checked="true" name="PreftabType" value="User.SSUser"><span style="vertical-align:middle;">个人模板</span>
+						    	</csp:if>
+						    	<csp:if condition='paraPreftabType="User.CTLoc"'>
+						    		<input class="check-dhcdoc-custom" type="radio" style="vertical-align:middle;" v-on:click="PreftabTypeClick" checked="true" name="PreftabType" value="User.CTLoc"><span style="vertical-align:middle;">科室模板</span>
+						    	</csp:if>
+						    </csp:if>
+						    <csp:if condition='IsHaveMenuAuthOrderOrgFav=""'>
+						    	<input class="check-dhcdoc-custom" type="radio" style="vertical-align:middle;" v-on:click="PreftabTypeClick" checked="true" name="PreftabType" value="User.SSUser"><span style="vertical-align:middle;">个人模板</span>
+						    </csp:if>
+						    <!--csp:if condition='CMFlag=""'>
+						    	<input class="check-dhcdoc-custom" type="checkbox" style="vertical-align:middle;" v-on:click="CMFlagClick"><span style="vertical-align:middle;">草药模板</span>
+						    </csp:if-->
+						</div>
+						<div class="input-group">
+							<span class="alertfont">{{getSaveParaTip}}</span>
+						</div>
+						<!--div class="input-group">
+							<input class="check-dhcdoc-custom" type="checkbox" style="vertical-align:middle;" v-on:click="SaveContextWorkflow" value="option1">按工作流上下文保存
+						</div-->
+				    </div>
+			    </div>
+			</div>
+			<div class="col-xs-8 col-sm-8 col-md-8">
+				<div class="panel panel-default">
+				    <div class="panel-heading">医嘱模板数据维护&nbsp&nbsp<span class="alertfont">{{getCurrMainteanceList}}</span></div>
+				    <div class="panel-body" style="padding-right: 0px;">
+				    	<form class="form-inline" role="form">
+				    	    <div class="form-group input-group">
+					        	<span class="input-group-addon">表名</span>
+					        	<input type="text" class="form-control" id="selTabName" v-model="TableNameSelectName" placeholder="">
+					        </div>
+					    	<div class="form-group input-group">
+					        	<span class="input-group-addon">分类</span>
+					            <input type="text" v-on:keydown.enter="OrdCatClick" v-model="OrdCatDesc" id="OrdCateGory" class="form-control" style="z-index:0;" placeholder="">
+					            <div class="input-group-btn"> 
+				            		<img name="imgItemDesc"  v-on:click="OrdCatClick" id="OrdCateGory" style="margin-left:-20px;" src="../images/websys/lookup.gif" >
+				            	</div>
+				            	<input type="text" v-model="OrdCatRowId" style="display:none;">
+					        </div>
+							<div class="form-group input-group">
+					        	<span class="input-group-addon">子分类</span>
+					            <input type="text" v-on:keydown.enter="OrdSubCatClick" v-model="OrdSubDesc" id="OrdSubCateGory" class="form-control" style="z-index:0;" placeholder="">
+					            <div class="input-group-btn"> 
+				            		<img name="imgItemDesc"  v-on:click="OrdSubCatClick" id="OrdSubCateGory" style="margin-left:-20px;" src="../images/websys/lookup.gif" >
+				            	</div>
+				            	<input type="text" v-model="OrdSubRowId" style="display:none;">
+							</div>
+							<div class="form-group input-group">
+					        	<span class="input-group-addon">项目</span>
+					            <input type="text" class="form-control" v-on:keydown="OrdNameClick" v-model="OrdNameDesc" id="OrderName" style="z-index:0;" placeholder="">
+					            <div class="input-group-btn"> 
+				            		<img name="imgItemDesc"  v-on:click="OrdNameClick" style="margin-left:-20px;" id="OrderNameImage" src="../images/websys/lookup.gif" >
+				            	</div>
+					            <input type="text" v-model="OrdNameRowId" style="display:none;">
+					        </div>
+					        <div class="form-group input-group">
+					        	<button type="button" v-on:click="UpdateClickHandle" class="btn btn-primary"><span class="fa fa-refresh"></span>更新</button>
+					        </div>
+					        
+				        </form>
+				        <div class="row">
+				        		<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="TabItemMove('Up')" class="btn btn-primary btn-table-custom"><i class="fa fa-arrow-up"></i>上移</button>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="TabItemMove('Down')" class="btn btn-primary btn-table-custom"><i class="fa fa-arrow-down"></i>下移</button>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="TabItemMove('Left')" class="btn btn-primary btn-table-custom"><i class="fa fa-arrow-left"></i>左移</button>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="TabItemMove('Right')" class="btn btn-primary btn-table-custom"><i class="fa fa-arrow-right"></i>右移</button>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="TabItemDel()" class="btn btn-primary btn-table-custom"><i class="fa fa-trash-o"></i>删除项目</button>
+					            </div>
+				        </div>
+				        <div class="row">
+					        <form class="form-inline" role="form">
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<input type="text" class="form-control" v-model="NameGroup1" v-bind:class={"form-group-select-focus":ListFocusIndex==1} style="width:100%;" placeholder="">
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<input type="text" class="form-control" v-model="NameGroup2" v-bind:class={"form-group-select-focus":ListFocusIndex==2} style="width:100%;" placeholder="">
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<input type="text" class="form-control" v-model="NameGroup3" v-bind:class={"form-group-select-focus":ListFocusIndex==3} style="width:100%;" placeholder="">
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<input type="text" class="form-control" v-model="NameGroup4" v-bind:class={"form-group-select-focus":ListFocusIndex==4} style="width:100%;" placeholder="">
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<input type="text" class="form-control" v-model="NameGroup5" v-bind:class={"form-group-select-focus":ListFocusIndex==5} style="width:100%;" placeholder="">
+					        	</div>
+					        	<!--input type="text" class="form-control" v-model="NameGroup1" v-bind:class={"form-group-select-focus":ListFocusIndex==1}  placeholder="">
+					        	<input type="text" class="form-control" v-model="NameGroup2" v-bind:class={"form-group-select-focus":ListFocusIndex==2}  placeholder="">
+					        	<input type="text" class="form-control" v-model="NameGroup3" v-bind:class={"form-group-select-focus":ListFocusIndex==3}  placeholder="">
+					        	<input type="text" class="form-control" v-model="NameGroup4" v-bind:class={"form-group-select-focus":ListFocusIndex==4}  placeholder="">
+					        	<input type="text" class="form-control" v-model="NameGroup5" v-bind:class={"form-group-select-focus":ListFocusIndex==5}  placeholder=""-->
+					        </form>
+				        </div>
+				        
+				        <div class="row">
+					        <form class="form-inline" role="form">
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<select multiple="multiple" v-on:focus="ListGroupFocus"  v-bind:class={"form-group-select-focus":ListFocusIndex==1} name="ListGroup_1" style="width:100%;height:300px;">
+									    <option v-for="option in ListGroup1" v-modal="ListGroup1" v-bind:title="option.text" v-bind:value="option.value" v-bind:selected="option.selected == 1">{{option.text}}</option>
+							   		</select>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<select multiple="multiple" v-on:focus="ListGroupFocus"  v-bind:class={"form-group-select-focus":ListFocusIndex==2} name="ListGroup_2" style="width:100%;height:300px;">
+									    <option v-for="option in ListGroup2" v-modal="ListGroup2" v-bind:title="option.text"  v-bind:value="option.value" v-bind:selected="option.selected == 1">{{option.text}}</option>
+							   		</select>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<select multiple="multiple" v-on:focus="ListGroupFocus" v-bind:class={"form-group-select-focus":ListFocusIndex==3} name="ListGroup_3" style="width:100%;height:300px;">
+									    <option v-for="option in ListGroup3" v-modal="ListGroup3" v-bind:title="option.text" v-bind:value="option.value" v-bind:selected="option.selected == 1">{{option.text}}</option>
+							   		</select>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<select multiple="multiple" v-on:focus="ListGroupFocus" v-bind:class={"form-group-select-focus":ListFocusIndex==4} name="ListGroup_4" style="width:100%;height:300px;">
+									    <option v-for="option in ListGroup4" v-modal="ListGroup4" v-bind:title="option.text" v-bind:value="option.value" v-bind:selected="option.selected == 1">{{option.text}}</option>
+									    
+							   		</select>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<select multiple="multiple" v-on:focus="ListGroupFocus" v-bind:class={"form-group-select-focus":ListFocusIndex==5} name="ListGroup_5" style="width:100%;height:300px;">
+									    <option v-for="option in ListGroup5" v-modal="ListGroup5" v-bind:title="option.text" v-bind:value="option.value" v-bind:selected="option.selected == 1">{{option.text}}</option>
+							   		</select>
+					        	</div>
+					        </form>
+				        </div>
+				        <div class="row">
+				        		<div class="col-xs-2 col-sm-2 col-md-2 form-group">
+					        		<button type="button" v-on:click="copyToClipboard" class="btn btn-primary btn-table-custom"><i class="fa fa-clipboard"></i>复制医嘱</button>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="BPaste" class="btn btn-primary btn-table-custom"><i class="fa fa-paste"></i>粘贴医嘱</button>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="CopyAllToClipboard" class="btn btn-primary btn-table-custom"><i class="fa fa-clipboard"></i>复制全部医嘱</button>
+					        	</div>
+					        	<div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="BPasteAll" class="btn btn-primary btn-table-custom"><i class="fa fa-paste"></i>粘贴全部医嘱</button>
+					        	</div>
+					        	<!--div class="col-xs-2 col-sm-2 col-md-2 form-group sel-div-custom">
+					        		<button type="button" v-on:click="TabNameDel()" class="btn btn-primary btn-table-custom"><i class="fa fa-trash-o"></i>删除用户默认明细</button>
+					            </div-->
+				        </div>
+				    </div>
+			    </div>
+			</div>
+			
+		</div>
+	</div>
+</div>

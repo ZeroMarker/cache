@@ -1,0 +1,115 @@
+<html>
+<head>
+<title>病历查看</title> 
+</head>
+<body style="width:100%; height:100%;" leftmargin="0" topmargin="0">
+ <script language="cache" runat="server">
+    
+    s SchemeID = $Get(%request.Data("SchemeID",1),"")
+    s MrItemID = $Get(%request.Data("MrItemID",1),"")
+    s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+    s Count = $Get(%request.Data("Count",1),"")
+    
+    s MREpisodeID = ##Class(DHCEPRFS.BL.BLMREpisode).GetMREpisodeIDByAdm(EpisodeID,"DHC")
+   	s VerItemsIDs = ""
+    if (MrItemID = "")
+    {
+	    //增加浏览默认方案，而不是取表中写死的方案
+	    s SchemeID = ##class(DHCEPRFS.BL.BLPrintScheme).GetSchemeIDByDefault("VIEW")
+	    s MREpisodeID = ##Class(DHCEPRFS.BL.BLMREpisode).GetMREpisodeIDByAdm(EpisodeID,"DHC")
+   	    s VersionID = ##class(DHCEPRFS.BL.BLMRVersion).GetMRVersionID(MREpisodeID,"0")
+    	s VerItemsIDs = ##class(DHCEPRFS.BL.BLPrintScheme).GetVerItemBySchemeIDString(SchemeID,VersionID)
+    }
+    else
+    {
+	    s VerItemsIDs = ##class(DHCEPRFS.BL.BLMRVerItem).GetVerItemByItemIDAndMRAdmID(MREpisodeID,MrItemID)
+    }
+    
+    s childPatNameList = "", childMRVerItemsIDList = ""
+    s childMREpisodeList = ##Class(DHCEPRFS.BL.BLMREpisode).GetChildByMRAdmID(MREpisodeID)
+    s childCount = $L(childMREpisodeList,"^")
+    for i=1:1:childCount
+    {
+	 	s childMREpisodeID = $p(childMREpisodeList,"^",1)
+       	quit:(childMREpisodeID="")    //遇到空值就退出?否则会导致前端看到的新生儿ID与数据不一致
+       	
+       	s childPatName = ##Class(DHCEPRFS.BL.BLMREpisode).GetPatName(childMREpisodeID)
+    	if (SchemeID '= "")
+    	{
+	    	s childVersionID = ##class(DHCEPRFS.BL.BLMRVersion).GetMRVersionID(childMREpisodeID,"0")
+    		s childVerItemsIDs = ##class(DHCEPRFS.BL.BLPrintScheme).GetVerItemBySchemeIDString(SchemeID,childVersionID)
+    	}
+    	else
+    	{
+	    	s childVerItemsIDs = ##class(DHCEPRFS.BL.BLMRVerItem).GetVerItemByItemIDAndMRAdmID(childMREpisodeID,MrItemID)
+    	}
+    	
+    	if (i = 1)
+    	{
+	    	s childPatNameList = childPatName
+	    	s childMRVerItemsIDList = childVerItemsIDs
+    	}
+    	else
+    	{
+	    	s childPatNameList = childPatNameList_"^"_childPatName
+	    	s childMRVerItemsIDList = childMRVerItemsIDList_"|"_childVerItemsIDs
+    	}
+    }
+    
+    s DataServiceUrl = ##class(web.DHCEPR).GetServiceURL()
+    s CodeBase = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("RegPDFViewerPath")
+	s DBVersion = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBVersion")
+	s DBUserPassword = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBUserPassword")
+</script>
+<object style="width:100%; height:90%;" id="objPDF" classid="clsid:3C7CDA10-1178-4c80-BDB0-A49955500094" codebase="https://172.19.19.82/imedical/web/addins/client/PDFViewer.cab#version=2017,6,1"></object>
+   <script type = "text/javascript">
+	  var DBVersion = '#(DBVersion)#';
+	  var DBUserPassword = '#(DBUserPassword)#';
+      var CodeBase = '#(CodeBase)#';
+      var VerItemsIDs = '#(VerItemsIDs)#';
+      var EpisodeID = '#(EpisodeID)#';
+      var SchemeID = '#(SchemeID)#';
+      var MREpisodeID = '#(MREpisodeID)#';
+      var DataServiceUrl = '#(DataServiceUrl)#';
+      
+      var childMREpisodeList = '#(childMREpisodeList)#';
+      var childPatNameList = '#(childPatNameList)#';
+      var childMRVerItemsIDList = '#(childMRVerItemsIDList)#';
+        
+      var count = '#(Count)#';
+      var obj = document.getElementById("objPDF");
+      if (SchemeID == "")
+      {
+	      obj.ShowLeftNavg(false);
+	      obj.ShowBottomNavg(false);
+	  }
+	  else
+	  {
+		  obj.ShowLeftNavg(false);
+	      obj.ShowBottomNavg(true);  //显示底部导航栏
+	  }
+	  obj.ShowDowloadError(true);
+	  
+	  if ((DBVersion == "2015") || (DBVersion == "2016"))
+	  {
+		  obj.DBUserPassword(DBVersion, DBUserPassword);
+	  }
+	  
+	  obj.InitParamMr1(VerItemsIDs, MREpisodeID, DataServiceUrl,count);
+      
+      
+      if (childMREpisodeList != "")
+      {
+	      var arrMREpisode = childMREpisodeList.split("^");
+	      var arrPatName = childPatNameList.split("^");
+	      var arrchildMRVerItemsID = childMRVerItemsIDList.split("|");
+	      for (i = 0; i < arrMREpisode.length; i++)
+	      {
+		      obj.AddByMREpisode(arrchildMRVerItemsID[i], arrMREpisode[i], DataServiceUrl, arrPatName[i]);
+	      }
+      }
+      
+  </script>
+</body>
+ 
+</html>

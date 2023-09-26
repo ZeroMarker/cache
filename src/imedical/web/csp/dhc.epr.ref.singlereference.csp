@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML xmlns="http://www.w3.org/1999/xhtml">
+<!--屏蔽掉IE6.0页面上加载的图片上面自动出现的保存图标-->
+<META HTTP-EQUIV="imagetoolbar" CONTENT="no"/>
+<HEAD>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	if ($g(%session.Data("LOGON.USERID")) = "")
+	{
+		s rtn = ##Class(websys.SessionLogon).Logon()
+		s %response.ServerSideRedirect = "dhc.epr.ref.singlereference.csp"
+	}
+	q 1
+	</csp:method>
+
+	<TITLE>唯一模板病历引用</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/ux_VerticalTabPanel.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/form.css"/> 
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	<style type="text/css">
+ 		.x-tree-node .hintnode span{color:red;font-weight:bolder;cursor:default;}
+ 		#lblHint { font-size:10pt; color:red; position:relative; left:30px; top:5px; }
+ 		#loading-mask{ position:absolute; left:0; top:0; width:100%; height:100%; z-index:20000; background-color:white; }
+		#loading { position:absolute; left:45%; top:40%; padding:2px; z-index:20001; height:auto; }
+		#loading img { margin-bottom:5px; }
+		#loading .loading-indicator{ background:white; color:#555; font:bold 13px tahoma,arial,helvetica; padding:10px; margin:0; text-align:center; height:auto; }
+ 		ul.navbar {text-align:center; margin-top:10px;}
+ 		ul.navbar li { list-style:none; width:140px; height:23px; border: solid 1px black; margin:10px 5px 5px 10px; background-color:#00EEFF; float:left; }
+		ul.navbar li a { text-decoration:underline; display:block; font-size:10pt; color:blue; line-height:23px; }
+		ul.navbar li a:link { text-decoration: underline; display:block; font-size:10pt; color:blue; line-height: 23px; }
+ 		ul.navbar li a:visited { text-decoration: none; color: #000000; }
+ 		ul.navbar li a:hover { color: #FFFFFF; background-color:#FF0000; }
+ 		ul.navbar li a:active { text-decoration: none; }
+ 	</style>
+ 	<script language="cache" runat="server">
+ 		s userID = %session.Get("LOGON.USERID")
+	 	s userName = %session.Get("LOGON.USERNAME")
+		s ctLocID 	  = %session.Get("LOGON.CTLOCID")
+		s ssGroupID   = %session.Get("LOGON.GROUPID")
+  		s patientID = $g(%request.Data("PatientID",1),"")
+ 		s admitType = $g(%request.Data("AdmitType",1),"")
+  		s episodeID = $g(%request.Data("EpisodeID",1),"")
+  		s instanceID = $g(%request.Data("InstanceID",1),"")
+  		s templateID = $g(%request.Data("TemplateID",1),"")
+  		s templateDocID = $g(%request.Data("TemplateDocID",1),"")
+  		s prtTemplateID = $g(%request.Data("PrintTemplateID",1),"")
+  		s prtTemplateDocID = $g(%request.Data("PrintTemplateDocID",1),"")
+  		s:(patientID = "") patientID = ##Class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+  		s patientName = $p($g(^PAPER(patientID,"ALL")),"^",1)
+  	</script>
+  	<script language="javascript">
+  		var chkAdmType = '';
+  		var chkAdmDate = '';
+  		var chkAdmTime = '';
+  		var chkDiagnos = '';
+  		var chkEpisodeID = '';
+  		var refType = 'Single';
+  		var userID = '#(userID)#';
+  		var userName = '#(userName)#';
+  		var ctLocID = '#(ctLocID)#';
+  		var ssGroupID = '#(ssGroupID)#';
+  		var patientID = '#(patientID)#';
+  		var admitType = '#(admitType)#';
+  		var episodeID = '#(episodeID)#';
+  		var instanceID = '#(instanceID)#';
+  		var patientName = '#(patientName)#';
+  		var templateID = '#(templateID)#';
+  		var templateDocID = '#(templateDocID)#';
+  		var prtTemplateID = '#(prtTemplateID)#'
+		var prtTemplateDocID = '#(prtTemplateDocID)#';
+  	</script>  	
+</HEAD>
+<BODY oncontextmenu="return false;">
+	<div id="loading-mask"></div>   
+  	<div id="loading">
+    	<div class="loading-indicator">
+          	<img src="../scripts/epr/Pics/loading.gif" width="16" height="16" style="margin-right:8px;" align="absmiddle"/>Loading...
+    	</div>
+  	</div>
+	<!--<div id='mainDiv' style="width:90%; height:100%"></div>-->
+	<script type="text/javascript" src="../scripts/epr/js/eprReferenceCommon.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprReferenceMethod.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprReference.js"></script>
+</BODY>
+</HTML>
+<script language="javascript">
+	setTimeout(function(){   
+		Ext.get('loading').remove();
+		Ext.get('loading-mask').fadeOut({remove:true});
+	}, 2000);
+</script> 

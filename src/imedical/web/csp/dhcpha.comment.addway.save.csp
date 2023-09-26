@@ -1,0 +1,73 @@
+<script language="cache" runat="server">
+
+    //执行动作
+   	s action = $Get(%request.Data("action",1))
+   
+    
+	//增加点评方式安全组配置
+	i action = "AddWayItm" d
+	.s WayID= $Get(%request.Data("WayID",1))
+	.s GrpDr= $Get(%request.Data("GrpDr",1))
+	.s Input= $Get(%request.Data("Input",1))
+	.s retstr=##class(web.DHCSTCNTSADDWAY).AddItmWay(WayID,GrpDr,Input)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//获取点评方式的安全组配置
+	i action = "QueryWayItmDs" d
+	.s WayID= $Get(%request.Data("WayID",1))
+	.w ##class(web.DHCSTCNTSADDWAY).GetAllItmWay(WayID)
+	
+	
+	//删除点评方式的安全组配置
+	i action = "DelWayItmData" d
+	.s WayItmId= $Get(%request.Data("WayItmId",1))
+	.s retstr=##class(web.DHCSTCNTSADDWAY).DelItmWay(WayItmId)
+	.s retvalue=$p(retstr,"^",1)
+	.s retinfo=$p(retstr,"^",2)
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+		///增加点评方式
+	i action = "AddWay" d
+	.s WayCode=$Get(%request.Data("WayCode",1))
+	.s WayDesc=$Get(%request.Data("WayDesc",1))
+	.s WayActive=$Get(%request.Data("WayActive",1))
+	.s OtherStr=$Get(%request.Data("OtherStr",1))
+	.s ret=##class(web.DHCSTCNTSADDWAY).AddWay(WayCode,WayDesc,WayActive,OtherStr)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+		
+	
+    ///修改点评方式
+	i action = "UpdWay" d
+	.s WayCode=$Get(%request.Data("WayCode",1))
+	.s WayDesc=$Get(%request.Data("WayDesc",1))
+	.s WayActive=$Get(%request.Data("WayActive",1))
+	.s WayID=$Get(%request.Data("WayID",1))
+	.s OtherStr=$Get(%request.Data("OtherStr",1))
+	.s ret=##class(web.DHCSTCNTSADDWAY).UpdWay(WayCode,WayDesc,WayActive,WayID,OtherStr)
+	.s retvalue=$p(ret,"^",1)
+	.s retinfo=$p(ret,"^",2)
+	.i retinfo="" s retinfo=retvalue
+	.w "{retvalue:'"_retvalue_"',retinfo:'"_retinfo_"'}"
+	
+	
+	//获取点评方式集合(全部)
+	i action = "QueryWayDs" d
+	.w ##class(web.DHCSTCNTSADDWAY).QueryWayDs()
+	
+	
+	//获取点评方式集合(激活)
+	i action = "QueryActiveWayDs" d
+	.s WayType=$Get(%request.Data("WayType",1))
+	.s ^tlq("WayType")=WayType
+	.w ##class(web.DHCSTCNTSADDWAY).QueryActiveWayDs(WayType)
+	
+	
+	
+</script>

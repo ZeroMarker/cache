@@ -1,0 +1,57 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html XMLNS=TRAK>
+<head>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</head>
+
+<body style="margin-left:10px;margin-right:10px;">
+<server>
+
+	//Log 56894
+ n ItemID,Dose,UOM,Frequency,Duration,Quantity,Route,RouteOfAdmin,DrugDetails,df,df1,df2,df3,ind,Qty
+ s (ItemID,Dose,UOM,Frequency,Duration,Quantity,Route,RouteOfAdmin,DrugDetails,df,df1,df2,df3,ind,Qty)=""
+ s ItemID=%request.Get("ItemID")
+ i ItemID'="" d
+ . s df=$p($g(^ARCIM(+ItemID,1,1)),"^",12)
+ i df'="" d
+ . s df1=$g(^PHCD(+df,"DF",+$p(df,"||",2),1))
+ . s df2=$g(^PHCD(+df,"DF",+$p(df,"||",2),2))
+ . s df3=$g(^PHCD(+df,"DF",+$p(df,"||",2),3))
+ . s Frequency=$p(df1,"^",4)
+ . s Duration=$p(df1,"^",8)
+ . s ind=$o(^PHCD(+df,"DF",+$p(df,"||",2),"EQ",0))
+ . i ind'="" d
+ . . s Dose=$p(^(ind),"^",3) 
+ . . i Dose="" s Dose=$p(^(ind),"^",2) 
+ . . s UOM=$p(^(ind),"^") 
+ . i UOM="" s UOM=$p(df2,"^",4)
+ . i Dose="" s Dose=$p(df2,"^",5)
+ s Route=$p(df3,"^",9)
+ s RouteOfAdmin=$p(df3,"^",12)
+ s Qty=$$calcqty^COEOrdItem1(df,Dose,Frequency,Duration)
+ i Dose'="" d %request.Set("Dose",Dose)
+ i UOM'="" d %request.Set("UOM",UOM)
+ ;Log 64888 PeterC 18/09/07
+ i $g(ItemID)'="",$$ordertype^COEOrdItem(ItemID)="X" d
+ . s Frequency=$p($g(^ARCIM(+ItemID,1,8)),"^",17)
+ . s Duration=$p($g(^ARCIM(+ItemID,1,8)),"^",16)
+ i Frequency'="" d %request.Set("Frequency",Frequency)
+ i Duration'="" d %request.Set("Duration",Duration)
+ i Route'="" d %request.Set("Route",Route)
+ i RouteOfAdmin'="" d %request.Set("RouteOfAdmin",RouteOfAdmin)
+ i Qty'="" d %request.Set("Quantity",Qty)
+ ;s ^ZBOC($zn,"vals")=Dose_"*"_UOM_"*"_Frequency_"*"_Duration_"*"_Quantity_"*"_Route_"*"_RouteOfAdmin_"*"_DrugDetails
+
+</server>
+
+<TRAK:COMPONENT id='MRClinicalPathways.OrderDetails' hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</body>
+</html>

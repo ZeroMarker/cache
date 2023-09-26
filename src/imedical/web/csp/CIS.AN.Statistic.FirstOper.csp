@@ -1,0 +1,293 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>首台手术统计</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+     	<form id="conditionForm">
+    		<label style="padding-left:5px;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:5px;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
+    		<!--<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-excel'">导出</a>-->
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false ">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		var hasSevenOperSeq = false;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+	    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: false,
+        		border:false,
+        		toolbar: "#dataTools",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.WorkStatistics",
+            		QueryName: "FirstOperTime",
+            		ArgCnt: 2
+        		},
+        		columns: [[{
+                    field: "OperDate",
+                    title: "手术日期",
+                    width: 100
+                },
+                {
+                    field: "WeekdayName",
+                    title: "星期",
+                    width: 60
+                },
+                {
+                    field: "Time",
+                    title: "开台时间",
+                    width: 100
+                },
+                {
+                    field: "PatDeptDesc",
+                    title: "科室",
+                    width: 100
+                },
+                {
+                    field: "Patient",
+                    title: "患者",
+                    width: 120
+                },
+                {
+                    field: "WardBed",
+                    title: "病区床位",
+                    width: 120,
+                    hidden: true
+                },
+                {
+                    field: "MedcareNo",
+                    title: "住院号",
+                    width: 80
+                },
+                {
+                    field: "OperDesc",
+                    title: "手术名称",
+                    width: 240
+                },
+                {
+                    field: "SurgeonDesc",
+                    title: "手术医生",
+                    width: 60
+                },
+                {
+                    field: "AsstDesc",
+                    title: "手术助手",
+                    width: 100
+                },{
+                    field: "UnplannedSurgery",
+                    title: "二次手术",
+                    width: 60,
+                    formatter:function(value,row,index){
+	                    var result="";
+	                    if(value=="Y"){
+		                    return "<span class='hisui-tooltip' title='首次手术：<br>"+row.UnplannedSurgeryNote+"'>是</span>"
+	                    }
+	                    return "否";
+                    }
+                },{
+                    field: "SourceTypeDesc",
+                    title: "类型",
+                    width: 60
+                },{
+                    field: "TheatreInDT",
+                    title: "入室时间",
+                    width: 120
+                },{
+                    field: "TheatreOutDT",
+                    title: "离室时间",
+                    width: 120
+                },{
+                    field: "AnaStartDT",
+                    title: "麻醉开始时间",
+                    width: 120
+                },{
+                    field: "AnaFinishDT",
+                    title: "麻醉结束时间",
+                    width: 120
+                }, {
+                    field: "OperStartDT",
+                    title: "手术开始时间",
+                    width: 120
+                },{
+                    field: "OperFinishDT",
+                    title: "手术结束时间",
+                    width: 120
+                },
+                {
+                    field: "AnaCareProv",
+                    title: "麻醉医护",
+                    width: 130
+                },
+                {
+                    field: "SurCareProv",
+                    title: "手术医护",
+                    width: 120,
+                    hidden: true
+                },
+                {
+                    field: "AdmReason",
+                    title: "费别",
+                    width: 100
+                },
+                {
+                    field: "OperStatusDesc",
+                    title: "手术状态",
+                    width: 80,
+                    hidden: true
+                }
+           	]],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	var datagrid = $("#data_grid");
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnExport").click(function(){
+	    	exportToExcel();
+    	});
+	});
+	
+	function exportToExcel() {
+    	var datagrid = $("#data_grid");
+    	var groups = datagrid.datagrid("groups");
+    	var groupLength = groups.length;
+    	var columns = datagrid.datagrid("options").columns[0];
+    	var columnLength = columns.length;
+    	var sheetRowCount = 3;
+    	var excelRow=0;
+    	
+    	var xlsExcel, xlsBook, xlsSheet;
+    	xlsExcel = new ActiveXObject("Excel.Application");
+    	xlsBook = xlsExcel.Workbooks.Add();
+
+    	for (var k = 0; k < groupLength; k++) {
+        	exportGroup(groups[k]);
+    	}
+
+    	xlsExcel.Visible = true;
+    	//xlsSheet.PrintPreview;
+    	//xlsSheet.PrintOut(); 
+
+    	function exportGroup(group) {
+        	var rows = group.rows;
+        	var rowLength = rows.length;
+        	
+			var date=new Date();
+			var year=group.value.substr(0,4);
+			year=Number(year);
+			var month=group.value.substr(5,2);
+			month=Number(month);
+			
+			date.setYear(year);
+			date.setMonth(month-1);
+			date.setDate(0);
+			var dayStart=date.getDay();
+			
+        	var startWeekDay=0;
+
+        	var row, field;
+        	for (var i = 0; i < rowLength; i++) {
+            	row = rows[i];
+            	excelRow++;
+            	var day=dayStart;
+         	
+         		addSheet(group.value,row.Nurse);
+            	for (var j = 1; j < columnLength; j++) {
+                	column = columns[j];
+                	field = column["field"];
+                	excelRow ++;
+                	day ++;
+                	if(j<16)
+                	{
+                		xlsSheet.cells(excelRow, 1) = column["title"];
+                		xlsSheet.cells(excelRow, 2) = row[field] || "";
+                		if(day % 7==6 || day % 7==0)xlsSheet.range(xlsSheet.cells(excelRow, 1), xlsSheet.cells(excelRow, 3)).interior.colorIndex = 39;
+                	}
+                	else
+                	{
+	                	xlsSheet.cells(excelRow - 15, 4) = column["title"];
+                		xlsSheet.cells(excelRow - 15, 5) = row[field] || "";
+                		if(day % 7==6 || day % 7==0)xlsSheet.range(xlsSheet.cells(excelRow - 15, 4), xlsSheet.cells(excelRow - 15, 6)).interior.colorIndex = 39;
+                	}
+            	}
+       		}
+    	}
+    
+    	function addSheet(month,nurseName)
+    	{
+    		xlsSheet = xlsBook.Sheets.Add();
+
+     		excelRow = 1;
+        	
+        	xlsSheet.cells(excelRow, 1) = "护士："+nurseName;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 1), xlsSheet.Cells(excelRow, 3)).Font.Size = 14;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 1), xlsSheet.Cells(excelRow, 3)).MergeCells = 1;
+        	xlsSheet.cells(excelRow, 4) = month;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 4), xlsSheet.Cells(excelRow, 6)).Font.Size = 11;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow, 4), xlsSheet.Cells(excelRow, 6)).MergeCells = 1;
+
+			xlsSheet.Columns(1).ColumnWidth = 3;
+    		xlsSheet.Columns(2).ColumnWidth = 36;
+    		xlsSheet.Columns(3).ColumnWidth = 8;
+    		xlsSheet.Columns(4).ColumnWidth = 3;
+    		xlsSheet.Columns(5).ColumnWidth = 36;
+    		xlsSheet.Columns(6).ColumnWidth = 8;
+    		
+			xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 1), xlsSheet.Cells(excelRow + 16, 1)).Font.Size = 11;
+			xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 2), xlsSheet.Cells(excelRow + 16, 6)).Font.Size = 9;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 1), xlsSheet.Cells(excelRow + 16, 6)).Borders.Weight = 1;
+        	xlsSheet.Range(xlsSheet.Cells(excelRow + 1, 1), xlsSheet.Cells(excelRow + 16, 6)).Borders.LineStyle = 1;
+    }
+}
+	</script>
+</body>
+</html>

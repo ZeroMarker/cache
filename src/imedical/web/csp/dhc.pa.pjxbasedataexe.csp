@@ -1,0 +1,44 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s active= $Get(%request.Data("active",1))
+	s CycleDr = $Get(%request.Data("CycleDr",1))
+	s rowid = $Get(%request.Data("rowid",1))
+	s data = $Get(%request.Data("data",1))
+	s period = $Get(%request.Data("period",1))
+	s frequency = $Get(%request.Data("frequency",1))
+	s type = $Get(%request.Data("type",1))
+	s tieOff = $Get(%request.Data("tieOff",1))
+    s personDr = $Get(%request.Data("personDr",1))
+
+	i action="list"  d
+	.w ##class(dhc.pa.udata.uPJXBaseData).ListRec("",searchField,searchValue,sortField,sortDir,start,limit,CycleDr,period,frequency)
+
+	i action = "del" d
+	.s result = ##class(dhc.pa.udata.uPJXBaseData).Delete(CycleDr, period, frequency)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(dhc.pa.udata.uCycle).UpdateRec(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	
+</script>

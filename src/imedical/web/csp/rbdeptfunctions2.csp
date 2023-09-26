@@ -1,0 +1,240 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<BODY>
+<SERVER>
+ //s %response.TraceDump=1
+ n obj,j,LocID,tmp,tmp1,RBSessIDs,FirstClinicSessIDs,ResIDs,ResID,pref,dfrom,dto,dfrom2,dto2,dowStart,dowEnd,Resource,ResourceLoc,AllSessions,linkresID,linkDocID,linkRBSessIDs,btnData,linkDocIDs,x,CareProvID,continue,dt,FirstSessionDate,WorkID,eDate
+ s (LocID,RBSessIDs,tmp,tmp1,FirstClinicSessIDs,ResIDs,ResID,pref,dfrom,dto,dfrom2,dto2,dowStart,dowEnd,Resource,ResourceLoc,AllSessions,linkresID,linkDocID,linkRBSessIDs,btnData,linkDocIDs,x,CareProvID,continue,dt,FirstSessionDate,WorkID,eDate)=""
+ s LocID=%request.Get("LocID",%session.Get("LOGON.CTLOCID"))
+ s WorkID=%request.Get("WorkID")
+ s context=%request.Get("CONTEXT")
+ ;
+ d ##Class(web.RBResource).getDeptFuncPrefernce()
+ s pref=%request.Get("Preference1")
+ s extraClinics=%request.Get("ExtraClinics")
+ s clinlist=%request.Get("ClinList")
+ s useclinlist=%request.Get("UseClinList")
+ s AllSessions=%request.Get("AllSessions")
+ ;Log 41756 BC 27-1-2004 Allow to see all resources
+ s AllRes=%request.Get("AllRes")
+ s ShowCode=%request.Get("ShowCode")
+ s defaultCPID=%request.Get("defaultCPID")
+ s AllSessForDay=%request.Get("AllSessForDay")
+ // Log 29363 BC 21-10-2002
+ s eDate=%request.Get("eDate")
+ i eDate="" s eDate=+$h
+ ;
+ s LnkCarPrv=%request.Get("LnkCarPrv")
+ ;
+ //NB: default is pref=1 i.e. dfroms CareProviders and Sessions
+ ;s (dfrom,dto)=(+$h) 
+ ;s (dowStart,dowEnd)=($h+3#7+1) 
+ i eDate="" s (dfrom,dto)=(+$h)
+ i eDate'="" s (dfrom,dto)=eDate
+ i eDate="" s (dowStart,dowEnd)=($h+3#7+1) 
+ i eDate'="" s (dowStart,dowEnd)=(eDate+3#7+1) 
+ ;LOG 29626 BC 30-10-2002
+ i ((pref=3)||(pref=4)||(pref=5)) s dowEnd=7,dto=dfrom+(dowEnd-dowStart)
+ d ##Class(web.RBResource).getDeptFuncExtraClinics(extraClinics,dfrom,dto)
+ s extraClinics=$tr(%request.Get("ExtraClinicAllDetails"),",","^")
+ ;
+ w "<DIV id=ListResourcesForLoc>"
+ ;LOG 27666 BC 11-9-2002 Enable the use of Location lists to limit the clinics shown based on value of SESS_Clinic_DR
+ ;i useclinlist=1,clinlist'="" {
+ ;	s clinlist=##Class(web.CTLocationList).GetLocationIDs(clinlist)
+ ;	s RBSessIDs=$$getsessclin^CRBAppointment(clinlist,dfrom,dto)
+ ;	;LOG 29626 BC 30-10-2002
+ ;	;LOG 41756 BC 21-1-2004
+ ;	i (((pref=4)||(pref=5)||(pref=6)||(pref=7)) && (RBSessIDs'="")) {s RBSessIDs=##Class(web.RBResEffDateSession).ModifySessionList(RBSessIDs,pref) }
+ ;	s allsess=RBSessIDs
+ ;	s AllSessions=1
+ ;	i AllSessions {
+	; s FirstClinicSessIDs=RBSessIDs
+ 	;}
+ ;} else  { 
+ s ResIDs=$$getres^CRBAppointment(LocID,dfrom,dto)
+ i $l(extraClinics)>0 s ResIDs=ResIDs_"^"_extraClinics
+ i $e(ResIDs,1,1)="^" s ResIDs=$e(ResIDs,2,$l(ResIDs))
+ f j=1:1:$l(ResIDs,"^") {
+ 	s continue=1
+ 	s ResID=$p(ResIDs,"^",j)
+
+	//if this is an extraclinic then need to use the extra clinic start and end dates
+ 	s dfrom2=$s($p(ResID,"|",2)>0:$p(ResID,"|",2),1:dfrom)
+ 	i dfrom2<dfrom s dfrom2=dfrom
+	s dto2=$s($p(ResID,"|",3)>0:$p(ResID,"|",3),1:dto)
+	i dto2>dto s dto2=dto
+
+	//if this is an extra clinic check that it has a schedule booked between dates to and from
+	i ($p(ResID,"|",2)>0)  {
+		s continue=0,dt=""
+		f dt=dfrom2:1:dto2 i $d(^RBAS(+$p(ResID,"|",1),0,"DateSTime",dt)) s continue=1
+	}
+	i continue=1 s continue=##Class(web.RBApptSchedule).ResSchedPresent(+$p(ResID,"|",1),dfrom,dto)
+	i continue=1 {
+ 		s ResID=$p(ResID,"|",1)
+  		s obj=##Class(User.RBResource).%OpenId(ResID)
+	 	i obj {
+ 			i pref=2 s dto=dfrom+(7-dowStart)
+			s Resource=obj.RESDesc ;;not all resources are careproviders
+			;Log 41756 BC 27-1-2004 Allow to see all resources
+			i obj.RESCTLOCDR s ResourceLoc=obj.RESCTLOCDR.CTLOCDesc
+			s CareProvID=""
+			s RBSessIDs=$$getsess^CRBAppointment(ResID,dfrom2,dto2)
+			i obj.RESCTPCPDR {
+				s Resource=obj.RESCTPCPDR.CTPCPDesc
+				s ResourceLoc=obj.RESCTLOCDR.%Id()
+				s CareProvID=obj.RESCTPCPDR.%Id()
+	 			i LnkCarPrv,AllSessions'=1 { //Find if Careprovider is linked to a specialist
+					s linkDocID=""
+		 			f  {
+		 				S linkDocID=$O(^CTPCP(0,"LinkDoctor",CareProvID,linkDocID))
+	 					q:linkDocID=""
+	 					s linkDocIDs=linkDocIDs_linkDocID_","
+	 					s linkresID=$o(^RB("RES",0,"CTPCP",linkDocID,ResourceLoc,""))
+	 					i linkresID'="" {
+		 					s linkRBSessIDs=$$getsess^CRBAppointment(linkresID,dfrom2,dto2)
+		 					i linkRBSessIDs'="" {
+	 							i RBSessIDs'="" s RBSessIDs=RBSessIDs_"^"
+	 							s RBSessIDs=RBSessIDs_linkRBSessIDs
+	 						}
+	 					}
+		 			}
+		 		}
+	 			i obj.RESCTLOCDR {
+					s ResourceLoc=obj.RESCTLOCDR.CTLOCDesc
+					; 50806 Show Code instead of Desc if tickbox checked in preference setup.
+					i ShowCode=1 s ResourceLoc=obj.RESCTLOCDR.CTLOCCode
+	 			}
+		 		;LOG 29626 BC 30-10-2002
+		 		;LOG 41756 BC 21-1-2004
+		 		i (((pref=4)||(pref=5)||(pref=6)||(pref=7)) && (RBSessIDs'="")) {s RBSessIDs=##Class(web.RBResEffDateSession).ModifySessionList(RBSessIDs,pref) }
+		 		;Log 41756 BC 27-1-2004 Allow to see all resources
+		 		//i RBSessIDs'="" s btnData(ResID)=ResourceLoc_$c(1)_Resource_$c(1)_CareProvID_$c(1)_RBSessIDs
+			}
+			;Log 41756 BC 27-1-2004 Allow to see all resources
+			i ((RBSessIDs'="")&&((AllRes)||(obj.RESCTPCPDR))) s btnData(ResID)=ResourceLoc_$c(1)_Resource_$c(1)_CareProvID_$c(1)_RBSessIDs 
+ 			i RBSessIDs'="" {
+ 				i AllSessions {
+ 					i FirstClinicSessIDs'="" s FirstClinicSessIDs=FirstClinicSessIDs_"^"
+	 				s FirstClinicSessIDs=FirstClinicSessIDs_RBSessIDs
+ 				}
+ 				i AllSessions'=1 {
+ 					;54112 RC 14/03/06 Selection of a default care provider will always display that CP first.
+ 					i defaultCPID'="",defaultCPID=ResID,FirstClinicSessIDs="" s FirstClinicSessIDs=RBSessIDs
+					i defaultCPID="",FirstClinicSessIDs="" s FirstClinicSessIDs=RBSessIDs
+ 				}
+ 				;
+ 				i FirstClinicSessIDs'="" {
+ 					s (currentsess,rescid,datechildsub,sesschildsub)=""
+ 					s currentsess=$p($g(FirstClinicSessIDs),"^",1),rescid=$p(currentsess,"||",1),datechildsub=$p(currentsess,"||",2),sesschildsub=$p(currentsess,"||",3)
+                	s FirstSessionDate=$p(^RB("RES",+rescid,"DATE",+datechildsub,"SESS",+sesschildsub),"^",2)
+  		        	s FirstSessionDate=($g(eDate))+(FirstSessionDate-($g(eDate)+3#7+1))
+ 				}
+			}
+ 			d obj.%Close()
+ 		}
+ 	}
+
+  }
+  s allsess=""
+  i $g(AllSessions)'=1 {
+  	k ^TMP("Web",$j)
+  	f  {
+  		s x=$o(btnData(x))
+  		q:x=""
+  		s (currentsess,datelogical,datechildsub,sesschildsub)=""
+        s currentsess=$p($p($g(btnData(x)),$c(1),4),"^"),datechildsub=$p(currentsess,"||",2),sesschildsub=$p(currentsess,"||",3)
+  		s datelogical=$p(^RB("RES",+x,"DATE",+datechildsub,"SESS",+sesschildsub),"^",2)
+  		s datelogical=(eDate)+(datelogical-(eDate+3#7+1))
+  		i datelogical="" s datelogical=+$h
+  		s ^TMP("Web",$j,($p($g(btnData(x)),$c(1),1)),($p($g(btnData(x)),$c(1),2)))=x
+  		; LOG 30934 RC 06/12/02 This allsess is used to do the find over all sessions on the RBAppointment.FindResDaySched page.
+  		; I put in the line of code but didn't set it up in the tasmanian worklist because I'm not sure if they really want it or
+  		; not...if they ever do, it is a simple matter of uncommenting this line...
+  		;s allsess=allsess_$p($g(btnData(x)),$c(1),4)_"*"
+  		;i (","_linkDocIDs)'[(","_$p($g(btnData(x)),$c(1),3)_",") w "<input type=""button"" value="""_$p($g(btnData(x)),$c(1),1)_": "_$p($g(btnData(x)),$c(1),2)_""" onclick=""getSessions('"_$p($g(btnData(x)),$c(1),4)_"','Y','"_datelogical_"')"">"
+  	}
+	  	f  {
+	  		s tmp=$o(^TMP("Web",$j,tmp))
+	  		q:tmp=""
+	  		s tmp1=""
+	  		f  {
+	  			s tmp1=$o(^TMP("Web",$j,tmp,tmp1))
+	  			q:tmp1=""
+	  			s x=^TMP("Web",$j,tmp,tmp1)
+	  			i (($g(btnData(x))'="")&&(","_linkDocIDs)'[(","_$p($g(btnData(x)),$c(1),3)_",")) w "<input type=""button"" value="""_$p($g(btnData(x)),$c(1),1)_": "_$p($g(btnData(x)),$c(1),2)_""" onclick=""getSessions('"_$p($g(btnData(x)),$c(1),4)_"','Y','"_datelogical_"')"">"
+	  		}
+	  	}
+  }
+  ;}
+  ;
+  s obj=##Class(websys.Component).OpenName("RBMessages")
+  i obj d obj.LoadTrans(),obj.%Close()
+  w "&nbsp;&nbsp<A HREF=""#"" id=""goToPreferences""><img SRC=""../images/websys/edit.gif""  BORDER=0>&nbsp"_$p(t("RB1"),"^",1)_"</A>"
+  w "</DIV>"
+</SERVER>
+<script Language="JavaScript">
+
+var FirstClinicSessIDs="#(FirstClinicSessIDs)#";
+var FirstSessionDate="#(FirstSessionDate)#";
+var WorkId="#(WorkID)#";
+var context="#(context)#";
+// Log 29363 BC 21-10-2002
+var effectDate="#(eDate)#";
+var AllSessForDay="#(AllSessForDay)#";
+// LOG 28355 BC 10-9-2002 Dynamically resize the Resource list
+if ((window.parent)) {
+	//alert("window.parent.document.body.rows ="+document.getElementById('ListResourcesForLoc').offsetHeight+',*');
+	if (document.getElementById('ListResourcesForLoc').offsetHeight<61) {
+	   window.parent.document.body.rows=document.getElementById('ListResourcesForLoc').offsetHeight+',*';
+	  } else {
+	  	window.parent.document.body.rows='60,*';
+	  }
+}
+var obj=document.getElementById("goToPreferences");
+if (obj) obj.onclick=goToPreferences;
+
+function getSessions(RBSessIDs,ButtonClicked) {
+	if (!top.frames['eprmenu'].RBSessIDs) ButtonClicked="Y"; //sometimes worklist tries to load before all of javascript on parent page is loaded
+	if (ButtonClicked=="Maybe" && top.frames['eprmenu'].RBSessIDs!="") ButtonClicked="Y"
+	if (ButtonClicked=="Y") {
+		top.frames['eprmenu'].RBSessIDs=RBSessIDs;
+		top.frames['eprmenu'].RBSessID="";
+	} else {
+		RBSessIDs=top.frames['eprmenu'].RBSessIDs;
+	}
+	// gets the first session (resc id, session id, date) for the chosen resource 
+	var sessAry=RBSessIDs.split("^");
+	var RBSessID=sessAry[0];
+	var rescAry=RBSessID.split("||");
+	var RescID=rescAry[0];
+	if (AllSessForDay==1) RBSessID="";
+    //alert(RescID+"^"+RBSessID+"^"+date);
+	websys_createWindow('websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.FindRescDaySched&RescID='+RescID+'&date='+effectDate+'&sessId='+RBSessID+'&WorkID='+WorkId+'&CONTEXT='+context+'&QuickAppt=1&TEVENTLIST=1','appointments','');
+	//websys_createWindow('websys.default.csp?WEBSYS.TCOMPONENT=RBResEffDateSession.List&RBSessIDs='+RBSessIDs,'sessions','');
+}
+
+function goToPreferences() {
+	websys_createWindow('websys.default.csp?WEBSYS.TCOMPONENT=RBDeptFuncPreferences.Custom'+'&CONTEXT='+context,'preferences','top=0,left=0,width=500,height=450,scrollbars=yes,resizable=yes');
+	return false;
+}
+
+getSessions(FirstClinicSessIDs,"Maybe");
+
+</script>
+
+</BODY>
+</HTML>
+

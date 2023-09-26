@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--opdoc.cardtypelist.csp HISUI卡类型列表弹出层--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.SelectedBtnCls{
+	background:#0063a7;
+}
+</style>
+<Server>
+s CardTypeList=%request.Get("CardTypeList")
+s ^tempscl("CardTypeList")=CardTypeList
+</Server>
+</head>
+<body style="BACKGROUND-COLOR:white;">
+	<input id="tmpCardTypeHidText" class="textbox" style="width:0px;border:0px;height:0px;"> <!--确保焦点在卡选择弹出界面-->
+	<div style="margin:10px;font-size:16px;">此卡包含多种卡类型,请选择:</div>
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			CardTypeList:"#(CardTypeList)#"
+		};
+		//页面加载完之后在赋值，防止事件未定义导致报错
+		$(function(){
+			$("#tmpCardTypeHidText").focus();
+			var list=ServerObj.CardTypeList;
+			var len=list.split("!").length;
+			var selIndex=0;
+			var html="";
+			for(var i=0;i<len;i++){
+				var oneData=list.split("!")[i].split("^");
+				var CardTypeId=oneData[0];
+				var cardDesc=oneData[1];
+				var CardNo=oneData[2];
+				var papmiNo=oneData[3];
+				var SecurityNo=oneData[4];
+				var id=CardTypeId+"-"+CardNo+"-"+cardDesc+"-"+SecurityNo
+				html +="	<div style='margin:5px auto;'><a class='hisui-linkbutton' style='width:100%;' id='"+id+"'>"+cardDesc+"</a></div>"
+			}
+			$("body").append(html);
+			$HUI.linkbutton(".hisui-linkbutton",{});
+			$($('.hisui-linkbutton')[0]).addClass("SelectedBtnCls");
+			$('.hisui-linkbutton').click(function(e){
+				$(".SelectedBtnCls").removeClass("SelectedBtnCls");
+				$("#"+e.currentTarget.id).addClass("SelectedBtnCls");
+				closeDialog();
+			})
+			document.onkeydown = Doc_OnKeyDown;
+			function Doc_OnKeyDown(e){
+				var keycode = websys_getKey(e);
+				if (keycode == 40) { //下
+					$(".SelectedBtnCls").removeClass("SelectedBtnCls");
+					selIndex=selIndex+1;
+					if (selIndex>(len-1)) selIndex=0;
+					$($('.hisui-linkbutton')[selIndex]).addClass("SelectedBtnCls")
+				}
+				if(keycode==38){ //上
+					$(".SelectedBtnCls").removeClass("SelectedBtnCls");
+					selIndex=selIndex-1;
+					if (selIndex<0) selIndex=len-1;
+					$($('.hisui-linkbutton')[selIndex]).addClass("SelectedBtnCls")
+				}
+				if(keycode==13){
+					closeDialog();
+				}
+			}
+			function closeDialog(){
+				var rtnInfo=$(".SelectedBtnCls")[0].id;
+				if (rtnInfo==""){
+					$.messager.alert("提示","请选择一种卡类型!");
+					return false;
+				}
+				window.parent.setSelCardType(rtnInfo);
+				window.parent.CloseCardTypeListDialog();
+			}
+			
+		});
+	</SCRIPT>
+	<!--script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OutPatientList.js"></script-->
+</body>
+</html>

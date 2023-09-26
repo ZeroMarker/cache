@@ -1,0 +1,38 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ n WINNAME,EpisMsg,OEOrdItemIDs,AdmDate,DischDate,OEORISttDat
+ s (WINNAME,EpisMsg,OEOrdItemIDs,AdmDate,DischDate,OEORISttDat)=""
+ s OEOrdItemIDs=%request.Get("OEOrdItemIDs")
+ s AdmDate=%request.Get("AdmDate")
+ s DischDate=%request.Get("DischDate")
+ s OEORISttDat=%request.Get("OEORISttDat")
+ s WINNAME=%request.Get("WINNAME")
+ s EpisMsg=##Class(web.OEOrdItem).CheckEpisodeDates(OEOrdItemIDs,AdmDate,DischDate,OEORISttDat)
+ i EpisMsg'="" d
+ .s EpisMsg=$tr(EpisMsg,$c(13,10),"; ")
+ .w "<script>"
+ .w "var detailFrame=window.open('','"_WINNAME_"');"
+ .w "var flagobj=detailFrame.document.getElementById(""dateflag"");"
+ .w "alert("""_EpisMsg_""");"
+ .w "if (flagobj) flagobj.value=""N"";"
+ .w "</script>"
+
+ q
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

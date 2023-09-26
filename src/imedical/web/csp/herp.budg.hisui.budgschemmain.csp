@@ -1,0 +1,278 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+	    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<TRAK:HEAD></TRAK:HEAD>
+		<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/herp/budgHisUI/common/css/budg.css" />
+</head>
+<BODY class="hisui-layout " >
+    <div class="x-separator" data-options="region:'north',headerCls:'panel-header-gray'"> 
+		<table style="border-collapse:separate; border-spacing:0px 10px;">
+			<tr>
+				<td class="padding-left-10">年度</td>
+				<td class="padding-both-10">
+					<select id="Yearbox" class="hisui-combobox combobox-width-177"/></select>
+				</td>
+				<td class="padding-left-10">方案类别</td>
+				<td class="padding-both-10">
+					<select id="SchemTypebox" class="hisui-combobox combobox-width-177"></select>	
+				</td>
+				<td class="padding-left-10">方案名称</td>
+				<td class="padding-both-10">
+					<input id="Schemfeild" class="hisui-validatebox textbox combobox-width-177"/>	
+				</td>
+				<td>
+				<a id="FindBn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+				</td>
+				</div>
+			</tr>
+		</table>
+	</div>
+	<div class="border-none" data-options="region:'center'" >
+		<table id="MainGrid" >
+		</table>
+	</div>
+	<!--创建方案明细窗口-->
+	<div id="DetailWin" class="hisui-window padding-10" data-options="closed:true,iconCls:'icon-w-edit'" >   
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="hisui-panel " data-options="region:'center',headerCls:'panel-header-blue panel-title'" style="border-left-width:1px;border-right-width:1px;border-top-width:1px;border-bottom-width:0px">
+				<table class="hisui-datagrid" id="DetailGrid" >		
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<!--批量添加明细窗口-->
+	<div id="batchadd" title="批量添加" class="hisui-window padding-both-10" data-options="closed:true, iconCls:'icon-w-batch-add'">
+	   <div class="hisui-layout"  data-options="fit:true" style="weight:680px">
+	     <div class="hisui-panel line-50-y" data-options="region:'north'" style="weight:680px" >
+	          <input type="hidden" id="Year3Box"  />
+	          <span class="padding-right-10">预算项类别</span>
+	          <select class="hisui-combobox combobox-width-177" id="TypeBox"  /></select>
+	          <span class="padding-both-10"></span>
+	          <span class="padding-right-10">上级科目</span>
+	          <select class="hisui-combobox combobox-width-177" id="SupercodeBox"  /></select>
+	          <span class="padding-both-10"></span>	     
+			  <a id="FindBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+		 </div>
+		 
+	     <div data-options="region:'center'" style="margin-top:1px" style="border-left-width:1px;border-right-width:1px;border-top-width:1px;border-bottom-width:0px">
+		      <table class="hisui-datagrid" id="BaDetailGrid"   >
+		      </table>
+	     </div>
+	    
+	     <div class="bottom-style"  data-options="region:'south'" style="margin:5px 0px 0px 0px;" >
+              <a id="BaAddSave" class="hisui-linkbutton width-70" >确定</a>
+	     </div>
+	  </div>
+	</div>
+	
+	
+	<!--批量明细窗口-->
+	<div id="batchsetting" title="批量" class="hisui-window" data-options="closed:true,iconCls:'icon-w-batch-add'">
+	   <div class="padding-10"  data-options="region:'center',headerCls:'panel-header-gray'">
+	     <form id="batchsetfm">
+	     <div class="maintext">	   
+			<table class="textleft" style="border-collapse:separate; border-spacing:0px 10px;">
+				<tr>
+				<td class="r-label">会计年度</td>
+				<td><input id="Year2box" class="textbox padding-left-10" style="width:171px;" disabled /></td>
+			    </tr>
+			    <tr>
+			    <td class="r-label" >科目类别</td>
+			    <td><select id="TypeCode" class="hisui-combobox combobox-width-177 padding-left-10"></select></td>
+				</tr>
+				<tr>
+				<td class="r-label" >上级科目</td>
+				<td><select id="Code" class="hisui-combobox combobox-width-177  padding-left-10"></select></td>
+				</tr>
+			    <tr>
+			    <td class="r-label">是否计算</td>
+			    <td><input class='hisui-checkbox' type="checkbox" id="IsCalcul" style="padding-left:5px" /></td>
+			    </tr>
+			 </table>
+			 <table class="textright" style="border-collapse:separate; border-spacing:0px 10px;">
+			    <tr>
+			    <td class="r-label">计算顺序</td>
+			    <td><input id="CalNo" class="textbox"  style="width:171px"/></td>
+			    </tr>
+			    <tr>
+			    <td class="r-label" >计算方法</td>
+			    <td><select id="CalMeth" class="hisui-combobox combobox-width-177"></select></td>
+			    </tr>
+			    <tr>
+			    <td class="r-label" >公式描述</td>
+			    <td><input id="Formula" class="textbox" style="width:171px;"/></td>
+			    <td><input id="FormulaCode" class="textbox" style="width:171px;" hidden/></td>
+                </tr>
+                <tr>
+                <td class="r-label">是否分解</td>
+                <td><input class='hisui-checkbox' type="checkbox" id="IsSplit"/></td>
+	            </tr>
+			 </table>	
+		</div>
+		</form>	
+	</div>
+			<div class="bottom-style"  data-options="region:'south'">
+				<a id="CopySave" class="hisui-linkbutton width-70" >确定</a>
+				<span Class="padding-right-10"></span>
+				<a id="CopyClose" class="hisui-linkbutton width-70" >关闭</a>
+			</div>
+	</div>
+	
+	<!--公式描述窗口-->  
+	<div id="formulawin" title="公式描述" class="hisui-window padding-10" data-options="closed:true,iconCls:'icon-w-paper'">
+	   <div class=" padding-10"  data-options="region:'center',headerCls:'panel-header-gray'">
+	     <form id="formulafm">
+	     <div align="center">	   
+			 <table align="center">
+				<tr>
+					<td>计算公式</td>
+					<td class="padding-left-10">
+						<textarea id="FormulaField" class="textarea" data-options="multiline:true" ></textarea>
+					</td>
+				</tr>
+			</table>
+			<table class=" padding-topbot-10 width-589" align="justify">
+				<tr>
+					<td>预算年度</td>
+					<td class="padding-both-10">
+			           <select id="fYearbox" class="hisui-combobox combobox-width-177"/></select>
+			       </td>
+			       <td class="width-74"></td>
+			       <td>项目类别</td>
+					<td class="padding-left-10">
+			           <select id="fItemTypebox" class="hisui-combobox combobox-width-177"/></select>
+			       </td>
+				</tr>
+				<tr>
+					<td>预算项目</td>
+					<td class="padding-both-10">
+			           <select id="fItembox" class="hisui-combobox combobox-width-177"/></select>
+			       	</td>
+			       	<td class="width-74"></td>
+					<td>经济科目</td>
+					<td class="padding-left-10">
+			           <select id="fEconomicItembox" class="hisui-combobox combobox-width-177"/></select>
+			       	</td>
+				</tr>
+				<tr>
+					<td>科室类别</td>
+					<td class="padding-both-10">
+			           <select id="fDeptTpyebox" class="hisui-combobox combobox-width-177"/></select>
+			       </td>
+			       <td class="width-74"></td>
+			       <td>预算科室</td>
+					<td class="padding-left-10">
+			           <select id="fDeptbox" class="hisui-combobox combobox-width-177"/></select>
+			       </td>
+				</tr>
+				<tr>
+					<td>报表模板</td>
+					<td class="padding-both-10">
+			           <select id="fReportTempletbox" class="hisui-combobox combobox-width-177"/></select>
+			       </td>
+			       <td class="width-74"></td>
+			       <td>报表明细</td>
+					<td class="padding-left-10">
+			           <select id="fReportTempletDetailbox" class="hisui-combobox combobox-width-177"/></select>
+			       </td>
+				</tr>	
+			</table>
+			</div>
+		</form>
+		
+		<div class="padding-10" id="formulabtn" data-options="region:'center',headerCls:'panel-header-gray'">
+			<table align="center" >
+				<tr>
+					<td><a href="#" class="hisui-linkbutton widthbtn" id="btn9">9</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn8">8</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn7">7</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn6">6</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn5">5</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn4">4</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn3">3</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn2">2</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn1">1</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn0">0</a></td>
+					<td><a href="#" class="hisui-linkbutton widthbtn" id="btn.">.</a></td>
+					<td class="padding-left-10"><a href="#" class="hisui-linkbutton" style="width:55px" id="btnCE">CE</a></td>
+				</tr>
+				<tr>
+					<td><a href="#" class="hisui-linkbutton widthbtn" id="btn{">{</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn}">}</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn[">[</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn]">]</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn(">(</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn)">)</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn+">+</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn-">-</a></td>
+			       	<td><a href="#" class="hisui-linkbutton widthbtn" id="btn*">*</a></td>
+					<td class="padding-both-10"><a href="#" class="hisui-linkbutton widthbtn" id="btn/">/</a></td>
+					<td><a href="#" class="hisui-linkbutton widthbtn" id="btn^">^</a></td>
+					<td class="padding-left-10"><a href="#" class="hisui-linkbutton" style="width:55px" id="btnC">C</a></td>
+				</tr>
+			</table>	
+		</div>
+	</div>
+			<div class="bottom-style"  data-options="region:'south'" >
+				<a id="FormulaSave" class="hisui-linkbutton width-74" >确认</a>
+				<span Class="padding-right-10"></span>
+				<a id="FormulaClose" class="hisui-linkbutton width-74" >取消</a>
+			</div>
+	</div>
+	
+	
+	<style>
+		.fdiv{
+			border:3px solid #40a2de
+		}
+		.textarea{
+			border-color:#40a2de;
+			background-color:#ffffff;
+			width:510px;
+			height:100px;
+		}
+	 	.widthbtn
+	 	{
+		 	width:35px
+		}
+	    .maintext
+        {
+            height: 190px;
+        }
+        .textright
+        {
+            float: right;
+            width: 45%;
+            height: 180px;
+           
+        }
+        .textleft
+        {
+            float: left;
+            width: 55%;
+            height: 180px;
+          
+        }
+	
+   </style>	
+   
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/extend.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/methods.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/formulacalculator.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/SessionAndUrl.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/common/js/FormFormulacalculator.js"></script>
+   
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/schemmain/schemmain.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/schemmain/detailfun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/schemmain/batchsettingfun.js"></script>
+	<script type="text/javascript" src="../scripts/herp/budgHisUI/makebg/schemmain/batchaddfun.js"></script>
+</BODY>
+</HTML>

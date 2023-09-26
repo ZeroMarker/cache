@@ -1,0 +1,292 @@
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<SCRIPT language=cache RUNAT=SERVER>
+	s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ 	s webIP=$P(setstr,"^",2)
+ 	s dllstr=webIP_"/dhcmg/DHCCNursePrintComm.dll#DHCCNursePrintComm.WebInterface"
+ 	s dllstr1=webIP_"/dhcmg/zxing.dll#zxing.WebInterface"
+    w "<OBJECT id=""DHCCNursePrintComm""  width=""0"" height=""0"" classid="""_dllstr_"""  IEWASTEXT></OBJECT>"
+ 	w "<OBJECT id=""zxing""  width=""0"" height=""0"" classid="""_dllstr1_"""  IEWASTEXT></OBJECT>"
+</SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcnuropexectable.css"></LINK>
+<script Language="JavaScript" SRC="../scripts/DHCNurOPExecNewOrderList.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/NURSE/DHCNUR/DHC.NURSE.OP.PRINTED.JS"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/DHCVisComputerMark.js"></script>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<body style=background-color:#EBF3FF >
+
+<SCRIPT language=javascript>
+	var serverOrderID=new Array();
+    serverOrderID[0]=1
+    var serverOrderData=new Array();
+    serverOrderData[0]=1
+    var countArray=[];
+    document.body.onload=BodyOnloadHandler;
+ </SCRIPT>
+<Server>
+w !," <input id='UpdateOrdGroup' name='UpdateOrdGroup' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCNurCom.UpdateOrdGroup"))_"'>"
+w !," <input id='UndoDisconOrder' name='UndoDisconOrder' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCNurCom.UndoDisconOrder"))_"'>"
+w !," <input id='ClientId' name='ClientId' type='hidden' value=''>"
+w !," <input id='TreatSave' name='TreatSave' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("User.DHCNurTreatQueue.Save"))_"'>"
+
+s wardId        =$g(%request.Data("wardId",1))
+s regNo         =$g(%request.Data("regNo",1))
+s userId        =$g(%request.Data("userId",1))
+s startDate     =$g(%request.Data("startDate",1))
+s endDate       =$g(%request.Data("endDate",1))
+s queryTypeCode =$g(%request.Data("queryTypeCode",1))
+s gap           =$g(%request.Data("gap",1))
+s locId         =$g(%request.Data("locId",1))
+s warddes       =$g(%request.Data("warddes",1))
+s admType       =$g(%request.Data("admType",1))
+s exeFlag       =$g(%request.Data("exeFlag",1))
+s disFlag       =$g(%request.Data("disFlag",1))
+s HospitalRowId =$g(%request.Data("HospitalRowId",1))
+//s startTime     =$g(%request.Data("startTime",1))
+//s endTime       =$g(%request.Data("endTime",1))
+s searchFlag    =$g(%request.Data("searchFlag",1))
+
+s rs=##class(%Library.ResultSet).%New("web.DHCNurCom:FindOrditem")
+//(wardId, regNo, userId, startDate, endDate, queryTypeCode, gap, locId, admType, exeFlag, HospitalRowId, startTime, endTime
+//s ^LYX("sss")=$lb(wardId, regNo, userId, $zdh(startDate,4), $zdh(endDate,4), queryTypeCode, gap, locId, admType, exeFlag, HospitalRowId, $zth(startTime,2), $zth(endTime,2))
+//d rs.Execute(wardId, regNo, userId, $zdh(startDate,4), $zdh(endDate,4), queryTypeCode, gap, locId, admType, exeFlag, HospitalRowId, $zth(startTime,2), $zth(endTime,2))
+d rs.Execute(wardId, regNo, userId, ##class(websys.Conversions).DateHtmlToLogical(startDate), ##class(websys.Conversions).DateHtmlToLogical(endDate), queryTypeCode, gap, locId, admType, exeFlag, HospitalRowId)
+s count=0
+s lcurrpos=10,maxheight=50,maxwidth=0,MostUrgent=0
+s onelinemaxnum=4,curlinenum=0,ifTranLine=0
+s bedhistory=0
+
+//w "<DIV>"
+w "<table>"
+w !," <td class='' noWrap><a href='#' id='executeOnly' name='executeOnly' class='i-btn'><img  style='border:0px #000' src='../images/uiimages/ok.png'>   执行</A></td>"
+w !," <td class='' noWrap><a href='#' id='CancelEx' name='CancelEx' class='i-btn' ><img  style='border:0px #000' src='../images/uiimages/undo.png'>  		撤销执行</A></td>"
+w !," <td class='' noWrap ><a href='#' id='PatInfoCard' name='PatInfoCard' class='i-btn' ><img style='border:0px #000' src='../images/uiimages/print.png'>信息卡打印</A></td>"
+w !," <td class='' noWrap ><a href='#' id='PrintTPQ' name='PrintTPQ' class='i-btn' ><img  style='border:0px #000' src='../images/uiimages/print.png'>  		瓶签打印</A></td>"
+//w !," <td class='' noWrap><div class='dhx_combo_box' style='width: 100%;'><input name='ClientList' tabindex='0' class='dhx_combo_input' id='ClientList' style='width: 100%;' type='text'><input name='formClientList' type='hidden' value='5'><input name='ClientList_new_value' type='hidden' value='false'><img class='dhx_combo_img' src='combo_select.gif'></div></td>"
+//w !," <td class='' noWrap><a href='#' id='btnTreatQueue' name='btnTreatQueue' class='i-btn i-btn-primary'  style='margin-left: 5px; float: left; display: block;'><img src='../images/uiimages/call.png' border='0'>排队</a></td>"
+w "</table>"
+//w "</DIV>"
+
+w "<DIV style=""position:absolute;"" id=""dhcnuropexectable"">",$c(13,10)
+K First
+while(rs.Next()){
+	s oeoriId=rs.GetData(33)
+	continue:oeoriId=""
+	s ordId=+oeoriId_"||"_$p(oeoriId,"||",2)
+	s oeordId=+oeoriId
+	s oeoriSub=$p(oeoriId,"||",2)
+	s seqNo=$p($g(^OEORD(+oeoriId,"I",$p(oeoriId,"||",2),11)),"^",39)   //seqNo
+	continue:seqNo'="" ///q 子医嘱
+	s arcimDesc=##class(Nur.NurseExcuteSheet).getOrderGroupArcimDesc(oeoriId,"")
+	//s arcimDesc=rs.GetData(9)
+	//操作用数据 存于 serverOrderData数组，
+	/*1:prtFlag, 2:regNo, 3:bedCode, 4:patName, 5:patIdentity, 6:age, 7:orcatDesc, 8:seqNo, 9:arcimDesc, 10:oecprDesc
+      11:ordStatDesc, 12:labNo, 13:doseQtyUnit, 14:phcfrCode, 15:phOrdQtyUnit, 16:phcinDesc, 17:notes, 18:execStat, 19:execDateTime, 20:execCtcpDesc
+  	  21:ctcpDesc, 22:disposeStatDesc, 23:reclocDesc, 24:sttDateTime, 25:xDateTime, 26:execXUserDesc, 27:prescNo, 28:price, 29:totalAmount, 30:execXDateTime
+      31:xCtcpDesc, 32:createDateTime, 33:oeoriId, 34:placerCode, 35:disposeStatCode, 36:tmpPrtFlag, 37:Durat, 38:placerNo, 39:skinTestDateTime, 40EpisodeID
+      41:specDesc, 42:tmpSeqNo, 43:Attention, 44:placerS, 45:ordDept, 46:diagnos"
+    */
+	s regNo=rs.GetData(2)
+	s bedCode=rs.GetData(3)
+	s patName=rs.GetData(4)
+	s execDateTime=rs.GetData(19)
+	s disposeStatCode=rs.GetData(35)
+	s curarcimDesc=rs.GetData(9)
+	s placerNo=rs.GetData(38)
+	s doseQtyUnit=rs.GetData(13)
+	s sttDateTime=rs.GetData(24)
+	s ordStatDesc=rs.GetData(11)
+	s oecprDesc=rs.GetData(10)
+	s execCtcpDesc=rs.GetData(20)
+	s tmpPrtFlag=rs.GetData(36)
+	s execStat=rs.GetData(18)
+	s EpisodeID=rs.GetData(40)
+	s phcinDesc=rs.GetData(16)
+	
+	s createDateTime=rs.GetData(32)
+	s phcfrCode=rs.GetData(14)
+	s ordDept=rs.GetData(45)
+	s doctor=rs.GetData(21)
+	s note=rs.GetData(17)
+	
+	s phOrdQtyUnit=rs.GetData(15)											 ;总量
+	s requestId=""
+	s useDateTimeInfo=""
+	//s requestId=##class(LIS.Service.BLD).GetRequestIdByOrderId(ordId)        ;add by ljk 2016-04-23 根据医嘱Id获取输血申请单Id
+	//i requestId'="" s useDateTimeInfo=##class(LIS.Service.BLD).GetOrderTransDateTime(ordId,"  ")
+	//e  s useDateTimeInfo=""
+	
+	i useDateTimeInfo'="" s useDate=$p(useDateTimeInfo,"  ",1),useTime=$p(useDateTimeInfo,"  ",2)
+	e  s useDate="",useTime=""
+	i $g(useDate)'="" s BXOrdStatus=##class(web.NurBloodBagRecive).GetOrderTransNotice(ordId,$g(useDate)) 
+	e  s BXOrdStatus=""
+	
+	i requestId'="" s transNoticeInfo=##class(web.NurBloodBagRecive).GetOrderTransNoticeInfo(ordId,$g(useDate))
+	e  s transNoticeInfo=""
+	
+	w !, "<script type=""text/javascript"">"
+	w !, "serverOrderID["_count_"]="_""""_""_""""
+	w !, "serverOrderData["_count_"]="_""""_execDateTime_"^"_disposeStatCode_"^"_curarcimDesc_"^"_placerNo_"^"_doseQtyUnit_"^"_sttDateTime_"^"_ordStatDesc_"^"_oecprDesc_"^"_execCtcpDesc_"^"_tmpPrtFlag_"^"_execStat_"^"_EpisodeID_""""       
+	w !, "countArray['"_oeoriId_"']="_count
+	w !,"<"_"/script>"
+	
+	i ($g(BXOrdStatus)="") d 
+	.i (tmpPrtFlag["T") d											
+	..i (disposeStatCode="UnPaid") d
+	...w "<DIV selectEnabled=1 class=""orderUnPaid"" id=""",oeoriId,""" "
+	..w "<DIV selectEnabled=1 class=""orderprt"" id=""",oeoriId,""" "        	; 输液已打印 (黄色)
+	.e  i (disposeStatCode="UnPaid") d										; 输液未收费 (天蓝色)
+	..w "<DIV selectEnabled=1 class=""orderUnPaid"" id=""",oeoriId,""" "
+	.e  d
+	..i (disposeStatCode="UnPaid") d
+	...w "<DIV selectEnabled=1 class=""orderUnPaid"" id=""",oeoriId,""" "
+	..i (disposeStatCode="Temp") d
+	...w "<DIV selectEnabled=1 class=""orderprt"" id=""",oeoriId,""" "		; 输液已打印 (黄色)
+	..w "<DIV selectEnabled=1 class=""order"" id=""",oeoriId,""" "			
+ 	
+ 	e  d
+ 	.i ($g(BXOrdStatus)="N") d												; 输血未配血 (黄色)
+ 	..w "<DIV selectEnabled=1 class=""orderBXN"" id=""",oeoriId,""" "
+ 	.e  i ($g(BXOrdStatus)="P") d											; 输血已配血 (绿色)	
+	..w "<DIV selectEnabled=1 class=""orderBXP"" id=""",oeoriId,""" "
+	.e  i ($g(BXOrdStatus)="F") d											; 输血已发血或正在输注 (蓝色)	
+	..w "<DIV selectEnabled=1 class=""order"" id=""",oeoriId,""" "
+	.e  i ($g(BXOrdStatus)="E") d											; 输血已输用 (灰色)	
+	..w "<DIV selectEnabled=1 class=""orderBXE"" id=""",oeoriId,""" "
+ 	
+ 	w "style=""left:",5+(ifTranLine*325),"px; top:",5+(curlinenum*185),"px; width:",320,"px; height:",180,"px; z-index:10;"
+ 	i execCtcpDesc'="" d
+ 	.w "background-color:#BEBEBE;"
+ 	w """ title=""",oeoriId_arcimDesc,""" >"
+
+ 	
+ 	
+ 	s oeoreSub=$p(oeoriId,"||",3)
+ 	s total=$o(^OEORD(oeordId,"I",oeoriSub,"X",""),-1)
+ 	s middleDesc=""
+ 	i (tmpPrtFlag["T") d
+ 	.s printUserDr=$p($g(^OEORD(oeordId,"I",oeoriSub,"X",oeoreSub,"NUR")),"^",4)
+ 	.s printUser=$p($g(^SSU("SSUSR",printUserDr)),"^",2)
+ 	.s middleDesc="打印:"_printUser
+ 	.s topColor="#BEBEBE"
+ 	.s middleColor="#FFFFC0"
+ 	.s bottomColor="#FBFAAE"
+ 	e  d
+ 	.s topColor="#FBFAAE"
+ 	.s middleColor="#FFFFC0"
+ 	.s bottomColor="#FBFAAE"
+ 	i execCtcpDesc'="" d
+ 	.s middleDesc=middleDesc_"&nbsp&nbsp&nbsp执行:"_execCtcpDesc
+ 	.s topColor="#BEBEBE"
+ 	.s middleColor="#BEBEBE"
+ 	.s bottomColor="#BEBEBE"
+ 	s totalDesc="共"_total_"袋 "
+ 	i $p(oeoriId,"||",3)'="" s ds="第"_oeoreSub_"袋 "
+ 	e  s ds=""
+ 	
+ 	
+    s oeordSttDate=$p($g(^OEORD(oeordId,"I",oeoriSub,"X",oeoreSub)),"^",1) 
+    s oeordDate=$p($g(^OEORD(oeordId,"I",oeoriSub,3)),"^",7)  
+    s oeoriQty=$p($g(^OEORD(oeordId,"I",oeoriSub,1)),"^",18)
+    s phcfrId=$p($g(^OEORD(oeordId,"I",oeoriSub,2)),"^",4)
+    s exexFre = ##class(web.DHCEMNurExe).GetExecPrice(oeoriId)
+    
+    i phcfrId'="" d
+    .s phcfrNum=$p($g(^PHCFR(phcfrId)),"^",2)
+    s freqNo=""
+    i ((oeordSttDate=oeordDate)&(+oeoriQty>0)) d
+    .s mode=oeoreSub#oeoriQty
+    .s:mode=0 mode=oeoriQty
+    .s freqNo=mode_"/"_oeoriQty
+    e  i ($g(phcfrNum)'="") d
+    .s mode=(oeoreSub-oeoriQty)#phcfrNum
+    .s:mode=0 mode=phcfrNum
+    .s freqNo=mode_"/"_phcfrNum
+    s freqNo=$p($g(exexFre),"^",4)_"/"_$p($g(exexFre),"^",3) 
+ 	w " <DIV class='desc' style='background-color:"_topColor_"' id='c"_oeoriId_"' nowrap "">"
+	w "<span style='color:red;font-size:16px'>&nbsp"_patName_"&nbsp&nbsp</span>"_sttDateTime_"&nbsp",phcinDesc,"&nbsp",phcfrCode,"&nbsp("_freqNo_")","&nbsp</DIV>",$c(13,10)
+	s selected=0
+	i execCtcpDesc'="" d
+	.s selected=1
+	
+	//i $d(First(ordId)) s selected=0 
+	//e  s First(ordId)=1,selected=1
+	
+	;i requestId'="" s selected=0         ;add by ljk 2016-04-23 申请单Id不为空的为备血医嘱，备血医嘱不需要打勾
+
+	;ljk 2016-04-23 <TABLE 增加节点以区分是备血医嘱还是输液医嘱 (requestId="_requestId_ 且只能加在最后 要不然输液医嘱的 requestId为空 会把 style=""width:100%;TABLE-LAYOUT:FIXED" 赋值给 requestId 这个节点)
+	w "<TABLE selected="_selected_" style=""width:100%;TABLE-LAYOUT:FIXED;"" id="""_oeoriId_""" count="""_count_""" title="""_""_""" border=0 cellpadding=0 cellspacing=0 requestId="_requestId_">",$c(13,10)
+		w "<tbody>"
+		;w "<TR>",ordDept," ",doctor,"</TR>"
+		;w "<TR>",note,"</TR>"
+		
+		s orderlistnum=$l(arcimDesc,"#")
+		i requestId="" d
+			.f l=1:1:orderlistnum d
+			..w "<TR><TD colspan=2>",$c(13,10)
+			..s curarcimDesc=$p(arcimDesc,"#",l)
+			..w "<SPAN>",curarcimDesc,"</SPAN>",$c(13,10)
+			..w "</TD></TR>"
+		e  w "<TR style='font:16px'>",arcimDesc_"  "_phOrdQtyUnit,"</TR>"
+		i useDateTimeInfo'="" w "<TR style='font:14px'>","用血时间:"_useDateTimeInfo,"</TR>"
+		i transNoticeInfo'="" w "<TR style='font:14px'>",transNoticeInfo,"</TR>"
+		w "</tbody>"
+	w "</TABLE>"
+	w "<div class='bottom' style='background-color:"_bottomColor_"'>"
+	_"<span class='bottomLeftDesc'>"_"医生:"_doctor_"</span>"
+	_"<span class='bottomMiddleDesc'>"_middleDesc_"</span>"
+	_"<span class='bottomRightDesc'>"_totalDesc_"&nbsp"_ds_"</span>"
+	_"</div>"
+	w "</DIV>",$c(13,10)
+ 	s ifTranLine=ifTranLine+1
+ 	i $p((ifTranLine/onelinemaxnum),".",2)="" d
+ 	.s curlinenum=curlinenum+1
+ 	.i ifTranLine=onelinemaxnum d
+ 	..s ifTranLine=0
+ 	..s maxwidth=maxwidth+100
+ 	s count=count+1
+ 	
+ }
+ w "</DIV><!--ward floorplan-->",$c(13,10)
+
+ w !,"<SCRIPT langauge='javascript'>"
+ w !,"document.writeln('<DIV id=""scrollie"" style=""top:'+("_maxwidth_")+'px;left:"_maxwidth_"px;width:1px;height:1px;position:absolute;"">&nbsp;</div>');"
+ w !,"</SCRIPT>",!!
+ w !,"<SCRIPT langauge='javascript'>"
+ w "document.body.onmousedown = TrakIt_onmousedown;",$c(13,10)
+ w "document.body.onmouseup = TrakIt_onmouseup;",$c(13,10)
+ w "document.body.onmousemove = TrakIt_onmousemove;",$c(13,10)
+ w "document.body.onkeypress = GotoShortcutMenu;",$c(13,10)
+ ;w "document.body.onload=BodyOnloadHandler;",$c(13,10)
+ w !,"</SCRIPT>"
+</Server>
+
+<SCRIPT language=javascript>
+
+	var queryTypeCode="#(queryTypeCode)#";
+	var searchFlag="#(searchFlag)#";
+	var exeFlag="#(exeFlag)#";  
+	session['WebIP']="#(webIP)#"; 
+	
+ </SCRIPT>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.listrows.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.List.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/websys.List.Tools.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/excelprint.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/dhtmlXCommon.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/dhtmlXCombo.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/DHCWeb.OPCommon.js"></script>
+<script Language="JavaScript" SRC="../SCRIPTS/DHCVisComputerMark.js"></script>
+</body>
+</html>

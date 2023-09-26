@@ -1,0 +1,62 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	
+	s action    = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir   = $Get(%request.Data("dir",1))
+	s start     = $Get(%request.Data("start",1))
+	s limit     = $Get(%request.Data("limit",1))	
+	s str       = $Get(%request.Data("query",1))
+	
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s userdr =  $Get(%request.Data("userdr",1)) // µÇÂ½ÓÃ»§ID
+	s checker =  $Get(%request.Data("checker",1))
+	s startdate=  $Get(%request.Data("startdate",1)) 
+	s enddate =  $Get(%request.Data("enddate",1))
+	s dept   =  $Get(%request.Data("dept",1))	
+	s title  =  $Get(%request.Data("title",1))
+	s AuthorName  =  $Get(%request.Data("AuthorName",1)) 
+	s FristAuthor =  $Get(%request.Data("FristAuthor",1))
+	s CorrAuthor =  $Get(%request.Data("CorrAuthor",1))
+	s ChkResult =  $Get(%request.Data("ChkResult",1))
+	s usercheckdr =  $Get(%request.Data("usercheckdr",1))
+	s view =  $Get(%request.Data("view",1))
+	
+	s jname =  $Get(%request.Data("jname",1))
+	s Type =  $Get(%request.Data("Type",1))
+
+	i action = "list" d
+	.w ##class(herp.srm.udata.uSRMAuditApplyPaper).List(sortField, sortDir, start, limit, startdate, enddate, dept, title, jname, FristAuthor,ChkResult, userdr,Type)
+	
+	i action = "deptList" d 
+	.w ##class(herp.srm.udata.uSRMCommon).DeptList(start, limit, str)
+	
+	i action = "applyerList" d
+	.w ##class(herp.srm.udata.uSRMCommon).UserList(start, limit, str)
+	
+	i action = "audit" d
+	.s result = ##class(herp.srm.udata.uSRMAuditApplyPaper).Audit(rowid,checker)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+    i action = "noaudit" d
+	.s result= ##class(herp.srm.udata.uSRMAuditApplyPaper).NoAudit(rowid, view, usercheckdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "GetUserdr" d
+	.s result = ##class(herp.srm.udata.uSRMCommon).GetSRMUserID(userdr)
+    .i result '= "NoOne!" d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

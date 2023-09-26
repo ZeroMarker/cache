@@ -1,0 +1,48 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ n EpisodeID,OEORIItmMastDR,WINNAME
+ s (EpisodeID,OEORIItmMastDR,WINNAME)=""
+ s EpisodeID=%request.Get("EpisodeID")
+ s OEORIItmMastDR=%request.Get("OEORIItmMastDR")
+ s WINNAME=%request.Get("WINNAME")
+ ;s ^zpeterc($zn,"Standing")=EpisodeID_","_OEORIItmMastDR_","_WINNAME
+
+ &sql(	SELECT OEORI_RowId 
+	FROM SQLUser.OE_OrdItem, SQLUser.OE_Order
+	WHERE OEORD_Adm_DR=:EpisodeID
+	AND OEORD_RowId=OEORI_OEORD_ParRef
+	AND OEORI_Priority_DR->OECPR_Code='S'
+	AND OEORI_ItemStat_DR->OSTAT_Code NOT='D'
+	AND OEORI_ItmMast_DR->ARCIM_ItemCat_DR->ARCIC_OrderType='D'
+	AND OEORI_SttDat >= CURRENT_DATE)
+
+ i 'SQLCODE {
+ s existStanding=1
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var cobj=detailFrame.document.getElementById(""Standing"");"
+ w "if(cobj){"
+ w "	cobj.value="_existStanding_";"
+ w "}"
+ w "</script>"
+ }
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

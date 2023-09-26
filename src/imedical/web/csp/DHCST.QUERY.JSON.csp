@@ -1,0 +1,24 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+ ///creator:    yunhaibao
+ ///createdate: 2017-06-26
+ ///description:药库系统返回各类数据格式(ext\easyui等需要的json格式)
+ ///已支持:     easyui comboxbox        
+	s $ZT="JsonErrorRecord^DHCSTERROR"
+	/// 类名
+	s className=$g(%request.Data("ClassName",1))
+	/// 方法名
+	s queryName=$g(%request.Data("QueryName",1))
+	/// 使用插件名(EasyUI.ComboBox)
+	s plugin=$g(%request.Data("Plugin",1))
+	/// 参数(以|@|分隔)
+	s strParams=$g(%request.Data("StrParams",1))
+	/// 插件默认的查询参数,例EasyUI的排序分页参数
+	i plugin["EasyUI" && $d(%request.Data("q",1)) d
+	.s strParams=%request.Data("q",1)
+	s pluginParams=""
+	i plugin="EasyUI.DataGrid" d
+	.s pluginParams=$g(%request.Data("page",1))_"^"_$g(%request.Data("rows",1))_"^"_$g(%request.Data("sort",1))_"^"_$g(%request.Data("order",1))
+	w ##class(web.DHCST.Common.QueryToJson).Execute(plugin, className, queryName, strParams,pluginParams)
+	q ""	
+</SERVER>

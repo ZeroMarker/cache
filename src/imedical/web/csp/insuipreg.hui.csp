@@ -1,0 +1,341 @@
+<!-- 
+ * FileName: insuipreg.hui.csp
+ * Creator: DingSH
+ * Date: 2019-04-19
+ * Description: 医保登记
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
+<html>
+<head>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<title>	医保登记 </title>
+<HISUI/>
+<DHCBILL/>
+</head>
+<server>
+	s ArgPapmiNo=%request.Get("PapmiNo") ;//zhangmingchao
+	s ArgAdmDr=%request.Get("AdmDr")    ; //zhangmingchao
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_ADMINFO")
+</server>
+<script type="text/javascript" >
+	var ArgPapmiNo='#(ArgPapmiNo)#'  //zhangmingchao
+	var ArgAdmDr='#(ArgPapmiNo)#'    //zhangmingchao
+</script>
+<body style="padding:10px">
+<div class="hisui-layout" fit="true" >  		
+  <div id="north" data-options="region:'north',border:false" style="height:34px;paading:0px 0px 10px 10px">
+       <table border="0" style="margin: auto;">
+           <td style="text-align: center;"><p style="font-size:18px;">医&nbsp;&nbsp;保&nbsp;&nbsp;住&nbsp;&nbsp;院&nbsp;&nbsp;登&nbsp;&nbsp;记</p></td> 
+       </table>
+  </div>
+  
+  <div id="center" data-options="region:'center',border:false" >
+    
+	 <div class="hisui-layout" fit="true" >   
+	    <div id="north" data-options="region:'north',border:false" style='height:481px'>
+	    
+	     <!--st-PatInfoPenel基本信息-->
+	 <div id="PatInfoPanel" class="hisui-panel" title="患者基本信息"  data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-patient'">
+	    <table  class="search-table" style="width:100%;"  >				
+		  <tr>
+			<td class="r-label">登记号</td>
+			<td><input id="PapmiNo" class="hisui-validatebox textbox" data-options="required:true,placeholder:'请输入回车'"/></td>
+			<td class="r-label" >住院号</td>
+			<td><input id="MedicareNo" class="hisui-validatebox textbox" data-options="required:true,placeholder:'请输入回车'"/></td>
+			<td class="r-label" >姓名</td>
+			<td><input id="Name" class="textbox" readonly= "true"/></td>
+			<td class="r-label" >性别</td>
+			<td><input id="Sex" class="textbox" readonly= "true" style='width:60px'/></td>
+			<td class="r-label" >出生日期</td>
+			<td><input id="BDDT" class="textbox"/></td>
+			<td class="r-label" >年龄</td>
+			<td><input id="Age" class="textbox" readonly= "true" style="width:60px"/></td>
+			<td class="r-label" align="right" >身份证号</td>
+			<td><input id="PatID" class="textbox"/></td>
+		  </tr>
+		  <tr>
+			<td class="r-label">省</td>
+			<td><input id="CTProvinceName" class="textbox" readonly= "true"/></td>
+			<td class="r-label" >市</td>
+			<td><input id="CTCityName" class="textbox" readonly= "true"/></td>
+			<td class="r-label" >区(县)</td>
+			<td><input id="CTAreaName" class="textbox" readonly= "true"/></td>
+		  </tr>
+	    </table>
+     </div>
+	 <!--en-PatInfoPanel基本信息-->
+    <div style="padding:10px 0px 10px 0px">	
+       <!--st-AdmInfoPanel就诊信息-->
+	   <div id="InAdmInfoPanel" class="hisui-panel" title="患者就诊信息"  data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-patient-info'">
+	     <table class="search-table" style="width:100%;" >	
+	       <tr>
+	         <td class="r-label" >就诊记录</td>
+             <td colspan="3"><input id="AdmLst"  class="hisui-combogrid"  style="width:435px"/></td>
+	         <td class="r-label">收费类别</td>
+	         <td><input id="AdmReasonDesc" class="textbox"/></td>
+	         <td class="r-label" >入院科室</td>
+	         <td><input id="DepDesc" class="textbox"/></td>
+	         <td class="r-label" >入院日期</td>
+	         <td><input id="AdmDate" class="hisui-datebox textbox"/></td>
+	         <td class="r-label" align="right" ></td>
+	       </tr>	
+	       <tr>
+	         <td class="r-label" align="right" >诊断记录</td>
+	         <td colspan="3"><input id="DiagLst"  class="hisui-combogrid"  style="width:435px"/></td>
+	         <td class="r-label" align="right" >入院诊断编码</td>
+			 <td><input id="InDiagCode" class="textbox" readonly= "true"/></td>
+			 <td class="r-label" align="right" >入院诊断名称</td>
+			 <td><input id="InDiagDesc" class="textbox" readonly= "true"/></td>
+			 <td class="r-label" align="right" >入院时间</td>
+			 <td><input id="AdmTime" class="hisui-timespinner textbox"/></td>
+	       </tr>		
+	     </table>
+       </div>
+	<!--en-AdmInfoPanel就诊信息-->	
+    </div>
+    <!--st-InAdmInfoPanel医保信息-->
+    <div id="PatInfoPanel" class="hisui-panel" title="患者医保信息"  data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-knw-submit'" >
+	   <table class="search-table" style="width:100%;"  >	
+		  <tr>
+			 <td class="r-label" align="right" >医保类型</td>
+			 <td><input id="InsuType" class="hisui-combobox" style="width:126px" data-options="required:true"/></td>
+			 <td class="r-label" align="right" >医疗类别</td>
+			 <td><input id="InsuAdmType" class="hisui-combobox" style="width:126px" data-options="required:true"/></td>
+			 <td class="r-label" align="right" >医保诊断名称</td>
+			 <td><input id="InsuInDiagDesc" class="hisui-combogrid" style="width:122px"/></td>
+			 <td class="r-label" align="right" >医保诊断编码</td>
+			 <td><input id="InsuInDiagCode" class="textbox" readonly= "true" style="width:90px"/></td>
+			 <td class="r-label" align="right">治疗方式</td>
+			 <td><input id="ZLFS" class="hisui-combobox" style="width:137px"/></td>
+			 <td class="r-label" align="right" >补偿方式</td>
+			 <td><input id="BCFS" class="hisui-combobox" style="width:137px"/></td>
+		  </tr>
+		  <tr >
+			 <td class="r-label" align="right" >医保卡号</td>
+			 <td>
+				<input id="CardNo" class="textbox" style="width:120px"/>
+				<input id="NewCardNo" class="textbox" style="display:none;" > 
+			 </td>
+			 <td class="r-label" align="right" >医保号</td>
+			 <td><input id="InsuNo" class="textbox" style="width:120px"/></td>
+			 <td class="r-label" align="right" >人员类别</td>
+			 <td><input id="InsuPatType" class="textbox" style="width:115px"/></td>
+			 <td class="r-label" align="right" >待遇类别</td>
+			 <td><input id="dylb" class="textbox" style="width:90px"/></td>
+			 <td class="r-label" align="right" >医保就诊号</td>
+			 <td><input id="InsuAdmSeriNo" class="textbox" style="width:130px"/></td>
+			 <td class="r-label" align="right" >分中心</td>
+			 <td><input id="InsuCenter" class="textbox" style="width:130px" ></td>
+		  </tr>
+		  <tr>
+			 <td class="r-label" align="right" >险种类型</td>
+			 <td><input id="xzlx" class="textbox" style="width:120px"/></td>
+			 <td class="r-label" align="right" >登记状态</td>
+			 <td><input id="InsuActiveFlag" class="textbox" style="width:120px;color:red"/></td>
+			 <td class="r-label" align="right" >医保卡状态</td>
+			 <td><input id="InsuCardStatus" class="textbox" style="width:115px"/></td>
+			 <td class="r-label" align="right" >旧医保卡号</td>
+			 <td><input id="OldCardNo" class="textbox" style="width:90px"/></td>
+		  </tr>
+	   </table>
+       <!--st-医保相关操作-->
+	   <table align="center" style='padding:0px 0px 10px 20px'>
+		  <tr>
+		     <td style="padding:0px 0px 0px 10px;">
+			    <a id="btnInReadCard" href="#" class="hisui-linkbutton" iconCls="icon-w-card"  style="width:120px;"  onClick='InsuReadCard_onclick()'>读医保卡</a> 
+		     </td>
+		     <td style="padding:0px 10px 0px 10px;">
+		        <a id="btnReg" href="#" class="hisui-linkbutton" style="width:120px" data-options="iconCls:'icon-w-submit'" onClick='InsuIPReg_onclick()'>医保登记</a> 
+		     </td>
+	         <td style="padding:0px 10px 0px 10px;">
+		        <a id="btnRegCancle" href="#" class="hisui-linkbutton" style="width:160px" data-options="iconCls:'icon-w-cancel'" onClick='InsuIPRegCancel_onclick()'>取消医保登记</a> 
+		     </td>
+		     <td style="padding:0px 10px 0px 10px;"> 
+		        <a id="btnUpdInCardNo" href="#" class="hisui-linkbutton" style="width:145px" data-options="iconCls:'icon-w-update'" onClick='UpdINSUCardNo_onclick()'  >更新医保卡号</a> 
+		     </td>
+		     <td style="padding:0px 10px 0px 10px;">
+		       <a id="btnClear" href="#" class="hisui-linkbutton" style="width:120px" data-options="iconCls:'icon-w-clean'" onClick='Clear(1)'>清屏</a> 
+		     </td>
+		  </tr>
+	   </table>
+	   <!--ed-医保相关操作-->
+       </div>
+	<!--ed-InAdmInfoPanel医保信息-->
+	</div>	
+       <div id="north" data-options="region:'center',border:false" style='padding-top:9px'>
+          <div class="hisui-panel" title="医保登记记录" style="fit:true;align:'center'" data-options="headerCls:'panel-header-gray',iconCls:'icon-apply-adm'">
+		    <!--医保就诊记录-->
+		     <table id="inadmdg" class="hisui-datagrid"  data-options="headerCls:'panel-header-gray'" style='height:179px'></table>
+		   </div>
+        </div>
+     </div>
+   </div>
+   
+  	<!--st-医保就诊信息弹窗-->
+     <div id="InAdmDlg" >
+		 <div id="InAdmDPanel" class="hisui-panel"  style="fit:true;padding:10px 20px 20px 20px;border:0" data-options="modal:true">
+		     <table class="search-table"   >				
+		        <tr>
+			       <td class="r-label" align="right" > 医保姓名</td>
+			       <td><input id="FXString6" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >医保身份证号</td>
+			       <td><input id="FXString5" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >医保性别</td>
+			       <td><input id="FXString7" class="textbox" style="width:120px" readonly= "true"></td>
+			       <td class="r-label" align="right" >医保个人编号</td>
+			       <td><input id="FInsuId" class="textbox" style="width:120px" readonly= "true"></td>
+		        </tr>
+		        <tr>
+			       <td class="r-label" align="right" >医保卡号</td>
+			       <td><input id="FCardNo" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right">医保卡状态</td>
+			       <td><input id="FCardStatus" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >就诊类型</td>
+			       <td><input id="FAdmType" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >人员类型</td>
+			       <td><input id="FPatType" class="textbox" style="width:120px" readonly= "true"/></td>
+		        </tr>
+		        <tr>
+			       <td class="r-label" align="right" >医保就诊号</td>
+			       <td><input id="FAdmSeriNo" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >登记状态</td>
+			       <td><input id="FActiveFlag" class="textbox" style="width:120px;color:red" readonly= "true"/></td>
+			       <td class="r-label" align="right" >入院日期</td>
+			       <td><input id="FAdmDate" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >入院时间</td>
+			       <td><input id="FAdmTime" class="textbox" style="width:120px" readonly= "true"/></td>
+		        </tr>
+		        <tr>
+			       <td class="r-label" align="right" >入院登记人</td>
+			       <td><input id="FInsuUser" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >入院登记日期</td>
+			       <td><input id="FFunDate" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >入院登记时间</td>
+			       <td><input id="FFunTime" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >待遇类型</td>
+			       <td><input id="FXString7" class="textbox" style="width:120px" readonly= "true"/></td>
+		        </tr>
+		        <tr>
+			       <td class="r-label" align="right" >出院操作员</td>
+			       <td><input id="FOutUser" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >出院日期</td>
+			       <td><input id="FOutDate" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >出院时间</td>
+			       <td><input id="FOutTime" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >险种类型</td>
+			       <td><input id="FXString8" class="textbox" style="width:120px" readonly= "true"/></td>
+		        </tr>
+		        <tr>
+		           <td class="r-label" align="right" >就诊科室</td>
+			       <td><input id="FDeptDesc" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >单位名称</td>
+			       <td><input id="FCompany" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >参保地区</td>
+			       <td><input id="FStates" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >分中心</td>
+			       <td><input id="FCenter" class="textbox" style="width:120px" readonly= "true"/></td>
+		        </tr>
+		        <tr>
+		           <td class="r-label" align="right" >入院诊断编码</td>
+			       <td><input id="FXString1" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >入院诊断描述</td>
+			       <td><input id="FXString2" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >住院次数</td>
+			       <td><input id="FIpTimes" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >冲销流水号</td>
+			       <td><input id="FAdmCancelNo" class="textbox" style="width:120px" readonly= "true" ></td>
+		        </tr>
+		        <tr>
+                   <td class="r-label" align="right" >出院诊断编码</td>
+			       <td><input id="FXString3" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >出院诊断描述</td>
+			       <td><input  id="FXString4" class="textbox" style="width:120px" readonly= "true"/></td>
+			       <td class="r-label" align="right" >预留9</td>
+			       <td><input id="FXString9" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >预留10</td>
+			       <td><input id="FXString10" class="textbox" style="width:120px" readonly= "true"/></td>
+		        </tr>
+		        <tr>
+		          <td class="r-label" align="right" >预留1</td>
+			      <td><input id="FXFloat1" class="textbox" style="width:120px" readonly= "true"/></td>
+			      <td class="r-label" align="right" >预留2</td>
+			      <td><input id="FXFloat2" class="textbox" style="width:120px" readonly= "true" /></td>
+			      <td class="r-label" align="right" >预留3</td>
+			      <td><input id="FXFloat3" class="textbox" style="width:120px" readonly= "true"/></td>
+			      <td class="r-label" align="right" >预留4</td>
+			      <td><input id="FXFloat4" class="textbox" style="width:120px" readonly= "true"/></td>
+		        </tr>
+		        <tr>
+		           <td class="r-label" align="right" >预留11</td>
+		           <td><input id="FXString11" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >预留12</td>
+		           <td><input id="FXString12" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >预留13</td>
+		           <td><input id="FXString13" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >预留14</td>
+		           <td><input id="FXString14" class="textbox" style="width:120px" readonly= "true"/></td> 
+		        </tr>	
+		        <tr>
+		           <td class="r-label" align="right" >预留15</td>
+		           <td><input id="FXString15" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >预留16</td>
+		           <td><input id="FXString16" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right">预留17</td>
+		           <td><input id="FXString17" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >预留18</td>
+		           <td><input id="FXString18" class="textbox" style="width:120px" readonly= "true"></td> 
+		        </tr>	
+		        <tr>
+		           <td class="r-label" align="right" >预留19</td>
+		           <td><input id="FXString19" class="textbox" style="width:120px" readonly= "true"/></td>
+		           <td class="r-label" align="right" >预留20</td>
+		           <td colspan="5" ><input id="FXString20" class="textbox" style="width:582px" readonly= "true"/></td>
+		        </tr>
+	         </table>
+		</div>
+	</div>
+	<!--ed-医保就诊信息弹窗-->
+	<!--st-医保读卡弹窗信息-->
+    <div id="ReadCardDlBd" style="display:none;">
+		<div id="ReadCardPanel" class="hisui-panel"  style="fit:true;padding:10px 30px 20px 30px;border:0" data-options="modal:true">
+	       <table cellpadding="3" >
+	          <tr>
+	             <td class="r-label" style="padding:5px 4px 10px 0px">医保类型：</td>
+	             <td><input id="RdInsuTypeDesc" class="textbox" readonly= "true">
+	             <input id="RdInsuType" class="textbox" style="display:none;">
+		         </td>
+		      </tr>
+		      <tr>
+		         <td class="r-label" style="padding:5px 4px 10px 0px">行政区代码：</td>
+	             <td><input id="RdStates" class="textbox" ></td>
+		      </tr>
+	          <tr>
+		         <td class="r-label" style="padding:5px 4px 10px 0px">统筹区代码：</td>
+	             <td><input id="RdCenter" class="textbox" ></td>
+		     </tr>		
+	       </table>
+	       <table >
+	          <tr>
+		        <td style="align:center;padding:20px 20px 10px 30px" >
+		            <a id="btnRbd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" >生成</a>
+		        </td>
+			    <td style="align:center;padding:20px 20px 10px 0px" >
+		    	    <a id="btnRbC" href="#" class="hisui-linkbutton" style="padding:20px 10px 10px 10px" data-options="iconCls:'icon-w-close'" style="align:center;">关闭</a>
+			   </td>
+		      </tr>
+           </table>
+	    </div>					
+	</div>
+       <!--ed-医保读卡弹窗信息-->
+</div>
+<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+<script type="text/javascript" src="../scripts/insuipreg.hui.js" charset='GB18030'></script>
+<script type="text/javascript" src="../scripts/DHCINSUPort.js" charset='GB18030'></script>	
+</body>
+</html>

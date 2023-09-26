@@ -1,0 +1,422 @@
+<!--
+ * FileName: dhcpeireport.ygreport.csp
+ * Anchor: zhongricheng
+ * Date: 2020-04-09
+ * Description: 乙肝报告
+-->
+<!--
+ * 注意: 修改的时候尽量不用 px 使用 pt
+ * A4 size   595.44*841.68 pt    210*297 mm
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>
+
+<html>
+	<head>
+		<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+		<!--meta http-equiv="X-UA-Compatible" content="IE=5"/-->
+
+		<style>
+		.TableWidth {
+			width:485pt;
+		}
+		.TopB {
+			border-top: .5pt solid black;
+		}
+		.RightB {
+			border-right: .5pt solid black;
+		}
+		.BottomB {
+			border-bottom: .5pt solid black;
+		}
+		.LeftB {
+			border-left: .5pt solid black;
+		}
+		
+		.Base {
+			padding:1px;
+			color:black;
+			font-family:宋体;
+			vertical-align:middle;
+			font-size:12.0pt;
+			font-weight:400;
+			white-space:nowrap;
+		}
+		.BaseText {
+			font-size:12.0pt;
+			font-weight:500;
+			text-align:right;
+		}
+		.BaseValue {
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:center;
+			border-bottom:0.5pt solid black;
+		}
+
+		.CoverTitle {
+			font-family:宋体;
+			font-size:24.0pt;
+			font-weight:700;
+			text-align:center;
+			vertical-align:middle;
+		}
+		.CoverFoot {
+			font-size:14.0pt;
+			font-weight:400;
+			font-family:黑体;
+			text-align:center;
+			vertical-align:middle;
+		}
+
+		.InfoTitle {
+			font-size:15.0pt;
+			font-weight:700;
+			text-align:center;
+			background-color:#999;
+		}
+
+		.GenTextLT{
+			font-size:12.0pt;
+			font-weight:400;
+			text-align:left;
+			line-height:17pt;
+			padding:3pt 3pt 0 3pt;
+			white-space:normal;
+			word-wrap:break-word;
+			word-break:break-all;
+			vertical-align:top;
+		}
+		.GenDocText{
+			font-size:13.0pt;
+			font-weight:700;
+			text-align:right;
+		}
+		.GenDocValue{
+			font-size:13.0pt;
+			font-weight:400;
+			text-align:left;
+		}
+		</style>
+		<!-- 595.44*841.68 pt  210*297 mm-->
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			// http://127.0.0.1/imedical/web/csp/dhcpeireport.ygreport.csp?PatientID=631
+		
+			s (Name,Sex,Age,Married,IDCard,CompanyDesc,CompanyTel,Department,VIPLevel,CheckAdmDate,HPNo,RegNo,HospitalCode)=""
+			
+			s PAADM=$g(%request.Data("PatientID",1))
+			q:PAADM=""
+			
+			s UserID=$j_"^"_PAADM
+			s Flag=##Class(web.DHCPE.ReportOutToWeb).GetReportInfor(PAADM,UserID)
+			//Q:("1"'=Flag)
+			
+			s CurLocID=$P(^PAADM(PAADM),"^",4)
+			
+			//基本信息 name="BaseInfo" 
+			//姓名
+			s Name=$G(^TMPReport(UserID,"PatInfo","PatName"))
+			//性别
+			s Sex=$G(^TMPReport(UserID,"PatInfo","PatSex"))
+			//出生日期
+			s Birthday=$G(^TMPReport(UserID,"PatInfo","PatBirthday"))
+			//年龄
+			s Age=$G(^TMPReport(UserID,"PatInfo","PatAge"))
+			//婚姻状况
+			s Married=$G(^TMPReport(UserID,"PatInfo","Married"))
+			s:Married'="" Married=$p($g(^CT("MAR",Married)),"^",2)
+			//联系电话
+			s PatTel=$G(^TMPReport(UserID,"PatInfo","PatTel"))
+			//家庭地址
+ 			s PatAddress=$G(^TMPReport(UserID,"PatInfo","PatAddress"))
+			//身份证号码
+			s IDCard=$G(^TMPReport(UserID,"PatInfo","PatID"))
+			//单位名称
+			s CompanyDesc=$G(^TMPReport(UserID,"PatInfo","PatCompany"))
+			//单位电话
+			s CompanyTel=$g(^TMPReport(UserID,"PatInfo","groupContactNumber"))
+			//部门
+			s Department=$G(^TMPReport(UserID,"PatInfo","Position"))
+			//vip等级
+			s VIPLevel=$G(^TMPReport(UserID,"PatInfo","VIPLevel"))
+			s:VIPLevel'="" VIPLevel=$p($g(^DHCPEVIPLevel("VIP",VIPLevel)),"^",2)
+			//体检日期
+			s CheckAdmDate=$G(^TMPReport(UserID,"PatInfo","AdmDate"))
+			//体检号
+			s HPNo=$G(^TMPReport(UserID,"PatInfo","PatHPNo"))
+			//登记号
+			s RegNo=$G(^TMPReport(UserID,"PatInfo","PatRegNo"))
+			
+			//总检建议
+			s GenAdvice=$G(^TMPReport(UserID,"GeneralAdvice", "YGAdvice"))
+			
+			s GenAdvice=##class(web.DHCPE.Public.Setting).Replace(GenAdvice," ","&ensp;")
+			s GenAdvice=##class(web.DHCPE.Public.Setting).Replace(GenAdvice,$C(13,10),"<br>")
+			s GenAdvice=##class(web.DHCPE.Public.Setting).Replace(GenAdvice,$C(10),"<br>")
+			s GenAdvice=##class(web.DHCPE.Public.Setting).Replace(GenAdvice,$C(13),"<br>")
+			//总检名字
+			i ($G(^DHCPESetting("DHCPE","MainDoctorGroup",CurLocID))="Y") d
+			.s GenDocName=$g(^TMPReport(UserID,"GeneralAdvice","MainDoctor"))
+			.s GenDate=$g(^TMPReport(UserID,"GeneralAdvice","MainDoctorDate"))
+			e  d
+			.s GenDocName=$G(^TMPReport(UserID,"GeneralAdvice","AduitUser"))
+			.s GenDate=$G(^TMPReport(UserID,"GeneralAdvice","AduitUserDate"))
+			
+			s HosCode=$G(^DHCPESetting("DHCPE","ReportCode",CurLocID))
+			s HosCode=$zcvt(HosCode,"L")
+			//s HosCode=""
+			i HosCode'="" s HosCode=HosCode_"."
+			s normalcss="../scripts/dhcpeireport."_HosCode_"normal.css"
+			s covercss="../scripts/dhcpeireport."_HosCode_"normal.cover.css"
+			s titlecss="../scripts/dhcpeireport."_HosCode_"normal.head.title.css"
+			s patinfocss="../scripts/dhcpeireport."_HosCode_"normal.head.patinfo.css"
+			s summarizecss="../scripts/dhcpeireport."_HosCode_"normal.summarize.css"
+			s generaladvicecss="../scripts/dhcpeireport."_HosCode_"normal.generaladvice.css"
+			s norcss="../scripts/dhcpeireport."_HosCode_"normal.result.nor.css"
+			s liscss="../scripts/dhcpeireport."_HosCode_"normal.result.lis.css"
+			s stationresultcss="../scripts/dhcpeireport."_HosCode_"normal.stationresult.css"
+			s summarizegathercss="../scripts/dhcpeireport."_HosCode_"normal.summarizegather.css"
+			s footercss="../scripts/dhcpeireport."_HosCode_"normal.footer.css"
+			s illexplaincss="../scripts/dhcpeireport."_HosCode_"normal.illexplain.css"
+		</SCRIPT>
+
+		<!-- 结果  
+		<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.result.css"></LINK>
+		-->
+		<!-- 通用格式  -->
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(norcss)#></LINK>
+		<!-- 检验结果  -->
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(liscss)#></LINK>
+
+
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(footercss)#></LINK>
+		<LINK REL="stylesheet" TYPE="text/css" HREF=#(illexplaincss)#></LINK>
+
+	</head>
+
+	<body>
+		<div align=left>
+			<!-- 封面 start -->
+			<table class='TableWidth' border=0 cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;'>
+ 				<tr style='height:5pt;'></tr>
+				
+				<tr style='height:45pt;'>
+					<td colspan=20 class='CoverTitle' style=''>乙肝检查报告</td>
+				</tr>
+ 				
+ 				<tr style='height:20pt;'>
+					<td style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>体检编号：</td>
+					<td colspan=3 id='RegNo' name='BaseInfo' class='Base BaseValue'>#(RegNo)#</td>
+					<td colspan=2 class='Base BaseText'>姓名：</td>
+					<td colspan=3 id='Name' name='BaseInfo' class='Base BaseValue'>#(Name)#</td>
+					<td colspan=2 class='Base BaseText'>性别：</td>
+					<td colspan=1 id='Sex' name='BaseInfo' class='Base BaseValue'>#(Sex)#</td>
+					<td colspan=2 class='Base BaseText'>年龄：</td>
+					<td colspan=2 id='Age' name='BaseInfo' class='Base BaseValue'>#(Age)#</td>
+					<td></td>
+				</tr>
+				
+ 				<tr style='height:20pt;'>
+					<td style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>联系电话：</td>
+					<td colspan=3 id='PatTel' name='BaseInfo'  class='Base BaseValue'>#(PatTel)#</td>
+					<td colspan=2 class='Base BaseText'>单位：</td>
+					<td colspan=10 id='CompanyDesc' name='BaseInfo' class='Base BaseValue'>#(CompanyDesc)#</td>
+					<td></td>
+				</tr>
+				
+ 				<tr style='height:20pt;'>
+					<td style='height:15pt;'></td>
+					<td colspan=3 class='Base BaseText'>证&ensp;件&ensp;号：</td>
+					<td colspan=6 id='IDCard' name='BaseInfo'  class='Base BaseValue'>#(IDCard)#</td>
+					<td colspan=3 class='Base BaseText'>体检日期：</td>
+					<td colspan=6 id='CompanyDesc' name='BaseInfo' class='Base BaseValue'>#(CheckAdmDate)#</td>
+					<td></td>
+ 				</tr>
+ 				
+ 
+				<tr style='height:5pt;'></tr>
+			</table>
+			<!-- 封面 End -->
+			
+			<!--输出其它csp结果 Start-->
+			<DIV class='Page StationResult TableWidth' style="">
+				<table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;'>
+					
+					<tr style='height:24pt;'><td colspan=20 class='InfoTitle'>体检结果</td></tr>
+					
+				</table>
+				<SCRIPT language="Cache" RUNAT="SERVER">
+					// 结果输出方式 SummarizeGather=将结果与小节一起输出
+					;Set UserID=%session.Get("LOGON.USERID")
+					;s:UserID="" UserID=PatientID
+					s HCode=HospitalCode
+					i HospitalCode'="" s HCode=HospitalCode_"."
+					s ReultOutType="SummarizeGather"
+					s NoReportStation="^"_$G(^DHCPESetting("DHCPE","NoReportStation"))_"^"
+					
+					//d $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.noresult","OnPageCSPROOT")	
+					
+					s CurData="aaa"
+
+					s ItemNum=0
+					;d:+$O(^TMPReport(UserID,"HistoryResult",""),-1)>1 $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.history","OnPageCSPROOT")
+					s sStationSequence=""
+					f  s sStationSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence)) q:sStationSequence=""  d
+					.s StationId=""
+					.f  s StationId=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId)) Q:(""=StationId)  d
+					..q:NoReportStation[("^"_StationId_"^")
+					..s sARCSequence=""
+					..f  s sARCSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence)) Q:(""=sARCSequence)  d
+					...s iiiLLoop=0
+					...f  s iiiLLoop=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop)) Q:(""=iiiLLoop)  d
+					....s ARCIM=$G(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop))
+					....s sArcimIdTemp=$p($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+					....s bFlagTemp=$G(^DHCPECTDataEx("DHCPEStationOrder","Sign",sArcimIdTemp))
+					
+					....q:$g(^DHCPECTDataEx("YGFlag",sArcimIdTemp))'="Y"
+					....s PAADM=+$g(^OEORD(+ARCIM))
+					....s HistoryContrastInfo="",tablecell=1  // 历次结果
+					....;i $d(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OI")) d
+					....;.s HistoryContrastInfo="1"
+					....;.s tablecell=$o(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OI",""),-1)
+					
+					....q:ARCIM=""
+					....s CurData=$G(^TMPReport(UserID,"Result", "ARCIM", ARCIM))
+					....s ARCIMDesc=$P(CurData,"^",1)
+					....s Checker=$P(CurData,"^",2)
+					....s CheckDate=$P(CurData,"^",3)
+					....s ReportFormat=$P(CurData,"^",4)
+					....s AuditUser=$P(CurData,"^",5)
+					....;q:'$D(^TMPReport(UserID,"Result", "Content",ARCIM))
+					....q:('$D(^TMPReport(UserID,"Result", "Content",ARCIM)))&&('$D(^DHCPEDataEx("DHCPEPreIOrdItem","RefuseCheck",ARCIM)))
+					....s ImgSrc=""
+					....s ItemNum=ItemNum+1
+					....d:(ReportFormat["LIS") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.lis.new","OnPageCSPROOT")
+					....;d:(ReportFormat["NOR") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.nor.new","OnPageCSPROOT")
+					....;d:(ReportFormat["RIS") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.ris.new","OnPageCSPROOT")
+					....;d:(ReportFormat["PIS") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.ris.new","OnPageCSPROOT")
+					....;d:(ReportFormat["CAT") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.cat.new","OnPageCSPROOT")
+					....;d:(ReportFormat["EKG") $zobjclassmethod("csp.csp.dhcpeireport.normal.result.ekg.new","OnPageCSPROOT")
+					...;d $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"noraml.stationsummarize","OnPageCSPROOT")
+					//d $zobjclassmethod("csp.csp.dhcpeireport.printpacsimg.new","OnPageCSPROOT")
+					//d $zobjclassmethod("csp.csp.dhcpeireport.normal.showother.new","OnPageCSPROOT")
+				</SCRIPT>
+			</DIV>
+			<!-- 输出其它csp结果 End -->
+			
+			<!-- 体检结论 Start -->
+			<table class='TableWidth' cellpadding=0 cellspacing=0 style='border-collapse:collapse;table-layout:fixed;'>
+				<tr style='height:2pt;'><td colspan=20></td></tr>
+				<tr style='height:24pt;'><td colspan=20 class='InfoTitle'>总检结论</td></tr>
+				
+				<tr>
+					<td colspan=20 class='GenTextLT' style="word-wrap:break-word;word-break:break-all;">#(GenAdvice)#</td>
+				</tr>
+				
+				<tr style='height:20pt;'>
+					<td colspan=8></td>
+					<td colspan=3 class='GenDocText'>总检医生：</td>
+					<td colspan=3 class='GenDocValue'>#(GenDocName)#</td>
+					<td colspan=3 class='GenDocText'>总检日期：</td>
+					<td colspan=3 class='GenDocValue'>#(GenDate)#</td>
+				</tr>
+				
+			</table>
+			<!-- 体检结论 End -->
+		</div>
+	</body>
+	<SCRIPT language="javascript">
+	/*
+	var ObjArr=document.getElementsByName("ItemCheckDate"); //项目检查日期赋值 id为项目代码
+	if (ObjArr){
+		var CheckDateItem=""
+		var ArrLength=ObjArr.length;
+		for (var j=0;j<ArrLength;j++){
+			//ObjArr[j].innerText="检查日期";
+			if (CheckDateItem==""){
+				CheckDateItem=ObjArr[j].id;
+			}else{
+				CheckDateItem=CheckDateItem+"^"+ObjArr[j].id;
+			}
+		}
+		if (CheckDateItem!=""){
+			
+		}
+	}
+	var ObjArr=document.getElementsByName("ItemCheckDoc"); //项目检查医生赋值 id为项目代码
+	if (ObjArr){
+		var CheckDocItem="";
+		var ArrLength=ObjArr.length;
+		for (var j=0;j<ArrLength;j++){
+			//ObjArr[j].innerText="检查医生"
+			if (CheckDocItem==""){
+				CheckDocItem=ObjArr[j].id;
+			}else{
+				CheckDocItem=CheckDocItem+"^"+ObjArr[j].id;
+			}
+		}
+		if (CheckDateItem!=""){
+			
+		}
+	}
+	*/
+	/*
+	var ObjArr=document.getElementsByName("ItemResult"); //项目结果
+	if (ObjArr){
+		var ResultInfoStr="";
+		var ArrLength=ObjArr.length;
+		for (var j=0;j<ArrLength;j++){
+			var ElementID=ObjArr[j].id;
+			if (ElementID=="") continue
+			if (ResultInfoStr==""){
+				ResultInfoStr=ObjArr[j].id;
+			}else{
+				ResultInfoStr=ResultInfoStr+"^"+ObjArr[j].id;
+			}
+		}
+		var PAADM=#(PAADM)#
+		if (ResultInfoStr!=""){
+			var ResultStr=#server(web.DHCPE.ReportGetInfor.GetResults(PAADM,ResultInfoStr))#;
+			var ResultArr=ResultStr.split("^");
+			var ElementArr=ResultInfoStr.split("^");
+			var Length=ElementArr.length;
+			for (var i=0;i<Length;i++){
+				var ElementID=ElementArr[i];
+				var Result=ResultArr[i];
+				var obj=document.getElementById(ElementID);
+				if (obj) obj.innerText=Result;
+			}
+		}
+		
+	}
+	*/
+	
+	//危害因素自适应高度
+	//var obj=document.getElementById("HarmInfo");
+	//if (obj){
+	//	setTareaAutoHeight(obj);
+	//	obj.style.height = "500px";
+	//}
+	
+	//建议自适应高度
+	var obj=document.getElementById("GenAdvice");
+	if (obj){
+		setTareaAutoHeight(obj);
+		obj.style.height = "150px";
+	}
+	
+	function setTareaAutoHeight(e) {
+	    //e.style.height = e.scrollHeight + "px";
+		if (e.scrollHeight<32){
+			e.style.height=32+"px";
+		}else{
+			e.style.height = (e.scrollHeight+25) + "px";
+		}
+	}
+
+	</script>
+</html>

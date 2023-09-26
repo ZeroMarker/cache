@@ -1,0 +1,44 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+</HEAD>
+<BODY>
+<SCRIPT SRC="../scripts_gen/webcommon.DateAndTime.js"></SCRIPT>
+
+<SERVER>
+n cont
+s cont=$g(%request.Data("CONTEXT",1)) 
+i cont'["_",$g(%request.Data("WIPClinicListType",1))="N" {
+	s cont=cont_"_"_$s(%request.Get("TabSelected")'="":%request.Get("TabSelected"),1:$p($p(##class(epr.ClinicWorklist).GetPrefTabs(),"^"),"_"))
+	s %request.Data("CONTEXT",1)=cont
+}
+
+s RegistrationNo=%request.Get("RegistrationNo")
+ ; if patient banner requried AND patient seleted - show banner.....
+ i (+%request.Get("PatientBanner")&&(RegistrationNo'="")) {
+	n pat
+	; Log 64043 YC - Need to alpha up reg no
+	s pat=$o(^PAPERi("PAPMI_PatNo",##Class(%Collation).AlphaUp(RegistrationNo),""))	
+	d %request.Set("PatientID",pat)
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+
+s frm=##Class(websys.Component).OpenName("EPVisitNumber.ClinicWorkList")
+i frm d frm.Show(),frm.%Close()
+d ##class(epr.ClinicWorklist).ClinicworklistOK()
+
+</SERVER>
+</BODY>
+</HTML>

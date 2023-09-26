@@ -1,0 +1,111 @@
+<!-- 
+ * FileName: dhcbill.conf.group.parasetting.csp
+ * Anchor: ZhYW
+ * Date: 2019-10-23
+ * Description: 参数设置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.layout-panel-center div.panel {
+			padding-bottom: 8px;
+		}
+		
+		.label-wth182 {
+			width: 182px;
+		}
+		
+		.label-wth147 {
+			width: 147px;
+		}
+		
+		.r-label-1 {
+			padding-left: 45px;
+		}
+	</style>
+	<server>
+		set groupId=+%request.Get("GroupId")
+		set hospId=+%request.Get("HospId")
+		set gsCfgJson=##class(BILL.CFG.COM.GroupAuth).GetGSCfgInfo(groupId, hospId)
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		GroupId: "_groupId_",",!
+		w "		HospId: "_hospId_",",!
+		w "	    GSCfgJson: "_gsCfgJson_"",!
+		w " };",!
+		w "<"_"/script>"
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',border:false" style="padding:8px;">
+			<div class="hisui-panel" title="门诊收费设置" style="padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+				<table class="search-table">
+					<tr>
+						<td class="r-label"><label>是否有结算权限</label></td>
+						<td><div id="switch-footFlag"></div></td>
+						<td class="r-label r-label-1"><label>结算是否需要发票</label></td>
+						<td><div id="switch-inv"></div></td>
+						<td class="r-label"><label>票据类型</label></td>
+						<td><input id="useINVType" class="textbox"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>卡支付不弹出收费界面</label></td>
+						<td><div id="switch-cardPayMFlag"></div></td>
+						<td class="r-label r-label-1"><label>是否打印单据列表</label></td>
+						<td><div id="switch-prtList"></div><a href="javascript:;" id="btn-prtList" class="hisui-linkbutton" data-options="iconCls:'icon-paper-group',disabled:true,plain:true"></a></td>
+						<td class="r-label r-label-1"><label>单据打印模板名称</label></td>
+						<td><input id="prtXMLName" class="textbox"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>挂号医嘱跟收费医嘱一起结算</label></td>
+						<td><div id="switch-regBillFlag"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div class="hisui-panel" title="集中打印发票设置" style="padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+				<table class="search-table">
+					<tr>
+						<td class="r-label label-wth182"><label>集中打印发票模板</label></td>
+						<td><input id="colPrtXMLName" class="textbox"/></td>
+					</tr>
+				</table>
+			</div>
+			<div class="hisui-panel" title="门诊退费设置" style="padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+				<table class="search-table">
+					<tr>
+						<td class="r-label label-wth182"><label>是否有作废权限</label></td>
+						<td><div id="switch-abort"></div></td>
+						<td class="r-label label-wth147"><label>是否有红冲权限</label></td>
+						<td><div id="switch-refund"></div></td>
+					</tr>
+				</table>
+			</div>
+			<div class="hisui-panel" title="日结设置" style="padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+				<table class="search-table">
+					<tr>
+						<td class="r-label label-wth182"><label>是否需要接收</label></td>
+						<td><div id="switch-receiveFlag"></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'south',border:false">
+			<div style="text-align:center;padding-bottom:10px;">
+				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.group.parasetting.js"></script>
+</body>
+</html>

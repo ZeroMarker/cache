@@ -1,0 +1,81 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))   
+	s str      = $Get(%request.Data("query",1))
+	s rowid    = $Get(%request.Data("rowid",1))
+	s BookID   = $Get(%request.Data("BookID",1))
+	s data     = $Get(%request.Data("data",1))
+	s Userid   = %session.Data("LOGON.USERID")             ;获取用户编码
+	s AcctBook = $Get(%request.Data("AcctBook",1))
+	
+	s PerType = $Get(%request.Data("PerType",1))   ;期间类型
+	s SPeriod = $Get(%request.Data("SPeriod",1))   ;会计期间(开始)          
+	s EPeriod = $Get(%request.Data("EPeriod",1))   ;会计期间(结束)
+	s RepState= $Get(%request.Data("RepState",1))  ;报表状态
+	s ReportData= $Get(%request.Data("ReportData",1))
+	s type=$Get(%request.Data("type",1))
+	s yearmonth= $Get(%request.Data("yearmonth",1))
+	s Type=$Get(%request.Data("Type",1))
+	
+	s RepCode=$Get(%request.Data("RepCode",1))
+	
+	s Mtype=$p(ReportData,"^",2)
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctFinancialReportCheck).List(AcctBook,PerType,SPeriod_"^"_EPeriod_"^"_RepState,sortField,sortDir,start,limit)
+
+    i action = "GetPeriod" d
+	.w ##class(herp.acct.udata.uAcctFinancialReportCheck).GetPeriod(BookID,PerType,start,limit)
+ 
+    i action = "Checked" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportCheck).Checked(data,Userid,type,yearmonth)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action="createReport" d
+	.i Mtype="M" d
+	..s result = ##class(herp.acct.udata.uReportCalculate).CreateReportData(ReportData)
+	..i result = 0  d
+	...w "{success:'true',info:'',refresh:'true'}"
+	..e  d
+	...w "{success:'false',info:'"_result_"'}"
+	.e  d
+	 ..s result = ##class(herp.acct.udata.uReportCalculate).CreateSHYData(ReportData)
+	..i result = 0  d
+	...w "{success:'true',info:'',refresh:'true'}"
+	..e  d
+	...w "{success:'false',info:'"_result_"'}"
+	 
+	 i action = "getReportTemplet" d
+	.w ##class(herp.acct.udata.uAcctFinancialReportCheck).getReportTemplet(start,limit,str,BookID,Type)
+	
+	 i action = "getyear" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetAcctYear(start,limit,str,BookID)
+	
+	i action="IfCheck" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportCheck).IfCheck(ReportData)
+	.i result '= "" d
+    ..w "{success:'true',info:'"_result_"'}"
+    
+     i action = "GetMonth" d
+	.w ##class(herp.acct.udata.uAcctFinancialReportCheck).GetType(Type,start,limit)
+	
+	 i action = "GetFileName" d
+	.s result=##class(herp.acct.udata.uAcctFinancialReportCheck).GetFileName(RepCode,AcctBook)
+	.i result '= "" d
+  	..w "{success:'true',info:'"_result_"'}"
+	
+</script>

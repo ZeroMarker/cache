@@ -1,0 +1,76 @@
+﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/resource.commonfile.js"></script>
+	<script language="cache" runat="server">
+	  d ##Class(EMRservice.SystemParameter).GetImportResource()
+      s scheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("LisScheme")
+      s:(scheme = "") scheme = "<scheme><show><parent><item><code>EpisodeDate</code><desc>就诊日期</desc><hidden>N</hidden></item><item><code>DeptDesc</code><desc>就诊科室</desc><hidden>N</hidden></item><item><code>OEordItemRowID</code><desc>OEordItemRowID</desc><hidden>Y</hidden></item><item><code>OEordItemDesc</code><desc>医嘱名称</desc><hidden>N</hidden></item><item><code>LabEpisodeNo</code><desc>标本号</desc><hidden>N</hidden></item><item><code>SpecimenDesc</code><desc>标本类型</desc><hidden>N</hidden></item><item><code>CollectionDate</code><desc>采集日期</desc><hidden>N</hidden></item><item><code>CollectionTime</code><desc>采集时间</desc><hidden>N</hidden></item><item><code>ReceiveDate</code><desc>接受日期</desc><hidden>N</hidden></item><item><code>ReceiveTime</code><desc>接收时间</desc><hidden>N</hidden></item><item><code>AuthorisationDate</code><desc>审核日期</desc><hidden>N</hidden></item><item><code>AuthorisationTime</code><desc>审核时间</desc><hidden>N</hidden></item><item><code>ExistReport</code><desc>有无报告</desc><hidden>N</hidden></item></parent><child><item><code>OeordID</code><desc>OeordID</desc><hidden>Y</hidden></item><item><code>LabEpisodeNo</code><desc>标本号</desc><hidden>N</hidden></item><item><code>ItemDesc</code><desc>描述</desc><hidden>N</hidden></item><item><code>Synonym</code><desc>英文缩写</desc><hidden>N</hidden></item><item><code>ItemResult</code><desc>结果</desc><hidden>N</hidden></item><item><code>ItemUnit</code><desc>单位</desc><hidden>N</hidden></item><item><code>AbnorFlag</code><desc>异常值</desc><hidden>N</hidden></item><item><code>ItemRanges</code><desc>范围值</desc><hidden>N</hidden></item></child></show><reference><parent><item><code>EpisodeDate</code><desc>就诊日期:</desc><separate>,</separate></item><item><code>DeptDesc</code><desc>就诊科室:</desc><separate>,</separate></item><item><code>OEordItemDesc</code><desc>医嘱名称:</desc><separate>enter</separate></item></parent><child><item><code>AbnorFlag</code><desc>异常值</desc><separate>,</separate></item><item><code>ItemUnit</code><desc>单位</desc><separate>,</separate></item><item><code>ItemUnit</code><desc>描述</desc><separate></separate></item></child><separate>enter</separate></reference><checkstyle></checkstyle><interface>HIS</interface></scheme>"
+      s AbnorFlagCheck = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("Lis_AbnorFlag_Check")
+      s:(AbnorFlagCheck = "") AbnorFlagCheck = "N"
+      s formatStrings = ##Class(EMRservice.SystemParameter).LisDataFormat()
+   </script>
+    <script type="text/javascript" src="../scripts/emr/js/resource.common.head.js"></script>
+	<script language="javascript">
+		var scheme = '#(scheme)#';
+		var AbnorFlagCheck = '#(AbnorFlagCheck)#';
+		var strXml = "";
+		var quoteData = {};
+		var qryAnt = {};
+		var formatStrings = eval('#(formatStrings)#');
+		//是否启用前端页面配置记录
+		var pageConfig = "";
+		//资源区页签查询按钮配置项数据
+		var resourceConfig = {};
+		var selectConfig="";
+		var clickFlag="";
+		var selectOnCheckFlag=true;
+		var checkOnSelectFlag=true;
+   </script>
+	<title>检验信息</title>
+</head>
+<body class="easyui-layout" data-options="fit:true">
+	<div id="seekform" data-options="region:'north',border:false" style="height:60px;padding:3px">
+		<div>
+			<input id="currentDay" type="radio" name="episode"/><span>当日</span>
+			<input id="ThreeDays" type="radio" name="episode"/><span>3日内</span>
+			<input id="sevenDays" type="radio" name="episode"/><span>7日内</span>
+			<input id="currentWeek" type="radio" name="episode"/><span>本周</span>
+			<input id="currentEpisode" type="radio" name="episode"/><span>本次就诊</span>			
+			<input id="noAuthEpisode" type="radio" name="episode"/><span>未审核</span>
+		</div>
+		<div style="padding-top:3px;">
+			<span id="resourceConfig" style="float:right;margin-top:15px;">
+				<a href="#" title="将当前选中按钮保存为默认按钮" onclick="saveResourceConfig('Lis');return false;">保存默认配置</a>
+			</span>
+			<input id="allEpisode" type="radio" name="episode"/><span>所有就诊</span>
+			<span id="comboxEpisode">
+				<input id="EpisodeList" name="EpisodeList" style="width:120px;"/>
+				<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="queryData()" style="vertical-align:middle;">查询</a>
+			</span> 
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" style="height:30px;padding-top:3px;">
+		<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-paste'" onclick="getData()">引用</a>
+	</div>	
+	<div class="easyui-panel" data-options="region:'center',border:false">
+		<div id="dataPnl" class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+			<div id="lisDataPnl" data-options="region:'north',border:false,split:true" style="height:60%;">
+				<table id="lisData" style="width:100%;"></table>
+			</div>
+			<div data-options="region:'center',border:false" style="">
+				<table id="lisSubData" cellpadding="0" cellspacing="0" style="width:100%; border:solid 1px #cccccc; font-size:12px;table-layout:fixed;"></table>
+			</div>
+		</div>	
+	</div>	
+	<script type="text/javascript" src="../scripts/emr/js/resource.lisdata.js"></script>
+</body>
+</html>

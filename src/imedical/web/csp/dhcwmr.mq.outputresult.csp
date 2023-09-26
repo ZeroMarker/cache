@@ -1,0 +1,46 @@
+<csp:content charset="utf-8"> 
+<SERVER>
+	/*
+	
+	Modified By LiYang 2015-01-14 ¸ü»»Âß¼­
+	
+	Set DateType=%request.Get("DateType")
+	Set FromDate=%request.Get("FromDate")
+	Set ToDate=%request.Get("ToDate")
+	Set Condition=%request.Get("Condition")
+	Set Logical=%request.Get("Logical")
+	Set OutPutCol=%request.Get("OutPutCol")
+	
+	Set ^DHCWMR.MQ.Arg("Arg","DateType")=DateType
+	Set ^DHCWMR.MQ.Arg("Arg","FromDate")=FromDate
+	Set ^DHCWMR.MQ.Arg("Arg","ToDate")=ToDate
+	Set ^DHCWMR.MQ.Arg("Arg","Condition")=Condition
+	Set ^DHCWMR.MQ.Arg("Arg","Logical")=Logical
+	Set ^DHCWMR.MQ.Arg("Arg","OutPutCol")=OutPutCol
+	
+	
+	Set arrResult=##class(DHCWMR.MQService.OutPutSrv).GetMasterList(DateType,FromDate,ToDate,Condition,Logical)
+	Do ##class(DHCWMR.MQService.OutPutSrv).GetOutPutJson(arrResult,OutPutCol,DateType)
+	*/
+	//Set Repid=%request.Get("Repid")
+	//Set OutPutCol=%request.Get("OutPutCol")
+	//Set DateType=%request.Get("DateType")
+	//Do ##class(DHCWMR.MQService.OutPutSrv).GetOutPutJson(Repid)
+	Set OperType=%request.Get("OperType")
+	If (OperType="Qry"){
+		Set aCondID=%request.Get("CondID")
+		Set aDataIndex=%request.Get("DataIndex")
+		Set aDateTypeID=%request.Get("DateType")
+		Set aDateFrom=%request.Get("DateFrom")
+		Set aDateTo=%request.Get("DateTo")
+		Set SysQryFlag=%request.Get("SysQryFlag")
+		Do ##class(DHCWMR.MQService.OutPutSrv).Process(aCondID, aDataIndex, aDateTypeID, aDateFrom, aDateTo,SysQryFlag)
+	}else{
+		Set itmjs=%request.Get("itmjs")
+		Set aDataIndex=%request.Get("DataIndex")
+		Set SysExportFlg=%request.Get("SysExportFlg")
+		Set aViewFields=%request.Get("ViewFields")
+		Set total =%request.Get("total")
+		Do ##class(DHCWMR.MQService.OutPutSrv).ExportProcess(itmjs,aDataIndex,SysExportFlg,aViewFields,total)
+	}
+</SERVER>

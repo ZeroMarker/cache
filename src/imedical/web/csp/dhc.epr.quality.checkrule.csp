@@ -1,0 +1,27 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+</HEAD>
+<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1))
+		//s patientID = $Get(%request.Data("patientID",1))
+		s patientID = ##class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s CTLocatID=$g(%session.Data("LOGON.CTLOCID"))
+		s SSUserID=$g(%session.Data("LOGON.USERID"))
+		s action = $Get(%request.Data("action",1))
+	
+</script>
+<frameset cols="62%,*" frameborder="0" framespacing="0">
+   <frame name="Left" src="emr.record.quality.csp?PatientID=#(patientID)#&EpisodeID=#(episodeID)#&EpisodeLocID=#(CTLocatID)#&action=#(action)#">
+   <!--frame name="Left" src="epr.newfw.episodelisttabpanel.csp?patientID=#(patientID)#&episodeID=#(episodeID)#&admType=#(type)#"-->
+   <frame name="Right" src="dhc.epr.quality.entrygrid.csp?EpisodeID=#(episodeID)#&action=#(action)#">
+</frameset>
+
+</HTML>

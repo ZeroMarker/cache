@@ -1,0 +1,174 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<style type="text/css">
+
+/*begin div实现table布局样式*/
+.eq-total-sum
+{
+	font-size:120%;
+	color:#F00;
+	float:right;
+}
+/*end div实现table布局样式*/
+</style>
+<body class="hisui-layout" >
+<script language=Cache runat=server>
+	s ContractType=$Get(%request.Data("ContractType",1))
+	s Type=$Get(%request.Data("Type",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s CTRowID=$Get(%request.Data("RowID",1))
+	s CurRole=$Get(%request.Data("ApproveRole",1))
+	s ContractNoFlag=##class(web.DHCEQCommon).GetSysInfo("103002")
+	s Action=$Get(%request.Data("Action",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("8",CTRowID),CurRole,Action)
+	
+</script>
+
+<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'合同'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:400px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<!--div class="eq-table-td eq-table-label"><label for="ContractTypeList">合同类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.Contract.ContractTypeList'" id="ContractTypeList"></div-->
+							<div class="eq-table-td eq-table-label"><label for="CTContractNo">合同号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTContractNo" disabled="true"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTContractName">合同名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTContractName"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTBuyTypeDR_BTDesc">采购方式</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.BuyType'" id="CTBuyTypeDR_BTDesc"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTProviderDR_VDesc">供应商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="CTProviderDR_VDesc"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTProviderHandler">供方经办人</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTProviderHandler"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTProviderTel">供方电话</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTProviderTel"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTSignLocDR_CTLOCDesc">签订部门</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="CTSignLocDR_CTLOCDesc"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTSignDate">签订日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTSignDate"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTManagerLocDR_CTLOCDesc">管理部门</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="CTManagerLocDR_CTLOCDesc"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTTotalFee">总价</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTTotalFee"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTPreFeeFee">预付款</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTPreFeeFee"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTStartDate">合同开始日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTStartDate"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTEndDate">合同截止日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTEndDate"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTServiceDR_SVName">服务商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Service'" id="CTServiceDR_SVName"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTServiceHandler">服务联系人</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTServiceHandler"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTServiceTel">服务电话</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTServiceTel"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTFileNo">档案号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTFileNo"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTService">服务条款</label></div>
+							<div class="eq-table-td"><textarea id="CTService" style="width:150px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CTPayItem">付款条款</label></div>
+							<div class="eq-table-td"><textarea id="CTPayItem" style="width:150px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CheckStandard">验收标准</label></div>
+							<div class="eq-table-td"><textarea id="CTCheckStandard" style="width:150px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CTRemark">备注</label></div>
+							<div class="eq-table-td"><textarea id="CTRemark" style="width:150px"></textarea></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTBreakItem">违约处理</label></div>
+							<div class="eq-table-td"><textarea id="CTBreakItem" style="width:150px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CTArriveItem">交货条款</label></div>
+							<div class="eq-table-td"><textarea id="CTArriveItem" style="width:150px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CTQualityItem">质保条款</label></div>
+							<div class="eq-table-td"><textarea id="CTQualityItem" style="width:150px"></textarea></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="EditOpinion">审批意见</label></div>
+							<div class="eq-table-td"><textarea id="EditOpinion" style="width:150px" colspan="3"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="Opinion">审批记录</label></div>
+							<div class="eq-table-td"><textarea id="Opinion" style="width:150px" colspan="3" disabled="true"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="RejectReason">拒绝原因</label></div>
+							<div class="eq-table-td"><textarea id="RejectReason" style="width:150px"></textarea></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td"><a id="BPicture" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-img" data-options="stopAllEventOnDisabled:true">图片信息</a></div>
+							<div class="eq-table-td"><a id="BPayPlan" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">付款计划</a></div>
+							<!--div class="eq-table-td"><a id="BScan" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">拍照</a></div-->
+							<div class="eq-table-td"><a id="BCopy" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-copy" data-options="stopAllEventOnDisabled:true">复制合同</a></div>
+							<!--div class="eq-table-td"><a id="BPrint" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">打印</a></div-->
+							
+							<div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a></div>
+							<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+							<div class="eq-table-td"><a id="BSubmit" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a></div>
+							<div class="eq-table-td"><a id="BCancelSubmit" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">取消提交</a></div>
+							<div class="eq-table-td"><a id="BApprove1" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核1</a></div>
+							<div class="eq-table-td"><a id="BApprove2" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核2</a></div>
+							<div class="eq-table-td"><a id="BApprove3" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核3</a></div>
+						</div>
+					</div>
+				</div>
+				<div class="eq-total-sum" data-options="region:'center',border:false" style="position:relative;">
+					 <table id="DHCEQContract" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"> </table>
+					 <span id="sumTotal" style="position:absolute;right:10px;top:5px;">合计</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<!--INPUT type="hidden" id="ContractType" value="#(ContractType)#"-->
+			<INPUT type="hidden" id="CTRowID" value="#(CTRowID)#">
+			<INPUT type="hidden" id="Type" value="#(Type)#">
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="ContractNoFlag" value="#(ContractNoFlag)#">
+			<INPUT type="hidden" id="CancelFlag">
+			
+			<INPUT type="hidden" id="CTStatus" value="">
+			<INPUT type="hidden" id="CTContractType" value="#(ContractType)#">
+			<INPUT type="hidden" id="CTProviderDR" value="">
+			<INPUT type="hidden" id="CTSignLocDR" value="">
+			<INPUT type="hidden" id="CTManagerLocDR" value="">
+			<INPUT type="hidden" id="CTBuyTypeDR" value="">
+			<INPUT type="hidden" id="CTServiceDR" value="">
+			<INPUT type="hidden" id="CTGuaranteePeriodNum" value="">
+			<INPUT type="hidden" id="SourceType" value="">
+			<INPUT type="hidden" id="SourceType_Desc" value="">
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/contract.js'></script>
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+﻿<html>
+<head>
+<title>验证用户</title>
+<HISUI/>  
+<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+<style type="text/css">
+*{
+	margin:0px;
+	padding:0px;
+	font-family:"Microsoft Yahei";
+}
+.form{
+	padding-left:25px;
+	padding-top:5px;
+	width:180px;	
+}
+.name{
+	font-size:25;
+	font-weight:bold;
+	padding-left:55px; 
+	margin-top:-40px;	
+}
+.password{
+	margin-top:20px;	
+}
+.password input{
+	width:180px;
+}
+.button{
+	margin-top:15px; 
+	float:right;
+}
+.button input{
+	width:63px;
+	margin-left:10px;
+	height:25px;
+}
+</style>
+ <script language="cache" runat="server">
+	s userId = $Get(%request.Data("UserID",1),"")
+	s userName = $Get(%request.Data("UserName",1),"")
+</script>		
+ <script language="javascript">
+ 	var userId = '#(userId)#';
+ 	var userName = '#(userName)#';
+ 	var openWay = '#($Get(%request.Data("openWay",1),""))#'
+ 	
+ 	$(function(){
+	    if (openWay != "")
+		{
+			userName = decodeURI(utf8to16(base64decode(userName)));
+		}
+	    $(".name").text(userName);
+	});
+ 	function confirm()
+ 	{
+	 	window.returnValue = 0;
+	 	var password = document.getElementById("password").value;
+		window.returnValue = userVerification(userId,password);
+	 	closeWindow();
+	}
+	
+	function cancel()
+	{
+		window.returnValue = "";
+		closeWindow();
+	}
+	//关闭窗口
+	function closeWindow()
+	{
+		if (openWay != "")
+		{
+			parent.closeDialog("lockDialog");
+		}
+		else
+		{
+			window.opener = null;
+			window.open('','_self');
+			window.close();	
+		}
+	}
+	///验证用户名
+	function userVerification(userCode,password)
+	{
+		var result = "0";
+		jQuery.ajax({
+			type: "Post",
+			dataType: "text",
+			url: "../EMRservice.Ajax.common.cls",
+			async: false,
+			data: {
+					"Class": "EMRservice.BL.BLPowerUser",
+					"Method":"IsLogonValid",
+					"OutputType":"String",
+			        "p1": userCode,
+			        "p2": password
+			      },
+			success: function(d) {
+				result =  d;
+			},
+			error : function(d) { alert(" error");}
+		});
+		return result;
+	}	
+</script>
+</head>
+<body>
+	<div class="form">
+		<div>
+			<img src="../scripts/emr/image/icon/userlock.png"/>
+			<div class="name"></div>
+		</div>
+		<div class="password">
+			<div style="font-size:15px;">#(..Get("请输入用户密码:"))#</div>
+			<input type="password" id="password" onkeydown= "if(event.keyCode==13)confirm()"/>
+		</div>
+		<div class="button">
+			<a href="#" class="hisui-linkbutton"  onclick="confirm()">#(..Get("确认"))#</a>
+			<a href="#" class="hisui-linkbutton"  onclick="cancel()">#(..Get("取消"))#</a>
+		</div>
+	</div> 
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!-- 体检结果 
+dhcpeireport.normal.stationresult.csp
+-->
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	// 结果输出方式 SummarizeGather=将结果与小节一起输出
+	;Set UserID=%session.Get("LOGON.USERID")
+	;s:UserID="" UserID=PatientID
+	s HCode=HospitalCode
+	i HospitalCode'="" s HCode=HospitalCode_"."
+	s ReultOutType="SummarizeGather"
+	s NoReportStation="^"_$G(^DHCPESetting("DHCPE","NoReportStation"))_"^"
+	
+	
+	//d $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.noresult","OnPageCSPROOT")	
+	
+	
+	s CurData="aaa"
+	i $D(^TMPReport(UserID,"HistoryResult",1,1))
+	{
+		i $L(^TMPReport(UserID,"HistoryResult",1,1),"^")>2 d $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.history","OnPageCSPROOT")	
+	}
+	s ItemNum=0
+	;d:+$O(^TMPReport(UserID,"HistoryResult",""),-1)>1 $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.history","OnPageCSPROOT")
+	s sStationSequence=""
+	f  s sStationSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence)) q:sStationSequence=""  d
+	.s StationId=""
+	.f  s StationId=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId)) Q:(""=StationId)  d
+	..q:NoReportStation[("^"_StationId_"^")
+	..s sARCSequence=""
+	..f  s sARCSequence=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence)) Q:(""=sARCSequence)  d
+	...s iiiLLoop=0
+	...f  s iiiLLoop=$O(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop)) Q:(""=iiiLLoop)  d
+	....s ARCIM=$G(^TMPReport(UserID,"Result","Station",sStationSequence,StationId,sARCSequence,iiiLLoop))
+	....s sArcimIdTemp=$p($G(^OEORD(+ARCIM,"I",$p(ARCIM,"||",2),1)),"^",2)
+	....s bFlagTemp=$G(^DHCPEDataEx("DHCPEStationOrder","Sign",sArcimIdTemp))
+	....q:ARCIM=""
+	....s CurData=$G(^TMPReport(UserID,"Result", "ARCIM", ARCIM))
+	....s ARCIMDesc=$P(CurData,"^",1)
+	....s Checker=$P(CurData,"^",2)
+	....s CheckDate=$P(CurData,"^",3)
+	....s ReportFormat=$P(CurData,"^",4)
+	....s AuditUser=$P(CurData,"^",5)
+	....q:'$D(^TMPReport(UserID,"Result", "Content",ARCIM))
+		
+	....s ItemNum=ItemNum+1
+	....w:ItemNum>1 "<br><br>"
+	....d:(ReportFormat["LIS") $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.lis","OnPageCSPROOT")
+	....d:(ReportFormat["NOR") $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.nor","OnPageCSPROOT")
+	....d:(ReportFormat["RIS") $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.ris","OnPageCSPROOT")
+	....d:(ReportFormat["PIS") $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.ris","OnPageCSPROOT")
+	....d:(ReportFormat["CAT") $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.cat","OnPageCSPROOT")
+	....d:(ReportFormat["EKG") $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.ekg","OnPageCSPROOT")
+	....d:(ReportFormat["AREA") $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.result.area","OnPageCSPROOT")
+	...;d $zobjclassmethod("csp.csp.dhcpeireport."_HCode_"normal.stationsummarize","OnPageCSPROOT")
+	d $zobjclassmethod("csp.csp.dhcpeireport.normal.showother","OnPageCSPROOT")
+</SCRIPT>
+		

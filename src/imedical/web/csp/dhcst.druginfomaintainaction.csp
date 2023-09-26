@@ -1,0 +1,281 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+s HospitalID=$get(%session.Data("LOGON.HOSPID"))
+s User=$get(%session.Data("LOGON.USERID"))
+s GroupID=$get(%session.Data("LOGON.GROUPID"))
+s CtlocID=$get(%session.Data("LOGON.CTLOCID"))
+i Action = "GetItm" d
+	.s Hosp=$Get(%request.Data("HospId",1))
+    .S StrParam=$Get(%request.Data("Params",1))
+	.d ##class(web.DHCST.DrugInfoMaintain).GetItm(Start,Limit,Sort,Dir,StrParam,User,Hosp)
+
+i Action = "SaveData" d
+	.S ListPhc=$Get(%request.Data("ListPhc",1))
+	.S ListArc=$Get(%request.Data("ListArc",1))
+	.S ListInc=$Get(%request.Data("ListInc",1))
+	.S drugRowid=$Get(%request.Data("drugRowid",1))
+	.s gParam=GroupID_"^"_CtlocID_"^"_User_"^"_HospitalID
+	.S result = ##class(web.DHCST.DrugInfoMaintain).SaveData(drugRowid,ListPhc,ListArc,ListInc,gParam)
+	.
+	.S Len = $Length(result,"^")
+	.i Len = 3 d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+i Action="DeleteData" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.s result=##class(web.DHCST.DrugInfoMaintain).Delete(InciId)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="GetIncAlias" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.w ##class(web.DHCST.INCALIAS).Select(InciId)
+i Action="SaveIncAlias" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result=##class(web.DHCST.INCALIAS).Save(InciId,ListData)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="DeleteIncAlias" d
+	.S IncaRowid=$Get(%request.Data("IncaRowid",1))
+	.s result=##class(web.DHCST.INCALIAS).Delete(IncaRowid)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="GetDetail" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.s ret=##class(web.DHCST.DrugInfoMaintain).GetDetail(InciId,HospitalID)
+	.i $f(ret,"ERROR-")  d
+	..W "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..W "{success:'true',info:'"_ret_"'}"
+	.
+i Action="GetDoseEquiv" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.W ##class(web.DHCST.PHCDRGMAST).QueryFormDoseEquiv(InciId)
+i Action="SaveDoseEquiv" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result=##class(web.DHCST.PHCDRGMAST).SaveFormDoseEquiv(InciId,ListData)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="DeleteDoseEquiv" d
+	.S EqRowid=$Get(%request.Data("EqRowid",1))
+	.s result=##class(web.DHCST.PHCDRGMAST).DeleteFormDoseEquiv(EqRowid)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="GetArcAlias" d
+	.S ArcId=$Get(%request.Data("ArcRowid",1))
+	.w ##class(web.DHCST.ARCALIAS).Select(ArcId)
+i Action="SaveArcAlias" d
+	.S ArcId=$Get(%request.Data("ArcRowid",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result=##class(web.DHCST.ARCALIAS).Save(ArcId,ListData)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="DeleteArcAlias" d
+	.S AliasRowid=$Get(%request.Data("AliasRowid",1))
+	.s result=##class(web.DHCST.ARCALIAS).Delete(AliasRowid)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+;±£´æ´æ´¢Ìõ¼þ
+i Action="saveStoreCon" d
+	.S storeStr=$Get(%request.Data("storeStr",1))
+	.S rowid=$Get(%request.Data("rowid",1))
+	.s IncRowid=$Get(%request.Data("IncRowid",1))
+	.s result=##class(web.DHCST.ITMSTORECON).Save(rowid,storeStr,IncRowid)
+	.i +result>0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="GetStoreCon" d
+	.S IncRowid=$Get(%request.Data("IncRowid",1))
+	.s result=##class(web.DHCST.ITMSTORECON).Select(IncRowid)
+	.w "{success:'true',info:'"_result_"'}"
+i Action ="CheckItmUsed" d
+	.S IncRowid=$Get(%request.Data("IncRowid",1))
+	.S result = ##class(web.DHCST.INCITM).CheckUsed(IncRowid)
+	.w "{success:'true',info:'"_result_"'}"
+	.
+i Action ="CheckManf" d
+	.S IncRowid=$Get(%request.Data("IncRowid",1))
+	.S result = ##class(web.DHCST.INCITM).CheckManf(IncRowid)
+	.w "{success:'true',info:'"_result_"'}"
+	.
+i Action="GetParamProp" d
+	.s StrParams=GroupID_"^"_CtlocID_"^"_User_"^"_HospitalID
+	.s result=##class(web.DHCST.DrugInfoMaintain).GetParamProp(StrParams)
+	.w "{success:'true',info:'"_result_"'}"
+	.
+i Action="GetMaxCodeByCat" d
+	.s Cat=$Get(%request.Data("Cat",1))
+	.s result=##class(web.DHCST.INCITM).GetMaxCodeByCat(Cat)
+	.w "{success:'true',info:'"_result_"'}"
+	.
+i Action="GetRefRetReason" d
+	.w ##class(web.DHCST.ARCALIAS).GetRefRetReason(Start,Limit,"")
+i Action="GetRefRetReaComb" d
+	.S Desc=$Get(%request.Data("Desc",1))
+	.w ##class(web.DHCST.ARCALIAS).GetRefRetReason(Start,Limit,Desc)
+i Action="SaveRefReason" d
+	.S date=$Get(%request.Data("ListDate",1))
+	.S result=##class(web.DHCST.ARCALIAS).SaveRefReason(date)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+i Action="DelRefReason" d
+	.S RowID=$Get(%request.Data("RowID",1))
+	.S result=##class(web.DHCST.ARCALIAS).DelRetReason(RowID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+i Action="GetRefReason" d
+	.S RowID=$Get(%request.Data("IncRowid",1))
+	.S result=##class(web.DHCST.ARCALIAS).GetRefReason(RowID)
+    .w "{success:'true',info:'"_result_"'}"
+i Action="UpdDrgRefReason" d
+	.S InciCode=$Get(%request.Data("InciCode",1))
+	.S RefReaDr=$Get(%request.Data("RefReaDr",1))
+	.S result=##class(web.DHCST.ARCALIAS).UpdDrgRefReason(InciCode,RefReaDr)
+    .i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="GetBatInfo" d
+	.S InciId=$Get(%request.Data("InciId",1))
+	.s LocId=$Get(%request.Data("LocId",1))
+	.w ##class(web.DHCST.DrugInfoMaintain).GetBatInfo(InciId,LocId,Start,Limit)	
+i Action="SaveBatInfo" d
+	.S Inclb=$Get(%request.Data("Inclb",1))
+	.S NotUseFlag=$Get(%request.Data("NotUseFlag",1))
+	.S result=##class(web.DHCST.DrugInfoMaintain).SaveBatInfo(Inclb,NotUseFlag)
+    .i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+i Action="DispUomSave" d
+	.S Phaloc=$Get(%request.Data("phaloc",1))
+	.s Arcitm=$Get(%request.Data("Arcitm",1))
+	.S ListData=$Get(%request.Data("ListData",1))
+	.S result=##class(web.DHCST.DispUom).Save(Phaloc,Arcitm,ListData)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+i Action="GetDispUomInfo" d
+	.S Phaloc=$Get(%request.Data("phaloc",1))
+	.s Arcitm=$Get(%request.Data("Arcitm",1))
+	.w ##class(web.DHCST.DispUom).GetDispUomInfo(Phaloc,Arcitm)
+i Action="DeleteDispUomInfo" d
+	.S ilduid=$Get(%request.Data("ilduid",1))
+	.s ret= ##class(web.DHCST.DispUom).DeleteDispUomInfo(ilduid)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+i Action="GetRestrictDocInfo" d
+	.s Arcitm=$Get(%request.Data("Arcitm",1))
+	.w ##class(web.DHCST.RestrictDoc).GetRestrictDocInfo(Arcitm)
+
+i Action="RestrictDocSave" d
+	.s Arcitm=$Get(%request.Data("Arcitm",1))
+	.S ListData=$Get(%request.Data("ListData",1))
+	.S result=##class(web.DHCST.RestrictDoc).Save(Arcitm,ListData)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+i Action="DeleteRestrictDoc" d
+	.S autid=$Get(%request.Data("autid",1))
+	.s ret= ##class(web.DHCST.RestrictDoc).Delete(autid)
+	.i +ret'=0  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'true',info:'"_ret_"'}"
+	
+i Action="GetWhonetInfo" d
+    .S Input=$Get(%request.Data("Input",1))
+  .w ##class(web.DHCST.PHCDRGMAST).GetWhonetInfo(Start,Limit,Input)
+
+i Action = "CheckBillUomDr" d
+	.s BillUomDr=$Get(%request.Data("BillUomDr",1))
+	.s BuomId=$Get(%request.Data("BuomId",1))
+	.s ret=##class(web.DHCST.ARCITMMAST).CheckBillUomDr(BillUomDr,BuomId)
+	.i +ret>0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"		
+i Action="GetPhcPoison" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.W ##class(web.DHCST.PHCDRGMAST).QueryPHCPoison(InciId)
+i Action="SavePhcPoison" d
+	.S InciId=$Get(%request.Data("InciRowid",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result=##class(web.DHCST.PHCDRGMAST).SavePHCPoison(InciId,ListData)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="DeletePhcPoison" d
+	.S PoLinkRowid=$Get(%request.Data("PoLinkRowid",1))
+	.s result=##class(web.DHCST.PHCDRGMAST).DeletePHCPoison(PoLinkRowid)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="GetSkinInfo" d 
+	.S ArcRowid=$Get(%request.Data("ArcRowid",1))
+	.w ##class(web.DHCST.ARCITMMAST).GetSktInfo(ArcRowid)
+i Action="SaveSkinInfo" d
+	.S ArcRowid=$Get(%request.Data("ArcRowid",1))
+	.s ListData=$Get(%request.Data("ListData",1))
+	.s result=##class(web.DHCST.ARCITMMAST).SaveSktInfo(ArcRowid,ListData)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+i Action="DeleteSkinInfo" d
+	.S SkinRowid=$Get(%request.Data("SkinRowid",1))
+	.s result=##class(web.DHCST.ARCITMMAST).DeleteSktInfo(SkinRowid)
+	.i result=0  d
+	..w "{success:'true',info:'"_result_"'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+</SERVER>

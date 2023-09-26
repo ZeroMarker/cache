@@ -1,0 +1,62 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method> 
+
+<script language="cache" runat="server">
+
+    s Action=$Get(%request.Data("actiontype",1))
+    s Start=$Get(%request.Data("start",1))
+    s Limit=$Get(%request.Data("limit",1)) 
+    s Sort=$Get(%request.Data("sort",1))
+    s Dir=$Get(%request.Data("dir",1))
+    
+        //导入供应商数据
+   i Action="ImpVendorFromExcel" d
+   .s vendorStr=$g(%request.Data("vendorStr",1))
+   .s vendorPicPath=$g(%request.Data("vendorPicPath",1))
+   .s vendorPicFiles=$g(%request.Data("vendorPicFiles",1))
+   .s result=##class(web.DHCSTM.APCVendorDataImport).ImpVendor(vendorStr,vendorPicPath,vendorPicFiles)
+ 	 .i result'<0 d
+	 ..w "{success:'true',info:'"_result_"'}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+
+   //导入厂商数据
+   i Action="ImpManfFromExcel" d
+   .s manfStr=$g(%request.Data("ManfData",1))
+   .s result=##class(web.DHCSTM.APCVendorDataImport).ImpManf(manfStr)
+ 	 .i result'<0 d
+	 ..w "{success:'true',info:'"_result_"'}"
+	 .e  d
+	 ..w "{success:'false',info:'"_result_"'}"
+  
+     //导入供货项目数据
+   i Action="ImpItmFromExcel" d
+   .s itmStr=$g(%request.Data("ItmData",1))
+   .s result=##class(web.DHCSTM.APCVendorItmImport).StartInputA(itmStr)
+   .i result'<0 d
+   ..w "{success:'true',info:'"_result_"'}"
+   .e  d
+   ..w "{success:'false',info:'"_result_"'}"
+
+  
+   // 记录供应商图片信息
+   i Action="InsVendorPic" d   //zhwh 2015-04-02
+   .s vendorCode=$g(%request.Data("vendorCode",1))
+   .s fileName=$g(%request.Data("fileName",1))
+   .s type=$g(%request.Data("type",1))
+   .&sql(select apcvm_rowid into :vendor from apc_vendor where apcvm_code=:vendorCode)
+   .i SQLCODE'=0 d
+   ..w "{success:'false',info:'"_SQLCODE_"'}"
+   .q:SQLCODE'=0
+   .
+   .s result=##class(web.DHCSTM.APCVendor).InsVendorPic(vendor,fileName,type)
+   .i result'<0 d
+   ..w "{success:'true',info:'"_result_"'}"
+   .e  d
+   ..w "{success:'false',info:'"_result_"'}"
+   
+    
+    
+</script>

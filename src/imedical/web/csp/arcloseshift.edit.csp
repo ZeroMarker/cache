@@ -1,0 +1,45 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+
+<CSP:METHOD name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</CSP:METHOD>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+	s ID=$g(%request.Data("ID",1))
+	s USER=$g(%request.Data("USER",1))
+
+	s %request.Data("ID",1) = %request.Get("ID")
+	s %request.Data("USER",1) = %request.Get("USER")	
+
+	n topFrm,bottomFrm,wkflow
+	s topFrm="websys.default.csp?WEBSYS.TCOMPONENT=ARCloseShift.Edit&ID="_ID
+	s bottomFrm="websys.default.csp?WEBSYS.TCOMPONENT=ARCashierTransactions.List&PARREF="_ID_"&USER="_USER
+
+	s frameset=##Class(epr.FramePreference).GetData($g(%session.Data("LOGON.SITECODE")),$g(%session.Data("LOGON.GROUPID")),%request.PageName)
+	s ^zGC("1")=frameset
+	s:$g(frameset)="" frameset="40%,*"
+	s ^zGC("2")=frameset
+</SERVER>
+
+<FRAMESET rows="#(frameset)#" border="0" scrolling="auto" reSize>
+   <FRAME SRC="#(topFrm)#" NAME="FRARCLOSESHIFTS" frameBorder=1>
+   <FRAME SRC="#(bottomFrm)#" NAME="FRARCLOSESHIFTRCPTS" frameBorder=1 scrolling="auto">
+</FRAMESET>
+
+
+<BODY>
+</BODY>
+
+</HTML>
+
+
+

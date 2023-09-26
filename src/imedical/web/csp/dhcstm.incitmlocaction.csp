@@ -1,0 +1,30 @@
+<csp:content charset="UTF-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))
+;
+i Action = "Query" d
+    .S StrParam=$Get(%request.Data("Params",1))
+    .s User=$get(%session.Data("LOGON.USERID"))
+    .d ##class(web.DHCSTM.INCItmLoc).jsDHCSTLocItm(Start,Limit,Sort,Dir,StrParam,User)
+    .
+i Action = "Save" d
+    .S ListData=$Get(%request.Data("Detail",1))
+    .s ret=##class(web.DHCSTM.INCItmLoc).Save(ListData)
+    .i +ret=0  d
+    ..w "{success:'true',info:'"_ret_"'}"
+    .e  d
+    ..w "{success:'false',info:'"_ret_"'}"
+    .
+ i Action="SendLocLimit" d
+	.s LocId=$Get(%request.Data("LocId",1))
+	.s result=##class(web.DHCSTM.INCItmLoc).SendLocLimit(LocId)
+	.i result="" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	.
+</SERVER>

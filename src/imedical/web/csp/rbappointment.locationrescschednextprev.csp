@@ -1,0 +1,196 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+</HEAD>
+<BODY>
+<TRAK:APPLET></TRAK:APPLET>
+<SERVER>
+	n userId,RescID,CurrentDate
+	s (userId,RescID,CurrentDate)=""
+
+	;Log 43299 - Added OTFullPageDiary & viewTotalCnt (how many resources can be viewed on the screen at once).
+	s viewTotalCnt = 5
+	s OTFullPageDiary=""
+	i $d(%request.Data("OTFullPageDiary",1)) s OTFullPageDiary = $g(%request.Data("OTFullPageDiary",1))
+	if OTFullPageDiary=1 {
+		s viewTotalCnt = 10
+	}
+
+	s TWKFL=%request.Get("TWKFL")
+ 	s TWKFLI=%request.Get("TWKFLI")
+ 	s autofind=%request.Get("autofind")
+ 	s PatientID=%request.Get("PatientID")
+ 	s EpisodeID=%request.Get("EpisodeID")
+	s Location=%request.Get("Location")
+	s defaultloc=%session.Get("LOGON.CTLOCID")
+	i defaultloc'="" s defaultloc=$p($g(^CTLOC(defaultloc)),"^",2)
+	s CurrentSection=%request.Get("section")
+	s TotalSections=%request.Get("TotalSections")
+	s CurrentDate=%request.Get("CurrentDate")
+	s DiaryType=%request.Get("DiaryType")
+
+	; Log 56180 - 14.09.2006 - Keep/Remove Parameters based on Lock value
+	s Lock=$g(%request.Data("Lock",1))	
+	
+	i Lock="on" {
+		i (+CurrentDate<4000) s CurrentDate=CurrentDate
+		s %session.Data("RBAPTResSched","1194","Lock")=Lock
+  		s %session.Data("RBAPTResSched","1194","Date")=CurrentDate
+  		;s %session.Data("RBAPTResSched","1194","Location")=$g(%request.Data("Location",1))
+  		s %session.Data("RBAPTResSched","1194","Location")=Location
+ 	} else {
+		k %session.Data("RBAPTResSched","1194")
+ 	}
+	; End Log 56180
+
+	;s ^zbrad("Previous")=$g(CurrentSession)_","_$g(TotalSession)_","_$g(Location)
+	i CurrentSection="" s CurrentSession=0
+ 	s userId=%session.Get("LOGON.USERID")
+	s RescID=%request.Get("RescID")
+	s RESCDesc=%request.Get("RESCDesc")
+	;w "<TABLE width=100%>"
+	s prevsection=CurrentSection-5
+	; Log 56180 - 15.09.2006 - Include 'Lock' in URL
+	s PrevURL="rbappointment.locationrescsched.csp?section="_prevsection_"&Location="_Location_"&Lock="_Lock_"&DiaryType="_DiaryType_"&CurrentDate="_CurrentDate_"&OTFullPageDiary="_OTFullPageDiary
+	s nextsection=CurrentSection+5
+	; Log 56180 - 15.09.2006 - Include 'Lock' in URL
+	s NextURL="rbappointment.locationrescsched.csp?section="_nextsection_"&Location="_Location_"&Lock="_Lock_"&DiaryType="_DiaryType_"&CurrentDate="_CurrentDate_"&OTFullPageDiary="_OTFullPageDiary
+	d ##Class(websys.Component).GetComponentMessages(.t,"RBMessages")
+	s nextroom=t("NextRoom")
+	s previousroom=t("PreviousRoom")
+	;w "<TR>"
+	;i CurrentSection'=0 w "<TD align=left><A href=""#"" onclick=""javascript:LocationDiary('",PrevURL,"')""><-",t("PreviousRoom"),"</a></td>"
+	;i (CurrentSection<(TotalSections-5)) w "<td align=right><a href=""#"" onclick=""javascript:LocationDiary('",NextURL,"')"">",t("NextRoom"),"-></a></td>"
+	;w "<tr></table>"
+
+
+</SERVER>
+<TRAK:COMPONENT id="RBAppointment.LocationRescSchedNextPrev" hidemenus=1>
+</TRAK:COMPONENT>
+</BODY>
+</HTML>
+
+<script Language="JavaScript">
+var proom='#(previousroom)#';
+var nroom='#(nextroom)#';
+var csection='#(CurrentSection)#';
+var tsection='#(TotalSections)#';
+var pURL='#(PrevURL)#'
+var nURL='#(NextURL)#'
+var pobj=document.getElementById("Previous");
+var nobj=document.getElementById("next");
+var fobj=document.getElementById("find");
+var lobj=document.getElementById("Location");
+var dateobj=document.getElementById("Date");
+var viewCnt=#(viewTotalCnt)#;
+
+function DocumentLoadHandler() {
+	if (fobj) {
+		fobj.onclick=finddate;
+		obj1=fobj.parentElement;
+		if (obj1) {
+			obj1.width="70%"
+			obj2=obj1.parentElement;
+			if (obj2) {
+				obj3=obj2.parentElement;
+				if (obj3) {
+					obj4=obj3.parentElement;
+					if (obj4) {
+						obj4.width="100%"
+					}
+				}
+			}
+		}
+	}	
+	if (pobj) {
+		pobj.onclick=prevroom;
+		obj1=pobj.parentElement;
+		if (obj1) {
+			obj1.width="15%"
+		}
+		if (csection==0) {
+			pobj.innerHTML="&NBSP";
+			var killed=pobj.removeNode(false);
+		} else {
+			pobj.innerHTML="<-"+proom;
+		}
+	}
+	if (nobj) {
+		nobj.onclick=nextroom;
+		obj1=nobj.parentElement;
+		if (obj1) {
+			obj1.width="15%"
+		}
+		//if (csection>(tsection-6)) {
+		if (csection>(tsection - (viewCnt + 1))) {
+			nobj.innerHTML="&NBSP";
+			var killed=nobj.removeNode(false);
+		} else {
+			nobj.innerHTML=nroom+"->";
+		}	
+	}
+	if ("#(autofind)#"==1) finddate()
+}
+
+function nextroom() {
+	LocationDiary(nURL);
+}
+
+function prevroom() {
+	LocationDiary(pURL);
+}
+
+function finddate() {
+	// Log 56180 - 14.09.2006 - Get Lock Value
+	var Lock="";
+	var def="0";
+	
+	var objLock=document.getElementById("Lock");
+	if (objLock) lockFind=objLock.checked;
+
+	if (lockFind) {
+		Lock="on";
+	}
+	else {
+		Lock="off";
+	}
+	// End Log 56180
+
+	if (dateobj) {
+		if (lobj) {
+			var loc=lobj.value;
+		} else {
+			var loc='#(Location)#';
+		}
+		if (loc=="") {
+			loc='#(defaultloc)#';
+		}	
+		// Log 56180 - 15.09.2006 - Include 'Lock' in URL
+		var furl="rbappointment.locationrescsched.csp?section="+csection+"&Location="+loc+"&Lock="+Lock+"&DiaryType="+'#(DiaryType)#'+"&CurrentDate="+dateobj.value+"&autofind=#(autofind)#"+"&OTFullPageDiary=#(OTFullPageDiary)#"
+		LocationDiary(furl);
+	}
+}
+
+function LocationDiary(url)
+{
+	//log 43299 - Check if frames["work_top"] exists, else use frame 'TRAK_main'.
+	if(top.frames["TRAK_main"].frames["work_top"]){
+		top.frames["TRAK_main"].frames["work_top"].document.location.href=url;
+	}
+	else{
+		top.frames["TRAK_main"].document.location.href=url;
+	}
+
+}
+
+document.body.onload=DocumentLoadHandler;
+</script>

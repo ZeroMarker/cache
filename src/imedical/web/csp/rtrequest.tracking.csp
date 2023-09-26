@@ -1,0 +1,65 @@
+<!-- Copyright (c) 2003 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script language="JavaScript">
+</script>
+</HEAD>
+<script Language="JavaScript">
+	
+</script>
+<BODY onKeyDown="EnterKey();">
+<TRAK:APPLET> 
+
+<server>
+ n pid,reqid
+ s pid=%request.Get("PatientID")
+ s reqid=%request.Get("ID")
+ ;s %response.TraceDump=1
+</server>
+
+<TRAK:COMPONENT id="PAPerson.Banner">
+</TRAK:COMPONENT>
+<server>
+ n pid,reqid
+ s pid=%request.Get("PatientID")
+ s reqid=%request.Get("ID")
+</server>
+
+<TRAK:COMPONENT id="RTRequest.Edit">
+</TRAK:COMPONENT>
+<server>
+ n pid,reqid,volids,LogOnLoc,obj
+ s (pid,reqid,volids,LogOnLoc,obj)=""
+ s pid=%request.Get("PatientID")
+ s reqid=%request.Get("ID")
+ s volids=%request.Get("VolumeIDs")
+ s obj=##Class(User.CTLoc).%OpenId(%session.Data("LOGON.CTLOCID"))
+ i obj'=""  s LogOnLoc=obj.CTLOCDesc d obj.%Close()
+ d %request.Set("DisplayBooked","Y")
+</server>
+
+<TRAK:COMPONENT id="RTMasVol.FindRequestVolume">
+</TRAK:COMPONENT>
+<script language="JavaScript">
+var Loc="#(LogOnLoc)#"
+var rlObj=document.getElementById("RTREQReqLocDR");
+if (rlObj) {
+	if (rlObj.value=="") rlObj.value=Loc;
+	
+}
+
+</script>
+
+</BODY>
+</HTML>
+
+

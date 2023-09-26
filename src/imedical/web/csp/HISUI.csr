@@ -1,0 +1,23 @@
+<csr:rule name="HISUI" match="HISUI">
+<csr:description>HIS User Interface</csr:description>
+<csr:attribute name=debugger description="是否引入debugger文件" type="Caption:STRING" >
+<csr:attribute name=translate description="是否翻译" type="Caption:STRING" >
+
+<csr:action>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	s debugger=##'element.GetAttribute("debugger")'##
+	s translate=##'element.GetAttribute("translate")'##
+	d ##class(websys.HisUILib).StableVersion(debugger,translate)
+	Set TMenu = $g(%request.Data("TMENU",1))
+ 	If (TMenu>0){
+	 	if $g(HelpCode)="" {  // 如果为空,则是没有引用<EXTHEAD></EXTHEAD>, 补生成帮助, 病历入院记录,病程记录
+		 	if $g(HelpCode)="" { Set HelpCode = $lg(^websys.MenuD(TMenu),31) } 
+	 		if $g(HelpStyle)="" { Set HelpStyle = $lg(^websys.MenuD(TMenu),32) }
+	 		if $g(HelpCaption)="" { Set HelpCaption = $lg(^websys.MenuD(TMenu),1) }
+	 		D:$g(HelpCode)'="" ##class(websys.Help).Init(HelpCode,HelpCaption,HelpStyle)
+	 	}
+ 	}
+	</SCRIPT>
+</csr:action>
+</csr:rule>
+

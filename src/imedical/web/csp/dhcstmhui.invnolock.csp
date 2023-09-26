@@ -1,0 +1,142 @@
+﻿<!--发票组合-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div id="North" class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'" style="border-bottom-style:dashed;height:131px">
+		<table id="MainConditions" class="Condition">
+			<input id="RowId" name="RowId" type="hidden">
+			<tr>
+				<td><label>入库科室</label><input id="IngrLoc" name="IngrLoc" class="hisui-combobox" style="width:180px;"></td>
+				<td><label>单号</label><input id="AssemNo" name="AssemNo" class="textbox" disabled="true" style="width:173px;"></td>
+				<td><label style="margin-right:14px;">制单日期</label><input id="CreateDate" name="CreateDate" class="hisui-datebox textbox" data-options="disabled:true"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:86px">完成</a></td>
+				<td><a href="#" id="InvMainBT" class="hisui-linkbutton" style="width:114px">主单据组合</a></td>
+			</tr>
+			<tr>
+				<td><label>供应商</label><input id="Vendor" name="Vendor" class="hisui-combobox" data-options="disabled:true" style="width:180px;"></td>
+				<td><label>组合进价</label><input id="InvRpAmt" name="InvRpAmt" class="textbox" disabled="true" style="width:173px;"></td>
+				<td align="left"><label style="margin-right:0;">完成标志</label><input id="Comp" name="Comp" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y"></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton">取消完成</a></td>
+				<td><a href="#" id="InvDetailBT" class="hisui-linkbutton">单据明细组合</a></td>
+			</tr>
+			<tr>
+				<td><label>类组</label><input id="Scg" name="Scg" class="hisui-stkscgcombotree" data-options="disabled:true" style="width:180px;"></td>
+				<td><label>制单人</label><input id="CreateUser" name="CreateUser" class="hisui-combobox" data-options="disabled:true" style="width:180px;"></td>
+				<td></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" style="width:86px">打印</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="InvGrid"></table>
+	</div>
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:true,modal:true" title="发票组合单查询"> 
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:90px;">
+				<table id="FindConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="StartDate" name="StartDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><label>供应商</label><input id="FVendor" name="FVendor" class="hisui-combobox" style="width:200px;"></td>
+						<td>
+						<td><label>完成标志</label><select id="Complate" name="Complate" class='hisui-simplecombobox' style="width:130px;"></select></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton">查询</a></td>
+						<td><a href="#" id="FSelectBT" class="hisui-linkbutton">选取</a></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton">清屏</a></td>
+					</tr>
+					<tr>
+						<td><label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><label>类组</label><input id="FScg" name="FScg" class="hisui-stkscgcombotree" style="width:200px;"></td>
+					</tr>
+				</table>
+			</div> 
+			<div data-options="region:'west',border:false,collapsible:false" style="padding:0px 10px 10px 10px;width:430px;">
+				<div class="hisui-panel" title="发票组合单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<table id="InvMainGrid"></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false,collapsible:false" style="padding:0px 10px 10px 0px;">
+				<div class="hisui-panel" title="发票组合单明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<table id="InvDetailGrid"></table>
+				</div>
+			</div>
+		</div>	
+	</div>
+	<div id="InvDetailWin" class="hisui-dialog FindWin" data-options="closed:true,modal:true" title="单据明细组合"> 
+		<div class="hisui-layout" data-options="fit:true">   
+			<div data-options="region:'north',border:false" style="height:90px;">
+				<table id="FVConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="FVStartDate" name="StartDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><label>供应商</label><input id="FVVendor" name="Vendor" class="hisui-combobox" style="width:200px;"></td>
+						<td><label>组合进价</label><input id="TotalRpAmt" name="TotalAmt" class="textbox" disabled="true" style="width:130px;"></td>
+						<td><a href="#" id="FVQueryBT" class="hisui-linkbutton">查询</a></td>
+						<td><a href="#" id="FVSaveBT" class="hisui-linkbutton">组合</a></td>
+						<td><a href="#" id="FVClearBT" class="hisui-linkbutton">清屏</a></td>	
+					</tr>
+					<tr>
+						<td><label>截止日期</label><input id="FVEndDate" name="EndDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><label>类组</label><input id="FVScg" name="Scg" class="hisui-stkscgcombotree" style="width:200px;"></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'west',border:false,collapsible:false" style="padding:0px 10px 10px 10px;width:430px;">
+				<div class="hisui-panel" title="入库退货单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<table id="GRMainGrid"></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false,collapsible:false" style="padding:0px 10px 10px 0px;">
+				<div class="hisui-panel" title="入库退货单明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<table id="GRDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="InvMainWin" class="hisui-dialog FindWin" data-options="closed:true,modal:true" title="主单据组合"> 
+		<div class="hisui-layout" data-options="fit:true">   
+			<div data-options="region:'north',border:false" style="height:90px;">
+				<table id="FVMConditions" class="Condition">
+					<tr>
+						<td><label>起始日期</label><input id="FVMStartDate" name="StartDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><label>供应商</label><input id="FVMVendor" name="Vendor" class="hisui-combobox" style="width:200px;"></td>
+						<td><label>组合进价</label><input id="TotalAmt" name="TotalAmt" class="textbox" disabled="true" style="width:130px;"></td>
+						<td><a href="#" id="FVMQueryBT" class="hisui-linkbutton">查询</a></td>
+						<td><a href="#" id="FVMSaveBT" class="hisui-linkbutton">组合</a></td>
+						<td><a href="#" id="FVMClearBT" class="hisui-linkbutton">清屏</a></td>
+					</tr>
+					<tr>
+						<td><label>截止日期</label><input id="FVMEndDate" name="EndDate" class="hisui-datebox" style="width:150px;"></td>
+						<td><label>类组</label><input id="FVMScg" name="Scg" class="hisui-stkscgcombotree" style="width:200px;"></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false,collapsible:false" style="padding:0px 10px 10px 10px;">
+				<div class="hisui-panel" title="入库退货单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<table id="GRMGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InvManage/InvCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InvManage/InvPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InvManage/VendorInv.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InvManage/VendorInvFind.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InvManage/InvAssemble.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InvManage/InvMainAssemble.js"></script>
+</body>
+</html>

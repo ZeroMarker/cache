@@ -1,0 +1,195 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+
+	if "getBusinessType"=action {
+		s json=##class(DHCWL.DataQuery.Serv).GetBusinessType()
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+		q
+	
+	}elseif "getTreeNodeOfDimPro"=action {
+		s roleCode=$g(%request.Data("RoleCode",1))
+		//add by wz.2017-6-5
+		s searchItemdimProCode=$g(%request.Data("searchItemdimProCode",1))
+		s proLen=$l(searchItemdimProCode,",")
+		K ^||TEMPDHCWL("getTreeNodeOfDimPro")
+		f i=1:1:proLen {
+			s dimpro=$p(searchItemdimProCode,",",i)
+			continue:$g(dimpro)=""
+			s dim=$p(dimpro,".",1)
+			s pro=$p(dimpro,".",2)
+			continue:dim'=roleCode
+			s ^||TEMPDHCWL("getTreeNodeOfDimPro",pro)=""
+		}
+		
+		//zw ^||TEMPDHCWL("getTreeNodeOfDimPro")
+		//w !,searchItemdimProCode
+		
+		s inParam("roleCode")=roleCode
+		d ##class(DHCWL.DataQuery.Serv).GetDimProByRole(.inParam,.outParam)
+		s dimPro=""
+		w "["
+		f {
+			s dimPro=$o(outParam(dimPro))
+			q:dimPro=""
+			s desc=outParam(dimPro)
+			s leaf="true"
+			s cls="file"
+
+			//grap
+			//if $d(^||TEMPDHCWL("getTreeNodeOfDimPro",dimPro)) s cls=cls _" || grap"
+			continue:$d(^||TEMPDHCWL("getTreeNodeOfDimPro",dimPro)) 
+			
+			s checked="false"
+			s temp="{""text"":"""_desc_""",""code"":"""_dimPro_""",""cls"":"""_cls_""",""leaf"":"_leaf_",""type"":""pro""}"
+
+			w temp_","
+			
+		}
+		w "]"
+		q
+	}elseif "getOptionalRoleOfFilter"=action {
+		s roleCode=$g(%request.Data("roleCode",1))
+		//w !,roleCode
+		s businessType=$g(%request.Data("businessType",1))
+		s inParam("roleCode")=roleCode
+		s inParam("businessType")=businessType
+		d ##class(DHCWL.DataQuery.Serv).getOptionalRoleOfFilter(.inParam,.outParam)
+		s inx=0
+		w "["
+		f {
+			s inx=$o(outParam(inx))
+			q:$g(inx)=""
+			s desc=outParam(inx,"DESC")
+			s dimCode=outParam(inx,"DIMCODE")
+			s roleCode=outParam(inx,"ROLECODE")
+			S type=outParam(inx,"TYPE")
+			s leaf="false"
+			s cls="folder"
+
+			s checked="false"
+			s temp="{""text"":"""_desc_""",""code"":"""_roleCode_""",""cls"":"""_cls_""",""type"":"""_type_""",""dimCode"":"""_dimCode_"""}"
+
+			w temp_","
+			
+		}
+		w "]"
+		q		
+	}elseif "getTreeNodeOfKpiRole"=action {
+		s kpiCode=$g(%request.Data("kpiCode",1))
+		s inParam("kpiCode")=kpiCode
+		d ##class(DHCWL.DataQuery.Serv).getKpiRole(.inParam,.outParam)
+		s inx=0
+		w "["
+		f {
+			s inx=$o(outParam(inx))
+			q:$g(inx)=""
+			s desc=outParam(inx,"DESC")
+			s dimCode=outParam(inx,"DIMCODE")
+			s roleCode=outParam(inx,"ROLECODE")
+			S type=outParam(inx,"TYPE")
+			s leaf="false"
+			s cls="folder"
+
+			s checked="false"
+			s temp="{""text"":"""_desc_""",""code"":"""_roleCode_""",""cls"":"""_cls_""",""type"":"""_type_""",""dimCode"":"""_dimCode_"""}"
+
+			w temp_","
+			
+		}
+		w "]"
+		q		
+	}elseif "getNodesOfKPI"=action {
+		s kpiCode=$g(%request.Data("kpiCode",1))
+
+		s len=$l(kpiCode,",")
+		w "["
+		f i=1:1:len {
+			s kc=$p(kpiCode,",",i)
+			continue:$g(kc)=""
+			
+			s alphaCode=$SYSTEM.SQL.ALPHAUP(kc)
+			s id=$o(^DHCWL.MKPI.MKPII("MKPICode",alphaCode,""))
+			i id="" s id=$o(^DHCWL.MKPI.MKPII("MKPICode"," "_code,""))
+			s desc=$lg(^DHCWL.MKPI.MKPID(id),3)	
+			s leaf="false"
+			s cls="folder"
+			s temp="{""text"":"""_desc_""",""code"":"""_kc_""",""cls"":"""_cls_""",""leaf"":"_leaf_",""type"":""kpi""}"
+			w temp_","
+		}
+		
+		w "]"
+		q
+	
+	}elseif ("getFilterFun"=action){
+		s json=##class(DHCWL.DataQuery.Serv).getFilterFun()
+		w json.GetHead()
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"
+		q		
+	}elseif "getOptionalProValue"=action {
+		
+		s dimCode=$g(%request.Data("dimCode",1))
+		s proCode=$g(%request.Data("proCode",1))
+		s searchV=$g(%request.Data("searchV",1))
+		s dimType=$g(%request.Data("dimType",1))
+		if dimType="sec" {
+			w "{result:2,totalNum:2,root:[{value:'$startDate'},{value:'$endDate'}]}"
+			q
+			
+		}else{
+			s start=$g(%request.Data("start",1))
+			s limit=$g(%request.Data("limit",1))
+			s end=start+limit
+			s start=start+1			
+		
+		
+			s qryName="DHCWL.DataQuery.Serv:QryOptionalProValue"
+			s arguments=dimCode_$C(2)_proCode_$C(2)_searchV
+			s jsonPro="value"
+		
+			s json=##class(DHCWL.CommonUtil.JsonUtil).GetJsonByQry(qryName,arguments,"",start,end,jsonPro)
+			w json.GetHead()
+			d{
+				s obj=json.Next()
+				w obj
+			}while(obj'="")
+			i json.GetCount()=0 w "]}"	
+		}
+		q	
+	}elseif "getTreeNodeOfSecPro"=action {
+		s secCode=$g(%request.Data("secCode",1))
+		s inParam("secCode")=secCode
+		d ##class(DHCWL.DataQuery.Serv).GetSecProByRole(.inParam,.outParam)
+		s dimPro=""
+		w "["
+		f {
+			s dimPro=$o(outParam(dimPro))
+			q:dimPro=""
+			s desc=outParam(dimPro)
+			s leaf="true"
+			s cls="file"
+
+			s checked="false"
+			s temp="{""text"":"""_desc_""",""code"":"""_dimPro_""",""cls"":"""_cls_""",""leaf"":"_leaf_",""type"":""pro""}"
+
+			w temp_","
+			
+		}
+		w "]"
+		q		
+	}
+	
+	
+	
+</script>

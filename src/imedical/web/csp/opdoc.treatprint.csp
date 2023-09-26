@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--opdoc.treatprint.csp 一键打印-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
+ <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+ <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+ <SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+<HISUI></HISUI>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcdoc/css/simplydatagrid.css"></LINK>
+<style>
+.tree-file,.tree-folder{
+	display:none;
+}
+.tree-line{
+	visibility:hidden;
+}
+/*.tree-collapsed,.tree-expanded{
+	display:none;
+}*/
+.RootsNodes{
+	background:#40A2DE;
+	color:white;
+}
+.childNode-selected{
+	background:#C6E6FE;
+	color:black;
+}
+.RootsNodes > .tree-indent,.RootsNodes > .tree-join,.RootsNodes > .tree-expanded,.RootsNodes > .tree-collapsed{
+	display:none;
+}
+.RootsNodes{
+	height:35px;
+}
+.RootsNodes .tree-title{
+	height:35px;
+	line-height:35px;
+}
+.RootsNodes > .tree-title{
+	padding-left:10px;
+}
+.tree-node-selected,.tree-node-selected .tree-title{
+	background:#40A2DE;
+	color:white;
+}
+input[id$="_check"]{
+	vertical-align:middle;
+	margin-right:5px;
+}
+#rightSegmentPanel{
+	border:1px solid #ccc;
+	border-radius:5px;
+}
+.normal-head{
+	background:#f9f9fa;
+	border-top:1px solid #cccccc;
+	border-color:#cccccc;
+}
+.normal-head .panel-title{
+	color: #0E0E0E;
+}
+.danger-head{
+	background:#FF7373;
+	border-color:#FF7373;
+}
+.danger-head .panel-title{
+	color: #FFFFFF;
+}
+div[id$="_TablePanle"]{
+	margin:5px;
+	border:1px solid #ccc;
+	border-top:0;
+	border-radius:5px;
+}
+.ImageButton{
+	padding:5px;
+	margin-left:5px;
+	color:white;
+	background:#FF8A84;
+	border:1px solid white;
+}
+.emrlistbn{
+	padding:5px 10px;
+	margin-left:5px;
+	color:white;
+	background:#40A2DE;
+	border:1px solid #40A2DE;
+}
+.printted-menu-title{
+	text-align:center;
+	margin:0 0 0 5px;
+	padding:5px;
+	background-color:#017BCE;
+	color:#fff;
+}
+.datagrid-row-selected{
+	background:#fff;
+	color:#000;
+}
+input[type="checkbox"]{
+	vertical-align:middle;
+	margin-right:5px;
+}
+.preview-panel{
+	position:relative;
+}
+object{
+	display:none;
+}
+#DiagnosInfo{
+	padding: 5px;
+	margin: 5px;
+	color: black;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+}
+#EMRInfo{
+	height: auto !important;
+}
+.editcls{
+	text-decoration: underline;
+	color: #40A2DE;
+}
+.editcls:hover{
+	cursor: pointer
+}
+#panel-footer{
+	margin-right:10px;
+}
+#previewObjectTemplate .panel:not(:first-child){
+	margin-top:10px;
+}
+.dialog-button a:not(:first-child) {
+	margin-left:20px;
+}
+.dialog-button{
+	border-top:1px solid #EFEFEF;
+}
+v\:* {behavior:url(#default#VML);}
+.waitbillccancel{
+	color:red;
+	font-style:oblique;
+}
+.toggle-btn{
+	display: inline-block;
+	padding-right:13px;	
+	margin:0 5px;
+	background:url(../images/fa-angle-double-down_40a2de_12.png) no-repeat center right;
+    color:#40a2de;
+	text-decoration:underline;
+    line-height: 13px;
+    border-bottom:1px solid #40a2de;
+    cursor:pointer;
+}
+.toggle-btn.expanded{
+	background-image:url(../images/fa-angle-double-up_40a2de_12.png);
+}
+.tr-hide{
+	display:none;
+}
+div[id^="MZBL_Panel"]{
+	overflow:hidden;
+}
+.cmpresc-head .panel-title {
+	height:auto;
+}
+div[id$="TablePanle"]{
+	overflow-x:auto;
+	overflow-y:hidden;
+}
+.simplydatagrid thead tr th,.simplydatagrid tbody tr td {
+	border-left:0;
+	border-top:0;
+}
+</style>
+<Server>
+ d ##Class(websys.Configuration).HeadSession()
+ d ##class(web.DHCXMLPConfig).LODOPInit()
+ s (EpisodeID,PatientID,mradm)=""
+ s EpisodeID=%request.Get("EpisodeID") 
+ s PatientID=%request.Get("PatientID") 
+ s mradm=""
+ if (EpisodeID'=""){
+     s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+     s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+ }
+ s sysDateFormat=##class("websys.Conversions").DateFormat()
+ s StartDate=##class(DHCDoc.OPDoc.TreatPrint).GetPrintDateRange(EpisodeID)
+ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+ s PatDobDate=##class(web.DHCDoc.OP.AjaxInterface).GetPatDob($g(PatientID))
+ s PatSex=##class(DHCDoc.OPDoc.AjaxInterface).GetPatSex($g(PatientID))
+</Server>
+  </head>
+<body>
+	<csp:Include Page="opdoc.treatprint.show.csp">
+	<SCRIPT language = 'javascript' >
+	 //全局请求后台服务对象
+		var ServerObj={
+			 EpisodeID:"#(EpisodeID)#",
+	         PatientID:"#(PatientID)#",
+	         mradm:"#(mradm)#",
+	         sysDateFormat:"#(sysDateFormat)#",
+	         StartDate:"#(StartDate)#",
+	         PatDobDate:"#(PatDobDate)#",
+	         PatSex:"#(PatSex)#"
+		};
+		//页面加载完之后在赋值，防止事件未定义导致报错
+		$(function(){
+			Init();
+		});
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/printcommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/simplydatagrid.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/TreatPrint.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+    <object ID='ClsBillPrint' WIDTH=0 HEIGHT=0 CLASSID='CLSID:F30DC1D4-5E29-4B89-902F-2E3DC81AE46D' CODEBASE='../addins/client/DHCOPPrint.CAB#version=1,0,0,56' VIEWASTEXT></object>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+</body>
+</html>

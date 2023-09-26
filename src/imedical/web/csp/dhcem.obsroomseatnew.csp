@@ -1,0 +1,257 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<meta http-equiv="X-UA-Compatible"  content="IE=edge" xmlns:v="urn:schemeas-microsoft-com:vml"/> 
+<title>	留观室床位图 </title>
+<!--<DHCAPP:EASYUI/>-->
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<ADDINS require="DHCOPPrint"/><!--hxy 2020-04-07-->
+<HISUI/>
+ <server>
+ 	d ##Class(web.DHCBillPrint).InvBillPrintCLSID() //打印时使用
+</server>
+<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script><!--hxy 2020-04-07-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/obsroomseatnew.css" />
+<script type='text/javascript' src='../scripts/dhcnewpro/js/comPrint.js'></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/obsroomseatnew.js" charset="gb2312"></script>
+<!--<script Language="JavaScript" SRC="../scripts/DHCMessage.js"></script>-->
+<script Language="Javascript">
+	var CurLocID="#(%session.Data("LOGON.CTLOCID"))#"  //科室ID
+	var CurHospID="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
+	var CurHospID="#(%session.Data("LOGON.HOSPID"))#"
+	var UserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var UserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+</script>
+
+<SERVER>
+ 	s UPDSEATNEEDPAS=+##class(web.DHCEMNurExe).GetConfigBySession("UPDSEATNEEDPAS") //留观室换床是否需要验证操作用户密码
+	w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	w "var UPDSEATNEEDPAS="""_UPDSEATNEEDPAS_""";"_$c(13,10)
+	w "</SCRIPT>"
+</SERVER>
+</head>
+
+<body>
+
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="padding:10px;border:none;">
+			
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:130px;overflow:hidden;border:none;">
+				<a id="disHosp" class="hisui-linkbutton big" data-options="iconCls:'icon-big-disHosp',plain:true">出院</a>  
+				<a id="upObsBtn" class="hisui-linkbutton big" data-options="iconCls:'opbtn-upObsBtn',plain:true">等候</a>
+				<a id="prtStraps" class="hisui-linkbutton big" data-options="iconCls:'icon-big-straps',plain:true">腕带</a>
+				<a id="transBed" class="hisui-linkbutton big" data-options="iconCls:'icon-big-skip-no',plain:true">转移</a>
+				<div id="LocAdmNum" style="margin-left:280px;height:48px;display:inline-block;position: relative;top:10px;"></div>
+				<div style="height:10px;"></div>
+				<div class="tool-bar-line" style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+				<div style="height:35px;padding-top:8px;">
+					<input id="obsLoc" class="hisui-combobox" style="width:200px"/>
+				</div>
+				<div class="tool-bar-line" style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+			</div>
+		
+			<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="border:none;">	
+				<div class="center">
+					<div class="seatArea" style="position:relative">
+						<div id="obsRoom" class="obsRoom seatOnDrop center-obsseat" style="display:none">
+							<div class="hisui-accordion accordion-green" id="obsRoomAccordion" style="float:left;" data-options="border:false"><!--hxy 加class和data-option-->   
+								<div id="obsKeptArea" title="等待区<span id='waitNumber' class='panTitleNum'>0</span>" data-options="iconCls:'icon-w-clock',selected:true" style="overflow:auto;">   
+									 <table id="obsPatTable"></table>   <!--等候区-->
+								</div>   
+								<div title="离院区<span id='disHospNumber' class='panTitleNum'>0</span>" data-options="iconCls:'icon-w-export'" style="display:none;"> <!--hxy 2018-06-29 换图标-->  
+									<table id="disHospTable"></table>  
+								</div> 
+							</div>
+						</div>
+						
+						<div id="obsseat" class="obsseat" style="position:relative"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+</div>
+
+
+</body>
+
+<!--安排床位的面板-->
+<div id="planPatWin" class="hisui-window" title="留观床位安排" data-options="iconCls:'icon-w-epr',closed:'true',modal:true,collapsible:false,maximizable:false,minimizable:false" style="width:550px;height:420px;padding:10px;top:100px"><!--hxy 2018-09-13 加遮罩-->
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center'" style="border:0px;border-bottom:1px solid #8DB2E3;overflow: hidden;">
+			<table class="planPatTable" style="padding-right: 25px;">
+				<tr>
+					<td class="input-label" style="padding-right:8px">姓名</td>
+					<td> 
+						<input id="planPatTable-Name" class="data-input textbox" disabled="disabled"></input>
+					</td>
+					<td style="width:40px"></td>
+					<td class="input-label" style="padding-right:8px">登记号</td>
+					<td>
+						<input id="planWinPat-RegNo" class="data-input textbox" disabled="disabled"></input>
+					</td>
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">性别</td>
+					<td> 
+						<input id="planPatTable-Sex" class="data-input textbox" disabled="disabled"></input>
+					</td>
+					<td style="width:40px"></td>
+					<td class="input-label" style="padding-right:8px">余额</td>
+					<td>
+						<input id="planPatTable-Balance" class="data-input textbox" disabled="disabled"></input>
+					</td>
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">科室</td>
+					<td> 
+						<input id="planPatTable-Loc" class="data-input textbox" disabled="disabled"></input>
+					</td>
+					<td style="width:40px"></td>
+					<td class="input-label" style="padding-right:8px">病区</td>
+					<td>
+						<input id="planWinPat-WardDesc" class="data-input textbox" disabled="disabled"></input>
+					</td>
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">开始日期</td>
+					<td>
+						<input id="planWinPat-StDate" type="text" style="width:155px" class="data-input hisui-datebox textbox"></input>
+					</td >
+					<td style="width:40px"></td>
+					<td class="input-label" style="padding-right:8px">开始时间</td>
+					<td>
+						<input id="planWinPat-StTime" style="width:155px" class="hisui-timespinner textbox" data-options="showSeconds:true"></input>
+					</td>
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">患者床号</td>
+					<td>
+						<input id="planWinPat-SeatNo" style="width:155px" class="hisui-combobox"></input>
+					</td>
+					<td style="width:40px"></td>
+					<td class="input-label" style="padding-right:8px">主管医生</td>
+					<td>
+						<input id="planPatTable-Doc" style="width:155px" class="hisui-combodatagrid"></input>
+					</td>
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">主管护士</td>
+					<td> 
+						<input id="planPatTable-Nur1" class="data-input textbox"></input>
+					</td>
+					<td style="width:40px"></td>
+					<td class="input-label" style="padding-right:8px;white-space: nowrap;">主管护士2</td>
+					<td>
+						<input id="planPatTable-Nur2" class="data-input textbox"></input>
+					</td>
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">操作用户</td>
+					<td>
+						<input id="planPatTable-UserId" class="data-input textbox" disabled></input>
+					</td>
+					<td style="width:40px"></td>
+					<td class="input-label" style="padding-right:8px">密码</td>
+					<td>
+						<input id="planPatTable-UserPas" type="password" class="data-input textbox"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		<div data-options="region:'south',border:false" style="text-align:center;padding-bottom:15px;">
+			<a href="#" class="hisui-linkbutton planPat-Btn" >安排</a> <!--iconCls="icon-ok" hxy 2018-07-06-->
+			<a style="width:20px;display:inline-block"></a>
+			<a href="#" style="background:#DE5246;border:0px solid #DE5246" class="hisui-linkbutton planPat-Btn " >取消</a> <!--iconCls="icon-cancel"-->
+		</div>
+	</div>
+</div>
+
+
+<div id="disPatWin" class="hisui-window" title="离院" data-options="iconCls:'icon-w-back',closed:'true',modal:true,collapsible:false,maximizable:false,minimizable:false" style="width:350px;height:330px;padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center'" style="border:0px;border-bottom:1px solid #8DB2E3">
+			<table class="disTable">
+				<tr style="display:none"> 
+					<td class="input-label">就诊ID:</td>
+					<td>
+						<input id="disPatWin-disPatAdm" class="data-input textbox" type="text"> </input>
+					</td >
+				</tr>
+				<tr>
+					<td class="input-label" style="width:42%;padding-right:8px">开始日期</td>
+					<td>
+						<input id="disPatWin-disStDate" type="text" class="hisui-datebox" disabled="disabled" style="width:150px"> </input>
+					</td >
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">开始时间</td>
+					<td>
+						<input id="disPatWin-disStTime" class="hisui-timespinner" data-options="showSeconds:true" disabled="disabled" style="width:150px"></input>
+					</td>
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">离院日期</td>
+					<td>
+						<input id="disPatWin-disDate" type="text" class="hisui-datebox" style="width:150px"></input>
+					</td >
+				</tr>
+				<tr>
+					<td class="input-label" style="padding-right:8px">离院时间</td>
+					<td>
+						<input id="disPatWin-disTime" class="hisui-timespinner" data-options="showSeconds:true" style="width:150px"></input>
+					</td>
+				</tr>
+				<tr style="line-height:50px">
+					<td class="input-label" style="padding-right:8px">离院原因</td>
+					<td>
+						<input id="disPatWin-DischargeNote" class="hisui-combobox" style="width:150px"></textarea>
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		<div data-options="region:'south',border:false" style="text-align:center;padding-bottom:18px">
+			<a href="#" class="hisui-linkbutton dis-Btn"  >更新</a> <!--iconCls="icon-update"-->
+			<a style="width:10px;display:inline-block"></a>
+			<a href="#" style="background:#DE5246;border:0px solid #DE5246" class="hisui-linkbutton planPat-Btn" >取消</a>
+		</div>
+	</div>
+</div>
+
+<div id="cancelWin" class="hisui-window" title="撤销结算" data-options="iconCls:'icon-save',closed:'true',collapsible:false,maximizable:false,minimizable:false" style="width:350px;height:180px;padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center'" style="border:0px;border-bottom:1px solid #8DB2E3">
+			<table>
+				<tr style=""> 
+					<td class="input-label" style="width:135px">撤销结算原因:</td>
+					<td>
+						<input id="cancelWin-cancelCause" class="data-input textbox" type="text"> </input>
+					</td >
+				</tr>
+			</table>
+		</div>
+		
+		<div data-options="region:'south',border:false" style="text-align:center;padding:5px 0 0;">
+			<a href="#" class="hisui-linkbutton cancel-Btn" iconCls="icon-update" >更新</a>
+		</div>
+	</div>
+</div>
+
+<!--------------右键菜单------------------>
+<div id="menu" class="hisui-menu" style="width:140px; display: none;">  
+      <!--放置一个隐藏的菜单Div-->
+      <div id="disHosp" data-options="iconCls:'icon-check-reg'">出院</div>
+      <div id="upObsBtn" data-options="iconCls:'icon-reset'">等候</div>
+      <div id="prtStraps" data-options="iconCls:'icon-print'">腕带</div>
+      <div id="transBed" data-options="iconCls:'icon-change-loc'">转移</div>
+ </div>
+<div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;opacity: 0.8;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">加载中···</font></h1></div>
+</html>

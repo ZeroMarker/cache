@@ -1,0 +1,58 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+
+<server>
+ set Item=%request.Get("DSSItem")
+ set id = %request.Get("ID")
+ set eid = %request.Get("EID")
+ if Item = "DSSEvent"{
+ 	do ##Class(websys.DSSEvent).%DeleteId(eid)
+ }elseif Item = "DSSEventItem"{
+ 	;do ##Class(websys.DSSEventItem).%DeleteId(id)
+ 	do ##Class(websys.DSSEventItem).websysDel(%request.Get("TEVENT"),%request.Get("ID"))
+ }elseif Item="DSSAction" {
+ 	;websys.DSSAction,websysDel,%request.Get("TEVENT"),%request.Get("ID")
+ 	;do ##Class(websys.DSSAction).%DeleteId(id)
+ 	do ##Class(websys.DSSAction).websysDel(%request.Get("TEVENT"),%request.Get("ID"))
+ }elseif Item="DSSActionItem"{
+ 	;do ##Class(websys.DSSActionItem).%DeleteId(id)
+ 	do ##Class(websys.DSSActionItem).websysDel(%request.Get("TEVENT"),%request.Get("ID"))
+ }
+</server>
+
+<server>
+	if Item="DSSEvent" {
+</server>
+	<TRAK:COMPONENT id="websys.DSSEvent.Find">
+	</TRAK:COMPONENT>
+<server>
+	}else{
+</server>
+	<SCRIPT language="javascript">
+	var lnk=""
+	lnk='dsseventsummary.csp?TFORM='+'#(%request.Get("TFORM"))#'+'&TEVENT=' + '#(%request.Get("TEVENT"))#' + '&TNAVMARK='+'#(%request.Get("TNAVMARK"))#' + '&TPAGID='+'#(%request.Get("TPAGID"))#' + '&EID=' + '#(%request.Get("EID"))#' + '&Component='+ '#(%request.Get("Component"))#';
+	//window.alert(lnk)
+	//window.parent.frames['TRAK_main'].document.location.href=lnk;
+	document.location.href=lnk;
+	
+	</SCRIPT>
+<server>
+	}
+</server>
+
+
+</BODY>
+</HTML>
+

@@ -1,0 +1,167 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<csr:action>		<!--modify by wl 2019-12-13 WL0021 begin-->		
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+	}   
+    </SCRIPT>  
+</csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+
+</head>
+<script language=Cache runat=server>
+	s ISRowID=$Get(%request.Data("RowID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s ApproveRoleDR=$Get(%request.Data("ApproveRoleDR",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CancelOper=$Get(%request.Data("CancelOper",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("13",ISRowID),CurRole,Action)
+	
+	s ISLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	s ISLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	s ISOriginDR=##class(web.DHCEQCommon).GetSysInfo("301008")
+	s ISOrigin=##class(web.DHCEQCommon).GetStandardDesc("DHCEQCOrigin",ISOriginDR)
+	s ISEquipTypeDR=##class(web.DHCEQCommon).GetDefaultEquipType(1)
+	s ISEquipType=##class(web.DHCEQCommon).GetDefaultEquipType(2)
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	//Add By QW20190530 需求号:869592 资金来源
+	s FundsEditType=1
+	if (WaitAD="off")
+	{
+		s EditFlag=##class(web.DHCEQCommon).GetSysInfo("990058")
+		i EditFlag'=0  s FundsEditType=0 
+	}
+	//End  By QW20190530 需求号:869592 资金来源
+</script>
+<style type="text/css">
+	.hisui-textarea
+	{
+		width:300%;
+		height:100%;
+	}
+</style>
+<body class="hisui-layout" >
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-4-9 界面首先加载loading bug WY0060-->
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="入库单" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:160px;">
+					
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="OpenCheck">选择验收设备</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.InStock.OpenCheckList'" id="OpenCheck"></div>
+						<div class="eq-table-td eq-table-label"><label id="cISLocDR_CTLOCDesc" for="ISLocDR_CTLOCDesc">库房</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="ISLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label"><label for="ISBuyUserDR_SSUSRName">采购人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="ISBuyUserDR_SSUSRName"></div>
+						<!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label15"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+						<div class="eq-table-td eq-table-label15"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close"  data-options="stopAllEventOnDisabled:true">删除</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cISInStockNo" for="ISInStockNo">入库单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISInStockNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cISProviderDR_VDesc" for="ISProviderDR_VDesc">供应商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="ISProviderDR_VDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cISBuyLocDR_CTLOCDesc" for="ISBuyLocDR_CTLOCDesc">申购部门</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="ISBuyLocDR_CTLOCDesc"></div>
+						<!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label15"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit"  data-options="stopAllEventOnDisabled:true">提交</a></div>
+						<div class="eq-table-td eq-table-label15"><a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print"  data-options="stopAllEventOnDisabled:true">打印</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cISEquipTypeDR_ETDesc" for="ISEquipTypeDR_ETDesc">管理类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType'" id="ISEquipTypeDR_ETDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cISInDate" for="ISInDate">制单日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="ISInDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cISOriginDR_ODesc" for="ISOriginDR_ODesc">来源</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Origin'" id="ISOriginDR_ODesc"></div>
+						<!--modify by lmm 2019-05-29 892873-->
+						<!--modify by lmm 2019-11-22 LMM0050-->
+						<div class="eq-table-td eq-table-label15"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">退回</a></div>
+						<div class="eq-table-td eq-table-label15"><a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核1</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label" ><label for="ISRemark" >备注</label></div>
+						<div class="eq-table-td eq-table-input"><textarea id="ISRemark" class="hisui-textarea"></textarea></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<!--modify by lmm 2019-05-29 892873-->
+						<div class="eq-table-td eq-table-label15"><a id="BCancel" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">作废</a></div>
+					</div>
+					
+				</div>
+				<!--add by zx 2019-07-23 入库编辑列bug修改-->
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="DHCEQInStock" class="hisui-datagrid" data-options="onClickRow:onClickRow"></table>
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="ISRowID" value="#(ISRowID)#">
+			<INPUT type="hidden" id="ISLocDR" value="#(ISLocDR)#">
+			<INPUT type="hidden" id="ISLoc" value="#(ISLoc)#">
+			<INPUT type="hidden" id="ISStatus" value="">
+			<INPUT type="hidden" id="ISOriginDR" value="#(ISOriginDR)#">
+			<INPUT type="hidden" id="ISOrigin" value="#(ISOrigin)#">
+			<INPUT type="hidden" id="ISFromDeptDR" value="">
+			<INPUT type="hidden" id="ISProviderDR" value="">
+			<INPUT type="hidden" id="ISBuyLocDR" value="">
+			<INPUT type="hidden" id="ISBuyUserDR" value="">
+			<INPUT type="hidden" id="ISEquipTypeDR" value="#(ISEquipTypeDR)#">
+			<INPUT type="hidden" id="ISEquipType" value="#(ISEquipType)#">
+			<INPUT type="hidden" id="ISStatCatDR" value="">
+			<INPUT type="hidden" id="ISRemark" value="">
+			
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="ApproveRoleDR" value="#(ApproveRoleDR)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="CancelOper" value="#(CancelOper)#">
+			
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="CurDate" value=#(CurDate)#>
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="ApproveTypeCode" value=13>
+			<INPUT type="hidden" id="Type">
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+			<INPUT type="hidden" id="FundsEditType" value=#(FundsEditType)#><!--Add By QW20190530 需求号:869592 资金来源-->
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#> <!--add by QW20191022 BUG:QW0032 增加润乾打印-->
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-11 WL0010  -->
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/instock.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>  <!--add by wl 2019-11-11  WL00010-->
+</body>
+</html>

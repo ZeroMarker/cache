@@ -1,0 +1,69 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE></TITLE>
+</HEAD>
+<body>
+<server>
+ n OEORID,WINNAME,returnText,count
+ s (OEORID,WINNAME,returnText,count)=""
+ s OEORID=%request.Get("ID")
+ s DispensingDate=##Class(websys.Conversions).DateHtmlToLogical(%request.Get("DispensingDate"))
+ s WINNAME=%request.Get("WINNAME")
+ ;s ^zpeterc($zn,"calculateDT")=OEORID_","_DispensingDate_","_WINNAME
+
+ s rs=##Class(%Library.ResultSet).%New("web.OEFilmExecute:FindDispensingTime")
+ i rs,OEORID'="",DispensingDate'=""  d
+ . d rs.Execute(OEORID,DispensingDate)
+ . f  q:'rs.Next()  d
+ . . s returnText=returnText_rs.GetDataByName("OEOERowId")_","_rs.GetDataByName("DispensingTime")_","_rs.GetDataByName("ExecuteTime")_"^"
+ i rs  d rs.%Close() 
+ ;s ^zpeterc($zn,"returnText")=returnText
+ s count=$l(returnText,"^")
+ i count=1 q
+
+ w "<script>"
+ w "var detailFrame=window.open('','"_WINNAME_"');"
+ w "var cobj=detailFrame.document.getElementById(""DTCounter"");"
+		w "if(cobj){"
+ 		w "	cobj.value="""_(count-1)_""";"
+		w "}"
+
+ for i=1:1:count-1 {
+		s tempLarge=$p(returnText,"^",i)
+		s tempMedium=$p(tempLarge,",",1)
+		s tempSmall=##Class(websys.Conversions).TimeLogicalToHtml($p(tempLarge,",",2))
+		s tempTiny=$p(tempLarge,",",3)
+		;s ^zpeterc($zn,"tempTiny"_i)=tempTiny
+		w "var cobj=detailFrame.document.getElementById(""DispensingTime"_i_""");"
+		w "if(cobj){"
+ 		w "	cobj.value="""_tempSmall_""";"
+		w "}"
+		w "var cobj=detailFrame.document.getElementById(""DisplayTime"_i_""");"
+		w "if(cobj){"
+ 		w "	cobj.value="""_tempSmall_""";"
+		w "}"
+		w "var cobj=detailFrame.document.getElementById(""OEOREID"_i_""");"
+		w "if(cobj){"
+ 		w "	cobj.value="""_tempMedium_""";"
+		w "}"
+		i tempTiny'=""{
+			w "detailFrame.DisableField(""DispensingTime"_i_""");"
+		}
+ }
+ w "</script>"
+ q
+ ;
+</server>
+<script language=Javascript>
+</script>
+
+</body>
+</html>

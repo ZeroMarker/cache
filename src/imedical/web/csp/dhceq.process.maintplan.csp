@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<HTML XMLNS=TRAK>
+<head>
+<meta charset="UTF-8" http-equiv="Content-Type" content="text/html;"/>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD></TRAK:HEAD>
+<DHCEQ:EASYUI></DHCEQ:EASYUI>
+</head>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	s RowID=$g(%request.Data("RowID",1))
+	s ReadOnly=$g(%request.Data("ReadOnly",1))
+	s Status=$g(%request.Data("Status",1))
+	s BussType=$g(%request.Data("BussType",1))
+	s QXType=$g(%request.Data("QXType",1))
+	s MaintLocDR=$g(%request.Data("MaintLocDR",1))
+	s SourceType=2  //$g(%request.Data("SourceType",1))
+</SCRIPT>
+<body>
+<div class="easyui-layout" fit="true" title="设备计量计划">
+    <div region="north" style="height:80%;width:100%;">
+		<div class="easyui-layout" fit="true">
+	    	<div region="west" title="计划信息" style="width:45%;padding:10px;">
+		        <table fit="true" border=0 style="height:100%;width:100%;">
+						<tr>
+							<td align="right">计划单号</td><td><input id="PlanNo" class="easyui-textbox" disabled="true" type="text"></input></td>
+						</tr>
+						<tr>
+							<td align="right">计划名称</td><td><input id="Name" class="easyui-textbox" required="true" type="text"></input></td>
+			                <td align="right">保养科室</td><td><input id="MaintLoc"  type="text" class="easyui-combogrid" data-options="{'component':'loc'}"></td>
+						</tr>
+						<tr>
+          				    <td align="right">临时计划</td><td><input id="TempPlanflag" type="checkbox"></td>
+							<td align="right">保养周期</td>
+							<td>
+								<input id="CycleNum" class="easyui-textbox" type="text" required="true" style="height:24px;width:80px;"></input>
+				                <input id="CycleUnit" type="text" required="true" value="月" style="height:24px;width:45px;" class="easyui-combogrid" data-options="{'component': 'CycleUnit'}">
+							</td>
+		             	</tr>   
+						<tr>
+							<td align="right">预警天数</td><td><input id="PreWarnDaysNum" class="easyui-textbox" required="true" type="text"></input></td>
+							<td align="right">启用日期</td><td><input class="easyui-datebox" id="FromDate" type="text" required="true"></input></td>
+		             	</tr>
+						<tr>
+          				    <td align="right">固定时间</td><td><input id="FixTimeflag" type="checkbox"></td>
+							<td align="right">时间范围</td>
+							<td>
+								<input class="easyui-datebox" id="SDate" type="text" disabled="true" style="height:24px;width:60px;"></input>
+								-<input class="easyui-datebox" id="EDate" type="text" disabled="true" style="height:24px;width:60px;"></input>
+							</td>
+		             	</tr>  
+						<tr>
+			                <td align="right">保养类型</td><td><input id="MaintType"  type="text" class="easyui-combogrid" data-options="{'component': 'MaintType'}"></td>
+			                <td align="right">维修方式</td><td><input id="MaintMode"  type="text" class="easyui-combogrid" data-options="{'component': 'MaintMode'}"></td>
+						
+		             	</tr>   
+						<tr>
+							<td align="right">保养费用</td><td><input id="MaintFee" class="easyui-textbox" type="text"></input></td>
+			                <td align="right">服务商</td><td><input id="Service"  type="text" class="easyui-combogrid" data-options="{'component': 'Service'}"></td>
+		             	</tr>   
+						<tr>
+							<td align="right">服务联系人</td><td><input id="ServiceHandler" class="easyui-textbox" type="text"></input></td>
+							<td align="right">服务电话</td><td><input id="ServiceTel" class="easyui-textbox" type="text"></input></td>
+		             	</tr>   
+						<tr>
+							<td align="right">保养内容</td><td colspan="3"><input id="Content" class="easyui-textbox" type="text" style="height:40px;width:413px;"></input></td>
+		             	</tr>   
+						<tr>
+							<td align="right">备注</td><td colspan="3"><input id="Remark" class="easyui-textbox" type="text" style="height:40px;width:413px;"></input></td>
+		             	</tr>
+		        </table>
+			</div>
+	    	<div region="center" title="设备范围">
+				<div class="easyui-layout" fit="true">
+		    		<div region="north" style="height:35%;padding:10px;">
+						<table fit="true" border=0 style="height:100%;width:100%;"> 
+								<tr>
+									<td align="right">范围描述</td><td colspan="5"><input id="RangeDesc"  class="easyui-textbox" required="true" type="text" style="width:355px;"/></td>
+								</tr>
+								<tr>
+									<td align="right">限定类组</td><td colspan="2"><input id="EquipType" type="text" style="width:200px;"></input></td>
+									<td align="right">限定类型</td><td colspan="2"><input id="StatCat" type="text" style="width:200px;"></input></td>
+								</tr>
+								<tr>
+			          				<td align="right">限定科室</td><td><input id="LocFlag" type="checkbox"></td>
+			          				<td align="right">限定设备项</td><td><input id="ItemFlag" type="checkbox"></td>
+			          				<td align="right">限定设备</td><td><input id="EquipFlag" type="checkbox"></td>
+								</tr>   
+				    	</table>
+	    			</div>
+    	
+			    	<div data-options="region:'center',title:'',split:true">
+			    		<div style="height:100%;width:1200px;overflow:hidden;">
+				    		<div id="div-DHCEQLoc" style="height:97%;width:250px;float:left;margin:1%;">
+				    			<table id="DHCEQLoc"></table>
+				    		</div>
+				    		<div id="div-DHCEQMastitem" style="height:97%;width:250px;float:left;margin:1%;">
+				    			<table id="DHCEQMastitem" ></table>
+				    		</div>
+				    		<div id="div-DHCEQEquip" style="height:97%;width:600px;float:left;margin:1%;">
+				    			<table id="DHCEQEquip"></table>
+				    		</div>
+			    		</div>
+	        			<!--table border=1 style="height:100%"> 
+				        	<tr>
+					        	<td style="width:150px"><table id="DHCEQLoc" ></table></td>
+					        	<td style="width:150px"><table id="DHCEQMastitem" ></table></td>
+					        	<td style="width:150px"><table id="DHCEQEquip"></table></td>
+				        	</tr>
+			        	</table-->
+			    	</div> 
+	    		</div>
+	    	</div>
+	    </div>
+	</div>
+	<div region="center" title="">
+		<table fit="true" border=0 style="width:70%;margin-top:40px;margin-left:230px;"> 
+				<td><a id="BSave" href="#" class="easyui-linkbutton" style="width:100px;height:25px;">保存</a></td>
+				<td><a id="BSubmit" href="#" class="easyui-linkbutton" style="width:100px;height:25px;">提交</a></td>
+				<td><a id="BDelete" href="#" class="easyui-linkbutton" style="width:100px;height:25px;">删除</a></td>
+				<div><input type="hidden" name="RowID" id="RowID" value=#(RowID)#></div>
+				<div><input type="hidden" name="BussType" id="BussType" value=#(BussType)#></div>
+				<div><input type="hidden" name="SourceType" id="SourceType" value=#(SourceType)#></div>
+				<div><input type="hidden" name="QXType" id="QXType" value=#(QXType)#></div>
+				<div><input type="hidden" name="MaintLocDR" id="MaintLocDR" value=#(MaintLocDR)#></div>
+				<div><input type="hidden" name="CycleUnitDR" id="CycleUnitDR" value=2></div>
+				<div><input type="hidden" name="MaintTypeDR" id="MaintTypeDR"></div>
+				<div><input type="hidden" name="MaintUserDR" id="MaintUserDR"></div>
+				<div><input type="hidden" name="MaintModeDR" id="MaintModeDR"></div>
+				<div><input type="hidden" name="MeasureDeptDR" id="MeasureDeptDR"></div>
+				<div><input type="hidden" name="MeasureHandler" id="MeasureHandler"></div>
+				<div><input type="hidden" name="MeasureTel" id="MeasureTel"></div>
+				<div><input type="hidden" name="ServiceDR" id="ServiceDR"></div>
+				<div><input type="hidden" name="Status" id="Status" value=#(Status)#></div>
+				<div><input type="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#></div>
+				<div><input type="hidden" name="InvalidFlag" id="InvalidFlag"></div>
+				<div><input type="hidden" name="Hold1" id="Hold1"></div>
+				<div><input type="hidden" name="Hold2" id="Hold2"></div>
+				<div><input type="hidden" name="Hold3" id="Hold3"></div>
+				<div><input type="hidden" name="Hold4" id="Hold4"></div>
+				<div><input type="hidden" name="Hold5" id="Hold5"></div>
+				
+				
+				<div><input type="hidden" name="EquipRangeDR" id="EquipRangeDR"></div>
+				<div><input type="hidden" name="EquipRangeEquipTypeDR" id="EquipRangeEquipTypeDR"></div>
+				<div><input type="hidden" name="EquipRangeStatCatDR" id="EquipRangeStatCatDR"></div>
+				
+    	
+    	</table>
+	</div>
+</div>
+    <script type='text/javascript' src='../scripts/DHCEQCommon.js'></script>
+    <script type='text/javascript' src='../scripts/dhceq/js/dhceqmaintplannew.js'></script>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	
+	//s searchField = $Get(%request.Data("searchField",1))
+	//s searchValue = $Get(%request.Data("searchValue",1))
+	
+	
+	s userdr = $Get(%request.Data("userdr",1))
+	s str=$Get(%request.Data("query",1))
+	s SubjId=$Get(%request.Data("SubjId",1))
+
+
+    ///²éÑ¯Ìõ¼þ
+
+	s subjId=$Get(%request.Data("checksubjId",1))
+	s startdate=$Get(%request.Data("startdate",1))
+	s enddate=$Get(%request.Data("enddate",1))
+	s state=$Get(%request.Data("state",1))
+	s checkitemId=$Get(%request.Data("checkitemId",1))
+	s miniAmount = $Get(%request.Data("miniAmount",1))
+	s maxAmount = $Get(%request.Data("maxAmount",1))
+
+
+	
+	s debitrowid=$Get(%request.Data("debitrowid",1))	
+    s creditrowid=$Get(%request.Data("creditrowid",1))
+	s checkitemId = $Get(%request.Data("checkitemId",1))
+	s checkGroupId = $Get(%request.Data("checkGroupId",1))
+
+
+	
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctManualDealCacel).ManualDebitList(start,limit,subjId,startdate,enddate,state,checkitemId,miniAmount,maxAmount,userdr)
+
+	
+	i action = "GetCheckSubj" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetCheckSubjName(start, limit, str, userdr)
+
+	i action = "GetCheckItemName" d
+	.w ##Class(herp.acct.udata.uAcctCommon).GetCheckItemName(start, limit, str, userdr, SubjId)
+	
+	
+	i action = "handcheck" d
+	.s result =##class(herp.acct.udata.uAcctManualDealCacel).handCheck(debitrowid,creditrowid,checkitemId,checkGroupId,userdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

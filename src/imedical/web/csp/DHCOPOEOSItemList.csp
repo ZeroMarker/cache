@@ -1,0 +1,65 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+
+</HEAD>
+<body>
+<TRAK:APPLET>
+<server>
+ n err
+ n OSOrderRowIDs,OSOrderRowID,OSOrderQuantity,OSOrderQuantitys,i,OrderWindow
+ ;#(%request.Get("ARCIMDesc"))#
+ s OSOrderQuantitys=""
+ s itemtext=%request.Get("itemtext")
+ s OSOrderRowIDs=%request.Get("OSOrderRowIDs")
+ s OrderWindow=%request.Get("OrderWindow")
+ f i=1:1:$l(OSOrderRowIDs,"^")-1 d
+ . s OSOrderRowID=$p($g(OSOrderRowIDs),"^",i)
+ . s OSOrderRowID=$p($g(OSOrderRowID),"*",2)
+ . s OSOrderQuantity=$p($g(^OEORD(+OSOrderRowID,"I",$p(OSOrderRowID,"||",2),1)),"^",12)
+ . ;i OSOrderQuantity="" s OSOrderQuantity=1
+ . s OSOrderQuantitys=OSOrderQuantitys_OSOrderQuantity_"^"
+ s %request.Data("OSOrderQuantitys",1)=OSOrderQuantitys
+ s del=$c(13,10)
+ s len=$l(itemtext,del)
+ s newitemtext=""
+ f i=1:1:len d
+ . s alias=$p(itemtext,del,i)
+ . i alias'="" d
+ . . s err=$$findbyalias^COEOrdItem(alias) 
+ . . ;s ^zanju($zn," err ",i)=err
+ . . i err'="" s newitemtext=newitemtext_$s($l(newitemtext):del,1:"")_alias
+ d %request.Set("itemtext",newitemtext)
+ ;i newitemtext="" s %response.ServerSideRedirect="websys.close.csp" d ##Class(websys.Conversions).SaveRequest() q
+	;oeorder.ositemlist.csp
+	;DHCOPOEOSItemList
+
+
+ s DefaultData=%request.Get("DefaultData")
+ n frm
+ ;s frm=##Class(websys.Component).OpenName("OEOrder.OSItemList")
+ s frm=##Class(websys.Component).OpenName("DHCOPOEOrdSets")
+ i frm d frm.Show(),frm.%Close()
+ n PatID,LabOrderWithoutExternalCode
+ s PatID=%request.Get("PatientID")
+ s LabOrderWithoutExternalCode=%request.Get("LabOrderWithoutExternalCode")
+</server>
+
+<script language=Javascript>
+   //window.moveTo(100, 100);
+   var OrderWindow="#(OrderWindow)#";
+   var strDefaultData="#(DefaultData)#";	
+   SetDefaultData(strDefaultData);
+   var LabOrderWithoutExternalCode="#(LabOrderWithoutExternalCode)#";
+</script>
+
+</body>
+</html>

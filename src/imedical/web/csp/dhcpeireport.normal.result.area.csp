@@ -1,0 +1,88 @@
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		i "SummarizeGather"=$G(ReultOutType) d
+		.s DIVClass="NORReport"
+		e  d
+		.s DIVClass="Page NORReport"
+		s DocNmae="检查医生:"
+		s:ARCIMDesc="妇科问诊" DocNmae="录入:"
+		s RetFlag=0
+		s HadFlag=0
+	</SCRIPT>
+			<TABLE width=655 border=0 cellspacing=0>
+				<TR>
+					<TD class='NORHead NORHeadARCIMDesc' colSpan=2>#(ARCIMDesc)#</TD>
+				</TR>
+			</TABLE>
+			<TABLE width=655 border=0 cellspacing=0>
+				<THEAD style="display:table-header-group">
+				<TR>
+					<TD width="300" height="20" class="NORResultTtile NORResultTtileTestName">项目名称</TD>
+					<TD class="NORResultTtile NORResultTtileTestValue">检查结果</TD>
+					<!--TD width="132" height="42" class="NORResultTtile NORResultTtileTestName">项目名称</TD>
+					<TD width="187" class="NORResultTtile NORResultTtileTestValue">检查结果</TD-->
+				</TR>
+				</THEAD>
+			
+			<TBODY>
+				
+					<!--  输出病患信息  -->
+	<csp:WHILE COUNTER=ODID CONDITION=(""'=CurData)>
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		s CurData=$g(^TMPReport(UserID,"Result", "Content",ARCIM,ODID))
+		i (""'=CurData) d
+		.s TestDesc=$P(CurData,"^",1)
+		.s TestResults=$P(CurData,"^",2)
+		.s TestResult=$P(CurData,"^",2)
+		.s TestNormal=$P(CurData,"^",3)
+		.s TestUnit=$P(CurData,"^",4)
+		.s:(""'=TestUnit) TestResult=TestResult_" "_TestUnit
+		.s TemplateDescs=$P(CurData,"^",5)
+		.s TemplateDesc=$P(CurData,"^",5)
+		.
+		.s:(""'=TemplateDesc) TestResult=TestResult_"  ("_TemplateDesc_")"
+		s:(TestDesc="既往史")&&((TestResult["子宫全切")||(TestResult["子宫次全切")) RetFlag="1"
+		
+		s ArcimID=$P(^OEORD(+ARCIM,"I",$P(ARCIM,"||",2),1),"^",1)
+		s ODSub=$O(^DHCPEST(0,"OD_Desc",TestDesc,StationId,0))
+		i ODSub'=""
+		{
+			s CODID=StationId_"||"_ODSub
+			s PAADM=$P(^OEORD(+ARCIM),"^",1)
+			s VIPLevel=##class(web.DHCPE.PreCommon).GetVIPLevel("PAADM",PAADM)
+			s RLT=$O(^DHCPERLT(0,"PAADM_OD",PAADM,CODID,0))
+			i RLT'="" d
+			.s OEID=$P(^DHCPERLT(RLT),"^",9)
+			.i OEID'=ARCIM d
+			..q:HadFlag=1
+			..i (HadFlag=0)&&(VIPLevel'[("VIP")) d
+			...w "<TR>"
+			...;w "<TD class='NORFooter NORFooterChecker'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;录入者:<LABEL class=Checker>"_Checker_"</LABEL></TD>"
+			...;w "<TD class='NORFooter NORFooterCheckDate'>录入日期:<LABEL class=CheckDate>"_CheckDate_"&nbsp;&nbsp;</LABEL></TD>"
+			...w "<TD colspan=2>&nbsp</TD>"
+			...w "</TR>"
+			..s HadFlag=1
+			..s Checker=$P(^DHCPERLT(RLT),"^",5)
+			..s:Checker'="" Checker=$P(^SSU("SSUSR",Checker),"^",2)
+			..s CheckDate=$P(^DHCPERLT(RLT),"^",6)
+			..s:CheckDate'="" CheckDate=$ZD(CheckDate,3)
+		}
+		</Script>
+		<CSP:IF CONDITION=((""'=CurData)&&((RetFlag'=1)||(TestDesc'="绝经后出血")))>
+				<TR>
+					<TD class='NORResult NORResultTestName'>#(TestDesc)#</TD>
+					<TD class='NORResult NORResultTestValue'>#(TestResult)#</TD>
+					<!--TD class='NORResult NORResultTestName'>#(TestDesc2)#</TD>
+					<TD class='NORResult NORResultTestValue'>#(TestResult2)#</TD-->
+				</TR>
+		</CSP:IF>
+	</csp:WHILE>
+			</TBODY>
+			<CSP:IF CONDITION=(Checker'="")>
+			<TFOOT>
+				<TR>
+					<TD class="NORFooter NORFooterChecker">#(DocNmae)#<LABEL class=Checker>#(Checker)#</LABEL></TD>
+					<TD class="NORFooter NORFooterCheckDate">检查日期:<LABEL class=CheckDate>#(CheckDate)#&nbsp;&nbsp;</LABEL></TD>
+				</TR>
+			</TFOOT>
+			</CSP:IF>
+		</TABLE>

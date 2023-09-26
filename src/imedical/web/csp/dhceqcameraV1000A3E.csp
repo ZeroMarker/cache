@@ -1,0 +1,68 @@
+<html>
+<head>
+<title>高拍仪图片采集</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=8" >
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+<Script language="cache" runat="server">
+ s ReadOnly=$Get(%request.Data("ReadOnly",1))
+ s Status=$Get(%request.Data("Status",1))
+ s CurrentSourceType=$Get(%request.Data("CurrentSourceType",1))
+ s CurrentSourceID=$Get(%request.Data("CurrentSourceID",1))
+ s EquipDR=$Get(%request.Data("EquipDR",1))
+ s PTRowID=$Get(%request.Data("PTRowID",1))
+ s PLRowID=$Get(%request.Data("PLRowID",1))
+ s Path=##class(web.DHCEQCommon).GetSysInfo("990004")
+ s PicTypeInfo=##Class(web.DHCEQ.Process.DHCEQCPicType).GetPicTypeBySourceType(CurrentSourceType)
+</Script>
+<TRAK:HEAD></TRAK:HEAD>
+<DHCEQ:EASYUI></DHCEQ:EASYUI>
+<script type="text/javascript" src="../scripts/DHCEQCommon.js"></script>
+<script type="text/javascript" src="../scripts/dhceq/js/dhceqcamera.js"></script>
+<script type="text/javascript" src="../csp/broker/cspbroker.js"></script>
+<script type="text/javascript" src="../csp/broker/cspxmlhttp.js"></script>
+</head>
+<body onload="Load()" onunload="Unload()">
+
+    <div>
+        <object id="view1" type="application/x-eloamplugin" width="600" height="600" name="view"></object>
+    </div>
+
+    <div>
+        <object id="thumb1" type="application/x-eloamplugin" width="800" height="150" name="thumb"></object>
+    </div>
+
+    <tr>
+	    <td>
+            <label id="lab1">设备1</label>
+            <select id="subType1" style="width: 90px" name="subType1" onchange="changesubTypeMain()"></select> 
+            <select id="selRes1" style="width: 90px" name="selRes"></select> 
+			扫描尺寸<select id="scansize" style="width: 90px" name="scansize" onchange="changescansize()">			
+				<option value ="org">原始</option>
+				<option value ="mid">中</option>
+				<option value="small">小</option>
+			</select> 	
+            <br />
+            <tr><font size=2>图片类型及名称:</font></tr>
+			<tr><select id="PicType" style="width: 90px" name="PicType" onchange="changePicType()"></select></tr>
+			<tr><input type="text" id="PicName" style="width: 86px;height: 18px"/></tr>	
+            <input class="submit_01" type="button" value="打开视频" onclick="OpenVideo()" />
+            <input class="submit_01" type="button" value="关闭视频" onclick="CloseVideo()" />
+			<input class="submit_01" type="button" value="拍照"	onclick="Scan()" />
+			<input class="submit_01" type="button" value=" 全    选 " onclick="SelectAll(true)" />
+			<input class="submit_01" type="button" value=" 全 不 选 " onclick="SelectAll(false)" />
+			<input class="submit_01" type="submit" value=" 上    传 "	onclick="Upload()" />
+            <br/>
+			<input id="PTRowID" type="hidden" value=#(PTRowID)#>
+			<input id="PLRowID" type="hidden" value=#(PLRowID)#>
+			<input id="ReadOnly" type="hidden" value=#(ReadOnly)#>
+			<input id="CurrentSourceType" type="hidden" value=#(CurrentSourceType)#>
+			<input id="CurrentSourceID" type="hidden" value=#(CurrentSourceID)#>
+			<input id="EquipDR" type="hidden" value=#(EquipDR)#>
+			<input id="Path" type="hidden" value=#(Path)#>
+			<input id="PicTypeInfo" type="hidden" value=#(PicTypeInfo)#>
+	    </td>
+    </tr>
+
+    </body>
+</html>

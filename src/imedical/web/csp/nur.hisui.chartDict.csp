@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<head>
+
+<!-- nur.hisui.chartDict.csp -->
+<title>	体温单字典表配置 </title>
+<meta charset="utf-8"/>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<NURHISUI />
+<style>
+	.panel-body.panel-body-noheader{
+		border-color: #ccc;
+	}
+	.datagrid .panel-body{
+		border: none;
+		border-radius: 0;
+	}
+	#add-dialog .panel-body{
+		padding-bottom:0!important;
+	}
+	.td-button{
+		padding: 10px;
+	}
+	#add-form td{
+		padding-top: 0;
+		padding-bottom: 10px;
+	}
+	.textareabox-text, input.textbox, textarea.textbox{
+		width: 230px;	
+	}
+	textarea{
+		border-color: #40a2de;
+		width: 230px;	
+	}
+	.form-group{
+		padding: 10px 10px 9px 10px;
+		border-bottom: 1px dashed #ccc;
+	}
+	.form-group a {
+		margin-left: 10px;	
+	}
+	.button-group{
+		margin: 2px 0;	
+	}
+</style>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<!--div data-options="region:'north',border:false" style="display:none,height: 44px;padding:10px 10px 0 10px">
+	 		<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+	 	</div-->
+		<div id="dregion" data-options="region:'center',border:false,split:true" style="padding:4px">
+			<div id="laypanel" class="hisui-panel"  title="" style="padding:0px" data-options="iconCls:'icon-edit',headerCls:'panel-header-gray',fit:true,closable:true,collapsible:false,minimizable:false,maximizable:false">
+				<div id="toolbar">
+					<div class="form-group">
+						<lable class="r-label">类别</lable>
+						<select placeholder="请选择" id="category" data-options="valueField:'code',textField:'desc',onSelect:function(record){setDataGridLoad(record.code)}" style="width:186px;"></select> 
+						<a id="search" href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</div>
+					<div class="button-group">
+						<a id="btn-add" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="UpdateGridData()">修改</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="DeleteGridData()">删除</a>
+					</div>
+				</div>	
+				<table id="temperatureSelectList"></table>
+				<div id="add-dialog" class="hisui-dialog" title="新增/修改" style="top:100px;width:370px;height:460px;padding-bottom:0;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,
+					buttons:[
+						{
+							text:'保存',
+							handler:function(){ SaveFormData(); }
+						},
+						{
+							text:'取消',
+							handler:function(){$HUI.dialog('#add-dialog').close();}
+						}
+					]">
+					<div class="hisui-panel" title="" style="padding:10px" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+						<form id="add-form" method="post" >
+							<table>
+								<tr>
+									<td><input name="Rowid" id="rowid" type="hidden" value=""></td>
+								</tr>
+								<tr>
+									<td class="r-label">类别</td>
+									<td>
+										<select placeholder="请选择" name="Code" id="category2" data-options="valueField:'code',textField:'desc',required:true" style="width:237px;"></select> 
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">描述</td>
+									<td>
+										<input placeholder="请输入" name="Desc" class="hisui-validatebox textbox" id="desc" data-options="required:true" /> 
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">对应值</td>
+									<td>
+										<input placeholder="请输入" name="cValue" class="textbox" id="cValue">
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">类名</td>
+									<td>
+										<input placeholder="请输入" name="ClassName" class="textbox" id="className">
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">方法名</td>
+									<td>
+										<input placeholder="请输入" name="QueryName" class="textbox" id="queryName">
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">参数</td>
+									<td>
+										<textarea placeholder="多个参数用“@”连接" name="Params" id="params" id="params" style=""></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">循环次数</td>
+									<td>
+										<input placeholder="请输入" name="LoopTimes" id="loopTimes" class="hisui-numberbox textbox" data-options="isKeyupChange:true,precision:0,min:0">
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">是否停用</td>
+									<td>
+										<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="isStop" name="IsStop">
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript">
+	var setDataGrid;
+	var categoryList = [
+		{code:'lineType',desc:'线框类型'},
+        {code:'fontFamily',desc:'字体'},
+        {code:'fontSize',desc:'字号'},
+        {code:'fontStyle',desc:'字体样式'},
+        {code:'alignType',desc:'对齐方式'},
+        {code:'locateMode',desc:'定位方式'},
+        {code:'bindingItem',desc:'绑定元素'},
+        {code:'changeBedRules',desc:'换床显示规则'},
+        {code:'changeDeptRules',desc:'转科显示规则'}, 
+        {code:'dateDefine',desc:'日期定义'},
+        {code:'dateFormat',desc:'日期格式'}, 
+        {code:'intervalMode',desc:'间隔方式'},
+        {code:'postoperativeDays',desc:'术后天数'},
+        {code:'operationFreq',desc:'术次显示规则'},
+        {code:'cablesRule',desc:'连线规则'},
+        {code:'afterDropRule',desc:'复降显示规则'},
+        {code:'condition',desc:'条件'},
+        {code:'pulseDificitStyle',desc:'脉搏短绌显示样式'},
+        {code:'breathePos',desc:'呼吸机位置'},
+        {code:'overShowMode',desc:'超出标尺显示方式'},
+        {code:'allergyResult',desc:'过敏结果'}        
+	];
+	$(function(){
+		//initHospComb('Nur_IP_ChartDictConfig');
+		Init();
+		setDataGridLoad(""); // 加载列表数据
+		selectDataLoad();
+		// 查询
+		$("#search").click(function(){
+			var value = $("#category").combobox('getValue');
+			var category = value ? value : "";
+			setDataGridLoad(category);
+		});
+		// 新增
+		$("#btn-add").click(function(){
+			$("#add-dialog").dialog("open");
+	 		//清空表单数据
+	 		$('#add-form').form("clear");
+		});
+	})
+	function Init(){
+        var setColumns = [[
+        	{field:'Category',title:'类别代码',width:150},
+        	{field:'Name',title:'类别名称',width:150},  
+        	{field:'Description',title:'描述',width:150},   
+        	{field:'CValue',title:'对应值',width:150},   
+        	{field:'Expression',title:'表达式'},
+        	{field:'LoopTimes',title:'循环次数',width:100},
+        	{field:'IsStop',title:'是否停用',width:80,formatter:function(value, row, index){
+	        	return value == "Y" ? "是" : "否"	
+	        }}
+    	]];
+		setDataGrid = $('#temperatureSelectList').datagrid({
+			fit : true,
+			columns :setColumns,
+			toolbar:"#toolbar",
+			pagination : true,  //是否分页
+			rownumbers : true,
+			pageSize: 15,
+			pageList : [15,30,50],
+			singleSelect : true,
+			loadMsg : '加载中..', 			
+			onDblClickRow:function(rowIndex, rowData){ 
+				UpdateGridData();
+       		}  
+    		// url:$URL,
+			// queryParams:{
+				// ClassName:'Nur.NIS.Service.Chart.DictConfig',
+				// QueryName:'ChartDictList',
+				// category:category
+			// },
+			// loadFilter: function(data){
+				// var currentCategory = ""
+				// var newData = [];
+				// if(data.total>0){
+					// categoryList.forEach(function(value,index){
+						// currentCategory = value.code;
+						// data.rows.forEach(function(value2,index2){
+							// if(currentCategory == value2.Category){
+								// value2.Name=value.desc;
+								// newData.push(value2);
+							// }	
+						// })	
+					// });
+					// data.rows = newData;
+				// }
+				// return data;
+			// }  
+		}); 
+	}
+	// 列表数据加载
+	function setDataGridLoad(category)
+	{
+		$.cm({
+			ClassName:"Nur.NIS.Service.Chart.DictConfig",
+			QueryName:"ChartDictList",
+			category:category,
+			rows:99999
+		},function(data){
+			var currentCategory = ""
+			var newData = [];
+			if(data.total>0){
+				categoryList.forEach(function(value,index){
+					currentCategory = value.code;
+					data.rows.forEach(function(value2,index2){
+						if(currentCategory == value2.Category){
+							value2.Name=value.desc;
+							newData.push(value2);
+						}	
+					})	
+				});
+				data.rows = newData;
+			}
+			setDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',data); 
+		})
+	};
+	// 加载类别下拉框数据
+	function selectDataLoad(){
+		$('#category, #category2').combobox({
+			data: categoryList	
+		});   
+	}
+	// 修改数据回显
+	function UpdateGridData(){
+		var rows = $('#temperatureSelectList').datagrid("getSelections");
+    	if (rows.length == 1) {
+       		$("#add-dialog").dialog("open");
+        	//清空表单数据
+	 		$('#add-form').form("clear");
+		 	$('#add-form').form("load",{
+		 		Rowid: rows[0].rowid,
+		 		Code: rows[0].Category,
+		 		Desc: rows[0].Description,
+		 		cValue: rows[0].CValue,
+		 		ClassName: rows[0].Expression && rows[0].Expression.split("^").length >= 1 ? rows[0].Expression.split("^")[0] : "",
+		 		QueryName: rows[0].Expression && rows[0].Expression.split("^").length >= 2 ? rows[0].Expression.split("^")[1] : "",
+		 		Params: rows[0].Expression && rows[0].Expression.split("^").length == 3 ? rows[0].Expression.split("^")[2] : "", 
+		 		LoopTime: rows[0].LoopTimes		
+	 		});
+	 		if(rows[0].IsStop == "Y"){
+		 		$("#isStop").checkbox("check");	
+		 	}else{
+			 	//$HUI.checkbox("#isStop").setValue(false);	
+			 	$("#isStop").checkbox("uncheck");	
+			}
+	 			
+     	}else{
+	    	$.messager.alert("简单提示", "请选择要修改配置数据", "info");
+     	}
+	}
+	// 新增/修改保存
+	function SaveFormData(){
+		var rowid = $("#rowid").val();
+		var category = $("#category2").combobox('getValue');
+		var desc = $("#desc").val();
+		var value = $("#cValue").val();
+		var className = $("#className").val();
+		var queryName = $("#queryName").val();
+		var params = $("#params").val();
+		var expression = className || queryName || params ? className + "^" + queryName + "^" + params : "";
+		var loopTimes = $("#loopTimes").val();
+		var isStop = $("#isStop").radio('getValue') ? "Y" : "N";
+		if(category == "")
+		{
+			$.messager.popover({ msg: '类别不能为空！', type:'error' });
+        	return false;
+		}
+		if(desc == "")
+		{
+			$.messager.popover({ msg: '描述不能为空！', type:'error' });
+        	return false;
+		}
+		$.m({
+			ClassName:"Nur.NIS.Service.Chart.DictConfig",
+			MethodName:"SaveChartDict",
+			"rowid":rowid,
+			"category":category,
+			"desc":desc,
+			"value":value,
+			"expression":expression,
+			"loopTimes":loopTimes,
+			"isStop":isStop,
+			//"HospID":CONST_HOSPID
+		},function testget(result){
+			$("#add-dialog").dialog( "close" );
+			if(result == "0"){
+				$.messager.alert("简单提示", "保存成功！", 'success');				
+				var type = $("#category").combobox('getValue');
+				setDataGridLoad(type);							
+			}else{
+				$.messager.alert("简单提示", "保存失败！", 'error');		
+			}
+		});
+	}
+	// 删除列表数据
+	function DeleteGridData(){
+		var rows = setDataGrid.datagrid("getSelections"); // setDataGrid.getSelections();
+        if (rows.length > 0) {
+            $.messager.confirm("提示", "你确定要删除吗?",
+            function(r) {
+            	if (r) {
+                	$.m({
+						ClassName:"Nur.NIS.Service.Chart.DictConfig",
+						MethodName:"DeleteChartDict",
+						rowid:rows[0].rowid
+					},function(value){
+						if(value=="0"){
+							var category = $("#category").combobox("getValue");
+							setDataGridLoad(category)
+           					$.messager.popover({msg:"删除成功！", type:'success'});
+						}else{
+							$.messager.popover({msg:"删除失败！", type:'success'});
+						}
+					})	
+                }
+            });
+        } else {
+        	$.messager.alert("提示", "请选择要删除的行", "info");
+		}
+	}
+	/*function reloadPage(){
+		var category = $("#category2").combobox('getValue');
+		setDataGridLoad(category);
+	}*/
+   </script>
+</body>
+</html>

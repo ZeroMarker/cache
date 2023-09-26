@@ -1,0 +1,58 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<csp:method name=Print arguments="">
+
+ w $h,": ",$g(%request.Data("ReportCode",1)),",",%session.Get("LOGON.CTLOCID"),",",%session.Get("REMOTE_ADDR"),",",%session.Get("COMPUTER_NAME"),"<br>",$c(13,10)
+ w $g(%request.Data("PatientID",1)),",",$g(%request.Data("EpisodeID",1)),$c(13,10)
+ w "<BR>DischID: ",$g(%request.Data("DischID",1)),",",$g(%request.Data("ClassName",1)),",",$g(%request.Data("ClassNameID",1)),"<BR>"
+
+ d ##Class(websys.Report).Print($g(%request.Data("ReportCode",1)),%session.Get("LOGON.CTLOCID"),%session.Get("REMOTE_ADDR"),"","","","","","","",$g(%request.Data("device",1)),$g(%request.Data("noofcopies",1)),$g(%request.Data("ClassName",1)),$g(%request.Data("ClassNameID",1)))
+
+</csp:method>
+
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<!-- 
+this page is to call the print method, so as to print a report off screen (automatically)
+...should be called into the hidden frame.
+-->
+<SERVER>
+	n first,items,itemx,itemcnt
+	w "start printing... <br>",$c(13,10)
+	;
+	s items=$g(%request.Data("MULTIITEMS",1))
+	s first=$p(items,",",1)
+	i $g(%request.Data("MULTI",1))&&$d(%request.Data(first)) {
+		n count
+		s count=""
+		f  {
+			s count=$o(%request.Data(first,count))
+			i count="" q
+	
+			f itmcnt=1:1:$l(items,",") {
+				s itemx=$p(items,",",itmcnt)			
+				s %request.Data(itemx,1)=$g(%request.Data(itemx,count))
+
+				//s %request.Data("PatientID",1)=$g(%request.Data("PatientID",count))
+				//s %request.Data("EpisodeID",1)=$g(%request.Data("EpisodeID",count))
+			}
+			d ..Print()
+		}
+	} else {
+		d ..Print()
+	}
+	w " ...done!<br>",$c(13,10)
+	
+</SERVER>
+</BODY>
+</HTML>

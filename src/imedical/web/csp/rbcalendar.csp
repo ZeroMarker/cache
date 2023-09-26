@@ -1,0 +1,487 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ //s zcnt=$i(^ZSIMON("calendar"))
+ //m ^ZSIMON("calendar",zcnt)=%request.Data
+ quit 1
+</csp:method>
+<html XMLNS=TRAK>
+<head>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+<script language="Javascript">
+//SB: Can change year by increment or by whole value
+function changemonth(incr,val) {
+ var frm=document.moForm;
+ var mo=parseInt(frm.moSelected.value,10)
+ if (incr!="") mo=parseInt(frm.moSelected.value,10)+(incr);
+ if (val!="") mo=parseInt(val,10);
+ var yr=parseInt(frm.yrSelected.value,10);
+ if (mo>12)
+  yr=yr+1,mo=mo-12;
+ if (mo<1)
+  yr=yr-1,mo=mo+12;
+ frm.moSelected.value=mo;
+ frm.yrSelected.value=yr;
+ frm.submit();
+}
+//SB: Can change year by increment or by whole value
+function changeyear(incr,val) {
+ var frm=document.moForm;
+ var mo=parseInt(frm.moSelected.value,10);
+ var yr=parseInt(frm.yrSelected.value,10)
+ if (val!="") yr=parseInt(val,10);
+ if (incr!="") yr=parseInt(frm.yrSelected.value,10)+(incr);
+ frm.moSelected.value=mo;
+ frm.yrSelected.value=yr;
+ frm.submit();
+}
+// LOG 25044 BC 28-4-2003 Extra Navigation for Diaries
+function LoadIntoTopFrame(url) {
+	//top.frames["TRAK_main"].frames["work_top"].document.location.href=url
+	//log 43299 - Check if frames["work_top"] exists, else use frame 'TRAK_main'.
+	if(top.frames["TRAK_main"].frames["work_top"]){
+		top.frames["TRAK_main"].frames["work_top"].document.location.href=url;
+	}
+	else{
+		top.frames["TRAK_main"].document.location.href=url;
+	}
+}
+</script>
+</head>
+
+<body style="margin-left:10px;">
+<server>
+ n PatientID,EpisodeID,TWKFL,TWKFLI,TNAVMARK,qid,RescID,ServID,TransferredAppt,BookingType,WListID,trans,inter,RefExpDate,SessType,SessTypeID,SSFlag,service,OBParam,DiaryType
+ // LOG 27955 BC 29-8-2002 Making this screen refresh properly
+ // The following line has been removed from the find button on RBResEffDateSessServices.Find and set up as a function here.  This allows the screen to refresh properly
+ //web.RBResource,GetResource,%request.Get("RESDesc"),%request.Get("CTLOCDesc"),%request.Get("SERDesc"),%request.Get("PatientID"),%request.Get("TEVENT"),%request.Get("SESSDesc")
+ ;//LOG 31208 BC 4-2-2003 
+ ; LOG 39484 BC 29-9-2003 Fix Thai date problem
+ s frm=$ZCONVERT($lg($g(^websys.ConfigurationD(1)),10),"U") s:frm="" frm="DMY"
+ s OBParam="", OBParam=$g(%request.Data("OBParam",1))
+ i OBParam'="" s %request.Data("OBParam",1)=OBParam
+ s cantOverbook="N",cantOverbook=$p($g(^SSU("SSUSR",%session.Get("LOGON.USERID"))),"^",92)
+ ; LOG 34976 BC 14-4-2003 
+ i %request.Get("RescID")'="" s %request.Data("RESDesc",1)=$p($g(^RB("RES",%request.Get("RescID"))),"^",17)
+ ;d ##Class(web.RBResource).GetResource(%request.Get("RESDesc"),%request.Get("CTLOCDesc"),%request.Get("SERDesc"),%request.Get("PatientID"),%request.Get("TEVENT"),%request.Get("SESSDesc"),%request.Get("SSFlag"))
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ ; Get the Referral Expiry date so we can check it in RBAppointment.FindRescDaySched
+ s (RefExpDate,Adm)="" s Adm=##Class(User.PAAdm).%OpenId(EpisodeID,0)
+ i Adm d
+ . s RefExpDate=Adm.PAADMRefExpiryDate
+ . d Adm.%Close()
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ ;i ((cantOverbook="Y")&&(OBParam'="")) s TWKFL="",TWKFLI=""
+ s TNAVMARK=%request.Get("TNAVMARK")
+ s DiaryType="",DiaryType=%request.Get("DiaryType")
+ s qid=%request.Get("qid")
+ s RescID=%request.Get("RescID")
+ s ServID=$p(%request.Get("ServID"),$c(4),1)
+ s service=%request.Get("serv")
+ i service="",ServID'="" s service=$p($g(^RBC("SER",ServID)),"^",6)
+ s showkey=%request.Get("showkey")
+ ;Log 43299 - OTFullPageDiary
+ s OTFullPageDiary=%request.Get("OTFullPageDiary")
+ s Adhoc=%request.Get("ADHOC")
+ ; Log 33638 BC 7-3-2003 Find Item Master if a service is given
+ n ARCItmMastID,addlink
+ s ARCItmMastID=""
+ i service'="" &sql(SELECT ARCIM_RowId INTO :ARCItmMastID FROM ARC_ItmMast WHERE ARCIM_Desc=:service) s ARCItmMastID=ARCItmMastID_"&"
+ s TransferredAppt=%request.Get("TransferredAppt")
+ s BookingType=%request.Get("BookingType")
+ s WListID=%request.Get("WListID")
+ s trans=%request.Get("APPTTransport")
+ s inter=%request.Get("IntReq")
+ ;LOG 21529 BC 29-7-2002 Search by Session Type
+ s SessTypeID=""
+ ;s ^zTRAK("BR",$zn,"SessType")=%request.Get("SESSDesc","_zz")
+ s SessType=%request.Get("SESSDesc","_zz")
+ i SessType'="_zz" d
+ . s SessTypeID=##Class(web.RBCSessionType).GetIdFromCodeOrDescription(SessType)
+ i SessType="_zz" s SessType=""
+ i SessType="",$d(^SSU("SSGRP",%session.Get("LOGON.GROUPID"),"SESS",0,"Sess")) d
+ . s gsid="" f  s gsid=$o(^SSU("SSGRP",%session.Get("LOGON.GROUPID"),"SESS",0,"Sess",gsid)) q:gsid=""  d
+ . . s SessTypeID=SessTypeID_"^"_gsid
+ ;
+ n rs,monthLIST,today,tMonth,tYear,moSelected,yrSelected,TRANSmonths
+ ;
+ s today=$zd(+$h)			;m/d/y
+ s tMonth=+$p(today,"/",1)	;1=jan..12=dec
+ s tYear=+$p(today,"/",3)	;4 digit year
+ d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,RBMessages")
+ s Vacanttext=t("Vacant")
+ s TRANSmonths=t("XMONTHS")
+ f i=1:1:12  s monthLIST(i)=$p(TRANSmonths,",",i)
+ s tSunday=$p(t("XDAYS"),",",1)
+ s tMonday=$p(t("XDAYS"),",",2)
+ s tTuesday=$p(t("XDAYS"),",",3)
+ s tWednesday=$p(t("XDAYS"),",",4)
+ s tThursday=$p(t("XDAYS"),",",5)
+ s tFriday=$p(t("XDAYS"),",",6)
+ s tSaturday=$p(t("XDAYS"),",",7)
+ s TRANSNextMonth=t("RBNextMonth")
+ s TRANSNextYear=t("RBNextYear")
+ s TRANSPrevMonth=t("RBPrevMonth")
+ s TRANSPrevYear=t("RBPrevYear")
+ s tBlank=t("Blank")
+ ;
+ ;s monthLIST(1)="January",monthLIST(2)="February",monthLIST(3)="March"
+ ;s monthLIST(4)="April",monthLIST(5)="May",monthLIST(6)="June"
+ ;s monthLIST(7)="July",monthLIST(8)="August",monthLIST(9)="September"
+ ;s monthLIST(10)="October",monthLIST(11)="November",monthLIST(12)="December"
+ s moSelected=%request.Get("moSelected")
+ i moSelected=""  s moSelected=tMonth
+ s yrSelected=%request.Get("yrSelected")
+ i yrSelected="" s yrSelected=tYear
+ s displayyrSelected=yrSelected
+ i frm="THAI" s displayyrSelected=yrSelected+543
+ ;
+ //d ##Class(websys.Menu).ShowMenuMS("","Appointment&nbsp;Schedule")
+ //
+ //get description
+ n obj,loc,resc,serv
+ s (loc,resc,serv)=""
+ s obj=##Class(User.RBResource).%OpenId(RescID)
+ i obj {
+ 	i obj.RESCTLOCDR s loc=obj.RESCTLOCDR.CTLOCDesc
+ 	s resc=obj.RESDesc
+ 	d obj.%Close()
+ }
+ s obj=##Class(User.RBCServices).%OpenId(ServID)
+ i obj {
+ 	s serv=obj.SERDesc
+ 	d obj.%Close()
+ }
+ 
+</server>
+<DIV>
+<B>#(loc)# : #(resc)# : #(service)#</B>
+<table border=1 cellpadding=5>
+	<form name="moForm" method="post" action="rbcalendar.csp">
+	<INPUT TYPE="HIDDEN" NAME="TWKFL" VALUE="#(TWKFL)#">
+	<INPUT TYPE="HIDDEN" NAME="TWKFLI" VALUE="#(TWKFLI)#">
+	<INPUT TYPE="HIDDEN" NAME="TNAVMARK" VALUE="#(TNAVMARK)#">
+	<INPUT TYPE="HIDDEN" NAME="PatientID" VALUE="#(PatientID)#">
+	<INPUT TYPE="HIDDEN" NAME="EpisodeID" VALUE="#(EpisodeID)#">
+	<INPUT TYPE="HIDDEN" NAME="qid" VALUE="#(qid)#">
+	<INPUT TYPE="HIDDEN" NAME="RescID" VALUE="#(RescID)#">
+	<INPUT TYPE="HIDDEN" NAME="ServID" VALUE="#(ServID)#">
+	<INPUT TYPE="HIDDEN" NAME="TransferredAppt" VALUE="#(TransferredAppt)#">
+	<INPUT TYPE="HIDDEN" NAME="BookingType" VALUE="#(BookingType)#">
+	<INPUT TYPE="HIDDEN" NAME="WListID" VALUE="#(WListID)#">
+	<INPUT TYPE="HIDDEN" NAME="APPTTransport" VALUE="#(trans)#">
+	<INPUT TYPE="HIDDEN" NAME="IntReq" VALUE="#(inter)#">
+	<INPUT TYPE="HIDDEN" NAME="OBParam" VALUE="#(OBParam)#">
+	<input type=hidden name="moSelected" value="#(moSelected)#">
+	<input type=hidden name="yrSelected" value="#(yrSelected)#">
+	<input type=hidden name="SESSDesc" value="#(SessType)#">
+	<input type=hidden name="DiaryType" value="#(DiaryType)#">
+	<input type=hidden name="OTFullPageDiary" value="#(OTFullPageDiary)#">
+	<input type=hidden name="ADHOC" value="#(Adhoc)#">
+    <tr>
+      <server>
+      	; LOG 25044 BC 28-4-2003 Extra Navigation for Diaries
+      	i DiaryType'="" w "<th></th>"
+      </server>
+      <TH COLSPAN="2">
+	    <!--INPUT type="button" name="prev" VALUE="Prev" onClick="changemonth(-1);"-->
+	    <INPUT type="image" SRC='../images/websys/arrow_left.gif' BORDER='0' onclick="changemonth(-1,'');"><font size="1">#(TRANSPrevMonth)#</font><br>
+		<INPUT type="image" SRC='../images/websys/arrow_left.gif' BORDER='0' onclick="changeyear(-1,'');"><font size="1">#(TRANSPrevYear)#</font>
+	  </TH><TH COLSPAN="3">	
+		<Select TYPE="text" ID="monthText" NAME="monthText">
+		<server>
+			f i=1:1:12  {
+				w "<option value='",i,"'"
+				i moSelected=i w " selected" 
+				w ">",monthLIST(i),"</option>"
+			}
+		</server>
+		</select>
+		<!--input id="monthText" name="monthText" width=200 value=""><IMG id="ld1145iCTLOCDesc" name="ld1145iCTLOCDesc" src="../images/websys/lookup.gif"-->
+		<!--&nbsp;#(yrSelected)#-->
+		<INPUT TYPE="text" ID="yearText" NAME="yearText" VALUE="#(displayyrSelected)#" size="12" maxlength="4">
+	  </TH><TH COLSPAN="2"><div align="right">
+		<font size="1">#(TRANSNextMonth)#</font><INPUT type="image" SRC='../images/websys/arrow_right.gif' BORDER='0' onclick="changemonth(1,'');"><br>
+		<font size="1">#(TRANSNextYear)#</font><INPUT type="image" SRC='../images/websys/arrow_right.gif' BORDER='0' onclick="changeyear(1,'');">
+		<!--INPUT type="button" name="next" VALUE="Next" onClick="changemonth(1);"-->
+    </div></TH>
+	</tr>
+	</form>
+    <tr>
+      <server>
+      	; LOG 25044 BC 28-4-2003 Extra Navigation for Diaries
+      	i DiaryType'="" w "<th></th>"
+      </server>
+      <th bordercolorlight="silver">#(tMonday)#</th>
+	  <th bordercolorlight="silver">#(tTuesday)#</th>
+	  <th bordercolorlight="silver">#(tWednesday)#</th>
+	  <th bordercolorlight="silver">#(tThursday)#</th>
+	  <th bordercolorlight="silver">#(tFriday)#</th>
+      <th bordercolorlight="silver"><font color=red>#(tSaturday)#</font></th>
+      <th bordercolorlight="silver"><font color=red>#(tSunday)#</font></th>
+    </tr>
+<server>
+ n firstday,Digit,i,theday,cls,taken,allowed,other,overbooked,sess,unavailsess,PLIST,closedslot,takenST
+ n subtot1,subtot2,serviceflag,jservicestr,vacant,delim
+ s delim=$c(2)
+ s (serviceflag,jservicestr)=""
+ ;
+ ; LOG 25935 BC 5-8-2002 Schedule calendar to reflect service groups from month display
+ ; Get the service flag to see if the extra detail is to be shown on the calender
+ s serviceflag=$p($g(^SSU("SSGRP",%session.Get("LOGON.GROUPID"))),"^",71)
+ s GrpID=%session.Get("LOGON.GROUPID")
+ &SQL(SELECT RBDisplaySessionType INTO :showsessionsflag FROM epr.GroupSettings WHERE GroupDR = :GrpID)
+ ; 
+ s takenST=""
+ ;
+ d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,RBMessages")
+ s RBNoAppts=t("RBNoAppts")
+ s RBSomeAppts=t("RBSomeAppts")
+ s RBFullAppts=t("RBFullAppts")
+ s RBOverbook=t("RBOverbook")
+ s RBPartNA=t("RBPartNA")
+ s RBAllNA=t("RBAllNA")
+ s RBNoSched=t("RBNoSched")
+ s firstday=moSelected_"/1/"_yrSelected
+ s firstday=$zdh(firstday)+3#7+1	;1=mon..7=sun
+ w "<TR>",$c(13,10)
+ ; LOG 25044 BC 28-4-2003 Extra Navigation for Diaries
+ i DiaryType'="",firstday'=1 d
+ . w "<TD>"
+ . s theday=moSelected_"/1/"_yrSelected
+ . s theday=$zdh(theday,1)
+ . s urlday=theday-firstday+1
+ . s dayURL="rbappointment.singlerescsched.csp?RESCDesc="_$g(resc)_"&RescID="_$g(RescID)_"&Location="_$g(loc)_"&DiaryType="_$g(DiaryType)_"&CurrentDate="_urlday_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&OTFullPageDiary="_%request.Get("OTFullPageDiary")
+ . w " <a href=""#"" onclick=""javascript:LoadIntoTopFrame('",dayURL,"')""><IMG SRC=../images/webemr/daydiary.gif BORDER=0></a></TD>",$c(13,10)
+ f i=1:1:firstday-1 W "<TD></TD>"
+ s Digit=1
+ ; LOG 39484 BC 29-9-2003 Fix Thai date problem
+ ;s ^zTRAK("BR",$zn,"open/fetch")=RescID_","_moSelected_","_yrSelected_","_SessTypeID_","_serviceflag
+ i $$open^CWEBRBRE5(RescID,moSelected,yrSelected,SessTypeID,serviceflag)
+ f i=firstday:1  Q:$$fetch^CWEBRBRE5(RescID,moSelected,yrSelected,SessTypeID,serviceflag)  D
+ . ;m ^zTRAK("RC",$zn,"PLIST",$o(^zTRAK("RC",$zn,"PLIST",""),-1)+1)=PLIST
+ . ; SB Log 23410: Attempt to get Appointment per day rather than slots.
+ . ;s taken=+$g(PLIST(1)),allowed=+$g(PLIST(2)),other=$p($g(PLIST(4)),$c(1),1),overbooked=$g(PLIST(5))
+ . ; Log 36004 Make sure the date is in the right form for the DateHtmlToLogical function
+ . ;s dsep=$lg($g(^websys.ConfigurationD(1)),4) s:dsep="" dsep="/"
+ . ;s frm=$ZCONVERT($lg($g(^websys.ConfigurationD(1)),10),"U") s:frm="" frm="DMY"
+ . ; LOG 39484 BC 29-9-2003 Fix Thai date problem
+ . ;i frm="YMD" s htmldate=yrSelected_dsep_moSelected_dsep_Digit
+ . ;i frm="DMY" s htmldate=Digit_dsep_moSelected_dsep_yrSelected
+ . ;i frm="MDY" s htmldate=moSelected_dsep_Digit_dsep_yrSelected
+ . ;i frm="THAI" s htmldate=Digit_dsep_moSelected_dsep_yrSelected
+ . ;i frm="DMMMY" s htmldate=Digit_dsep_moSelected_dsep_yrSelected
+ . ;s cdate=##Class(websys.Conversions).DateHtmlToLogical(htmldate)
+ . ;;TN:21/07/2004:fix for all formats
+ . s cdate=$zdh(Digit_"/"_moSelected_"/"_yrSelected,4)
+ . ; Log 33638 BC 7-3-2003 If a service is chosen, only show links on the days that have the service available
+ . s cDOW=cdate+3#7+1
+ . s addlink=1
+ . ;SB 23/08/04 (43901): Changed addlink so it checks appts by date, as we cant check DOW for adhocs
+ . i RescID'="",cdate'="" s addlink=$d(^RBAS(RescID,0,"DateSTime",cdate)) ;s addlink=$o(^RB("RES",0,"DOW1",cDOW,ARCItmMastID,RescID,""))
+ . ; BR 39703 3/11/03- delimiter should take into account not available etc. changed to use PLIST 11 instead of 2.
+ . ;s taken=##Class(web.RBAppointment).CountAptsBkdForSess(RescID,"",cdate),allowed=+$g(PLIST(11)),other=$p($g(PLIST(4)),$c(1),1),overbooked=$g(PLIST(5)),closedslot=$g(PLIST(9))
+ . ; 65953 RC New piece created on Leons side for counting of appointments, to decrease loading time of page
+ . s taken=$g(PLIST(13))
+ . i taken="" s taken=0
+ . s allowed=+$g(PLIST(11)),other=$p($g(PLIST(4)),$c(1),1),overbooked=$g(PLIST(5)),closedslot=$g(PLIST(9))
+ . ; BR 49470- PLIST(11) returns blank when no services defined against session.
+ . ; If 11 is blank, then check PLIST(2). 2=load level, 11 incorporates services overrides etc.
+ . ; BR 53613 - If it is 0 and it has overrides, then we need to display as 0.
+ . i allowed=0,closedslot'="Y" s allowed=+$g(PLIST(2))
+ . ;SB 15/11/05 : Uncommented FOR loop and commented out single call.
+ . ;  When showing session types takenST always equalled zero, FOR loop seems to return correct total.
+ . ;RC 09/07/07 64252 Totals for SessionType not quite adding up correctly.
+ . s takenST="" f j=1:1:$l(PLIST(6),"|") d
+ . . s SType=$p(PLIST(6),"|",j)
+ . . ;s takenST=takenST+##Class(web.RBAppointment).CountAptsBkdForSessType(RescID,##Class(web.RBCSessionType).GetIdFromCodeOrDescription($p(SType,$c(2))),cdate)
+ . . ; 65953 RC New piece created on Leons side for counting of appointments, to decrease loading time of page
+ . . s takenST=takenST+$p(SType,$c(2),5)
+ . ;i (SessTypeID'="") s takenST=##Class(web.RBAppointment).CountAptsBkdForSessType(RescID,SessTypeID,cdate)
+ . ; LOG 25044 BC 28-4-2003 Extra Navigation for Diaries
+ . i DiaryType'="",cDOW=1 d
+ . . w "<TD>"
+ . . s dayURL="rbappointment.singlerescsched.csp?RESCDesc="_$g(resc)_"&RescID="_$g(RescID)_"&Location="_$g(loc)_"&DiaryType="_$g(DiaryType)_"&CurrentDate="_cdate_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&OTFullPageDiary="_%request.Get("OTFullPageDiary")
+ . . w " <a href=""#"" onclick=""javascript:LoadIntoTopFrame('",dayURL,"')""><IMG SRC=../images/webemr/daydiary.gif BORDER=0></a></TD>",$c(13,10)
+ . ; SB 10/02/03 (32450): Need to check -> CP|Assign CP to Loc|Ignore Public Hols
+ . s pubHol=##Class(web.RBAppointment).CheckPublicHoliday(cdate,RescID)
+ . s cls="noapptcell"
+ . i taken>0 s cls="apptcell"
+ . i taken>=allowed s cls="maxapptcell"
+ . i $l(overbooked) s cls="overbookcell"
+ . i allowed=0,other="N" s cls="noschedcell"
+ . i other="P",allowed'=0 s cls="partunavailcell"
+ . i closedslot="Y" s cls="partunavailcell"
+ . i (other="Y")!(pubHol'="")!((allowed=0)&(other="P")) d
+ . . s cls="unavailcell"
+ . . i ((taken="")!(taken=0))&((takenST="")!(takenST=0)) s allowed=0
+ . i other="S" d
+ . . s sess=$g(PLIST(8)),unavailsess=$g(PLIST(7)),unavailsess=$l(unavailsess,"|")
+ . . i unavailsess=sess s cls="unavailcell",allowed=0
+ . . i unavailsess<sess s cls="partunavailcell"
+ . w "<TD class='",cls,"' align=center valign=top><dd><DIV align=right valign=top><b>",Digit,"</b></div>"
+ . i cls["unavailcell",%request.Get("ADHOC")=1 s closedslot="Y"
+ . i (allowed=0)&&(closedslot'="Y") w "&nbsp;</TD>",$c(13,10)
+ . i (allowed'=0)!(closedslot="Y") d
+ . . ; LOG 25935 BC 5-8-2002 Schedule calendar to reflect service groups from month display
+ . . ; If the service flag is "Y" then build a table containing number of slots and appointment slots
+ . . ; booked and finally the the "vacant" total 
+ . . s (subtot1,subtot2,vacant)=0
+ . . i (serviceflag="Y") d
+ . . . s servicestr="<DIV align=left><table border=0 cellpadding=5><font font-size='6pt'>"
+ . . . f j=1:1  Q:$p(PLIST(10),"|",j)=""  d
+ . . . . s servicestr=servicestr_"<TR><TD>"_$s($p($p(PLIST(10),"|",j),delim,1)="SLOTS":t("RBNSSlots"),1:$p($p(PLIST(10),"|",j),delim,1))_"</TD><TD>"_$p($p(PLIST(10),"|",j),delim,3)_"</TD><TD> ("_$s($p($p(PLIST(10),"|",j),$c(2),2):$p($p(PLIST(10),"|",j),$c(2),2),1:"0")_") </TD></TR>"
+ . . . . s subtot1=subtot1+$p($p(PLIST(10),"|",j),delim,3),subtot2=subtot2+$p($p(PLIST(10),"|",j),delim,2)
+ . . . s servicestr=servicestr_"</font></TABLE></DIV>"
+ . . . ;s vacant=allowed-taken
+ . . . s vacant=PLIST(11)-subtot2
+ . . i (showsessionsflag="Y") d
+ . . . s servicestr="<DIV align=left><table border=0 cellpadding=5><font font-size='6pt'>"
+ . . . f j=1:1  Q:$p(PLIST(6),"|",j)=""  d
+ . . . . ;i $p($p(PLIST(6),"|",j),delim,1)'="" s servicestr=servicestr_"<TR><TD>"_$s($p($p(PLIST(6),"|",j),delim,1)="":"Blank",1:$p($p(PLIST(6),"|",j),delim,1))_"</TD><TD>"_$p($p(PLIST(6),"|",j),delim,3)_"</TD><TD> ("_$s($p($p(PLIST(6),"|",j),delim,2)="":"0",1:$p($p(PLIST(6),"|",j),delim,2))_") </TD></TR>"
+ . . . . ;i $p($p(PLIST(6),"|",j),delim,1)="" s servicestr=servicestr_"<TR><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD></TR>"
+ . . . . s servicestr=servicestr_"<TR><TD>"_$s($p($p(PLIST(6),"|",j),delim,1)="":tBlank,1:$p($p(PLIST(6),"|",j),delim,1))_"</TD><TD>"_$p($p(PLIST(6),"|",j),delim,3)_"</TD><TD> ("_$s($p($p(PLIST(6),"|",j),delim,2)="":"0",1:$p($p(PLIST(6),"|",j),delim,2))_") </TD></TR>"
+ . . . . s subtot1=subtot1+$p($p(PLIST(6),"|",j),delim,2)
+ . . . f j=1:1  Q:$p(PLIST(10),"|",j)=""  d
+ . . . . s subtot2=subtot2+$p($p(PLIST(10),"|",j),delim,2)
+ . . . s vacant=allowed-subtot2
+ . . . s servicestr=servicestr_"</font></TABLE></DIV>"
+ . . ;Log 36004 Make sure the date is in the right form for the DateHtmlToLogical function
+ . . s theday=moSelected_"/"_Digit_"/"_yrSelected
+ . . s theday=$zdh(theday,1)
+ . . i RefExpDate d
+ . . . i RefExpDate<theday s RefExpDate="EXP"
+ . . ;LOG 25935 BC 5-8-2002 Schedule calendar to reflect service groups from month display
+ . . ; If the service flag is set then display the table of service groups etc
+ . . i (serviceflag="Y") w servicestr,"<BR>",$c(13,10)
+ . . i (showsessionsflag="Y") w servicestr,"<BR>",$c(13,10)
+ . . ;
+ . . w "<b>" 
+ . . i SessTypeID'="" d 
+ . . . s found=0 f k=1:1:$l(SessTypeID,"^") d
+ . . . . f kk=1:1:$l(PLIST(6),"|") d
+ . . . . . s sessiontype=$p(PLIST(6),"|",kk),sesstypeid=##Class(web.RBCSessionType).GetIdFromCodeOrDescription($p(sessiontype,$c(2)))
+ . . . . . i $p(SessTypeID,"^",k)=sesstypeid s found=1
+ . . . i found=0 s addlink=""
+ . . ; Log 33638 BC 7-3-2003 If a service is chosen, only show links on the days that have the service available
+ . . i ((TWKFL)&&(addlink'="")) d
+ . . . ;LOG 31208 BC 4-2-2003
+ . . . ;s ^zmeto("zrod",$zn,"link",$o(^zTRAK("zrod",$zn,"link",""),-1)+1)="TWKFL="_TWKFL_"#TWKFLI="_TWKFLI_"#TNAVMARK="_TNAVMARK_"#PatientID="_PatientID_"#EpisodeID="_EpisodeID_"#date="_theday_"#SessTypeId="_SessTypeID_"#RescID="_RescID_"#ServID="_ServID_"#qid="_qid_"#TransferredAppt="_TransferredAppt_"#BookingType="_BookingType_"#WListID="_WListID_"#transferTrans="_trans_"#RefExpDate="_RefExpDate_"#OBParam="_OBParam
+ . . . ; LOG 52747 RC 01/06/05 Put 'FullScreen=1' in for single appointment multi screens. No other way I could think to
+ . . . ; do it than to use a variable.
+ . . . i Adhoc=1 d 
+ . . . . w "<a href=""websys.csp"
+ . . . . w "?TWKFL=",TWKFL,"&TWKFLI=",TWKFLI,"&TNAVMARK=",TNAVMARK,"&PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&date=",theday,"&SessTypeId=",SessTypeID
+ . . . . w "&RescID=",RescID,"&ServID=",$ZCVT(ServID,"O","URL"),"&qid=",qid,"&TransferredAppt=",TransferredAppt,"&BookingType=",BookingType,"&WListID=",WListID,"&transferTrans=",trans,"&RefExpDate=",RefExpDate,"&OBParam=",OBParam,"&sessall=Y&FullScreen=1&SingleApptOB="_$g(%request.Data("SingleApptOB",1))
+ . . . . w """>"
+ . . . . i (showsessionsflag="Y") w subtot1
+ . . . . i (SessTypeID="")&&(showsessionsflag'="Y") w taken
+ . . . . i (SessTypeID'="")&&(showsessionsflag'="Y") w takenST
+ . . . ;s URl11="websys.csp?TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TNAVMARK="_TNAVMARK_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&date="_theday_"&SessTypeId="_SessTypeID_"&RescID="_RescID_"&ServID="_ServID_"&qid="_qid_"&TransferredAppt="_TransferredAppt_"&BookingType="_BookingType_"&WListID="_WListID_"&transferTrans="_trans_"&RefExpDate="_RefExpDate_"&OBParam="_OBParam 
+ . . . i Adhoc'=1 d
+ . . . . s URl11="websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.FindRescDaySched&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TNAVMARK="_TNAVMARK_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&date="_theday_"&SessTypeId="_SessTypeID_"&RescID="_RescID_"&ServID="_ServID_"&qid="_qid_"&TransferredAppt="_TransferredAppt_"&BookingType="_BookingType_"&WListID="_WListID_"&transferTrans="_trans_"&RefExpDate="_RefExpDate_"&OBParam="_OBParam_"&sessall=Y&FullScreen=1&SingleApptOB="_$g(%request.Data("SingleApptOB",1))
+ . . . . i (showsessionsflag="Y") s mmtaken=subtot1
+ . . . . i (SessTypeID="")&&(showsessionsflag'="Y") s mmtaken=taken
+ . . . . i (SessTypeID'="")&&(showsessionsflag'="Y") s mmtaken=takenST
+ . . . . w "<a href=""#"" onclick=""javascript:newWin2('",URl11,"')""><B>",mmtaken,"</B></a> "
+ . . i ((DiaryType'="")&&(DiaryType'="OT")) d
+ . . . ;LOG 31208 BC 4-2-2003 
+ . . . ;s ^zmeto("zrod",$zn,"link",2)=1
+ . . . w "<a href=""websys.default.csp"
+ . . . w "?WEBSYS.TCOMPONENT=RBAppointment.FindRescDaySched&TWKFL=",TWKFL,"&TWKFLI=",TWKFLI,"&TNAVMARK=",TNAVMARK,"&PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&date=",theday,"&SessTypeId=",SessTypeID
+ . . . w "&RescID=",RescID,"&ServID=",$ZCVT(ServID,"O","URL"),"&qid=",qid,"&TransferredAppt=",TransferredAppt,"&BookingType=",BookingType,"&WListID=",WListID,"&transferTrans=",trans,"&RefExpDate=",RefExpDate,"&OBParam=",OBParam,"&sessall=Y&SingleApptOB=",$g(%request.Data("SingleApptOB",1))
+ . . . w """>"
+ . . . ;
+ . . . i (showsessionsflag="Y") w subtot1
+ . . . i (SessTypeID="")&&(showsessionsflag'="Y") w taken
+ . . . i (SessTypeID'="")&&(showsessionsflag'="Y") w takenST 
+ . . . ;
+ . . i (DiaryType="OT") d
+ . . . ;MD pLS SEE ME BEFORE ALTER ANY CODE HERE
+ . . . ;LOG 31208 BC 4-2-2003 
+ . . . ;LOG 37596 BC 4-8-2003 Needs to go to RBOperatingRoom.List
+ . . . ;s ^zmeto("zrod",$zn,"link",3)=1
+ . . . w "<a href=""websys.default.csp"
+ . . . w "?WEBSYS.TCOMPONENT=RBOperatingRoom.List&TWKFL=",TWKFL,"&TWKFLI=",TWKFLI,"&TNAVMARK=",TNAVMARK,"&PatientID=",PatientID,"&EpisodeID=",EpisodeID,"&RBOPDateOper=",theday,"&dateto=",theday
+ . . . w "&ResID=",RescID,"&DiaryType=",DiaryType
+ . . . w """>"
+ . . . i (showsessionsflag="Y") w subtot1
+ . . . i (SessTypeID="")&&(showsessionsflag'="Y") w taken
+ . . . i (SessTypeID'="")&&(showsessionsflag'="Y") w takenST 
+ . . ; Log 33638 BC 7-3-2003 If a service is chosen, only show links on the days that have the service available
+ . . i (((TWKFL)&&(addlink'=""))||(DiaryType'="")) w "</a>"
+ . . w " / ",allowed,"</b>"
+ . . i (SessTypeID'="") w "&nbsp;(",taken,")"
+ . . ;LOG 25935 BC 5-8-2002 Schedule calendar to reflect service groups from month display
+ . . ; If the service flag is set then display the vacant total
+ . . i (serviceflag="Y") ! (showsessionsflag="Y") w "<DIV align=left valign=bottom><BR>",Vacanttext," ",vacant,"</DIV>",$c(13,10)
+ . . ;
+ . . w "</TD>",$c(13,10)
+ . s Digit=Digit+1
+ . i i#7=0  W "</TR>",$c(13,10)
+ i $$close^CWEBRBRE5()
+ ;
+ ;;close table row
+ i j#7'=0  W "</TR>",$c(13,10)
+</server>
+</table>
+<P></P>
+<BR><BR><BR>
+<script language=javascript>
+if ("#(showkey)#"=="") { 
+	document.writeln("<table>")
+	document.writeln("<tr><td nowrap><span id='noapptkey'></span>#(RBNoAppts)#</td></tr>")
+	document.writeln("<tr><td nowrap><span id='apptkey'></span>#(RBSomeAppts)#</td></tr>")
+	document.writeln("<tr><td nowrap><span id='maxapptkey'></span>#(RBFullAppts)#</td></tr>")
+	document.writeln("<tr><td nowrap><span id='overbookkey'></span>#(RBOverbook)#</td></tr>")
+	document.writeln("<tr><td nowrap><span id='partunavailkey'></span>#(RBPartNA)#</td></tr>")
+	document.writeln("<tr><td nowrap><span id='unavailkey'></span>#(RBAllNA)#</td></tr>")
+	document.writeln("<tr><td nowrap><span id='noschedkey'></span>#(RBNoSched)#</td></tr>")
+	document.writeln("</table>")
+}
+</script>
+</DIV>
+</DIV>
+<script language=javascript>
+function DocumentLoadHandler() {
+	obj=document.getElementById('yearText');
+	if (obj) obj.onchange= YearTextChangeHandler;
+	
+	obj=document.getElementById('yearText');
+	if (obj) obj.onkeydown= YearTextKeyDownHandler;
+	
+	obj=document.getElementById('monthText');
+	if (obj) obj.onchange= MonthTextChangeHandler;
+}
+function MonthTextChangeHandler() {
+	var obj=document.getElementById('monthText')
+	if (obj) changemonth("",obj.value);
+}
+function YearTextChangeHandler() {
+	var obj=document.getElementById('yearText')
+	if (obj) {
+		var yr=obj.value;
+		if ((yr!="")&&("#(frm)#"=="THAI")) yr=parseInt(yr,10)-543;
+		changeyear("",yr);
+	}
+}
+function YearTextKeyDownHandler(e) {
+	var keycode;
+	try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+	if (keycode==13) return false; //YearTextChangeHandler();
+}
+
+function newWin2(url) {
+websys_createWindow(url, "DaySessionCP","toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,width=900,height=550")
+}
+
+document.body.onload = DocumentLoadHandler;
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<HTML>
+<HEAD>
+<TITLE>brwosertestcontent</TITLE>
+<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate-tab-bottom.css" />
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+ 	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-lang-zh_CN.js"></script>
+</HEAD>
+<BODY>
+	<div id='pagetoolbar'></div>	
+	<iframe marginwidth=5 marginheight=5 id='frameBrowserTest' width='100%' style=" top: 28px; position: absolute; z-index: 1998; height:expression(document.body.offsetHeight - 28);"></iframe>	
+	<script type='text/javascript'>
+	
+		var patientID = '#($Get(%request.Data("PatientID",1),""))#';
+		var episodeID = '#($Get(%request.Data("EpisodeID",1),""))#';
+		
+		var categoryChapterParentId = "";				
+		var categoryChapterId = "";
+		var templateDocId = "";
+		var selectNode = null;			//选中的节点
+		var timeOut =  parent.parent.timedOut;
+		//确定按钮
+		function confirm()
+		{
+			if(selectNode == null)
+			{
+				return;	
+			}
+			if(selectNode.isRoot == true)
+			{
+				return;
+			}
+			//若选中的是根节点
+			if(selectNode.isLeaf())
+			{
+				templateDocId = subStrNodeID(selectNode.id);
+				categoryChapterId = subStrNodeID(selectNode.parentNode.id);
+				categoryChapterParentId = subStrNodeID(selectNode.parentNode.parentNode.id);
+			}
+			//若不是叶子节点,判断是否是第二层节点
+			else if(selectNode.parentNode.isRoot)
+			{
+				categoryChapterParentId = subStrNodeID(selectNode.id);
+				categoryChapterId = "";
+				templateDocId = "";
+			}			
+			else
+			{
+				categoryChapterParentId = subStrNodeID(selectNode.parentNode.id);
+				categoryChapterId = subStrNodeID(selectNode.id);
+				templateDocId = "";
+			}
+			Ext.getCmp('cboEprRecordTest').setValue(selectNode.text);	
+		}
+		
+		//去掉树节点的前两个英文
+		function subStrNodeID(nodeID)
+		{
+			return nodeID.substring(2, nodeID.length);	
+		}
+		
+		function browser()
+		{
+			Ext.Ajax.request({			
+				url: '../web.eprajax.eprBorwser.printTemplateIdTest.cls',
+				timeout : parent.parent.timedOut,
+				params: { episodeID: episodeID, eprCategoryID: categoryChapterParentId, eprCategoryChapterID: categoryChapterId, eprTemplateID: templateDocId},
+				success: function(response, opts) {
+					var obj = response.responseText;
+					var instid=obj.split("#")[0].split("^")[0];
+					Ext.getDom('frameBrowserTest').src = 'EPR1109.CSP?instanceid='+instid;
+					
+				},
+				failure: function(response, opts) {				
+					var obj = "写入日志错误,错误代码:" + response.status + "," + "错误信息:" + response.statusText;				
+					alert(obj);
+				}
+			});
+		}
+	</script>
+</BODY>
+<script type='text/javascript' src="../scripts/epr/js/eprbrowsertest.js"></script>
+</HTML>

@@ -1,0 +1,342 @@
+<!-- Copyright (c) 2008 DTHealth Pty Limited. ALL RIGHTS RESERVED. dhc.reg.appscheduler.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<meta http-equiv="Content-Type" content="text/html;">
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<Server>
+;s DHTMXPath="../scripts_lib/dhtmx/"
+s DHTMXPath=##class(ext.websys.DHTMLXLib).BasePath()
+;w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxTabbar/codebase/dhtmlxtabbar.css"">",!
+;w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxTabbar/samples/common/style.css"">",!
+;w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"tagbox.css"">",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxTabbar/codebase/dhtmlxcommon.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxTabbar/codebase/dhtmlxtabbar.js'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxCombo/codebase/dhtmlxcombo.js'></SCRIPT>",!
+
+w "<SCRIPT SRC='../SCRIPTS/DHCOPAdm.Common.js'></SCRIPT>",!
+w "<SCRIPT SRC='../SCRIPTS/DHCWeb.OPCommon.js'></SCRIPT>",!
+w "<SCRIPT SRC='../SCRIPTS/websys.js'></SCRIPT>",!
+w "<script type='text/javascript' src='../scripts/framework/ext.icare.Lookup.js'></script>",!
+w "<script type='text/javascript' src='../scripts/framework/ext.icare.TabPanel.js'></script>",!
+
+w "<LINK REL=""stylesheet"" TYPE=""text/css"" HREF="""_DHTMXPath_"dhtmlxScheduler/codebase/dhtmlxscheduler.css"" charset=""utf-8"">",!
+;w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxScheduler/codebase/dhtmlxscheduler.js' charset='utf-8'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxScheduler/codebase/dhtmlxscheduler_debug.js' charset='utf-8'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxScheduler/sources/locale_cn.js' charset='utf-8'></SCRIPT>",!
+w "<SCRIPT SRC='"_DHTMXPath_"dhtmlxScheduler/sources/locale_recurring_cn.js' charset='utf-8'></SCRIPT>",!
+w "<SCRIPT SRC='../SCRIPTS/DHCRegAppScheduler.js'></SCRIPT>"
+</Server>
+
+<Server>
+  ;id要设为空?表示这是新插入纪录
+  s id=""
+  s DocId=$P(^SSU("SSUSR",%session.Get("LOGON.USERID")),"^",14)
+  s MarkDocID=""
+  s PatientID=%request.Get("PatientID")
+  s EpisodeID=%request.Get("EpisodeID")
+  s LogonLocId=%session.Get("LOGON.CTLOCID")
+  s LogonUserId=%session.Get("LOGON.USERID")
+  s mradm="",EpisodeType="O"
+  if EpisodeID {
+    s mradm=##class(web.PAAdm).GetMRAdm(%request.Get("EpisodeID"))
+    s EpisodeType=$P($G(^PAADM(%request.Get("EpisodeID"))),"^",2)
+  }
+  s PatientNo=""
+  if PatientID {
+    s PatientNo=$p($g(^PAPER(PatientID,"PAT",1)),"^",2)
+  }
+  s GetCurrentDateTimeMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderCommon.GetCurrentDateTime"))
+  ;得到对应号别的出诊记录
+  s GetTodayASRowIdByResMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetTodayASRowIdByRes"))
+  ;得到对应医生所有号别出诊记录
+  s GetTodayAllASRowIdByResMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetTodayAllASRowIdByRes"))
+  ;得到登录医生的出诊记录,如果没有出诊记录则产生不规则记录
+  s GetRapidASRowIdMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetRapidASRowId"))
+  ;得到医生是否当前星期有排班记录
+  s GetIsScheduleFlagMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetIsScheduleFlag"))
+  ;得到医生当前星期排班记录的时段串
+  s GetScheduleTRangeStrMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetScheduleTRangeStr"))
+  ;得到号别串
+  s MarkDocStr=##class(web.DHCOPAdmReg).FindDocMarkStr(%session.Get("LOGON.USERID"),LogonLocId)
+  
+  
+  ;科室
+  s CTLOCStr=##class(web.DHCBL.Doctor.AppointOral).GetOPLocList(%session.Get("LOGON.USERID"),LogonLocId)
+  ;其他科室的号别
+  s MarkDocStrOtherMark=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.Doctor.AppointOral.FindDocMarkStrNew"))
+  ;获取可用的排班 
+  s GetAvailRA=##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.GetAvailRA"))
+  s DateFormat=##Class(websys.Conversions).DateFormat()
+  w "<input id='PatientID' name='PatientID' type='hidden' value='"_%request.Get("PatientID")_"'>",$C(13,10)
+  w "<input id='mradm' name='mradm' type='hidden' value='"_mradm_"'>",$C(13,10)
+  w "<input id='EpisodeType' name='EpisodeType' type='hidden' value='"_EpisodeType_"'>",$C(13,10)
+  w "<input id='EpisodeID' name='EpisodeID' type='hidden' value='"_%request.Get("EpisodeID")_"'>",$C(13,10)
+  w "<input id='MarkDocStr' name='MarkDocStr' type='hidden' value='"_%request.Get("MarkDocStr")_"'>",$C(13,10)
+</Server>
+<STYLE type='text/css'>
+BODY INPUT
+  {
+    FONT-SIZE: 14px;
+    font-family:"Microsoft Yahei";
+    padding:5px 5px 0 5px;
+  }
+  .dhx_cal_container{
+    FONT-SIZE: 15px;
+  }
+  .haveSche .dhx_month_body{
+    background-color: #77C0F4;
+  }
+ .dhx_combo_list{
+	height:300px
+ }
+
+</STYLE>
+</HEAD>
+<BODY onload="BodyLoadHandler();">
+<SCRIPT language = 'javascript' >
+var PatientID='#(PatientID)#';
+var PatientNo='#(PatientNo)#';
+var DocId='#(DocId)#';
+var LogonLocId='#(LogonLocId)#';
+var LogonUserId='#(LogonUserId)#';
+
+var OtherLOC='#(CTLOCStr)#' //其他科室
+var MarkDocStr='#(MarkDocStr)#'; //号别
+var MarkDocID='#(MarkDocID)#'; 
+var DateFormat='#(DateFormat)#';
+
+var combo_MarkDoc;
+var BackDocId=DocId
+var combo_OtherLoc;
+var combo_OtherMark;
+var MarkOther="" //选择其他号别的时候传出的排版ID
+
+
+var GetCurrentDateTimeMethod='#(GetCurrentDateTimeMethod)#';
+var GetRapidASRowIdMethod='#(GetRapidASRowIdMethod)#';
+var GetTodayASRowIdByResMethod='#(GetTodayASRowIdByResMethod)#';
+var GetIsScheduleFlagMethod='#(GetIsScheduleFlagMethod)#';
+var GetScheduleTRangeStrMethod='#(GetScheduleTRangeStrMethod)#';
+var GetTodayAllASRowIdByResMethod='#(GetTodayAllASRowIdByResMethod)#';
+var MarkDocStrOtherMark='#(MarkDocStrOtherMark)#'; //获取科室下有效的号别
+var GetAvailRA='#(GetAvailRA)#'; //获取有效排班
+var MarkDocStr='#(MarkDocStr)#';
+var MarkDocID='#(MarkDocID)#';
+var combo_MarkDoc;
+var BackDocId=DocId
+</SCRIPT>
+<table>
+	
+	<tr>
+	<td>号别</td><td id="MarkDoc" style="right:204px;"></td>
+	<td>
+		<div>其他科室</div>
+	</td>
+	<td>
+		<!--div id="OCTloc" style="right:204px;"></div-->
+		<input  id="OCTloc" class="easyui-textbox" style="width:210px;height:24px">
+		<img name="imgOCTloc" id="imgOCTloc" src="../images/websys/lookup.gif" style="margin-left:-25px;">
+		<input id="OCTLocRowid" name="OCTLocRowid" type=hidden>
+	</td>
+	<td><div>科室号别</div></td><td><div id="OMark" style="right:204px;"></div></td>
+	<!--td></td><td><input type='button' id="Clear" style="right:204px;" value='清除'></div></td-->
+	<td></td><td><a class="i-btn i-btn-primary" href="#" id="Clear"><img src="../images/uiimages/clearscreen.png" border="0">清除</a></td>
+	<tr>
+</table>
+<table>
+<tr>
+  <td>
+  </td>    
+</tr>
+<tr><td colspan="2">
+  <div id="scheduler_here" class="dhx_cal_container" style='width:700; height:550;'>
+    <div class="dhx_cal_navline">
+      <div class="dhx_cal_prev_button">&nbsp;</div>
+      <div class="dhx_cal_next_button">&nbsp;</div>
+      <div class="dhx_cal_today_button"></div>
+      <div class="dhx_cal_date"></div>
+      <div class="dhx_cal_tab" name="day_tab" style="right:204px;"></div>
+      <div class="dhx_cal_tab" name="week_tab" style="right:140px;"></div>
+      <div class="dhx_cal_tab" name="month_tab" style="right:76px;"></div>
+    </div>
+    <div class="dhx_cal_header">
+    </div>
+    <div class="dhx_cal_data">
+    </div>  
+  </div>
+</td>
+<td style='width:49%; height:550;'>
+  <iframe name="AppDetail" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDoc.CalendarAppoint&Papmino=#(PatientNo)#" width="100%" height="100%"></iframe>
+</td>
+</tr>
+</table>
+<script language="JavaScript">
+  	//号别
+ 	var Obj=document.getElementById("MarkDoc")
+  	if(Obj){
+	     combo_MarkDoc = new dhtmlXCombo("MarkDoc", "alfa", 200);
+	     if (MarkDocStr!="") {
+		 var Arr = DHCC_StrToArray(MarkDocStr);
+	  	 combo_MarkDoc.addOption(Arr);
+	  	 combo_MarkDoc.enableFilteringMode(false);
+	  	 combo_MarkDoc.attachEvent("onChange",combo_MarkDocKeydownhandler)
+	  	}
+  	}
+	//选择号别
+	function combo_MarkDocKeydownhandler(e)
+	{
+		  combo_OtherMark.setComboText(''); 
+		  combo_OtherMark.setComboValue('');
+		  //combo_OtherLoc.setComboText(''); 
+		  //combo_OtherLoc.setComboValue('');
+		  var Obj=document.getElementById("OCTloc")
+		  if (Obj) Obj.value="";
+		  var Obj=document.getElementById("OCTLocRowid")
+		  if (Obj) Obj.value="";
+		  MarkOther=''
+		  MarkDocID = combo_MarkDoc.getSelectedValue();  
+		  if ((!MarkDocID && typeof(MarkDocID)!="undefined")||(MarkDocID==0)){MarkDocID="";DocId=BackDocId}
+		  else{DocId=MarkDocID}
+		  ReloadScheduler()
+		  var Obj=window.frames["AppDetail"].document.getElementById("RBResID")
+		  if (Obj){Obj.value=""}
+		  var Obj=window.frames["AppDetail"].document.getElementById("MarkDocID")
+		  if (Obj){Obj.value=MarkDocID}
+		
+	 }
+	
+  	//其他科室
+  	var Obj=document.getElementById("OCTloc")
+  	if (Obj){
+	  	Obj.onkeyup=LookOtherLoc;
+	  	Obj.onchange = OCTlocChangeHandler;
+	}
+	var Obj=document.getElementById("imgOCTloc")
+  	if (Obj){
+	  	Obj.onclick=LookOtherLoc;
+	}
+	var lookup;
+	var evtTimer;
+    var evtName;
+	function LookOtherLoc(e){
+		try{
+			if (evtName=='OCTloc') {
+				window.clearTimeout(evtTimer);
+				evtTimer='';
+				evtName='';
+			}
+			var obj=websys_getSrcElement(e);
+			var type=websys_getType(e);
+			var key=websys_getKey(e);
+			var srcEle=document.getElementById('OCTloc'); 
+		 	var srcVal=srcEle.value;
+		 	if (srcVal.length<0){return ; }
+		 	if (srcVal.length==0){
+			 	OCTlocChangeHandler();
+			}
+		 	if (key==27){return ;} //ESC 
+			if ((type=="click"  && key!=13) || (type=="keydown" && key!=13) ||(type=="keyup" && key==13 && document.getElementById("OCTLocRowid").value=="")){
+			    if(typeof lookup =="undefined"  || dhcc.icare.lookupconfig.lookupDiv.style.display == "none"){
+			        lookup = new dhcc.icare.Lookup({
+			            lookupListComponetId: 1872,
+			            lookupPage: "fdhc.reg.appscheduler.csp",
+			            lookupName: "OCTloc",
+			            listClassName: 'web.DHCBL.Doctor.AppointOral',
+			            listQueryName: 'GetOtherLocList',
+			            resizeColumn: true,
+			            minLen:0,
+			            isDynamicHeight:false,
+			            listProperties: [function() { if (srcEle) return srcEle.value; }, session['LOGON.USERID'], session['LOGON.CTLOCID']],
+			            listeners: { 
+			                'selectRow': OCTlocLookupSelect
+			            },
+			            isCombo: true
+			        });
+			    }
+			}
+		}catch(e){}
+    }
+    function OCTlocChangeHandler(){
+	    var Obj=document.getElementById("OCTloc")
+	    if ((Obj)&&(Obj.value=="")){
+		    var OCTLocRowidObj=document.getElementById("OCTLocRowid");
+		    debugger;
+	    	if (OCTLocRowidObj){
+		    	OCTLocRowidObj.value="";
+		    }
+		    var RtnStr=cspRunServerMethod(MarkDocStrOtherMark,session['LOGON.USERID'],"",session['LOGON.CTLOCID'])
+			combo_OtherMark.clearAll();
+			combo_OtherMark.setComboText("");
+			combo_OtherMark.addOption('');
+			var Arr=DHCC_StrToArray(RtnStr);
+			combo_OtherMark.addOption(Arr);
+		}
+	}
+    function OCTlocLookupSelect(value){
+	    var OCTLocRowidObj=document.getElementById("OCTLocRowid");
+	    if (OCTLocRowidObj){
+		    OCTLocRowidObj.value=value.split("^")[1];
+		    var RtnStr=cspRunServerMethod(MarkDocStrOtherMark,session['LOGON.USERID'],value.split("^")[1],session['LOGON.CTLOCID'])
+			combo_OtherMark.clearAll();
+			combo_OtherMark.setComboText("");
+			combo_OtherMark.addOption('');
+			var Arr=DHCC_StrToArray(RtnStr);
+			combo_OtherMark.addOption(Arr);
+		}
+	}
+  	/*var Obj=document.getElementById("OCTloc")
+  	if(Obj){
+	  	 combo_OtherLoc = new dhtmlXCombo("OCTloc", "alfa", 200);
+	  	 var Arr = DHCC_StrToArray(OtherLOC);
+  	 	 combo_OtherLoc.addOption(Arr);
+  	 	 combo_OtherLoc.enableFilteringMode(true);
+  		 combo_OtherLoc.attachEvent("onChange",combo_OtherLocChan)
+  	}
+  	//其他科室	
+   function combo_OtherLocChan(e){
+		var OtherCtloc = combo_OtherLoc.getSelectedValue();
+		var RtnStr=cspRunServerMethod(MarkDocStrOtherMark,session['LOGON.USERID'],OtherCtloc,session['LOGON.CTLOCID'])
+		combo_OtherMark.clearAll();
+		combo_OtherMark.setComboText("");
+		combo_OtherMark.addOption('');
+		var Arr=DHCC_StrToArray(RtnStr);
+		combo_OtherMark.addOption(Arr);
+		window.setTimeout(function(){
+			var text=combo_OtherLoc.getComboText();
+	    	//combo_OtherLoc.setComboText(text.split("-")[1])
+        })
+  	}*/
+  	//其他号别
+  	var Obj=document.getElementById("OMark")
+  	if(Obj){
+  		combo_OtherMark= new dhtmlXCombo("OMark", "alfa", 200);
+  		combo_OtherMark.enableFilteringMode(false);
+  		combo_OtherMark.attachEvent("onChange",combo_OtherMarkChan)
+  		
+  	}
+  	
+  	//选择其他号别
+  	function combo_OtherMarkChan(e){
+	  	var OtherMarkID = combo_OtherMark.getSelectedValue();
+	  	combo_MarkDoc.setComboText(''); 
+		combo_MarkDoc.setComboValue('');
+		MarkOther=OtherMarkID
+		MarkDocID=""
+		var Obj=window.frames["AppDetail"].document.getElementById("MarkDocID")
+		if (Obj){Obj.value=""}
+		var Obj=window.frames["AppDetail"].document.getElementById("RBResID")
+	    if (Obj){Obj.value=MarkOther}
+	    ReloadScheduler()
+		
+	}
+  
+</script> 
+</BODY>
+</HTML>

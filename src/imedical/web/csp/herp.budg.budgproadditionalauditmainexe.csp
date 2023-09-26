@@ -1,0 +1,99 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+                s hospid=$G(%session.Data("LOGON.HOSPID"))
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+	
+    s projyear=$Get(%request.Data("projyear",1))
+    s projcode=$Get(%request.Data("projcode",1))
+    s projname=$Get(%request.Data("projname",1))
+    s projdutydr=$Get(%request.Data("projdutydr",1))
+    s projdeptdr=$Get(%request.Data("projdeptdr",1))
+    s projstate=$Get(%request.Data("projstate",1))
+    s pabudgvaluebegin=$Get(%request.Data("pabudgvaluebegin",1))
+    s pabudgvalue=$Get(%request.Data("pabudgvalue",1))
+    s pafundrestype=$Get(%request.Data("pafundrestype",1))
+    s parowid=$Get(%request.Data("parowid",1))
+    s padesc=$Get(%request.Data("padesc",1))
+    s pachkstate=$Get(%request.Data("pachkstate",1))
+    s pachangedate=$Get(%request.Data("pachangedate",1))
+    s projfiledesc=$Get(%request.Data("projfiledesc",1))
+    s pachangefag=$Get(%request.Data("pachangefag",1))
+    s sf=$Get(%request.Data("sf",1))
+    
+    s RowID=$Get(%request.Data("RowID",1))
+    s PArowid=$Get(%request.Data("PArowid",1))
+	s Year=$Get(%request.Data("Year",1))
+    s Dept=$Get(%request.Data("Dept",1))
+    s ProjectName=$Get(%request.Data("ProjectName",1))
+    
+     s username=$Get(%request.Data("username",1))
+    s deptname=$Get(%request.Data("deptname",1))
+    
+	//s UserID=^dhcpaUsertemp("LOGON.USERID")
+	s UserID=$Get(%request.Data("UserID",1))
+	
+	i action="list" d
+	.s a=UserID
+	.w ##class(herp.budg.udata.uBudgProAdditionalAudit).ListMain(hospid,Year, Dept, ProjectName,UserID,searchField, searchValue, sortField, sortDir, start, limit)
+	
+	
+	
+//	i action = "add" d
+//	.s result = ##class(dhc.dura.udata.uWHouseState).InsertRec(YearMonth,HouseDr)
+//	.i result = 0 d
+//	..w "{success:'true',info:'',refresh:'true'}"
+//	.e  d
+//	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "yearlist" d
+	.w ##class(herp.budg.udata.uBudgProAdditionalAudit).YearList(start,limit,str)
+	
+	i action = "deptlist" d
+	.w ##class(herp.budg.udata.uBudgProAdditionalAudit).DeptList(hospid,UserID,start, limit, str)
+	
+	i action = "projectnamelist" d
+	.w ##class(herp.budg.udata.uBudgProAdditionalAudit).ProjectNameList(hospid,UserID,start, limit, str)
+
+
+	i action = "audit" d
+	.s result = ##class(herp.budg.udata.uBudgProAdditionalAudit).Audit(RowID, PArowid, UserID)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "cancelaudit" d
+	.s result = ##class(herp.budg.udata.uBudgProAdditionalAudit).CancelAudit(RowID, PArowid, UserID)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+//	i action = "cancel" d
+//	.s result = ##class(dhc.dura.udata.uWHouseState).CancelAccount(rowid)
+//	.i result = 0 d
+//	..w "{success:'true',info:''}"
+//	.e  d
+//	..w "{success:'false',info:'"_result_"'}"
+//
+//	i action = "account" d
+//	.s result = ##class(dhc.dura.udata.uWHouseState).Account(rowid)
+//	.i result = 0 d
+//	..w "{success:'true',info:''}"
+//	.e  d
+//	..w "{success:'false',info:'"_result_"'}"
+</script>

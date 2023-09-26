@@ -1,0 +1,47 @@
+<csp:content charset="UTF-8">
+<html>
+<head>
+	<DHCTT:HEAD/>
+</head>	
+<body>
+	<DHCTT:MENU/>
+		<table>
+			<tr>
+				<td><label class='greentitle'>待导出组件列表</label></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td><td>
+				<form action="dhctt.xmlexport.csp" method='post'>
+					<input type="hidden" value="xmlexport" name="act"/>
+					组件名:<input id="componentName" name="componentName" value="#($g(%request.Data("componentName",1)))#" autocomplete="off">
+					<input id="exportBtn" value="导出" type='submit'>					
+				</form></td>
+			</tr>
+		</table>
+		
+		<div class='line' id='ComponentXml'>
+			<pre>
+			<script language=cache runat=server>
+				if ($g(%request.Data("act",1))="xmlexport") {
+					s cn = %request.Data("componentName",1)
+					if (cn'=""){
+						S ComponentID=$o(^websys.ComponentI("UniqueNameIndex",$$ALPHAUP^SSUTIL4(cn),""))
+						if ComponentID="" {
+							w "not find "_cn
+						} else {
+							s componentxml = "\temp\componentxml\"
+							s path = ##class(web.Util.DHCJFXMLOperate).GetPhysicalPath(componentxml)
+							d ##class(web.Util.UtilService).GetExportComponents(cn,path)
+							w !,%request.GetCgiEnv("LOCAL_ADDR")_" "_path_cn_".xml  "_"<a href=dhctt.file.csp?act=download&dirname="_componentxml_"&filename="_cn_".xml >download</a>"
+							;"<a href='../xml/"_cn_".xml' target='dhcttReviewXml'>review</a>"
+						}
+					}
+				}
+	
+			</script>
+			</pre>
+		</div>		
+	<script type='text/javascript' src='../../scripts/dhctt/xmlexport.js'></script>	
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+ n PatiendID
+ s PatientID=%request.Get("PatientID")
+ s ID=%request.Get("ID")
+ s CancerReg=%request.Get("CancerReg")
+ s PopUpTumor=%request.Get("PopUpTumor")
+ s ReasonFlag=%request.Get("ClinicalDiagReasonFlag")
+ s TWKFL=%request.Get("TWKFL")
+ s TWKFLI=%request.Get("TWKFLI")
+ s TWKFLL=%request.Get("TWKFLL")
+ s TWKFLJ=%request.Get("TWKFLJ")
+ 
+ s verticalframeset=##Class(epr.FramePreference).GetData($g(%session.Data("LOGON.SITECODE")),$g(%session.Data("LOGON.GROUPID")),"vertical_patumorframe.csp")
+ s:$g(verticalframeset)="" verticalframeset="75%,*"
+ 
+ s horizontalframeset=##Class(epr.FramePreference).GetData($g(%session.Data("LOGON.SITECODE")),$g(%session.Data("LOGON.GROUPID")),"horizontal_patumorframe.csp")
+ s:$g(horizontalframeset)="" horizontalframeset="50%,*"
+ 
+ 
+</SERVER>
+<script>
+</script>
+
+<CSP:IF condition=(ReasonFlag="")>
+		<frameset rows="#(verticalframeset)#">
+			<frame src="websys.default.csp?WEBSYS.TCOMPONENT=PATumor.Edit&PatientID=#(PatientID)#&ID=#(ID)#&PatientBanner=1&CancerReg=#(CancerReg)#&PopUpTumor=#(PopUpTumor)#&TWKFL=#(TWKFL)#&TWKFLI=#(TWKFLI)#&TWKFLL=#(TWKFLL)#&TWKFLJ=#(TWKFLJ)#" name="FRAMEPATumorEdit" frameBorder=0>
+			<frameset cols="#(horizontalframeset)#">
+				<frame src="websys.default.csp?WEBSYS.TCOMPONENT=PATumorMetatstatic.List&PatientID=#(PatientID)#&CancerReg=#(CancerReg)#&Tumor=#(ID)#" name="FRAMEPATumorMetatstaticList" frameBorder=0>
+  				<frame src="websys.default.csp?WEBSYS.TCOMPONENT=PATumorClinDiagReason.List&PatientID=#(PatientID)#&CancerReg=#(CancerReg)#&Tumor=#(ID)#" name="FRAMEPATumorClinDiagReasonList" frameBorder=0>
+	  		</frameset>
+		</frameset>
+</CSP:IF>
+<CSP:IF condition=((ID'="")&&(ReasonFlag="Y"))>
+	<SERVER>
+	n cmp
+	d %request.Set("PatientID",PatientID)
+	d %request.Set("PARREF",ID)
+	d %request.Set("ID","")
+	d %request.Set("PatientBanner",1)
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show()
+	s cmp=##Class(websys.Component).OpenName("PATumorClinDiagReason.Edit")
+	i cmp d cmp.Show()
+	</SERVER>
+</CSP:IF>
+<BODY>
+</BODY>
+</HTML>

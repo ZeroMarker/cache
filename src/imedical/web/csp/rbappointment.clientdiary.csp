@@ -1,0 +1,395 @@
+<!-- Copyright (c) 2002 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/RBCalendar.css"></LINK>
+</HEAD>
+<BODY>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT> 
+
+
+<SERVER>
+	; LOG 27602 BC 20-8-2002 rewrite the client diary to make it translatable, dynamic and have the ability to display
+	; more than one appointment per slot.  
+	; LOG 23612 ANA 5/08/02
+	n CurrentDate,dayofwk,sdateOfWeek,edateOfWeek,PatientID,EpisodeID,CURRdate,highDuration,PREVcurrDate,NEXTcurrDate,HTMLDate,SlotTimeHTML,SlotTime,nextSlotTime,ServArray,SlotServArray,editurlArray,SlotediturlArray,SglAppturlArray,OutHoursAppturlArray,stime,etime,timestep,TotalSlotArray,AHApptListArray
+	s (CurrentDate,dayofwk,sdateOfWeek,edateOfWeek,PatientID,EpisodeID,CURRdate,highDuration,PREVcurrDate,NEXTcurrDate,HTMLDate,SlotTimeHTML,SlotTime,nextSlotTime,ServArray,SlotServArray,editurlArray,SlotediturlArray,SglAppturlArray,OutHoursAppturlArray,stime,etime,timestep,TotalSlotArray,AHApptListArray)=""
+	s TWKFL=%request.Get("TWKFL")
+ 	s TWKFLI=%request.Get("TWKFLI")
+ 	s PatientID=%request.Get("PatientID")
+ 	s EpisodeID=%request.Get("EpisodeID")
+ 	s mradm=%request.Get("mradm")
+ 	;s highDuration=%request.Get("highDuration")
+ 	i highDuration="" s highDuration=7
+ 	; LOG 27602 BC 20-8-2002 translatable message
+ 	s obj=##Class(websys.Component).OpenName("RBClientDiaryMessages")
+	i obj d obj.LoadTrans(),obj.%Close()
+ 	;s ^zanju($zn,"highDuration ")=highDuration
+ 	; LOG 23612 ANA 5/08/02. Week displayed starting from the Monday of current date(This week).
+ 	i (%request.Get("CurrentDate")'="") s CurrentDate=%request.Get("CurrentDate")
+	i (%request.Get("CurrentDate")="") s CurrentDate=+$h
+	;s CurrentDate=+$h
+	s CURRdate=+$h
+	i CurrentDate'=""  d
+	. s dayofwk=CurrentDate+3#7+1
+	. s sdateOfWeek=CurrentDate
+	. s edateOfWeek=CurrentDate+highDuration-1
+	. ;s sdateOfWeek=(CurrentDate-dayofwk)+1
+	. ;s edateOfWeek=(CurrentDate-dayofwk)+highDuration
+	;s ^zanju($zn,"start and end date of week ")=sdateOfWeek_"^"_edateOfWeek_"^"_TWKFL_"^"_TWKFLI
+ 	i PatientID'="" d
+	. ; LOG 27602 BC 20-8-2002 Get Default Day of the Week fields
+	. i $$getall^MVBCTDOW()
+	. n dayLIST
+	. s dayLIST(1)=$p(PLIST(1),$c(2),3),dayLIST(2)=$p(PLIST(2),$c(2),3),dayLIST(3)=$p(PLIST(3),$c(2),3),dayLIST(4)=$p(PLIST(4),$c(2),3),dayLIST(5)=$p(PLIST(5),$c(2),3),dayLIST(6)=$p(PLIST(6),$c(2),3),dayLIST(7)=$p(PLIST(7),$c(2),3)
+	. w "<DIV>"
+	. w "<B></B>"
+	. w "<form name=""fRBAppointment_ClientDiary"" method=""post"" id=""fRBAppointment_ClientDiary"">",$c(13,10)
+	. w "<TABLE class=tblList id=""tfRBAppointment_ClientDiary"" Name=""tfRBAppointment_ClientDiary"" CELLSPACING=1 border=1 cellpadding=5 width=""100%"">",$c(13,10)
+	. w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFL"" VALUE=""",TWKFL,""">",$c(13,10)
+	. w "<INPUT TYPE=""HIDDEN"" NAME=""TWKFLI"" VALUE=""",TWKFLI,""">",$c(13,10)
+	. w "<INPUT TYPE=""HIDDEN"" NAME=""PatientID"" VALUE=""",PatientID,""">",$c(13,10)
+ 	. w "<INPUT TYPE=""HIDDEN"" NAME=""EpisodeID"" VALUE=""",EpisodeID,""">",$c(13,10)
+	. w "<INPUT TYPE=""HIDDEN"" NAME=""mradm"" VALUE=""",mradm,""">",$c(13,10)
+	. //LOG 31444 BC 17-01-03 Day messages and allow Update,Previous, Next and Edit buttons to be set through the layout editor
+ 	. ;w "<tr>"
+ 	. s PREVcurrDate=CurrentDate-7
+ 	. s Prevz="Previous"
+ 	. s PREVurl="rbappointment.clientdiary.csp?TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_%request.Get("PatientID")_"&EpisodeID="_%request.Get("EpisodeID")_"&mradm="_%request.Get("mradm")_"&CurrentDate="_PREVcurrDate_"&CONTEXT="_%request.Get("CONTEXT")
+ 	. //LOG 31444 BC 17-01-03 Day messages and allow Update,Previous, Next and Edit buttons to be set through the layout editor
+ 	. ;w "<td align=center><A id=""",Prevz,""" name=""",Prevz,""" href=""#"" onClick=""websys_createWindow('",PREVurl,"','TRAK_main','width=750,height=570');"" accesskey=""P"">",t("Prev"),"</A>"
+ 	. s NEXTcurrDate=CurrentDate+7
+ 	. s Nextz="Next"
+ 	. s NEXTurl="rbappointment.clientdiary.csp?TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")_"&PatientID="_%request.Get("PatientID")_"&EpisodeID="_%request.Get("EpisodeID")_"&mradm="_%request.Get("mradm")_"&CurrentDate="_NEXTcurrDate_"&CONTEXT="_%request.Get("CONTEXT")
+ 	. //LOG 31444 BC 17-01-03 Day messages and allow Update,Previous, Next and Edit buttons to be set through the layout editor
+ 	. ;w "<td align=center><A id=""",Nextz,""" name=""",Nextz,""" href=""#"" onClick=""websys_createWindow('",NEXTurl,"','TRAK_main','width=750,height=570');"" accesskey=""N"">",t("Next"),"</A>"
+ 	. s url="epr.default.csp?TWKFL=&TWKFLI="
+ 	. //LOG 31444 BC 17-01-03 Day messages and allow Update,Previous, Next and Edit buttons to be set through the layout editor
+ 	. ;w "<td align=center><A href=",url," accesskey=""U""><img SRC=""../images/websys/update.gif"" BORDER=""0"">",t("Update"),"</A>"
+ 	. ;w "</tr>"
+    . w "<tr>"
+    . w "<th bordercolorlight=""silver"">",t("ApptTime"),"</th>",$c(13,10)
+	. s Date=sdateOfWeek,HTMLDate=""
+    . f dayCount=1:1:7 d
+    . . s DNamez="Datez"_dayCount
+    . . i (dayofwk+dayCount-1)#7=0 s daycnt=(dayofwk+dayCount-1)
+    . . i (dayofwk+dayCount-1)#7'=0 s daycnt=(dayofwk+dayCount-1)#7
+    . . s HTMLDate=" ("_##Class(websys.Conversions).DateLogicalToHtml(Date)_")"
+    . . w "<th bordercolorlight=""silver"">",dayLIST(daycnt)_HTMLDate,"</th>"
+    . . w "<INPUT TYPE=""HIDDEN"" id=""",DNamez,""" NAME=""",DNamez,""" VALUE=""",Date,""">",$c(13,10)
+    . . s Date=Date+1
+    . w "</tr>"
+	. ; ANA 23612 is 7:00am. Hardcoded time.
+	. n colCount,rowCount
+	. s rowCount=0
+	. s (stime,etime,timestep)=""
+	. s stime=$p($g(^SSU("SSGRP",%session.Get("LOGON.GROUPID"))),"^",75)
+	. s etime=$p($g(^SSU("SSGRP",%session.Get("LOGON.GROUPID"))),"^",76)
+	. s timestep=$p($g(^SSU("SSGRP",%session.Get("LOGON.GROUPID"))),"^",77)*60
+	. ; Default values if not defined in SS Group
+	. i stime="" s stime=25200
+	. i etime="" s etime=61200
+	. i ((timestep="")||(timestep<60)) s timestep=1800
+	. ; LOG 33428 Show out of hours appointment/events (Set AH link array)
+	. f SlotDate=sdateOfWeek:1:edateOfWeek d
+	. .s AHApptListArray(SlotDate)=""
+	. f SlotTime=stime:timestep:etime d
+	. . s rowCount=rowCount+1
+	. . w "<tr>"
+	. . s SlotTimeHTML=##Class(websys.Conversions).TimeLogicalToHtml(SlotTime)
+	. . w "<td align=center>",SlotTimeHTML,"</td>",$c(13,10)
+	. . s colCount=0
+	. . f SlotDate=sdateOfWeek:1:edateOfWeek d
+	. . . s colCount=colCount+1
+	. . . s SlotServArray(rowCount,colCount)=""
+	. . . s SlotediturlArray(rowCount,colCount)=""
+	. . . s TotalSlotArray(rowCount,colCount)=""
+	. . . ;s SglAppturlArray(rowCount,colCount)="websys.default.csp?WEBSYS.TCOMPONENT=RBResEffDateSessServices.Find&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&BookingType=E"_"&Date="_SlotDate
+	. . . s SglAppturlArray(rowCount,colCount)="websys.csp?TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&BookingType=E"_"&Date="_SlotDate_"&PrefTime="_SlotTime
+	. . . i (rowCount=1) s OutHoursAppturlArray(colCount)="websys.csp?TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&BookingType=E"_"&Date="_SlotDate_"&PrefTime="
+	. . . s nextSlotTime=SlotTime+timestep
+	. . . n APPTRowID,ID,Service,ApptTime,ApptDate,rsEpisodeID,ApptRes,ApptLoc,EventID,EventName
+	. . . s (APPTRowID,ID,Service,ApptTime,ApptDate,rsEpisodeID,ApptRes,ApptLoc)=""
+	. . . s rsappt=##Class(%Library.ResultSet).%New("web.RBAppointment:FindPatientApptByDate")
+	. . . i rsappt d
+	. . . . d rsappt.Execute(PatientID,SlotDate)
+	. . . . f  q:'rsappt.Next()  d
+	. . . . . s APPTRowID=rsappt.GetDataByName("APPTRowId")
+	. . . . . s ID=rsappt.GetDataByName("APPTRowId")
+	. . . . . ;s Service=##Class(websys.Conversions).ListLogicalToHtml(rsappt.GetDataByName("SERDesc"))
+	. . . . . ; LOG 27602 BC 20-8-2002 Resource and Location added
+	. . . . . s ApptRes=rsappt.GetDataByName("CTPCPDesc")
+	. . . . . s ApptLoc=rsappt.GetDataByName("CTLOCDesc")
+	. . . . . s Service=rsappt.GetDataByName("SERDesc")
+	. . . . . s ApptTime=rsappt.GetDataByName("ASSessStartTime")
+	. . . . . s ApptDate=rsappt.GetDataByName("ASDate")
+	. . . . . s rsEpisodeID=rsappt.GetDataByName("APPTAdmDR")
+	. . . . . s ORIRowIDs=""
+	. . . . . s rso=##Class(%Library.ResultSet).%New("web.MRClinicalPathWays:FindApptID")
+	. . . . . d rso.Execute(APPTRowID)
+	. . . . . f  q:'rso.Next()  d
+	. . . . . . i ORIRowIDs'="" s ORIRowIDs=ORIRowIDs_"^"_rso.GetDataByName("OEORIRowID")
+	. . . . . . i ORIRowIDs="" s ORIRowIDs=rso.GetDataByName("OEORIRowID")
+	. . . . . d rso.%Close()
+	. . . . . ;LOG 29800 BC 29-10-2002 Event Appointments have links to the Event rather than the appointment
+	. . . . . s EventID=rsappt.GetDataByName("EventID")
+	. . . . . s EventName=rsappt.GetDataByName("EVName")
+	. . . . . ; SB 10/09/02: Check if Appt Care Provider is restricted, if so don't show appointment.
+	. . . . . s secgrp=%session.Get("LOGON.GROUPID")
+	. . . . . s secgrpid=##class(epr.GroupSettings).GetIdFromGroupId(secgrp)
+	. . . . . s cpset=##class(epr.GroupSettings).HideEpisodesForCPT(secgrpid)
+	. . . . . s cpid=$p(^RB("RES",+APPTRowID),"^",2),cptype="",showbook=1
+	. . . . . i cpid'="",$d(^CTPCP(cpid,1)),secgrpid'="" d
+	. . . . . . s cptype=$p($g(^CTPCP(cpid,1)),"^",4)
+	. . . . . . i $p(cpset,"^",2)=1,(","_$p(cpset,"^",3)_",")'[(","_cptype_",") s showbook=0
+	. . . . . ;LOG 27602 BC 20-8-2002 Change to display Resource and Location
+	. . . . . i ApptDate'="",ApptTime'="",showbook,EventID="" d 
+	. . . . . . s servidz="servidz"_rowCount_"^"_colCount_"^"_ID
+	. . . . . . ; LOG 33428 Show out of hours appointment/events
+	. . . . . . i (ApptTime<stime),(SlotTime=stime) s AHApptListArray(ApptDate)=AHApptListArray(ApptDate)_"<A id="_$c(34)_$g(servidz)_$c(34)_" name="_$c(34)_$g(servidz)_$c(34)_" HREF="_$c(34)_"#"_$c(34)_" onClick="_$c(34)_"websys_lu('websys.csp?TWKFL="_##Class(websys.WorkFlow).GetIdFromCodeOrDescription("trak.RBAppointment.Edit")_"&ID="_ID_"&PatientID="_PatientID_"&EpisodeID="_rsEpisodeID_"&ApptID="_APPTRowID_"&TimeLogical="_ApptTime_"&DateLogical="_ApptDate_"&ORIRowIDs="_ORIRowIDs_"',false,'width=750,height=570')"_$c(34)_";>"_##Class(websys.Conversions).TimeLogicalToHtml(ApptTime)_": "_ApptRes_"("_ApptLoc_")"_"</A><BR>"
+	. . . . . . i (ApptTime>etime),(SlotTime=stime) s AHApptListArray(ApptDate)=AHApptListArray(ApptDate)_"<A id="_$c(34)_$g(servidz)_$c(34)_" name="_$c(34)_$g(servidz)_$c(34)_" HREF="_$c(34)_"#"_$c(34)_" onClick="_$c(34)_"websys_lu('websys.csp?TWKFL="_##Class(websys.WorkFlow).GetIdFromCodeOrDescription("trak.RBAppointment.Edit")_"&ID="_ID_"&PatientID="_PatientID_"&EpisodeID="_rsEpisodeID_"&ApptID="_APPTRowID_"&TimeLogical="_ApptTime_"&DateLogical="_ApptDate_"&ORIRowIDs="_ORIRowIDs_"',false,'width=750,height=570')"_$c(34)_";>"_##Class(websys.Conversions).TimeLogicalToHtml(ApptTime)_": "_ApptRes_"("_ApptLoc_")"_"</A><BR>"
+	. . . . . . s ServArray(ApptDate,ApptTime)="<A id="_$c(34)_$g(servidz)_$c(34)_" name="_$c(34)_$g(servidz)_$c(34)_" HREF="_$c(34)_"#"_$c(34)_" onClick="_$c(34)_"websys_lu('websys.csp?TWKFL="_##Class(websys.WorkFlow).GetIdFromCodeOrDescription("trak.RBAppointment.Edit")_"&ID="_ID_"&PatientID="_PatientID_"&EpisodeID="_rsEpisodeID_"&ApptID="_APPTRowID_"&TimeLogical="_ApptTime_"&DateLogical="_ApptDate_"&ORIRowIDs="_ORIRowIDs_"',false,'width=750,height=570')"_$c(34)_";>"_ApptRes_"("_ApptLoc_")"_"</A>"
+	. . . . . . i (ApptDate=SlotDate),(ApptTime'<SlotTime),(ApptTime<nextSlotTime) d
+	. . . . . . . i TotalSlotArray(rowCount,colCount)'="" d
+	. . . . . . . . s TotalSlotArray(rowCount,colCount)=TotalSlotArray(rowCount,colCount)_"<BR>"_ServArray(ApptDate,ApptTime)
+	. . . . . . . i TotalSlotArray(rowCount,colCount)="" d
+	. . . . . . . . s TotalSlotArray(rowCount,colCount)=ServArray(ApptDate,ApptTime)
+	. . . . . ;LOG 29800 BC 29-10-2002 Event Appointments have links to the Event rather than the appointment
+	. . . . . i ApptDate'="",ApptTime'="",showbook,EventID'="" d 
+	. . . . . . s servidz="servidz"_rowCount_"^"_colCount_"^"_ID
+	. . . . . . ; LOG 33428 Show out of hours appointment/events
+	. . . . . . i (ApptTime<stime),(SlotTime=stime) s AHApptListArray(ApptDate)=AHApptListArray(ApptDate)_"<A id="_$c(34)_$g(servidz)_$c(34)_" name="_$c(34)_$g(servidz)_$c(34)_" HREF="_$c(34)_"#"_$c(34)_" onClick="_$c(34)_"websys_lu('rbevent.edit.csp?ID="_EventID_"&PatientID="_PatientID_"&EpisodeID="_rsEpisodeID_"&ApptID="_APPTRowID_"',false,'width=750,height=570')"_$c(34)_";>"_EventName_"("_ApptLoc_")"_"</A>"_"<BR>"
+	. . . . . . i (ApptTime>etime),(SlotTime=stime) s AHApptListArray(ApptDate)=AHApptListArray(ApptDate)_"<A id="_$c(34)_$g(servidz)_$c(34)_" name="_$c(34)_$g(servidz)_$c(34)_" HREF="_$c(34)_"#"_$c(34)_" onClick="_$c(34)_"websys_lu('rbevent.edit.csp?ID="_EventID_"&PatientID="_PatientID_"&EpisodeID="_rsEpisodeID_"&ApptID="_APPTRowID_"',false,'width=750,height=570')"_$c(34)_";>"_EventName_"("_ApptLoc_")"_"</A>"_"<BR>"
+	. . . . . . s ServArray(ApptDate,ApptTime)="<A id="_$c(34)_$g(servidz)_$c(34)_" name="_$c(34)_$g(servidz)_$c(34)_" HREF="_$c(34)_"#"_$c(34)_" onClick="_$c(34)_"websys_lu('rbevent.edit.csp?ID="_EventID_"&PatientID="_PatientID_"&EpisodeID="_rsEpisodeID_"&ApptID="_APPTRowID_"',false,'width=750,height=570')"_$c(34)_";>"_EventName_"("_ApptLoc_")"_"</A>"
+	. . . . . . i (ApptDate=SlotDate),(ApptTime'<SlotTime),(ApptTime<nextSlotTime) d
+	. . . . . . . i TotalSlotArray(rowCount,colCount)'="" d
+	. . . . . . . . s TotalSlotArray(rowCount,colCount)=TotalSlotArray(rowCount,colCount)_"<BR>"_ServArray(ApptDate,ApptTime)
+	. . . . . . . i TotalSlotArray(rowCount,colCount)="" d
+	. . . . . . . . s TotalSlotArray(rowCount,colCount)=ServArray(ApptDate,ApptTime)
+	. . . . d rsappt.%Close()
+	. . . i TotalSlotArray(rowCount,colCount)'="" d
+	. . . . w "<td align=center>"
+	. . . . w TotalSlotArray(rowCount,colCount)
+	. . . . w "</td>",$c(13,10)
+	. . . i TotalSlotArray(rowCount,colCount)="" d
+	. . . . s servidz="servidz"_rowCount_"^"_colCount
+	. . . . w "<td align=center>"
+	. . . . s PatientAvailable=##Class(web.PAAdmUnavailable).IsAvailable(EpisodeID,SlotDate)
+	. . . . i PatientAvailable w "<A id=""",servidz,""" name=""",servidz,""" HREF=""",SglAppturlArray(rowCount,colCount),""">",t("Book"),"</A>"
+	. . . . i 'PatientAvailable w t("Unavailable")
+	. . . . w "</td>",$c(13,10)
+	. . . . ; LOG 30519 BC 20-11-2002 No longer want the links to become inactive for past appointments/events/book buttons
+	. . . . ;i SlotDate'<CURRdate d
+	. . . . ;. w "<td align=center>"
+	. . . . ;. w "<A id=""",servidz,""" name=""",servidz,""" HREF=""",SglAppturlArray(rowCount,colCount),""">",t("Book"),"</A>"
+	. . . . ;. w "</td>",$c(13,10)
+	. . . . ;i SlotDate<CURRdate d
+	. . . . ;. w "<td align=center>"
+	. . . . ;. w "<A id=""",servidz,""" name=""",servidz,""" disabled >",t("Book"),"</A>"
+	. . . . ;. w "</td>",$c(13,10)
+	. . w "</tr>"
+	. d ##Class(websys.Conversions).LoadRequest()
+	. w "<tr><td align=center>",t("AH"),"</td>"
+	. s colCount=0
+	. ; LOG 27602 BC 20-8-2002 Add after hours booking slot
+	. f SlotDate=sdateOfWeek:1:edateOfWeek d
+	. . s colCount=colCount+1
+	. . s servidz="servidz"_"^"_colCount
+	. . w "<td align=center>"
+	. . ; LOG 33428 Show out of hours appointment/events
+	. . i $g(AHApptListArray(SlotDate))'="" w AHApptListArray(SlotDate)
+	. . s PatientAvailable=##Class(web.PAAdmUnavailable).IsAvailable(EpisodeID,SlotDate)
+	. . i 'PatientAvailable w t("Unavailable")
+	. . i PatientAvailable w "<A id=""",servidz,""" name=""",servidz,""" HREF=""",OutHoursAppturlArray(colCount),""">",t("Book"),"</A>"
+	. . w "</td>"
+ 	. w "</tr>",$c(13,10)
+	. w "</table>"
+	. w "</form>"
+	. w "</DIV>"
+	;//LOG 31444 BC 17-01-03 Day messages and allow Update,Previous, Next and Edit buttons to be set through the layout editor
+	n clientmessage,clientmessageid,dmess
+	s (clientmessage,clientmessageid)=""
+	s clientmessageid=$o(^PACLD(0,"Person",PatientID,clientmessageid))
+	; SB 21/06/03 (36059): Problem with the way the LongTextFields were being saved. Changed all CLDText fields to be saved and 
+	; retrieved through websys.Conversions).LongTextLogicalToHtml
+	i clientmessageid'="" d
+	. s obj=##Class(User.PAClientDiaryDayData).%OpenId(clientmessageid)
+	. s monmess=##Class(websys.Conversions).LongTextLogicalToHtml($s(obj:obj.CLDText1,1:""),"<br>")
+	. s tuesmess=##Class(websys.Conversions).LongTextLogicalToHtml($s(obj:obj.CLDText2,1:""),"<br>")
+	. s wedmess=##Class(websys.Conversions).LongTextLogicalToHtml($s(obj:obj.CLDText3,1:""),"<br>")
+	. s thursmess=##Class(websys.Conversions).LongTextLogicalToHtml($s(obj:obj.CLDText4,1:""),"<br>")
+	. s frimess=##Class(websys.Conversions).LongTextLogicalToHtml($s(obj:obj.CLDText5,1:""),"<br>")
+	. s satmess=##Class(websys.Conversions).LongTextLogicalToHtml($s(obj:obj.CLDText6,1:""),"<br>")
+	. s sunmess=##Class(websys.Conversions).LongTextLogicalToHtml($s(obj:obj.CLDText7,1:""),"<br>")
+	. s clientmessage1="^"_monmess_"^"_tuesmess_"^"_wedmess_"^"_thursmess_"^"_frimess_"^"_satmess_"^"_sunmess_"^"
+	. f j=1:1:$l(clientmessage1,$C(13,10)) d
+	. . s part=$p(clientmessage1,$C(13,10),j)
+	. . i clientmessage'="" s clientmessage=clientmessage_"<br>"_part
+	. . i clientmessage="" s clientmessage=part
+	/*
+	i clientmessageid'="" d
+	. s ind=0,monmess="" f  s ind=$o(^PACLD(clientmessageid,"TX1",ind))  q:ind=""  d
+	. . i ind=1 s monmess=^PACLD(clientmessageid,"TX1",ind)
+	. . i ind'=1 s monmess=monmess_"<B>"_^PACLD(clientmessageid,"TX1",ind)
+	. s ind=0,tuesmess="" f  s ind=$o(^PACLD(clientmessageid,"TX2",ind))  q:ind=""  d
+	. . i ind=1 s tuesmess=^PACLD(clientmessageid,"TX2",ind)
+	. . i ind'=1 s tuesmess=monmess_"<B>"_^PACLD(clientmessageid,"TX2",ind)
+	. s ind=0,wedmess="" f  s ind=$o(^PACLD(clientmessageid,"TX3",ind))  q:ind=""  d
+	. . i ind=1 s wedmess=^PACLD(clientmessageid,"TX3",ind)
+	. . i ind'=1 s wedmess=monmess_"<B>"_^PACLD(clientmessageid,"TX3",ind)
+	. s ind=0,thursmess="" f  s ind=$o(^PACLD(clientmessageid,"TX4",ind))  q:ind=""  d
+	. . i ind=1 s thursmess=^PACLD(clientmessageid,"TX4",ind)
+	. . i ind'=1 s thursmess=monmess_"<B>"_^PACLD(clientmessageid,"TX4",ind)
+	. s ind=0,frimess="" f  s ind=$o(^PACLD(clientmessageid,"TX5",ind))  q:ind=""  d
+	. . i ind=1 s frimess=^PACLD(clientmessageid,"TX5",ind)
+	. . i ind'=1 s frimess=monmess_"<B>"_^PACLD(clientmessageid,"TX5",ind)
+	. s ind=0,satmess="" f  s ind=$o(^PACLD(clientmessageid,"TX6",ind))  q:ind=""  d
+	. . i ind=1 s satmess=^PACLD(clientmessageid,"TX6",ind)
+	. . i ind'=1 s satmess=monmess_"<B>"_^PACLD(clientmessageid,"TX6",ind)
+	. s ind=0,sunmess="" f  s ind=$o(^PACLD(clientmessageid,"TX7",ind))  q:ind=""  d
+	. . i ind=1 s sunmess=^PACLD(clientmessageid,"TX7",ind)
+	. . i ind'=1 s sunmess=monmess_"<B>"_^PACLD(clientmessageid,"TX7",ind)
+	. s clientmessage1="^"_monmess_"^"_tuesmess_"^"_wedmess_"^"_thursmess_"^"_frimess_"^"_satmess_"^"_sunmess_"^"
+	. f j=1:1:$l(clientmessage1,$C(13,10)) d
+	. . s part=$p(clientmessage1,$C(13,10),j) 
+	. . i clientmessage'="" s clientmessage=clientmessage_"<br>"_part
+	. . i clientmessage="" s clientmessage=part
+	*/
+	;End Log 31444
+	;Log 36880 BC 26-6-2003 Update takes the user back to the start page
+	s wfl=##Class(epr.GroupSettings).GetStartPage(%session.Get("LOGON.GROUPID"))
+</SERVER>
+<TRAK:COMPONENT id="PAClientDiaryDayData.Edit" hidemenus=1 hideheadings=1></TRAK:COMPONENT> 
+<script language="javascript">
+	//LOG 31444 BC 17-01-03 Day messages and allow Update,Previous, Next and Edit buttons to be set through the layout editor
+	//alert("Javascript");
+	var allmessage="#(clientmessage)#";
+	if (allmessage=="") allmessage="^^^^^^^^";
+	//alert(allmessage);
+	var messages=allmessage.split("^");
+	var dayofwk='#(dayofwk)#';
+	var PREVurl='#(PREVurl)#';
+	//alert(PREVurl);
+	var NEXTurl='#(NEXTurl)#';
+	//alert(NEXTurl);
+	var url='#(url)#';
+	//alert(url);
+	//alert("clientmessageid="+"#(clientmessageid)#");
+	var DayDataID=document.getElementById("DayDataID");
+	if (DayDataID) {DayDataID.value="#(clientmessageid)#";}
+	//alert("DayDataID.value="+DayDataID.value);
+	var EditButton=document.getElementById("Edit");
+	if (EditButton) EditButton.onclick=EditDayData;
+	var PreviousButton=document.getElementById("Previous");
+	if (PreviousButton) {
+		//alert(PreviousButton.href);
+		var innertxt=PreviousButton.innerHTML
+		var url="<A id=Previous"+" name=Previous"+" HREF="+'"'+PREVurl+'"'+" accesskey='P' >"+innertxt+'</A>';
+		//alert(url);
+		PreviousButton.outerHTML=url;
+	}
+	var NextButton=document.getElementById("Next");
+	if (NextButton)  {
+		//alert(NextButton.outerHTML);
+		var innertxt=NextButton.innerHTML
+		//var url="<A id=Next"+" name=Next"+" HREF="+'"'+"#"+'"'+" onClick="+'"'+"websys_createWindow(NEXTurl,'TRAK_main','');"+'"'+"accesskey='N' >"+innertxt+'</A>';
+		var url="<A id=Next"+" name=Next"+" HREF="+'"'+NEXTurl+'"'+" accesskey='N' >"+innertxt+'</A>';
+		//alert(url);
+		NextButton.outerHTML=url;
+	}
+	var UpdateButton=document.getElementById("Update1");
+	if (UpdateButton) {
+		//Log 36880 BC 26-6-2003 Update takes the user back to the start page
+		UpdateButton.onclick=updatebuttonclick;
+		//alert(UpdateButton.outerHTML);
+		//var innertxt=UpdateButton.innerHTML
+		//var url="<A id=Update1"+" name=Update1"+" HREF="+'"'+"#"+'"'+" onClick="+'"'+"websys_createWindow(url,'TRAK_main','');"+'"'+"accesskey='U' >"+innertxt+'</A>';
+		//UpdateButton.outerHTML=url;
+	}
+	// This replaces all the fields in the components with the appropriate message and gives the columns
+	// their correct widths to match the width of the columns in the client diary (set at 100px)
+	dayofwk=dayofwk*1
+	//alert("Day of the week "+dayofwk);
+	for (var i=1;i<8;i++) {
+		var DOW=document.getElementById("DOW"+i);
+		if (DOW) {
+			var dowvalue=dayofwk+i-1;
+			if (dowvalue>7) dowvalue=dowvalue-7
+			DOW.value=dowvalue;
+			//alert(dowvalue);
+		}
+		
+		var DOWMess=document.getElementById("DayMessage"+i);
+		if (DOWMess) {
+			if (messages[dowvalue]=="") messages[dowvalue]="&nbsp"
+			DOWMess.value=messages[dowvalue]
+			DOWMess.innerHTML=messages[dowvalue]
+			var outerobj=DOWMess.parentElement;	
+			if (outerobj) {
+				outerobj.align="center";
+				outerobj.vAlign="top";
+			}
+		}
+	}
+	var FormattingBlank=document.getElementById('cDayInfo');
+	if (FormattingBlank) {
+		var htmlvalue=FormattingBlank.innerHTML;
+		var outerobj=FormattingBlank.parentElement;	
+		killed=FormattingBlank.removeNode(false);
+		if (outerobj) {
+			outerobj.innerHTML='<label id=cDayInfo name=cDayInfo>'+htmlvalue+'</label>';
+			outerobj.align="center"
+		}
+	}
+
+	var tblDiary=document.getElementById('tfRBAppointment_ClientDiary');
+	var f=document.forms['fPAClientDiaryDayData_Edit'];
+	var arrtbl=f.getElementsByTagName('TABLE');
+	var tblMess=arrtbl[0];
+if (tblMess) {
+	//tblMess.cellPadding=tblDiary.cellPadding;
+	tblMess.cellSpacing=tblDiary.cellSpacing;
+	var tblborder=parseInt(tblDiary.border,10);
+	var tot=0; var borderwdt=2; 
+	tblMess.border=tblborder;
+	//alert(tblMess.cellPadding+":"+tblMess.cellSpacing)
+	var colMess=tblMess.rows[0].cells.length; colDiary=tblDiary.rows[1].cells.length;
+	for (var i=0; i<colMess, i<colDiary; i++) {
+		//alert(tblDiary.rows[0].cells[i].style.borderRightWidth+":"+tblDiary.rows[0].cells[i].style.borderLeftWidth);
+		//alert(tblDiary.rows[1].cells[i].offsetWidth+":"+tblDiary.rows[1].cells[i].offsetLeft+":"+tblDiary.rows[1].cells[i].width);
+		tblMess.rows[0].cells[i].style.width=(tblDiary.rows[1].cells[i].offsetWidth)-(borderwdt);
+		tot=tot+parseInt(tblMess.rows[0].cells[i].style.width,10)+(borderwdt)+(tblborder);
+		//tblMess.rows[0].cells[i].style.width=((tblDiary.rows[0].cells[i].offsetWidth)-(tblDiary.rows[0].cells[i].style.borderRightWidth)-(tblDiary.rows[0].cells[i].style.borderLeftWidth));
+	}
+	tot+=(borderwdt+tblborder);
+	tblMess.className="tblList";
+	//tblMess.width=tot;
+	tblMess.style.width=tot;
+}
+
+	
+	
+	function EditDayData(e) {
+		var lnk='websys.default.csp?WEBSYS.TCOMPONENT=PAClientDiaryDayData.EditData&ID='+"#(clientmessageid)#"+"&PatientID="+"#(PatientID)#";
+		websys_lu(lnk,false,"width=350,height=580")
+		return false;
+	}
+ // Log 31444
+ //Log 36880 BC 26-6-2003 Update takes the user back to the start page
+  	function updatebuttonclick() {
+ 		var winf = null; if (window.parent != window.self) winf = window.parent;
+		if ((winf)&&(winf.frames['eprmenu'])) winf.MainClearEpisodeDetails();
+		window.location="websys.csp?TEPRSTART=TEPRSTART&TWKFL="+"#(wfl)#"+"&TWKFLI=0";
+		return false;
+ 	}
+</script>
+</TRAK:APPLET>
+</BODY>
+</HTML>

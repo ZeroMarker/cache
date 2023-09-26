@@ -1,0 +1,112 @@
+﻿<!-- dhcpeireport.normal.csp -->
+<!-- 
+/// 创建时间		2007.04.01
+/// 创建人			xuwm 
+/// 主要功能		个人体检报告
+/// 关联文件		
+/// 最后修改时间	
+/// 最后修改人	 
+/// 体检汇总报告
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<TITLE></TITLE>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s HosCode=$G(^DHCPESetting("DHCPE","HospitalCode"))
+	s HosCode=$zcvt(HosCode,"L")
+	//s HosCode=""
+	i HosCode'="" s HosCode=HosCode_"."
+	s normalcss="../scripts/dhcpeireport."_HosCode_"normal.css"
+	s covercss="../scripts/dhcpeireport."_HosCode_"normal.cover.css"
+	s titlecss="../scripts/dhcpeireport."_HosCode_"normal.head.title.css"
+	s patinfocss="../scripts/dhcpeireport."_HosCode_"normal.head.patinfo.css"
+	s summarizecss="../scripts/dhcpeireport."_HosCode_"normal.summarize.css"
+	s generaladvicecss="../scripts/dhcpeireport."_HosCode_"normal.generaladvice.css"
+	s norcss="../scripts/dhcpeireport."_HosCode_"normal.result.nor.css"
+	s liscss="../scripts/dhcpeireport."_HosCode_"normal.result.lis.css"
+	s stationresultcss="../scripts/dhcpeireport."_HosCode_"normal.stationresult.css"
+	s summarizegathercss="../scripts/dhcpeireport."_HosCode_"normal.summarizegather.css"
+	//w covercss
+</SCRIPT>
+<!-- ͨԃ  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(normalcss)#></LINK>
+
+
+<!-- ·ㄦ  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(covercss)#></LINK>
+<!-- ±¨¸獷 ±¨¸沪͢ -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(titlecss)#></LINK>
+<!-- ±¨¸獷 ±¨¸沪͢ -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(patinfocss)#></LINK>
+
+<!-- ¿ǊӐ¡½ؠ -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizecss)#></LINK>
+<!-- ؜¼콨ө  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(generaladvicecss)#></LINK>
+
+<!-- ½ẻ  
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpeireport.normal.result.css"></LINK>
+-->
+<!-- ͨԃ¸򊻠 -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(norcss)#></LINK>
+<!-- ¼풩½ẻ  -->
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(liscss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(stationresultcss)#></LINK>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF=#(summarizegathercss)#></LINK>
+
+</head>
+<BODY>
+
+<!--OBJECT id=WebBrowser classid=CLSID:8856F961-340A-11D0-A96B-00C04FD705A2  height=0  width=0 VIEWASTEXT>
+  </OBJECT>
+
+ 
+
+<input type=button id=SaveAs value="另存" onclick="document.all.WebBrowser.ExecWB(4,1)" class="NOPRINT">
+<input type=button id=dy value="打印"   onclick="PrintReport()" class="NOPRINT">
+<input type=button id=zjdy value=ֱ½Ӵ󓟠onclick="document.all.WebBrowser.ExecWB(6,6)" class="NOPRINT">
+<input type=button value=ҳĦʨ׃ onclick="document.all.WebBrowser.ExecWB(8,1)" class="NOPRINT">
+<input type=button value=´󓢔¤@ onclick="document.all.WebBrowser.ExecWB(7,1)" class="NOPRINT"-->
+
+<OBJECT id="factory" style="DISPLAY: none" codeBase="../addins/client/smsx.cab#VVersion=6,5,439,50" classid="clsid:1663ed61-23eb-11d2-b92f-008048fdd814" viewastext></OBJECT>
+<center class="Noprint">
+<input type=button value="打印"onclick="factory.printing.Print(true)"> 
+<input type=button value="打印设置" onclick="factory.printing.PageSetup()"> 
+<input type=button value="预览" onclick="factory.printing.Preview()">           
+<input type="button" value="关闭" onclick="window.close();">
+</center>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s PatientID=$g(%request.Data("PatientID",1))
+		s ReportID=$g(%request.Data("ReportID",1))
+		// »򈡱¨¸瑅Ϣ
+		w:(""=PatientID) "<P>·Ƿ¨¿ͻ§ID,Ϟ±¨¸亯P>"
+		Q:(""=PatientID) 
+		s Flag=##Class(web.DHCPE.ReportOutToWeb).GetReportInfor(PatientID)
+		// ˤ³�䋊		w:("1"'=Flag) "<P>δ֒µ½Р¹ؿͻ§хϢ</P>"
+		Q:("1"'=Flag)
+		d ##Class(web.DHCPE.ReportOutToWeb).OutReportToWeb()	
+	</SCRIPT>
+
+<TABLE>
+<TR>
+          <TD  id="ReportID" width="0" height="0" style="display:none;">#(ReportID)#</TD>
+</TR>
+</TABLE>
+<SCRIPT language="javascript">
+	function PrintReport()
+	{
+		var ReportID=""
+		var obj=document.getElementById("ReportID")
+		if (obj) ReportID=obj.innerText;
+		var InString=ReportID+"^P^^";
+		var ret=#server(web.DHCPE.Report.SetReportStatus("","",InString))#
+
+		document.all.WebBrowser.ExecWB(6,1)
+	}
+</SCRIPT>
+</BODY>
+</HTML>

@@ -1,0 +1,104 @@
+<html>
+<head>
+	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+		if ($g(%session.Data("LOGON.USERID")) = "")
+		{
+			s rtn = ##Class(websys.SessionLogon).Logon()
+			s %response.ServerSideRedirect = "dhc.epr.query.index.csp"
+		}
+		i ##Class(websys.SessionEvents).SessionExpired() q 1
+		q 1
+	</csp:method>
+	<title>电子病历综合查询</title>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/layout.css" />  
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/form.css"/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/ExtJS/resources/css/xtheme-slate.css" />
+	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script type="text/javascript" defer="defer" src="../scripts/epr/ExtJS/ext-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprAjaxHelper.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script>
+	<script language="javascript">
+	Ext.onReady(function(){
+		Ext.isIE8 = Ext.isIE && navigator.userAgent.indexOf('MSIE 8')!=-1;
+		Ext.override(Ext.menu.Menu, { 
+			autoWidth : function(){ 
+				var el = this.el, ul = this.ul; 
+				if(!el){ 
+					return; 
+				} 
+				var w = this.width; 
+				if(w){ 
+					el.setWidth(w); 
+				}
+				else if(Ext.isIE && !Ext.isIE8){ //Ext2.2 支持 Ext.isIE8 属性 
+					el.setWidth(this.minWidth); 
+					var t = el.dom.offsetWidth; 
+					el.setWidth(ul.getWidth()+el.getFrameWidth("lr")); 
+				} 
+			} 
+		}); 
+	});
+	</script>
+
+	<style type="text/css">
+		.divColumn { width:290px; height:74px; float:left;} 
+		.divColumn input {width:180px; float:left; } 
+		.x-date-middle { padding-top:2px;padding-bottom:2px; width:180px;}
+		.colname {width: 50px; text-align: center; line-height:23px;}
+		.op {width: 35px; text-align: center; line-height:23px;}
+		.value {width: 66px; padding-left: 0pt;}
+		.relation {width: 25px; text-align: center; line-height:23px;}
+		#tblCondition { width:93%; border:1px solid #ccaaee; border-width:3 2 2 3 }
+		#tblCondition tr { height: 23px; }
+		#tblCondition td { border:1px solid #ccaaee; border-width:0 1 1 0}
+		#loading-mask{ position:absolute; left:0; top:0; width:100%; height:100%; z-index:20000; background-color:white; }
+		#loading { position:absolute; left:45%; top:40%; padding:2px; z-index:20001; height:auto; }
+		#loading img { margin-bottom:5px; }
+		#loading .loading-indicator{ background:white; color:#555; font:bold 13px tahoma,arial,helvetica; padding:10px; margin:0; text-align:center; height:auto; }
+	</style>
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetExtJSCSS()
+ 		s userID 	= %session.Get("LOGON.USERID")
+	 	s userName 	= %session.Get("LOGON.USERNAME")
+		s ctLocID 	= %session.Get("LOGON.CTLOCID")
+		s ssGroupID	= %session.Get("LOGON.GROUPID")
+		s queryDateGap = ##Class(EPRservice.BOSysOption).GetValueByName("QueryDateGap")
+		s queryPageSize = ##Class(EPRservice.BOSysOption).GetValueByName("QueryPageSize")
+		s:(queryDateGap = "") queryDateGap = 31
+		s:(queryPageSize = "") queryPageSize = 25
+		s canViewAllLoc = $Get(%request.Data("CanViewAllLoc",1),"")
+	</script>
+	<script language="javascript">
+		var userID	  = '#(userID)#';
+		var userName  = '#(userName)#';
+		var ctLocID   = '#(ctLocID)#';
+		var ssGroupID = '#(ssGroupID)#';
+		var queryDateGap = '#(queryDateGap)#';
+		var queryPageSize = '#(queryPageSize)#';
+		var CategoryID = "-1";
+		var PageToolbarPageSize = 15;
+		var canViewAllLoc = '#(canViewAllLoc)#';
+	</script>
+</head>
+<body oncontextmenu="return true;" onload="init();">
+	<div id="loading-mask"></div>   
+  	<div id="loading">
+    	<div class="loading-indicator">
+          	<img src="../scripts/epr/Pics/loading.gif" width="16" height="16" style="margin-right:8px;" align="absmiddle"/>Loading...
+    	</div>
+  	</div>
+	<script type="text/javascript" src="../scripts/epr/js/eprIntegratedQueryMethod.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprIntegratedQuery.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/eprInitIQpopupWindow.js"></script>
+</body>
+</html>
+<script language="javascript">
+	setTimeout(function(){   
+		Ext.get('loading').remove();
+		Ext.get('loading-mask').fadeOut({remove:true});
+	}, 500);
+</script> 

@@ -1,0 +1,28 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<csp:content charset="UTF-8">
+
+<script language="cache" runat="server">
+
+	s Action=$Get(%request.Data("actiontype",1))
+	s Start=$Get(%request.Data("start",1))
+	s Limit=$Get(%request.Data("limit",1))
+	s Sort=$Get(%request.Data("sort",1))
+	s Dir=$Get(%request.Data("dir",1))
+
+///返回明细信息	
+i Action="LocUserMatStat" d
+	.s strPar=$g(%request.Data("strPar",1))
+	.s ExcludeAlloted=$g(%request.Data("ExcludeAlloted",1))
+	.d ##class(web.DHCSTM.SubLocMatStat).jsSubLocMatUserDisp(Start,Limit,strPar,ExcludeAlloted)
+	
+///返回汇总信息
+i Action="INDispStat" d
+	.s strPar=$g(%request.Data("strPar",1))
+	.s ExcludeAlloted=$g(%request.Data("ExcludeAlloted",1))
+	.s IncludeAllot=$g(%request.Data("IncludeAllot",1))
+	.d ##class(web.DHCSTM.SubLocMatStat).INDispUserStat(Start,Limit,strPar,ExcludeAlloted,IncludeAllot)
+
+</script>

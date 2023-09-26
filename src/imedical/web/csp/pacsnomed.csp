@@ -1,0 +1,52 @@
+<!-- Copyright (c) 2006 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+ s mradm=%request.Get("mradm")
+ s ConsultID=%request.Get("ConsultID")
+ s SNOlistcomp=%request.Get("WEBSYS.TCOMPONENT")
+ s SNOeditcomp=%request.Get("EditComp")
+ s CONTEXT=%request.Get("CONTEXT")
+ s PatientID=%request.Get("PatientID")
+ s EpisodeID=%request.Get("EpisodeID")
+ s ConsultEpisodeID=%request.Get("ConsultEpisodeID")
+</SERVER>
+
+<frameset rows="75%,25%">
+        <frameset cols="25%,*">
+        <SERVER>
+                ; testing purposes
+                i SNOeditcomp="" s SNOeditcomp="MRSubjectFindings.Snomed.Edit"
+                w !,"<frame name=""snomed_find"" src=""pacsnomedconcept.search.find.csp?SNOeditcomp="_SNOeditcomp_"&mradm="_mradm_"&ConsultID="_ConsultID_"&mradm="_mradm_"&EpisodeID="_EpisodeID_"&ConsultEpisodeID="_ConsultEpisodeID_""" >"
+                w !,"<frame name=""snomed_main"" src=""pacsnomed.edit.csp?SNOeditcomp="_SNOeditcomp_"&PARREF="_mradm_"&ConsultID="_ConsultID_"&EpisodeID="_EpisodeID_"&ConsultEpisodeID="_ConsultEpisodeID_""">"
+        </SERVER>
+        </frameset>
+        <SERVER>
+                w !,"<frame name=""snomed_list"" src=""websys.default.csp?WEBSYS.TCOMPONENT="_SNOlistcomp_"&mradm="_mradm_"&ConsultID="_ConsultID_"&ShowSnomed=1&CONTEXT="_CONTEXT_"&PatientID="_PatientID_""">"
+        </SERVER>
+</frameset>
+
+
+<noframes>
+    <body>
+    <p></p>
+    <p>Your browser does not appear to support 'frames' which are required by this application. Please download version 5 or later of <a href="http://www.microsoft.com/">Microsoft Internet Explorer</a>.</p>
+    </body>
+</noframes>
+
+
+
+<SCRIPT language='javascript'>
+</SCRIPT>
+
+</HTML>

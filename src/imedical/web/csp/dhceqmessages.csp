@@ -1,0 +1,229 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+</Script>
+<server>
+s FrmName="DHCEQMessages"
+s RowID=$Get(%request.Data("RowID",1))
+s ReadOnly=$Get(%request.Data("ReadOnly",1))
+;Type:	1:发消息  2:收消息
+s vData=$Get(%request.Data("vData",1))
+s Action=$Get(%request.Data("Action",1))
+s CurRole=$Get(%request.Data("CurRole",1))
+s Type=##Class(web.DHCEQCommon).GetDataByName(vData,"Type")
+s QXType=""
+s UserID=##Class(web.DHCEQCommon).getMapIDBySource("user",%session.Get("LOGON.USERID")) 
+;在收消息中打开,且状态为 发送的 处理为消息已读
+i (($p($g(^DHCEQMessages(RowID)),"^",26)="1")&&(Type="2"))
+{
+	d ##Class(web.DHCEQMessages).ReadMessage(RowID)
+}
+
+;"0":"普通消息","1":"业务消息","2":"系统消息",:"没有定义"
+s MessageType=$p($g(^DHCEQMessages(RowID)),"^",4)
+i MessageType="0"
+{
+	s FrmName="DHCEQMessages"
+	s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQMessages&RowID="_RowID_"&ReadOnly="_ReadOnly
+}
+elseif MessageType="1"
+{
+	s BussType=$p($g(^DHCEQMessages(RowID)),"^",10) 
+	s BussID=$p($g(^DHCEQMessages(RowID)),"^",11)
+	s WaitAD="on"
+	s ReadOnly=""
+	
+	i Type="1"
+	{
+		// add by zx 2016-03-04 Bug ZX0035
+		s CurRole=$p($g(^DHCEQMessages(RowID)),"^",12)	;FromRoleDR
+		s SourceMessageDR=$p($g(^DHCEQMessages(RowID)),"^",13)
+		//i SourceMessageDR'="" s QXType=$p($g(^DHCEQMessages(SourceMessageDR)),"^",42)	;Hold1
+		
+	}
+	
+	;如果角色为空,即为建单,入库单固定QXType为2
+	if CurRole=""
+	{	s QXType="2"
+		s WaitAD="off"
+	}
+	;11:开箱验收 12:安装调试验收 21:入库?22:转移 23:减少 31:维修?32保养?33检查?34报废?35折旧?41使用?51设备调帐,62研究课题
+	i BussType="11"
+	{
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheckRequest&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="21"
+	{
+		//modified by zy 20181114 ZY0179
+		//s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQInStockNew&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD
+		s Lnk="dhceq.em.instock.csp?&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD
+	}
+	elseif BussType="22"
+	{
+		//add by zx 2019-02-19 ZX0056
+		//s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQStoreMoveNew&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD
+		s Lnk="dhceq.em.storemove.csp?&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD
+	}
+	elseif BussType="23"
+	{
+		s OutTypeDR=$p($g(^DHCEQReturn(BussID)),"^",17)
+		i OutTypeDR'=1 s OutTypeDR=""
+		s Status=1
+		if CurRole="" s Status=0
+		//add by zx 2019-02-19 ZX0056
+		i OutTypeDR=1
+		{
+			;退货单
+			//s ComponentName="DHCEQReturnNew"
+			s Lnk="dhceq.em.return.csp?&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Status="_Status_"&OutTypeDR="_OutTypeDR
+		}
+		else
+		{
+			;减少单
+			//s ComponentName="DHCEQOutStockNew"
+			s Lnk="dhceq.em.outstock.csp?&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Status="_Status_"&OutTypeDR="_OutTypeDR
+		}
+		//s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_ComponentName_"&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Status="_Status_"&OutTypeDR="_OutTypeDR
+	}
+	elseif BussType="31"
+	{
+		s Status=1
+		if CurRole="" s Status=0	 
+		//s Lnk="dhceqmmaintrequest.csp?&RowID="_BussID_"&CurRole="_CurRole_"&Status="_Status_"&MenuApproveRole="_CurRole_"&EvaluateFlag=&EvaluateGroup="_"&Action="_Action
+		s Lnk="dhceq.em.mmaintrequest.csp?&RowID="_BussID_"&CurRole="_CurRole_"&Status="_Status_"&MenuApproveRole="_CurRole_"&EvaluateFlag=&EvaluateGroup="_"&Action="_Action
+	}
+	elseif BussType="34"
+	{
+		///add by lmm 355083
+		s KindFlag=$p($g(^DHCEQDisuseRequest(BussID)),"^",44)
+		Set ComponentName=##class(web.DHCEQDisuseRequestList).GetComponent(KindFlag,0)
+		
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0
+		if KindFlag=2     ;modified by kdf 2019-01-24 修改工作台多批报废的显示 begin
+		{
+			// Add by QW20200303 BUG:QW0042 begin
+			if WaitAD="on" s WaitAD="true"
+			else  s WaitAD="false"
+			// Add by QW20200303 BUG:QW0042 end 
+			s Lnk="dhceq.em.disusesimlpe.csp?WEBSYS.TCOMPONENT="_ComponentName_"&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+		 }
+		else{
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_ComponentName_"&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+		  ;modified by kdf 2019-01-24 修改工作台多批报废的显示 end
+		}
+	}
+	elseif BussType="91"
+	{
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		s YearFlag=$p($g(^DHCEQBuyRequest(BussID)),"^",3)
+		if CurRole="" s Type=0
+		//s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBuyRequestNew&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type_"&Action="_Action_"&MenuApproveRole="_CurRole_"&YearFlag="_YearFlag
+		//"&RowID="_rs.GetDataByName("TRowID")_"&WaitAD="_%request.Get("WaitAD")_"&ApproveRole="_%request.Get("ApproveRole")_"&Action="_%request.Get("Action")
+		s Lnk="dhceq.em.buyrequest.csp?&RowID="_BussID_"&ApproveRole="_CurRole_"&WaitAD="_WaitAD_"&Action="_Action_"&YearFlag="_YearFlag
+	}  ;add by Mozy 2011-03-18
+	elseif BussType="92"
+	{
+		;Type=0 建单  Type=1 审批
+		Set Type=1
+		If CurRole="" Set Type=0
+		//Set Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBuyPlanNew&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+		s Lnk="dhceq.em.buyplan.csp?&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="93"
+	{
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0		
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQIFB&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}  ;add by zy 2011-03-14 ZY0065
+	elseif BussType="94"
+	{
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0		
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQContractNew&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="61"
+	{
+		;add by zy 20120217  ZY0088
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQProject&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="62"
+	{	//研究课题 .Add By HZY 2012-03-13 HZY0024
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0		
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQIssue&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="A01"
+	{	
+	    ;Add by zx 2016-03-07 ZX0035 配件入库
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0		
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAInStock&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="A02"
+	{
+		;Add by zx 2016-03-07 ZX0035 配件转移	
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0		
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAMoveStock&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="A03"
+	{
+		;Add by zx 2016-03-07 ZX0035 配件退货	
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0		
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAReduce&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type_"&ReturnTypeDR=1"
+	}
+	elseif BussType="A04"
+	{
+		;Add by zx 2016-03-07 ZX0035 配件退库	
+		;Type=0 建单  Type=1 审批
+		s Type=1
+		if CurRole="" s Type=0		
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAReduce&RowID="_BussID_"&ReadOnly="_ReadOnly_"&QXType="_QXType_"&CurRole="_CurRole_"&WaitAD="_WaitAD_"&Type="_Type
+	}
+	elseif BussType="64"
+	{
+		;Add by zx 2016-12-09 租赁
+		;Type=0 建单  Type=1 审批
+		//s Type=Find  ///modify by lmm 2017-04-11 361629
+		//if CurRole="" s Type=0  ///modify by lmm 2017-04-11 361629
+		///add by lmm 2017-04-11 361629
+	    i Action'="" s Type=$CASE(Action,"ZL_Loan":"Rent","ZL_Renewal":"Return", "ZL_RenewalOK":"Return","ZL_LocReturn":"LocReturn","ZL_Return":"Return","":"Find")
+		//"&RowID="_rs.GetDataByName("TRowID")_"&Type="_%request.Get("Type")_"&RentManagerDR="_%request.Get("User")_"&ReturnManagerDR="_%request.Get("User")_"&StartDate="_$zd($h,4)_"&ReturnDate="_$zd($h,4)_"&StartTime="_$ZT($P($H,",",2),2)_"&ReturnTime="_$ZT($P($H,",",2),2)_"&CurRole="_%request.Get("ApproveRole")_"&Action="_%request.Get("Action")
+		s Lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQRent&RowID="_BussID_"&Type="_Type_"&CurRole="_CurRole_"&Action="_Action_"&RentManagerDR="_UserID_"&ReturnManagerDR="_UserID_"&StartDate="_##class(web.DHCEQCommon).TransValueToPage($h,"date")_"&ReturnDate="_##class(web.DHCEQCommon).TransValueToPage($h,"date")_"&StartTime="_$ZT($P($H,",",2),2)_"&ReturnTime="_$ZT($P($H,",",2),2)   ////modified by wy 2017-5-15
+	}
+}
+	
+</server>
+<frameset rows="100%">
+	
+	<frame name=#(FrmName)# src=#(Lnk)#   framespacing="0" frameBorder="no" noresize>
+
+</frameset>
+
+</HTML>

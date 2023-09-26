@@ -1,0 +1,175 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SCRIPT>
+win=top.window
+resetSize()
+window.focus()
+
+function resetSize()  {
+  var posX=screen.availWidth;
+  var posY=screen.availHeight;
+  var winWidth=screen.availWidth;
+  var winHeight=screen.availHeight;
+  posX=posX-winWidth
+  posY=posY-winHeight
+  win.self.moveTo(posX,posY);
+  win.self.resizeTo(winWidth,winHeight);
+}
+</SCRIPT>
+<SERVER>
+k ^TMP("WEB",%session.SessionId,"APPTDIARY","TMP")
+s delimsys = $c(1)
+s (StartDate,NewStartDate,LastDate,DaysOfWeek,times,LinkRes,allRes,EndDate,EndTime,MultiSelect)=""
+s (Rows,LinkFlag,LinkRes,allRes,Book,PayId,PlanId,SessDesc,InsTypeDr,HCARowId,HospIDs)=""
+s pPrev=$g(%request.Data("pPrev",1))
+s pgcnt=$g(%request.Data("pgcnt",1))
+i pgcnt="" s pgcnt=1
+s more="Y"
+
+s rows=2
+s cols=3
+s max=rows*cols
+
+s irows="" f i=1:1:rows s irows=irows_"*,"
+s icols="" f i=1:1:cols s icols=icols_"*,"
+
+//Initialise all the search params
+s StartDate=$g(%request.Data("Date",1))
+s ServId=$g(%request.Data("ServId",1))
+s ResId=$g(%request.Data("ResId",1))
+s StartTime=$g(%request.Data("STime",1))
+i +StartTime < 3000 s StartTime=##Class(websys.Conversions).TimeHtmlToLogical(StartTime)
+s LocId=$g(%request.Data("LocId",1))
+s DaysOfWeek=$g(%request.Data("DOW",1)) ;"1234567"
+s HCA=$g(%request.Data("HCA",1))
+s HCARowId="" i (HCA'="") s HCARowId=$p(HCA,"PP",1)
+i (HCA'="") s times=$p(HCA,"PP",2)
+i (HCA="") s times="^N^N^N"
+s EndDate=times
+i $g(%request.Data("EndDate",1))'="" s EndDate=$g(%request.Data("EndDate",1))
+s EndTime=$g(%request.Data("ETime",1))
+i +EndTime < 3000 s EndTime=##Class(websys.Conversions).TimeHtmlToLogical(EndTime)
+s MultiSelect=$g(%request.Data("MultiSelect",1))
+s Rows=$g(%request.Data("Rows",1))
+s LinkFlag=$g(%request.Data("LinkFlag",1))
+;i LinkFlag'="" s LinkRes=$p(LinkFlag,"^"),allRes=$p(LinkFlag,"^",2)
+s allRes=$p(LinkFlag,"^",2)
+s Book=MultiSelect_"^^"_Rows_"^0^^"_allRes
+i $g(%request.Data("Book",1))'="" s Book=$g(%request.Data("Book",1))
+s PayId=$g(%request.Data("PayId",1))
+s PlanId=$g(%request.Data("PlanId",1))
+s SessDesc=##Class(web.RBApptSchedule).ConvertSessDesc($g(%request.Data("SessDesc",1)))
+s InsTypeDr=PayId_"^"_SessDesc_"^"_PlanId_"^"_HCARowId
+i $g(%request.Data("InsTypeDr",1))'="" s InsTypeDr=$g(%request.Data("InsTypeDr",1))
+s HospIDs=$g(%request.Data("HospIDs",1))
+
+s ConD=$p(LinkFlag,"^",3),NoS=$p(LinkFlag,"^",4),LinkFlag=$p(LinkFlag,"^")
+s linkflag=##Class(websys.Conversions).YesNoHtmlToLogical(LinkFlag)
+s ConD=##Class(websys.Conversions).YesNoHtmlToLogical(ConD)
+i $d(%session) s user=%session.Get("LOGON.USERID"),grp=%session.Get("LOGON.GROUPID")
+s Params2="^^O^"_linkflag_"^"_$g(user)_"^^^^^^^"_$g(grp)
+i ConD="Y" s Params2=Params2_"^"_NoS
+
+i StartDate'="" {
+	s StartDate=##Class(websys.Conversions).DateHtmlToLogical(StartDate)
+	i $g(%request.Data("init",1)) s StartDate=StartDate-1
+}
+
+//Fetch all the data required to show in the MAX number of frames
+s tcnt=0
+i $$open^MVBRBAS1($g(ResId),$g(StartDate)_Params2,$g(EndDate),$g(StartTime),$g(EndTime),$g(DaysOfWeek),$g(Book),$g(LocId),$g(ServId),$g(InsTypeDr),$g(HospIDs),$g(CareProvId))
+f { //i=1:1:100*max
+	s code=$$fetch^MVBRBAS1($g(ResId),$g(StartDate),$g(EndDate),$g(StartTime),$g(EndTime),$g(DaysOfWeek),$g(Book),$g(LocId),$g(ServId),$g(InsTypeDr),$g(HospIDs),$g(CareProvId))
+	q:code=100
+	s pRes=+PLIST(3) ;PLIST(PLIST-5)
+	s pDate=PLIST(5)
+	; We need to manipulate the number of pieces passed to each frame so that everything shows correctly.
+	s ser=ServId
+	i $p($g(ResId),"^")'="" {
+		s ser=""
+		f v=1:1:$l(ResId,"^") {i $p(ResId,"^",v)=pRes s ser=ser_$p(ServId,"^",v)_"^"}
+	}
+	i $p($g(times),"^",3)="Y" s ser=ServId
+	s ^TMP("WEB",%session.SessionId,"APPTDIARY","TMP",pDate,pRes)=ser
+	s (tmp,tcnt)=0 f  {
+		s tmp=$o(^TMP("WEB",%session.SessionId,"APPTDIARY","TMP",tmp)) q:tmp=""
+		s tcnt=tcnt+1
+	}
+	i tcnt>(max+1) q
+}
+i $$close^MVBRBAS1()
+
+//Create the frame set with all the populated frames
+w " <frameset name='RBDiary' border='0' framespacing='0' rows='*,25px'>"
+w " <frameset border='0' framespacing='0' cols='"_icols_"' rows='"_irows_"'>"
+s cnt=0
+s oRes=$g(%request.Data("oRes",1))
+i pPrev'=1 {
+  s oDate=StartDate f { 
+	s oDate=$o(^TMP("WEB",%session.SessionId,"APPTDIARY","TMP",oDate)) q:oDate=""
+	f { 
+		s oRes=$o(^TMP("WEB",%session.SessionId,"APPTDIARY","TMP",oDate,oRes)) q:oRes=""
+		s cnt=cnt+1
+		i NewStartDate="" s NewStartDate=oDate
+		s LastDate=oDate
+		s oSer=^(oRes)
+		w "   <frame name="_oDate_"$"_oRes_" scrolling='AUTO' src='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.DiaryView.List&ResId="_$g(oRes)_"&StartDate="_$g(oDate)_"&EndDate="_$g(oDate)_"&StartTime="_$g(StartTime)_"&EndTime="_$g(EndTime)_"&DaysOfWeek="_$g(DaysOfWeek)_"&Book="_$g(Book)_"&LocId="_$g(LocId)_"&ServId="_$g(oSer)_"&InsTypeDr="_$g(InsTypeDr)_"&HospIDs="_$g(HospIDs)_"&CareProvId="_$g(CareProvId)_"&Params="_$g(EndDate)_"$"_Params2_"'>"
+		;Use Start Time For Each Day - if not checked then clear StartTime for subsequent frames
+		i $p($g(EndDate),"^",4)'="Y" s StartTime=""
+		q:cnt=max
+	}
+	q:cnt=max
+  }
+}
+//Buffer with "nice" blank frames instead of ugly gray ones.
+f v=1:1:max-cnt w "   <frame name='blank' scrolling='AUTO' src='websys.default.csp'>"
+i cnt<max,cnt'=max s more="N"
+i tcnt=max s more="N"
+
+//Maybe someday all this code will work... but for the moment lets leave it commented out.
+/*
+i pPrev=1 {
+  s frames=""
+  s oDate=StartDate f { 
+	s oDate=$o(^TMP("WEB",%session.SessionId,"APPTDIARY","TMP",oDate),-1) q:oDate=""
+	f { 
+		s oRes=$o(^TMP("WEB",%session.SessionId,"APPTDIARY","TMP",oDate,oRes)) q:oRes=""
+		s cnt=cnt+1
+		s NewStartDate=oDate
+		i LastDate="" s LastDate=oDate
+		s oSer=^(oRes)
+		s frames="   <frame name="_oDate_"$"_oRes_" scrolling='AUTO' src='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.DiaryView.List&ResId="_oRes_"&ServId="_oSer_"&StartDate="_oDate_"'>"_frames
+		q:cnt=max
+	}
+	q:cnt=max
+  }
+  w frames
+}*/
+;
+w "  </frameset>"
+
+//Pass though all data required for Next Button
+s pNext="$Date="_##Class(websys.Conversions).DateLogicalToHtml(LastDate-1)
+s pNext=pNext_"$ServId="_ServId_"$ResId="_ResId_"$STime="_StartTime_"$LocId="_LocId_"$oRes="_oRes_"$DOW="_DaysOfWeek_"$EndDate="_EndDate_"$ETime="_EndTime_"$Book="_Book_"$InsTypeDr="_InsTypeDr_"$HospIDs="_HospIDs
+
+//Pass though all data required for Previous Button (which is currently not used, as we use history.back() instead - naughty I know)
+s pPrev="$Date="_##Class(websys.Conversions).DateLogicalToHtml(NewStartDate+1)
+s pPrev=pPrev_"$ServId="_ServId_"$ResId="_ResId_"$STime="_StartTime_"$LocId="_LocId_"$oRes="_oRes
+
+//Create Header frame (which is actually the Footer frame - oh the irony)
+w " <frame name='RBDiaryHeader' frameborder='NO' scrolling='NO' src='websys.default.csp?WEBSYS.TCOMPONENT=RBAppointment.DiaryView.Header&pNext="_pNext_"&pPrev="_pPrev_"&pgcnt="_pgcnt_"&more="_more_"'>"
+w "  </frameset>"
+k ^TMP("WEB",%session.SessionId,"APPTDIARY","TMP")
+</SERVER>
+</BODY>
+</HTML>

@@ -1,0 +1,43 @@
+<!-- Log 57128 YC - used to preview and print html discharge summaries -->
+<!-- Called from PAAdmDischargeSummary.Edit "Update" and "Update & Preview" Buttons, in the .js -->
+
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+
+</HEAD>
+<BODY>
+
+<SERVER>
+ s DischID=%request.Get("DischID") q:DischID=""
+ s printDS=%request.Get("printDS") 
+ s DocTyp=$p($g(^PA("DISSUM",DischID)),"^",9) q:DocTyp=""
+ s status=$p($g(^PA("DISSUM",DischID)),"^")
+ ;i status'="" s status=##Class(websys.StandardTypeItem).GetIdFromCodeOrDescription("DischargeSummaryStatus",status)
+ ;i %request.Data("docType",1)'="" s DocTyp=##Class(epr.CTDischargeSummaryType).GetIdFromCodeOrDescription(%request.Data("docType",1))
+ ;i DocTyp="" s DocTyp=$p($g(^PA("DISSUM",DischID)),"^",9)
+ 
+ s obj=##Class(epr.CTDischargeSummaryType).%OpenId(DocTyp) q:'obj
+ ; 57128 YC - get discharge summary document type (html,word or crystal)
+ i obj.DSTReportDR d
+ . i obj.DSTReportDR.Expression'="" x obj.DSTReportDR.Expression
+</SERVER>
+
+</BODY>
+<SCRIPT language="Javascript">
+var printDS="#(printDS)#";
+var status="#(status)#";
+function BodyLoadHandler(){
+	// only print if discharge summary is authorised and printDS=1
+	if ((status=="A")&&(printDS==1))
+		setTimeout("PrintNow();",220);
+}
+
+function PrintNow() {
+	window.focus();
+	window.print();
+}
+
+document.body.onload=BodyLoadHandler;
+</SCRIPT>
+</HTML>

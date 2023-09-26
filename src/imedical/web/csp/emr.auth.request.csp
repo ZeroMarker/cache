@@ -1,0 +1,199 @@
+﻿<HTML>
+<HEAD>
+    <TITLE>申请权限页面</TITLE>
+    <HISUI/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s currPatient = ""
+		if (patientID'="")
+		{
+			s currPatient = ##class(EMRservice.HISInterface.PatientInfoAssist).Name(patientID)
+		}
+		s userID = %session.Get("LOGON.USERID")
+		s currAuthor=""
+		if (userID'="")
+		{
+			s currAuthor = ##class(EMRmeta.PowerUser).GetUserName(userID)
+		}
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s userLocDes = %session.Get("LOGON.CTLOCDESC")
+        	s userSSGroupID = %session.Get("LOGON.GROUPID")	
+
+		s RequestReasonRequiredStr = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("RequestReasonRequiredStr","Y^N^N^N")
+		s RequestReasonRequiredStr = $zcvt(RequestReasonRequiredStr,"U")
+		
+		s RequestReasonLimitStr = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("RequestReasonLimitStr","0^0^0^0")
+		
+		s IsCopyed = ""
+		s AuthRequestByPriented = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("AuthRequestByPriented","N")
+		if (AuthRequestByPriented = "Y")&&(episodeID '= "")
+		{
+			s IsCopyed = ##class(DHCWMR.IO.ToOutService).GetIsCopy(episodeID)
+		}
+		s flag = ""
+		s Allow = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("AllowDefault")
+		if (Allow = "Y")
+		{
+			s flag = "true"
+		}
+		else
+		{
+			s flag = "false"	
+		}
+	</script>
+	<script type="text/javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var currPatient = '#(currPatient)#';
+		var userID = '#(userID)#';
+		var currAuthor = '#(currAuthor)#';
+		var userLocID = '#(userLocID)#';
+		var userLocDes = '#(userLocDes)#';
+        	var userSSGroupID = '#(userSSGroupID)#';
+		var IsCopyed = '#(IsCopyed)#';
+		var flag = '#(flag)#';
+		var reqReasonFL = '申请的原因';
+		var befReqConFL = '修改前内容';
+		var aftReqConFL = '修改后内容';
+		var requestNumber = '申请人电话';
+		var RequestReasonRequiredStr = '#(RequestReasonRequiredStr)#';
+		var EditMust = RequestReasonRequiredStr.split("^");
+		var RequestReasonLimitStr = '#(RequestReasonLimitStr)#';
+		var LimitMust = RequestReasonLimitStr.split("^");
+		
+		if (EditMust[0] == "Y")
+		{
+			reqReasonFL = '申请的原因<font color="FF0000">(必填)</font>';
+			if (LimitMust[0] > 0)
+			{
+				reqReasonFL = '申请的原因font color=FF0000(必填,至少' + LimitMust[0] + '个字)font';
+			}
+		}
+		if (EditMust[1] == "Y")
+		{
+			befReqConFL = '修改前内容<font color="FF0000">(必填)</font>';
+			if (LimitMust[1] > 0)
+			{
+				befReqConFL = '修改前内容font color=FF0000(必填,至少' + LimitMust[1] + '个字)font';
+			}
+		}
+		if (EditMust[2] == "Y")
+		{
+			aftReqConFL = '修改后内容<font color="FF0000">(必填)</font>';
+			if (LimitMust[2] > 0)
+			{
+				befReqConFL = '修改后内容font color=FF0000(必填,至少' + LimitMust[2] + '个字)font';
+			}
+		}
+		if (EditMust[3] == "Y")
+		{
+			aftReqConFL = '修改后内容<font color="FF0000">(必填)</font>';
+			if (LimitMust[3] > 0)
+			{
+				befReqConFL = '修改后内容font color=FF0000(必填,至少' + LimitMust[2] + '个字)font';
+			}
+		}
+	</script>
+</HEAD>
+
+<BODY class="hisui-layout" data-options="fit:true">
+    <div class="hisui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;padding:5px;">
+        <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        
+            <div id="west" class="hisui-panel" data-options="region:'west',border:true,split:true,title:'病历目录',headerCls:'panel-header-gray',iconCls:'icon-book',collapsible:false" style="width:650px;">
+                <div class="hisui-layout" style="overflow:hidden;padding:5px;">
+                    <!--a href="#" class="hisui-linkbutton" id="selectall" data-options="iconCls:'icon-all-select',plain:true">全选</a-->
+                    <!--a href="#" class="hisui-linkbutton" id="unselectall" data-options="iconCls:'icon-transfer',plain:true">全不选</a-->
+                    <a href="#" class="hisui-linkbutton" id="expandall" data-options="iconCls:'icon-download',plain:true">#(..Get("展开"))#</a>
+                    <a href="#" class="hisui-linkbutton" id="collapseall" data-options="iconCls:'icon-upload',plain:true">#(..Get("折叠"))#</a>
+                	<a href="#" class="hisui-linkbutton" id="requestHistory" data-options="iconCls:'icon-paper',plain:true" style="float:right;margin-right:3px;">#(..Get("申请记录"))#</a>
+                </div>
+                <div class="hisui-layout" style="overflow:hidden;padding:5px;">
+                    <div style="width:100%;height:450px;overflow:auto">
+                        <ul id="emrTree" class="hisui-tree" data-options="lines:true" style="overflow:hidden;"></ul>
+                    </div>
+                </div>
+            </div>	
+            
+            <div id="center" class="hisui-panel" data-options="region:'center',border:true,split:true,title:'申请内容',headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="overflow:auto;">
+                <div class="hisui-layout" data-options="fit:true,border:false" style="height:100%;">
+                
+                    <div id="centerNorth" class="hisui-panel" data-options="region:'north',border:false" style="height:70px;padding-top:20px;">
+                        <span>
+                            <div style="float:left;width:18%;text-align:right;padding-right:5px;">#(..Get("权限类型"))#</div>
+                        </span>
+                        <span>
+                            <div>
+                                <span id="privColumn0" style="float:left;width:19%;">
+                                    <div>
+                                        <input class='hisui-checkbox' type="checkbox" id="allAction" label="全选" data-options="onCheckChange:function(event,value){allActionChange(event,value)}">
+                                    </div>
+                                </span>
+                                <span id="privColumn1" style="float:left;width:19%;"></span>
+                                <span id="privColumn2" style="float:left;width:19%;"></span>
+                                <span id="privColumn3" style="float:left;width:19%;"></span>
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <div id="centerCenter" class="hisui-panel" data-options="region:'center',border:false" style="overflow:auto;">
+                        <div class="hisui-panel" data-options="border:false" style="height:70px;">
+                            <span>
+                                <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("申请的原因"))#</div>
+                            </span>
+                            <span>
+                                <div style="padding-top:3px;">
+                                    <input class="textbox" id="requestReason" style="width:78%;height:60px;">
+                                </div>
+                            </span>
+                        </div>
+                        <div class="hisui-panel" data-options="border:false" style="height:70px;">
+                            <span>
+                                <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("修改前内容"))#</div>
+                            </span>
+                            <span>
+                                <div style="padding-top:3px;">
+                                    <input class="textbox" id="beforeRequestContent" style="width:78%;height:60px;">
+                                </div>
+                            </span>
+                        </div>
+                        <div class="hisui-panel" data-options="border:false" style="height:70px;">
+                            <span>
+                                <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("修改后内容"))#</div>
+                            </span>
+                            <span>
+                                <div style="padding-top:3px;">
+                                    <input class="textbox" id="afterRequestContent" style="width:78%;height:60px;">
+                                </div>
+                            </span>
+                        </div>
+			<div class="hisui-panel" data-options="border:false" style="height:70px;">
+                            <span>
+                                <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("申请人电话"))#</div>
+                            </span>
+                            <span>
+                                <div style="padding-top:3px;">
+                                    <input class="textbox" id="requestNumber" style="width:78%;height:60px;">
+                                </div>
+                            </span>
+                        </div>
+                        <div class="hisui-panel" data-options="border:false" align="center" style="height:45px;padding-top:5px;">
+                            <a href="#" class="hisui-linkbutton" id="btnCancel">#(..Get("取消"))#</a>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <a href="#" class="hisui-linkbutton" id="btnCommit" style="background:#21BA45;">#(..Get("提交"))#</a>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+        </div>
+    </div>
+	<script type="text/javascript" src="../scripts/emr/js/auth.request.js"></script>
+</BODY>
+</HTML>

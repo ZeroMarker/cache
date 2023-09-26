@@ -1,0 +1,28 @@
+/* 
+ * FileName:dhcipmeal.FindMealInfobyModalityjson.csp
+ * User: 吴博实
+ * Date: 2010-10-22
+ * Function: 动态生成列实例服务器端动态生成json数据格式
+ * Description: 
+*/
+<csp:content charset="utf-8">
+<script language="Cache" runat="SERVER">
+  s act=$g(%request.Data("act",1))
+  s mealmodalitydr=$g(%request.Data("mealmodalitydr",1))
+  s Date=$g(%request.Data("startdate",1))
+  s start=+$g(%request.Data("start",1))  ;开始行
+  s limit=+$g(%request.Data("limit",1))  ;限制行
+	
+  i act="combolist" d
+  .s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealItembyModality","FindMealModality",0,0)
+  .w jsonStr
+  
+   i act="combolist2" d
+  .s jsonStr=##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQuery("DHCBILL.DHCIPMealItembyModality","FindMealNameByModality",0,0)
+  .w jsonStr
+	
+  i act="query"  d
+  .s jsonStr= ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONStoreStrByQuery("DHCBILL.DHCIPMealBookMealPrint","FindMealBookInfoByWard","",start,limit,stdate,wardid)
+  .w jsonStr
+
+</script>

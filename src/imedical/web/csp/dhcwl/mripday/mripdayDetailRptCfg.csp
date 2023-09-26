@@ -1,0 +1,176 @@
+<csp:content charset="gb2312">
+<csp:content charset="UTF-8">
+<csp:content charset="UTF-8">
+	<script language="cache" runat="server">
+	s action=$g(%request.Data("action",1))
+	//		日志记录模块
+
+	if "SearchOPTLDetailItem"=action {		//得到可选明细统计项
+		b
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) 
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		
+		s itemType=$g(%request.Data("ItemType",1))	
+		s rptDR=$g(%request.Data("rptDR",1))	
+		s exceptRptDR=$g(%request.Data("ExceptOPTLItem",1))	
+			
+		s OPTLDetailItems=""
+		
+		//1、从明细报表中得到明细项
+		if $g(exceptRptDR)="" {
+			&sql(SELECT DetailRpt_OPTLDetailItems into :OPTLDetailItems FROM DHCWL_MRIPDay.DetailRpt WHERE DetailRpt_RptDR=:rptDR AND DetailRpt_OPTLItemDR is null)	
+		}else {
+			&sql(SELECT DetailRpt_OPTLDetailItems into :OPTLDetailItems FROM DHCWL_MRIPDay.DetailRpt WHERE DetailRpt_RptDR=:rptDR AND DetailRpt_OPTLItemDR=:exceptRptDR)	
+		}		
+	
+		//2、得到明细项的ID，编码，描述，类型
+		set sql="SELECT OPTLDetailItem_RowID,OPTLDetailItem_Code,OPTLDetailItem_Desc,OPTLDetailItem_Type FROM DHCWL_MRIPDay.OPTLDetailItem  WHERE OPTLDetailItem_Type='"_itemType_"'"
+		
+		if OPTLDetailItems'="" s sql=sql_" AND OPTLDetailItem_RowID NOT IN ("_OPTLDetailItems_")"
+
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		//3、组装拼接返回数据
+		s deli=","           	
+        s json=##class(DHCWL.util.Json).Json("ID"_deli_"detailCode"_deli_"detailDesc","result","root",deli)
+		s recCnt=0				;记录条数计数
+		While(rs.Next()){
+			s recCnt=recCnt+1
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+
+			s rowID=rs.Data("OPTLDetailItem_RowID")
+			s code=rs.Data("OPTLDetailItem_Code")
+			s desc=rs.Data("OPTLDetailItem_Desc")
+			//4、组装拼接返回数据
+			d json.Insert(""_rowID_""_deli_"'"_code_"'"_deli_"'"_desc_"'")
+		}
+	
+		d rs.Close()
+		//5、向前台页面返回数据
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"		
+	
+	
+	}elseif "SearchDetailRptItem"=action {				//得到已选明细统计项
+		b
+		set start = $g(%request.Data("start",1))
+		set pageSize = $g(%request.Data("limit",1)) 
+		s end=$g(start)+$g(pageSize)
+		s:+start>1 start=start+1
+		
+		s itemType=$g(%request.Data("ItemType",1))	
+		s rptDR=$g(%request.Data("rptDR",1))	
+		s OPTLItem=$g(%request.Data("OPTLItem",1))	
+		//1、从明细报表中得到明细项
+		s OPTLDetailItems=""	
+		if OPTLItem'=""	&sql(SELECT DetailRpt_OPTLDetailItems into :OPTLDetailItems FROM DHCWL_MRIPDay.DetailRpt WHERE DetailRpt_RptDR=:rptDR AND DetailRpt_OPTLItemDR=:OPTLItem)	
+		e  &sql(SELECT DetailRpt_OPTLDetailItems into :OPTLDetailItems FROM DHCWL_MRIPDay.DetailRpt WHERE DetailRpt_RptDR=:rptDR AND DetailRpt_OPTLItemDR is NULL)	
+		set sql="SELECT OPTLDetailItem_RowID,OPTLDetailItem_Code,OPTLDetailItem_Desc,OPTLDetailItem_Type FROM DHCWL_MRIPDay.OPTLDetailItem  WHERE OPTLDetailItem_Type='"_itemType_"'"
+		
+		s sql=sql_" AND OPTLDetailItem_RowID IN ("_OPTLDetailItems_")"
+		//2、得到明细项的ID，编码，描述，类型
+		s rs=##class(%Library.ResultSet).%New()
+		d rs.Prepare(sql)
+		d rs.Execute()
+		s deli=","
+            	
+        s json=##class(DHCWL.util.Json).Json("ID"_deli_"detailCode"_deli_"detailDesc","result","root",deli)
+		s recCnt=0				;记录条数计数
+
+		s lstRpt = ##Class(%ArrayOfObjects).%New()
+		While(rs.Next()){
+			s recCnt=recCnt+1
+			i (recCnt<start) continue
+			i (recCnt>end) continue
+			
+			s aryRec = ##Class(%ArrayOfDataTypes).%New()
+			s rowID=rs.Data("OPTLDetailItem_RowID")
+			s code=rs.Data("OPTLDetailItem_Code")
+			s desc=rs.Data("OPTLDetailItem_Desc")
+			//3、为了能按顺序显示明细统计项，需要先把数据保存到ArrayOfObjects
+			d aryRec.SetAt(rowID,"rowID")
+			d aryRec.SetAt(code,"code")
+			d aryRec.SetAt(desc,"desc")
+			d lstRpt.SetAt(aryRec,rowID)
+		}
+	
+		d rs.Close()
+		
+		//4、按配置顺序组装拼接返回数据
+		s recCnt=$l(OPTLDetailItems,",")
+		for recInx=1:1:recCnt {
+			s detailItemDR=$p(OPTLDetailItems,",",recInx)
+			
+			if (detailItemDR="") continue
+			s rec=lstRpt.GetAt(detailItemDR)
+			if (rec="") continue
+			
+			s rowID=rec.GetAt("rowID")
+			s code=rec.GetAt("code")
+			s desc=rec.GetAt("desc")
+			d json.Insert(""_rowID_""_deli_"'"_code_"'"_deli_"'"_desc_"'")
+		}
+		
+		d json.SetTotalNum(recCnt)
+		s jsonHead=json.GetHead()
+		w jsonHead
+		d{
+			s obj=json.Next()
+			w obj
+		}while(obj'="")
+		i json.GetCount()=0 w "]}"		
+		
+	}elseif "addDetailRptItem"=action {		//向明细报表中增加报表项
+		b
+		s OPTLItemDR= $g(%request.Data("OPTLItemDR",1))
+		s rptDR=$g(%request.Data("RptDR",1))
+		s itemDesc=$g(%request.Data("ItemDesc",1))
+		s aryOPTLDetailItemDRs=$g(%request.Data("aryOPTLDetailItemDRs",1))
+		s detailRptRowID=""
+		s DetailRptDesc="默认明细"
+		if itemDesc'="" s DetailRptDesc=itemDesc_"明细"
+		if aryOPTLDetailItemDRs="" {
+			if OPTLItemDR'="" {
+				&sql(delete from DHCWL_MRIPDay.DetailRpt where DetailRpt_RptDR=:rptDR and DetailRpt_OPTLItemDR=:OPTLItemDR)
+			}else{
+				&sql(delete from DHCWL_MRIPDay.DetailRpt where DetailRpt_RptDR=:rptDR and DetailRpt_OPTLItemDR is null)
+			}
+			
+			i ((+$g(SQLCODE)=0)||(+$g(SQLCODE)=100)) w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+			e  w "{success:true,tip:'操作失败',SQLCODE:"_SQLCODE_"}"
+				
+		}else{
+		
+			i OPTLItemDR'="" {
+				&sql(select DetailRpt_RowID into :detailRptRowID from DHCWL_MRIPDay.DetailRpt where DetailRpt_RptDR=:rptDR and DetailRpt_OPTLItemDR=:OPTLItemDR)
+			}else {
+				&sql(select DetailRpt_RowID into :detailRptRowID from DHCWL_MRIPDay.DetailRpt where DetailRpt_RptDR=:rptDR and DetailRpt_OPTLItemDR is NULL)
+			}
+		
+			if detailRptRowID="" {
+				&sql(insert into DHCWL_MRIPDay.DetailRpt (DetailRpt_RptDR,DetailRpt_OPTLItemDR,DetailRpt_OPTLDetailItems,DetailRpt_Desc)
+				 values (:rptDR,:OPTLItemDR,:aryOPTLDetailItemDRs,:DetailRptDesc))
+				i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+				e  w "{success:true,tip:'操作失败',SQLCODE:"_SQLCODE_"}"	
+			
+			}else {
+				//&sql(update DHCWL_MRIPDay.DetailRpt set DetailRpt_OPTLDetailItems=:aryOPTLDetailItemDRs where DetailRpt_RptDR=:rptDR and DetailRpt_OPTLItemDR=:OPTLItemDR)
+				&sql(update DHCWL_MRIPDay.DetailRpt set DetailRpt_OPTLDetailItems=:aryOPTLDetailItemDRs where DetailRpt_RowID=:detailRptRowID)
+				i +$g(SQLCODE)=0 w "{success:true,tip:'ok',ROWID:"_%ROWID_"}"
+				e  w "{success:true,tip:'操作失败',SQLCODE:"_SQLCODE_"}"	
+			}
+			
+		}
+		
+	}
+</script>

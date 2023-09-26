@@ -1,0 +1,161 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<csr:action>		<!--add by wl 2019-11-20 WL0010 begin-->		
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+    //modify by wl 2019-12-13 WL0021 begin
+    s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") 
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+	}  
+	 //modify by wl 2019-12-13 WL0021 end 
+    </SCRIPT>  
+</csr:action>		<!--add by wl 2019-11-20 WL0010 end-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RowID=$Get(%request.Data("RowID",1))
+	s Type=$Get(%request.Data("Type",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CurRole=$Get(%request.Data("ApproveRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("10",RowID),CurRole,Action)
+	s AISAccessoryTypeDR=##Class(web.DHCEQACommon).GetDefaultAccessoryType("1")
+	s AISAccessoryType=##Class(web.DHCEQACommon).GetDefaultAccessoryType("2")
+	s AISLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	s AISLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+</script>
+<!--Mozy003003	1241868		2020-3-27	注释多行文本框个性样式>
+<style type="text/css">
+	.hisui-textarea
+	{
+		width:300%;
+		height:100%;
+	}
+</style-->
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>	<!--Mozy003019		2020-04-28-->
+	<div data-options="region:'center',border:false" style="padding:5px 0px;">
+		<div class="hisui-panel" data-options="fit:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 0px #ccc;height:160px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cAISInStockNo" for="AISInStockNo">入库单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AISInStockNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cAISInDate" for="AISInDate">入库日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="AISInDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cAISInType_Desc" for="AISInType_Desc">入库类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'MP.L.AInStock.GetInType'" id="AISInType_Desc"></div>
+						<div class="eq-table-td eq-table-label15"><!--a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a--></div>
+						<div class="eq-table-td eq-table-label15"><!--a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a--></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cAISAccessoryTypeDR_ATDesc" for="AISAccessoryTypeDR_ATDesc">管理类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.AccessoryType'" id="AISAccessoryTypeDR_ATDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cAISBuyLocDR_CTLOCDesc" for="AISBuyLocDR_CTLOCDesc">采购部门</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="AISBuyLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cAISBuyUserDR_SSUSRName" for="AISBuyUserDR_SSUSRName">采购人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="AISBuyUserDR_SSUSRName"></div>
+						<div class="eq-table-td eq-table-label15"><!--a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a--></div>
+						<div class="eq-table-td eq-table-label15"><!--a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">打印</a--></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cAISLocDR_CTLOCDesc" for="AISLocDR_CTLOCDesc">配件库房</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="AISLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cAISProviderDR_VDesc" for="AISProviderDR_VDesc">供应商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="AISProviderDR_VDesc"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<!--modify by lmm 2019-11-22 LMM0050-->
+						<div class="eq-table-td eq-table-label15"><!--a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">退回</a--></div>
+						<div class="eq-table-td eq-table-label15"><!--a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核1</a><a id="BApprove2" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核2</a--></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cAISRemark" for="AISRemark">备注</label></div>
+						<div class="eq-table-td"><textarea id="AISRemark" class="textbox"></textarea></div><!--Mozy003003	1241868		2020-3-27	修正多行文本框样式-->
+						<!--modified by csj 2020-02-11 标准版-配件入库将发票号和发票日期添加到主表显示区域，避免明细都重复操作-->
+						<div class="eq-table-td eq-table-label"><label id="cAISHold2" for="AISHold2">发票号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AISHold2"></div>
+						<div class="eq-table-td eq-table-label"><label id="cAISHold3" for="AISHold3">发票日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="AISHold3"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BApprove4" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核4</a></div>
+						<div class="eq-table-td eq-table-label15"><a id="BApprove3" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核3</a></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;padding:0 10px;">
+                	<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'配件入库单明细'">
+						<table id="DHCEQAInStock" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"> </table>
+						<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:20px;top:5px;">合计</span>
+					</div>
+				</div>
+				<!--MZY0025 2020-05-13 UI调整-->
+		     	<div data-options="region:'south',border:false" style="border-bottom:dashed 0px #ccc;height:45px;">
+			        <div style="margin:0px auto;fit:true;padding-top:10px;vertical-align:middle;text-align:center;">
+		            	<a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+		                <a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a>
+		                <a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a>
+		                <a id="BApprove1" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核1</a>
+		                <a id="BApprove2" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a>
+		                <a id="BCancelSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">退回</a>
+						<a id="BPrint" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">打印</a>
+			        </div>
+			    </div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQA">
+			<INPUT type="hidden" id="AISRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="Type" value="#(Type)#">
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="ApproveTypeCode" value="10">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="ApproveRoleDR" value="">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			
+			<INPUT type="hidden" id="AISAccessoryTypeDR" value="#(AISAccessoryTypeDR)#">
+			<INPUT type="hidden" id="AISAccessoryType" value="#(AISAccessoryType)#">
+			<INPUT type="hidden" id="AISLocDR" value="#(AISLocDR)#">
+			<INPUT type="hidden" id="AISLoc" value="#(AISLoc)#">
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+			
+			<INPUT type="hidden" id="AISStatus" value="">
+			<INPUT type="hidden" id="AISInType" value="">
+			<INPUT type="hidden" id="AISBuyLocDR" value="">
+			<INPUT type="hidden" id="AISBuyUserDR" value="">
+			<INPUT type="hidden" id="AISProviderDR" value="">
+			<INPUT type="hidden" id="AISJob" value="">
+			<input type="hidden" id="PrintFlag" value=#(PrintFlag)#> <!--add by wl 2019-11-20 WL0010-->
+			<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-20 WL0010  -->	
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/mp/instock.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>  <!--add by wl 2019-11-20 WL0010  -->
+</body>
+</html>

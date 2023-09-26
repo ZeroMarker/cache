@@ -1,0 +1,146 @@
+<HTML>
+<HEAD>
+	<TITLE>质控信息列表</TITLE>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/style.css" />
+  	<script type="text/javascript" SRC="../scripts/epr/js/dgrid.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS/adapter/ext/ext-base.js"></script>
+	<script type="text/javascript" src="../scripts/epr/ExtJS/ext-all.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/jquery.js"></script>
+</HEAD>
+
+<BODY bgcolor="#F6FAFD" width="98%" topmargin="2" leftmargin="2" marginwidth="0" marginheight="0">
+	<div id="reportMessageList"></div>	
+
+	<script type="text/javascript">
+		var lastSelectTr = '';
+		//var episodeID = 1;
+		var episodeID = '#($Get(%request.Data("episodeID",1),""))#';
+		var userID = '#(%session.Get("LOGON.USERID"))#';
+		//alert(escape("\r\n"))
+		Ext.Ajax.request({			
+			url: '../web.eprajax.qualitymessagelist.cls',
+			timeout : 5000,
+			params: { episodeID: episodeID},
+			success: function(response, opts) {
+				//alert(episodeID)
+				//debugger;
+				if(response == null)
+				{
+					//取不到任何值
+					
+				}
+				else
+				{
+					//取到相关的html代码
+					var resText = response.responseText;
+					var count = resText.split('$')[1];
+					
+					//判断返回字符串是否有质控信息
+					//没有信息?直接隐藏panel和菜单中不选中
+					if(count == 0)
+					{
+						//debugger;
+						document.getElementById("reportMessageList").innerHTML += resText.split('$')[0];
+						
+						var panel = parent.Ext.getCmp("panel_5");
+						panel.setVisible(false);
+						var menu = parent.Ext.getCmp("menu_5");
+						menu.checked = false;
+					}
+					else
+					{
+						document.getElementById("reportMessageList").innerHTML += resText.split('$')[0];
+					}
+				}
+			},
+			failure: function(response, opts) {
+				alert(response.responseText); 		
+			}
+		});
+		
+		
+		function ReadMessage(recipientID)
+		{
+			//debugger;
+			Ext.Ajax.request({
+				url:'../web.eprajax.updatequalitymsg.cls',
+				timeout:5000,
+				params:{ARecipientID:recipientID, AReadUserID:userID},
+				success: function(response,opts) {
+					if(response.responseText == "1")
+					{
+						//更新成功,改变样式
+						$("td[id=des_" + recipientID +"]").attr("class","TDstyle01_read");
+						$("td[id=date_" + recipientID +"]").attr("class","TDstyle01_read");
+						$("td[id=link1_" + recipientID +"]").attr("class","TDstyle01_read");
+						Ext.getDom("link1_" + recipientID).innerHTML = "已读"
+						
+					}
+				},
+				failure: function(response,opts){
+					alert(response.responseText); 
+				}
+			});
+		}
+		
+		function ExeMessage(recipientID)
+		{
+			//debugger;
+			Ext.Ajax.request({
+				url:'../web.eprajax.updatequalitymsg.cls',
+				timeout:5000,
+				params:{ARecipientID:recipientID, AReadUserID:userID, Action:"exe"},
+				success: function(response,opts) {
+					if(response.responseText == "1")
+					{
+						//更新成功,改变样式
+						$("td[id=des_" + recipientID +"]").attr("class","TDstyle01_read");
+						$("td[id=date_" + recipientID +"]").attr("class","TDstyle01_read");
+						$("td[id=link1_" + recipientID +"]").attr("class","TDstyle01_read");
+						Ext.getDom("link1_" + recipientID).innerHTML = "已读"
+						$("td[id=link2_" + recipientID +"]").attr("class","TDstyle01_read");
+						Ext.getDom("link2_" + recipientID).innerHTML = "已执行"
+						
+					}
+				},
+				failure: function(response,opts){
+					alert(response.responseText); 
+				}
+			});
+		}
+		
+		function ShowDetail(recipientID,msg)
+		{
+			//debugger;
+			var shortMsg = Ext.getDom("des_" + recipientID).innerHTML;
+			Ext.getDom("des_" + recipientID).innerHTML = msg;
+			Ext.getDom("detail_" + recipientID).innerHTML = "<a href='#' onclick=\"CollapseDetail(" + recipientID + ",'" + shortMsg +"')\">收起</a>";
+			
+			//打开详细信息,更新数据库,标志为已读
+			ReadMessage(recipientID);
+			//Ext.getDom("trTitle").childNodes[0].innerHTML="<a>test</a>"
+		}
+		
+		function ShowExe(recipientID,msg)
+		{
+			//debugger;
+			var shortMsg = Ext.getDom("des_" + recipientID).innerHTML;
+			Ext.getDom("des_" + recipientID).innerHTML = msg;
+			Ext.getDom("detail_" + recipientID).innerHTML = "<a href='#' onclick=\"CollapseDetail(" + recipientID + ",'" + shortMsg +"')\">收起</a>";
+			
+			//打开详细信息,更新数据库,标志为已读
+			ExeMessage(recipientID);
+			//Ext.getDom("trTitle").childNodes[0].innerHTML="<a>test</a>"
+		}
+		
+		function CollapseDetail(recipientID,msg)
+		{
+			//debugger;
+			var detailMsg = Ext.getDom("des_" + recipientID).innerHTML;
+			Ext.getDom("des_" + recipientID).innerHTML = msg;
+			Ext.getDom("detail_" + recipientID).innerHTML = "<a href='#' onclick=\"ShowDetail(" + recipientID + ",'" + detailMsg +"')\">阅读</a>";
+		}
+	</script>
+</BODY>
+</HTML>

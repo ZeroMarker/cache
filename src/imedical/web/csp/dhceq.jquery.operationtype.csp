@@ -1,0 +1,143 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str = $Get(%request.Data("str",1))
+	i action = "updaterolebuss" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s rowid=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"rowid",1)
+	..s roledr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"roledr",1)
+	..s busstypedr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"busstypedr",1)
+	..s opt=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"opt",1)
+	..s PSTData=rowid_"^"_roledr_"^"_busstypedr_"^"_opt
+    ..s result= ##Class(web.DHCEQCRoleBuss).SaveData(PSTData)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"	
+	
+	i action = "updategrouprole" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s rowid=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"rowid",1)
+	..s groupdr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"groupdr",1)
+	..s roledr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"roledr",1)
+	..s opt=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"opt",1)
+	..s PSTData=rowid_"^"_groupdr_"^"_roledr_"^"_opt
+    ..s result= ##Class(web.DHCEQCGroupRole).SaveData(PSTData)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"	
+	
+	i action = "updategroupmenu" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s rowid=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"rowid",1)
+	..s groupdr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"groupdr",1)
+	..s menudr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"menudr",1)
+	..s opt=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"opt",1)
+	..s PSTData=rowid_"^"_groupdr_"^"_menudr_"^"_opt
+    ..s result= ##Class(web.DHCEQCSysGroupMenu).SaveData(PSTData)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"
+    
+    i action = "updatemanagelimitlistinfo" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s rowid=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"rowid",1)
+	..s managelimitdr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"managelimitdr",1)
+	..s typedr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"typedr",1)
+	..s valuedr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"valuedr",1)
+	..s opt=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"opt",1)
+	..s PSTData=rowid_"^"_managelimitdr_"^"_typedr_"^"_valuedr_"^"_opt
+    ..s result= ##Class(web.DHCEQCManageLimit).SaveData(PSTData)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"
+    
+    i action = "updategroupequiptype" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s rowid=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"rowid",1)
+	..s groupdr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"groupdr",1)
+	..s equiptypedr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"equiptypedr",1)
+	..s defaultflag=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"defaultflag",1)
+	..s accessflag=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"accessflag",1)
+	..s PSTData=rowid_"^"_groupdr_"^"_equiptypedr_"^"_defaultflag_"^"_accessflag
+    ..s result= ##Class(web.DHCEQCGroupEquipType).SaveGroupEquipType(PSTData)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"
+    
+    i action="GetLocation" d
+    .d ##class(web.DHCEQMove).GetLocation()
+    
+    i action="GetMenu" d
+    .d ##class(web.DHCEQMove).GetMenu()
+    
+    i action="GetUser" d
+    .d ##class(web.DHCEQMove).GetUser()
+    
+    i action="GetDeptID" d
+    .d ##class(web.DHCEQMove).GetDeptID(str)
+    
+	i action = "updategrouphospital" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s rowid=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"rowid",1)
+	..s groupdr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"groupdr",1)
+	..s hospitaldr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"hospitaldr",1)
+	..s opt=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"opt",1)
+	..s PSTData=rowid_"^"_groupdr_"^"_hospitaldr_"^"_opt
+    ..s result= ##Class(web.DHCEQCGroupHospital).SaveData(PSTData)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"	
+    
+	i action = "updateevaluationrole" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s rowid=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"rowid",1)
+	..s evaluationdr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"evaluationdr",1)
+	..s roledr=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"roledr",1)
+	..s opt=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"opt",1)
+	..s PSTData=rowid_"^"_evaluationdr_"^"_roledr_"^"_opt
+    ..s result= ##Class(web.DHCEQCEvaluation).SaveEvaluationRoles(PSTData)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"
+    
+    i action="GetMaintUser" d
+    .d ##class(web.DHCEQMaintUserList).GetMaintUser()
+	
+	i action = "updategrouptable" d
+	.s data=$Get(%request.Data("data",1))
+	.s length=$LENGTH(data,"},{")
+	.for i=1:1:length d
+	..s data(i)=$p(data,"},{",i)
+	..s TRow=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TRow",1)
+	..s TROWID=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TROWID",1)
+	..s TPutIn=##Class(web.DHCEQCommon).GetJsonDataByName(data(i),"TPutIn",1)
+	..i TPutIn="" s TPutIn="N"
+	..i TPutIn="Y" s TPutIn="1"
+	..e  s TPutIn="2"
+    ..s result= ##Class(web.DHCEQCGroupCTable).SaveData("","",str,TROWID,TPutIn)
+    ..i result<0 {w "{success:false,result:'更新失败!'}",! q}
+    ..w:i=length "{success:true,result:'result更新成功!'}"
+	Quit 
+	
+</script>

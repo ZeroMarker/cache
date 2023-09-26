@@ -1,0 +1,1162 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ if ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD SoundScenes="HeaderMenu"></EXTHEALTH:HEAD>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" type="text/css" href="../scripts_lib/bootstrap/css/bootstrap.min.css"/>
+	<HISUI/>
+	<ADDINS/>
+	<server>
+	 Set IEVersion = ##class(ext.util.String).GetIEVersion()
+	 if IEVersion="IE11" {
+	 	 Set IEVersion = "IE11"
+	 }ELSE{
+	 	Set IEVersion = "IE8"
+	 }
+	 Set ActiveSkinRowId = $o(^websys.SkinI("ActiveIndex","Y",""))
+	 If ActiveSkinRowId>0{	
+		Set skinObj = ##class(websys.Skin).%OpenId(ActiveSkinRowId)
+		Set MenuBGColor = skinObj.MenuBGColor ;017BCE
+		
+		s lbgColorG = $zhex($e(MenuBGColor,2,3))+53 
+		i lbgColorG>255 set lbgColorG=255 
+		i lbgColorG<0 set lbgColorG="00"
+		s lbgColorG = $zhex(lbgColorG) if $l(lbgColorG)=1 set lbgColorG="0"_lbgColorG
+		
+		s lbgColorR = $zhex($e(MenuBGColor,4,5))-17
+		i lbgColorR>255 set lbgColorR=255 
+		i lbgColorR<0 set lbgColorR="00"
+		s lbgColorR = $zhex(lbgColorR) if $l(lbgColorR)=1 set lbgColorR="0"_lbgColorR
+		
+		s lbgColorB = $zhex($e(MenuBGColor,6,7))-15
+		i lbgColorB>255 set lbgColorB=255 
+		i lbgColorB<0 set lbgColorB="00"
+		s lbgColorB = $zhex(lbgColorB) if $l(lbgColorB)=1 set lbgColorB="0"_lbgColorB
+
+		Set LeftMenuBGColor = "#026cb4" //"#"_lbgColorG_lbgColorR_lbgColorB	;366abf
+		//Set ^Wanghc("gbcolor",1,$zhex(lbgColorG),$zhex(lbgColorR),$zhex(lbgColorB))=LeftMenuBGColor
+		;Set RightMenuBGColor = $e(MenuBGColor,1,2)_$e(MenuBGColor,3,4)_$e(MenuBGColor,5,6) 	; 3FA2DF
+		Set MenuSelectedBGColor = skinObj.MenuSelectedBGColor
+		Set skinObj=""
+	 }
+	 Set iconVolumeOnText = ..Get("开启消息提示音") 
+	 Set iconVolumeOffText = ..Get("关闭消息提示音")
+	 Set OtherMenuTan = ##class(websys.Translation).Get("DIC","其它")
+	 Set NormalTan = ##class(websys.Translation).Get("DIC","正常")
+	 Set MediWayLan =##class(websys.Translation).Get("DIC","医为医疗")
+	 Set ExitTipLan = ..Get("您确定退出系统")
+	 Set CurYear = $p($zd(+$h,3),"-")
+	</server>
+<style>
+/*#0063A7*/
+body {
+  overflow: hidden;
+  font-family: "Microsoft YaHei";
+  font-size: 16px;
+  line-height: 1.7;
+  color: #333;
+  background-color: #017BCE;
+  padding:0; /*2018-7-6*/
+}
+.navbarhead a {
+  color: #ffffff;
+}
+.centerPanel {
+  overflow: hidden;
+  background-color: #ffffff;
+  position: absolute;
+  width:100%;
+  height:50px;
+}
+.navbar-fixed-top {
+  border-width: 0px;
+}
+.navbarhead .navbar {
+  min-height: 35px;
+  margin-bottom: 0px;
+}
+.navbarhead .navbar-default {
+  color: #fff;
+  background-color: #(MenuBGColor)#; /*#017BCE; 背景色*/
+}
+.navbarhead .navbar-default a.navbar-brand {
+  color: #ffffff;
+}
+.navbarhead .navbar-default a:hover.navbar-brand {
+  color: #ffffff;
+}
+.navbarhead .navbar-default .navbar-brand {
+  height: 35px;
+  padding-top: 5px;
+}
+.navbarhead .navbar-default .navbar-nav {
+
+}
+.navbarhead .navbar-default .navbar-nav > .active > a {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+.navbarhead .navbar-default .navbar-nav > li > a {
+  color: #ffffff;
+  padding: 10px;
+  line-height: 30px;
+  font-size: 16px;
+}
+
+.navbarhead .navbar-default .navbar-inner .navbar-nav > .clickactive > a {
+  color: #fff;
+  background-color: #(MenuSelectedBGColor)# ; /*#ffffff; 选中color*/ 
+  /*margin-top: 2px;
+  padding-top: 8px;*/
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .navbar-nav {
+  margin-right: 5px;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .navbar-nav li:first > a {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .nullMessage {
+  padding-bottom: 15px;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .nullMessage .badge {
+  display: none;
+  position: relative;
+  top: 5px; /*-6px*/
+  left: -10px;
+  line-height: 0.9;
+  padding: 3px;
+  color: #ffffff;
+  background-color: red;
+}
+/*.navbarhead .navbar-default .navbar-container .navbar-buttons .hasMessage {
+  padding-right: 4px;
+}*/
+.navbarhead .navbar-default .navbar-container .navbar-buttons .hasMessage .badge {
+  display: inline-block;
+  /*position: relative;
+  top: -6px;
+  left: -10px;
+  */
+  line-height: 0.9;
+  padding: 3px;
+  color: #ffffff;
+  background-color: red;
+  position: absolute;
+  top: 5px; /*-6*/
+  left: 22px;
+}
+.fontsettings {
+  margin-left: 20px;
+}
+.fontsettings span {
+  cursor: pointer;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+.userlocinfo {
+  display: inline-block;
+  zoom: 1;
+  font-size: 13px;
+  line-height: 15px;
+  max-width: 200px;
+  overflow: hidden;
+  vertical-align: top;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left:26px;
+}
+.userinfo {
+  display: block;
+}
+.locinfo {
+  float:left; /*right---ie11兼容下对不齐*/
+}
+.navbar-toggle {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+/*三级菜单*/
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu:hover > .dropdown-menu {
+  display: block;
+}
+.dropdown-submenu > .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  -webkit-border-radius: 0 6px 6px 6px;
+  -moz-border-radius: 0 6px 6px;
+  border-radius: 0 6px 6px 6px;
+}
+.pull-right .dropdown-submenu > .dropdown-menu {
+  left: auto;
+  right:98%;
+}
+.dropdown-submenu:hover > a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu > a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #ccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left > .dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  -webkit-border-radius: 6px 0 6px 6px;
+  -moz-border-radius: 6px 0 6px 6px;
+  border-radius: 6px 0 6px 6px;
+}
+/*下拉菜单背景色 #FEFEFE*/
+.navbar-nav>li>.dropdown-menu, li.dropdown-submenu>ul.dropdown-menu{
+	background-color:#FEFEFE;
+	min-width:140px;
+}
+.dropdown-menu>li>a{
+	/*color:#ffffff;*/
+	position:relative;
+	padding-left:25px;
+}
+.aboutbody ul>li{
+	margin-top:3px;
+}
+.aboutfooter{
+	background-color:#F7F7F7;
+	width:458px;
+	height:35px;
+	position:absolute;
+	left: 0px;
+	font-size:12px;
+	color:#8a8aea; /*#B5B5B5;*/
+	padding-left:100px;
+	padding-top:5px;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+.panel-body{
+	padding:0px;
+}
+.panel-body.messager-body {
+    padding: 10px;
+}
+.modal-header{
+	padding:8px;
+	background-color:#556983;
+	color:#ffffff;
+}
+.close,.close:hover{
+	color:#ffffff;
+	opacity:0.8;
+}
+.navbarhead .navbar-default .navbar-nav > LI {
+	height:50px;
+}
+.navbarhead .navbar-default .navbar-nav > LI > A.rightMainMenu{
+	/*box-sizing:border-box;*/
+	padding-top:12px;
+	height:50px;
+}
+.navbar-container a:focus{
+	outline:none;
+}
+
+/*.navbarhead .dropdown-menu > li > a:focus,*/ 
+.navbarhead .dropdown-menu > li > a:hover
+{
+  /*color: #ffffff;*/
+  background-color: #21BA45;
+}
+
+/*.navbarhead .navbar-default .navbar-nav > .active > a:focus,*/
+.navbarhead .navbar-default .navbar-nav > .active > a:hover {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+/**/
+/*.navbarhead .navbar-default .navbar-nav > li > a:focus,  点击不要变色效果*/
+.navbarhead .navbar-default .navbar-inner> .navbar-nav > li > a:hover {
+  background-color: #(MenuSelectedBGColor)#;
+  border-color: #(MenuSelectedBGColor)#;
+  color: #fff;
+}
+.navbarhead li.hover{
+	background-color:  #(MenuSelectedBGColor)#;
+    border-color:  #(MenuSelectedBGColor)#;
+    color: #fff;
+}
+.navbarhead .navbar-default .navbar-nav > .open > a,
+/*.navbarhead .navbar-default .navbar-nav > .open > a:focus,*/
+.navbarhead .navbar-default .navbar-nav > .open > a:hover {
+  color: #000000;
+  background-color: #ffffff;
+}
+/*下拉菜单选中色*/
+ /*.navbarhead .dropdown-menu > li > a:focus*/
+.navbarhead .dropdown-menu > li > a:hover{
+	color: #ffffff; /*#000000;*/
+    background-color: #20BB44 ; /*#ffffff;*/
+}
+/**----*/
+.navbarhead .navbar-default .navbar-nav > li > a.dhc-icon-th{
+    padding: 6px;
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 1px #7BC2F2 solid;
+    margin-top: 10px;
+    background: #3FA2DF;
+}
+.navbarhead .navbar-default .navbar-nav > li > a.dhc-icon-user{
+    border-radius: 15px;
+}
+.navbarhead .navbar-default .navbar-nav > .open > a.dhc-icon-th,
+/*.navbarhead .navbar-default .navbar-nav > .open > a:focus,*/
+.navbarhead .navbar-default .navbar-nav > .open > a.dhc-icon-th:hover {
+  border: 1px #40a2de solid;
+  color:#ffffff;
+  background-color: #0063a7;
+}
+.dhc-fa-icon-large{
+	background-repeat:no-repeat;
+	display:block;
+	width:24px;
+	height:24px;
+	/*position: absolute;*/
+}
+.dhc-fa-icon-small{
+	background-repeat:no-repeat;
+	display:block;
+	width:14px;
+	height:14px;
+    position: absolute;
+    left: 10px;
+    top: 5px;
+}
+.icon-user-md{
+	position: absolute;
+}
+</style>
+
+<style type="text/css">
+.lockScreen .bg{
+	background:url(../images/websys/lockScreen_bg.png) no-repeat!important;
+	width: 100%;
+    height: 100%;
+}
+.lockScreen{
+	z-index: 10000002!important;
+    left: 0;
+    line-height: 30px;
+    padding: 9px 14px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: none!important;
+    padding: 0!important;
+}
+.lockScreen .iconLock{
+    background: url(../images/websys/iconLock.png) no-repeat!important;
+    background-size: contain;
+    width: 205px;
+    height: 205px;
+    margin: 15px auto 90px;
+    line-height: 500px;
+    color: #fff;
+    font-size: 26px;	
+    text-align: center;
+}
+.lockScreen .iconLockOpen{
+	background:url(../images/websys/iconLockOpen.png)!important;
+	background-size:contain;	
+	width: 20px;
+    height: 24px;
+	display: block;	
+	margin: 7px 0 0 9px;
+}
+
+.lockScreen .bg{
+	background-size: cover!important;
+}
+.lockScreen>div:first-child{
+	opacity: 1!important;
+}
+.lockScreen .form-control{
+	border-radius: 0;
+    display: block;
+    width: 100%;
+    height: 40px;
+    padding: 0px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #555;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #ccc;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+.lockScreen>div:last-child{
+	top: calc(50% - 185px)!important;
+    left:calc(50% - 175px)!important;
+    width: 350px;
+    position: absolute;
+}
+.lockScreen>div:last-child>div:last-child{
+	background: transparent!important;
+	width: 100%;
+	height: 100%;
+	padding: 0;
+}
+.lockScreen .verifyPassword_zl{
+    background: #ccc;
+    width: 38px;
+    height: 38px;
+    display: block;
+    /*margin: 0px -23px 0 0;*/
+    margin-top: -39px;
+    float: right;
+}
+.lockScreen .time{
+	position: fixed;
+	top: 50px;
+	left: 50px;
+	color: #fff;
+}
+.lockScreen .time >div{
+	float:left;
+}
+.lockScreen .time>div.z-time{
+	font-size: 82px;
+	line-height: 82px;
+	border-right: 1px solid;
+	padding-right: 20px;
+}
+.lockScreen .time>div.z-dateweek{
+	line-height: 42px;
+	font-size: 26px;
+	padding-left: 20px;
+}
+</style>
+<server>
+	w "<style>"
+	for cssname = "th-large","envelope","user-md"{
+		w ".dhc-menu.open .icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-000.png') ;}",!
+		w ".icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-fff.png') ;}",!
+	}
+	for cssname="question-sign","volume-off","volume-up","question-sign","cog","key","exchange","reply","off"{
+		w "a.dhc-submenu:hover .icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-fff.png') ;}",!
+		w ".icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-000.png') ;}",!
+	}
+	w "</style>"
+	
+</server>
+<style type="text/css">
+.box {
+    position: absolute;
+    left: -18%;
+    top:-3px;
+    width: 800px;
+    border-radius: 3px;
+    box-shadow: 1px 1px 10px #666;
+    background-color: #FFFFFF;
+    overflow: auto !important;
+    max-height: 500px;
+    filter: alpha(opacity=0);
+    opacity: 1;
+    border-bottom: 1px none #074c52;
+    z-index: 99;
+}
+.box .cont {
+    position: relative;
+    padding: 20px 0 0px 24px;
+}
+.box ul.clearfix {
+    display: block;
+}
+.box .sublist>li {
+    float: left;
+    width: 97.5%;
+    padding-right: 2px;
+    padding-bottom: 10px;
+}
+.ltitlebox{text-align:right;width:15%;position:relative;float:left;padding-top:4px;}
+.sublist>li h3.ltitle {
+    background-color: #FFFFFF;
+    margin-right: 10px;
+    margin-top: 10px;
+    border-radius: 2px;
+    font-weight: bold;
+    font-family: '微软雅黑';
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px none #666666;
+    word-break: keep-all;
+}
+.sublist>li div.lbody {
+    padding-left: 10px;
+    margin-top: 0;
+    width:85%;
+    border-left:1px solid #666;
+    position:relative;
+    float:left;
+}
+.lbody>ul>li{
+	display: block;
+    width: 24%;
+    float: left;
+}
+.sublist>li div.lbody a:hover {
+    background-color: #20BB44; /*#ededed;*/
+    color:#fff;
+}
+.sublist>li div.lbody a {
+    width:100%;
+    padding: 5px 10px 5px 10px;
+    margin-left: 5px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    display: inline-block;
+    /*white-space: nowrap;*/
+    line-height:16px;
+}
+.pm-caret-in {
+    display: block;
+	float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #000000;
+    margin-top: 8px;
+    margin-left: 10px;
+}
+.box .dropdown-submenu > a:after{
+	margin-right: 0px;
+}
+</style>
+
+<csp:if condition=IEVersion="IE8">
+<style>
+/*IE低版本布局乱，是li的float莫名其妙没了*/
+.navbar-nav>li{
+	float:left!important;
+	display:list-item!important;
+	/*display:inline-block!important;
+	float:none!important;*/
+}
+/*IE低版本莫名其妙有了margin*/
+/*IE8需要floatleft,IE7却不需要*/
+.navbar-nav{
+	margin:0!important;
+	float:left!important;
+}
+/*IE低版本生成三角号*/
+.caret-in {
+    display: block;
+	float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #ccc;
+    margin-top: -18px;
+    margin-right: 10px;
+}
+/*分隔线显示不对，在js中增加一class*/
+.dropdown-menu .divider-ie{
+    margin:-9px 0 0 0;
+    width:100%;
+}
+</style>	
+</csp:if>
+</head>
+<body>
+
+<SERVER>
+	Set CTLodId = %session.Data("LOGON.CTLOCID")
+	Set GroupId = %session.Data("LOGON.GROUPID")
+	Set GroupDesc = $p(^SSU("SSGRP",GroupId),"^",1)
+	Set GroupSetId = ##class(epr.GroupSettings).GetIdFromGroupId(GroupId)
+	Set GroupMutilTabMenu = $lg(^ooGroupSettingsD(GroupSetId),116)
+	Set GroupShowPanelMenu = $lg(^ooGroupSettingsD(GroupSetId),117)
+	set menuJson = ##class(websys.Menu).Json("",GroupId)
+	Set HelpMenuId = ##class(websys.Menu).GetIdFromCodeOrDescription("System.HeaderMenu.Help")
+	Set HeaderMenuDesc = ##class(websys.Translation).Get("DIC","帮助文档")
+	Set HeaderMenuHelpJson = "[]"
+	If (HelpMenuId>0){
+		Set HeaderMenuDesc = ##class(websys.Menu).%OpenId(HelpMenuId,0).Caption
+		Set HeaderMenuHelpJson = ##class(websys.Menu).Json(HelpMenuId,GroupId)
+	}
+	/*wanghc*/
+	set CloseSessionMenuId = ##class(websys.Menu).GetIdFromCodeOrDescription("Main.Close")
+	
+	Set EnableExitAlert = 0
+	if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Configuration||EnableExitAlert"){
+		Set EnableExitAlert = ##class(websys.Configuration).GetFieldValue("EnableExitAlert")
+		if EnableExitAlert="" Set EnableExitAlert=0
+	}
+	/*工作站 wanghc 2017-03-08*/
+	Set WorkStationDesc = ##class(websys.DHCWorkstationLnkGrp).GetWorkstation(GroupId)
+	If (WorkStationDesc=""){
+		Set WorkStationDesc = MediWayLan
+	}
+	Set LicInfo = ##class(websys.License).GetInfo()
+	
+	Set LicExpDate = $P(LicInfo,"^",2)
+	Set LicVerSummary = $P(LicInfo,"^",3)
+	Set LicUserName = $P(LicInfo,"^",5)
+	Set LicPrj = $TR($P(LicInfo,"^",6)_" HIS "_$p($P(LicInfo,"^",7),".",1,2),"R","")   //产品名称
+	Set LicVer = $p($g(^CF("SM",1)),"^",5) //产品版本
+	Set LicVer = $p(LicVer," ",$l(LicVer," "))
+	Set LicUseType = $p(LicInfo,"^",9)
+	Set ModelLicType = NormalTan
+	if ##class(websys.Conversions).IsValidMethodName("BSP.Lic.SRV.Interface","GetModelType"){
+		Set ModelLicType = ##class(BSP.Lic.SRV.Interface).GetModelType()
+	}
+	Set EncryptCmpCode = ##class(websys.License).EncryptCmpCode()
+	; 消息配置
+	Set messageShowFlag = 1,MsgSearchInterval=3,iconVolumeCls="",iconVolumeText="",EnableMsgAudio="false"
+	//If (##class(websys.Conversions).IsValidMethodName("web.DHCBL.Authorize.CTLocAut","IsAutCTLoc")){
+	//	if '##class(web.DHCBL.Authorize.CTLocAut).IsAutCTLoc(CTLodId) {
+	If (##class(websys.Conversions).IsValidMethodName("websys.DHCMessageConfig","MsgBtnIsDisabled")){
+		if (##class(websys.DHCMessageConfig).MsgBtnIsDisabled(CTLodId)){
+			Set messageShowFlag = 0
+		}
+	}elseif(##class(websys.Conversions).IsValidMethodName("web.DHCBL.Authorize.CTLocAut","IsAutCTLoc")){
+		if '##class(web.DHCBL.Authorize.CTLocAut).IsAutCTLoc(CTLodId) {
+			Set messageShowFlag = 0
+		}
+	}
+	If (messageShowFlag=1){
+		Set MsgSearchInterval = +$lg($g(^websys.DHCMessageConfigD(1)),2)
+		if MsgSearchInterval=0 Set MsgSearchInterval=3
+		if ##class(websys.DHCMessageConfig).MsgAudioIsDisabled(%session.Get("LOGON.USERID")) {
+			Set iconVolumeCls = "icon-volume-off", iconVolumeText=iconVolumeOnText, EnableMsgAudio="false"
+		}else{
+			Set iconVolumeCls = "icon-volume-up", iconVolumeText=iconVolumeOffText, EnableMsgAudio="true"
+		}
+	}
+	n LogonFromVB
+	s (LogonFromVB)=""
+	i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s LogonFromVB=$g(%request.Data("LogonFromVB",1)) ;s ^zTRAK("cjb","epr.frames.csp")=LogonFromVB
+	
+	;KK 18/jul/2002 Log 23459 To display the system security message	
+	n securitymsg
+	s securitymsg=""
+	i $d(%request.Data("RELOGON",1))'="" d
+	. s securitymsg=##Class(web.SSUser).GetSystemSecurityMessage(%session.Get("LOGON.USERID"))
+</SERVER>
+
+<server>
+	;i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s ^zTRAK("cjb","epr.menu.csp")=$g(%request.Data("LogonFromVB",1))
+	n str,LogonPatientID,LogonEpisodeID
+	s (str,LogonPatientID,LogonEpisodeID)=""
+	i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s str=$p($g(%request.Data("LogonFromVB",1)),"^",2)
+	i str'="" s LogonPatientID=$p(str,":",3),LogonEpisodeID=$p(str,":",4)
+	n comp
+	s comp=##Class(websys.Component).OpenName("epr.Menu.Messages")
+	i comp d comp.LoadTrans(),comp.%Close()
+	w "<SCRIPT>",$c(13,10)
+	; Dump out all the translated captions
+	s code=""  f  s code=$o(t(code))  q:code=""  d
+	. w "t['"_code_"']="_..QuoteJS($p($g(t(code),code),"^",1))_";",$c(13,10)
+	w "</SCRIPT>",$c(13,10),!
+</server>
+
+
+<server>
+ 
+ S IsSideMenu = $g(%request.Data("IsSideMenu",1),"false")
+ s CfgLayoutNameSpace = ##class(websys.Configuration).GetLayoutManager() 	;##Class(web.DHCTHREEEX).GetServerNameSpace()
+ s ServerNameSpace = "cn_iptcp:"_##class(ext.util.String).ServerIP()_"["_##class(ext.util.String).GetConnPort()_"]:DHC-APP"
+ 
+ S CacheDetails = "{}"
+ if ##class(websys.Conversions).IsValidMethodName("websys.DHCCache","CacheDetails"){
+ 	S CacheDetails = ##class(websys.DHCCache).CacheDetails(%session.Data("LOGON.GROUPID"),%session.Data("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))
+ }
+ s Loc=%session.Data("LOGON.CTLOCID")
+ s LocDesc=$P($G(^CTLOC(Loc)),"^",2)
+ i $P(LocDesc,"-",2)'="" s LocDesc= $P(LocDesc,"-",2)
+ s UserId=%session.Data("LOGON.USERID")
+ s Str=##Class(web.DHCLCNUREXCUTE).GetUserWardId(UserId,Loc)
+ s WardStr=$P(Str,"|")
+ s WardId=$P(WardStr,"^",2)
+
+ Set LockSrcTimeout=0 // 不启用锁屏
+ if ##class(%Dictionary.PropertyDefinition).%ExistsId("websys.Configuration||LockScrTimeOut"){
+	 Set LockSrcTimeout = +##class(websys.Configuration).GetFieldValue("LockScrTimeOut")
+	 if ##class(%Dictionary.PropertyDefinition).%ExistsId("epr.GroupSettings||LockScrTimeOut"){
+	 	set eprGrpId = ##class(epr.GroupSettings).GetIdFromGroupId(%session.Data("LOGON.GROUPID"))
+	 	Set eprGrpObj  = ##class(epr.GroupSettings).%OpenId(eprGrpId,0)
+	 	if eprGrpObj.LockScrTimeOut>0 Set LockSrcTimeout = eprGrpObj.LockScrTimeOut
+	 }
+ }
+</server>
+<SCRIPT Language="Javascript">
+ /*
+ VB,C#,C++连接Cache连接串 
+ ServerNameSpace是web对应后台的Cache库的连接串,
+ CfgLayoutNameSpace是[配置管理界面]配置的Cache连接串
+ */
+ var ServerNameSpace = "#(ServerNameSpace)#";
+ var CfgLayoutNameSpace = "#(CfgLayoutNameSpace)#";
+ /*缓存明细*/
+ var gCacheDetails = #(CacheDetails)#;  
+ var WardId="#(WardId)#";
+ var LocDesc="#(LocDesc)#";
+ var LicVer="#(LicVer)#"
+ var LicExpDate="#(LicExpDate)#"
+ var LicVerSummary="#(LicVerSummary)#"
+ var LicUserName="#(LicUserName)#"
+ var LicUseType="#(LicUseType)#";
+ var LicPrj="#(LicPrj)#"
+ var ModelLicType="#(ModelLicType)#"
+ var CurYear="#(CurYear)#";
+ var EncryptCmpCode="#(EncryptCmpCode)#";
+ var IsSideMenu = #(IsSideMenu)#;
+ var popsw = "#(##class(dhc.dao.SSUser).Encode())#";
+ var lockScreenOpt = {"encodeKey":"#(%session.SessionId)#","popsw":popsw,"timeout":#(LockSrcTimeout*60)#,"username":"#(%session.Data("LOGON.USERNAME"))#"};
+ var groupMutilTabMenu = "#(GroupMutilTabMenu)#";
+ var menuJson = {records:#(menuJson)#};
+ var HeaderMenuHelpJson = {records:#(HeaderMenuHelpJson)#};
+ var HeaderMenuDesc = "#(HeaderMenuDesc)#";
+ var OtherMenuTan = "#(OtherMenuTan)#";
+ var iconVolumeOnText = "#(iconVolumeOnText)#";
+ var iconVolumeOffText = "#(iconVolumeOffText)#";
+ var GroupShowPanelMenu = '#(GroupShowPanelMenu)#';
+</SCRIPT>
+<SCRIPT SRC="../scripts/epr.menu.js"></SCRIPT>
+
+<SCRIPT language="Javascript">
+var securitymsg="#(securitymsg)#";
+if (securitymsg!="") alert(securitymsg);
+
+self.moveTo(0,0);
+self.resizeTo(screen.availWidth,screen.availHeight);
+var keepopen=false;
+if (#(EnableExitAlert)#){
+	window.onbeforeunload = unlockbeforeunload ;
+}
+function unlockbeforeunload(){
+	if (#(EnableExitAlert)#){
+		var DoingSthDesc = $("#DoingSth").val();
+		if (DoingSthDesc!=""){
+			if(window.event) window.event.returnValue = DoingSthDesc;
+			return DoingSthDesc + "#(ExitTipLan)#";
+		}
+		if(!keepopen){
+			return "#(ExitTipLan)#";
+		}
+	}
+}
+window.onunload=unlockonunload;                        //add by wuqk 2011-12-31
+ 
+ // ab 19.12.07 65893 - check 'keepopen' flag rather than mouse cursor position
+// keepopen flag is set on click of a 'home' menu
+function unlockonunload() {
+	websys_onunload(); //关闭界面时,打开的界面也关闭
+	if (!keepopen) {
+		   try {unloadHandler();} catch(e) {}
+		   //确定退出后,把before事件置空,IE11兼容到IE5后,加载新界面会再次触发before事件
+		   window.onbeforeunload=function(){}
+		   if (websys_isIE){
+			   window.location.href="websys.closesession.csp";
+		   }else{
+		   		// 处理chrome系统浏览器上不运行closese...csp问题
+		   		window.open("websys.closesession.csp","_blank","top=1200,left=0,width=20,height=20");
+		   }
+	}
+	return true;
+}
+ 
+//This is a workaround to try and distinguish between reloading the frame and closing the window
+/*
+function unlockonunload() {
+	if (window.event) {
+		if (window.event.clientY < 0) {
+		   	try {unloadHandler();} catch(e) {}
+			//alert("The browser is closing...");
+			window.location.href="websys.closesession.csp";
+		} else {
+			//alert("The user is refreshing or navigating away...");
+		}
+	}
+}
+*/
+function unloadHandler() {
+	// SA 13.8.02 - log 26697: Function written in order to close Medicode 
+	// when Medtrak is closed. While this code is only relevant to RIE, because 
+	// there is no single component associated with this code, SP and I have agreed
+	// that this code needs to be here rather than in a custom javascript.
+	// This code also appears in websys.frames.csp
+
+	// DDE object
+	var objDDE;
+	try {
+		objDDE = new ActiveXObject("tkDDEInterface.clsConnect");
+		objDDE.DDELinkTopic = "OINSIGHT|MW_MAINFORM.TXT_HOST_ID";
+		objDDE.DDELinkMode = 2;
+		objDDE.DDELinkItem = "TEXT";
+		objDDE.DDEText = "MEDICODE_EXIT"
+		objDDE.DDEPoke();
+	} catch(e) {}
+	
+	// cjb 04/04/2006 58809 - unload SimpleCode when unloading web session
+	var obj;
+	try {
+		obj = new ActiveXObject("tkPSimpleCode.clstkPSimpleCode");
+		obj.ItemPath = "";
+		obj.ClosePSimpleCodeWindow();
+		obj="";
+	} catch(e) {}
+
+}
+
+var DivBedSelected = "";
+var isMenuLoaded = 0;
+var isMainLoaded = 0;
+var elementID="";
+var elementValue="";
+
+//TN: added multipleIDs parameter to pass to MultipleIDs fields for multiple selection. This is to store the main id of those items selected
+//ie. off the episode list... multipleIDs will be "EpisodeID^episID1^episID2^episID3".... etc
+//ie. off the orders workbench... multipleIDs will be "OEOrdItemID^oeoriID1^oeoriID2^oeoriID3".... etc
+////////////////////////////////////////////////////////////////////
+//IMPORTANT!!! TN: when adding new fields to be passed to this function, please remember to add to the Clear function below as well
+////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+////modify by wuqk 2010-05-20    begin
+////////////////////////////////////////////////////////////////////
+function SetEpisodeDetails(patID,episID,mradm,titleName,apptID,waitinglistID,OEOrdItemIDs,SinglePatientFlag,WardID,PAAdmCodingID,multipleIDs,OEORIItemStatus,BillRowIds,BillTypes,wlstatus,ARCIMDesc,FollowUpApptID,ItemApptStatus,Decease,ReqIDs,ReqVolIDs,canGiveBirth,MultiEpisodeID,OperRoomID,AnaesthesiaID,NokID,attendID) {
+	//var win=top.frames['eprmenu'];
+	//if (win) {
+		//if (titleName=="") titleName='##--(%session.Get("TITLE"))--##';
+		//websys_setTitleBar(titleName);
+		//var frm = win.document.forms['fEPRMENU'];
+		var frm = document.forms['fEPRMENU'];
+		if (frm) {
+			//HORRIBLE BUT SAFE SO CAN'T GET MIXED IDs... clear then set values
+			for (var i=0; i<frm.elements.length; i++) {
+				frm.elements[i].value="";
+			}
+			//
+			frm.PatientID.value = patID;
+			frm.EpisodeID.value = episID;
+			frm.mradm.value = mradm;
+			//alert("SetEpisodeDetails"+OperRoomID);
+			if (apptID) frm.apptID.value=apptID;
+			if (OperRoomID) frm.OperRoomID.value=OperRoomID;
+			if (waitinglistID) frm.WaitingListID.value=waitinglistID;
+			if (OEOrdItemIDs) frm.OEOrdItemID.value=OEOrdItemIDs;
+			if (SinglePatientFlag) frm.SinglePatientFlag.value=SinglePatientFlag;
+			if (WardID) frm.WardID.value=WardID;
+			if (PAAdmCodingID) frm.PAAdmCodingID.value=PAAdmCodingID;
+			if (multipleIDs) frm.MultipleIDs.value=multipleIDs;
+			if (OEORIItemStatus) frm.OEORIItemStatus.value=OEORIItemStatus;
+			if (BillRowIds) frm.BillRowIds.value=BillRowIds;
+			if (BillTypes) frm.BillTypes.value=BillTypes;
+			if (wlstatus) frm.WLWaitListStatusDR.value=wlstatus;
+			if (ARCIMDesc) frm.ARCIMDesc.value=ARCIMDesc;
+			if (FollowUpApptID) frm.FollowUpAppt.value=FollowUpApptID;
+			if (ItemApptStatus) frm.ItemApptStatus.value=ItemApptStatus;
+			if (Decease) frm.Decease.value=Decease;
+			if (ReqIDs) frm.ReqIDs.value=ReqIDs;
+			if (ReqVolIDs) frm.ReqVolIDs.value=ReqVolIDs;
+			if (canGiveBirth) frm.canGiveBirth.value=canGiveBirth;
+			if (MultiEpisodeID) frm.MultiEpisodeID.value=MultiEpisodeID;
+			/*for (i in HEADERBUFFER) {
+				if (frm.elements[i]) frm.elements[i].value=HEADERBUFFER[i];
+			}*/
+			if (NokID) frm.NokID.value=NokID;	// cjb 22/02/2006 56793
+			if (AnaesthesiaID) frm.AnaesthesiaID.value=AnaesthesiaID;
+			if (attendID) frm.attendID.value=attendID;  //log 61395 TedT
+		}
+	//}
+}
+
+function SetSingleField(fldname,val) {
+	//var win=top.frames['eprmenu'];
+	//if (win) {
+		var frm = document.forms['fEPRMENU'];
+		if (frm) {
+			var fld=frm.elements[fldname];
+			if (fld) fld.value=val;
+		}
+	//}
+
+}
+//created one clear function so will need to update just the one function instead of everywhere.
+function MainClearEpisodeDetails() {
+	//don't need this anymore, does a form loop
+	//SetEpisodeDetails("","","","","","","","","","","","","","","","","","","","","","","","");
+	//
+	
+		var frm = document.forms['fEPRMENU'];
+		for (var i=0; i<frm.elements.length; i++) {
+			frm.elements[i].value="";
+		}
+		//window.frames["eprmenu"].MENU_TRELOADPAGE='';
+		//window.frames["eprmenu"].MENU_TRELOADID='';
+	
+}
+
+//SA 4.1.01 - log 22468: Added mPiece function.
+function mPiece(s1,sep,n) {
+	//Getting wanted piece, passing (string,separator,piece number)
+	//First piece starts from 0
+	//Split the array with the passed delimeter
+	delimArray = s1.split(sep);
+	//If out of range, return a blank string
+	if ((n <= delimArray.length-1) && (n >= 0)) return delimArray[n];
+}
+function SetKeepOpen(url,newwin) {
+	keepopen = true;
+	parent.keepopen = true;
+	parent.location.href = url;
+}
+</SCRIPT>
+<FORM name="fEPRMENU">
+	<!--TN:23-Apr-2002:added field MultipleIDs for multiple selected IDs for generic looping workflows-->
+	<INPUT TYPE="hidden" name="PatientID" id="PatientID" value="#($g(%request.Data("PatientID",1)))#">
+	<INPUT TYPE="hidden" name="EpisodeID" value="#($g(%request.Data("EpisodeID",1)))#">
+	<INPUT TYPE="hidden" name="mradm" value="#($g(%request.Data("mradm",1)))#">
+	<INPUT TYPE="hidden" name="Decease" value="">
+	<INPUT TYPE="hidden" name="MultipleIDs" value="">
+	<!-- WAITINGLIST -->
+	<INPUT TYPE="hidden" name="WaitingListID" value="">
+	<INPUT TYPE="hidden" name="WLWaitListStatusDR" value="">
+	<!-- ORDERITEM -->
+	<INPUT TYPE="hidden" name="OEOrdItemID" value="">
+	<INPUT TYPE="hidden" name="OEORIItemStatus" value="">
+	<INPUT TYPE="hidden" name="ARCIMDesc" value="">
+	<INPUT TYPE="hidden" name="ItemApptStatus" value="">
+	<!-- CODING -->
+	<INPUT TYPE="hidden" name="PAAdmCodingID" value="">
+	<!-- BILLING -->
+	<INPUT TYPE="hidden" name="BillRowIds" value="">
+	<INPUT TYPE="hidden" name="BillTypes" value="">
+	<!-- BOOKING -->
+	<INPUT TYPE="hidden" name="FollowUpAppt" value="">
+	<INPUT TYPE="hidden" name="apptID" value="">
+	<INPUT TYPE="hidden" name="OperRoomID" value="">
+	<INPUT TYPE="hidden" name="AnaesthesiaID" value=""> <!--OR_Anaesthesia用于在医嘱表加上麻醉表指针//-->
+	<!-- 现在需要再加一个手术表OR_Anaest_Operation（麻醉表的子表）的ID，也在医嘱表中存,需要通过顶部菜单传手术表ID //-->
+	<INPUT TYPE="hidden" name="AnaestOperationID" value=""> 
+	
+	<!-- MEDRECORD -->
+	<INPUT TYPE="hidden" name="ReqIDs" value="">
+	<INPUT TYPE="hidden" name="ReqVolIDs" value="">
+	<!-- EPISODE -->
+	<INPUT TYPE="hidden" name="MultiEpisodeID" value="">
+	<INPUT TYPE="hidden" name="WardID" value="">
+	<!-- MATERNITY -->
+	<INPUT TYPE="hidden" name="canGiveBirth" value="">
+	<!-- NEXT OF KIN - cjb 22/02/2006 56793 -->
+	<INPUT TYPE="hidden" name="NokID" value="">
+	<!-- Attendance - 61395 Tedt 01/07 -->
+	<INPUT TYPE="hidden" name="attendID" value="">
+	<INPUT TYPE="hidden" name="SpecificID" value="">
+	<INPUT TYPE="hidden" name="SinglePatientFlag" value="">
+	<!-- 药理实验项目指针 -->
+	<INPUT TYPE="hidden" name="PPRowId" value="">
+	<!--会计核算成品-帐套-->
+	<INPUT TYPE="hidden" name="AcctBookID" id="AcctBookID" value="">
+	<INPUT TYPE="hidden" name="AcctBookName" id="AcctBookName" value="">
+	<INPUT TYPE="hidden" id="checkNewMessage" value='<%=##Class(%CSP.Page).Encrypt($LB("web.SSMessageRecipient.countNewMessages"))%>'>
+	<!-- 业务上正在做某事,菜单不能切换   DoingSthName为提示信息,为空表示可以切换-->
+	<input Type="hidden" id="DoingSth" name="DoingSth" value="">
+	<!-- 医技申请单号 PACSApplyNo -->
+	<INPUT TYPE="hidden" name="PACSApplyNo" id="PACSApplyNo" value="">
+</FORM>
+<div class="navbarhead">
+	<nav class="navbar navbar-default navbar-fixed-top" id="menuPanel" style="height:50px;">
+		<div class="navbar-container">
+			<div class="navbar-header pull-left" style="background-color:#(LeftMenuBGColor)#;height:50px;">
+				<a href="#" class="navbar-brand" style="font-size:16px;color:#e8fffe;display: inline-block;width:140px;height:50px;">
+					<ul style="margin-top:2px;">
+						<li style="margin-bottom:3px;"><img src="../skin/default/images/websys/logo_imedical.png"/></li>
+						<li>#(WorkStationDesc)#</li>
+					</ul>
+				</a>
+				<!--<span style="font-size:10px;" class="glyphicon glyphicon-registration-mark"></span>-->
+			</div>
+			<!--header menu start//-->
+			<div class="navbar-inner">
+				<ul class="nav navbar-nav" id="left-menu">
+				</ul>
+			</div>
+			<!--header menu end//-->
+			<div class="navbar-header navbar-buttons pull-right" role="navigation">
+				<ul class="nav navbar-nav">
+				<!--style="padding:6px;display: inline-block;width: 30px; height: 30px; border: 1px #7BC2F2 solid; margin-top: 10px;background: #3FA2DF;"-->
+					
+				
+					<li class="dhc-menu">
+						<!-- class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown"-->
+						<a href="#" class="rightMainMenu">
+							<span class="dhc-fa-icon-large icon-th-large" style="font-size:23px;" aria-hidden="true"></span>
+						</a>
+						<ul class="dropdown-menu">
+							<li id="SystemHeaderMenuHelp">
+								<a href="#" data-ilink="javascript:showHelp();" class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-question-sign"></i>
+									#(##class(websys.Translation).Get("DIC","帮助文档"))#
+									</a>
+							</li>
+							<li>
+								<a href="#" data-ilink="javascript:showConfig();" class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-cog"></i>
+									#(##class(websys.Translation).Get("DIC","页面设置"))#
+								</a>
+							</li>
+							<csp:if condition=messageShowFlag=1>
+								<li>
+									<a href="#" data-ilink="javascript:toggleMsgAudio();" id="toggleMsgAudioA" class="dhc-submenu">
+										<i class="dhc-fa-icon-small #(iconVolumeCls)#"></i><span>#(iconVolumeText)#</span></a>
+								</li>
+							</csp:if>
+							<li>
+								<a href="#" data-ilink="javascript:showAbout();" class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-question-sign"></i> #(##class(websys.Translation).Get("DIC","关于"))#</a>
+							</li>
+							<!--
+							<li>
+								<a href="#" data-ilink="#" class="dhc-submenu">
+									<i class="icon-font"></i>
+									字体大小转换
+								</a>
+							</li>
+							<li role="separator" class="divider"></li>
+							<li>
+								<div class="fontsettings">
+									<span class="label label-danger" style="font-size:14px;" data-val="16">大</span>
+									<span class="label label-primary" data-val="14">中</span>
+									<span class="label label-warning" style="font-size:10px;" data-val="12">小</span>
+								</div>
+							</li>
+							-->
+						</ul>
+					</li>
+					<csp:if condition=messageShowFlag=1>
+						<li class="dhc-menu">
+							<!--data-ilink="dhc.message.csp" data-itarget="#WinModal" data-iblankOpt="title:'消息列表',width:900,height:500,showbefore:ShowDHCMessageCount" data-imodal='true'-->
+							<a id="DHCMessageBtn" href="#" data-ilink="javascript:msgBtnClickHandler();" class="rightMainMenu dhc-submenu nullMessage" >
+								<span class="dhc-fa-icon-large icon-envelope" style="font-size:23px;"></span>
+								<span class="badge messagecount" > </span>
+							</a>
+						</li>
+					</csp:if>
+					<li class="dhc-menu">
+						<!--class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" -->
+						<a href="#" class="rightMainMenu">
+							<span class="dhc-fa-icon-large icon-user-md" style="font-size:23px;"></span>
+							<span class="userlocinfo">
+								<span class="userinfo"><strong>#(%session.Data("LOGON.USERNAME"))#</strong> &nbsp;&nbsp;#(GroupDesc)#</span>
+								<span class="locinfo">#(LocDesc)#</span>
+							</span>
+						</a>
+						<ul class="dropdown-menu">
+							<li>
+								<a href="#" data-ilink="websys.user.settings.csp" 
+								data-itarget="#WinModalEasyUI" data-iblankOpt="title:'修改用户设置',width:750,height:400,isTopZindex:true" data-imodal='true' class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-cog"></i> #(##class(websys.Translation).Get("DIC","个人中心"))#</a>
+							</li>
+							<li>
+								<a href="#" data-ilink="dhc.logon.otherloc.csp" data-itarget="#WinModalEasyUI" data-iblankOpt="title:'切换科室',width:800,height:500" data-imodal='true' class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-exchange"></i>#(..Get("切换科室"))#</a>
+							</li>
+							<li role="separator" class="divider"></li>
+							<li>
+								<a href="#" data-ilink="javascript:SetKeepOpen('websys.csp?TMENU=#(CloseSessionMenuId)#&relogon=1','')" data-itarget="TRAK_main" data-iblankOpt="" class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-reply"></i>#(##class(websys.Translation).Get("DIC","重新登录"))#</a>
+							</li>
+							<li>
+								<a href="#" data-ilink="javascript:SetKeepOpen('websys.csp?TMENU=#(CloseSessionMenuId)#','')" data-itarget="TRAK_main" data-iblankOpt="" class="dhc-submenu">
+									<!--icon-signout-->
+									<i class="dhc-fa-icon-small icon-off"></i>#(##class(websys.Translation).Get("DIC","退出系统"))#</a>
+							</li>
+						</ul>
+					</li>
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+	</div>
+	<div id="centerPanel" class="centerPanel" >
+		<iframe name="TRAK_main" src="epr.default.csp?IsSideMenu=#($g(%request.Data("IsSideMenu",1),"false"))#" width="100%" height="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+		</iframe>
+	</div>
+	<div style="height:0px"  id="southPanel">
+		<iframe name="TRAK_hidden" src="" width="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+		</iframe>
+	</div>
+	<div id="WinModalEasyUI" style="padding:0px;overflow:hidden;" data-options="isTopZindex:true"></div>
+
+
+	<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+	<script type="text/javascript" src="../scripts/epr.frames.js"></script>
+	<script type="text/javascript" src='../scripts/websys.jquery.js'></script>
+	<csp:if condition=LockSrcTimeout>0>
+	<script type="text/javascript" src='../scripts/websys.encrypt.js'></script>
+	<script type="text/javascript" src='../scripts/websys.lockscreen.js'></script>
+	</csp:if>
+	<SCRIPT type="text/javascript">
+		var IEVersion = "#(IEVersion)#";
+		var navbar,preSelectedMenu;
+		var g_showMessage=("#($g(messageShowFlag))#"=="1");  //定义一个是否显示消息按钮js变量
+		var LevelTypeFlag = "D,V,I,G"; 
+		var msgBtnClickHandler = function(){} 
+		function HideExecMsgWin (){};
+		var ShowExecMsgWin = function(DetailsId,OtherJson){}
+		// 第一次登录与消息有变化时调用。  
+		// 请求query,刷新消息数量
+		var ForceShowDHCMessageCount = function(isNewMsg,forceQuery){}
+		//显示消息数量
+		var ShowDHCMessageCount = function(){}
+
+		/*$.parser.onComplete = function(context){
+			// 当点消息按钮时,是用easyui的window打开的,所以parser再次调用,再次进入方法
+			// context是$("#MessageWin")
+			// 第一次context为undefined,不为空跳出.
+			//console.log("parser.onComplete--all---"+context);
+			if (!!context) return ;
+			$("#Loading").fadeOut("fast");
+			//ShowDHCMessageCount();
+		}*/
+	</SCRIPT>
+	<script type="text/javascript" src='../scripts/DHCMessageEngine.js'></script>
+</body>
+</html>	

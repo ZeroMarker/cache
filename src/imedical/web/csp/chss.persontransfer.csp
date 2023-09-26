@@ -1,0 +1,131 @@
+<script language="cache" runat="server">
+
+  s Action=$Get(%request.Data("actiontype",1))
+  
+  s Username=$Get(%request.Data("user",1))
+  s Pageid=$Get(%request.Data("pageid",1))
+  
+  s Start=$Get(%request.Data("start",1))
+  s Limit=$Get(%request.Data("limit",1))
+  s Dir=$Get(%request.Data("dir",1))
+  s Sort=$Get(%request.Data("sort",1))
+  
+  s TransferRowId=$Get(%request.Data("TransferRowId",1))
+  
+  s PersonRowId=$Get(%request.Data("PersonRowId",1))
+  
+  s TransferStatusDR=$Get(%request.Data("TransferStatusDR",1))
+  s TransferTypeDR=$Get(%request.Data("TransferTypeDR",1))
+  s SendUnit=$Get(%request.Data("SendUnit",1))
+  s PatientName=$Get(%request.Data("PatientName",1))
+  s SexDR=$Get(%request.Data("SexDR",1))
+  s Birth=$Get(%request.Data("Birth",1))
+  s CaseBookNumber=$Get(%request.Data("CaseBookNumber",1))
+  s TelNumber=$Get(%request.Data("TelNumber",1))
+  s HomePlace=$Get(%request.Data("HomePlace",1))
+  s SendDepartment=$Get(%request.Data("SendDepartment",1))
+  s SendLeader=$Get(%request.Data("SendLeader",1))
+  s SendDoctor=$Get(%request.Data("SendDoctor",1))
+  s SendDate=$Get(%request.Data("SendDate",1))
+  s SendDoctNumber=$Get(%request.Data("SendDoctNumber",1))
+  s AcceptUnit=$Get(%request.Data("AcceptUnit",1))
+  s AcceptDepartment=$Get(%request.Data("AcceptDepartment",1))
+  s AcceptLeader=$Get(%request.Data("AcceptLeader",1))
+  s AcceptDoctor=$Get(%request.Data("AcceptDoctor",1))
+  s StartAcceptDate=$Get(%request.Data("StartAcceptDate",1))
+  s EndAcceptDate=$Get(%request.Data("EndAcceptDate",1))
+  s AcceptDoctNumber=$Get(%request.Data("AcceptDoctNumber",1))
+  s AcceptNumberDay1=$Get(%request.Data("AcceptNumberDay1",1))
+  s AcceptNumberDay2=$Get(%request.Data("AcceptNumberDay2",1))
+  s AcceptNumberNight=$Get(%request.Data("AcceptNumberNight",1))
+  s AuditMan=$Get(%request.Data("AuditMan",1))
+  s AuditDate=$Get(%request.Data("AuditDate",1))
+  s ChiefComplaint=$Get(%request.Data("ChiefComplaint",1))
+  s DoctorSay=$Get(%request.Data("DoctorSay",1))
+  s DiseaseHistory=$Get(%request.Data("DiseaseHistory",1))
+  s PersonHistory=$Get(%request.Data("PersonHistory",1))
+  s FamilyHistory=$Get(%request.Data("FamilyHistory",1))
+  s Suggestion=$Get(%request.Data("Suggestion",1))
+  s DiagnoseResult=$Get(%request.Data("DiagnoseResult",1))
+  s TransferReason=$Get(%request.Data("TransferReason",1))
+  s TransferTarget=$Get(%request.Data("TransferTarget",1))
+  s CaseAbstract=$Get(%request.Data("CaseAbstract",1))
+  s Attentions=$Get(%request.Data("Attentions",1))
+  s Remark=$Get(%request.Data("Remark",1))
+  s SendUnitCode=$Get(%request.Data("SendUnitCode",1))
+  s AcceptUnitCode=$Get(%request.Data("AcceptUnitCode",1))
+  s bDeleteFlag=$Get(%request.Data("bDeleteFlag",1))
+  s OldRecordRowId=$Get(%request.Data("OldRecordRowId",1))
+  s FeeTypeDR=$Get(%request.Data("FeeTypeDR",1))
+  s BackDate=$Get(%request.Data("BackDate",1))
+  s BackCaseInfo=$Get(%request.Data("BackCaseInfo",1))
+  
+  s CommunityCode=$Get(%request.Data("CommunityCode",1))
+  
+  s DateOfStart = $Get(%request.Data("DateOfStart",1))
+  s DateOfEnd = $Get(%request.Data("DateOfEnd",1))
+  s SqlStr = ""
+  
+  s SearchYear=$Get(%request.Data("SearchYear",1))
+  s SearchMonth=$Get(%request.Data("SearchMonth",1))
+  
+  i Action = "listall" d 
+  .s DateOfStart=$zdh(DateOfStart,1)
+  .s DateOfEnd=$zdh(DateOfEnd,1)
+  .s SqlStr = " and SendDate between "_DateOfStart_" and "_DateOfEnd
+  
+  
+  i Action = "listmonthout" d 
+  .s SqlStr = " and {fn YEAR(SendDate)}="_SearchYear_" and  {fn MONTH(SendDate)}="_SearchMonth
+  
+  i Action = "listyear" d 
+  .s SqlStr = " and {fn YEAR(SendDate)}="_SearchYear
+  
+  i Action = "list" d
+  .w ##class(CHSSWeb.PersonTransferService).List(PersonRowId,Start,Limit,Sort)
+  i Action = "listall" d
+  .w ##class(CHSSWeb.PersonTransferService).ListAll(CommunityCode,Start,Limit,Sort,SqlStr)
+  i Action = "add" d
+  .w ##class(CHSSWeb.PersonTransferService).Insert(PersonRowId, TransferStatusDR, TransferTypeDR, SendUnit, PatientName, SexDR, Birth, CaseBookNumber, TelNumber, HomePlace, SendDepartment, SendLeader, SendDoctor, SendDate, SendDoctNumber, AcceptUnit, AcceptDepartment, AcceptLeader, AcceptDoctor, StartAcceptDate, EndAcceptDate, AcceptDoctNumber, AcceptNumberDay1, AcceptNumberDay2, AcceptNumberNight, AuditMan, AuditDate, ChiefComplaint, DoctorSay, DiseaseHistory, PersonHistory, FamilyHistory, Suggestion, DiagnoseResult, TransferReason, TransferTarget, CaseAbstract, Attentions, Remark, SendUnitCode, AcceptUnitCode, bDeleteFlag, OldRecordRowId, FeeTypeDR, BackDate, BackCaseInfo) 
+  i Action = "edit" d
+  .w ##class(CHSSWeb.PersonTransferService).Update(TransferRowId, PersonRowId, TransferStatusDR, TransferTypeDR, SendUnit, PatientName, SexDR, Birth, CaseBookNumber, TelNumber, HomePlace, SendDepartment, SendLeader, SendDoctor, SendDate, SendDoctNumber, AcceptUnit, AcceptDepartment, AcceptLeader, AcceptDoctor, StartAcceptDate, EndAcceptDate, AcceptDoctNumber, AcceptNumberDay1, AcceptNumberDay2, AcceptNumberNight, AuditMan, AuditDate, ChiefComplaint, DoctorSay, DiseaseHistory, PersonHistory, FamilyHistory, Suggestion, DiagnoseResult, TransferReason, TransferTarget, CaseAbstract, Attentions, Remark, SendUnitCode, AcceptUnitCode, bDeleteFlag, OldRecordRowId, FeeTypeDR, BackDate, BackCaseInfo)
+  i Action = "delete" d
+  .w ##class(CHSSWeb.PersonTransferService).Delete(TransferRowId)
+  i Action = "audit" d
+  .w ##class(CHSSWeb.PersonTransferService).Audit(TransferRowId, AuditMan)
+  i Action = "listmonthout" d 
+  .w ##class(CHSSWeb.PersonTransferService).ListMonthOut(CommunityCode,Start,Limit,Sort,SqlStr)
+  i Action = "listyear" d 
+  .w ##class(CHSSWeb.PersonTransferService).ListYear(CommunityCode,Start,Limit,Sort,SqlStr)
+  i Action = "inceptlist" d
+  .w ##class(CHSSWeb.PersonTransferService).InceptList(PersonRowId,Start,Limit,Sort)
+  i Action = "inceptlistall" d
+  .w ##class(CHSSWeb.PersonTransferService).InceptListAll(CommunityCode,Start,Limit,Sort,SqlStr)
+  .
+  .//s ^TMP("zhwh",12)=CommunityCode_"^"_Start_"^"_Limit_"^"_Sort_"^"_SqlStr
+  
+  i Action="lookupLab" d
+  .//s TransferRowId=$g(%request.Data("TransferRowId",1))
+  .s ^TMP("zhwh",100)=TransferRowId
+  .w ##class(CHSSWeb.PersonTransferService).lookupLab(TransferRowId)
+  .
+ 
+  i Action="lookupLabItem" d
+  .s rowid=$Get(%request.Data("rptRowid",1))
+  .w ##class(CHSSWeb.PersonTransferService).lookupLabDet(rowid)
+  .
+  
+  i Action="lookupInfo" d
+  .
+  .w ##class(CHSSWeb.PersonTransferService).lookupInfo(TransferRowId)
+  .
+  i Action="getCommunityCode" d
+  .s userid=%session.Get("LOGON.USERID")
+  .s communityCode=##class(CHSSWeb.CommunityService).GetCommunityCode(userid)
+  .i communityCode'=""  w "{success:'true',info:'"_communityCode_"'}" 
+  .e   w "{success:'false',info:'"_"'}" 
+  .
+  .
+  
+</script>
+

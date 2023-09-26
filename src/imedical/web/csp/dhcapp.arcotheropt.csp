@@ -1,0 +1,79 @@
+<!--dhcapp.arcotheropt.csp -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/arcotheropt.js"></script>
+	<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<style>
+	.panel-body-noheader.panel-body
+	{
+		border-radius:0px;
+		border:0px;
+	}
+	
+</style>
+</head> 
+<body >
+		<div id="subtoolbar" class="toolbar">
+			<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:add()" >新增</a>
+			<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">删除</a>
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true"
+			data-options="
+			toolbar:'#subtoolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onDblClickRow">
+			<thead>
+				<tr>
+					<th data-options="field:'ID',hidden:true">id</th>
+					<th data-options="field:'AORowId',hidden:true">id</th>
+					<th data-options="field:'AODesc',width:70,editor:{
+							type:'combogrid',
+							options:{
+								required : true,
+							    id:'AORowId',
+							    fitColumns:true,
+							    fit: true,//自动大小  
+								pagination : true,
+								panelWidth:600,
+								textField:'AODesc',
+								mode:'remote',
+								url:'dhcapp.broker.csp?ClassName=web.DHCAPPOtherOpt&MethodName=list&HospId='+window.parent.$HUI.combogrid('#_HospList').getValue(),
+								columns:[[
+									{field:'ID',hidden:true},
+									{field:'AOCode',title:'代码',width:60},
+									{field:'AODesc',title:'名称',width:140},
+									{field:'AOType',title:'内容类型',width:40},
+									{field:'AORequired',title:'是否必填',width:30}
+								]],
+								onSelect:function(rowIndex, rowData) {
+                   					fillValue(rowIndex, rowData);
+                				}	   
+							}
+						},sortable:true">描述</th>
+					<th data-options="field:'AOCode',width:30,sortable:true">代码</th>
+					<th data-options="field:'AOType',width:30,align:'center'">内容类型</th>
+					<th data-options="field:'AORequired',align:'center',width:30">是否必填</th>	
+				</tr>
+			</thead>
+		</table>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Ext Window</title>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<STYLE type='text/css'>
+BODY INPUT
+{
+	width:auto;
+	height:auto;
+
+} 
+
+</STYLE>
+<SERVER>
+
+ d ##class(web.DHCMGNurData).PrintLinkFile()
+ s setstr=##class(Nur.DHCMGNurseSet).getSet()
+ s CacheDB=$P(setstr,"^")
+ s webIP=$P(setstr,"^",2)
+  s GetPatinfo=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurComm.PatInfo"))
+
+ s dllstr=webIP_"/dhcmg/PrintCommPic.dll#PrintComm.PrintCom"
+ s getSingleConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.getSingleConsult"))
+ s getSingleConsultApply=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.getSingleConsultApply"))
+
+// s ComponentName=%request.Get("EmrCode")
+ s GetConsult=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.GetConsult"))
+ ///如果开启多科会诊审核，申请列表查询用GetConsultApply
+ s GetConsultApply=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.GetConsultApply"))
+ s SaveCon=##Class(%CSP.Page).Encrypt($lb("User.DHCConsultation.Save"))
+ s GetLoc=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.getloc"))
+ //获取医师级别
+ s GetLoc1=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.getDocGrade"))
+ s pdata1=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.getPagData"))
+ s pdata=##Class(%CSP.Page).Encrypt($lb("web.DHCMGPageData.GetPagData1"))
+ s GetSortDep=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurSch.GetSortDep"))
+ s GetMainPat=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakePernum"))
+ s MakeAdmData=##Class(%CSP.Page).Encrypt($lb("web.DHCMGNurWorkLoad.MakeAdmData"))
+ s GetEmrCode=##Class(%CSP.Page).Encrypt($lb("web.DHCNUREMR.ParseNurEmrCode"))
+ ///s SavePerson=##Class(%CSP.Page).Encrypt($lb("User.DHCPregPerson.save"))
+ s CloseOrdEntry=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.CloseOrdEntry"))
+ s OpenOrdEntry=##Class(%CSP.Page).Encrypt($lb("web.DHCConsult.OpenOrdEntry"))
+ s SendMessage=##Class(%CSP.Page).Encrypt($lb("web.DHCConDepPhone.SendMessage"))
+ s GetDish=##Class(%CSP.Page).Encrypt($lb("web.DHCSETIMAGE.DocDisch"))
+ S EpisodeID=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+ s PregRowId=%request.Get("PregRowId")  //##class(web.DHCPregComm).GetPRegId(EpisodeID,%session.Data("LOGON.USERID"))
+ s EmrCode="DHCCONSULTLIST"
+ s ComponentName="DHCCONSULTLIST"
+ i $d(%session.Data("LOGON.USERID")) d
+ .s usertcp= $P($G(^SSU("SSUSR",%session.Data("LOGON.USERID"))),"^",14)
+ s admdoc=$p(^PAADM(EpisodeID),"^",9) //病人医生
+ s file=##class(web.DHCNUREMR).getcomflag(EmrCode,EpisodeID,"")
+ //w !,file
+ s LogLoc=##Class(web.CTLoc).GetDescFromRowId(%session.Get("LOGON.CTLOCID"))
+ i $L(LogLoc,"-")>1 s LogLoc=$P(LogLoc,"-",2)
+
+ //s PregRowId=##class(web.DHCPregComm).GetPRegId(EpisodeID,%session.Data("LOGON.USERID"))
+ //w ##Class(web.SSMessageRecipient).getMessageLink() 
+ n cmp
+ i +%request.Get("PatientBanner"),+%request.Get("PatientID") {
+	s cmp=##Class(websys.Component).OpenName("PAPerson.Banner")
+	i cmp d cmp.Show(),cmp.%Close()
+ }
+// s comret=##class(web.DHCNUREMR).getPagData("",%request.Get("EmrCode"),EpisodeID,"")
+ // s a=##class(web.DHCMGPageData).GetPagData()
+ s itm="" f  s itm=$O(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm)) q:itm=""  d
+ .s link=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":"),id=$P(^NurEmr.NurEmrSubK("Kcode",EmrCode,itm),":",2)
+ .s val=##Class(%CSP.Page).Encrypt($lb(link))
+ . w "<input id="""_id_""" name="""_id_""" type=""hidden"" value="""_val_""">",!
+ w "<OBJECT id=""PrintComm""  classid="""_dllstr_""" width=0 height=0 IEWASTEXT></OBJECT>"
+</SERVER>
+
+</HEAD>
+<BODY>
+</DIV>
+<TRAK:APPLET>
+<TRAK:COMPONENT id=#($s(%request.Get("WEBSYS.TCOMPONENT")'="":%request.Get("WEBSYS.TCOMPONENT"),1:%session.Get("WEBSYS.TCOMPONENT")))# >
+</TRAK:COMPONENT>
+<SERVER>
+ // display system info and current variable values	
+ // s %response.TraceDump=1
+ //set title with patient details
+ //d ##Class(web.PAPatMas).webSetTitleBar(%request.Get("PatientID"))
+ ////var ChgConStatus="#(ChgConStatus)#";
+//var SavePerson="#(SavePerson)#";
+
+</SERVER>
+</DIV>
+<script Language="Javascript">
+Ext.grid.ColumnModel.override({  
+        getTotalWidth: function(includeHidden) {  
+            var off = 2;  
+
+            if (Ext.isChrome){  
+                off = 2;  
+            };  
+            if (!this.totalWidth) {  
+                this.totalWidth = 0;  
+                for (var i = 0, len = this.config.length; i < len; i++) {  
+                    if (includeHidden || !this.isHidden(i)) {  
+                        this.totalWidth += this.getColumnWidth(i)+off;  
+                    };  
+                };  
+            };  
+            return this.totalWidth;  
+            }  
+        });  
+</script>
+<SCRIPT Language="Javascript">
+var CacheDB="#(CacheDB)#";
+var WebIp="#(webIP)#";
+var GetDish="#(GetDish)#";
+var GetPatinfo="#(GetPatinfo)#";
+var EmrCode="#(ComponentName)#";
+var GetConsult="#(GetConsult)#";
+var GetConsultApply="#(GetConsultApply)#";
+var getSingleConsult="#(getSingleConsult)#";
+var getSingleConsultApply="#(getSingleConsultApply)#";
+var SaveCon="#(SaveCon)#";
+var getloc="#(GetLoc)#";
+var getloc1="#(GetLoc1)#";
+var GetSortDep="#(GetSortDep)#";
+var GetMainPat="#(GetMainPat)#";
+var GetEmrCode="#(GetEmrCode)#";
+var EpisodeID="#(%request.Get("EpisodeID"))#"
+var PregRowId="#(PregRowId)#";  //妊娠Id
+var pdata1="#(pdata1)#";
+var pdata="#(pdata)#";
+var SendMessage="#(SendMessage)#";
+var OpenOrd="#(OpenOrdEntry)#";
+var CloseOrd="#(CloseOrdEntry)#";
+var PatientID="#(PatientID)#";
+var ComponentName="#(ComponentName)#";
+var LogLoc="#(LogLoc)#";
+var usertcp="#(usertcp)#";
+var admdoc="#(admdoc)#";
+
+</SCRIPT>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/comm/dhcmgcomm.js"></script><!-- Put your page Title here -->
+<script type="text/javascript" src="../scripts/nurse/comm/DHCNURComm.js"></script><!-- Put your page Title here -->
+<Server>
+ w "<script type=""text/javascript"" src=""../scripts_gen/dhcmg/"_ComponentName_".js""></script>"
+ w "<script type=""text/javascript"" src=""../scripts/nurse/dhcconsult/"_ComponentName_".js""></script>"
+</Server>
+</BODY>
+</HTML>

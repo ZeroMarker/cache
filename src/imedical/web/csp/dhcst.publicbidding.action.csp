@@ -1,0 +1,25 @@
+<csp:content charset="utf-8">
+<SERVER>
+s Action=$Get(%request.Data("actiontype",1))
+s Start=$Get(%request.Data("start",1))
+s Limit=$Get(%request.Data("limit",1))
+s Sort=$Get(%request.Data("sort",1))
+s Dir=$Get(%request.Data("dir",1))	
+s HospId=$Get(%request.Data("HospId",1))
+i Action="GetPublicBidding" d
+	.w ##class(web.DHCST.PublicBidding).GetPublicBidding(Start,Limit,"",HospId)
+i Action="SavePublicBidding" d
+	.S data=$Get(%request.Data("ListData",1))
+	.S result=##class(web.DHCST.PublicBidding).SavePublicBidding(data,HospId)
+	.i (+result = 0)&&(result'["ERROR") d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+i Action="DelPublicBidding" d
+	.S RowId=$Get(%request.Data("RowId",1))
+	.S result=##class(web.DHCST.PublicBidding).DelPublicBidding(RowId,HospId)
+	.i +result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</SERVER>

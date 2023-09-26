@@ -1,0 +1,36 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!doctype html>
+<html>
+<head>
+
+<title>	¥¶∑Ω‘§¿¿ </title>
+ <server>
+	s PrescNo = $g(%request.Data("PrescNo",1))
+	s EpisodeID = $g(%request.Data("EpisodeID",1))
+	s XMLTemplateXY=##class(web.DHCST.Common.AppCommon).GetAppPropValue("DHCSTOUTPH","PrescXYFormat")
+	s XMLTemplateCY=##class(web.DHCST.Common.AppCommon).GetAppPropValue("DHCSTOUTPH","PrescCYFormat")
+	s presType = ##class(web.DHCDocPrescript).IsPrescType(PrescNo) //##Class(icare.TimeLineOutpatientView).IsPrescType(PrescNo)
+</server>
+ <script type="text/javascript">
+ 	var PrescNo="#($ZCVT(PrescNo,"O","JSON"))#";
+ 	var EpisodeID="#($ZCVT(EpisodeID,"O","JSON"))#";
+ 	var XMLTemplateXY="#($ZCVT(XMLTemplateXY,"O","JSON"))#";
+ 	var XMLTemplateCY="#($ZCVT(XMLTemplateCY,"O","JSON"))#";
+ 	var IsCYPresc="#($ZCVT(presType,"O","JSON"))#";
+ 	
+ 	var pathcsp="dhcpha/dhcpha.common.prescpreview.csp"
+ 	var pathname=window.location.pathname;
+	pathname=pathname.split("/csp/")[0];
+	pathcsp=pathname+"/csp/"+pathcsp;
+	var query="paramsstr=DHCOUTPHA^"+PrescNo+"^"+(IsCYPresc=="1"?"Y":"N")+"&PrtType=DISPPREVIEW"
+	window.location.href=pathcsp+'?'+query;
+ </script>
+</head>
+
+<body>
+
+</body>
+</html>

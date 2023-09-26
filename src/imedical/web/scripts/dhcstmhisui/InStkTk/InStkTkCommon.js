@@ -1,0 +1,1 @@
+var InStkTkParamObj = GetAppPropValue('DHCSTINSTKTKM')

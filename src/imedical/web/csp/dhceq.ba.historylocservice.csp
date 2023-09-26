@@ -1,0 +1,76 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css"></style>
+</HEAD>
+<script language=Cache runat=server>
+	s SLocDR=$Get(%request.Data("SLocDR",1))
+	//add by ZY0224 2020-04-24
+	s BussType=$Get(%request.Data("BussType",1))
+	s SourceType=$Get(%request.Data("SourceType",1))
+	s SourceID=$Get(%request.Data("SourceID",1))
+	;s SDate=##Class(web.DHCEQCommon).TransValueToPage($ZDH(+$ZD(+$H,3)_"-01-01",3),"date")
+	s SMonth=+$ZD(+$H,3)_"-01"
+</script>
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px; width:700px;">
+		<div class="hisui-panel" title="科室历史医嘱项" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+			<!--modify by lmm 2020-05-27 UI-->
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc; height:89px; padding:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cStartDate" for="StartDate">开始月份:</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate" value=#(SMonth)# data-options='validParams:"YM"'></div>
+							<div class="eq-table-td eq-table-label"><label id="cEndDate" for="EndDate">结束月份:</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate" value=#(CurMonth)# data-options='validParams:"YM"'></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"><a id="BDownload" href="#" class="hisui-linkbutton" iconCls="icon-w-update"  data-options="stopAllEventOnDisabled:true">同步中间表</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cOrdCatDR_Desc" for="OrdCatDR_Desc">医嘱大类:</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="OrdCatDR_Desc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cOrdItemCatDR_Desc" for="OrdItemCatDR_Desc">医嘱子类:</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="OrdItemCatDR_Desc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSaveType" for="SaveType">设备项存储:</label></div>
+							<div class="eq-table-td eq-table-input"><input id="SaveType" class="hisui-checkbox" type="checkbox"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find"  data-options="stopAllEventOnDisabled:true">查询</a></div>
+							<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">   <!--modify by lmm 2020-05-27-->
+					<table id="DHCEQHistoryLocService" class="hisui-datagrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="SLocDR" value=#(SLocDR)#>
+			<INPUT type="hidden" id="BussType" value=#(BussType)#>
+			<INPUT type="hidden" id="SourceType" value=#(SourceType)#>
+			<INPUT type="hidden" id="SourceID" value=#(SourceID)#>
+			<INPUT type="hidden" id="OrdCatDR">
+			<INPUT type="hidden" id="OrdItemCatDR">
+		</form>
+	</div>
+	<script type='text/javascript'>
+		MonthBox('StartDate');
+		MonthBox('EndDate');
+	</script>
+	<script type='text/javascript' src='../scripts/dhceq/ba/historylocservice.js'></script>
+</body>
+</html>

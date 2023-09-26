@@ -1,0 +1,46 @@
+
+<script language="cache" runat="server">
+
+ 	s Action=$Get(%request.Data("actiontype",1))
+ 	
+ 	s Username=$Get(%request.Data("user",1))
+ 	s Pageid=$Get(%request.Data("pageid",1))
+
+ 	s Start=$Get(%request.Data("start",1))
+ 	s Limit=$Get(%request.Data("limit",1))
+ 	s Dir=$Get(%request.Data("dir",1))
+	
+	s RowId=$Get(%request.Data("RowId",1))
+	s FirstCheckRowIdParref=$Get(%request.Data("FirstCheckRowIdParref",1))
+	s EvalRowIdParref=$Get(%request.Data("EvalRowIdParref",1))
+	s EvalContent=$Get(%request.Data("EvalContent",1))
+	
+	s Start=0
+	s Limit=100
+	
+		
+	i Action = "list" d
+	.w ##class(CHSSWeb.WhFirstCheckEvalService).ListPage(Start,Limit,FirstCheckRowIdParref)
+	i Action = "info" d
+	.w ##class(CHSSWeb.WhFirstCheckEvalService).ShowInfo(Start,Limit,FirstCheckRowIdParref)
+	i Action = "add" d
+	.s result = ##class(CHSSWeb.WhFirstCheckEvalService).insert(FirstCheckRowIdParref,EvalRowIdParref,EvalContent)
+	.i result = 0 d
+	..w "{success:'true',info:'添加成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "edit" d
+	.s result = ##class(CHSSWeb.WhFirstCheckEvalService).update(RowId,EvalRowIdParref,EvalContent)
+	.i result = 0 d
+	..w "{success:'true',info:'保存成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	i Action = "delete" d
+	.s result = ##class(CHSSWeb.WhFirstCheckEvalService).delete(RowId)
+	.i result = 0 d
+	..w "{success:'true',info:'删除成功'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+</script>

@@ -1,0 +1,39 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s rowid=$Get(%request.Data("rowid",1))
+    s str  =$Get(%request.Data("query",1))
+	s data = $Get(%request.Data("data",1))				
+	
+	i action = "list" d
+	.w ##class(dhc.bonus.umodule.uDrgsItemCollect).ListRec(data,searchField,searchValue,sortField,sortDir,start,limit)
+	
+	i action = "GetDept" d
+	.w ##class(dhc.bonus.umodule.uDrgsTargetMap).GetBonusTarget(str,start,limit)
+	
+	i action = "GetWorkItem" d
+	.w ##class(dhc.bonus.umodule.uDrgsTargetMap).GetDrgs(str,start,limit)
+	
+	
+    i action = "check" d
+	.s result = ##class(dhc.bonus.umodule.uDrgsItemCollect).Check(data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+
+</script>

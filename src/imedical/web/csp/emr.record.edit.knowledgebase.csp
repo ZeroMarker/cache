@@ -1,0 +1,137 @@
+﻿<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+    <link rel="stylesheet" type="text/css" href="../scripts/emr/css/layout.css"/>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script language="cache" runat="server">
+      d ##Class(EMRservice.SystemParameter).GetImportResource()
+      s patientID = $Get(%request.Data("PatientID",1),"") 
+      s episodeID = $Get(%request.Data("EpisodeID",1),"")
+      s userID = %session.Get("LOGON.USERID")
+      s ssgroupID = %session.Get("LOGON.GROUPID")
+      s userLocID = %session.Get("LOGON.CTLOCID")
+
+      s opDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+      s defaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")      
+  </script>
+  <script language = "javascript">
+  var para = window.dialogArguments;
+  var node = para[0];
+  //当前元素路径
+  var currentPath = ""; 
+  //元素code的最大值
+  var maxElementObj = {"MIString":"","MINumber":"","MIDateTime":"","MIMonoChoice":"","MIMultiChoice":"","MIDictionary":""};
+  var returnValues = new Object();
+  var defaultFontStyle = '';
+  if (para.length > 2 && (para[2]||'')=='OP') {
+      defaultFontStyle = "#(opDefaultFontStyle)#".replace(/\'/g, "\"");   
+      defaultFontStyle = $.parseJSON(('{'+defaultFontStyle+'}'));
+  }
+  else {      
+      defaultFontStyle = "#(defaultFontStyle)#".replace(/\'/g, "\"");   
+      defaultFontStyle = $.parseJSON(('{'+defaultFontStyle+'}'));
+  }
+  
+	var ipAddress = getIpAddress();
+	var userID = '#(userID)#'
+	var userName = '#(%session.Get("LOGON.USERNAME"))#';
+ </script>
+    <title>病历内容</title>
+</head>
+<body class="easyui-layout">
+    <div data-options="region:'north'" style="margin-left:2px;height:82px;">  
+        <div>
+            <span>节点名称</span>
+            <span><input id="nodeText" type="text" name="nodeText"></input></span>
+            <span><input id="chkCommon" type="checkbox" name="chkCommon"></input>是否通用</span>
+            <span><button id="publicSave" type="button">保存并发布</button></span>
+	        <span><button id="nodeStatus" type="button" style="display:none;"></button></span>
+        </div>
+        <div >
+            <span>节点描述</span>
+            <span><textarea id="nodeDesc" rows="3" cols="66"></textarea></span>
+        </div>
+    </div>
+    <div id="element" data-options="region:'west'" style="margin-left:2px;width:40px;">
+        <a id="MIString" href="#" class="easyui-linkbutton" data-options="plain:true">字符</a>
+        <a id="MINumber" href="#" class="easyui-linkbutton" data-options="plain:true">数字</a>
+        <a id="MIDateTime" href="#" class="easyui-linkbutton" data-options="plain:true">时间</a>
+        <a id="MIMonoChoice" href="#" class="easyui-linkbutton" data-options="plain:true">单选</a>
+        <a id="MIMultiChoice" href="#" class="easyui-linkbutton" data-options="plain:true">多选</a>
+        <a id="MIDictionary" href="#" class="easyui-linkbutton" data-options="plain:true">字典</a>
+    </div>
+    <div id="setPropty" class="easyui-accordion" data-options="region:'east',title:'属性设置',split:true" style="width:260px;">
+        <div title="基本属性" id="property"></div>  
+        <div title="数据绑定">  
+            <div id="databind" class="easyui-tabs" data-options="fit:true,border:false">
+                <div id="DataBase" data-options="title:'HIS数据',border:false" style="overflow:hidden;">
+                    <div style="height:42%;width:100%;"><table id="dataBaseCategory"></table></div>  
+                    <div style="height:50%;width:100%;"><table id="dataBaseDeital"></table></div>
+                    <div style="height:8%;float:right;vertical-align:baseline;"><a id='sureSelect' href="javascript:void(0);" class="easyui-linkbutton">确定</a></div>
+                </div>
+                <div id="EPR" data-options="title:'病历数据',fit:true,border:false" style="overflow:hidden;">
+                    <div id="DataEMR" class="easyui-layout" data-options="fit:true" style="overflow:hidden;">
+                        <div data-options="region:'north'" style="height:240px;dispaly:none">
+                            <ul id="dataEMRCategory" class="easyui-tree"></ul>
+                        </div>
+                        <div data-options="region:'center'" style="height:200px;dispaly:none">
+                            <ul id="dataEMRDeital" class="easyui-tree"></ul>
+                        </div>
+                        <div data-options="region:'south'" style="height:50px;">
+                            <label for="vtype">设置取值类型</label>
+                            <input id="valueType" class="easyui-combobox" name="vtype" style="width:150px;float:right"></input>
+                            <a id='confirmSelect' href="javascript:void(0);"class="easyui-linkbutton" style="float:right">确定</a>
+                        </div>
+                    </div>
+                </div> 
+            </div> 
+        </div>  
+    </div> 
+    <div data-options="region:'center'">
+         <div class="easyui-layout" data-options="fit:true">
+             <div data-options="region:'west',title:'元素大纲',split:true" style="width:180px;">
+                 <ul id="elementTree"></ul>
+             </div>
+             <div id="container" data-options="region:'center',border:false">
+                 <div class="easyui-layout" data-options="fit:true,border:false">
+                      <div data-options="region:'north',border:false" id="toolBox" class="tool-box" style="height:25px" >
+                        <select id="font" name="font" style="width:100px;margin-top:2px;"></select>
+                        <select id="fontSize" name="fontSize" style="width:60px;margin-top:2px;" onchange="changeFontSize();"></select> 
+                        <input id="fontSizeText" type='text' name="fontSizeText" style="width:43px;position:absolute;margin-top:2px;left:103px;" onkeypress="changeFontSizeText();"/>
+                        <a id='bold' href="javascript:void(0);" title="粗体" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('bold')"></a>
+                        <a id='italic' href="javascript:void(0);" title="斜体" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('italic')"></a>
+                        <a id='underline' href="javascript:void(0);" title="下划线" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('underline')"></a>
+                        <a id='strike' href="javascript:void(0);" title="删除线" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('strike')"></a>
+                        <a id='super' href="javascript:void(0);" title="上标"  class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('super')"></a>
+                        <a id='sub' href="javascript:void(0);" title="下标" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('sub')"></a>           
+                        <a id='alignjustify' href="javascript:void(0);" title="两端对齐" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('justify')"></a>
+                        <a id='alignleft' href="javascript:void(0);" title="左对齐" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('alignleft')"></a>
+                        <a id='aligncenter' href="javascript:void(0);" title="居中对齐" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('aligncenter')"></a>
+                        <a id='alignright' href="javascript:void(0);" title="右对齐"  class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick(alignright)"></a>
+                        <a id='indent' title="增加缩进量" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('indent')"></a>
+                        <a id='unindent' title="减少缩进量" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('unindent')"></a>
+                        <a id='cut' title="剪切" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('cut')"></a>
+                        <a id='copy' title="拷贝" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('copy')"></a>
+                        <a id='paste' title="粘贴" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('paste')"></a>
+                        <a id='undo' title="撤销" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('undo')"></a>
+                        <a id='redo' title="重做" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('redo')"></a>
+                        <a id='toolspechars' title="特殊符号" href="javascript:void(0);" class="easyui-linkbutton" data-options="plain:true" onClick="toolButtonClick('toolspechars')"></a> 
+                    </div>                     
+                     <div data-options="region:'center',border:false">
+                         <object id='plugin' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>
+                             <param name='product' value='GlobalEMR'/>
+                         </object>
+                     </div>
+                 </div>
+             </div>
+         </div>    
+         <script type="text/javascript" src="../scripts/emr/js/record.edit.knowledgebase.js"></script>
+         <script type="text/javascript" src="../scripts/emr/js/record.edit.knowledgebase.getdatabindrecord.js"></script>
+    </div>
+</body>
+</html>

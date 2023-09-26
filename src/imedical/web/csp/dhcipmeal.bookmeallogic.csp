@@ -1,0 +1,56 @@
+<csp:content charset="utf-8">
+
+<script language="Cache" runat="SERVER">
+	s requestType=$g(%request.Data("type",1))
+	if (requestType="onTree")
+	{
+		s nodeId = $g(%request.Data("node",1))
+		s nodeType = $p(nodeId,"-",1)
+		s bookDate=$g(%request.Data("bookDate",1))
+		if (nodeType="bookmeal"){
+			w ##class(DHCBILL.DHCIPMealInsertOrder).ToWardTreeJson()
+		}elseif(nodeType="Ward"){
+			w ##class(DHCBILL.DHCIPMealInsertOrder).ToPaadmByWardTreeJson($p(nodeId,"-",2),bookDate)
+		}else{
+			w ""
+		}	
+	}
+	elseif (requestType="onPAPERNode")
+	{
+		s PAPERRowid=$p($g(%request.Data("PAPERRowid",1)),"-",2)
+		s bookDate=$g(%request.Data("bookDate",1))
+		w ##class(DHCBILL.DHCIPMealInsertOrder).GetPatInfoByPapmiID(+PAPERRowid,bookDate)
+	}
+	elseif(requestType="getInfoByMedicare")
+	{
+		s medicare = $g(%request.Data("papMedicare",1))
+		s bookDate=$g(%request.Data("bookDate",1))
+		w "{success:true,msg:'"_##class(DHCBILL.DHCIPMealInsertOrder).GetPatInfoByMedicare(medicare,bookDate)_"'}"
+	}
+	elseif (requestType="mealTypeCombo")
+	{
+		w ##class(DHCBILL.DHCIPMealInsertOrder).ToMealTypeJson()
+	}
+	elseif (requestType="mealModalityCombo")
+	{
+		w ##class(DHCBILL.DHCIPMealInsertOrder).ToMealModalityJson()
+	}
+	elseif (requestType="mealGrid")
+	{
+		s date=$g(%request.Data("mealDate",1))
+		s mealModalityRowid = $g(%request.Data("mealModalityRowid",1))
+		s mealTypeRowid=$g(%request.Data("mealTypeRowid",1))
+		s start=$g(%request.Data("start",1))
+		s limit=$g(%request.Data("limit",1))
+		s admRowid = $g(%request.Data("admRowid",1))
+		s billFlag = $g(%request.Data("billFlag",1))
+		s mealAlias =  $g(%request.Data("mealAlias",1))
+		d ##class(DHCBILL.DHCIPMealWriteJSON).WriteJSONDataByQueryNew("DHCBILL.DHCIPMealInsertOrder","FindMenuItmByDate",start,limit,date,mealModalityRowid,mealTypeRowid,admRowid,billFlag,mealAlias)
+	}
+	elseif (requestType="InsertMealDetail")
+	{
+		s OrdInfo = $g(%request.Data("OrdInfo",1)) 
+		s ItmInfo = $g(%request.Data("ItmInfo",1)) 
+		w ##class(DHCBILL.DHCIPMealInsertOrder).InsertOrder(OrdInfo, ItmInfo)
+	}
+</script>

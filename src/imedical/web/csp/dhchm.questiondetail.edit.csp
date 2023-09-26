@@ -1,0 +1,160 @@
+<!--
+Description: 问卷基本内容维护  dhchm.questiondetail.edit.csp
+Created by wangguoying
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+	<style>
+		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			text-align:right;
+			padding:0 10px;
+		}
+		.btnTd{
+			width:120px;
+			text-align:right;
+		}
+   </style>
+</head>
+<body class="hisui-layout" data-options="fit:true"  >
+	<div id="DetailPanel" data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px;">
+		<div id='ContentDiv' class="hisui-panel" fit="true" style="height:100%" title="问卷内容"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+			<table class="hisui-table">
+				<tr>
+					<td class="labelTd">编码</td>	
+					<td><input id="PCode" class="hisui-validatebox" type="text" style="width:120px;" ></td>
+					<td class="labelTd">业务描述</td>
+					<td><input id="PDesc" class="hisui-validatebox" type="text" style="width:120px;"></td>
+					<td style="padding-left:10px;"><input id="PActive" class="hisui-checkbox" type="checkbox" checked></td>
+					<td style="padding-left:5px;">激活</td>
+					
+					<td class="btnTd">
+						<a id="FindBtn" onclick="findBtn_onclick();" href="#" class="hisui-linkbutton head-btn" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+					<td class="btnTd">
+						<a id="ClearBtn" onclick="clearBtn_onclick();" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					</td>				
+				</tr>
+			</table>
+		<div id="GridDiv" fit="true" style="border-top:1px dashed #ccc">
+		<table id="DetailList" data-options="singleSelect:true,border:false"></table>
+		</div>
+		</div> <!--hisui panel -->
+	</div><!-- west region end //-->
+	<div id='OptionPanel' data-options="region:'east',headerCls:'panel-header-gray',border:false" style="width:400px; padding:10px 10px 10px 0;position:relative;">
+		<div id="OptionDiv" class="hisui-panel" title="选择项(选择型问题可编辑)" fit="true" style="height:100%;position:relative;"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<div id="LockDiv" style="position:absolute; top:0; left:0; z-index:27888; width:100%; height:100%;  filter:alpha(opacity=40); opacity:0.4;"></div>	
+			<table class="hisui-table">
+				<tr>
+					<td class="labelTd">描述</td>	
+					<td><input id="OpDesc" class="hisui-validatebox" type="text" style="width:190px;" ></td>
+					<td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox" id='OpDefault'></td>
+					<td>默认值</td>					
+				</tr>
+				<tr>
+					<td class="labelTd">顺序</td>
+					<td><input id="OpSeq" class="hisui-validatebox" type="text" style="width:190px;"></td>					
+					<td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox" id='OpNote'></td>
+					<td>允许备注</td>
+					
+				</tr>
+				<tr>
+					<td class="labelTd">性别</td>	
+					<td><select id="OpSex" class="hisui-combobox" style="width:200px;" data-options="enterNullValueClear:false,blurValidValue:true">
+							<option value="M">男</option>
+							<option value="F">女</option>
+							<option value="N" selected >不限</option>	
+						</select>
+					</td>					
+					<td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox" id='OpActive'></td>
+					<td>激活</td>
+				</tr>
+				<tr>
+					<td colspan="4">
+						<a id="OpSave" onclick="optionSave();" style="margin-left:50px;" href="#" class="hisui-linkbutton head-btn" data-options="iconCls:'icon-w-save'">保存</a>
+						<a id="OpClear" onclick="optionClear();" style="margin-left:20px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					</td>
+				</tr>
+			</table>
+			<input id="OpID" type="hidden" value="">
+			<input id="OpParf" type="hidden" value="">
+			<input id="OpParfType" type="hidden" value="">
+		<div id="OpGridDiv" fit="true" style="border-top:1px solid #ccc">
+			<table id="OptionList" data-options="singleSelect:true,bodyCls:'panel-body-gray',border:false"></table>
+		</div>
+		</div> <!--hisui panel -->
+	</div>
+	
+	
+	<div id="DetailEditWin" title="问卷内容维护" class="hisui-window"  style="width:600px;height:335px;"
+		data-options="iconCls:'icon-edit',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
+		
+			<table class="hisui-table">
+				<tr>
+					<td class="labelTd">编码</td>	
+					<td><input id="DCode" class="hisui-validatebox" type="text" style="width:180px;" data-options="validType:'checkQDCodeExist',required:true" ></td>
+					<td class="labelTd">描述</td>
+					<td><input id="DDesc" class="hisui-validatebox" type="text" style="width:180px;" data-options="required:true" ></td>			
+					<td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox" id='DActive'></td>
+					<td>激活</td>
+				</tr>
+				<tr>
+					<td class="labelTd">类型</td>
+					<td><select id="DType" class="hisui-combobox" style="width:189px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true">
+							<option value="T">说明型</option>
+							<option value="N">数值型</option>
+							<option value="D">日期型</option>
+							<option value="S">单选型</option>
+							<option value="M">多选型</option>
+						</select>
+					</td>
+					<td class="labelTd">显示列数</td>
+					<td><input id="DColNum" class="hisui-validatebox" type="text" style="width:180px;"></td>
+					<td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox" id='DRequired'></td>
+					<td>必填</td>
+				</tr>
+				<tr>
+					<td class="labelTd">性别</td>	
+					<td><select id="DSex" class="hisui-combobox" style="width:189px;" data-options="enterNullValueClear:false,blurValidValue:true">
+							<option value="M">男</option>
+							<option value="F">女</option>
+							<option value="N" selected >不限</option>	
+						</select>
+					</td>
+					<td class="labelTd">外部关联码</td>
+					<td><input class="hisui-validatebox" type="text" style="width:180px;" id='DLinkCode'></td>
+				</tr>
+				<tr>
+					<td class="labelTd">单位</td>
+					<td><input id="DUnit" class="hisui-validatebox" type="text" style="width:180px;" ></td>			
+				</tr>
+				<tr>
+					<td class="labelTd">备注</td>
+					<td colspan="5"><textarea rows='4' id="DRemark" style="width:100%" class='hisyui-validatebox' ></textarea></td>
+				</tr>
+			</table>
+			<div style="text-align:center;">
+				<a id="QSaveBtn" href="#"  onclick="detailSave();" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				<a id="QClearBtn" href="#"  onclick="detailClear();" style="margin-left:50px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>					
+			</div>
+			<input type="hidden" id="DID" value="">
+	</div>
+	<div id="DOLinkDetailWin" style="overflow:hidden;"></div>
+	<div id="DLOrdSetsWin" style="overflow:hidden;"></div>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  	<script type="text/javascript" src="../scripts/dhchm.questiondetail.edit.js"></script>
+</body>
+</html>

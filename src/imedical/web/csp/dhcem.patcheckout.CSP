@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<DHC:BOOTSTRAP/>
+   
+	 <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patientcheck.js" charset="gb2312"></script>
+	<script Language="Javascript">
+		var UserId = #($g(%session.Data("LOGON.USERID")))#;
+	    var LevelType = '#($g(%request.Data("LevelType",1)))#';
+	    var RegNo = '#($g(%request.Data("RegNo",1)))#';
+	    var HospID=  #($g(%session.Data("LOGON.HOSPID")))#;
+	    var EpisodeID = '#($g(%request.Data("EpisodeID",1)))#';
+   		var PatientID= '#($g(%request.Data("PatientID",1)))#'; //这个应该是要传过来的参数
+		var Search= '#($g(%request.Data("Search",1)))#';
+		var NoReaded= '#($g(%request.Data("NoReaded",1)))#';
+			
+   </script>
+
+    <style>
+   		#sampleArrDiv{
+	   		padding: 0 !important;
+	   		left: 1px !important;	
+   		} 
+   		#ResultArrDivOne{
+	   		padding: 0 !important;	
+   		} 
+   		table{
+	   		border-bottom:0px
+	   		}
+    </style>
+    
+   <script type='text/javascript'>
+		$.fn.datepicker.dates['zh-CN'] = {
+		days: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+		daysShort: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+		daysMin: ['日', '一', '二', '三', '四', '五', '六'],
+		months: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月','十月', '十一月', '十二月'],
+		monthsShort: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+		today: "今天",
+		clear: "清除",
+		format: 'yyyy-mm-dd',
+		titleFormat: 'MM yyyy',
+		weekStart: 0
+		};
+</script> 
+</head>
+<SERVER>
+ s webIP=##Class(DHCLIS.DHCOrderList).getDllWebIP()
+ s dllstr="http://"_webIP_"/imedicallis/download/data/TRAK/print/DHCLabtrakReportPrint.dll#DHCLabtrakReportPrint.DHCLabtrakReportPrint"
+ //s dllstr2=webIP_"/imedicallis/download/data/TRAK/Microsoft.Web.Services3.dll"
+ //w "<OBJECT id=""objPrintPreview""  width=""0"" height=""0"" classid="""_dllstr2_"""  IEWASTEXT></OBJECT>"
+ w "<OBJECT id=""objPrintPreview""  width=""0"" height=""0"" classid="""_dllstr_"""  IEWASTEXT></OBJECT>"
+</SERVER>
+<body class="bor-lay" style="background-color:#fff;" >
+<div class="panel" style="margin-top:10px;padding-left:10px;padding-right:10px;margin-bottom:0px;border:0px">
+    <div style="margin-left:1px;background:#FAFAFA;padding-top:5px; border:1px solid #CBCBCB;border-radius:3px;border-bottom: 0;">
+    <div class="row" style="height:40px">
+                <div class="col-sm-2">	
+            		<div class="input-group date" id="StartDate">
+            			<span class="input-group-addon bord-no" style="font-size: 14px;color:#000;">开始日期</span>
+                		<input type="text" class="form-control input-lg inputBorder"  style="width:110px;margin-left:-7px;height:30px">
+                		<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            		</div>
+        		</div>
+        		<div class="col-sm-2" style="margin-left:40px">	
+            		<div class="input-group date" id="EndDate">
+            			<span class="input-group-addon bord-no" style="font-size: 14px;color:#000;">截至日期 </span>
+                		<input type="text" class="form-control inputBorder" style="width:110px;margin-left:-7px;height:30px">
+                		<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            		</div>
+        		</div>
+        	
+                <div class="col-sm-3" style="padding-left:18px;display:none">	
+            		<div class="input-group">
+					<span style="font-size: 14px;color:#000;">项目名称 </span> 
+				    <select id="ItemName" class="form-control"style="width:180px;">
+				    </select> 
+				    <span id="clearItemName" style="margin-top:-3px;position:absolute;right:36px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+				    </div>
+				</div>
+ 
+				<div class="col-sm-3" style="margin-left:50px">	
+            		<div class="input-group">
+					<span style="font-size: 14px;color:#000;">就诊科室 </span> 
+				    <select id="diagAdm" class="form-control"style="width:165px;">
+				    </select> 
+				    <span id="cleardiagAdm" style="margin-top:-3px;position:absolute;right:36px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+				    </div>
+				</div>
+				<div class="col-md-3" style="margin-top:-7px;margin-left:-25px">
+                    <div class="checkbox">
+                        <input id="readRadio" class="magic-checkbox" name=""  type="checkbox" onClick="findOrdItmList();" >
+        				<label for="readRadio" style="min-width:60px;margin-top:5px" style="font-size: 14px;color:#000;"><div style="margin-top: -2px;">未读</div></label>
+        				<input id="issueRadio" class="magic-checkbox" name="" type="checkbox" onClick="findOrdItmList();">
+        				<label for="issueRadio" style="min-width:60px;margin-top:5px" style="font-size: 14px;color:#000;"><div style="margin-top: -2px;">未打印</div></label>
+        				<input id="printRadio" class="magic-checkbox" name=""  type="checkbox" onClick="findOrdItmList();">
+        				<label for="printRadio" style="min-width:60px;margin-top:5px" style="font-size: 14px;color:#000;"><div style="margin-top: -2px;">已发布</div></label>
+                    </div>
+                    
+                </div>
+				 <div class="col-md-1">
+                	<input type="button" class="btn btn-primary" id="selBtn" value="查找"/>
+                </div>
+        		
+                
+        	</div><!--row1 end-->   
+        	<div class="row" style="margin-top:5px;display:none">
+				<div class="col-sm-1" style="">	</div>
+				<div class="col-sm-3" style="padding-left:18px;display:none">	
+            		<div class="input-group">
+					<span style="font-size: 14px;color:#000;">医嘱名称 </span> 
+				    <select id="CheckName" class="form-control"style="width:180px;">
+				    </select> 
+				    <span id="clearCheckName" style="position:absolute;right:36px;top:8px;z-index:3;cursor:pointer;" onclick="javascript:dhccOptionClear(this.id)"><i class="fa fa-close"></i></span>
+				    </div>
+				</div>
+        	</div> 		  
+    </div><!--div end-->
+    <div class=" toolbar-sm bord-top bord-hor" style="border-left:1px solid #CBCBCB ; margin: -5px 0px 0px 1px; border-image: none; height: 40px;border-top:2px dashed #E6E6E6;padding-top: 10px;">
+	    <table >
+			<tr >
+				<td style=""><button class="text-primary  " id="exeBtn"><img src="../scripts/dhcnewpro/images/Nurse_PrtView.png" class="Nurseimg"/>打印预览</button></td>
+				<td style=""><button class="text-primary  " id="prnBtn"><img src="../scripts/dhcnewpro/images/Nurse_Printing.png" class="Nurseimg"/>打印</button></td>
+				<td style="display:none" id="readBookBtn"><button class="text-primary" ><img src="../scripts/dhcnewpro/images/read_book.png" class="Nurseimg"/>确认阅读</button></td>
+			</tr>
+		</table>
+	</div>
+    <div class="row" style="">
+	   <div class="col-md-5" style="margin-top:-5px;padding-right:1px">
+	   		<table id="cspCheckSamArr" ></table>
+	   </div>
+	   <div class="col-md-7" style="margin-top:-5px;padding-left:1px">
+	   		<table id="cspCheckRarr" ></table>
+	   </div>
+	</div>    
+  	
+  
+</div><!--panel end-->
+
+
+</body>
+</html>

@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s userid=$Get(%request.Data("UserId",1))
+	s AcctYear=$Get(%request.Data("AcctYear",1))
+	s AcctMonth=$Get(%request.Data("AcctMonth",1))
+	s VouchType=$Get(%request.Data("VouchType",1))
+	s VouchSource=$Get(%request.Data("VouchSource",1))
+	s Operator=$Get(%request.Data("Operator",1))
+	
+	s miniVouchNo=$Get(%request.Data("miniVouchNo",1))
+	s maxVouchNo=$Get(%request.Data("maxVouchNo",1))
+	s VouchState=$Get(%request.Data("VouchState",1))
+	s startDate=$Get(%request.Data("startDate",1))
+	s endDate=$Get(%request.Data("endDate",1))
+	s IsDestroy=$Get(%request.Data("IsDestroy",1))
+	s IsCancel=$Get(%request.Data("IsCancel",1))
+	
+	s vouchid=$Get(%request.Data("vouchid",1))
+	s vercode=$Get(%request.Data("vercode",1))
+	s userdr=$Get(%request.Data("userdr",1))
+	s ChkResult=$Get(%request.Data("ChkResult",1))
+	s view=$Get(%request.Data("view",1))
+	s statusid=$Get(%request.Data("statusid",1))
+	s bookID=$Get(%request.Data("bookID",1))
+	s state=$Get(%request.Data("state",1))
+	
+
+
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctBatchAudit).List(start, limit,AcctYear,AcctMonth,VouchType,VouchSource,Operator,miniVouchNo,maxVouchNo,VouchState,startDate,endDate,IsDestroy,IsCancel,bookID,userdr)
+	i action = "Vouchlist" d
+	.w ##class(herp.acct.udata.uAcctBatchAudit).VouchList(sortField, sortDir, start, limit,AcctYear,AcctMonth,VouchType,VouchSource,Operator,miniVouchNo,maxVouchNo,VouchState,startDate,endDate,IsDestroy,IsCancel,bookID,userdr)
+	
+	
+	
+	i action = "GetYearMonth" d
+	.s result =  ##Class(herp.acct.udata.uAcctBatchAudit).GetYearMonth(bookID)
+	.i result = "" d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+ 
+    i action = "GetAcctYearMonth" d
+	.w ##Class(herp.acct.udata.uAcctCommon).GetAcctYearMonth(start, limit, str)
+ 
+ 
+
+	i action = "GetVouchType" d
+	.w ##Class(herp.acct.udata.uAcctCommon).GetVouchType(start, limit, str)
+	
+	i action = "GetVouchSource" d
+	.w ##Class(herp.acct.udata.uAcctBatchAudit).GetVouchSource(start, limit, str)
+	
+	i action = "CalUsername" d
+	.w ##class(herp.acct.udata.uAcctBatchAudit).CalUsername(start, limit, str,userdr)
+	
+	i action = "listd" d
+	.w ##class(herp.acct.udata.uAcctCommon).GetVouchProgress(start, limit, rowid)
+	
+	i action = "veraudit" d 
+	.s result = ##class(herp.acct.udata.uAcctBatchAudit).InsertUpdRec(vouchid,userdr,ChkResult,view,statusid,bookID)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+</script>

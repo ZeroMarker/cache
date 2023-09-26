@@ -1,0 +1,126 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ n EpisodeID,Virtual,VirtualDirectory,objPD,FileName,x,ID,Actual,ActualDirectory,vdir
+ ;
+ ;d ##Class(websys.Component).GetComponentMessages(.t,"RBEventDocuments.Edit")
+ s (VirtualDirectory,FileName,ActualDirectory)=""
+ s EventID=%request.Get("PARREF")
+ s ID=%request.Get("ID")
+ s objPD=##Class(User.RBEventDocuments).%OpenId(ID)
+ i objPD d
+ . s FileName=$tr(objPD.SDFile,"\","/")
+ . i FileName'="" d
+ . . d ##Class(web.CFSystemFileDefinition).GetVirtualDirectories(.vdir)
+ . . i $p(objPD.SDFile,".",2)'="" s VirtualDirectory="http://"_%session.Get("SERVER_NAME")_$p($g(vdir($p(objPD.SDFile,".",2))),"^")
+ . . i ($l(VirtualDirectory)'=0),($e(VirtualDirectory,$l(VirtualDirectory)-1,$l(VirtualDirectory))'="/") s VirtualDirectory=VirtualDirectory_"/"
+ . d objPD.%Close()
+</SERVER>
+<SCRIPT Language="JavaScript">
+var FileName="#(FileName)#";
+var VirtualDirectory="#(VirtualDirectory)#";
+//alert("1."+VirtualDirectory+FileName);
+function Viewer_addStudy()
+{
+	//alert("2."+VirtualDirectory+FileName);
+	try {
+		//DicomScan.setSelected(true);
+		DicomScan.addSeries("1","1","1","1",VirtualDirectory+FileName,"");
+		DicomScan.displayStudies();
+	} catch(e) {
+		alert('Failed To Load Image');
+	}
+}
+function Init(){
+	Viewer_addStudy()
+}
+function Viewer_pan()
+{
+	DicomScan.setMode("PAN");
+	return false;
+}
+function Viewer_zoom()
+{
+	DicomScan.setMode("ZOOM");
+	return false;
+}
+function Viewer_forwards()
+{
+    DicomScan.nextFrame();
+	return false;
+}
+function Viewer_backwards()
+{
+    DicomScan.previousFrame();
+	return false;
+}
+</SCRIPT>
+</HEAD>
+
+<BODY ONLOAD="Init();">
+<TRAK:COMPONENT id="RBEventDocuments.Edit" hidemenus=1></TRAK:COMPONENT>
+
+	<OBJECT classid="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93" width="350" height="450" VIEWASTEXT name="DicomScan" id="DicomScan">
+	        <PARAM NAME="code" VALUE="trak/Viewer/WebTrakViewer.class">
+ 		<PARAM NAME="codebase" VALUE="../addins/client/">
+      		<PARAM NAME="cache_archive" VALUE="WebTrakViewer.jar">
+  		<PARAM NAME="cache_version" VALUE=0.0.0.1>
+     		<PARAM NAME="scriptable" VALUE="true">
+        	<PARAM NAME="FITTOWIN" VALUE="true">
+div align="center">
+<table border="0" cellspacing="8">
+<tr>
+<td><img SRC="../images/javaconfig.jpg" BORDER="0"></td>
+<td valign="top">
+<br>
+<H2>Sun Java Plug-in not installed.</H2>
+<p>Please download and install Sun Java in this computer to view the images</p>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td width="100"><b>File size</b></td><td><b>File name</b></a></td></tr>
+<tr><td colspan="2"><hr size="1" noshade></td></tr>
+<tr><td width="100">5,239KByte</td><td><a target="_blank" style="TEXT-DECORATION: none" href="../addins/java/j2re-1_4_0-win.exe"><li>j2re-1_4_0-win.exe</li></a></td></tr>
+<tr><td width="100" colspan="2">&nbsp;</td></tr>
+<tr><td width="100">4,975KByte</td><td><a target="_blank" style="TEXT-DECORATION: none" href="../addins/java/jai-1_1_1-lib-win-jre.exe"><li>jai-1_1_1-lib-win-jre.exe</li></a></td></tr>
+</table>
+
+<p><b>1. Please that you should install J2RE 1.3.1 (Java 2 Runtime Environment) first before installing JAI 1.1.1 (Java Advanced Imaging)</b></p>
+<p><b>2. After both the J2RE and JAI installed don't forget to config your Java Runtime Parameters setting for better performance</b></p>
+
+<br>
+</td>
+</tr>
+</table>
+</div>
+	</OBJECT>
+
+<SCRIPT>
+var obj=document.getElementById('Pan');
+if (obj) {
+	obj.onclick = Viewer_pan;
+}
+var obj=document.getElementById('Zoom');
+if (obj) {
+	obj.onclick = Viewer_zoom;
+}
+var obj=document.getElementById('Next');
+if (obj) {
+	obj.onclick = Viewer_forwards;
+}
+var obj=document.getElementById('Previous');
+if (obj) {
+	obj.onclick = Viewer_backwards;
+}
+</SCRIPT>
+</BODY>
+</HTML>
+

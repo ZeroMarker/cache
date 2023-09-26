@@ -1,0 +1,158 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ ;d ##Class(websys.Conversions).CommonReload()
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/epr.chartbook.side.css">
+<SERVER>
+ ; If called from the new button of the questionnaire edit screen then the last questionnaire should not be fetched
+ s questionnaireload=1 i $g(%request.Data("clearquestion",1))=1 s questionnaireload=0 
+ k %request.Data("clearquestion")
+</SERVER>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT SRC="../scripts/epr.Chart.js"></SCRIPT>
+
+<style>
+.epr_chart_tbmenu {COLOR:black; FONT-FAMILY:Verdana; FONT-SIZE:10pt;} 
+.tbMenuHighlight2 {BACKGROUND-COLOR:lightgrey; CURSOR:default;}
+</style>
+
+<SCRIPT language="Javascript">
+
+function showleft()	{
+	//parent.eprframeset.cols="70%,*";
+	}
+
+</SCRIPT>
+
+</HEAD>
+<BODY onmouseover="showleft()"><DIV id="PageContent">
+<TRAK:APPLET>
+<SERVER>
+ s eprurl="epr.dhcwmr.chart.csp?PatientID="_%request.Get("PatientID")_"&EpisodeID="_%request.Get("EpisodeID")_"&mradm="_%request.Get("mradm")_"&ChartID="_%request.Get("ChartID")_"&PAAdmTransactionID="_%request.Get("PAAdmTransactionID")_"&DischID="_%request.Get("DischID")_"&CurrDischID="_%request.Get("CurrDischID")_"&DischEpisodes="_%request.Get("DischEpisodes")_"&doctype="_%request.Get("doctype")_"&TWKFL="_%request.Get("TWKFL")_"&TWKFLI="_%request.Get("TWKFLI")
+ s eprchartCONTEXT="",ChartID=%request.Get("ChartID")
+ i ChartID s eprchartCONTEXT="C"_ChartID
+ ; For printing - taking advantage that the context for the normal page is still accessable
+ ; We need the previous context so we can print the right list component
+ s TPrintContext=%request.Get("CONTEXT")
+ ; Setting the context for the whole chart
+ d %request.Set("CONTEXT",eprchartCONTEXT)
+ w ##Class(web.SSMessageRecipient).getMessageLink()
+ n PatiendID,mradm,chart,itmLIST,jk,params,itmparams,parref,GrpId,GrpSetCarPrv,AdHocGraphLink,ConditionalExpression
+ n obj,Graph,PAAdmCodingID,Heading,ItemID,EpisodeNo,PatientBanner,TPrint,TPrintComp,TPrintParams,divID,Collapsed
+ n resultAtomic,resultDicom,resultImage,resultText,resultWord,episode,studentMRADMID,newMRADMclass,tmpmradm,studentchart
+ s mradm=%request.Get("mradm")_"&PatientID="_%request.Get("PatientID")_"&EpisodeID="_%request.Get("EpisodeID")
+ s (ObsGrpID,TPrintParams)=""
+ s TPrint=$g(%request.Data("TPRINT",1))
+ s TPrintComp=$g(%request.Data("WEBSYS.TCOMPONENT",1))
+ ; get the workflow ID of Orders Entry for use by 'repeat orders' menu
+ n eprWorkFlowID s eprWorkFlowID=$O(^websys.WorkFlowI("UniqueNameIndex"," TRAK.EPR ORDER ENTRY",""))
+ k %request.Data("TMENU")
+ s ChartID=%request.Get("ChartID")
+ i ChartID s eprchartCONTEXT="C"_ChartID
+ d %request.Set("CONTEXT",eprchartCONTEXT)
+ d ##Class(websys.Component).GetComponentMessages(.t,"websys.SYSTEM,epr.Chart.Messages")
+ i 'ChartID w "Chart ID is Blank.  Check your Security Settings to see if a Chart has been defined for this User Group" q
+ s CanAddDSMedications=""
+ s GrpId=##Class(epr.GroupSettings).GetIdFromGroupId(%session.Get("LOGON.GROUPID"))
+ s obj=##Class(epr.GroupSettings).%OpenId(GrpId) 
+ i obj d
+ . s GrpSetCarPrv=obj.CarPrvTp 
+ . s CanAddDSMedications=obj.CanAddDSMedications 
+ d obj.%Close()
+ i $g(GrpSetCarPrv)'="" {s %request.Data("GrpSetCarPrv",1)=","_GrpSetCarPrv_","} else {s %request.Data("GrpSetCarPrv",1)=""}
+ ;
+ ;
+ s chart=##Class(epr.Chart).%OpenId(ChartID,0)
+ i 'chart w "There is no Chart Defined for this ChartID." q
+ s (itmLIST,params,parref)=""
+ ;
+ s cs=chart.ChartSettings i cs d ##Class(epr.Chart).chartSettingsSelect(.itmLIST,.params,cs)
+ d chart.%Close()
+ s jk=""  f  s jk=$o(itmLIST(jk))  q:jk=""  d
+ . s itm=itmLIST(jk)
+ . s ItemID=$p(itm,"^",1)
+ . s ListComponent=$p(itm,"^",5)
+ . s EditComponent=$p(itm,"^",6)
+ . ; Graph now contains a LIST of graphs...
+ . s Graph=$p(itm,"^",9)
+ . s Heading=$p(itm,"^",10)
+ . s AdHocGraphLink=$p(itm,"^",13)
+ . ; Allow EPR to show conditionally based on a conditional expression in the chart setup
+ . ; Example Conditional Expression - s show=##class(Class).Method()
+ . s ConditionalExpression=$p(itm,"^",14)
+ . s show=1 i ConditionalExpression'="" d ##class(websys.Conversions).expressionExecute(ConditionalExpression)
+ . q:'show
+ . ; Log 52724 & 53953 YC - Across Episodes to determine if it is one episode or multiple
+ . s %request.Data("AcrossEpisodes",1)=$s(+$p(itm,"^",15)=0:"N",1:"Y")
+ . s eprcomponentCONTEXT=eprchartCONTEXT_$p(itm,"^",2)_ItemID
+ . d %request.Set("CONTEXT",eprcomponentCONTEXT)
+ . s frm=##Class(websys.Component).OpenName(ListComponent)
+ . i frm d
+ . . s TPrint=%request.Get("TPRINT")
+ . . s (idesc,itmparams)=""
+ . . i $g(params($p(itm,"^",2),$p(itm,"^",1)))'="" s itmparams=params($p(itm,"^",2),$p(itm,"^",1))
+ . . s frm.HideHeadings=$p(itm,"^",3)
+ . . s frm.ListRows=$p(itm,"^",7)
+ . . s Collapsed=$p(itm,"^",11)
+ . . s divID=jk
+ . . i 'TPrint d
+ . . . s (%request.Data("QuestionnaireGroups",1),%request.Data("EpisodesAll",1),%request.Data("ThisPreg",1))=""
+ . . . w !,"<DIV nowrap style='margin-top:5px; margin-bottom:5px; width:80%;'>"
+ . . . w "<SPAN class='chartitemheading'>&nbsp;<IMG id='IMG"_divID_"' src='"_$s(Collapsed:"../images/websys/plus.gif",1:"../images/websys/minus.gif")_"' onclick='ExpandCollapse(""DIV"_divID_""",""IMG"_divID_""");' border=0>&nbsp;"
+ . . . s frm.ShowNextInNewWindow="top=20,left=100,width=800"
+ . . . w "<B>"_$p(itm,"^",8)
+ . . . w "</B>&nbsp;&nbsp;&nbsp;&nbsp;"
+ . . . ; end Log 42221
+ . . . i $p(itm,"^",4)=1 d
+ . . . . w "<LABEL style=""color:blue;cursor:hand"" onclick=""NewPage('"_$p(itm,"^",6)_"','','"_$g(parref)_"','"_$g(mradm)_"');""><IMG SRC=""../images/websys/new.gif""><u>"_t("new")_"</u></LABEL>"
+ . . . ; PACSSystem Viewer Link END - YC 46911
+ . . . w "</SPAN>"
+ . . ; Display heading when printing - without all the other stuff
+ . . i (TPrint),(TPrintComp=frm.Name),(TPrintContext=eprcomponentCONTEXT) d
+ . . . ; Log 42221 - AI - 05-02-2004 : Display (Student) if the Chart is a Student Chart.
+ . . . w !,"<DIV>",!,"<SPAN class='chartitemheading'><BR><B>"_$p(itm,"^",8)
+ . . . w "</B><BR></SPAN>"
+ . . . ; end Log 42221
+ . . . s frm.HideMenus=1
+ . . ;w !,"----4-"
+ . . i TPrint w !,"<DIV id='DIV"_divID_"' style='margin-left:15px;'>",!
+ . . i 'TPrint w !,"<DIV id='DIV"_divID_"' style='margin-left:15px; display:"_$s(Collapsed:"none",1:"")_"; '>",!
+ . . ;
+ . . d frm.Show()
+ . . d frm.%Close()
+ . . ;
+ . . w !,"</DIV>" ;ends the actual chart item data block
+ . . w "</DIV>" ;ends the expand block
+ ;
+</SERVER>
+<P>&nbsp;</P>
+<script Language="JavaScript">
+//This must be at bottom of page so that all other javascript functions and event triggers have loaded.
+function eprLoadHandler() {
+	// Log 42221 - AI - 05-02-2004 : Remove mradm from glb, as we don't know if it is Main MRADM or Student MRADM any more.
+	//glb="&PatientID="+PatientID+"&mradm="+mradm+"&EpisodeID="+EpisodeID+"&ChartID="+ChartID;
+	
+	//glb="&PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&ChartID="+ChartID;
+	
+	//If any of the epr pages have their own document.body.onload handlers then call each of them individually from here.
+	try {PAPatMas_ListEMRPatDetails_BodyLoadHandler();} catch(e) {}
+	// Log 52572 - AI - 30-05-2005 : Remove the component-defined ALT-"U" and replace with a javascript-defined function that is still ALT-"U".
+	//                               Discharge Summary Edit BodyLoad defined here so it is loaded AFTER the component and tsc array.
+	try {PAAdmDischargeSummaryEdit_BodyLoad();} catch(e) {}
+
+	var objQuestUpdate = document.getElementById("update1");
+	if (objQuestUpdate) {objQuestUpdate.onclick = QuestUpdate;}
+	
+	//if ((studentchart=="1")&&(DischEpisodes!="")) {alert(studentdischargewarning);}
+}
+document.body.onload=eprLoadHandler;
+</script>
+</div></body>
+</html>

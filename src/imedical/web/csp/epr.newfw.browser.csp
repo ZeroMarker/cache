@@ -1,0 +1,51 @@
+<HTML>
+<HEAD>
+<!--add by loo on 2010-4-26-->
+<script type="text/javascript" src="../scripts/epr/js/barrier.js"></script> 
+<TITLE></TITLE>
+</HEAD>
+<body>
+			
+	<div id='pagetoolbar' style="width:100%; height:28; z-index: 2000; position: absolute;"></div>		
+	<div id='divDateTimeSelect' style="left: 173px; width: 100px; position: absolute; top: 0px; height: 25px; z-index: 1999; "></div>
+	<iframe marginwidth=5 marginheight=5 id='frameBrowserPhoto' width='100%' style=" top: 28px; position: absolute; z-index: 1998; height:expression(document.body.offsetHeight - 60);" src='epr.newfw.browserphoto.csp'></iframe>	
+
+	<script language="cache" runat="server">
+  		s episodeID = $Get(%request.Data("episodeID",1),"")
+  		s admDateTimeInBed = $zd(##class(EPRservice.HISInterface.PatientInfoAssist).AdmDateTimeInBed(episodeID, ""), 3)
+  		s disBed = $zd(##class(EPRservice.HISInterface.PatientInfoAssist).DisDateTime(episodeID, ""), 3)
+  		s SavePrintImage = ##class(EPRmeta.SysOption).GetOptionValueByName("SavePrintImage")
+	 	s serviceUrl = ##class(web.DHCEPR).GetServiceURL()
+	 	s formUrl = ##class(web.DHCEPR).GetFormURL("1")
+		s preconfigUrl = formUrl_"PreviewManage.dll#dhcc.epr.eprlib.previewmanage.UCCfg"
+		s imageloaderUrl = formUrl_"PreviewManage.dll#dhcc.epr.eprlib.previewmanage.UCImageLoader"
+	 </script>
+	
+	<script type='text/javascript'>
+		var dateInBed = '#(admDateTimeInBed)#'		//入院日期
+		var disBed = '#(disBed)#'					// 出院日期
+		
+		var patientID = '#($Get(%request.Data("patientID",1),""))#';
+		var episodeID = '#($Get(%request.Data("episodeID",1),""))#';
+		
+		var startIndex = 1;
+		var endIndex = 1;
+		var arrTmp = new Array();		//存临时图片的路径
+		var total = 0;					//图片个数
+		var imageList = "";				//图片列表
+		
+		var parentId = "";				
+		var categoryChapterId = "";
+		var selectNode = null;			//选中的节点
+		
+		var SavePrintImage = '#(SavePrintImage)#';
+		
+		var arrCurrPageCount = new Array();	//存放当前应该显示图片的数量	add by zhuj on 2009-12-24
+		var currPage = 1;					//当前显示的页数,从1开始	add by zhuj on 2009-12-24
+		var currDownPage = 0;					//当前已经下载的页数	add by zhuj on 2009-12-24
+		
+	</script>
+	
+	<script type='text/javascript' src="../scripts/epr/js/eprbrowser.js" ></script>
+</body>
+</HTML>

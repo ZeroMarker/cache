@@ -1,0 +1,89 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+
+</csp:method>
+
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s searchField = $Get(%request.Data("searchField",1))
+	s searchValue = $Get(%request.Data("searchValue",1))
+
+	s parent=$Get(%request.Data("parent",1))
+	s str=$Get(%request.Data("query",1))
+	s rowid=$Get(%request.Data("rowid",1))
+
+	s data=$Get(%request.Data("data",1))
+	
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	
+	s fDR=$Get(%request.Data("parent",1))
+	s code=$Get(%request.Data("code",1))
+	s name=$Get(%request.Data("name",1))
+	s isEnd=$Get(%request.Data("isEnd",1))
+	s alert=$Get(%request.Data("alert",1))
+	s conting=$Get(%request.Data("conting",1))
+		
+	s cost = $Get(%request.Data("cost",1))
+	s dura=$Get(%request.Data("dura",1))
+	s pa = $Get(%request.Data("pa",1))
+	s bonus=$Get(%request.Data("bonus",1))
+	s hr=$Get(%request.Data("hr",1))
+	s check=$Get(%request.Data("check",1))
+
+	
+	i action="lastunit" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetLastUnit(sUnitFlag,sLastStage,start,limit)
+	
+	i action="UnitList" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetUnitList(sUnitFlag,sLastStage,str,start,limit)
+
+
+	i action="FlagUnit" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetUnitByUnitFlag(sUnitFlag,start,limit)
+	
+	i action="GetUnitBySuper" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).GetUnitBySuper(parent,start,limit)
+	
+	
+	i action="list" d
+	.w ##class(dhc.bonus.udata.uDeptManager).List(searchField,searchValue,sortField,sortDir,start,limit,parent)
+
+	i action = "type" d
+	.w ##class(dhc.bonus.udata.uBonusUnit).unitType(start,limit,str,sUnitFlag)
+
+
+	i action = "add" d
+	.s result = ##class(dhc.bonus.udata.uDeptManager).InsertRec(fDR,code, name,isEnd,alert,conting,cost,dura,pa,bonus,hr,check)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "edit" d
+	.s result = ##class(dhc.bonus.udata.uBonusUnit).Update(rowid,data)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "del" d
+	.s result = ##class(dhc.bonus.udata.uBonusUnit).Delete(rowid)
+	.i result = 0 d
+	..w "{success:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action = "findfather" d
+	.s result = ##class(dhc.bonus.udata.uBonusUnit).GetFatherNode(parent)
+	.w "{success:'true',info:'"_result_"'}"
+
+</script>

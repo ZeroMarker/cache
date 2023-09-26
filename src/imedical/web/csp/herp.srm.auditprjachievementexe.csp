@@ -1,0 +1,52 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	
+	s action    = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir   = $Get(%request.Data("dir",1))
+	s start     = $Get(%request.Data("start",1))
+	s limit     = $Get(%request.Data("limit",1))	
+	s str       = $Get(%request.Data("query",1))
+	
+	s rowid  =  $Get(%request.Data("rowid",1))
+	s userdr =  $Get(%request.Data("userdr",1)) // µÇÂ½ÓÃ»§ID
+	s checker =  $Get(%request.Data("checker",1))
+	s checkerdr =  $Get(%request.Data("checkerdr",1))
+	s view =  $Get(%request.Data("view",1))  
+	
+	s data =  $Get(%request.Data("data",1))
+	s rewardamount = $Get(%request.Data("rewardamount",1))
+	s rewarddate = $Get(%request.Data("rewarddate",1))
+
+	i action = "list" d
+	.w ##class(herp.srm.udata.uPrjAchievementAudit).List(data, sortField, sortDir, start, limit)
+	
+	i action = "audit" d
+	.s result = ##class(herp.srm.udata.uPrjAchievementAudit).Audit(rowid,checker)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+    i action = "noaudit" d
+	.s result= ##class(herp.srm.udata.uPrjAchievementAudit).NoAudit(rowid, view, checkerdr)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "rewardaudit" d
+	.s result = ##class(herp.srm.udata.uPrjAchievementAudit).RewardAudit(rowid, rewardamount, rewarddate)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+  i action = "GetUserID" d
+	.w ##class(herp.srm.udata.uSRMCommon).GetSRMUserID(userdr)
+</script>

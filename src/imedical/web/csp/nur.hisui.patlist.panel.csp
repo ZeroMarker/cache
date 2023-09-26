@@ -1,0 +1,120 @@
+<!--nur.hisui.patlist.panel2.csp 护士患者列表-->
+<div class="hisui-panel" title="患者列表" data-options="fit:true,headerCls:'panel-header-gray'">
+	<div class="hisui-layout" data-options="fit:true,headerCls:'panel-header-gray'">
+		<div data-options="region:'north',border:false,headerCls:'panel-header-gray'" style="height:42px;">
+	    	<div style="height:36px;border-bottom:1px dashed #ccc;padding-left:5px;">
+				<div id="PatClassify"></div>
+			</div>
+			<!--div style="height:30px;border-bottom:1px dashed #ccc;padding:5px;">
+				<input id="findPat" href="#" class="hisui-searchbox"/>
+			</div-->
+		</div>
+		<div data-options="region:'center',border:false" style="border:0px;">
+			<table id="patTable" class="hisui-datagrid" data-options="fit:true,border:false,headerCls:'panel-header-gray'">
+			</table>
+		</div>
+	</div>
+</div>
+<style>
+
+</style>
+<server>
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
+	if EpisodeID'="" {
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+		Set Page=$g(%request.Data("page",1))
+	}
+</server>
+<script type="text/javascript">
+var episodeID="#(EpisodeID)#";
+$(function(){
+	//初始化
+	Init();
+})
+function Init(){
+	initPageDom();	
+}
+function initPageDom(){
+	initPatClassify();
+	initPatTable();
+}
+function initPatClassify(){
+	$("#PatClassify").keywords({
+	    singleSelect:true,
+	    labelCls:'red',
+	    items:[
+	        {text:'本病区',id:'Ward',selected:true},
+	        {text:'在院转科',id:'Transing'}
+	    ],
+	    onClick:function(v){
+		    		var type=v.id;
+		    		patTableLoad(type);
+		   		},
+	    onUnselect:function(v){console.log("你选择->");console.dir(v);},
+	    onSelect:function(v){console.log("你取消选择->");console.dir(v);}
+	});
+}
+function initPatTable(){
+	//bedCode,name,sex,age,regNo,medicareNo,wardDesc
+	var FrozenColumns=[[
+		{field:'bedCode',title:'床号',width:40},
+		{field:'name',title:'姓名',width:100},
+	]];
+	var Columns=[[ 	
+			{field:'sex',title:'性别',width:50},			
+			{field:'age',title:'年龄',width:70},
+	        {field:'medicareNo',title:'病案号',width:80},
+			{field:'regNo',title:'登记号',width:100},			
+			{field:'wardDesc',title:'病区',width:80}
+	    ]]  
+	$('#patTable').datagrid({  
+		singleSelect : true,
+		fitColumns : false,
+		autoRowHeight : false,
+		idField:'EpisodeID',
+		frozenColumns:FrozenColumns,
+		columns:Columns,
+		url: $URL,
+        queryParams: {
+            ClassName: "Nur.NIS.Service.Base.InPatientList",
+            QueryName: "getInPatQuery",
+            ResultSetType: 'array',
+            WardID:session['LOGON.WARDID'], 
+            Type:"Ward"
+        },
+        onSelect:function(index, rowData){			
+			var frm= dhcsys_getmenuform(); //parent.parent.parent.document.forms['fEPRMENU'];
+			if(frm&&frm.canGiveBirth){
+				var frmcanGiveBirth=frm.canGiveBirth;
+				if (rowData["PAPMISex"]=="女"){
+					frmcanGiveBirth.value=1;
+				}else{
+					frmcanGiveBirth.value=0;
+				}
+			}
+			switchPatient(rowData);
+		},
+		onLoadSuccess:function(data){
+			console.log(data);
+			var frm = dhcsys_getmenuform();
+            if(frm){
+                episodeID=frm.EpisodeID.value;
+            }
+			$('#patTable').datagrid("selectRecord",episodeID);
+		}
+		
+	});  
+}
+function patTableLoad(type){
+	$('#patTable').datagrid("load",{
+            ClassName: "Nur.NIS.Service.Base.InPatientList",
+            QueryName: "getInPatQuery",
+            ResultSetType: 'array',
+            WardID:session['LOGON.WARDID'], 
+            Type:type
+        });
+}
+</script>

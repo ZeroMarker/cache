@@ -1,0 +1,59 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+
+<SERVER>
+	s QuestID=%request.Get("QuestionnaireID")
+	s PatientID=%request.Get("PatientID")
+	s EpisodeID=%request.Get("EpisodeID")
+	s mradm=%request.Get("mradm")
+	s MRDIARowId=%request.Get("MRDIARowId")
+	s QuestRowID=%request.Get("QuestRowID")
+
+	; check that the questionnaire's not been deleted
+	i QuestID'="" d	
+	. s qCode=$li(##class(web.SSUserDefWindow).GetCodeDescriptionFromId(QuestID),3)
+	. s qClass=##class(web.SSUserDefWindow).CreateClassClassname(qCode)
+	. s obj=##class(%Library.CompiledClass).%OpenId(qClass)
+	. ; if no class - don't try and open questionnaire
+	. i 'obj s QuestRowID="",QuestID="" q
+	. e  d obj.%Close()
+	. ; if class defined - check questionnaire entry not been deleted...
+	. s obj=$$InvokeMethod^%apiOBJ(qClass,"","%OpenId",QuestRowID)
+	. i 'obj s QuestRowID="" q
+	. e  d obj.%Close()
+
+
+</SERVER>
+<script language="Javascript">
+	var questid = "#(QuestID)#";
+	questURL = "ssuserdefwindowcontrols.questionnaire.csp?MRDIARowId=#(MRDIARowId)#&PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&mradm=#(mradm)#&QuestionnaireID="+questid+"&ID=#(QuestRowID)#&ChartID=&PatientBanner=1";
+	if (questid !="" ) {
+		//alert(questURL);
+		window.location = questURL;
+		//window.showModalDialog(questURL,'modalquest','dialogHeight:480px;dialogWidth:640px;center:no;help:no;resizable:yes;scroll:yes');
+	} else {	
+		// refresh parent, or parent chart
+		if (window.opener) {
+			window.opener.treload('websys.csp');
+		}
+		else {
+			if (window.top.opener)
+				window.top.opener.treload('websys.csp');
+			else window.close();
+		}
+	}	
+</script>
+</BODY>
+</HTML>
+

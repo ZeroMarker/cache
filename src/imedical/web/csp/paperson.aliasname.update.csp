@@ -1,0 +1,45 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ n AliasID,PatientID,ComponentItemName,DefaultValue,name,name2,name3,obj
+ s (AliasID,name,name2,name3)=""
+ s ComponentItemName=%request.Get("ComponentItemName")
+ s DefaultValue=%request.Get("DefaultValue")
+ s PatientID=%request.Get("PatientID")
+ s FullName=%request.Get("FullName")
+
+ if ComponentItemName="PAPERDob" d ##Class(web.PAPersonSurnameAlias).setAliasFromDOB("",AliasID,PatientID,DefaultValue,"D") q
+ 
+ if ComponentItemName="CTSEXDesc" d ##Class(web.PAPersonSurnameAlias).setAliasFromSex("",AliasID,PatientID,DefaultValue,"S") q
+ 
+ 
+ s HL7Flag="Y"
+ if ComponentItemName="PAPERName" {
+	d ##Class(web.PAPersonSurnameAlias).setAliasFromName("",AliasID,PatientID,DefaultValue,"","",FullName)
+ } else {
+	i ComponentItemName="PAPERName2" s %request.Data("AliasType",1)="G"
+	i ComponentItemName="PAPERName3" s %request.Data("AliasType",1)="O"
+	d ##Class(web.PAPersonAlias).setAliasFromName("",AliasID,PatientID,DefaultValue,FullName)
+ }
+ k HL7Flag
+ /*
+ i ComponentItemName="PAPERName" s name=DefaultValue d ##Class(web.PAPersonAlias).setAliasFromName("",AliasID,PatientID,name)
+ i ComponentItemName="PAPERName2" s name2=DefaultValue
+ i ComponentItemName="PAPERName3" s name3=DefaultValue
+ d ##Class(web.PAPersonSurnameAlias).setAliasFromName(AliasID,PatientID,name,name2,name3)
+ */
+</SERVER>
+</BODY>
+</HTML>

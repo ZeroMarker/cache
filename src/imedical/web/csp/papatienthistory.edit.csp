@@ -1,0 +1,163 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- This is a generic page used to display single simple components  -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<BODY>
+<SERVER>
+ ;
+ ;
+ ; Log 27032 - AI - 13-08-2002 : This file has been created to handle the different types of History.
+ ; 			There was a problem with the Comments field, when passing between the two components only.
+ ; 			(PAPatMas.ListEMRHistory and PAPatientHistory.Edit)
+ ; 			The problem arose with apostrophes (') within the comment, as this terminates the link expression.
+ ; 			So now we only pass the bare essentials, and get the History information from the appropriate
+ ; 			User Class, using the ID passed in.
+ ;
+ ;
+ n frm,ID,pahistorytype,obj,comments
+ n pahistorydesc,desc,onsetdate,durationyears,durationmonths,durationdays,chkinactive
+ ;
+ s frm=##Class(websys.Component).OpenName("PAPerson.Banner")
+ i frm d frm.Show() d frm.%Close()
+ ;
+ s ID=%request.Get("ID")
+ s pahistorytype=%request.Get("HistoryType")
+ ;
+ i (pahistorytype'="") {
+	i pahistorytype="D" {
+		s obj=##Class(User.PADesease).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=obj.DESMRCICDDxDR.MRCIDDesc
+			s desc=obj.DESMRCICDDxDR.MRCIDDesc
+			s onsetdate=obj.DESOnsetDate
+			s durationyears=obj.DESDuratYear
+			s durationmonths=obj.DESDuratMonth
+			s durationdays=obj.DESDuratDays
+			s chkinactive=obj.DESInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.DESDesc),$c(13,10))
+		}
+	}
+	;
+	i pahistorytype="O" {
+		s obj=##Class(User.PAOperation).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=obj.OPERORCOperDR.OPERDesc
+			s desc=obj.OPERORCOperDR.OPERDesc
+			s onsetdate=obj.OPEROnsetDate
+			s durationyears=obj.OPERDuratYear
+			s durationmonths=obj.OPERDuratMonth
+			s durationdays=obj.OPERDuratDays
+			s chkinactive=obj.OPERInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.OPERDesc),$c(13,10))
+		}
+	}
+	;
+	i pahistorytype="A" {
+		s obj=##Class(User.PAAllergy).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=obj.ALGTypeDR.ALGDesc
+			s desc=obj.ALGTypeDR.ALGDesc
+			s onsetdate=obj.ALGOnsetDate
+			s durationyears=obj.ALGDuratYear
+			s durationmonths=obj.ALGDuratMonth
+			s durationdays=obj.ALGDuratDays
+			s chkinactive=obj.ALGInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.ALGDesc),$c(13,10))
+		}
+	}
+	;
+	i pahistorytype="C" {
+		s obj=##Class(User.PAPastHistCondition).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=obj.PHISTPastHistDR.PASTDesc
+			s desc=obj.PHISTPastHistDR.PASTDesc
+			s onsetdate=obj.PHISTOnsetDate
+			s durationyears=obj.PHISTDuratYear
+			s durationmonths=obj.PHISTDuratMonth
+			s durationdays=obj.PHISTDuratDays
+			s chkinactive=obj.PHISTInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.PHISTDesc),$c(13,10))
+		}
+	}
+	;
+	i pahistorytype="S" {
+		s obj=##Class(User.PASocHist).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=obj.SCHHabitsDR.HABDesc_"^"_obj.SCHHabitsQtyDR.QTYDesc
+			s desc=obj.SCHHabitsDR.HABDesc_"^"_obj.SCHHabitsQtyDR.QTYDesc
+			s onsetdate=obj.SCHOnsetDate
+			s durationyears=obj.SCHDuratYear
+			s durationmonths=obj.SCHDuratMonth
+			s durationdays=obj.SCHDuratDays
+			s chkinactive=obj.SCHInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.SCHDesc),$c(13,10))
+		}
+	}
+	;
+	i pahistorytype="F" {
+		s obj=##Class(User.PAFamily).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=obj.FAMMRCICDDR.MRCIDDesc_"^"_obj.FAMRelationDR.CTRLTDesc
+			s desc=obj.FAMMRCICDDR.MRCIDDesc_"^"_obj.FAMRelationDR.CTRLTDesc
+			s onsetdate=obj.FAMOnsetDate
+			s durationyears=obj.FAMDuratYear
+			s durationmonths=obj.FAMDuratMonth
+			s durationdays=obj.FAMDuratDays
+			s chkinactive=obj.FAMInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.FAMDesc),$c(13,10))
+		}
+	}
+	;
+	i pahistorytype="M" {
+		s obj=##Class(User.PADrugs).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=obj.DRGDrugMastDR.PHCDName
+			s desc=obj.DRGDrugMastDR.PHCDName
+			s onsetdate=obj.DRGOnsetDate
+			s durationyears=obj.DRGDuratYear
+			s durationmonths=obj.DRGDuratMonth
+			s durationdays=obj.DRGDuratDays
+			s chkinactive=obj.DRGInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.DRGDesc),$c(13,10))
+		}
+	}
+	;
+	i pahistorytype="MD" {
+		s obj=##Class(User.PADrugDescription).%OpenId(ID)
+		i (obj) {
+			s pahistorydesc=##Class(websys.Conversions).LongTextLogicalToHtml(obj.DRDNotes)
+			s desc=##Class(websys.Conversions).LongTextLogicalToHtml(obj.DRDNotes)
+			s onsetdate=obj.DRDOnsetDate
+			s durationyears=obj.DRDDuratYear
+			s durationmonths=obj.DRDDuratMonth
+			s durationdays=obj.DRDDuratDays
+			s chkinactive=obj.DRDInActive
+			s comments=##Class(websys.Conversions).LongTextLogicalToHtml((obj.DRDDesc),$c(13,10))
+		}
+	}
+ }
+ d %request.Set("HistoryID",ID)
+ d %request.Set("PAHistoryType",pahistorytype)
+ d %request.Set("PAHistoryDesc",pahistorydesc)
+ d %request.Set("Desc",desc)
+ d %request.Set("PAOnsetDate",onsetdate)
+ d %request.Set("PADurationYears",durationyears)
+ d %request.Set("PADurationMonths",durationmonths)
+ d %request.Set("PADurationDays",durationdays)
+ d %request.Set("PAComments",comments)
+ d %request.Set("chkInActive",chkinactive)
+ ;
+ s frm=##Class(websys.Component).OpenName("PAPatientHistory.Edit")
+ i frm d frm.Show() d frm.%Close()
+</SERVER>
+</BODY>
+</HTML>

@@ -1,0 +1,53 @@
+<csp:content charset="utf-8">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+
+<script language="cache" runat="server">
+	;<csp:content charset="utf-8">
+	s action   = $Get(%request.Data("action",1))
+	s sortField= $Get(%request.Data("sort",1))
+	s sortDir  = $Get(%request.Data("dir",1))
+	s start    = $Get(%request.Data("start",1))
+	s limit    = $Get(%request.Data("limit",1))   
+	s str      = $Get(%request.Data("query",1))
+	s rowid    = $Get(%request.Data("rowid",1))
+	s Userid   = %session.Data("LOGON.USERID")             ;获取用户编码
+	s AcctBook = $Get(%request.Data("AcctBook",1))
+	
+	s ReportCode = $Get(%request.Data("ReportCode",1))     ;报表模板编码
+	s ReportName = $Get(%request.Data("ReportName",1))     ;报表模板名称
+	s StopDesc   = $Get(%request.Data("StopDesc",1))       ;停用原因
+	
+	i action = "list" d
+	.w ##class(herp.acct.udata.uAcctFinancialReportTempletAdd).List(AcctBook,ReportCode_"^"_ReportName,sortField,sortDir,start,limit)
+
+    i action = "Checkhed" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletCheck).Checkhed(rowid,Userid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "CancleCheck" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletCheck).CancleCheck(rowid,Userid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "Stop" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletCheck).Stop(rowid,Userid,StopDesc)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "Start" d
+	.s result = ##class(herp.acct.udata.uAcctFinancialReportTempletCheck).Start(rowid,Userid)
+	.i result = 0 d
+	..w "{success:'true',info:'',refresh:'true'}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

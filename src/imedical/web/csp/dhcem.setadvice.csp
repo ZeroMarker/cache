@@ -1,0 +1,114 @@
+<html>
+<head>
+<title></title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-26-->
+<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/css/icon.css">
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/setadvice.js"></script>
+   <script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+		var session=new Array(); <!--hxy 2020-05-26 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+</script>
+</head>
+<body>   
+	
+		<!-- toolbar -->
+		<div id="toolbar" class="toolbar">	
+			<div style="height:10px"></div>
+			<!--span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	<hxy 2019-07-18 2020-05-26 注释-->
+			<label class="r-label" id="_HospListLabel" style="padding-left:10px">医院</label><input id="_HospList"><!--hxy 2020-05-26-->
+			<!--a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a hxy 2020-05-26 注释，选医院自动查-->
+			<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancel()">删除</a></td>	
+			    </tr>
+			</table>
+		</div>
+		<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+			data-options="
+			border:false,
+			toolbar:'#toolbar',
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:false,
+		    pageSize:100,
+		    pageList:[100,200],
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRow, 
+			url:'dhcapp.broker.csp?ClassName=web.DHCEMDocOrderCat&MethodName=queryCatList'">
+			<thead>
+				<tr>
+					<th data-options="field:'APOrdNum',width:240,align:'center',formatter:cellStyler">操作</th>
+					<th data-options="field:'oecDesc',width:200,align:'center',
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMDocOrderCat&MethodName=jsonListCat',
+													required:true,
+													editable:false,
+													onShowPanel:function(option){ //hxy2020-05-26
+														var url = 'dhcapp.broker.csp?ClassName=web.DHCEMDocOrderCat&MethodName=jsonListCat&hospId='+hospComp.getValue();
+														var ed=$('#datagrid').datagrid('getEditor',{index:editRow,field:'oecDesc'});
+	        											$(ed.target).combobox('reload',url);
+													},
+													onSelect:function(option){
+														var ed=$('#datagrid').datagrid('getEditor',{index:editRow,field:'oecDr'});
+														$(ed.target).val(option.value); 
+													}
+												}
+											}">医嘱分类</th>
+					<th data-options="field:'activeFlag',align:'center',width:100,align:'center',
+											formatter:function(value,row,index){
+												if (value=='Y'){return '是';} 
+												else {return '否';}
+											},
+											editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMLevKey&MethodName=ListIsActive',
+													required:true,
+													editable:false
+												}
+											}">是否可用</th>
+					<th data-options="field:'hospDesc',width:280,align:'center',hidden:true,
+												editor:{
+												type:'combobox',
+												options:{
+													valueField:'value',
+													textField:'text',
+													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
+													required:true,
+													editable:false,
+													onSelect:function(option){
+														var ed=$('#datagrid').datagrid('getEditor',{index:editRow,field:'hospDr'});
+														$(ed.target).val(option.value); 
+													}
+												}
+											}">医院</th>
+					<th data-options="field:'hospDr',hidden:true,editor:{type:'validatebox',options:{required:true}}">hospDr</th>
+					<th data-options="field:'oecDr',hidden:true,editor:{type:'validatebox',options:{required:true}}">oecDr</th>
+					<th data-options="field:'docId',hidden:true">id</th>
+				</tr>
+			</thead>
+		</table>
+</body>
+</html>

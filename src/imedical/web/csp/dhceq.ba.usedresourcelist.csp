@@ -1,0 +1,63 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+</head>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+s SourceType=$g(%request.Data("SourceType",1))
+s Year=$g(%request.Data("Year",1))
+s Month=$g(%request.Data("Month",1))
+s SourceID=$g(%request.Data("SourceID",1))
+s EquipName=""
+i SourceType="1" s EquipName=$P($g(^DHCEQEquip(SourceID)),"^",1)
+s title=EquipName_Year_"年"_Month_"月资源消耗信息" ;;add by jyp20160831
+s title=$TRanslate(title," ","_") ;add by jyp20160831
+s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</SCRIPT>
+
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px; width:700px;">
+		<div class="hisui-panel" title=#(title)# data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc; height:50px; padding:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cYear" for="Year">年度</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Year" value=#(Year)#></div>
+							<div class="eq-table-td eq-table-label"><label id="cMonth" for="Month">月份</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Month" value=#(Month)#></div>
+							<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+							<div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">删除</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="padding:10px;">
+					<table id="tDHCEQUsedResourceList" class="hisui-datagrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="SourceType" value=#(SourceType)#>
+			<INPUT type="hidden" id="SourceID" value=#(SourceID)#>
+			<!--add by ZY0217 2020-04-08-->
+			<INPUT type="hidden" id="Year" value=#(Year)#>
+			<INPUT type="hidden" id="Month" value=#(Month)#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/ba/usedresourcelist.js"></script>
+</body>
+</html>

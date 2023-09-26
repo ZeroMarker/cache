@@ -1,0 +1,68 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	 i ##Class(websys.SessionEvents).SessionExpired() q 1
+	 q 1
+</csp:method>
+<csp:content charset="utf-8">
+<script language="cache" runat="server">
+
+	s action = $Get(%request.Data("action",1))
+	s sortField = $Get(%request.Data("sort",1))
+	s sortDir = $Get(%request.Data("dir",1))
+	s start = $Get(%request.Data("start",1))
+	s limit = $Get(%request.Data("limit",1))
+	s str=$Get(%request.Data("query",1))
+	s userid=$Get(%request.Data("userid",1))
+	
+	s rowid=$Get(%request.Data("rowid",1))
+	s AcctBookID = $Get(%request.Data("AcctBookID",1))
+	s AcctSubjCode=$Get(%request.Data("AcctSubjCode",1))
+	
+	s Amount=$Get(%request.Data("Amount",1))
+
+	s userid=%session.Data("LOGON.USERID")
+    s SubjID=$Get(%request.Data("SubjID",1))
+    s CheckName=$Get(%request.Data("CheckName",1))
+    s CashJournalID=$Get(%request.Data("CashJournalID",1))
+    s ItemName=$Get(%request.Data("ItemName",1))
+  	 s AcctCheckTypeID= $Get(%request.Data("AcctCheckTypeID",1))
+  	s CheckTypeID=$Get(%request.Data("CheckTypeID",1))
+  	s CheckItemIDMain=$Get(%request.Data("CheckItemIDMain",1))
+  	s CashJournalID=$Get(%request.Data("CashJournalID",1))
+  	s SubjCode=$Get(%request.Data("SubjCode",1))
+  	
+  	
+	i action = "ListTemplete" d
+	.w ##class(herp.acct.udata.uAcctCashJournal).ListCheck( sortField, sortDir, start, limit,CashJournalID)
+	
+	i action = "add" d
+	.s result = ##class(herp.acct.udata.uAcctCashJournal).InsertCheck(CashJournalID,AcctSubjCode,CheckName,ItemName,Amount)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	
+	i action = "edit" d
+	.s result = ##class(herp.acct.udata.uAcctCashJournal).UpdateCheck(rowid,CheckName,ItemName,Amount)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+	
+	i action = "del" d
+	.s result = ##class(herp.acct.udata.uAcctCashJournal).DeleteCheck(rowid)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+
+	i action="list"  d 
+	 .w ##class(herp.acct.udata.uAcctCashJournal).ListItem( start, limit,AcctCheckTypeID,AcctBookID,SubjID)
+
+    i action="batchAdd"  d 
+    .s result = ##class(herp.acct.udata.uAcctCashJournal).batchAdd(CashJournalID,CheckTypeID,CheckItemIDMain,SubjCode)
+	.i result = 0 d
+	..w "{success:'true',refresh:'true',info:''}"
+	.e  d
+	..w "{success:'false',info:'"_result_"'}"
+</script>

@@ -1,0 +1,50 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+ //this page is used as a workflow item inside a workflow to popup back out to the main frame
+ //or called from websys.csp when TFRAME is not blank
+ n params,x,target
+ s params="websys.csp?a=a"
+ //cannot use this because of javascript maxstring problem for jumping to new location, 
+ //use form post submission instead
+ ;s x=""  f  s x=%request.Next(x)  q:x=""  d
+ ;. s params=params_"&"_x_"="_##Class(websys.Conversions).EscapeUrl($g(%request.Data(x,1)))
+ ;
+ s nextpage="websys.csp"
+ i $g(%request.Data("TFRAME",1))'="" s nextpage=$g(%request.Data("ServerSideRedirect",1))
+ i nextpage="websys.framesescape.csp" s nextpage="websys.csp" ;for existing workflows that call this item directly, do not loop
+ w !,"<FORM method='POST' action='"_nextpage_"'>"
+ k %request.Data("TEVENT"),%request.Data("ServerSideRedirect") ;don't do the update method again
+ s x=""  f  s x=%request.Next(x)  q:x=""  d
+ . q:x="TFRAME"
+ . w !," <INPUT NAME='"_x_"' type='hidden' value='"_$g(%request.Data(x,1))_"'>"
+ ;need to keep this existing in case the next page's component refreshes (this page) due to error msg
+ i $g(%session.Data("WEBSYS.TCOMPONENT"))'="" w !," <INPUT NAME='WEBSYS.TCOMPONENT' type='hidden' value='"_$g(%session.Data("WEBSYS.TCOMPONENT"))_"'>"
+ w !,"</FORM>"
+ w !,"<SCRIPT language='Javascript'>"
+ //pop out to main frame or just to parent frame???
+ //TN: 02-Oct-2002: if only need to pop to parent frame pass through parent flag else pops to main frame
+ //w !," document.forms[0].target="_$s($g(%request.Data("PARENTWINONLY",1))=1:"window.parent.name;",1:"'TRAK_main';")
+ //should use TFRAME... but for backwards compatibility
+ w !," document.forms[0].target="_$s($g(%request.Data("TFRAME",1))'="":"'"_%request.Data("TFRAME",1)_"'",$g(%request.Data("PARENTWINONLY",1))=1:"window.parent.name;",1:"'TRAK_main';")
+ w !," document.forms[0].submit();"
+ w !," if (self==top) window.close();"
+ //w !," document.writeln('tn: sorry testing stuff');"
+ w !,"</SCRIPT>"
+</SERVER>
+<SCRIPT language="Javascript">
+ //cannot use this because of javascript maxstring problem for jumping to new location
+	//	window.open("#(params)#","TRAK_main");
+	//	if (self==top) window.close();
+</SCRIPT>
+</head>
+</html>

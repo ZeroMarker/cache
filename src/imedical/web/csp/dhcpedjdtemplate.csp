@@ -1,0 +1,121 @@
+<!--
+http://127.0.0.1/imedical/web/csp/dhcpedjdtemplate.header.csp?PAADM=652 
+http://127.0.0.1/imedical/web/csp/dhcpedjdtemplate.csp?PAADM=652 
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=5">
+<TITLE>
+
+</TITLE>
+
+</head>
+<BODY>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s HospID=$g(%request.Data("HospID",1))
+	S UserID=$g(%request.Data("UserID",1))
+	s PatientID=$g(%request.Data("PAADM",1))
+
+	i PatientID=""{
+		s Loc=$O(^DHCPESetting("DHCPE","DefaultPAADM",""))
+		s:Loc'="" PatientID=$G(^DHCPESetting("DHCPE","DefaultPAADM",Loc))
+	}
+	i PatientID'=""{ 
+	s IADM=$o(^DHCPEIADM(0,"PAADM",PatientID,0))
+	s PreIADM=$p($g(^DHCPEIADM(IADM)),"^",4)
+	s BaseInfo=##class(web.DHCPE.PrintNewDirect).GetPatBaseInfo(PreIADM,"0","N",HospID,UserID)
+	s ItemInfo=##class(web.DHCPE.PrintNewDirect).GetItemInfo(PreIADM)
+	//s ItemInfo=$P(ItemInfo,$C(4),2)
+	/*
+	s BaseInfo=PatName_"^"_Sex_"^"_PatAge_"^"_MobilePhone_"^"_RegNo_"^"_BarRegNo
+	s BaseInfo=BaseInfo_"^"_RegDate_"^"_OrderSetsDesc_"^"_Company_"^"_VIPType
+	;s DietDesc="早餐"
+	;s PhotoDesc="片子"
+	s BaseInfo=BaseInfo_"^"_Position_"^"_TotalFee_"^"_DietDesc_"^"_PhotoDesc
+	s BaseInfo=BaseInfo_"^"_SortForNorCus
+	
+	*/
+	s PatName=$P(BaseInfo,"^",1)
+	s LocID=$P(^PAADM(+PatientID),"^",4)
+	
+	s ReportCorderInfo=$G(^DHCPESetting("DHCPE","DJDInfo",LocID))
+	}else{
+		s BaseInfo=""
+		s ReportCorderInfo="导检单抬头^注意事项^备注内容"
+	}
+	s PatName=$P(BaseInfo,"^",1)
+	s PatSex=$P(BaseInfo,"^",2)
+	s PatAge=$P(BaseInfo,"^",3)
+	s MobilePhone=$P(BaseInfo,"^",4)
+	s HPNo=$P(BaseInfo,"^",5)
+	s BarRegNo=$P(BaseInfo,"^",6)
+	s CheckDate=$P(BaseInfo,"^",7)
+	s OrdSetsDesc=$P(BaseInfo,"^",8)
+	s GroupName=$P(BaseInfo,"^",9)
+	s DepartName=$P(BaseInfo,"^",11)
+	
+	s DJDTitel=$P(ReportCorderInfo,"^",1)
+	s DJDNotice=$P(ReportCorderInfo,"^",2)
+	s DJDRemark=$P(ReportCorderInfo,"^",3)
+	
+	
+	s width1="3%"
+	s width2=76
+	s width3="70%"
+	s height=30
+</SCRIPT>
+	
+	<TABLE width=655 border=0 cellspacing=0>
+	
+			<SCRIPT language="Cache" RUNAT="SERVER">
+			//s ItemInfo=$P(ItemInfo,$C(5),1)
+			s ItemInfo=$P(ItemInfo,$C(4),2)
+			
+			s TypeNum=$L(ItemInfo,$C(1))
+			w "<TR><TD height='5' colspan=3 style='border-bottom-style: solid;border-bottom-width: 1px'>&nbsp;</TD></TR>"
+			
+			s Job=$J
+			k ^TempDHCPEPrintNewDirect(Job)
+			f i=1:1:TypeNum d
+			.s OneTypeInfo=$P(ItemInfo,$C(1),i)
+			.s ^TempDHCPEPrintNewDirect(i)=""
+			.//s ItemInfo=$P(OneTypeInfo,$C(1),1)
+			.s OnePatInfo=$P(OneTypeInfo,$C(2),1)
+			.s OneItemInfo=$P(OneTypeInfo,$C(2),2)
+			.s TypeDesc=$P(OnePatInfo,"^",1)
+			.s ArcLength=$L(OneItemInfo,$C(3))
+			.//s ^TempDHCPEPrintNewDirect(Job,i)=TypeDesc_"^0"
+			.s ArcimDescs=""
+			.f j=1:1:ArcLength d
+			..s OneArcInfo=$P(OneItemInfo,$C(3),j)
+			..//w OneArcInfo,!
+			..//s OneArcInfo
+			..s ArcDesc=$P(OneArcInfo,"^",1)
+			..i ArcimDescs="" d
+			...s ArcimDescs=ArcDesc
+			..e  d
+			...s ArcimDescs=ArcimDescs_"、"_ArcDesc
+			.w "<TR><TD colspan=2 width='"_width3_"'>"_TypeDesc_"</TD><TD>"_"医生签名："_"</TD></TR>"
+			.w "<TR><TD width='"_width1_"'>&nbsp;</TD><TD width='"_width3_"'>"_ArcimDescs_"</TD><TD valign='top'>"_"自请免做患者签名："_"</TD></TR>"
+			.w "<TR><TD height='5' colspan=3 style='border-top-style: solid;border-top-width: 1px'>&nbsp;</TD></TR>"
+			
+			</SCRIPT>
+			
+			<TR>
+				<TD colspan=5>
+			
+				<TABLE width=100% border=0 cellspacing=0>
+					<TR><TD><br>#(DJDRemark)#</TD><TR>
+				</TABLE>
+				</TD>
+			</TR>
+
+			
+	</TABLE>
+
+</BODY>
+</HTML>

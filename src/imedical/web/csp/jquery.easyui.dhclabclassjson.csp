@@ -1,0 +1,74 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired() q 1
+	Do %session.Unlock()
+	quit 1
+</csp:method>
+
+<script language="Cache" runat="server">
+	;jquery.easyui.dhclabclassjson.csp
+	;s ^TMPP1=##class(web.DHCDocOrderCommon).UnEscape($g(%request.Data("P1",1)))
+	Set ClassName = $g(%request.Data("ClassName",1))
+	Set QueryName = $g(%request.Data("QueryName",1))
+	Set FunModul = $g(%request.Data("FunModul",1))
+	Set ComponentId = $g(%request.Data("ComponentID",1))
+	Set ComponentName = $g(%request.Data("ComponentName",1))
+	
+	Set page = $g(%request.Data("page",1),1)
+	Set rows = $g(%request.Data("rows",1),450)
+	set start = page*rows - rows
+	set total=0
+	if (FunModul="JSON")||(FunModul="MTHD") {
+		//»Î≤Œ
+	    s P0=$g(%request.Data("P0",1))
+	    s P1=$g(%request.Data("P1",1))
+	    s P2=$g(%request.Data("P2",1))
+	    s P3=$g(%request.Data("P3",1))
+	    s P4=$g(%request.Data("P4",1))
+	    s P5=$g(%request.Data("P5",1))
+	    s P6=$g(%request.Data("P6",1))
+	    s P7=$g(%request.Data("P7",1))
+	    s P8=$g(%request.Data("P8",1))
+	    s P9=$g(%request.Data("P9",1))
+	    s P10=$g(%request.Data("P10",1))
+	    s P11=$g(%request.Data("P11",1))
+	    s P12=$g(%request.Data("P12",1))
+	    s P13=$g(%request.Data("P13",1))
+	    s P14=$g(%request.Data("P14",1))	
+		s P15=rows
+		s P16=start
+		s P17=""
+		
+		if (FunModul="MTHD")
+	 	{
+			s retJson=$CLASSMETHOD(ClassName,QueryName,P0,P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14)
+			w ##Class(LIS.WS.BLL.DHCDataJSON).DealForXML(retJson)
+			Quit ""
+		} 
+		if (FunModul="JSON")
+		{
+			s ^SZW1=$lb(ClassName,QueryName,P0,P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16,P17)
+			Write "{""rows"":"
+			Write ##class(LIS.WS.BLL.DHCDataJSON).ClassQuery2Json(ClassName,QueryName,P0,P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16,P17,.total)
+			Write ",""total"":",total,"}"
+		}
+    }else{
+		if ClassName'="",QueryName'=""{
+			Write "{""rows"":"
+			Write ##class(websys.Query).ToJson(ClassName,QueryName,start,rows)
+			Write ",""total"":",total,"}"
+		}else{
+			if ComponentName'="",ComponentId=""{
+				Set ComponentId = $O(^websys.ComponentI("UniqueNameIndex",$zcvt(ComponentName,"U"),""))
+			}
+			if ComponentId=""{
+				Write "{""Error"":""ComponentID Is Null"",""total"":0}" 
+				Quit ""
+			}
+			w "{""rows"":"
+			do ##class(websys.ComponentUserInterface).ComponentTable2Json(ComponentId,start,rows)
+			w ",""total"":",total,"}"
+		}
+    }
+	quit ""
+</script>
+

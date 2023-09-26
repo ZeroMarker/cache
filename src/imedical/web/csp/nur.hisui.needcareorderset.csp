@@ -1,0 +1,157 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI />
+    <NURHISUI />
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.needcareorderset.js" charset='gbk'></script>
+
+
+    <STYLE type='text/css'>
+        .westLabel {
+            font-weight: bold;
+        }
+
+        .kw-section-list>li {
+            float: left;
+            margin: 5px 0;
+            width: 100%;
+        }
+
+        .btnCls {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            padding: 0 5px 0 0;
+        }
+    </STYLE>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height: 44px;padding:10px 10px 0 10px">
+	 	<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+	 </div>
+    <div data-options="region:'center',border:false" style="padding:10px 10px 0 10px">
+        <div id="main" class="hisui-layout" fit=true>
+            <div data-options="region:'west',title:'',split:true,headerCls:'panel-header-gray',width:260,collapsible:false"
+                border=none>
+                <div class="hisui-panel" fit=true title="出入转设置" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'"
+                    style="padding:10px">
+                    <div class="hisui-layout" fit=true>
+                        <div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray',height:320,collapsible:false"
+                            border=none>
+                            <div style="height:20px;">
+                                <span class="westLabel">入院设置</span>
+                                <span><input id='ifGetAdmDateTimeByBedCheck' class='hisui-checkbox' type="checkbox"
+                                        label="入院时间取分床"></span>
+                            </div>
+                            <div style="height:20px;">
+                                <span class="westLabel">转科需开医嘱子类</span>
+                            </div>
+                            <div class="hisui-panel" border=none>
+                                <table id='transLocNeedOrderGrid' class="hisui-datagrid" style="height:140px"
+                                    data-options="bodyCls:'panel-header-gray',pagination:false,">
+                                </table>
+                            </div>
+                            <div>
+                                <span class="westLabel">出院设置</span>
+                                <span>
+                                    <input id='ifGetDischgDateTimeByDocCheck' class='hisui-checkbox' type="checkbox"
+                                        label="取医生出院时间">
+                                </span>
+                            </div>
+                            <div class="hisui-panel" border=none>
+                                <div id="outHospKeywords"></div>
+                            </div>
+
+                        </div>
+                        <div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray',collapsible:false"
+                            fit=true border=none>
+                            <table id='outHospNeedOrdeGrid' class="hisui-datagrid" style="height:217px" data-options="headerCls:'panel-header-gray',pagination:false,">
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" border=none>
+                <div class="hisui-panel" fit=true title="需关注设置" style="padding:10px" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+                    <div class="hisui-layout" fit=true>
+                        <div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray',height:210,collapsible:false"
+                            border=none>
+                            <div style="height:40px">
+                                <span class="westLabel">需关注类型</span>
+                                <select id="careTypeBox" class="hisui-combobox" name="careType" style="width:120px;"
+                                    data-options="enterNullValueClear:false,panelHeight:'auto'">
+                                    <option value="D">出院需关注</option>
+                                    <option value="T">转科需关注</option>
+                                </select>
+                                <span>
+                                    <input class='hisui-radio' type="radio" label='护士' name='ctcptType' value='NURSE'
+                                        data-options="checked:true">
+                                    <input class='hisui-radio' type="radio" label='医生' name='ctcptType' value='DOCTOR'>
+                                </span>
+                                <a href="#" id="findCareSetBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                            </div>
+                            <div class="hisui-panel" border=none>
+                                <table id='needCareSetGrid' class="hisui-datagrid" style="height:140px" data-options="bodyCls:'panel-header-gray',pagination:false,">
+                                </table>
+                            </div>
+                            <div>
+                                <span class="westLabel">需关注不提示设置</span>
+                                <input id="ifAlertLonOldCheck" class='hisui-checkbox' type="checkbox" label="提示非新长嘱未执行">
+                                <input id="ifTakeDisDrugCheck" class='hisui-checkbox' type="checkbox" label="出院带药需在最终结算前取药">
+                                <input id="ifActiveJustODCheck" class='hisui-checkbox' type="checkbox" label="以下屏蔽只对开医嘱计费的医嘱生效">
+                            </div>
+                        </div>
+                        <div data-options="region:'center',title:'',split:false,collapsible:false" border=none>
+                            <div class="hisui-layout" fit=true>
+                                <div data-options="region:'west',title:'',width:445,collapsible:false" border=none>
+                                    <div class="hisui-panel" title="屏蔽的开单科室" style="height:177px;width:427px;"
+                                        data-options="headerCls:'panel-header-card'">
+                                        <table id='notAlertOrderLocGrid' class="hisui-datagrid" fit=true border=none
+                                            data-options="bodyCls:'panel-header-gray',pagination:false,">
+                                        </table>
+                                    </div>
+                                    <div class="hisui-panel" title="屏蔽的医嘱子类" style="height:177px;width:427px;"
+                                        data-options="headerCls:'panel-header-card'">
+                                        <table id='notAlertArcCatGrid' class="hisui-datagrid" fit=true border=none
+                                            data-options="bodyCls:'panel-header-gray',pagination:false,">
+                                        </table>
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',title:'',collapsible:false" border=none>
+                                    <div class="hisui-panel" title="屏蔽的医嘱大类" style="height:177px;width:425px;"
+                                        data-options="headerCls:'panel-header-card'">
+                                        <table id='notAlertOrderCatGrid' class="hisui-datagrid" fit=true border=none
+                                            data-options="bodyCls:'panel-header-gray',pagination:false,">
+                                        </table>
+                                    </div>
+                                    <div class="hisui-panel" title="屏蔽的医嘱项" style="height:177px;width:420px;"
+                                        data-options="headerCls:'panel-header-card'">
+                                        <table id='notAlertArcItmGrid' class="hisui-datagrid" fit=true border=none
+                                            data-options="bodyCls:'panel-header-gray',pagination:false,">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+</html>

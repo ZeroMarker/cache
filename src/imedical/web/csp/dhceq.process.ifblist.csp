@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<HTML XMLNS=TRAK>
+<head>
+<meta charset="UTF-8" http-equiv="Content-Type" content="text/html;"/>
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<TRAK:HEAD></TRAK:HEAD>
+<DHCEQ:EASYUI></DHCEQ:EASYUI>
+</head>
+<script language="cache" runat="server">
+	s SourceType = $Get(%request.Data("SourceType",1))
+	s SourceID = $Get(%request.Data("SourceID",1))
+	s ReadOnly = $Get(%request.Data("ReadOnly",1))
+	s (title,Status,ElementID,TemplateID)=""
+	if SourceType=1 
+	{
+		s title="采购申请论证-推荐供应商"
+		s ElementID = $Get(%request.Data("ElementID",1))
+		s TemplateID = $Get(%request.Data("TemplateID",1))
+		s Status=$Piece($G(^DHCEQBuyRequest(SourceID)),"^",16)
+	}
+	elseif SourceType=2
+	{
+		s title="采购计划-采购调研表"
+	}
+</script>
+<body>
+	<div class="easyui-layout" fit="true">
+	    <div region="center" title=#(title)#>
+	        <table id="tDHCEQIFBList"> 
+	        </table>
+	    </div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="SourceType" id="SourceType" value=#(SourceType)#>
+			<INPUT TYPE="hidden" name="SourceID" id="SourceID" value=#(SourceID)#>
+			<INPUT TYPE="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>
+			<INPUT TYPE="hidden" name="Status" id="Status" value=#(Status)#>
+			<INPUT TYPE="hidden" name="ElementID" id="ElementID" value=#(ElementID)#>	
+			<INPUT TYPE="hidden" name="TemplateID" id="TemplateID" value=#(TemplateID)#>			
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/js/dhceqifblist.js"></script>
+</body>
+
+</html>

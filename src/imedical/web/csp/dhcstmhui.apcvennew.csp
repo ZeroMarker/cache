@@ -1,0 +1,378 @@
+﻿<!--供应商信息维护-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+	<style>
+		.selectedpic { border:4px solid #378ec4; padding:0;position: relative;z-index:0}
+	</style>
+	<link href="../scripts/dhcstmhisui/Common/webuploader/webuploader.css" type="text/css" rel="stylesheet"/>
+	<link href="../scripts/dhcstmhisui/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'west',border:false,collapsible:false" style="width:570px;">
+		<div class="hisui-panel" title="供应商列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false" style="border-bottom:none;">
+					<table id="MainConditions" class="Condition">
+						<tr>
+							<td><label>代码</label><input id="VendorCode" name="VendorCode" class="textbox" style="width:160px;"></td>
+							<td><label>状态</label><select id="Status" name="Status" class='hisui-combobox' style="width:160px;">
+								<option value="" selected>全部</option>
+								<option value="A">使用</option>
+								<option value="S">停用</option>
+							</select></td>
+							<td align="left"><input id="MiddleVendor" name="MiddleVendor" class='hisui-checkbox' type="checkbox" value="Y" label="经销商"></td>
+						</tr>
+						<tr>
+							<td><label>名称</label><input id="VendorDesc" name="VendorDesc" class="textbox" style="width:160px;"></td>
+							<td><label>分类</label><input id="VendorCat" name="VendorCat" class="hisui-combobox" style="width:160px;"></td>
+							<td align="left" style="padding-left:16px;"><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="VendorGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="hisui-tabs tabs-gray GridPadding" data-options="region:'center'" style="padding-left:0;border:none;"> 
+		<div title="供应商基本信息">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;padding:5px;">
+					<a href="#" id="AddBT_1" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+					<a href="#" id="SaveBT_1" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="BasicConditions" class="Condition">
+						<input id="RowId" name="RowId" type="hidden">
+						<tr>
+							<td><label>代码</label><input id="VendorCode_1" name="VendorCode" class="hisui-validatebox" style="width:150px;"></td>
+							<td><span class="required">*</span><label>名称</label><input id="VendorDesc_1" name="VendorDesc" class="hisui-validatebox" data-options="required:true" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>电话</label><input id="Tel" name="Tel" class="textbox" style="width:150px;"></td>
+							<td><label>分类</label><input id="VendorCat_1" name="VendorCat" class="hisui-combobox" style="width:147px;"></td>
+						</tr>
+						<tr>
+							<td><label>传真</label><input id="Fax" name="Fax" class="textbox" style="width:150px;"></td>
+							<td><label>邮箱</label><input id="VendorEmail" name="VendorEmail" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>简称</label><input id="Abbrev" name="Abbrev" class="textbox" style="width:150px;"></td>
+							<td><label>地址</label><input id="Address" name="Address" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>法人</label><input id="President" name="President" class="textbox" style="width:150px;"></td>
+							<td><label>法人身份证</label><input id="PresidentCard" name="PresidentCard" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>法人电话</label><input id="PresidentTel" name="PresidentTel" class="textbox" style="width:150px;"></td>
+							<td><label>账户</label><input id="CtrlAcct" name="CtrlAcct" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>注册资金</label><input id="CrAvail" name="CrAvail" class="textbox" style="width:150px;"></td>
+							<td><label>采购额</label><input id="CrLimit" name="CrLimit" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>开户银行</label><input id="Bank" name="Bank" class="textbox" style="width:150px;"></td>
+							<td><label>许可证核准号</label><input id="BankLicApprovalNo" name="BankLicApprovalNo" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>许可证号</label><input id="BankLicNo" name="BankLicNo" class="textbox" style="width:150px;"></td>
+							<td><label>高值条码前缀</label><input id="BarCode" name="BarCode" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>成立日期</label><input id="EstablishedDate" name="EstablishedDate" class="hisui-datebox textbox" style="width:157px;"></td>
+							<td><label>合同截止日期</label><input id="LstPoDate" name="LstPoDate" class="hisui-datebox textbox" style="width:147px;"></td>
+						</tr>
+						<tr>
+							<td><label>营业期限</label><input id="BusinessTerm" name="BusinessTerm" class="hisui-datebox textbox" style="width:157px;"></td>
+							<td><label>最后业务日期</label><input id="LstBsDate" name="LstBsDate" class="hisui-datebox textbox" data-options="disabled:true" style="width:147px;"></td>
+						</tr>
+						<tr>
+							<td><label>注册地址</label><input id="RegAddress" name="RegAddress" class="textbox" style="width:150px;"></td>
+							<td><label>企业负责人</label><input id="ResponsiblePerson" name="ResponsiblePerson" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>仓库地址</label><input id="DepotAddress" name="DepotAddress" class="textbox" style="width:150px;"></td>
+							<td><label>质量管理人</label><input id="QualityManager" name="QualityManager" class="textbox" style="width:140px;"></td>
+						</tr>
+						<tr>
+							<td><label>助记码</label><input id="VendorAlias" name="VendorAlias" class="textbox" style="width:150px;"></td>
+							<td><label>使用状态</label><select id="Status_1" name="Status" class='hisui-combobox' style="width:147px;">
+								<option value="A" selected>使用</option>
+								<option value="S">停用</option>
+							</select></td>
+						</tr>
+					</table>
+					<table id="BasicCheckConditions" class="Condition">
+						<tr align="left">
+							<td><input id="MiddleVendor_1" name="MiddleVendor" class='hisui-checkbox' type="checkbox" value="Y" label="经销商"></td>
+							<td><input id="SMSFlag" name="SMSFlag" class='hisui-checkbox' type="checkbox" value="Y" label="短信通知"></td>
+							<td><input id="PurchPlatFlag" name="PurchPlatFlag" class='hisui-checkbox' type="checkbox" value="Y" label="平台通知"></td>
+							<td><input id="CarryFlag" name="CarryFlag" class='hisui-checkbox' type="checkbox" value="Y" label="转配送标志"></td>
+						</tr>
+						<tr align="left">
+							<td><input id="UniversalFlag" name="UniversalFlag" class='hisui-checkbox' type="checkbox" value="Y" label="通用标志"></td>
+							<td><input id="RenameFlag" name="RenameFlag" class='hisui-checkbox' type="checkbox" value="Y" label="更名标志"></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div title="资质信息" data-options="closable:false" style="overflow:auto;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;padding:5px;">
+					<a href="#" id="AddBT_2" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+					<a href="#" id="SaveBT_2" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="QualifyConditions" class="Condition">
+						<!--
+							1.这里所有资质的命名进行一个约束, 比如工商执照使用'comLic',和后台有约定,不是随便定义的.
+							2.RowId字段(拼接RowId), 证书编号(拼接Text), 发证机关(IssuedDept), 发证日期(IssuedDate), 效期comLicDateTo(DateTo), 
+							效期长期标志(BlankedFlag), 延期标志(DelayFlag), 延期至(DelayDateTo)
+							3.注意大小写!
+						-->
+						<tr>
+							<input id="comLicRowId" name="comLicRowId" type="hidden">
+							<td><label>工商执照</label><input id="comLicText" name="comLicText" class="textbox" style="width:180px;"></td>
+							<td><label>效期</label><input id="comLicDateTo" name="comLicDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<td><label>发证机关</label><input id="comLicIssuedDept" name="comLicIssuedDept" class="textbox" style="width:180px;"></td>
+							<td><label>发证日期</label><input id="comLicIssuedDate" name="comLicIssuedDate" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<input id="taxLicRowId" name="taxLicRowId" type="hidden">
+							<td><label>税务登记证</label><input id="taxLicText" name="taxLicText" class="textbox" style="width:180px;"></td>
+							<td><label>效期</label><input id="taxLicDateTo" name="taxLicDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<td><label>发证机关</label><input id="taxLicIssuedDept" name="taxLicIssuedDept" class="textbox" style="width:180px;"></td>
+							<td><label>发证日期</label><input id="taxLicIssuedDate" name="taxLicIssuedDate" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<input id="orgCodeRowId" name="orgCodeRowId" type="hidden">
+							<td><label>机构代码</label><input id="orgCodeText" name="orgCodeText" class="textbox" style="width:180px;"></td>
+							<td><label>效期</label><input id="orgCodeDateTo" name="orgCodeDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<td><label>发证机关</label><input id="orgCodeIssuedDept" name="orgCodeIssuedDept" class="textbox" style="width:180px;"></td>
+							<td><label>发证日期</label><input id="orgCodeIssuedDate" name="orgCodeIssuedDate" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<input id="insBusLicRowId" name="insBusLicRowId" type="hidden">
+							<td><label>器械经营许可证</label><input id="insBusLicText" name="insBusLicText" class="textbox" style="width:180px;"></td>
+							<td><label>效期</label><input id="insBusLicDateTo" name="insBusLicDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<td><label>发证机关</label><input id="insBusLicIssuedDept" name="insBusLicIssuedDept" class="textbox" style="width:180px;"></td>
+							<td><label>发证日期</label><input id="insBusLicIssuedDate" name="insBusLicIssuedDate" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<input id="qualityCommRowId" name="qualityCommRowId" type="hidden">
+							<td><label>质量承诺书</label><input id="qualityCommText" name="qualityCommText" class="textbox" style="width:180px;"></td>
+							<td><label>效期</label><input id="qualityCommDateTo" name="qualityCommDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<input id="legalCommRowId" name="legalCommRowId" type="hidden">
+							<td><label>法人委托书</label><input id="legalCommText" name="legalCommText" class="textbox" style="width:180px;"></td>
+							<td><label>效期</label><input id="legalCommDateTo" name="legalCommDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<tr>
+							<input id="saleServCommRowId" name="saleServCommRowId" type="hidden">
+							<td><label>售后服务书</label><input id="saleServCommText" name="saleServCommText" class="textbox" style="width:180px;"></td>
+							<td><label>效期</label><input id="saleServCommDateTo" name="saleServCommDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
+						</tr>
+						<!--这里所有资质的命名进行一个约束, 具体要求见本table的开头部分-->
+					</table>
+				</div>
+			</div>
+		</div>
+		<div title="业务员信息" data-options="closable:false">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;padding:5px;">
+					<a href="#" id="AddBT_3" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+					<a href="#" id="SaveBT_3" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="SalesManConditions" class="Condition">
+						<tr>
+							<td><label>姓名</label><input id="SalesName" name="SalesName" class="textbox" style="width:230px;"></td>
+						</tr>
+						<tr>
+							<td><label>身份证</label><input id="SalesCard" name="SalesCard" class="textbox" style="width:230px;"></td>
+						</tr>
+						<tr>
+							<td><label>手机</label><input id="SalesCarrTel" name="SalesCarrTel" class="textbox" style="width:230px;"></td>
+						</tr>
+						<tr>
+							<td><label>电话</label><input id="SalesTel" name="SalesTel" class="textbox" style="width:230px;"></td>
+						</tr>
+						<tr>
+							<td><label>邮箱</label><input id="SalesEmail" name="SalesEmail" class="textbox" style="width:230px;"></td>
+						</tr>
+						<tr>
+							<td><label>传真</label><input id="SalesFax" name="SalesFax" class="textbox" style="width:230px;"></td>
+						</tr>
+						<tr>
+							<td><label>授权书效期</label><input id="ProxyValidDate" name="ProxyValidDate" class="hisui-datebox textbox" style="width:237px;"></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div title="资质图片" data-options="closable:false">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;padding:5px;">
+					<a href="#" id="UpLoadBT" class="hisui-linkbutton" data-options="iconCls:'icon-upload-cloud',plain:true">上传</a>
+					<a href="#" id="TakePhotoBT" class="hisui-linkbutton" data-options="iconCls:'icon-camera',plain:true">拍照</a>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table class="Condition">
+						<tr>
+							<td><label>资质信息</label><select id="Qualifications" name="Qualifications" class="hisui-combobox" style="width:200px;">
+								<option value="" selected disabled>请选择资质信息...</option>
+								<option value="comLic">工商执照</option>
+								<option value="taxLic">税务登记证</option>
+								<option value="gspLic">GSP认证</option>
+								<option value="orgCode">机构代码</option>
+								<option value="agentAuth">代理授权书</option>
+								<option value="vendorAgreement">供应商协议</option>
+								<option value="insRegLic">器械注册证</option>
+								<option value="insBusLic">器械经营许可证</option>
+								<option value="insProLic">器械生产许可证</option>
+								<option value="inletRLic">进口注册证</option>
+								<option value="inletRegLic">进口注册登记表</option>
+								<option value="saleServComm">售后服务书</option>
+								<option value="legalComm">法人委托书</option>
+								<option value="socialCreditComm">社会信用码</option>
+								<option value="qualityComm">质量承诺书</option>
+								<option value="salesLic">业务员授权书</option>
+								<option value="salsPhoto">业务员照片</option>
+								<option value="salesID">业务员身份证</option>
+							</select></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="UpLoadWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:600px;height:480px" title="图片上传"> 
+		<div class="hisui-layout" data-options="fit:true">   
+			<div class="BorderLine" data-options="region:'north',border:false" style="height:58px;">
+				<table class="Condition">
+					<tr>
+						<td><div id="AddPicBT">添加图片</div></td>
+						<td><div id="UpLoadPicBT" class="hisui-linkbutton">上传图片</div></td>
+					</tr>
+				</table>
+			</div> 
+			<div data-options="region:'center',border:false">   
+				<div id="PicList" class="uploader-list" style="padding:10px;"></div>
+			</div>
+		</div>
+	</div>
+	<div id="VendorPicWin" class="hisui-dialog FindWin" data-options="modal:true,closed:'true'" title="供应商图片信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="GridPadding" data-options="region:'west',border:false" style="width:430px;">
+				<div class="hisui-panel" title="资质信息" data-options="headerCls:'panel-header-card-gray'">
+					<table id="Conditions" class="Condition">
+						<tr>
+							<td align="left"><input id="comLic" name="comLic" class='hisui-checkbox' type="checkbox" value="Y" label="工商执照"></td>
+							<td align="left"><input id="insRegLic" name="insRegLic" class='hisui-checkbox' type="checkbox" value="Y" label="器械注册证"></td>
+							<td align="left"><input id="legalComm" name="legalComm" class='hisui-checkbox' type="checkbox" value="Y" label="法人委托书"></td>
+						</tr>
+						<tr>
+							<td align="left"><input id="taxLic" name="taxLic" class='hisui-checkbox' type="checkbox" value="Y" label="税务登记证"></td>
+							<td align="left"><input id="insBusLic" name="insBusLic" class='hisui-checkbox' type="checkbox" value="Y" label="器械经营许可证"></td>
+							<td align="left"><input id="socialCreditComm" name="socialCreditComm" class='hisui-checkbox' type="checkbox" value="Y" label="社会信用码"></td>
+						</tr>
+						<tr>
+							<td align="left"><input id="gspLic" name="gspLic" class='hisui-checkbox' type="checkbox" value="Y" label="GSP认证"></td>
+							<td align="left"><input id="insProLic" name="insProLic" class='hisui-checkbox' type="checkbox" value="Y" label="器械生产许可证"></td>
+							<td align="left"><input id="qualityComm" name="qualityComm" class='hisui-checkbox' type="checkbox" value="Y" label="质量承诺书"></td>
+						</tr>
+						<tr>
+							<td align="left"><input id="orgCode" name="orgCode" class='hisui-checkbox' type="checkbox" value="Y" label="机构代码"></td>
+							<td align="left"><input id="inletRLic" name="inletRLic" class='hisui-checkbox' type="checkbox" value="Y" label="进口注册证"></td>
+							<td align="left"><input id="salsPhoto" name="salsPhoto" class='hisui-checkbox' type="checkbox" value="Y" label="业务员照片"></td>
+						</tr>
+						<tr>
+							<td align="left"><input id="agentAuth" name="agentAuth" class='hisui-checkbox' type="checkbox" value="Y" label="代理授权书"></td>
+							<td align="left"><input id="inletRegLic" name="inletRegLic" class='hisui-checkbox' type="checkbox" value="Y" label="进口注册登记表"></td>
+							<td align="left"><input id="salesID" name="salesID" class='hisui-checkbox' type="checkbox" value="Y" label="业务员身份证"></td>
+						</tr>
+						<tr>
+							<td align="left"><input id="vendorAgreement" name="vendorAgreement" class='hisui-checkbox' type="checkbox" value="Y" label="供应商协议"></td>
+							<td align="left"><input id="saleServComm" name="saleServComm" class='hisui-checkbox' type="checkbox" value="Y" label="售后服务书"></td>
+							<td align="left"><input id="salesLic" name="salesLic" class='hisui-checkbox' type="checkbox" value="Y" label="业务员授权书"></td>
+						</tr>
+					</table>
+				</div>
+				<div>
+					<table class="Condition">
+						<tr>
+							<td align="left"><input id="AuditFlag" name="AuditFlag" class='hisui-checkbox' type="checkbox" value="Y" label="已审核"></td>
+							<td colspan="2"><label>资质信息</label><select id="Qualification" name="Qualification" class="hisui-combobox" style="width:190px;">
+								<option value="" selected disabled>请选择图片重新归档为...</option>
+								<option value="comLic">工商执照</option>
+								<option value="taxLic">税务登记证</option>
+								<option value="gspLic">GSP认证</option>
+								<option value="orgCode">机构代码</option>
+								<option value="agentAuth">代理授权书</option>
+								<option value="vendorAgreement">供应商协议</option>
+								<option value="insRegLic">器械注册证</option>
+								<option value="insBusLic">器械经营许可证</option>
+								<option value="insProLic">器械生产许可证</option>
+								<option value="inletRLic">进口注册证</option>
+								<option value="inletRegLic">进口注册登记表</option>
+								<option value="saleServComm">售后服务书</option>
+								<option value="legalComm">法人委托书</option>
+								<option value="socialCreditComm">社会信用码</option>
+								<option value="qualityComm">质量承诺书</option>
+								<option value="salesLic">业务员授权书</option>
+								<option value="salsPhoto">业务员照片</option>
+								<option value="salesID">业务员身份证</option>
+							</select></td>
+						</tr>
+						<tr>
+							<td><a href="#" id="PicQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+						</tr>
+						<tr>
+							<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+							<td><a href="#" id="AuditBT" class="hisui-linkbutton" style="width:88px;">审核通过</a></td>
+							<td><a href="#" id="DenyBT" class="hisui-linkbutton" style="width:88px;">审核拒绝</a></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-left:0;">
+				<div class="hisui-panel" title="图片列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-img',fit:true">
+					<ul id="PicLists" style="padding:10px;"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonHosp.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/jquery.tmpl.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/Viewer/viewer.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/webuploader/webuploader.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonuploader.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ApcVendor/PicWindow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ApcVendor/ApcVenNew.js"></script>
+</body>
+</html>

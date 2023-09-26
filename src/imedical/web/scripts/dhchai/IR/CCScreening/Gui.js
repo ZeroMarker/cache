@@ -1,0 +1,50 @@
+﻿//页面Gui
+function InitCCScreeningWin(){
+	var obj = new Object();
+	obj.EpisScrRstList = new Object();
+	obj.EpisScrRstList.CCSList = new Array();
+	obj.EpisScrRstList.INFList = new Array();	
+	//初始化高度
+	var wh = $(window).height();
+	$("#divLeft").height(wh-10);
+    $("#MainTable").height(wh-1);
+	$("#divPanel").height(wh-170);
+	
+	//自适应高度
+	$(window).resize(function(){
+		var wh = $(window).height();
+		$("#divLeft").height(wh-10);
+		$("#MainTable").height(wh-1);
+		$("#divPanel").height(wh-170);	
+	});
+	
+	$("#divLeft").mCustomScrollbar({
+		theme: "dark-thick",
+		axis: "y",
+		scrollInertia: 100,
+		mouseWheelPixels: 80 //滚动速度
+	});
+	
+	$("#divMain").mCustomScrollbar({
+		theme: "dark-thick",
+		axis: "y",
+		scrollInertia: 100,
+		mouseWheelPixels: 80
+	});
+	
+	$("#divPanel").mCustomScrollbar({
+		theme: "dark-thick",
+		axis: "y",
+		scrollInertia: 100,
+		mouseWheelPixels: 80
+	});
+	
+	$('body').mCustomScrollbar({
+		theme: "dark-thick",
+		scrollInertia : 100,
+		mouseWheelPixels: 80
+	});
+	
+	InitCCScreeningWinEvent(obj);
+	return obj;
+}

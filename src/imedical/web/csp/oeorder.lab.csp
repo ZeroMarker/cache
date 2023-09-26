@@ -1,0 +1,171 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<TITLE>#(%request.Get("ARCIMDesc"))#</TITLE>
+</HEAD>
+<body>
+<!--AmiN Log 24827   on 02 May 2002><-->
+<CSP:IF condition=($l($g(%request.Data("EpisodeID",1)),"^")=1)>
+<TRAK:COMPONENT id="PAPerson.Banner" hidemenus=1 hideheadings=1></TRAK:COMPONENT>
+</CSP:IF>
+<script language="Javascript" SRC="../Scripts/OEOrder.Common.js"></script>
+<server>
+ d ##Class(websys.Component).GetComponentMessages(.t,"OEOrder.Normal")
+ i %request.Get("LOCKMSG")'="" d
+ . w "<P><center><B><font color='red'>"_%request.Get("LOCKMSG")_"</font></B></center></P>"
+ ; seanl log 58161 Questionnaire link will turn bold if questionnaire has already been 
+ ; filled in
+ n oid,QuestRowID,QuestRowIDFinal
+ s (oid,QuestRowID,QuestRowIDFinal)=""
+ s oid=%request.Get("ID") 
+ i oid'="",$p(oid,"||",2)'="" s QuestRowID=$g(^OEORD(+oid,"I",$p(oid,"||",2),12)) 
+ i QuestRowID'="" s QuestRowID=$p(QuestRowID,"^",15) 
+ i QuestRowID'="" s QuestRowIDFinal=$p(QuestRowID,"||",2)
+ i QuestRowIDFinal'="" w "<B>"
+ i %request.Get("QuestionnaireDesc")'="" d
+ . w "<center>"
+ . w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ . w "<br>"
+ . w "</center>"
+ i QuestRowIDFinal'="" w "</B>" 
+
+ ;i %request.Get("QuestionnaireDesc")'="" d
+ ;. w "<center>"
+ ;. w "<A href=""javascript:QuestionnaireClickHandler();"" accesskey=""Q"">",t("Questionnaire"),"-",%request.Get("QuestionnaireDesc"),"</A>"
+ ;. w "<br>"
+ ;. w "</center>"
+ ;LOG 35167 RC 06/06/03 This has been commented out because Log 35170 added 3 new customizable links to 
+ ;replace this one.
+ ;i %request.Get("FileNotes")'="" d
+ ;. w "<center>" 
+ ;. w "<A href=""javascript:PatientOrderProfile();"" accesskey=""P""><U>P</U>atientOrderProfile-",%request.Get("FileNotes"),"</A>"
+ ;. w "</center>"
+</server>
+<TRAK:COMPONENT id="OEOrder.Lab">
+</TRAK:COMPONENT>
+<server>
+ ;s a="" f  s a=$o(%KEY(a)) q:a=""  w "<BR>",a,"=",%KEY(a)
+ ;
+ n tsetSelected,ExtLabFlag,SelDefaultSpec,specimens,itmMast,setid,sites,defstatus,deflab,CreateOneOrderPerSpecFlag,OrderWindow,SttTim
+ s (tsetSelected,ExtLabFlag,SelDefaultSpec,specimens,itmMast,setid,sites,defstatus,deflab,CreateOneOrderPerSpecFlag,OrderWindow,SttTim)=""
+ s tsetSelected=%request.Get("tsetSelected")
+ ;i %request.Get("ID")'="" S tsetSelected=%request.Get("tsetSelected")
+
+ s itmMast=%request.Get("OEORIItmMastDR")
+ s Order=%request.Get("ID")
+
+ i Order'="" d
+ . s itm=$p(Order,"||",2),ord=+Order
+ . i ord'="",itm'="" s SttTim=$p($g(^OEORD(ord,"I",itm,1)),"^",10)
+
+ s ExtLabFlag=$$extlab^COEOrdItem()
+ s ExtLabFlag=$$extlab^COEOrdItem($$recloc^COEOrdItem(%request.Get("OEORIItmMastDR"),%request.Get("EpisodeID"),SttTim))
+
+ i ExtLabFlag="N" s deflab=$p(##Class(web.OEOrder).GetDefaultLaboratory(%session.Get("LOGON.USERCODE")),"^",2)
+
+ ;s ^zpeterc($zn,"sites")=deflab_"***"_sites
+ ;s ^zdenise($zn,"sites")=%request.Data("SpecSites")
+ s sites=%request.Get("SpecSites")
+ s setid=%request.Get("ORDERSETID")
+ i itmMast=setid  s setid=""
+ ;s %response.TraceDump=1
+ ;s specimens=$$labspec2^COEOrdItem(itmMast,setid,"1")
+ 
+ ; This should be "Y" and a case for "" but that will come later
+ i ExtLabFlag="Y",%request.Get("OEORIItmMastDR")'="" d
+ . s SelDefaultSpec=""
+ . s rs=##Class(%Library.ResultSet).%New("web.ARCItemSpecimen:FindDefaultMedSpecimens")
+ . i rs d
+ . . d rs.Execute(%request.Get("OEORIItmMastDR"))
+ . . f k=1:1 q:'rs.Next()  d
+ . . . s SelDefaultSpec=SelDefaultSpec_rs.GetData(1)_"^"
+ . . d rs.%Close()
+ i ExtLabFlag'="Y",%request.Get("OEORIItmMastDR")'="" d
+ . s (SelDefaultSpec,IsDef)=""
+ . s rs=##Class(%Library.ResultSet).%New("web.EPVisitSpecimen:LookUpSpecimen")
+ . i rs d
+ . . d rs.Execute("",%request.Get("ID"),%request.Get("OEORIItmMastDR"))
+ . . f k=1:1 q:'rs.Next()  d
+ . . . s IsDef=rs.GetData(3)
+ . . . i IsDef="Y" s SelDefaultSpec=SelDefaultSpec_"^"_rs.GetData(2)
+ . . d rs.%Close()
+ ;i ExtLabFlag="Y" d
+ ;s ^zpeterc($zn,"tsetSelected")=tsetSelected_"()"_SelDefaultSpec
+ i tsetSelected'="" s SelDefaultSpec=""
+ s CPList=%request.Get("CareProvList")
+ s RefDOcList=%request.Get("RefDoctorList")
+ n PatID
+ s PatID=%request.Get("PatientID")
+ s defstatus=%request.Get("defstatus")
+ ;
+ s specimens=%request.Get("Specimens")
+ s tempFlag=%request.Get("Flag")
+ s specimens=%request.Get("Specimens")
+ s CreateOneOrderPerSpecFlag=$p(^CF("OE",1),"^",62)
+ s OrderWindow=%request.Get("OrderWindow")
+ n DisableSpecimenList,OrderID
+ s DisableSpecimenList=0
+ s OrderID=%request.Get("ID")
+ i OrderID'="" d
+ . i $p($g(^OEORD(+OrderID,"I",$p(OrderID,"||",2),3)),"^",35)'="" s DisableSpecimenList=1
+</server>
+
+<script language="Javascript">
+var CPList = "#(CPList)#";
+var RefDOcList="#(RefDOcList)#";
+var tsetSelected="#(tsetSelected)#";
+var SelDefaultSpec="#(SelDefaultSpec)#";
+var PatientID = "#(PatID)#";
+var specs="#(specimens)#";
+//alert(tsetSelected);
+var CreateOneOrderPerSpecFlag="#(CreateOneOrderPerSpecFlag)#"
+
+var sites="#(sites)#";
+var deflab="#(deflab)#";
+var defstatus="#(defstatus)#";
+var tempFlag="#(tempFlag)#";
+var ExtLabFlag="#(ExtLabFlag)#";
+var OrderWindow="#(OrderWindow)#";
+var Updated=0;   //log 30710 AmiN Start Date must be within Episode Admin Date and Discharge date.
+//alert("Thing:"+tsetSelected+"\n"+SelDefaultSpec)
+</SCRIPT>
+<server>
+ i %request.Get("ID")'="" d
+ . n billflag
+ . s billflag=##Class(web.OEOrder).GetBilledFlag(%request.Get("ID"))
+ . i billflag="P" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i billflag="TR" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i billflag="R" d
+ . . w "<script language='Javascript'>"
+ . . w "DisableElementsWhenInvoiced();"
+ . . w "</script>"
+ . i DisableSpecimenList=1 d
+ . . w "<script language='Javascript'>"
+ . . w "DisableSpecimenListBox();"
+ . . w "</script>"
+ ;
+ //when page is returned after cache error (such as invalid pin, invalid ct, etc)
+ n val
+ i $g(%request.Data("ID",1))'="",$d(msg.Data("hiddenitem1")) d
+ . w "<SCRIPT Language=""Javascript"">",$C(13,10)
+ . s val=$zcvt($g(msg.Data("hiddenitem1",1)),"I","URL")
+ . ;override CPList from above js, as this is the new selected list items.
+ . w "CPList='"_$p(val,$c(1),51)_"';",$c(13,10)
+ . w "</SCRIPT>",$C(13,10)
+</server>
+
+</body>
+</html>

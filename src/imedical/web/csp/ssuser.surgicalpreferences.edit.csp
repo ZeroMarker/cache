@@ -1,0 +1,39 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //i ##Class(websys.SessionEvents).SessionExpired()
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ i $g(%request.Data("Stat",1))="Copy" s %response.ServerSideRedirect="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrv"_$g(%request.Data("Component",1))_"Pref.Edit"
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+<SERVER>
+	s PARREF=$g(%request.Data("PARREF",1))
+	s OpPrefID=$g(%request.Data("OpPrefID",1))
+	s Component=$g(%request.Data("Component",1))
+	s ReadOnly=$g(%request.Data("ReadOnly",1))
+	s keeepcurrent=$g(%request.Data("keeepcurrent",1))
+	s cbcurrent=$g(%request.Data("cbcurrent",1))
+	s %request.Data("cbcurrent",1)=cbcurrent
+</SERVER>
+<CSP:IF condition=(keeepcurrent="")>
+	<frameset rows="30%,30%,20%,*">
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrv#(Component)#Pref.Edit&PARREF=#(PARREF)#&OpPrefID=#(OpPrefID)#&Stat=Edit&ReadOnly=#(ReadOnly)#" name="PrefEdit" frameBorder=1>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrvPrefEqOrdItem.List&PARREF=#(OpPrefID)#&CareProvID=#(PARREF)#&ReadOnly=#(ReadOnly)#&cbcurrent=#(cbcurrent)#" name="ItemReq" frameBorder=0>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrvPrefEqEquip.List&PARREF=#(OpPrefID)#&ReadOnly=#(ReadOnly)#" name="EquipReq" frameBorder=0>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrvPrefEqStaff.List&PARREF=#(OpPrefID)#&ReadOnly=#(ReadOnly)#" name="StaffReq" frameBorder=0>
+</frameset>
+</CSP:IF>
+<CSP:IF condition=(keeepcurrent'="")>
+	<frameset rows="30%,30%,20%,*">
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrv#(Component)#Pref.Edit&PARREF=#(PARREF)#&OpPrefID=#(OpPrefID)#&Stat=Edit&ReadOnly=#(ReadOnly)#" name="PrefEdit" frameBorder=1>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrvPrefEqOrdItem.List&PARREF=#(OpPrefID)#&CareProvID=#(PARREF)#&ReadOnly=#(ReadOnly)#&keeepcurrent=#(keeepcurrent)#" name="ItemReq" frameBorder=0>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrvPrefEqEquip.List&PARREF=#(OpPrefID)#&ReadOnly=#(ReadOnly)#" name="EquipReq" frameBorder=0>
+	<frame src="websys.default.csp?WEBSYS.TCOMPONENT=CTCarPrvPrefEqStaff.List&PARREF=#(OpPrefID)#&ReadOnly=#(ReadOnly)#" name="StaffReq" frameBorder=0>
+</frameset>
+</CSP:IF>
+</HTML>
