@@ -1,0 +1,99 @@
+/// Creator:         wk
+/// CreatDate:       2018-01-11
+/// Description:	 院长查询配置增删等操作
+Class web.DHCWL.V1.YZCXData.SaveData Extends %RegisteredObject
+{
+
+/// w ##class(DHCWL.YZCXData.SaveData).GetHosconidByUser("1")
+ClassMethod GetHosconidByUser(hosconUserDr) As %String
+{
+	q:hosconUserDr="" ""
+	s id=$o(^DHCWL.YZCX.HosConI("User",hosconUserDr,""))
+	q id
+}
+
+/// Creator：      wk
+/// CreatDate：    2017-12-27
+/// Description:： 院区配置表增加用户信息
+/// Table：        DHCWL_YZCX.DHCWLYZCXHosCon
+/// Input：       
+/// Output：      
+/// Return：      
+/// Others：w ##class(DHCWL.YZCXData.SaveData).SaveUserNew(.dim)
+/// 
+ClassMethod SaveUserNew(userID) As %String
+{
+	s id=..GetHosconidByUser(userID)
+	i id'="" q "该用户已添加！"
+	s date=+$h
+	&sql(INSERT INTO DHCWL_YZCX.DHCWLYZCXHosCon(HosCon_User_Dr,HosCon_CUDate) values(:userID,:date))
+	s id=+$g(%ROWID)
+	s result="保存失败了"
+	i SQLCODE=0  d  
+	.s result="ok"
+    q result
+}
+
+/// Creator：      wk
+/// CreatDate：    2017-12-27
+/// Description:： 院区配置表保存用户分院信息
+/// Table：        DHCWL_YZCX.DHCWLYZCXHosCon
+/// Input：       
+/// Output：      
+/// Return：      
+/// Others：w ##class(DHCWL.YZCXData.SaveData).SaveHospNew(.dim)
+/// 
+ClassMethod SaveHospNew(userID As %String, hospId As %String) As %String
+{
+	//s ^TEMPDHCWL("wk","hos")=userID_"@"_hospId
+	s nowDate=+$h
+	s flag=0
+	s result="failure"
+	q:$d(^DHCWL.YZCX.UserHosRelI("UserHos",userID,hospId)) "已经存在了"
+	&sql(INSERT INTO DHCWL_YZCX.DHCWLYZCXUserHosRel(UHR_User_Dr,UHR_Hosp_Dr,UHR_CUDate) values(:userID,:hospId,:nowDate))
+	q:SQLCODE'=0 "保存失败了"
+	q "ok"
+}
+
+/// Creator：      wk
+/// CreatDate：    2017-12-28
+/// Description:： 删除配置用户
+/// Table：        DHCWL_YZCX.DHCWLYZCXHosCon
+/// Input：       
+/// Output：      
+/// Return：      
+/// Others：w ##class(DHCWL.YZCXData.SaveData).deleteUserNew("11")
+/// 删除配置 需要同时删除相应的分院配置信息
+ClassMethod deleteUserNew(ID) As %String
+{
+	s id=$g(ID)
+	s flag=0
+	q:'$d(^DHCWL.YZCX.HosConD(id)) "请选择要删除的行"
+	s uhrId=$o(^DHCWL.YZCX.UserHosRelI("User",id,""))
+	q:uhrId'="" "请先删除该用户关联院区"
+	s exc=##class(DHCWL.YZCX.HosCon).%OpenId(id)
+	s sc=##class(DHCWL.YZCX.HosCon).%DeleteId(id)
+	i (sc=1)&&(flag=0) d
+	.s result="ok"
+	e  s result="删除失败"
+	q $g(result)
+}
+
+/// Creator：      wk
+/// CreatDate：    2017-12-28
+/// Description:： 删除配置分院
+/// Table：        DHCWL_YZCX.DHCWLYZCXHosCon
+/// Input：       
+/// Output：      
+/// Return：      
+/// Others：w ##class(DHCWL.YZCXData.SaveData).deleteHospNew()
+/// 删除院配置信息
+ClassMethod deleteHospNew(id) As %String
+{
+	s excValueObj=##class(DHCWL.YZCX.UserHosRel).%OpenId(id)
+	s sc=##class(DHCWL.YZCX.UserHosRel).%DeleteId(id)
+	q:sc'=1 "删除失败"
+	q "ok"
+}
+
+}

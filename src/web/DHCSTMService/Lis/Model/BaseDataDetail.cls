@@ -1,0 +1,56 @@
+Class web.DHCSTMService.Lis.Model.BaseDataDetail Extends (%RegisteredObject, %XML.Adaptor)
+{
+
+Parameter XMLIGNORENULL = 1;
+
+Property MATERIALID As %String(MAXLEN = "", XMLNAME = "MATERIALID");
+
+Property MATERIALCODE As %String(MAXLEN = "", XMLNAME = "MATERIALCODE");
+
+Property MATERIALSTATUS As %String(MAXLEN = "", XMLNAME = "MATERIALSTATUS");
+
+Property MATERIALNAME As %String(MAXLEN = "", XMLNAME = "MATERIALNAME");
+
+Property MATERIALGNAME As %String(MAXLEN = "", XMLNAME = "MATERIALGNAME");
+
+Property MATERIALALIAS As %String(MAXLEN = "", XMLNAME = "MATERIALALIAS");
+
+Property MATERIALPACKSIZE As %String(MAXLEN = "", XMLNAME = "MATERIALPACKSIZE");
+
+Property UNITID As %String(MAXLEN = "", XMLNAME = "UNITID");
+
+Property UNITNAME As %String(MAXLEN = "", XMLNAME = "UNITNAME");
+
+Property CATEGORYID As %String(MAXLEN = "", XMLNAME = "CATEGORYID");
+
+Property CATEGORYNAME As %String(MAXLEN = "", XMLNAME = "CATEGORYNAME");
+
+Property STORAGEMODEID As %String(MAXLEN = "", XMLNAME = "STORAGEMODEID");
+
+Property STORAGEMODEName As %String(MAXLEN = "", XMLNAME = "STORAGEMODEName");
+
+Property MANUFACTURERID As %String(MAXLEN = "", XMLNAME = "MANUFACTURERID");
+
+Property MANUFACTURERNAME As %String(MAXLEN = "", XMLNAME = "MANUFACTURERNAME");
+
+Property SUBPACKNO As %String(MAXLEN = "", XMLNAME = "SUBPACKNO");
+
+Property GROUPID As %String(MAXLEN = "", XMLNAME = "GROUPID");
+
+Property GROUPNAME As %String(MAXLEN = "", XMLNAME = "GROUPNAME");
+
+Property SUPPLIERID As %String(MAXLEN = "", XMLNAME = "SUPPLIERID");
+
+Property SUPPLIERNAME As %String(MAXLEN = "", XMLNAME = "SUPPLIERNAME");
+
+Property MATERIALPRICE As %String(MAXLEN = "", XMLNAME = "MATERIALPRICE");
+
+Property HOSID As %String(MAXLEN = "", XMLNAME = "HOSID");
+
+Property DEPTID As %String(MAXLEN = "", XMLNAME = "DEPTID");
+
+Property BUNITID As %String(MAXLEN = "", XMLNAME = "BUNITID");
+
+Property BUNITNAME As %String(MAXLEN = "", XMLNAME = "BUNITNAME");
+
+}

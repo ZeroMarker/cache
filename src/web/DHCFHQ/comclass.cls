@@ -1,0 +1,4 @@
+Class web.DHCFHQ.comclass
+{
+
+}
